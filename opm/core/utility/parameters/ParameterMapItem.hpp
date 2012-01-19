@@ -1,8 +1,8 @@
 //===========================================================================
 //
-// File: ParameterTools.cpp
+// File: ParameterMapItem.hpp
 //
-// Created: Tue Jun  2 19:03:09 2009
+// Created: Tue Jun  2 19:05:54 2009
 //
 // Author(s): Bård Skaflestad     <bard.skaflestad@sintef.no>
 //            Atgeirr F Rasmussen <atgeirr@sintef.no>
@@ -33,23 +33,41 @@ You should have received a copy of the GNU General Public License
 along with OpenRS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if HAVE_CONFIG_H
-#include "config.h"
-#endif
-#include <opm/core/utility/parameters/ParameterTools.hpp>
-#include <opm/core/utility/parameters/ParameterStrings.hpp>
+#ifndef OPENRS_PARAMETERMAPITEM_HEADER
+#define OPENRS_PARAMETERMAPITEM_HEADER
+
+#include <string>
 
 namespace Opm {
     namespace parameter {
-	std::pair<std::string, std::string> split(const std::string& name)
-        {
-	    int pos = name.find(ID_delimiter_path);
-	    if (pos == int(std::string::npos)) {
-		return std::make_pair(name, "");
-	    } else {
-		return std::make_pair(name.substr(0, pos),
-                                      name.substr(pos + ID_delimiter_path.size()));
-	    }
-	}
+	/// The parameter handlig system is structured as a tree,
+	/// where each node inhertis from ParameterMapItem.
+	///
+	/// The abstract virtual function getTag() is  used to determine
+	/// which derived class the node actually is.
+	struct ParameterMapItem {
+	    /// Default constructor
+	    ParameterMapItem() : used_(false) {}
+
+	    /// Destructor
+	    virtual ~ParameterMapItem() {}
+
+	    /// \brief This function returns a string describing
+	    ///        the ParameterMapItem.
+	    virtual std::string getTag() const = 0;
+	    void setUsed() const { used_ = true; }
+	    bool used() const { return used_; }
+	private:
+	    mutable bool used_;
+	};
+
+	template<typename T>
+	struct ParameterMapItemTrait {
+	    static T convert(const ParameterMapItem&,
+                             std::string& conversion_error);
+	    static std::string type();
+	};
     } // namespace parameter
 } // namespace Opm
+
+#endif // OPENRS_PARAMETERMAPITEM_HEADER
