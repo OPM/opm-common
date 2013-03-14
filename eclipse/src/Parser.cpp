@@ -15,39 +15,39 @@ Parser::Parser() {
 }
 
 Parser::Parser(const std::string &path) {
-    dataFilePath = path;
+    m_dataFilePath = path;
 }
 
-EclipseDeck Parser::Parse() {
+EclipseDeck Parser::parse() {
     EclipseDeck deck;
-
-    log.append("Initializing inputstream from file: " + dataFilePath + "\n");
+    m_log.append("Initializing inputstream from file: " + m_dataFilePath + "\n");
 
     ifstream inputstream;
-    inputstream.open(dataFilePath.c_str());
+    inputstream.open(m_dataFilePath.c_str());
 
     if (!inputstream.is_open()) {
-        log.append("ERROR: unable to open file");
+        m_log.append("ERROR: unable to open file");
         return deck;
     }
+    
     std::string line;
-
     while (!inputstream.eof()) {
         std::getline(inputstream, line);
         if (line.substr(0, 2) != "--") {
-            deck.AddKeyword(line);
+            deck.addKeyword(line);
         }
-        log.append("Linje: " + line + "\n");
+        m_log.append("Line: " + line + "\n");
     }
 
     inputstream.close();
+    return deck;
+}
 
+void Parser::writeLogToFile() {
     std::ofstream logfile;
     logfile.open("log.txt");
-    logfile << log;
+    logfile << m_log;
     logfile.close();
-
-    return deck;
 }
 
 Parser::~Parser() {

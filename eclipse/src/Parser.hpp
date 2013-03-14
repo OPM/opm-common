@@ -14,13 +14,14 @@ class Parser {
 public:
     Parser();
     Parser(const std::string &path);
-    EclipseDeck Parse();
-    std::string GetLog();
+    EclipseDeck parse();
+    std::string getLog();
     virtual ~Parser();
 private:
     //EclipseDeck deck;
-    std::string dataFilePath;
-    std::string log;
+    std::string m_dataFilePath;
+    std::string m_log;
+    void writeLogToFile();
 };
 
 #endif	/* PARSER_H */

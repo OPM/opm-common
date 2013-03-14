@@ -10,16 +10,16 @@
 EclipseDeck::EclipseDeck() {
 }
 
-int EclipseDeck::GetNumberOfKeywords() {
-    return keywords.size();
+int EclipseDeck::getNumberOfKeywords() {
+    return m_keywords.size();
 }
 
-const std::vector<std::string> EclipseDeck::GetKeywords() {
-    return keywords;
+const std::vector<std::string> EclipseDeck::getKeywords() {
+    return m_keywords;
 }
 
-void EclipseDeck::AddKeyword(const std::string &keyword) {
-    keywords.push_back(keyword);
+void EclipseDeck::addKeyword(const std::string &keyword) {
+    m_keywords.push_back(keyword);
 }
 
 EclipseDeck::~EclipseDeck() {

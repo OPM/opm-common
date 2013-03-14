@@ -13,13 +13,13 @@
 class EclipseDeck {
 public:
     EclipseDeck();
-    int GetNumberOfKeywords();
-    const std::vector<std::string> GetKeywords();
-    void AddKeyword(const std::string &keyword);
+    int getNumberOfKeywords();
+    const std::vector<std::string> getKeywords();
+    void addKeyword(const std::string &keyword);
     virtual ~EclipseDeck();
 private:
-    int numberOfKeywords;
-    std::vector<std::string> keywords; 
+    int m_numberOfKeywords;
+    std::vector<std::string> m_keywords; 
 };
 
 #endif	/* ECLIPSEDECK_H */

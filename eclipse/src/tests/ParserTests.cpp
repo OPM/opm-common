@@ -16,9 +16,9 @@ TEST(ParserTest, Initializing) {
 
 TEST(ParserTest, ParseEmptyFileKeywordVectorEmpty) {
     Parser * parser = new Parser();
-    EclipseDeck deck = parser->Parse();
-    ASSERT_EQ(0, deck.GetNumberOfKeywords());
-    ASSERT_EQ((unsigned int)0, deck.GetKeywords().size());
+    EclipseDeck deck = parser->parse();
+    ASSERT_EQ(0, deck.getNumberOfKeywords());
+    ASSERT_EQ((unsigned int)0, deck.getKeywords().size());
     delete parser;
 }
 
@@ -26,10 +26,10 @@ TEST(ParserTest, ParseFileWithOneKeyword) {
     boost::filesystem::path singleKeywordFile("testdata/single.data");
 
     Parser * parser = new Parser(singleKeywordFile.string());
-    EclipseDeck deck = parser->Parse();
+    EclipseDeck deck = parser->parse();
 
-    ASSERT_EQ(1, deck.GetNumberOfKeywords());
-    ASSERT_EQ((unsigned int)1, deck.GetKeywords().size());
+    ASSERT_EQ(1, deck.getNumberOfKeywords());
+    ASSERT_EQ((unsigned int)1, deck.getKeywords().size());
 
     delete parser;
 }
