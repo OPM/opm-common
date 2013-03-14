@@ -14,7 +14,8 @@ class EclipseDeck {
 public:
     EclipseDeck();
     int GetNumberOfKeywords();
-    std::vector<std::string> GetKeywords();
+    const std::vector<std::string> GetKeywords();
+    void AddKeyword(const std::string &keyword);
     virtual ~EclipseDeck();
 private:
     int numberOfKeywords;

@@ -15,10 +15,12 @@ public:
     Parser();
     Parser(const std::string &path);
     EclipseDeck Parse();
+    std::string GetLog();
     virtual ~Parser();
 private:
     //EclipseDeck deck;
-    std::string pathToEclipseFile;
+    std::string dataFilePath;
+    std::string log;
 };
 
 #endif	/* PARSER_H */
