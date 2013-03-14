@@ -13,7 +13,7 @@
 class Parser {
 public:
     Parser();
-    Parser(std::string path);
+    Parser(const std::string &path);
     EclipseDeck Parse();
     virtual ~Parser();
 private:

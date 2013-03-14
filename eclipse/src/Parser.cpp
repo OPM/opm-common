@@ -4,6 +4,8 @@
  * 
  * Created on March 11, 2013, 3:40 PM
  */
+#include <boost/filesystem.hpp>
+
 #include <fstream>
 using std::ifstream;
 
@@ -12,7 +14,10 @@ using std::ifstream;
 Parser::Parser() {
 }
 
-Parser::Parser(std::string path) {
+Parser::Parser(const std::string &path) {
+    boost::filesystem::path currentPath;
+    currentPath = boost::filesystem::current_path();
+    
     // Read keyword definition from file
 }
 
