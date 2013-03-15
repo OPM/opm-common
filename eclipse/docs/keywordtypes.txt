@@ -1,0 +1,8 @@
+Sections:
+
+Keywords:
+    Types:
+        - Keyword "as" Property: eg UNIFOUT, sets a boolean value for the UNIFOUT property (note, this is related to MULTOUT (which is default))
+        - Keyword with several properties (that are named in the documentation)
+
+Relationships:
