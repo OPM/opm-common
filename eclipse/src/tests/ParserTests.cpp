@@ -34,6 +34,18 @@ TEST(ParserTest, ParseFileWithOneKeyword) {
     delete parser;
 }
 
+TEST(ParserTest, ParseFileWithManyKeywords) {
+    boost::filesystem::path multipleKeywordFile("testdata/ECLIPSE.DATA");
+
+    Parser * parser = new Parser(multipleKeywordFile.string());
+    EclipseDeck deck = parser->parse();
+
+    ASSERT_EQ(1, deck.getNumberOfKeywords());
+    ASSERT_EQ((unsigned int)1, deck.getKeywords().size());
+
+    delete parser;
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

@@ -5,6 +5,7 @@
  * Created on March 11, 2013, 3:40 PM
  */
 #include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
 #include <iostream>
 #include <fstream>
 using std::ifstream;
@@ -29,16 +30,25 @@ EclipseDeck Parser::parse() {
         m_log.append("ERROR: unable to open file");
         return deck;
     }
-    
+
     std::string line;
     while (!inputstream.eof()) {
         std::getline(inputstream, line);
-        if (line.substr(0, 2) != "--") {
-            deck.addKeyword(line);
+        if (line.substr(0, 2) == "--") {
+            m_log.append("COMMENT LINE   < " + line + ">\n");
         }
-        m_log.append("Line: " + line + "\n");
+        else if (boost::algorithm::trim_copy(line).length() == 0) {
+            m_log.append("EMPTY LINE     <" + line + ">\n");
+        }
+        else if (line.substr(0, 1) != " " && boost::algorithm::to_upper_copy(line) == line) {
+            deck.addKeyword(line);
+            m_log.append("KEYWORD LINE   <" + line + ">\n");
+        }
+        else {
+            m_log.append("SOMETHING ELSE <" + line + ">\n");
+        }
     }
-
+    writeLogToFile();
     inputstream.close();
     return deck;
 }
