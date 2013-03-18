@@ -35,8 +35,10 @@ namespace Opm {
     }
 
     EclipseDeck Parser::parse(const std::string &path) {
+        m_logger.setLogLevel(Opm::Logger::INFO);
         fs::path pathToCheck(path);
         if (!fs::is_regular_file(pathToCheck)) {
+            m_logger.error("Unable to open file with path: " + path);
             throw std::invalid_argument("Given path is not a valid file-path, path: " + path);
         }
         
@@ -70,7 +72,7 @@ namespace Opm {
     }
     
     void Parser::initInputStream(const std::string &path, ifstream& file) {
-        m_logger.debug("Initializing from file: " + path);
+        m_logger.info("Initializing from file: " + path);
         file.open(path.c_str());
     }
 
