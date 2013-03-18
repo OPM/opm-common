@@ -17,54 +17,63 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
+#include <stdexcept>
 #include <boost/filesystem.hpp>
+namespace fs = boost::filesystem;
+
 #include <boost/algorithm/string.hpp>
-#include <fstream>
-using std::ifstream;
 
 #include "Parser.hpp"
 
-Parser::Parser() {
-}
+namespace Opm {
 
-Parser::Parser(const std::string &path) {
-    m_dataFilePath = path;
-}
+    Parser::Parser() {
+    }
 
-EclipseDeck Parser::parse() {
-    EclipseDeck deck;
-    m_logger.debug("Initializing inputstream from file: " + m_dataFilePath);
+    Parser::Parser(const std::string &path) {
+        m_dataFilePath = path;
+    }
 
-    ifstream inputstream;
-    inputstream.open(m_dataFilePath.c_str());
-
-    if (!inputstream.is_open()) {
-        m_logger.debug("ERROR: unable to open file");
+    EclipseDeck Parser::parse(const std::string &path) {
+        fs::path pathToCheck(path);
+        if (!fs::is_regular_file(pathToCheck)) {
+            throw std::invalid_argument("Given path is not a valid file-path, path: " + path);
+        }
+        
+        ifstream file;
+        initInputStream(path, file);
+        EclipseDeck deck = doFileParsing(file);
+        file.close();
         return deck;
     }
-
-    std::string line;
-    while (!inputstream.eof()) {
-        std::getline(inputstream, line);
-        if (line.substr(0, 2) == "--") {
-            m_logger.debug("COMMENT LINE   < " + line + ">");
-        }
-        else if (boost::algorithm::trim_copy(line).length() == 0) {
-            m_logger.debug("EMPTY LINE     <" + line + ">");
-        }
-        else if (line.substr(0, 1) != " " && boost::algorithm::to_upper_copy(line) == line) {
-            deck.addKeyword(line);
-            m_logger.debug("KEYWORD LINE   <" + line + ">");
-        }
-        else {
-            m_logger.debug("SOMETHING ELSE <" + line + ">");
-        }
+    
+    EclipseDeck Parser::parse() {
+        return parse(m_dataFilePath);
     }
-    inputstream.close();
-    return deck;
-}
+    
+    EclipseDeck Parser::doFileParsing(ifstream& inputstream) {
+        EclipseDeck deck;
+        std::string line;
+        while (std::getline(inputstream, line)) {
+            if (line.substr(0, 2) == "--") {
+                m_logger.debug("COMMENT LINE   < " + line + ">");
+            } else if (boost::algorithm::trim_copy(line).length() == 0) {
+                m_logger.debug("EMPTY LINE     <" + line + ">");
+            } else if (line.substr(0, 1) != " " && boost::algorithm::to_upper_copy(line) == line) {
+                deck.addKeyword(line);
+                m_logger.debug("KEYWORD LINE   <" + line + ">");
+            } else {
+                m_logger.debug("SOMETHING ELSE <" + line + ">");
+            }
+        }
+        return deck;
+    }
+    
+    void Parser::initInputStream(const std::string &path, ifstream& file) {
+        m_logger.debug("Initializing from file: " + path);
+        file.open(path.c_str());
+    }
 
-Parser::~Parser() {
-}
-
+    Parser::~Parser() {
+    }
+} // namespace Opm

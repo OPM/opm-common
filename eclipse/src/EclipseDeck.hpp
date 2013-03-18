@@ -22,17 +22,18 @@
 #include <vector>
 #include <string>
 
-class EclipseDeck {
-public:
-    EclipseDeck();
-    int getNumberOfKeywords();
-    const std::vector<std::string> getKeywords();
-    void addKeyword(const std::string &keyword);
-    virtual ~EclipseDeck();
-private:
-    int m_numberOfKeywords;
-    std::vector<std::string> m_keywords; 
-};
-
+namespace Opm {
+    class EclipseDeck {
+    public:
+        EclipseDeck();
+        int getNumberOfKeywords();
+        const std::vector<std::string> getKeywords();
+        void addKeyword(const std::string &keyword);
+        virtual ~EclipseDeck();
+    private:
+        int m_numberOfKeywords;
+        std::vector<std::string> m_keywords;
+    };
+} // namespace Opm
 #endif	/* ECLIPSEDECK_H */
 

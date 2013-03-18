@@ -17,50 +17,62 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
+#include <stdexcept>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 
-#include "gtest/gtest.h"
+#define BOOST_TEST_MODULE ParserTests
+#include <boost/test/unit_test.hpp>
+
 #include "Parser.hpp"
 #include "EclipseDeck.hpp"
 
+using namespace Opm;
 
-
-TEST(ParserTest, Initializing) {
+BOOST_AUTO_TEST_CASE(Initializing) {
     Parser parser;
-    ASSERT_TRUE(&parser != NULL);
+    BOOST_CHECK(&parser != NULL);
 }
 
-TEST(ParserTest, ParseEmptyFileKeywordVectorEmpty) {
+BOOST_AUTO_TEST_CASE(ParseWithoutInputFileThrows) {
     Parser parser;
-    EclipseDeck deck = parser.parse();
-    ASSERT_EQ(0, deck.getNumberOfKeywords());
-    ASSERT_EQ((unsigned int)0, deck.getKeywords().size());
+    BOOST_REQUIRE_THROW(parser.parse(), std::invalid_argument);
 }
 
-TEST(ParserTest, ParseFileWithOneKeyword) {
+BOOST_AUTO_TEST_CASE(ParseWithInvalidInputFileThrows) {
+    Parser parser("nonexistingfile.asdf");
+    BOOST_REQUIRE_THROW(parser.parse(), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(ParseWithValidFileSetOnParseCallNoThrow) {
+    boost::filesystem::path singleKeywordFile("testdata/single.data");
+    Parser parser;
+    BOOST_REQUIRE_NO_THROW(parser.parse(singleKeywordFile.string()));
+}
+
+BOOST_AUTO_TEST_CASE(ParseWithInValidFileSetOnParseCallThrows) {
+    boost::filesystem::path singleKeywordFile("testdata/nosuchfile.data");
+    Parser parser;
+    BOOST_REQUIRE_THROW(parser.parse(singleKeywordFile.string()), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(ParseFileWithOneKeyword) {
     boost::filesystem::path singleKeywordFile("testdata/single.data");
 
     Parser parser(singleKeywordFile.string());
     EclipseDeck deck = parser.parse();
 
-    ASSERT_EQ(1, deck.getNumberOfKeywords());
-    ASSERT_EQ((unsigned int)1, deck.getKeywords().size());
+    BOOST_REQUIRE_EQUAL(1, deck.getNumberOfKeywords());
+    BOOST_REQUIRE_EQUAL((unsigned int)1, deck.getKeywords().size());
 }
 
-TEST(ParserTest, ParseFileWithManyKeywords) {
+BOOST_AUTO_TEST_CASE(ParseFileWithManyKeywords) {
     boost::filesystem::path multipleKeywordFile("testdata/gurbat_trimmed.DATA");
 
     Parser parser(multipleKeywordFile.string());
     EclipseDeck deck = parser.parse();
 
-    ASSERT_EQ(18, deck.getNumberOfKeywords());
-    ASSERT_EQ((unsigned int)18, deck.getKeywords().size());
-}
-
-int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    BOOST_REQUIRE_EQUAL(18, deck.getNumberOfKeywords());
+    BOOST_REQUIRE_EQUAL((unsigned int)18, deck.getKeywords().size());
 }

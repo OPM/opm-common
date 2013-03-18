@@ -23,17 +23,19 @@
 #include <string>
 #include <fstream>
 
-class Logger {
-public:
-    Logger();
-    Logger(const std::string& path);
-    void debug(const std::string& message);
-    virtual ~Logger();
-private:
-    void initLogger();
-    std::string m_logFile;
-    std::ofstream m_logStream;
-};
+namespace Opm {
 
+    class Logger {
+    public:
+        Logger();
+        Logger(const std::string& path);
+        void debug(const std::string& message);
+        virtual ~Logger();
+    private:
+        void initLogger();
+        std::string m_logFile;
+        std::ofstream m_logStream;
+    };
+}// namespace Opm
 #endif	/* LOGGER_HPP */
 

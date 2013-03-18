@@ -22,26 +22,28 @@
 using namespace boost::posix_time;
 #include "Logger.hpp"
 
-Logger::Logger() {
-    m_logFile = "log.log";
-    initLogger();
-}
+namespace Opm {
 
-Logger::Logger(const std::string& path) {
-    m_logFile = path;
-    initLogger();
-}
+    Logger::Logger() {
+        m_logFile = "log.log";
+        initLogger();
+    }
 
-void Logger::debug(const std::string& message) {
-    ptime now = second_clock::universal_time();
-    m_logStream << to_simple_string(now) << " (DEBUG) " << message << "\n";
-}
+    Logger::Logger(const std::string& path) {
+        m_logFile = path;
+        initLogger();
+    }
 
-void Logger::initLogger() {
-    m_logStream.open(m_logFile.c_str());
-}
+    void Logger::debug(const std::string& message) {
+        ptime now = second_clock::universal_time();
+        m_logStream << to_simple_string(now) << " (DEBUG) " << message << "\n";
+    }
 
-Logger::~Logger() {
-    m_logStream.close();
-}
+    void Logger::initLogger() {
+        m_logStream.open(m_logFile.c_str());
+    }
 
+    Logger::~Logger() {
+        m_logStream.close();
+    }
+} // namespace Opm

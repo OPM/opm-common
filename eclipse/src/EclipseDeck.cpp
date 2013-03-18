@@ -20,21 +20,23 @@
 
 #include "EclipseDeck.hpp"
 
-EclipseDeck::EclipseDeck() {
-}
+namespace Opm {
 
-int EclipseDeck::getNumberOfKeywords() {
-    return m_keywords.size();
-}
+    EclipseDeck::EclipseDeck() {
+    }
 
-const std::vector<std::string> EclipseDeck::getKeywords() {
-    return m_keywords;
-}
+    int EclipseDeck::getNumberOfKeywords() {
+        return m_keywords.size();
+    }
 
-void EclipseDeck::addKeyword(const std::string &keyword) {
-    m_keywords.push_back(keyword);
-}
+    const std::vector<std::string> EclipseDeck::getKeywords() {
+        return m_keywords;
+    }
 
-EclipseDeck::~EclipseDeck() {
-}
+    void EclipseDeck::addKeyword(const std::string &keyword) {
+        m_keywords.push_back(keyword);
+    }
 
+    EclipseDeck::~EclipseDeck() {
+    }
+} // namespace Opm
