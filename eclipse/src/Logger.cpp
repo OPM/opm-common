@@ -17,22 +17,31 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ECLIPSEDECK_H
-#define	ECLIPSEDECK_H
-#include <vector>
-#include <string>
 
-class EclipseDeck {
-public:
-    EclipseDeck();
-    int getNumberOfKeywords();
-    const std::vector<std::string> getKeywords();
-    void addKeyword(const std::string &keyword);
-    virtual ~EclipseDeck();
-private:
-    int m_numberOfKeywords;
-    std::vector<std::string> m_keywords; 
-};
+#include "boost/date_time/posix_time/posix_time.hpp"
+using namespace boost::posix_time;
+#include "Logger.hpp"
 
-#endif	/* ECLIPSEDECK_H */
+Logger::Logger() {
+    m_logFile = "log.log";
+    initLogger();
+}
+
+Logger::Logger(const std::string& path) {
+    m_logFile = path;
+    initLogger();
+}
+
+void Logger::debug(const std::string& message) {
+    ptime now = second_clock::universal_time();
+    m_logStream << to_simple_string(now) << " (DEBUG) " << message << "\n";
+}
+
+void Logger::initLogger() {
+    m_logStream.open(m_logFile.c_str());
+}
+
+Logger::~Logger() {
+    m_logStream.close();
+}
 

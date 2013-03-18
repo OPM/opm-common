@@ -1,0 +1,160 @@
+-- AUTO-SMOOTHER
+
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+-- This is the DATA file used by EnKF to run ECLIPSE. It is nearly a 100%
+-- normal ECLIPSE DATA file, but there have been som modifications to use
+-- it with EnkF. There are essentially three types of modifications:
+-- 
+--  * The parameters we want to update/estimate with EnKF are separated
+--    out in separate files, which are included into this file.
+-- 
+--  * There are som 'magic strings' looking like this: <xxxx>. These are
+--    replaced withother content by EnKF before the simulations starts -
+--    observe that the 'magic strings' never represent parameters to
+--    update.
+-- 
+--  * There are some special ECLIPSE keywords which must/must not be
+--    present in the DATA file.
+-- 
+-- All the places[1] where the DATA file has been update for EnKF are marked
+-- with EnKF. 
+--
+-- [1]: There are many places with the string /private/joaho/ERT/git/ert/Gurbat - that is
+-- not essential EnKF - just convenience to get EnKF to insert the
+-- include path. The value of INCLUDE_PATH must be set with DATA_KW in
+-- the main configuration file. 
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------
+-- Reservoir Simulation Model Building Basic Principles: Generic Reservoir
+-- by Gurbat S. Agaev, 26.06.2006
+-- 
+-- Objective: Explain simulation modelling steps
+-- 3-phase model
+-- Geological Grid - 120 x 200 x 42
+-----------------------------------------------------------------------------------------
+--
+--
+-- **************************************************************************************
+-- In this section simulation run specification is given
+-- **************************************************************************************
+--
+-----------------------------------------------------------------------------------------
+-- **************************************************************************************
+RUNSPEC
+-- **************************************************************************************
+-- Simulation run title
+TITLE
+Reservoir Simulation Model Building Basic Principles
+--
+-- --------------------------------------------------------------------------------------
+-- Simulation grid dimension (Imax, Jmax, Kmax)
+DIMENS
+    40  64   14                                                 /
+--
+-- --------------------------------------------------------------------------------------
+-- Big Model
+--BIGMODEL
+--
+-- --------------------------------------------------------------------------------------
+-- Simulation run start
+START
+----
+ 1 JAN 2000                                                     /
+--
+-- --------------------------------------------------------------------------------------
+-- Fluid phases present
+OIL
+GAS
+WATER
+DISGAS
+VAPOIL
+--
+-- --------------------------------------------------------------------------------------
+-- Measurement unit used
+METRIC
+--
+-- --------------------------------------------------------------------------------------
+--Options to process grid data
+--If MULTX-, MULTY- and MULTZ- are used, set first parameter= 'YES'
+GRIDOPTS
+-- MULTNUM?   NRMULT
+   'YES'      1*                                                /
+INCLUDE
+ 'include/example_summary.txt'             /
+
+-- Tracer data to be written to SUMMARY file 
+--FTPRSK1
+--FTPRSK2
+--FTPRSK3
+
+--FTPTSK1
+--FTPTSK2
+--FTPTSK3
+
+--WTPRSK1
+--/
+--WTPRSK2
+--/
+--WTPRSK3
+--/
+
+--WTPTSK1
+--/
+--WTPTSK2
+--/
+--WTPTSK3
+--/
+--
+--
+-- **************************************************************************************
+-- In this section data required to describe history and prediction is given
+-- - well completions, well production/injection, well constraints
+-- - platform/production unit constraints, etc.
+-- **************************************************************************************
+--
+-----------------------------------------------------------------------------------------
+-- **************************************************************************************
+SCHEDULE
+-- **************************************************************************************
+-----------------------------------------------------------------------------------------
+-- EnKF: RPTSCHED must have RESTART=2 for EnKF to work.
+RPTSCHED
+   RESTART=2 /
+
+-- EnKF: The keyword 'SKIPREST' in the SCHEDULE section is essential
+-- EnKF: for EnKF to work.
+SKIPREST
+NOECHO
+--
+-- --------------------------------------------------------------------------------------
+-- Schedule file (well comptetions, well constraints, well groups, rates, etc.)
+-- Generated by SCHEDULE software
+-- Input data required and input data formats are given in  directory
+--
+INCLUDE
+  'target.SCH' /
+
+--INCLUDE
+--  'include/target.SCH' /       
+
+--
+-- --------------------------------------------------------------------------------------
+-- Production well VFP table (used for predictions)
+--INCLUDE
+-- 'include/example_vfp.vfp'             /
+
+--
+-- --------------------------------------------------------------------------------------
+-- If injection well VFP tables are required, include them in this section
+--
+
+--INCLUDE
+--  'prediction.sch'   /
+
+END

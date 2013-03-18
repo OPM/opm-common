@@ -17,22 +17,23 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ECLIPSEDECK_H
-#define	ECLIPSEDECK_H
-#include <vector>
-#include <string>
 
-class EclipseDeck {
+#ifndef LOGGER_HPP
+#define	LOGGER_HPP
+#include <string>
+#include <fstream>
+
+class Logger {
 public:
-    EclipseDeck();
-    int getNumberOfKeywords();
-    const std::vector<std::string> getKeywords();
-    void addKeyword(const std::string &keyword);
-    virtual ~EclipseDeck();
+    Logger();
+    Logger(const std::string& path);
+    void debug(const std::string& message);
+    virtual ~Logger();
 private:
-    int m_numberOfKeywords;
-    std::vector<std::string> m_keywords; 
+    void initLogger();
+    std::string m_logFile;
+    std::ofstream m_logStream;
 };
 
-#endif	/* ECLIPSEDECK_H */
+#endif	/* LOGGER_HPP */
 

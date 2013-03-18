@@ -1,12 +1,25 @@
-/* 
- * File:   Parser.cpp
- * Author: kflik
- * 
- * Created on March 11, 2013, 3:40 PM
+/*
+  Copyright 2013 Statoil ASA.
+
+  This file is part of the Open Porous Media project (OPM).
+
+  OPM is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  OPM is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
-#include <iostream>
 #include <fstream>
 using std::ifstream;
 
@@ -21,13 +34,13 @@ Parser::Parser(const std::string &path) {
 
 EclipseDeck Parser::parse() {
     EclipseDeck deck;
-    m_log.append("Initializing inputstream from file: " + m_dataFilePath + "\n");
+    m_logger.debug("Initializing inputstream from file: " + m_dataFilePath);
 
     ifstream inputstream;
     inputstream.open(m_dataFilePath.c_str());
 
     if (!inputstream.is_open()) {
-        m_log.append("ERROR: unable to open file");
+        m_logger.debug("ERROR: unable to open file");
         return deck;
     }
 
@@ -35,29 +48,21 @@ EclipseDeck Parser::parse() {
     while (!inputstream.eof()) {
         std::getline(inputstream, line);
         if (line.substr(0, 2) == "--") {
-            m_log.append("COMMENT LINE   < " + line + ">\n");
+            m_logger.debug("COMMENT LINE   < " + line + ">");
         }
         else if (boost::algorithm::trim_copy(line).length() == 0) {
-            m_log.append("EMPTY LINE     <" + line + ">\n");
+            m_logger.debug("EMPTY LINE     <" + line + ">");
         }
         else if (line.substr(0, 1) != " " && boost::algorithm::to_upper_copy(line) == line) {
             deck.addKeyword(line);
-            m_log.append("KEYWORD LINE   <" + line + ">\n");
+            m_logger.debug("KEYWORD LINE   <" + line + ">");
         }
         else {
-            m_log.append("SOMETHING ELSE <" + line + ">\n");
+            m_logger.debug("SOMETHING ELSE <" + line + ">");
         }
     }
-    writeLogToFile();
     inputstream.close();
     return deck;
-}
-
-void Parser::writeLogToFile() {
-    std::ofstream logfile;
-    logfile.open("log.txt");
-    logfile << m_log;
-    logfile.close();
 }
 
 Parser::~Parser() {
