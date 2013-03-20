@@ -32,6 +32,14 @@ namespace Opm {
         return m_keywordRawData.size();
     }
 
+    void KeywordRawData::getListOfKeywords(std::list<std::string>& keywords) {
+        keywords.clear();
+        std::list< std::pair< std::string, std::list<std::string > > >::iterator iterator;
+        for (iterator = m_keywordRawData.begin(); iterator != m_keywordRawData.end(); iterator++) {
+            keywords.push_back(iterator->first);
+        }
+    }
+
     KeywordRawData::~KeywordRawData() {
     }
 }

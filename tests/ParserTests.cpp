@@ -66,10 +66,30 @@ BOOST_AUTO_TEST_CASE(ParseFileWithOneKeyword) {
     BOOST_REQUIRE_EQUAL(2, parser.getNumberOfKeywords());
 }
 
+//NOTE: needs statoil dataset
 BOOST_AUTO_TEST_CASE(ParseFileWithManyKeywords) {
     boost::filesystem::path multipleKeywordFile("testdata/gurbat_trimmed.DATA");
 
     Parser parser(multipleKeywordFile.string());
     parser.parse();
     BOOST_REQUIRE_EQUAL(18, parser.getNumberOfKeywords());
+}
+
+//NOTE: needs statoil dataset
+BOOST_AUTO_TEST_CASE(ParseFullTestFile) {
+    boost::filesystem::path multipleKeywordFile("testdata/ECLIPSE.DATA");
+
+    Parser parser(multipleKeywordFile.string());
+    parser.parse();
+    BOOST_REQUIRE_EQUAL(73, parser.getNumberOfKeywords());
+    std::list<std::string> keywords;
+    parser.getListOfKeywords(keywords);
+    BOOST_REQUIRE_EQUAL((unsigned int)73, keywords.size());
+
+    //    std::ofstream file("keywords.out");  
+    //    std::list<std::string>::iterator iterator;
+    //    for (iterator = keywords.begin(); iterator != keywords.end(); ++iterator) {
+    //        file << *iterator << std::endl;
+    //    }
+    //    file.close();
 }

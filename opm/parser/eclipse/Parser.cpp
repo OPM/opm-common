@@ -60,6 +60,10 @@ namespace Opm {
         return m_keywordRawData -> numberOfKeywords();
     }
 
+    void Parser::getListOfKeywords(std::list<std::string>& list) {
+        m_keywordRawData->getListOfKeywords(list);
+    }
+
     void Parser::createKeywordAndRawData(std::ifstream& inputstream) {
         EclipseDeck deck;
         std::string line;
@@ -68,16 +72,17 @@ namespace Opm {
         while (std::getline(inputstream, line)) {
             if (isKeyword(line)) {
                 if (currentKeyword != "") {
-                    m_keywordRawData->addKeywordDataBlob(line, currentDataBlob);
+                    m_keywordRawData->addKeywordDataBlob(currentKeyword, currentDataBlob);
                 }
                 currentDataBlob = std::list<std::string>();
                 currentKeyword = line;
             } else {
-                addDataToBlob(line, currentDataBlob);
+                if (currentKeyword != "")
+                    addDataToBlob(line, currentDataBlob);
             }
         }
         if (currentKeyword != "") {
-            m_keywordRawData->addKeywordDataBlob(line, currentDataBlob);
+            m_keywordRawData->addKeywordDataBlob(currentKeyword, currentDataBlob);
         }
     }
 
@@ -109,8 +114,9 @@ namespace Opm {
             m_logger.error("Unable to compile regular expression for keyword! Expression: " + keywordRegex);
             throw std::runtime_error("Unable to compile regular expression for keyword! Expression: " + keywordRegex);
         }
-
-        status = regexec(&re, line.c_str(), 1, &rm, 0);
+        
+        std::string trimmedRight = boost::trim_right_copy(line);
+        status = regexec(&re, trimmedRight.c_str(), 1, &rm, 0);
         regfree(&re);
 
         if (status == 0) {

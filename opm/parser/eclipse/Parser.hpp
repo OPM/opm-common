@@ -35,6 +35,7 @@ namespace Opm {
         void parse();
         void parse(const std::string &path);
         int getNumberOfKeywords();
+        void getListOfKeywords(std::list<std::string>& list);
         virtual ~Parser();
     private:
         std::string m_dataFilePath;

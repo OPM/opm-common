@@ -18,6 +18,7 @@ namespace Opm {
     public:
         KeywordRawData();
         void addKeywordDataBlob(const std::string& keyword, const std::list<std::string>& blob);
+        void getListOfKeywords(std::list<std::string>& keywords);
         int numberOfKeywords();
         virtual ~KeywordRawData();
     private:
