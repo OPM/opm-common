@@ -18,6 +18,7 @@
  */
 
 #include <stdexcept>
+#include <iostream>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
@@ -25,8 +26,8 @@
 #define BOOST_TEST_MODULE ParserTests
 #include <boost/test/unit_test.hpp>
 
-#include "Parser.hpp"
-#include "EclipseDeck.hpp"
+#include "opm/parser/eclipse/Parser.hpp"
+#include "opm/parser/eclipse/EclipseDeck.hpp"
 
 using namespace Opm;
 
@@ -46,7 +47,7 @@ BOOST_AUTO_TEST_CASE(ParseWithInvalidInputFileThrows) {
 }
 
 BOOST_AUTO_TEST_CASE(ParseWithValidFileSetOnParseCallNoThrow) {
-    boost::filesystem::path singleKeywordFile("testdata/single.data");
+    boost::filesystem::path singleKeywordFile("testdata/small.data");
     Parser parser;
     BOOST_REQUIRE_NO_THROW(parser.parse(singleKeywordFile.string()));
 }
@@ -58,21 +59,17 @@ BOOST_AUTO_TEST_CASE(ParseWithInValidFileSetOnParseCallThrows) {
 }
 
 BOOST_AUTO_TEST_CASE(ParseFileWithOneKeyword) {
-    boost::filesystem::path singleKeywordFile("testdata/single.data");
+    boost::filesystem::path singleKeywordFile("testdata/small.data");
 
     Parser parser(singleKeywordFile.string());
-    EclipseDeck deck = parser.parse();
-
-    BOOST_REQUIRE_EQUAL(1, deck.getNumberOfKeywords());
-    BOOST_REQUIRE_EQUAL((unsigned int)1, deck.getKeywords().size());
+    parser.parse();
+    BOOST_REQUIRE_EQUAL(2, parser.getNumberOfKeywords());
 }
 
 BOOST_AUTO_TEST_CASE(ParseFileWithManyKeywords) {
     boost::filesystem::path multipleKeywordFile("testdata/gurbat_trimmed.DATA");
 
     Parser parser(multipleKeywordFile.string());
-    EclipseDeck deck = parser.parse();
-
-    BOOST_REQUIRE_EQUAL(18, deck.getNumberOfKeywords());
-    BOOST_REQUIRE_EQUAL((unsigned int)18, deck.getKeywords().size());
+    parser.parse();
+    BOOST_REQUIRE_EQUAL(18, parser.getNumberOfKeywords());
 }

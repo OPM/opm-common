@@ -19,13 +19,12 @@
 
 #ifndef PARSER_H
 #define	PARSER_H
-
 #include <string>
 #include <fstream>
-using std::ifstream;
 
 #include "EclipseDeck.hpp"
 #include "Logger.hpp"
+#include "KeywordRawData.hpp"
 
 namespace Opm {
 
@@ -33,15 +32,20 @@ namespace Opm {
     public:
         Parser();
         Parser(const std::string &path);
-        EclipseDeck parse();
-        EclipseDeck parse(const std::string &path);
-        std::string getLog();
+        void parse();
+        void parse(const std::string &path);
+        int getNumberOfKeywords();
         virtual ~Parser();
     private:
         std::string m_dataFilePath;
         Logger m_logger;
-        void initInputStream(const std::string &path, ifstream& file);
-        EclipseDeck doFileParsing(ifstream& inputstream);
+        KeywordRawData* m_keywordRawData;
+        void initInputStream(const std::string &path, std::ifstream& file);
+        void createKeywordAndRawData(std::ifstream& inputstream);
+        bool isKeyword(const std::string& line);
+        void addDataToBlob(const std::string& line, std::list<std::string>& dataBlob);
+        bool looksLikeData(const std::string& line);
+        
     };
 } // namespace Opm
 #endif	/* PARSER_H */
