@@ -18,34 +18,34 @@
  */
 
 #include <utility>
-#include "KeywordDataToken.hpp"
+#include "KeywordRecordSet.hpp"
 namespace Opm {
 
-    KeywordDataToken::KeywordDataToken() {
+    KeywordRecordSet::KeywordRecordSet() {
     }
     
-    KeywordDataToken::KeywordDataToken(const std::string& keyword, const std::list<std::string>& dataElements) {
+    KeywordRecordSet::KeywordRecordSet(const std::string& keyword, const std::list<std::string>& dataElements) {
         setKeyword(keyword);
         m_data = dataElements;
     }
     
-    KeywordDataToken::KeywordDataToken(const std::string& keyword) {
+    KeywordRecordSet::KeywordRecordSet(const std::string& keyword) {
         m_keyword = keyword;
     }
 
-    void KeywordDataToken::setKeyword(const std::string& keyword) {
+    void KeywordRecordSet::setKeyword(const std::string& keyword) {
         m_keyword = keyword;
     }
     
-    void KeywordDataToken::addDataElement(const std::string& element) {
+    void KeywordRecordSet::addDataElement(const std::string& element) {
         m_data.push_back(element);
     }
 
-    std::string KeywordDataToken::getKeyword() {
+    std::string KeywordRecordSet::getKeyword() {
         return m_keyword;
     }
     
-    KeywordDataToken::~KeywordDataToken() {
+    KeywordRecordSet::~KeywordRecordSet() {
     }
 }
 

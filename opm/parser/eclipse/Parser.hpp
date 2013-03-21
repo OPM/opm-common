@@ -23,7 +23,7 @@
 #include <fstream>
 
 #include "Logger.hpp"
-#include "data/KeywordDataToken.hpp"
+#include "data/KeywordRecordSet.hpp"
 
 namespace Opm {
 
@@ -39,11 +39,11 @@ namespace Opm {
     private:
         std::string m_dataFilePath;
         Logger m_logger;
-        std::list<KeywordDataToken> m_keywordRawDatas;
+        std::list<KeywordRecordSet> m_keywordRawDatas;
         void initInputStream(const std::string &path, std::ifstream& file);
         void readKeywordAndDataTokens(std::ifstream& inputstream);
         bool isKeyword(const std::string& line);
-        void addDataToDataToken(const std::string& line, KeywordDataToken& currentKeywordDataToken);
+        void addDataToDataToken(const std::string& line, KeywordRecordSet& currentKeywordRecordSet);
         bool looksLikeData(const std::string& line);
         void checkInputFile(const std::string& pathToInputFile);
         

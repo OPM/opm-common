@@ -55,20 +55,20 @@ namespace Opm {
 
     void Parser::readKeywordAndDataTokens(std::ifstream& inputstream) {
         std::string line;
-        KeywordDataToken currentKeywordDataToken;
+        KeywordRecordSet currentKeywordRecordSet;
         while (std::getline(inputstream, line)) {
             if (isKeyword(line)) {
-                currentKeywordDataToken = KeywordDataToken(line);
-                m_keywordRawDatas.push_back(currentKeywordDataToken);
+                currentKeywordRecordSet = KeywordRecordSet(line);
+                m_keywordRawDatas.push_back(currentKeywordRecordSet);
             } else {
-                addDataToDataToken(line, currentKeywordDataToken);
+                addDataToDataToken(line, currentKeywordRecordSet);
             }
         }
     }
 
-    void Parser::addDataToDataToken(const std::string& line, KeywordDataToken& currentKeywordDataToken) {
-        if (currentKeywordDataToken.getKeyword() != "" && looksLikeData(line)) {
-            currentKeywordDataToken.addDataElement(line);
+    void Parser::addDataToDataToken(const std::string& line, KeywordRecordSet& currentKeywordRecordSet) {
+        if (currentKeywordRecordSet.getKeyword() != "" && looksLikeData(line)) {
+            currentKeywordRecordSet.addDataElement(line);
         }
     }
 
