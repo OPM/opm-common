@@ -18,7 +18,7 @@
  */
 
 #ifndef PARSER_H
-#define	PARSER_H
+#define PARSER_H
 #include <string>
 #include <fstream>
 
@@ -49,5 +49,5 @@ namespace Opm {
         
     };
 } // namespace Opm
-#endif	/* PARSER_H */
+#endif  /* PARSER_H */
 
