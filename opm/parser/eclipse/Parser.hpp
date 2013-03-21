@@ -22,9 +22,8 @@
 #include <string>
 #include <fstream>
 
-#include "EclipseDeck.hpp"
 #include "Logger.hpp"
-#include "KeywordRawData.hpp"
+#include "data/KeywordDataToken.hpp"
 
 namespace Opm {
 
@@ -40,12 +39,13 @@ namespace Opm {
     private:
         std::string m_dataFilePath;
         Logger m_logger;
-        KeywordRawData* m_keywordRawData;
+        std::list<KeywordDataToken> m_keywordRawDatas;
         void initInputStream(const std::string &path, std::ifstream& file);
-        void createKeywordAndRawData(std::ifstream& inputstream);
+        void readKeywordAndDataTokens(std::ifstream& inputstream);
         bool isKeyword(const std::string& line);
-        void addDataToBlob(const std::string& line, std::list<std::string>& dataBlob);
+        void addDataToDataToken(const std::string& line, KeywordDataToken& currentKeywordDataToken);
         bool looksLikeData(const std::string& line);
+        void checkInputFile(const std::string& pathToInputFile);
         
     };
 } // namespace Opm

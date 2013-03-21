@@ -18,29 +18,34 @@
  */
 
 #include <utility>
-#include "KeywordRawData.hpp"
+#include "KeywordDataToken.hpp"
 namespace Opm {
 
-    KeywordRawData::KeywordRawData() {
+    KeywordDataToken::KeywordDataToken() {
+    }
+    
+    KeywordDataToken::KeywordDataToken(const std::string& keyword, const std::list<std::string>& dataElements) {
+        setKeyword(keyword);
+        m_data = dataElements;
+    }
+    
+    KeywordDataToken::KeywordDataToken(const std::string& keyword) {
+        m_keyword = keyword;
     }
 
-    void KeywordRawData::addKeywordDataBlob(const std::string& keyword, const std::list<std::string>& blob) {
-        m_keywordRawData.push_back(std::make_pair(keyword, blob));
+    void KeywordDataToken::setKeyword(const std::string& keyword) {
+        m_keyword = keyword;
+    }
+    
+    void KeywordDataToken::addDataElement(const std::string& element) {
+        m_data.push_back(element);
     }
 
-    int KeywordRawData::numberOfKeywords() {
-        return m_keywordRawData.size();
+    std::string KeywordDataToken::getKeyword() {
+        return m_keyword;
     }
-
-    void KeywordRawData::getListOfKeywords(std::list<std::string>& keywords) {
-        keywords.clear();
-        std::list< std::pair< std::string, std::list<std::string > > >::iterator iterator;
-        for (iterator = m_keywordRawData.begin(); iterator != m_keywordRawData.end(); iterator++) {
-            keywords.push_back(iterator->first);
-        }
-    }
-
-    KeywordRawData::~KeywordRawData() {
+    
+    KeywordDataToken::~KeywordDataToken() {
     }
 }
 

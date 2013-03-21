@@ -29,66 +29,46 @@ namespace fs = boost::filesystem;
 namespace Opm {
 
     Parser::Parser() {
-        m_keywordRawData = new KeywordRawData();
     }
 
     Parser::Parser(const std::string &path) {
-        m_keywordRawData = new KeywordRawData();
         m_dataFilePath = path;
     }
-
-    void Parser::parse(const std::string &path) {
-        m_logger.setLogLevel(Opm::Logger::DEBUG);
-
-        fs::path pathToCheck(path);
-        if (!fs::is_regular_file(pathToCheck)) {
-            m_logger.error("Unable to open file with path: " + path);
-            throw std::invalid_argument("Given path is not a valid file-path, path: " + path);
-        }
-
-        std::ifstream file;
-        initInputStream(path, file);
-        createKeywordAndRawData(file);
-        file.close();
-    }
-
+    
     void Parser::parse() {
         parse(m_dataFilePath);
     }
+    
+    void Parser::parse(const std::string &path) {
+        checkInputFile(path);
+        std::ifstream file;
+        initInputStream(path, file);
+        
+        readKeywordAndDataTokens(file);
+        
+        file.close();
+    }
 
     int Parser::getNumberOfKeywords() {
-        return m_keywordRawData -> numberOfKeywords();
+        return m_keywordRawDatas.size();
     }
 
-    void Parser::getListOfKeywords(std::list<std::string>& list) {
-        m_keywordRawData->getListOfKeywords(list);
-    }
-
-    void Parser::createKeywordAndRawData(std::ifstream& inputstream) {
-        EclipseDeck deck;
+    void Parser::readKeywordAndDataTokens(std::ifstream& inputstream) {
         std::string line;
-        std::string currentKeyword = "";
-        std::list<std::string> currentDataBlob;
+        KeywordDataToken currentKeywordDataToken;
         while (std::getline(inputstream, line)) {
             if (isKeyword(line)) {
-                if (currentKeyword != "") {
-                    m_keywordRawData->addKeywordDataBlob(currentKeyword, currentDataBlob);
-                }
-                currentDataBlob = std::list<std::string>();
-                currentKeyword = line;
+                currentKeywordDataToken = KeywordDataToken(line);
+                m_keywordRawDatas.push_back(currentKeywordDataToken);
             } else {
-                if (currentKeyword != "")
-                    addDataToBlob(line, currentDataBlob);
+                addDataToDataToken(line, currentKeywordDataToken);
             }
-        }
-        if (currentKeyword != "") {
-            m_keywordRawData->addKeywordDataBlob(currentKeyword, currentDataBlob);
         }
     }
 
-    void Parser::addDataToBlob(const std::string& line, std::list<std::string>& currentDataBlob) {
-        if (looksLikeData(line)) {
-            currentDataBlob.push_back(line);
+    void Parser::addDataToDataToken(const std::string& line, KeywordDataToken& currentKeywordDataToken) {
+        if (currentKeywordDataToken.getKeyword() != "" && looksLikeData(line)) {
+            currentKeywordDataToken.addDataElement(line);
         }
     }
 
@@ -114,7 +94,7 @@ namespace Opm {
             m_logger.error("Unable to compile regular expression for keyword! Expression: " + keywordRegex);
             throw std::runtime_error("Unable to compile regular expression for keyword! Expression: " + keywordRegex);
         }
-        
+
         std::string trimmedRight = boost::trim_right_copy(line);
         status = regexec(&re, trimmedRight.c_str(), 1, &rm, 0);
         regfree(&re);
@@ -131,7 +111,14 @@ namespace Opm {
         file.open(path.c_str());
     }
 
+    void Parser::checkInputFile(const std::string& inputPath) {
+        fs::path pathToInputFile(inputPath);
+        if (!fs::is_regular_file(pathToInputFile)) {
+            m_logger.error("Unable to open file with path: " + inputPath);
+            throw std::invalid_argument("Given path is not a valid file-path, path: " + inputPath);
+        }
+    }
+
     Parser::~Parser() {
-        delete m_keywordRawData;
     }
 } // namespace Opm
