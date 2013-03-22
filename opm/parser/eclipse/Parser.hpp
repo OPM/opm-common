@@ -23,27 +23,22 @@
 #include <fstream>
 
 #include "Logger.hpp"
-#include "data/KeywordRecordSet.hpp"
+#include "data/RawKeyword.hpp"
+#include "data/RawDeck.hpp"
+
 
 namespace Opm {
 
     class Parser {
     public:
         Parser();
-        Parser(const std::string &path);
-        void parse();
-        void parse(const std::string &path);
-        int getNumberOfKeywords();
-        void getListOfKeywords(std::list<std::string>& list);
+        void parse(const std::string &path, RawDeck& outputDeck);
         virtual ~Parser();
     private:
-        std::string m_dataFilePath;
         Logger m_logger;
-        std::list<KeywordRecordSet> m_keywordRawDatas;
         void initInputStream(const std::string &path, std::ifstream& file);
-        void readKeywordAndDataTokens(std::ifstream& inputstream);
-        bool isKeyword(const std::string& line);
-        void addDataToDataToken(const std::string& line, KeywordRecordSet& currentKeywordRecordSet);
+        void readRawDeck(std::ifstream& inputstream, RawDeck& outputDeck);
+        void addRawRecordStringToRawKeyword(const std::string& line, RawKeyword& currentKeywordRecordSet);
         bool looksLikeData(const std::string& line);
         void checkInputFile(const std::string& pathToInputFile);
         

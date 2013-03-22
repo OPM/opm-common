@@ -17,35 +17,21 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <utility>
-#include "KeywordRecordSet.hpp"
+#include "RawDeck.hpp"
+
 namespace Opm {
 
-    KeywordRecordSet::KeywordRecordSet() {
-    }
-    
-    KeywordRecordSet::KeywordRecordSet(const std::string& keyword, const std::list<std::string>& dataElements) {
-        setKeyword(keyword);
-        m_data = dataElements;
-    }
-    
-    KeywordRecordSet::KeywordRecordSet(const std::string& keyword) {
-        m_keyword = keyword;
+    RawDeck::RawDeck() {
     }
 
-    void KeywordRecordSet::setKeyword(const std::string& keyword) {
-        m_keyword = keyword;
+    void RawDeck::addKeyword(const RawKeyword& keyword){
+        m_keywords.push_back(keyword);
     }
     
-    void KeywordRecordSet::addDataElement(const std::string& element) {
-        m_data.push_back(element);
+    unsigned int RawDeck::getNumberOfKeywords() {
+        return m_keywords.size();
     }
 
-    std::string KeywordRecordSet::getKeyword() {
-        return m_keyword;
-    }
-    
-    KeywordRecordSet::~KeywordRecordSet() {
+    RawDeck::~RawDeck() {
     }
 }
-

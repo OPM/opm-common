@@ -21,7 +21,6 @@
 #include <regex.h>
 
 #include <boost/filesystem.hpp>
-namespace fs = boost::filesystem;
 #include <boost/algorithm/string.hpp>
 
 #include "Parser.hpp"
@@ -31,44 +30,34 @@ namespace Opm {
     Parser::Parser() {
     }
 
-    Parser::Parser(const std::string &path) {
-        m_dataFilePath = path;
-    }
-    
-    void Parser::parse() {
-        parse(m_dataFilePath);
-    }
-    
-    void Parser::parse(const std::string &path) {
+    void Parser::parse(const std::string &path, RawDeck& outputDeck) {
         checkInputFile(path);
         std::ifstream file;
         initInputStream(path, file);
-        
-        readKeywordAndDataTokens(file);
-        
+
+        readRawDeck(file, outputDeck);
+
         file.close();
     }
 
-    int Parser::getNumberOfKeywords() {
-        return m_keywordRawDatas.size();
-    }
-
-    void Parser::readKeywordAndDataTokens(std::ifstream& inputstream) {
+    void Parser::readRawDeck(std::ifstream& inputstream, RawDeck& outputDeck) {
         std::string line;
-        KeywordRecordSet currentKeywordRecordSet;
+        std::string keyword;
+        RawKeyword currentRawKeyword;
         while (std::getline(inputstream, line)) {
-            if (isKeyword(line)) {
-                currentKeywordRecordSet = KeywordRecordSet(line);
-                m_keywordRawDatas.push_back(currentKeywordRecordSet);
-            } else {
-                addDataToDataToken(line, currentKeywordRecordSet);
+            if (RawKeyword::tryGetValidKeyword(line, keyword)) {
+                currentRawKeyword = RawKeyword(keyword);
+                outputDeck.addKeyword(currentRawKeyword);
+            }
+            else {
+                addRawRecordStringToRawKeyword(line, currentRawKeyword);
             }
         }
     }
 
-    void Parser::addDataToDataToken(const std::string& line, KeywordRecordSet& currentKeywordRecordSet) {
-        if (currentKeywordRecordSet.getKeyword() != "" && looksLikeData(line)) {
-            currentKeywordRecordSet.addDataElement(line);
+    void Parser::addRawRecordStringToRawKeyword(const std::string& line, RawKeyword& currentRawKeyword) {
+        if (currentRawKeyword.getKeyword() != "" && looksLikeData(line)) {
+            currentRawKeyword.addRawRecordString(line);
         }
     }
 
@@ -79,31 +68,13 @@ namespace Opm {
         } else if (boost::algorithm::trim_copy(line).length() == 0) {
             m_logger.debug("EMPTY LINE     <" + line + ">");
             return false;
+        } else if (line.substr(0, 1) == "/") {
+            m_logger.debug("END OF RECORD  <" + line + ">");
+            return false;
         } else {
             m_logger.debug("LOOKS LIKE DATA<" + line + ">");
             return true;
         }
-    }
-
-    bool Parser::isKeyword(const std::string& line) {
-        std::string keywordRegex = "^[A-Z]{1,8}$";
-        int status;
-        regex_t re;
-        regmatch_t rm;
-        if (regcomp(&re, keywordRegex.c_str(), REG_EXTENDED) != 0) {
-            m_logger.error("Unable to compile regular expression for keyword! Expression: " + keywordRegex);
-            throw std::runtime_error("Unable to compile regular expression for keyword! Expression: " + keywordRegex);
-        }
-
-        std::string trimmedRight = boost::trim_right_copy(line);
-        status = regexec(&re, trimmedRight.c_str(), 1, &rm, 0);
-        regfree(&re);
-
-        if (status == 0) {
-            m_logger.debug("KEYWORD LINE   <" + line + ">");
-            return true;
-        }
-        return false;
     }
 
     void Parser::initInputStream(const std::string &path, std::ifstream& file) {
@@ -112,8 +83,8 @@ namespace Opm {
     }
 
     void Parser::checkInputFile(const std::string& inputPath) {
-        fs::path pathToInputFile(inputPath);
-        if (!fs::is_regular_file(pathToInputFile)) {
+        boost::filesystem::path pathToInputFile(inputPath);
+        if (!boost::filesystem::is_regular_file(pathToInputFile)) {
             m_logger.error("Unable to open file with path: " + inputPath);
             throw std::invalid_argument("Given path is not a valid file-path, path: " + inputPath);
         }
