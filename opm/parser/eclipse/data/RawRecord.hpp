@@ -21,11 +21,11 @@ namespace Opm {
         static const char QUOTE;
         RawRecord();
         RawRecord(const std::string& singleRecordString);
+        void getRecord(std::string& recordString);
         static bool isCompleteRecordString(const std::string& candidateRecordString);
         virtual ~RawRecord();
     private:
         std::string m_sanitizedRecordString;
-        std::list<std::string> m_recordElements;
         void sanitizeInputString(const std::string& singleRecordString);
         static unsigned int findTerminatingSlash(const std::string& singleRecordString);
     };

@@ -12,16 +12,18 @@
 #include <utility>
 #include <list>
 
+#include "opm/parser/eclipse/Logger.hpp"
 #include "RawRecord.hpp"
 
 namespace Opm {
-
     class RawKeyword {
     public:
         RawKeyword();
         RawKeyword(const std::string& keyword);
-        static bool tryGetValidKeyword(const std::string& line, std::string& result);
+        bool tryGetValidKeyword(const std::string& line, std::string& result);
         std::string getKeyword();
+        void getRecords(std::list<RawRecord>& records);
+        unsigned int getNumberOfRecords();
         void setKeyword(const std::string& keyword);
         void addRawRecordString(const std::string& partialRecordString);
         virtual ~RawKeyword();

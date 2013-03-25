@@ -20,6 +20,7 @@
 #include <regex.h>
 #include <boost/algorithm/string.hpp>
 #include "RawKeyword.hpp"
+#include <iostream>
 
 namespace Opm {
 
@@ -50,13 +51,25 @@ namespace Opm {
         }
     }
 
+    unsigned int RawKeyword::getNumberOfRecords() {
+        return m_records.size();
+    }
+
+    void RawKeyword::getRecords(std::list<RawRecord>& records) {
+        records = m_records;
+    }
+
     std::string RawKeyword::getKeyword() {
         return m_keyword;
     }
 
     bool RawKeyword::tryGetValidKeyword(const std::string& keywordCandidate, std::string& result) {
         result = boost::trim_right_copy(keywordCandidate.substr(0, 8));
-        return isValidKeyword(result);
+        if (isValidKeyword(result)) {
+            Logger::debug("KEYWORD     <" + keywordCandidate + ">");
+            return true;
+        }
+        return false;
     }
 
     bool RawKeyword::isValidKeyword(const std::string& keywordCandidate) {
@@ -76,7 +89,7 @@ namespace Opm {
         }
         return false;
     }
-    
+
     RawKeyword::~RawKeyword() {
     }
 }

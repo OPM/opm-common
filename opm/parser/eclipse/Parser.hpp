@@ -35,13 +35,7 @@ namespace Opm {
         void parse(const std::string &path, RawDeck& outputDeck);
         virtual ~Parser();
     private:
-        Logger m_logger;
-        void initInputStream(const std::string &path, std::ifstream& file);
-        void readRawDeck(std::ifstream& inputstream, RawDeck& outputDeck);
-        void addRawRecordStringToRawKeyword(const std::string& line, RawKeyword& currentKeywordRecordSet);
-        bool looksLikeData(const std::string& line);
-        void checkInputFile(const std::string& pathToInputFile);
-        
+        //Logger m_logger;
     };
 } // namespace Opm
 #endif	/* PARSER_H */

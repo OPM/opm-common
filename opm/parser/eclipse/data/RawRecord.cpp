@@ -18,7 +18,7 @@
  */
 
 #include <boost/algorithm/string.hpp>
-
+#include <iostream>
 #include "RawRecord.hpp"
 using namespace std;
 
@@ -36,6 +36,10 @@ namespace Opm {
      */
     RawRecord::RawRecord(const std::string& singleRecordString) {
         sanitizeInputString(singleRecordString);
+    }
+
+    void RawRecord::getRecord(std::string& recordString) {
+        recordString = m_sanitizedRecordString;
     }
 
     bool RawRecord::isCompleteRecordString(const std::string& candidateRecordString) {

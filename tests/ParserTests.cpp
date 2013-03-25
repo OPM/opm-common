@@ -35,18 +35,20 @@ BOOST_AUTO_TEST_CASE(Initializing) {
 }
 
 BOOST_AUTO_TEST_CASE(ParseWithInvalidInputFileThrows) {
-    Parser parser;
+    Parser *parser = new Parser();
     RawDeck rawDeck;
-    BOOST_REQUIRE_THROW(parser.parse("nonexistingfile.asdf", rawDeck), std::invalid_argument);
+    BOOST_REQUIRE_THROW(parser -> parse("nonexistingfile.asdf", rawDeck), std::invalid_argument);
+    delete parser;
 }
 
 BOOST_AUTO_TEST_CASE(ParseWithValidFileSetOnParseCallNoThrow) {
 
     boost::filesystem::path singleKeywordFile("testdata/small.data");
-    Parser parser;
+    Parser *parser = new Parser();
     RawDeck rawDeck;
 
-    BOOST_REQUIRE_NO_THROW(parser.parse(singleKeywordFile.string(), rawDeck));
+    BOOST_REQUIRE_NO_THROW(parser -> parse(singleKeywordFile.string(), rawDeck));
+    delete parser;
 }
 
 BOOST_AUTO_TEST_CASE(ParseWithInValidFileSetOnParseCallThrows) {
@@ -65,6 +67,18 @@ BOOST_AUTO_TEST_CASE(ParseFileWithFewKeywords) {
 
     parser.parse(singleKeywordFile.string(), rawDeck);
     BOOST_REQUIRE_EQUAL((unsigned)4, rawDeck.getNumberOfKeywords());
+
+    RawKeyword* matchingKeyword = rawDeck.getKeyword("A");
+    BOOST_REQUIRE_EQUAL("A", matchingKeyword->getKeyword());
+    
+    std::list<RawRecord> records;
+    matchingKeyword->getRecords(records);
+    BOOST_REQUIRE_EQUAL((unsigned) 1, records.size());
+    
+    RawRecord theRecord = records.front();
+    std::string recordString;
+    theRecord.getRecord(recordString);
+    BOOST_REQUIRE_EQUAL("\'sti til fil/den er her\'", recordString);
 }
 
 //NOTE: needs statoil dataset
