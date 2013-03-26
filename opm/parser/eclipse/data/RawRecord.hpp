@@ -9,7 +9,6 @@
 #define	RECORD_HPP
 
 #include <string>
-#include <list>
 #include <vector>
 
 
@@ -21,12 +20,15 @@ namespace Opm {
         static const char QUOTE;
         RawRecord();
         RawRecord(const std::string& singleRecordString);
-        void getRecord(std::string& recordString);
+        void getRecordString(std::string& recordString);
+        void getRecords(std::vector<std::string>& recordItems);
         static bool isCompleteRecordString(const std::string& candidateRecordString);
         virtual ~RawRecord();
     private:
         std::string m_sanitizedRecordString;
-        void sanitizeInputString(const std::string& singleRecordString);
+        std::vector<std::string> m_recordItems;
+        void setRecordString(const std::string& singleRecordString);
+        bool stringContains(std::string collection, char candidate);
         static unsigned int findTerminatingSlash(const std::string& singleRecordString);
     };
     typedef boost::shared_ptr<RawRecord> RawRecordPtr;

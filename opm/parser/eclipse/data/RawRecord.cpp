@@ -16,9 +16,10 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-#include <boost/algorithm/string.hpp>
 #include <iostream>
+#include <stdexcept>
+#include <boost/algorithm/string.hpp>
+
 #include "RawRecord.hpp"
 using namespace std;
 
@@ -35,10 +36,60 @@ namespace Opm {
      * manual.
      */
     RawRecord::RawRecord(const std::string& singleRecordString) {
-        sanitizeInputString(singleRecordString);
+        if (isCompleteRecordString(singleRecordString)) {
+            setRecordString(singleRecordString);
+        } else {
+            throw std::invalid_argument("Input string is not a complete record string,"
+                    " offending string: " + singleRecordString);
+        }
+
+        std::string tokenSeparators = "\t ";
+        std::string quoteSeparators = "\'\"";
+        char currentChar;
+        char tokenStarter;
+        std::string currentToken = "";
+        for (unsigned i = 0; i < m_sanitizedRecordString.size(); i++) {
+            currentChar = m_sanitizedRecordString[i];
+            if (stringContains(tokenSeparators, currentChar)) {
+                if (stringContains(quoteSeparators, tokenStarter)) {
+                    currentToken += currentChar;
+                } else {
+                    if (currentToken.size() > 0) {
+                        m_recordItems.push_back(currentToken);
+                        currentToken.clear();
+                    }
+                    tokenStarter = currentChar;
+                }
+            } else if (stringContains(quoteSeparators, currentChar)) {
+                if (currentChar == tokenStarter) {
+                    if (currentToken.size() > 0) {
+                        m_recordItems.push_back(currentToken);
+                        currentToken.clear();
+                    }
+                    tokenStarter = '\0';
+                } else {
+                    tokenStarter = currentChar;
+                    currentToken.clear();
+                }
+            } else {
+                currentToken += currentChar;
+            }
+        }
+        if (currentToken.size() > 0) {
+            m_recordItems.push_back(currentToken);
+            currentToken.clear();
+        }
     }
 
-    void RawRecord::getRecord(std::string& recordString) {
+    bool RawRecord::stringContains(std::string collection, char candidate) {
+        return std::string::npos != collection.find(candidate);
+    }
+
+    void RawRecord::getRecords(std::vector<std::string>& recordItems) {
+        recordItems = m_recordItems;
+    }
+
+    void RawRecord::getRecordString(std::string& recordString) {
         recordString = m_sanitizedRecordString;
     }
 
@@ -47,7 +98,7 @@ namespace Opm {
         return (terminatingSlash < candidateRecordString.size());
     }
 
-    void RawRecord::sanitizeInputString(const std::string& singleRecordString) {
+    void RawRecord::setRecordString(const std::string& singleRecordString) {
         unsigned terminatingSlash = findTerminatingSlash(singleRecordString);
         m_sanitizedRecordString = singleRecordString.substr(0, terminatingSlash);
         boost::trim(m_sanitizedRecordString);

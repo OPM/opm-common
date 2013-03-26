@@ -21,6 +21,8 @@
 #include <stdexcept>
 #include <boost/test/unit_test.hpp>
 #include <opm/parser/eclipse/data/RawKeyword.hpp>
+#include <opm/parser/eclipse/data/RawRecord.hpp>
+
 
 BOOST_AUTO_TEST_CASE(EmptyConstructorEmptyKeyword) {
     Opm::RawKeyword keyword;
@@ -64,3 +66,18 @@ BOOST_AUTO_TEST_CASE(Set8CharKeywordWithTrailingWhitespaceKeywordTrimmed) {
     BOOST_CHECK(keyword.getKeyword() == "GOODONEE");
 }
 
+BOOST_AUTO_TEST_CASE(RawRecordSetRecordCheckCorrectTrimAndSplit) {
+    Opm::RawRecordPtr record(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20                                       /"));
+    std::string recordString;
+    record -> getRecordString(recordString);
+    BOOST_REQUIRE_EQUAL("'NODIR '  'REVERS'  1  20", recordString);
+   
+    std::vector<std::string> recordElements;
+    record -> getRecords(recordElements);
+    BOOST_REQUIRE_EQUAL((unsigned)4, recordElements.size());
+    
+    BOOST_REQUIRE_EQUAL("NODIR ", recordElements[0]);
+    BOOST_REQUIRE_EQUAL("REVERS", recordElements[1]);
+    BOOST_REQUIRE_EQUAL("1", recordElements[2]);
+    BOOST_REQUIRE_EQUAL("20", recordElements[3]);
+}
