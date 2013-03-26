@@ -32,7 +32,7 @@ namespace Opm {
                 return (*it);
             }
         }
-        return RawKeywordPtr();
+        return RawKeywordPtr(new RawKeyword());
     }
 
     void RawDeck::readDataIntoDeck(const std::string& path) {
@@ -45,7 +45,7 @@ namespace Opm {
         std::string keywordString;
         RawKeywordPtr currentRawKeyword;
         while (std::getline(inputstream, line)) {
-            if (RawKeyword::tryGetValidKeyword(line, keywordString)) {
+            if (RawKeyword::tryParseKeyword(line, keywordString)) {
                 currentRawKeyword = RawKeywordPtr(new RawKeyword(keywordString));
                 m_keywords.push_back(currentRawKeyword);
             } else if (currentRawKeyword != NULL) {

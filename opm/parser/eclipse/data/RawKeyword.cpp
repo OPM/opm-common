@@ -44,7 +44,7 @@ namespace Opm {
     void RawKeyword::addRawRecordString(const std::string& partialRecordString) {
         m_partialRecordString += partialRecordString;
         if (RawRecord::isCompleteRecordString(m_partialRecordString)) {
-            RawRecord record(m_partialRecordString);
+            RawRecordPtr record(new RawRecord(m_partialRecordString));
             m_records.push_back(record);
             m_partialRecordString.clear();
         }
@@ -54,7 +54,7 @@ namespace Opm {
         return m_records.size();
     }
 
-    void RawKeyword::getRecords(std::list<RawRecord>& records) {
+    void RawKeyword::getRecords(std::list<RawRecordPtr>& records) {
         records = m_records;
     }
 
@@ -62,7 +62,7 @@ namespace Opm {
         return m_keyword;
     }
 
-    bool RawKeyword::tryGetValidKeyword(const std::string& keywordCandidate, std::string& result) {
+    bool RawKeyword::tryParseKeyword(const std::string& keywordCandidate, std::string& result) {
         result = boost::trim_right_copy(keywordCandidate.substr(0, 8));
         if (isValidKeyword(result)) {
             Logger::debug("KEYWORD     <" + keywordCandidate + ">");

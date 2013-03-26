@@ -2,7 +2,7 @@
 HALLOENZ
 
 -- Saa bare en - OK
-A
+INCLUDE
 'sti til fil/den er her' /
 -- Saa kommer en for lang en, skal bli "trunkert", slik at keywordet blir ABCXYZFF - OK
 
@@ -16,7 +16,9 @@ ABC5ADFC
 -- Og en med mellomrom etter - OK
 
 ABCDAD  
-
+ 4.5 5 5 /
+ 3 3 fisk /
+/
 
 -- Og en med liten bokstav i IKKE OK
 

@@ -21,9 +21,9 @@ namespace Opm {
     public:
         RawKeyword();
         RawKeyword(const std::string& keyword);
-        static bool tryGetValidKeyword(const std::string& line, std::string& result);
+        static bool tryParseKeyword(const std::string& line, std::string& result);
         std::string getKeyword();
-        void getRecords(std::list<RawRecord>& records);
+        void getRecords(std::list<RawRecordPtr>& records);
         unsigned int getNumberOfRecords();
         void setKeyword(const std::string& keyword);
         void addRawRecordString(const std::string& partialRecordString);
@@ -31,12 +31,11 @@ namespace Opm {
 
     private:
         std::string m_keyword;
-        std::list<RawRecord> m_records;
+        std::list<RawRecordPtr> m_records;
         std::string m_partialRecordString;
         static bool isValidKeyword(const std::string& keywordCandidate);
     };
     typedef boost::shared_ptr<RawKeyword> RawKeywordPtr;
-
 }
 #endif	/* RAWKEYWORD_HPP */
 

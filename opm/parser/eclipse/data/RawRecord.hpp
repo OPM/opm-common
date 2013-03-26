@@ -29,6 +29,7 @@ namespace Opm {
         void sanitizeInputString(const std::string& singleRecordString);
         static unsigned int findTerminatingSlash(const std::string& singleRecordString);
     };
+    typedef boost::shared_ptr<RawRecord> RawRecordPtr;
 }
 
 #endif	/* RECORD_HPP */

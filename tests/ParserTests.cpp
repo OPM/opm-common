@@ -62,17 +62,24 @@ BOOST_AUTO_TEST_CASE(ParseFileWithFewKeywords) {
     RawDeckPtr rawDeck = parser -> parse(singleKeywordFile.string());
     BOOST_REQUIRE_EQUAL((unsigned) 4, rawDeck -> getNumberOfKeywords());
 
-    RawKeywordPtr matchingKeyword = rawDeck -> getKeyword("A");
-    BOOST_REQUIRE_EQUAL("A", matchingKeyword->getKeyword());
+    RawKeywordPtr matchingKeyword = rawDeck -> getKeyword("INCLUDE");
+    BOOST_REQUIRE_EQUAL("INCLUDE", matchingKeyword->getKeyword());
 
-    std::list<RawRecord> records;
+    std::list<RawRecordPtr> records;
     matchingKeyword->getRecords(records);
     BOOST_REQUIRE_EQUAL((unsigned) 1, records.size());
 
-    RawRecord theRecord = records.front();
+    RawRecordPtr theRecord = records.front();
     std::string recordString;
-    theRecord.getRecord(recordString);
+    theRecord -> getRecord(recordString);
     BOOST_REQUIRE_EQUAL("\'sti til fil/den er her\'", recordString);
+    
+    RawKeywordPtr matchingKeyword2 = rawDeck -> getKeyword("ABCDAD");
+    BOOST_REQUIRE_EQUAL("ABCDAD", matchingKeyword2->getKeyword());
+
+    std::list<RawRecordPtr> records2;
+    matchingKeyword2->getRecords(records2);
+    BOOST_REQUIRE_EQUAL((unsigned) 2, records2.size());
 }
 
 //NOTE: needs statoil dataset
