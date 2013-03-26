@@ -23,7 +23,6 @@
 #include <iostream>
 
 namespace Opm {
-
     RawKeyword::RawKeyword() {
     }
 

@@ -35,46 +35,40 @@ BOOST_AUTO_TEST_CASE(Initializing) {
 }
 
 BOOST_AUTO_TEST_CASE(ParseWithInvalidInputFileThrows) {
-    Parser *parser = new Parser();
-    RawDeck rawDeck;
-    BOOST_REQUIRE_THROW(parser -> parse("nonexistingfile.asdf", rawDeck), std::invalid_argument);
-    delete parser;
+    ParserPtr parser(new Parser());
+    BOOST_REQUIRE_THROW(parser -> parse("nonexistingfile.asdf"), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(ParseWithValidFileSetOnParseCallNoThrow) {
 
     boost::filesystem::path singleKeywordFile("testdata/small.data");
-    Parser *parser = new Parser();
-    RawDeck rawDeck;
+    ParserPtr parser(new Parser());
 
-    BOOST_REQUIRE_NO_THROW(parser -> parse(singleKeywordFile.string(), rawDeck));
-    delete parser;
+    BOOST_REQUIRE_NO_THROW(parser -> parse(singleKeywordFile.string()));
+
 }
 
 BOOST_AUTO_TEST_CASE(ParseWithInValidFileSetOnParseCallThrows) {
     boost::filesystem::path singleKeywordFile("testdata/nosuchfile.data");
-    Parser parser;
-    RawDeck rawDeck;
-
-    BOOST_REQUIRE_THROW(parser.parse(singleKeywordFile.string(), rawDeck), std::invalid_argument);
+    ParserPtr parser(new Parser());
+    BOOST_REQUIRE_THROW(parser -> parse(singleKeywordFile.string()), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(ParseFileWithFewKeywords) {
     boost::filesystem::path singleKeywordFile("testdata/small.data");
 
-    Parser parser;
-    RawDeck rawDeck;
+    ParserPtr parser(new Parser());
 
-    parser.parse(singleKeywordFile.string(), rawDeck);
-    BOOST_REQUIRE_EQUAL((unsigned)4, rawDeck.getNumberOfKeywords());
+    RawDeckPtr rawDeck = parser -> parse(singleKeywordFile.string());
+    BOOST_REQUIRE_EQUAL((unsigned) 4, rawDeck -> getNumberOfKeywords());
 
-    RawKeyword* matchingKeyword = rawDeck.getKeyword("A");
+    RawKeywordPtr matchingKeyword = rawDeck -> getKeyword("A");
     BOOST_REQUIRE_EQUAL("A", matchingKeyword->getKeyword());
-    
+
     std::list<RawRecord> records;
     matchingKeyword->getRecords(records);
     BOOST_REQUIRE_EQUAL((unsigned) 1, records.size());
-    
+
     RawRecord theRecord = records.front();
     std::string recordString;
     theRecord.getRecord(recordString);
@@ -86,11 +80,10 @@ BOOST_AUTO_TEST_CASE(ParseFileWithFewKeywords) {
 BOOST_AUTO_TEST_CASE(ParseFileWithManyKeywords) {
     boost::filesystem::path multipleKeywordFile("testdata/gurbat_trimmed.DATA");
 
-    Parser parser;
-    RawDeck rawDeck;
-
-    parser.parse(multipleKeywordFile.string(), rawDeck);
-    BOOST_REQUIRE_EQUAL((unsigned)18, rawDeck.getNumberOfKeywords());
+    ParserPtr parser(new Parser());
+    
+    RawDeckPtr rawDeck = parser -> parse(multipleKeywordFile.string());
+    BOOST_REQUIRE_EQUAL((unsigned) 18, rawDeck -> getNumberOfKeywords());
 }
 
 //NOTE: needs statoil dataset
@@ -98,9 +91,8 @@ BOOST_AUTO_TEST_CASE(ParseFileWithManyKeywords) {
 BOOST_AUTO_TEST_CASE(ParseFullTestFile) {
     boost::filesystem::path multipleKeywordFile("testdata/ECLIPSE.DATA");
 
-    Parser parser;
-    RawDeck rawDeck;
-
-    parser.parse(multipleKeywordFile.string(), rawDeck);
-    BOOST_REQUIRE_EQUAL((unsigned)73, rawDeck.getNumberOfKeywords());
+    ParserPtr parser(new Parser());
+   
+    RawDeckPtr rawDeck = parser -> parse(multipleKeywordFile.string());
+    BOOST_REQUIRE_EQUAL((unsigned) 73, rawDeck -> getNumberOfKeywords());
 }

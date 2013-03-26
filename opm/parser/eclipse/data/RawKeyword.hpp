@@ -11,6 +11,7 @@
 #include <string>
 #include <utility>
 #include <list>
+#include <boost/shared_ptr.hpp>
 
 #include "opm/parser/eclipse/Logger.hpp"
 #include "RawRecord.hpp"
@@ -20,7 +21,7 @@ namespace Opm {
     public:
         RawKeyword();
         RawKeyword(const std::string& keyword);
-        bool tryGetValidKeyword(const std::string& line, std::string& result);
+        static bool tryGetValidKeyword(const std::string& line, std::string& result);
         std::string getKeyword();
         void getRecords(std::list<RawRecord>& records);
         unsigned int getNumberOfRecords();
@@ -34,6 +35,8 @@ namespace Opm {
         std::string m_partialRecordString;
         static bool isValidKeyword(const std::string& keywordCandidate);
     };
+    typedef boost::shared_ptr<RawKeyword> RawKeywordPtr;
+
 }
 #endif	/* RAWKEYWORD_HPP */
 

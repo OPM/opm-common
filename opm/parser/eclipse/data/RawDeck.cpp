@@ -26,13 +26,13 @@ namespace Opm {
     RawDeck::RawDeck() {
     }
     
-    RawKeyword* RawDeck::getKeyword(const std::string& keyword) {
-        for(std::list<RawKeyword*>::iterator it = m_keywords.begin(); it != m_keywords.end(); it++) {
+    RawKeywordPtr RawDeck::getKeyword(const std::string& keyword) {
+        for(std::list<RawKeywordPtr>::iterator it = m_keywords.begin(); it != m_keywords.end(); it++) {
             if ((*it)->getKeyword() == keyword) {
                 return (*it);
             }
         }
-        return NULL;
+        return RawKeywordPtr();
     }
 
     void RawDeck::readDataIntoDeck(const std::string& path) {
@@ -43,10 +43,10 @@ namespace Opm {
 
         std::string line;
         std::string keywordString;
-        RawKeyword* currentRawKeyword;
+        RawKeywordPtr currentRawKeyword;
         while (std::getline(inputstream, line)) {
-            if (currentRawKeyword -> tryGetValidKeyword(line, keywordString)) {
-                currentRawKeyword = new RawKeyword(keywordString);
+            if (RawKeyword::tryGetValidKeyword(line, keywordString)) {
+                currentRawKeyword = RawKeywordPtr(new RawKeyword(keywordString));
                 m_keywords.push_back(currentRawKeyword);
             } else if (currentRawKeyword != NULL) {
                 addRawRecordStringToRawKeyword(line, currentRawKeyword);
@@ -55,7 +55,7 @@ namespace Opm {
         inputstream.close();
     }
 
-    void RawDeck::addRawRecordStringToRawKeyword(const std::string& line, RawKeyword* currentRawKeyword) {
+    void RawDeck::addRawRecordStringToRawKeyword(const std::string& line, RawKeywordPtr currentRawKeyword) {
         if (looksLikeData(line)) {
             currentRawKeyword->addRawRecordString(line);
         }
@@ -90,9 +90,5 @@ namespace Opm {
     }
 
     RawDeck::~RawDeck() {
-        while(!m_keywords.empty()) {
-            delete m_keywords.front(); 
-            m_keywords.pop_front();
-        }
     }
 }

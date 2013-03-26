@@ -23,10 +23,12 @@ namespace Opm {
     Parser::Parser() {
     }
 
-    void Parser::parse(const std::string &path, RawDeck& outputDeck) {
+    RawDeckPtr Parser::parse(const std::string &path) {
         Logger::info("Starting parsing of file: " + path);
-        outputDeck.readDataIntoDeck(path);
+        RawDeckPtr rawDeck(new RawDeck());
+        rawDeck -> readDataIntoDeck(path);
         Logger::info("Done parsing of file: " + path);
+        return rawDeck;
     }
 
     Parser::~Parser() {

@@ -21,6 +21,7 @@
 #define	PARSER_H
 #include <string>
 #include <fstream>
+#include <boost/shared_ptr.hpp>
 
 #include "Logger.hpp"
 #include "data/RawKeyword.hpp"
@@ -32,11 +33,13 @@ namespace Opm {
     class Parser {
     public:
         Parser();
-        void parse(const std::string &path, RawDeck& outputDeck);
+        RawDeckPtr parse(const std::string &path);
         virtual ~Parser();
     private:
         //Logger m_logger;
     };
+    
+    typedef boost::shared_ptr<Parser> ParserPtr;
 } // namespace Opm
 #endif	/* PARSER_H */
 
