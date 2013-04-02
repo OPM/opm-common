@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(ParseFileWithFewKeywords) {
 //NOTE: needs statoil dataset
 
 BOOST_AUTO_TEST_CASE(ParseFileWithManyKeywords) {
-    boost::filesystem::path multipleKeywordFile("testdata/gurbat_trimmed.DATA");
+    boost::filesystem::path multipleKeywordFile("testdata/statoil/gurbat_trimmed.DATA");
 
     ParserPtr parser(new Parser());
     
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(ParseFileWithManyKeywords) {
 //NOTE: needs statoil dataset
 
 BOOST_AUTO_TEST_CASE(ParseFullTestFile) {
-    boost::filesystem::path multipleKeywordFile("testdata/ECLIPSE.DATA");
+    boost::filesystem::path multipleKeywordFile("testdata/statoil/ECLIPSE.DATA");
 
     ParserPtr parser(new Parser());
    
