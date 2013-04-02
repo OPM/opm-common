@@ -21,33 +21,25 @@
 #define PARSER_H
 #include <string>
 #include <fstream>
+#include <boost/shared_ptr.hpp>
 
 #include "Logger.hpp"
-#include "data/KeywordRecordSet.hpp"
+#include "data/RawKeyword.hpp"
+#include "data/RawDeck.hpp"
+
 
 namespace Opm {
 
     class Parser {
     public:
         Parser();
-        Parser(const std::string &path);
-        void parse();
-        void parse(const std::string &path);
-        int getNumberOfKeywords();
-        void getListOfKeywords(std::list<std::string>& list);
+        RawDeckPtr parse(const std::string &path);
         virtual ~Parser();
     private:
-        std::string m_dataFilePath;
-        Logger m_logger;
-        std::list<KeywordRecordSet> m_keywordRawDatas;
-        void initInputStream(const std::string &path, std::ifstream& file);
-        void readKeywordAndDataTokens(std::ifstream& inputstream);
-        bool isKeyword(const std::string& line);
-        void addDataToDataToken(const std::string& line, KeywordRecordSet& currentKeywordRecordSet);
-        bool looksLikeData(const std::string& line);
-        void checkInputFile(const std::string& pathToInputFile);
-        
+        //Logger m_logger;
     };
+    
+    typedef boost::shared_ptr<Parser> ParserPtr;
 } // namespace Opm
 #endif  /* PARSER_H */
 

@@ -27,23 +27,20 @@ namespace Opm {
     const int Logger::INFO = 1;
     const int Logger::ERROR = 2;
 
-    Logger::Logger(int logLevel) {
-        m_logLevel = logLevel;
-        m_logFile = "log.log";
-        initLogger();
-    }
-
-    Logger::Logger(const std::string& path, int logLevel) {
-        m_logLevel = logLevel;
-        m_logFile = path;
-        initLogger();
-    }
+    std::string Logger::m_logFile = "log.log";
+    int Logger::m_logLevel = INFO;
+    std::ofstream Logger::m_logStream;
 
     void Logger::setLogLevel(int logLevel) {
         m_logLevel = logLevel;
     }
 
+    void Logger::setPath(const std::string& path) {
+        m_logFile = path;
+    }
+
     void Logger::debug(const std::string& message) {
+
         if (m_logLevel <= DEBUG) {
             log(message, "DEBUG");
         }

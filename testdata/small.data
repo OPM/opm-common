@@ -1,18 +1,25 @@
--- Dette er en supertest, 8 tegn kommer
+-- Dette er en supertest - OK
 HALLOENZ
 
--- Saa bare en
-A
-
--- Saa kommer en for lang en
+-- Saa bare en - OK
+INCLUDE
+'sti til fil/den er her' /
+-- Saa kommer en for lang en, skal bli "trunkert", slik at keywordet blir ABCXYZFF - OK
 
 ABCXYZFFD
 
--- Og en med tall
+-- Og en med tall - IKKE OK
 
 ABC5ADFC
 
 
--- Og en med mellomrom etter
+-- Og en med mellomrom etter - OK
 
-ABC5AD  
+ABCDAD  
+ 4.5 5 5 /
+ 3 3 fisk /
+/
+
+-- Og en med liten bokstav i IKKE OK
+
+ABCDAd  

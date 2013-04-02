@@ -31,21 +31,19 @@ namespace Opm {
         static const int INFO;
         static const int ERROR;
         
-        Logger(int logLevel = INFO);
-        Logger(const std::string& path, int logLevel = INFO);
-        
-        void setLogLevel(int logLevel);
-        void debug(const std::string& message);
-        void info(const std::string& message);
-        void error(const std::string& message);
+        static void setLogLevel(int logLevel);
+        static void setPath(const std::string& path);
+        static void debug(const std::string& message);
+        static void info(const std::string& message);
+        static void error(const std::string& message);
         virtual ~Logger();
     private:
-        std::string m_logFile;
-        std::ofstream m_logStream;
-        int m_logLevel;
-        void initLogger();
-        void log(const std::string& message, std::string logLevel);
-        void initLoggingConstants();
+        static std::string m_logFile;
+        static std::ofstream m_logStream;
+        static int m_logLevel;
+        static void initLogger();
+        static void log(const std::string& message, std::string logLevel);
+        static void initLoggingConstants();
     };
 }// namespace Opm
 #endif	/* LOGGER_HPP */
