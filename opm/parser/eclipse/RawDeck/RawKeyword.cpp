@@ -30,6 +30,33 @@ namespace Opm {
         setKeyword(keyword);
     }
 
+     bool RawKeyword::tryParseKeyword(const std::string& keywordCandidate, std::string& result) {
+        result = boost::trim_right_copy(keywordCandidate.substr(0, 8));
+        if (isValidKeyword(result)) {
+            Logger::debug("KEYWORD     <" + keywordCandidate + ">");
+            return true;
+        }
+        return false;
+    }
+     
+    bool RawKeyword::isValidKeyword(const std::string& keywordCandidate) {
+        std::string keywordRegex = "^[A-Z]{1,8}$";
+        int status;
+        regex_t re;
+        regmatch_t rm;
+        if (regcomp(&re, keywordRegex.c_str(), REG_EXTENDED) != 0) {
+            throw std::runtime_error("Unable to compile regular expression for keyword! Expression: " + keywordRegex);
+        }
+
+        status = regexec(&re, keywordCandidate.c_str(), 1, &rm, 0);
+        regfree(&re);
+
+        if (status == 0) {
+            return true;
+        }
+        return false;
+    }
+     
     void RawKeyword::setKeyword(const std::string& keyword) {
         m_keyword = boost::algorithm::trim_right_copy(keyword);
         if (!isValidKeyword(m_keyword)) {
@@ -60,33 +87,6 @@ namespace Opm {
 
     std::string RawKeyword::getKeyword() {
         return m_keyword;
-    }
-
-    bool RawKeyword::tryParseKeyword(const std::string& keywordCandidate, std::string& result) {
-        result = boost::trim_right_copy(keywordCandidate.substr(0, 8));
-        if (isValidKeyword(result)) {
-            Logger::debug("KEYWORD     <" + keywordCandidate + ">");
-            return true;
-        }
-        return false;
-    }
-
-    bool RawKeyword::isValidKeyword(const std::string& keywordCandidate) {
-        std::string keywordRegex = "^[A-Z]{1,8}$";
-        int status;
-        regex_t re;
-        regmatch_t rm;
-        if (regcomp(&re, keywordRegex.c_str(), REG_EXTENDED) != 0) {
-            throw std::runtime_error("Unable to compile regular expression for keyword! Expression: " + keywordRegex);
-        }
-
-        status = regexec(&re, keywordCandidate.c_str(), 1, &rm, 0);
-        regfree(&re);
-
-        if (status == 0) {
-            return true;
-        }
-        return false;
     }
 
     RawKeyword::~RawKeyword() {
