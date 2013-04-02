@@ -24,8 +24,8 @@
 #include <boost/shared_ptr.hpp>
 
 #include "Logger.hpp"
-#include "data/RawKeyword.hpp"
-#include "data/RawDeck.hpp"
+#include "RawDeck/RawKeyword.hpp"
+#include "RawDeck/RawDeck.hpp"
 
 
 namespace Opm {

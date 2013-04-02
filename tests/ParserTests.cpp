@@ -27,7 +27,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "opm/parser/eclipse/Parser.hpp"
-#include "opm/parser/eclipse/data/RawDeck.hpp"
+#include "opm/parser/eclipse/RawDeck/RawDeck.hpp"
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(Initializing) {

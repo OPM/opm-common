@@ -20,8 +20,8 @@
 #define BOOST_TEST_MODULE ParserTests
 #include <stdexcept>
 #include <boost/test/unit_test.hpp>
-#include <opm/parser/eclipse/data/RawKeyword.hpp>
-#include <opm/parser/eclipse/data/RawRecord.hpp>
+#include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
+#include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
 
 
 BOOST_AUTO_TEST_CASE(EmptyConstructorEmptyKeyword) {
