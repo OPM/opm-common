@@ -6,7 +6,7 @@
  */
 
 #ifndef RAWDECK_HPP
-#define	RAWDECK_HPP
+#define RAWDECK_HPP
 #include <list>
 #include <iostream>
 #include <boost/shared_ptr.hpp>
@@ -28,9 +28,9 @@ namespace Opm {
         bool looksLikeData(const std::string& line);
         void checkInputFile(const std::string& inputPath);
     };
-    
+  
     typedef boost::shared_ptr<RawDeck> RawDeckPtr;
 }
 
-#endif	/* RAWDECK_HPP */
+#endif  /* RAWDECK_HPP */
 

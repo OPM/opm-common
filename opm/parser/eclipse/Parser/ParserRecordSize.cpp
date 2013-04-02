@@ -16,27 +16,45 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef PARSER_KW_H
-#define PARSER_KW_H
 
 #include <string>
+#include <stdexcept>
+
+#include <opm/parser/eclipse/Parser/ParserConst.hpp>
+#include <opm/parser/eclipse/Parser/ParserEnums.hpp>
+#include <opm/parser/eclipse/Parser/ParserRecordSize.hpp>
 
 namespace Opm {
-  
-  class ParserKW {
-    
-  public:
-    ParserKW();
-    ParserKW(const std::string& name);
-    ~ParserKW();
-    
-    const std::string& getName();
 
+
+  ParserRecordSize::ParserRecordSize() {
+    recordSizeType = UNDEFINED;
+    fixedSize = 0;
+  }
+
+
+  ParserRecordSize::ParserRecordSize(size_t fixedSize) {
+    recordSizeType = FIXED;
+    this->fixedSize = fixedSize;
+  }
+
+
+  
+
+  
+  size_t ParserRecordSize::recordSize( ) {
+    if (recordSizeType == FIXED) {
+      return fixedSize;
+    } else
+      throw std::logic_error("Only the FIXED recordSize is supported.\n");
+  }
+  
+
+  
+  ParserRecordSize::~ParserRecordSize() {
     
-  private:
-    std::string m_name;  
-  };
+  }
+
   
 }
 
-#endif

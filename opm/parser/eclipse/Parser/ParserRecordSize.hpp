@@ -17,43 +17,35 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef PARSER_RECORD_SIZE_H
+#define PARSER_RECORD_SIZE_H
+
 #include <string>
 #include <stdexcept>
+#include <boost/shared_ptr.hpp>
 
-#include <opm/parser/eclipse/ParserKW.hpp>
-#include <opm/parser/eclipse/ParserConst.hpp>
+#include <opm/parser/eclipse/Parser/ParserConst.hpp>
+#include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 
 namespace Opm {
   
-  ParserKW::ParserKW() {
-    m_name.assign("");
-  }  
-
-
-  
-  ParserKW::ParserKW(const std::string& name) {
-    if (name.length() > ParserConst::maxKWLength)
-      throw std::invalid_argument("Given keyword name is too long - max 8 characters.");
+  class ParserRecordSize {
     
-    for (unsigned int i=0; i < name.length(); i++)
-      if (islower(name[i]))
-        throw std::invalid_argument("Keyword must be all upper case - mixed case not allowed:" + name);
+  public:
+    ParserRecordSize();
+    ParserRecordSize(size_t fixedSize);
+    ~ParserRecordSize();
     
-    m_name.assign( name ); 
-  }
-  
-
-
-  ParserKW::~ParserKW() {
+    size_t recordSize();
     
     
-  }
+  private:
+    enum   ParserRecordSizeEnum recordSizeType;
+    size_t fixedSize;
+  };
 
-  //-----------------------------------------------------------------//
-  
-  const std::string& ParserKW::getName() {
-    return m_name;
-  }
-
-
+  typedef boost::shared_ptr<ParserRecordSize> ParserRecordSizePtr;
+  typedef boost::shared_ptr<const ParserRecordSize> ParserRecordSizeConstPtr;
 }
+
+#endif

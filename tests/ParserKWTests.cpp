@@ -21,7 +21,7 @@
 #define BOOST_TEST_MODULE ParserTests
 #include <boost/test/unit_test.hpp>
 
-#include "opm/parser/eclipse/ParserKW.hpp"
+#include "opm/parser/eclipse/Parser/ParserKW.hpp"
 
 
 using namespace Opm;
@@ -37,20 +37,24 @@ BOOST_AUTO_TEST_CASE(Initialize) {
 
 BOOST_AUTO_TEST_CASE(NamedInit) {
   std::string keyword("KEYWORD");
-  ParserKW parserKW( keyword );
+  
+  ParserRecordSizeConstPtr recordSize( new ParserRecordSize( 100 ));
+  ParserKW parserKW( keyword , recordSize);
   BOOST_REQUIRE_EQUAL( parserKW.getName( ) , keyword );
 }
 
 
+
 BOOST_AUTO_TEST_CASE(NameTooLong) {
   std::string keyword("KEYWORDTOOLONG");
-
-  BOOST_REQUIRE_THROW( ParserKW parserKW( keyword ) , std::invalid_argument );
+  ParserRecordSizeConstPtr recordSize( new ParserRecordSize( 100 ));
+  BOOST_REQUIRE_THROW( ParserKW parserKW( keyword , recordSize ) , std::invalid_argument );
 }
 
 
 BOOST_AUTO_TEST_CASE(MixedCase) {
   std::string keyword("KeyWord");
-
-  BOOST_REQUIRE_THROW( ParserKW parserKW( keyword ) , std::invalid_argument );
+  
+  ParserRecordSizeConstPtr recordSize( new ParserRecordSize( 100 ));
+  BOOST_REQUIRE_THROW( ParserKW parserKW( keyword , recordSize ) , std::invalid_argument );
 }

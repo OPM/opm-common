@@ -26,7 +26,7 @@
 #define BOOST_TEST_MODULE ParserTests
 #include <boost/test/unit_test.hpp>
 
-#include "opm/parser/eclipse/Parser.hpp"
+#include "opm/parser/eclipse/Parser/Parser.hpp"
 #include "opm/parser/eclipse/data/RawDeck.hpp"
 using namespace Opm;
 

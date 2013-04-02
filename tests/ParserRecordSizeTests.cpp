@@ -15,31 +15,35 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-#ifndef PARSER_H
-#define PARSER_H
-#include <string>
-#include <fstream>
-#include <boost/shared_ptr.hpp>
-
-#include "Logger.hpp"
-#include "data/RawKeyword.hpp"
-#include "data/RawDeck.hpp"
+*/
 
 
-namespace Opm {
+#define BOOST_TEST_MODULE ParserTests
+#include <boost/test/unit_test.hpp>
 
-    class Parser {
-    public:
-        Parser();
-        RawDeckPtr parse(const std::string &path);
-        virtual ~Parser();
-    private:
-        //Logger m_logger;
-    };
-    
-    typedef boost::shared_ptr<Parser> ParserPtr;
-} // namespace Opm
-#endif  /* PARSER_H */
+#include "opm/parser/eclipse/Parser/ParserRecordSize.hpp"
+
+
+using namespace Opm;
+
+
+BOOST_AUTO_TEST_CASE(Initialize) {
+  BOOST_REQUIRE_NO_THROW( ParserRecordSize recordSize );
+}
+
+
+BOOST_AUTO_TEST_CASE(DynamicSize) {
+  ParserRecordSize recordSize;
+  BOOST_REQUIRE_THROW( recordSize.recordSize() , std::logic_error );
+}
+
+
+BOOST_AUTO_TEST_CASE(FixedSize) {
+  BOOST_REQUIRE_NO_THROW(  ParserRecordSize recordSize(100) );
+  ParserRecordSize recordSize(100);
+  
+  BOOST_REQUIRE_EQUAL( recordSize.recordSize() , (size_t) 100 );
+}
+
+
 

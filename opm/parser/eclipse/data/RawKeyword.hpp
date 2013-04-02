@@ -6,7 +6,7 @@
  */
 
 #ifndef RAWKEYWORD_HPP
-#define	RAWKEYWORD_HPP
+#define RAWKEYWORD_HPP
 
 #include <string>
 #include <utility>
@@ -37,5 +37,5 @@ namespace Opm {
     };
     typedef boost::shared_ptr<RawKeyword> RawKeywordPtr;
 }
-#endif	/* RAWKEYWORD_HPP */
+#endif  /* RAWKEYWORD_HPP */
 
