@@ -16,7 +16,9 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "Parser.hpp"
+
+#include <opm/parser/eclipse/Parser/ParserKW.hpp>
+#include <opm/parser/eclipse/Parser/Parser.hpp>
 
 namespace Opm {
 
@@ -35,4 +37,11 @@ namespace Opm {
 
     Parser::~Parser() {
     }
+
+
+    void Parser::addKW(ParserKWConstPtr parserKW) {
+      keywords.insert( std::make_pair( parserKW->getName() , parserKW ));
+    }
+
+
 } // namespace Opm

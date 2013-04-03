@@ -50,7 +50,7 @@ namespace Opm {
 
   //-----------------------------------------------------------------//
   
-  const std::string& ParserKW::getName() {
+  const std::string& ParserKW::getName() const {
     return m_name;
   }
 

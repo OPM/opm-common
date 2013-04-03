@@ -26,7 +26,10 @@
 #define BOOST_TEST_MODULE ParserTests
 #include <boost/test/unit_test.hpp>
 
+
 #include "opm/parser/eclipse/Parser/Parser.hpp"
+#include "opm/parser/eclipse/Parser/ParserKW.hpp"
+#include "opm/parser/eclipse/Parser/ParserRecordSize.hpp"
 #include "opm/parser/eclipse/RawDeck/RawDeck.hpp"
 using namespace Opm;
 
@@ -129,4 +132,16 @@ BOOST_AUTO_TEST_CASE(ParseFullTestFile) {
    
     RawDeckPtr rawDeck = parser -> parse(multipleKeywordFile.string());
     BOOST_REQUIRE_EQUAL((unsigned) 73, rawDeck -> getNumberOfKeywords());
+}
+
+
+
+BOOST_AUTO_TEST_CASE(ParserAddKW) {
+  Parser parser;
+  {
+    ParserRecordSizePtr recordSize(new ParserRecordSize(9)); 
+    ParserKWPtr equilKW(new ParserKW("EQUIL" , recordSize) );
+    
+    parser.addKW( equilKW );
+  }
 }

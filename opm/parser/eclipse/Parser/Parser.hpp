@@ -20,13 +20,14 @@
 #ifndef PARSER_H
 #define PARSER_H
 #include <string>
+#include <map>
 #include <fstream>
 #include <boost/shared_ptr.hpp>
 
 #include <opm/parser/eclipse/Logger.hpp>
 #include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
 #include <opm/parser/eclipse/RawDeck/RawDeck.hpp>
-
+#include <opm/parser/eclipse/Parser/ParserKW.hpp>
 
 namespace Opm {
 
@@ -34,9 +35,13 @@ namespace Opm {
     public:
         Parser();
         RawDeckPtr parse(const std::string &path);
-        virtual ~Parser();
+        virtual   ~Parser();
+
+        void       addKW(ParserKWConstPtr parserKW);
+
     private:
-        //Logger m_logger;
+        //Logger   m_logger;
+      std::map<std::string,ParserKWConstPtr> keywords;
     };
     
     typedef boost::shared_ptr<Parser> ParserPtr;
