@@ -31,6 +31,7 @@ namespace Opm {
         static const int INFO;
         static const int ERROR;
         
+        static void initLogger();
         static void setLogLevel(int logLevel);
         static void setPath(const std::string& path);
         static void debug(const std::string& message);
@@ -41,7 +42,6 @@ namespace Opm {
         static std::string m_logFile;
         static std::ofstream m_logStream;
         static int m_logLevel;
-        static void initLogger();
         static void log(const std::string& message, std::string logLevel);
         static void initLoggingConstants();
     };

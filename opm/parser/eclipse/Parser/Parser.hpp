@@ -24,8 +24,8 @@
 #include <boost/shared_ptr.hpp>
 
 #include <opm/parser/eclipse/Logger.hpp>
-#include <opm/parser/eclipse/data/RawKeyword.hpp>
-#include <opm/parser/eclipse/data/RawDeck.hpp>
+#include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
+#include <opm/parser/eclipse/RawDeck/RawDeck.hpp>
 
 
 namespace Opm {

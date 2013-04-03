@@ -26,6 +26,11 @@ namespace Opm {
     RawDeck::RawDeck() {
     }
     
+    /*
+     * Iterate through list of RawKeywords in search for the specified string.
+     * O(n), not using map or hash because the keywords are not unique, 
+     * and the order matters. Returns first matching keyword.
+     */
     RawKeywordPtr RawDeck::getKeyword(const std::string& keyword) {
         for(std::list<RawKeywordPtr>::iterator it = m_keywords.begin(); it != m_keywords.end(); it++) {
             if ((*it)->getKeyword() == keyword) {
@@ -35,6 +40,10 @@ namespace Opm {
         return RawKeywordPtr(new RawKeyword());
     }
 
+    /*
+     * Read data into deck, from specified path.
+     * Throws invalid_argument exception if path not valid.
+     */
     void RawDeck::readDataIntoDeck(const std::string& path) {
         checkInputFile(path);
         std::ifstream inputstream;
@@ -55,9 +64,9 @@ namespace Opm {
         inputstream.close();
     }
 
-    void RawDeck::addRawRecordStringToRawKeyword(const std::string& line, RawKeywordPtr currentRawKeyword) {
-        if (looksLikeData(line)) {
-            currentRawKeyword->addRawRecordString(line);
+    void RawDeck::addRawRecordStringToRawKeyword(const std::string& recordCandidate, RawKeywordPtr currentRawKeyword) {
+        if (looksLikeData(recordCandidate)) {
+            currentRawKeyword->addRawRecordString(recordCandidate);
         }
     }
 

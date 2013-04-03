@@ -20,64 +20,78 @@
 #define BOOST_TEST_MODULE ParserTests
 #include <stdexcept>
 #include <boost/test/unit_test.hpp>
-#include <opm/parser/eclipse/data/RawKeyword.hpp>
-#include <opm/parser/eclipse/data/RawRecord.hpp>
+#include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
+#include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
 
-
-BOOST_AUTO_TEST_CASE(EmptyConstructorEmptyKeyword) {
+BOOST_AUTO_TEST_CASE(RawKeywordEmptyConstructorEmptyKeyword) {
     Opm::RawKeyword keyword;
     BOOST_CHECK(keyword.getKeyword() == "");
 }
 
-BOOST_AUTO_TEST_CASE(KeywordToConstructorKeywordSet) {
+BOOST_AUTO_TEST_CASE(RawKeywordGiveKeywordToConstructorKeywordSet) {
     Opm::RawKeyword keyword("KEYYWORD");
     BOOST_CHECK(keyword.getKeyword() == "KEYYWORD");
 }
 
-BOOST_AUTO_TEST_CASE(KeywordToConstructorTooLongThrows) {
+BOOST_AUTO_TEST_CASE(RawKeywordGiveKeywordToConstructorTooLongThrows) {
     BOOST_CHECK_THROW(Opm::RawKeyword keyword("KEYYYWORD"), std::invalid_argument);
 }
 
-BOOST_AUTO_TEST_CASE(SetTooLongKeywordThrows) {
+BOOST_AUTO_TEST_CASE(RawKeywordSetTooLongKeywordThrows) {
     Opm::RawKeyword keyword;
     BOOST_CHECK_THROW(keyword.setKeyword("TESTTOOLONG"), std::invalid_argument);
 }
 
-
-BOOST_AUTO_TEST_CASE(SetKeywordInitialWhitespaceInKeywordThrows) {
+BOOST_AUTO_TEST_CASE(RawKeywordSetKeywordInitialWhitespaceInKeywordThrows) {
     Opm::RawKeyword keyword;
     BOOST_CHECK_THROW(keyword.setKeyword(" TELONG"), std::invalid_argument);
 }
 
-BOOST_AUTO_TEST_CASE(SetKeywordInitialTabInKeywordThrows) {
+BOOST_AUTO_TEST_CASE(RawKeywordSetKeywordInitialTabInKeywordThrows) {
     Opm::RawKeyword keyword;
     BOOST_CHECK_THROW(keyword.setKeyword("\tTELONG"), std::invalid_argument);
 }
 
-BOOST_AUTO_TEST_CASE(SetCorrectLenghtKeywordNoError) {
+BOOST_AUTO_TEST_CASE(RawKeywordSetCorrectLenghtKeywordNoError) {
     Opm::RawKeyword keyword;
     keyword.setKeyword("GOODONE");
     BOOST_CHECK(keyword.getKeyword() == "GOODONE");
 }
 
-BOOST_AUTO_TEST_CASE(Set8CharKeywordWithTrailingWhitespaceKeywordTrimmed) {
+BOOST_AUTO_TEST_CASE(RawKeywordSet8CharKeywordWithTrailingWhitespaceKeywordTrimmed) {
     Opm::RawKeyword keyword;
     keyword.setKeyword("GOODONEE ");
     BOOST_CHECK(keyword.getKeyword() == "GOODONEE");
 }
 
-BOOST_AUTO_TEST_CASE(RawRecordSetRecordCheckCorrectTrimAndSplit) {
+BOOST_AUTO_TEST_CASE(RawRecordGetRecordStringReturnsTrimmedString) {
     Opm::RawRecordPtr record(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20                                       /"));
     std::string recordString;
     record -> getRecordString(recordString);
     BOOST_REQUIRE_EQUAL("'NODIR '  'REVERS'  1  20", recordString);
-   
+}
+
+BOOST_AUTO_TEST_CASE(RawRecordGetRecordsCorrectElementsReturned) {
+    Opm::RawRecordPtr record(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20                                       /"));
+
     std::vector<std::string> recordElements;
     record -> getRecords(recordElements);
-    BOOST_REQUIRE_EQUAL((unsigned)4, recordElements.size());
-    
+    BOOST_REQUIRE_EQUAL((unsigned) 4, recordElements.size());
+
     BOOST_REQUIRE_EQUAL("NODIR ", recordElements[0]);
     BOOST_REQUIRE_EQUAL("REVERS", recordElements[1]);
     BOOST_REQUIRE_EQUAL("1", recordElements[2]);
     BOOST_REQUIRE_EQUAL("20", recordElements[3]);
+}
+
+BOOST_AUTO_TEST_CASE(RawRecordIsCompleteRecordCompleteRecordReturnsTrue) {
+    bool isComplete = Opm::RawRecord::isCompleteRecordString("'NODIR '  'REVERS'  1  20                                       /");
+    BOOST_REQUIRE_EQUAL(true, isComplete);
+}
+
+BOOST_AUTO_TEST_CASE(RawRecordIsCompleteRecordInCompleteRecordReturnsFalse) {
+    bool isComplete = Opm::RawRecord::isCompleteRecordString("'NODIR '  'REVERS'  1  20                                       ");
+    BOOST_REQUIRE_EQUAL(false, isComplete);
+    isComplete = Opm::RawRecord::isCompleteRecordString("'NODIR '  'REVERS  1  20 /");
+    BOOST_REQUIRE_EQUAL(false, isComplete);
 }

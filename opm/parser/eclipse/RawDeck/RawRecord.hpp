@@ -18,6 +18,8 @@ namespace Opm {
     public:
         static const char SLASH;
         static const char QUOTE;
+        static const std::string SEPARATORS;
+
         RawRecord();
         RawRecord(const std::string& singleRecordString);
         void getRecordString(std::string& recordString);
@@ -28,7 +30,11 @@ namespace Opm {
         std::string m_sanitizedRecordString;
         std::vector<std::string> m_recordItems;
         void setRecordString(const std::string& singleRecordString);
-        bool stringContains(std::string collection, char candidate);
+        void splitSingleRecordString();
+        void processSeparatorCharacter(std::string& currentToken, const char& currentChar, char& tokenStarter);
+        void processQuoteCharacters(std::string& currentToken, const char& currentChar, char& tokenStarter);
+        void processNonSpecialCharacters(std::string& currentToken, const char& currentChar);
+        bool charIsSeparator(char candidate);
         static unsigned int findTerminatingSlash(const std::string& singleRecordString);
     };
     typedef boost::shared_ptr<RawRecord> RawRecordPtr;

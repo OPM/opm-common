@@ -26,6 +26,7 @@ using namespace std;
 namespace Opm {
     const char RawRecord::SLASH = '/';
     const char RawRecord::QUOTE = '\'';
+    const std::string RawRecord::SEPARATORS = "\t ";
 
     RawRecord::RawRecord() {
     }
@@ -34,6 +35,10 @@ namespace Opm {
      * It is assumed that after a record is terminated, there is no quote marks
      * in the subsequent comment. This is in accordance with the Eclipse user
      * manual.
+     * 
+     * If a "non-complete" record string is supplied, an invalid_argument
+     * exception is thrown.
+     * 
      */
     RawRecord::RawRecord(const std::string& singleRecordString) {
         if (isCompleteRecordString(singleRecordString)) {
@@ -43,36 +48,21 @@ namespace Opm {
                     " offending string: " + singleRecordString);
         }
 
-        std::string tokenSeparators = "\t ";
-        std::string quoteSeparators = "\'\"";
+        splitSingleRecordString();
+    }
+
+    void RawRecord::splitSingleRecordString() {
         char currentChar;
-        char tokenStarter;
+        char tokenStartCharacter;
         std::string currentToken = "";
         for (unsigned i = 0; i < m_sanitizedRecordString.size(); i++) {
             currentChar = m_sanitizedRecordString[i];
-            if (stringContains(tokenSeparators, currentChar)) {
-                if (stringContains(quoteSeparators, tokenStarter)) {
-                    currentToken += currentChar;
-                } else {
-                    if (currentToken.size() > 0) {
-                        m_recordItems.push_back(currentToken);
-                        currentToken.clear();
-                    }
-                    tokenStarter = currentChar;
-                }
-            } else if (stringContains(quoteSeparators, currentChar)) {
-                if (currentChar == tokenStarter) {
-                    if (currentToken.size() > 0) {
-                        m_recordItems.push_back(currentToken);
-                        currentToken.clear();
-                    }
-                    tokenStarter = '\0';
-                } else {
-                    tokenStarter = currentChar;
-                    currentToken.clear();
-                }
+            if (charIsSeparator(currentChar)) {
+                processSeparatorCharacter(currentToken, currentChar, tokenStartCharacter);
+            } else if (currentChar == QUOTE) {
+                processQuoteCharacters(currentToken, currentChar, tokenStartCharacter);
             } else {
-                currentToken += currentChar;
+                processNonSpecialCharacters(currentToken, currentChar);
             }
         }
         if (currentToken.size() > 0) {
@@ -80,9 +70,38 @@ namespace Opm {
             currentToken.clear();
         }
     }
+    
+    void RawRecord::processSeparatorCharacter(std::string& currentToken, const char& currentChar, char& tokenStartCharacter) {
+        if (tokenStartCharacter == QUOTE) {
+            currentToken += currentChar;
+        } else {
+            if (currentToken.size() > 0) {
+                m_recordItems.push_back(currentToken);
+                currentToken.clear();
+            }
+            tokenStartCharacter = currentChar;
+        }
+    }
 
-    bool RawRecord::stringContains(std::string collection, char candidate) {
-        return std::string::npos != collection.find(candidate);
+    void RawRecord::processQuoteCharacters(std::string& currentToken, const char& currentChar, char& tokenStartCharacter) {
+        if (currentChar == tokenStartCharacter) {
+            if (currentToken.size() > 0) {
+                m_recordItems.push_back(currentToken);
+                currentToken.clear();
+            }
+            tokenStartCharacter = '\0';
+        } else {
+            tokenStartCharacter = currentChar;
+            currentToken.clear();
+        }
+    }
+
+    void RawRecord::processNonSpecialCharacters(std::string& currentToken, const char& currentChar) {
+        currentToken += currentChar;
+    }
+
+    bool RawRecord::charIsSeparator(char candidate) {
+        return std::string::npos != SEPARATORS.find(candidate);
     }
 
     void RawRecord::getRecords(std::vector<std::string>& recordItems) {
@@ -95,7 +114,10 @@ namespace Opm {
 
     bool RawRecord::isCompleteRecordString(const std::string& candidateRecordString) {
         unsigned int terminatingSlash = findTerminatingSlash(candidateRecordString);
-        return (terminatingSlash < candidateRecordString.size());
+        bool hasTerminatingSlash = (terminatingSlash < candidateRecordString.size());
+        int size = std::count(candidateRecordString.begin(), candidateRecordString.end(), QUOTE);
+        bool hasEvenNumberOfQuotes = (size % 2) == 0;
+        return hasTerminatingSlash && hasEvenNumberOfQuotes;
     }
 
     void RawRecord::setRecordString(const std::string& singleRecordString) {

@@ -44,6 +44,3 @@ BOOST_AUTO_TEST_CASE(FixedSize) {
   
   BOOST_REQUIRE_EQUAL( recordSize.recordSize() , (size_t) 100 );
 }
-
-
-
