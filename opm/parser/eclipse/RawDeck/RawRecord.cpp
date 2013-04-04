@@ -47,8 +47,23 @@ namespace Opm {
             throw std::invalid_argument("Input string is not a complete record string,"
                     " offending string: " + singleRecordString);
         }
-
         splitSingleRecordString();
+    }
+
+    const std::vector<std::string>& RawRecord::getRecords() const {
+        return m_recordItems;
+    }
+
+    const std::string& RawRecord::getRecordString() const {
+       return m_sanitizedRecordString;
+    }
+
+    bool RawRecord::isCompleteRecordString(const std::string& candidateRecordString) {
+        unsigned int terminatingSlash = findTerminatingSlash(candidateRecordString);
+        bool hasTerminatingSlash = (terminatingSlash < candidateRecordString.size());
+        int size = std::count(candidateRecordString.begin(), candidateRecordString.end(), QUOTE);
+        bool hasEvenNumberOfQuotes = (size % 2) == 0;
+        return hasTerminatingSlash && hasEvenNumberOfQuotes;
     }
 
     void RawRecord::splitSingleRecordString() {
@@ -70,7 +85,7 @@ namespace Opm {
             currentToken.clear();
         }
     }
-    
+
     void RawRecord::processSeparatorCharacter(std::string& currentToken, const char& currentChar, char& tokenStartCharacter) {
         if (tokenStartCharacter == QUOTE) {
             currentToken += currentChar;
@@ -86,7 +101,7 @@ namespace Opm {
     void RawRecord::processQuoteCharacters(std::string& currentToken, const char& currentChar, char& tokenStartCharacter) {
         if (currentChar == tokenStartCharacter) {
             if (currentToken.size() > 0) {
-                m_recordItems.push_back("'"+currentToken+"'"); //Adding quotes, not sure what is best.
+                m_recordItems.push_back("'" + currentToken + "'"); //Adding quotes, not sure what is best.
                 currentToken.clear();
             }
             tokenStartCharacter = '\0';
@@ -102,22 +117,6 @@ namespace Opm {
 
     bool RawRecord::charIsSeparator(char candidate) {
         return std::string::npos != SEPARATORS.find(candidate);
-    }
-
-    void RawRecord::getRecords(std::vector<std::string>& recordItems) {
-        recordItems = m_recordItems;
-    }
-
-    void RawRecord::getRecordString(std::string& recordString) {
-        recordString = m_sanitizedRecordString;
-    }
-
-    bool RawRecord::isCompleteRecordString(const std::string& candidateRecordString) {
-        unsigned int terminatingSlash = findTerminatingSlash(candidateRecordString);
-        bool hasTerminatingSlash = (terminatingSlash < candidateRecordString.size());
-        int size = std::count(candidateRecordString.begin(), candidateRecordString.end(), QUOTE);
-        bool hasEvenNumberOfQuotes = (size % 2) == 0;
-        return hasTerminatingSlash && hasEvenNumberOfQuotes;
     }
 
     void RawRecord::setRecordString(const std::string& singleRecordString) {

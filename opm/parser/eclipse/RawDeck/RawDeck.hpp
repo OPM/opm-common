@@ -25,12 +25,13 @@
 #include <boost/shared_ptr.hpp>
 #include "opm/parser/eclipse/Logger.hpp"
 #include "RawKeyword.hpp"
+#include "RawParserKWs.hpp"
 
 namespace Opm {
 
     class RawDeck {
     public:
-        RawDeck(std::map<std::string, int>& keywordsWithFixedRecordNums);
+        RawDeck(RawParserKWsConstPtr rawParserKWs);
         void readDataIntoDeck(const std::string& path);
         RawKeywordPtr getKeyword(const std::string& keyword);
         unsigned int getNumberOfKeywords();
@@ -38,7 +39,7 @@ namespace Opm {
         virtual ~RawDeck();
     private:
         std::list<RawKeywordPtr> m_keywords;
-        std::map<std::string, int> m_keywordsWithFixedRecordNums;
+        RawParserKWsConstPtr m_rawParserKWs;
         void readDataIntoDeck(const std::string& path, std::list<RawKeywordPtr>& keywordList);
         bool isKeywordFinished(RawKeywordPtr rawKeyword);
         static void verifyValidInputPath(const std::string& inputPath);

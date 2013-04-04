@@ -70,17 +70,14 @@ BOOST_AUTO_TEST_CASE(ParseFileWithOneKeyword) {
     RawDeckPtr rawDeck = parser->parse(singleKeywordFile.string());
     BOOST_REQUIRE_EQUAL((unsigned) 1, rawDeck->getNumberOfKeywords());
     RawKeywordPtr rawKeyword = rawDeck->getKeyword("ENDSCALE");
-    std::list<RawRecordPtr> records;
-    rawKeyword->getRecords(records);
+    const std::list<RawRecordPtr>& records = rawKeyword->getRecords();
     BOOST_REQUIRE_EQUAL((unsigned) 1, records.size());
     RawRecordPtr record = records.back();
 
-    std::string recordString;
-    record->getRecordString(recordString);
+    const std::string& recordString = record->getRecordString();
     BOOST_REQUIRE_EQUAL("'NODIR'  'REVERS'  1  20", recordString);
 
-    std::vector<std::string> recordElements;
-    record->getRecords(recordElements);
+    const std::vector<std::string>& recordElements = record->getRecords();
     BOOST_REQUIRE_EQUAL((unsigned) 4, recordElements.size());
 
     BOOST_REQUIRE_EQUAL("\'NODIR\'", recordElements[0]);
@@ -97,38 +94,33 @@ BOOST_AUTO_TEST_CASE(ParseFileWithFewKeywords) {
     RawDeckPtr rawDeck = parser->parse(singleKeywordFile.string());
     BOOST_REQUIRE_EQUAL((unsigned) 5, rawDeck->getNumberOfKeywords());
 
-    std::list<RawRecordPtr> records;
-
-    RawKeywordPtr matchingKeyword = rawDeck->getKeyword("OIL");
-    matchingKeyword->getRecords(records);
+    RawKeywordConstPtr matchingKeyword = rawDeck->getKeyword("OIL");
+    std::list<RawRecordPtr> records = matchingKeyword->getRecords();
     BOOST_REQUIRE_EQUAL("OIL", matchingKeyword->getKeyword());
-    matchingKeyword->getRecords(records);
     BOOST_REQUIRE_EQUAL((unsigned) 0, records.size());
 
     matchingKeyword = rawDeck->getKeyword("INCLUDE");
     BOOST_REQUIRE_EQUAL("INCLUDE", matchingKeyword->getKeyword());
-    matchingKeyword->getRecords(records);
+    records = matchingKeyword->getRecords();
     BOOST_REQUIRE_EQUAL((unsigned) 1, records.size());
     RawRecordPtr theRecord = records.front();
-    std::string recordString;
-    theRecord->getRecordString(recordString);
+    const std::string& recordString = theRecord->getRecordString();
     BOOST_REQUIRE_EQUAL("\'sti til fil/den er her\'", recordString);
 
-
     matchingKeyword = rawDeck->getKeyword("GRIDUNIT");
-    matchingKeyword->getRecords(records);
     BOOST_REQUIRE_EQUAL("GRIDUNIT", matchingKeyword->getKeyword());
-    matchingKeyword->getRecords(records);
+    records = matchingKeyword->getRecords();
     BOOST_REQUIRE_EQUAL((unsigned) 1, records.size());
 
     matchingKeyword = rawDeck->getKeyword("RADFIN4");
-    matchingKeyword->getRecords(records);
+    records = matchingKeyword->getRecords();
     BOOST_REQUIRE_EQUAL("RADFIN4", matchingKeyword->getKeyword());
     BOOST_REQUIRE_EQUAL((unsigned) 1, records.size());
 
     matchingKeyword = rawDeck->getKeyword("ABCDAD");
     BOOST_REQUIRE_EQUAL("ABCDAD", matchingKeyword->getKeyword());
-    matchingKeyword->getRecords(records);
+    records = matchingKeyword->getRecords();
+
     BOOST_REQUIRE_EQUAL((unsigned) 2, records.size());
 }
 
@@ -155,26 +147,23 @@ BOOST_AUTO_TEST_CASE(ParseFullTestFile) {
     // records are not defined (yet) for all these keywords.
     // But we can check a copule of keywords, and that they have the correct
     // number of records
-    std::list<RawRecordPtr> records;
-    RawKeywordPtr matchingKeyword = rawDeck->getKeyword("OIL");
-    matchingKeyword->getRecords(records);
+    
+    RawKeywordConstPtr matchingKeyword = rawDeck->getKeyword("OIL");
+    std::list<RawRecordPtr> records = matchingKeyword->getRecords();
     BOOST_REQUIRE_EQUAL("OIL", matchingKeyword->getKeyword());
-    matchingKeyword->getRecords(records);
+    
     BOOST_REQUIRE_EQUAL((unsigned) 0, records.size());
-    
+
     matchingKeyword = rawDeck->getKeyword("VFPPDIMS");
-    matchingKeyword->getRecords(records);
+    records = matchingKeyword->getRecords();
     BOOST_REQUIRE_EQUAL("VFPPDIMS", matchingKeyword->getKeyword());
-    matchingKeyword->getRecords(records);
     BOOST_REQUIRE_EQUAL((unsigned) 1, records.size());
-    
-    std::string recordString;
-    records.front()->getRecordString(recordString);
+
+    const std::string& recordString = records.front()->getRecordString();
     BOOST_REQUIRE_EQUAL("20  20  15  15  15   50", recordString);
-    std::vector<std::string> recordItems;
-    records.front()->getRecords(recordItems);
-    BOOST_REQUIRE_EQUAL((unsigned)6, recordItems.size());
-    
+    std::vector<std::string> recordItems = records.front()->getRecords();
+    BOOST_REQUIRE_EQUAL((unsigned) 6, recordItems.size());
+
 
 }
 

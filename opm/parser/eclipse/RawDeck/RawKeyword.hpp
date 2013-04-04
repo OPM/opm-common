@@ -38,8 +38,8 @@ namespace Opm {
         static bool lineContainsData(const std::string& line);
         static bool lineTerminatesKeyword(const std::string& line);
 
-        std::string getKeyword();
-        void getRecords(std::list<RawRecordPtr>& records);
+        std::string getKeyword() const;
+        const std::list<RawRecordPtr>& getRecords() const;
         unsigned int getNumberOfRecords();
         void setKeyword(const std::string& keyword);
         void addRawRecordString(const std::string& partialRecordString);
@@ -52,6 +52,8 @@ namespace Opm {
         static bool isValidKeyword(const std::string& keywordCandidate);
     };
     typedef boost::shared_ptr<RawKeyword> RawKeywordPtr;
+    typedef boost::shared_ptr<const RawKeyword> RawKeywordConstPtr;
+
 }
 #endif  /* RAWKEYWORD_HPP */
 

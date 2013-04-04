@@ -22,9 +22,10 @@
 #define BOOST_TEST_MODULE RawDeckTests
 #include <boost/test/unit_test.hpp>
 #include <opm/parser/eclipse/RawDeck/RawDeck.hpp>
+#include <opm/parser/eclipse/RawDeck/RawParserKWs.hpp>
+
 
 BOOST_AUTO_TEST_CASE(ReadData_MissingFixedKeywords_WrongNumberOfKeywordsFound) {
-    std::map<std::string, int> fixedKeywords;
-    fixedKeywords.insert(std::pair<std::string, int>("GRIDUNIT", 1));
-    Opm::RawDeck rawDeck(fixedKeywords);   
+    Opm::RawParserKWsConstPtr fixedKeywords(new Opm::RawParserKWs());
+    Opm::RawDeck rawDeck(fixedKeywords);
 }

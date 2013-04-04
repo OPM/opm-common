@@ -36,8 +36,6 @@ namespace Opm {
         RawDeckPtr parse(const std::string &path);
         virtual ~Parser();
     private:
-        std::map<std::string, int> m_keywordRecordLengths;
-        void initializeFixedKeywordLenghts();
     };
     
     typedef boost::shared_ptr<Parser> ParserPtr;

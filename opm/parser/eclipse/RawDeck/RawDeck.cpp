@@ -23,8 +23,8 @@
 
 namespace Opm {
 
-    RawDeck::RawDeck(std::map<std::string, int>& keywordsWithFixedRecordNums) {
-        m_keywordsWithFixedRecordNums = keywordsWithFixedRecordNums;
+    RawDeck::RawDeck(RawParserKWsConstPtr rawParserKWs) {
+        m_rawParserKWs = rawParserKWs;
     }
 
     /*
@@ -94,8 +94,8 @@ namespace Opm {
     }
 
     bool RawDeck::isKeywordFinished(RawKeywordPtr rawKeyword) {
-        if ((unsigned)m_keywordsWithFixedRecordNums.count(rawKeyword->getKeyword()) != 0) {
-            return rawKeyword->getNumberOfRecords() == (unsigned)m_keywordsWithFixedRecordNums[rawKeyword->getKeyword()];
+        if (m_rawParserKWs->keywordExists(rawKeyword->getKeyword())) {
+            return rawKeyword->getNumberOfRecords() == m_rawParserKWs->getFixedNumberOfRecords(rawKeyword->getKeyword());
         }
         return false;
     }
@@ -103,11 +103,10 @@ namespace Opm {
     std::ostream& operator<<(std::ostream& os, const RawDeck& deck) {
         for (std::list<RawKeywordPtr>::const_iterator keyword = deck.m_keywords.begin(); keyword != deck.m_keywords.end(); keyword++) {
             os << (*keyword)->getKeyword() << "                -- Keyword\n";
-            std::list<RawRecordPtr> records;
-            (*keyword)->getRecords(records);
+            
+            std::list<RawRecordPtr> records = (*keyword)->getRecords();
             for (std::list<RawRecordPtr>::const_iterator record = records.begin(); record != records.end(); record++) {
-                std::vector<std::string> recordItems;
-                (*record)->getRecords(recordItems);
+                std::vector<std::string> recordItems  = (*record)->getRecords();
 
                 for (std::vector<std::string>::const_iterator recordItem = recordItems.begin(); recordItem != recordItems.end(); recordItem++) {
                     os << (*recordItem) << " ";

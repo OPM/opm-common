@@ -34,8 +34,8 @@ namespace Opm {
 
         RawRecord();
         RawRecord(const std::string& singleRecordString);
-        void getRecordString(std::string& recordString);
-        void getRecords(std::vector<std::string>& recordItems);
+        const std::string& getRecordString() const;
+        const std::vector<std::string>& getRecords() const;
         static bool isCompleteRecordString(const std::string& candidateRecordString);
         virtual ~RawRecord();
     private:

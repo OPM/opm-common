@@ -102,11 +102,11 @@ namespace Opm {
         return m_records.size();
     }
 
-    void RawKeyword::getRecords(std::list<RawRecordPtr>& records) {
-        records = m_records;
+    const std::list<RawRecordPtr>& RawKeyword::getRecords() const{
+        return m_records;
     }
 
-    std::string RawKeyword::getKeyword() {
+    std::string RawKeyword::getKeyword() const{
         return m_keyword;
     }
 

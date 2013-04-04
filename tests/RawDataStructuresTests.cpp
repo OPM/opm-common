@@ -67,8 +67,7 @@ BOOST_AUTO_TEST_CASE(RawKeywordSet8CharKeywordWithTrailingWhitespaceKeywordTrimm
 
 BOOST_AUTO_TEST_CASE(RawRecordGetRecordStringReturnsTrimmedString) {
     Opm::RawRecordPtr record(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20                                       /"));
-    std::string recordString;
-    record->getRecordString(recordString);
+    const std::string& recordString = record->getRecordString();
     BOOST_REQUIRE_EQUAL("'NODIR '  'REVERS'  1  20", recordString);
 }
 
@@ -77,8 +76,7 @@ BOOST_AUTO_TEST_CASE(RawRecordGetRecordStringReturnsTrimmedString) {
 BOOST_AUTO_TEST_CASE(RawRecordGetRecordsCorrectElementsReturned) {
     Opm::RawRecordPtr record(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20                                       /"));
 
-    std::vector<std::string> recordElements;
-    record->getRecords(recordElements);
+    const std::vector<std::string>& recordElements = record->getRecords();
     BOOST_REQUIRE_EQUAL((unsigned) 4, recordElements.size());
 
     BOOST_REQUIRE_EQUAL("\'NODIR \'", recordElements[0]);
