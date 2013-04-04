@@ -50,7 +50,7 @@ namespace Opm {
     }
 
     void RawDeck::readDataIntoDeck(const std::string& path, std::list<RawKeywordPtr>& keywordList) {
-        checkInputFile(path);
+        verifyValidInputPath(path);
         {
             std::ifstream inputstream;
             Logger::info("Initializing from file: " + path);
@@ -81,7 +81,7 @@ namespace Opm {
         }
     }
 
-    void RawDeck::checkInputFile(const std::string& inputPath) {
+    void RawDeck::verifyValidInputPath(const std::string& inputPath) {
         boost::filesystem::path pathToInputFile(inputPath);
         if (!boost::filesystem::is_regular_file(pathToInputFile)) {
             Logger::error("Unable to open file with path: " + inputPath);

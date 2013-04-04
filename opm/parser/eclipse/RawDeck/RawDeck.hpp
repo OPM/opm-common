@@ -41,7 +41,7 @@ namespace Opm {
         std::map<std::string, int> m_keywordsWithFixedRecordNums;
         void readDataIntoDeck(const std::string& path, std::list<RawKeywordPtr>& keywordList);
         bool isKeywordFinished(RawKeywordPtr rawKeyword);
-        static void checkInputFile(const std::string& inputPath);
+        static void verifyValidInputPath(const std::string& inputPath);
     };
 
     typedef boost::shared_ptr<RawDeck> RawDeckPtr;
