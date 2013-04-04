@@ -86,7 +86,7 @@ namespace Opm {
     void RawRecord::processQuoteCharacters(std::string& currentToken, const char& currentChar, char& tokenStartCharacter) {
         if (currentChar == tokenStartCharacter) {
             if (currentToken.size() > 0) {
-                m_recordItems.push_back(currentToken);
+                m_recordItems.push_back("'"+currentToken+"'"); //Adding quotes, not sure what is best.
                 currentToken.clear();
             }
             tokenStartCharacter = '\0';

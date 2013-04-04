@@ -17,30 +17,14 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PARSER_H
-#define PARSER_H
-#include <string>
 #include <map>
-#include <boost/shared_ptr.hpp>
-
-#include <opm/parser/eclipse/Logger.hpp>
-#include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
+#include <string>
+#define BOOST_TEST_MODULE RawDeckTests
+#include <boost/test/unit_test.hpp>
 #include <opm/parser/eclipse/RawDeck/RawDeck.hpp>
 
-
-namespace Opm {
-
-    class Parser {
-    public:
-        Parser();
-        RawDeckPtr parse(const std::string &path);
-        virtual ~Parser();
-    private:
-        std::map<std::string, int> m_keywordRecordLengths;
-        void initializeFixedKeywordLenghts();
-    };
-    
-    typedef boost::shared_ptr<Parser> ParserPtr;
-} // namespace Opm
-#endif  /* PARSER_H */
-
+BOOST_AUTO_TEST_CASE(ReadData_MissingFixedKeywords_WrongNumberOfKeywordsFound) {
+    std::map<std::string, int> fixedKeywords;
+    fixedKeywords.insert(std::pair<std::string, int>("GRIDUNIT", 1));
+    Opm::RawDeck rawDeck(fixedKeywords);   
+}

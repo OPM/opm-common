@@ -64,22 +64,25 @@ BOOST_AUTO_TEST_CASE(RawKeywordSet8CharKeywordWithTrailingWhitespaceKeywordTrimm
     BOOST_CHECK(keyword.getKeyword() == "GOODONEE");
 }
 
+
 BOOST_AUTO_TEST_CASE(RawRecordGetRecordStringReturnsTrimmedString) {
     Opm::RawRecordPtr record(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20                                       /"));
     std::string recordString;
-    record -> getRecordString(recordString);
+    record->getRecordString(recordString);
     BOOST_REQUIRE_EQUAL("'NODIR '  'REVERS'  1  20", recordString);
 }
+
+
 
 BOOST_AUTO_TEST_CASE(RawRecordGetRecordsCorrectElementsReturned) {
     Opm::RawRecordPtr record(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20                                       /"));
 
     std::vector<std::string> recordElements;
-    record -> getRecords(recordElements);
+    record->getRecords(recordElements);
     BOOST_REQUIRE_EQUAL((unsigned) 4, recordElements.size());
 
-    BOOST_REQUIRE_EQUAL("NODIR ", recordElements[0]);
-    BOOST_REQUIRE_EQUAL("REVERS", recordElements[1]);
+    BOOST_REQUIRE_EQUAL("\'NODIR \'", recordElements[0]);
+    BOOST_REQUIRE_EQUAL("\'REVERS\'", recordElements[1]);
     BOOST_REQUIRE_EQUAL("1", recordElements[2]);
     BOOST_REQUIRE_EQUAL("20", recordElements[3]);
 }

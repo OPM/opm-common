@@ -23,16 +23,17 @@
 
 namespace Opm {
 
-    RawDeck::RawDeck() {
+    RawDeck::RawDeck(std::map<std::string, int>& keywordsWithFixedRecordNums) {
+        m_keywordsWithFixedRecordNums = keywordsWithFixedRecordNums;
     }
-    
+
     /*
      * Iterate through list of RawKeywords in search for the specified string.
      * O(n), not using map or hash because the keywords are not unique, 
      * and the order matters. Returns first matching keyword.
      */
     RawKeywordPtr RawDeck::getKeyword(const std::string& keyword) {
-        for(std::list<RawKeywordPtr>::iterator it = m_keywords.begin(); it != m_keywords.end(); it++) {
+        for (std::list<RawKeywordPtr>::iterator it = m_keywords.begin(); it != m_keywords.end(); it++) {
             if ((*it)->getKeyword() == keyword) {
                 return (*it);
             }
@@ -45,44 +46,38 @@ namespace Opm {
      * Throws invalid_argument exception if path not valid.
      */
     void RawDeck::readDataIntoDeck(const std::string& path) {
+        readDataIntoDeck(path, m_keywords);
+    }
+
+    void RawDeck::readDataIntoDeck(const std::string& path, std::list<RawKeywordPtr>& keywordList) {
         checkInputFile(path);
-        std::ifstream inputstream;
-        Logger::info("Initializing from file: " + path);
-        inputstream.open(path.c_str());
+        {
+            std::ifstream inputstream;
+            Logger::info("Initializing from file: " + path);
+            inputstream.open(path.c_str());
 
-        std::string line;
-        std::string keywordString;
-        RawKeywordPtr currentRawKeyword;
-        while (std::getline(inputstream, line)) {
-            if (RawKeyword::tryParseKeyword(line, keywordString)) {
-                currentRawKeyword = RawKeywordPtr(new RawKeyword(keywordString));
-                m_keywords.push_back(currentRawKeyword);
-            } else if (currentRawKeyword != NULL) {
-                addRawRecordStringToRawKeyword(line, currentRawKeyword);
+            std::string line;
+            RawKeywordPtr currentRawKeyword;
+            int numberOfRecordsForCurrentKeyword = 0;
+            bool previousKeywordFinished = true;
+            while (std::getline(inputstream, line)) {
+                std::string keywordString;
+
+                if (previousKeywordFinished && RawKeyword::tryParseKeyword(line, keywordString)) {
+                    currentRawKeyword = RawKeywordPtr(new RawKeyword(keywordString));
+                    keywordList.push_back(currentRawKeyword);
+                    previousKeywordFinished = isKeywordFinished(currentRawKeyword);
+                }
+                else if (currentRawKeyword != NULL && RawKeyword::lineContainsData(line)) {
+                    currentRawKeyword->addRawRecordString(line);
+                    numberOfRecordsForCurrentKeyword = currentRawKeyword->getNumberOfRecords();
+                    previousKeywordFinished = isKeywordFinished(currentRawKeyword);
+                }
+                else if (RawKeyword::lineTerminatesKeyword(line)) {
+                    previousKeywordFinished = true;
+                }
             }
-        }
-        inputstream.close();
-    }
-
-    void RawDeck::addRawRecordStringToRawKeyword(const std::string& recordCandidate, RawKeywordPtr currentRawKeyword) {
-        if (looksLikeData(recordCandidate)) {
-            currentRawKeyword->addRawRecordString(recordCandidate);
-        }
-    }
-
-    bool RawDeck::looksLikeData(const std::string& line) {
-        if (line.substr(0, 2) == "--") {
-            Logger::debug("COMMENT LINE   <" + line + ">");
-            return false;
-        } else if (boost::algorithm::trim_copy(line).length() == 0) {
-            Logger::debug("EMPTY LINE     <" + line + ">");
-            return false;
-        } else if (line.substr(0, 1) == "/") {
-            Logger::debug("END OF RECORD  <" + line + ">");
-            return false;
-        } else {
-            Logger::debug("LOOKS LIKE DATA<" + line + ">");
-            return true;
+            inputstream.close();
         }
     }
 
@@ -96,6 +91,32 @@ namespace Opm {
 
     unsigned int RawDeck::getNumberOfKeywords() {
         return m_keywords.size();
+    }
+
+    bool RawDeck::isKeywordFinished(RawKeywordPtr rawKeyword) {
+        if ((unsigned)m_keywordsWithFixedRecordNums.count(rawKeyword->getKeyword()) != 0) {
+            return rawKeyword->getNumberOfRecords() == (unsigned)m_keywordsWithFixedRecordNums[rawKeyword->getKeyword()];
+        }
+        return false;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const RawDeck& deck) {
+        for (std::list<RawKeywordPtr>::const_iterator keyword = deck.m_keywords.begin(); keyword != deck.m_keywords.end(); keyword++) {
+            os << (*keyword)->getKeyword() << "                -- Keyword\n";
+            std::list<RawRecordPtr> records;
+            (*keyword)->getRecords(records);
+            for (std::list<RawRecordPtr>::const_iterator record = records.begin(); record != records.end(); record++) {
+                std::vector<std::string> recordItems;
+                (*record)->getRecords(recordItems);
+
+                for (std::vector<std::string>::const_iterator recordItem = recordItems.begin(); recordItem != recordItems.end(); recordItem++) {
+                    os << (*recordItem) << " ";
+                }
+                os << " /                -- Data\n";
+            }
+            os << "\n";
+        }
+        return os;
     }
 
     RawDeck::~RawDeck() {

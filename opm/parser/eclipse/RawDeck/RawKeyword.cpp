@@ -23,6 +23,7 @@
 #include <iostream>
 
 namespace Opm {
+
     RawKeyword::RawKeyword() {
     }
 
@@ -30,7 +31,7 @@ namespace Opm {
         setKeyword(keyword);
     }
 
-     bool RawKeyword::tryParseKeyword(const std::string& keywordCandidate, std::string& result) {
+    bool RawKeyword::tryParseKeyword(const std::string& keywordCandidate, std::string& result) {
         result = boost::trim_right_copy(keywordCandidate.substr(0, 8));
         if (isValidKeyword(result)) {
             Logger::debug("KEYWORD     <" + keywordCandidate + ">");
@@ -38,25 +39,45 @@ namespace Opm {
         }
         return false;
     }
-     
+
     bool RawKeyword::isValidKeyword(const std::string& keywordCandidate) {
-        std::string keywordRegex = "^[A-Z]{1,8}$";
+        std::string keywordRegex = "^[A-Z][A-Z,0-9]{1,7}$";
         int status;
-        regex_t re;
+        regex_t regularExpression;
         regmatch_t rm;
-        if (regcomp(&re, keywordRegex.c_str(), REG_EXTENDED) != 0) {
+        if (regcomp(&regularExpression, keywordRegex.c_str(), REG_EXTENDED) != 0) {
             throw std::runtime_error("Unable to compile regular expression for keyword! Expression: " + keywordRegex);
         }
 
-        status = regexec(&re, keywordCandidate.c_str(), 1, &rm, 0);
-        regfree(&re);
+        status = regexec(&regularExpression, keywordCandidate.c_str(), 1, &rm, 0);
+        regfree(&regularExpression);
 
         if (status == 0) {
             return true;
         }
         return false;
     }
-     
+
+    bool RawKeyword::lineContainsData(const std::string& line) {
+        if (boost::algorithm::trim_left_copy(line).substr(0, 2) == "--") {
+            Logger::debug("COMMENT LINE   <" + line + ">");
+            return false;
+        } else if (boost::algorithm::trim_copy(line).length() == 0) {
+            Logger::debug("EMPTY LINE     <" + line + ">");
+            return false;
+        } else if (lineTerminatesKeyword(line)) {
+            Logger::debug("END OF RECORD  <" + line + ">");
+            return false;
+        } else {
+            Logger::debug("LOOKS LIKE DATA<" + line + ">");
+            return true;
+        }
+    }
+
+    bool RawKeyword::lineTerminatesKeyword(const std::string& line) {
+        return boost::algorithm::trim_left_copy(line).substr(0,1) == "/";
+    }
+
     void RawKeyword::setKeyword(const std::string& keyword) {
         m_keyword = boost::algorithm::trim_right_copy(keyword);
         if (!isValidKeyword(m_keyword)) {
