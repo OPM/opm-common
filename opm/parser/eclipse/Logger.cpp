@@ -67,7 +67,11 @@ namespace Opm {
         m_logStream.open(m_logFile.c_str(), std::ios::app);
     }
 
-    Logger::~Logger() {
+    void Logger::closeLogger() {
         m_logStream.close();
+    }
+    
+    Logger::~Logger() {
+       
     }
 } // namespace Opm

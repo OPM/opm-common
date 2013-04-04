@@ -32,6 +32,7 @@ namespace Opm {
         static const int ERROR;
         
         static void initLogger();
+        static void closeLogger();
         static void setLogLevel(int logLevel);
         static void setPath(const std::string& path);
         static void debug(const std::string& message);
