@@ -61,8 +61,8 @@ namespace Opm {
     bool RawRecord::isCompleteRecordString(const std::string& candidateRecordString) {
         unsigned int terminatingSlash = findTerminatingSlash(candidateRecordString);
         bool hasTerminatingSlash = (terminatingSlash < candidateRecordString.size());
-        int size = std::count(candidateRecordString.begin(), candidateRecordString.end(), QUOTE);
-        bool hasEvenNumberOfQuotes = (size % 2) == 0;
+        int numberOfQuotes = std::count(candidateRecordString.begin(), candidateRecordString.end(), QUOTE);
+        bool hasEvenNumberOfQuotes = (numberOfQuotes % 2) == 0;
         return hasTerminatingSlash && hasEvenNumberOfQuotes;
     }
 
