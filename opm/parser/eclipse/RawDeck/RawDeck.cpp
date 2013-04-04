@@ -58,7 +58,6 @@ namespace Opm {
 
             std::string line;
             RawKeywordPtr currentRawKeyword;
-            int numberOfRecordsForCurrentKeyword = 0;
             bool previousKeywordFinished = true;
             while (std::getline(inputstream, line)) {
                 std::string keywordString;
@@ -70,7 +69,6 @@ namespace Opm {
                 }
                 else if (currentRawKeyword != NULL && RawKeyword::lineContainsData(line)) {
                     currentRawKeyword->addRawRecordString(line);
-                    numberOfRecordsForCurrentKeyword = currentRawKeyword->getNumberOfRecords();
                     previousKeywordFinished = isKeywordFinished(currentRawKeyword);
                 }
                 else if (RawKeyword::lineTerminatesKeyword(line)) {

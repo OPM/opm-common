@@ -7,8 +7,6 @@ add_executable(runRawParserKWsTests RawParserKWsTests.cpp)
 add_executable(runParserKWTests ParserKWTests.cpp)
 add_executable(runParserRecordSizeTests ParserRecordSizeTests.cpp)
 
-
-
 target_link_libraries(runParserTests Parser Logger ${Boost_LIBRARIES})
 target_link_libraries(runRawDataTests Parser Logger ${Boost_LIBRARIES})
 target_link_libraries(runRawDeckTests Parser Logger ${Boost_LIBRARIES})

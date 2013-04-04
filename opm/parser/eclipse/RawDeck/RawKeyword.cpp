@@ -23,7 +23,6 @@
 #include <iostream>
 
 namespace Opm {
-
     RawKeyword::RawKeyword() {
     }
 
@@ -41,6 +40,7 @@ namespace Opm {
     }
 
     bool RawKeyword::isValidKeyword(const std::string& keywordCandidate) {
+        
         std::string keywordRegex = "^[A-Z][A-Z,0-9]{1,7}$";
         int status;
         regex_t regularExpression;
