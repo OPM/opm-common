@@ -16,7 +16,6 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 #include <iostream>
 #include "RawDeck.hpp"
@@ -50,41 +49,63 @@ namespace Opm {
     }
 
     void RawDeck::readDataIntoDeck(const std::string& path, std::list<RawKeywordPtr>& keywordList) {
-        verifyValidInputPath(path);
+        boost::filesystem::path dataFolderPath = verifyValidInputPath(path);
         {
             std::ifstream inputstream;
-            Logger::info("Initializing from file: " + path);
+            Logger::info("Initializing from file: " + path );
             inputstream.open(path.c_str());
 
             std::string line;
             RawKeywordPtr currentRawKeyword;
-            bool previousKeywordFinished = true;
+            bool currentKeywordFinished = true;
+            bool includeFound = false;
             while (std::getline(inputstream, line)) {
                 std::string keywordString;
-
-                if (previousKeywordFinished && RawKeyword::tryParseKeyword(line, keywordString)) {
+                
+                if (currentKeywordFinished && RawKeyword::tryParseKeyword(line, keywordString)) {
                     currentRawKeyword = RawKeywordPtr(new RawKeyword(keywordString));
-                    keywordList.push_back(currentRawKeyword);
-                    previousKeywordFinished = isKeywordFinished(currentRawKeyword);
-                }
+                    if (keywordString == "INCLUDE") {
+                        includeFound = true;
+                    } else {
+                        keywordList.push_back(currentRawKeyword);
+                    }
+                    currentKeywordFinished = isKeywordFinished(currentRawKeyword);
+                } 
                 else if (currentRawKeyword != NULL && RawKeyword::lineContainsData(line)) {
                     currentRawKeyword->addRawRecordString(line);
-                    previousKeywordFinished = isKeywordFinished(currentRawKeyword);
-                }
+                    currentKeywordFinished = isKeywordFinished(currentRawKeyword);
+                } 
                 else if (RawKeyword::lineTerminatesKeyword(line)) {
-                    previousKeywordFinished = true;
+                    if (!currentRawKeyword->isPartialRecordStringEmpty()) {
+                        Logger::error("Reached keyword terminator slash, but there is non-terminated data on current keyword. "
+                        "Adding terminator, but records should be terminated by slash in data file");
+                        currentRawKeyword->addRawRecordString("/");
+                    }
+                    currentKeywordFinished = true;
+                }
+                
+                if (includeFound && currentKeywordFinished) {
+                    std::string includeFileString = currentRawKeyword->getRecords().front()->getRecords().front();
+                    
+                    boost::filesystem::path pathToIncludedFile(dataFolderPath);
+                    pathToIncludedFile /= includeFileString;
+                    
+                    readDataIntoDeck(pathToIncludedFile.string(), m_keywords);
+                    includeFound = false;
                 }
             }
             inputstream.close();
         }
     }
 
-    void RawDeck::verifyValidInputPath(const std::string& inputPath) {
+    boost::filesystem::path RawDeck::verifyValidInputPath(const std::string& inputPath) {
+        Logger::info("Verifying path: " + inputPath);
         boost::filesystem::path pathToInputFile(inputPath);
         if (!boost::filesystem::is_regular_file(pathToInputFile)) {
             Logger::error("Unable to open file with path: " + inputPath);
             throw std::invalid_argument("Given path is not a valid file-path, path: " + inputPath);
         }
+        return pathToInputFile.parent_path();
     }
 
     unsigned int RawDeck::getNumberOfKeywords() {
@@ -101,10 +122,10 @@ namespace Opm {
     std::ostream& operator<<(std::ostream& os, const RawDeck& deck) {
         for (std::list<RawKeywordPtr>::const_iterator keyword = deck.m_keywords.begin(); keyword != deck.m_keywords.end(); keyword++) {
             os << (*keyword)->getKeyword() << "                -- Keyword\n";
-            
+
             std::list<RawRecordPtr> records = (*keyword)->getRecords();
             for (std::list<RawRecordPtr>::const_iterator record = records.begin(); record != records.end(); record++) {
-                std::vector<std::string> recordItems  = (*record)->getRecords();
+                std::vector<std::string> recordItems = (*record)->getRecords();
 
                 for (std::vector<std::string>::const_iterator recordItem = recordItems.begin(); recordItem != recordItems.end(); recordItem++) {
                     os << (*recordItem) << " ";

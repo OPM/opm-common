@@ -23,6 +23,7 @@
 #include <ostream>
 #include <map>
 #include <boost/shared_ptr.hpp>
+#include <boost/filesystem.hpp>
 #include "opm/parser/eclipse/Logger.hpp"
 #include "RawKeyword.hpp"
 #include "RawParserKWs.hpp"
@@ -42,7 +43,7 @@ namespace Opm {
         RawParserKWsConstPtr m_rawParserKWs;
         void readDataIntoDeck(const std::string& path, std::list<RawKeywordPtr>& keywordList);
         bool isKeywordFinished(RawKeywordPtr rawKeyword);
-        static void verifyValidInputPath(const std::string& inputPath);
+        static boost::filesystem::path verifyValidInputPath(const std::string& inputPath);
     };
 
     typedef boost::shared_ptr<RawDeck> RawDeckPtr;

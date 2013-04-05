@@ -91,11 +91,15 @@ namespace Opm {
 
     void RawKeyword::addRawRecordString(const std::string& partialRecordString) {
         m_partialRecordString += partialRecordString;
-        if (RawRecord::isCompleteRecordString(m_partialRecordString)) {
+        if (RawRecord::isTerminatedRecordString(partialRecordString)) {
             RawRecordPtr record(new RawRecord(m_partialRecordString));
             m_records.push_back(record);
             m_partialRecordString.clear();
         }
+    }
+    
+    bool RawKeyword::isPartialRecordStringEmpty() {
+        return m_partialRecordString.size() == 0;
     }
 
     unsigned int RawKeyword::getNumberOfRecords() {

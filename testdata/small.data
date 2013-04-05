@@ -3,7 +3,7 @@ OIL
 
 -- Saa bare en - OK
 INCLUDE
-'sti til fil/den er her' /
+  'include path/readthis.sch' /
 -- Saa kommer en for lang en, skal bli "trunkert", slik at keywordet blir ABCXYZFF - OK
 
 GRIDUNIT Tull kommer her

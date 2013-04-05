@@ -36,7 +36,7 @@ namespace Opm {
         RawRecord(const std::string& singleRecordString);
         const std::string& getRecordString() const;
         const std::vector<std::string>& getRecords() const;
-        static bool isCompleteRecordString(const std::string& candidateRecordString);
+        static bool isTerminatedRecordString(const std::string& candidateRecordString);
         virtual ~RawRecord();
     private:
         std::string m_sanitizedRecordString;

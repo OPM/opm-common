@@ -43,6 +43,7 @@ namespace Opm {
         unsigned int getNumberOfRecords();
         void setKeyword(const std::string& keyword);
         void addRawRecordString(const std::string& partialRecordString);
+        bool isPartialRecordStringEmpty();
         virtual ~RawKeyword();
 
     private:

@@ -56,6 +56,9 @@ namespace Opm {
         add(std::pair<std::string, unsigned int>("WELLDIMS", 1));
         add(std::pair<std::string, unsigned int>("VFPPDIMS", 1));
         add(std::pair<std::string, unsigned int>("RPTSCHED", 1));
+        add(std::pair<std::string, unsigned int>("WHISTCTL", 1));
+
+
         add(std::pair<std::string, unsigned int>("TITLE", 0));
         add(std::pair<std::string, unsigned int>("RUNSPEC", 0));
         add(std::pair<std::string, unsigned int>("METRIC", 0));

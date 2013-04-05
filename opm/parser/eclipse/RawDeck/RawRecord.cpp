@@ -41,7 +41,7 @@ namespace Opm {
      * 
      */
     RawRecord::RawRecord(const std::string& singleRecordString) {
-        if (isCompleteRecordString(singleRecordString)) {
+        if (isTerminatedRecordString(singleRecordString)) {
             setRecordString(singleRecordString);
         } else {
             throw std::invalid_argument("Input string is not a complete record string,"
@@ -58,7 +58,7 @@ namespace Opm {
        return m_sanitizedRecordString;
     }
 
-    bool RawRecord::isCompleteRecordString(const std::string& candidateRecordString) {
+    bool RawRecord::isTerminatedRecordString(const std::string& candidateRecordString) {
         unsigned int terminatingSlash = findTerminatingSlash(candidateRecordString);
         bool hasTerminatingSlash = (terminatingSlash < candidateRecordString.size());
         int numberOfQuotes = std::count(candidateRecordString.begin(), candidateRecordString.end(), QUOTE);
@@ -101,7 +101,7 @@ namespace Opm {
     void RawRecord::processQuoteCharacters(std::string& currentToken, const char& currentChar, char& tokenStartCharacter) {
         if (currentChar == tokenStartCharacter) {
             if (currentToken.size() > 0) {
-                m_recordItems.push_back("'" + currentToken + "'"); //Adding quotes, not sure what is best.
+                m_recordItems.push_back(currentToken);
                 currentToken.clear();
             }
             tokenStartCharacter = '\0';

@@ -79,20 +79,20 @@ BOOST_AUTO_TEST_CASE(RawRecordGetRecordsCorrectElementsReturned) {
     const std::vector<std::string>& recordElements = record->getRecords();
     BOOST_REQUIRE_EQUAL((unsigned) 4, recordElements.size());
 
-    BOOST_REQUIRE_EQUAL("\'NODIR \'", recordElements[0]);
-    BOOST_REQUIRE_EQUAL("\'REVERS\'", recordElements[1]);
+    BOOST_REQUIRE_EQUAL("NODIR ", recordElements[0]);
+    BOOST_REQUIRE_EQUAL("REVERS", recordElements[1]);
     BOOST_REQUIRE_EQUAL("1", recordElements[2]);
     BOOST_REQUIRE_EQUAL("20", recordElements[3]);
 }
 
 BOOST_AUTO_TEST_CASE(RawRecordIsCompleteRecordCompleteRecordReturnsTrue) {
-    bool isComplete = Opm::RawRecord::isCompleteRecordString("'NODIR '  'REVERS'  1  20                                       /");
+    bool isComplete = Opm::RawRecord::isTerminatedRecordString("'NODIR '  'REVERS'  1  20                                       /");
     BOOST_REQUIRE_EQUAL(true, isComplete);
 }
 
 BOOST_AUTO_TEST_CASE(RawRecordIsCompleteRecordInCompleteRecordReturnsFalse) {
-    bool isComplete = Opm::RawRecord::isCompleteRecordString("'NODIR '  'REVERS'  1  20                                       ");
+    bool isComplete = Opm::RawRecord::isTerminatedRecordString("'NODIR '  'REVERS'  1  20                                       ");
     BOOST_REQUIRE_EQUAL(false, isComplete);
-    isComplete = Opm::RawRecord::isCompleteRecordString("'NODIR '  'REVERS  1  20 /");
+    isComplete = Opm::RawRecord::isTerminatedRecordString("'NODIR '  'REVERS  1  20 /");
     BOOST_REQUIRE_EQUAL(false, isComplete);
 }

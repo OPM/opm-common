@@ -83,8 +83,8 @@ BOOST_AUTO_TEST_CASE(ParseFileWithOneKeyword) {
     const std::vector<std::string>& recordElements = record->getRecords();
     BOOST_REQUIRE_EQUAL((unsigned) 4, recordElements.size());
 
-    BOOST_REQUIRE_EQUAL("\'NODIR\'", recordElements[0]);
-    BOOST_REQUIRE_EQUAL("\'REVERS\'", recordElements[1]);
+    BOOST_REQUIRE_EQUAL("NODIR", recordElements[0]);
+    BOOST_REQUIRE_EQUAL("REVERS", recordElements[1]);
     BOOST_REQUIRE_EQUAL("1", recordElements[2]);
     BOOST_REQUIRE_EQUAL("20", recordElements[3]);
 }
@@ -95,20 +95,28 @@ BOOST_AUTO_TEST_CASE(ParseFileWithFewKeywords) {
     ParserPtr parser(new Parser());
 
     RawDeckPtr rawDeck = parser->parse(singleKeywordFile.string());
-    BOOST_REQUIRE_EQUAL((unsigned) 5, rawDeck->getNumberOfKeywords());
+    BOOST_REQUIRE_EQUAL((unsigned) 7, rawDeck->getNumberOfKeywords());
 
     RawKeywordConstPtr matchingKeyword = rawDeck->getKeyword("OIL");
     std::list<RawRecordPtr> records = matchingKeyword->getRecords();
     BOOST_REQUIRE_EQUAL("OIL", matchingKeyword->getKeyword());
     BOOST_REQUIRE_EQUAL((unsigned) 0, records.size());
 
-    matchingKeyword = rawDeck->getKeyword("INCLUDE");
-    BOOST_REQUIRE_EQUAL("INCLUDE", matchingKeyword->getKeyword());
+    // The two next come in via the include of the include path/readthis.sch file
+    matchingKeyword = rawDeck->getKeyword("GRUPTREE");
+    BOOST_REQUIRE_EQUAL("GRUPTREE", matchingKeyword->getKeyword());
+    records = matchingKeyword->getRecords();
+    BOOST_REQUIRE_EQUAL((unsigned) 2, records.size());
+    
+    matchingKeyword = rawDeck->getKeyword("WHISTCTL");
+    BOOST_REQUIRE_EQUAL("WHISTCTL", matchingKeyword->getKeyword());
     records = matchingKeyword->getRecords();
     BOOST_REQUIRE_EQUAL((unsigned) 1, records.size());
-    RawRecordPtr theRecord = records.front();
-    const std::string& recordString = theRecord->getRecordString();
-    BOOST_REQUIRE_EQUAL("\'sti til fil/den er her\'", recordString);
+    
+    matchingKeyword = rawDeck->getKeyword("METRIC");
+    BOOST_REQUIRE_EQUAL("METRIC", matchingKeyword->getKeyword());
+    records = matchingKeyword->getRecords();
+    BOOST_REQUIRE_EQUAL((unsigned) 0, records.size());
 
     matchingKeyword = rawDeck->getKeyword("GRIDUNIT");
     BOOST_REQUIRE_EQUAL("GRIDUNIT", matchingKeyword->getKeyword());
@@ -131,11 +139,15 @@ BOOST_AUTO_TEST_CASE(ParseFileWithFewKeywords) {
 
 BOOST_AUTO_TEST_CASE(ParseFileWithManyKeywords) {
     boost::filesystem::path multipleKeywordFile("testdata/statoil/gurbat_trimmed.DATA");
+    std::cout << "BOOST path running ParseFullTestFile\n";
 
     ParserPtr parser(new Parser());
 
     RawDeckPtr rawDeck = parser->parse(multipleKeywordFile.string());
-    BOOST_REQUIRE_EQUAL((unsigned) 18, rawDeck->getNumberOfKeywords());
+    
+    //This check is not necessarily correct, 
+    //as it depends on that all the fixed recordNum keywords are specified
+    BOOST_REQUIRE_EQUAL((unsigned) 276, rawDeck->getNumberOfKeywords()); 
 }
 
 //NOTE: needs statoil dataset
