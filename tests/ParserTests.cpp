@@ -135,53 +135,6 @@ BOOST_AUTO_TEST_CASE(ParseFileWithFewKeywords) {
     BOOST_REQUIRE_EQUAL((unsigned) 2, records.size());
 }
 
-//NOTE: needs statoil dataset
-
-BOOST_AUTO_TEST_CASE(ParseFileWithManyKeywords) {
-    boost::filesystem::path multipleKeywordFile("testdata/statoil/gurbat_trimmed.DATA");
-    std::cout << "BOOST path running ParseFullTestFile\n";
-
-    ParserPtr parser(new Parser());
-
-    RawDeckPtr rawDeck = parser->parse(multipleKeywordFile.string());
-    
-    //This check is not necessarily correct, 
-    //as it depends on that all the fixed recordNum keywords are specified
-    BOOST_REQUIRE_EQUAL((unsigned) 275, rawDeck->getNumberOfKeywords()); 
-}
-
-//NOTE: needs statoil dataset
-
-BOOST_AUTO_TEST_CASE(ParseFullTestFile) {
-    boost::filesystem::path multipleKeywordFile("testdata/statoil/ECLIPSE.DATA");
-
-    ParserPtr parser(new Parser());
-
-    RawDeckPtr rawDeck = parser->parse(multipleKeywordFile.string());
-    // Note, cannot check the number of keywords, since the number of
-    // records are not defined (yet) for all these keywords.
-    // But we can check a copule of keywords, and that they have the correct
-    // number of records
-    
-    RawKeywordConstPtr matchingKeyword = rawDeck->getKeyword("OIL");
-    std::list<RawRecordPtr> records = matchingKeyword->getRecords();
-    BOOST_REQUIRE_EQUAL("OIL", matchingKeyword->getKeyword());
-    
-    BOOST_REQUIRE_EQUAL((unsigned) 0, records.size());
-
-    matchingKeyword = rawDeck->getKeyword("VFPPDIMS");
-    records = matchingKeyword->getRecords();
-    BOOST_REQUIRE_EQUAL("VFPPDIMS", matchingKeyword->getKeyword());
-    BOOST_REQUIRE_EQUAL((unsigned) 1, records.size());
-
-    const std::string& recordString = records.front()->getRecordString();
-    BOOST_REQUIRE_EQUAL("20  20  15  15  15   50", recordString);
-    std::vector<std::string> recordItems = records.front()->getRecords();
-    BOOST_REQUIRE_EQUAL((unsigned) 6, recordItems.size());
-
-
-}
-
 BOOST_AUTO_TEST_CASE(ParserAddKW) {
   Parser parser;
   {
