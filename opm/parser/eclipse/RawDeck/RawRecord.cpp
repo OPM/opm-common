@@ -50,7 +50,7 @@ namespace Opm {
     splitSingleRecordString();
   }
 
-  const std::vector<std::string>& RawRecord::getRecords() const {
+  const std::vector<std::string>& RawRecord::getItems() const {
     return m_recordItems;
   }
 

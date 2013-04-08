@@ -18,6 +18,7 @@
  */
 #include <boost/algorithm/string.hpp>
 #include <iostream>
+#include <stdexcept>
 #include "RawDeck.hpp"
 #include "RawConsts.hpp"
 
@@ -32,24 +33,25 @@ namespace Opm {
    * O(n), not using map or hash because the keywords are not unique, 
    * and the order matters. Returns first matching keyword.
    */
-  RawKeywordPtr RawDeck::getKeyword(const std::string& keyword) {
-    for (std::list<RawKeywordPtr>::iterator it = m_keywords.begin(); it != m_keywords.end(); it++) {
+  RawKeywordConstPtr RawDeck::getKeyword(const std::string& keyword) const {
+    for (std::list<RawKeywordConstPtr>::const_iterator it = m_keywords.begin(); it != m_keywords.end(); it++) {
       if ((*it)->getKeyword() == keyword) {
         return (*it);
       }
     }
-    return RawKeywordPtr(new RawKeyword());
+    throw std::invalid_argument("Keyword not found, keyword: " + keyword);
   }
 
-  /*
-   * Read data into deck, from specified path.
-   * Throws invalid_argument exception if path not valid.
-   */
+  bool RawDeck::hasKeyword(const std::string& keyword) const {
+    for (std::list<RawKeywordConstPtr>::const_iterator it = m_keywords.begin(); it != m_keywords.end(); it++) {
+       if ((*it)->getKeyword() == keyword) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   void RawDeck::readDataIntoDeck(const std::string& path) {
-    readDataIntoDeck(path, m_keywords);
-  }
-
-  void RawDeck::readDataIntoDeck(const std::string& path, std::list<RawKeywordPtr>& keywordList) {
     boost::filesystem::path dataFolderPath = verifyValidInputPath(path);
     {
       std::ifstream inputstream;
@@ -61,29 +63,26 @@ namespace Opm {
       while (std::getline(inputstream, line)) {
         std::string keywordString;
         if (currentRawKeyword == NULL) {
-          popAndProcessInclude(keywordList, dataFolderPath);
-
           if (RawKeyword::tryParseKeyword(line, keywordString)) {
             currentRawKeyword = RawKeywordPtr(new RawKeyword(keywordString));
             if (isKeywordFinished(currentRawKeyword)) {
-              keywordList.push_back(currentRawKeyword);
+              addKeyword(currentRawKeyword, dataFolderPath);
               currentRawKeyword.reset();
             }
           }
         } else if (currentRawKeyword != NULL && RawKeyword::lineContainsData(line)) {
           currentRawKeyword->addRawRecordString(line);
           if (isKeywordFinished(currentRawKeyword)) {
-            keywordList.push_back(currentRawKeyword);
+            addKeyword(currentRawKeyword, dataFolderPath);
             currentRawKeyword.reset();
           }
         } else if (currentRawKeyword != NULL && RawKeyword::lineTerminatesKeyword(line)) {
           if (!currentRawKeyword->isPartialRecordStringEmpty()) {
             Logger::error("Reached keyword terminator slash, but there is non-terminated data on current keyword. "
                     "Adding terminator, but records should be terminated by slash in data file");
-            currentRawKeyword->addRawRecordString("/");
-
+            currentRawKeyword->addRawRecordString(std::string(1,Opm::RawConsts::slash));
           }
-          keywordList.push_back(currentRawKeyword);
+          addKeyword(currentRawKeyword, dataFolderPath);
           currentRawKeyword.reset();
         }
       }
@@ -91,16 +90,15 @@ namespace Opm {
     }
   }
 
-  void RawDeck::popAndProcessInclude(std::list<RawKeywordPtr>& keywordList, boost::filesystem::path dataFolderPath) {
-    if (!keywordList.empty() && keywordList.back()->getKeyword() == Opm::RawConsts::include) {
-      RawKeywordPtr includeKeyword = keywordList.back();
-      keywordList.pop_back(); // Don't need the include keyword in the deck.
-
-      std::string includeFileString = includeKeyword->getRecords().front()->getRecords().front();
+  void RawDeck::addKeyword(RawKeywordConstPtr keyword, const boost::filesystem::path& dataFolderPath) {
+    if (keyword->getKeyword() == Opm::RawConsts::include) {
+      std::string includeFileString = keyword->getRecords().front()->getItems().front();
       boost::filesystem::path pathToIncludedFile(dataFolderPath);
       pathToIncludedFile /= includeFileString;
 
-      readDataIntoDeck(pathToIncludedFile.string(), m_keywords);
+      readDataIntoDeck(pathToIncludedFile.string());
+    } else {
+      m_keywords.push_back(keyword);
     }
   }
 
@@ -114,11 +112,11 @@ namespace Opm {
     return pathToInputFile.parent_path();
   }
 
-  unsigned int RawDeck::getNumberOfKeywords() {
+  unsigned int RawDeck::getNumberOfKeywords() const {
     return m_keywords.size();
   }
 
-  bool RawDeck::isKeywordFinished(RawKeywordPtr rawKeyword) {
+  bool RawDeck::isKeywordFinished(RawKeywordConstPtr rawKeyword) {
     if (m_rawParserKWs->keywordExists(rawKeyword->getKeyword())) {
       return rawKeyword->getNumberOfRecords() == m_rawParserKWs->getFixedNumberOfRecords(rawKeyword->getKeyword());
     }
@@ -126,12 +124,12 @@ namespace Opm {
   }
 
   std::ostream& operator<<(std::ostream& os, const RawDeck& deck) {
-    for (std::list<RawKeywordPtr>::const_iterator keyword = deck.m_keywords.begin(); keyword != deck.m_keywords.end(); keyword++) {
+    for (std::list<RawKeywordConstPtr>::const_iterator keyword = deck.m_keywords.begin(); keyword != deck.m_keywords.end(); keyword++) {
       os << (*keyword)->getKeyword() << "                -- Keyword\n";
 
-      std::list<RawRecordPtr> records = (*keyword)->getRecords();
-      for (std::list<RawRecordPtr>::const_iterator record = records.begin(); record != records.end(); record++) {
-        std::vector<std::string> recordItems = (*record)->getRecords();
+      std::list<RawRecordConstPtr> records = (*keyword)->getRecords();
+      for (std::list<RawRecordConstPtr>::const_iterator record = records.begin(); record != records.end(); record++) {
+        std::vector<std::string> recordItems = (*record)->getItems();
 
         for (std::vector<std::string>::const_iterator recordItem = recordItems.begin(); recordItem != recordItems.end(); recordItem++) {
           os << (*recordItem) << " ";

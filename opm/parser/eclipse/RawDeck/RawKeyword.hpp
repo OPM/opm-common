@@ -38,17 +38,17 @@ namespace Opm {
         static bool lineContainsData(const std::string& line);
         static bool lineTerminatesKeyword(const std::string& line);
 
-        std::string getKeyword() const;
-        const std::list<RawRecordPtr>& getRecords() const;
-        unsigned int getNumberOfRecords();
+        const std::string& getKeyword() const;
+        const std::list<RawRecordConstPtr>& getRecords() const;
+        unsigned int getNumberOfRecords() const;
         void setKeyword(const std::string& keyword);
         void addRawRecordString(const std::string& partialRecordString);
-        bool isPartialRecordStringEmpty();
+        bool isPartialRecordStringEmpty() const;
         virtual ~RawKeyword();
 
     private:
         std::string m_keyword;
-        std::list<RawRecordPtr> m_records;
+        std::list<RawRecordConstPtr> m_records;
         std::string m_partialRecordString;
         static bool isValidKeyword(const std::string& keywordCandidate);
     };

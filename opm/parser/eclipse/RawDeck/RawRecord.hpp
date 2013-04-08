@@ -31,12 +31,13 @@ namespace Opm {
     RawRecord();
     RawRecord(const std::string& singleRecordString);
     const std::string& getRecordString() const;
-    const std::vector<std::string>& getRecords() const;
+    const std::vector<std::string>& getItems() const;
     static bool isTerminatedRecordString(const std::string& candidateRecordString);
     virtual ~RawRecord();
   private:
     std::string m_sanitizedRecordString;
     std::vector<std::string> m_recordItems;
+    
     void setRecordString(const std::string& singleRecordString);
     void splitSingleRecordString();
     void processSeparatorCharacter(std::string& currentToken, const char& currentChar, char& tokenStarter);
@@ -46,6 +47,8 @@ namespace Opm {
     static unsigned int findTerminatingSlash(const std::string& singleRecordString);
   };
   typedef boost::shared_ptr<RawRecord> RawRecordPtr;
+  typedef boost::shared_ptr<const RawRecord> RawRecordConstPtr;
+
 }
 
 #endif	/* RECORD_HPP */

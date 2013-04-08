@@ -104,19 +104,19 @@ namespace Opm {
     }
   }
 
-  bool RawKeyword::isPartialRecordStringEmpty() {
+  bool RawKeyword::isPartialRecordStringEmpty() const {
     return m_partialRecordString.size() == 0;
   }
 
-  unsigned int RawKeyword::getNumberOfRecords() {
+  unsigned int RawKeyword::getNumberOfRecords() const {
     return m_records.size();
   }
 
-  const std::list<RawRecordPtr>& RawKeyword::getRecords() const {
+  const std::list<RawRecordConstPtr>& RawKeyword::getRecords() const {
     return m_records;
   }
 
-  std::string RawKeyword::getKeyword() const {
+  const std::string& RawKeyword::getKeyword() const {
     return m_keyword;
   }
 

@@ -33,18 +33,19 @@ namespace Opm {
   class RawDeck {
   public:
     RawDeck(RawParserKWsConstPtr rawParserKWs);
+    RawKeywordConstPtr getKeyword(const std::string& keyword) const;
+    bool hasKeyword(const std::string& keyword) const;
     void readDataIntoDeck(const std::string& path);
-    RawKeywordPtr getKeyword(const std::string& keyword);
-    unsigned int getNumberOfKeywords();
+    unsigned int getNumberOfKeywords() const;
     friend std::ostream& operator<<(std::ostream& os, const RawDeck& deck);
     virtual ~RawDeck();
 
   private:
-    std::list<RawKeywordPtr> m_keywords;
+    std::list<RawKeywordConstPtr> m_keywords;
     RawParserKWsConstPtr m_rawParserKWs;
-    void readDataIntoDeck(const std::string& path, std::list<RawKeywordPtr>& keywordList);
-    void popAndProcessInclude(std::list<RawKeywordPtr>& keywordList, boost::filesystem::path baseDataFolder);
-    bool isKeywordFinished(RawKeywordPtr rawKeyword);
+    void readDataIntoDeck(const std::string& path, std::list<RawKeywordConstPtr>& keywordList);
+    void addKeyword(RawKeywordConstPtr keyword, const boost::filesystem::path& baseDataFolder);
+    bool isKeywordFinished(RawKeywordConstPtr rawKeyword);
     static boost::filesystem::path verifyValidInputPath(const std::string& inputPath);
   };
 
