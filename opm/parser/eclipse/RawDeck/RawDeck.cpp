@@ -22,121 +22,128 @@
 
 namespace Opm {
 
-    RawDeck::RawDeck(RawParserKWsConstPtr rawParserKWs) {
-        m_rawParserKWs = rawParserKWs;
-    }
+  RawDeck::RawDeck(RawParserKWsConstPtr rawParserKWs) {
+    m_rawParserKWs = rawParserKWs;
+  }
 
-    /*
-     * Iterate through list of RawKeywords in search for the specified string.
-     * O(n), not using map or hash because the keywords are not unique, 
-     * and the order matters. Returns first matching keyword.
-     */
-    RawKeywordPtr RawDeck::getKeyword(const std::string& keyword) {
-        for (std::list<RawKeywordPtr>::iterator it = m_keywords.begin(); it != m_keywords.end(); it++) {
-            if ((*it)->getKeyword() == keyword) {
-                return (*it);
+  /*
+   * Iterate through list of RawKeywords in search for the specified string.
+   * O(n), not using map or hash because the keywords are not unique, 
+   * and the order matters. Returns first matching keyword.
+   */
+  RawKeywordPtr RawDeck::getKeyword(const std::string& keyword) {
+    for (std::list<RawKeywordPtr>::iterator it = m_keywords.begin(); it != m_keywords.end(); it++) {
+      if ((*it)->getKeyword() == keyword) {
+        return (*it);
+      }
+    }
+    return RawKeywordPtr(new RawKeyword());
+  }
+
+  /*
+   * Read data into deck, from specified path.
+   * Throws invalid_argument exception if path not valid.
+   */
+  void RawDeck::readDataIntoDeck(const std::string& path) {
+    readDataIntoDeck(path, m_keywords);
+  }
+
+  void RawDeck::readDataIntoDeck(const std::string& path, std::list<RawKeywordPtr>& keywordList) {
+    boost::filesystem::path dataFolderPath = verifyValidInputPath(path);
+    {
+      std::ifstream inputstream;
+      Logger::info("Initializing from file: " + path);
+      inputstream.open(path.c_str());
+
+      std::string line;
+      RawKeywordPtr currentRawKeyword;
+      while (std::getline(inputstream, line)) {
+        std::string keywordString;
+        if (currentRawKeyword == NULL) {
+          popAndProcessInclude(keywordList, dataFolderPath);
+
+          if (RawKeyword::tryParseKeyword(line, keywordString)) {
+            currentRawKeyword = RawKeywordPtr(new RawKeyword(keywordString));
+            if (isKeywordFinished(currentRawKeyword)) {
+              keywordList.push_back(currentRawKeyword);
+              currentRawKeyword.reset();
             }
+          }
         }
-        return RawKeywordPtr(new RawKeyword());
-    }
-
-    /*
-     * Read data into deck, from specified path.
-     * Throws invalid_argument exception if path not valid.
-     */
-    void RawDeck::readDataIntoDeck(const std::string& path) {
-        readDataIntoDeck(path, m_keywords);
-    }
-
-    void RawDeck::readDataIntoDeck(const std::string& path, std::list<RawKeywordPtr>& keywordList) {
-        boost::filesystem::path dataFolderPath = verifyValidInputPath(path);
-        {
-            std::ifstream inputstream;
-            Logger::info("Initializing from file: " + path );
-            inputstream.open(path.c_str());
-
-            std::string line;
-            RawKeywordPtr currentRawKeyword;
-            bool currentKeywordFinished = true;
-            bool includeFound = false;
-            while (std::getline(inputstream, line)) {
-                std::string keywordString;
-                
-                if (currentKeywordFinished && RawKeyword::tryParseKeyword(line, keywordString)) {
-                    currentRawKeyword = RawKeywordPtr(new RawKeyword(keywordString));
-                    if (keywordString == "INCLUDE") {
-                        includeFound = true;
-                    } else {
-                        keywordList.push_back(currentRawKeyword);
-                    }
-                    currentKeywordFinished = isKeywordFinished(currentRawKeyword);
-                } 
-                else if (currentRawKeyword != NULL && RawKeyword::lineContainsData(line)) {
-                    currentRawKeyword->addRawRecordString(line);
-                    currentKeywordFinished = isKeywordFinished(currentRawKeyword);
-                } 
-                else if (RawKeyword::lineTerminatesKeyword(line)) {
-                    if (!currentRawKeyword->isPartialRecordStringEmpty()) {
-                        Logger::error("Reached keyword terminator slash, but there is non-terminated data on current keyword. "
-                        "Adding terminator, but records should be terminated by slash in data file");
-                        currentRawKeyword->addRawRecordString("/");
-                    }
-                    currentKeywordFinished = true;
-                }
-                
-                if (includeFound && currentKeywordFinished) {
-                    std::string includeFileString = currentRawKeyword->getRecords().front()->getRecords().front();
-                    
-                    boost::filesystem::path pathToIncludedFile(dataFolderPath);
-                    pathToIncludedFile /= includeFileString;
-                    
-                    readDataIntoDeck(pathToIncludedFile.string(), m_keywords);
-                    includeFound = false;
-                }
-            }
-            inputstream.close();
+        else if (currentRawKeyword != NULL && RawKeyword::lineContainsData(line)) {
+          currentRawKeyword->addRawRecordString(line);
+          if (isKeywordFinished(currentRawKeyword)) {
+            keywordList.push_back(currentRawKeyword);
+            currentRawKeyword.reset();
+          }
         }
-    }
+        else if (currentRawKeyword != NULL && RawKeyword::lineTerminatesKeyword(line)) {
+          if (!currentRawKeyword->isPartialRecordStringEmpty()) {
+            Logger::error("Reached keyword terminator slash, but there is non-terminated data on current keyword. "
+                    "Adding terminator, but records should be terminated by slash in data file");
+            currentRawKeyword->addRawRecordString("/");
 
-    boost::filesystem::path RawDeck::verifyValidInputPath(const std::string& inputPath) {
-        Logger::info("Verifying path: " + inputPath);
-        boost::filesystem::path pathToInputFile(inputPath);
-        if (!boost::filesystem::is_regular_file(pathToInputFile)) {
-            Logger::error("Unable to open file with path: " + inputPath);
-            throw std::invalid_argument("Given path is not a valid file-path, path: " + inputPath);
+          }
+          keywordList.push_back(currentRawKeyword);
+          currentRawKeyword.reset();
         }
-        return pathToInputFile.parent_path();
+      }
+      inputstream.close();
     }
+  }
 
-    unsigned int RawDeck::getNumberOfKeywords() {
-        return m_keywords.size();
+  void RawDeck::popAndProcessInclude(std::list<RawKeywordPtr>& keywordList, boost::filesystem::path dataFolderPath) {
+    if (!keywordList.empty() && keywordList.back()->getKeyword() == "INCLUDE") {
+      RawKeywordPtr includeKeyword = keywordList.back();
+      keywordList.pop_back(); // Don't need the include keyword in the deck.
+      
+      std::string includeFileString = includeKeyword->getRecords().front()->getRecords().front();
+      boost::filesystem::path pathToIncludedFile(dataFolderPath);
+      pathToIncludedFile /= includeFileString;
+
+      readDataIntoDeck(pathToIncludedFile.string(), m_keywords);
     }
+  }
 
-    bool RawDeck::isKeywordFinished(RawKeywordPtr rawKeyword) {
-        if (m_rawParserKWs->keywordExists(rawKeyword->getKeyword())) {
-            return rawKeyword->getNumberOfRecords() == m_rawParserKWs->getFixedNumberOfRecords(rawKeyword->getKeyword());
+  boost::filesystem::path RawDeck::verifyValidInputPath(const std::string& inputPath) {
+    Logger::info("Verifying path: " + inputPath);
+    boost::filesystem::path pathToInputFile(inputPath);
+    if (!boost::filesystem::is_regular_file(pathToInputFile)) {
+      Logger::error("Unable to open file with path: " + inputPath);
+      throw std::invalid_argument("Given path is not a valid file-path, path: " + inputPath);
+    }
+    return pathToInputFile.parent_path();
+  }
+
+  unsigned int RawDeck::getNumberOfKeywords() {
+    return m_keywords.size();
+  }
+
+  bool RawDeck::isKeywordFinished(RawKeywordPtr rawKeyword) {
+    if (m_rawParserKWs->keywordExists(rawKeyword->getKeyword())) {
+      return rawKeyword->getNumberOfRecords() == m_rawParserKWs->getFixedNumberOfRecords(rawKeyword->getKeyword());
+    }
+    return false;
+  }
+
+  std::ostream& operator<<(std::ostream& os, const RawDeck& deck) {
+    for (std::list<RawKeywordPtr>::const_iterator keyword = deck.m_keywords.begin(); keyword != deck.m_keywords.end(); keyword++) {
+      os << (*keyword)->getKeyword() << "                -- Keyword\n";
+
+      std::list<RawRecordPtr> records = (*keyword)->getRecords();
+      for (std::list<RawRecordPtr>::const_iterator record = records.begin(); record != records.end(); record++) {
+        std::vector<std::string> recordItems = (*record)->getRecords();
+
+        for (std::vector<std::string>::const_iterator recordItem = recordItems.begin(); recordItem != recordItems.end(); recordItem++) {
+          os << (*recordItem) << " ";
         }
-        return false;
+        os << " /                -- Data\n";
+      }
+      os << "\n";
     }
+    return os;
+  }
 
-    std::ostream& operator<<(std::ostream& os, const RawDeck& deck) {
-        for (std::list<RawKeywordPtr>::const_iterator keyword = deck.m_keywords.begin(); keyword != deck.m_keywords.end(); keyword++) {
-            os << (*keyword)->getKeyword() << "                -- Keyword\n";
-
-            std::list<RawRecordPtr> records = (*keyword)->getRecords();
-            for (std::list<RawRecordPtr>::const_iterator record = records.begin(); record != records.end(); record++) {
-                std::vector<std::string> recordItems = (*record)->getRecords();
-
-                for (std::vector<std::string>::const_iterator recordItem = recordItems.begin(); recordItem != recordItems.end(); recordItem++) {
-                    os << (*recordItem) << " ";
-                }
-                os << " /                -- Data\n";
-            }
-            os << "\n";
-        }
-        return os;
-    }
-
-    RawDeck::~RawDeck() {
-    }
+  RawDeck::~RawDeck() {
+  }
 }

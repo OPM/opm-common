@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(ParseFileWithManyKeywords) {
     
     //This check is not necessarily correct, 
     //as it depends on that all the fixed recordNum keywords are specified
-    BOOST_REQUIRE_EQUAL((unsigned) 276, rawDeck->getNumberOfKeywords()); 
+    BOOST_REQUIRE_EQUAL((unsigned) 275, rawDeck->getNumberOfKeywords()); 
 }
 
 //NOTE: needs statoil dataset
