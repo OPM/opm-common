@@ -28,10 +28,6 @@ namespace Opm {
 
     class RawRecord {
     public:
-        static const char SLASH;
-        static const char QUOTE;
-        static const std::string SEPARATORS;
-
         RawRecord();
         RawRecord(const std::string& singleRecordString);
         const std::string& getRecordString() const;

@@ -27,7 +27,6 @@ namespace Opm {
 
     RawDeckPtr Parser::parse(const std::string &path) {
         Logger::initLogger();
-        Logger::setLogLevel(Logger::DEBUG);
         Logger::info("Starting parsing of file: " + path);
         RawDeckPtr rawDeck(new RawDeck(RawParserKWsConstPtr(new RawParserKWs())));
         rawDeck->readDataIntoDeck(path);

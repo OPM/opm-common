@@ -19,6 +19,7 @@
 #include <boost/algorithm/string.hpp>
 #include <iostream>
 #include "RawDeck.hpp"
+#include "RawConsts.hpp"
 
 namespace Opm {
 
@@ -93,7 +94,7 @@ namespace Opm {
   }
 
   void RawDeck::popAndProcessInclude(std::list<RawKeywordPtr>& keywordList, boost::filesystem::path dataFolderPath) {
-    if (!keywordList.empty() && keywordList.back()->getKeyword() == "INCLUDE") {
+    if (!keywordList.empty() && keywordList.back()->getKeyword() == Opm::RawConsts::include) {
       RawKeywordPtr includeKeyword = keywordList.back();
       keywordList.pop_back(); // Don't need the include keyword in the deck.
       

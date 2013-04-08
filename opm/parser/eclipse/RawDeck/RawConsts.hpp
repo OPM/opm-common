@@ -17,31 +17,20 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PARSER_H
-#define PARSER_H
-#include <string>
-#include <map>
-#include <boost/shared_ptr.hpp>
+#ifndef RAWCONSTS_HPP
+#define	RAWCONSTS_HPP
 
-#include <opm/parser/eclipse/Logger.hpp>
-#include <opm/parser/eclipse/RawDeck/RawDeck.hpp>
-#include <opm/parser/eclipse/Parser/ParserKW.hpp>
 
 namespace Opm {
+  namespace RawConsts {
+    const char slash = '/';
+    const char quote = '\'';
+    const std::string separators = "\t ";
+    const std::string include = "INCLUDE";
+    const unsigned int maxKeywordLength = 8;
+  }
+}
 
-    class Parser {
-    public:
-        Parser();
-        RawDeckPtr parse(const std::string &path);
-        virtual   ~Parser();
 
-        void       addKW(ParserKWConstPtr parserKW);
-
-    private:
-        std::map<std::string,ParserKWConstPtr> keywords;
-    };
-    
-    typedef boost::shared_ptr<Parser> ParserPtr;
-} // namespace Opm
-#endif  /* PARSER_H */
+#endif	/* RAWCONSTS_HPP */
 
