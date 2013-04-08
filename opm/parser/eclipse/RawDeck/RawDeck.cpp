@@ -70,15 +70,13 @@ namespace Opm {
               currentRawKeyword.reset();
             }
           }
-        }
-        else if (currentRawKeyword != NULL && RawKeyword::lineContainsData(line)) {
+        } else if (currentRawKeyword != NULL && RawKeyword::lineContainsData(line)) {
           currentRawKeyword->addRawRecordString(line);
           if (isKeywordFinished(currentRawKeyword)) {
             keywordList.push_back(currentRawKeyword);
             currentRawKeyword.reset();
           }
-        }
-        else if (currentRawKeyword != NULL && RawKeyword::lineTerminatesKeyword(line)) {
+        } else if (currentRawKeyword != NULL && RawKeyword::lineTerminatesKeyword(line)) {
           if (!currentRawKeyword->isPartialRecordStringEmpty()) {
             Logger::error("Reached keyword terminator slash, but there is non-terminated data on current keyword. "
                     "Adding terminator, but records should be terminated by slash in data file");
@@ -97,7 +95,7 @@ namespace Opm {
     if (!keywordList.empty() && keywordList.back()->getKeyword() == Opm::RawConsts::include) {
       RawKeywordPtr includeKeyword = keywordList.back();
       keywordList.pop_back(); // Don't need the include keyword in the deck.
-      
+
       std::string includeFileString = includeKeyword->getRecords().front()->getRecords().front();
       boost::filesystem::path pathToIncludedFile(dataFolderPath);
       pathToIncludedFile /= includeFileString;

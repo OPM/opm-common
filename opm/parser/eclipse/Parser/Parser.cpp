@@ -22,25 +22,25 @@
 
 namespace Opm {
 
-    Parser::Parser() {
-    }
+  Parser::Parser() {
+  }
 
-    RawDeckPtr Parser::parse(const std::string &path) {
-        Logger::initLogger();
-        Logger::info("Starting parsing of file: " + path);
-        RawDeckPtr rawDeck(new RawDeck(RawParserKWsConstPtr(new RawParserKWs())));
-        rawDeck->readDataIntoDeck(path);
-        Logger::info("Done parsing of file: " + path);
-        Logger::closeLogger();
-        return rawDeck;
-    }
+  RawDeckPtr Parser::parse(const std::string &path) {
+    Logger::initLogger();
+    Logger::info("Starting parsing of file: " + path);
+    RawDeckPtr rawDeck(new RawDeck(RawParserKWsConstPtr(new RawParserKWs())));
+    rawDeck->readDataIntoDeck(path);
+    Logger::info("Done parsing of file: " + path);
+    Logger::closeLogger();
+    return rawDeck;
+  }
 
-    Parser::~Parser() {
-    }
+  Parser::~Parser() {
+  }
 
-    void Parser::addKW(ParserKWConstPtr parserKW) {
-        keywords.insert(std::make_pair(parserKW->getName(), parserKW));
-    }
+  void Parser::addKW(ParserKWConstPtr parserKW) {
+    keywords.insert(std::make_pair(parserKW->getName(), parserKW));
+  }
 
 
 } // namespace Opm

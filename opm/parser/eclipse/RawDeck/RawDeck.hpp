@@ -30,26 +30,25 @@
 
 namespace Opm {
 
-    class RawDeck {
+  class RawDeck {
+  public:
+    RawDeck(RawParserKWsConstPtr rawParserKWs);
+    void readDataIntoDeck(const std::string& path);
+    RawKeywordPtr getKeyword(const std::string& keyword);
+    unsigned int getNumberOfKeywords();
+    friend std::ostream& operator<<(std::ostream& os, const RawDeck& deck);
+    virtual ~RawDeck();
 
-    public:
-        RawDeck(RawParserKWsConstPtr rawParserKWs);
-        void readDataIntoDeck(const std::string& path);
-        RawKeywordPtr getKeyword(const std::string& keyword);
-        unsigned int getNumberOfKeywords();
-        friend std::ostream& operator<<(std::ostream& os, const RawDeck& deck);
-        virtual ~RawDeck();
+  private:
+    std::list<RawKeywordPtr> m_keywords;
+    RawParserKWsConstPtr m_rawParserKWs;
+    void readDataIntoDeck(const std::string& path, std::list<RawKeywordPtr>& keywordList);
+    void popAndProcessInclude(std::list<RawKeywordPtr>& keywordList, boost::filesystem::path baseDataFolder);
+    bool isKeywordFinished(RawKeywordPtr rawKeyword);
+    static boost::filesystem::path verifyValidInputPath(const std::string& inputPath);
+  };
 
-    private:
-        std::list<RawKeywordPtr> m_keywords;
-        RawParserKWsConstPtr m_rawParserKWs;
-        void readDataIntoDeck(const std::string& path, std::list<RawKeywordPtr>& keywordList);
-        void popAndProcessInclude(std::list<RawKeywordPtr>& keywordList, boost::filesystem::path baseDataFolder);
-        bool isKeywordFinished(RawKeywordPtr rawKeyword);
-        static boost::filesystem::path verifyValidInputPath(const std::string& inputPath);
-    };
-
-    typedef boost::shared_ptr<RawDeck> RawDeckPtr;
+  typedef boost::shared_ptr<RawDeck> RawDeckPtr;
 }
 
 #endif  /* RAWDECK_HPP */

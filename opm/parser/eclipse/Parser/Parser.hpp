@@ -29,19 +29,19 @@
 
 namespace Opm {
 
-    class Parser {
-    public:
-        Parser();
-        RawDeckPtr parse(const std::string &path);
-        virtual   ~Parser();
+  class Parser {
+  public:
+    Parser();
+    RawDeckPtr parse(const std::string &path);
+    virtual ~Parser();
 
-        void       addKW(ParserKWConstPtr parserKW);
+    void addKW(ParserKWConstPtr parserKW);
 
-    private:
-        std::map<std::string,ParserKWConstPtr> keywords;
-    };
-    
-    typedef boost::shared_ptr<Parser> ParserPtr;
+  private:
+    std::map<std::string, ParserKWConstPtr> keywords;
+  };
+
+  typedef boost::shared_ptr<Parser> ParserPtr;
 } // namespace Opm
 #endif  /* PARSER_H */
 

@@ -15,7 +15,7 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #ifndef PARSER_RECORD_SIZE_H
 #define PARSER_RECORD_SIZE_H
@@ -28,19 +28,18 @@
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 
 namespace Opm {
-  
+
   class ParserRecordSize {
-    
   public:
     ParserRecordSize();
     ParserRecordSize(size_t fixedSize);
     ~ParserRecordSize();
-    
+
     size_t recordSize();
-    
-    
+
+
   private:
-    enum   ParserRecordSizeEnum recordSizeType;
+    enum ParserRecordSizeEnum recordSizeType;
     size_t fixedSize;
   };
 

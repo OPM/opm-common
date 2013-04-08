@@ -25,27 +25,27 @@
 
 namespace Opm {
 
-    class Logger {
-    public:
-        static const int DEBUG;
-        static const int INFO;
-        static const int ERROR;
-        
-        static void initLogger();
-        static void closeLogger();
-        static void setLogLevel(int logLevel);
-        static void setPath(const std::string& path);
-        static void debug(const std::string& message);
-        static void info(const std::string& message);
-        static void error(const std::string& message);
-        virtual ~Logger();
-    private:
-        static std::string m_logFile;
-        static std::ofstream m_logStream;
-        static int m_logLevel;
-        static void log(const std::string& message, std::string logLevel);
-        static void initLoggingConstants();
-    };
+  class Logger {
+  public:
+    static const int DEBUG;
+    static const int INFO;
+    static const int ERROR;
+
+    static void initLogger();
+    static void closeLogger();
+    static void setLogLevel(int logLevel);
+    static void setPath(const std::string& path);
+    static void debug(const std::string& message);
+    static void info(const std::string& message);
+    static void error(const std::string& message);
+    virtual ~Logger();
+  private:
+    static std::string m_logFile;
+    static std::ofstream m_logStream;
+    static int m_logLevel;
+    static void log(const std::string& message, std::string logLevel);
+    static void initLoggingConstants();
+  };
 }// namespace Opm
 #endif	/* LOGGER_HPP */
 
