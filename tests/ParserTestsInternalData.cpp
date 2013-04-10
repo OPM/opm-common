@@ -20,8 +20,6 @@
 #include <stdexcept>
 #include <iostream>
 #include <boost/filesystem.hpp>
-#include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/path.hpp>
 
 #define BOOST_TEST_MODULE ParserTestsInternalData
 #include <boost/test/unit_test.hpp>
