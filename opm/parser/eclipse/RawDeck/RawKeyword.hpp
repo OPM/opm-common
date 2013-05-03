@@ -13,7 +13,7 @@
 #include <list>
 #include <boost/shared_ptr.hpp>
 
-#include "opm/parser/eclipse/Logger.hpp"
+#include "opm/parser/eclipse/Logger/Logger.hpp"
 #include "RawRecord.hpp"
 
 namespace Opm {

@@ -10,7 +10,7 @@
 #include <list>
 #include <iostream>
 #include <boost/shared_ptr.hpp>
-#include "opm/parser/eclipse/Logger.hpp"
+#include "opm/parser/eclipse/Logger/Logger.hpp"
 #include "RawKeyword.hpp"
 
 namespace Opm {
