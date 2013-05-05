@@ -29,12 +29,18 @@
 
 namespace Opm {
 
+  /// The hub of the parsing process.
+  /// An input file in the eclipse data format is specified, several steps of parsing is performed
+  /// and the semantically parsed result is returned.
   class Parser {
   public:
     Parser();
+
+    /// The starting point of the parsing process. The supplied file is parsed, and the resulting Deck is returned.
     RawDeckPtr parse(const std::string &path);
     virtual ~Parser();
-
+    
+    /// Method to add ParserKW instances, these holding type and size information about the keywords and their data.
     void addKW(ParserKWConstPtr parserKW);
 
   private:

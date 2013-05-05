@@ -28,11 +28,9 @@ namespace Opm {
     m_rawParserKWs = rawParserKWs;
   }
 
-  /*
-   * Iterate through list of RawKeywords in search for the specified string.
-   * O(n), not using map or hash because the keywords are not unique, 
-   * and the order matters. Returns first matching keyword.
-   */
+  /// Iterate through list of RawKeywords in search for the specified string.
+  /// O(n), not using map or hash because the keywords are not unique, 
+  /// and the order matters. Returns first matching keyword.
   RawKeywordConstPtr RawDeck::getKeyword(const std::string& keyword) const {
     for (std::list<RawKeywordConstPtr>::const_iterator it = m_keywords.begin(); it != m_keywords.end(); it++) {
       if ((*it)->getKeyword() == keyword) {
@@ -51,6 +49,10 @@ namespace Opm {
     return false;
   }
 
+  /// The main data reading function, reads one and one keyword into the RawDeck
+  /// If the INCLUDE keyword is found, the specified include file is inline read into the RawDeck.
+  /// The data is read into a keyword, record by record, until the fixed number of records specified
+  /// in the RawParserKW is met, or till a slash on a separate line is found.
   void RawDeck::readDataIntoDeck(const std::string& path) {
     boost::filesystem::path dataFolderPath = verifyValidInputPath(path);
     {
@@ -116,6 +118,8 @@ namespace Opm {
     return m_keywords.size();
   }
 
+  /// Checks if the current keyword being read is finished, based on the number of records
+  /// specified for the current keyword type in the RawParserKW class.
   bool RawDeck::isKeywordFinished(RawKeywordConstPtr rawKeyword) {
     if (m_rawParserKWs->keywordExists(rawKeyword->getKeyword())) {
       return rawKeyword->getNumberOfRecords() == m_rawParserKWs->getFixedNumberOfRecords(rawKeyword->getKeyword());
@@ -123,6 +127,7 @@ namespace Opm {
     return false;
   }
 
+  /// Operator overload to write the content of the RawDeck to an ostream
   std::ostream& operator<<(std::ostream& os, const RawDeck& deck) {
     for (std::list<RawKeywordConstPtr>::const_iterator keyword = deck.m_keywords.begin(); keyword != deck.m_keywords.end(); keyword++) {
       os << (*keyword)->getKeyword() << "                -- Keyword\n";

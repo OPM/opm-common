@@ -30,9 +30,19 @@
 
 namespace Opm {
 
+  /// Class representing the most high level structure, a deck. The RawDeck holds non parsed
+  /// data, in the form of a list of RawKeywords. The order of the keywords is important, as this
+  /// reflects the order they were read in from the eclipse file. The RawDeck forms the basis of the 
+  /// semantic parsing that comes after the RawDeck has been created from the eclipse file.
   class RawDeck {
   public:
+
+    /// Constructor that requires information about the fixed record length keywords. 
+    /// All relevant keywords with a fixed number of records 
+    /// must be specified through the RawParserKW class. This is to be able to know how the records
+    /// of the keyword is structured.
     RawDeck(RawParserKWsConstPtr rawParserKWs);
+    
     RawKeywordConstPtr getKeyword(const std::string& keyword) const;
     bool hasKeyword(const std::string& keyword) const;
     void readDataIntoDeck(const std::string& path);

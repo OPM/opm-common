@@ -94,7 +94,8 @@ namespace Opm {
       throw std::invalid_argument("Illegal whitespace start of keyword:" + keyword);
     }
   }
-
+  /// Important method, being repeatedly called. When a record is terminated,
+  /// it is added to the list of records, and a new record is started.
   void RawKeyword::addRawRecordString(const std::string& partialRecordString) {
     m_partialRecordString += partialRecordString;
     if (RawRecord::isTerminatedRecordString(partialRecordString)) {

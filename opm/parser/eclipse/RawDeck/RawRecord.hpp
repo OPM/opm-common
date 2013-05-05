@@ -26,6 +26,9 @@
 
 namespace Opm {
 
+  /// Class representing the lowest level of the Raw datatypes, a record. A record is simply
+  /// a vector containing the record elements, represented as strings. Some logic is present
+  /// to handle special elements in a record string, particularly with quote characters.
   class RawRecord {
   public:
     RawRecord();

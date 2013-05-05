@@ -22,6 +22,8 @@
 
 
 namespace Opm {
+
+  /// Consts used in the non semantic, raw parsing of the eclipse file
   namespace RawConsts {
     const char slash = '/';
     const char quote = '\'';

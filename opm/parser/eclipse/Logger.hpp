@@ -25,6 +25,9 @@
 
 namespace Opm {
 
+  /// Class to use for simple logging to file. Default output file is log.log
+  /// initLogger and closeLogger have to be called to open and close the stream.
+  /// The logging is performed using the debug, info and error methods.
   class Logger {
   public:
     static const int DEBUG;

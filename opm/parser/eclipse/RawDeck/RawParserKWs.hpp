@@ -13,6 +13,9 @@
 #include <boost/shared_ptr.hpp>
 namespace Opm {
 
+  /// Class holding information about the characteristics of all known fixed length keywords.
+  /// The characteristics being held is the ones important for the raw parsing,
+  /// these being the keywords name and fixed number of records for the keyword.
   class RawParserKWs {
   public:
     RawParserKWs();

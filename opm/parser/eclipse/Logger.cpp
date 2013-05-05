@@ -23,6 +23,8 @@ using namespace boost::posix_time;
 #include "Logger.hpp"
 
 namespace Opm {
+  
+  /// The log levels, used to avoid clutter in the log
   const int Logger::DEBUG = 0;
   const int Logger::INFO = 1;
   const int Logger::ERROR = 2;
@@ -35,23 +37,26 @@ namespace Opm {
     m_logLevel = logLevel;
   }
 
+  /// Changes the default path from log.log to path
   void Logger::setPath(const std::string& path) {
     m_logFile = path;
   }
 
+  /// Logs a debug message
   void Logger::debug(const std::string& message) {
-
     if (m_logLevel <= DEBUG) {
       log(message, "DEBUG");
     }
   }
 
+  /// Logs an info message
   void Logger::info(const std::string& message) {
     if (m_logLevel <= INFO) {
       log(message, "INFO");
     }
   }
 
+  /// Logs an error message
   void Logger::error(const std::string& message) {
     if (m_logLevel <= ERROR) {
       log(message, "ERROR");
