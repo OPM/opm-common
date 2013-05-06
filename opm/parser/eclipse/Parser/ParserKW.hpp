@@ -15,7 +15,7 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 #ifndef PARSER_KW_H
 #define PARSER_KW_H
 
@@ -25,20 +25,17 @@
 #include <opm/parser/eclipse/Parser/ParserRecordSize.hpp>
 
 namespace Opm {
-  
+
   class ParserKW {
-    
   public:
-    ParserKW();     
-    ParserKW(const std::string& name , ParserRecordSizeConstPtr recordSize);
+    ParserKW();
+    ParserKW(const std::string& name, ParserRecordSizeConstPtr recordSize);
     ~ParserKW();
-    
     const std::string& getName() const;
   private:
-    std::string m_name;  
+    std::string m_name;
     ParserRecordSizeConstPtr recordSize;
   };
- 
   typedef boost::shared_ptr<ParserKW> ParserKWPtr;
   typedef boost::shared_ptr<const ParserKW> ParserKWConstPtr;
 }

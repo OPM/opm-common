@@ -15,7 +15,7 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #ifndef PARSER_ENUMS_H
 #define PARSER_ENUMS_H
@@ -27,11 +27,11 @@ namespace Opm {
 
   enum ParserRecordSizeEnum {
     UNDEFINED = 0,
-    FIXED     = 1,
-    BOX       = 2,
-    GRID      = 3 
+    FIXED = 1,
+    BOX = 2,
+    GRID = 3
   };
-  
+
 }
 
 #endif

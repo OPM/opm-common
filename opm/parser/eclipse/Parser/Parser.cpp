@@ -16,32 +16,30 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-#include <opm/parser/eclipse/Parser/ParserKW.hpp>
-#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include "opm/parser/eclipse/Parser/Parser.hpp"
+#include "opm/parser/eclipse/Parser/ParserKW.hpp"
+#include "opm/parser/eclipse/RawDeck/RawParserKWs.hpp"
 
 namespace Opm {
 
-    Parser::Parser() {
-    }
+  Parser::Parser() {
+  }
 
-    RawDeckPtr Parser::parse(const std::string &path) {
-        Logger::initLogger();
-        Logger::setLogLevel(Logger::DEBUG);
-        Logger::info("Starting parsing of file: " + path);
-        RawDeckPtr rawDeck(new RawDeck());
-        rawDeck -> readDataIntoDeck(path);
-        Logger::info("Done parsing of file: " + path);
-        return rawDeck;
-    }
+  RawDeckPtr Parser::parse(const std::string &path) {
+    Logger::initLogger();
+    Logger::info("Starting parsing of file: " + path);
+    RawDeckPtr rawDeck(new RawDeck(RawParserKWsConstPtr(new RawParserKWs())));
+    rawDeck->readDataIntoDeck(path);
+    Logger::info("Done parsing of file: " + path);
+    Logger::closeLogger();
+    return rawDeck;
+  }
 
-    Parser::~Parser() {
-    }
+  Parser::~Parser() {
+  }
 
-
-    void Parser::addKW(ParserKWConstPtr parserKW) {
-      keywords.insert( std::make_pair( parserKW->getName() , parserKW ));
-    }
-
+  void Parser::addKW(ParserKWConstPtr parserKW) {
+    keywords.insert(std::make_pair(parserKW->getName(), parserKW));
+  }
 
 } // namespace Opm

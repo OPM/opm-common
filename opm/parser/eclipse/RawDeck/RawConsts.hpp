@@ -17,36 +17,22 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string>
-#include <stdexcept>
+#ifndef RAWCONSTS_HPP
+#define	RAWCONSTS_HPP
 
-#include <opm/parser/eclipse/Parser/ParserConst.hpp>
-#include <opm/parser/eclipse/Parser/ParserEnums.hpp>
-#include <opm/parser/eclipse/Parser/ParserRecordSize.hpp>
 
 namespace Opm {
 
-  ParserRecordSize::ParserRecordSize() {
-    recordSizeType = UNDEFINED;
-    fixedSize = 0;
+  /// Consts used in the non semantic, raw parsing of the eclipse file
+  namespace RawConsts {
+    const char slash = '/';
+    const char quote = '\'';
+    const std::string separators = "\t ";
+    const std::string include = "INCLUDE";
+    const unsigned int maxKeywordLength = 8;
   }
-
-  ParserRecordSize::ParserRecordSize(size_t fixedSize) {
-    recordSizeType = FIXED;
-    this->fixedSize = fixedSize;
-  }
-
-  size_t ParserRecordSize::recordSize() {
-    if (recordSizeType == FIXED) {
-      return fixedSize;
-    } else
-      throw std::logic_error("Only the FIXED recordSize is supported.\n");
-  }
-
-  ParserRecordSize::~ParserRecordSize() {
-
-  }
-
-
 }
+
+
+#endif	/* RAWCONSTS_HPP */
 

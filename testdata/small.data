@@ -1,25 +1,35 @@
 -- Dette er en supertest - OK
-HALLOENZ
+OIL
 
 -- Saa bare en - OK
 INCLUDE
-'sti til fil/den er her' /
+  'include path/readthis.sch' /
 -- Saa kommer en for lang en, skal bli "trunkert", slik at keywordet blir ABCXYZFF - OK
 
-ABCXYZFFD
+GRIDUNIT Tull kommer her
+-- Saa kommer det data
+METRES                                                        /
 
--- Og en med tall - IKKE OK
+-- Og en med tall - OK
 
-ABC5ADFC
+RADFIN4
+213 123 123 /
+
+-- Og en med tall først- Ikke OK
+
+5ABCADFC
 
 
--- Og en med mellomrom etter - OK
+-- Og en med mellomrom etter, og et ubestemt antall, terminert av / - OK
 
 ABCDAD  
  4.5 5 5 /
- 3 3 fisk /
+ 3 3 'FISK_1' /
 /
 
 -- Og en med liten bokstav i IKKE OK
 
-ABCDAd  
+ABCDAd
+
+-- Og en kommentar med space foran, det er ok
+  -- Hei her er jeg.

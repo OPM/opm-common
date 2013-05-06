@@ -21,126 +21,125 @@
 #include <boost/algorithm/string.hpp>
 
 #include "RawRecord.hpp"
+#include "RawConsts.hpp"
+
+using namespace Opm;
 using namespace std;
 
 namespace Opm {
-    const char RawRecord::SLASH = '/';
-    const char RawRecord::QUOTE = '\'';
-    const std::string RawRecord::SEPARATORS = "\t ";
 
-    RawRecord::RawRecord() {
+  RawRecord::RawRecord() {
+  }
+
+  /*
+   * It is assumed that after a record is terminated, there is no quote marks
+   * in the subsequent comment. This is in accordance with the Eclipse user
+   * manual.
+   * 
+   * If a "non-complete" record string is supplied, an invalid_argument
+   * exception is thrown.
+   * 
+   */
+  RawRecord::RawRecord(const std::string& singleRecordString) {
+    if (isTerminatedRecordString(singleRecordString)) {
+      setRecordString(singleRecordString);
+    } else {
+      throw std::invalid_argument("Input string is not a complete record string,"
+              " offending string: " + singleRecordString);
     }
+    splitSingleRecordString();
+  }
 
-    /*
-     * It is assumed that after a record is terminated, there is no quote marks
-     * in the subsequent comment. This is in accordance with the Eclipse user
-     * manual.
-     * 
-     * If a "non-complete" record string is supplied, an invalid_argument
-     * exception is thrown.
-     * 
-     */
-    RawRecord::RawRecord(const std::string& singleRecordString) {
-        if (isCompleteRecordString(singleRecordString)) {
-            setRecordString(singleRecordString);
-        } else {
-            throw std::invalid_argument("Input string is not a complete record string,"
-                    " offending string: " + singleRecordString);
-        }
+  const std::vector<std::string>& RawRecord::getItems() const {
+    return m_recordItems;
+  }
 
-        splitSingleRecordString();
+  const std::string& RawRecord::getRecordString() const {
+    return m_sanitizedRecordString;
+  }
+
+  bool RawRecord::isTerminatedRecordString(const std::string& candidateRecordString) {
+    unsigned int terminatingSlash = findTerminatingSlash(candidateRecordString);
+    bool hasTerminatingSlash = (terminatingSlash < candidateRecordString.size());
+    int numberOfQuotes = std::count(candidateRecordString.begin(), candidateRecordString.end(), RawConsts::quote);
+    bool hasEvenNumberOfQuotes = (numberOfQuotes % 2) == 0;
+    return hasTerminatingSlash && hasEvenNumberOfQuotes;
+  }
+
+  void RawRecord::splitSingleRecordString() {
+    char currentChar;
+    char tokenStartCharacter;
+    std::string currentToken = "";
+    for (unsigned i = 0; i < m_sanitizedRecordString.size(); i++) {
+      currentChar = m_sanitizedRecordString[i];
+      if (charIsSeparator(currentChar)) {
+        processSeparatorCharacter(currentToken, currentChar, tokenStartCharacter);
+      } else if (currentChar == RawConsts::quote) {
+        processQuoteCharacters(currentToken, currentChar, tokenStartCharacter);
+      } else {
+        processNonSpecialCharacters(currentToken, currentChar);
+      }
     }
-
-    void RawRecord::splitSingleRecordString() {
-        char currentChar;
-        char tokenStartCharacter;
-        std::string currentToken = "";
-        for (unsigned i = 0; i < m_sanitizedRecordString.size(); i++) {
-            currentChar = m_sanitizedRecordString[i];
-            if (charIsSeparator(currentChar)) {
-                processSeparatorCharacter(currentToken, currentChar, tokenStartCharacter);
-            } else if (currentChar == QUOTE) {
-                processQuoteCharacters(currentToken, currentChar, tokenStartCharacter);
-            } else {
-                processNonSpecialCharacters(currentToken, currentChar);
-            }
-        }
-        if (currentToken.size() > 0) {
-            m_recordItems.push_back(currentToken);
-            currentToken.clear();
-        }
+    if (currentToken.size() > 0) {
+      m_recordItems.push_back(currentToken);
+      currentToken.clear();
     }
-    
-    void RawRecord::processSeparatorCharacter(std::string& currentToken, const char& currentChar, char& tokenStartCharacter) {
-        if (tokenStartCharacter == QUOTE) {
-            currentToken += currentChar;
-        } else {
-            if (currentToken.size() > 0) {
-                m_recordItems.push_back(currentToken);
-                currentToken.clear();
-            }
-            tokenStartCharacter = currentChar;
-        }
-    }
+  }
 
-    void RawRecord::processQuoteCharacters(std::string& currentToken, const char& currentChar, char& tokenStartCharacter) {
-        if (currentChar == tokenStartCharacter) {
-            if (currentToken.size() > 0) {
-                m_recordItems.push_back(currentToken);
-                currentToken.clear();
-            }
-            tokenStartCharacter = '\0';
-        } else {
-            tokenStartCharacter = currentChar;
-            currentToken.clear();
-        }
+  void RawRecord::processSeparatorCharacter(std::string& currentToken, const char& currentChar, char& tokenStartCharacter) {
+    if (tokenStartCharacter == RawConsts::quote) {
+      currentToken += currentChar;
+    } else {
+      if (currentToken.size() > 0) {
+        m_recordItems.push_back(currentToken);
+        currentToken.clear();
+      }
+      tokenStartCharacter = currentChar;
     }
+  }
 
-    void RawRecord::processNonSpecialCharacters(std::string& currentToken, const char& currentChar) {
-        currentToken += currentChar;
+  void RawRecord::processQuoteCharacters(std::string& currentToken, const char& currentChar, char& tokenStartCharacter) {
+    if (currentChar == tokenStartCharacter) {
+      if (currentToken.size() > 0) {
+        m_recordItems.push_back(currentToken);
+        currentToken.clear();
+      }
+      tokenStartCharacter = '\0';
+    } else {
+      tokenStartCharacter = currentChar;
+      currentToken.clear();
     }
+  }
 
-    bool RawRecord::charIsSeparator(char candidate) {
-        return std::string::npos != SEPARATORS.find(candidate);
+  void RawRecord::processNonSpecialCharacters(std::string& currentToken, const char& currentChar) {
+    currentToken += currentChar;
+  }
+
+  bool RawRecord::charIsSeparator(char candidate) {
+    return std::string::npos != RawConsts::separators.find(candidate);
+  }
+
+  void RawRecord::setRecordString(const std::string& singleRecordString) {
+    unsigned terminatingSlash = findTerminatingSlash(singleRecordString);
+    m_sanitizedRecordString = singleRecordString.substr(0, terminatingSlash);
+    boost::trim(m_sanitizedRecordString);
+  }
+
+  unsigned int RawRecord::findTerminatingSlash(const std::string& singleRecordString) {
+    unsigned int terminatingSlash = singleRecordString.find_first_of(RawConsts::slash);
+    unsigned int lastQuotePosition = singleRecordString.find_last_of(RawConsts::quote);
+
+    // Checks lastQuotePosition vs terminatingSlashPosition, 
+    // since specifications of WELLS, FILENAMES etc can include slash, but 
+    // these are always in quotes (and there are no quotes after record-end).
+    if (terminatingSlash < lastQuotePosition && lastQuotePosition < singleRecordString.size()) {
+      terminatingSlash = singleRecordString.find_first_of(RawConsts::slash, lastQuotePosition);
     }
+    return terminatingSlash;
+  }
 
-    void RawRecord::getRecords(std::vector<std::string>& recordItems) {
-        recordItems = m_recordItems;
-    }
-
-    void RawRecord::getRecordString(std::string& recordString) {
-        recordString = m_sanitizedRecordString;
-    }
-
-    bool RawRecord::isCompleteRecordString(const std::string& candidateRecordString) {
-        unsigned int terminatingSlash = findTerminatingSlash(candidateRecordString);
-        bool hasTerminatingSlash = (terminatingSlash < candidateRecordString.size());
-        int size = std::count(candidateRecordString.begin(), candidateRecordString.end(), QUOTE);
-        bool hasEvenNumberOfQuotes = (size % 2) == 0;
-        return hasTerminatingSlash && hasEvenNumberOfQuotes;
-    }
-
-    void RawRecord::setRecordString(const std::string& singleRecordString) {
-        unsigned terminatingSlash = findTerminatingSlash(singleRecordString);
-        m_sanitizedRecordString = singleRecordString.substr(0, terminatingSlash);
-        boost::trim(m_sanitizedRecordString);
-    }
-
-    unsigned int RawRecord::findTerminatingSlash(const std::string& singleRecordString) {
-        unsigned int terminatingSlash = singleRecordString.find_first_of(SLASH);
-        unsigned int lastQuotePosition = singleRecordString.find_last_of(QUOTE);
-
-        // Checks lastQuotePosition vs terminatingSlashPosition, 
-        // since specifications of WELLS, FILENAMES etc can include slash, but 
-        // these are always in quotes (and there are no quotes after record-end).
-        if (terminatingSlash < lastQuotePosition && lastQuotePosition < singleRecordString.size()) {
-            terminatingSlash = singleRecordString.find_first_of(SLASH, lastQuotePosition);
-        }
-        return terminatingSlash;
-    }
-
-    RawRecord::~RawRecord() {
-    }
+  RawRecord::~RawRecord() {
+  }
 
 
 }

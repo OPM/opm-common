@@ -1,0 +1,25 @@
+Initial reading / tokenization:
+
+When reading the data elements for a keyword, some keywords are not terminated (/ on a separate line). 
+
+In these cases, we must know where the data ends, by having a record_number for the keyword. BUT for some keywords, the number of records is given by a different keyword (RSVD -> the number of records is given by the keyword EQLDIMS first element. 
+
+So, should we "preparse this" to get the value (called NTEQUL) or should we perhaps rather do a "simultaneous" raw / syntactic parsing, thereby being able make the NTEQUL number available to the raw parsing of RSVD either by letting the raw parsing "ask" the Deck, or by putting the value of NTEQUL into the num_records for the keyword RSVD.
+
+Example of :
+
+Before EQLDIMS is read, RawParserKW looks like this:
+METRIC 1
+OIL 0
+RSVD 'NTEQUL'
+
+-- Then the parser reads the following keyword:
+-- Dimensions for equilibration tables
+EQLDIMS
+  2  100  20                                                    /
+
+-> when the EQLDIMS is read into the Deck (requires simultaneous building of RawDeck and Deck), RawParserKW looks like this:
+METRIC 1
+OIL 0
+RSVD 2
+

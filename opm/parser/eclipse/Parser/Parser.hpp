@@ -25,26 +25,30 @@
 #include <boost/shared_ptr.hpp>
 
 #include <opm/parser/eclipse/Logger.hpp>
-#include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
 #include <opm/parser/eclipse/RawDeck/RawDeck.hpp>
 #include <opm/parser/eclipse/Parser/ParserKW.hpp>
 
 namespace Opm {
 
-    class Parser {
-    public:
-        Parser();
-        RawDeckPtr parse(const std::string &path);
-        virtual   ~Parser();
+  /// The hub of the parsing process.
+  /// An input file in the eclipse data format is specified, several steps of parsing is performed
+  /// and the semantically parsed result is returned.
+  class Parser {
+  public:
+    Parser();
 
-        void       addKW(ParserKWConstPtr parserKW);
-
-    private:
-        //Logger   m_logger;
-      std::map<std::string,ParserKWConstPtr> keywords;
-    };
+    /// The starting point of the parsing process. The supplied file is parsed, and the resulting Deck is returned.
+    RawDeckPtr parse(const std::string &path);
+    virtual ~Parser();
     
-    typedef boost::shared_ptr<Parser> ParserPtr;
+    /// Method to add ParserKW instances, these holding type and size information about the keywords and their data.
+    void addKW(ParserKWConstPtr parserKW);
+
+  private:
+    std::map<std::string, ParserKWConstPtr> keywords;
+  };
+
+  typedef boost::shared_ptr<Parser> ParserPtr;
 } // namespace Opm
 #endif  /* PARSER_H */
 

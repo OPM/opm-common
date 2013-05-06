@@ -23,51 +23,60 @@ using namespace boost::posix_time;
 #include "Logger.hpp"
 
 namespace Opm {
-    const int Logger::DEBUG = 0;
-    const int Logger::INFO = 1;
-    const int Logger::ERROR = 2;
+  
+  /// The log levels, used to avoid clutter in the log
+  const int Logger::DEBUG = 0;
+  const int Logger::INFO = 1;
+  const int Logger::ERROR = 2;
 
-    std::string Logger::m_logFile = "log.log";
-    int Logger::m_logLevel = INFO;
-    std::ofstream Logger::m_logStream;
+  std::string Logger::m_logFile = "log.log";
+  int Logger::m_logLevel = INFO;
+  std::ofstream Logger::m_logStream;
 
-    void Logger::setLogLevel(int logLevel) {
-        m_logLevel = logLevel;
+  void Logger::setLogLevel(int logLevel) {
+    m_logLevel = logLevel;
+  }
+
+  /// Changes the default path from log.log to path
+  void Logger::setPath(const std::string& path) {
+    m_logFile = path;
+  }
+
+  /// Logs a debug message
+  void Logger::debug(const std::string& message) {
+    if (m_logLevel <= DEBUG) {
+      log(message, "DEBUG");
     }
+  }
 
-    void Logger::setPath(const std::string& path) {
-        m_logFile = path;
+  /// Logs an info message
+  void Logger::info(const std::string& message) {
+    if (m_logLevel <= INFO) {
+      log(message, "INFO");
     }
+  }
 
-    void Logger::debug(const std::string& message) {
-
-        if (m_logLevel <= DEBUG) {
-            log(message, "DEBUG");
-        }
+  /// Logs an error message
+  void Logger::error(const std::string& message) {
+    if (m_logLevel <= ERROR) {
+      log(message, "ERROR");
     }
+  }
 
-    void Logger::info(const std::string& message) {
-        if (m_logLevel <= INFO) {
-            log(message, "INFO");
-        }
-    }
+  void Logger::log(const std::string& message, std::string logLevel) {
+    ptime now = second_clock::universal_time();
+    m_logStream << to_simple_string(now) << " " << logLevel << " " << message << "\n";
+  }
 
-    void Logger::error(const std::string& message) {
-        if (m_logLevel <= ERROR) {
-            log(message, "ERROR");
-        }
-    }
+  void Logger::initLogger() {
+    m_logStream.open(m_logFile.c_str(), std::ios::app);
+  }
 
-    void Logger::log(const std::string& message, std::string logLevel) {
-        ptime now = second_clock::universal_time();
-        m_logStream << to_simple_string(now) << " " << logLevel << " " << message << "\n";
-    }
+  void Logger::closeLogger() {
+    m_logStream.close();
+  }
 
-    void Logger::initLogger() {
-        m_logStream.open(m_logFile.c_str(), std::ios::app);
-    }
+  Logger::~Logger() {
 
-    Logger::~Logger() {
-        m_logStream.close();
-    }
+  }
 } // namespace Opm
