@@ -8,6 +8,9 @@ add_executable(runRawParserKWsTests RawParserKWsTests.cpp)
 
 add_executable(runParserKWTests ParserKWTests.cpp)
 add_executable(runParserRecordSizeTests ParserRecordSizeTests.cpp)
+add_executable(runParserRecordItemTests ParserRecordItemTests.cpp)
+add_executable(runParserItemSizeTests ParserItemSizeTests.cpp)
+
 
 target_link_libraries(runParserTests Parser Logger ${Boost_LIBRARIES})
 target_link_libraries(runParserTestsInternalData Parser Logger ${Boost_LIBRARIES})
@@ -19,6 +22,8 @@ target_link_libraries(runRawParserKWsTests Parser Logger ${Boost_LIBRARIES})
 
 target_link_libraries(runParserKWTests Parser Logger ${Boost_LIBRARIES})
 target_link_libraries(runParserRecordSizeTests Parser Logger ${Boost_LIBRARIES})
+target_link_libraries(runParserRecordItemTests Parser Logger ${Boost_LIBRARIES})
+target_link_libraries(runParserItemSizeTests  Parser Logger ${Boost_LIBRARIES})
 
 add_test(NAME runParserTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${EXECUTABLE_OUTPUT_PATH}/runParserTests )
 add_test(NAME runParserTestsInternalData WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${EXECUTABLE_OUTPUT_PATH}/runParserTestsInternalData)
@@ -38,3 +43,5 @@ set_tests_properties(runRawParserKWsTests PROPERTIES LABELS Raw)
 
 add_test(NAME runParserKWTests COMMAND ${EXECUTABLE_OUTPUT_PATH}/runParserKWTests )
 add_test(NAME runParserRecordSizeTests COMMAND ${EXECUTABLE_OUTPUT_PATH}/runParserRecordSizeTests )
+add_test(NAME runParserRecordItemTests COMMAND ${EXECUTABLE_OUTPUT_PATH}/runParserRecordItemTests )
+add_test(NAME runParserItemSizeTests  COMMAND ${EXECUTABLE_OUTPUT_PATH}/runParserItemSizeTests  )

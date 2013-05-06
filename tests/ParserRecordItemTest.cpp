@@ -15,31 +15,17 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-#ifndef PARSER_ENUMS_H
-#define PARSER_ENUMS_H
-
-#include <string>
-#include <stdexcept>
-
-namespace Opm {
-
-  enum ParserRecordSizeEnum {
-    UNDEFINED = 0,
-    FIXED = 1,
-    BOX = 2,
-    GRID = 3
-  };
-  
-
-  enum ItemSizeEnum {
-    UNSPECIFIED = 0,
-    ITEM_FIXED  = 1,
-    ITEM_BOX    = 2
-  };
+*/
 
 
+#define BOOST_TEST_MODULE ParserTests
+#include <boost/test/unit_test.hpp>
+
+#include "opm/parser/eclipse/Parser/ParserRecordItem.hpp"
+
+
+using namespace Opm;
+
+BOOST_AUTO_TEST_CASE(Initialize_int) {
+  BOOST_REQUIRE_NO_THROW( ParserRecordItem<int> item );
 }
-
-#endif

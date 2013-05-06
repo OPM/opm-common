@@ -24,7 +24,8 @@
 #include <fstream>
 #include <boost/shared_ptr.hpp>
 
-#include <opm/parser/eclipse/Logger.hpp>
+#include <opm/parser/eclipse/Logger/Logger.hpp>
+#include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
 #include <opm/parser/eclipse/RawDeck/RawDeck.hpp>
 #include <opm/parser/eclipse/Parser/ParserKW.hpp>
 

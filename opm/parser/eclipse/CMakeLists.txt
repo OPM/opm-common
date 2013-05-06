@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 add_subdirectory( Logger )
 
 
@@ -16,7 +15,6 @@ Parser/ItemSize.cpp )
 
 
 add_library(Parser ${rawdeck_source} ${parser_source})
-add_library(Logger Logger.cpp)
 
 
 
