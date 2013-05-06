@@ -26,21 +26,20 @@
 #include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
 #include <boost/test/test_tools.hpp>
 
-
 BOOST_AUTO_TEST_CASE(GetNumberOfKeywords_EmptyDeck_RetunsZero) {
-  Opm::RawParserKWsConstPtr fixedKeywords(new Opm::RawParserKWs());
-  Opm::RawDeckPtr rawDeck(new Opm::RawDeck(fixedKeywords));
-  BOOST_CHECK_EQUAL((unsigned) 0, rawDeck->getNumberOfKeywords());
+    Opm::RawParserKWsConstPtr fixedKeywords(new Opm::RawParserKWs());
+    Opm::RawDeckPtr rawDeck(new Opm::RawDeck(fixedKeywords));
+    BOOST_CHECK_EQUAL((unsigned) 0, rawDeck->getNumberOfKeywords());
 }
 
 BOOST_AUTO_TEST_CASE(HasKeyword_NotExisting_RetunsFalse) {
-  Opm::RawParserKWsConstPtr fixedKeywords(new Opm::RawParserKWs());
-  Opm::RawDeckPtr rawDeck(new Opm::RawDeck(fixedKeywords));
-  BOOST_CHECK_EQUAL(false, rawDeck->hasKeyword("TEST"));
+    Opm::RawParserKWsConstPtr fixedKeywords(new Opm::RawParserKWs());
+    Opm::RawDeckPtr rawDeck(new Opm::RawDeck(fixedKeywords));
+    BOOST_CHECK_EQUAL(false, rawDeck->hasKeyword("TEST"));
 }
 
 BOOST_AUTO_TEST_CASE(GetKeyword_EmptyDeck_ThrowsExeption) {
-  Opm::RawParserKWsConstPtr fixedKeywords(new Opm::RawParserKWs());
-  Opm::RawDeckPtr rawDeck(new Opm::RawDeck(fixedKeywords));
-  BOOST_CHECK_THROW(rawDeck->getKeyword("TEST"), std::invalid_argument);
+    Opm::RawParserKWsConstPtr fixedKeywords(new Opm::RawParserKWs());
+    Opm::RawDeckPtr rawDeck(new Opm::RawDeck(fixedKeywords));
+    BOOST_CHECK_THROW(rawDeck->getKeyword("TEST"), std::invalid_argument);
 }

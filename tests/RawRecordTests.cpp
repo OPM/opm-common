@@ -23,31 +23,31 @@
 #include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
 
 BOOST_AUTO_TEST_CASE(RawRecordGetRecordStringReturnsTrimmedString) {
-  Opm::RawRecordPtr record(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20                                       /"));
-  const std::string& recordString = record->getRecordString();
-  BOOST_CHECK_EQUAL("'NODIR '  'REVERS'  1  20", recordString);
+    Opm::RawRecordPtr record(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20                                       /"));
+    const std::string& recordString = record->getRecordString();
+    BOOST_CHECK_EQUAL("'NODIR '  'REVERS'  1  20", recordString);
 }
 
 BOOST_AUTO_TEST_CASE(RawRecordGetRecordsCorrectElementsReturned) {
-  Opm::RawRecordPtr record(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20                                       /"));
+    Opm::RawRecordPtr record(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20                                       /"));
 
-  const std::vector<std::string>& recordElements = record->getItems();
-  BOOST_CHECK_EQUAL((unsigned) 4, recordElements.size());
+    const std::vector<std::string>& recordElements = record->getItems();
+    BOOST_CHECK_EQUAL((unsigned) 4, recordElements.size());
 
-  BOOST_CHECK_EQUAL("NODIR ", recordElements[0]);
-  BOOST_CHECK_EQUAL("REVERS", recordElements[1]);
-  BOOST_CHECK_EQUAL("1", recordElements[2]);
-  BOOST_CHECK_EQUAL("20", recordElements[3]);
+    BOOST_CHECK_EQUAL("NODIR ", recordElements[0]);
+    BOOST_CHECK_EQUAL("REVERS", recordElements[1]);
+    BOOST_CHECK_EQUAL("1", recordElements[2]);
+    BOOST_CHECK_EQUAL("20", recordElements[3]);
 }
 
 BOOST_AUTO_TEST_CASE(RawRecordIsCompleteRecordCompleteRecordReturnsTrue) {
-  bool isComplete = Opm::RawRecord::isTerminatedRecordString("'NODIR '  'REVERS'  1  20                                       /");
-  BOOST_CHECK_EQUAL(true, isComplete);
+    bool isComplete = Opm::RawRecord::isTerminatedRecordString("'NODIR '  'REVERS'  1  20                                       /");
+    BOOST_CHECK_EQUAL(true, isComplete);
 }
 
 BOOST_AUTO_TEST_CASE(RawRecordIsCompleteRecordInCompleteRecordReturnsFalse) {
-  bool isComplete = Opm::RawRecord::isTerminatedRecordString("'NODIR '  'REVERS'  1  20                                       ");
-  BOOST_CHECK_EQUAL(false, isComplete);
-  isComplete = Opm::RawRecord::isTerminatedRecordString("'NODIR '  'REVERS  1  20 /");
-  BOOST_CHECK_EQUAL(false, isComplete);
+    bool isComplete = Opm::RawRecord::isTerminatedRecordString("'NODIR '  'REVERS'  1  20                                       ");
+    BOOST_CHECK_EQUAL(false, isComplete);
+    isComplete = Opm::RawRecord::isTerminatedRecordString("'NODIR '  'REVERS  1  20 /");
+    BOOST_CHECK_EQUAL(false, isComplete);
 }

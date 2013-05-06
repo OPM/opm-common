@@ -27,29 +27,29 @@
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(Initialize) {
-  BOOST_REQUIRE_NO_THROW(ParserKW parserKW);
+    BOOST_REQUIRE_NO_THROW(ParserKW parserKW);
 
-  ParserKW parserKW;
-  BOOST_CHECK_EQUAL(parserKW.getName(), "");
+    ParserKW parserKW;
+    BOOST_CHECK_EQUAL(parserKW.getName(), "");
 }
 
 BOOST_AUTO_TEST_CASE(NamedInit) {
-  std::string keyword("KEYWORD");
+    std::string keyword("KEYWORD");
 
-  ParserRecordSizeConstPtr recordSize(new ParserRecordSize(100));
-  ParserKW parserKW(keyword, recordSize);
-  BOOST_CHECK_EQUAL(parserKW.getName(), keyword);
+    ParserRecordSizeConstPtr recordSize(new ParserRecordSize(100));
+    ParserKW parserKW(keyword, recordSize);
+    BOOST_CHECK_EQUAL(parserKW.getName(), keyword);
 }
 
 BOOST_AUTO_TEST_CASE(NameTooLong) {
-  std::string keyword("KEYWORDTOOLONG");
-  ParserRecordSizeConstPtr recordSize(new ParserRecordSize(100));
-  BOOST_CHECK_THROW(ParserKW parserKW(keyword, recordSize), std::invalid_argument);
+    std::string keyword("KEYWORDTOOLONG");
+    ParserRecordSizeConstPtr recordSize(new ParserRecordSize(100));
+    BOOST_CHECK_THROW(ParserKW parserKW(keyword, recordSize), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(MixedCase) {
-  std::string keyword("KeyWord");
+    std::string keyword("KeyWord");
 
-  ParserRecordSizeConstPtr recordSize(new ParserRecordSize(100));
-  BOOST_CHECK_THROW(ParserKW parserKW(keyword, recordSize), std::invalid_argument);
+    ParserRecordSizeConstPtr recordSize(new ParserRecordSize(100));
+    BOOST_CHECK_THROW(ParserKW parserKW(keyword, recordSize), std::invalid_argument);
 }

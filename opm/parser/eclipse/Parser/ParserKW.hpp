@@ -26,18 +26,18 @@
 
 namespace Opm {
 
-  class ParserKW {
-  public:
-    ParserKW();
-    ParserKW(const std::string& name, ParserRecordSizeConstPtr recordSize);
-    ~ParserKW();
-    const std::string& getName() const;
-  private:
-    std::string m_name;
-    ParserRecordSizeConstPtr recordSize;
-  };
-  typedef boost::shared_ptr<ParserKW> ParserKWPtr;
-  typedef boost::shared_ptr<const ParserKW> ParserKWConstPtr;
+    class ParserKW {
+    public:
+        ParserKW();
+        ParserKW(const std::string& name, ParserRecordSizeConstPtr recordSize);
+        ~ParserKW();
+        const std::string& getName() const;
+    private:
+        std::string m_name;
+        ParserRecordSizeConstPtr recordSize;
+    };
+    typedef boost::shared_ptr<ParserKW> ParserKWPtr;
+    typedef boost::shared_ptr<const ParserKW> ParserKWConstPtr;
 }
 
 #endif

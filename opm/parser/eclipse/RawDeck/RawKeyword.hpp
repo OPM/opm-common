@@ -34,6 +34,7 @@ namespace Opm {
     /// represented as a list of RawRecord objects.
     /// The class also contains static functions to aid the parsing of the input file.
     /// The creationg of an instance is performed by calling the addRawRecordString method repeatedly.
+
     class RawKeyword {
     public:
         RawKeyword();

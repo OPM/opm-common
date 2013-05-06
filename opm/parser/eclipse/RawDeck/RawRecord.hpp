@@ -26,31 +26,32 @@
 
 namespace Opm {
 
-  /// Class representing the lowest level of the Raw datatypes, a record. A record is simply
-  /// a vector containing the record elements, represented as strings. Some logic is present
-  /// to handle special elements in a record string, particularly with quote characters.
-  class RawRecord {
-  public:
-    RawRecord();
-    RawRecord(const std::string& singleRecordString);
-    const std::string& getRecordString() const;
-    const std::vector<std::string>& getItems() const;
-    static bool isTerminatedRecordString(const std::string& candidateRecordString);
-    virtual ~RawRecord();
-  private:
-    std::string m_sanitizedRecordString;
-    std::vector<std::string> m_recordItems;
-    
-    void setRecordString(const std::string& singleRecordString);
-    void splitSingleRecordString();
-    void processSeparatorCharacter(std::string& currentToken, const char& currentChar, char& tokenStarter);
-    void processQuoteCharacters(std::string& currentToken, const char& currentChar, char& tokenStarter);
-    void processNonSpecialCharacters(std::string& currentToken, const char& currentChar);
-    bool charIsSeparator(char candidate);
-    static unsigned int findTerminatingSlash(const std::string& singleRecordString);
-  };
-  typedef boost::shared_ptr<RawRecord> RawRecordPtr;
-  typedef boost::shared_ptr<const RawRecord> RawRecordConstPtr;
+    /// Class representing the lowest level of the Raw datatypes, a record. A record is simply
+    /// a vector containing the record elements, represented as strings. Some logic is present
+    /// to handle special elements in a record string, particularly with quote characters.
+
+    class RawRecord {
+    public:
+        RawRecord();
+        RawRecord(const std::string& singleRecordString);
+        const std::string& getRecordString() const;
+        const std::vector<std::string>& getItems() const;
+        static bool isTerminatedRecordString(const std::string& candidateRecordString);
+        virtual ~RawRecord();
+    private:
+        std::string m_sanitizedRecordString;
+        std::vector<std::string> m_recordItems;
+
+        void setRecordString(const std::string& singleRecordString);
+        void splitSingleRecordString();
+        void processSeparatorCharacter(std::string& currentToken, const char& currentChar, char& tokenStarter);
+        void processQuoteCharacters(std::string& currentToken, const char& currentChar, char& tokenStarter);
+        void processNonSpecialCharacters(std::string& currentToken, const char& currentChar);
+        bool charIsSeparator(char candidate);
+        static unsigned int findTerminatingSlash(const std::string& singleRecordString);
+    };
+    typedef boost::shared_ptr<RawRecord> RawRecordPtr;
+    typedef boost::shared_ptr<const RawRecord> RawRecordConstPtr;
 
 }
 

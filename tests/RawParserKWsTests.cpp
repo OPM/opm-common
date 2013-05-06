@@ -26,26 +26,26 @@
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(KeywordExists_KeywordNotPresent_ReturnsFalse) {
-  RawParserKWsConstPtr parserKWs(new RawParserKWs());
-  BOOST_CHECK_EQUAL(false, parserKWs->keywordExists("FLASKE"));
+    RawParserKWsConstPtr parserKWs(new RawParserKWs());
+    BOOST_CHECK_EQUAL(false, parserKWs->keywordExists("FLASKE"));
 }
 
 BOOST_AUTO_TEST_CASE(KeywordExists_KeywordPresent_ReturnsTrue) {
-  RawParserKWsConstPtr parserKWs(new RawParserKWs());
-  BOOST_CHECK_EQUAL(true, parserKWs->keywordExists("TITLE"));
+    RawParserKWsConstPtr parserKWs(new RawParserKWs());
+    BOOST_CHECK_EQUAL(true, parserKWs->keywordExists("TITLE"));
 }
 
 BOOST_AUTO_TEST_CASE(GetFixedNumberOfRecords_KeywordNotPresent_ThrowsException) {
-  RawParserKWsConstPtr parserKWs(new RawParserKWs());
-  BOOST_CHECK_THROW(parserKWs->getFixedNumberOfRecords("FLASKE"), std::invalid_argument);
+    RawParserKWsConstPtr parserKWs(new RawParserKWs());
+    BOOST_CHECK_THROW(parserKWs->getFixedNumberOfRecords("FLASKE"), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(GetFixedNumberOfRecords_OneRecord_ReturnsOne) {
-  RawParserKWsConstPtr parserKWs(new RawParserKWs());
-  BOOST_CHECK_EQUAL((unsigned) 1, parserKWs->getFixedNumberOfRecords("GRIDUNIT"));
+    RawParserKWsConstPtr parserKWs(new RawParserKWs());
+    BOOST_CHECK_EQUAL((unsigned) 1, parserKWs->getFixedNumberOfRecords("GRIDUNIT"));
 }
 
 BOOST_AUTO_TEST_CASE(GetFixedNumberOfRecords_ZeroRecords_ReturnsZero) {
-  RawParserKWsConstPtr parserKWs(new RawParserKWs());
-  BOOST_CHECK_EQUAL((unsigned) 0, parserKWs->getFixedNumberOfRecords("METRIC"));
+    RawParserKWsConstPtr parserKWs(new RawParserKWs());
+    BOOST_CHECK_EQUAL((unsigned) 0, parserKWs->getFixedNumberOfRecords("METRIC"));
 }

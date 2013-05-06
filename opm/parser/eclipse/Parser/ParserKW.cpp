@@ -26,28 +26,28 @@
 
 namespace Opm {
 
-  ParserKW::ParserKW() {
-    m_name.assign("");
-  }
+    ParserKW::ParserKW() {
+        m_name.assign("");
+    }
 
-  ParserKW::ParserKW(const std::string& name, ParserRecordSizeConstPtr recordSize) {
-    if (name.length() > ParserConst::maxKWLength)
-      throw std::invalid_argument("Given keyword name is too long - max 8 characters.");
+    ParserKW::ParserKW(const std::string& name, ParserRecordSizeConstPtr recordSize) {
+        if (name.length() > ParserConst::maxKWLength)
+            throw std::invalid_argument("Given keyword name is too long - max 8 characters.");
 
-    for (unsigned int i = 0; i < name.length(); i++)
-      if (islower(name[i]))
-        throw std::invalid_argument("Keyword must be all upper case - mixed case not allowed:" + name);
+        for (unsigned int i = 0; i < name.length(); i++)
+            if (islower(name[i]))
+                throw std::invalid_argument("Keyword must be all upper case - mixed case not allowed:" + name);
 
-    m_name.assign(name);
-    this->recordSize = recordSize;
-  }
+        m_name.assign(name);
+        this->recordSize = recordSize;
+    }
 
-  ParserKW::~ParserKW() {
-  }
+    ParserKW::~ParserKW() {
+    }
 
-  const std::string& ParserKW::getName() const {
-    return m_name;
-  }
+    const std::string& ParserKW::getName() const {
+        return m_name;
+    }
 
 
 }

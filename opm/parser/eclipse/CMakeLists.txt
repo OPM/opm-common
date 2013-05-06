@@ -12,7 +12,7 @@ set( parser_source
 Parser/ParserRecordSize.cpp 
 Parser/ParserKW.cpp 
 Parser/Parser.cpp 
-Parser/ItemSize.cpp )
+Parser/ParserItemSize.cpp )
 
 
 add_library(Parser ${rawdeck_source} ${parser_source})

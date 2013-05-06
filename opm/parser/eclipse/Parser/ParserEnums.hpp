@@ -25,19 +25,18 @@
 
 namespace Opm {
 
-  enum ParserRecordSizeEnum {
-    UNDEFINED = 0,
-    FIXED = 1,
-    BOX = 2,
-    GRID = 3
-  };
-  
+    enum ParserRecordSizeEnum {
+        UNDEFINED = 0,
+        FIXED = 1,
+        BOX = 2,
+        GRID = 3
+    };
 
-  enum ItemSizeEnum {
-    UNSPECIFIED = 0,
-    ITEM_FIXED  = 1,
-    ITEM_BOX    = 2
-  };
+    enum ParserItemSizeEnum {
+        UNSPECIFIED = 0,
+        ITEM_FIXED = 1,
+        ITEM_BOX = 2
+    };
 
 
 }

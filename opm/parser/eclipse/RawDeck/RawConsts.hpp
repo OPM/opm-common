@@ -23,14 +23,14 @@
 
 namespace Opm {
 
-  /// Consts used in the non semantic, raw parsing of the eclipse file
-  namespace RawConsts {
-    const char slash = '/';
-    const char quote = '\'';
-    const std::string separators = "\t ";
-    const std::string include = "INCLUDE";
-    const unsigned int maxKeywordLength = 8;
-  }
+    /// Consts used in the non semantic, raw parsing of the eclipse file
+    namespace RawConsts {
+        const char slash = '/';
+        const char quote = '\'';
+        const std::string separators = "\t ";
+        const std::string include = "INCLUDE";
+        const unsigned int maxKeywordLength = 8;
+    }
 }
 
 

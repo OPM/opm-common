@@ -22,9 +22,9 @@
 
 
 namespace Opm {
-  namespace ParserConst {
-    const unsigned int maxKWLength = 8;
-  }
+    namespace ParserConst {
+        const unsigned int maxKWLength = 8;
+    }
 }
 
 

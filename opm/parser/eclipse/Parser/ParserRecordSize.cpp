@@ -26,26 +26,26 @@
 
 namespace Opm {
 
-  ParserRecordSize::ParserRecordSize() {
-    recordSizeType = UNDEFINED;
-    fixedSize = 0;
-  }
+    ParserRecordSize::ParserRecordSize() {
+        recordSizeType = UNDEFINED;
+        fixedSize = 0;
+    }
 
-  ParserRecordSize::ParserRecordSize(size_t fixedSize) {
-    recordSizeType = FIXED;
-    this->fixedSize = fixedSize;
-  }
+    ParserRecordSize::ParserRecordSize(size_t fixedSize) {
+        recordSizeType = FIXED;
+        this->fixedSize = fixedSize;
+    }
 
-  size_t ParserRecordSize::recordSize() {
-    if (recordSizeType == FIXED) {
-      return fixedSize;
-    } else
-      throw std::logic_error("Only the FIXED recordSize is supported.\n");
-  }
+    size_t ParserRecordSize::recordSize() {
+        if (recordSizeType == FIXED) {
+            return fixedSize;
+        } else
+            throw std::logic_error("Only the FIXED recordSize is supported.\n");
+    }
 
-  ParserRecordSize::~ParserRecordSize() {
+    ParserRecordSize::~ParserRecordSize() {
 
-  }
+    }
 
 
 }

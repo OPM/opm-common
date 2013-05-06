@@ -15,7 +15,7 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 
 #define BOOST_TEST_MODULE ParserTests
@@ -27,5 +27,5 @@
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(Initialize_int) {
-  BOOST_REQUIRE_NO_THROW( ParserRecordItem<int> item );
+    BOOST_REQUIRE_NO_THROW(ParserRecordItem<int> item);
 }

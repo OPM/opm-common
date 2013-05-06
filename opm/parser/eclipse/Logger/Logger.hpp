@@ -25,30 +25,31 @@
 
 namespace Opm {
 
-  /// Class to use for simple logging to file. Default output file is log.log
-  /// initLogger and closeLogger have to be called to open and close the stream.
-  /// The logging is performed using the debug, info and error methods.
-  class Logger {
-  public:
-    static const int DEBUG;
-    static const int INFO;
-    static const int ERROR;
+    /// Class to use for simple logging to file. Default output file is log.log
+    /// initLogger and closeLogger have to be called to open and close the stream.
+    /// The logging is performed using the debug, info and error methods.
 
-    static void initLogger();
-    static void closeLogger();
-    static void setLogLevel(int logLevel);
-    static void setPath(const std::string& path);
-    static void debug(const std::string& message);
-    static void info(const std::string& message);
-    static void error(const std::string& message);
-    virtual ~Logger();
-  private:
-    static std::string m_logFile;
-    static std::ofstream m_logStream;
-    static int m_logLevel;
-    static void log(const std::string& message, std::string logLevel);
-    static void initLoggingConstants();
-  };
+    class Logger {
+    public:
+        static const int DEBUG;
+        static const int INFO;
+        static const int ERROR;
+
+        static void initLogger();
+        static void closeLogger();
+        static void setLogLevel(int logLevel);
+        static void setPath(const std::string& path);
+        static void debug(const std::string& message);
+        static void info(const std::string& message);
+        static void error(const std::string& message);
+        virtual ~Logger();
+    private:
+        static std::string m_logFile;
+        static std::ofstream m_logStream;
+        static int m_logLevel;
+        static void log(const std::string& message, std::string logLevel);
+        static void initLoggingConstants();
+    };
 }// namespace Opm
 #endif	/* LOGGER_HPP */
 

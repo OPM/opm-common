@@ -15,57 +15,56 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 
 #define BOOST_TEST_MODULE ParserTests
 #include <boost/test/unit_test.hpp>
 
-#include "opm/parser/eclipse/Parser/ItemSize.hpp"
+#include "opm/parser/eclipse/Parser/ParserItemSize.hpp"
 #include "opm/parser/eclipse/Parser/ParserEnums.hpp"
 
 
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(Initialize) {
-  BOOST_REQUIRE_NO_THROW( ItemSize itemSize );
+    BOOST_REQUIRE_NO_THROW(ParserItemSize itemSize);
 }
-
-
 
 BOOST_AUTO_TEST_CASE(Default) {
-  ItemSize itemSize;
-  BOOST_REQUIRE_EQUAL( itemSize.sizeType() , UNSPECIFIED );
-  BOOST_REQUIRE_THROW( itemSize.sizeValue() , std::invalid_argument );
+    ParserItemSize itemSize;
+    BOOST_REQUIRE_EQUAL(itemSize.sizeType(), UNSPECIFIED);
+    BOOST_REQUIRE_THROW(itemSize.sizeValue(), std::invalid_argument);
 }
-
-
 
 BOOST_AUTO_TEST_CASE(Fixed) {
-  ItemSize itemSize(100);
-  BOOST_REQUIRE_EQUAL( itemSize.sizeType() , ITEM_FIXED );
-  BOOST_REQUIRE_EQUAL( itemSize.sizeValue() , 100U );
+    ParserItemSize itemSize(100);
+    BOOST_REQUIRE_EQUAL(itemSize.sizeType(), ITEM_FIXED);
+    BOOST_REQUIRE_EQUAL(itemSize.sizeValue(), 100U);
 }
-
-
 
 BOOST_AUTO_TEST_CASE(Fixed2) {
-  ItemSize itemSize(ITEM_FIXED , 100U);
-  BOOST_REQUIRE_EQUAL( itemSize.sizeType() , ITEM_FIXED );
-  BOOST_REQUIRE_EQUAL( itemSize.sizeValue() , 100U );
+    ParserItemSize itemSize(ITEM_FIXED, 100U);
+    BOOST_REQUIRE_EQUAL(itemSize.sizeType(), ITEM_FIXED);
+    BOOST_REQUIRE_EQUAL(itemSize.sizeValue(), 100U);
 }
 
+BOOST_AUTO_TEST_CASE(Constructor_UnspecifiedWithValue_ShouldThrow) {
+    BOOST_REQUIRE_THROW(ParserItemSize itemSize(UNSPECIFIED, 100U), std::invalid_argument);
+}
 
+BOOST_AUTO_TEST_CASE(Constructor_BoxWithValue_ShouldThrow) {
+    BOOST_REQUIRE_THROW(ParserItemSize itemSize(ITEM_BOX, 100U), std::invalid_argument);
+}
 
 BOOST_AUTO_TEST_CASE(Box) {
-  ItemSize itemSize(ITEM_BOX);
-  BOOST_REQUIRE_EQUAL( itemSize.sizeType() , ITEM_BOX );
-  BOOST_REQUIRE_THROW( itemSize.sizeValue() , std::invalid_argument );
+    ParserItemSize itemSize(ITEM_BOX);
+    BOOST_REQUIRE_EQUAL(itemSize.sizeType(), ITEM_BOX);
+    BOOST_REQUIRE_THROW(itemSize.sizeValue(), std::invalid_argument);
 }
 
-
 BOOST_AUTO_TEST_CASE(Boost) {
-  ItemSizeConstPtr itemSize( new ItemSize( ITEM_BOX ));
-  BOOST_REQUIRE_EQUAL( itemSize->sizeType() , ITEM_BOX );
-  BOOST_REQUIRE_THROW( itemSize->sizeValue() , std::invalid_argument );
+    ParserItemSizeConstPtr itemSize(new ParserItemSize(ITEM_BOX));
+    BOOST_REQUIRE_EQUAL(itemSize->sizeType(), ITEM_BOX);
+    BOOST_REQUIRE_THROW(itemSize->sizeValue(), std::invalid_argument);
 }
