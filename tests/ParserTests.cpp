@@ -144,12 +144,3 @@ BOOST_AUTO_TEST_CASE(ParserAddKW) {
 
 
 
-BOOST_AUTO_TEST_CASE(ParserAddKW) {
-  Parser parser;
-  {
-    ParserRecordSizePtr recordSize(new ParserRecordSize(9)); 
-    ParserKWPtr equilKW(new ParserKW("EQUIL" , recordSize) );
-    
-    parser.addKW( equilKW );
-  }
-}
