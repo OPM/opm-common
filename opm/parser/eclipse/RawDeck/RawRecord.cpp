@@ -43,11 +43,11 @@ namespace Opm {
     RawRecord::RawRecord(const std::string& singleRecordString) {
         if (isTerminatedRecordString(singleRecordString)) {
             setRecordString(singleRecordString);
+            splitSingleRecordString();
         } else {
             throw std::invalid_argument("Input string is not a complete record string,"
                     " offending string: " + singleRecordString);
         }
-        splitSingleRecordString();
     }
 
     const std::vector<std::string>& RawRecord::getItems() const {

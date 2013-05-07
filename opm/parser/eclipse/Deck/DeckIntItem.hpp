@@ -17,28 +17,24 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PARSERRECORD_HPP
-#define	PARSERRECORD_HPP
+#ifndef DECKINTITEM_HPP
+#define	DECKINTITEM_HPP
 
 #include <vector>
 #include <boost/shared_ptr.hpp>
-
-#include "ParserItem.hpp"
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
 
 namespace Opm {
 
-    class ParserRecord {
+    class DeckIntItem : public DeckItem {
     public:
-        ParserRecord();
-        size_t size();
+        int getInt(unsigned int index) const;
     private:
-        std::vector<ParserItem> m_items;
+        std::vector<int> m_data;
     };
 
-    typedef boost::shared_ptr<const ParserRecord> ParserRecordConstPtr;
-    typedef boost::shared_ptr<ParserRecord> ParserRecordPtr;
+    typedef boost::shared_ptr<DeckIntItem> DeckIntItemPtr;
+    typedef boost::shared_ptr<const DeckIntItem> DeckIntItemConstPtr;
 }
-
-
-#endif	/* PARSERRECORD_HPP */
+#endif	/* DECKINTITEM_HPP */
 

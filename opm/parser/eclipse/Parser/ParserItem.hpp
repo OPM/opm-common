@@ -20,15 +20,15 @@
 #define PARSER_ITEM_H
 
 #include <string>
+#include <sstream>
 #include <iostream>
-
+#include <vector>
 #include <boost/shared_ptr.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserItemSize.hpp>
 
 namespace Opm {
 
-    template<class T>
     class ParserItem {
     private:
         std::string m_name;
@@ -36,49 +36,46 @@ namespace Opm {
 
     public:
 
-        ParserItem<T>(const std::string& itemName, ParserItemSizeConstPtr itemSize) {
-            m_name.assign(itemName);
-            m_itemSize = itemSize;
-        }
+        ParserItem(const std::string& itemName, ParserItemSizeConstPtr itemSize);
 
-        bool scanItem(const std::string& itemString, T& value) {
-            std::istringstream inputStream(itemString);
-            T newValue;
-            inputStream >> newValue;
-
-            if (inputStream.fail())
-                return false;
-            else {
-                char c;
-                inputStream >> c;
-                if (inputStream.eof() || c == ' ') {
-                    value = newValue;
-                    return true;
-                } else
-                    return false;
-            }
+//        bool scanItem(const std::string& itemString, T& value) {
+//            std::istringstream inputStream(itemString);
+//            T newValue;
+//            inputStream >> newValue;
+//
+//            if (inputStream.fail())
+//                return false;
+//            else {
+//                char c;
+//                inputStream >> c;
+//                if (inputStream.eof() || c == ' ') {
+//                    value = newValue;
+//                    return true;
+//                } else
+//                    return false;
+//            }
         };
 
-        int scanItems(const std::string& itemString, size_t items, std::vector<T>& values) {
-            std::istringstream inputStream(itemString);
-            unsigned int itemsRead = 0;
+//        int scanItems(const std::string& itemString, size_t items, std::vector<T>& values) {
+//            std::istringstream inputStream(itemString);
+//            unsigned int itemsRead = 0;
+//
+//            while (inputStream.good() && itemsRead < items) {
+//                T value;
+//                inputStream >> value;
+//                values.push_back(value);
+//                itemsRead++;
+//            }
+//
+//            return itemsRead;
+//        }
+//
+//        int scanItems(const std::string& itemString, std::vector<T>& values) {
+//            return scanItems(itemString, m_itemSize->sizeValue(), values);
+//        }
 
-            while (inputStream.good() && itemsRead < items) {
-                T value;
-                inputStream >> value;
-                values.push_back(value);
-                itemsRead++;
-            }
 
-            return itemsRead;
-        }
-
-        int scanItems(const std::string& itemString, std::vector<T>& values) {
-            return scanItems(itemString, m_itemSize->sizeValue(), values);
-        }
-
-
-    };
+   // };
 }
 
 #endif

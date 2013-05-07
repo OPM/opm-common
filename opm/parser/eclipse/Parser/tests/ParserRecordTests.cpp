@@ -21,11 +21,21 @@
 #define BOOST_TEST_MODULE ParserTests
 #include <boost/test/unit_test.hpp>
 
-#include "opm/parser/eclipse/Parser/ParserRecordItem.hpp"
-
+#include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 
 using namespace Opm;
 
-BOOST_AUTO_TEST_CASE(Initialize_int) {
-    BOOST_REQUIRE_NO_THROW(ParserRecordItem<int> item);
+BOOST_AUTO_TEST_CASE(DefaultConstructor_NoParams_NoThrow) {
+    BOOST_CHECK_NO_THROW(ParserRecord record);
 }
+
+BOOST_AUTO_TEST_CASE(InitSharedPointer_NoThrow) {
+    BOOST_CHECK_NO_THROW(ParserRecordConstPtr ptr(new ParserRecord()));
+    BOOST_CHECK_NO_THROW(ParserRecordPtr ptr(new ParserRecord()));
+}
+
+BOOST_AUTO_TEST_CASE(Size_NoElements_ReturnsZero) {
+    ParserRecord record;
+    BOOST_CHECK_EQUAL(0U, record.size());
+}
+

@@ -17,28 +17,21 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PARSERRECORD_HPP
-#define	PARSERRECORD_HPP
 
-#include <vector>
-#include <boost/shared_ptr.hpp>
+#define BOOST_TEST_MODULE DeckItemTests
 
-#include "ParserItem.hpp"
+#include <stdexcept>
+#include <boost/test/unit_test.hpp>
+#include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
 
-namespace Opm {
+using namespace Opm;
 
-    class ParserRecord {
-    public:
-        ParserRecord();
-        size_t size();
-    private:
-        std::vector<ParserItem> m_items;
-    };
-
-    typedef boost::shared_ptr<const ParserRecord> ParserRecordConstPtr;
-    typedef boost::shared_ptr<ParserRecord> ParserRecordPtr;
+BOOST_AUTO_TEST_CASE(Initialize) {
+    BOOST_REQUIRE_NO_THROW(DeckIntItem deckIntItem);
 }
 
-
-#endif	/* PARSERRECORD_HPP */
+BOOST_AUTO_TEST_CASE(GetIntAtIndex_NoData_ExceptionThrown) {
+    const DeckIntItem deckIntItem;
+    BOOST_CHECK_THROW(deckIntItem.getInt(0), std::out_of_range);
+}
 

@@ -17,28 +17,15 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PARSERRECORD_HPP
-#define	PARSERRECORD_HPP
-
-#include <vector>
-#include <boost/shared_ptr.hpp>
-
-#include "ParserItem.hpp"
+#include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 
 namespace Opm {
-
-    class ParserRecord {
-    public:
-        ParserRecord();
-        size_t size();
-    private:
-        std::vector<ParserItem> m_items;
-    };
-
-    typedef boost::shared_ptr<const ParserRecord> ParserRecordConstPtr;
-    typedef boost::shared_ptr<ParserRecord> ParserRecordPtr;
+    
+    ParserRecord::ParserRecord() {
+        
+    }
+    
+    size_t ParserRecord::size() {
+        return m_items.size();
+    }
 }
-
-
-#endif	/* PARSERRECORD_HPP */
-

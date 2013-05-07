@@ -17,28 +17,15 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PARSERRECORD_HPP
-#define	PARSERRECORD_HPP
-
-#include <vector>
-#include <boost/shared_ptr.hpp>
-
-#include "ParserItem.hpp"
-
+#include "DeckIntItem.hpp"
+#include <boost/lexical_cast.hpp>
 namespace Opm {
 
-    class ParserRecord {
-    public:
-        ParserRecord();
-        size_t size();
-    private:
-        std::vector<ParserItem> m_items;
-    };
-
-    typedef boost::shared_ptr<const ParserRecord> ParserRecordConstPtr;
-    typedef boost::shared_ptr<ParserRecord> ParserRecordPtr;
+    int DeckIntItem::getInt(unsigned int index) const {
+        if (index < m_data.size()) {
+            return m_data[index];
+        } else
+            throw std::out_of_range("Out of range, index must be lower than " + boost::lexical_cast<std::string>(m_data.size()));
+    }
 }
-
-
-#endif	/* PARSERRECORD_HPP */
 
