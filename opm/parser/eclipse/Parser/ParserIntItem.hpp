@@ -32,7 +32,7 @@ namespace Opm {
         DeckIntItemPtr scan(RawRecordPtr rawRecord);
         
     private:
-        void fillIntVector(std::string token, std::vector<int>& intsFromCurrentToken);
+        void fillIntVectorFromStringToken(std::string token, std::vector<int>& intsFromCurrentToken);
     };
 }
 

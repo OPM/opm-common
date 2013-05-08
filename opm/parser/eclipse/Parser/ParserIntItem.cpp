@@ -35,7 +35,7 @@ namespace Opm {
 
             do {
                 std::string token = rawRecord->pop_front();
-                fillIntVector(token, intsPreparedForDeckItem);
+                fillIntVectorFromStringToken(token, intsPreparedForDeckItem);
             } while (intsPreparedForDeckItem.size() < size()->sizeValue() && rawRecord->getItems().size() > 0U);
 
             if (intsPreparedForDeckItem.size() != size()->sizeValue()) {
@@ -50,7 +50,7 @@ namespace Opm {
         return deckItem;
     }
 
-    void ParserIntItem::fillIntVector(std::string token, std::vector<int>& dataVector) {
+    void ParserIntItem::fillIntVectorFromStringToken(std::string token, std::vector<int>& dataVector) {
         try {
             dataVector.push_back(boost::lexical_cast<int>(token));
         }

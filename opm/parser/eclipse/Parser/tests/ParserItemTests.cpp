@@ -82,17 +82,29 @@ BOOST_AUTO_TEST_CASE(Scan_SeveralIntsFixed_CorrectIntsSetInDeckItem) {
     BOOST_CHECK_EQUAL(338932, deckIntItem->getInt(2));
 }
 
-BOOST_AUTO_TEST_CASE(Scan_RawRecordInconsistencies_ExceptionThrown) {
+BOOST_AUTO_TEST_CASE(Scan_RawRecordErrorInRawData_ExceptionThrown) {
     ParserItemSizeConstPtr itemSize(new ParserItemSize(3));
     ParserIntItem itemInt("ITEM2", itemSize);
 
     // Too few elements
     RawRecordPtr rawRecord(new RawRecord("100 443 /"));
     BOOST_CHECK_THROW(itemInt.scan(rawRecord), std::invalid_argument);
-    
+
     // Wrong type
     RawRecordPtr rawRecord2(new RawRecord("100 443 333.2 /"));
     BOOST_CHECK_THROW(itemInt.scan(rawRecord2), std::invalid_argument);
+
+    // Wrong type
+    RawRecordPtr rawRecord3(new RawRecord("100X 443 3332 /"));
+    BOOST_CHECK_THROW(itemInt.scan(rawRecord3), std::invalid_argument);
+
+    // Wrong type
+    RawRecordPtr rawRecord4(new RawRecord("100U 443 3332 /"));
+    BOOST_CHECK_THROW(itemInt.scan(rawRecord4), std::invalid_argument);
+
+    // Wrong type
+    RawRecordPtr rawRecord5(new RawRecord("galneslig 443 3332 /"));
+    BOOST_CHECK_THROW(itemInt.scan(rawRecord5), std::invalid_argument);
 }
 
 // Husk kombocase, dvs en record med alt morro i 333 * 2*23 2* 'HEI' 4*'NEIDA' / 
