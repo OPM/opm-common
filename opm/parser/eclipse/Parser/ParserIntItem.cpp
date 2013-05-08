@@ -31,16 +31,32 @@ namespace Opm {
         DeckIntItemPtr deckItem(new DeckIntItem());
 
         if (size()->sizeType() == ITEM_FIXED) {
-            std::string token = rawRecord->pop_front();
-            std::vector<int> intsFromCurrentToken;
-            fillIntVector(token, intsFromCurrentToken);
-            deckItem->push_back(intsFromCurrentToken);
-        }
+            std::vector<int> intsPreparedForDeckItem;
 
+            do {
+                std::string token = rawRecord->pop_front();
+                fillIntVector(token, intsPreparedForDeckItem);
+            } while (intsPreparedForDeckItem.size() < size()->sizeValue() && rawRecord->getItems().size() > 0U);
+
+            if (intsPreparedForDeckItem.size() != size()->sizeValue()) {
+                std::string preparedInts = boost::lexical_cast<std::string>(intsPreparedForDeckItem.size());
+                std::string parserSizeValue = boost::lexical_cast<std::string>(size()->sizeValue());
+                throw std::invalid_argument("The number of parsed ints (" + preparedInts + ") did not correspond to the fixed size of the ParserItem (" + parserSizeValue + ")");
+            }
+            deckItem->push_back(intsPreparedForDeckItem);
+        } else {
+            throw std::invalid_argument("Unsupported size type, only support ITEM_FIXED");
+        }
         return deckItem;
     }
-    
-    void ParserIntItem::fillIntVector(std::string token, std::vector<int>& intsFromCurrentToken) {
-        intsFromCurrentToken.push_back(boost::lexical_cast<int>(token));
+
+    void ParserIntItem::fillIntVector(std::string token, std::vector<int>& dataVector) {
+        try {
+            dataVector.push_back(boost::lexical_cast<int>(token));
+        }
+        catch (std::bad_cast& exception) {
+            throw std::invalid_argument("std::bad_cast exception thrown, unable to cast string token (" + token +") to int. Check data.");
+        }
     }
+
 }

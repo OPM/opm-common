@@ -51,7 +51,9 @@ namespace Opm {
     }
 
     std::string RawRecord::pop_front() {
-        return m_recordItems[0];
+        std::string front = m_recordItems.front();
+        m_recordItems.pop_front();
+        return front;
     }
 
     

@@ -62,20 +62,40 @@ BOOST_AUTO_TEST_CASE(Size_ReturnsCorrectSize) {
     BOOST_CHECK_EQUAL(UNSPECIFIED, item2.size()->sizeType());
 }
 
-BOOST_AUTO_TEST_CASE(TestScanInt) {
+BOOST_AUTO_TEST_CASE(Scan_SingleItemFixed_CorrectIntSetInDeckItem) {
     ParserItemSizeConstPtr itemSize(new ParserItemSize(1));
     ParserIntItem itemInt("ITEM2", itemSize);
 
-    RawRecordPtr rawRecord(new RawRecord("100 /"));
+    RawRecordPtr rawRecord(new RawRecord("100 44.3 'Heisann' /"));
     DeckIntItemConstPtr deckIntItem = itemInt.scan(rawRecord);
     BOOST_CHECK_EQUAL(100, deckIntItem->getInt(0));
-
-    //    BOOST_REQUIRE(!itemInt.scanItem("200X", value));
-    //    BOOST_REQUIRE_EQUAL(value, 100);
-    //
-    //    BOOST_REQUIRE(!itemInt.scanItem("", value));
-    //    BOOST_REQUIRE_EQUAL(value, 100);
 }
+
+BOOST_AUTO_TEST_CASE(Scan_SeveralIntsFixed_CorrectIntsSetInDeckItem) {
+    ParserItemSizeConstPtr itemSize(new ParserItemSize(3));
+    ParserIntItem itemInt("ITEM2", itemSize);
+
+    RawRecordPtr rawRecord(new RawRecord("100 443 338932 222.33 'Heisann' /"));
+    DeckIntItemConstPtr deckIntItem = itemInt.scan(rawRecord);
+    BOOST_CHECK_EQUAL(100, deckIntItem->getInt(0));
+    BOOST_CHECK_EQUAL(443, deckIntItem->getInt(1));
+    BOOST_CHECK_EQUAL(338932, deckIntItem->getInt(2));
+}
+
+BOOST_AUTO_TEST_CASE(Scan_RawRecordInconsistencies_ExceptionThrown) {
+    ParserItemSizeConstPtr itemSize(new ParserItemSize(3));
+    ParserIntItem itemInt("ITEM2", itemSize);
+
+    // Too few elements
+    RawRecordPtr rawRecord(new RawRecord("100 443 /"));
+    BOOST_CHECK_THROW(itemInt.scan(rawRecord), std::invalid_argument);
+    
+    // Wrong type
+    RawRecordPtr rawRecord2(new RawRecord("100 443 333.2 /"));
+    BOOST_CHECK_THROW(itemInt.scan(rawRecord2), std::invalid_argument);
+}
+
+// Husk kombocase, dvs en record med alt morro i 333 * 2*23 2* 'HEI' 4*'NEIDA' / 
 
 //BOOST_AUTO_TEST_CASE(TestScanDouble) {
 //    ParserItemSizeConstPtr itemSize(new ParserItemSize(10));
