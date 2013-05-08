@@ -17,12 +17,30 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <boost/lexical_cast.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 
+
 namespace Opm {
-    DeckIntItemConstPtr ParserIntItem::scan(std::vector<std::string>& stringTokens) {
-        DeckIntItemConstPtr deckItem(new DeckIntItem());
+
+    /// Scans the rawRecords data according to the ParserItems definition.
+    /// returns a DeckIntItem object.
+    /// NOTE: data are popped from the rawRecords deque!
+
+    DeckIntItemPtr ParserIntItem::scan(RawRecordPtr rawRecord) {
+        DeckIntItemPtr deckItem(new DeckIntItem());
+
+        if (size()->sizeType() == ITEM_FIXED) {
+            std::string token = rawRecord->pop_front();
+            std::vector<int> intsFromCurrentToken;
+            fillIntVector(token, intsFromCurrentToken);
+            deckItem->push_back(intsFromCurrentToken);
+        }
+
         return deckItem;
     }
-
+    
+    void ParserIntItem::fillIntVector(std::string token, std::vector<int>& intsFromCurrentToken) {
+        intsFromCurrentToken.push_back(boost::lexical_cast<int>(token));
+    }
 }

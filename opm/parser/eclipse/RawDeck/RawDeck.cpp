@@ -138,10 +138,10 @@ namespace Opm {
 
             std::list<RawRecordConstPtr> records = (*keyword)->getRecords();
             for (std::list<RawRecordConstPtr>::const_iterator record = records.begin(); record != records.end(); record++) {
-                std::vector<std::string> recordItems = (*record)->getItems();
+                std::deque<std::string> recordItems = (*record)->getItems();
 
-                for (std::vector<std::string>::const_iterator recordItem = recordItems.begin(); recordItem != recordItems.end(); recordItem++) {
-                    os << (*recordItem) << " ";
+                for (size_t i=0; i<recordItems.size(); i++) {
+                    os << recordItems[i] << " ";
                 }
                 os << " /                -- Data\n";
             }

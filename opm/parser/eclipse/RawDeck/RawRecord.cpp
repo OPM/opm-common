@@ -50,7 +50,12 @@ namespace Opm {
         }
     }
 
-    const std::vector<std::string>& RawRecord::getItems() const {
+    std::string RawRecord::pop_front() {
+        return m_recordItems[0];
+    }
+
+    
+    const std::deque<std::string>& RawRecord::getItems() const {
         return m_recordItems;
     }
 

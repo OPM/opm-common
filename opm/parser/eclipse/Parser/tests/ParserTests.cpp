@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(ParseFileWithOneKeyword) {
     const std::string& recordString = record->getRecordString();
     BOOST_CHECK_EQUAL("'NODIR'  'REVERS'  1  20", recordString);
 
-    const std::vector<std::string>& recordElements = record->getItems();
+    const std::deque<std::string>& recordElements = record->getItems();
     BOOST_CHECK_EQUAL((unsigned) 4, recordElements.size());
 
     BOOST_CHECK_EQUAL("NODIR", recordElements[0]);

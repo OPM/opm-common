@@ -30,13 +30,18 @@
 namespace Opm {
 
     class ParserItem {
+    public:
+        ParserItem(const std::string& itemName, ParserItemSizeConstPtr itemSize);
+        std::string name();
+        ParserItemSizeConstPtr size();
+
     private:
         std::string m_name;
         ParserItemSizeConstPtr m_itemSize;
+    };
+}
 
-    public:
-
-        ParserItem(const std::string& itemName, ParserItemSizeConstPtr itemSize);
+#endif
 
 //        bool scanItem(const std::string& itemString, T& value) {
 //            std::istringstream inputStream(itemString);
@@ -54,7 +59,7 @@ namespace Opm {
 //                } else
 //                    return false;
 //            }
-        };
+
 
 //        int scanItems(const std::string& itemString, size_t items, std::vector<T>& values) {
 //            std::istringstream inputStream(itemString);
@@ -75,7 +80,4 @@ namespace Opm {
 //        }
 
 
-   // };
-}
-
-#endif
+// };

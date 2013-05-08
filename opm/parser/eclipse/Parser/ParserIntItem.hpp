@@ -23,16 +23,16 @@
 
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
-
+#include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
 namespace Opm {
 
     class ParserIntItem : public ParserItem {
     public:
         ParserIntItem(const std::string& itemName, ParserItemSizeConstPtr itemSize) : ParserItem(itemName, itemSize) {};
-        DeckIntItemConstPtr scan(std::vector<std::string>& stringTokens);
+        DeckIntItemPtr scan(RawRecordPtr rawRecord);
         
     private:
-
+        void fillIntVector(std::string token, std::vector<int>& intsFromCurrentToken);
     };
 }
 

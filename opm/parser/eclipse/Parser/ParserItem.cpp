@@ -25,4 +25,12 @@ namespace Opm {
         m_name.assign(itemName);
         m_itemSize = itemSize;
     }
+
+    std::string ParserItem::name() {
+        return m_name;
+    }
+
+    ParserItemSizeConstPtr ParserItem::size() {
+        return m_itemSize;
+    }
 }

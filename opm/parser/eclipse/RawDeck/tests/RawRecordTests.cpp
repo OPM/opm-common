@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(RawRecordGetRecordStringReturnsTrimmedString) {
 BOOST_AUTO_TEST_CASE(RawRecordGetRecordsCorrectElementsReturned) {
     Opm::RawRecordPtr record(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20                                       /"));
 
-    const std::vector<std::string>& recordElements = record->getItems();
+    const std::deque<std::string>& recordElements = record->getItems();
     BOOST_CHECK_EQUAL((unsigned) 4, recordElements.size());
 
     BOOST_CHECK_EQUAL("NODIR ", recordElements[0]);

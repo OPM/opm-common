@@ -29,6 +29,7 @@ namespace Opm {
     class DeckIntItem : public DeckItem {
     public:
         int getInt(unsigned int index) const;
+        void push_back(std::vector<int> data);
     private:
         std::vector<int> m_data;
     };

@@ -72,6 +72,6 @@ BOOST_AUTO_TEST_CASE(ParseFullTestFile) {
 
     const std::string& recordString = records.front()->getRecordString();
     BOOST_CHECK_EQUAL("20  20  15  15  15   50", recordString);
-    std::vector<std::string> recordItems = records.front()->getItems();
+    std::deque<std::string> recordItems = records.front()->getItems();
     BOOST_CHECK_EQUAL((unsigned) 6, recordItems.size());
 }

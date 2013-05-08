@@ -35,3 +35,12 @@ BOOST_AUTO_TEST_CASE(GetIntAtIndex_NoData_ExceptionThrown) {
     BOOST_CHECK_THROW(deckIntItem.getInt(0), std::out_of_range);
 }
 
+BOOST_AUTO_TEST_CASE(PushBack_VectorPushed_ElementsCorrect) {
+    DeckIntItem deckIntItem;
+    std::vector<int> pushThese;
+    pushThese.push_back(13);
+    pushThese.push_back(33);
+    deckIntItem.push_back(pushThese);
+    BOOST_CHECK_EQUAL(13, deckIntItem.getInt(0));
+    BOOST_CHECK_EQUAL(33, deckIntItem.getInt(1));
+}

@@ -28,6 +28,8 @@
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserItemSize.hpp>
 
+#include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
+
 #include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
 
 using namespace Opm;
@@ -35,28 +37,45 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE(Initialize) {
     ParserItemSizeConstPtr itemSize(new ParserItemSize(10));
 
-    BOOST_REQUIRE_NO_THROW(ParserIntItem item1("ITEM1", itemSize));
-    BOOST_REQUIRE_NO_THROW(ParserStringItem item1("ITEM1", itemSize));
-    BOOST_REQUIRE_NO_THROW(ParserBoolItem item1("ITEM1", itemSize));
-    BOOST_REQUIRE_NO_THROW(ParserDoubleItem item1("ITEM1", itemSize));
+    BOOST_CHECK_NO_THROW(ParserIntItem item1("ITEM1", itemSize));
+    BOOST_CHECK_NO_THROW(ParserStringItem item1("ITEM1", itemSize));
+    BOOST_CHECK_NO_THROW(ParserBoolItem item1("ITEM1", itemSize));
+    BOOST_CHECK_NO_THROW(ParserDoubleItem item1("ITEM1", itemSize));
 }
 
-//BOOST_AUTO_TEST_CASE(TestScanInt) {
-//    ParserItemSizeConstPtr itemSize(new ParserItemSize(10));
-//    ParserIntItem itemInt("ITEM2", itemSize);
-//    
-//    std::vector<std::string> singleItem;
-//    singleItem.push_back("100");
-//    DeckIntItemConstPtr deckIntItem = itemInt.scan(singleItem);
-//
-//    BOOST_REQUIRE_EQUAL(100, deckIntItem->getInt(0));
+BOOST_AUTO_TEST_CASE(Name_ReturnsCorrectName) {
+    ParserItemSizeConstPtr itemSize(new ParserItemSize(10));
+    ParserIntItem item1("ITEM1", itemSize);
+    BOOST_CHECK_EQUAL("ITEM1", item1.name());
+    ParserIntItem item2("", itemSize);
+    BOOST_CHECK_EQUAL("", item2.name());
+}
 
-//    BOOST_REQUIRE(!itemInt.scanItem("200X", value));
-//    BOOST_REQUIRE_EQUAL(value, 100);
-//
-//    BOOST_REQUIRE(!itemInt.scanItem("", value));
-//    BOOST_REQUIRE_EQUAL(value, 100);
-//}
+BOOST_AUTO_TEST_CASE(Size_ReturnsCorrectSize) {
+    ParserItemSizeConstPtr itemSize(new ParserItemSize(10));
+    ParserIntItem item1("ITEM1", itemSize);
+    BOOST_CHECK_EQUAL(itemSize, item1.size());
+    BOOST_CHECK_EQUAL(10U, item1.size()->sizeValue());
+    ParserItemSizeConstPtr itemSize2(new ParserItemSize(UNSPECIFIED));
+    ParserIntItem item2("ITEM2", itemSize2);
+    BOOST_CHECK_EQUAL(itemSize2, item2.size());
+    BOOST_CHECK_EQUAL(UNSPECIFIED, item2.size()->sizeType());
+}
+
+BOOST_AUTO_TEST_CASE(TestScanInt) {
+    ParserItemSizeConstPtr itemSize(new ParserItemSize(1));
+    ParserIntItem itemInt("ITEM2", itemSize);
+
+    RawRecordPtr rawRecord(new RawRecord("100 /"));
+    DeckIntItemConstPtr deckIntItem = itemInt.scan(rawRecord);
+    BOOST_CHECK_EQUAL(100, deckIntItem->getInt(0));
+
+    //    BOOST_REQUIRE(!itemInt.scanItem("200X", value));
+    //    BOOST_REQUIRE_EQUAL(value, 100);
+    //
+    //    BOOST_REQUIRE(!itemInt.scanItem("", value));
+    //    BOOST_REQUIRE_EQUAL(value, 100);
+}
 
 //BOOST_AUTO_TEST_CASE(TestScanDouble) {
 //    ParserItemSizeConstPtr itemSize(new ParserItemSize(10));

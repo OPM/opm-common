@@ -21,7 +21,7 @@
 #define	RECORD_HPP
 
 #include <string>
-#include <vector>
+#include <deque>
 
 
 namespace Opm {
@@ -34,13 +34,17 @@ namespace Opm {
     public:
         RawRecord();
         RawRecord(const std::string& singleRecordString);
+        
+        std::string pop_front();
+        
         const std::string& getRecordString() const;
-        const std::vector<std::string>& getItems() const;
+        const std::deque<std::string>& getItems() const;
+        
         static bool isTerminatedRecordString(const std::string& candidateRecordString);
         virtual ~RawRecord();
     private:
         std::string m_sanitizedRecordString;
-        std::vector<std::string> m_recordItems;
+        std::deque<std::string> m_recordItems;
 
         void setRecordString(const std::string& singleRecordString);
         void splitSingleRecordString();
