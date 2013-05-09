@@ -44,3 +44,17 @@ BOOST_AUTO_TEST_CASE(PushBack_VectorPushed_ElementsCorrect) {
     BOOST_CHECK_EQUAL(13, deckIntItem.getInt(0));
     BOOST_CHECK_EQUAL(33, deckIntItem.getInt(1));
 }
+
+
+
+BOOST_AUTO_TEST_CASE(size_correct) {
+    DeckIntItem deckIntItem;
+    
+    BOOST_CHECK_EQUAL( 0U , deckIntItem.size());
+    deckIntItem.push_back( 100 );
+    BOOST_CHECK_EQUAL( 1U , deckIntItem.size());
+    
+    deckIntItem.push_back( 100 );
+    deckIntItem.push_back( 100 );
+    BOOST_CHECK_EQUAL( 3U , deckIntItem.size());
+}

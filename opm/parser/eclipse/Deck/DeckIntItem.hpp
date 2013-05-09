@@ -18,7 +18,7 @@
  */
 
 #ifndef DECKINTITEM_HPP
-#define	DECKINTITEM_HPP
+#define DECKINTITEM_HPP
 
 #include <vector>
 #include <boost/shared_ptr.hpp>
@@ -30,6 +30,8 @@ namespace Opm {
     public:
         int getInt(unsigned int index) const;
         void push_back(std::vector<int> data);
+        void push_back(int value);
+        size_t size() const;
     private:
         std::vector<int> m_data;
     };
@@ -37,5 +39,5 @@ namespace Opm {
     typedef boost::shared_ptr<DeckIntItem> DeckIntItemPtr;
     typedef boost::shared_ptr<const DeckIntItem> DeckIntItemConstPtr;
 }
-#endif	/* DECKINTITEM_HPP */
+#endif  /* DECKINTITEM_HPP */
 

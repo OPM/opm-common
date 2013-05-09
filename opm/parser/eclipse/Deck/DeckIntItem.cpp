@@ -34,5 +34,14 @@ namespace Opm {
         }
     }
 
+    void DeckIntItem::push_back(int data) {
+        m_data.push_back( data );
+    }
+
+
+    size_t DeckIntItem::size() const {
+        return m_data.size();
+    }
+
 }
 
