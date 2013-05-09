@@ -19,18 +19,21 @@
 
 
 #ifndef PARSERSTRINGITEM_HPP
-#define	PARSERSTRINGITEM_HPP
+#define PARSERSTRINGITEM_HPP
 
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
+#include <opm/parser/eclipse/Parser/ParserEnums.hpp>
+
 namespace Opm {
 
     class ParserStringItem : public ParserItem {
     public:
-        ParserStringItem(const std::string& itemName, ParserItemSizeConstPtr itemSize) : ParserItem(itemName, itemSize) {};
+        ParserStringItem(const std::string& itemName, ParserItemSizeEnum sizeType) : ParserItem(itemName, sizeType) {};
+
     private:
 
-    };
+   };
 }
 
-#endif	/* PARSERSTRINGITEM_HPP */
+#endif  /* PARSERSTRINGITEM_HPP */
 

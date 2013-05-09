@@ -25,19 +25,19 @@
 #include <vector>
 #include <boost/shared_ptr.hpp>
 
-#include <opm/parser/eclipse/Parser/ParserItemSize.hpp>
+#include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 
 namespace Opm {
 
     class ParserItem {
     public:
-        ParserItem(const std::string& itemName, ParserItemSizeConstPtr itemSize);
+        ParserItem(const std::string& itemName, ParserItemSizeEnum sizeType);
         std::string name();
-        ParserItemSizeConstPtr size();
-
+        ParserItemSizeEnum sizeType();
+        
     private:
         std::string m_name;
-        ParserItemSizeConstPtr m_itemSize;
+        ParserItemSizeEnum m_sizeType;
     };
 }
 

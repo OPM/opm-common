@@ -17,7 +17,6 @@ set( parser_source
 Parser/ParserRecordSize.cpp 
 Parser/ParserKW.cpp 
 Parser/Parser.cpp 
-Parser/ParserItemSize.cpp
 Parser/ParserRecord.cpp
 Parser/ParserItem.cpp
 Parser/ParserIntItem.cpp  

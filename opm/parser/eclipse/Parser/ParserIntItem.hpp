@@ -19,16 +19,22 @@
 
 
 #ifndef PARSERINTITEM_HPP
-#define	PARSERINTITEM_HPP
+#define PARSERINTITEM_HPP
 
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
+#include <opm/parser/eclipse/Parser/ParserEnums.hpp>
+
 #include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
 #include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
+
+
 namespace Opm {
 
     class ParserIntItem : public ParserItem {
     public:
-        ParserIntItem(const std::string& itemName, ParserItemSizeConstPtr itemSize) : ParserItem(itemName, itemSize) {};
+        ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType) : ParserItem(itemName, sizeType) {};
+
+        DeckIntItemPtr scan(size_t expectedItems , RawRecordPtr rawRecord);
         DeckIntItemPtr scan(RawRecordPtr rawRecord);
         
     private:
@@ -36,5 +42,5 @@ namespace Opm {
     };
 }
 
-#endif	/* PARSERINTITEM_HPP */
+#endif  /* PARSERINTITEM_HPP */
 

@@ -18,37 +18,54 @@
  */
 
 #include <boost/lexical_cast.hpp>
+
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
+#include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 
 
 namespace Opm {
+
+
+
 
     /// Scans the rawRecords data according to the ParserItems definition.
     /// returns a DeckIntItem object.
     /// NOTE: data are popped from the rawRecords deque!
 
-    DeckIntItemPtr ParserIntItem::scan(RawRecordPtr rawRecord) {
-        DeckIntItemPtr deckItem(new DeckIntItem());
+    DeckIntItemPtr ParserIntItem::scan(size_t expectedItems , RawRecordPtr rawRecord) {
+        if (sizeType() == SCALAR && expectedItems > 1)
+            throw std::invalid_argument("Can only ask for one item when sizeType == SCALAR");
 
-        if (size()->sizeType() == ITEM_FIXED) {
-            std::vector<int> intsPreparedForDeckItem;
+        {
+            DeckIntItemPtr deckItem(new DeckIntItem());
 
-            do {
-                std::string token = rawRecord->pop_front();
-                fillIntVectorFromStringToken(token, intsPreparedForDeckItem);
-            } while (intsPreparedForDeckItem.size() < size()->sizeValue() && rawRecord->getItems().size() > 0U);
-
-            if (intsPreparedForDeckItem.size() != size()->sizeValue()) {
-                std::string preparedInts = boost::lexical_cast<std::string>(intsPreparedForDeckItem.size());
-                std::string parserSizeValue = boost::lexical_cast<std::string>(size()->sizeValue());
-                throw std::invalid_argument("The number of parsed ints (" + preparedInts + ") did not correspond to the fixed size of the ParserItem (" + parserSizeValue + ")");
+            if (expectedItems) {
+                std::vector<int> intsPreparedForDeckItem;
+                
+                do {
+                    std::string token = rawRecord->pop_front();
+                    fillIntVectorFromStringToken(token, intsPreparedForDeckItem);
+                } while ((intsPreparedForDeckItem.size() < expectedItems) && (rawRecord->getItems().size() > 0U));
+                
+                if (intsPreparedForDeckItem.size() != expectedItems) {
+                    std::string preparedInts = boost::lexical_cast<std::string>(intsPreparedForDeckItem.size());
+                    std::string parserSizeValue = boost::lexical_cast<std::string>(expectedItems);
+                    throw std::invalid_argument("The number of parsed ints (" + preparedInts + ") did not correspond to the expected number of items:(" + parserSizeValue + ")");
+                }
+                deckItem->push_back(intsPreparedForDeckItem);
             }
-            deckItem->push_back(intsPreparedForDeckItem);
-        } else {
-            throw std::invalid_argument("Unsupported size type, only support ITEM_FIXED");
+            return deckItem;
         }
-        return deckItem;
     }
+    
+    
+    DeckIntItemPtr ParserIntItem::scan(RawRecordPtr rawRecord) {
+        if (sizeType() == SCALAR) 
+            return scan(1U , rawRecord);
+        else
+            throw std::invalid_argument("Unsupported size type, only support SCALAR. Use scan( numTokens , rawRecord) instead ");
+    }
+
 
     void ParserIntItem::fillIntVectorFromStringToken(std::string token, std::vector<int>& dataVector) {
         try {

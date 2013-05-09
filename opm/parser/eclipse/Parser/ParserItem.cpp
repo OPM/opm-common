@@ -21,16 +21,16 @@
 
 namespace Opm {
 
-    ParserItem::ParserItem(const std::string& itemName, ParserItemSizeConstPtr itemSize) {
+    ParserItem::ParserItem(const std::string& itemName, ParserItemSizeEnum sizeType) {
         m_name.assign(itemName);
-        m_itemSize = itemSize;
+        m_sizeType = sizeType;
     }
 
     std::string ParserItem::name() {
         return m_name;
     }
 
-    ParserItemSizeConstPtr ParserItem::size() {
-        return m_itemSize;
+    ParserItemSizeEnum ParserItem::sizeType() {
+        return m_sizeType;
     }
 }

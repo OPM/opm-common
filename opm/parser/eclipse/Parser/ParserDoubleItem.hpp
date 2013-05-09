@@ -19,17 +19,18 @@
 
 
 #ifndef PARSERDOUBLEITEM_HPP
-#define	PARSERDOUBLEITEM_HPP
+#define PARSERDOUBLEITEM_HPP
 
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
+#include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 namespace Opm {
 
     class ParserDoubleItem : public ParserItem {
     public:
-        ParserDoubleItem(const std::string& itemName, ParserItemSizeConstPtr itemSize) : ParserItem(itemName, itemSize) {};
+        ParserDoubleItem(const std::string& itemName, ParserItemSizeEnum sizeType) : ParserItem(itemName, sizeType) {};
     private:
     };
 }
 
-#endif	/* PARSERDOUBLEITEM_HPP */
+#endif  /* PARSERDOUBLEITEM_HPP */
 
