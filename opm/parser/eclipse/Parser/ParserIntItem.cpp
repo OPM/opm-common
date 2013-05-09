@@ -25,7 +25,14 @@
 
 namespace Opm {
 
+    ParserIntItem::ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType) : ParserItem(itemName, sizeType) {
+        m_default = defaultInt();
+    }
 
+    
+    ParserIntItem::ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType, int defaultValue) : ParserItem(itemName, sizeType) {
+        m_default = defaultValue;
+    }
 
 
     /// Scans the rawRecords data according to the ParserItems definition.
@@ -68,12 +75,71 @@ namespace Opm {
 
 
     void ParserIntItem::fillIntVectorFromStringToken(std::string token, std::vector<int>& dataVector) {
-        try {
-            dataVector.push_back(boost::lexical_cast<int>(token));
-        }
-        catch (std::bad_cast& exception) {
-            throw std::invalid_argument("std::bad_cast exception thrown, unable to cast string token (" + token +") to int. Check data.");
-        }
-    }
+        int multiplier = 1;
+        int value = m_default;
+        {
+            bool   starStart = false;
+            bool   OK = false;
+            char * endPtr;
+            const char * tokenPtr = token.c_str();
+            
+            int val1 = (int) strtol(tokenPtr , &endPtr, 10);
+            
+            if (strlen(endPtr)) {
+                // The reading stopped at a non-integer character; now we
+                // continue to see if the stopping character was a '*' which
+                // might be interpreted either as a default in '*' or '5*' OR as
+                // a multiplication symbol in '5*7'.
+                
+                if (endPtr[0] == '*') {
+                    // We stopped at a star.
 
+                    
+                    if (endPtr == tokenPtr) {
+                        // We have not read anything - the string starts with a '*'; for strings
+                        // starting with '*' we do not accept anything following the '*'.
+                        multiplier = 1;
+                        starStart = true;
+                    } else
+                        multiplier = val1;
+                    
+
+                    endPtr++; 
+                    if (strlen(endPtr)) {
+                        // There is more data following after the star.
+                        
+                        if (!starStart) {
+                            // Continue the reading after the star; if the token
+                            // starts with a star we do not accept anything
+                            // following after the star.
+                            tokenPtr = endPtr;
+                            {
+                                int val2 = (int) strtol(tokenPtr , &endPtr, 10);
+                                if (strlen(endPtr) == 0) {
+                                    value = val2;
+                                    OK = true;
+                                }
+                            }
+                        }
+                    } else {
+                        // Nothing following the star; i.e. it should be
+                        // interpreted as a default sign. That is OK.
+                        OK = true;
+                    }
+                }
+            } else {
+                // We just read the whole token in one pass: token = "100"
+                value = val1;
+                OK = true;
+            }
+
+
+            if (!OK)
+                throw std::invalid_argument("std::bad_cast exception thrown, unable to cast string token (" + token +") one of forms: 'int'   '*'   'int*int'  'int*'");
+            
+            for (int i=0; i < multiplier; i++) 
+                dataVector.push_back( value );
+        }
+        //boost::lexical_cast<int>(token)
+    }
 }

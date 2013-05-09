@@ -32,13 +32,19 @@ namespace Opm {
 
     class ParserIntItem : public ParserItem {
     public:
-        ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType) : ParserItem(itemName, sizeType) {};
+        ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType);
+        ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType, int defaultValue);
 
         DeckIntItemPtr scan(size_t expectedItems , RawRecordPtr rawRecord);
         DeckIntItemPtr scan(RawRecordPtr rawRecord);
         
+        int getDefault() const {
+            return m_default;
+        }
+
     private:
         void fillIntVectorFromStringToken(std::string token, std::vector<int>& intsFromCurrentToken);
+        int  m_default;
     };
 }
 

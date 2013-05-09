@@ -33,4 +33,9 @@ namespace Opm {
     ParserItemSizeEnum ParserItem::sizeType() {
         return m_sizeType;
     }
+
+    int ParserItem::defaultInt() {
+        return 0;
+    }
+
 }

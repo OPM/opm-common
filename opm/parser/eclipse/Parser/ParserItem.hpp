@@ -35,6 +35,10 @@ namespace Opm {
         std::string name();
         ParserItemSizeEnum sizeType();
         
+        static int defaultInt();
+        
+
+
     private:
         std::string m_name;
         ParserItemSizeEnum m_sizeType;
