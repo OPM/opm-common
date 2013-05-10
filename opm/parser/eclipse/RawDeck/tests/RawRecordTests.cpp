@@ -51,3 +51,29 @@ BOOST_AUTO_TEST_CASE(RawRecordIsCompleteRecordInCompleteRecordReturnsFalse) {
     isComplete = Opm::RawRecord::isTerminatedRecordString("'NODIR '  'REVERS  1  20 /");
     BOOST_CHECK_EQUAL(false, isComplete);
 }
+
+
+BOOST_AUTO_TEST_CASE(Rawrecord_OperatorThis_OK) {
+  Opm::RawRecord record(" 'NODIR '  'REVERS'  1  20  /");
+  Opm::RawRecordPtr recordPtr(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20  /"));  
+
+  BOOST_CHECK_EQUAL( "NODIR " , record[0]);
+  BOOST_CHECK_EQUAL( "REVERS" , record[1]);
+  BOOST_CHECK_EQUAL( "1" , record[2]);
+  BOOST_CHECK_EQUAL( "20" , record[3]);
+
+  BOOST_CHECK_EQUAL( "20" , (*recordPtr)[3]);
+
+  BOOST_CHECK_THROW( record[4] , std::out_of_range);
+}
+
+
+BOOST_AUTO_TEST_CASE(Rawrecord_PushFront_OK) {
+  Opm::RawRecordPtr record(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20  /"));
+  record->push_front( "String2" );
+  record->push_front( "String1" );
+  
+  
+  BOOST_CHECK_EQUAL( "String1" , (*record)[0]);
+  BOOST_CHECK_EQUAL( "String2" , (*record)[1]);
+}

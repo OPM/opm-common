@@ -18,7 +18,7 @@
  */
 
 #ifndef RECORD_HPP
-#define	RECORD_HPP
+#define RECORD_HPP
 
 #include <string>
 #include <deque>
@@ -36,10 +36,12 @@ namespace Opm {
         RawRecord(const std::string& singleRecordString);
         
         std::string pop_front();
+        void push_front(std::string token);
         
         const std::string& getRecordString() const;
         const std::deque<std::string>& getItems() const;
-        
+        const std::string& operator[](size_t index) const;
+
         static bool isTerminatedRecordString(const std::string& candidateRecordString);
         virtual ~RawRecord();
     private:
@@ -59,5 +61,5 @@ namespace Opm {
 
 }
 
-#endif	/* RECORD_HPP */
+#endif  /* RECORD_HPP */
 

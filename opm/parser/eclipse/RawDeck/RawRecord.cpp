@@ -56,6 +56,19 @@ namespace Opm {
         return front;
     }
 
+
+    void RawRecord::push_front(std::string token) {
+        m_recordItems.push_front( token );
+    }
+
+    
+    const std::string& RawRecord::operator[](size_t index) const {
+        if (index < m_recordItems.size())
+            return m_recordItems[index];
+        else
+            throw std::out_of_range("Lookup index out of range");
+    }
+
     
     const std::deque<std::string>& RawRecord::getItems() const {
         return m_recordItems;
