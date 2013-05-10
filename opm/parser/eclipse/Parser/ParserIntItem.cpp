@@ -39,7 +39,7 @@ namespace Opm {
     /// returns a DeckIntItem object.
     /// NOTE: data are popped from the rawRecords deque!
 
-    DeckIntItemPtr ParserIntItem::scan(size_t expectedItems , RawRecordPtr rawRecord) {
+    DeckIntItemPtr ParserIntItem::scan__(size_t expectedItems , bool scanAll , RawRecordPtr rawRecord) {
         if (sizeType() == SCALAR && expectedItems > 1)
             throw std::invalid_argument("Can only ask for one item when sizeType == SCALAR");
 
@@ -48,35 +48,65 @@ namespace Opm {
 
             if (expectedItems) {
                 std::vector<int> intsPreparedForDeckItem;
+                bool defaultActive;
                 
                 do {
                     std::string token = rawRecord->pop_front();
-                    fillIntVectorFromStringToken(token, intsPreparedForDeckItem);
-                } while ((intsPreparedForDeckItem.size() < expectedItems) && (rawRecord->getItems().size() > 0U));
+                    fillIntVectorFromStringToken(token, intsPreparedForDeckItem , defaultActive);
+                } while (((intsPreparedForDeckItem.size() < expectedItems) || scanAll) && (rawRecord->getItems().size() > 0U));
                 
-                if (intsPreparedForDeckItem.size() != expectedItems) {
+                if (intsPreparedForDeckItem.size() >= expectedItems) {
+                    if (scanAll)
+                        deckItem->push_back(intsPreparedForDeckItem);
+                    else {
+                        deckItem->push_back(intsPreparedForDeckItem , expectedItems);
+                        
+                        if (intsPreparedForDeckItem.size() > expectedItems) {
+                            size_t offset = intsPreparedForDeckItem.size();
+                            size_t extraItems = intsPreparedForDeckItem.size() - expectedItems;
+                            
+                            for (size_t i=1; i <= extraItems; i++) {
+                                if (defaultActive)
+                                    rawRecord->push_front("*");
+                                else {
+                                    int intValue = intsPreparedForDeckItem[ offset - i ];
+                                    std::string stringValue = boost::lexical_cast<std::string>( intValue );
+                                    
+                                    rawRecord->push_front( stringValue );
+                                }
+                            }
+                        }
+                    }
+                } else {
                     std::string preparedInts = boost::lexical_cast<std::string>(intsPreparedForDeckItem.size());
                     std::string parserSizeValue = boost::lexical_cast<std::string>(expectedItems);
                     throw std::invalid_argument("The number of parsed ints (" + preparedInts + ") did not correspond to the expected number of items:(" + parserSizeValue + ")");
                 }
-                deckItem->push_back(intsPreparedForDeckItem);
+
             }
             return deckItem;
         }
     }
     
+    DeckIntItemPtr ParserIntItem::scan(size_t expectedItems, RawRecordPtr rawRecord) {
+        return scan__( expectedItems , false , rawRecord);
+    }
+
     
     DeckIntItemPtr ParserIntItem::scan(RawRecordPtr rawRecord) {
         if (sizeType() == SCALAR) 
             return scan(1U , rawRecord);
+        else if (sizeType() == ALL)
+            return scan__(0 , true , rawRecord);
         else
             throw std::invalid_argument("Unsupported size type, only support SCALAR. Use scan( numTokens , rawRecord) instead ");
     }
 
 
-    void ParserIntItem::fillIntVectorFromStringToken(std::string token, std::vector<int>& dataVector) {
+    void ParserIntItem::fillIntVectorFromStringToken(std::string token, std::vector<int>& dataVector, bool& defaultActive) {
         int multiplier = 1;
         int value = m_default;
+        defaultActive = false;
         {
             bool   starStart = false;
             bool   OK = false;
@@ -125,6 +155,7 @@ namespace Opm {
                         // Nothing following the star; i.e. it should be
                         // interpreted as a default sign. That is OK.
                         OK = true;
+                        defaultActive = true;
                     }
                 }
             } else {

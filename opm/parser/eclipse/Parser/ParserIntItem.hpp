@@ -43,7 +43,8 @@ namespace Opm {
         }
 
     private:
-        void fillIntVectorFromStringToken(std::string token, std::vector<int>& intsFromCurrentToken);
+        void fillIntVectorFromStringToken(std::string token, std::vector<int>& intsFromCurrentToken, bool& defaultActive);
+        DeckIntItemPtr scan__(size_t expectedItems , bool scanAll , RawRecordPtr rawRecord);
         int  m_default;
     };
 }

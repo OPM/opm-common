@@ -33,7 +33,7 @@ namespace Opm {
     };
 
     enum ParserItemSizeEnum {
-        UNSPECIFIED = 0,
+        ALL = 0,
         SCALAR = 1,
         ITEM_BOX = 2
     };
