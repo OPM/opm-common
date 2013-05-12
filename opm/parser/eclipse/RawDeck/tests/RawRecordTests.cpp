@@ -77,3 +77,20 @@ BOOST_AUTO_TEST_CASE(Rawrecord_PushFront_OK) {
   BOOST_CHECK_EQUAL( "String1" , (*record)[0]);
   BOOST_CHECK_EQUAL( "String2" , (*record)[1]);
 }
+
+
+BOOST_AUTO_TEST_CASE(Rawrecord_size_OK) {
+  Opm::RawRecordPtr record(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20  /"));
+
+  BOOST_CHECK_EQUAL( 4U  , record->size());
+  record->push_front( "String2" );
+  record->push_front( "String1" );
+  BOOST_CHECK_EQUAL( 6U  , record->size());
+}
+
+
+BOOST_AUTO_TEST_CASE(Rawrecord_sizeEmpty_OK) {
+  Opm::RawRecordPtr record(new Opm::RawRecord("/"));
+
+  BOOST_CHECK_EQUAL( 0U  , record->size());
+}

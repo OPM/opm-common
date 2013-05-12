@@ -61,7 +61,12 @@ namespace Opm {
         m_recordItems.push_front( token );
     }
 
-    
+
+    size_t RawRecord::size() const {
+        return m_recordItems.size();
+    }
+
+
     const std::string& RawRecord::operator[](size_t index) const {
         if (index < m_recordItems.size())
             return m_recordItems[index];

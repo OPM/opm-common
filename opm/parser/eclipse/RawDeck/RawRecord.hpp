@@ -37,7 +37,8 @@ namespace Opm {
         
         std::string pop_front();
         void push_front(std::string token);
-        
+        size_t size() const;
+
         const std::string& getRecordString() const;
         const std::deque<std::string>& getItems() const;
         const std::string& operator[](size_t index) const;
