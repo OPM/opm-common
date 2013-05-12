@@ -46,14 +46,25 @@ namespace Opm {
         {
             DeckIntItemPtr deckItem(new DeckIntItem());
 
-            if (expectedItems) {
+            if (expectedItems || scanAll) {
                 std::vector<int> intsPreparedForDeckItem;
                 bool defaultActive;
                 
-                do {
-                    std::string token = rawRecord->pop_front();
-                    fillIntVectorFromStringToken(token, intsPreparedForDeckItem , defaultActive);
-                } while (((intsPreparedForDeckItem.size() < expectedItems) || scanAll) && (rawRecord->getItems().size() > 0U));
+                {
+                    bool cont = true;
+                    do {
+                        std::string token = rawRecord->pop_front();
+                        fillIntVectorFromStringToken(token, intsPreparedForDeckItem , defaultActive);
+
+                        if (rawRecord->size() == 0)
+                            cont = false;
+                        else {
+                            if (!scanAll)
+                                if (intsPreparedForDeckItem.size() >= expectedItems)
+                                    cont = false;
+                        }
+                    } while (cont);
+                }
                 
                 if (intsPreparedForDeckItem.size() >= expectedItems) {
                     if (scanAll)
@@ -96,7 +107,7 @@ namespace Opm {
     DeckIntItemPtr ParserIntItem::scan(RawRecordPtr rawRecord) {
         if (sizeType() == SCALAR) 
             return scan(1U , rawRecord);
-        else if (sizeType() == ALL)
+        else if (sizeType() == ALL) 
             return scan__(0 , true , rawRecord);
         else
             throw std::invalid_argument("Unsupported size type, only support SCALAR. Use scan( numTokens , rawRecord) instead ");
