@@ -39,7 +39,7 @@ namespace Opm {
         ParserItemSizeEnum sizeType();
         
         static int defaultInt();
-        
+
     protected:
         
         template<class T> void fillVectorFromStringToken(std::string token , std::vector<T>& dataVector, T defaultValue , bool& defaultActive) {

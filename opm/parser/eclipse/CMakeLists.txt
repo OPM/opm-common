@@ -11,6 +11,7 @@ RawDeck/RawParserKWs.cpp )
 
 set( deck_source
 Deck/DeckIntItem.cpp
+Deck/DeckDoubleItem.cpp
 )
 
 set( parser_source 

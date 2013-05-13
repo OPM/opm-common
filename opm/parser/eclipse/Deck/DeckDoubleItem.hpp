@@ -17,8 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DECKINTITEM_HPP
-#define DECKINTITEM_HPP
+#ifndef DECKDOUBLEITEM_HPP
+#define DECKDOUBLEITEM_HPP
 
 #include <vector>
 #include <boost/shared_ptr.hpp>
@@ -26,21 +26,21 @@
 
 namespace Opm {
 
-    class DeckIntItem : public DeckItem {
+    class DeckDoubleItem : public DeckItem {
     public:
-        int getInt(size_t index) const;
-
-        void push_back(std::vector<int> data , size_t items);
-        void push_back(std::vector<int> data);
-        void push_back(int value);
-
+        double getDouble(size_t index) const;
+        
+        void push_back(std::vector<double> data , size_t items);
+        void push_back(std::vector<double> data);
+        void push_back(double value);
+        
         size_t size() const;
     private:
-        std::vector<int> m_data;
+        std::vector<double> m_data;
     };
 
-    typedef boost::shared_ptr<DeckIntItem> DeckIntItemPtr;
-    typedef boost::shared_ptr<const DeckIntItem> DeckIntItemConstPtr;
+    typedef boost::shared_ptr<DeckDoubleItem> DeckDoubleItemPtr;
+    typedef boost::shared_ptr<const DeckDoubleItem> DeckDoubleItemConstPtr;
 }
-#endif  /* DECKINTITEM_HPP */
+#endif  /* DECKDOUBLEITEM_HPP */
 

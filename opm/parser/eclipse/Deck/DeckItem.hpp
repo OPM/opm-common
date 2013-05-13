@@ -18,7 +18,7 @@
  */
 
 #ifndef DECKITEM_HPP
-#define	DECKITEM_HPP
+#define DECKITEM_HPP
 
 #include <stdexcept>
 #include <string>
@@ -26,19 +26,19 @@
 class DeckItem {
 public:
 
-    virtual int getInt(unsigned int index) const {
+    virtual int getInt(size_t index) const {
         throw std::logic_error("This implementation of DeckItem does not support int");
     };
 
-    virtual double getDouble(unsigned int index) const {
+    virtual double getDouble(size_t index) const {
         throw std::logic_error("This implementation of DeckItem does not support double");
     };
 
-    virtual bool getBool(unsigned int index) const {
+    virtual bool getBool(size_t index) const {
        throw std::logic_error("This implementation of DeckItem does not support bool");
     }
 
-    virtual std::string getString(unsigned int index) const {
+    virtual std::string getString(size_t index) const {
         throw std::logic_error("This implementation of DeckItem does not support string");
     }
 
@@ -47,5 +47,5 @@ private:
 
 };
 
-#endif	/* DECKITEM_HPP */
+#endif  /* DECKITEM_HPP */
 

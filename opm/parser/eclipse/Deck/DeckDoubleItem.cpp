@@ -19,11 +19,11 @@
 
 #include <boost/lexical_cast.hpp>
 
-#include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
 
 namespace Opm {
 
-    int DeckIntItem::getInt(size_t index) const {
+    double DeckDoubleItem::getDouble(size_t index) const {
         if (index < m_data.size()) {
             return m_data[index];
         } else
@@ -31,23 +31,23 @@ namespace Opm {
     }
 
 
-    void DeckIntItem::push_back(std::vector<int> data , size_t items) {
+    void DeckDoubleItem::push_back(std::vector<double> data , size_t items) {
         for (size_t i=0; i<items; i++) {
             m_data.push_back(data[i]);
         }
     }
 
 
-    void DeckIntItem::push_back(std::vector<int> data) {
+    void DeckDoubleItem::push_back(std::vector<double> data) {
         push_back( data  , data.size() );
     }
 
-    void DeckIntItem::push_back(int data) {
+    void DeckDoubleItem::push_back(double data) {
         m_data.push_back( data );
     }
 
 
-    size_t DeckIntItem::size() const {
+    size_t DeckDoubleItem::size() const {
         return m_data.size();
     }
 
