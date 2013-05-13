@@ -34,7 +34,7 @@ namespace Opm {
 
     enum ParserItemSizeEnum {
         ALL = 0,
-        SCALAR = 1,
+        SINGLE = 1,
         ITEM_BOX = 2
     };
 
