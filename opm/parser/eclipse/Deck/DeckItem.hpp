@@ -23,6 +23,8 @@
 #include <stdexcept>
 #include <string>
 
+namespace Opm {
+
 class DeckItem {
 public:
 
@@ -46,6 +48,6 @@ public:
 private:
 
 };
-
+}
 #endif  /* DECKITEM_HPP */
 
