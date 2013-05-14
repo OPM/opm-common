@@ -22,6 +22,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
+#include <opm/parser/eclipse/Parser/ParserItem.hpp>
+#include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 
 using namespace Opm;
 
@@ -38,4 +40,79 @@ BOOST_AUTO_TEST_CASE(Size_NoElements_ReturnsZero) {
     ParserRecord record;
     BOOST_CHECK_EQUAL(0U, record.size());
 }
+
+
+BOOST_AUTO_TEST_CASE(Size_OneItem_Return1) {
+    ParserItemSizeEnum sizeType = SINGLE;
+    ParserIntItemPtr itemInt( new ParserIntItem("ITEM1", sizeType));
+    ParserRecordPtr record(new ParserRecord());
+    record->addItem( itemInt );
+    BOOST_CHECK_EQUAL(1U, record->size());
+}
+
+
+BOOST_AUTO_TEST_CASE(Get_OneItem_Return1) {
+    ParserItemSizeEnum sizeType = SINGLE;
+    ParserIntItemPtr itemInt( new ParserIntItem("ITEM1", sizeType));
+    ParserRecordPtr record(new ParserRecord());
+    record->addItem( itemInt );
+    {
+      ParserItemConstPtr item = record->get(0);
+      BOOST_CHECK_EQUAL( item , itemInt );
+    }
+}    
+
+
+
+BOOST_AUTO_TEST_CASE(Get_outOfRange_Throw) {
+    ParserRecordPtr record(new ParserRecord());
+    BOOST_CHECK_THROW(record->get(0) , std::out_of_range);
+}    
+
+
+
+BOOST_AUTO_TEST_CASE(Get_KeyNotFound_Throw) {
+    ParserRecordPtr record(new ParserRecord());
+    BOOST_CHECK_THROW(record->get("Hei") , std::invalid_argument);
+}    
+
+
+BOOST_AUTO_TEST_CASE(Get_KeyFound_OK) {
+    ParserItemSizeEnum sizeType = SINGLE;
+    ParserIntItemPtr itemInt( new ParserIntItem("ITEM1", sizeType));
+    ParserRecordPtr record(new ParserRecord());
+    record->addItem( itemInt );
+    {
+        ParserItemConstPtr item = record->get("ITEM1");
+        BOOST_CHECK_EQUAL( item , itemInt );
+    }
+}    
+
+
+
+BOOST_AUTO_TEST_CASE(Get_GetByNameAndIndex_OK) {
+    ParserItemSizeEnum sizeType = SINGLE;
+    ParserIntItemPtr itemInt( new ParserIntItem("ITEM1", sizeType));
+    ParserRecordPtr record(new ParserRecord());
+    record->addItem( itemInt );
+    {
+        ParserItemConstPtr itemByName = record->get("ITEM1");   
+        ParserItemConstPtr itemByIndex = record->get(0);
+        BOOST_CHECK_EQUAL( itemInt , itemByName);
+        BOOST_CHECK_EQUAL( itemInt , itemByIndex);
+    }
+}    
+
+
+BOOST_AUTO_TEST_CASE(addItem_SameName_Throw) {
+    ParserItemSizeEnum sizeType = SINGLE;
+    ParserIntItemPtr itemInt1( new ParserIntItem("ITEM1", sizeType));
+    ParserIntItemPtr itemInt2( new ParserIntItem("ITEM1", sizeType));
+    ParserRecordPtr record(new ParserRecord());
+    record->addItem( itemInt1 );
+    BOOST_CHECK_THROW( record->addItem( itemInt2 ) , std::invalid_argument);
+}    
+
+
+
 

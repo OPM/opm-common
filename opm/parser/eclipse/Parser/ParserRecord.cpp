@@ -18,6 +18,7 @@
  */
 
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
+#include <opm/parser/eclipse/Parser/ParserItem.hpp>
 
 namespace Opm {
     
@@ -28,4 +29,30 @@ namespace Opm {
     size_t ParserRecord::size() {
         return m_items.size();
     }
+
+    void ParserRecord::addItem( ParserItemConstPtr item ) {
+        if (m_itemMap.find( item->name() ) == m_itemMap.end()) {
+            m_items.push_back( item );
+            m_itemMap[item->name()]  = item;
+        } else
+            throw std::invalid_argument("Itemname: " + item->name() + " already exists.");
+    }
+
+
+    ParserItemConstPtr ParserRecord::get(size_t index) {
+        if (index < m_items.size())
+            return m_items[ index ];
+        else
+            throw std::out_of_range("Out of range");
+    }
+
+
+    ParserItemConstPtr ParserRecord::get(const std::string& itemName) {
+        if (m_itemMap.find( itemName ) == m_itemMap.end())
+            throw std::invalid_argument("Itemname: " + itemName + " does not exist.");
+        else
+            return m_itemMap[ itemName ];
+    }
+
+    
 }

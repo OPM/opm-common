@@ -18,9 +18,10 @@
  */
 
 #ifndef PARSERRECORD_HPP
-#define	PARSERRECORD_HPP
+#define PARSERRECORD_HPP
 
 #include <vector>
+#include <map>
 #include <boost/shared_ptr.hpp>
 
 #include "ParserItem.hpp"
@@ -31,8 +32,13 @@ namespace Opm {
     public:
         ParserRecord();
         size_t size();
+        void addItem( ParserItemConstPtr item );
+        ParserItemConstPtr get(size_t index);
+        ParserItemConstPtr get(const std::string& itemName);
+        
     private:
-        std::vector<ParserItem> m_items;
+        std::vector<ParserItemConstPtr> m_items;
+        std::map<std::string , ParserItemConstPtr> m_itemMap;
     };
 
     typedef boost::shared_ptr<const ParserRecord> ParserRecordConstPtr;
@@ -40,5 +46,5 @@ namespace Opm {
 }
 
 
-#endif	/* PARSERRECORD_HPP */
+#endif  /* PARSERRECORD_HPP */
 
