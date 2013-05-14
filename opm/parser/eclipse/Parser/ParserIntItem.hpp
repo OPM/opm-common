@@ -46,6 +46,9 @@ namespace Opm {
         DeckIntItemPtr scan__(size_t expectedItems , bool scanAll , RawRecordPtr rawRecord);
         int  m_default;
     };
+
+    typedef boost::shared_ptr<const ParserIntItem> ParserIntItemConstPtr;
+    typedef boost::shared_ptr<ParserIntItem> ParserIntItemPtr;
 }
 
 #endif  /* PARSERINTITEM_HPP */

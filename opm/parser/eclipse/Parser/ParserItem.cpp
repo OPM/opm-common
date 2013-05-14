@@ -26,7 +26,7 @@ namespace Opm {
         m_sizeType = sizeType;
     }
 
-    std::string ParserItem::name() {
+    const std::string& ParserItem::name() const {
         return m_name;
     }
 
@@ -37,5 +37,6 @@ namespace Opm {
     int ParserItem::defaultInt() {
         return 0;
     }
+
 
 }
