@@ -23,11 +23,49 @@
 #include <stdexcept>
 #include <boost/test/unit_test.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-
-
+#include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
 
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(Initialize) {
-    BOOST_REQUIRE_NO_THROW(DeckRecord deckRecord);
+    BOOST_CHECK_NO_THROW(DeckRecord deckRecord);
+}
+
+BOOST_AUTO_TEST_CASE(size_defaultConstructor_sizezero) {
+    DeckRecord deckRecord;
+    BOOST_CHECK_EQUAL(0U, deckRecord.size());
+}
+
+BOOST_AUTO_TEST_CASE(addItem_singleItem_sizeone) {
+    DeckRecord deckRecord;
+    DeckIntItemPtr intItem(new DeckIntItem("TEST"));
+    intItem->push_back(3);
+    deckRecord.addItem(intItem);
+    BOOST_CHECK_EQUAL(1U, deckRecord.size());
+}
+
+BOOST_AUTO_TEST_CASE(addItem_multipleItems_sizecorrect) {
+    DeckRecord deckRecord;
+    DeckIntItemPtr intItem1(new DeckIntItem("TEST"));
+    DeckIntItemPtr intItem2(new DeckIntItem("TEST"));
+    DeckIntItemPtr intItem3(new DeckIntItem("TEST"));
+
+    intItem1->push_back(3);
+    intItem2->push_back(3);
+    intItem3->push_back(3);
+
+    deckRecord.addItem(intItem1);
+    deckRecord.addItem(intItem2);
+    deckRecord.addItem(intItem3);
+
+    BOOST_CHECK_EQUAL(3U, deckRecord.size());
+}
+
+BOOST_AUTO_TEST_CASE(addItem_sameItemTimes_throws) {
+    DeckRecord deckRecord;
+    DeckIntItemPtr intItem1(new DeckIntItem("TEST"));
+    intItem1->push_back(3);
+
+    deckRecord.addItem(intItem1);
+    BOOST_CHECK_THROW(deckRecord.addItem(intItem1), std::invalid_argument);
 }

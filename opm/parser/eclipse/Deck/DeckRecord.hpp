@@ -22,16 +22,27 @@
 
 #include <stdexcept>
 #include <string>
+#include <vector>
+#include <map>
+#include <boost/shared_ptr.hpp>
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
 
 namespace Opm {
-class DeckRecord {
 
-public:
-  DeckRecord();
+    class DeckRecord {
+    public:
+        DeckRecord();
+        size_t size() const;
+        void addItem(DeckItemConstPtr deckItem);
 
-private:
+    private:
+        std::vector<DeckItemConstPtr> m_items;
+        std::map<std::string, DeckItemConstPtr> m_itemMap;
 
-};
+    };
+    typedef boost::shared_ptr<DeckRecord> DeckRecordPtr;
+    typedef boost::shared_ptr<const DeckRecord> DeckRecordConstPtr;
+
 }
 #endif  /* DECKRECORD_HPP */
 

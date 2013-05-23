@@ -28,18 +28,18 @@
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(Initialize) {
-    BOOST_REQUIRE_NO_THROW(DeckIntItem deckIntItem);
+    BOOST_REQUIRE_NO_THROW(DeckIntItem deckIntItem("TEST"));
 }
 
 BOOST_AUTO_TEST_CASE(GetIntAtIndex_NoData_ExceptionThrown) {
-    const DeckIntItem deckIntItem;
+    const DeckIntItem deckIntItem("TEST");
     BOOST_CHECK_THROW(deckIntItem.getInt(0), std::out_of_range);
 }
 
 
 
 BOOST_AUTO_TEST_CASE(PushBack_VectorPushed_ElementsCorrect) {
-    DeckIntItem deckIntItem;
+    DeckIntItem deckIntItem("TEST");
     std::vector<int> pushThese;
     pushThese.push_back(13);
     pushThese.push_back(33);
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(PushBack_VectorPushed_ElementsCorrect) {
 
 
 BOOST_AUTO_TEST_CASE(PushBack_subVectorPushed_ElementsCorrect) {
-    DeckIntItem deckIntItem;
+    DeckIntItem deckIntItem("TEST");
     std::vector<int> pushThese;
     pushThese.push_back(13);
     pushThese.push_back(33);
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(PushBack_subVectorPushed_ElementsCorrect) {
 
 
 BOOST_AUTO_TEST_CASE(size_correct) {
-    DeckIntItem deckIntItem;
+    DeckIntItem deckIntItem("TEST");
     
     BOOST_CHECK_EQUAL( 0U , deckIntItem.size());
     deckIntItem.push_back( 100 );
@@ -78,18 +78,18 @@ BOOST_AUTO_TEST_CASE(size_correct) {
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(InitializeDouble) {
-    BOOST_REQUIRE_NO_THROW(DeckDoubleItem deckDoubleItem);
+    BOOST_REQUIRE_NO_THROW(DeckDoubleItem deckDoubleItem("TEST"));
 }
 
 BOOST_AUTO_TEST_CASE(GetDoubleAtIndex_NoData_ExceptionThrown) {
-    const DeckDoubleItem deckDoubleItem;
+    const DeckDoubleItem deckDoubleItem("TEST");
     BOOST_CHECK_THROW(deckDoubleItem.getDouble(0), std::out_of_range);
 }
 
 
 
 BOOST_AUTO_TEST_CASE(PushBackDouble_VectorPushed_ElementsCorrect) {
-    DeckDoubleItem deckDoubleItem;
+    DeckDoubleItem deckDoubleItem("TEST");
     std::vector<double> pushThese;
     pushThese.push_back(13);
     pushThese.push_back(33);
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(PushBackDouble_VectorPushed_ElementsCorrect) {
 
 
 BOOST_AUTO_TEST_CASE(PushBackDouble_subVectorPushed_ElementsCorrect) {
-    DeckDoubleItem deckDoubleItem;
+    DeckDoubleItem deckDoubleItem("TEST");
     std::vector<double> pushThese;
     pushThese.push_back(13);
     pushThese.push_back(33);
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(PushBackDouble_subVectorPushed_ElementsCorrect) {
 
 
 BOOST_AUTO_TEST_CASE(sizeDouble_correct) {
-    DeckDoubleItem deckDoubleItem;
+    DeckDoubleItem deckDoubleItem("TEST");
     
     BOOST_CHECK_EQUAL( 0U , deckDoubleItem.size());
     deckDoubleItem.push_back( 100 );

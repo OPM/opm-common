@@ -24,7 +24,9 @@
 #include <map>
 #include <boost/shared_ptr.hpp>
 
-#include "ParserItem.hpp"
+#include <opm/parser/eclipse/Parser/ParserItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+
 
 namespace Opm {
 
@@ -35,7 +37,8 @@ namespace Opm {
         void addItem( ParserItemConstPtr item );
         ParserItemConstPtr get(size_t index);
         ParserItemConstPtr get(const std::string& itemName);
-        
+        DeckRecordConstPtr parse(RawRecordPtr rawRecord);
+    
     private:
         std::vector<ParserItemConstPtr> m_items;
         std::map<std::string , ParserItemConstPtr> m_itemMap;

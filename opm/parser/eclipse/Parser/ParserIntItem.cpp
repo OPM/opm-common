@@ -49,7 +49,7 @@ namespace Opm {
             throw std::invalid_argument("Can only ask for one item when sizeType == SINGLE");
         
         {
-            DeckIntItemPtr deckItem(new DeckIntItem());
+            DeckIntItemPtr deckItem(new DeckIntItem(name()));
             
             if ((expectedItems > 0)  || scanAll) {
                 bool defaultActive;

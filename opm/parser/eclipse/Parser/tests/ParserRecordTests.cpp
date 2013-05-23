@@ -24,6 +24,8 @@
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
+#include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
+#include <boost/test/test_tools.hpp>
 
 using namespace Opm;
 
@@ -41,77 +43,89 @@ BOOST_AUTO_TEST_CASE(Size_NoElements_ReturnsZero) {
     BOOST_CHECK_EQUAL(0U, record.size());
 }
 
-
 BOOST_AUTO_TEST_CASE(Size_OneItem_Return1) {
     ParserItemSizeEnum sizeType = SINGLE;
-    ParserIntItemPtr itemInt( new ParserIntItem("ITEM1", sizeType));
+    ParserIntItemPtr itemInt(new ParserIntItem("ITEM1", sizeType));
     ParserRecordPtr record(new ParserRecord());
-    record->addItem( itemInt );
+    record->addItem(itemInt);
     BOOST_CHECK_EQUAL(1U, record->size());
 }
 
-
 BOOST_AUTO_TEST_CASE(Get_OneItem_Return1) {
     ParserItemSizeEnum sizeType = SINGLE;
-    ParserIntItemPtr itemInt( new ParserIntItem("ITEM1", sizeType));
+    ParserIntItemPtr itemInt(new ParserIntItem("ITEM1", sizeType));
     ParserRecordPtr record(new ParserRecord());
-    record->addItem( itemInt );
+    record->addItem(itemInt);
     {
-      ParserItemConstPtr item = record->get(0);
-      BOOST_CHECK_EQUAL( item , itemInt );
+        ParserItemConstPtr item = record->get(0);
+        BOOST_CHECK_EQUAL(item, itemInt);
     }
-}    
-
-
+}
 
 BOOST_AUTO_TEST_CASE(Get_outOfRange_Throw) {
     ParserRecordPtr record(new ParserRecord());
-    BOOST_CHECK_THROW(record->get(0) , std::out_of_range);
-}    
-
-
+    BOOST_CHECK_THROW(record->get(0), std::out_of_range);
+}
 
 BOOST_AUTO_TEST_CASE(Get_KeyNotFound_Throw) {
     ParserRecordPtr record(new ParserRecord());
-    BOOST_CHECK_THROW(record->get("Hei") , std::invalid_argument);
-}    
-
+    BOOST_CHECK_THROW(record->get("Hei"), std::invalid_argument);
+}
 
 BOOST_AUTO_TEST_CASE(Get_KeyFound_OK) {
     ParserItemSizeEnum sizeType = SINGLE;
-    ParserIntItemPtr itemInt( new ParserIntItem("ITEM1", sizeType));
+    ParserIntItemPtr itemInt(new ParserIntItem("ITEM1", sizeType));
     ParserRecordPtr record(new ParserRecord());
-    record->addItem( itemInt );
+    record->addItem(itemInt);
     {
         ParserItemConstPtr item = record->get("ITEM1");
-        BOOST_CHECK_EQUAL( item , itemInt );
+        BOOST_CHECK_EQUAL(item, itemInt);
     }
-}    
-
-
+}
 
 BOOST_AUTO_TEST_CASE(Get_GetByNameAndIndex_OK) {
     ParserItemSizeEnum sizeType = SINGLE;
-    ParserIntItemPtr itemInt( new ParserIntItem("ITEM1", sizeType));
+    ParserIntItemPtr itemInt(new ParserIntItem("ITEM1", sizeType));
     ParserRecordPtr record(new ParserRecord());
-    record->addItem( itemInt );
+    record->addItem(itemInt);
     {
-        ParserItemConstPtr itemByName = record->get("ITEM1");   
+        ParserItemConstPtr itemByName = record->get("ITEM1");
         ParserItemConstPtr itemByIndex = record->get(0);
-        BOOST_CHECK_EQUAL( itemInt , itemByName);
-        BOOST_CHECK_EQUAL( itemInt , itemByIndex);
+        BOOST_CHECK_EQUAL(itemInt, itemByName);
+        BOOST_CHECK_EQUAL(itemInt, itemByIndex);
     }
-}    
-
+}
 
 BOOST_AUTO_TEST_CASE(addItem_SameName_Throw) {
     ParserItemSizeEnum sizeType = SINGLE;
-    ParserIntItemPtr itemInt1( new ParserIntItem("ITEM1", sizeType));
-    ParserIntItemPtr itemInt2( new ParserIntItem("ITEM1", sizeType));
+    ParserIntItemPtr itemInt1(new ParserIntItem("ITEM1", sizeType));
+    ParserIntItemPtr itemInt2(new ParserIntItem("ITEM1", sizeType));
     ParserRecordPtr record(new ParserRecord());
-    record->addItem( itemInt1 );
-    BOOST_CHECK_THROW( record->addItem( itemInt2 ) , std::invalid_argument);
-}    
+    record->addItem(itemInt1);
+    BOOST_CHECK_THROW(record->addItem(itemInt2), std::invalid_argument);
+}
+
+ParserRecordPtr createSimpleParserRecord() {
+    ParserItemSizeEnum sizeType = SINGLE;
+    ParserIntItemPtr itemInt1(new ParserIntItem("ITEM1", sizeType));
+    ParserIntItemPtr itemInt2(new ParserIntItem("ITEM2", sizeType));
+    ParserRecordPtr record(new ParserRecord());
+    return record;
+}
+
+BOOST_AUTO_TEST_CASE(parse_validRecord_noThrow) {
+    ParserRecordPtr record = createSimpleParserRecord();
+    RawRecordPtr rawRecord(new RawRecord("100 443 /"));
+    BOOST_CHECK_NO_THROW(record->parse(rawRecord));
+}
+
+BOOST_AUTO_TEST_CASE(parse_validRecord_deckRecordCreated) {
+    ParserRecordPtr record = createSimpleParserRecord();
+    RawRecordPtr rawRecord(new RawRecord("100 443 /"));
+    DeckRecordConstPtr deckRecord = record->parse(rawRecord);
+    BOOST_CHECK_EQUAL(2U, deckRecord->size());
+}
+
 
 
 

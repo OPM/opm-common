@@ -17,32 +17,15 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DECKDOUBLEITEM_HPP
-#define DECKDOUBLEITEM_HPP
-
-#include <vector>
-#include <string>
-#include <boost/shared_ptr.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 
 namespace Opm {
 
-    class DeckDoubleItem : public DeckItem {
-    public:
-        DeckDoubleItem(std::string name) : DeckItem(name) {}
-        double getDouble(size_t index) const;
-        
-        void push_back(std::vector<double> data , size_t items);
-        void push_back(std::vector<double> data);
-        void push_back(double value);
-        
-        size_t size() const;
-    private:
-        std::vector<double> m_data;
-    };
+    DeckItem::DeckItem(const std::string& name) {
+        m_name = name;
+    }
 
-    typedef boost::shared_ptr<DeckDoubleItem> DeckDoubleItemPtr;
-    typedef boost::shared_ptr<const DeckDoubleItem> DeckDoubleItemConstPtr;
+    const std::string& DeckItem::name() const {
+        return m_name;
+    }
 }
-#endif  /* DECKDOUBLEITEM_HPP */
-

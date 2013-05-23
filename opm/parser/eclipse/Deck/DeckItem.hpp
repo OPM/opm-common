@@ -22,32 +22,39 @@
 
 #include <stdexcept>
 #include <string>
+#include <boost/shared_ptr.hpp>
 
 namespace Opm {
 
-class DeckItem {
-public:
+    class DeckItem {
+    public:
+        DeckItem(const std::string& name);
+        const std::string& name() const;
+        
+        virtual int getInt(size_t index) const {
+            throw std::logic_error("This implementation of DeckItem does not support int");
+        };
 
-    virtual int getInt(size_t index) const {
-        throw std::logic_error("This implementation of DeckItem does not support int");
+        virtual double getDouble(size_t index) const {
+            throw std::logic_error("This implementation of DeckItem does not support double");
+        };
+
+        virtual bool getBool(size_t index) const {
+            throw std::logic_error("This implementation of DeckItem does not support bool");
+        }
+
+        virtual std::string getString(size_t index) const {
+            throw std::logic_error("This implementation of DeckItem does not support string");
+        }
+
+        virtual ~DeckItem() {
+        }
+    private:
+        std::string m_name;
+
     };
-
-    virtual double getDouble(size_t index) const {
-        throw std::logic_error("This implementation of DeckItem does not support double");
-    };
-
-    virtual bool getBool(size_t index) const {
-       throw std::logic_error("This implementation of DeckItem does not support bool");
-    }
-
-    virtual std::string getString(size_t index) const {
-        throw std::logic_error("This implementation of DeckItem does not support string");
-    }
-
-    virtual ~DeckItem() {}
-private:
-
-};
+    typedef boost::shared_ptr<DeckItem> DeckItemPtr;
+    typedef boost::shared_ptr<const DeckItem> DeckItemConstPtr;
 }
 #endif  /* DECKITEM_HPP */
 

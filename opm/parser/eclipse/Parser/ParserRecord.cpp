@@ -53,6 +53,9 @@ namespace Opm {
         else
             return m_itemMap[ itemName ];
     }
-
     
+    DeckRecordConstPtr ParserRecord::parse(RawRecordPtr rawRecord) {
+        DeckRecordPtr deckRecord(new DeckRecord());
+        return deckRecord;
+    }
 }

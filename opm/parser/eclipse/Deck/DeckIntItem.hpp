@@ -21,6 +21,7 @@
 #define DECKINTITEM_HPP
 
 #include <vector>
+#include <string>
 #include <boost/shared_ptr.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 
@@ -28,6 +29,7 @@ namespace Opm {
 
     class DeckIntItem : public DeckItem {
     public:
+        DeckIntItem(std::string name) : DeckItem(name) {}
         int getInt(size_t index) const;
 
         void push_back(std::vector<int> data , size_t items);

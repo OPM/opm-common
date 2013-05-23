@@ -27,9 +27,21 @@
 namespace Opm {
 
     DeckRecord::DeckRecord() {
-        
+
     }
-    
+
+    size_t DeckRecord::size() const {
+        return m_items.size();
+    }
+
+    void DeckRecord::addItem(DeckItemConstPtr deckItem) {
+//        if (m_itemMap.find(deckItem->name()) == m_itemMap.end()) {
+//            m_itemMap[deckItem->name()] = deckItem;
+//            m_items.push_back(deckItem);
+//        }
+//        else 
+//            throw std::invalid_argument("Item with name: " + deckItem->name() + " already exists in DeckRecord");
+    }
 }
 
 
