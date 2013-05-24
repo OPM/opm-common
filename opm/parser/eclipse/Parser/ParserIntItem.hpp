@@ -35,15 +35,15 @@ namespace Opm {
         ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType);
         ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType, int defaultValue);
 
-        DeckIntItemPtr scan(size_t expectedItems , RawRecordPtr rawRecord);
-        DeckIntItemPtr scan(RawRecordPtr rawRecord);
+        DeckItemConstPtr scan(size_t expectedItems , RawRecordPtr rawRecord) const;
+        DeckItemConstPtr scan(RawRecordPtr rawRecord) const;
         
         int getDefault() const {
             return m_default;
         }
 
     private:
-        DeckIntItemPtr scan__(size_t expectedItems , bool scanAll , RawRecordPtr rawRecord);
+        DeckItemConstPtr scan__(size_t expectedItems , bool scanAll , RawRecordPtr rawRecord) const;
         int  m_default;
     };
 

@@ -17,7 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-template<class T> void fillVectorFromStringToken(std::string token , std::vector<T>& dataVector, T defaultValue , bool& defaultActive) {
+template<class T> void fillVectorFromStringToken(std::string token , std::vector<T>& dataVector, T defaultValue , bool& defaultActive) const {
   std::istringstream inputStream(token);
   size_t starPos = token.find('*');
   T value;
@@ -65,7 +65,7 @@ template<class T> void fillVectorFromStringToken(std::string token , std::vector
         
 
 
-template<class T> std::vector<T> readFromRawRecord(RawRecordPtr rawRecord , bool scanAll , size_t expectedItems , T defaultValue , bool& defaultActive) {
+template<class T> std::vector<T> readFromRawRecord(RawRecordPtr rawRecord , bool scanAll , size_t expectedItems , T defaultValue , bool& defaultActive) const {
   bool cont = true;
   std::vector<T> data;
   do {
@@ -84,7 +84,7 @@ template<class T> std::vector<T> readFromRawRecord(RawRecordPtr rawRecord , bool
 }
         
 
-template <class T> void pushBackToRecord( RawRecordPtr rawRecord , std::vector<T>& data , size_t expectedItems , bool defaultActive) {
+template <class T> void pushBackToRecord( RawRecordPtr rawRecord , std::vector<T>& data , size_t expectedItems , bool defaultActive) const {
   size_t extraItems = data.size() - expectedItems;
             
   for (size_t i=1; i <= extraItems; i++) {

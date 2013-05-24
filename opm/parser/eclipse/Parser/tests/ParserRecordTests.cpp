@@ -110,6 +110,9 @@ ParserRecordPtr createSimpleParserRecord() {
     ParserIntItemPtr itemInt1(new ParserIntItem("ITEM1", sizeType));
     ParserIntItemPtr itemInt2(new ParserIntItem("ITEM2", sizeType));
     ParserRecordPtr record(new ParserRecord());
+    record->addItem(itemInt1);
+    record->addItem(itemInt2);
+
     return record;
 }
 

@@ -31,6 +31,8 @@ namespace Opm {
         DeckItem(const std::string& name);
         const std::string& name() const;
         
+        virtual size_t size() const = 0;
+        
         virtual int getInt(size_t index) const {
             throw std::logic_error("This implementation of DeckItem does not support int");
         };

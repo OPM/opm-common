@@ -29,28 +29,36 @@
 
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 #include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
+
 
 namespace Opm {
 
-    class ParserItem {
-    public:
-        ParserItem(const std::string& itemName, ParserItemSizeEnum sizeType);
-        const std::string& name() const;
-        ParserItemSizeEnum sizeType();
-        
-        static int defaultInt();
+  class ParserItem {
+  public:
+    ParserItem(const std::string& itemName, ParserItemSizeEnum sizeType);
+    virtual DeckItemConstPtr scan(RawRecordPtr rawRecord) const = 0;
+    virtual DeckItemConstPtr scan(size_t expectedItems, RawRecordPtr rawRecord) const = 0;
 
-        protected:
+    const std::string& name() const;
+    ParserItemSizeEnum sizeType() const;
+
+    static int defaultInt();
+
+    virtual ~ParserItem() {
+    }
+    
+  protected:
 
 #include "ParserItemTemplate.hpp"
-        
-    private:
-        std::string m_name;
-        ParserItemSizeEnum m_sizeType;
-    };
 
-    typedef boost::shared_ptr<const ParserItem> ParserItemConstPtr;
-    typedef boost::shared_ptr<ParserItem> ParserItemPtr;
+  private:
+    std::string m_name;
+    ParserItemSizeEnum m_sizeType;
+  };
+
+  typedef boost::shared_ptr<const ParserItem> ParserItemConstPtr;
+  typedef boost::shared_ptr<ParserItem> ParserItemPtr;
 }
 
 #endif

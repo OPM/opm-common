@@ -30,7 +30,7 @@ namespace Opm {
         return m_name;
     }
 
-    ParserItemSizeEnum ParserItem::sizeType() {
+    ParserItemSizeEnum ParserItem::sizeType() const {
         return m_sizeType;
     }
 
