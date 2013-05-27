@@ -26,11 +26,9 @@
 
 using namespace Opm;
 
-BOOST_AUTO_TEST_CASE(Initialize) {
-    BOOST_REQUIRE_NO_THROW(ParserKW parserKW);
-
-    ParserKW parserKW;
-    BOOST_CHECK_EQUAL(parserKW.getName(), "");
+BOOST_AUTO_TEST_CASE(construct_withname_nameSet) {
+    ParserKW parserKW("BPR");
+    BOOST_CHECK_EQUAL(parserKW.getName(), "BPR");
 }
 
 BOOST_AUTO_TEST_CASE(NamedInit) {
@@ -39,6 +37,13 @@ BOOST_AUTO_TEST_CASE(NamedInit) {
     ParserRecordSizeConstPtr recordSize(new ParserRecordSize(100));
     ParserKW parserKW(keyword, recordSize);
     BOOST_CHECK_EQUAL(parserKW.getName(), keyword);
+}
+
+BOOST_AUTO_TEST_CASE(setRecord_validRecord_recordSet) {
+    ParserKWPtr parserKW(new ParserKW("JA"));
+    ParserRecordConstPtr parserRecord = ParserRecordConstPtr(new ParserRecord());
+    parserKW->setRecord(parserRecord);
+    BOOST_CHECK_EQUAL(parserRecord, parserKW->getRecord());
 }
 
 BOOST_AUTO_TEST_CASE(NameTooLong) {

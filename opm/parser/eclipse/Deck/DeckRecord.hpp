@@ -34,6 +34,8 @@ namespace Opm {
         DeckRecord();
         size_t size() const;
         void addItem(DeckItemConstPtr deckItem);
+        DeckItemConstPtr get(size_t index);
+        DeckItemConstPtr get(const std::string& name);
 
     private:
         std::vector<DeckItemConstPtr> m_items;

@@ -2,6 +2,7 @@ add_subdirectory( Logger )
 add_subdirectory(Parser/tests)
 add_subdirectory(RawDeck/tests)
 add_subdirectory(Deck/tests)
+add_subdirectory(IntegrationTests)
 
 set( rawdeck_source 
 RawDeck/RawDeck.cpp 
@@ -30,6 +31,7 @@ Parser/ParserStringItem.cpp
 
 
 add_library(Parser ${rawdeck_source} ${parser_source} ${deck_source})
+target_link_libraries(Parser Logger ${Boost_LIBRARIES})
 
 
 

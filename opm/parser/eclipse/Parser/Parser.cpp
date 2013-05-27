@@ -16,9 +16,12 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "opm/parser/eclipse/Parser/Parser.hpp"
-#include "opm/parser/eclipse/Parser/ParserKW.hpp"
-#include "opm/parser/eclipse/RawDeck/RawParserKWs.hpp"
+#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParserKW.hpp>
+#include <opm/parser/eclipse/RawDeck/RawParserKWs.hpp>
+#include <opm/parser/eclipse/Logger/Logger.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+
 
 namespace Opm {
 
@@ -28,8 +31,17 @@ namespace Opm {
     RawDeckPtr Parser::parse(const std::string &path) {
         Logger::initLogger();
         Logger::info("Starting parsing of file: " + path);
+    
+        
+        
         RawDeckPtr rawDeck(new RawDeck(RawParserKWsConstPtr(new RawParserKWs())));
         rawDeck->readDataIntoDeck(path);
+        
+        
+        //Iterate through rawDeck, and return Deck
+        
+        DeckPtr deck(new Deck());
+        
         Logger::info("Done parsing of file: " + path);
         Logger::closeLogger();
         return rawDeck;

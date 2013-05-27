@@ -38,10 +38,24 @@ namespace Opm {
         if (m_itemMap.find(deckItem->name()) == m_itemMap.end()) {
             m_itemMap[deckItem->name()] = deckItem;
             m_items.push_back(deckItem);
-        }
-        else 
+        } else
             throw std::invalid_argument("Item with name: " + deckItem->name() + " already exists in DeckRecord");
     }
+
+    DeckItemConstPtr DeckRecord::get(size_t index) {
+        if (index < m_items.size())
+            return m_items[index];
+        else
+            throw std::range_error("Index out of range.");
+    }
+
+    DeckItemConstPtr DeckRecord::get(const std::string& name) {
+        if (m_itemMap.find(name) == m_itemMap.end())
+            throw std::invalid_argument("Itemname: " + name + " does not exist.");
+        else
+            return m_itemMap[name];
+    }
+
 }
 
 

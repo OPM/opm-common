@@ -34,6 +34,9 @@ using namespace Opm;
 //NOTE: needs statoil dataset
 
 BOOST_AUTO_TEST_CASE(ParseFileWithManyKeywords) {
+    boost::filesystem::path current = boost::filesystem::current_path();
+    std::cout << "Current path: " << current.string() << "\n";
+    
     boost::filesystem::path multipleKeywordFile("testdata/statoil/gurbat_trimmed.DATA");
     std::cout << "BOOST path running ParseFullTestFile\n";
 

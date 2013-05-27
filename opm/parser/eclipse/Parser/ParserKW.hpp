@@ -23,17 +23,22 @@
 #include <boost/shared_ptr.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserRecordSize.hpp>
+#include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 
 namespace Opm {
 
     class ParserKW {
     public:
-        ParserKW();
+        ParserKW(const std::string& name);
         ParserKW(const std::string& name, ParserRecordSizeConstPtr recordSize);
+        void setRecord(ParserRecordConstPtr record);
+        ParserRecordConstPtr getRecord();
+        
         ~ParserKW();
         const std::string& getName() const;
     private:
         std::string m_name;
+        ParserRecordConstPtr m_record;
         ParserRecordSizeConstPtr recordSize;
     };
     typedef boost::shared_ptr<ParserKW> ParserKWPtr;

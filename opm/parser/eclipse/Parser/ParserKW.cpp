@@ -26,8 +26,8 @@
 
 namespace Opm {
 
-    ParserKW::ParserKW() {
-        m_name.assign("");
+    ParserKW::ParserKW(const std::string& name) {
+        m_name = name;
     }
 
     ParserKW::ParserKW(const std::string& name, ParserRecordSizeConstPtr recordSize) {
@@ -38,16 +38,25 @@ namespace Opm {
             if (islower(name[i]))
                 throw std::invalid_argument("Keyword must be all upper case - mixed case not allowed:" + name);
 
-        m_name.assign(name);
+        m_name = name;
         this->recordSize = recordSize;
+    }
+
+    void ParserKW::setRecord(ParserRecordConstPtr record) {
+        m_record = record;
+    }
+
+    ParserRecordConstPtr ParserKW::getRecord() {
+        return m_record;
+    }
+    
+    const std::string& ParserKW::getName() const {
+        return m_name;
     }
 
     ParserKW::~ParserKW() {
     }
 
-    const std::string& ParserKW::getName() const {
-        return m_name;
-    }
 
 
 }
