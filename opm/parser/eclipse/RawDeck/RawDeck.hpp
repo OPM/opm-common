@@ -43,24 +43,28 @@ namespace Opm {
         /// must be specified through the RawParserKW class. This is to be able to know how the records
         /// of the keyword is structured.
         RawDeck(RawParserKWsConstPtr rawParserKWs);
-
+        
+        void parse(const std::string& path);
         RawKeywordConstPtr getKeyword(const std::string& keyword) const;
         bool hasKeyword(const std::string& keyword) const;
-        void readDataIntoDeck(const std::string& path);
         unsigned int getNumberOfKeywords() const;
         friend std::ostream& operator<<(std::ostream& os, const RawDeck& deck);
         virtual ~RawDeck();
+        
 
     private:
         std::list<RawKeywordConstPtr> m_keywords;
         RawParserKWsConstPtr m_rawParserKWs;
-        void readDataIntoDeck(const std::string& path, std::list<RawKeywordConstPtr>& keywordList);
+
+
+        //void readDataIntoDeck(const std::string& path, std::list<RawKeywordConstPtr>& keywordList);
         void addKeyword(RawKeywordConstPtr keyword, const boost::filesystem::path& baseDataFolder);
         bool isKeywordFinished(RawKeywordConstPtr rawKeyword);
         static boost::filesystem::path verifyValidInputPath(const std::string& inputPath);
     };
 
     typedef boost::shared_ptr<RawDeck> RawDeckPtr;
+    typedef boost::shared_ptr<const RawDeck> RawDeckConstPtr;
 }
 
 #endif  /* RAWDECK_HPP */

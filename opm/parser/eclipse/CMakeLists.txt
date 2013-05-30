@@ -11,6 +11,7 @@ RawDeck/RawRecord.cpp
 RawDeck/RawParserKWs.cpp )
 
 set( deck_source
+Deck/Deck.cpp
 Deck/DeckItem.cpp
 Deck/DeckIntItem.cpp
 Deck/DeckDoubleItem.cpp

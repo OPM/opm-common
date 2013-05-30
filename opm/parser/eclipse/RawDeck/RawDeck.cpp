@@ -55,7 +55,7 @@ namespace Opm {
     /// The data is read into a keyword, record by record, until the fixed number of records specified
     /// in the RawParserKW is met, or till a slash on a separate line is found.
 
-    void RawDeck::readDataIntoDeck(const std::string& path) {
+    void RawDeck::parse(const std::string& path) {
         boost::filesystem::path dataFolderPath = verifyValidInputPath(path);
         {
             std::ifstream inputstream;
@@ -100,7 +100,7 @@ namespace Opm {
             boost::filesystem::path pathToIncludedFile(dataFolderPath);
             pathToIncludedFile /= includeFileString;
 
-            readDataIntoDeck(pathToIncludedFile.string());
+            parse(pathToIncludedFile.string());
         } else {
             m_keywords.push_back(keyword);
         }

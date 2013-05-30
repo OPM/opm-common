@@ -21,6 +21,8 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
 
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
@@ -28,19 +30,35 @@
 
 using namespace Opm;
 
-BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_deckReturned) {
 
+ParserPtr createBPRParser() {
     ParserKWPtr parserKW(new ParserKW("BPR"));
-    ParserRecordPtr bprRecord(new ParserRecord());
-    bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("I", SINGLE)));
-    bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("J", SINGLE)));
-    bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("K", SINGLE)));
+    {
+        ParserRecordPtr bprRecord(new ParserRecord());
+        bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("I", SINGLE)));
+        bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("J", SINGLE)));
+        bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("K", SINGLE)));
+        
+        parserKW->setRecord(bprRecord);
+    }
 
-    parserKW->setRecord(bprRecord);
-
-    boost::filesystem::path singleKeywordFile("testdata/integration_tests/bpr.data");
     ParserPtr parser(new Parser());
+    return parser;
+}
 
 
-    BOOST_CHECK_NO_THROW(parser->parse(singleKeywordFile.string()));
+BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_deckReturned) {
+    boost::filesystem::path singleKeywordFile("testdata/integration_tests/bpr.data");
+    ParserPtr parser = createBPRParser();
+
+    BOOST_CHECK_NO_THROW( DeckPtr deck = parser->parse(singleKeywordFile.string()));
+}
+
+
+BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_DeckhasBRP) {
+    boost::filesystem::path singleKeywordFile("testdata/integration_tests/bpr.data");
+    ParserPtr parser = createBPRParser();
+
+    DeckPtr deck = parser->parse(singleKeywordFile.string());
+    BOOST_CHECK_EQUAL( true , deck.hasKeyword("BPR"));
 }

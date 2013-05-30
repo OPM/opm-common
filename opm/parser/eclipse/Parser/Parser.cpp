@@ -28,24 +28,26 @@ namespace Opm {
     Parser::Parser() {
     }
 
-    RawDeckPtr Parser::parse(const std::string &path) {
+    DeckPtr Parser::parse(const std::string &path) {
         Logger::initLogger();
         Logger::info("Starting parsing of file: " + path);
     
         
-        
-        RawDeckPtr rawDeck(new RawDeck(RawParserKWsConstPtr(new RawParserKWs())));
-        rawDeck->readDataIntoDeck(path);
-        
-        
-        //Iterate through rawDeck, and return Deck
-        
         DeckPtr deck(new Deck());
-        
+        {
+            RawDeckPtr rawDeck(new RawDeck(RawParserKWsConstPtr(new RawParserKWs())));
+            rawDeck->parse(path);
+
+            
+          
+        }
         Logger::info("Done parsing of file: " + path);
         Logger::closeLogger();
-        return rawDeck;
+        return deck;
     }
+  
+
+
 
     Parser::~Parser() {
     }

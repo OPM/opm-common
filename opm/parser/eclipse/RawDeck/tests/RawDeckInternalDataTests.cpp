@@ -35,15 +35,10 @@ using namespace Opm;
 //NOTE: needs statoil dataset
 
 BOOST_AUTO_TEST_CASE(ParseFileWithManyKeywords) {
-    boost::filesystem::path current = boost::filesystem::current_path();
-    std::cout << "Current path: " << current.string() << "\n";
-    
     boost::filesystem::path multipleKeywordFile("testdata/statoil/gurbat_trimmed.DATA");
-    std::cout << "BOOST path running ParseFullTestFile\n";
 
-    ParserPtr parser(new Parser());
-
-    RawDeckPtr rawDeck = parser->parse(multipleKeywordFile.string());
+    RawDeckPtr rawDeck(new RawDeck(RawParserKWsConstPtr(new RawParserKWs())));
+    rawDeck->parse(multipleKeywordFile.string());
 
     //This check is not necessarily correct, 
     //as it depends on that all the fixed recordNum keywords are specified
@@ -55,9 +50,9 @@ BOOST_AUTO_TEST_CASE(ParseFileWithManyKeywords) {
 BOOST_AUTO_TEST_CASE(ParseFullTestFile) {
     boost::filesystem::path multipleKeywordFile("testdata/statoil/ECLIPSE.DATA");
 
-    ParserPtr parser(new Parser());
+    RawDeckPtr rawDeck(new RawDeck(RawParserKWsConstPtr(new RawParserKWs())));
+    rawDeck->parse(multipleKeywordFile.string());
 
-    RawDeckPtr rawDeck = parser->parse(multipleKeywordFile.string());
     // Note, cannot check the number of keywords, since the number of
     // records are not defined (yet) for all these keywords.
     // But we can check a copule of keywords, and that they have the correct

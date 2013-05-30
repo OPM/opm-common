@@ -27,6 +27,7 @@
 #include <opm/parser/eclipse/Logger/Logger.hpp>
 #include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
 #include <opm/parser/eclipse/RawDeck/RawDeck.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/ParserKW.hpp>
 
 namespace Opm {
@@ -40,7 +41,7 @@ namespace Opm {
         Parser();
 
         /// The starting point of the parsing process. The supplied file is parsed, and the resulting Deck is returned.
-        RawDeckPtr parse(const std::string &path);
+        DeckPtr parse(const std::string &path);
         virtual ~Parser();
 
         /// Method to add ParserKW instances, these holding type and size information about the keywords and their data.
@@ -51,6 +52,7 @@ namespace Opm {
     };
 
     typedef boost::shared_ptr<Parser> ParserPtr;
+    typedef boost::shared_ptr<const Parser> ParserConstPtr;
 } // namespace Opm
 #endif  /* PARSER_H */
 

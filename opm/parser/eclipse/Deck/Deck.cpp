@@ -24,6 +24,11 @@ namespace Opm {
     Deck::Deck() {
     }
 
+    bool Deck::hasKeyword(const std::string& keyWord) const {
+        
+    }
+
+
     Deck::~Deck() {
     }
 }

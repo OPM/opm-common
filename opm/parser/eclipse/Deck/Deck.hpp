@@ -18,7 +18,7 @@
  */
 
 #ifndef DECK_HPP
-#define	DECK_HPP
+#define DECK_HPP
 
 #include <boost/shared_ptr.hpp>
 
@@ -28,6 +28,8 @@ namespace Opm {
     public:
         Deck();
         virtual ~Deck();
+
+        bool hasKeyword( const std::string& keyWord ) const;
     private:
 
     };
@@ -35,5 +37,5 @@ namespace Opm {
     typedef boost::shared_ptr<Deck> DeckPtr;
     typedef boost::shared_ptr<const Deck> DeckConstPtr;
 }
-#endif	/* DECK_HPP */
+#endif  /* DECK_HPP */
 
