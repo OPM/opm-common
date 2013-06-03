@@ -35,8 +35,9 @@ namespace Opm {
         RawDeckPtr rawDeck(new RawDeck(RawParserKWsConstPtr(new RawParserKWs())));
         rawDeck->parse(path);
 
-        for (size_t i = rawDeck->getNumberOfKeywords(); i++) {
-            RawKeywordPtr rawKeyword = rawDeck->getKeyword(0);
+        DeckPtr deck(new Deck());
+        for (size_t i = 0; i < rawDeck->getNumberOfKeywords(); i++) {
+            //RawKeywordPtr rawKeyword = rawDeck->getKeyword(0);
         }
         
         

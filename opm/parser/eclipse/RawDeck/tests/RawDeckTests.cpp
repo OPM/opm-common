@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(getKeyword_byIndex_keywordReturned) {
     rawDeck.parse("testdata/small.data");
     RawKeywordConstPtr rawKeyword = rawDeck.getKeyword(0U);
 }
-}
+
 
 BOOST_AUTO_TEST_CASE(GetNumberOfKeywords_EmptyDeck_RetunsZero) {
     RawParserKWsConstPtr fixedKeywords(new RawParserKWs());

@@ -29,6 +29,7 @@ namespace Opm {
     }
 
     RawKeywordConstPtr RawDeck::getKeyword(size_t index) const {
+        return m_keywords.front();
     }
 
 
