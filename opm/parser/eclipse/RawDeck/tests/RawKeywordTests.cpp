@@ -22,43 +22,49 @@
 #include <boost/test/unit_test.hpp>
 #include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
 
-BOOST_AUTO_TEST_CASE(RawKeywordEmptyConstructorEmptyKeyword) {
-    Opm::RawKeyword keyword;
-    BOOST_CHECK(keyword.getKeyword() == "");
-}
+
+using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(RawKeywordGiveKeywordToConstructorKeywordSet) {
-    Opm::RawKeyword keyword("KEYYWORD");
-    BOOST_CHECK(keyword.getKeyword() == "KEYYWORD");
+    RawKeyword keyword("KEYYWORD");
+    BOOST_CHECK(keyword.getKeywordName() == "KEYYWORD");
 }
 
 BOOST_AUTO_TEST_CASE(RawKeywordGiveKeywordToConstructorTooLongThrows) {
-    BOOST_CHECK_THROW(Opm::RawKeyword keyword("KEYYYWORD"), std::invalid_argument);
-}
-
-BOOST_AUTO_TEST_CASE(RawKeywordSetTooLongKeywordThrows) {
-    Opm::RawKeyword keyword;
-    BOOST_CHECK_THROW(keyword.setKeyword("TESTTOOLONG"), std::invalid_argument);
+    BOOST_CHECK_THROW(RawKeyword keyword("KEYYYWORD"), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(RawKeywordSetKeywordInitialWhitespaceInKeywordThrows) {
-    Opm::RawKeyword keyword;
-    BOOST_CHECK_THROW(keyword.setKeyword(" TELONG"), std::invalid_argument);
+    BOOST_CHECK_THROW(RawKeyword(" TELONG"), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(constructor_mixedCaseName_throws) {
+    BOOST_CHECK_THROW(RawKeyword("Test"), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(RawKeywordSetKeywordInitialTabInKeywordThrows) {
-    Opm::RawKeyword keyword;
-    BOOST_CHECK_THROW(keyword.setKeyword("\tTELONG"), std::invalid_argument);
+    BOOST_CHECK_THROW( RawKeyword("\tTELONG"), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(RawKeywordSetCorrectLenghtKeywordNoError) {
-    Opm::RawKeyword keyword;
-    keyword.setKeyword("GOODONE");
-    BOOST_CHECK(keyword.getKeyword() == "GOODONE");
+    RawKeyword keyword("GOODONE");
+    BOOST_CHECK(keyword.getKeywordName() == "GOODONE");
 }
 
 BOOST_AUTO_TEST_CASE(RawKeywordSet8CharKeywordWithTrailingWhitespaceKeywordTrimmed) {
-    Opm::RawKeyword keyword;
-    keyword.setKeyword("GOODONEE ");
-    BOOST_CHECK(keyword.getKeyword() == "GOODONEE");
+    RawKeyword keyword("GOODONEE ");
+    BOOST_CHECK(keyword.getKeywordName() == "GOODONEE");
+}
+
+
+BOOST_AUTO_TEST_CASE(addRecord_singleRecord_recordAdded) {
+    RawKeyword keyword("TEST");
+    keyword.addRawRecordString("test 1 3 4 /");
+    BOOST_CHECK_EQUAL(1U, keyword.size());
+}
+
+BOOST_AUTO_TEST_CASE(getRecord_outOfRange_throws) {
+    RawKeyword keyword("TEST");
+    keyword.addRawRecordString("test 1 3 4 /");
+    BOOST_CHECK_THROW(keyword.getRecord(1), std::range_error);
 }

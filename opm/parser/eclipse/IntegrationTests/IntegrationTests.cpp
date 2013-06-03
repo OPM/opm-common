@@ -60,5 +60,5 @@ BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_DeckhasBRP) {
     ParserPtr parser = createBPRParser();
 
     DeckPtr deck = parser->parse(singleKeywordFile.string());
-    BOOST_CHECK_EQUAL( true , deck.hasKeyword("BPR"));
+    BOOST_CHECK_EQUAL( true , deck->hasKeyword("BPR"));
 }

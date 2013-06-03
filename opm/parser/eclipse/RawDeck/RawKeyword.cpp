@@ -25,11 +25,36 @@
 
 namespace Opm {
 
-    RawKeyword::RawKeyword() {
+    RawKeyword::RawKeyword(const std::string& name) {
+        setKeywordName(name);
     }
 
-    RawKeyword::RawKeyword(const std::string& keyword) {
-        setKeyword(keyword);
+    const std::string& RawKeyword::getKeywordName() const {
+        return m_name;
+    }
+
+    size_t RawKeyword::size() const {
+        return m_records.size();
+    }
+
+    /// Important method, being repeatedly called. When a record is terminated,
+    /// it is added to the list of records, and a new record is started.
+
+    void RawKeyword::addRawRecordString(const std::string& partialRecordString) {
+        m_partialRecordString += partialRecordString;
+        if (RawRecord::isTerminatedRecordString(partialRecordString)) {
+            RawRecordPtr record(new RawRecord(m_partialRecordString));
+            m_records.push_back(record);
+            m_partialRecordString.clear();
+        }
+    }
+
+    RawRecordPtr RawKeyword::getRecord(size_t index) const {
+        if (index < m_records.size()) {
+            return m_records[index];
+        }
+        else 
+            throw std::range_error("Index out of range");
     }
 
     bool RawKeyword::tryParseKeyword(const std::string& keywordCandidate, std::string& result) {
@@ -84,25 +109,14 @@ namespace Opm {
         return false;
     }
 
-    void RawKeyword::setKeyword(const std::string& keyword) {
-        m_keyword = boost::algorithm::trim_right_copy(keyword);
-        if (!isValidKeyword(m_keyword)) {
-            throw std::invalid_argument("Not a valid keyword:" + keyword);
-        } else if (m_keyword.size() > Opm::RawConsts::maxKeywordLength) {
-            throw std::invalid_argument("Too long keyword:" + keyword);
-        } else if (boost::algorithm::trim_left_copy(m_keyword) != m_keyword) {
-            throw std::invalid_argument("Illegal whitespace start of keyword:" + keyword);
-        }
-    }
-    /// Important method, being repeatedly called. When a record is terminated,
-    /// it is added to the list of records, and a new record is started.
-
-    void RawKeyword::addRawRecordString(const std::string& partialRecordString) {
-        m_partialRecordString += partialRecordString;
-        if (RawRecord::isTerminatedRecordString(partialRecordString)) {
-            RawRecordPtr record(new RawRecord(m_partialRecordString));
-            m_records.push_back(record);
-            m_partialRecordString.clear();
+    void RawKeyword::setKeywordName(const std::string& name) {
+        m_name = boost::algorithm::trim_right_copy(name);
+        if (!isValidKeyword(m_name)) {
+            throw std::invalid_argument("Not a valid keyword:" + name);
+        } else if (m_name.size() > Opm::RawConsts::maxKeywordLength) {
+            throw std::invalid_argument("Too long keyword:" + name);
+        } else if (boost::algorithm::trim_left_copy(m_name) != m_name) {
+            throw std::invalid_argument("Illegal whitespace start of keyword:" + name);
         }
     }
 
@@ -110,19 +124,5 @@ namespace Opm {
         return m_partialRecordString.size() == 0;
     }
 
-    unsigned int RawKeyword::getNumberOfRecords() const {
-        return m_records.size();
-    }
-
-    const std::list<RawRecordConstPtr>& RawKeyword::getRecords() const {
-        return m_records;
-    }
-
-    const std::string& RawKeyword::getKeyword() const {
-        return m_keyword;
-    }
-
-    RawKeyword::~RawKeyword() {
-    }
 }
 

@@ -54,9 +54,17 @@ namespace Opm {
         return m_name;
     }
 
-    ParserKW::~ParserKW() {
+    DeckKWPtr ParserKW::parse(RawKeywordPtr rawKeyword) {
+        DeckKWPtr keyword(new DeckKW(getName()));
+        if (m_record != NULL) {
+            for (size_t i=0; i<rawKeyword->size(); i++) {
+                DeckRecordConstPtr deckRecord = m_record->parse(rawKeyword->getRecord(i));
+                keyword->addRecord(deckRecord);
+            }
+        }
+        else 
+            throw std::logic_error("Unable to parse rawKeyword, because the ParserKW's record is not set!");
+        
+        return keyword;
     }
-
-
-
 }

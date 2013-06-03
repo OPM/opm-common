@@ -65,13 +65,13 @@ BOOST_AUTO_TEST_CASE(ParseFullTestFile) {
 
     RawKeywordConstPtr matchingKeyword = rawDeck->getKeyword("OIL");
     std::list<RawRecordConstPtr> records = matchingKeyword->getRecords();
-    BOOST_CHECK_EQUAL("OIL", matchingKeyword->getKeyword());
+    BOOST_CHECK_EQUAL("OIL", matchingKeyword->getKeywordName());
 
     BOOST_CHECK_EQUAL((unsigned) 0, records.size());
 
     matchingKeyword = rawDeck->getKeyword("VFPPDIMS");
     records = matchingKeyword->getRecords();
-    BOOST_CHECK_EQUAL("VFPPDIMS", matchingKeyword->getKeyword());
+    BOOST_CHECK_EQUAL("VFPPDIMS", matchingKeyword->getKeywordName());
     BOOST_CHECK_EQUAL((unsigned) 1, records.size());
 
     const std::string& recordString = records.front()->getRecordString();

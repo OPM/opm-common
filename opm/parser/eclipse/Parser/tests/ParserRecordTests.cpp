@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(Get_OneItem_Return1) {
 }
 
 BOOST_AUTO_TEST_CASE(Get_outOfRange_Throw) {
-    ParserRecordPtr record(new ParserRecord());
+    ParserRecordConstPtr record(new ParserRecord());
     BOOST_CHECK_THROW(record->get(0), std::out_of_range);
 }
 

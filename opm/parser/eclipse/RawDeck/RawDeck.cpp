@@ -28,13 +28,17 @@ namespace Opm {
         m_rawParserKWs = rawParserKWs;
     }
 
+    RawKeywordConstPtr RawDeck::getKeyword(size_t index) const {
+    }
+
+
     /// Iterate through list of RawKeywords in search for the specified string.
     /// O(n), not using map or hash because the keywords are not unique, 
     /// and the order matters. Returns first matching keyword.
 
     RawKeywordConstPtr RawDeck::getKeyword(const std::string& keyword) const {
         for (std::list<RawKeywordConstPtr>::const_iterator it = m_keywords.begin(); it != m_keywords.end(); it++) {
-            if ((*it)->getKeyword() == keyword) {
+            if ((*it)->getKeywordName() == keyword) {
                 return (*it);
             }
         }
@@ -43,7 +47,7 @@ namespace Opm {
 
     bool RawDeck::hasKeyword(const std::string& keyword) const {
         for (std::list<RawKeywordConstPtr>::const_iterator it = m_keywords.begin(); it != m_keywords.end(); it++) {
-            if ((*it)->getKeyword() == keyword) {
+            if ((*it)->getKeywordName() == keyword) {
                 return true;
             }
         }
@@ -95,8 +99,9 @@ namespace Opm {
     }
 
     void RawDeck::addKeyword(RawKeywordConstPtr keyword, const boost::filesystem::path& dataFolderPath) {
-        if (keyword->getKeyword() == Opm::RawConsts::include) {
-            std::string includeFileString = keyword->getRecords().front()->getItems().front();
+        if (keyword->getKeywordName() == Opm::RawConsts::include) {
+            RawRecordConstPtr firstRecord = keyword->getRecord(0);
+            std::string includeFileString = firstRecord->getItem(0);
             boost::filesystem::path pathToIncludedFile(dataFolderPath);
             pathToIncludedFile /= includeFileString;
 
@@ -124,8 +129,8 @@ namespace Opm {
     /// specified for the current keyword type in the RawParserKW class.
 
     bool RawDeck::isKeywordFinished(RawKeywordConstPtr rawKeyword) {
-        if (m_rawParserKWs->keywordExists(rawKeyword->getKeyword())) {
-            return rawKeyword->getNumberOfRecords() == m_rawParserKWs->getFixedNumberOfRecords(rawKeyword->getKeyword());
+        if (m_rawParserKWs->keywordExists(rawKeyword->getKeywordName())) {
+            return rawKeyword->size() == m_rawParserKWs->getFixedNumberOfRecords(rawKeyword->getKeywordName());
         }
         return false;
     }
@@ -134,14 +139,12 @@ namespace Opm {
 
     std::ostream& operator<<(std::ostream& os, const RawDeck& deck) {
         for (std::list<RawKeywordConstPtr>::const_iterator keyword = deck.m_keywords.begin(); keyword != deck.m_keywords.end(); keyword++) {
-            os << (*keyword)->getKeyword() << "                -- Keyword\n";
+            os << (*keyword)->getKeywordName() << "                -- Keyword\n";
 
-            std::list<RawRecordConstPtr> records = (*keyword)->getRecords();
-            for (std::list<RawRecordConstPtr>::const_iterator record = records.begin(); record != records.end(); record++) {
-                std::deque<std::string> recordItems = (*record)->getItems();
-
-                for (size_t i=0; i<recordItems.size(); i++) {
-                    os << recordItems[i] << " ";
+            for (size_t i = 0; i < (*keyword)->size(); i++) {
+                RawRecordConstPtr rawRecord = (*keyword)->getRecord(i);
+                for (size_t j = 0; j < rawRecord->size(); j++) {
+                    os << rawRecord->getItem(j) << " ";
                 }
                 os << " /                -- Data\n";
             }

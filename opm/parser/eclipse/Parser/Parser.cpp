@@ -31,16 +31,15 @@ namespace Opm {
     DeckPtr Parser::parse(const std::string &path) {
         Logger::initLogger();
         Logger::info("Starting parsing of file: " + path);
-    
-        
-        DeckPtr deck(new Deck());
-        {
-            RawDeckPtr rawDeck(new RawDeck(RawParserKWsConstPtr(new RawParserKWs())));
-            rawDeck->parse(path);
 
-            
-          
+        RawDeckPtr rawDeck(new RawDeck(RawParserKWsConstPtr(new RawParserKWs())));
+        rawDeck->parse(path);
+
+        for (size_t i = rawDeck->getNumberOfKeywords(); i++) {
+            RawKeywordPtr rawKeyword = rawDeck->getKeyword(0);
         }
+        
+        
         Logger::info("Done parsing of file: " + path);
         Logger::closeLogger();
         return deck;
@@ -53,7 +52,7 @@ namespace Opm {
     }
 
     void Parser::addKW(ParserKWConstPtr parserKW) {
-        keywords.insert(std::make_pair(parserKW->getName(), parserKW));
+        m_parserKeywords.insert(std::make_pair(parserKW->getName(), parserKW));
     }
 
 } // namespace Opm

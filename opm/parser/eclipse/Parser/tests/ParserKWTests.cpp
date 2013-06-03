@@ -22,6 +22,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include "opm/parser/eclipse/Parser/ParserKW.hpp"
+#include "opm/parser/eclipse/Parser/ParserIntItem.hpp"
+#include "opm/parser/eclipse/Parser/ParserItem.hpp"
+
 
 
 using namespace Opm;
@@ -57,4 +60,23 @@ BOOST_AUTO_TEST_CASE(MixedCase) {
 
     ParserRecordSizeConstPtr recordSize(new ParserRecordSize(100));
     BOOST_CHECK_THROW(ParserKW parserKW(keyword, recordSize), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(parse_rawKeyword_returnsDeckKW) {
+    RawKeywordPtr rawKeyword(new RawKeyword("TEST2"));
+    rawKeyword->addRawRecordString("2 3 5 /");
+    ParserKWPtr parserKW(new ParserKW("TEST2"));
+    
+    ParserRecordPtr parserRecord = ParserRecordPtr(new ParserRecord());
+
+    ParserItemPtr item1(new ParserIntItem("I", SINGLE));
+    parserRecord->addItem(item1);
+    ParserItemPtr item2(new ParserIntItem("J", SINGLE));
+    parserRecord->addItem(item2);
+    ParserItemPtr item3(new ParserIntItem("K", SINGLE));
+    parserRecord->addItem(item3);
+    
+    parserKW->setRecord(parserRecord);
+    DeckKWPtr deckKW = parserKW->parse(rawKeyword);
+    BOOST_CHECK_EQUAL(1U, deckKW->size());
 }

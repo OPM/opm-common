@@ -48,7 +48,7 @@ namespace Opm {
         void addKW(ParserKWConstPtr parserKW);
 
     private:
-        std::map<std::string, ParserKWConstPtr> keywords;
+        std::map<std::string, ParserKWConstPtr> m_parserKeywords;
     };
 
     typedef boost::shared_ptr<Parser> ParserPtr;

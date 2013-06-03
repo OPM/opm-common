@@ -46,6 +46,8 @@ namespace Opm {
         
         void parse(const std::string& path);
         RawKeywordConstPtr getKeyword(const std::string& keyword) const;
+        RawKeywordConstPtr getKeyword(size_t index) const;
+
         bool hasKeyword(const std::string& keyword) const;
         unsigned int getNumberOfKeywords() const;
         friend std::ostream& operator<<(std::ostream& os, const RawDeck& deck);
@@ -55,7 +57,6 @@ namespace Opm {
     private:
         std::list<RawKeywordConstPtr> m_keywords;
         RawParserKWsConstPtr m_rawParserKWs;
-
 
         //void readDataIntoDeck(const std::string& path, std::list<RawKeywordConstPtr>& keywordList);
         void addKeyword(RawKeywordConstPtr keyword, const boost::filesystem::path& baseDataFolder);

@@ -24,6 +24,9 @@
 
 #include <opm/parser/eclipse/Parser/ParserRecordSize.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
+#include <opm/parser/eclipse/Deck/DeckKW.hpp>
+#include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
+
 
 namespace Opm {
 
@@ -33,9 +36,9 @@ namespace Opm {
         ParserKW(const std::string& name, ParserRecordSizeConstPtr recordSize);
         void setRecord(ParserRecordConstPtr record);
         ParserRecordConstPtr getRecord();
-        
-        ~ParserKW();
         const std::string& getName() const;
+        DeckKWPtr parse(RawKeywordPtr rawKeyword);
+        
     private:
         std::string m_name;
         ParserRecordConstPtr m_record;

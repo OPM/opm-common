@@ -18,25 +18,39 @@
  */
 
 
-#define BOOST_TEST_MODULE DeckTests
+#define BOOST_TEST_MODULE KeywordContainerTests
 
 #include <stdexcept>
 #include <boost/test/unit_test.hpp>
+#include <opm/parser/eclipse/Deck/KeywordContainer.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckKW.hpp>
+
 
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(Initialize) {
-    BOOST_REQUIRE_NO_THROW(Deck deck);
-    BOOST_REQUIRE_NO_THROW(DeckPtr deckPtr(new Deck()));
-    BOOST_REQUIRE_NO_THROW(DeckConstPtr deckConstPtr(new Deck()));
+    KeywordContainer container;
+    KeywordContainerPtr ptrContainer(new KeywordContainer());
+    KeywordContainerConstPtr constPtrContainer(new KeywordContainer());
+}
+
+BOOST_AUTO_TEST_CASE(hasKeyword_empty_returnsfalse) {
+    KeywordContainerPtr container(new KeywordContainer());
+    BOOST_CHECK_EQUAL(false, container->hasKeyword("Truls"));
 }
 
 
-BOOST_AUTO_TEST_CASE(hasKeyword_empty_returnFalse) {
-    Deck deck;
-    BOOST_CHECK_EQUAL( false , deck.hasKeyword("Bjarne"));
+BOOST_AUTO_TEST_CASE(addKeyword_keywordAdded_keywordAdded) {
+    KeywordContainerPtr container(new KeywordContainer());
+    DeckKWPtr keyword = DeckKWPtr(new DeckKW("Truls"));
+    container->addKeyword(keyword);
+    
+    BOOST_CHECK_EQUAL(true, container->hasKeyword("Truls"));
+    BOOST_CHECK_EQUAL(1U, container->size());
 }
+
+
 
 
 

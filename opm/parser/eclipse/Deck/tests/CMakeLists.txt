@@ -15,6 +15,15 @@ target_link_libraries(runDeckTests Parser Logger ${Boost_LIBRARIES})
 add_test(NAME runDeckTests  COMMAND ${EXECUTABLE_OUTPUT_PATH}/runDeckTests  )
 set_property(SOURCE DeckTests.cpp PROPERTY COMPILE_FLAGS "-Wno-error")
 
+add_executable(runKeywordContainerTests KeywordContainerTests.cpp)
+target_link_libraries(runKeywordContainerTests Parser Logger ${Boost_LIBRARIES})
+add_test(NAME runKeywordContainerTests  COMMAND ${EXECUTABLE_OUTPUT_PATH}/runKeywordContainerTests  )
+set_property(SOURCE KeywordContainerTests.cpp PROPERTY COMPILE_FLAGS "-Wno-error")
 
 
+
+add_executable(runDeckKWTests DeckKWTests.cpp)
+target_link_libraries(runDeckKWTests Parser Logger ${Boost_LIBRARIES})
+add_test(NAME runDeckKWTests  COMMAND ${EXECUTABLE_OUTPUT_PATH}/runDeckKWTests  )
+set_property(SOURCE DeckKWTests.cpp PROPERTY COMPILE_FLAGS "-Wno-error")
 

@@ -40,8 +40,7 @@ namespace Opm {
         size_t size() const;
 
         const std::string& getRecordString() const;
-        const std::deque<std::string>& getItems() const;
-        const std::string& operator[](size_t index) const;
+        const std::string& getItem(size_t index) const;
 
         static bool isTerminatedRecordString(const std::string& candidateRecordString);
         virtual ~RawRecord();

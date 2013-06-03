@@ -67,16 +67,11 @@ namespace Opm {
     }
 
 
-    const std::string& RawRecord::operator[](size_t index) const {
+    const std::string& RawRecord::getItem(size_t index) const {
         if (index < m_recordItems.size())
             return m_recordItems[index];
         else
             throw std::out_of_range("Lookup index out of range");
-    }
-
-    
-    const std::deque<std::string>& RawRecord::getItems() const {
-        return m_recordItems;
     }
 
     const std::string& RawRecord::getRecordString() const {

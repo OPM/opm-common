@@ -31,13 +31,12 @@ BOOST_AUTO_TEST_CASE(RawRecordGetRecordStringReturnsTrimmedString) {
 BOOST_AUTO_TEST_CASE(RawRecordGetRecordsCorrectElementsReturned) {
     Opm::RawRecordPtr record(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20                                       /"));
 
-    const std::deque<std::string>& recordElements = record->getItems();
-    BOOST_CHECK_EQUAL((unsigned) 4, recordElements.size());
+    BOOST_CHECK_EQUAL((unsigned) 4, record->size());
 
-    BOOST_CHECK_EQUAL("NODIR ", recordElements[0]);
-    BOOST_CHECK_EQUAL("REVERS", recordElements[1]);
-    BOOST_CHECK_EQUAL("1", recordElements[2]);
-    BOOST_CHECK_EQUAL("20", recordElements[3]);
+    BOOST_CHECK_EQUAL("NODIR ", record->getItem(0));
+    BOOST_CHECK_EQUAL("REVERS", record->getItem(1));
+    BOOST_CHECK_EQUAL("1", record->getItem(2));
+    BOOST_CHECK_EQUAL("20", record->getItem(3));
 }
 
 BOOST_AUTO_TEST_CASE(RawRecordIsCompleteRecordCompleteRecordReturnsTrue) {
@@ -57,14 +56,14 @@ BOOST_AUTO_TEST_CASE(Rawrecord_OperatorThis_OK) {
   Opm::RawRecord record(" 'NODIR '  'REVERS'  1  20  /");
   Opm::RawRecordPtr recordPtr(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20  /"));  
 
-  BOOST_CHECK_EQUAL( "NODIR " , record[0]);
-  BOOST_CHECK_EQUAL( "REVERS" , record[1]);
-  BOOST_CHECK_EQUAL( "1" , record[2]);
-  BOOST_CHECK_EQUAL( "20" , record[3]);
+  BOOST_CHECK_EQUAL( "NODIR " , record.getItem(0));
+  BOOST_CHECK_EQUAL( "REVERS" , record.getItem(1));
+  BOOST_CHECK_EQUAL( "1" , record.getItem(2));
+  BOOST_CHECK_EQUAL( "20" , record.getItem(3));
 
-  BOOST_CHECK_EQUAL( "20" , (*recordPtr)[3]);
+  BOOST_CHECK_EQUAL( "20" , recordPtr->getItem(3));
 
-  BOOST_CHECK_THROW( record[4] , std::out_of_range);
+  BOOST_CHECK_THROW( record.getItem(4) , std::out_of_range);
 }
 
 
@@ -74,8 +73,8 @@ BOOST_AUTO_TEST_CASE(Rawrecord_PushFront_OK) {
   record->push_front( "String1" );
   
   
-  BOOST_CHECK_EQUAL( "String1" , (*record)[0]);
-  BOOST_CHECK_EQUAL( "String2" , (*record)[1]);
+  BOOST_CHECK_EQUAL( "String1" , record->getItem(0));
+  BOOST_CHECK_EQUAL( "String2" , record->getItem(1));
 }
 
 

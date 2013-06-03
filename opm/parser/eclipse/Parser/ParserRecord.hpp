@@ -33,11 +33,11 @@ namespace Opm {
     class ParserRecord {
     public:
         ParserRecord();
-        size_t size();
+        size_t size() const;
         void addItem( ParserItemConstPtr item );
-        ParserItemConstPtr get(size_t index);
-        ParserItemConstPtr get(const std::string& itemName);
-        DeckRecordConstPtr parse(RawRecordPtr rawRecord);
+        ParserItemConstPtr get(size_t index) const;
+        ParserItemConstPtr get(const std::string& itemName) const;
+        DeckRecordConstPtr parse(RawRecordPtr rawRecord) const;
     
     private:
         std::vector<ParserItemConstPtr> m_items;

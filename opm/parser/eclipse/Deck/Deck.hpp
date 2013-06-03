@@ -21,6 +21,7 @@
 #define DECK_HPP
 
 #include <boost/shared_ptr.hpp>
+#include <opm/parser/eclipse/Deck/KeywordContainer.hpp>
 
 namespace Opm {
 
@@ -29,9 +30,9 @@ namespace Opm {
         Deck();
         virtual ~Deck();
 
-        bool hasKeyword( const std::string& keyWord ) const;
+        bool hasKeyword( const std::string& keyword ) const;
     private:
-
+        KeywordContainerPtr m_keywords;
     };
 
     typedef boost::shared_ptr<Deck> DeckPtr;

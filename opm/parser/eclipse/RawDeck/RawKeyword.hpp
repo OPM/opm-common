@@ -22,7 +22,7 @@
 
 #include <string>
 #include <utility>
-#include <list>
+#include <vector>
 #include <boost/shared_ptr.hpp>
 
 #include "opm/parser/eclipse/Logger/Logger.hpp"
@@ -33,28 +33,29 @@ namespace Opm {
     /// Class representing a RawKeyword, meaning both the actual keyword phrase, and the records,
     /// represented as a list of RawRecord objects.
     /// The class also contains static functions to aid the parsing of the input file.
-    /// The creationg of an instance is performed by calling the addRawRecordString method repeatedly.
+    /// The creating of an instance is performed by calling the addRawRecordString method repeatedly.
 
     class RawKeyword {
     public:
-        RawKeyword();
-        RawKeyword(const std::string& keyword);
+        RawKeyword(const std::string& name);
+        const std::string& getKeywordName() const;
+        void addRawRecordString(const std::string& partialRecordString);
+        size_t size() const;
+        RawRecordPtr getRecord(size_t index) const;
+        
+        
+        
         static bool tryParseKeyword(const std::string& line, std::string& result);
         static bool lineContainsData(const std::string& line);
         static bool lineTerminatesKeyword(const std::string& line);
 
-        const std::string& getKeyword() const;
-        const std::list<RawRecordConstPtr>& getRecords() const;
-        unsigned int getNumberOfRecords() const;
-        void setKeyword(const std::string& keyword);
-        void addRawRecordString(const std::string& partialRecordString);
         bool isPartialRecordStringEmpty() const;
-        virtual ~RawKeyword();
 
     private:
-        std::string m_keyword;
-        std::list<RawRecordConstPtr> m_records;
+        std::string m_name;
+        std::vector<RawRecordPtr> m_records;
         std::string m_partialRecordString;
+        void setKeywordName(const std::string& keyword);
         static bool isValidKeyword(const std::string& keywordCandidate);
     };
     typedef boost::shared_ptr<RawKeyword> RawKeywordPtr;

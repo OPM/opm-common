@@ -59,18 +59,14 @@ BOOST_AUTO_TEST_CASE(ParseFullTestFile) {
     // number of records
 
     RawKeywordConstPtr matchingKeyword = rawDeck->getKeyword("OIL");
-    std::list<RawRecordConstPtr> records = matchingKeyword->getRecords();
-    BOOST_CHECK_EQUAL("OIL", matchingKeyword->getKeyword());
-
-    BOOST_CHECK_EQUAL((unsigned) 0, records.size());
+    BOOST_CHECK_EQUAL("OIL", matchingKeyword->getKeywordName());
+    BOOST_CHECK_EQUAL(0U, matchingKeyword->size());
 
     matchingKeyword = rawDeck->getKeyword("VFPPDIMS");
-    records = matchingKeyword->getRecords();
-    BOOST_CHECK_EQUAL("VFPPDIMS", matchingKeyword->getKeyword());
-    BOOST_CHECK_EQUAL((unsigned) 1, records.size());
+    BOOST_CHECK_EQUAL("VFPPDIMS", matchingKeyword->getKeywordName());
+    BOOST_CHECK_EQUAL((unsigned) 1, matchingKeyword->size());
 
-    const std::string& recordString = records.front()->getRecordString();
+    const std::string& recordString = matchingKeyword->getRecord(0)->getRecordString();
     BOOST_CHECK_EQUAL("20  20  15  15  15   50", recordString);
-    std::deque<std::string> recordItems = records.front()->getItems();
-    BOOST_CHECK_EQUAL((unsigned) 6, recordItems.size());
+    BOOST_CHECK_EQUAL((unsigned) 6, matchingKeyword->getRecord(0)->size());
 }

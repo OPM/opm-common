@@ -26,7 +26,7 @@ namespace Opm {
         
     }
     
-    size_t ParserRecord::size() {
+    size_t ParserRecord::size() const {
         return m_items.size();
     }
 
@@ -39,7 +39,7 @@ namespace Opm {
     }
 
 
-    ParserItemConstPtr ParserRecord::get(size_t index) {
+    ParserItemConstPtr ParserRecord::get(size_t index) const{
         if (index < m_items.size())
             return m_items[ index ];
         else
@@ -47,14 +47,17 @@ namespace Opm {
     }
 
 
-    ParserItemConstPtr ParserRecord::get(const std::string& itemName) {
+    ParserItemConstPtr ParserRecord::get(const std::string& itemName) const {
         if (m_itemMap.find( itemName ) == m_itemMap.end())
             throw std::invalid_argument("Itemname: " + itemName + " does not exist.");
         else
-            return m_itemMap[ itemName ];
+        {
+            std::map<std::string, ParserItemConstPtr>::const_iterator theItem = m_itemMap.find(itemName);
+            return (*theItem).second;
+        }
     }
     
-    DeckRecordConstPtr ParserRecord::parse(RawRecordPtr rawRecord) {
+    DeckRecordConstPtr ParserRecord::parse(RawRecordPtr rawRecord) const {
         DeckRecordPtr deckRecord(new DeckRecord());
         
         for(size_t i=0; i<size(); i++) {
