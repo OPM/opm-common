@@ -59,6 +59,7 @@ namespace Opm {
         add(std::pair<std::string, unsigned int>("WHISTCTL", 1));
 
 
+        add(std::pair<std::string, unsigned int>("SUMMARY", 0));
         add(std::pair<std::string, unsigned int>("TITLE", 0));
         add(std::pair<std::string, unsigned int>("RUNSPEC", 0));
         add(std::pair<std::string, unsigned int>("METRIC", 0));

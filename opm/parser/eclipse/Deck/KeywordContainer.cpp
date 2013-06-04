@@ -37,7 +37,7 @@ namespace Opm {
     void KeywordContainer::addKeyword(DeckKWConstPtr keyword) {
         m_keywordList.push_back(keyword);
         
-        if (m_keywordMap.find(keyword->name()) == m_keywordMap.end()) {
+        if (!hasKeyword(keyword->name())) {
             m_keywordMap[keyword->name()] = std::vector<DeckKWConstPtr>();
         }
         
@@ -46,5 +46,15 @@ namespace Opm {
             keywordList.push_back(keyword);
         }
     }
+    
+    DeckKWConstPtr KeywordContainer::getKeyword(const std::string& keyword) const {
+        if (hasKeyword(keyword)) {
+            const std::vector<DeckKWConstPtr>& keywordList = m_keywordMap.find(keyword)->second;
+            return keywordList.back();
+        }
+        else
+            throw std::invalid_argument("Keyword: " + keyword + " is not found in the container");
+    }
+
 
 }

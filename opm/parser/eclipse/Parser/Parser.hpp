@@ -42,13 +42,19 @@ namespace Opm {
 
         /// The starting point of the parsing process. The supplied file is parsed, and the resulting Deck is returned.
         DeckPtr parse(const std::string &path);
-        virtual ~Parser();
+
+        RawDeckPtr readToRawDeck(const std::string& path);
 
         /// Method to add ParserKW instances, these holding type and size information about the keywords and their data.
         void addKW(ParserKWConstPtr parserKW);
+        bool hasKeyword(const std::string& keyword) const;
 
     private:
         std::map<std::string, ParserKWConstPtr> m_parserKeywords;
+        void readToRawDeck(RawDeckPtr rawDeck, const std::string& path);
+        void processIncludeKeyword(RawDeckPtr rawDeck, RawKeywordConstPtr keyword, const boost::filesystem::path& dataFolderPath);
+        boost::filesystem::path verifyValidInputPath(const std::string& inputPath);
+
     };
 
     typedef boost::shared_ptr<Parser> ParserPtr;

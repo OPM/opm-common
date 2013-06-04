@@ -54,7 +54,7 @@ namespace Opm {
         return m_name;
     }
 
-    DeckKWPtr ParserKW::parse(RawKeywordPtr rawKeyword) {
+    DeckKWPtr ParserKW::parse(RawKeywordConstPtr rawKeyword) const {
         DeckKWPtr keyword(new DeckKW(getName()));
         if (m_record != NULL) {
             for (size_t i=0; i<rawKeyword->size(); i++) {

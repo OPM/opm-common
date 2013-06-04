@@ -19,14 +19,12 @@
 
 #ifndef RAWDECK_HPP
 #define RAWDECK_HPP
-#include <list>
+#include <vector>
 #include <ostream>
-#include <map>
 #include <boost/shared_ptr.hpp>
-#include "opm/parser/eclipse/Logger/Logger.hpp"
 #include <boost/filesystem.hpp>
-#include "RawKeyword.hpp"
-#include "RawParserKWs.hpp"
+#include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
+#include <opm/parser/eclipse/RawDeck/RawParserKWs.hpp>
 
 namespace Opm {
 
@@ -42,25 +40,25 @@ namespace Opm {
         /// All relevant keywords with a fixed number of records 
         /// must be specified through the RawParserKW class. This is to be able to know how the records
         /// of the keyword is structured.
-        RawDeck(RawParserKWsConstPtr rawParserKWs);
-        
-        void parse(const std::string& path);
-        RawKeywordConstPtr getKeyword(const std::string& keyword) const;
-        RawKeywordConstPtr getKeyword(size_t index) const;
 
-        bool hasKeyword(const std::string& keyword) const;
-        unsigned int getNumberOfKeywords() const;
+        RawDeck(RawParserKWsConstPtr rawParserKWs);
+        void addKeyword(RawKeywordConstPtr keyword);
+        RawKeywordConstPtr getKeyword(size_t index) const;
+        size_t size() const;
+        
+        // This will move to Parser class when m_rawParserKWs is moved.
+        bool isKeywordFinished(RawKeywordConstPtr rawKeyword);
+      
         friend std::ostream& operator<<(std::ostream& os, const RawDeck& deck);
         virtual ~RawDeck();
-        
 
     private:
-        std::list<RawKeywordConstPtr> m_keywords;
+        std::vector<RawKeywordConstPtr> m_keywords;
+        
+        // This variable should be replaced by an equivalent collection of ParserKWs, and put in the Parser class
         RawParserKWsConstPtr m_rawParserKWs;
 
-        //void readDataIntoDeck(const std::string& path, std::list<RawKeywordConstPtr>& keywordList);
-        void addKeyword(RawKeywordConstPtr keyword, const boost::filesystem::path& baseDataFolder);
-        bool isKeywordFinished(RawKeywordConstPtr rawKeyword);
+        void processIncludeKeyword(RawKeywordConstPtr keyword, const boost::filesystem::path& dataFolderPath);
         static boost::filesystem::path verifyValidInputPath(const std::string& inputPath);
     };
 

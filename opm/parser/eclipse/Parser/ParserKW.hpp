@@ -37,7 +37,7 @@ namespace Opm {
         void setRecord(ParserRecordConstPtr record);
         ParserRecordConstPtr getRecord();
         const std::string& getName() const;
-        DeckKWPtr parse(RawKeywordPtr rawKeyword);
+        DeckKWPtr parse(RawKeywordConstPtr rawKeyword) const;
         
     private:
         std::string m_name;

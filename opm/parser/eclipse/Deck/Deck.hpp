@@ -28,9 +28,10 @@ namespace Opm {
     class Deck {
     public:
         Deck();
-        virtual ~Deck();
-
         bool hasKeyword( const std::string& keyword ) const;
+        void addKeyword( DeckKWConstPtr keyword);
+        DeckKWConstPtr getKeyword(const std::string& keyword) const;
+
     private:
         KeywordContainerPtr m_keywords;
     };

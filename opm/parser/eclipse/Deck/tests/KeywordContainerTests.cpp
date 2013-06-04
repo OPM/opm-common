@@ -50,6 +50,18 @@ BOOST_AUTO_TEST_CASE(addKeyword_keywordAdded_keywordAdded) {
     BOOST_CHECK_EQUAL(1U, container->size());
 }
 
+BOOST_AUTO_TEST_CASE(getKeyword_nosuchkeyword_throws) {
+    KeywordContainerPtr container(new KeywordContainer());
+    BOOST_CHECK_THROW(container->getKeyword("TRULS"), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(getKeyword_singleKeyword_keywordReturned) {
+    KeywordContainerPtr container(new KeywordContainer());
+    DeckKWPtr keyword = DeckKWPtr(new DeckKW("TRULS"));
+    container->addKeyword(keyword);
+    BOOST_CHECK_EQUAL(keyword, container->getKeyword("TRULS"));
+}
+
 
 
 

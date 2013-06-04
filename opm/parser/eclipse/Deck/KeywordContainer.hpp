@@ -23,6 +23,8 @@ namespace Opm {
         bool hasKeyword(const std::string& keyword) const;
         size_t size() const;
         void addKeyword(DeckKWConstPtr keyword);
+        DeckKWConstPtr getKeyword(const std::string& keyword) const;
+
 
     private:
         std::vector<DeckKWConstPtr> m_keywordList;

@@ -30,7 +30,6 @@
 
 using namespace Opm;
 
-
 ParserPtr createBPRParser() {
     ParserKWPtr parserKW(new ParserKW("BPR"));
     {
@@ -38,27 +37,75 @@ ParserPtr createBPRParser() {
         bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("I", SINGLE)));
         bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("J", SINGLE)));
         bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("K", SINGLE)));
-        
+
         parserKW->setRecord(bprRecord);
     }
 
     ParserPtr parser(new Parser());
+    parser->addKW(parserKW);
     return parser;
 }
-
 
 BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_deckReturned) {
     boost::filesystem::path singleKeywordFile("testdata/integration_tests/bpr.data");
     ParserPtr parser = createBPRParser();
 
-    BOOST_CHECK_NO_THROW( DeckPtr deck = parser->parse(singleKeywordFile.string()));
+    BOOST_CHECK_NO_THROW(DeckPtr deck = parser->parse(singleKeywordFile.string()));
 }
-
 
 BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_DeckhasBRP) {
     boost::filesystem::path singleKeywordFile("testdata/integration_tests/bpr.data");
-    ParserPtr parser = createBPRParser();
 
+    ParserPtr parser = createBPRParser();
     DeckPtr deck = parser->parse(singleKeywordFile.string());
-    BOOST_CHECK_EQUAL( true , deck->hasKeyword("BPR"));
+
+    BOOST_CHECK_EQUAL(true, deck->hasKeyword("BPR"));
+}
+
+BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_dataiscorrect) {
+    boost::filesystem::path singleKeywordFile("testdata/integration_tests/bpr.data");
+
+    ParserPtr parser = createBPRParser();
+    DeckPtr deck = parser->parse(singleKeywordFile.string());
+
+    DeckKWConstPtr keyword = deck->getKeyword("BPR");
+    BOOST_CHECK_EQUAL(2U, keyword->size());
+
+    DeckRecordConstPtr record1 = keyword->getRecord(0);
+    BOOST_CHECK_EQUAL(3U, record1->size());
+
+    DeckItemConstPtr I1 = record1->get(0);
+    BOOST_CHECK_EQUAL(1, I1->getInt(0));
+    I1 = record1->get("I");
+    BOOST_CHECK_EQUAL(1, I1->getInt(0));
+
+    DeckItemConstPtr J1 = record1->get(1);
+    BOOST_CHECK_EQUAL(2, J1->getInt(0));
+    J1 = record1->get("J");
+    BOOST_CHECK_EQUAL(2, J1->getInt(0));
+
+    DeckItemConstPtr K1 = record1->get(2);
+    BOOST_CHECK_EQUAL(3, K1->getInt(0));
+    K1 = record1->get("K");
+    BOOST_CHECK_EQUAL(3, K1->getInt(0));
+
+
+    DeckRecordConstPtr record2 = keyword->getRecord(0);
+    BOOST_CHECK_EQUAL(3U, record2->size());
+
+    I1 = record2->get(0);
+    BOOST_CHECK_EQUAL(1, I1->getInt(0));
+    I1 = record2->get("I");
+    BOOST_CHECK_EQUAL(1, I1->getInt(0));
+
+    J1 = record2->get(1);
+    BOOST_CHECK_EQUAL(2, J1->getInt(0));
+    J1 = record2->get("J");
+    BOOST_CHECK_EQUAL(2, J1->getInt(0));
+
+    K1 = record2->get(2);
+    BOOST_CHECK_EQUAL(3, K1->getInt(0));
+    K1 = record2->get("K");
+    BOOST_CHECK_EQUAL(3, K1->getInt(0));
+
 }

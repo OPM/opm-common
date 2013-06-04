@@ -17,7 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "Deck.hpp"
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 
 namespace Opm {
 
@@ -28,9 +28,14 @@ namespace Opm {
     bool Deck::hasKeyword(const std::string& keyword) const {
         return m_keywords->hasKeyword(keyword);
     }
-
-
-    Deck::~Deck() {
+    
+    void Deck::addKeyword( DeckKWConstPtr keyword) {
+        m_keywords->addKeyword(keyword);
     }
+    
+    DeckKWConstPtr Deck::getKeyword(const std::string& keyword) const {
+        return m_keywords->getKeyword(keyword);
+    }
+
 }
 
