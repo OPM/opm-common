@@ -12,7 +12,6 @@ target_link_libraries(runParserRecordTests Parser ${Boost_LIBRARIES})
 target_link_libraries(runParserItemTests Parser ${Boost_LIBRARIES})
 target_link_libraries(runParserTestsInternalDataTests Parser ${Boost_LIBRARIES})
 
-
 add_test(NAME runParserTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${EXECUTABLE_OUTPUT_PATH}/runParserTests )
 add_test(NAME runParserKWTests COMMAND ${EXECUTABLE_OUTPUT_PATH}/runParserKWTests )
 add_test(NAME runParserRecordSizeTests COMMAND ${EXECUTABLE_OUTPUT_PATH}/runParserRecordSizeTests )
@@ -20,5 +19,5 @@ add_test(NAME runParserRecordTests COMMAND ${EXECUTABLE_OUTPUT_PATH}/runParserRe
 add_test(NAME runParserItemTests COMMAND ${EXECUTABLE_OUTPUT_PATH}/runParserItemTests )
 add_test(NAME runParserTestsInternalDataTests WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND ${EXECUTABLE_OUTPUT_PATH}/runParserTestsInternalDataTests )
 
-set_tests_properties(runParserTestsInternalDataTests PROPERTIES LABEL Statoil)
+set_property(TEST runParserTestsInternalDataTests PROPERTY LABELS Statoil)
 set_property(SOURCE ParserRecordTests.cpp PROPERTY COMPILE_FLAGS "-Wno-error")
