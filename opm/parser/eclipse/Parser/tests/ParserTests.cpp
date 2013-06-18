@@ -29,6 +29,8 @@
 #include <opm/parser/eclipse/Parser/ParserRecordSize.hpp>
 #include <opm/parser/eclipse/RawDeck/RawDeck.hpp>
 
+#include "opm/parser/eclipse/Parser/ParserIntItem.hpp"
+
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(Initializing) {
@@ -37,12 +39,11 @@ BOOST_AUTO_TEST_CASE(Initializing) {
     BOOST_CHECK_NO_THROW(ParserConstPtr parserConstPtr(new Parser()));
 }
 
-BOOST_AUTO_TEST_CASE(ParserAddKW) {
+BOOST_AUTO_TEST_CASE(addKW_keyword_doesntfail) {
     Parser parser;
     {
         ParserRecordSizePtr recordSize(new ParserRecordSize(9));
         ParserKWPtr equilKW(new ParserKW("EQUIL", recordSize));
-
         parser.addKW(equilKW);
     }
 }
@@ -52,6 +53,32 @@ BOOST_AUTO_TEST_CASE(hasKeyword_hasKeyword_returnstrue) {
      parser->addKW(ParserKWConstPtr(new ParserKW("FJAS")));
      BOOST_CHECK(parser->hasKeyword("FJAS"));
 }
+
+BOOST_AUTO_TEST_CASE(parseFromRawDeck_singleRawIntItem_deckReturned) {
+    ParserPtr parser(new Parser());
+    
+    ParserKWPtr parserKw(new ParserKW("RANDOM"));
+    ParserRecordPtr parserRecord(new ParserRecord());
+    ParserItemPtr intItem(new ParserIntItem("ETTALL", SINGLE));
+    parserRecord->addItem(intItem);
+    parserKw->setRecord(parserRecord);
+    
+    parser->addKW(parserKw);
+    
+    RawParserKWsConstPtr rawParserKWs(new RawParserKWs());
+    RawDeckPtr rawDeck(new RawDeck(rawParserKWs));
+    RawKeywordPtr rawKeyword(new RawKeyword("RANDOM"));
+    rawKeyword->addRawRecordString("1");
+    
+    rawDeck->addKeyword(rawKeyword);
+    
+    DeckPtr deck = parser->parseFromRawDeck(rawDeck);
+    
+    BOOST_CHECK(deck->hasKeyword("RANDOM"));
+    BOOST_CHECK(!deck->hasKeyword("ANDOM"));
+}
+
+
 
 
 
