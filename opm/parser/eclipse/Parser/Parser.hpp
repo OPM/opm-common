@@ -42,8 +42,12 @@ namespace Opm {
 
         /// The starting point of the parsing process. The supplied file is parsed, and the resulting Deck is returned.
         DeckPtr parse(const std::string &path);
+        
+        /// Function to parse directly from a raw deck
+        DeckPtr parseFromRawDeck(RawDeckConstPtr rawDeck);
 
-        RawDeckPtr readToRawDeck(const std::string& path);
+        /// Reads an eclipse file and returns a tokenized RawDeck
+        RawDeckPtr readToRawDeck(const std::string& path) const;
 
         /// Method to add ParserKW instances, these holding type and size information about the keywords and their data.
         void addKW(ParserKWConstPtr parserKW);
@@ -51,9 +55,9 @@ namespace Opm {
 
     private:
         std::map<std::string, ParserKWConstPtr> m_parserKeywords;
-        void readToRawDeck(RawDeckPtr rawDeck, const std::string& path);
-        void processIncludeKeyword(RawDeckPtr rawDeck, RawKeywordConstPtr keyword, const boost::filesystem::path& dataFolderPath);
-        boost::filesystem::path verifyValidInputPath(const std::string& inputPath);
+        void readToRawDeck(RawDeckPtr rawDeck, const std::string& path) const;
+        void processIncludeKeyword(RawDeckPtr rawDeck, RawKeywordConstPtr keyword, const boost::filesystem::path& dataFolderPath) const;
+        boost::filesystem::path verifyValidInputPath(const std::string& inputPath) const;
 
     };
 

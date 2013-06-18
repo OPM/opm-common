@@ -31,7 +31,10 @@ namespace Opm {
 
     DeckPtr Parser::parse(const std::string &path) {
         RawDeckPtr rawDeck = readToRawDeck(path);
+        return parseFromRawDeck(rawDeck);
+    }
 
+    DeckPtr Parser::parseFromRawDeck(RawDeckConstPtr rawDeck) {
         DeckPtr deck(new Deck());
         for (size_t i = 0; i < rawDeck->size(); i++) {
             RawKeywordConstPtr rawKeyword = rawDeck->getKeyword(i);
@@ -40,8 +43,7 @@ namespace Opm {
                 ParserKWConstPtr parserKW = m_parserKeywords[rawKeyword->getKeywordName()];
                 DeckKWConstPtr deckKW = parserKW->parse(rawKeyword);
                 deck->addKeyword(deckKW);
-            }
-            else
+            } else
                 std::cerr << "Keyword: " << rawKeyword->getKeywordName() << " is not recognized, skipping this." << std::endl;
         }
         return deck;
@@ -50,12 +52,12 @@ namespace Opm {
     void Parser::addKW(ParserKWConstPtr parserKW) {
         m_parserKeywords.insert(std::make_pair(parserKW->getName(), parserKW));
     }
-    
+
     bool Parser::hasKeyword(const std::string& keyword) const {
         return m_parserKeywords.find(keyword) != m_parserKeywords.end();
     }
 
-    RawDeckPtr Parser::readToRawDeck(const std::string& path) {
+    RawDeckPtr Parser::readToRawDeck(const std::string& path) const {
         RawDeckPtr rawDeck(new RawDeck(RawParserKWsConstPtr(new RawParserKWs())));
         readToRawDeck(rawDeck, path);
         return rawDeck;
@@ -66,7 +68,7 @@ namespace Opm {
     /// The data is read into a keyword, record by record, until the fixed number of records specified
     /// in the RawParserKW is met, or till a slash on a separate line is found.
 
-    void Parser::readToRawDeck(RawDeckPtr rawDeck, const std::string& path) {
+    void Parser::readToRawDeck(RawDeckPtr rawDeck, const std::string& path) const {
         boost::filesystem::path dataFolderPath = verifyValidInputPath(path);
         {
             std::ifstream inputstream;
@@ -109,7 +111,7 @@ namespace Opm {
         }
     }
 
-    void Parser::processIncludeKeyword(RawDeckPtr rawDeck, RawKeywordConstPtr keyword, const boost::filesystem::path& dataFolderPath) {
+    void Parser::processIncludeKeyword(RawDeckPtr rawDeck, RawKeywordConstPtr keyword, const boost::filesystem::path& dataFolderPath) const {
         RawRecordConstPtr firstRecord = keyword->getRecord(0);
         std::string includeFileString = firstRecord->getItem(0);
         boost::filesystem::path pathToIncludedFile(dataFolderPath);
@@ -118,7 +120,7 @@ namespace Opm {
         readToRawDeck(rawDeck, pathToIncludedFile.string());
     }
 
-    boost::filesystem::path Parser::verifyValidInputPath(const std::string& inputPath) {
+    boost::filesystem::path Parser::verifyValidInputPath(const std::string& inputPath) const {
         Logger::info("Verifying path: " + inputPath);
         boost::filesystem::path pathToInputFile(inputPath);
         if (!boost::filesystem::is_regular_file(pathToInputFile)) {

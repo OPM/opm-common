@@ -39,7 +39,6 @@ namespace Opm {
     /// Scans the rawRecords data according to the ParserItems definition.
     /// returns a DeckItem object.
     /// NOTE: data are popped from the rawRecords deque!
-
     DeckItemConstPtr ParserIntItem::scan__(size_t expectedItems , bool scanAll , RawRecordPtr rawRecord) const {
         if (sizeType() == SINGLE && expectedItems > 1)
             throw std::invalid_argument("Can only ask for one item when sizeType == SINGLE");
