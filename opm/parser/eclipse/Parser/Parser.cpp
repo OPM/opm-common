@@ -49,7 +49,7 @@ namespace Opm {
         return deck;
     }
 
-    void Parser::addKEYWORD(ParserKeywordConstPtr parserKeyword) {
+    void Parser::addKeyword(ParserKeywordConstPtr parserKeyword) {
         m_parserKeywords.insert(std::make_pair(parserKeyword->getName(), parserKeyword));
     }
 

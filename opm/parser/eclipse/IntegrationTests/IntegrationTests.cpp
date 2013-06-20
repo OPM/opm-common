@@ -41,7 +41,7 @@ ParserPtr createWWCTParser() {
     }
 
     ParserPtr parser(new Parser());
-    parser->addKEYWORD(parserKeyword);
+    parser->addKeyword(parserKeyword);
     return parser;
 }
 
@@ -79,7 +79,7 @@ ParserPtr createBPRParser() {
     }
 
     ParserPtr parser(new Parser());
-    parser->addKEYWORD(parserKeyword);
+    parser->addKeyword(parserKeyword);
     return parser;
 }
 

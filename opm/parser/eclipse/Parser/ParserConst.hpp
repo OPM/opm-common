@@ -23,7 +23,7 @@
 
 namespace Opm {
     namespace ParserConst {
-        const unsigned int maxKEYWORDLength = 8;
+        const unsigned int maxKeywordLength = 8;
     }
 }
 

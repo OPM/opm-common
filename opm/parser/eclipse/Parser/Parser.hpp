@@ -50,7 +50,7 @@ namespace Opm {
         RawDeckPtr readToRawDeck(const std::string& path) const;
 
         /// Method to add ParserKeyword instances, these holding type and size information about the keywords and their data.
-        void addKEYWORD(ParserKeywordConstPtr parserKeyword);
+        void addKeyword(ParserKeywordConstPtr parserKeyword);
         bool hasKeyword(const std::string& keyword) const;
 
     private:

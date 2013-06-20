@@ -31,7 +31,7 @@ namespace Opm {
     }
 
     ParserKeyword::ParserKeyword(const std::string& name, ParserRecordSizeConstPtr recordSize) {
-        if (name.length() > ParserConst::maxKEYWORDLength)
+        if (name.length() > ParserConst::maxKeywordLength)
             throw std::invalid_argument("Given keyword name is too long - max 8 characters.");
 
         for (unsigned int i = 0; i < name.length(); i++)
