@@ -33,15 +33,15 @@
 using namespace Opm;
 
 ParserPtr createWWCTParser() {
-    ParserKWPtr parserKW(new ParserKW("WWCT"));
+    ParserKeywordPtr parserKeyword(new ParserKeyword("WWCT"));
     {
         ParserRecordPtr wwctRecord(new ParserRecord());
         wwctRecord->addItem(ParserStringItemConstPtr(new ParserStringItem("WELL", ALL)));
-        parserKW->setRecord(wwctRecord);
+        parserKeyword->setRecord(wwctRecord);
     }
 
     ParserPtr parser(new Parser());
-    parser->addKW(parserKW);
+    parser->addKEYWORD(parserKeyword);
     return parser;
 }
 
@@ -68,18 +68,18 @@ BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_dataIsCorrect) {
 }
 
 ParserPtr createBPRParser() {
-    ParserKWPtr parserKW(new ParserKW("BPR"));
+    ParserKeywordPtr parserKeyword(new ParserKeyword("BPR"));
     {
         ParserRecordPtr bprRecord(new ParserRecord());
         bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("I", SINGLE)));
         bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("J", SINGLE)));
         bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("K", SINGLE)));
 
-        parserKW->setRecord(bprRecord);
+        parserKeyword->setRecord(bprRecord);
     }
 
     ParserPtr parser(new Parser());
-    parser->addKW(parserKW);
+    parser->addKEYWORD(parserKeyword);
     return parser;
 }
 
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_dataiscorrect) {
     ParserPtr parser = createBPRParser();
     DeckPtr deck = parser->parse(singleKeywordFile.string());
 
-    DeckKWConstPtr keyword = deck->getKeyword("BPR");
+    DeckKeywordConstPtr keyword = deck->getKeyword("BPR");
     BOOST_CHECK_EQUAL(2U, keyword->size());
 
     DeckRecordConstPtr record1 = keyword->getRecord(0);

@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(hasKeyword_empty_returnFalse) {
 
 BOOST_AUTO_TEST_CASE(addKeyword_singlekeyword_keywordAdded) {
     Deck deck;
-    DeckKWConstPtr keyword(new DeckKW("BJARNE"));
+    DeckKeywordConstPtr keyword(new DeckKeyword("BJARNE"));
     BOOST_CHECK_NO_THROW(deck.addKeyword(keyword));
 }
 
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(getKeyword_nosuchkeyword_throws) {
 
 BOOST_AUTO_TEST_CASE(getKeyword_singlekeyword_keywordreturned) {
     Deck deck;
-    DeckKWConstPtr keyword(new DeckKW("BJARNE"));
+    DeckKeywordConstPtr keyword(new DeckKeyword("BJARNE"));
     deck.addKeyword(keyword);
     BOOST_CHECK_EQUAL(keyword, deck.getKeyword("BJARNE"));
 }

@@ -16,36 +16,36 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef PARSER_KW_H
-#define PARSER_KW_H
+#ifndef PARSER_KEYWORD_H
+#define PARSER_KEYWORD_H
 
 #include <string>
 #include <boost/shared_ptr.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserRecordSize.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
-#include <opm/parser/eclipse/Deck/DeckKW.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
 
 
 namespace Opm {
 
-    class ParserKW {
+    class ParserKeyword {
     public:
-        ParserKW(const std::string& name);
-        ParserKW(const std::string& name, ParserRecordSizeConstPtr recordSize);
+        ParserKeyword(const std::string& name);
+        ParserKeyword(const std::string& name, ParserRecordSizeConstPtr recordSize);
         void setRecord(ParserRecordConstPtr record);
         ParserRecordConstPtr getRecord();
         const std::string& getName() const;
-        DeckKWPtr parse(RawKeywordConstPtr rawKeyword) const;
+        DeckKeywordPtr parse(RawKeywordConstPtr rawKeyword) const;
         
     private:
         std::string m_name;
         ParserRecordConstPtr m_record;
         ParserRecordSizeConstPtr recordSize;
     };
-    typedef boost::shared_ptr<ParserKW> ParserKWPtr;
-    typedef boost::shared_ptr<const ParserKW> ParserKWConstPtr;
+    typedef boost::shared_ptr<ParserKeyword> ParserKeywordPtr;
+    typedef boost::shared_ptr<const ParserKeyword> ParserKeywordConstPtr;
 }
 
 #endif

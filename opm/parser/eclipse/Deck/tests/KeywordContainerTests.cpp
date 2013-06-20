@@ -24,7 +24,7 @@
 #include <boost/test/unit_test.hpp>
 #include <opm/parser/eclipse/Deck/KeywordContainer.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Deck/DeckKW.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 
 using namespace Opm;
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(hasKeyword_empty_returnsfalse) {
 
 BOOST_AUTO_TEST_CASE(addKeyword_keywordAdded_keywordAdded) {
     KeywordContainerPtr container(new KeywordContainer());
-    DeckKWPtr keyword = DeckKWPtr(new DeckKW("Truls"));
+    DeckKeywordPtr keyword = DeckKeywordPtr(new DeckKeyword("Truls"));
     container->addKeyword(keyword);
     
     BOOST_CHECK_EQUAL(true, container->hasKeyword("Truls"));
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(getKeyword_nosuchkeyword_throws) {
 
 BOOST_AUTO_TEST_CASE(getKeyword_singleKeyword_keywordReturned) {
     KeywordContainerPtr container(new KeywordContainer());
-    DeckKWPtr keyword = DeckKWPtr(new DeckKW("TRULS"));
+    DeckKeywordPtr keyword = DeckKeywordPtr(new DeckKeyword("TRULS"));
     container->addKeyword(keyword);
     BOOST_CHECK_EQUAL(keyword, container->getKeyword("TRULS"));
 }

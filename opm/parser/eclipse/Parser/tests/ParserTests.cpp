@@ -25,7 +25,7 @@
 
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParserKW.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecordSize.hpp>
 #include <opm/parser/eclipse/RawDeck/RawDeck.hpp>
 
@@ -41,25 +41,25 @@ BOOST_AUTO_TEST_CASE(Initializing) {
     BOOST_CHECK_NO_THROW(ParserConstPtr parserConstPtr(new Parser()));
 }
 
-BOOST_AUTO_TEST_CASE(addKW_keyword_doesntfail) {
+BOOST_AUTO_TEST_CASE(addKEYWORD_keyword_doesntfail) {
     Parser parser;
     {
         ParserRecordSizePtr recordSize(new ParserRecordSize(9));
-        ParserKWPtr equilKW(new ParserKW("EQUIL", recordSize));
-        parser.addKW(equilKW);
+        ParserKeywordPtr equilKEYWORD(new ParserKeyword("EQUIL", recordSize));
+        parser.addKEYWORD(equilKEYWORD);
     }
 }
 
 BOOST_AUTO_TEST_CASE(hasKeyword_hasKeyword_returnstrue) {
     ParserPtr parser(new Parser());
-    parser->addKW(ParserKWConstPtr(new ParserKW("FJAS")));
+    parser->addKEYWORD(ParserKeywordConstPtr(new ParserKeyword("FJAS")));
     BOOST_CHECK(parser->hasKeyword("FJAS"));
 }
 
 /***************** Simple Int parsing ********************************/
 
-ParserKWPtr setupParserKWInt(std::string name, int numberOfItems) {
-    ParserKWPtr parserKw(new ParserKW(name));
+ParserKeywordPtr setupParserKeywordInt(std::string name, int numberOfItems) {
+    ParserKeywordPtr parserKeyword(new ParserKeyword(name));
     ParserRecordPtr parserRecord(new ParserRecord());
     for (int i = 0; i < numberOfItems; i++) {
         std::string name = "ITEM_" + boost::lexical_cast<std::string>(i);
@@ -67,14 +67,14 @@ ParserKWPtr setupParserKWInt(std::string name, int numberOfItems) {
         parserRecord->addItem(intItem);
     }
 
-    parserKw->setRecord(parserRecord);
+    parserKeyword->setRecord(parserRecord);
 
-    return parserKw;
+    return parserKeyword;
 }
 
 RawDeckPtr setupRawDeckInt(std::string name, int numberOfRecords, int numberOfItems) {
-    RawParserKWsConstPtr rawParserKWs(new RawParserKWs());
-    RawDeckPtr rawDeck(new RawDeck(rawParserKWs));
+    RawParserKeywordsConstPtr rawParserKeywords(new RawParserKeywords());
+    RawDeckPtr rawDeck(new RawDeck(rawParserKeywords));
 
     RawKeywordPtr rawKeyword(new RawKeyword(name));
     for (int records = 0; records < numberOfRecords; records++) {
@@ -90,7 +90,7 @@ RawDeckPtr setupRawDeckInt(std::string name, int numberOfRecords, int numberOfIt
 
 BOOST_AUTO_TEST_CASE(parseFromRawDeck_singleRawSingleIntItem_deckReturned) {
     ParserPtr parser(new Parser());
-    parser->addKW(setupParserKWInt("RANDOM", 1));
+    parser->addKEYWORD(setupParserKeywordInt("RANDOM", 1));
     DeckPtr deck = parser->parseFromRawDeck(setupRawDeckInt("RANDOM", 1, 1));
 
     BOOST_CHECK(!deck->hasKeyword("ANDOM"));
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(parseFromRawDeck_singleRawSingleIntItem_deckReturned) {
 
 BOOST_AUTO_TEST_CASE(parseFromRawDeck_singleRawRecordsSeveralIntItem_deckReturned) {
     ParserPtr parser(new Parser());
-    parser->addKW(setupParserKWInt("RANDOM", 50));
+    parser->addKEYWORD(setupParserKeywordInt("RANDOM", 50));
     DeckPtr deck = parser->parseFromRawDeck(setupRawDeckInt("RANDOM", 1, 50));
 
     BOOST_CHECK(deck->hasKeyword("RANDOM"));
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(parseFromRawDeck_singleRawRecordsSeveralIntItem_deckReturne
 
 BOOST_AUTO_TEST_CASE(parseFromRawDeck_severalRawRecordsSeveralIntItem_deckReturned) {
     ParserPtr parser(new Parser());
-    parser->addKW(setupParserKWInt("RANDOM", 50));
+    parser->addKEYWORD(setupParserKeywordInt("RANDOM", 50));
     DeckPtr deck = parser->parseFromRawDeck(setupRawDeckInt("RANDOM", 10, 50));
 
     BOOST_CHECK(deck->hasKeyword("RANDOM"));
@@ -120,8 +120,8 @@ BOOST_AUTO_TEST_CASE(parseFromRawDeck_severalRawRecordsSeveralIntItem_deckReturn
 
 /***************** Simple String parsing ********************************/
 
-ParserKWPtr setupParserKWString(std::string name, int numberOfItems) {
-    ParserKWPtr parserKw(new ParserKW(name));
+ParserKeywordPtr setupParserKeywordString(std::string name, int numberOfItems) {
+    ParserKeywordPtr parserKeyword(new ParserKeyword(name));
     ParserRecordPtr parserRecord(new ParserRecord());
     for (int i = 0; i < numberOfItems; i++) {
         std::string name = "ITEM_" + boost::lexical_cast<std::string>(i);
@@ -129,14 +129,14 @@ ParserKWPtr setupParserKWString(std::string name, int numberOfItems) {
         parserRecord->addItem(stringItem);
     }
 
-    parserKw->setRecord(parserRecord);
+    parserKeyword->setRecord(parserRecord);
 
-    return parserKw;
+    return parserKeyword;
 }
 
 RawDeckPtr setupRawDeckString(std::string name, int numberOfRecords, int numberOfItems) {
-    RawParserKWsConstPtr rawParserKWs(new RawParserKWs());
-    RawDeckPtr rawDeck(new RawDeck(rawParserKWs));
+    RawParserKeywordsConstPtr rawParserKeywords(new RawParserKeywords());
+    RawDeckPtr rawDeck(new RawDeck(rawParserKeywords));
 
     RawKeywordPtr rawKeyword(new RawKeyword(name));
     for (int records = 0; records < numberOfRecords; records++) {
@@ -154,7 +154,7 @@ RawDeckPtr setupRawDeckString(std::string name, int numberOfRecords, int numberO
 
 BOOST_AUTO_TEST_CASE(parseFromRawDeck_singleRawRecordsSingleStringItem_deckReturned) {
     ParserPtr parser(new Parser());
-    parser->addKW(setupParserKWString("WWCT", 1));
+    parser->addKEYWORD(setupParserKeywordString("WWCT", 1));
     DeckPtr deck = parser->parseFromRawDeck(setupRawDeckString("WWCT",1, 1));
 
     BOOST_CHECK(deck->hasKeyword("WWCT"));

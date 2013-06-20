@@ -28,7 +28,7 @@
 #include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
 #include <opm/parser/eclipse/RawDeck/RawDeck.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Parser/ParserKW.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 
 namespace Opm {
 
@@ -49,12 +49,12 @@ namespace Opm {
         /// Reads an eclipse file and returns a tokenized RawDeck
         RawDeckPtr readToRawDeck(const std::string& path) const;
 
-        /// Method to add ParserKW instances, these holding type and size information about the keywords and their data.
-        void addKW(ParserKWConstPtr parserKW);
+        /// Method to add ParserKeyword instances, these holding type and size information about the keywords and their data.
+        void addKEYWORD(ParserKeywordConstPtr parserKeyword);
         bool hasKeyword(const std::string& keyword) const;
 
     private:
-        std::map<std::string, ParserKWConstPtr> m_parserKeywords;
+        std::map<std::string, ParserKeywordConstPtr> m_parserKeywords;
         void readToRawDeck(RawDeckPtr rawDeck, const std::string& path) const;
         void processIncludeKeyword(RawDeckPtr rawDeck, RawKeywordConstPtr keyword, const boost::filesystem::path& dataFolderPath) const;
         boost::filesystem::path verifyValidInputPath(const std::string& inputPath) const;

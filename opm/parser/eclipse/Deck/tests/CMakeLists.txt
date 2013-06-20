@@ -22,7 +22,7 @@ add_executable(runKeywordContainerTests KeywordContainerTests.cpp)
 target_link_libraries(runKeywordContainerTests Parser Logger ${Boost_LIBRARIES})
 add_test(NAME runKeywordContainerTests  COMMAND ${EXECUTABLE_OUTPUT_PATH}/runKeywordContainerTests  )
 
-add_executable(runDeckKWTests DeckKWTests.cpp)
-target_link_libraries(runDeckKWTests Parser Logger ${Boost_LIBRARIES})
-add_test(NAME runDeckKWTests  COMMAND ${EXECUTABLE_OUTPUT_PATH}/runDeckKWTests  )
+add_executable(runDeckKeywordTests DeckKeywordTests.cpp)
+target_link_libraries(runDeckKeywordTests Parser Logger ${Boost_LIBRARIES})
+add_test(NAME runDeckKeywordTests  COMMAND ${EXECUTABLE_OUTPUT_PATH}/runDeckKeywordTests  )
 

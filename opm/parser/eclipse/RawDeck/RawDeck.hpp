@@ -24,7 +24,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/filesystem.hpp>
 #include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
-#include <opm/parser/eclipse/RawDeck/RawParserKWs.hpp>
+#include <opm/parser/eclipse/RawDeck/RawParserKeywords.hpp>
 
 namespace Opm {
 
@@ -38,15 +38,15 @@ namespace Opm {
 
         /// Constructor that requires information about the fixed record length keywords. 
         /// All relevant keywords with a fixed number of records 
-        /// must be specified through the RawParserKW class. This is to be able to know how the records
+        /// must be specified through the RawParserKeyword class. This is to be able to know how the records
         /// of the keyword is structured.
 
-        RawDeck(RawParserKWsConstPtr rawParserKWs);
+        RawDeck(RawParserKeywordsConstPtr rawParserKeywords);
         void addKeyword(RawKeywordConstPtr keyword);
         RawKeywordConstPtr getKeyword(size_t index) const;
         size_t size() const;
         
-        // This will move to Parser class when m_rawParserKWs is moved.
+        // This will move to Parser class when m_rawParserKeywords is moved.
         bool isKeywordFinished(RawKeywordConstPtr rawKeyword);
       
         friend std::ostream& operator<<(std::ostream& os, const RawDeck& deck);
@@ -55,8 +55,8 @@ namespace Opm {
     private:
         std::vector<RawKeywordConstPtr> m_keywords;
         
-        // This variable should be replaced by an equivalent collection of ParserKWs, and put in the Parser class
-        RawParserKWsConstPtr m_rawParserKWs;
+        // This variable should be replaced by an equivalent collection of ParserKeywords, and put in the Parser class
+        RawParserKeywordsConstPtr m_rawParserKeywords;
 
         void processIncludeKeyword(RawKeywordConstPtr keyword, const boost::filesystem::path& dataFolderPath);
         static boost::filesystem::path verifyValidInputPath(const std::string& inputPath);

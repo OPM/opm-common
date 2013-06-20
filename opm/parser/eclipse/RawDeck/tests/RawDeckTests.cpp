@@ -23,7 +23,7 @@
 #define BOOST_TEST_MODULE RawDeckTests
 #include <boost/test/unit_test.hpp>
 #include <opm/parser/eclipse/RawDeck/RawDeck.hpp>
-#include <opm/parser/eclipse/RawDeck/RawParserKWs.hpp>
+#include <opm/parser/eclipse/RawDeck/RawParserKeywords.hpp>
 #include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
 #include <boost/test/test_tools.hpp>
 
@@ -32,25 +32,25 @@
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(Initialize_NoThrow) {
-    RawParserKWsConstPtr fixedKeywords(new RawParserKWs());
+    RawParserKeywordsConstPtr fixedKeywords(new RawParserKeywords());
     BOOST_CHECK_NO_THROW(RawDeck rawDeck(fixedKeywords));
 }
 
 
 BOOST_AUTO_TEST_CASE(GetNumberOfKeywords_EmptyDeck_RetunsZero) {
-    RawParserKWsConstPtr fixedKeywords(new RawParserKWs());
+    RawParserKeywordsConstPtr fixedKeywords(new RawParserKeywords());
     RawDeckPtr rawDeck(new RawDeck(fixedKeywords));
     BOOST_CHECK_EQUAL((unsigned) 0, rawDeck->size());
 }
 
 BOOST_AUTO_TEST_CASE(GetKeyword_EmptyDeck_ThrowsExeption) {
-    RawParserKWsConstPtr fixedKeywords(new RawParserKWs());
+    RawParserKeywordsConstPtr fixedKeywords(new RawParserKeywords());
     RawDeckPtr rawDeck(new RawDeck(fixedKeywords));
     BOOST_CHECK_THROW(rawDeck->getKeyword(0), std::range_error);
 }
 
 BOOST_AUTO_TEST_CASE(addKeyword_withkeywords_keywordAdded) {
-    RawParserKWsConstPtr fixedKeywords(new RawParserKWs());
+    RawParserKeywordsConstPtr fixedKeywords(new RawParserKeywords());
     RawDeckPtr rawDeck(new RawDeck(fixedKeywords));
     
     RawKeywordPtr keyword(new RawKeyword("BJARNE"));

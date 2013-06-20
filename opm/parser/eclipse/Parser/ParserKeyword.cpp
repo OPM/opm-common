@@ -22,16 +22,16 @@
 
 #include <opm/parser/eclipse/Parser/ParserConst.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecordSize.hpp>
-#include <opm/parser/eclipse/Parser/ParserKW.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 
 namespace Opm {
 
-    ParserKW::ParserKW(const std::string& name) {
+    ParserKeyword::ParserKeyword(const std::string& name) {
         m_name = name;
     }
 
-    ParserKW::ParserKW(const std::string& name, ParserRecordSizeConstPtr recordSize) {
-        if (name.length() > ParserConst::maxKWLength)
+    ParserKeyword::ParserKeyword(const std::string& name, ParserRecordSizeConstPtr recordSize) {
+        if (name.length() > ParserConst::maxKEYWORDLength)
             throw std::invalid_argument("Given keyword name is too long - max 8 characters.");
 
         for (unsigned int i = 0; i < name.length(); i++)
@@ -42,20 +42,20 @@ namespace Opm {
         this->recordSize = recordSize;
     }
 
-    void ParserKW::setRecord(ParserRecordConstPtr record) {
+    void ParserKeyword::setRecord(ParserRecordConstPtr record) {
         m_record = record;
     }
 
-    ParserRecordConstPtr ParserKW::getRecord() {
+    ParserRecordConstPtr ParserKeyword::getRecord() {
         return m_record;
     }
     
-    const std::string& ParserKW::getName() const {
+    const std::string& ParserKeyword::getName() const {
         return m_name;
     }
 
-    DeckKWPtr ParserKW::parse(RawKeywordConstPtr rawKeyword) const {
-        DeckKWPtr keyword(new DeckKW(getName()));
+    DeckKeywordPtr ParserKeyword::parse(RawKeywordConstPtr rawKeyword) const {
+        DeckKeywordPtr keyword(new DeckKeyword(getName()));
         if (m_record != NULL) {
             for (size_t i=0; i<rawKeyword->size(); i++) {
                 DeckRecordConstPtr deckRecord = m_record->parse(rawKeyword->getRecord(i));
@@ -63,7 +63,7 @@ namespace Opm {
             }
         }
         else 
-            throw std::logic_error("Unable to parse rawKeyword, because the ParserKW's record is not set!");
+            throw std::logic_error("Unable to parse rawKeyword, because the ParserKeyword's record is not set!");
         
         return keyword;
     }

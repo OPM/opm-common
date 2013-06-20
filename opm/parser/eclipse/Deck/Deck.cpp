@@ -29,11 +29,11 @@ namespace Opm {
         return m_keywords->hasKeyword(keyword);
     }
     
-    void Deck::addKeyword( DeckKWConstPtr keyword) {
+    void Deck::addKeyword( DeckKeywordConstPtr keyword) {
         m_keywords->addKeyword(keyword);
     }
     
-    DeckKWConstPtr Deck::getKeyword(const std::string& keyword) const {
+    DeckKeywordConstPtr Deck::getKeyword(const std::string& keyword) const {
         return m_keywords->getKeyword(keyword);
     }
 

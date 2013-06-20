@@ -18,49 +18,49 @@
  */
 
 
-#define BOOST_TEST_MODULE DeckKWTests
+#define BOOST_TEST_MODULE DeckKeywordTests
 
 #include <stdexcept>
 #include <boost/test/unit_test.hpp>
-#include <opm/parser/eclipse/Deck/DeckKW.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(Initialize) {
-    DeckKW deckKW1("KW");
-    DeckKWPtr deckKW2(new DeckKW("KW"));
-    DeckKWConstPtr deckKW3(new DeckKW("KW"));
+    DeckKeyword deckKeyword1("KW");
+    DeckKeywordPtr deckKeyword2(new DeckKeyword("KW"));
+    DeckKeywordConstPtr deckKeyword3(new DeckKeyword("KW"));
 }
 BOOST_AUTO_TEST_CASE(name_nameSetInConstructor_nameReturned) {
-    DeckKWPtr deckKW(new DeckKW("KW"));
-    BOOST_CHECK_EQUAL("KW", deckKW->name());
+    DeckKeywordPtr deckKeyword(new DeckKeyword("KW"));
+    BOOST_CHECK_EQUAL("KW", deckKeyword->name());
 }
 
 BOOST_AUTO_TEST_CASE(size_noRecords_returnszero) {
-    DeckKWPtr deckKW(new DeckKW("KW"));
-    BOOST_CHECK_EQUAL(0U, deckKW->size());
+    DeckKeywordPtr deckKeyword(new DeckKeyword("KW"));
+    BOOST_CHECK_EQUAL(0U, deckKeyword->size());
 }
 
 
 BOOST_AUTO_TEST_CASE(addRecord_onerecord_recordadded) {
-    DeckKWPtr deckKW(new DeckKW("KW"));
-    deckKW->addRecord(DeckRecordConstPtr(new DeckRecord()));
-    BOOST_CHECK_EQUAL(1U, deckKW->size());
+    DeckKeywordPtr deckKeyword(new DeckKeyword("KW"));
+    deckKeyword->addRecord(DeckRecordConstPtr(new DeckRecord()));
+    BOOST_CHECK_EQUAL(1U, deckKeyword->size());
 }
 
 BOOST_AUTO_TEST_CASE(getRecord_onerecord_recordretured) {
-    DeckKWPtr deckKW(new DeckKW("KW"));
+    DeckKeywordPtr deckKeyword(new DeckKeyword("KW"));
     DeckRecordConstPtr deckRecord(new DeckRecord());
-    deckKW->addRecord(deckRecord);
-    BOOST_CHECK_EQUAL(deckRecord, deckKW->getRecord(0));
+    deckKeyword->addRecord(deckRecord);
+    BOOST_CHECK_EQUAL(deckRecord, deckKeyword->getRecord(0));
 }
 
 
 BOOST_AUTO_TEST_CASE(getRecord_outofrange_exceptionthrown) {
-    DeckKWPtr deckKW(new DeckKW("KW"));
+    DeckKeywordPtr deckKeyword(new DeckKeyword("KW"));
     DeckRecordConstPtr deckRecord(new DeckRecord());
-    deckKW->addRecord(deckRecord);
-    BOOST_CHECK_THROW(deckKW->getRecord(1), std::range_error);
+    deckKeyword->addRecord(deckRecord);
+    BOOST_CHECK_THROW(deckKeyword->getRecord(1), std::range_error);
 }
 
 

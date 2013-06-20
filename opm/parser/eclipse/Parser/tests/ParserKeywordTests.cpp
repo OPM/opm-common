@@ -21,7 +21,7 @@
 #define BOOST_TEST_MODULE ParserTests
 #include <boost/test/unit_test.hpp>
 
-#include "opm/parser/eclipse/Parser/ParserKW.hpp"
+#include "opm/parser/eclipse/Parser/ParserKeyword.hpp"
 #include "opm/parser/eclipse/Parser/ParserIntItem.hpp"
 #include "opm/parser/eclipse/Parser/ParserItem.hpp"
 
@@ -30,42 +30,42 @@
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(construct_withname_nameSet) {
-    ParserKW parserKW("BPR");
-    BOOST_CHECK_EQUAL(parserKW.getName(), "BPR");
+    ParserKeyword parserKeyword("BPR");
+    BOOST_CHECK_EQUAL(parserKeyword.getName(), "BPR");
 }
 
 BOOST_AUTO_TEST_CASE(NamedInit) {
     std::string keyword("KEYWORD");
 
     ParserRecordSizeConstPtr recordSize(new ParserRecordSize(100));
-    ParserKW parserKW(keyword, recordSize);
-    BOOST_CHECK_EQUAL(parserKW.getName(), keyword);
+    ParserKeyword parserKeyword(keyword, recordSize);
+    BOOST_CHECK_EQUAL(parserKeyword.getName(), keyword);
 }
 
 BOOST_AUTO_TEST_CASE(setRecord_validRecord_recordSet) {
-    ParserKWPtr parserKW(new ParserKW("JA"));
+    ParserKeywordPtr parserKeyword(new ParserKeyword("JA"));
     ParserRecordConstPtr parserRecord = ParserRecordConstPtr(new ParserRecord());
-    parserKW->setRecord(parserRecord);
-    BOOST_CHECK_EQUAL(parserRecord, parserKW->getRecord());
+    parserKeyword->setRecord(parserRecord);
+    BOOST_CHECK_EQUAL(parserRecord, parserKeyword->getRecord());
 }
 
 BOOST_AUTO_TEST_CASE(NameTooLong) {
     std::string keyword("KEYWORDTOOLONG");
     ParserRecordSizeConstPtr recordSize(new ParserRecordSize(100));
-    BOOST_CHECK_THROW(ParserKW parserKW(keyword, recordSize), std::invalid_argument);
+    BOOST_CHECK_THROW(ParserKeyword parserKeyword(keyword, recordSize), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(MixedCase) {
     std::string keyword("KeyWord");
 
     ParserRecordSizeConstPtr recordSize(new ParserRecordSize(100));
-    BOOST_CHECK_THROW(ParserKW parserKW(keyword, recordSize), std::invalid_argument);
+    BOOST_CHECK_THROW(ParserKeyword parserKeyword(keyword, recordSize), std::invalid_argument);
 }
 
-BOOST_AUTO_TEST_CASE(parse_rawKeyword_returnsDeckKW) {
+BOOST_AUTO_TEST_CASE(parse_rawKeyword_returnsDeckKeyword) {
     RawKeywordPtr rawKeyword(new RawKeyword("TEST2"));
     rawKeyword->addRawRecordString("2 3 5 /");
-    ParserKWPtr parserKW(new ParserKW("TEST2"));
+    ParserKeywordPtr parserKeyword(new ParserKeyword("TEST2"));
     
     ParserRecordPtr parserRecord = ParserRecordPtr(new ParserRecord());
 
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(parse_rawKeyword_returnsDeckKW) {
     ParserItemPtr item3(new ParserIntItem("K", SINGLE));
     parserRecord->addItem(item3);
     
-    parserKW->setRecord(parserRecord);
-    DeckKWPtr deckKW = parserKW->parse(rawKeyword);
-    BOOST_CHECK_EQUAL(1U, deckKW->size());
+    parserKeyword->setRecord(parserRecord);
+    DeckKeywordPtr deckKeyword = parserKeyword->parse(rawKeyword);
+    BOOST_CHECK_EQUAL(1U, deckKeyword->size());
 }

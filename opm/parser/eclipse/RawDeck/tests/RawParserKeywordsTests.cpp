@@ -19,33 +19,33 @@
 
 #include <map>
 #include <string>
-#define BOOST_TEST_MODULE RawParserKWsTests
+#define BOOST_TEST_MODULE RawParserKeywordsTests
 #include <boost/test/unit_test.hpp>
 #include <opm/parser/eclipse/RawDeck/RawDeck.hpp>
-#include <opm/parser/eclipse/RawDeck/RawParserKWs.hpp>
+#include <opm/parser/eclipse/RawDeck/RawParserKeywords.hpp>
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(KeywordExists_KeywordNotPresent_ReturnsFalse) {
-    RawParserKWsConstPtr parserKWs(new RawParserKWs());
-    BOOST_CHECK_EQUAL(false, parserKWs->keywordExists("FLASKE"));
+    RawParserKeywordsConstPtr parserKeywords(new RawParserKeywords());
+    BOOST_CHECK_EQUAL(false, parserKeywords->keywordExists("FLASKE"));
 }
 
 BOOST_AUTO_TEST_CASE(KeywordExists_KeywordPresent_ReturnsTrue) {
-    RawParserKWsConstPtr parserKWs(new RawParserKWs());
-    BOOST_CHECK_EQUAL(true, parserKWs->keywordExists("TITLE"));
+    RawParserKeywordsConstPtr parserKeywords(new RawParserKeywords());
+    BOOST_CHECK_EQUAL(true, parserKeywords->keywordExists("TITLE"));
 }
 
 BOOST_AUTO_TEST_CASE(GetFixedNumberOfRecords_KeywordNotPresent_ThrowsException) {
-    RawParserKWsConstPtr parserKWs(new RawParserKWs());
-    BOOST_CHECK_THROW(parserKWs->getFixedNumberOfRecords("FLASKE"), std::invalid_argument);
+    RawParserKeywordsConstPtr parserKeywords(new RawParserKeywords());
+    BOOST_CHECK_THROW(parserKeywords->getFixedNumberOfRecords("FLASKE"), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(GetFixedNumberOfRecords_OneRecord_ReturnsOne) {
-    RawParserKWsConstPtr parserKWs(new RawParserKWs());
-    BOOST_CHECK_EQUAL((unsigned) 1, parserKWs->getFixedNumberOfRecords("GRIDUNIT"));
+    RawParserKeywordsConstPtr parserKeywords(new RawParserKeywords());
+    BOOST_CHECK_EQUAL((unsigned) 1, parserKeywords->getFixedNumberOfRecords("GRIDUNIT"));
 }
 
 BOOST_AUTO_TEST_CASE(GetFixedNumberOfRecords_ZeroRecords_ReturnsZero) {
-    RawParserKWsConstPtr parserKWs(new RawParserKWs());
-    BOOST_CHECK_EQUAL((unsigned) 0, parserKWs->getFixedNumberOfRecords("METRIC"));
+    RawParserKeywordsConstPtr parserKeywords(new RawParserKeywords());
+    BOOST_CHECK_EQUAL((unsigned) 0, parserKeywords->getFixedNumberOfRecords("METRIC"));
 }

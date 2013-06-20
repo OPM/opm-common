@@ -24,8 +24,8 @@
 
 namespace Opm {
 
-    RawDeck::RawDeck(RawParserKWsConstPtr rawParserKWs) {
-        m_rawParserKWs = rawParserKWs;
+    RawDeck::RawDeck(RawParserKeywordsConstPtr rawParserKeywords) {
+        m_rawParserKeywords = rawParserKeywords;
     }
 
     void RawDeck::addKeyword(RawKeywordConstPtr keyword) {
@@ -44,11 +44,11 @@ namespace Opm {
     }
 
     /// Checks if the current keyword being read is finished, based on the number of records
-    /// specified for the current keyword type in the RawParserKW class.
+    /// specified for the current keyword type in the RawParserKeyword class.
 
     bool RawDeck::isKeywordFinished(RawKeywordConstPtr rawKeyword) {
-        if (m_rawParserKWs->keywordExists(rawKeyword->getKeywordName())) {
-            return rawKeyword->size() == m_rawParserKWs->getFixedNumberOfRecords(rawKeyword->getKeywordName());
+        if (m_rawParserKeywords->keywordExists(rawKeyword->getKeywordName())) {
+            return rawKeyword->size() == m_rawParserKeywords->getFixedNumberOfRecords(rawKeyword->getKeywordName());
         }
         return false;
     }

@@ -17,30 +17,30 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <stdexcept>
-#include "RawParserKWs.hpp"
+#include "RawParserKeywords.hpp"
 
 namespace Opm {
 
-    RawParserKWs::RawParserKWs() {
+    RawParserKeywords::RawParserKeywords() {
         initializeFixedKeywordLenghts();
     }
 
-    bool RawParserKWs::keywordExists(const std::string& keyword) const {
+    bool RawParserKeywords::keywordExists(const std::string& keyword) const {
         return m_keywordRecordLengths.find(keyword) != m_keywordRecordLengths.end();
     }
 
-    unsigned int RawParserKWs::getFixedNumberOfRecords(const std::string& keyword) const {
+    unsigned int RawParserKeywords::getFixedNumberOfRecords(const std::string& keyword) const {
         if (keywordExists(keyword)) {
             return m_keywordRecordLengths.find(keyword) -> second;
         } else
             throw std::invalid_argument("Given keyword is not found, offending keyword: " + keyword);
     }
 
-    void RawParserKWs::add(std::pair<std::string, unsigned int> keywordAndNumRecords) {
+    void RawParserKeywords::add(std::pair<std::string, unsigned int> keywordAndNumRecords) {
         m_keywordRecordLengths.insert(keywordAndNumRecords);
     }
 
-    void RawParserKWs::initializeFixedKeywordLenghts() {
+    void RawParserKeywords::initializeFixedKeywordLenghts() {
         add(std::pair<std::string, unsigned int>("GRIDUNIT", 1));
         add(std::pair<std::string, unsigned int>("INCLUDE", 1));
         add(std::pair<std::string, unsigned int>("RADFIN4", 1));
@@ -74,7 +74,7 @@ namespace Opm {
         add(std::pair<std::string, unsigned int>("VAPOIL", 0));
     }
 
-    RawParserKWs::~RawParserKWs() {
+    RawParserKeywords::~RawParserKeywords() {
     }
 }
 

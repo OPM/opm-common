@@ -19,7 +19,7 @@
 
 #include <map>
 #include <opm/parser/eclipse/Deck/KeywordContainer.hpp>
-#include <opm/parser/eclipse/Deck/DeckKW.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 namespace Opm {
 
@@ -34,22 +34,22 @@ namespace Opm {
         return m_keywordList.size();
     }
     
-    void KeywordContainer::addKeyword(DeckKWConstPtr keyword) {
+    void KeywordContainer::addKeyword(DeckKeywordConstPtr keyword) {
         m_keywordList.push_back(keyword);
         
         if (!hasKeyword(keyword->name())) {
-            m_keywordMap[keyword->name()] = std::vector<DeckKWConstPtr>();
+            m_keywordMap[keyword->name()] = std::vector<DeckKeywordConstPtr>();
         }
         
         {
-            std::vector<DeckKWConstPtr>& keywordList = m_keywordMap[keyword->name()];
+            std::vector<DeckKeywordConstPtr>& keywordList = m_keywordMap[keyword->name()];
             keywordList.push_back(keyword);
         }
     }
     
-    DeckKWConstPtr KeywordContainer::getKeyword(const std::string& keyword) const {
+    DeckKeywordConstPtr KeywordContainer::getKeyword(const std::string& keyword) const {
         if (hasKeyword(keyword)) {
-            const std::vector<DeckKWConstPtr>& keywordList = m_keywordMap.find(keyword)->second;
+            const std::vector<DeckKeywordConstPtr>& keywordList = m_keywordMap.find(keyword)->second;
             return keywordList.back();
         }
         else

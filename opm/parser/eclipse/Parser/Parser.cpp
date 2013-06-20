@@ -17,8 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParserKW.hpp>
-#include <opm/parser/eclipse/RawDeck/RawParserKWs.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
+#include <opm/parser/eclipse/RawDeck/RawParserKeywords.hpp>
 #include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
 #include <opm/parser/eclipse/Logger/Logger.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -40,17 +40,17 @@ namespace Opm {
             RawKeywordConstPtr rawKeyword = rawDeck->getKeyword(i);
 
             if (hasKeyword(rawKeyword->getKeywordName())) {
-                ParserKWConstPtr parserKW = m_parserKeywords[rawKeyword->getKeywordName()];
-                DeckKWConstPtr deckKW = parserKW->parse(rawKeyword);
-                deck->addKeyword(deckKW);
+                ParserKeywordConstPtr parserKeyword = m_parserKeywords[rawKeyword->getKeywordName()];
+                DeckKeywordConstPtr deckKeyword = parserKeyword->parse(rawKeyword);
+                deck->addKeyword(deckKeyword);
             } else
                 std::cerr << "Keyword: " << rawKeyword->getKeywordName() << " is not recognized, skipping this." << std::endl;
         }
         return deck;
     }
 
-    void Parser::addKW(ParserKWConstPtr parserKW) {
-        m_parserKeywords.insert(std::make_pair(parserKW->getName(), parserKW));
+    void Parser::addKEYWORD(ParserKeywordConstPtr parserKeyword) {
+        m_parserKeywords.insert(std::make_pair(parserKeyword->getName(), parserKeyword));
     }
 
     bool Parser::hasKeyword(const std::string& keyword) const {
@@ -58,7 +58,7 @@ namespace Opm {
     }
 
     RawDeckPtr Parser::readToRawDeck(const std::string& path) const {
-        RawDeckPtr rawDeck(new RawDeck(RawParserKWsConstPtr(new RawParserKWs())));
+        RawDeckPtr rawDeck(new RawDeck(RawParserKeywordsConstPtr(new RawParserKeywords())));
         readToRawDeck(rawDeck, path);
         return rawDeck;
     }
@@ -66,7 +66,7 @@ namespace Opm {
     /// The main data reading function, reads one and one keyword into the RawDeck
     /// If the INCLUDE keyword is found, the specified include file is inline read into the RawDeck.
     /// The data is read into a keyword, record by record, until the fixed number of records specified
-    /// in the RawParserKW is met, or till a slash on a separate line is found.
+    /// in the RawParserKeyword is met, or till a slash on a separate line is found.
 
     void Parser::readToRawDeck(RawDeckPtr rawDeck, const std::string& path) const {
         boost::filesystem::path dataFolderPath = verifyValidInputPath(path);

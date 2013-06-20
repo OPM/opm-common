@@ -8,11 +8,11 @@ set( rawdeck_source
 RawDeck/RawDeck.cpp 
 RawDeck/RawKeyword.cpp 
 RawDeck/RawRecord.cpp 
-RawDeck/RawParserKWs.cpp )
+RawDeck/RawParserKeywords.cpp )
 
 set( deck_source
 Deck/Deck.cpp
-Deck/DeckKW.cpp
+Deck/DeckKeyword.cpp
 Deck/DeckRecord.cpp
 Deck/DeckItem.cpp
 Deck/DeckIntItem.cpp
@@ -23,7 +23,7 @@ Deck/KeywordContainer.cpp
 
 set( parser_source 
 Parser/ParserRecordSize.cpp 
-Parser/ParserKW.cpp 
+Parser/ParserKeyword.cpp 
 Parser/Parser.cpp 
 Parser/ParserRecord.cpp
 Parser/ParserItem.cpp

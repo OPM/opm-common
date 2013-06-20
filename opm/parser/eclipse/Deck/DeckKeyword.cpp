@@ -17,31 +17,30 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "DeckKW.hpp"
+#include "DeckKeyword.hpp"
 
 namespace Opm {
 
-    DeckKW::DeckKW(const std::string& keywordName) {
+    DeckKeyword::DeckKeyword(const std::string& keywordName) {
         m_keywordName = keywordName;
     }
 
-    std::string DeckKW::name() const {
+    std::string DeckKeyword::name() const {
         return m_keywordName;
     }
 
-    size_t DeckKW::size() const {
+    size_t DeckKeyword::size() const {
         return m_recordList.size();
     }
 
-    void DeckKW::addRecord(DeckRecordConstPtr record) {
+    void DeckKeyword::addRecord(DeckRecordConstPtr record) {
         m_recordList.push_back(record);
     }
-    
-    DeckRecordConstPtr DeckKW::getRecord(size_t index) const {
+
+    DeckRecordConstPtr DeckKeyword::getRecord(size_t index) const {
         if (index < m_recordList.size()) {
             return m_recordList[index];
-        }
-        else
+        } else
             throw std::range_error("Index out of range");
     }
 

@@ -1,12 +1,12 @@
 /* 
- * File:   DeckKW.hpp
+ * File:   DeckKeyword.hpp
  * Author: kflik
  *
  * Created on June 3, 2013, 12:55 PM
  */
 
-#ifndef DECKKW_HPP
-#define	DECKKW_HPP
+#ifndef DECKKEYWORD_HPP
+#define	DECKKEYWORD_HPP
 
 #include <string>
 #include <vector>
@@ -16,9 +16,9 @@
 
 namespace Opm {
 
-    class DeckKW {
+    class DeckKeyword {
     public:
-        DeckKW(const std::string& keywordName);
+        DeckKeyword(const std::string& keywordName);
         std::string name() const;
         size_t size() const;
         void addRecord(DeckRecordConstPtr record);
@@ -29,9 +29,9 @@ namespace Opm {
         std::vector<DeckRecordConstPtr> m_recordList;
 
     };
-    typedef boost::shared_ptr<DeckKW> DeckKWPtr;
-    typedef boost::shared_ptr<const DeckKW> DeckKWConstPtr;
+    typedef boost::shared_ptr<DeckKeyword> DeckKeywordPtr;
+    typedef boost::shared_ptr<const DeckKeyword> DeckKeywordConstPtr;
 }
 
-#endif	/* DECKKW_HPP */
+#endif	/* DECKKEYWORD_HPP */
 
