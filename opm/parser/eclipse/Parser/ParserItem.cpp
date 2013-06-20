@@ -38,5 +38,8 @@ namespace Opm {
         return 0;
     }
 
+    std::string ParserItem::defaultString() {
+        return "DEFAULT";
+    }
 
 }

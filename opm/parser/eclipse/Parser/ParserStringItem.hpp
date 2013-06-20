@@ -28,11 +28,23 @@ namespace Opm {
 
     class ParserStringItem : public ParserItem {
     public:
-        ParserStringItem(const std::string& itemName, ParserItemSizeEnum sizeType) : ParserItem(itemName, sizeType) {};
+        ParserStringItem(const std::string& itemName, ParserItemSizeEnum sizeType);
+        ParserStringItem(const std::string& itemName, ParserItemSizeEnum sizeType, std::string defaultValue);
+
+        DeckItemConstPtr scan(size_t expectedItems, RawRecordPtr rawRecord) const;
+        DeckItemConstPtr scan(RawRecordPtr rawRecord) const;
+        
+        std::string getDefault() const {
+            return m_default;
+        }
 
     private:
+        DeckItemConstPtr scan__(size_t expectedItems, bool readAll, RawRecordPtr rawRecord) const;
+        std::string m_default;
+    };
 
-   };
+    typedef boost::shared_ptr<const ParserStringItem> ParserStringItemConstPtr;
+    typedef boost::shared_ptr<ParserStringItem> ParserStringItemPtr;
 }
 
 #endif  /* PARSERSTRINGITEM_HPP */

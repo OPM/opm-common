@@ -22,6 +22,7 @@
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
+#include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
 
 
 namespace Opm {
@@ -29,34 +30,47 @@ namespace Opm {
     ParserIntItem::ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType) : ParserItem(itemName, sizeType) {
         m_default = defaultInt();
     }
-    
-    
+
     ParserIntItem::ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType, int defaultValue) : ParserItem(itemName, sizeType) {
         m_default = defaultValue;
     }
-  
+
+    DeckItemConstPtr ParserIntItem::scan(size_t expectedItems, RawRecordPtr rawRecord) const {
+        return scan__(expectedItems, false, rawRecord);
+    }
+
+    DeckItemConstPtr ParserIntItem::scan(RawRecordPtr rawRecord) const {
+        if (sizeType() == SINGLE)
+            return scan(1U, rawRecord);
+        else if (sizeType() == ALL)
+            return scan__(0, true, rawRecord);
+        else
+            throw std::invalid_argument("Unsupported size type, only support SINGLE and ALL. Use scan( numTokens , rawRecord) instead ");
+    }
 
     /// Scans the rawRecords data according to the ParserItems definition.
     /// returns a DeckItem object.
     /// NOTE: data are popped from the rawRecords deque!
-    DeckItemConstPtr ParserIntItem::scan__(size_t expectedItems , bool scanAll , RawRecordPtr rawRecord) const {
-        if (sizeType() == SINGLE && expectedItems > 1)
+
+    DeckItemConstPtr ParserIntItem::scan__(size_t expectedItems, bool scanAll, RawRecordPtr rawRecord) const {
+        if (sizeType() == SINGLE && expectedItems > 1) {
             throw std::invalid_argument("Can only ask for one item when sizeType == SINGLE");
+        }
         
         {
             DeckIntItemPtr deckItem(new DeckIntItem(name()));
-            
-            if ((expectedItems > 0)  || scanAll) {
+
+            if ((expectedItems > 0) || scanAll) {
                 bool defaultActive;
-                std::vector<int> intsPreparedForDeckItem = readFromRawRecord(rawRecord , scanAll , expectedItems , m_default , defaultActive);
-                
+                std::vector<int> intsPreparedForDeckItem = readFromRawRecord(rawRecord, scanAll, expectedItems, m_default, defaultActive);
+
                 if (scanAll)
                     deckItem->push_back(intsPreparedForDeckItem);
                 else if (intsPreparedForDeckItem.size() >= expectedItems) {
-                    deckItem->push_back(intsPreparedForDeckItem , expectedItems);
-                    
-                    if (intsPreparedForDeckItem.size() > expectedItems) 
-                        pushBackToRecord(rawRecord , intsPreparedForDeckItem , expectedItems , defaultActive);
+                    deckItem->push_back(intsPreparedForDeckItem, expectedItems);
+
+                    if (intsPreparedForDeckItem.size() > expectedItems)
+                        pushBackToRecord(rawRecord, intsPreparedForDeckItem, expectedItems, defaultActive);
 
                 } else {
                     std::string preparedInts = boost::lexical_cast<std::string>(intsPreparedForDeckItem.size());
@@ -65,25 +79,9 @@ namespace Opm {
                 }
 
             }
-            
+
             return deckItem;
         }
     }
-    
-
-    DeckItemConstPtr ParserIntItem::scan(size_t expectedItems, RawRecordPtr rawRecord) const {
-        return scan__( expectedItems , false , rawRecord);
-    }
-
-    
-    DeckItemConstPtr ParserIntItem::scan(RawRecordPtr rawRecord) const {
-        if (sizeType() == SINGLE) 
-            return scan(1U , rawRecord);
-        else if (sizeType() == ALL) 
-            return scan__(0 , true , rawRecord);
-        else
-            throw std::invalid_argument("Unsupported size type, only support SINGLE. Use scan( numTokens , rawRecord) instead ");
-    }
-
 
 }

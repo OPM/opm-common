@@ -17,6 +17,7 @@ Deck/DeckRecord.cpp
 Deck/DeckItem.cpp
 Deck/DeckIntItem.cpp
 Deck/DeckDoubleItem.cpp
+Deck/DeckStringItem.cpp
 Deck/KeywordContainer.cpp
 )
 

@@ -15,9 +15,9 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
-template<class T> void fillVectorFromStringToken(std::string token , std::vector<T>& dataVector, T defaultValue , bool& defaultActive) const {
+template<class T> void fillVectorFromStringToken(std::string token, std::vector<T>& dataVector, T defaultValue, bool& defaultActive) const {
   std::istringstream inputStream(token);
   size_t starPos = token.find('*');
   T value;
@@ -27,13 +27,13 @@ template<class T> void fillVectorFromStringToken(std::string token , std::vector
 
   if (hasStar) {
     bool singleDefault = (starPos == 0);
-                
+
     if (singleDefault) {
       defaultActive = true;
       inputStream.get();
       if (token.size() > 1)
         throw std::invalid_argument("Token : " + token + " is invalid.");
-      dataVector.push_back( defaultValue );
+      dataVector.push_back(defaultValue);
     } else {
       size_t multiplier;
       int starChar;
@@ -42,36 +42,34 @@ template<class T> void fillVectorFromStringToken(std::string token , std::vector
       starChar = inputStream.get();
       if (starChar != '*')
         throw std::invalid_argument("Error ...");
-                    
+
       defaultActive = (inputStream.peek() == std::char_traits<char>::eof());
-                    
+
       if (defaultActive)
         value = defaultValue;
       else
         inputStream >> value;
-                    
+
       for (size_t i = 0; i < multiplier; i++)
-        dataVector.push_back( value );
-    } 
+        dataVector.push_back(value);
+    }
   } else {
     inputStream >> value;
-    dataVector.push_back( value );
-  } 
+    dataVector.push_back(value);
+  }
 
   inputStream.get();
   if (!inputStream.eof())
     throw std::invalid_argument("Spurious data at the end of: <" + token + ">");
 }
-        
 
-
-template<class T> std::vector<T> readFromRawRecord(RawRecordPtr rawRecord , bool scanAll , size_t expectedItems , T defaultValue , bool& defaultActive) const {
+template<class T> std::vector<T> readFromRawRecord(RawRecordPtr rawRecord, bool scanAll, size_t expectedItems, T defaultValue, bool& defaultActive) const {
   bool cont = true;
   std::vector<T> data;
   do {
     std::string token = rawRecord->pop_front();
-    fillVectorFromStringToken(token, data , defaultValue , defaultActive);
-                
+    fillVectorFromStringToken(token, data, defaultValue, defaultActive);
+
     if (rawRecord->size() == 0)
       cont = false;
     else {
@@ -82,20 +80,19 @@ template<class T> std::vector<T> readFromRawRecord(RawRecordPtr rawRecord , bool
   } while (cont);
   return data;
 }
-        
 
-template <class T> void pushBackToRecord( RawRecordPtr rawRecord , std::vector<T>& data , size_t expectedItems , bool defaultActive) const {
+template <class T> void pushBackToRecord(RawRecordPtr rawRecord, std::vector<T>& data, size_t expectedItems, bool defaultActive) const {
   size_t extraItems = data.size() - expectedItems;
-            
-  for (size_t i=1; i <= extraItems; i++) {
-    if (defaultActive) 
+
+  for (size_t i = 1; i <= extraItems; i++) {
+    if (defaultActive)
       rawRecord->push_front("*");
     else {
       size_t offset = data.size();
-      int intValue = data[ offset - i ];
-      std::string stringValue = boost::lexical_cast<std::string>( intValue );
-                    
-      rawRecord->push_front( stringValue );
+      T intValue = data[ offset - i ];
+      std::string stringValue = boost::lexical_cast<std::string>(intValue);
+
+      rawRecord->push_front(stringValue);
     }
   }
 }

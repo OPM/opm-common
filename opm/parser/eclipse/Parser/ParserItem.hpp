@@ -44,13 +44,15 @@ namespace Opm {
     ParserItemSizeEnum sizeType() const;
 
     static int defaultInt();
+    static std::string defaultString();
+
 
     virtual ~ParserItem() {
     }
     
   protected:
 
-#include "ParserItemTemplate.hpp"
+#include <opm/parser/eclipse/Parser/ParserItemTemplate.hpp>
 
   private:
     std::string m_name;
@@ -63,41 +65,3 @@ namespace Opm {
 
 #endif
 
-//        bool scanItem(const std::string& itemString, T& value) {
-//            std::istringstream inputStream(itemString);
-//            T newValue;
-//            inputStream >> newValue;
-//
-//            if (inputStream.fail())
-//                return false;
-//            else {
-//                char c;
-//                inputStream >> c;
-//                if (inputStream.eof() || c == ' ') {
-//                    value = newValue;
-//                    return true;
-//                } else
-//                    return false;
-//            }
-
-
-//        int scanItems(const std::string& itemString, size_t items, std::vector<T>& values) {
-//            std::istringstream inputStream(itemString);
-//            unsigned int itemsRead = 0;
-//
-//            while (inputStream.good() && itemsRead < items) {
-//                T value;
-//                inputStream >> value;
-//                values.push_back(value);
-//                itemsRead++;
-//            }
-//
-//            return itemsRead;
-//        }
-//
-//        int scanItems(const std::string& itemString, std::vector<T>& values) {
-//            return scanItems(itemString, m_itemSize->sizeValue(), values);
-//        }
-
-
-// };

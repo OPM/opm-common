@@ -24,58 +24,10 @@
 #include <boost/test/unit_test.hpp>
 #include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
+
 
 using namespace Opm;
-
-BOOST_AUTO_TEST_CASE(Initialize) {
-    BOOST_REQUIRE_NO_THROW(DeckIntItem deckIntItem("TEST"));
-}
-
-BOOST_AUTO_TEST_CASE(GetIntAtIndex_NoData_ExceptionThrown) {
-    const DeckIntItem deckIntItem("TEST");
-    BOOST_CHECK_THROW(deckIntItem.getInt(0), std::out_of_range);
-}
-
-
-
-BOOST_AUTO_TEST_CASE(PushBack_VectorPushed_ElementsCorrect) {
-    DeckIntItem deckIntItem("TEST");
-    std::vector<int> pushThese;
-    pushThese.push_back(13);
-    pushThese.push_back(33);
-    deckIntItem.push_back(pushThese);
-    BOOST_CHECK_EQUAL(13, deckIntItem.getInt(0));
-    BOOST_CHECK_EQUAL(33, deckIntItem.getInt(1));
-}
-
-
-BOOST_AUTO_TEST_CASE(PushBack_subVectorPushed_ElementsCorrect) {
-    DeckIntItem deckIntItem("TEST");
-    std::vector<int> pushThese;
-    pushThese.push_back(13);
-    pushThese.push_back(33);
-    pushThese.push_back(47);
-    deckIntItem.push_back(pushThese , 2);
-    BOOST_CHECK_EQUAL(13 , deckIntItem.getInt(0));
-    BOOST_CHECK_EQUAL(33 , deckIntItem.getInt(1));
-    BOOST_CHECK_EQUAL( 2U , deckIntItem.size());
-}
-
-
-
-BOOST_AUTO_TEST_CASE(size_correct) {
-    DeckIntItem deckIntItem("TEST");
-    
-    BOOST_CHECK_EQUAL( 0U , deckIntItem.size());
-    deckIntItem.push_back( 100 );
-    BOOST_CHECK_EQUAL( 1U , deckIntItem.size());
-    
-    deckIntItem.push_back( 100 );
-    deckIntItem.push_back( 100 );
-    BOOST_CHECK_EQUAL( 3U , deckIntItem.size());
-}
-
-/*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(InitializeDouble) {
     BOOST_REQUIRE_NO_THROW(DeckDoubleItem deckDoubleItem("TEST"));

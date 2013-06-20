@@ -26,9 +26,46 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
+#include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
+
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 
 using namespace Opm;
+
+ParserPtr createWWCTParser() {
+    ParserKWPtr parserKW(new ParserKW("WWCT"));
+    {
+        ParserRecordPtr wwctRecord(new ParserRecord());
+        wwctRecord->addItem(ParserStringItemConstPtr(new ParserStringItem("WELL", ALL)));
+        parserKW->setRecord(wwctRecord);
+    }
+
+    ParserPtr parser(new Parser());
+    parser->addKW(parserKW);
+    return parser;
+}
+
+BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_deckReturned) {
+    boost::filesystem::path singleKeywordFile("testdata/integration_tests/wwct.data");
+    ParserPtr parser = createWWCTParser();
+
+    BOOST_CHECK_NO_THROW(DeckPtr deck = parser->parse(singleKeywordFile.string()));
+}
+
+BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_deckHasWWCT) {
+    boost::filesystem::path singleKeywordFile("testdata/integration_tests/wwct.data");
+    ParserPtr parser = createWWCTParser();
+    DeckPtr deck = parser->parse(singleKeywordFile.string());
+    BOOST_CHECK(deck->hasKeyword("WWCT"));
+}
+
+BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_dataIsCorrect) {
+    boost::filesystem::path singleKeywordFile("testdata/integration_tests/wwct.data");
+    ParserPtr parser = createWWCTParser();
+    DeckPtr deck = parser->parse(singleKeywordFile.string());
+    BOOST_CHECK_EQUAL("WELL-1", deck->getKeyword("WWCT")->getRecord(0)->get(0)->getString(0));
+    BOOST_CHECK_EQUAL("WELL-2", deck->getKeyword("WWCT")->getRecord(0)->get(0)->getString(1));
+}
 
 ParserPtr createBPRParser() {
     ParserKWPtr parserKW(new ParserKW("BPR"));
@@ -109,7 +146,6 @@ BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_dataiscorrect) {
     BOOST_CHECK_EQUAL(3, K1->getInt(0));
 
 }
-
 
 BOOST_AUTO_TEST_CASE(PrintToOStream_noThrow) {
     boost::filesystem::path singleKeywordFile("testdata/small.data");

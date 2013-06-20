@@ -19,32 +19,32 @@
 
 #include <boost/lexical_cast.hpp>
 
-#include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
 
 namespace Opm {
 
-    int DeckIntItem::getInt(size_t index) const {
+    std::string DeckStringItem::getString(size_t index) const {
         if (index < m_data.size()) {
             return m_data[index];
         } else
             throw std::out_of_range("Out of range, index must be lower than " + boost::lexical_cast<std::string>(m_data.size()));
     }
 
-    void DeckIntItem::push_back(std::vector<int> data, size_t items) {
+    void DeckStringItem::push_back(std::vector<std::string> data, size_t items) {
         for (size_t i = 0; i < items; i++) {
             m_data.push_back(data[i]);
         }
     }
 
-    void DeckIntItem::push_back(std::vector<int> data) {
+    void DeckStringItem::push_back(std::vector<std::string> data) {
         push_back(data, data.size());
     }
 
-    void DeckIntItem::push_back(int data) {
+    void DeckStringItem::push_back(std::string data) {
         m_data.push_back(data);
     }
 
-    size_t DeckIntItem::size() const {
+    size_t DeckStringItem::size() const {
         return m_data.size();
     }
 
