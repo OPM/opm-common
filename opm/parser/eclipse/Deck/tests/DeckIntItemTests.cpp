@@ -23,9 +23,6 @@
 #include <stdexcept>
 #include <boost/test/unit_test.hpp>
 #include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
-#include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
-#include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
-
 
 using namespace Opm;
 
