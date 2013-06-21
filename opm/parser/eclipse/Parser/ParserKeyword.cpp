@@ -21,7 +21,7 @@
 #include <stdexcept>
 
 #include <opm/parser/eclipse/Parser/ParserConst.hpp>
-#include <opm/parser/eclipse/Parser/ParserRecordSize.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywordSize.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 
 namespace Opm {
@@ -30,7 +30,7 @@ namespace Opm {
         m_name = name;
     }
 
-    ParserKeyword::ParserKeyword(const std::string& name, ParserRecordSizeConstPtr recordSize) {
+    ParserKeyword::ParserKeyword(const std::string& name, ParserKeywordSizePtr recordSize) {
         if (name.length() > ParserConst::maxKeywordLength)
             throw std::invalid_argument("Given keyword name is too long - max 8 characters.");
 

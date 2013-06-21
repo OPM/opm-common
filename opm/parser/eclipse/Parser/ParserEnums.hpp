@@ -25,7 +25,7 @@
 
 namespace Opm {
 
-    enum ParserRecordSizeEnum {
+    enum ParserKeywordSizeEnum {
         UNDEFINED = 0,
         FIXED = 1,
         BOX = 2,

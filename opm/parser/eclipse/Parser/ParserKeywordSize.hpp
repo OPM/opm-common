@@ -29,22 +29,21 @@
 
 namespace Opm {
 
-    class ParserRecordSize {
+    class ParserKeywordSize {
     public:
-        ParserRecordSize();
-        ParserRecordSize(size_t fixedSize);
-        ~ParserRecordSize();
+        ParserKeywordSize();
+        ParserKeywordSize(size_t fixedSize);
+        ~ParserKeywordSize();
 
         size_t recordSize();
 
-
     private:
-        enum ParserRecordSizeEnum recordSizeType;
+        enum ParserKeywordSizeEnum recordSizeType;
         size_t fixedSize;
     };
 
-    typedef boost::shared_ptr<ParserRecordSize> ParserRecordSizePtr;
-    typedef boost::shared_ptr<const ParserRecordSize> ParserRecordSizeConstPtr;
+    typedef boost::shared_ptr<ParserKeywordSize> ParserKeywordSizePtr;
+    typedef boost::shared_ptr<const ParserKeywordSize> ParserKeywordSizeConstPtr;
 }
 
 #endif

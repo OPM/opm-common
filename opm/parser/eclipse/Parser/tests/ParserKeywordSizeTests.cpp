@@ -21,23 +21,23 @@
 #define BOOST_TEST_MODULE ParserTests
 #include <boost/test/unit_test.hpp>
 
-#include "opm/parser/eclipse/Parser/ParserRecordSize.hpp"
+#include <opm/parser/eclipse/Parser/ParserKeywordSize.hpp>
 
 
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(Initialize) {
-    BOOST_REQUIRE_NO_THROW(ParserRecordSize recordSize);
+    BOOST_REQUIRE_NO_THROW(ParserKeywordSize recordSize);
 }
 
 BOOST_AUTO_TEST_CASE(DynamicSize) {
-    ParserRecordSize recordSize;
+    ParserKeywordSize recordSize;
     BOOST_CHECK_THROW(recordSize.recordSize(), std::logic_error);
 }
 
 BOOST_AUTO_TEST_CASE(FixedSize) {
-    BOOST_REQUIRE_NO_THROW(ParserRecordSize recordSize(100));
-    ParserRecordSize recordSize(100);
+    BOOST_REQUIRE_NO_THROW(ParserKeywordSize recordSize(100));
+    ParserKeywordSize recordSize(100);
 
     BOOST_CHECK_EQUAL(recordSize.recordSize(), (size_t) 100);
 }

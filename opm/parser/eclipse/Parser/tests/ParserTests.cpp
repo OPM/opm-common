@@ -26,7 +26,7 @@
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
-#include <opm/parser/eclipse/Parser/ParserRecordSize.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywordSize.hpp>
 #include <opm/parser/eclipse/RawDeck/RawDeck.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
@@ -39,6 +39,7 @@ using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(Initializing) {
     BOOST_CHECK_NO_THROW(Parser parser);
+    BOOST_CHECK_NO_THROW(Parser parser);
     BOOST_CHECK_NO_THROW(ParserPtr parserPtr(new Parser()));
     BOOST_CHECK_NO_THROW(ParserConstPtr parserConstPtr(new Parser()));
 }
@@ -46,8 +47,7 @@ BOOST_AUTO_TEST_CASE(Initializing) {
 BOOST_AUTO_TEST_CASE(addKeyword_keyword_doesntfail) {
     Parser parser;
     {
-        ParserRecordSizePtr recordSize(new ParserRecordSize(9));
-        ParserKeywordPtr equilKeyword(new ParserKeyword("EQUIL", recordSize));
+        ParserKeywordPtr equilKeyword(new ParserKeyword("EQUIL"));
         parser.addKeyword(equilKeyword);
     }
 }
@@ -57,6 +57,7 @@ BOOST_AUTO_TEST_CASE(hasKeyword_hasKeyword_returnstrue) {
     parser->addKeyword(ParserKeywordConstPtr(new ParserKeyword("FJAS")));
     BOOST_CHECK(parser->hasKeyword("FJAS"));
 }
+
 
 
 
