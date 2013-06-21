@@ -79,8 +79,7 @@ ParserKeywordPtr setupParserKeywordInt(std::string name, int numberOfItems) {
 }
 
 RawDeckPtr setupRawDeckInt(std::string name, int numberOfRecords, int numberOfItems) {
-    RawParserKeywordsConstPtr rawParserKeywords(new RawParserKeywords());
-    RawDeckPtr rawDeck(new RawDeck(rawParserKeywords));
+    RawDeckPtr rawDeck(new RawDeck());
 
     RawKeywordPtr rawKeyword(new RawKeyword(name));
     for (int records = 0; records < numberOfRecords; records++) {
@@ -141,8 +140,7 @@ ParserKeywordPtr setupParserKeywordString(std::string name, int numberOfItems) {
 }
 
 RawDeckPtr setupRawDeckString(std::string name, int numberOfRecords, int numberOfItems) {
-    RawParserKeywordsConstPtr rawParserKeywords(new RawParserKeywords());
-    RawDeckPtr rawDeck(new RawDeck(rawParserKeywords));
+    RawDeckPtr rawDeck(new RawDeck());
 
     RawKeywordPtr rawKeyword(new RawKeyword(name));
     for (int records = 0; records < numberOfRecords; records++) {

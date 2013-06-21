@@ -18,7 +18,6 @@
  */
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
-#include <opm/parser/eclipse/RawDeck/RawParserKeywords.hpp>
 #include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
 #include <opm/parser/eclipse/Logger/Logger.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -59,7 +58,7 @@ namespace Opm {
     }
 
     RawDeckPtr Parser::readToRawDeck(const std::string& path) const {
-        RawDeckPtr rawDeck(new RawDeck(RawParserKeywordsConstPtr(new RawParserKeywords())));
+        RawDeckPtr rawDeck(new RawDeck());
         readToRawDeck(rawDeck, path);
         return rawDeck;
     }
