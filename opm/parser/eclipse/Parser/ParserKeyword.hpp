@@ -33,16 +33,19 @@ namespace Opm {
     class ParserKeyword {
     public:
         ParserKeyword(const std::string& name);
-        ParserKeyword(const std::string& name, ParserKeywordSizePtr recordSize);
+        ParserKeyword(const std::string& name, ParserKeywordSizeConstPtr recordSize);
         void setRecord(ParserRecordConstPtr record);
         ParserRecordConstPtr getRecord();
         const std::string& getName() const;
+        size_t getFixedSize() const;
+        bool hasFixedSize() const;
+
         DeckKeywordPtr parse(RawKeywordConstPtr rawKeyword) const;
-        
+
     private:
         std::string m_name;
         ParserRecordConstPtr m_record;
-        ParserKeywordSizePtr recordSize;
+        ParserKeywordSizeConstPtr m_keywordSize;
     };
     typedef boost::shared_ptr<ParserKeyword> ParserKeywordPtr;
     typedef boost::shared_ptr<const ParserKeyword> ParserKeywordConstPtr;

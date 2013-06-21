@@ -35,11 +35,13 @@ namespace Opm {
         ParserKeywordSize(size_t fixedSize);
         ~ParserKeywordSize();
 
-        size_t recordSize();
+        size_t fixedSize() const;
+        bool hasFixedSize() const;
+
 
     private:
-        enum ParserKeywordSizeEnum recordSizeType;
-        size_t fixedSize;
+        enum ParserKeywordSizeEnum keywordSizeType;
+        size_t m_fixedSize;
     };
 
     typedef boost::shared_ptr<ParserKeywordSize> ParserKeywordSizePtr;

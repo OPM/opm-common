@@ -27,20 +27,24 @@
 namespace Opm {
 
     ParserKeywordSize::ParserKeywordSize() {
-        recordSizeType = UNDEFINED;
-        fixedSize = 0;
+        keywordSizeType = UNDEFINED;
+        m_fixedSize = 0;
     }
 
     ParserKeywordSize::ParserKeywordSize(size_t fixedSize) {
-        recordSizeType = FIXED;
-        this->fixedSize = fixedSize;
+        keywordSizeType = FIXED;
+        m_fixedSize = fixedSize;
     }
 
-    size_t ParserKeywordSize::recordSize() {
-        if (recordSizeType == FIXED) {
-            return fixedSize;
+    size_t ParserKeywordSize::fixedSize() const {
+        if (keywordSizeType == FIXED) {
+            return m_fixedSize;
         } else
             throw std::logic_error("Only the FIXED recordSize is supported.\n");
+    }
+
+    bool ParserKeywordSize::hasFixedSize() const {
+        return keywordSizeType == FIXED;
     }
 
     ParserKeywordSize::~ParserKeywordSize() {

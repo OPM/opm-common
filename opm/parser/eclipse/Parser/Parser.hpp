@@ -58,6 +58,9 @@ namespace Opm {
         void readToRawDeck(RawDeckPtr rawDeck, const std::string& path) const;
         void processIncludeKeyword(RawDeckPtr rawDeck, RawKeywordConstPtr keyword, const boost::filesystem::path& dataFolderPath) const;
         boost::filesystem::path verifyValidInputPath(const std::string& inputPath) const;
+        void populateDefaultKeywords();
+        bool isFixedLenghtKeywordFinished(RawKeywordConstPtr rawKeyword) const;
+
 
     };
 

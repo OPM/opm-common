@@ -26,18 +26,29 @@
 
 using namespace Opm;
 
-BOOST_AUTO_TEST_CASE(Initialize) {
-    BOOST_REQUIRE_NO_THROW(ParserKeywordSize recordSize);
+BOOST_AUTO_TEST_CASE(initialize_defaultConstructor_allGood) {
+    BOOST_REQUIRE_NO_THROW(ParserKeywordSize keywordSize);
 }
 
-BOOST_AUTO_TEST_CASE(DynamicSize) {
-    ParserKeywordSize recordSize;
-    BOOST_CHECK_THROW(recordSize.recordSize(), std::logic_error);
+BOOST_AUTO_TEST_CASE(fixedSize_sizeNotFixed_exceptionThrown) {
+    ParserKeywordSize keywordSize;
+    BOOST_CHECK_THROW(keywordSize.fixedSize(), std::logic_error);
 }
 
-BOOST_AUTO_TEST_CASE(FixedSize) {
-    BOOST_REQUIRE_NO_THROW(ParserKeywordSize recordSize(100));
-    ParserKeywordSize recordSize(100);
+BOOST_AUTO_TEST_CASE(fixedSize_sizeIsFixedAndSet_sizeIsReturnedCorrectly) {
+    BOOST_REQUIRE_NO_THROW(ParserKeywordSize keywordSize(100));
+    ParserKeywordSize keywordSize(100);
 
-    BOOST_CHECK_EQUAL(recordSize.recordSize(), (size_t) 100);
+    BOOST_CHECK_EQUAL(100U, keywordSize.fixedSize());
 }
+
+BOOST_AUTO_TEST_CASE(hasFixedSize_sizeofmanykinds_trueOnlyForFIXED) {
+    ParserKeywordSize keywordSizeFixed(100);
+    ParserKeywordSize keywordSizeDefault;
+
+    BOOST_CHECK(keywordSizeFixed.hasFixedSize());
+    BOOST_CHECK(!keywordSizeDefault.hasFixedSize());
+
+}
+
+
