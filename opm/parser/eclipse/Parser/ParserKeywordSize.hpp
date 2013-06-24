@@ -35,7 +35,7 @@ namespace Opm {
         ParserKeywordSize(size_t fixedSize);
         ~ParserKeywordSize();
 
-        size_t fixedSize() const;
+        size_t getFixedSize() const;
         bool hasFixedSize() const;
 
 

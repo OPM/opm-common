@@ -32,14 +32,14 @@ BOOST_AUTO_TEST_CASE(initialize_defaultConstructor_allGood) {
 
 BOOST_AUTO_TEST_CASE(fixedSize_sizeNotFixed_exceptionThrown) {
     ParserKeywordSize keywordSize;
-    BOOST_CHECK_THROW(keywordSize.fixedSize(), std::logic_error);
+    BOOST_CHECK_THROW(keywordSize.getFixedSize(), std::logic_error);
 }
 
 BOOST_AUTO_TEST_CASE(fixedSize_sizeIsFixedAndSet_sizeIsReturnedCorrectly) {
     BOOST_REQUIRE_NO_THROW(ParserKeywordSize keywordSize(100));
     ParserKeywordSize keywordSize(100);
 
-    BOOST_CHECK_EQUAL(100U, keywordSize.fixedSize());
+    BOOST_CHECK_EQUAL(100U, keywordSize.getFixedSize());
 }
 
 BOOST_AUTO_TEST_CASE(hasFixedSize_sizeofmanykinds_trueOnlyForFIXED) {

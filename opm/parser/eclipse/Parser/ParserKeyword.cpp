@@ -66,7 +66,7 @@ namespace Opm {
     }
     
     size_t ParserKeyword::getFixedSize() const {
-        return m_keywordSize->fixedSize();
+        return m_keywordSize->getFixedSize();
     }
     
        bool ParserKeyword::hasFixedSize() const {

@@ -36,7 +36,7 @@ namespace Opm {
         m_fixedSize = fixedSize;
     }
 
-    size_t ParserKeywordSize::fixedSize() const {
+    size_t ParserKeywordSize::getFixedSize() const {
         if (keywordSizeType == FIXED) {
             return m_fixedSize;
         } else
