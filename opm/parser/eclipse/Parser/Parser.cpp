@@ -18,7 +18,6 @@
  */
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
-#include <opm/parser/eclipse/RawDeck/RawParserKeywords.hpp>
 #include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
 #include <opm/parser/eclipse/Logger/Logger.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -27,6 +26,7 @@
 namespace Opm {
 
     Parser::Parser() {
+        populateDefaultKeywords();
     }
 
     DeckPtr Parser::parse(const std::string &path) {
@@ -58,7 +58,7 @@ namespace Opm {
     }
 
     RawDeckPtr Parser::readToRawDeck(const std::string& path) const {
-        RawDeckPtr rawDeck(new RawDeck(RawParserKeywordsConstPtr(new RawParserKeywords())));
+        RawDeckPtr rawDeck(new RawDeck());
         readToRawDeck(rawDeck, path);
         return rawDeck;
     }
@@ -81,14 +81,14 @@ namespace Opm {
                 if (currentRawKeyword == NULL) {
                     if (RawKeyword::tryParseKeyword(line, keywordString)) {
                         currentRawKeyword = RawKeywordPtr(new RawKeyword(keywordString));
-                        if (rawDeck->isKeywordFinished(currentRawKeyword)) {
+                        if (isFixedLenghtKeywordFinished(currentRawKeyword)) {
                             rawDeck->addKeyword(currentRawKeyword);
                             currentRawKeyword.reset();
                         }
                     }
                 } else if (currentRawKeyword != NULL && RawKeyword::lineContainsData(line)) {
                     currentRawKeyword->addRawRecordString(line);
-                    if (rawDeck->isKeywordFinished(currentRawKeyword)) {
+                    if (isFixedLenghtKeywordFinished(currentRawKeyword)) {
                         // The INCLUDE keyword has fixed lenght 1, will hit here
                         if (currentRawKeyword->getKeywordName() == Opm::RawConsts::include)
                             processIncludeKeyword(rawDeck, currentRawKeyword, dataFolderPath);
@@ -111,6 +111,17 @@ namespace Opm {
         }
     }
 
+    bool Parser::isFixedLenghtKeywordFinished(RawKeywordConstPtr rawKeyword) const {
+        bool fixedSizeReached = false;
+        if (hasKeyword(rawKeyword->getKeywordName())) {
+            ParserKeywordConstPtr parserKeyword = m_parserKeywords.find(rawKeyword->getKeywordName())->second;
+            if (parserKeyword->hasFixedSize())
+                fixedSizeReached = rawKeyword->size() == parserKeyword->getFixedSize();
+        }
+
+        return fixedSizeReached;
+    }
+
     void Parser::processIncludeKeyword(RawDeckPtr rawDeck, RawKeywordConstPtr keyword, const boost::filesystem::path& dataFolderPath) const {
         RawRecordConstPtr firstRecord = keyword->getRecord(0);
         std::string includeFileString = firstRecord->getItem(0);
@@ -130,5 +141,37 @@ namespace Opm {
         return pathToInputFile.parent_path();
     }
 
+    void Parser::populateDefaultKeywords() {
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("GRIDUNIT", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("INCLUDE", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("RADFIN4", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("DIMENS", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("START", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("GRIDOPTS", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("ENDSCALE", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("EQLOPTS", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("TABDIMS", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("EQLDIMS", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("REGDIMS", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("FAULTDIM", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("WELLDIMS", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("VFPPDIMS", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("RPTSCHED", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("WHISTCTL", 1)));
+
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("SUMMARY", 0)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("TITLE", 0)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("RUNSPEC", 0)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("METRIC", 0)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("SCHEDULE", 0)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("SKIPREST", 0)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("NOECHO", 0)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("END", 0)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("OIL", 0)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("GAS", 0)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("WATER", 0)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("DISGAS", 0)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("VAPOIL", 0)));
+    }
 
 } // namespace Opm

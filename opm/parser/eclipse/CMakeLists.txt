@@ -7,8 +7,7 @@ add_subdirectory(IntegrationTests)
 set( rawdeck_source 
 RawDeck/RawDeck.cpp 
 RawDeck/RawKeyword.cpp 
-RawDeck/RawRecord.cpp 
-RawDeck/RawParserKeywords.cpp )
+RawDeck/RawRecord.cpp )
 
 set( deck_source
 Deck/Deck.cpp
@@ -22,7 +21,6 @@ Deck/KeywordContainer.cpp
 )
 
 set( parser_source 
-Parser/ParserRecordSize.cpp 
 Parser/ParserKeyword.cpp 
 Parser/Parser.cpp 
 Parser/ParserRecord.cpp

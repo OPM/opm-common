@@ -21,16 +21,23 @@
 #include <stdexcept>
 
 #include <opm/parser/eclipse/Parser/ParserConst.hpp>
-#include <opm/parser/eclipse/Parser/ParserRecordSize.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 
 namespace Opm {
 
     ParserKeyword::ParserKeyword(const std::string& name) {
-        m_name = name;
+        setKeywordName(name);
+        m_keywordSizeType = UNDEFINED;
     }
 
-    ParserKeyword::ParserKeyword(const std::string& name, ParserRecordSizeConstPtr recordSize) {
+    ParserKeyword::ParserKeyword(const std::string& name, size_t fixedKeywordSize) {
+
+        setKeywordName(name);
+        m_keywordSizeType = FIXED;
+        m_fixedSize = fixedKeywordSize;
+    }
+
+    void ParserKeyword::setKeywordName(const std::string& name) {
         if (name.length() > ParserConst::maxKeywordLength)
             throw std::invalid_argument("Given keyword name is too long - max 8 characters.");
 
@@ -39,7 +46,6 @@ namespace Opm {
                 throw std::invalid_argument("Keyword must be all upper case - mixed case not allowed:" + name);
 
         m_name = name;
-        this->recordSize = recordSize;
     }
 
     void ParserKeyword::setRecord(ParserRecordConstPtr record) {
@@ -49,22 +55,29 @@ namespace Opm {
     ParserRecordConstPtr ParserKeyword::getRecord() {
         return m_record;
     }
-    
+
     const std::string& ParserKeyword::getName() const {
         return m_name;
     }
 
     DeckKeywordPtr ParserKeyword::parse(RawKeywordConstPtr rawKeyword) const {
         DeckKeywordPtr keyword(new DeckKeyword(getName()));
-        if (m_record != NULL) {
-            for (size_t i=0; i<rawKeyword->size(); i++) {
-                DeckRecordConstPtr deckRecord = m_record->parse(rawKeyword->getRecord(i));
-                keyword->addRecord(deckRecord);
-            }
+        for (size_t i = 0; i < rawKeyword->size(); i++) {
+            DeckRecordConstPtr deckRecord = m_record->parse(rawKeyword->getRecord(i));
+            keyword->addRecord(deckRecord);
         }
-        else 
-            throw std::logic_error("Unable to parse rawKeyword, because the ParserKeyword's record is not set!");
-        
+
         return keyword;
+    }
+
+    size_t ParserKeyword::getFixedSize() const {
+        if (!hasFixedSize()) {
+            throw std::logic_error("This parser keyword does not have a fixed size!");
+        }
+        return m_fixedSize;
+    }
+
+    bool ParserKeyword::hasFixedSize() const {
+        return m_keywordSizeType == FIXED;
     }
 }

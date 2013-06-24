@@ -37,8 +37,7 @@ BOOST_AUTO_TEST_CASE(construct_withname_nameSet) {
 BOOST_AUTO_TEST_CASE(NamedInit) {
     std::string keyword("KEYWORD");
 
-    ParserRecordSizeConstPtr recordSize(new ParserRecordSize(100));
-    ParserKeyword parserKeyword(keyword, recordSize);
+    ParserKeyword parserKeyword(keyword, 100);
     BOOST_CHECK_EQUAL(parserKeyword.getName(), keyword);
 }
 
@@ -49,34 +48,42 @@ BOOST_AUTO_TEST_CASE(setRecord_validRecord_recordSet) {
     BOOST_CHECK_EQUAL(parserRecord, parserKeyword->getRecord());
 }
 
-BOOST_AUTO_TEST_CASE(NameTooLong) {
+BOOST_AUTO_TEST_CASE(constructor_nametoolongwithfixedsize_exceptionthrown) {
     std::string keyword("KEYWORDTOOLONG");
-    ParserRecordSizeConstPtr recordSize(new ParserRecordSize(100));
-    BOOST_CHECK_THROW(ParserKeyword parserKeyword(keyword, recordSize), std::invalid_argument);
+    BOOST_CHECK_THROW(ParserKeyword parserKeyword(keyword, 100), std::invalid_argument);
+}
+
+
+BOOST_AUTO_TEST_CASE(constructor_nametoolong_exceptionthrown) {
+    std::string keyword("KEYWORDTOOLONG");
+    BOOST_CHECK_THROW(ParserKeyword parserKeyword(keyword), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(MixedCase) {
     std::string keyword("KeyWord");
 
-    ParserRecordSizeConstPtr recordSize(new ParserRecordSize(100));
-    BOOST_CHECK_THROW(ParserKeyword parserKeyword(keyword, recordSize), std::invalid_argument);
+    BOOST_CHECK_THROW(ParserKeyword parserKeyword(keyword, 100), std::invalid_argument);
 }
 
-BOOST_AUTO_TEST_CASE(parse_rawKeyword_returnsDeckKeyword) {
-    RawKeywordPtr rawKeyword(new RawKeyword("TEST2"));
-    rawKeyword->addRawRecordString("2 3 5 /");
-    ParserKeywordPtr parserKeyword(new ParserKeyword("TEST2"));
-    
-    ParserRecordPtr parserRecord = ParserRecordPtr(new ParserRecord());
+BOOST_AUTO_TEST_CASE(getFixedSize_sizeObjectHasFixedSize_sizeReturned) {
+    ParserKeywordPtr parserKeyword(new ParserKeyword("JA", 3));
+    BOOST_CHECK_EQUAL(3U, parserKeyword->getFixedSize());
 
-    ParserItemPtr item1(new ParserIntItem("I", SINGLE));
-    parserRecord->addItem(item1);
-    ParserItemPtr item2(new ParserIntItem("J", SINGLE));
-    parserRecord->addItem(item2);
-    ParserItemPtr item3(new ParserIntItem("K", SINGLE));
-    parserRecord->addItem(item3);
-    
-    parserKeyword->setRecord(parserRecord);
-    DeckKeywordPtr deckKeyword = parserKeyword->parse(rawKeyword);
-    BOOST_CHECK_EQUAL(1U, deckKeyword->size());
 }
+
+BOOST_AUTO_TEST_CASE(getFixedSize_sizeObjectDoesNotHaveFixedSizeObjectSet_ExceptionThrown) {
+    ParserKeywordPtr parserKeyword(new ParserKeyword("JA"));
+    BOOST_CHECK_THROW(parserKeyword->getFixedSize(), std::logic_error);
+}
+
+
+BOOST_AUTO_TEST_CASE(hasFixedSize_hasFixedSizeObject_returnstrue) {
+    ParserKeywordPtr parserKeyword(new ParserKeyword("JA", 2));
+    BOOST_CHECK(parserKeyword->hasFixedSize());
+}
+
+BOOST_AUTO_TEST_CASE(hasFixedSize_sizeObjectDoesNotHaveFixedSize_returnsfalse) {
+    ParserKeywordPtr parserKeyword(new ParserKeyword("JA"));
+    BOOST_CHECK(!parserKeyword->hasFixedSize());
+}
+

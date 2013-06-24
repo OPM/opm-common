@@ -24,7 +24,6 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/filesystem.hpp>
 #include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
-#include <opm/parser/eclipse/RawDeck/RawParserKeywords.hpp>
 
 namespace Opm {
 
@@ -41,7 +40,7 @@ namespace Opm {
         /// must be specified through the RawParserKeyword class. This is to be able to know how the records
         /// of the keyword is structured.
 
-        RawDeck(RawParserKeywordsConstPtr rawParserKeywords);
+        RawDeck();
         void addKeyword(RawKeywordConstPtr keyword);
         RawKeywordConstPtr getKeyword(size_t index) const;
         size_t size() const;
@@ -55,9 +54,6 @@ namespace Opm {
     private:
         std::vector<RawKeywordConstPtr> m_keywords;
         
-        // This variable should be replaced by an equivalent collection of ParserKeywords, and put in the Parser class
-        RawParserKeywordsConstPtr m_rawParserKeywords;
-
         void processIncludeKeyword(RawKeywordConstPtr keyword, const boost::filesystem::path& dataFolderPath);
         static boost::filesystem::path verifyValidInputPath(const std::string& inputPath);
     };
