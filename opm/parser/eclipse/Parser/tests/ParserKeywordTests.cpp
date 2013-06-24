@@ -37,8 +37,7 @@ BOOST_AUTO_TEST_CASE(construct_withname_nameSet) {
 BOOST_AUTO_TEST_CASE(NamedInit) {
     std::string keyword("KEYWORD");
 
-    ParserKeywordSizePtr recordSize(new ParserKeywordSize(100));
-    ParserKeyword parserKeyword(keyword, recordSize);
+    ParserKeyword parserKeyword(keyword, 100);
     BOOST_CHECK_EQUAL(parserKeyword.getName(), keyword);
 }
 
@@ -49,33 +48,37 @@ BOOST_AUTO_TEST_CASE(setRecord_validRecord_recordSet) {
     BOOST_CHECK_EQUAL(parserRecord, parserKeyword->getRecord());
 }
 
-BOOST_AUTO_TEST_CASE(NameTooLong) {
+BOOST_AUTO_TEST_CASE(constructor_nametoolongwithfixedsize_exceptionthrown) {
     std::string keyword("KEYWORDTOOLONG");
-    ParserKeywordSizePtr recordSize(new ParserKeywordSize(100));
-    BOOST_CHECK_THROW(ParserKeyword parserKeyword(keyword, recordSize), std::invalid_argument);
+    BOOST_CHECK_THROW(ParserKeyword parserKeyword(keyword, 100), std::invalid_argument);
+}
+
+
+BOOST_AUTO_TEST_CASE(constructor_nametoolong_exceptionthrown) {
+    std::string keyword("KEYWORDTOOLONG");
+    BOOST_CHECK_THROW(ParserKeyword parserKeyword(keyword), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(MixedCase) {
     std::string keyword("KeyWord");
 
-    ParserKeywordSizePtr recordSize(new ParserKeywordSize(100));
-    BOOST_CHECK_THROW(ParserKeyword parserKeyword(keyword, recordSize), std::invalid_argument);
+    BOOST_CHECK_THROW(ParserKeyword parserKeyword(keyword, 100), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(getFixedSize_sizeObjectHasFixedSize_sizeReturned) {
-    ParserKeywordPtr parserKeyword(new ParserKeyword("JA", ParserKeywordSizePtr(new ParserKeywordSize(3))));
+    ParserKeywordPtr parserKeyword(new ParserKeyword("JA", 3));
     BOOST_CHECK_EQUAL(3U, parserKeyword->getFixedSize());
 
 }
 
 BOOST_AUTO_TEST_CASE(getFixedSize_sizeObjectDoesNotHaveFixedSizeObjectSet_ExceptionThrown) {
-    ParserKeywordPtr parserKeyword(new ParserKeyword("JA", ParserKeywordSizePtr(new ParserKeywordSize())));
+    ParserKeywordPtr parserKeyword(new ParserKeyword("JA"));
     BOOST_CHECK_THROW(parserKeyword->getFixedSize(), std::logic_error);
 }
 
 
 BOOST_AUTO_TEST_CASE(hasFixedSize_hasFixedSizeObject_returnstrue) {
-    ParserKeywordPtr parserKeyword(new ParserKeyword("JA", ParserKeywordSizePtr(new ParserKeywordSize(2))));
+    ParserKeywordPtr parserKeyword(new ParserKeyword("JA", 2));
     BOOST_CHECK(parserKeyword->hasFixedSize());
 }
 

@@ -142,36 +142,36 @@ namespace Opm {
     }
 
     void Parser::populateDefaultKeywords() {
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("GRIDUNIT", ParserKeywordSizeConstPtr(new ParserKeywordSize(1)))));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("INCLUDE", ParserKeywordSizeConstPtr(new ParserKeywordSize(1)))));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("RADFIN4", ParserKeywordSizeConstPtr(new ParserKeywordSize(1)))));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("DIMENS", ParserKeywordSizeConstPtr(new ParserKeywordSize(1)))));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("START", ParserKeywordSizeConstPtr(new ParserKeywordSize(1)))));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("GRIDOPTS", ParserKeywordSizeConstPtr(new ParserKeywordSize(1)))));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("ENDSCALE", ParserKeywordSizeConstPtr(new ParserKeywordSize(1)))));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("EQLOPTS", ParserKeywordSizeConstPtr(new ParserKeywordSize(1)))));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("TABDIMS", ParserKeywordSizeConstPtr(new ParserKeywordSize(1)))));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("EQLDIMS", ParserKeywordSizeConstPtr(new ParserKeywordSize(1)))));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("REGDIMS", ParserKeywordSizeConstPtr(new ParserKeywordSize(1)))));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("FAULTDIM", ParserKeywordSizeConstPtr(new ParserKeywordSize(1)))));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("WELLDIMS", ParserKeywordSizeConstPtr(new ParserKeywordSize(1)))));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("VFPPDIMS", ParserKeywordSizeConstPtr(new ParserKeywordSize(1)))));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("RPTSCHED", ParserKeywordSizeConstPtr(new ParserKeywordSize(1)))));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("WHISTCTL", ParserKeywordSizeConstPtr(new ParserKeywordSize(1)))));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("GRIDUNIT", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("INCLUDE", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("RADFIN4", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("DIMENS", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("START", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("GRIDOPTS", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("ENDSCALE", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("EQLOPTS", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("TABDIMS", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("EQLDIMS", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("REGDIMS", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("FAULTDIM", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("WELLDIMS", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("VFPPDIMS", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("RPTSCHED", 1)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("WHISTCTL", 1)));
 
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("SUMMARY", ParserKeywordSizeConstPtr(new ParserKeywordSize(0)))));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("TITLE", ParserKeywordSizeConstPtr(new ParserKeywordSize(0)))));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("RUNSPEC", ParserKeywordSizeConstPtr(new ParserKeywordSize(0)))));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("METRIC", ParserKeywordSizeConstPtr(new ParserKeywordSize(0)))));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("SCHEDULE", ParserKeywordSizeConstPtr(new ParserKeywordSize(0)))));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("SKIPREST", ParserKeywordSizeConstPtr(new ParserKeywordSize(0)))));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("NOECHO", ParserKeywordSizeConstPtr(new ParserKeywordSize(0)))));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("END", ParserKeywordSizeConstPtr(new ParserKeywordSize(0)))));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("OIL", ParserKeywordSizeConstPtr(new ParserKeywordSize(0)))));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("GAS", ParserKeywordSizeConstPtr(new ParserKeywordSize(0)))));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("WATER", ParserKeywordSizeConstPtr(new ParserKeywordSize(0)))));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("DISGAS", ParserKeywordSizeConstPtr(new ParserKeywordSize(0)))));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("VAPOIL", ParserKeywordSizeConstPtr(new ParserKeywordSize(0)))));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("SUMMARY", 0)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("TITLE", 0)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("RUNSPEC", 0)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("METRIC", 0)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("SCHEDULE", 0)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("SKIPREST", 0)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("NOECHO", 0)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("END", 0)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("OIL", 0)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("GAS", 0)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("WATER", 0)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("DISGAS", 0)));
+        addKeyword(ParserKeywordConstPtr(new ParserKeyword("VAPOIL", 0)));
     }
 
 } // namespace Opm

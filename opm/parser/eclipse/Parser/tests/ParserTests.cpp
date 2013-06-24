@@ -26,7 +26,6 @@
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeywordSize.hpp>
 #include <opm/parser/eclipse/RawDeck/RawDeck.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>

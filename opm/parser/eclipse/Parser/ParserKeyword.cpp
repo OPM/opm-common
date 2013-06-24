@@ -21,17 +21,23 @@
 #include <stdexcept>
 
 #include <opm/parser/eclipse/Parser/ParserConst.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeywordSize.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 
 namespace Opm {
 
     ParserKeyword::ParserKeyword(const std::string& name) {
-        m_name = name;
-        m_keywordSize = ParserKeywordSizeConstPtr(new ParserKeywordSize());
+        setKeywordName(name);
+        m_keywordSizeType = UNDEFINED;
     }
 
-    ParserKeyword::ParserKeyword(const std::string& name, ParserKeywordSizeConstPtr recordSize) {
+    ParserKeyword::ParserKeyword(const std::string& name, size_t fixedKeywordSize) {
+
+        setKeywordName(name);
+        m_keywordSizeType = FIXED;
+        m_fixedSize = fixedKeywordSize;
+    }
+
+    void ParserKeyword::setKeywordName(const std::string& name) {
         if (name.length() > ParserConst::maxKeywordLength)
             throw std::invalid_argument("Given keyword name is too long - max 8 characters.");
 
@@ -40,7 +46,6 @@ namespace Opm {
                 throw std::invalid_argument("Keyword must be all upper case - mixed case not allowed:" + name);
 
         m_name = name;
-        this->m_keywordSize = recordSize;
     }
 
     void ParserKeyword::setRecord(ParserRecordConstPtr record) {
@@ -64,13 +69,15 @@ namespace Opm {
 
         return keyword;
     }
-    
+
     size_t ParserKeyword::getFixedSize() const {
-        return m_keywordSize->getFixedSize();
-    }
-    
-       bool ParserKeyword::hasFixedSize() const {
-        return m_keywordSize->hasFixedSize();
+        if (!hasFixedSize()) {
+            throw std::logic_error("This parser keyword does not have a fixed size!");
+        }
+        return m_fixedSize;
     }
 
+    bool ParserKeyword::hasFixedSize() const {
+        return m_keywordSizeType == FIXED;
+    }
 }

@@ -21,7 +21,6 @@ Deck/KeywordContainer.cpp
 )
 
 set( parser_source 
-Parser/ParserKeywordSize.cpp 
 Parser/ParserKeyword.cpp 
 Parser/Parser.cpp 
 Parser/ParserRecord.cpp

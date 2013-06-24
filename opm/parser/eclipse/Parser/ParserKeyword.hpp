@@ -22,7 +22,6 @@
 #include <string>
 #include <boost/shared_ptr.hpp>
 
-#include <opm/parser/eclipse/Parser/ParserKeywordSize.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
@@ -33,7 +32,7 @@ namespace Opm {
     class ParserKeyword {
     public:
         ParserKeyword(const std::string& name);
-        ParserKeyword(const std::string& name, ParserKeywordSizeConstPtr recordSize);
+        ParserKeyword(const std::string& name, size_t fixedKeywordSize);
         void setRecord(ParserRecordConstPtr record);
         ParserRecordConstPtr getRecord();
         const std::string& getName() const;
@@ -45,7 +44,11 @@ namespace Opm {
     private:
         std::string m_name;
         ParserRecordConstPtr m_record;
-        ParserKeywordSizeConstPtr m_keywordSize;
+        enum ParserKeywordSizeEnum m_keywordSizeType;
+        size_t m_fixedSize;
+        
+        void setKeywordName(const std::string& name);
+
     };
     typedef boost::shared_ptr<ParserKeyword> ParserKeywordPtr;
     typedef boost::shared_ptr<const ParserKeyword> ParserKeywordConstPtr;
