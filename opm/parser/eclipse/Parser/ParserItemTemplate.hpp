@@ -89,8 +89,8 @@ template <class T> void pushBackToRecord(RawRecordPtr rawRecord, std::vector<T>&
       rawRecord->push_front("*");
     else {
       size_t offset = data.size();
-      T intValue = data[ offset - i ];
-      std::string stringValue = boost::lexical_cast<std::string>(intValue);
+      T value = data[ offset - i ];
+      std::string stringValue = boost::lexical_cast<std::string>(value);
 
       rawRecord->push_front(stringValue);
     }
