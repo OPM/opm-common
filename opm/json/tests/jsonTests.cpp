@@ -35,6 +35,11 @@ BOOST_AUTO_TEST_CASE(ParseValidJson) {
 }
 
 
+BOOST_AUTO_TEST_CASE(ParseValidJson_fromLiteral) {
+    BOOST_CHECK_NO_THROW(Json::JsonObject parser("{\"key\": \"value\"}"));
+}
+
+
 
 BOOST_AUTO_TEST_CASE(ParseInvalidJSON_throw) {
     std::string inline_json = "{\"key\": \"value\"";
@@ -43,11 +48,58 @@ BOOST_AUTO_TEST_CASE(ParseInvalidJSON_throw) {
 
 
 
-BOOST_AUTO_TEST_CASE(ParsevalidJSON_getValue) {
+BOOST_AUTO_TEST_CASE(ParsevalidJSON_getString) {
     std::string inline_json = "{\"key\": \"value\"}";
     Json::JsonObject parser(inline_json);
+    
     BOOST_CHECK_EQUAL( "value" , parser.get_string("key") );
 }
+
+
+BOOST_AUTO_TEST_CASE(ParsevalidJSONString_asString) {
+    std::string inline_json = "{\"key\": \"value\"}";
+    Json::JsonObject parser(inline_json);
+    Json::JsonObject value = parser.get_item("key");
+    
+    BOOST_CHECK_EQUAL( "value" , value.as_string() );
+}
+
+
+BOOST_AUTO_TEST_CASE(ParsevalidJSONnotString_asString_throws) {
+    std::string inline_json = "{\"key\": 100}";
+    Json::JsonObject parser(inline_json);
+    Json::JsonObject value = parser.get_item("key");
+    
+    BOOST_CHECK_THROW( value.as_string() , std::invalid_argument );
+}
+
+
+BOOST_AUTO_TEST_CASE(ParsevalidJSONint_asInt) {
+    std::string inline_json = "{\"key\": 100}";
+    Json::JsonObject parser(inline_json);
+    Json::JsonObject value = parser.get_item("key");
+    
+    BOOST_CHECK_EQUAL( 100 , value.as_int() );
+}
+
+
+BOOST_AUTO_TEST_CASE(ParsevalidJSONnotint_asint_throws) {
+    std::string inline_json = "{\"key\": \"100X\"}";
+    Json::JsonObject parser(inline_json);
+    Json::JsonObject value = parser.get_item("key");
+    
+    BOOST_CHECK_THROW( value.as_int() , std::invalid_argument );
+}
+
+
+
+BOOST_AUTO_TEST_CASE(ParsevalidJSON_getInt_OK) {
+    std::string inline_json = "{\"key1\": 100 , \"key2\" : 200}";
+    Json::JsonObject parser(inline_json);
+    BOOST_CHECK_EQUAL( 100 , parser.get_int("key1") );
+    BOOST_CHECK_EQUAL( 200 , parser.get_int("key2") );
+}
+
 
 
 BOOST_AUTO_TEST_CASE(ParsevalidJSON_hasItem) {
@@ -77,15 +129,15 @@ BOOST_AUTO_TEST_CASE(ParsevalidJSON_getNotScalar_throws) {
 BOOST_AUTO_TEST_CASE(ParsevalidJSON_getObject) {
     std::string inline_json = "{\"key\": \"value\", \"list\": [1,2,3]}";
     Json::JsonObject parser(inline_json);
-    BOOST_CHECK_NO_THROW( Json::JsonObject object = parser.get_object("list") );
-    BOOST_CHECK_NO_THROW( Json::JsonObject object = parser.get_object("key") );
+    BOOST_CHECK_NO_THROW( Json::JsonObject object = parser.get_item("list") );
+    BOOST_CHECK_NO_THROW( Json::JsonObject object = parser.get_item("key") );
 }
 
 
 BOOST_AUTO_TEST_CASE(ParsevalidJSON_getObject_missing_throw) {
     std::string inline_json = "{\"key\": \"value\", \"list\": [1,2,3]}";
     Json::JsonObject parser(inline_json);
-    BOOST_CHECK_THROW( parser.get_object("listX") , std::invalid_argument );
+    BOOST_CHECK_THROW( parser.get_item("listX") , std::invalid_argument );
 }
 
 
@@ -93,8 +145,82 @@ BOOST_AUTO_TEST_CASE(ParsevalidJSON_getObject_missing_throw) {
 BOOST_AUTO_TEST_CASE(ParsevalidJSON_CheckArraySize) {
     std::string inline_json = "{\"key\": \"value\", \"list\": [1,2,3]}";
     Json::JsonObject parser(inline_json);
-    Json::JsonObject object = parser.get_object("list");
+    Json::JsonObject object = parser.get_item("list");
     BOOST_CHECK_EQUAL( 3U , object.size() );
+}
+
+
+BOOST_AUTO_TEST_CASE(ParsevalidJSON_isArray){ 
+    std::string inline_json = "{\"key\": \"value\", \"list\": [1,2,3]}";
+    Json::JsonObject parser(inline_json);
+    Json::JsonObject list = parser.get_item("list");
+    Json::JsonObject key = parser.get_item("key");
+
+    BOOST_CHECK( list.is_array() );
+    BOOST_CHECK_EQUAL( false , key.is_array( ) );
+}
+
+
+BOOST_AUTO_TEST_CASE(ParsevalidJSON_arrayGet) {
+    std::string inline_json = "{\"key\": \"value\", \"list\": [1,2,3]}";
+    Json::JsonObject parser(inline_json);
+    Json::JsonObject list = parser.get_item("list");
+    Json::JsonObject key = parser.get_item("key");
+
+    BOOST_CHECK_NO_THROW( list.get_array_item( 0U ));
+    BOOST_CHECK_NO_THROW( list.get_array_item( 1U ));
+    BOOST_CHECK_NO_THROW( list.get_array_item( 2U ));
+    
+    BOOST_CHECK_THROW( list.get_array_item( 3U ) , std::invalid_argument );
+    BOOST_CHECK_THROW( key.get_array_item( 0U ) , std::invalid_argument );
+}
+
+
+BOOST_AUTO_TEST_CASE(parseJSONString_testType) {
+    std::string inline_json = "{\"item\": \"string\"}";
+    Json::JsonObject json(inline_json);    
+    Json::JsonObject item = json.get_item( "item" );
+
+    BOOST_CHECK( item.is_string() );
+    BOOST_CHECK_EQUAL( false , item.is_number( ) );
+    BOOST_CHECK_EQUAL( false , item.is_array( ) );
+    BOOST_CHECK_EQUAL( false , item.is_object( ) );
+}
+
+
+BOOST_AUTO_TEST_CASE(parseJSONNumber_testType) {
+    std::string inline_json = "{\"item\": 100}";
+    Json::JsonObject json(inline_json);    
+    Json::JsonObject item = json.get_item( "item" );
+
+    BOOST_CHECK_EQUAL( true  , item.is_number( ) );
+    BOOST_CHECK_EQUAL( false , item.is_string() );
+    BOOST_CHECK_EQUAL( false , item.is_array( ) );
+    BOOST_CHECK_EQUAL( false , item.is_object( ) );
+}
+
+
+BOOST_AUTO_TEST_CASE(parseJSONArray_testType) {
+    std::string inline_json = "{\"item\": [1,2,3]}";
+    Json::JsonObject json(inline_json);    
+    Json::JsonObject item = json.get_item( "item" );
+
+    BOOST_CHECK_EQUAL( false , item.is_number( ) );
+    BOOST_CHECK_EQUAL( false , item.is_string() );
+    BOOST_CHECK_EQUAL( true  , item.is_array( ) );
+    BOOST_CHECK_EQUAL( false , item.is_object( ) );
+}
+
+
+BOOST_AUTO_TEST_CASE(parseJSONObject_testType) {
+    std::string inline_json = "{\"item\": {\"list\": [0,1,2]}}";
+    Json::JsonObject json(inline_json);    
+    Json::JsonObject item = json.get_item( "item" );
+
+    BOOST_CHECK_EQUAL( false , item.is_number( ) );
+    BOOST_CHECK_EQUAL( false , item.is_string() );
+    BOOST_CHECK_EQUAL( false , item.is_array( ) );
+    BOOST_CHECK_EQUAL( true  , item.is_object( ) );
 }
 
 
@@ -110,3 +236,6 @@ BOOST_AUTO_TEST_CASE(Parse_fileExists_OK) {
     boost::filesystem::path jsonFile("testdata/json/example1.json");
     BOOST_CHECK_THROW( Json::JsonObject parser(jsonFile) , std::invalid_argument);
 }
+
+
+

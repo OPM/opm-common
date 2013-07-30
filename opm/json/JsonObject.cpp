@@ -53,8 +53,7 @@ namespace Json {
 
         if (stream) { 
             std::string content( (std::istreambuf_iterator<char>(stream)), 
-                                  (std::istreambuf_iterator<char>()));
-            std::cout << content;
+                                 (std::istreambuf_iterator<char>()));
             initialize( content );
         } else
             throw std::invalid_argument("Loading json from file: " + jsonFile.string() + " failed.");
@@ -85,16 +84,33 @@ namespace Json {
     }
 
     
+    bool JsonObject::is_array( ) const {
+        if (root->type == cJSON_Array)
+            return true;
+        else
+            return false;
+    }
 
-    std::string JsonObject::get_string(const std::string& key) {
-        cJSON * object = cJSON_GetObjectItem( root , key.c_str() );
-        if (object) {
-            if (cJSON_GetArraySize( object ))
-                throw std::invalid_argument("Key: " + key + " is not a scalar object");
-            else  
-                return object->valuestring;
-        } else
-            throw std::invalid_argument("Key: " + key + " does not exist in json object");
+    bool JsonObject::is_number( ) const {
+        if (root->type == cJSON_Number)
+            return true;
+        else
+            return false;
+    }
+
+
+    bool JsonObject::is_string( ) const {
+        if (root->type == cJSON_String)
+            return true;
+        else
+            return false;
+    }
+
+    bool JsonObject::is_object( ) const {
+        if (root->type == cJSON_Object)
+            return true;
+        else
+            return false;
     }
     
     
@@ -104,14 +120,65 @@ namespace Json {
     }
 
 
+    JsonObject JsonObject::get_array_item( size_t index ) const {
+        if (is_array()) {
+            cJSON * new_c_ptr = cJSON_GetArrayItem( root , index );
+            if (new_c_ptr)
+                return JsonObject( new_c_ptr );
+            else
+                throw std::invalid_argument("Index is out ouf range.");
+        } else
+            throw std::invalid_argument("Object is not an array.");
+    }
+    
 
-    JsonObject JsonObject::get_object(const std::string& key) {
-        cJSON * object = cJSON_GetObjectItem( root , key.c_str() );
-        if (object) 
-            return JsonObject( object );
+    JsonObject JsonObject::get_item(const std::string& key) const {
+        cJSON * c_ptr = cJSON_GetObjectItem( root , key.c_str() );
+        if (c_ptr) 
+            return JsonObject( c_ptr );
         else
             throw std::invalid_argument("Key: " + key + " does not exist in json object");
     }
+
+    
+    std::string JsonObject::get_string(const std::string& key) const {
+        JsonObject child = get_scalar_object( key );
+        return child.as_string();
+    }
+
+
+    std::string JsonObject::as_string() const {
+        if (is_string())
+            return root->valuestring;
+        else
+            throw std::invalid_argument("Object is not a string object");
+    }
+
+
+    int JsonObject::get_int(const std::string& key) const {
+        JsonObject child = get_scalar_object( key );
+        return child.as_int( );
+    }
+    
+
+    int JsonObject::as_int() const {    
+        if (root->type == cJSON_Number)
+            return root->valueint;
+        else
+            throw std::invalid_argument("Object is not a number object.");
+    }
+
+
+    JsonObject JsonObject::get_scalar_object(const std::string& key) const{
+        JsonObject child = get_item( key );
+        if (child.size())
+            throw std::invalid_argument("Key: " + key + " is not a scalar object");
+        else
+            return child;
+    }
+
+
+
 
 }
 
