@@ -43,6 +43,11 @@ namespace Json {
     }
 
 
+    JsonObject::JsonObject(const char * inline_json) {
+        initialize( inline_json );
+    }
+
+
     JsonObject::JsonObject(const boost::filesystem::path& jsonFile ) {
         std::ifstream stream(jsonFile.string().c_str());
 

@@ -33,6 +33,7 @@ namespace Json {
     public:
         JsonObject(const boost::filesystem::path& jsonFile );
         JsonObject(const std::string& inline_json);
+        JsonObject(const char * inline_json);
         JsonObject(cJSON * root);
         ~JsonObject();
         
