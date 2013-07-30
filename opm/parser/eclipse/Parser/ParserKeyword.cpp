@@ -20,22 +20,43 @@
 #include <string>
 #include <stdexcept>
 
+
+#include <opm/json/JsonObject.hpp>
+
 #include <opm/parser/eclipse/Parser/ParserConst.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 
 namespace Opm {
+
 
     ParserKeyword::ParserKeyword(const std::string& name) {
         setKeywordName(name);
         m_keywordSizeType = UNDEFINED;
     }
 
-    ParserKeyword::ParserKeyword(const std::string& name, size_t fixedKeywordSize) {
 
+    ParserKeyword::ParserKeyword(const char * name) {
+        setKeywordName(name);
+        m_keywordSizeType = UNDEFINED;
+    }
+
+
+    ParserKeyword::ParserKeyword(const std::string& name, size_t fixedKeywordSize) {
         setKeywordName(name);
         m_keywordSizeType = FIXED;
         m_fixedSize = fixedKeywordSize;
     }
+    
+    
+    ParserKeyword::ParserKeyword(const Json::JsonObject& jsonConfig) {
+        setKeywordName(jsonConfig.get_string("name"));
+        if (jsonConfig.has_item("size")) {
+            m_fixedSize = (size_t) jsonConfig.get_int("size");
+            m_keywordSizeType = FIXED;
+        } else
+            m_keywordSizeType = UNDEFINED;
+    }
+
 
     void ParserKeyword::setKeywordName(const std::string& name) {
         if (name.length() > ParserConst::maxKeywordLength)

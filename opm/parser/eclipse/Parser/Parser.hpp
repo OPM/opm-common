@@ -24,6 +24,8 @@
 #include <fstream>
 #include <boost/shared_ptr.hpp>
 
+#include <opm/json/JsonObject.hpp>
+
 #include <opm/parser/eclipse/Logger/Logger.hpp>
 #include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
 #include <opm/parser/eclipse/RawDeck/RawDeck.hpp>
@@ -52,6 +54,8 @@ namespace Opm {
         /// Method to add ParserKeyword instances, these holding type and size information about the keywords and their data.
         void addKeyword(ParserKeywordConstPtr parserKeyword);
         bool hasKeyword(const std::string& keyword) const;
+
+        void loadKeywords(const Json::JsonObject& jsonConfig);
 
     private:
         std::map<std::string, ParserKeywordConstPtr> m_parserKeywords;

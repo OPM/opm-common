@@ -23,6 +23,7 @@
 #define BOOST_TEST_MODULE ParserTests
 #include <boost/test/unit_test.hpp>
 
+#include <opm/json/JsonObject.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
@@ -55,6 +56,31 @@ BOOST_AUTO_TEST_CASE(hasKeyword_hasKeyword_returnstrue) {
     ParserPtr parser(new Parser());
     parser->addKeyword(ParserKeywordConstPtr(new ParserKeyword("FJAS")));
     BOOST_CHECK(parser->hasKeyword("FJAS"));
+}
+
+
+BOOST_AUTO_TEST_CASE(addKeywordJSON_hasKeyword_returnstrue) {
+    ParserPtr parser(new Parser());
+    Json::JsonObject jsonConfig("{\"name\": \"BPR\", \"size\" : 100}");
+    parser->addKeyword(ParserKeywordConstPtr(new ParserKeyword( jsonConfig )));
+    BOOST_CHECK(parser->hasKeyword("BPR"));
+}
+
+BOOST_AUTO_TEST_CASE(loadKeywordsJSON_notArray_throw) {
+    ParserPtr parser(new Parser());
+    Json::JsonObject jsonConfig( "{\"keywords\" : {\"name\" : \"BPR\" , \"size\" : 100}}");
+    
+    BOOST_CHECK_THROW(parser->loadKeywords( jsonConfig ) , std::invalid_argument);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(loadKeywordsJSON_hasKeyword_returnstrue) {
+    ParserPtr parser(new Parser());
+    Json::JsonObject jsonConfig( "{\"keywords\" : [{\"name\" : \"BPR\" , \"size\" : 100}]}");
+    
+    parser->loadKeywords( jsonConfig );
+    BOOST_CHECK(parser->hasKeyword("BPR"));
 }
 
 

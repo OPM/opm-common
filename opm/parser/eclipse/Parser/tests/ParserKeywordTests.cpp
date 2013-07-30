@@ -21,6 +21,7 @@
 #define BOOST_TEST_MODULE ParserTests
 #include <boost/test/unit_test.hpp>
 
+#include <opm/json/JsonObject.hpp>
 #include "opm/parser/eclipse/Parser/ParserKeyword.hpp"
 #include "opm/parser/eclipse/Parser/ParserIntItem.hpp"
 #include "opm/parser/eclipse/Parser/ParserItem.hpp"
@@ -40,6 +41,24 @@ BOOST_AUTO_TEST_CASE(NamedInit) {
     ParserKeyword parserKeyword(keyword, 100);
     BOOST_CHECK_EQUAL(parserKeyword.getName(), keyword);
 }
+
+
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObject) {
+    Json::JsonObject jsonObject("{\"name\": \"BPR\"}");
+    ParserKeyword parserKeyword(jsonObject);
+    BOOST_CHECK_EQUAL("BPR" , parserKeyword.getName());
+    BOOST_CHECK_EQUAL( false , parserKeyword.hasFixedSize() );
+}
+
+
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withSize) {
+    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100}");
+    ParserKeyword parserKeyword(jsonObject);
+    BOOST_CHECK_EQUAL("BPR" , parserKeyword.getName());
+    BOOST_CHECK_EQUAL( true , parserKeyword.hasFixedSize() );
+    BOOST_CHECK_EQUAL( 100U , parserKeyword.getFixedSize() );
+}
+
 
 BOOST_AUTO_TEST_CASE(setRecord_validRecord_recordSet) {
     ParserKeywordPtr parserKeyword(new ParserKeyword("JA"));

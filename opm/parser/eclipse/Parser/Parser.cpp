@@ -49,13 +49,30 @@ namespace Opm {
         return deck;
     }
 
+
     void Parser::addKeyword(ParserKeywordConstPtr parserKeyword) {
         m_parserKeywords.insert(std::make_pair(parserKeyword->getName(), parserKeyword));
     }
 
+
+    void Parser::loadKeywords(const Json::JsonObject& jsonConfig) {
+        Json::JsonObject jsonKeywords = jsonConfig.get_item("keywords");
+        if (jsonKeywords.is_array()) {
+            for (size_t index = 0; index < jsonKeywords.size(); index++) {
+                Json::JsonObject jsonKeyword = jsonKeywords.get_array_item( index );
+                ParserKeywordConstPtr parserKeyword( new ParserKeyword( jsonKeyword ));
+                
+                addKeyword( parserKeyword );
+            }
+        } else
+            throw std::invalid_argument("Input JSON object is not an array");
+    }
+
+
     bool Parser::hasKeyword(const std::string& keyword) const {
         return m_parserKeywords.find(keyword) != m_parserKeywords.end();
     }
+
 
     RawDeckPtr Parser::readToRawDeck(const std::string& path) const {
         RawDeckPtr rawDeck(new RawDeck());
