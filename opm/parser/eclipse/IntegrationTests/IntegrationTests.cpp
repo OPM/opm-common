@@ -149,19 +149,19 @@ BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_dataiscorrect) {
 
 BOOST_AUTO_TEST_CASE(PrintToOStream_noThrow) {
     boost::filesystem::path singleKeywordFile("testdata/small.data");
-    ParserPtr parser(new Parser());
+    ParserPtr parser(new Parser(JSON_CONFIG_FILE));
     RawDeckPtr rawDeck = parser->readToRawDeck(singleKeywordFile.string());
     std::cout << *rawDeck << "\n";
 }
 
 BOOST_AUTO_TEST_CASE(Parse_InvalidInputFile_Throws) {
-    ParserPtr parser(new Parser());
+    ParserPtr parser(new Parser(JSON_CONFIG_FILE));
     BOOST_CHECK_THROW(parser->readToRawDeck("nonexistingfile.asdf"), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(Parse_ValidInputFile_NoThrow) {
     boost::filesystem::path singleKeywordFile("testdata/small.data");
-    ParserPtr parser(new Parser());
+    ParserPtr parser(new Parser(JSON_CONFIG_FILE));
 
     BOOST_CHECK_NO_THROW(parser->readToRawDeck(singleKeywordFile.string()));
 }
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(Parse_ValidInputFile_NoThrow) {
 BOOST_AUTO_TEST_CASE(ParseFileWithOneKeyword) {
 
     boost::filesystem::path singleKeywordFile("testdata/mini.data");
-    ParserPtr parser(new Parser());
+    ParserPtr parser(new Parser(JSON_CONFIG_FILE));
 
     RawDeckPtr rawDeck = parser->readToRawDeck(singleKeywordFile.string());
 
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(ParseFileWithOneKeyword) {
 BOOST_AUTO_TEST_CASE(ParseFileWithFewKeywords) {
     boost::filesystem::path singleKeywordFile("testdata/small.data");
 
-    ParserPtr parser(new Parser());
+    ParserPtr parser(new Parser(JSON_CONFIG_FILE));
 
     RawDeckPtr rawDeck = parser->readToRawDeck(singleKeywordFile.string());
 

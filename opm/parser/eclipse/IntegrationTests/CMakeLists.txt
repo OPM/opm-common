@@ -1,3 +1,5 @@
+add_definitions( -DJSON_CONFIG_FILE="${PROJECT_SOURCE_DIR}/opm/parser/share/parser_config.json")
+
 add_executable(runIntegrationTests IntegrationTests.cpp)
 target_link_libraries(runIntegrationTests Parser ${Boost_LIBRARIES})
 add_test(NAME runIntegrationTests WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND runIntegrationTests)
