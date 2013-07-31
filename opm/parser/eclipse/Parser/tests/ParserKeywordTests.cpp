@@ -60,6 +60,12 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withSize) {
 }
 
 
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_missingName_throws) {
+    Json::JsonObject jsonObject("{\"nameXX\": \"BPR\", \"size\" : 100}");
+    BOOST_CHECK_THROW(ParserKeyword parserKeyword(jsonObject) , std::invalid_argument);
+}
+
+
 BOOST_AUTO_TEST_CASE(setRecord_validRecord_recordSet) {
     ParserKeywordPtr parserKeyword(new ParserKeyword("JA"));
     ParserRecordConstPtr parserRecord = ParserRecordConstPtr(new ParserRecord());

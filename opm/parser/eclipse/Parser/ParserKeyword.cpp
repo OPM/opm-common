@@ -49,12 +49,15 @@ namespace Opm {
     
     
     ParserKeyword::ParserKeyword(const Json::JsonObject& jsonConfig) {
-        setKeywordName(jsonConfig.get_string("name"));
-        if (jsonConfig.has_item("size")) {
-            m_fixedSize = (size_t) jsonConfig.get_int("size");
-            m_keywordSizeType = FIXED;
+        if (jsonConfig.has_item("name")) {
+            setKeywordName(jsonConfig.get_string("name"));
+            if (jsonConfig.has_item("size")) {
+                m_fixedSize = (size_t) jsonConfig.get_int("size");
+                m_keywordSizeType = FIXED;
+            } else
+                m_keywordSizeType = UNDEFINED;
         } else
-            m_keywordSizeType = UNDEFINED;
+            throw std::invalid_argument("Json object is missing name: property");
     }
 
 
