@@ -30,19 +30,19 @@ namespace Opm {
 
 
     ParserKeyword::ParserKeyword(const std::string& name) {
-        setKeywordName(name);
+        commonInit(name);
         m_keywordSizeType = UNDEFINED;
     }
 
 
     ParserKeyword::ParserKeyword(const char * name) {
-        setKeywordName(name);
+        commonInit(name);
         m_keywordSizeType = UNDEFINED;
     }
 
 
     ParserKeyword::ParserKeyword(const std::string& name, size_t fixedKeywordSize) {
-        setKeywordName(name);
+        commonInit(name);
         m_keywordSizeType = FIXED;
         m_fixedSize = fixedKeywordSize;
     }
@@ -50,7 +50,7 @@ namespace Opm {
     
     ParserKeyword::ParserKeyword(const Json::JsonObject& jsonConfig) {
         if (jsonConfig.has_item("name")) {
-            setKeywordName(jsonConfig.get_string("name"));
+            commonInit(jsonConfig.get_string("name"));
             if (jsonConfig.has_item("size")) {
                 m_fixedSize = (size_t) jsonConfig.get_int("size");
                 m_keywordSizeType = FIXED;
@@ -59,26 +59,24 @@ namespace Opm {
         } else
             throw std::invalid_argument("Json object is missing name: property");
     }
-
-
-    void ParserKeyword::setKeywordName(const std::string& name) {
+    
+    void ParserKeyword::commonInit(const std::string& name) {
         if (name.length() > ParserConst::maxKeywordLength)
             throw std::invalid_argument("Given keyword name is too long - max 8 characters.");
-
+        
         for (unsigned int i = 0; i < name.length(); i++)
             if (islower(name[i]))
                 throw std::invalid_argument("Keyword must be all upper case - mixed case not allowed:" + name);
-
+        
         m_name = name;
+        m_record = ParserRecordPtr(new ParserRecord);
     }
 
-    void ParserKeyword::setRecord(ParserRecordConstPtr record) {
-        m_record = record;
-    }
 
-    ParserRecordConstPtr ParserKeyword::getRecord() {
+    ParserRecordPtr ParserKeyword::getRecord() {
         return m_record;
     }
+
 
     const std::string& ParserKeyword::getName() const {
         return m_name;

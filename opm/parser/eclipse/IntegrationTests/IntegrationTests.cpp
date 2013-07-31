@@ -35,9 +35,8 @@ using namespace Opm;
 ParserPtr createWWCTParser() {
     ParserKeywordPtr parserKeyword(new ParserKeyword("WWCT"));
     {
-        ParserRecordPtr wwctRecord(new ParserRecord());
+        ParserRecordPtr wwctRecord = parserKeyword->getRecord();
         wwctRecord->addItem(ParserStringItemConstPtr(new ParserStringItem("WELL", ALL)));
-        parserKeyword->setRecord(wwctRecord);
     }
 
     ParserPtr parser(new Parser());
@@ -70,12 +69,10 @@ BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_dataIsCorrect) {
 ParserPtr createBPRParser() {
     ParserKeywordPtr parserKeyword(new ParserKeyword("BPR"));
     {
-        ParserRecordPtr bprRecord(new ParserRecord());
+        ParserRecordPtr bprRecord = parserKeyword->getRecord();
         bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("I", SINGLE)));
         bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("J", SINGLE)));
         bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("K", SINGLE)));
-
-        parserKeyword->setRecord(bprRecord);
     }
 
     ParserPtr parser(new Parser());

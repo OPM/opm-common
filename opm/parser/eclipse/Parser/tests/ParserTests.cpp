@@ -146,14 +146,13 @@ BOOST_AUTO_TEST_CASE(createWithValidJsonFileArgument) {
 
 ParserKeywordPtr setupParserKeywordInt(std::string name, int numberOfItems) {
     ParserKeywordPtr parserKeyword(new ParserKeyword(name));
-    ParserRecordPtr parserRecord(new ParserRecord());
+    ParserRecordPtr parserRecord = parserKeyword->getRecord();
+
     for (int i = 0; i < numberOfItems; i++) {
         std::string name = "ITEM_" + boost::lexical_cast<std::string>(i);
         ParserItemPtr intItem(new ParserIntItem(name, SINGLE));
         parserRecord->addItem(intItem);
     }
-
-    parserKeyword->setRecord(parserRecord);
 
     return parserKeyword;
 }
@@ -207,14 +206,12 @@ BOOST_AUTO_TEST_CASE(parseFromRawDeck_severalRawRecordsSeveralIntItem_deckReturn
 
 ParserKeywordPtr setupParserKeywordString(std::string name, int numberOfItems) {
     ParserKeywordPtr parserKeyword(new ParserKeyword(name));
-    ParserRecordPtr parserRecord(new ParserRecord());
+    ParserRecordPtr parserRecord = parserKeyword->getRecord();
     for (int i = 0; i < numberOfItems; i++) {
         std::string name = "ITEM_" + boost::lexical_cast<std::string>(i);
         ParserItemPtr stringItem(new ParserStringItem(name, SINGLE));
         parserRecord->addItem(stringItem);
     }
-
-    parserKeyword->setRecord(parserRecord);
 
     return parserKeyword;
 }

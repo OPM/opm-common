@@ -37,21 +37,20 @@ namespace Opm {
         ParserKeyword(const std::string& name);
         ParserKeyword(const std::string& name, size_t fixedKeywordSize);
         ParserKeyword(const Json::JsonObject& jsonConfig);
-        void setRecord(ParserRecordConstPtr record);
-        ParserRecordConstPtr getRecord();
+        ParserRecordPtr getRecord();
         const std::string& getName() const;
         size_t getFixedSize() const;
         bool hasFixedSize() const;
-
+        
         DeckKeywordPtr parse(RawKeywordConstPtr rawKeyword) const;
 
     private:
         std::string m_name;
-        ParserRecordConstPtr m_record;
+        ParserRecordPtr m_record;
         enum ParserKeywordSizeEnum m_keywordSizeType;
         size_t m_fixedSize;
         
-        void setKeywordName(const std::string& name);
+        void commonInit(const std::string& name);
 
     };
     typedef boost::shared_ptr<ParserKeyword> ParserKeywordPtr;

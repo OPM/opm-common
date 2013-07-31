@@ -66,12 +66,6 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_missingName_throws) {
 }
 
 
-BOOST_AUTO_TEST_CASE(setRecord_validRecord_recordSet) {
-    ParserKeywordPtr parserKeyword(new ParserKeyword("JA"));
-    ParserRecordConstPtr parserRecord = ParserRecordConstPtr(new ParserRecord());
-    parserKeyword->setRecord(parserRecord);
-    BOOST_CHECK_EQUAL(parserRecord, parserKeyword->getRecord());
-}
 
 BOOST_AUTO_TEST_CASE(constructor_nametoolongwithfixedsize_exceptionthrown) {
     std::string keyword("KEYWORDTOOLONG");
