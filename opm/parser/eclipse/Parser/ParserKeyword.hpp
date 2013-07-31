@@ -51,7 +51,7 @@ namespace Opm {
         size_t m_fixedSize;
         
         void commonInit(const std::string& name);
-
+        void addItems( const Json::JsonObject& jsonConfig);
     };
     typedef boost::shared_ptr<ParserKeyword> ParserKeywordPtr;
     typedef boost::shared_ptr<const ParserKeyword> ParserKeywordConstPtr;

@@ -42,6 +42,8 @@ BOOST_AUTO_TEST_CASE(NamedInit) {
     BOOST_CHECK_EQUAL(parserKeyword.getName(), keyword);
 }
 
+/*****************************************************************/
+/* json */
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject) {
     Json::JsonObject jsonObject("{\"name\": \"BPR\"}");
@@ -65,7 +67,57 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_missingName_throws) {
     BOOST_CHECK_THROW(ParserKeyword parserKeyword(jsonObject) , std::invalid_argument);
 }
 
+/*
+  "items": [{"name" : "I" , "size_type" : "SINGLE" , "value_type" : "int"}]
+*/
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_invalidItems_throws) {
+    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100 , \"items\" : 100}");
+    BOOST_CHECK_THROW(ParserKeyword parserKeyword(jsonObject) , std::invalid_argument);
+}
 
+
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_ItemMissingName_throws) {
+    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100 , \"items\" : [{\"nameX\" : \"I\" , \"size_type\" : \"SINGLE\" , \"value_type\" : \"INT\"}]}");
+    BOOST_CHECK_THROW(ParserKeyword parserKeyword(jsonObject) , std::invalid_argument);
+}
+
+
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_ItemMissingSizeType_throws) {
+    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100 , \"items\" : [{\"name\" : \"I\" , \"Xsize_type\" : \"SINGLE\" , \"value_type\" : \"INT\"}]}");
+    BOOST_CHECK_THROW(ParserKeyword parserKeyword(jsonObject) , std::invalid_argument);
+}
+
+
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_ItemMissingValueType_throws) {
+    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100 , \"items\" : [{\"name\" : \"I\" , \"size_type\" : \"SINGLE\" , \"Xvalue_type\" : \"INT\"}]}");
+    BOOST_CHECK_THROW(ParserKeyword parserKeyword(jsonObject) , std::invalid_argument);
+}
+
+
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_ItemInvalidEnum_throws) {
+    Json::JsonObject jsonObject1("{\"name\": \"BPR\", \"size\" : 100 , \"items\" : [{\"name\" : \"I\" , \"size_type\" : \"XSINGLE\" , \"value_type\" : \"INT\"}]}");
+    Json::JsonObject jsonObject2("{\"name\": \"BPR\", \"size\" : 100 , \"items\" : [{\"name\" : \"I\" , \"size_type\" : \"SINGLE\" , \"value_type\" : \"INTX\"}]}");
+    
+    BOOST_CHECK_THROW(ParserKeyword parserKeyword(jsonObject1) , std::invalid_argument);
+    BOOST_CHECK_THROW(ParserKeyword parserKeyword(jsonObject2) , std::invalid_argument);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObjectItemsOK) {
+    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100 , \"items\" : [{\"name\" : \"I\" , \"size_type\" : \"SINGLE\" , \"value_type\" : \"INT\"}]}");
+    ParserKeyword parserKeyword(jsonObject);
+    ParserRecordConstPtr record = parserKeyword.getRecord();
+    ParserItemConstPtr item = record->get( 0 );
+    BOOST_CHECK_EQUAL( 1U , record->size( ) );
+    BOOST_CHECK_EQUAL( "I" , item->name( ) );
+    BOOST_CHECK_EQUAL( SINGLE , item->sizeType()); 
+}
+
+
+
+/* </Json> */
+/*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(constructor_nametoolongwithfixedsize_exceptionthrown) {
     std::string keyword("KEYWORDTOOLONG");

@@ -1,8 +1,16 @@
-{"keywords" : [
-{"name" : "GRIDUNIT" , "size" : 1},
-{"name" : "INCLUDE", "size" : 1},        
-{"name" : "RADFIN4", "size" : 1},        
-{"name" : "DIMENS", "size" : 1},        
+{"keywords" : 
+[
+   {"name" : "BPR" , "items" : 
+     [{"name": "I" , "size_type" : "SINGLE" , "value_type" : "INT"}, 
+      {"name": "J" , "size_type" : "SINGLE" , "value_type" : "INT"}, 
+      {"name": "K" , "size_type" : "SINGLE" , "value_type" : "INT"}]},
+   {"name" : "GRIDUNIT" , "size" : 1, "items" : [{"name" : "LengthUnit"  , "size_type" : "SINGLE" , "value_type" : "STRING" , "default" : "METRES"}]},
+   {"name" : "INCLUDE"  , "size" : 1, "items" : [{"name" : "IncludeFile" , "size_type" : "SINGLE" , "value_type" : "STRING"}]},
+   {"name" : "RADFIN4", "size" : 1},        
+   {"name" : "DIMENS", "size" : 1 , "items" : 
+     [{"name": "NX" , "size_type" : "SINGLE" , "value_type" : "INT"}, 
+      {"name": "NY" , "size_type" : "SINGLE" , "value_type" : "INT"}, 
+      {"name": "NZ" , "size_type" : "SINGLE" , "value_type" : "INT"}]},
 {"name" : "START", "size" : 1},        
 {"name" : "GRIDOPTS", "size" : 1},        
 {"name" : "ENDSCALE", "size" : 1},        
@@ -29,3 +37,4 @@
 {"name" : "DISGAS", "size" : 0},        
 {"name" : "VAPOIL", "size" : 0}
 ]}
+ 

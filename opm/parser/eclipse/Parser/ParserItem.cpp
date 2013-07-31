@@ -22,6 +22,9 @@
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 
+#include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
+#include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
+
 namespace Opm {
 
     ParserItem::ParserItem(const std::string& itemName, ParserItemSizeEnum sizeType) {
@@ -42,6 +45,11 @@ namespace Opm {
         } else
             throw std::invalid_argument("Json config object missing \"size_type\": ... item");
     }
+
+    
+
+
+
 
 
     const std::string& ParserItem::name() const {
