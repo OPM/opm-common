@@ -21,6 +21,7 @@ Deck/KeywordContainer.cpp
 )
 
 set( parser_source 
+Parser/ParserEnums.cpp
 Parser/ParserKeyword.cpp 
 Parser/Parser.cpp 
 Parser/ParserRecord.cpp

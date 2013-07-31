@@ -50,6 +50,14 @@ BOOST_AUTO_TEST_CASE(Initialize_Default) {
     BOOST_CHECK_EQUAL(item2.getDefault(), 88);
 }
 
+
+/*BOOST_AUTO_TEST_CASE(InitializeIntItem_FromJsonObject) {
+    Json::JsonObject jsonConfig("{\"name\": \"ITEM1\" , \"size_type\" : \"ALL\"
+}
+*/
+
+
+
 BOOST_AUTO_TEST_CASE(Name_ReturnsCorrectName) {
     ParserItemSizeEnum sizeType = ALL;
 
@@ -61,13 +69,13 @@ BOOST_AUTO_TEST_CASE(Name_ReturnsCorrectName) {
 }
 
 BOOST_AUTO_TEST_CASE(Size_ReturnsCorrectSizeType) {
-    ParserItemSizeEnum sizeType = ITEM_BOX;
+    ParserItemSizeEnum sizeType = BOX;
     ParserIntItem item1("ITEM1", sizeType);
     BOOST_CHECK_EQUAL(sizeType, item1.sizeType());
 }
 
 BOOST_AUTO_TEST_CASE(Scan_WrongSizeType_ExceptionThrown) {
-    ParserItemSizeEnum sizeType = ITEM_BOX;
+    ParserItemSizeEnum sizeType = BOX;
     ParserIntItem itemInt("ITEM2", sizeType);
 
     RawRecordPtr rawRecord(new RawRecord("100 443 /"));
@@ -112,7 +120,7 @@ BOOST_AUTO_TEST_CASE(Scan_SINGLE_CorrectIntSetInDeckItem) {
 }
 
 BOOST_AUTO_TEST_CASE(Scan_SeveralInts_CorrectIntsSetInDeckItem) {
-    ParserItemSizeEnum sizeType = ITEM_BOX;
+    ParserItemSizeEnum sizeType = BOX;
     ParserIntItem itemInt("ITEM2", sizeType);
 
     RawRecordPtr rawRecord(new RawRecord("100 443 338932 222.33 'Heisann' /"));
@@ -123,7 +131,7 @@ BOOST_AUTO_TEST_CASE(Scan_SeveralInts_CorrectIntsSetInDeckItem) {
 }
 
 BOOST_AUTO_TEST_CASE(Scan_Default_CorrectIntsSetInDeckItem) {
-    ParserItemSizeEnum sizeType = ITEM_BOX;
+    ParserItemSizeEnum sizeType = BOX;
     int defaultValue = 199;
     ParserIntItem itemInt("ITEM2", sizeType, defaultValue);
 
@@ -142,7 +150,7 @@ BOOST_AUTO_TEST_CASE(Scan_Default_CorrectIntsSetInDeckItem) {
 }
 
 BOOST_AUTO_TEST_CASE(Scan_Multiplier_CorrectIntsSetInDeckItem) {
-    ParserItemSizeEnum sizeType = ITEM_BOX;
+    ParserItemSizeEnum sizeType = BOX;
     ParserIntItem itemInt("ITEM2", sizeType);
 
     RawRecordPtr rawRecord(new RawRecord("3*4 /"));
@@ -153,7 +161,7 @@ BOOST_AUTO_TEST_CASE(Scan_Multiplier_CorrectIntsSetInDeckItem) {
 }
 
 BOOST_AUTO_TEST_CASE(Scan_StarNoMultiplier_ExceptionThrown) {
-    ParserItemSizeEnum sizeType = ITEM_BOX;
+    ParserItemSizeEnum sizeType = BOX;
     ParserIntItem itemInt("ITEM2", sizeType);
 
     RawRecordPtr rawRecord(new RawRecord("*45 /"));
@@ -161,7 +169,7 @@ BOOST_AUTO_TEST_CASE(Scan_StarNoMultiplier_ExceptionThrown) {
 }
 
 BOOST_AUTO_TEST_CASE(Scan_MultipleItems_CorrectIntsSetInDeckItem) {
-    ParserItemSizeEnum sizeType = ITEM_BOX;
+    ParserItemSizeEnum sizeType = BOX;
     ParserIntItem itemInt1("ITEM1", sizeType);
     ParserIntItem itemInt2("ITEM2", sizeType);
 
@@ -174,7 +182,7 @@ BOOST_AUTO_TEST_CASE(Scan_MultipleItems_CorrectIntsSetInDeckItem) {
 }
 
 BOOST_AUTO_TEST_CASE(Scan_MultipleDefault_CorrectIntsSetInDeckItem) {
-    ParserItemSizeEnum sizeType = ITEM_BOX;
+    ParserItemSizeEnum sizeType = BOX;
     ParserIntItem itemInt1("ITEM1", sizeType, 10);
     ParserIntItem itemInt2("ITEM2", sizeType, 20);
 
@@ -187,7 +195,7 @@ BOOST_AUTO_TEST_CASE(Scan_MultipleDefault_CorrectIntsSetInDeckItem) {
 }
 
 BOOST_AUTO_TEST_CASE(Scan_MultipleWithMultiplier_CorrectIntsSetInDeckItem) {
-    ParserItemSizeEnum sizeType = ITEM_BOX;
+    ParserItemSizeEnum sizeType = BOX;
     ParserIntItem itemInt1("ITEM1", sizeType, 10);
     ParserIntItem itemInt2("ITEM2", sizeType, 20);
 
@@ -200,7 +208,7 @@ BOOST_AUTO_TEST_CASE(Scan_MultipleWithMultiplier_CorrectIntsSetInDeckItem) {
 }
 
 BOOST_AUTO_TEST_CASE(Scan_MalformedMultiplier_Throw) {
-    ParserItemSizeEnum sizeType = ITEM_BOX;
+    ParserItemSizeEnum sizeType = BOX;
     ParserIntItem itemInt1("ITEM1", sizeType, 10);
 
     RawRecordPtr rawRecord(new RawRecord("2.10*30/"));
@@ -208,7 +216,7 @@ BOOST_AUTO_TEST_CASE(Scan_MalformedMultiplier_Throw) {
 }
 
 BOOST_AUTO_TEST_CASE(Scan_MalformedMultiplierChar_Throw) {
-    ParserItemSizeEnum sizeType = ITEM_BOX;
+    ParserItemSizeEnum sizeType = BOX;
     ParserIntItem itemInt1("ITEM1", sizeType, 10);
 
     RawRecordPtr rawRecord(new RawRecord("210X30/"));
@@ -216,7 +224,7 @@ BOOST_AUTO_TEST_CASE(Scan_MalformedMultiplierChar_Throw) {
 }
 
 BOOST_AUTO_TEST_CASE(Scan_MultipleWithMultiplierDefault_CorrectIntsSetInDeckItem) {
-    ParserItemSizeEnum sizeType = ITEM_BOX;
+    ParserItemSizeEnum sizeType = BOX;
     ParserIntItem itemInt1("ITEM1", sizeType, 10);
     ParserIntItem itemInt2("ITEM2", sizeType, 20);
 
@@ -229,7 +237,7 @@ BOOST_AUTO_TEST_CASE(Scan_MultipleWithMultiplierDefault_CorrectIntsSetInDeckItem
 }
 
 BOOST_AUTO_TEST_CASE(Scan_MultipleWithMultiplierDefault2_CorrectIntsSetInDeckItem) {
-    ParserItemSizeEnum sizeType = ITEM_BOX;
+    ParserItemSizeEnum sizeType = BOX;
     ParserIntItem itemInt1("ITEM1", sizeType, 10);
     ParserIntItem itemInt2("ITEM2", sizeType, 20);
 
@@ -245,7 +253,7 @@ BOOST_AUTO_TEST_CASE(Scan_MultipleWithMultiplierDefault2_CorrectIntsSetInDeckIte
 }
 
 BOOST_AUTO_TEST_CASE(Scan_RawRecordErrorInRawData_ExceptionThrown) {
-    ParserItemSizeEnum sizeType = ITEM_BOX;
+    ParserItemSizeEnum sizeType = BOX;
     ParserIntItem itemInt("ITEM2", sizeType);
 
     // Too few elements
@@ -283,7 +291,7 @@ BOOST_AUTO_TEST_CASE(Scan_RawRecordErrorInRawData_ExceptionThrown) {
 
 /*********************String************************'*/
 BOOST_AUTO_TEST_CASE(scan_boxWithoutExpected_ExceptionThrown) {
-    ParserItemSizeEnum sizeType = ITEM_BOX;
+    ParserItemSizeEnum sizeType = BOX;
     ParserStringItem itemString("ITEM1", sizeType);
     RawRecordPtr rawRecord(new RawRecord("'WELL1' 'WELL2' /"));
     BOOST_CHECK_THROW(itemString.scan(rawRecord), std::invalid_argument);
@@ -335,7 +343,7 @@ BOOST_AUTO_TEST_CASE(scan_all_valuesCorrect) {
 }
 
 BOOST_AUTO_TEST_CASE(scan_givenNumber_valuesCorrect) {
-    ParserItemSizeEnum sizeType = ITEM_BOX;
+    ParserItemSizeEnum sizeType = BOX;
     ParserStringItem itemString("ITEMWITHMANY", sizeType);
     RawRecordPtr rawRecord(new RawRecord("'WELL1' '*' FISK BANAN 3* OPPLEGG_FOR_DATAANALYSE /"));
     DeckItemConstPtr deckItem = itemString.scan(3, rawRecord);
@@ -371,7 +379,7 @@ BOOST_AUTO_TEST_CASE(scan_intsAndStrings_dataCorrect) {
     RawRecordPtr rawRecord(new RawRecord("'WELL1' 2 2 2*3 3*FLASKEHALS /"));
 
     ParserItemSizeEnum sizeTypeSingle = SINGLE;
-    ParserItemSizeEnum sizeTypeItemBoxed = ITEM_BOX;
+    ParserItemSizeEnum sizeTypeItemBoxed = BOX;
 
     ParserStringItem itemSingleString("ITEM1", sizeTypeSingle);
     DeckItemConstPtr deckItemWell1 = itemSingleString.scan(rawRecord);
