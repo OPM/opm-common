@@ -17,6 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <opm/json/JsonObject.hpp>
+
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
 
@@ -26,9 +28,19 @@ namespace Opm {
         m_default = defaultString();
     }
     
-      ParserStringItem::ParserStringItem(const std::string& itemName, ParserItemSizeEnum sizeType, std::string defaultValue) : ParserItem(itemName, sizeType) {
+
+    ParserStringItem::ParserStringItem(const std::string& itemName, ParserItemSizeEnum sizeType, std::string defaultValue) : ParserItem(itemName, sizeType) {
         m_default = defaultValue;
     }
+
+
+    ParserStringItem::ParserStringItem( const Json::JsonObject& jsonConfig) : ParserItem(jsonConfig) {
+        if (jsonConfig.has_item("default"))
+            m_default = jsonConfig.get_string("default");
+        else
+            m_default = defaultString();
+    }
+
 
 
     DeckItemConstPtr ParserStringItem::scan(size_t expectedItems, RawRecordPtr rawRecord) const {

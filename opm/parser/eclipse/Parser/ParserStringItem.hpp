@@ -21,6 +21,8 @@
 #ifndef PARSERSTRINGITEM_HPP
 #define PARSERSTRINGITEM_HPP
 
+#include <opm/json/JsonObject.hpp>
+
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 
@@ -30,6 +32,7 @@ namespace Opm {
     public:
         ParserStringItem(const std::string& itemName, ParserItemSizeEnum sizeType);
         ParserStringItem(const std::string& itemName, ParserItemSizeEnum sizeType, std::string defaultValue);
+        ParserStringItem( const Json::JsonObject& jsonConfig);
 
         DeckItemConstPtr scan(size_t expectedItems, RawRecordPtr rawRecord) const;
         DeckItemConstPtr scan(RawRecordPtr rawRecord) const;

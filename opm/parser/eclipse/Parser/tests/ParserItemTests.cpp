@@ -82,11 +82,13 @@ BOOST_AUTO_TEST_CASE(InitializeIntItem_FromJsonObject_withDefault) {
 }
 
 
-
 BOOST_AUTO_TEST_CASE(InitializeIntItem_FromJsonObject_withDefaultInvalid_throws) {
     Json::JsonObject jsonConfig("{\"name\": \"ITEM1\" , \"size_type\" : \"ALL\", \"default\" : \"100X\"}");
     BOOST_CHECK_THROW( ParserIntItem item1( jsonConfig ) , std::invalid_argument );
 }
+
+
+
 
 /* </Json> */
 /******************************************************************/
@@ -324,6 +326,46 @@ BOOST_AUTO_TEST_CASE(Scan_RawRecordErrorInRawData_ExceptionThrown) {
 }
 
 /*********************String************************'*/
+/*****************************************************************/
+/*</json>*/
+
+BOOST_AUTO_TEST_CASE(InitializeStringItem_FromJsonObject_missingName_throws) {
+    Json::JsonObject jsonConfig("{\"nameX\": \"ITEM1\" , \"size_type\" : \"ALL\"}");
+    BOOST_CHECK_THROW( ParserStringItem item1( jsonConfig ) , std::invalid_argument );
+}
+
+
+BOOST_AUTO_TEST_CASE(InitializeStringItem_FromJsonObject_missingSizeType_throws) {
+    Json::JsonObject jsonConfig("{\"name\": \"ITEM1\" , \"size_typeX\" : \"ALL\"}");
+    BOOST_CHECK_THROW( ParserStringItem item1( jsonConfig ) , std::invalid_argument );
+}
+
+
+BOOST_AUTO_TEST_CASE(InitializeStringItem_FromJsonObject) {
+    Json::JsonObject jsonConfig("{\"name\": \"ITEM1\" , \"size_type\" : \"ALL\"}");
+    ParserStringItem item1( jsonConfig );
+    BOOST_CHECK_EQUAL( "ITEM1" , item1.name() );
+    BOOST_CHECK_EQUAL( ALL , item1.sizeType() );
+    BOOST_CHECK_EQUAL( ParserItem::defaultString() , item1.getDefault() );
+}
+
+
+BOOST_AUTO_TEST_CASE(InitializeStringItem_FromJsonObject_withDefault) {
+    Json::JsonObject jsonConfig("{\"name\": \"ITEM1\" , \"size_type\" : \"ALL\", \"default\" : \"100\"}");
+    ParserStringItem item1( jsonConfig );
+    BOOST_CHECK_EQUAL( "100" , item1.getDefault() );
+}
+
+
+
+BOOST_AUTO_TEST_CASE(InitializeStringItem_FromJsonObject_withDefaultInvalid_throws) {
+    Json::JsonObject jsonConfig("{\"name\": \"ITEM1\" , \"size_type\" : \"ALL\", \"default\" : [1,2,3]}");
+    BOOST_CHECK_THROW( ParserStringItem item1( jsonConfig ) , std::invalid_argument );
+}
+/*</json>*/
+/*****************************************************************/
+
+
 BOOST_AUTO_TEST_CASE(scan_boxWithoutExpected_ExceptionThrown) {
     ParserItemSizeEnum sizeType = BOX;
     ParserStringItem itemString("ITEM1", sizeType);
