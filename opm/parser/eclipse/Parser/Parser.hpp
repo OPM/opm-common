@@ -41,6 +41,7 @@ namespace Opm {
     class Parser {
     public:
         Parser();
+        Parser(const boost::filesystem::path& jsonFile);
 
         /// The starting point of the parsing process. The supplied file is parsed, and the resulting Deck is returned.
         DeckPtr parse(const std::string &path);
@@ -55,7 +56,8 @@ namespace Opm {
         void addKeyword(ParserKeywordConstPtr parserKeyword);
         bool hasKeyword(const std::string& keyword) const;
 
-        void loadKeywords(const Json::JsonObject& jsonConfig);
+        void initializeFromJsonFile( const boost::filesystem::path& jsonFile );
+        void loadKeywords(const Json::JsonObject& jsonKeywords);
 
     private:
         std::map<std::string, ParserKeywordConstPtr> m_parserKeywords;
