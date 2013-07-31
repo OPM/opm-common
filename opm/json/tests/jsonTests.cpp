@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(Parse_fileDoesNotExist_Throws) {
 
 BOOST_AUTO_TEST_CASE(Parse_fileExists_OK) {
     boost::filesystem::path jsonFile("testdata/json/example1.json");
-    BOOST_CHECK_THROW( Json::JsonObject parser(jsonFile) , std::invalid_argument);
+    BOOST_CHECK_NO_THROW( Json::JsonObject parser(jsonFile) );
 }
 
 

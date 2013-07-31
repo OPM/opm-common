@@ -24,6 +24,7 @@
 #include <stdexcept>
 
 #include <boost/filesystem/path.hpp>
+#include <boost/filesystem/operations.hpp>
 
 #include <opm/json/JsonObject.hpp>
 #include <opm/json/cjson/cJSON.h>
@@ -42,15 +43,14 @@ namespace Json {
         initialize( inline_json );
     }
 
-
     JsonObject::JsonObject(const char * inline_json) {
         initialize( inline_json );
     }
 
 
+    
     JsonObject::JsonObject(const boost::filesystem::path& jsonFile ) {
         std::ifstream stream(jsonFile.string().c_str());
-
         if (stream) { 
             std::string content( (std::istreambuf_iterator<char>(stream)), 
                                  (std::istreambuf_iterator<char>()));
@@ -114,7 +114,7 @@ namespace Json {
     }
     
     
-    size_t JsonObject::size() {
+    size_t JsonObject::size() const {
         int int_size = cJSON_GetArraySize( root );
         return (size_t) int_size;
     }

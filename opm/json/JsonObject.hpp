@@ -52,7 +52,7 @@ namespace Json {
         bool is_array( ) const;
         bool is_object( ) const;
         
-        size_t size();
+        size_t size() const;
     private:
         JsonObject get_scalar_object(const std::string& key) const;
         void initialize(const std::string& inline_json);
