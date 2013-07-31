@@ -31,9 +31,19 @@ namespace Opm {
         m_default = defaultInt();
     }
 
+
     ParserIntItem::ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType, int defaultValue) : ParserItem(itemName, sizeType) {
         m_default = defaultValue;
     }
+
+    ParserIntItem::ParserIntItem( const Json::JsonObject& jsonConfig) : ParserItem(jsonConfig) {
+        if (jsonConfig.has_item("default"))
+            m_default = jsonConfig.get_int("default");
+        else
+            m_default = defaultInt();
+    }
+
+
 
     DeckItemConstPtr ParserIntItem::scan(size_t expectedItems, RawRecordPtr rawRecord) const {
         return scan__(expectedItems, false, rawRecord);

@@ -21,6 +21,8 @@
 #define BOOST_TEST_MODULE ParserTests
 #include <boost/test/unit_test.hpp>
 
+#include <opm/json/JsonObject.hpp>
+
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
@@ -50,12 +52,44 @@ BOOST_AUTO_TEST_CASE(Initialize_Default) {
     BOOST_CHECK_EQUAL(item2.getDefault(), 88);
 }
 
-
-/*BOOST_AUTO_TEST_CASE(InitializeIntItem_FromJsonObject) {
-    Json::JsonObject jsonConfig("{\"name\": \"ITEM1\" , \"size_type\" : \"ALL\"
+/******************************************************************/
+/* <Json> */
+BOOST_AUTO_TEST_CASE(InitializeIntItem_FromJsonObject_missingName_throws) {
+    Json::JsonObject jsonConfig("{\"nameX\": \"ITEM1\" , \"size_type\" : \"ALL\"}");
+    BOOST_CHECK_THROW( ParserIntItem item1( jsonConfig ) , std::invalid_argument );
 }
-*/
 
+
+BOOST_AUTO_TEST_CASE(InitializeIntItem_FromJsonObject_missingSizeType_throws) {
+    Json::JsonObject jsonConfig("{\"name\": \"ITEM1\" , \"size_typeX\" : \"ALL\"}");
+    BOOST_CHECK_THROW( ParserIntItem item1( jsonConfig ) , std::invalid_argument );
+}
+
+
+BOOST_AUTO_TEST_CASE(InitializeIntItem_FromJsonObject) {
+    Json::JsonObject jsonConfig("{\"name\": \"ITEM1\" , \"size_type\" : \"ALL\"}");
+    ParserIntItem item1( jsonConfig );
+    BOOST_CHECK_EQUAL( "ITEM1" , item1.name() );
+    BOOST_CHECK_EQUAL( ALL , item1.sizeType() );
+    BOOST_CHECK_EQUAL( ParserItem::defaultInt() , item1.getDefault() );
+}
+
+
+BOOST_AUTO_TEST_CASE(InitializeIntItem_FromJsonObject_withDefault) {
+    Json::JsonObject jsonConfig("{\"name\": \"ITEM1\" , \"size_type\" : \"ALL\", \"default\" : 100}");
+    ParserIntItem item1( jsonConfig );
+    BOOST_CHECK_EQUAL( 100 , item1.getDefault() );
+}
+
+
+
+BOOST_AUTO_TEST_CASE(InitializeIntItem_FromJsonObject_withDefaultInvalid_throws) {
+    Json::JsonObject jsonConfig("{\"name\": \"ITEM1\" , \"size_type\" : \"ALL\", \"default\" : \"100X\"}");
+    BOOST_CHECK_THROW( ParserIntItem item1( jsonConfig ) , std::invalid_argument );
+}
+
+/* </Json> */
+/******************************************************************/
 
 
 BOOST_AUTO_TEST_CASE(Name_ReturnsCorrectName) {

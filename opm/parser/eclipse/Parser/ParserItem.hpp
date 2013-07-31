@@ -27,6 +27,8 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/lexical_cast.hpp>
 
+#include <opm/json/JsonObject.hpp>
+
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 #include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
@@ -37,6 +39,7 @@ namespace Opm {
   class ParserItem {
   public:
     ParserItem(const std::string& itemName, ParserItemSizeEnum sizeType);
+    ParserItem(const Json::JsonObject& jsonConfig);
     virtual DeckItemConstPtr scan(RawRecordPtr rawRecord) const = 0;
     virtual DeckItemConstPtr scan(size_t expectedItems, RawRecordPtr rawRecord) const = 0;
 

@@ -17,7 +17,10 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <opm/json/JsonObject.hpp>
+
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
+#include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 
 namespace Opm {
 
@@ -25,6 +28,21 @@ namespace Opm {
         m_name.assign(itemName);
         m_sizeType = sizeType;
     }
+
+    
+    ParserItem::ParserItem(const Json::JsonObject& jsonConfig) {
+        if (jsonConfig.has_item("name"))
+            m_name = jsonConfig.get_string("name");
+        else
+            throw std::invalid_argument("Json config object missing \"name\": ... item");
+
+        if (jsonConfig.has_item("size_type")) {
+            const std::string sizeTypeString = jsonConfig.get_string("size_type");
+            m_sizeType = ParserItemSizeEnumFromString( sizeTypeString );
+        } else
+            throw std::invalid_argument("Json config object missing \"size_type\": ... item");
+    }
+
 
     const std::string& ParserItem::name() const {
         return m_name;
