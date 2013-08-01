@@ -48,7 +48,7 @@ namespace Opm {
 
     static int defaultInt();
     static std::string defaultString();
-
+    static double defaultDouble();
 
     virtual ~ParserItem() {
     }

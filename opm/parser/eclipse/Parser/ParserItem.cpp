@@ -64,6 +64,10 @@ namespace Opm {
         return 0;
     }
 
+    double ParserItem::defaultDouble() {
+        return 0.0;
+    }
+
     std::string ParserItem::defaultString() {
         return "DEFAULT";
     }
