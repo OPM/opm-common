@@ -20,7 +20,10 @@
 #ifndef DECK_HPP
 #define DECK_HPP
 
+#include <vector>
+
 #include <boost/shared_ptr.hpp>
+
 #include <opm/parser/eclipse/Deck/KeywordContainer.hpp>
 
 namespace Opm {
@@ -30,7 +33,9 @@ namespace Opm {
         Deck();
         bool hasKeyword( const std::string& keyword ) const;
         void addKeyword( DeckKeywordConstPtr keyword);
-      DeckKeywordConstPtr getKeyword(const std::string& keyword , size_t index) const;
+        DeckKeywordConstPtr getKeyword(const std::string& keyword , size_t index) const;
+        size_t numKeywords(const std::string& keyword);
+        const std::vector<DeckKeywordConstPtr>& getKeywordList(const std::string& keyword);
 
     private:
         KeywordContainerPtr m_keywords;

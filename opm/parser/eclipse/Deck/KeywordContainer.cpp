@@ -48,18 +48,31 @@ namespace Opm {
             keywordList.push_back(keyword);
         }
     }
-    
-    DeckKeywordConstPtr KeywordContainer::getKeyword(const std::string& keyword, size_t index) const {
+
+    const std::vector<DeckKeywordConstPtr>&  KeywordContainer::getKeywordList(const std::string& keyword) const {
         if (hasKeyword(keyword)) {
             const std::vector<DeckKeywordConstPtr>& keywordList = m_keywordMap.find(keyword)->second;
-            if (index < keywordList.size())
-                return keywordList[index];
-            else
-                throw std::invalid_argument("Keyword index  is out of range.");
-        }
-        else
+            return keywordList;
+        } else
             throw std::invalid_argument("Keyword: " + keyword + " is not found in the container");
     }
+    
+    
+    DeckKeywordConstPtr KeywordContainer::getKeyword(const std::string& keyword, size_t index) const {
+        const std::vector<DeckKeywordConstPtr>& keywordList = getKeywordList( keyword );
+        if (index < keywordList.size())
+            return keywordList[index];
+        else
+            throw std::invalid_argument("Keyword index  is out of range.");
+    }
 
+
+    size_t KeywordContainer::numKeywords(const std::string& keyword) const{
+        if (hasKeyword(keyword)) {
+            const std::vector<DeckKeywordConstPtr>& keywordList = getKeywordList( keyword );
+            return keywordList.size();
+        } else
+            return 0;
+    }
 
 }

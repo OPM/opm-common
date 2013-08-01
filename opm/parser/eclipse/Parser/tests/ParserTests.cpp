@@ -201,6 +201,17 @@ BOOST_AUTO_TEST_CASE(parseFromRawDeck_severalRawRecordsSeveralIntItem_deckReturn
     BOOST_CHECK_EQUAL(10U, deck->getKeyword("RANDOM", 0)->size());
     BOOST_CHECK_EQUAL(50U, deck->getKeyword("RANDOM", 0)->getRecord(0)->size());
 }
+/****************** readToRawDeck ***********************************************/
+
+
+BOOST_AUTO_TEST_CASE(readToRawDeck_twoKeywords_sizeTwoReturned) {
+    ParserPtr parser(new Parser(JSON_CONFIG_FILE));
+    boost::filesystem::path wconhistFile("testdata/WCONHIST/WCONHIST1");
+    RawDeckPtr rawDeck = parser->readToRawDeck( wconhistFile.string() );
+    BOOST_CHECK_EQUAL( 2U , rawDeck->size() );
+}
+
+
 
 /***************** Simple String parsing ********************************/
 

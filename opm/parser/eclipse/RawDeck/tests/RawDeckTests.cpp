@@ -26,8 +26,6 @@
 #include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
 #include <boost/test/test_tools.hpp>
 
-#include "opm/parser/eclipse/Parser/Parser.hpp"
-
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(Initialize_NoThrow) {
@@ -58,6 +56,8 @@ BOOST_AUTO_TEST_CASE(addKeyword_withkeywords_keywordAdded) {
     
     BOOST_CHECK_EQUAL(2U, rawDeck->size());
 }
+
+
 
 
 

@@ -48,6 +48,11 @@ BOOST_AUTO_TEST_CASE(getKeyword_nosuchkeyword_throws) {
     BOOST_CHECK_THROW(deck.getKeyword("TRULS" , 0), std::invalid_argument);
 }
 
+BOOST_AUTO_TEST_CASE(getKeywordList_nosuchkeyword_throws) {
+    Deck deck;
+    BOOST_CHECK_THROW(deck.getKeywordList("TRULS"), std::invalid_argument);
+}
+
 BOOST_AUTO_TEST_CASE(getKeyword_singlekeyword_keywordreturned) {
     Deck deck;
     DeckKeywordConstPtr keyword(new DeckKeyword("BJARNE"));
@@ -63,6 +68,38 @@ BOOST_AUTO_TEST_CASE(getKeyword_singlekeyword_outRange_throws) {
     BOOST_CHECK_THROW(deck.getKeyword("BJARNE" , 10) , std::invalid_argument);
 }
 
+
+BOOST_AUTO_TEST_CASE(getKeywordList_returnOK) {
+    Deck deck;
+    DeckKeywordConstPtr keyword(new DeckKeyword("BJARNE"));
+    deck.addKeyword(keyword);
+    BOOST_CHECK_NO_THROW(deck.getKeywordList("BJARNE") );
+}
+
+
+BOOST_AUTO_TEST_CASE(numKeyword_singlekeyword_return1) {
+    Deck deck;
+    DeckKeywordConstPtr keyword(new DeckKeyword("BJARNE"));
+    deck.addKeyword(keyword);
+    BOOST_CHECK_EQUAL(1U , deck.numKeywords("BJARNE"));
+}
+
+
+BOOST_AUTO_TEST_CASE(numKeyword_twokeyword_return2) {
+    Deck deck;
+    DeckKeywordConstPtr keyword(new DeckKeyword("BJARNE"));
+    deck.addKeyword(keyword);
+    deck.addKeyword(keyword);
+    BOOST_CHECK_EQUAL(2U , deck.numKeywords("BJARNE"));
+}
+
+
+BOOST_AUTO_TEST_CASE(numKeyword_nokeyword_return0) {
+    Deck deck;
+    DeckKeywordConstPtr keyword(new DeckKeyword("BJARNE"));
+    deck.addKeyword(keyword);
+    BOOST_CHECK_EQUAL(0U , deck.numKeywords("BJARNEX"));
+}
 
 
 

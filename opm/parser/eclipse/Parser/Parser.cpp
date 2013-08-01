@@ -43,7 +43,7 @@ namespace Opm {
         DeckPtr deck(new Deck());
         for (size_t i = 0; i < rawDeck->size(); i++) {
             RawKeywordConstPtr rawKeyword = rawDeck->getKeyword(i);
-
+            
             if (hasKeyword(rawKeyword->getKeywordName())) {
                 ParserKeywordConstPtr parserKeyword = m_parserKeywords[rawKeyword->getKeywordName()];
                 DeckKeywordConstPtr deckKeyword = parserKeyword->parse(rawKeyword);
@@ -93,6 +93,7 @@ namespace Opm {
         readToRawDeck(rawDeck, path);
         return rawDeck;
     }
+
 
     /// The main data reading function, reads one and one keyword into the RawDeck
     /// If the INCLUDE keyword is found, the specified include file is inline read into the RawDeck.
