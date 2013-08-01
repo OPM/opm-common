@@ -22,7 +22,6 @@
       {"name" : "Lift"        , "size_type" : "SINGLE" , "value_type" : "FLOAT" , "default" : 0.0 , "comment":"The default is a state variable"},
       {"name" : "THP"         , "size_type" : "SINGLE" , "value_type" : "FLOAT" , "default" : 0.0},
       {"name" : "BHP"         , "size_type" : "SINGLE" , "value_type" : "FLOAT" , "default" : 0.0},
-      {"name" : "WGRAT"       , "size_type" : "SINGLE" , "value_type" : "FLOAT" , "default" : 0.0},
       {"name" : "NGLRAT"       , "size_type" : "SINGLE" , "value_type" : "FLOAT" , "default" : 0.0}]},
 {"name" : "START", "size" : 1},        
 {"name" : "GRIDOPTS", "size" : 1},        
