@@ -17,20 +17,40 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef PARSERDOUBLEITEM_HPP
 #define PARSERDOUBLEITEM_HPP
 
+#include <opm/json/JsonObject.hpp>
+
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
+
+#include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
+
+
 namespace Opm {
 
     class ParserDoubleItem : public ParserItem {
     public:
-        ParserDoubleItem(const std::string& itemName, ParserItemSizeEnum sizeType) : ParserItem(itemName, sizeType) {};
+        ParserDoubleItem(const std::string& itemName, ParserItemSizeEnum sizeType);
+        ParserDoubleItem(const std::string& itemName, ParserItemSizeEnum sizeType, int defaultValue);
+        ParserDoubleItem( const Json::JsonObject& jsonConfig);
+
+        DeckItemConstPtr scan(size_t expectedItems , RawRecordPtr rawRecord) const;
+        DeckItemConstPtr scan(RawRecordPtr rawRecord) const;
+        
+        double getDefault() const {
+            return m_default;
+        }
+
     private:
+        DeckItemConstPtr scan__(size_t expectedItems , bool scanAll , RawRecordPtr rawRecord) const;
+        double  m_default;
     };
+
+    typedef boost::shared_ptr<const ParserDoubleItem> ParserDoubleItemConstPtr;
+    typedef boost::shared_ptr<ParserDoubleItem> ParserDoubleItemPtr;
 }
 
-#endif  /* PARSERDOUBLEITEM_HPP */
+#endif  /* PARSERINTITEM_HPP */
 

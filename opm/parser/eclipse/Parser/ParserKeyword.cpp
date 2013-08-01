@@ -26,7 +26,9 @@
 #include <opm/parser/eclipse/Parser/ParserConst.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
+#include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
+
 
 namespace Opm {
 
@@ -89,6 +91,7 @@ namespace Opm {
                 
                 if (itemConfig.has_item("value_type")) {
                     ParserValueTypeEnum valueType = ParserValueTypeEnumFromString( itemConfig.get_string("value_type") );
+                    std::cout << "ValueType : " << itemConfig.get_string("value_type") << "Numeric: " << valueType << std::endl;
                     switch( valueType ) {
                     case INT:
                         {
@@ -99,6 +102,12 @@ namespace Opm {
                     case STRING:
                         {
                             ParserStringItemConstPtr item = ParserStringItemConstPtr(new ParserStringItem( itemConfig ));
+                            m_record->addItem( item );
+                        }
+                        break;
+                    case FLOAT:
+                        {
+                            ParserDoubleItemConstPtr item = ParserDoubleItemConstPtr(new ParserDoubleItem( itemConfig ));
                             m_record->addItem( item );
                         }
                         break;
