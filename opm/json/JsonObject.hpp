@@ -45,9 +45,11 @@ namespace Json {
         std::string as_string() const;
         bool is_string( ) const;
 
-        int get_int(const std::string& key) const;
         bool is_number( ) const;
+        int get_int(const std::string& key) const;
         int as_int() const;
+        double get_double(const std::string& key) const;
+        double as_double() const;
 
         bool is_array( ) const;
         bool is_object( ) const;

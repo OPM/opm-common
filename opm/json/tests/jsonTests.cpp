@@ -18,6 +18,7 @@
  */
 
 #include <stdexcept>
+#include <math.h>
 
 #define BOOST_TEST_MODULE jsonParserTests
 #include <boost/test/unit_test.hpp>
@@ -74,21 +75,36 @@ BOOST_AUTO_TEST_CASE(ParsevalidJSONnotString_asString_throws) {
 }
 
 
-BOOST_AUTO_TEST_CASE(ParsevalidJSONint_asInt) {
-    std::string inline_json = "{\"key\": 100}";
+BOOST_AUTO_TEST_CASE(ParsevalidJSONint_asNumber) {
+    std::string inline_json = "{\"key1\": 100, \"key2\" : 100.100 }";
     Json::JsonObject parser(inline_json);
-    Json::JsonObject value = parser.get_item("key");
+    Json::JsonObject value1 = parser.get_item("key1");
+    Json::JsonObject value2 = parser.get_item("key2");
     
-    BOOST_CHECK_EQUAL( 100 , value.as_int() );
+    BOOST_CHECK_EQUAL( 100 , value1.as_int() );
+    BOOST_CHECK( fabs(100.100 - value2.as_double()) < 0.00001 );
+}
+
+BOOST_AUTO_TEST_CASE(ParsevalidJSONint_isNumber) {
+    std::string inline_json = "{\"key1\": 100, \"key2\" : 100.100 , \"key3\": \"string\"}";
+    Json::JsonObject parser(inline_json);
+    Json::JsonObject value1 = parser.get_item("key1");
+    Json::JsonObject value2 = parser.get_item("key2");
+    Json::JsonObject value3 = parser.get_item("key3");
+    
+    BOOST_CHECK( value1.is_number()) ;
+    BOOST_CHECK( value2.is_number()) ;
+    BOOST_CHECK_EQUAL( false , value3.is_number()) ;
 }
 
 
-BOOST_AUTO_TEST_CASE(ParsevalidJSONnotint_asint_throws) {
+BOOST_AUTO_TEST_CASE(ParsevalidJSONnotNumber_asNumber_throws) {
     std::string inline_json = "{\"key\": \"100X\"}";
     Json::JsonObject parser(inline_json);
     Json::JsonObject value = parser.get_item("key");
     
-    BOOST_CHECK_THROW( value.as_int() , std::invalid_argument );
+    BOOST_CHECK_THROW( value.as_int()    , std::invalid_argument );
+    BOOST_CHECK_THROW( value.as_double() , std::invalid_argument );
 }
 
 

@@ -169,6 +169,20 @@ namespace Json {
     }
 
 
+    double JsonObject::get_double(const std::string& key) const {
+        JsonObject child = get_scalar_object( key );
+        return child.as_double( );
+    }
+    
+
+    double JsonObject::as_double() const {    
+        if (root->type == cJSON_Number)
+            return root->valuedouble;
+        else
+            throw std::invalid_argument("Object is not a number object.");
+    }
+
+
     JsonObject JsonObject::get_scalar_object(const std::string& key) const{
         JsonObject child = get_item( key );
         if (child.size())
