@@ -52,14 +52,22 @@ BOOST_AUTO_TEST_CASE(addKeyword_keywordAdded_keywordAdded) {
 
 BOOST_AUTO_TEST_CASE(getKeyword_nosuchkeyword_throws) {
     KeywordContainerPtr container(new KeywordContainer());
-    BOOST_CHECK_THROW(container->getKeyword("TRULS"), std::invalid_argument);
+    BOOST_CHECK_THROW(container->getKeyword("TRULS" , 0), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(getKeyword_singleKeyword_keywordReturned) {
     KeywordContainerPtr container(new KeywordContainer());
     DeckKeywordPtr keyword = DeckKeywordPtr(new DeckKeyword("TRULS"));
     container->addKeyword(keyword);
-    BOOST_CHECK_EQUAL(keyword, container->getKeyword("TRULS"));
+    BOOST_CHECK_EQUAL(keyword, container->getKeyword("TRULS", 0));
+}
+
+
+BOOST_AUTO_TEST_CASE(getKeyword_outOfRange_throws) {
+    KeywordContainerPtr container(new KeywordContainer());
+    DeckKeywordPtr keyword = DeckKeywordPtr(new DeckKeyword("TRULS"));
+    container->addKeyword(keyword);
+    BOOST_CHECK_EQUAL(keyword, container->getKeyword("TRULS" , 2));
 }
 
 

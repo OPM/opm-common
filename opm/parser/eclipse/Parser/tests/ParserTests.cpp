@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(parseFromRawDeck_singleRawSingleIntItem_deckReturned) {
     BOOST_CHECK(!deck->hasKeyword("ANDOM"));
 
     BOOST_CHECK(deck->hasKeyword("RANDOM"));
-    BOOST_CHECK_EQUAL(1U, deck->getKeyword("RANDOM")->getRecord(0)->size());
+    BOOST_CHECK_EQUAL(1U, deck->getKeyword("RANDOM" , 0)->getRecord(0)->size());
 }
 
 BOOST_AUTO_TEST_CASE(parseFromRawDeck_singleRawRecordsSeveralIntItem_deckReturned) {
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(parseFromRawDeck_singleRawRecordsSeveralIntItem_deckReturne
     DeckPtr deck = parser->parseFromRawDeck(setupRawDeckInt("RANDOM", 1, 50));
 
     BOOST_CHECK(deck->hasKeyword("RANDOM"));
-    BOOST_CHECK_EQUAL(50U, deck->getKeyword("RANDOM")->getRecord(0)->size());
+    BOOST_CHECK_EQUAL(50U, deck->getKeyword("RANDOM" , 0)->getRecord(0)->size());
 }
 
 BOOST_AUTO_TEST_CASE(parseFromRawDeck_severalRawRecordsSeveralIntItem_deckReturned) {
@@ -198,8 +198,8 @@ BOOST_AUTO_TEST_CASE(parseFromRawDeck_severalRawRecordsSeveralIntItem_deckReturn
     DeckPtr deck = parser->parseFromRawDeck(setupRawDeckInt("RANDOM", 10, 50));
 
     BOOST_CHECK(deck->hasKeyword("RANDOM"));
-    BOOST_CHECK_EQUAL(10U, deck->getKeyword("RANDOM")->size());
-    BOOST_CHECK_EQUAL(50U, deck->getKeyword("RANDOM")->getRecord(0)->size());
+    BOOST_CHECK_EQUAL(10U, deck->getKeyword("RANDOM", 0)->size());
+    BOOST_CHECK_EQUAL(50U, deck->getKeyword("RANDOM", 0)->getRecord(0)->size());
 }
 
 /***************** Simple String parsing ********************************/
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(parseFromRawDeck_singleRawRecordsSingleStringItem_deckRetur
     DeckPtr deck = parser->parseFromRawDeck(setupRawDeckString("WWCT",1, 1));
 
     BOOST_CHECK(deck->hasKeyword("WWCT"));
-    BOOST_CHECK_EQUAL(1U, deck->getKeyword("WWCT")->size());
+    BOOST_CHECK_EQUAL(1U, deck->getKeyword("WWCT" , 0)->size());
 }
 
 

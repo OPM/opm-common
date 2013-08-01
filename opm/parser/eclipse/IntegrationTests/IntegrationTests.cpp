@@ -62,8 +62,8 @@ BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_dataIsCorrect) {
     boost::filesystem::path singleKeywordFile("testdata/integration_tests/wwct.data");
     ParserPtr parser = createWWCTParser();
     DeckPtr deck = parser->parse(singleKeywordFile.string());
-    BOOST_CHECK_EQUAL("WELL-1", deck->getKeyword("WWCT")->getRecord(0)->getItem(0)->getString(0));
-    BOOST_CHECK_EQUAL("WELL-2", deck->getKeyword("WWCT")->getRecord(0)->getItem(0)->getString(1));
+    BOOST_CHECK_EQUAL("WELL-1", deck->getKeyword("WWCT" , 0)->getRecord(0)->getItem(0)->getString(0));
+    BOOST_CHECK_EQUAL("WELL-2", deck->getKeyword("WWCT" , 0)->getRecord(0)->getItem(0)->getString(1));
 }
 
 ParserPtr createBPRParser() {
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_dataiscorrect) {
     ParserPtr parser = createBPRParser();
     DeckPtr deck = parser->parse(singleKeywordFile.string());
 
-    DeckKeywordConstPtr keyword = deck->getKeyword("BPR");
+    DeckKeywordConstPtr keyword = deck->getKeyword("BPR" , 0);
     BOOST_CHECK_EQUAL(2U, keyword->size());
 
     DeckRecordConstPtr record1 = keyword->getRecord(0);

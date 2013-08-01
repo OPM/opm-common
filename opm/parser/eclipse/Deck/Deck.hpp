@@ -30,7 +30,7 @@ namespace Opm {
         Deck();
         bool hasKeyword( const std::string& keyword ) const;
         void addKeyword( DeckKeywordConstPtr keyword);
-        DeckKeywordConstPtr getKeyword(const std::string& keyword) const;
+      DeckKeywordConstPtr getKeyword(const std::string& keyword , size_t index) const;
 
     private:
         KeywordContainerPtr m_keywords;

@@ -18,6 +18,8 @@
  */
 
 #include <map>
+#include <string>
+
 #include <opm/parser/eclipse/Deck/KeywordContainer.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
@@ -47,10 +49,13 @@ namespace Opm {
         }
     }
     
-    DeckKeywordConstPtr KeywordContainer::getKeyword(const std::string& keyword) const {
+    DeckKeywordConstPtr KeywordContainer::getKeyword(const std::string& keyword, size_t index) const {
         if (hasKeyword(keyword)) {
             const std::vector<DeckKeywordConstPtr>& keywordList = m_keywordMap.find(keyword)->second;
-            return keywordList.back();
+            if (index < keywordList.size())
+                return keywordList[index];
+            else
+                throw std::invalid_argument("Keyword index  is out of range.");
         }
         else
             throw std::invalid_argument("Keyword: " + keyword + " is not found in the container");
