@@ -62,8 +62,8 @@ BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_dataIsCorrect) {
     boost::filesystem::path singleKeywordFile("testdata/integration_tests/wwct.data");
     ParserPtr parser = createWWCTParser();
     DeckPtr deck = parser->parse(singleKeywordFile.string());
-    BOOST_CHECK_EQUAL("WELL-1", deck->getKeyword("WWCT")->getRecord(0)->get(0)->getString(0));
-    BOOST_CHECK_EQUAL("WELL-2", deck->getKeyword("WWCT")->getRecord(0)->get(0)->getString(1));
+    BOOST_CHECK_EQUAL("WELL-1", deck->getKeyword("WWCT")->getRecord(0)->getItem(0)->getString(0));
+    BOOST_CHECK_EQUAL("WELL-2", deck->getKeyword("WWCT")->getRecord(0)->getItem(0)->getString(1));
 }
 
 ParserPtr createBPRParser() {
@@ -108,38 +108,38 @@ BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_dataiscorrect) {
     DeckRecordConstPtr record1 = keyword->getRecord(0);
     BOOST_CHECK_EQUAL(3U, record1->size());
 
-    DeckItemConstPtr I1 = record1->get(0);
+    DeckItemConstPtr I1 = record1->getItem(0);
     BOOST_CHECK_EQUAL(1, I1->getInt(0));
-    I1 = record1->get("I");
+    I1 = record1->getItem("I");
     BOOST_CHECK_EQUAL(1, I1->getInt(0));
 
-    DeckItemConstPtr J1 = record1->get(1);
+    DeckItemConstPtr J1 = record1->getItem(1);
     BOOST_CHECK_EQUAL(2, J1->getInt(0));
-    J1 = record1->get("J");
+    J1 = record1->getItem("J");
     BOOST_CHECK_EQUAL(2, J1->getInt(0));
 
-    DeckItemConstPtr K1 = record1->get(2);
+    DeckItemConstPtr K1 = record1->getItem(2);
     BOOST_CHECK_EQUAL(3, K1->getInt(0));
-    K1 = record1->get("K");
+    K1 = record1->getItem("K");
     BOOST_CHECK_EQUAL(3, K1->getInt(0));
 
 
     DeckRecordConstPtr record2 = keyword->getRecord(0);
     BOOST_CHECK_EQUAL(3U, record2->size());
 
-    I1 = record2->get(0);
+    I1 = record2->getItem(0);
     BOOST_CHECK_EQUAL(1, I1->getInt(0));
-    I1 = record2->get("I");
+    I1 = record2->getItem("I");
     BOOST_CHECK_EQUAL(1, I1->getInt(0));
 
-    J1 = record2->get(1);
+    J1 = record2->getItem(1);
     BOOST_CHECK_EQUAL(2, J1->getInt(0));
-    J1 = record2->get("J");
+    J1 = record2->getItem("J");
     BOOST_CHECK_EQUAL(2, J1->getInt(0));
 
-    K1 = record2->get(2);
+    K1 = record2->getItem(2);
     BOOST_CHECK_EQUAL(3, K1->getInt(0));
-    K1 = record2->get("K");
+    K1 = record2->getItem("K");
     BOOST_CHECK_EQUAL(3, K1->getInt(0));
 
 }

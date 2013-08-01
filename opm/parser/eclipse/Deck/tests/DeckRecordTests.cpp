@@ -77,28 +77,28 @@ BOOST_AUTO_TEST_CASE(get_byIndex_returnsItem) {
     DeckRecord deckRecord;
     DeckIntItemPtr intItem1(new DeckIntItem("TEST"));
     deckRecord.addItem(intItem1);
-    BOOST_CHECK_NO_THROW(deckRecord.get(0U));
+    BOOST_CHECK_NO_THROW(deckRecord.getItem(0U));
 }
 
 BOOST_AUTO_TEST_CASE(get_indexoutofbounds_throws) {
     DeckRecord deckRecord;
     DeckIntItemPtr intItem1(new DeckIntItem("TEST"));
     deckRecord.addItem(intItem1);
-    BOOST_CHECK_THROW(deckRecord.get(1), std::range_error);
+    BOOST_CHECK_THROW(deckRecord.getItem(1), std::range_error);
 }
 
 BOOST_AUTO_TEST_CASE(get_byName_returnsItem) {
     DeckRecord deckRecord;
     DeckIntItemPtr intItem1(new DeckIntItem("TEST"));
     deckRecord.addItem(intItem1);
-    deckRecord.get("TEST");
+    deckRecord.getItem("TEST");
 }
 
 BOOST_AUTO_TEST_CASE(get_byNameNonExisting_throws) {
     DeckRecord deckRecord;
     DeckIntItemPtr intItem1(new DeckIntItem("TEST"));
     deckRecord.addItem(intItem1);
-    BOOST_CHECK_THROW(deckRecord.get("INVALID"), std::invalid_argument);
+    BOOST_CHECK_THROW(deckRecord.getItem("INVALID"), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(get_oneoftwo_returnscorrectitem) {
@@ -107,8 +107,8 @@ BOOST_AUTO_TEST_CASE(get_oneoftwo_returnscorrectitem) {
     DeckIntItemPtr intItem2(new DeckIntItem("TEST2"));
     deckRecord.addItem(intItem1);
     deckRecord.addItem(intItem2);
-    BOOST_CHECK_EQUAL(intItem2, deckRecord.get(1));
-    BOOST_CHECK_EQUAL(intItem1, deckRecord.get("TEST"));
+    BOOST_CHECK_EQUAL(intItem2, deckRecord.getItem(1));
+    BOOST_CHECK_EQUAL(intItem1, deckRecord.getItem("TEST"));
 }
 
 

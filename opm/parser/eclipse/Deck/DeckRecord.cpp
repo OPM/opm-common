@@ -42,14 +42,14 @@ namespace Opm {
             throw std::invalid_argument("Item with name: " + deckItem->name() + " already exists in DeckRecord");
     }
 
-    DeckItemConstPtr DeckRecord::get(size_t index) const {
+    DeckItemConstPtr DeckRecord::getItem(size_t index) const {
         if (index < m_items.size())
             return m_items[index];
         else
             throw std::range_error("Index out of range.");
     }
 
-    DeckItemConstPtr DeckRecord::get(const std::string& name) const {
+    DeckItemConstPtr DeckRecord::getItem(const std::string& name) const {
         if (m_itemMap.find(name) == m_itemMap.end())
             throw std::invalid_argument("Itemname: " + name + " does not exist.");
         else
