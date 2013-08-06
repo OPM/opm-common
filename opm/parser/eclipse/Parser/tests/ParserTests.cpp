@@ -68,6 +68,16 @@ BOOST_AUTO_TEST_CASE(addKeywordJSON_hasKeyword_returnstrue) {
     BOOST_CHECK(parser->hasKeyword("BPR"));
 }
 
+
+BOOST_AUTO_TEST_CASE(addKeywordJSON_size_isObject_allGood) {
+    ParserPtr parser(new Parser());
+    Json::JsonObject jsonConfig("{\"name\": \"EQUIL\", \"size\" : {\"keyword\":\"EQLDIMS\" , \"item\" : \"NTEQUL\"}}");
+    parser->addKeyword(ParserKeywordConstPtr(new ParserKeyword( jsonConfig )));
+    BOOST_CHECK(parser->hasKeyword("EQUIL"));
+}
+
+
+
 BOOST_AUTO_TEST_CASE(loadKeywordsJSON_notArray_throw) {
     ParserPtr parser(new Parser());
     Json::JsonObject jsonConfig( "{\"name\" : \"BPR\" , \"size\" : 100}");

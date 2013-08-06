@@ -142,17 +142,30 @@ namespace Opm {
             inputstream.close();
         }
     }
-
+    
     bool Parser::isFixedLenghtKeywordFinished(RawKeywordConstPtr rawKeyword) const {
         bool fixedSizeReached = false;
         if (hasKeyword(rawKeyword->getKeywordName())) {
             ParserKeywordConstPtr parserKeyword = m_parserKeywords.find(rawKeyword->getKeywordName())->second;
-            if (parserKeyword->hasFixedSize())
-                fixedSizeReached = rawKeyword->size() == parserKeyword->getFixedSize();
+            if (parserKeyword->getSizeType() != UNDEFINED) {
+                size_t targetSize;
+                
+                if (parserKeyword->hasFixedSize())
+                    targetSize = parserKeyword->getFixedSize();
+                else {
+                    const std::pair<std::string,std::string> sizeKeyword = parserKeyword->getSizeKeyword();
+                    // Need to check the deck ....
+                    throw std::invalid_argument("Not implemented - need access to Deck here ...");
+                }
+                fixedSizeReached = (rawKeyword->size() == targetSize);
+            }
         }
 
         return fixedSizeReached;
     }
+
+
+
 
     void Parser::processIncludeKeyword(RawDeckPtr rawDeck, RawKeywordConstPtr keyword, const boost::filesystem::path& dataFolderPath) const {
         RawRecordConstPtr firstRecord = keyword->getRecord(0);
