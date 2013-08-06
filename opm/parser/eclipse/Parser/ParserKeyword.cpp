@@ -21,6 +21,7 @@
 #include <stdexcept>
 
 
+
 #include <opm/json/JsonObject.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserConst.hpp>
@@ -52,6 +53,12 @@ namespace Opm {
     }
     
     
+    ParserKeyword::ParserKeyword(const std::string& name , const std::string& sizeKeyword , const std::string& sizeItem) {
+        commonInit(name);
+        initSizeKeyword( sizeKeyword , sizeItem );
+    }
+
+    
     ParserKeyword::ParserKeyword(const Json::JsonObject& jsonConfig) {
         if (jsonConfig.has_item("name")) {
             commonInit(jsonConfig.get_string("name"));
@@ -59,13 +66,27 @@ namespace Opm {
             throw std::invalid_argument("Json object is missing name: property");
 
         if (jsonConfig.has_item("size")) {
-            m_fixedSize = (size_t) jsonConfig.get_int("size");
-            m_keywordSizeType = FIXED;
+            Json::JsonObject sizeObject = jsonConfig.get_item("size");
+            
+            if (sizeObject.is_number()) {
+                m_fixedSize = (size_t) sizeObject.as_int( );
+                m_keywordSizeType = FIXED;
+            } else {
+                std::string sizeKeyword = sizeObject.get_string("keyword");
+                std::string sizeItem = sizeObject.get_string("item");
+                initSizeKeyword( sizeKeyword , sizeItem);
+            }
         } else
             m_keywordSizeType = UNDEFINED;
 
         if (jsonConfig.has_item("items")) 
             addItems( jsonConfig );
+    }
+
+    
+    void ParserKeyword::initSizeKeyword( const std::string& sizeKeyword, const std::string& sizeItem) {
+        m_keywordSizeType = OTHER;
+        m_sizeKeyword = std::pair<std::string , std::string>(sizeKeyword , sizeItem);
     }
 
     
@@ -150,4 +171,13 @@ namespace Opm {
     bool ParserKeyword::hasFixedSize() const {
         return m_keywordSizeType == FIXED;
     }
+
+    enum ParserKeywordSizeEnum ParserKeyword::getSizeType() const {
+        return m_keywordSizeType;
+    }
+
+    const std::pair<std::string,std::string>& ParserKeyword::getSizePair() const {
+        return m_sizeKeyword;
+    }
+
 }

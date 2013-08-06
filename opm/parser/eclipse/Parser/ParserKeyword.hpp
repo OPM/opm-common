@@ -36,20 +36,26 @@ namespace Opm {
         ParserKeyword(const char * name);
         ParserKeyword(const std::string& name);
         ParserKeyword(const std::string& name, size_t fixedKeywordSize);
+        ParserKeyword(const std::string& name , const std::string& sizeKeyword , const std::string& sizeItem);
         ParserKeyword(const Json::JsonObject& jsonConfig);
+
+        
         ParserRecordPtr getRecord();
         const std::string& getName() const;
         size_t getFixedSize() const;
         bool hasFixedSize() const;
         
         DeckKeywordPtr parse(RawKeywordConstPtr rawKeyword) const;
-
+        enum ParserKeywordSizeEnum getSizeType() const;
+        const std::pair<std::string,std::string>& getSizePair() const;
     private:
+        std::pair<std::string,std::string> m_sizeKeyword;
         std::string m_name;
         ParserRecordPtr m_record;
         enum ParserKeywordSizeEnum m_keywordSizeType;
         size_t m_fixedSize;
         
+        void initSizeKeyword( const std::string& sizeKeyword, const std::string& sizeItem);
         void commonInit(const std::string& name);
         void addItems( const Json::JsonObject& jsonConfig);
     };

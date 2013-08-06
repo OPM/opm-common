@@ -42,6 +42,34 @@ BOOST_AUTO_TEST_CASE(NamedInit) {
     BOOST_CHECK_EQUAL(parserKeyword.getName(), keyword);
 }
 
+BOOST_AUTO_TEST_CASE(ParserKeyword_default_SizeTypedefault) {
+    std::string keyword("KEYWORD");
+    ParserKeyword parserKeyword(keyword);
+    BOOST_CHECK_EQUAL(parserKeyword.getSizeType() , UNDEFINED);
+}
+
+
+BOOST_AUTO_TEST_CASE(ParserKeyword_withSize_SizeTypeFIXED) {
+    std::string keyword("KEYWORD");
+    ParserKeyword parserKeyword(keyword, 100);
+    BOOST_CHECK_EQUAL(parserKeyword.getSizeType() , FIXED);
+}
+
+
+BOOST_AUTO_TEST_CASE(ParserKeyword_withOtherSize_SizeTypeOTHER) {
+    std::string keyword("KEYWORD");
+    ParserKeyword parserKeyword(keyword, "EQUILDIMS" , "NTEQUIL");
+    const std::pair<std::string,std::string>& sizeKW = parserKeyword.getSizePair();
+    BOOST_CHECK_EQUAL(OTHER , parserKeyword.getSizeType() );
+    BOOST_CHECK_EQUAL("EQUILDIMS", sizeKW.first );
+    BOOST_CHECK_EQUAL("NTEQUIL" , sizeKW.second );
+}
+
+
+
+
+
+
 /*****************************************************************/
 /* json */
 
@@ -59,6 +87,18 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withSize) {
     BOOST_CHECK_EQUAL("BPR" , parserKeyword.getName());
     BOOST_CHECK_EQUAL( true , parserKeyword.hasFixedSize() );
     BOOST_CHECK_EQUAL( 100U , parserKeyword.getFixedSize() );
+}
+
+
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withSizeOther) {
+    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : {\"keyword\" : \"Bjarne\" , \"item\": \"BjarneIgjen\"}}");
+    ParserKeyword parserKeyword(jsonObject);
+    const std::pair<std::string,std::string>& sizeKW = parserKeyword.getSizePair();
+    BOOST_CHECK_EQUAL("BPR" , parserKeyword.getName());
+    BOOST_CHECK_EQUAL( false , parserKeyword.hasFixedSize() );
+    BOOST_CHECK_EQUAL( parserKeyword.getSizeType() , OTHER);
+    BOOST_CHECK_EQUAL("Bjarne", sizeKW.first );
+    BOOST_CHECK_EQUAL("BjarneIgjen" , sizeKW.second );
 }
 
 
@@ -112,6 +152,12 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObjectItemsOK) {
     BOOST_CHECK_EQUAL( 1U , record->size( ) );
     BOOST_CHECK_EQUAL( "I" , item->name( ) );
     BOOST_CHECK_EQUAL( SINGLE , item->sizeType()); 
+}
+
+
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_sizeFromOther) {
+    Json::JsonObject jsonConfig("{\"name\": \"EQUIL\", \"size\" : {\"keyword\":\"EQLDIMS\" , \"item\" : \"NTEQUL\"}}");
+    BOOST_CHECK_NO_THROW( ParserKeyword parserKeyword(jsonConfig) );
 }
 
 
