@@ -153,7 +153,7 @@ namespace Opm {
                 if (parserKeyword->hasFixedSize())
                     targetSize = parserKeyword->getFixedSize();
                 else {
-                    const std::pair<std::string,std::string> sizeKeyword = parserKeyword->getSizeKeyword();
+                    const std::pair<std::string,std::string> sizeKeyword = parserKeyword->getSizePair();
                     // Need to check the deck ....
                     throw std::invalid_argument("Not implemented - need access to Deck here ...");
                 }
