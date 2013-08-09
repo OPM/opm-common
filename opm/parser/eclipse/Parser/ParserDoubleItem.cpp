@@ -34,7 +34,7 @@ namespace Opm {
     }
 
 
-    ParserDoubleItem::ParserDoubleItem(const std::string& itemName, ParserItemSizeEnum sizeType, int defaultValue) : ParserItem(itemName, sizeType) {
+    ParserDoubleItem::ParserDoubleItem(const std::string& itemName, ParserItemSizeEnum sizeType, double defaultValue) : ParserItem(itemName, sizeType) {
         m_default = defaultValue;
     }
 
@@ -42,7 +42,7 @@ namespace Opm {
         if (jsonConfig.has_item("default"))
             m_default = jsonConfig.get_double("default");
         else
-            m_default = defaultInt();
+            m_default = defaultDouble();
     }
 
 

@@ -33,7 +33,7 @@ namespace Opm {
     class ParserDoubleItem : public ParserItem {
     public:
         ParserDoubleItem(const std::string& itemName, ParserItemSizeEnum sizeType);
-        ParserDoubleItem(const std::string& itemName, ParserItemSizeEnum sizeType, int defaultValue);
+        ParserDoubleItem(const std::string& itemName, ParserItemSizeEnum sizeType, double defaultValue);
         ParserDoubleItem( const Json::JsonObject& jsonConfig);
 
         DeckItemConstPtr scan(size_t expectedItems , RawRecordPtr rawRecord) const;
