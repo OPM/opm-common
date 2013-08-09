@@ -42,7 +42,7 @@ namespace Opm {
         if (jsonConfig.has_item("default"))
             m_default = jsonConfig.get_double("default");
         else
-            m_default = defaultInt();
+            m_default = defaultDouble();
     }
 
 
