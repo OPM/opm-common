@@ -40,8 +40,7 @@ BOOST_AUTO_TEST_CASE(Initialize) {
     ParserItemSizeEnum sizeType = SINGLE;
     BOOST_CHECK_NO_THROW(ParserIntItem item1("ITEM1", sizeType));
     BOOST_CHECK_NO_THROW(ParserStringItem item1("ITEM1", sizeType));
-    //    BOOST_CHECK_NO_THROW(ParserBoolItem item1("ITEM1", sizeType));
-    //    BOOST_CHECK_NO_THROW(ParserDoubleItem item1("ITEM1", sizeType));
+    BOOST_CHECK_NO_THROW(ParserDoubleItem item1("ITEM1", sizeType));
 }
 
 BOOST_AUTO_TEST_CASE(Initialize_Default) {
@@ -51,6 +50,16 @@ BOOST_AUTO_TEST_CASE(Initialize_Default) {
     BOOST_CHECK_EQUAL(item1.getDefault(), ParserItem::defaultInt());
     BOOST_CHECK_EQUAL(item2.getDefault(), 88);
 }
+
+
+BOOST_AUTO_TEST_CASE(Initialize_Default_Double) {
+    ParserItemSizeEnum sizeType = SINGLE;
+    ParserDoubleItem item1("ITEM1", sizeType);
+    ParserDoubleItem item2("ITEM1", sizeType, 88.91);
+    BOOST_CHECK_EQUAL(item1.getDefault(), ParserItem::defaultDouble());
+    BOOST_CHECK_EQUAL( 88.91 , item2.getDefault());
+}
+
 
 /******************************************************************/
 /* <Json> */
