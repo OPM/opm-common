@@ -68,3 +68,79 @@ BOOST_AUTO_TEST_CASE(getRecord_outOfRange_throws) {
     keyword.addRawRecordString("test 1 3 4 /");
     BOOST_CHECK_THROW(keyword.getRecord(1), std::range_error);
 }
+
+
+
+BOOST_AUTO_TEST_CASE(isFinished_undef_size) {
+    RawKeyword keyword("TEST");
+
+    BOOST_CHECK(  !keyword.isFinished() );
+    keyword.addRawRecordString("test 1 3 4 /");
+    keyword.addRawRecordString("test 1 3 4");
+    keyword.addRawRecordString("test 1 3 4");
+    BOOST_CHECK(  !keyword.isFinished() );
+    keyword.addRawRecordString("/");
+    BOOST_CHECK(  !keyword.isFinished() );
+    keyword.addRawRecordString("/");
+    BOOST_CHECK(  keyword.isFinished() );
+}
+
+
+BOOST_AUTO_TEST_CASE(isFinished_Fixedsize0) {
+    RawKeyword keyword("TEST" , 0U);
+    
+    BOOST_CHECK(  keyword.isFinished() );
+}
+
+
+BOOST_AUTO_TEST_CASE(isFinished_Fixedsize1) {
+    RawKeyword keyword("TEST" , 1U);
+    BOOST_CHECK(  !keyword.isFinished() );
+    keyword.addRawRecordString("test 1 3 4 /");
+    BOOST_CHECK(  keyword.isFinished() );
+}
+
+
+BOOST_AUTO_TEST_CASE(isFinished_FixedsizeMulti) {
+    RawKeyword keyword("TEST" , 4U);
+    BOOST_CHECK(  !keyword.isFinished() );
+    keyword.addRawRecordString("test 1 3 4 /");
+    BOOST_CHECK(  !keyword.isFinished() );
+
+    keyword.addRawRecordString("/");
+    BOOST_CHECK(  !keyword.isFinished() );
+
+    keyword.addRawRecordString("1 2 3 3 4");
+    BOOST_CHECK(  !keyword.isFinished() );
+    keyword.addRawRecordString("1 2 3 3 4 /");
+    BOOST_CHECK(  !keyword.isFinished() );
+    keyword.addRawRecordString("1 2 3 3 /");
+    BOOST_CHECK(  keyword.isFinished() );
+    
+    RawRecordConstPtr record = keyword.getRecord(3);
+    BOOST_CHECK_EQUAL( 4U , record->size() );
+
+}
+
+
+
+BOOST_AUTO_TEST_CASE(isKeywordTerminator) {
+    BOOST_CHECK( RawKeyword::isTerminator("/"));
+    BOOST_CHECK( RawKeyword::isTerminator("  /"));
+    BOOST_CHECK( RawKeyword::isTerminator("/  "));
+    BOOST_CHECK( RawKeyword::isTerminator("  /"));
+    BOOST_CHECK( RawKeyword::isTerminator("  /"));
+
+    BOOST_CHECK( !RawKeyword::isTerminator("  X/  "));
+}
+
+
+BOOST_AUTO_TEST_CASE(useLine) {
+    BOOST_CHECK( !RawKeyword::useLine("                   "));
+    BOOST_CHECK( !RawKeyword::useLine("-- ggg"));
+
+    BOOST_CHECK( RawKeyword::useLine("Data -- ggg"));
+    BOOST_CHECK( RawKeyword::useLine("/ -- ggg"));
+    BOOST_CHECK( RawKeyword::useLine("/"));
+}
+

@@ -66,6 +66,13 @@ namespace Opm {
         return m_recordItems.size();
     }
 
+    void RawRecord::dump() const {
+        std::cout << "RecordDump: ";
+        for (size_t i = 0; i < m_recordItems.size(); i++)
+            std::cout << m_recordItems[i] << "/" << getItem(i) << " ";
+        std::cout << std::endl;
+    }
+
 
     const std::string& RawRecord::getItem(size_t index) const {
         if (index < m_recordItems.size())

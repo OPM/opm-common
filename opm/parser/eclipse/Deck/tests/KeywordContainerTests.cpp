@@ -60,6 +60,22 @@ BOOST_AUTO_TEST_CASE(getKeyword_singleKeyword_keywordReturned) {
     DeckKeywordPtr keyword = DeckKeywordPtr(new DeckKeyword("TRULS"));
     container->addKeyword(keyword);
     BOOST_CHECK_EQUAL(keyword, container->getKeyword("TRULS", 0));
+    BOOST_CHECK_EQUAL(keyword, container->getKeyword("TRULS"));
+}
+
+
+BOOST_AUTO_TEST_CASE(getKeyword_multipleKeyword_keywordReturned) {
+    KeywordContainerPtr container(new KeywordContainer());
+    DeckKeywordPtr keyword1 = DeckKeywordPtr(new DeckKeyword("TRULS"));
+    DeckKeywordPtr keyword2 = DeckKeywordPtr(new DeckKeyword("TRULS"));
+    DeckKeywordPtr keyword3 = DeckKeywordPtr(new DeckKeyword("TRULS"));
+    container->addKeyword(keyword1);
+    container->addKeyword(keyword2);
+    container->addKeyword(keyword3);
+
+    BOOST_CHECK_EQUAL(keyword1, container->getKeyword("TRULS", 0));
+    BOOST_CHECK_EQUAL(keyword3, container->getKeyword("TRULS", 2));
+    BOOST_CHECK_EQUAL(keyword3, container->getKeyword("TRULS"));
 }
 
 
@@ -108,6 +124,8 @@ BOOST_AUTO_TEST_CASE(keywordList_getnum_OK) {
     BOOST_CHECK_EQUAL( 2U , container->numKeywords( "TRULS" ));
     BOOST_CHECK_EQUAL( 1U , container->numKeywords( "TRULSX" ));
 }
+
+
 
 
 

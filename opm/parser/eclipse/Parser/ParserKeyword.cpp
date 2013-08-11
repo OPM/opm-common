@@ -112,7 +112,6 @@ namespace Opm {
                 
                 if (itemConfig.has_item("value_type")) {
                     ParserValueTypeEnum valueType = ParserValueTypeEnumFromString( itemConfig.get_string("value_type") );
-                    std::cout << "ValueType : " << itemConfig.get_string("value_type") << "Numeric: " << valueType << std::endl;
                     switch( valueType ) {
                     case INT:
                         {
@@ -152,12 +151,12 @@ namespace Opm {
     }
 
     DeckKeywordPtr ParserKeyword::parse(RawKeywordConstPtr rawKeyword) const {
-        DeckKeywordPtr keyword(new DeckKeyword(getName()));
+      DeckKeywordPtr keyword(new DeckKeyword(getName()));
         for (size_t i = 0; i < rawKeyword->size(); i++) {
             DeckRecordConstPtr deckRecord = m_record->parse(rawKeyword->getRecord(i));
             keyword->addRecord(deckRecord);
         }
-
+        
         return keyword;
     }
 

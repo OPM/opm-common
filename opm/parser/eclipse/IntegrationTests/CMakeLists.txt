@@ -13,7 +13,9 @@ add_test(NAME runParseWCONHIST WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMA
 
 add_executable(runParseEQUIL ParseEQUIL.cpp)
 target_link_libraries(runParseEQUIL Parser ${Boost_LIBRARIES})
-add_test(NAME runParseEQUIL WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND runParseEQUIL)
+add_test(NAME runParseEQUIL 
+         WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} 
+         COMMAND ${EXECUTABLE_OUTPUT_PATH}/runParseEQUIL)
 
 
 add_executable(runIntegrationTestsInternalData IntegrationTestsInternalData.cpp)

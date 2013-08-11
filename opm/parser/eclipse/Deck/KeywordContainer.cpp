@@ -67,6 +67,12 @@ namespace Opm {
     }
 
 
+    DeckKeywordConstPtr KeywordContainer::getKeyword(const std::string& keyword) const {
+        const std::vector<DeckKeywordConstPtr>& keywordList = getKeywordList( keyword );
+        return keywordList.back();
+    }
+
+
     size_t KeywordContainer::numKeywords(const std::string& keyword) const{
         if (hasKeyword(keyword)) {
             const std::vector<DeckKeywordConstPtr>& keywordList = getKeywordList( keyword );

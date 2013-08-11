@@ -25,8 +25,20 @@
 
 namespace Opm {
 
+    RawKeyword::RawKeyword(const std::string& name, size_t fixedSize) {
+        setKeywordName(name);
+        m_fixedSizeKeyword = true;
+        m_fixedSize = fixedSize;
+        if (fixedSize == 0)
+            m_isFinished = true;
+        else
+            m_isFinished = false;
+    }
+
     RawKeyword::RawKeyword(const std::string& name) {
         setKeywordName(name);
+        m_fixedSizeKeyword = false;
+        m_isFinished = false;
     }
 
     const std::string& RawKeyword::getKeywordName() const {
@@ -42,12 +54,30 @@ namespace Opm {
 
     void RawKeyword::addRawRecordString(const std::string& partialRecordString) {
         m_partialRecordString += partialRecordString;
-        if (RawRecord::isTerminatedRecordString(partialRecordString)) {
-            RawRecordPtr record(new RawRecord(m_partialRecordString));
-            m_records.push_back(record);
+
+        if (!m_fixedSizeKeyword && isTerminator( m_partialRecordString )) {
+            m_isFinished = true;
             m_partialRecordString.clear();
+        } else {
+            if (RawRecord::isTerminatedRecordString(m_partialRecordString)) {
+                RawRecordPtr record(new RawRecord(m_partialRecordString));
+                m_records.push_back(record);
+                m_partialRecordString.clear();
+                
+                if (m_fixedSizeKeyword && (m_records.size() == m_fixedSize))
+                    m_isFinished = true;
+            }
         }
     }
+
+    bool RawKeyword::isTerminator(std::string line) {
+        boost::algorithm::trim_left( line );
+        if (line[0] == RawConsts::slash) {
+            return true;
+        } else
+            return false;
+    }
+
 
     RawRecordPtr RawKeyword::getRecord(size_t index) const {
         if (index < m_records.size()) {
@@ -92,13 +122,26 @@ namespace Opm {
             Logger::debug("EMPTY LINE     <" + line + ">");
             return false;
         } else if (lineTerminatesKeyword(line)) {
-            Logger::debug("END OF RECORD  <" + line + ">");
+            Logger::debug("END OF KEYWORD <" + line + ">");
             return false;
         } else {
             Logger::debug("LOOKS LIKE DATA<" + line + ">");
             return true;
         }
     }
+
+
+    bool RawKeyword::useLine(std::string line) {
+        boost::algorithm::trim_left(line);
+        if (line.length()) {
+            if (line.substr(0,2) == "--")
+                return false;
+            else
+                return true;
+        } else
+            return false;
+    }
+
 
     bool RawKeyword::lineTerminatesKeyword(const std::string& line) {
         std::string firstNonBlank = boost::algorithm::trim_left_copy(line).substr(0, 1);
@@ -121,6 +164,11 @@ namespace Opm {
 
     bool RawKeyword::isPartialRecordStringEmpty() const {
         return m_partialRecordString.size() == 0;
+    }
+
+
+    bool RawKeyword::isFinished() const {
+        return m_isFinished;
     }
 
 }

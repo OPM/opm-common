@@ -33,11 +33,45 @@
 using namespace Opm;
 
 
-
+/*
 BOOST_AUTO_TEST_CASE( parse_WCHONHIST_OK ) {
     ParserPtr parser(new Parser(JSON_CONFIG_FILE));
     boost::filesystem::path wconhistFile("testdata/WCONHIST/WCONHIST1");
     DeckPtr deck = parser->parse(wconhistFile.string());
+    DeckKeywordConstPtr kw1 = deck->getKeyword("WCONHIST" , 0);
+    BOOST_CHECK_EQUAL( 3U , kw1->size() );
+
+
+    DeckRecordConstPtr rec1 = kw1->getRecord(0);
+    BOOST_CHECK_EQUAL( 11U , rec1->size() );
+
+    DeckRecordConstPtr rec3 = kw1->getRecord(2);
+    BOOST_CHECK_EQUAL( 11U , rec3->size() );
+
+    DeckItemConstPtr item1       = rec1->getItem("WellName");
+    DeckItemConstPtr item1_index = rec1->getItem(0);
+    
+    BOOST_CHECK_EQUAL( item1  , item1_index );
+    BOOST_CHECK_EQUAL( "OP_1" , item1->getString(0));
+
+
+    item1 = rec3->getItem("WellName");
+    BOOST_CHECK_EQUAL( "OP_3" , item1->getString(0));
+
+    
+    
+    BOOST_CHECK_EQUAL( 2U , deck->numKeywords("WCONHIST"));
+    kw1 = deck->getKeyword("WCONHIST" , 1 );
+    rec3 = kw1->getRecord(2);
+    BOOST_CHECK_EQUAL( "OP_3_B" , rec3->getItem("WellName")->getString(0));
+}
+*/
+
+
+BOOST_AUTO_TEST_CASE( newParse_WCHONHIST_OK ) {
+    ParserPtr parser(new Parser(JSON_CONFIG_FILE));
+    boost::filesystem::path wconhistFile("testdata/WCONHIST/WCONHIST1");
+    DeckPtr deck = parser->newParse(wconhistFile.string());
     DeckKeywordConstPtr kw1 = deck->getKeyword("WCONHIST" , 0);
     BOOST_CHECK_EQUAL( 3U , kw1->size() );
 
@@ -65,7 +99,4 @@ BOOST_AUTO_TEST_CASE( parse_WCHONHIST_OK ) {
     kw1 = deck->getKeyword("WCONHIST" , 1 );
     rec3 = kw1->getRecord(2);
     BOOST_CHECK_EQUAL( "OP_3_B" , rec3->getItem("WellName")->getString(0));
-
-    
-    
 }

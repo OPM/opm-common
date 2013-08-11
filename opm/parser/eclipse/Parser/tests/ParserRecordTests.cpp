@@ -24,6 +24,7 @@
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
+#include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>
 #include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
 #include <boost/test/test_tools.hpp>
 
@@ -110,15 +111,20 @@ ParserRecordPtr createSimpleParserRecord() {
     ParserIntItemPtr itemInt1(new ParserIntItem("ITEM1", sizeType));
     ParserIntItemPtr itemInt2(new ParserIntItem("ITEM2", sizeType));
     ParserRecordPtr record(new ParserRecord());
+
     record->addItem(itemInt1);
     record->addItem(itemInt2);
-
+    
     return record;
 }
+
+
+
 
 BOOST_AUTO_TEST_CASE(parse_validRecord_noThrow) {
     ParserRecordPtr record = createSimpleParserRecord();
     RawRecordPtr rawRecord(new RawRecord("100 443 /"));
+    rawRecord->dump();
     BOOST_CHECK_NO_THROW(record->parse(rawRecord));
 }
 
@@ -130,6 +136,35 @@ BOOST_AUTO_TEST_CASE(parse_validRecord_deckRecordCreated) {
 }
 
 
+// INT INT DOUBLE DOUBLE INT DOUBLE
+ParserRecordPtr createMixedParserRecord() {
 
+    ParserItemSizeEnum sizeType = SINGLE;
+    ParserIntItemPtr itemInt1(new ParserIntItem("INTITEM1", sizeType));
+    ParserIntItemPtr itemInt2(new ParserIntItem("INTITEM2", sizeType));
+    ParserDoubleItemPtr itemDouble1(new ParserDoubleItem("DOUBLEITEM1", sizeType));
+    ParserDoubleItemPtr itemDouble2(new ParserDoubleItem("DOUBLEITEM2", sizeType));
+
+    ParserIntItemPtr itemInt3(new ParserIntItem("INTITEM3", sizeType));
+    ParserDoubleItemPtr itemDouble3(new ParserDoubleItem("DOUBLEITEM3", sizeType));
+
+    ParserRecordPtr record(new ParserRecord());
+    record->addItem(itemInt1);
+    record->addItem(itemInt2);
+    record->addItem(itemDouble1);
+    record->addItem(itemDouble2);
+    record->addItem(itemInt3);
+    record->addItem(itemDouble3);
+
+    return record;
+}
+
+
+
+BOOST_AUTO_TEST_CASE(parse_validMixedRecord_noThrow) {
+    ParserRecordPtr record = createMixedParserRecord();
+    RawRecordPtr rawRecord(new RawRecord("1 2 10.0 20.0 4 90.0 /"));
+    BOOST_CHECK_NO_THROW(record->parse(rawRecord));
+}
 
 

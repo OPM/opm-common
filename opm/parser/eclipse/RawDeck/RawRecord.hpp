@@ -44,6 +44,8 @@ namespace Opm {
 
         static bool isTerminatedRecordString(const std::string& candidateRecordString);
         virtual ~RawRecord();
+        void dump() const;
+        
     private:
         std::string m_sanitizedRecordString;
         std::deque<std::string> m_recordItems;

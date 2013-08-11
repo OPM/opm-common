@@ -38,6 +38,7 @@ namespace Opm {
     class RawKeyword {
     public:
         RawKeyword(const std::string& name);
+        RawKeyword(const std::string& name, size_t fixedSize);
         const std::string& getKeywordName() const;
         void addRawRecordString(const std::string& partialRecordString);
         size_t size() const;
@@ -46,10 +47,17 @@ namespace Opm {
         static bool tryParseKeyword(const std::string& line, std::string& result);
         static bool lineContainsData(const std::string& line);
         static bool lineTerminatesKeyword(const std::string& line);
-
+        static bool isTerminator(std::string line);
+        static bool useLine(std::string line);
+        
         bool isPartialRecordStringEmpty() const;
+        bool isFinished() const;
+
 
     private:
+        bool m_isFinished;
+        bool m_fixedSizeKeyword;
+        size_t m_fixedSize;
         std::string m_name;
         std::vector<RawRecordPtr> m_records;
         std::string m_partialRecordString;

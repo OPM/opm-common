@@ -24,6 +24,7 @@ namespace Opm {
         size_t size() const;
         void addKeyword(DeckKeywordConstPtr keyword);
         DeckKeywordConstPtr getKeyword(const std::string& keyword, size_t index) const;
+        DeckKeywordConstPtr getKeyword(const std::string& keyword) const;
         const std::vector<DeckKeywordConstPtr>&  getKeywordList(const std::string& keyword) const;
         size_t numKeywords(const std::string& keyword) const;
 

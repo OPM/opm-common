@@ -39,9 +39,9 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE( parse_EQUIL_OK ) {
     ParserPtr parser(new Parser(JSON_CONFIG_FILE));
     boost::filesystem::path wconhistFile("testdata/EQUIL/EQUIL1");
-    DeckPtr deck = parser->parse(wconhistFile.string());
+    DeckPtr deck = parser->newParse(wconhistFile.string());
     DeckKeywordConstPtr kw1 = deck->getKeyword("EQUIL" , 0);
-    BOOST_CHECK_EQUAL( 2U , kw1->size() );
+    BOOST_CHECK_EQUAL( 3U , kw1->size() );
 
 
     DeckRecordConstPtr rec1 = kw1->getRecord(0);
@@ -50,10 +50,19 @@ BOOST_AUTO_TEST_CASE( parse_EQUIL_OK ) {
     DeckRecordConstPtr rec2 = kw1->getRecord(1);
     BOOST_CHECK_EQUAL( 9U , rec2->size() );
 
+    DeckRecordConstPtr rec3 = kw1->getRecord(2);
+    BOOST_CHECK_EQUAL( 9U , rec3->size() );
+
     DeckItemConstPtr item1       = rec1->getItem("OWC");
     DeckItemConstPtr item1_index = rec1->getItem(2);
     
     BOOST_CHECK_EQUAL( item1  , item1_index );
-    BOOST_CHECK( fabs(item1->getDouble(0) - 2469) < 0.001);
+    BOOST_CHECK( fabs(item1->getDouble(0) - 1705) < 0.001);
+
+    DeckItemConstPtr item3       = rec3->getItem("OWC");
+    DeckItemConstPtr item3_index = rec3->getItem(2);
+    
+    BOOST_CHECK_EQUAL( item3  , item3_index );
+    BOOST_CHECK( fabs(item3->getDouble(0) - 3000) < 0.001);
     
 }

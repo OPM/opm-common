@@ -21,6 +21,7 @@
 #include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
 #include <opm/parser/eclipse/Logger/Logger.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
 
 
 namespace Opm {
@@ -38,6 +39,41 @@ namespace Opm {
         RawDeckPtr rawDeck = readToRawDeck(path);
         return parseFromRawDeck(rawDeck);
     }
+
+    DeckPtr Parser::newParse(const std::string &dataFile) {
+        DeckPtr deck(new Deck());
+
+        parseFile( deck , dataFile );
+        return deck;
+    }
+
+
+    void Parser::parseFile(DeckPtr deck , const std::string &file) {
+        std::ifstream inputstream;
+        inputstream.open( file.c_str() );
+
+        RawKeywordPtr rawKeyword;
+
+        while (tryParseKeyword(deck , inputstream , rawKeyword)) {
+            if (rawKeyword->getKeywordName() == Opm::RawConsts::include) {
+                boost::filesystem::path dataFolderPath = verifyValidInputPath(file);
+                RawRecordConstPtr firstRecord = rawKeyword->getRecord(0);
+                std::string includeFileString = firstRecord->getItem(0);
+                boost::filesystem::path pathToIncludedFile(dataFolderPath);
+                pathToIncludedFile /= includeFileString;
+                
+                parseFile( deck , pathToIncludedFile.string() );
+            } else {
+                ParserKeywordConstPtr parserKeyword = m_parserKeywords[rawKeyword->getKeywordName()];
+                DeckKeywordConstPtr deckKeyword = parserKeyword->parse(rawKeyword);
+                deck->addKeyword( deckKeyword );
+            }
+            rawKeyword.reset();
+        }
+        inputstream.close();
+    }
+
+
 
     DeckPtr Parser::parseFromRawDeck(RawDeckConstPtr rawDeck) {
         DeckPtr deck(new Deck());
@@ -95,6 +131,59 @@ namespace Opm {
     }
 
 
+    RawKeywordPtr Parser::newRawKeyword(const DeckConstPtr deck , const std::string& keywordString) {
+        if (hasKeyword(keywordString)) {
+            ParserKeywordConstPtr parserKeyword = m_parserKeywords.find(keywordString)->second;
+            if (parserKeyword->getSizeType() == UNDEFINED) 
+                return RawKeywordPtr(new RawKeyword(keywordString));
+            else {
+                size_t targetSize;
+                
+                if (parserKeyword->hasFixedSize())
+                    targetSize = parserKeyword->getFixedSize();
+                else {
+                    const std::pair<std::string,std::string> sizeKeyword = parserKeyword->getSizePair();
+                    DeckKeywordConstPtr deckKeyword = deck->getKeyword(sizeKeyword.first);
+                    DeckRecordConstPtr deckRecord = deckKeyword->getRecord(0);
+                    DeckItemConstPtr deckItem = deckRecord->getItem(sizeKeyword.second);
+                    
+                    targetSize = deckItem->getInt(0);
+                }
+                return RawKeywordPtr(new RawKeyword(keywordString , targetSize));
+            }
+        } else
+            throw std::invalid_argument("Keyword " + keywordString + " not recognized ");
+    }
+
+
+
+    
+    bool Parser::tryParseKeyword(const DeckConstPtr deck ,  std::ifstream& inputstream , RawKeywordPtr& rawKeyword) {        
+        std::string line;
+
+        while (std::getline(inputstream, line)) {
+            std::string keywordString;
+
+            if (rawKeyword == NULL) {
+                if (RawKeyword::tryParseKeyword(line, keywordString)) 
+                    rawKeyword = newRawKeyword( deck , keywordString );
+            } else {
+                if (RawKeyword::useLine(line)) 
+                    rawKeyword->addRawRecordString(line);
+            }                    
+            
+            if (rawKeyword != NULL && rawKeyword->isFinished())
+                return true;
+        }
+        
+        return false;
+    }
+
+
+
+
+
+
     /// The main data reading function, reads one and one keyword into the RawDeck
     /// If the INCLUDE keyword is found, the specified include file is inline read into the RawDeck.
     /// The data is read into a keyword, record by record, until the fixed number of records specified
@@ -108,9 +197,33 @@ namespace Opm {
 
             std::string line;
             RawKeywordPtr currentRawKeyword;
+
+
             while (std::getline(inputstream, line)) {
                 std::string keywordString;
-                if (currentRawKeyword == NULL) {
+                
+                if (currentRawKeyword != NULL) {
+                    if (RawKeyword::lineContainsData(line)) {
+                        currentRawKeyword->addRawRecordString(line);
+                        if (isFixedLenghtKeywordFinished(currentRawKeyword)) {
+                            // The INCLUDE keyword has fixed lenght 1, will hit here
+                            if (currentRawKeyword->getKeywordName() == Opm::RawConsts::include)
+                                processIncludeKeyword(rawDeck, currentRawKeyword, dataFolderPath);
+                            else
+                                rawDeck->addKeyword(currentRawKeyword);
+                            
+                            currentRawKeyword.reset();
+                        }
+                    } else if (RawKeyword::lineTerminatesKeyword(line)) {
+                        if (!currentRawKeyword->isPartialRecordStringEmpty()) {
+                            // This is an error in the input file, but sometimes occurs
+                            currentRawKeyword->addRawRecordString(std::string(1, Opm::RawConsts::slash));
+                        }
+                        // Don't need to check for include here, since only non-fixed lenght keywords come here.
+                        rawDeck->addKeyword(currentRawKeyword);
+                        currentRawKeyword.reset();
+                    }
+                } else {
                     if (RawKeyword::tryParseKeyword(line, keywordString)) {
                         currentRawKeyword = RawKeywordPtr(new RawKeyword(keywordString));
                         if (isFixedLenghtKeywordFinished(currentRawKeyword)) {
@@ -118,31 +231,13 @@ namespace Opm {
                             currentRawKeyword.reset();
                         }
                     }
-                } else if (currentRawKeyword != NULL && RawKeyword::lineContainsData(line)) {
-                    currentRawKeyword->addRawRecordString(line);
-                    if (isFixedLenghtKeywordFinished(currentRawKeyword)) {
-                        // The INCLUDE keyword has fixed lenght 1, will hit here
-                        if (currentRawKeyword->getKeywordName() == Opm::RawConsts::include)
-                            processIncludeKeyword(rawDeck, currentRawKeyword, dataFolderPath);
-                        else
-                            rawDeck->addKeyword(currentRawKeyword);
-
-                        currentRawKeyword.reset();
-                    }
-                } else if (currentRawKeyword != NULL && RawKeyword::lineTerminatesKeyword(line)) {
-                    if (!currentRawKeyword->isPartialRecordStringEmpty()) {
-                        // This is an error in the input file, but sometimes occurs
-                        currentRawKeyword->addRawRecordString(std::string(1, Opm::RawConsts::slash));
-                    }
-                    // Don't need to check for include here, since only non-fixed lenght keywords come here.
-                    rawDeck->addKeyword(currentRawKeyword);
-                    currentRawKeyword.reset();
-                }
+                }                    
             }
             inputstream.close();
         }
     }
     
+
     bool Parser::isFixedLenghtKeywordFinished(RawKeywordConstPtr rawKeyword) const {
         bool fixedSizeReached = false;
         if (hasKeyword(rawKeyword->getKeywordName())) {

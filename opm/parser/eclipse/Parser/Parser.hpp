@@ -45,7 +45,8 @@ namespace Opm {
 
         /// The starting point of the parsing process. The supplied file is parsed, and the resulting Deck is returned.
         DeckPtr parse(const std::string &path);
-        
+        DeckPtr newParse(const std::string &dataFile);
+
         /// Function to parse directly from a raw deck
         DeckPtr parseFromRawDeck(RawDeckConstPtr rawDeck);
 
@@ -61,12 +62,14 @@ namespace Opm {
 
     private:
         std::map<std::string, ParserKeywordConstPtr> m_parserKeywords;
+        bool tryParseKeyword(const DeckConstPtr deck ,  std::ifstream& inputstream , RawKeywordPtr& rawKeyword);
+        void parseFile(DeckPtr deck , const std::string &file) ;
         void readToRawDeck(RawDeckPtr rawDeck, const std::string& path) const;
         void processIncludeKeyword(RawDeckPtr rawDeck, RawKeywordConstPtr keyword, const boost::filesystem::path& dataFolderPath) const;
         boost::filesystem::path verifyValidInputPath(const std::string& inputPath) const;
         void populateDefaultKeywords();
         bool isFixedLenghtKeywordFinished(RawKeywordConstPtr rawKeyword) const;
-
+        RawKeywordPtr newRawKeyword(const DeckConstPtr deck , const std::string& keywordString);
 
     };
 
