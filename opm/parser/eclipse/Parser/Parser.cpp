@@ -35,12 +35,7 @@ namespace Opm {
     }
 
 
-    DeckPtr Parser::parse(const std::string &path) {
-        RawDeckPtr rawDeck = readToRawDeck(path);
-        return parseFromRawDeck(rawDeck);
-    }
-
-    DeckPtr Parser::newParse(const std::string &dataFile) {
+    DeckPtr Parser::parse(const std::string &dataFile) {
         DeckPtr deck(new Deck());
 
         parseFile( deck , dataFile );
@@ -72,7 +67,6 @@ namespace Opm {
         }
         inputstream.close();
     }
-
 
 
     DeckPtr Parser::parseFromRawDeck(RawDeckConstPtr rawDeck) {

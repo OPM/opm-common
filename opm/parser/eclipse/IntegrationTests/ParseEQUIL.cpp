@@ -24,7 +24,6 @@
 #include <boost/test/test_tools.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
@@ -39,7 +38,7 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE( parse_EQUIL_OK ) {
     ParserPtr parser(new Parser(JSON_CONFIG_FILE));
     boost::filesystem::path wconhistFile("testdata/EQUIL/EQUIL1");
-    DeckPtr deck = parser->newParse(wconhistFile.string());
+    DeckPtr deck = parser->parse(wconhistFile.string());
     DeckKeywordConstPtr kw1 = deck->getKeyword("EQUIL" , 0);
     BOOST_CHECK_EQUAL( 3U , kw1->size() );
 

@@ -44,8 +44,7 @@ namespace Opm {
         Parser(const boost::filesystem::path& jsonFile);
 
         /// The starting point of the parsing process. The supplied file is parsed, and the resulting Deck is returned.
-        DeckPtr parse(const std::string &path);
-        DeckPtr newParse(const std::string &dataFile);
+        DeckPtr parse(const std::string &dataFile);
 
         /// Function to parse directly from a raw deck
         DeckPtr parseFromRawDeck(RawDeckConstPtr rawDeck);
