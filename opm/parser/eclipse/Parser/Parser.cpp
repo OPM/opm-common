@@ -18,8 +18,8 @@
  */
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
-#include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
 #include <opm/parser/eclipse/Logger/Logger.hpp>
+#include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
 
@@ -46,45 +46,35 @@ namespace Opm {
     void Parser::parseFile(DeckPtr deck , const std::string &file) {
         std::ifstream inputstream;
         inputstream.open( file.c_str() );
-
-        RawKeywordPtr rawKeyword;
-
-        while (tryParseKeyword(deck , inputstream , rawKeyword)) {
+        
+        if (inputstream) {
+          RawKeywordPtr rawKeyword;
+          
+          while (tryParseKeyword(deck , inputstream , rawKeyword)) {
             if (rawKeyword->getKeywordName() == Opm::RawConsts::include) {
-                boost::filesystem::path dataFolderPath = verifyValidInputPath(file);
-                RawRecordConstPtr firstRecord = rawKeyword->getRecord(0);
-                std::string includeFileString = firstRecord->getItem(0);
-                boost::filesystem::path pathToIncludedFile(dataFolderPath);
-                pathToIncludedFile /= includeFileString;
-                
-                parseFile( deck , pathToIncludedFile.string() );
+              boost::filesystem::path dataFolderPath = verifyValidInputPath(file);
+              RawRecordConstPtr firstRecord = rawKeyword->getRecord(0);
+              std::string includeFileString = firstRecord->getItem(0);
+              boost::filesystem::path pathToIncludedFile(dataFolderPath);
+              pathToIncludedFile /= includeFileString;
+              
+              parseFile( deck , pathToIncludedFile.string() );
             } else {
-                ParserKeywordConstPtr parserKeyword = m_parserKeywords[rawKeyword->getKeywordName()];
-                DeckKeywordConstPtr deckKeyword = parserKeyword->parse(rawKeyword);
-                deck->addKeyword( deckKeyword );
+              ParserKeywordConstPtr parserKeyword = m_parserKeywords[rawKeyword->getKeywordName()];
+              DeckKeywordConstPtr deckKeyword = parserKeyword->parse(rawKeyword);
+              std::cout << "Adding: " << rawKeyword->getKeywordName() << std::endl;
+              deck->addKeyword( deckKeyword );
             }
             rawKeyword.reset();
-        }
-        inputstream.close();
+          }
+          
+          inputstream.close();
+        } else
+          throw std::invalid_argument("Failed to open file: " + file);
     }
 
 
-    DeckPtr Parser::parseFromRawDeck(RawDeckConstPtr rawDeck) {
-        DeckPtr deck(new Deck());
-        for (size_t i = 0; i < rawDeck->size(); i++) {
-            RawKeywordConstPtr rawKeyword = rawDeck->getKeyword(i);
-            
-            if (hasKeyword(rawKeyword->getKeywordName())) {
-                ParserKeywordConstPtr parserKeyword = m_parserKeywords[rawKeyword->getKeywordName()];
-                DeckKeywordConstPtr deckKeyword = parserKeyword->parse(rawKeyword);
-                deck->addKeyword(deckKeyword);
-            } else
-                std::cerr << "Keyword: " << rawKeyword->getKeywordName() << " is not recognized, skipping this." << std::endl;
-        }
-        return deck;
-    }
-
-
+    
     void Parser::addKeyword(ParserKeywordConstPtr parserKeyword) {
         m_parserKeywords.insert(std::make_pair(parserKeyword->getName(), parserKeyword));
     }
@@ -118,11 +108,6 @@ namespace Opm {
     }
 
 
-    RawDeckPtr Parser::readToRawDeck(const std::string& path) const {
-        RawDeckPtr rawDeck(new RawDeck());
-        readToRawDeck(rawDeck, path);
-        return rawDeck;
-    }
 
 
     RawKeywordPtr Parser::newRawKeyword(const DeckConstPtr deck , const std::string& keywordString) {
@@ -174,96 +159,6 @@ namespace Opm {
     }
 
 
-
-
-
-
-    /// The main data reading function, reads one and one keyword into the RawDeck
-    /// If the INCLUDE keyword is found, the specified include file is inline read into the RawDeck.
-    /// The data is read into a keyword, record by record, until the fixed number of records specified
-    /// in the RawParserKeyword is met, or till a slash on a separate line is found.
-
-    void Parser::readToRawDeck(RawDeckPtr rawDeck, const std::string& path) const {
-        boost::filesystem::path dataFolderPath = verifyValidInputPath(path);
-        {
-            std::ifstream inputstream;
-            inputstream.open(path.c_str());
-
-            std::string line;
-            RawKeywordPtr currentRawKeyword;
-
-
-            while (std::getline(inputstream, line)) {
-                std::string keywordString;
-                
-                if (currentRawKeyword != NULL) {
-                    if (RawKeyword::lineContainsData(line)) {
-                        currentRawKeyword->addRawRecordString(line);
-                        if (isFixedLenghtKeywordFinished(currentRawKeyword)) {
-                            // The INCLUDE keyword has fixed lenght 1, will hit here
-                            if (currentRawKeyword->getKeywordName() == Opm::RawConsts::include)
-                                processIncludeKeyword(rawDeck, currentRawKeyword, dataFolderPath);
-                            else
-                                rawDeck->addKeyword(currentRawKeyword);
-                            
-                            currentRawKeyword.reset();
-                        }
-                    } else if (RawKeyword::lineTerminatesKeyword(line)) {
-                        if (!currentRawKeyword->isPartialRecordStringEmpty()) {
-                            // This is an error in the input file, but sometimes occurs
-                            currentRawKeyword->addRawRecordString(std::string(1, Opm::RawConsts::slash));
-                        }
-                        // Don't need to check for include here, since only non-fixed lenght keywords come here.
-                        rawDeck->addKeyword(currentRawKeyword);
-                        currentRawKeyword.reset();
-                    }
-                } else {
-                    if (RawKeyword::tryParseKeyword(line, keywordString)) {
-                        currentRawKeyword = RawKeywordPtr(new RawKeyword(keywordString));
-                        if (isFixedLenghtKeywordFinished(currentRawKeyword)) {
-                            rawDeck->addKeyword(currentRawKeyword);
-                            currentRawKeyword.reset();
-                        }
-                    }
-                }                    
-            }
-            inputstream.close();
-        }
-    }
-    
-
-    bool Parser::isFixedLenghtKeywordFinished(RawKeywordConstPtr rawKeyword) const {
-        bool fixedSizeReached = false;
-        if (hasKeyword(rawKeyword->getKeywordName())) {
-            ParserKeywordConstPtr parserKeyword = m_parserKeywords.find(rawKeyword->getKeywordName())->second;
-            if (parserKeyword->getSizeType() != UNDEFINED) {
-                size_t targetSize;
-                
-                if (parserKeyword->hasFixedSize())
-                    targetSize = parserKeyword->getFixedSize();
-                else {
-                    const std::pair<std::string,std::string> sizeKeyword = parserKeyword->getSizePair();
-                    // Need to check the deck ....
-                    throw std::invalid_argument("Not implemented - need access to Deck here ...");
-                }
-                fixedSizeReached = (rawKeyword->size() == targetSize);
-            }
-        }
-
-        return fixedSizeReached;
-    }
-
-
-
-
-    void Parser::processIncludeKeyword(RawDeckPtr rawDeck, RawKeywordConstPtr keyword, const boost::filesystem::path& dataFolderPath) const {
-        RawRecordConstPtr firstRecord = keyword->getRecord(0);
-        std::string includeFileString = firstRecord->getItem(0);
-        boost::filesystem::path pathToIncludedFile(dataFolderPath);
-        pathToIncludedFile /= includeFileString;
-
-        readToRawDeck(rawDeck, pathToIncludedFile.string());
-    }
 
     boost::filesystem::path Parser::verifyValidInputPath(const std::string& inputPath) const {
         Logger::info("Verifying path: " + inputPath);

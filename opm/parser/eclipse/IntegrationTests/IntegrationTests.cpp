@@ -144,59 +144,30 @@ BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_dataiscorrect) {
 
 }
 
-BOOST_AUTO_TEST_CASE(PrintToOStream_noThrow) {
-    boost::filesystem::path singleKeywordFile("testdata/small.data");
-    ParserPtr parser(new Parser(JSON_CONFIG_FILE));
-    RawDeckPtr rawDeck = parser->readToRawDeck(singleKeywordFile.string());
-    std::cout << *rawDeck << "\n";
-}
 
 BOOST_AUTO_TEST_CASE(Parse_InvalidInputFile_Throws) {
     ParserPtr parser(new Parser(JSON_CONFIG_FILE));
-    BOOST_CHECK_THROW(parser->readToRawDeck("nonexistingfile.asdf"), std::invalid_argument);
+    BOOST_CHECK_THROW(parser->parse("nonexistingfile.asdf"), std::invalid_argument );
 }
 
 BOOST_AUTO_TEST_CASE(Parse_ValidInputFile_NoThrow) {
     boost::filesystem::path singleKeywordFile("testdata/small.data");
     ParserPtr parser(new Parser(JSON_CONFIG_FILE));
 
-    BOOST_CHECK_NO_THROW(parser->readToRawDeck(singleKeywordFile.string()));
-}
-
-BOOST_AUTO_TEST_CASE(ParseFileWithOneKeyword) {
-
-    boost::filesystem::path singleKeywordFile("testdata/mini.data");
-    ParserPtr parser(new Parser(JSON_CONFIG_FILE));
-
-    RawDeckPtr rawDeck = parser->readToRawDeck(singleKeywordFile.string());
-
-    BOOST_CHECK_EQUAL(1U, rawDeck->size());
-    RawKeywordConstPtr rawKeyword = rawDeck->getKeyword(0);
-
-    BOOST_CHECK_EQUAL(1U, rawKeyword->size());
-    RawRecordConstPtr record = rawKeyword->getRecord(rawKeyword->size() - 1);
-
-    const std::string& recordString = record->getRecordString();
-    BOOST_CHECK_EQUAL("'NODIR'  'REVERS'  1  20", recordString);
-
-    BOOST_CHECK_EQUAL(4U, record->size());
-
-    BOOST_CHECK_EQUAL("NODIR", record->getItem(0));
-    BOOST_CHECK_EQUAL("REVERS", record->getItem(1));
-    BOOST_CHECK_EQUAL("1", record->getItem(2));
-    BOOST_CHECK_EQUAL("20", record->getItem(3));
+    BOOST_CHECK_NO_THROW(parser->parse(singleKeywordFile.string()));
 }
 
 
 
+/*
 BOOST_AUTO_TEST_CASE(ParseFileWithFewKeywords) {
     boost::filesystem::path singleKeywordFile("testdata/small.data");
 
     ParserPtr parser(new Parser(JSON_CONFIG_FILE));
 
-    RawDeckPtr rawDeck = parser->readToRawDeck(singleKeywordFile.string());
+    DeckPtr Deck = parser->parse(singleKeywordFile.string());
 
-    BOOST_CHECK_EQUAL(7U, rawDeck->size());
+    BOOST_CHECK_EQUAL(7U, Deck->size());
 
     RawKeywordConstPtr matchingKeyword = rawDeck->getKeyword(0);
     BOOST_CHECK_EQUAL("OIL", matchingKeyword->getKeywordName());
@@ -228,3 +199,4 @@ BOOST_AUTO_TEST_CASE(ParseFileWithFewKeywords) {
 
     BOOST_CHECK_EQUAL(2U, matchingKeyword->size());
 }
+*/

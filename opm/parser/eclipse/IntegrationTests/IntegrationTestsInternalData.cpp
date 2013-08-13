@@ -27,7 +27,6 @@
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
-#include <opm/parser/eclipse/RawDeck/RawDeck.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 using namespace Opm;
 
@@ -36,10 +35,10 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE(ParseFileWithManyKeywords) {
     boost::filesystem::path multipleKeywordFile("testdata/statoil/gurbat_trimmed.DATA");
 
-    ParserPtr parser(new Parser());
-    RawDeckPtr rawDeck = parser->readToRawDeck(multipleKeywordFile.string());
+    ParserPtr parser(new Parser(JSON_CONFIG_FILE));
+    DeckPtr Deck = parser->parse(multipleKeywordFile.string());
 
     //This check is not necessarily correct, 
     //as it depends on that all the fixed recordNum keywords are specified
-    BOOST_CHECK_EQUAL((unsigned) 275, rawDeck->size());
+    BOOST_CHECK_EQUAL((unsigned) 250, Deck->size());
 }
