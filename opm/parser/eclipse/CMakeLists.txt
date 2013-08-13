@@ -5,7 +5,6 @@ add_subdirectory(Deck/tests)
 add_subdirectory(IntegrationTests)
 
 set( rawdeck_source 
-RawDeck/RawDeck.cpp 
 RawDeck/RawKeyword.cpp 
 RawDeck/RawRecord.cpp )
 
