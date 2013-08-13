@@ -114,22 +114,6 @@ namespace Opm {
         return false;
     }
 
-    bool RawKeyword::lineContainsData(const std::string& line) {
-        if (boost::algorithm::trim_left_copy(line).substr(0, 2) == "--") {
-            Logger::debug("COMMENT LINE   <" + line + ">");
-            return false;
-        } else if (boost::algorithm::trim_copy(line).length() == 0) {
-            Logger::debug("EMPTY LINE     <" + line + ">");
-            return false;
-        } else if (lineTerminatesKeyword(line)) {
-            Logger::debug("END OF KEYWORD <" + line + ">");
-            return false;
-        } else {
-            Logger::debug("LOOKS LIKE DATA<" + line + ">");
-            return true;
-        }
-    }
-
 
     bool RawKeyword::useLine(std::string line) {
         boost::algorithm::trim_left(line);
@@ -142,14 +126,6 @@ namespace Opm {
             return false;
     }
 
-
-    bool RawKeyword::lineTerminatesKeyword(const std::string& line) {
-        std::string firstNonBlank = boost::algorithm::trim_left_copy(line).substr(0, 1);
-        if (firstNonBlank.size() > (unsigned) 0) {
-            return firstNonBlank[0] == Opm::RawConsts::slash;
-        }
-        return false;
-    }
 
     void RawKeyword::setKeywordName(const std::string& name) {
         m_name = boost::algorithm::trim_right_copy(name);

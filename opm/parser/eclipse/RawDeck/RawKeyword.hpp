@@ -45,8 +45,6 @@ namespace Opm {
         RawRecordPtr getRecord(size_t index) const;
         
         static bool tryParseKeyword(const std::string& line, std::string& result);
-        static bool lineContainsData(const std::string& line);
-        static bool lineTerminatesKeyword(const std::string& line);
         static bool isTerminator(std::string line);
         static bool useLine(std::string line);
         
