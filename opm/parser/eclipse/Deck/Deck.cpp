@@ -51,6 +51,10 @@ namespace Opm {
         return m_keywords->getKeywordList( keyword );
     }
 
+    size_t Deck::size() const {
+        return m_keywords->size();
+    }
+
 
 }
 

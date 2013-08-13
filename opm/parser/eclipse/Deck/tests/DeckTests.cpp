@@ -102,4 +102,12 @@ BOOST_AUTO_TEST_CASE(numKeyword_nokeyword_return0) {
 }
 
 
+BOOST_AUTO_TEST_CASE(size_twokeyword_return2) {
+    Deck deck;
+    DeckKeywordConstPtr keyword(new DeckKeyword("BJARNE"));
+    deck.addKeyword(keyword);
+    deck.addKeyword(keyword);
+    BOOST_CHECK_EQUAL(2U , deck.size());
+}
+
 
