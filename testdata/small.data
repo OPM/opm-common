@@ -2,9 +2,9 @@
 OIL
 
 -- Saa bare en - OK
-INCLUDE
-  'include path/readthis.sch' /
--- Saa kommer en for lang en, skal bli "trunkert", slik at keywordet blir ABCXYZFF - OK
+--INCLUDE
+--  'include path/readthis.sch' /
+---- Saa kommer en for lang en, skal bli "trunkert", slik at keywordet blir ABCXYZFF - OK
 
 GRIDUNIT Tull kommer her
 -- Saa kommer det data
@@ -16,20 +16,20 @@ RADFIN4
 213 123 123 /
 
 -- Og en med tall først- Ikke OK
-
-5ABCADFC
-
-
--- Og en med mellomrom etter, og et ubestemt antall, terminert av / - OK
-
-ABCDAD  
- 4.5 5 5 /
- 3 3 'FISK_1' /
-/
-
--- Og en med liten bokstav i IKKE OK
-
-ABCDAd
-
--- Og en kommentar med space foran, det er ok
-  -- Hei her er jeg.
+--
+--5ABCADFC
+--
+--
+---- Og en med mellomrom etter, og et ubestemt antall, terminert av / - OK
+--
+--ABCDAD  
+-- 4.5 5 5 /
+-- 3 3 'FISK_1' /
+--/
+--
+---- Og en med liten bokstav i IKKE OK
+--
+--ABCDAd
+--
+---- Og en kommentar med space foran, det er ok
+--  -- Hei her er jeg.
