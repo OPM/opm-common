@@ -47,9 +47,9 @@ namespace Opm {
         
         DeckKeywordPtr parse(RawKeywordConstPtr rawKeyword) const;
         enum ParserKeywordSizeEnum getSizeType() const;
-        const std::pair<std::string,std::string>& getSizePair() const;
+        const std::pair<std::string,std::string>& getSizeDefinitionPair() const;
     private:
-        std::pair<std::string,std::string> m_sizeKeyword;
+        std::pair<std::string,std::string> m_sizeDefinitionPair;
         std::string m_name;
         ParserRecordPtr m_record;
         enum ParserKeywordSizeEnum m_keywordSizeType;

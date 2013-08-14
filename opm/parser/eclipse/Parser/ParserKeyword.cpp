@@ -86,7 +86,7 @@ namespace Opm {
     
     void ParserKeyword::initSizeKeyword( const std::string& sizeKeyword, const std::string& sizeItem) {
         m_keywordSizeType = OTHER;
-        m_sizeKeyword = std::pair<std::string , std::string>(sizeKeyword , sizeItem);
+        m_sizeDefinitionPair = std::pair<std::string , std::string>(sizeKeyword , sizeItem);
     }
 
     
@@ -175,8 +175,8 @@ namespace Opm {
         return m_keywordSizeType;
     }
 
-    const std::pair<std::string,std::string>& ParserKeyword::getSizePair() const {
-        return m_sizeKeyword;
+    const std::pair<std::string,std::string>& ParserKeyword::getSizeDefinitionPair() const {
+        return m_sizeDefinitionPair;
     }
 
 }

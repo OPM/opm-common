@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_withSize_SizeTypeFIXED) {
 BOOST_AUTO_TEST_CASE(ParserKeyword_withOtherSize_SizeTypeOTHER) {
     std::string keyword("KEYWORD");
     ParserKeyword parserKeyword(keyword, "EQUILDIMS" , "NTEQUIL");
-    const std::pair<std::string,std::string>& sizeKW = parserKeyword.getSizePair();
+    const std::pair<std::string,std::string>& sizeKW = parserKeyword.getSizeDefinitionPair();
     BOOST_CHECK_EQUAL(OTHER , parserKeyword.getSizeType() );
     BOOST_CHECK_EQUAL("EQUILDIMS", sizeKW.first );
     BOOST_CHECK_EQUAL("NTEQUIL" , sizeKW.second );
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withSize) {
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withSizeOther) {
     Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : {\"keyword\" : \"Bjarne\" , \"item\": \"BjarneIgjen\"}}");
     ParserKeyword parserKeyword(jsonObject);
-    const std::pair<std::string,std::string>& sizeKW = parserKeyword.getSizePair();
+    const std::pair<std::string,std::string>& sizeKW = parserKeyword.getSizeDefinitionPair();
     BOOST_CHECK_EQUAL("BPR" , parserKeyword.getName());
     BOOST_CHECK_EQUAL( false , parserKeyword.hasFixedSize() );
     BOOST_CHECK_EQUAL( parserKeyword.getSizeType() , OTHER);

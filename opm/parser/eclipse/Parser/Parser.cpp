@@ -122,12 +122,14 @@ namespace Opm {
                 if (parserKeyword->hasFixedSize())
                     targetSize = parserKeyword->getFixedSize();
                 else {
-                    const std::pair<std::string,std::string> sizeKeyword = parserKeyword->getSizePair();
-                    DeckKeywordConstPtr deckKeyword = deck->getKeyword(sizeKeyword.first);
-                    DeckRecordConstPtr deckRecord = deckKeyword->getRecord(0);
-                    DeckItemConstPtr deckItem = deckRecord->getItem(sizeKeyword.second);
-                    
-                    targetSize = deckItem->getInt(0);
+                    const std::pair<std::string,std::string> sizeKeyword = parserKeyword->getSizeDefinitionPair();
+                    DeckKeywordConstPtr sizeDefinitionKeyword = deck->getKeyword(sizeKeyword.first);
+                    DeckItemConstPtr sizeDefinitionItem;
+                    {
+                        DeckRecordConstPtr record = sizeDefinitionKeyword->getRecord(0);
+                        sizeDefinitionItem = record->getItem(sizeKeyword.second);
+                    }
+                    targetSize = sizeDefinitionItem->getInt(0);
                 }
                 return RawKeywordPtr(new RawKeyword(keywordString , targetSize));
             }
