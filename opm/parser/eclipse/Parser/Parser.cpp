@@ -62,7 +62,6 @@ namespace Opm {
             } else {
               ParserKeywordConstPtr parserKeyword = m_parserKeywords[rawKeyword->getKeywordName()];
               DeckKeywordConstPtr deckKeyword = parserKeyword->parse(rawKeyword);
-              std::cout << "Adding: " << rawKeyword->getKeywordName() << std::endl;
               deck->addKeyword( deckKeyword );
             }
             rawKeyword.reset();
