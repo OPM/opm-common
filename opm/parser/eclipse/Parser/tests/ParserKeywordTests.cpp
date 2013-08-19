@@ -204,3 +204,4 @@ BOOST_AUTO_TEST_CASE(hasFixedSize_sizeObjectDoesNotHaveFixedSize_returnsfalse) {
     BOOST_CHECK(!parserKeyword->hasFixedSize());
 }
 
+

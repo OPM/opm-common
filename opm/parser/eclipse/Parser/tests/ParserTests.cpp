@@ -84,6 +84,11 @@ BOOST_AUTO_TEST_CASE(loadKeywordsJSON_notArray_throw) {
     BOOST_CHECK_THROW(parser->loadKeywords( jsonConfig ) , std::invalid_argument);
 }
 
+BOOST_AUTO_TEST_CASE(empty_sizeReturns0) {
+    ParserPtr parser(new Parser());
+    BOOST_CHECK_EQUAL( 0U , parser->size());
+}
+
 
 
 BOOST_AUTO_TEST_CASE(loadKeywordsJSON_hasKeyword_returnstrue) {
@@ -103,6 +108,7 @@ BOOST_AUTO_TEST_CASE(loadKeywordsJSON_manyKeywords_returnstrue) {
     BOOST_CHECK(parser->hasKeyword("BPR"));
     BOOST_CHECK(parser->hasKeyword("WWCT"));
     BOOST_CHECK(parser->hasKeyword("EQUIL"));
+    BOOST_CHECK_EQUAL( 3U , parser->size() );
 }
 
 
@@ -148,6 +154,37 @@ BOOST_AUTO_TEST_CASE(createWithValidJsonFileArgument) {
 */
 
 
+/*****************************************************************/
+
+
+BOOST_AUTO_TEST_CASE(loadKeywordFromFile_fileDoesNotExist_returnsFalse) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path configFile("File/does/not/exist");
+    BOOST_CHECK_EQUAL( false , parser->loadKeywordFromFile( configFile ));
+}
+
+
+BOOST_AUTO_TEST_CASE(loadKeywordFromFile_invalidJson_returnsFalse) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path configFile("testdata/json/example_invalid_json");
+    BOOST_CHECK_EQUAL( false , parser->loadKeywordFromFile( configFile ));
+}
+
+
+BOOST_AUTO_TEST_CASE(loadKeywordFromFile_invalidConfig_returnsFalse) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path configFile("testdata/json/example_missing_name.json");
+    BOOST_CHECK_EQUAL( false , parser->loadKeywordFromFile( configFile ));
+}
+
+
+BOOST_AUTO_TEST_CASE(loadKeywordFromFile_validKeyword_returnsTrueHasKeyword) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path configFile("testdata/json/BPR");
+    BOOST_CHECK_EQUAL( true , parser->loadKeywordFromFile( configFile ));
+    BOOST_CHECK_EQUAL( 1U , parser->size() );
+    BOOST_CHECK_EQUAL( true , parser->hasKeyword("BPR") );
+}
 
 
 

@@ -29,7 +29,7 @@
 namespace Opm {
 
     Parser::Parser() {
-        populateDefaultKeywords();
+        //populateDefaultKeywords();
     }
 
     Parser::Parser(const boost::filesystem::path& jsonFile) {
@@ -42,6 +42,10 @@ namespace Opm {
 
         parseFile( deck , dataFile );
         return deck;
+    }
+
+    size_t Parser::size() const {
+        return m_parserKeywords.size();
     }
 
 
@@ -172,6 +176,21 @@ namespace Opm {
         }
         return pathToInputFile.parent_path();
     }
+
+    bool Parser::loadKeywordFromFile(const boost::filesystem::path& configFile) {
+
+        try {
+            Json::JsonObject jsonKeyword(configFile);
+            ParserKeywordConstPtr parserKeyword( new ParserKeyword( jsonKeyword ));
+            addKeyword( parserKeyword );
+            return true;
+        } catch (...) {
+            return false;
+        }
+
+    }
+
+
 
     void Parser::populateDefaultKeywords() {
         addKeyword(ParserKeywordConstPtr(new ParserKeyword("GRIDUNIT", 1)));

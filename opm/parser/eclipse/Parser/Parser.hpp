@@ -51,7 +51,8 @@ namespace Opm {
 
         void initializeFromJsonFile( const boost::filesystem::path& jsonFile );
         void loadKeywords(const Json::JsonObject& jsonKeywords);
-
+        bool loadKeywordFromFile(const boost::filesystem::path& configFile);
+        size_t size() const;
     private:
         std::map<std::string, ParserKeywordConstPtr> m_parserKeywords;
         bool tryParseKeyword(const DeckConstPtr deck ,  std::ifstream& inputstream , RawKeywordPtr& rawKeyword);
