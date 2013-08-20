@@ -4,6 +4,8 @@ add_subdirectory(RawDeck/tests)
 add_subdirectory(Deck/tests)
 add_subdirectory(IntegrationTests)
 
+add_subdirectory( Applications )
+
 set( rawdeck_source 
 RawDeck/RawKeyword.cpp 
 RawDeck/RawRecord.cpp )
