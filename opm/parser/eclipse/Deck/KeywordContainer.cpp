@@ -63,7 +63,7 @@ namespace Opm {
         if (index < keywordList.size())
             return keywordList[index];
         else
-            throw std::invalid_argument("Keyword index  is out of range.");
+            throw std::out_of_range("Keyword index is out of range.");
     }
 
 
@@ -72,6 +72,12 @@ namespace Opm {
         return keywordList.back();
     }
 
+    DeckKeywordConstPtr KeywordContainer::getKeyword(size_t index) const {
+        if (index < m_keywordList.size())
+            return m_keywordList[index];
+        else
+            throw std::out_of_range("Keyword index is out of range.");
+    }
 
     size_t KeywordContainer::numKeywords(const std::string& keyword) const{
         if (hasKeyword(keyword)) {
