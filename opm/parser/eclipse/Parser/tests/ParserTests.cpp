@@ -188,6 +188,60 @@ BOOST_AUTO_TEST_CASE(loadKeywordFromFile_validKeyword_returnsTrueHasKeyword) {
 
 
 
+BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_directoryDoesNotexist_throws) {
+	ParserPtr parser(new Parser());
+	boost::filesystem::path configPath("path/does/not/exist");
+	BOOST_CHECK_THROW(parser->loadKeywordsFromDirectory( configPath), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_notRecursive_allNames) {
+	ParserPtr parser(new Parser());
+	BOOST_CHECK_EQUAL(false , parser->hasKeyword("BPR"));
+	boost::filesystem::path configPath("testdata/config/directory1");
+	BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath, false , false));
+	BOOST_CHECK(parser->hasKeyword("WWCT"));
+	BOOST_CHECK_EQUAL(true , parser->hasKeyword("BPR"));
+	BOOST_CHECK_EQUAL(false , parser->hasKeyword("DIMENS"));
+}
+
+
+BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_notRecursive_strictNames) {
+	ParserPtr parser(new Parser());
+	boost::filesystem::path configPath("testdata/config/directory1");
+	BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath, false , true ));
+	BOOST_CHECK(parser->hasKeyword("WWCT"));
+	BOOST_CHECK_EQUAL(false , parser->hasKeyword("BPR"));
+	BOOST_CHECK_EQUAL(false , parser->hasKeyword("DIMENS"));
+}
+
+
+BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_Recursive_allNames) {
+	ParserPtr parser(new Parser());
+	BOOST_CHECK_EQUAL(false , parser->hasKeyword("BPR"));
+	boost::filesystem::path configPath("testdata/config/directory1");
+	BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath, true, false));
+	BOOST_CHECK(parser->hasKeyword("WWCT"));
+	BOOST_CHECK_EQUAL(true , parser->hasKeyword("BPR"));
+	BOOST_CHECK_EQUAL(true , parser->hasKeyword("DIMENS"));
+}
+
+
+BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_default) {
+	ParserPtr parser(new Parser());
+	BOOST_CHECK_EQUAL(false , parser->hasKeyword("BPR"));
+	boost::filesystem::path configPath("testdata/config/directory1");
+	BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath ));
+	BOOST_CHECK(parser->hasKeyword("WWCT"));
+	BOOST_CHECK_EQUAL(false , parser->hasKeyword("BPR"));
+	BOOST_CHECK_EQUAL(true , parser->hasKeyword("DIMENS"));
+}
+
+
+
+
+
+
+
 /***************** Simple Int parsing ********************************/
 
 ParserKeywordPtr setupParserKeywordInt(std::string name, int numberOfItems) {

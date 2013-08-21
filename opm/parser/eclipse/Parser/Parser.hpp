@@ -52,6 +52,8 @@ namespace Opm {
         void initializeFromJsonFile( const boost::filesystem::path& jsonFile );
         void loadKeywords(const Json::JsonObject& jsonKeywords);
         bool loadKeywordFromFile(const boost::filesystem::path& configFile);
+
+        void loadKeywordsFromDirectory(const boost::filesystem::path& directory , bool recursive = true, bool onlyALLCAPS8Files = true);
         size_t size() const;
     private:
         std::map<std::string, ParserKeywordConstPtr> m_parserKeywords;
