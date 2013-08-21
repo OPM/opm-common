@@ -81,9 +81,17 @@ namespace Opm {
 
         if (jsonConfig.has_item("items")) 
             addItems( jsonConfig );
+
+        if (m_fixedSize > 0 || m_keywordSizeType != FIXED)
+                if (numItems() == 0)
+                        throw std::invalid_argument("Json object for keyword: " + jsonConfig.get_string("name") + "is missing items specifier");
+
     }
 
     
+
+
+
     void ParserKeyword::initSizeKeyword( const std::string& sizeKeyword, const std::string& sizeItem) {
         m_keywordSizeType = OTHER;
         m_sizeDefinitionPair = std::pair<std::string , std::string>(sizeKeyword , sizeItem);
@@ -91,23 +99,24 @@ namespace Opm {
 
     
     bool ParserKeyword::validName(const std::string& name) {
-    	if (name.length() > ParserConst::maxKeywordLength)
-    		return false;
+        if (name.length() > ParserConst::maxKeywordLength)
+            return false;
 
-    	if (isdigit(name[0]))
-    		return false;
-
-    	for (unsigned int i = 0; i < name.length(); i++)
-  	      if (islower(name[i]))
-  	    	  return false;
-
-    	return true;
+        if (!isalpha(name[0]))
+            return false;
+        
+        for (unsigned int i = 0; i < name.length(); i++) {
+            char c = name[i];
+            if ( !(isupper(c) || isdigit(c)) )
+                return false;
+        }
+        return true;
     }
 
 
     void ParserKeyword::commonInit(const std::string& name) {
-    	if (!validName(name))
-    		throw std::invalid_argument("Invalid name: " + name + "keyword must be all upper case, max 8 characters. Starting with character.");
+        if (!validName(name))
+                throw std::invalid_argument("Invalid name: " + name + "keyword must be all upper case, max 8 characters. Starting with character.");
 
         m_name = name;
         m_record = ParserRecordPtr(new ParserRecord);
@@ -160,6 +169,11 @@ namespace Opm {
     const std::string& ParserKeyword::getName() const {
         return m_name;
     }
+
+    size_t ParserKeyword::numItems() const {
+        return m_record->size();
+    }
+
 
     DeckKeywordPtr ParserKeyword::parse(RawKeywordConstPtr rawKeyword) const {
       DeckKeywordPtr keyword(new DeckKeyword(getName()));
