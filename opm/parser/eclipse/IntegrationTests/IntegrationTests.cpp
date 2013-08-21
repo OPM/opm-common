@@ -151,19 +151,17 @@ BOOST_AUTO_TEST_CASE(Parse_InvalidInputFile_Throws) {
 }
 
 BOOST_AUTO_TEST_CASE(Parse_ValidInputFile_NoThrow) {
-    boost::filesystem::path singleKeywordFile("testdata/small.data");
+    boost::filesystem::path singleKeywordFile("testdata/integration_tests/small.data");
     ParserPtr parser(new Parser(JSON_CONFIG_FILE));
 
     BOOST_CHECK_NO_THROW(parser->parse(singleKeywordFile.string()));
 }
 
 /***************** Testing non-recognized keywords ********************/
-BOOST_AUTO_TEST_CASE(loadKeywordsJSON_manyKeywords_returnstrue) {
-    ParserPtr parser(new Parser());
-    Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100}, {\"name\" : \"WWCT\"} , {\"name\" : \"EQUIL\" , \"size\" : 100}]");
-    
-    parser->loadKeywords( jsonConfig );
-    BOOST_CHECK(parser->hasKeyword("BPR"));
-    BOOST_CHECK(parser->hasKeyword("WWCT"));
-    BOOST_CHECK(parser->hasKeyword("EQUIL"));
-}
+//BOOST_AUTO_TEST_CASE(loadKeywordsJSON_manyKeywords_returnstrue) {
+//    ParserPtr parser(new Parser());
+//    Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100}, {\"name\" : \"WWCT\"} , {\"name\" : \"EQUIL\" , \"size\" : 100}]");
+//    parser->loadKeywords( jsonConfig );
+//    
+//    parser->parse("testdata/someobscureelements.data");
+//}
