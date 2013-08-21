@@ -13,30 +13,41 @@
  * 
  */
 int main(int argc, char** argv) {
-    if (argc <= 1)
-    {
-        std::cout << "Usage: " << argv[0] << " <Filename>"  << "[-a] (list all keywords)" << std::endl;
+    if (argc <= 1) {
+        std::cout << "Usage: " << argv[0] << " <Filename>" << "[-a] (list all keywords)" << std::endl;
         exit(1);
     }
-    
+
     bool showKeywords = false;
-    for (int i=1; i<argc; i++) {
+    for (int i = 1; i < argc; i++) {
         std::string arg(argv[i]);
         if (arg == "-a")
             showKeywords = true;
     }
-    std::string file = argv[1];
-    Opm::ParserPtr parser(new Opm::Parser(JSON_CONFIG_FILE));
+
     try {
+        Opm::ParserPtr parser(new Opm::Parser(JSON_CONFIG_FILE));
+        std::string file = argv[1];
         Opm::DeckConstPtr deck = parser->parse(file);
-        std::cout << "Number of keywords: " << deck->size() << std::endl;
-        if (showKeywords) {
-            for (size_t i=0; i < deck->size(); i++) {
-                std::cout << "Keyword" << ": " << deck->getKeyword(i)->name() << std::endl;
+        int recognizedKeywords = 0;
+        int unrecognizedKeywords = 0;
+        for (size_t i = 0; i < deck->size(); i++) {
+            if (!deck->getKeyword(i)->isKnown()) {
+                unrecognizedKeywords++;
+                std::cout << "Warning, this looks like a keyword, but is not in the configuration: " << deck->getKeyword(i)->name() << std::endl;
+            }
+            else
+                recognizedKeywords++;
+
+            if (showKeywords) {
+                std::cout << "Keyword (" << i << "): " << deck->getKeyword(i)->name() << std::endl;
             }
         }
-    }
-    catch (std::invalid_argument exception) {
+        std::cout << "Number of recognized keywords:   " << recognizedKeywords << std::endl;
+        std::cout << "Number of unrecognized keywords: " << unrecognizedKeywords << std::endl;
+        std::cout << "Total number of keywords:        " << deck->size() << std::endl;
+
+    } catch (std::invalid_argument exception) {
         std::cout << "Unable to read file, error:" << std::endl << exception.what() << std::endl;
     }
     return 0;
