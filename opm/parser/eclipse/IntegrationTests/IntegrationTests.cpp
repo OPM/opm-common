@@ -38,16 +38,20 @@ ParserPtr createWWCTParser() {
         ParserRecordPtr wwctRecord = parserKeyword->getRecord();
         wwctRecord->addItem(ParserStringItemConstPtr(new ParserStringItem("WELL", ALL)));
     }
+    ParserKeywordPtr summaryKeyword(new ParserKeyword("SUMMARY" , 0));
+
 
     ParserPtr parser(new Parser());
     parser->addKeyword(parserKeyword);
+    parser->addKeyword(summaryKeyword);
     return parser;
 }
 
 BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_deckReturned) {
     boost::filesystem::path singleKeywordFile("testdata/integration_tests/wwct.data");
     ParserPtr parser = createWWCTParser();
-
+    BOOST_CHECK( parser->hasKeyword("WWCT"));
+    BOOST_CHECK( parser->hasKeyword("SUMMARY"));
     BOOST_CHECK_NO_THROW(DeckPtr deck = parser->parse(singleKeywordFile.string()));
 }
 
@@ -55,6 +59,7 @@ BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_deckHasWWCT) {
     boost::filesystem::path singleKeywordFile("testdata/integration_tests/wwct.data");
     ParserPtr parser = createWWCTParser();
     DeckPtr deck = parser->parse(singleKeywordFile.string());
+    BOOST_CHECK(deck->hasKeyword("SUMMARY"));
     BOOST_CHECK(deck->hasKeyword("WWCT"));
 }
 
@@ -74,9 +79,10 @@ ParserPtr createBPRParser() {
         bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("J", SINGLE)));
         bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("K", SINGLE)));
     }
-
+    ParserKeywordPtr summaryKeyword(new ParserKeyword("SUMMARY" , 0));
     ParserPtr parser(new Parser());
     parser->addKeyword(parserKeyword);
+    parser->addKeyword(summaryKeyword);
     return parser;
 }
 
