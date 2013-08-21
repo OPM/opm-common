@@ -67,6 +67,14 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_withOtherSize_SizeTypeOTHER) {
 
 
 
+BOOST_AUTO_TEST_CASE(ParserKeyword_validName) {
+	BOOST_CHECK_EQUAL( true , ParserKeyword::validName("SUMMARY"));
+	BOOST_CHECK_EQUAL( false , ParserKeyword::validName("MixeCase"));
+	BOOST_CHECK_EQUAL( false , ParserKeyword::validName("NAMETOOLONG"));
+	BOOST_CHECK_EQUAL( true , ParserKeyword::validName("STRING88"));
+	BOOST_CHECK_EQUAL( false , ParserKeyword::validName("88STRING"));
+}
+
 
 
 

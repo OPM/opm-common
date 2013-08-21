@@ -90,14 +90,25 @@ namespace Opm {
     }
 
     
+    bool ParserKeyword::validName(const std::string& name) {
+    	if (name.length() > ParserConst::maxKeywordLength)
+    		return false;
+
+    	if (isdigit(name[0]))
+    		return false;
+
+    	for (unsigned int i = 0; i < name.length(); i++)
+  	      if (islower(name[i]))
+  	    	  return false;
+
+    	return true;
+    }
+
+
     void ParserKeyword::commonInit(const std::string& name) {
-        if (name.length() > ParserConst::maxKeywordLength)
-            throw std::invalid_argument("Given keyword name is too long - max 8 characters.");
-        
-        for (unsigned int i = 0; i < name.length(); i++)
-            if (islower(name[i]))
-                throw std::invalid_argument("Keyword must be all upper case - mixed case not allowed:" + name);
-        
+    	if (!validName(name))
+    		throw std::invalid_argument("Invalid name: " + name + "keyword must be all upper case, max 8 characters. Starting with character.");
+
         m_name = name;
         m_record = ParserRecordPtr(new ParserRecord);
     }
