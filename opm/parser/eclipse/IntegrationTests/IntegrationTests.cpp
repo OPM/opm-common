@@ -157,10 +157,15 @@ BOOST_AUTO_TEST_CASE(Parse_ValidInputFile_NoThrow) {
 }
 
 /***************** Testing non-recognized keywords ********************/
-BOOST_AUTO_TEST_CASE(loadKeywordsJSON_manyKeywords_returnstrue) {
+BOOST_AUTO_TEST_CASE(parse_unknownkeywordWithnonstrictparsing_keywordmarked) {
     ParserPtr parser(new Parser(JSON_CONFIG_FILE));
-    DeckPtr deck = parser->parse("testdata/integration_tests/someobscureelements.data");
+    DeckPtr deck = parser->parse("testdata/integration_tests/someobscureelements.data", false);
     BOOST_CHECK_EQUAL(4U, deck->size());
     DeckKeywordConstPtr unknown = deck->getKeyword("GRUDINT");
     BOOST_CHECK(!unknown->isKnown());
+}
+
+BOOST_AUTO_TEST_CASE(parse_unknownkeywordWithstrictparsing_exceptionthrown) {
+    ParserPtr parser(new Parser(JSON_CONFIG_FILE));
+    BOOST_CHECK_THROW(parser->parse("testdata/integration_tests/someobscureelements.data", true), std::invalid_argument);
 }

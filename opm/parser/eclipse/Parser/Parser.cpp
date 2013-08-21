@@ -37,20 +37,23 @@ namespace Opm {
     }
 
     DeckPtr Parser::parse(const std::string &dataFile) {
-        DeckPtr deck(new Deck());
+        return parse(dataFile, true);
+    }
 
-        parseFile(deck, dataFile);
+    DeckPtr Parser::parse(const std::string &dataFile, bool strictParsing) {
+        DeckPtr deck(new Deck());
+        parseFile(deck, dataFile, strictParsing);
         return deck;
     }
 
-    void Parser::parseFile(DeckPtr deck, const std::string &file) {
+    void Parser::parseFile(DeckPtr deck, const std::string &file, bool parseStrict) {
         std::ifstream inputstream;
         inputstream.open(file.c_str());
 
         if (inputstream) {
             RawKeywordPtr rawKeyword;
 
-            while (tryParseKeyword(deck, inputstream, rawKeyword)) {
+            while (tryParseKeyword(deck, inputstream, rawKeyword, parseStrict)) {
                 if (rawKeyword->getKeywordName() == Opm::RawConsts::include) {
                     boost::filesystem::path dataFolderPath = verifyValidInputPath(file);
                     RawRecordConstPtr firstRecord = rawKeyword->getRecord(0);
@@ -58,13 +61,13 @@ namespace Opm {
                     boost::filesystem::path pathToIncludedFile(dataFolderPath);
                     pathToIncludedFile /= includeFileString;
 
-                    parseFile(deck, pathToIncludedFile.string());
+                    parseFile(deck, pathToIncludedFile.string(), parseStrict);
                 } else {
                     if (m_parserKeywords.find(rawKeyword->getKeywordName()) == m_parserKeywords.end()) {
                         DeckKeywordPtr deckKeyword(new DeckKeyword(rawKeyword->getKeywordName()));
                         deckKeyword->setUnknown();
                         deck->addKeyword(deckKeyword);
-                        
+
                     } else {
                         ParserKeywordConstPtr parserKeyword = m_parserKeywords[rawKeyword->getKeywordName()];
                         DeckKeywordConstPtr deckKeyword = parserKeyword->parse(rawKeyword);
@@ -108,7 +111,7 @@ namespace Opm {
         return m_parserKeywords.find(keyword) != m_parserKeywords.end();
     }
 
-    RawKeywordPtr Parser::createRawKeyword(const DeckConstPtr deck, const std::string& keywordString) {
+    RawKeywordPtr Parser::createRawKeyword(const DeckConstPtr deck, const std::string& keywordString, bool strictParsing) {
         if (hasKeyword(keywordString)) {
             ParserKeywordConstPtr parserKeyword = m_parserKeywords.find(keywordString)->second;
             if (parserKeyword->getSizeType() == UNDEFINED)
@@ -131,8 +134,7 @@ namespace Opm {
                 return RawKeywordPtr(new RawKeyword(keywordString, targetSize));
             }
         } else {
-            bool strict = false;
-            if (strict) {
+            if (strictParsing) {
                 throw std::invalid_argument("Keyword " + keywordString + " not recognized ");
             } else {
                 return RawKeywordPtr(new RawKeyword(keywordString, 0));
@@ -140,7 +142,7 @@ namespace Opm {
         }
     }
 
-    bool Parser::tryParseKeyword(const DeckConstPtr deck, std::ifstream& inputstream, RawKeywordPtr& rawKeyword) {
+    bool Parser::tryParseKeyword(const DeckConstPtr deck, std::ifstream& inputstream, RawKeywordPtr& rawKeyword, bool strictParsing) {
         std::string line;
 
         while (std::getline(inputstream, line)) {
@@ -148,7 +150,7 @@ namespace Opm {
 
             if (rawKeyword == NULL) {
                 if (RawKeyword::tryParseKeyword(line, keywordString)) {
-                    rawKeyword = createRawKeyword(deck, keywordString);
+                    rawKeyword = createRawKeyword(deck, keywordString, strictParsing);
                 }
             } else {
                 if (RawKeyword::useLine(line)) {
