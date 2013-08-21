@@ -141,7 +141,6 @@ BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_dataiscorrect) {
     BOOST_CHECK_EQUAL(3, K1->getInt(0));
     K1 = record2->getItem("K");
     BOOST_CHECK_EQUAL(3, K1->getInt(0));
-
 }
 
 
@@ -158,10 +157,10 @@ BOOST_AUTO_TEST_CASE(Parse_ValidInputFile_NoThrow) {
 }
 
 /***************** Testing non-recognized keywords ********************/
-//BOOST_AUTO_TEST_CASE(loadKeywordsJSON_manyKeywords_returnstrue) {
-//    ParserPtr parser(new Parser());
-//    Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100}, {\"name\" : \"WWCT\"} , {\"name\" : \"EQUIL\" , \"size\" : 100}]");
-//    parser->loadKeywords( jsonConfig );
-//    
-//    parser->parse("testdata/someobscureelements.data");
-//}
+BOOST_AUTO_TEST_CASE(loadKeywordsJSON_manyKeywords_returnstrue) {
+    ParserPtr parser(new Parser(JSON_CONFIG_FILE));
+    DeckPtr deck = parser->parse("testdata/integration_tests/someobscureelements.data");
+    BOOST_CHECK_EQUAL(4U, deck->size());
+    DeckKeywordConstPtr unknown = deck->getKeyword("GRUDINT");
+    BOOST_CHECK(!unknown->isKnown());
+}

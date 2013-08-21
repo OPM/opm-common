@@ -23,10 +23,13 @@ namespace Opm {
         size_t size() const;
         void addRecord(DeckRecordConstPtr record);
         DeckRecordConstPtr getRecord(size_t index) const;
+        void setUnknown();
+        bool isKnown() const;
         
     private:
         std::string m_keywordName;
         std::vector<DeckRecordConstPtr> m_recordList;
+        bool m_knownKeyword;
 
     };
     typedef boost::shared_ptr<DeckKeyword> DeckKeywordPtr;

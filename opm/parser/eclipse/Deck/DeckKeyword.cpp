@@ -22,6 +22,7 @@
 namespace Opm {
 
     DeckKeyword::DeckKeyword(const std::string& keywordName) {
+        m_knownKeyword = true;
         m_keywordName = keywordName;
     }
 
@@ -33,6 +34,15 @@ namespace Opm {
         return m_recordList.size();
     }
 
+    void DeckKeyword::setUnknown() {
+        m_knownKeyword = false;
+    }
+    
+    
+    bool DeckKeyword::isKnown() const {
+        return m_knownKeyword;
+    }
+    
     void DeckKeyword::addRecord(DeckRecordConstPtr record) {
         m_recordList.push_back(record);
     }
@@ -43,6 +53,5 @@ namespace Opm {
         } else
             throw std::range_error("Index out of range");
     }
-
 }
 
