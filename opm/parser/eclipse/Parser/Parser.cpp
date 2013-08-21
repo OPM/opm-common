@@ -111,7 +111,7 @@ namespace Opm {
 
 
 
-    RawKeywordPtr Parser::newRawKeyword(const DeckConstPtr deck , const std::string& keywordString) {
+    RawKeywordPtr Parser::createRawKeyword(const DeckConstPtr deck , const std::string& keywordString) {
         if (hasKeyword(keywordString)) {
             ParserKeywordConstPtr parserKeyword = m_parserKeywords.find(keywordString)->second;
             if (parserKeyword->getSizeType() == UNDEFINED) 
@@ -147,11 +147,14 @@ namespace Opm {
             std::string keywordString;
 
             if (rawKeyword == NULL) {
-                if (RawKeyword::tryParseKeyword(line, keywordString)) 
-                    rawKeyword = newRawKeyword( deck , keywordString );
-            } else {
-                if (RawKeyword::useLine(line)) 
+                if (RawKeyword::tryParseKeyword(line, keywordString)) {
+                    rawKeyword = createRawKeyword( deck , keywordString );
+                }
+            } 
+            else {
+                if (RawKeyword::useLine(line)) {
                     rawKeyword->addRawRecordString(line);
+                }
             }                    
             
             if (rawKeyword != NULL && rawKeyword->isFinished())

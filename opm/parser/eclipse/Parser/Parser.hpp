@@ -58,7 +58,7 @@ namespace Opm {
         void parseFile(DeckPtr deck , const std::string &file) ;
         boost::filesystem::path verifyValidInputPath(const std::string& inputPath) const;
         void populateDefaultKeywords();
-        RawKeywordPtr newRawKeyword(const DeckConstPtr deck , const std::string& keywordString);
+        RawKeywordPtr createRawKeyword(const DeckConstPtr deck , const std::string& keywordString);
 
     };
 
