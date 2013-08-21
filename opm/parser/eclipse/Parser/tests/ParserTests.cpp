@@ -137,8 +137,6 @@ BOOST_AUTO_TEST_CASE(inititalizeFromFile_missing_keywords_throw) {
     BOOST_CHECK_THROW( parser->initializeFromJsonFile( jsonFile ) , std::invalid_argument );
 }
 
-/***************** Testing non-recognized keywords ********************/
-
 
 /***************** Simple Int parsing ********************************/
 
