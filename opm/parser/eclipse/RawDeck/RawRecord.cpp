@@ -95,7 +95,7 @@ namespace Opm {
 
     void RawRecord::splitSingleRecordString() {
         char currentChar;
-        char tokenStartCharacter;
+        char tokenStartCharacter=' ';
         std::string currentToken = "";
         for (unsigned i = 0; i < m_sanitizedRecordString.size(); i++) {
             currentChar = m_sanitizedRecordString[i];
