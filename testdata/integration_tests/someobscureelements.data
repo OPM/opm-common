@@ -1,16 +1,15 @@
--- Dette er en supertest - OK
+-- Comment 
 OIL
 
 GRIDUNIT 
 METRES                   /
 
-GRUDINT -- Denne skjønner vi ikke, men "tar den med" som en ukjent
- "knaskenspill" 3 5 /
+GRUDINT -- A wrong, or unknown keyword
+ "text" 3 5 /
   3 3 3 3 3 3 /
 /
 
 
--- Og en med tall - OK
 
 RADFIN4
 213 123 123 /
