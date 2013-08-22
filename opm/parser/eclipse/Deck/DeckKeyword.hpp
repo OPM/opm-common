@@ -25,7 +25,6 @@ namespace Opm {
         size_t size() const;
         void addRecord(DeckRecordConstPtr record);
         DeckRecordConstPtr getRecord(size_t index) const;
-        void setUnknown();
         bool isKnown() const;
         
     private:
