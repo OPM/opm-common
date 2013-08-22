@@ -33,21 +33,21 @@ void printDeckDiagnostics(Opm::DeckConstPtr deck, bool printAllKeywords) {
  * 
  */
 int main(int argc, char** argv) {
-    if (argc <= 1) {
-        std::cout << "Usage: " << argv[0] << " <Filename>" << "[-a] (list all keywords)" << std::endl;
+    if (argc < 2) {
+        std::cout << "Usage: " << argv[0] << " <Filename>" << "[-l] (list keywords)" << std::endl;
         exit(1);
     }
 
     bool printKeywords = false;
-    for (int i = 1; i < argc; i++) {
-        std::string arg(argv[i]);
-        if (arg == "-a")
+    if (argc == 3) {
+        std::string arg(argv[2]);
+        if (arg == "-l")
             printKeywords = true;
     }
 
     Opm::ParserPtr parser(new Opm::Parser(JSON_CONFIG_FILE));
     std::string file = argv[1];
-    Opm::DeckConstPtr deck = parser->parse(file);
+    Opm::DeckConstPtr deck = parser->parse(file, false);
     
     printDeckDiagnostics(deck, printKeywords);
 

@@ -64,11 +64,7 @@ BOOST_AUTO_TEST_CASE(getRecord_outofrange_exceptionthrown) {
 }
 
 BOOST_AUTO_TEST_CASE(setUnknown_wasknown_nowunknown) {
-    DeckKeywordPtr deckKeyword(new DeckKeyword("KW"));
-    BOOST_CHECK(deckKeyword->isKnown());
-    deckKeyword->setUnknown();
-    BOOST_CHECK(!deckKeyword->isKnown());
-    deckKeyword->setUnknown();
+    DeckKeywordPtr deckKeyword(new DeckKeyword("KW", false));
     BOOST_CHECK(!deckKeyword->isKnown());
 }
 

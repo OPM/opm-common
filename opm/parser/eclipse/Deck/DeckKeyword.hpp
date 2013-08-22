@@ -19,6 +19,8 @@ namespace Opm {
     class DeckKeyword {
     public:
         DeckKeyword(const std::string& keywordName);
+        DeckKeyword(const std::string& keywordName, bool knownKeyword);
+
         std::string name() const;
         size_t size() const;
         void addRecord(DeckRecordConstPtr record);

@@ -25,6 +25,11 @@ namespace Opm {
         m_knownKeyword = true;
         m_keywordName = keywordName;
     }
+    
+    DeckKeyword::DeckKeyword(const std::string& keywordName, bool knownKeyword) {
+        m_knownKeyword = knownKeyword;
+        m_keywordName = keywordName;
+    }
 
     std::string DeckKeyword::name() const {
         return m_keywordName;
@@ -34,11 +39,6 @@ namespace Opm {
         return m_recordList.size();
     }
 
-    void DeckKeyword::setUnknown() {
-        m_knownKeyword = false;
-    }
-    
-    
     bool DeckKeyword::isKnown() const {
         return m_knownKeyword;
     }

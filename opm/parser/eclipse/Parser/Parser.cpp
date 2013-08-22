@@ -63,14 +63,12 @@ namespace Opm {
 
                     parseFile(deck, pathToIncludedFile.string(), parseStrict);
                 } else {
-                    if (m_parserKeywords.find(rawKeyword->getKeywordName()) == m_parserKeywords.end()) {
-                        DeckKeywordPtr deckKeyword(new DeckKeyword(rawKeyword->getKeywordName()));
-                        deckKeyword->setUnknown();
-                        deck->addKeyword(deckKeyword);
-
-                    } else {
+                    if (hasKeyword(rawKeyword->getKeywordName())) {
                         ParserKeywordConstPtr parserKeyword = m_parserKeywords[rawKeyword->getKeywordName()];
                         DeckKeywordConstPtr deckKeyword = parserKeyword->parse(rawKeyword);
+                        deck->addKeyword(deckKeyword);
+                    } else {
+                        DeckKeywordPtr deckKeyword(new DeckKeyword(rawKeyword->getKeywordName(), false));
                         deck->addKeyword(deckKeyword);
                     }
                 }
