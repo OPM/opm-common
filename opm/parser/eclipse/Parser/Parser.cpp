@@ -195,24 +195,24 @@ namespace Opm {
 
 
     void Parser::loadKeywordsFromDirectory(const boost::filesystem::path& directory, bool recursive, bool onlyALLCAPS8) {
-    	if (!boost::filesystem::exists(directory))
-    		throw std::invalid_argument("Directory: " + directory.string() + " does not exist.");
-    	else {
-    		boost::filesystem::directory_iterator end;
-    		for (boost::filesystem::directory_iterator iter(directory) ; iter != end; iter++) {
-    			if (is_directory(*iter)) {
-    				if (recursive)
-    					loadKeywordsFromDirectory(*iter , recursive , onlyALLCAPS8);
-    			} else {
-    				if (!onlyALLCAPS8 || ParserKeyword::validName( iter->path().filename())) {
-    					if (!loadKeywordFromFile(*iter))
-    						std::cerr << "** Warning: failed to load keyword from file:" << iter->path() << std::endl;
-    				}
-    			}
-    		}
-    	}
-   	}
-
+        if (!boost::filesystem::exists(directory))
+            throw std::invalid_argument("Directory: " + directory.string() + " does not exist.");
+        else {
+            boost::filesystem::directory_iterator end;
+            for (boost::filesystem::directory_iterator iter(directory) ; iter != end; iter++) {
+                if (is_directory(*iter)) {
+                    if (recursive)
+                        loadKeywordsFromDirectory(*iter , recursive , onlyALLCAPS8);
+                } else {
+                    if (!onlyALLCAPS8 || ParserKeyword::validName( iter->path().filename())) {
+                        if (!loadKeywordFromFile(*iter))
+                            std::cerr << "** Warning: failed to load keyword from file:" << iter->path() << std::endl;
+                    }
+                }
+            }
+        }
+    }
+    
 
     void Parser::populateDefaultKeywords() {
         addKeyword(ParserKeywordConstPtr(new ParserKeyword("GRIDUNIT", 1)));
