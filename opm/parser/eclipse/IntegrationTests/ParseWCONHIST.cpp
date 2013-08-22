@@ -36,7 +36,8 @@ using namespace Opm;
 
 
 BOOST_AUTO_TEST_CASE( parse_WCHONHIST_OK ) {
-    ParserPtr parser(new Parser(JSON_CONFIG_FILE));
+    ParserPtr parser(new Parser());
+    parser->loadKeywordsFromDirectory(KEYWORD_DIRECTORY);
     boost::filesystem::path wconhistFile("testdata/WCONHIST/WCONHIST1");
     DeckPtr deck = parser->parse(wconhistFile.string());
     DeckKeywordConstPtr kw1 = deck->getKeyword("WCONHIST" , 0);
