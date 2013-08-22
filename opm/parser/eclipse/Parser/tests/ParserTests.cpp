@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(hasKeyword_hasKeyword_returnstrue) {
 
 BOOST_AUTO_TEST_CASE(addKeywordJSON_hasKeyword_returnstrue) {
     ParserPtr parser(new Parser());
-    Json::JsonObject jsonConfig("{\"name\": \"BPR\", \"size\" : 100}");
+    Json::JsonObject jsonConfig("{\"name\": \"BPR\", \"size\" : 100 ,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"FLOAT\"}]}");
     parser->addKeyword(ParserKeywordConstPtr(new ParserKeyword( jsonConfig )));
     BOOST_CHECK(parser->hasKeyword("BPR"));
 }
@@ -70,9 +70,9 @@ BOOST_AUTO_TEST_CASE(addKeywordJSON_hasKeyword_returnstrue) {
 
 BOOST_AUTO_TEST_CASE(addKeywordJSON_size_isObject_allGood) {
     ParserPtr parser(new Parser());
-    Json::JsonObject jsonConfig("{\"name\": \"EQUIL\", \"size\" : {\"keyword\":\"EQLDIMS\" , \"item\" : \"NTEQUL\"}}");
+    Json::JsonObject jsonConfig("{\"name\": \"EQUIXL\", \"size\" : {\"keyword\":\"EQLDIMS\" , \"item\" : \"NTEQUL\"},  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"FLOAT\"}]}");
     parser->addKeyword(ParserKeywordConstPtr(new ParserKeyword( jsonConfig )));
-    BOOST_CHECK(parser->hasKeyword("EQUIL"));
+    BOOST_CHECK(parser->hasKeyword("EQUIXL"));
 }
 
 
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(empty_sizeReturns0) {
 
 BOOST_AUTO_TEST_CASE(loadKeywordsJSON_hasKeyword_returnstrue) {
     ParserPtr parser(new Parser());
-    Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100}]");
+    Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"FLOAT\"}]}]");
     
     parser->loadKeywords( jsonConfig );
     BOOST_CHECK(parser->hasKeyword("BPR"));
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(loadKeywordsJSON_hasKeyword_returnstrue) {
 
 BOOST_AUTO_TEST_CASE(loadKeywordsJSON_manyKeywords_returnstrue) {
     ParserPtr parser(new Parser());
-    Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100}, {\"name\" : \"WWCT\"} , {\"name\" : \"EQUIL\" , \"size\" : 100}]");
+    Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100 ,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"FLOAT\"}]}, {\"name\" : \"WWCT\", \"size\" : 0} , {\"name\" : \"EQUIL\" , \"size\" : 0}]");
     
     parser->loadKeywords( jsonConfig );
     BOOST_CHECK(parser->hasKeyword("BPR"));
@@ -189,51 +189,51 @@ BOOST_AUTO_TEST_CASE(loadKeywordFromFile_validKeyword_returnsTrueHasKeyword) {
 
 
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_directoryDoesNotexist_throws) {
-	ParserPtr parser(new Parser());
-	boost::filesystem::path configPath("path/does/not/exist");
-	BOOST_CHECK_THROW(parser->loadKeywordsFromDirectory( configPath), std::invalid_argument);
+        ParserPtr parser(new Parser());
+        boost::filesystem::path configPath("path/does/not/exist");
+        BOOST_CHECK_THROW(parser->loadKeywordsFromDirectory( configPath), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_notRecursive_allNames) {
-	ParserPtr parser(new Parser());
-	BOOST_CHECK_EQUAL(false , parser->hasKeyword("BPR"));
-	boost::filesystem::path configPath("testdata/config/directory1");
-	BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath, false , false));
-	BOOST_CHECK(parser->hasKeyword("WWCT"));
-	BOOST_CHECK_EQUAL(true , parser->hasKeyword("BPR"));
-	BOOST_CHECK_EQUAL(false , parser->hasKeyword("DIMENS"));
+        ParserPtr parser(new Parser());
+        BOOST_CHECK_EQUAL(false , parser->hasKeyword("BPR"));
+        boost::filesystem::path configPath("testdata/config/directory1");
+        BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath, false , false));
+        BOOST_CHECK(parser->hasKeyword("WWCT"));
+        BOOST_CHECK_EQUAL(true , parser->hasKeyword("BPR"));
+        BOOST_CHECK_EQUAL(false , parser->hasKeyword("DIMENS"));
 }
 
 
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_notRecursive_strictNames) {
-	ParserPtr parser(new Parser());
-	boost::filesystem::path configPath("testdata/config/directory1");
-	BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath, false , true ));
-	BOOST_CHECK(parser->hasKeyword("WWCT"));
-	BOOST_CHECK_EQUAL(false , parser->hasKeyword("BPR"));
-	BOOST_CHECK_EQUAL(false , parser->hasKeyword("DIMENS"));
+        ParserPtr parser(new Parser());
+        boost::filesystem::path configPath("testdata/config/directory1");
+        BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath, false , true ));
+        BOOST_CHECK(parser->hasKeyword("WWCT"));
+        BOOST_CHECK_EQUAL(false , parser->hasKeyword("BPR"));
+        BOOST_CHECK_EQUAL(false , parser->hasKeyword("DIMENS"));
 }
 
 
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_Recursive_allNames) {
-	ParserPtr parser(new Parser());
-	BOOST_CHECK_EQUAL(false , parser->hasKeyword("BPR"));
-	boost::filesystem::path configPath("testdata/config/directory1");
-	BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath, true, false));
-	BOOST_CHECK(parser->hasKeyword("WWCT"));
-	BOOST_CHECK_EQUAL(true , parser->hasKeyword("BPR"));
-	BOOST_CHECK_EQUAL(true , parser->hasKeyword("DIMENS"));
+        ParserPtr parser(new Parser());
+        BOOST_CHECK_EQUAL(false , parser->hasKeyword("BPR"));
+        boost::filesystem::path configPath("testdata/config/directory1");
+        BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath, true, false));
+        BOOST_CHECK(parser->hasKeyword("WWCT"));
+        BOOST_CHECK_EQUAL(true , parser->hasKeyword("BPR"));
+        BOOST_CHECK_EQUAL(true , parser->hasKeyword("DIMENS"));
 }
 
 
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_default) {
-	ParserPtr parser(new Parser());
-	BOOST_CHECK_EQUAL(false , parser->hasKeyword("BPR"));
-	boost::filesystem::path configPath("testdata/config/directory1");
-	BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath ));
-	BOOST_CHECK(parser->hasKeyword("WWCT"));
-	BOOST_CHECK_EQUAL(false , parser->hasKeyword("BPR"));
-	BOOST_CHECK_EQUAL(true , parser->hasKeyword("DIMENS"));
+        ParserPtr parser(new Parser());
+        BOOST_CHECK_EQUAL(false , parser->hasKeyword("BPR"));
+        boost::filesystem::path configPath("testdata/config/directory1");
+        BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath ));
+        BOOST_CHECK(parser->hasKeyword("WWCT"));
+        BOOST_CHECK_EQUAL(false , parser->hasKeyword("BPR"));
+        BOOST_CHECK_EQUAL(true , parser->hasKeyword("DIMENS"));
 }
 
 
