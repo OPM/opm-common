@@ -45,6 +45,7 @@ namespace Opm {
         const std::string& getName() const;
         size_t getFixedSize() const;
         bool hasFixedSize() const;
+        size_t numItems() const;
         
         DeckKeywordPtr parse(RawKeywordConstPtr rawKeyword) const;
         enum ParserKeywordSizeEnum getSizeType() const;
