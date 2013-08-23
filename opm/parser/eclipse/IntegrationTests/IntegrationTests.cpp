@@ -175,3 +175,13 @@ BOOST_AUTO_TEST_CASE(parse_unknownkeywordWithstrictparsing_exceptionthrown) {
     ParserPtr parser(new Parser(JSON_CONFIG_FILE));
     BOOST_CHECK_THROW(parser->parse("testdata/integration_tests/someobscureelements.data", true), std::invalid_argument);
 }
+
+/*********************Testing truncated (default) records ***************************/
+
+BOOST_AUTO_TEST_CASE(parse_truncatedrecords_deckFilledWithDefaults) {
+    ParserPtr parser(new Parser());
+    parser->loadKeywordsFromDirectory(KEYWORD_DIRECTORY);
+    DeckPtr deck = parser->parse("testdata/integration_tests/truncated_records.data");
+    
+
+}

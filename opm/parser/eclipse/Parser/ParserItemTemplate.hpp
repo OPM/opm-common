@@ -64,21 +64,25 @@ template<class T> void fillVectorFromStringToken(std::string token, std::vector<
 }
 
 template<class T> std::vector<T> readFromRawRecord(RawRecordPtr rawRecord, bool scanAll, size_t expectedItems, T defaultValue, bool& defaultActive) const {
-  bool cont = true;
-  std::vector<T> data;
-  do {
-    std::string token = rawRecord->pop_front();
-    fillVectorFromStringToken(token, data, defaultValue, defaultActive);
+    bool cont = true;
+    std::vector<T> data;
+    if (rawRecord->size() == 0) {
+        data.push_back(defaultValue);
+    } else {
+        do {
+            std::string token = rawRecord->pop_front();
+            fillVectorFromStringToken(token, data, defaultValue, defaultActive);
 
-    if (rawRecord->size() == 0)
-      cont = false;
-    else {
-      if (!scanAll)
-        if (data.size() >= expectedItems)
-          cont = false;
+            if (rawRecord->size() == 0)
+                cont = false;
+            else {
+                if (!scanAll)
+                    if (data.size() >= expectedItems)
+                        cont = false;
+            }
+        } while (cont);
     }
-  } while (cont);
-  return data;
+    return data;
 }
 
 template <class T> void pushBackToRecord(RawRecordPtr rawRecord, std::vector<T>& data, size_t expectedItems, bool defaultActive) const {
