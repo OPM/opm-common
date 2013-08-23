@@ -64,7 +64,7 @@ namespace Opm {
             
             if ((expectedItems > 0) || scanAll) {
                 bool defaultActive;
-                std::vector<std::string> stringsPreparedForDeckItem = readFromRawRecord(rawRecord, scanAll, expectedItems, m_default, defaultActive);
+                std::vector<std::string> stringsPreparedForDeckItem = readFromRawRecord(rawRecord, scanAll, m_default, defaultActive);
                 if (scanAll)
                     deckItem->push_back(stringsPreparedForDeckItem);
                 else if (stringsPreparedForDeckItem.size() >= expectedItems) {

@@ -63,7 +63,7 @@ template<class T> void fillVectorFromStringToken(std::string token, std::vector<
     throw std::invalid_argument("Spurious data at the end of: <" + token + ">");
 }
 
-template<class T> std::vector<T> readFromRawRecord(RawRecordPtr rawRecord, bool scanAll, size_t expectedItems, T defaultValue, bool& defaultActive) const {
+template<class T> std::vector<T> readFromRawRecord(RawRecordPtr rawRecord, bool scanAll, T defaultValue, bool& defaultActive) const {
     bool cont = true;
     std::vector<T> data;
     if (rawRecord->size() == 0) {
@@ -73,13 +73,9 @@ template<class T> std::vector<T> readFromRawRecord(RawRecordPtr rawRecord, bool 
             std::string token = rawRecord->pop_front();
             fillVectorFromStringToken(token, data, defaultValue, defaultActive);
 
-            if (rawRecord->size() == 0)
+            if (rawRecord->size() == 0 || !scanAll)
                 cont = false;
-            else {
-                if (!scanAll)
-                    if (data.size() >= expectedItems)
-                        cont = false;
-            }
+        
         } while (cont);
     }
     return data;

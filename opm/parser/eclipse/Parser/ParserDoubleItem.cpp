@@ -68,7 +68,7 @@ namespace Opm {
 
             if ((expectedItems > 0) || scanAll) {
                 bool defaultActive;
-                std::vector<double> doublesPreparedForDeckItem = readFromRawRecord(rawRecord, scanAll, expectedItems, m_default, defaultActive);
+                std::vector<double> doublesPreparedForDeckItem = readFromRawRecord(rawRecord, scanAll, m_default, defaultActive);
 
                 if (scanAll)
                     deckItem->push_back(doublesPreparedForDeckItem);
