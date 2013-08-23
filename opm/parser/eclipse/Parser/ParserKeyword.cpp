@@ -116,7 +116,7 @@ namespace Opm {
 
     void ParserKeyword::commonInit(const std::string& name) {
         if (!validName(name))
-                throw std::invalid_argument("Invalid name: " + name + "keyword must be all upper case, max 8 characters. Starting with character.");
+            throw std::invalid_argument("Invalid name: " + name + "keyword must be all upper case, max 8 characters. Starting with character.");
 
         m_name = name;
         m_record = ParserRecordPtr(new ParserRecord);
