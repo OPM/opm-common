@@ -102,10 +102,10 @@ namespace Opm {
         if (name.length() > ParserConst::maxKeywordLength)
             return false;
 
-        if (!isalpha(name[0]))
+        if (!isupper(name[0]))
             return false;
         
-        for (unsigned int i = 0; i < name.length(); i++) {
+        for (unsigned int i = 1; i < name.length(); i++) {
             char c = name[i];
             if ( !(isupper(c) || isdigit(c)) )
                 return false;
