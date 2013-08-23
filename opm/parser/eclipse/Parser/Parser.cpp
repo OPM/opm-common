@@ -29,7 +29,6 @@
 namespace Opm {
 
     Parser::Parser() {
-        //populateDefaultKeywords();
     }
 
     Parser::Parser(const boost::filesystem::path& jsonFile) {
