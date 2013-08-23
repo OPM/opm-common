@@ -63,6 +63,10 @@ BOOST_AUTO_TEST_CASE(getRecord_outofrange_exceptionthrown) {
     BOOST_CHECK_THROW(deckKeyword->getRecord(1), std::range_error);
 }
 
+BOOST_AUTO_TEST_CASE(setUnknown_wasknown_nowunknown) {
+    DeckKeywordPtr deckKeyword(new DeckKeyword("KW", false));
+    BOOST_CHECK(!deckKeyword->isKnown());
+}
 
 
 

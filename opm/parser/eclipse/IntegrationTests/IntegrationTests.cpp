@@ -147,7 +147,6 @@ BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_dataiscorrect) {
     BOOST_CHECK_EQUAL(3, K1->getInt(0));
     K1 = record2->getItem("K");
     BOOST_CHECK_EQUAL(3, K1->getInt(0));
-
 }
 
 
@@ -157,52 +156,22 @@ BOOST_AUTO_TEST_CASE(Parse_InvalidInputFile_Throws) {
 }
 
 BOOST_AUTO_TEST_CASE(Parse_ValidInputFile_NoThrow) {
-    boost::filesystem::path singleKeywordFile("testdata/small.data");
+    boost::filesystem::path singleKeywordFile("testdata/integration_tests/small.data");
     ParserPtr parser(new Parser(JSON_CONFIG_FILE));
 
     BOOST_CHECK_NO_THROW(parser->parse(singleKeywordFile.string()));
 }
 
-
-
-/*
-BOOST_AUTO_TEST_CASE(ParseFileWithFewKeywords) {
-    boost::filesystem::path singleKeywordFile("testdata/small.data");
-
+/***************** Testing non-recognized keywords ********************/
+BOOST_AUTO_TEST_CASE(parse_unknownkeywordWithnonstrictparsing_keywordmarked) {
     ParserPtr parser(new Parser(JSON_CONFIG_FILE));
-
-    DeckPtr Deck = parser->parse(singleKeywordFile.string());
-
-    BOOST_CHECK_EQUAL(7U, Deck->size());
-
-    RawKeywordConstPtr matchingKeyword = rawDeck->getKeyword(0);
-    BOOST_CHECK_EQUAL("OIL", matchingKeyword->getKeywordName());
-    BOOST_CHECK_EQUAL(0U, matchingKeyword->size());
-
-    // The two next come in via the include of the include path/readthis.sch file
-    matchingKeyword = rawDeck->getKeyword(1);
-    BOOST_CHECK_EQUAL("GRUPTREE", matchingKeyword->getKeywordName());
-    BOOST_CHECK_EQUAL(2U, matchingKeyword->size());
-
-    matchingKeyword = rawDeck->getKeyword(2);
-    BOOST_CHECK_EQUAL("WHISTCTL", matchingKeyword->getKeywordName());
-    BOOST_CHECK_EQUAL(1U, matchingKeyword->size());
-
-    matchingKeyword = rawDeck->getKeyword(3);
-    BOOST_CHECK_EQUAL("METRIC", matchingKeyword->getKeywordName());
-    BOOST_CHECK_EQUAL(0U, matchingKeyword->size());
-
-    matchingKeyword = rawDeck->getKeyword(4);
-    BOOST_CHECK_EQUAL("GRIDUNIT", matchingKeyword->getKeywordName());
-    BOOST_CHECK_EQUAL(1U, matchingKeyword->size());
-
-    matchingKeyword = rawDeck->getKeyword(5);
-    BOOST_CHECK_EQUAL("RADFIN4", matchingKeyword->getKeywordName());
-    BOOST_CHECK_EQUAL(1U, matchingKeyword->size());
-
-    matchingKeyword = rawDeck->getKeyword(6);
-    BOOST_CHECK_EQUAL("ABCDAD", matchingKeyword->getKeywordName());
-
-    BOOST_CHECK_EQUAL(2U, matchingKeyword->size());
+    DeckPtr deck = parser->parse("testdata/integration_tests/someobscureelements.data", false);
+    BOOST_CHECK_EQUAL(4U, deck->size());
+    DeckKeywordConstPtr unknown = deck->getKeyword("GRUDINT");
+    BOOST_CHECK(!unknown->isKnown());
 }
-*/
+
+BOOST_AUTO_TEST_CASE(parse_unknownkeywordWithstrictparsing_exceptionthrown) {
+    ParserPtr parser(new Parser(JSON_CONFIG_FILE));
+    BOOST_CHECK_THROW(parser->parse("testdata/integration_tests/someobscureelements.data", true), std::invalid_argument);
+}

@@ -1,0 +1,16 @@
+-- Comment 
+OIL
+
+GRIDUNIT 
+METRES                   /
+
+GRUDINT -- A wrong, or unknown keyword
+ "text" 3 5 /
+  3 3 3 3 3 3 /
+/
+
+
+
+RADFIN4
+213 123 123 /
+

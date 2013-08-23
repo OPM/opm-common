@@ -44,6 +44,7 @@ namespace Opm {
 
         /// The starting point of the parsing process. The supplied file is parsed, and the resulting Deck is returned.
         DeckPtr parse(const std::string &dataFile);
+        DeckPtr parse(const std::string &dataFile, bool strictParsing);
 
         /// Method to add ParserKeyword instances, these holding type and size information about the keywords and their data.
         void addKeyword(ParserKeywordConstPtr parserKeyword);
@@ -57,11 +58,11 @@ namespace Opm {
         size_t size() const;
     private:
         std::map<std::string, ParserKeywordConstPtr> m_parserKeywords;
-        bool tryParseKeyword(const DeckConstPtr deck ,  std::ifstream& inputstream , RawKeywordPtr& rawKeyword);
-        void parseFile(DeckPtr deck , const std::string &file) ;
+        bool tryParseKeyword(const DeckConstPtr deck ,  std::ifstream& inputstream , RawKeywordPtr& rawKeyword, bool strictParsing);
+        void parseFile(DeckPtr deck , const std::string &file, bool strictParsing) ;
         boost::filesystem::path verifyValidInputPath(const std::string& inputPath) const;
         void populateDefaultKeywords();
-        RawKeywordPtr newRawKeyword(const DeckConstPtr deck , const std::string& keywordString);
+        RawKeywordPtr createRawKeyword(const DeckConstPtr deck , const std::string& keywordString, bool strictParsing);
 
     };
 

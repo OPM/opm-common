@@ -33,103 +33,104 @@ namespace Opm {
     }
 
     Parser::Parser(const boost::filesystem::path& jsonFile) {
-        initializeFromJsonFile( jsonFile );
+        initializeFromJsonFile(jsonFile);
     }
 
-
     DeckPtr Parser::parse(const std::string &dataFile) {
-        DeckPtr deck(new Deck());
+        return parse(dataFile, true);
+    }
 
-        parseFile( deck , dataFile );
+    DeckPtr Parser::parse(const std::string &dataFile, bool strictParsing) {
+        DeckPtr deck(new Deck());
+        parseFile(deck, dataFile, strictParsing);
         return deck;
     }
 
+<<<<<<< HEAD
     size_t Parser::size() const {
         return m_parserKeywords.size();
     }
 
 
     void Parser::parseFile(DeckPtr deck , const std::string &file) {
+=======
+    void Parser::parseFile(DeckPtr deck, const std::string &file, bool parseStrict) {
+>>>>>>> upstream/master
         std::ifstream inputstream;
-        inputstream.open( file.c_str() );
-        
+        inputstream.open(file.c_str());
+
         if (inputstream) {
-          RawKeywordPtr rawKeyword;
-          
-          while (tryParseKeyword(deck , inputstream , rawKeyword)) {
-            if (rawKeyword->getKeywordName() == Opm::RawConsts::include) {
-              boost::filesystem::path dataFolderPath = verifyValidInputPath(file);
-              RawRecordConstPtr firstRecord = rawKeyword->getRecord(0);
-              std::string includeFileString = firstRecord->getItem(0);
-              boost::filesystem::path pathToIncludedFile(dataFolderPath);
-              pathToIncludedFile /= includeFileString;
-              
-              parseFile( deck , pathToIncludedFile.string() );
-            } else {
-              ParserKeywordConstPtr parserKeyword = m_parserKeywords[rawKeyword->getKeywordName()];
-              DeckKeywordConstPtr deckKeyword = parserKeyword->parse(rawKeyword);
-              deck->addKeyword( deckKeyword );
+            RawKeywordPtr rawKeyword;
+
+            while (tryParseKeyword(deck, inputstream, rawKeyword, parseStrict)) {
+                if (rawKeyword->getKeywordName() == Opm::RawConsts::include) {
+                    boost::filesystem::path dataFolderPath = verifyValidInputPath(file);
+                    RawRecordConstPtr firstRecord = rawKeyword->getRecord(0);
+                    std::string includeFileString = firstRecord->getItem(0);
+                    boost::filesystem::path pathToIncludedFile(dataFolderPath);
+                    pathToIncludedFile /= includeFileString;
+
+                    parseFile(deck, pathToIncludedFile.string(), parseStrict);
+                } else {
+                    if (hasKeyword(rawKeyword->getKeywordName())) {
+                        ParserKeywordConstPtr parserKeyword = m_parserKeywords[rawKeyword->getKeywordName()];
+                        DeckKeywordConstPtr deckKeyword = parserKeyword->parse(rawKeyword);
+                        deck->addKeyword(deckKeyword);
+                    } else {
+                        DeckKeywordPtr deckKeyword(new DeckKeyword(rawKeyword->getKeywordName(), false));
+                        deck->addKeyword(deckKeyword);
+                    }
+                }
+                rawKeyword.reset();
             }
-            rawKeyword.reset();
-          }
-          
-          inputstream.close();
+
+            inputstream.close();
         } else
-          throw std::invalid_argument("Failed to open file: " + file);
+            throw std::invalid_argument("Failed to open file: " + file);
     }
 
-
-    
     void Parser::addKeyword(ParserKeywordConstPtr parserKeyword) {
         m_parserKeywords.insert(std::make_pair(parserKeyword->getName(), parserKeyword));
     }
 
-    
-    void Parser::initializeFromJsonFile( const boost::filesystem::path& jsonFile ) {
+    void Parser::initializeFromJsonFile(const boost::filesystem::path& jsonFile) {
         Json::JsonObject jsonConfig(jsonFile);
         if (jsonConfig.has_item("keywords")) {
             Json::JsonObject jsonKeywords = jsonConfig.get_item("keywords");
-            loadKeywords( jsonKeywords );
+            loadKeywords(jsonKeywords);
         } else
             throw std::invalid_argument("Missing \"keywords\" section in config file: " + jsonFile.string());
     }
 
-
     void Parser::loadKeywords(const Json::JsonObject& jsonKeywords) {
         if (jsonKeywords.is_array()) {
             for (size_t index = 0; index < jsonKeywords.size(); index++) {
-                Json::JsonObject jsonKeyword = jsonKeywords.get_array_item( index );
-                ParserKeywordConstPtr parserKeyword( new ParserKeyword( jsonKeyword ));
-                
-                addKeyword( parserKeyword );
+                Json::JsonObject jsonKeyword = jsonKeywords.get_array_item(index);
+                ParserKeywordConstPtr parserKeyword(new ParserKeyword(jsonKeyword));
+
+                addKeyword(parserKeyword);
             }
         } else
             throw std::invalid_argument("Input JSON object is not an array");
     }
 
 
-
-
-
     bool Parser::hasKeyword(const std::string& keyword) const {
         return m_parserKeywords.find(keyword) != m_parserKeywords.end();
     }
 
-
-
-
-    RawKeywordPtr Parser::newRawKeyword(const DeckConstPtr deck , const std::string& keywordString) {
+    RawKeywordPtr Parser::createRawKeyword(const DeckConstPtr deck, const std::string& keywordString, bool strictParsing) {
         if (hasKeyword(keywordString)) {
             ParserKeywordConstPtr parserKeyword = m_parserKeywords.find(keywordString)->second;
-            if (parserKeyword->getSizeType() == UNDEFINED) 
+            if (parserKeyword->getSizeType() == UNDEFINED)
                 return RawKeywordPtr(new RawKeyword(keywordString));
             else {
                 size_t targetSize;
-                
+
                 if (parserKeyword->hasFixedSize())
                     targetSize = parserKeyword->getFixedSize();
                 else {
-                    const std::pair<std::string,std::string> sizeKeyword = parserKeyword->getSizeDefinitionPair();
+                    const std::pair<std::string, std::string> sizeKeyword = parserKeyword->getSizeDefinitionPair();
                     DeckKeywordConstPtr sizeDefinitionKeyword = deck->getKeyword(sizeKeyword.first);
                     DeckItemConstPtr sizeDefinitionItem;
                     {
@@ -138,37 +139,39 @@ namespace Opm {
                     }
                     targetSize = sizeDefinitionItem->getInt(0);
                 }
-                return RawKeywordPtr(new RawKeyword(keywordString , targetSize));
+                return RawKeywordPtr(new RawKeyword(keywordString, targetSize));
             }
-        } else
-            throw std::invalid_argument("Keyword " + keywordString + " not recognized ");
+        } else {
+            if (strictParsing) {
+                throw std::invalid_argument("Keyword " + keywordString + " not recognized ");
+            } else {
+                return RawKeywordPtr(new RawKeyword(keywordString, 0));
+            }
+        }
     }
 
-
-
-    
-    bool Parser::tryParseKeyword(const DeckConstPtr deck ,  std::ifstream& inputstream , RawKeywordPtr& rawKeyword) {        
+    bool Parser::tryParseKeyword(const DeckConstPtr deck, std::ifstream& inputstream, RawKeywordPtr& rawKeyword, bool strictParsing) {
         std::string line;
 
         while (std::getline(inputstream, line)) {
             std::string keywordString;
 
             if (rawKeyword == NULL) {
-                if (RawKeyword::tryParseKeyword(line, keywordString)) 
-                    rawKeyword = newRawKeyword( deck , keywordString );
+                if (RawKeyword::tryParseKeyword(line, keywordString)) {
+                    rawKeyword = createRawKeyword(deck, keywordString, strictParsing);
+                }
             } else {
-                if (RawKeyword::useLine(line)) 
+                if (RawKeyword::useLine(line)) {
                     rawKeyword->addRawRecordString(line);
-            }                    
-            
+                }
+            }
+
             if (rawKeyword != NULL && rawKeyword->isFinished())
                 return true;
         }
-        
+
         return false;
     }
-
-
 
     boost::filesystem::path Parser::verifyValidInputPath(const std::string& inputPath) const {
         Logger::info("Verifying path: " + inputPath);

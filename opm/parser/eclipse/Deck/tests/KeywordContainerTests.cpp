@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(getKeyword_outOfRange_throws) {
     KeywordContainerPtr container(new KeywordContainer());
     DeckKeywordPtr keyword = DeckKeywordPtr(new DeckKeyword("TRULS"));
     container->addKeyword(keyword);
-    BOOST_CHECK_THROW( container->getKeyword("TRULS" , 3) , std::invalid_argument)
+    BOOST_CHECK_THROW( container->getKeyword("TRULS" , 3) , std::out_of_range)
 }
 
 
@@ -126,7 +126,31 @@ BOOST_AUTO_TEST_CASE(keywordList_getnum_OK) {
 }
 
 
+BOOST_AUTO_TEST_CASE(keywordList_getbyindexoutofbounds_exceptionthrown) {
+    KeywordContainerPtr container(new KeywordContainer());
+    BOOST_CHECK_THROW(container->getKeyword(0), std::out_of_range);
+    DeckKeywordPtr keyword1 = DeckKeywordPtr(new DeckKeyword("TRULS"));
+    DeckKeywordPtr keyword2 = DeckKeywordPtr(new DeckKeyword("TRULS"));
+    DeckKeywordPtr keyword3 = DeckKeywordPtr(new DeckKeyword("TRULSX"));
+    container->addKeyword(keyword1);
+    container->addKeyword(keyword2);
+    container->addKeyword(keyword3);
+    BOOST_CHECK_NO_THROW(container->getKeyword(2));
+    BOOST_CHECK_THROW(container->getKeyword(3), std::out_of_range);
+}
 
+BOOST_AUTO_TEST_CASE(keywordList_getbyindex_correctkeywordreturned) {
+    KeywordContainerPtr container(new KeywordContainer());
+    DeckKeywordPtr keyword1 = DeckKeywordPtr(new DeckKeyword("TRULS"));
+    DeckKeywordPtr keyword2 = DeckKeywordPtr(new DeckKeyword("TRULS"));
+    DeckKeywordPtr keyword3 = DeckKeywordPtr(new DeckKeyword("TRULSX"));
+    container->addKeyword(keyword1);
+    container->addKeyword(keyword2);
+    container->addKeyword(keyword3);
+    BOOST_CHECK_EQUAL("TRULS", container->getKeyword(0)->name());
+    BOOST_CHECK_EQUAL("TRULS", container->getKeyword(1)->name());
+    BOOST_CHECK_EQUAL("TRULSX", container->getKeyword(2)->name());
+}
 
 
 

@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(getKeyword_singlekeyword_outRange_throws) {
     Deck deck;
     DeckKeywordConstPtr keyword(new DeckKeyword("BJARNE"));
     deck.addKeyword(keyword);
-    BOOST_CHECK_THROW(deck.getKeyword("BJARNE" , 10) , std::invalid_argument);
+    BOOST_CHECK_THROW(deck.getKeyword("BJARNE" , 10) , std::out_of_range);
 }
 
 
@@ -76,6 +76,13 @@ BOOST_AUTO_TEST_CASE(getKeywordList_returnOK) {
     BOOST_CHECK_NO_THROW(deck.getKeywordList("BJARNE") );
 }
 
+
+BOOST_AUTO_TEST_CASE(getKeyword_indexok_returnskeyword) {
+    Deck deck;
+    DeckKeywordConstPtr keyword(new DeckKeyword("BJARNE"));
+    deck.addKeyword(keyword);
+    BOOST_CHECK_NO_THROW(deck.getKeyword(0));
+}
 
 BOOST_AUTO_TEST_CASE(numKeyword_singlekeyword_return1) {
     Deck deck;

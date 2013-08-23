@@ -38,7 +38,7 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE( parse_WCHONHIST_OK ) {
     ParserPtr parser(new Parser());
     parser->loadKeywordsFromDirectory(KEYWORD_DIRECTORY);
-    boost::filesystem::path wconhistFile("testdata/WCONHIST/WCONHIST1");
+    boost::filesystem::path wconhistFile("testdata/integration_tests/WCONHIST/WCONHIST1");
     DeckPtr deck = parser->parse(wconhistFile.string());
     DeckKeywordConstPtr kw1 = deck->getKeyword("WCONHIST" , 0);
     BOOST_CHECK_EQUAL( 3U , kw1->size() );

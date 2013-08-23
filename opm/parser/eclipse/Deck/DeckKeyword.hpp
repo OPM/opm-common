@@ -19,14 +19,18 @@ namespace Opm {
     class DeckKeyword {
     public:
         DeckKeyword(const std::string& keywordName);
+        DeckKeyword(const std::string& keywordName, bool knownKeyword);
+
         std::string name() const;
         size_t size() const;
         void addRecord(DeckRecordConstPtr record);
         DeckRecordConstPtr getRecord(size_t index) const;
+        bool isKnown() const;
         
     private:
         std::string m_keywordName;
         std::vector<DeckRecordConstPtr> m_recordList;
+        bool m_knownKeyword;
 
     };
     typedef boost::shared_ptr<DeckKeyword> DeckKeywordPtr;
