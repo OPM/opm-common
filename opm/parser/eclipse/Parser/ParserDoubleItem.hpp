@@ -43,7 +43,6 @@ namespace Opm {
         }
 
     private:
-        DeckItemConstPtr scan__(bool scanAll , RawRecordPtr rawRecord) const;
         double  m_default;
     };
 

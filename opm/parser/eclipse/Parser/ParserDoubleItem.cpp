@@ -44,22 +44,14 @@ namespace Opm {
             m_default = defaultDouble();
     }
 
-    DeckItemConstPtr ParserDoubleItem::scan(RawRecordPtr rawRecord) const {
-        if (sizeType() == SINGLE)
-            return scan__(false, rawRecord);
-        else if (sizeType() == ALL)
-            return scan__(true, rawRecord);
-        else
-            throw std::invalid_argument("Unsupported size type, only support SINGLE and ALL. Use scan( numTokens , rawRecord) instead ");
-    }
-
     /// Scans the rawRecords data according to the ParserItems definition.
     /// returns a DeckItem object.
     /// NOTE: data are popped from the rawRecords deque!
 
-    DeckItemConstPtr ParserDoubleItem::scan__(bool scanAll, RawRecordPtr rawRecord) const {
-        DeckDoubleItemPtr deckItem(new DeckDoubleItem(name()));
+    DeckItemConstPtr ParserDoubleItem::scan(RawRecordPtr rawRecord) const {
+       DeckDoubleItemPtr deckItem(new DeckDoubleItem(name()));
 
+       bool scanAll = (sizeType() == ALL);
         bool defaultActive;
         std::deque<double> doublesPreparedForDeckItem = readFromRawRecord(rawRecord, scanAll, m_default, defaultActive);
 
@@ -72,7 +64,6 @@ namespace Opm {
         }
         return deckItem;
     }
-
 }
 
 
