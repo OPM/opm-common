@@ -41,15 +41,9 @@ namespace Opm {
             m_default = defaultString();
     }
 
-
-
-    DeckItemConstPtr ParserStringItem::scan(size_t expectedItems, RawRecordPtr rawRecord) const {
-        return scan__(expectedItems, false, rawRecord);
-    }
-
     DeckItemConstPtr ParserStringItem::scan(RawRecordPtr rawRecord) const {
         if (sizeType() == SINGLE) {
-            return scan(1U, rawRecord);
+            return scan__(1U, false, rawRecord);
         } else if (sizeType() == ALL) {
             return scan__(0, true, rawRecord);
         } else

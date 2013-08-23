@@ -143,23 +143,6 @@ BOOST_AUTO_TEST_CASE(Scan_All_CorrectIntSetInDeckItem) {
     BOOST_CHECK_EQUAL(25, deckIntItem->getInt(22));
 }
 
-BOOST_AUTO_TEST_CASE(Scan_ScalarMultipleItems_ExceptionThrown) {
-    ParserItemSizeEnum sizeType = SINGLE;
-    ParserIntItem itemInt("ITEM2", sizeType);
-
-    RawRecordPtr rawRecord(new RawRecord("100 443 /"));
-    BOOST_CHECK_THROW(itemInt.scan(2, rawRecord), std::invalid_argument);
-}
-
-BOOST_AUTO_TEST_CASE(Scan_NoData_OK) {
-    ParserItemSizeEnum sizeType = ALL;
-    ParserIntItem itemInt("ITEM2", sizeType);
-
-    RawRecordPtr rawRecord(new RawRecord("100 443 /"));
-    DeckItemConstPtr deckIntItem = itemInt.scan(0, rawRecord);
-    BOOST_CHECK_EQUAL(0U, deckIntItem->size());
-}
-
 BOOST_AUTO_TEST_CASE(Scan_SINGLE_CorrectIntSetInDeckItem) {
     ParserItemSizeEnum sizeType = SINGLE;
     ParserIntItem itemInt("ITEM2", sizeType);
@@ -211,7 +194,7 @@ BOOST_AUTO_TEST_CASE(Scan_Multiplier_CorrectIntsSetInDeckItem) {
     ParserIntItem itemInt("ITEM2", sizeType);
 
     RawRecordPtr rawRecord(new RawRecord("3*4 /"));
-    DeckItemConstPtr deckIntItem = itemInt.scan(3, rawRecord);
+    DeckItemConstPtr deckIntItem = itemInt.scan(rawRecord);
     BOOST_CHECK_EQUAL(4, deckIntItem->getInt(0));
     BOOST_CHECK_EQUAL(4, deckIntItem->getInt(1));
     BOOST_CHECK_EQUAL(4, deckIntItem->getInt(2));
@@ -349,13 +332,6 @@ BOOST_AUTO_TEST_CASE(InitializeStringItem_FromJsonObject_withDefaultInvalid_thro
 }
 /*</json>*/
 /*****************************************************************/
-
-BOOST_AUTO_TEST_CASE(scan_singleWithMoreThenOneExpected_ExceptionThrown) {
-    ParserItemSizeEnum sizeType = SINGLE;
-    ParserStringItem itemString("ITEM1", sizeType);
-    RawRecordPtr rawRecord(new RawRecord("'WELL1' 'WELL2' /"));
-    BOOST_CHECK_THROW(itemString.scan(2, rawRecord), std::invalid_argument);
-}
 
 BOOST_AUTO_TEST_CASE(init_defaultvalue_defaultset) {
     ParserItemSizeEnum sizeType = SINGLE;

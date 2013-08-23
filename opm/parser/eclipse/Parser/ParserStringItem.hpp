@@ -34,7 +34,6 @@ namespace Opm {
         ParserStringItem(const std::string& itemName, ParserItemSizeEnum sizeType, std::string defaultValue);
         ParserStringItem( const Json::JsonObject& jsonConfig);
 
-        DeckItemConstPtr scan(size_t expectedItems, RawRecordPtr rawRecord) const;
         DeckItemConstPtr scan(RawRecordPtr rawRecord) const;
         
         std::string getDefault() const {

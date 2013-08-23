@@ -40,9 +40,9 @@ namespace Opm {
   public:
     ParserItem(const std::string& itemName, ParserItemSizeEnum sizeType);
     ParserItem(const Json::JsonObject& jsonConfig);
+    
     virtual DeckItemConstPtr scan(RawRecordPtr rawRecord) const = 0;
-    virtual DeckItemConstPtr scan(size_t expectedItems, RawRecordPtr rawRecord) const = 0;
-
+    
     const std::string& name() const;
     ParserItemSizeEnum sizeType() const;
 
