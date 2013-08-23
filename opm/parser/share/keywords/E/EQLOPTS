@@ -1,0 +1,6 @@
+{"name" : "EQLOPTS", "size"  : 1, "items" : [
+     	{"name" : "OPTION1" , "size_type" : "SINGLE" , "value_type" : "STRING"},
+     	{"name" : "OPTION2" , "size_type" : "SINGLE" , "value_type" : "STRING"},
+     	{"name" : "OPTION3" , "size_type" : "SINGLE" , "value_type" : "STRING"},
+     	{"name" : "OPTION4" , "size_type" : "SINGLE" , "value_type" : "STRING"}
+     ]}

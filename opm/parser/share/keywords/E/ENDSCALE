@@ -1,0 +1,7 @@
+{"name" : "ENDSCALE", "size" : 1 , "items" : [
+     	{"name" : "DIRECT" , "size_type" : "SINGLE" , "value_type" : "STRING" , "default" : "NODIR"},
+     	{"name" : "IRREVERS" , "size_type" : "SINGLE" , "value_type" : "STRING" , "default" : "REVER"},
+     	{"name" : "NUM_TABLES" , "size_type" : "SINGLE" , "value_type" : "INT"  , "default" : 1},
+     	{"name" : "NUM_NODES" , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 20},
+     	{"name" : "COMB_MODE" , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 0}
+     ]}

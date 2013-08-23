@@ -1,0 +1,10 @@
+{"name" : "EQUIL" , "size" : {"keyword":"EQLDIMS" , "item":"NTEQUL"}, "items" : 
+ [{"name" : "DATUM_DEPTH" ,  "size_type" : "SINGLE" , "value_type" : "FLOAT" , "default" : 0.0},
+  {"name" : "DATUM_PRESSURE" , "size_type" : "SINGLE" , "value_type" : "FLOAT"} ,
+  {"name" : "OWC" , "size_type" : "SINGLE" , "value_type" : "FLOAT" , "default" : 0.0} ,
+  {"name" : "PC_OWC" , "size_type" : "SINGLE" , "value_type" : "FLOAT" , "default" : 0.0} ,
+  {"name" : "GOC" , "size_type" : "SINGLE" , "value_type" : "FLOAT" , "default" : 0.0} ,
+  {"name" : "PC_GOC" , "size_type" : "SINGLE" , "value_type" : "FLOAT" , "default" : 0.0} ,
+  {"name" : "BLACK_OIL_INIT" , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 0} ,
+  {"name" : "BLACK_OIL_INIT_WG" , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 0} ,
+  {"name" : "OIP_INIT" , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : -5 , "comment":"The default is a state variable"}]}

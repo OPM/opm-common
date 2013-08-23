@@ -1,0 +1,12 @@
+{"name" : "WCONHIST", "items" : 
+      [{"name" : "WellName"    , "size_type" : "SINGLE" , "value_type" : "STRING"}, 
+       {"name" : "OpenShut"    , "size_type" : "SINGLE" , "value_type" : "STRING" , "default" : "OPEN"}, 
+       {"name" : "ControlMode" , "size_type" : "SINGLE" , "value_type" : "STRING"},
+       {"name" : "ORAT"        , "size_type" : "SINGLE" , "value_type" : "FLOAT",  "default" : 0.0},
+       {"name" : "WRAT"        , "size_type" : "SINGLE" , "value_type" : "FLOAT" , "default" : 0.0},
+       {"name" : "GRAT"        , "size_type" : "SINGLE" , "value_type" : "FLOAT" , "default" : 0.0},
+       {"name" : "VFPTable"    , "size_type" : "SINGLE" , "value_type" : "INT"   , "default" : 0.0 , "comment":"The default is a state variable"},
+       {"name" : "Lift"        , "size_type" : "SINGLE" , "value_type" : "FLOAT" , "default" : 0.0 , "comment":"The default is a state variable"},
+       {"name" : "THP"         , "size_type" : "SINGLE" , "value_type" : "FLOAT" , "default" : 0.0},
+       {"name" : "BHP"         , "size_type" : "SINGLE" , "value_type" : "FLOAT" , "default" : 0.0},
+       {"name" : "NGLRAT"       , "size_type" : "SINGLE" , "value_type" : "FLOAT" , "default" : 0.0}]}

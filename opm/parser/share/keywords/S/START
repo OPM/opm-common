@@ -1,0 +1,5 @@
+{"name" : "START", "size" : 1 , "items" : [
+{"name" : "DAY"   , "size_type" : "SINGLE" , "value_type" : "INT"},
+{"name" : "MONTH" , "size_type" : "SINGLE" , "value_type" : "STRING"},
+{"name" : "YEAR"  , "size_type" : "SINGLE" , "value_type" : "INT"}]
+}

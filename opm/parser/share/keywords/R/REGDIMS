@@ -1,0 +1,12 @@
+{"name" : "REGDIMS", "size"  : 1 , "items" : [
+    {"name" : "NTFIP" , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 1},
+    {"name" : "NMFIPR" , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 1},
+    {"name" : "NRFREG" , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 0},
+    {"name" : "NTFREG" , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 0},
+    {"name" : "MAX_ETRACK"  , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 0 , "E300" : true},
+    {"name" : "NTCREG"  , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 1},
+    {"name" : "MAX_OPERNUM"  , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 0},
+    {"name" : "MAX_OPERATE_DWORK", "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 0},
+    {"name" : "MAX_OPERATE_IWORK", "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 0},
+    {"name" : "NPLMIX"  , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 1}
+]}
