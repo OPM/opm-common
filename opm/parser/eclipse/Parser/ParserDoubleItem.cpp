@@ -33,12 +33,11 @@ namespace Opm {
         m_default = defaultDouble();
     }
 
-
     ParserDoubleItem::ParserDoubleItem(const std::string& itemName, ParserItemSizeEnum sizeType, double defaultValue) : ParserItem(itemName, sizeType) {
         m_default = defaultValue;
     }
 
-    ParserDoubleItem::ParserDoubleItem( const Json::JsonObject& jsonConfig) : ParserItem(jsonConfig) {
+    ParserDoubleItem::ParserDoubleItem(const Json::JsonObject& jsonConfig) : ParserItem(jsonConfig) {
         if (jsonConfig.has_item("default"))
             m_default = jsonConfig.get_double("default");
         else
@@ -47,9 +46,9 @@ namespace Opm {
 
     DeckItemConstPtr ParserDoubleItem::scan(RawRecordPtr rawRecord) const {
         if (sizeType() == SINGLE)
-            return scan__(1U, false, rawRecord);
+            return scan__(false, rawRecord);
         else if (sizeType() == ALL)
-            return scan__(0, true, rawRecord);
+            return scan__(true, rawRecord);
         else
             throw std::invalid_argument("Unsupported size type, only support SINGLE and ALL. Use scan( numTokens , rawRecord) instead ");
     }
@@ -58,36 +57,20 @@ namespace Opm {
     /// returns a DeckItem object.
     /// NOTE: data are popped from the rawRecords deque!
 
-    DeckItemConstPtr ParserDoubleItem::scan__(size_t expectedItems, bool scanAll, RawRecordPtr rawRecord) const {
-        if (sizeType() == SINGLE && expectedItems > 1) {
-            throw std::invalid_argument("Can only ask for one item when sizeType == SINGLE");
+    DeckItemConstPtr ParserDoubleItem::scan__(bool scanAll, RawRecordPtr rawRecord) const {
+        DeckDoubleItemPtr deckItem(new DeckDoubleItem(name()));
+
+        bool defaultActive;
+        std::deque<double> doublesPreparedForDeckItem = readFromRawRecord(rawRecord, scanAll, m_default, defaultActive);
+
+        if (scanAll)
+            deckItem->push_back(doublesPreparedForDeckItem);
+        else {
+            deckItem->push_back(doublesPreparedForDeckItem.front());
+            doublesPreparedForDeckItem.pop_front();
+            pushBackToRecord(rawRecord, doublesPreparedForDeckItem, defaultActive);
         }
-        
-        {
-            DeckDoubleItemPtr deckItem(new DeckDoubleItem(name()));
-
-            if ((expectedItems > 0) || scanAll) {
-                bool defaultActive;
-                std::vector<double> doublesPreparedForDeckItem = readFromRawRecord(rawRecord, scanAll, m_default, defaultActive);
-
-                if (scanAll)
-                    deckItem->push_back(doublesPreparedForDeckItem);
-                else if (doublesPreparedForDeckItem.size() >= expectedItems) {
-                    deckItem->push_back(doublesPreparedForDeckItem, expectedItems);
-
-                    if (doublesPreparedForDeckItem.size() > expectedItems)
-                        pushBackToRecord(rawRecord, doublesPreparedForDeckItem, expectedItems, defaultActive);
-
-                } else {
-                    std::string preparedDoubles = boost::lexical_cast<std::string>(doublesPreparedForDeckItem.size());
-                    std::string parserSizeValue = boost::lexical_cast<std::string>(expectedItems);
-                    throw std::invalid_argument("The number of parsed doubles (" + preparedDoubles + ") did not correspond to the expected number of items:(" + parserSizeValue + ")");
-                }
-
-            }
-
-            return deckItem;
-        }
+        return deckItem;
     }
 
 }

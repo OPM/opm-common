@@ -17,7 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-template<class T> void fillVectorFromStringToken(std::string token, std::vector<T>& dataVector, T defaultValue, bool& defaultActive) const {
+template<class T> void fillVectorFromStringToken(std::string token, std::deque<T>& dataVector, T defaultValue, bool& defaultActive) const {
   std::istringstream inputStream(token);
   size_t starPos = token.find('*');
   T value;
@@ -63,9 +63,9 @@ template<class T> void fillVectorFromStringToken(std::string token, std::vector<
     throw std::invalid_argument("Spurious data at the end of: <" + token + ">");
 }
 
-template<class T> std::vector<T> readFromRawRecord(RawRecordPtr rawRecord, bool scanAll, T defaultValue, bool& defaultActive) const {
+template<class T> std::deque<T> readFromRawRecord(RawRecordPtr rawRecord, bool scanAll, T defaultValue, bool& defaultActive) const {
     bool cont = true;
-    std::vector<T> data;
+    std::deque<T> data;
     if (rawRecord->size() == 0) {
         data.push_back(defaultValue);
     } else {
@@ -81,15 +81,13 @@ template<class T> std::vector<T> readFromRawRecord(RawRecordPtr rawRecord, bool 
     return data;
 }
 
-template <class T> void pushBackToRecord(RawRecordPtr rawRecord, std::vector<T>& data, size_t expectedItems, bool defaultActive) const {
-  size_t extraItems = data.size() - expectedItems;
+template <class T> void pushBackToRecord(RawRecordPtr rawRecord, std::deque<T>& data, bool defaultActive) const {
 
-  for (size_t i = 1; i <= extraItems; i++) {
+    for (size_t i = 0; i < data.size(); i++) {
     if (defaultActive)
       rawRecord->push_front("*");
     else {
-      size_t offset = data.size();
-      T value = data[ offset - i ];
+      T value = data[i];
       std::string stringValue = boost::lexical_cast<std::string>(value);
 
       rawRecord->push_front(stringValue);

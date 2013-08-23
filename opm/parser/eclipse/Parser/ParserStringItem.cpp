@@ -27,14 +27,12 @@ namespace Opm {
     ParserStringItem::ParserStringItem(const std::string& itemName, ParserItemSizeEnum sizeType) : ParserItem(itemName, sizeType) {
         m_default = defaultString();
     }
-    
 
     ParserStringItem::ParserStringItem(const std::string& itemName, ParserItemSizeEnum sizeType, std::string defaultValue) : ParserItem(itemName, sizeType) {
         m_default = defaultValue;
     }
 
-
-    ParserStringItem::ParserStringItem( const Json::JsonObject& jsonConfig) : ParserItem(jsonConfig) {
+    ParserStringItem::ParserStringItem(const Json::JsonObject& jsonConfig) : ParserItem(jsonConfig) {
         if (jsonConfig.has_item("default"))
             m_default = jsonConfig.get_string("default");
         else
@@ -43,9 +41,9 @@ namespace Opm {
 
     DeckItemConstPtr ParserStringItem::scan(RawRecordPtr rawRecord) const {
         if (sizeType() == SINGLE) {
-            return scan__(1U, false, rawRecord);
+            return scan__(false, rawRecord);
         } else if (sizeType() == ALL) {
-            return scan__(0, true, rawRecord);
+            return scan__(true, rawRecord);
         } else
             throw std::invalid_argument("Unsupported size type, only support SINGLE and ALL. Use scan( numTokens , rawRecord) instead ");
     }
@@ -54,32 +52,18 @@ namespace Opm {
     /// returns a DeckItem object.
     /// NOTE: data are popped from the rawRecords deque!
 
-    DeckItemConstPtr ParserStringItem::scan__(size_t expectedItems, bool scanAll, RawRecordPtr rawRecord) const {
-        if (sizeType() == SINGLE && expectedItems > 1) {
-            throw std::invalid_argument("Can only ask for one item when sizeType == SINGLE");
-        }
+    DeckItemConstPtr ParserStringItem::scan__(bool scanAll, RawRecordPtr rawRecord) const {
+        DeckStringItemPtr deckItem(new DeckStringItem(name()));
 
-        {
-            DeckStringItemPtr deckItem(new DeckStringItem(name()));
-            
-            if ((expectedItems > 0) || scanAll) {
-                bool defaultActive;
-                std::vector<std::string> stringsPreparedForDeckItem = readFromRawRecord(rawRecord, scanAll, m_default, defaultActive);
-                if (scanAll)
-                    deckItem->push_back(stringsPreparedForDeckItem);
-                else if (stringsPreparedForDeckItem.size() >= expectedItems) {
-                    deckItem->push_back(stringsPreparedForDeckItem, expectedItems);
-                    
-                    if (stringsPreparedForDeckItem.size() > expectedItems)
-                        pushBackToRecord(rawRecord, stringsPreparedForDeckItem, expectedItems, defaultActive);
-                } else {
-                    std::string preparedStrings = boost::lexical_cast<std::string>(stringsPreparedForDeckItem.size());
-                    std::string parserSizeValue = boost::lexical_cast<std::string>(expectedItems);
-                    throw std::invalid_argument("The number of parsed strings (" + preparedStrings + ") did not correspond to the expected number of items:(" + parserSizeValue + ")");
-                }
-            }
-
-            return deckItem;
+        bool defaultActive;
+        std::deque<std::string> stringsPreparedForDeckItem = readFromRawRecord(rawRecord, scanAll, m_default, defaultActive);
+        if (scanAll)
+            deckItem->push_back(stringsPreparedForDeckItem);
+        else {
+            deckItem->push_back(stringsPreparedForDeckItem.front());
+            stringsPreparedForDeckItem.pop_front();
+            pushBackToRecord(rawRecord, stringsPreparedForDeckItem, defaultActive);
         }
+        return deckItem;
     }
 }

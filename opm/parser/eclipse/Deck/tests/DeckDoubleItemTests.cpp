@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(GetDoubleAtIndex_NoData_ExceptionThrown) {
 
 BOOST_AUTO_TEST_CASE(PushBackDouble_VectorPushed_ElementsCorrect) {
     DeckDoubleItem deckDoubleItem("TEST");
-    std::vector<double> pushThese;
+    std::deque<double> pushThese;
     pushThese.push_back(13);
     pushThese.push_back(33);
     deckDoubleItem.push_back(pushThese);
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(PushBackDouble_VectorPushed_ElementsCorrect) {
 
 BOOST_AUTO_TEST_CASE(PushBackDouble_subVectorPushed_ElementsCorrect) {
     DeckDoubleItem deckDoubleItem("TEST");
-    std::vector<double> pushThese;
+    std::deque<double> pushThese;
     pushThese.push_back(13);
     pushThese.push_back(33);
     pushThese.push_back(47);

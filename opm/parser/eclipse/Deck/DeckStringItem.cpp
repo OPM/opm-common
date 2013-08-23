@@ -30,13 +30,13 @@ namespace Opm {
             throw std::out_of_range("Out of range, index must be lower than " + boost::lexical_cast<std::string>(m_data.size()));
     }
 
-    void DeckStringItem::push_back(std::vector<std::string> data, size_t items) {
+    void DeckStringItem::push_back(std::deque<std::string> data, size_t items) {
         for (size_t i = 0; i < items; i++) {
             m_data.push_back(data[i]);
         }
     }
 
-    void DeckStringItem::push_back(std::vector<std::string> data) {
+    void DeckStringItem::push_back(std::deque<std::string> data) {
         push_back(data, data.size());
     }
 

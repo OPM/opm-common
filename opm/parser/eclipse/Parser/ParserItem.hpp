@@ -22,7 +22,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
-#include <vector>
+#include <deque>
 
 #include <boost/shared_ptr.hpp>
 #include <boost/lexical_cast.hpp>
