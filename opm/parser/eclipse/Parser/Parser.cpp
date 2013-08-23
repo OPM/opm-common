@@ -203,7 +203,7 @@ namespace Opm {
                     if (recursive)
                         loadKeywordsFromDirectory(*iter , recursive , onlyALLCAPS8);
                 } else {
-                    if (!onlyALLCAPS8 || ParserKeyword::validName( iter->path().filename())) {
+                    if (ParserKeyword::validName( iter->path().filename()) || !onlyALLCAPS8 ) {
                         if (!loadKeywordFromFile(*iter))
                             std::cerr << "** Warning: failed to load keyword from file:" << iter->path() << std::endl;
                     }
