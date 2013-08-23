@@ -46,16 +46,13 @@ namespace Opm {
         return deck;
     }
 
-<<<<<<< HEAD
+
     size_t Parser::size() const {
         return m_parserKeywords.size();
     }
 
 
-    void Parser::parseFile(DeckPtr deck , const std::string &file) {
-=======
     void Parser::parseFile(DeckPtr deck, const std::string &file, bool parseStrict) {
->>>>>>> upstream/master
         std::ifstream inputstream;
         inputstream.open(file.c_str());
 
