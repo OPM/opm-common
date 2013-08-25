@@ -1,0 +1,58 @@
+Keywords is the most important aspect of the ECLIPSE datafile
+parser.
+
+The structure of a keyword
+--------------------------
+
+A keyword contains from zero to many records, and each record contains
+one or several items. Here comes three typical examples of keywords:
+
+
+  GRID
+
+  WCONHIST 
+    ... /
+    ... /
+    ... /
+  /
+
+  EQLDIMS
+    ....   /
+
+  EQUIL
+    .... /
+    .... /
+
+[ Each record is / terminated ]
+
+In the list above here the GRID keyword has zero records, i.e. no data
+attached. The WCONHIST keyword has three records of data, the EQLDIMS
+keyword has one record and the EQUIL keyword has two records of
+data. One of the first structural questions regarding keywords is how
+many records they contain, this question is closely related to how the
+keyword is terminated. When it comes to record size the keywords can
+be split in three groups:
+
+  1. Keywords with a fixed number of records. Both the GRID keyword
+     and the EQLDIMS keyword have a fixed number of records, zero and
+     one respectively. The keywords are therefor not explicitly
+     terminated in any way.
+
+  2. Keywords with a variable number of records.
+
+
+
+
+
+
+
+
+The classes involved
+--------------------
+
+
+
+
+Configuring a parser keyword
+----------------------------
+
