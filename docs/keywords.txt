@@ -1,10 +1,27 @@
+NB: Work in progress (25.th of August 2013)
+
+-----------------------------------------------------------------
+
+1. ........... The structure of a keyword
+  1.1 ........ Records
+  1.2 ........ How many records in a keyword
+  1.3 ........ The content of a record: items
+2. ........... The classes involved
+  2.1 ........ Parser / ParserKeyword / ParserRecord / ParserItem
+  2.2 ........ RawDeck / RawKeyword / RawRecord
+  2.3 ........ Deck / DeckKeyword / DeckRecord / DeckItem
+3. ........... Configuring the keywords with Json.
+
+
 Keywords is the most important aspect of the ECLIPSE datafile
 parser.
 
-The structure of a keyword
---------------------------
+1. The structure of a keyword
+-----------------------------
 
-Records:
+1.1 Records
+-----------
+
 The data content of a keyword comes as a collection of
 records. Records are a collection of 'data', terminated by a '/'. Here
 are three examples of records:
@@ -25,16 +42,19 @@ From these examples we see that:
      newlines.
   3. Each record is terminated with a '/'
 
-How many records in a keyword:
-The division of records into items is described below. One of the
-first things structural elements which must be configured into the the
-parser records is the number of records in the different
-keywords. Here comes three typical examples of keywords:
+
+1.2 How many records in a keyword
+---------------------------------
+
+One of the first structural elements which must be configured into the
+the parser keywords is the number of records in the different
+keywords, this is closely related to how the keyboard is
+terminated. Here comes three typical examples of keywords:
 
 
   GRID
 
-  WCONHIST 
+  WCONHIST
     ... /
     ... /
     ... /
@@ -49,16 +69,14 @@ keywords. Here comes three typical examples of keywords:
 
 
 In the list above here the GRID keyword has zero records, i.e. no data
-attached. The WCONHIST keyword has three records of data, the EQLDIMS
+at all. The WCONHIST keyword has three records of data, the EQLDIMS
 keyword has one record and the EQUIL keyword has two records of
-data. One of the first structural questions regarding keywords is how
-many records they contain, this question is closely related to how the
-keyword is terminated. When it comes to record size the keywords can
-be split in three groups:
+data. When it comes to record size and termination the keywords can be
+split in three groups:
 
   1. Keywords with a fixed number of records. Both the GRID keyword
      and the EQLDIMS keyword have a fixed number of records, zero and
-     one respectively. The keywords are therefor not explicitly
+     one respectively. These keywords are therefor not explicitly
      terminated in any way.
 
   2. Keywords with a variable number of records like the
@@ -72,16 +90,47 @@ be split in three groups:
      EQLDIMS keyword) the EQUIL keyword is not explicitly terminated
      with a '/'.
 
-The content of a record:
+1.3 The content of a record: items
+
+[ Disclaimer: The initial defintion of a item could be configured to
+  have a fixed number of elements greater than one, that possibility
+  has now been removed. However the code, and in particular the
+  configuration shows this heritage.]
+
+The different elements in a record are organized in items. An item can
+either consist of one single element from the record, or alternatively
+all the elements in the record. An item has a name, a data type and
+optionally a default value.
+
+
+2. The classes involved
+-----------------------
+
+The library contains classes along two dimensions:
+
+   +----------------+     +----------------+     +----------------+ 
+   | Parser         |     | RawDeck        |     | Deck           | 
+   +----------------+     +----------------+     +----------------+ 
+  		       		      	      		    
+   +----------------+     +----------------+     +----------------+ 
+   | ParserKeyword  |     | Rawkeyword     |     | DeckKeyword    | 
+   +----------------+     +----------------+     +----------------+ 
+  		       		      	      		    
+   +----------------+     +----------------+     +----------------+ 
+   | ParserRecord   |     | RawRecord      |     | DeckRecord     | 
+   +----------------+     +----------------+     +----------------+ 
+        		             		            		    
+   +----------------+     		         +----------------+ 
+   | ParserItem     |     		         | DeckItem       | 
+   +----------------+     		         +----------------+ 
+  
 
 
 
-The classes involved
---------------------
 
 
 
 
-Configuring a parser keyword
-----------------------------
+3. Configuring a parser keyword
+-------------------------------
 
