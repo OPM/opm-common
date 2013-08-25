@@ -4,8 +4,32 @@ parser.
 The structure of a keyword
 --------------------------
 
-A keyword contains from zero to many records, and each record contains
-one or several items. Here comes three typical examples of keywords:
+Records:
+The data content of a keyword comes as a collection of
+records. Records are a collection of 'data', terminated by a '/'. Here
+are three examples of records:
+
+   'METRES'  /
+
+   1  'OFF'  100  '*'  24.0  /
+
+   0.26 0.27 0.26 0.78
+   0.82 0.66 0.27 0.78
+   0.76 0.56 0.23 0.67   /
+
+From these examples we see that:
+
+  1. One record can contain a mix of integer, float and string values.
+  2. Records typically correspond to one line in the data-file, but
+     that is purely convention; the records can be sprinkled with
+     newlines.
+  3. Each record is terminated with a '/'
+
+How many records in a keyword:
+The division of records into items is described below. One of the
+first things structural elements which must be configured into the the
+parser records is the number of records in the different
+keywords. Here comes three typical examples of keywords:
 
 
   GRID
@@ -23,7 +47,6 @@ one or several items. Here comes three typical examples of keywords:
     .... /
     .... /
 
-[ Each record is / terminated ]
 
 In the list above here the GRID keyword has zero records, i.e. no data
 attached. The WCONHIST keyword has three records of data, the EQLDIMS
@@ -38,12 +61,18 @@ be split in three groups:
      one respectively. The keywords are therefor not explicitly
      terminated in any way.
 
-  2. Keywords with a variable number of records.
+  2. Keywords with a variable number of records like the
+     WCONHIST. Becase the number of records is not known in advance
+     this keyword must be explicitly terminated with a '/'.
 
+  3. Keywords where the number of records is inferred from the content
+     of another keyword; this is the case with EQUIL which reads the
+     number of records from the xxx item of the EQLDIMS keyword. Since
+     the number of records is known in advance (indirectly through the
+     EQLDIMS keyword) the EQUIL keyword is not explicitly terminated
+     with a '/'.
 
-
-
-
+The content of a record:
 
 
 
