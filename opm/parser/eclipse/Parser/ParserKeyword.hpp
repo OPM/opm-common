@@ -41,7 +41,7 @@ namespace Opm {
 
         static bool validName(const std::string& name);
         
-        ParserRecordPtr getRecord();
+        ParserRecordPtr getRecord() const;
         const std::string& getName() const;
         size_t getFixedSize() const;
         bool hasFixedSize() const;

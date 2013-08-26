@@ -51,13 +51,23 @@ BOOST_AUTO_TEST_CASE(addKeyword_keyword_doesntfail) {
     }
 }
 
-/************************ JSON config related tests **********************'*/
 
 BOOST_AUTO_TEST_CASE(hasKeyword_hasKeyword_returnstrue) {
     ParserPtr parser(new Parser());
     parser->addKeyword(ParserKeywordConstPtr(new ParserKeyword("FJAS")));
     BOOST_CHECK(parser->hasKeyword("FJAS"));
 }
+
+
+BOOST_AUTO_TEST_CASE(Keyword_getKeyword_returnskeyword) {
+    ParserPtr parser(new Parser());
+    ParserKeywordConstPtr parserKeyword(new ParserKeyword("FJAS"));
+    parser->addKeyword(parserKeyword);
+    BOOST_CHECK_EQUAL(parserKeyword, parser->getKeyword("FJAS"));
+}
+
+
+/************************ JSON config related tests **********************'*/
 
 
 BOOST_AUTO_TEST_CASE(addKeywordJSON_hasKeyword_returnstrue) {

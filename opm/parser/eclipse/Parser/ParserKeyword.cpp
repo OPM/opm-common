@@ -161,7 +161,7 @@ namespace Opm {
             throw std::invalid_argument("The items: object must be an array");            
     }
 
-    ParserRecordPtr ParserKeyword::getRecord() {
+    ParserRecordPtr ParserKeyword::getRecord() const {
         return m_record;
     }
 
