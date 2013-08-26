@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(GetStringAtIndex_NoData_ExceptionThrown) {
 
 BOOST_AUTO_TEST_CASE(PushBack_VectorPushed_ElementsCorrect) {
     DeckStringItem deckStringItem("TEST");
-    std::vector<std::string> pushThese;
+    std::deque<std::string> pushThese;
     pushThese.push_back("hei");
     pushThese.push_back("trygve-hei");
     deckStringItem.push_back(pushThese);
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(PushBack_VectorPushed_ElementsCorrect) {
 
 BOOST_AUTO_TEST_CASE(PushBack_subVectorPushed_ElementsCorrect) {
     DeckStringItem deckStringItem("TEST");
-    std::vector<std::string> pushThese;
+    std::deque<std::string> pushThese;
     pushThese.push_back("Well-1");
     pushThese.push_back("Well-2");
     pushThese.push_back("Well-3");

@@ -31,14 +31,14 @@ namespace Opm {
     }
 
 
-    void DeckDoubleItem::push_back(std::vector<double> data , size_t items) {
+    void DeckDoubleItem::push_back(std::deque<double> data , size_t items) {
         for (size_t i=0; i<items; i++) {
             m_data.push_back(data[i]);
         }
     }
 
 
-    void DeckDoubleItem::push_back(std::vector<double> data) {
+    void DeckDoubleItem::push_back(std::deque<double> data) {
         push_back( data  , data.size() );
     }
 

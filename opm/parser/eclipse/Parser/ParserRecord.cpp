@@ -21,51 +21,47 @@
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 
 namespace Opm {
-    
+
     ParserRecord::ParserRecord() {
-        
     }
-    
+
     size_t ParserRecord::size() const {
         return m_items.size();
     }
 
-    void ParserRecord::addItem( ParserItemConstPtr item ) {
-        if (m_itemMap.find( item->name() ) == m_itemMap.end()) {
-            m_items.push_back( item );
-            m_itemMap[item->name()]  = item;
+    void ParserRecord::addItem(ParserItemConstPtr item) {
+        if (m_itemMap.find(item->name()) == m_itemMap.end()) {
+            m_items.push_back(item);
+            m_itemMap[item->name()] = item;
         } else
             throw std::invalid_argument("Itemname: " + item->name() + " already exists.");
     }
 
-
-    ParserItemConstPtr ParserRecord::get(size_t index) const{
+    ParserItemConstPtr ParserRecord::get(size_t index) const {
         if (index < m_items.size())
             return m_items[ index ];
         else
             throw std::out_of_range("Out of range");
     }
 
-
     ParserItemConstPtr ParserRecord::get(const std::string& itemName) const {
-        if (m_itemMap.find( itemName ) == m_itemMap.end())
+        if (m_itemMap.find(itemName) == m_itemMap.end())
             throw std::invalid_argument("Itemname: " + itemName + " does not exist.");
-        else
-        {
+        else {
             std::map<std::string, ParserItemConstPtr>::const_iterator theItem = m_itemMap.find(itemName);
             return (*theItem).second;
         }
     }
-    
+
     DeckRecordConstPtr ParserRecord::parse(RawRecordPtr rawRecord) const {
         DeckRecordPtr deckRecord(new DeckRecord());
-        
-        for(size_t i=0; i<size(); i++) {
-          ParserItemConstPtr parserItem = get(i);
-          DeckItemConstPtr deckItem = parserItem->scan(rawRecord);
-          deckRecord->addItem(deckItem);
+
+        for (size_t i = 0; i < size(); i++) {
+            ParserItemConstPtr parserItem = get(i);
+            DeckItemConstPtr deckItem = parserItem->scan(rawRecord);
+            deckRecord->addItem(deckItem);
         }
-        
+
         return deckRecord;
     }
 }

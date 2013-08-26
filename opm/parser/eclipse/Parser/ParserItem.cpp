@@ -46,12 +46,6 @@ namespace Opm {
             throw std::invalid_argument("Json config object missing \"size_type\": ... item");
     }
 
-    
-
-
-
-
-
     const std::string& ParserItem::name() const {
         return m_name;
     }

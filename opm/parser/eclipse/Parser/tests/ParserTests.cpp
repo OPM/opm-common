@@ -51,13 +51,23 @@ BOOST_AUTO_TEST_CASE(addKeyword_keyword_doesntfail) {
     }
 }
 
-/************************ JSON config related tests **********************'*/
 
 BOOST_AUTO_TEST_CASE(hasKeyword_hasKeyword_returnstrue) {
     ParserPtr parser(new Parser());
     parser->addKeyword(ParserKeywordConstPtr(new ParserKeyword("FJAS")));
     BOOST_CHECK(parser->hasKeyword("FJAS"));
 }
+
+
+BOOST_AUTO_TEST_CASE(Keyword_getKeyword_returnskeyword) {
+    ParserPtr parser(new Parser());
+    ParserKeywordConstPtr parserKeyword(new ParserKeyword("FJAS"));
+    parser->addKeyword(parserKeyword);
+    BOOST_CHECK_EQUAL(parserKeyword, parser->getKeyword("FJAS"));
+}
+
+
+/************************ JSON config related tests **********************'*/
 
 
 BOOST_AUTO_TEST_CASE(addKeywordJSON_hasKeyword_returnstrue) {
@@ -143,17 +153,6 @@ BOOST_AUTO_TEST_CASE(inititalizeFromFile_missing_keywords_throw) {
     BOOST_CHECK_THROW( parser->initializeFromJsonFile( jsonFile ) , std::invalid_argument );
 }
 
-
-
-
-/*
-BOOST_AUTO_TEST_CASE(createWithValidJsonFileArgument) {
-    boost::filesystem::path jsonFile("testdata/json/example1.json");
-    BOOST_CHECK_NO_THROW( Parser(jsonFile) );
-}
-*/
-
-
 /*****************************************************************/
 
 
@@ -235,12 +234,6 @@ BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_default) {
         BOOST_CHECK_EQUAL(false , parser->hasKeyword("BPR"));
         BOOST_CHECK_EQUAL(true , parser->hasKeyword("DIMENS"));
 }
-
-
-
-
-
-
 
 
 /***************** Simple Int parsing ********************************/

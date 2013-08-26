@@ -20,7 +20,7 @@
 #ifndef DECKSTRINGITEM_HPP
 #define DECKSTRINGITEM_HPP
 
-#include <vector>
+#include <deque>
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
@@ -32,13 +32,13 @@ namespace Opm {
         DeckStringItem(std::string name) : DeckItem(name) {}
         std::string getString(size_t index) const;
 
-        void push_back(std::vector<std::string> data , size_t items);
-        void push_back(std::vector<std::string> data);
+        void push_back(std::deque<std::string> data , size_t items);
+        void push_back(std::deque<std::string> data);
         void push_back(std::string value);
 
         size_t size() const;
     private:
-        std::vector<std::string> m_data;
+        std::deque<std::string> m_data;
     };
 
     typedef boost::shared_ptr<DeckStringItem> DeckStringItemPtr;

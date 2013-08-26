@@ -32,9 +32,6 @@ namespace Opm {
         case SINGLE:
             return "SINGLE";
             break;
-        case BOX:
-            return "BOX";
-            break;
         default:
             throw std::invalid_argument("Implementation error - should NOT be here");
         }
@@ -46,8 +43,6 @@ namespace Opm {
             return ALL;
         else if (stringValue == "SINGLE")
             return SINGLE;
-        else if (stringValue == "BOX")
-            return BOX;
         else
             throw std::invalid_argument("String: " + stringValue + " can not be converted to enum value");
     }

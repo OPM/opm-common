@@ -35,11 +35,11 @@ namespace Opm {
         initializeFromJsonFile(jsonFile);
     }
 
-    DeckPtr Parser::parse(const std::string &dataFile) {
+    DeckPtr Parser::parse(const std::string &dataFile) const {
         return parse(dataFile, true);
     }
 
-    DeckPtr Parser::parse(const std::string &dataFile, bool strictParsing) {
+    DeckPtr Parser::parse(const std::string &dataFile, bool strictParsing) const {
         DeckPtr deck(new Deck());
         parseFile(deck, dataFile, strictParsing);
         return deck;
@@ -49,9 +49,24 @@ namespace Opm {
     size_t Parser::size() const {
         return m_parserKeywords.size();
     }
+    
+    
+    void Parser::addKeyword(ParserKeywordConstPtr parserKeyword) {
+        m_parserKeywords.insert(std::make_pair(parserKeyword->getName(), parserKeyword));
+    }
+    
+    bool Parser::hasKeyword(const std::string& keyword) const {
+        return m_parserKeywords.find(keyword) != m_parserKeywords.end();
+    }
+
+   ParserKeywordConstPtr Parser::getKeyword(const std::string& keyword) const {
+       if (hasKeyword(keyword)) {
+           return m_parserKeywords.at(keyword);
+       }
+   }
 
 
-    void Parser::parseFile(DeckPtr deck, const std::string &file, bool parseStrict) {
+    void Parser::parseFile(DeckPtr deck, const std::string &file, bool parseStrict) const {
         std::ifstream inputstream;
         inputstream.open(file.c_str());
 
@@ -69,7 +84,7 @@ namespace Opm {
                     parseFile(deck, pathToIncludedFile.string(), parseStrict);
                 } else {
                     if (hasKeyword(rawKeyword->getKeywordName())) {
-                        ParserKeywordConstPtr parserKeyword = m_parserKeywords[rawKeyword->getKeywordName()];
+                        ParserKeywordConstPtr parserKeyword = m_parserKeywords.at(rawKeyword->getKeywordName());
                         DeckKeywordConstPtr deckKeyword = parserKeyword->parse(rawKeyword);
                         deck->addKeyword(deckKeyword);
                     } else {
@@ -83,10 +98,6 @@ namespace Opm {
             inputstream.close();
         } else
             throw std::invalid_argument("Failed to open file: " + file);
-    }
-
-    void Parser::addKeyword(ParserKeywordConstPtr parserKeyword) {
-        m_parserKeywords.insert(std::make_pair(parserKeyword->getName(), parserKeyword));
     }
 
     void Parser::initializeFromJsonFile(const boost::filesystem::path& jsonFile) {
@@ -111,11 +122,8 @@ namespace Opm {
     }
 
 
-    bool Parser::hasKeyword(const std::string& keyword) const {
-        return m_parserKeywords.find(keyword) != m_parserKeywords.end();
-    }
-
-    RawKeywordPtr Parser::createRawKeyword(const DeckConstPtr deck, const std::string& keywordString, bool strictParsing) {
+            
+    RawKeywordPtr Parser::createRawKeyword(const DeckConstPtr deck, const std::string& keywordString, bool strictParsing) const {
         if (hasKeyword(keywordString)) {
             ParserKeywordConstPtr parserKeyword = m_parserKeywords.find(keywordString)->second;
             if (parserKeyword->getSizeType() == UNDEFINED)
@@ -146,7 +154,7 @@ namespace Opm {
         }
     }
 
-    bool Parser::tryParseKeyword(const DeckConstPtr deck, std::ifstream& inputstream, RawKeywordPtr& rawKeyword, bool strictParsing) {
+    bool Parser::tryParseKeyword(const DeckConstPtr deck, std::ifstream& inputstream, RawKeywordPtr& rawKeyword, bool strictParsing) const {
         std::string line;
 
         while (std::getline(inputstream, line)) {

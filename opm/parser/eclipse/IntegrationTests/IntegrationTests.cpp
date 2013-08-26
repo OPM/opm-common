@@ -175,3 +175,41 @@ BOOST_AUTO_TEST_CASE(parse_unknownkeywordWithstrictparsing_exceptionthrown) {
     ParserPtr parser(new Parser(JSON_CONFIG_FILE));
     BOOST_CHECK_THROW(parser->parse("testdata/integration_tests/someobscureelements.data", true), std::invalid_argument);
 }
+
+/*********************Testing truncated (default) records ***************************/
+
+
+// Datafile contains 3 RADFIN4 keywords. One fully specified, one with 2 out of 11 items, and one with no items.
+BOOST_AUTO_TEST_CASE(parse_truncatedrecords_deckFilledWithDefaults) {
+    ParserPtr parser(new Parser());
+    parser->loadKeywordsFromDirectory(KEYWORD_DIRECTORY);
+    DeckPtr deck = parser->parse("testdata/integration_tests/truncated_records.data");
+    BOOST_CHECK_EQUAL(4U, deck->size());
+    DeckKeywordConstPtr radfin4_0_full= deck->getKeyword("RADFIN4", 0);
+    DeckKeywordConstPtr radfin4_1_partial= deck->getKeyword("RADFIN4", 1);
+    DeckKeywordConstPtr radfin4_2_nodata= deck->getKeyword("RADFIN4", 2);
+
+    // Specified in datafile
+    BOOST_CHECK_EQUAL("NAME", radfin4_0_full->getRecord(0)->getItem(0)->getString(0));
+    BOOST_CHECK_EQUAL("NAME", radfin4_1_partial->getRecord(0)->getItem(0)->getString(0));
+    // Default string
+    BOOST_CHECK_EQUAL(ParserItem::defaultString(), radfin4_2_nodata->getRecord(0)->getItem(0)->getString(0));
+    
+    
+    // Specified in datafile
+    BOOST_CHECK_EQUAL(213, radfin4_0_full->getRecord(0)->getItem(1)->getInt(0));
+    BOOST_CHECK_EQUAL(213, radfin4_1_partial->getRecord(0)->getItem(1)->getInt(0));
+    // Default int
+    BOOST_CHECK_EQUAL(ParserItem::defaultInt(), radfin4_2_nodata->getRecord(0)->getItem(1)->getInt(0));
+    
+    
+    ParserKeywordConstPtr parserKeyword = parser->getKeyword("RADFIN4");
+    ParserRecordConstPtr parserRecord = parserKeyword->getRecord();
+    ParserItemConstPtr nwmaxItem = parserRecord->get("NWMAX");
+    ParserIntItemConstPtr intItem = boost::static_pointer_cast<const ParserIntItem>(nwmaxItem);
+    
+    BOOST_CHECK_EQUAL(18, radfin4_0_full->getRecord(0)->getItem(10)->getInt(0));
+    BOOST_CHECK_EQUAL(intItem->getDefault(), radfin4_1_partial->getRecord(0)->getItem(10)->getInt(0));
+    BOOST_CHECK_EQUAL(intItem->getDefault(), radfin4_2_nodata->getRecord(0)->getItem(10)->getInt(0));
+    
+}
