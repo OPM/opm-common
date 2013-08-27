@@ -61,6 +61,8 @@ namespace Opm {
         if (hasKeyword(keyword)) {
             return m_parserKeywords.at(keyword);
         }
+        else
+            throw std::invalid_argument("Keyword: " + keyword + " does not exist");
     }
 
     void Parser::parseFile(DeckPtr deck, const std::string &file, bool parseStrict) const {
