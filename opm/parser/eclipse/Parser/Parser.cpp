@@ -45,26 +45,23 @@ namespace Opm {
         return deck;
     }
 
-
     size_t Parser::size() const {
         return m_parserKeywords.size();
     }
-    
-    
+
     void Parser::addKeyword(ParserKeywordConstPtr parserKeyword) {
         m_parserKeywords.insert(std::make_pair(parserKeyword->getName(), parserKeyword));
     }
-    
+
     bool Parser::hasKeyword(const std::string& keyword) const {
         return m_parserKeywords.find(keyword) != m_parserKeywords.end();
     }
 
-   ParserKeywordConstPtr Parser::getKeyword(const std::string& keyword) const {
-       if (hasKeyword(keyword)) {
-           return m_parserKeywords.at(keyword);
-       }
-   }
-
+    ParserKeywordConstPtr Parser::getKeyword(const std::string& keyword) const {
+        if (hasKeyword(keyword)) {
+            return m_parserKeywords.at(keyword);
+        }
+    }
 
     void Parser::parseFile(DeckPtr deck, const std::string &file, bool parseStrict) const {
         std::ifstream inputstream;
@@ -121,8 +118,6 @@ namespace Opm {
             throw std::invalid_argument("Input JSON object is not an array");
     }
 
-
-            
     RawKeywordPtr Parser::createRawKeyword(const DeckConstPtr deck, const std::string& keywordString, bool strictParsing) const {
         if (hasKeyword(keywordString)) {
             ParserKeywordConstPtr parserKeyword = m_parserKeywords.find(keywordString)->second;
@@ -191,8 +186,8 @@ namespace Opm {
 
         try {
             Json::JsonObject jsonKeyword(configFile);
-            ParserKeywordConstPtr parserKeyword( new ParserKeyword( jsonKeyword ));
-            addKeyword( parserKeyword );
+            ParserKeywordConstPtr parserKeyword(new ParserKeyword(jsonKeyword));
+            addKeyword(parserKeyword);
             return true;
         } catch (...) {
             return false;
@@ -200,18 +195,17 @@ namespace Opm {
 
     }
 
-
     void Parser::loadKeywordsFromDirectory(const boost::filesystem::path& directory, bool recursive, bool onlyALLCAPS8) {
         if (!boost::filesystem::exists(directory))
             throw std::invalid_argument("Directory: " + directory.string() + " does not exist.");
         else {
             boost::filesystem::directory_iterator end;
-            for (boost::filesystem::directory_iterator iter(directory) ; iter != end; iter++) {
-                if (is_directory(*iter)) {
+            for (boost::filesystem::directory_iterator iter(directory); iter != end; iter++) {
+                if (boost::filesystem::is_directory(*iter)) {
                     if (recursive)
-                        loadKeywordsFromDirectory(*iter , recursive , onlyALLCAPS8);
+                        loadKeywordsFromDirectory(*iter, recursive, onlyALLCAPS8);
                 } else {
-                    if (ParserKeyword::validName( iter->path().filename()) || !onlyALLCAPS8 ) {
+                    if (ParserKeyword::validName(iter->path().filename().string()) || !onlyALLCAPS8) {
                         if (!loadKeywordFromFile(*iter))
                             std::cerr << "** Warning: failed to load keyword from file:" << iter->path() << std::endl;
                     }
@@ -219,7 +213,6 @@ namespace Opm {
             }
         }
     }
-    
 
     void Parser::populateDefaultKeywords() {
         addKeyword(ParserKeywordConstPtr(new ParserKeyword("GRIDUNIT", 1)));
