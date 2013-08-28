@@ -18,8 +18,9 @@ add_test(NAME runParseEQUIL
          WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} 
          COMMAND ${EXECUTABLE_OUTPUT_PATH}/runParseEQUIL)
 
-
-add_executable(runIntegrationTestsInternalData IntegrationTestsInternalData.cpp)
-target_link_libraries(runIntegrationTestsInternalData Parser ${Boost_LIBRARIES})
-add_test(NAME runIntegrationTestsInternalData WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND ${EXECUTABLE_OUTPUT_PATH}/runIntegrationTestsInternalData )
-set_property(TEST runIntegrationTestsInternalData PROPERTY LABELS Statoil)
+if (${INCLUDE_STATOIL_TESTS}) 
+   add_executable(runIntegrationTestsInternalData IntegrationTestsInternalData.cpp)
+   target_link_libraries(runIntegrationTestsInternalData Parser ${Boost_LIBRARIES})
+   add_test(NAME runIntegrationTestsInternalData WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND ${EXECUTABLE_OUTPUT_PATH}/runIntegrationTestsInternalData )
+   set_property(TEST runIntegrationTestsInternalData PROPERTY LABELS Statoil)
+endif()
