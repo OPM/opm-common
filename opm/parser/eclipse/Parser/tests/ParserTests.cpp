@@ -59,11 +59,18 @@ BOOST_AUTO_TEST_CASE(hasKeyword_hasKeyword_returnstrue) {
 }
 
 
-BOOST_AUTO_TEST_CASE(Keyword_getKeyword_returnskeyword) {
+BOOST_AUTO_TEST_CASE(getKeyword_haskeyword_returnskeyword) {
     ParserPtr parser(new Parser());
     ParserKeywordConstPtr parserKeyword(new ParserKeyword("FJAS"));
     parser->addKeyword(parserKeyword);
     BOOST_CHECK_EQUAL(parserKeyword, parser->getKeyword("FJAS"));
+}
+
+BOOST_AUTO_TEST_CASE(getKeyword_hasnotkeyword_throws) {
+    ParserPtr parser(new Parser());
+    ParserKeywordConstPtr parserKeyword(new ParserKeyword("FJAS"));
+    parser->addKeyword(parserKeyword);
+    BOOST_CHECK_THROW(parser->getKeyword("FJASS"), std::invalid_argument);
 }
 
 
