@@ -12,6 +12,11 @@ target_link_libraries(runParseWCONHIST Parser ${Boost_LIBRARIES})
 add_test(NAME runParseWCONHIST WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND runParseWCONHIST)
 
 
+add_executable(runIncludeTest IncludeTest.cpp)
+target_link_libraries(runIncludeTest Parser ${Boost_LIBRARIES})
+add_test(NAME runIncludeTest WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND runIncludeTest)
+
+
 add_executable(runParseEQUIL ParseEQUIL.cpp)
 target_link_libraries(runParseEQUIL Parser ${Boost_LIBRARIES})
 add_test(NAME runParseEQUIL 

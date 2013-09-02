@@ -39,11 +39,29 @@ namespace Opm {
         return parse(dataFile, true);
     }
 
-    DeckPtr Parser::parse(const std::string &dataFile, bool strictParsing) const {
+
+    /*
+     About INCLUDE: Observe that the ECLIPSE parser is slightly unlogical
+     when it comes to nested includes; the path to an included file is always
+     interpreted relative to the filesystem location of the DATA file, and
+     not the location of the file issuing the INCLUDE command. That behaviour
+     is retained in the current implementation.
+     */
+
+    DeckPtr Parser::parse(const std::string &dataFileName, bool strictParsing) const {
         DeckPtr deck(new Deck());
-        parseFile(deck, dataFile, strictParsing);
+        boost::filesystem::path dataFile(dataFileName);
+        boost::filesystem::path rootPath;
+
+        if (dataFile.is_absolute())
+            rootPath = dataFile.parent_path();
+        else
+            rootPath = boost::filesystem::current_path() / dataFile.parent_path();
+
+        parseFile(deck, dataFile, rootPath , strictParsing);
         return deck;
     }
+
 
     size_t Parser::size() const {
         return m_parserKeywords.size();
@@ -65,22 +83,25 @@ namespace Opm {
             throw std::invalid_argument("Keyword: " + keyword + " does not exist");
     }
 
-    void Parser::parseFile(DeckPtr deck, const std::string &file, bool parseStrict) const {
+
+
+    void Parser::parseFile(DeckPtr deck, const boost::filesystem::path& file, const boost::filesystem::path& rootPath, bool parseStrict) const {
         std::ifstream inputstream;
-        inputstream.open(file.c_str());
+        inputstream.open(file.string().c_str());
 
         if (inputstream) {
             RawKeywordPtr rawKeyword;
 
             while (tryParseKeyword(deck, inputstream, rawKeyword, parseStrict)) {
                 if (rawKeyword->getKeywordName() == Opm::RawConsts::include) {
-                    boost::filesystem::path dataFolderPath = verifyValidInputPath(file);
                     RawRecordConstPtr firstRecord = rawKeyword->getRecord(0);
                     std::string includeFileString = firstRecord->getItem(0);
-                    boost::filesystem::path pathToIncludedFile(dataFolderPath);
-                    pathToIncludedFile /= includeFileString;
+                    boost::filesystem::path includeFile(includeFileString);
 
-                    parseFile(deck, pathToIncludedFile.string(), parseStrict);
+                    if (includeFile.is_relative())
+                        includeFile = rootPath / includeFile;
+
+                    parseFile(deck, includeFile, rootPath , parseStrict);
                 } else {
                     if (hasKeyword(rawKeyword->getKeywordName())) {
                         ParserKeywordConstPtr parserKeyword = m_parserKeywords.at(rawKeyword->getKeywordName());
@@ -96,7 +117,7 @@ namespace Opm {
 
             inputstream.close();
         } else
-            throw std::invalid_argument("Failed to open file: " + file);
+            throw std::invalid_argument("Failed to open file: " + file.string());
     }
 
     void Parser::initializeFromJsonFile(const boost::filesystem::path& jsonFile) {
@@ -174,15 +195,6 @@ namespace Opm {
         return false;
     }
 
-    boost::filesystem::path Parser::verifyValidInputPath(const std::string& inputPath) const {
-        Logger::info("Verifying path: " + inputPath);
-        boost::filesystem::path pathToInputFile(inputPath);
-        if (!boost::filesystem::is_regular_file(pathToInputFile)) {
-            Logger::error("Unable to open file with path: " + inputPath);
-            throw std::invalid_argument("Given path is not a valid file-path, path: " + inputPath);
-        }
-        return pathToInputFile.parent_path();
-    }
 
     bool Parser::loadKeywordFromFile(const boost::filesystem::path& configFile) {
 
