@@ -109,6 +109,80 @@ BOOST_AUTO_TEST_CASE(InitializeIntItem_FromJsonObject_withDefaultInvalid_throws)
 /* </Json> */
 /******************************************************************/
 
+/* EQUAL */
+
+BOOST_AUTO_TEST_CASE(IntItem_Equal_ReturnsTrue) {
+    ParserItemSizeEnum sizeType = ALL;
+    ParserIntItem item1("ITEM1", sizeType);
+    ParserIntItem item2("ITEM1", sizeType);
+    ParserIntItem item3 = item1;
+
+    BOOST_CHECK( item1.equal( item2 ));
+    BOOST_CHECK( item1.equal( item3 ));
+}
+
+
+BOOST_AUTO_TEST_CASE(IntItem_Different_ReturnsFalse) {
+    ParserIntItem item1("ITEM1", ALL);
+    ParserIntItem item2("ITEM2", ALL);
+    ParserIntItem item3("ITEM1" , SINGLE);
+    ParserIntItem item4("ITEM1" , SINGLE , 42);
+
+    BOOST_CHECK( !item1.equal( item2 ));
+    BOOST_CHECK( !item1.equal( item3 ));
+    BOOST_CHECK( !item2.equal( item3 ));
+    BOOST_CHECK( !item4.equal( item3 ));
+}
+
+BOOST_AUTO_TEST_CASE(DoubleItem_Equal_ReturnsTrue) {
+    ParserItemSizeEnum sizeType = ALL;
+    ParserDoubleItem item1("ITEM1", sizeType);
+    ParserDoubleItem item2("ITEM1", sizeType);
+    ParserDoubleItem item3 = item1;
+
+    BOOST_CHECK( item1.equal( item2 ));
+    BOOST_CHECK( item1.equal( item3 ));
+}
+
+
+BOOST_AUTO_TEST_CASE(DoubleItem_Different_ReturnsFalse) {
+    ParserDoubleItem item1("ITEM1", ALL);
+    ParserDoubleItem item2("ITEM2", ALL);
+    ParserDoubleItem item3("ITEM1" , SINGLE);
+    ParserDoubleItem item4("ITEM1" , SINGLE , 42.89);
+
+    BOOST_CHECK( !item1.equal( item2 ));
+    BOOST_CHECK( !item1.equal( item3 ));
+    BOOST_CHECK( !item2.equal( item3 ));
+    BOOST_CHECK( !item4.equal( item3 ));
+}
+
+
+BOOST_AUTO_TEST_CASE(StringItem_Equal_ReturnsTrue) {
+    ParserItemSizeEnum sizeType = ALL;
+    ParserStringItem item1("ITEM1", sizeType);
+    ParserStringItem item2("ITEM1", sizeType);
+    ParserStringItem item3 = item1;
+
+    BOOST_CHECK( item1.equal( item2 ));
+    BOOST_CHECK( item1.equal( item3 ));
+}
+
+
+BOOST_AUTO_TEST_CASE(StringItem_Different_ReturnsFalse) {
+    ParserStringItem item1("ITEM1", ALL);
+    ParserStringItem item2("ITEM2", ALL);
+    ParserStringItem item3("ITEM1" , SINGLE);
+    ParserStringItem item4("ITEM1" , SINGLE , "42.89");
+
+    BOOST_CHECK( !item1.equal( item2 ));
+    BOOST_CHECK( !item1.equal( item3 ));
+    BOOST_CHECK( !item2.equal( item3 ));
+    BOOST_CHECK( !item4.equal( item3 ));
+}
+
+
+/******************************************************************/
 
 BOOST_AUTO_TEST_CASE(Name_ReturnsCorrectName) {
     ParserItemSizeEnum sizeType = ALL;

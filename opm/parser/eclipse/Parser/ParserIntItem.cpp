@@ -61,4 +61,14 @@ namespace Opm {
         }
         return deckItem;
     }
+
+
+    bool ParserIntItem::equal(const ParserIntItem& other) const
+    {
+        if (ParserItem::equal(other) && (getDefault() == other.getDefault()))
+            return true;
+        else
+            return false;
+    }
+
 }

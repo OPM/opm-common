@@ -42,13 +42,14 @@ namespace Opm {
     ParserItem(const Json::JsonObject& jsonConfig);
     
     virtual DeckItemConstPtr scan(RawRecordPtr rawRecord) const = 0;
-    
+    //virtual equal(const ParserItemPtr& other) const = 0;
     const std::string& name() const;
     ParserItemSizeEnum sizeType() const;
 
     static int defaultInt();
     static std::string defaultString();
     static double defaultDouble();
+    virtual bool equal(const ParserItem& otehr) const;
 
     virtual ~ParserItem() {
     }

@@ -66,4 +66,13 @@ namespace Opm {
         return "DEFAULT";
     }
 
+
+    bool ParserItem::equal(const ParserItem& other) const {
+        if ((name() == other.name()) &&
+            (sizeType() == other.sizeType()))
+            return true;
+        else
+            return false;
+    }
+
 }
