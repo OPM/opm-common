@@ -38,6 +38,7 @@ namespace Opm {
 
         DeckItemConstPtr scan(RawRecordPtr rawRecord) const;
         bool equal(const ParserDoubleItem& other) const;
+        void inlineNew(std::ostream& os) const;
         double getDefault() const {
             return m_default;
         }

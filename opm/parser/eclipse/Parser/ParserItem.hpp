@@ -42,7 +42,6 @@ namespace Opm {
     ParserItem(const Json::JsonObject& jsonConfig);
     
     virtual DeckItemConstPtr scan(RawRecordPtr rawRecord) const = 0;
-    //virtual equal(const ParserItemPtr& other) const = 0;
     const std::string& name() const;
     ParserItemSizeEnum sizeType() const;
 
@@ -50,6 +49,7 @@ namespace Opm {
     static std::string defaultString();
     static double defaultDouble();
     virtual bool equal(const ParserItem& other) const;
+    virtual void inlineNew(std::ostream& os) const {}
 
     virtual ~ParserItem() {
     }

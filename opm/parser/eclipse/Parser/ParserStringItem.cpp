@@ -71,5 +71,10 @@ namespace Opm {
             return false;
     }
 
-
+    void ParserStringItem::inlineNew(std::ostream& os) const {
+        os << "new ParserStringItem(" << "\"" << name() << "\"" << "," << ParserItemSizeEnum2String( sizeType() );
+        if (m_defaultSet)
+            os << "," << getDefault();
+        os << ")";
+    }
 }

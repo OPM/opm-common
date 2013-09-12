@@ -19,3 +19,17 @@ add_test(NAME runParserItemTests COMMAND ${EXECUTABLE_OUTPUT_PATH}/runParserItem
 add_test(NAME runParserEnumTests COMMAND ${EXECUTABLE_OUTPUT_PATH}/runParserEnumTests )
 
 set_property(SOURCE ParserRecordTests.cpp PROPERTY COMPILE_FLAGS "-Wno-error")
+
+#-----------------------------------------------------------------
+
+add_executable( createInlineItemTest createInlineItemTest.cpp ) 
+target_link_libraries( createInlineItemTest Parser ${Boost_LIBRARIES} )
+
+add_custom_command( OUTPUT inlineItemTest.cpp 
+                    COMMAND createInlineItemTest ${CMAKE_CURRENT_BINARY_DIR}/inlineItemTest.cpp inlineItemTest
+                    DEPENDS createInlineItemTest )
+
+
+add_executable( inlineItemTest ${CMAKE_CURRENT_BINARY_DIR}/inlineItemTest.cpp )
+target_link_libraries( inlineItemTest Parser ${Boost_LIBRARIES} )
+add_test(inlineItemTest ${EXECUTABLE_OUTPUT_PATH}/inlineItemTest)

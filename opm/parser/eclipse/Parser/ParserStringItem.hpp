@@ -36,7 +36,7 @@ namespace Opm {
 
         bool equal(const ParserStringItem& other) const;
         DeckItemConstPtr scan(RawRecordPtr rawRecord) const;
-        
+        void inlineNew(std::ostream& os) const;
         std::string getDefault() const {
             return m_default;
         }
