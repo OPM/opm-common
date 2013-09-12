@@ -49,12 +49,13 @@ namespace Opm {
     static int defaultInt();
     static std::string defaultString();
     static double defaultDouble();
-    virtual bool equal(const ParserItem& otehr) const;
+    virtual bool equal(const ParserItem& other) const;
 
     virtual ~ParserItem() {
     }
     
   protected:
+    bool m_defaultSet;
 
 #include <opm/parser/eclipse/Parser/ParserItemTemplate.hpp>
 

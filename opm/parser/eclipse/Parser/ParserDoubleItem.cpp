@@ -41,14 +41,16 @@ namespace Opm
             ParserItem(itemName, sizeType)
     {
         m_default = defaultValue;
+        m_defaultSet = true;
     }
 
     ParserDoubleItem::ParserDoubleItem(const Json::JsonObject& jsonConfig) :
             ParserItem(jsonConfig)
     {
-        if (jsonConfig.has_item("default"))
+        if (jsonConfig.has_item("default")) {
             m_default = jsonConfig.get_double("default");
-        else
+            m_defaultSet = true;
+        } else
             m_default = defaultDouble();
     }
 

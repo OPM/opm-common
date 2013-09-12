@@ -30,11 +30,15 @@ namespace Opm {
 
     ParserStringItem::ParserStringItem(const std::string& itemName, ParserItemSizeEnum sizeType, std::string defaultValue) : ParserItem(itemName, sizeType) {
         m_default = defaultValue;
+        m_defaultSet = true;
     }
 
     ParserStringItem::ParserStringItem(const Json::JsonObject& jsonConfig) : ParserItem(jsonConfig) {
         if (jsonConfig.has_item("default"))
-            m_default = jsonConfig.get_string("default");
+            {
+                m_default = jsonConfig.get_string("default");
+                m_defaultSet = true;
+            }
         else
             m_default = defaultString();
     }
