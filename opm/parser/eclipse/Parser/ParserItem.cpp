@@ -69,9 +69,12 @@ namespace Opm {
 
 
     bool ParserItem::equal(const ParserItem& other) const {
-        if ((name() == other.name()) &&
-            (sizeType() == other.sizeType()))
-            return true;
+        if (typeid(this) == typeid(&other)) {
+            if ((name() == other.name()) && (sizeType() == other.sizeType()))
+                return true;
+            else
+                return false;
+        }
         else
             return false;
     }
