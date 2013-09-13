@@ -87,4 +87,22 @@ namespace Opm {
         return equal;
     }
 
+    void ParserRecord::inlineNew(std::ostream& os , const std::string& lhs) const {
+        os << "ParserRecord * " << lhs << " = new ParserRecord();" << std::endl;
+        os << "{" << std::endl;
+        for (size_t i = 0; i < size(); i++) {
+                os << "   {" << std::endl;
+             {
+                 ParserItemConstPtr item = get(i);
+                 os << "        ParserItemConstPtr item(";
+                 item->inlineNew(os);
+                 os << ");" << std::endl;
+
+                 os << "        " << lhs << "->addItem(item);" << std::endl;
+             }
+             os << "   }" << std::endl;
+        }
+        os << "}" << std::endl;
+    }
+
 }
