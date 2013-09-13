@@ -134,5 +134,11 @@ int main(int argc , char ** argv) {
     intItem( of );
     intItemWithDefault( of );
 
+    DoubleItem( of );
+    DoubleItemWithDefault( of );
+
+    stringItem( of );
+    stringItemWithDefault( of );
+
     of.close();
 }
