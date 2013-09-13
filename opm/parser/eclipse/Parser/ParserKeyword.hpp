@@ -20,8 +20,9 @@
 #define PARSER_KEYWORD_H
 
 #include <string>
-#include <boost/shared_ptr.hpp>
+#include <iostream>
 
+#include <boost/shared_ptr.hpp>
 #include <opm/json/JsonObject.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
@@ -50,6 +51,10 @@ namespace Opm {
         DeckKeywordPtr parse(RawKeywordConstPtr rawKeyword) const;
         enum ParserKeywordSizeEnum getSizeType() const;
         const std::pair<std::string,std::string>& getSizeDefinitionPair() const;
+        void addItem( ParserItemConstPtr item );
+
+        bool equal(const ParserKeyword& other) const;
+        void inlineNew(std::ostream& os , const std::string& lhs) const;
     private:
         std::pair<std::string,std::string> m_sizeDefinitionPair;
         std::string m_name;

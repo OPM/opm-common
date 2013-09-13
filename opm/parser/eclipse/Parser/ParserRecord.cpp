@@ -70,17 +70,18 @@ namespace Opm {
         if (size() == other.size()) {
            size_t itemIndex = 0;
            while (true) {
-               ParserItemConstPtr item = get(itemIndex);
-               ParserItemConstPtr otherItem = other.get(itemIndex);
-
-               if (!item->equal(*otherItem)) {
-                   equal = false;
-                   break;
-               }
-
-               itemIndex++;
                if (itemIndex == size())
                    break;
+               {
+                   ParserItemConstPtr item = get(itemIndex);
+                   ParserItemConstPtr otherItem = other.get(itemIndex);
+                   
+                   if (!item->equal(*otherItem)) {
+                       equal = false;
+                       break;
+                   }
+               }
+               itemIndex++;
             }
         } else
             equal = false;
@@ -92,16 +93,16 @@ namespace Opm {
         os << "ParserRecord * " << lhs << " = new ParserRecord();" << std::endl;
         os << "{" << std::endl;
         for (size_t i = 0; i < size(); i++) {
-                os << "   {" << std::endl;
-             {
-                 ParserItemConstPtr item = get(i);
-                 os << "        ParserItemConstPtr item(";
-                 item->inlineNew(os);
-                 os << ");" << std::endl;
-
-                 os << "        " << lhs << "->addItem(item);" << std::endl;
-             }
-             os << "   }" << std::endl;
+            os << "   {" << std::endl;
+            {
+                ParserItemConstPtr item = get(i);
+                os << "        ParserItemConstPtr item(";
+                item->inlineNew(os);
+                os << ");" << std::endl;
+            
+                os << "        " << lhs << "->addItem(item);" << std::endl;
+            }
+            os << "   }" << std::endl;
         }
         os << "}" << std::endl;
     }

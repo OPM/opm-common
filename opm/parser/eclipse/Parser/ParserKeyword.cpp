@@ -122,6 +122,10 @@ namespace Opm {
         m_record = ParserRecordPtr(new ParserRecord);
     }
 
+    void ParserKeyword::addItem( ParserItemConstPtr item ) {
+        m_record->addItem( item );
+    }
+
 
     void ParserKeyword::addItems( const Json::JsonObject& jsonConfig) {
         const Json::JsonObject itemsConfig = jsonConfig.get_item("items");
@@ -136,19 +140,19 @@ namespace Opm {
                     case INT:
                         {
                             ParserIntItemConstPtr item = ParserIntItemConstPtr(new ParserIntItem( itemConfig ));
-                            m_record->addItem( item );
+                            addItem( item );
                         }
                         break;
                     case STRING:
                         {
                             ParserStringItemConstPtr item = ParserStringItemConstPtr(new ParserStringItem( itemConfig ));
-                            m_record->addItem( item );
+                            addItem( item );
                         }
                         break;
                     case FLOAT:
                         {
                             ParserDoubleItemConstPtr item = ParserDoubleItemConstPtr(new ParserDoubleItem( itemConfig ));
-                            m_record->addItem( item );
+                            addItem( item );
                         }
                         break;
                     default:
@@ -202,6 +206,60 @@ namespace Opm {
 
     const std::pair<std::string,std::string>& ParserKeyword::getSizeDefinitionPair() const {
         return m_sizeDefinitionPair;
+    }
+
+    bool ParserKeyword::equal(const ParserKeyword& other) const {
+        if ((m_name == other.m_name) &&
+            (m_record->equal( *(other.m_record) )) &&
+            (m_keywordSizeType == other.m_keywordSizeType))
+            {
+                bool equal = false;
+                switch(m_keywordSizeType) {
+                case FIXED:
+                    if (m_fixedSize == other.m_fixedSize)
+                        equal = true;
+                    break;
+                case UNDEFINED:
+                    equal = true;
+                    break;
+                case OTHER:
+                    if ((m_sizeDefinitionPair.first  == other.m_sizeDefinitionPair.first) &&
+                        (m_sizeDefinitionPair.second == other.m_sizeDefinitionPair.second))
+                        equal = true;
+                    break;
+                }
+                return equal;
+            }
+        else
+            return false;
+    }
+
+
+    void ParserKeyword::inlineNew(std::ostream& os , const std::string& lhs) const {
+        switch(m_keywordSizeType) {
+        case UNDEFINED:
+            os << lhs << " = new ParserKeyword(\"" << m_name << "\");" << std::endl;
+            break;
+        case FIXED:
+            os << lhs << " = new ParserKeyword(\"" << m_name << "\"," << m_fixedSize << ");" << std::endl;
+            break;
+        case OTHER:
+            os << lhs << " = new ParserKeyword(\"" << m_name << "\",\"" << m_sizeDefinitionPair.first << "\",\"" << m_sizeDefinitionPair.second << "\");" << std::endl;
+            break;
+        }
+
+        for (size_t i = 0; i < m_record->size(); i++) {
+            os << "{" << std::endl;
+            {
+                ParserItemConstPtr item = m_record->get(i);
+                os << "    ParserItemConstPtr item(";
+                item->inlineNew(os);
+                os << ");" << std::endl;
+            
+                os << "    " << lhs << "->addItem(item);" << std::endl;
+            }
+            os << "}" << std::endl;
+        }
     }
 
 }

@@ -45,6 +45,8 @@ namespace Opm {
             m_sizeType = ParserItemSizeEnumFromString( sizeTypeString );
         } else
             throw std::invalid_argument("Json config object missing \"size_type\": ... item");
+
+        m_defaultSet = false;
     }
 
     const std::string& ParserItem::name() const {

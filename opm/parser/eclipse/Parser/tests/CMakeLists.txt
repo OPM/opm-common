@@ -48,4 +48,16 @@ add_executable( inlineRecordTest ${CMAKE_CURRENT_BINARY_DIR}/inlineRecordTest.cp
 target_link_libraries( inlineRecordTest buildParser ${Boost_LIBRARIES} )
 add_test(inlineRecordTest ${EXECUTABLE_OUTPUT_PATH}/inlineRecordTest)
 
+#-----------------------------------------------------------------
+
+add_executable( createInlineKeywordTest createInlineKeywordTest.cpp ) 
+target_link_libraries( createInlineKeywordTest buildParser ${Boost_LIBRARIES} )
+
+add_custom_command( OUTPUT inlineKeywordTest.cpp 
+                    COMMAND createInlineKeywordTest ${CMAKE_CURRENT_BINARY_DIR}/inlineKeywordTest.cpp inlineKeywordTest ${PROJECT_SOURCE_DIR}/opm/parser/share/keywords 
+                    DEPENDS createInlineKeywordTest )
+
+add_executable( inlineKeywordTest ${CMAKE_CURRENT_BINARY_DIR}/inlineKeywordTest.cpp )
+target_link_libraries( inlineKeywordTest buildParser ${Boost_LIBRARIES} )
+add_test(inlineKeywordTest ${EXECUTABLE_OUTPUT_PATH}/inlineKeywordTest)
 
