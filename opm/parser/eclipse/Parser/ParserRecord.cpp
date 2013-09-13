@@ -87,6 +87,7 @@ namespace Opm {
         return equal;
     }
 
+
     void ParserRecord::inlineNew(std::ostream& os , const std::string& lhs) const {
         os << "ParserRecord * " << lhs << " = new ParserRecord();" << std::endl;
         os << "{" << std::endl;

@@ -33,6 +33,18 @@ Parser/ParserDoubleItem.cpp
 Parser/ParserStringItem.cpp  
 )
 
+set( build_parser_source 
+Parser/ParserEnums.cpp
+Parser/ParserKeyword.cpp 
+Parser/ParserRecord.cpp
+Parser/ParserItem.cpp
+Parser/ParserIntItem.cpp  
+Parser/ParserBoolItem.cpp  
+Parser/ParserDoubleItem.cpp  
+Parser/ParserStringItem.cpp  
+)
+
+
 set( HEADER_FILES
 RawDeck/RawConsts.hpp 
 RawDeck/RawKeyword.hpp 
@@ -64,7 +76,10 @@ Parser/ParserItemTemplate.hpp
 
 
 add_library(Parser ${rawdeck_source} ${parser_source} ${deck_source})
+add_library(buildParser ${rawdeck_source} ${build_parser_source} ${deck_source})
 target_link_libraries(Parser opm-json Logger ${Boost_LIBRARIES})
+target_link_libraries(buildParser opm-json Logger ${Boost_LIBRARIES})
+
 
 install( TARGETS Parser DESTINATION ${CMAKE_INSTALL_LIBDIR} )
 install( FILES ${HEADER_FILES} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/opm/parser/eclipse)

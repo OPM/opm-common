@@ -23,7 +23,7 @@ set_property(SOURCE ParserRecordTests.cpp PROPERTY COMPILE_FLAGS "-Wno-error")
 #-----------------------------------------------------------------
 
 add_executable( createInlineItemTest createInlineItemTest.cpp ) 
-target_link_libraries( createInlineItemTest Parser ${Boost_LIBRARIES} )
+target_link_libraries( createInlineItemTest buildParser ${Boost_LIBRARIES} )
 
 add_custom_command( OUTPUT inlineItemTest.cpp 
                     COMMAND createInlineItemTest ${CMAKE_CURRENT_BINARY_DIR}/inlineItemTest.cpp inlineItemTest
@@ -31,13 +31,13 @@ add_custom_command( OUTPUT inlineItemTest.cpp
 
 
 add_executable( inlineItemTest ${CMAKE_CURRENT_BINARY_DIR}/inlineItemTest.cpp )
-target_link_libraries( inlineItemTest Parser ${Boost_LIBRARIES} )
+target_link_libraries( inlineItemTest buildParser ${Boost_LIBRARIES} )
 add_test(inlineItemTest ${EXECUTABLE_OUTPUT_PATH}/inlineItemTest)
 
 #-----------------------------------------------------------------
 
 add_executable( createInlineRecordTest createInlineRecordTest.cpp ) 
-target_link_libraries( createInlineRecordTest Parser ${Boost_LIBRARIES} )
+target_link_libraries( createInlineRecordTest buildParser ${Boost_LIBRARIES} )
 
 add_custom_command( OUTPUT inlineRecordTest.cpp 
                     COMMAND createInlineRecordTest ${CMAKE_CURRENT_BINARY_DIR}/inlineRecordTest.cpp inlineRecordTest
@@ -45,7 +45,7 @@ add_custom_command( OUTPUT inlineRecordTest.cpp
 
 
 add_executable( inlineRecordTest ${CMAKE_CURRENT_BINARY_DIR}/inlineRecordTest.cpp )
-target_link_libraries( inlineRecordTest Parser ${Boost_LIBRARIES} )
+target_link_libraries( inlineRecordTest buildParser ${Boost_LIBRARIES} )
 add_test(inlineRecordTest ${EXECUTABLE_OUTPUT_PATH}/inlineRecordTest)
 
 
