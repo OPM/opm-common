@@ -111,6 +111,7 @@ BOOST_AUTO_TEST_CASE(InitializeIntItem_FromJsonObject_withDefaultInvalid_throws)
 
 /* EQUAL */
 
+
 BOOST_AUTO_TEST_CASE(IntItem_Equal_ReturnsTrue) {
     ParserItemSizeEnum sizeType = ALL;
     ParserIntItem item1("ITEM1", sizeType);
@@ -180,6 +181,8 @@ BOOST_AUTO_TEST_CASE(StringItem_Different_ReturnsFalse) {
     BOOST_CHECK( !item2.equal( item3 ));
     BOOST_CHECK( !item4.equal( item3 ));
 }
+
+
 
 
 /******************************************************************/

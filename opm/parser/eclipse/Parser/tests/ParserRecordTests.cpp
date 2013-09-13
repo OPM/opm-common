@@ -25,6 +25,7 @@
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>
+#include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
 #include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
 #include <boost/test/test_tools.hpp>
 
@@ -168,3 +169,34 @@ BOOST_AUTO_TEST_CASE(parse_validMixedRecord_noThrow) {
 }
 
 
+BOOST_AUTO_TEST_CASE(Equal_Equal_ReturnsTrue) {
+    ParserRecordPtr record1 = createMixedParserRecord();
+    ParserRecordPtr record2 = createMixedParserRecord();
+
+    BOOST_CHECK( record1->equal( *record1 ));
+    BOOST_CHECK( record1->equal( *record2 ));
+}
+
+
+BOOST_AUTO_TEST_CASE(Equal_Different_ReturnsFalse) {
+    ParserItemSizeEnum sizeType = SINGLE;
+    ParserIntItemPtr itemInt(new ParserIntItem("INTITEM1", sizeType , 0));
+    ParserDoubleItemPtr itemDouble(new ParserDoubleItem("DOUBLEITEM1", sizeType , 0));
+    ParserStringItemPtr itemString(new ParserStringItem("STRINGITEM1", sizeType));
+    ParserRecordPtr record1(new ParserRecord());
+    ParserRecordPtr record2(new ParserRecord());
+    ParserRecordPtr record3(new ParserRecord());
+
+    record1->addItem( itemInt );
+    record1->addItem( itemDouble );
+
+    record2->addItem( itemInt );
+    record2->addItem( itemDouble );
+    record2->addItem( itemString );
+
+    record3->addItem( itemDouble );
+    record3->addItem( itemInt );
+    BOOST_CHECK( !record1->equal( *record2 ));
+    BOOST_CHECK( !record1->equal( *record3 ));
+
+}
