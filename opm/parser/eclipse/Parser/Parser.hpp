@@ -63,7 +63,7 @@ namespace Opm {
         void parseFile(DeckPtr deck , const boost::filesystem::path& file, const boost::filesystem::path& rootPath, bool strictParsing) const;
         void populateDefaultKeywords();
         RawKeywordPtr createRawKeyword(const DeckConstPtr deck , const std::string& keywordString, bool strictParsing) const;
-
+        void addDefaultKeywords();
     };
 
     typedef boost::shared_ptr<Parser> ParserPtr;
