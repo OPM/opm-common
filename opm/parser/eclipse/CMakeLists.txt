@@ -1,3 +1,5 @@
+file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/generated-source)
+
 add_subdirectory( Logger )
 add_subdirectory(Parser/tests)
 add_subdirectory(RawDeck/tests)
@@ -31,7 +33,7 @@ Parser/ParserIntItem.cpp
 Parser/ParserBoolItem.cpp  
 Parser/ParserDoubleItem.cpp  
 Parser/ParserStringItem.cpp  
-${CMAKE_CURRENT_BINARY_DIR}/DefaultKeywordList.cpp
+${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.cpp
 )
 
 set( build_parser_source 
@@ -80,8 +82,8 @@ target_link_libraries(buildParser opm-json Logger ${Boost_LIBRARIES})
 add_executable( createDefaultKeywordList Parser/createDefaultKeywordList.cpp )
 target_link_libraries( createDefaultKeywordList buildParser opm-json Logger ${Boost_LIBRARIES} )
 
-add_custom_command( OUTPUT DefaultKeywordList.cpp
-                    COMMAND createDefaultKeywordList ${PROJECT_SOURCE_DIR}/opm/parser/share/keywords ${CMAKE_CURRENT_BINARY_DIR}/DefaultKeywordList.cpp
+add_custom_command( OUTPUT ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.cpp
+                    COMMAND createDefaultKeywordList ${PROJECT_SOURCE_DIR}/opm/parser/share/keywords ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.cpp
                     DEPENDS createDefaultKeywordList )
 
 

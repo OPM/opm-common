@@ -25,12 +25,12 @@ set_property(SOURCE ParserRecordTests.cpp PROPERTY COMPILE_FLAGS "-Wno-error")
 add_executable( createInlineItemTest createInlineItemTest.cpp ) 
 target_link_libraries( createInlineItemTest buildParser ${Boost_LIBRARIES} )
 
-add_custom_command( OUTPUT inlineItemTest.cpp 
-                    COMMAND createInlineItemTest ${CMAKE_CURRENT_BINARY_DIR}/inlineItemTest.cpp inlineItemTest
+add_custom_command( OUTPUT ${PROJECT_BINARY_DIR}/generated-source/inlineItemTest.cpp 
+                    COMMAND createInlineItemTest ${PROJECT_BINARY_DIR}/generated-source/inlineItemTest.cpp inlineItemTest
                     DEPENDS createInlineItemTest )
 
 
-add_executable( inlineItemTest ${CMAKE_CURRENT_BINARY_DIR}/inlineItemTest.cpp )
+add_executable( inlineItemTest ${PROJECT_BINARY_DIR}/generated-source/inlineItemTest.cpp )
 target_link_libraries( inlineItemTest buildParser ${Boost_LIBRARIES} )
 add_test(inlineItemTest ${EXECUTABLE_OUTPUT_PATH}/inlineItemTest)
 
@@ -39,11 +39,11 @@ add_test(inlineItemTest ${EXECUTABLE_OUTPUT_PATH}/inlineItemTest)
 add_executable( createInlineKeywordTest createInlineKeywordTest.cpp ) 
 target_link_libraries( createInlineKeywordTest buildParser ${Boost_LIBRARIES} )
 
-add_custom_command( OUTPUT inlineKeywordTest.cpp 
-                    COMMAND createInlineKeywordTest ${CMAKE_CURRENT_BINARY_DIR}/inlineKeywordTest.cpp inlineKeywordTest ${PROJECT_SOURCE_DIR}/opm/parser/share/keywords 
+add_custom_command( OUTPUT ${PROJECT_BINARY_DIR}/generated-source/inlineKeywordTest.cpp 
+                    COMMAND createInlineKeywordTest ${PROJECT_BINARY_DIR}/generated-source/inlineKeywordTest.cpp inlineKeywordTest ${PROJECT_SOURCE_DIR}/opm/parser/share/keywords 
                     DEPENDS createInlineKeywordTest )
 
-add_executable( inlineKeywordTest ${CMAKE_CURRENT_BINARY_DIR}/inlineKeywordTest.cpp )
+add_executable( inlineKeywordTest ${PROJECT_BINARY_DIR}/generated-source/inlineKeywordTest.cpp )
 target_link_libraries( inlineKeywordTest buildParser ${Boost_LIBRARIES} )
 add_test(inlineKeywordTest ${EXECUTABLE_OUTPUT_PATH}/inlineKeywordTest)
 
