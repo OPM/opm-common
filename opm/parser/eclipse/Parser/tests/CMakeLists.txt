@@ -36,20 +36,6 @@ add_test(inlineItemTest ${EXECUTABLE_OUTPUT_PATH}/inlineItemTest)
 
 #-----------------------------------------------------------------
 
-add_executable( createInlineRecordTest createInlineRecordTest.cpp ) 
-target_link_libraries( createInlineRecordTest buildParser ${Boost_LIBRARIES} )
-
-add_custom_command( OUTPUT inlineRecordTest.cpp 
-                    COMMAND createInlineRecordTest ${CMAKE_CURRENT_BINARY_DIR}/inlineRecordTest.cpp inlineRecordTest
-                    DEPENDS createInlineRecordTest )
-
-
-add_executable( inlineRecordTest ${CMAKE_CURRENT_BINARY_DIR}/inlineRecordTest.cpp )
-target_link_libraries( inlineRecordTest buildParser ${Boost_LIBRARIES} )
-add_test(inlineRecordTest ${EXECUTABLE_OUTPUT_PATH}/inlineRecordTest)
-
-#-----------------------------------------------------------------
-
 add_executable( createInlineKeywordTest createInlineKeywordTest.cpp ) 
 target_link_libraries( createInlineKeywordTest buildParser ${Boost_LIBRARIES} )
 
