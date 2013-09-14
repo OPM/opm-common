@@ -130,35 +130,6 @@ BOOST_AUTO_TEST_CASE(loadKeywordsJSON_manyKeywords_returnstrue) {
 
 
 
-BOOST_AUTO_TEST_CASE(inititalizeFromFile) {
-    ParserPtr parser(new Parser());
-    boost::filesystem::path jsonFile("testdata/json/example1.json");
-    BOOST_CHECK_NO_THROW(parser->initializeFromJsonFile( jsonFile ));
-    BOOST_CHECK(parser->hasKeyword("BPR"));
-    BOOST_CHECK(parser->hasKeyword("WWCT"));
-}
-
-
-BOOST_AUTO_TEST_CASE(constructFromJsonFile) {
-    boost::filesystem::path jsonFile("testdata/json/example1.json");
-    ParserPtr parser(new Parser(jsonFile));
-    BOOST_CHECK(parser->hasKeyword("BPR"));
-    BOOST_CHECK(parser->hasKeyword("WWCT"));
-}
-
-
-BOOST_AUTO_TEST_CASE(inititalizeFromFile_doesNotExist_throw) {
-    ParserPtr parser(new Parser());
-    boost::filesystem::path jsonFile("Does/not/exist");
-    BOOST_CHECK_THROW( parser->initializeFromJsonFile( jsonFile ) , std::invalid_argument );
-}
-
-
-BOOST_AUTO_TEST_CASE(inititalizeFromFile_missing_keywords_throw) {
-    ParserPtr parser(new Parser());
-    boost::filesystem::path jsonFile("testdata/json/example_missing_keyword.json");
-    BOOST_CHECK_THROW( parser->initializeFromJsonFile( jsonFile ) , std::invalid_argument );
-}
 
 /*****************************************************************/
 

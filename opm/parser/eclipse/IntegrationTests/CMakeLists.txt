@@ -1,4 +1,3 @@
-add_definitions( -DJSON_CONFIG_FILE="${PROJECT_SOURCE_DIR}/opm/parser/share/parser_config.json")
 add_definitions( -DKEYWORD_DIRECTORY="${PROJECT_SOURCE_DIR}/opm/parser/share/keywords")
 
 add_executable(runIntegrationTests IntegrationTests.cpp)

@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
             printKeywords = true;
     }
 
-    Opm::ParserPtr parser(new Opm::Parser(JSON_CONFIG_FILE));
+    Opm::ParserPtr parser(new Opm::Parser());
     std::string file = argv[1];
     Opm::DeckConstPtr deck = parser->parse(file, false);
     

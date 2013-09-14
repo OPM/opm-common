@@ -150,21 +150,11 @@ BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_dataiscorrect) {
 }
 
 
-BOOST_AUTO_TEST_CASE(Parse_InvalidInputFile_Throws) {
-    ParserPtr parser(new Parser(JSON_CONFIG_FILE));
-    BOOST_CHECK_THROW(parser->parse("nonexistingfile.asdf"), std::invalid_argument );
-}
 
-BOOST_AUTO_TEST_CASE(Parse_ValidInputFile_NoThrow) {
-    boost::filesystem::path singleKeywordFile("testdata/integration_tests/small.data");
-    ParserPtr parser(new Parser(JSON_CONFIG_FILE));
-
-    BOOST_CHECK_NO_THROW(parser->parse(singleKeywordFile.string()));
-}
 
 /***************** Testing non-recognized keywords ********************/
 BOOST_AUTO_TEST_CASE(parse_unknownkeywordWithnonstrictparsing_keywordmarked) {
-    ParserPtr parser(new Parser(JSON_CONFIG_FILE));
+    ParserPtr parser(new Parser());
     DeckPtr deck = parser->parse("testdata/integration_tests/someobscureelements.data", false);
     BOOST_CHECK_EQUAL(4U, deck->size());
     DeckKeywordConstPtr unknown = deck->getKeyword("GRUDINT");
@@ -172,7 +162,7 @@ BOOST_AUTO_TEST_CASE(parse_unknownkeywordWithnonstrictparsing_keywordmarked) {
 }
 
 BOOST_AUTO_TEST_CASE(parse_unknownkeywordWithstrictparsing_exceptionthrown) {
-    ParserPtr parser(new Parser(JSON_CONFIG_FILE));
+    ParserPtr parser(new Parser());
     BOOST_CHECK_THROW(parser->parse("testdata/integration_tests/someobscureelements.data", true), std::invalid_argument);
 }
 
