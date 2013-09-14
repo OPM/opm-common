@@ -40,10 +40,11 @@ void inlineKeyword(const boost::filesystem::path& file , std::ofstream& of) {
     if (ParserKeyword::validName(keyword)) {
         Json::JsonObject jsonKeyword(file);
         ParserKeywordConstPtr parserKeyword(new ParserKeyword(jsonKeyword));
+        std::string indent("   ");
         of << "{" << std::endl;
-        of << "ParserKeyword *";
-        parserKeyword->inlineNew(of , keyword);
-        of << "addKeyword( ParserKeywordConstPtr(" << keyword << "));" << std::endl;
+        of << indent << "ParserKeyword *";
+        parserKeyword->inlineNew(of , keyword , indent);
+        of << indent << "addKeyword( ParserKeywordConstPtr(" << keyword << "));" << std::endl;
         of << "}" << std::endl << std::endl;
     }
 }

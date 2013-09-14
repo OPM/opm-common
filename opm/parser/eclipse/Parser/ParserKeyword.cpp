@@ -235,7 +235,7 @@ namespace Opm {
     }
 
 
-    void ParserKeyword::inlineNew(std::ostream& os , const std::string& lhs) const {
+  void ParserKeyword::inlineNew(std::ostream& os , const std::string& lhs, const std::string& indent) const {
         switch(m_keywordSizeType) {
         case UNDEFINED:
             os << lhs << " = new ParserKeyword(\"" << m_name << "\");" << std::endl;
@@ -249,16 +249,16 @@ namespace Opm {
         }
 
         for (size_t i = 0; i < m_record->size(); i++) {
-            os << "{" << std::endl;
+            os << indent << "{" << std::endl;
             {
+                const std::string local_indent = indent + "   ";
                 ParserItemConstPtr item = m_record->get(i);
-                os << "    ParserItemConstPtr item(";
+                os << local_indent << "ParserItemConstPtr item(";
                 item->inlineNew(os);
                 os << ");" << std::endl;
-            
-                os << "    " << lhs << "->addItem(item);" << std::endl;
+                os << local_indent << lhs << "->addItem(item);" << std::endl;
             }
-            os << "}" << std::endl;
+            os << indent << "}" << std::endl;
         }
     }
 

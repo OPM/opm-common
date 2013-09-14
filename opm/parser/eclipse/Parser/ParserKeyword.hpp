@@ -54,7 +54,7 @@ namespace Opm {
         void addItem( ParserItemConstPtr item );
 
         bool equal(const ParserKeyword& other) const;
-        void inlineNew(std::ostream& os , const std::string& lhs) const;
+        void inlineNew(std::ostream& os , const std::string& lhs, const std::string& indent) const;
     private:
         std::pair<std::string,std::string> m_sizeDefinitionPair;
         std::string m_name;

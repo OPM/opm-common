@@ -45,7 +45,7 @@ void testKeyword(const boost::filesystem::path& file , std::ofstream& of) {
         Json::JsonObject jsonKeyword(file);
         ParserKeywordConstPtr parserKeyword(new ParserKeyword(jsonKeyword));
         of << "ParserKeyword * ";
-        parserKeyword->inlineNew(of , "inlineKeyword");
+        parserKeyword->inlineNew(of , "inlineKeyword" , "   ");
 
         of << "BOOST_CHECK( parserKeyword->equal( *inlineKeyword));" << std::endl;
         endTest(of);
