@@ -1,5 +1,3 @@
-file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/generated-source)
-
 add_subdirectory( Logger )
 add_subdirectory(Parser/tests)
 add_subdirectory(RawDeck/tests)
