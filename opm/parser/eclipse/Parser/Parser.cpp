@@ -185,19 +185,17 @@ namespace Opm {
         return false;
     }
 
-
     bool Parser::loadKeywordFromFile(const boost::filesystem::path& configFile) {
 
         try {
-               Json::JsonObject jsonKeyword(configFile);
-               ParserKeywordConstPtr parserKeyword(new ParserKeyword(jsonKeyword));
-               addKeyword(parserKeyword);
-               return true;
-            }
-        catch (...)
-            {
-                return false;
-            }
+            Json::JsonObject jsonKeyword(configFile);
+            ParserKeywordConstPtr parserKeyword(new ParserKeyword(jsonKeyword));
+            addKeyword(parserKeyword);
+            return true;
+        } 
+        catch (...) {
+            return false;
+        }
     }
 
 
