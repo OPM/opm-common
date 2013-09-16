@@ -1,4 +1,3 @@
-add_subdirectory( Logger )
 add_subdirectory(Parser/tests)
 add_subdirectory(RawDeck/tests)
 add_subdirectory(Deck/tests)
@@ -64,7 +63,7 @@ Parser/ParserItemTemplate.hpp
 
 
 add_library(Parser ${rawdeck_source} ${parser_source} ${deck_source})
-target_link_libraries(Parser opm-json Logger ${Boost_LIBRARIES})
+target_link_libraries(Parser opm-json ${Boost_LIBRARIES})
 
 install( TARGETS Parser DESTINATION ${CMAKE_INSTALL_LIBDIR} )
 install( FILES ${HEADER_FILES} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/opm/parser/eclipse)
