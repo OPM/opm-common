@@ -24,6 +24,11 @@
 
 namespace Opm {
 
+    ParserStringItem::ParserStringItem(const std::string& itemName) : ParserItem(itemName) {
+        m_default = defaultString();
+    }
+
+
     ParserStringItem::ParserStringItem(const std::string& itemName, ParserItemSizeEnum sizeType) : ParserItem(itemName, sizeType) {
         m_default = defaultString();
     }
@@ -34,14 +39,21 @@ namespace Opm {
     }
 
     ParserStringItem::ParserStringItem(const Json::JsonObject& jsonConfig) : ParserItem(jsonConfig) {
-        if (jsonConfig.has_item("default"))
-            {
-                m_default = jsonConfig.get_string("default");
-                m_defaultSet = true;
-            }
-        else
+        if (jsonConfig.has_item("default")) {
+            m_default = jsonConfig.get_string("default");
+            m_defaultSet = true;
+        } else
             m_default = defaultString();
     }
+
+
+
+    void ParserStringItem::setDefault(const std::string& defaultValue) {
+        m_default = defaultValue;
+        m_defaultSet = true;
+    }
+
+
 
     /// Scans the rawRecords data according to the ParserItems definition.
     /// returns a DeckItem object.

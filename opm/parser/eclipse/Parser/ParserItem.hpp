@@ -38,6 +38,7 @@ namespace Opm {
 
   class ParserItem {
   public:
+    ParserItem(const std::string& itemName);
     ParserItem(const std::string& itemName, ParserItemSizeEnum sizeType);
     ParserItem(const Json::JsonObject& jsonConfig);
     
@@ -48,9 +49,9 @@ namespace Opm {
     static int defaultInt();
     static std::string defaultString();
     static double defaultDouble();
+
     virtual bool equal(const ParserItem& other) const;
     virtual void inlineNew(std::ostream& os) const {}
-
     virtual ~ParserItem() {
     }
     

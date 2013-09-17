@@ -33,6 +33,13 @@ namespace Opm {
         m_defaultSet = false;
     }
 
+
+    ParserItem::ParserItem(const std::string& itemName) {
+        m_name.assign(itemName);
+        m_sizeType = SINGLE;
+        m_defaultSet = false;
+    }
+
     
     ParserItem::ParserItem(const Json::JsonObject& jsonConfig) {
         if (jsonConfig.has_item("name"))
@@ -44,8 +51,8 @@ namespace Opm {
             const std::string sizeTypeString = jsonConfig.get_string("size_type");
             m_sizeType = ParserItemSizeEnumFromString( sizeTypeString );
         } else
-            throw std::invalid_argument("Json config object missing \"size_type\": ... item");
-
+          m_sizeType = SINGLE;
+        
         m_defaultSet = false;
     }
 

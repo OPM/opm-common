@@ -43,6 +43,18 @@ BOOST_AUTO_TEST_CASE(Initialize) {
     BOOST_CHECK_NO_THROW(ParserDoubleItem item1("ITEM1", sizeType));
 }
 
+BOOST_AUTO_TEST_CASE(Initialize_DefaultSizeType) {
+    ParserIntItem item1(std::string("ITEM1"));
+    ParserStringItem item2(std::string("ITEM1"));
+    ParserDoubleItem item3(std::string("ITEM1"));
+
+    BOOST_CHECK_EQUAL( SINGLE , item1.sizeType());
+    BOOST_CHECK_EQUAL( SINGLE , item2.sizeType());
+    BOOST_CHECK_EQUAL( SINGLE , item3.sizeType());
+}
+
+
+
 BOOST_AUTO_TEST_CASE(Initialize_Default) {
     ParserItemSizeEnum sizeType = SINGLE;
     ParserIntItem item1("ITEM1", sizeType);
@@ -76,10 +88,12 @@ BOOST_AUTO_TEST_CASE(InitializeIntItem_FromJsonObject_missingName_throws) {
 }
 
 
-BOOST_AUTO_TEST_CASE(InitializeIntItem_FromJsonObject_missingSizeType_throws) {
-    Json::JsonObject jsonConfig("{\"name\": \"ITEM1\" , \"size_typeX\" : \"ALL\"}");
-    BOOST_CHECK_THROW( ParserIntItem item1( jsonConfig ) , std::invalid_argument );
+BOOST_AUTO_TEST_CASE(InitializeIntItem_FromJsonObject_defaultSizeType) {
+    Json::JsonObject jsonConfig("{\"name\": \"ITEM1\" }");
+    ParserIntItem item1( jsonConfig );
+    BOOST_CHECK_EQUAL( SINGLE , item1.sizeType());
 }
+
 
 
 BOOST_AUTO_TEST_CASE(InitializeIntItem_FromJsonObject) {
@@ -380,10 +394,6 @@ BOOST_AUTO_TEST_CASE(InitializeStringItem_FromJsonObject_missingName_throws) {
 }
 
 
-BOOST_AUTO_TEST_CASE(InitializeStringItem_FromJsonObject_missingSizeType_throws) {
-    Json::JsonObject jsonConfig("{\"name\": \"ITEM1\" , \"size_typeX\" : \"ALL\"}");
-    BOOST_CHECK_THROW( ParserStringItem item1( jsonConfig ) , std::invalid_argument );
-}
 
 
 BOOST_AUTO_TEST_CASE(InitializeStringItem_FromJsonObject) {

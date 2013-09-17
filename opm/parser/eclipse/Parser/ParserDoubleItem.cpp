@@ -36,21 +36,32 @@ namespace Opm
         m_default = defaultDouble();
     }
 
+  ParserDoubleItem::ParserDoubleItem(const std::string& itemName) : ParserItem(itemName)
+    {
+        m_default = defaultDouble();
+    }
+
+
     ParserDoubleItem::ParserDoubleItem(const std::string& itemName,
             ParserItemSizeEnum sizeType, double defaultValue) :
             ParserItem(itemName, sizeType)
     {
+        setDefault( defaultValue );
+    }
+
+    void ParserDoubleItem::setDefault(double defaultValue) {
         m_default = defaultValue;
         m_defaultSet = true;
     }
 
+
+
     ParserDoubleItem::ParserDoubleItem(const Json::JsonObject& jsonConfig) :
             ParserItem(jsonConfig)
     {
-        if (jsonConfig.has_item("default")) {
-            m_default = jsonConfig.get_double("default");
-            m_defaultSet = true;
-        } else
+        if (jsonConfig.has_item("default")) 
+            setDefault( jsonConfig.get_double("default") );
+        else
             m_default = defaultDouble();
     }
 
