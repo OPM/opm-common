@@ -101,11 +101,6 @@ BOOST_AUTO_TEST_CASE(loadKeywordsJSON_notArray_throw) {
     BOOST_CHECK_THROW(parser->loadKeywords( jsonConfig ) , std::invalid_argument);
 }
 
-BOOST_AUTO_TEST_CASE(empty_sizeReturns0) {
-    ParserPtr parser(new Parser());
-    BOOST_CHECK_EQUAL( 0U , parser->size());
-}
-
 
 
 BOOST_AUTO_TEST_CASE(loadKeywordsJSON_hasKeyword_returnstrue) {
@@ -117,8 +112,15 @@ BOOST_AUTO_TEST_CASE(loadKeywordsJSON_hasKeyword_returnstrue) {
 }
 
 
+BOOST_AUTO_TEST_CASE(empty_sizeReturns0) {
+    ParserPtr parser(new Parser( false ));
+    BOOST_CHECK_EQUAL( 0U , parser->size());
+}
+
+
+
 BOOST_AUTO_TEST_CASE(loadKeywordsJSON_manyKeywords_returnstrue) {
-    ParserPtr parser(new Parser());
+    ParserPtr parser(new Parser( false ));
     Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100 ,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"FLOAT\"}]}, {\"name\" : \"WWCT\", \"size\" : 0} , {\"name\" : \"EQUIL\" , \"size\" : 0}]");
     
     parser->loadKeywords( jsonConfig );
@@ -156,7 +158,7 @@ BOOST_AUTO_TEST_CASE(loadKeywordFromFile_invalidConfig_returnsFalse) {
 
 
 BOOST_AUTO_TEST_CASE(loadKeywordFromFile_validKeyword_returnsTrueHasKeyword) {
-    ParserPtr parser(new Parser());
+    ParserPtr parser(new Parser( false ));
     boost::filesystem::path configFile("testdata/json/BPR");
     BOOST_CHECK_EQUAL( true , parser->loadKeywordFromFile( configFile ));
     BOOST_CHECK_EQUAL( 1U , parser->size() );
@@ -166,13 +168,13 @@ BOOST_AUTO_TEST_CASE(loadKeywordFromFile_validKeyword_returnsTrueHasKeyword) {
 
 
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_directoryDoesNotexist_throws) {
-        ParserPtr parser(new Parser());
+        ParserPtr parser(new Parser(false));
         boost::filesystem::path configPath("path/does/not/exist");
         BOOST_CHECK_THROW(parser->loadKeywordsFromDirectory( configPath), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_notRecursive_allNames) {
-        ParserPtr parser(new Parser());
+        ParserPtr parser(new Parser(false));
         BOOST_CHECK_EQUAL(false , parser->hasKeyword("BPR"));
         boost::filesystem::path configPath("testdata/config/directory1");
         BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath, false , false));
@@ -183,7 +185,7 @@ BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_notRecursive_allNames) {
 
 
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_notRecursive_strictNames) {
-        ParserPtr parser(new Parser());
+        ParserPtr parser(new Parser(false));
         boost::filesystem::path configPath("testdata/config/directory1");
         BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath, false , true ));
         BOOST_CHECK(parser->hasKeyword("WWCT"));
@@ -193,7 +195,7 @@ BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_notRecursive_strictNames) {
 
 
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_Recursive_allNames) {
-        ParserPtr parser(new Parser());
+        ParserPtr parser(new Parser(false));
         BOOST_CHECK_EQUAL(false , parser->hasKeyword("BPR"));
         boost::filesystem::path configPath("testdata/config/directory1");
         BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath, true, false));
@@ -204,7 +206,7 @@ BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_Recursive_allNames) {
 
 
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_default) {
-        ParserPtr parser(new Parser());
+        ParserPtr parser(new Parser(false));
         BOOST_CHECK_EQUAL(false , parser->hasKeyword("BPR"));
         boost::filesystem::path configPath("testdata/config/directory1");
         BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath ));
