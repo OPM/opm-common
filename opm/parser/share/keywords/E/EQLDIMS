@@ -1,6 +1,6 @@
 {"name" : "EQLDIMS"  , "size" : 1 , "items": 
- [{"name" : "NTEQUL" , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 1},
-  {"name" : "DEPTH_NODES_P" , "size_type" : "SINGLE" , "value_type" : "INT", "default" : 100},
-  {"name" : "DEPTH_NODES_TAB" , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 20},
-  {"name" : "TRACER_TAB" , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 1},
-  {"name" : "TRACER_VD" , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 20}]}
+ [{"name" : "NTEQUL"          , "value_type" : "INT" , "default" : 1},
+  {"name" : "DEPTH_NODES_P"   , "value_type" : "INT", "default" : 100},
+  {"name" : "DEPTH_NODES_TAB" , "value_type" : "INT" , "default" : 20},
+  {"name" : "TRACER_TAB"      , "value_type" : "INT" , "default" : 1},
+  {"name" : "TRACER_VD"       , "value_type" : "INT" , "default" : 20}]}

@@ -1,15 +1,15 @@
 {"name" : "RADFIN4", "size" : 1,  "items" : 
 [
-    {"name" : "NAME", "size_type" : "SINGLE" , "value_type" : "STRING"},
-    {"name" : "I1", "size_type" : "SINGLE" , "value_type" : "INT"},
-    {"name" : "I2", "size_type" : "SINGLE" , "value_type" : "INT"},
-    {"name" : "J1", "size_type" : "SINGLE" , "value_type" : "INT"},
-    {"name" : "J2", "size_type" : "SINGLE" , "value_type" : "INT"},
-    {"name" : "K1", "size_type" : "SINGLE" , "value_type" : "INT"},
-    {"name" : "K2", "size_type" : "SINGLE" , "value_type" : "INT"},
-    {"name" : "NR", "size_type" : "SINGLE" , "value_type" : "INT"},
-    {"name" : "NTHETA", "size_type" : "SINGLE" , "value_type" : "INT"},
-    {"name" : "NZ", "size_type" : "SINGLE" , "value_type" : "INT"},
-    {"name" : "NWMAX", "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 1}
+    {"name" : "NAME"  , "value_type" : "STRING"},
+    {"name" : "I1"    , "value_type" : "INT"},
+    {"name" : "I2"    , "value_type" : "INT"},
+    {"name" : "J1"    , "value_type" : "INT"},
+    {"name" : "J2"    , "value_type" : "INT"},
+    {"name" : "K1"    , "value_type" : "INT"},
+    {"name" : "K2"    , "value_type" : "INT"},
+    {"name" : "NR"    , "value_type" : "INT"},
+    {"name" : "NTHETA", "value_type" : "INT"},
+    {"name" : "NZ"    , "value_type" : "INT"},
+    {"name" : "NWMAX" , "value_type" : "INT" , "default" : 1}
 ]
 }

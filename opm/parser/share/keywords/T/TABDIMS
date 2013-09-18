@@ -1,8 +1,8 @@
 {"name" : "TABDIMS", "size"  : 1, "items" : [
-     	{"name" : "NTSFUN" , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 1},
-     	{"name" : "NTPVT" , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 1},
-     	{"name" : "NSSFUN" , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 20},
-     	{"name" : "NPPVT" , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 20},
-     	{"name" : "NTFIP" , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 1},
-     	{"name" : "NRPVT" , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 20}
+        {"name" : "NTSFUN" , "value_type" : "INT" , "default" : 1},
+        {"name" : "NTPVT"  , "value_type" : "INT" , "default" : 1},
+        {"name" : "NSSFUN" , "value_type" : "INT" , "default" : 20},
+        {"name" : "NPPVT"  , "value_type" : "INT" , "default" : 20},
+        {"name" : "NTFIP"  , "value_type" : "INT" , "default" : 1},
+        {"name" : "NRPVT"  , "value_type" : "INT" , "default" : 20}
      ]}

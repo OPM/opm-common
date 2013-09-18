@@ -1,4 +1,4 @@
 {"name" : "BPR" , "items" : 
-      [{"name": "I" , "size_type" : "SINGLE" , "value_type" : "INT"}, 
-       {"name": "J" , "size_type" : "SINGLE" , "value_type" : "INT"}, 
-       {"name": "K" , "size_type" : "SINGLE" , "value_type" : "INT"}]}
+      [{"name": "I" , "value_type" : "INT"}, 
+       {"name": "J" , "value_type" : "INT"}, 
+       {"name": "K" , "value_type" : "INT"}]}

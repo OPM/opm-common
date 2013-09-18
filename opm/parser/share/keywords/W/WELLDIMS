@@ -1,15 +1,15 @@
      {"name" : "WELLDIMS", "size" : 1, "items" : [
-         {"name" : "MAXWELLS" , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 0},
-         {"name" : "MAXCONN"  , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 0},
-         {"name" : "MAXGROUPS"  , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 0},
-         {"name" : "MAX_GROUPSIZE"  , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 0},
-         {"name" : "MAX_STAGES"  , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 5},
-         {"name" : "MAX_STREAMS"  , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 10},
-         {"name" : "MAX_MIXTURES"  , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 5},
-         {"name" : "MAX_SEPARATORS"  , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 4},
-         {"name" : "MAX_MIXTURE_ITEMS"  , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 3},
-         {"name" : "MAX_COMPLETION_X"  , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 0},
-         {"name" : "MAX_WELLIST_PR_WELL"  , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 1},
-         {"name" : "MAX_DYNAMIC_WELLIST"  , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 1},
-         {"name" : "MAX_SECONDARY_WELLS"  , "size_type" : "SINGLE" , "value_type" : "INT" , "default" : 1}
+         {"name" : "MAXWELLS"             , "value_type" : "INT" , "default" : 0},
+         {"name" : "MAXCONN"              , "value_type" : "INT" , "default" : 0},
+         {"name" : "MAXGROUPS"            , "value_type" : "INT" , "default" : 0},
+         {"name" : "MAX_GROUPSIZE"        , "value_type" : "INT" , "default" : 0},
+         {"name" : "MAX_STAGES"           , "value_type" : "INT" , "default" : 5},
+         {"name" : "MAX_STREAMS"          , "value_type" : "INT" , "default" : 10},
+         {"name" : "MAX_MIXTURES"         , "value_type" : "INT" , "default" : 5},
+         {"name" : "MAX_SEPARATORS"       , "value_type" : "INT" , "default" : 4},
+         {"name" : "MAX_MIXTURE_ITEMS"    , "value_type" : "INT" , "default" : 3},
+         {"name" : "MAX_COMPLETION_X"     , "value_type" : "INT" , "default" : 0},
+         {"name" : "MAX_WELLIST_PR_WELL"  , "value_type" : "INT" , "default" : 1},
+         {"name" : "MAX_DYNAMIC_WELLIST"  , "value_type" : "INT" , "default" : 1},
+         {"name" : "MAX_SECONDARY_WELLS"  , "value_type" : "INT" , "default" : 1}
      ]}

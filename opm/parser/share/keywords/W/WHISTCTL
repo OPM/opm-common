@@ -1,4 +1,4 @@
 {"name" : "WHISTCTL", "size" : 1, "items" : [
-    {"name" : "CMODE" , "size_type" : "SINGLE" , "value_type" : "STRING" , "default" : "NONE" },
-    {"name" : "BPH_TERMINATE" , "size_type" : "SINGLE" , "value_type" : "STRING" , "default" : "NO"}
+    {"name" : "CMODE" , "value_type" : "STRING" , "default" : "NONE" },
+    {"name" : "BPH_TERMINATE" , "value_type" : "STRING" , "default" : "NO"}
 ]}
