@@ -36,18 +36,23 @@ namespace Opm
         m_default = defaultDouble();
     }
 
-  ParserDoubleItem::ParserDoubleItem(const std::string& itemName) : ParserItem(itemName)
+    ParserDoubleItem::ParserDoubleItem(const std::string& itemName) : ParserItem(itemName)
     {
         m_default = defaultDouble();
     }
 
 
-    ParserDoubleItem::ParserDoubleItem(const std::string& itemName,
-            ParserItemSizeEnum sizeType, double defaultValue) :
-            ParserItem(itemName, sizeType)
+    ParserDoubleItem::ParserDoubleItem(const std::string& itemName, double defaultValue) : ParserItem(itemName)
     {
         setDefault( defaultValue );
     }
+
+
+    ParserDoubleItem::ParserDoubleItem(const std::string& itemName, ParserItemSizeEnum sizeType, double defaultValue) : ParserItem(itemName, sizeType)
+    {
+        setDefault( defaultValue );
+    }
+
 
     void ParserDoubleItem::setDefault(double defaultValue) {
         m_default = defaultValue;

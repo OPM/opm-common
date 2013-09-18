@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_missingItemThrows) {
 
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withSizeOther) {
-    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : {\"keyword\" : \"Bjarne\" , \"item\": \"BjarneIgjen\"},  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"FLOAT\"}]}");
+    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : {\"keyword\" : \"Bjarne\" , \"item\": \"BjarneIgjen\"},  \"items\" :[{\"name\":\"ItemX\" ,  \"value_type\" : \"FLOAT\"}]}");
     ParserKeyword parserKeyword(jsonObject);
     const std::pair<std::string,std::string>& sizeKW = parserKeyword.getSizeDefinitionPair();
     BOOST_CHECK_EQUAL("BPR" , parserKeyword.getName());
@@ -139,15 +139,10 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_invalidItems_throws) {
 
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_ItemMissingName_throws) {
-    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100 , \"items\" : [{\"nameX\" : \"I\" , \"size_type\" : \"SINGLE\" , \"value_type\" : \"INT\"}]}");
+    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100 , \"items\" : [{\"nameX\" : \"I\"  , \"value_type\" : \"INT\"}]}");
     BOOST_CHECK_THROW(ParserKeyword parserKeyword(jsonObject) , std::invalid_argument);
 }
 
-
-BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_ItemMissingSizeType_throws) {
-    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100 , \"items\" : [{\"name\" : \"I\" , \"Xsize_type\" : \"SINGLE\" , \"value_type\" : \"INT\"}]}");
-    BOOST_CHECK_THROW(ParserKeyword parserKeyword(jsonObject) , std::invalid_argument);
-}
 
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_ItemMissingValueType_throws) {
@@ -167,7 +162,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_ItemInvalidEnum_throws) {
 
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObjectItemsOK) {
-    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100 , \"items\" : [{\"name\" : \"I\" , \"size_type\" : \"SINGLE\" , \"value_type\" : \"INT\"}]}");
+    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100 , \"items\" : [{\"name\" : \"I\", \"value_type\" : \"INT\"}]}");
     ParserKeyword parserKeyword(jsonObject);
     ParserRecordConstPtr record = parserKeyword.getRecord();
     ParserItemConstPtr item = record->get( 0 );
@@ -178,7 +173,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObjectItemsOK) {
 
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_sizeFromOther) {
-    Json::JsonObject jsonConfig("{\"name\": \"EQUILX\", \"size\" : {\"keyword\":\"EQLDIMS\" , \"item\" : \"NTEQUL\"},  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"FLOAT\"}]}");
+    Json::JsonObject jsonConfig("{\"name\": \"EQUILX\", \"size\" : {\"keyword\":\"EQLDIMS\" , \"item\" : \"NTEQUL\"},  \"items\" :[{\"name\":\"ItemX\" ,\"value_type\" : \"FLOAT\"}]}");
     BOOST_CHECK_NO_THROW( ParserKeyword parserKeyword(jsonConfig) );
 }
 

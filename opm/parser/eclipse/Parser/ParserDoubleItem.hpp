@@ -34,6 +34,7 @@ namespace Opm {
     public:
         ParserDoubleItem(const std::string& itemName);
         ParserDoubleItem(const std::string& itemName, ParserItemSizeEnum sizeType);
+        ParserDoubleItem(const std::string& itemName, double defaultValue);
         ParserDoubleItem(const std::string& itemName, ParserItemSizeEnum sizeType, double defaultValue);
         ParserDoubleItem( const Json::JsonObject& jsonConfig);
 
