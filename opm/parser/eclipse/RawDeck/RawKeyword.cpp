@@ -89,11 +89,10 @@ namespace Opm {
 
     bool RawKeyword::tryParseKeyword(const std::string& keywordCandidate, std::string& result) {
         result = boost::trim_right_copy(keywordCandidate.substr(0, 8));
-        if (isValidKeyword(result)) {
-            Logger::debug("KEYWORD     <" + keywordCandidate + ">");
+        if (isValidKeyword(result))
             return true;
-        }
-        return false;
+        else
+            return false;
     }
 
     bool RawKeyword::isValidKeyword(const std::string& keywordCandidate) {

@@ -1,4 +1,3 @@
-add_subdirectory( Logger )
 add_subdirectory(Parser/tests)
 add_subdirectory(RawDeck/tests)
 add_subdirectory(Deck/tests)
@@ -88,7 +87,7 @@ add_custom_command( OUTPUT ${PROJECT_BINARY_DIR}/generated-source/DefaultKeyword
 #-----------------------------------------------------------------
 
 add_library(Parser ${rawdeck_source} ${parser_source} ${deck_source})
-target_link_libraries(Parser opm-json Logger ${Boost_LIBRARIES})
+target_link_libraries(Parser opm-json ${Boost_LIBRARIES})
 
 
 
