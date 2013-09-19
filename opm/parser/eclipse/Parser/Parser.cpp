@@ -20,7 +20,6 @@
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
-#include <opm/parser/eclipse/Logger/Logger.hpp>
 #include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
@@ -216,39 +215,6 @@ namespace Opm {
                 }
             }
         }
-    }
-
-    void Parser::populateDefaultKeywords() {
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("GRIDUNIT", 1)));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("INCLUDE", 1)));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("RADFIN4", 1)));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("DIMENS", 1)));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("START", 1)));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("GRIDOPTS", 1)));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("ENDSCALE", 1)));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("EQLOPTS", 1)));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("TABDIMS", 1)));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("EQLDIMS", 1)));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("REGDIMS", 1)));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("FAULTDIM", 1)));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("WELLDIMS", 1)));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("VFPPDIMS", 1)));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("RPTSCHED", 1)));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("WHISTCTL", 1)));
-
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("SUMMARY", 0)));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("TITLE", 0)));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("RUNSPEC", 0)));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("METRIC", 0)));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("SCHEDULE", 0)));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("SKIPREST", 0)));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("NOECHO", 0)));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("END", 0)));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("OIL", 0)));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("GAS", 0)));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("WATER", 0)));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("DISGAS", 0)));
-        addKeyword(ParserKeywordConstPtr(new ParserKeyword("VAPOIL", 0)));
     }
 
 } // namespace Opm

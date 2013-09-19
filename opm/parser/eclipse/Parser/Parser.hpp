@@ -26,7 +26,6 @@
 
 #include <opm/json/JsonObject.hpp>
 
-#include <opm/parser/eclipse/Logger/Logger.hpp>
 #include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
@@ -59,7 +58,6 @@ namespace Opm {
         std::map<std::string, ParserKeywordConstPtr> m_parserKeywords;
         bool tryParseKeyword(const DeckConstPtr deck ,  std::ifstream& inputstream , RawKeywordPtr& rawKeyword, bool strictParsing) const;
         void parseFile(DeckPtr deck , const boost::filesystem::path& file, const boost::filesystem::path& rootPath, bool strictParsing) const;
-        void populateDefaultKeywords();
         RawKeywordPtr createRawKeyword(const DeckConstPtr deck , const std::string& keywordString, bool strictParsing) const;
         void addDefaultKeywords();
     };
