@@ -20,8 +20,9 @@
 #ifndef DECKDOUBLEITEM_HPP
 #define DECKDOUBLEITEM_HPP
 
-#include <deque>
+#include <vector>
 #include <string>
+#include <deque>
 #include <boost/shared_ptr.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 
@@ -38,7 +39,7 @@ namespace Opm {
         
         size_t size() const;
     private:
-        std::deque<double> m_data;
+        std::vector<double> m_data;
     };
 
     typedef boost::shared_ptr<DeckDoubleItem> DeckDoubleItemPtr;
