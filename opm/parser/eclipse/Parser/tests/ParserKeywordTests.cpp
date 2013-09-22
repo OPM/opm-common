@@ -22,9 +22,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/json/JsonObject.hpp>
-#include "opm/parser/eclipse/Parser/ParserKeyword.hpp"
-#include "opm/parser/eclipse/Parser/ParserIntItem.hpp"
-#include "opm/parser/eclipse/Parser/ParserItem.hpp"
+#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
+#include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
+#include <opm/parser/eclipse/Parser/ParserItem.hpp>
 
 
 
@@ -79,6 +79,45 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_validName) {
 
 
 
+BOOST_AUTO_TEST_CASE(AddDataKeyword_correctlyConfigured) {
+    ParserKeyword parserKeyword("PORO" , 1);
+    ParserIntItemConstPtr item = ParserIntItemConstPtr(new ParserIntItem( "ACTNUM" , ALL , 0 ));
+    BOOST_CHECK_EQUAL( false , parserKeyword.isDataKeyword() );
+    parserKeyword.addDataItem( item );
+    BOOST_CHECK_EQUAL( true , parserKeyword.isDataKeyword() );
+    
+    BOOST_CHECK_EQUAL(true , parserKeyword.hasFixedSize( ));
+    BOOST_CHECK_EQUAL(1U , parserKeyword.getFixedSize() );
+    BOOST_CHECK_EQUAL(1U , parserKeyword.numItems() );
+}
+
+
+BOOST_AUTO_TEST_CASE(WrongConstructor_addDataItem_throws) {
+    ParserKeyword parserKeyword("PORO");
+    ParserIntItemConstPtr dataItem = ParserIntItemConstPtr(new ParserIntItem( "ACTNUM" , ALL , 0 ));
+    BOOST_CHECK_THROW( parserKeyword.addDataItem( dataItem ) , std::invalid_argument);
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(MixingDataAndItems_throws1) {
+    ParserKeyword parserKeyword("PORO" , 1);
+    ParserIntItemConstPtr dataItem = ParserIntItemConstPtr(new ParserIntItem( "ACTNUM" , ALL , 0 ));
+    ParserIntItemConstPtr item     = ParserIntItemConstPtr(new ParserIntItem( "XXX" , ALL , 0 ));
+    parserKeyword.addDataItem( dataItem );
+    BOOST_CHECK_THROW( parserKeyword.addItem( item ) , std::invalid_argument);
+    BOOST_CHECK_THROW( parserKeyword.addItem( dataItem ) , std::invalid_argument);
+}
+
+
+BOOST_AUTO_TEST_CASE(MixingDataAndItems_throws2) {
+    ParserKeyword parserKeyword("PORO" , 1);
+    ParserIntItemConstPtr dataItem = ParserIntItemConstPtr(new ParserIntItem( "ACTNUM" , ALL , 0 ));
+    ParserIntItemConstPtr item     = ParserIntItemConstPtr(new ParserIntItem( "XXX" , ALL , 0 ));
+    parserKeyword.addItem( item );
+    BOOST_CHECK_THROW( parserKeyword.addDataItem( dataItem ) , std::invalid_argument);
+}
 
 /*****************************************************************/
 /* json */
@@ -110,6 +149,14 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_missingItemThrows) {
     Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100}");
     BOOST_CHECK_THROW( ParserKeyword parserKeyword(jsonObject) , std::invalid_argument);
 }
+
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_nosize_notItems_OK) {
+    Json::JsonObject jsonObject("{\"name\": \"BPR\"}");
+    ParserKeyword parserKeyword(jsonObject);
+    BOOST_CHECK_EQUAL( true , parserKeyword.hasFixedSize() );
+    BOOST_CHECK_EQUAL( 0U , parserKeyword.getFixedSize());
+}
+
 
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withSizeOther) {
@@ -176,6 +223,30 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_sizeFromOther) {
     Json::JsonObject jsonConfig("{\"name\": \"EQUILX\", \"size\" : {\"keyword\":\"EQLDIMS\" , \"item\" : \"NTEQUL\"},  \"items\" :[{\"name\":\"ItemX\" ,\"value_type\" : \"FLOAT\"}]}");
     BOOST_CHECK_NO_THROW( ParserKeyword parserKeyword(jsonConfig) );
 }
+
+
+BOOST_AUTO_TEST_CASE(Default_NotData) {
+    ParserKeyword parserKeyword("BPR");
+    BOOST_CHECK_EQUAL( false , parserKeyword.isDataKeyword());
+}
+
+
+BOOST_AUTO_TEST_CASE(AddDataKeywordFromJson_correctlyConfigured) {
+    Json::JsonObject jsonConfig("{\"name\": \"ACTNUM\", \"data\" : {\"value_type\": \"INT\" , \"default\" : 100}}");
+    ParserKeyword parserKeyword(jsonConfig);
+    ParserRecordConstPtr parserRecord = parserKeyword.getRecord();
+    ParserItemConstPtr item = parserRecord->get(0);
+
+
+    BOOST_CHECK_EQUAL( true , parserKeyword.isDataKeyword());
+    BOOST_CHECK_EQUAL(true , parserKeyword.hasFixedSize( ));
+    BOOST_CHECK_EQUAL(1U , parserKeyword.getFixedSize() );
+    BOOST_CHECK_EQUAL(1U , parserKeyword.numItems() );
+
+    BOOST_CHECK_EQUAL( item->name() , parserKeyword.getName());
+    BOOST_CHECK_EQUAL( ALL , item->sizeType() );
+}
+
 
 
 

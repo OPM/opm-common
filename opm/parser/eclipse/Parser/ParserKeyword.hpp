@@ -52,7 +52,8 @@ namespace Opm {
         enum ParserKeywordSizeEnum getSizeType() const;
         const std::pair<std::string,std::string>& getSizeDefinitionPair() const;
         void addItem( ParserItemConstPtr item );
-
+        void addDataItem( ParserItemConstPtr item );
+        bool isDataKeyword() const;
         bool equal(const ParserKeyword& other) const;
         void inlineNew(std::ostream& os , const std::string& lhs, const std::string& indent) const;
     private:
@@ -61,7 +62,10 @@ namespace Opm {
         ParserRecordPtr m_record;
         enum ParserKeywordSizeEnum m_keywordSizeType;
         size_t m_fixedSize;
+        bool m_isDataKeyword;
         
+        void initData( const Json::JsonObject& jsonConfig );
+        void initSize( const Json::JsonObject& jsonConfig );
         void initSizeKeyword( const std::string& sizeKeyword, const std::string& sizeItem);
         void commonInit(const std::string& name);
         void addItems( const Json::JsonObject& jsonConfig);

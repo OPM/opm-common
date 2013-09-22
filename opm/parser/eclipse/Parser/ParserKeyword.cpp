@@ -36,13 +36,11 @@ namespace Opm {
 
     ParserKeyword::ParserKeyword(const std::string& name) {
         commonInit(name);
-        m_keywordSizeType = UNDEFINED;
     }
 
 
     ParserKeyword::ParserKeyword(const char * name) {
         commonInit(name);
-        m_keywordSizeType = UNDEFINED;
     }
 
 
@@ -58,13 +56,9 @@ namespace Opm {
         initSizeKeyword( sizeKeyword , sizeItem );
     }
 
-    
-    ParserKeyword::ParserKeyword(const Json::JsonObject& jsonConfig) {
-        if (jsonConfig.has_item("name")) {
-            commonInit(jsonConfig.get_string("name"));
-        } else
-            throw std::invalid_argument("Json object is missing name: property");
 
+    void ParserKeyword::initSize( const Json::JsonObject& jsonConfig ) {
+        // The number of record has been set explicitly with the size: keyword
         if (jsonConfig.has_item("size")) {
             Json::JsonObject sizeObject = jsonConfig.get_item("size");
             
@@ -76,16 +70,42 @@ namespace Opm {
                 std::string sizeItem = sizeObject.get_string("item");
                 initSizeKeyword( sizeKeyword , sizeItem);
             }
+        } else {
+            if (jsonConfig.has_item("items"))
+                // The number of records is undetermined - the keyword will be '/' terminated.
+                m_keywordSizeType = UNDEFINED;
+            else {
+                m_keywordSizeType = FIXED;
+                if (jsonConfig.has_item("data"))
+                    m_fixedSize = 1;
+                else
+                    m_fixedSize = 0;
+            }
+        }
+    }
+
+
+    
+    ParserKeyword::ParserKeyword(const Json::JsonObject& jsonConfig) {
+        if (jsonConfig.has_item("name")) {
+            commonInit(jsonConfig.get_string("name"));
         } else
-            m_keywordSizeType = UNDEFINED;
+            throw std::invalid_argument("Json object is missing name: property");
+
+        initSize( jsonConfig );
 
         if (jsonConfig.has_item("items")) 
             addItems( jsonConfig );
+        
+        if (jsonConfig.has_item("data"))
+            initData( jsonConfig );
 
-        if (m_fixedSize > 0 || m_keywordSizeType != FIXED)
-                if (numItems() == 0)
-                        throw std::invalid_argument("Json object for keyword: " + jsonConfig.get_string("name") + "is missing items specifier");
-
+        if (m_fixedSize == 0 && m_keywordSizeType == FIXED)
+            return;
+        else  {
+            if (numItems() == 0)
+                throw std::invalid_argument("Json object for keyword: " + jsonConfig.get_string("name") + " is missing items specifier");
+        }
     }
 
     
@@ -117,13 +137,33 @@ namespace Opm {
     void ParserKeyword::commonInit(const std::string& name) {
         if (!validName(name))
             throw std::invalid_argument("Invalid name: " + name + "keyword must be all upper case, max 8 characters. Starting with character.");
-
+        
+        m_keywordSizeType = UNDEFINED;
+        m_isDataKeyword = false;
         m_name = name;
         m_record = ParserRecordPtr(new ParserRecord);
     }
 
+
+
+
     void ParserKeyword::addItem( ParserItemConstPtr item ) {
+        if (m_isDataKeyword)
+            throw std::invalid_argument("Keyword:" + getName() + " is already configured as data keyword - can not add more items.");
+        
         m_record->addItem( item );
+    }
+
+    
+    void ParserKeyword::addDataItem( ParserItemConstPtr item ) {
+        if (m_record->size())
+            throw std::invalid_argument("Keyword:" + getName() + " already has items - can not add a data item.");
+        
+        if ((m_fixedSize == 1U) && (m_keywordSizeType == FIXED)) {
+            addItem( item );
+            m_isDataKeyword = true;
+        } else
+            throw std::invalid_argument("Keyword:" + getName() + ". When calling addDataItem() the keyword must be configured with fixed size == 1.");
     }
 
 
@@ -164,6 +204,56 @@ namespace Opm {
         } else
             throw std::invalid_argument("The items: object must be an array");            
     }
+
+
+    void ParserKeyword::initData(const Json::JsonObject& jsonConfig) {
+        m_fixedSize = 1U;
+        m_keywordSizeType = FIXED;
+
+        const Json::JsonObject dataConfig = jsonConfig.get_item("data");
+        if (dataConfig.has_item("value_type")) {
+            ParserValueTypeEnum valueType = ParserValueTypeEnumFromString( dataConfig.get_string("value_type") );
+            const std::string itemName( getName() );
+            bool hasDefault = dataConfig.has_item("default");
+            
+            switch( valueType ) {
+                case INT:
+                {
+                    ParserIntItemPtr item = ParserIntItemPtr(new ParserIntItem( itemName , ALL ));
+                    if (hasDefault) {
+                        int defaultValue = dataConfig.get_int("default");
+                        item->setDefault( defaultValue );
+                    }
+                    addDataItem( item );
+                }
+                break;
+            case STRING:
+                {
+                    ParserStringItemPtr item = ParserStringItemPtr(new ParserStringItem( itemName , ALL ));
+                    if (hasDefault) {
+                        std::string defaultValue = dataConfig.get_string("default");
+                        item->setDefault( defaultValue );
+                    }
+                    addDataItem( item );
+                }
+                break;
+            case FLOAT:
+                {
+                    ParserDoubleItemPtr item = ParserDoubleItemPtr(new ParserDoubleItem( itemName , ALL ));
+                    if (hasDefault) {
+                        double defaultValue = dataConfig.get_double("default");
+                        item->setDefault( defaultValue );
+                    }
+                    addDataItem( item );
+                }
+                break;
+            default:
+                throw std::invalid_argument("Not implemented.");
+            } 
+        } else
+            throw std::invalid_argument("Json config object missing \"value_type\": ... item");            
+    }
+
 
     ParserRecordPtr ParserKeyword::getRecord() const {
         return m_record;
@@ -208,10 +298,15 @@ namespace Opm {
         return m_sizeDefinitionPair;
     }
 
+    bool ParserKeyword::isDataKeyword() const {
+        return m_isDataKeyword;
+    }
+
     bool ParserKeyword::equal(const ParserKeyword& other) const {
         if ((m_name == other.m_name) &&
             (m_record->equal( *(other.m_record) )) &&
-            (m_keywordSizeType == other.m_keywordSizeType))
+            (m_keywordSizeType == other.m_keywordSizeType) &&
+            (m_isDataKeyword == other.m_isDataKeyword))
             {
                 bool equal = false;
                 switch(m_keywordSizeType) {
@@ -256,7 +351,13 @@ namespace Opm {
                 os << local_indent << "ParserItemConstPtr item(";
                 item->inlineNew(os);
                 os << ");" << std::endl;
-                os << local_indent << lhs << "->addItem(item);" << std::endl;
+                {
+                    std::string addItemMethod = "addItem";
+                    if (m_isDataKeyword)
+                        addItemMethod = "addDataItem";
+                    
+                    os << local_indent << lhs << "->" << addItemMethod << "(item);" << std::endl;
+                }
             }
             os << indent << "}" << std::endl;
         }
