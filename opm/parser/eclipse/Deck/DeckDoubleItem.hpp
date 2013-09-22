@@ -32,6 +32,7 @@ namespace Opm {
     public:
         DeckDoubleItem(std::string name) : DeckItem(name) {}
         double getDouble(size_t index) const;
+        const std::vector<double>& getDoubleData() const;
         
         void push_back(std::deque<double> data , size_t items);
         void push_back(std::deque<double> data);

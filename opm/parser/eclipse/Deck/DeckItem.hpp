@@ -22,6 +22,8 @@
 
 #include <stdexcept>
 #include <string>
+#include <vector>
+
 #include <boost/shared_ptr.hpp>
 
 namespace Opm {
@@ -48,6 +50,21 @@ namespace Opm {
         virtual std::string getString(size_t index) const {
             throw std::logic_error("This implementation of DeckItem does not support string");
         }
+
+        
+
+        virtual const std::vector<int>& getIntData( ) const {
+            throw std::logic_error("This implementation of DeckItem does not support int");
+        };
+
+        virtual const std::vector<double>& getDoubleData() const {
+            throw std::logic_error("This implementation of DeckItem does not support double");
+        };
+
+        virtual const std::vector<std::string>& getStringData() const {
+            throw std::logic_error("This implementation of DeckItem does not support string");
+        }
+
 
         virtual ~DeckItem() {
         }

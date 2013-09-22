@@ -17,6 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <vector>
+
 #include <boost/lexical_cast.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
@@ -29,6 +31,11 @@ namespace Opm {
         } else
             throw std::out_of_range("Out of range, index must be lower than " + boost::lexical_cast<std::string>(m_data.size()));
     }
+
+    const std::vector<std::string>& DeckStringItem::getStringData() const {
+        return m_data;
+    }
+
 
     void DeckStringItem::push_back(std::deque<std::string> data, size_t items) {
         for (size_t i = 0; i < items; i++) {

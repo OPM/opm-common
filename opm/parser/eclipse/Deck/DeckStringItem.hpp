@@ -32,6 +32,7 @@ namespace Opm {
     public:
         DeckStringItem(std::string name) : DeckItem(name) {}
         std::string getString(size_t index) const;
+        const std::vector<std::string>& getStringData() const;
 
         void push_back(std::deque<std::string> data , size_t items);
         void push_back(std::deque<std::string> data);

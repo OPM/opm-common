@@ -32,6 +32,8 @@ namespace Opm {
     public:
         DeckIntItem(std::string name) : DeckItem(name) {}
         int getInt(size_t index) const;
+        const std::vector<int>& getIntData() const;
+
 
         void push_back(std::deque<int> data , size_t items);
         void push_back(std::deque<int> data);
