@@ -36,7 +36,7 @@ namespace Opm {
         void addItem(DeckItemConstPtr deckItem);
         DeckItemConstPtr getItem(size_t index) const;
         DeckItemConstPtr getItem(const std::string& name) const;
-
+        DeckItemConstPtr getDataItem() const;
     private:
         std::vector<DeckItemConstPtr> m_items;
         std::map<std::string, DeckItemConstPtr> m_itemMap;

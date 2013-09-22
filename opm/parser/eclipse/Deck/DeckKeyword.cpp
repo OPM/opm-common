@@ -53,5 +53,36 @@ namespace Opm {
         } else
             throw std::range_error("Index out of range");
     }
+
+
+    DeckRecordConstPtr DeckKeyword::getDataRecord() const {
+        if (m_recordList.size() == 1)
+            return getRecord(0);
+        else
+            throw std::range_error("Not a data keyword ?");
+    }
+
+    
+
+    const std::vector<int>& DeckKeyword::getIntData() const {
+        DeckRecordConstPtr record = getDataRecord();
+        DeckItemConstPtr item = record->getDataItem();
+        return item->getIntData();
+    }
+
+
+    const std::vector<std::string>& DeckKeyword::getStringData() const {
+        DeckRecordConstPtr record = getDataRecord();
+        DeckItemConstPtr item = record->getDataItem();
+        return item->getStringData();
+    }
+
+
+    const std::vector<double>& DeckKeyword::getDoubleData() const {
+        DeckRecordConstPtr record = getDataRecord();
+        DeckItemConstPtr item = record->getDataItem();
+        return item->getDoubleData();
+    }
+
 }
 

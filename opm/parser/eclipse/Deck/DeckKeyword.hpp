@@ -6,7 +6,7 @@
  */
 
 #ifndef DECKKEYWORD_HPP
-#define	DECKKEYWORD_HPP
+#define DECKKEYWORD_HPP
 
 #include <string>
 #include <vector>
@@ -25,8 +25,13 @@ namespace Opm {
         size_t size() const;
         void addRecord(DeckRecordConstPtr record);
         DeckRecordConstPtr getRecord(size_t index) const;
+        DeckRecordConstPtr getDataRecord() const;
         bool isKnown() const;
         
+        const std::vector<int>& getIntData() const;
+        const std::vector<double>& getDoubleData() const;
+        const std::vector<std::string>& getStringData() const;
+
     private:
         std::string m_keywordName;
         std::vector<DeckRecordConstPtr> m_recordList;
@@ -37,5 +42,5 @@ namespace Opm {
     typedef boost::shared_ptr<const DeckKeyword> DeckKeywordConstPtr;
 }
 
-#endif	/* DECKKEYWORD_HPP */
+#endif  /* DECKKEYWORD_HPP */
 

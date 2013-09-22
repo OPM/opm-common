@@ -56,6 +56,14 @@ namespace Opm {
             return m_itemMap.find(name)->second;
     }
 
+
+    DeckItemConstPtr DeckRecord::getDataItem() const {
+        if (m_items.size() == 1)
+            return getItem(0);
+        else
+            throw std::range_error("Not a data keyword ?");
+    }
+
 }
 
 
