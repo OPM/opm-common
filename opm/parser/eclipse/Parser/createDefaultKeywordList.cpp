@@ -38,14 +38,25 @@ void endFunction(std::ofstream& of) {
 void inlineKeyword(const boost::filesystem::path& file , std::ofstream& of) {
     std::string keyword(file.filename().string());
     if (ParserKeyword::validName(keyword)) {
-        Json::JsonObject jsonKeyword(file);
-        ParserKeywordConstPtr parserKeyword(new ParserKeyword(jsonKeyword));
-        std::string indent("   ");
-        of << "{" << std::endl;
-        of << indent << "ParserKeyword *";
-        parserKeyword->inlineNew(of , keyword , indent);
-        of << indent << "addKeyword( ParserKeywordConstPtr(" << keyword << "));" << std::endl;
-        of << "}" << std::endl << std::endl;
+        Json::JsonObject * jsonKeyword;
+        try {
+            jsonKeyword = new Json::JsonObject(file);
+        } catch(...) {
+            std::cerr << "Parsing json config file: " << file.string() << " failed - keyword skipped." << std::endl;
+            return;
+        }
+
+        {
+            ParserKeywordConstPtr parserKeyword(new ParserKeyword(*jsonKeyword));
+            std::string indent("   ");
+            of << "{" << std::endl;
+            of << indent << "ParserKeyword *";
+            parserKeyword->inlineNew(of , keyword , indent);
+            of << indent << "addKeyword( ParserKeywordConstPtr(" << keyword << "));" << std::endl;
+            of << "}" << std::endl << std::endl;
+            
+            delete jsonKeyword;
+        }
     }
 }
 
