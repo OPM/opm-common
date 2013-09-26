@@ -1,0 +1,4 @@
+{"name" : "COPY" , "items" : [
+        {"name" : "src", "value_type" : "STRING"},
+        {"name" : "target", "value_type" : "STRING"}]}
+        

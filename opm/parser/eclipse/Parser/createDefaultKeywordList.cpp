@@ -54,7 +54,8 @@ void inlineKeyword(const boost::filesystem::path& file , std::ofstream& of) {
             parserKeyword->inlineNew(of , keyword , indent);
             of << indent << "addKeyword( ParserKeywordConstPtr(" << keyword << "));" << std::endl;
             of << "}" << std::endl << std::endl;
-            
+
+            std::cout << "Creating keyword: " << file.filename() << std::endl;
             delete jsonKeyword;
         }
     }
