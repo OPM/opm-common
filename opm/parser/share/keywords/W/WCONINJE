@@ -1,0 +1,16 @@
+{"name" : "WCONINJE" , "items" : [
+    {"name" : "well_name"    , "value_type" : "STRING" },
+    {"name" : "type"         , "value_type" : "STRING" },
+    {"name" : "status"       , "value_type" : "STRING" , "default" : "OPEN"},
+    {"name" : "CMODE"        , "value_type" : "STRING" },
+    {"name" : "surface_flow_target" , "value_type" : "FLOAT"},
+    {"name" : "resv_flow_target" , "value_type" : "FLOAT"},
+    {"name" : "bhp_target" , "value_type" : "FLOAT"},
+    {"name" : "thp_target" , "value_type" : "FLOAT"},
+    {"name" : "VFP_TABLE" , "value_type" : "INT" , "default" : 0},
+    {"name" : "VAPOIL_C" , "value_type" : "FLOAT" , "default" : 0},
+    {"name" : "GAS_STEAM_RATIO" , "value_type" : "FLOAT" , "default" : 0},
+    {"name" : "SURFACE_OIL_FRACTION" , "value_type" : "FLOAT" , "default" : 0},
+    {"name" : "SURFACE_GAS_FRACTION" , "value_type" : "FLOAT" , "default" : 0},
+    {"name" : "OIL_STEAM_RATIO" , "value_type" : "FLOAT" , "default" : 0}
+]}
