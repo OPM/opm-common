@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(TestItemSizeEnumLoop) {
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(TestKeywordSizeEnum2String) {
-    BOOST_CHECK_EQUAL( "UNDEFINED" , ParserKeywordSizeEnum2String(UNDEFINED));
+    BOOST_CHECK_EQUAL( "SLASH_TERMINATED" , ParserKeywordSizeEnum2String(SLASH_TERMINATED));
     BOOST_CHECK_EQUAL( "FIXED"     , ParserKeywordSizeEnum2String(FIXED));
 }
 
@@ -58,17 +58,17 @@ BOOST_AUTO_TEST_CASE(TestKeywordSizeEnum2String) {
 BOOST_AUTO_TEST_CASE(TestKeywordSizeEnumFromString) {
     BOOST_CHECK_THROW( ParserKeywordSizeEnumFromString("XXX") , std::invalid_argument );
     BOOST_CHECK_EQUAL( FIXED     , ParserKeywordSizeEnumFromString("FIXED"));
-    BOOST_CHECK_EQUAL( UNDEFINED , ParserKeywordSizeEnumFromString("UNDEFINED"));
+    BOOST_CHECK_EQUAL( SLASH_TERMINATED , ParserKeywordSizeEnumFromString("SLASH_TERMINATED"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(TestKeywordSizeEnumLoop) {
     BOOST_CHECK_EQUAL( FIXED     , ParserKeywordSizeEnumFromString( ParserKeywordSizeEnum2String( FIXED ) ));
-    BOOST_CHECK_EQUAL( UNDEFINED , ParserKeywordSizeEnumFromString( ParserKeywordSizeEnum2String( UNDEFINED ) ));
+    BOOST_CHECK_EQUAL( SLASH_TERMINATED , ParserKeywordSizeEnumFromString( ParserKeywordSizeEnum2String( SLASH_TERMINATED ) ));
     
     BOOST_CHECK_EQUAL( "FIXED"     , ParserKeywordSizeEnum2String(ParserKeywordSizeEnumFromString(  "FIXED" ) ));
-    BOOST_CHECK_EQUAL( "UNDEFINED" , ParserKeywordSizeEnum2String(ParserKeywordSizeEnumFromString(  "UNDEFINED" ) ));
+    BOOST_CHECK_EQUAL( "SLASH_TERMINATED" , ParserKeywordSizeEnum2String(ParserKeywordSizeEnumFromString(  "SLASH_TERMINATED" ) ));
 }
 
 

@@ -73,7 +73,7 @@ namespace Opm {
         } else {
             if (jsonConfig.has_item("items"))
                 // The number of records is undetermined - the keyword will be '/' terminated.
-                m_keywordSizeType = UNDEFINED;
+                m_keywordSizeType = SLASH_TERMINATED;
             else {
                 m_keywordSizeType = FIXED;
                 if (jsonConfig.has_item("data"))
@@ -138,7 +138,7 @@ namespace Opm {
         if (!validName(name))
             throw std::invalid_argument("Invalid name: " + name + "keyword must be all upper case, max 8 characters. Starting with character.");
         
-        m_keywordSizeType = UNDEFINED;
+        m_keywordSizeType = SLASH_TERMINATED;
         m_isDataKeyword = false;
         m_name = name;
         m_record = ParserRecordPtr(new ParserRecord);
@@ -314,7 +314,7 @@ namespace Opm {
                     if (m_fixedSize == other.m_fixedSize)
                         equal = true;
                     break;
-                case UNDEFINED:
+                case SLASH_TERMINATED:
                     equal = true;
                     break;
                 case OTHER:
@@ -332,7 +332,7 @@ namespace Opm {
 
   void ParserKeyword::inlineNew(std::ostream& os , const std::string& lhs, const std::string& indent) const {
         switch(m_keywordSizeType) {
-        case UNDEFINED:
+        case SLASH_TERMINATED:
             os << lhs << " = new ParserKeyword(\"" << m_name << "\");" << std::endl;
             break;
         case FIXED:

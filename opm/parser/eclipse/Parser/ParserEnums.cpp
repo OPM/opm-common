@@ -52,8 +52,8 @@ namespace Opm {
 
     const std::string ParserKeywordSizeEnum2String(ParserKeywordSizeEnum enumValue) {
         switch (enumValue) {
-        case UNDEFINED:
-            return "UNDEFINED";
+        case SLASH_TERMINATED:
+            return "SLASH_TERMINATED";
             break;
         case FIXED:
             return "FIXED";
@@ -66,8 +66,8 @@ namespace Opm {
 
 
     ParserKeywordSizeEnum ParserKeywordSizeEnumFromString(const std::string& stringValue) {
-        if (stringValue == "UNDEFINED")
-            return UNDEFINED;
+        if (stringValue == "SLASH_TERMINATED")
+            return SLASH_TERMINATED;
         else if (stringValue == "FIXED")
             return FIXED;
         else

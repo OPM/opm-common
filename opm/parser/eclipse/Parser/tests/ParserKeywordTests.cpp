@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(NamedInit) {
 BOOST_AUTO_TEST_CASE(ParserKeyword_default_SizeTypedefault) {
     std::string keyword("KEYWORD");
     ParserKeyword parserKeyword(keyword);
-    BOOST_CHECK_EQUAL(parserKeyword.getSizeType() , UNDEFINED);
+    BOOST_CHECK_EQUAL(parserKeyword.getSizeType() , SLASH_TERMINATED);
 }
 
 

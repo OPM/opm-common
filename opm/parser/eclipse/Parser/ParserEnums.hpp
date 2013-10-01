@@ -26,7 +26,7 @@
 namespace Opm {
 
     enum ParserKeywordSizeEnum {
-        UNDEFINED = 0,
+        SLASH_TERMINATED = 0,
         FIXED = 1,
         OTHER = 2
     };
