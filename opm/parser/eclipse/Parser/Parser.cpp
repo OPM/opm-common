@@ -83,6 +83,7 @@ namespace Opm {
 
 
     void Parser::parseFile(DeckPtr deck, const boost::filesystem::path& file, const boost::filesystem::path& rootPath, bool parseStrict) const {
+        bool verbose = false;
         std::ifstream inputstream;
         inputstream.open(file.string().c_str());
 
@@ -98,8 +99,14 @@ namespace Opm {
                     if (includeFile.is_relative())
                         includeFile = rootPath / includeFile;
 
+                    if (verbose)
+                        std::cout << rawKeyword->getKeywordName() << "  " << includeFile << std::endl;
+
                     parseFile(deck, includeFile, rootPath , parseStrict);
                 } else {
+                    if (verbose)
+                        std::cout << rawKeyword->getKeywordName() << std::endl;
+
                     if (hasKeyword(rawKeyword->getKeywordName())) {
                         ParserKeywordConstPtr parserKeyword = m_parserKeywords.at(rawKeyword->getKeywordName());
                         DeckKeywordConstPtr deckKeyword = parserKeyword->parse(rawKeyword);
