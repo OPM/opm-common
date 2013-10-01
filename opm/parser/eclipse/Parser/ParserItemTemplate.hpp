@@ -64,19 +64,20 @@ template<class T> void fillVectorFromStringToken(std::string token, std::deque<T
 }
 
 template<class T> std::deque<T> readFromRawRecord(RawRecordPtr rawRecord, bool scanAll, T defaultValue, bool& defaultActive) const {
-    bool cont = true;
     std::deque<T> data;
     if (rawRecord->size() == 0) {
-        data.push_back(defaultValue);
+        if (!scanAll)
+            data.push_back(defaultValue);
     } else {
+        bool continueReading = scanAll;
         do {
             std::string token = rawRecord->pop_front();
             fillVectorFromStringToken(token, data, defaultValue, defaultActive);
 
-            if (rawRecord->size() == 0 || !scanAll)
-                cont = false;
+            if (rawRecord->size() == 0)
+                continueReading = false;
 
-        } while (cont);
+        } while (continueReading);
     }
     return data;
 }

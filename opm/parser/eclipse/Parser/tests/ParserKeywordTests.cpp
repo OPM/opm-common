@@ -292,4 +292,29 @@ BOOST_AUTO_TEST_CASE(hasFixedSize_sizeObjectDoesNotHaveFixedSize_returnsfalse) {
     BOOST_CHECK(!parserKeyword->hasFixedSize());
 }
 
+/******/
+/* Tables: */
+
+
+
+
+BOOST_AUTO_TEST_CASE(ParseEmptyRecord) {
+    ParserKeywordPtr tabdimsKeyword( new ParserKeyword("TEST" , 1));
+    ParserIntItemConstPtr item(new ParserIntItem(std::string("ITEM") , ALL));
+    RawKeywordPtr rawkeyword(new RawKeyword( tabdimsKeyword->getName() , 1));
+
+
+
+    rawkeyword->addRawRecordString("/");
+    tabdimsKeyword->addItem(item);
+
+    DeckKeywordConstPtr deckKeyword = tabdimsKeyword->parse( rawkeyword );
+    BOOST_REQUIRE_EQUAL( 1U , deckKeyword->size());
+
+    DeckRecordConstPtr deckRecord = deckKeyword->getRecord(0);
+    BOOST_REQUIRE_EQUAL( 1U , deckRecord->size());
+
+    DeckItemConstPtr deckItem = deckRecord->getItem(0);
+    BOOST_CHECK_EQUAL(0U , deckItem->size());
+}
 
