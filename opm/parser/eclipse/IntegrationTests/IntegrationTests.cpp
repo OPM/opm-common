@@ -38,7 +38,7 @@ ParserPtr createWWCTParser() {
         ParserRecordPtr wwctRecord = parserKeyword->getRecord();
         wwctRecord->addItem(ParserStringItemConstPtr(new ParserStringItem("WELL", ALL)));
     }
-    ParserKeywordPtr summaryKeyword(new ParserKeyword("SUMMARY" , 0));
+    ParserKeywordPtr summaryKeyword(new ParserKeyword("SUMMARY" , (size_t) 0));
 
 
     ParserPtr parser(new Parser());
@@ -79,7 +79,7 @@ ParserPtr createBPRParser() {
         bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("J", SINGLE)));
         bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("K", SINGLE)));
     }
-    ParserKeywordPtr summaryKeyword(new ParserKeyword("SUMMARY" , 0));
+    ParserKeywordPtr summaryKeyword(new ParserKeyword("SUMMARY" , (size_t) 0));
     ParserPtr parser(new Parser());
     parser->addKeyword(parserKeyword);
     parser->addKeyword(summaryKeyword);
