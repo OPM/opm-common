@@ -69,11 +69,18 @@ namespace Opm {
             if (sizeObject.is_number()) {
                 m_fixedSize = (size_t) sizeObject.as_int( );
                 m_keywordSizeType = FIXED;
-            } else {
-                std::string sizeKeyword = sizeObject.get_string("keyword");
-                std::string sizeItem = sizeObject.get_string("item");
-                initSizeKeyword( sizeKeyword , sizeItem);
-            }
+            } else
+                initSizeKeyword( sizeObject );
+
+        } else
+            if (jsonConfig.has_item("num_tables")) {
+             Json::JsonObject numTablesObject = jsonConfig.get_item("num_tables");
+
+             if (!numTablesObject.is_object())
+                 throw std::invalid_argument("The num_tables key must point to a {} object");
+
+             initSizeKeyword( numTablesObject );
+             m_isTableCollection = true;
         } else {
             if (jsonConfig.has_item("items"))
                 // The number of records is undetermined - the keyword will be '/' terminated.
@@ -104,6 +111,9 @@ namespace Opm {
         if (jsonConfig.has_item("data"))
             initData( jsonConfig );
 
+        if (isTableCollection())
+            addTableItems();
+
         if (m_fixedSize == 0 && m_keywordSizeType == FIXED)
             return;
         else  {
@@ -122,6 +132,13 @@ namespace Opm {
     }
 
     
+    void ParserKeyword::initSizeKeyword(const Json::JsonObject& sizeObject) {
+        std::string sizeKeyword = sizeObject.get_string("keyword");
+        std::string sizeItem = sizeObject.get_string("item");
+        initSizeKeyword( sizeKeyword , sizeItem);
+    }
+
+
     bool ParserKeyword::validName(const std::string& name) {
         if (name.length() > ParserConst::maxKeywordLength)
             return false;
@@ -208,6 +225,12 @@ namespace Opm {
             }
         } else
             throw std::invalid_argument("The items: object must be an array");            
+    }
+
+
+    void ParserKeyword::addTableItems() {
+        ParserDoubleItemConstPtr item = ParserDoubleItemConstPtr(new ParserDoubleItem("TABLEROW" , ALL , 0));
+        addItem( item );
     }
 
 

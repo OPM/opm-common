@@ -72,8 +72,10 @@ namespace Opm {
         void initData( const Json::JsonObject& jsonConfig );
         void initSize( const Json::JsonObject& jsonConfig );
         void initSizeKeyword( const std::string& sizeKeyword, const std::string& sizeItem);
+        void initSizeKeyword(const Json::JsonObject& sizeObject);
         void commonInit(const std::string& name);
         void addItems( const Json::JsonObject& jsonConfig);
+        void addTableItems();
     };
     typedef boost::shared_ptr<ParserKeyword> ParserKeywordPtr;
     typedef boost::shared_ptr<const ParserKeyword> ParserKeywordConstPtr;

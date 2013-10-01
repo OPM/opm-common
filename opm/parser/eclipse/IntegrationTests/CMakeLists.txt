@@ -26,6 +26,18 @@ add_test(NAME runParseEQUIL
          WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} 
          COMMAND ${EXECUTABLE_OUTPUT_PATH}/runParseEQUIL)
 
+add_executable(runParseRSVD ParseRSVD.cpp)
+target_link_libraries(runParseRSVD Parser ${Boost_LIBRARIES})
+add_test(NAME runParseRSVD 
+         WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} 
+         COMMAND ${EXECUTABLE_OUTPUT_PATH}/runParseRSVD)
+         
+add_executable(runParsePVTG ParsePVTG.cpp)
+target_link_libraries(runParsePVTG Parser ${Boost_LIBRARIES})
+add_test(NAME runParsePVTG 
+         WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} 
+         COMMAND ${EXECUTABLE_OUTPUT_PATH}/runParsePVTG)         
+
 if (INCLUDE_STATOIL_TESTS) 
    add_executable(runIntegrationTestsInternalData IntegrationTestsInternalData.cpp)
    target_link_libraries(runIntegrationTestsInternalData Parser ${Boost_LIBRARIES})

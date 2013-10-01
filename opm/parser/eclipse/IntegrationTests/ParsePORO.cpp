@@ -36,7 +36,7 @@ using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(AddDataKeywordFromJson_correctlyConfigured) {
     ParserPtr parser(new Parser());
-    boost::filesystem::path porogFile("testdata/integration_tests/PORO/PORO1");
+    boost::filesystem::path poroFile("testdata/integration_tests/PORO/PORO1");
     DeckPtr deck = parser->parse(poroFile.string());
     DeckKeywordConstPtr kw1 = deck->getKeyword("PORO" , 0);
 
