@@ -36,8 +36,8 @@ using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(AddDataKeywordFromJson_correctlyConfigured) {
     ParserPtr parser(new Parser());
-    boost::filesystem::path wconhistFile("testdata/integration_tests/PORO/PORO1");
-    DeckPtr deck = parser->parse(wconhistFile.string());
+    boost::filesystem::path porogFile("testdata/integration_tests/PORO/PORO1");
+    DeckPtr deck = parser->parse(poroFile.string());
     DeckKeywordConstPtr kw1 = deck->getKeyword("PORO" , 0);
 
     BOOST_CHECK_THROW( kw1->getIntData() , std::logic_error );
