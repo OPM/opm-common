@@ -25,21 +25,36 @@
 
 namespace Opm {
 
-    RawKeyword::RawKeyword(const std::string& name, size_t fixedSize) {
-        setKeywordName(name);
-        m_fixedSizeKeyword = true;
-        m_fixedSize = fixedSize;
-        if (fixedSize == 0)
-            m_isFinished = true;
-        else
-            m_isFinished = false;
-    }
 
     RawKeyword::RawKeyword(const std::string& name) {
-        setKeywordName(name);
-        m_fixedSizeKeyword = false;
-        m_isFinished = false;
+        commonInit(name);
     }
+
+
+    RawKeyword::RawKeyword(const std::string& name , size_t inputSize, bool isTableCollection ) {
+        commonInit(name);
+        if (isTableCollection) {
+            m_isTableCollection = true;
+            m_numTables = inputSize;
+        } else {
+            m_fixedSizeKeyword = true;
+            m_fixedSize = inputSize;
+            if (m_fixedSize == 0)
+                m_isFinished = true;
+            else
+                m_isFinished = false;
+        }
+    }
+
+
+    void RawKeyword::commonInit(const std::string& name) {
+        setKeywordName( name );
+        m_isFinished = false;
+        m_fixedSizeKeyword = false;
+        m_isTableCollection = false;
+        m_currentNumTables = 0;
+    }
+
 
     const std::string& RawKeyword::getKeywordName() const {
         return m_name;
@@ -49,16 +64,29 @@ namespace Opm {
         return m_records.size();
     }
 
+
+
+
     /// Important method, being repeatedly called. When a record is terminated,
     /// it is added to the list of records, and a new record is started.
 
     void RawKeyword::addRawRecordString(const std::string& partialRecordString) {
-        m_partialRecordString += partialRecordString;
+        m_partialRecordString += " " + partialRecordString;
 
         if (!m_fixedSizeKeyword && isTerminator( m_partialRecordString )) {
-            m_isFinished = true;
-            m_partialRecordString.clear();
-        } else {
+            if (m_isTableCollection) {
+                m_currentNumTables += 1;
+                if (m_currentNumTables == m_numTables) {
+                    m_isFinished = true;
+                    m_partialRecordString.clear();
+                }
+            } else {
+                m_isFinished = true;
+                m_partialRecordString.clear();
+            }
+        }
+
+        if (!m_isFinished) {
             if (RawRecord::isTerminatedRecordString(partialRecordString)) {
                 RawRecordPtr record(new RawRecord(m_partialRecordString));
                 m_records.push_back(record);
@@ -78,6 +106,10 @@ namespace Opm {
             return false;
     }
 
+
+    bool RawKeyword::isTableCollection() const {
+        return m_isTableCollection;
+    }
 
     RawRecordPtr RawKeyword::getRecord(size_t index) const {
         if (index < m_records.size()) {

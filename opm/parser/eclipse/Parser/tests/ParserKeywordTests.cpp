@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(construct_withname_nameSet) {
 BOOST_AUTO_TEST_CASE(NamedInit) {
     std::string keyword("KEYWORD");
 
-    ParserKeyword parserKeyword(keyword, 100);
+    ParserKeyword parserKeyword(keyword, (size_t) 100);
     BOOST_CHECK_EQUAL(parserKeyword.getName(), keyword);
 }
 
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_default_SizeTypedefault) {
 
 BOOST_AUTO_TEST_CASE(ParserKeyword_withSize_SizeTypeFIXED) {
     std::string keyword("KEYWORD");
-    ParserKeyword parserKeyword(keyword, 100);
+    ParserKeyword parserKeyword(keyword, (size_t) 100);
     BOOST_CHECK_EQUAL(parserKeyword.getSizeType() , FIXED);
 }
 
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_validName) {
 
 
 BOOST_AUTO_TEST_CASE(AddDataKeyword_correctlyConfigured) {
-    ParserKeyword parserKeyword("PORO" , 1);
+    ParserKeyword parserKeyword("PORO" , (size_t) 1);
     ParserIntItemConstPtr item = ParserIntItemConstPtr(new ParserIntItem( "ACTNUM" , ALL , 0 ));
     BOOST_CHECK_EQUAL( false , parserKeyword.isDataKeyword() );
     parserKeyword.addDataItem( item );
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(WrongConstructor_addDataItem_throws) {
 
 
 BOOST_AUTO_TEST_CASE(MixingDataAndItems_throws1) {
-    ParserKeyword parserKeyword("PORO" , 1);
+    ParserKeyword parserKeyword("PORO" , (size_t) 1);
     ParserIntItemConstPtr dataItem = ParserIntItemConstPtr(new ParserIntItem( "ACTNUM" , ALL , 0 ));
     ParserIntItemConstPtr item     = ParserIntItemConstPtr(new ParserIntItem( "XXX" , ALL , 0 ));
     parserKeyword.addDataItem( dataItem );
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(MixingDataAndItems_throws1) {
 
 
 BOOST_AUTO_TEST_CASE(MixingDataAndItems_throws2) {
-    ParserKeyword parserKeyword("PORO" , 1);
+    ParserKeyword parserKeyword("PORO" , (size_t) 1);
     ParserIntItemConstPtr dataItem = ParserIntItemConstPtr(new ParserIntItem( "ACTNUM" , ALL , 0 ));
     ParserIntItemConstPtr item     = ParserIntItemConstPtr(new ParserIntItem( "XXX" , ALL , 0 ));
     parserKeyword.addItem( item );
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(AddDataKeywordFromJson_correctlyConfigured) {
 
 BOOST_AUTO_TEST_CASE(constructor_nametoolongwithfixedsize_exceptionthrown) {
     std::string keyword("KEYWORDTOOLONG");
-    BOOST_CHECK_THROW(ParserKeyword parserKeyword(keyword, 100), std::invalid_argument);
+    BOOST_CHECK_THROW(ParserKeyword parserKeyword(keyword, (size_t) 100), std::invalid_argument);
 }
 
 
@@ -267,11 +267,11 @@ BOOST_AUTO_TEST_CASE(constructor_nametoolong_exceptionthrown) {
 BOOST_AUTO_TEST_CASE(MixedCase) {
     std::string keyword("KeyWord");
 
-    BOOST_CHECK_THROW(ParserKeyword parserKeyword(keyword, 100), std::invalid_argument);
+    BOOST_CHECK_THROW(ParserKeyword parserKeyword(keyword, (size_t) 100), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(getFixedSize_sizeObjectHasFixedSize_sizeReturned) {
-    ParserKeywordPtr parserKeyword(new ParserKeyword("JA", 3));
+    ParserKeywordPtr parserKeyword(new ParserKeyword("JA", (size_t) 3));
     BOOST_CHECK_EQUAL(3U, parserKeyword->getFixedSize());
 
 }
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(getFixedSize_sizeObjectDoesNotHaveFixedSizeObjectSet_Except
 
 
 BOOST_AUTO_TEST_CASE(hasFixedSize_hasFixedSizeObject_returnstrue) {
-    ParserKeywordPtr parserKeyword(new ParserKeyword("JA", 2));
+    ParserKeywordPtr parserKeyword(new ParserKeyword("JA", (size_t) 2));
     BOOST_CHECK(parserKeyword->hasFixedSize());
 }
 
@@ -295,6 +295,21 @@ BOOST_AUTO_TEST_CASE(hasFixedSize_sizeObjectDoesNotHaveFixedSize_returnsfalse) {
 /******/
 /* Tables: */
 
+BOOST_AUTO_TEST_CASE(DefaultIsNot_TableKeyword) {
+    ParserKeywordPtr parserKeyword(new ParserKeyword("JA"));
+    BOOST_CHECK(!parserKeyword->isTableCollection());
+}
+
+BOOST_AUTO_TEST_CASE(ConstructorIsTableCollection) {
+    ParserKeywordPtr parserKeyword(new ParserKeyword("JA" , "TABDIMS" , "NTPVT" , true));
+    const std::pair<std::string,std::string>& sizeKW = parserKeyword->getSizeDefinitionPair();
+    BOOST_CHECK(parserKeyword->isTableCollection());
+    BOOST_CHECK(!parserKeyword->hasFixedSize());
+
+    BOOST_CHECK_EQUAL( parserKeyword->getSizeType() , OTHER);
+    BOOST_CHECK_EQUAL("TABDIMS", sizeKW.first );
+    BOOST_CHECK_EQUAL("NTPVT" , sizeKW.second );
+}
 
 
 

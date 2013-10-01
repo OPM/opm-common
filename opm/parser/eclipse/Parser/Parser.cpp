@@ -157,7 +157,7 @@ namespace Opm {
                     }
                     targetSize = sizeDefinitionItem->getInt(0);
                 }
-                return RawKeywordPtr(new RawKeyword(keywordString, targetSize));
+                return RawKeywordPtr(new RawKeyword(keywordString, targetSize , parserKeyword->isTableCollection()));
             }
         } else {
             if (strictParsing) {

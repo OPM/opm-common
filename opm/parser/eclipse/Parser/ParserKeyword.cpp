@@ -44,18 +44,22 @@ namespace Opm {
     }
 
 
+    ParserKeyword::ParserKeyword(const std::string& name ,  const std::string& sizeKeyword , const std::string& sizeItem,  bool isTableCollection) {
+        commonInit(name);
+        m_isTableCollection = isTableCollection;
+        initSizeKeyword(sizeKeyword , sizeItem);
+    }
+
     ParserKeyword::ParserKeyword(const std::string& name, size_t fixedKeywordSize) {
         commonInit(name);
         m_keywordSizeType = FIXED;
         m_fixedSize = fixedKeywordSize;
     }
     
-    
-    ParserKeyword::ParserKeyword(const std::string& name , const std::string& sizeKeyword , const std::string& sizeItem) {
-        commonInit(name);
-        initSizeKeyword( sizeKeyword , sizeItem );
-    }
 
+    bool ParserKeyword::isTableCollection() const {
+        return m_isTableCollection;
+    }
 
     void ParserKeyword::initSize( const Json::JsonObject& jsonConfig ) {
         // The number of record has been set explicitly with the size: keyword
@@ -140,6 +144,7 @@ namespace Opm {
         
         m_keywordSizeType = SLASH_TERMINATED;
         m_isDataKeyword = false;
+        m_isTableCollection = false;
         m_name = name;
         m_record = ParserRecordPtr(new ParserRecord);
     }
@@ -306,7 +311,8 @@ namespace Opm {
         if ((m_name == other.m_name) &&
             (m_record->equal( *(other.m_record) )) &&
             (m_keywordSizeType == other.m_keywordSizeType) &&
-            (m_isDataKeyword == other.m_isDataKeyword))
+            (m_isDataKeyword == other.m_isDataKeyword) &&
+            (m_isTableCollection == other.m_isTableCollection))
             {
                 bool equal = false;
                 switch(m_keywordSizeType) {
@@ -336,10 +342,13 @@ namespace Opm {
             os << lhs << " = new ParserKeyword(\"" << m_name << "\");" << std::endl;
             break;
         case FIXED:
-            os << lhs << " = new ParserKeyword(\"" << m_name << "\"," << m_fixedSize << ");" << std::endl;
+            os << lhs << " = new ParserKeyword(\"" << m_name << "\",(size_t)" << m_fixedSize << ");" << std::endl;
             break;
         case OTHER:
-            os << lhs << " = new ParserKeyword(\"" << m_name << "\",\"" << m_sizeDefinitionPair.first << "\",\"" << m_sizeDefinitionPair.second << "\");" << std::endl;
+            if (isTableCollection())
+                os << lhs << " = new ParserKeyword(\"" << m_name << "\",\"" << m_sizeDefinitionPair.first << "\",\"" << m_sizeDefinitionPair.second << "\" , true);" << std::endl;
+            else
+                os << lhs << " = new ParserKeyword(\"" << m_name << "\",\"" << m_sizeDefinitionPair.first << "\",\"" << m_sizeDefinitionPair.second << "\");" << std::endl;
             break;
         }
 

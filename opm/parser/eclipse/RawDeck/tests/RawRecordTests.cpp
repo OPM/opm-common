@@ -93,3 +93,15 @@ BOOST_AUTO_TEST_CASE(Rawrecord_sizeEmpty_OK) {
 
   BOOST_CHECK_EQUAL( 0U  , record->size());
 }
+
+
+BOOST_AUTO_TEST_CASE(Rawrecord_spaceOnlyEmpty_OK) {
+  Opm::RawRecordPtr record(new Opm::RawRecord("   /"));
+  BOOST_CHECK_EQUAL( "" , record->getRecordString());
+  BOOST_CHECK_EQUAL( 0U  , record->size());
+}
+
+
+
+
+

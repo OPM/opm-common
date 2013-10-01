@@ -37,15 +37,19 @@ namespace Opm {
         ParserKeyword(const char * name);
         ParserKeyword(const std::string& name);
         ParserKeyword(const std::string& name, size_t fixedKeywordSize);
-        ParserKeyword(const std::string& name , const std::string& sizeKeyword , const std::string& sizeItem);
+        ParserKeyword(const std::string& name , const std::string& sizeKeyword , const std::string& sizeItem, bool isTableCollection = false);
         ParserKeyword(const Json::JsonObject& jsonConfig);
 
         static bool validName(const std::string& name);
         
         ParserRecordPtr getRecord() const;
         const std::string& getName() const;
+
         size_t getFixedSize() const;
         bool hasFixedSize() const;
+        bool isTableCollection() const;
+
+
         size_t numItems() const;
         
         DeckKeywordPtr parse(RawKeywordConstPtr rawKeyword) const;
@@ -63,6 +67,7 @@ namespace Opm {
         enum ParserKeywordSizeEnum m_keywordSizeType;
         size_t m_fixedSize;
         bool m_isDataKeyword;
+        bool m_isTableCollection;
         
         void initData( const Json::JsonObject& jsonConfig );
         void initSize( const Json::JsonObject& jsonConfig );

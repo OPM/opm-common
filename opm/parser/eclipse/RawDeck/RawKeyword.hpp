@@ -37,7 +37,8 @@ namespace Opm {
     class RawKeyword {
     public:
         RawKeyword(const std::string& name);
-        RawKeyword(const std::string& name, size_t fixedSize);
+        RawKeyword(const std::string& name , size_t inputSize , bool isTableCollection = false);
+
         const std::string& getKeywordName() const;
         void addRawRecordString(const std::string& partialRecordString);
         size_t size() const;
@@ -49,15 +50,21 @@ namespace Opm {
         
         bool isPartialRecordStringEmpty() const;
         bool isFinished() const;
+        bool isTableCollection() const;
 
 
     private:
+        bool m_isTableCollection;
         bool m_isFinished;
         bool m_fixedSizeKeyword;
         size_t m_fixedSize;
+        size_t m_numTables;
+        size_t m_currentNumTables;
         std::string m_name;
         std::vector<RawRecordPtr> m_records;
         std::string m_partialRecordString;
+
+        void commonInit(const std::string& name);
         void setKeywordName(const std::string& keyword);
         static bool isValidKeyword(const std::string& keywordCandidate);
     };

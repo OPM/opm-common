@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(isFinished_undef_size) {
 
 
 BOOST_AUTO_TEST_CASE(isFinished_Fixedsize0) {
-    RawKeyword keyword("TEST" , 0U);
+    RawKeyword keyword("TEST" ,0U);
     
     BOOST_CHECK(  keyword.isFinished() );
 }
@@ -143,4 +143,19 @@ BOOST_AUTO_TEST_CASE(useLine) {
     BOOST_CHECK( RawKeyword::useLine("/ -- ggg"));
     BOOST_CHECK( RawKeyword::useLine("/"));
 }
+
+
+BOOST_AUTO_TEST_CASE(isTableCollection) {
+    RawKeyword keyword1("TEST" , 4U , false);
+    RawKeyword keyword2("TEST2");
+    BOOST_CHECK_EQUAL( false , keyword1.isTableCollection());
+    BOOST_CHECK_EQUAL( false , keyword2.isTableCollection());
+ }
+
+
+BOOST_AUTO_TEST_CASE(CreateTableCollection) {
+    RawKeyword keyword1("TEST" , 2, true);
+    BOOST_CHECK_EQUAL( true , keyword1.isTableCollection());
+}
+
 
