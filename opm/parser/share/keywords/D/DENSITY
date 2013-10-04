@@ -1,0 +1,4 @@
+{"name" : "DENSITY", "size" : {"keyword":"TABDIMS", "item":"NTPVT" }, "items" : 
+ [{"name": "OIL" , "value_type" : "FLOAT", "default": 600}, 
+  {"name": "WATER" , "value_type" : "FLOAT", "default": 999.014}, 
+  {"name": "GAS" , "value_type" : "FLOAT", "default": 1}]}
