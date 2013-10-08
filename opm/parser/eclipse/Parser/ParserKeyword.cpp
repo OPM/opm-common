@@ -114,8 +114,13 @@ namespace Opm {
 
     
     ParserKeyword::ParserKeyword(const Json::JsonObject& jsonConfig) {
+        ParserKeywordActionEnum action = INTERNALIZE;
+
+        if (jsonConfig.has_item("action"))
+            action = ParserKeywordActionEnumFromString( jsonConfig.get_string("action") );
+        
         if (jsonConfig.has_item("name")) {
-            commonInit(jsonConfig.get_string("name") , INTERNALIZE);
+            commonInit(jsonConfig.get_string("name") , action);
         } else
             throw std::invalid_argument("Json object is missing name: property");
 
@@ -130,7 +135,7 @@ namespace Opm {
         if (isTableCollection())
             addTableItems();
 
-        if (m_fixedSize == 0 && m_keywordSizeType == FIXED)
+        if ((m_fixedSize == 0 && m_keywordSizeType == FIXED) || (m_action != INTERNALIZE))
             return;
         else  {
             if (numItems() == 0)
@@ -345,7 +350,8 @@ namespace Opm {
             (m_record->equal( *(other.m_record) )) &&
             (m_keywordSizeType == other.m_keywordSizeType) &&
             (m_isDataKeyword == other.m_isDataKeyword) &&
-            (m_isTableCollection == other.m_isTableCollection))
+            (m_isTableCollection == other.m_isTableCollection) &&
+            (m_action == other.m_action)) 
             {
                 bool equal = false;
                 switch(m_keywordSizeType) {

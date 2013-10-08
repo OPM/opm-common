@@ -130,7 +130,17 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject) {
 }
 
 
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObjectWithActionInvalidThrows) {
+    Json::JsonObject jsonObject("{\"name\": \"XXX\" , \"size\" : 0, \"action\" : \"WhatEver?\"}");
+    BOOST_CHECK_THROW(ParserKeyword parserKeyword(jsonObject) , std::invalid_argument);
+}
 
+
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObjectWithAction) {
+    Json::JsonObject jsonObject("{\"name\": \"XXX\" , \"size\" : 0, \"action\" : \"IGNORE\"}");
+    ParserKeyword parserKeyword(jsonObject);
+    BOOST_CHECK_EQUAL( IGNORE , parserKeyword.getAction() );
+}
 
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withSize) {
@@ -149,6 +159,12 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_missingItemThrows) {
     Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100}");
     BOOST_CHECK_THROW( ParserKeyword parserKeyword(jsonObject) , std::invalid_argument);
 }
+
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_missingItemActionIgnoreOK) {
+    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100, \"action\" : \"IGNORE\"}");
+    BOOST_CHECK_NO_THROW( ParserKeyword parserKeyword(jsonObject));
+}
+
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_nosize_notItems_OK) {
     Json::JsonObject jsonObject("{\"name\": \"BPR\"}");
