@@ -56,9 +56,9 @@ namespace Opm {
         size_t size() const;
     private:
         std::map<std::string, ParserKeywordConstPtr> m_parserKeywords;
-        bool tryParseKeyword(const DeckConstPtr deck ,  std::ifstream& inputstream , RawKeywordPtr& rawKeyword, bool strictParsing) const;
+        bool tryParseKeyword(const DeckConstPtr deck , const std::string& filename , size_t& lineNR , std::ifstream& inputstream , RawKeywordPtr& rawKeyword, bool strictParsing) const;
         void parseFile(DeckPtr deck , const boost::filesystem::path& file, const boost::filesystem::path& rootPath, bool strictParsing) const;
-        RawKeywordPtr createRawKeyword(const DeckConstPtr deck , const std::string& keywordString, bool strictParsing) const;
+        RawKeywordPtr createRawKeyword(const DeckConstPtr deck , const std::string& filename , size_t lineNR , const std::string& keywordString, bool strictParsing) const;
         void addDefaultKeywords();
     };
 

@@ -85,12 +85,13 @@ namespace Opm {
     void Parser::parseFile(DeckPtr deck, const boost::filesystem::path& file, const boost::filesystem::path& rootPath, bool parseStrict) const {
         bool verbose = false;
         std::ifstream inputstream;
+        size_t lineNR = 0;
         inputstream.open(file.string().c_str());
 
         if (inputstream) {
             RawKeywordPtr rawKeyword;
 
-            while (tryParseKeyword(deck, inputstream, rawKeyword, parseStrict)) {
+            while (tryParseKeyword(deck, file.string() , lineNR , inputstream, rawKeyword, parseStrict)) {
                 if (rawKeyword->getKeywordName() == Opm::RawConsts::include) {
                     RawRecordConstPtr firstRecord = rawKeyword->getRecord(0);
                     std::string includeFileString = firstRecord->getItem(0);
@@ -139,11 +140,11 @@ namespace Opm {
             throw std::invalid_argument("Input JSON object is not an array");
     }
 
-    RawKeywordPtr Parser::createRawKeyword(const DeckConstPtr deck, const std::string& keywordString, bool strictParsing) const {
+    RawKeywordPtr Parser::createRawKeyword(const DeckConstPtr deck, const std::string& filename , size_t lineNR , const std::string& keywordString, bool strictParsing) const {
         if (hasKeyword(keywordString)) {
             ParserKeywordConstPtr parserKeyword = m_parserKeywords.find(keywordString)->second;
             if (parserKeyword->getSizeType() == SLASH_TERMINATED)
-                return RawKeywordPtr(new RawKeyword(keywordString));
+                return RawKeywordPtr(new RawKeyword(keywordString , filename , lineNR));
             else {
                 size_t targetSize;
 
@@ -159,26 +160,27 @@ namespace Opm {
                     }
                     targetSize = sizeDefinitionItem->getInt(0);
                 }
-                return RawKeywordPtr(new RawKeyword(keywordString, targetSize , parserKeyword->isTableCollection()));
+                return RawKeywordPtr(new RawKeyword(keywordString, filename , lineNR , targetSize , parserKeyword->isTableCollection()));
             }
         } else {
             if (strictParsing) {
                 throw std::invalid_argument("Keyword " + keywordString + " not recognized ");
             } else {
-                return RawKeywordPtr(new RawKeyword(keywordString, 0));
+                return RawKeywordPtr(new RawKeyword(keywordString, filename , lineNR , 0));
             }
         }
     }
 
-    bool Parser::tryParseKeyword(const DeckConstPtr deck, std::ifstream& inputstream, RawKeywordPtr& rawKeyword, bool strictParsing) const {
+    bool Parser::tryParseKeyword(const DeckConstPtr deck, const std::string& filename , size_t& lineNR , std::ifstream& inputstream, RawKeywordPtr& rawKeyword, bool strictParsing) const {
         std::string line;
-
+        
         while (std::getline(inputstream, line)) {
             std::string keywordString;
+            lineNR++;
 
             if (rawKeyword == NULL) {
                 if (RawKeyword::tryParseKeyword(line, keywordString)) {
-                    rawKeyword = createRawKeyword(deck, keywordString, strictParsing);
+                    rawKeyword = createRawKeyword(deck, filename , lineNR , keywordString, strictParsing);
                 }
             } else {
                 if (RawKeyword::useLine(line)) {
