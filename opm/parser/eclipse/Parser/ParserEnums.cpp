@@ -103,4 +103,36 @@ namespace Opm {
         else
             throw std::invalid_argument("String: " + stringValue + " can not be converted to enum value");
     }
+
+    /*****************************************************************/
+
+    const std::string ParserKeywordActionEnum2String(ParserKeywordActionEnum enumValue) {
+        switch (enumValue) {
+        case INTERNALIZE:
+            return "INTERNALIZE";
+            break;
+        case IGNORE:
+            return "IGNORE";
+            break;
+        case IGNORE_WARNING:
+            return "IGNORE_WARNING";
+            break;
+        default:
+            throw std::invalid_argument("Implementation error - should NOT be here");
+        }
+    }
+    
+    ParserKeywordActionEnum ParserKeywordActionEnumFromString(const std::string& stringValue) {
+        if (stringValue == "INTERNALIZE")
+            return INTERNALIZE;
+        else if (stringValue == "IGNORE")
+            return IGNORE;
+        else if (stringValue == "IGNORE_WARNING")
+            return IGNORE_WARNING;
+        else
+            throw std::invalid_argument("String: " + stringValue + " can not be converted to enum value");
+    }
+
+
+
 }

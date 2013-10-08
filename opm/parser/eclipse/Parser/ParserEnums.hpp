@@ -47,6 +47,13 @@ namespace Opm {
     };
 
     
+    enum ParserKeywordActionEnum {
+        INTERNALIZE = 0,
+        IGNORE = 1,
+        IGNORE_WARNING = 2
+    };
+    
+    const std::string ParserKeywordActionEnum2String(ParserKeywordActionEnum enumValue);
     const std::string ParserItemSizeEnum2String(ParserItemSizeEnum enumValue);
     const std::string ParserKeywordSizeEnum2String(ParserKeywordSizeEnum enumValue);
     const std::string ParserValueTypeEnum2String(ParserValueTypeEnum enumValue);
@@ -54,6 +61,7 @@ namespace Opm {
     ParserItemSizeEnum ParserItemSizeEnumFromString(const std::string& stringValue);
     ParserKeywordSizeEnum ParserKeywordSizeEnumFromString(const std::string& stringValue);
     ParserValueTypeEnum ParserValueTypeEnumFromString(const std::string& stringValue);
+    ParserKeywordActionEnum ParserKeywordActionEnumFromString(const std::string& stringValue);
 }
 
 #endif
