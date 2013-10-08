@@ -109,10 +109,12 @@ namespace Opm {
 
                     if (hasKeyword(rawKeyword->getKeywordName())) {
                         ParserKeywordConstPtr parserKeyword = m_parserKeywords.at(rawKeyword->getKeywordName());
-                        DeckKeywordConstPtr deckKeyword = parserKeyword->parse(rawKeyword);
-                        deck->addKeyword(deckKeyword);
+                        if (parserKeyword->getAction() == INTERNALIZE) {
+                            DeckKeywordConstPtr deckKeyword = parserKeyword->parse(rawKeyword);
+                            deck->addKeyword(deckKeyword);
+                        }
                     } else {
-                        DeckKeywordPtr deckKeyword(new DeckKeyword(rawKeyword->getKeywordName(), false));
+                        DeckKeywordConstPtr deckKeyword(new DeckKeyword(rawKeyword->getKeywordName(), false));
                         deck->addKeyword(deckKeyword);
                     }
                 }
