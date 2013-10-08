@@ -117,6 +117,7 @@ namespace Opm {
                     } else {
                         DeckKeywordConstPtr deckKeyword(new DeckKeyword(rawKeyword->getKeywordName(), false));
                         deck->addKeyword(deckKeyword);
+                        deck->addWarning( "The keyword " + rawKeyword->getKeywordName() + " is not recognized." , file.string() , lineNR);
                     }
                 }
                 rawKeyword.reset();
