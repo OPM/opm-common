@@ -115,11 +115,11 @@ namespace Opm {
                             DeckKeywordConstPtr deckKeyword = parserKeyword->parse(rawKeyword);
                             deck->addKeyword(deckKeyword);
                         } else if (action == IGNORE_WARNING) 
-                            deck->addWarning( "The keyword " + rawKeyword->getKeywordName() + " is ignored - this might potentially affect the results." , file.string() , rawKeyword->getLineNR());
+                            deck->addWarning( "The keyword " + rawKeyword->getKeywordName() + " is ignored - this might potentially affect the results" , file.string() , rawKeyword->getLineNR());
                     } else {
                         DeckKeywordConstPtr deckKeyword(new DeckKeyword(rawKeyword->getKeywordName(), false));
                         deck->addKeyword(deckKeyword);
-                        deck->addWarning( "The keyword " + rawKeyword->getKeywordName() + " is not recognized." , file.string() , lineNR);
+                        deck->addWarning( "The keyword " + rawKeyword->getKeywordName() + " is not recognized" , file.string() , lineNR);
                     }
                 }
                 rawKeyword.reset();
