@@ -324,7 +324,7 @@ BOOST_AUTO_TEST_CASE(DefaultIsNot_TableKeyword) {
 }
 
 BOOST_AUTO_TEST_CASE(ConstructorIsTableCollection) {
-    ParserKeywordPtr parserKeyword(new ParserKeyword("JA" , "TABDIMS" , "NTPVT" , true));
+    ParserKeywordPtr parserKeyword(new ParserKeyword("JA" , "TABDIMS" , "NTPVT" , INTERNALIZE , true));
     const std::pair<std::string,std::string>& sizeKW = parserKeyword->getSizeDefinitionPair();
     BOOST_CHECK(parserKeyword->isTableCollection());
     BOOST_CHECK(!parserKeyword->hasFixedSize());
@@ -356,3 +356,17 @@ BOOST_AUTO_TEST_CASE(ParseEmptyRecord) {
     BOOST_CHECK_EQUAL(0U , deckItem->size());
 }
 
+
+/*****************************************************************/
+/* Action value */
+
+BOOST_AUTO_TEST_CASE(DefaultActionISINTERNALIZE) {
+    ParserKeywordPtr parserKeyword(new ParserKeyword("JA"));
+    BOOST_CHECK_EQUAL(INTERNALIZE , parserKeyword->getAction());
+}
+
+
+BOOST_AUTO_TEST_CASE(CreateWithAction) {
+    ParserKeywordPtr parserKeyword(new ParserKeyword("JA" , IGNORE));
+    BOOST_CHECK_EQUAL(IGNORE , parserKeyword->getAction());
+}

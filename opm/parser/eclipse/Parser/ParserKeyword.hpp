@@ -26,6 +26,7 @@
 #include <opm/json/JsonObject.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
+#include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
 
@@ -34,17 +35,17 @@ namespace Opm {
 
     class ParserKeyword {
     public:
-        ParserKeyword(const char * name);
-        ParserKeyword(const std::string& name);
-        ParserKeyword(const std::string& name, size_t fixedKeywordSize);
-        ParserKeyword(const std::string& name , const std::string& sizeKeyword , const std::string& sizeItem, bool isTableCollection = false);
+        ParserKeyword(const char * name , ParserKeywordActionEnum action = INTERNALIZE);
+        ParserKeyword(const std::string& name , ParserKeywordActionEnum action = INTERNALIZE);
+        ParserKeyword(const std::string& name, size_t fixedKeywordSize,ParserKeywordActionEnum action = INTERNALIZE);
+        ParserKeyword(const std::string& name , const std::string& sizeKeyword , const std::string& sizeItem, ParserKeywordActionEnum action = INTERNALIZE , bool isTableCollection = false);
         ParserKeyword(const Json::JsonObject& jsonConfig);
 
         static bool validName(const std::string& name);
         
         ParserRecordPtr getRecord() const;
         const std::string& getName() const;
-
+        ParserKeywordActionEnum getAction() const;
         size_t getFixedSize() const;
         bool hasFixedSize() const;
         bool isTableCollection() const;
@@ -68,12 +69,13 @@ namespace Opm {
         size_t m_fixedSize;
         bool m_isDataKeyword;
         bool m_isTableCollection;
-        
+        ParserKeywordActionEnum m_action;
+
         void initData( const Json::JsonObject& jsonConfig );
         void initSize( const Json::JsonObject& jsonConfig );
         void initSizeKeyword( const std::string& sizeKeyword, const std::string& sizeItem);
         void initSizeKeyword(const Json::JsonObject& sizeObject);
-        void commonInit(const std::string& name);
+        void commonInit(const std::string& name, ParserKeywordActionEnum action);
         void addItems( const Json::JsonObject& jsonConfig);
         void addTableItems();
     };

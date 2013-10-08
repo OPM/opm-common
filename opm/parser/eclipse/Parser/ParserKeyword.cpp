@@ -33,28 +33,44 @@
 
 namespace Opm {
 
-
-    ParserKeyword::ParserKeyword(const std::string& name) {
-        commonInit(name);
+    void ParserKeyword::commonInit(const std::string& name , ParserKeywordActionEnum action) {
+        if (!validName(name))
+            throw std::invalid_argument("Invalid name: " + name + "keyword must be all upper case, max 8 characters. Starting with character.");
+        
+        m_keywordSizeType = SLASH_TERMINATED;
+        m_isDataKeyword = false;
+        m_isTableCollection = false;
+        m_name = name;
+        m_action = action;
+        m_record = ParserRecordPtr(new ParserRecord);
     }
 
 
-    ParserKeyword::ParserKeyword(const char * name) {
-        commonInit(name);
+    ParserKeyword::ParserKeyword(const std::string& name, ParserKeywordActionEnum action) {
+        commonInit(name , action);
+        m_action = action;
     }
 
 
-    ParserKeyword::ParserKeyword(const std::string& name ,  const std::string& sizeKeyword , const std::string& sizeItem,  bool isTableCollection) {
-        commonInit(name);
+    ParserKeyword::ParserKeyword(const char * name , ParserKeywordActionEnum action) {
+        commonInit(name , action);
+        m_action = action;
+    }
+
+
+    ParserKeyword::ParserKeyword(const std::string& name, size_t fixedKeywordSize  , ParserKeywordActionEnum action) {
+        commonInit(name,action);
+        m_keywordSizeType = FIXED;
+        m_fixedSize = fixedKeywordSize;
+    }
+
+
+    ParserKeyword::ParserKeyword(const std::string& name ,  const std::string& sizeKeyword , const std::string& sizeItem , ParserKeywordActionEnum action , bool isTableCollection) {
+        commonInit(name,action);
         m_isTableCollection = isTableCollection;
         initSizeKeyword(sizeKeyword , sizeItem);
     }
 
-    ParserKeyword::ParserKeyword(const std::string& name, size_t fixedKeywordSize) {
-        commonInit(name);
-        m_keywordSizeType = FIXED;
-        m_fixedSize = fixedKeywordSize;
-    }
     
 
     bool ParserKeyword::isTableCollection() const {
@@ -99,7 +115,7 @@ namespace Opm {
     
     ParserKeyword::ParserKeyword(const Json::JsonObject& jsonConfig) {
         if (jsonConfig.has_item("name")) {
-            commonInit(jsonConfig.get_string("name"));
+            commonInit(jsonConfig.get_string("name") , INTERNALIZE);
         } else
             throw std::invalid_argument("Json object is missing name: property");
 
@@ -154,17 +170,6 @@ namespace Opm {
         return true;
     }
 
-
-    void ParserKeyword::commonInit(const std::string& name) {
-        if (!validName(name))
-            throw std::invalid_argument("Invalid name: " + name + "keyword must be all upper case, max 8 characters. Starting with character.");
-        
-        m_keywordSizeType = SLASH_TERMINATED;
-        m_isDataKeyword = false;
-        m_isTableCollection = false;
-        m_name = name;
-        m_record = ParserRecordPtr(new ParserRecord);
-    }
 
 
 
@@ -287,6 +292,11 @@ namespace Opm {
         return m_record;
     }
 
+  
+    ParserKeywordActionEnum ParserKeyword::getAction() const {
+        return m_action;
+    }
+
 
     const std::string& ParserKeyword::getName() const {
         return m_name;
@@ -360,39 +370,41 @@ namespace Opm {
 
 
   void ParserKeyword::inlineNew(std::ostream& os , const std::string& lhs, const std::string& indent) const {
-        switch(m_keywordSizeType) {
-        case SLASH_TERMINATED:
-            os << lhs << " = new ParserKeyword(\"" << m_name << "\");" << std::endl;
-            break;
-        case FIXED:
-            os << lhs << " = new ParserKeyword(\"" << m_name << "\",(size_t)" << m_fixedSize << ");" << std::endl;
-            break;
-        case OTHER:
-            if (isTableCollection())
-                os << lhs << " = new ParserKeyword(\"" << m_name << "\",\"" << m_sizeDefinitionPair.first << "\",\"" << m_sizeDefinitionPair.second << "\" , true);" << std::endl;
-            else
-                os << lhs << " = new ParserKeyword(\"" << m_name << "\",\"" << m_sizeDefinitionPair.first << "\",\"" << m_sizeDefinitionPair.second << "\");" << std::endl;
-            break;
-        }
-
-        for (size_t i = 0; i < m_record->size(); i++) {
-            os << indent << "{" << std::endl;
-            {
-                const std::string local_indent = indent + "   ";
-                ParserItemConstPtr item = m_record->get(i);
-                os << local_indent << "ParserItemConstPtr item(";
-                item->inlineNew(os);
-                os << ");" << std::endl;
-                {
-                    std::string addItemMethod = "addItem";
-                    if (m_isDataKeyword)
-                        addItemMethod = "addDataItem";
-                    
-                    os << local_indent << lhs << "->" << addItemMethod << "(item);" << std::endl;
-                }
-            }
-            os << indent << "}" << std::endl;
-        }
-    }
-
+      {
+          const std::string actionString(ParserKeywordActionEnum2String( m_action ));
+          switch(m_keywordSizeType) {
+          case SLASH_TERMINATED:
+              os << lhs << " = new ParserKeyword(\"" << m_name << "\"," << actionString << ");" << std::endl;
+              break;
+          case FIXED:
+              os << lhs << " = new ParserKeyword(\"" << m_name << "\",(size_t)" << m_fixedSize << "," << actionString << ");" << std::endl;
+              break;
+          case OTHER:
+              if (isTableCollection())
+                  os << lhs << " = new ParserKeyword(\"" << m_name << "\",\"" << m_sizeDefinitionPair.first << "\",\"" << m_sizeDefinitionPair.second << "\"," << actionString << ", true);" << std::endl;
+              else
+                  os << lhs << " = new ParserKeyword(\"" << m_name << "\",\"" << m_sizeDefinitionPair.first << "\",\"" << m_sizeDefinitionPair.second << "\"," << actionString << ");" << std::endl;
+              break;
+          }
+      }
+      
+      for (size_t i = 0; i < m_record->size(); i++) {
+          os << indent << "{" << std::endl;
+          {
+              const std::string local_indent = indent + "   ";
+              ParserItemConstPtr item = m_record->get(i);
+              os << local_indent << "ParserItemConstPtr item(";
+              item->inlineNew(os);
+              os << ");" << std::endl;
+              {
+                  std::string addItemMethod = "addItem";
+                  if (m_isDataKeyword)
+                      addItemMethod = "addDataItem";
+                  
+                  os << local_indent << lhs << "->" << addItemMethod << "(item);" << std::endl;
+              }
+          }
+          os << indent << "}" << std::endl;
+      }
+  }
 }
