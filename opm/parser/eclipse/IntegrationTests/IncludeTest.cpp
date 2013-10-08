@@ -106,7 +106,6 @@ createDeckWithInclude(path& datafile)
 BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_deckReturned) {
     path datafile;
     ParserPtr parser(new Parser());
-    parser->loadKeywordsFromDirectory(KEYWORD_DIRECTORY);
     createDeckWithInclude (datafile);
     DeckConstPtr deck = parser->parse(datafile.string());
 
