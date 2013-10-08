@@ -1,4 +1,9 @@
-DIMENS
+
+UNRECOGNIZED
+  This Keyword should give a warning at line 2/
+
+
+DIMENS           -- /This is flagged as IGNORE_WARNING - and should give a warning at line: 6
    10 10 10 /     
 
 WCONHIST 
@@ -6,6 +11,8 @@ WCONHIST
      'OP_2'      'OPEN'      'ORAT'   7998.000      2.000 1461075.000   5* /
      'OP_3'      'OPEN'      'ORAT'   7999.000      1.000 1471824.000   1   0.25 0.25 0.25 1* /
 /
+
+
 
 
 

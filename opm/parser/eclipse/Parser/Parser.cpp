@@ -110,10 +110,12 @@ namespace Opm {
 
                     if (hasKeyword(rawKeyword->getKeywordName())) {
                         ParserKeywordConstPtr parserKeyword = m_parserKeywords.at(rawKeyword->getKeywordName());
-                        if (parserKeyword->getAction() == INTERNALIZE) {
+                        ParserKeywordActionEnum action = parserKeyword->getAction();
+                        if (action == INTERNALIZE) {
                             DeckKeywordConstPtr deckKeyword = parserKeyword->parse(rawKeyword);
                             deck->addKeyword(deckKeyword);
-                        }
+                        } else if (action == IGNORE_WARNING) 
+                            deck->addWarning( "The keyword " + rawKeyword->getKeywordName() + " is ignored - this might potentially affect the results." , file.string() , rawKeyword->getLineNR());
                     } else {
                         DeckKeywordConstPtr deckKeyword(new DeckKeyword(rawKeyword->getKeywordName(), false));
                         deck->addKeyword(deckKeyword);
