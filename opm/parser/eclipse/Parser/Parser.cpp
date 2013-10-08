@@ -90,7 +90,7 @@ namespace Opm {
 
         if (inputstream) {
             RawKeywordPtr rawKeyword;
-
+            
             while (tryParseKeyword(deck, file.string() , lineNR , inputstream, rawKeyword, parseStrict)) {
                 if (rawKeyword->getKeywordName() == Opm::RawConsts::include) {
                     RawRecordConstPtr firstRecord = rawKeyword->getRecord(0);
@@ -146,6 +146,11 @@ namespace Opm {
     RawKeywordPtr Parser::createRawKeyword(const DeckConstPtr deck, const std::string& filename , size_t lineNR , const std::string& keywordString, bool strictParsing) const {
         if (hasKeyword(keywordString)) {
             ParserKeywordConstPtr parserKeyword = m_parserKeywords.find(keywordString)->second;
+            ParserKeywordActionEnum action = parserKeyword->getAction();
+            
+            if (action == THROW_EXCEPTION)
+                throw std::invalid_argument("Parsing terminated by fatal keyword: " + keywordString);
+            
             if (parserKeyword->getSizeType() == SLASH_TERMINATED)
                 return RawKeywordPtr(new RawKeyword(keywordString , filename , lineNR));
             else {
@@ -174,13 +179,14 @@ namespace Opm {
         }
     }
 
+
     bool Parser::tryParseKeyword(const DeckConstPtr deck, const std::string& filename , size_t& lineNR , std::ifstream& inputstream, RawKeywordPtr& rawKeyword, bool strictParsing) const {
         std::string line;
         
         while (std::getline(inputstream, line)) {
             std::string keywordString;
             lineNR++;
-
+            
             if (rawKeyword == NULL) {
                 if (RawKeyword::tryParseKeyword(line, keywordString)) {
                     rawKeyword = createRawKeyword(deck, filename , lineNR , keywordString, strictParsing);

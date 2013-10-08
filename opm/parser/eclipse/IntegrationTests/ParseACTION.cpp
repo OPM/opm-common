@@ -38,14 +38,21 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE( parse_ACTION_OK ) {
     ParserPtr parser(new Parser( false ));
     boost::filesystem::path actionFile("testdata/integration_tests/ACTION/ACTION.txt");
+    boost::filesystem::path actionFile2("testdata/integration_tests/ACTION/ACTION_EXCEPTION.txt");
     ParserKeywordConstPtr DIMENS( new ParserKeyword("DIMENS" , (size_t) 1 , IGNORE_WARNING ));
+    ParserKeywordConstPtr THROW( new ParserKeyword("THROW" , THROW_EXCEPTION ));
     
     BOOST_REQUIRE( parser->loadKeywordFromFile( boost::filesystem::path( std::string(KEYWORD_DIRECTORY) + std::string("/W/WCONHIST") )) );
     parser->addKeyword( DIMENS );
-    
+    parser->addKeyword( THROW );
+
     BOOST_REQUIRE( parser->hasKeyword( "DIMENS" ));
     BOOST_REQUIRE( parser->hasKeyword( "WCONHIST" ));
-
+    BOOST_REQUIRE( parser->hasKeyword( "THROW" ));
+    
+    BOOST_REQUIRE_THROW( parser->parse( actionFile2.string() , false) , std::invalid_argument );
+    
+                       
     DeckPtr deck = parser->parse(actionFile.string() , false);
     DeckKeywordConstPtr kw1 = deck->getKeyword("WCONHIST" , 0);
     BOOST_CHECK_EQUAL( 3U , kw1->size() );
@@ -82,6 +89,5 @@ BOOST_AUTO_TEST_CASE( parse_ACTION_OK ) {
       BOOST_CHECK_EQUAL( actionFile.string() , location.first);
       BOOST_CHECK_EQUAL( 6U , location.second);
     }
-    
     
 }

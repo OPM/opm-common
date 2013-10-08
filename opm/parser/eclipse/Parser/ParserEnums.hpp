@@ -50,7 +50,8 @@ namespace Opm {
     enum ParserKeywordActionEnum {
         INTERNALIZE = 0,
         IGNORE = 1,
-        IGNORE_WARNING = 2
+        IGNORE_WARNING = 2,
+        THROW_EXCEPTION = 3
     };
     
     const std::string ParserKeywordActionEnum2String(ParserKeywordActionEnum enumValue);

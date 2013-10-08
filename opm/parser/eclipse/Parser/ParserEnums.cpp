@@ -114,6 +114,9 @@ namespace Opm {
         case IGNORE:
             return "IGNORE";
             break;
+        case THROW_EXCEPTION:
+            return "THROW_EXCEPTION";
+            break;
         case IGNORE_WARNING:
             return "IGNORE_WARNING";
             break;
@@ -127,6 +130,8 @@ namespace Opm {
             return INTERNALIZE;
         else if (stringValue == "IGNORE")
             return IGNORE;
+        else if (stringValue == "THROW_EXCEPTION")
+            return THROW_EXCEPTION;
         else if (stringValue == "IGNORE_WARNING")
             return IGNORE_WARNING;
         else
