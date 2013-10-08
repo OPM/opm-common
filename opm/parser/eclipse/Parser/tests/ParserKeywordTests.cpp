@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE(ConstructorIsTableCollection) {
 BOOST_AUTO_TEST_CASE(ParseEmptyRecord) {
     ParserKeywordPtr tabdimsKeyword( new ParserKeyword("TEST" , 1));
     ParserIntItemConstPtr item(new ParserIntItem(std::string("ITEM") , ALL));
-    RawKeywordPtr rawkeyword(new RawKeyword( tabdimsKeyword->getName() , 1));
+    RawKeywordPtr rawkeyword(new RawKeyword( tabdimsKeyword->getName() , "FILE" , 10U , 1));
 
 
 
