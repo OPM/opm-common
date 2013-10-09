@@ -72,6 +72,13 @@ namespace Opm {
         return m_parserKeywords.find(keyword) != m_parserKeywords.end();
     }
 
+    bool Parser::dropKeyword(const std::string& keyword) {
+        if (m_parserKeywords.erase( keyword ) == 1)
+            return true;
+        else
+            return false;
+    }
+
     ParserKeywordConstPtr Parser::getKeyword(const std::string& keyword) const {
         if (hasKeyword(keyword)) {
             return m_parserKeywords.at(keyword);

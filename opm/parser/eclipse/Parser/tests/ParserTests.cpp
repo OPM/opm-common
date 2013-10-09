@@ -216,6 +216,14 @@ BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_default) {
 }
 
 
+BOOST_AUTO_TEST_CASE(DropKeyword) {
+    ParserPtr parser(new Parser());
+    BOOST_CHECK_EQUAL(false , parser->dropKeyword("DoesNotHaveThis"));
+    BOOST_CHECK_EQUAL(true  , parser->dropKeyword("BPR"));
+    BOOST_CHECK_EQUAL(false  , parser->dropKeyword("BPR"));
+}
+
+
 /***************** Simple Int parsing ********************************/
 
 ParserKeywordPtr setupParserKeywordInt(std::string name, int numberOfItems) {
