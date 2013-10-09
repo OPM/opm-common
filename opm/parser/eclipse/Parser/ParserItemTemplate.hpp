@@ -17,14 +17,39 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+/*
+  Pushing the converted values onto the dataVector is in this seperate
+  function to be able to specialize the implementation for type
+  std::string. The problem is that in the code:
+
+     std::istringstream inputStream(" WITH_SPACE ");
+     inputStream >> stringValue;
+
+  The leading and trailing spaces will be stripped from the final
+  stringValue (have tried manipulating the skipws flag to no
+  avail). To avoid this a specialized
+  fillVectorFromStringStream<std::string> implementation is in
+  ParserItem.cpp.
+*/
+
+template<class T> void fillVectorFromStringStream(std::istringstream& inputStream , std::string& token , std::deque<T>& dataVector) const {
+    T value;
+    inputStream >> value;
+    dataVector.push_back(value);
+        
+    inputStream.get();
+    if (!inputStream.eof())
+        throw std::invalid_argument("Spurious data at the end of: <" + token + ">");
+}
+
+
 template<class T> void fillVectorFromStringToken(std::string token, std::deque<T>& dataVector, T defaultValue, bool& defaultActive) const {
     std::istringstream inputStream(token);
     size_t starPos = token.find('*');
-    T value;
     bool hasStar = (starPos != std::string::npos);
 
     defaultActive = false;
-
     if (hasStar) {
         bool singleDefault = (starPos == 0);
 
@@ -37,6 +62,7 @@ template<class T> void fillVectorFromStringToken(std::string token, std::deque<T
         } else {
             size_t multiplier;
             int starChar;
+            T value;
 
             inputStream >> multiplier;
             starChar = inputStream.get();
@@ -49,19 +75,15 @@ template<class T> void fillVectorFromStringToken(std::string token, std::deque<T
                 value = defaultValue;
             else
                 inputStream >> value;
-
+            
             for (size_t i = 0; i < multiplier; i++)
                 dataVector.push_back(value);
         }
-    } else {
-        inputStream >> value;
-        dataVector.push_back(value);
-    }
-
-    inputStream.get();
-    if (!inputStream.eof())
-        throw std::invalid_argument("Spurious data at the end of: <" + token + ">");
+    } else 
+        fillVectorFromStringStream(inputStream , token , dataVector);
 }
+
+
 
 template<class T> std::deque<T> readFromRawRecord(RawRecordPtr rawRecord, bool scanAll, T defaultValue, bool& defaultActive) const {
     std::deque<T> data;
