@@ -69,3 +69,13 @@ BOOST_AUTO_TEST_CASE(size_correct) {
     deckIntItem.push_back( 100 );
     BOOST_CHECK_EQUAL( 3U , deckIntItem.size());
 }
+
+
+
+BOOST_AUTO_TEST_CASE(DefaultApplied) {
+    DeckIntItem deckIntItem("TEST");
+    BOOST_CHECK_EQUAL( false , deckIntItem.defaultApplied() );
+}
+
+
+

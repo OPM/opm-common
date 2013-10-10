@@ -23,9 +23,15 @@ namespace Opm {
 
     DeckItem::DeckItem(const std::string& name) {
         m_name = name;
+        m_defaultApplied = false;
     }
 
     const std::string& DeckItem::name() const {
         return m_name;
     }
+
+    bool DeckItem::defaultApplied() const {
+        return m_defaultApplied;
+    }
+
 }

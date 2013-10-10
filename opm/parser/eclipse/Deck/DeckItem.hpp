@@ -33,6 +33,8 @@ namespace Opm {
         DeckItem(const std::string& name);
         const std::string& name() const;
         
+        bool defaultApplied() const;
+
         virtual size_t size() const = 0;
         
         virtual int getInt(size_t index) const {
@@ -70,7 +72,7 @@ namespace Opm {
         }
     private:
         std::string m_name;
-
+        bool m_defaultApplied;
     };
     typedef boost::shared_ptr<DeckItem> DeckItemPtr;
     typedef boost::shared_ptr<const DeckItem> DeckItemConstPtr;

@@ -45,7 +45,7 @@ namespace Opm {
         push_back(data, data.size());
     }
 
-    void DeckIntItem::push_back(int data) {
+  void DeckIntItem::push_back(int data) {
         m_data.push_back(data);
     }
 
