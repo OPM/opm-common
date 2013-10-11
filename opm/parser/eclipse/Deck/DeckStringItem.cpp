@@ -51,6 +51,13 @@ namespace Opm {
         m_data.push_back(data);
     }
 
+  
+    void DeckStringItem::push_backDefault(std::string data) {
+        m_data.push_back( data );
+        m_defaultApplied = true;
+    }
+
+
     size_t DeckStringItem::size() const {
         return m_data.size();
     }

@@ -79,3 +79,11 @@ BOOST_AUTO_TEST_CASE(sizeDouble_correct) {
 
 
 
+BOOST_AUTO_TEST_CASE(DefaultApplied) {
+    DeckDoubleItem deckDoubleItem("TEST");
+    BOOST_CHECK_EQUAL( false , deckDoubleItem.defaultApplied() );
+    deckDoubleItem.push_backDefault( 1 );
+    BOOST_CHECK_EQUAL( true , deckDoubleItem.defaultApplied() );
+}
+
+

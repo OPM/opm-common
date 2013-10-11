@@ -75,7 +75,10 @@ BOOST_AUTO_TEST_CASE(size_correct) {
 BOOST_AUTO_TEST_CASE(DefaultApplied) {
     DeckIntItem deckIntItem("TEST");
     BOOST_CHECK_EQUAL( false , deckIntItem.defaultApplied() );
+    deckIntItem.push_backDefault( 1 );
+    BOOST_CHECK_EQUAL( true , deckIntItem.defaultApplied() );
 }
+
 
 
 

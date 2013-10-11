@@ -69,3 +69,13 @@ BOOST_AUTO_TEST_CASE(size_variouspushes_sizecorrect) {
     deckStringItem.push_back("WELL-5");
     BOOST_CHECK_EQUAL(3U, deckStringItem.size());
 }
+
+
+BOOST_AUTO_TEST_CASE(DefaultApplied) {
+    DeckStringItem deckStringItem("TEST");
+    BOOST_CHECK_EQUAL( false , deckStringItem.defaultApplied() );
+    deckStringItem.push_backDefault( "1" );
+    BOOST_CHECK_EQUAL( true , deckStringItem.defaultApplied() );
+}
+
+
