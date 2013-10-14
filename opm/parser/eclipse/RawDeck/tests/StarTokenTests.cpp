@@ -113,3 +113,10 @@ BOOST_AUTO_TEST_CASE(CorrectStringValue) {
 
 
 
+BOOST_AUTO_TEST_CASE( ContainsStar_WithStar_ReturnsTrue ) {
+    BOOST_CHECK_EQUAL( true , Opm::tokenContainsStar("*") );
+    BOOST_CHECK_EQUAL( true , Opm::tokenContainsStar("1*") );
+    BOOST_CHECK_EQUAL( true , Opm::tokenContainsStar("1*2") );
+    
+    BOOST_CHECK_EQUAL( false , Opm::tokenContainsStar("12") );
+}

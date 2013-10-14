@@ -26,6 +26,15 @@
 
 
 namespace Opm {
+
+    bool tokenContainsStar(const std::string& token) {
+        if (token.find('*') == std::string::npos)
+            return false;
+        else
+            return true;
+    }
+
+
   
     template <>
     int readValueToken(const std::string& valueToken) {
@@ -51,5 +60,7 @@ namespace Opm {
     std::string readValueToken(const std::string& valueToken) {
         return valueToken;
     }
+
+
     
 }
