@@ -68,12 +68,15 @@ namespace Opm {
         }
 
 
+
         virtual ~DeckItem() {
         }
+
+        bool m_defaultApplied;
     private:
         std::string m_name;
-        bool m_defaultApplied;
     };
+
     typedef boost::shared_ptr<DeckItem> DeckItemPtr;
     typedef boost::shared_ptr<const DeckItem> DeckItemConstPtr;
 }

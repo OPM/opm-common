@@ -200,3 +200,76 @@ BOOST_AUTO_TEST_CASE(Equal_Different_ReturnsFalse) {
     BOOST_CHECK( !record1->equal( *record3 ));
 
 }
+
+
+BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
+    ParserRecord parserRecord;
+    ParserIntItemConstPtr itemInt( new ParserIntItem("ITEM1", SINGLE));
+    ParserStringItemConstPtr itemString( new ParserStringItem( "ITEM2", SINGLE));
+    ParserDoubleItemConstPtr itemDouble( new ParserDoubleItem( "ITEM3", SINGLE));
+
+    parserRecord.addItem( itemInt );
+    parserRecord.addItem( itemString );
+    parserRecord.addItem( itemDouble );
+    
+    {
+        RawRecordPtr rawRecord(new RawRecord("* /"));
+        DeckItemConstPtr deckStringItem = itemString->scan(rawRecord);
+        DeckItemConstPtr deckIntItem = itemInt->scan(rawRecord);
+        DeckItemConstPtr deckDoubleItem = itemDouble->scan(rawRecord);
+      
+        BOOST_CHECK( deckStringItem->defaultApplied() );
+        BOOST_CHECK( deckIntItem->defaultApplied() );
+        BOOST_CHECK( deckDoubleItem->defaultApplied() );
+    }
+
+
+    {
+        RawRecordPtr rawRecord(new RawRecord("/"));
+        DeckItemConstPtr deckStringItem = itemString->scan(rawRecord);
+        DeckItemConstPtr deckIntItem = itemInt->scan(rawRecord);
+        DeckItemConstPtr deckDoubleItem = itemDouble->scan(rawRecord);
+      
+        BOOST_CHECK( deckStringItem->defaultApplied() );
+        BOOST_CHECK( deckIntItem->defaultApplied() );
+        BOOST_CHECK( deckDoubleItem->defaultApplied() );
+    }
+    
+
+    {
+        RawRecordPtr rawRecord(new RawRecord("10 /"));
+        DeckItemConstPtr deckStringItem = itemString->scan(rawRecord);
+        DeckItemConstPtr deckIntItem = itemInt->scan(rawRecord);
+        DeckItemConstPtr deckDoubleItem = itemDouble->scan(rawRecord);
+      
+        BOOST_CHECK_EQUAL(  false , deckStringItem->defaultApplied() );
+        BOOST_CHECK_EQUAL(  false , deckIntItem->defaultApplied() );
+        BOOST_CHECK_EQUAL(  false , deckDoubleItem->defaultApplied() );
+    }
+
+
+    {
+        RawRecordPtr rawRecord(new RawRecord("* * * /"));
+        DeckItemConstPtr deckStringItem = itemString->scan(rawRecord);
+        DeckItemConstPtr deckIntItem = itemInt->scan(rawRecord);
+        DeckItemConstPtr deckDoubleItem = itemDouble->scan(rawRecord);
+        
+        BOOST_CHECK_EQUAL(  true , deckStringItem->defaultApplied() );
+        BOOST_CHECK_EQUAL(  true , deckIntItem->defaultApplied() );
+        BOOST_CHECK_EQUAL(  true , deckDoubleItem->defaultApplied() );
+    }
+
+    {
+        RawRecordPtr rawRecord(new RawRecord("3*/"));
+        DeckItemConstPtr deckStringItem = itemString->scan(rawRecord);
+        DeckItemConstPtr deckIntItem = itemInt->scan(rawRecord);
+        DeckItemConstPtr deckDoubleItem = itemDouble->scan(rawRecord);
+        
+        BOOST_CHECK_EQUAL(  true , deckStringItem->defaultApplied() );
+        BOOST_CHECK_EQUAL(  true , deckIntItem->defaultApplied() );
+        BOOST_CHECK_EQUAL(  true , deckDoubleItem->defaultApplied() );
+    }
+
+}
+
+

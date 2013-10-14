@@ -66,7 +66,7 @@ namespace Opm {
         bool defaultActive;
         std::deque<int> intsPreparedForDeckItem = readFromRawRecord(rawRecord, scanAll, m_default, defaultActive);
 
-        if (scanAll)
+        if (scanAll) 
             deckItem->push_back(intsPreparedForDeckItem);
         else {
             deckItem->push_back(intsPreparedForDeckItem.front());

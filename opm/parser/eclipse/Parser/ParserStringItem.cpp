@@ -69,6 +69,7 @@ namespace Opm {
         bool scanAll = (sizeType() == ALL);
         bool defaultActive;
         std::deque<std::string> stringsPreparedForDeckItem = readFromRawRecord(rawRecord, scanAll, m_default, defaultActive);
+
         if (scanAll)
             deckItem->push_back(stringsPreparedForDeckItem);
         else {
