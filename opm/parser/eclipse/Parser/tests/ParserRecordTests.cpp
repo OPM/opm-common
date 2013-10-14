@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(Equal_Different_ReturnsFalse) {
 
 }
 
-
+/*
 BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
     ParserRecord parserRecord;
     ParserIntItemConstPtr itemInt( new ParserIntItem("ITEM1", SINGLE));
@@ -269,7 +269,7 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
         BOOST_CHECK_EQUAL(  true , deckIntItem->defaultApplied() );
         BOOST_CHECK_EQUAL(  true , deckDoubleItem->defaultApplied() );
     }
-
 }
+*/
 
 
