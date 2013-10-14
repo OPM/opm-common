@@ -26,6 +26,30 @@
 
 
 namespace Opm {
+  
+    template <>
+    int readValueToken(const std::string& valueToken) {
+        char * error_ptr;
+        int value = strtol( valueToken.c_str() , &error_ptr , 10);
+        if (error_ptr[0] != C_EOS)
+            throw std::invalid_argument("Parsing integer value from: " + valueToken + " failed");
+        return value;
+    }
+    
 
+    template <>
+    double readValueToken(const std::string& valueToken) {
+        char * error_ptr;
+        double value = strtod( valueToken.c_str() , &error_ptr);
+        if (error_ptr[0] != C_EOS)
+            throw std::invalid_argument("Parsing double value from: " + valueToken + " failed");
+        return value;
+    }
+
+
+    template <>
+    std::string readValueToken(const std::string& valueToken) {
+        return valueToken;
+    }
     
 }

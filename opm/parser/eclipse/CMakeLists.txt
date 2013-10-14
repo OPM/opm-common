@@ -6,6 +6,7 @@ add_subdirectory(IntegrationTests)
 add_subdirectory( Applications )
 
 set( rawdeck_source 
+RawDeck/StarToken.cpp
 RawDeck/RawKeyword.cpp 
 RawDeck/RawRecord.cpp )
 
@@ -49,6 +50,7 @@ set( HEADER_FILES
 RawDeck/RawConsts.hpp 
 RawDeck/RawKeyword.hpp 
 RawDeck/RawRecord.hpp 
+RawDeck/StarToken.hpp
 #
 Deck/Deck.hpp
 Deck/DeckKeyword.hpp

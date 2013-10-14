@@ -63,6 +63,13 @@ BOOST_AUTO_TEST_CASE(IntMalformedValueThrows) {
 }
 
 
+BOOST_AUTO_TEST_CASE(StarNoMultiplierThrows) {
+    BOOST_CHECK_THROW( Opm::StarToken<int> st1("*10") , std::invalid_argument);
+    BOOST_CHECK_THROW( Opm::StarToken<double> st1("*1.0") , std::invalid_argument);
+    BOOST_CHECK_THROW( Opm::StarToken<std::string> st1("*String") , std::invalid_argument);
+}
+
+
 BOOST_AUTO_TEST_CASE(DoubleMalformedValueThrows) {
     BOOST_CHECK_THROW( Opm::StarToken<double> st1("1*10X") , std::invalid_argument);
     BOOST_CHECK_THROW( Opm::StarToken<double> st1("1*X") , std::invalid_argument);

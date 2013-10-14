@@ -35,31 +35,13 @@ namespace Opm {
     }
 
     template <>
-    int readValueToken(const std::string& valueToken) {
-        char * error_ptr;
-        int value = strtol( valueToken.c_str() , &error_ptr , 10);
-        if (error_ptr[0] != C_EOS)
-            throw std::invalid_argument("Parsing integer value from: " + valueToken + " failed");
-        return value;
-    }
-    
+    std::string readValueToken(const std::string& valueToken);
 
     template <>
-    double readValueToken(const std::string& valueToken) {
-        char * error_ptr;
-        double value = strtod( valueToken.c_str() , &error_ptr);
-        if (error_ptr[0] != C_EOS)
-            throw std::invalid_argument("Parsing double value from: " + valueToken + " failed");
-        return value;
-    }
-
+    double readValueToken(const std::string& valueToken);
 
     template <>
-    std::string readValueToken(const std::string& valueToken) {
-        return valueToken;
-    }
-
-
+    int readValueToken(const std::string& valueToken);
 
 
 template <class T>
@@ -85,6 +67,8 @@ class StarToken {
                     if (value_token.size()) {
                         m_value = readValueToken<T>( value_token );
                         m_hasValue = true;
+                        if (star_pos == 0)
+                          throw std::invalid_argument("Failed to extract multiplier from token:"  + token);
                     } else {
                         m_hasValue = false;
                     }
@@ -110,7 +94,7 @@ class StarToken {
         }
 
 
-
+ 
     private:
         ssize_t m_multiplier;
         T m_value;
