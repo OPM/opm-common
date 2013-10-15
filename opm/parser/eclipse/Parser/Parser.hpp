@@ -47,6 +47,7 @@ namespace Opm {
         /// Method to add ParserKeyword instances, these holding type and size information about the keywords and their data.
         void addKeyword(ParserKeywordConstPtr parserKeyword);
         bool hasKeyword(const std::string& keyword) const;
+        bool dropKeyword(const std::string& keyword);
         ParserKeywordConstPtr getKeyword(const std::string& keyword) const;
         
         void loadKeywords(const Json::JsonObject& jsonKeywords);
