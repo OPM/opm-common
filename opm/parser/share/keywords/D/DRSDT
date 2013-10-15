@@ -1,0 +1,4 @@
+{"name" : "DRSDT", "size" : 1, "items" : 
+ [{"name" : "DRSDT" , "value_type" : "FLOAT"}, 
+  {"name" : "Option" , "value_type" : "STRING", "default" : "ALL"}]
+}

@@ -13,17 +13,26 @@
 void printDeckDiagnostics(Opm::DeckConstPtr deck, bool printAllKeywords) {
     int recognizedKeywords = 0;
     int unrecognizedKeywords = 0;
+    
     for (size_t i = 0; i < deck->size(); i++) {
-        if (!deck->getKeyword(i)->isKnown()) {
+        if (!deck->getKeyword(i)->isKnown()) 
             unrecognizedKeywords++;
-            std::cout << "Warning, this looks like a keyword, but is not in the configuration: " << deck->getKeyword(i)->name() << std::endl;
-        } else
+        else
             recognizedKeywords++;
 
         if (printAllKeywords) {
             std::cout << "Keyword (" << i << "): " << deck->getKeyword(i)->name() << " " << std::endl;
         }
     }
+    {
+        for (size_t iw = 0; iw < deck->numWarnings(); iw++) {
+            const std::pair<std::string,std::pair<std::string,size_t> >& warning = deck->getWarning( iw );
+            const std::pair<std::string,size_t>& location = warning.second;
+            
+            std::cout << warning.first << " at " << location.first << ":" << location.second << std::endl;
+        }
+    }
+    std::cout << "Total number of warnings:        " << deck->numWarnings() << std::endl;
     std::cout << "Number of recognized keywords:   " << recognizedKeywords << std::endl;
     std::cout << "Number of unrecognized keywords: " << unrecognizedKeywords << std::endl;
     std::cout << "Total number of keywords:        " << deck->size() << std::endl;

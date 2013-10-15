@@ -172,7 +172,6 @@ BOOST_AUTO_TEST_CASE(parse_unknownkeywordWithstrictparsing_exceptionthrown) {
 // Datafile contains 3 RADFIN4 keywords. One fully specified, one with 2 out of 11 items, and one with no items.
 BOOST_AUTO_TEST_CASE(parse_truncatedrecords_deckFilledWithDefaults) {
     ParserPtr parser(new Parser());
-    parser->loadKeywordsFromDirectory(KEYWORD_DIRECTORY);
     DeckPtr deck = parser->parse("testdata/integration_tests/truncated_records.data");
     BOOST_CHECK_EQUAL(4U, deck->size());
     DeckKeywordConstPtr radfin4_0_full= deck->getKeyword("RADFIN4", 0);

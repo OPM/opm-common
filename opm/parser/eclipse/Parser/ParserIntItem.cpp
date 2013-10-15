@@ -27,6 +27,7 @@
 
 namespace Opm {
 
+
     ParserIntItem::ParserIntItem(const std::string& itemName) : ParserItem(itemName) {
         m_default = defaultInt();
     }

@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE( parse_PVTG_OK ) {
     ParserPtr parser2(new Parser());
     ParserPtr parser(new Parser(false));
     ParserKeywordPtr tabdimsKeyword( new ParserKeyword("TABDIMS" , 1));
-    ParserKeywordPtr pvtgKeyword( new ParserKeyword("PVTG" , "TABDIMS" , "NTPVT" , true));
+    ParserKeywordPtr pvtgKeyword( new ParserKeyword("PVTG" , "TABDIMS" , "NTPVT" , INTERNALIZE , true));
     {
         ParserIntItemConstPtr item(new ParserIntItem(std::string("NTSFUN")));
         tabdimsKeyword->addItem(item);

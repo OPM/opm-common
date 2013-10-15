@@ -100,3 +100,38 @@ BOOST_AUTO_TEST_CASE(TestValueTypeEnumLoop) {
     BOOST_CHECK_EQUAL( "FLOAT" , ParserValueTypeEnum2String(ParserValueTypeEnumFromString(  "FLOAT" ) ));
     BOOST_CHECK_EQUAL( "STRING"    , ParserValueTypeEnum2String(ParserValueTypeEnumFromString(  "STRING" ) ));
 }
+
+
+/*****************************************************************/
+
+BOOST_AUTO_TEST_CASE(TestKeywordActionEnum2String) {
+    BOOST_CHECK_EQUAL( "INTERNALIZE"     , ParserKeywordActionEnum2String(INTERNALIZE));
+    BOOST_CHECK_EQUAL( "IGNORE"          , ParserKeywordActionEnum2String(IGNORE));
+    BOOST_CHECK_EQUAL( "IGNORE_WARNING"  , ParserKeywordActionEnum2String(IGNORE_WARNING));
+    BOOST_CHECK_EQUAL( "THROW_EXCEPTION" , ParserKeywordActionEnum2String(THROW_EXCEPTION));
+}
+ 
+
+BOOST_AUTO_TEST_CASE(TestKeywordActionEnumFromString) {
+    BOOST_CHECK_THROW( ParserKeywordActionEnumFromString("XXX") , std::invalid_argument );
+    BOOST_CHECK_EQUAL( INTERNALIZE    , ParserKeywordActionEnumFromString("INTERNALIZE"));
+    BOOST_CHECK_EQUAL( IGNORE_WARNING , ParserKeywordActionEnumFromString("IGNORE_WARNING"));
+    BOOST_CHECK_EQUAL( IGNORE  , ParserKeywordActionEnumFromString("IGNORE"));
+    BOOST_CHECK_EQUAL( THROW_EXCEPTION  , ParserKeywordActionEnumFromString("THROW_EXCEPTION"));
+}
+
+
+
+BOOST_AUTO_TEST_CASE(TestKeywordActionEnumLoop) {
+    BOOST_CHECK_EQUAL( INTERNALIZE    , ParserKeywordActionEnumFromString( ParserKeywordActionEnum2String( INTERNALIZE ) ));
+    BOOST_CHECK_EQUAL( IGNORE , ParserKeywordActionEnumFromString( ParserKeywordActionEnum2String( IGNORE ) ));
+    BOOST_CHECK_EQUAL( IGNORE_WARNING    , ParserKeywordActionEnumFromString( ParserKeywordActionEnum2String( IGNORE_WARNING ) ));
+    BOOST_CHECK_EQUAL( THROW_EXCEPTION    , ParserKeywordActionEnumFromString( ParserKeywordActionEnum2String( THROW_EXCEPTION ) ));
+    
+    BOOST_CHECK_EQUAL( "INTERNALIZE"    , ParserKeywordActionEnum2String(ParserKeywordActionEnumFromString(  "INTERNALIZE" ) ));
+    BOOST_CHECK_EQUAL( "IGNORE" , ParserKeywordActionEnum2String(ParserKeywordActionEnumFromString(  "IGNORE" ) ));
+    BOOST_CHECK_EQUAL( "IGNORE_WARNING"    , ParserKeywordActionEnum2String(ParserKeywordActionEnumFromString(  "IGNORE_WARNING" ) ));
+    BOOST_CHECK_EQUAL( "THROW_EXCEPTION" , ParserKeywordActionEnum2String(ParserKeywordActionEnumFromString(  "THROW_EXCEPTION" ) ));
+}
+
+

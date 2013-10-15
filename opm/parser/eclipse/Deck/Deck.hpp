@@ -40,8 +40,12 @@ namespace Opm {
         size_t numKeywords(const std::string& keyword);
         const std::vector<DeckKeywordConstPtr>& getKeywordList(const std::string& keyword);
         size_t size() const;
+        size_t numWarnings() const;
+        void addWarning(const std::string& warningText , const std::string& filename , size_t lineNR);
+        const std::pair<std::string , std::pair<std::string,size_t> >& getWarning( size_t index ) const;
     private:
         KeywordContainerPtr m_keywords;
+        std::vector<std::pair<std::string , std::pair<std::string,size_t> > > m_warnings; //<"Warning Text" , <"Filename" , LineNR>>
     };
 
     typedef boost::shared_ptr<Deck> DeckPtr;

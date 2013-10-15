@@ -130,7 +130,17 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject) {
 }
 
 
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObjectWithActionInvalidThrows) {
+    Json::JsonObject jsonObject("{\"name\": \"XXX\" , \"size\" : 0, \"action\" : \"WhatEver?\"}");
+    BOOST_CHECK_THROW(ParserKeyword parserKeyword(jsonObject) , std::invalid_argument);
+}
 
+
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObjectWithAction) {
+    Json::JsonObject jsonObject("{\"name\": \"XXX\" , \"size\" : 0, \"action\" : \"IGNORE\"}");
+    ParserKeyword parserKeyword(jsonObject);
+    BOOST_CHECK_EQUAL( IGNORE , parserKeyword.getAction() );
+}
 
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withSize) {
@@ -149,6 +159,12 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_missingItemThrows) {
     Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100}");
     BOOST_CHECK_THROW( ParserKeyword parserKeyword(jsonObject) , std::invalid_argument);
 }
+
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_missingItemActionIgnoreOK) {
+    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100, \"action\" : \"IGNORE\"}");
+    BOOST_CHECK_NO_THROW( ParserKeyword parserKeyword(jsonObject));
+}
+
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_nosize_notItems_OK) {
     Json::JsonObject jsonObject("{\"name\": \"BPR\"}");
@@ -324,7 +340,7 @@ BOOST_AUTO_TEST_CASE(DefaultIsNot_TableKeyword) {
 }
 
 BOOST_AUTO_TEST_CASE(ConstructorIsTableCollection) {
-    ParserKeywordPtr parserKeyword(new ParserKeyword("JA" , "TABDIMS" , "NTPVT" , true));
+    ParserKeywordPtr parserKeyword(new ParserKeyword("JA" , "TABDIMS" , "NTPVT" , INTERNALIZE , true));
     const std::pair<std::string,std::string>& sizeKW = parserKeyword->getSizeDefinitionPair();
     BOOST_CHECK(parserKeyword->isTableCollection());
     BOOST_CHECK(!parserKeyword->hasFixedSize());
@@ -339,7 +355,7 @@ BOOST_AUTO_TEST_CASE(ConstructorIsTableCollection) {
 BOOST_AUTO_TEST_CASE(ParseEmptyRecord) {
     ParserKeywordPtr tabdimsKeyword( new ParserKeyword("TEST" , 1));
     ParserIntItemConstPtr item(new ParserIntItem(std::string("ITEM") , ALL));
-    RawKeywordPtr rawkeyword(new RawKeyword( tabdimsKeyword->getName() , 1));
+    RawKeywordPtr rawkeyword(new RawKeyword( tabdimsKeyword->getName() , "FILE" , 10U , 1));
 
 
 
@@ -356,3 +372,17 @@ BOOST_AUTO_TEST_CASE(ParseEmptyRecord) {
     BOOST_CHECK_EQUAL(0U , deckItem->size());
 }
 
+
+/*****************************************************************/
+/* Action value */
+
+BOOST_AUTO_TEST_CASE(DefaultActionISINTERNALIZE) {
+    ParserKeywordPtr parserKeyword(new ParserKeyword("JA"));
+    BOOST_CHECK_EQUAL(INTERNALIZE , parserKeyword->getAction());
+}
+
+
+BOOST_AUTO_TEST_CASE(CreateWithAction) {
+    ParserKeywordPtr parserKeyword(new ParserKeyword("JA" , IGNORE));
+    BOOST_CHECK_EQUAL(IGNORE , parserKeyword->getAction());
+}

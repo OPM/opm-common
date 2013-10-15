@@ -12,12 +12,17 @@ add_test(NAME runParseWCONHIST WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMA
 
 add_executable(runParsePORO ParsePORO.cpp)
 target_link_libraries(runParsePORO Parser ${Boost_LIBRARIES})
-add_test(NAME runParsePORO WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND runParsePORO)
+add_test(NAME runParsePORO WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND runParsePORO) 
 
+add_executable(runParseACTION ParseACTION.cpp)
+target_link_libraries(runParseACTION Parser ${Boost_LIBRARIES})
+add_test(NAME runParseACTION WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND runParseACTION)
 
 add_executable(runIncludeTest IncludeTest.cpp)
 target_link_libraries(runIncludeTest Parser ${Boost_LIBRARIES})
 add_test(NAME runIncludeTest WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND runIncludeTest)
+
+
 
 
 add_executable(runParseEQUIL ParseEQUIL.cpp)

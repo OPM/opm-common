@@ -118,3 +118,27 @@ BOOST_AUTO_TEST_CASE(size_twokeyword_return2) {
 }
 
 
+BOOST_AUTO_TEST_CASE(DECKWARNING_EMPTYOK) {
+    Deck deck;
+    BOOST_CHECK_EQUAL(0U, deck.numWarnings());
+}
+
+
+BOOST_AUTO_TEST_CASE(DECKAddWarning) {
+    Deck deck;
+    deck.addWarning("WARNING" , "FILE" , 100U);
+    BOOST_CHECK_EQUAL(1U, deck.numWarnings());
+
+    deck.addWarning("WARNING2" , "FILE2" , 200U);
+    BOOST_CHECK_EQUAL(2U, deck.numWarnings());
+
+    const std::pair<std::string,std::pair<std::string,size_t> >& warning = deck.getWarning( 0 );
+    const std::pair<std::string,size_t>& location = warning.second;
+
+    BOOST_CHECK_EQUAL( warning.first   , "WARNING" );
+    BOOST_CHECK_EQUAL( location.first  , "FILE" );
+    BOOST_CHECK_EQUAL( location.second , 100U );
+    
+}
+
+

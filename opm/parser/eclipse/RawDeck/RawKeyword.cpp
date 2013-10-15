@@ -26,13 +26,13 @@
 namespace Opm {
 
 
-    RawKeyword::RawKeyword(const std::string& name) {
-        commonInit(name);
+    RawKeyword::RawKeyword(const std::string& name, const std::string& filename, size_t lineNR) {
+        commonInit(name,filename,lineNR);
     }
 
 
-    RawKeyword::RawKeyword(const std::string& name , size_t inputSize, bool isTableCollection ) {
-        commonInit(name);
+    RawKeyword::RawKeyword(const std::string& name , const std::string& filename, size_t lineNR , size_t inputSize, bool isTableCollection ) {
+        commonInit(name,filename,lineNR);
         if (isTableCollection) {
             m_isTableCollection = true;
             m_numTables = inputSize;
@@ -47,8 +47,10 @@ namespace Opm {
     }
 
 
-    void RawKeyword::commonInit(const std::string& name) {
+    void RawKeyword::commonInit(const std::string& name , const std::string& filename, size_t lineNR) {
         setKeywordName( name );
+        m_filename = filename;
+        m_lineNR = lineNR;
         m_isFinished = false;
         m_fixedSizeKeyword = false;
         m_isTableCollection = false;
@@ -176,6 +178,14 @@ namespace Opm {
 
     bool RawKeyword::isFinished() const {
         return m_isFinished;
+    }
+
+    const std::string& RawKeyword::getFilename() const {
+        return m_filename;
+    }
+
+    size_t RawKeyword::getLineNR() const {
+        return m_lineNR;
     }
 
 }

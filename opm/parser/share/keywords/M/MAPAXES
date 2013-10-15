@@ -1,0 +1,7 @@
+{"name" : "MAPAXES" , "size" : 1 , "items" : [
+    {"name" : "X1" , "value_type" : "FLOAT"},
+    {"name" : "Y1" , "value_type" : "FLOAT"},
+    {"name" : "X2" , "value_type" : "FLOAT"},
+    {"name" : "Y2" , "value_type" : "FLOAT"},
+    {"name" : "X3" , "value_type" : "FLOAT"},
+    {"name" : "Y3" , "value_type" : "FLOAT"}]}

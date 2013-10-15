@@ -59,6 +59,24 @@ namespace Opm {
         return m_keywords->size();
     }
 
+    size_t Deck::numWarnings() const {
+        return m_warnings.size();
+    }
+
+    void Deck::addWarning(const std::string& warningText , const std::string& filename , size_t lineNR) {
+        std::pair<std::string,size_t> location(filename , lineNR);
+        std::pair<std::string , std::pair<std::string,size_t> > warning(warningText , location);
+
+        m_warnings.push_back( warning );
+    }
+
+    const std::pair<std::string , std::pair<std::string,size_t> >& Deck::getWarning( size_t index ) const {
+        if (index < m_warnings.size())
+            return m_warnings[index];
+        else
+            throw std::invalid_argument("Index out of range");
+    }
+    
 
 }
 

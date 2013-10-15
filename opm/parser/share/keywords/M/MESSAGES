@@ -1,0 +1,14 @@
+{"name" : "MESSAGES" , "size" : 1 , "items" : [
+    {"name" : "PRINT_LIMIT1" , "value_type" : "INT" , "default" : 1000000},
+    {"name" : "PRINT_LIMIT2" , "value_type" : "INT" , "default" : 1000000},
+    {"name" : "PRINT_LIMIT3" , "value_type" : "INT" , "default" : 10000},
+    {"name" : "PRINT_LIMIT4" , "value_type" : "INT" , "default" : 100},
+    {"name" : "PRINT_LIMIT5" , "value_type" : "INT" , "default" : 100},
+    {"name" : "PRINT_LIMIT6" , "value_type" : "INT" , "default" : 100},
+    {"name" : "STOP_LIMIT1"  , "value_type" : "INT" , "default" : 1000000},
+    {"name" : "STOP_LIMIT2"  , "value_type" : "INT" , "default" : 1000000},
+    {"name" : "STOP_LIMIT3"  , "value_type" : "INT" , "default" : 10000},
+    {"name" : "STOP_LIMIT4"  , "value_type" : "INT" , "default" : 100},
+    {"name" : "STOP_LIMIT5"  , "value_type" : "INT" , "default" : 10},
+    {"name" : "STOP_LIMIT6"  , "value_type" : "INT" , "default" : 1}]}
+    
