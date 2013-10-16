@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(Equal_Different_ReturnsFalse) {
 
 }
 
-/*
+
 BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
     ParserRecord parserRecord;
     ParserIntItemConstPtr itemInt( new ParserIntItem("ITEM1", SINGLE));
@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
     
 
     {
-        RawRecordPtr rawRecord(new RawRecord("10 /"));
+        RawRecordPtr rawRecord(new RawRecord("TRYGVE 10 2.9 /"));
         DeckItemConstPtr deckStringItem = itemString->scan(rawRecord);
         DeckItemConstPtr deckIntItem = itemInt->scan(rawRecord);
         DeckItemConstPtr deckDoubleItem = itemDouble->scan(rawRecord);
@@ -270,6 +270,6 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
         BOOST_CHECK_EQUAL(  true , deckDoubleItem->defaultApplied() );
     }
 }
-*/
+
 
 
