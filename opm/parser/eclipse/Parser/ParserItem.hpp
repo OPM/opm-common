@@ -67,6 +67,8 @@ namespace Opm {
 
   typedef boost::shared_ptr<const ParserItem> ParserItemConstPtr;
   typedef boost::shared_ptr<ParserItem> ParserItemPtr;
+
+
 }
 
 #endif
