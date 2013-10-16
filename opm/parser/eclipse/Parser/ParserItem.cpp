@@ -25,10 +25,6 @@
 
 namespace Opm {
 
-    template<> void ParserItem::fillVectorFromStringStream<std::string>(std::istringstream& inputStream , std::string& token , std::deque<std::string>& dataVector) const {
-        dataVector.push_back(token);
-    }
-
     ParserItem::ParserItem(const std::string& itemName, ParserItemSizeEnum sizeType) {
         m_name.assign(itemName);
         m_sizeType = sizeType;

@@ -54,13 +54,6 @@ namespace Opm {
 
     typedef boost::shared_ptr<const ParserIntItem> ParserIntItemConstPtr;
     typedef boost::shared_ptr<ParserIntItem> ParserIntItemPtr;
-
-    
-    template<class T> 
-    class ParserXItem : public ParserItem{
-    public:
-        ParserXItem(const std::string& itemName) { };
-    };
 }
 
 #endif  /* PARSERINTITEM_HPP */

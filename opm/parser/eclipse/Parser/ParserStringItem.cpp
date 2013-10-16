@@ -21,7 +21,7 @@
 
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
-
+#include <opm/parser/eclipse/RawDeck/StarToken.hpp>
 namespace Opm {
 
     ParserStringItem::ParserStringItem(const std::string& itemName) : ParserItem(itemName) {
@@ -63,23 +63,53 @@ namespace Opm {
     /// returns a DeckItem object.
     /// NOTE: data are popped from the rawRecords deque!
 
-    DeckItemConstPtr ParserStringItem::scan(RawRecordPtr rawRecord) const {
+     DeckItemConstPtr ParserStringItem::scan(RawRecordPtr rawRecord) const {
         DeckStringItemPtr deckItem(new DeckStringItem(name()));
-        
-        bool scanAll = (sizeType() == ALL);
-        bool defaultActive;
-        std::deque<std::string> stringsPreparedForDeckItem = readFromRawRecord(rawRecord, scanAll, m_default, defaultActive);
+        std::string defaultValue = m_default;
 
-        if (scanAll)
-            deckItem->push_back(stringsPreparedForDeckItem);
-        else {
-            deckItem->push_back(stringsPreparedForDeckItem.front());
-            stringsPreparedForDeckItem.pop_front();
-            pushBackToRecord(rawRecord, stringsPreparedForDeckItem, defaultActive);
+        if (sizeType() == ALL) {  // This can probably not be combined with a default value ....
+            // The '*' should be interpreted as a multiplication sign
+            while (rawRecord->size() > 0) {
+                std::string token = rawRecord->pop_front();
+                if (tokenContainsStar( token )) {
+                    StarToken<std::string> st(token);
+                    std::string value = defaultValue;    // This probably does never apply
+                    if (st.hasValue())
+                        value = st.value();
+                    deckItem->push_backMultiple( value , st.multiplier() );
+                } else {
+                    std::string value = readValueToken<std::string>(token);
+                    deckItem->push_back(value);
+                }
+            }
+        } else {
+            // The '*' should be interpreted as a default indicator
+            if (rawRecord->size() > 0) {
+                std::string token = rawRecord->pop_front();
+                if (tokenContainsStar( token )) {
+                    StarToken<std::string> st(token);
+        
+                    if (st.hasValue()) { // Probably never true
+                        deckItem->push_back( st.value() ); 
+                        std::string stringValue = boost::lexical_cast<std::string>(st.value());
+                        for (size_t i=1; i < st.multiplier(); i++)
+                            rawRecord->push_front( stringValue );
+                    } else {
+                        deckItem->push_backDefault( defaultValue );
+                        for (size_t i=1; i < st.multiplier(); i++)
+                            rawRecord->push_front( "*" );
+                    }
+                } else {
+                    std::string value = readValueToken<std::string>(token);
+                    deckItem->push_back(value);
+                }
+            } else
+                deckItem->push_backDefault( defaultValue );
         }
         return deckItem;
     }
-
+     
+     
     bool ParserStringItem::equal(const ParserStringItem& other) const
     {
         if (ParserItem::equal(other) && (getDefault() == other.getDefault()))

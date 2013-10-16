@@ -30,15 +30,18 @@ namespace Opm {
 
     class DeckStringItem : public DeckItem {
     public:
-        DeckStringItem(std::string name) : DeckItem(name) {}
+
+        DeckStringItem(std::string name) : DeckItem(name) {
+        }
         std::string getString(size_t index) const;
         const std::vector<std::string>& getStringData() const;
 
-        void push_back(std::deque<std::string> data , size_t items);
+        void push_back(std::deque<std::string> data, size_t items);
         void push_back(std::deque<std::string> data);
         void push_back(std::string value);
         void push_backDefault(std::string value);
-
+        void push_backMultiple(std::string value, size_t numItems);
+        
         size_t size() const;
     private:
         std::vector<std::string> m_data;

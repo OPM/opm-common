@@ -58,7 +58,7 @@ namespace Opm {
   protected:
     bool m_defaultSet;
 
-#include <opm/parser/eclipse/Parser/ParserItemTemplate.hpp>
+
 
   private:
     std::string m_name;

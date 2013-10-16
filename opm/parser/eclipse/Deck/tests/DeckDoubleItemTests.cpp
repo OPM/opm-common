@@ -87,3 +87,11 @@ BOOST_AUTO_TEST_CASE(DefaultApplied) {
 }
 
 
+
+BOOST_AUTO_TEST_CASE(PushBackMultiple) {
+    DeckDoubleItem item("HEI");
+    item.push_backMultiple(10.22 , 100 );
+    BOOST_CHECK_EQUAL( 100U , item.size() );
+    for (size_t i=0; i < 100; i++)
+        BOOST_CHECK_EQUAL(10.22 , item.getDouble(i));
+}
