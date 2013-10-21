@@ -70,7 +70,6 @@ Parser/ParserIntItem.hpp
 Parser/ParserBoolItem.hpp  
 Parser/ParserDoubleItem.hpp  
 Parser/ParserStringItem.hpp  
-Parser/ParserItemTemplate.hpp
 )
 
 add_library(buildParser ${rawdeck_source} ${build_parser_source} ${deck_source})
