@@ -1,12 +1,9 @@
-add_subdirectory( tests )
 enable_language( C )
 
 
-find_package(cjson)
-if (HAVE_CJSON)
-    include_directories( ${CJSON_INCLUDE_DIR} )
-else()
+if (NOT HAVE_CJSON)
     add_library( cjson cjson/cJSON.c )
+    set( CJSON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
     install( TARGETS cjson DESTINATION ${CMAKE_INSTALL_LIBDIR} )
     install( FILES cjson/cJSON.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include/cjson )
 
@@ -25,3 +22,4 @@ foreach ( header ${json_headers} )
      install( FILES ${header} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/opm/json RENAME ${header})
 endforeach()
 
+add_subdirectory( tests )
