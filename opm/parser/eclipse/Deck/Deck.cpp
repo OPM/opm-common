@@ -31,7 +31,7 @@ namespace Opm {
         return m_keywords->hasKeyword(keyword);
     }
     
-    void Deck::addKeyword( DeckKeywordConstPtr keyword) {
+    void Deck::addKeyword( DeckKeywordPtr keyword) {
         m_keywords->addKeyword(keyword);
     }
     

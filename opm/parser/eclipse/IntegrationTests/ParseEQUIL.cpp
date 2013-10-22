@@ -39,8 +39,12 @@ BOOST_AUTO_TEST_CASE( parse_EQUIL_OK ) {
     ParserPtr parser(new Parser());
     boost::filesystem::path pvtgFile("testdata/integration_tests/EQUIL/EQUIL1");
     DeckPtr deck = parser->parse(pvtgFile.string());
+    DeckKeywordConstPtr kw0 = deck->getKeyword("EQLDIMS" , 0);
     DeckKeywordConstPtr kw1 = deck->getKeyword("EQUIL" , 0);
     BOOST_CHECK_EQUAL( 3U , kw1->size() );
+
+    BOOST_CHECK_EQUAL(0 , kw0->getDeckIndex());
+    BOOST_CHECK_EQUAL(1 , kw1->getDeckIndex());
 
 
     DeckRecordConstPtr rec1 = kw1->getRecord(0);
