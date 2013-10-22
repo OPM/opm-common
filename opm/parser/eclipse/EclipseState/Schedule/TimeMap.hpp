@@ -21,12 +21,20 @@
 #ifndef TIMEMAP_HPP_
 #define TIMEMAP_HPP_
 
+#include <boost/date_time.hpp>
+
 namespace Opm {
 
     class TimeMap {
     public:
-        TimeMap();
+        TimeMap(boost::gregorian::date startDate);
+        void addDate(boost::gregorian::date newDate);
+        void addTStep(boost::posix_time::time_duration step);
+        size_t size() const;
 
+    private:
+        boost::gregorian::date m_startDate;
+        std::vector<boost::posix_time::ptime> m_timeList;
     };
 
 }

@@ -23,11 +23,64 @@
 
 #define BOOST_TEST_MODULE ParserTests
 #include <boost/test/unit_test.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 
 
+BOOST_AUTO_TEST_CASE(CreateTimeMap_InvalidThrow) {
+    boost::gregorian::date startDate;
+    BOOST_CHECK_THROW(Opm::TimeMap timeMap(startDate) , std::invalid_argument);
+}
+
 
 BOOST_AUTO_TEST_CASE(CreateTimeMap) {
-    Opm::TimeMap timeMap;
+    boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
+    Opm::TimeMap timeMap(startDate);
+    BOOST_CHECK_EQUAL(1U , timeMap.size());
 }
+
+
+
+BOOST_AUTO_TEST_CASE(AddDateBeforThrows) {
+    boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
+    Opm::TimeMap timeMap(startDate);
+
+    BOOST_CHECK_THROW( timeMap.addDate( boost::gregorian::date(2009,boost::gregorian::Feb,2))  , std::invalid_argument);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(AddDateAfterSizeCorrect) {
+    boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
+    Opm::TimeMap timeMap(startDate);
+
+    timeMap.addDate( boost::gregorian::date(2010,boost::gregorian::Feb,2));
+    BOOST_CHECK_EQUAL( 2U , timeMap.size());
+}
+
+
+BOOST_AUTO_TEST_CASE(AddDateNegativeStepThrows) {
+  boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
+    Opm::TimeMap timeMap(startDate);
+
+    BOOST_CHECK_THROW( timeMap.addTStep( boost::posix_time::hours(-1)) , std::invalid_argument);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(AddStepSizeCorrect) {
+    boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
+    Opm::TimeMap timeMap(startDate);
+
+    timeMap.addTStep( boost::posix_time::hours(1));
+    timeMap.addTStep( boost::posix_time::hours(24));
+    BOOST_CHECK_EQUAL( 3U , timeMap.size());
+}
+
+
+
+
+
+
+
