@@ -28,6 +28,9 @@ namespace Opm {
         DeckRecordConstPtr getDataRecord() const;
         bool isKnown() const;
         
+        ssize_t getDeckIndex() const;
+        void    setDeckIndex(size_t deckIndex);
+
         const std::vector<int>& getIntData() const;
         const std::vector<double>& getDoubleData() const;
         const std::vector<std::string>& getStringData() const;
@@ -36,7 +39,7 @@ namespace Opm {
         std::string m_keywordName;
         std::vector<DeckRecordConstPtr> m_recordList;
         bool m_knownKeyword;
-
+        ssize_t m_deckIndex;
     };
     typedef boost::shared_ptr<DeckKeyword> DeckKeywordPtr;
     typedef boost::shared_ptr<const DeckKeyword> DeckKeywordConstPtr;
