@@ -1,6 +1,3 @@
-enable_language( C )
-
-
 if (NOT HAVE_CJSON)
     add_library( cjson cjson/cJSON.c )
     set( CJSON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
