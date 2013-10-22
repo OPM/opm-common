@@ -35,10 +35,9 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE(ParseFileWithManyKeywords) {
     boost::filesystem::path multipleKeywordFile("testdata/statoil/gurbat_trimmed.DATA");
 
-    ParserPtr parser(new Parser(JSON_CONFIG_FILE));
-    DeckPtr Deck = parser->parse(multipleKeywordFile.string());
+    ParserPtr parser(new Parser());
+    DeckPtr Deck = parser->parse(multipleKeywordFile.string() , false);
 
     //This check is not necessarily correct, 
     //as it depends on that all the fixed recordNum keywords are specified
-    BOOST_CHECK_EQUAL((unsigned) 250, Deck->size());
 }
