@@ -19,6 +19,11 @@ find_path (CJSON_INCLUDE_DIR
   DOC "Path to cjson library header files"
   ${_no_default_path} )
 
+# find out the size of a pointer. this is required to only search for
+# libraries in the directories relevant for the architecture
+if (CMAKE_SIZEOF_VOID_P)
+  math (EXPR _BITS "8 * ${CMAKE_SIZEOF_VOID_P}")
+endif (CMAKE_SIZEOF_VOID_P)
 
 find_library (CJSON_LIBRARY
   NAMES "cjson"
