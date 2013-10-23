@@ -2,7 +2,7 @@
 # If found, it sets these variables:
 #
 #       CJSON_INCLUDE_DIRS      Header file directories
-#       CJSON_LIBRARRY          Archive/shared objects
+#       CJSON_LIBRARIES         Archive/shared objects
 
 if (CJSON_ROOT)
   set (_no_default_path "NO_DEFAULT_PATH")
