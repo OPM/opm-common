@@ -53,3 +53,9 @@ else ()
   unset (HAVE_CJSON CACHE)
 endif ()
 
+# if the test program didn't compile, but was required to do so, bail
+# out now and display an error; otherwise limp on
+find_package_handle_standard_args (cjson
+  DEFAULT_MSG
+  CJSON_INCLUDE_DIR CJSON_LIBRARIES HAVE_CJSON
+  )
