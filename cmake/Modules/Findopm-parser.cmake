@@ -9,6 +9,8 @@
 #	OPM_PARSER_INCLUDE_DIRS      Header file directories
 #	OPM_PARSER_LIBRARIES         Archives and shared objects
 
+include (FindPackageHandleStandardArgs)
+
 # variables to pass on to other packages
 if (FIND_QUIETLY)
   set (OPM_PARSER_QUIET "QUIET")
