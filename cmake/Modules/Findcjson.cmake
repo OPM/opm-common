@@ -4,6 +4,8 @@
 #       CJSON_INCLUDE_DIRS      Header file directories
 #       CJSON_LIBRARIES         Archive/shared objects
 
+include (FindPackageHandleStandardArgs)
+
 if (CJSON_ROOT)
   set (_no_default_path "NO_DEFAULT_PATH")
 else (CJSON_ROOT)
