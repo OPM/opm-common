@@ -132,6 +132,8 @@ endif ()
 
 # if the test program didn't compile, but was required to do so, bail
 # out now and display an error; otherwise limp on
+set (OPM_PARSER_FIND_REQUIRED ${opm-parser_FIND_REQUIRED})
+set (OPM_PARSER_FIND_QUIETLY ${opm-parser_FIND_QUIETLY})
 find_package_handle_standard_args (OPM_PARSER
   DEFAULT_MSG
   OPM_PARSER_INCLUDE_DIR OPM_PARSER_LIBRARIES HAVE_OPM_PARSER
