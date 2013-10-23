@@ -14,7 +14,7 @@ endif (CJSON_ROOT)
 find_path (CJSON_INCLUDE_DIR
   NAMES "cjson/cJSON.h"
   HINTS "${CJSON_ROOT}"
-  PATH_SUFFIXES "include"
+  PATH_SUFFIXES "include" "opm/json"
   DOC "Path to cjson library header files"
   ${_no_default_path} )
 
@@ -23,6 +23,7 @@ find_library (CJSON_LIBRARY
   NAMES "cjson"
   HINTS "${CJSON_ROOT}"
   PATH_SUFFIXES "lib" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}"
+                "opm/json"
   DOC "Path to cjson library archive/shared object files"
   ${_no_default_path} )
 
