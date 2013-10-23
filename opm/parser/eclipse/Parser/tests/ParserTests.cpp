@@ -224,6 +224,19 @@ BOOST_AUTO_TEST_CASE(DropKeyword) {
 }
 
 
+BOOST_AUTO_TEST_CASE(ReplaceKeyword) {
+    ParserPtr parser(new Parser());
+    ParserKeywordConstPtr eqldims = parser->getKeyword("EQLDIMS");
+
+    BOOST_CHECK_EQUAL( 5 , eqldims->numItems());
+    parser->loadKeywordFromFile( "testdata/parser/EQLDIMS2" );
+    
+
+    eqldims = parser->getKeyword("EQLDIMS");
+    BOOST_CHECK_EQUAL( 1 , eqldims->numItems());
+}
+
+
 /***************** Simple Int parsing ********************************/
 
 ParserKeywordPtr setupParserKeywordInt(std::string name, int numberOfItems) {
