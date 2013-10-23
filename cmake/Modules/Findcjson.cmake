@@ -32,16 +32,23 @@ find_library (CJSON_LIBRARY
   DOC "Path to cjson library archive/shared object files"
   ${_no_default_path} )
 
+# setup list of all required libraries to link with cjson
+set (CJSON_LIBRARIES ${CJSON_LIBRARY})
 
+# math library (should exist on all unices; automatically linked on Windows)
+if (UNIX)
+  find_library (MATH_LIBRARY NAMES "m")
+  list (APPEND CJSON_LIBRARIES ${MATH_LIBRARY})
+endif (UNIX)
 
 # see if we can compile a minimum example
 # CMake logical test doesn't handle lists (sic)
-if (NOT (CJSON_INCLUDE_DIR MATCHES "-NOTFOUND" OR CJSON_LIBRARY MATCHES "-NOTFOUND"))
+if (NOT (CJSON_INCLUDE_DIR MATCHES "-NOTFOUND" OR CJSON_LIBRARIES MATCHES "-NOTFOUND"))
   include (CMakePushCheckState)
   include (CheckCSourceCompiles)
   cmake_push_check_state ()
   set (CMAKE_REQUIRED_INCLUDES ${CJSON_INCLUDE_DIR})
-  set (CMAKE_REQUIRED_LIBRARIES ${CJSON_LIBRARY})
+  set (CMAKE_REQUIRED_LIBRARIES ${CJSON_LIBRARIES})
 
   check_c_source_compiles (
 "#include <stdlib.h>
