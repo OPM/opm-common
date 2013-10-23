@@ -74,7 +74,8 @@ endif ()
 
 # if the test program didn't compile, but was required to do so, bail
 # out now and display an error; otherwise limp on
-find_package_handle_standard_args (cjson
+find_package_handle_standard_args (CJSON
   DEFAULT_MSG
   CJSON_INCLUDE_DIRS CJSON_LIBRARIES HAVE_CJSON
   )
+set (cjson_FOUND ${CJSON_FOUND})
