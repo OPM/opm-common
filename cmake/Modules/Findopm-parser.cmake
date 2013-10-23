@@ -32,17 +32,27 @@ if ((NOT OPM_PARSER_ROOT) AND OPM_ROOT)
 endif ()
 
 # if a root is specified, then don't search in system directories
+# or in relative directories to this one
 if (OPM_PARSER_ROOT)
   set (_no_default_path "NO_DEFAULT_PATH")
+  set (_opm_parser_source "")
+  set (_opm_parser_build "")
 else ()
   set (_no_default_path "")
+  set (_opm_parser_source
+    "${PROJECT_SOURCE_DIR}/../opm-parser")
+  set (_opm_parser_build
+    "${PROJECT_BINARY_DIR}/../opm-parser"
+    "${PROJECT_BINARY_DIR}/../opm-parser-build"
+    "${PROJECT_BINARY_DIR}/../../opm-parser/build"
+    "${PROJECT_BINARY_DIR}/../../opm-parser/cmake-build")
 endif ()
 
 # use this header as signature
 find_path (OPM_PARSER_INCLUDE_DIR
   NAMES "opm/parser/eclipse/Parser/Parser.hpp"
   HINTS "${OPM_PARSER_ROOT}"
-  PATHS "../opm-parser"
+  PATHS ${_opm_parser_source}
   PATH_SUFFIXES "include"
   DOC "Path to OPM parser header files"
   ${_no_default_path} )
@@ -57,10 +67,7 @@ endif (CMAKE_SIZEOF_VOID_P)
 find_library (OPM_PARSER_LIBRARY
   NAMES "Parser"
   HINTS "${OPM_PARSER_ROOT}"
-  PATHS "${PROJECT_BINARY_DIR}/../opm-parser"
-        "${PROJECT_BINARY_DIR}/../opm-parser-build"
-        "${PROJECT_BINARY_DIR}/../../opm-parser/build"
-        "${PROJECT_BINARY_DIR}/../../opm-parser/cmake-build"
+  PATHS ${_opm_parser_build}
   PATH_SUFFIXES "lib" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}"
                 "opm/parser/eclipse"
   DOC "Path to OPM parser library archive/shared object files"
@@ -69,10 +76,7 @@ find_library (OPM_PARSER_LIBRARY
 find_library (OPM_JSON_LIBRARY
   NAMES "opm-json"
   HINTS "${OPM_PARSER_ROOT}"
-  PATHS "${PROJECT_BINARY_DIR}/../opm-parser"
-        "${PROJECT_BINARY_DIR}/../opm-parser-build"
-        "${PROJECT_BINARY_DIR}/../../opm-parser/build"
-        "${PROJECT_BINARY_DIR}/../../opm-parser/cmake-build"
+  PATHS ${_opm_parser_build}
   PATH_SUFFIXES "lib" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}"
                 "opm/json"
   DOC "Path to OPM JSON library archive/shared object files"
