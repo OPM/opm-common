@@ -18,6 +18,14 @@ else ()
   set (OPM_PARSER_QUIET "")
 endif ()
 
+# use lowercase versions of the variables if those are set
+if (opm-parser_ROOT)
+  set (OPM_PARSER_ROOT ${opm-parser_ROOT})
+endif ()
+if (opm_ROOT)
+  set (OPM_ROOT ${opm_ROOT})
+endif ()
+
 # inherit "suite" root if not specifically set for this library
 if ((NOT OPM_PARSER_ROOT) AND OPM_ROOT)
   set (OPM_PARSER_ROOT "${OPM_ROOT}/opm-parser")
