@@ -14,6 +14,7 @@ endif (CJSON_ROOT)
 find_path (CJSON_INCLUDE_DIR
   NAMES "cjson/cJSON.h"
   HINTS "${CJSON_ROOT}"
+  PATHS "../opm-parser"
   PATH_SUFFIXES "include" "opm/json"
   DOC "Path to cjson library header files"
   ${_no_default_path} )
@@ -22,6 +23,10 @@ find_path (CJSON_INCLUDE_DIR
 find_library (CJSON_LIBRARY
   NAMES "cjson"
   HINTS "${CJSON_ROOT}"
+  PATHS "${PROJECT_BINARY_DIR}/../opm-parser"
+        "${PROJECT_BINARY_DIR}/../opm-parser-build"
+        "${PROJECT_BINARY_DIR}/../../opm-parser/build"
+        "${PROJECT_BINARY_DIR}/../../opm-parser/cmake-build"
   PATH_SUFFIXES "lib" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}"
                 "opm/json"
   DOC "Path to cjson library archive/shared object files"
