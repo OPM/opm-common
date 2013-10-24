@@ -73,7 +73,6 @@ Parser/ParserIntItem.hpp
 Parser/ParserBoolItem.hpp  
 Parser/ParserDoubleItem.hpp  
 Parser/ParserStringItem.hpp  
-Parser/ParserItemTemplate.hpp
 #
 EclipseState/Schedule/TimeMap.hpp
 )
