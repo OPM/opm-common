@@ -65,6 +65,9 @@ namespace Opm {
     }
 
     void Parser::addKeyword(ParserKeywordConstPtr parserKeyword) {
+        if (hasKeyword(parserKeyword->getName()))
+            m_parserKeywords.erase(parserKeyword->getName());
+            
         m_parserKeywords.insert(std::make_pair(parserKeyword->getName(), parserKeyword));
     }
 
