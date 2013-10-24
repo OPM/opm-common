@@ -16,7 +16,7 @@ endif (CJSON_ROOT)
 find_path (CJSON_INCLUDE_DIR
   NAMES "cjson/cJSON.h"
   HINTS "${CJSON_ROOT}"
-  PATHS "../opm-parser"
+  PATHS "${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/../opm-parser"
   PATH_SUFFIXES "include" "opm/json"
   DOC "Path to cjson library header files"
   ${_no_default_path} )
@@ -76,6 +76,8 @@ endif ()
 
 # if the test program didn't compile, but was required to do so, bail
 # out now and display an error; otherwise limp on
+set (CJSON_FIND_REQUIRED ${cjson_FIND_REQUIRED})
+set (CJSON_FIND_QUIETLY ${cjson_FIND_QUIETLY})
 find_package_handle_standard_args (CJSON
   DEFAULT_MSG
   CJSON_INCLUDE_DIRS CJSON_LIBRARIES HAVE_CJSON

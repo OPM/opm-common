@@ -22,6 +22,7 @@
 
 #include <string>
 #include <iostream>
+#include <cstdlib> // strtol, strtod
 
 #define STAR    '*'
 #define C_EOS  '\0'
