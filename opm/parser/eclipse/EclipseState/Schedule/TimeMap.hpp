@@ -23,6 +23,9 @@
 
 #include <boost/date_time.hpp>
 
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+
 namespace Opm {
 
     class TimeMap {
@@ -30,13 +33,20 @@ namespace Opm {
         TimeMap(boost::gregorian::date startDate);
         void addDate(boost::gregorian::date newDate);
         void addTStep(boost::posix_time::time_duration step);
+        void addFromDATESKeyword( DeckKeywordConstPtr DATESKeyword );
+        void addFromTSTEPKeyword( DeckKeywordConstPtr TSTEPKeyword );
+        boost::gregorian::date getStartDate() const;
         size_t size() const;
-
+        static boost::gregorian::date dateFromEclipse(DeckRecordConstPtr dateRecord);
+        static boost::gregorian::date dateFromEclipse(int day , const std::string& month, int year);
     private:
+        static std::map<std::string , boost::gregorian::greg_month> initEclipseMonthNames();
+
         boost::gregorian::date m_startDate;
         std::vector<boost::posix_time::ptime> m_timeList;
     };
-
+    typedef boost::shared_ptr<TimeMap> TimeMapPtr;
+    typedef boost::shared_ptr<const TimeMap> TimeMapConstPtr;
 }
 
 

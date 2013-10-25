@@ -17,8 +17,10 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
+#include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
+#include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
 
 namespace Opm {
 
@@ -53,6 +55,87 @@ namespace Opm {
         return m_timeList.size();
     }
 
+
+    boost::gregorian::date TimeMap::getStartDate() const {
+        return m_startDate;
+    }
+
+
+    std::map<std::string , boost::gregorian::greg_month> TimeMap::initEclipseMonthNames() {
+        std::map<std::string , boost::gregorian::greg_month> monthNames;
+
+        monthNames.insert( std::make_pair( "JAN" , boost::gregorian::Jan ));
+        monthNames.insert( std::make_pair( "FEB" , boost::gregorian::Feb ));
+        monthNames.insert( std::make_pair( "MAR" , boost::gregorian::Mar ));
+        monthNames.insert( std::make_pair( "APR" , boost::gregorian::Apr ));
+        monthNames.insert( std::make_pair( "MAI" , boost::gregorian::May ));
+        monthNames.insert( std::make_pair( "MAY" , boost::gregorian::May ));
+        monthNames.insert( std::make_pair( "JUN" , boost::gregorian::Jun ));
+        monthNames.insert( std::make_pair( "JUL" , boost::gregorian::Jul ));
+        monthNames.insert( std::make_pair( "JLY" , boost::gregorian::Jul ));
+        monthNames.insert( std::make_pair( "AUG" , boost::gregorian::Aug ));
+        monthNames.insert( std::make_pair( "SEP" , boost::gregorian::Sep ));
+        monthNames.insert( std::make_pair( "OCT" , boost::gregorian::Oct ));
+        monthNames.insert( std::make_pair( "OKT" , boost::gregorian::Oct ));
+        monthNames.insert( std::make_pair( "NOV" , boost::gregorian::Nov ));
+        monthNames.insert( std::make_pair( "DEC" , boost::gregorian::Dec ));
+        monthNames.insert( std::make_pair( "DES" , boost::gregorian::Dec ));
+        
+        return monthNames;
+    }
+    
+
+    boost::gregorian::date TimeMap::dateFromEclipse(int day , const std::string& eclipseMonthName, int year) {
+        static const std::map<std::string,boost::gregorian::greg_month> monthNames = initEclipseMonthNames();
+        boost::gregorian::greg_month month = monthNames.at( eclipseMonthName );
+        return boost::gregorian::date( year , month , day );
+    }
+    
+
+
+    boost::gregorian::date TimeMap::dateFromEclipse(DeckRecordConstPtr dateRecord) {
+        static const std::string errorMsg("The datarecord must consists of three values: \"DAY(int)  MONTH(string)  YEAR(int)\".\n");
+        if (dateRecord->size() != 3)
+            throw std::invalid_argument( errorMsg);
+
+        DeckItemConstPtr dayItem = dateRecord->getItem( 0 );
+        DeckItemConstPtr monthItem = dateRecord->getItem( 1 );
+        DeckItemConstPtr yearItem = dateRecord->getItem( 2 );
+
+        try {
+            int day = dayItem->getInt(0);
+            const std::string& month = monthItem->getString(0);
+            int year = yearItem->getInt(0);
+
+            return TimeMap::dateFromEclipse( day , month , year);
+        } catch (...) {
+            throw std::invalid_argument( errorMsg );
+        }
+    }
+
+    
+    
+    void TimeMap::addFromDATESKeyword( DeckKeywordConstPtr DATESKeyword ) {
+        for (size_t recordIndex = 0; recordIndex < DATESKeyword->size(); recordIndex++) {
+            DeckRecordConstPtr record = DATESKeyword->getRecord( recordIndex );
+            boost::gregorian::date date = TimeMap::dateFromEclipse( record );
+            addDate( date );
+        }
+    }
+    
+    
+
+    void TimeMap::addFromTSTEPKeyword( DeckKeywordConstPtr TSTEPKeyword ) {
+        DeckRecordConstPtr record = TSTEPKeyword->getRecord( 0 );
+        DeckItemConstPtr item = record->getItem( 0 );
+
+        for (size_t itemIndex = 0; itemIndex < item->size(); itemIndex++) {
+            double days = item->getDouble( itemIndex );
+            boost::posix_time::time_duration step = boost::posix_time::seconds( static_cast<long int>(days * 24 * 3600) );
+            addTStep( step );
+        }
+    } 
+    
 }
 
 
