@@ -14,6 +14,10 @@ add_executable(runParsePORO ParsePORO.cpp)
 target_link_libraries(runParsePORO Parser ${Boost_LIBRARIES})
 add_test(NAME runParsePORO WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND runParsePORO) 
 
+add_executable(runScheduleCreateFromDeck ScheduleCreateFromDeck.cpp)
+target_link_libraries(runScheduleCreateFromDeck Parser ${Boost_LIBRARIES})
+add_test(NAME runScheduleCreateFromDeck WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND runScheduleCreateFromDeck) 
+
 add_executable(runParseACTION ParseACTION.cpp)
 target_link_libraries(runParseACTION Parser ${Boost_LIBRARIES})
 add_test(NAME runParseACTION WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND runParseACTION)
