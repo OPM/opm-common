@@ -122,12 +122,12 @@ namespace Opm {
                         ParserKeywordConstPtr parserKeyword = m_parserKeywords.at(rawKeyword->getKeywordName());
                         ParserKeywordActionEnum action = parserKeyword->getAction();
                         if (action == INTERNALIZE) {
-                            DeckKeywordConstPtr deckKeyword = parserKeyword->parse(rawKeyword);
+                            DeckKeywordPtr deckKeyword = parserKeyword->parse(rawKeyword);
                             deck->addKeyword(deckKeyword);
                         } else if (action == IGNORE_WARNING) 
                             deck->addWarning( "The keyword " + rawKeyword->getKeywordName() + " is ignored - this might potentially affect the results" , file.string() , rawKeyword->getLineNR());
                     } else {
-                        DeckKeywordConstPtr deckKeyword(new DeckKeyword(rawKeyword->getKeywordName(), false));
+                        DeckKeywordPtr deckKeyword(new DeckKeyword(rawKeyword->getKeywordName(), false));
                         deck->addKeyword(deckKeyword);
                         deck->addWarning( "The keyword " + rawKeyword->getKeywordName() + " is not recognized" , file.string() , lineNR);
                     }

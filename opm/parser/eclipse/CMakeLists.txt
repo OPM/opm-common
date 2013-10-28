@@ -2,6 +2,7 @@ add_subdirectory(Parser/tests)
 add_subdirectory(RawDeck/tests)
 add_subdirectory(Deck/tests)
 add_subdirectory(IntegrationTests)
+add_subdirectory(EclipseState/Schedule/tests)
 
 add_subdirectory( Applications )
 
@@ -45,6 +46,9 @@ Parser/ParserDoubleItem.cpp
 Parser/ParserStringItem.cpp  
 )
 
+set (state_source
+EclipseState/Schedule/TimeMap.cpp 
+EclipseState/Schedule/Schedule.cpp )
 
 set( HEADER_FILES
 RawDeck/RawConsts.hpp 
@@ -70,6 +74,9 @@ Parser/ParserIntItem.hpp
 Parser/ParserBoolItem.hpp  
 Parser/ParserDoubleItem.hpp  
 Parser/ParserStringItem.hpp  
+#
+EclipseState/Schedule/TimeMap.hpp
+EclipseState/Schedule/Schedule.hpp
 )
 
 add_library(buildParser ${rawdeck_source} ${build_parser_source} ${deck_source})
@@ -87,7 +94,7 @@ add_custom_command( OUTPUT ${PROJECT_BINARY_DIR}/generated-source/DefaultKeyword
 
 #-----------------------------------------------------------------
 
-add_library(Parser ${rawdeck_source} ${parser_source} ${deck_source})
+add_library(Parser ${rawdeck_source} ${parser_source} ${deck_source} ${state_source})
 target_link_libraries(Parser opm-json ${Boost_LIBRARIES})
 
 include( ${PROJECT_SOURCE_DIR}/cmake/Modules/install_headers.cmake )   

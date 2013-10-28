@@ -15,29 +15,32 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
+#ifndef SCHEDULE_HPP
+#define SCHEDULE_HPP
 
-#define BOOST_TEST_MODULE ParserIntegrationTestsInternalData
-
-#include <stdexcept>
-#include <iostream>
-#include <boost/filesystem.hpp>
-
-#include <boost/test/unit_test.hpp>
-
-#include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-using namespace Opm;
 
-//NOTE: needs statoil dataset
+#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 
-BOOST_AUTO_TEST_CASE(ParseFileWithManyKeywords) {
-    boost::filesystem::path multipleKeywordFile("testdata/statoil/gurbat_trimmed.DATA");
 
-    ParserPtr parser(new Parser());
-    DeckPtr Deck = parser->parse(multipleKeywordFile.string() , false);
+namespace Opm 
+{
+    
+    const boost::gregorian::date defaultStartDate( 1983 , boost::gregorian::Jan , 1);
 
-    //This check is not necessarily correct, 
-    //as it depends on that all the fixed recordNum keywords are specified
+    class Schedule {
+    public:
+        Schedule(DeckConstPtr deck);
+        boost::gregorian::date getStartDate() const;
+        TimeMapConstPtr getTimeMap() const;
+    private:
+        TimeMapPtr m_timeMap;
+    };
+    typedef boost::shared_ptr<Schedule> SchedulePtr;
+    typedef boost::shared_ptr<const Schedule> ScheduleConstPtr;
 }
+
+#endif

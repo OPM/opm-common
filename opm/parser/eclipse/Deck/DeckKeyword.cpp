@@ -24,11 +24,21 @@ namespace Opm {
     DeckKeyword::DeckKeyword(const std::string& keywordName) {
         m_knownKeyword = true;
         m_keywordName = keywordName;
+        m_deckIndex = -1;
     }
     
     DeckKeyword::DeckKeyword(const std::string& keywordName, bool knownKeyword) {
         m_knownKeyword = knownKeyword;
         m_keywordName = keywordName;
+        m_deckIndex = -1;
+    }
+
+    ssize_t DeckKeyword::getDeckIndex() const {
+        return m_deckIndex;
+    }
+
+    void DeckKeyword::setDeckIndex(size_t deckIndex) {
+        m_deckIndex = deckIndex;
     }
 
     std::string DeckKeyword::name() const {

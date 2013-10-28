@@ -17,27 +17,28 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define BOOST_TEST_MODULE ParserIntegrationTestsInternalData
-
-#include <stdexcept>
-#include <iostream>
-#include <boost/filesystem.hpp>
+#define BOOST_TEST_MODULE ParserIntegrationTests
+#include <math.h>
 
 #include <boost/test/unit_test.hpp>
+#include <boost/test/test_tools.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
-#include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+
+
 using namespace Opm;
 
-//NOTE: needs statoil dataset
-
-BOOST_AUTO_TEST_CASE(ParseFileWithManyKeywords) {
-    boost::filesystem::path multipleKeywordFile("testdata/statoil/gurbat_trimmed.DATA");
+BOOST_AUTO_TEST_CASE( CreateSchedule ) {
 
     ParserPtr parser(new Parser());
-    DeckPtr Deck = parser->parse(multipleKeywordFile.string() , false);
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE1");
+    DeckPtr deck = parser->parse(scheduleFile.string());
+    ScheduleConstPtr sched( new Schedule(deck));
+    TimeMapConstPtr timeMap = sched->getTimeMap();
+    BOOST_CHECK_EQUAL( boost::gregorian::date( 2007 , boost::gregorian::May , 10 ) , sched->getStartDate());
 
-    //This check is not necessarily correct, 
-    //as it depends on that all the fixed recordNum keywords are specified
+    BOOST_CHECK_EQUAL( 9U , timeMap->size());
 }
