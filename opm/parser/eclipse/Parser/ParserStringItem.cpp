@@ -110,9 +110,11 @@ namespace Opm {
     }
      
      
-    bool ParserStringItem::equal(const ParserStringItem& other) const
+    bool ParserStringItem::equal(const ParserItem& other) const
     {
-        if (ParserItem::equal(other) && (getDefault() == other.getDefault()))
+        // cast to a pointer to avoid bad_cast exception
+        const ParserStringItem* rhs = dynamic_cast<const ParserStringItem*>(&other);
+        if (rhs && ParserItem::equal(other) && (getDefault() == rhs->getDefault()))
             return true;
         else
             return false;

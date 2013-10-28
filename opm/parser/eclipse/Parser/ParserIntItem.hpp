@@ -40,7 +40,7 @@ namespace Opm {
         ParserIntItem(const Json::JsonObject& jsonConfig);
 
         DeckItemConstPtr scan(RawRecordPtr rawRecord) const;
-        bool equal(const ParserIntItem& other) const;
+        bool equal(const ParserItem& other) const;
         void inlineNew(std::ostream& os) const;
         
         void setDefault(int defaultValue);
