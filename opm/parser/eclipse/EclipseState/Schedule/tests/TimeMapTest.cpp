@@ -32,6 +32,7 @@
 #include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 
 BOOST_AUTO_TEST_CASE(CreateTimeMap_InvalidThrow) {
@@ -176,4 +177,22 @@ BOOST_AUTO_TEST_CASE( dateFromEclipseInputRecord ) {
     startRecord->addItem( yearItem );
 
     BOOST_CHECK_EQUAL( boost::gregorian::date( 1987 , boost::gregorian::Jan , 10 ) , Opm::TimeMap::dateFromEclipse( startRecord ));
+}
+
+
+
+BOOST_AUTO_TEST_CASE( addDATESFromWrongKeywordThrows ) {
+    boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
+    Opm::TimeMap timeMap(startDate);
+    Opm::DeckKeywordConstPtr deckKeyword(new Opm::DeckKeyword("NOTDATES"));
+    BOOST_CHECK_THROW( timeMap.addFromDATESKeyword( deckKeyword ) , std::invalid_argument );
+}
+
+
+
+BOOST_AUTO_TEST_CASE( addTSTEPFromWrongKeywordThrows ) {
+    boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
+    Opm::TimeMap timeMap(startDate);
+    Opm::DeckKeywordConstPtr deckKeyword(new Opm::DeckKeyword("NOTTSTEP"));
+    BOOST_CHECK_THROW( timeMap.addFromTSTEPKeyword( deckKeyword ) , std::invalid_argument );
 }

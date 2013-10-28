@@ -116,6 +116,9 @@ namespace Opm {
     
     
     void TimeMap::addFromDATESKeyword( DeckKeywordConstPtr DATESKeyword ) {
+        if (DATESKeyword->name() != "DATES")
+            throw std::invalid_argument("Method requires DATES keyword input.");
+
         for (size_t recordIndex = 0; recordIndex < DATESKeyword->size(); recordIndex++) {
             DeckRecordConstPtr record = DATESKeyword->getRecord( recordIndex );
             boost::gregorian::date date = TimeMap::dateFromEclipse( record );
@@ -126,13 +129,17 @@ namespace Opm {
     
 
     void TimeMap::addFromTSTEPKeyword( DeckKeywordConstPtr TSTEPKeyword ) {
-        DeckRecordConstPtr record = TSTEPKeyword->getRecord( 0 );
-        DeckItemConstPtr item = record->getItem( 0 );
-
-        for (size_t itemIndex = 0; itemIndex < item->size(); itemIndex++) {
-            double days = item->getDouble( itemIndex );
-            boost::posix_time::time_duration step = boost::posix_time::seconds( static_cast<long int>(days * 24 * 3600) );
-            addTStep( step );
+        if (TSTEPKeyword->name() != "TSTEP")
+            throw std::invalid_argument("Method requires TSTEP keyword input.");
+        {
+            DeckRecordConstPtr record = TSTEPKeyword->getRecord( 0 );
+            DeckItemConstPtr item = record->getItem( 0 );
+            
+            for (size_t itemIndex = 0; itemIndex < item->size(); itemIndex++) {
+                double days = item->getDouble( itemIndex );
+                boost::posix_time::time_duration step = boost::posix_time::seconds( static_cast<long int>(days * 24 * 3600) );
+                addTStep( step );
+            }
         }
     } 
     
