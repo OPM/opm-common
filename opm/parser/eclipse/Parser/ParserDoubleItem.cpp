@@ -96,9 +96,11 @@ namespace Opm
 //        return deckItem;
 //    }
 
-    bool ParserDoubleItem::equal(const ParserDoubleItem& other) const
+    bool ParserDoubleItem::equal(const ParserItem& other) const
     {
-        if (ParserItem::equal(other) && (getDefault() == other.getDefault()))
+        // cast to a pointer to avoid bad_cast exception
+        const ParserDoubleItem* rhs = dynamic_cast<const ParserDoubleItem*>(&other);
+        if (rhs && ParserItem::equal(other) && (getDefault() == rhs->getDefault()))
             return true;
         else
             return false;

@@ -97,7 +97,6 @@ add_custom_command( OUTPUT ${PROJECT_BINARY_DIR}/generated-source/DefaultKeyword
 add_library(Parser ${rawdeck_source} ${parser_source} ${deck_source} ${state_source})
 target_link_libraries(Parser opm-json ${Boost_LIBRARIES})
 
-
-
+include( ${PROJECT_SOURCE_DIR}/cmake/Modules/install_headers.cmake )   
+install_headers( "${HEADER_FILES}" "${CMAKE_INSTALL_PREFIX}" )
 install( TARGETS Parser DESTINATION ${CMAKE_INSTALL_LIBDIR} )
-install( FILES ${HEADER_FILES} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/opm/parser/eclipse)
