@@ -1,0 +1,13 @@
+{"name" : "WCONPROD" , "items" : 
+      [{"name" : "WellName"     , "value_type" : "STRING"}, 
+       {"name" : "OpenShut"     , "value_type" : "STRING" , "default" : "OPEN"}, 
+       {"name" : "ControlMode"  , "value_type" : "STRING"},
+       {"name" : "ORAT"         , "value_type" : "FLOAT",  "default" : 0.0},
+       {"name" : "WRAT"         , "value_type" : "FLOAT" , "default" : 0.0},
+       {"name" : "GRAT"         , "value_type" : "FLOAT" , "default" : 0.0},
+       {"name" : "LRAT"         , "value_type" : "FLOAT" , "default" : 0.0},
+       {"name" : "RESV"         , "value_type" : "FLOAT" , "default" : 0.0},
+       {"name" : "BHP"          , "value_type" : "FLOAT" , "default" : 0.0},
+       {"name" : "THP"          , "value_type" : "FLOAT" , "default" : 0.0},
+       {"name" : "VFPTable"     , "value_type" : "INT"   , "default" : 0.0 , "comment":"The default is a state variable"},
+       {"name" : "ALQ"          , "value_type" : "FLOAT" , "default" : 0.0 , "comment":"The default is a state variable"}]}

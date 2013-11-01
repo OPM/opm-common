@@ -1,0 +1,3 @@
+{"name" : "PVDG" , "size" : {"keyword" : "TABDIMS" , "item" : "NTPVT"} , "items" : [
+        {"name" : "data" , "size_type" : "ALL" , "value_type" : "FLOAT"}]}
+
