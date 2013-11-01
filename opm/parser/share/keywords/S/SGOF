@@ -1,0 +1,5 @@
+{"name" : "SGOF" , "size" : {"keyword" : "TABDIMS" , "item" : "NTSFUN"}, 
+        "items" : [
+            {"name":"table", "value_type":"FLOAT", "size_type" : "ALL"}
+         ]
+}

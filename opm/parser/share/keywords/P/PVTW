@@ -1,0 +1,8 @@
+{"name" : "PVTW" , "size" : {"keyword":"TABDIMS" , "item":"NTPVT"}, "items":
+    [   {"name":"P_REF", "value_type" : "FLOAT"},
+        {"name":"WATER_VOL_FACTOR", "value_type" : "FLOAT", "default" : 1.0},
+        {"name":"WATER_COMPRESSIBILITY", "value_type" : "FLOAT", "default" : 0.00004},
+        {"name":"WATER_VISCOSITY", "value_type" : "FLOAT", "default" : 0.5, "comment" : "Default is 0.3 in Eclipse300"},
+        {"name":"WATER_VISCOSIBILITY", "value_type" : "FLOAT", "default" : 0.0}
+    ]}
+    
