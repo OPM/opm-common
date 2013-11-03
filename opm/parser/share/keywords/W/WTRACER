@@ -1,0 +1,7 @@
+{"name" : "WTRACER" , "items" : [
+    {"name" : "WELL" , "value_type" : "STRING"},
+    {"name" : "TRACER" , "value_type" : "STRING"},
+    {"name" : "CONCENTRATION" , "value_type" : "FLOAT"},
+    {"name" : "CUM_TRACER_FACTOR" , "value_type" : "FLOAT"},
+    {"name" : "PRODUCTION_GROUP" , "value_type" : "STRING"}]}
+    

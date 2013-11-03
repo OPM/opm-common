@@ -1,0 +1,14 @@
+{"name" : "GCONINJE" , "items" : [
+    {"name" : "group_name"    , "value_type" : "STRING" },
+    {"name" : "PHASE"  , "value_type" : "STRING"},
+    {"name" : "CONTROL_MODE" , "value_type" : "STRING" , "default" : "NONE"},
+    {"name" : "PHASE_TARGET" , "value_type" : "FLOAT" , "default" : 0},
+    {"name" : "RESV_TARGET" , "value_type" : "FLOAT" , "default" : 0},
+    {"name" : "REINJ_TARGET" , "value_type" : "FLOAT" , "default" : 0},
+    {"name" : "VOIDAGE_TARGET" , "value_type" : "FLOAT" , "default" : 0},
+    {"name" : "FREE" , "value_type" : "STRING" , "default" : "YES"},
+    {"name" : "GUIDE_FRACTION" , "value_type" : "FLOAT" , "default" : 0},
+    {"name" : "GUIDE_DEF" , "value_type" : "STRING"},
+    {"name" : "REINJECT_GROUP" , "value_type" : "STRING"},
+    {"name" : "VOIDAGE_GROUP" , "value_type" : "STRING"}
+]}
