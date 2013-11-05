@@ -17,7 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define BOOST_TEST_MODULE ParserIntegrationTests
+#define BOOST_TEST_MODULE ScheduleIntegrationTests
 #include <math.h>
 
 #include <boost/test/unit_test.hpp>
@@ -54,10 +54,8 @@ BOOST_AUTO_TEST_CASE( WellTesting ) {
     BOOST_CHECK( sched->hasWell("OP_1"));
     BOOST_CHECK( sched->hasWell("OP_2"));
     BOOST_CHECK( sched->hasWell("OP_3"));
-    
     {
         WellPtr well1 = sched->getWell("OP_1");
         BOOST_CHECK_EQUAL( 14000 , well1->getOilRate( 8 ));
     }
-
 }

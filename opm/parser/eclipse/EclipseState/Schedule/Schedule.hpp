@@ -43,17 +43,21 @@ namespace Opm
         size_t numWells() const;
         bool hasWell(const std::string& wellName) const;
         WellPtr getWell(const std::string& wellName) const;
-        
+  
     private:
         TimeMapPtr m_timeMap;
         std::map<std::string , WellPtr> m_wells;
 
-        void addWell(const std::string& wellName);
-        void initTimeMap(DeckConstPtr deck);
-        void initWells(DeckConstPtr deck);
 
+        void initFromDeck(DeckConstPtr deck);
+        void createTimeMap(DeckConstPtr deck);
+        void iterateScheduleSection(DeckConstPtr deck);
+
+        void addWell(const std::string& wellName);
         void handleWELSPECS(DeckKeywordConstPtr keyword);
         void handleWCONHIST(DeckKeywordConstPtr keyword , size_t currentStep);
+        void handleDATES(DeckKeywordConstPtr keyword);
+        void handleTSTEP(DeckKeywordConstPtr keyword);
     };
     typedef boost::shared_ptr<Schedule> SchedulePtr;
     typedef boost::shared_ptr<const Schedule> ScheduleConstPtr;

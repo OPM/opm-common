@@ -24,23 +24,14 @@
 namespace Opm 
 {
     Schedule::Schedule(DeckConstPtr deck) {
-        if (deck->hasKeyword("SCHEDULE")) {
-            initTimeMap( deck );
-            initWells( deck );
-        } else
+        if (deck->hasKeyword("SCHEDULE")) 
+            initFromDeck( deck );
+        else
             throw std::invalid_argument("Deck does not contain SCHEDULE section.\n");
     }
 
 
-    void Schedule::initTimeMap(DeckConstPtr deck) {
-        boost::gregorian::date startDate( defaultStartDate );
-        if (deck->hasKeyword("START")) {
-            DeckKeywordConstPtr startKeyword = deck->getKeyword("START");
-            startDate = TimeMap::dateFromEclipse( startKeyword->getRecord(0));
-        }
-
-        m_timeMap = TimeMapPtr(new TimeMap(startDate));
-            
+    /*void Schedule::initTimeMap(DeckConstPtr deck) {
         DeckKeywordConstPtr scheduleKeyword = deck->getKeyword( "SCHEDULE" );
         size_t deckIndex = scheduleKeyword->getDeckIndex() + 1;
         while (deckIndex < deck->size()) {
@@ -54,22 +45,45 @@ namespace Opm
             deckIndex++;
         }
     }
+    */
+
+    void Schedule::createTimeMap(DeckConstPtr deck) {
+        boost::gregorian::date startDate( defaultStartDate );
+        if (deck->hasKeyword("START")) {
+            DeckKeywordConstPtr startKeyword = deck->getKeyword("START");
+            startDate = TimeMap::dateFromEclipse( startKeyword->getRecord(0));
+        }
+        
+        m_timeMap = TimeMapPtr(new TimeMap(startDate));
+    }
+
 
     
-    void Schedule::initWells(DeckConstPtr deck) {
+    void Schedule::initFromDeck(DeckConstPtr deck) {
+        createTimeMap( deck );
+        iterateScheduleSection( deck );
+    }
+    
+    
+
+    void Schedule::iterateScheduleSection(DeckConstPtr deck) {
         DeckKeywordConstPtr scheduleKeyword = deck->getKeyword( "SCHEDULE" );
         size_t deckIndex = scheduleKeyword->getDeckIndex() + 1;
         size_t currentStep = 0;
-
+        
         while (deckIndex < deck->size()) {
             DeckKeywordConstPtr keyword = deck->getKeyword( deckIndex );
-
-            if (keyword->name() == "TSTEP") 
+            
+            if (keyword->name() == "DATES") {
+                handleDATES( keyword );
                 currentStep += keyword->size();
+            }
 
-            if (keyword->name() == "DATES") 
+            if (keyword->name() == "TSTEP") {
+                handleTSTEP( keyword );
                 currentStep += keyword->size();
-
+            }
+            
             if (keyword->name() == "WELSPECS") 
                 handleWELSPECS( keyword );
                 
@@ -81,12 +95,13 @@ namespace Opm
     }
     
 
-
-    void Schedule::addWell(const std::string& wellName) {
-        WellPtr well(new Well(wellName , m_timeMap));
-        m_wells[ wellName ] = well;
+    void Schedule::handleDATES(DeckKeywordConstPtr keyword) {
+        m_timeMap->addFromDATESKeyword( keyword );
     }
 
+    void Schedule::handleTSTEP(DeckKeywordConstPtr keyword) {
+        m_timeMap->addFromTSTEPKeyword( keyword );
+    }
 
     void Schedule::handleWELSPECS(DeckKeywordConstPtr keyword) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
@@ -115,8 +130,8 @@ namespace Opm
         }
     }
 
-
-
+    
+    
     boost::gregorian::date Schedule::getStartDate() const {
         return m_timeMap->getStartDate();
     }
@@ -126,6 +141,11 @@ namespace Opm
         return m_timeMap;
     }
 
+
+    void Schedule::addWell(const std::string& wellName) {
+        WellPtr well(new Well(wellName , m_timeMap));
+        m_wells[ wellName ] = well;
+    }
 
     size_t Schedule::numWells() const {
         return m_wells.size();
