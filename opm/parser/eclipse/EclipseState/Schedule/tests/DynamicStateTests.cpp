@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(DynamicStateSetOutOfRangeThrows) {
     for (size_t i = 0; i < 2; i++)
         timeMap->addTStep( boost::posix_time::hours( (i+1) * 24 ));
     
-    BOOST_CHECK_THROW( state.add(2 , 100) , std::range_error);
+    BOOST_CHECK_THROW( state.add(3 , 100) , std::range_error);
 }
 
 

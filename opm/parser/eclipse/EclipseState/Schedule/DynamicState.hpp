@@ -51,8 +51,8 @@ namespace Opm {
 
 
         void add(size_t index , T value) {
-            if (index >= (m_timeMap->size() - 1))
-                throw std::range_error("Index value is out range - can not add elements to the last timestep.");
+            if (index >= (m_timeMap->size()))
+                throw std::range_error("Index value is out range.");
  
            if (m_data.size() > 0) {
                 if (index < (m_data.size() - 1))
