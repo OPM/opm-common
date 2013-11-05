@@ -49,6 +49,7 @@ Parser/ParserStringItem.cpp
 set (state_source
 EclipseState/Schedule/TimeMap.cpp 
 EclipseState/Schedule/Schedule.cpp )
+EclipseState/Schedule/Well.cpp )
 
 set( HEADER_FILES
 RawDeck/RawConsts.hpp 
@@ -77,6 +78,7 @@ Parser/ParserStringItem.hpp
 #
 EclipseState/Schedule/TimeMap.hpp
 EclipseState/Schedule/Schedule.hpp
+EclipseState/Schedule/Well.hpp
 )
 
 add_library(buildParser ${rawdeck_source} ${build_parser_source} ${deck_source})
