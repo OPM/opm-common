@@ -21,6 +21,9 @@
 #ifndef WELL_HPP_
 #define WELL_HPP_
 
+#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
+
 #include <boost/shared_ptr.hpp>
 #include <string>
 
@@ -28,11 +31,16 @@ namespace Opm {
 
     class Well {
     public:
-        Well(const std::string& name);
+        Well(const std::string& name, TimeMapConstPtr timeMap);
         const std::string& name() const;
-        
+
+        double getOilRate(size_t timeStep) const;
+        void setOilRate(size_t timeStep, double oilRate);
+        void addWELSPECS(DeckRecordConstPtr deckRecord);
+
     private:
         std::string m_name;
+        boost::shared_ptr<DynamicState<double> > m_oilRate;
     };
     typedef boost::shared_ptr<Well> WellPtr;
     typedef boost::shared_ptr<const Well> WellConstPtr;

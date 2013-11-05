@@ -32,24 +32,7 @@
 
 using namespace Opm;
 
-BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingSCHEDULE_Throws) {
-    DeckPtr deck(new Deck());
-    BOOST_CHECK_THROW(Schedule schedule(deck) , std::invalid_argument);
-}
-
-
-
-
-BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingReturnsDefaults) {
-    DeckPtr deck(new Deck());
-    DeckKeywordPtr keyword(new DeckKeyword("SCHEDULE"));
-    deck->addKeyword( keyword );
-    Schedule schedule(deck);
-    BOOST_CHECK_EQUAL( schedule.getStartDate() , boost::gregorian::date( 1983  , boost::gregorian::Jan , 1));
-}
-
-
-BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithStart) {
+DeckPtr createDeck() {
     DeckPtr deck(new Deck());
     DeckKeywordPtr scheduleKeyword(new DeckKeyword("SCHEDULE"));
     DeckKeywordPtr startKeyword(new DeckKeyword("START"));
@@ -71,6 +54,29 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithStart) {
     deck->addKeyword( startKeyword );
     deck->addKeyword( scheduleKeyword );
 
+    return deck;
+}
+
+
+BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingSCHEDULE_Throws) {
+    DeckPtr deck(new Deck());
+    BOOST_CHECK_THROW(Schedule schedule(deck) , std::invalid_argument);
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingReturnsDefaults) {
+    DeckPtr deck(new Deck());
+    DeckKeywordPtr keyword(new DeckKeyword("SCHEDULE"));
+    deck->addKeyword( keyword );
+    Schedule schedule(deck);
+    BOOST_CHECK_EQUAL( schedule.getStartDate() , boost::gregorian::date( 1983  , boost::gregorian::Jan , 1));
+}
+
+
+BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithStart) {
+    DeckPtr deck = createDeck();
     Schedule schedule(deck); 
     BOOST_CHECK_EQUAL( schedule.getStartDate() , boost::gregorian::date( 1998  , boost::gregorian::Mar , 8));
 }
@@ -85,5 +91,15 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithSCHEDULENoThrow) {
     
     BOOST_CHECK_NO_THROW(Schedule schedule(deck));
 }
+
+
+BOOST_AUTO_TEST_CASE(EmptyScheduleHasNoWells) {
+    DeckPtr deck = createDeck();
+    Schedule schedule(deck); 
+    BOOST_CHECK_EQUAL( 0U , schedule.numWells() );
+    BOOST_CHECK_EQUAL( false , schedule.hasWell("WELL1") );
+    BOOST_CHECK_THROW( schedule.getWell("WELL2") , std::invalid_argument );
+}
+
 
 

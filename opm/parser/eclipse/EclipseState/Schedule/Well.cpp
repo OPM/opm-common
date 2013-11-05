@@ -17,20 +17,37 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+
+
+#include <boost/date_time.hpp>
+
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 
-#include <string>
-
-
-
 namespace Opm {
-    
-    Well::Well(const std::string& name) {
+
+    Well::Well(const std::string& name , TimeMapConstPtr timeMap) : m_oilRate( new DynamicState<double>( timeMap , 0.0)) {
         m_name = name;
     }
 
     const std::string& Well::name() const {
         return m_name;
+    }
+
+
+    double Well::getOilRate(size_t timeStep) const {
+        return m_oilRate->get( timeStep );
+    }
+
+    
+    void Well::setOilRate(size_t timeStep, double oilRate) {
+        m_oilRate->add( timeStep , oilRate );
+    }
+
+    
+    void Well::addWELSPECS(DeckRecordConstPtr deckRecord) {
+        
     }
 
 }

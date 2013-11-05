@@ -19,12 +19,15 @@
 #ifndef SCHEDULE_HPP
 #define SCHEDULE_HPP
 
-#include <boost/shared_ptr.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 
+#include <boost/shared_ptr.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+
+#include <map>
 
 namespace Opm 
 {
@@ -36,8 +39,21 @@ namespace Opm
         Schedule(DeckConstPtr deck);
         boost::gregorian::date getStartDate() const;
         TimeMapConstPtr getTimeMap() const;
+
+        size_t numWells() const;
+        bool hasWell(const std::string& wellName) const;
+        WellPtr getWell(const std::string& wellName) const;
+        
     private:
         TimeMapPtr m_timeMap;
+        std::map<std::string , WellPtr> m_wells;
+
+        void addWell(const std::string& wellName);
+        void initTimeMap(DeckConstPtr deck);
+        void initWells(DeckConstPtr deck);
+
+        void handleWELSPECS(DeckKeywordConstPtr keyword);
+        void handleWCONHIST(DeckKeywordConstPtr keyword , size_t currentStep);
     };
     typedef boost::shared_ptr<Schedule> SchedulePtr;
     typedef boost::shared_ptr<const Schedule> ScheduleConstPtr;

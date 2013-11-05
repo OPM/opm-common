@@ -39,6 +39,25 @@ BOOST_AUTO_TEST_CASE( CreateSchedule ) {
     ScheduleConstPtr sched( new Schedule(deck));
     TimeMapConstPtr timeMap = sched->getTimeMap();
     BOOST_CHECK_EQUAL( boost::gregorian::date( 2007 , boost::gregorian::May , 10 ) , sched->getStartDate());
-
     BOOST_CHECK_EQUAL( 9U , timeMap->size());
+
+}
+
+
+BOOST_AUTO_TEST_CASE( WellTesting ) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELLS2");
+    DeckPtr deck = parser->parse(scheduleFile.string());
+    ScheduleConstPtr sched( new Schedule(deck));
+
+    BOOST_CHECK_EQUAL( 3U , sched->numWells());
+    BOOST_CHECK( sched->hasWell("OP_1"));
+    BOOST_CHECK( sched->hasWell("OP_2"));
+    BOOST_CHECK( sched->hasWell("OP_3"));
+    
+    {
+        WellPtr well1 = sched->getWell("OP_1");
+        BOOST_CHECK_EQUAL( 14000 , well1->getOilRate( 8 ));
+    }
+
 }

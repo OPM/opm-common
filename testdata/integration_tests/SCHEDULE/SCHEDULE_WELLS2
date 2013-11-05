@@ -1,0 +1,45 @@
+START
+10 MAI 2007 /
+
+
+SCHEDULE
+
+DATES
+  10  'JUN'  2007 /
+/
+
+
+DATES
+   10  JLY 2007 /
+   10  AUG 2007 /
+/      
+
+WELSPECS 
+     'OP_1'        'OP'   30   37  1*       'OIL'  7* /   Crap1 
+     'OP_2'        'OP'   20   51  1*       'OIL'  7* /   Crap2   Crap3 
+     'OP_3'        'OP'   31   18  1*       'OIL'  7* /   
+/
+
+
+WCONHIST 
+     'OP_1'      'OPEN'      'ORAT'   4000.000      4.000 1.46402E+006  5* /
+     'OP_2'      'OPEN'      'ORAT'   7998.000      2.000 1461075.000  5* /
+     'OP_3'      'OPEN'      'ORAT'   7999.000      1.000 1471824.000  5* /
+/
+
+
+TSTEP
+  10   2*10  /
+ 
+
+WCONHIST 
+     'OP_1'      'OPEN'      'ORAT'   14000.000      4.000 1.46402E+006  5* /
+     'OP_2'      'OPEN'      'ORAT'   17998.000      2.000 1461075.000  5* /
+     'OP_3'      'OPEN'      'ORAT'   17999.000      1.000 1471824.000  5* /
+/
+
+
+DATES
+   10  JLY 2008 /
+   10  AUG 2008 /
+/      
