@@ -13,6 +13,16 @@ target_link_libraries(runWellTests Parser ${Boost_LIBRARIES})
 add_test(NAME runWellTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${EXECUTABLE_OUTPUT_PATH}/runWellTests )
 
 
+add_executable(runScheduleEnumTests ScheduleEnumTests.cpp)
+target_link_libraries(runScheduleEnumTests Parser ${Boost_LIBRARIES})
+add_test(NAME runScheduleEnumTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${EXECUTABLE_OUTPUT_PATH}/runScheduleEnumTests )
+
+
+add_executable(runCompletionTests CompletionTests.cpp)
+target_link_libraries(runCompletionTests Parser ${Boost_LIBRARIES})
+add_test(NAME runCompletionTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${EXECUTABLE_OUTPUT_PATH}/runCompletionTests )
+
+
 add_executable(runDynamicStateTests DynamicStateTests.cpp)
 target_link_libraries(runDynamicStateTests Parser ${Boost_LIBRARIES})
 add_test(NAME runDynamicStateTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${EXECUTABLE_OUTPUT_PATH}/runDynamicStateTests )
