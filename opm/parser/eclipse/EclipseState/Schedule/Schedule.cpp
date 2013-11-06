@@ -30,22 +30,6 @@ namespace Opm {
             throw std::invalid_argument("Deck does not contain SCHEDULE section.\n");
     }
 
-    /*void Schedule::initTimeMap(DeckConstPtr deck) {
-        DeckKeywordConstPtr scheduleKeyword = deck->getKeyword( "SCHEDULE" );
-        size_t deckIndex = scheduleKeyword->getDeckIndex() + 1;
-        while (deckIndex < deck->size()) {
-            DeckKeywordConstPtr keyword = deck->getKeyword( deckIndex );
-
-            if (keyword->name() == "DATES")
-                m_timeMap->addFromDATESKeyword( keyword );
-            else if (keyword->name() == "TSTEP")
-                m_timeMap->addFromTSTEPKeyword( keyword );
-                
-            deckIndex++;
-        }
-    }
-     */
-
     void Schedule::createTimeMap(DeckConstPtr deck) {
         boost::gregorian::date startDate(defaultStartDate);
         if (deck->hasKeyword("START")) {
