@@ -90,7 +90,7 @@ namespace Opm {
 
         if (!m_isFinished) {
             if (RawRecord::isTerminatedRecordString(partialRecordString)) {
-                RawRecordPtr record(new RawRecord(m_partialRecordString));
+                RawRecordPtr record(new RawRecord(m_partialRecordString, m_filename, m_name));
                 m_records.push_back(record);
                 m_partialRecordString.clear();
                 

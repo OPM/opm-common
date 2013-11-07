@@ -28,7 +28,7 @@ using namespace std;
 
 namespace Opm {
 
-    RawRecord::RawRecord() {
+    RawRecord::RawRecord() : m_fileName(""), m_keywordName("") {
     }
 
     /*
@@ -40,7 +40,7 @@ namespace Opm {
      * exception is thrown.
      * 
      */
-    RawRecord::RawRecord(const std::string& singleRecordString) {
+    RawRecord::RawRecord(const std::string& singleRecordString, const std::string& fileName, const std::string& keywordName) : m_fileName(fileName), m_keywordName(keywordName){
         if (isTerminatedRecordString(singleRecordString)) {
             setRecordString(singleRecordString);
             splitSingleRecordString();
@@ -49,6 +49,15 @@ namespace Opm {
                     " offending string: " + singleRecordString);
         }
     }
+    
+    const std::string& RawRecord::getFileName() const {
+        return m_fileName;
+    }
+    
+    const std::string& RawRecord::getKeywordName() const {
+        return m_keywordName;
+    }
+    
 
     std::string RawRecord::pop_front() {
         std::string front = m_recordItems.front();
