@@ -55,6 +55,8 @@ BOOST_AUTO_TEST_CASE(AddCompletionSizeCorrect) {
 
     completionSet.add( completion2 );
     BOOST_CHECK_EQUAL( 2U , completionSet.size() );
+
+    BOOST_CHECK_EQUAL( completion1 , completionSet.get(0));
 }
 
 
@@ -101,10 +103,10 @@ BOOST_AUTO_TEST_CASE(AddCompletionShallowCopy) {
     completionSet.add( completion3 );
     BOOST_CHECK_EQUAL( 3U , completionSet.size() );
 
-    Opm::CompletionSet copy = completionSet.shallowCopy();
-    BOOST_CHECK_EQUAL( 3U , copy.size() );
+    Opm::CompletionSetConstPtr copy = Opm::CompletionSetConstPtr( completionSet.shallowCopy() );
+    BOOST_CHECK_EQUAL( 3U , copy->size() );
     
-    BOOST_CHECK_EQUAL( completion1 , copy.get(0));
-    BOOST_CHECK_EQUAL( completion2 , copy.get(1));
-    BOOST_CHECK_EQUAL( completion3 , copy.get(2));
+    BOOST_CHECK_EQUAL( completion1 , copy->get(0));
+    BOOST_CHECK_EQUAL( completion2 , copy->get(1));
+    BOOST_CHECK_EQUAL( completion3 , copy->get(2));
 }

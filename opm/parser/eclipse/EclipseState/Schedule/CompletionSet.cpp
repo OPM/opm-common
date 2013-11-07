@@ -31,7 +31,7 @@ namespace Opm {
     }
 
     
-    CompletionConstPtr CompletionSet::get(size_t index) {
+    CompletionConstPtr CompletionSet::get(size_t index) const {
         if (index >= m_completions.size())
             throw std::range_error("Out of bounds");
         
@@ -55,11 +55,11 @@ namespace Opm {
     }
 
 
-    CompletionSet CompletionSet::shallowCopy() {
-        CompletionSet copy;
+    CompletionSet * CompletionSet::shallowCopy() {
+      CompletionSet * copy = new CompletionSet();
         for (size_t ic = 0; ic < m_completions.size(); ic++) {
             CompletionConstPtr completion = m_completions[ic];
-            copy.m_completions.push_back( completion );
+            copy->m_completions.push_back( completion );
         }
         return copy;
     }

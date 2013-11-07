@@ -35,8 +35,8 @@ namespace Opm {
         CompletionSet();
         void add(CompletionConstPtr completion);
         size_t size() const;
-        CompletionSet shallowCopy();
-        CompletionConstPtr get(size_t index);
+        CompletionSet * shallowCopy();
+        CompletionConstPtr get(size_t index) const;
     private:
         std::vector<CompletionConstPtr> m_completions;
     };
