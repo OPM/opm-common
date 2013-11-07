@@ -33,7 +33,7 @@ namespace Opm {
     class Completion {
     public:
         Completion(int i, int j , int k , CompletionStateEnum state , double CF);
-        bool sameCell(const Completion& other) const;
+        bool sameCoordinate(const Completion& other) const;
         int getI() const;
         int getJ() const;
         int getK() const;

@@ -32,7 +32,7 @@ namespace Opm {
     }
 
 
-    bool Completion::sameCell(const Completion& other) const {
+    bool Completion::sameCoordinate(const Completion& other) const {
         if ((m_i == other.m_i) && 
             (m_j == other.m_j) && 
             (m_k == other.m_k))

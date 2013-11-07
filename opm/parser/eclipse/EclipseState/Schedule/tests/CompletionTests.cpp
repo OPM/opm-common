@@ -55,17 +55,17 @@ BOOST_AUTO_TEST_CASE(testGetFunctions) {
 
 
 
-BOOST_AUTO_TEST_CASE(CompletionTestssameCell) {
+BOOST_AUTO_TEST_CASE(CompletionTestssameCoordinate) {
     Opm::Completion completion1(10,10,10,Opm::OPEN, 100.0);
     Opm::Completion completion2(10,10,10,Opm::OPEN, 100.0);
     Opm::Completion completion3(11,10,10,Opm::OPEN, 100.0);
     Opm::Completion completion4(10,11,10,Opm::OPEN, 100.0);
     Opm::Completion completion5(10,10,11,Opm::OPEN, 100.0);
 
-    BOOST_CHECK( completion1.sameCell( completion2 ));
-    BOOST_CHECK_EQUAL( false , completion1.sameCell( completion3 ));
-    BOOST_CHECK_EQUAL( false , completion1.sameCell( completion4 ));
-    BOOST_CHECK_EQUAL( false , completion1.sameCell( completion5 ));
+    BOOST_CHECK( completion1.sameCoordinate( completion2 ));
+    BOOST_CHECK_EQUAL( false , completion1.sameCoordinate( completion3 ));
+    BOOST_CHECK_EQUAL( false , completion1.sameCoordinate( completion4 ));
+    BOOST_CHECK_EQUAL( false , completion1.sameCoordinate( completion5 ));
 }
 
 
