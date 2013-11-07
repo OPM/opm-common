@@ -10,5 +10,6 @@
     {"name" : "GUIDE_FRACTION" , "value_type" : "FLOAT" , "default" : 0},
     {"name" : "GUIDE_DEF" , "value_type" : "STRING"},
     {"name" : "REINJECT_GROUP" , "value_type" : "STRING"},
-    {"name" : "VOIDAGE_GROUP" , "value_type" : "STRING"}
+    {"name" : "VOIDAGE_GROUP" , "value_type" : "STRING"},
+    {"name" : "WETGAS_TARGET", "value_type" : "FLOAT"}
 ]}
