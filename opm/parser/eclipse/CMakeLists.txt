@@ -51,6 +51,7 @@ EclipseState/Schedule/TimeMap.cpp
 EclipseState/Schedule/Schedule.cpp 
 EclipseState/Schedule/Well.cpp
 EclipseState/Schedule/Completion.cpp
+EclipseState/Schedule/CompletionSet.cpp
 EclipseState/Schedule/ScheduleEnums.cpp )
 
 set( HEADER_FILES
@@ -83,6 +84,7 @@ EclipseState/Schedule/Schedule.hpp
 EclipseState/Schedule/Well.hpp
 EclipseState/Schedule/DynamicState.hpp
 EclipseState/Schedule/Completion.hpp
+EclipseState/Schedule/CompletionSet.hpp
 EclipseState/Schedule/ScheduleEnums.hpp
 )
 
