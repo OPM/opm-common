@@ -90,7 +90,7 @@ namespace Opm {
             std::vector<CompletionConstPtr>& newCompletions = wellCompletionsPair.second;
         
             if (completionMapList.find(well) == completionMapList.end()) 
-                completionMapList[well] = std::vector<CompletionConstPtr>();
+                 completionMapList[well] = std::vector<CompletionConstPtr>();
             
             {
                 std::vector<CompletionConstPtr>& currentCompletions = completionMapList.find(well)->second;
