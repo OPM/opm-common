@@ -55,8 +55,8 @@ namespace Opm {
     }
 
 
-    CompletionSet * CompletionSet::shallowCopy() {
-      CompletionSet * copy = new CompletionSet();
+    CompletionSet * CompletionSet::shallowCopy() const {
+        CompletionSet * copy = new CompletionSet();
         for (size_t ic = 0; ic < m_completions.size(); ic++) {
             CompletionConstPtr completion = m_completions[ic];
             copy->m_completions.push_back( completion );
@@ -64,5 +64,5 @@ namespace Opm {
         return copy;
     }
 
-
+    
 }

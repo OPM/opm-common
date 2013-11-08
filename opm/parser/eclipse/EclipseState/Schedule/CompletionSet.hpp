@@ -26,7 +26,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
-
+#include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
 
 namespace Opm {
 
@@ -35,7 +35,7 @@ namespace Opm {
         CompletionSet();
         void add(CompletionConstPtr completion);
         size_t size() const;
-        CompletionSet * shallowCopy();
+        CompletionSet * shallowCopy() const;
         CompletionConstPtr get(size_t index) const;
     private:
         std::vector<CompletionConstPtr> m_completions;
