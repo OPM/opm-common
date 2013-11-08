@@ -23,6 +23,8 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
 
 #include <boost/shared_ptr.hpp>
 #include <string>
@@ -39,12 +41,13 @@ namespace Opm {
         bool isInPredictionMode(size_t timeStep) const;
         void setInPredictionMode(size_t timeStep, bool isInPredictionMode);
         void addWELSPECS(DeckRecordConstPtr deckRecord);
-
+        void addCompletions(size_t time_step , const std::vector<CompletionConstPtr>& newCompletions);
+        CompletionSetConstPtr getCompletions(size_t timeStep);
     private:
         std::string m_name;
         boost::shared_ptr<DynamicState<double> > m_oilRate;
         boost::shared_ptr<DynamicState<bool> > m_inPredictionMode;
-
+        boost::shared_ptr<DynamicState<CompletionSetConstPtr> > m_completions;
     };
     typedef boost::shared_ptr<Well> WellPtr;
     typedef boost::shared_ptr<const Well> WellConstPtr;

@@ -24,11 +24,16 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
 
 namespace Opm {
 
-    Well::Well(const std::string& name, TimeMapConstPtr timeMap)
-    : m_oilRate(new DynamicState<double>(timeMap, 0.0)), m_inPredictionMode(new DynamicState<bool>(timeMap, true)) {
+    Well::Well(const std::string& name , TimeMapConstPtr timeMap) 
+        : m_oilRate( new DynamicState<double>( timeMap , 0.0)) , 
+          m_inPredictionMode(new DynamicState<bool>(timeMap, true)),
+          m_completions( new DynamicState<CompletionSetConstPtr>( timeMap , CompletionSetConstPtr( new CompletionSet()) )) 
+    {
         m_name = name;
     }
 
@@ -62,6 +67,20 @@ namespace Opm {
 
     }
 
+    CompletionSetConstPtr Well::getCompletions(size_t timeStep) {
+        return m_completions->get( timeStep );
+    }
+    
+    void Well::addCompletions(size_t time_step , const std::vector<CompletionConstPtr>& newCompletions) {
+        CompletionSetConstPtr currentCompletionSet = m_completions->get(time_step);
+        CompletionSetPtr newCompletionSet = CompletionSetPtr( currentCompletionSet->shallowCopy() );
+
+        for (size_t ic = 0; ic < newCompletions.size(); ic++) 
+            newCompletionSet->add( newCompletions[ic] );
+
+        m_completions->add( time_step , newCompletionSet);
+    }
+    
 }
 
 

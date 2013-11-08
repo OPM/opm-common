@@ -64,3 +64,51 @@ BOOST_AUTO_TEST_CASE(setPredictionMode_ModeSetCorrect) {
     BOOST_CHECK_EQUAL(false , well.isInPredictionMode( 5 ));
     BOOST_CHECK_EQUAL(false , well.isInPredictionMode( 8 ));
 }
+
+
+
+BOOST_AUTO_TEST_CASE(NewWellZeroCompletions) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    Opm::Well well("WELL1" , timeMap);
+    Opm::CompletionSetConstPtr completions = well.getCompletions( 0 );
+    BOOST_CHECK_EQUAL( 0U , completions->size());
+}
+
+
+BOOST_AUTO_TEST_CASE(UpdateCompletions) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    Opm::Well well("WELL1" , timeMap);
+    Opm::CompletionSetConstPtr completions = well.getCompletions( 0 );
+    BOOST_CHECK_EQUAL( 0U , completions->size());
+    
+    std::vector<Opm::CompletionConstPtr> newCompletions;
+    std::vector<Opm::CompletionConstPtr> newCompletions2;
+    Opm::CompletionConstPtr comp1(new Opm::Completion( 10 , 10 , 10 , Opm::AUTO , 99.0));
+    Opm::CompletionConstPtr comp2(new Opm::Completion( 10 , 11 , 10 , Opm::SHUT , 99.0));
+    Opm::CompletionConstPtr comp3(new Opm::Completion( 10 , 10 , 12 , Opm::OPEN , 99.0));
+    Opm::CompletionConstPtr comp4(new Opm::Completion( 10 , 10 , 12 , Opm::SHUT , 99.0));
+    Opm::CompletionConstPtr comp5(new Opm::Completion( 10 , 10 , 13 , Opm::OPEN , 99.0));
+
+    //std::vector<Opm::CompletionConstPtr> newCompletions2{ comp4 , comp5}; Newer c++
+
+    newCompletions.push_back( comp1 );
+    newCompletions.push_back( comp2 );
+    newCompletions.push_back( comp3 );
+
+    newCompletions2.push_back( comp4 );
+    newCompletions2.push_back( comp5 );
+
+    BOOST_CHECK_EQUAL( 3U , newCompletions.size());
+    well.addCompletions( 5 , newCompletions );
+    completions = well.getCompletions( 5 );
+    BOOST_CHECK_EQUAL( 3U , completions->size());
+    BOOST_CHECK_EQUAL( comp3 , completions->get(2));
+
+    well.addCompletions( 6 , newCompletions2 );
+
+    completions = well.getCompletions( 6 );
+    BOOST_CHECK_EQUAL( 4U , completions->size());
+    BOOST_CHECK_EQUAL( comp4 , completions->get(2));
+    
+}
+
