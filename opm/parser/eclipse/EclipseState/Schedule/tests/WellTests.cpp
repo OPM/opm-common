@@ -30,14 +30,24 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 
-BOOST_AUTO_TEST_CASE(CreateWellCorrentName) {
+Opm::TimeMapPtr createXDaysTimeMap(size_t numDays) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
     Opm::TimeMapPtr timeMap(new Opm::TimeMap(startDate));
-    for (size_t i = 0; i < 10; i++)
+    for (size_t i = 0; i < numDays; i++)
         timeMap->addTStep( boost::posix_time::hours( (i+1) * 24 ));
+    return timeMap;
+}
+
+BOOST_AUTO_TEST_CASE(CreateWell_CorrectNameAndDefaultValues) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
     Opm::Well well("WELL1" , timeMap);
     BOOST_CHECK_EQUAL( "WELL1" , well.name() );
+    BOOST_CHECK_EQUAL(0.0 , well.getOilRate( 5 ));
+}
 
+BOOST_AUTO_TEST_CASE(setOilRate_RateSetCorrect) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    Opm::Well well("WELL1" , timeMap);
     BOOST_CHECK_EQUAL(0.0 , well.getOilRate( 5 ));
     well.setOilRate( 5 , 99 );
     BOOST_CHECK_EQUAL(99 , well.getOilRate( 5 ));
