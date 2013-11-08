@@ -36,11 +36,15 @@ namespace Opm {
 
         double getOilRate(size_t timeStep) const;
         void setOilRate(size_t timeStep, double oilRate);
+        bool isInPredictionMode(size_t timeStep) const;
+        void setInPredictionMode(size_t timeStep, bool isInPredictionMode);
         void addWELSPECS(DeckRecordConstPtr deckRecord);
 
     private:
         std::string m_name;
         boost::shared_ptr<DynamicState<double> > m_oilRate;
+        boost::shared_ptr<DynamicState<bool> > m_inPredictionMode;
+
     };
     typedef boost::shared_ptr<Well> WellPtr;
     typedef boost::shared_ptr<const Well> WellConstPtr;

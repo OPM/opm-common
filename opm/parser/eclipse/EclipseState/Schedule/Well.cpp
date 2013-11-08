@@ -15,7 +15,7 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 
 
@@ -27,27 +27,39 @@
 
 namespace Opm {
 
-    Well::Well(const std::string& name , TimeMapConstPtr timeMap) : m_oilRate( new DynamicState<double>( timeMap , 0.0)) {
+    Well::Well(const std::string& name, TimeMapConstPtr timeMap)
+    : m_oilRate(new DynamicState<double>(timeMap, 0.0)), m_inPredictionMode(new DynamicState<bool>(timeMap, true)) {
         m_name = name;
     }
 
     const std::string& Well::name() const {
+
         return m_name;
     }
 
 
     double Well::getOilRate(size_t timeStep) const {
-        return m_oilRate->get( timeStep );
+
+        return m_oilRate->get(timeStep);
     }
 
-    
+
     void Well::setOilRate(size_t timeStep, double oilRate) {
-        m_oilRate->add( timeStep , oilRate );
-    }
 
+        m_oilRate->add(timeStep, oilRate);
+    }
     
+     bool Well::isInPredictionMode(size_t timeStep) const {
+         return m_inPredictionMode->get(timeStep);
+     }
+     
+     void Well::setInPredictionMode(size_t timeStep, bool inPredictionMode) {
+         m_inPredictionMode->add(timeStep, inPredictionMode);
+     }
+
+
     void Well::addWELSPECS(DeckRecordConstPtr deckRecord) {
-        
+
     }
 
 }

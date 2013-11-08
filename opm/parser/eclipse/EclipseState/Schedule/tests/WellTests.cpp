@@ -48,8 +48,19 @@ BOOST_AUTO_TEST_CASE(CreateWell_CorrectNameAndDefaultValues) {
 BOOST_AUTO_TEST_CASE(setOilRate_RateSetCorrect) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
     Opm::Well well("WELL1" , timeMap);
+    
     BOOST_CHECK_EQUAL(0.0 , well.getOilRate( 5 ));
     well.setOilRate( 5 , 99 );
     BOOST_CHECK_EQUAL(99 , well.getOilRate( 5 ));
     BOOST_CHECK_EQUAL(99 , well.getOilRate( 8 ));
+}
+
+BOOST_AUTO_TEST_CASE(setPredictionMode_ModeSetCorrect) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    Opm::Well well("WELL1" , timeMap);
+    
+    BOOST_CHECK_EQUAL( true, well.isInPredictionMode( 5 ));
+    well.setInPredictionMode( 5 , false ); // Go to history mode
+    BOOST_CHECK_EQUAL(false , well.isInPredictionMode( 5 ));
+    BOOST_CHECK_EQUAL(false , well.isInPredictionMode( 8 ));
 }
