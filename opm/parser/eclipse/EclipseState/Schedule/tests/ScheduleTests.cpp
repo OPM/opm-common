@@ -82,8 +82,6 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithStart) {
 }
 
 
-
-
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithSCHEDULENoThrow) {
     DeckPtr deck(new Deck());
     DeckKeywordPtr keyword(new DeckKeyword("SCHEDULE"));

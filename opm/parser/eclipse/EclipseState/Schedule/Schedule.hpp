@@ -55,7 +55,9 @@ namespace Opm
 
         void addWell(const std::string& wellName);
         void handleWELSPECS(DeckKeywordConstPtr keyword);
+        void handleWCON(DeckKeywordConstPtr keyword, size_t currentStep, bool isPredictionMode);
         void handleWCONHIST(DeckKeywordConstPtr keyword , size_t currentStep);
+        void handleWCONPROD(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleDATES(DeckKeywordConstPtr keyword);
         void handleTSTEP(DeckKeywordConstPtr keyword);
     };

@@ -1,15 +1,15 @@
-START
+START             -- 0
 10 MAI 2007 /
 
 
 SCHEDULE
 
-DATES
+DATES             -- 1
   10  'JUN'  2007 /
 /
 
 
-DATES
+DATES             -- 2,3
    10  JLY 2007 /
    10  AUG 2007 /
 /      
@@ -28,7 +28,7 @@ WCONHIST
 /
 
 
-TSTEP
+TSTEP             -- 4,5,6
   10   2*10  /
  
 
@@ -38,8 +38,25 @@ WCONHIST
      'OP_3'      'OPEN'      'ORAT'   17999.000      1.000 1471824.000  5* /
 /
 
+TSTEP             - 7 
+  3  /
 
-DATES
+WCONPROD 
+     'OP_1'      'OPEN'      'ORAT'   11000.000      4.000 1.46402E+006  5* /
+     'OP_2'      'OPEN'      'ORAT'   17998.000      2.000 1461075.000  5* /
+     'OP_3'      'OPEN'      'ORAT'   17999.000      1.000 1471824.000  5* /
+/
+
+TSTEP              -- 8
+ 4 /
+
+WCONHIST 
+     'OP_1'      'OPEN'      'ORAT'   13000.000      4.000 1.46402E+006  5* /
+     'OP_2'      'OPEN'      'ORAT'   17998.000      2.000 1461075.000  5* /
+     'OP_3'      'OPEN'      'ORAT'   17999.000      1.000 1471824.000  5* /
+/
+
+DATES              -- 9, 10
    10  JLY 2008 /
    10  AUG 2008 /
 /      

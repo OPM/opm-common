@@ -55,7 +55,6 @@ namespace Opm {
 
     DeckRecordConstPtr ParserRecord::parse(RawRecordPtr rawRecord) const {
         DeckRecordPtr deckRecord(new DeckRecord());
-
         for (size_t i = 0; i < size(); i++) {
             ParserItemConstPtr parserItem = get(i);
             DeckItemConstPtr deckItem = parserItem->scan(rawRecord);
