@@ -73,6 +73,9 @@ namespace Opm {
                 handleWCONPROD(keyword, currentStep);
 
 
+            if (keyword->name() == "COMPDAT") 
+                handleCOMPDAT( keyword , currentStep );
+
             deckIndex++;
         }
     }
@@ -116,6 +119,18 @@ namespace Opm {
 
     void Schedule::handleWCONPROD(DeckKeywordConstPtr keyword, size_t currentStep) {
         handleWCON(keyword, currentStep, true);
+    }
+
+    void Schedule::handleCOMPDAT(DeckKeywordConstPtr keyword , size_t currentStep) {
+        std::map<std::string , std::vector< CompletionConstPtr> > completionMapList = Completion::completionsFromCOMPDATKeyword( keyword );
+        std::map<std::string , std::vector< CompletionConstPtr> >::iterator iter;
+        
+        for( iter= completionMapList.begin(); iter != completionMapList.end(); iter++) {
+            const std::string wellName = iter->first;
+            WellPtr well = getWell( wellName );
+
+            well->addCompletions( currentStep , iter->second );
+        }
     }
 
     boost::gregorian::date Schedule::getStartDate() const {

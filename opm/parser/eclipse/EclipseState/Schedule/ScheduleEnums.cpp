@@ -32,6 +32,8 @@ namespace Opm {
             return "AUTO";
         case SHUT:
             return "SHUT";
+        default:
+          throw std::invalid_argument("Unhandled enum value");
         }
     }
     

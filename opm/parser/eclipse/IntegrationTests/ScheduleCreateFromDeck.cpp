@@ -27,6 +27,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 
 
 using namespace Opm;
@@ -48,14 +49,14 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELLS2");
     DeckPtr deck = parser->parse(scheduleFile.string());
     ScheduleConstPtr sched(new Schedule(deck));
-
+    
     BOOST_CHECK_EQUAL(3U, sched->numWells());
-    BOOST_CHECK(sched->hasWell("OP_1"));
-    BOOST_CHECK(sched->hasWell("OP_2"));
-    BOOST_CHECK(sched->hasWell("OP_3"));
+    BOOST_CHECK(sched->hasWell("W_1"));
+    BOOST_CHECK(sched->hasWell("W_2"));
+    BOOST_CHECK(sched->hasWell("W_3"));
 
     {
-        WellPtr well1 = sched->getWell("OP_1");
+        WellPtr well1 = sched->getWell("W_1");
 
         BOOST_CHECK(well1->isInPredictionMode(0));
         BOOST_CHECK_EQUAL(0, well1->getOilRate(0));
@@ -78,5 +79,42 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
         BOOST_CHECK_EQUAL(13000, well1->getOilRate(8));
         BOOST_CHECK_EQUAL(13000, well1->getOilRate(9));
         BOOST_CHECK_EQUAL(13000, well1->getOilRate(10));
+
+        BOOST_CHECK_EQUAL( 3U , sched->numWells());
+        BOOST_CHECK( sched->hasWell("W_1"));
+        BOOST_CHECK( sched->hasWell("W_2"));
+        BOOST_CHECK( sched->hasWell("W_3"));
+        {
+          WellPtr well1 = sched->getWell("W_1");
+          BOOST_CHECK_EQUAL( 13000 , well1->getOilRate( 8 ));
+        }
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE( WellTestCOMPDAT ) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELLS2");
+    DeckPtr deck = parser->parse(scheduleFile.string());
+    ScheduleConstPtr sched( new Schedule(deck));
+
+    BOOST_CHECK_EQUAL( 3U , sched->numWells());
+    BOOST_CHECK( sched->hasWell("W_1"));
+    BOOST_CHECK( sched->hasWell("W_2"));
+    BOOST_CHECK( sched->hasWell("W_3"));
+    {
+        WellPtr well1 = sched->getWell("W_1");
+        BOOST_CHECK_EQUAL( 13000 , well1->getOilRate( 8 ));
+        CompletionSetConstPtr completions = well1->getCompletions( 0 );
+        BOOST_CHECK_EQUAL( 0U , completions->size() );
+
+        
+        completions = well1->getCompletions( 3 );
+        BOOST_CHECK_EQUAL( 4U , completions->size() );
+        BOOST_CHECK_EQUAL( OPEN , completions->get(3)->getState() );
+
+        completions = well1->getCompletions( 7 );
+        BOOST_CHECK_EQUAL( 4U , completions->size() );
+        BOOST_CHECK_EQUAL( SHUT , completions->get(3)->getState() );
     }
 }
