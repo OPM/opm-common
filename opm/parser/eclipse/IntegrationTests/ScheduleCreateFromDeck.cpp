@@ -68,26 +68,29 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
         BOOST_CHECK_EQUAL(4000, well1->getOilRate(3));
         BOOST_CHECK_EQUAL(4000, well1->getOilRate(4));
         BOOST_CHECK_EQUAL(4000, well1->getOilRate(5));
+        BOOST_CHECK_EQUAL(4     , well1->getWaterRate(3));
+        BOOST_CHECK_EQUAL(12345 , well1->getGasRate(3));
+        BOOST_CHECK_EQUAL(4     , well1->getWaterRate(4));
+        BOOST_CHECK_EQUAL(12345 , well1->getGasRate(4));
+        BOOST_CHECK_EQUAL(4     , well1->getWaterRate(5));
+        BOOST_CHECK_EQUAL(12345 , well1->getGasRate(5));
+
 
         BOOST_CHECK(!well1->isInPredictionMode(6));
         BOOST_CHECK_EQUAL(14000, well1->getOilRate(6));
         
         BOOST_CHECK(well1->isInPredictionMode(7));
         BOOST_CHECK_EQUAL(11000, well1->getOilRate(7));
+        BOOST_CHECK_EQUAL(44   , well1->getWaterRate(7));
+        BOOST_CHECK_EQUAL(188  , well1->getGasRate(7));
         
         BOOST_CHECK(!well1->isInPredictionMode(8));
         BOOST_CHECK_EQUAL(13000, well1->getOilRate(8));
-        BOOST_CHECK_EQUAL(13000, well1->getOilRate(9));
-        BOOST_CHECK_EQUAL(13000, well1->getOilRate(10));
-
-        BOOST_CHECK_EQUAL( 3U , sched->numWells());
-        BOOST_CHECK( sched->hasWell("W_1"));
-        BOOST_CHECK( sched->hasWell("W_2"));
-        BOOST_CHECK( sched->hasWell("W_3"));
-        {
-          WellPtr well1 = sched->getWell("W_1");
-          BOOST_CHECK_EQUAL( 13000 , well1->getOilRate( 8 ));
-        }
+        
+        BOOST_CHECK( well1->isInjector(9));
+        BOOST_CHECK_EQUAL(20000, well1->getInjectionRate(9));
+        BOOST_CHECK_EQUAL(5000, well1->getInjectionRate(10));
+        
     }
 }
 
