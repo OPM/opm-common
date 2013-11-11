@@ -33,7 +33,7 @@ namespace Opm {
     class RawRecord {
     public:
         RawRecord();
-        RawRecord(const std::string& singleRecordString);
+        RawRecord(const std::string& singleRecordString, const std::string& fileName = "", const std::string& keywordName = "");
         
         std::string pop_front();
         void push_front(std::string token);
@@ -41,6 +41,8 @@ namespace Opm {
 
         const std::string& getRecordString() const;
         const std::string& getItem(size_t index) const;
+        const std::string& getFileName() const;
+        const std::string& getKeywordName() const;
 
         static bool isTerminatedRecordString(const std::string& candidateRecordString);
         virtual ~RawRecord();
@@ -49,7 +51,9 @@ namespace Opm {
     private:
         std::string m_sanitizedRecordString;
         std::deque<std::string> m_recordItems;
-
+        const std::string& m_fileName;
+        const std::string& m_keywordName;
+        
         void setRecordString(const std::string& singleRecordString);
         void splitSingleRecordString();
         void processSeparatorCharacter(std::string& currentToken, const char& currentChar, char& tokenStarter);

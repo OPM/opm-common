@@ -21,6 +21,7 @@
 #define BOOST_TEST_MODULE ParserTests
 #include <boost/test/unit_test.hpp>
 
+#include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
@@ -28,6 +29,9 @@
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
 #include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
 #include <boost/test/test_tools.hpp>
+
+#include "opm/parser/eclipse/RawDeck/RawKeyword.hpp"
+#include "opm/parser/eclipse/Parser/ParserKeyword.hpp"
 
 using namespace Opm;
 
@@ -115,12 +119,9 @@ ParserRecordPtr createSimpleParserRecord() {
 
     record->addItem(itemInt1);
     record->addItem(itemInt2);
-    
+
     return record;
 }
-
-
-
 
 BOOST_AUTO_TEST_CASE(parse_validRecord_noThrow) {
     ParserRecordPtr record = createSimpleParserRecord();
@@ -138,6 +139,7 @@ BOOST_AUTO_TEST_CASE(parse_validRecord_deckRecordCreated) {
 
 
 // INT INT DOUBLE DOUBLE INT DOUBLE
+
 ParserRecordPtr createMixedParserRecord() {
 
     ParserItemSizeEnum sizeType = SINGLE;
@@ -160,67 +162,62 @@ ParserRecordPtr createMixedParserRecord() {
     return record;
 }
 
-
-
 BOOST_AUTO_TEST_CASE(parse_validMixedRecord_noThrow) {
     ParserRecordPtr record = createMixedParserRecord();
     RawRecordPtr rawRecord(new RawRecord("1 2 10.0 20.0 4 90.0 /"));
     BOOST_CHECK_NO_THROW(record->parse(rawRecord));
 }
 
-
 BOOST_AUTO_TEST_CASE(Equal_Equal_ReturnsTrue) {
     ParserRecordPtr record1 = createMixedParserRecord();
     ParserRecordPtr record2 = createMixedParserRecord();
 
-    BOOST_CHECK( record1->equal( *record1 ));
-    BOOST_CHECK( record1->equal( *record2 ));
+    BOOST_CHECK(record1->equal(*record1));
+    BOOST_CHECK(record1->equal(*record2));
 }
-
 
 BOOST_AUTO_TEST_CASE(Equal_Different_ReturnsFalse) {
     ParserItemSizeEnum sizeType = SINGLE;
-    ParserIntItemPtr itemInt(new ParserIntItem("INTITEM1", sizeType , 0));
-    ParserDoubleItemPtr itemDouble(new ParserDoubleItem("DOUBLEITEM1", sizeType , 0));
+    ParserIntItemPtr itemInt(new ParserIntItem("INTITEM1", sizeType, 0));
+    ParserDoubleItemPtr itemDouble(new ParserDoubleItem("DOUBLEITEM1", sizeType, 0));
     ParserStringItemPtr itemString(new ParserStringItem("STRINGITEM1", sizeType));
     ParserRecordPtr record1(new ParserRecord());
     ParserRecordPtr record2(new ParserRecord());
     ParserRecordPtr record3(new ParserRecord());
 
-    record1->addItem( itemInt );
-    record1->addItem( itemDouble );
+    record1->addItem(itemInt);
+    record1->addItem(itemDouble);
 
-    record2->addItem( itemInt );
-    record2->addItem( itemDouble );
-    record2->addItem( itemString );
+    record2->addItem(itemInt);
+    record2->addItem(itemDouble);
+    record2->addItem(itemString);
 
-    record3->addItem( itemDouble );
-    record3->addItem( itemInt );
-    BOOST_CHECK( !record1->equal( *record2 ));
-    BOOST_CHECK( !record1->equal( *record3 ));
+    record3->addItem(itemDouble);
+    record3->addItem(itemInt);
+    BOOST_CHECK(!record1->equal(*record2));
+    BOOST_CHECK(!record1->equal(*record3));
 
 }
 
-
 BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
     ParserRecord parserRecord;
-    ParserIntItemConstPtr itemInt( new ParserIntItem("ITEM1", SINGLE));
-    ParserStringItemConstPtr itemString( new ParserStringItem( "ITEM2", SINGLE));
-    ParserDoubleItemConstPtr itemDouble( new ParserDoubleItem( "ITEM3", SINGLE));
+    ParserIntItemConstPtr itemInt(new ParserIntItem("ITEM1", SINGLE));
+    ParserStringItemConstPtr itemString(new ParserStringItem("ITEM2", SINGLE));
+    ParserDoubleItemConstPtr itemDouble(new ParserDoubleItem("ITEM3", SINGLE));
 
-    parserRecord.addItem( itemInt );
-    parserRecord.addItem( itemString );
-    parserRecord.addItem( itemDouble );
-    
+    parserRecord.addItem(itemInt);
+    parserRecord.addItem(itemString);
+    parserRecord.addItem(itemDouble);
+
     {
         RawRecordPtr rawRecord(new RawRecord("* /"));
         DeckItemConstPtr deckStringItem = itemString->scan(rawRecord);
         DeckItemConstPtr deckIntItem = itemInt->scan(rawRecord);
         DeckItemConstPtr deckDoubleItem = itemDouble->scan(rawRecord);
-      
-        BOOST_CHECK( deckStringItem->defaultApplied() );
-        BOOST_CHECK( deckIntItem->defaultApplied() );
-        BOOST_CHECK( deckDoubleItem->defaultApplied() );
+
+        BOOST_CHECK(deckStringItem->defaultApplied());
+        BOOST_CHECK(deckIntItem->defaultApplied());
+        BOOST_CHECK(deckDoubleItem->defaultApplied());
     }
 
 
@@ -229,22 +226,22 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
         DeckItemConstPtr deckStringItem = itemString->scan(rawRecord);
         DeckItemConstPtr deckIntItem = itemInt->scan(rawRecord);
         DeckItemConstPtr deckDoubleItem = itemDouble->scan(rawRecord);
-      
-        BOOST_CHECK( deckStringItem->defaultApplied() );
-        BOOST_CHECK( deckIntItem->defaultApplied() );
-        BOOST_CHECK( deckDoubleItem->defaultApplied() );
+
+        BOOST_CHECK(deckStringItem->defaultApplied());
+        BOOST_CHECK(deckIntItem->defaultApplied());
+        BOOST_CHECK(deckDoubleItem->defaultApplied());
     }
-    
+
 
     {
         RawRecordPtr rawRecord(new RawRecord("TRYGVE 10 2.9 /"));
         DeckItemConstPtr deckStringItem = itemString->scan(rawRecord);
         DeckItemConstPtr deckIntItem = itemInt->scan(rawRecord);
         DeckItemConstPtr deckDoubleItem = itemDouble->scan(rawRecord);
-      
-        BOOST_CHECK_EQUAL(  false , deckStringItem->defaultApplied() );
-        BOOST_CHECK_EQUAL(  false , deckIntItem->defaultApplied() );
-        BOOST_CHECK_EQUAL(  false , deckDoubleItem->defaultApplied() );
+
+        BOOST_CHECK_EQUAL(false, deckStringItem->defaultApplied());
+        BOOST_CHECK_EQUAL(false, deckIntItem->defaultApplied());
+        BOOST_CHECK_EQUAL(false, deckDoubleItem->defaultApplied());
     }
 
 
@@ -253,10 +250,10 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
         DeckItemConstPtr deckStringItem = itemString->scan(rawRecord);
         DeckItemConstPtr deckIntItem = itemInt->scan(rawRecord);
         DeckItemConstPtr deckDoubleItem = itemDouble->scan(rawRecord);
-        
-        BOOST_CHECK_EQUAL(  true , deckStringItem->defaultApplied() );
-        BOOST_CHECK_EQUAL(  true , deckIntItem->defaultApplied() );
-        BOOST_CHECK_EQUAL(  true , deckDoubleItem->defaultApplied() );
+
+        BOOST_CHECK_EQUAL(true, deckStringItem->defaultApplied());
+        BOOST_CHECK_EQUAL(true, deckIntItem->defaultApplied());
+        BOOST_CHECK_EQUAL(true, deckDoubleItem->defaultApplied());
     }
 
     {
@@ -264,12 +261,46 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
         DeckItemConstPtr deckStringItem = itemString->scan(rawRecord);
         DeckItemConstPtr deckIntItem = itemInt->scan(rawRecord);
         DeckItemConstPtr deckDoubleItem = itemDouble->scan(rawRecord);
-        
-        BOOST_CHECK_EQUAL(  true , deckStringItem->defaultApplied() );
-        BOOST_CHECK_EQUAL(  true , deckIntItem->defaultApplied() );
-        BOOST_CHECK_EQUAL(  true , deckDoubleItem->defaultApplied() );
+
+        BOOST_CHECK_EQUAL(true, deckStringItem->defaultApplied());
+        BOOST_CHECK_EQUAL(true, deckIntItem->defaultApplied());
+        BOOST_CHECK_EQUAL(true, deckDoubleItem->defaultApplied());
     }
 }
 
+BOOST_AUTO_TEST_CASE(Parse_RawRecordTooManyItems_Throws) {
+    ParserRecordPtr parserRecord(new ParserRecord());
+    ParserIntItemConstPtr itemI(new ParserIntItem("I", SINGLE));
+    ParserIntItemConstPtr itemJ(new ParserIntItem("J", SINGLE));
+    ParserIntItemConstPtr itemK(new ParserIntItem("K", SINGLE));
+
+    parserRecord->addItem(itemI);
+    parserRecord->addItem(itemJ);
+    parserRecord->addItem(itemK);
+
+        
+    RawRecordPtr rawRecord(new RawRecord("3 3 3 /"));
+    BOOST_CHECK_NO_THROW(parserRecord->parse(rawRecord));
+    
+    RawRecordPtr rawRecordOneExtra(new RawRecord("3 3 3 4 /"));
+    BOOST_CHECK_THROW(parserRecord->parse(rawRecordOneExtra), std::invalid_argument);
+
+    RawRecordPtr rawRecordForgotRecordTerminator(new RawRecord("3 3 3 \n 4 4 4 /"));
+    BOOST_CHECK_THROW(parserRecord->parse(rawRecordForgotRecordTerminator), std::invalid_argument);
+
+}
 
 
+BOOST_AUTO_TEST_CASE(Parse_RawRecordTooFewItems_ThrowsNot) {
+    ParserRecordPtr parserRecord(new ParserRecord());
+    ParserIntItemConstPtr itemI(new ParserIntItem("I", SINGLE));
+    ParserIntItemConstPtr itemJ(new ParserIntItem("J", SINGLE));
+    ParserIntItemConstPtr itemK(new ParserIntItem("K", SINGLE));
+
+    parserRecord->addItem(itemI);
+    parserRecord->addItem(itemJ);
+    parserRecord->addItem(itemK);
+
+    RawRecordPtr rawRecord(new RawRecord("3 3  /"));
+    BOOST_CHECK_NO_THROW(parserRecord->parse(rawRecord));
+}
