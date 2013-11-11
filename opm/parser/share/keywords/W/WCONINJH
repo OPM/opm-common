@@ -1,16 +1,14 @@
-{"name" : "WCONINJE" , "items" : [
+{"name" : "WCONINJH" , "items" : [
     {"name" : "WELL"         , "value_type" : "STRING" },
     {"name" : "TYPE"         , "value_type" : "STRING" },
     {"name" : "STATUS"       , "value_type" : "STRING" , "default" : "OPEN"},
-    {"name" : "CMODE"        , "value_type" : "STRING" },
-    {"name" : "SURFACE_FLOW_TARGET" , "value_type" : "FLOAT"},
-    {"name" : "RESV_FLOW_TARGET" , "value_type" : "FLOAT"},
-    {"name" : "BHP_TARGET" , "value_type" : "FLOAT"},
-    {"name" : "THP_TARGET" , "value_type" : "FLOAT"},
+    {"name" : "RATE"         , "value_type" : "FLOAT"},
+    {"name" : "BHP"          , "value_type" : "FLOAT"},
+    {"name" : "THP"          , "value_type" : "FLOAT"},
     {"name" : "VFP_TABLE" , "value_type" : "INT" , "default" : 0},
     {"name" : "VAPOIL_C" , "value_type" : "FLOAT" , "default" : 0},
-    {"name" : "GAS_STEAM_RATIO" , "value_type" : "FLOAT" , "default" : 0},
     {"name" : "SURFACE_OIL_FRACTION" , "value_type" : "FLOAT" , "default" : 0},
+    {"name" : "SURFACE_WATER_FRACTION" , "value_type" : "FLOAT" , "default" : 0},
     {"name" : "SURFACE_GAS_FRACTION" , "value_type" : "FLOAT" , "default" : 0},
-    {"name" : "OIL_STEAM_RATIO" , "value_type" : "FLOAT" , "default" : 0}
+    {"name" : "CMODE"        , "value_type" : "STRING" }
 ]}

@@ -1,5 +1,5 @@
 {"name" : "WCONHIST", "items" : 
-      [{"name" : "WellName"     , "value_type" : "STRING"}, 
+      [{"name" : "WELL"     , "value_type" : "STRING"}, 
        {"name" : "OpenShut"     , "value_type" : "STRING" , "default" : "OPEN"}, 
        {"name" : "ControlMode"  , "value_type" : "STRING"},
        {"name" : "ORAT"         , "value_type" : "FLOAT",  "default" : 0.0},
