@@ -19,7 +19,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
-
+#include <iostream>
 
 namespace Opm {
 
@@ -30,6 +30,16 @@ namespace Opm {
             throw std::invalid_argument("Deck does not contain SCHEDULE section.\n");
     }
 
+    void Schedule::initFromDeck(DeckConstPtr deck) {
+        createTimeMap(deck);
+        initRootGroupTreeNode(getTimeMap());
+        iterateScheduleSection(deck);
+    }
+
+    void Schedule::initRootGroupTreeNode(TimeMapConstPtr timeMap) {
+        m_rootGroupTree.reset(new DynamicState<GroupTreePtr>(timeMap, GroupTreePtr(new GroupTree())));
+    }
+
     void Schedule::createTimeMap(DeckConstPtr deck) {
         boost::gregorian::date startDate(defaultStartDate);
         if (deck->hasKeyword("START")) {
@@ -38,11 +48,6 @@ namespace Opm {
         }
 
         m_timeMap = TimeMapPtr(new TimeMap(startDate));
-    }
-
-    void Schedule::initFromDeck(DeckConstPtr deck) {
-        createTimeMap(deck);
-        iterateScheduleSection(deck);
     }
 
     void Schedule::iterateScheduleSection(DeckConstPtr deck) {
@@ -73,8 +78,12 @@ namespace Opm {
                 handleWCONPROD(keyword, currentStep);
 
 
-            if (keyword->name() == "COMPDAT") 
-                handleCOMPDAT( keyword , currentStep );
+            if (keyword->name() == "COMPDAT")
+                handleCOMPDAT(keyword, currentStep);
+
+
+            if (keyword->name() == "GRUPTREE")
+                handleGRUPTREE(keyword, currentStep);
 
             deckIndex++;
         }
@@ -121,16 +130,28 @@ namespace Opm {
         handleWCON(keyword, currentStep, true);
     }
 
-    void Schedule::handleCOMPDAT(DeckKeywordConstPtr keyword , size_t currentStep) {
-        std::map<std::string , std::vector< CompletionConstPtr> > completionMapList = Completion::completionsFromCOMPDATKeyword( keyword );
-        std::map<std::string , std::vector< CompletionConstPtr> >::iterator iter;
-        
-        for( iter= completionMapList.begin(); iter != completionMapList.end(); iter++) {
-            const std::string wellName = iter->first;
-            WellPtr well = getWell( wellName );
+    void Schedule::handleCOMPDAT(DeckKeywordConstPtr keyword, size_t currentStep) {
+        std::map<std::string, std::vector< CompletionConstPtr> > completionMapList = Completion::completionsFromCOMPDATKeyword(keyword);
+        std::map<std::string, std::vector< CompletionConstPtr> >::iterator iter;
 
-            well->addCompletions( currentStep , iter->second );
+        for (iter = completionMapList.begin(); iter != completionMapList.end(); iter++) {
+            const std::string wellName = iter->first;
+            WellPtr well = getWell(wellName);
+
+            well->addCompletions(currentStep, iter->second);
         }
+    }
+
+    void Schedule::handleGRUPTREE(DeckKeywordConstPtr keyword, size_t currentStep) {
+        GroupTreePtr currentTree = m_rootGroupTree->get(currentStep);
+        GroupTreePtr newTree = currentTree->deepCopy();
+        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
+           DeckRecordConstPtr record = keyword->getRecord(recordNr);
+           const std::string& childName = record->getItem("CHILD_GROUP")->getString(0);
+           const std::string& parentName = record->getItem("PARENT_GROUP")->getString(0);
+           GroupTreeNodePtr theNewNode = newTree->updateTree(childName, parentName);
+        }
+        m_rootGroupTree->add(currentStep, newTree);
     }
 
     boost::gregorian::date Schedule::getStartDate() const {
@@ -139,6 +160,10 @@ namespace Opm {
 
     TimeMapConstPtr Schedule::getTimeMap() const {
         return m_timeMap;
+    }
+
+    GroupTreePtr Schedule::getGroupTree(size_t timeStep) const {
+        return m_rootGroupTree->get(timeStep);
     }
 
     void Schedule::addWell(const std::string& wellName) {

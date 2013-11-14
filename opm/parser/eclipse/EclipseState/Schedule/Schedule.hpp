@@ -22,6 +22,10 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
+
+
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 #include <boost/shared_ptr.hpp>
@@ -43,14 +47,16 @@ namespace Opm
         size_t numWells() const;
         bool hasWell(const std::string& wellName) const;
         WellPtr getWell(const std::string& wellName) const;
+        GroupTreePtr getGroupTree(size_t t) const;
   
     private:
         TimeMapPtr m_timeMap;
         std::map<std::string , WellPtr> m_wells;
-
+        boost::shared_ptr<DynamicState<GroupTreePtr> > m_rootGroupTree;
 
         void initFromDeck(DeckConstPtr deck);
         void createTimeMap(DeckConstPtr deck);
+        void initRootGroupTreeNode(TimeMapConstPtr timeMap);
         void iterateScheduleSection(DeckConstPtr deck);
 
         void addWell(const std::string& wellName);
@@ -61,6 +67,8 @@ namespace Opm
         void handleCOMPDAT(DeckKeywordConstPtr keyword , size_t currentStep);
         void handleDATES(DeckKeywordConstPtr keyword);
         void handleTSTEP(DeckKeywordConstPtr keyword);
+        void handleGRUPTREE(DeckKeywordConstPtr keyword, size_t currentStep);
+
     };
     typedef boost::shared_ptr<Schedule> SchedulePtr;
     typedef boost::shared_ptr<const Schedule> ScheduleConstPtr;

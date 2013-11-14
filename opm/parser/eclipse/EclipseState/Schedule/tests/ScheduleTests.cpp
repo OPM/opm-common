@@ -64,8 +64,6 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingSCHEDULE_Throws) {
 }
 
 
-
-
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingReturnsDefaults) {
     DeckPtr deck(new Deck());
     DeckKeywordPtr keyword(new DeckKeyword("SCHEDULE"));
@@ -98,6 +96,32 @@ BOOST_AUTO_TEST_CASE(EmptyScheduleHasNoWells) {
     BOOST_CHECK_EQUAL( false , schedule.hasWell("WELL1") );
     BOOST_CHECK_THROW( schedule.getWell("WELL2") , std::invalid_argument );
 }
+
+
+BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithoutGRUPTREE_HasRootGroupTreeNodeForTimeStepZero) {
+    DeckPtr deck = createDeck();
+    Schedule schedule(deck); 
+    BOOST_CHECK_EQUAL("FIELD", schedule.getGroupTree(0)->getNode("FIELD")->name());
+}
+
+
+//BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithoutGRUPTREE_HasRootGroupTreeNodeForTimeStepZero) {
+//    DeckPtr deck = createDeck();
+//    DeckKeywordPtr gruptreeKeyword(new DeckKeyword("GRUPTREE"));
+//    
+//    DeckRecordPtr recordChildOfField(new DeckRecord());
+//    DeckStringItemPtr itemChild1(new DeckStringItem("CHILD_GROUP"));
+//    itemChild1->push_back("BARNET");
+//    DeckStringItemPtr itemParent1(new DeckStringItem("PARENT_GROUP"));
+//    itemParent1->push_back("FAREN");
+//    
+//    recordChildOfField->addItem()
+//    gruptreeKeyword->addRecord(DeckRecordConstPtr()
+//
+//    Schedule schedule(deck); 
+//    BOOST_CHECK_EQUAL("FIELD", schedule.getGroupTreeNode(0)->name());
+//}
+
 
 
 

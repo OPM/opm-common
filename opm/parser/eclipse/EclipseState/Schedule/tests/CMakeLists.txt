@@ -36,3 +36,8 @@ add_test(NAME runDynamicStateTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMA
 add_executable(runGroupTreeNodeTests GroupTreeNodeTests.cpp)
 target_link_libraries(runGroupTreeNodeTests Parser ${Boost_LIBRARIES})
 add_test(NAME runGroupTreeNodeTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${EXECUTABLE_OUTPUT_PATH}/runGroupTreeNodeTests )
+
+
+add_executable(runGroupTreeTests GroupTreeTests.cpp)
+target_link_libraries(runGroupTreeTests Parser ${Boost_LIBRARIES})
+add_test(NAME runGroupTreeTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${EXECUTABLE_OUTPUT_PATH}/runGroupTreeTests )

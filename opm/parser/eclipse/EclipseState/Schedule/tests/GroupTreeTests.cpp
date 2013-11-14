@@ -24,6 +24,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include <stdexcept>
+#include <iostream>
+
 
 
 using namespace Opm;
@@ -54,7 +56,6 @@ BOOST_AUTO_TEST_CASE(AddNode_ParentIsField_AddedUnderField) {
     BOOST_CHECK(rootNode->hasChildGroup("CHILD_OF_FIELD"));
 }
 
-
 BOOST_AUTO_TEST_CASE(AddNode_ParentNotAdded_ChildAndParentAdded) {
     GroupTree tree;
     tree.updateTree("CHILD", "NEWPARENT");
@@ -65,3 +66,42 @@ BOOST_AUTO_TEST_CASE(AddNode_ParentNotAdded_ChildAndParentAdded) {
     BOOST_CHECK(newParent->hasChildGroup("CHILD"));
 }
 
+BOOST_AUTO_TEST_CASE(DeepCopy_TreeWithChildren_ObjectsDifferContentMatch) {
+    GroupTreePtr tree(new GroupTree());
+    tree->updateTree("L1CHILD1", "FIELD");
+    tree->updateTree("L1CHILD2", "FIELD");
+    tree->updateTree("L2CHILD1", "L1CHILD1");
+    tree->updateTree("L2CHILD2", "L1CHILD1");
+    tree->updateTree("L3CHILD1", "L2CHILD1");
+    
+    GroupTreePtr copiedTree = tree->deepCopy();
+    GroupTreeNodePtr fieldNodeCopy = copiedTree->getNode("FIELD");
+    GroupTreeNodePtr fieldNodeOriginal = tree->getNode("FIELD");
+    BOOST_CHECK(!(fieldNodeCopy == fieldNodeOriginal));
+    BOOST_CHECK_EQUAL(fieldNodeCopy->name(), fieldNodeOriginal->name());
+    
+    GroupTreeNodePtr L1CHILD1NodeCopy = fieldNodeCopy->getChildGroup("L1CHILD1");
+    GroupTreeNodePtr L1CHILD1NodeOriginal = fieldNodeOriginal->getChildGroup("L1CHILD1");
+    BOOST_CHECK(!(L1CHILD1NodeCopy == L1CHILD1NodeOriginal));
+    BOOST_CHECK_EQUAL(L1CHILD1NodeCopy->name(), L1CHILD1NodeOriginal->name());
+    
+    GroupTreeNodePtr L1CHILD2NodeCopy = fieldNodeCopy->getChildGroup("L1CHILD2");
+    GroupTreeNodePtr L1CHILD2NodeOriginal = fieldNodeOriginal->getChildGroup("L1CHILD2");
+    BOOST_CHECK(!(L1CHILD2NodeCopy == L1CHILD2NodeOriginal));
+    BOOST_CHECK_EQUAL(L1CHILD2NodeCopy->name(), L1CHILD2NodeOriginal->name());
+    
+    GroupTreeNodePtr L2CHILD1NodeCopy = L1CHILD1NodeCopy->getChildGroup("L2CHILD1");
+    GroupTreeNodePtr L2CHILD1NodeOriginal = L1CHILD1NodeOriginal->getChildGroup("L2CHILD1");
+    BOOST_CHECK(!(L2CHILD1NodeCopy == L2CHILD1NodeOriginal));
+    BOOST_CHECK_EQUAL(L2CHILD1NodeCopy->name(), L2CHILD1NodeOriginal->name());
+    
+    GroupTreeNodePtr L2CHILD2NodeCopy = L1CHILD1NodeCopy->getChildGroup("L2CHILD2");
+    GroupTreeNodePtr L2CHILD2NodeOriginal = L1CHILD1NodeOriginal->getChildGroup("L2CHILD2");
+    BOOST_CHECK(!(L2CHILD2NodeCopy == L2CHILD2NodeOriginal));
+    BOOST_CHECK_EQUAL(L2CHILD2NodeCopy->name(), L2CHILD2NodeOriginal->name());
+    
+    GroupTreeNodePtr L3CHILD1NodeCopy = L2CHILD1NodeCopy->getChildGroup("L3CHILD1");
+    GroupTreeNodePtr L3CHILD1NodeOriginal = L2CHILD1NodeOriginal->getChildGroup("L3CHILD1");
+    BOOST_CHECK(!(L3CHILD1NodeCopy == L3CHILD1NodeOriginal));
+    BOOST_CHECK_EQUAL(L3CHILD1NodeCopy->name(), L3CHILD1NodeOriginal->name());
+}
