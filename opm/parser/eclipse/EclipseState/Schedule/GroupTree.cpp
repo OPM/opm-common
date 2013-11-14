@@ -18,6 +18,8 @@
  */
 
 #include <stdexcept>
+#include <iostream>
+
 
 #include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
 
@@ -27,7 +29,7 @@ namespace Opm {
     GroupTree::GroupTree() {
         m_root = GroupTreeNode::createFieldNode();
     }
-    
+
     GroupTreeNodePtr GroupTree::updateTree(const std::string& childName) {
         if (getNode(childName)) {
             throw std::invalid_argument("Node \"" + childName + "\" is already in tree, cannot move (yet)");
@@ -35,18 +37,17 @@ namespace Opm {
         return m_root->addChildGroup(childName);
     }
 
-    GroupTreeNodePtr GroupTree::updateTree(const std::string& childName, const std::string& parentName ) {
+    GroupTreeNodePtr GroupTree::updateTree(const std::string& childName, const std::string& parentName) {
         if (getNode(childName)) {
             throw std::invalid_argument("Node \"" + childName + "\" is already in tree, cannot move (yet)");
         }
         GroupTreeNodePtr parentNode = getNode(parentName);
-        if (!parentNode){
+        if (!parentNode) {
             parentNode = updateTree(parentName);
         }
         return parentNode->addChildGroup(childName);
     }
 
-            
     GroupTreeNodePtr GroupTree::getNode(const std::string& nodeName) const {
         GroupTreeNodePtr current = m_root;
         return getNode(nodeName, current);
@@ -58,12 +59,48 @@ namespace Opm {
         } else {
             auto iter = current->begin();
             while (iter != current->end()) {
-                if (getNode(nodeName, (*iter).second)) {
-                    return (*iter).second;
+                GroupTreeNodePtr result = getNode(nodeName, (*iter).second); 
+                if (result) {
+                    return result;
                 }
                 ++iter;
             }
             return GroupTreeNodePtr();
+        }
+    }
+
+    GroupTreePtr GroupTree::deepCopy() const {
+        GroupTreePtr newTree(new GroupTree());
+        GroupTreeNodePtr currentOriginNode = m_root;
+        GroupTreeNodePtr currentNewNode = newTree->getNode("FIELD");
+
+        deepCopy(currentOriginNode, currentNewNode);
+        return newTree;
+
+    }
+
+    void GroupTree::deepCopy(GroupTreeNodePtr origin, GroupTreeNodePtr copy) const {
+        auto iter = origin->begin();
+        while (iter != origin->end()) {
+            GroupTreeNodePtr originChild = (*iter).second;
+            GroupTreeNodePtr copyChild = copy->addChildGroup(originChild->name());
+            deepCopy(originChild, copyChild);
+            ++iter;
+        }
+    }
+
+    void GroupTree::printTree() const {
+        printTree(m_root);
+    }
+
+    void GroupTree::printTree(GroupTreeNodePtr fromNode) const {
+        auto iter = fromNode->begin();
+        while (iter != fromNode->end()) {
+            
+            GroupTreeNodePtr child = (*iter).second;
+            std::cout << fromNode->name() << "(" << fromNode.get() << ")" <<  "<-" << child->name() << "(" << child.get() << ")" << std::endl;
+            printTree(child);
+            ++iter;
         }
     }
 
