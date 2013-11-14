@@ -35,10 +35,14 @@ namespace Opm {
         GroupTreeNode * parent() const;
         boost::shared_ptr<GroupTreeNode> addChildGroup(const std::string& childName);
         bool hasChildGroup(const std::string& childName) const;
-        boost::shared_ptr<const GroupTreeNode> getChildGroup(const std::string& childName);
+        boost::shared_ptr<GroupTreeNode> getChildGroup(const std::string& childName);
 
         void setParent(GroupTreeNode * parent);
         static boost::shared_ptr<GroupTreeNode> createFieldNode();
+        std::map<std::string, boost::shared_ptr<GroupTreeNode> >::iterator begin();
+        std::map<std::string, boost::shared_ptr<GroupTreeNode> >::iterator end();
+
+        
     private:
         GroupTreeNode(const std::string& name);
         GroupTreeNode(const std::string& name, GroupTreeNode * parent);

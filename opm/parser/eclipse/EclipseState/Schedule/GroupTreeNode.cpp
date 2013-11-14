@@ -53,7 +53,7 @@ namespace Opm {
         return m_childGroups.find(childName) != m_childGroups.end();
     }
 
-    GroupTreeNodeConstPtr GroupTreeNode::getChildGroup(const std::string& childName) {
+    GroupTreeNodePtr GroupTreeNode::getChildGroup(const std::string& childName) {
         if (hasChildGroup(childName)) {
             return m_childGroups[childName];
         }
@@ -64,4 +64,11 @@ namespace Opm {
         return GroupTreeNodePtr(new GroupTreeNode("FIELD"));
     }
 
+    std::map<std::string, boost::shared_ptr<GroupTreeNode> >::iterator GroupTreeNode::begin() {
+        return m_childGroups.begin();
+    }
+
+    std::map<std::string, boost::shared_ptr<GroupTreeNode> >::iterator GroupTreeNode::end() {
+        return m_childGroups.end();
+    }
 }
