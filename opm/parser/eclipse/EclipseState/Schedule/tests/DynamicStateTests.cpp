@@ -109,3 +109,24 @@ BOOST_AUTO_TEST_CASE(DynamicStateAddIndexAlreadySetThrows) {
 
 
 
+
+BOOST_AUTO_TEST_CASE(DynamicStateCheckSize) {
+    boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
+    Opm::TimeMapPtr timeMap(new Opm::TimeMap(startDate));
+    Opm::DynamicState<int> state(timeMap , 137);
+    for (size_t i = 0; i < 10; i++)
+        timeMap->addTStep( boost::posix_time::hours( (i+1) * 24 ));
+
+    BOOST_CHECK_EQUAL( 0U , state.size() );
+
+    state.add( 0 , 10 );
+    BOOST_CHECK_EQUAL( 1U , state.size() );
+
+    state.add( 2 , 10 );
+    BOOST_CHECK_EQUAL( 3U , state.size() );
+    state.add( 2 , 10 );
+    BOOST_CHECK_EQUAL( 3U , state.size() );
+
+    state.add( 6 , 10 );
+    BOOST_CHECK_EQUAL( 7U , state.size() );
+}
