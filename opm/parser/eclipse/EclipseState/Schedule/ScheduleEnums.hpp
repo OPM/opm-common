@@ -30,8 +30,20 @@ namespace Opm {
         AUTO = 3
     };
 
+
+    enum PhaseEnum {
+        OIL   = 1,
+        GAS   = 2,
+        WATER = 4
+    };
+
+
+
     const std::string CompletionStateEnum2String( CompletionStateEnum enumValue );
     CompletionStateEnum CompletionStateEnumFromString( const std::string& stringValue );
+
+    const std::string PhaseEnum2String( PhaseEnum enumValue );
+    PhaseEnum PhaseEnumFromString( const std::string& stringValue );
     
 }
 
