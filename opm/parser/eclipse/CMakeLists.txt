@@ -50,6 +50,7 @@ set (state_source
 EclipseState/Schedule/TimeMap.cpp 
 EclipseState/Schedule/Schedule.cpp 
 EclipseState/Schedule/Well.cpp
+EclipseState/Schedule/Group.cpp
 EclipseState/Schedule/Completion.cpp
 EclipseState/Schedule/CompletionSet.cpp
 EclipseState/Schedule/ScheduleEnums.cpp )
@@ -82,6 +83,7 @@ Parser/ParserStringItem.hpp
 EclipseState/Schedule/TimeMap.hpp
 EclipseState/Schedule/Schedule.hpp
 EclipseState/Schedule/Well.hpp
+EclipseState/Schedule/Group.hpp
 EclipseState/Schedule/DynamicState.hpp
 EclipseState/Schedule/Completion.hpp
 EclipseState/Schedule/CompletionSet.hpp
