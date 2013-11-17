@@ -42,13 +42,53 @@ BOOST_AUTO_TEST_CASE(TestCompletionStateEnumFromString) {
 
 
 BOOST_AUTO_TEST_CASE(TestCompletionStateEnumLoop) {
-    BOOST_CHECK_EQUAL( AUTO    , CompletionStateEnumFromString( CompletionStateEnum2String( AUTO ) ));
+    BOOST_CHECK_EQUAL( AUTO , CompletionStateEnumFromString( CompletionStateEnum2String( AUTO ) ));
     BOOST_CHECK_EQUAL( SHUT , CompletionStateEnumFromString( CompletionStateEnum2String( SHUT ) ));
     BOOST_CHECK_EQUAL( OPEN , CompletionStateEnumFromString( CompletionStateEnum2String( OPEN ) ));
 
-    BOOST_CHECK_EQUAL( "AUTO"    , CompletionStateEnum2String(CompletionStateEnumFromString(  "AUTO" ) ));
+    BOOST_CHECK_EQUAL( "AUTO" , CompletionStateEnum2String(CompletionStateEnumFromString(  "AUTO" ) ));
     BOOST_CHECK_EQUAL( "OPEN" , CompletionStateEnum2String(CompletionStateEnumFromString(  "OPEN" ) ));
     BOOST_CHECK_EQUAL( "SHUT" , CompletionStateEnum2String(CompletionStateEnumFromString(  "SHUT" ) ));
+}
+
+/*****************************************************************/
+
+BOOST_AUTO_TEST_CASE(TestGroupInjectionControlEnum2String) {
+    BOOST_CHECK_EQUAL( "NONE" , GroupInjectionControlEnum2String(NONE));
+    BOOST_CHECK_EQUAL( "RATE" , GroupInjectionControlEnum2String(RATE));
+    BOOST_CHECK_EQUAL( "RESV" , GroupInjectionControlEnum2String(RESV));
+    BOOST_CHECK_EQUAL( "REIN" , GroupInjectionControlEnum2String(REIN));
+    BOOST_CHECK_EQUAL( "VREP" , GroupInjectionControlEnum2String(VREP));
+    BOOST_CHECK_EQUAL( "FLD"  , GroupInjectionControlEnum2String(FLD));
+}
+
+
+BOOST_AUTO_TEST_CASE(TestGroupInjectionControlEnumFromString) {
+    BOOST_CHECK_THROW( GroupInjectionControlEnumFromString("XXX") , std::invalid_argument );
+    BOOST_CHECK_EQUAL( NONE , GroupInjectionControlEnumFromString("NONE"));
+    BOOST_CHECK_EQUAL( RATE , GroupInjectionControlEnumFromString("RATE"));
+    BOOST_CHECK_EQUAL( RESV , GroupInjectionControlEnumFromString("RESV"));
+    BOOST_CHECK_EQUAL( REIN , GroupInjectionControlEnumFromString("REIN"));
+    BOOST_CHECK_EQUAL( VREP , GroupInjectionControlEnumFromString("VREP"));
+    BOOST_CHECK_EQUAL( FLD  , GroupInjectionControlEnumFromString("FLD"));
+}
+
+
+
+BOOST_AUTO_TEST_CASE(TestGroupInjectionControlEnumLoop) {
+    BOOST_CHECK_EQUAL( NONE , GroupInjectionControlEnumFromString( GroupInjectionControlEnum2String( NONE ) ));
+    BOOST_CHECK_EQUAL( RATE , GroupInjectionControlEnumFromString( GroupInjectionControlEnum2String( RATE ) ));
+    BOOST_CHECK_EQUAL( RESV , GroupInjectionControlEnumFromString( GroupInjectionControlEnum2String( RESV ) ));
+    BOOST_CHECK_EQUAL( REIN , GroupInjectionControlEnumFromString( GroupInjectionControlEnum2String( REIN ) ));
+    BOOST_CHECK_EQUAL( VREP , GroupInjectionControlEnumFromString( GroupInjectionControlEnum2String( VREP ) ));
+    BOOST_CHECK_EQUAL( FLD  , GroupInjectionControlEnumFromString( GroupInjectionControlEnum2String( FLD ) ));
+
+    BOOST_CHECK_EQUAL( "NONE" , GroupInjectionControlEnum2String(GroupInjectionControlEnumFromString( "NONE" ) ));
+    BOOST_CHECK_EQUAL( "RATE" , GroupInjectionControlEnum2String(GroupInjectionControlEnumFromString( "RATE" ) ));
+    BOOST_CHECK_EQUAL( "RESV" , GroupInjectionControlEnum2String(GroupInjectionControlEnumFromString( "RESV" ) ));
+    BOOST_CHECK_EQUAL( "REIN" , GroupInjectionControlEnum2String(GroupInjectionControlEnumFromString( "REIN" ) ));
+    BOOST_CHECK_EQUAL( "VREP" , GroupInjectionControlEnum2String(GroupInjectionControlEnumFromString( "VREP" ) ));
+    BOOST_CHECK_EQUAL( "FLD"  , GroupInjectionControlEnum2String(GroupInjectionControlEnumFromString( "FLD"  ) ));
 }
 
 /*****************************************************************/

@@ -50,6 +50,45 @@ namespace Opm {
     }
 
     /*****************************************************************/
+    
+    const std::string GroupInjectionControlEnum2String( GroupInjectionControlEnum enumValue ) {
+        switch( enumValue ) {
+        case NONE:
+            return "NONE";
+        case RATE:
+            return "RATE";
+        case RESV:
+            return "RESV";
+        case REIN:
+            return "REIN";
+        case VREP:
+            return "VREP";
+        case FLD:
+            return "FLD";
+        default:
+          throw std::invalid_argument("Unhandled enum value");
+        }
+    }
+    
+    
+    GroupInjectionControlEnum GroupInjectionControlEnumFromString( const std::string& stringValue ) {
+        if (stringValue == "NONE")
+            return NONE;
+        else if (stringValue == "RATE")
+            return RATE;
+        else if (stringValue == "RESV")
+            return RESV;
+        else if (stringValue == "REIN")
+            return REIN;
+        else if (stringValue == "VREP")
+            return VREP;
+        else if (stringValue == "FLD")
+            return FLD;
+        else
+            throw std::invalid_argument("Unknown enum state string: " + stringValue );
+    }
+
+    /*****************************************************************/
 
     const std::string PhaseEnum2String( PhaseEnum enumValue ) {
         switch( enumValue ) {

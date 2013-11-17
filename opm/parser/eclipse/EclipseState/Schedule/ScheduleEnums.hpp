@@ -37,6 +37,16 @@ namespace Opm {
         WATER = 4
     };
 
+    
+    enum GroupInjectionControlEnum {
+        NONE = 0,
+        RATE = 1,
+        RESV = 2,
+        REIN = 3,
+        VREP = 4,
+        FLD  = 5
+    };
+
 
 
     const std::string CompletionStateEnum2String( CompletionStateEnum enumValue );
@@ -44,6 +54,9 @@ namespace Opm {
 
     const std::string PhaseEnum2String( PhaseEnum enumValue );
     PhaseEnum PhaseEnumFromString( const std::string& stringValue );
+
+    const std::string GroupInjectionControlEnum2String( GroupInjectionControlEnum enumValue );
+    GroupInjectionControlEnum GroupInjectionControlEnumFromString( const std::string& stringValue );
     
 }
 
