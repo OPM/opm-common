@@ -28,6 +28,10 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
+
 using namespace Opm;
 
 //NOTE: needs statoil dataset
@@ -36,8 +40,12 @@ BOOST_AUTO_TEST_CASE(ParseFileWithManyKeywords) {
     boost::filesystem::path multipleKeywordFile("testdata/statoil/gurbat_trimmed.DATA");
 
     ParserPtr parser(new Parser());
-    DeckPtr Deck = parser->parse(multipleKeywordFile.string() , false);
-
-    //This check is not necessarily correct, 
-    //as it depends on that all the fixed recordNum keywords are specified
+    DeckPtr deck = parser->parse(multipleKeywordFile.string() , false);
+    SchedulePtr schedule(new Schedule(deck));
+    
+    GroupTreePtr treeAtStart = schedule->getGroupTree(0);
+    GroupTreeNodePtr fieldNode = treeAtStart->getNode("FIELD");
+    BOOST_CHECK(fieldNode);
+    BOOST_CHECK(fieldNode->getChildGroup("OP"));
+    BOOST_CHECK(fieldNode->getChildGroup("WI"));
 }
