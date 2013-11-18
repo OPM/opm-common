@@ -121,3 +121,11 @@ BOOST_AUTO_TEST_CASE( WellTestCOMPDAT ) {
         BOOST_CHECK_EQUAL( SHUT , completions->get(3)->getState() );
     }
 }
+
+
+//BOOST_AUTO_TEST_CASE( WellTestGroups ) {
+//    ParserPtr parser(new Parser());
+//    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_GROUPS");
+//    DeckPtr deck = parser->parse(scheduleFile.string());
+//    ScheduleConstPtr sched( new Schedule(deck));
+//}

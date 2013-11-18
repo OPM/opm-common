@@ -24,9 +24,10 @@
 namespace Opm {
 
     Schedule::Schedule(DeckConstPtr deck) {
-        if (deck->hasKeyword("SCHEDULE"))
+        if (deck->hasKeyword("SCHEDULE")) {
+            addGroup( "FIELD" );
             initFromDeck(deck);
-        else
+        } else
             throw std::invalid_argument("Deck does not contain SCHEDULE section.\n");
     }
 
@@ -37,13 +38,14 @@ namespace Opm {
             startDate = TimeMap::dateFromEclipse(startKeyword->getRecord(0));
         }
 
-        m_timeMap = TimeMapPtr(new TimeMap(startDate));
+        m_timeMap.reset(new TimeMap(startDate));
     }
 
     void Schedule::initFromDeck(DeckConstPtr deck) {
         createTimeMap(deck);
         iterateScheduleSection(deck);
     }
+
 
     void Schedule::iterateScheduleSection(DeckConstPtr deck) {
         DeckKeywordConstPtr scheduleKeyword = deck->getKeyword("SCHEDULE");
@@ -193,6 +195,27 @@ namespace Opm {
         } else
             throw std::invalid_argument("Well: " + wellName + " does not exist");
     }
+
+    void Schedule::addGroup(const std::string& groupName) {
+        GroupPtr group(new Group(groupName, m_timeMap));
+        m_groups[ groupName ] = group;
+    }
+
+    size_t Schedule::numGroups() const {
+        return m_groups.size();
+    }
+
+    bool Schedule::hasGroup(const std::string& groupName) const {
+        return m_groups.find(groupName) != m_groups.end();
+    }
+
+    GroupPtr Schedule::getGroup(const std::string& groupName) const {
+        if (hasGroup(groupName)) {
+            return m_groups.at(groupName);
+        } else
+            throw std::invalid_argument("Group: " + groupName + " does not exist");
+    }
+
 
 
 }
