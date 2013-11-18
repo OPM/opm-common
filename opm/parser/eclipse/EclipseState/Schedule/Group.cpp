@@ -27,16 +27,22 @@ namespace Opm {
     Group::Group(const std::string& name , TimeMapConstPtr timeMap) 
         : m_injectionPhase( new DynamicState<PhaseEnum>( timeMap , WATER )),
           m_injectionControlMode( new DynamicState<GroupInjectionControlEnum>( timeMap , NONE )),
-          m_injectionRate( new DynamicState<double>( timeMap , 0 ))
+          m_injectionRate( new DynamicState<double>( timeMap , 0 )),
+          m_surfaceFlowMaxRate( new DynamicState<double>( timeMap , 0)),
+          m_reservoirFlowMaxRate( new DynamicState<double>( timeMap , 0)),
+          m_targetReinjectFraction( new DynamicState<double>( timeMap , 0)),
+          m_targetVoidReplacementFraction( new DynamicState<double>( timeMap , 0))
     {
         m_name = name;
     }
 
+
     const std::string& Group::name() const {
         return m_name;
     }
+
     
-    void Group::setInjectionPhase(size_t time_step , PhaseEnum phase) {
+    void Group::setInjectionPhase(size_t time_step , PhaseEnum phase){
         if (m_injectionPhase->size() == time_step + 1) {
             PhaseEnum currentPhase = m_injectionPhase->get(time_step);
             /*
@@ -81,6 +87,38 @@ namespace Opm {
 
     GroupInjectionControlEnum Group::getInjectionControlMode( size_t time_step) const {
         return m_injectionControlMode->get( time_step );
+    }
+
+    void Group::setSurfaceMaxRate( size_t time_step , double rate) {
+        return m_surfaceFlowMaxRate->add( time_step , rate);
+    }
+
+    double Group::getSurfaceMaxRate( size_t time_step ) const {
+        return m_surfaceFlowMaxRate->get( time_step );
+    }
+
+    void Group::setReservoirMaxRate( size_t time_step , double rate) {
+        return m_reservoirFlowMaxRate->add( time_step , rate);
+    }
+
+    double Group::getReservoirMaxRate( size_t time_step ) const {
+        return m_reservoirFlowMaxRate->get( time_step );
+    }
+
+    void Group::setTargetReinjectFraction( size_t time_step , double rate) {
+        return m_targetReinjectFraction->add( time_step , rate);
+    }
+
+    double Group::getTargetReinjectFraction( size_t time_step ) const {
+        return m_targetReinjectFraction->get( time_step );
+    }
+
+    void Group::setTargetVoidReplacementFraction( size_t time_step , double rate) {
+        return m_targetVoidReplacementFraction->add( time_step , rate);
+    }
+
+    double Group::getTargetVoidReplacementFraction( size_t time_step ) const {
+        return m_targetVoidReplacementFraction->get( time_step );
     }
 
     

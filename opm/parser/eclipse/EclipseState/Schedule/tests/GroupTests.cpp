@@ -82,3 +82,21 @@ BOOST_AUTO_TEST_CASE(GroupChangePhaseSameTimeThrows) {
 }
 
 
+
+
+BOOST_AUTO_TEST_CASE(GroupMiscInjection) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    Opm::Group group("G1" , timeMap);
+    
+    group.setSurfaceMaxRate( 3 , 100 );
+    BOOST_CHECK_EQUAL( 100 , group.getSurfaceMaxRate( 5 ));
+
+    group.setReservoirMaxRate( 3 , 200 );
+    BOOST_CHECK_EQUAL( 200 , group.getReservoirMaxRate( 5 ));
+
+    group.setTargetReinjectFraction( 3 , 300 );
+    BOOST_CHECK_EQUAL( 300 , group.getTargetReinjectFraction( 5 ));
+
+    group.setTargetVoidReplacementFraction( 3 , 400 );
+    BOOST_CHECK_EQUAL( 400 , group.getTargetVoidReplacementFraction( 5 ));
+}

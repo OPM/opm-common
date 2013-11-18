@@ -35,19 +35,36 @@ namespace Opm {
         Group(const std::string& name, TimeMapConstPtr timeMap);
         
         const std::string& name() const;
-        void setInjectionPhase(size_t time_step , PhaseEnum phase);
+        void      setInjectionPhase(size_t time_step , PhaseEnum phase);
         PhaseEnum getInjectionPhase( size_t time_step) const;
 
-        void setInjectionControlMode(size_t time_step , GroupInjectionControlEnum ControlMode);
+        void                      setInjectionControlMode(size_t time_step , GroupInjectionControlEnum ControlMode);
         GroupInjectionControlEnum getInjectionControlMode( size_t time_step) const;
 
-        void setInjectionRate(size_t time_step , double rate);
+        void   setInjectionRate(size_t time_step , double rate);
         double getInjectionRate( size_t time_step) const;
+
+        void   setSurfaceMaxRate( size_t time_step , double rate);
+        double getSurfaceMaxRate( size_t time_step ) const;
+
+        void   setReservoirMaxRate( size_t time_step , double rate);
+        double getReservoirMaxRate( size_t time_step ) const;
+
+        void   setTargetReinjectFraction( size_t time_step , double rate);
+        double getTargetReinjectFraction( size_t time_step ) const;
+
+        void   setTargetVoidReplacementFraction( size_t time_step , double rate);
+        double getTargetVoidReplacementFraction( size_t time_step ) const;
+
     private:
         std::string m_name;
         boost::shared_ptr<DynamicState<PhaseEnum> > m_injectionPhase;
         boost::shared_ptr<DynamicState<GroupInjectionControlEnum> > m_injectionControlMode;
         boost::shared_ptr<DynamicState<double> > m_injectionRate;
+        boost::shared_ptr<DynamicState<double> > m_surfaceFlowMaxRate;
+        boost::shared_ptr<DynamicState<double> > m_reservoirFlowMaxRate;
+        boost::shared_ptr<DynamicState<double> > m_targetReinjectFraction;
+        boost::shared_ptr<DynamicState<double> > m_targetVoidReplacementFraction;
     };
     typedef boost::shared_ptr<Group> GroupPtr;
     typedef boost::shared_ptr<const Group> GroupConstPtr;
