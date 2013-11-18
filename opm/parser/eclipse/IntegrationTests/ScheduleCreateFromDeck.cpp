@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_with_explicit_L0_parenting) {
     ScheduleConstPtr sched(new Schedule(deck));
 
     GroupTreeNodePtr rootNode = sched->getGroupTree(0)->getNode("FIELD");
-    
+
     sched->getGroupTree(0)->printTree();
 
     BOOST_REQUIRE_EQUAL("FIELD", rootNode->name());
@@ -145,9 +145,53 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_with_explicit_L0_parenting) {
     GroupTreeNodePtr THIRD_LEVEL1 = SECOND_LEVEL1->getChildGroup("THIRD_LEVEL1");
 }
 
+BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_tree) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELSPECS_GROUPS");
+    DeckPtr deck = parser->parse(scheduleFile.string());
+    ScheduleConstPtr schedule(new Schedule(deck));
+
+    // Time 0, only from WELSPECS
+    GroupTreeNodePtr root0 = schedule->getGroupTree(0)->getNode("FIELD");
+    BOOST_REQUIRE_EQUAL("FIELD", root0->name());
+
+    BOOST_CHECK(root0->hasChildGroup("GROUP_BJARNE"));
+    GroupTreeNodePtr GROUP_BJARNE = root0->getChildGroup("GROUP_BJARNE");
+    BOOST_CHECK_EQUAL("GROUP_BJARNE", GROUP_BJARNE->name());
+
+    BOOST_CHECK(root0->hasChildGroup("GROUP_ODD"));
+    GroupTreeNodePtr GROUP_ODD = root0->getChildGroup("GROUP_ODD");
+    BOOST_CHECK_EQUAL("GROUP_ODD", GROUP_ODD->name());
+
+    // Time 1, now also from GRUPTREE
+    GroupTreeNodePtr root1 = schedule->getGroupTree(1)->getNode("FIELD");
+    BOOST_REQUIRE_EQUAL("FIELD", root1->name());
+    BOOST_CHECK(root1->hasChildGroup("GROUP_BJARNE"));
+    GroupTreeNodePtr GROUP_BJARNE1 = root1->getChildGroup("GROUP_BJARNE");
+    BOOST_CHECK_EQUAL("GROUP_BJARNE", GROUP_BJARNE1->name());
+
+    BOOST_CHECK(root1->hasChildGroup("GROUP_ODD"));
+    GroupTreeNodePtr GROUP_ODD1 = root1->getChildGroup("GROUP_ODD");
+    BOOST_CHECK_EQUAL("GROUP_ODD", GROUP_ODD1->name());
+
+    // - from GRUPTREE
+    
+    BOOST_CHECK(GROUP_BJARNE1->hasChildGroup("GROUP_BIRGER"));
+    GroupTreeNodePtr GROUP_BIRGER = GROUP_BJARNE1->getChildGroup("GROUP_BIRGER");
+    BOOST_CHECK_EQUAL("GROUP_BIRGER", GROUP_BIRGER->name());
+
+    BOOST_CHECK(root1->hasChildGroup("GROUP_NEW"));
+    GroupTreeNodePtr GROUP_NEW = root1->getChildGroup("GROUP_NEW");
+    BOOST_CHECK_EQUAL("GROUP_NEW", GROUP_NEW->name());
+    
+    BOOST_CHECK(GROUP_NEW->hasChildGroup("GROUP_NILS"));
+    GroupTreeNodePtr GROUP_NILS = GROUP_NEW->getChildGroup("GROUP_NILS");
+    BOOST_CHECK_EQUAL("GROUP_NILS", GROUP_NILS->name());
+};
+
 BOOST_AUTO_TEST_CASE(GroupTreeTest_PrintGrouptree) {
     ParserPtr parser(new Parser());
-    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_GRUPTREE_EXPLICIT_PARENTING");
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELSPECS_GROUPS");
     DeckPtr deck = parser->parse(scheduleFile.string());
     ScheduleConstPtr sched(new Schedule(deck));
 
@@ -155,28 +199,6 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_PrintGrouptree) {
     rootNode->printTree();
 
 }
-
-BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_with_implicit_L0_parenting) {
-};
-
-BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_with_explicit_then_implicit_LO_parenting) {
-};
-
-BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_with_moving_of_node) {
-};
-
-BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_with_adding_of_node) {
-};
-
-BOOST_AUTO_TEST_CASE(GroupTreeTest_only_WELSPECS_grouping) {
-};
-
-BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_TSTEPS_and_then_more_WELSPECS_grouping) {
-};
-
-BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_someTSTEPS_and_then_GRUPTREE_grouping) {
-};
-
 
 
 

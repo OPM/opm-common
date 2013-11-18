@@ -68,8 +68,9 @@ namespace Opm {
                 currentStep += keyword->getRecord(0)->getItem(0)->size(); // This is a bit weird API.
             }
 
-            if (keyword->name() == "WELSPECS")
-                handleWELSPECS(keyword);
+            if (keyword->name() == "WELSPECS") {
+                handleWELSPECS(keyword, currentStep);
+            }
 
             if (keyword->name() == "WCONHIST")
                 handleWCONHIST(keyword, currentStep);
@@ -97,7 +98,19 @@ namespace Opm {
         m_timeMap->addFromTSTEPKeyword(keyword);
     }
 
-    void Schedule::handleWELSPECS(DeckKeywordConstPtr keyword) {
+    bool Schedule::handleGroupFromWELSPECS(const std::string& groupName, GroupTreePtr newTree) const {
+        bool treeUpdated = false;
+        if (!newTree->getNode(groupName)) {
+            treeUpdated = true;
+            newTree->updateTree(groupName);
+        }
+        return treeUpdated;
+    }
+
+    void Schedule::handleWELSPECS(DeckKeywordConstPtr keyword, size_t currentStep) {
+        bool needNewTree = false;
+        GroupTreePtr newTree = m_rootGroupTree->get(currentStep)->deepCopy();
+
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellName = record->getItem(0)->getString(0);
@@ -106,7 +119,12 @@ namespace Opm {
                 addWell(wellName);
             }
             WellPtr well = getWell(wellName);
-            well->addWELSPECS(record);
+
+            needNewTree = handleGroupFromWELSPECS(record->getItem(1)->getString(0), newTree);
+
+        }
+        if (needNewTree) {
+            m_rootGroupTree->add(currentStep, newTree);
         }
     }
 
@@ -146,10 +164,10 @@ namespace Opm {
         GroupTreePtr currentTree = m_rootGroupTree->get(currentStep);
         GroupTreePtr newTree = currentTree->deepCopy();
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
-           DeckRecordConstPtr record = keyword->getRecord(recordNr);
-           const std::string& childName = record->getItem("CHILD_GROUP")->getString(0);
-           const std::string& parentName = record->getItem("PARENT_GROUP")->getString(0);
-           GroupTreeNodePtr theNewNode = newTree->updateTree(childName, parentName);
+            DeckRecordConstPtr record = keyword->getRecord(recordNr);
+            const std::string& childName = record->getItem("CHILD_GROUP")->getString(0);
+            const std::string& parentName = record->getItem("PARENT_GROUP")->getString(0);
+            GroupTreeNodePtr theNewNode = newTree->updateTree(childName, parentName);
         }
         m_rootGroupTree->add(currentStep, newTree);
     }

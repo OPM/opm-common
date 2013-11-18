@@ -1,6 +1,6 @@
 {"name" : "WELSPECS" , "items" : [
   {"name" : "well_name" , "value_type" : "STRING" },
-  {"name" : "group_name" , "value_type" : "STRING" },
+  {"name" : "group_name" , "value_type" : "STRING", "default" : "FIELD"},
   {"name" : "HEAD_I" , "value_type" : "INT"}, 
   {"name" : "HEAD_J" , "value_type" : "INT"}, 
   {"name" : "REF_DEPTH" , "value_type" : "FLOAT"}, 

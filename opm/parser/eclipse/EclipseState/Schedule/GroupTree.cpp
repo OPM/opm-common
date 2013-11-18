@@ -57,7 +57,7 @@ namespace Opm {
         if (current->name() == nodeName) {
             return current;
         } else {
-            auto iter = current->begin();
+            std::map<std::string, GroupTreeNodePtr>::iterator iter = current->begin();
             while (iter != current->end()) {
                 GroupTreeNodePtr result = getNode(nodeName, (*iter).second); 
                 if (result) {
@@ -80,7 +80,7 @@ namespace Opm {
     }
 
     void GroupTree::deepCopy(GroupTreeNodePtr origin, GroupTreeNodePtr copy) const {
-        auto iter = origin->begin();
+        std::map<std::string, GroupTreeNodePtr >::iterator iter = origin->begin();
         while (iter != origin->end()) {
             GroupTreeNodePtr originChild = (*iter).second;
             GroupTreeNodePtr copyChild = copy->addChildGroup(originChild->name());
@@ -91,14 +91,16 @@ namespace Opm {
 
     void GroupTree::printTree() const {
         printTree(m_root);
+        std::cout << std::endl;
+        std::cout << "End of tree" << std::endl;
     }
 
     void GroupTree::printTree(GroupTreeNodePtr fromNode) const {
-        auto iter = fromNode->begin();
+        std::cout << fromNode->name() << "(" << fromNode.get() << ")";
+        std::map<std::string, GroupTreeNodePtr >::iterator iter = fromNode->begin();
         while (iter != fromNode->end()) {
-            
             GroupTreeNodePtr child = (*iter).second;
-            std::cout << fromNode->name() << "(" << fromNode.get() << ")" <<  "<-" << child->name() << "(" << child.get() << ")" << std::endl;
+            std::cout <<  "<-" << child->name() << "(" << child.get() << ")" << std::endl;
             printTree(child);
             ++iter;
         }
