@@ -123,9 +123,25 @@ BOOST_AUTO_TEST_CASE( WellTestCOMPDAT ) {
 }
 
 
-//BOOST_AUTO_TEST_CASE( WellTestGroups ) {
-//    ParserPtr parser(new Parser());
-//    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_GROUPS");
-//    DeckPtr deck = parser->parse(scheduleFile.string());
-//    ScheduleConstPtr sched( new Schedule(deck));
-//}
+BOOST_AUTO_TEST_CASE( WellTestGroups ) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_GROUPS");
+    DeckPtr deck = parser->parse(scheduleFile.string());
+    ScheduleConstPtr sched( new Schedule(deck));
+    
+    BOOST_CHECK_EQUAL( 3U , sched->numGroups() );
+    BOOST_CHECK( sched->hasGroup( "INJ" ));
+    BOOST_CHECK( sched->hasGroup( "OP" ));
+
+    GroupPtr group = sched->getGroup("INJ");
+    BOOST_CHECK_EQUAL( WATER , group->getInjectionPhase( 3 ));
+    BOOST_CHECK_EQUAL( VREP , group->getInjectionControlMode( 3 ));
+    BOOST_CHECK_EQUAL( 10 , group->getSurfaceMaxRate( 3 ));
+    BOOST_CHECK_EQUAL( 20 , group->getReservoirMaxRate( 3 ));
+    BOOST_CHECK_EQUAL( 0.75 , group->getTargetReinjectFraction( 3 ));
+    BOOST_CHECK_EQUAL( 0.95 , group->getTargetVoidReplacementFraction( 3 ));
+    
+    BOOST_CHECK_EQUAL( OIL , group->getInjectionPhase( 6 ));
+    BOOST_CHECK_EQUAL( RATE , group->getInjectionControlMode( 6 ));
+    BOOST_CHECK_EQUAL( 1000 , group->getSurfaceMaxRate( 6 ));
+}

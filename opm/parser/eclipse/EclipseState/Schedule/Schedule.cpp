@@ -83,6 +83,9 @@ namespace Opm {
             if (keyword->name() == "COMPDAT") 
                 handleCOMPDAT( keyword , currentStep );
 
+            if (keyword->name() == "GCONINJE")
+                handleGCONINJE( keyword , currentStep );
+
             deckIndex++;
         }
     }
@@ -98,7 +101,12 @@ namespace Opm {
     void Schedule::handleWELSPECS(DeckKeywordConstPtr keyword) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            const std::string& wellName = record->getItem(0)->getString(0);
+            const std::string& wellName = record->getItem("WELL")->getString(0);
+            const std::string& groupName = record->getItem("GROUP")->getString(0);
+
+            if (!hasGroup(groupName)) {
+                addGroup(groupName);
+            }
 
             if (!hasWell(wellName)) {
                 addWell(wellName);
@@ -155,6 +163,30 @@ namespace Opm {
             well->setInPredictionMode(currentStep, false );
         }
     }
+
+
+    void Schedule::handleGCONINJE(DeckKeywordConstPtr keyword, size_t currentStep) {
+        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
+            DeckRecordConstPtr record = keyword->getRecord(recordNr);
+            const std::string& groupName = record->getItem("GROUP")->getString(0);
+            GroupPtr group = getGroup(groupName);
+
+            {
+                PhaseEnum phase = PhaseEnumFromString( record->getItem("PHASE")->getString(0) );
+                group->setInjectionPhase( currentStep , phase );
+            }
+            {
+                GroupInjectionControlEnum controlMode = GroupInjectionControlEnumFromString( record->getItem("CONTROL_MODE")->getString(0) );
+                group->setInjectionControlMode( currentStep , controlMode );
+            }
+            group->setSurfaceMaxRate( currentStep , record->getItem("SURFACE_TARGET")->getDouble(0));
+            group->setReservoirMaxRate( currentStep , record->getItem("RESV_TARGET")->getDouble(0));
+            group->setTargetReinjectFraction( currentStep , record->getItem("REINJ_TARGET")->getDouble(0));
+            group->setTargetVoidReplacementFraction( currentStep , record->getItem("VOIDAGE_TARGET")->getDouble(0));
+        }
+    }
+
+
 
     void Schedule::handleCOMPDAT(DeckKeywordConstPtr keyword , size_t currentStep) {
         std::map<std::string , std::vector< CompletionConstPtr> > completionMapList = Completion::completionsFromCOMPDATKeyword( keyword );

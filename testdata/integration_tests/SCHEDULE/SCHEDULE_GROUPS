@@ -21,7 +21,7 @@ WELSPECS
 
 
 GCONINJE 
-    'INJ'     'WATER'      'VREP'  3*      0.95  6* /
+    'INJ'     'WATER'      'VREP'  10 20 0.75      0.95  6* /
 /
 
 
@@ -30,7 +30,7 @@ TSTEP             -- 4,5,6
  
 
 GCONINJE 
-    'INJ'     'WATER'      'RATE'  1000  2*      0.95  6* /
+    'INJ'     'OIL'      'RATE'  1000  2*      0.95  6* /
 /
 
 

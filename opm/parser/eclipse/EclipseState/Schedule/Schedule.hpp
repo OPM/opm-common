@@ -70,6 +70,7 @@ namespace Opm
         void handleCOMPDAT(DeckKeywordConstPtr keyword , size_t currentStep);
         void handleWCONINJE(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleWCONINJH(DeckKeywordConstPtr keyword, size_t currentStep);
+        void handleGCONINJE(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleDATES(DeckKeywordConstPtr keyword);
         void handleTSTEP(DeckKeywordConstPtr keyword);
     };
