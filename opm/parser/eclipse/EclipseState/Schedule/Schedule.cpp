@@ -176,7 +176,7 @@ namespace Opm {
                 group->setInjectionPhase( currentStep , phase );
             }
             {
-                GroupInjectionControlEnum controlMode = GroupInjectionControlEnumFromString( record->getItem("CONTROL_MODE")->getString(0) );
+                GroupInjection::ControlEnum controlMode = GroupInjection::ControlEnumFromString( record->getItem("CONTROL_MODE")->getString(0) );
                 group->setInjectionControlMode( currentStep , controlMode );
             }
             group->setSurfaceMaxRate( currentStep , record->getItem("SURFACE_TARGET")->getDouble(0));

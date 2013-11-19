@@ -23,15 +23,62 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 
 namespace Opm {
+    namespace GroupProduction {
+        struct ProductionData {
+            ProductionData(TimeMapConstPtr timeMap);
+            
+            boost::shared_ptr<DynamicState<GroupProduction::ControlEnum> > controlMode;
+            boost::shared_ptr<DynamicState<double> > oilTarget;
+            boost::shared_ptr<DynamicState<double> > waterTarget;
+            boost::shared_ptr<DynamicState<double> > gasTarget;
+            boost::shared_ptr<DynamicState<double> > liquidTarget;
+            
+        };
+        
+        ProductionData::ProductionData(TimeMapConstPtr timeMap) : 
+            controlMode( new DynamicState<GroupProduction::ControlEnum>(timeMap , GroupProduction::NONE)),
+            oilTarget( new DynamicState<double>(timeMap , 0)),
+            waterTarget( new DynamicState<double>(timeMap , 0)),
+            gasTarget( new DynamicState<double>(timeMap , 0)),
+            liquidTarget( new DynamicState<double>(timeMap , 0))
+        {
+        }
+        
+    }
 
-    Group::Group(const std::string& name , TimeMapConstPtr timeMap) 
-        : m_injectionPhase( new DynamicState<PhaseEnum>( timeMap , WATER )),
-          m_injectionControlMode( new DynamicState<GroupInjectionControlEnum>( timeMap , NONE )),
-          m_injectionRate( new DynamicState<double>( timeMap , 0 )),
-          m_surfaceFlowMaxRate( new DynamicState<double>( timeMap , 0)),
-          m_reservoirFlowMaxRate( new DynamicState<double>( timeMap , 0)),
-          m_targetReinjectFraction( new DynamicState<double>( timeMap , 0)),
-          m_targetVoidReplacementFraction( new DynamicState<double>( timeMap , 0))
+    
+    
+
+    namespace GroupInjection {
+        struct InjectionData {
+            InjectionData(TimeMapConstPtr timeMap);
+            
+            boost::shared_ptr<DynamicState<PhaseEnum> > phase;
+            boost::shared_ptr<DynamicState<GroupInjection::ControlEnum> > controlMode;
+            boost::shared_ptr<DynamicState<double> > rate;
+            boost::shared_ptr<DynamicState<double> > surfaceFlowMaxRate;
+            boost::shared_ptr<DynamicState<double> > reservoirFlowMaxRate;
+            boost::shared_ptr<DynamicState<double> > targetReinjectFraction;
+            boost::shared_ptr<DynamicState<double> > targetVoidReplacementFraction;                
+        };
+        
+        InjectionData::InjectionData(TimeMapConstPtr timeMap) : 
+            phase( new DynamicState<PhaseEnum>( timeMap , WATER )),
+            controlMode( new DynamicState<GroupInjection::ControlEnum>( timeMap , NONE )),
+            rate( new DynamicState<double>( timeMap , 0 )),
+            surfaceFlowMaxRate( new DynamicState<double>( timeMap , 0)),
+            reservoirFlowMaxRate( new DynamicState<double>( timeMap , 0)),
+            targetReinjectFraction( new DynamicState<double>( timeMap , 0)),
+            targetVoidReplacementFraction( new DynamicState<double>( timeMap , 0))
+        {
+        
+        }
+    }
+
+    /*****************************************************************/
+    
+    Group::Group(const std::string& name , TimeMapConstPtr timeMap) : 
+        m_injection( new GroupInjection::InjectionData(timeMap) )
     {
         m_name = name;
     }
@@ -43,8 +90,8 @@ namespace Opm {
 
     
     void Group::setInjectionPhase(size_t time_step , PhaseEnum phase){
-        if (m_injectionPhase->size() == time_step + 1) {
-            PhaseEnum currentPhase = m_injectionPhase->get(time_step);
+        if (m_injection->phase->size() == time_step + 1) {
+            PhaseEnum currentPhase = m_injection->phase->get(time_step);
             /*
               The ECLIPSE documentation of the GCONINJE keyword seems
               to indicate that a group can inject more than one phase
@@ -66,63 +113,60 @@ namespace Opm {
             if (phase != currentPhase)
                 throw std::invalid_argument("Sorry - we currently do not support injecting multiple phases at the same time.");
         }
-        m_injectionPhase->add( time_step , phase );
+        m_injection->phase->add( time_step , phase );
     }
 
     PhaseEnum Group::getInjectionPhase( size_t time_step ) const {
-        return m_injectionPhase->get( time_step );
+        return m_injection->phase->get( time_step );
     }
 
     void Group::setInjectionRate( size_t time_step , double rate) {
-        return m_injectionRate->add( time_step , rate);
+        return m_injection->rate->add( time_step , rate);
     }
 
     double Group::getInjectionRate( size_t time_step ) const {
-        return m_injectionRate->get( time_step );
+        return m_injection->rate->get( time_step );
     }
 
-    void Group::setInjectionControlMode(size_t time_step , GroupInjectionControlEnum controlMode) {
-        m_injectionControlMode->add( time_step , controlMode );
+    void Group::setInjectionControlMode(size_t time_step , GroupInjection::ControlEnum controlMode) {
+        m_injection->controlMode->add( time_step , controlMode );
     }
 
-    GroupInjectionControlEnum Group::getInjectionControlMode( size_t time_step) const {
-        return m_injectionControlMode->get( time_step );
+    GroupInjection::ControlEnum Group::getInjectionControlMode( size_t time_step) const {
+        return m_injection->controlMode->get( time_step );
     }
 
     void Group::setSurfaceMaxRate( size_t time_step , double rate) {
-        return m_surfaceFlowMaxRate->add( time_step , rate);
+        return m_injection->surfaceFlowMaxRate->add( time_step , rate);
     }
 
     double Group::getSurfaceMaxRate( size_t time_step ) const {
-        return m_surfaceFlowMaxRate->get( time_step );
+        return m_injection->surfaceFlowMaxRate->get( time_step );
     }
 
     void Group::setReservoirMaxRate( size_t time_step , double rate) {
-        return m_reservoirFlowMaxRate->add( time_step , rate);
+        return m_injection->reservoirFlowMaxRate->add( time_step , rate);
     }
 
     double Group::getReservoirMaxRate( size_t time_step ) const {
-        return m_reservoirFlowMaxRate->get( time_step );
+        return m_injection->reservoirFlowMaxRate->get( time_step );
     }
 
     void Group::setTargetReinjectFraction( size_t time_step , double rate) {
-        return m_targetReinjectFraction->add( time_step , rate);
+        return m_injection->targetReinjectFraction->add( time_step , rate);
     }
 
     double Group::getTargetReinjectFraction( size_t time_step ) const {
-        return m_targetReinjectFraction->get( time_step );
+        return m_injection->targetReinjectFraction->get( time_step );
     }
 
     void Group::setTargetVoidReplacementFraction( size_t time_step , double rate) {
-        return m_targetVoidReplacementFraction->add( time_step , rate);
+        return m_injection->targetVoidReplacementFraction->add( time_step , rate);
     }
 
     double Group::getTargetVoidReplacementFraction( size_t time_step ) const {
-        return m_targetVoidReplacementFraction->get( time_step );
+        return m_injection->targetVoidReplacementFraction->get( time_step );
     }
-
-    
-
 }
 
 

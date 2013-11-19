@@ -61,10 +61,10 @@ BOOST_AUTO_TEST_CASE(InjectRateOK) {
 BOOST_AUTO_TEST_CASE(ControlModeOK) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
     Opm::Group group("G1" , timeMap);
-    BOOST_CHECK_EQUAL( Opm::NONE , group.getInjectionControlMode( 0 ));
-    group.setInjectionControlMode( 2 , Opm::RESV );
-    BOOST_CHECK_EQUAL( Opm::RESV , group.getInjectionControlMode( 2 ));
-    BOOST_CHECK_EQUAL( Opm::RESV , group.getInjectionControlMode( 8 ));
+    BOOST_CHECK_EQUAL( Opm::GroupInjection::NONE , group.getInjectionControlMode( 0 ));
+    group.setInjectionControlMode( 2 , Opm::GroupInjection::RESV );
+    BOOST_CHECK_EQUAL( Opm::GroupInjection::RESV , group.getInjectionControlMode( 2 ));
+    BOOST_CHECK_EQUAL( Opm::GroupInjection::RESV , group.getInjectionControlMode( 8 ));
 }
 
 

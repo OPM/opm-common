@@ -38,15 +38,54 @@ namespace Opm {
     };
 
     
-    enum GroupInjectionControlEnum {
-        NONE = 0,
-        RATE = 1,
-        RESV = 2,
-        REIN = 3,
-        VREP = 4,
-        FLD  = 5
-    };
+    namespace GroupInjection {
+        
+          enum ControlEnum {
+            NONE = 0,
+            RATE = 1,
+            RESV = 2,
+            REIN = 3,
+            VREP = 4,
+            FLD  = 5
+        };
 
+        const std::string ControlEnum2String( ControlEnum enumValue );
+        ControlEnum ControlEnumFromString( const std::string& stringValue );
+    }
+
+    
+    namespace GroupProductionExceedLimit {
+        enum ActionEnum {
+            NONE = 0,
+            CON = 1,
+            CON_PLUS = 2,   // String: "+CON"
+            WELL = 3,
+            PLUG = 4,
+            RATE = 5
+        };
+            
+        const std::string ActionEnum2String( ActionEnum enumValue );
+        ActionEnum ActionEnumFromString( const std::string& stringValue );
+    }
+    
+    
+
+    namespace GroupProduction {
+
+        enum ControlEnum {
+            NONE = 0,
+            ORAT = 1,
+            WRAT = 2,
+            GRAT = 3,
+            LRAT = 4,
+            CRAT = 5,
+            RESV = 6,
+            PRBL = 7
+        };
+        
+        const std::string ControlEnum2String( GroupProduction::ControlEnum enumValue );
+        GroupProduction::ControlEnum ControlEnumFromString( const std::string& stringValue );    
+    }
 
 
     const std::string CompletionStateEnum2String( CompletionStateEnum enumValue );
@@ -55,8 +94,7 @@ namespace Opm {
     const std::string PhaseEnum2String( PhaseEnum enumValue );
     PhaseEnum PhaseEnumFromString( const std::string& stringValue );
 
-    const std::string GroupInjectionControlEnum2String( GroupInjectionControlEnum enumValue );
-    GroupInjectionControlEnum GroupInjectionControlEnumFromString( const std::string& stringValue );
+    
     
 }
 
