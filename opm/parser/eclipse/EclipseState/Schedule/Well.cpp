@@ -31,38 +31,89 @@ namespace Opm {
 
     Well::Well(const std::string& name , TimeMapConstPtr timeMap) 
         : m_oilRate( new DynamicState<double>( timeMap , 0.0)) , 
+          m_gasRate(new DynamicState<double>(timeMap, 0.0)), 
+          m_waterRate(new DynamicState<double>(timeMap, 0.0)), 
+          m_injectionRate(new DynamicState<double>(timeMap, 0.0)), 
           m_inPredictionMode(new DynamicState<bool>(timeMap, true)),
+          m_isProducer(new DynamicState<bool>(timeMap, true)) ,
           m_completions( new DynamicState<CompletionSetConstPtr>( timeMap , CompletionSetConstPtr( new CompletionSet()) )) 
     {
         m_name = name;
     }
 
     const std::string& Well::name() const {
-
         return m_name;
     }
 
 
     double Well::getOilRate(size_t timeStep) const {
-
         return m_oilRate->get(timeStep);
     }
 
-
     void Well::setOilRate(size_t timeStep, double oilRate) {
-
         m_oilRate->add(timeStep, oilRate);
+        switch2Producer( timeStep );
+    }
+
+
+    double Well::getGasRate(size_t timeStep) const {
+        return m_gasRate->get(timeStep);
+    }
+
+    void Well::setGasRate(size_t timeStep, double gasRate) {
+        m_gasRate->add(timeStep, gasRate);
+        switch2Producer( timeStep );
+    }
+
+
+    double Well::getWaterRate(size_t timeStep) const {
+        return m_waterRate->get(timeStep);
+    }
+
+    void Well::setWaterRate(size_t timeStep, double waterRate) {
+        m_waterRate->add(timeStep, waterRate);
+        switch2Producer( timeStep );
+    }
+
+
+    double Well::getInjectionRate(size_t timeStep) const {
+        return m_injectionRate->get(timeStep);
+    }
+
+    void Well::setInjectionRate(size_t timeStep, double injectionRate) {
+        m_injectionRate->add(timeStep, injectionRate);
+        switch2Injector( timeStep );
+    }
+
+    bool Well::isProducer(size_t timeStep) const {
+        return m_isProducer->get(timeStep);
+    }
+
+    bool Well::isInjector(size_t timeStep) const {
+        return !isProducer(timeStep);
     }
     
-     bool Well::isInPredictionMode(size_t timeStep) const {
-         return m_inPredictionMode->get(timeStep);
-     }
-     
-     void Well::setInPredictionMode(size_t timeStep, bool inPredictionMode) {
-         m_inPredictionMode->add(timeStep, inPredictionMode);
-     }
+    void Well::switch2Producer(size_t timeStep ) {
+        m_isProducer->add(timeStep , true);
+        m_injectionRate->add(timeStep, 0);
+    }
 
+    void Well::switch2Injector(size_t timeStep ) {
+        m_isProducer->add(timeStep , false);
+        m_oilRate->add(timeStep, 0);
+        m_gasRate->add(timeStep, 0);
+        m_waterRate->add(timeStep, 0);
+    }
 
+    bool Well::isInPredictionMode(size_t timeStep) const {
+        return m_inPredictionMode->get(timeStep);
+    }
+    
+    void Well::setInPredictionMode(size_t timeStep, bool inPredictionMode) {
+        m_inPredictionMode->add(timeStep, inPredictionMode);
+    }
+    
+    
     void Well::addWELSPECS(DeckRecordConstPtr deckRecord) {
 
     }

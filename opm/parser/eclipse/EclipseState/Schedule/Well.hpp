@@ -37,16 +37,33 @@ namespace Opm {
         const std::string& name() const;
 
         double getOilRate(size_t timeStep) const;
-        void setOilRate(size_t timeStep, double oilRate);
+        void   setOilRate(size_t timeStep, double oilRate);
+        double getGasRate(size_t timeStep) const;
+        void   setGasRate(size_t timeStep, double gasRate);
+        double getWaterRate(size_t timeStep) const;
+        void   setWaterRate(size_t timeStep, double waterRate);
+        double getInjectionRate(size_t timeStep) const;
+        void   setInjectionRate(size_t timeStep, double injectionRate);
+        
         bool isInPredictionMode(size_t timeStep) const;
         void setInPredictionMode(size_t timeStep, bool isInPredictionMode);
+        bool isProducer(size_t timeStep) const;
+        bool isInjector(size_t timeStep) const;
         void addWELSPECS(DeckRecordConstPtr deckRecord);
         void addCompletions(size_t time_step , const std::vector<CompletionConstPtr>& newCompletions);
         CompletionSetConstPtr getCompletions(size_t timeStep);
     private:
+        void switch2Producer(size_t timeStep );
+        void switch2Injector(size_t timeStep );
+        
         std::string m_name;
         boost::shared_ptr<DynamicState<double> > m_oilRate;
+        boost::shared_ptr<DynamicState<double> > m_gasRate;
+        boost::shared_ptr<DynamicState<double> > m_waterRate;
+        boost::shared_ptr<DynamicState<double> > m_injectionRate;
+        
         boost::shared_ptr<DynamicState<bool> > m_inPredictionMode;
+        boost::shared_ptr<DynamicState<bool> > m_isProducer;
         boost::shared_ptr<DynamicState<CompletionSetConstPtr> > m_completions;
     };
     typedef boost::shared_ptr<Well> WellPtr;

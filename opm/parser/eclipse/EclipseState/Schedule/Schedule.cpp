@@ -78,6 +78,11 @@ namespace Opm {
             if (keyword->name() == "WCONPROD")
                 handleWCONPROD(keyword, currentStep);
 
+            if (keyword->name() == "WCONINJE")
+                handleWCONINJE(keyword, currentStep);
+
+            if (keyword->name() == "WCONINJH")
+                handleWCONINJH(keyword, currentStep);
 
             if (keyword->name() == "COMPDAT")
                 handleCOMPDAT(keyword, currentStep);
@@ -128,24 +133,52 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleWCON(DeckKeywordConstPtr keyword, size_t currentStep, bool isPredictionMode) {
+    void Schedule::handleWCONProducer(DeckKeywordConstPtr keyword, size_t currentStep, bool isPredictionMode) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            const std::string& wellName = record->getItem(0)->getString(0);
-            double orat = record->getItem("ORAT")->getDouble(0);
+            const std::string& wellName = record->getItem("WELL")->getString(0);
             WellPtr well = getWell(wellName);
-
+            double orat  = record->getItem("ORAT")->getDouble(0);
+            double wrat  = record->getItem("WRAT")->getDouble(0);
+            double grat  = record->getItem("GRAT")->getDouble(0);
+            
             well->setOilRate(currentStep, orat);
+            well->setWaterRate(currentStep, wrat);
+            well->setGasRate(currentStep, grat);
             well->setInPredictionMode(currentStep, isPredictionMode);
         }
     }
 
     void Schedule::handleWCONHIST(DeckKeywordConstPtr keyword, size_t currentStep) {
-        handleWCON(keyword, currentStep, false);
+        handleWCONProducer(keyword, currentStep, false);
     }
 
     void Schedule::handleWCONPROD(DeckKeywordConstPtr keyword, size_t currentStep) {
-        handleWCON(keyword, currentStep, true);
+        handleWCONProducer(keyword, currentStep, true);
+    }
+
+    void Schedule::handleWCONINJE(DeckKeywordConstPtr keyword, size_t currentStep) {
+        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
+            DeckRecordConstPtr record = keyword->getRecord(recordNr);
+            const std::string& wellName = record->getItem("WELL")->getString(0);
+            WellPtr well = getWell(wellName);
+            double injectionRate  = record->getItem("SURFACE_FLOW_TARGET")->getDouble(0);
+            
+            well->setInjectionRate( currentStep , injectionRate );
+            well->setInPredictionMode(currentStep, true);
+        }
+    }
+
+    void Schedule::handleWCONINJH(DeckKeywordConstPtr keyword, size_t currentStep) {
+        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
+            DeckRecordConstPtr record = keyword->getRecord(recordNr);
+            const std::string& wellName = record->getItem("WELL")->getString(0);
+            WellPtr well = getWell(wellName);
+            double injectionRate  = record->getItem("RATE")->getDouble(0);
+            
+            well->setInjectionRate( currentStep , injectionRate );
+            well->setInPredictionMode(currentStep, false );
+        }
     }
 
     void Schedule::handleCOMPDAT(DeckKeywordConstPtr keyword, size_t currentStep) {
