@@ -44,6 +44,20 @@ BOOST_AUTO_TEST_CASE(CreateSchedule) {
 
 }
 
+
+BOOST_AUTO_TEST_CASE(CreateSchedule_Comments_After_Keywords) {
+
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_COMMENTS_AFTER_KEYWORDS");
+    DeckPtr deck = parser->parse(scheduleFile.string());
+    ScheduleConstPtr sched(new Schedule(deck));
+    TimeMapConstPtr timeMap = sched->getTimeMap();
+    BOOST_CHECK_EQUAL(boost::gregorian::date(2007, boost::gregorian::May, 10), sched->getStartDate());
+    BOOST_CHECK_EQUAL(9U, timeMap->size());
+
+}
+
+
 BOOST_AUTO_TEST_CASE(WellTesting) {
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELLS2");
