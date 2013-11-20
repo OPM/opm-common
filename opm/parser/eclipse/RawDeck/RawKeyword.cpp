@@ -122,7 +122,7 @@ namespace Opm {
     }
 
     bool RawKeyword::tryParseKeyword(const std::string& keywordCandidate, std::string& result) {
-        result = boost::trim_right_copy(keywordCandidate.substr(0, 8));
+        result = boost::trim_right_copy_if(keywordCandidate.substr(0, 8), boost::is_any_of("- \t"));
         if (isValidKeyword(result))
             return true;
         else
