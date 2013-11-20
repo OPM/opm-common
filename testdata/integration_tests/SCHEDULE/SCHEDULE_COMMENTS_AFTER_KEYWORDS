@@ -4,7 +4,7 @@ START
 
 SCHEDULE
 
-DATES      -- Bananskrell
+DATES -- Bananskrell
   10  'JUN'  2007 /
 /
 
@@ -16,7 +16,7 @@ DATES
 
 
 
-TSTEP
+TSTEP -- Fiskepudding
   10   2*10  /
  
 
