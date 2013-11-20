@@ -31,21 +31,28 @@ namespace Opm {
     }
 
     GroupTreeNodePtr GroupTree::updateTree(const std::string& childName) {
-        if (getNode(childName)) {
-            throw std::invalid_argument("Node \"" + childName + "\" is already in tree, cannot move (yet)");
-        }
-        return m_root->addChildGroup(childName);
+        return updateTree(childName, m_root->name());
     }
 
     GroupTreeNodePtr GroupTree::updateTree(const std::string& childName, const std::string& parentName) {
-        if (getNode(childName)) {
-            throw std::invalid_argument("Node \"" + childName + "\" is already in tree, cannot move (yet)");
+        if (childName == m_root->name()) {
+            throw std::domain_error("Error, trying to add node with the same name as the root, offending name: " + childName);
         }
-        GroupTreeNodePtr parentNode = getNode(parentName);
-        if (!parentNode) {
-            parentNode = updateTree(parentName);
+
+        GroupTreeNodePtr newParentNode = getNode(parentName);
+        if (!newParentNode) {
+            newParentNode = updateTree(parentName);
         }
-        return parentNode->addChildGroup(childName);
+
+        GroupTreeNodePtr childNodeInTree = getNode(childName);
+        if (childNodeInTree) {
+            GroupTreeNodePtr currentParent = getParent(childName);
+            currentParent->removeChild(childNodeInTree);
+            newParentNode->addChildGroup(childNodeInTree);
+            return childNodeInTree;
+        } else {
+            return newParentNode->addChildGroup(childName);
+        }
     }
 
     GroupTreeNodePtr GroupTree::getNode(const std::string& nodeName) const {
@@ -59,7 +66,28 @@ namespace Opm {
         } else {
             std::map<std::string, GroupTreeNodePtr>::iterator iter = current->begin();
             while (iter != current->end()) {
-                GroupTreeNodePtr result = getNode(nodeName, (*iter).second); 
+                GroupTreeNodePtr result = getNode(nodeName, (*iter).second);
+                if (result) {
+                    return result;
+                }
+                ++iter;
+            }
+            return GroupTreeNodePtr();
+        }
+    }
+
+    GroupTreeNodePtr GroupTree::getParent(const std::string& childName) const {
+        GroupTreeNodePtr currentChild = m_root;
+        return getParent(childName, currentChild, GroupTreeNodePtr());
+    }
+
+    GroupTreeNodePtr GroupTree::getParent(const std::string& childName, GroupTreeNodePtr currentChild, GroupTreeNodePtr parent) const {
+        if (currentChild->name() == childName) {
+            return parent;
+        } else {
+            std::map<std::string, GroupTreeNodePtr>::iterator iter = currentChild->begin();
+            while (iter != currentChild->end()) {
+                GroupTreeNodePtr result = getParent(childName, (*iter).second, currentChild);
                 if (result) {
                     return result;
                 }
@@ -100,7 +128,7 @@ namespace Opm {
         std::map<std::string, GroupTreeNodePtr >::iterator iter = fromNode->begin();
         while (iter != fromNode->end()) {
             GroupTreeNodePtr child = (*iter).second;
-            std::cout <<  "<-" << child->name() << "(" << child.get() << ")" << std::endl;
+            std::cout << "<-" << child->name() << "(" << child.get() << ")" << std::endl;
             printTree(child);
             ++iter;
         }

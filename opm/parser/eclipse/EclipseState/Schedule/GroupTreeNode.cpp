@@ -24,29 +24,34 @@ namespace Opm {
 
     GroupTreeNode::GroupTreeNode(const std::string& name) {
         m_name = name;
-        m_parent = NULL;
-    }
-
-    GroupTreeNode::GroupTreeNode(const std::string& name, GroupTreeNode * parent) {
-        m_name = name;
-        m_parent = parent;
     }
 
     const std::string& GroupTreeNode::name() const {
         return m_name;
     }
 
-    GroupTreeNode * GroupTreeNode::parent() const {
-        return m_parent;
-    }
-
     GroupTreeNodePtr GroupTreeNode::addChildGroup(const std::string& childName) {
         if (hasChildGroup(childName)) {
             throw std::invalid_argument("Child group with name \"" + childName + "\"already exists.");
         }
-        GroupTreeNodePtr child(new GroupTreeNode(childName, this));
+        GroupTreeNodePtr child(new GroupTreeNode(childName));
         m_childGroups[childName] = child;
         return child;
+    }
+    
+    void GroupTreeNode::addChildGroup(boost::shared_ptr<GroupTreeNode> childGroup) {
+        if (hasChildGroup(childGroup->name())) {
+            throw std::invalid_argument("Child group with name \"" + childGroup->name() + "\"already exists under node " + m_name);
+        }
+        m_childGroups[childGroup->name()] = childGroup;
+    }
+
+
+    void GroupTreeNode::removeChild(GroupTreeNodePtr child) {
+        if (!hasChildGroup(child->name())) {
+            throw std::invalid_argument("The node " + m_name + " does not have a child named " + child->name());
+        }
+        m_childGroups.erase(child->name());
     }
 
     bool GroupTreeNode::hasChildGroup(const std::string& childName) const {

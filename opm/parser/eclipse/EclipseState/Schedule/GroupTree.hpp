@@ -32,9 +32,11 @@ namespace Opm {
     public:
         GroupTree();
         GroupTreeNodePtr updateTree(const std::string& childName);
-        GroupTreeNodePtr updateTree(const std::string& childName, const std::string& parentName );
+        GroupTreeNodePtr updateTree(const std::string& childName, const std::string& parentName);
 
         GroupTreeNodePtr getNode(const std::string& nodeName) const;
+        GroupTreeNodePtr getParent(const std::string& childName) const;
+
         boost::shared_ptr<GroupTree> deepCopy() const;
         void printTree() const;
 
@@ -42,11 +44,10 @@ namespace Opm {
     private:
         GroupTreeNodePtr m_root;
         GroupTreeNodePtr getNode(const std::string& nodeName, GroupTreeNodePtr current) const;
+        GroupTreeNodePtr getParent(const std::string& childName, GroupTreeNodePtr currentChild, GroupTreeNodePtr parent) const;
+
         void deepCopy(GroupTreeNodePtr origin, GroupTreeNodePtr copy) const;
         void printTree(GroupTreeNodePtr fromNode) const;
-
-
-        
     };
 
     typedef boost::shared_ptr<GroupTree> GroupTreePtr;

@@ -189,6 +189,40 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_tree) {
     BOOST_CHECK_EQUAL("GROUP_NILS", GROUP_NILS->name());
 };
 
+BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_WITH_REPARENT_correct_tree) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_GROUPS_REPARENT");
+    DeckPtr deck = parser->parse(scheduleFile.string());
+    ScheduleConstPtr schedule(new Schedule(deck));
+
+    schedule->getGroupTree(0)->printTree();
+    std::cout << std::endl << std::endl;
+    schedule->getGroupTree(1)->printTree();
+
+    // Time , from  first GRUPTREE
+    GroupTreeNodePtr root0 = schedule->getGroupTree(0)->getNode("FIELD");
+    BOOST_REQUIRE_EQUAL("FIELD", root0->name());
+    BOOST_CHECK(root0->hasChildGroup("GROUP_BJARNE"));
+    GroupTreeNodePtr GROUP_BJARNE0 = root0->getChildGroup("GROUP_BJARNE");
+    BOOST_CHECK_EQUAL("GROUP_BJARNE", GROUP_BJARNE0->name());
+
+    BOOST_CHECK(root0->hasChildGroup("GROUP_NEW"));
+    GroupTreeNodePtr GROUP_NEW0 = root0->getChildGroup("GROUP_NEW");
+    BOOST_CHECK_EQUAL("GROUP_NEW", GROUP_NEW0->name());
+
+    
+    BOOST_CHECK(GROUP_BJARNE0->hasChildGroup("GROUP_BIRGER"));
+    GroupTreeNodePtr GROUP_BIRGER0 = GROUP_BJARNE0->getChildGroup("GROUP_BIRGER");
+    BOOST_CHECK_EQUAL("GROUP_BIRGER", GROUP_BIRGER0->name());
+
+    BOOST_CHECK(GROUP_NEW0->hasChildGroup("GROUP_NILS"));
+    GroupTreeNodePtr GROUP_NILS0 = GROUP_NEW0->getChildGroup("GROUP_NILS");
+    BOOST_CHECK_EQUAL("GROUP_NILS", GROUP_NILS0->name());
+    
+    // SÅ den nye strukturen med et barneflytt
+};
+
+
 BOOST_AUTO_TEST_CASE(GroupTreeTest_PrintGrouptree) {
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELSPECS_GROUPS");
