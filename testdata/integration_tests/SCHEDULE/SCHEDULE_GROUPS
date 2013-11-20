@@ -25,6 +25,14 @@ GCONINJE
 /
 
 
+
+GCONPROD 
+    'OP'     'ORAT'      10 20 30 40  +CON      /
+/
+
+
+
+
 TSTEP             -- 4,5,6
   10   2*10  /
  

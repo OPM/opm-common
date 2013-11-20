@@ -133,15 +133,27 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
     BOOST_CHECK( sched->hasGroup( "INJ" ));
     BOOST_CHECK( sched->hasGroup( "OP" ));
 
-    GroupPtr group = sched->getGroup("INJ");
-    BOOST_CHECK_EQUAL( WATER , group->getInjectionPhase( 3 ));
-    BOOST_CHECK_EQUAL( GroupInjection::VREP , group->getInjectionControlMode( 3 ));
-    BOOST_CHECK_EQUAL( 10 , group->getSurfaceMaxRate( 3 ));
-    BOOST_CHECK_EQUAL( 20 , group->getReservoirMaxRate( 3 ));
-    BOOST_CHECK_EQUAL( 0.75 , group->getTargetReinjectFraction( 3 ));
-    BOOST_CHECK_EQUAL( 0.95 , group->getTargetVoidReplacementFraction( 3 ));
+    {
+        GroupPtr group = sched->getGroup("INJ");
+        BOOST_CHECK_EQUAL( WATER , group->getInjectionPhase( 3 ));
+        BOOST_CHECK_EQUAL( GroupInjection::VREP , group->getInjectionControlMode( 3 ));
+        BOOST_CHECK_EQUAL( 10 , group->getSurfaceMaxRate( 3 ));
+        BOOST_CHECK_EQUAL( 20 , group->getReservoirMaxRate( 3 ));
+        BOOST_CHECK_EQUAL( 0.75 , group->getTargetReinjectFraction( 3 ));
+        BOOST_CHECK_EQUAL( 0.95 , group->getTargetVoidReplacementFraction( 3 ));
     
-    BOOST_CHECK_EQUAL( OIL , group->getInjectionPhase( 6 ));
-    BOOST_CHECK_EQUAL( GroupInjection::RATE , group->getInjectionControlMode( 6 ));
-    BOOST_CHECK_EQUAL( 1000 , group->getSurfaceMaxRate( 6 ));
+        BOOST_CHECK_EQUAL( OIL , group->getInjectionPhase( 6 ));
+        BOOST_CHECK_EQUAL( GroupInjection::RATE , group->getInjectionControlMode( 6 ));
+        BOOST_CHECK_EQUAL( 1000 , group->getSurfaceMaxRate( 6 ));
+    }
+    
+    {
+        GroupPtr group = sched->getGroup("OP");
+        BOOST_CHECK_EQUAL( GroupProduction::ORAT , group->getProductionControlMode(3));
+        BOOST_CHECK_EQUAL( 10 , group->getOilTargetRate(3));
+        BOOST_CHECK_EQUAL( 20 , group->getWaterTargetRate(3));
+        BOOST_CHECK_EQUAL( 30 , group->getGasTargetRate(3));
+        BOOST_CHECK_EQUAL( 40 , group->getLiquidTargetRate(3));
+    }
+
 }

@@ -26,8 +26,9 @@ namespace Opm {
     namespace GroupProduction {
         struct ProductionData {
             ProductionData(TimeMapConstPtr timeMap);
-            
+
             boost::shared_ptr<DynamicState<GroupProduction::ControlEnum> > controlMode;
+            boost::shared_ptr<DynamicState<GroupProductionExceedLimit::ActionEnum> > exceedAction;
             boost::shared_ptr<DynamicState<double> > oilTarget;
             boost::shared_ptr<DynamicState<double> > waterTarget;
             boost::shared_ptr<DynamicState<double> > gasTarget;
@@ -37,13 +38,14 @@ namespace Opm {
         
         ProductionData::ProductionData(TimeMapConstPtr timeMap) : 
             controlMode( new DynamicState<GroupProduction::ControlEnum>(timeMap , GroupProduction::NONE)),
+            exceedAction( new DynamicState<GroupProductionExceedLimit::ActionEnum>(timeMap , GroupProductionExceedLimit::NONE)),
             oilTarget( new DynamicState<double>(timeMap , 0)),
             waterTarget( new DynamicState<double>(timeMap , 0)),
             gasTarget( new DynamicState<double>(timeMap , 0)),
             liquidTarget( new DynamicState<double>(timeMap , 0))
         {
+
         }
-        
     }
 
     
@@ -78,7 +80,8 @@ namespace Opm {
     /*****************************************************************/
     
     Group::Group(const std::string& name , TimeMapConstPtr timeMap) : 
-        m_injection( new GroupInjection::InjectionData(timeMap) )
+        m_injection( new GroupInjection::InjectionData(timeMap) ),
+        m_production( new GroupProduction::ProductionData( timeMap ))
     {
         m_name = name;
     }
@@ -167,6 +170,70 @@ namespace Opm {
     double Group::getTargetVoidReplacementFraction( size_t time_step ) const {
         return m_injection->targetVoidReplacementFraction->get( time_step );
     }
+
+    /*****************************************************************/
+
+    void Group::setProductionControlMode( size_t time_step , GroupProduction::ControlEnum controlMode) {
+        m_production->controlMode->add(time_step , controlMode );
+    }
+    
+    GroupProduction::ControlEnum Group::getProductionControlMode( size_t time_step ) const {
+        return m_production->controlMode->get(time_step);
+    }
+
+
+    GroupProductionExceedLimit::ActionEnum Group::getProductionExceedLimitAction( size_t time_step ) const  {
+        return m_production->exceedAction->get(time_step);
+    }
+
+
+    void Group::setProductionExceedLimitAction( size_t time_step , GroupProductionExceedLimit::ActionEnum action) {
+        m_production->exceedAction->add(time_step , action);
+    }
+
+
+    void Group::setOilTargetRate(size_t time_step , double oilTargetRate) {
+        m_production->oilTarget->add(time_step , oilTargetRate);
+    }
+
+
+    double Group::getOilTargetRate(size_t time_step) {
+        return m_production->oilTarget->get(time_step);
+    }
+
+
+    void Group::setGasTargetRate(size_t time_step , double gasTargetRate) {
+        m_production->gasTarget->add(time_step , gasTargetRate);
+    }
+
+
+    double Group::getGasTargetRate(size_t time_step) {
+        return m_production->gasTarget->get(time_step);
+    }
+
+
+    void Group::setWaterTargetRate(size_t time_step , double waterTargetRate) {
+        m_production->waterTarget->add(time_step , waterTargetRate);
+    }
+
+
+    double Group::getWaterTargetRate(size_t time_step) {
+        return m_production->waterTarget->get(time_step);
+    }
+
+
+    void Group::setLiquidTargetRate(size_t time_step , double liquidTargetRate) {
+        m_production->liquidTarget->add(time_step , liquidTargetRate);
+    }
+
+
+    double Group::getLiquidTargetRate(size_t time_step) {
+        return m_production->liquidTarget->get(time_step);
+    }
+
+
+    
+
 }
 
 

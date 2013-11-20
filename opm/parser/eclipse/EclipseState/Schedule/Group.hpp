@@ -66,6 +66,22 @@ namespace Opm {
         void   setTargetVoidReplacementFraction( size_t time_step , double rate);
         double getTargetVoidReplacementFraction( size_t time_step ) const;
 
+        /*****************************************************************/
+
+        void   setProductionControlMode( size_t time_step , GroupProduction::ControlEnum controlMode);
+        GroupProduction::ControlEnum getProductionControlMode( size_t time_step ) const;
+
+        GroupProductionExceedLimit::ActionEnum getProductionExceedLimitAction(size_t time_step) const;
+        void setProductionExceedLimitAction(size_t time_step , GroupProductionExceedLimit::ActionEnum action);
+        
+        void   setOilTargetRate(size_t time_step , double oilTargetRate);
+        double getOilTargetRate(size_t time_step);
+        void   setGasTargetRate(size_t time_step , double gasTargetRate);
+        double getGasTargetRate(size_t time_step);
+        void   setWaterTargetRate(size_t time_step , double waterTargetRate);
+        double getWaterTargetRate(size_t time_step);
+        void   setLiquidTargetRate(size_t time_step , double LiquidTargetRate);
+        double getLiquidTargetRate(size_t time_step);
 
     private:
         std::string m_name;

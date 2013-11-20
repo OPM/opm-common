@@ -86,6 +86,9 @@ namespace Opm {
             if (keyword->name() == "GCONINJE")
                 handleGCONINJE( keyword , currentStep );
 
+            if (keyword->name() == "GCONPROD")
+                handleGCONPROD( keyword , currentStep );
+
             deckIndex++;
         }
     }
@@ -183,6 +186,28 @@ namespace Opm {
             group->setReservoirMaxRate( currentStep , record->getItem("RESV_TARGET")->getDouble(0));
             group->setTargetReinjectFraction( currentStep , record->getItem("REINJ_TARGET")->getDouble(0));
             group->setTargetVoidReplacementFraction( currentStep , record->getItem("VOIDAGE_TARGET")->getDouble(0));
+        }
+    }
+
+
+    void Schedule::handleGCONPROD(DeckKeywordConstPtr keyword, size_t currentStep) {
+        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
+            DeckRecordConstPtr record = keyword->getRecord(recordNr);
+            const std::string& groupName = record->getItem("GROUP")->getString(0);
+            GroupPtr group = getGroup(groupName);
+            {
+                GroupProduction::ControlEnum controlMode = GroupProduction::ControlEnumFromString( record->getItem("CONTROL_MODE")->getString(0) );
+                group->setProductionControlMode( currentStep , controlMode );
+            }
+            group->setOilTargetRate( currentStep , record->getItem("OIL_TARGET")->getDouble(0));
+            group->setGasTargetRate( currentStep , record->getItem("GAS_TARGET")->getDouble(0));
+            group->setWaterTargetRate( currentStep , record->getItem("WATER_TARGET")->getDouble(0));
+            group->setLiquidTargetRate( currentStep , record->getItem("LIQUID_TARGET")->getDouble(0));
+            {
+                GroupProductionExceedLimit::ActionEnum exceedAction = GroupProductionExceedLimit::ActionEnumFromString(record->getItem("EXCEED_PROC")->getString(0) );
+                group->setProductionExceedLimitAction( currentStep , exceedAction );
+            }
+            
         }
     }
 
