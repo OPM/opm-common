@@ -200,7 +200,7 @@ namespace Opm {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& childName = record->getItem("CHILD_GROUP")->getString(0);
             const std::string& parentName = record->getItem("PARENT_GROUP")->getString(0);
-            GroupTreeNodePtr theNewNode = newTree->updateTree(childName, parentName);
+            newTree->updateTree(childName, parentName);
         }
         m_rootGroupTree->add(currentStep, newTree);
     }

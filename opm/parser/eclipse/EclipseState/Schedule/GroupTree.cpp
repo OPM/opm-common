@@ -30,18 +30,18 @@ namespace Opm {
         m_root = GroupTreeNode::createFieldNode();
     }
 
-    GroupTreeNodePtr GroupTree::updateTree(const std::string& childName) {
-        return updateTree(childName, m_root->name());
+    void GroupTree::updateTree(const std::string& childName) {
+        updateTree(childName, m_root->name());
     }
 
-    GroupTreeNodePtr GroupTree::updateTree(const std::string& childName, const std::string& parentName) {
+    void GroupTree::updateTree(const std::string& childName, const std::string& parentName) {
         if (childName == m_root->name()) {
             throw std::domain_error("Error, trying to add node with the same name as the root, offending name: " + childName);
         }
 
         GroupTreeNodePtr newParentNode = getNode(parentName);
         if (!newParentNode) {
-            newParentNode = updateTree(parentName);
+            newParentNode = m_root->addChildGroup(parentName);
         }
 
         GroupTreeNodePtr childNodeInTree = getNode(childName);
@@ -49,9 +49,8 @@ namespace Opm {
             GroupTreeNodePtr currentParent = getParent(childName);
             currentParent->removeChild(childNodeInTree);
             newParentNode->addChildGroup(childNodeInTree);
-            return childNodeInTree;
         } else {
-            return newParentNode->addChildGroup(childName);
+            newParentNode->addChildGroup(childName);
         }
     }
 

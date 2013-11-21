@@ -31,8 +31,8 @@ namespace Opm {
     class GroupTree {
     public:
         GroupTree();
-        GroupTreeNodePtr updateTree(const std::string& childName);
-        GroupTreeNodePtr updateTree(const std::string& childName, const std::string& parentName);
+        void updateTree(const std::string& childName);
+        void updateTree(const std::string& childName, const std::string& parentName);
 
         GroupTreeNodePtr getNode(const std::string& nodeName) const;
         GroupTreeNodePtr getParent(const std::string& childName) const;
