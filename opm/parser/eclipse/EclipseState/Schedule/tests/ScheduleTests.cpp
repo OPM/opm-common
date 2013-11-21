@@ -129,3 +129,14 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithGRUPTREE_HasRootGroupTreeNodeForTime
 
 
 
+BOOST_AUTO_TEST_CASE(EmptyScheduleHasFIELDGroup) {
+    DeckPtr deck = createDeck();
+    Schedule schedule(deck); 
+    BOOST_CHECK_EQUAL( 1U , schedule.numGroups() );
+    BOOST_CHECK_EQUAL( true , schedule.hasGroup("FIELD") );
+    BOOST_CHECK_EQUAL( false , schedule.hasGroup("GROUP") );
+    BOOST_CHECK_THROW( schedule.getGroup("GROUP") , std::invalid_argument );
+}
+
+
+

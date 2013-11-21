@@ -1,4 +1,5 @@
 *~
+*.user
 gmon.out
 log.log
 build

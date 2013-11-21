@@ -24,9 +24,10 @@
 namespace Opm {
 
     Schedule::Schedule(DeckConstPtr deck) {
-        if (deck->hasKeyword("SCHEDULE"))
+        if (deck->hasKeyword("SCHEDULE")) {
+            addGroup( "FIELD" );
             initFromDeck(deck);
-        else
+        } else
             throw std::invalid_argument("Deck does not contain SCHEDULE section.\n");
     }
 
@@ -47,7 +48,7 @@ namespace Opm {
             startDate = TimeMap::dateFromEclipse(startKeyword->getRecord(0));
         }
 
-        m_timeMap = TimeMapPtr(new TimeMap(startDate));
+        m_timeMap.reset(new TimeMap(startDate));
     }
 
     void Schedule::iterateScheduleSection(DeckConstPtr deck) {
@@ -91,6 +92,12 @@ namespace Opm {
             if (keyword->name() == "GRUPTREE")
                 handleGRUPTREE(keyword, currentStep);
 
+            if (keyword->name() == "GCONINJE")
+                handleGCONINJE( keyword , currentStep );
+
+            if (keyword->name() == "GCONPROD")
+                handleGCONPROD( keyword , currentStep );
+
             deckIndex++;
         }
     }
@@ -118,7 +125,12 @@ namespace Opm {
 
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            const std::string& wellName = record->getItem(0)->getString(0);
+            const std::string& wellName = record->getItem("WELL")->getString(0);
+            const std::string& groupName = record->getItem("GROUP")->getString(0);
+
+            if (!hasGroup(groupName)) {
+                addGroup(groupName);
+            }
 
             if (!hasWell(wellName)) {
                 addWell(wellName);
@@ -181,14 +193,57 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleCOMPDAT(DeckKeywordConstPtr keyword, size_t currentStep) {
-        std::map<std::string, std::vector< CompletionConstPtr> > completionMapList = Completion::completionsFromCOMPDATKeyword(keyword);
-        std::map<std::string, std::vector< CompletionConstPtr> >::iterator iter;
 
-        for (iter = completionMapList.begin(); iter != completionMapList.end(); iter++) {
+    void Schedule::handleGCONINJE(DeckKeywordConstPtr keyword, size_t currentStep) {
+        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
+            DeckRecordConstPtr record = keyword->getRecord(recordNr);
+            const std::string& groupName = record->getItem("GROUP")->getString(0);
+            GroupPtr group = getGroup(groupName);
+
+            {
+                PhaseEnum phase = PhaseEnumFromString( record->getItem("PHASE")->getString(0) );
+                group->setInjectionPhase( currentStep , phase );
+            }
+            {
+                GroupInjection::ControlEnum controlMode = GroupInjection::ControlEnumFromString( record->getItem("CONTROL_MODE")->getString(0) );
+                group->setInjectionControlMode( currentStep , controlMode );
+            }
+            group->setSurfaceMaxRate( currentStep , record->getItem("SURFACE_TARGET")->getDouble(0));
+            group->setReservoirMaxRate( currentStep , record->getItem("RESV_TARGET")->getDouble(0));
+            group->setTargetReinjectFraction( currentStep , record->getItem("REINJ_TARGET")->getDouble(0));
+            group->setTargetVoidReplacementFraction( currentStep , record->getItem("VOIDAGE_TARGET")->getDouble(0));
+        }
+    }
+
+
+    void Schedule::handleGCONPROD(DeckKeywordConstPtr keyword, size_t currentStep) {
+        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
+            DeckRecordConstPtr record = keyword->getRecord(recordNr);
+            const std::string& groupName = record->getItem("GROUP")->getString(0);
+            GroupPtr group = getGroup(groupName);
+            {
+                GroupProduction::ControlEnum controlMode = GroupProduction::ControlEnumFromString( record->getItem("CONTROL_MODE")->getString(0) );
+                group->setProductionControlMode( currentStep , controlMode );
+            }
+            group->setOilTargetRate( currentStep , record->getItem("OIL_TARGET")->getDouble(0));
+            group->setGasTargetRate( currentStep , record->getItem("GAS_TARGET")->getDouble(0));
+            group->setWaterTargetRate( currentStep , record->getItem("WATER_TARGET")->getDouble(0));
+            group->setLiquidTargetRate( currentStep , record->getItem("LIQUID_TARGET")->getDouble(0));
+            {
+                GroupProductionExceedLimit::ActionEnum exceedAction = GroupProductionExceedLimit::ActionEnumFromString(record->getItem("EXCEED_PROC")->getString(0) );
+                group->setProductionExceedLimitAction( currentStep , exceedAction );
+            }
+            
+        }
+    }
+
+    void Schedule::handleCOMPDAT(DeckKeywordConstPtr keyword , size_t currentStep) {
+        std::map<std::string , std::vector< CompletionConstPtr> > completionMapList = Completion::completionsFromCOMPDATKeyword( keyword );
+        std::map<std::string , std::vector< CompletionConstPtr> >::iterator iter;
+        
+        for( iter= completionMapList.begin(); iter != completionMapList.end(); iter++) {
             const std::string wellName = iter->first;
             WellPtr well = getWell(wellName);
-
             well->addCompletions(currentStep, iter->second);
         }
     }
@@ -236,6 +291,27 @@ namespace Opm {
         } else
             throw std::invalid_argument("Well: " + wellName + " does not exist");
     }
+
+    void Schedule::addGroup(const std::string& groupName) {
+        GroupPtr group(new Group(groupName, m_timeMap));
+        m_groups[ groupName ] = group;
+    }
+
+    size_t Schedule::numGroups() const {
+        return m_groups.size();
+    }
+
+    bool Schedule::hasGroup(const std::string& groupName) const {
+        return m_groups.find(groupName) != m_groups.end();
+    }
+
+    GroupPtr Schedule::getGroup(const std::string& groupName) const {
+        if (hasGroup(groupName)) {
+            return m_groups.at(groupName);
+        } else
+            throw std::invalid_argument("Group: " + groupName + " does not exist");
+    }
+
 
 
 }

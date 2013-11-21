@@ -44,6 +44,20 @@ BOOST_AUTO_TEST_CASE(CreateSchedule) {
 
 }
 
+
+BOOST_AUTO_TEST_CASE(CreateSchedule_Comments_After_Keywords) {
+
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_COMMENTS_AFTER_KEYWORDS");
+    DeckPtr deck = parser->parse(scheduleFile.string());
+    ScheduleConstPtr sched(new Schedule(deck));
+    TimeMapConstPtr timeMap = sched->getTimeMap();
+    BOOST_CHECK_EQUAL(boost::gregorian::date(2007, boost::gregorian::May, 10), sched->getStartDate());
+    BOOST_CHECK_EQUAL(9U, timeMap->size());
+
+}
+
+
 BOOST_AUTO_TEST_CASE(WellTesting) {
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELLS2");
@@ -237,4 +251,38 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_PrintGrouptree) {
 }
 
 
+BOOST_AUTO_TEST_CASE( WellTestGroups ) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_GROUPS");
+    DeckPtr deck = parser->parse(scheduleFile.string());
+    ScheduleConstPtr sched( new Schedule(deck));
+    
+    BOOST_CHECK_EQUAL( 3U , sched->numGroups() );
+    BOOST_CHECK( sched->hasGroup( "INJ" ));
+    BOOST_CHECK( sched->hasGroup( "OP" ));
+
+    {
+        GroupPtr group = sched->getGroup("INJ");
+        BOOST_CHECK_EQUAL( WATER , group->getInjectionPhase( 3 ));
+        BOOST_CHECK_EQUAL( GroupInjection::VREP , group->getInjectionControlMode( 3 ));
+        BOOST_CHECK_EQUAL( 10 , group->getSurfaceMaxRate( 3 ));
+        BOOST_CHECK_EQUAL( 20 , group->getReservoirMaxRate( 3 ));
+        BOOST_CHECK_EQUAL( 0.75 , group->getTargetReinjectFraction( 3 ));
+        BOOST_CHECK_EQUAL( 0.95 , group->getTargetVoidReplacementFraction( 3 ));
+    
+        BOOST_CHECK_EQUAL( OIL , group->getInjectionPhase( 6 ));
+        BOOST_CHECK_EQUAL( GroupInjection::RATE , group->getInjectionControlMode( 6 ));
+        BOOST_CHECK_EQUAL( 1000 , group->getSurfaceMaxRate( 6 ));
+    }
+    
+    {
+        GroupPtr group = sched->getGroup("OP");
+        BOOST_CHECK_EQUAL( GroupProduction::ORAT , group->getProductionControlMode(3));
+        BOOST_CHECK_EQUAL( 10 , group->getOilTargetRate(3));
+        BOOST_CHECK_EQUAL( 20 , group->getWaterTargetRate(3));
+        BOOST_CHECK_EQUAL( 30 , group->getGasTargetRate(3));
+        BOOST_CHECK_EQUAL( 40 , group->getLiquidTargetRate(3));
+    }
+
+}
 
