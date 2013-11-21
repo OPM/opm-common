@@ -22,6 +22,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 #include <boost/shared_ptr.hpp>
@@ -43,17 +44,25 @@ namespace Opm
         size_t numWells() const;
         bool hasWell(const std::string& wellName) const;
         WellPtr getWell(const std::string& wellName) const;
-  
+
+        size_t numGroups() const;
+        bool hasGroup(const std::string& groupName) const;
+        GroupPtr getGroup(const std::string& groupName) const;
+        
+
     private:
         TimeMapPtr m_timeMap;
         std::map<std::string , WellPtr> m_wells;
+        std::map<std::string , GroupPtr> m_groups;
 
 
         void initFromDeck(DeckConstPtr deck);
         void createTimeMap(DeckConstPtr deck);
         void iterateScheduleSection(DeckConstPtr deck);
 
+        void addGroup(const std::string& groupName);
         void addWell(const std::string& wellName);
+
         void handleWELSPECS(DeckKeywordConstPtr keyword);
         void handleWCONProducer(DeckKeywordConstPtr keyword, size_t currentStep, bool isPredictionMode);
         void handleWCONHIST(DeckKeywordConstPtr keyword , size_t currentStep);
@@ -61,6 +70,8 @@ namespace Opm
         void handleCOMPDAT(DeckKeywordConstPtr keyword , size_t currentStep);
         void handleWCONINJE(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleWCONINJH(DeckKeywordConstPtr keyword, size_t currentStep);
+        void handleGCONINJE(DeckKeywordConstPtr keyword, size_t currentStep);
+        void handleGCONPROD(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleDATES(DeckKeywordConstPtr keyword);
         void handleTSTEP(DeckKeywordConstPtr keyword);
     };
