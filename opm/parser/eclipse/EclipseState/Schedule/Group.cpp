@@ -22,6 +22,7 @@
 #include <boost/date_time.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 
+
 namespace Opm {
     namespace GroupProduction {
         struct ProductionData {
@@ -78,10 +79,73 @@ namespace Opm {
     }
 
     /*****************************************************************/
+
+    class WellSet {
+    public:
+        WellSet();
+        size_t size() const;
+        bool hasWell(const std::string& wellName) const;
+        WellConstPtr getWell(const std::string& wellName) const;
+        void addWell(WellPtr well);
+        void delWell(const std::string& wellName);
+        WellSet * shallowCopy() const;
+    private:
+        std::map<std::string , WellPtr> m_wells;
+    };
+    
+
+        
+    WellSet::WellSet() {
+    }
+
+    size_t WellSet::size() const {
+        return m_wells.size();
+    }
+
+
+    bool WellSet::hasWell(const std::string& wellName) const {
+        return (m_wells.find(wellName) != m_wells.end());
+    }
+
+
+    WellConstPtr WellSet::getWell(const std::string& wellName) const {
+        if (hasWell(wellName))
+            return m_wells.find(wellName)->second;
+        else
+            throw std::invalid_argument("Does not have this well?!\n");
+    }
+
+    
+    void WellSet::addWell(WellPtr well) {
+        const std::string& wellName = well->name();
+        if (!hasWell(wellName)) 
+            m_wells[wellName] = well;
+    }
+
+    void WellSet::delWell(const std::string& wellName) {
+        if (hasWell(wellName))
+            m_wells.erase( wellName );
+        else
+            throw std::invalid_argument("Does not have this well?");
+    }
+
+
+    WellSet * WellSet::shallowCopy() const {
+        WellSet * copy = new WellSet();
+        
+        for (std::map<std::string , WellPtr>::const_iterator iter=m_wells.begin(); iter != m_wells.end(); ++iter) 
+            copy->addWell( (*iter).second );
+        
+        return copy;
+    }
+        
+
+    /*****************************************************************/
     
     Group::Group(const std::string& name , TimeMapConstPtr timeMap) : 
         m_injection( new GroupInjection::InjectionData(timeMap) ),
-        m_production( new GroupProduction::ProductionData( timeMap ))
+        m_production( new GroupProduction::ProductionData( timeMap )),
+        m_wells( new DynamicState<WellSetConstPtr>(timeMap , WellSetConstPtr(new WellSet() )))
     {
         m_name = name;
     }
@@ -232,7 +296,46 @@ namespace Opm {
     }
 
 
+    /*****************************************************************/
     
+    WellSetConstPtr Group::wellMap(size_t time_step) const {
+        return m_wells->get(time_step);
+    }
+
+
+    bool Group::hasWell(const std::string& wellName , size_t time_step) {
+        WellSetConstPtr wellSet = wellMap(time_step);
+        return wellSet->hasWell(wellName);
+    }
+
+
+    WellConstPtr Group::getWell(const std::string& wellName , size_t time_step) const {
+        WellSetConstPtr wellSet = wellMap(time_step);
+        return wellSet->getWell(wellName);
+    }
+
+
+    size_t Group::numWells(size_t time_step) {
+        WellSetConstPtr wellSet = wellMap(time_step);
+        return wellSet->size();
+    }
+    
+    void Group::addWell(size_t time_step , WellPtr well) {
+        WellSetConstPtr wellSet = wellMap(time_step);
+        WellSetPtr newWellSet = WellSetPtr( wellSet->shallowCopy() );
+        
+        newWellSet->addWell(well);
+        m_wells->add(time_step , newWellSet);
+    }
+
+
+    void Group::delWell(size_t time_step , const std::string& wellName) {
+        WellSetConstPtr wellSet = wellMap(time_step);
+        WellSetPtr newWellSet = WellSetPtr( wellSet->shallowCopy() );
+        
+        newWellSet->delWell(wellName);
+        m_wells->add(time_step , newWellSet);
+    }
 
 }
 

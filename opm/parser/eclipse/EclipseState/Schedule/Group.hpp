@@ -24,6 +24,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 
 #include <boost/shared_ptr.hpp>
 #include <string>
@@ -38,6 +39,10 @@ namespace Opm {
     namespace GroupProduction {
         struct ProductionData;
     }
+    
+    class WellSet;
+    typedef boost::shared_ptr<const WellSet> WellSetConstPtr;
+    typedef boost::shared_ptr<WellSet> WellSetPtr;
     
 
     class Group {
@@ -83,10 +88,20 @@ namespace Opm {
         void   setLiquidTargetRate(size_t time_step , double LiquidTargetRate);
         double getLiquidTargetRate(size_t time_step);
 
+        /*****************************************************************/
+
+        bool hasWell(const std::string& wellName , size_t time_step);
+        WellConstPtr getWell(const std::string& wellName , size_t time_step) const;
+        size_t numWells(size_t time_step);
+        void addWell(size_t time_step , WellPtr well);
+        void delWell(size_t time_step , const std::string& wellName);
     private:
+        WellSetConstPtr wellMap(size_t time_step) const;
+
         std::string m_name;
         boost::shared_ptr<GroupInjection::InjectionData> m_injection;
         boost::shared_ptr<GroupProduction::ProductionData> m_production;
+        boost::shared_ptr<DynamicState<WellSetConstPtr> > m_wells;
     };
     typedef boost::shared_ptr<Group> GroupPtr;
     typedef boost::shared_ptr<const Group> GroupConstPtr;

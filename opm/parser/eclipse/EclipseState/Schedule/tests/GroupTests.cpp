@@ -100,3 +100,89 @@ BOOST_AUTO_TEST_CASE(GroupMiscInjection) {
     group.setTargetVoidReplacementFraction( 3 , 400 );
     BOOST_CHECK_EQUAL( 400 , group.getTargetVoidReplacementFraction( 5 ));
 }
+
+
+
+BOOST_AUTO_TEST_CASE(GroupDoesNotHaveWell) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    Opm::Group group("G1" , timeMap);
+    
+    BOOST_CHECK_EQUAL(false , group.hasWell("NO", 2));
+    BOOST_CHECK_EQUAL(0U , group.numWells(2));
+    BOOST_CHECK_THROW(group.getWell("NO" , 2) , std::invalid_argument);
+}
+
+
+BOOST_AUTO_TEST_CASE(GroupAddWell) {
+
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    Opm::Group group("G1" , timeMap);
+    Opm::WellPtr well1(new Opm::Well("WELL1" , timeMap));
+    Opm::WellPtr well2(new Opm::Well("WELL2" , timeMap));
+    
+    BOOST_CHECK_EQUAL(0U , group.numWells(2));
+    group.addWell( 3 , well1 );
+    BOOST_CHECK_EQUAL( 1U , group.numWells(3));
+    BOOST_CHECK_EQUAL( 0U , group.numWells(1));
+
+    group.addWell( 4 , well1 );
+    BOOST_CHECK_EQUAL( 1U , group.numWells(4));
+    BOOST_CHECK_EQUAL( 0U , group.numWells(1));
+    BOOST_CHECK_EQUAL( 1U , group.numWells(5));
+
+    group.addWell( 6 , well2 );
+    BOOST_CHECK_EQUAL( 1U , group.numWells(4));
+    BOOST_CHECK_EQUAL( 0U , group.numWells(1));
+    BOOST_CHECK_EQUAL( 1U , group.numWells(5));
+    BOOST_CHECK_EQUAL( 2U , group.numWells(6));
+    BOOST_CHECK_EQUAL( 2U , group.numWells(8));
+
+    BOOST_CHECK(group.hasWell("WELL1" , 8 ));
+    BOOST_CHECK(group.hasWell("WELL2" , 8 ));
+
+    BOOST_CHECK_EQUAL(false , group.hasWell("WELL1" , 0 ));
+    BOOST_CHECK_EQUAL(false , group.hasWell("WELL2" , 0 ));
+
+    BOOST_CHECK_EQUAL(true  , group.hasWell("WELL1" , 5 ));
+    BOOST_CHECK_EQUAL(false , group.hasWell("WELL2" , 5 ));
+
+}
+
+
+
+BOOST_AUTO_TEST_CASE(GroupAddAndDelWell) {
+
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    Opm::Group group("G1" , timeMap);
+    Opm::WellPtr well1(new Opm::Well("WELL1" , timeMap));
+    Opm::WellPtr well2(new Opm::Well("WELL2" , timeMap));
+    
+    BOOST_CHECK_EQUAL(0U , group.numWells(2));
+    group.addWell( 3 , well1 );
+    BOOST_CHECK_EQUAL( 1U , group.numWells(3));
+    BOOST_CHECK_EQUAL( 0U , group.numWells(1));
+
+    group.addWell( 6 , well2 );
+    BOOST_CHECK_EQUAL( 1U , group.numWells(4));
+    BOOST_CHECK_EQUAL( 0U , group.numWells(1));
+    BOOST_CHECK_EQUAL( 1U , group.numWells(5));
+    BOOST_CHECK_EQUAL( 2U , group.numWells(6));
+    BOOST_CHECK_EQUAL( 2U , group.numWells(8));
+    
+    group.delWell( 7 , "WELL1");
+    BOOST_CHECK_EQUAL(false , group.hasWell("WELL1" , 7));
+    BOOST_CHECK_EQUAL(true , group.hasWell("WELL2" , 7));
+    BOOST_CHECK_EQUAL( 1U , group.numWells(7));
+    BOOST_CHECK_EQUAL( 2U , group.numWells(6));
+
+
+    group.delWell( 8 , "WELL2");
+    BOOST_CHECK_EQUAL(false , group.hasWell("WELL1" , 8));
+    BOOST_CHECK_EQUAL(false , group.hasWell("WELL2" , 8));
+    BOOST_CHECK_EQUAL( 0U , group.numWells(8));
+    BOOST_CHECK_EQUAL( 1U , group.numWells(7));
+    BOOST_CHECK_EQUAL( 2U , group.numWells(6));
+
+    BOOST_CHECK_THROW( group.delWell( 8 , "WeLLDOESNOT" ) , std::invalid_argument);
+    BOOST_CHECK_THROW( group.delWell( 8 , "WELL1" ) , std::invalid_argument);
+}
