@@ -13,6 +13,11 @@ target_link_libraries(runWellTests Parser ${Boost_LIBRARIES})
 add_test(NAME runWellTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${EXECUTABLE_OUTPUT_PATH}/runWellTests )
 
 
+add_executable(runWellSetTests WellSetTests.cpp)
+target_link_libraries(runWellSetTests Parser ${Boost_LIBRARIES})
+add_test(NAME runWellSetTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${EXECUTABLE_OUTPUT_PATH}/runWellSetTests )
+
+
 add_executable(runGroupTests GroupTests.cpp)
 target_link_libraries(runGroupTests Parser ${Boost_LIBRARIES})
 add_test(NAME runGroupTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${EXECUTABLE_OUTPUT_PATH}/runGroupTests )
