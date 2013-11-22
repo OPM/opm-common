@@ -78,66 +78,7 @@ namespace Opm {
         }
     }
 
-    /*****************************************************************/
-
-    class WellSet {
-    public:
-        WellSet();
-        size_t size() const;
-        bool hasWell(const std::string& wellName) const;
-        WellConstPtr getWell(const std::string& wellName) const;
-        void addWell(WellPtr well);
-        void delWell(const std::string& wellName);
-        WellSet * shallowCopy() const;
-    private:
-        std::map<std::string , WellPtr> m_wells;
-    };
     
-
-        
-    WellSet::WellSet() {
-    }
-
-    size_t WellSet::size() const {
-        return m_wells.size();
-    }
-
-
-    bool WellSet::hasWell(const std::string& wellName) const {
-        return (m_wells.find(wellName) != m_wells.end());
-    }
-
-
-    WellConstPtr WellSet::getWell(const std::string& wellName) const {
-        if (hasWell(wellName))
-            return m_wells.find(wellName)->second;
-        else
-            throw std::invalid_argument("Does not have this well?!\n");
-    }
-
-    
-    void WellSet::addWell(WellPtr well) {
-        const std::string& wellName = well->name();
-        if (!hasWell(wellName)) 
-            m_wells[wellName] = well;
-    }
-
-    void WellSet::delWell(const std::string& wellName) {
-        if (hasWell(wellName))
-            m_wells.erase( wellName );
-        else
-            throw std::invalid_argument("Does not have this well?");
-    }
-
-
-    WellSet * WellSet::shallowCopy() const {
-        WellSet * copy = new WellSet();
-        
-        for (std::map<std::string , WellPtr>::const_iterator iter=m_wells.begin(); iter != m_wells.end(); ++iter) 
-            copy->addWell( (*iter).second );
-        
-        return copy;
-    }
         
 
     /*****************************************************************/

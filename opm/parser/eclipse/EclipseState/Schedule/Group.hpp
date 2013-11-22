@@ -25,6 +25,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellSet.hpp>
 
 #include <boost/shared_ptr.hpp>
 #include <string>
@@ -40,11 +41,6 @@ namespace Opm {
         struct ProductionData;
     }
     
-    class WellSet;
-    typedef boost::shared_ptr<const WellSet> WellSetConstPtr;
-    typedef boost::shared_ptr<WellSet> WellSetPtr;
-    
-
     class Group {
     public:
         Group(const std::string& name, TimeMapConstPtr timeMap);
