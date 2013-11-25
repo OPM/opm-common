@@ -40,14 +40,25 @@ Opm::TimeMapPtr createXDaysTimeMap(size_t numDays) {
 
 BOOST_AUTO_TEST_CASE(CreateWell_CorrectNameAndDefaultValues) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
-    Opm::Well well("WELL1" , timeMap);
+    Opm::Well well("WELL1" , timeMap , 0);
     BOOST_CHECK_EQUAL( "WELL1" , well.name() );
     BOOST_CHECK_EQUAL(0.0 , well.getOilRate( 5 ));
 }
 
+BOOST_AUTO_TEST_CASE(CreateWellCreateTimeStepOK) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    Opm::Well well("WELL1" , timeMap , 5);
+    BOOST_CHECK_EQUAL( false , well.hasBeenDefined(0) );
+    BOOST_CHECK_EQUAL( false , well.hasBeenDefined(4) );
+    BOOST_CHECK_EQUAL( true , well.hasBeenDefined(5) );
+    BOOST_CHECK_EQUAL( true , well.hasBeenDefined(7) );
+    
+}
+
+
 BOOST_AUTO_TEST_CASE(setOilRate_RateSetCorrect) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
-    Opm::Well well("WELL1" , timeMap);
+    Opm::Well well("WELL1" , timeMap , 0);
     
     BOOST_CHECK_EQUAL(0.0 , well.getOilRate( 5 ));
     well.setOilRate( 5 , 99 );
@@ -57,7 +68,7 @@ BOOST_AUTO_TEST_CASE(setOilRate_RateSetCorrect) {
 
 BOOST_AUTO_TEST_CASE(setPredictionMode_ModeSetCorrect) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
-    Opm::Well well("WELL1" , timeMap);
+    Opm::Well well("WELL1" , timeMap , 0);
     
     BOOST_CHECK_EQUAL( true, well.isInPredictionMode( 5 ));
     well.setInPredictionMode( 5 , false ); // Go to history mode
@@ -69,7 +80,7 @@ BOOST_AUTO_TEST_CASE(setPredictionMode_ModeSetCorrect) {
 
 BOOST_AUTO_TEST_CASE(NewWellZeroCompletions) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
-    Opm::Well well("WELL1" , timeMap);
+    Opm::Well well("WELL1" , timeMap , 0);
     Opm::CompletionSetConstPtr completions = well.getCompletions( 0 );
     BOOST_CHECK_EQUAL( 0U , completions->size());
 }
@@ -77,7 +88,7 @@ BOOST_AUTO_TEST_CASE(NewWellZeroCompletions) {
 
 BOOST_AUTO_TEST_CASE(UpdateCompletions) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
-    Opm::Well well("WELL1" , timeMap);
+    Opm::Well well("WELL1" , timeMap , 0);
     Opm::CompletionSetConstPtr completions = well.getCompletions( 0 );
     BOOST_CHECK_EQUAL( 0U , completions->size());
     
@@ -115,7 +126,7 @@ BOOST_AUTO_TEST_CASE(UpdateCompletions) {
 
 BOOST_AUTO_TEST_CASE(setGasRate_RateSetCorrect) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
-    Opm::Well well("WELL1" , timeMap);
+    Opm::Well well("WELL1" , timeMap , 0);
     
     BOOST_CHECK_EQUAL(0.0 , well.getGasRate( 5 ));
     well.setGasRate( 5 , 108 );
@@ -127,7 +138,7 @@ BOOST_AUTO_TEST_CASE(setGasRate_RateSetCorrect) {
 
 BOOST_AUTO_TEST_CASE(setWaterRate_RateSetCorrect) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
-    Opm::Well well("WELL1" , timeMap);
+    Opm::Well well("WELL1" , timeMap , 0);
     
     BOOST_CHECK_EQUAL(0.0 , well.getWaterRate( 5 ));
     well.setWaterRate( 5 , 108 );
@@ -138,7 +149,7 @@ BOOST_AUTO_TEST_CASE(setWaterRate_RateSetCorrect) {
 
 BOOST_AUTO_TEST_CASE(setInjectionRate_RateSetCorrect) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
-    Opm::Well well("WELL1" , timeMap);
+    Opm::Well well("WELL1" , timeMap , 0);
     
     BOOST_CHECK_EQUAL(0.0 , well.getInjectionRate( 5 ));
     well.setInjectionRate( 5 , 108 );
@@ -149,7 +160,7 @@ BOOST_AUTO_TEST_CASE(setInjectionRate_RateSetCorrect) {
 
 BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
-    Opm::Well well("WELL1" , timeMap);
+    Opm::Well well("WELL1" , timeMap ,0);
 
     /* 1: Well is created as producer */
     BOOST_CHECK_EQUAL( false , well.isInjector(0));
@@ -186,7 +197,7 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
 
 BOOST_AUTO_TEST_CASE(GroupnameCorretlySet) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
-    Opm::Well well("WELL1" , timeMap);
+    Opm::Well well("WELL1" , timeMap ,0);
 
 
     BOOST_CHECK_EQUAL("" , well.getGroupName(2));

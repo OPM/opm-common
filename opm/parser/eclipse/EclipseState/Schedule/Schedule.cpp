@@ -133,7 +133,7 @@ namespace Opm {
             }
 
             if (!hasWell(wellName)) {
-                addWell(wellName);
+                addWell(wellName , currentStep);
             }
             WellPtr well = getWell(wellName);
 
@@ -272,8 +272,8 @@ namespace Opm {
         return m_rootGroupTree->get(timeStep);
     }
 
-    void Schedule::addWell(const std::string& wellName) {
-        WellPtr well(new Well(wellName, m_timeMap));
+    void Schedule::addWell(const std::string& wellName, size_t timeStep) {
+        WellPtr well(new Well(wellName, m_timeMap , timeStep));
         m_wells[ wellName ] = well;
     }
 

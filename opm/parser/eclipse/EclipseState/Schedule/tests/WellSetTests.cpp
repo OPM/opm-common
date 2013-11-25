@@ -53,8 +53,8 @@ BOOST_AUTO_TEST_CASE(AddAndDeleteWell) {
     Opm::WellSet wellSet;
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
 
-    Opm::WellPtr well(new Opm::Well("WELL1" , timeMap));
-    Opm::WellPtr well2(new Opm::Well("WELL2" , timeMap));
+    Opm::WellPtr well(new Opm::Well("WELL1" , timeMap , 0));
+    Opm::WellPtr well2(new Opm::Well("WELL2" , timeMap , 0));
 
     wellSet.addWell( well ); 
     BOOST_CHECK_EQUAL(true , wellSet.hasWell("WELL1"));
@@ -78,8 +78,8 @@ BOOST_AUTO_TEST_CASE(AddWellSameName) {
     Opm::WellSet wellSet;
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
 
-    Opm::WellPtr well1(new Opm::Well("WELL" , timeMap));
-    Opm::WellPtr well2(new Opm::Well("WELL" , timeMap));
+    Opm::WellPtr well1(new Opm::Well("WELL" , timeMap, 0));
+    Opm::WellPtr well2(new Opm::Well("WELL" , timeMap , 0));
 
     wellSet.addWell( well1 ); 
     BOOST_CHECK_EQUAL(true , wellSet.hasWell("WELL"));
