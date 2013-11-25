@@ -25,7 +25,7 @@ namespace Opm {
 
     Schedule::Schedule(DeckConstPtr deck) {
         if (deck->hasKeyword("SCHEDULE")) {
-            addGroup( "FIELD" );
+            addGroup( "FIELD", 0 );
             initFromDeck(deck);
         } else
             throw std::invalid_argument("Deck does not contain SCHEDULE section.\n");
@@ -129,7 +129,7 @@ namespace Opm {
             const std::string& groupName = record->getItem("GROUP")->getString(0);
 
             if (!hasGroup(groupName)) {
-                addGroup(groupName);
+                addGroup(groupName , currentStep);
             }
 
             if (!hasWell(wellName)) {
@@ -292,8 +292,8 @@ namespace Opm {
             throw std::invalid_argument("Well: " + wellName + " does not exist");
     }
 
-    void Schedule::addGroup(const std::string& groupName) {
-        GroupPtr group(new Group(groupName, m_timeMap));
+    void Schedule::addGroup(const std::string& groupName, size_t timeStep) {
+        GroupPtr group(new Group(groupName, m_timeMap , timeStep));
         m_groups[ groupName ] = group;
     }
 

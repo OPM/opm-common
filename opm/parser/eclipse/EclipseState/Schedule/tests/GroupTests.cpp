@@ -43,14 +43,23 @@ Opm::TimeMapPtr createXDaysTimeMap(size_t numDays) {
 
 BOOST_AUTO_TEST_CASE(CreateGroup_CorrectNameAndDefaultValues) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
-    Opm::Group group("G1" , timeMap);
+    Opm::Group group("G1" , timeMap , 0);
     BOOST_CHECK_EQUAL( "G1" , group.name() );
+}
+
+
+BOOST_AUTO_TEST_CASE(CreateGroupCreateTimeOK) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    Opm::Group group("G1" , timeMap , 5);
+    BOOST_CHECK_EQUAL( false, group.hasBeenDefined( 4 ));
+    BOOST_CHECK_EQUAL( true, group.hasBeenDefined( 5 ));
+    BOOST_CHECK_EQUAL( true, group.hasBeenDefined( 6 ));
 }
 
 
 BOOST_AUTO_TEST_CASE(InjectRateOK) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
-    Opm::Group group("G1" , timeMap);
+    Opm::Group group("G1" , timeMap , 0);
     BOOST_CHECK_EQUAL( 0 , group.getInjectionRate( 0 ));
     group.setInjectionRate( 2 , 100 );
     BOOST_CHECK_EQUAL( 100 , group.getInjectionRate( 2 ));
@@ -60,7 +69,7 @@ BOOST_AUTO_TEST_CASE(InjectRateOK) {
 
 BOOST_AUTO_TEST_CASE(ControlModeOK) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
-    Opm::Group group("G1" , timeMap);
+    Opm::Group group("G1" , timeMap , 0);
     BOOST_CHECK_EQUAL( Opm::GroupInjection::NONE , group.getInjectionControlMode( 0 ));
     group.setInjectionControlMode( 2 , Opm::GroupInjection::RESV );
     BOOST_CHECK_EQUAL( Opm::GroupInjection::RESV , group.getInjectionControlMode( 2 ));
@@ -71,7 +80,7 @@ BOOST_AUTO_TEST_CASE(ControlModeOK) {
 
 BOOST_AUTO_TEST_CASE(GroupChangePhaseSameTimeThrows) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
-    Opm::Group group("G1" , timeMap);
+    Opm::Group group("G1" , timeMap , 0);
     BOOST_CHECK_EQUAL( Opm::WATER , group.getInjectionPhase( 0 )); // Default phase - assumed WATER
     group.setInjectionPhase(5 , Opm::WATER );
     BOOST_CHECK_THROW( group.setInjectionPhase( 5 , Opm::GAS ) , std::invalid_argument );
@@ -86,7 +95,7 @@ BOOST_AUTO_TEST_CASE(GroupChangePhaseSameTimeThrows) {
 
 BOOST_AUTO_TEST_CASE(GroupMiscInjection) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
-    Opm::Group group("G1" , timeMap);
+    Opm::Group group("G1" , timeMap , 0);
     
     group.setSurfaceMaxRate( 3 , 100 );
     BOOST_CHECK_EQUAL( 100 , group.getSurfaceMaxRate( 5 ));
@@ -105,7 +114,7 @@ BOOST_AUTO_TEST_CASE(GroupMiscInjection) {
 
 BOOST_AUTO_TEST_CASE(GroupDoesNotHaveWell) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
-    Opm::Group group("G1" , timeMap);
+    Opm::Group group("G1" , timeMap , 0);
     
     BOOST_CHECK_EQUAL(false , group.hasWell("NO", 2));
     BOOST_CHECK_EQUAL(0U , group.numWells(2));
@@ -116,7 +125,7 @@ BOOST_AUTO_TEST_CASE(GroupDoesNotHaveWell) {
 BOOST_AUTO_TEST_CASE(GroupAddWell) {
 
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
-    Opm::Group group("G1" , timeMap);
+    Opm::Group group("G1" , timeMap , 0);
     Opm::WellPtr well1(new Opm::Well("WELL1" , timeMap , 0));
     Opm::WellPtr well2(new Opm::Well("WELL2" , timeMap , 0));
     
@@ -153,7 +162,7 @@ BOOST_AUTO_TEST_CASE(GroupAddWell) {
 BOOST_AUTO_TEST_CASE(GroupAddAndDelWell) {
 
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
-    Opm::Group group("G1" , timeMap);
+    Opm::Group group("G1" , timeMap , 0);
     Opm::WellPtr well1(new Opm::Well("WELL1" , timeMap , 0));
     Opm::WellPtr well2(new Opm::Well("WELL2" , timeMap , 0));
     

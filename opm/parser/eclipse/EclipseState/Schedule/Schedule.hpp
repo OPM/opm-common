@@ -61,7 +61,7 @@ namespace Opm
         void initRootGroupTreeNode(TimeMapConstPtr timeMap);
         void iterateScheduleSection(DeckConstPtr deck);
         bool handleGroupFromWELSPECS(const std::string& groupName, GroupTreePtr newTree) const;
-        void addGroup(const std::string& groupName);
+        void addGroup(const std::string& groupName , size_t timeStep);
         void addWell(const std::string& wellName , size_t timeStep);
         void handleWELSPECS(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleWCONProducer(DeckKeywordConstPtr keyword, size_t currentStep, bool isPredictionMode);

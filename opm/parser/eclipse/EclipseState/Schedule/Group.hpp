@@ -43,8 +43,8 @@ namespace Opm {
     
     class Group {
     public:
-        Group(const std::string& name, TimeMapConstPtr timeMap);
-        
+        Group(const std::string& name, TimeMapConstPtr timeMap , size_t createTimeStep);
+        bool hasBeenDefined(size_t timeStep) const;
         const std::string& name() const;
         void      setInjectionPhase(size_t time_step , PhaseEnum phase);
         PhaseEnum getInjectionPhase( size_t time_step) const;
@@ -94,6 +94,7 @@ namespace Opm {
     private:
         WellSetConstPtr wellMap(size_t time_step) const;
 
+        size_t m_createTimeStep;
         std::string m_name;
         boost::shared_ptr<GroupInjection::InjectionData> m_injection;
         boost::shared_ptr<GroupProduction::ProductionData> m_production;
