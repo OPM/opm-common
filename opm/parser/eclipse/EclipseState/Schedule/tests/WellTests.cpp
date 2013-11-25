@@ -184,3 +184,16 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
 }
 
 
+BOOST_AUTO_TEST_CASE(GroupnameCorretlySet) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    Opm::Well well("WELL1" , timeMap);
+
+
+    BOOST_CHECK_EQUAL("" , well.getGroupName(2));
+
+    well.setGroupName(3 , "GROUP2");
+    BOOST_CHECK_EQUAL("GROUP2" , well.getGroupName(3));
+    BOOST_CHECK_EQUAL("GROUP2" , well.getGroupName(6));
+    well.setGroupName(7 , "NEWGROUP");
+    BOOST_CHECK_EQUAL("NEWGROUP" , well.getGroupName(7));
+}
