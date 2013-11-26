@@ -147,7 +147,7 @@ namespace Opm {
     }
 
 
-    void Well::setGroupName(size_t time_step , const std::string& groupName) {
+    void Well::setGroupName(size_t time_step, const std::string& groupName ) {
         m_groupName->add(time_step , groupName);
     }
 

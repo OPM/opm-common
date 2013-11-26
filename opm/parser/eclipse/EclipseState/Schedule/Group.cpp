@@ -280,7 +280,7 @@ namespace Opm {
     }
 
 
-    void Group::delWell(size_t time_step , const std::string& wellName) {
+    void Group::delWell(size_t time_step, const std::string& wellName) {
         WellSetConstPtr wellSet = wellMap(time_step);
         WellSetPtr newWellSet = WellSetPtr( wellSet->shallowCopy() );
         

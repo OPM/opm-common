@@ -56,6 +56,7 @@ namespace Opm
         std::map<std::string , GroupPtr> m_groups;
         boost::shared_ptr<DynamicState<GroupTreePtr> > m_rootGroupTree;
 
+        void addWellToGroup( GroupPtr newGroup , WellPtr well , size_t timeStep);
         void initFromDeck(DeckConstPtr deck);
         void createTimeMap(DeckConstPtr deck);
         void initRootGroupTreeNode(TimeMapConstPtr timeMap);

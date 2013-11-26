@@ -286,3 +286,30 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
 
 }
 
+
+BOOST_AUTO_TEST_CASE( WellTestGroupAndWellRelation ) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELLS_AND_GROUPS");
+    DeckPtr deck = parser->parse(scheduleFile.string());
+    ScheduleConstPtr sched( new Schedule(deck));
+
+    GroupPtr group1 = sched->getGroup("GROUP1");
+    GroupPtr group2 = sched->getGroup("GROUP2");
+    
+    BOOST_CHECK( group1->hasBeenDefined(0) );
+    BOOST_CHECK_EQUAL(false , group2->hasBeenDefined(0));
+    BOOST_CHECK( group2->hasBeenDefined(1));
+
+    BOOST_CHECK_EQUAL( true , group1->hasWell("W_1" , 0));
+    BOOST_CHECK_EQUAL( true , group1->hasWell("W_2" , 0));
+    BOOST_CHECK_EQUAL( false, group2->hasWell("W_1" , 0));
+    BOOST_CHECK_EQUAL( false, group2->hasWell("W_2" , 0));
+    
+
+
+    BOOST_CHECK_EQUAL( true  , group1->hasWell("W_1" , 1));
+    BOOST_CHECK_EQUAL( false , group1->hasWell("W_2" , 1));
+    BOOST_CHECK_EQUAL( false , group2->hasWell("W_1" , 1));
+    BOOST_CHECK_EQUAL( true  , group2->hasWell("W_2" , 1));
+}
+

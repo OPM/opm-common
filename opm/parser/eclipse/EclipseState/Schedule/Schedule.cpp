@@ -135,10 +135,9 @@ namespace Opm {
             if (!hasWell(wellName)) {
                 addWell(wellName , currentStep);
             }
-            WellPtr well = getWell(wellName);
+            addWellToGroup( getGroup(groupName) , getWell(wellName) , currentStep);
 
             needNewTree = handleGroupFromWELSPECS(record->getItem(1)->getString(0), newTree);
-
         }
         if (needNewTree) {
             m_rootGroupTree->add(currentStep, newTree);
@@ -312,6 +311,15 @@ namespace Opm {
             throw std::invalid_argument("Group: " + groupName + " does not exist");
     }
 
+    void Schedule::addWellToGroup( GroupPtr newGroup , WellPtr well , size_t timeStep) {
+        const std::string currentGroupName = well->getGroupName(timeStep);
+        if (currentGroupName != "") {
+            GroupPtr currentGroup = getGroup( currentGroupName );
+            currentGroup->delWell( timeStep , well->name());
+        }
+        well->setGroupName(timeStep , newGroup->name());
+        newGroup->addWell(timeStep , well);
+    }
 
 
 }

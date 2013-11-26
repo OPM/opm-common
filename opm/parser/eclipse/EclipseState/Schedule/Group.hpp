@@ -90,7 +90,7 @@ namespace Opm {
         WellConstPtr getWell(const std::string& wellName , size_t time_step) const;
         size_t numWells(size_t time_step);
         void addWell(size_t time_step , WellPtr well);
-        void delWell(size_t time_step , const std::string& wellName);
+        void delWell(size_t time_step, const std::string& wellName );
     private:
         WellSetConstPtr wellMap(size_t time_step) const;
 
