@@ -83,13 +83,13 @@ namespace Opm {
 
     /*****************************************************************/
     
-    Group::Group(const std::string& name , TimeMapConstPtr timeMap , size_t createTimeStep) : 
+    Group::Group(const std::string& name , TimeMapConstPtr timeMap , size_t creationTimeStep) : 
         m_injection( new GroupInjection::InjectionData(timeMap) ),
         m_production( new GroupProduction::ProductionData( timeMap )),
         m_wells( new DynamicState<WellSetConstPtr>(timeMap , WellSetConstPtr(new WellSet() )))
     {
         m_name = name;
-        m_createTimeStep = createTimeStep;
+        m_creationTimeStep = creationTimeStep;
     }
 
 
@@ -99,7 +99,7 @@ namespace Opm {
 
 
     bool Group::hasBeenDefined(size_t timeStep) const {
-        if (timeStep < m_createTimeStep)
+        if (timeStep < m_creationTimeStep)
             return false;
         else
             return true;

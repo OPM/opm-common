@@ -29,7 +29,7 @@
 
 namespace Opm {
 
-    Well::Well(const std::string& name , TimeMapConstPtr timeMap , size_t createTimeStep)
+    Well::Well(const std::string& name , TimeMapConstPtr timeMap , size_t creationTimeStep)
         : m_oilRate( new DynamicState<double>( timeMap , 0.0)) , 
           m_gasRate(new DynamicState<double>(timeMap, 0.0)), 
           m_waterRate(new DynamicState<double>(timeMap, 0.0)), 
@@ -40,7 +40,7 @@ namespace Opm {
           m_groupName( new DynamicState<std::string>( timeMap , "" ))
     {
         m_name = name;
-        m_createTimeStep = createTimeStep;
+        m_creationTimeStep = creationTimeStep;
     }
 
     const std::string& Well::name() const {
@@ -49,7 +49,7 @@ namespace Opm {
 
 
     bool Well::hasBeenDefined(size_t timeStep) const {
-        if (timeStep < m_createTimeStep)
+        if (timeStep < m_creationTimeStep)
             return false;
         else
             return true;
