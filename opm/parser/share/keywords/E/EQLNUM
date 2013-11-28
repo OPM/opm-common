@@ -1,3 +1,1 @@
-{"name" : "EQLNUM" , "size" : 1, "items" : 
-[{"name" : "EQL_REGION", "value_type" : "INT"}]
-}
+{"name" : "EQLNUM", "data" : {"value_type" : "INT" }}

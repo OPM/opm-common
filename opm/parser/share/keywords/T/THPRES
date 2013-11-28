@@ -1,0 +1,4 @@
+{"name" : "THPRES" , "items" : [
+        {"name" : "REGION1" , "value_type" : "INT"},
+        {"name" : "REGION2" , "value_type" : "INT"},
+        {"name" : "THPRES" , "value_type" : "FLOAT"}]}
