@@ -1,0 +1,3 @@
+{"name" : "PIMTDIMS" , "size" : 1, "items" : [
+    {"name" : "PI_SCALING_TABLES" , "value_type" : "INT", "default" : 0},
+    {"name" : "MAX_ENTRIES" , "value_type" : "INT", "default" : 0}]}

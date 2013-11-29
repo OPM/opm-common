@@ -1,0 +1,3 @@
+{"name" : "PINCH" , "size" : 1 , "items" : [
+    {"name" : "THRESHOLD_THICKNESS", "value_type" : "FLOAT", "default" : 0.001},
+    {"name" : "GAP", "value_type" : "STRING", "default" : "GAP"}]}
