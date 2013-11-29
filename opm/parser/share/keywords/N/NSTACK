@@ -1,3 +1,2 @@
 {"name" : "NSTACK" , "size" : 1 , "items" : [
-    {"name" : "LINEAR_SOLVER_SIZE", "value_type" : "INT" , "default" : 10},
-    {"name" : "NOT_USED", "value_type" : "STRING"}]}
+    {"name" : "LINEAR_SOLVER_SIZE", "value_type" : "INT" , "default" : 10}]}
