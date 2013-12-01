@@ -52,10 +52,10 @@ BOOST_AUTO_TEST_CASE(addKeyword_keyword_doesntfail) {
 }
 
 
-BOOST_AUTO_TEST_CASE(hasKeyword_hasKeyword_returnstrue) {
+BOOST_AUTO_TEST_CASE(canParseKeyword_canParseKeyword_returnstrue) {
     ParserPtr parser(new Parser());
     parser->addKeyword(ParserKeywordConstPtr(new ParserKeyword("FJAS")));
-    BOOST_CHECK(parser->hasKeyword("FJAS"));
+    BOOST_CHECK(parser->canParseKeyword("FJAS"));
 }
 
 
@@ -77,11 +77,11 @@ BOOST_AUTO_TEST_CASE(getKeyword_hasnotkeyword_throws) {
 /************************ JSON config related tests **********************'*/
 
 
-BOOST_AUTO_TEST_CASE(addKeywordJSON_hasKeyword_returnstrue) {
+BOOST_AUTO_TEST_CASE(addKeywordJSON_canParseKeyword_returnstrue) {
     ParserPtr parser(new Parser());
     Json::JsonObject jsonConfig("{\"name\": \"BPR\", \"size\" : 100 ,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"FLOAT\"}]}");
     parser->addKeyword(ParserKeywordConstPtr(new ParserKeyword( jsonConfig )));
-    BOOST_CHECK(parser->hasKeyword("BPR"));
+    BOOST_CHECK(parser->canParseKeyword("BPR"));
 }
 
 
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(addKeywordJSON_size_isObject_allGood) {
     ParserPtr parser(new Parser());
     Json::JsonObject jsonConfig("{\"name\": \"EQUIXL\", \"size\" : {\"keyword\":\"EQLDIMS\" , \"item\" : \"NTEQUL\"},  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"FLOAT\"}]}");
     parser->addKeyword(ParserKeywordConstPtr(new ParserKeyword( jsonConfig )));
-    BOOST_CHECK(parser->hasKeyword("EQUIXL"));
+    BOOST_CHECK(parser->canParseKeyword("EQUIXL"));
 }
 
 
@@ -103,12 +103,12 @@ BOOST_AUTO_TEST_CASE(loadKeywordsJSON_notArray_throw) {
 
 
 
-BOOST_AUTO_TEST_CASE(loadKeywordsJSON_hasKeyword_returnstrue) {
+BOOST_AUTO_TEST_CASE(loadKeywordsJSON_canParseKeyword_returnstrue) {
     ParserPtr parser(new Parser());
     Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"FLOAT\"}]}]");
     
     parser->loadKeywords( jsonConfig );
-    BOOST_CHECK(parser->hasKeyword("BPR"));
+    BOOST_CHECK(parser->canParseKeyword("BPR"));
 }
 
 
@@ -124,9 +124,9 @@ BOOST_AUTO_TEST_CASE(loadKeywordsJSON_manyKeywords_returnstrue) {
     Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100 ,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"FLOAT\"}]}, {\"name\" : \"WWCT\", \"size\" : 0} , {\"name\" : \"EQUIL\" , \"size\" : 0}]");
     
     parser->loadKeywords( jsonConfig );
-    BOOST_CHECK(parser->hasKeyword("BPR"));
-    BOOST_CHECK(parser->hasKeyword("WWCT"));
-    BOOST_CHECK(parser->hasKeyword("EQUIL"));
+    BOOST_CHECK(parser->canParseKeyword("BPR"));
+    BOOST_CHECK(parser->canParseKeyword("WWCT"));
+    BOOST_CHECK(parser->canParseKeyword("EQUIL"));
     BOOST_CHECK_EQUAL( 3U , parser->size() );
 }
 
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(loadKeywordFromFile_validKeyword_returnsTrueHasKeyword) {
     boost::filesystem::path configFile("testdata/json/BPR");
     BOOST_CHECK_EQUAL( true , parser->loadKeywordFromFile( configFile ));
     BOOST_CHECK_EQUAL( 1U , parser->size() );
-    BOOST_CHECK_EQUAL( true , parser->hasKeyword("BPR") );
+    BOOST_CHECK_EQUAL( true , parser->canParseKeyword("BPR") );
 }
 
 
@@ -175,12 +175,12 @@ BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_directoryDoesNotexist_throws) {
 
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_notRecursive_allNames) {
         ParserPtr parser(new Parser(false));
-        BOOST_CHECK_EQUAL(false , parser->hasKeyword("BPR"));
+        BOOST_CHECK_EQUAL(false , parser->canParseKeyword("BPR"));
         boost::filesystem::path configPath("testdata/config/directory1");
         BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath, false , false));
-        BOOST_CHECK(parser->hasKeyword("WWCT"));
-        BOOST_CHECK_EQUAL(true , parser->hasKeyword("BPR"));
-        BOOST_CHECK_EQUAL(false , parser->hasKeyword("DIMENS"));
+        BOOST_CHECK(parser->canParseKeyword("WWCT"));
+        BOOST_CHECK_EQUAL(true , parser->canParseKeyword("BPR"));
+        BOOST_CHECK_EQUAL(false , parser->canParseKeyword("DIMENS"));
 }
 
 
@@ -188,31 +188,31 @@ BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_notRecursive_strictNames) {
         ParserPtr parser(new Parser(false));
         boost::filesystem::path configPath("testdata/config/directory1");
         BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath, false , true ));
-        BOOST_CHECK(parser->hasKeyword("WWCT"));
-        BOOST_CHECK_EQUAL(false , parser->hasKeyword("BPR"));
-        BOOST_CHECK_EQUAL(false , parser->hasKeyword("DIMENS"));
+        BOOST_CHECK(parser->canParseKeyword("WWCT"));
+        BOOST_CHECK_EQUAL(false , parser->canParseKeyword("BPR"));
+        BOOST_CHECK_EQUAL(false , parser->canParseKeyword("DIMENS"));
 }
 
 
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_Recursive_allNames) {
         ParserPtr parser(new Parser(false));
-        BOOST_CHECK_EQUAL(false , parser->hasKeyword("BPR"));
+        BOOST_CHECK_EQUAL(false , parser->canParseKeyword("BPR"));
         boost::filesystem::path configPath("testdata/config/directory1");
         BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath, true, false));
-        BOOST_CHECK(parser->hasKeyword("WWCT"));
-        BOOST_CHECK_EQUAL(true , parser->hasKeyword("BPR"));
-        BOOST_CHECK_EQUAL(true , parser->hasKeyword("DIMENS"));
+        BOOST_CHECK(parser->canParseKeyword("WWCT"));
+        BOOST_CHECK_EQUAL(true , parser->canParseKeyword("BPR"));
+        BOOST_CHECK_EQUAL(true , parser->canParseKeyword("DIMENS"));
 }
 
 
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_default) {
         ParserPtr parser(new Parser(false));
-        BOOST_CHECK_EQUAL(false , parser->hasKeyword("BPR"));
+        BOOST_CHECK_EQUAL(false , parser->canParseKeyword("BPR"));
         boost::filesystem::path configPath("testdata/config/directory1");
         BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath ));
-        BOOST_CHECK(parser->hasKeyword("WWCT"));
-        BOOST_CHECK_EQUAL(false , parser->hasKeyword("BPR"));
-        BOOST_CHECK_EQUAL(true , parser->hasKeyword("DIMENS"));
+        BOOST_CHECK(parser->canParseKeyword("WWCT"));
+        BOOST_CHECK_EQUAL(false , parser->canParseKeyword("BPR"));
+        BOOST_CHECK_EQUAL(true , parser->canParseKeyword("DIMENS"));
 }
 
 
@@ -221,6 +221,10 @@ BOOST_AUTO_TEST_CASE(DropKeyword) {
     BOOST_CHECK_EQUAL(false , parser->dropKeyword("DoesNotHaveThis"));
     BOOST_CHECK_EQUAL(true  , parser->dropKeyword("BPR"));
     BOOST_CHECK_EQUAL(false  , parser->dropKeyword("BPR"));
+
+    BOOST_CHECK_EQUAL(true , parser->canParseKeyword("TVDPX"));
+    BOOST_CHECK_EQUAL(true , parser->dropKeyword("TVDP*"));
+    BOOST_CHECK_EQUAL(false , parser->canParseKeyword("TVDPX"));
 }
 
 
@@ -235,6 +239,24 @@ BOOST_AUTO_TEST_CASE(ReplaceKeyword) {
     eqldims = parser->getKeyword("EQLDIMS");
     BOOST_CHECK_EQUAL( 1U , eqldims->numItems());
 }
+
+
+BOOST_AUTO_TEST_CASE(WildCardTest) {
+    ParserPtr parser(new Parser());
+    BOOST_CHECK_EQUAL(true  , parser->canParseKeyword("TVDP*"));
+    BOOST_CHECK_EQUAL(true  , parser->canParseKeyword("TVDP"));
+    BOOST_CHECK_EQUAL(true  , parser->canParseKeyword("TVDPXXX"));
+    BOOST_CHECK_EQUAL(false , parser->canParseKeyword("TVD"));
+
+
+    ParserKeywordConstPtr keyword1 = parser->getKeyword("TVDP*");
+    ParserKeywordConstPtr keyword2 = parser->getKeyword("TVDP");
+    ParserKeywordConstPtr keyword3 = parser->getKeyword("TVDPXXX");
+
+    BOOST_CHECK_EQUAL( keyword1 , keyword2 );
+    BOOST_CHECK_EQUAL( keyword1 , keyword3 );
+}
+
 
 
 /***************** Simple Int parsing ********************************/

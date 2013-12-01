@@ -50,8 +50,8 @@ ParserPtr createWWCTParser() {
 BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_deckReturned) {
     boost::filesystem::path singleKeywordFile("testdata/integration_tests/wwct.data");
     ParserPtr parser = createWWCTParser();
-    BOOST_CHECK( parser->hasKeyword("WWCT"));
-    BOOST_CHECK( parser->hasKeyword("SUMMARY"));
+    BOOST_CHECK( parser->canParseKeyword("WWCT"));
+    BOOST_CHECK( parser->canParseKeyword("SUMMARY"));
     BOOST_CHECK_NO_THROW(DeckPtr deck = parser->parse(singleKeywordFile.string()));
 }
 

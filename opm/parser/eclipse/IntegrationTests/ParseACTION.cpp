@@ -46,9 +46,9 @@ BOOST_AUTO_TEST_CASE( parse_ACTION_OK ) {
     parser->addKeyword( DIMENS );
     parser->addKeyword( THROW );
 
-    BOOST_REQUIRE( parser->hasKeyword( "DIMENS" ));
-    BOOST_REQUIRE( parser->hasKeyword( "WCONHIST" ));
-    BOOST_REQUIRE( parser->hasKeyword( "THROW" ));
+    BOOST_REQUIRE( parser->canParseKeyword( "DIMENS" ));
+    BOOST_REQUIRE( parser->canParseKeyword( "WCONHIST" ));
+    BOOST_REQUIRE( parser->canParseKeyword( "THROW" ));
     
     BOOST_REQUIRE_THROW( parser->parse( actionFile2.string() , false) , std::invalid_argument );
     

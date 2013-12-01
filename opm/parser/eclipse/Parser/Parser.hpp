@@ -46,8 +46,8 @@ namespace Opm {
 
         /// Method to add ParserKeyword instances, these holding type and size information about the keywords and their data.
         void addKeyword(ParserKeywordConstPtr parserKeyword);
-        bool hasKeyword(const std::string& keyword) const;
         bool dropKeyword(const std::string& keyword);
+        bool canParseKeyword( const std::string& keyword) const;
         ParserKeywordConstPtr getKeyword(const std::string& keyword) const;
         
         void loadKeywords(const Json::JsonObject& jsonKeywords);
@@ -57,6 +57,12 @@ namespace Opm {
         size_t size() const;
     private:
         std::map<std::string, ParserKeywordConstPtr> m_parserKeywords;
+        std::map<std::string, ParserKeywordConstPtr> m_wildCardKeywords;
+
+        bool hasKeyword(const std::string& keyword) const;   
+        bool hasWildCardKeyword(const std::string& keyword) const;   
+        ParserKeywordConstPtr matchingKeyword(const std::string& keyword) const;
+
         bool tryParseKeyword(const DeckConstPtr deck , const std::string& filename , size_t& lineNR , std::ifstream& inputstream , RawKeywordPtr& rawKeyword, bool strictParsing) const;
         void parseFile(DeckPtr deck , const boost::filesystem::path& file, const boost::filesystem::path& rootPath, bool strictParsing) const;
         RawKeywordPtr createRawKeyword(const DeckConstPtr deck , const std::string& filename , size_t lineNR , const std::string& keywordString, bool strictParsing) const;
