@@ -67,6 +67,16 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_withOtherSize_SizeTypeOTHER) {
 
 
 
+BOOST_AUTO_TEST_CASE(ParserKeyword_wildCardName) {
+    BOOST_CHECK_EQUAL( true  , ParserKeyword::wildCardName("SUM*"));
+    BOOST_CHECK_EQUAL( false , ParserKeyword::wildCardName("SUM*X"));
+    BOOST_CHECK_EQUAL( false , ParserKeyword::wildCardName("sUM*"));
+    BOOST_CHECK_EQUAL( false , ParserKeyword::wildCardName("5UM*"));
+    BOOST_CHECK_EQUAL( true , ParserKeyword::wildCardName("U5M*"));
+    BOOST_CHECK_EQUAL( false , ParserKeyword::wildCardName("ABCDEFGH*"));
+}
+
+
 BOOST_AUTO_TEST_CASE(ParserKeyword_validName) {
     BOOST_CHECK_EQUAL( true , ParserKeyword::validName("SUMMARY"));
     BOOST_CHECK_EQUAL( false , ParserKeyword::validName("MixeCase"));
@@ -75,6 +85,19 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_validName) {
     BOOST_CHECK_EQUAL( false , ParserKeyword::validName("88STRING"));
     BOOST_CHECK_EQUAL( false , ParserKeyword::validName("KEY.EXT"));
     BOOST_CHECK_EQUAL( false , ParserKeyword::validName("STRING~"));
+
+    BOOST_CHECK_EQUAL( true  , ParserKeyword::validName("TVDP*"));
+    BOOST_CHECK_EQUAL( false , ParserKeyword::validName("*"));
+}
+
+
+BOOST_AUTO_TEST_CASE(ParserKeywordMathces) {
+    ParserKeyword parserKeyword("TVDP*" , (size_t) 1);
+    BOOST_CHECK_EQUAL( true , parserKeyword.matches("TVDP"));
+    BOOST_CHECK_EQUAL( true , parserKeyword.matches("TVDPX"));
+    BOOST_CHECK_EQUAL( true , parserKeyword.matches("TVDPXY"));
+    BOOST_CHECK_EQUAL( false , parserKeyword.matches("TVD"));
+    BOOST_CHECK_EQUAL( false , parserKeyword.matches("ATVDP"));
 }
 
 

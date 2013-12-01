@@ -42,7 +42,9 @@ namespace Opm {
         ParserKeyword(const Json::JsonObject& jsonConfig);
 
         static bool validName(const std::string& name);
-        
+        static bool wildCardName(const std::string& name);
+        bool matches(const std::string& keyword) const;
+
         ParserRecordPtr getRecord() const;
         const std::string& getName() const;
         ParserKeywordActionEnum getAction() const;
