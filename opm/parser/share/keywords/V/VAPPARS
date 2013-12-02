@@ -1,0 +1,3 @@
+{"name" : "VAPPARS" , "size" : 2 , "items" : [
+        {"name" : "OIL_VAP_PROPENSITY" , "value_type" : "FLOAT"},
+        {"name" : "OIL_DENSITY_PROPENSITY" , "value_type" : "FLOAT"}]}
