@@ -63,31 +63,82 @@ namespace Opm {
     size_t Parser::size() const {
         return m_parserKeywords.size();
     }
-
+    
+    
     void Parser::addKeyword(ParserKeywordConstPtr parserKeyword) {
-        if (hasKeyword(parserKeyword->getName()))
-            m_parserKeywords.erase(parserKeyword->getName());
-            
-        m_parserKeywords.insert(std::make_pair(parserKeyword->getName(), parserKeyword));
+        const std::string& name = parserKeyword->getName();
+        dropKeyword( name );
+        
+        m_parserKeywords.insert(std::make_pair(name, parserKeyword));
+        if (ParserKeyword::wildCardName(name)) 
+            m_wildCardKeywords.insert( std::make_pair(name , parserKeyword ));
     }
+
+
+    ParserKeywordConstPtr Parser::matchingKeyword(const std::string& name) const {
+        std::map<std::string, ParserKeywordConstPtr>::const_iterator iter = m_wildCardKeywords.begin();
+        ParserKeywordConstPtr keyword;
+        
+        while (true) {
+            if (iter == m_wildCardKeywords.end())
+                break;
+
+            if ((*iter).second->matches(name)) {
+                keyword = (*iter).second;
+                break;
+            }
+
+            ++iter;
+        }
+        return keyword;
+    }
+
 
     bool Parser::hasKeyword(const std::string& keyword) const {
-        return m_parserKeywords.find(keyword) != m_parserKeywords.end();
+        return (m_parserKeywords.find(keyword) != m_parserKeywords.end());
     }
 
-    bool Parser::dropKeyword(const std::string& keyword) {
-        if (m_parserKeywords.erase( keyword ) == 1)
-            return true;
-        else
-            return false;
+
+    bool Parser::hasWildCardKeyword(const std::string& keyword) const {
+        return (m_wildCardKeywords.find(keyword) != m_parserKeywords.end());
     }
+    
+
+    bool Parser::canParseKeyword( const std::string& keyword) const {
+        if (hasKeyword(keyword)) 
+            return true;
+        else {
+            ParserKeywordConstPtr wildCardKeyword = matchingKeyword( keyword );
+            if (wildCardKeyword)
+                return true;
+            else
+                return false;
+        }
+    }
+
+
+
+    bool Parser::dropKeyword(const std::string& keyword) {
+        bool erase = (m_parserKeywords.erase( keyword ) == 1);
+        if (erase)
+            m_wildCardKeywords.erase( keyword );
+        
+        return erase;
+    }
+
+
 
     ParserKeywordConstPtr Parser::getKeyword(const std::string& keyword) const {
         if (hasKeyword(keyword)) {
             return m_parserKeywords.at(keyword);
+        } else {
+            ParserKeywordConstPtr wildCardKeyword = matchingKeyword( keyword );
+
+            if (wildCardKeyword)
+                return wildCardKeyword;
+            else
+                throw std::invalid_argument("Do not have parser keyword for parsing: " + keyword);
         }
-        else
-            throw std::invalid_argument("Keyword: " + keyword + " does not exist");
     }
 
 
@@ -117,9 +168,9 @@ namespace Opm {
                 } else {
                     if (verbose)
                         std::cout << rawKeyword->getKeywordName() << std::endl;
-
-                    if (hasKeyword(rawKeyword->getKeywordName())) {
-                        ParserKeywordConstPtr parserKeyword = m_parserKeywords.at(rawKeyword->getKeywordName());
+                    
+                    if (canParseKeyword(rawKeyword->getKeywordName())) {
+                        ParserKeywordConstPtr parserKeyword = getKeyword(rawKeyword->getKeywordName());
                         ParserKeywordActionEnum action = parserKeyword->getAction();
                         if (action == INTERNALIZE) {
                             DeckKeywordPtr deckKeyword = parserKeyword->parse(rawKeyword);
@@ -154,8 +205,8 @@ namespace Opm {
     }
 
     RawKeywordPtr Parser::createRawKeyword(const DeckConstPtr deck, const std::string& filename , size_t lineNR , const std::string& keywordString, bool strictParsing) const {
-        if (hasKeyword(keywordString)) {
-            ParserKeywordConstPtr parserKeyword = m_parserKeywords.find(keywordString)->second;
+        if (canParseKeyword(keywordString)) {
+            ParserKeywordConstPtr parserKeyword = getKeyword( keywordString );
             ParserKeywordActionEnum action = parserKeyword->getAction();
             
             if (action == THROW_EXCEPTION)
@@ -192,7 +243,7 @@ namespace Opm {
 
     bool Parser::tryParseKeyword(const DeckConstPtr deck, const std::string& filename , size_t& lineNR , std::ifstream& inputstream, RawKeywordPtr& rawKeyword, bool strictParsing) const {
         std::string line;
-        
+        std::cout << "tryParse " << std::endl;
         while (std::getline(inputstream, line)) {
             std::string keywordString;
             lineNR++;

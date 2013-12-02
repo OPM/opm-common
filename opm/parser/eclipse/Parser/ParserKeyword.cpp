@@ -146,20 +146,47 @@ namespace Opm {
         initSizeKeyword(sizeKeyword, sizeItem);
     }
 
-    bool ParserKeyword::validName(const std::string& name) {
+
+    bool ParserKeyword::validNameStart(const std::string& name) {
         if (name.length() > ParserConst::maxKeywordLength)
             return false;
 
         if (!isupper(name[0]))
             return false;
+        
+        return true;
+    }
 
-        for (unsigned int i = 1; i < name.length(); i++) {
+
+    bool ParserKeyword::wildCardName(const std::string& name) {
+        if (!validNameStart(name))
+            return false;
+                              
+        for (size_t i = 1; i < name.length(); i++) {
             char c = name[i];
-            if (!(isupper(c) || isdigit(c)))
-                return false;
+            if (!(isupper(c) || isdigit(c))) {
+                if ((i == (name.length() - 1)) && (c == '*'))
+                    return true;
+                else
+                    return false;
+            }
+        }
+        return false;
+    }
+
+
+    bool ParserKeyword::validName(const std::string& name) {
+        if (!validNameStart(name))
+            return false;
+
+        for (size_t i = 1; i < name.length(); i++) {
+            char c = name[i];
+            if (!(isupper(c) || isdigit(c))) 
+                return wildCardName(name);
         }
         return true;
     }
+
 
     void ParserKeyword::addItem(ParserItemConstPtr item) {
         if (m_isDataKeyword)
@@ -287,7 +314,7 @@ namespace Opm {
     }
 
     DeckKeywordPtr ParserKeyword::parse(RawKeywordConstPtr rawKeyword) const {
-        DeckKeywordPtr keyword(new DeckKeyword(getName()));
+        DeckKeywordPtr keyword(new DeckKeyword(rawKeyword->getKeywordName()));
         for (size_t i = 0; i < rawKeyword->size(); i++) {
             DeckRecordConstPtr deckRecord = m_record->parse(rawKeyword->getRecord(i));
             keyword->addRecord(deckRecord);
@@ -317,6 +344,20 @@ namespace Opm {
     bool ParserKeyword::isDataKeyword() const {
         return m_isDataKeyword;
     }
+
+
+    bool ParserKeyword::matches(const std::string& keyword) const {
+        size_t cmpLength = m_name.find('*');
+        if (cmpLength == std::string::npos)
+            return (keyword == m_name);
+        else {
+            if (keyword.length() < cmpLength)
+                return false;
+            
+            return (m_name.compare( 0 , cmpLength , keyword , 0 , cmpLength) == 0);
+        }
+    }
+
 
     bool ParserKeyword::equal(const ParserKeyword& other) const {
         if ((m_name == other.m_name) &&

@@ -42,7 +42,9 @@ namespace Opm {
         ParserKeyword(const Json::JsonObject& jsonConfig);
 
         static bool validName(const std::string& name);
-        
+        static bool wildCardName(const std::string& name);
+        bool matches(const std::string& keyword) const;
+
         ParserRecordPtr getRecord() const;
         const std::string& getName() const;
         ParserKeywordActionEnum getAction() const;
@@ -71,6 +73,7 @@ namespace Opm {
         bool m_isTableCollection;
         ParserKeywordActionEnum m_action;
 
+        static bool validNameStart(const std::string& name);
         void initData( const Json::JsonObject& jsonConfig );
         void initSize( const Json::JsonObject& jsonConfig );
         void initSizeKeyword( const std::string& sizeKeyword, const std::string& sizeItem);
