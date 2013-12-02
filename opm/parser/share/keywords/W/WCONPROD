@@ -10,4 +10,13 @@
        {"name" : "BHP"          , "value_type" : "FLOAT" , "default" : 0.0},
        {"name" : "THP"          , "value_type" : "FLOAT" , "default" : 0.0},
        {"name" : "VFPTable"     , "value_type" : "INT"   , "default" : 0.0 , "comment":"The default is a state variable"},
-       {"name" : "ALQ"          , "value_type" : "FLOAT" , "default" : 0.0 , "comment":"The default is a state variable"}]}
+       {"name" : "ALQ"          , "value_type" : "FLOAT" , "default" : 0.0 , "comment":"The default is a state variable"},
+       {"name" : "E300_ITEM13"  , "value_type" : "FLOAT"},
+       {"name" : "E300_ITEM14"  , "value_type" : "FLOAT"},
+       {"name" : "E300_ITEM15"  , "value_type" : "FLOAT"},
+       {"name" : "E300_ITEM16"  , "value_type" : "FLOAT"},
+       {"name" : "E300_ITEM17"  , "value_type" : "FLOAT"},
+       {"name" : "E300_ITEM18"  , "value_type" : "FLOAT"},
+       {"name" : "E300_ITEM19"  , "value_type" : "FLOAT"},
+       {"name" : "E300_ITEM20"  , "value_type" : "FLOAT"}]}
+       
