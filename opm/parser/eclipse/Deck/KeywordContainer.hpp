@@ -11,7 +11,7 @@
 #include <vector>
 #include <map>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 
@@ -34,8 +34,8 @@ namespace Opm {
         std::vector<DeckKeywordConstPtr> m_keywordList;
         std::map<std::string, std::vector<DeckKeywordConstPtr> > m_keywordMap;
     };
-    typedef boost::shared_ptr<KeywordContainer> KeywordContainerPtr;
-    typedef boost::shared_ptr<const KeywordContainer> KeywordContainerConstPtr;
+    typedef std::shared_ptr<KeywordContainer> KeywordContainerPtr;
+    typedef std::shared_ptr<const KeywordContainer> KeywordContainerConstPtr;
 }
 
 #endif  /* KEYWORDCONTAINER_HPP */

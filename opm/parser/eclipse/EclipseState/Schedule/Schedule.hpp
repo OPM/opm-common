@@ -26,7 +26,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <map>
@@ -54,7 +54,7 @@ namespace Opm
         TimeMapPtr m_timeMap;
         std::map<std::string , WellPtr> m_wells;
         std::map<std::string , GroupPtr> m_groups;
-        boost::shared_ptr<DynamicState<GroupTreePtr> > m_rootGroupTree;
+        std::shared_ptr<DynamicState<GroupTreePtr> > m_rootGroupTree;
 
         void addWellToGroup( GroupPtr newGroup , WellPtr well , size_t timeStep);
         void initFromDeck(DeckConstPtr deck);
@@ -78,8 +78,8 @@ namespace Opm
         void handleGRUPTREE(DeckKeywordConstPtr keyword, size_t currentStep);
 
     };
-    typedef boost::shared_ptr<Schedule> SchedulePtr;
-    typedef boost::shared_ptr<const Schedule> ScheduleConstPtr;
+    typedef std::shared_ptr<Schedule> SchedulePtr;
+    typedef std::shared_ptr<const Schedule> ScheduleConstPtr;
 }
 
 #endif

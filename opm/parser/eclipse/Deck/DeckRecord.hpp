@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 
 namespace Opm {
@@ -42,8 +42,8 @@ namespace Opm {
         std::map<std::string, DeckItemConstPtr> m_itemMap;
 
     };
-    typedef boost::shared_ptr<DeckRecord> DeckRecordPtr;
-    typedef boost::shared_ptr<const DeckRecord> DeckRecordConstPtr;
+    typedef std::shared_ptr<DeckRecord> DeckRecordPtr;
+    typedef std::shared_ptr<const DeckRecord> DeckRecordConstPtr;
 
 }
 #endif  /* DECKRECORD_HPP */

@@ -23,7 +23,7 @@
 #include <string>
 #include <vector>
 #include <deque>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 
 namespace Opm {
@@ -47,8 +47,8 @@ namespace Opm {
         std::vector<std::string> m_data;
     };
 
-    typedef boost::shared_ptr<DeckStringItem> DeckStringItemPtr;
-    typedef boost::shared_ptr<const DeckStringItem> DeckStringItemConstPtr;
+    typedef std::shared_ptr<DeckStringItem> DeckStringItemPtr;
+    typedef std::shared_ptr<const DeckStringItem> DeckStringItemConstPtr;
 }
 #endif  
 

@@ -21,6 +21,8 @@
 #ifndef PARSERSTRINGITEM_HPP
 #define PARSERSTRINGITEM_HPP
 
+#include <memory>
+
 #include <opm/json/JsonObject.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
@@ -48,8 +50,8 @@ namespace Opm {
         std::string m_default;
     };
 
-    typedef boost::shared_ptr<const ParserStringItem> ParserStringItemConstPtr;
-    typedef boost::shared_ptr<ParserStringItem> ParserStringItemPtr;
+    typedef std::shared_ptr<const ParserStringItem> ParserStringItemConstPtr;
+    typedef std::shared_ptr<ParserStringItem> ParserStringItemPtr;
 }
 
 #endif  /* PARSERSTRINGITEM_HPP */

@@ -23,7 +23,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include <string>
 #include <map>
@@ -43,8 +43,8 @@ namespace Opm {
         std::map<std::string , WellPtr> m_wells;
     };
     
-    typedef boost::shared_ptr<WellSet> WellSetPtr;
-    typedef boost::shared_ptr<const WellSet> WellSetConstPtr;
+    typedef std::shared_ptr<WellSet> WellSetPtr;
+    typedef std::shared_ptr<const WellSet> WellSetConstPtr;
 }
 
 #endif

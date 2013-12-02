@@ -23,7 +23,7 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include "RawRecord.hpp"
 
@@ -74,8 +74,8 @@ namespace Opm {
         void setKeywordName(const std::string& keyword);
         static bool isValidKeyword(const std::string& keywordCandidate);
     };
-    typedef boost::shared_ptr<RawKeyword> RawKeywordPtr;
-    typedef boost::shared_ptr<const RawKeyword> RawKeywordConstPtr;
+    typedef std::shared_ptr<RawKeyword> RawKeywordPtr;
+    typedef std::shared_ptr<const RawKeyword> RawKeywordConstPtr;
 
 }
 #endif  /* RAWKEYWORD_HPP */

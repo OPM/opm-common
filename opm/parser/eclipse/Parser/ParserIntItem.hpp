@@ -21,6 +21,8 @@
 #ifndef PARSERINTITEM_HPP
 #define PARSERINTITEM_HPP
 
+#include <memory>
+
 #include <opm/json/JsonObject.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
@@ -52,8 +54,8 @@ namespace Opm {
         int  m_default;
     };
 
-    typedef boost::shared_ptr<const ParserIntItem> ParserIntItemConstPtr;
-    typedef boost::shared_ptr<ParserIntItem> ParserIntItemPtr;
+    typedef std::shared_ptr<const ParserIntItem> ParserIntItemConstPtr;
+    typedef std::shared_ptr<ParserIntItem> ParserIntItemPtr;
 }
 
 #endif  /* PARSERINTITEM_HPP */

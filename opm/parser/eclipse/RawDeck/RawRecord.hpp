@@ -62,8 +62,8 @@ namespace Opm {
         bool charIsSeparator(char candidate);
         static unsigned int findTerminatingSlash(const std::string& singleRecordString);
     };
-    typedef boost::shared_ptr<RawRecord> RawRecordPtr;
-    typedef boost::shared_ptr<const RawRecord> RawRecordConstPtr;
+    typedef std::shared_ptr<RawRecord> RawRecordPtr;
+    typedef std::shared_ptr<const RawRecord> RawRecordConstPtr;
 
 }
 

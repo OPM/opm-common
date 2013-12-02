@@ -21,6 +21,7 @@
 #ifndef COMPLETION_HPP_
 #define COMPLETION_HPP_
 
+#include <memory>
 #include <boost/date_time.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -40,8 +41,8 @@ namespace Opm {
         CompletionStateEnum getState() const;
         double getCF() const;
 
-        static std::map<std::string , std::vector<boost::shared_ptr<const Completion> > >  completionsFromCOMPDATKeyword( DeckKeywordConstPtr compdatKeyword );
-        static std::pair<std::string , std::vector<boost::shared_ptr<const Completion> > > completionsFromCOMPDATRecord( DeckRecordConstPtr compdatRecord );
+        static std::map<std::string , std::vector<std::shared_ptr<const Completion> > >  completionsFromCOMPDATKeyword( DeckKeywordConstPtr compdatKeyword );
+        static std::pair<std::string , std::vector<std::shared_ptr<const Completion> > > completionsFromCOMPDATRecord( DeckRecordConstPtr compdatRecord );
         
     private:
         int m_i, m_j, m_k;
@@ -49,8 +50,8 @@ namespace Opm {
         CompletionStateEnum m_state;
     };
 
-    typedef boost::shared_ptr<Completion> CompletionPtr;
-    typedef boost::shared_ptr<const Completion> CompletionConstPtr;
+    typedef std::shared_ptr<Completion> CompletionPtr;
+    typedef std::shared_ptr<const Completion> CompletionConstPtr;
 }
 
 

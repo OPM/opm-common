@@ -24,7 +24,7 @@
 #include <iostream>
 #include <deque>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <boost/lexical_cast.hpp>
 
 #include <opm/json/JsonObject.hpp>
@@ -65,8 +65,8 @@ namespace Opm {
     ParserItemSizeEnum m_sizeType;
   };
 
-  typedef boost::shared_ptr<const ParserItem> ParserItemConstPtr;
-  typedef boost::shared_ptr<ParserItem> ParserItemPtr;
+  typedef std::shared_ptr<const ParserItem> ParserItemConstPtr;
+  typedef std::shared_ptr<ParserItem> ParserItemPtr;
 
 
 }

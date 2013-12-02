@@ -28,12 +28,12 @@ namespace Opm {
         struct ProductionData {
             ProductionData(TimeMapConstPtr timeMap);
 
-            boost::shared_ptr<DynamicState<GroupProduction::ControlEnum> > controlMode;
-            boost::shared_ptr<DynamicState<GroupProductionExceedLimit::ActionEnum> > exceedAction;
-            boost::shared_ptr<DynamicState<double> > oilTarget;
-            boost::shared_ptr<DynamicState<double> > waterTarget;
-            boost::shared_ptr<DynamicState<double> > gasTarget;
-            boost::shared_ptr<DynamicState<double> > liquidTarget;
+            std::shared_ptr<DynamicState<GroupProduction::ControlEnum> > controlMode;
+            std::shared_ptr<DynamicState<GroupProductionExceedLimit::ActionEnum> > exceedAction;
+            std::shared_ptr<DynamicState<double> > oilTarget;
+            std::shared_ptr<DynamicState<double> > waterTarget;
+            std::shared_ptr<DynamicState<double> > gasTarget;
+            std::shared_ptr<DynamicState<double> > liquidTarget;
             
         };
         
@@ -56,13 +56,13 @@ namespace Opm {
         struct InjectionData {
             InjectionData(TimeMapConstPtr timeMap);
             
-            boost::shared_ptr<DynamicState<PhaseEnum> > phase;
-            boost::shared_ptr<DynamicState<GroupInjection::ControlEnum> > controlMode;
-            boost::shared_ptr<DynamicState<double> > rate;
-            boost::shared_ptr<DynamicState<double> > surfaceFlowMaxRate;
-            boost::shared_ptr<DynamicState<double> > reservoirFlowMaxRate;
-            boost::shared_ptr<DynamicState<double> > targetReinjectFraction;
-            boost::shared_ptr<DynamicState<double> > targetVoidReplacementFraction;                
+            std::shared_ptr<DynamicState<PhaseEnum> > phase;
+            std::shared_ptr<DynamicState<GroupInjection::ControlEnum> > controlMode;
+            std::shared_ptr<DynamicState<double> > rate;
+            std::shared_ptr<DynamicState<double> > surfaceFlowMaxRate;
+            std::shared_ptr<DynamicState<double> > reservoirFlowMaxRate;
+            std::shared_ptr<DynamicState<double> > targetReinjectFraction;
+            std::shared_ptr<DynamicState<double> > targetVoidReplacementFraction;
         };
         
         InjectionData::InjectionData(TimeMapConstPtr timeMap) : 
