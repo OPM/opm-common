@@ -243,7 +243,6 @@ namespace Opm {
 
     bool Parser::tryParseKeyword(const DeckConstPtr deck, const std::string& filename , size_t& lineNR , std::ifstream& inputstream, RawKeywordPtr& rawKeyword, bool strictParsing) const {
         std::string line;
-        std::cout << "tryParse " << std::endl;
         while (std::getline(inputstream, line)) {
             std::string keywordString;
             lineNR++;
