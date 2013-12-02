@@ -21,6 +21,8 @@
 #ifndef COMPLETIONSET_HPP_
 #define COMPLETIONSET_HPP_
 
+#include <memory>
+
 #include <boost/date_time.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -41,8 +43,8 @@ namespace Opm {
         std::vector<CompletionConstPtr> m_completions;
     };
 
-    typedef boost::shared_ptr<CompletionSet> CompletionSetPtr;
-    typedef boost::shared_ptr<const CompletionSet> CompletionSetConstPtr;
+    typedef std::shared_ptr<CompletionSet> CompletionSetPtr;
+    typedef std::shared_ptr<const CompletionSet> CompletionSetConstPtr;
 }
 
 

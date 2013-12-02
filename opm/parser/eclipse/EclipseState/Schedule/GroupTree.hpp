@@ -24,7 +24,7 @@
 
 #include <string>
 #include <map>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 namespace Opm {
 
@@ -37,7 +37,7 @@ namespace Opm {
         GroupTreeNodePtr getNode(const std::string& nodeName) const;
         GroupTreeNodePtr getParent(const std::string& childName) const;
 
-        boost::shared_ptr<GroupTree> deepCopy() const;
+        std::shared_ptr<GroupTree> deepCopy() const;
         void printTree() const;
 
 
@@ -50,8 +50,8 @@ namespace Opm {
         void printTree(GroupTreeNodePtr fromNode) const;
     };
 
-    typedef boost::shared_ptr<GroupTree> GroupTreePtr;
-    typedef boost::shared_ptr<const GroupTree> GroupTreeConstPtr;
+    typedef std::shared_ptr<GroupTree> GroupTreePtr;
+    typedef std::shared_ptr<const GroupTree> GroupTreeConstPtr;
 }
 
 #endif	/* GROUPTREE_HPP */

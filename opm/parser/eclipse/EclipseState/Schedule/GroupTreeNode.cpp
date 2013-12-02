@@ -39,7 +39,7 @@ namespace Opm {
         return child;
     }
     
-    void GroupTreeNode::addChildGroup(boost::shared_ptr<GroupTreeNode> childGroup) {
+    void GroupTreeNode::addChildGroup(std::shared_ptr<GroupTreeNode> childGroup) {
         if (hasChildGroup(childGroup->name())) {
             throw std::invalid_argument("Child group with name \"" + childGroup->name() + "\"already exists under node " + m_name);
         }
@@ -69,11 +69,11 @@ namespace Opm {
         return GroupTreeNodePtr(new GroupTreeNode("FIELD"));
     }
 
-    std::map<std::string, boost::shared_ptr<GroupTreeNode> >::iterator GroupTreeNode::begin() {
+    std::map<std::string, std::shared_ptr<GroupTreeNode> >::iterator GroupTreeNode::begin() {
         return m_childGroups.begin();
     }
 
-    std::map<std::string, boost::shared_ptr<GroupTreeNode> >::iterator GroupTreeNode::end() {
+    std::map<std::string, std::shared_ptr<GroupTreeNode> >::iterator GroupTreeNode::end() {
         return m_childGroups.end();
     }
 }

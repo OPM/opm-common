@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(parse_truncatedrecords_deckFilledWithDefaults) {
     ParserKeywordConstPtr parserKeyword = parser->getKeyword("RADFIN4");
     ParserRecordConstPtr parserRecord = parserKeyword->getRecord();
     ParserItemConstPtr nwmaxItem = parserRecord->get("NWMAX");
-    ParserIntItemConstPtr intItem = boost::static_pointer_cast<const ParserIntItem>(nwmaxItem);
+    ParserIntItemConstPtr intItem = std::static_pointer_cast<const ParserIntItem>(nwmaxItem);
     
     BOOST_CHECK_EQUAL(18, radfin4_0_full->getRecord(0)->getItem(10)->getInt(0));
     BOOST_CHECK_EQUAL(intItem->getDefault(), radfin4_1_partial->getRecord(0)->getItem(10)->getInt(0));

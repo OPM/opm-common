@@ -25,7 +25,6 @@ namespace Opm {
 
     Schedule::Schedule(DeckConstPtr deck) {
         if (deck->hasKeyword("SCHEDULE")) {
-            addGroup( "FIELD", 0 );
             initFromDeck(deck);
         } else
             throw std::invalid_argument("Deck does not contain SCHEDULE section.\n");
@@ -33,6 +32,7 @@ namespace Opm {
 
     void Schedule::initFromDeck(DeckConstPtr deck) {
         createTimeMap(deck);
+        addGroup( "FIELD", 0 );
         initRootGroupTreeNode(getTimeMap());
         iterateScheduleSection(deck);
     }
@@ -292,6 +292,9 @@ namespace Opm {
     }
 
     void Schedule::addGroup(const std::string& groupName, size_t timeStep) {
+        if (!m_timeMap) {
+            throw std::invalid_argument("TimeMap is null, can't add group named: " + groupName);
+        }
         GroupPtr group(new Group(groupName, m_timeMap , timeStep));
         m_groups[ groupName ] = group;
     }

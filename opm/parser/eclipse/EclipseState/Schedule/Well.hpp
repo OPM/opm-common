@@ -26,7 +26,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <string>
 
 namespace Opm {
@@ -62,18 +62,18 @@ namespace Opm {
         
         size_t m_creationTimeStep;
         std::string m_name;
-        boost::shared_ptr<DynamicState<double> > m_oilRate;
-        boost::shared_ptr<DynamicState<double> > m_gasRate;
-        boost::shared_ptr<DynamicState<double> > m_waterRate;
-        boost::shared_ptr<DynamicState<double> > m_injectionRate;
+        std::shared_ptr<DynamicState<double> > m_oilRate;
+        std::shared_ptr<DynamicState<double> > m_gasRate;
+        std::shared_ptr<DynamicState<double> > m_waterRate;
+        std::shared_ptr<DynamicState<double> > m_injectionRate;
         
-        boost::shared_ptr<DynamicState<bool> > m_inPredictionMode;
-        boost::shared_ptr<DynamicState<bool> > m_isProducer;
-        boost::shared_ptr<DynamicState<CompletionSetConstPtr> > m_completions;
-        boost::shared_ptr<DynamicState<std::string> > m_groupName;
+        std::shared_ptr<DynamicState<bool> > m_inPredictionMode;
+        std::shared_ptr<DynamicState<bool> > m_isProducer;
+        std::shared_ptr<DynamicState<CompletionSetConstPtr> > m_completions;
+        std::shared_ptr<DynamicState<std::string> > m_groupName;
     };
-    typedef boost::shared_ptr<Well> WellPtr;
-    typedef boost::shared_ptr<const Well> WellConstPtr;
+    typedef std::shared_ptr<Well> WellPtr;
+    typedef std::shared_ptr<const Well> WellConstPtr;
 }
 
 

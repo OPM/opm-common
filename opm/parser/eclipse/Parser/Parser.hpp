@@ -22,7 +22,7 @@
 #include <string>
 #include <map>
 #include <fstream>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include <opm/json/JsonObject.hpp>
 
@@ -69,8 +69,8 @@ namespace Opm {
         void addDefaultKeywords();
     };
 
-    typedef boost::shared_ptr<Parser> ParserPtr;
-    typedef boost::shared_ptr<const Parser> ParserConstPtr;
+    typedef std::shared_ptr<Parser> ParserPtr;
+    typedef std::shared_ptr<const Parser> ParserConstPtr;
 } // namespace Opm
 #endif  /* PARSER_H */
 

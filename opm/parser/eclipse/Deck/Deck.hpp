@@ -21,8 +21,7 @@
 #define DECK_HPP
 
 #include <vector>
-
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include <opm/parser/eclipse/Deck/KeywordContainer.hpp>
 
@@ -48,8 +47,8 @@ namespace Opm {
         std::vector<std::pair<std::string , std::pair<std::string,size_t> > > m_warnings; //<"Warning Text" , <"Filename" , LineNR>>
     };
 
-    typedef boost::shared_ptr<Deck> DeckPtr;
-    typedef boost::shared_ptr<const Deck> DeckConstPtr;
+    typedef std::shared_ptr<Deck> DeckPtr;
+    typedef std::shared_ptr<const Deck> DeckConstPtr;
 }
 #endif  /* DECK_HPP */
 
