@@ -1,1 +1,1 @@
-{"name" : "WBHP" , "data" : {"value_type" : "STRING"}}
+{"name" : "WBHP", "items" : [{"name" : "WELLS" , "size_type" : "ALL" , "value_type" : "STRING"}]}
