@@ -154,7 +154,7 @@ namespace Opm {
         if (!isupper(name[0]))
             return false;
         
-        for (unsigned int i = 1; i < name.length(); i++) {
+        for (size_t i = 1; i < name.length(); i++) {
             char c = name[i];
             if (!(isupper(c) || isdigit(c))) {
                 if ((i == (name.length() - 1)) && (c == '*'))
@@ -174,7 +174,7 @@ namespace Opm {
         if (!isupper(name[0]))
             return false;
 
-        for (unsigned int i = 1; i < name.length(); i++) {
+        for (size_t i = 1; i < name.length(); i++) {
             char c = name[i];
             if (!(isupper(c) || isdigit(c))) 
                 return wildCardName(name);
