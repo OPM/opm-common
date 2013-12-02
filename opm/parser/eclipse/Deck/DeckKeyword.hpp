@@ -10,7 +10,7 @@
 
 #include <string>
 #include <vector>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
@@ -41,8 +41,8 @@ namespace Opm {
         bool m_knownKeyword;
         ssize_t m_deckIndex;
     };
-    typedef boost::shared_ptr<DeckKeyword> DeckKeywordPtr;
-    typedef boost::shared_ptr<const DeckKeyword> DeckKeywordConstPtr;
+    typedef std::shared_ptr<DeckKeyword> DeckKeywordPtr;
+    typedef std::shared_ptr<const DeckKeyword> DeckKeywordConstPtr;
 }
 
 #endif  /* DECKKEYWORD_HPP */

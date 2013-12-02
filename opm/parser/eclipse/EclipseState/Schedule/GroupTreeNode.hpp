@@ -22,7 +22,7 @@
 
 #include <string>
 #include <map>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 namespace Opm {
 
@@ -32,26 +32,26 @@ namespace Opm {
     class GroupTreeNode {
     public:
         const std::string& name() const;
-        boost::shared_ptr<GroupTreeNode> addChildGroup(const std::string& childName);
-        void addChildGroup(boost::shared_ptr<GroupTreeNode> childGroup);
+        std::shared_ptr<GroupTreeNode> addChildGroup(const std::string& childName);
+        void addChildGroup(std::shared_ptr<GroupTreeNode> childGroup);
 
         bool hasChildGroup(const std::string& childName) const;
-        void removeChild(boost::shared_ptr<GroupTreeNode> child);
-        boost::shared_ptr<GroupTreeNode> getChildGroup(const std::string& childName);
+        void removeChild(std::shared_ptr<GroupTreeNode> child);
+        std::shared_ptr<GroupTreeNode> getChildGroup(const std::string& childName);
 
-        static boost::shared_ptr<GroupTreeNode> createFieldNode();
-        std::map<std::string, boost::shared_ptr<GroupTreeNode> >::iterator begin();
-        std::map<std::string, boost::shared_ptr<GroupTreeNode> >::iterator end();
+        static std::shared_ptr<GroupTreeNode> createFieldNode();
+        std::map<std::string, std::shared_ptr<GroupTreeNode> >::iterator begin();
+        std::map<std::string, std::shared_ptr<GroupTreeNode> >::iterator end();
 
         
     private:
         GroupTreeNode(const std::string& name);
         std::string m_name;
-        std::map<std::string, boost::shared_ptr<GroupTreeNode> > m_childGroups; 
+        std::map<std::string, std::shared_ptr<GroupTreeNode> > m_childGroups;
     };
 
-    typedef boost::shared_ptr<GroupTreeNode> GroupTreeNodePtr;
-    typedef boost::shared_ptr<const GroupTreeNode> GroupTreeNodeConstPtr;
+    typedef std::shared_ptr<GroupTreeNode> GroupTreeNodePtr;
+    typedef std::shared_ptr<const GroupTreeNode> GroupTreeNodeConstPtr;
 }
 
 #endif	/* GROUPTREENODE_HPP */

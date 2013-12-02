@@ -45,8 +45,8 @@ namespace Opm {
         boost::gregorian::date m_startDate;
         std::vector<boost::posix_time::ptime> m_timeList;
     };
-    typedef boost::shared_ptr<TimeMap> TimeMapPtr;
-    typedef boost::shared_ptr<const TimeMap> TimeMapConstPtr;
+    typedef std::shared_ptr<TimeMap> TimeMapPtr;
+    typedef std::shared_ptr<const TimeMap> TimeMapConstPtr;
 }
 
 

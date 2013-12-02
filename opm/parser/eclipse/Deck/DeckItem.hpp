@@ -23,8 +23,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 namespace Opm {
 
@@ -77,8 +76,8 @@ namespace Opm {
         std::string m_name;
     };
 
-    typedef boost::shared_ptr<DeckItem> DeckItemPtr;
-    typedef boost::shared_ptr<const DeckItem> DeckItemConstPtr;
+    typedef std::shared_ptr<DeckItem> DeckItemPtr;
+    typedef std::shared_ptr<const DeckItem> DeckItemConstPtr;
 }
 #endif  /* DECKITEM_HPP */
 

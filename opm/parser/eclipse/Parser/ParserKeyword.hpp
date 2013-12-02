@@ -22,7 +22,7 @@
 #include <string>
 #include <iostream>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <opm/json/JsonObject.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
@@ -79,8 +79,8 @@ namespace Opm {
         void addItems( const Json::JsonObject& jsonConfig);
         void addTableItems();
     };
-    typedef boost::shared_ptr<ParserKeyword> ParserKeywordPtr;
-    typedef boost::shared_ptr<const ParserKeyword> ParserKeywordConstPtr;
+    typedef std::shared_ptr<ParserKeyword> ParserKeywordPtr;
+    typedef std::shared_ptr<const ParserKeyword> ParserKeywordConstPtr;
 }
 
 #endif

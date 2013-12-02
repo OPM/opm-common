@@ -22,7 +22,7 @@
 
 #include <vector>
 #include <map>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
@@ -44,8 +44,8 @@ namespace Opm {
         std::map<std::string , ParserItemConstPtr> m_itemMap;
     };
 
-    typedef boost::shared_ptr<const ParserRecord> ParserRecordConstPtr;
-    typedef boost::shared_ptr<ParserRecord> ParserRecordPtr;
+    typedef std::shared_ptr<const ParserRecord> ParserRecordConstPtr;
+    typedef std::shared_ptr<ParserRecord> ParserRecordPtr;
 }
 
 

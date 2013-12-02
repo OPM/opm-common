@@ -27,7 +27,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellSet.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <string>
 
 namespace Opm {
@@ -96,12 +96,12 @@ namespace Opm {
 
         size_t m_creationTimeStep;
         std::string m_name;
-        boost::shared_ptr<GroupInjection::InjectionData> m_injection;
-        boost::shared_ptr<GroupProduction::ProductionData> m_production;
-        boost::shared_ptr<DynamicState<WellSetConstPtr> > m_wells;
+        std::shared_ptr<GroupInjection::InjectionData> m_injection;
+        std::shared_ptr<GroupProduction::ProductionData> m_production;
+        std::shared_ptr<DynamicState<WellSetConstPtr> > m_wells;
     };
-    typedef boost::shared_ptr<Group> GroupPtr;
-    typedef boost::shared_ptr<const Group> GroupConstPtr;
+    typedef std::shared_ptr<Group> GroupPtr;
+    typedef std::shared_ptr<const Group> GroupConstPtr;
 }
 
 

@@ -20,6 +20,8 @@
 #ifndef PARSERDOUBLEITEM_HPP
 #define PARSERDOUBLEITEM_HPP
 
+#include <memory>
+
 #include <opm/json/JsonObject.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
@@ -50,8 +52,8 @@ namespace Opm {
         double  m_default;
     };
 
-    typedef boost::shared_ptr<const ParserDoubleItem> ParserDoubleItemConstPtr;
-    typedef boost::shared_ptr<ParserDoubleItem> ParserDoubleItemPtr;
+    typedef std::shared_ptr<const ParserDoubleItem> ParserDoubleItemConstPtr;
+    typedef std::shared_ptr<ParserDoubleItem> ParserDoubleItemPtr;
 }
 
 #endif  /* PARSERINTITEM_HPP */
