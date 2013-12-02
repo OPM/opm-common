@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule) {
     TimeMapConstPtr timeMap = sched->getTimeMap();
     BOOST_CHECK_EQUAL(boost::gregorian::date(2007, boost::gregorian::May, 10), sched->getStartDate());
     BOOST_CHECK_EQUAL(9U, timeMap->size());
-
+    BOOST_CHECK( deck->hasKeyword("NETBALAN") );
 }
 
 

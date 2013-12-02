@@ -4,6 +4,10 @@ START
 
 SCHEDULE
 
+NETBALAN 
+      0.000      0.200  6* /
+
+
 DATES      -- Bananskrell
   10  'JUN'  2007 /
 /
@@ -24,3 +28,5 @@ DATES
    10  JLY 2008 /
    10  AUG 2008 /
 /      
+
+
