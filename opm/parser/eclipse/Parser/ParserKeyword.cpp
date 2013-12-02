@@ -147,13 +147,21 @@ namespace Opm {
     }
 
 
-    bool ParserKeyword::wildCardName(const std::string& name) {
+    bool ParserKeyword::validNameStart(const std::string& name) {
         if (name.length() > ParserConst::maxKeywordLength)
             return false;
 
         if (!isupper(name[0]))
             return false;
         
+        return true;
+    }
+
+
+    bool ParserKeyword::wildCardName(const std::string& name) {
+        if (!validNameStart(name))
+            return false;
+                              
         for (size_t i = 1; i < name.length(); i++) {
             char c = name[i];
             if (!(isupper(c) || isdigit(c))) {
@@ -168,10 +176,7 @@ namespace Opm {
 
 
     bool ParserKeyword::validName(const std::string& name) {
-        if (name.length() > ParserConst::maxKeywordLength)
-            return false;
-
-        if (!isupper(name[0]))
+        if (!validNameStart(name))
             return false;
 
         for (size_t i = 1; i < name.length(); i++) {
@@ -181,6 +186,7 @@ namespace Opm {
         }
         return true;
     }
+
 
     void ParserKeyword::addItem(ParserItemConstPtr item) {
         if (m_isDataKeyword)
