@@ -20,7 +20,7 @@
 #include <string>
 #include <iostream>
 #include <stdexcept>
-
+#include <boost/lexical_cast.hpp>
 #include <opm/parser/eclipse/RawDeck/StarToken.hpp>
 
 
@@ -34,25 +34,26 @@ namespace Opm {
             return true;
     }
 
-
   
     template <>
     int readValueToken(const std::string& valueToken) {
-        char * error_ptr;
-        int value = strtol( valueToken.c_str() , &error_ptr , 10);
-        if (error_ptr[0] != C_EOS)
-            throw std::invalid_argument("Parsing integer value from: " + valueToken + " failed");
-        return value;
+        try {
+            return boost::lexical_cast<int>(valueToken);
+        }
+        catch (boost::bad_lexical_cast&) {
+            throw std::invalid_argument("Unable to parse string" + valueToken + " to an integer");
+        }
     }
     
 
     template <>
     double readValueToken(const std::string& valueToken) {
-        char * error_ptr;
-        double value = strtod( valueToken.c_str() , &error_ptr);
-        if (error_ptr[0] != C_EOS)
-            throw std::invalid_argument("Parsing double value from: " + valueToken + " failed");
-        return value;
+        try {
+            return boost::lexical_cast<double>(valueToken);
+        }
+        catch (boost::bad_lexical_cast&) {
+            throw std::invalid_argument("Unable to parse string " + valueToken + " to a double");
+        }
     }
 
 

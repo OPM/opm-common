@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
@@ -243,10 +244,11 @@ namespace Opm {
 
     bool Parser::tryParseKeyword(const DeckConstPtr deck, const std::string& filename , size_t& lineNR , std::ifstream& inputstream, RawKeywordPtr& rawKeyword, bool strictParsing) const {
         std::string line;
+
         while (std::getline(inputstream, line)) {
+            boost::algorithm::trim_right(line); // Removing garbage (eg. \r)
             std::string keywordString;
             lineNR++;
-            
             if (rawKeyword == NULL) {
                 if (RawKeyword::tryParseKeyword(line, keywordString)) {
                     rawKeyword = createRawKeyword(deck, filename , lineNR , keywordString, strictParsing);
