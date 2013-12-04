@@ -26,18 +26,22 @@
 namespace Opm {
 
 
-    RawKeyword::RawKeyword(const std::string& name, const std::string& filename, size_t lineNR) {
-        commonInit(name,filename,lineNR);
+    RawKeyword::RawKeyword(const std::string& name, Raw::KeywordSizeEnum sizeType , const std::string& filename, size_t lineNR) {
+        if (sizeType == Raw::SLASH_TERMINATED || sizeType == Raw::UNKNOWN) {
+            commonInit(name,filename,lineNR);
+            m_sizeType = sizeType;
+        } else
+            throw std::invalid_argument("Error - invalid sizetype on input");
     }
 
 
     RawKeyword::RawKeyword(const std::string& name , const std::string& filename, size_t lineNR , size_t inputSize, bool isTableCollection ) {
         commonInit(name,filename,lineNR);
         if (isTableCollection) {
-            m_isTableCollection = true;
+            m_sizeType = Raw::TABLE_COLLECTION;
             m_numTables = inputSize;
         } else {
-            m_fixedSizeKeyword = true;
+            m_sizeType = Raw::FIXED;
             m_fixedSize = inputSize;
             if (m_fixedSize == 0)
                 m_isFinished = true;
@@ -52,8 +56,6 @@ namespace Opm {
         m_filename = filename;
         m_lineNR = lineNR;
         m_isFinished = false;
-        m_fixedSizeKeyword = false;
-        m_isTableCollection = false;
         m_currentNumTables = 0;
     }
 
@@ -75,8 +77,8 @@ namespace Opm {
     void RawKeyword::addRawRecordString(const std::string& partialRecordString) {
         m_partialRecordString += " " + partialRecordString;
 
-        if (!m_fixedSizeKeyword && isTerminator( m_partialRecordString )) {
-            if (m_isTableCollection) {
+        if (m_sizeType != Raw::FIXED && isTerminator( m_partialRecordString )) {
+            if (m_sizeType == Raw::TABLE_COLLECTION) {
                 m_currentNumTables += 1;
                 if (m_currentNumTables == m_numTables) {
                     m_isFinished = true;
@@ -94,7 +96,7 @@ namespace Opm {
                 m_records.push_back(record);
                 m_partialRecordString.clear();
                 
-                if (m_fixedSizeKeyword && (m_records.size() == m_fixedSize))
+                if (m_sizeType == Raw::FIXED && (m_records.size() == m_fixedSize))
                     m_isFinished = true;
             }
         }
@@ -109,9 +111,6 @@ namespace Opm {
     }
 
 
-    bool RawKeyword::isTableCollection() const {
-        return m_isTableCollection;
-    }
 
     RawRecordPtr RawKeyword::getRecord(size_t index) const {
         if (index < m_records.size()) {
@@ -188,5 +187,9 @@ namespace Opm {
         return m_lineNR;
     }
 
+
+    Raw::KeywordSizeEnum RawKeyword::getSizeType() const {
+        return m_sizeType;
+    }
 }
 

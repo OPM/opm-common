@@ -25,7 +25,8 @@
 #include <vector>
 #include <memory>
 
-#include "RawRecord.hpp"
+#include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
+#include <opm/parser/eclipse/RawDeck/RawEnums.hpp>
 
 namespace Opm {
 
@@ -36,30 +37,31 @@ namespace Opm {
 
     class RawKeyword {
     public:
-        RawKeyword(const std::string& name , const std::string& filename, size_t lineNR);
+        RawKeyword(const std::string& name , Raw::KeywordSizeEnum sizeType , const std::string& filename, size_t lineNR);
         RawKeyword(const std::string& name , const std::string& filename, size_t lineNR , size_t inputSize , bool isTableCollection = false);
 
         const std::string& getKeywordName() const;
         void addRawRecordString(const std::string& partialRecordString);
         size_t size() const;
+        Raw::KeywordSizeEnum getSizeType() const;
         RawRecordPtr getRecord(size_t index) const;
         
         static bool tryParseKeyword(const std::string& line, std::string& result);
         static bool isTerminator(std::string line);
         static bool useLine(std::string line);
         
+        
         bool isPartialRecordStringEmpty() const;
         bool isFinished() const;
-        bool isTableCollection() const;
+        bool unKnownSize() const;
 
         const std::string& getFilename() const;
         size_t getLineNR() const;
         
 
     private:
-        bool m_isTableCollection;
+        Raw::KeywordSizeEnum m_sizeType;
         bool m_isFinished;
-        bool m_fixedSizeKeyword;
         size_t m_fixedSize;
         size_t m_numTables;
         size_t m_currentNumTables;

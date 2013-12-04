@@ -380,8 +380,8 @@ BOOST_AUTO_TEST_CASE(ParseEmptyRecord) {
     ParserIntItemConstPtr item(new ParserIntItem(std::string("ITEM") , ALL));
     RawKeywordPtr rawkeyword(new RawKeyword( tabdimsKeyword->getName() , "FILE" , 10U , 1));
 
-
-
+    
+    BOOST_CHECK_EQUAL( Raw::FIXED , rawkeyword->getSizeType());
     rawkeyword->addRawRecordString("/");
     tabdimsKeyword->addItem(item);
 
