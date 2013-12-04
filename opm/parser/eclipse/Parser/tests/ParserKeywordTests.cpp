@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withSizeOther) {
     const std::pair<std::string,std::string>& sizeKW = parserKeyword.getSizeDefinitionPair();
     BOOST_CHECK_EQUAL("BPR" , parserKeyword.getName());
     BOOST_CHECK_EQUAL( false , parserKeyword.hasFixedSize() );
-    BOOST_CHECK_EQUAL( parserKeyword.getSizeType() , OTHER_KEYWORD_IN_DECK);
+    BOOST_CHECK_EQUAL(OTHER_KEYWORD_IN_DECK , parserKeyword.getSizeType());
     BOOST_CHECK_EQUAL("Bjarne", sizeKW.first );
     BOOST_CHECK_EQUAL("BjarneIgjen" , sizeKW.second );
 }
@@ -406,6 +406,6 @@ BOOST_AUTO_TEST_CASE(DefaultActionISINTERNALIZE) {
 
 
 BOOST_AUTO_TEST_CASE(CreateWithAction) {
-    ParserKeywordPtr parserKeyword(new ParserKeyword("JA" , IGNORE));
+    ParserKeywordPtr parserKeyword(new ParserKeyword("JA" , UNKNOWN , IGNORE));
     BOOST_CHECK_EQUAL(IGNORE , parserKeyword->getAction());
 }
