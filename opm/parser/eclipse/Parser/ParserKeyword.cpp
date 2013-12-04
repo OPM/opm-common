@@ -37,7 +37,6 @@ namespace Opm {
         if (!validName(name))
             throw std::invalid_argument("Invalid name: " + name + "keyword must be all upper case, max 8 characters. Starting with character.");
 
-        m_keywordSizeType = SLASH_TERMINATED;
         m_isDataKeyword = false;
         m_isTableCollection = false;
         m_name = name;
@@ -45,19 +44,23 @@ namespace Opm {
         m_record = ParserRecordPtr(new ParserRecord);
     }
 
-    ParserKeyword::ParserKeyword(const std::string& name, ParserKeywordActionEnum action) {
+    ParserKeyword::ParserKeyword(const std::string& name, ParserKeywordSizeEnum sizeType, ParserKeywordActionEnum action) {
+
+        m_keywordSizeType = SLASH_TERMINATED;
         commonInit(name, action);
-        m_action = action;
     }
 
-    ParserKeyword::ParserKeyword(const char * name, ParserKeywordActionEnum action) {
+    ParserKeyword::ParserKeyword(const char * name, ParserKeywordSizeEnum sizeType, ParserKeywordActionEnum action) {
+        if (!(sizeType == SLASH_TERMINATED || sizeType == UNKNOWN)) {
+            throw std::invalid_argument("Size type " + ParserKeywordSizeEnum2String(sizeType) + " can not be set explicitly.");
+        }
+        m_keywordSizeType = sizeType;
         commonInit(name, action);
-        m_action = action;
     }
 
     ParserKeyword::ParserKeyword(const std::string& name, size_t fixedKeywordSize, ParserKeywordActionEnum action) {
         commonInit(name, action);
-        m_keywordSizeType = FIXED;
+        m_keywordSizeType = sizeType;
         m_fixedSize = fixedKeywordSize;
     }
 
@@ -136,7 +139,7 @@ namespace Opm {
     }
 
     void ParserKeyword::initSizeKeyword(const std::string& sizeKeyword, const std::string& sizeItem) {
-        m_keywordSizeType = OTHER;
+        m_keywordSizeType = OTHER_KEYWORD_IN_DECK;
         m_sizeDefinitionPair = std::pair<std::string, std::string>(sizeKeyword, sizeItem);
     }
 
@@ -372,14 +375,15 @@ namespace Opm {
                     if (m_fixedSize == other.m_fixedSize)
                         equal = true;
                     break;
-                case SLASH_TERMINATED:
-                    equal = true;
-                    break;
-                case OTHER:
+                case OTHER_KEYWORD_IN_DECK:
                     if ((m_sizeDefinitionPair.first == other.m_sizeDefinitionPair.first) &&
                             (m_sizeDefinitionPair.second == other.m_sizeDefinitionPair.second))
                         equal = true;
                     break;
+                default:
+                    equal = true;
+                    break;
+
             }
             return equal;
         } else
@@ -396,7 +400,7 @@ namespace Opm {
                 case FIXED:
                     os << lhs << " = new ParserKeyword(\"" << m_name << "\",(size_t)" << m_fixedSize << "," << actionString << ");" << std::endl;
                     break;
-                case OTHER:
+                case OTHER_KEYWORD_IN_DECK:
                     if (isTableCollection())
                         os << lhs << " = new ParserKeyword(\"" << m_name << "\",\"" << m_sizeDefinitionPair.first << "\",\"" << m_sizeDefinitionPair.second << "\"," << actionString << ", true);" << std::endl;
                     else

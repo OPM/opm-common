@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_withOtherSize_SizeTypeOTHER) {
     std::string keyword("KEYWORD");
     ParserKeyword parserKeyword(keyword, "EQUILDIMS" , "NTEQUIL");
     const std::pair<std::string,std::string>& sizeKW = parserKeyword.getSizeDefinitionPair();
-    BOOST_CHECK_EQUAL(OTHER , parserKeyword.getSizeType() );
+    BOOST_CHECK_EQUAL(OTHER_KEYWORD_IN_DECK , parserKeyword.getSizeType() );
     BOOST_CHECK_EQUAL("EQUILDIMS", sizeKW.first );
     BOOST_CHECK_EQUAL("NTEQUIL" , sizeKW.second );
 }
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withSizeOther) {
     const std::pair<std::string,std::string>& sizeKW = parserKeyword.getSizeDefinitionPair();
     BOOST_CHECK_EQUAL("BPR" , parserKeyword.getName());
     BOOST_CHECK_EQUAL( false , parserKeyword.hasFixedSize() );
-    BOOST_CHECK_EQUAL( parserKeyword.getSizeType() , OTHER);
+    BOOST_CHECK_EQUAL( parserKeyword.getSizeType() , OTHER_KEYWORD_IN_DECK);
     BOOST_CHECK_EQUAL("Bjarne", sizeKW.first );
     BOOST_CHECK_EQUAL("BjarneIgjen" , sizeKW.second );
 }
@@ -368,7 +368,7 @@ BOOST_AUTO_TEST_CASE(ConstructorIsTableCollection) {
     BOOST_CHECK(parserKeyword->isTableCollection());
     BOOST_CHECK(!parserKeyword->hasFixedSize());
 
-    BOOST_CHECK_EQUAL( parserKeyword->getSizeType() , OTHER);
+    BOOST_CHECK_EQUAL( parserKeyword->getSizeType() , OTHER_KEYWORD_IN_DECK);
     BOOST_CHECK_EQUAL("TABDIMS", sizeKW.first );
     BOOST_CHECK_EQUAL("NTPVT" , sizeKW.second );
 }

@@ -58,6 +58,12 @@ namespace Opm {
         case FIXED:
             return "FIXED";
             break;
+        case OTHER_KEYWORD_IN_DECK:
+            return "OTHER_KEYWORD_IN_DECK";
+            break;
+        case UNKNOWN:
+            return "UNKNOWN";
+            break;
         default:
             throw std::invalid_argument("Implementation error - should NOT be here");
         }
@@ -70,6 +76,10 @@ namespace Opm {
             return SLASH_TERMINATED;
         else if (stringValue == "FIXED")
             return FIXED;
+        else if (stringValue == "OTHER_KEYWORD_IN_DECK")
+                return OTHER_KEYWORD_IN_DECK;
+        else if (stringValue == "UNKNOWN")
+            return UNKNOWN;
         else
             throw std::invalid_argument("String: " + stringValue + " can not be converted to enum value");
     }
