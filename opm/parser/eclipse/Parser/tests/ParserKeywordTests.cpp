@@ -26,6 +26,8 @@
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 
+#include <opm/parser/eclipse/RawDeck/RawEnums.hpp>
+
 
 
 using namespace Opm;
@@ -310,6 +312,21 @@ BOOST_AUTO_TEST_CASE(AddkeywordFromJson_isTableCollection) {
 
 }
 
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_InvalidSize_throws) {
+    Json::JsonObject jsonObject1("{\"name\": \"BPR\", \"size\" : \"string\" , \"items\" : [{\"name\" : \"I\" , \"size_type\" : \"SINGLE\" , \"value_type\" : \"INT\"}]}");
+    Json::JsonObject jsonObject2("{\"name\": \"BPR\", \"size\" : [1,2,3]    , \"items\" : [{\"name\" : \"I\" , \"size_type\" : \"SINGLE\" , \"value_type\" : \"INT\"}]}");
+    
+    BOOST_CHECK_THROW(ParserKeyword parserKeyword(jsonObject1) , std::invalid_argument);
+    BOOST_CHECK_THROW(ParserKeyword parserKeyword(jsonObject2) , std::invalid_argument);
+
+}
+
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_SizeUNKNOWN_OK) {
+    Json::JsonObject jsonObject1("{\"name\": \"BPR\", \"size\" : \"UNKNOWN\" , \"items\" : [{\"name\" : \"I\" , \"size_type\" : \"SINGLE\" , \"value_type\" : \"INT\"}]}");
+    ParserKeyword parserKeyword(jsonObject1);
+    
+    BOOST_CHECK_EQUAL( UNKNOWN , parserKeyword.getSizeType() );
+}
 
 
 /* </Json> */

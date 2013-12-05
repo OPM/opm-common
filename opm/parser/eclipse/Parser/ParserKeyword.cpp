@@ -145,9 +145,13 @@ namespace Opm {
     }
 
     void ParserKeyword::initSizeKeyword(const Json::JsonObject& sizeObject) {
-        std::string sizeKeyword = sizeObject.get_string("keyword");
-        std::string sizeItem = sizeObject.get_string("item");
-        initSizeKeyword(sizeKeyword, sizeItem);
+        if (sizeObject.is_object()) {
+            std::string sizeKeyword = sizeObject.get_string("keyword");
+            std::string sizeItem = sizeObject.get_string("item");
+            initSizeKeyword(sizeKeyword, sizeItem);
+        } else {
+            m_keywordSizeType = ParserKeywordSizeEnumFromString( sizeObject.as_string() );
+        }
     }
 
 

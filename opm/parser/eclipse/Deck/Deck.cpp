@@ -18,6 +18,7 @@
  */
 
 #include <vector>
+#include <iostream>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 

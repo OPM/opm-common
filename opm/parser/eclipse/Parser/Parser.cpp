@@ -22,9 +22,9 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
+#include <opm/parser/eclipse/RawDeck/RawEnums.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
-
 
 namespace Opm {
 
@@ -153,40 +153,45 @@ namespace Opm {
         if (inputstream) {
             RawKeywordPtr rawKeyword;
             
-            while (tryParseKeyword(deck, file.string() , lineNR , inputstream, rawKeyword, parseStrict)) {
-                if (rawKeyword->getKeywordName() == Opm::RawConsts::include) {
-                    RawRecordConstPtr firstRecord = rawKeyword->getRecord(0);
-                    std::string includeFileString = firstRecord->getItem(0);
-                    boost::filesystem::path includeFile(includeFileString);
-
-                    if (includeFile.is_relative())
-                        includeFile = rootPath / includeFile;
-
-                    if (verbose)
-                        std::cout << rawKeyword->getKeywordName() << "  " << includeFile << std::endl;
-
-                    parseFile(deck, includeFile, rootPath , parseStrict);
-                } else {
-                    if (verbose)
-                        std::cout << rawKeyword->getKeywordName() << std::endl;
-                    
-                    if (canParseKeyword(rawKeyword->getKeywordName())) {
-                        ParserKeywordConstPtr parserKeyword = getKeyword(rawKeyword->getKeywordName());
-                        ParserKeywordActionEnum action = parserKeyword->getAction();
-                        if (action == INTERNALIZE) {
-                            DeckKeywordPtr deckKeyword = parserKeyword->parse(rawKeyword);
-                            deck->addKeyword(deckKeyword);
-                        } else if (action == IGNORE_WARNING) 
-                            deck->addWarning( "The keyword " + rawKeyword->getKeywordName() + " is ignored - this might potentially affect the results" , file.string() , rawKeyword->getLineNR());
+            while (true) {
+                bool streamOK = tryParseKeyword(deck, file.string() , lineNR , inputstream, rawKeyword, parseStrict);
+                if (rawKeyword) {
+                    if (rawKeyword->getKeywordName() == Opm::RawConsts::include) {
+                        RawRecordConstPtr firstRecord = rawKeyword->getRecord(0);
+                        std::string includeFileString = firstRecord->getItem(0);
+                        boost::filesystem::path includeFile(includeFileString);
+                        
+                        if (includeFile.is_relative())
+                            includeFile = rootPath / includeFile;
+                        
+                        if (verbose)
+                            std::cout << rawKeyword->getKeywordName() << "  " << includeFile << std::endl;
+                        
+                        parseFile(deck, includeFile, rootPath , parseStrict);
                     } else {
-                        DeckKeywordPtr deckKeyword(new DeckKeyword(rawKeyword->getKeywordName(), false));
-                        deck->addKeyword(deckKeyword);
-                        deck->addWarning( "The keyword " + rawKeyword->getKeywordName() + " is not recognized" , file.string() , lineNR);
+                        if (verbose)
+                            std::cout << rawKeyword->getKeywordName() << std::endl;
+                        
+                        if (canParseKeyword(rawKeyword->getKeywordName())) {
+                            ParserKeywordConstPtr parserKeyword = getKeyword(rawKeyword->getKeywordName());
+                            ParserKeywordActionEnum action = parserKeyword->getAction();
+                            if (action == INTERNALIZE) {
+                                DeckKeywordPtr deckKeyword = parserKeyword->parse(rawKeyword);
+                                deck->addKeyword(deckKeyword);
+                            } else if (action == IGNORE_WARNING) 
+                                deck->addWarning( "The keyword " + rawKeyword->getKeywordName() + " is ignored - this might potentially affect the results" , file.string() , rawKeyword->getLineNR());
+                        } else {
+                            DeckKeywordPtr deckKeyword(new DeckKeyword(rawKeyword->getKeywordName(), false));
+                            deck->addKeyword(deckKeyword);
+                            deck->addWarning( "The keyword " + rawKeyword->getKeywordName() + " is not recognized" , file.string() , lineNR);
+                        }
                     }
+                    rawKeyword.reset();
                 }
-                rawKeyword.reset();
+                if (!streamOK)
+                    break;
             }
-
+            
             inputstream.close();
         } else
             throw std::invalid_argument("Failed to open file: " + file.string());
@@ -213,9 +218,15 @@ namespace Opm {
             if (action == THROW_EXCEPTION)
                 throw std::invalid_argument("Parsing terminated by fatal keyword: " + keywordString);
             
-            if (parserKeyword->getSizeType() == SLASH_TERMINATED)
-                return RawKeywordPtr(new RawKeyword(keywordString , filename , lineNR));
-            else {
+            if (parserKeyword->getSizeType() == SLASH_TERMINATED || parserKeyword->getSizeType() == UNKNOWN) {
+                Raw::KeywordSizeEnum rawSizeType;
+                if (parserKeyword->getSizeType() == SLASH_TERMINATED)
+                    rawSizeType = Raw::SLASH_TERMINATED;
+                else
+                    rawSizeType = Raw::UNKNOWN;
+
+                return RawKeywordPtr(new RawKeyword(keywordString , rawSizeType , filename , lineNR));
+            } else {
                 size_t targetSize;
 
                 if (parserKeyword->hasFixedSize())
@@ -244,6 +255,12 @@ namespace Opm {
 
     bool Parser::tryParseKeyword(const DeckConstPtr deck, const std::string& filename , size_t& lineNR , std::ifstream& inputstream, RawKeywordPtr& rawKeyword, bool strictParsing) const {
         std::string line;
+        static std::string nextKeyword;
+
+        if (nextKeyword.length() > 0) {
+            rawKeyword = createRawKeyword(deck, filename , lineNR , nextKeyword , strictParsing);
+            nextKeyword = "";
+        }
 
         while (std::getline(inputstream, line)) {
             boost::algorithm::trim_right(line); // Removing garbage (eg. \r)
@@ -254,6 +271,12 @@ namespace Opm {
                     rawKeyword = createRawKeyword(deck, filename , lineNR , keywordString, strictParsing);
                 }
             } else {
+                if (rawKeyword->getSizeType() == Raw::UNKNOWN) {
+                    if (canParseKeyword(line)) {
+                        nextKeyword = line;
+                        return true;
+                    }
+                }
                 if (RawKeyword::useLine(line)) {
                     rawKeyword->addRawRecordString(line);
                 }
