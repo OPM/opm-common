@@ -1,0 +1,4 @@
+{"name"     :  "VFPINJ" , 
+ "size"     :  "UNKNOWN" , 
+ "items"    : [{"name" : "STRING" , "value_type" : "STRING" , "size_type" : "ALL"}], 
+ "comments" : "See further comments in the VFPPROD keyword"}

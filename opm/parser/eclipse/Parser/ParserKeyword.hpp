@@ -35,9 +35,9 @@ namespace Opm {
 
     class ParserKeyword {
     public:
-        ParserKeyword(const char * name , ParserKeywordActionEnum action = INTERNALIZE);
-        ParserKeyword(const std::string& name , ParserKeywordActionEnum action = INTERNALIZE);
-        ParserKeyword(const std::string& name, size_t fixedKeywordSize,ParserKeywordActionEnum action = INTERNALIZE);
+        ParserKeyword(const char * name , ParserKeywordSizeEnum sizeType = SLASH_TERMINATED , ParserKeywordActionEnum action = INTERNALIZE);
+        ParserKeyword(const std::string& name , ParserKeywordSizeEnum sizeType = SLASH_TERMINATED , ParserKeywordActionEnum action = INTERNALIZE);
+        ParserKeyword(const std::string& name , size_t fixedKeywordSize,ParserKeywordActionEnum action = INTERNALIZE);
         ParserKeyword(const std::string& name , const std::string& sizeKeyword , const std::string& sizeItem, ParserKeywordActionEnum action = INTERNALIZE , bool isTableCollection = false);
         ParserKeyword(const Json::JsonObject& jsonConfig);
 
@@ -78,7 +78,7 @@ namespace Opm {
         void initSize( const Json::JsonObject& jsonConfig );
         void initSizeKeyword( const std::string& sizeKeyword, const std::string& sizeItem);
         void initSizeKeyword(const Json::JsonObject& sizeObject);
-        void commonInit(const std::string& name, ParserKeywordActionEnum action);
+        void commonInit(const std::string& name, ParserKeywordSizeEnum sizeType , ParserKeywordActionEnum action);
         void addItems( const Json::JsonObject& jsonConfig);
         void addTableItems();
     };

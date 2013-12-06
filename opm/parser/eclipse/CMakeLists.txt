@@ -63,6 +63,7 @@ RawDeck/RawConsts.hpp
 RawDeck/RawKeyword.hpp 
 RawDeck/RawRecord.hpp 
 RawDeck/StarToken.hpp
+RawDeck/RawEnums.hpp
 #
 Deck/Deck.hpp
 Deck/DeckKeyword.hpp

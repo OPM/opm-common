@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE( parse_ACTION_OK ) {
     boost::filesystem::path actionFile("testdata/integration_tests/ACTION/ACTION.txt");
     boost::filesystem::path actionFile2("testdata/integration_tests/ACTION/ACTION_EXCEPTION.txt");
     ParserKeywordConstPtr DIMENS( new ParserKeyword("DIMENS" , (size_t) 1 , IGNORE_WARNING ));
-    ParserKeywordConstPtr THROW( new ParserKeyword("THROW" , THROW_EXCEPTION ));
+    ParserKeywordConstPtr THROW( new ParserKeyword("THROW" , UNKNOWN , THROW_EXCEPTION ));
     
     BOOST_REQUIRE( parser->loadKeywordFromFile( boost::filesystem::path( std::string(KEYWORD_DIRECTORY) + std::string("/W/WCONHIST") )) );
     parser->addKeyword( DIMENS );
