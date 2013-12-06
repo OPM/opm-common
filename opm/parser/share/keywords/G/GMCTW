@@ -1,1 +1,1 @@
-{"name" : "GMCTW" , "size" : 1 , "items" : [{"name" : "GROUPS" , "size_type" : "ALL" , "value_type" : "STRING"}]}
+{"name" : "GMCTW", "items" : [{"name" : "WELLS" , "size_type" : "ALL" , "value_type" : "STRING"}]}

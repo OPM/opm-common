@@ -1,1 +1,1 @@
-{"name" : "RWPT", "size" : 1 , "items" : [{"name" : "REGIONS" , "value_type" : "INT" , "size_type" : "ALL"}]}
+{"name" : "RWPT*", "size" : 1 , "items" : [{"name" : "REGIONS" , "value_type" : "INT" , "size_type" : "ALL"}]}
