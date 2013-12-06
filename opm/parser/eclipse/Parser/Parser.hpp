@@ -17,8 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PARSER_H
-#define PARSER_H
+#ifndef OPM_PARSER_HPP
+#define OPM_PARSER_HPP
 #include <string>
 #include <map>
 #include <fstream>
