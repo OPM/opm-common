@@ -24,6 +24,9 @@
 #include <fstream>
 #include <memory>
 
+#include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
+
 #include <opm/json/JsonObject.hpp>
 
 #include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
@@ -31,6 +34,22 @@
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 
 namespace Opm {
+
+    struct ParserState {
+        DeckPtr deck;
+        boost::filesystem::path dataFile;
+        boost::filesystem::path rootPath;
+        size_t lineNR;
+        std::ifstream inputstream;
+        RawKeywordPtr rawKeyword;
+        bool strictParsing;
+        std::string nextKeyword;
+        void copyFrom(std::shared_ptr<ParserState> source) {
+            deck = source->deck;
+            strictParsing = source->strictParsing;
+            rootPath = source->rootPath;
+        }
+    };
 
     /// The hub of the parsing process.
     /// An input file in the eclipse data format is specified, several steps of parsing is performed
@@ -49,7 +68,7 @@ namespace Opm {
         bool dropKeyword(const std::string& keyword);
         bool canParseKeyword( const std::string& keyword) const;
         ParserKeywordConstPtr getKeyword(const std::string& keyword) const;
-        
+
         void loadKeywords(const Json::JsonObject& jsonKeywords);
         bool loadKeywordFromFile(const boost::filesystem::path& configFile);
 
@@ -59,15 +78,16 @@ namespace Opm {
         std::map<std::string, ParserKeywordConstPtr> m_parserKeywords;
         std::map<std::string, ParserKeywordConstPtr> m_wildCardKeywords;
 
-        bool hasKeyword(const std::string& keyword) const;   
-        bool hasWildCardKeyword(const std::string& keyword) const;   
+        bool hasKeyword(const std::string& keyword) const;
+        bool hasWildCardKeyword(const std::string& keyword) const;
         ParserKeywordConstPtr matchingKeyword(const std::string& keyword) const;
 
-        bool tryParseKeyword(const DeckConstPtr deck , const std::string& filename , size_t& lineNR , std::ifstream& inputstream , RawKeywordPtr& rawKeyword, bool strictParsing) const;
-        void parseFile(DeckPtr deck , const boost::filesystem::path& file, const boost::filesystem::path& rootPath, bool strictParsing) const;
-        RawKeywordPtr createRawKeyword(const DeckConstPtr deck , const std::string& filename , size_t lineNR , const std::string& keywordString, bool strictParsing) const;
+        bool tryParseKeyword(std::shared_ptr<ParserState> parserState) const;
+        void parseFile(std::shared_ptr<ParserState> parserState) const;
+        RawKeywordPtr createRawKeyword(const std::string& keywordString, std::shared_ptr<ParserState> parserState) const;
         void addDefaultKeywords();
     };
+
 
     typedef std::shared_ptr<Parser> ParserPtr;
     typedef std::shared_ptr<const Parser> ParserConstPtr;
