@@ -28,6 +28,24 @@
 
 namespace Opm {
 
+    struct ParserState {
+        DeckPtr deck;
+        boost::filesystem::path dataFile;
+        boost::filesystem::path rootPath;
+        size_t lineNR;
+        std::ifstream inputstream;
+        RawKeywordPtr rawKeyword;
+        bool strictParsing;
+        std::string nextKeyword;
+        ParserState(const boost::filesystem::path &inputDataFile, DeckPtr deckToFill, const boost::filesystem::path &commonRootPath, bool useStrictParsing) {
+            lineNR = 0;
+            strictParsing = useStrictParsing;
+            dataFile = inputDataFile;
+            deck = deckToFill;
+            rootPath = commonRootPath;
+        }
+    };
+
     Parser::Parser(bool addDefault) {
         if (addDefault)
             addDefaultKeywords();
@@ -48,15 +66,7 @@ namespace Opm {
 
     DeckPtr Parser::parse(const std::string &dataFileName, bool strictParsing) const {
 
-        std::shared_ptr<ParserState> parserState(new ParserState());
-        parserState->strictParsing = strictParsing;
-        parserState->dataFile = boost::filesystem::path(dataFileName);;
-        if (parserState->dataFile.is_absolute())
-            parserState->rootPath = parserState->dataFile.parent_path();
-        else
-            parserState->rootPath = boost::filesystem::current_path() / parserState->dataFile.parent_path();
-
-        parserState->deck = DeckPtr(new Deck());
+        std::shared_ptr<ParserState> parserState(new ParserState(dataFileName, DeckPtr(new Deck()), getRootPathFromFile(dataFileName), strictParsing));
 
         parseFile(parserState);
         return parserState->deck;
@@ -148,7 +158,7 @@ namespace Opm {
 
     void Parser::parseFile(std::shared_ptr<ParserState> parserState) const {
         bool verbose = false;
-        parserState->lineNR = 0;
+
         parserState->inputstream.open(parserState->dataFile.string().c_str());
 
         if (parserState->inputstream) {
@@ -166,10 +176,7 @@ namespace Opm {
                         if (verbose)
                             std::cout << parserState->rawKeyword->getKeywordName() << "  " << includeFile << std::endl;
                         
-
-                        std::shared_ptr<ParserState> newParserState (new ParserState());
-                        newParserState->copyFrom(parserState);
-                        newParserState->dataFile = includeFile;
+                        std::shared_ptr<ParserState> newParserState (new ParserState(includeFile.string(), parserState->deck, parserState->rootPath, parserState->strictParsing));
                         parseFile(newParserState);
                     } else {
                         if (verbose)
@@ -324,6 +331,13 @@ namespace Opm {
         }
     }
 
-
+    boost::filesystem::path Parser::getRootPathFromFile(const boost::filesystem::path &inputDataFile) const {
+        boost::filesystem::path root;
+        if (inputDataFile.is_absolute())
+            root = inputDataFile.parent_path();
+        else
+            root = boost::filesystem::current_path() / inputDataFile.parent_path();
+        return root;
+    }
 
 } // namespace Opm

@@ -35,21 +35,7 @@
 
 namespace Opm {
 
-    struct ParserState {
-        DeckPtr deck;
-        boost::filesystem::path dataFile;
-        boost::filesystem::path rootPath;
-        size_t lineNR;
-        std::ifstream inputstream;
-        RawKeywordPtr rawKeyword;
-        bool strictParsing;
-        std::string nextKeyword;
-        void copyFrom(std::shared_ptr<ParserState> source) {
-            deck = source->deck;
-            strictParsing = source->strictParsing;
-            rootPath = source->rootPath;
-        }
-    };
+    struct ParserState;
 
     /// The hub of the parsing process.
     /// An input file in the eclipse data format is specified, several steps of parsing is performed
@@ -86,6 +72,8 @@ namespace Opm {
         void parseFile(std::shared_ptr<ParserState> parserState) const;
         RawKeywordPtr createRawKeyword(const std::string& keywordString, std::shared_ptr<ParserState> parserState) const;
         void addDefaultKeywords();
+
+        boost::filesystem::path getRootPathFromFile(const boost::filesystem::path &inputDataFile) const;
     };
 
 
