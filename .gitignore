@@ -6,3 +6,4 @@ build
 install
 .cproject
 .project
+/testdata/statoil
