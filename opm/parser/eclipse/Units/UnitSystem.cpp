@@ -61,7 +61,7 @@ namespace Opm {
     }
 
 
-    Dimension UnitSystem::parseFactor(const std::string& dimension) const {
+    std::shared_ptr<Dimension> UnitSystem::parseFactor(const std::string& dimension) const {
         std::vector<std::string> dimensionList;
         boost::split(dimensionList , dimension , boost::is_any_of("*"));
         double SIfactor = 1.0;
@@ -69,12 +69,12 @@ namespace Opm {
             Dimension dim = getDimension( *iter );
             SIfactor *= dim.getSIScaling();
         }
-        return Dimension::makeComposite( dimension , SIfactor );
+        return std::shared_ptr<Dimension>(Dimension::newComposite( dimension , SIfactor ));
     }
     
 
 
-    Dimension UnitSystem::parse(const std::string& dimension) const {
+    std::shared_ptr<Dimension> UnitSystem::parse(const std::string& dimension) const {
         bool haveDivisor;
         {
             size_t divCount = std::count( dimension.begin() , dimension.end() , '/' );
@@ -89,10 +89,10 @@ namespace Opm {
         if (haveDivisor) {
             std::vector<std::string> parts;
             boost::split(parts , dimension , boost::is_any_of("/"));
-            Dimension dividend = parseFactor( parts[0] );
-            Dimension divisor = parseFactor( parts[1] );
+            std::shared_ptr<const Dimension> dividend = parseFactor( parts[0] );
+            std::shared_ptr<const Dimension> divisor = parseFactor( parts[1] );
         
-            return Dimension::makeComposite( dimension , dividend.getSIScaling() / divisor.getSIScaling() );
+            return std::shared_ptr<Dimension>( Dimension::newComposite( dimension , dividend->getSIScaling() / divisor->getSIScaling() ));
         } else {
             return parseFactor( dimension );
         }

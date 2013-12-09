@@ -18,14 +18,15 @@
 */
 
 #define BOOST_TEST_MODULE UnitTests
-#include <boost/test/unit_test.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystemMap.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/ConversionFactors.hpp>
 
+#include <boost/test/unit_test.hpp>
 
+#include <memory>
 
 using namespace Opm;
 
@@ -36,9 +37,9 @@ BOOST_AUTO_TEST_CASE(CreateDimension) {
 }
 
 BOOST_AUTO_TEST_CASE(makeComposite) {
-    Dimension composite = Dimension::makeComposite("L*L*L/t" , 100);
-    BOOST_CHECK_EQUAL("L*L*L/t" , composite.getName());
-    BOOST_CHECK_EQUAL(100 , composite.getSIScaling());
+    std::shared_ptr<Dimension> composite(Dimension::newComposite("L*L*L/t" , 100));
+    BOOST_CHECK_EQUAL("L*L*L/t" , composite->getName());
+    BOOST_CHECK_EQUAL(100 , composite->getSIScaling());
 }
 
 
@@ -96,9 +97,9 @@ BOOST_AUTO_TEST_CASE(UnitSystemParseInvalidThrows) {
     system.addDimension("L" , 3.00 );
     system.addDimension("t" , 9.0 );
     
-    Dimension volumePerTime = system.parse("L*L*L/t");
-    BOOST_CHECK_EQUAL("L*L*L/t" , volumePerTime.getName() );
-    BOOST_CHECK_EQUAL(3.0 , volumePerTime.getSIScaling());
+    std::shared_ptr<Dimension> volumePerTime = system.parse("L*L*L/t");
+    BOOST_CHECK_EQUAL("L*L*L/t" , volumePerTime->getName() );
+    BOOST_CHECK_EQUAL(3.0 , volumePerTime->getSIScaling());
 }    
 
 

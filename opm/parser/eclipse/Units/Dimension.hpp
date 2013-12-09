@@ -29,7 +29,7 @@ namespace Opm {
         Dimension(const std::string& name, double SI_factor);
         double getSIScaling() const;
         const std::string& getName() const;
-        static Dimension makeComposite(const std::string& dim , double SIfactor);
+        static Dimension * newComposite(const std::string& dim , double SIfactor);
 
     private:
         Dimension();
