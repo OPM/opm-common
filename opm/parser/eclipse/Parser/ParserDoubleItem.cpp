@@ -55,6 +55,11 @@ namespace Opm
     }
 
 
+    double ParserDoubleItem::getDefault() const {
+        return m_default;
+    }
+    
+
     void ParserDoubleItem::setDefault(double defaultValue) {
         m_default = defaultValue;
         m_defaultSet = true;
@@ -71,30 +76,6 @@ namespace Opm
             m_default = defaultDouble();
     }
 
-    /// Scans the rawRecords data according to the ParserItems definition.
-    /// returns a DeckItem object.
-    /// NOTE: data are popped from the rawRecords deque!
-
-//    DeckItemConstPtr ParserDoubleItem::scan(RawRecordPtr rawRecord) const
-//    {
-//        DeckDoubleItemPtr deckItem(new DeckDoubleItem(name()));
-//
-//        bool scanAll = (sizeType() == ALL);
-//        bool defaultActive;
-//        std::deque<double> doublesPreparedForDeckItem = readFromRawRecord(
-//                rawRecord, scanAll, m_default, defaultActive);
-//
-//        if (scanAll)
-//            deckItem->push_back(doublesPreparedForDeckItem);
-//        else
-//            {
-//                deckItem->push_back(doublesPreparedForDeckItem.front());
-//                doublesPreparedForDeckItem.pop_front();
-//                pushBackToRecord(rawRecord, doublesPreparedForDeckItem,
-//                        defaultActive);
-//            }
-//        return deckItem;
-//    }
 
     bool ParserDoubleItem::equal(const ParserItem& other) const
     {

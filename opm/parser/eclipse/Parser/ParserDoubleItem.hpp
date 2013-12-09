@@ -44,9 +44,7 @@ namespace Opm {
         bool equal(const ParserItem& other) const;
         void inlineNew(std::ostream& os) const;
         void setDefault(double defaultValue);
-        double getDefault() const {
-            return m_default;
-        }
+        double getDefault() const;
 
     private:
         double  m_default;
