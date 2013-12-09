@@ -3,6 +3,7 @@ add_subdirectory(RawDeck/tests)
 add_subdirectory(Deck/tests)
 add_subdirectory(IntegrationTests)
 add_subdirectory(EclipseState/Schedule/tests)
+add_subdirectory(Units/tests)
 
 add_subdirectory( Applications )
 
@@ -10,6 +11,11 @@ set( rawdeck_source
 RawDeck/StarToken.cpp
 RawDeck/RawKeyword.cpp 
 RawDeck/RawRecord.cpp )
+
+set( unit_source
+Units/UnitSystemMap.cpp
+Units/UnitSystem.cpp
+Units/Dimension.cpp)
 
 set( deck_source
 Deck/Deck.cpp
@@ -84,6 +90,11 @@ Parser/ParserBoolItem.hpp
 Parser/ParserDoubleItem.hpp  
 Parser/ParserStringItem.hpp  
 #
+Units/UnitSystemMap.hpp
+Units/UnitSystem.hpp
+Units/Dimension.hpp
+Units/ConversionFactors.hpp
+#
 EclipseState/Schedule/TimeMap.hpp
 EclipseState/Schedule/Schedule.hpp
 EclipseState/Schedule/Well.hpp
@@ -97,7 +108,7 @@ EclipseState/Schedule/GroupTreeNode.hpp
 EclipseState/Schedule/GroupTree.hpp 
 )
 
-add_library(buildParser ${rawdeck_source} ${build_parser_source} ${deck_source})
+add_library(buildParser ${rawdeck_source} ${build_parser_source} ${deck_source} ${unit_source})
 target_link_libraries(buildParser opm-json ${Boost_LIBRARIES})
 
 #-----------------------------------------------------------------
@@ -112,7 +123,7 @@ add_custom_command( OUTPUT ${PROJECT_BINARY_DIR}/generated-source/DefaultKeyword
 
 #-----------------------------------------------------------------
 
-add_library(Parser ${rawdeck_source} ${parser_source} ${deck_source} ${state_source})
+add_library(Parser ${rawdeck_source} ${parser_source} ${deck_source} ${state_source} ${unit_source})
 target_link_libraries(Parser opm-json ${Boost_LIBRARIES})
 
 include( ${PROJECT_SOURCE_DIR}/cmake/Modules/install_headers.cmake )   

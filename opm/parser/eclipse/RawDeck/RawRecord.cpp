@@ -20,8 +20,8 @@
 #include <stdexcept>
 #include <boost/algorithm/string.hpp>
 
-#include "RawRecord.hpp"
-#include "RawConsts.hpp"
+#include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
+#include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
 
 using namespace Opm;
 using namespace std;
