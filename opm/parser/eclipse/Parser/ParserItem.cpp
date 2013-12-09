@@ -38,6 +38,10 @@ namespace Opm {
         m_defaultSet = false;
     }
 
+    bool ParserItem::hasDimension() const {
+        return false;
+    }
+
     
     ParserItem::ParserItem(const Json::JsonObject& jsonConfig) {
         if (jsonConfig.has_item("name"))

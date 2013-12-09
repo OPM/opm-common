@@ -24,6 +24,7 @@
 #include <opm/json/JsonObject.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
+#include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 
 #include <opm/parser/eclipse/RawDeck/RawEnums.hpp>
@@ -426,3 +427,23 @@ BOOST_AUTO_TEST_CASE(CreateWithAction) {
     ParserKeywordPtr parserKeyword(new ParserKeyword("JA" , UNKNOWN , IGNORE));
     BOOST_CHECK_EQUAL(IGNORE , parserKeyword->getAction());
 }
+
+
+/*****************************************************************/
+/* DImension */
+
+BOOST_AUTO_TEST_CASE(ParseKeywordHasDimensionCorrect) {
+    ParserKeywordPtr parserKeyword(new ParserKeyword("JA"));
+    ParserIntItemConstPtr itemI(new ParserIntItem("I", SINGLE));
+    ParserDoubleItemPtr item2(new ParserDoubleItem("ID", SINGLE));
+    
+    BOOST_CHECK_EQUAL( false , parserKeyword->hasDimension());
+    
+    parserKeyword->addItem( itemI );
+    parserKeyword->addItem( item2 );
+    BOOST_CHECK_EQUAL( false , parserKeyword->hasDimension());
+    
+    item2->push_backDimension("L*L/t");
+    BOOST_CHECK_EQUAL( true , parserKeyword->hasDimension());
+}
+

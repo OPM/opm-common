@@ -70,6 +70,10 @@ namespace Opm {
         initSizeKeyword(sizeKeyword, sizeItem);
     }
 
+    bool ParserKeyword::hasDimension() const {
+        return m_record->hasDimension();
+    }
+
     bool ParserKeyword::isTableCollection() const {
         return m_isTableCollection;
     }

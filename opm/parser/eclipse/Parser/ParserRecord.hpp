@@ -39,6 +39,9 @@ namespace Opm {
         ParserItemConstPtr get(const std::string& itemName) const;
         DeckRecordConstPtr parse(RawRecordPtr rawRecord) const;
         bool equal(const ParserRecord& other) const;
+        bool hasDimension() const;
+        std::vector<ParserItemConstPtr>::const_iterator begin() const;
+        std::vector<ParserItemConstPtr>::const_iterator end() const;
     private:
         std::vector<ParserItemConstPtr> m_items;
         std::map<std::string , ParserItemConstPtr> m_itemMap;

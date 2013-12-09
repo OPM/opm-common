@@ -40,11 +40,12 @@ namespace Opm {
         ParserKeyword(const std::string& name , size_t fixedKeywordSize,ParserKeywordActionEnum action = INTERNALIZE);
         ParserKeyword(const std::string& name , const std::string& sizeKeyword , const std::string& sizeItem, ParserKeywordActionEnum action = INTERNALIZE , bool isTableCollection = false);
         ParserKeyword(const Json::JsonObject& jsonConfig);
-
+        
+        
         static bool validName(const std::string& name);
         static bool wildCardName(const std::string& name);
         bool matches(const std::string& keyword) const;
-
+        bool hasDimension() const;
         ParserRecordPtr getRecord() const;
         const std::string& getName() const;
         ParserKeywordActionEnum getAction() const;

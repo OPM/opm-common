@@ -87,6 +87,18 @@ namespace Opm
             return false;
     }
 
+    void ParserDoubleItem::push_backDimension(const std::string& dimension) {
+        if ((sizeType() == SINGLE) && (m_dimensions.size() > 0))
+            throw std::invalid_argument("Internal error - can not add more than one dimension to a Item os size 1");
+        
+        m_dimensions.push_back( dimension );
+    }
+
+    bool ParserDoubleItem::hasDimension() const {
+        return (m_dimensions.size() > 0);
+    }
+
+
     /// Scans the rawRecords data according to the ParserItems definition.
     /// returns a DeckItem object.
     /// NOTE: data are popped from the rawRecords deque!

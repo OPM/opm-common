@@ -37,6 +37,26 @@ namespace Opm {
             throw std::invalid_argument("Itemname: " + item->name() + " already exists.");
     }
 
+    std::vector<ParserItemConstPtr>::const_iterator ParserRecord::begin() const {
+        return m_items.begin();
+    }
+
+
+    std::vector<ParserItemConstPtr>::const_iterator ParserRecord::end() const {
+        return m_items.end();
+    }
+
+
+    bool ParserRecord::hasDimension() const {
+        bool hasDim = false;
+        for (auto iter=begin(); iter != end(); ++iter) {
+            if ((*iter)->hasDimension())
+                hasDim = true;
+        }
+        return hasDim;
+    }
+
+
     ParserItemConstPtr ParserRecord::get(size_t index) const {
         if (index < m_items.size())
             return m_items[ index ];
