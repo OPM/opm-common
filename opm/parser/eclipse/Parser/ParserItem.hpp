@@ -41,9 +41,11 @@ namespace Opm {
         ParserItem(const std::string& itemName);
         ParserItem(const std::string& itemName, ParserItemSizeEnum sizeType);
         ParserItem(const Json::JsonObject& jsonConfig);
-      
+        
+        virtual const std::string& getDimension(size_t index) const;
         virtual DeckItemConstPtr scan(RawRecordPtr rawRecord) const = 0;
         virtual bool hasDimension() const;
+        virtual size_t numDimensions() const;
         const std::string& name() const;
         ParserItemSizeEnum sizeType() const;
       

@@ -40,13 +40,17 @@ namespace Opm {
         ParserDoubleItem(const std::string& itemName, ParserItemSizeEnum sizeType, double defaultValue);
         ParserDoubleItem( const Json::JsonObject& jsonConfig);
 
+        size_t numDimensions() const;
         bool hasDimension() const;
         void push_backDimension(const std::string& dimension);
+        const std::string& getDimension(size_t index) const;
+
         DeckItemConstPtr scan(RawRecordPtr rawRecord) const;
         bool equal(const ParserItem& other) const;
         void inlineNew(std::ostream& os) const;
         void setDefault(double defaultValue);
         double getDefault() const;
+        size_t dimensionSize() const;
 
     private:
         double m_default;

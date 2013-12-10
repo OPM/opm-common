@@ -98,6 +98,17 @@ namespace Opm
         return (m_dimensions.size() > 0);
     }
 
+    size_t ParserDoubleItem::numDimensions() const {
+        return m_dimensions.size();
+    }
+
+    const std::string& ParserDoubleItem::getDimension(size_t index) const {
+        if (index < m_dimensions.size())
+            return m_dimensions[index];
+        else
+            throw std::invalid_argument("Invalid index ");
+    }
+
 
     /// Scans the rawRecords data according to the ParserItems definition.
     /// returns a DeckItem object.

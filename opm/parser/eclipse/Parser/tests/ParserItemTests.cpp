@@ -519,6 +519,11 @@ BOOST_AUTO_TEST_CASE(ParserDefaultHasDimensionReturnsFalse) {
     BOOST_CHECK_EQUAL( false, doubleItem.hasDimension());
 }
 
+BOOST_AUTO_TEST_CASE(ParserIntItemGetDimensionThrows) {
+    ParserIntItem intItem(std::string("SOMEINT"));
+
+    BOOST_CHECK_THROW( intItem.getDimension(0) , std::invalid_argument );
+}
 
 
 
@@ -536,5 +541,22 @@ BOOST_AUTO_TEST_CASE(ParserDoubleItemWithDimensionHasReturnsCorrect) {
     BOOST_CHECK_EQUAL( false , doubleItem.hasDimension() );
     doubleItem.push_backDimension("L*L");
     BOOST_CHECK_EQUAL( true , doubleItem.hasDimension() );
+}
+
+
+BOOST_AUTO_TEST_CASE(ParserDoubleItemGetDimension) {
+    ParserDoubleItem doubleItem(std::string("SOMEDOUBLE") , ALL);
+
+    BOOST_CHECK_THROW( doubleItem.getDimension( 10 ) , std::invalid_argument );
+    BOOST_CHECK_THROW( doubleItem.getDimension(  0 ) , std::invalid_argument );
+
+    doubleItem.push_backDimension("L");
+    doubleItem.push_backDimension("L*L");
+    doubleItem.push_backDimension("L*L*L");
+
+    BOOST_CHECK_EQUAL( "L" , doubleItem.getDimension(0));
+    BOOST_CHECK_EQUAL( "L*L" , doubleItem.getDimension(1));
+    BOOST_CHECK_EQUAL( "L*L*L" , doubleItem.getDimension(2));
+    BOOST_CHECK_THROW( doubleItem.getDimension( 3 ) , std::invalid_argument );
 }
 
