@@ -26,6 +26,7 @@
 #include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
 
+#include <opm/parser/eclipse/Units/Dimension.hpp>
 
 using namespace Opm;
 
@@ -95,3 +96,75 @@ BOOST_AUTO_TEST_CASE(PushBackMultiple) {
     for (size_t i=0; i < 100; i++)
         BOOST_CHECK_EQUAL(10.22 , item.getDouble(i));
 }
+
+
+
+BOOST_AUTO_TEST_CASE(PushBackDimension) {
+    DeckDoubleItem item("HEI");
+    std::shared_ptr<Dimension> activeDimension(new Dimension("L" , 100));
+    std::shared_ptr<Dimension> defaultDimension(new Dimension("L" , 10));
+
+    item.push_backDimensions( activeDimension , defaultDimension);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(GetSIWithoutDimensionThrows) {
+    DeckDoubleItem item("HEI");
+    item.push_backMultiple(10.22 , 100 );
+    
+    BOOST_CHECK_THROW( item.getSIDouble(0) , std::invalid_argument );
+    BOOST_CHECK_THROW( item.getSIDoubleData( ) , std::invalid_argument );
+}
+
+
+
+BOOST_AUTO_TEST_CASE(GetSISingleDimensionCorrect) {
+    DeckDoubleItem item("HEI");
+    std::shared_ptr<Dimension> dim(new Dimension("L" , 100));
+
+    item.push_backMultiple(1 , 100 );
+    item.push_backDimensions( dim , dim );
+
+    BOOST_CHECK_EQUAL( 1   , item.getDouble(0) );
+    BOOST_CHECK_EQUAL( 100 , item.getSIDouble(0) );
+}
+
+
+BOOST_AUTO_TEST_CASE(GetSISingleDefault) {
+    DeckDoubleItem item("HEI");
+    std::shared_ptr<Dimension> dim(new Dimension("L" , 1));
+    std::shared_ptr<Dimension> defaultDim(new Dimension("L" , 100));
+
+    item.push_backDefault(1 );
+    item.push_backDimensions( dim , defaultDim );
+
+    BOOST_CHECK_EQUAL( 1   , item.getDouble(0) );
+    BOOST_CHECK_EQUAL( 100 , item.getSIDouble(0) );
+}
+
+
+BOOST_AUTO_TEST_CASE(GetSIMultipleDim) {
+    DeckDoubleItem item("HEI");
+    std::shared_ptr<Dimension> dim1(new Dimension("L" , 2));
+    std::shared_ptr<Dimension> dim2(new Dimension("L" , 4));
+    std::shared_ptr<Dimension> dim3(new Dimension("L" , 8));
+    std::shared_ptr<Dimension> dim4(new Dimension("L" ,16));
+    std::shared_ptr<Dimension> defaultDim(new Dimension("L" , 100));
+
+    item.push_backMultiple( 1 , 16 );
+    item.push_backDimensions( dim1 , defaultDim );
+    item.push_backDimensions( dim2 , defaultDim );
+    item.push_backDimensions( dim3 , defaultDim );
+    item.push_backDimensions( dim4 , defaultDim );
+
+    for (size_t i=0; i < 16; i+= 4) {
+        BOOST_CHECK_EQUAL( 2   , item.getSIDouble(i) );        
+        BOOST_CHECK_EQUAL( 4   , item.getSIDouble(i+ 1) );        
+        BOOST_CHECK_EQUAL( 8   , item.getSIDouble(i+2) );        
+        BOOST_CHECK_EQUAL(16   , item.getSIDouble(i+3) );        
+    }
+}
+
+
+

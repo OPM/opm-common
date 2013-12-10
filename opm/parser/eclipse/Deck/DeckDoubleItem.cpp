@@ -17,9 +17,11 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
+
 #include <boost/lexical_cast.hpp>
 
-#include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
+#include <algorithm>
 
 namespace Opm {
 
@@ -32,6 +34,41 @@ namespace Opm {
     
     const std::vector<double>& DeckDoubleItem::getDoubleData() const {
         return m_data;
+    }
+
+
+    void DeckDoubleItem::assertSIData() {
+        if (m_dimensions.size() > 0) {
+            m_SIdata.resize( m_data.size() );
+            if (m_dimensions.size() == 1) {
+                double SIfactor = m_dimensions[0]->getSIScaling();
+                std::transform( m_data.begin() , m_data.end() , m_SIdata.begin() , std::bind1st(std::multiplies<double>(),SIfactor));
+            } else {
+                for (size_t index=0; index < m_data.size(); index++) {
+                    size_t dimIndex = (index % m_dimensions.size());
+                    double SIfactor = m_dimensions[dimIndex]->getSIScaling();
+                    m_SIdata[index] = m_data[index] * SIfactor;
+                }
+            }
+        } else
+            throw std::invalid_argument("No dimension has been set - can not ask for SI data");
+    }
+    
+
+
+    double DeckDoubleItem::getSIDouble(size_t index) {
+        assertSIData();
+        {
+            if (index < m_data.size()) {
+                return m_SIdata[index];
+            } else
+                throw std::out_of_range("Out of range, index must be lower than " + boost::lexical_cast<std::string>(m_data.size()));
+        }
+    }
+    
+    const std::vector<double>& DeckDoubleItem::getSIDoubleData() {
+        assertSIData();
+        return m_SIdata;
     }
 
 
@@ -66,6 +103,14 @@ namespace Opm {
     size_t DeckDoubleItem::size() const {
         return m_data.size();
     }
+
+    void DeckDoubleItem::push_backDimensions(std::shared_ptr<const Dimension> activeDimension , std::shared_ptr<const Dimension> defaultDimension) {
+        if (m_defaultApplied)
+            m_dimensions.push_back( defaultDimension );
+        else
+            m_dimensions.push_back( activeDimension );
+    }
+    
 
 }
 
