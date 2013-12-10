@@ -242,7 +242,8 @@ namespace Opm {
                             break;
                         case FLOAT:
                         {
-                            ParserDoubleItemConstPtr item = ParserDoubleItemConstPtr(new ParserDoubleItem(itemConfig));
+                            ParserDoubleItemPtr item = ParserDoubleItemPtr(new ParserDoubleItem(itemConfig));
+                            initItemDimension( item , itemConfig );
                             addItem(item);
                         }
                             break;
@@ -260,6 +261,24 @@ namespace Opm {
         ParserDoubleItemConstPtr item = ParserDoubleItemConstPtr(new ParserDoubleItem("TABLEROW", ALL, 0));
         addItem(item);
     }
+
+    
+    void ParserKeyword::initItemDimension( ParserDoubleItemPtr item, const Json::JsonObject itemConfig) {
+        if (itemConfig.has_item("dimension")) {
+            const Json::JsonObject dimensionConfig = itemConfig.get_item("dimension");
+            if (dimensionConfig.is_string())
+                item->push_backDimension( dimensionConfig.as_string() );
+            else if (dimensionConfig.is_array()) {
+                for (size_t idim = 0; idim < dimensionConfig.size(); idim++) {
+                    Json::JsonObject dimObject = dimensionConfig.get_array_item( idim );
+                    item->push_backDimension( dimObject.as_string());
+                }
+            } else
+                throw std::invalid_argument("The dimension: attribute must be a string/list of strings");
+        } 
+    }
+
+    
 
     void ParserKeyword::initData(const Json::JsonObject& jsonConfig) {
         m_fixedSize = 1U;
