@@ -60,12 +60,12 @@ BOOST_AUTO_TEST_CASE( parse_EQUIL_OK ) {
     DeckItemConstPtr item1_index = rec1->getItem(2);
     
     BOOST_CHECK_EQUAL( item1  , item1_index );
-    BOOST_CHECK( fabs(item1->getDouble(0) - 1705) < 0.001);
+    BOOST_CHECK( fabs(item1->getRawDouble(0) - 1705) < 0.001);
 
     DeckItemConstPtr item3       = rec3->getItem("OWC");
     DeckItemConstPtr item3_index = rec3->getItem(2);
     
     BOOST_CHECK_EQUAL( item3  , item3_index );
-    BOOST_CHECK( fabs(item3->getDouble(0) - 3000) < 0.001);
+    BOOST_CHECK( fabs(item3->getRawDouble(0) - 3000) < 0.001);
     
 }

@@ -61,7 +61,7 @@ namespace Opm {
             if (CFItem->defaultApplied())
                 throw std::invalid_argument("The connection factor item can not be defaulted");
         }
-        double CF = compdatRecord->getItem("CF")->getDouble(0);
+        double CF = compdatRecord->getItem("CF")->getRawDouble(0);
 
         for (int k = K1; k <= K2; k++) {
             CompletionConstPtr completion(new Completion(I , J , k , state , CF ));

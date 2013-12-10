@@ -33,8 +33,8 @@ namespace Opm {
     class DeckDoubleItem : public DeckItem {
     public:
         DeckDoubleItem(std::string name) : DeckItem(name) {}
-        double getDouble(size_t index) const;
-        const std::vector<double>& getDoubleData() const;
+        double getRawDouble(size_t index) const;
+        const std::vector<double>& getRawDoubleData() const;
         double getSIDouble(size_t index);
         const std::vector<double>& getSIDoubleData();
         

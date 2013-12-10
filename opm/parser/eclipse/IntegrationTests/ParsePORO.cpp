@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(AddDataKeywordFromJson_correctlyConfigured) {
     BOOST_CHECK_THROW( kw1->getStringData() , std::logic_error );
     
     {
-        const std::vector<double>& poro = kw1->getDoubleData();
+        const std::vector<double>& poro = kw1->getRawDoubleData();
         BOOST_CHECK_EQUAL( 440U , poro.size() );
         BOOST_CHECK_EQUAL( 0.233782813 , poro[0]);
         BOOST_CHECK_EQUAL( 0.251224369 , poro[1]);

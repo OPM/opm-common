@@ -25,14 +25,14 @@
 
 namespace Opm {
 
-    double DeckDoubleItem::getDouble(size_t index) const {
+    double DeckDoubleItem::getRawDouble(size_t index) const {
         if (index < m_data.size()) {
             return m_data[index];
         } else
             throw std::out_of_range("Out of range, index must be lower than " + boost::lexical_cast<std::string>(m_data.size()));
     }
     
-    const std::vector<double>& DeckDoubleItem::getDoubleData() const {
+    const std::vector<double>& DeckDoubleItem::getRawDoubleData() const {
         return m_data;
     }
 

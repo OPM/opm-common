@@ -47,9 +47,9 @@ BOOST_AUTO_TEST_CASE( parse_EQUIL_OK ) {
     DeckRecordConstPtr rec3 = kw1->getRecord(2);
 
     DeckItemConstPtr item1       = rec1->getItem("table");
-    BOOST_CHECK( fabs(item1->getDouble(0) - 2382) < 0.001);
+    BOOST_CHECK( fabs(item1->getRawDouble(0) - 2382) < 0.001);
 
     DeckItemConstPtr item3       = rec3->getItem("table");
-    BOOST_CHECK( fabs(item3->getDouble(7) - 106.77) < 0.001);
+    BOOST_CHECK( fabs(item3->getRawDouble(7) - 106.77) < 0.001);
     
 }

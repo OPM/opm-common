@@ -40,7 +40,11 @@ namespace Opm {
             throw std::logic_error("This implementation of DeckItem does not support int");
         };
 
-        virtual double getDouble(size_t index) const {
+        virtual double getSIDouble(size_t index) const {
+            throw std::logic_error("This implementation of DeckItem does not support double");
+        };
+
+        virtual double getRawDouble(size_t index) const {
             throw std::logic_error("This implementation of DeckItem does not support double");
         };
 
@@ -58,7 +62,11 @@ namespace Opm {
             throw std::logic_error("This implementation of DeckItem does not support int");
         };
 
-        virtual const std::vector<double>& getDoubleData() const {
+        virtual const std::vector<double>& getSIDoubleData() const {
+            throw std::logic_error("This implementation of DeckItem does not support double");
+        };
+
+        virtual const std::vector<double>& getRawDoubleData() const {
             throw std::logic_error("This implementation of DeckItem does not support double");
         };
 

@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(InitializeDouble) {
 
 BOOST_AUTO_TEST_CASE(GetDoubleAtIndex_NoData_ExceptionThrown) {
     const DeckDoubleItem deckDoubleItem("TEST");
-    BOOST_CHECK_THROW(deckDoubleItem.getDouble(0), std::out_of_range);
+    BOOST_CHECK_THROW(deckDoubleItem.getRawDouble(0), std::out_of_range);
 }
 
 
@@ -47,8 +47,8 @@ BOOST_AUTO_TEST_CASE(PushBackDouble_VectorPushed_ElementsCorrect) {
     pushThese.push_back(13);
     pushThese.push_back(33);
     deckDoubleItem.push_back(pushThese);
-    BOOST_CHECK_EQUAL(13, deckDoubleItem.getDouble(0));
-    BOOST_CHECK_EQUAL(33, deckDoubleItem.getDouble(1));
+    BOOST_CHECK_EQUAL(13, deckDoubleItem.getRawDouble(0));
+    BOOST_CHECK_EQUAL(33, deckDoubleItem.getRawDouble(1));
 }
 
 
@@ -59,8 +59,8 @@ BOOST_AUTO_TEST_CASE(PushBackDouble_subVectorPushed_ElementsCorrect) {
     pushThese.push_back(33);
     pushThese.push_back(47);
     deckDoubleItem.push_back(pushThese , 2);
-    BOOST_CHECK_EQUAL(13 , deckDoubleItem.getDouble(0));
-    BOOST_CHECK_EQUAL(33 , deckDoubleItem.getDouble(1));
+    BOOST_CHECK_EQUAL(13 , deckDoubleItem.getRawDouble(0));
+    BOOST_CHECK_EQUAL(33 , deckDoubleItem.getRawDouble(1));
     BOOST_CHECK_EQUAL( 2U , deckDoubleItem.size());
 }
 
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(PushBackMultiple) {
     item.push_backMultiple(10.22 , 100 );
     BOOST_CHECK_EQUAL( 100U , item.size() );
     for (size_t i=0; i < 100; i++)
-        BOOST_CHECK_EQUAL(10.22 , item.getDouble(i));
+        BOOST_CHECK_EQUAL(10.22 , item.getRawDouble(i));
 }
 
 
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(GetSISingleDimensionCorrect) {
     item.push_backMultiple(1 , 100 );
     item.push_backDimensions( dim , dim );
 
-    BOOST_CHECK_EQUAL( 1   , item.getDouble(0) );
+    BOOST_CHECK_EQUAL( 1   , item.getRawDouble(0) );
     BOOST_CHECK_EQUAL( 100 , item.getSIDouble(0) );
 }
 
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(GetSISingleDefault) {
     item.push_backDefault(1 );
     item.push_backDimensions( dim , defaultDim );
 
-    BOOST_CHECK_EQUAL( 1   , item.getDouble(0) );
+    BOOST_CHECK_EQUAL( 1   , item.getRawDouble(0) );
     BOOST_CHECK_EQUAL( 100 , item.getSIDouble(0) );
 }
 
