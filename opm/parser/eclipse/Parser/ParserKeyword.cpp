@@ -133,7 +133,7 @@ namespace Opm {
             initData(jsonConfig);
 
         if (isTableCollection())
-            addTableItems();
+            addTableItems(jsonConfig.get_item("num_tables"));
 
         if ((m_fixedSize == 0 && m_keywordSizeType == FIXED) || (m_action != INTERNALIZE))
             return;
@@ -257,8 +257,9 @@ namespace Opm {
             throw std::invalid_argument("The items: object must be an array");
     }
 
-    void ParserKeyword::addTableItems() {
-        ParserDoubleItemConstPtr item = ParserDoubleItemConstPtr(new ParserDoubleItem("TABLEROW", ALL, 0));
+    void ParserKeyword::addTableItems(const Json::JsonObject tableConfig) {
+        ParserDoubleItemPtr item = ParserDoubleItemPtr(new ParserDoubleItem("TABLEROW", ALL, 0));
+        initItemDimension( item , tableConfig );
         addItem(item);
     }
 
@@ -318,6 +319,7 @@ namespace Opm {
                         double defaultValue = dataConfig.get_double("default");
                         item->setDefault(defaultValue);
                     }
+                    initItemDimension( item , dataConfig );
                     addDataItem(item);
                 }
                     break;

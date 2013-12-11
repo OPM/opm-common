@@ -82,7 +82,7 @@ namespace Opm {
         void initSizeKeyword(const Json::JsonObject& sizeObject);
         void commonInit(const std::string& name, ParserKeywordSizeEnum sizeType , ParserKeywordActionEnum action);
         void addItems( const Json::JsonObject& jsonConfig);
-        void addTableItems();
+        void addTableItems(const Json::JsonObject tableConfig);
         static void initItemDimension( ParserDoubleItemPtr item, const Json::JsonObject itemConfig);
     };
     typedef std::shared_ptr<ParserKeyword> ParserKeywordPtr;
