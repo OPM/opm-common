@@ -523,6 +523,7 @@ BOOST_AUTO_TEST_CASE(ParserIntItemGetDimensionThrows) {
     ParserIntItem intItem(std::string("SOMEINT"));
 
     BOOST_CHECK_THROW( intItem.getDimension(0) , std::invalid_argument );
+    BOOST_CHECK_THROW( intItem.push_backDimension("L") , std::invalid_argument );
 }
 
 

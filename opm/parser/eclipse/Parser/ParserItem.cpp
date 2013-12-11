@@ -50,6 +50,9 @@ namespace Opm {
         throw std::invalid_argument("Should not call this ... \n");       
     }
 
+    void ParserItem::push_backDimension(const std::string& dimension) {
+        throw std::invalid_argument("Should not call this ... \n");       
+    }
     
     ParserItem::ParserItem(const Json::JsonObject& jsonConfig) {
         if (jsonConfig.has_item("name"))
