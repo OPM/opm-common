@@ -448,9 +448,11 @@ namespace Opm {
             {
                 const std::string local_indent = indent + "   ";
                 ParserItemConstPtr item = m_record->get(i);
-                os << local_indent << "ParserItemConstPtr item(";
+                os << local_indent << "ParserItemPtr item(";
                 item->inlineNew(os);
                 os << ");" << std::endl;
+                for (size_t idim=0; idim < item->numDimensions(); idim++)
+                    os << local_indent << "item->push_backDimension(\"" << item->getDimension( idim ) << "\");";
                 {
                     std::string addItemMethod = "addItem";
                     if (m_isDataKeyword)
