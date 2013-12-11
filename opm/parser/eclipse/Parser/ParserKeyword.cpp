@@ -392,11 +392,11 @@ namespace Opm {
 
     bool ParserKeyword::equal(const ParserKeyword& other) const {
         if ((m_name == other.m_name) &&
-                (m_record->equal(*(other.m_record))) &&
-                (m_keywordSizeType == other.m_keywordSizeType) &&
-                (m_isDataKeyword == other.m_isDataKeyword) &&
-                (m_isTableCollection == other.m_isTableCollection) &&
-                (m_action == other.m_action)) {
+            (m_record->equal(*(other.m_record))) &&
+            (m_keywordSizeType == other.m_keywordSizeType) &&
+            (m_isDataKeyword == other.m_isDataKeyword) &&
+            (m_isTableCollection == other.m_isTableCollection) &&
+            (m_action == other.m_action)) {
             bool equal = false;
             switch (m_keywordSizeType) {
                 case FIXED:
