@@ -452,7 +452,7 @@ namespace Opm {
                 item->inlineNew(os);
                 os << ");" << std::endl;
                 for (size_t idim=0; idim < item->numDimensions(); idim++)
-                    os << local_indent << "item->push_backDimension(\"" << item->getDimension( idim ) << "\");";
+                    os << local_indent << "item->push_backDimension(\"" << item->getDimension( idim ) << "\");" << std::endl;
                 {
                     std::string addItemMethod = "addItem";
                     if (m_isDataKeyword)
