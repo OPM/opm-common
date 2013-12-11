@@ -157,6 +157,43 @@ BOOST_AUTO_TEST_CASE(DoubleItem_Equal_ReturnsTrue) {
 }
 
 
+BOOST_AUTO_TEST_CASE(DoubleItem_DimEqual_ReturnsTrue) {
+    ParserItemSizeEnum sizeType = ALL;
+    ParserDoubleItem item1("ITEM1", sizeType);
+    ParserDoubleItem item2("ITEM1", sizeType);
+
+    item1.push_backDimension("L*L");
+    item2.push_backDimension("L*L");
+    
+    BOOST_CHECK( item1.equal( item2 ));
+}
+
+
+BOOST_AUTO_TEST_CASE(DoubleItem_DimDifferent_ReturnsFalse) {
+    ParserItemSizeEnum sizeType = ALL;
+    ParserDoubleItem item1("ITEM1", sizeType);    // Dim: []
+    ParserDoubleItem item2("ITEM1", sizeType);    // Dim: [L]
+    ParserDoubleItem item3("ITEM1", sizeType);    // Dim: [L ,L]
+    ParserDoubleItem item4("ITEM1", sizeType);    // Dim: [t]
+
+    item2.push_backDimension("L");
+
+    item3.push_backDimension("L");
+    item3.push_backDimension("L");
+    
+    item4.push_backDimension("t");
+
+    BOOST_CHECK_EQUAL(false , item1.equal( item2 ));
+    BOOST_CHECK_EQUAL(false , item2.equal( item3 ));
+    BOOST_CHECK_EQUAL(false , item2.equal( item1 ));
+    BOOST_CHECK_EQUAL(false , item2.equal( item4 ));
+    BOOST_CHECK_EQUAL(false , item1.equal( item3 ));
+    BOOST_CHECK_EQUAL(false , item3.equal( item1 ));
+    BOOST_CHECK_EQUAL(false , item4.equal( item2 ));
+
+}
+
+
 BOOST_AUTO_TEST_CASE(DoubleItem_Different_ReturnsFalse) {
     ParserDoubleItem item1("ITEM1", ALL);
     ParserDoubleItem item2("ITEM2", ALL);

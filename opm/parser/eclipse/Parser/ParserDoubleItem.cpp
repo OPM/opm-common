@@ -81,10 +81,24 @@ namespace Opm
     {
         // cast to a pointer to avoid bad_cast exception
         const ParserDoubleItem* rhs = dynamic_cast<const ParserDoubleItem*>(&other);
-        if (rhs && ParserItem::equal(other) && (getDefault() == rhs->getDefault()))
-            return true;
+        if (rhs && ParserItem::equal(other) && (getDefault() == rhs->getDefault())) {
+            return equalDimensions( other );
+        }
         else
             return false;
+    }
+
+
+    bool ParserDoubleItem::equalDimensions(const ParserItem& other) const {
+        bool equal=false;
+        if (other.numDimensions() == numDimensions()) {
+            equal = true;
+            for (size_t idim=0; idim < numDimensions(); idim++) {
+                if (other.getDimension(idim) != getDimension(idim))
+                    equal = false;
+            }
+        } 
+        return equal;
     }
 
     void ParserDoubleItem::push_backDimension(const std::string& dimension) {

@@ -44,6 +44,7 @@ namespace Opm {
         bool hasDimension() const;
         void push_backDimension(const std::string& dimension);
         const std::string& getDimension(size_t index) const;
+        bool equalDimensions(const ParserItem& other) const;
 
         DeckItemConstPtr scan(RawRecordPtr rawRecord) const;
         bool equal(const ParserItem& other) const;
