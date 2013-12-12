@@ -56,6 +56,15 @@ namespace Opm {
         return dimension;
     }
 
+
+    bool Dimension::equal(const Dimension& other) {
+        if ((m_name == other.m_name) && 
+            (m_SIfactor == other.m_SIfactor))
+            return true;
+        else
+            return false;
+    }
+
 }
 
 

@@ -155,4 +155,16 @@ BOOST_AUTO_TEST_CASE(CreateUnitMap) {
     BOOST_CHECK_THROW( systemMap.getSystem( "NoNotThisOne") , std::invalid_argument);
 }
 
+BOOST_AUTO_TEST_CASE(DimensionEqual) {
+    Dimension d1("L" , 1);
+    Dimension d2("L" , 1);
+    Dimension d3("t" , 1);
+    Dimension d4("L" , 2);
+
+    BOOST_CHECK_EQUAL( true  , d1.equal(d1) );
+    BOOST_CHECK_EQUAL( true  , d1.equal(d2) );
+    BOOST_CHECK_EQUAL( false , d1.equal(d3) );
+    BOOST_CHECK_EQUAL( false , d1.equal(d4) );
+}
+
 
