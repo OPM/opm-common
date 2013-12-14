@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 
@@ -54,6 +55,23 @@ namespace Opm {
                 hasDim = true;
         }
         return hasDim;
+    }
+
+
+
+    void ParserRecord::applyUnitsToDeck(std::shared_ptr<const Deck> deck , std::shared_ptr<const DeckRecord> deckRecord) const {
+        for (auto iter=begin(); iter != end(); ++iter) {
+            if ((*iter)->hasDimension()) {
+                std::shared_ptr<DeckItem> deckItem = deckRecord->getItem( (*iter)->name() );
+                std::shared_ptr<const ParserItem> parserItem = get( (*iter)->name() );
+
+                for (size_t idim=0; idim < (*iter)->numDimensions(); idim++) {
+                    std::shared_ptr<const Dimension> activeDimension  = deck->getActiveUnitSystem()->getNewDimension( parserItem->getDimension(idim) );
+                    std::shared_ptr<const Dimension> defaultDimension = deck->getDefaultUnitSystem()->getNewDimension( parserItem->getDimension(idim) );
+                    deckItem->push_backDimension( activeDimension , defaultDimension ); 
+                }
+            }
+        }
     }
 
 

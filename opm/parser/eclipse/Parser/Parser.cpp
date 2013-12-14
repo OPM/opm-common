@@ -52,7 +52,9 @@ namespace Opm {
     }
 
     DeckPtr Parser::parse(const std::string &dataFile) const {
-        return parse(dataFile, true);
+        DeckPtr deck = parse(dataFile, true);
+        applyUnitsToDeck(deck);
+        return deck;
     }
 
 
@@ -244,7 +246,7 @@ namespace Opm {
                 else {
                     const std::pair<std::string, std::string> sizeKeyword = parserKeyword->getSizeDefinitionPair();
                     DeckKeywordConstPtr sizeDefinitionKeyword = parserState->deck->getKeyword(sizeKeyword.first);
-                    DeckItemConstPtr sizeDefinitionItem;
+                    DeckItemPtr sizeDefinitionItem;
                     {
                         DeckRecordConstPtr record = sizeDefinitionKeyword->getRecord(0);
                         sizeDefinitionItem = record->getItem(sizeKeyword.second);
@@ -339,5 +341,16 @@ namespace Opm {
             root = boost::filesystem::current_path() / inputDataFile.parent_path();
         return root;
     }
+
+    void Parser::applyUnitsToDeck(DeckPtr deck) const {
+        deck->initUnitSystem();
+        for (size_t index=0; index < deck->size(); ++index) {
+            DeckKeywordPtr deckKeyword = deck->getKeyword( index );
+            ParserKeywordConstPtr parserKeyword = getKeyword( deckKeyword->name() );
+            if (parserKeyword->hasDimension()) 
+                parserKeyword->applyUnitsToDeck(deck , deckKeyword);
+        }
+    }
+    
 
 } // namespace Opm

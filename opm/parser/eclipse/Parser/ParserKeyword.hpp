@@ -28,8 +28,10 @@
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
-#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+
 
 
 namespace Opm {
@@ -65,6 +67,7 @@ namespace Opm {
         bool isDataKeyword() const;
         bool equal(const ParserKeyword& other) const;
         void inlineNew(std::ostream& os , const std::string& lhs, const std::string& indent) const;
+        void applyUnitsToDeck(std::shared_ptr<const Deck> deck , std::shared_ptr<DeckKeyword> deckKeyword) const;
     private:
         std::pair<std::string,std::string> m_sizeDefinitionPair;
         std::string m_name;
