@@ -104,7 +104,7 @@ namespace Opm {
         return m_data.size();
     }
 
-    void DeckDoubleItem::push_backDimensions(std::shared_ptr<const Dimension> activeDimension , std::shared_ptr<const Dimension> defaultDimension) {
+    void DeckDoubleItem::push_backDimension(std::shared_ptr<const Dimension> activeDimension , std::shared_ptr<const Dimension> defaultDimension) {
         if (m_defaultApplied)
             m_dimensions.push_back( defaultDimension );
         else

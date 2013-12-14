@@ -43,7 +43,7 @@ namespace Opm {
         void push_back(double value);
         void push_backDefault(double value);
         void push_backMultiple(double value, size_t numValues);
-        void push_backDimensions(std::shared_ptr<const Dimension> activeDimension , std::shared_ptr<const Dimension> defaultDimension);
+        void push_backDimension(std::shared_ptr<const Dimension> activeDimension , std::shared_ptr<const Dimension> defaultDimension);
         
         size_t size() const;
     private:

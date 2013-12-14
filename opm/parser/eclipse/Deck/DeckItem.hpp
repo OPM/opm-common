@@ -20,6 +20,8 @@
 #ifndef DECKITEM_HPP
 #define DECKITEM_HPP
 
+#include <opm/parser/eclipse/Units/Dimension.hpp>
+
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -74,7 +76,9 @@ namespace Opm {
             throw std::logic_error("This implementation of DeckItem does not support string");
         }
 
-
+        virtual void push_backDimension(std::shared_ptr<const Dimension> activeDimension , std::shared_ptr<const Dimension> defaultDimension) {
+            throw std::invalid_argument("Should not be here - internal error ...");
+        }
 
         virtual ~DeckItem() {
         }
