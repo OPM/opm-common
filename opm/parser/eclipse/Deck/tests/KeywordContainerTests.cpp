@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(getKeywordList_OK) {
     container->addKeyword(keyword2);
     container->addKeyword(keyword3);
 
-    const std::vector<DeckKeywordConstPtr>& keywordList = container->getKeywordList("TRULS");
+    const std::vector<DeckKeywordPtr>& keywordList = container->getKeywordList("TRULS");
     BOOST_CHECK_EQUAL( 3U , keywordList.size() );
 }
 

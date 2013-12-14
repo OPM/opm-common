@@ -104,7 +104,13 @@ BOOST_AUTO_TEST_CASE(PushBackDimension) {
     std::shared_ptr<Dimension> activeDimension(new Dimension("L" , 100));
     std::shared_ptr<Dimension> defaultDimension(new Dimension("L" , 10));
 
-    item.push_backDimensions( activeDimension , defaultDimension);
+    item.push_backDimension( activeDimension , defaultDimension);
+}
+
+BOOST_AUTO_TEST_CASE(PushBackDimensionInvalidType) {
+    DeckIntItem item("HEI");
+    std::shared_ptr<Dimension> dim(new Dimension("L" , 100));
+    BOOST_CHECK_THROW( item.push_backDimension( dim , dim ) , std::invalid_argument );
 }
 
 
@@ -124,7 +130,7 @@ BOOST_AUTO_TEST_CASE(GetSISingleDimensionCorrect) {
     std::shared_ptr<Dimension> dim(new Dimension("L" , 100));
 
     item.push_backMultiple(1 , 100 );
-    item.push_backDimensions( dim , dim );
+    item.push_backDimension( dim , dim );
 
     BOOST_CHECK_EQUAL( 1   , item.getRawDouble(0) );
     BOOST_CHECK_EQUAL( 100 , item.getSIDouble(0) );
@@ -137,7 +143,7 @@ BOOST_AUTO_TEST_CASE(GetSISingleDefault) {
     std::shared_ptr<Dimension> defaultDim(new Dimension("L" , 100));
 
     item.push_backDefault(1 );
-    item.push_backDimensions( dim , defaultDim );
+    item.push_backDimension( dim , defaultDim );
 
     BOOST_CHECK_EQUAL( 1   , item.getRawDouble(0) );
     BOOST_CHECK_EQUAL( 100 , item.getSIDouble(0) );
@@ -153,10 +159,10 @@ BOOST_AUTO_TEST_CASE(GetSIMultipleDim) {
     std::shared_ptr<Dimension> defaultDim(new Dimension("L" , 100));
 
     item.push_backMultiple( 1 , 16 );
-    item.push_backDimensions( dim1 , defaultDim );
-    item.push_backDimensions( dim2 , defaultDim );
-    item.push_backDimensions( dim3 , defaultDim );
-    item.push_backDimensions( dim4 , defaultDim );
+    item.push_backDimension( dim1 , defaultDim );
+    item.push_backDimension( dim2 , defaultDim );
+    item.push_backDimension( dim3 , defaultDim );
+    item.push_backDimension( dim4 , defaultDim );
 
     for (size_t i=0; i < 16; i+= 4) {
         BOOST_CHECK_EQUAL( 2   , item.getSIDouble(i) );        
