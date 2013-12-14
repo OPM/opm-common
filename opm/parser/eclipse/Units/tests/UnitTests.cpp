@@ -19,7 +19,6 @@
 
 #define BOOST_TEST_MODULE UnitTests
 
-#include <opm/parser/eclipse/Units/UnitSystemMap.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/ConversionFactors.hpp>
@@ -132,28 +131,15 @@ BOOST_AUTO_TEST_CASE(CreateFieldSystem) {
     std::shared_ptr<UnitSystem> system = std::shared_ptr<UnitSystem>( UnitSystem::newFIELD() );
     checkSystemHasRequiredDimensions( system );
 
-    BOOST_CHECK_EQUAL( Field::Length       , system->getDimension("L").getSIScaling() );
-    BOOST_CHECK_EQUAL( Field::Mass         , system->getDimension("m").getSIScaling() );
-    BOOST_CHECK_EQUAL( Field::Time         , system->getDimension("t").getSIScaling() );
-    BOOST_CHECK_EQUAL( Field::Permeability , system->getDimension("K").getSIScaling() );
-    BOOST_CHECK_EQUAL( Field::Pressure     , system->getDimension("P").getSIScaling() );
+    BOOST_CHECK_EQUAL( Field::Length       , system->getDimension("L")->getSIScaling() );
+    BOOST_CHECK_EQUAL( Field::Mass         , system->getDimension("m")->getSIScaling() );
+    BOOST_CHECK_EQUAL( Field::Time         , system->getDimension("t")->getSIScaling() );
+    BOOST_CHECK_EQUAL( Field::Permeability , system->getDimension("K")->getSIScaling() );
+    BOOST_CHECK_EQUAL( Field::Pressure     , system->getDimension("P")->getSIScaling() );
 }
 
 
 
-BOOST_AUTO_TEST_CASE(CreateUnitMap) {
-    UnitSystemMap systemMap; 
-    systemMap.addSystem( std::shared_ptr<UnitSystem>( UnitSystem::newMETRIC() ));
-    systemMap.addSystem( std::shared_ptr<UnitSystem>( UnitSystem::newFIELD() ));
-
-    BOOST_CHECK( systemMap.hasSystem("METRIC"));
-    BOOST_CHECK( systemMap.hasSystem("meTRIC"));
-    BOOST_CHECK( systemMap.hasSystem("meTRic"));
-    BOOST_CHECK( systemMap.hasSystem("Field"));
-    
-    BOOST_CHECK_EQUAL( false , systemMap.hasSystem("NoNotThisOne"));
-    BOOST_CHECK_THROW( systemMap.getSystem( "NoNotThisOne") , std::invalid_argument);
-}
 
 BOOST_AUTO_TEST_CASE(DimensionEqual) {
     Dimension d1("L" , 1);
