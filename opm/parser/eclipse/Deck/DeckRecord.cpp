@@ -34,7 +34,7 @@ namespace Opm {
         return m_items.size();
     }
 
-    void DeckRecord::addItem(DeckItemConstPtr deckItem) {
+    void DeckRecord::addItem(DeckItemPtr deckItem) {
         if (m_itemMap.find(deckItem->name()) == m_itemMap.end()) {
             m_itemMap[deckItem->name()] = deckItem;
             m_items.push_back(deckItem);
@@ -42,14 +42,14 @@ namespace Opm {
             throw std::invalid_argument("Item with name: " + deckItem->name() + " already exists in DeckRecord");
     }
 
-    DeckItemConstPtr DeckRecord::getItem(size_t index) const {
+    DeckItemPtr DeckRecord::getItem(size_t index) const {
         if (index < m_items.size())
             return m_items[index];
         else
             throw std::range_error("Index out of range.");
     }
 
-    DeckItemConstPtr DeckRecord::getItem(const std::string& name) const {
+    DeckItemPtr DeckRecord::getItem(const std::string& name) const {
         if (m_itemMap.find(name) == m_itemMap.end())
             throw std::invalid_argument("Itemname: " + name + " does not exist.");
         else
@@ -57,7 +57,7 @@ namespace Opm {
     }
 
 
-    DeckItemConstPtr DeckRecord::getDataItem() const {
+    DeckItemPtr DeckRecord::getDataItem() const {
         if (m_items.size() == 1)
             return getItem(0);
         else

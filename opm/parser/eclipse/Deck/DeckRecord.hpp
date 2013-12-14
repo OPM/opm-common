@@ -33,13 +33,13 @@ namespace Opm {
     public:
         DeckRecord();
         size_t size() const;
-        void addItem(DeckItemConstPtr deckItem);
-        DeckItemConstPtr getItem(size_t index) const;
-        DeckItemConstPtr getItem(const std::string& name) const;
-        DeckItemConstPtr getDataItem() const;
+        void addItem(DeckItemPtr deckItem);
+        DeckItemPtr getItem(size_t index) const;
+        DeckItemPtr getItem(const std::string& name) const;
+        DeckItemPtr getDataItem() const;
     private:
-        std::vector<DeckItemConstPtr> m_items;
-        std::map<std::string, DeckItemConstPtr> m_itemMap;
+        std::vector<DeckItemPtr> m_items;
+        std::map<std::string, DeckItemPtr> m_itemMap;
 
     };
     typedef std::shared_ptr<DeckRecord> DeckRecordPtr;

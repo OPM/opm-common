@@ -44,7 +44,7 @@ namespace Opm {
 
         virtual void push_backDimension(const std::string& dimension);
         virtual const std::string& getDimension(size_t index) const;
-        virtual DeckItemConstPtr scan(RawRecordPtr rawRecord) const = 0;
+        virtual DeckItemPtr scan(RawRecordPtr rawRecord) const = 0;
         virtual bool hasDimension() const;
         virtual size_t numDimensions() const;
         const std::string& name() const;

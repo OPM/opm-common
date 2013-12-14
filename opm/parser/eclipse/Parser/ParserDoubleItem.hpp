@@ -46,7 +46,7 @@ namespace Opm {
         const std::string& getDimension(size_t index) const;
         bool equalDimensions(const ParserItem& other) const;
 
-        DeckItemConstPtr scan(RawRecordPtr rawRecord) const;
+        DeckItemPtr scan(RawRecordPtr rawRecord) const;
         bool equal(const ParserItem& other) const;
         void inlineNew(std::ostream& os) const;
         void setDefault(double defaultValue);
