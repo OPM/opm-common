@@ -78,6 +78,23 @@ namespace Opm {
             throw std::invalid_argument("Index out of range");
     }
     
+    
+    void Deck::initUnitSystem() {
+        m_defaultUnits = std::shared_ptr<UnitSystem>( UnitSystem::newMETRIC() );
+        if (hasKeyword("FIELD"))
+            m_activeUnits = std::shared_ptr<UnitSystem>( UnitSystem::newFIELD() );
+        else
+            m_activeUnits = m_defaultUnits;
+    }
+
+    std::shared_ptr<UnitSystem> Deck::getActiveUnitSystem() const {
+        return m_activeUnits;
+    }
+    
+
+    std::shared_ptr<UnitSystem> Deck::getDefaultUnitSystem() const {
+        return m_defaultUnits;
+    }
 
 }
 

@@ -24,6 +24,7 @@
 #include <memory>
 
 #include <opm/parser/eclipse/Deck/KeywordContainer.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm {
 
