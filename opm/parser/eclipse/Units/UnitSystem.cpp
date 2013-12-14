@@ -39,42 +39,55 @@ namespace Opm {
         return (m_dimensions.find( dimension ) != m_dimensions.end());
     }
 
-    
-    const Dimension& UnitSystem::getDimension(const std::string& dimension) const {
-        if (hasDimension( dimension ))
+
+    std::shared_ptr<const Dimension> UnitSystem::getNewDimension(const std::string& dimension) {
+        if (!hasDimension( dimension )) {
+            std::shared_ptr<const Dimension> newDimension = parse( dimension );
+            addDimension( newDimension );
+        }
+        return getDimension( dimension );
+    }
+
+
+    std::shared_ptr<const Dimension> UnitSystem::getDimension(const std::string& dimension) const {
+        if (hasDimension( dimension )) 
             return m_dimensions.at( dimension );
         else
             throw std::invalid_argument("Dimension: " + dimension + " not recognized ");
     }
 
-
-    void UnitSystem::addDimension(const std::string& dimension , double SI_factor) {
-        if (hasDimension(dimension))
-            m_dimensions.erase( dimension );
+    
+    void UnitSystem::addDimension(std::shared_ptr<const Dimension> dimension) {
+        if (hasDimension(dimension->getName()))
+            m_dimensions.erase( dimension->getName() );
         
-        m_dimensions.insert( std::make_pair(dimension , Dimension(dimension , SI_factor)));
+        m_dimensions.insert( std::make_pair(dimension->getName() , dimension));
     }
 
+    void UnitSystem::addDimension(const std::string& dimension , double SI_factor) {
+        std::shared_ptr<const Dimension> dim( new Dimension(dimension , SI_factor) );
+        addDimension(dim);
+    }
 
     const std::string& UnitSystem::getName() const {
         return m_name;
     }
 
 
-    std::shared_ptr<Dimension> UnitSystem::parseFactor(const std::string& dimension) const {
+    std::shared_ptr<const Dimension> UnitSystem::parseFactor(const std::string& dimension) const {
         std::vector<std::string> dimensionList;
         boost::split(dimensionList , dimension , boost::is_any_of("*"));
         double SIfactor = 1.0;
         for (auto iter = dimensionList.begin(); iter != dimensionList.end(); ++iter) {
-            Dimension dim = getDimension( *iter );
-            SIfactor *= dim.getSIScaling();
+            std::shared_ptr<const Dimension> dim = getDimension( *iter );
+            SIfactor *= dim->getSIScaling();
         }
         return std::shared_ptr<Dimension>(Dimension::newComposite( dimension , SIfactor ));
     }
     
 
 
-    std::shared_ptr<Dimension> UnitSystem::parse(const std::string& dimension) const {
+    std::shared_ptr<const Dimension> UnitSystem::parse(const std::string& dimension) const {
         bool haveDivisor;
         {
             size_t divCount = std::count( dimension.begin() , dimension.end() , '/' );
@@ -96,6 +109,26 @@ namespace Opm {
         } else {
             return parseFactor( dimension );
         }
+    }
+
+
+    bool UnitSystem::equal(const UnitSystem& other) const {
+        bool equal = (m_dimensions.size() == other.m_dimensions.size());
+        
+        if (equal) {
+            for (auto iter = m_dimensions.begin(); iter != m_dimensions.end(); ++iter) {
+                std::shared_ptr<const Dimension> dim = getDimension( iter->first );
+
+                if (other.hasDimension( iter->first )) {
+                    std::shared_ptr<const Dimension> otherDim = other.getDimension( iter->first );
+                    if (!dim->equal(*otherDim))
+                        equal = false;
+                } else
+                    equal = false;
+                
+            }
+        }
+        return equal;
     }
 
 
