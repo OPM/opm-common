@@ -141,8 +141,8 @@ namespace Opm {
         system->addDimension("t" , Metric::Time );
         system->addDimension("m" , Metric::Mass );
         system->addDimension("K" , Metric::Permeability );
-        system->addDimension("Rs", Metric::DissolvedGasRaito );
-        
+        system->addDimension("Rs", Metric::DissolvedGasRaito);
+        system->addDimension("V" , Metric::Volume );
         return system;
     }
 
@@ -158,7 +158,7 @@ namespace Opm {
         system->addDimension("m"  , Field::Mass);
         system->addDimension("K"  , Field::Permeability );
         system->addDimension("Rs" , Field::DissolvedGasRaito );
-        
+        system->addDimension("V"  , Field::Volume );
         return system;
     }
 

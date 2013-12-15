@@ -30,7 +30,9 @@ namespace Opm {
         const double Mass              = 1.0;
         const double Permeability      = 9.869233e-10;
         const double DissolvedGasRaito = 1.0;
+        const double Volume            = 1.0;
     }
+
 
      namespace Field {
          const double Pressure     = 6894.76;
@@ -38,7 +40,8 @@ namespace Opm {
          const double Time         = 86400;
          const double Mass         = 0.45359237;
          const double Permeability = 9.869233e-10;
-         const double DissolvedGasRaito = 1.0;  // Mscf / stb
+         const double DissolvedGasRaito = 1.0;     // Mscf / stb
+         const double Volume            = 158.987294;  // STB
     }
 
 }
