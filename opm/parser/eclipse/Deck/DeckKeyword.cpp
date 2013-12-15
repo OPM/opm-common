@@ -94,9 +94,9 @@ namespace Opm {
         return item->getRawDoubleData();
     }
 
-    const std::vector<double>& DeckKeyword::getSIDoubleData() const {
+    const std::vector<double>& DeckKeyword::getSIDoubleData() {
         DeckRecordConstPtr record = getDataRecord();
-        DeckItemConstPtr item = record->getDataItem();
+        DeckItemPtr item = record->getDataItem();
         return item->getSIDoubleData();
     }
 
