@@ -141,6 +141,7 @@ namespace Opm {
         system->addDimension("t" , Metric::Time );
         system->addDimension("m" , Metric::Mass );
         system->addDimension("K" , Metric::Permeability );
+        system->addDimension("Rs", Metric::DissolvedGasRaito );
         
         return system;
     }
@@ -150,12 +151,13 @@ namespace Opm {
     UnitSystem * UnitSystem::newFIELD() {
         UnitSystem * system = new UnitSystem("Field");
         
-        system->addDimension("1" , 1.0);
-        system->addDimension("P" , Field::Pressure );
-        system->addDimension("L" , Field::Length);
-        system->addDimension("t" , Field::Time);
-        system->addDimension("m" , Field::Mass);
-        system->addDimension("K" , Field::Permeability );
+        system->addDimension("1"  , 1.0);
+        system->addDimension("P"  , Field::Pressure );
+        system->addDimension("L"  , Field::Length);
+        system->addDimension("t"  , Field::Time);
+        system->addDimension("m"  , Field::Mass);
+        system->addDimension("K"  , Field::Permeability );
+        system->addDimension("Rs" , Field::DissolvedGasRaito );
         
         return system;
     }

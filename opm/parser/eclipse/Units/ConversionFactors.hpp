@@ -24,19 +24,21 @@
 namespace Opm {
 
     namespace Metric {
-        const double Pressure     = 100000;   
-        const double Length       = 1.0;      
-        const double Time         = 86400;
-        const double Mass         = 1.0;
-        const double Permeability = 9.869233e-10;
+        const double Pressure          = 100000;   
+        const double Length            = 1.0;      
+        const double Time              = 86400;
+        const double Mass              = 1.0;
+        const double Permeability      = 9.869233e-10;
+        const double DissolvedGasRaito = 1.0;
     }
 
      namespace Field {
-        const double Pressure     = 6894.76;
-        const double Length       = 0.3048;
-        const double Time         = 86400;
-        const double Mass         = 0.45359237;
-        const double Permeability = 9.869233e-10;
+         const double Pressure     = 6894.76;
+         const double Length       = 0.3048;
+         const double Time         = 86400;
+         const double Mass         = 0.45359237;
+         const double Permeability = 9.869233e-10;
+         const double DissolvedGasRaito = 1.0;  // Mscf / stb
     }
 
 }
