@@ -26,6 +26,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Units/ConversionFactors.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 
@@ -74,36 +75,33 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
 
         BOOST_CHECK(well1->isInPredictionMode(0));
         BOOST_CHECK_EQUAL(0, well1->getOilRate(0));
-
         BOOST_CHECK_EQUAL(0, well1->getOilRate(1));
         BOOST_CHECK_EQUAL(0, well1->getOilRate(2));
 
         BOOST_CHECK(!well1->isInPredictionMode(3));
-        BOOST_CHECK_EQUAL(4000, well1->getOilRate(3));
-        BOOST_CHECK_EQUAL(4000, well1->getOilRate(4));
-        BOOST_CHECK_EQUAL(4000, well1->getOilRate(5));
-        BOOST_CHECK_EQUAL(4     , well1->getWaterRate(3));
-        BOOST_CHECK_EQUAL(12345 , well1->getGasRate(3));
-        BOOST_CHECK_EQUAL(4     , well1->getWaterRate(4));
-        BOOST_CHECK_EQUAL(12345 , well1->getGasRate(4));
-        BOOST_CHECK_EQUAL(4     , well1->getWaterRate(5));
-        BOOST_CHECK_EQUAL(12345 , well1->getGasRate(5));
+        BOOST_CHECK_CLOSE(4000  / Metric::Time, well1->getOilRate(3), 0.0001);
+        BOOST_CHECK_CLOSE(4000  / Metric::Time, well1->getOilRate(4) , 0.0001);
+        BOOST_CHECK_CLOSE(12345 / Metric::Time, well1->getGasRate(3) , 0.0001);
+        BOOST_CHECK_CLOSE(4     / Metric::Time, well1->getWaterRate(4) , 0.0001);
+        BOOST_CHECK_CLOSE(12345 / Metric::Time, well1->getGasRate(4) , 0.0001);
+        BOOST_CHECK_CLOSE(4     / Metric::Time, well1->getWaterRate(5), 0.0001);
+        BOOST_CHECK_CLOSE(12345 / Metric::Time, well1->getGasRate(5) , 0.0001);
 
-
+        
         BOOST_CHECK(!well1->isInPredictionMode(6));
-        BOOST_CHECK_EQUAL(14000, well1->getOilRate(6));
+        BOOST_CHECK_CLOSE(14000/Metric::Time, well1->getOilRate(6) , 0.0001);
 
         BOOST_CHECK(well1->isInPredictionMode(7));
-        BOOST_CHECK_EQUAL(11000, well1->getOilRate(7));
-        BOOST_CHECK_EQUAL(44   , well1->getWaterRate(7));
-        BOOST_CHECK_EQUAL(188  , well1->getGasRate(7));
+        BOOST_CHECK_CLOSE(11000/Metric::Time, well1->getOilRate(7) , 0.0001);
+        BOOST_CHECK_CLOSE(44/Metric::Time   , well1->getWaterRate(7) , 0.0001);
+        BOOST_CHECK_CLOSE(188/Metric::Time  , well1->getGasRate(7) , 0.0001);
 
         BOOST_CHECK(!well1->isInPredictionMode(8));
-        BOOST_CHECK_EQUAL(13000, well1->getOilRate(8));
+        BOOST_CHECK_CLOSE(13000/Metric::Time, well1->getOilRate(8) , 0.0001);
         
         BOOST_CHECK( well1->isInjector(9));
-        BOOST_CHECK_EQUAL(20000, well1->getInjectionRate(9));
-        BOOST_CHECK_EQUAL(5000, well1->getInjectionRate(10));
+        BOOST_CHECK_CLOSE(20000, well1->getInjectionRate(9) , 0.0001);
+        BOOST_CHECK_CLOSE(5000, well1->getInjectionRate(10) , 0.0001);
     }
 }
 
@@ -119,7 +117,7 @@ BOOST_AUTO_TEST_CASE(WellTestCOMPDAT) {
     BOOST_CHECK(sched->hasWell("W_3"));
     {
         WellPtr well1 = sched->getWell("W_1");
-        BOOST_CHECK_EQUAL(13000, well1->getOilRate(8));
+        BOOST_CHECK_CLOSE(13000/Metric::Time, well1->getOilRate(8), 0.0001);
         CompletionSetConstPtr completions = well1->getCompletions(0);
         BOOST_CHECK_EQUAL(0U, completions->size());
 

@@ -95,7 +95,7 @@ namespace Opm {
 
             if (!numTablesObject.is_object())
                 throw std::invalid_argument("The num_tables key must point to a {} object");
-
+            
             initSizeKeyword(numTablesObject);
             m_isTableCollection = true;
         } else {

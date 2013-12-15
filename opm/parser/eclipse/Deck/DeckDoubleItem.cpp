@@ -22,6 +22,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include <algorithm>
+#include <iostream>
 
 namespace Opm {
 
@@ -51,7 +52,7 @@ namespace Opm {
                 }
             }
         } else
-            throw std::invalid_argument("No dimension has been set - can not ask for SI data");
+            throw std::invalid_argument("No dimension has been set for item:" + name() + " can not ask for SI data");
     }
     
 

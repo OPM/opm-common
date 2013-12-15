@@ -149,9 +149,9 @@ namespace Opm {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellName = record->getItem("WELL")->getString(0);
             WellPtr well = getWell(wellName);
-            double orat  = record->getItem("ORAT")->getRawDouble(0);
-            double wrat  = record->getItem("WRAT")->getRawDouble(0);
-            double grat  = record->getItem("GRAT")->getRawDouble(0);
+            double orat  = record->getItem("ORAT")->getSIDouble(0);
+            double wrat  = record->getItem("WRAT")->getSIDouble(0);
+            double grat  = record->getItem("GRAT")->getSIDouble(0);
             
             well->setOilRate(currentStep, orat);
             well->setWaterRate(currentStep, wrat);

@@ -52,9 +52,7 @@ namespace Opm {
     }
 
     DeckPtr Parser::parse(const std::string &dataFile) const {
-        DeckPtr deck = parse(dataFile, true);
-        applyUnitsToDeck(deck);
-        return deck;
+        return parse(dataFile, true);
     }
 
 
@@ -71,6 +69,7 @@ namespace Opm {
         std::shared_ptr<ParserState> parserState(new ParserState(dataFileName, DeckPtr(new Deck()), getRootPathFromFile(dataFileName), strictParsing));
 
         parseFile(parserState);
+        applyUnitsToDeck(parserState->deck);
         return parserState->deck;
     }
 
@@ -346,9 +345,12 @@ namespace Opm {
         deck->initUnitSystem();
         for (size_t index=0; index < deck->size(); ++index) {
             DeckKeywordPtr deckKeyword = deck->getKeyword( index );
-            ParserKeywordConstPtr parserKeyword = getKeyword( deckKeyword->name() );
-            if (parserKeyword->hasDimension()) 
-                parserKeyword->applyUnitsToDeck(deck , deckKeyword);
+            if (canParseKeyword( deckKeyword->name())) {
+                ParserKeywordConstPtr parserKeyword = getKeyword( deckKeyword->name() );
+                if (parserKeyword->hasDimension()) {
+                    parserKeyword->applyUnitsToDeck(deck , deckKeyword);
+                }
+            }
         }
     }
     
