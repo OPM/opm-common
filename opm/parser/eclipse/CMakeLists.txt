@@ -4,6 +4,7 @@ add_subdirectory(Deck/tests)
 add_subdirectory(IntegrationTests)
 add_subdirectory(EclipseState/tests)
 add_subdirectory(EclipseState/Schedule/tests)
+add_subdirectory(Utility/tests)
 add_subdirectory(Units/tests)
 
 add_subdirectory( Applications )
@@ -66,6 +67,9 @@ EclipseState/Schedule/ScheduleEnums.cpp
 EclipseState/Schedule/GroupTreeNode.cpp
 EclipseState/Schedule/GroupTree.cpp)
 
+set (utility_source
+Utility/SimpleTable.cpp)
+
 set( HEADER_FILES
 RawDeck/RawConsts.hpp 
 RawDeck/RawKeyword.hpp 
@@ -109,6 +113,8 @@ EclipseState/Schedule/CompletionSet.hpp
 EclipseState/Schedule/ScheduleEnums.hpp
 EclipseState/Schedule/GroupTreeNode.hpp 
 EclipseState/Schedule/GroupTree.hpp 
+#
+Utility/SimpleTable.hpp
 )
 
 add_library(buildParser ${rawdeck_source} ${build_parser_source} ${deck_source} ${unit_source})
@@ -126,7 +132,7 @@ add_custom_command( OUTPUT ${PROJECT_BINARY_DIR}/generated-source/DefaultKeyword
 
 #-----------------------------------------------------------------
 
-add_library(Parser ${rawdeck_source} ${parser_source} ${deck_source} ${state_source} ${unit_source})
+add_library(Parser ${rawdeck_source} ${parser_source} ${deck_source} ${state_source} ${utility_source} ${unit_source})
 target_link_libraries(Parser opm-json ${Boost_LIBRARIES})
 
 include( ${PROJECT_SOURCE_DIR}/cmake/Modules/install_headers.cmake )   
