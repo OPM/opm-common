@@ -2,8 +2,8 @@
     {"name" : "GROUP"    , "value_type" : "STRING" },
     {"name" : "PHASE"  , "value_type" : "STRING"},
     {"name" : "CONTROL_MODE" , "value_type" : "STRING" , "default" : "NONE"},
-    {"name" : "SURFACE_TARGET" , "value_type" : "FLOAT" , "default" : 0},
-    {"name" : "RESV_TARGET" , "value_type" : "FLOAT" , "default" : 0},
+    {"name" : "SURFACE_TARGET" , "value_type" : "FLOAT" , "default" : 0 , "dimension" : "V/t"},
+    {"name" : "RESV_TARGET" , "value_type" : "FLOAT" , "default" : 0 , "dimension" : "V/t"},
     {"name" : "REINJ_TARGET" , "value_type" : "FLOAT" , "default" : 0},
     {"name" : "VOIDAGE_TARGET" , "value_type" : "FLOAT" , "default" : 0},
     {"name" : "FREE" , "value_type" : "STRING" , "default" : "YES"},
@@ -11,5 +11,5 @@
     {"name" : "GUIDE_DEF" , "value_type" : "STRING"},
     {"name" : "REINJECT_GROUP" , "value_type" : "STRING"},
     {"name" : "VOIDAGE_GROUP" , "value_type" : "STRING"},
-    {"name" : "WETGAS_TARGET", "value_type" : "FLOAT"}
+    {"name" : "WETGAS_TARGET", "value_type" : "FLOAT" , "dimension" : "V/t"}
 ]}
