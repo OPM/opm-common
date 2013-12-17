@@ -26,24 +26,32 @@
 #include <memory>
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
+#include <opm/parser/eclipse/Units/Dimension.hpp>
 
 namespace Opm {
 
     class DeckDoubleItem : public DeckItem {
     public:
         DeckDoubleItem(std::string name) : DeckItem(name) {}
-        double getDouble(size_t index) const;
-        const std::vector<double>& getDoubleData() const;
+        double getRawDouble(size_t index) const;
+        const std::vector<double>& getRawDoubleData() const;
+        double getSIDouble(size_t index);
+        const std::vector<double>& getSIDoubleData();
         
         void push_back(std::deque<double> data , size_t items);
         void push_back(std::deque<double> data);
         void push_back(double value);
         void push_backDefault(double value);
         void push_backMultiple(double value, size_t numValues);
+        void push_backDimension(std::shared_ptr<const Dimension> activeDimension , std::shared_ptr<const Dimension> defaultDimension);
         
         size_t size() const;
     private:
+        void assertSIData();
+
         std::vector<double> m_data;
+        std::vector<double> m_SIdata;
+        std::vector<std::shared_ptr<const Dimension> > m_dimensions;
     };
 
     typedef std::shared_ptr<DeckDoubleItem> DeckDoubleItemPtr;

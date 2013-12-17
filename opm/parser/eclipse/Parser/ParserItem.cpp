@@ -38,6 +38,21 @@ namespace Opm {
         m_defaultSet = false;
     }
 
+    bool ParserItem::hasDimension() const {
+        return false;
+    }
+
+    size_t ParserItem::numDimensions() const {
+        return 0;
+    }
+
+    const std::string& ParserItem::getDimension(size_t index) const {
+        throw std::invalid_argument("Should not call this ... \n");       
+    }
+
+    void ParserItem::push_backDimension(const std::string& dimension) {
+        throw std::invalid_argument("Should not call this ... \n");       
+    }
     
     ParserItem::ParserItem(const Json::JsonObject& jsonConfig) {
         if (jsonConfig.has_item("name"))

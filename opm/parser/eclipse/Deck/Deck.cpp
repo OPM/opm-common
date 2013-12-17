@@ -36,15 +36,15 @@ namespace Opm {
         m_keywords->addKeyword(keyword);
     }
     
-    DeckKeywordConstPtr Deck::getKeyword(const std::string& keyword, size_t index) const {
+    DeckKeywordPtr Deck::getKeyword(const std::string& keyword, size_t index) const {
         return m_keywords->getKeyword(keyword , index);
     }
 
-    DeckKeywordConstPtr Deck::getKeyword(const std::string& keyword) const {
+    DeckKeywordPtr Deck::getKeyword(const std::string& keyword) const {
         return m_keywords->getKeyword(keyword);
     }
     
-    DeckKeywordConstPtr Deck::getKeyword(size_t index) const {
+    DeckKeywordPtr Deck::getKeyword(size_t index) const {
         return m_keywords->getKeyword(index);
     }
       
@@ -52,7 +52,7 @@ namespace Opm {
         return m_keywords->numKeywords( keyword );
     }
 
-    const std::vector<DeckKeywordConstPtr>& Deck::getKeywordList(const std::string& keyword) {
+    const std::vector<DeckKeywordPtr>& Deck::getKeywordList(const std::string& keyword) {
         return m_keywords->getKeywordList( keyword );
     }
 
@@ -78,6 +78,23 @@ namespace Opm {
             throw std::invalid_argument("Index out of range");
     }
     
+    
+    void Deck::initUnitSystem() {
+        m_defaultUnits = std::shared_ptr<UnitSystem>( UnitSystem::newMETRIC() );
+        if (hasKeyword("FIELD"))
+            m_activeUnits = std::shared_ptr<UnitSystem>( UnitSystem::newFIELD() );
+        else
+            m_activeUnits = m_defaultUnits;
+    }
+
+    std::shared_ptr<UnitSystem> Deck::getActiveUnitSystem() const {
+        return m_activeUnits;
+    }
+    
+
+    std::shared_ptr<UnitSystem> Deck::getDefaultUnitSystem() const {
+        return m_defaultUnits;
+    }
 
 }
 

@@ -35,38 +35,43 @@
 
 
 namespace Opm {
-
-  class ParserItem {
-  public:
-    ParserItem(const std::string& itemName);
-    ParserItem(const std::string& itemName, ParserItemSizeEnum sizeType);
-    ParserItem(const Json::JsonObject& jsonConfig);
     
-    virtual DeckItemConstPtr scan(RawRecordPtr rawRecord) const = 0;
-    const std::string& name() const;
-    ParserItemSizeEnum sizeType() const;
+    class ParserItem {
+    public:
+        ParserItem(const std::string& itemName);
+        ParserItem(const std::string& itemName, ParserItemSizeEnum sizeType);
+        ParserItem(const Json::JsonObject& jsonConfig);
 
-    static int defaultInt();
-    static std::string defaultString();
-    static double defaultDouble();
-
-    virtual bool equal(const ParserItem& other) const;
-    virtual void inlineNew(std::ostream& os) const {}
-    virtual ~ParserItem() {
-    }
+        virtual void push_backDimension(const std::string& dimension);
+        virtual const std::string& getDimension(size_t index) const;
+        virtual DeckItemPtr scan(RawRecordPtr rawRecord) const = 0;
+        virtual bool hasDimension() const;
+        virtual size_t numDimensions() const;
+        const std::string& name() const;
+        ParserItemSizeEnum sizeType() const;
+      
+        static int defaultInt();
+        static std::string defaultString();
+        static double defaultDouble();
+      
+        virtual bool equal(const ParserItem& other) const;
+        virtual void inlineNew(std::ostream& os) const {}
+      
+        virtual ~ParserItem() {
+        }
     
-  protected:
-    bool m_defaultSet;
+    protected:
+        bool m_defaultSet;
 
 
 
-  private:
-    std::string m_name;
-    ParserItemSizeEnum m_sizeType;
-  };
+    private:
+        std::string m_name;
+        ParserItemSizeEnum m_sizeType;
+    };
 
-  typedef std::shared_ptr<const ParserItem> ParserItemConstPtr;
-  typedef std::shared_ptr<ParserItem> ParserItemPtr;
+    typedef std::shared_ptr<const ParserItem> ParserItemConstPtr;
+    typedef std::shared_ptr<ParserItem> ParserItemPtr;
 
 
 }

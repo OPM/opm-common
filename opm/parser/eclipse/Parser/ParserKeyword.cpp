@@ -70,6 +70,10 @@ namespace Opm {
         initSizeKeyword(sizeKeyword, sizeItem);
     }
 
+    bool ParserKeyword::hasDimension() const {
+        return m_record->hasDimension();
+    }
+
     bool ParserKeyword::isTableCollection() const {
         return m_isTableCollection;
     }
@@ -91,7 +95,7 @@ namespace Opm {
 
             if (!numTablesObject.is_object())
                 throw std::invalid_argument("The num_tables key must point to a {} object");
-
+            
             initSizeKeyword(numTablesObject);
             m_isTableCollection = true;
         } else {
@@ -129,7 +133,7 @@ namespace Opm {
             initData(jsonConfig);
 
         if (isTableCollection())
-            addTableItems();
+            addTableItems(jsonConfig.get_item("num_tables"));
 
         if ((m_fixedSize == 0 && m_keywordSizeType == FIXED) || (m_action != INTERNALIZE))
             return;
@@ -238,7 +242,8 @@ namespace Opm {
                             break;
                         case FLOAT:
                         {
-                            ParserDoubleItemConstPtr item = ParserDoubleItemConstPtr(new ParserDoubleItem(itemConfig));
+                            ParserDoubleItemPtr item = ParserDoubleItemPtr(new ParserDoubleItem(itemConfig));
+                            initItemDimension( item , itemConfig );
                             addItem(item);
                         }
                             break;
@@ -252,10 +257,29 @@ namespace Opm {
             throw std::invalid_argument("The items: object must be an array");
     }
 
-    void ParserKeyword::addTableItems() {
-        ParserDoubleItemConstPtr item = ParserDoubleItemConstPtr(new ParserDoubleItem("TABLEROW", ALL, 0));
+    void ParserKeyword::addTableItems(const Json::JsonObject tableConfig) {
+        ParserDoubleItemPtr item = ParserDoubleItemPtr(new ParserDoubleItem("TABLEROW", ALL, 0));
+        initItemDimension( item , tableConfig );
         addItem(item);
     }
+
+    
+    void ParserKeyword::initItemDimension( ParserDoubleItemPtr item, const Json::JsonObject itemConfig) {
+        if (itemConfig.has_item("dimension")) {
+            const Json::JsonObject dimensionConfig = itemConfig.get_item("dimension");
+            if (dimensionConfig.is_string())
+                item->push_backDimension( dimensionConfig.as_string() );
+            else if (dimensionConfig.is_array()) {
+                for (size_t idim = 0; idim < dimensionConfig.size(); idim++) {
+                    Json::JsonObject dimObject = dimensionConfig.get_array_item( idim );
+                    item->push_backDimension( dimObject.as_string());
+                }
+            } else
+                throw std::invalid_argument("The dimension: attribute must be a string/list of strings");
+        } 
+    }
+
+    
 
     void ParserKeyword::initData(const Json::JsonObject& jsonConfig) {
         m_fixedSize = 1U;
@@ -295,6 +319,7 @@ namespace Opm {
                         double defaultValue = dataConfig.get_double("default");
                         item->setDefault(defaultValue);
                     }
+                    initItemDimension( item , dataConfig );
                     addDataItem(item);
                 }
                     break;
@@ -369,11 +394,11 @@ namespace Opm {
 
     bool ParserKeyword::equal(const ParserKeyword& other) const {
         if ((m_name == other.m_name) &&
-                (m_record->equal(*(other.m_record))) &&
-                (m_keywordSizeType == other.m_keywordSizeType) &&
-                (m_isDataKeyword == other.m_isDataKeyword) &&
-                (m_isTableCollection == other.m_isTableCollection) &&
-                (m_action == other.m_action)) {
+            (m_record->equal(*(other.m_record))) &&
+            (m_keywordSizeType == other.m_keywordSizeType) &&
+            (m_isDataKeyword == other.m_isDataKeyword) &&
+            (m_isTableCollection == other.m_isTableCollection) &&
+            (m_action == other.m_action)) {
             bool equal = false;
             switch (m_keywordSizeType) {
                 case FIXED:
@@ -423,9 +448,11 @@ namespace Opm {
             {
                 const std::string local_indent = indent + "   ";
                 ParserItemConstPtr item = m_record->get(i);
-                os << local_indent << "ParserItemConstPtr item(";
+                os << local_indent << "ParserItemPtr item(";
                 item->inlineNew(os);
                 os << ");" << std::endl;
+                for (size_t idim=0; idim < item->numDimensions(); idim++)
+                    os << local_indent << "item->push_backDimension(\"" << item->getDimension( idim ) << "\");" << std::endl;
                 {
                     std::string addItemMethod = "addItem";
                     if (m_isDataKeyword)
@@ -437,4 +464,14 @@ namespace Opm {
             os << indent << "}" << std::endl;
         }
     }
+
+
+    void ParserKeyword::applyUnitsToDeck(std::shared_ptr<const Deck> deck , std::shared_ptr<DeckKeyword> deckKeyword) const {
+        std::shared_ptr<const ParserRecord> parserRecord = getRecord();
+        for (size_t index = 0; index < deckKeyword->size(); index++) {
+            std::shared_ptr<const DeckRecord> deckRecord = deckKeyword->getRecord(index);
+            parserRecord->applyUnitsToDeck( deck , deckRecord);
+        }
+    }
+
 }

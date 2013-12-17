@@ -22,7 +22,9 @@ void createHeader(std::ofstream& of , const std::string& test_module) {
     of << "#include <opm/parser/eclipse/Parser/ParserStringItem.hpp>" << std::endl;
     of << "#include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>" << std::endl;
     of << "#include <opm/parser/eclipse/Parser/ParserRecord.hpp>" << std::endl;
+    of << "#include <opm/parser/eclipse/Units/UnitSystem.hpp>" << std::endl;
     of << "using namespace Opm;"  << std::endl << std::endl;
+    of << "UnitSystem * unitSystem = UnitSystem::newMETRIC();" << std::endl;
 }
 
 
@@ -48,6 +50,18 @@ void testKeyword(const boost::filesystem::path& file , std::ofstream& of) {
         parserKeyword->inlineNew(of , "inlineKeyword" , "   ");
 
         of << "BOOST_CHECK( parserKeyword->equal( *inlineKeyword));" << std::endl;
+        if (parserKeyword->hasDimension()) {
+            of << "{" << std::endl;
+            of << "    ParserRecordConstPtr parserRecord = parserKeyword->getRecord();" << std::endl;
+            of << "    for (size_t i=0; i < parserRecord->size(); i++) { " << std::endl;
+            of << "        ParserItemConstPtr item = parserRecord->get( i );" << std::endl;
+            of << "        for (size_t j=0; j < item->numDimensions(); j++) {" << std::endl;
+            of << "            std::string dimString = item->getDimension(j);" << std::endl;
+            of << "            BOOST_CHECK_NO_THROW( unitSystem->getNewDimension( dimString ));" << std::endl;
+            of << "         }" << std::endl; 
+            of << "    }" << std::endl; 
+            of << "}" << std::endl;
+        }
         endTest(of);
     }
 }

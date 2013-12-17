@@ -136,7 +136,7 @@ namespace Opm {
             DeckItemConstPtr item = record->getItem( 0 );
             
             for (size_t itemIndex = 0; itemIndex < item->size(); itemIndex++) {
-                double days = item->getDouble( itemIndex );
+                double days = item->getRawDouble( itemIndex );
                 boost::posix_time::time_duration step = boost::posix_time::seconds( static_cast<long int>(days * 24 * 3600) );
                 addTStep( step );
             }

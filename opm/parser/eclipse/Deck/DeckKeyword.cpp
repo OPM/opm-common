@@ -88,10 +88,16 @@ namespace Opm {
     }
 
 
-    const std::vector<double>& DeckKeyword::getDoubleData() const {
+    const std::vector<double>& DeckKeyword::getRawDoubleData() const {
         DeckRecordConstPtr record = getDataRecord();
         DeckItemConstPtr item = record->getDataItem();
-        return item->getDoubleData();
+        return item->getRawDoubleData();
+    }
+
+    const std::vector<double>& DeckKeyword::getSIDoubleData() {
+        DeckRecordConstPtr record = getDataRecord();
+        DeckItemPtr item = record->getDataItem();
+        return item->getSIDoubleData();
     }
 
 }

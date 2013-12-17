@@ -24,6 +24,7 @@
 #include <opm/json/JsonObject.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
+#include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 
 #include <opm/parser/eclipse/RawDeck/RawEnums.hpp>
@@ -425,4 +426,60 @@ BOOST_AUTO_TEST_CASE(DefaultActionISINTERNALIZE) {
 BOOST_AUTO_TEST_CASE(CreateWithAction) {
     ParserKeywordPtr parserKeyword(new ParserKeyword("JA" , UNKNOWN , IGNORE));
     BOOST_CHECK_EQUAL(IGNORE , parserKeyword->getAction());
+}
+
+
+/*****************************************************************/
+/* DImension */
+
+BOOST_AUTO_TEST_CASE(ParseKeywordHasDimensionCorrect) {
+    ParserKeywordPtr parserKeyword(new ParserKeyword("JA"));
+    ParserIntItemConstPtr itemI(new ParserIntItem("I", SINGLE));
+    ParserDoubleItemPtr item2(new ParserDoubleItem("ID", SINGLE));
+    
+    BOOST_CHECK_EQUAL( false , parserKeyword->hasDimension());
+    
+    parserKeyword->addItem( itemI );
+    parserKeyword->addItem( item2 );
+    BOOST_CHECK_EQUAL( false , parserKeyword->hasDimension());
+    BOOST_CHECK_EQUAL( 0U , itemI->numDimensions() );
+
+    item2->push_backDimension("L*L/t");
+    BOOST_CHECK_EQUAL( true , parserKeyword->hasDimension());
+    BOOST_CHECK_EQUAL( 1U , item2->numDimensions() );
+}
+
+
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withDimension) {
+    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100 , \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"FLOAT\" , \"dimension\" : \"L*L/t\"}]}");
+    ParserKeyword parserKeyword(jsonObject);
+    ParserRecordConstPtr record = parserKeyword.getRecord();
+    ParserItemConstPtr item = record->get("ItemX");      
+
+    BOOST_CHECK_EQUAL("BPR" , parserKeyword.getName());
+    BOOST_CHECK_EQUAL( true , parserKeyword.hasFixedSize() );
+    BOOST_CHECK_EQUAL( 100U , parserKeyword.getFixedSize() );
+
+    BOOST_CHECK_EQUAL( 1U , parserKeyword.numItems());
+    BOOST_CHECK( parserKeyword.hasDimension() );
+    BOOST_CHECK( item->hasDimension() );
+    BOOST_CHECK_EQUAL( 1U , item->numDimensions() );
+}
+
+
+
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withDimensionList) {
+    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100 , \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"ALL\" , \"value_type\" : \"FLOAT\" , \"dimension\" : [\"L*L/t\" , \"t\", \"1\"]}]}");
+    ParserKeyword parserKeyword(jsonObject);
+    ParserRecordConstPtr record = parserKeyword.getRecord();
+    ParserItemConstPtr item = record->get("ItemX");      
+
+    BOOST_CHECK_EQUAL("BPR" , parserKeyword.getName());
+    BOOST_CHECK_EQUAL( true , parserKeyword.hasFixedSize() );
+    BOOST_CHECK_EQUAL( 100U , parserKeyword.getFixedSize() );
+
+    BOOST_CHECK_EQUAL( 1U , parserKeyword.numItems());
+    BOOST_CHECK( parserKeyword.hasDimension() );
+    BOOST_CHECK( item->hasDimension() );
+    BOOST_CHECK_EQUAL( 3U , item->numDimensions() );
 }

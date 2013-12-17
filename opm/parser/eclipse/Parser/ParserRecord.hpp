@@ -24,6 +24,7 @@
 #include <map>
 #include <memory>
 
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
@@ -39,6 +40,10 @@ namespace Opm {
         ParserItemConstPtr get(const std::string& itemName) const;
         DeckRecordConstPtr parse(RawRecordPtr rawRecord) const;
         bool equal(const ParserRecord& other) const;
+        bool hasDimension() const;
+        void applyUnitsToDeck(std::shared_ptr<const Deck> deck , std::shared_ptr<const DeckRecord> deckRecord) const;
+        std::vector<ParserItemConstPtr>::const_iterator begin() const;
+        std::vector<ParserItemConstPtr>::const_iterator end() const;
     private:
         std::vector<ParserItemConstPtr> m_items;
         std::map<std::string , ParserItemConstPtr> m_itemMap;

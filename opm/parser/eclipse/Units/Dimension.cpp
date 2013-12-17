@@ -47,12 +47,22 @@ namespace Opm {
         return m_name;
     }
 
-    Dimension Dimension::makeComposite(const std::string& dim , double SIfactor) {
-        Dimension dimension;
-        dimension.m_name = dim;
-        dimension.m_SIfactor = SIfactor;
+
+    Dimension * Dimension::newComposite(const std::string& dim , double SIfactor) {
+        Dimension * dimension = new Dimension();
+        dimension->m_name = dim;
+        dimension->m_SIfactor = SIfactor;
 
         return dimension;
+    }
+
+
+    bool Dimension::equal(const Dimension& other) const {
+        if ((m_name == other.m_name) && 
+            (m_SIfactor == other.m_SIfactor))
+            return true;
+        else
+            return false;
     }
 
 }

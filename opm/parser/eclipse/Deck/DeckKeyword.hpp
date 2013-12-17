@@ -32,7 +32,8 @@ namespace Opm {
         void    setDeckIndex(size_t deckIndex);
 
         const std::vector<int>& getIntData() const;
-        const std::vector<double>& getDoubleData() const;
+        const std::vector<double>& getRawDoubleData() const;
+        const std::vector<double>& getSIDoubleData();
         const std::vector<std::string>& getStringData() const;
 
     private:

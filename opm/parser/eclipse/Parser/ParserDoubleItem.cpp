@@ -55,6 +55,11 @@ namespace Opm
     }
 
 
+    double ParserDoubleItem::getDefault() const {
+        return m_default;
+    }
+    
+
     void ParserDoubleItem::setDefault(double defaultValue) {
         m_default = defaultValue;
         m_defaultSet = true;
@@ -71,45 +76,58 @@ namespace Opm
             m_default = defaultDouble();
     }
 
-    /// Scans the rawRecords data according to the ParserItems definition.
-    /// returns a DeckItem object.
-    /// NOTE: data are popped from the rawRecords deque!
-
-//    DeckItemConstPtr ParserDoubleItem::scan(RawRecordPtr rawRecord) const
-//    {
-//        DeckDoubleItemPtr deckItem(new DeckDoubleItem(name()));
-//
-//        bool scanAll = (sizeType() == ALL);
-//        bool defaultActive;
-//        std::deque<double> doublesPreparedForDeckItem = readFromRawRecord(
-//                rawRecord, scanAll, m_default, defaultActive);
-//
-//        if (scanAll)
-//            deckItem->push_back(doublesPreparedForDeckItem);
-//        else
-//            {
-//                deckItem->push_back(doublesPreparedForDeckItem.front());
-//                doublesPreparedForDeckItem.pop_front();
-//                pushBackToRecord(rawRecord, doublesPreparedForDeckItem,
-//                        defaultActive);
-//            }
-//        return deckItem;
-//    }
 
     bool ParserDoubleItem::equal(const ParserItem& other) const
     {
         // cast to a pointer to avoid bad_cast exception
         const ParserDoubleItem* rhs = dynamic_cast<const ParserDoubleItem*>(&other);
-        if (rhs && ParserItem::equal(other) && (getDefault() == rhs->getDefault()))
-            return true;
+        if (rhs && ParserItem::equal(other) && (getDefault() == rhs->getDefault())) {
+            return equalDimensions( other );
+        }
         else
             return false;
     }
 
+
+    bool ParserDoubleItem::equalDimensions(const ParserItem& other) const {
+        bool equal=false;
+        if (other.numDimensions() == numDimensions()) {
+            equal = true;
+            for (size_t idim=0; idim < numDimensions(); idim++) {
+                if (other.getDimension(idim) != getDimension(idim))
+                    equal = false;
+            }
+        } 
+        return equal;
+    }
+
+    void ParserDoubleItem::push_backDimension(const std::string& dimension) {
+        if ((sizeType() == SINGLE) && (m_dimensions.size() > 0))
+            throw std::invalid_argument("Internal error - can not add more than one dimension to a Item os size 1");
+        
+        m_dimensions.push_back( dimension );
+    }
+
+    bool ParserDoubleItem::hasDimension() const {
+        return (m_dimensions.size() > 0);
+    }
+
+    size_t ParserDoubleItem::numDimensions() const {
+        return m_dimensions.size();
+    }
+
+    const std::string& ParserDoubleItem::getDimension(size_t index) const {
+        if (index < m_dimensions.size())
+            return m_dimensions[index];
+        else
+            throw std::invalid_argument("Invalid index ");
+    }
+
+
     /// Scans the rawRecords data according to the ParserItems definition.
     /// returns a DeckItem object.
     /// NOTE: data are popped from the rawRecords deque!
-    DeckItemConstPtr ParserDoubleItem::scan(RawRecordPtr rawRecord) const {
+    DeckItemPtr ParserDoubleItem::scan(RawRecordPtr rawRecord) const {
         DeckDoubleItemPtr deckItem(new DeckDoubleItem(name()));
         double defaultValue = m_default;
 

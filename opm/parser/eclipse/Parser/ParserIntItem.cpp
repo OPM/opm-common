@@ -61,7 +61,7 @@ namespace Opm {
     /// Scans the rawRecords data according to the ParserItems definition.
     /// returns a DeckItem object.
     /// NOTE: data are popped from the rawRecords deque!
-    DeckItemConstPtr ParserIntItem::scan(RawRecordPtr rawRecord) const {
+    DeckItemPtr ParserIntItem::scan(RawRecordPtr rawRecord) const {
         DeckIntItemPtr deckItem(new DeckIntItem(name()));
         int defaultValue = m_default;
 

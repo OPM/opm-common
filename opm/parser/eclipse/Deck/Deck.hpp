@@ -24,6 +24,7 @@
 #include <memory>
 
 #include <opm/parser/eclipse/Deck/KeywordContainer.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm {
 
@@ -32,18 +33,26 @@ namespace Opm {
         Deck();
         bool hasKeyword( const std::string& keyword ) const;
         void addKeyword( DeckKeywordPtr keyword);
-        DeckKeywordConstPtr getKeyword(const std::string& keyword , size_t index) const;
-        DeckKeywordConstPtr getKeyword(const std::string& keyword) const;
-        DeckKeywordConstPtr getKeyword(size_t index) const;
+        DeckKeywordPtr getKeyword(const std::string& keyword , size_t index) const;
+        DeckKeywordPtr getKeyword(const std::string& keyword) const;
+        DeckKeywordPtr getKeyword(size_t index) const;
 
         size_t numKeywords(const std::string& keyword);
-        const std::vector<DeckKeywordConstPtr>& getKeywordList(const std::string& keyword);
+        const std::vector<DeckKeywordPtr>& getKeywordList(const std::string& keyword);
         size_t size() const;
         size_t numWarnings() const;
         void addWarning(const std::string& warningText , const std::string& filename , size_t lineNR);
         const std::pair<std::string , std::pair<std::string,size_t> >& getWarning( size_t index ) const;
+        void initUnitSystem();
+        
+        std::shared_ptr<UnitSystem> getDefaultUnitSystem() const;
+        std::shared_ptr<UnitSystem> getActiveUnitSystem()  const;
+
     private:
         KeywordContainerPtr m_keywords;
+        std::shared_ptr<UnitSystem> m_defaultUnits;
+        std::shared_ptr<UnitSystem> m_activeUnits;
+        
         std::vector<std::pair<std::string , std::pair<std::string,size_t> > > m_warnings; //<"Warning Text" , <"Filename" , LineNR>>
     };
 

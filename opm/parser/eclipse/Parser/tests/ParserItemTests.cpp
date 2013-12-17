@@ -157,6 +157,43 @@ BOOST_AUTO_TEST_CASE(DoubleItem_Equal_ReturnsTrue) {
 }
 
 
+BOOST_AUTO_TEST_CASE(DoubleItem_DimEqual_ReturnsTrue) {
+    ParserItemSizeEnum sizeType = ALL;
+    ParserDoubleItem item1("ITEM1", sizeType);
+    ParserDoubleItem item2("ITEM1", sizeType);
+
+    item1.push_backDimension("L*L");
+    item2.push_backDimension("L*L");
+    
+    BOOST_CHECK( item1.equal( item2 ));
+}
+
+
+BOOST_AUTO_TEST_CASE(DoubleItem_DimDifferent_ReturnsFalse) {
+    ParserItemSizeEnum sizeType = ALL;
+    ParserDoubleItem item1("ITEM1", sizeType);    // Dim: []
+    ParserDoubleItem item2("ITEM1", sizeType);    // Dim: [L]
+    ParserDoubleItem item3("ITEM1", sizeType);    // Dim: [L ,L]
+    ParserDoubleItem item4("ITEM1", sizeType);    // Dim: [t]
+
+    item2.push_backDimension("L");
+
+    item3.push_backDimension("L");
+    item3.push_backDimension("L");
+    
+    item4.push_backDimension("t");
+
+    BOOST_CHECK_EQUAL(false , item1.equal( item2 ));
+    BOOST_CHECK_EQUAL(false , item2.equal( item3 ));
+    BOOST_CHECK_EQUAL(false , item2.equal( item1 ));
+    BOOST_CHECK_EQUAL(false , item2.equal( item4 ));
+    BOOST_CHECK_EQUAL(false , item1.equal( item3 ));
+    BOOST_CHECK_EQUAL(false , item3.equal( item1 ));
+    BOOST_CHECK_EQUAL(false , item4.equal( item2 ));
+
+}
+
+
 BOOST_AUTO_TEST_CASE(DoubleItem_Different_ReturnsFalse) {
     ParserDoubleItem item1("ITEM1", ALL);
     ParserDoubleItem item2("ITEM2", ALL);
@@ -505,3 +542,59 @@ BOOST_AUTO_TEST_CASE(ParserItemCheckEqualsOverride) {
     BOOST_CHECK( itemDefault10->equal( *itemDefault10 ));
     BOOST_CHECK_EQUAL( false , itemDefault10->equal( *itemDefault20 ));
 }
+
+/*****************************************************************/
+
+
+BOOST_AUTO_TEST_CASE(ParserDefaultHasDimensionReturnsFalse) {
+    ParserIntItem intItem(std::string("SOMEINTS"));
+    ParserStringItem stringItem(std::string("SOMESTRING"));
+    ParserDoubleItem doubleItem(std::string("SOMEDOUBLE"));
+    
+    BOOST_CHECK_EQUAL( false, intItem.hasDimension());
+    BOOST_CHECK_EQUAL( false, stringItem.hasDimension());
+    BOOST_CHECK_EQUAL( false, doubleItem.hasDimension());
+}
+
+BOOST_AUTO_TEST_CASE(ParserIntItemGetDimensionThrows) {
+    ParserIntItem intItem(std::string("SOMEINT"));
+
+    BOOST_CHECK_THROW( intItem.getDimension(0) , std::invalid_argument );
+    BOOST_CHECK_THROW( intItem.push_backDimension("L") , std::invalid_argument );
+}
+
+
+
+BOOST_AUTO_TEST_CASE(ParserDoubleItemAddMultipleDimensionToSIngleSizeThrows) {
+    ParserDoubleItem doubleItem(std::string("SOMEDOUBLE"));
+    
+    doubleItem.push_backDimension("L*L");
+    BOOST_CHECK_THROW( doubleItem.push_backDimension("L*L"), std::invalid_argument);
+}
+
+
+BOOST_AUTO_TEST_CASE(ParserDoubleItemWithDimensionHasReturnsCorrect) {
+    ParserDoubleItem doubleItem(std::string("SOMEDOUBLE"));
+
+    BOOST_CHECK_EQUAL( false , doubleItem.hasDimension() );
+    doubleItem.push_backDimension("L*L");
+    BOOST_CHECK_EQUAL( true , doubleItem.hasDimension() );
+}
+
+
+BOOST_AUTO_TEST_CASE(ParserDoubleItemGetDimension) {
+    ParserDoubleItem doubleItem(std::string("SOMEDOUBLE") , ALL);
+
+    BOOST_CHECK_THROW( doubleItem.getDimension( 10 ) , std::invalid_argument );
+    BOOST_CHECK_THROW( doubleItem.getDimension(  0 ) , std::invalid_argument );
+
+    doubleItem.push_backDimension("L");
+    doubleItem.push_backDimension("L*L");
+    doubleItem.push_backDimension("L*L*L");
+
+    BOOST_CHECK_EQUAL( "L" , doubleItem.getDimension(0));
+    BOOST_CHECK_EQUAL( "L*L" , doubleItem.getDimension(1));
+    BOOST_CHECK_EQUAL( "L*L*L" , doubleItem.getDimension(2));
+    BOOST_CHECK_THROW( doubleItem.getDimension( 3 ) , std::invalid_argument );
+}
+

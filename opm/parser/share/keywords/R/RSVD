@@ -1,2 +1,7 @@
 {"name" : "RSVD" , "size" : {"keyword" : "EQLDIMS" , "item" : "NTEQUL"}, 
-        "items" : [{"name" : "table" , "value_type" : "FLOAT" , "size_type" : "ALL"}]}
+        "items" : [{"name" : "table" , 
+                   "value_type" : "FLOAT" , 
+                   "size_type" : "ALL",
+                   "dimension" : ["L" , "Rs"]}]}
+
+        

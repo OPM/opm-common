@@ -149,9 +149,9 @@ namespace Opm {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellName = record->getItem("WELL")->getString(0);
             WellPtr well = getWell(wellName);
-            double orat  = record->getItem("ORAT")->getDouble(0);
-            double wrat  = record->getItem("WRAT")->getDouble(0);
-            double grat  = record->getItem("GRAT")->getDouble(0);
+            double orat  = record->getItem("ORAT")->getSIDouble(0);
+            double wrat  = record->getItem("WRAT")->getSIDouble(0);
+            double grat  = record->getItem("GRAT")->getSIDouble(0);
             
             well->setOilRate(currentStep, orat);
             well->setWaterRate(currentStep, wrat);
@@ -173,7 +173,7 @@ namespace Opm {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellName = record->getItem("WELL")->getString(0);
             WellPtr well = getWell(wellName);
-            double injectionRate  = record->getItem("SURFACE_FLOW_TARGET")->getDouble(0);
+            double injectionRate  = record->getItem("SURFACE_FLOW_TARGET")->getSIDouble(0);
             
             well->setInjectionRate( currentStep , injectionRate );
             well->setInPredictionMode(currentStep, true);
@@ -185,7 +185,7 @@ namespace Opm {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellName = record->getItem("WELL")->getString(0);
             WellPtr well = getWell(wellName);
-            double injectionRate  = record->getItem("RATE")->getDouble(0);
+            double injectionRate  = record->getItem("RATE")->getSIDouble(0);
             
             well->setInjectionRate( currentStep , injectionRate );
             well->setInPredictionMode(currentStep, false );
@@ -207,10 +207,10 @@ namespace Opm {
                 GroupInjection::ControlEnum controlMode = GroupInjection::ControlEnumFromString( record->getItem("CONTROL_MODE")->getString(0) );
                 group->setInjectionControlMode( currentStep , controlMode );
             }
-            group->setSurfaceMaxRate( currentStep , record->getItem("SURFACE_TARGET")->getDouble(0));
-            group->setReservoirMaxRate( currentStep , record->getItem("RESV_TARGET")->getDouble(0));
-            group->setTargetReinjectFraction( currentStep , record->getItem("REINJ_TARGET")->getDouble(0));
-            group->setTargetVoidReplacementFraction( currentStep , record->getItem("VOIDAGE_TARGET")->getDouble(0));
+            group->setSurfaceMaxRate( currentStep , record->getItem("SURFACE_TARGET")->getSIDouble(0));
+            group->setReservoirMaxRate( currentStep , record->getItem("RESV_TARGET")->getSIDouble(0));
+            group->setTargetReinjectFraction( currentStep , record->getItem("REINJ_TARGET")->getRawDouble(0));
+            group->setTargetVoidReplacementFraction( currentStep , record->getItem("VOIDAGE_TARGET")->getRawDouble(0));
         }
     }
 
@@ -224,10 +224,10 @@ namespace Opm {
                 GroupProduction::ControlEnum controlMode = GroupProduction::ControlEnumFromString( record->getItem("CONTROL_MODE")->getString(0) );
                 group->setProductionControlMode( currentStep , controlMode );
             }
-            group->setOilTargetRate( currentStep , record->getItem("OIL_TARGET")->getDouble(0));
-            group->setGasTargetRate( currentStep , record->getItem("GAS_TARGET")->getDouble(0));
-            group->setWaterTargetRate( currentStep , record->getItem("WATER_TARGET")->getDouble(0));
-            group->setLiquidTargetRate( currentStep , record->getItem("LIQUID_TARGET")->getDouble(0));
+            group->setOilTargetRate( currentStep , record->getItem("OIL_TARGET")->getSIDouble(0));
+            group->setGasTargetRate( currentStep , record->getItem("GAS_TARGET")->getSIDouble(0));
+            group->setWaterTargetRate( currentStep , record->getItem("WATER_TARGET")->getSIDouble(0));
+            group->setLiquidTargetRate( currentStep , record->getItem("LIQUID_TARGET")->getSIDouble(0));
             {
                 GroupProductionExceedLimit::ActionEnum exceedAction = GroupProductionExceedLimit::ActionEnumFromString(record->getItem("EXCEED_PROC")->getString(0) );
                 group->setProductionExceedLimitAction( currentStep , exceedAction );

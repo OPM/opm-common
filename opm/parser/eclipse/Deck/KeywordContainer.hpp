@@ -23,16 +23,16 @@ namespace Opm {
         bool hasKeyword(const std::string& keyword) const;
         size_t size() const;
         void addKeyword(DeckKeywordPtr keyword);
-        DeckKeywordConstPtr getKeyword(const std::string& keyword, size_t index) const;
-        DeckKeywordConstPtr getKeyword(const std::string& keyword) const;
-        DeckKeywordConstPtr getKeyword(size_t index) const;
+        DeckKeywordPtr getKeyword(const std::string& keyword, size_t index) const;
+        DeckKeywordPtr getKeyword(const std::string& keyword) const;
+        DeckKeywordPtr      getKeyword(size_t index) const;
 
-        const std::vector<DeckKeywordConstPtr>&  getKeywordList(const std::string& keyword) const;
+        const std::vector<DeckKeywordPtr>&  getKeywordList(const std::string& keyword) const;
         size_t numKeywords(const std::string& keyword) const;
 
     private:
-        std::vector<DeckKeywordConstPtr> m_keywordList;
-        std::map<std::string, std::vector<DeckKeywordConstPtr> > m_keywordMap;
+        std::vector<DeckKeywordPtr> m_keywordList;
+        std::map<std::string, std::vector<DeckKeywordPtr> > m_keywordMap;
     };
     typedef std::shared_ptr<KeywordContainer> KeywordContainerPtr;
     typedef std::shared_ptr<const KeywordContainer> KeywordContainerConstPtr;

@@ -26,9 +26,12 @@
 #include <opm/json/JsonObject.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
+#include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
-#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+
 
 
 namespace Opm {
@@ -40,11 +43,12 @@ namespace Opm {
         ParserKeyword(const std::string& name , size_t fixedKeywordSize,ParserKeywordActionEnum action = INTERNALIZE);
         ParserKeyword(const std::string& name , const std::string& sizeKeyword , const std::string& sizeItem, ParserKeywordActionEnum action = INTERNALIZE , bool isTableCollection = false);
         ParserKeyword(const Json::JsonObject& jsonConfig);
-
+        
+        
         static bool validName(const std::string& name);
         static bool wildCardName(const std::string& name);
         bool matches(const std::string& keyword) const;
-
+        bool hasDimension() const;
         ParserRecordPtr getRecord() const;
         const std::string& getName() const;
         ParserKeywordActionEnum getAction() const;
@@ -63,6 +67,7 @@ namespace Opm {
         bool isDataKeyword() const;
         bool equal(const ParserKeyword& other) const;
         void inlineNew(std::ostream& os , const std::string& lhs, const std::string& indent) const;
+        void applyUnitsToDeck(std::shared_ptr<const Deck> deck , std::shared_ptr<DeckKeyword> deckKeyword) const;
     private:
         std::pair<std::string,std::string> m_sizeDefinitionPair;
         std::string m_name;
@@ -80,7 +85,8 @@ namespace Opm {
         void initSizeKeyword(const Json::JsonObject& sizeObject);
         void commonInit(const std::string& name, ParserKeywordSizeEnum sizeType , ParserKeywordActionEnum action);
         void addItems( const Json::JsonObject& jsonConfig);
-        void addTableItems();
+        void addTableItems(const Json::JsonObject tableConfig);
+        static void initItemDimension( ParserDoubleItemPtr item, const Json::JsonObject itemConfig);
     };
     typedef std::shared_ptr<ParserKeyword> ParserKeywordPtr;
     typedef std::shared_ptr<const ParserKeyword> ParserKeywordConstPtr;

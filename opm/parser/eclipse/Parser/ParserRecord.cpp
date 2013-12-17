@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 
@@ -36,6 +37,43 @@ namespace Opm {
         } else
             throw std::invalid_argument("Itemname: " + item->name() + " already exists.");
     }
+
+    std::vector<ParserItemConstPtr>::const_iterator ParserRecord::begin() const {
+        return m_items.begin();
+    }
+
+
+    std::vector<ParserItemConstPtr>::const_iterator ParserRecord::end() const {
+        return m_items.end();
+    }
+
+
+    bool ParserRecord::hasDimension() const {
+        bool hasDim = false;
+        for (auto iter=begin(); iter != end(); ++iter) {
+            if ((*iter)->hasDimension())
+                hasDim = true;
+        }
+        return hasDim;
+    }
+
+
+
+    void ParserRecord::applyUnitsToDeck(std::shared_ptr<const Deck> deck , std::shared_ptr<const DeckRecord> deckRecord) const {
+        for (auto iter=begin(); iter != end(); ++iter) {
+            if ((*iter)->hasDimension()) {
+                std::shared_ptr<DeckItem> deckItem = deckRecord->getItem( (*iter)->name() );
+                std::shared_ptr<const ParserItem> parserItem = get( (*iter)->name() );
+
+                for (size_t idim=0; idim < (*iter)->numDimensions(); idim++) {
+                    std::shared_ptr<const Dimension> activeDimension  = deck->getActiveUnitSystem()->getNewDimension( parserItem->getDimension(idim) );
+                    std::shared_ptr<const Dimension> defaultDimension = deck->getDefaultUnitSystem()->getNewDimension( parserItem->getDimension(idim) );
+                    deckItem->push_backDimension( activeDimension , defaultDimension ); 
+                }
+            }
+        }
+    }
+
 
     ParserItemConstPtr ParserRecord::get(size_t index) const {
         if (index < m_items.size())
@@ -58,7 +96,7 @@ namespace Opm {
         DeckRecordPtr deckRecord(new DeckRecord());
         for (size_t i = 0; i < size(); i++) {
             ParserItemConstPtr parserItem = get(i);
-            DeckItemConstPtr deckItem = parserItem->scan(rawRecord);
+            DeckItemPtr deckItem = parserItem->scan(rawRecord);
             deckRecord->addItem(deckItem);
         }
         const size_t recordSize = rawRecord->size();

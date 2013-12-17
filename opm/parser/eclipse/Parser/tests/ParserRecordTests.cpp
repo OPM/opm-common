@@ -304,3 +304,20 @@ BOOST_AUTO_TEST_CASE(Parse_RawRecordTooFewItems_ThrowsNot) {
     RawRecordPtr rawRecord(new RawRecord("3 3  /"));
     BOOST_CHECK_NO_THROW(parserRecord->parse(rawRecord));
 }
+
+
+
+BOOST_AUTO_TEST_CASE(ParseRecordHasDimensionCorrect) {
+    ParserRecordPtr parserRecord(new ParserRecord());
+    ParserIntItemConstPtr itemI(new ParserIntItem("I", SINGLE));
+    ParserDoubleItemPtr item2(new ParserDoubleItem("ID", SINGLE));
+    
+    BOOST_CHECK_EQUAL( false , parserRecord->hasDimension());
+    
+    parserRecord->addItem( itemI );
+    parserRecord->addItem( item2 );
+    BOOST_CHECK_EQUAL( false , parserRecord->hasDimension());
+    
+    item2->push_backDimension("L*L/t");
+    BOOST_CHECK_EQUAL( true , parserRecord->hasDimension());
+}

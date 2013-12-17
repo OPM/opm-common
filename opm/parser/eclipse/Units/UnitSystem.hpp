@@ -22,6 +22,7 @@
 
 #include <string>
 #include <map>
+#include <memory>
 
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 
@@ -33,18 +34,21 @@ namespace Opm {
         const std::string& getName() const;
 
         void addDimension(const std::string& dimension , double SI_factor);
-        const Dimension& getDimension(const std::string& dimension) const;
+        void addDimension(std::shared_ptr<const Dimension> dimension);
+        std::shared_ptr<const Dimension> getNewDimension(const std::string& dimension);
+        std::shared_ptr<const Dimension> getDimension(const std::string& dimension) const;
         bool hasDimension(const std::string& dimension) const;
+        bool equal(const UnitSystem& other) const;
         
-        Dimension parse(const std::string& dimension) const;
+        std::shared_ptr<const Dimension> parse(const std::string& dimension) const;
 
         static UnitSystem * newMETRIC();
         static UnitSystem * newFIELD();
     private:
-        Dimension parseFactor(const std::string& dimension) const;
-
+        std::shared_ptr<const Dimension> parseFactor(const std::string& dimension) const;
+        
         const std::string m_name;
-        std::map<std::string , Dimension> m_dimensions;
+        std::map<std::string , std::shared_ptr<const Dimension> > m_dimensions;
     };
 }
 

@@ -13,7 +13,6 @@ RawDeck/RawKeyword.cpp
 RawDeck/RawRecord.cpp )
 
 set( unit_source
-Units/UnitSystemMap.cpp
 Units/UnitSystem.cpp
 Units/Dimension.cpp)
 
@@ -90,7 +89,6 @@ Parser/ParserBoolItem.hpp
 Parser/ParserDoubleItem.hpp  
 Parser/ParserStringItem.hpp  
 #
-Units/UnitSystemMap.hpp
 Units/UnitSystem.hpp
 Units/Dimension.hpp
 Units/ConversionFactors.hpp
