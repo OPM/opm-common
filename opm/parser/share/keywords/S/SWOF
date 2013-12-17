@@ -1,5 +1,5 @@
 {"name" : "SWOF" , "size" : {"keyword" : "TABDIMS" , "item" : "NTSFUN"}, 
         "items" : [
-            {"name":"table", "value_type":"FLOAT", "size_type" : "ALL"}
+            {"name":"table", "value_type":"FLOAT", "size_type" : "ALL" , "dimension" : ["1","1","1","P"]}
          ]
 }
