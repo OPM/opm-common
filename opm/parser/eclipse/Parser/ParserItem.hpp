@@ -40,7 +40,7 @@ namespace Opm {
     public:
         ParserItem(const std::string& itemName);
         ParserItem(const std::string& itemName, ParserItemSizeEnum sizeType);
-        ParserItem(const Json::JsonObject& jsonConfig);
+        explicit ParserItem(const Json::JsonObject& jsonConfig);
 
         virtual void push_backDimension(const std::string& dimension);
         virtual const std::string& getDimension(size_t index) const;

@@ -38,7 +38,7 @@ namespace Opm {
         ParserDoubleItem(const std::string& itemName, ParserItemSizeEnum sizeType);
         ParserDoubleItem(const std::string& itemName, double defaultValue);
         ParserDoubleItem(const std::string& itemName, ParserItemSizeEnum sizeType, double defaultValue);
-        ParserDoubleItem( const Json::JsonObject& jsonConfig);
+        explicit ParserDoubleItem( const Json::JsonObject& jsonConfig);
 
         size_t numDimensions() const;
         bool hasDimension() const;

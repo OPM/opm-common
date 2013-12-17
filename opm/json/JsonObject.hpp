@@ -31,10 +31,10 @@ namespace Json {
 
     class JsonObject {
     public:
-        JsonObject(const boost::filesystem::path& jsonFile );
-        JsonObject(const std::string& inline_json);
-        JsonObject(const char * inline_json);
-        JsonObject(cJSON * root);
+        explicit JsonObject(const boost::filesystem::path& jsonFile );
+        explicit JsonObject(const std::string& inline_json);
+        explicit JsonObject(const char * inline_json);
+        explicit JsonObject(cJSON * root);
         ~JsonObject();
         
         bool has_item(const std::string& key) const;
