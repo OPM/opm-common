@@ -21,6 +21,28 @@
 #define CONVERSION_FACTORS_HPP
 
 
+/**
+   The unit sets emplyed in ECLIPSE, in particular the FIELD units,
+   are quite inconsistent. Ideally one should choose units for a set
+   of base quantities like Mass,Time and Length and then derive the
+   units for e.g. pressure and flowrate in a consisten manner. However
+   that is not the case; for instance in the metric system we have:
+
+      [Length] = meters
+      [time] = days
+      [mass] = kg
+
+   This should give:
+
+      [Pressure] = [mass] / ([length] * [time]^2) = kg / (m * days * days)
+
+   Instead pressure is given in Bars. When it comes to FIELD units the
+   number of such examples is long.
+*/
+
+      
+
+
 namespace Opm {
 
     namespace Metric {
