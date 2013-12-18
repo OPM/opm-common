@@ -135,14 +135,15 @@ namespace Opm {
     UnitSystem * UnitSystem::newMETRIC() {
         UnitSystem * system = new UnitSystem("Metric");
         
-        system->addDimension("1" , 1.0);
-        system->addDimension("P" , Metric::Pressure );
-        system->addDimension("L" , Metric::Length);
-        system->addDimension("t" , Metric::Time );
-        system->addDimension("m" , Metric::Mass );
-        system->addDimension("K" , Metric::Permeability );
-        system->addDimension("Rs", Metric::DissolvedGasRaito);
-        system->addDimension("V" , Metric::Volume );
+        system->addDimension("1"         , 1.0);
+        system->addDimension("P"         , Metric::Pressure );
+        system->addDimension("L"         , Metric::Length);
+        system->addDimension("t"         , Metric::Time );
+        system->addDimension("m"         , Metric::Mass );
+        system->addDimension("K"         , Metric::Permeability );
+        system->addDimension("Rs"        , Metric::DissolvedGasRaito);
+        system->addDimension("FlowVolume", Metric::FlowVolume );
+        system->addDimension("Rho"       , Metric::Density );
         return system;
     }
 
@@ -151,14 +152,15 @@ namespace Opm {
     UnitSystem * UnitSystem::newFIELD() {
         UnitSystem * system = new UnitSystem("Field");
         
-        system->addDimension("1"  , 1.0);
-        system->addDimension("P"  , Field::Pressure );
-        system->addDimension("L"  , Field::Length);
-        system->addDimension("t"  , Field::Time);
-        system->addDimension("m"  , Field::Mass);
-        system->addDimension("K"  , Field::Permeability );
-        system->addDimension("Rs" , Field::DissolvedGasRaito );
-        system->addDimension("V"  , Field::Volume );
+        system->addDimension("1"    , 1.0);
+        system->addDimension("P"    , Field::Pressure );
+        system->addDimension("L"    , Field::Length);
+        system->addDimension("t"    , Field::Time);
+        system->addDimension("m"    , Field::Mass);
+        system->addDimension("K"    , Field::Permeability );
+        system->addDimension("Rs"   , Field::DissolvedGasRaito );
+        system->addDimension("FlowVolume"    , Field::FlowVolume );
+        system->addDimension("Rho"  , Field::Density );
         return system;
     }
 
