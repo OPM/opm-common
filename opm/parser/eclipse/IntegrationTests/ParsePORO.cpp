@@ -28,17 +28,19 @@
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
+#include <opm/parser/eclipse/Units/ConversionFactors.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 
 using namespace Opm;
 
 
-BOOST_AUTO_TEST_CASE(AddDataKeywordFromJson_correctlyConfigured) {
+BOOST_AUTO_TEST_CASE(ParsePOROandPERMX) {
     ParserPtr parser(new Parser());
     boost::filesystem::path poroFile("testdata/integration_tests/PORO/PORO1");
     DeckPtr deck = parser->parse(poroFile.string());
     DeckKeywordConstPtr kw1 = deck->getKeyword("PORO" , 0);
+    DeckKeywordPtr kw2 = deck->getKeyword("PERMX" , 0);
 
     BOOST_CHECK_THROW( kw1->getIntData() , std::logic_error );
     BOOST_CHECK_THROW( kw1->getStringData() , std::logic_error );
@@ -49,5 +51,17 @@ BOOST_AUTO_TEST_CASE(AddDataKeywordFromJson_correctlyConfigured) {
         BOOST_CHECK_EQUAL( 0.233782813 , poro[0]);
         BOOST_CHECK_EQUAL( 0.251224369 , poro[1]);
         BOOST_CHECK_EQUAL( 0.155628711 , poro[439]);
+    }
+
+    {
+        const std::vector<double>& permx = kw2->getSIDoubleData();
+        const std::vector<double>& permxRAW = kw2->getRawDoubleData();
+        BOOST_CHECK_EQUAL( 1000U , permx.size() );
+        BOOST_CHECK_EQUAL( 1000U , permxRAW.size() );
+
+        BOOST_CHECK_CLOSE( Metric::Permeability * 1 , permx[0] , 0.001);
+        BOOST_CHECK_CLOSE( Metric::Permeability * 2 , permx[1] , 0.001);
+        BOOST_CHECK_CLOSE( Metric::Permeability * 3 , permx[2] , 0.001);
+        BOOST_CHECK_CLOSE( Metric::Permeability * 10, permx[999] , 0.001);
     }
 }
