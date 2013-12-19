@@ -38,7 +38,7 @@ namespace Opm {
     }
 
 
-    void DeckDoubleItem::assertSIData() {
+    void DeckDoubleItem::assertSIData() const {
         if (m_dimensions.size() > 0) {
             m_SIdata.resize( m_data.size() );
             if (m_dimensions.size() == 1) {
@@ -57,7 +57,7 @@ namespace Opm {
     
 
 
-    double DeckDoubleItem::getSIDouble(size_t index) {
+    double DeckDoubleItem::getSIDouble(size_t index) const {
         assertSIData();
         {
             if (index < m_data.size()) {
@@ -67,7 +67,7 @@ namespace Opm {
         }
     }
     
-    const std::vector<double>& DeckDoubleItem::getSIDoubleData() {
+    const std::vector<double>& DeckDoubleItem::getSIDoubleData() const {
         assertSIData();
         return m_SIdata;
     }

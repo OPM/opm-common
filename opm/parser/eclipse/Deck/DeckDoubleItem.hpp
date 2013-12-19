@@ -35,8 +35,8 @@ namespace Opm {
         DeckDoubleItem(std::string name) : DeckItem(name) {}
         double getRawDouble(size_t index) const;
         const std::vector<double>& getRawDoubleData() const;
-        double getSIDouble(size_t index);
-        const std::vector<double>& getSIDoubleData();
+        double getSIDouble(size_t index) const;
+        const std::vector<double>& getSIDoubleData() const;
         
         void push_back(std::deque<double> data , size_t items);
         void push_back(std::deque<double> data);
@@ -47,10 +47,13 @@ namespace Opm {
         
         size_t size() const;
     private:
-        void assertSIData();
+        void assertSIData() const;
 
         std::vector<double> m_data;
-        std::vector<double> m_SIdata;
+        // mutable is required because the data is "lazily" converted
+        // to SI units in asserSIData() which needs to be callable by
+        // 'const'-decorated methods
+        mutable std::vector<double> m_SIdata;
         std::vector<std::shared_ptr<const Dimension> > m_dimensions;
     };
 
