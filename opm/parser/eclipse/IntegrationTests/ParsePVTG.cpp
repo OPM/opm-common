@@ -32,72 +32,45 @@ void check_parser(ParserPtr parser) {
     DeckRecordConstPtr record3 = kw1->getRecord(3);
     DeckRecordConstPtr record4 = kw1->getRecord(4);
 
-    DeckItemConstPtr item0 = record0->getItem("TABLEROW");
-    BOOST_CHECK_EQUAL(10U , item0->size());
-    BOOST_CHECK_EQUAL(1U , record0->size());
+    DeckItemConstPtr item0_0 = record0->getItem("GAS_PRESSURE");
+    DeckItemConstPtr item0_1 = record0->getItem("DATA");
+    BOOST_CHECK_EQUAL(1U , item0_0->size());
+    BOOST_CHECK_EQUAL(9U , item0_1->size());
+    BOOST_CHECK_EQUAL(2U , record0->size());
 
-    DeckItemConstPtr item1 = record1->getItem("TABLEROW");
-    BOOST_CHECK_EQUAL(10U , item1->size());
-    BOOST_CHECK_EQUAL(1U , record1->size());
+    DeckItemConstPtr item1_0 = record1->getItem("GAS_PRESSURE");
+    DeckItemConstPtr item1_1 = record1->getItem("DATA");
+    BOOST_CHECK_EQUAL(1U , item1_0->size());
+    BOOST_CHECK_EQUAL(9U , item1_1->size());
+    BOOST_CHECK_EQUAL(2U , record1->size());
 
-    DeckItemConstPtr item2 = record2->getItem("TABLEROW");
-    BOOST_CHECK_EQUAL(1U , record2->size());
-    BOOST_CHECK_EQUAL(0U , item2->size());
+    DeckItemConstPtr item2_0 = record2->getItem("GAS_PRESSURE");
+    DeckItemConstPtr item2_1 = record2->getItem("DATA");
+    BOOST_CHECK_EQUAL(1U , item2_0->size());
+    BOOST_CHECK_EQUAL(0U , item2_1->size());
+    BOOST_CHECK_EQUAL(2U , record2->size());
 
-    DeckItemConstPtr item3 = record3->getItem("TABLEROW");
-    BOOST_CHECK_EQUAL(10U , item3->size());
-    BOOST_CHECK_EQUAL(1U , record3->size());
 
-    DeckItemConstPtr item4 = record4->getItem("TABLEROW");
-    BOOST_CHECK_EQUAL(10U , item4->size());
-    BOOST_CHECK_EQUAL(1U , record4->size());
+    DeckItemConstPtr item3_0 = record3->getItem("GAS_PRESSURE");
+    DeckItemConstPtr item3_1 = record3->getItem("DATA");
+    BOOST_CHECK_EQUAL(1U , item3_0->size());
+    BOOST_CHECK_EQUAL(9U , item3_1->size());
+    BOOST_CHECK_EQUAL(2U , record3->size());
+
+
+    DeckItemConstPtr item4_0 = record4->getItem("GAS_PRESSURE");
+    DeckItemConstPtr item4_1 = record4->getItem("DATA");
+    BOOST_CHECK_EQUAL(1U , item4_0->size());
+    BOOST_CHECK_EQUAL(9U , item4_1->size());
+    BOOST_CHECK_EQUAL(2U , record4->size());
+
+
+
 
 }
 
 
 BOOST_AUTO_TEST_CASE( parse_PVTG_OK ) {
-    ParserPtr parser2(new Parser());
-    ParserPtr parser(new Parser(false));
-    ParserKeywordPtr tabdimsKeyword( new ParserKeyword("TABDIMS" , 1));
-    ParserKeywordPtr pvtgKeyword( new ParserKeyword("PVTG" , "TABDIMS" , "NTPVT" , INTERNALIZE , true));
-    {
-        ParserIntItemConstPtr item(new ParserIntItem(std::string("NTSFUN")));
-        tabdimsKeyword->addItem(item);
-    }
-
-    {
-        ParserIntItemConstPtr item(new ParserIntItem(std::string("NTPVT")));
-        tabdimsKeyword->addItem(item);
-    }
-
-    {
-        ParserIntItemConstPtr item(new ParserIntItem(std::string("NSSFUN")));
-        tabdimsKeyword->addItem(item);
-    }
-
-    {
-        ParserIntItemConstPtr item(new ParserIntItem(std::string("NPPVT")));
-        tabdimsKeyword->addItem(item);
-    }
-
-    {
-        ParserIntItemConstPtr item(new ParserIntItem(std::string("NTFIP")));
-        tabdimsKeyword->addItem(item);
-    }
-
-    {
-        ParserIntItemConstPtr item(new ParserIntItem(std::string("NRPVT")));
-        tabdimsKeyword->addItem(item);
-    }
-
-    {
-        ParserDoubleItemConstPtr item(new ParserDoubleItem(std::string("TABLEROW") , ALL));
-        pvtgKeyword->addItem(item);
-    }
-
-    parser->addKeyword( tabdimsKeyword );
-    parser->addKeyword( pvtgKeyword );
-
+    ParserPtr parser(new Parser());
     check_parser( parser );
-    check_parser( parser2 );
 }

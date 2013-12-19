@@ -299,18 +299,14 @@ BOOST_AUTO_TEST_CASE(AddkeywordFromJson_numTables_incoorect_throw) {
 
 
 BOOST_AUTO_TEST_CASE(AddkeywordFromJson_isTableCollection) {
-    Json::JsonObject jsonConfig("{\"name\": \"PVTG\", \"num_tables\" : {\"keyword\": \"TABDIMS\" , \"item\" : \"NTPVT\"}}");
+    Json::JsonObject jsonConfig("{\"name\": \"PVTG\", \"num_tables\" : {\"keyword\": \"TABDIMS\" , \"item\" : \"NTPVT\"} , \"items\" : [{\"name\" : \"data\", \"value_type\" : \"FLOAT\"}]}");
     ParserKeyword parserKeyword(jsonConfig);
     ParserRecordConstPtr parserRecord = parserKeyword.getRecord();
-    ParserItemConstPtr item = parserRecord->get(0);
 
 
     BOOST_CHECK_EQUAL( true , parserKeyword.isTableCollection() );
     BOOST_CHECK_EQUAL( false , parserKeyword.isDataKeyword());
     BOOST_CHECK_EQUAL( false , parserKeyword.hasFixedSize( ));
-    BOOST_CHECK_EQUAL( ALL , item->sizeType());
-    BOOST_CHECK_EQUAL( "TABLEROW" , item->name());
-
 }
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_InvalidSize_throws) {
