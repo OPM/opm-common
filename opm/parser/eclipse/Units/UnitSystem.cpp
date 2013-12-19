@@ -144,6 +144,7 @@ namespace Opm {
         system->addDimension("Rs"        , Metric::DissolvedGasRaito);
         system->addDimension("FlowVolume", Metric::FlowVolume );
         system->addDimension("Rho"       , Metric::Density );
+        system->addDimension("mu"        , Metric::Viscosity);
         return system;
     }
 
@@ -161,6 +162,7 @@ namespace Opm {
         system->addDimension("Rs"   , Field::DissolvedGasRaito );
         system->addDimension("FlowVolume"    , Field::FlowVolume );
         system->addDimension("Rho"  , Field::Density );
+        system->addDimension("mu"   , Field::Viscosity);
         return system;
     }
 

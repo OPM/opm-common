@@ -54,6 +54,7 @@ namespace Opm {
         const double DissolvedGasRaito = 1.0;
         const double FlowVolume        = 1.0;
         const double Density           = 1.0;
+        const double Viscosity         = 0.001;               // cP
     }
 
 
@@ -66,6 +67,7 @@ namespace Opm {
          const double DissolvedGasRaito = 178.1076;            // Mscf / stb
          const double FlowVolume        = 158.987294;          // STB
          const double Density           = 16.01846;            // lb/ft^3
+         const double Viscosity         = 0.001;               // cP
     }
 
 }
