@@ -1,4 +1,4 @@
-{"name" : "PVTO" , "size" : {"keyword" : "TABDIMS" , "item" : "NTPVT"}, 
+{"name" : "PVTO" , "num_tables" : {"keyword" : "TABDIMS" , "item" : "NTPVT"}, 
         "items" : [
             {"name":"RS", "value_type" : "FLOAT", "dimension":"Rs" },
             {"name":"table", "value_type":"FLOAT", "size_type" : "ALL" , "dimension" : ["P","1","mu"]}
