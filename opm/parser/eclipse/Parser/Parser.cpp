@@ -161,6 +161,9 @@ namespace Opm {
         for (iterator = m_parserKeywords.begin(); iterator != m_parserKeywords.end(); iterator++) {
             keywords->push_back(iterator->first);
         }
+        for (iterator = m_wildCardKeywords.begin(); iterator != m_wildCardKeywords.end(); iterator++) {
+            keywords->push_back(iterator->first);
+        }
         return;
     }
 

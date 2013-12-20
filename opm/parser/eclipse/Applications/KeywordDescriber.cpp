@@ -8,6 +8,8 @@
 #include <iostream>
 #include <utility>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParserRecord.hpp>
+#include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 
 
@@ -29,6 +31,12 @@ void printKeywordInformation(Opm::ParserKeywordConstPtr keyword)
     std::pair<std::string, std::string> sizeDefinitionPair = keyword->getSizeDefinitionPair();
     std::cout << indent << "getSizeDefinitionPair: '" << sizeDefinitionPair.first << "', '" << sizeDefinitionPair.second << "'" << std::endl;
     std::cout << indent << "isDataKeyword:         " << keyword->isDataKeyword() << std::endl;
+
+//    Opm::ParserRecordPtr parserRecord = keyword->getRecord();
+//    std::vector<Opm::ParserItemConstPtr>::const_iterator iterator;
+//    for (iterator = parserRecord->begin(); iterator != parserRecord->end(); ++iterator) {
+//        std::cout << indent << iterator->name;
+//    }
 }
 
 bool parseCommandLineForAllKeywordsOption(char** argv)
