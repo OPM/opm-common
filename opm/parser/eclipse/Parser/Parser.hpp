@@ -54,8 +54,6 @@ namespace Opm {
         bool dropKeyword(const std::string& keyword);
         bool canParseKeyword( const std::string& keyword) const;
         ParserKeywordConstPtr getKeyword(const std::string& keyword) const;
-        void listKeywords() const;
-        std::list<std::string> getKeywords() const;
         void getKeywords(std::list<std::string> *keywords) const;
 
         void loadKeywords(const Json::JsonObject& jsonKeywords);

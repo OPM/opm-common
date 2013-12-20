@@ -16,19 +16,19 @@
  */
 void printKeywordInformation(Opm::ParserKeywordConstPtr keyword)
 {
-    std::cout << "getName: " << keyword->getName() << std::endl;
-//        ParserRecordPtr recordPtr = keyword->getRecord();
+    std::string indent = "   ";
 
-    std::cout << "numItems: " << keyword->numItems() << std::endl;
-    std::cout << "hasDimension: " << keyword->hasDimension() << std::endl;
-    std::cout << "hasFixedSize: " << keyword->hasFixedSize() << std::endl;
+    std::cout << keyword->getName() << std::endl;
+    std::cout << indent << "numItems: " << keyword->numItems() << std::endl;
+    std::cout << indent << "hasDimension: " << keyword->hasDimension() << std::endl;
+    std::cout << indent << "hasFixedSize: " << keyword->hasFixedSize() << std::endl;
     if (keyword->hasFixedSize())
-        std::cout << "getFixedSize: " << keyword->getFixedSize() << std::endl;
-    std::cout << "isTableCollection: " << keyword->isTableCollection() << std::endl;
-    std::cout << "getSizeType: " << keyword->getSizeType() << std::endl;
+        std::cout << indent << "getFixedSize: " << keyword->getFixedSize() << std::endl;
+    std::cout << indent << "isTableCollection: " << keyword->isTableCollection() << std::endl;
+    std::cout << indent << "getSizeType: " << keyword->getSizeType() << std::endl;
     std::pair<std::string, std::string> sizeDefinitionPair = keyword->getSizeDefinitionPair();
-    std::cout << "getSizeDefinitionPair: '" << sizeDefinitionPair.first << "', '" << sizeDefinitionPair.second << "'" << std::endl;
-    std::cout << "isDataKeyword: " << keyword->isDataKeyword() << std::endl;
+    std::cout << indent << "getSizeDefinitionPair: '" << sizeDefinitionPair.first << "', '" << sizeDefinitionPair.second << "'" << std::endl;
+    std::cout << indent << "isDataKeyword: " << keyword->isDataKeyword() << std::endl;
 }
 
 int main(int argc, char** argv) {
@@ -45,14 +45,9 @@ int main(int argc, char** argv) {
         Opm::ParserPtr parser(new Opm::Parser());
         std::string keywordName = argv[1];
 
-        //parser->listKeywords();
         std::list<std::string> keywords;
         if (allKeywords) {
             parser->getKeywords(&keywords);
-//            std::list<std::string>::const_iterator iterator;
-//            for (iterator = keywords.begin(); iterator != keywords.end(); ++iterator) {
-//                std::cout << *iterator;
-//            }
         } else {
             keywords.push_back(keywordName);
         }
