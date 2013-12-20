@@ -18,6 +18,7 @@
  */
 
 #include <memory>
+#include <list>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
@@ -155,6 +156,30 @@ namespace Opm {
         }
     }
 
+    void Parser::listKeywords() const {
+        std::map<std::string, ParserKeywordConstPtr>::const_iterator iterator;
+        for (iterator = m_parserKeywords.begin(); iterator != m_parserKeywords.end(); iterator++) {
+            std::cout << iterator->first << std::endl;
+        }
+    }
+
+    // Throws exception
+    std::list<std::string> Parser::getKeywords() const {
+        std::list<std::string> keys;
+        std::map<std::string, ParserKeywordConstPtr>::const_iterator iterator;
+        for (iterator = m_parserKeywords.begin(); iterator != m_parserKeywords.end(); iterator++) {
+            keys.push_back(iterator->first);
+        }
+        return keys;
+    }
+
+    void Parser::getKeywords(std::list<std::string> *keywords) const {
+        std::map<std::string, ParserKeywordConstPtr>::const_iterator iterator;
+        for (iterator = m_parserKeywords.begin(); iterator != m_parserKeywords.end(); iterator++) {
+            keywords->push_back(iterator->first);
+        }
+        return;
+    }
 
 
     void Parser::parseFile(std::shared_ptr<ParserState> parserState) const {

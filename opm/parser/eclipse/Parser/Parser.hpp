@@ -20,7 +20,7 @@
 #ifndef OPM_PARSER_HPP
 #define OPM_PARSER_HPP
 #include <string>
-#include <map>
+#include <list>
 #include <fstream>
 #include <memory>
 
@@ -54,6 +54,9 @@ namespace Opm {
         bool dropKeyword(const std::string& keyword);
         bool canParseKeyword( const std::string& keyword) const;
         ParserKeywordConstPtr getKeyword(const std::string& keyword) const;
+        void listKeywords() const;
+        std::list<std::string> getKeywords() const;
+        void getKeywords(std::list<std::string> *keywords) const;
 
         void loadKeywords(const Json::JsonObject& jsonKeywords);
         bool loadKeywordFromFile(const boost::filesystem::path& configFile);
