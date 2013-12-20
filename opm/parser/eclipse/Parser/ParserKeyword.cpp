@@ -132,9 +132,6 @@ namespace Opm {
         if (jsonConfig.has_item("data"))
             initData(jsonConfig);
 
-        if (isTableCollection())
-            addTableItems(jsonConfig.get_item("num_tables"));
-
         if ((m_fixedSize == 0 && m_keywordSizeType == FIXED) || (m_action != INTERNALIZE))
             return;
         else {
@@ -255,12 +252,6 @@ namespace Opm {
             }
         } else
             throw std::invalid_argument("The items: object must be an array");
-    }
-
-    void ParserKeyword::addTableItems(const Json::JsonObject tableConfig) {
-        ParserDoubleItemPtr item = ParserDoubleItemPtr(new ParserDoubleItem("TABLEROW", ALL, 0));
-        initItemDimension( item , tableConfig );
-        addItem(item);
     }
 
     
