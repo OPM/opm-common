@@ -50,7 +50,7 @@ namespace Opm {
         const double Length            = 1.0;      
         const double Time              = 86400;
         const double Mass              = 1.0;
-        const double Permeability      = 9.869233e-10;
+        const double Permeability      = 9.869233e-16;
         const double DissolvedGasRatio = 1.0;
         const double FlowVolume        = 1.0;
         const double Density           = 1.0;
@@ -63,7 +63,7 @@ namespace Opm {
          const double Length            = 0.3048;
          const double Time              = 86400;
          const double Mass              = 0.45359237;
-         const double Permeability      = 9.869233e-10;
+         const double Permeability      = 9.869233e-16;
          const double DissolvedGasRatio = 178.1076;            // Mscf / stb
          const double FlowVolume        = 158.987294;          // STB
          const double Density           = 16.01846;            // lb/ft^3
