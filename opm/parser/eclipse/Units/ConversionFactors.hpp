@@ -51,7 +51,7 @@ namespace Opm {
         const double Time              = 86400;
         const double Mass              = 1.0;
         const double Permeability      = 9.869233e-10;
-        const double DissolvedGasRaito = 1.0;
+        const double DissolvedGasRatio = 1.0;
         const double FlowVolume        = 1.0;
         const double Density           = 1.0;
         const double Viscosity         = 0.001;               // cP
@@ -64,7 +64,7 @@ namespace Opm {
          const double Time              = 86400;
          const double Mass              = 0.45359237;
          const double Permeability      = 9.869233e-10;
-         const double DissolvedGasRaito = 178.1076;            // Mscf / stb
+         const double DissolvedGasRatio = 178.1076;            // Mscf / stb
          const double FlowVolume        = 158.987294;          // STB
          const double Density           = 16.01846;            // lb/ft^3
          const double Viscosity         = 0.001;               // cP
