@@ -2,6 +2,7 @@ add_subdirectory(Parser/tests)
 add_subdirectory(RawDeck/tests)
 add_subdirectory(Deck/tests)
 add_subdirectory(IntegrationTests)
+add_subdirectory(EclipseState/tests)
 add_subdirectory(EclipseState/Schedule/tests)
 add_subdirectory(Units/tests)
 
@@ -52,6 +53,8 @@ Parser/ParserStringItem.cpp
 )
 
 set (state_source
+EclipseState/EclipseState.cpp
+#
 EclipseState/Schedule/TimeMap.cpp 
 EclipseState/Schedule/Schedule.cpp 
 EclipseState/Schedule/Well.cpp
@@ -92,6 +95,8 @@ Parser/ParserStringItem.hpp
 Units/UnitSystem.hpp
 Units/Dimension.hpp
 Units/ConversionFactors.hpp
+#
+EclipseState/EclipseState.hpp
 #
 EclipseState/Schedule/TimeMap.hpp
 EclipseState/Schedule/Schedule.hpp
