@@ -18,12 +18,14 @@
  */
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <iostream>
 
 namespace Opm {
     
     EclipseState::EclipseState(DeckConstPtr deck) {
+        initPhases(deck);
         initSchedule(deck);
     }
     
@@ -37,5 +39,21 @@ namespace Opm {
         schedule = ScheduleConstPtr( new Schedule(deck) );
     }
 
+
+    void EclipseState::initPhases(DeckConstPtr deck) {
+        if (deck->hasKeyword("OIL"))
+            phases.insert(PhaseEnum::OIL);
+
+        if (deck->hasKeyword("GAS"))
+            phases.insert(PhaseEnum::GAS);
+
+        if (deck->hasKeyword("WATER"))
+            phases.insert(PhaseEnum::WATER);
+    }
+
+
+    bool EclipseState::hasPhase(enum PhaseEnum phase) const {
+         return (phases.count(phase) == 1);
+    }
 
 }

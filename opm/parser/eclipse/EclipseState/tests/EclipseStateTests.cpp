@@ -26,6 +26,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
@@ -35,6 +36,10 @@ using namespace Opm;
 
 DeckPtr createDeck() {
     DeckPtr deck(new Deck());
+    DeckKeywordPtr oilKeyword(new DeckKeyword("OIL"));
+    DeckKeywordPtr gasKeyword(new DeckKeyword("GAS"));
+
+
     DeckKeywordPtr scheduleKeyword(new DeckKeyword("SCHEDULE"));
     DeckKeywordPtr startKeyword(new DeckKeyword("START"));
     DeckRecordPtr  startRecord(new DeckRecord());
@@ -52,6 +57,8 @@ DeckPtr createDeck() {
     startRecord->addItem( yearItem );
     startKeyword->addRecord( startRecord );
 
+    deck->addKeyword( oilKeyword );
+    deck->addKeyword( gasKeyword );
     deck->addKeyword( startKeyword );
     deck->addKeyword( scheduleKeyword );
 
@@ -68,3 +75,13 @@ BOOST_AUTO_TEST_CASE(CreatSchedule) {
     BOOST_CHECK_EQUAL( schedule->getStartDate() , boost::gregorian::date(1998 , 3 , 8 ));
 }
 
+
+
+BOOST_AUTO_TEST_CASE(PhasesCorrect) {
+    DeckPtr deck = createDeck();
+    EclipseState state(deck);
+
+    BOOST_CHECK(  state.hasPhase( PhaseEnum::OIL ));
+    BOOST_CHECK(  state.hasPhase( PhaseEnum::GAS ));
+    BOOST_CHECK( !state.hasPhase( PhaseEnum::WATER ));
+}

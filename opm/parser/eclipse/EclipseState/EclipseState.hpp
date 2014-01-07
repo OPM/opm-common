@@ -22,6 +22,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
+#include <set>
 #include <memory>
 
 namespace Opm {
@@ -30,11 +31,14 @@ namespace Opm {
     public:
         EclipseState(DeckConstPtr deck);
         ScheduleConstPtr getSchedule() const;
-
+        bool hasPhase(enum PhaseEnum phase) const;
         
     private:
         void initSchedule(DeckConstPtr deck);
+        void initPhases(DeckConstPtr deck);
+
         ScheduleConstPtr schedule;
+        std::set<enum PhaseEnum> phases;
     };
 
     typedef std::shared_ptr<EclipseState> EclipseStatePtr;
