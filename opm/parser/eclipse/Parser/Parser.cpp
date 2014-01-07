@@ -156,15 +156,18 @@ namespace Opm {
         }
     }
 
-    void Parser::getKeywords(std::list<std::string> *keywords) const {
+    //std::shared_ptr<std::vector<std::string> > Parser::getKeywords () const {
+    std::vector<std::string> Parser::getKeywords () const {
         std::map<std::string, ParserKeywordConstPtr>::const_iterator iterator;
+        //std::shared_ptr<std::vector<std::string> > keywords(new std::vector<std::string>());
+        std::vector<std::string> keywords;
         for (iterator = m_parserKeywords.begin(); iterator != m_parserKeywords.end(); iterator++) {
-            keywords->push_back(iterator->first);
+            keywords.push_back(iterator->first);
         }
         for (iterator = m_wildCardKeywords.begin(); iterator != m_wildCardKeywords.end(); iterator++) {
-            keywords->push_back(iterator->first);
+            keywords.push_back(iterator->first);
         }
-        return;
+        return keywords;
     }
 
 

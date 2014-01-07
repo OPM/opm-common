@@ -32,11 +32,14 @@ void printKeywordInformation(Opm::ParserKeywordConstPtr keyword)
     std::cout << indent << "getSizeDefinitionPair: '" << sizeDefinitionPair.first << "', '" << sizeDefinitionPair.second << "'" << std::endl;
     std::cout << indent << "isDataKeyword:         " << keyword->isDataKeyword() << std::endl;
 
-//    Opm::ParserRecordPtr parserRecord = keyword->getRecord();
-//    std::vector<Opm::ParserItemConstPtr>::const_iterator iterator;
-//    for (iterator = parserRecord->begin(); iterator != parserRecord->end(); ++iterator) {
-//        std::cout << indent << iterator->name;
-//    }
+    Opm::ParserRecordPtr parserRecord = keyword->getRecord();
+    std::vector<Opm::ParserItemConstPtr>::const_iterator iterator;
+    for (iterator = parserRecord->begin(); iterator != parserRecord->end(); ++iterator) {
+//        std::cout << indent << (*iterator).name();
+        std::cout << ".";
+    }
+
+    std::cout << std::endl;
 }
 
 bool parseCommandLineForAllKeywordsOption(char** argv)
@@ -49,13 +52,14 @@ bool parseCommandLineForAllKeywordsOption(char** argv)
     return allKeywords;
 }
 
-std::list<std::string> createListOfKeywordsToDescribe(char** argv, bool allKeywords, Opm::ParserPtr parser)
+std::vector<std::string> createListOfKeywordsToDescribe(char** argv, bool allKeywords, Opm::ParserPtr parser)
 {
-    std::list<std::string> keywords;
+    std::vector<std::string> keywords;
     if (allKeywords) {
-        parser->getKeywords(&keywords);
+        keywords = parser->getKeywords();
     } else {
         std::string keywordName = argv[1];
+//        keywords = new std::vector<std::string>();
         keywords.push_back(keywordName);
     }
 
@@ -72,10 +76,9 @@ int main(int argc, char** argv) {
 
         Opm::ParserPtr parser(new Opm::Parser());
 
-        std::list<std::string> keywords;
-        keywords = createListOfKeywordsToDescribe(argv, allKeywords, parser);
+        std::vector<std::string> keywords = createListOfKeywordsToDescribe(argv, allKeywords, parser);
 
-        std::list<std::string>::const_iterator iterator;
+        std::vector<std::string>::const_iterator iterator;
         for (iterator = keywords.begin(); iterator != keywords.end(); ++iterator) {
             Opm::ParserKeywordConstPtr keyword = parser->getKeyword(*iterator);
             printKeywordInformation(keyword);
