@@ -66,12 +66,28 @@ BOOST_AUTO_TEST_CASE(getKeyword_haskeyword_returnskeyword) {
     BOOST_CHECK_EQUAL(parserKeyword, parser->getKeyword("FJAS"));
 }
 
-BOOST_AUTO_TEST_CASE(getKeyword_hasnotkeyword_throws) {
+BOOST_AUTO_TEST_CASE(getKeyword_hasnotkeyword_getKeywordThrowsException) {
     ParserPtr parser(new Parser());
     ParserKeywordConstPtr parserKeyword(new ParserKeyword("FJAS"));
     parser->addKeyword(parserKeyword);
     BOOST_CHECK_THROW(parser->getKeyword("FJASS"), std::invalid_argument);
 }
+
+BOOST_AUTO_TEST_CASE(getAllKeywords_hasTwoKeywords_returnsCompleteList) {
+    ParserPtr parser(new Parser(false));
+    std::cout << parser->getAllKeywords().size() << std::endl;
+    ParserKeywordConstPtr firstParserKeyword(new ParserKeyword("FJAS"));
+    parser->addKeyword(firstParserKeyword);
+    ParserKeywordConstPtr secondParserKeyword(new ParserKeyword("SAJF"));
+    parser->addKeyword(secondParserKeyword);
+    BOOST_CHECK_EQUAL(2U, parser->getAllKeywords().size());
+}
+
+BOOST_AUTO_TEST_CASE(getAllKeywords_hasNoKeywords_returnsEmptyList) {
+    ParserPtr parser(new Parser(false));
+    BOOST_CHECK_EQUAL(0U, parser->getAllKeywords().size());
+}
+
 
 
 /************************ JSON config related tests **********************'*/
