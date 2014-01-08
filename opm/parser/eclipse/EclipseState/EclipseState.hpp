@@ -21,6 +21,8 @@
 #define ECLIPSESTATE_H
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnum.hpp>
 
 #include <set>
 #include <memory>
