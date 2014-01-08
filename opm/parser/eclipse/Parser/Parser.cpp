@@ -18,7 +18,6 @@
  */
 
 #include <memory>
-#include <list>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
@@ -158,7 +157,6 @@ namespace Opm {
 
     std::vector<std::string> Parser::getAllKeywords () const {
         std::map<std::string, ParserKeywordConstPtr>::const_iterator iterator;
-        //std::shared_ptr<std::vector<std::string> > keywords(new std::vector<std::string>());
         std::vector<std::string> keywords;
         for (iterator = m_parserKeywords.begin(); iterator != m_parserKeywords.end(); iterator++) {
             keywords.push_back(iterator->first);
