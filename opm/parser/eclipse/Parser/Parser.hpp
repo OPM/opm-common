@@ -20,7 +20,7 @@
 #ifndef OPM_PARSER_HPP
 #define OPM_PARSER_HPP
 #include <string>
-#include <list>
+#include <map>
 #include <fstream>
 #include <memory>
 
