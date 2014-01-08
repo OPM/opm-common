@@ -26,20 +26,19 @@ void printKeywordInformation(Opm::ParserKeywordConstPtr keyword)
     std::cout << indent << "hasFixedSize:          " << keyword->hasFixedSize() << std::endl;
     if (keyword->hasFixedSize())
         std::cout << indent << "getFixedSize:          " << keyword->getFixedSize() << std::endl;
-    std::cout << indent << "isTableCollection:     " << keyword->isTableCollection() << std::endl;
     std::cout << indent << "getSizeType:           " << keyword->getSizeType() << std::endl;
     std::pair<std::string, std::string> sizeDefinitionPair = keyword->getSizeDefinitionPair();
     std::cout << indent << "getSizeDefinitionPair: '" << sizeDefinitionPair.first << "', '" << sizeDefinitionPair.second << "'" << std::endl;
-    std::cout << indent << "isDataKeyword:         " << keyword->isDataKeyword() << std::endl;
 
     Opm::ParserRecordPtr parserRecord = keyword->getRecord();
     std::vector<Opm::ParserItemConstPtr>::const_iterator iterator;
     for (iterator = parserRecord->begin(); iterator != parserRecord->end(); ++iterator) {
-//        std::cout << indent << (*iterator).name();
-        std::cout << ".";
+        std::cout << indent << (*iterator)->name() << std::endl;
+        std::cout << indent << indent << "sizeType:           " << (*iterator)->sizeType() << std::endl;
+        std::cout << indent << indent << "numDimensions:      " << (*iterator)->numDimensions() << std::endl;
+        if ((*iterator)->numDimensions() == 1)
+            std::cout << indent << indent << "getDimension(0):    '" << (*iterator)->getDimension((*iterator)->numDimensions()-1) << "'" << std::endl;
     }
-
-    std::cout << std::endl;
 }
 
 bool parseCommandLineForAllKeywordsOption(char** argv)
@@ -59,7 +58,6 @@ std::vector<std::string> createListOfKeywordsToDescribe(char** argv, bool allKey
         keywords = parser->getKeywords();
     } else {
         std::string keywordName = argv[1];
-//        keywords = new std::vector<std::string>();
         keywords.push_back(keywordName);
     }
 
