@@ -156,8 +156,7 @@ namespace Opm {
         }
     }
 
-    //std::shared_ptr<std::vector<std::string> > Parser::getKeywords () const {
-    std::vector<std::string> Parser::getKeywords () const {
+    std::vector<std::string> Parser::getAllKeywords () const {
         std::map<std::string, ParserKeywordConstPtr>::const_iterator iterator;
         //std::shared_ptr<std::vector<std::string> > keywords(new std::vector<std::string>());
         std::vector<std::string> keywords;

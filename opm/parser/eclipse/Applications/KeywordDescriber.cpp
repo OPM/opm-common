@@ -56,7 +56,7 @@ std::vector<std::string> createListOfKeywordsToDescribe(char** argv, bool allKey
 {
     std::vector<std::string> keywords;
     if (allKeywords) {
-        keywords = parser->getKeywords();
+        keywords = parser->getAllKeywords();
     } else {
         std::string keywordName = argv[1];
         keywords.push_back(keywordName);
