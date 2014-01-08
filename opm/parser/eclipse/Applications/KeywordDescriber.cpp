@@ -35,6 +35,7 @@ void printKeywordInformation(Opm::ParserKeywordConstPtr keyword)
     for (iterator = parserRecord->begin(); iterator != parserRecord->end(); ++iterator) {
         std::cout << indent << (*iterator)->name() << std::endl;
         std::cout << indent << indent << "sizeType:           " << (*iterator)->sizeType() << std::endl;
+        std::cout << indent << indent << "hasDimension:       " << (*iterator)->hasDimension() << std::endl;
         std::cout << indent << indent << "numDimensions:      " << (*iterator)->numDimensions() << std::endl;
         if ((*iterator)->numDimensions() == 1)
             std::cout << indent << indent << "getDimension(0):    '" << (*iterator)->getDimension((*iterator)->numDimensions()-1) << "'" << std::endl;
