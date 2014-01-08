@@ -26,75 +26,8 @@
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 
 
-void printKeywordInformation(Opm::ParserPtr parser, std::vector<std::string> keywords)
+void printKeyword(Opm::ParserKeywordConstPtr keyword, std::string indent)
 {
-    std::string indent = " ";
-    std::string keywordSeparator = "---------\n";
-    std::string itemSeparator = "\n";
-
-    std::vector<std::string>::const_iterator iterator;
-    for (iterator = keywords.begin(); iterator != keywords.end(); ++iterator) {
-        Opm::ParserKeywordConstPtr keyword = parser->getKeyword(*iterator);
-
-        std::cout << keyword->getName() << std::endl;
-        std::cout << indent << "Number of items: " << keyword->numItems() << std::endl;
-        std::cout << indent << "Has dimension information: " << keyword->hasDimension() << std::endl;
-        switch (keyword->getSizeType()) {
-            case Opm::ParserKeywordSizeEnum::SLASH_TERMINATED: {
-                std::cout << indent << "Size type: SLASH_TERMINATED" << std::endl;
-                break;
-            }
-            case Opm::ParserKeywordSizeEnum::FIXED: {
-                std::cout << indent << "Size type: FIXED" << std::endl;
-                if (keyword->hasFixedSize())
-                    std::cout << indent << "Fixed size: " << keyword->getFixedSize() << std::endl;
-                break;
-            }
-            case Opm::ParserKeywordSizeEnum::OTHER_KEYWORD_IN_DECK: {
-                std::cout << indent << "Size type: OTHER" << std::endl;
-                std::pair<std::string, std::string> sizeDefinitionPair = keyword->getSizeDefinitionPair();
-                std::cout << indent << "Size defined by: " << sizeDefinitionPair.first << ", " << sizeDefinitionPair.second << std::endl;
-                break;
-            }
-            default:{
-                std::cout << indent << "Size type: UNKNOWN" << std::endl;
-                break;
-            }
-        }
-
-
-        std::cout << itemSeparator;
-        std::cout << indent << "List of items:" << std::endl;
-        Opm::ParserRecordPtr parserRecord = keyword->getRecord();
-        std::vector<Opm::ParserItemConstPtr>::const_iterator iterator;
-        for (iterator = parserRecord->begin(); iterator != parserRecord->end(); ++iterator) {
-            std::cout << indent << (*iterator)->name() << std::endl;
-            switch ((*iterator)->sizeType()) {
-                case Opm::ParserItemSizeEnum::ALL: {
-                    std::cout << indent << indent << "SizeType: ALL" << std::endl;
-                    break;
-                }
-                case Opm::ParserItemSizeEnum::SINGLE: {
-                    std::cout << indent << indent << "SizeType: SINGLE" << std::endl;
-                    break;
-                }
-            }
-
-            std::cout << indent << indent << "Has dimension information: " << (*iterator)->hasDimension() << std::endl;
-            if ((*iterator)->numDimensions() == 1)
-                std::cout << indent << indent << "Dimension: " << (*iterator)->getDimension((*iterator)->numDimensions()-1) << std::endl;
-            std::cout << itemSeparator;
-        }
-        std::cout << keywordSeparator;
-    }
-}
-
-void printKeywordInformationOBSOLETE(Opm::ParserKeywordConstPtr keyword)
-{
-    std::string indent = " ";
-    std::string keywordSeparator = "---------\n";
-    std::string itemSeparator = "\n";
-
     std::cout << keyword->getName() << std::endl;
     std::cout << indent << "Number of items: " << keyword->numItems() << std::endl;
     std::cout << indent << "Has dimension information: " << keyword->hasDimension() << std::endl;
@@ -120,9 +53,11 @@ void printKeywordInformationOBSOLETE(Opm::ParserKeywordConstPtr keyword)
             break;
         }
     }
+}
 
-
-    std::cout << itemSeparator;
+void printItems(Opm::ParserKeywordConstPtr keyword, std::string indent)
+{
+    std::cout << std::endl;
     std::cout << indent << "List of items:" << std::endl;
     Opm::ParserRecordPtr parserRecord = keyword->getRecord();
     std::vector<Opm::ParserItemConstPtr>::const_iterator iterator;
@@ -130,21 +65,33 @@ void printKeywordInformationOBSOLETE(Opm::ParserKeywordConstPtr keyword)
         std::cout << indent << (*iterator)->name() << std::endl;
         switch ((*iterator)->sizeType()) {
             case Opm::ParserItemSizeEnum::ALL: {
-                std::cout << indent << indent << "SizeType: ALL" << std::endl;
+                std::cout << indent << "SizeType: ALL" << std::endl;
                 break;
             }
             case Opm::ParserItemSizeEnum::SINGLE: {
-                std::cout << indent << indent << "SizeType: SINGLE" << std::endl;
+                std::cout << indent << "SizeType: SINGLE" << std::endl;
                 break;
             }
         }
 
-        std::cout << indent << indent << "Has dimension information: " << (*iterator)->hasDimension() << std::endl;
+        std::cout << indent << "Has dimension information: " << (*iterator)->hasDimension() << std::endl;
         if ((*iterator)->numDimensions() == 1)
-            std::cout << indent << indent << "Dimension: " << (*iterator)->getDimension((*iterator)->numDimensions()-1) << std::endl;
-        std::cout << itemSeparator;
+            std::cout << indent << "Dimension: " << (*iterator)->getDimension((*iterator)->numDimensions()-1) << std::endl;
+        std::cout << std::endl;
     }
-    std::cout << keywordSeparator;
+}
+
+void printKeywords (Opm::ParserPtr parser, std::vector<std::string> keywords)
+{
+    std::string keywordIndent = " ";
+    std::string itemIndent = "  ";
+
+    std::vector<std::string>::const_iterator iterator;
+    for (iterator = keywords.begin(); iterator != keywords.end(); ++iterator) {
+        Opm::ParserKeywordConstPtr keyword = parser->getKeyword(*iterator);
+        printKeyword(keyword, keywordIndent);
+        printItems(keyword, itemIndent);
+    }
 }
 
 bool parseCommandLineForAllKeywordsOption(char** argv)
@@ -182,7 +129,7 @@ int main(int argc, char** argv) {
 
         std::vector<std::string> keywords = createListOfKeywordsToDescribe(argv, allKeywords, parser);
 
-        printKeywordInformation(parser, keywords);
+        printKeywords(parser, keywords);
 
         return 0;
     }
