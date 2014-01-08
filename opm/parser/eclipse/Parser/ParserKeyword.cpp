@@ -43,6 +43,7 @@ namespace Opm {
         m_action = action;
         m_record = ParserRecordPtr(new ParserRecord);
         m_keywordSizeType = sizeType;
+        m_helpText = "";
     }
 
     ParserKeyword::ParserKeyword(const std::string& name, ParserKeywordSizeEnum sizeType, ParserKeywordActionEnum action) {
@@ -76,6 +77,10 @@ namespace Opm {
 
     bool ParserKeyword::isTableCollection() const {
         return m_isTableCollection;
+    }
+
+    std::string ParserKeyword::getHelpText() const {
+        return m_helpText;
     }
 
     void ParserKeyword::initSize(const Json::JsonObject& jsonConfig) {
@@ -131,6 +136,10 @@ namespace Opm {
 
         if (jsonConfig.has_item("data"))
             initData(jsonConfig);
+
+        if (jsonConfig.has_item("help")) {
+            m_helpText = jsonConfig.get_string("help");
+        }
 
         if ((m_fixedSize == 0 && m_keywordSizeType == FIXED) || (m_action != INTERNALIZE))
             return;

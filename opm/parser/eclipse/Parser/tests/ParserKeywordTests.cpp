@@ -326,6 +326,22 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_SizeUNKNOWN_OK) {
 }
 
 
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_WithHelpText_HelpTextPropertyShouldBePopulated) {
+    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"help\" : \"Help text\"}");
+    ParserKeyword parserKeyword(jsonObject);
+
+    BOOST_CHECK_EQUAL( "Help text", parserKeyword.getHelpText() );
+}
+
+
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_WithoutHelpText_HelpTextPropertyShouldBeEmpty) {
+    Json::JsonObject jsonObject("{\"name\": \"BPR\"}");
+    ParserKeyword parserKeyword(jsonObject);
+
+    BOOST_CHECK_EQUAL( "", parserKeyword.getHelpText() );
+}
+
+
 /* </Json> */
 /*****************************************************************/
 
