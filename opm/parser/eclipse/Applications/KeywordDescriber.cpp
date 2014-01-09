@@ -30,6 +30,9 @@ void printKeyword(Opm::ParserKeywordConstPtr keyword)
 {
     std::string indent = " ";
     std::cout << keyword->getName() << std::endl;
+    if (keyword->getHelpText().length() > 0) {
+        std::cout << indent << "Help text: " << keyword->getHelpText() << std::endl;
+    }
     std::cout << indent << "Number of items: " << keyword->numItems() << std::endl;
     std::cout << indent << "Has dimension information: " << keyword->hasDimension() << std::endl;
     std::cout << indent << "Size type: " << ParserKeywordSizeEnum2String(keyword->getSizeType()) << std::endl;
@@ -53,6 +56,9 @@ void printKeyword(Opm::ParserKeywordConstPtr keyword)
 void printItem(Opm::ParserItemConstPtr item, std::string indent)
 {
     std::cout << indent << item->name() << std::endl;
+    if (item->getHelpText().length() > 0) {
+        std::cout << indent << "Help text: " << item->getHelpText() << std::endl;
+    }
     std::cout << indent << "SizeType: " << ParserItemSizeEnum2String(item->sizeType()) << std::endl;
     std::cout << indent << "Has dimension information: " << item->hasDimension() << std::endl;
     if (item->numDimensions() == 1)
@@ -107,15 +113,15 @@ std::vector<std::string> createListOfKeywordsToDescribe(char** argv, bool allKey
 }
 
 int main(int argc, char** argv) {
-        if (argc < 2) {
-            std::cout << "Usage: " << argv[0] << " <Keywordname>|-a (all keywords)" << std::endl;
-            exit(1);
-        }
-
-        bool allKeywords = parseCommandLineForAllKeywordsOption(argv);
-        Opm::ParserPtr parser(new Opm::Parser());
-        std::vector<std::string> keywords = createListOfKeywordsToDescribe(argv, allKeywords, parser);
-        printKeywords(parser, keywords);
-
-        return 0;
+    if (argc < 2) {
+        std::cout << "Usage: " << argv[0] << " <Keywordname>|-a (all keywords)" << std::endl;
+        exit(1);
     }
+
+    bool allKeywords = parseCommandLineForAllKeywordsOption(argv);
+    Opm::ParserPtr parser(new Opm::Parser());
+    std::vector<std::string> keywords = createListOfKeywordsToDescribe(argv, allKeywords, parser);
+    printKeywords(parser, keywords);
+
+    return 0;
+}

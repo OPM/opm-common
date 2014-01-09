@@ -145,6 +145,15 @@ BOOST_AUTO_TEST_CASE(MixingDataAndItems_throws2) {
     BOOST_CHECK_THROW( parserKeyword.addDataItem( dataItem ) , std::invalid_argument);
 }
 
+
+BOOST_AUTO_TEST_CASE(DefaultConstructur_setHelpText_canReadBack) {
+    ParserKeyword parserKeyword("BPR");
+    std::string helpText("This is the help text");
+    parserKeyword.setHelpText(helpText);
+    BOOST_CHECK_EQUAL( helpText, parserKeyword.getHelpText());
+}
+
+
 /*****************************************************************/
 /* json */
 

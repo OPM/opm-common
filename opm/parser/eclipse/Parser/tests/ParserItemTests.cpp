@@ -77,6 +77,16 @@ BOOST_AUTO_TEST_CASE(scan_PreMatureTerminator_defaultUsed) {
     DeckItemConstPtr defaulted = itemInt.scan(rawRecord1);
     BOOST_CHECK_EQUAL(ParserItem::defaultInt(), defaulted->getInt(0));
 }    
+
+BOOST_AUTO_TEST_CASE(InitializeIntItem_setHelpText_canReadBack) {
+    ParserIntItem itemInt(std::string("ITEM1"));
+    std::string helpText("This is the help text");
+    itemInt.setHelpText(helpText);
+
+    BOOST_CHECK_EQUAL( helpText, itemInt.getHelpText() );
+}
+
+
 /******************************************************************/
 /* <Json> */
 BOOST_AUTO_TEST_CASE(InitializeIntItem_FromJsonObject_missingName_throws) {
@@ -114,6 +124,22 @@ BOOST_AUTO_TEST_CASE(InitializeIntItem_FromJsonObject_withDefaultInvalid_throws)
     BOOST_CHECK_THROW( ParserIntItem item1( jsonConfig ) , std::invalid_argument );
 }
 
+
+
+BOOST_AUTO_TEST_CASE(InitializeIntItem_WithHelpText_HelpTextPropertyShouldBePopulated) {
+    Json::JsonObject jsonConfig("{\"name\": \"ITEM1\" , \"help\" : \"Help text goes here\"}");
+    ParserIntItem item(jsonConfig);
+
+    BOOST_CHECK_EQUAL( "Help text goes here", item.getHelpText() );
+}
+
+
+BOOST_AUTO_TEST_CASE(InitializeIntItem_WithoutHelpText_HelpTextPropertyShouldBeEmpty) {
+    Json::JsonObject jsonConfig("{\"name\": \"ITEM1\"}");
+    ParserIntItem item(jsonConfig);
+
+    BOOST_CHECK_EQUAL( "", item.getHelpText() );
+}
 
 
 

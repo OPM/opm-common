@@ -49,7 +49,9 @@ namespace Opm {
         virtual size_t numDimensions() const;
         const std::string& name() const;
         ParserItemSizeEnum sizeType() const;
-      
+        std::string getHelpText() const;
+        void setHelpText(std::string helpText);
+
         static int defaultInt();
         static std::string defaultString();
         static double defaultDouble();
@@ -68,6 +70,7 @@ namespace Opm {
     private:
         std::string m_name;
         ParserItemSizeEnum m_sizeType;
+        std::string m_helpText;
     };
 
     typedef std::shared_ptr<const ParserItem> ParserItemConstPtr;

@@ -83,6 +83,10 @@ namespace Opm {
         return m_helpText;
     }
 
+    void ParserKeyword::setHelpText(std::string helpText) {
+        m_helpText = helpText;
+    }
+
     void ParserKeyword::initSize(const Json::JsonObject& jsonConfig) {
         // The number of record has been set explicitly with the size: keyword
         if (jsonConfig.has_item("size")) {
@@ -442,6 +446,7 @@ namespace Opm {
                     break;
             }
         }
+        os << indent << lhs << "->setHelpText(\"" << m_helpText << "\");" << std::endl;
 
         for (size_t i = 0; i < m_record->size(); i++) {
             os << indent << "{" << std::endl;
@@ -451,6 +456,7 @@ namespace Opm {
                 os << local_indent << "ParserItemPtr item(";
                 item->inlineNew(os);
                 os << ");" << std::endl;
+                os << local_indent << "item->setHelpText(\"" << item->getHelpText() << "\");" << std::endl;
                 for (size_t idim=0; idim < item->numDimensions(); idim++)
                     os << local_indent << "item->push_backDimension(\"" << item->getDimension( idim ) << "\");" << std::endl;
                 {
