@@ -30,12 +30,33 @@
 #include <cassert>
 
 namespace Opm {
-    class FullTable {
+    template <class OuterTable = Opm::SimpleMultiRecordTable, class InnerTable = Opm::SimpleTable>
+    class FullTable
+    {
+        typedef FullTable<OuterTable, InnerTable> Self;
+        typedef std::shared_ptr<const OuterTable> OuterTableConstPtr;
+        typedef std::shared_ptr<const InnerTable> InnerTableConstPtr;
+
     protected:
         // protected default constructor for the derived classes
         FullTable() {}
 
+        // protected constructor for the case that the derived classes
+        // use specialized classes for the outer and inner tables
+        FullTable(Opm::DeckKeywordConstPtr keyword)
+        {
+            m_outerTable.reset(new OuterTable(keyword));
+
+            for (int rowIdx = 0; rowIdx < static_cast<int>(keyword->size()); ++rowIdx) {
+                InnerTableConstPtr curRow(new InnerTable(keyword, /*recordIdx=*/rowIdx));
+                m_innerTables.push_back(curRow);
+            }
+        }
+
     public:
+        typedef std::shared_ptr<Self> Pointer;
+        typedef std::shared_ptr<const Self> ConstPointer;
+
         /*!
          * \brief Read full tables from keywords like PVTO
          *
@@ -50,25 +71,38 @@ namespace Opm {
          */
         FullTable(Opm::DeckKeywordConstPtr keyword,
                   const std::vector<std::string> &outerColumnNames,
-                  const std::vector<std::string> &innerColumnNames);
+                  const std::vector<std::string> &innerColumnNames)
+        {
+            m_outerTable.reset(new SimpleMultiRecordTable(keyword, outerColumnNames));
 
-        Opm::SimpleTableConstPtr getOuterTable() const
+            for (int rowIdx = 0; rowIdx < keyword->size(); ++rowIdx) {
+                Opm::SimpleTableConstPtr curRow(
+                    new SimpleTable(keyword,
+                                    innerColumnNames,
+                                    /*recordIdx=*/rowIdx,
+                                    /*firstColumnOffset=*/1));
+                m_innerTables.push_back(curRow);
+            }
+        }
+
+
+        std::shared_ptr<const OuterTable> getOuterTable() const
         { return m_outerTable; }
 
-        Opm::SimpleTableConstPtr getInnerTable(int rowIdx) const
+        std::shared_ptr<const InnerTable> getInnerTable(int rowIdx) const
         {
-            assert(0 <= rowIdx && rowIdx < m_innerTables.size());
+            assert(0 <= rowIdx && rowIdx < static_cast<int>(m_innerTables.size()));
             return m_innerTables[rowIdx];
         }
 
     protected:
-        Opm::SimpleTableConstPtr m_outerTable;
-        std::vector<Opm::SimpleTableConstPtr> m_innerTables;
+        std::shared_ptr<const OuterTable> m_outerTable;
+        std::vector<std::shared_ptr<const InnerTable> > m_innerTables;
 
     };
 
-    typedef std::shared_ptr<FullTable> FullTablePtr;
-    typedef std::shared_ptr<const FullTable> FullTableConstPtr;
+    typedef FullTable<Opm::SimpleMultiRecordTable, Opm::SimpleTable>::Pointer FullTablePtr;
+    typedef FullTable<Opm::SimpleMultiRecordTable, Opm::SimpleTable>::ConstPointer FullTableConstPtr;
 }
 
 #endif	// OPM_PARSER_FULL_TABLE_HPP
