@@ -20,6 +20,7 @@
 #define	OPM_PARSER_FULL_TABLE_HPP
 
 #include "SimpleTable.hpp"
+#include "SimpleMultiRecordTable.hpp"
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 

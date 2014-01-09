@@ -19,7 +19,7 @@
 #ifndef OPM_PARSER_PVTG_OUTER_TABLE_HPP
 #define	OPM_PARSER_PVTG_OUTER_TABLE_HPP
 
-#include "SimpleTable.hpp"
+#include "SimpleMultiRecordTable.hpp"
 
 namespace Opm {
     class PvtgOuterTable : protected SimpleMultiRecordTable {
@@ -55,5 +55,5 @@ namespace Opm {
     };
 }
 
-#endif	// OPM_PARSER_SIMPLE_TABLE_HPP
+#endif	// OPM_PARSER_PVTO_OUTER_TABLE_HPP
 

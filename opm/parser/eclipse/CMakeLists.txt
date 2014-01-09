@@ -68,7 +68,8 @@ EclipseState/Schedule/GroupTreeNode.cpp
 EclipseState/Schedule/GroupTree.cpp)
 
 set (utility_source
-Utility/SimpleTable.cpp)
+Utility/SimpleTable.cpp
+Utility/SimpleMultiRecordTable.cpp)
 
 set( HEADER_FILES
 RawDeck/RawConsts.hpp 

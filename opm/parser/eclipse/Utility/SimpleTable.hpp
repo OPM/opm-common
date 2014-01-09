@@ -88,28 +88,6 @@ namespace Opm {
 
     typedef std::shared_ptr<SimpleTable> SimpleTablePtr;
     typedef std::shared_ptr<const SimpleTable> SimpleTableConstPtr;
-
-    // create table from first few items of multiple records (i.e. getSIDoubleData() throws an exception)
-    class SimpleMultiRecordTable : public SimpleTable {
-    public:
-        /*!
-         * \brief Read simple tables from multi-item keywords like PVTW
-         *
-         * This creates a table out of the first N items of each of
-         * the keyword's records. (N is the number of columns.)
-         */
-        SimpleMultiRecordTable(Opm::DeckKeywordConstPtr keyword,
-                               const std::vector<std::string> &columnNames,
-                               int firstEntityOffset = 0);
-
-    private:
-        int getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord) const;
-        double getFlatSiDoubleData_(Opm::DeckRecordConstPtr deckRecord, int flatItemIdx) const;
-    };
-
-    typedef std::shared_ptr<SimpleMultiRecordTable> SimpleMultiRecordTablePtr;
-    typedef std::shared_ptr<const SimpleMultiRecordTable> SimpleMultiRecordTableConstPtr;
-
 }
 
 #endif	// OPM_PARSER_SIMPLE_TABLE_HPP
