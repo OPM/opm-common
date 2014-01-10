@@ -56,7 +56,7 @@ namespace Opm {
         bool hasFixedSize() const;
         bool isTableCollection() const;
         std::string getHelpText() const;
-        void setHelpText(std::string helpText);
+        void setHelpText(const std::string &helpText);
 
         size_t numItems() const;
         

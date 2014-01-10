@@ -83,7 +83,7 @@ namespace Opm {
         return m_helpText;
     }
 
-    void ParserKeyword::setHelpText(std::string helpText) {
+    void ParserKeyword::setHelpText(const std::string& helpText) {
         m_helpText = helpText;
     }
 

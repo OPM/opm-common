@@ -156,12 +156,11 @@ namespace Opm {
     }
 
     std::vector<std::string> Parser::getAllKeywords () const {
-        std::map<std::string, ParserKeywordConstPtr>::const_iterator iterator;
         std::vector<std::string> keywords;
-        for (iterator = m_parserKeywords.begin(); iterator != m_parserKeywords.end(); iterator++) {
+        for (auto iterator = m_parserKeywords.begin(); iterator != m_parserKeywords.end(); iterator++) {
             keywords.push_back(iterator->first);
         }
-        for (iterator = m_wildCardKeywords.begin(); iterator != m_wildCardKeywords.end(); iterator++) {
+        for (auto iterator = m_wildCardKeywords.begin(); iterator != m_wildCardKeywords.end(); iterator++) {
             keywords.push_back(iterator->first);
         }
         return keywords;

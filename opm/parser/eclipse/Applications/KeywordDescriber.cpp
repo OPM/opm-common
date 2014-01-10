@@ -72,17 +72,15 @@ void printItems(Opm::ParserKeywordConstPtr keyword)
     std::cout << std::endl;
     std::cout << indent << "List of items:" << std::endl;
     Opm::ParserRecordPtr parserRecord = keyword->getRecord();
-    std::vector<Opm::ParserItemConstPtr>::const_iterator iterator;
-    for (iterator = parserRecord->begin(); iterator != parserRecord->end(); ++iterator) {
+    for (auto iterator = parserRecord->begin(); iterator != parserRecord->end(); ++iterator) {
         Opm::ParserItemConstPtr item = *iterator;
         printItem(item, indent);
     }
 }
 
-void printKeywords (Opm::ParserPtr parser, std::vector<std::string> keywords)
+void printKeywords (Opm::ParserPtr parser, std::vector<std::string>& keywords)
 {
-    std::vector<std::string>::const_iterator iterator;
-    for (iterator = keywords.begin(); iterator != keywords.end(); ++iterator) {
+    for (auto iterator = keywords.begin(); iterator != keywords.end(); ++iterator) {
         Opm::ParserKeywordConstPtr keyword = parser->getKeyword(*iterator);
         printKeyword(keyword);
         printItems(keyword);
@@ -105,8 +103,7 @@ std::vector<std::string> createListOfKeywordsToDescribe(char** argv, bool allKey
     if (allKeywords) {
         keywords = parser->getAllKeywords();
     } else {
-        std::string keywordName = argv[1];
-        keywords.push_back(keywordName);
+        keywords.push_back(argv[1]);
     }
 
     return keywords;
