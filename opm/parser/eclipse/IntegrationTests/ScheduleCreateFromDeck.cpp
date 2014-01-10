@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule) {
 
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE1");
-    DeckPtr deck = parser->parse(scheduleFile.string());
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
     ScheduleConstPtr sched(new Schedule(deck));
     TimeMapConstPtr timeMap = sched->getTimeMap();
     BOOST_CHECK_EQUAL(boost::gregorian::date(2007, boost::gregorian::May, 10), sched->getStartDate());
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_Comments_After_Keywords) {
 
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_COMMENTS_AFTER_KEYWORDS");
-    DeckPtr deck = parser->parse(scheduleFile.string());
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
     ScheduleConstPtr sched(new Schedule(deck));
     TimeMapConstPtr timeMap = sched->getTimeMap();
     BOOST_CHECK_EQUAL(boost::gregorian::date(2007, boost::gregorian::May, 10), sched->getStartDate());
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_Comments_After_Keywords) {
 BOOST_AUTO_TEST_CASE(WellTesting) {
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELLS2");
-    DeckPtr deck = parser->parse(scheduleFile.string());
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
     ScheduleConstPtr sched(new Schedule(deck));
 
     BOOST_CHECK_EQUAL(3U, sched->numWells());
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
 BOOST_AUTO_TEST_CASE(WellTestCOMPDAT) {
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELLS2");
-    DeckPtr deck = parser->parse(scheduleFile.string());
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
     ScheduleConstPtr sched(new Schedule(deck));
 
     BOOST_CHECK_EQUAL(3U, sched->numWells());
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(WellTestCOMPDAT) {
 BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_with_explicit_L0_parenting) {
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_GRUPTREE_EXPLICIT_PARENTING");
-    DeckPtr deck = parser->parse(scheduleFile.string());
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
     ScheduleConstPtr sched(new Schedule(deck));
 
     GroupTreeNodePtr rootNode = sched->getGroupTree(0)->getNode("FIELD");
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_with_explicit_L0_parenting) {
 BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_tree) {
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELSPECS_GROUPS");
-    DeckPtr deck = parser->parse(scheduleFile.string());
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
     ScheduleConstPtr schedule(new Schedule(deck));
 
     // Time 0, only from WELSPECS
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_tree) {
 BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_WITH_REPARENT_correct_tree) {
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_GROUPS_REPARENT");
-    DeckPtr deck = parser->parse(scheduleFile.string());
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
     ScheduleConstPtr schedule(new Schedule(deck));
 
     schedule->getGroupTree(0)->printTree();
@@ -242,7 +242,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_WITH_REPARENT_correct_tree) {
 BOOST_AUTO_TEST_CASE(GroupTreeTest_PrintGrouptree) {
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELSPECS_GROUPS");
-    DeckPtr deck = parser->parse(scheduleFile.string());
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
     ScheduleConstPtr sched(new Schedule(deck));
 
     GroupTreePtr rootNode = sched->getGroupTree(0);
@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_PrintGrouptree) {
 BOOST_AUTO_TEST_CASE( WellTestGroups ) {
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_GROUPS");
-    DeckPtr deck = parser->parse(scheduleFile.string());
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
     ScheduleConstPtr sched( new Schedule(deck));
     
     BOOST_CHECK_EQUAL( 3U , sched->numGroups() );
@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
 BOOST_AUTO_TEST_CASE( WellTestGroupAndWellRelation ) {
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELLS_AND_GROUPS");
-    DeckPtr deck = parser->parse(scheduleFile.string());
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
     ScheduleConstPtr sched( new Schedule(deck));
 
     GroupPtr group1 = sched->getGroup("GROUP1");

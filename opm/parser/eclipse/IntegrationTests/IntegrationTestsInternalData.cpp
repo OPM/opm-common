@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(ParseFileWithManyKeywords) {
     boost::filesystem::path multipleKeywordFile("testdata/statoil/gurbat_trimmed.DATA");
 
     ParserPtr parser(new Parser());
-    DeckPtr deck = parser->parse(multipleKeywordFile.string() , false);
+    DeckPtr deck =  parser->parseFile(multipleKeywordFile.string() , false);
     SchedulePtr schedule(new Schedule(deck));
     
     GroupTreePtr treeAtStart = schedule->getGroupTree(0);

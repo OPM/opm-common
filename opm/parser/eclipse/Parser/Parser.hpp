@@ -46,8 +46,8 @@ namespace Opm {
         Parser(bool addDefault = true);
 
         /// The starting point of the parsing process. The supplied file is parsed, and the resulting Deck is returned.
-        DeckPtr parse(const std::string &dataFile) const;
-        DeckPtr parse(const std::string &dataFile, bool strictParsing) const;
+        DeckPtr parseFile(const std::string &dataFile, bool strictParsing=true) const;
+        DeckPtr parseString(const std::string &data, bool strictParsing=true) const;
 
         /// Method to add ParserKeyword instances, these holding type and size information about the keywords and their data.
         void addKeyword(ParserKeywordConstPtr parserKeyword);
@@ -71,7 +71,7 @@ namespace Opm {
         ParserKeywordConstPtr matchingKeyword(const std::string& keyword) const;
 
         bool tryParseKeyword(std::shared_ptr<ParserState> parserState) const;
-        void parseFile(std::shared_ptr<ParserState> parserState) const;
+        void parseStream(std::shared_ptr<ParserState> parserState) const;
         RawKeywordPtr createRawKeyword(const std::string& keywordString, std::shared_ptr<ParserState> parserState) const;
         void addDefaultKeywords();
 

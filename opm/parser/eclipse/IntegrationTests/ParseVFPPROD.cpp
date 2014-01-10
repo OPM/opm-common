@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE( parse_VFPPROD_OK ) {
     boost::filesystem::path file("testdata/integration_tests/VFPPROD/VFPPROD1");
     BOOST_CHECK( parser->canParseKeyword("VFPPROD"));
 
-    DeckPtr deck = parser->parse(file.string());
+    DeckPtr deck =  parser->parseFile(file.string());
 
     DeckKeywordConstPtr VFPPROD1 = deck->getKeyword("VFPPROD" , 0);
     DeckKeywordConstPtr BPR = deck->getKeyword("BPR" , 0);

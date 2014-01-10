@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_deckReturned) {
     path datafile;
     ParserPtr parser(new Parser());
     createDeckWithInclude (datafile);
-    DeckConstPtr deck = parser->parse(datafile.string());
+    DeckConstPtr deck =  parser->parseFile(datafile.string());
 
     BOOST_CHECK( deck->hasKeyword("DIMENS"));
     BOOST_CHECK( deck->hasKeyword("START"));

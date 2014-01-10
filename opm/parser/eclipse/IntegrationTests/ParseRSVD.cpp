@@ -38,7 +38,7 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE( parse_EQUIL_OK ) {
     ParserPtr parser(new Parser());
     boost::filesystem::path pvtgFile("testdata/integration_tests/RSVD/RSVD.txt");
-    DeckPtr deck = parser->parse(pvtgFile.string());
+    DeckPtr deck =  parser->parseFile(pvtgFile.string());
     DeckKeywordConstPtr kw1 = deck->getKeyword("RSVD" , 0);
     BOOST_CHECK_EQUAL( 6U , kw1->size() );
 

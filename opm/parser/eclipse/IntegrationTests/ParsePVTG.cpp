@@ -22,7 +22,7 @@ using namespace Opm;
 void check_parser(ParserPtr parser) {
 
     boost::filesystem::path pvtgFile("testdata/integration_tests/PVTG/PVTG.txt");
-    DeckPtr deck = parser->parse(pvtgFile.string());
+    DeckPtr deck =  parser->parseFile(pvtgFile.string());
     DeckKeywordConstPtr kw1 = deck->getKeyword("PVTG" , 0);
     BOOST_CHECK_EQUAL(5U , kw1->size());
 

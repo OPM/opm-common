@@ -40,7 +40,7 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE(ParseDENSITY) {
     ParserPtr parser(new Parser());
     boost::filesystem::path file("testdata/integration_tests/DENSITY/DENSITY1");
-    DeckPtr deck = parser->parse(file.string());
+    DeckPtr deck =  parser->parseFile(file.string());
     DeckKeywordPtr densityKw = deck->getKeyword("DENSITY" , 0);
 
     

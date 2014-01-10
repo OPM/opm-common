@@ -33,7 +33,7 @@ namespace Opm {
         boost::filesystem::path dataFile;
         boost::filesystem::path rootPath;
         size_t lineNR;
-        std::ifstream inputstream;
+        std::shared_ptr<std::istream> inputstream;
         RawKeywordPtr rawKeyword;
         bool strictParsing;
         std::string nextKeyword;
@@ -43,6 +43,15 @@ namespace Opm {
             dataFile = inputDataFile;
             deck = deckToFill;
             rootPath = commonRootPath;
+            inputstream.reset(new std::ifstream(inputDataFile.string().c_str()));
+        }
+
+        ParserState(const std::string &inputData, DeckPtr deckToFill, bool useStrictParsing) {
+            lineNR = 0;
+            strictParsing = useStrictParsing;
+            dataFile = "";
+            deck = deckToFill;
+            inputstream.reset(new std::istringstream(inputData));
         }
     };
 
@@ -50,11 +59,6 @@ namespace Opm {
         if (addDefault)
             addDefaultKeywords();
     }
-
-    DeckPtr Parser::parse(const std::string &dataFile) const {
-        return parse(dataFile, true);
-    }
-
 
     /*
      About INCLUDE: Observe that the ECLIPSE parser is slightly unlogical
@@ -64,15 +68,23 @@ namespace Opm {
      is retained in the current implementation.
      */
 
-    DeckPtr Parser::parse(const std::string &dataFileName, bool strictParsing) const {
+    DeckPtr Parser::parseFile(const std::string &dataFileName, bool strictParsing) const {
 
         std::shared_ptr<ParserState> parserState(new ParserState(dataFileName, DeckPtr(new Deck()), getRootPathFromFile(dataFileName), strictParsing));
 
-        parseFile(parserState);
+        parseStream(parserState);
         applyUnitsToDeck(parserState->deck);
         return parserState->deck;
     }
 
+    DeckPtr Parser::parseString(const std::string &data, bool strictParsing) const {
+
+        std::shared_ptr<ParserState> parserState(new ParserState(data, DeckPtr(new Deck()), strictParsing));
+
+        parseStream(parserState);
+        applyUnitsToDeck(parserState->deck);
+        return parserState->deck;
+    }
 
     size_t Parser::size() const {
         return m_parserKeywords.size();
@@ -167,10 +179,8 @@ namespace Opm {
     }
 
 
-    void Parser::parseFile(std::shared_ptr<ParserState> parserState) const {
+    void Parser::parseStream(std::shared_ptr<ParserState> parserState) const {
         bool verbose = false;
-
-        parserState->inputstream.open(parserState->dataFile.string().c_str());
 
         if (parserState->inputstream) {
             while (true) {
@@ -188,7 +198,7 @@ namespace Opm {
                             std::cout << parserState->rawKeyword->getKeywordName() << "  " << includeFile << std::endl;
                         
                         std::shared_ptr<ParserState> newParserState (new ParserState(includeFile.string(), parserState->deck, parserState->rootPath, parserState->strictParsing));
-                        parseFile(newParserState);
+                        parseStream(newParserState);
                     } else {
                         if (verbose)
                             std::cout << parserState->rawKeyword->getKeywordName() << std::endl;
@@ -212,8 +222,6 @@ namespace Opm {
                 if (!streamOK)
                     break;
             }
-            
-            parserState->inputstream.close();
         } else
             throw std::invalid_argument("Failed to open file: " + parserState->dataFile.string());
     }
@@ -282,7 +290,7 @@ namespace Opm {
             parserState->nextKeyword = "";
         }
 
-        while (std::getline(parserState->inputstream, line)) {
+        while (std::getline(*parserState->inputstream, line)) {
             boost::algorithm::trim_right(line); // Removing garbage (eg. \r)
             std::string keywordString;
             parserState->lineNR++;
