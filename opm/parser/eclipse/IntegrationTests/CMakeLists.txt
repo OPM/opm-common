@@ -69,6 +69,12 @@ add_test(NAME runParseSWOF
          WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} 
          COMMAND ${EXECUTABLE_OUTPUT_PATH}/runParseSWOF)         
 
+add_executable(runParseSGOF ParseSGOF.cpp)
+target_link_libraries(runParseSGOF Parser ${Boost_LIBRARIES})
+add_test(NAME runParseSGOF 
+         WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} 
+         COMMAND ${EXECUTABLE_OUTPUT_PATH}/runParseSGOF)         
+
 if (INCLUDE_STATOIL_TESTS) 
    add_executable(runIntegrationTestsInternalData IntegrationTestsInternalData.cpp)
    target_link_libraries(runIntegrationTestsInternalData Parser ${Boost_LIBRARIES})
