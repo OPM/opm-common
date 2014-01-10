@@ -54,6 +54,7 @@ namespace Opm {
         bool dropKeyword(const std::string& keyword);
         bool canParseKeyword( const std::string& keyword) const;
         ParserKeywordConstPtr getKeyword(const std::string& keyword) const;
+        std::vector<std::string> getAllKeywords () const;
 
         void loadKeywords(const Json::JsonObject& jsonKeywords);
         bool loadKeywordFromFile(const boost::filesystem::path& configFile);

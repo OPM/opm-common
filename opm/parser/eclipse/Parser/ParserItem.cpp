@@ -29,6 +29,7 @@ namespace Opm {
         m_name.assign(itemName);
         m_sizeType = sizeType;
         m_defaultSet = false;
+        m_description = "";
     }
 
 
@@ -36,6 +37,7 @@ namespace Opm {
         m_name.assign(itemName);
         m_sizeType = SINGLE;
         m_defaultSet = false;
+        m_description = "";
     }
 
     bool ParserItem::hasDimension() const {
@@ -66,6 +68,10 @@ namespace Opm {
         } else
           m_sizeType = SINGLE;
         
+        if (jsonConfig.has_item("description")) {
+            m_description = jsonConfig.get_string("description");
+        }
+
         m_defaultSet = false;
     }
 
@@ -76,6 +82,15 @@ namespace Opm {
     ParserItemSizeEnum ParserItem::sizeType() const {
         return m_sizeType;
     }
+
+    std::string ParserItem::getDescription() const {
+        return m_description;
+    }
+
+    void ParserItem::setDescription(std::string description) {
+        m_description = description;
+    }
+
 
     int ParserItem::defaultInt() {
         return 0;

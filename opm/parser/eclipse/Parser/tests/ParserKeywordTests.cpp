@@ -145,6 +145,15 @@ BOOST_AUTO_TEST_CASE(MixingDataAndItems_throws2) {
     BOOST_CHECK_THROW( parserKeyword.addDataItem( dataItem ) , std::invalid_argument);
 }
 
+
+BOOST_AUTO_TEST_CASE(DefaultConstructur_setDescription_canReadBack) {
+    ParserKeyword parserKeyword("BPR");
+    std::string description("This is the description");
+    parserKeyword.setDescription(description);
+    BOOST_CHECK_EQUAL( description, parserKeyword.getDescription());
+}
+
+
 /*****************************************************************/
 /* json */
 
@@ -323,6 +332,22 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_SizeUNKNOWN_OK) {
     ParserKeyword parserKeyword(jsonObject1);
     
     BOOST_CHECK_EQUAL( UNKNOWN , parserKeyword.getSizeType() );
+}
+
+
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_WithDescription_DescriptionPropertyShouldBePopulated) {
+    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"description\" : \"Description\"}");
+    ParserKeyword parserKeyword(jsonObject);
+
+    BOOST_CHECK_EQUAL( "Description", parserKeyword.getDescription() );
+}
+
+
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_WithoutDescription_DescriptionPropertyShouldBeEmpty) {
+    Json::JsonObject jsonObject("{\"name\": \"BPR\"}");
+    ParserKeyword parserKeyword(jsonObject);
+
+    BOOST_CHECK_EQUAL( "", parserKeyword.getDescription() );
 }
 
 

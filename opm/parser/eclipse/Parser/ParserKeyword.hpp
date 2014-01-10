@@ -55,7 +55,8 @@ namespace Opm {
         size_t getFixedSize() const;
         bool hasFixedSize() const;
         bool isTableCollection() const;
-
+        std::string getDescription() const;
+        void setDescription(const std::string &description);
 
         size_t numItems() const;
         
@@ -77,6 +78,7 @@ namespace Opm {
         bool m_isDataKeyword;
         bool m_isTableCollection;
         ParserKeywordActionEnum m_action;
+        std::string m_Description;
 
         static bool validNameStart(const std::string& name);
         void initData( const Json::JsonObject& jsonConfig );

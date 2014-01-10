@@ -155,6 +155,16 @@ namespace Opm {
         }
     }
 
+    std::vector<std::string> Parser::getAllKeywords () const {
+        std::vector<std::string> keywords;
+        for (auto iterator = m_parserKeywords.begin(); iterator != m_parserKeywords.end(); iterator++) {
+            keywords.push_back(iterator->first);
+        }
+        for (auto iterator = m_wildCardKeywords.begin(); iterator != m_wildCardKeywords.end(); iterator++) {
+            keywords.push_back(iterator->first);
+        }
+        return keywords;
+    }
 
 
     void Parser::parseFile(std::shared_ptr<ParserState> parserState) const {

@@ -43,6 +43,7 @@ namespace Opm {
         m_action = action;
         m_record = ParserRecordPtr(new ParserRecord);
         m_keywordSizeType = sizeType;
+        m_Description = "";
     }
 
     ParserKeyword::ParserKeyword(const std::string& name, ParserKeywordSizeEnum sizeType, ParserKeywordActionEnum action) {
@@ -76,6 +77,14 @@ namespace Opm {
 
     bool ParserKeyword::isTableCollection() const {
         return m_isTableCollection;
+    }
+
+    std::string ParserKeyword::getDescription() const {
+        return m_Description;
+    }
+
+    void ParserKeyword::setDescription(const std::string& description) {
+        m_Description = description;
     }
 
     void ParserKeyword::initSize(const Json::JsonObject& jsonConfig) {
@@ -131,6 +140,10 @@ namespace Opm {
 
         if (jsonConfig.has_item("data"))
             initData(jsonConfig);
+
+        if (jsonConfig.has_item("description")) {
+            m_Description = jsonConfig.get_string("description");
+        }
 
         if ((m_fixedSize == 0 && m_keywordSizeType == FIXED) || (m_action != INTERNALIZE))
             return;
@@ -433,6 +446,7 @@ namespace Opm {
                     break;
             }
         }
+        os << indent << lhs << "->setDescription(\"" << getDescription() << "\");" << std::endl;
 
         for (size_t i = 0; i < m_record->size(); i++) {
             os << indent << "{" << std::endl;
@@ -442,6 +456,7 @@ namespace Opm {
                 os << local_indent << "ParserItemPtr item(";
                 item->inlineNew(os);
                 os << ");" << std::endl;
+                os << local_indent << "item->setDescription(\"" << item->getDescription() << "\");" << std::endl;
                 for (size_t idim=0; idim < item->numDimensions(); idim++)
                     os << local_indent << "item->push_backDimension(\"" << item->getDimension( idim ) << "\");" << std::endl;
                 {
