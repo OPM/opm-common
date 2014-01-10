@@ -54,7 +54,8 @@ namespace Opm {
         const double DissolvedGasRatio = 1.0;
         const double FlowVolume        = 1.0;
         const double Density           = 1.0;
-        const double Viscosity         = 0.001;               // cP -> Pa s
+        const double Viscosity         = 0.001;                // cP -> Pa s
+        const double Timestep          = 24*60*60;             // days -> s
     }
 
 
@@ -68,6 +69,7 @@ namespace Opm {
          const double FlowVolume        = 0.158987294;         // STB -> m^3
          const double Density           = 16.01846;            // lb/ft^3 -> kg / m^3
          const double Viscosity         = 0.001;               // cP -> Pa s
+         const double Timestep          = 24*60*60;            // days -> s
     }
 
 }
