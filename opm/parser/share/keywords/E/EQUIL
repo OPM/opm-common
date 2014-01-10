@@ -1,10 +1,10 @@
 {"name" : "EQUIL" , "size" : {"keyword":"EQLDIMS" , "item":"NTEQUL"}, 
- "help": "The EQUIL item is used when equilibrationg the model. The item should consist of one record for each PVT region",    
+ "description": "The EQUIL item is used when equilibrationg the model. The item should consist of one record for each PVT region",    
  "items" : 
  [{"name" : "DATUM_DEPTH"       , "value_type" : "FLOAT" , "default" : 0.0 , "dimension" : "L"},
   {"name" : "DATUM_PRESSURE"    , "value_type" : "FLOAT" , "dimension" : "P"} ,
   {"name" : "OWC"               , "value_type" : "FLOAT" , "default" : 0.0 , "dimension" : "L",
-            "help" : "The OWC item is depth of the OIL Water contact. This should ..."} ,
+            "description" : "The OWC item is depth of the OIL Water contact. This should ..."} ,
   {"name" : "PC_OWC"            , "value_type" : "FLOAT" , "default" : 0.0 , "dimension" : "P"} ,
   {"name" : "GOC"               , "value_type" : "FLOAT" , "default" : 0.0 , "dimension" : "L"} ,
   {"name" : "PC_GOC"            , "value_type" : "FLOAT" , "default" : 0.0 , "dimension" : "P"} ,

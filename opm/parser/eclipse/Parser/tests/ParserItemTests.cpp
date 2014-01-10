@@ -78,12 +78,12 @@ BOOST_AUTO_TEST_CASE(scan_PreMatureTerminator_defaultUsed) {
     BOOST_CHECK_EQUAL(ParserItem::defaultInt(), defaulted->getInt(0));
 }    
 
-BOOST_AUTO_TEST_CASE(InitializeIntItem_setHelpText_canReadBack) {
+BOOST_AUTO_TEST_CASE(InitializeIntItem_setDescription_canReadBack) {
     ParserIntItem itemInt(std::string("ITEM1"));
-    std::string helpText("This is the help text");
-    itemInt.setHelpText(helpText);
+    std::string description("This is the description");
+    itemInt.setDescription(description);
 
-    BOOST_CHECK_EQUAL( helpText, itemInt.getHelpText() );
+    BOOST_CHECK_EQUAL( description, itemInt.getDescription() );
 }
 
 
@@ -126,19 +126,20 @@ BOOST_AUTO_TEST_CASE(InitializeIntItem_FromJsonObject_withDefaultInvalid_throws)
 
 
 
-BOOST_AUTO_TEST_CASE(InitializeIntItem_WithHelpText_HelpTextPropertyShouldBePopulated) {
-    Json::JsonObject jsonConfig("{\"name\": \"ITEM1\" , \"help\" : \"Help text goes here\"}");
+BOOST_AUTO_TEST_CASE(InitializeIntItem_WithDescription_DescriptionPropertyShouldBePopulated) {
+    std::string description("Description goes here");
+    Json::JsonObject jsonConfig("{\"name\": \"ITEM1\" , \"description\" : \"Description goes here\"}");
     ParserIntItem item(jsonConfig);
 
-    BOOST_CHECK_EQUAL( "Help text goes here", item.getHelpText() );
+    BOOST_CHECK_EQUAL( "Description goes here", item.getDescription() );
 }
 
 
-BOOST_AUTO_TEST_CASE(InitializeIntItem_WithoutHelpText_HelpTextPropertyShouldBeEmpty) {
+BOOST_AUTO_TEST_CASE(InitializeIntItem_WithoutDescription_DescriptionPropertyShouldBeEmpty) {
     Json::JsonObject jsonConfig("{\"name\": \"ITEM1\"}");
     ParserIntItem item(jsonConfig);
 
-    BOOST_CHECK_EQUAL( "", item.getHelpText() );
+    BOOST_CHECK_EQUAL( "", item.getDescription() );
 }
 
 

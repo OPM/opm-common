@@ -146,11 +146,11 @@ BOOST_AUTO_TEST_CASE(MixingDataAndItems_throws2) {
 }
 
 
-BOOST_AUTO_TEST_CASE(DefaultConstructur_setHelpText_canReadBack) {
+BOOST_AUTO_TEST_CASE(DefaultConstructur_setDescription_canReadBack) {
     ParserKeyword parserKeyword("BPR");
-    std::string helpText("This is the help text");
-    parserKeyword.setHelpText(helpText);
-    BOOST_CHECK_EQUAL( helpText, parserKeyword.getHelpText());
+    std::string description("This is the description");
+    parserKeyword.setDescription(description);
+    BOOST_CHECK_EQUAL( description, parserKeyword.getDescription());
 }
 
 
@@ -335,19 +335,19 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_SizeUNKNOWN_OK) {
 }
 
 
-BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_WithHelpText_HelpTextPropertyShouldBePopulated) {
-    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"help\" : \"Help text\"}");
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_WithDescription_DescriptionPropertyShouldBePopulated) {
+    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"description\" : \"Description\"}");
     ParserKeyword parserKeyword(jsonObject);
 
-    BOOST_CHECK_EQUAL( "Help text", parserKeyword.getHelpText() );
+    BOOST_CHECK_EQUAL( "Description", parserKeyword.getDescription() );
 }
 
 
-BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_WithoutHelpText_HelpTextPropertyShouldBeEmpty) {
+BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_WithoutDescription_DescriptionPropertyShouldBeEmpty) {
     Json::JsonObject jsonObject("{\"name\": \"BPR\"}");
     ParserKeyword parserKeyword(jsonObject);
 
-    BOOST_CHECK_EQUAL( "", parserKeyword.getHelpText() );
+    BOOST_CHECK_EQUAL( "", parserKeyword.getDescription() );
 }
 
 

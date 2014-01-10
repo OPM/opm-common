@@ -30,8 +30,8 @@ void printKeyword(Opm::ParserKeywordConstPtr keyword)
 {
     std::string indent = " ";
     std::cout << keyword->getName() << std::endl;
-    if (keyword->getHelpText().length() > 0) {
-        std::cout << indent << "Help text: " << keyword->getHelpText() << std::endl;
+    if (keyword->getDescription().length() > 0) {
+        std::cout << indent << "Description: " << keyword->getDescription() << std::endl;
     }
     std::cout << indent << "Number of items: " << keyword->numItems() << std::endl;
     std::cout << indent << "Has dimension information: " << keyword->hasDimension() << std::endl;
@@ -56,8 +56,8 @@ void printKeyword(Opm::ParserKeywordConstPtr keyword)
 void printItem(Opm::ParserItemConstPtr item, std::string indent)
 {
     std::cout << indent << item->name() << std::endl;
-    if (item->getHelpText().length() > 0) {
-        std::cout << indent << "Help text: " << item->getHelpText() << std::endl;
+    if (item->getDescription().length() > 0) {
+        std::cout << indent << "Description: " << item->getDescription() << std::endl;
     }
     std::cout << indent << "SizeType: " << ParserItemSizeEnum2String(item->sizeType()) << std::endl;
     std::cout << indent << "Has dimension information: " << item->hasDimension() << std::endl;
