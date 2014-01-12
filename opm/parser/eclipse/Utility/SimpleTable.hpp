@@ -80,7 +80,7 @@ namespace Opm {
         void createColumns_(const std::vector<std::string> &columnNames);
 
         int getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord) const;
-        double getFlatSiDoubleData_(Opm::DeckRecordConstPtr deckRecord, int flatItemIdx) const;
+        double getFlatSiDoubleData_(Opm::DeckRecordConstPtr deckRecord, unsigned flatItemIdx) const;
 
         std::map<std::string, int> m_columnNames;
         std::vector<std::vector<double> > m_columns;

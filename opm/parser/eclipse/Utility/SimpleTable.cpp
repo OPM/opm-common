@@ -63,17 +63,17 @@ void SimpleTable::createColumns_(const std::vector<std::string> &columnNames)
 int SimpleTable::getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord) const
 {
     int result = 0;
-    for (int i = 0; i < deckRecord->size(); ++ i) {
+    for (unsigned i = 0; i < deckRecord->size(); ++ i) {
         result += deckRecord->getItem(i)->size();
     }
 
     return result;
 }
 
-double SimpleTable::getFlatSiDoubleData_(Opm::DeckRecordConstPtr deckRecord, int flatItemIdx) const
+double SimpleTable::getFlatSiDoubleData_(Opm::DeckRecordConstPtr deckRecord, unsigned flatItemIdx) const
 {
-    int itemFirstFlatIdx = 0;
-    for (int i = 0; i < deckRecord->size(); ++ i) {
+    unsigned itemFirstFlatIdx = 0;
+    for (unsigned i = 0; i < deckRecord->size(); ++ i) {
         Opm::DeckItemConstPtr item = deckRecord->getItem(i);
         if (itemFirstFlatIdx + item->size() > flatItemIdx)
             return item->getSIDouble(flatItemIdx - itemFirstFlatIdx);

@@ -45,7 +45,7 @@ namespace Opm {
 
     private:
         int getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord) const;
-        double getFlatSiDoubleData_(Opm::DeckRecordConstPtr deckRecord, int flatItemIdx) const;
+        double getFlatSiDoubleData_(Opm::DeckRecordConstPtr deckRecord, unsigned flatItemIdx) const;
     };
 
     typedef std::shared_ptr<SimpleMultiRecordTable> SimpleMultiRecordTablePtr;

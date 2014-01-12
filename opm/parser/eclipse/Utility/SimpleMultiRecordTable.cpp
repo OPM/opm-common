@@ -25,7 +25,7 @@ SimpleMultiRecordTable::SimpleMultiRecordTable(Opm::DeckKeywordConstPtr keyword,
                                                int firstEntityOffset)
 {
     createColumns_(columnNames);
-    for (int rowIdx = 0; rowIdx < keyword->size(); ++ rowIdx) {
+    for (unsigned rowIdx = 0; rowIdx < keyword->size(); ++ rowIdx) {
         // extract the actual data from the records of the keyword of
         // the deck
         Opm::DeckRecordConstPtr deckRecord =
@@ -45,17 +45,17 @@ SimpleMultiRecordTable::SimpleMultiRecordTable(Opm::DeckKeywordConstPtr keyword,
 int SimpleMultiRecordTable::getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord) const
 {
     int result = 0;
-    for (int i = 0; i < deckRecord->size(); ++ i) {
+    for (unsigned i = 0; i < deckRecord->size(); ++ i) {
         result += deckRecord->getItem(i)->size();
     }
 
     return result;
 }
 
-double SimpleMultiRecordTable::getFlatSiDoubleData_(Opm::DeckRecordConstPtr deckRecord, int flatItemIdx) const
+double SimpleMultiRecordTable::getFlatSiDoubleData_(Opm::DeckRecordConstPtr deckRecord, unsigned flatItemIdx) const
 {
-    int itemFirstFlatIdx = 0;
-    for (int i = 0; i < deckRecord->size(); ++ i) {
+    unsigned itemFirstFlatIdx = 0;
+    for (unsigned i = 0; i < deckRecord->size(); ++ i) {
         Opm::DeckItemConstPtr item = deckRecord->getItem(i);
         if (itemFirstFlatIdx + item->size() > flatItemIdx)
             return item->getSIDouble(flatItemIdx - itemFirstFlatIdx);
