@@ -32,40 +32,46 @@ namespace Opm {
          *        data of an individual well as exposed by the
          *        'WELSPECS' keyword.
          */
-        WelspecsWrapper(Opm::DeckRecordConstPtr record)
-            : m_record(record)
+        WelspecsWrapper(Opm::DeckKeywordConstPtr keyword)
+            : m_keyword(keyword)
         {
         }
 
         /*!
+         * \brief Return the number if wells covered by the WELSPECS keyword.
+         */
+        int numWells() const
+        { return m_keyword->size(); }
+
+        /*!
          * \brief Return the name of the well
          */
-        const std::string wellName() const
-        { return m_record->getItem(0)->getString(0); }
+        const std::string wellName(int wellIdx) const
+        { return m_keyword->getRecord(wellIdx)->getItem(0)->getString(0); }
 
         /*!
          * \brief Return the name of the group this well belongs to
          */
-        const std::string groupName() const
-        { return m_record->getItem(1)->getString(0); }
+        const std::string groupName(int wellIdx) const
+        { return m_keyword->getRecord(wellIdx)->getItem(1)->getString(0); }
 
         /*!
          * \brief Return east-west grid coordinate of the well
          */
-        int coordinateI() const
-        { return m_record->getItem(2)->getInt(0); }
+        int coordinateI(int wellIdx) const
+        { return m_keyword->getRecord(wellIdx)->getItem(2)->getInt(0); }
 
         /*!
          * \brief Return north-south grid coordinate of the well
          */
-        int coordinateJ() const
-        { return m_record->getItem(3)->getInt(0); }
+        int coordinateJ(int wellIdx) const
+        { return m_keyword->getRecord(wellIdx)->getItem(3)->getInt(0); }
 
         /*!
          * \brief Return reference depth to which the bottom hole pressure of the well applies
          */
-        double referenceDepth() const
-        { return m_record->getItem(4)->getSIDouble(0); }
+        double referenceDepth(int wellIdx) const
+        { return m_keyword->getRecord(wellIdx)->getItem(4)->getSIDouble(0); }
 
         /*!
          * \brief Return the preferred fluid phase of this well
@@ -73,40 +79,40 @@ namespace Opm {
          * (whatever this means.) This method returns a string that
          * contains one of "OIL", "WATER", "GAS", or "LIQ".
          */
-        const std::string preferredPhase() const
-        { return m_record->getItem(5)->getString(0); }
+        const std::string preferredPhase(int wellIdx) const
+        { return m_keyword->getRecord(wellIdx)->getItem(5)->getString(0); }
 
         /*!
          * \brief Return effective drainage radius of the well
          */
-        double drainageRadius() const
-        { return m_record->getItem(6)->getSIDouble(0); }
+        double drainageRadius(int wellIdx) const
+        { return m_keyword->getRecord(wellIdx)->getItem(6)->getSIDouble(0); }
 
         /*!
          * \brief Return the inflow equation to be used for the well
          *
          * This is one of "STD", "NO", "R-G", "YES", "P-P" or "GPP".
          */
-        const std::string inflowEquation() const
-        { return m_record->getItem(7)->getString(0); }
+        const std::string inflowEquation(int wellIdx) const
+        { return m_keyword->getRecord(wellIdx)->getItem(7)->getString(0); }
 
         /*!
          * \brief Returns true if the well is closed for fluids
          */
-        bool isShut() const
-        { return m_record->getItem(8)->getString(0) == "SHUT"; }
+        bool isShut(int wellIdx) const
+        { return m_keyword->getRecord(wellIdx)->getItem(8)->getString(0) == "SHUT"; }
 
         /*!
          * \brief Returns true if crossflow should be allowed
          */
-        bool allowCrossflow() const
-        { return m_record->getItem(9)->getString(0) == "YES"; }
+        bool allowCrossflow(int wellIdx) const
+        { return m_keyword->getRecord(wellIdx)->getItem(9)->getString(0) == "YES"; }
 
         /*!
          * \brief Returns the pressure number to be used for the wellbore fluids
          */
-        int pressureTableNumber() const
-        { return m_record->getItem(10)->getInt(0); }
+        int pressureTableNumber(int wellIdx) const
+        { return m_keyword->getRecord(wellIdx)->getItem(10)->getInt(0); }
 
         /*!
          * \brief Indicates the type of the calculation to be used for hydrostatic pressure
@@ -115,16 +121,16 @@ namespace Opm {
          *  - "SEG": segmented density calculation
          *  - "AVG": averaged density calculation
          */
-        const std::string hydrostaticCalculation() const
-        { return m_record->getItem(11)->getString(0); }
+        const std::string hydrostaticCalculation(int wellIdx) const
+        { return m_keyword->getRecord(wellIdx)->getItem(11)->getString(0); }
 
         /*!
          * \brief Indicates the "fluid in place" region table number
          *        used to calculate volumetric rates at reservoir
          *        conditions.
          */
-        int inPlaceRegionNumber() const
-        { return m_record->getItem(12)->getInt(0); }
+        int inPlaceRegionNumber(int wellIdx) const
+        { return m_keyword->getRecord(wellIdx)->getItem(12)->getInt(0); }
 
         // items 14 and 15 are "reserved for FrontSim"
 
@@ -135,11 +141,11 @@ namespace Opm {
          *  - "STD": The standard well model (Peaceman??)
          *  - "HMIW": High Mobility Injection Wells
          */
-        const std::string wellModel() const
-        { return m_record->getItem(15)->getString(0); }
+        const std::string wellModel(int wellIdx) const
+        { return m_keyword->getRecord(wellIdx)->getItem(15)->getString(0); }
 
     private:
-        Opm::DeckRecordConstPtr m_record;
+        Opm::DeckKeywordConstPtr m_keyword;
     };
 }
 

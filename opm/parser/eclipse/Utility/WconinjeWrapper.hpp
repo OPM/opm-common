@@ -16,8 +16,8 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPM_PARSER_WCONINJ_WRAPPER_HPP
-#define	OPM_PARSER_WCONINJ_WRAPPER_HPP
+#ifndef OPM_PARSER_WCONINJE_WRAPPER_HPP
+#define	OPM_PARSER_WCONINJE_WRAPPER_HPP
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
@@ -25,13 +25,13 @@
 #include <algorithm>
 
 namespace Opm {
-    class WconinjWrapper {
+    class WconinjeWrapper {
     public:
         /*!
          * \brief A wrapper class to provide convenient access to the
-         *        data of the 'WCONINJ' keyword.
+         *        data of the 'WCONINJE' keyword.
          */
-        WconinjWrapper(Opm::DeckKeywordConstPtr keyword)
+        WconinjeWrapper(Opm::DeckKeywordConstPtr keyword)
             : m_keyword(keyword)
         {
         }
@@ -54,7 +54,9 @@ namespace Opm {
          * This is one of:
          * - OIL
          * - WATER
+         * - STEAM-GAS
          * - GAS
+         * - MULTI
          */
         std::string wellType(int wellIdx) const
         { return m_keyword->getRecord(wellIdx)->getItem(1)->getString(0); }
@@ -82,6 +84,7 @@ namespace Opm {
          * - RESV: Control for the reservoir volume rate of the fluid
          * - BHP: Control for the bottom hole pressure
          * - THP: Control for the top hole pressure
+         * - GRUP: Use the control mode which applies for the group of the well
          */
         std::string controlMode(int wellIdx) const
         { return m_keyword->getRecord(wellIdx)->getItem(3)->getString(0); }
@@ -105,30 +108,13 @@ namespace Opm {
         { return m_keyword->getRecord(wellIdx)->getItem(5)->getSIDouble(0); }
 
         /*!
-         * \brief Return the reinjection replacement percentage of well
-         */
-        double reinjectionReplacementRatio(int wellIdx) const
-        { return m_keyword->getRecord(wellIdx)->getItem(6)->getSIDouble(0); }
-
-        /*!
-         * \brief Return how reinjection should be handled
-         *
-         * This is one of:
-         * - NONE
-         * - GPRD
-         * - FPRD
-         */
-        std::string reinjectionReplacementType(int wellIdx) const
-        { return m_keyword->getRecord(wellIdx)->getItem(7)->getString(0); }
-
-        /*!
          * \brief The target of the bottom hole pressure
          *
          * If the control mode does not use the bottom hole pressure,
          * this specifies the upper limit.
          */
         double bottomHoleTargetPressure(int wellIdx) const
-        { return m_keyword->getRecord(wellIdx)->getItem(9)->getSIDouble(0); }
+        { return m_keyword->getRecord(wellIdx)->getItem(6)->getSIDouble(0); }
 
         /*!
          * \brief The target of the top hole pressure
@@ -137,24 +123,48 @@ namespace Opm {
          * this specifies the upper limit.
          */
         double topHoleTargetPressure(int wellIdx) const
-        { return m_keyword->getRecord(wellIdx)->getItem(10)->getSIDouble(0); }
+        { return m_keyword->getRecord(wellIdx)->getItem(7)->getSIDouble(0); }
 
         /*!
          * \brief The index of the PVT table used for the injected fluid
          */
         int vfpTableIndex(int wellIdx) const
-        { return m_keyword->getRecord(wellIdx)->getItem(11)->getInt(0); }
+        { return m_keyword->getRecord(wellIdx)->getItem(8)->getInt(0); }
 
         /*!
          * \brief The vaporized oil concentration in the injected gas (if the well injects gas)
          */
         double vaporizedOilConcentration(int wellIdx) const
+        { return m_keyword->getRecord(wellIdx)->getItem(9)->getSIDouble(0); }
+
+        /*!
+         * \brief The gas to steam ratio (at reservoir conditions?) for GAS-STEAM injectors.
+         */
+        double gasSteamRatio(int wellIdx) const
+        { return m_keyword->getRecord(wellIdx)->getItem(10)->getSIDouble(0); }
+
+        /*!
+         * \brief The proportion of oil at the surface for multi-phase injector wells.
+         */
+        double surfaceOilRatio(int wellIdx) const
+        { return m_keyword->getRecord(wellIdx)->getItem(11)->getSIDouble(0); }
+
+        /*!
+         * \brief The proportion water oil at the surface for multi-phase injector wells.
+         */
+        double surfaceWaterRatio(int wellIdx) const
         { return m_keyword->getRecord(wellIdx)->getItem(12)->getSIDouble(0); }
+
+        /*!
+         * \brief The proportion water oil at the surface for multi-phase injector wells.
+         */
+        double surfaceGasRatio(int wellIdx) const
+        { return m_keyword->getRecord(wellIdx)->getItem(13)->getSIDouble(0); }
 
     private:
         Opm::DeckKeywordConstPtr m_keyword;
     };
 }
 
-#endif	// OPM_PARSER_WCONINJ_WRAPPER_HPP
+#endif	// OPM_PARSER_WCONINJE_WRAPPER_HPP
 
