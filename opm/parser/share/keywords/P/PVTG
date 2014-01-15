@@ -1,4 +1,4 @@
-{"name" : "PVTG" , "num_tables" : {"keyword":"TABDIMS" , "item":"NTPVT"},
+{"name" : "PVTG" , "size" : {"keyword":"TABDIMS" , "item":"NTPVT"},
         "items" : [
             {"name":"GAS_PRESSURE", "value_type" : "FLOAT", "dimension":"P" },
             {"name":"DATA", "value_type":"FLOAT", "size_type" : "ALL" , "dimension" : ["1/Rs","1","mu"]}
