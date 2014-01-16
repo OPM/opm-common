@@ -32,7 +32,7 @@ namespace Opm {
          */
         PvtgOuterTable(Opm::DeckKeywordConstPtr keyword, int tableIdx)
             : ParentType(keyword,
-                         std::vector<std::string>{"RV", "P", "BG", "MUG"},
+                         std::vector<std::string>{"P", "RV", "BG", "MUG"},
                          tableIdx)
         {}
 
@@ -51,7 +51,7 @@ namespace Opm {
         const std::vector<double> &getPressureColumn() const
         { return ParentType::getColumn(0); }
 
-        const std::vector<double> &getOilSolubilityFactorColumn() const
+        const std::vector<double> &getOilSolubilityColumn() const
         { return ParentType::getColumn(1); }
 
         const std::vector<double> &getGasFormationFactorColumn() const

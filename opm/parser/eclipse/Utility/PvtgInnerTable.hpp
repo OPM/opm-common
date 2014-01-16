@@ -34,7 +34,7 @@ namespace Opm {
          */
         PvtgInnerTable(Opm::DeckKeywordConstPtr keyword, int recordIdx = 0)
             : SimpleTable(keyword,
-                          std::vector<std::string>{"P", "BG", "MUG"},
+                          std::vector<std::string>{"RV", "BG", "MUG"},
                           recordIdx, /*firstEntityOffset=*/1)
         {}
 
