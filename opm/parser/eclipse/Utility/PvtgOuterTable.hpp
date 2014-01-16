@@ -30,9 +30,10 @@ namespace Opm {
          * \brief Read the per record table of the PVTG keyword and
          *        provide some convenience methods for it.
          */
-        PvtgOuterTable(Opm::DeckKeywordConstPtr keyword)
+        PvtgOuterTable(Opm::DeckKeywordConstPtr keyword, int tableIdx)
             : ParentType(keyword,
-                         std::vector<std::string>{"RV", "P", "BG", "MUG"})
+                         std::vector<std::string>{"RV", "P", "BG", "MUG"},
+                         tableIdx)
         {}
 
         int numRows() const
@@ -41,10 +42,16 @@ namespace Opm {
         int numColumns() const
         { return ParentType::numColumns(); };
 
-        const std::vector<double> &getOilSolubilityFactorColumn() const
-        { return ParentType::getColumn(0); }
+        int firstRecordIndex() const
+        { return ParentType::firstRecordIndex(); }
+
+        int numRecords() const
+        { return ParentType::numRecords(); }
 
         const std::vector<double> &getPressureColumn() const
+        { return ParentType::getColumn(0); }
+
+        const std::vector<double> &getOilSolubilityFactorColumn() const
         { return ParentType::getColumn(1); }
 
         const std::vector<double> &getGasFormationFactorColumn() const

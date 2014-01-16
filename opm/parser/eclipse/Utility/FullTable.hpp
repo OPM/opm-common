@@ -44,11 +44,13 @@ namespace Opm {
 
         // protected constructor for the case that the derived classes
         // use specialized classes for the outer and inner tables
-        FullTable(Opm::DeckKeywordConstPtr keyword)
+        FullTable(Opm::DeckKeywordConstPtr keyword, int tableIdx)
         {
-            m_outerTable.reset(new OuterTable(keyword));
+            m_outerTable.reset(new OuterTable(keyword, tableIdx));
 
-            for (int rowIdx = 0; rowIdx < static_cast<int>(keyword->size()); ++rowIdx) {
+            int firstRecordIdx = m_outerTable->firstRecordIndex();
+            int numRecords = m_outerTable->numRecords();
+            for (int rowIdx = firstRecordIdx; rowIdx < firstRecordIdx + numRecords; ++rowIdx) {
                 InnerTableConstPtr curRow(new InnerTable(keyword, /*recordIdx=*/rowIdx));
                 m_innerTables.push_back(curRow);
             }
@@ -72,15 +74,16 @@ namespace Opm {
          */
         FullTable(Opm::DeckKeywordConstPtr keyword,
                   const std::vector<std::string> &outerColumnNames,
-                  const std::vector<std::string> &innerColumnNames)
+                  const std::vector<std::string> &innerColumnNames,
+                  int tableIdx)
         {
-            m_outerTable.reset(new SimpleMultiRecordTable(keyword, outerColumnNames));
+            m_outerTable.reset(new SimpleMultiRecordTable(keyword, outerColumnNames, tableIdx));
 
-            for (int rowIdx = 0; rowIdx < keyword->size(); ++rowIdx) {
+            for (int rowIdx = 0; rowIdx < m_outerTable->numRecords(); ++rowIdx) {
                 Opm::SimpleTableConstPtr curRow(
                     new SimpleTable(keyword,
                                     innerColumnNames,
-                                    /*recordIdx=*/rowIdx,
+                                    /*recordIdx=*/m_outerTable->firstRecordIndex() + rowIdx,
                                     /*firstColumnOffset=*/1));
                 m_innerTables.push_back(curRow);
             }

@@ -41,11 +41,29 @@ namespace Opm {
          */
         SimpleMultiRecordTable(Opm::DeckKeywordConstPtr keyword,
                                const std::vector<std::string> &columnNames,
+                               int tableIndex,
                                int firstEntityOffset = 0);
+
+        /*!
+         * \brief Return the index of the first record which applies
+         *        for this table object.
+         */
+        int firstRecordIndex() const
+        { return m_firstRecordIdx; }
+
+        /*!
+         * \brief Return the number of records which are used by this
+         *        this table object.
+         */
+        int numRecords() const
+        { return m_numRecords; }
 
     private:
         int getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord) const;
         double getFlatSiDoubleData_(Opm::DeckRecordConstPtr deckRecord, unsigned flatItemIdx) const;
+
+        int m_firstRecordIdx;
+        int m_numRecords;
     };
 
     typedef std::shared_ptr<SimpleMultiRecordTable> SimpleMultiRecordTablePtr;

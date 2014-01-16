@@ -22,10 +22,36 @@ namespace Opm {
 // create table from first few items of multiple records (i.e. getSIDoubleData() throws an exception)
 SimpleMultiRecordTable::SimpleMultiRecordTable(Opm::DeckKeywordConstPtr keyword,
                                                const std::vector<std::string> &columnNames,
+                                               int tableIdx,
                                                int firstEntityOffset)
 {
     createColumns_(columnNames);
-    for (unsigned rowIdx = 0; rowIdx < keyword->size(); ++ rowIdx) {
+
+    // first, go to the first record of the specified table. For this,
+    // we need to skip the right number of empty records...
+    int curTableIdx = 0;
+    for (m_firstRecordIdx = 0;
+         curTableIdx < tableIdx;
+         ++ m_firstRecordIdx)
+    {
+        if (getNumFlatItems_(keyword->getRecord(m_firstRecordIdx)) == 0)
+            // next table starts with an empty record
+            ++ curTableIdx;
+    }
+
+    if (curTableIdx != tableIdx) {
+        throw std::runtime_error("keyword does not specify enough tables");
+    }
+
+    // find the number of records in the table
+    for (m_numRecords = 0;
+         m_firstRecordIdx + m_numRecords < keyword->size()
+             && getNumFlatItems_(keyword->getRecord(m_firstRecordIdx + m_numRecords)) != 0;
+         ++ m_numRecords)
+    {
+    }
+
+    for (unsigned rowIdx = m_firstRecordIdx; rowIdx < m_firstRecordIdx + m_numRecords; ++ rowIdx) {
         // extract the actual data from the records of the keyword of
         // the deck
         Opm::DeckRecordConstPtr deckRecord =
@@ -46,7 +72,10 @@ int SimpleMultiRecordTable::getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord)
 {
     int result = 0;
     for (unsigned i = 0; i < deckRecord->size(); ++ i) {
-        result += deckRecord->getItem(i)->size();
+        Opm::DeckItemConstPtr item(deckRecord->getItem(i));
+        if (item->defaultApplied())
+            return result;
+        result += item->size();
     }
 
     return result;

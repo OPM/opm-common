@@ -32,9 +32,10 @@ namespace Opm {
          *
          * The first value of the record (-> Rs) is skipped.
          */
-        PvtoOuterTable(Opm::DeckKeywordConstPtr keyword)
+        PvtoOuterTable(Opm::DeckKeywordConstPtr keyword, int tableIdx)
             : ParentType(keyword,
-                         std::vector<std::string>{"RS", "P", "BO", "MU"})
+                         std::vector<std::string>{"RS", "P", "BO", "MU"},
+                         tableIdx)
         {}
 
         int numRows() const
@@ -42,6 +43,12 @@ namespace Opm {
 
         int numColumns() const
         { return ParentType::numColumns(); };
+
+        int firstRecordIndex() const
+        { return ParentType::firstRecordIndex(); }
+
+        int numRecords() const
+        { return ParentType::numRecords(); }
 
         const std::vector<double> &getGasSolubilityFactorColumn() const
         { return ParentType::getColumn(0); }

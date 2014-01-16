@@ -32,12 +32,12 @@ namespace Opm {
       typedef Opm::FullTable<Opm::PvtoOuterTable, Opm::PvtoInnerTable> ParentType;
 
   public:
-        /*!
-         * \brief Read the table for the PVTO and provide convenient access to it.
-         */
-        PvtoTable(Opm::DeckKeywordConstPtr keyword)
-            : ParentType(keyword)
-        { }
+      /*!
+       * \brief Read the table for the PVTO and provide convenient access to it.
+       */
+      PvtoTable(Opm::DeckKeywordConstPtr keyword, int tableIdx)
+          : ParentType(keyword, tableIdx)
+      { }
     };
 
     typedef std::shared_ptr<PvtoTable> PvtoTablePtr;

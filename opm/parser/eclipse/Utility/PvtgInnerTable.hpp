@@ -44,7 +44,7 @@ namespace Opm {
         int numColumns() const
         { return ParentType::numColumns(); };
 
-        const std::vector<double> &getPressureColumn() const
+        const std::vector<double> &getOilSolubilityColumn() const
         { return ParentType::getColumn(0); }
 
         const std::vector<double> &getGasFormationFactorColumn() const
