@@ -47,10 +47,10 @@ namespace Opm {
         const std::vector<double> &getPressureColumn() const
         { return ParentType::getColumn(0); }
 
-        const std::vector<double> &getFormationFactorColumn() const
+        const std::vector<double> &getOilFormationFactorColumn() const
         { return ParentType::getColumn(1); }
 
-        const std::vector<double> &getViscosityColumn() const
+        const std::vector<double> &getOilViscosityColumn() const
         { return ParentType::getColumn(2); }
     };
 }
