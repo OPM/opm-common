@@ -43,14 +43,14 @@ void check_parser(ParserPtr parser) {
     BOOST_CHECK_EQUAL(1U , record0->size());
 
     DeckItemConstPtr item0 = record0->getItem(0);
-    BOOST_CHECK_EQUAL(10 * 4, item0->size());
+    BOOST_CHECK_EQUAL(10U * 4, item0->size());
 }
 
 void check_SwofTable(ParserPtr parser) {
     DeckPtr deck =  parser->parseString(parserData);
     Opm::SwofTable swofTable(deck->getKeyword("SWOF"));
 
-    BOOST_CHECK_EQUAL(10, swofTable.getSwColumn().size());
+    BOOST_CHECK_EQUAL(10U, swofTable.getSwColumn().size());
     BOOST_CHECK_EQUAL(0.1, swofTable.getSwColumn()[0]);
     BOOST_CHECK_EQUAL(0.0, swofTable.getKrwColumn()[0]);
     BOOST_CHECK_EQUAL(1.0, swofTable.getKrowColumn()[0]);

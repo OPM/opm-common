@@ -19,7 +19,7 @@
 #ifndef OPM_PARSER_SIMPLE_MULTI_RECORD_TABLE_HPP
 #define	OPM_PARSER_SIMPLE_MULTI_RECORD_TABLE_HPP
 
-#include "SimpleTable.hpp"
+#include <opm/parser/eclipse/Utility/SimpleTable.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
@@ -41,29 +41,29 @@ namespace Opm {
          */
         SimpleMultiRecordTable(Opm::DeckKeywordConstPtr keyword,
                                const std::vector<std::string> &columnNames,
-                               int tableIndex,
-                               int firstEntityOffset = 0);
+                               size_t tableIndex,
+                               size_t firstEntityOffset = 0);
 
         /*!
          * \brief Return the index of the first record which applies
          *        for this table object.
          */
-        int firstRecordIndex() const
+        size_t firstRecordIndex() const
         { return m_firstRecordIdx; }
 
         /*!
          * \brief Return the number of records which are used by this
          *        this table object.
          */
-        int numRecords() const
+        size_t numRecords() const
         { return m_numRecords; }
 
     private:
-        int getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord) const;
+        size_t getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord) const;
         double getFlatSiDoubleData_(Opm::DeckRecordConstPtr deckRecord, unsigned flatItemIdx) const;
 
-        int m_firstRecordIdx;
-        int m_numRecords;
+        size_t m_firstRecordIdx;
+        size_t m_numRecords;
     };
 
     typedef std::shared_ptr<SimpleMultiRecordTable> SimpleMultiRecordTablePtr;

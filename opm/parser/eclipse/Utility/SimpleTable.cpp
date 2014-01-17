@@ -16,14 +16,14 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "SimpleTable.hpp"
+#include <opm/parser/eclipse/Utility/SimpleTable.hpp>
 
 namespace Opm {
 // create table from single record
 SimpleTable::SimpleTable(Opm::DeckKeywordConstPtr keyword,
                          const std::vector<std::string> &columnNames,
-                         int recordIdx,
-                         int firstEntityOffset)
+                         size_t recordIdx,
+                         size_t firstEntityOffset)
 {
     createColumns_(columnNames);
 
@@ -31,17 +31,17 @@ SimpleTable::SimpleTable(Opm::DeckKeywordConstPtr keyword,
     Opm::DeckRecordConstPtr deckRecord =
         keyword->getRecord(recordIdx);
 
-    int numFlatItems = getNumFlatItems_(deckRecord);
+    size_t numFlatItems = getNumFlatItems_(deckRecord);
     if ( (numFlatItems - firstEntityOffset) % numColumns() != 0)
         throw std::runtime_error("Number of columns in the data file is"
                                  "inconsistent with the ones specified");
 
-    for (int rowIdx = 0;
+    for (size_t rowIdx = 0;
          rowIdx*numColumns() < numFlatItems - firstEntityOffset;
          ++rowIdx)
     {
-        for (int colIdx = 0; colIdx < numColumns(); ++colIdx) {
-            int deckItemIdx = rowIdx*numColumns() + firstEntityOffset + colIdx;
+        for (size_t colIdx = 0; colIdx < numColumns(); ++colIdx) {
+            size_t deckItemIdx = rowIdx*numColumns() + firstEntityOffset + colIdx;
             m_columns[colIdx].push_back(getFlatSiDoubleData_(deckRecord, deckItemIdx));
         }
     }
@@ -53,26 +53,26 @@ void SimpleTable::createColumns_(const std::vector<std::string> &columnNames)
     // the json description of the keyword.
     auto columnNameIt = columnNames.begin();
     const auto &columnNameEndIt = columnNames.end();
-    int columnIdx = 0;
+    size_t columnIdx = 0;
     for (; columnNameIt != columnNameEndIt; ++columnNameIt, ++columnIdx) {
         m_columnNames[*columnNameIt] = columnIdx;
     }
     m_columns.resize(columnIdx);
 }
 
-int SimpleTable::getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord) const
+size_t SimpleTable::getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord) const
 {
-    int result = 0;
-    for (unsigned i = 0; i < deckRecord->size(); ++ i) {
+    size_t result = 0;
+    for (size_t i = 0; i < deckRecord->size(); ++ i) {
         result += deckRecord->getItem(i)->size();
     }
 
     return result;
 }
 
-double SimpleTable::getFlatSiDoubleData_(Opm::DeckRecordConstPtr deckRecord, unsigned flatItemIdx) const
+double SimpleTable::getFlatSiDoubleData_(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const
 {
-    unsigned itemFirstFlatIdx = 0;
+    size_t itemFirstFlatIdx = 0;
     for (unsigned i = 0; i < deckRecord->size(); ++ i) {
         Opm::DeckItemConstPtr item = deckRecord->getItem(i);
         if (itemFirstFlatIdx + item->size() > flatItemIdx)

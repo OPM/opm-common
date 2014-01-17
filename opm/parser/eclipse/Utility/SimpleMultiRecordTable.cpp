@@ -16,20 +16,20 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "SimpleMultiRecordTable.hpp"
+#include <opm/parser/eclipse/Utility/SimpleMultiRecordTable.hpp>
 
 namespace Opm {
 // create table from first few items of multiple records (i.e. getSIDoubleData() throws an exception)
 SimpleMultiRecordTable::SimpleMultiRecordTable(Opm::DeckKeywordConstPtr keyword,
                                                const std::vector<std::string> &columnNames,
-                                               int tableIdx,
-                                               int firstEntityOffset)
+                                               size_t tableIdx,
+                                               size_t firstEntityOffset)
 {
     createColumns_(columnNames);
 
     // first, go to the first record of the specified table. For this,
     // we need to skip the right number of empty records...
-    int curTableIdx = 0;
+    size_t curTableIdx = 0;
     for (m_firstRecordIdx = 0;
          curTableIdx < tableIdx;
          ++ m_firstRecordIdx)
@@ -51,7 +51,7 @@ SimpleMultiRecordTable::SimpleMultiRecordTable(Opm::DeckKeywordConstPtr keyword,
     {
     }
 
-    for (unsigned rowIdx = m_firstRecordIdx; rowIdx < m_firstRecordIdx + m_numRecords; ++ rowIdx) {
+    for (size_t  rowIdx = m_firstRecordIdx; rowIdx < m_firstRecordIdx + m_numRecords; ++ rowIdx) {
         // extract the actual data from the records of the keyword of
         // the deck
         Opm::DeckRecordConstPtr deckRecord =
@@ -61,14 +61,14 @@ SimpleMultiRecordTable::SimpleMultiRecordTable(Opm::DeckKeywordConstPtr keyword,
             throw std::runtime_error("Number of columns in the data file is"
                                      "inconsistent with the ones specified");
 
-        for (int colIdx = 0; colIdx < numColumns(); ++colIdx) {
-            int deckItemIdx = colIdx + firstEntityOffset;
+        for (size_t colIdx = 0; colIdx < numColumns(); ++colIdx) {
+            size_t deckItemIdx = colIdx + firstEntityOffset;
             m_columns[colIdx].push_back(getFlatSiDoubleData_(deckRecord, deckItemIdx));
         }
     }
 }
 
-int SimpleMultiRecordTable::getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord) const
+size_t SimpleMultiRecordTable::getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord) const
 {
     int result = 0;
     for (unsigned i = 0; i < deckRecord->size(); ++ i) {

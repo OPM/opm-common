@@ -42,22 +42,22 @@ namespace Opm {
          */
         SimpleTable(Opm::DeckKeywordConstPtr keyword,
                     const std::vector<std::string> &columnNames,
-                    int recordIdx = 0,
-                    int firstEntityOffset = 0);
+                    size_t recordIdx = 0,
+                    size_t firstEntityOffset = 0);
 
         // constructor to make the base class compatible with specialized table implementations
         SimpleTable(Opm::DeckKeywordConstPtr keyword,
-                    int recordIdx = 0,
-                    int firstEntityOffset = 0)
+                    size_t recordIdx = 0,
+                    size_t firstEntityOffset = 0)
         {
             throw std::logic_error("The base class of simple tables can't be "
                                    "instantiated without specifying columns!");
         }
 
-        int numColumns() const
+        size_t numColumns() const
         { return m_columns.size(); }
 
-        int numRows() const
+        size_t numRows() const
         { return m_columns[0].size(); }
 
         const std::vector<double> &getColumn(const std::string &name) const
@@ -70,19 +70,19 @@ namespace Opm {
             assert(0 <= colIdx && colIdx < static_cast<int>(m_columns.size()));
             return m_columns[colIdx];
         }
-        const std::vector<double> &getColumn(int colIdx) const
+        const std::vector<double> &getColumn(size_t colIdx) const
         {
-            assert(0 <= colIdx && colIdx < static_cast<int>(m_columns.size()));
+            assert(0 <= colIdx && colIdx < static_cast<size_t>(m_columns.size()));
             return m_columns[colIdx];
         }
 
     protected:
         void createColumns_(const std::vector<std::string> &columnNames);
 
-        int getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord) const;
-        double getFlatSiDoubleData_(Opm::DeckRecordConstPtr deckRecord, unsigned flatItemIdx) const;
+        size_t getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord) const;
+        double getFlatSiDoubleData_(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const;
 
-        std::map<std::string, int> m_columnNames;
+        std::map<std::string, size_t> m_columnNames;
         std::vector<std::vector<double> > m_columns;
     };
 
