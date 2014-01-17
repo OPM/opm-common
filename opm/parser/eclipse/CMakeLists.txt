@@ -115,7 +115,35 @@ EclipseState/Schedule/ScheduleEnums.hpp
 EclipseState/Schedule/GroupTreeNode.hpp 
 EclipseState/Schedule/GroupTree.hpp 
 #
+Utility/WconinjeWrapper.hpp
+Utility/CompdatWrapper.hpp
+Utility/PvtoOuterTable.hpp
+Utility/WconinjWrapper.hpp
+Utility/PvtgInnerTable.hpp
+Utility/PvdoTable.hpp
+Utility/WgrupconWrapper.hpp
+Utility/PvdcoTable.hpp
+Utility/GconprodWrapper.hpp
+Utility/PvdgTable.hpp
+Utility/SimpleMultiRecordTable.hpp
+Utility/TstepWrapper.hpp
+Utility/PvtgTable.hpp
+Utility/StartWrapper.hpp
+Utility/SpecgridWrapper.hpp
+Utility/SwofTable.hpp
+Utility/PvtwTable.hpp
+Utility/FullTable.hpp
+Utility/WconprodWrapper.hpp
+Utility/GconinjeWrapper.hpp
+Utility/WelopenWrapper.hpp
 Utility/SimpleTable.hpp
+Utility/SgofTable.hpp
+Utility/PvtoTable.hpp
+Utility/PvtoInnerTable.hpp
+Utility/GruptreeWrapper.hpp
+Utility/WelspecsWrapper.hpp
+Utility/PvtgOuterTable.hpp
+Utility/EquilWrapper.hpp
 )
 
 add_library(buildParser ${rawdeck_source} ${build_parser_source} ${deck_source} ${unit_source})
