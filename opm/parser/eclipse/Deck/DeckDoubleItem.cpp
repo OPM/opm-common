@@ -40,6 +40,10 @@ namespace Opm {
 
     void DeckDoubleItem::assertSIData() const {
         if (m_dimensions.size() > 0) {
+            if (m_SIdata.size() > 0) {
+                // we already converted this item to SI!
+                return;
+            }
             m_SIdata.resize( m_data.size() );
             if (m_dimensions.size() == 1) {
                 double SIfactor = m_dimensions[0]->getSIScaling();
