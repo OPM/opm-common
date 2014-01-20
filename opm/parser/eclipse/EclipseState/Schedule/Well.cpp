@@ -17,10 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdexcept>
-
 #include <boost/date_time.hpp>
-#include <boost/lexical_cast.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
