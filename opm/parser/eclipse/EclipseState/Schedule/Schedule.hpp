@@ -63,7 +63,8 @@ namespace Opm
         void iterateScheduleSection(DeckConstPtr deck);
         bool handleGroupFromWELSPECS(const std::string& groupName, GroupTreePtr newTree) const;
         void addGroup(const std::string& groupName , size_t timeStep);
-        void addWell(const std::string& wellName , size_t timeStep);
+        void addWell(const std::string& wellName, DeckRecordConstPtr record, size_t timeStep);
+        void checkWELSPECSConsistency(WellConstPtr well, DeckRecordConstPtr record) const;
         void handleWELSPECS(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleWCONProducer(DeckKeywordConstPtr keyword, size_t currentStep, bool isPredictionMode);
         void handleWCONHIST(DeckKeywordConstPtr keyword , size_t currentStep);

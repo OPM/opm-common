@@ -133,14 +133,29 @@ namespace Opm {
             }
 
             if (!hasWell(wellName)) {
-                addWell(wellName , currentStep);
+                addWell(wellName, record, currentStep);
             }
-            addWellToGroup( getGroup(groupName) , getWell(wellName) , currentStep);
 
+            WellConstPtr currentWell = getWell(wellName);
+            checkWELSPECSConsistency(currentWell, record);
+
+            addWellToGroup( getGroup(groupName) , getWell(wellName) , currentStep);
             needNewTree = handleGroupFromWELSPECS(record->getItem(1)->getString(0), newTree);
         }
         if (needNewTree) {
             m_rootGroupTree->add(currentStep, newTree);
+        }
+    }
+
+    void Schedule::checkWELSPECSConsistency(WellConstPtr well, DeckRecordConstPtr record) const {
+        if (well->getHeadI() != record->getItem("HEAD_I")->getInt(0)) {
+            throw std::invalid_argument("Unable process WELSPECS for well " + well->name() + ", HEAD_I deviates from existing value");
+        }
+        if (well->getHeadJ() != record->getItem("HEAD_J")->getInt(0)) {
+            throw std::invalid_argument("Unable process WELSPECS for well " + well->name() + ", HEAD_J deviates from existing value");
+        }
+        if (well->getRefDepth() != record->getItem("REF_DEPTH")->getRawDouble(0)) {
+            throw std::invalid_argument("Unable process WELSPECS for well " + well->name() + ", REF_DEPTH deviates from existing value");
         }
     }
 
@@ -271,8 +286,11 @@ namespace Opm {
         return m_rootGroupTree->get(timeStep);
     }
 
-    void Schedule::addWell(const std::string& wellName, size_t timeStep) {
-        WellPtr well(new Well(wellName, m_timeMap , timeStep));
+    void Schedule::addWell(const std::string& wellName, DeckRecordConstPtr record, size_t timeStep) {
+        int headI = record->getItem("HEAD_I")->getInt(0);
+        int headJ = record->getItem("HEAD_J")->getInt(0);
+        double refDepth = record->getItem("REF_DEPTH")->getRawDouble(0);
+        WellPtr well(new Well(wellName, headI, headJ, refDepth, m_timeMap , timeStep));
         m_wells[ wellName ] = well;
     }
 

@@ -313,3 +313,47 @@ BOOST_AUTO_TEST_CASE( WellTestGroupAndWellRelation ) {
     BOOST_CHECK_EQUAL( true  , group2->hasWell("W_2" , 1));
 }
 
+
+BOOST_AUTO_TEST_CASE(WellTestWELSPECSDataLoaded) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELLS2");
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
+    ScheduleConstPtr sched(new Schedule(deck));
+
+    BOOST_CHECK_EQUAL(3U, sched->numWells());
+    BOOST_CHECK(sched->hasWell("W_1"));
+    BOOST_CHECK(sched->hasWell("W_2"));
+    BOOST_CHECK(sched->hasWell("W_3"));
+    {
+        WellConstPtr well1 = sched->getWell("W_1");
+        BOOST_CHECK(!well1->hasBeenDefined(2));
+        BOOST_CHECK(well1->hasBeenDefined(3));
+        BOOST_CHECK_EQUAL(30, well1->getHeadI());
+        BOOST_CHECK_EQUAL(37, well1->getHeadJ());
+        BOOST_CHECK_EQUAL(3.33, well1->getRefDepth());
+
+        WellConstPtr well2 = sched->getWell("W_2");
+        BOOST_CHECK(!well2->hasBeenDefined(2));
+        BOOST_CHECK(well2->hasBeenDefined(3));
+        BOOST_CHECK_EQUAL(20, well2->getHeadI());
+        BOOST_CHECK_EQUAL(51, well2->getHeadJ());
+        BOOST_CHECK_EQUAL(3.92, well2->getRefDepth());
+
+        WellConstPtr well3 = sched->getWell("W_3");
+        BOOST_CHECK(!well3->hasBeenDefined(2));
+        BOOST_CHECK(well3->hasBeenDefined(3));
+        BOOST_CHECK_EQUAL(31, well3->getHeadI());
+        BOOST_CHECK_EQUAL(18, well3->getHeadJ());
+        BOOST_CHECK_EQUAL(2.33, well3->getRefDepth());
+
+    }
+}
+
+BOOST_AUTO_TEST_CASE(WellTestWELSPECS_InvalidConfig_Throws) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELL_INVALID_WELSPECS");
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
+    BOOST_CHECK_THROW(new Schedule(deck), std::invalid_argument);
+
+}
+

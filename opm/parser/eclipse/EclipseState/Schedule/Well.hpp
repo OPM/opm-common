@@ -33,7 +33,7 @@ namespace Opm {
 
     class Well {
     public:
-        Well(const std::string& name, TimeMapConstPtr timeMap , size_t creationTimeStep);
+        Well(const std::string& name, int headI, int headJ, double refDepth, TimeMapConstPtr timeMap , size_t creationTimeStep);
         const std::string& name() const;
 
         bool hasBeenDefined(size_t timeStep) const;
@@ -48,6 +48,10 @@ namespace Opm {
         void   setWaterRate(size_t timeStep, double waterRate);
         double getInjectionRate(size_t timeStep) const;
         void   setInjectionRate(size_t timeStep, double injectionRate);
+
+        int    getHeadI() const;
+        int    getHeadJ() const;
+        double getRefDepth() const;
         
         bool isInPredictionMode(size_t timeStep) const;
         void setInPredictionMode(size_t timeStep, bool isInPredictionMode);
@@ -56,6 +60,7 @@ namespace Opm {
         void addWELSPECS(DeckRecordConstPtr deckRecord);
         void addCompletions(size_t time_step , const std::vector<CompletionConstPtr>& newCompletions);
         CompletionSetConstPtr getCompletions(size_t timeStep);
+
     private:
         void switch2Producer(size_t timeStep );
         void switch2Injector(size_t timeStep );
@@ -71,6 +76,11 @@ namespace Opm {
         std::shared_ptr<DynamicState<bool> > m_isProducer;
         std::shared_ptr<DynamicState<CompletionSetConstPtr> > m_completions;
         std::shared_ptr<DynamicState<std::string> > m_groupName;
+
+        // WELSPECS data - assumes this is not dynamic
+        int m_headI;
+        int m_headJ;
+        double m_refDepth;
     };
     typedef std::shared_ptr<Well> WellPtr;
     typedef std::shared_ptr<const Well> WellConstPtr;

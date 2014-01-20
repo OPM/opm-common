@@ -17,9 +17,10 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
+#include <stdexcept>
 
 #include <boost/date_time.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
@@ -29,15 +30,18 @@
 
 namespace Opm {
 
-    Well::Well(const std::string& name , TimeMapConstPtr timeMap , size_t creationTimeStep)
-        : m_oilRate( new DynamicState<double>( timeMap , 0.0)) , 
-          m_gasRate(new DynamicState<double>(timeMap, 0.0)), 
-          m_waterRate(new DynamicState<double>(timeMap, 0.0)), 
-          m_injectionRate(new DynamicState<double>(timeMap, 0.0)), 
+    Well::Well(const std::string& name, int headI, int headJ, double refDepth, TimeMapConstPtr timeMap , size_t creationTimeStep)
+        : m_oilRate( new DynamicState<double>( timeMap , 0.0)) ,
+          m_gasRate(new DynamicState<double>(timeMap, 0.0)),
+          m_waterRate(new DynamicState<double>(timeMap, 0.0)),
+          m_injectionRate(new DynamicState<double>(timeMap, 0.0)),
           m_inPredictionMode(new DynamicState<bool>(timeMap, true)),
           m_isProducer(new DynamicState<bool>(timeMap, true)) ,
           m_completions( new DynamicState<CompletionSetConstPtr>( timeMap , CompletionSetConstPtr( new CompletionSet()) )),
-          m_groupName( new DynamicState<std::string>( timeMap , "" ))
+          m_groupName( new DynamicState<std::string>( timeMap , "" )),
+          m_headI(headI),
+          m_headJ(headJ),
+          m_refDepth(refDepth)
     {
         m_name = name;
         m_creationTimeStep = creationTimeStep;
@@ -75,7 +79,6 @@ namespace Opm {
         switch2Producer( timeStep );
     }
 
-
     double Well::getWaterRate(size_t timeStep) const {
         return m_waterRate->get(timeStep);
     }
@@ -84,7 +87,6 @@ namespace Opm {
         m_waterRate->add(timeStep, waterRate);
         switch2Producer( timeStep );
     }
-
 
     double Well::getInjectionRate(size_t timeStep) const {
         return m_injectionRate->get(timeStep);
@@ -122,10 +124,19 @@ namespace Opm {
     void Well::setInPredictionMode(size_t timeStep, bool inPredictionMode) {
         m_inPredictionMode->add(timeStep, inPredictionMode);
     }
-    
-    
-    void Well::addWELSPECS(DeckRecordConstPtr deckRecord) {
 
+    // WELSPECS
+    
+    int Well::getHeadI() const {
+        return m_headI;
+    }
+
+    int Well::getHeadJ() const {
+        return m_headJ;
+    }
+
+    double Well::getRefDepth() const {
+        return m_refDepth;
     }
 
     CompletionSetConstPtr Well::getCompletions(size_t timeStep) {

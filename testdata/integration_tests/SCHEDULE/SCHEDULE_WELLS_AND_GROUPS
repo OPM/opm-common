@@ -15,5 +15,5 @@ TSTEP
 
 
 WELSPECS
-   'W_2'  'GROUP2'   30 37  1* 'OIL'  7*  /
+   'W_2'  'GROUP2'   20  51  1* 'OIL'  7*  /
 /
