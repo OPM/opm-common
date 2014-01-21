@@ -3,7 +3,7 @@
   {"name" : "GROUP" , "value_type" : "STRING" },
   {"name" : "HEAD_I" , "value_type" : "INT"}, 
   {"name" : "HEAD_J" , "value_type" : "INT"}, 
-  {"name" : "REF_DEPTH" , "value_type" : "FLOAT"}, 
+  {"name" : "REF_DEPTH" , "value_type" : "FLOAT", "dimension" : "L"},
   {"name" : "PHASE" , "value_type" : "STRING"}, 
   {"name" : "D_RADIUS" , "value_type" : "FLOAT" , "default" : 0},
   {"name" : "INFLOW_EQ" , "value_type" : "STRING" , "default" : "STD"},

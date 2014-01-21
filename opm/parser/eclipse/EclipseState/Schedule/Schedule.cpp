@@ -154,7 +154,7 @@ namespace Opm {
         if (well->getHeadJ() != record->getItem("HEAD_J")->getInt(0)) {
             throw std::invalid_argument("Unable process WELSPECS for well " + well->name() + ", HEAD_J deviates from existing value");
         }
-        if (well->getRefDepth() != record->getItem("REF_DEPTH")->getRawDouble(0)) {
+        if (well->getRefDepth() != record->getItem("REF_DEPTH")->getSIDouble(0)) {
             throw std::invalid_argument("Unable process WELSPECS for well " + well->name() + ", REF_DEPTH deviates from existing value");
         }
     }
@@ -289,7 +289,7 @@ namespace Opm {
     void Schedule::addWell(const std::string& wellName, DeckRecordConstPtr record, size_t timeStep) {
         int headI = record->getItem("HEAD_I")->getInt(0);
         int headJ = record->getItem("HEAD_J")->getInt(0);
-        double refDepth = record->getItem("REF_DEPTH")->getRawDouble(0);
+        double refDepth = record->getItem("REF_DEPTH")->getSIDouble(0);
         WellPtr well(new Well(wellName, headI, headJ, refDepth, m_timeMap , timeStep));
         m_wells[ wellName ] = well;
     }
