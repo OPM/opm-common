@@ -4,6 +4,7 @@ add_subdirectory(Deck/tests)
 add_subdirectory(IntegrationTests)
 add_subdirectory(EclipseState/tests)
 add_subdirectory(EclipseState/Schedule/tests)
+add_subdirectory(Utility/tests)
 add_subdirectory(Units/tests)
 
 add_subdirectory( Applications )
@@ -66,6 +67,10 @@ EclipseState/Schedule/ScheduleEnums.cpp
 EclipseState/Schedule/GroupTreeNode.cpp
 EclipseState/Schedule/GroupTree.cpp)
 
+set (utility_source
+Utility/SimpleTable.cpp
+Utility/SimpleMultiRecordTable.cpp)
+
 set( HEADER_FILES
 RawDeck/RawConsts.hpp 
 RawDeck/RawKeyword.hpp 
@@ -109,6 +114,36 @@ EclipseState/Schedule/CompletionSet.hpp
 EclipseState/Schedule/ScheduleEnums.hpp
 EclipseState/Schedule/GroupTreeNode.hpp 
 EclipseState/Schedule/GroupTree.hpp 
+#
+Utility/WconinjeWrapper.hpp
+Utility/CompdatWrapper.hpp
+Utility/PvtoOuterTable.hpp
+Utility/WconinjWrapper.hpp
+Utility/PvtgInnerTable.hpp
+Utility/PvdoTable.hpp
+Utility/WgrupconWrapper.hpp
+Utility/PvdcoTable.hpp
+Utility/GconprodWrapper.hpp
+Utility/PvdgTable.hpp
+Utility/SimpleMultiRecordTable.hpp
+Utility/TstepWrapper.hpp
+Utility/PvtgTable.hpp
+Utility/StartWrapper.hpp
+Utility/SpecgridWrapper.hpp
+Utility/SwofTable.hpp
+Utility/PvtwTable.hpp
+Utility/FullTable.hpp
+Utility/WconprodWrapper.hpp
+Utility/GconinjeWrapper.hpp
+Utility/WelopenWrapper.hpp
+Utility/SimpleTable.hpp
+Utility/SgofTable.hpp
+Utility/PvtoTable.hpp
+Utility/PvtoInnerTable.hpp
+Utility/GruptreeWrapper.hpp
+Utility/WelspecsWrapper.hpp
+Utility/PvtgOuterTable.hpp
+Utility/EquilWrapper.hpp
 )
 
 add_library(buildParser ${rawdeck_source} ${build_parser_source} ${deck_source} ${unit_source})
@@ -126,7 +161,7 @@ add_custom_command( OUTPUT ${PROJECT_BINARY_DIR}/generated-source/DefaultKeyword
 
 #-----------------------------------------------------------------
 
-add_library(Parser ${rawdeck_source} ${parser_source} ${deck_source} ${state_source} ${unit_source})
+add_library(Parser ${rawdeck_source} ${parser_source} ${deck_source} ${state_source} ${utility_source} ${unit_source})
 target_link_libraries(Parser opm-json ${Boost_LIBRARIES})
 
 include( ${PROJECT_SOURCE_DIR}/cmake/Modules/install_headers.cmake )   

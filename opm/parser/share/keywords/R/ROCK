@@ -1,4 +1,4 @@
 {"name" : "ROCK" , "size" : {"keyword":"TABDIMS" , "item":"NTPVT"}, "items" : [
-        {"name" : "PREF"  , "value_type" : "FLOAT" , "default" : 1.0132 , "comment" : "Units ...."},
-        {"name" : "COMPRESSIBILITY" , "value_type" : "FLOAT" , "default" : 0 , "comment" : "Units ...."},
-        {"name" : "MATRIX_COMPRESSIBILITY" , "value_type" : "FLOAT" , "default" : 0 , "comment" : "Units ...."}]}
+        {"name" : "PREF"  , "value_type" : "FLOAT" , "default" : 1.0132 , "dimension" : "P"},
+        {"name" : "COMPRESSIBILITY" , "value_type" : "FLOAT" , "default" : 0 , "dimension" : "1/P"},
+        {"name" : "MATRIX_COMPRESSIBILITY" , "value_type" : "FLOAT" , "default" : 0 , "dimension" : "1/P"}]}

@@ -145,6 +145,7 @@ namespace Opm {
         system->addDimension("FlowVolume", Metric::FlowVolume );
         system->addDimension("Rho"       , Metric::Density );
         system->addDimension("mu"        , Metric::Viscosity);
+        system->addDimension("Timestep"  , Metric::Timestep);
         return system;
     }
 
@@ -163,6 +164,7 @@ namespace Opm {
         system->addDimension("FlowVolume"    , Field::FlowVolume );
         system->addDimension("Rho"  , Field::Density );
         system->addDimension("mu"   , Field::Viscosity);
+        system->addDimension("Timestep", Field::Timestep);
         return system;
     }
 

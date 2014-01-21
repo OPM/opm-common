@@ -63,6 +63,24 @@ add_test(NAME runParsePVTG
          WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} 
          COMMAND ${EXECUTABLE_OUTPUT_PATH}/runParsePVTG)         
 
+add_executable(runParsePVTO ParsePVTO.cpp)
+target_link_libraries(runParsePVTO Parser ${Boost_LIBRARIES})
+add_test(NAME runParsePVTO 
+         WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} 
+         COMMAND ${EXECUTABLE_OUTPUT_PATH}/runParsePVTO)         
+
+add_executable(runParseSWOF ParseSWOF.cpp)
+target_link_libraries(runParseSWOF Parser ${Boost_LIBRARIES})
+add_test(NAME runParseSWOF 
+         WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} 
+         COMMAND ${EXECUTABLE_OUTPUT_PATH}/runParseSWOF)         
+
+add_executable(runParseSGOF ParseSGOF.cpp)
+target_link_libraries(runParseSGOF Parser ${Boost_LIBRARIES})
+add_test(NAME runParseSGOF 
+         WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} 
+         COMMAND ${EXECUTABLE_OUTPUT_PATH}/runParseSGOF)         
+
 if (INCLUDE_STATOIL_TESTS) 
    add_executable(runIntegrationTestsInternalData IntegrationTestsInternalData.cpp)
    target_link_libraries(runIntegrationTestsInternalData Parser ${Boost_LIBRARIES})
