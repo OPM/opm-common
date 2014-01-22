@@ -309,6 +309,25 @@ namespace Opm {
             throw std::invalid_argument("Well: " + wellName + " does not exist");
     }
 
+    std::vector<WellConstPtr> Schedule::getWells() const {
+        return getWells(m_timeMap->size()-1);
+    }
+
+    std::vector<WellConstPtr> Schedule::getWells(size_t timeStep) const {
+        if (timeStep >= m_timeMap->size()) {
+            throw std::invalid_argument("Timestep to large");
+        }
+
+        std::vector<WellConstPtr> wells;
+        for (auto iter = m_wells.begin(); iter != m_wells.end(); ++iter) {
+            WellConstPtr well = (*iter).second;
+            if (well->hasBeenDefined(timeStep)) {
+                wells.push_back(well);
+            }
+        }
+        return wells;
+    }
+
     void Schedule::addGroup(const std::string& groupName, size_t timeStep) {
         if (!m_timeMap) {
             throw std::invalid_argument("TimeMap is null, can't add group named: " + groupName);

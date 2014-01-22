@@ -29,6 +29,7 @@
 #include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Parser/Parser.hpp>
 
 using namespace Opm;
 
@@ -56,6 +57,31 @@ DeckPtr createDeck() {
 
     return deck;
 }
+
+DeckPtr createDeckWithWells() {
+    Opm::Parser parser;
+    std::string input =
+            "START             -- 0 \n"
+            "10 MAI 2007 / \n"
+            "SCHEDULE\n"
+            "WELSPECS\n"
+            "     \'W_1\'        \'OP\'   30   37  3.33       \'OIL\'  7* /   \n"
+            "/ \n"
+            "DATES             -- 1\n"
+            " 10  \'JUN\'  2007 / \n"
+            "/\n"
+            "DATES             -- 2,3\n"
+            "  10  JLY 2007 / \n"
+            "   10  AUG 2007 / \n"
+            "/\n"
+            "WELSPECS\n"
+            "     \'W_2\'        \'OP\'   30   37  3.33       \'OIL\'  7* /   \n"
+            "     \'W_3\'        \'OP\'   20   51  3.92       \'OIL\'  7* /  \n"
+            "/\n";
+
+    return parser.parseString(input);
+}
+
 
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingSCHEDULE_Throws) {
@@ -138,5 +164,28 @@ BOOST_AUTO_TEST_CASE(EmptyScheduleHasFIELDGroup) {
     BOOST_CHECK_THROW( schedule.getGroup("GROUP") , std::invalid_argument );
 }
 
+BOOST_AUTO_TEST_CASE(WellsIterator_Empty_EmptyVectorReturned) {
+    DeckPtr deck = createDeck();
+    Schedule schedule(deck);
+
+    std::vector<WellConstPtr> wells_alltimesteps = schedule.getWells();
+    BOOST_CHECK_EQUAL(0U, wells_alltimesteps.size());
+    std::vector<WellConstPtr> wells_t0 = schedule.getWells(0);
+    BOOST_CHECK_EQUAL(0U, wells_t0.size());
+
+    BOOST_CHECK_THROW(schedule.getWells(1), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(WellsIterator_HasWells_WellsReturned) {
+    DeckPtr deck = createDeckWithWells();
+    Schedule schedule(deck);
+
+    std::vector<WellConstPtr> wells_alltimesteps = schedule.getWells();
+    BOOST_CHECK_EQUAL(3U, wells_alltimesteps.size());
+    std::vector<WellConstPtr> wells_t0 = schedule.getWells(0);
+    BOOST_CHECK_EQUAL(1U, wells_t0.size());
+    std::vector<WellConstPtr> wells_t3 = schedule.getWells(3);
+    BOOST_CHECK_EQUAL(3U, wells_t3.size());
+}
 
 
