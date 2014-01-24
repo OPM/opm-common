@@ -190,7 +190,7 @@ namespace Opm {
             WellPtr well = getWell(wellName);
             double injectionRate  = record->getItem("SURFACE_FLOW_TARGET")->getSIDouble(0);
             
-            well->setInjectionRate( currentStep , injectionRate );
+            well->setSurfaceInjectionRate( currentStep , injectionRate );
             well->setInPredictionMode(currentStep, true);
         }
     }
@@ -202,7 +202,7 @@ namespace Opm {
             WellPtr well = getWell(wellName);
             double injectionRate  = record->getItem("RATE")->getSIDouble(0);
             
-            well->setInjectionRate( currentStep , injectionRate );
+            well->setSurfaceInjectionRate( currentStep , injectionRate );
             well->setInPredictionMode(currentStep, false );
         }
     }
