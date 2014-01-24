@@ -6,6 +6,10 @@ add_test(NAME runIntegrationTests WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} CO
 set_property(SOURCE IntegrationTests.cpp PROPERTY COMPILE_FLAGS "-Wno-error")
 
 
+add_executable(runParseTITLE ParseTITLE.cpp)
+target_link_libraries(runParseTITLE Parser ${Boost_LIBRARIES})
+add_test(NAME runParseTITLE WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND runParseTITLE)
+
 add_executable(runParseWCONHIST ParseWCONHIST.cpp)
 target_link_libraries(runParseWCONHIST Parser ${Boost_LIBRARIES})
 add_test(NAME runParseWCONHIST WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND runParseWCONHIST)

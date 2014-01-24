@@ -79,7 +79,6 @@ createDeckWithInclude(path& datafile, bool addEndIncKeyword)
 
             if (addEndIncKeyword) {
                 of << "ENDINC" << std::endl;
-                of << "/" << std::endl;
             }
             of << "START" << std::endl;
             of << "   10 'FEB' 2012 /" << std::endl;
