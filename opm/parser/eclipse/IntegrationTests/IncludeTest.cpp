@@ -36,7 +36,7 @@ using namespace Opm;
 using namespace boost::filesystem;
 
 void
-createDeckWithInclude(path& datafile, bool addEndIncKeyword)
+createDeckWithInclude(path& datafile, std::string addEndKeyword)
 {
     path root = unique_path("/tmp/%%%%-%%%%");
     path absoluteInclude = root / "absolute.include";
@@ -65,23 +65,24 @@ createDeckWithInclude(path& datafile, bool addEndIncKeyword)
 
             of.close();
         }
-        {
-            std::ofstream of(absoluteInclude.string().c_str());
-
-            of << "DIMENS" << std::endl;
-            of << "   10 20 30 /" << std::endl;
-            of.close();
-        }
 
         {
             path relativeInclude = root / "relative.include";
             std::ofstream of(relativeInclude.string().c_str());
 
-            if (addEndIncKeyword) {
-                of << "ENDINC" << std::endl;
-            }
             of << "START" << std::endl;
             of << "   10 'FEB' 2012 /" << std::endl;
+            of.close();
+        }
+
+        {
+            std::ofstream of(absoluteInclude.string().c_str());
+
+            if (addEndKeyword.length() > 0) {
+                of << addEndKeyword << std::endl;
+            }
+            of << "DIMENS" << std::endl;
+            of << "   10 20 30 /" << std::endl;
             of.close();
         }
 
@@ -110,22 +111,32 @@ createDeckWithInclude(path& datafile, bool addEndIncKeyword)
 BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_deckReturned) {
     path datafile;
     ParserPtr parser(new Parser());
-    createDeckWithInclude (datafile, false);
+    createDeckWithInclude (datafile, "");
     DeckConstPtr deck =  parser->parseFile(datafile.string());
 
-    BOOST_CHECK( deck->hasKeyword("DIMENS"));
     BOOST_CHECK( deck->hasKeyword("START"));
+    BOOST_CHECK( deck->hasKeyword("DIMENS"));
     BOOST_CHECK( deck->hasKeyword("GRIDUNIT"));
 }
 
 BOOST_AUTO_TEST_CASE(parse_fileWithENDINCKeyword_deckReturned) {
     path datafile;
     ParserPtr parser(new Parser());
-    createDeckWithInclude (datafile, true);
+    createDeckWithInclude (datafile, "ENDINC");
     DeckConstPtr deck =  parser->parseFile(datafile.string());
 
-    BOOST_CHECK( deck->hasKeyword("DIMENS"));
-    BOOST_CHECK( !deck->hasKeyword("START"));
+    BOOST_CHECK( deck->hasKeyword("START"));
+    BOOST_CHECK( !deck->hasKeyword("DIMENS"));
     BOOST_CHECK( deck->hasKeyword("GRIDUNIT"));
 }
 
+BOOST_AUTO_TEST_CASE(parse_fileWithENDKeyword_deckReturned) {
+    path datafile;
+    ParserPtr parser(new Parser());
+    createDeckWithInclude (datafile, "END");
+    DeckConstPtr deck =  parser->parseFile(datafile.string());
+
+    BOOST_CHECK( deck->hasKeyword("START"));
+    BOOST_CHECK( !deck->hasKeyword("DIMENS"));
+    BOOST_CHECK( !deck->hasKeyword("GRIDUNIT"));
+}

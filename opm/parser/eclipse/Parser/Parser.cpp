@@ -179,14 +179,16 @@ namespace Opm {
     }
 
 
-    void Parser::parseStream(std::shared_ptr<ParserState> parserState) const {
+    bool Parser::parseStream(std::shared_ptr<ParserState> parserState) const {
         bool verbose = false;
+        bool stopParsing = false;
 
         if (parserState->inputstream) {
             while (true) {
                 bool streamOK = tryParseKeyword(parserState);
                 if (parserState->rawKeyword) {
                     if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::end) {
+                        stopParsing = true;
                         break;
                     }
                     else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::endinclude) {
@@ -204,7 +206,8 @@ namespace Opm {
                             std::cout << parserState->rawKeyword->getKeywordName() << "  " << includeFile << std::endl;
                         
                         std::shared_ptr<ParserState> newParserState (new ParserState(includeFile.string(), parserState->deck, parserState->rootPath, parserState->strictParsing));
-                        parseStream(newParserState);
+                        stopParsing = parseStream(newParserState);
+                        if (stopParsing) break;
                     } else {
                         if (verbose)
                             std::cout << parserState->rawKeyword->getKeywordName() << std::endl;
@@ -230,6 +233,7 @@ namespace Opm {
             }
         } else
             throw std::invalid_argument("Failed to open file: " + parserState->dataFile.string());
+        return stopParsing;
     }
 
 
