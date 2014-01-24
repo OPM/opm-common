@@ -186,7 +186,13 @@ namespace Opm {
             while (true) {
                 bool streamOK = tryParseKeyword(parserState);
                 if (parserState->rawKeyword) {
-                    if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::include) {
+                    if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::end) {
+                        break;
+                    }
+                    else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::endinclude) {
+                        break;
+                    }
+                    else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::include) {
                         RawRecordConstPtr firstRecord = parserState->rawKeyword->getRecord(0);
                         std::string includeFileString = firstRecord->getItem(0);
                         boost::filesystem::path includeFile(includeFileString);
