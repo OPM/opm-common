@@ -30,22 +30,22 @@ namespace Opm {
          * \brief Read the per record table of the PVTG keyword and
          *        provide some convenience methods for it.
          */
-        PvtgOuterTable(Opm::DeckKeywordConstPtr keyword, int tableIdx)
+        PvtgOuterTable(Opm::DeckKeywordConstPtr keyword, size_t tableIdx)
             : ParentType(keyword,
                          std::vector<std::string>{"P", "RV", "BG", "MUG"},
                          tableIdx)
         {}
 
-        int numRows() const
+        size_t numRows() const
         { return ParentType::numRows(); };
 
-        int numColumns() const
+        size_t numColumns() const
         { return ParentType::numColumns(); };
 
-        int firstRecordIndex() const
+        size_t firstRecordIndex() const
         { return ParentType::firstRecordIndex(); }
 
-        int numRecords() const
+        size_t numRecords() const
         { return ParentType::numRecords(); }
 
         const std::vector<double> &getPressureColumn() const

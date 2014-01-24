@@ -29,6 +29,7 @@
 #include <stdexcept>
 #include <iostream>
 
+
 BOOST_AUTO_TEST_CASE(CreateSimpleTable_InvalidDeck) {
     Opm::DeckKeywordPtr keyword(new Opm::DeckKeyword("SWOF"));
     Opm::DeckRecordPtr record(new Opm::DeckRecord());

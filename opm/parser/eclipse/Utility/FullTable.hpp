@@ -19,9 +19,8 @@
 #ifndef OPM_PARSER_FULL_TABLE_HPP
 #define	OPM_PARSER_FULL_TABLE_HPP
 
-#include "SimpleTable.hpp"
-#include "SimpleMultiRecordTable.hpp"
-
+#include <opm/parser/eclipse/Utility/SimpleMultiRecordTable.hpp>
+#include <opm/parser/eclipse/Utility/SimpleTable.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 #include <map>
@@ -44,13 +43,13 @@ namespace Opm {
 
         // protected constructor for the case that the derived classes
         // use specialized classes for the outer and inner tables
-        FullTable(Opm::DeckKeywordConstPtr keyword, int tableIdx)
+        FullTable(Opm::DeckKeywordConstPtr keyword, size_t tableIdx)
         {
             m_outerTable.reset(new OuterTable(keyword, tableIdx));
 
-            int firstRecordIdx = m_outerTable->firstRecordIndex();
-            int numRecords = m_outerTable->numRecords();
-            for (int rowIdx = firstRecordIdx; rowIdx < firstRecordIdx + numRecords; ++rowIdx) {
+            size_t firstRecordIdx = m_outerTable->firstRecordIndex();
+            size_t numRecords = m_outerTable->numRecords();
+            for (size_t rowIdx = firstRecordIdx; rowIdx < firstRecordIdx + numRecords; ++rowIdx) {
                 InnerTableConstPtr curRow(new InnerTable(keyword, /*recordIdx=*/rowIdx));
                 m_innerTables.push_back(curRow);
             }
@@ -75,11 +74,11 @@ namespace Opm {
         FullTable(Opm::DeckKeywordConstPtr keyword,
                   const std::vector<std::string> &outerColumnNames,
                   const std::vector<std::string> &innerColumnNames,
-                  int tableIdx)
+                  size_t tableIdx)
         {
             m_outerTable.reset(new SimpleMultiRecordTable(keyword, outerColumnNames, tableIdx));
 
-            for (int rowIdx = 0; rowIdx < m_outerTable->numRecords(); ++rowIdx) {
+            for (size_t rowIdx = 0; rowIdx < m_outerTable->numRecords(); ++rowIdx) {
                 Opm::SimpleTableConstPtr curRow(
                     new SimpleTable(keyword,
                                     innerColumnNames,
@@ -93,9 +92,9 @@ namespace Opm {
         std::shared_ptr<const OuterTable> getOuterTable() const
         { return m_outerTable; }
 
-        std::shared_ptr<const InnerTable> getInnerTable(int rowIdx) const
+        std::shared_ptr<const InnerTable> getInnerTable(size_t rowIdx) const
         {
-            assert(0 <= rowIdx && rowIdx < static_cast<int>(m_innerTables.size()));
+            assert(0 <= rowIdx && rowIdx < static_cast<size_t>(m_innerTables.size()));
             return m_innerTables[rowIdx];
         }
 

@@ -32,16 +32,16 @@ namespace Opm {
          *
          * The first value of the record (-> Rv) is skipped.
          */
-        PvtgInnerTable(Opm::DeckKeywordConstPtr keyword, int recordIdx = 0)
+        PvtgInnerTable(Opm::DeckKeywordConstPtr keyword, size_t recordIdx = 0)
             : SimpleTable(keyword,
                           std::vector<std::string>{"RV", "BG", "MUG"},
-                          recordIdx, /*firstEntityOffset=*/1)
+                          recordIdx, 1U)
         {}
 
-        int numRows() const
+        size_t numRows() const
         { return ParentType::numRows(); };
 
-        int numColumns() const
+        size_t numColumns() const
         { return ParentType::numColumns(); };
 
         const std::vector<double> &getOilSolubilityColumn() const

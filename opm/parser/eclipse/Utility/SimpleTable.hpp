@@ -66,8 +66,8 @@ namespace Opm {
             if (colIt == m_columnNames.end())
                 throw std::runtime_error("Unknown column name \""+name+"\"");
 
-            int colIdx = colIt->second;
-            assert(0 <= colIdx && colIdx < static_cast<int>(m_columns.size()));
+            size_t colIdx = colIt->second;
+            assert(0 <= colIdx && colIdx < static_cast<size_t>(m_columns.size()));
             return m_columns[colIdx];
         }
         const std::vector<double> &getColumn(size_t colIdx) const
