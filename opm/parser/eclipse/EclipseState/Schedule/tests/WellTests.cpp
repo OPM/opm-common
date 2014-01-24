@@ -160,6 +160,17 @@ BOOST_AUTO_TEST_CASE(setSurfaceInjectionRate_RateSetCorrect) {
 }
 
 
+BOOST_AUTO_TEST_CASE(setReservoirInjectionRate_RateSetCorrect) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    Opm::Well well("WELL1" , 0, 0, 0.0, timeMap , 0);
+    
+    BOOST_CHECK_EQUAL(0.0 , well.getReservoirInjectionRate( 5 ));
+    well.setReservoirInjectionRate( 5 , 108 );
+    BOOST_CHECK_EQUAL(108 , well.getReservoirInjectionRate( 5 ));
+    BOOST_CHECK_EQUAL(108 , well.getReservoirInjectionRate( 8 ));
+}
+
+
 BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
     Opm::Well well("WELL1" , 0, 0, 0.0, timeMap ,0);
@@ -168,11 +179,18 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
     BOOST_CHECK_EQUAL( false , well.isInjector(0));
     BOOST_CHECK_EQUAL( true , well.isProducer(0));
 
-    /* Set an injection rate => Well becomes an Injector */
+    /* Set a surface injection rate => Well becomes an Injector */
     well.setSurfaceInjectionRate(3 , 100);
     BOOST_CHECK_EQUAL( true  , well.isInjector(3));
     BOOST_CHECK_EQUAL( false , well.isProducer(3));
     BOOST_CHECK_EQUAL( 100 , well.getSurfaceInjectionRate(3));
+    
+    /* Set a reservoir injection rate => Well becomes an Injector */
+    well.setReservoirInjectionRate(4 , 200);
+    BOOST_CHECK_EQUAL( true  , well.isInjector(4));
+    BOOST_CHECK_EQUAL( false , well.isProducer(4));
+    BOOST_CHECK_EQUAL( 200 , well.getReservoirInjectionRate(4));
+    
 
     /* Set rates => Well becomes a producer; injection rate should be set to 0. */
     well.setOilRate(4 , 100 );
@@ -182,15 +200,16 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
     BOOST_CHECK_EQUAL( false , well.isInjector(4));
     BOOST_CHECK_EQUAL( true , well.isProducer(4));
     BOOST_CHECK_EQUAL( 0 , well.getSurfaceInjectionRate(4));
+    BOOST_CHECK_EQUAL( 0 , well.getReservoirInjectionRate(4));
     BOOST_CHECK_EQUAL( 100 , well.getOilRate(4));
     BOOST_CHECK_EQUAL( 200 , well.getGasRate(4));
     BOOST_CHECK_EQUAL( 300 , well.getWaterRate(4));
     
     /* Set injection rate => Well becomes injector - all produced rates -> 0 */
-    well.setSurfaceInjectionRate( 6 , 50 );
+    well.setReservoirInjectionRate( 6 , 50 );
     BOOST_CHECK_EQUAL( true  , well.isInjector(6));
     BOOST_CHECK_EQUAL( false , well.isProducer(6));
-    BOOST_CHECK_EQUAL( 50 , well.getSurfaceInjectionRate(6));
+    BOOST_CHECK_EQUAL( 50 , well.getReservoirInjectionRate(6));
     BOOST_CHECK_EQUAL( 0 , well.getOilRate(6));
     BOOST_CHECK_EQUAL( 0 , well.getGasRate(6));
     BOOST_CHECK_EQUAL( 0 , well.getWaterRate(6));

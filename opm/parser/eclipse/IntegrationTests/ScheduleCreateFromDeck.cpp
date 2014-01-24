@@ -104,6 +104,8 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
         BOOST_CHECK( well1->isInjector(9));
         BOOST_CHECK_CLOSE(20000/Metric::Time , well1->getSurfaceInjectionRate(9) , 0.001);
         BOOST_CHECK_CLOSE(5000/Metric::Time , well1->getSurfaceInjectionRate(10) , 0.001);
+
+        BOOST_CHECK_CLOSE(200000/Metric::Time , well1->getReservoirInjectionRate(9) , 0.001);
     }
 }
 
