@@ -148,7 +148,7 @@ namespace Opm {
         return m_refDepth;
     }
 
-    CompletionSetConstPtr Well::getCompletions(size_t timeStep) {
+    CompletionSetConstPtr Well::getCompletions(size_t timeStep) const {
         return m_completions->get( timeStep );
     }
     

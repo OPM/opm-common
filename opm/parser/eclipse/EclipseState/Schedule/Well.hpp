@@ -61,7 +61,7 @@ namespace Opm {
         bool isInjector(size_t timeStep) const;
         void addWELSPECS(DeckRecordConstPtr deckRecord);
         void addCompletions(size_t time_step , const std::vector<CompletionConstPtr>& newCompletions);
-        CompletionSetConstPtr getCompletions(size_t timeStep);
+        CompletionSetConstPtr getCompletions(size_t timeStep) const;
 
     private:
         void switch2Producer(size_t timeStep );
