@@ -188,9 +188,11 @@ namespace Opm {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellName = record->getItem("WELL")->getString(0);
             WellPtr well = getWell(wellName);
-            double injectionRate  = record->getItem("SURFACE_FLOW_TARGET")->getSIDouble(0);
+            double surfaceInjectionRate    = record->getItem("SURFACE_FLOW_TARGET")->getSIDouble(0);
+            double reservoirInjectionRate  = record->getItem("RESV_FLOW_TARGET")->getSIDouble(0);
             
-            well->setInjectionRate( currentStep , injectionRate );
+            well->setSurfaceInjectionRate( currentStep , surfaceInjectionRate );
+            well->setReservoirInjectionRate( currentStep , reservoirInjectionRate );
             well->setInPredictionMode(currentStep, true);
         }
     }
@@ -202,7 +204,7 @@ namespace Opm {
             WellPtr well = getWell(wellName);
             double injectionRate  = record->getItem("RATE")->getSIDouble(0);
             
-            well->setInjectionRate( currentStep , injectionRate );
+            well->setSurfaceInjectionRate( currentStep , injectionRate );
             well->setInPredictionMode(currentStep, false );
         }
     }

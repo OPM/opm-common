@@ -31,7 +31,8 @@ namespace Opm {
         : m_oilRate( new DynamicState<double>( timeMap , 0.0)) ,
           m_gasRate(new DynamicState<double>(timeMap, 0.0)),
           m_waterRate(new DynamicState<double>(timeMap, 0.0)),
-          m_injectionRate(new DynamicState<double>(timeMap, 0.0)),
+          m_surfaceInjectionRate(new DynamicState<double>(timeMap, 0.0)),
+          m_reservoirInjectionRate(new DynamicState<double>(timeMap, 0.0)),
           m_inPredictionMode(new DynamicState<bool>(timeMap, true)),
           m_isProducer(new DynamicState<bool>(timeMap, true)) ,
           m_completions( new DynamicState<CompletionSetConstPtr>( timeMap , CompletionSetConstPtr( new CompletionSet()) )),
@@ -85,14 +86,24 @@ namespace Opm {
         switch2Producer( timeStep );
     }
 
-    double Well::getInjectionRate(size_t timeStep) const {
-        return m_injectionRate->get(timeStep);
+    double Well::getSurfaceInjectionRate(size_t timeStep) const {
+        return m_surfaceInjectionRate->get(timeStep);
     }
 
-    void Well::setInjectionRate(size_t timeStep, double injectionRate) {
-        m_injectionRate->add(timeStep, injectionRate);
+    void Well::setSurfaceInjectionRate(size_t timeStep, double injectionRate) {
+        m_surfaceInjectionRate->add(timeStep, injectionRate);
         switch2Injector( timeStep );
     }
+
+    double Well::getReservoirInjectionRate(size_t timeStep) const {
+        return m_reservoirInjectionRate->get(timeStep);
+    }
+
+    void Well::setReservoirInjectionRate(size_t timeStep, double injectionRate) {
+        m_reservoirInjectionRate->add(timeStep, injectionRate);
+        switch2Injector( timeStep );
+    }
+
 
     bool Well::isProducer(size_t timeStep) const {
         return m_isProducer->get(timeStep);
@@ -104,7 +115,8 @@ namespace Opm {
     
     void Well::switch2Producer(size_t timeStep ) {
         m_isProducer->add(timeStep , true);
-        m_injectionRate->add(timeStep, 0);
+        m_surfaceInjectionRate->add(timeStep, 0);
+        m_reservoirInjectionRate->add(timeStep , 0);
     }
 
     void Well::switch2Injector(size_t timeStep ) {
