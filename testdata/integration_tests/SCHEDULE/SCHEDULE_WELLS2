@@ -89,11 +89,20 @@ DATES              -- 10
    10  AUG 2008 /
 /      
 
+WCONINJE 
+     'W_1'     'WATER'  1*      'RATE'  20000.000  200000.000 123 4* /
+/
+
+DATES              -- 11
+   15  AUG 2008 /
+/      
+
+
 WCONINJH
      'W_1'     'WATER'  1*      5000.000   50000.000 /
 /
 
 
-DATES              -- 11
+DATES              -- 12
    10  SEP 2008 /
 /      
