@@ -25,7 +25,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-
+#include <opm/parser/eclipse/Units/ConversionFactors.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
 
@@ -240,3 +240,13 @@ BOOST_AUTO_TEST_CASE(addWELSPECS_setData_dataSet) {
     BOOST_CHECK_EQUAL(42, well.getHeadJ());
     BOOST_CHECK_EQUAL(2334.32, well.getRefDepth());
 }
+
+
+BOOST_AUTO_TEST_CASE(XHPLimitDefault) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    Opm::Well well("WELL1", 1, 2, 2334.32, timeMap, 0);
+    
+    well.setBHPLimit( 1 , 100 );
+    BOOST_CHECK_EQUAL( 100 , well.getBHPLimit( 5 ));
+}
+

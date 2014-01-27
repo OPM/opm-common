@@ -33,6 +33,7 @@ namespace Opm {
           m_waterRate(new DynamicState<double>(timeMap, 0.0)),
           m_surfaceInjectionRate(new DynamicState<double>(timeMap, 0.0)),
           m_reservoirInjectionRate(new DynamicState<double>(timeMap, 0.0)),
+          m_BHPLimit(new DynamicState<double>(timeMap , 0.0)),
           m_inPredictionMode(new DynamicState<bool>(timeMap, true)),
           m_isProducer(new DynamicState<bool>(timeMap, true)) ,
           m_completions( new DynamicState<CompletionSetConstPtr>( timeMap , CompletionSetConstPtr( new CompletionSet()) )),
@@ -55,6 +56,15 @@ namespace Opm {
             return false;
         else
             return true;
+    }
+
+
+    double Well::getBHPLimit(size_t timeStep) const {
+        return m_BHPLimit->get(timeStep);
+    }
+
+    void Well::setBHPLimit(size_t timeStep, double BHPLimit) {
+        m_BHPLimit->add(timeStep, BHPLimit);
     }
 
 
