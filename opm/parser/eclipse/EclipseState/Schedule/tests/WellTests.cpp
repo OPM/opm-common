@@ -248,5 +248,8 @@ BOOST_AUTO_TEST_CASE(XHPLimitDefault) {
     
     well.setBHPLimit( 1 , 100 );
     BOOST_CHECK_EQUAL( 100 , well.getBHPLimit( 5 ));
+
+    well.setTHPLimit( 1 , 200 );
+    BOOST_CHECK_EQUAL( 200 , well.getTHPLimit( 5 ));
 }
 
