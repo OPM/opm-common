@@ -190,9 +190,11 @@ namespace Opm {
             WellPtr well = getWell(wellName);
             double surfaceInjectionRate    = record->getItem("SURFACE_FLOW_TARGET")->getSIDouble(0);
             double reservoirInjectionRate  = record->getItem("RESV_FLOW_TARGET")->getSIDouble(0);
+            double BHPLimit                = record->getItem("BHP_TARGET")->getSIDouble(0);
             
             well->setSurfaceInjectionRate( currentStep , surfaceInjectionRate );
             well->setReservoirInjectionRate( currentStep , reservoirInjectionRate );
+            well->setBHPLimit(currentStep, BHPLimit);
             well->setInPredictionMode(currentStep, true);
         }
     }
