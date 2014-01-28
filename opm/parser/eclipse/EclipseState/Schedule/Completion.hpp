@@ -33,20 +33,22 @@ namespace Opm {
 
     class Completion {
     public:
-        Completion(int i, int j , int k , CompletionStateEnum state , double CF);
+        Completion(int i, int j , int k , CompletionStateEnum state , double CF, double diameter, double skinFactor);
         bool sameCoordinate(const Completion& other) const;
         int getI() const;
         int getJ() const;
         int getK() const;
         CompletionStateEnum getState() const;
         double getCF() const;
+        double getDiameter() const;
+        double getSkinFactor() const;
 
         static std::map<std::string , std::vector<std::shared_ptr<const Completion> > >  completionsFromCOMPDATKeyword( DeckKeywordConstPtr compdatKeyword );
         static std::pair<std::string , std::vector<std::shared_ptr<const Completion> > > completionsFromCOMPDATRecord( DeckRecordConstPtr compdatRecord );
         
     private:
         int m_i, m_j, m_k;
-        double m_CF;
+        double m_CF, m_diameter, m_skinFactor;
         CompletionStateEnum m_state;
     };
 
