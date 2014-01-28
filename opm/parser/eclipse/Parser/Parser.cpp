@@ -292,6 +292,12 @@ namespace Opm {
     }
 
 
+    std::string Parser::doSpecialHandlingForTitleKeyword(std::string line, std::shared_ptr<ParserState> parserState) const {
+        if ((parserState->rawKeyword != NULL) && (parserState->rawKeyword->getKeywordName() == "TITLE"))
+                line = line.append("/");
+        return line;
+    }
+
     bool Parser::tryParseKeyword(std::shared_ptr<ParserState> parserState) const {
         std::string line;
 
@@ -302,6 +308,7 @@ namespace Opm {
 
         while (std::getline(*parserState->inputstream, line)) {
             boost::algorithm::trim_right(line); // Removing garbage (eg. \r)
+            line = doSpecialHandlingForTitleKeyword(line, parserState);
             std::string keywordString;
             parserState->lineNR++;
             if (parserState->rawKeyword == NULL) {

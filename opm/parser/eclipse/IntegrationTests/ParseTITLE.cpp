@@ -41,8 +41,14 @@ BOOST_AUTO_TEST_CASE( parse_TITLE_OK ) {
     
     DeckPtr deck = parser->parseFile (fileWithTitleKeyword.string(), true);
 
-    BOOST_CHECK_EQUAL(size_t(1), deck->size());
+    BOOST_CHECK_EQUAL(size_t(2), deck->size());
     BOOST_CHECK_EQUAL (true, deck->hasKeyword("TITLE"));
+    DeckKeywordConstPtr titleKeyword = deck->getKeyword("TITLE");
+    DeckRecordConstPtr record = titleKeyword->getRecord(0);
+    BOOST_CHECK (itemValue.length() > 0 ); //Should check for actual value?
+    BOOST_CHECK_EQUAL (true, deck->hasKeyword("START"));
+
+
 }
 
 
