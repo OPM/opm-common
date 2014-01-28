@@ -45,6 +45,8 @@ BOOST_AUTO_TEST_CASE( parse_TITLE_OK ) {
     BOOST_CHECK_EQUAL (true, deck->hasKeyword("TITLE"));
     DeckKeywordConstPtr titleKeyword = deck->getKeyword("TITLE");
     DeckRecordConstPtr record = titleKeyword->getRecord(0);
+    DeckItemPtr item = record->getItem(0);
+    std::string itemValue = item->getString(0);
     BOOST_CHECK (itemValue.length() > 0 ); //Should check for actual value?
     BOOST_CHECK_EQUAL (true, deck->hasKeyword("START"));
 
