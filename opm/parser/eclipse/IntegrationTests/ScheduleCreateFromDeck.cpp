@@ -269,14 +269,14 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
 
     {
         GroupPtr group = sched->getGroup("INJ");
-        BOOST_CHECK_EQUAL( WATER , group->getInjectionPhase( 3 ));
+        BOOST_CHECK_EQUAL( Phase::WATER , group->getInjectionPhase( 3 ));
         BOOST_CHECK_EQUAL( GroupInjection::VREP , group->getInjectionControlMode( 3 ));
         BOOST_CHECK_CLOSE( 10/Metric::Time , group->getSurfaceMaxRate( 3 ) , 0.001);
         BOOST_CHECK_CLOSE( 20/Metric::Time , group->getReservoirMaxRate( 3 ) , 0.001);
         BOOST_CHECK_EQUAL( 0.75 , group->getTargetReinjectFraction( 3 ));
         BOOST_CHECK_EQUAL( 0.95 , group->getTargetVoidReplacementFraction( 3 ));
     
-        BOOST_CHECK_EQUAL( OIL , group->getInjectionPhase( 6 ));
+        BOOST_CHECK_EQUAL( Phase::OIL , group->getInjectionPhase( 6 ));
         BOOST_CHECK_EQUAL( GroupInjection::RATE , group->getInjectionControlMode( 6 ));
         BOOST_CHECK_CLOSE( 1000/Metric::Time , group->getSurfaceMaxRate( 6 ) , 0.0001);
     }

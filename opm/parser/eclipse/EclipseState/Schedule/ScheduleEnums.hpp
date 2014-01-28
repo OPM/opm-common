@@ -31,10 +31,26 @@ namespace Opm {
     };
 
 
-    enum PhaseEnum {
-        OIL   = 1,
-        GAS   = 2,
-        WATER = 4
+    namespace Phase { 
+        enum PhaseEnum {
+            OIL   = 1,
+            GAS   = 2,
+            WATER = 4
+        };
+
+        const std::string PhaseEnum2String( PhaseEnum enumValue );
+        PhaseEnum PhaseEnumFromString( const std::string& stringValue );
+    };
+
+
+
+    namespace Injector {
+        enum InjectorType {
+            WATER = 1,
+            GAS = 2,
+            OIL = 3,
+            MULTI = 4
+        };
     };
 
     
@@ -91,10 +107,6 @@ namespace Opm {
     const std::string CompletionStateEnum2String( CompletionStateEnum enumValue );
     CompletionStateEnum CompletionStateEnumFromString( const std::string& stringValue );
 
-    const std::string PhaseEnum2String( PhaseEnum enumValue );
-    PhaseEnum PhaseEnumFromString( const std::string& stringValue );
-
-    
     
 }
 

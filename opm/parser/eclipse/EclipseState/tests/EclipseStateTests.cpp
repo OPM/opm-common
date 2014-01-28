@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(PhasesCorrect) {
     DeckPtr deck = createDeck();
     EclipseState state(deck);
 
-    BOOST_CHECK(  state.hasPhase( PhaseEnum::OIL ));
-    BOOST_CHECK(  state.hasPhase( PhaseEnum::GAS ));
-    BOOST_CHECK( !state.hasPhase( PhaseEnum::WATER ));
+    BOOST_CHECK(  state.hasPhase( Phase::PhaseEnum::OIL ));
+    BOOST_CHECK(  state.hasPhase( Phase::PhaseEnum::GAS ));
+    BOOST_CHECK( !state.hasPhase( Phase::PhaseEnum::WATER ));
 }
