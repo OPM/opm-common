@@ -184,36 +184,70 @@ BOOST_AUTO_TEST_CASE(TestGroupProductionExceedLimitActionEnumLoop) {
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(TestPhaseEnum2String) {
-    BOOST_CHECK_EQUAL( "OIL" , PhaseEnum2String(OIL));
-    BOOST_CHECK_EQUAL( "GAS" , PhaseEnum2String(GAS));
-    BOOST_CHECK_EQUAL( "WATER" , PhaseEnum2String(WATER));
+    BOOST_CHECK_EQUAL( "OIL"  ,  Phase::PhaseEnum2String(Phase::OIL));
+    BOOST_CHECK_EQUAL( "GAS"  ,  Phase::PhaseEnum2String(Phase::GAS));
+    BOOST_CHECK_EQUAL( "WATER" , Phase::PhaseEnum2String(Phase::WATER));
 }
 
 
 BOOST_AUTO_TEST_CASE(TestPhaseEnumFromString) {
-    BOOST_CHECK_THROW( PhaseEnumFromString("XXX") , std::invalid_argument );
-    BOOST_CHECK_EQUAL( OIL , PhaseEnumFromString("OIL"));
-    BOOST_CHECK_EQUAL( WATER , PhaseEnumFromString("WATER"));
-    BOOST_CHECK_EQUAL( GAS , PhaseEnumFromString("GAS"));
+    BOOST_CHECK_THROW( Phase::PhaseEnumFromString("XXX") , std::invalid_argument );
+    BOOST_CHECK_EQUAL( Phase::OIL   , Phase::PhaseEnumFromString("OIL"));
+    BOOST_CHECK_EQUAL( Phase::WATER , Phase::PhaseEnumFromString("WATER"));
+    BOOST_CHECK_EQUAL( Phase::GAS   , Phase::PhaseEnumFromString("GAS"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(TestPhaseEnumLoop) {
-    BOOST_CHECK_EQUAL( OIL    , PhaseEnumFromString( PhaseEnum2String( OIL ) ));
-    BOOST_CHECK_EQUAL( WATER , PhaseEnumFromString( PhaseEnum2String( WATER ) ));
-    BOOST_CHECK_EQUAL( GAS , PhaseEnumFromString( PhaseEnum2String( GAS ) ));
+    BOOST_CHECK_EQUAL( Phase::OIL   , Phase::PhaseEnumFromString( Phase::PhaseEnum2String( Phase::OIL ) ));
+    BOOST_CHECK_EQUAL( Phase::WATER , Phase::PhaseEnumFromString( Phase::PhaseEnum2String( Phase::WATER ) ));
+    BOOST_CHECK_EQUAL( Phase::GAS   , Phase::PhaseEnumFromString( Phase::PhaseEnum2String( Phase::GAS ) ));
 
-    BOOST_CHECK_EQUAL( "OIL"    , PhaseEnum2String(PhaseEnumFromString(  "OIL" ) ));
-    BOOST_CHECK_EQUAL( "GAS" , PhaseEnum2String(PhaseEnumFromString(  "GAS" ) ));
-    BOOST_CHECK_EQUAL( "WATER" , PhaseEnum2String(PhaseEnumFromString(  "WATER" ) ));
+    BOOST_CHECK_EQUAL( "OIL"    , Phase::PhaseEnum2String(Phase::PhaseEnumFromString(  "OIL" ) ));
+    BOOST_CHECK_EQUAL( "GAS"    , Phase::PhaseEnum2String(Phase::PhaseEnumFromString(  "GAS" ) ));
+    BOOST_CHECK_EQUAL( "WATER"  , Phase::PhaseEnum2String(Phase::PhaseEnumFromString(  "WATER" ) ));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(TestPhaseEnumMask) {
-    BOOST_CHECK_EQUAL( 0 , OIL & GAS );
-    BOOST_CHECK_EQUAL( 0 , OIL & WATER );
-    BOOST_CHECK_EQUAL( 0 , WATER & GAS );
+    BOOST_CHECK_EQUAL( 0 , Phase::OIL   & Phase::GAS );
+    BOOST_CHECK_EQUAL( 0 , Phase::OIL   & Phase::WATER );
+    BOOST_CHECK_EQUAL( 0 , Phase::WATER & Phase::GAS );
+}
+
+
+
+/*****************************************************************/
+
+BOOST_AUTO_TEST_CASE(TestInjectorEnum2String) {
+    BOOST_CHECK_EQUAL( "OIL"  ,  InjectorType::InjectorEnum2String(InjectorType::OIL));
+    BOOST_CHECK_EQUAL( "GAS"  ,  InjectorType::InjectorEnum2String(InjectorType::GAS));
+    BOOST_CHECK_EQUAL( "WATER" , InjectorType::InjectorEnum2String(InjectorType::WATER));
+    BOOST_CHECK_EQUAL( "MULTI" , InjectorType::InjectorEnum2String(InjectorType::MULTI));
+}
+
+
+BOOST_AUTO_TEST_CASE(TestInjectorEnumFromString) {
+    BOOST_CHECK_THROW( InjectorType::InjectorEnumFromString("XXX") , std::invalid_argument );
+    BOOST_CHECK_EQUAL( InjectorType::OIL   , InjectorType::InjectorEnumFromString("OIL"));
+    BOOST_CHECK_EQUAL( InjectorType::WATER , InjectorType::InjectorEnumFromString("WATER"));
+    BOOST_CHECK_EQUAL( InjectorType::GAS   , InjectorType::InjectorEnumFromString("GAS"));
+    BOOST_CHECK_EQUAL( InjectorType::MULTI , InjectorType::InjectorEnumFromString("MULTI"));
+}
+
+
+
+BOOST_AUTO_TEST_CASE(TestInjectorEnumLoop) {
+    BOOST_CHECK_EQUAL( InjectorType::OIL   , InjectorType::InjectorEnumFromString( InjectorType::InjectorEnum2String( InjectorType::OIL ) ));
+    BOOST_CHECK_EQUAL( InjectorType::WATER , InjectorType::InjectorEnumFromString( InjectorType::InjectorEnum2String( InjectorType::WATER ) ));
+    BOOST_CHECK_EQUAL( InjectorType::GAS   , InjectorType::InjectorEnumFromString( InjectorType::InjectorEnum2String( InjectorType::GAS ) ));
+    BOOST_CHECK_EQUAL( InjectorType::MULTI   , InjectorType::InjectorEnumFromString( InjectorType::InjectorEnum2String( InjectorType::MULTI ) ));
+
+    BOOST_CHECK_EQUAL( "MULTI"    , InjectorType::InjectorEnum2String(InjectorType::InjectorEnumFromString(  "MULTI" ) ));
+    BOOST_CHECK_EQUAL( "OIL"    , InjectorType::InjectorEnum2String(InjectorType::InjectorEnumFromString(  "OIL" ) ));
+    BOOST_CHECK_EQUAL( "GAS"    , InjectorType::InjectorEnum2String(InjectorType::InjectorEnumFromString(  "GAS" ) ));
+    BOOST_CHECK_EQUAL( "WATER"  , InjectorType::InjectorEnum2String(InjectorType::InjectorEnumFromString(  "WATER" ) ));
 }
 

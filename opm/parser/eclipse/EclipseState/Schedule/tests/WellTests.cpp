@@ -29,6 +29,7 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 
@@ -251,5 +252,15 @@ BOOST_AUTO_TEST_CASE(XHPLimitDefault) {
 
     well.setTHPLimit( 1 , 200 );
     BOOST_CHECK_EQUAL( 200 , well.getTHPLimit( 5 ));
+}
+
+
+
+BOOST_AUTO_TEST_CASE(InjectorType) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    Opm::Well well("WELL1", 1, 2, 2334.32, timeMap, 0);
+    
+    well.setInjectorType( 1 , Opm::InjectorType::WATER );
+    BOOST_CHECK_EQUAL( Opm::InjectorType::WATER , well.getInjectorType( 5 ));
 }
 

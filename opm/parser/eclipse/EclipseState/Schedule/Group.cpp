@@ -56,7 +56,7 @@ namespace Opm {
         struct InjectionData {
             InjectionData(TimeMapConstPtr timeMap);
             
-            std::shared_ptr<DynamicState<PhaseEnum> > phase;
+            std::shared_ptr<DynamicState<Phase::PhaseEnum> > phase;
             std::shared_ptr<DynamicState<GroupInjection::ControlEnum> > controlMode;
             std::shared_ptr<DynamicState<double> > rate;
             std::shared_ptr<DynamicState<double> > surfaceFlowMaxRate;
@@ -66,7 +66,7 @@ namespace Opm {
         };
         
         InjectionData::InjectionData(TimeMapConstPtr timeMap) : 
-            phase( new DynamicState<PhaseEnum>( timeMap , WATER )),
+            phase( new DynamicState<Phase::PhaseEnum>( timeMap , Phase::WATER )),
             controlMode( new DynamicState<GroupInjection::ControlEnum>( timeMap , NONE )),
             rate( new DynamicState<double>( timeMap , 0 )),
             surfaceFlowMaxRate( new DynamicState<double>( timeMap , 0)),
@@ -107,9 +107,9 @@ namespace Opm {
 
 
     
-    void Group::setInjectionPhase(size_t time_step , PhaseEnum phase){
+    void Group::setInjectionPhase(size_t time_step , Phase::PhaseEnum phase){
         if (m_injection->phase->size() == time_step + 1) {
-            PhaseEnum currentPhase = m_injection->phase->get(time_step);
+            Phase::PhaseEnum currentPhase = m_injection->phase->get(time_step);
             /*
               The ECLIPSE documentation of the GCONINJE keyword seems
               to indicate that a group can inject more than one phase
@@ -134,7 +134,7 @@ namespace Opm {
         m_injection->phase->add( time_step , phase );
     }
 
-    PhaseEnum Group::getInjectionPhase( size_t time_step ) const {
+    Phase::PhaseEnum Group::getInjectionPhase( size_t time_step ) const {
         return m_injection->phase->get( time_step );
     }
 

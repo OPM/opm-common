@@ -221,7 +221,7 @@ namespace Opm {
             GroupPtr group = getGroup(groupName);
 
             {
-                PhaseEnum phase = PhaseEnumFromString( record->getItem("PHASE")->getString(0) );
+                Phase::PhaseEnum phase = Phase::PhaseEnumFromString( record->getItem("PHASE")->getString(0) );
                 group->setInjectionPhase( currentStep , phase );
             }
             {

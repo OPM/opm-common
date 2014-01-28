@@ -46,8 +46,8 @@ namespace Opm {
         Group(const std::string& name, TimeMapConstPtr timeMap , size_t creationTimeStep);
         bool hasBeenDefined(size_t timeStep) const;
         const std::string& name() const;
-        void      setInjectionPhase(size_t time_step , PhaseEnum phase);
-        PhaseEnum getInjectionPhase( size_t time_step) const;
+        void             setInjectionPhase(size_t time_step , Phase::PhaseEnum phase);
+        Phase::PhaseEnum getInjectionPhase(size_t time_step) const;
         
         void                      setInjectionControlMode(size_t time_step , GroupInjection::ControlEnum ControlMode);
         GroupInjection::ControlEnum getInjectionControlMode( size_t time_step) const;
