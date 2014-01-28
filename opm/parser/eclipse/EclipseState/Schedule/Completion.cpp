@@ -64,7 +64,7 @@ namespace Opm {
             if (CFItem->defaultApplied())
                 throw std::invalid_argument("The connection factor item can not be defaulted");
         }
-        double CF = compdatRecord->getItem("CF")->getRawDouble(0);
+        double CF = compdatRecord->getItem("CF")->getSIDouble(0);
 
         double diameter = compdatRecord->getItem("DIAMETER")->getSIDouble(0);
         double skinFactor = compdatRecord->getItem("SKIN")->getRawDouble(0);
