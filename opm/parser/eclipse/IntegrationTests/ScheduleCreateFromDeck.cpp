@@ -125,10 +125,13 @@ BOOST_AUTO_TEST_CASE(WellTestCOMPDAT) {
         CompletionSetConstPtr completions = well1->getCompletions(0);
         BOOST_CHECK_EQUAL(0U, completions->size());
 
-
         completions = well1->getCompletions(3);
         BOOST_CHECK_EQUAL(4U, completions->size());
+
         BOOST_CHECK_EQUAL(OPEN, completions->get(3)->getState());
+        BOOST_CHECK_EQUAL(19.731, completions->get(3)->getCF());
+        BOOST_CHECK_EQUAL(0.311/Metric::Length, completions->get(3)->getDiameter());
+        BOOST_CHECK_EQUAL(3.3, completions->get(3)->getSkinFactor());
 
         completions = well1->getCompletions(7);
         BOOST_CHECK_EQUAL(4U, completions->size());
