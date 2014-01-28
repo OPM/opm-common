@@ -211,5 +211,37 @@ namespace Opm {
                 throw std::invalid_argument("Unknown enum state string: " + stringValue );
         }
     }
+    
+    /*****************************************************************/
+
+    namespace InjectorType {
+        const std::string InjectorEnum2String( InjectorEnum enumValue ) {
+            switch( enumValue ) {
+            case OIL:
+                return "OIL";
+            case GAS:
+                return "GAS";
+            case WATER:
+                return "WATER";
+            case MULTI:
+                return "MULTI";
+            default:
+                throw std::invalid_argument("unhandled enum value");
+            }
+        }
+    
+        InjectorEnum InjectorEnumFromString( const std::string& stringValue ) {
+            if (stringValue == "OIL")
+                return OIL;
+            else if (stringValue == "WATER")
+                return WATER;
+            else if (stringValue == "GAS")
+                return GAS;
+            else if (stringValue == "MULTI")
+                return MULTI;
+            else
+                throw std::invalid_argument("Unknown enum state string: " + stringValue );
+        }
+    }
 }
 

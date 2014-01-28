@@ -219,3 +219,35 @@ BOOST_AUTO_TEST_CASE(TestPhaseEnumMask) {
 
 
 
+/*****************************************************************/
+
+BOOST_AUTO_TEST_CASE(TestInjectorEnum2String) {
+    BOOST_CHECK_EQUAL( "OIL"  ,  InjectorType::InjectorEnum2String(InjectorType::OIL));
+    BOOST_CHECK_EQUAL( "GAS"  ,  InjectorType::InjectorEnum2String(InjectorType::GAS));
+    BOOST_CHECK_EQUAL( "WATER" , InjectorType::InjectorEnum2String(InjectorType::WATER));
+    BOOST_CHECK_EQUAL( "MULTI" , InjectorType::InjectorEnum2String(InjectorType::MULTI));
+}
+
+
+BOOST_AUTO_TEST_CASE(TestInjectorEnumFromString) {
+    BOOST_CHECK_THROW( InjectorType::InjectorEnumFromString("XXX") , std::invalid_argument );
+    BOOST_CHECK_EQUAL( InjectorType::OIL   , InjectorType::InjectorEnumFromString("OIL"));
+    BOOST_CHECK_EQUAL( InjectorType::WATER , InjectorType::InjectorEnumFromString("WATER"));
+    BOOST_CHECK_EQUAL( InjectorType::GAS   , InjectorType::InjectorEnumFromString("GAS"));
+    BOOST_CHECK_EQUAL( InjectorType::MULTI , InjectorType::InjectorEnumFromString("MULTI"));
+}
+
+
+
+BOOST_AUTO_TEST_CASE(TestInjectorEnumLoop) {
+    BOOST_CHECK_EQUAL( InjectorType::OIL   , InjectorType::InjectorEnumFromString( InjectorType::InjectorEnum2String( InjectorType::OIL ) ));
+    BOOST_CHECK_EQUAL( InjectorType::WATER , InjectorType::InjectorEnumFromString( InjectorType::InjectorEnum2String( InjectorType::WATER ) ));
+    BOOST_CHECK_EQUAL( InjectorType::GAS   , InjectorType::InjectorEnumFromString( InjectorType::InjectorEnum2String( InjectorType::GAS ) ));
+    BOOST_CHECK_EQUAL( InjectorType::MULTI   , InjectorType::InjectorEnumFromString( InjectorType::InjectorEnum2String( InjectorType::MULTI ) ));
+
+    BOOST_CHECK_EQUAL( "MULTI"    , InjectorType::InjectorEnum2String(InjectorType::InjectorEnumFromString(  "MULTI" ) ));
+    BOOST_CHECK_EQUAL( "OIL"    , InjectorType::InjectorEnum2String(InjectorType::InjectorEnumFromString(  "OIL" ) ));
+    BOOST_CHECK_EQUAL( "GAS"    , InjectorType::InjectorEnum2String(InjectorType::InjectorEnumFromString(  "GAS" ) ));
+    BOOST_CHECK_EQUAL( "WATER"  , InjectorType::InjectorEnum2String(InjectorType::InjectorEnumFromString(  "WATER" ) ));
+}
+
