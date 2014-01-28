@@ -35,6 +35,7 @@ namespace Opm {
           m_reservoirInjectionRate(new DynamicState<double>(timeMap, 0.0)),
           m_BHPLimit(new DynamicState<double>(timeMap , 0.0)),
           m_THPLimit(new DynamicState<double>(timeMap , 0.0)),
+          m_injectorType(new DynamicState<InjectorType::InjectorEnum>(timeMap, InjectorType::WATER)),
           m_inPredictionMode(new DynamicState<bool>(timeMap, true)),
           m_isProducer(new DynamicState<bool>(timeMap, true)) ,
           m_completions( new DynamicState<CompletionSetConstPtr>( timeMap , CompletionSetConstPtr( new CompletionSet()) )),
@@ -74,6 +75,14 @@ namespace Opm {
 
     void Well::setTHPLimit(size_t timeStep, double THPLimit) {
         m_THPLimit->add(timeStep, THPLimit);
+    }
+
+    InjectorType::InjectorEnum Well::getInjectorType(size_t timeStep) const {
+        return m_injectorType->get(timeStep);
+    }
+
+    void Well::setInjectorType(size_t timeStep, InjectorType::InjectorEnum injectorType) {
+        m_injectorType->add(timeStep , injectorType);
     }
 
 
