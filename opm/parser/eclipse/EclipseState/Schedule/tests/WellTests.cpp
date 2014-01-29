@@ -273,3 +273,13 @@ BOOST_AUTO_TEST_CASE(InjectorControlMode) {
     BOOST_CHECK_EQUAL( Opm::WellInjector::RESV , well.getInjectorControlMode( 5 ));
 }
 
+
+BOOST_AUTO_TEST_CASE(WellStatus) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    Opm::Well well("WELL1", 1, 2, 2334.32, timeMap, 0);
+    
+    well.setStatus( 1 , Opm::WellCommon::OPEN );
+    BOOST_CHECK_EQUAL( Opm::WellCommon::OPEN , well.getStatus( 5 ));
+    
+}
+

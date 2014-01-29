@@ -58,7 +58,9 @@ namespace Opm {
         void   setInjectorType(size_t timeStep, WellInjector::TypeEnum injectorType);
         WellInjector::ControlModeEnum getInjectorControlMode(size_t timeStep) const;
         void   setInjectorControlMode(size_t timeStep, WellInjector::ControlModeEnum injectorControlMode);
-
+        WellCommon::StatusEnum getStatus(size_t timeStep) const;
+        void   setStatus(size_t timeStep, WellCommon::StatusEnum Status);
+        
 
         int    getHeadI() const;
         int    getHeadJ() const;
@@ -87,6 +89,7 @@ namespace Opm {
         std::shared_ptr<DynamicState<double> > m_THPLimit;
         std::shared_ptr<DynamicState<WellInjector::TypeEnum> > m_injectorType;
         std::shared_ptr<DynamicState<WellInjector::ControlModeEnum> > m_injectorControlMode;
+        std::shared_ptr<DynamicState<WellCommon::StatusEnum> > m_status;
         
         std::shared_ptr<DynamicState<bool> > m_inPredictionMode;
         std::shared_ptr<DynamicState<bool> > m_isProducer;
