@@ -1,6 +1,6 @@
 {"name" : "WCONPROD" , "items" : 
       [{"name" : "WELL"         , "value_type" : "STRING"}, 
-       {"name" : "OpenShut"     , "value_type" : "STRING" , "default" : "OPEN"}, 
+       {"name" : "STATUS"       , "value_type" : "STRING" , "default" : "OPEN"}, 
        {"name" : "ControlMode"  , "value_type" : "STRING"},
        {"name" : "ORAT"         , "value_type" : "FLOAT",  "default" : 0.0 , "dimension" : "FlowVolume/t"},
        {"name" : "WRAT"         , "value_type" : "FLOAT" , "default" : 0.0 , "dimension" : "FlowVolume/t"},
