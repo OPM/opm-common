@@ -55,13 +55,13 @@ BOOST_AUTO_TEST_CASE( CreateCompletionsFromRecord ) {
         BOOST_CHECK_EQUAL( 37 , completion0->getJ() );
         BOOST_CHECK_EQUAL( 1  , completion0->getK() );
         BOOST_CHECK_EQUAL( OPEN  , completion0->getState() );
-        BOOST_CHECK_EQUAL( 32.948  , completion0->getCF() );
+        BOOST_CHECK_EQUAL(  3.8134259259259256e-12 , completion0->getCF() );
 
         BOOST_CHECK_EQUAL( 30 , completion2->getI() );
         BOOST_CHECK_EQUAL( 37 , completion2->getJ() );
         BOOST_CHECK_EQUAL( 3  , completion2->getK() );
         BOOST_CHECK_EQUAL( OPEN  , completion2->getState() );
-        BOOST_CHECK_EQUAL( 32.948  , completion2->getCF() );
+        BOOST_CHECK_EQUAL( 3.8134259259259256e-12  , completion2->getCF() );
     }
         
     // We do not accept a defaulted Connection Factor
@@ -98,13 +98,13 @@ BOOST_AUTO_TEST_CASE( CreateCompletionsFromKeyword ) {
     BOOST_CHECK_EQUAL( 18     , completion0->getJ() );
     BOOST_CHECK_EQUAL( 1      , completion0->getK() );
     BOOST_CHECK_EQUAL( OPEN   , completion0->getState() );
-    BOOST_CHECK_EQUAL( 27.412 , completion0->getCF() );
+    BOOST_CHECK_EQUAL( 3.1726851851851847e-12 , completion0->getCF() );
 
     BOOST_CHECK_EQUAL( 31     , completion4->getI() );
     BOOST_CHECK_EQUAL( 17     , completion4->getJ() );
     BOOST_CHECK_EQUAL( 4      , completion4->getK() );
     BOOST_CHECK_EQUAL( OPEN   , completion4->getState() );
-    BOOST_CHECK_EQUAL( 4.728  , completion4->getCF() );
+    BOOST_CHECK_EQUAL( 5.4722222222222212e-13 , completion4->getCF() );
 
     
     
