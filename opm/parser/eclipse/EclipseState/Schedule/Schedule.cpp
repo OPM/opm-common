@@ -148,10 +148,10 @@ namespace Opm {
     }
 
     void Schedule::checkWELSPECSConsistency(WellConstPtr well, DeckRecordConstPtr record) const {
-        if (well->getHeadI() != record->getItem("HEAD_I")->getInt(0)) {
+        if (well->getHeadI() != record->getItem("HEAD_I")->getInt(0) - 1) {
             throw std::invalid_argument("Unable process WELSPECS for well " + well->name() + ", HEAD_I deviates from existing value");
         }
-        if (well->getHeadJ() != record->getItem("HEAD_J")->getInt(0)) {
+        if (well->getHeadJ() != record->getItem("HEAD_J")->getInt(0) - 1) {
             throw std::invalid_argument("Unable process WELSPECS for well " + well->name() + ", HEAD_J deviates from existing value");
         }
         if (well->getRefDepth() != record->getItem("REF_DEPTH")->getSIDouble(0)) {
@@ -293,8 +293,10 @@ namespace Opm {
     }
 
     void Schedule::addWell(const std::string& wellName, DeckRecordConstPtr record, size_t timeStep) {
-        int headI = record->getItem("HEAD_I")->getInt(0);
-        int headJ = record->getItem("HEAD_J")->getInt(0);
+
+        // We change from eclipse's 1 - n, to a 0 - n-1 solution
+        int headI = record->getItem("HEAD_I")->getInt(0) - 1;
+        int headJ = record->getItem("HEAD_J")->getInt(0) - 1;
         double refDepth = record->getItem("REF_DEPTH")->getSIDouble(0);
         WellPtr well(new Well(wellName, headI, headJ, refDepth, m_timeMap , timeStep));
         m_wells[ wellName ] = well;

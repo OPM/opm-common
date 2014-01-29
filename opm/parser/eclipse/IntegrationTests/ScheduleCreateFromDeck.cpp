@@ -337,22 +337,22 @@ BOOST_AUTO_TEST_CASE(WellTestWELSPECSDataLoaded) {
         WellConstPtr well1 = sched->getWell("W_1");
         BOOST_CHECK(!well1->hasBeenDefined(2));
         BOOST_CHECK(well1->hasBeenDefined(3));
-        BOOST_CHECK_EQUAL(30, well1->getHeadI());
-        BOOST_CHECK_EQUAL(37, well1->getHeadJ());
+        BOOST_CHECK_EQUAL(29, well1->getHeadI());
+        BOOST_CHECK_EQUAL(36, well1->getHeadJ());
         BOOST_CHECK_EQUAL(3.33, well1->getRefDepth());
 
         WellConstPtr well2 = sched->getWell("W_2");
         BOOST_CHECK(!well2->hasBeenDefined(2));
         BOOST_CHECK(well2->hasBeenDefined(3));
-        BOOST_CHECK_EQUAL(20, well2->getHeadI());
-        BOOST_CHECK_EQUAL(51, well2->getHeadJ());
+        BOOST_CHECK_EQUAL(19, well2->getHeadI());
+        BOOST_CHECK_EQUAL(50, well2->getHeadJ());
         BOOST_CHECK_EQUAL(3.92, well2->getRefDepth());
 
         WellConstPtr well3 = sched->getWell("W_3");
         BOOST_CHECK(!well3->hasBeenDefined(2));
         BOOST_CHECK(well3->hasBeenDefined(3));
-        BOOST_CHECK_EQUAL(31, well3->getHeadI());
-        BOOST_CHECK_EQUAL(18, well3->getHeadJ());
+        BOOST_CHECK_EQUAL(30, well3->getHeadI());
+        BOOST_CHECK_EQUAL(17, well3->getHeadJ());
         BOOST_CHECK_EQUAL(2.33, well3->getRefDepth());
 
     }
