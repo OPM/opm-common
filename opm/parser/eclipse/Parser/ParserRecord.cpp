@@ -93,8 +93,6 @@ namespace Opm {
 
     DeckRecordConstPtr ParserRecord::parse(RawRecordPtr rawRecord) const {
         std::string recordBeforeParsing = rawRecord->getRecordString();
-        std::cout << "Inside ParserRecord::parse(): recordBeforeParsing: " << recordBeforeParsing << std::endl;
-        std::cout << "Inside ParserRecord::parse(): size(): " << size() << std::endl;
         DeckRecordPtr deckRecord(new DeckRecord());
         for (size_t i = 0; i < size(); i++) {
             ParserItemConstPtr parserItem = get(i);

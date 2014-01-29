@@ -27,6 +27,7 @@ namespace Opm {
     EclipseState::EclipseState(DeckConstPtr deck) {
         initPhases(deck);
         initSchedule(deck);
+        initTitle(deck);
     }
     
 
@@ -34,6 +35,10 @@ namespace Opm {
         return schedule;
     }
 
+
+    std::string EclipseState::getTitle() const {
+        return m_title;
+    }
 
     void EclipseState::initSchedule(DeckConstPtr deck) {
         schedule = ScheduleConstPtr( new Schedule(deck) );
@@ -56,4 +61,15 @@ namespace Opm {
          return (phases.count(phase) == 1);
     }
 
+    void EclipseState::initTitle(DeckConstPtr deck){
+        DeckKeywordConstPtr titleKeyword = deck->getKeyword("TITLE");
+        DeckRecordConstPtr record = titleKeyword->getRecord(0);
+        DeckItemPtr item = record->getItem(0);
+        std::vector<std::string> itemValue = item->getStringData();
+        m_title.clear();
+        for(size_t i=0; i!=itemValue.size(); ++i) {
+            m_title.append(itemValue[i]);
+            if (i<itemValue.size()-1) m_title.append(" ");
+        }
+    }
 }

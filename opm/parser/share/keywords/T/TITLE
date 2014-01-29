@@ -1,2 +1,2 @@
 {"name" : "TITLE" , "size" : 1 , "items" : [
-    {"name" : "TitleText"   , "value_type" : "STRING"}]}
+    {"name" : "TitleText"   , "value_type" : "STRING", "size_type" : "ALL"}]}

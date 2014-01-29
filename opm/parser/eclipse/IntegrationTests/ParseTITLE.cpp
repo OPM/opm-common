@@ -38,7 +38,7 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE( parse_TITLE_OK ) {
     ParserPtr parser(new Parser());
     boost::filesystem::path fileWithTitleKeyword("testdata/integration_tests/TITLE/TITLE1.txt");
-    
+
     DeckPtr deck = parser->parseFile (fileWithTitleKeyword.string(), true);
 
     BOOST_CHECK_EQUAL(size_t(2), deck->size());
@@ -46,10 +46,15 @@ BOOST_AUTO_TEST_CASE( parse_TITLE_OK ) {
     DeckKeywordConstPtr titleKeyword = deck->getKeyword("TITLE");
     DeckRecordConstPtr record = titleKeyword->getRecord(0);
     DeckItemPtr item = record->getItem(0);
-    std::string itemValue = item->getString(0);
-    BOOST_CHECK (itemValue.length() > 0 ); //Should check for actual value?
-    BOOST_CHECK_EQUAL (true, deck->hasKeyword("START"));
+    std::vector<std::string> itemValue = item->getStringData();
+    std::string itemValueString;
+    for(size_t i=0; i!=itemValue.size(); ++i) {
+        itemValueString.append(itemValue[i]);
+        if (i<itemValue.size()-1) itemValueString.append(" ");
+    }
 
+    BOOST_CHECK_EQUAL (0, itemValueString.compare("This is the title of the model."));
+    BOOST_CHECK_EQUAL (true, deck->hasKeyword("START"));
 
 }
 
