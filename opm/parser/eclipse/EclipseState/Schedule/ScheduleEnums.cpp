@@ -279,5 +279,39 @@ namespace Opm {
         }
 
     }
+
+
+    namespace WellCommon {
+        
+        const std::string Status2String(StatusEnum enumValue) {
+            switch( enumValue ) {
+            case OPEN:
+                return "OPEN";
+            case SHUT:
+                return "SHUT";
+            case AUTO:
+                return "AUTO";
+            case STOP:
+                return "STOP";
+            default:
+                throw std::invalid_argument("unhandled enum value");
+            }
+        }
+
+
+        StatusEnum StatusFromString(const std::string& stringValue) {
+            if (stringValue == "OPEN")
+                return OPEN;
+            else if (stringValue == "SHUT")
+                return SHUT;
+            else if (stringValue == "STOP")
+                return STOP;
+            else if (stringValue == "AUTO")
+                return AUTO;
+            else
+                throw std::invalid_argument("Unknown enum state string: " + stringValue );
+        }
+        
+    }
 }
 
