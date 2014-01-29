@@ -52,6 +52,19 @@ namespace Opm {
             MULTI = 4
         };
 
+        
+        enum ControlModeEnum {
+            RATE = 1,
+            RESV = 2 , 
+            BHP = 3,
+            THP = 4,
+            GRUP = 5
+        };
+
+
+        const std::string ControlMode2String( ControlModeEnum enumValue );
+        ControlModeEnum ControlModeFromString( const std::string& stringValue );
+
         const std::string Type2String( TypeEnum enumValue );
         TypeEnum TypeFromString( const std::string& stringValue );
     };
