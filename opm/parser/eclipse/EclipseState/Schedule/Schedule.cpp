@@ -196,13 +196,15 @@ namespace Opm {
             double THPLimit                           = record->getItem("THP_TARGET")->getSIDouble(0);
             WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( record->getItem("CMODE")->getString(0));
             WellCommon::StatusEnum status             = WellCommon::StatusFromString( record->getItem("STATUS")->getString(0));
-            
+            WellInjector::TypeEnum injectorType       = WellInjector::TypeFromString( record->getItem("TYPE")->getString(0) );
+       
             well->setStatus( currentStep , status );
             well->setSurfaceInjectionRate( currentStep , surfaceInjectionRate );
             well->setReservoirInjectionRate( currentStep , reservoirInjectionRate );
             well->setBHPLimit(currentStep, BHPLimit);
             well->setTHPLimit(currentStep, THPLimit);
             well->setInjectorControlMode(currentStep , controlMode );
+            well->setInjectorType( currentStep , injectorType );
             well->setInPredictionMode(currentStep, true);
         }
     }
