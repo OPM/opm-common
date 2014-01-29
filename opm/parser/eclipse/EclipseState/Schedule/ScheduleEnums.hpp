@@ -44,16 +44,16 @@ namespace Opm {
 
 
 
-    namespace InjectorType {
-        enum InjectorEnum {
+    namespace WellInjector {
+        enum TypeEnum {
             WATER = 1,
             GAS = 2,
             OIL = 3,
             MULTI = 4
         };
 
-        const std::string InjectorEnum2String( InjectorEnum enumValue );
-        InjectorEnum InjectorEnumFromString( const std::string& stringValue );
+        const std::string Type2String( TypeEnum enumValue );
+        TypeEnum TypeFromString( const std::string& stringValue );
     };
 
     

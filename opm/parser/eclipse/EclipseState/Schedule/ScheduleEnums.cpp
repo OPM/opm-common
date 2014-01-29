@@ -214,8 +214,8 @@ namespace Opm {
     
     /*****************************************************************/
 
-    namespace InjectorType {
-        const std::string InjectorEnum2String( InjectorEnum enumValue ) {
+    namespace WellInjector {
+        const std::string Type2String( TypeEnum enumValue ) {
             switch( enumValue ) {
             case OIL:
                 return "OIL";
@@ -230,7 +230,7 @@ namespace Opm {
             }
         }
     
-        InjectorEnum InjectorEnumFromString( const std::string& stringValue ) {
+        TypeEnum TypeFromString( const std::string& stringValue ) {
             if (stringValue == "OIL")
                 return OIL;
             else if (stringValue == "WATER")

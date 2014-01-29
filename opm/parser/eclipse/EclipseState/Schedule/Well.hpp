@@ -54,8 +54,8 @@ namespace Opm {
         void   setBHPLimit(size_t timeStep, double BHPLimit);
         double getTHPLimit(size_t timeStep) const;
         void   setTHPLimit(size_t timeStep, double THPLimit);
-        InjectorType::InjectorEnum getInjectorType(size_t timeStep) const;
-        void   setInjectorType(size_t timeStep, InjectorType::InjectorEnum injectorType);
+        WellInjector::TypeEnum getInjectorType(size_t timeStep) const;
+        void   setInjectorType(size_t timeStep, WellInjector::TypeEnum injectorType);
 
 
         int    getHeadI() const;
@@ -83,7 +83,7 @@ namespace Opm {
         std::shared_ptr<DynamicState<double> > m_reservoirInjectionRate;
         std::shared_ptr<DynamicState<double> > m_BHPLimit;
         std::shared_ptr<DynamicState<double> > m_THPLimit;
-        std::shared_ptr<DynamicState<InjectorType::InjectorEnum> > m_injectorType;
+        std::shared_ptr<DynamicState<WellInjector::TypeEnum> > m_injectorType;
         
         std::shared_ptr<DynamicState<bool> > m_inPredictionMode;
         std::shared_ptr<DynamicState<bool> > m_isProducer;
