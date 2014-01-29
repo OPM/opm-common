@@ -70,6 +70,19 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
     BOOST_CHECK(sched->hasWell("W_3"));
 
     {
+        WellPtr well2 = sched->getWell("W_2");
+
+        BOOST_CHECK_EQUAL( WellCommon::SHUT , well2->getStatus(3));
+    }
+
+
+    {
+        WellPtr well3 = sched->getWell("W_3");
+
+        BOOST_CHECK_EQUAL( WellCommon::AUTO , well3->getStatus(3));
+    }
+
+    {
         WellPtr well1 = sched->getWell("W_1");
 
         BOOST_CHECK(well1->isInPredictionMode(0));
@@ -109,10 +122,12 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
         BOOST_CHECK_CLOSE(123.00 * Metric::Pressure , well1->getBHPLimit(10) , 0.001); 
         BOOST_CHECK_CLOSE(678.00 * Metric::Pressure , well1->getTHPLimit(10) , 0.001); 
         
-        BOOST_CHECK_CLOSE(5000/Metric::Time , well1->getSurfaceInjectionRate(12) , 0.001);
+        BOOST_CHECK_CLOSE(5000/Metric::Time , well1->getSurfaceInjectionRate(11) , 0.001);
 
         BOOST_CHECK_EQUAL( WellInjector::RESV  , well1->getInjectorControlMode( 9 ));
         BOOST_CHECK_EQUAL( WellInjector::RATE  , well1->getInjectorControlMode( 11 ));
+        BOOST_CHECK_EQUAL( WellCommon::OPEN , well1->getStatus( 11 ));
+        BOOST_CHECK_EQUAL( WellCommon::SHUT , well1->getStatus( 12 ));
     }
 }
 

@@ -167,7 +167,9 @@ namespace Opm {
             double orat  = record->getItem("ORAT")->getSIDouble(0);
             double wrat  = record->getItem("WRAT")->getSIDouble(0);
             double grat  = record->getItem("GRAT")->getSIDouble(0);
-            
+            WellCommon::StatusEnum status = WellCommon::StatusFromString( record->getItem("STATUS")->getString(0));
+
+            well->setStatus( currentStep , status );
             well->setOilRate(currentStep, orat);
             well->setWaterRate(currentStep, wrat);
             well->setGasRate(currentStep, grat);
@@ -193,7 +195,9 @@ namespace Opm {
             double BHPLimit                           = record->getItem("BHP_TARGET")->getSIDouble(0);
             double THPLimit                           = record->getItem("THP_TARGET")->getSIDouble(0);
             WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( record->getItem("CMODE")->getString(0));
-
+            WellCommon::StatusEnum status             = WellCommon::StatusFromString( record->getItem("STATUS")->getString(0));
+            
+            well->setStatus( currentStep , status );
             well->setSurfaceInjectionRate( currentStep , surfaceInjectionRate );
             well->setReservoirInjectionRate( currentStep , reservoirInjectionRate );
             well->setBHPLimit(currentStep, BHPLimit);
@@ -209,7 +213,9 @@ namespace Opm {
             const std::string& wellName = record->getItem("WELL")->getString(0);
             WellPtr well = getWell(wellName);
             double injectionRate  = record->getItem("RATE")->getSIDouble(0);
+            WellCommon::StatusEnum status = WellCommon::StatusFromString( record->getItem("STATUS")->getString(0));
             
+            well->setStatus( currentStep , status );
             well->setSurfaceInjectionRate( currentStep , injectionRate );
             well->setInPredictionMode(currentStep, false );
         }
