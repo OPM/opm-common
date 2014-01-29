@@ -110,6 +110,9 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
         BOOST_CHECK_CLOSE(678.00 * Metric::Pressure , well1->getTHPLimit(10) , 0.001); 
         
         BOOST_CHECK_CLOSE(5000/Metric::Time , well1->getSurfaceInjectionRate(12) , 0.001);
+
+        BOOST_CHECK_EQUAL( WellInjector::RESV  , well1->getInjectorControlMode( 9 ));
+        BOOST_CHECK_EQUAL( WellInjector::RATE  , well1->getInjectorControlMode( 11 ));
     }
 }
 

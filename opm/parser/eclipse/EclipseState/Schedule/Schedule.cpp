@@ -188,15 +188,17 @@ namespace Opm {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellName = record->getItem("WELL")->getString(0);
             WellPtr well = getWell(wellName);
-            double surfaceInjectionRate    = record->getItem("SURFACE_FLOW_TARGET")->getSIDouble(0);
-            double reservoirInjectionRate  = record->getItem("RESV_FLOW_TARGET")->getSIDouble(0);
-            double BHPLimit                = record->getItem("BHP_TARGET")->getSIDouble(0);
-            double THPLimit                = record->getItem("THP_TARGET")->getSIDouble(0);
+            double surfaceInjectionRate               = record->getItem("SURFACE_FLOW_TARGET")->getSIDouble(0);
+            double reservoirInjectionRate             = record->getItem("RESV_FLOW_TARGET")->getSIDouble(0);
+            double BHPLimit                           = record->getItem("BHP_TARGET")->getSIDouble(0);
+            double THPLimit                           = record->getItem("THP_TARGET")->getSIDouble(0);
+            WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( record->getItem("CMODE")->getString(0));
 
             well->setSurfaceInjectionRate( currentStep , surfaceInjectionRate );
             well->setReservoirInjectionRate( currentStep , reservoirInjectionRate );
             well->setBHPLimit(currentStep, BHPLimit);
             well->setTHPLimit(currentStep, THPLimit);
+            well->setInjectorControlMode(currentStep , controlMode );
             well->setInPredictionMode(currentStep, true);
         }
     }
