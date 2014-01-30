@@ -42,6 +42,8 @@ namespace Opm {
 
         double getOilRate(size_t timeStep) const;
         void   setOilRate(size_t timeStep, double oilRate);
+        double getLiquidRate(size_t timeStep) const;
+        void   setLiquidRate(size_t timeStep, double LiquidRate);
         double getGasRate(size_t timeStep) const;
         void   setGasRate(size_t timeStep, double gasRate);
         double getWaterRate(size_t timeStep) const;
@@ -83,6 +85,7 @@ namespace Opm {
         std::shared_ptr<DynamicState<double> > m_oilRate;
         std::shared_ptr<DynamicState<double> > m_gasRate;
         std::shared_ptr<DynamicState<double> > m_waterRate;
+        std::shared_ptr<DynamicState<double> > m_liquidRate;
         std::shared_ptr<DynamicState<double> > m_surfaceInjectionRate;
         std::shared_ptr<DynamicState<double> > m_reservoirInjectionRate;
         std::shared_ptr<DynamicState<double> > m_BHPLimit;

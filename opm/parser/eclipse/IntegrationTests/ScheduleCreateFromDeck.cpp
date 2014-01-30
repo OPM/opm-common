@@ -80,6 +80,8 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
         WellPtr well3 = sched->getWell("W_3");
 
         BOOST_CHECK_EQUAL( WellCommon::AUTO , well3->getStatus(3));
+
+        BOOST_CHECK_EQUAL( 999/Metric::Time , well3->getLiquidRate(10));
     }
 
     {

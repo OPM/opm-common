@@ -69,6 +69,17 @@ BOOST_AUTO_TEST_CASE(setOilRate_RateSetCorrect) {
     BOOST_CHECK_EQUAL(99 , well.getOilRate( 8 ));
 }
 
+BOOST_AUTO_TEST_CASE(seLiquidRate_RateSetCorrect) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    Opm::Well well("WELL1" , 0, 0, 0.0, timeMap , 0);
+    
+    BOOST_CHECK_EQUAL(0.0 , well.getLiquidRate( 5 ));
+    well.setLiquidRate( 5 , 99 );
+    BOOST_CHECK_EQUAL(99 , well.getLiquidRate( 5 ));
+    BOOST_CHECK_EQUAL(99 , well.getLiquidRate( 8 ));
+}
+
+
 BOOST_AUTO_TEST_CASE(setPredictionMode_ModeSetCorrect) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
     Opm::Well well("WELL1" , 0, 0, 0.0, timeMap , 0);
