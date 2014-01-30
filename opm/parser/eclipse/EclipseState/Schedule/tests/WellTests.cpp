@@ -258,11 +258,13 @@ BOOST_AUTO_TEST_CASE(XHPLimitDefault) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
     Opm::Well well("WELL1", 1, 2, 2334.32, timeMap, 0);
     
-    well.setBHPLimit( 1 , 100 );
+    well.setBHPLimit( 1 , 100 , true);
     BOOST_CHECK_EQUAL( 100 , well.getBHPLimit( 5 ));
-
-    well.setTHPLimit( 1 , 200 );
+    BOOST_CHECK( well.hasProductionControl( 5 , Opm::WellProducer::BHP ));
+    
+    well.setTHPLimit( 1 , 200 , false );
     BOOST_CHECK_EQUAL( 200 , well.getTHPLimit( 5 ));
+    BOOST_CHECK( !well.hasProductionControl( 5 , Opm::WellProducer::THP ));
 }
 
 
@@ -294,6 +296,52 @@ BOOST_AUTO_TEST_CASE(WellStatus) {
     
     well.setStatus( 1 , Opm::WellCommon::OPEN );
     BOOST_CHECK_EQUAL( Opm::WellCommon::OPEN , well.getStatus( 5 ));
-    
 }
 
+
+
+/*****************************************************************/
+
+
+BOOST_AUTO_TEST_CASE(WellHaveProductionControlLimit) {
+
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(20);
+    Opm::Well well("WELL1", 1, 2, 2334.32, timeMap, 0);
+
+    
+    BOOST_CHECK( !well.hasProductionControl( 1 , Opm::WellProducer::ORAT ));
+    BOOST_CHECK( !well.hasProductionControl( 1 , Opm::WellProducer::RESV ));
+    
+    well.setOilRate( 2 , 100 );
+    BOOST_CHECK(  well.hasProductionControl( 2, Opm::WellProducer::ORAT ));
+    BOOST_CHECK( !well.hasProductionControl( 2 , Opm::WellProducer::RESV ));
+
+    well.setResVRate( 2 , 100 );
+    BOOST_CHECK( well.hasProductionControl( 2 , Opm::WellProducer::RESV ));
+    
+    well.setOilRate( 10 , 100 );
+    well.setWaterRate( 10 , 100 );
+    well.setGasRate( 10 , 100 );
+    well.setLiquidRate( 10 , 100 );
+    well.setResVRate( 10 , 100 );
+    well.setBHPLimit( 10 , 100 , true);
+    well.setTHPLimit( 10 , 100 , true);
+    
+    BOOST_CHECK( well.hasProductionControl( 10 , Opm::WellProducer::ORAT ));
+    BOOST_CHECK( well.hasProductionControl( 10 , Opm::WellProducer::WRAT ));
+    BOOST_CHECK( well.hasProductionControl( 10 , Opm::WellProducer::GRAT ));
+    BOOST_CHECK( well.hasProductionControl( 10 , Opm::WellProducer::LRAT ));
+    BOOST_CHECK( well.hasProductionControl( 10 , Opm::WellProducer::RESV ));
+    BOOST_CHECK( well.hasProductionControl( 10 , Opm::WellProducer::BHP ));
+    BOOST_CHECK( well.hasProductionControl( 10 , Opm::WellProducer::THP ));
+    
+    well.dropProductionControl( 11 , Opm::WellProducer::RESV );
+    
+    BOOST_CHECK( well.hasProductionControl( 11 , Opm::WellProducer::ORAT ));
+    BOOST_CHECK( well.hasProductionControl( 11 , Opm::WellProducer::WRAT ));
+    BOOST_CHECK( well.hasProductionControl( 11 , Opm::WellProducer::GRAT ));
+    BOOST_CHECK( well.hasProductionControl( 11 , Opm::WellProducer::LRAT ));
+    BOOST_CHECK( !well.hasProductionControl( 11 , Opm::WellProducer::RESV ));
+    BOOST_CHECK( well.hasProductionControl( 11 , Opm::WellProducer::BHP ));
+    BOOST_CHECK( well.hasProductionControl( 11 , Opm::WellProducer::THP ));
+}
