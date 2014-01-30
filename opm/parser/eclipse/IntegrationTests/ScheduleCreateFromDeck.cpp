@@ -15,7 +15,7 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #define BOOST_TEST_MODULE ScheduleIntegrationTests
 #include <math.h>
@@ -76,6 +76,8 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
         BOOST_CHECK_EQUAL( 0 , well2->getResVRate(8));
 
         BOOST_CHECK_EQUAL( WellCommon::SHUT , well2->getStatus(3));
+
+        BOOST_CHECK_EQUAL( WellProducer::ORAT , well2->getProducerControlMode( 3 ));
     }
 
 
@@ -87,6 +89,8 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
         BOOST_CHECK_EQUAL( 0 , well3->getLiquidRate(2));
         BOOST_CHECK_CLOSE( 999/Metric::Time , well3->getLiquidRate(7) , 0.001);
         BOOST_CHECK_EQUAL( 0 , well3->getLiquidRate(8));
+
+        BOOST_CHECK_EQUAL( WellProducer::ORAT , well3->getProducerControlMode( 7 ));
     }
 
     {

@@ -83,6 +83,29 @@ namespace Opm {
         TypeEnum TypeFromString( const std::string& stringValue );
     };
 
+
+    namespace WellProducer {
+
+        enum ControlModeEnum {
+            ORAT = 1,
+            WRAT = 2 , 
+            GRAT = 3,
+            LRAT = 4,
+            CRAT = 5,
+            RESV = 6,
+            BHP  = 7, 
+            THP  = 8, 
+            GRUP = 9  
+        };
+        /*
+          The items BHP, THP and GRUP only apply in prediction mode: WCONPROD
+        */
+
+
+        const std::string ControlMode2String( ControlModeEnum enumValue );
+        ControlModeEnum ControlModeFromString( const std::string& stringValue );
+    };
+
     
     namespace GroupInjection {
         

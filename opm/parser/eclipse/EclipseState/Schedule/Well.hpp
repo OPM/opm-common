@@ -59,11 +59,13 @@ namespace Opm {
         double getTHPLimit(size_t timeStep) const;
         void   setTHPLimit(size_t timeStep, double THPLimit);
         WellInjector::TypeEnum getInjectorType(size_t timeStep) const;
-        void   setInjectorType(size_t timeStep, WellInjector::TypeEnum injectorType);
+        void                   setInjectorType(size_t timeStep, WellInjector::TypeEnum injectorType);
         WellInjector::ControlModeEnum getInjectorControlMode(size_t timeStep) const;
-        void   setInjectorControlMode(size_t timeStep, WellInjector::ControlModeEnum injectorControlMode);
+        void                          setInjectorControlMode(size_t timeStep, WellInjector::ControlModeEnum injectorControlMode);
+        WellProducer::ControlModeEnum getProducerControlMode(size_t timeStep) const;
+        void                          setProducerControlMode(size_t timeStep, WellProducer::ControlModeEnum controlMode);
         WellCommon::StatusEnum getStatus(size_t timeStep) const;
-        void   setStatus(size_t timeStep, WellCommon::StatusEnum Status);
+        void                   setStatus(size_t timeStep, WellCommon::StatusEnum Status);
         
 
         int    getHeadI() const;
@@ -95,6 +97,7 @@ namespace Opm {
         std::shared_ptr<DynamicState<double> > m_THPLimit;
         std::shared_ptr<DynamicState<WellInjector::TypeEnum> > m_injectorType;
         std::shared_ptr<DynamicState<WellInjector::ControlModeEnum> > m_injectorControlMode;
+        std::shared_ptr<DynamicState<WellProducer::ControlModeEnum> > m_producerControlMode;
         std::shared_ptr<DynamicState<WellCommon::StatusEnum> > m_status;
         
         std::shared_ptr<DynamicState<bool> > m_inPredictionMode;

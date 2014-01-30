@@ -163,12 +163,14 @@ namespace Opm {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellName = record->getItem("WELL")->getString(0);
-            WellPtr well = getWell(wellName);
-            double orat  = record->getItem("ORAT")->getSIDouble(0);
-            double wrat  = record->getItem("WRAT")->getSIDouble(0);
-            double grat  = record->getItem("GRAT")->getSIDouble(0);
-            WellCommon::StatusEnum status = WellCommon::StatusFromString( record->getItem("STATUS")->getString(0));
+            WellPtr well                          = getWell(wellName);
+            double orat                           = record->getItem("ORAT")->getSIDouble(0);
+            double wrat                           = record->getItem("WRAT")->getSIDouble(0);
+            double grat                           = record->getItem("GRAT")->getSIDouble(0);
+            WellProducer::ControlModeEnum control = WellProducer::ControlModeFromString( record->getItem("CMODE")->getString(0));
+            WellCommon::StatusEnum status         = WellCommon::StatusFromString( record->getItem("STATUS")->getString(0));
 
+            well->setProducerControlMode( currentStep , control );
             well->setStatus( currentStep , status );
             well->setOilRate(currentStep, orat);
             well->setWaterRate(currentStep, wrat);
@@ -177,13 +179,20 @@ namespace Opm {
             {
                 double liquidRate = 0;
                 double resVRate = 0;
-                
+                double BHPLimit = 0;  
+                double THPLimit = 0;
+
                 if (isPredictionMode) {
                     liquidRate = record->getItem("LRAT")->getSIDouble(0);
                     resVRate = record->getItem("RESV")->getSIDouble(0);
+                    BHPLimit = record->getItem("BHP")->getSIDouble(0);
+                    THPLimit = record->getItem("THP")->getSIDouble(0);
                 }
+                
                 well->setLiquidRate( currentStep , liquidRate );
                 well->setResVRate( currentStep , resVRate );
+                well->setBHPLimit(currentStep, BHPLimit);
+                well->setTHPLimit(currentStep, THPLimit);
             }
         }
     }
