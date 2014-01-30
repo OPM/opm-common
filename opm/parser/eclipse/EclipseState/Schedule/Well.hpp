@@ -68,8 +68,10 @@ namespace Opm {
         void                   setStatus(size_t timeStep, WellCommon::StatusEnum Status);
         
         bool hasProductionControl(size_t timeStep , WellProducer::ControlModeEnum controlMode) const;
-        bool hasInjectorControl(size_t timeStep   , WellInjector::ControlModeEnum controlMode) const;
         void dropProductionControl(size_t timeStep , WellProducer::ControlModeEnum controlMode);
+        
+        bool hasInjectionControl(size_t timeStep   , WellInjector::ControlModeEnum controlMode) const;
+        void dropInjectionControl(size_t timeStep   , WellInjector::ControlModeEnum controlMode);
 
 
         int    getHeadI() const;
@@ -88,7 +90,7 @@ namespace Opm {
         void switch2Producer(size_t timeStep );
         void switch2Injector(size_t timeStep );
 
-        void addInjectorControl(size_t timeStep   , WellInjector::ControlModeEnum controlMode);
+        void addInjectionControl(size_t timeStep   , WellInjector::ControlModeEnum controlMode);
         void addProductionControl(size_t timeStep , WellProducer::ControlModeEnum controlMode);
         
         
@@ -108,7 +110,7 @@ namespace Opm {
         std::shared_ptr<DynamicState<WellProducer::ControlModeEnum> > m_producerControlMode;
         std::shared_ptr<DynamicState<WellCommon::StatusEnum> > m_status;
         std::shared_ptr<DynamicState<int> > m_productionControls;
-        std::shared_ptr<DynamicState<int> > m_injectorControls;
+        std::shared_ptr<DynamicState<int> > m_injectionControls;
         
         std::shared_ptr<DynamicState<bool> > m_inPredictionMode;
         std::shared_ptr<DynamicState<bool> > m_isProducer;

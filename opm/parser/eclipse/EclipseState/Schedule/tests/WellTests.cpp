@@ -345,3 +345,37 @@ BOOST_AUTO_TEST_CASE(WellHaveProductionControlLimit) {
     BOOST_CHECK( well.hasProductionControl( 11 , Opm::WellProducer::BHP ));
     BOOST_CHECK( well.hasProductionControl( 11 , Opm::WellProducer::THP ));
 }
+
+
+
+BOOST_AUTO_TEST_CASE(WellHaveInjectionControlLimit) {
+
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(20);
+    Opm::Well well("WELL1", 1, 2, 2334.32, timeMap, 0);
+
+    
+    BOOST_CHECK( !well.hasInjectionControl( 1 , Opm::WellInjector::RATE ));
+    BOOST_CHECK( !well.hasInjectionControl( 1 , Opm::WellInjector::RESV ));
+    
+    well.setSurfaceInjectionRate( 2 , 100 );
+    BOOST_CHECK(  well.hasInjectionControl( 2, Opm::WellInjector::RATE ));
+    BOOST_CHECK( !well.hasInjectionControl( 2 , Opm::WellInjector::RESV ));
+
+    well.setReservoirInjectionRate( 2 , 100 );
+    BOOST_CHECK( well.hasInjectionControl( 2 , Opm::WellInjector::RESV ));
+    
+    well.setBHPLimit( 10 , 100 , false);
+    well.setTHPLimit( 10 , 100 , false);
+    
+    BOOST_CHECK( well.hasInjectionControl( 10 , Opm::WellInjector::RATE ));
+    BOOST_CHECK( well.hasInjectionControl( 10 , Opm::WellInjector::RESV ));
+    BOOST_CHECK( well.hasInjectionControl( 10 , Opm::WellInjector::THP ));
+    BOOST_CHECK( well.hasInjectionControl( 10 , Opm::WellInjector::BHP ));
+
+    well.dropInjectionControl( 11 , Opm::WellInjector::RESV );
+    
+    BOOST_CHECK(  well.hasInjectionControl( 11 , Opm::WellInjector::RATE ));
+    BOOST_CHECK( !well.hasInjectionControl( 11 , Opm::WellInjector::RESV ));
+    BOOST_CHECK(  well.hasInjectionControl( 11 , Opm::WellInjector::THP ));
+    BOOST_CHECK(  well.hasInjectionControl( 11 , Opm::WellInjector::BHP ));
+}

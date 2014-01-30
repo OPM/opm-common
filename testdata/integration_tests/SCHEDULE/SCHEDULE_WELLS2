@@ -117,5 +117,5 @@ DATES              -- 12
 /      
 
 WCONINJE 
-     'W_1'     'WATER'  'SHUT'      'RATE'  20000.000  200000.000 123 678 4* /
+     'W_1'     'WATER'  'SHUT'      'RATE'  20000.000  * 123 678 4* /
 /

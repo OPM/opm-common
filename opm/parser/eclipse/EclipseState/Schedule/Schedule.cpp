@@ -189,31 +189,37 @@ namespace Opm {
                     resVRate = record->getItem("RESV")->getSIDouble(0);
                     BHPLimit = record->getItem("BHP")->getSIDouble(0);
                     THPLimit = record->getItem("THP")->getSIDouble(0);
-        
-                    if (record->getItem("LRAT")->defaultApplied())
-                        well->dropProductionControl( currentStep , WellProducer::LRAT );
-
-                    if (record->getItem("RESV")->defaultApplied())
-                        well->dropProductionControl( currentStep , WellProducer::RESV );
-                    
-                    if (record->getItem("BHP")->defaultApplied())
-                        well->dropProductionControl( currentStep , WellProducer::BHP );
-
-                    if (record->getItem("THP")->defaultApplied())
-                        well->dropProductionControl( currentStep , WellProducer::THP );
                 }
                 
                 well->setLiquidRate( currentStep , liquidRate );
                 well->setResVRate( currentStep , resVRate );
                 well->setBHPLimit(currentStep, BHPLimit , true);
                 well->setTHPLimit(currentStep, THPLimit , true);
-            }
 
+                if (isPredictionMode) {
+                    if (record->getItem("LRAT")->defaultApplied())
+                        well->dropProductionControl( currentStep , WellProducer::LRAT );
+                    
+                    if (record->getItem("RESV")->defaultApplied())
+                        well->dropProductionControl( currentStep , WellProducer::RESV );
+                    
+                    if (record->getItem("BHP")->defaultApplied())
+                        well->dropProductionControl( currentStep , WellProducer::BHP );
+                    
+                    if (record->getItem("THP")->defaultApplied())
+                        well->dropProductionControl( currentStep , WellProducer::THP );
+                } else {
+                    well->dropProductionControl( currentStep , WellProducer::LRAT );
+                    well->dropProductionControl( currentStep , WellProducer::RESV );
+                    well->dropProductionControl( currentStep , WellProducer::BHP );
+                    well->dropProductionControl( currentStep , WellProducer::THP );
+                }
+            }
+            
             if (record->getItem("ORAT")->defaultApplied())
                 well->dropProductionControl( currentStep , WellProducer::ORAT );
             
             if (record->getItem("GRAT")->defaultApplied()) {
-                std::cout << "Defaulted GRAT identified " << std::endl;
                 well->dropProductionControl( currentStep , WellProducer::GRAT );
             }
 
@@ -235,10 +241,10 @@ namespace Opm {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellName = record->getItem("WELL")->getString(0);
             WellPtr well = getWell(wellName);
-            double surfaceInjectionRate               = record->getItem("SURFACE_FLOW_TARGET")->getSIDouble(0);
-            double reservoirInjectionRate             = record->getItem("RESV_FLOW_TARGET")->getSIDouble(0);
-            double BHPLimit                           = record->getItem("BHP_TARGET")->getSIDouble(0);
-            double THPLimit                           = record->getItem("THP_TARGET")->getSIDouble(0);
+            double surfaceInjectionRate               = record->getItem("RATE")->getSIDouble(0);
+            double reservoirInjectionRate             = record->getItem("RESV")->getSIDouble(0);
+            double BHPLimit                           = record->getItem("BHP")->getSIDouble(0);
+            double THPLimit                           = record->getItem("THP")->getSIDouble(0);
             WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( record->getItem("CMODE")->getString(0));
             WellCommon::StatusEnum status             = WellCommon::StatusFromString( record->getItem("STATUS")->getString(0));
             WellInjector::TypeEnum injectorType       = WellInjector::TypeFromString( record->getItem("TYPE")->getString(0) );
@@ -251,6 +257,19 @@ namespace Opm {
             well->setInjectorControlMode(currentStep , controlMode );
             well->setInjectorType( currentStep , injectorType );
             well->setInPredictionMode(currentStep, true);
+            
+            if (record->getItem("RATE")->defaultApplied())
+                well->dropInjectionControl( currentStep , WellInjector::RATE );
+
+            if (record->getItem("RESV")->defaultApplied())
+                well->dropInjectionControl( currentStep , WellInjector::RESV );
+            
+            if (record->getItem("THP")->defaultApplied())
+                well->dropInjectionControl( currentStep , WellInjector::THP );
+
+            if (record->getItem("BHP")->defaultApplied())
+                well->dropInjectionControl( currentStep , WellInjector::BHP );
+            
         }
     }
 

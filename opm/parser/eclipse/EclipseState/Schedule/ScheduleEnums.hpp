@@ -103,6 +103,7 @@ namespace Opm {
             THP  = 128, 
             GRUP = 256  
         };
+
         /*
           The items BHP, THP and GRUP only apply in prediction mode:
           WCONPROD. The elements in this enum are used as bitmasks to
