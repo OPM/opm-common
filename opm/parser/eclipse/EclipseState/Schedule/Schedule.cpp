@@ -159,6 +159,8 @@ namespace Opm {
         }
     }
 
+    
+
     void Schedule::handleWCONProducer(DeckKeywordConstPtr keyword, size_t currentStep, bool isPredictionMode) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
@@ -187,13 +189,36 @@ namespace Opm {
                     resVRate = record->getItem("RESV")->getSIDouble(0);
                     BHPLimit = record->getItem("BHP")->getSIDouble(0);
                     THPLimit = record->getItem("THP")->getSIDouble(0);
+        
+                    if (record->getItem("LRAT")->defaultApplied())
+                        well->dropProductionControl( currentStep , WellProducer::LRAT );
+
+                    if (record->getItem("RESV")->defaultApplied())
+                        well->dropProductionControl( currentStep , WellProducer::RESV );
+                    
+                    if (record->getItem("BHP")->defaultApplied())
+                        well->dropProductionControl( currentStep , WellProducer::BHP );
+
+                    if (record->getItem("THP")->defaultApplied())
+                        well->dropProductionControl( currentStep , WellProducer::THP );
                 }
                 
                 well->setLiquidRate( currentStep , liquidRate );
                 well->setResVRate( currentStep , resVRate );
-                well->setBHPLimit(currentStep, BHPLimit);
-                well->setTHPLimit(currentStep, THPLimit);
+                well->setBHPLimit(currentStep, BHPLimit , true);
+                well->setTHPLimit(currentStep, THPLimit , true);
             }
+
+            if (record->getItem("ORAT")->defaultApplied())
+                well->dropProductionControl( currentStep , WellProducer::ORAT );
+            
+            if (record->getItem("GRAT")->defaultApplied()) {
+                std::cout << "Defaulted GRAT identified " << std::endl;
+                well->dropProductionControl( currentStep , WellProducer::GRAT );
+            }
+
+            if (record->getItem("WRAT")->defaultApplied())
+                well->dropProductionControl( currentStep , WellProducer::WRAT );
         }
     }
 
@@ -221,8 +246,8 @@ namespace Opm {
             well->setStatus( currentStep , status );
             well->setSurfaceInjectionRate( currentStep , surfaceInjectionRate );
             well->setReservoirInjectionRate( currentStep , reservoirInjectionRate );
-            well->setBHPLimit(currentStep, BHPLimit);
-            well->setTHPLimit(currentStep, THPLimit);
+            well->setBHPLimit(currentStep, BHPLimit , false);
+            well->setTHPLimit(currentStep, THPLimit , false);
             well->setInjectorControlMode(currentStep , controlMode );
             well->setInjectorType( currentStep , injectorType );
             well->setInPredictionMode(currentStep, true);
