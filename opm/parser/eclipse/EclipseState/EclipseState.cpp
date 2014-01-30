@@ -21,6 +21,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <iostream>
+#include <boost/algorithm/string/join.hpp>
 
 namespace Opm {
     
@@ -62,14 +63,12 @@ namespace Opm {
     }
 
     void EclipseState::initTitle(DeckConstPtr deck){
-        DeckKeywordConstPtr titleKeyword = deck->getKeyword("TITLE");
-        DeckRecordConstPtr record = titleKeyword->getRecord(0);
-        DeckItemPtr item = record->getItem(0);
-        std::vector<std::string> itemValue = item->getStringData();
-        m_title.clear();
-        for(size_t i=0; i!=itemValue.size(); ++i) {
-            m_title.append(itemValue[i]);
-            if (i<itemValue.size()-1) m_title.append(" ");
+        if (deck->hasKeyword("TITLE")) {
+            DeckKeywordConstPtr titleKeyword = deck->getKeyword("TITLE");
+            DeckRecordConstPtr record = titleKeyword->getRecord(0);
+            DeckItemPtr item = record->getItem(0);
+            std::vector<std::string> itemValue = item->getStringData();
+            m_title = boost::algorithm::join(itemValue, " ");
         }
     }
 }

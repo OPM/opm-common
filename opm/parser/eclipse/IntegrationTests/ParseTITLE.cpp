@@ -20,6 +20,7 @@
 #define BOOST_TEST_MODULE ParserIntegrationTests
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
+#include <boost/algorithm/string/join.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
@@ -47,11 +48,7 @@ BOOST_AUTO_TEST_CASE( parse_TITLE_OK ) {
     DeckRecordConstPtr record = titleKeyword->getRecord(0);
     DeckItemPtr item = record->getItem(0);
     std::vector<std::string> itemValue = item->getStringData();
-    std::string itemValueString;
-    for(size_t i=0; i!=itemValue.size(); ++i) {
-        itemValueString.append(itemValue[i]);
-        if (i<itemValue.size()-1) itemValueString.append(" ");
-    }
+    std::string itemValueString = boost::algorithm::join(itemValue, " ");
 
     BOOST_CHECK_EQUAL (0, itemValueString.compare("This is the title of the model."));
     BOOST_CHECK_EQUAL (true, deck->hasKeyword("START"));
