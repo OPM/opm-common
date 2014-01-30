@@ -174,8 +174,13 @@ namespace Opm {
             well->setWaterRate(currentStep, wrat);
             well->setGasRate(currentStep, grat);
             well->setInPredictionMode(currentStep, isPredictionMode);
-            if (isPredictionMode) {
-                double liquidRate = record->getItem("LRAT")->getSIDouble(0);
+            {
+                double liquidRate = 0;
+                
+                if (isPredictionMode) {
+                    liquidRate = record->getItem("LRAT")->getSIDouble(0);
+                    std::cout << "liquidrate " << liquidRate << std::endl;
+                }
                 well->setLiquidRate( currentStep , liquidRate );
             }
         }
