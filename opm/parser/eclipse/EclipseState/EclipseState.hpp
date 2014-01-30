@@ -33,7 +33,7 @@ namespace Opm {
     public:
         EclipseState(DeckConstPtr deck);
         ScheduleConstPtr getSchedule() const;
-        bool hasPhase(enum PhaseEnum phase) const;
+        bool hasPhase(enum Phase::PhaseEnum phase) const;
         std::string getTitle() const;
         
     private:
@@ -42,7 +42,7 @@ namespace Opm {
         void initTitle(DeckConstPtr deck);
 
         ScheduleConstPtr schedule;
-        std::set<enum PhaseEnum> phases;
+        std::set<enum Phase::PhaseEnum> phases;
         std::string m_title;
     };
 

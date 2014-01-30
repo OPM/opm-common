@@ -31,7 +31,12 @@ namespace Opm {
         : m_oilRate( new DynamicState<double>( timeMap , 0.0)) ,
           m_gasRate(new DynamicState<double>(timeMap, 0.0)),
           m_waterRate(new DynamicState<double>(timeMap, 0.0)),
-          m_injectionRate(new DynamicState<double>(timeMap, 0.0)),
+          m_surfaceInjectionRate(new DynamicState<double>(timeMap, 0.0)),
+          m_reservoirInjectionRate(new DynamicState<double>(timeMap, 0.0)),
+          m_BHPLimit(new DynamicState<double>(timeMap , 0.0)),
+          m_THPLimit(new DynamicState<double>(timeMap , 0.0)),
+          m_injectorType(new DynamicState<WellInjector::TypeEnum>(timeMap, WellInjector::WATER)),
+          m_injectorControlMode(new DynamicState<WellInjector::ControlModeEnum>(timeMap, WellInjector::RATE)),
           m_inPredictionMode(new DynamicState<bool>(timeMap, true)),
           m_isProducer(new DynamicState<bool>(timeMap, true)) ,
           m_completions( new DynamicState<CompletionSetConstPtr>( timeMap , CompletionSetConstPtr( new CompletionSet()) )),
@@ -54,6 +59,39 @@ namespace Opm {
             return false;
         else
             return true;
+    }
+
+
+    double Well::getBHPLimit(size_t timeStep) const {
+        return m_BHPLimit->get(timeStep);
+    }
+
+    void Well::setBHPLimit(size_t timeStep, double BHPLimit) {
+        m_BHPLimit->add(timeStep, BHPLimit);
+    }
+
+    double Well::getTHPLimit(size_t timeStep) const {
+        return m_THPLimit->get(timeStep);
+    }
+
+    void Well::setTHPLimit(size_t timeStep, double THPLimit) {
+        m_THPLimit->add(timeStep, THPLimit);
+    }
+
+    WellInjector::TypeEnum Well::getInjectorType(size_t timeStep) const {
+        return m_injectorType->get(timeStep);
+    }
+
+    void Well::setInjectorType(size_t timeStep, WellInjector::TypeEnum injectorType) {
+        m_injectorType->add(timeStep , injectorType);
+    }
+
+    WellInjector::ControlModeEnum Well::getInjectorControlMode(size_t timeStep) const {
+        return m_injectorControlMode->get(timeStep);
+    }
+
+    void Well::setInjectorControlMode(size_t timeStep, WellInjector::ControlModeEnum injectorControlMode) {
+        m_injectorControlMode->add(timeStep , injectorControlMode);
     }
 
 
@@ -85,14 +123,24 @@ namespace Opm {
         switch2Producer( timeStep );
     }
 
-    double Well::getInjectionRate(size_t timeStep) const {
-        return m_injectionRate->get(timeStep);
+    double Well::getSurfaceInjectionRate(size_t timeStep) const {
+        return m_surfaceInjectionRate->get(timeStep);
     }
 
-    void Well::setInjectionRate(size_t timeStep, double injectionRate) {
-        m_injectionRate->add(timeStep, injectionRate);
+    void Well::setSurfaceInjectionRate(size_t timeStep, double injectionRate) {
+        m_surfaceInjectionRate->add(timeStep, injectionRate);
         switch2Injector( timeStep );
     }
+
+    double Well::getReservoirInjectionRate(size_t timeStep) const {
+        return m_reservoirInjectionRate->get(timeStep);
+    }
+
+    void Well::setReservoirInjectionRate(size_t timeStep, double injectionRate) {
+        m_reservoirInjectionRate->add(timeStep, injectionRate);
+        switch2Injector( timeStep );
+    }
+
 
     bool Well::isProducer(size_t timeStep) const {
         return m_isProducer->get(timeStep);
@@ -104,7 +152,8 @@ namespace Opm {
     
     void Well::switch2Producer(size_t timeStep ) {
         m_isProducer->add(timeStep , true);
-        m_injectionRate->add(timeStep, 0);
+        m_surfaceInjectionRate->add(timeStep, 0);
+        m_reservoirInjectionRate->add(timeStep , 0);
     }
 
     void Well::switch2Injector(size_t timeStep ) {
@@ -136,7 +185,7 @@ namespace Opm {
         return m_refDepth;
     }
 
-    CompletionSetConstPtr Well::getCompletions(size_t timeStep) {
+    CompletionSetConstPtr Well::getCompletions(size_t timeStep) const {
         return m_completions->get( timeStep );
     }
     

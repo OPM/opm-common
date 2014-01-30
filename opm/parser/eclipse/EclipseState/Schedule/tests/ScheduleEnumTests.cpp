@@ -184,36 +184,106 @@ BOOST_AUTO_TEST_CASE(TestGroupProductionExceedLimitActionEnumLoop) {
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(TestPhaseEnum2String) {
-    BOOST_CHECK_EQUAL( "OIL" , PhaseEnum2String(OIL));
-    BOOST_CHECK_EQUAL( "GAS" , PhaseEnum2String(GAS));
-    BOOST_CHECK_EQUAL( "WATER" , PhaseEnum2String(WATER));
+    BOOST_CHECK_EQUAL( "OIL"  ,  Phase::PhaseEnum2String(Phase::OIL));
+    BOOST_CHECK_EQUAL( "GAS"  ,  Phase::PhaseEnum2String(Phase::GAS));
+    BOOST_CHECK_EQUAL( "WATER" , Phase::PhaseEnum2String(Phase::WATER));
 }
 
 
 BOOST_AUTO_TEST_CASE(TestPhaseEnumFromString) {
-    BOOST_CHECK_THROW( PhaseEnumFromString("XXX") , std::invalid_argument );
-    BOOST_CHECK_EQUAL( OIL , PhaseEnumFromString("OIL"));
-    BOOST_CHECK_EQUAL( WATER , PhaseEnumFromString("WATER"));
-    BOOST_CHECK_EQUAL( GAS , PhaseEnumFromString("GAS"));
+    BOOST_CHECK_THROW( Phase::PhaseEnumFromString("XXX") , std::invalid_argument );
+    BOOST_CHECK_EQUAL( Phase::OIL   , Phase::PhaseEnumFromString("OIL"));
+    BOOST_CHECK_EQUAL( Phase::WATER , Phase::PhaseEnumFromString("WATER"));
+    BOOST_CHECK_EQUAL( Phase::GAS   , Phase::PhaseEnumFromString("GAS"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(TestPhaseEnumLoop) {
-    BOOST_CHECK_EQUAL( OIL    , PhaseEnumFromString( PhaseEnum2String( OIL ) ));
-    BOOST_CHECK_EQUAL( WATER , PhaseEnumFromString( PhaseEnum2String( WATER ) ));
-    BOOST_CHECK_EQUAL( GAS , PhaseEnumFromString( PhaseEnum2String( GAS ) ));
+    BOOST_CHECK_EQUAL( Phase::OIL   , Phase::PhaseEnumFromString( Phase::PhaseEnum2String( Phase::OIL ) ));
+    BOOST_CHECK_EQUAL( Phase::WATER , Phase::PhaseEnumFromString( Phase::PhaseEnum2String( Phase::WATER ) ));
+    BOOST_CHECK_EQUAL( Phase::GAS   , Phase::PhaseEnumFromString( Phase::PhaseEnum2String( Phase::GAS ) ));
 
-    BOOST_CHECK_EQUAL( "OIL"    , PhaseEnum2String(PhaseEnumFromString(  "OIL" ) ));
-    BOOST_CHECK_EQUAL( "GAS" , PhaseEnum2String(PhaseEnumFromString(  "GAS" ) ));
-    BOOST_CHECK_EQUAL( "WATER" , PhaseEnum2String(PhaseEnumFromString(  "WATER" ) ));
+    BOOST_CHECK_EQUAL( "OIL"    , Phase::PhaseEnum2String(Phase::PhaseEnumFromString(  "OIL" ) ));
+    BOOST_CHECK_EQUAL( "GAS"    , Phase::PhaseEnum2String(Phase::PhaseEnumFromString(  "GAS" ) ));
+    BOOST_CHECK_EQUAL( "WATER"  , Phase::PhaseEnum2String(Phase::PhaseEnumFromString(  "WATER" ) ));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(TestPhaseEnumMask) {
-    BOOST_CHECK_EQUAL( 0 , OIL & GAS );
-    BOOST_CHECK_EQUAL( 0 , OIL & WATER );
-    BOOST_CHECK_EQUAL( 0 , WATER & GAS );
+    BOOST_CHECK_EQUAL( 0 , Phase::OIL   & Phase::GAS );
+    BOOST_CHECK_EQUAL( 0 , Phase::OIL   & Phase::WATER );
+    BOOST_CHECK_EQUAL( 0 , Phase::WATER & Phase::GAS );
+}
+
+
+
+/*****************************************************************/
+
+BOOST_AUTO_TEST_CASE(TestInjectorEnum2String) {
+    BOOST_CHECK_EQUAL( "OIL"  ,  WellInjector::Type2String(WellInjector::OIL));
+    BOOST_CHECK_EQUAL( "GAS"  ,  WellInjector::Type2String(WellInjector::GAS));
+    BOOST_CHECK_EQUAL( "WATER" , WellInjector::Type2String(WellInjector::WATER));
+    BOOST_CHECK_EQUAL( "MULTI" , WellInjector::Type2String(WellInjector::MULTI));
+}
+
+
+BOOST_AUTO_TEST_CASE(TestInjectorEnumFromString) {
+    BOOST_CHECK_THROW( WellInjector::TypeFromString("XXX") , std::invalid_argument );
+    BOOST_CHECK_EQUAL( WellInjector::OIL   , WellInjector::TypeFromString("OIL"));
+    BOOST_CHECK_EQUAL( WellInjector::WATER , WellInjector::TypeFromString("WATER"));
+    BOOST_CHECK_EQUAL( WellInjector::GAS   , WellInjector::TypeFromString("GAS"));
+    BOOST_CHECK_EQUAL( WellInjector::MULTI , WellInjector::TypeFromString("MULTI"));
+}
+
+
+
+BOOST_AUTO_TEST_CASE(TestInjectorEnumLoop) {
+    BOOST_CHECK_EQUAL( WellInjector::OIL     , WellInjector::TypeFromString( WellInjector::Type2String( WellInjector::OIL ) ));
+    BOOST_CHECK_EQUAL( WellInjector::WATER   , WellInjector::TypeFromString( WellInjector::Type2String( WellInjector::WATER ) ));
+    BOOST_CHECK_EQUAL( WellInjector::GAS     , WellInjector::TypeFromString( WellInjector::Type2String( WellInjector::GAS ) ));
+    BOOST_CHECK_EQUAL( WellInjector::MULTI   , WellInjector::TypeFromString( WellInjector::Type2String( WellInjector::MULTI ) ));
+
+    BOOST_CHECK_EQUAL( "MULTI"    , WellInjector::Type2String(WellInjector::TypeFromString(  "MULTI" ) ));
+    BOOST_CHECK_EQUAL( "OIL"      , WellInjector::Type2String(WellInjector::TypeFromString(  "OIL" ) ));
+    BOOST_CHECK_EQUAL( "GAS"      , WellInjector::Type2String(WellInjector::TypeFromString(  "GAS" ) ));
+    BOOST_CHECK_EQUAL( "WATER"    , WellInjector::Type2String(WellInjector::TypeFromString(  "WATER" ) ));
+}
+
+/*****************************************************************/
+
+BOOST_AUTO_TEST_CASE(InjectorCOntrolMopdeEnum2String) {
+    BOOST_CHECK_EQUAL( "RATE"  ,  WellInjector::ControlMode2String(WellInjector::RATE));
+    BOOST_CHECK_EQUAL( "RESV"  ,  WellInjector::ControlMode2String(WellInjector::RESV));
+    BOOST_CHECK_EQUAL( "BHP" , WellInjector::ControlMode2String(WellInjector::BHP));
+    BOOST_CHECK_EQUAL( "THP" , WellInjector::ControlMode2String(WellInjector::THP));
+    BOOST_CHECK_EQUAL( "GRUP" , WellInjector::ControlMode2String(WellInjector::GRUP));
+}
+
+
+BOOST_AUTO_TEST_CASE(InjectorControlModeEnumFromString) {
+    BOOST_CHECK_THROW( WellInjector::ControlModeFromString("XXX") , std::invalid_argument );
+    BOOST_CHECK_EQUAL( WellInjector::RATE   , WellInjector::ControlModeFromString("RATE"));
+    BOOST_CHECK_EQUAL( WellInjector::BHP , WellInjector::ControlModeFromString("BHP"));
+    BOOST_CHECK_EQUAL( WellInjector::RESV   , WellInjector::ControlModeFromString("RESV"));
+    BOOST_CHECK_EQUAL( WellInjector::THP , WellInjector::ControlModeFromString("THP"));
+    BOOST_CHECK_EQUAL( WellInjector::GRUP , WellInjector::ControlModeFromString("GRUP"));
+}
+
+
+
+BOOST_AUTO_TEST_CASE(InjectorControlModeEnumLoop) {
+    BOOST_CHECK_EQUAL( WellInjector::RATE     , WellInjector::ControlModeFromString( WellInjector::ControlMode2String( WellInjector::RATE ) ));
+    BOOST_CHECK_EQUAL( WellInjector::BHP   , WellInjector::ControlModeFromString( WellInjector::ControlMode2String( WellInjector::BHP ) ));
+    BOOST_CHECK_EQUAL( WellInjector::RESV     , WellInjector::ControlModeFromString( WellInjector::ControlMode2String( WellInjector::RESV ) ));
+    BOOST_CHECK_EQUAL( WellInjector::THP   , WellInjector::ControlModeFromString( WellInjector::ControlMode2String( WellInjector::THP ) ));
+    BOOST_CHECK_EQUAL( WellInjector::GRUP   , WellInjector::ControlModeFromString( WellInjector::ControlMode2String( WellInjector::GRUP ) ));
+
+    BOOST_CHECK_EQUAL( "THP"    , WellInjector::ControlMode2String(WellInjector::ControlModeFromString(  "THP" ) ));
+    BOOST_CHECK_EQUAL( "RATE"      , WellInjector::ControlMode2String(WellInjector::ControlModeFromString(  "RATE" ) ));
+    BOOST_CHECK_EQUAL( "RESV"      , WellInjector::ControlMode2String(WellInjector::ControlModeFromString(  "RESV" ) ));
+    BOOST_CHECK_EQUAL( "BHP"    , WellInjector::ControlMode2String(WellInjector::ControlModeFromString(  "BHP" ) ));
+    BOOST_CHECK_EQUAL( "GRUP"    , WellInjector::ControlMode2String(WellInjector::ControlModeFromString(  "GRUP" ) ));
 }
 

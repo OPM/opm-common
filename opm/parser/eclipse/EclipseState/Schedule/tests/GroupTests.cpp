@@ -81,13 +81,13 @@ BOOST_AUTO_TEST_CASE(ControlModeOK) {
 BOOST_AUTO_TEST_CASE(GroupChangePhaseSameTimeThrows) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
     Opm::Group group("G1" , timeMap , 0);
-    BOOST_CHECK_EQUAL( Opm::WATER , group.getInjectionPhase( 0 )); // Default phase - assumed WATER
-    group.setInjectionPhase(5 , Opm::WATER );
-    BOOST_CHECK_THROW( group.setInjectionPhase( 5 , Opm::GAS ) , std::invalid_argument );
-    BOOST_CHECK_NO_THROW( group.setInjectionPhase( 5 , Opm::WATER ));
-    BOOST_CHECK_NO_THROW( group.setInjectionPhase( 6 , Opm::GAS ));
-    BOOST_CHECK_EQUAL( Opm::GAS , group.getInjectionPhase( 6 ));
-    BOOST_CHECK_EQUAL( Opm::GAS , group.getInjectionPhase( 8 ));
+    BOOST_CHECK_EQUAL( Opm::Phase::WATER , group.getInjectionPhase( 0 )); // Default phase - assumed WATER
+    group.setInjectionPhase(5 , Opm::Phase::WATER );
+    BOOST_CHECK_THROW( group.setInjectionPhase( 5 , Opm::Phase::GAS ) , std::invalid_argument );
+    BOOST_CHECK_NO_THROW( group.setInjectionPhase( 5 , Opm::Phase::WATER ));
+    BOOST_CHECK_NO_THROW( group.setInjectionPhase( 6 , Opm::Phase::GAS ));
+    BOOST_CHECK_EQUAL( Opm::Phase::GAS , group.getInjectionPhase( 6 ));
+    BOOST_CHECK_EQUAL( Opm::Phase::GAS , group.getInjectionPhase( 8 ));
 }
 
 

@@ -22,13 +22,15 @@
 
 namespace Opm {
 
-    Completion::Completion(int i, int j , int k , CompletionStateEnum state , double CF) {  
+    Completion::Completion(int i, int j , int k , CompletionStateEnum state , double CF, double diameter, double skinFactor) {
         m_i = i;
         m_j = j;
         m_k = k;
 
         m_state = state;
         m_CF = CF;
+        m_diameter = diameter;
+        m_skinFactor = skinFactor;
     }
 
 
@@ -51,20 +53,25 @@ namespace Opm {
     std::pair<std::string , std::vector<CompletionConstPtr> > Completion::completionsFromCOMPDATRecord( DeckRecordConstPtr compdatRecord ) {
         std::vector<CompletionConstPtr> completions;
         std::string well = compdatRecord->getItem("WELL")->getString(0);
-        int I = compdatRecord->getItem("I")->getInt(0);
-        int J = compdatRecord->getItem("J")->getInt(0);
-        int K1 = compdatRecord->getItem("K1")->getInt(0);
-        int K2 = compdatRecord->getItem("K2")->getInt(0);
+        // We change from eclipse's 1 - n, to a 0 - n-1 solution
+        int I = compdatRecord->getItem("I")->getInt(0) - 1;
+        int J = compdatRecord->getItem("J")->getInt(0) - 1;
+        int K1 = compdatRecord->getItem("K1")->getInt(0) - 1;
+        int K2 = compdatRecord->getItem("K2")->getInt(0) - 1;
         CompletionStateEnum state = CompletionStateEnumFromString( compdatRecord->getItem("STATE")->getString(0) );
+
         {
             DeckItemConstPtr CFItem = compdatRecord->getItem("CF");
             if (CFItem->defaultApplied())
                 throw std::invalid_argument("The connection factor item can not be defaulted");
         }
-        double CF = compdatRecord->getItem("CF")->getRawDouble(0);
+        double CF = compdatRecord->getItem("CF")->getSIDouble(0);
+
+        double diameter = compdatRecord->getItem("DIAMETER")->getSIDouble(0);
+        double skinFactor = compdatRecord->getItem("SKIN")->getRawDouble(0);
 
         for (int k = K1; k <= K2; k++) {
-            CompletionConstPtr completion(new Completion(I , J , k , state , CF ));
+            CompletionConstPtr completion(new Completion(I , J , k , state , CF, diameter, skinFactor ));
             completions.push_back( completion );
         }
 
@@ -117,12 +124,19 @@ namespace Opm {
 
     CompletionStateEnum Completion::getState() const {
         return m_state;
-    };
+    }
 
     double Completion::getCF() const {
         return m_CF;
     }
+
+    double Completion::getDiameter() const {
+        return m_diameter;
+    }
     
+    double Completion::getSkinFactor() const {
+        return m_skinFactor;
+    }
 }
 
 

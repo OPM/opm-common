@@ -46,8 +46,19 @@ namespace Opm {
         void   setGasRate(size_t timeStep, double gasRate);
         double getWaterRate(size_t timeStep) const;
         void   setWaterRate(size_t timeStep, double waterRate);
-        double getInjectionRate(size_t timeStep) const;
-        void   setInjectionRate(size_t timeStep, double injectionRate);
+        double getSurfaceInjectionRate(size_t timeStep) const;
+        void   setSurfaceInjectionRate(size_t timeStep, double injectionRate);
+        double getReservoirInjectionRate(size_t timeStep) const;
+        void   setReservoirInjectionRate(size_t timeStep, double injectionRate);
+        double getBHPLimit(size_t timeStep) const;
+        void   setBHPLimit(size_t timeStep, double BHPLimit);
+        double getTHPLimit(size_t timeStep) const;
+        void   setTHPLimit(size_t timeStep, double THPLimit);
+        WellInjector::TypeEnum getInjectorType(size_t timeStep) const;
+        void   setInjectorType(size_t timeStep, WellInjector::TypeEnum injectorType);
+        WellInjector::ControlModeEnum getInjectorControlMode(size_t timeStep) const;
+        void   setInjectorControlMode(size_t timeStep, WellInjector::ControlModeEnum injectorControlMode);
+
 
         int    getHeadI() const;
         int    getHeadJ() const;
@@ -59,7 +70,7 @@ namespace Opm {
         bool isInjector(size_t timeStep) const;
         void addWELSPECS(DeckRecordConstPtr deckRecord);
         void addCompletions(size_t time_step , const std::vector<CompletionConstPtr>& newCompletions);
-        CompletionSetConstPtr getCompletions(size_t timeStep);
+        CompletionSetConstPtr getCompletions(size_t timeStep) const;
 
     private:
         void switch2Producer(size_t timeStep );
@@ -70,7 +81,12 @@ namespace Opm {
         std::shared_ptr<DynamicState<double> > m_oilRate;
         std::shared_ptr<DynamicState<double> > m_gasRate;
         std::shared_ptr<DynamicState<double> > m_waterRate;
-        std::shared_ptr<DynamicState<double> > m_injectionRate;
+        std::shared_ptr<DynamicState<double> > m_surfaceInjectionRate;
+        std::shared_ptr<DynamicState<double> > m_reservoirInjectionRate;
+        std::shared_ptr<DynamicState<double> > m_BHPLimit;
+        std::shared_ptr<DynamicState<double> > m_THPLimit;
+        std::shared_ptr<DynamicState<WellInjector::TypeEnum> > m_injectorType;
+        std::shared_ptr<DynamicState<WellInjector::ControlModeEnum> > m_injectorControlMode;
         
         std::shared_ptr<DynamicState<bool> > m_inPredictionMode;
         std::shared_ptr<DynamicState<bool> > m_isProducer;

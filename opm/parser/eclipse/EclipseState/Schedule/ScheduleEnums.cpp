@@ -185,31 +185,99 @@ namespace Opm {
     }
 
     /*****************************************************************/
-
-    const std::string PhaseEnum2String( PhaseEnum enumValue ) {
-        switch( enumValue ) {
-        case OIL:
-            return "OIL";
-        case GAS:
-            return "GAS";
-        case WATER:
-            return "WATER";
-        default:
-          throw std::invalid_argument("unhandled enum value");
+    
+    namespace Phase {
+        const std::string PhaseEnum2String( PhaseEnum enumValue ) {
+            switch( enumValue ) {
+            case OIL:
+                return "OIL";
+            case GAS:
+                return "GAS";
+            case WATER:
+                return "WATER";
+            default:
+                throw std::invalid_argument("unhandled enum value");
+            }
+        }
+    
+        PhaseEnum PhaseEnumFromString( const std::string& stringValue ) {
+            if (stringValue == "OIL")
+                return OIL;
+            else if (stringValue == "WATER")
+                return WATER;
+            else if (stringValue == "GAS")
+                return GAS;
+            else
+                throw std::invalid_argument("Unknown enum state string: " + stringValue );
         }
     }
     
-    PhaseEnum PhaseEnumFromString( const std::string& stringValue ) {
-        if (stringValue == "OIL")
-            return OIL;
-        else if (stringValue == "WATER")
-            return WATER;
-        else if (stringValue == "GAS")
-            return GAS;
-        else
-            throw std::invalid_argument("Unknown enum state string: " + stringValue );
+    /*****************************************************************/
+
+    namespace WellInjector {
+
+        const std::string Type2String( TypeEnum enumValue ) {
+            switch( enumValue ) {
+            case OIL:
+                return "OIL";
+            case GAS:
+                return "GAS";
+            case WATER:
+                return "WATER";
+            case MULTI:
+                return "MULTI";
+            default:
+                throw std::invalid_argument("unhandled enum value");
+            }
+        }
+    
+        TypeEnum TypeFromString( const std::string& stringValue ) {
+            if (stringValue == "OIL")
+                return OIL;
+            else if (stringValue == "WATER")
+                return WATER;
+            else if (stringValue == "GAS")
+                return GAS;
+            else if (stringValue == "MULTI")
+                return MULTI;
+            else
+                throw std::invalid_argument("Unknown enum state string: " + stringValue );
+        }
+
+        /*****************************************************************/
+
+        const std::string ControlMode2String( ControlModeEnum enumValue ) {
+            switch( enumValue ) {
+            case RESV:
+                return "RESV";
+            case RATE:
+                return "RATE";
+            case BHP:
+                return "BHP";
+            case THP:
+                return "THP";
+            case GRUP:
+                return "GRUP";
+            default:
+                throw std::invalid_argument("unhandled enum value");
+            }
+        }
+    
+        ControlModeEnum ControlModeFromString( const std::string& stringValue ) {
+            if (stringValue == "RATE")
+                return RATE;
+            else if (stringValue == "RESV")
+                return RESV;
+            else if (stringValue == "BHP")
+                return BHP;
+            else if (stringValue == "THP")
+                return THP;
+            else if (stringValue == "GRUP")
+                return GRUP;
+            else
+                throw std::invalid_argument("Unknown enum state string: " + stringValue );
+        }
+
     }
-
-
 }
 

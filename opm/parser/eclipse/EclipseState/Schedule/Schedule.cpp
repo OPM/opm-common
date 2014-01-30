@@ -148,10 +148,10 @@ namespace Opm {
     }
 
     void Schedule::checkWELSPECSConsistency(WellConstPtr well, DeckRecordConstPtr record) const {
-        if (well->getHeadI() != record->getItem("HEAD_I")->getInt(0)) {
+        if (well->getHeadI() != record->getItem("HEAD_I")->getInt(0) - 1) {
             throw std::invalid_argument("Unable process WELSPECS for well " + well->name() + ", HEAD_I deviates from existing value");
         }
-        if (well->getHeadJ() != record->getItem("HEAD_J")->getInt(0)) {
+        if (well->getHeadJ() != record->getItem("HEAD_J")->getInt(0) - 1) {
             throw std::invalid_argument("Unable process WELSPECS for well " + well->name() + ", HEAD_J deviates from existing value");
         }
         if (well->getRefDepth() != record->getItem("REF_DEPTH")->getSIDouble(0)) {
@@ -188,9 +188,17 @@ namespace Opm {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellName = record->getItem("WELL")->getString(0);
             WellPtr well = getWell(wellName);
-            double injectionRate  = record->getItem("SURFACE_FLOW_TARGET")->getSIDouble(0);
-            
-            well->setInjectionRate( currentStep , injectionRate );
+            double surfaceInjectionRate               = record->getItem("SURFACE_FLOW_TARGET")->getSIDouble(0);
+            double reservoirInjectionRate             = record->getItem("RESV_FLOW_TARGET")->getSIDouble(0);
+            double BHPLimit                           = record->getItem("BHP_TARGET")->getSIDouble(0);
+            double THPLimit                           = record->getItem("THP_TARGET")->getSIDouble(0);
+            WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( record->getItem("CMODE")->getString(0));
+
+            well->setSurfaceInjectionRate( currentStep , surfaceInjectionRate );
+            well->setReservoirInjectionRate( currentStep , reservoirInjectionRate );
+            well->setBHPLimit(currentStep, BHPLimit);
+            well->setTHPLimit(currentStep, THPLimit);
+            well->setInjectorControlMode(currentStep , controlMode );
             well->setInPredictionMode(currentStep, true);
         }
     }
@@ -202,7 +210,7 @@ namespace Opm {
             WellPtr well = getWell(wellName);
             double injectionRate  = record->getItem("RATE")->getSIDouble(0);
             
-            well->setInjectionRate( currentStep , injectionRate );
+            well->setSurfaceInjectionRate( currentStep , injectionRate );
             well->setInPredictionMode(currentStep, false );
         }
     }
@@ -215,7 +223,7 @@ namespace Opm {
             GroupPtr group = getGroup(groupName);
 
             {
-                PhaseEnum phase = PhaseEnumFromString( record->getItem("PHASE")->getString(0) );
+                Phase::PhaseEnum phase = Phase::PhaseEnumFromString( record->getItem("PHASE")->getString(0) );
                 group->setInjectionPhase( currentStep , phase );
             }
             {
@@ -287,8 +295,10 @@ namespace Opm {
     }
 
     void Schedule::addWell(const std::string& wellName, DeckRecordConstPtr record, size_t timeStep) {
-        int headI = record->getItem("HEAD_I")->getInt(0);
-        int headJ = record->getItem("HEAD_J")->getInt(0);
+
+        // We change from eclipse's 1 - n, to a 0 - n-1 solution
+        int headI = record->getItem("HEAD_I")->getInt(0) - 1;
+        int headJ = record->getItem("HEAD_J")->getInt(0) - 1;
         double refDepth = record->getItem("REF_DEPTH")->getSIDouble(0);
         WellPtr well(new Well(wellName, headI, headJ, refDepth, m_timeMap , timeStep));
         m_wells[ wellName ] = well;

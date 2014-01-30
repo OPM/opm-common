@@ -25,10 +25,11 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-
+#include <opm/parser/eclipse/Units/ConversionFactors.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 
@@ -96,11 +97,11 @@ BOOST_AUTO_TEST_CASE(UpdateCompletions) {
     
     std::vector<Opm::CompletionConstPtr> newCompletions;
     std::vector<Opm::CompletionConstPtr> newCompletions2;
-    Opm::CompletionConstPtr comp1(new Opm::Completion( 10 , 10 , 10 , Opm::AUTO , 99.0));
-    Opm::CompletionConstPtr comp2(new Opm::Completion( 10 , 11 , 10 , Opm::SHUT , 99.0));
-    Opm::CompletionConstPtr comp3(new Opm::Completion( 10 , 10 , 12 , Opm::OPEN , 99.0));
-    Opm::CompletionConstPtr comp4(new Opm::Completion( 10 , 10 , 12 , Opm::SHUT , 99.0));
-    Opm::CompletionConstPtr comp5(new Opm::Completion( 10 , 10 , 13 , Opm::OPEN , 99.0));
+    Opm::CompletionConstPtr comp1(new Opm::Completion( 10 , 10 , 10 , Opm::AUTO , 99.0, 22.3, 33.2));
+    Opm::CompletionConstPtr comp2(new Opm::Completion( 10 , 11 , 10 , Opm::SHUT , 99.0, 22.3, 33.2));
+    Opm::CompletionConstPtr comp3(new Opm::Completion( 10 , 10 , 12 , Opm::OPEN , 99.0, 22.3, 33.2));
+    Opm::CompletionConstPtr comp4(new Opm::Completion( 10 , 10 , 12 , Opm::SHUT , 99.0, 22.3, 33.2));
+    Opm::CompletionConstPtr comp5(new Opm::Completion( 10 , 10 , 13 , Opm::OPEN , 99.0, 22.3, 33.2));
 
     //std::vector<Opm::CompletionConstPtr> newCompletions2{ comp4 , comp5}; Newer c++
 
@@ -149,14 +150,25 @@ BOOST_AUTO_TEST_CASE(setWaterRate_RateSetCorrect) {
 }
 
 
-BOOST_AUTO_TEST_CASE(setInjectionRate_RateSetCorrect) {
+BOOST_AUTO_TEST_CASE(setSurfaceInjectionRate_RateSetCorrect) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
     Opm::Well well("WELL1" , 0, 0, 0.0, timeMap , 0);
     
-    BOOST_CHECK_EQUAL(0.0 , well.getInjectionRate( 5 ));
-    well.setInjectionRate( 5 , 108 );
-    BOOST_CHECK_EQUAL(108 , well.getInjectionRate( 5 ));
-    BOOST_CHECK_EQUAL(108 , well.getInjectionRate( 8 ));
+    BOOST_CHECK_EQUAL(0.0 , well.getSurfaceInjectionRate( 5 ));
+    well.setSurfaceInjectionRate( 5 , 108 );
+    BOOST_CHECK_EQUAL(108 , well.getSurfaceInjectionRate( 5 ));
+    BOOST_CHECK_EQUAL(108 , well.getSurfaceInjectionRate( 8 ));
+}
+
+
+BOOST_AUTO_TEST_CASE(setReservoirInjectionRate_RateSetCorrect) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    Opm::Well well("WELL1" , 0, 0, 0.0, timeMap , 0);
+    
+    BOOST_CHECK_EQUAL(0.0 , well.getReservoirInjectionRate( 5 ));
+    well.setReservoirInjectionRate( 5 , 108 );
+    BOOST_CHECK_EQUAL(108 , well.getReservoirInjectionRate( 5 ));
+    BOOST_CHECK_EQUAL(108 , well.getReservoirInjectionRate( 8 ));
 }
 
 
@@ -168,11 +180,18 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
     BOOST_CHECK_EQUAL( false , well.isInjector(0));
     BOOST_CHECK_EQUAL( true , well.isProducer(0));
 
-    /* Set an injection rate => Well becomes an Injector */
-    well.setInjectionRate(3 , 100);
+    /* Set a surface injection rate => Well becomes an Injector */
+    well.setSurfaceInjectionRate(3 , 100);
     BOOST_CHECK_EQUAL( true  , well.isInjector(3));
     BOOST_CHECK_EQUAL( false , well.isProducer(3));
-    BOOST_CHECK_EQUAL( 100 , well.getInjectionRate(3));
+    BOOST_CHECK_EQUAL( 100 , well.getSurfaceInjectionRate(3));
+    
+    /* Set a reservoir injection rate => Well becomes an Injector */
+    well.setReservoirInjectionRate(4 , 200);
+    BOOST_CHECK_EQUAL( true  , well.isInjector(4));
+    BOOST_CHECK_EQUAL( false , well.isProducer(4));
+    BOOST_CHECK_EQUAL( 200 , well.getReservoirInjectionRate(4));
+    
 
     /* Set rates => Well becomes a producer; injection rate should be set to 0. */
     well.setOilRate(4 , 100 );
@@ -181,16 +200,17 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
 
     BOOST_CHECK_EQUAL( false , well.isInjector(4));
     BOOST_CHECK_EQUAL( true , well.isProducer(4));
-    BOOST_CHECK_EQUAL( 0 , well.getInjectionRate(4));
+    BOOST_CHECK_EQUAL( 0 , well.getSurfaceInjectionRate(4));
+    BOOST_CHECK_EQUAL( 0 , well.getReservoirInjectionRate(4));
     BOOST_CHECK_EQUAL( 100 , well.getOilRate(4));
     BOOST_CHECK_EQUAL( 200 , well.getGasRate(4));
     BOOST_CHECK_EQUAL( 300 , well.getWaterRate(4));
     
     /* Set injection rate => Well becomes injector - all produced rates -> 0 */
-    well.setInjectionRate( 6 , 50 );
+    well.setReservoirInjectionRate( 6 , 50 );
     BOOST_CHECK_EQUAL( true  , well.isInjector(6));
     BOOST_CHECK_EQUAL( false , well.isProducer(6));
-    BOOST_CHECK_EQUAL( 50 , well.getInjectionRate(6));
+    BOOST_CHECK_EQUAL( 50 , well.getReservoirInjectionRate(6));
     BOOST_CHECK_EQUAL( 0 , well.getOilRate(6));
     BOOST_CHECK_EQUAL( 0 , well.getGasRate(6));
     BOOST_CHECK_EQUAL( 0 , well.getWaterRate(6));
@@ -221,3 +241,35 @@ BOOST_AUTO_TEST_CASE(addWELSPECS_setData_dataSet) {
     BOOST_CHECK_EQUAL(42, well.getHeadJ());
     BOOST_CHECK_EQUAL(2334.32, well.getRefDepth());
 }
+
+
+BOOST_AUTO_TEST_CASE(XHPLimitDefault) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    Opm::Well well("WELL1", 1, 2, 2334.32, timeMap, 0);
+    
+    well.setBHPLimit( 1 , 100 );
+    BOOST_CHECK_EQUAL( 100 , well.getBHPLimit( 5 ));
+
+    well.setTHPLimit( 1 , 200 );
+    BOOST_CHECK_EQUAL( 200 , well.getTHPLimit( 5 ));
+}
+
+
+
+BOOST_AUTO_TEST_CASE(InjectorType) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    Opm::Well well("WELL1", 1, 2, 2334.32, timeMap, 0);
+    
+    well.setInjectorType( 1 , Opm::WellInjector::WATER );
+    BOOST_CHECK_EQUAL( Opm::WellInjector::WATER , well.getInjectorType( 5 ));
+}
+
+
+BOOST_AUTO_TEST_CASE(InjectorControlMode) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    Opm::Well well("WELL1", 1, 2, 2334.32, timeMap, 0);
+    
+    well.setInjectorControlMode( 1 , Opm::WellInjector::RESV );
+    BOOST_CHECK_EQUAL( Opm::WellInjector::RESV , well.getInjectorControlMode( 5 ));
+}
+

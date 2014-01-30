@@ -47,17 +47,17 @@ namespace Opm {
 
     void EclipseState::initPhases(DeckConstPtr deck) {
         if (deck->hasKeyword("OIL"))
-            phases.insert(PhaseEnum::OIL);
+            phases.insert(Phase::PhaseEnum::OIL);
 
         if (deck->hasKeyword("GAS"))
-            phases.insert(PhaseEnum::GAS);
+            phases.insert(Phase::PhaseEnum::GAS);
 
         if (deck->hasKeyword("WATER"))
-            phases.insert(PhaseEnum::WATER);
+            phases.insert(Phase::PhaseEnum::WATER);
     }
 
 
-    bool EclipseState::hasPhase(enum PhaseEnum phase) const {
+    bool EclipseState::hasPhase(enum Phase::PhaseEnum phase) const {
          return (phases.count(phase) == 1);
     }
 

@@ -102,8 +102,17 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
         BOOST_CHECK_CLOSE(13000/Metric::Time , well1->getOilRate(8) , 0.001);
         
         BOOST_CHECK( well1->isInjector(9));
-        BOOST_CHECK_CLOSE(20000/Metric::Time , well1->getInjectionRate(9) , 0.001);
-        BOOST_CHECK_CLOSE(5000/Metric::Time , well1->getInjectionRate(10) , 0.001);
+        BOOST_CHECK_CLOSE(20000/Metric::Time , well1->getSurfaceInjectionRate(9) , 0.001);
+        BOOST_CHECK_CLOSE(200000/Metric::Time , well1->getReservoirInjectionRate(9) , 0.001);
+        BOOST_CHECK_CLOSE(6891 * Metric::Pressure , well1->getBHPLimit(9) , 0.001); 
+        BOOST_CHECK_CLOSE(0 , well1->getTHPLimit(9) , 0.001); 
+        BOOST_CHECK_CLOSE(123.00 * Metric::Pressure , well1->getBHPLimit(10) , 0.001); 
+        BOOST_CHECK_CLOSE(678.00 * Metric::Pressure , well1->getTHPLimit(10) , 0.001); 
+        
+        BOOST_CHECK_CLOSE(5000/Metric::Time , well1->getSurfaceInjectionRate(12) , 0.001);
+
+        BOOST_CHECK_EQUAL( WellInjector::RESV  , well1->getInjectorControlMode( 9 ));
+        BOOST_CHECK_EQUAL( WellInjector::RATE  , well1->getInjectorControlMode( 11 ));
     }
 }
 
@@ -123,10 +132,13 @@ BOOST_AUTO_TEST_CASE(WellTestCOMPDAT) {
         CompletionSetConstPtr completions = well1->getCompletions(0);
         BOOST_CHECK_EQUAL(0U, completions->size());
 
-
         completions = well1->getCompletions(3);
         BOOST_CHECK_EQUAL(4U, completions->size());
+
         BOOST_CHECK_EQUAL(OPEN, completions->get(3)->getState());
+        BOOST_CHECK_EQUAL(2.2836805555555556e-12 , completions->get(3)->getCF());
+        BOOST_CHECK_EQUAL(0.311/Metric::Length, completions->get(3)->getDiameter());
+        BOOST_CHECK_EQUAL(3.3, completions->get(3)->getSkinFactor());
 
         completions = well1->getCompletions(7);
         BOOST_CHECK_EQUAL(4U, completions->size());
@@ -263,14 +275,14 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
 
     {
         GroupPtr group = sched->getGroup("INJ");
-        BOOST_CHECK_EQUAL( WATER , group->getInjectionPhase( 3 ));
+        BOOST_CHECK_EQUAL( Phase::WATER , group->getInjectionPhase( 3 ));
         BOOST_CHECK_EQUAL( GroupInjection::VREP , group->getInjectionControlMode( 3 ));
         BOOST_CHECK_CLOSE( 10/Metric::Time , group->getSurfaceMaxRate( 3 ) , 0.001);
         BOOST_CHECK_CLOSE( 20/Metric::Time , group->getReservoirMaxRate( 3 ) , 0.001);
         BOOST_CHECK_EQUAL( 0.75 , group->getTargetReinjectFraction( 3 ));
         BOOST_CHECK_EQUAL( 0.95 , group->getTargetVoidReplacementFraction( 3 ));
     
-        BOOST_CHECK_EQUAL( OIL , group->getInjectionPhase( 6 ));
+        BOOST_CHECK_EQUAL( Phase::OIL , group->getInjectionPhase( 6 ));
         BOOST_CHECK_EQUAL( GroupInjection::RATE , group->getInjectionControlMode( 6 ));
         BOOST_CHECK_CLOSE( 1000/Metric::Time , group->getSurfaceMaxRate( 6 ) , 0.0001);
     }
@@ -328,22 +340,22 @@ BOOST_AUTO_TEST_CASE(WellTestWELSPECSDataLoaded) {
         WellConstPtr well1 = sched->getWell("W_1");
         BOOST_CHECK(!well1->hasBeenDefined(2));
         BOOST_CHECK(well1->hasBeenDefined(3));
-        BOOST_CHECK_EQUAL(30, well1->getHeadI());
-        BOOST_CHECK_EQUAL(37, well1->getHeadJ());
+        BOOST_CHECK_EQUAL(29, well1->getHeadI());
+        BOOST_CHECK_EQUAL(36, well1->getHeadJ());
         BOOST_CHECK_EQUAL(3.33, well1->getRefDepth());
 
         WellConstPtr well2 = sched->getWell("W_2");
         BOOST_CHECK(!well2->hasBeenDefined(2));
         BOOST_CHECK(well2->hasBeenDefined(3));
-        BOOST_CHECK_EQUAL(20, well2->getHeadI());
-        BOOST_CHECK_EQUAL(51, well2->getHeadJ());
+        BOOST_CHECK_EQUAL(19, well2->getHeadI());
+        BOOST_CHECK_EQUAL(50, well2->getHeadJ());
         BOOST_CHECK_EQUAL(3.92, well2->getRefDepth());
 
         WellConstPtr well3 = sched->getWell("W_3");
         BOOST_CHECK(!well3->hasBeenDefined(2));
         BOOST_CHECK(well3->hasBeenDefined(3));
-        BOOST_CHECK_EQUAL(31, well3->getHeadI());
-        BOOST_CHECK_EQUAL(18, well3->getHeadJ());
+        BOOST_CHECK_EQUAL(30, well3->getHeadI());
+        BOOST_CHECK_EQUAL(17, well3->getHeadJ());
         BOOST_CHECK_EQUAL(2.33, well3->getRefDepth());
 
     }
