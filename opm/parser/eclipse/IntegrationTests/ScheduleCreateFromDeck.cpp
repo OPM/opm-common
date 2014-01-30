@@ -71,6 +71,9 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
 
     {
         WellPtr well2 = sched->getWell("W_2");
+        BOOST_CHECK_EQUAL( 0 , well2->getResVRate(2));
+        BOOST_CHECK_CLOSE( 777/Metric::Time , well2->getResVRate(7) , 0.0001);
+        BOOST_CHECK_EQUAL( 0 , well2->getResVRate(8));
 
         BOOST_CHECK_EQUAL( WellCommon::SHUT , well2->getStatus(3));
     }
@@ -82,7 +85,7 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
         BOOST_CHECK_EQUAL( WellCommon::AUTO , well3->getStatus(3));
 
         BOOST_CHECK_EQUAL( 0 , well3->getLiquidRate(2));
-        BOOST_CHECK_EQUAL( 999/Metric::Time , well3->getLiquidRate(7));
+        BOOST_CHECK_CLOSE( 999/Metric::Time , well3->getLiquidRate(7) , 0.001);
         BOOST_CHECK_EQUAL( 0 , well3->getLiquidRate(8));
     }
 

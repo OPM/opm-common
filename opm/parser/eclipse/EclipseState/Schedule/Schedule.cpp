@@ -176,12 +176,14 @@ namespace Opm {
             well->setInPredictionMode(currentStep, isPredictionMode);
             {
                 double liquidRate = 0;
+                double resVRate = 0;
                 
                 if (isPredictionMode) {
                     liquidRate = record->getItem("LRAT")->getSIDouble(0);
-                    std::cout << "liquidrate " << liquidRate << std::endl;
+                    resVRate = record->getItem("RESV")->getSIDouble(0);
                 }
                 well->setLiquidRate( currentStep , liquidRate );
+                well->setResVRate( currentStep , resVRate );
             }
         }
     }

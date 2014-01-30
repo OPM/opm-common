@@ -32,6 +32,7 @@ namespace Opm {
           m_gasRate(new DynamicState<double>(timeMap, 0.0)),
           m_waterRate(new DynamicState<double>(timeMap, 0.0)),
           m_liquidRate(new DynamicState<double>(timeMap, 0.0)),
+          m_resVRate(new DynamicState<double>(timeMap, 0.0)),
           m_surfaceInjectionRate(new DynamicState<double>(timeMap, 0.0)),
           m_reservoirInjectionRate(new DynamicState<double>(timeMap, 0.0)),
           m_BHPLimit(new DynamicState<double>(timeMap , 0.0)),
@@ -139,6 +140,15 @@ namespace Opm {
 
     void Well::setLiquidRate(size_t timeStep, double liquidRate) {
         m_liquidRate->add(timeStep, liquidRate);
+        switch2Producer( timeStep );
+    }
+
+    double Well::getResVRate(size_t timeStep) const {
+        return m_resVRate->get(timeStep);
+    }
+
+    void Well::setResVRate(size_t timeStep, double resvRate) {
+        m_resVRate->add(timeStep, resvRate);
         switch2Producer( timeStep );
     }
 
