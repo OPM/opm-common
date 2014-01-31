@@ -179,14 +179,22 @@ namespace Opm {
     }
 
 
-    void Parser::parseStream(std::shared_ptr<ParserState> parserState) const {
+    bool Parser::parseStream(std::shared_ptr<ParserState> parserState) const {
         bool verbose = false;
+        bool stopParsing = false;
 
         if (parserState->inputstream) {
             while (true) {
                 bool streamOK = tryParseKeyword(parserState);
                 if (parserState->rawKeyword) {
-                    if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::include) {
+                    if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::end) {
+                        stopParsing = true;
+                        break;
+                    }
+                    else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::endinclude) {
+                        break;
+                    }
+                    else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::include) {
                         RawRecordConstPtr firstRecord = parserState->rawKeyword->getRecord(0);
                         std::string includeFileString = firstRecord->getItem(0);
                         boost::filesystem::path includeFile(includeFileString);
@@ -198,7 +206,8 @@ namespace Opm {
                             std::cout << parserState->rawKeyword->getKeywordName() << "  " << includeFile << std::endl;
                         
                         std::shared_ptr<ParserState> newParserState (new ParserState(includeFile.string(), parserState->deck, parserState->rootPath, parserState->strictParsing));
-                        parseStream(newParserState);
+                        stopParsing = parseStream(newParserState);
+                        if (stopParsing) break;
                     } else {
                         if (verbose)
                             std::cout << parserState->rawKeyword->getKeywordName() << std::endl;
@@ -224,6 +233,7 @@ namespace Opm {
             }
         } else
             throw std::invalid_argument("Failed to open file: " + parserState->dataFile.string());
+        return stopParsing;
     }
 
 
@@ -282,6 +292,12 @@ namespace Opm {
     }
 
 
+    std::string Parser::doSpecialHandlingForTitleKeyword(std::string line, std::shared_ptr<ParserState> parserState) const {
+        if ((parserState->rawKeyword != NULL) && (parserState->rawKeyword->getKeywordName() == "TITLE"))
+                line = line.append("/");
+        return line;
+    }
+
     bool Parser::tryParseKeyword(std::shared_ptr<ParserState> parserState) const {
         std::string line;
 
@@ -292,6 +308,7 @@ namespace Opm {
 
         while (std::getline(*parserState->inputstream, line)) {
             boost::algorithm::trim_right(line); // Removing garbage (eg. \r)
+            line = doSpecialHandlingForTitleKeyword(line, parserState);
             std::string keywordString;
             parserState->lineNR++;
             if (parserState->rawKeyword == NULL) {

@@ -21,12 +21,14 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <iostream>
+#include <boost/algorithm/string/join.hpp>
 
 namespace Opm {
     
     EclipseState::EclipseState(DeckConstPtr deck) {
         initPhases(deck);
         initSchedule(deck);
+        initTitle(deck);
     }
     
 
@@ -34,6 +36,10 @@ namespace Opm {
         return schedule;
     }
 
+
+    std::string EclipseState::getTitle() const {
+        return m_title;
+    }
 
     void EclipseState::initSchedule(DeckConstPtr deck) {
         schedule = ScheduleConstPtr( new Schedule(deck) );
@@ -56,4 +62,13 @@ namespace Opm {
          return (phases.count(phase) == 1);
     }
 
+    void EclipseState::initTitle(DeckConstPtr deck){
+        if (deck->hasKeyword("TITLE")) {
+            DeckKeywordConstPtr titleKeyword = deck->getKeyword("TITLE");
+            DeckRecordConstPtr record = titleKeyword->getRecord(0);
+            DeckItemPtr item = record->getItem(0);
+            std::vector<std::string> itemValue = item->getStringData();
+            m_title = boost::algorithm::join(itemValue, " ");
+        }
+    }
 }

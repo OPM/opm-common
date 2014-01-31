@@ -34,13 +34,16 @@ namespace Opm {
         EclipseState(DeckConstPtr deck);
         ScheduleConstPtr getSchedule() const;
         bool hasPhase(enum Phase::PhaseEnum phase) const;
+        std::string getTitle() const;
         
     private:
         void initSchedule(DeckConstPtr deck);
         void initPhases(DeckConstPtr deck);
+        void initTitle(DeckConstPtr deck);
 
         ScheduleConstPtr schedule;
         std::set<enum Phase::PhaseEnum> phases;
+        std::string m_title;
     };
 
     typedef std::shared_ptr<EclipseState> EclipseStatePtr;

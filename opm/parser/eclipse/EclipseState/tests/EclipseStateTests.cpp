@@ -39,6 +39,9 @@ DeckPtr createDeck() {
     DeckKeywordPtr oilKeyword(new DeckKeyword("OIL"));
     DeckKeywordPtr gasKeyword(new DeckKeyword("GAS"));
 
+    DeckKeywordPtr titleKeyword(new DeckKeyword("TITLE"));
+    DeckRecordPtr  titleRecord(new DeckRecord());
+    DeckStringItemPtr titleItem(new DeckStringItem("TITLE") );
 
     DeckKeywordPtr scheduleKeyword(new DeckKeyword("SCHEDULE"));
     DeckKeywordPtr startKeyword(new DeckKeyword("START"));
@@ -57,10 +60,16 @@ DeckPtr createDeck() {
     startRecord->addItem( yearItem );
     startKeyword->addRecord( startRecord );
 
+    titleItem->push_back( "The" );
+    titleItem->push_back( "title" );
+    titleRecord->addItem( titleItem );
+    titleKeyword->addRecord( titleRecord );
+
     deck->addKeyword( oilKeyword );
     deck->addKeyword( gasKeyword );
     deck->addKeyword( startKeyword );
     deck->addKeyword( scheduleKeyword );
+    deck->addKeyword( titleKeyword );
 
     return deck;
 }
@@ -84,4 +93,12 @@ BOOST_AUTO_TEST_CASE(PhasesCorrect) {
     BOOST_CHECK(  state.hasPhase( Phase::PhaseEnum::OIL ));
     BOOST_CHECK(  state.hasPhase( Phase::PhaseEnum::GAS ));
     BOOST_CHECK( !state.hasPhase( Phase::PhaseEnum::WATER ));
+}
+
+
+BOOST_AUTO_TEST_CASE(TitleCorrect) {
+    DeckPtr deck = createDeck();
+    EclipseState state(deck);
+
+    BOOST_CHECK_EQUAL( state.getTitle(), "The title");
 }
