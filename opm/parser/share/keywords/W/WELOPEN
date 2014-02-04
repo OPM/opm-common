@@ -1,5 +1,5 @@
 {"name" : "WELOPEN", "items" : [
-    {"name" : "well" , "value_type" : "STRING"},
+    {"name" : "WELL" , "value_type" : "STRING"},
     {"name" : "STATUS" , "value_type" : "STRING" , "default" : "OPEN"},
     {"name" : "I"  , "value_type" : "INT" , "default" : -1},
     {"name" : "J"  , "value_type" : "INT" , "default" : -1},

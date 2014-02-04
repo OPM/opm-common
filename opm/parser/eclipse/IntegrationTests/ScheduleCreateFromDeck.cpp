@@ -408,3 +408,27 @@ BOOST_AUTO_TEST_CASE(WellTestWELSPECS_InvalidConfig_Throws) {
 
 }
 
+BOOST_AUTO_TEST_CASE(WellTestWELOPEN_ConfigWithIndexes_Throws) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELOPEN_INVALID");
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
+    BOOST_CHECK_THROW(new Schedule(deck), std::logic_error);
+}
+
+
+BOOST_AUTO_TEST_CASE(WellTestWELOPENControlsSet) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELOPEN");
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
+    ScheduleConstPtr sched(new Schedule(deck));
+
+    WellConstPtr well1 = sched->getWell("W_1");
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, sched->getWell("W_1")->getStatus(0));
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, sched->getWell("W_1")->getStatus(1));
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, sched->getWell("W_1")->getStatus(2));
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::STOP, sched->getWell("W_1")->getStatus(3));
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::AUTO, sched->getWell("W_1")->getStatus(4));
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::STOP, sched->getWell("W_1")->getStatus(5));
+}
+
+

@@ -88,6 +88,8 @@ namespace Opm {
             if (keyword->name() == "COMPDAT")
                 handleCOMPDAT(keyword, currentStep);
 
+            if (keyword->name() == "WELOPEN")
+                handleWELOPEN(keyword, currentStep);
 
             if (keyword->name() == "GRUPTREE")
                 handleGRUPTREE(keyword, currentStep);
@@ -284,6 +286,22 @@ namespace Opm {
             well->setStatus( currentStep , status );
             well->setSurfaceInjectionRate( currentStep , injectionRate );
             well->setInPredictionMode(currentStep, false );
+        }
+    }
+
+    void Schedule::handleWELOPEN(DeckKeywordConstPtr keyword, size_t currentStep) {
+        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
+            DeckRecordConstPtr record = keyword->getRecord(recordNr);
+            const std::string& wellName = record->getItem("WELL")->getString(0);
+            WellPtr well = getWell(wellName);
+
+            for (size_t i=2; i<7; i++) {
+                if (record->getItem(i)->getInt(0) > 0 ) {
+                    throw std::logic_error("Error processing WELOPEN keyword, specifying specific connections is not supported yet.");
+                }
+            }
+            WellCommon::StatusEnum status = WellCommon::StatusFromString( record->getItem("STATUS")->getString(0));
+            well->setStatus(currentStep, status);
         }
     }
 
