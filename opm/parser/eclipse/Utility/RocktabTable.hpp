@@ -54,20 +54,20 @@ namespace Opm {
         const std::vector<double> &getPoreVolumeMultiplierColumn() const
         { return ParentType::getColumn(1); }
 
-        const std::vector<double> &getTransmisibilityMultiplierColumn() const
+        const std::vector<double> &getTransmissibilityMultiplierColumn() const
         { return ParentType::getColumn(2); }
 
-        const std::vector<double> &getTransmisibilityMultiplierXColumn() const
+        const std::vector<double> &getTransmissibilityMultiplierXColumn() const
         { return ParentType::getColumn(2); }
 
-        const std::vector<double> &getTransmisibilityMultiplierYColumn() const
+        const std::vector<double> &getTransmissibilityMultiplierYColumn() const
         {
             if (!m_isDirectional)
                 return ParentType::getColumn(2);
             return ParentType::getColumn(3);
         }
 
-        const std::vector<double> &getTransmisibilityMultiplierZColumn() const
+        const std::vector<double> &getTransmissibilityMultiplierZColumn() const
         {
             if (!m_isDirectional)
                 return ParentType::getColumn(2);
