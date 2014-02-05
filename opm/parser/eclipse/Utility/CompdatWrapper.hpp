@@ -92,9 +92,9 @@ namespace Opm {
         { return m_keyword->getRecord(wellIdx)->getItem(6)->getInt(0); }
 
         /*!
-         * \brief Return the transmiscibility factor to be used for the connection
+         * \brief Return the transmissibility factor to be used for the connection
          */
-        double transmiscibilityFactor(int wellIdx) const
+        double transmissibilityFactor(int wellIdx) const
         { return m_keyword->getRecord(wellIdx)->getItem(7)->getSIDouble(0); }
 
         /*!
