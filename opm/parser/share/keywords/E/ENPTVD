@@ -1,0 +1,5 @@
+{"name" : "ENPTVD" , "size" : {"keyword" : "ENDSCALE" , "item" : "NUM_TABLES"},
+        "items" : [
+            {"name":"DATA", "value_type":"FLOAT", "size_type" : "ALL" , "dimension" : ["L","1","1","1","1","1","1","1","1"]}
+         ]
+}
