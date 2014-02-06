@@ -144,8 +144,8 @@ namespace Opm {
         if (jsonConfig.has_item("description")) {
             m_Description = jsonConfig.get_string("description");
         }
-
-        if ((m_fixedSize == 0 && m_keywordSizeType == FIXED) || (m_action != INTERNALIZE))
+        
+        if ((m_keywordSizeType == FIXED && m_fixedSize == 0) || (m_action != INTERNALIZE))
             return;
         else {
             if (numItems() == 0)
