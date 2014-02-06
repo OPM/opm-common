@@ -221,7 +221,7 @@ namespace Opm {
         if (m_record->size())
             throw std::invalid_argument("Keyword:" + getName() + " already has items - can not add a data item.");
 
-        if ((m_fixedSize == 1U) && (m_keywordSizeType == FIXED)) {
+        if ((m_keywordSizeType == FIXED) && (m_fixedSize == 1U)) {
             addItem(item);
             m_isDataKeyword = true;
         } else
