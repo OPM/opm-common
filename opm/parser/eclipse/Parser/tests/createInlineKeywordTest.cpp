@@ -16,6 +16,7 @@ using namespace Opm;
 void createHeader(std::ofstream& of , const std::string& test_module) {
     of << "#define BOOST_TEST_MODULE "  << test_module << std::endl;
     of << "#include <boost/test/unit_test.hpp>" << std::endl;
+    of << "#include <memory>" << std::endl;
     of << "#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>" << std::endl;
     of << "#include <opm/parser/eclipse/Parser/ParserItem.hpp>" << std::endl;
     of << "#include <opm/parser/eclipse/Parser/ParserIntItem.hpp>" << std::endl;
@@ -24,7 +25,7 @@ void createHeader(std::ofstream& of , const std::string& test_module) {
     of << "#include <opm/parser/eclipse/Parser/ParserRecord.hpp>" << std::endl;
     of << "#include <opm/parser/eclipse/Units/UnitSystem.hpp>" << std::endl;
     of << "using namespace Opm;"  << std::endl << std::endl;
-    of << "UnitSystem * unitSystem = UnitSystem::newMETRIC();" << std::endl;
+    of << "std::shared_ptr<UnitSystem> unitSystem( UnitSystem::newMETRIC() );" << std::endl;
 }
 
 
