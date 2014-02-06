@@ -59,9 +59,10 @@ void testKeyword(const boost::filesystem::path& file , std::ofstream& of) {
             of << "            std::string dimString = item->getDimension(j);" << std::endl;
             of << "            BOOST_CHECK_NO_THROW( unitSystem->getNewDimension( dimString ));" << std::endl;
             of << "         }" << std::endl; 
-            of << "    }" << std::endl; 
+            of << "    }" << std::endl;
             of << "}" << std::endl;
         }
+        of << "  delete inlineKeyword;" << std::endl;
         endTest(of);
     }
 }
