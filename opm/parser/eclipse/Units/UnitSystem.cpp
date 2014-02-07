@@ -142,7 +142,8 @@ namespace Opm {
         system->addDimension("m"         , Metric::Mass );
         system->addDimension("K"         , Metric::Permeability );
         system->addDimension("Rs"        , Metric::DissolvedGasRatio);
-        system->addDimension("FlowVolume", Metric::FlowVolume );
+        system->addDimension("LiquidVolume", Metric::LiquidVolume );
+        system->addDimension("GasVolume", Metric::GasVolume );
         system->addDimension("Rho"       , Metric::Density );
         system->addDimension("mu"        , Metric::Viscosity);
         system->addDimension("Timestep"  , Metric::Timestep);
@@ -161,7 +162,8 @@ namespace Opm {
         system->addDimension("m"    , Field::Mass);
         system->addDimension("K"    , Field::Permeability );
         system->addDimension("Rs"   , Field::DissolvedGasRatio );
-        system->addDimension("FlowVolume"    , Field::FlowVolume );
+        system->addDimension("LiquidVolume", Field::LiquidVolume );
+        system->addDimension("GasVolume", Field::GasVolume );
         system->addDimension("Rho"  , Field::Density );
         system->addDimension("mu"   , Field::Viscosity);
         system->addDimension("Timestep", Field::Timestep);
