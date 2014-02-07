@@ -145,7 +145,7 @@ namespace Opm {
         system->addDimension("OilDissolutionFactor", Metric::OilDissolutionFactor);
         system->addDimension("LiquidVolume", Metric::LiquidVolume );
         system->addDimension("GasVolume" , Metric::GasVolume );
-        system->addDimension("Rho"       , Metric::Density );
+        system->addDimension("Density"   , Metric::Density );
         system->addDimension("Viscosity" , Metric::Viscosity);
         system->addDimension("Timestep"  , Metric::Timestep);
         return system;
@@ -166,7 +166,7 @@ namespace Opm {
         system->addDimension("OilDissolutionFactor", Field::OilDissolutionFactor);
         system->addDimension("LiquidVolume", Field::LiquidVolume );
         system->addDimension("GasVolume", Field::GasVolume );
-        system->addDimension("Rho", Field::Density );
+        system->addDimension("Density", Field::Density );
         system->addDimension("Viscosity", Field::Viscosity);
         system->addDimension("Timestep", Field::Timestep);
         return system;

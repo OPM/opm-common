@@ -1,4 +1,4 @@
 {"name" : "DENSITY", "size" : {"keyword":"TABDIMS", "item":"NTPVT" }, "items" : 
- [{"name": "OIL"   , "value_type" : "FLOAT" , "default": 600     , "dimension" : "Rho"}, 
-  {"name": "WATER" , "value_type" : "FLOAT" , "default": 999.014 , "dimension" : "Rho"}, 
-  {"name": "GAS"   , "value_type" : "FLOAT" , "default": 1       , "dimension" : "Rho"}]}
+ [{"name": "OIL"   , "value_type" : "FLOAT" , "default": 600     , "dimension" : "Density"}, 
+  {"name": "WATER" , "value_type" : "FLOAT" , "default": 999.014 , "dimension" : "Density"}, 
+  {"name": "GAS"   , "value_type" : "FLOAT" , "default": 1       , "dimension" : "Density"}]}
