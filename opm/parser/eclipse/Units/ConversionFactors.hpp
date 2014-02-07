@@ -51,7 +51,8 @@ namespace Opm {
         const double Time              = 86400;
         const double Mass              = 1.0;
         const double Permeability      = 9.869233e-16;
-        const double DissolvedGasRatio = 1.0;
+        const double GasDissolutionFactor = 1.0;
+        const double OilDissolutionFactor = 1.0;
         const double LiquidVolume      = 1.0;
         const double GasVolume         = 1.0;
         const double Density           = 1.0;
@@ -66,7 +67,8 @@ namespace Opm {
          const double Time              = 86400;
          const double Mass              = 0.45359237;
          const double Permeability      = 9.869233e-16;
-         const double DissolvedGasRatio = 178.1076;            // Mscf / stb -> m^3/m^3
+         const double GasDissolutionFactor = 178.1076;         // Mscf / stb -> m^3/m^3
+         const double OilDissolutionFactor = 1.0/178.1076;     // stb / Mscf -> m^3/m^3
          const double LiquidVolume      = 0.158987294;         // STB -> m^3
          const double GasVolume         = 28.316847;           // MCFT -> m^3
          const double Density           = 16.01846;            // lb/ft^3 -> kg / m^3

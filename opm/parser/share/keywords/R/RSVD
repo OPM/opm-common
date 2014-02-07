@@ -2,6 +2,6 @@
         "items" : [{"name" : "table" , 
                    "value_type" : "FLOAT" , 
                    "size_type" : "ALL",
-                   "dimension" : ["Length" , "Rs"]}]}
+                   "dimension" : ["Length" , "GasDissolutionFactor"]}]}
 
         

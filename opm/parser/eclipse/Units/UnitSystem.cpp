@@ -136,16 +136,17 @@ namespace Opm {
         UnitSystem * system = new UnitSystem("Metric");
         
         system->addDimension("1"         , 1.0);
-        system->addDimension("Pressure"         , Metric::Pressure );
-        system->addDimension("Length"         , Metric::Length);
-        system->addDimension("Time"         , Metric::Time );
+        system->addDimension("Pressure"  , Metric::Pressure );
+        system->addDimension("Length"    , Metric::Length);
+        system->addDimension("Time"      , Metric::Time );
         system->addDimension("m"         , Metric::Mass );
         system->addDimension("K"         , Metric::Permeability );
-        system->addDimension("Rs"        , Metric::DissolvedGasRatio);
+        system->addDimension("GasDissolutionFactor", Metric::GasDissolutionFactor);
+        system->addDimension("OilDissolutionFactor", Metric::OilDissolutionFactor);
         system->addDimension("LiquidVolume", Metric::LiquidVolume );
-        system->addDimension("GasVolume", Metric::GasVolume );
+        system->addDimension("GasVolume" , Metric::GasVolume );
         system->addDimension("Rho"       , Metric::Density );
-        system->addDimension("Viscosity"        , Metric::Viscosity);
+        system->addDimension("Viscosity" , Metric::Viscosity);
         system->addDimension("Timestep"  , Metric::Timestep);
         return system;
     }
@@ -156,12 +157,13 @@ namespace Opm {
         UnitSystem * system = new UnitSystem("Field");
         
         system->addDimension("1"    , 1.0);
-        system->addDimension("Pressure"    , Field::Pressure );
-        system->addDimension("Length"    , Field::Length);
-        system->addDimension("Time"    , Field::Time);
+        system->addDimension("Pressure", Field::Pressure );
+        system->addDimension("Length", Field::Length);
+        system->addDimension("Time" , Field::Time);
         system->addDimension("m"    , Field::Mass);
         system->addDimension("K"    , Field::Permeability );
-        system->addDimension("Rs"   , Field::DissolvedGasRatio );
+        system->addDimension("GasDissolutionFactor" , Field::GasDissolutionFactor);
+        system->addDimension("OilDissolutionFactor", Field::OilDissolutionFactor);
         system->addDimension("LiquidVolume", Field::LiquidVolume );
         system->addDimension("GasVolume", Field::GasVolume );
         system->addDimension("Rho"  , Field::Density );
