@@ -8,7 +8,7 @@
     {"name" : "SAT_TABLE" , "value_type" : "INT" , "default" : 0},
     {"name" : "CF"     , "value_type" : "FLOAT", "dimension" : "Viscosity*LiquidVolume/Time*Pressure"},
     {"name" : "DIAMETER" , "value_type" : "FLOAT", "dimension" : "Length"},
-    {"name" : "Kh" , "value_type" : "FLOAT", "dimension" : "K" , "default" : -1},
+    {"name" : "Kh" , "value_type" : "FLOAT", "dimension" : "Permeability" , "default" : -1},
     {"name" : "SKIN" , "value_type" : "FLOAT", "dimension" : "1" , "default" : 0},
     {"name" : "D_FACTOR" , "value_type" : "FLOAT", "dimension" : "1" },
     {"name" : "DIR" , "value_type" : "STRING" , "default" : "Z"},

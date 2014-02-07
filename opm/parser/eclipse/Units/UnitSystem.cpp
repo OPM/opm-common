@@ -140,7 +140,7 @@ namespace Opm {
         system->addDimension("Length"    , Metric::Length);
         system->addDimension("Time"      , Metric::Time );
         system->addDimension("m"         , Metric::Mass );
-        system->addDimension("K"         , Metric::Permeability );
+        system->addDimension("Permeability", Metric::Permeability );
         system->addDimension("GasDissolutionFactor", Metric::GasDissolutionFactor);
         system->addDimension("OilDissolutionFactor", Metric::OilDissolutionFactor);
         system->addDimension("LiquidVolume", Metric::LiquidVolume );
@@ -161,13 +161,13 @@ namespace Opm {
         system->addDimension("Length", Field::Length);
         system->addDimension("Time" , Field::Time);
         system->addDimension("m"    , Field::Mass);
-        system->addDimension("K"    , Field::Permeability );
+        system->addDimension("Permeability", Field::Permeability );
         system->addDimension("GasDissolutionFactor" , Field::GasDissolutionFactor);
         system->addDimension("OilDissolutionFactor", Field::OilDissolutionFactor);
         system->addDimension("LiquidVolume", Field::LiquidVolume );
         system->addDimension("GasVolume", Field::GasVolume );
-        system->addDimension("Rho"  , Field::Density );
-        system->addDimension("Viscosity"   , Field::Viscosity);
+        system->addDimension("Rho", Field::Density );
+        system->addDimension("Viscosity", Field::Viscosity);
         system->addDimension("Timestep", Field::Timestep);
         return system;
     }
