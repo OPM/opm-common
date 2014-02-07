@@ -24,7 +24,9 @@
 
 #include <opm/parser/eclipse/Units/ConversionFactors.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
+
 #include <vector>
+#include <limits>
 
 
 namespace Opm {
@@ -148,6 +150,7 @@ namespace Opm {
         system->addDimension("Density"   , Metric::Density );
         system->addDimension("Viscosity" , Metric::Viscosity);
         system->addDimension("Timestep"  , Metric::Timestep);
+        system->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         return system;
     }
 
@@ -169,6 +172,7 @@ namespace Opm {
         system->addDimension("Density", Field::Density );
         system->addDimension("Viscosity", Field::Viscosity);
         system->addDimension("Timestep", Field::Timestep);
+        system->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         return system;
     }
 

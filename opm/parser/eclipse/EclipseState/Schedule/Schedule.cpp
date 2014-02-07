@@ -243,8 +243,11 @@ namespace Opm {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellName = record->getItem("WELL")->getString(0);
             WellPtr well = getWell(wellName);
-            double surfaceInjectionRate               = record->getItem("RATE")->getSIDouble(0);
-            double reservoirInjectionRate             = record->getItem("RESV")->getSIDouble(0);
+
+#warning TODO: convert these two rates to SI depending on what we control for!
+            double surfaceInjectionRate               = record->getItem("RATE")->getRawDouble(0);
+            double reservoirInjectionRate             = record->getItem("RESV")->getRawDouble(0);
+
             double BHPLimit                           = record->getItem("BHP")->getSIDouble(0);
             double THPLimit                           = record->getItem("THP")->getSIDouble(0);
             WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( record->getItem("CMODE")->getString(0));
@@ -280,7 +283,10 @@ namespace Opm {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellName = record->getItem("WELL")->getString(0);
             WellPtr well = getWell(wellName);
-            double injectionRate  = record->getItem("RATE")->getSIDouble(0);
+
+#warning TODO: convert this rate to SI depending on what we control for!
+            double injectionRate  = record->getItem("RATE")->getRawDouble(0);
+
             WellCommon::StatusEnum status = WellCommon::StatusFromString( record->getItem("STATUS")->getString(0));
             
             well->setStatus( currentStep , status );
@@ -320,8 +326,9 @@ namespace Opm {
                 GroupInjection::ControlEnum controlMode = GroupInjection::ControlEnumFromString( record->getItem("CONTROL_MODE")->getString(0) );
                 group->setInjectionControlMode( currentStep , controlMode );
             }
-            group->setSurfaceMaxRate( currentStep , record->getItem("SURFACE_TARGET")->getSIDouble(0));
-            group->setReservoirMaxRate( currentStep , record->getItem("RESV_TARGET")->getSIDouble(0));
+#warning TODO: convert these context dependent rates to SI
+            group->setSurfaceMaxRate( currentStep , record->getItem("SURFACE_TARGET")->getRawDouble(0));
+            group->setReservoirMaxRate( currentStep , record->getItem("RESV_TARGET")->getRawDouble(0));
             group->setTargetReinjectFraction( currentStep , record->getItem("REINJ_TARGET")->getRawDouble(0));
             group->setTargetVoidReplacementFraction( currentStep , record->getItem("VOIDAGE_TARGET")->getRawDouble(0));
         }

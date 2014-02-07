@@ -21,6 +21,7 @@
 
 #include <string>
 #include <stdexcept>
+#include <cmath>
 
 namespace Opm {
 
@@ -40,6 +41,9 @@ namespace Opm {
 
     
     double Dimension::getSIScaling() const {
+        if (!std::isfinite(m_SIfactor))
+            throw std::logic_error("The DeckItem contains a field with a context dependent unit. "
+                                   "Use getRawDoubleData() and convert the returned value manually!");
         return m_SIfactor;
     }
 
@@ -58,11 +62,13 @@ namespace Opm {
 
 
     bool Dimension::equal(const Dimension& other) const {
-        if ((m_name == other.m_name) && 
-            (m_SIfactor == other.m_SIfactor))
-            return true;
-        else
+        if (m_name != other.m_name)
             return false;
+        if (m_SIfactor == other.m_SIfactor)
+            return true;
+        if (std::isnan(m_SIfactor) && std::isnan(other.m_SIfactor))
+            return true;
+        return false;
     }
 
 }
