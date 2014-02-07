@@ -6,7 +6,7 @@
     {"name" : "K2" , "value_type" : "INT" },
     {"name" : "STATE" , "value_type" : "STRING" , "default" : "OPEN"},
     {"name" : "SAT_TABLE" , "value_type" : "INT" , "default" : 0},
-    {"name" : "CF"     , "value_type" : "FLOAT", "dimension" : "mu*LiquidVolume/Time*Pressure"},
+    {"name" : "CF"     , "value_type" : "FLOAT", "dimension" : "Viscosity*LiquidVolume/Time*Pressure"},
     {"name" : "DIAMETER" , "value_type" : "FLOAT", "dimension" : "Length"},
     {"name" : "Kh" , "value_type" : "FLOAT", "dimension" : "K" , "default" : -1},
     {"name" : "SKIN" , "value_type" : "FLOAT", "dimension" : "1" , "default" : 0},
