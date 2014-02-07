@@ -108,7 +108,7 @@ namespace Opm {
         UnitSystem * system = new UnitSystem("Metric");
         
         system->addDimension("1" , 1);
-        system->addDimension("L" , 1);
+        system->addDimension("Length" , 1);
         system->addDimension("Time" , 86400 );
         system->addDimension("m" , 1 );
         system->addDimension("P" , 100000 );
@@ -125,7 +125,7 @@ namespace Opm {
         UnitSystem * system = new UnitSystem("Field");
         
         system->addDimension("1" , 1);
-        system->addDimension("L" , 0.3048);
+        system->addDimension("Length" , 0.3048);
         system->addDimension("Time" , 86400 );
         system->addDimension("m" , 0.45359237 );
         system->addDimension("P" , 6894.76 );
