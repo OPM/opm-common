@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(UnitSystemParseInvalidThrows) {
 void checkSystemHasRequiredDimensions(std::shared_ptr<const UnitSystem> system) {
     BOOST_CHECK( system->hasDimension("1"));
     BOOST_CHECK( system->hasDimension("Length"));
-    BOOST_CHECK( system->hasDimension("m"));
+    BOOST_CHECK( system->hasDimension("Mass"));
     BOOST_CHECK( system->hasDimension("Time"));
     BOOST_CHECK( system->hasDimension("Permeability"));
     BOOST_CHECK( system->hasDimension("Pressure"));
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(CreateMetricSystem) {
     checkSystemHasRequiredDimensions( system );
 
     BOOST_CHECK_EQUAL( Metric::Length       , system->getDimension("Length")->getSIScaling() );
-    BOOST_CHECK_EQUAL( Metric::Mass         , system->getDimension("m")->getSIScaling() );
+    BOOST_CHECK_EQUAL( Metric::Mass         , system->getDimension("Mass")->getSIScaling() );
     BOOST_CHECK_EQUAL( Metric::Time         , system->getDimension("Time")->getSIScaling() );
     BOOST_CHECK_EQUAL( Metric::Permeability , system->getDimension("Permeability")->getSIScaling() );
     BOOST_CHECK_EQUAL( Metric::Pressure     , system->getDimension("Pressure")->getSIScaling() );
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(CreateFieldSystem) {
     checkSystemHasRequiredDimensions( system );
 
     BOOST_CHECK_EQUAL( Field::Length       , system->getDimension("Length")->getSIScaling() );
-    BOOST_CHECK_EQUAL( Field::Mass         , system->getDimension("m")->getSIScaling() );
+    BOOST_CHECK_EQUAL( Field::Mass         , system->getDimension("Mass")->getSIScaling() );
     BOOST_CHECK_EQUAL( Field::Time         , system->getDimension("Time")->getSIScaling() );
     BOOST_CHECK_EQUAL( Field::Permeability , system->getDimension("Permeability")->getSIScaling() );
     BOOST_CHECK_EQUAL( Field::Pressure     , system->getDimension("Pressure")->getSIScaling() );

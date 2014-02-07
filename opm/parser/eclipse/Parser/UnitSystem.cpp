@@ -110,7 +110,7 @@ namespace Opm {
         system->addDimension("1" , 1);
         system->addDimension("Length" , 1);
         system->addDimension("Time" , 86400 );
-        system->addDimension("m" , 1 );
+        system->addDimension("Mass" , 1 );
         system->addDimension("Pressure" , 100000 );
         system->addDimension("Permeability" , 9.869233e-10 );
         system->addDimension("Viscosity" , 0.001); // viscosity. ECLiPSE uses cP for metric units
@@ -127,7 +127,7 @@ namespace Opm {
         system->addDimension("1" , 1);
         system->addDimension("Length" , 0.3048);
         system->addDimension("Time" , 86400 );
-        system->addDimension("m" , 0.45359237 );
+        system->addDimension("Mass" , 0.45359237 );
         system->addDimension("Pressure" , 6894.76 );
         system->addDimension("Permeability" , 9.869233e-10 );
         system->addDimension("Viscosity" , 0.001); // viscosity. ECLiPSE uses cP for field units
