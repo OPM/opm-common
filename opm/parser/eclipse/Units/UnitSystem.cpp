@@ -136,7 +136,7 @@ namespace Opm {
         UnitSystem * system = new UnitSystem("Metric");
         
         system->addDimension("1"         , 1.0);
-        system->addDimension("P"         , Metric::Pressure );
+        system->addDimension("Pressure"         , Metric::Pressure );
         system->addDimension("Length"         , Metric::Length);
         system->addDimension("Time"         , Metric::Time );
         system->addDimension("m"         , Metric::Mass );
@@ -156,7 +156,7 @@ namespace Opm {
         UnitSystem * system = new UnitSystem("Field");
         
         system->addDimension("1"    , 1.0);
-        system->addDimension("P"    , Field::Pressure );
+        system->addDimension("Pressure"    , Field::Pressure );
         system->addDimension("Length"    , Field::Length);
         system->addDimension("Time"    , Field::Time);
         system->addDimension("m"    , Field::Mass);

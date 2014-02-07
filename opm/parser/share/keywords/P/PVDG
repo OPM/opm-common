@@ -1,4 +1,4 @@
 {"name" : "PVDG" , "size" : {"keyword" : "TABDIMS" , "item" : "NTPVT"} , "items" : [
-        {"name" : "data" , "size_type" : "ALL" , "value_type" : "FLOAT"  , "dimension" : ["P","1/Rs","mu"]}]}
+        {"name" : "data" , "size_type" : "ALL" , "value_type" : "FLOAT"  , "dimension" : ["Pressure","1/Rs","mu"]}]}
         
 

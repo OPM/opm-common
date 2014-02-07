@@ -7,6 +7,6 @@
        {"name" : "GRAT"         , "value_type" : "FLOAT" , "default" : 0.0, "dimension" : "GasVolume/Time"},
        {"name" : "VFPTable"     , "value_type" : "INT"   , "default" : 0.0 , "comment":"The default is a state variable"},
        {"name" : "Lift"         , "value_type" : "FLOAT" , "default" : 0.0 , "comment":"The default is a state variable"},
-       {"name" : "THP"          , "value_type" : "FLOAT" , "default" : 0.0 , "dimension" : "P"},
-       {"name" : "BHP"          , "value_type" : "FLOAT" , "default" : 0.0 ,"dimension" : "P"},
+       {"name" : "THP"          , "value_type" : "FLOAT" , "default" : 0.0 , "dimension" : "Pressure"},
+       {"name" : "BHP"          , "value_type" : "FLOAT" , "default" : 0.0 ,"dimension" : "Pressure"},
        {"name" : "NGLRAT"       , "value_type" : "FLOAT" , "default" : 0.0 ,"dimension" : "LiquidVolume/Time"}]}

@@ -111,7 +111,7 @@ namespace Opm {
         system->addDimension("Length" , 1);
         system->addDimension("Time" , 86400 );
         system->addDimension("m" , 1 );
-        system->addDimension("P" , 100000 );
+        system->addDimension("Pressure" , 100000 );
         system->addDimension("K" , 9.869233e-10 );
         system->addDimension("mu" , 0.001); // viscosity. ECLiPSE uses cP for metric units
         system->addDimension("Rs" , 1); // Gas dissolution factor. ECLiPSE uses m^3/m^3 for metric units
@@ -128,7 +128,7 @@ namespace Opm {
         system->addDimension("Length" , 0.3048);
         system->addDimension("Time" , 86400 );
         system->addDimension("m" , 0.45359237 );
-        system->addDimension("P" , 6894.76 );
+        system->addDimension("Pressure" , 6894.76 );
         system->addDimension("K" , 9.869233e-10 );
         system->addDimension("mu" , 0.001); // viscosity. ECLiPSE uses cP for field units
         system->addDimension("Rs" , 28.316847/0.15898729); // Gas dissolution factor. ECLiPSE uses Mscft/stb for field units
