@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(DoubleItem_DimDifferent_ReturnsFalse) {
     item3.push_backDimension("L");
     item3.push_backDimension("L");
     
-    item4.push_backDimension("t");
+    item4.push_backDimension("Time");
 
     BOOST_CHECK_EQUAL(false , item1.equal( item2 ));
     BOOST_CHECK_EQUAL(false , item2.equal( item3 ));

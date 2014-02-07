@@ -2,11 +2,11 @@
       [{"name" : "WELL"         , "value_type" : "STRING"}, 
        {"name" : "STATUS"       , "value_type" : "STRING" , "default" : "OPEN"}, 
        {"name" : "CMODE"        , "value_type" : "STRING"},
-       {"name" : "ORAT"         , "value_type" : "FLOAT",  "default" : 0.0, "dimension" : "LiquidVolume/t"},
-       {"name" : "WRAT"         , "value_type" : "FLOAT" , "default" : 0.0, "dimension" : "LiquidVolume/t"},
-       {"name" : "GRAT"         , "value_type" : "FLOAT" , "default" : 0.0, "dimension" : "GasVolume/t"},
+       {"name" : "ORAT"         , "value_type" : "FLOAT",  "default" : 0.0, "dimension" : "LiquidVolume/Time"},
+       {"name" : "WRAT"         , "value_type" : "FLOAT" , "default" : 0.0, "dimension" : "LiquidVolume/Time"},
+       {"name" : "GRAT"         , "value_type" : "FLOAT" , "default" : 0.0, "dimension" : "GasVolume/Time"},
        {"name" : "VFPTable"     , "value_type" : "INT"   , "default" : 0.0 , "comment":"The default is a state variable"},
        {"name" : "Lift"         , "value_type" : "FLOAT" , "default" : 0.0 , "comment":"The default is a state variable"},
        {"name" : "THP"          , "value_type" : "FLOAT" , "default" : 0.0 , "dimension" : "P"},
        {"name" : "BHP"          , "value_type" : "FLOAT" , "default" : 0.0 ,"dimension" : "P"},
-       {"name" : "NGLRAT"       , "value_type" : "FLOAT" , "default" : 0.0 ,"dimension" : "LiquidVolume/t"}]}
+       {"name" : "NGLRAT"       , "value_type" : "FLOAT" , "default" : 0.0 ,"dimension" : "LiquidVolume/Time"}]}
