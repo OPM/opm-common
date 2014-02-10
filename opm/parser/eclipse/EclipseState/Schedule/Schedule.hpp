@@ -73,15 +73,17 @@ namespace Opm
         void handleWCONHIST(DeckKeywordConstPtr keyword , size_t currentStep);
         void handleWCONPROD(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleCOMPDAT(DeckKeywordConstPtr keyword , size_t currentStep);
-        void handleWCONINJE(DeckKeywordConstPtr keyword, size_t currentStep);
-        void handleWCONINJH(DeckKeywordConstPtr keyword, size_t currentStep);
+        void handleWCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep);
+        void handleWCONINJH(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep);
         void handleWELOPEN(DeckKeywordConstPtr keyword, size_t currentStep);
-        void handleGCONINJE(DeckKeywordConstPtr keyword, size_t currentStep);
+        void handleGCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep);
         void handleGCONPROD(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleDATES(DeckKeywordConstPtr keyword);
         void handleTSTEP(DeckKeywordConstPtr keyword);
         void handleGRUPTREE(DeckKeywordConstPtr keyword, size_t currentStep);
 
+        double convertInjectionRateToSI(double rawRate, WellInjector::TypeEnum wellType, const Opm::UnitSystem &unitSystem) const;
+        double convertInjectionRateToSI(double rawRate, Phase::PhaseEnum wellPhase, const Opm::UnitSystem &unitSystem) const;
     };
     typedef std::shared_ptr<Schedule> SchedulePtr;
     typedef std::shared_ptr<const Schedule> ScheduleConstPtr;

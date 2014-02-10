@@ -129,14 +129,14 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
         BOOST_CHECK_CLOSE(13000/Metric::Time , well1->getOilRate(8) , 0.001);
         
         BOOST_CHECK( well1->isInjector(9));
-        BOOST_CHECK_CLOSE(20000 , well1->getSurfaceInjectionRate(9) , 0.001);
-        BOOST_CHECK_CLOSE(200000, well1->getReservoirInjectionRate(9) , 0.001);
+        BOOST_CHECK_CLOSE(20000/Metric::Time , well1->getSurfaceInjectionRate(9) , 0.001);
+        BOOST_CHECK_CLOSE(200000/Metric::Time, well1->getReservoirInjectionRate(9) , 0.001);
         BOOST_CHECK_CLOSE(6891 * Metric::Pressure , well1->getBHPLimit(9) , 0.001); 
         BOOST_CHECK_CLOSE(0 , well1->getTHPLimit(9) , 0.001); 
         BOOST_CHECK_CLOSE(123.00 * Metric::Pressure , well1->getBHPLimit(10) , 0.001); 
         BOOST_CHECK_CLOSE(678.00 * Metric::Pressure , well1->getTHPLimit(10) , 0.001); 
         
-        BOOST_CHECK_CLOSE(5000 , well1->getSurfaceInjectionRate(11) , 0.001);
+        BOOST_CHECK_CLOSE(5000/Metric::Time , well1->getSurfaceInjectionRate(11) , 0.001);
 
         BOOST_CHECK_EQUAL( WellInjector::RESV  , well1->getInjectorControlMode( 9 ));
         BOOST_CHECK_EQUAL( WellInjector::RATE  , well1->getInjectorControlMode( 11 ));
@@ -316,14 +316,14 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
         GroupPtr group = sched->getGroup("INJ");
         BOOST_CHECK_EQUAL( Phase::WATER , group->getInjectionPhase( 3 ));
         BOOST_CHECK_EQUAL( GroupInjection::VREP , group->getInjectionControlMode( 3 ));
-        BOOST_CHECK_CLOSE( 10 , group->getSurfaceMaxRate( 3 ) , 0.001);
-        BOOST_CHECK_CLOSE( 20 , group->getReservoirMaxRate( 3 ) , 0.001);
+        BOOST_CHECK_CLOSE( 10/Metric::Time , group->getSurfaceMaxRate( 3 ) , 0.001);
+        BOOST_CHECK_CLOSE( 20/Metric::Time , group->getReservoirMaxRate( 3 ) , 0.001);
         BOOST_CHECK_EQUAL( 0.75 , group->getTargetReinjectFraction( 3 ));
         BOOST_CHECK_EQUAL( 0.95 , group->getTargetVoidReplacementFraction( 3 ));
     
         BOOST_CHECK_EQUAL( Phase::OIL , group->getInjectionPhase( 6 ));
         BOOST_CHECK_EQUAL( GroupInjection::RATE , group->getInjectionControlMode( 6 ));
-        BOOST_CHECK_CLOSE( 1000 , group->getSurfaceMaxRate( 6 ) , 0.0001);
+        BOOST_CHECK_CLOSE( 1000/Metric::Time , group->getSurfaceMaxRate( 6 ) , 0.0001);
     }
     
     {
