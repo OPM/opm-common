@@ -46,6 +46,11 @@ namespace Opm {
         Group(const std::string& name, TimeMapConstPtr timeMap , size_t creationTimeStep);
         bool hasBeenDefined(size_t timeStep) const;
         const std::string& name() const;
+        bool isProductionGroup(size_t timeStep) const;
+        bool isInjectionGroup(size_t timeStep) const;
+        void setProductionGroup(size_t timeStep, bool isProductionGroup);
+
+        /******************************************************************/
         void             setInjectionPhase(size_t time_step , Phase::PhaseEnum phase);
         Phase::PhaseEnum getInjectionPhase(size_t time_step) const;
         
@@ -67,7 +72,7 @@ namespace Opm {
         void   setTargetVoidReplacementFraction( size_t time_step , double rate);
         double getTargetVoidReplacementFraction( size_t time_step ) const;
 
-        /*****************************************************************/
+        /******************************************************************/
 
         void   setProductionControlMode( size_t time_step , GroupProduction::ControlEnum controlMode);
         GroupProduction::ControlEnum getProductionControlMode( size_t time_step ) const;
@@ -99,6 +104,7 @@ namespace Opm {
         std::shared_ptr<GroupInjection::InjectionData> m_injection;
         std::shared_ptr<GroupProduction::ProductionData> m_production;
         std::shared_ptr<DynamicState<WellSetConstPtr> > m_wells;
+        std::shared_ptr<DynamicState<bool> > m_isProductionGroup;
     };
     typedef std::shared_ptr<Group> GroupPtr;
     typedef std::shared_ptr<const Group> GroupConstPtr;

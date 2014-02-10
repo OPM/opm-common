@@ -86,7 +86,8 @@ namespace Opm {
     Group::Group(const std::string& name , TimeMapConstPtr timeMap , size_t creationTimeStep) : 
         m_injection( new GroupInjection::InjectionData(timeMap) ),
         m_production( new GroupProduction::ProductionData( timeMap )),
-        m_wells( new DynamicState<WellSetConstPtr>(timeMap , WellSetConstPtr(new WellSet() )))
+        m_wells( new DynamicState<WellSetConstPtr>(timeMap , WellSetConstPtr(new WellSet() ))),
+        m_isProductionGroup( new DynamicState<bool>(timeMap, true))
     {
         m_name = name;
         m_creationTimeStep = creationTimeStep;
@@ -105,6 +106,20 @@ namespace Opm {
             return true;
     }
 
+    bool Group::isProductionGroup(size_t timeStep) const {
+        return m_isProductionGroup->get(timeStep);
+    }
+
+    bool Group::isInjectionGroup(size_t timeStep) const {
+        return !m_isProductionGroup->get(timeStep);
+    }
+
+    void Group::setProductionGroup(size_t timeStep, bool isProductionGroup) {
+        m_isProductionGroup->add(timeStep, isProductionGroup);
+    }
+
+
+    /**********************************************************************/
 
     
     void Group::setInjectionPhase(size_t time_step , Phase::PhaseEnum phase){
