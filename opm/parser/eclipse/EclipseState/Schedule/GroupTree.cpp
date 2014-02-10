@@ -75,6 +75,23 @@ namespace Opm {
         }
     }
 
+    std::vector<GroupTreeNodeConstPtr> GroupTree::getNodes() const {
+        std::vector<GroupTreeNodeConstPtr> nodes;
+        nodes.push_back(m_root);
+        getNodes(m_root, nodes);
+        return nodes;
+    }
+
+    void GroupTree::getNodes(GroupTreeNodePtr fromNode, std::vector<GroupTreeNodeConstPtr>& nodes) const {
+        std::map<std::string, GroupTreeNodePtr >::iterator iter = fromNode->begin();
+        while (iter != fromNode->end()) {
+            GroupTreeNodePtr child = (*iter).second;
+            nodes.push_back(child);
+            getNodes(child, nodes);
+            ++iter;
+        }
+    }
+
     GroupTreeNodePtr GroupTree::getParent(const std::string& childName) const {
         GroupTreeNodePtr currentChild = m_root;
         return getParent(childName, currentChild, GroupTreeNodePtr());
