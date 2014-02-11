@@ -76,19 +76,19 @@ namespace Opm {
         void setProductionExceedLimitAction(size_t time_step , GroupProductionExceedLimit::ActionEnum action);
         
         void   setOilTargetRate(size_t time_step , double oilTargetRate);
-        double getOilTargetRate(size_t time_step);
+        double getOilTargetRate(size_t time_step) const;
         void   setGasTargetRate(size_t time_step , double gasTargetRate);
-        double getGasTargetRate(size_t time_step);
+        double getGasTargetRate(size_t time_step) const;
         void   setWaterTargetRate(size_t time_step , double waterTargetRate);
-        double getWaterTargetRate(size_t time_step);
+        double getWaterTargetRate(size_t time_step) const;
         void   setLiquidTargetRate(size_t time_step , double LiquidTargetRate);
-        double getLiquidTargetRate(size_t time_step);
+        double getLiquidTargetRate(size_t time_step) const;
 
         /*****************************************************************/
 
-        bool hasWell(const std::string& wellName , size_t time_step);
+        bool hasWell(const std::string& wellName , size_t time_step) const;
         WellConstPtr getWell(const std::string& wellName , size_t time_step) const;
-        size_t numWells(size_t time_step);
+        size_t numWells(size_t time_step) const;
         void addWell(size_t time_step , WellPtr well);
         void delWell(size_t time_step, const std::string& wellName );
     private:

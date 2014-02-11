@@ -212,7 +212,7 @@ namespace Opm {
     }
 
 
-    double Group::getOilTargetRate(size_t time_step) {
+    double Group::getOilTargetRate(size_t time_step) const {
         return m_production->oilTarget->get(time_step);
     }
 
@@ -222,7 +222,7 @@ namespace Opm {
     }
 
 
-    double Group::getGasTargetRate(size_t time_step) {
+    double Group::getGasTargetRate(size_t time_step) const {
         return m_production->gasTarget->get(time_step);
     }
 
@@ -232,7 +232,7 @@ namespace Opm {
     }
 
 
-    double Group::getWaterTargetRate(size_t time_step) {
+    double Group::getWaterTargetRate(size_t time_step) const {
         return m_production->waterTarget->get(time_step);
     }
 
@@ -242,7 +242,7 @@ namespace Opm {
     }
 
 
-    double Group::getLiquidTargetRate(size_t time_step) {
+    double Group::getLiquidTargetRate(size_t time_step) const {
         return m_production->liquidTarget->get(time_step);
     }
 
@@ -254,7 +254,7 @@ namespace Opm {
     }
 
 
-    bool Group::hasWell(const std::string& wellName , size_t time_step) {
+    bool Group::hasWell(const std::string& wellName , size_t time_step) const {
         WellSetConstPtr wellSet = wellMap(time_step);
         return wellSet->hasWell(wellName);
     }
@@ -266,7 +266,7 @@ namespace Opm {
     }
 
 
-    size_t Group::numWells(size_t time_step) {
+    size_t Group::numWells(size_t time_step) const {
         WellSetConstPtr wellSet = wellMap(time_step);
         return wellSet->size();
     }
