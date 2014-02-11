@@ -80,10 +80,10 @@ namespace Opm {
                 handleWCONPROD(keyword, currentStep);
 
             if (keyword->name() == "WCONINJE")
-                handleWCONINJE(keyword, currentStep);
+                handleWCONINJE(deck, keyword, currentStep);
 
             if (keyword->name() == "WCONINJH")
-                handleWCONINJH(keyword, currentStep);
+                handleWCONINJH(deck, keyword, currentStep);
 
             if (keyword->name() == "COMPDAT")
                 handleCOMPDAT(keyword, currentStep);
@@ -95,7 +95,7 @@ namespace Opm {
                 handleGRUPTREE(keyword, currentStep);
 
             if (keyword->name() == "GCONINJE")
-                handleGCONINJE( keyword , currentStep );
+                handleGCONINJE( deck, keyword , currentStep );
 
             if (keyword->name() == "GCONPROD")
                 handleGCONPROD( keyword , currentStep );
@@ -188,9 +188,9 @@ namespace Opm {
 
                 if (isPredictionMode) {
                     liquidRate = record->getItem("LRAT")->getSIDouble(0);
-                    resVRate = record->getItem("RESV")->getSIDouble(0);
                     BHPLimit = record->getItem("BHP")->getSIDouble(0);
                     THPLimit = record->getItem("THP")->getSIDouble(0);
+                    resVRate = record->getItem("RESV")->getSIDouble(0);
                 }
                 
                 well->setLiquidRate( currentStep , liquidRate );
@@ -238,18 +238,25 @@ namespace Opm {
         handleWCONProducer(keyword, currentStep, true);
     }
 
-    void Schedule::handleWCONINJE(DeckKeywordConstPtr keyword, size_t currentStep) {
+    void Schedule::handleWCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellName = record->getItem("WELL")->getString(0);
             WellPtr well = getWell(wellName);
-            double surfaceInjectionRate               = record->getItem("RATE")->getSIDouble(0);
-            double reservoirInjectionRate             = record->getItem("RESV")->getSIDouble(0);
+
+            // calculate the injection rates. These are context
+            // dependent, so we have to jump through some hoops
+            // here...
+            WellInjector::TypeEnum injectorType = WellInjector::TypeFromString( record->getItem("TYPE")->getString(0) );
+            double surfaceInjectionRate = record->getItem("RATE")->getRawDouble(0);
+            double reservoirInjectionRate = record->getItem("RESV")->getRawDouble(0);
+            surfaceInjectionRate = convertInjectionRateToSI(surfaceInjectionRate, injectorType, *deck->getActiveUnitSystem());
+            reservoirInjectionRate = convertInjectionRateToSI(reservoirInjectionRate, injectorType, *deck->getActiveUnitSystem());
+
             double BHPLimit                           = record->getItem("BHP")->getSIDouble(0);
             double THPLimit                           = record->getItem("THP")->getSIDouble(0);
-            WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( record->getItem("CMODE")->getString(0));
             WellCommon::StatusEnum status             = WellCommon::StatusFromString( record->getItem("STATUS")->getString(0));
-            WellInjector::TypeEnum injectorType       = WellInjector::TypeFromString( record->getItem("TYPE")->getString(0) );
+            WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( record->getItem("CMODE")->getString(0));
        
             well->setStatus( currentStep , status );
             well->setSurfaceInjectionRate( currentStep , surfaceInjectionRate );
@@ -275,14 +282,19 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleWCONINJH(DeckKeywordConstPtr keyword, size_t currentStep) {
+    void Schedule::handleWCONINJH(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellName = record->getItem("WELL")->getString(0);
             WellPtr well = getWell(wellName);
-            double injectionRate  = record->getItem("RATE")->getSIDouble(0);
+
+            // convert injection rates to SI
+            WellInjector::TypeEnum wellType = WellInjector::TypeFromString( record->getItem("TYPE")->getString(0));
+            double injectionRate = record->getItem("RATE")->getRawDouble(0);
+            injectionRate = convertInjectionRateToSI(injectionRate, wellType, *deck->getActiveUnitSystem());
+
             WellCommon::StatusEnum status = WellCommon::StatusFromString( record->getItem("STATUS")->getString(0));
-            
+
             well->setStatus( currentStep , status );
             well->setSurfaceInjectionRate( currentStep , injectionRate );
             well->setInPredictionMode(currentStep, false );
@@ -306,7 +318,7 @@ namespace Opm {
     }
 
 
-    void Schedule::handleGCONINJE(DeckKeywordConstPtr keyword, size_t currentStep) {
+    void Schedule::handleGCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& groupName = record->getItem("GROUP")->getString(0);
@@ -320,10 +332,19 @@ namespace Opm {
                 GroupInjection::ControlEnum controlMode = GroupInjection::ControlEnumFromString( record->getItem("CONTROL_MODE")->getString(0) );
                 group->setInjectionControlMode( currentStep , controlMode );
             }
-            group->setSurfaceMaxRate( currentStep , record->getItem("SURFACE_TARGET")->getSIDouble(0));
-            group->setReservoirMaxRate( currentStep , record->getItem("RESV_TARGET")->getSIDouble(0));
-            group->setTargetReinjectFraction( currentStep , record->getItem("REINJ_TARGET")->getRawDouble(0));
-            group->setTargetVoidReplacementFraction( currentStep , record->getItem("VOIDAGE_TARGET")->getRawDouble(0));
+
+            Phase::PhaseEnum wellPhase = Phase::PhaseEnumFromString( record->getItem("PHASE")->getString(0));
+
+            // calculate SI injection rates for the group
+            double surfaceInjectionRate = record->getItem("SURFACE_TARGET")->getRawDouble(0);
+            surfaceInjectionRate = convertInjectionRateToSI(surfaceInjectionRate, wellPhase, *deck->getActiveUnitSystem());
+            double reservoirInjectionRate = record->getItem("RESV_TARGET")->getRawDouble(0);
+            reservoirInjectionRate = convertInjectionRateToSI(reservoirInjectionRate, wellPhase, *deck->getActiveUnitSystem());
+
+            group->setSurfaceMaxRate( currentStep , surfaceInjectionRate);
+            group->setReservoirMaxRate( currentStep , reservoirInjectionRate);
+            group->setTargetReinjectFraction( currentStep , record->getItem("REINJ_TARGET")->getSIDouble(0));
+            group->setTargetVoidReplacementFraction( currentStep , record->getItem("VOIDAGE_TARGET")->getSIDouble(0));
         }
     }
 
@@ -462,4 +483,38 @@ namespace Opm {
     }
 
 
+    double Schedule::convertInjectionRateToSI(double rawRate, WellInjector::TypeEnum wellType, const Opm::UnitSystem &unitSystem) const {
+        switch (wellType) {
+        case WellInjector::MULTI:
+            // multi-phase controlled injectors are a really funny
+            // construct in Eclipse: the quantity controlled for is
+            // not physically meaningful, i.e. Eclipse adds up
+            // MCFT/day and STB/day.
+            throw std::logic_error("There is no generic way to handle multi-phase injectors at this level!");
+
+        case WellInjector::OIL:
+        case WellInjector::WATER:
+            return rawRate * unitSystem.parse("LiquidVolume/Time")->getSIScaling();
+
+        case WellInjector::GAS:
+            return rawRate * unitSystem.parse("GasVolume/Time")->getSIScaling();
+
+        default:
+            throw std::logic_error("Unknown injector type");
+        }
+    }
+
+    double Schedule::convertInjectionRateToSI(double rawRate, Phase::PhaseEnum wellPhase, const Opm::UnitSystem &unitSystem) const {
+        switch (wellPhase) {
+        case Phase::OIL:
+        case Phase::WATER:
+            return rawRate * unitSystem.parse("LiquidVolume/Time")->getSIScaling();
+
+        case Phase::GAS:
+            return rawRate * unitSystem.parse("GasVolume/Time")->getSIScaling();
+
+        default:
+            throw std::logic_error("Unknown injection phase");
+        }
+    }
 }

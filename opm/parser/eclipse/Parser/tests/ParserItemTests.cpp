@@ -189,8 +189,8 @@ BOOST_AUTO_TEST_CASE(DoubleItem_DimEqual_ReturnsTrue) {
     ParserDoubleItem item1("ITEM1", sizeType);
     ParserDoubleItem item2("ITEM1", sizeType);
 
-    item1.push_backDimension("L*L");
-    item2.push_backDimension("L*L");
+    item1.push_backDimension("Length*Length");
+    item2.push_backDimension("Length*Length");
     
     BOOST_CHECK( item1.equal( item2 ));
 }
@@ -199,16 +199,16 @@ BOOST_AUTO_TEST_CASE(DoubleItem_DimEqual_ReturnsTrue) {
 BOOST_AUTO_TEST_CASE(DoubleItem_DimDifferent_ReturnsFalse) {
     ParserItemSizeEnum sizeType = ALL;
     ParserDoubleItem item1("ITEM1", sizeType);    // Dim: []
-    ParserDoubleItem item2("ITEM1", sizeType);    // Dim: [L]
-    ParserDoubleItem item3("ITEM1", sizeType);    // Dim: [L ,L]
+    ParserDoubleItem item2("ITEM1", sizeType);    // Dim: [Length]
+    ParserDoubleItem item3("ITEM1", sizeType);    // Dim: [Length ,Length]
     ParserDoubleItem item4("ITEM1", sizeType);    // Dim: [t]
 
-    item2.push_backDimension("L");
+    item2.push_backDimension("Length");
 
-    item3.push_backDimension("L");
-    item3.push_backDimension("L");
+    item3.push_backDimension("Length");
+    item3.push_backDimension("Length");
     
-    item4.push_backDimension("t");
+    item4.push_backDimension("Time");
 
     BOOST_CHECK_EQUAL(false , item1.equal( item2 ));
     BOOST_CHECK_EQUAL(false , item2.equal( item3 ));
@@ -587,7 +587,7 @@ BOOST_AUTO_TEST_CASE(ParserIntItemGetDimensionThrows) {
     ParserIntItem intItem(std::string("SOMEINT"));
 
     BOOST_CHECK_THROW( intItem.getDimension(0) , std::invalid_argument );
-    BOOST_CHECK_THROW( intItem.push_backDimension("L") , std::invalid_argument );
+    BOOST_CHECK_THROW( intItem.push_backDimension("Length") , std::invalid_argument );
 }
 
 
@@ -595,8 +595,8 @@ BOOST_AUTO_TEST_CASE(ParserIntItemGetDimensionThrows) {
 BOOST_AUTO_TEST_CASE(ParserDoubleItemAddMultipleDimensionToSIngleSizeThrows) {
     ParserDoubleItem doubleItem(std::string("SOMEDOUBLE"));
     
-    doubleItem.push_backDimension("L*L");
-    BOOST_CHECK_THROW( doubleItem.push_backDimension("L*L"), std::invalid_argument);
+    doubleItem.push_backDimension("Length*Length");
+    BOOST_CHECK_THROW( doubleItem.push_backDimension("Length*Length"), std::invalid_argument);
 }
 
 
@@ -604,7 +604,7 @@ BOOST_AUTO_TEST_CASE(ParserDoubleItemWithDimensionHasReturnsCorrect) {
     ParserDoubleItem doubleItem(std::string("SOMEDOUBLE"));
 
     BOOST_CHECK_EQUAL( false , doubleItem.hasDimension() );
-    doubleItem.push_backDimension("L*L");
+    doubleItem.push_backDimension("Length*Length");
     BOOST_CHECK_EQUAL( true , doubleItem.hasDimension() );
 }
 
@@ -615,13 +615,13 @@ BOOST_AUTO_TEST_CASE(ParserDoubleItemGetDimension) {
     BOOST_CHECK_THROW( doubleItem.getDimension( 10 ) , std::invalid_argument );
     BOOST_CHECK_THROW( doubleItem.getDimension(  0 ) , std::invalid_argument );
 
-    doubleItem.push_backDimension("L");
-    doubleItem.push_backDimension("L*L");
-    doubleItem.push_backDimension("L*L*L");
+    doubleItem.push_backDimension("Length");
+    doubleItem.push_backDimension("Length*Length");
+    doubleItem.push_backDimension("Length*Length*Length");
 
-    BOOST_CHECK_EQUAL( "L" , doubleItem.getDimension(0));
-    BOOST_CHECK_EQUAL( "L*L" , doubleItem.getDimension(1));
-    BOOST_CHECK_EQUAL( "L*L*L" , doubleItem.getDimension(2));
+    BOOST_CHECK_EQUAL( "Length" , doubleItem.getDimension(0));
+    BOOST_CHECK_EQUAL( "Length*Length" , doubleItem.getDimension(1));
+    BOOST_CHECK_EQUAL( "Length*Length*Length" , doubleItem.getDimension(2));
     BOOST_CHECK_THROW( doubleItem.getDimension( 3 ) , std::invalid_argument );
 }
 

@@ -1,1 +1,1 @@
-{"name" : "PRESSURE" , "data" : {"value_type" : "FLOAT", "dimension" : "P"}}
+{"name" : "PRESSURE" , "data" : {"value_type" : "FLOAT", "dimension" : "Pressure"}}

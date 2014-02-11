@@ -30,14 +30,14 @@
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(CreateDimension) {
-    Dimension length("L" , 1);
-    BOOST_CHECK_EQUAL("L" , length.getName());
+    Dimension length("Length" , 1);
+    BOOST_CHECK_EQUAL("Length" , length.getName());
     BOOST_CHECK_EQUAL(1 , length.getSIScaling());
 }
 
 BOOST_AUTO_TEST_CASE(makeComposite) {
-    std::shared_ptr<Dimension> composite(Dimension::newComposite("L*L*L/t" , 100));
-    BOOST_CHECK_EQUAL("L*L*L/t" , composite->getName());
+    std::shared_ptr<Dimension> composite(Dimension::newComposite("Length*Length*Length/Time" , 100));
+    BOOST_CHECK_EQUAL("Length*Length*Length/Time" , composite->getName());
     BOOST_CHECK_EQUAL(100 , composite->getSIScaling());
 }
 
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(CreateUnitSystem) {
 
 BOOST_AUTO_TEST_CASE(UnitSystemEmptyHasNone) {
     UnitSystem system("Metric");
-    BOOST_CHECK_EQUAL( false , system.hasDimension("L"));
+    BOOST_CHECK_EQUAL( false , system.hasDimension("Length"));
     BOOST_CHECK_EQUAL( false , system.hasDimension("LXY"));
 }
 
@@ -68,17 +68,17 @@ BOOST_AUTO_TEST_CASE(UnitSystemEmptyHasNone) {
 
 BOOST_AUTO_TEST_CASE(UnitSystemGetMissingDimensionThrows) {
     UnitSystem system("Metric");
-    BOOST_CHECK_THROW( system.getDimension("L") , std::invalid_argument );
+    BOOST_CHECK_THROW( system.getDimension("Length") , std::invalid_argument );
 }
 
 BOOST_AUTO_TEST_CASE(UnitSystemGetNewOK) {
     UnitSystem system("Metric");
-    system.addDimension("L" , 10 );
-    system.addDimension("t" , 100);
+    system.addDimension("Length" , 10 );
+    system.addDimension("Time" , 100);
 
-    BOOST_CHECK_EQUAL( false , system.hasDimension("L*L/t"));
-    std::shared_ptr<const Dimension> comp = system.getNewDimension("L*L/t");
-    BOOST_CHECK_EQUAL( true , system.hasDimension("L*L/t"));
+    BOOST_CHECK_EQUAL( false , system.hasDimension("Length*Length/Time"));
+    std::shared_ptr<const Dimension> comp = system.getNewDimension("Length*Length/Time");
+    BOOST_CHECK_EQUAL( true , system.hasDimension("Length*Length/Time"));
     BOOST_CHECK_EQUAL(1 , comp->getSIScaling());
 }
 
@@ -87,16 +87,16 @@ BOOST_AUTO_TEST_CASE(UnitSystemGetNewOK) {
 
 BOOST_AUTO_TEST_CASE(UnitSystemAddDimensions) {
     UnitSystem system("Metric");
-    system.addDimension("L" , 1 );
-    system.addDimension("t" , 86400 );
+    system.addDimension("Length" , 1 );
+    system.addDimension("Time" , 86400 );
 
-    std::shared_ptr<const Dimension> length = system.getDimension("L");
-    std::shared_ptr<const Dimension> time = system.getDimension("t");
+    std::shared_ptr<const Dimension> length = system.getDimension("Length");
+    std::shared_ptr<const Dimension> time = system.getDimension("Time");
     BOOST_CHECK_EQUAL(1     , length->getSIScaling());
     BOOST_CHECK_EQUAL(86400 , time->getSIScaling());
 
-    system.addDimension("L" , 0.3048);
-    length = system.getDimension("L");
+    system.addDimension("Length" , 0.3048);
+    length = system.getDimension("Length");
     BOOST_CHECK_EQUAL(0.3048 , length->getSIScaling());
 }
 
@@ -104,13 +104,13 @@ BOOST_AUTO_TEST_CASE(UnitSystemAddDimensions) {
 BOOST_AUTO_TEST_CASE(UnitSystemParseInvalidThrows) {
     UnitSystem system("Metric");
     BOOST_CHECK_THROW( system.parse("//") , std::invalid_argument);
-    BOOST_CHECK_THROW( system.parse("L * L / t") , std::invalid_argument);
+    BOOST_CHECK_THROW( system.parse("Length * Length / Time") , std::invalid_argument);
 
-    system.addDimension("L" , 3.00 );
-    system.addDimension("t" , 9.0 );
+    system.addDimension("Length" , 3.00 );
+    system.addDimension("Time" , 9.0 );
     
-    std::shared_ptr<const Dimension> volumePerTime = system.parse("L*L*L/t");
-    BOOST_CHECK_EQUAL("L*L*L/t" , volumePerTime->getName() );
+    std::shared_ptr<const Dimension> volumePerTime = system.parse("Length*Length*Length/Time");
+    BOOST_CHECK_EQUAL("Length*Length*Length/Time" , volumePerTime->getName() );
     BOOST_CHECK_EQUAL(3.0 , volumePerTime->getSIScaling());
 }    
 
@@ -118,11 +118,11 @@ BOOST_AUTO_TEST_CASE(UnitSystemParseInvalidThrows) {
 
 void checkSystemHasRequiredDimensions(std::shared_ptr<const UnitSystem> system) {
     BOOST_CHECK( system->hasDimension("1"));
-    BOOST_CHECK( system->hasDimension("L"));
-    BOOST_CHECK( system->hasDimension("m"));
-    BOOST_CHECK( system->hasDimension("t"));
-    BOOST_CHECK( system->hasDimension("K"));
-    BOOST_CHECK( system->hasDimension("P"));
+    BOOST_CHECK( system->hasDimension("Length"));
+    BOOST_CHECK( system->hasDimension("Mass"));
+    BOOST_CHECK( system->hasDimension("Time"));
+    BOOST_CHECK( system->hasDimension("Permeability"));
+    BOOST_CHECK( system->hasDimension("Pressure"));
 }
 
 
@@ -131,11 +131,11 @@ BOOST_AUTO_TEST_CASE(CreateMetricSystem) {
     std::shared_ptr<UnitSystem> system = std::shared_ptr<UnitSystem>( UnitSystem::newMETRIC() );
     checkSystemHasRequiredDimensions( system );
 
-    BOOST_CHECK_EQUAL( Metric::Length       , system->getDimension("L")->getSIScaling() );
-    BOOST_CHECK_EQUAL( Metric::Mass         , system->getDimension("m")->getSIScaling() );
-    BOOST_CHECK_EQUAL( Metric::Time         , system->getDimension("t")->getSIScaling() );
-    BOOST_CHECK_EQUAL( Metric::Permeability , system->getDimension("K")->getSIScaling() );
-    BOOST_CHECK_EQUAL( Metric::Pressure     , system->getDimension("P")->getSIScaling() );
+    BOOST_CHECK_EQUAL( Metric::Length       , system->getDimension("Length")->getSIScaling() );
+    BOOST_CHECK_EQUAL( Metric::Mass         , system->getDimension("Mass")->getSIScaling() );
+    BOOST_CHECK_EQUAL( Metric::Time         , system->getDimension("Time")->getSIScaling() );
+    BOOST_CHECK_EQUAL( Metric::Permeability , system->getDimension("Permeability")->getSIScaling() );
+    BOOST_CHECK_EQUAL( Metric::Pressure     , system->getDimension("Pressure")->getSIScaling() );
 }
 
 
@@ -144,21 +144,21 @@ BOOST_AUTO_TEST_CASE(CreateFieldSystem) {
     std::shared_ptr<UnitSystem> system = std::shared_ptr<UnitSystem>( UnitSystem::newFIELD() );
     checkSystemHasRequiredDimensions( system );
 
-    BOOST_CHECK_EQUAL( Field::Length       , system->getDimension("L")->getSIScaling() );
-    BOOST_CHECK_EQUAL( Field::Mass         , system->getDimension("m")->getSIScaling() );
-    BOOST_CHECK_EQUAL( Field::Time         , system->getDimension("t")->getSIScaling() );
-    BOOST_CHECK_EQUAL( Field::Permeability , system->getDimension("K")->getSIScaling() );
-    BOOST_CHECK_EQUAL( Field::Pressure     , system->getDimension("P")->getSIScaling() );
+    BOOST_CHECK_EQUAL( Field::Length       , system->getDimension("Length")->getSIScaling() );
+    BOOST_CHECK_EQUAL( Field::Mass         , system->getDimension("Mass")->getSIScaling() );
+    BOOST_CHECK_EQUAL( Field::Time         , system->getDimension("Time")->getSIScaling() );
+    BOOST_CHECK_EQUAL( Field::Permeability , system->getDimension("Permeability")->getSIScaling() );
+    BOOST_CHECK_EQUAL( Field::Pressure     , system->getDimension("Pressure")->getSIScaling() );
 }
 
 
 
 
 BOOST_AUTO_TEST_CASE(DimensionEqual) {
-    Dimension d1("L" , 1);
-    Dimension d2("L" , 1);
-    Dimension d3("t" , 1);
-    Dimension d4("L" , 2);
+    Dimension d1("Length" , 1);
+    Dimension d2("Length" , 1);
+    Dimension d3("Time" , 1);
+    Dimension d4("Length" , 2);
 
     BOOST_CHECK_EQUAL( true  , d1.equal(d1) );
     BOOST_CHECK_EQUAL( true  , d1.equal(d2) );

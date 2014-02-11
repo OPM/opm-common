@@ -318,6 +318,6 @@ BOOST_AUTO_TEST_CASE(ParseRecordHasDimensionCorrect) {
     parserRecord->addItem( item2 );
     BOOST_CHECK_EQUAL( false , parserRecord->hasDimension());
     
-    item2->push_backDimension("L*L/t");
+    item2->push_backDimension("Length*Length/Time");
     BOOST_CHECK_EQUAL( true , parserRecord->hasDimension());
 }
