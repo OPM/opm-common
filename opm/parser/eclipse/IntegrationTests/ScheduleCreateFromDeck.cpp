@@ -324,6 +324,8 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
         BOOST_CHECK_EQUAL( Phase::OIL , group->getInjectionPhase( 6 ));
         BOOST_CHECK_EQUAL( GroupInjection::RATE , group->getInjectionControlMode( 6 ));
         BOOST_CHECK_CLOSE( 1000/Metric::Time , group->getSurfaceMaxRate( 6 ) , 0.0001);
+
+        BOOST_CHECK(group->isInjectionGroup(3));
     }
     
     {
@@ -333,6 +335,8 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
         BOOST_CHECK_CLOSE( 20/Metric::Time , group->getWaterTargetRate(3) , 0.001);
         BOOST_CHECK_CLOSE( 30/Metric::Time , group->getGasTargetRate(3) , 0.001);
         BOOST_CHECK_CLOSE( 40/Metric::Time , group->getLiquidTargetRate(3) , 0.001);
+
+        BOOST_CHECK(group->isProductionGroup(3));
     }
 
 }

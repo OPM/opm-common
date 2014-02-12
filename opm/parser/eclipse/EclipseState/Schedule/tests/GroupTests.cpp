@@ -57,6 +57,28 @@ BOOST_AUTO_TEST_CASE(CreateGroupCreateTimeOK) {
 }
 
 
+
+BOOST_AUTO_TEST_CASE(CreateGroup_SetInjectorProducer_CorrectStatusSet) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    Opm::Group group1("IGROUP" , timeMap , 0);
+    Opm::Group group2("PGROUP" , timeMap , 0);
+
+    group1.setProductionGroup(0, true);
+    BOOST_CHECK(group1.isProductionGroup(1));
+    BOOST_CHECK(!group1.isInjectionGroup(1));
+    group1.setProductionGroup(3, false);
+    BOOST_CHECK(!group1.isProductionGroup(3));
+    BOOST_CHECK(group1.isInjectionGroup(3));
+
+    group2.setProductionGroup(0, false);
+    BOOST_CHECK(!group2.isProductionGroup(1));
+    BOOST_CHECK(group2.isInjectionGroup(1));
+    group2.setProductionGroup(3, true);
+    BOOST_CHECK(group2.isProductionGroup(4));
+    BOOST_CHECK(!group2.isInjectionGroup(4));
+}
+
+
 BOOST_AUTO_TEST_CASE(InjectRateOK) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
     Opm::Group group("G1" , timeMap , 0);

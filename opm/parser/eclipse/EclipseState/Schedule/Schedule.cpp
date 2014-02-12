@@ -345,6 +345,8 @@ namespace Opm {
             group->setReservoirMaxRate( currentStep , reservoirInjectionRate);
             group->setTargetReinjectFraction( currentStep , record->getItem("REINJ_TARGET")->getSIDouble(0));
             group->setTargetVoidReplacementFraction( currentStep , record->getItem("VOIDAGE_TARGET")->getSIDouble(0));
+
+            group->setProductionGroup(currentStep, false);
         }
     }
 
@@ -367,6 +369,7 @@ namespace Opm {
                 group->setProductionExceedLimitAction( currentStep , exceedAction );
             }
             
+            group->setProductionGroup(currentStep, true);
         }
     }
 
