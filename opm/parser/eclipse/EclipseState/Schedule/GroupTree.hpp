@@ -25,6 +25,7 @@
 #include <string>
 #include <map>
 #include <memory>
+#include <vector>
 
 namespace Opm {
 
@@ -35,6 +36,7 @@ namespace Opm {
         void updateTree(const std::string& childName, const std::string& parentName);
 
         GroupTreeNodePtr getNode(const std::string& nodeName) const;
+        std::vector<GroupTreeNodeConstPtr> getNodes() const;
         GroupTreeNodePtr getParent(const std::string& childName) const;
 
         std::shared_ptr<GroupTree> deepCopy() const;
@@ -46,6 +48,7 @@ namespace Opm {
         GroupTreeNodePtr getNode(const std::string& nodeName, GroupTreeNodePtr current) const;
         GroupTreeNodePtr getParent(const std::string& childName, GroupTreeNodePtr currentChild, GroupTreeNodePtr parent) const;
 
+        void getNodes(GroupTreeNodePtr fromNode, std::vector<GroupTreeNodeConstPtr>& nodes) const;
         void deepCopy(GroupTreeNodePtr origin, GroupTreeNodePtr copy) const;
         void printTree(GroupTreeNodePtr fromNode) const;
     };

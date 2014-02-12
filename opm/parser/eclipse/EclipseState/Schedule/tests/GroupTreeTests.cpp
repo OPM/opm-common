@@ -149,3 +149,21 @@ BOOST_AUTO_TEST_CASE(DeepCopy_TreeWithChildren_ObjectsDifferContentMatch) {
     BOOST_CHECK(!(L3CHILD1NodeCopy == L3CHILD1NodeOriginal));
     BOOST_CHECK_EQUAL(L3CHILD1NodeCopy->name(), L3CHILD1NodeOriginal->name());
 }
+
+BOOST_AUTO_TEST_CASE(GetNodes_ReturnsAllNodes) {
+    GroupTreePtr tree(new GroupTree());
+    tree->updateTree("L1CHILD1", "FIELD");
+    tree->updateTree("L1CHILD2", "FIELD");
+    tree->updateTree("L2CHILD1", "L1CHILD1");
+    tree->updateTree("L2CHILD2", "L1CHILD1");
+    tree->updateTree("L3CHILD1", "L2CHILD1");
+
+    std::vector<GroupTreeNodeConstPtr> nodes = tree->getNodes();
+    BOOST_CHECK_EQUAL(6U, nodes.size());
+    BOOST_CHECK_EQUAL("FIELD", nodes[0U]->name());
+    BOOST_CHECK_EQUAL("L1CHILD1", nodes[1U]->name());
+    BOOST_CHECK_EQUAL("L2CHILD1", nodes[2U]->name());
+    BOOST_CHECK_EQUAL("L3CHILD1", nodes[3U]->name());
+    BOOST_CHECK_EQUAL("L2CHILD2", nodes[4U]->name());
+    BOOST_CHECK_EQUAL("L1CHILD2", nodes[5U]->name());
+}
