@@ -24,7 +24,9 @@
 
 #include <opm/parser/eclipse/Units/ConversionFactors.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
+
 #include <vector>
+#include <limits>
 
 
 namespace Opm {
@@ -136,16 +138,19 @@ namespace Opm {
         UnitSystem * system = new UnitSystem("Metric");
         
         system->addDimension("1"         , 1.0);
-        system->addDimension("P"         , Metric::Pressure );
-        system->addDimension("L"         , Metric::Length);
-        system->addDimension("t"         , Metric::Time );
-        system->addDimension("m"         , Metric::Mass );
-        system->addDimension("K"         , Metric::Permeability );
-        system->addDimension("Rs"        , Metric::DissolvedGasRatio);
-        system->addDimension("FlowVolume", Metric::FlowVolume );
-        system->addDimension("Rho"       , Metric::Density );
-        system->addDimension("mu"        , Metric::Viscosity);
+        system->addDimension("Pressure"  , Metric::Pressure );
+        system->addDimension("Length"    , Metric::Length);
+        system->addDimension("Time"      , Metric::Time );
+        system->addDimension("Mass"         , Metric::Mass );
+        system->addDimension("Permeability", Metric::Permeability );
+        system->addDimension("GasDissolutionFactor", Metric::GasDissolutionFactor);
+        system->addDimension("OilDissolutionFactor", Metric::OilDissolutionFactor);
+        system->addDimension("LiquidVolume", Metric::LiquidVolume );
+        system->addDimension("GasVolume" , Metric::GasVolume );
+        system->addDimension("Density"   , Metric::Density );
+        system->addDimension("Viscosity" , Metric::Viscosity);
         system->addDimension("Timestep"  , Metric::Timestep);
+        system->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         return system;
     }
 
@@ -155,16 +160,19 @@ namespace Opm {
         UnitSystem * system = new UnitSystem("Field");
         
         system->addDimension("1"    , 1.0);
-        system->addDimension("P"    , Field::Pressure );
-        system->addDimension("L"    , Field::Length);
-        system->addDimension("t"    , Field::Time);
-        system->addDimension("m"    , Field::Mass);
-        system->addDimension("K"    , Field::Permeability );
-        system->addDimension("Rs"   , Field::DissolvedGasRatio );
-        system->addDimension("FlowVolume"    , Field::FlowVolume );
-        system->addDimension("Rho"  , Field::Density );
-        system->addDimension("mu"   , Field::Viscosity);
+        system->addDimension("Pressure", Field::Pressure );
+        system->addDimension("Length", Field::Length);
+        system->addDimension("Time" , Field::Time);
+        system->addDimension("Mass", Field::Mass);
+        system->addDimension("Permeability", Field::Permeability );
+        system->addDimension("GasDissolutionFactor" , Field::GasDissolutionFactor);
+        system->addDimension("OilDissolutionFactor", Field::OilDissolutionFactor);
+        system->addDimension("LiquidVolume", Field::LiquidVolume );
+        system->addDimension("GasVolume", Field::GasVolume );
+        system->addDimension("Density", Field::Density );
+        system->addDimension("Viscosity", Field::Viscosity);
         system->addDimension("Timestep", Field::Timestep);
+        system->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         return system;
     }
 

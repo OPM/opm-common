@@ -465,14 +465,14 @@ BOOST_AUTO_TEST_CASE(ParseKeywordHasDimensionCorrect) {
     BOOST_CHECK_EQUAL( false , parserKeyword->hasDimension());
     BOOST_CHECK_EQUAL( 0U , itemI->numDimensions() );
 
-    item2->push_backDimension("L*L/t");
+    item2->push_backDimension("Length*Length/Time");
     BOOST_CHECK_EQUAL( true , parserKeyword->hasDimension());
     BOOST_CHECK_EQUAL( 1U , item2->numDimensions() );
 }
 
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withDimension) {
-    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100 , \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"FLOAT\" , \"dimension\" : \"L*L/t\"}]}");
+    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100 , \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"FLOAT\" , \"dimension\" : \"Length*Length/Time\"}]}");
     ParserKeyword parserKeyword(jsonObject);
     ParserRecordConstPtr record = parserKeyword.getRecord();
     ParserItemConstPtr item = record->get("ItemX");      
@@ -490,7 +490,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withDimension) {
 
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withDimensionList) {
-    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100 , \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"ALL\" , \"value_type\" : \"FLOAT\" , \"dimension\" : [\"L*L/t\" , \"t\", \"1\"]}]}");
+    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100 , \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"ALL\" , \"value_type\" : \"FLOAT\" , \"dimension\" : [\"Length*Length/Time\" , \"Time\", \"1\"]}]}");
     ParserKeyword parserKeyword(jsonObject);
     ParserRecordConstPtr record = parserKeyword.getRecord();
     ParserItemConstPtr item = record->get("ItemX");      

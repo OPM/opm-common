@@ -144,6 +144,12 @@ Utility/GruptreeWrapper.hpp
 Utility/WelspecsWrapper.hpp
 Utility/PvtgOuterTable.hpp
 Utility/EquilWrapper.hpp
+Utility/EndscaleWrapper.hpp
+Utility/ScalecrsWrapper.hpp
+Utility/EnptvdTable.hpp
+Utility/EnkrvdTable.hpp
+Utility/RocktabTable.hpp
+Utility/RockTable.hpp
 )
 
 add_library(buildParser ${rawdeck_source} ${build_parser_source} ${deck_source} ${unit_source})
