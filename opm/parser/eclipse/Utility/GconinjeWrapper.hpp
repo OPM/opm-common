@@ -80,8 +80,8 @@ namespace Opm {
          * If the control mode does not use the volumetric surface
          * rate, this is the upper limit.
          */
-        double surfaceTargetRate(int wellGroupIdx) const
-        { return m_keyword->getRecord(wellGroupIdx)->getItem(3)->getSIDouble(0); }
+        double rawSurfaceTargetRate(int wellGroupIdx) const
+        { return m_keyword->getRecord(wellGroupIdx)->getItem(3)->getRawDouble(0); }
 
         /*!
          * \brief Return the target for the volumetric reservoir rate of a well group
@@ -89,8 +89,8 @@ namespace Opm {
          * If the control mode does not use the volumetric reservoir
          * rate, this is the upper limit.
          */
-        double reservoirTargetRate(int wellGroupIdx) const
-        { return m_keyword->getRecord(wellGroupIdx)->getItem(4)->getSIDouble(0); }
+        double rawReservoirTargetRate(int wellGroupIdx) const
+        { return m_keyword->getRecord(wellGroupIdx)->getItem(4)->getRawDouble(0); }
 
         /*!
          * \brief The target fraction for reinjection
