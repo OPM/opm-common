@@ -142,7 +142,8 @@ namespace Opm {
             checkWELSPECSConsistency(currentWell, record);
 
             addWellToGroup( getGroup(groupName) , getWell(wellName) , currentStep);
-            needNewTree = handleGroupFromWELSPECS(record->getItem(1)->getString(0), newTree);
+            bool treeChanged = handleGroupFromWELSPECS(groupName, newTree);
+            needNewTree = needNewTree || treeChanged;
         }
         if (needNewTree) {
             m_rootGroupTree->add(currentStep, newTree);
