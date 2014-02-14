@@ -42,6 +42,14 @@ namespace Opm {
             throw std::logic_error("This implementation of DeckItem does not support int");
         };
 
+        virtual float getSIFloat(size_t index) const {
+            throw std::logic_error("This implementation of DeckItem does not support float");
+        };
+
+        virtual float getRawFloat(size_t index) const {
+            throw std::logic_error("This implementation of DeckItem does not support float");
+        };
+
         virtual double getSIDouble(size_t index) const {
             throw std::logic_error("This implementation of DeckItem does not support double");
         };

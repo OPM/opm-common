@@ -10,6 +10,10 @@ add_executable(runDeckDoubleItemTests DeckDoubleItemTests.cpp)
 target_link_libraries(runDeckDoubleItemTests Parser  ${Boost_LIBRARIES})
 add_test(NAME runDeckDoubleItemTests  COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runDeckDoubleItemTests  )
 
+add_executable(runDeckFloatItemTests DeckFloatItemTests.cpp)
+target_link_libraries(runDeckFloatItemTests Parser  ${Boost_LIBRARIES})
+add_test(NAME runDeckFloatItemTests  COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runDeckFloatItemTests  )
+
 add_executable(runDeckStringItemTests DeckStringItemTests.cpp)
 target_link_libraries(runDeckStringItemTests Parser  ${Boost_LIBRARIES})
 add_test(NAME runDeckStringItemTests  COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runDeckStringItemTests  )
