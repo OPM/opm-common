@@ -29,6 +29,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/Units/ConversionFactors.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/GroupTreeNode.hpp>
 
 using namespace Opm;
 
@@ -213,6 +214,31 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_with_explicit_L0_parenting) {
     GroupTreeNodePtr THIRD_LEVEL1 = SECOND_LEVEL1->getChildGroup("THIRD_LEVEL1");
 }
 
+BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_iter_function) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELSPECS_GROUPS");
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
+    ScheduleConstPtr schedule(new Schedule(deck));
+
+    // Time 0, only from WELSPECS
+    GroupTreeNodeConstPtr root = schedule->getGroupTree(0)->getNode("FIELD");
+
+    int iter_counted = 0;
+
+    for (auto iter=root->begin(); iter != root->end(); ++iter) {
+       iter_counted++;
+    }
+    BOOST_CHECK_EQUAL(2, iter_counted);
+    // Time 1, a new group added in tree
+    iter_counted = 0;
+
+    root = schedule->getGroupTree(1)->getNode("FIELD");
+    for (auto iter=root->begin(); iter != root->end(); ++iter) {
+       iter_counted++;
+    }
+    BOOST_CHECK_EQUAL(3, iter_counted);
+}
+
 BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_tree) {
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELSPECS_GROUPS");
@@ -222,7 +248,6 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_tree) {
     // Time 0, only from WELSPECS
     GroupTreeNodePtr root0 = schedule->getGroupTree(0)->getNode("FIELD");
     BOOST_REQUIRE_EQUAL("FIELD", root0->name());
-
     BOOST_CHECK(root0->hasChildGroup("GROUP_BJARNE"));
     GroupTreeNodePtr GROUP_BJARNE = root0->getChildGroup("GROUP_BJARNE");
     BOOST_CHECK_EQUAL("GROUP_BJARNE", GROUP_BJARNE->name());
