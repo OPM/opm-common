@@ -69,11 +69,11 @@ namespace Opm {
         return GroupTreeNodePtr(new GroupTreeNode("FIELD"));
     }
 
-    std::map<std::string, std::shared_ptr<GroupTreeNode> >::iterator GroupTreeNode::begin() {
+    std::map<std::string, std::shared_ptr<GroupTreeNode> >::const_iterator GroupTreeNode::begin() const {
         return m_childGroups.begin();
     }
 
-    std::map<std::string, std::shared_ptr<GroupTreeNode> >::iterator GroupTreeNode::end() {
+    std::map<std::string, std::shared_ptr<GroupTreeNode> >::const_iterator GroupTreeNode::end() const {
         return m_childGroups.end();
     }
 }
