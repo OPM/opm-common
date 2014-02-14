@@ -63,7 +63,7 @@ namespace Opm {
         if (current->name() == nodeName) {
             return current;
         } else {
-            std::map<std::string, GroupTreeNodePtr>::iterator iter = current->begin();
+            std::map<std::string, GroupTreeNodePtr>::const_iterator iter = current->begin();
             while (iter != current->end()) {
                 GroupTreeNodePtr result = getNode(nodeName, (*iter).second);
                 if (result) {
@@ -83,7 +83,7 @@ namespace Opm {
     }
 
     void GroupTree::getNodes(GroupTreeNodePtr fromNode, std::vector<GroupTreeNodeConstPtr>& nodes) const {
-        std::map<std::string, GroupTreeNodePtr >::iterator iter = fromNode->begin();
+        std::map<std::string, GroupTreeNodePtr >::const_iterator iter = fromNode->begin();
         while (iter != fromNode->end()) {
             GroupTreeNodePtr child = (*iter).second;
             nodes.push_back(child);
@@ -101,7 +101,7 @@ namespace Opm {
         if (currentChild->name() == childName) {
             return parent;
         } else {
-            std::map<std::string, GroupTreeNodePtr>::iterator iter = currentChild->begin();
+            std::map<std::string, GroupTreeNodePtr>::const_iterator iter = currentChild->begin();
             while (iter != currentChild->end()) {
                 GroupTreeNodePtr result = getParent(childName, (*iter).second, currentChild);
                 if (result) {
@@ -124,7 +124,7 @@ namespace Opm {
     }
 
     void GroupTree::deepCopy(GroupTreeNodePtr origin, GroupTreeNodePtr copy) const {
-        std::map<std::string, GroupTreeNodePtr >::iterator iter = origin->begin();
+        std::map<std::string, GroupTreeNodePtr >::const_iterator iter = origin->begin();
         while (iter != origin->end()) {
             GroupTreeNodePtr originChild = (*iter).second;
             GroupTreeNodePtr copyChild = copy->addChildGroup(originChild->name());
@@ -141,7 +141,7 @@ namespace Opm {
 
     void GroupTree::printTree(GroupTreeNodePtr fromNode) const {
         std::cout << fromNode->name() << "(" << fromNode.get() << ")";
-        std::map<std::string, GroupTreeNodePtr >::iterator iter = fromNode->begin();
+        std::map<std::string, GroupTreeNodePtr >::const_iterator iter = fromNode->begin();
         while (iter != fromNode->end()) {
             GroupTreeNodePtr child = (*iter).second;
             std::cout << "<-" << child->name() << "(" << child.get() << ")" << std::endl;

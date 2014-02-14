@@ -40,8 +40,8 @@ namespace Opm {
         std::shared_ptr<GroupTreeNode> getChildGroup(const std::string& childName);
 
         static std::shared_ptr<GroupTreeNode> createFieldNode();
-        std::map<std::string, std::shared_ptr<GroupTreeNode> >::iterator begin();
-        std::map<std::string, std::shared_ptr<GroupTreeNode> >::iterator end();
+        std::map<std::string, std::shared_ptr<GroupTreeNode> >::const_iterator begin() const;
+        std::map<std::string, std::shared_ptr<GroupTreeNode> >::const_iterator end() const;
 
         
     private:
