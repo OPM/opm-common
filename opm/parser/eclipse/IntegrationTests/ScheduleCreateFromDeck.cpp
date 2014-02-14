@@ -226,7 +226,8 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_iter_function) 
     int iter_counted = 0;
 
     for (auto iter=root->begin(); iter != root->end(); ++iter) {
-       iter_counted++;
+        std::cout << "Child of FIELD: " << (*iter).second->name() << std::endl;
+        iter_counted++;
     }
     BOOST_CHECK_EQUAL(2, iter_counted);
     // Time 1, a new group added in tree
