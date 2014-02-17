@@ -1,1 +1,1 @@
-{"name" : "COORD", "data" : {"value_type" : "FLOAT", "dimension" : "Length"  }}
+{"name" : "COORD", "data" : {"value_type" : "DOUBLE", "dimension" : "Length"  }}

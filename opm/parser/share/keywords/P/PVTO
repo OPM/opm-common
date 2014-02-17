@@ -1,6 +1,6 @@
 {"name" : "PVTO" , "num_tables" : {"keyword" : "TABDIMS" , "item" : "NTPVT"}, 
         "items" : [
-            {"name":"RS", "value_type" : "FLOAT", "dimension":"GasDissolutionFactor" },
-            {"name":"DATA", "value_type":"FLOAT", "size_type" : "ALL" , "dimension" : ["Pressure","1","Viscosity"]}
+            {"name":"RS", "value_type" : "DOUBLE", "dimension":"GasDissolutionFactor" },
+            {"name":"DATA", "value_type":"DOUBLE", "size_type" : "ALL" , "dimension" : ["Pressure","1","Viscosity"]}
          ]
 }

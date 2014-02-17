@@ -1,1 +1,1 @@
-{"name" : "PERMYX" , "data" : {"value_type" : "FLOAT" , "dimension" : "Permeability"}} 
+{"name" : "PERMYX" , "data" : {"value_type" : "DOUBLE" , "dimension" : "Permeability"}} 

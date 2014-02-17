@@ -250,7 +250,7 @@ namespace Opm {
                             addItem(item);
                         }
                             break;
-                        case FLOAT:
+                        case DOUBLE:
                         {
                             ParserDoubleItemPtr item = ParserDoubleItemPtr(new ParserDoubleItem(itemConfig));
                             initItemDimension( item , itemConfig );
@@ -316,7 +316,7 @@ namespace Opm {
                     addDataItem(item);
                 }
                     break;
-                case FLOAT:
+                case DOUBLE:
                 {
                     ParserDoubleItemPtr item = ParserDoubleItemPtr(new ParserDoubleItem(itemName, ALL));
                     if (hasDefault) {

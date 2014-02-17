@@ -1,6 +1,6 @@
 {"name" : "PVTG" , "num_tables" : {"keyword":"TABDIMS" , "item":"NTPVT"},
         "items" : [
-            {"name":"GAS_PRESSURE", "value_type" : "FLOAT", "dimension":"Pressure" },
-            {"name":"DATA", "size_type" : "ALL" , "value_type":"FLOAT" , "dimension" : ["OilDissolutionFactor","1","Viscosity"]}
+            {"name":"GAS_PRESSURE", "value_type" : "DOUBLE", "dimension":"Pressure" },
+            {"name":"DATA", "size_type" : "ALL" , "value_type":"DOUBLE" , "dimension" : ["OilDissolutionFactor","1","Viscosity"]}
          ]
 }

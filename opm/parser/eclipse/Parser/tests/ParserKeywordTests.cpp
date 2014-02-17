@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObjectWithAction) {
 
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withSize) {
-    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100 , \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"FLOAT\"}]}");
+    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100 , \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}");
 
     ParserKeyword parserKeyword(jsonObject);
     BOOST_CHECK_EQUAL("BPR" , parserKeyword.getName());
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_nosize_notItems_OK) {
 
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withSizeOther) {
-    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : {\"keyword\" : \"Bjarne\" , \"item\": \"BjarneIgjen\"},  \"items\" :[{\"name\":\"ItemX\" ,  \"value_type\" : \"FLOAT\"}]}");
+    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : {\"keyword\" : \"Bjarne\" , \"item\": \"BjarneIgjen\"},  \"items\" :[{\"name\":\"ItemX\" ,  \"value_type\" : \"DOUBLE\"}]}");
     ParserKeyword parserKeyword(jsonObject);
     const std::pair<std::string,std::string>& sizeKW = parserKeyword.getSizeDefinitionPair();
     BOOST_CHECK_EQUAL("BPR" , parserKeyword.getName());
@@ -271,7 +271,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObjectItemsOK) {
 
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_sizeFromOther) {
-    Json::JsonObject jsonConfig("{\"name\": \"EQUILX\", \"size\" : {\"keyword\":\"EQLDIMS\" , \"item\" : \"NTEQUL\"},  \"items\" :[{\"name\":\"ItemX\" ,\"value_type\" : \"FLOAT\"}]}");
+    Json::JsonObject jsonConfig("{\"name\": \"EQUILX\", \"size\" : {\"keyword\":\"EQLDIMS\" , \"item\" : \"NTEQUL\"},  \"items\" :[{\"name\":\"ItemX\" ,\"value_type\" : \"DOUBLE\"}]}");
     BOOST_CHECK_NO_THROW( ParserKeyword parserKeyword(jsonConfig) );
 }
 
@@ -308,7 +308,7 @@ BOOST_AUTO_TEST_CASE(AddkeywordFromJson_numTables_incoorect_throw) {
 
 
 BOOST_AUTO_TEST_CASE(AddkeywordFromJson_isTableCollection) {
-    Json::JsonObject jsonConfig("{\"name\": \"PVTG\", \"num_tables\" : {\"keyword\": \"TABDIMS\" , \"item\" : \"NTPVT\"} , \"items\" : [{\"name\" : \"data\", \"value_type\" : \"FLOAT\"}]}");
+    Json::JsonObject jsonConfig("{\"name\": \"PVTG\", \"num_tables\" : {\"keyword\": \"TABDIMS\" , \"item\" : \"NTPVT\"} , \"items\" : [{\"name\" : \"data\", \"value_type\" : \"DOUBLE\"}]}");
     ParserKeyword parserKeyword(jsonConfig);
     ParserRecordConstPtr parserRecord = parserKeyword.getRecord();
 
@@ -472,7 +472,7 @@ BOOST_AUTO_TEST_CASE(ParseKeywordHasDimensionCorrect) {
 
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withDimension) {
-    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100 , \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"FLOAT\" , \"dimension\" : \"Length*Length/Time\"}]}");
+    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100 , \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\" , \"dimension\" : \"Length*Length/Time\"}]}");
     ParserKeyword parserKeyword(jsonObject);
     ParserRecordConstPtr record = parserKeyword.getRecord();
     ParserItemConstPtr item = record->get("ItemX");      
@@ -490,7 +490,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withDimension) {
 
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withDimensionList) {
-    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100 , \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"ALL\" , \"value_type\" : \"FLOAT\" , \"dimension\" : [\"Length*Length/Time\" , \"Time\", \"1\"]}]}");
+    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"size\" : 100 , \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"ALL\" , \"value_type\" : \"DOUBLE\" , \"dimension\" : [\"Length*Length/Time\" , \"Time\", \"1\"]}]}");
     ParserKeyword parserKeyword(jsonObject);
     ParserRecordConstPtr record = parserKeyword.getRecord();
     ParserItemConstPtr item = record->get("ItemX");      

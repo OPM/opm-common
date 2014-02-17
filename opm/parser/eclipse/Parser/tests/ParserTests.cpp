@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(getAllKeywords_hasNoKeywords_returnsEmptyList) {
 
 BOOST_AUTO_TEST_CASE(addKeywordJSON_canParseKeyword_returnstrue) {
     ParserPtr parser(new Parser());
-    Json::JsonObject jsonConfig("{\"name\": \"BPR\", \"size\" : 100 ,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"FLOAT\"}]}");
+    Json::JsonObject jsonConfig("{\"name\": \"BPR\", \"size\" : 100 ,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}");
     parser->addKeyword(ParserKeywordConstPtr(new ParserKeyword( jsonConfig )));
     BOOST_CHECK(parser->canParseKeyword("BPR"));
 }
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(addKeywordJSON_canParseKeyword_returnstrue) {
 
 BOOST_AUTO_TEST_CASE(addKeywordJSON_size_isObject_allGood) {
     ParserPtr parser(new Parser());
-    Json::JsonObject jsonConfig("{\"name\": \"EQUIXL\", \"size\" : {\"keyword\":\"EQLDIMS\" , \"item\" : \"NTEQUL\"},  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"FLOAT\"}]}");
+    Json::JsonObject jsonConfig("{\"name\": \"EQUIXL\", \"size\" : {\"keyword\":\"EQLDIMS\" , \"item\" : \"NTEQUL\"},  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}");
     parser->addKeyword(ParserKeywordConstPtr(new ParserKeyword( jsonConfig )));
     BOOST_CHECK(parser->canParseKeyword("EQUIXL"));
 }
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(loadKeywordsJSON_notArray_throw) {
 
 BOOST_AUTO_TEST_CASE(loadKeywordsJSON_canParseKeyword_returnstrue) {
     ParserPtr parser(new Parser());
-    Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"FLOAT\"}]}]");
+    Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}]");
     
     parser->loadKeywords( jsonConfig );
     BOOST_CHECK(parser->canParseKeyword("BPR"));
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(empty_sizeReturns0) {
 
 BOOST_AUTO_TEST_CASE(loadKeywordsJSON_manyKeywords_returnstrue) {
     ParserPtr parser(new Parser( false ));
-    Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100 ,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"FLOAT\"}]}, {\"name\" : \"WWCT\", \"size\" : 0} , {\"name\" : \"EQUIL\" , \"size\" : 0}]");
+    Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100 ,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}, {\"name\" : \"WWCT\", \"size\" : 0} , {\"name\" : \"EQUIL\" , \"size\" : 0}]");
     
     parser->loadKeywords( jsonConfig );
     BOOST_CHECK(parser->canParseKeyword("BPR"));
