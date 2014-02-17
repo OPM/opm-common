@@ -44,7 +44,8 @@ namespace Opm {
     enum ParserValueTypeEnum {
         INT = 0,
         FLOAT = 1,
-        STRING = 2
+        STRING = 2,
+        DOUBLE = 3
     };
 
     

@@ -108,6 +108,8 @@ namespace Opm {
             return INT;
         else if (stringValue == "FLOAT")
             return FLOAT;
+        else if (stringValue == "DOUBLE")
+            return DOUBLE;
         else if (stringValue == "STRING")
             return STRING;
         else
