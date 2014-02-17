@@ -58,4 +58,4 @@ namespace Opm {
 
 
 
-#endif /* TIMEMAP_HPP_ */
+#endif /* COMPLETION_HPP_ */
