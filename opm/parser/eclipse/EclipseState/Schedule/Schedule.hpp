@@ -72,6 +72,7 @@ namespace Opm
         void handleWCONProducer(DeckKeywordConstPtr keyword, size_t currentStep, bool isPredictionMode);
         void handleWCONHIST(DeckKeywordConstPtr keyword , size_t currentStep);
         void handleWCONPROD(DeckKeywordConstPtr keyword, size_t currentStep);
+        void handleWGRUPCON(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleCOMPDAT(DeckKeywordConstPtr keyword , size_t currentStep);
         void handleWCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep);
         void handleWCONINJH(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep);

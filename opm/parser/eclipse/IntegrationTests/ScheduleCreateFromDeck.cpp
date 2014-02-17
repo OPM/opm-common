@@ -461,4 +461,16 @@ BOOST_AUTO_TEST_CASE(WellTestWELOPENControlsSet) {
     BOOST_CHECK_EQUAL(WellCommon::StatusEnum::STOP, sched->getWell("W_1")->getStatus(5));
 }
 
+BOOST_AUTO_TEST_CASE(WellTestWGRUPCONWellPropertiesSet) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WGRUPCON");
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
+    ScheduleConstPtr sched(new Schedule(deck));
+    WellConstPtr well1 = sched->getWell("W_1");
+    BOOST_CHECK(well1->isAvailableForGroupControl(0));
+    WellConstPtr well2 = sched->getWell("W_2");
+    BOOST_CHECK(!well2->isAvailableForGroupControl(0));
+    WellConstPtr well3 = sched->getWell("W_3");
+    BOOST_CHECK(well3->isAvailableForGroupControl(0));
+}
 

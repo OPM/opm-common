@@ -44,7 +44,8 @@ namespace Opm {
           m_productionControls(new DynamicState<int>(timeMap, 0)),
           m_injectionControls(new DynamicState<int>(timeMap, 0)),
           m_inPredictionMode(new DynamicState<bool>(timeMap, true)),
-          m_isProducer(new DynamicState<bool>(timeMap, true)) ,
+          m_isProducer(new DynamicState<bool>(timeMap, true)),
+          m_isAvailableForGroupControl(new DynamicState<bool>(timeMap, true)),
           m_completions( new DynamicState<CompletionSetConstPtr>( timeMap , CompletionSetConstPtr( new CompletionSet()) )),
           m_groupName( new DynamicState<std::string>( timeMap , "" )),
           m_headI(headI),
@@ -205,7 +206,15 @@ namespace Opm {
     bool Well::isInjector(size_t timeStep) const {
         return !isProducer(timeStep);
     }
+
+    bool Well::isAvailableForGroupControl(size_t timeStep) const {
+        return m_isAvailableForGroupControl->get(timeStep);
+    }
     
+    void Well::setAvailableForGroupControl(size_t timeStep, bool isAvailableForGroupControl) {
+        m_isAvailableForGroupControl->add(timeStep, isAvailableForGroupControl);
+    }
+
     void Well::switch2Producer(size_t timeStep ) {
         m_isProducer->add(timeStep , true);
         m_surfaceInjectionRate->add(timeStep, 0);

@@ -85,6 +85,9 @@ namespace Opm {
             if (keyword->name() == "WCONINJH")
                 handleWCONINJH(deck, keyword, currentStep);
 
+            if (keyword->name() == "WGRUPCON")
+                handleWGRUPCON(keyword, currentStep);
+
             if (keyword->name() == "COMPDAT")
                 handleCOMPDAT(keyword, currentStep);
 
@@ -382,6 +385,20 @@ namespace Opm {
             const std::string wellName = iter->first;
             WellPtr well = getWell(wellName);
             well->addCompletions(currentStep, iter->second);
+        }
+    }
+
+    void Schedule::handleWGRUPCON(DeckKeywordConstPtr keyword, size_t currentStep) {
+        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
+            DeckRecordConstPtr record = keyword->getRecord(recordNr);
+            const std::string& wellName = record->getItem("WELL")->getString(0);
+            WellPtr well = getWell(wellName);
+            if (record->getItem("GROUP_CONTROLLED")->getString(0) == "YES") {
+                well->setAvailableForGroupControl(currentStep, true);
+            }
+            else if (record->getItem("GROUP_CONTROLLED")->getString(0) == "NO") {
+                well->setAvailableForGroupControl(currentStep, false);
+            }
         }
     }
 
