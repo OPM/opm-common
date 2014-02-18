@@ -7,6 +7,7 @@
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>
+#include <opm/parser/eclipse/Parser/ParserFloatItem.hpp>
 
 using namespace Opm;
 
@@ -17,6 +18,7 @@ void createHeader(std::ofstream& of , const std::string& test_module) {
     of << "#include <opm/parser/eclipse/Parser/ParserIntItem.hpp>" << std::endl;
     of << "#include <opm/parser/eclipse/Parser/ParserStringItem.hpp>" << std::endl;
     of << "#include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>" << std::endl;
+    of << "#include <opm/parser/eclipse/Parser/ParserFloatItem.hpp>" << std::endl;
     of << "using namespace Opm;"  << std::endl << std::endl;
 }
 
@@ -95,6 +97,38 @@ void endTest(std::ofstream& of) {
 
  /*****************************************************************/
 
+
+ void FloatItem(std::ofstream& of) {
+    startTest(of , "FloatItem");
+    of << "   ParserFloatItem * item = new ParserFloatItem(\"NAME\" , ALL);" << std::endl;
+    of << "   ParserFloatItem * inlineItem = ";
+    {
+       ParserFloatItem * item = new ParserFloatItem("NAME" , ALL);
+       item->inlineNew( of );
+       of << ";" << std::endl;
+       delete item;
+    }
+    of << "   BOOST_CHECK( item->equal( *inlineItem ) );" << std::endl;
+    endTest(of);
+}
+
+
+ void FloatItemWithDefault(std::ofstream& of) {
+    startTest(of , "FloatItemWithDefault");
+    of << "   ParserFloatItem * item = new ParserFloatItem(\"NAME\" , SINGLE , 100.89);" << std::endl;
+    of << "   ParserFloatItem * inlineItem = ";
+    {
+       ParserFloatItem * item = new ParserFloatItem("NAME" , SINGLE , 100.89);
+       item->inlineNew( of );
+       of << ";" << std::endl;
+       delete item;
+    }
+    of << "   BOOST_CHECK( item->equal( *inlineItem ) );" << std::endl;
+    endTest(of);
+}
+
+ /*****************************************************************/
+
   void stringItem(std::ofstream& of) {
     startTest(of , "StringItem");
     of << "   ParserStringItem * item = new ParserStringItem(\"NAME\" , SINGLE);" << std::endl;
@@ -136,6 +170,9 @@ int main(int argc , char ** argv) {
 
     DoubleItem( of );
     DoubleItemWithDefault( of );
+
+    FloatItem( of );
+    FloatItemWithDefault( of );
 
     stringItem( of );
     stringItemWithDefault( of );

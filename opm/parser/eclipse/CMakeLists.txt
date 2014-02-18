@@ -38,7 +38,8 @@ Parser/ParserRecord.cpp
 Parser/ParserItem.cpp
 Parser/ParserIntItem.cpp  
 Parser/ParserBoolItem.cpp  
-Parser/ParserDoubleItem.cpp  
+Parser/ParserFloatItem.cpp
+Parser/ParserDoubleItem.cpp
 Parser/ParserStringItem.cpp  
 ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.cpp
 )
@@ -50,7 +51,8 @@ Parser/ParserRecord.cpp
 Parser/ParserItem.cpp
 Parser/ParserIntItem.cpp  
 Parser/ParserBoolItem.cpp  
-Parser/ParserDoubleItem.cpp  
+Parser/ParserFloatItem.cpp
+Parser/ParserDoubleItem.cpp
 Parser/ParserStringItem.cpp  
 )
 
@@ -96,8 +98,9 @@ Parser/ParserRecord.hpp
 Parser/ParserItem.hpp
 Parser/ParserIntItem.hpp  
 Parser/ParserBoolItem.hpp  
-Parser/ParserDoubleItem.hpp  
-Parser/ParserStringItem.hpp  
+Parser/ParserFloatItem.hpp
+Parser/ParserDoubleItem.hpp
+Parser/ParserStringItem.hpp
 #
 Units/UnitSystem.hpp
 Units/Dimension.hpp

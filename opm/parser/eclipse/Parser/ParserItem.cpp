@@ -96,6 +96,10 @@ namespace Opm {
         return 0;
     }
 
+    float ParserItem::defaultFloat() {
+        return 0.0F;
+    }
+
     double ParserItem::defaultDouble() {
         return 0.0;
     }
