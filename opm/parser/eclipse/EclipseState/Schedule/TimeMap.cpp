@@ -94,13 +94,15 @@ namespace Opm {
 
 
     boost::gregorian::date TimeMap::dateFromEclipse(DeckRecordConstPtr dateRecord) {
-        static const std::string errorMsg("The datarecord must consists of three values: \"DAY(int)  MONTH(string)  YEAR(int)\".\n");
-        if (dateRecord->size() != 3)
+        static const std::string errorMsg("The datarecord must consist of the three values "
+                                          "\"DAY(int)  MONTH(string)  YEAR(int)\" plus the optional value \"TIME(string)\".\n");
+        if (dateRecord->size() < 3 || dateRecord->size() > 4)
             throw std::invalid_argument( errorMsg);
 
         DeckItemConstPtr dayItem = dateRecord->getItem( 0 );
         DeckItemConstPtr monthItem = dateRecord->getItem( 1 );
         DeckItemConstPtr yearItem = dateRecord->getItem( 2 );
+        //DeckItemConstPtr timeItem = dateRecord->getItem( 3 );
 
         try {
             int day = dayItem->getInt(0);

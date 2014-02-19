@@ -98,6 +98,7 @@ BOOST_AUTO_TEST_CASE( dateFromEclipseThrowsInvalidRecord ) {
     Opm::DeckIntItemPtr    dayItem( new  Opm::DeckIntItem("DAY") );
     Opm::DeckStringItemPtr monthItem(new Opm::DeckStringItem("MONTH") );
     Opm::DeckIntItemPtr    yearItem(new  Opm::DeckIntItem("YEAR"));
+    Opm::DeckStringItemPtr timeItem(new Opm::DeckStringItem("TIME") );
     Opm::DeckIntItemPtr    extraItem(new  Opm::DeckIntItem("EXTRA"));
 
     dayItem->push_back( 10 );
@@ -113,6 +114,9 @@ BOOST_AUTO_TEST_CASE( dateFromEclipseThrowsInvalidRecord ) {
     BOOST_CHECK_THROW( Opm::TimeMap::dateFromEclipse( startRecord ) , std::invalid_argument );
 
     startRecord->addItem( yearItem );
+    BOOST_CHECK_NO_THROW(Opm::TimeMap::dateFromEclipse( startRecord ));
+
+    startRecord->addItem( timeItem );
     BOOST_CHECK_NO_THROW(Opm::TimeMap::dateFromEclipse( startRecord ));
   
     startRecord->addItem( extraItem );

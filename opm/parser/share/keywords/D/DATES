@@ -1,5 +1,6 @@
 {"name" : "DATES", "items" : [
-    {"name" : "DAY"   , "value_type" : "INT"},
+    {"name" : "DAY"   , "value_type" : "INT" },
     {"name" : "MONTH" , "value_type" : "STRING"},
-    {"name" : "YEAR"  , "value_type" : "INT"}]
+    {"name" : "YEAR"  , "value_type" : "INT" },
+    {"name" : "TIME" , "value_type" : "STRING", "default":"00:00:00.000"} ]
 }
