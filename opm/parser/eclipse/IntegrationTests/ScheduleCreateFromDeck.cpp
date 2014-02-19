@@ -468,9 +468,14 @@ BOOST_AUTO_TEST_CASE(WellTestWGRUPCONWellPropertiesSet) {
     ScheduleConstPtr sched(new Schedule(deck));
     WellConstPtr well1 = sched->getWell("W_1");
     BOOST_CHECK(well1->isAvailableForGroupControl(0));
+    BOOST_CHECK_EQUAL(-1, well1->getGuideRate(0));
+
     WellConstPtr well2 = sched->getWell("W_2");
     BOOST_CHECK(!well2->isAvailableForGroupControl(0));
+
+
     WellConstPtr well3 = sched->getWell("W_3");
     BOOST_CHECK(well3->isAvailableForGroupControl(0));
+    BOOST_CHECK_EQUAL(100, well3->getGuideRate(0));
 }
 

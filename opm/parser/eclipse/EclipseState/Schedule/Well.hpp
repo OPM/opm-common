@@ -82,8 +82,11 @@ namespace Opm {
         void setInPredictionMode(size_t timeStep, bool isInPredictionMode);
         bool isProducer(size_t timeStep) const;
         bool isInjector(size_t timeStep) const;
+
         bool isAvailableForGroupControl(size_t timeStep) const;
         void setAvailableForGroupControl(size_t timeStep, bool isAvailableForGroupControl);
+        double getGuideRate(size_t timeStep) const;
+        void setGuideRate(size_t timeStep, double guideRate);
 
         void addWELSPECS(DeckRecordConstPtr deckRecord);
         void addCompletions(size_t time_step , const std::vector<CompletionConstPtr>& newCompletions);
@@ -118,6 +121,8 @@ namespace Opm {
         std::shared_ptr<DynamicState<bool> > m_inPredictionMode;
         std::shared_ptr<DynamicState<bool> > m_isProducer;
         std::shared_ptr<DynamicState<bool> > m_isAvailableForGroupControl;
+        std::shared_ptr<DynamicState<double> > m_guideRate;
+
         std::shared_ptr<DynamicState<CompletionSetConstPtr> > m_completions;
         std::shared_ptr<DynamicState<std::string> > m_groupName;
 

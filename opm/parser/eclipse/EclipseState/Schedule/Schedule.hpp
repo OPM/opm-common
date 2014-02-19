@@ -85,6 +85,8 @@ namespace Opm
 
         double convertInjectionRateToSI(double rawRate, WellInjector::TypeEnum wellType, const Opm::UnitSystem &unitSystem) const;
         double convertInjectionRateToSI(double rawRate, Phase::PhaseEnum wellPhase, const Opm::UnitSystem &unitSystem) const;
+
+        static bool convertEclipseStringToBool(const std::string& eclipseString);
     };
     typedef std::shared_ptr<Schedule> SchedulePtr;
     typedef std::shared_ptr<const Schedule> ScheduleConstPtr;
