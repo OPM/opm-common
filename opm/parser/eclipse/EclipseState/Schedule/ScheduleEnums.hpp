@@ -166,6 +166,21 @@ namespace Opm {
         GroupProduction::ControlEnum ControlEnumFromString( const std::string& stringValue );    
     }
 
+    namespace GuideRate {
+        enum GuideRatePhaseEnum {
+            OIL = 0,
+            WAT = 1,
+            GAS = 2,
+            LIQ = 3,
+            COMB = 4,
+            WGA = 5,
+            CVAL = 6,
+            RAT = 7,
+            RES = 8
+        };
+        const std::string GuideRatePhaseEnum2String( GuideRatePhaseEnum enumValue );
+        GuideRatePhaseEnum GuideRatePhaseEnumFromString( const std::string& stringValue );
+    }
 
     const std::string CompletionStateEnum2String( CompletionStateEnum enumValue );
     CompletionStateEnum CompletionStateEnumFromString( const std::string& stringValue );
