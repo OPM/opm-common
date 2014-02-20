@@ -8,6 +8,7 @@
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>
+#include <opm/parser/eclipse/Parser/ParserFloatItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 
@@ -22,6 +23,7 @@ void createHeader(std::ofstream& of , const std::string& test_module) {
     of << "#include <opm/parser/eclipse/Parser/ParserIntItem.hpp>" << std::endl;
     of << "#include <opm/parser/eclipse/Parser/ParserStringItem.hpp>" << std::endl;
     of << "#include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>" << std::endl;
+    of << "#include <opm/parser/eclipse/Parser/ParserFloatItem.hpp>" << std::endl;
     of << "#include <opm/parser/eclipse/Parser/ParserRecord.hpp>" << std::endl;
     of << "#include <opm/parser/eclipse/Units/UnitSystem.hpp>" << std::endl;
     of << "using namespace Opm;"  << std::endl << std::endl;

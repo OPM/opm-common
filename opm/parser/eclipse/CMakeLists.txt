@@ -25,6 +25,7 @@ Deck/DeckRecord.cpp
 Deck/DeckItem.cpp
 Deck/DeckIntItem.cpp
 Deck/DeckDoubleItem.cpp
+Deck/DeckFloatItem.cpp
 Deck/DeckStringItem.cpp
 Deck/KeywordContainer.cpp
 )
@@ -37,7 +38,8 @@ Parser/ParserRecord.cpp
 Parser/ParserItem.cpp
 Parser/ParserIntItem.cpp  
 Parser/ParserBoolItem.cpp  
-Parser/ParserDoubleItem.cpp  
+Parser/ParserFloatItem.cpp
+Parser/ParserDoubleItem.cpp
 Parser/ParserStringItem.cpp  
 ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.cpp
 )
@@ -49,7 +51,8 @@ Parser/ParserRecord.cpp
 Parser/ParserItem.cpp
 Parser/ParserIntItem.cpp  
 Parser/ParserBoolItem.cpp  
-Parser/ParserDoubleItem.cpp  
+Parser/ParserFloatItem.cpp
+Parser/ParserDoubleItem.cpp
 Parser/ParserStringItem.cpp  
 )
 
@@ -84,6 +87,7 @@ Deck/DeckRecord.hpp
 Deck/DeckItem.hpp
 Deck/DeckIntItem.hpp
 Deck/DeckDoubleItem.hpp
+Deck/DeckFloatItem.hpp
 Deck/DeckStringItem.hpp
 Deck/KeywordContainer.hpp
 #
@@ -94,8 +98,9 @@ Parser/ParserRecord.hpp
 Parser/ParserItem.hpp
 Parser/ParserIntItem.hpp  
 Parser/ParserBoolItem.hpp  
-Parser/ParserDoubleItem.hpp  
-Parser/ParserStringItem.hpp  
+Parser/ParserFloatItem.hpp
+Parser/ParserDoubleItem.hpp
+Parser/ParserStringItem.hpp
 #
 Units/UnitSystem.hpp
 Units/Dimension.hpp

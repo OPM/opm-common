@@ -54,6 +54,7 @@ namespace Opm {
 
         static int defaultInt();
         static std::string defaultString();
+        static float defaultFloat();
         static double defaultDouble();
       
         virtual bool equal(const ParserItem& other) const;

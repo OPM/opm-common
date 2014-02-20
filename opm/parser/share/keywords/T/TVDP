@@ -1,2 +1,2 @@
 {"name" : "TVDP*" , "size" : {"keyword":"EQLDIMS" , "item":"NTTRVD"}, "items" : 
-        [ {"name" : "table" , "value_type" : "FLOAT" , "size_type" : "ALL" , "dimension" : ["Length" , "ContextDependent"]}]}
+        [ {"name" : "table" , "value_type" : "DOUBLE" , "size_type" : "ALL" , "dimension" : ["Length" , "ContextDependent"]}]}

@@ -1,6 +1,6 @@
 {"name" : "MAXVALUE", "items" : [
         {"name" : "field" , "value_type" : "STRING"},
-        {"name" : "value" , "value_type" : "FLOAT"},
+        {"name" : "value" , "value_type" : "DOUBLE"},
         {"name" : "I1" , "value_type" : "INT"},
         {"name" : "I2" , "value_type" : "INT"}, 
         {"name" : "J1" , "value_type" : "INT"},

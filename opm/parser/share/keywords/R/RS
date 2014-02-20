@@ -1,1 +1,1 @@
-{"name" : "RS" , "data" : {"value_type" : "FLOAT", "dimension" : "GasDissolutionFactor"}}
+{"name" : "RS" , "data" : {"value_type" : "DOUBLE", "dimension" : "GasDissolutionFactor"}}

@@ -1,1 +1,1 @@
-{"name":"DZV", "data" : {"value_type" : "FLOAT", "dimension":"Length" }}
+{"name":"DZV", "data" : {"value_type" : "DOUBLE", "dimension":"Length" }}
