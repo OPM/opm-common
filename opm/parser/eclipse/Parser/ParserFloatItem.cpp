@@ -70,14 +70,8 @@ namespace Opm
     ParserFloatItem::ParserFloatItem(const Json::JsonObject& jsonConfig) :
             ParserItem(jsonConfig)
     {
-        if (jsonConfig.has_item("default")) {
-            double defaultValueAsDouble = jsonConfig.get_double("default");
-            float defaultValueAsFloat = defaultValueAsDouble;
-            if (defaultValueAsFloat == (float) defaultValueAsDouble)
-                setDefault( defaultValueAsFloat );
-            else
-                throw std::overflow_error("Overflow when trying to convert a double to float");
-        }
+        if (jsonConfig.has_item("default"))
+            setDefault( jsonConfig.get_double("default"));
         else
             m_default = defaultFloat();
     }
