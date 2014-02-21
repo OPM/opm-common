@@ -23,6 +23,7 @@
 
 #include <boost/date_time.hpp>
 
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
@@ -31,6 +32,7 @@ namespace Opm {
     class TimeMap {
     public:
         TimeMap(boost::posix_time::ptime startDate);
+        TimeMap(Opm::DeckConstPtr deck);
         void addTime(boost::posix_time::ptime newTime);
         void addTStep(boost::posix_time::time_duration step);
         void addFromDATESKeyword( DeckKeywordConstPtr DATESKeyword );

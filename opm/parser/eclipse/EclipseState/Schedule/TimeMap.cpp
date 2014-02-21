@@ -30,6 +30,42 @@ namespace Opm {
         m_timeList.push_back( boost::posix_time::ptime(startDate) );
     }
 
+    TimeMap::TimeMap(Opm::DeckConstPtr deck) {
+        // The default start date is not specified in the Eclipse
+        // reference manual. We hence just assume it is the start
+        // of the UNIX epoch, i.e., January 1st, 1970...
+        boost::posix_time::ptime startTime(boost::gregorian::date(1970, 1, 1));
+
+        // use the 'START' keyword to find out the start date (if the
+        // keyword was specified)
+        if (deck->hasKeyword("START")) {
+            Opm::DeckKeywordConstPtr keyword = deck->getKeyword("START");
+            startTime = timeFromEclipse(keyword->getRecord(/*index=*/0));
+        }
+
+        m_timeList.push_back( startTime );
+
+        // find all "TSTEP" and "DATES" keywords in the deck and deal
+        // with them one after another
+        size_t numKeywords = deck->size();
+        for (size_t keywordIdx = 0; keywordIdx < numKeywords; ++keywordIdx) {
+            Opm::DeckKeywordConstPtr keyword = deck->getKeyword(keywordIdx);
+
+            // We're only interested in "TSTEP" and "DATES" keywords,
+            // so we ignore everything else here...
+            if (keyword->name() != "TSTEP" &&
+                keyword->name() != "DATES")
+            {
+                continue;
+            }
+
+            if (keyword->name() == "TSTEP")
+                addFromTSTEPKeyword(keyword);
+            else if (keyword->name() == "DATES")
+                addFromDATESKeyword(keyword);
+        }
+    }
+
     double TimeMap::getTotalTime() const
     {
         if (m_timeList.size() < 2)
