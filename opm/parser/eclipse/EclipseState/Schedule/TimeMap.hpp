@@ -43,7 +43,7 @@ namespace Opm {
         static boost::posix_time::ptime timeFromEclipse(int day , const std::string& month, int year, const std::string& eclipseTimeString = "00:00:00.000");
         static boost::posix_time::time_duration dayTimeFromEclipse(const std::string& eclipseTimeString);
     private:
-        static std::map<std::string , boost::gregorian::greg_month> initEclipseMonthNames();
+        static const std::map<std::string , boost::gregorian::greg_month>& eclipseMonthNames();
 
         std::vector<boost::posix_time::ptime> m_timeList;
     };

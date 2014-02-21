@@ -53,41 +53,40 @@ namespace Opm {
         return m_timeList.size();
     }
 
-    std::map<std::string , boost::gregorian::greg_month> TimeMap::initEclipseMonthNames() {
-        std::map<std::string , boost::gregorian::greg_month> monthNames;
+    const std::map<std::string , boost::gregorian::greg_month>& TimeMap::eclipseMonthNames() {
+        static std::map<std::string , boost::gregorian::greg_month> monthNames;
 
-        monthNames.insert( std::make_pair( "JAN" , boost::gregorian::Jan ));
-        monthNames.insert( std::make_pair( "FEB" , boost::gregorian::Feb ));
-        monthNames.insert( std::make_pair( "MAR" , boost::gregorian::Mar ));
-        monthNames.insert( std::make_pair( "APR" , boost::gregorian::Apr ));
-        monthNames.insert( std::make_pair( "MAI" , boost::gregorian::May ));
-        monthNames.insert( std::make_pair( "MAY" , boost::gregorian::May ));
-        monthNames.insert( std::make_pair( "JUN" , boost::gregorian::Jun ));
-        monthNames.insert( std::make_pair( "JUL" , boost::gregorian::Jul ));
-        monthNames.insert( std::make_pair( "JLY" , boost::gregorian::Jul ));
-        monthNames.insert( std::make_pair( "AUG" , boost::gregorian::Aug ));
-        monthNames.insert( std::make_pair( "SEP" , boost::gregorian::Sep ));
-        monthNames.insert( std::make_pair( "OCT" , boost::gregorian::Oct ));
-        monthNames.insert( std::make_pair( "OKT" , boost::gregorian::Oct ));
-        monthNames.insert( std::make_pair( "NOV" , boost::gregorian::Nov ));
-        monthNames.insert( std::make_pair( "DEC" , boost::gregorian::Dec ));
-        monthNames.insert( std::make_pair( "DES" , boost::gregorian::Dec ));
+        if (monthNames.size() == 0) {
+            monthNames.insert( std::make_pair( "JAN" , boost::gregorian::Jan ));
+            monthNames.insert( std::make_pair( "FEB" , boost::gregorian::Feb ));
+            monthNames.insert( std::make_pair( "MAR" , boost::gregorian::Mar ));
+            monthNames.insert( std::make_pair( "APR" , boost::gregorian::Apr ));
+            monthNames.insert( std::make_pair( "MAI" , boost::gregorian::May ));
+            monthNames.insert( std::make_pair( "MAY" , boost::gregorian::May ));
+            monthNames.insert( std::make_pair( "JUN" , boost::gregorian::Jun ));
+            monthNames.insert( std::make_pair( "JUL" , boost::gregorian::Jul ));
+            monthNames.insert( std::make_pair( "JLY" , boost::gregorian::Jul ));
+            monthNames.insert( std::make_pair( "AUG" , boost::gregorian::Aug ));
+            monthNames.insert( std::make_pair( "SEP" , boost::gregorian::Sep ));
+            monthNames.insert( std::make_pair( "OCT" , boost::gregorian::Oct ));
+            monthNames.insert( std::make_pair( "OKT" , boost::gregorian::Oct ));
+            monthNames.insert( std::make_pair( "NOV" , boost::gregorian::Nov ));
+            monthNames.insert( std::make_pair( "DEC" , boost::gregorian::Dec ));
+            monthNames.insert( std::make_pair( "DES" , boost::gregorian::Dec ));
+        }
         
         return monthNames;
     }
-    
 
     boost::posix_time::ptime TimeMap::timeFromEclipse(int day,
                                                       const std::string& eclipseMonthName,
                                                       int year,
                                                       const std::string& eclipseTimeString) {
-        static const std::map<std::string , boost::gregorian::greg_month> eclipseMonthNames = initEclipseMonthNames();
-        boost::gregorian::greg_month month = eclipseMonthNames.at( eclipseMonthName );
+        boost::gregorian::greg_month month = eclipseMonthNames().at( eclipseMonthName );
         boost::gregorian::date date( year , month , day );
         boost::posix_time::time_duration dayTime = dayTimeFromEclipse(eclipseTimeString);
         return boost::posix_time::ptime(date, dayTime);
     }
-    
 
     boost::posix_time::time_duration TimeMap::dayTimeFromEclipse(const std::string& eclipseTimeString) {
         return boost::posix_time::duration_from_string(eclipseTimeString);
