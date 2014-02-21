@@ -33,17 +33,17 @@
 #include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-
+#include <opm/parser/eclipse/Parser/Parser.hpp>
 
 BOOST_AUTO_TEST_CASE(CreateTimeMap_InvalidThrow) {
     boost::gregorian::date startDate;
-    BOOST_CHECK_THROW(Opm::TimeMap timeMap(startDate) , std::invalid_argument);
+    BOOST_CHECK_THROW(Opm::TimeMap(boost::posix_time::ptime(startDate)) , std::invalid_argument);
 }
 
 
 BOOST_AUTO_TEST_CASE(CreateTimeMap) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMap timeMap(startDate);
+    Opm::TimeMap timeMap((boost::posix_time::ptime(startDate)));
     BOOST_CHECK_EQUAL(1U , timeMap.size());
 }
 
@@ -51,32 +51,34 @@ BOOST_AUTO_TEST_CASE(CreateTimeMap) {
 
 BOOST_AUTO_TEST_CASE(AddDateBeforeThrows) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMap timeMap(startDate);
+    Opm::TimeMap timeMap((boost::posix_time::ptime(startDate)));
 
-    BOOST_CHECK_THROW( timeMap.addDate( boost::gregorian::date(2009,boost::gregorian::Feb,2))  , std::invalid_argument);
+    BOOST_CHECK_THROW( timeMap.addTime( boost::posix_time::ptime(boost::gregorian::date(2009,boost::gregorian::Feb,2))),
+                       std::invalid_argument);
 }
 
 
 BOOST_AUTO_TEST_CASE(GetStartDate) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMap timeMap(startDate);
-    BOOST_CHECK_EQUAL( startDate , timeMap.getStartDate());
+    boost::posix_time::ptime startTime(startDate);
+    Opm::TimeMap timeMap(startTime);
+    BOOST_CHECK_EQUAL( startTime , timeMap.getStartTime(/*timeStepIdx=*/0));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(AddDateAfterSizeCorrect) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMap timeMap(startDate);
+    Opm::TimeMap timeMap((boost::posix_time::ptime(startDate)));
 
-    timeMap.addDate( boost::gregorian::date(2010,boost::gregorian::Feb,2));
+    timeMap.addTime( boost::posix_time::ptime(boost::gregorian::date(2010,boost::gregorian::Feb,2)));
     BOOST_CHECK_EQUAL( 2U , timeMap.size());
 }
 
 
 BOOST_AUTO_TEST_CASE(AddDateNegativeStepThrows) {
-  boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMap timeMap(startDate);
+    boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
+    Opm::TimeMap timeMap((boost::posix_time::ptime(startDate)));
 
     BOOST_CHECK_THROW( timeMap.addTStep( boost::posix_time::hours(-1)) , std::invalid_argument);
 }
@@ -85,7 +87,7 @@ BOOST_AUTO_TEST_CASE(AddDateNegativeStepThrows) {
 
 BOOST_AUTO_TEST_CASE(AddStepSizeCorrect) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMapPtr timeMap( new Opm::TimeMap(startDate) );
+    Opm::TimeMapPtr timeMap( new Opm::TimeMap(boost::posix_time::ptime(boost::posix_time::ptime(startDate))) );
 
     timeMap->addTStep( boost::posix_time::hours(1));
     timeMap->addTStep( boost::posix_time::hours(24));
@@ -105,22 +107,22 @@ BOOST_AUTO_TEST_CASE( dateFromEclipseThrowsInvalidRecord ) {
     yearItem->push_back(1987 );
     monthItem->push_back("FEB");
 
-    BOOST_CHECK_THROW( Opm::TimeMap::dateFromEclipse( startRecord ) , std::invalid_argument );
+    BOOST_CHECK_THROW( Opm::TimeMap::timeFromEclipse( startRecord ) , std::invalid_argument );
 
     startRecord->addItem( dayItem );
-    BOOST_CHECK_THROW( Opm::TimeMap::dateFromEclipse( startRecord ) , std::invalid_argument );
+    BOOST_CHECK_THROW( Opm::TimeMap::timeFromEclipse( startRecord ) , std::invalid_argument );
 
     startRecord->addItem( monthItem );
-    BOOST_CHECK_THROW( Opm::TimeMap::dateFromEclipse( startRecord ) , std::invalid_argument );
+    BOOST_CHECK_THROW( Opm::TimeMap::timeFromEclipse( startRecord ) , std::invalid_argument );
 
     startRecord->addItem( yearItem );
-    BOOST_CHECK_NO_THROW(Opm::TimeMap::dateFromEclipse( startRecord ));
+    BOOST_CHECK_NO_THROW(Opm::TimeMap::timeFromEclipse( startRecord ));
 
     startRecord->addItem( timeItem );
-    BOOST_CHECK_NO_THROW(Opm::TimeMap::dateFromEclipse( startRecord ));
+    BOOST_CHECK_NO_THROW(Opm::TimeMap::timeFromEclipse( startRecord ));
   
     startRecord->addItem( extraItem );
-    BOOST_CHECK_THROW( Opm::TimeMap::dateFromEclipse( startRecord ) , std::invalid_argument );
+    BOOST_CHECK_THROW( Opm::TimeMap::timeFromEclipse( startRecord ) , std::invalid_argument );
 }
 
 
@@ -139,34 +141,34 @@ BOOST_AUTO_TEST_CASE( dateFromEclipseInvalidMonthThrows ) {
     startRecord->addItem( monthItem );
     startRecord->addItem( yearItem );
 
-    BOOST_CHECK_THROW( Opm::TimeMap::dateFromEclipse( startRecord ) , std::invalid_argument );
+    BOOST_CHECK_THROW( Opm::TimeMap::timeFromEclipse( startRecord ) , std::invalid_argument );
 }
 
 
-BOOST_AUTO_TEST_CASE( dateFromEclipseCheckMonthNames ) {
+BOOST_AUTO_TEST_CASE( timeFromEclipseCheckMonthNames ) {
 
-    BOOST_CHECK_EQUAL( boost::gregorian::date( 2000 , boost::gregorian::Jan , 1 ) , Opm::TimeMap::dateFromEclipse( 1 , "JAN" , 2000));
-    BOOST_CHECK_EQUAL( boost::gregorian::date( 2000 , boost::gregorian::Feb , 1 ) , Opm::TimeMap::dateFromEclipse( 1 , "FEB" , 2000));
-    BOOST_CHECK_EQUAL( boost::gregorian::date( 2000 , boost::gregorian::Mar , 1 ) , Opm::TimeMap::dateFromEclipse( 1 , "MAR" , 2000));
-    BOOST_CHECK_EQUAL( boost::gregorian::date( 2000 , boost::gregorian::Apr , 1 ) , Opm::TimeMap::dateFromEclipse( 1 , "APR" , 2000));
-    BOOST_CHECK_EQUAL( boost::gregorian::date( 2000 , boost::gregorian::May , 1 ) , Opm::TimeMap::dateFromEclipse( 1 , "MAI" , 2000));
-    BOOST_CHECK_EQUAL( boost::gregorian::date( 2000 , boost::gregorian::May , 1 ) , Opm::TimeMap::dateFromEclipse( 1 , "MAY" , 2000));
-    BOOST_CHECK_EQUAL( boost::gregorian::date( 2000 , boost::gregorian::Jun , 1 ) , Opm::TimeMap::dateFromEclipse( 1 , "JUN" , 2000));
-    BOOST_CHECK_EQUAL( boost::gregorian::date( 2000 , boost::gregorian::Jul , 1 ) , Opm::TimeMap::dateFromEclipse( 1 , "JUL" , 2000));
-    BOOST_CHECK_EQUAL( boost::gregorian::date( 2000 , boost::gregorian::Jul , 1 ) , Opm::TimeMap::dateFromEclipse( 1 , "JLY" , 2000));
-    BOOST_CHECK_EQUAL( boost::gregorian::date( 2000 , boost::gregorian::Aug , 1 ) , Opm::TimeMap::dateFromEclipse( 1 , "AUG" , 2000));
-    BOOST_CHECK_EQUAL( boost::gregorian::date( 2000 , boost::gregorian::Sep , 1 ) , Opm::TimeMap::dateFromEclipse( 1 , "SEP" , 2000));
-    BOOST_CHECK_EQUAL( boost::gregorian::date( 2000 , boost::gregorian::Oct , 1 ) , Opm::TimeMap::dateFromEclipse( 1 , "OKT" , 2000));
-    BOOST_CHECK_EQUAL( boost::gregorian::date( 2000 , boost::gregorian::Oct , 1 ) , Opm::TimeMap::dateFromEclipse( 1 , "OCT" , 2000));
-    BOOST_CHECK_EQUAL( boost::gregorian::date( 2000 , boost::gregorian::Nov , 1 ) , Opm::TimeMap::dateFromEclipse( 1 , "NOV" , 2000));
-    BOOST_CHECK_EQUAL( boost::gregorian::date( 2000 , boost::gregorian::Dec , 1 ) , Opm::TimeMap::dateFromEclipse( 1 , "DEC" , 2000));
-    BOOST_CHECK_EQUAL( boost::gregorian::date( 2000 , boost::gregorian::Dec , 1 ) , Opm::TimeMap::dateFromEclipse( 1 , "DES" , 2000));
+    BOOST_CHECK_EQUAL( boost::posix_time::ptime(boost::gregorian::date( 2000 , boost::gregorian::Jan , 1 )) , Opm::TimeMap::timeFromEclipse( 1 , "JAN" , 2000));
+    BOOST_CHECK_EQUAL( boost::posix_time::ptime(boost::gregorian::date( 2000 , boost::gregorian::Feb , 1 )) , Opm::TimeMap::timeFromEclipse( 1 , "FEB" , 2000));
+    BOOST_CHECK_EQUAL( boost::posix_time::ptime(boost::gregorian::date( 2000 , boost::gregorian::Mar , 1 )) , Opm::TimeMap::timeFromEclipse( 1 , "MAR" , 2000));
+    BOOST_CHECK_EQUAL( boost::posix_time::ptime(boost::gregorian::date( 2000 , boost::gregorian::Apr , 1 )) , Opm::TimeMap::timeFromEclipse( 1 , "APR" , 2000));
+    BOOST_CHECK_EQUAL( boost::posix_time::ptime(boost::gregorian::date( 2000 , boost::gregorian::May , 1 )) , Opm::TimeMap::timeFromEclipse( 1 , "MAI" , 2000));
+    BOOST_CHECK_EQUAL( boost::posix_time::ptime(boost::gregorian::date( 2000 , boost::gregorian::May , 1 )) , Opm::TimeMap::timeFromEclipse( 1 , "MAY" , 2000));
+    BOOST_CHECK_EQUAL( boost::posix_time::ptime(boost::gregorian::date( 2000 , boost::gregorian::Jun , 1 )) , Opm::TimeMap::timeFromEclipse( 1 , "JUN" , 2000));
+    BOOST_CHECK_EQUAL( boost::posix_time::ptime(boost::gregorian::date( 2000 , boost::gregorian::Jul , 1 )) , Opm::TimeMap::timeFromEclipse( 1 , "JUL" , 2000));
+    BOOST_CHECK_EQUAL( boost::posix_time::ptime(boost::gregorian::date( 2000 , boost::gregorian::Jul , 1 )) , Opm::TimeMap::timeFromEclipse( 1 , "JLY" , 2000));
+    BOOST_CHECK_EQUAL( boost::posix_time::ptime(boost::gregorian::date( 2000 , boost::gregorian::Aug , 1 )) , Opm::TimeMap::timeFromEclipse( 1 , "AUG" , 2000));
+    BOOST_CHECK_EQUAL( boost::posix_time::ptime(boost::gregorian::date( 2000 , boost::gregorian::Sep , 1 )) , Opm::TimeMap::timeFromEclipse( 1 , "SEP" , 2000));
+    BOOST_CHECK_EQUAL( boost::posix_time::ptime(boost::gregorian::date( 2000 , boost::gregorian::Oct , 1 )) , Opm::TimeMap::timeFromEclipse( 1 , "OKT" , 2000));
+    BOOST_CHECK_EQUAL( boost::posix_time::ptime(boost::gregorian::date( 2000 , boost::gregorian::Oct , 1 )) , Opm::TimeMap::timeFromEclipse( 1 , "OCT" , 2000));
+    BOOST_CHECK_EQUAL( boost::posix_time::ptime(boost::gregorian::date( 2000 , boost::gregorian::Nov , 1 )) , Opm::TimeMap::timeFromEclipse( 1 , "NOV" , 2000));
+    BOOST_CHECK_EQUAL( boost::posix_time::ptime(boost::gregorian::date( 2000 , boost::gregorian::Dec , 1 )) , Opm::TimeMap::timeFromEclipse( 1 , "DEC" , 2000));
+    BOOST_CHECK_EQUAL( boost::posix_time::ptime(boost::gregorian::date( 2000 , boost::gregorian::Dec , 1 )) , Opm::TimeMap::timeFromEclipse( 1 , "DES" , 2000));
 
 }
 
 
 
-BOOST_AUTO_TEST_CASE( dateFromEclipseInputRecord ) {
+BOOST_AUTO_TEST_CASE( timeFromEclipseInputRecord ) {
     Opm::DeckRecordPtr  startRecord(new  Opm::DeckRecord());
     Opm::DeckIntItemPtr    dayItem( new  Opm::DeckIntItem("DAY") );
     Opm::DeckStringItemPtr monthItem(new Opm::DeckStringItem("MONTH") );
@@ -180,14 +182,14 @@ BOOST_AUTO_TEST_CASE( dateFromEclipseInputRecord ) {
     startRecord->addItem( monthItem );
     startRecord->addItem( yearItem );
 
-    BOOST_CHECK_EQUAL( boost::gregorian::date( 1987 , boost::gregorian::Jan , 10 ) , Opm::TimeMap::dateFromEclipse( startRecord ));
+    BOOST_CHECK_EQUAL( boost::posix_time::ptime(boost::gregorian::date( 1987 , boost::gregorian::Jan , 10 )) , Opm::TimeMap::timeFromEclipse( startRecord ));
 }
 
 
 
 BOOST_AUTO_TEST_CASE( addDATESFromWrongKeywordThrows ) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMap timeMap(startDate);
+    Opm::TimeMap timeMap((boost::posix_time::ptime(startDate)));
     Opm::DeckKeywordConstPtr deckKeyword(new Opm::DeckKeyword("NOTDATES"));
     BOOST_CHECK_THROW( timeMap.addFromDATESKeyword( deckKeyword ) , std::invalid_argument );
 }
@@ -196,7 +198,8 @@ BOOST_AUTO_TEST_CASE( addDATESFromWrongKeywordThrows ) {
 
 BOOST_AUTO_TEST_CASE( addTSTEPFromWrongKeywordThrows ) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMap timeMap(startDate);
+    boost::posix_time::ptime ptime(startDate);
+    Opm::TimeMap timeMap(ptime);
     Opm::DeckKeywordConstPtr deckKeyword(new Opm::DeckKeyword("NOTTSTEP"));
     BOOST_CHECK_THROW( timeMap.addFromTSTEPKeyword( deckKeyword ) , std::invalid_argument );
 }

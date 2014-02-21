@@ -30,19 +30,21 @@ namespace Opm {
 
     class TimeMap {
     public:
-        TimeMap(boost::gregorian::date startDate);
-        void addDate(boost::gregorian::date newDate);
+        TimeMap(boost::posix_time::ptime startDate);
+        void addTime(boost::posix_time::ptime newTime);
         void addTStep(boost::posix_time::time_duration step);
         void addFromDATESKeyword( DeckKeywordConstPtr DATESKeyword );
         void addFromTSTEPKeyword( DeckKeywordConstPtr TSTEPKeyword );
-        boost::gregorian::date getStartDate() const;
         size_t size() const;
-        static boost::gregorian::date dateFromEclipse(DeckRecordConstPtr dateRecord);
-        static boost::gregorian::date dateFromEclipse(int day , const std::string& month, int year);
+        /// Return the date and time where a given time step starts.
+        boost::posix_time::ptime getStartTime(int tStepIdx) const
+        { return m_timeList[tStepIdx]; }
+        static boost::posix_time::ptime timeFromEclipse(DeckRecordConstPtr dateRecord);
+        static boost::posix_time::ptime timeFromEclipse(int day , const std::string& month, int year, const std::string& eclipseTimeString = "00:00:00.000");
+        static boost::posix_time::time_duration dayTimeFromEclipse(const std::string& eclipseTimeString);
     private:
         static std::map<std::string , boost::gregorian::greg_month> initEclipseMonthNames();
 
-        boost::gregorian::date m_startDate;
         std::vector<boost::posix_time::ptime> m_timeList;
     };
     typedef std::shared_ptr<TimeMap> TimeMapPtr;

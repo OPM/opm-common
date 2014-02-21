@@ -35,14 +35,14 @@
 
 BOOST_AUTO_TEST_CASE(CreateDynamicTest) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMapPtr timeMap(new Opm::TimeMap(startDate));
+    Opm::TimeMapPtr timeMap(new Opm::TimeMap(boost::posix_time::ptime(startDate)));
     Opm::DynamicState<double> state(timeMap , 9.99);
 }
 
 
 BOOST_AUTO_TEST_CASE(DynamicStateGetOutOfRangeThrows) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMapPtr timeMap(new Opm::TimeMap(startDate));
+    Opm::TimeMapPtr timeMap(new Opm::TimeMap(boost::posix_time::ptime(startDate)));
     Opm::DynamicState<double> state(timeMap , 9.99);
     BOOST_CHECK_THROW( state.get(1) , std::range_error);
 }
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(DynamicStateGetOutOfRangeThrows) {
 
 BOOST_AUTO_TEST_CASE(DynamicStateGetDefault) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMapPtr timeMap(new Opm::TimeMap(startDate));
+    Opm::TimeMapPtr timeMap(new Opm::TimeMap(boost::posix_time::ptime(startDate)));
     Opm::DynamicState<int> state(timeMap , 137);
     BOOST_CHECK_EQUAL( 137 , state.get(0));
 }
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(DynamicStateGetDefault) {
 
 BOOST_AUTO_TEST_CASE(DynamicStateSetOutOfRangeThrows) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMapPtr timeMap(new Opm::TimeMap(startDate));
+    Opm::TimeMapPtr timeMap(new Opm::TimeMap(boost::posix_time::ptime(startDate)));
     Opm::DynamicState<int> state(timeMap , 137);
     for (size_t i = 0; i < 2; i++)
         timeMap->addTStep( boost::posix_time::hours( (i+1) * 24 ));
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(DynamicStateSetOutOfRangeThrows) {
 
 BOOST_AUTO_TEST_CASE(DynamicStateSetOK) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMapPtr timeMap(new Opm::TimeMap(startDate));
+    Opm::TimeMapPtr timeMap(new Opm::TimeMap(boost::posix_time::ptime(startDate)));
     Opm::DynamicState<int> state(timeMap , 137);
     for (size_t i = 0; i < 10; i++)
         timeMap->addTStep( boost::posix_time::hours( (i+1) * 24 ));
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(DynamicStateSetOK) {
 
 BOOST_AUTO_TEST_CASE(DynamicStateAddIndexAlreadySetThrows) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMapPtr timeMap(new Opm::TimeMap(startDate));
+    Opm::TimeMapPtr timeMap(new Opm::TimeMap(boost::posix_time::ptime(startDate)));
     Opm::DynamicState<int> state(timeMap , 137);
     for (size_t i = 0; i < 10; i++)
         timeMap->addTStep( boost::posix_time::hours( (i+1) * 24 ));
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(DynamicStateAddIndexAlreadySetThrows) {
 
 BOOST_AUTO_TEST_CASE(DynamicStateCheckSize) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMapPtr timeMap(new Opm::TimeMap(startDate));
+    Opm::TimeMapPtr timeMap(new Opm::TimeMap(boost::posix_time::ptime(startDate)));
     Opm::DynamicState<int> state(timeMap , 137);
     for (size_t i = 0; i < 10; i++)
         timeMap->addTStep( boost::posix_time::hours( (i+1) * 24 ));

@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(CreatSchedule) {
     EclipseState state(deck);
     ScheduleConstPtr schedule = state.getSchedule();
     
-    BOOST_CHECK_EQUAL( schedule->getStartDate() , boost::gregorian::date(1998 , 3 , 8 ));
+    BOOST_CHECK_EQUAL( schedule->getStartTime() , boost::posix_time::ptime(boost::gregorian::date(1998 , 3 , 8 )));
 }
 
 

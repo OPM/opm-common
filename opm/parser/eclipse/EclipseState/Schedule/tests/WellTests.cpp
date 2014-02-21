@@ -35,7 +35,7 @@
 
 Opm::TimeMapPtr createXDaysTimeMap(size_t numDays) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMapPtr timeMap(new Opm::TimeMap(startDate));
+    Opm::TimeMapPtr timeMap(new Opm::TimeMap(boost::posix_time::ptime(startDate)));
     for (size_t i = 0; i < numDays; i++)
         timeMap->addTStep( boost::posix_time::hours( (i+1) * 24 ));
     return timeMap;

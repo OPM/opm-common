@@ -95,14 +95,14 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingReturnsDefaults) {
     DeckKeywordPtr keyword(new DeckKeyword("SCHEDULE"));
     deck->addKeyword( keyword );
     Schedule schedule(deck);
-    BOOST_CHECK_EQUAL( schedule.getStartDate() , boost::gregorian::date( 1983  , boost::gregorian::Jan , 1));
+    BOOST_CHECK_EQUAL( schedule.getStartTime() , boost::posix_time::ptime(boost::gregorian::date( 1983  , boost::gregorian::Jan , 1)));
 }
 
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithStart) {
     DeckPtr deck = createDeck();
     Schedule schedule(deck); 
-    BOOST_CHECK_EQUAL( schedule.getStartDate() , boost::gregorian::date( 1998  , boost::gregorian::Mar , 8));
+    BOOST_CHECK_EQUAL( schedule.getStartTime() , boost::posix_time::ptime(boost::gregorian::date( 1998  , boost::gregorian::Mar , 8)));
 }
 
 

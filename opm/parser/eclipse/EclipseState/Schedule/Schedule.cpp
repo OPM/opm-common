@@ -42,13 +42,13 @@ namespace Opm {
     }
 
     void Schedule::createTimeMap(DeckConstPtr deck) {
-        boost::gregorian::date startDate(defaultStartDate);
+        boost::posix_time::ptime startTime(defaultStartDate);
         if (deck->hasKeyword("START")) {
             DeckKeywordConstPtr startKeyword = deck->getKeyword("START");
-            startDate = TimeMap::dateFromEclipse(startKeyword->getRecord(0));
+            startTime = TimeMap::timeFromEclipse(startKeyword->getRecord(0));
         }
 
-        m_timeMap.reset(new TimeMap(startDate));
+        m_timeMap.reset(new TimeMap(startTime));
     }
 
     void Schedule::iterateScheduleSection(DeckConstPtr deck) {
@@ -395,10 +395,6 @@ namespace Opm {
             newTree->updateTree(childName, parentName);
         }
         m_rootGroupTree->add(currentStep, newTree);
-    }
-
-    boost::gregorian::date Schedule::getStartDate() const {
-        return m_timeMap->getStartDate();
     }
 
     TimeMapConstPtr Schedule::getTimeMap() const {
