@@ -222,9 +222,7 @@ namespace Opm {
                         for (size_t i = 0; i < parserState->rawKeyword->size(); i++) {
                              RawRecordConstPtr record = parserState->rawKeyword->getRecord(i);
                              std::string pathName = record->getItem(0);
-                             std::cout << "Adding pathName: " << pathName << std::endl;
                              std::string pathValue = record->getItem(1);
-                             std::cout << "Adding pathValue: " << pathValue << std::endl;
                              parserState->pathMap.insert(std::pair<std::string, std::string>(pathName, pathValue));
                         }
                     }
