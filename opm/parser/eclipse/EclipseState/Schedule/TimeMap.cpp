@@ -30,6 +30,13 @@ namespace Opm {
         m_timeList.push_back( boost::posix_time::ptime(startDate) );
     }
 
+    double TimeMap::getTotalTime() const
+    {
+        if (m_timeList.size() < 2)
+            return 0.0;
+        boost::posix_time::time_duration deltaT = m_timeList.back() - m_timeList.front();
+        return static_cast<double>(deltaT.total_milliseconds())/1000.0;
+    }
 
     void TimeMap::addTime(boost::posix_time::ptime newTime) {
         boost::posix_time::ptime lastTime = m_timeList.back();
@@ -146,7 +153,31 @@ namespace Opm {
             }
         }
     } 
-    
+
+    double TimeMap::getTimeStepLength(int tStepIdx) const
+    {
+        assert(0 <= tStepIdx && tStepIdx < numTimesteps());
+        const boost::posix_time::ptime &t1
+            = m_timeList[tStepIdx];
+        const boost::posix_time::ptime &t2
+            = m_timeList[tStepIdx + 1];
+        const boost::posix_time::time_duration &deltaT
+            = t2 - t1;
+        return static_cast<double>(deltaT.total_milliseconds())/1000.0;
+    }
+
+    double TimeMap::getTimePassedUntil(int tStepIdx) const
+    {
+        assert(0 <= tStepIdx && tStepIdx < numTimesteps());
+        const boost::posix_time::ptime &t1
+            = m_timeList[tStepIdx];
+        const boost::posix_time::ptime &t2
+            = m_timeList.back();
+        const boost::posix_time::time_duration &deltaT
+            = t2 - t1;
+        return static_cast<double>(deltaT.total_milliseconds())/1000.0;
+    }
+
 }
 
 
