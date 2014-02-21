@@ -388,6 +388,8 @@ namespace Opm {
                 return "RAT";
             case RES:
                 return "RES";
+            case UNDEFINED:
+                return "UNDEFINED";
             default:
                 throw std::invalid_argument("unhandled enum value");
             }
@@ -412,6 +414,8 @@ namespace Opm {
                 return RAT;
             else if (stringValue == "RES")
                 return RES;
+            else if (stringValue == "UNDEFINED")
+                return UNDEFINED;
             else
                 throw std::invalid_argument("Unknown enum state string: " + stringValue );
         }

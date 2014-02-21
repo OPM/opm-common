@@ -27,6 +27,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/Units/ConversionFactors.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/GroupTreeNode.hpp>
@@ -469,13 +470,19 @@ BOOST_AUTO_TEST_CASE(WellTestWGRUPCONWellPropertiesSet) {
     WellConstPtr well1 = sched->getWell("W_1");
     BOOST_CHECK(well1->isAvailableForGroupControl(0));
     BOOST_CHECK_EQUAL(-1, well1->getGuideRate(0));
+    BOOST_CHECK_EQUAL(GuideRate::OIL, well1->getGuideRatePhase(0));
+    BOOST_CHECK_EQUAL(1.0, well1->getGuideRateScalingFactor(0));
 
     WellConstPtr well2 = sched->getWell("W_2");
     BOOST_CHECK(!well2->isAvailableForGroupControl(0));
-
+    BOOST_CHECK_EQUAL(-1, well2->getGuideRate(0));
+    BOOST_CHECK_EQUAL(GuideRate::UNDEFINED, well2->getGuideRatePhase(0));
+    BOOST_CHECK_EQUAL(1.0, well2->getGuideRateScalingFactor(0));
 
     WellConstPtr well3 = sched->getWell("W_3");
     BOOST_CHECK(well3->isAvailableForGroupControl(0));
     BOOST_CHECK_EQUAL(100, well3->getGuideRate(0));
+    BOOST_CHECK_EQUAL(GuideRate::RAT, well3->getGuideRatePhase(0));
+    BOOST_CHECK_EQUAL(0.5, well3->getGuideRateScalingFactor(0));
 }
 

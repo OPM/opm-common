@@ -14,7 +14,7 @@ WELSPECS
 WGRUPCON
    'W_1' 2* OIL /
    'W_2' NO /
-   'W_3' YES 100 RATE /
+   'W_3' YES 100 RAT 0.5 /
 /
 
 TSTEP

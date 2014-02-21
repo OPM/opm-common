@@ -401,6 +401,16 @@ namespace Opm {
             well->setAvailableForGroupControl(currentStep, availableForGroupControl);
 
             well->setGuideRate(currentStep, record->getItem("GUIDE_RATE")->getRawDouble(0));
+
+            if (record->getItem("PHASE")->defaultApplied()) {
+                well->setGuideRatePhase(currentStep, GuideRate::UNDEFINED);
+            }
+            else {
+                std::string guideRatePhase = record->getItem("PHASE")->getString(0);
+                well->setGuideRatePhase(currentStep, GuideRate::GuideRatePhaseEnumFromString(guideRatePhase));
+            }
+
+            well->setGuideRateScalingFactor(currentStep, record->getItem("SCALING_FACTOR")->getRawDouble(0));
         }
     }
 

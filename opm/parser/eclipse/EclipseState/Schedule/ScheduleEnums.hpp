@@ -176,7 +176,8 @@ namespace Opm {
             WGA = 5,
             CVAL = 6,
             RAT = 7,
-            RES = 8
+            RES = 8,
+            UNDEFINED = 9
         };
         const std::string GuideRatePhaseEnum2String( GuideRatePhaseEnum enumValue );
         GuideRatePhaseEnum GuideRatePhaseEnumFromString( const std::string& stringValue );
