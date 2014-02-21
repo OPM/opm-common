@@ -52,7 +52,6 @@ add_test(NAME runIncludeTest WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND
 
 
 
-
 add_executable(runParseEQUIL ParseEQUIL.cpp)
 target_link_libraries(runParseEQUIL Parser ${Boost_LIBRARIES})
 add_test(NAME runParseEQUIL 

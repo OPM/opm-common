@@ -41,6 +41,7 @@ createDeckWithInclude(path& datafile, std::string addEndKeyword)
     path root = unique_path("/tmp/%%%%-%%%%");
     path absoluteInclude = root / "absolute.include";
     path includePath = root / "include";
+    path pathInclude = "path.include";
 
     create_directories(root);
     create_directories(includePath);
@@ -62,6 +63,13 @@ createDeckWithInclude(path& datafile, std::string addEndKeyword)
 
             of << "INCLUDE" << std::endl;
             of << "  \'include/nested.include\'   /" << std::endl;
+
+            of << std::endl;
+
+            of << "PATHS" << std::endl;
+            of << "PATH1 '" << includePath.string() << "' /" << std::endl;
+            of << "INCLUDE" << std::endl;
+            of << "  \'$PATH1/" << pathInclude.string() << "\'   /" << std::endl;
 
             of.close();
         }
@@ -100,6 +108,16 @@ createDeckWithInclude(path& datafile, std::string addEndKeyword)
             of2 << "/" << std::endl;
             of2.close();
         }
+
+        {
+            path fullPathToPathIncludeFile = includePath / pathInclude;
+            std::ofstream of(fullPathToPathIncludeFile.string().c_str());
+
+            of << "TITLE" << std::endl;
+            of << "This is the title /" << std::endl;
+            of.close();
+        }
+
     std::cout << datafile << std::endl;
 
 
@@ -140,3 +158,13 @@ BOOST_AUTO_TEST_CASE(parse_fileWithENDKeyword_deckReturned) {
     BOOST_CHECK( !deck->hasKeyword("DIMENS"));
     BOOST_CHECK( !deck->hasKeyword("GRIDUNIT"));
 }
+
+BOOST_AUTO_TEST_CASE(parse_fileWithPathsKeyword_IncludeExtendsPath) {
+    path datafile;
+    ParserPtr parser(new Parser());
+    createDeckWithInclude (datafile, "");
+    DeckConstPtr deck =  parser->parseFile(datafile.string());
+
+    BOOST_CHECK( deck->hasKeyword("TITLE"));
+}
+
