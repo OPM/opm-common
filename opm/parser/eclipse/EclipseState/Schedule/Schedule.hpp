@@ -72,6 +72,7 @@ namespace Opm
         void handleWCONProducer(DeckKeywordConstPtr keyword, size_t currentStep, bool isPredictionMode);
         void handleWCONHIST(DeckKeywordConstPtr keyword , size_t currentStep);
         void handleWCONPROD(DeckKeywordConstPtr keyword, size_t currentStep);
+        void handleWGRUPCON(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleCOMPDAT(DeckKeywordConstPtr keyword , size_t currentStep);
         void handleWCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep);
         void handleWCONINJH(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep);
@@ -84,6 +85,8 @@ namespace Opm
 
         double convertInjectionRateToSI(double rawRate, WellInjector::TypeEnum wellType, const Opm::UnitSystem &unitSystem) const;
         double convertInjectionRateToSI(double rawRate, Phase::PhaseEnum wellPhase, const Opm::UnitSystem &unitSystem) const;
+
+        static bool convertEclipseStringToBool(const std::string& eclipseString);
     };
     typedef std::shared_ptr<Schedule> SchedulePtr;
     typedef std::shared_ptr<const Schedule> ScheduleConstPtr;

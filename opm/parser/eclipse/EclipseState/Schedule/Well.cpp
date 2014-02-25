@@ -44,7 +44,11 @@ namespace Opm {
           m_productionControls(new DynamicState<int>(timeMap, 0)),
           m_injectionControls(new DynamicState<int>(timeMap, 0)),
           m_inPredictionMode(new DynamicState<bool>(timeMap, true)),
-          m_isProducer(new DynamicState<bool>(timeMap, true)) ,
+          m_isProducer(new DynamicState<bool>(timeMap, true)),
+          m_isAvailableForGroupControl(new DynamicState<bool>(timeMap, true)),
+          m_guideRate(new DynamicState<double>(timeMap, -1.0)),
+          m_guideRatePhase(new DynamicState<GuideRate::GuideRatePhaseEnum>(timeMap, GuideRate::UNDEFINED)),
+          m_guideRateScalingFactor(new DynamicState<double>(timeMap, 1.0)),
           m_completions( new DynamicState<CompletionSetConstPtr>( timeMap , CompletionSetConstPtr( new CompletionSet()) )),
           m_groupName( new DynamicState<std::string>( timeMap , "" )),
           m_headI(headI),
@@ -205,7 +209,40 @@ namespace Opm {
     bool Well::isInjector(size_t timeStep) const {
         return !isProducer(timeStep);
     }
+
+    bool Well::isAvailableForGroupControl(size_t timeStep) const {
+        return m_isAvailableForGroupControl->get(timeStep);
+    }
     
+    void Well::setAvailableForGroupControl(size_t timeStep, bool isAvailableForGroupControl) {
+        m_isAvailableForGroupControl->add(timeStep, isAvailableForGroupControl);
+    }
+
+    double Well::getGuideRate(size_t timeStep) const {
+        return m_guideRate->get(timeStep);
+    }
+
+    void Well::setGuideRate(size_t timeStep, double guideRate) {
+        m_guideRate->add(timeStep, guideRate);
+    }
+
+    GuideRate::GuideRatePhaseEnum Well::getGuideRatePhase(size_t timeStep) const {
+        return m_guideRatePhase->get(timeStep);
+    }
+
+    void Well::setGuideRatePhase(size_t timeStep, GuideRate::GuideRatePhaseEnum phase) {
+        m_guideRatePhase->add(timeStep, phase);
+    }
+
+    double Well::getGuideRateScalingFactor(size_t timeStep) const {
+        return m_guideRateScalingFactor->get(timeStep);
+    }
+
+    void Well::setGuideRateScalingFactor(size_t timeStep, double scalingFactor) {
+        m_guideRateScalingFactor->add(timeStep, scalingFactor);
+    }
+
+
     void Well::switch2Producer(size_t timeStep ) {
         m_isProducer->add(timeStep , true);
         m_surfaceInjectionRate->add(timeStep, 0);

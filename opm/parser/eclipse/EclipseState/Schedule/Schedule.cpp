@@ -19,7 +19,10 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
+#include <boost/algorithm/string.hpp>
 #include <iostream>
+
+
 
 namespace Opm {
 
@@ -84,6 +87,9 @@ namespace Opm {
 
             if (keyword->name() == "WCONINJH")
                 handleWCONINJH(deck, keyword, currentStep);
+
+            if (keyword->name() == "WGRUPCON")
+                handleWGRUPCON(keyword, currentStep);
 
             if (keyword->name() == "COMPDAT")
                 handleCOMPDAT(keyword, currentStep);
@@ -385,6 +391,29 @@ namespace Opm {
         }
     }
 
+    void Schedule::handleWGRUPCON(DeckKeywordConstPtr keyword, size_t currentStep) {
+        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
+            DeckRecordConstPtr record = keyword->getRecord(recordNr);
+            const std::string& wellName = record->getItem("WELL")->getString(0);
+            WellPtr well = getWell(wellName);
+
+            bool availableForGroupControl = convertEclipseStringToBool(record->getItem("GROUP_CONTROLLED")->getString(0));
+            well->setAvailableForGroupControl(currentStep, availableForGroupControl);
+
+            well->setGuideRate(currentStep, record->getItem("GUIDE_RATE")->getRawDouble(0));
+
+            if (record->getItem("PHASE")->defaultApplied()) {
+                well->setGuideRatePhase(currentStep, GuideRate::UNDEFINED);
+            }
+            else {
+                std::string guideRatePhase = record->getItem("PHASE")->getString(0);
+                well->setGuideRatePhase(currentStep, GuideRate::GuideRatePhaseEnumFromString(guideRatePhase));
+            }
+
+            well->setGuideRateScalingFactor(currentStep, record->getItem("SCALING_FACTOR")->getRawDouble(0));
+        }
+    }
+
     void Schedule::handleGRUPTREE(DeckKeywordConstPtr keyword, size_t currentStep) {
         GroupTreePtr currentTree = m_rootGroupTree->get(currentStep);
         GroupTreePtr newTree = currentTree->deepCopy();
@@ -520,5 +549,18 @@ namespace Opm {
         default:
             throw std::logic_error("Unknown injection phase");
         }
+    }
+    
+    bool Schedule::convertEclipseStringToBool(const std::string& eclipseString) {
+        std::string lowerTrimmed = boost::algorithm::to_lower_copy(eclipseString);
+        boost::algorithm::trim(lowerTrimmed);
+
+        if (lowerTrimmed == "y" || lowerTrimmed == "yes") {
+            return true;
+        }
+        else if (lowerTrimmed == "n" || lowerTrimmed == "no") {
+            return false;
+        }
+        else throw std::invalid_argument("String " + eclipseString + " not recognized as a boolean-convertible string.");
     }
 }

@@ -365,5 +365,59 @@ namespace Opm {
         }
         
     }
-}
 
+    namespace GuideRate {
+
+        const std::string GuideRatePhaseEnum2String( GuideRatePhaseEnum enumValue ) {
+            switch( enumValue ) {
+            case OIL:
+                return "OIL";
+            case WAT:
+                return "WAT";
+            case GAS:
+                return "GAS";
+            case LIQ:
+                return "LIQ";
+            case COMB:
+                return "COMB";
+            case WGA:
+                return "WGA";
+            case CVAL:
+                return "CVAL";
+            case RAT:
+                return "RAT";
+            case RES:
+                return "RES";
+            case UNDEFINED:
+                return "UNDEFINED";
+            default:
+                throw std::invalid_argument("unhandled enum value");
+            }
+        }
+
+        GuideRatePhaseEnum GuideRatePhaseEnumFromString( const std::string& stringValue ) {
+            if (stringValue == "OIL")
+                return OIL;
+            else if (stringValue == "WAT")
+                return WAT;
+            else if (stringValue == "GAS")
+                return GAS;
+            else if (stringValue == "LIQ")
+                return LIQ;
+            else if (stringValue == "COMB")
+                return COMB;
+            else if (stringValue == "WGA")
+                return WGA;
+            else if (stringValue == "CVAL")
+                return CVAL;
+            else if (stringValue == "RAT")
+                return RAT;
+            else if (stringValue == "RES")
+                return RES;
+            else if (stringValue == "UNDEFINED")
+                return UNDEFINED;
+            else
+                throw std::invalid_argument("Unknown enum state string: " + stringValue );
+        }
+    }
+}

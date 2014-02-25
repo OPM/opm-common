@@ -379,3 +379,48 @@ BOOST_AUTO_TEST_CASE(WellHaveInjectionControlLimit) {
     BOOST_CHECK(  well.hasInjectionControl( 11 , Opm::WellInjector::THP ));
     BOOST_CHECK(  well.hasInjectionControl( 11 , Opm::WellInjector::BHP ));
 }
+
+/*********************************************************************/
+
+
+BOOST_AUTO_TEST_CASE(WellSetAvailableForGroupControl_ControlSet) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(20);
+    Opm::Well well("WELL1", 1, 2, 2334.32, timeMap, 0);
+
+    BOOST_CHECK(well.isAvailableForGroupControl(10));
+    well.setAvailableForGroupControl(12, false);
+    BOOST_CHECK(!well.isAvailableForGroupControl(13));
+    well.setAvailableForGroupControl(15, true);
+    BOOST_CHECK(well.isAvailableForGroupControl(15));
+}
+
+BOOST_AUTO_TEST_CASE(WellSetGuideRate_GuideRateSet) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(20);
+    Opm::Well well("WELL1", 1, 2, 2334.32, timeMap, 0);
+
+    BOOST_CHECK_LT(well.getGuideRate(0), 0);
+    well.setGuideRate(1, 32.2);
+    BOOST_CHECK_LT(well.getGuideRate(0), 0);
+    BOOST_CHECK_EQUAL(32.2, well.getGuideRate(1));
+}
+
+BOOST_AUTO_TEST_CASE(WellGuideRatePhase_GuideRatePhaseSet) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(20);
+    Opm::Well well("WELL1", 1, 2, 2334.32, timeMap, 0);
+    BOOST_CHECK_EQUAL(Opm::GuideRate::UNDEFINED, well.getGuideRatePhase(0));
+    well.setGuideRatePhase(3, Opm::GuideRate::RAT);
+    BOOST_CHECK_EQUAL(Opm::GuideRate::UNDEFINED, well.getGuideRatePhase(2));
+    BOOST_CHECK_EQUAL(Opm::GuideRate::RAT, well.getGuideRatePhase(3));
+}
+
+
+BOOST_AUTO_TEST_CASE(WellSetScalingFactor_ScalingFactorSetSet) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(20);
+    Opm::Well well("WELL1", 1, 2, 2334.32, timeMap, 0);
+    BOOST_CHECK_EQUAL(1.0, well.getGuideRateScalingFactor(0));
+    well.setGuideRateScalingFactor(4, 0.6);
+    BOOST_CHECK_EQUAL(1.0, well.getGuideRateScalingFactor(3));
+    BOOST_CHECK_EQUAL(0.6, well.getGuideRateScalingFactor(4));
+}
+
+
