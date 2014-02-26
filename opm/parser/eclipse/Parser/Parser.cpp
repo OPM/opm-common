@@ -32,6 +32,7 @@ namespace Opm {
         DeckPtr deck;
         boost::filesystem::path dataFile;
         boost::filesystem::path rootPath;
+        std::map<std::string, std::string> pathMap;
         size_t lineNR;
         std::shared_ptr<std::istream> inputstream;
         RawKeywordPtr rawKeyword;
@@ -179,6 +180,29 @@ namespace Opm {
     }
 
 
+    boost::filesystem::path Parser::getIncludeFilePath(std::shared_ptr<ParserState> parserState, std::string path) const
+    {
+        const std::string pathKeywordPrefix("$");
+        const std::string validPathNameCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_");
+
+        size_t positionOfPathName = path.find(pathKeywordPrefix);
+
+        if ( positionOfPathName != std::string::npos) {
+            std::string stringStartingAtPathName = path.substr(positionOfPathName+1);
+            size_t cutOffPosition = stringStartingAtPathName.find_first_not_of(validPathNameCharacters);
+            std::string stringToFind = stringStartingAtPathName.substr(0, cutOffPosition);
+            std::string stringToReplace = parserState->pathMap[stringToFind];
+            boost::replace_all(path, pathKeywordPrefix + stringToFind, stringToReplace);
+        }
+
+        boost::filesystem::path includeFilePath(path);
+
+        if (includeFilePath.is_relative())
+            includeFilePath = parserState->rootPath / includeFilePath;
+
+        return includeFilePath;
+    }
+
     bool Parser::parseStream(std::shared_ptr<ParserState> parserState) const {
         bool verbose = false;
         bool stopParsing = false;
@@ -194,17 +218,22 @@ namespace Opm {
                     else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::endinclude) {
                         break;
                     }
+                    else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::paths) {
+                        for (size_t i = 0; i < parserState->rawKeyword->size(); i++) {
+                             RawRecordConstPtr record = parserState->rawKeyword->getRecord(i);
+                             std::string pathName = record->getItem(0);
+                             std::string pathValue = record->getItem(1);
+                             parserState->pathMap.insert(std::pair<std::string, std::string>(pathName, pathValue));
+                        }
+                    }
                     else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::include) {
                         RawRecordConstPtr firstRecord = parserState->rawKeyword->getRecord(0);
-                        std::string includeFileString = firstRecord->getItem(0);
-                        boost::filesystem::path includeFile(includeFileString);
-                        
-                        if (includeFile.is_relative())
-                            includeFile = parserState->rootPath / includeFile;
-                        
+                        std::string includeFileAsString = firstRecord->getItem(0);
+                        boost::filesystem::path includeFile = getIncludeFilePath(parserState, includeFileAsString);
+
                         if (verbose)
                             std::cout << parserState->rawKeyword->getKeywordName() << "  " << includeFile << std::endl;
-                        
+
                         std::shared_ptr<ParserState> newParserState (new ParserState(includeFile.string(), parserState->deck, parserState->rootPath, parserState->strictParsing));
                         stopParsing = parseStream(newParserState);
                         if (stopParsing) break;

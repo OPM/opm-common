@@ -31,6 +31,7 @@ namespace Opm {
         const std::string include = "INCLUDE";
         const std::string end = "END";
         const std::string endinclude = "ENDINC";
+        const std::string paths = "PATHS";
         const unsigned int maxKeywordLength = 8;
     }
 }

@@ -75,6 +75,7 @@ namespace Opm {
         RawKeywordPtr createRawKeyword(const std::string& keywordString, std::shared_ptr<ParserState> parserState) const;
         void addDefaultKeywords();
 
+        boost::filesystem::path getIncludeFilePath(std::shared_ptr<ParserState> parserState, std::string path) const;
         boost::filesystem::path getRootPathFromFile(const boost::filesystem::path &inputDataFile) const;
         std::string doSpecialHandlingForTitleKeyword(std::string line, std::shared_ptr<ParserState> parserState) const;
     };
