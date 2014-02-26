@@ -32,9 +32,10 @@ namespace Opm {
 
     TimeMap::TimeMap(Opm::DeckConstPtr deck) {
         // The default start date is not specified in the Eclipse
-        // reference manual. We hence just assume it is the start
-        // of the UNIX epoch, i.e., January 1st, 1970...
-        boost::posix_time::ptime startTime(boost::gregorian::date(1970, 1, 1));
+        // reference manual. We hence just assume it is same as for
+        // the START keyword for Eclipse R100, i.e., January 1st,
+        // 1983...
+        boost::posix_time::ptime startTime(boost::gregorian::date(1983, 1, 1));
 
         // use the 'START' keyword to find out the start date (if the
         // keyword was specified)
