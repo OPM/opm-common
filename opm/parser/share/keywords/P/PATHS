@@ -1,2 +1,5 @@
-{"name" : "PATHS" , "size" : 1 , "items" : [
-    {"name" : "Path"   , "value_type" : "STRING", "size_type" : "ALL"}]}
+{"name" : "PATHS" , "items" :
+   [
+    {"name" : "PathName"   , "value_type" : "STRING"},
+    {"name" : "PathValue"   , "value_type" : "STRING"}
+   ]}

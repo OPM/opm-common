@@ -230,10 +230,10 @@ namespace Opm {
                         RawRecordConstPtr firstRecord = parserState->rawKeyword->getRecord(0);
                         std::string includeFileAsString = firstRecord->getItem(0);
                         boost::filesystem::path includeFile = getIncludeFilePath(parserState, includeFileAsString);
-                        
+
                         if (verbose)
                             std::cout << parserState->rawKeyword->getKeywordName() << "  " << includeFile << std::endl;
-                        
+
                         std::shared_ptr<ParserState> newParserState (new ParserState(includeFile.string(), parserState->deck, parserState->rootPath, parserState->strictParsing));
                         stopParsing = parseStream(newParserState);
                         if (stopParsing) break;

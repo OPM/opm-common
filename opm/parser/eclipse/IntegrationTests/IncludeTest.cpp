@@ -40,11 +40,13 @@ createDeckWithInclude(path& datafile, std::string addEndKeyword)
 {
     path root = unique_path("/tmp/%%%%-%%%%");
     path absoluteInclude = root / "absolute.include";
-    path includePath = root / "include";
-    path pathInclude = "path.include";
+    path includePath1 = root / "include";
+    path includePath2 = root / "include2";
+    path pathIncludeFile = "path.file";
 
     create_directories(root);
-    create_directories(includePath);
+    create_directories(includePath1);
+    create_directories(includePath2);
 
         {
             datafile = root / "TEST.DATA";
@@ -67,9 +69,19 @@ createDeckWithInclude(path& datafile, std::string addEndKeyword)
             of << std::endl;
 
             of << "PATHS" << std::endl;
-            of << "PATH1 '" << includePath.string() << "' /" << std::endl;
+            of << "PATH1 '" << includePath1.string() << "' /" << std::endl;
+            of << "PATH2 '" << includePath2.string() << "' /" << std::endl;
+            of << "/" << std::endl;
+
+            of << std::endl;
+
             of << "INCLUDE" << std::endl;
-            of << "  \'$PATH1/" << pathInclude.string() << "\'   /" << std::endl;
+            of << "  \'$PATH1/" << pathIncludeFile.string() << "\'   /" << std::endl;
+
+            of << std::endl;
+
+            of << "INCLUDE" << std::endl;
+            of << "  \'$PATH2/" << pathIncludeFile.string() << "\'   /" << std::endl;
 
             of.close();
         }
@@ -95,8 +107,8 @@ createDeckWithInclude(path& datafile, std::string addEndKeyword)
         }
 
         {
-            path nestedInclude = includePath / "nested.include";
-            path gridInclude = includePath / "grid.include";
+            path nestedInclude = includePath1 / "nested.include";
+            path gridInclude = includePath1 / "grid.include";
             std::ofstream of(nestedInclude.string().c_str());
 
             of << "INCLUDE" << std::endl;
@@ -110,12 +122,17 @@ createDeckWithInclude(path& datafile, std::string addEndKeyword)
         }
 
         {
-            path fullPathToPathIncludeFile = includePath / pathInclude;
-            std::ofstream of(fullPathToPathIncludeFile.string().c_str());
+            path fullPathToPathIncludeFile1 = includePath1 / pathIncludeFile;
+            std::ofstream of1(fullPathToPathIncludeFile1.string().c_str());
+            of1 << "TITLE" << std::endl;
+            of1 << "This is the title /" << std::endl;
+            of1.close();
 
-            of << "TITLE" << std::endl;
-            of << "This is the title /" << std::endl;
-            of.close();
+            path fullPathToPathIncludeFile2 = includePath2 / pathIncludeFile;
+            std::ofstream of2(fullPathToPathIncludeFile2.string().c_str());
+            of2 << "BOX" << std::endl;
+            of2 << " 1 2 3 4 5 6 /" << std::endl;
+            of2.close();
         }
 
     std::cout << datafile << std::endl;
@@ -166,5 +183,6 @@ BOOST_AUTO_TEST_CASE(parse_fileWithPathsKeyword_IncludeExtendsPath) {
     DeckConstPtr deck =  parser->parseFile(datafile.string());
 
     BOOST_CHECK( deck->hasKeyword("TITLE"));
+    BOOST_CHECK( deck->hasKeyword("BOX"));
 }
 
