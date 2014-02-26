@@ -23,6 +23,7 @@
 
 #include <boost/date_time.hpp>
 
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
@@ -30,19 +31,28 @@ namespace Opm {
 
     class TimeMap {
     public:
-        TimeMap(boost::gregorian::date startDate);
-        void addDate(boost::gregorian::date newDate);
+        TimeMap(boost::posix_time::ptime startDate);
+        TimeMap(Opm::DeckConstPtr deck);
+        void addTime(boost::posix_time::ptime newTime);
         void addTStep(boost::posix_time::time_duration step);
         void addFromDATESKeyword( DeckKeywordConstPtr DATESKeyword );
         void addFromTSTEPKeyword( DeckKeywordConstPtr TSTEPKeyword );
-        boost::gregorian::date getStartDate() const;
         size_t size() const;
-        static boost::gregorian::date dateFromEclipse(DeckRecordConstPtr dateRecord);
-        static boost::gregorian::date dateFromEclipse(int day , const std::string& month, int year);
+        int numTimesteps() const { return m_timeList.size() - 1; }
+        double getTotalTime() const;
+        /// Return the date and time where a given time step starts.
+        boost::posix_time::ptime getStartTime(size_t tStepIdx) const
+        { return m_timeList[tStepIdx]; }
+        /// Return the period of time in seconds which passed between the start of the simulation and a given time step.
+        double getTimePassedUntil(size_t tStepIdx) const;
+        /// Return the length of a given time step in seconds.
+        double getTimeStepLength(size_t tStepIdx) const;
+        static boost::posix_time::ptime timeFromEclipse(DeckRecordConstPtr dateRecord);
+        static boost::posix_time::ptime timeFromEclipse(int day , const std::string& month, int year, const std::string& eclipseTimeString = "00:00:00.000");
+        static boost::posix_time::time_duration dayTimeFromEclipse(const std::string& eclipseTimeString);
     private:
-        static std::map<std::string , boost::gregorian::greg_month> initEclipseMonthNames();
+        static const std::map<std::string , boost::gregorian::greg_month>& eclipseMonthNames();
 
-        boost::gregorian::date m_startDate;
         std::vector<boost::posix_time::ptime> m_timeList;
     };
     typedef std::shared_ptr<TimeMap> TimeMapPtr;

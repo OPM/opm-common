@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule) {
     DeckPtr deck =  parser->parseFile(scheduleFile.string());
     ScheduleConstPtr sched(new Schedule(deck));
     TimeMapConstPtr timeMap = sched->getTimeMap();
-    BOOST_CHECK_EQUAL(boost::gregorian::date(2007, boost::gregorian::May, 10), sched->getStartDate());
+    BOOST_CHECK_EQUAL(boost::posix_time::ptime(boost::gregorian::date(2007, boost::gregorian::May, 10)), sched->getStartTime());
     BOOST_CHECK_EQUAL(9U, timeMap->size());
     BOOST_CHECK( deck->hasKeyword("NETBALAN") );
 }
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_Comments_After_Keywords) {
     DeckPtr deck =  parser->parseFile(scheduleFile.string());
     ScheduleConstPtr sched(new Schedule(deck));
     TimeMapConstPtr timeMap = sched->getTimeMap();
-    BOOST_CHECK_EQUAL(boost::gregorian::date(2007, boost::gregorian::May, 10), sched->getStartDate());
+    BOOST_CHECK_EQUAL(boost::posix_time::ptime(boost::gregorian::date(2007, boost::gregorian::May, 10)), sched->getStartTime());
     BOOST_CHECK_EQUAL(9U, timeMap->size());
 
 }

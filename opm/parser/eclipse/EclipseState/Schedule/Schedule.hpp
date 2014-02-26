@@ -39,7 +39,8 @@ namespace Opm
     class Schedule {
     public:
         Schedule(DeckConstPtr deck);
-        boost::gregorian::date getStartDate() const;
+        boost::posix_time::ptime getStartTime() const
+        { return m_timeMap->getStartTime(/*timeStepIdx=*/0); }
         TimeMapConstPtr getTimeMap() const;
 
         size_t numWells() const;
