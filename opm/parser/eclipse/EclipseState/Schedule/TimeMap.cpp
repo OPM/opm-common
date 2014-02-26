@@ -191,7 +191,7 @@ namespace Opm {
         }
     } 
 
-    double TimeMap::getTimeStepLength(int tStepIdx) const
+    double TimeMap::getTimeStepLength(size_t tStepIdx) const
     {
         assert(0 <= tStepIdx && tStepIdx < numTimesteps());
         const boost::posix_time::ptime &t1
@@ -203,7 +203,7 @@ namespace Opm {
         return static_cast<double>(deltaT.total_milliseconds())/1000.0;
     }
 
-    double TimeMap::getTimePassedUntil(int tStepIdx) const
+    double TimeMap::getTimePassedUntil(size_t tStepIdx) const
     {
         assert(0 <= tStepIdx && tStepIdx < numTimesteps());
         const boost::posix_time::ptime &t1
