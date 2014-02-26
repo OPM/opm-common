@@ -38,11 +38,10 @@ namespace Opm {
         void addFromDATESKeyword( DeckKeywordConstPtr DATESKeyword );
         void addFromTSTEPKeyword( DeckKeywordConstPtr TSTEPKeyword );
         size_t size() const;
-        int numTimesteps() const { return m_timeList.size() - 1; }
+        size_t numTimesteps() const;
         double getTotalTime() const;
         /// Return the date and time where a given time step starts.
-        boost::posix_time::ptime getStartTime(size_t tStepIdx) const
-        { return m_timeList[tStepIdx]; }
+        boost::posix_time::ptime getStartTime(size_t tStepIdx) const;
         /// Return the period of time in seconds which passed between the start of the simulation and a given time step.
         double getTimePassedUntil(size_t tStepIdx) const;
         /// Return the length of a given time step in seconds.

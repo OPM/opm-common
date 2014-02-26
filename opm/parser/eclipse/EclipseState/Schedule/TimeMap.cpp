@@ -66,6 +66,16 @@ namespace Opm {
                 addFromDATESKeyword(keyword);
         }
     }
+    
+    size_t TimeMap::numTimesteps() const { 
+        return m_timeList.size() - 1; 
+    }
+
+
+    boost::posix_time::ptime TimeMap::getStartTime(size_t tStepIdx) const {
+        return m_timeList[tStepIdx]; 
+    }
+
 
     double TimeMap::getTotalTime() const
     {
