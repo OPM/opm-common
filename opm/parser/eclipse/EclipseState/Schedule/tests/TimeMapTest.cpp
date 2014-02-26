@@ -106,6 +106,7 @@ BOOST_AUTO_TEST_CASE( dateFromEclipseThrowsInvalidRecord ) {
     dayItem->push_back( 10 );
     yearItem->push_back(1987 );
     monthItem->push_back("FEB");
+    timeItem->push_back("00:00:00.000");
 
     BOOST_CHECK_THROW( Opm::TimeMap::timeFromEclipse( startRecord ) , std::invalid_argument );
 
@@ -116,11 +117,11 @@ BOOST_AUTO_TEST_CASE( dateFromEclipseThrowsInvalidRecord ) {
     BOOST_CHECK_THROW( Opm::TimeMap::timeFromEclipse( startRecord ) , std::invalid_argument );
 
     startRecord->addItem( yearItem );
-    BOOST_CHECK_NO_THROW(Opm::TimeMap::timeFromEclipse( startRecord ));
+    BOOST_CHECK_THROW(Opm::TimeMap::timeFromEclipse( startRecord ) , std::invalid_argument );
 
     startRecord->addItem( timeItem );
     BOOST_CHECK_NO_THROW(Opm::TimeMap::timeFromEclipse( startRecord ));
-  
+
     startRecord->addItem( extraItem );
     BOOST_CHECK_THROW( Opm::TimeMap::timeFromEclipse( startRecord ) , std::invalid_argument );
 }
@@ -173,14 +174,17 @@ BOOST_AUTO_TEST_CASE( timeFromEclipseInputRecord ) {
     Opm::DeckIntItemPtr    dayItem( new  Opm::DeckIntItem("DAY") );
     Opm::DeckStringItemPtr monthItem(new Opm::DeckStringItem("MONTH") );
     Opm::DeckIntItemPtr    yearItem(new  Opm::DeckIntItem("YEAR"));
+    Opm::DeckStringItemPtr timeItem(new Opm::DeckStringItem("TIME") );
 
     dayItem->push_back( 10 );
     yearItem->push_back( 1987 );
     monthItem->push_back("JAN");
+    timeItem->push_back("00:00:00.000");
 
     startRecord->addItem( dayItem );
     startRecord->addItem( monthItem );
     startRecord->addItem( yearItem );
+    startRecord->addItem( timeItem );
 
     BOOST_CHECK_EQUAL( boost::posix_time::ptime(boost::gregorian::date( 1987 , boost::gregorian::Jan , 10 )) , Opm::TimeMap::timeFromEclipse( startRecord ));
 }

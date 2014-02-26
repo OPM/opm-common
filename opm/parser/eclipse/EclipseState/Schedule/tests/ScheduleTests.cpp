@@ -34,28 +34,15 @@
 using namespace Opm;
 
 DeckPtr createDeck() {
-    DeckPtr deck(new Deck());
-    DeckKeywordPtr scheduleKeyword(new DeckKeyword("SCHEDULE"));
-    DeckKeywordPtr startKeyword(new DeckKeyword("START"));
-    DeckRecordPtr  startRecord(new DeckRecord());
-    DeckIntItemPtr    dayItem( new DeckIntItem("DAY") );
-    DeckStringItemPtr monthItem(new DeckStringItem("MONTH") );
-    DeckIntItemPtr    yearItem(new DeckIntItem("YEAR"));
+    Opm::Parser parser;
+    std::string input =
+        "START\n"
+        "8 MAR 1998 /\n"
+        "\n"
+        "SCHEDULE\n"
+        "\n";
 
-
-    dayItem->push_back( 8 );
-    monthItem->push_back( "MAR" );
-    yearItem->push_back( 1998 );
-
-    startRecord->addItem( dayItem );
-    startRecord->addItem( monthItem );
-    startRecord->addItem( yearItem );
-    startKeyword->addRecord( startRecord );
-
-    deck->addKeyword( startKeyword );
-    deck->addKeyword( scheduleKeyword );
-
-    return deck;
+    return parser.parseString(input);
 }
 
 DeckPtr createDeckWithWells() {
@@ -101,7 +88,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingReturnsDefaults) {
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithStart) {
     DeckPtr deck = createDeck();
-    Schedule schedule(deck); 
+    Schedule schedule(deck);
     BOOST_CHECK_EQUAL( schedule.getStartTime() , boost::posix_time::ptime(boost::gregorian::date( 1998  , boost::gregorian::Mar , 8)));
 }
 

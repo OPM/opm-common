@@ -137,23 +137,22 @@ namespace Opm {
     }
 
     boost::posix_time::ptime TimeMap::timeFromEclipse(DeckRecordConstPtr dateRecord) {
-        static const std::string errorMsg("The datarecord must consist of the three values "
-                                          "\"DAY(int)  MONTH(string)  YEAR(int)\" plus the optional value \"TIME(string)\".\n");
-        if (dateRecord->size() < 3 || dateRecord->size() > 4)
+        static const std::string errorMsg("The datarecord must consist of the for values "
+                                          "\"DAY(int), MONTH(string), YEAR(int), TIME(string)\".\n");
+        if (dateRecord->size() != 4) {
             throw std::invalid_argument( errorMsg);
+        }
 
         DeckItemConstPtr dayItem = dateRecord->getItem( 0 );
         DeckItemConstPtr monthItem = dateRecord->getItem( 1 );
         DeckItemConstPtr yearItem = dateRecord->getItem( 2 );
+        DeckItemConstPtr timeItem = dateRecord->getItem( 3 );
 
         try {
             int day = dayItem->getInt(0);
             const std::string& month = monthItem->getString(0);
             int year = yearItem->getInt(0);
-
-            std::string eclipseTimeString = "00:00:00.000";
-            if (dateRecord->size() > 3 && dateRecord->getItem( 3 )->size() > 0)
-                eclipseTimeString = dateRecord->getItem( 3 )->getString(0);
+            std::string eclipseTimeString = timeItem->getString(0);
 
             return TimeMap::timeFromEclipse(day, month, year, eclipseTimeString);
         } catch (...) {
