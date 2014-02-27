@@ -95,8 +95,8 @@ namespace Opm {
          * If the control mode does not use the volumetric surface
          * rate, this is the upper limit.
          */
-        double surfaceTargetRate(int wellIdx) const
-        { return m_keyword->getRecord(wellIdx)->getItem(4)->getSIDouble(0); }
+        double rawSurfaceTargetRate(int wellIdx) const
+        { return m_keyword->getRecord(wellIdx)->getItem(4)->getRawDouble(0); }
 
         /*!
          * \brief Return the target for the volumetric reservoir rate of a well
@@ -104,8 +104,8 @@ namespace Opm {
          * If the control mode does not use the volumetric reservoir
          * rate, this is the upper limit.
          */
-        double reservoirTargetRate(int wellIdx) const
-        { return m_keyword->getRecord(wellIdx)->getItem(5)->getSIDouble(0); }
+        double rawReservoirTargetRate(int wellIdx) const
+        { return m_keyword->getRecord(wellIdx)->getItem(5)->getRawDouble(0); }
 
         /*!
          * \brief The target of the bottom hole pressure
