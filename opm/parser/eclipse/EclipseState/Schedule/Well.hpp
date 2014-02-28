@@ -27,10 +27,22 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 
+#include <boost/optional.hpp>
+
 #include <memory>
 #include <string>
+#include <limits>
 
 namespace Opm {
+
+    typedef struct {
+        double  OilRate;
+        double  GasRate;
+        double  WaterRate;
+        double  LiquidRate;
+        double  ResVRate;
+        int     ProductionControls;
+    } WellProductionProperties;
 
     class Well {
     public:
@@ -96,6 +108,8 @@ namespace Opm {
         void addWELSPECS(DeckRecordConstPtr deckRecord);
         void addCompletions(size_t time_step , const std::vector<CompletionConstPtr>& newCompletions);
         CompletionSetConstPtr getCompletions(size_t timeStep) const;
+        void setProductionProperties(size_t timeStep , const WellProductionProperties properties);
+        WellProductionProperties getProductionProperties(size_t timeStep) const;
 
     private:
         void switch2Producer(size_t timeStep );
@@ -107,11 +121,12 @@ namespace Opm {
         
         size_t m_creationTimeStep;
         std::string m_name;
-        std::shared_ptr<DynamicState<double> > m_oilRate;
-        std::shared_ptr<DynamicState<double> > m_gasRate;
-        std::shared_ptr<DynamicState<double> > m_waterRate;
-        std::shared_ptr<DynamicState<double> > m_liquidRate;
-        std::shared_ptr<DynamicState<double> > m_resVRate;
+
+        //std::shared_ptr<DynamicState<double> > m_oilRate;
+        //std::shared_ptr<DynamicState<double> > m_gasRate;
+        //std::shared_ptr<DynamicState<double> > m_waterRate;
+        //std::shared_ptr<DynamicState<double> > m_liquidRate;
+        //std::shared_ptr<DynamicState<double> > m_resVRate;
         std::shared_ptr<DynamicState<double> > m_surfaceInjectionRate;
         std::shared_ptr<DynamicState<double> > m_reservoirInjectionRate;
         std::shared_ptr<DynamicState<double> > m_BHPLimit;
@@ -120,7 +135,7 @@ namespace Opm {
         std::shared_ptr<DynamicState<WellInjector::ControlModeEnum> > m_injectorControlMode;
         std::shared_ptr<DynamicState<WellProducer::ControlModeEnum> > m_producerControlMode;
         std::shared_ptr<DynamicState<WellCommon::StatusEnum> > m_status;
-        std::shared_ptr<DynamicState<int> > m_productionControls;
+        //std::shared_ptr<DynamicState<int> > m_productionControls;
         std::shared_ptr<DynamicState<int> > m_injectionControls;
         
         std::shared_ptr<DynamicState<bool> > m_inPredictionMode;
@@ -131,6 +146,7 @@ namespace Opm {
         std::shared_ptr<DynamicState<double> > m_guideRateScalingFactor;
 
         std::shared_ptr<DynamicState<CompletionSetConstPtr> > m_completions;
+        std::shared_ptr<DynamicState<WellProductionProperties> > m_productionProperties;
         std::shared_ptr<DynamicState<std::string> > m_groupName;
 
         // WELSPECS data - assumes this is not dynamic
