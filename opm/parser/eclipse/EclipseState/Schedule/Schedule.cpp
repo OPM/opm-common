@@ -178,10 +178,12 @@ namespace Opm {
             double orat                           = record->getItem("ORAT")->getSIDouble(0);
             double wrat                           = record->getItem("WRAT")->getSIDouble(0);
             double grat                           = record->getItem("GRAT")->getSIDouble(0);
-            WellProducer::ControlModeEnum control = WellProducer::ControlModeFromString( record->getItem("CMODE")->getString(0));
             WellCommon::StatusEnum status         = WellCommon::StatusFromString( record->getItem("STATUS")->getString(0));
 
-            well->setProducerControlMode( currentStep , control );
+            if (status != WellCommon::SHUT) {
+                WellProducer::ControlModeEnum control = WellProducer::ControlModeFromString( record->getItem("CMODE")->getString(0));
+                well->setProducerControlMode( currentStep , control );
+            }
             well->setStatus( currentStep , status );
             well->setOilRate(currentStep, orat);
             well->setWaterRate(currentStep, wrat);

@@ -60,6 +60,16 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_Comments_After_Keywords) {
 }
 
 
+BOOST_AUTO_TEST_CASE(WCONPROD_MissingCmode) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_MISSING_CMODE");
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
+    
+    BOOST_CHECK_NO_THROW( new Schedule(deck) );
+}
+
+
+
 BOOST_AUTO_TEST_CASE(WellTesting) {
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELLS2");
