@@ -58,7 +58,7 @@ namespace Opm {
         static double defaultDouble();
       
         virtual bool equal(const ParserItem& other) const;
-        virtual void inlineNew(std::ostream& os) const {}
+        virtual void inlineNew(std::ostream& /* os */) const {}
       
         virtual ~ParserItem() {
         }

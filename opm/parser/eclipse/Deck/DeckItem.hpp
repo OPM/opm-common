@@ -38,35 +38,34 @@ namespace Opm {
 
         virtual size_t size() const = 0;
         
-        virtual int getInt(size_t index) const {
+        virtual int getInt(size_t /* index */) const {
             throw std::logic_error("This implementation of DeckItem does not support int");
         }
 
-        virtual float getSIFloat(size_t index) const {
+        virtual float getSIFloat(size_t /* index */) const {
             throw std::logic_error("This implementation of DeckItem does not support float");
         }
 
-        virtual float getRawFloat(size_t index) const {
+        virtual float getRawFloat(size_t /* index */) const {
             throw std::logic_error("This implementation of DeckItem does not support float");
         }
 
-        virtual double getSIDouble(size_t index) const {
+        virtual double getSIDouble(size_t /* index */) const {
             throw std::logic_error("This implementation of DeckItem does not support double");
         }
 
-        virtual double getRawDouble(size_t index) const {
+        virtual double getRawDouble(size_t /* index */) const {
             throw std::logic_error("This implementation of DeckItem does not support double");
         }
 
-        virtual bool getBool(size_t index) const {
+        virtual bool getBool(size_t /* index */) const {
             throw std::logic_error("This implementation of DeckItem does not support bool");
         }
 
-        virtual std::string getString(size_t index) const {
+        virtual std::string getString(size_t /* index */) const {
             throw std::logic_error("This implementation of DeckItem does not support string");
         }
 
-        
 
         virtual const std::vector<int>& getIntData( ) const {
             throw std::logic_error("This implementation of DeckItem does not support int");
@@ -84,7 +83,8 @@ namespace Opm {
             throw std::logic_error("This implementation of DeckItem does not support string");
         }
 
-        virtual void push_backDimension(std::shared_ptr<const Dimension> activeDimension , std::shared_ptr<const Dimension> defaultDimension) {
+        virtual void push_backDimension(std::shared_ptr<const Dimension> /* activeDimension */,
+                                        std::shared_ptr<const Dimension> /* defaultDimension */) {
             throw std::invalid_argument("Should not be here - internal error ...");
         }
 

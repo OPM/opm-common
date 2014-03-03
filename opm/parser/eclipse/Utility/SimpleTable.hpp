@@ -46,9 +46,9 @@ namespace Opm {
                     size_t firstEntityOffset = 0);
 
         // constructor to make the base class compatible with specialized table implementations
-        SimpleTable(Opm::DeckKeywordConstPtr keyword,
-                    size_t recordIdx = 0,
-                    size_t firstEntityOffset = 0)
+        SimpleTable(Opm::DeckKeywordConstPtr /* keyword */,
+                    size_t /* recordIdx = 0 */,
+                    size_t /* firstEntityOffset = 0 */)
         {
             throw std::logic_error("The base class of simple tables can't be "
                                    "instantiated without specifying columns!");
