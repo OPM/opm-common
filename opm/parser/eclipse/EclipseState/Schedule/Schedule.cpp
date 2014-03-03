@@ -424,6 +424,12 @@ namespace Opm {
             const std::string& childName = record->getItem("CHILD_GROUP")->getString(0);
             const std::string& parentName = record->getItem("PARENT_GROUP")->getString(0);
             newTree->updateTree(childName, parentName);
+
+            if (!hasGroup(parentName))
+                addGroup( parentName , currentStep );
+            
+            if (!hasGroup(childName))
+                addGroup( childName , currentStep );
         }
         m_rootGroupTree->add(currentStep, newTree);
     }

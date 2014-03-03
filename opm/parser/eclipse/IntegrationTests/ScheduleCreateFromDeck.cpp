@@ -225,6 +225,24 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_with_explicit_L0_parenting) {
     GroupTreeNodePtr THIRD_LEVEL1 = SECOND_LEVEL1->getChildGroup("THIRD_LEVEL1");
 }
 
+
+BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_correct) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELSPECS_GRUPTREE");
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
+    ScheduleConstPtr schedule(new Schedule(deck));
+    
+    BOOST_CHECK( schedule->hasGroup( "FIELD" ));
+    BOOST_CHECK( schedule->hasGroup( "PROD" ));
+    BOOST_CHECK( schedule->hasGroup( "INJE" ));
+    BOOST_CHECK( schedule->hasGroup( "MANI-PROD" ));
+    BOOST_CHECK( schedule->hasGroup( "MANI-INJ" ));
+    BOOST_CHECK( schedule->hasGroup( "DUMMY-PROD" ));
+    BOOST_CHECK( schedule->hasGroup( "DUMMY-INJ" ));
+}
+
+
+
 BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_iter_function) {
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELSPECS_GROUPS");

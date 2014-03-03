@@ -1,0 +1,15 @@
+START
+10 MAI 2007 /
+
+
+SCHEDULE
+
+
+GRUPTREE 
+   'INJE'          'FIELD'  /
+   'PROD'          'FIELD'  /
+   'MANI-PROD'     'PROD'  /
+   'MANI-INJ'      'INJE'  /
+   'DUMMY-PROD'    'MANI-PROD'  /
+   'DUMMY-INJ'     'MANI-INJ'  /
+/
