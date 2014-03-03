@@ -56,7 +56,6 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_Comments_After_Keywords) {
     TimeMapConstPtr timeMap = sched->getTimeMap();
     BOOST_CHECK_EQUAL(boost::posix_time::ptime(boost::gregorian::date(2007, boost::gregorian::May, 10)), sched->getStartTime());
     BOOST_CHECK_EQUAL(9U, timeMap->size());
-
 }
 
 
@@ -66,6 +65,15 @@ BOOST_AUTO_TEST_CASE(WCONPROD_MissingCmode) {
     DeckPtr deck =  parser->parseFile(scheduleFile.string());
     
     BOOST_CHECK_NO_THROW( new Schedule(deck) );
+}
+
+
+BOOST_AUTO_TEST_CASE(WCONPROD_Missing_DATA) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_CMODE_MISSING_DATA");
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
+    
+    BOOST_CHECK_THROW( new Schedule(deck) , std::invalid_argument );
 }
 
 

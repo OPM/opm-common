@@ -236,6 +236,33 @@ namespace Opm {
 
             if (record->getItem("WRAT")->defaultApplied())
                 well->dropProductionControl( currentStep , WellProducer::WRAT );
+
+            if (status != WellCommon::SHUT) {
+                const std::string& cmodeString = record->getItem("CMODE")->getString(0);
+                WellProducer::ControlModeEnum control = WellProducer::ControlModeFromString( cmodeString );
+                if (well->hasProductionControl( currentStep , control))
+                    well->setProducerControlMode( currentStep , control );
+                else {
+                    /*
+                      This is an awkward situation. The current control mode variable
+                      points to a control which has not been specified in the deck; i.e. a
+                      situation like this:
+
+                        WCONHIST 
+                           'WELL'      'OPEN'      'RESV'      0.000      0.000      0.000  5* /
+                        /
+                      
+                      We have specified that the well should be controlled with 'RESV'
+                      mode, but actual RESV value has been defaulted. ECLIPSE seems to
+                      handle this, but the well machinery in OPM-Core keeps close track of
+                      which controls are available, i.e. have a value set, and will be
+                      confused by this. We therefor throw here; the fix is to modify the
+                      deck to set an explicit value for the defaulted control, or
+                      alternatively change control mode.
+                    */
+                    throw std::invalid_argument("Tried to set invalid control: " + cmodeString + " for well: " + wellName);
+                }
+            }
         }
     }
 
@@ -265,14 +292,12 @@ namespace Opm {
             double BHPLimit                           = record->getItem("BHP")->getSIDouble(0);
             double THPLimit                           = record->getItem("THP")->getSIDouble(0);
             WellCommon::StatusEnum status             = WellCommon::StatusFromString( record->getItem("STATUS")->getString(0));
-            WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( record->getItem("CMODE")->getString(0));
        
             well->setStatus( currentStep , status );
             well->setSurfaceInjectionRate( currentStep , surfaceInjectionRate );
             well->setReservoirInjectionRate( currentStep , reservoirInjectionRate );
             well->setBHPLimit(currentStep, BHPLimit , false);
             well->setTHPLimit(currentStep, THPLimit , false);
-            well->setInjectorControlMode(currentStep , controlMode );
             well->setInjectorType( currentStep , injectorType );
             well->setInPredictionMode(currentStep, true);
             
@@ -288,8 +313,18 @@ namespace Opm {
             if (record->getItem("BHP")->defaultApplied())
                 well->dropInjectionControl( currentStep , WellInjector::BHP );
             
+            {
+                const std::string& cmodeString = record->getItem("CMODE")->getString(0);
+                WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( cmodeString );
+                if (well->hasInjectionControl( currentStep , controlMode))
+                    well->setInjectorControlMode( currentStep , controlMode );
+                else {
+                    throw std::invalid_argument("Tried to set invalid control: " + cmodeString + " for well: " + wellName);
+                }
+            }
         }
     }
+
 
     void Schedule::handleWCONINJH(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
