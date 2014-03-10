@@ -199,20 +199,13 @@ namespace Opm {
                     resVRate = record->getItem("RESV")->getSIDouble(0);
                 }
                 
-                WellProductionPropertiesPtr properties(new WellProductionProperties());
-                properties->OilRate = orat;
-                properties->WaterRate = wrat;
-                properties->GasRate = grat;
-                properties->LiquidRate = liquidRate;
-                properties->ResVRate = resVRate;
-                //properties->ProductionControls = 0;
-                std::cout << "Setting production properties at tstep=" << currentStep << " to " << properties->ProductionControls << std::endl;
+                WellProductionProperties properties = well->getProductionProperties(currentStep);
+                properties.OilRate = orat;
+                properties.WaterRate = wrat;
+                properties.GasRate = grat;
+                properties.LiquidRate = liquidRate;
+                properties.ResVRate = resVRate;
                 well->setProductionProperties(currentStep, properties);
-//                well->setOilRate(currentStep, orat);
-//                well->setWaterRate(currentStep, wrat);
-//                well->setGasRate(currentStep, grat);
-//                well->setLiquidRate( currentStep , liquidRate );
-//                well->setResVRate( currentStep , resVRate );
                 well->setBHPLimit(currentStep, BHPLimit , true);
                 well->setTHPLimit(currentStep, THPLimit , true);
 
