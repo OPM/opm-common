@@ -42,12 +42,24 @@ namespace Opm {
         double  LiquidRate;
         double  ResVRate;
         int     ProductionControls;
+
         WellProductionProperties()
             {OilRate=0.0; GasRate=0.0; WaterRate=0.0; LiquidRate=0.0; ResVRate=0.0; ProductionControls=0;}
         WellProductionProperties(const WellProductionProperties& props)
             {OilRate=props.OilRate; GasRate=props.GasRate; WaterRate=props.WaterRate;
              LiquidRate=props.LiquidRate; ResVRate=props.ResVRate; ProductionControls=props.ProductionControls;}
     } WellProductionProperties;
+
+    typedef struct WellInjectionProperties {
+        double SurfaceInjectionRate;
+        double ReservoirInjectionRate;
+
+        WellInjectionProperties()
+            {SurfaceInjectionRate=0.0; ReservoirInjectionRate=0.0;}
+        WellInjectionProperties(const WellInjectionProperties& props)
+            {SurfaceInjectionRate=props.SurfaceInjectionRate;
+             ReservoirInjectionRate=props.ReservoirInjectionRate;}
+    } WellInjectionProperties;
 
     class Well {
     public:
@@ -58,10 +70,10 @@ namespace Opm {
         const std::string getGroupName(size_t timeStep) const;
         void setGroupName(size_t timeStep , const std::string& groupName);
 
-        double getSurfaceInjectionRate(size_t timeStep) const;
-        void   setSurfaceInjectionRate(size_t timeStep, double injectionRate);
-        double getReservoirInjectionRate(size_t timeStep) const;
-        void   setReservoirInjectionRate(size_t timeStep, double injectionRate);
+//        double getSurfaceInjectionRate(size_t timeStep) const;
+//        void   setSurfaceInjectionRate(size_t timeStep, double injectionRate);
+//        double getReservoirInjectionRate(size_t timeStep) const;
+//        void   setReservoirInjectionRate(size_t timeStep, double injectionRate);
         double getBHPLimit(size_t timeStep) const;
         void   setBHPLimit(size_t timeStep, double BHPLimit , bool producer);
         double getTHPLimit(size_t timeStep) const;
@@ -105,6 +117,8 @@ namespace Opm {
                CompletionSetConstPtr getCompletions(size_t timeStep) const;
         void setProductionProperties(size_t timeStep , const WellProductionProperties properties);
         WellProductionProperties getProductionProperties(size_t timeStep) const;
+        void setInjectionProperties(size_t timeStep , const WellInjectionProperties properties);
+        WellInjectionProperties getInjectionProperties(size_t timeStep) const;
 
     private:
         void switch2Producer(size_t timeStep );
@@ -117,8 +131,8 @@ namespace Opm {
         size_t m_creationTimeStep;
         std::string m_name;
 
-        std::shared_ptr<DynamicState<double> > m_surfaceInjectionRate;
-        std::shared_ptr<DynamicState<double> > m_reservoirInjectionRate;
+//        std::shared_ptr<DynamicState<double> > m_surfaceInjectionRate;
+//        std::shared_ptr<DynamicState<double> > m_reservoirInjectionRate;
         std::shared_ptr<DynamicState<double> > m_BHPLimit;
         std::shared_ptr<DynamicState<double> > m_THPLimit;
         std::shared_ptr<DynamicState<WellInjector::TypeEnum> > m_injectorType;
@@ -136,6 +150,7 @@ namespace Opm {
 
         std::shared_ptr<DynamicState<CompletionSetConstPtr> > m_completions;
         std::shared_ptr<DynamicState<WellProductionProperties> > m_productionProperties;
+        std::shared_ptr<DynamicState<WellInjectionProperties> > m_injectionProperties;
         std::shared_ptr<DynamicState<std::string> > m_groupName;
 
         // WELSPECS data - assumes this is not dynamic

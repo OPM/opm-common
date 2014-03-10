@@ -28,8 +28,8 @@
 namespace Opm {
 
     Well::Well(const std::string& name, int headI, int headJ, double refDepth, TimeMapConstPtr timeMap , size_t creationTimeStep)
-        : m_surfaceInjectionRate(new DynamicState<double>(timeMap, 0.0)),
-          m_reservoirInjectionRate(new DynamicState<double>(timeMap, 0.0)),
+        : //m_surfaceInjectionRate(new DynamicState<double>(timeMap, 0.0)),
+          //m_reservoirInjectionRate(new DynamicState<double>(timeMap, 0.0)),
           m_BHPLimit(new DynamicState<double>(timeMap , 0.0)),
           m_THPLimit(new DynamicState<double>(timeMap , 0.0)),
           m_injectorType(new DynamicState<WellInjector::TypeEnum>(timeMap, WellInjector::WATER)),
@@ -45,6 +45,7 @@ namespace Opm {
           m_guideRateScalingFactor(new DynamicState<double>(timeMap, 1.0)),
           m_completions( new DynamicState<CompletionSetConstPtr>( timeMap , CompletionSetConstPtr( new CompletionSet()) )),
           m_productionProperties( new DynamicState<WellProductionProperties>(timeMap, WellProductionProperties() )),
+          m_injectionProperties( new DynamicState<WellInjectionProperties>(timeMap, WellInjectionProperties() )),
           m_groupName( new DynamicState<std::string>( timeMap , "" )),
           m_headI(headI),
           m_headJ(headJ),
@@ -66,6 +67,15 @@ namespace Opm {
 
     WellProductionProperties Well::getProductionProperties(size_t timeStep) const {
         return m_productionProperties->get(timeStep);
+    }
+
+    void Well::setInjectionProperties(size_t timeStep , const WellInjectionProperties newProperties) {
+        m_isProducer->add(timeStep , false);
+        m_injectionProperties->add(timeStep, newProperties);
+    }
+
+    WellInjectionProperties Well::getInjectionProperties(size_t timeStep) const {
+        return m_injectionProperties->get(timeStep);
     }
 
     bool Well::hasBeenDefined(size_t timeStep) const {
@@ -131,27 +141,6 @@ namespace Opm {
 
     void Well::setProducerControlMode(size_t timeStep, WellProducer::ControlModeEnum controlMode) {
         m_producerControlMode->add(timeStep , controlMode);
-    }
-
-
-    double Well::getSurfaceInjectionRate(size_t timeStep) const {
-        return m_surfaceInjectionRate->get(timeStep);
-    }
-
-    void Well::setSurfaceInjectionRate(size_t timeStep, double injectionRate) {
-        m_surfaceInjectionRate->add(timeStep, injectionRate);
-        switch2Injector( timeStep );
-        addInjectionControl( timeStep , WellInjector::RATE );
-    }
-
-    double Well::getReservoirInjectionRate(size_t timeStep) const {
-        return m_reservoirInjectionRate->get(timeStep);
-    }
-
-    void Well::setReservoirInjectionRate(size_t timeStep, double injectionRate) {
-        m_reservoirInjectionRate->add(timeStep, injectionRate);
-        switch2Injector( timeStep );
-        addInjectionControl( timeStep , WellInjector::RESV );
     }
 
 

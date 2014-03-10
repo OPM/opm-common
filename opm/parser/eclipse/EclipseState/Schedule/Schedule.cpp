@@ -296,8 +296,10 @@ namespace Opm {
             WellCommon::StatusEnum status             = WellCommon::StatusFromString( record->getItem("STATUS")->getString(0));
        
             well->setStatus( currentStep , status );
-            well->setSurfaceInjectionRate( currentStep , surfaceInjectionRate );
-            well->setReservoirInjectionRate( currentStep , reservoirInjectionRate );
+            WellInjectionProperties properties(well->getInjectionProperties(currentStep));
+            properties.SurfaceInjectionRate = surfaceInjectionRate;
+            properties.ReservoirInjectionRate = reservoirInjectionRate;
+            well->setInjectionProperties(currentStep, properties);
             well->setBHPLimit(currentStep, BHPLimit , false);
             well->setTHPLimit(currentStep, THPLimit , false);
             well->setInjectorType( currentStep , injectorType );
@@ -342,7 +344,9 @@ namespace Opm {
             WellCommon::StatusEnum status = WellCommon::StatusFromString( record->getItem("STATUS")->getString(0));
 
             well->setStatus( currentStep , status );
-            well->setSurfaceInjectionRate( currentStep , injectionRate );
+            WellInjectionProperties properties(well->getInjectionProperties(currentStep));
+            properties.SurfaceInjectionRate = injectionRate;
+            well->setInjectionProperties(currentStep, properties);
             well->setInPredictionMode(currentStep, false );
         }
     }
