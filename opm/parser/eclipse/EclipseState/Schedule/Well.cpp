@@ -50,7 +50,7 @@ namespace Opm {
           m_guideRatePhase(new DynamicState<GuideRate::GuideRatePhaseEnum>(timeMap, GuideRate::UNDEFINED)),
           m_guideRateScalingFactor(new DynamicState<double>(timeMap, 1.0)),
           m_completions( new DynamicState<CompletionSetConstPtr>( timeMap , CompletionSetConstPtr( new CompletionSet()) )),
-          m_productionProperties( new DynamicState<WellProductionProperties>(timeMap, WellProductionProperties() )),
+          m_productionProperties( new DynamicState<WellProductionPropertiesPtr>(timeMap, WellProductionPropertiesPtr(new WellProductionProperties()) )),
           m_groupName( new DynamicState<std::string>( timeMap , "" )),
           m_headI(headI),
           m_headJ(headJ),
@@ -65,36 +65,38 @@ namespace Opm {
     }
 
 
-    void Well::setProductionProperties(size_t timeStep , const WellProductionProperties newProperties) {
+    void Well::setProductionProperties(size_t timeStep , const WellProductionPropertiesPtr newProperties) {
         m_isProducer->add(timeStep , true);
-        WellProductionProperties copyToBeSaved = getProductionProperties(timeStep);
-        if ((copyToBeSaved.ProductionControls != newProperties.ProductionControls)) {
-            copyToBeSaved.ProductionControls = newProperties.ProductionControls;
+        WellProductionPropertiesPtr copyToBeSaved = getProductionProperties(timeStep);
+//        std::cout << "setProductionProperties(): getProductionProperties returned " << copyToBeSaved->ProductionControls << " at timestep " << timeStep << std::endl;
+//        if ((copyToBeSaved->ProductionControls != newProperties->ProductionControls)) {
+            copyToBeSaved->ProductionControls = newProperties->ProductionControls;
+//        }
+        if (copyToBeSaved->OilRate != newProperties->OilRate) {
+            copyToBeSaved->OilRate = newProperties->OilRate;
+            copyToBeSaved->ProductionControls += WellProducer::ORAT;
         }
-        if (copyToBeSaved.OilRate != newProperties.OilRate) {
-            copyToBeSaved.OilRate = newProperties.OilRate;
-            copyToBeSaved.ProductionControls += WellProducer::ORAT;
+        if (copyToBeSaved->GasRate != newProperties->GasRate) {
+            copyToBeSaved->GasRate = newProperties->GasRate;
+            copyToBeSaved->ProductionControls += WellProducer::GRAT;
         }
-        if (copyToBeSaved.GasRate != newProperties.GasRate) {
-            copyToBeSaved.GasRate = newProperties.GasRate;
-            copyToBeSaved.ProductionControls += WellProducer::GRAT;
+        if (copyToBeSaved->WaterRate != newProperties->WaterRate) {
+            copyToBeSaved->WaterRate = newProperties->WaterRate;
+            copyToBeSaved->ProductionControls += WellProducer::WRAT;
         }
-        if (copyToBeSaved.WaterRate != newProperties.WaterRate) {
-            copyToBeSaved.WaterRate = newProperties.WaterRate;
-            copyToBeSaved.ProductionControls += WellProducer::WRAT;
+        if (copyToBeSaved->LiquidRate != newProperties->LiquidRate) {
+            copyToBeSaved->LiquidRate = newProperties->LiquidRate;
+            copyToBeSaved->ProductionControls += WellProducer::LRAT;
         }
-        if (copyToBeSaved.LiquidRate != newProperties.LiquidRate) {
-            copyToBeSaved.LiquidRate = newProperties.LiquidRate;
-            copyToBeSaved.ProductionControls += WellProducer::LRAT;
+        if (copyToBeSaved->ResVRate != newProperties->ResVRate) {
+            copyToBeSaved->ResVRate = newProperties->ResVRate;
+            copyToBeSaved->ProductionControls += WellProducer::RESV;
         }
-        if (copyToBeSaved.ResVRate != newProperties.ResVRate) {
-            copyToBeSaved.ResVRate = newProperties.ResVRate;
-            copyToBeSaved.ProductionControls += WellProducer::RESV;
-        }
+        std::cout << "setProductionProperties(): Setting new value: " << copyToBeSaved->ProductionControls << " at timestep " << timeStep << std::endl;
         m_productionProperties->add(timeStep, copyToBeSaved);
     }
 
-    WellProductionProperties Well::getProductionProperties(size_t timeStep) const {
+    WellProductionPropertiesPtr Well::getProductionProperties(size_t timeStep) const {
         return m_productionProperties->get(timeStep);
     }
 
@@ -164,56 +166,56 @@ namespace Opm {
     }
 
 
-    double Well::getOilRate(size_t timeStep) const {
-        return getProductionProperties(timeStep).OilRate;
-    }
+//    double Well::getOilRate(size_t timeStep) const {
+//        return getProductionProperties(timeStep).OilRate;
+//    }
 
-    void Well::setOilRate(size_t timeStep, double oilRate) {
-        WellProductionProperties properties = getProductionProperties(timeStep);
-        properties.OilRate = oilRate;
-        setProductionProperties(timeStep, properties);
-    }
+//    void Well::setOilRate(size_t timeStep, double oilRate) {
+//        WellProductionProperties properties = getProductionProperties(timeStep);
+//        properties.OilRate = oilRate;
+//        setProductionProperties(timeStep, properties);
+//    }
 
 
-    double Well::getGasRate(size_t timeStep) const {
-        return getProductionProperties(timeStep).GasRate;
-    }
+//    double Well::getGasRate(size_t timeStep) const {
+//        return getProductionProperties(timeStep).GasRate;
+//    }
 
-    void Well::setGasRate(size_t timeStep, double gasRate) {
-        WellProductionProperties properties = getProductionProperties(timeStep);
-        properties.GasRate = gasRate;
-        setProductionProperties(timeStep, properties);
-    }
+//    void Well::setGasRate(size_t timeStep, double gasRate) {
+//        WellProductionProperties properties = getProductionProperties(timeStep);
+//        properties.GasRate = gasRate;
+//        setProductionProperties(timeStep, properties);
+//    }
 
-    double Well::getWaterRate(size_t timeStep) const {
-        return getProductionProperties(timeStep).WaterRate;
-    }
+//    double Well::getWaterRate(size_t timeStep) const {
+//        return getProductionProperties(timeStep).WaterRate;
+//    }
 
-    void Well::setWaterRate(size_t timeStep, double waterRate) {
-        WellProductionProperties properties = getProductionProperties(timeStep);
-        properties.WaterRate = waterRate;
-        setProductionProperties(timeStep, properties);
-    }
+//    void Well::setWaterRate(size_t timeStep, double waterRate) {
+//        WellProductionProperties properties = getProductionProperties(timeStep);
+//        properties.WaterRate = waterRate;
+//        setProductionProperties(timeStep, properties);
+//    }
 
-    double Well::getLiquidRate(size_t timeStep) const {
-        return getProductionProperties(timeStep).LiquidRate;
-    }
+//    double Well::getLiquidRate(size_t timeStep) const {
+//        return getProductionProperties(timeStep).LiquidRate;
+//    }
 
-    void Well::setLiquidRate(size_t timeStep, double liquidRate) {
-        WellProductionProperties properties = getProductionProperties(timeStep);
-        properties.LiquidRate = liquidRate;
-        setProductionProperties(timeStep, properties);
-    }
+//    void Well::setLiquidRate(size_t timeStep, double liquidRate) {
+//        WellProductionProperties properties = getProductionProperties(timeStep);
+//        properties.LiquidRate = liquidRate;
+//        setProductionProperties(timeStep, properties);
+//    }
 
-    double Well::getResVRate(size_t timeStep) const {
-        return getProductionProperties(timeStep).ResVRate;
-    }
+//    double Well::getResVRate(size_t timeStep) const {
+//        return getProductionProperties(timeStep).ResVRate;
+//    }
 
-    void Well::setResVRate(size_t timeStep, double resvRate) {
-        WellProductionProperties properties = getProductionProperties(timeStep);
-        properties.ResVRate = resvRate;
-        setProductionProperties(timeStep, properties);
-    }
+//    void Well::setResVRate(size_t timeStep, double resvRate) {
+//        WellProductionProperties properties = getProductionProperties(timeStep);
+//        properties.ResVRate = resvRate;
+//        setProductionProperties(timeStep, properties);
+//    }
 
     double Well::getSurfaceInjectionRate(size_t timeStep) const {
         return m_surfaceInjectionRate->get(timeStep);
@@ -301,8 +303,8 @@ namespace Opm {
     /*****************************************************************/
 
     bool Well::hasProductionControl(size_t timeStep , WellProducer::ControlModeEnum controlMode) const {
-        WellProductionProperties properties = getProductionProperties(timeStep);
-        if ((properties.ProductionControls & controlMode) != 0)
+        WellProductionPropertiesPtr properties = getProductionProperties(timeStep);
+        if ((properties->ProductionControls & controlMode) != 0)
             return true;
         else
             return false;
@@ -310,18 +312,18 @@ namespace Opm {
 
     
     void Well::addProductionControl(size_t timeStep , WellProducer::ControlModeEnum controlMode) {
-        WellProductionProperties properties = getProductionProperties(timeStep);
-        if ((properties.ProductionControls & controlMode) == 0) {
-            properties.ProductionControls += controlMode;
+        WellProductionPropertiesPtr properties = getProductionProperties(timeStep);
+        if ((properties->ProductionControls & controlMode) == 0) {
+            properties->ProductionControls += controlMode;
             setProductionProperties(timeStep, properties);
         }
     }
 
     
     void Well::dropProductionControl(size_t timeStep , WellProducer::ControlModeEnum controlMode) {
-        WellProductionProperties properties = getProductionProperties(timeStep);
-        if ((properties.ProductionControls & controlMode) != 0) {
-            properties.ProductionControls -= controlMode;
+        WellProductionPropertiesPtr properties = getProductionProperties(timeStep);
+        if ((properties->ProductionControls & controlMode) != 0) {
+            properties->ProductionControls -= controlMode;
             setProductionProperties(timeStep, properties);
         }
     }

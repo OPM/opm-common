@@ -185,9 +185,6 @@ namespace Opm {
                 well->setProducerControlMode( currentStep , control );
             }
             well->setStatus( currentStep , status );
-            well->setOilRate(currentStep, orat);
-            well->setWaterRate(currentStep, wrat);
-            well->setGasRate(currentStep, grat);
             well->setInPredictionMode(currentStep, isPredictionMode);
             {
                 double liquidRate = 0;
@@ -202,8 +199,20 @@ namespace Opm {
                     resVRate = record->getItem("RESV")->getSIDouble(0);
                 }
                 
-                well->setLiquidRate( currentStep , liquidRate );
-                well->setResVRate( currentStep , resVRate );
+                WellProductionPropertiesPtr properties(new WellProductionProperties());
+                properties->OilRate = orat;
+                properties->WaterRate = wrat;
+                properties->GasRate = grat;
+                properties->LiquidRate = liquidRate;
+                properties->ResVRate = resVRate;
+                //properties->ProductionControls = 0;
+                std::cout << "Setting production properties at tstep=" << currentStep << " to " << properties->ProductionControls << std::endl;
+                well->setProductionProperties(currentStep, properties);
+//                well->setOilRate(currentStep, orat);
+//                well->setWaterRate(currentStep, wrat);
+//                well->setGasRate(currentStep, grat);
+//                well->setLiquidRate( currentStep , liquidRate );
+//                well->setResVRate( currentStep , resVRate );
                 well->setBHPLimit(currentStep, BHPLimit , true);
                 well->setTHPLimit(currentStep, THPLimit , true);
 
