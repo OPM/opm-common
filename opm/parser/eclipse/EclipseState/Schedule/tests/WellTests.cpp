@@ -231,16 +231,16 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
     Opm::WellInjectionProperties injectionProps1(well.getInjectionProperties(3));
     injectionProps1.SurfaceInjectionRate = 100;
     well.setInjectionProperties(3, injectionProps1);
-//    BOOST_CHECK_EQUAL( true  , well.isInjector(3));
-//    BOOST_CHECK_EQUAL( false , well.isProducer(3));
+    BOOST_CHECK_EQUAL( true  , well.isInjector(3));
+    BOOST_CHECK_EQUAL( false , well.isProducer(3));
     BOOST_CHECK_EQUAL( 100 , well.getInjectionProperties(3).SurfaceInjectionRate);
     
     /* Set a reservoir injection rate => Well becomes an Injector */
     Opm::WellInjectionProperties injectionProps2(well.getInjectionProperties(4));
     injectionProps2.ReservoirInjectionRate = 200;
     well.setInjectionProperties(4, injectionProps2);
-//    BOOST_CHECK_EQUAL( true  , well.isInjector(4));
-//    BOOST_CHECK_EQUAL( false , well.isProducer(4));
+    BOOST_CHECK_EQUAL( true  , well.isInjector(4));
+    BOOST_CHECK_EQUAL( false , well.isProducer(4));
     BOOST_CHECK_EQUAL( 200 , well.getInjectionProperties(4).ReservoirInjectionRate);
     
 
@@ -253,8 +253,8 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
 
     BOOST_CHECK_EQUAL( false , well.isInjector(4));
     BOOST_CHECK_EQUAL( true , well.isProducer(4));
-//    BOOST_CHECK_EQUAL( 0 , well.getSurfaceInjectionRate(4));
-//    BOOST_CHECK_EQUAL( 0 , well.getReservoirInjectionRate(4));
+//    BOOST_CHECK_EQUAL( 0 , well.getInjectionProperties(4).SurfaceInjectionRate);
+//    BOOST_CHECK_EQUAL( 0 , well.getInjectionProperties(4).ReservoirInjectionRate);
     BOOST_CHECK_EQUAL( 100 , well.getProductionProperties(4).OilRate);
     BOOST_CHECK_EQUAL( 200 , well.getProductionProperties(4).GasRate);
     BOOST_CHECK_EQUAL( 300 , well.getProductionProperties(4).WaterRate);
@@ -263,12 +263,12 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
     Opm::WellInjectionProperties injectionProps3(well.getInjectionProperties(6));
     injectionProps3.ReservoirInjectionRate = 50;
     well.setInjectionProperties(6, injectionProps3);
-//    BOOST_CHECK_EQUAL( true  , well.isInjector(6));
-//    BOOST_CHECK_EQUAL( false , well.isProducer(6));
+    BOOST_CHECK_EQUAL( true  , well.isInjector(6));
+    BOOST_CHECK_EQUAL( false , well.isProducer(6));
     BOOST_CHECK_EQUAL( 50 , well.getInjectionProperties(6).ReservoirInjectionRate);
-//    BOOST_CHECK_EQUAL( 0 , well.getOilRate(6));
-//    BOOST_CHECK_EQUAL( 0 , well.getGasRate(6));
-//    BOOST_CHECK_EQUAL( 0 , well.getWaterRate(6));
+//    BOOST_CHECK_EQUAL( 0 , well.getProductionProperties(6).OilRate);
+//    BOOST_CHECK_EQUAL( 0 , well.getProductionProperties(6).GasRate);
+//    BOOST_CHECK_EQUAL( 0 , well.getProductionProperties(6).WaterRate);
 }
 
 

@@ -53,12 +53,14 @@ namespace Opm {
     typedef struct WellInjectionProperties {
         double SurfaceInjectionRate;
         double ReservoirInjectionRate;
+        int    InjectionControls;
 
         WellInjectionProperties()
-            {SurfaceInjectionRate=0.0; ReservoirInjectionRate=0.0;}
+            {SurfaceInjectionRate=0.0; ReservoirInjectionRate=0.0; InjectionControls=0;}
         WellInjectionProperties(const WellInjectionProperties& props)
             {SurfaceInjectionRate=props.SurfaceInjectionRate;
-             ReservoirInjectionRate=props.ReservoirInjectionRate;}
+             ReservoirInjectionRate=props.ReservoirInjectionRate;
+             InjectionControls=props.InjectionControls;}
     } WellInjectionProperties;
 
     class Well {
@@ -70,10 +72,6 @@ namespace Opm {
         const std::string getGroupName(size_t timeStep) const;
         void setGroupName(size_t timeStep , const std::string& groupName);
 
-//        double getSurfaceInjectionRate(size_t timeStep) const;
-//        void   setSurfaceInjectionRate(size_t timeStep, double injectionRate);
-//        double getReservoirInjectionRate(size_t timeStep) const;
-//        void   setReservoirInjectionRate(size_t timeStep, double injectionRate);
         double getBHPLimit(size_t timeStep) const;
         void   setBHPLimit(size_t timeStep, double BHPLimit , bool producer);
         double getTHPLimit(size_t timeStep) const;
@@ -121,18 +119,12 @@ namespace Opm {
         WellInjectionProperties getInjectionProperties(size_t timeStep) const;
 
     private:
-        void switch2Producer(size_t timeStep );
-        void switch2Injector(size_t timeStep );
-
         void addInjectionControl(size_t timeStep   , WellInjector::ControlModeEnum controlMode);
         void addProductionControl(size_t timeStep , WellProducer::ControlModeEnum controlMode);
-        
         
         size_t m_creationTimeStep;
         std::string m_name;
 
-//        std::shared_ptr<DynamicState<double> > m_surfaceInjectionRate;
-//        std::shared_ptr<DynamicState<double> > m_reservoirInjectionRate;
         std::shared_ptr<DynamicState<double> > m_BHPLimit;
         std::shared_ptr<DynamicState<double> > m_THPLimit;
         std::shared_ptr<DynamicState<WellInjector::TypeEnum> > m_injectorType;

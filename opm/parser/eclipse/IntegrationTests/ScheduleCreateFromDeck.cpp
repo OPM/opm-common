@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
         BOOST_CHECK_EQUAL( WellCommon::OPEN , well1->getStatus( 11 ));
         BOOST_CHECK_EQUAL( WellCommon::SHUT , well1->getStatus( 12 ));
 
-        //BOOST_CHECK(  well1->hasInjectionControl( 9 , WellInjector::RATE ));
+//        BOOST_CHECK(  well1->hasInjectionControl( 9 , WellInjector::RATE ));
 //        BOOST_CHECK(  well1->hasInjectionControl( 9 , WellInjector::RESV ));
         BOOST_CHECK( !well1->hasInjectionControl( 9 , WellInjector::THP ));
         BOOST_CHECK( !well1->hasInjectionControl( 9 , WellInjector::BHP ));

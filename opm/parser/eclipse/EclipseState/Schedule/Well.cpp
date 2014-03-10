@@ -28,9 +28,7 @@
 namespace Opm {
 
     Well::Well(const std::string& name, int headI, int headJ, double refDepth, TimeMapConstPtr timeMap , size_t creationTimeStep)
-        : //m_surfaceInjectionRate(new DynamicState<double>(timeMap, 0.0)),
-          //m_reservoirInjectionRate(new DynamicState<double>(timeMap, 0.0)),
-          m_BHPLimit(new DynamicState<double>(timeMap , 0.0)),
+        : m_BHPLimit(new DynamicState<double>(timeMap , 0.0)),
           m_THPLimit(new DynamicState<double>(timeMap , 0.0)),
           m_injectorType(new DynamicState<WellInjector::TypeEnum>(timeMap, WellInjector::WATER)),
           m_injectorControlMode(new DynamicState<WellInjector::ControlModeEnum>(timeMap, WellInjector::RATE)),
@@ -210,7 +208,7 @@ namespace Opm {
 
     bool Well::hasProductionControl(size_t timeStep , WellProducer::ControlModeEnum controlMode) const {
         WellProductionProperties properties = getProductionProperties(timeStep);
-        if ((properties.ProductionControls & controlMode) != 0)
+        if (properties.ProductionControls & controlMode)
             return true;
         else
             return false;
@@ -236,8 +234,8 @@ namespace Opm {
 
     
     bool Well::hasInjectionControl(size_t timeStep , WellInjector::ControlModeEnum controlMode) const {
-        int controls = m_injectionControls->get( timeStep );
-        if (controls & controlMode)
+        WellInjectionProperties properties = getInjectionProperties(timeStep);
+        if (properties.InjectionControls & controlMode)
             return true;
         else
             return false;
@@ -245,19 +243,19 @@ namespace Opm {
 
     
     void Well::addInjectionControl(size_t timeStep , WellInjector::ControlModeEnum controlMode) {
-        int controls = m_injectionControls->get( timeStep );
-        if ((controls & controlMode) == 0) {
-            controls += controlMode;
-            m_injectionControls->add(timeStep , controls );
+        WellInjectionProperties properties = getInjectionProperties(timeStep);
+        if ((properties.InjectionControls & controlMode) == 0) {
+            properties.InjectionControls += controlMode;
+            setInjectionProperties(timeStep, properties);
         }
     }
 
     
     void Well::dropInjectionControl(size_t timeStep , WellInjector::ControlModeEnum controlMode) {
-        int controls = m_injectionControls->get( timeStep );
-        if ((controls & controlMode) != 0) {
-            controls -= controlMode;
-            m_injectionControls->add(timeStep , controls );
+        WellInjectionProperties properties = getInjectionProperties(timeStep);
+        if ((properties.InjectionControls & controlMode) != 0) {
+            properties.InjectionControls -= controlMode;
+            setInjectionProperties(timeStep, properties);
         }
     }
 
