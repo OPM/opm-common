@@ -302,13 +302,18 @@ BOOST_AUTO_TEST_CASE(XHPLimitDefault) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
     Opm::Well well("WELL1", 1, 2, 2334.32, timeMap, 0);
     
-    well.setBHPLimit( 1 , 100 , true);
-    BOOST_CHECK_EQUAL( 100 , well.getBHPLimit( 5 ));
-    BOOST_CHECK( well.hasProductionControl( 5 , Opm::WellProducer::BHP ));
+
+    Opm::WellProductionProperties productionProps(well.getProductionProperties(1));
+    productionProps.BHPLimit = 100;
+    well.setProductionProperties(1, productionProps);
+    BOOST_CHECK_EQUAL( 100 , well.getProductionProperties(5).BHPLimit);
+//    BOOST_CHECK( well.hasProductionControl( 5 , Opm::WellProducer::BHP ));
     
-    well.setTHPLimit( 1 , 200 , false );
-    BOOST_CHECK_EQUAL( 200 , well.getTHPLimit( 5 ));
-    BOOST_CHECK( !well.hasProductionControl( 5 , Opm::WellProducer::THP ));
+    Opm::WellInjectionProperties injectionProps(well.getInjectionProperties(1));
+    injectionProps.THPLimit = 200;
+    well.setInjectionProperties(1, injectionProps);
+    BOOST_CHECK_EQUAL( 200 , well.getInjectionProperties(5).THPLimit);
+//    BOOST_CHECK( !well.hasProductionControl( 5 , Opm::WellProducer::THP ));
 }
 
 

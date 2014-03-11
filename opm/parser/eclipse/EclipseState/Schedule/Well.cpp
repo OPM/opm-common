@@ -28,9 +28,7 @@
 namespace Opm {
 
     Well::Well(const std::string& name, int headI, int headJ, double refDepth, TimeMapConstPtr timeMap , size_t creationTimeStep)
-        : m_BHPLimit(new DynamicState<double>(timeMap , 0.0)),
-          m_THPLimit(new DynamicState<double>(timeMap , 0.0)),
-          m_injectorType(new DynamicState<WellInjector::TypeEnum>(timeMap, WellInjector::WATER)),
+        : m_injectorType(new DynamicState<WellInjector::TypeEnum>(timeMap, WellInjector::WATER)),
           m_injectorControlMode(new DynamicState<WellInjector::ControlModeEnum>(timeMap, WellInjector::RATE)),
           m_producerControlMode(new DynamicState<WellProducer::ControlModeEnum>(timeMap, WellProducer::ORAT)),
           m_status(new DynamicState<WellCommon::StatusEnum>(timeMap, WellCommon::OPEN)),
@@ -91,31 +89,6 @@ namespace Opm {
         m_status->add( timeStep , status );
     }
     
-
-    double Well::getBHPLimit(size_t timeStep) const {
-        return m_BHPLimit->get(timeStep);
-    }
-
-    void Well::setBHPLimit(size_t timeStep, double BHPLimit , bool producer) {
-        m_BHPLimit->add(timeStep, BHPLimit);
-        if (producer)
-            addProductionControl( timeStep , WellProducer::BHP);
-        else
-            addInjectionControl( timeStep , WellInjector::BHP );
-    }
-
-
-    double Well::getTHPLimit(size_t timeStep) const {
-        return m_THPLimit->get(timeStep);
-    }
-
-    void Well::setTHPLimit(size_t timeStep, double THPLimit , bool producer) {
-        m_THPLimit->add(timeStep, THPLimit);
-        if (producer)
-            addProductionControl( timeStep , WellProducer::THP);
-        else
-            addInjectionControl( timeStep , WellInjector::THP );
-    }
 
     WellInjector::TypeEnum Well::getInjectorType(size_t timeStep) const {
         return m_injectorType->get(timeStep);

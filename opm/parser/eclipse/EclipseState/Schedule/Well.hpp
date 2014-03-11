@@ -41,25 +41,34 @@ namespace Opm {
         double  WaterRate;
         double  LiquidRate;
         double  ResVRate;
+        double  BHPLimit;
+        double  THPLimit;
         int     ProductionControls;
 
         WellProductionProperties()
-            {OilRate=0.0; GasRate=0.0; WaterRate=0.0; LiquidRate=0.0; ResVRate=0.0; ProductionControls=0;}
+            {OilRate=0.0; GasRate=0.0; WaterRate=0.0; LiquidRate=0.0; ResVRate=0.0;
+             BHPLimit=0.0; THPLimit=0.0; ProductionControls=0;}
         WellProductionProperties(const WellProductionProperties& props)
             {OilRate=props.OilRate; GasRate=props.GasRate; WaterRate=props.WaterRate;
-             LiquidRate=props.LiquidRate; ResVRate=props.ResVRate; ProductionControls=props.ProductionControls;}
+             LiquidRate=props.LiquidRate; ResVRate=props.ResVRate;
+             BHPLimit=props.BHPLimit; THPLimit=props.THPLimit;
+             ProductionControls=props.ProductionControls;}
     } WellProductionProperties;
 
     typedef struct WellInjectionProperties {
         double SurfaceInjectionRate;
         double ReservoirInjectionRate;
+        double  BHPLimit;
+        double  THPLimit;
         int    InjectionControls;
 
         WellInjectionProperties()
-            {SurfaceInjectionRate=0.0; ReservoirInjectionRate=0.0; InjectionControls=0;}
+            {SurfaceInjectionRate=0.0; ReservoirInjectionRate=0.0;
+             BHPLimit=0.0; THPLimit=0.0; InjectionControls=0;}
         WellInjectionProperties(const WellInjectionProperties& props)
             {SurfaceInjectionRate=props.SurfaceInjectionRate;
              ReservoirInjectionRate=props.ReservoirInjectionRate;
+             BHPLimit=props.BHPLimit; THPLimit=props.THPLimit;
              InjectionControls=props.InjectionControls;}
     } WellInjectionProperties;
 
@@ -72,10 +81,6 @@ namespace Opm {
         const std::string getGroupName(size_t timeStep) const;
         void setGroupName(size_t timeStep , const std::string& groupName);
 
-        double getBHPLimit(size_t timeStep) const;
-        void   setBHPLimit(size_t timeStep, double BHPLimit , bool producer);
-        double getTHPLimit(size_t timeStep) const;
-        void   setTHPLimit(size_t timeStep, double THPLimit , bool producer);
         WellInjector::TypeEnum getInjectorType(size_t timeStep) const;
         void                   setInjectorType(size_t timeStep, WellInjector::TypeEnum injectorType);
         WellInjector::ControlModeEnum getInjectorControlMode(size_t timeStep) const;
@@ -125,8 +130,6 @@ namespace Opm {
         size_t m_creationTimeStep;
         std::string m_name;
 
-        std::shared_ptr<DynamicState<double> > m_BHPLimit;
-        std::shared_ptr<DynamicState<double> > m_THPLimit;
         std::shared_ptr<DynamicState<WellInjector::TypeEnum> > m_injectorType;
         std::shared_ptr<DynamicState<WellInjector::ControlModeEnum> > m_injectorControlMode;
         std::shared_ptr<DynamicState<WellProducer::ControlModeEnum> > m_producerControlMode;

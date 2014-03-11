@@ -205,9 +205,9 @@ namespace Opm {
                 properties.GasRate = grat;
                 properties.LiquidRate = liquidRate;
                 properties.ResVRate = resVRate;
+                properties.BHPLimit = BHPLimit;
+                properties.THPLimit = THPLimit;
                 well->setProductionProperties(currentStep, properties);
-                well->setBHPLimit(currentStep, BHPLimit , true);
-                well->setTHPLimit(currentStep, THPLimit , true);
 
                 if (isPredictionMode) {
                     if (record->getItem("LRAT")->defaultApplied())
@@ -299,9 +299,10 @@ namespace Opm {
             WellInjectionProperties properties(well->getInjectionProperties(currentStep));
             properties.SurfaceInjectionRate = surfaceInjectionRate;
             properties.ReservoirInjectionRate = reservoirInjectionRate;
+            properties.BHPLimit = BHPLimit;
+            properties.THPLimit = THPLimit;
             well->setInjectionProperties(currentStep, properties);
-            well->setBHPLimit(currentStep, BHPLimit , false);
-            well->setTHPLimit(currentStep, THPLimit , false);
+            well->setInjectorControlMode(currentStep , controlMode );
             well->setInjectorType( currentStep , injectorType );
             well->setInPredictionMode(currentStep, true);
             
