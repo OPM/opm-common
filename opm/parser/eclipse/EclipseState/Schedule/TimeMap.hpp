@@ -42,8 +42,8 @@ namespace Opm {
         double getTotalTime() const;
         /// Return the date and time where a given time step starts.
         boost::posix_time::ptime getStartTime(size_t tStepIdx) const;
-        /// Return the period of time in seconds which passed between the start of the simulation and a given time step.
-        double getTimePassedUntil(size_t tStepIdx) const;
+        /// Return the period of time in seconds which passed between the start of the simulation and a given point in time.
+        double getTimePassedUntil(size_t tLevelIdx) const;
         /// Return the length of a given time step in seconds.
         double getTimeStepLength(size_t tStepIdx) const;
         static boost::posix_time::ptime timeFromEclipse(DeckRecordConstPtr dateRecord);

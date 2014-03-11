@@ -212,13 +212,13 @@ namespace Opm {
         return static_cast<double>(deltaT.total_milliseconds())/1000.0;
     }
 
-    double TimeMap::getTimePassedUntil(size_t tStepIdx) const
+    double TimeMap::getTimePassedUntil(size_t tLevelIdx) const
     {
-        assert(0 <= tStepIdx && tStepIdx < numTimesteps());
+        assert(0 <= tLevelIdx && tLevelIdx < m_timeList.size());
         const boost::posix_time::ptime &t1
-            = m_timeList[tStepIdx];
+            = m_timeList.front();
         const boost::posix_time::ptime &t2
-            = m_timeList.back();
+            = m_timeList[tLevelIdx];
         const boost::posix_time::time_duration &deltaT
             = t2 - t1;
         return static_cast<double>(deltaT.total_milliseconds())/1000.0;
