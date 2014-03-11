@@ -229,21 +229,41 @@ BOOST_AUTO_TEST_CASE(TimeStepsCorrect) {
     Opm::DeckPtr deck = parser->parseString(deckData);
     Opm::TimeMap tmap(deck);
 
-    BOOST_CHECK_EQUAL(tmap.getStartTime(/*timeStepIdx=*/0),
+    BOOST_CHECK_EQUAL(tmap.getStartTime(/*timeLevelIdx=*/0),
                       boost::posix_time::ptime(boost::gregorian::date(1981, 5, 21)));
     BOOST_CHECK_EQUAL(tmap.getTimeStepLength(/*index=*/0), 1*24*60*60);
+    BOOST_CHECK_EQUAL(tmap.getTimePassedUntil(/*timeLevelIdx=*/1), 1.0*24*60*60);
+    BOOST_CHECK_EQUAL(tmap.getStartTime(/*timeLevelIdx=*/1),
+                      boost::posix_time::ptime(boost::gregorian::date(1981, 5, 21),
+                                               boost::posix_time::time_duration(1*24, 0, 0)));
     BOOST_CHECK_EQUAL(tmap.getTimeStepLength(/*index=*/1), 2*24*60*60);
+    BOOST_CHECK_EQUAL(tmap.getTimePassedUntil(/*timeLevelIdx=*/2), (1.0 + 2.0)*24*60*60);
+    BOOST_CHECK_EQUAL(tmap.getStartTime(/*timeLevelIdx=*/2),
+                      boost::posix_time::ptime(boost::gregorian::date(1981, 5, 21),
+                                               boost::posix_time::time_duration((1 + 2)*24, 0, 0)));
     BOOST_CHECK_EQUAL(tmap.getTimeStepLength(/*index=*/2), 3*24*60*60);
+    BOOST_CHECK_EQUAL(tmap.getTimePassedUntil(/*timeLevelIdx=*/3), (1.0 + 2.0 + 3.0)*24*60*60);
+    BOOST_CHECK_EQUAL(tmap.getStartTime(/*timeLevelIdx=*/3),
+                      boost::posix_time::ptime(boost::gregorian::date(1981, 5, 21),
+                                               boost::posix_time::time_duration((1 + 2 + 3)*24, 0, 0)));
     BOOST_CHECK_EQUAL(tmap.getTimeStepLength(/*index=*/3), 4*24*60*60);
+    BOOST_CHECK_EQUAL(tmap.getTimePassedUntil(/*timeLevelIdx=*/4), (1.0 + 2.0 + 3.0 + 4.0)*24*60*60);
+    BOOST_CHECK_EQUAL(tmap.getStartTime(/*timeLevelIdx=*/4),
+                      boost::posix_time::ptime(boost::gregorian::date(1981, 5, 21),
+                                               boost::posix_time::time_duration((1 + 2 + 3 + 4)*24, 0, 0)));
     BOOST_CHECK_EQUAL(tmap.getTimeStepLength(/*index=*/4), 5*24*60*60);
+    BOOST_CHECK_EQUAL(tmap.getTimePassedUntil(/*timeLevelIdx=*/5), (1.0 + 2.0 + 3.0 + 4.0 + 5.0)*24*60*60);
+    BOOST_CHECK_EQUAL(tmap.getStartTime(/*timeLevelIdx=*/5),
+                      boost::posix_time::ptime(boost::gregorian::date(1981, 5, 21),
+                                               boost::posix_time::time_duration((1 + 2 + 3 + 4 + 5)*24, 0, 0)));
     // timestep 5 is the period between the last step specified using
     // of the TIMES keyword and the first record of DATES
-    BOOST_CHECK_EQUAL(tmap.getStartTime(/*timeStepIndex=*/6),
+    BOOST_CHECK_EQUAL(tmap.getStartTime(/*timeLevelIndex=*/6),
                       boost::posix_time::ptime(boost::gregorian::date(1982, 1, 1)));
-    BOOST_CHECK_EQUAL(tmap.getStartTime(/*timeStepIndex=*/7),
+    BOOST_CHECK_EQUAL(tmap.getStartTime(/*timeLevelIndex=*/7),
                       boost::posix_time::ptime(boost::gregorian::date(1982, 1, 1),
                                                boost::posix_time::time_duration(13, 55, 44)));
-    BOOST_CHECK_EQUAL(tmap.getStartTime(/*timeStepIndex=*/8),
+    BOOST_CHECK_EQUAL(tmap.getStartTime(/*timeLevelIndex=*/8),
                       boost::posix_time::ptime(boost::gregorian::date(1982, 1, 3),
                                                boost::posix_time::time_duration(14, 56, 45) +
                                                boost::posix_time::milliseconds(123)));
