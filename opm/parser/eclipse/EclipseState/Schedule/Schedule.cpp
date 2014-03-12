@@ -185,6 +185,7 @@ namespace Opm {
                 well->setProducerControlMode( currentStep , control );
             }
             well->setStatus( currentStep , status );
+            WellProductionProperties properties = well->getProductionProperties(currentStep);
             {
                 double liquidRate = 0;
                 double resVRate = 0;
@@ -198,7 +199,6 @@ namespace Opm {
                     resVRate = record->getItem("RESV")->getSIDouble(0);
                 }
                 
-                WellProductionProperties properties = well->getProductionProperties(currentStep);
                 properties.PredictionMode = isPredictionMode;
                 properties.OilRate = orat;
                 properties.WaterRate = wrat;
@@ -207,42 +207,42 @@ namespace Opm {
                 properties.ResVRate = resVRate;
                 properties.BHPLimit = BHPLimit;
                 properties.THPLimit = THPLimit;
-                well->setProductionProperties(currentStep, properties);
 
                 if (isPredictionMode) {
                     if (record->getItem("LRAT")->defaultApplied())
-                        well->dropProductionControl( currentStep , WellProducer::LRAT );
+                        properties.dropProductionControl(WellProducer::LRAT);
                     
                     if (record->getItem("RESV")->defaultApplied())
-                        well->dropProductionControl( currentStep , WellProducer::RESV );
+                        properties.dropProductionControl(WellProducer::RESV);
                     
                     if (record->getItem("BHP")->defaultApplied())
-                        well->dropProductionControl( currentStep , WellProducer::BHP );
+                        properties.dropProductionControl(WellProducer::BHP);
                     
                     if (record->getItem("THP")->defaultApplied())
-                        well->dropProductionControl( currentStep , WellProducer::THP );
+                        properties.dropProductionControl(WellProducer::THP);
                 } else {
-                    well->dropProductionControl( currentStep , WellProducer::LRAT );
-                    well->dropProductionControl( currentStep , WellProducer::RESV );
-                    well->dropProductionControl( currentStep , WellProducer::BHP );
-                    well->dropProductionControl( currentStep , WellProducer::THP );
+                    properties.dropProductionControl(WellProducer::LRAT);
+                    properties.dropProductionControl(WellProducer::RESV);
+                    properties.dropProductionControl(WellProducer::BHP);
+                    properties.dropProductionControl(WellProducer::THP);
                 }
             }
             
             if (record->getItem("ORAT")->defaultApplied())
-                well->dropProductionControl( currentStep , WellProducer::ORAT );
+                properties.dropProductionControl(WellProducer::ORAT);
             
             if (record->getItem("GRAT")->defaultApplied()) {
-                well->dropProductionControl( currentStep , WellProducer::GRAT );
+                properties.dropProductionControl(WellProducer::GRAT);
             }
 
-            if (record->getItem("WRAT")->defaultApplied())
-                well->dropProductionControl( currentStep , WellProducer::WRAT );
+            if (record->getItem("WRAT")->defaultApplied()) {
+                properties.dropProductionControl(WellProducer::WRAT);
+            }
 
             if (status != WellCommon::SHUT) {
                 const std::string& cmodeString = record->getItem("CMODE")->getString(0);
                 WellProducer::ControlModeEnum control = WellProducer::ControlModeFromString( cmodeString );
-                if (well->hasProductionControl( currentStep , control))
+                if (properties.hasProductionControl( control))
                     well->setProducerControlMode( currentStep , control );
                 else {
                     /*
@@ -265,6 +265,7 @@ namespace Opm {
                     throw std::invalid_argument("Tried to set invalid control: " + cmodeString + " for well: " + wellName);
                 }
             }
+            well->setProductionProperties(currentStep, properties);
         }
     }
 
@@ -303,30 +304,29 @@ namespace Opm {
             properties.THPLimit = THPLimit;
             properties.InjectorType = injectorType;
             properties.PredictionMode = true;
-            well->setInjectionProperties(currentStep, properties);
-            well->setInjectorControlMode(currentStep , controlMode );
             
             if (record->getItem("RATE")->defaultApplied())
-                well->dropInjectionControl( currentStep , WellInjector::RATE );
+                properties.dropInjectionControl(WellInjector::RATE);
 
             if (record->getItem("RESV")->defaultApplied())
-                well->dropInjectionControl( currentStep , WellInjector::RESV );
+                properties.dropInjectionControl(WellInjector::RESV);
             
             if (record->getItem("THP")->defaultApplied())
-                well->dropInjectionControl( currentStep , WellInjector::THP );
+                properties.dropInjectionControl(WellInjector::THP);
 
             if (record->getItem("BHP")->defaultApplied())
-                well->dropInjectionControl( currentStep , WellInjector::BHP );
+                properties.dropInjectionControl(WellInjector::BHP);
             
             {
                 const std::string& cmodeString = record->getItem("CMODE")->getString(0);
                 WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( cmodeString );
-                if (well->hasInjectionControl( currentStep , controlMode))
+                if (properties.hasInjectionControl( controlMode))
                     well->setInjectorControlMode( currentStep , controlMode );
                 else {
                     throw std::invalid_argument("Tried to set invalid control: " + cmodeString + " for well: " + wellName);
                 }
             }
+            well->setInjectionProperties(currentStep, properties);
         }
     }
 

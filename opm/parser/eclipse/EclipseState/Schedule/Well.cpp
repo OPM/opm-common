@@ -31,8 +31,7 @@ namespace Opm {
         : m_injectorControlMode(new DynamicState<WellInjector::ControlModeEnum>(timeMap, WellInjector::RATE)),
           m_producerControlMode(new DynamicState<WellProducer::ControlModeEnum>(timeMap, WellProducer::ORAT)),
           m_status(new DynamicState<WellCommon::StatusEnum>(timeMap, WellCommon::OPEN)),
-          //m_injectionControls(new DynamicState<int>(timeMap, 0)),
-          m_isProducer(new DynamicState<bool>(timeMap, true)),
+          m_isProducer(new DynamicState<bool>(timeMap, true)) ,
           m_isAvailableForGroupControl(new DynamicState<bool>(timeMap, true)),
           m_guideRate(new DynamicState<double>(timeMap, -1.0)),
           m_guideRatePhase(new DynamicState<GuideRate::GuideRatePhaseEnum>(timeMap, GuideRate::UNDEFINED)),
@@ -59,8 +58,12 @@ namespace Opm {
         m_productionProperties->add(timeStep, newProperties);
     }
 
-    WellProductionProperties Well::getProductionProperties(size_t timeStep) const {
+    WellProductionProperties Well::getProductionPropertiesCopy(size_t timeStep) const {
         return m_productionProperties->get(timeStep);
+    }
+
+    const WellProductionProperties& Well::getProductionProperties(size_t timeStep) const {
+        return m_productionProperties->at(timeStep);
     }
 
     void Well::setInjectionProperties(size_t timeStep , const WellInjectionProperties newProperties) {
@@ -68,8 +71,12 @@ namespace Opm {
         m_injectionProperties->add(timeStep, newProperties);
     }
 
-    WellInjectionProperties Well::getInjectionProperties(size_t timeStep) const {
+    WellInjectionProperties Well::getInjectionPropertiesCopy(size_t timeStep) const {
         return m_injectionProperties->get(timeStep);
+    }
+
+    const WellInjectionProperties& Well::getInjectionProperties(size_t timeStep) const {
+        return m_injectionProperties->at(timeStep);
     }
 
     bool Well::hasBeenDefined(size_t timeStep) const {
@@ -112,11 +119,11 @@ namespace Opm {
     bool Well::isInjector(size_t timeStep) const {
         return !isProducer(timeStep);
     }
-
+    
     bool Well::isAvailableForGroupControl(size_t timeStep) const {
         return m_isAvailableForGroupControl->get(timeStep);
     }
-    
+
     void Well::setAvailableForGroupControl(size_t timeStep, bool isAvailableForGroupControl) {
         m_isAvailableForGroupControl->add(timeStep, isAvailableForGroupControl);
     }
@@ -145,77 +152,7 @@ namespace Opm {
         m_guideRateScalingFactor->add(timeStep, scalingFactor);
     }
 
-
-    void Well::switch2Producer(size_t timeStep ) {
-        m_isProducer->add(timeStep , true);
-//        m_surfaceInjectionRate->add(timeStep, 0);
-//        m_reservoirInjectionRate->add(timeStep , 0);
-    }
-
-    void Well::switch2Injector(size_t timeStep ) {
-        m_isProducer->add(timeStep , false);
-//        m_oilRate->add(timeStep, 0);
-//        m_gasRate->add(timeStep, 0);
-//        m_waterRate->add(timeStep, 0);
-    }
-
     /*****************************************************************/
-
-    bool Well::hasProductionControl(size_t timeStep , WellProducer::ControlModeEnum controlMode) const {
-        WellProductionProperties properties = getProductionProperties(timeStep);
-        if (properties.ProductionControls & controlMode)
-            return true;
-        else
-            return false;
-    }
-
-    
-    void Well::addProductionControl(size_t timeStep , WellProducer::ControlModeEnum controlMode) {
-        WellProductionProperties properties = getProductionProperties(timeStep);
-        if ((properties.ProductionControls & controlMode) == 0) {
-            properties.ProductionControls += controlMode;
-            setProductionProperties(timeStep, properties);
-        }
-    }
-
-    
-    void Well::dropProductionControl(size_t timeStep , WellProducer::ControlModeEnum controlMode) {
-        WellProductionProperties properties = getProductionProperties(timeStep);
-        if ((properties.ProductionControls & controlMode) != 0) {
-            properties.ProductionControls -= controlMode;
-            setProductionProperties(timeStep, properties);
-        }
-    }
-
-    
-    bool Well::hasInjectionControl(size_t timeStep , WellInjector::ControlModeEnum controlMode) const {
-        WellInjectionProperties properties = getInjectionProperties(timeStep);
-        if (properties.InjectionControls & controlMode)
-            return true;
-        else
-            return false;
-    }
-
-    
-    void Well::addInjectionControl(size_t timeStep , WellInjector::ControlModeEnum controlMode) {
-        WellInjectionProperties properties = getInjectionProperties(timeStep);
-        if ((properties.InjectionControls & controlMode) == 0) {
-            properties.InjectionControls += controlMode;
-            setInjectionProperties(timeStep, properties);
-        }
-    }
-
-    
-    void Well::dropInjectionControl(size_t timeStep , WellInjector::ControlModeEnum controlMode) {
-        WellInjectionProperties properties = getInjectionProperties(timeStep);
-        if ((properties.InjectionControls & controlMode) != 0) {
-            properties.InjectionControls -= controlMode;
-            setInjectionProperties(timeStep, properties);
-        }
-    }
-
-    /*****************************************************************/
-
 
     // WELSPECS
     

@@ -25,7 +25,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 
 #include <boost/optional.hpp>
 
@@ -46,15 +45,31 @@ namespace Opm {
         bool    PredictionMode;
         int     ProductionControls;
 
-        WellProductionProperties()
-            {OilRate=0.0; GasRate=0.0; WaterRate=0.0; LiquidRate=0.0; ResVRate=0.0;
-             BHPLimit=0.0; THPLimit=0.0; PredictionMode=true; ProductionControls=0;}
-        WellProductionProperties(const WellProductionProperties& props)
-            {OilRate=props.OilRate; GasRate=props.GasRate; WaterRate=props.WaterRate;
-             LiquidRate=props.LiquidRate; ResVRate=props.ResVRate;
-             BHPLimit=props.BHPLimit; THPLimit=props.THPLimit; PredictionMode=props.PredictionMode;
-             ProductionControls=props.ProductionControls;}
-    } WellProductionProperties;
+        WellProductionProperties() {
+            OilRate=0.0; GasRate=0.0; WaterRate=0.0; LiquidRate=0.0; ResVRate=0.0;
+            BHPLimit=0.0; THPLimit=0.0; PredictionMode=true; ProductionControls=0;
+        }
+
+        bool hasProductionControl(WellProducer::ControlModeEnum controlMode) const {
+            if (ProductionControls & controlMode)
+                return true;
+            else
+                return false;
+        }
+
+        void dropProductionControl(WellProducer::ControlModeEnum controlMode) {
+            if ((ProductionControls & controlMode) != 0) {
+                ProductionControls -= controlMode;
+            }
+        }
+
+        void addProductionControl(WellProducer::ControlModeEnum controlMode) {
+            if ((ProductionControls & controlMode) == 0) {
+                ProductionControls += controlMode;
+            }
+        }
+
+} WellProductionProperties;
 
     typedef struct WellInjectionProperties {
         double SurfaceInjectionRate;
@@ -65,16 +80,32 @@ namespace Opm {
         WellInjector::TypeEnum InjectorType;
         int    InjectionControls;
 
-        WellInjectionProperties()
-            {SurfaceInjectionRate=0.0; ReservoirInjectionRate=0.0;
-             BHPLimit=0.0; THPLimit=0.0; PredictionMode=true;
-             InjectorType=WellInjector::WATER, InjectionControls=0;}
-        WellInjectionProperties(const WellInjectionProperties& props)
-            {SurfaceInjectionRate=props.SurfaceInjectionRate;
-             ReservoirInjectionRate=props.ReservoirInjectionRate;
-             BHPLimit=props.BHPLimit; THPLimit=props.THPLimit; PredictionMode=props.PredictionMode;
-             InjectorType=props.InjectorType; InjectionControls=props.InjectionControls;}
-    } WellInjectionProperties;
+        WellInjectionProperties() {
+            SurfaceInjectionRate=0.0; ReservoirInjectionRate=0.0;
+            BHPLimit=0.0; THPLimit=0.0; PredictionMode=true;
+            InjectorType=WellInjector::WATER, InjectionControls=0;
+        }
+
+        bool hasInjectionControl(WellInjector::ControlModeEnum controlMode) const {
+            if (InjectionControls & controlMode)
+                return true;
+            else
+                return false;
+        }
+
+        void dropInjectionControl(WellInjector::ControlModeEnum controlMode) {
+            if ((InjectionControls & controlMode) != 0) {
+                InjectionControls -= controlMode;
+            }
+        }
+
+        void addInjectionControl(WellInjector::ControlModeEnum controlMode) {
+            if ((InjectionControls & controlMode) == 0) {
+                InjectionControls += controlMode;
+            }
+        }
+
+} WellInjectionProperties;
 
     class Well {
     public:
@@ -92,20 +123,10 @@ namespace Opm {
         WellCommon::StatusEnum getStatus(size_t timeStep) const;
         void                   setStatus(size_t timeStep, WellCommon::StatusEnum Status);
         
-        bool hasProductionControl(size_t timeStep , WellProducer::ControlModeEnum controlMode) const;
-        void dropProductionControl(size_t timeStep , WellProducer::ControlModeEnum controlMode);
-        
-        bool hasInjectionControl(size_t timeStep   , WellInjector::ControlModeEnum controlMode) const;
-        void dropInjectionControl(size_t timeStep   , WellInjector::ControlModeEnum controlMode);
-
-
         int    getHeadI() const;
         int    getHeadJ() const;
         double getRefDepth() const;
         
-        bool isProducer(size_t timeStep) const;
-        bool isInjector(size_t timeStep) const;
-
         bool isAvailableForGroupControl(size_t timeStep) const;
         void setAvailableForGroupControl(size_t timeStep, bool isAvailableForGroupControl);
         double getGuideRate(size_t timeStep) const;
@@ -115,18 +136,19 @@ namespace Opm {
         double getGuideRateScalingFactor(size_t timeStep) const;
         void setGuideRateScalingFactor(size_t timeStep, double scalingFactor);
 
+        bool isProducer(size_t timeStep) const;
+        bool isInjector(size_t timeStep) const;
         void addWELSPECS(DeckRecordConstPtr deckRecord);
         void addCompletions(size_t time_step , const std::vector<CompletionConstPtr>& newCompletions);
                CompletionSetConstPtr getCompletions(size_t timeStep) const;
         void setProductionProperties(size_t timeStep , const WellProductionProperties properties);
-        WellProductionProperties getProductionProperties(size_t timeStep) const;
+        WellProductionProperties getProductionPropertiesCopy(size_t timeStep) const;
+        const WellProductionProperties& getProductionProperties(size_t timeStep)  const;
         void setInjectionProperties(size_t timeStep , const WellInjectionProperties properties);
-        WellInjectionProperties getInjectionProperties(size_t timeStep) const;
+        WellInjectionProperties getInjectionPropertiesCopy(size_t timeStep) const;
+        const WellInjectionProperties& getInjectionProperties(size_t timeStep) const;
 
     private:
-        void addInjectionControl(size_t timeStep   , WellInjector::ControlModeEnum controlMode);
-        void addProductionControl(size_t timeStep , WellProducer::ControlModeEnum controlMode);
-        
         size_t m_creationTimeStep;
         std::string m_name;
 
@@ -134,12 +156,12 @@ namespace Opm {
         std::shared_ptr<DynamicState<WellProducer::ControlModeEnum> > m_producerControlMode;
         std::shared_ptr<DynamicState<WellCommon::StatusEnum> > m_status;
         
-        std::shared_ptr<DynamicState<bool> > m_isProducer;
         std::shared_ptr<DynamicState<bool> > m_isAvailableForGroupControl;
         std::shared_ptr<DynamicState<double> > m_guideRate;
         std::shared_ptr<DynamicState<GuideRate::GuideRatePhaseEnum> > m_guideRatePhase;
         std::shared_ptr<DynamicState<double> > m_guideRateScalingFactor;
 
+        std::shared_ptr<DynamicState<bool> > m_isProducer;
         std::shared_ptr<DynamicState<CompletionSetConstPtr> > m_completions;
         std::shared_ptr<DynamicState<WellProductionProperties> > m_productionProperties;
         std::shared_ptr<DynamicState<WellInjectionProperties> > m_injectionProperties;
