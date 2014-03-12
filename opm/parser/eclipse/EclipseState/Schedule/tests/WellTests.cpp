@@ -108,14 +108,30 @@ BOOST_AUTO_TEST_CASE(seLiquidRate_RateSetCorrect) {
 }
 
 
-BOOST_AUTO_TEST_CASE(setPredictionMode_ModeSetCorrect) {
+BOOST_AUTO_TEST_CASE(setPredictionModeProduction_ModeSetCorrect) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
     Opm::Well well("WELL1" , 0, 0, 0.0, timeMap , 0);
     
-    BOOST_CHECK_EQUAL( true, well.isInPredictionMode( 5 ));
-    well.setInPredictionMode( 5 , false ); // Go to history mode
-    BOOST_CHECK_EQUAL(false , well.isInPredictionMode( 5 ));
-    BOOST_CHECK_EQUAL(false , well.isInPredictionMode( 8 ));
+    BOOST_CHECK_EQUAL( true, well.getProductionProperties(5).PredictionMode);
+    Opm::WellProductionProperties props;
+    props.PredictionMode = false;
+    well.setProductionProperties( 5 , props);
+    BOOST_CHECK_EQUAL(false , well.getProductionProperties(5).PredictionMode);
+    BOOST_CHECK_EQUAL(false , well.getProductionProperties(8).PredictionMode);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(setPredictionModeInjection_ModeSetCorrect) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    Opm::Well well("WELL1" , 0, 0, 0.0, timeMap , 0);
+
+    BOOST_CHECK_EQUAL( true, well.getInjectionProperties(5).PredictionMode);
+    Opm::WellInjectionProperties props;
+    props.PredictionMode = false;
+    well.setInjectionProperties( 5 , props);
+    BOOST_CHECK_EQUAL(false , well.getInjectionProperties(5).PredictionMode);
+    BOOST_CHECK_EQUAL(false , well.getInjectionProperties(8).PredictionMode);
 }
 
 
@@ -325,6 +341,8 @@ BOOST_AUTO_TEST_CASE(InjectorType) {
     Opm::WellInjectionProperties injectionProps(well.getInjectionProperties(1));
     injectionProps.InjectorType = Opm::WellInjector::WATER;
     well.setInjectionProperties(1, injectionProps);
+    // TODO: Should we test for something other than water here, as long as
+    //       the default value for InjectorType is WellInjector::WATER?
     BOOST_CHECK_EQUAL( Opm::WellInjector::WATER , well.getInjectionProperties(5).InjectorType);
 }
 

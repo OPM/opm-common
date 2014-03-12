@@ -121,13 +121,13 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
     {
         WellPtr well1 = sched->getWell("W_1");
 
-        BOOST_CHECK(well1->isInPredictionMode(0));
+        BOOST_CHECK(well1->getProductionProperties(0).PredictionMode);
         BOOST_CHECK_EQUAL(0, well1->getProductionProperties(0).OilRate);
 
         BOOST_CHECK_EQUAL(0, well1->getProductionProperties(1).OilRate);
         BOOST_CHECK_EQUAL(0, well1->getProductionProperties(2).OilRate);
 
-        BOOST_CHECK(!well1->isInPredictionMode(3));
+        BOOST_CHECK(!well1->getProductionProperties(3).PredictionMode);
         BOOST_CHECK_CLOSE(4000/Metric::Time , well1->getProductionProperties(3).OilRate , 0.001);
         BOOST_CHECK_CLOSE(4000/Metric::Time , well1->getProductionProperties(4).OilRate , 0.001);
         BOOST_CHECK_CLOSE(4000/Metric::Time , well1->getProductionProperties(5).OilRate , 0.001);
@@ -139,15 +139,15 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
         BOOST_CHECK_CLOSE(12345/Metric::Time  , well1->getProductionProperties(5).GasRate , 0.001);
 
 
-        BOOST_CHECK(!well1->isInPredictionMode(6));
+        BOOST_CHECK(!well1->getProductionProperties(6).PredictionMode);
         BOOST_CHECK_CLOSE(14000/Metric::Time , well1->getProductionProperties(6).OilRate , 0.001);
 
-        BOOST_CHECK(well1->isInPredictionMode(7));
+        BOOST_CHECK(well1->getProductionProperties(7).PredictionMode);
         BOOST_CHECK_CLOSE(11000/Metric::Time , well1->getProductionProperties(7).OilRate , 0.001);
         BOOST_CHECK_CLOSE(44/Metric::Time    , well1->getProductionProperties(7).WaterRate , 0.001);
         BOOST_CHECK_CLOSE(188/Metric::Time   , well1->getProductionProperties(7).GasRate , 0.001);
 
-        BOOST_CHECK(!well1->isInPredictionMode(8));
+        BOOST_CHECK(!well1->getProductionProperties(8).PredictionMode);
         BOOST_CHECK_CLOSE(13000/Metric::Time , well1->getProductionProperties(8).OilRate , 0.001);
         
         BOOST_CHECK( well1->isInjector(9));

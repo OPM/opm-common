@@ -43,15 +43,16 @@ namespace Opm {
         double  ResVRate;
         double  BHPLimit;
         double  THPLimit;
+        bool    PredictionMode;
         int     ProductionControls;
 
         WellProductionProperties()
             {OilRate=0.0; GasRate=0.0; WaterRate=0.0; LiquidRate=0.0; ResVRate=0.0;
-             BHPLimit=0.0; THPLimit=0.0; ProductionControls=0;}
+             BHPLimit=0.0; THPLimit=0.0; PredictionMode=true; ProductionControls=0;}
         WellProductionProperties(const WellProductionProperties& props)
             {OilRate=props.OilRate; GasRate=props.GasRate; WaterRate=props.WaterRate;
              LiquidRate=props.LiquidRate; ResVRate=props.ResVRate;
-             BHPLimit=props.BHPLimit; THPLimit=props.THPLimit;
+             BHPLimit=props.BHPLimit; THPLimit=props.THPLimit; PredictionMode=props.PredictionMode;
              ProductionControls=props.ProductionControls;}
     } WellProductionProperties;
 
@@ -60,16 +61,18 @@ namespace Opm {
         double ReservoirInjectionRate;
         double  BHPLimit;
         double  THPLimit;
+        bool    PredictionMode;
         WellInjector::TypeEnum InjectorType;
         int    InjectionControls;
 
         WellInjectionProperties()
             {SurfaceInjectionRate=0.0; ReservoirInjectionRate=0.0;
-             BHPLimit=0.0; THPLimit=0.0; InjectorType=WellInjector::WATER, InjectionControls=0;}
+             BHPLimit=0.0; THPLimit=0.0; PredictionMode=true;
+             InjectorType=WellInjector::WATER, InjectionControls=0;}
         WellInjectionProperties(const WellInjectionProperties& props)
             {SurfaceInjectionRate=props.SurfaceInjectionRate;
              ReservoirInjectionRate=props.ReservoirInjectionRate;
-             BHPLimit=props.BHPLimit; THPLimit=props.THPLimit;
+             BHPLimit=props.BHPLimit; THPLimit=props.THPLimit; PredictionMode=props.PredictionMode;
              InjectorType=props.InjectorType; InjectionControls=props.InjectionControls;}
     } WellInjectionProperties;
 
@@ -82,8 +85,6 @@ namespace Opm {
         const std::string getGroupName(size_t timeStep) const;
         void setGroupName(size_t timeStep , const std::string& groupName);
 
-//        WellInjector::TypeEnum getInjectorType(size_t timeStep) const;
-//        void                   setInjectorType(size_t timeStep, WellInjector::TypeEnum injectorType);
         WellInjector::ControlModeEnum getInjectorControlMode(size_t timeStep) const;
         void                          setInjectorControlMode(size_t timeStep, WellInjector::ControlModeEnum injectorControlMode);
         WellProducer::ControlModeEnum getProducerControlMode(size_t timeStep) const;
@@ -102,8 +103,6 @@ namespace Opm {
         int    getHeadJ() const;
         double getRefDepth() const;
         
-        bool isInPredictionMode(size_t timeStep) const;
-        void setInPredictionMode(size_t timeStep, bool isInPredictionMode);
         bool isProducer(size_t timeStep) const;
         bool isInjector(size_t timeStep) const;
 
@@ -131,12 +130,10 @@ namespace Opm {
         size_t m_creationTimeStep;
         std::string m_name;
 
-        //std::shared_ptr<DynamicState<WellInjector::TypeEnum> > m_injectorType;
         std::shared_ptr<DynamicState<WellInjector::ControlModeEnum> > m_injectorControlMode;
         std::shared_ptr<DynamicState<WellProducer::ControlModeEnum> > m_producerControlMode;
         std::shared_ptr<DynamicState<WellCommon::StatusEnum> > m_status;
         
-        std::shared_ptr<DynamicState<bool> > m_inPredictionMode;
         std::shared_ptr<DynamicState<bool> > m_isProducer;
         std::shared_ptr<DynamicState<bool> > m_isAvailableForGroupControl;
         std::shared_ptr<DynamicState<double> > m_guideRate;
