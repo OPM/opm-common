@@ -28,11 +28,11 @@
 namespace Opm {
 
     Well::Well(const std::string& name, int headI, int headJ, double refDepth, TimeMapConstPtr timeMap , size_t creationTimeStep)
-        : m_injectorType(new DynamicState<WellInjector::TypeEnum>(timeMap, WellInjector::WATER)),
+        : //m_injectorType(new DynamicState<WellInjector::TypeEnum>(timeMap, WellInjector::WATER)),
           m_injectorControlMode(new DynamicState<WellInjector::ControlModeEnum>(timeMap, WellInjector::RATE)),
           m_producerControlMode(new DynamicState<WellProducer::ControlModeEnum>(timeMap, WellProducer::ORAT)),
           m_status(new DynamicState<WellCommon::StatusEnum>(timeMap, WellCommon::OPEN)),
-          m_injectionControls(new DynamicState<int>(timeMap, 0)),
+          //m_injectionControls(new DynamicState<int>(timeMap, 0)),
           m_inPredictionMode(new DynamicState<bool>(timeMap, true)),
           m_isProducer(new DynamicState<bool>(timeMap, true)),
           m_isAvailableForGroupControl(new DynamicState<bool>(timeMap, true)),
@@ -90,13 +90,13 @@ namespace Opm {
     }
     
 
-    WellInjector::TypeEnum Well::getInjectorType(size_t timeStep) const {
-        return m_injectorType->get(timeStep);
-    }
+//    WellInjector::TypeEnum Well::getInjectorType(size_t timeStep) const {
+//        return m_injectorType->get(timeStep);
+//    }
 
-    void Well::setInjectorType(size_t timeStep, WellInjector::TypeEnum injectorType) {
-        m_injectorType->add(timeStep , injectorType);
-    }
+//    void Well::setInjectorType(size_t timeStep, WellInjector::TypeEnum injectorType) {
+//        m_injectorType->add(timeStep , injectorType);
+//    }
 
     WellInjector::ControlModeEnum Well::getInjectorControlMode(size_t timeStep) const {
         return m_injectorControlMode->get(timeStep);

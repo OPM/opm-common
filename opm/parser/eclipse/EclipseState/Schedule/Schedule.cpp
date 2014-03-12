@@ -301,9 +301,9 @@ namespace Opm {
             properties.ReservoirInjectionRate = reservoirInjectionRate;
             properties.BHPLimit = BHPLimit;
             properties.THPLimit = THPLimit;
+            properties.InjectorType = injectorType;
             well->setInjectionProperties(currentStep, properties);
             well->setInjectorControlMode(currentStep , controlMode );
-            well->setInjectorType( currentStep , injectorType );
             well->setInPredictionMode(currentStep, true);
             
             if (record->getItem("RATE")->defaultApplied())
