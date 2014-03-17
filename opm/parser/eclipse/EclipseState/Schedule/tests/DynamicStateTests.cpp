@@ -109,6 +109,27 @@ BOOST_AUTO_TEST_CASE(DynamicStateAddIndexAlreadySetThrows) {
 
 
 
+BOOST_AUTO_TEST_CASE(DynamicStateAddAt) {
+    boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
+    Opm::TimeMapPtr timeMap(new Opm::TimeMap(boost::posix_time::ptime(startDate)));
+    Opm::DynamicState<int> state(timeMap , 0);
+    for (size_t i = 0; i < 10; i++)
+        timeMap->addTStep( boost::posix_time::hours( (i+1) * 24 ));
+
+    state.add( 10 , 77 );
+    {
+        const int& v1 = state.at(10);
+        int v2 = state.get(10);
+        BOOST_CHECK_EQUAL( v1 , 77 );
+        BOOST_CHECK_EQUAL( v1 , v2 );
+        BOOST_CHECK( &v1 != &v2 );
+    }
+}
+    
+    
+
+
+
 
 BOOST_AUTO_TEST_CASE(DynamicStateCheckSize) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
