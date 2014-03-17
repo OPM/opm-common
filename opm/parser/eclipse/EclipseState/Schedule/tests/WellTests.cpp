@@ -236,6 +236,8 @@ BOOST_AUTO_TEST_CASE(setReservoirInjectionRate_RateSetCorrect) {
 
 
 BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
+    // HACK: This test checks correctly setting of isProducer/isInjector. This property depends on which of
+    //       WellProductionProperties/WellInjectionProperties is set last, independent of actual values.
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
     Opm::Well well("WELL1" , 0, 0, 0.0, timeMap ,0);
 
@@ -261,30 +263,33 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
     
 
     /* Set rates => Well becomes a producer; injection rate should be set to 0. */
+    Opm::WellInjectionProperties injectionProps3;
+    well.setInjectionProperties(4, injectionProps3);
     Opm::WellProductionProperties properties(well.getProductionProperties(4));
     properties.OilRate = 100;
     properties.GasRate = 200;
     properties.WaterRate = 300;
     well.setProductionProperties(4, properties);
-
     BOOST_CHECK_EQUAL( false , well.isInjector(4));
     BOOST_CHECK_EQUAL( true , well.isProducer(4));
-//    BOOST_CHECK_EQUAL( 0 , well.getInjectionProperties(4).SurfaceInjectionRate);
-//    BOOST_CHECK_EQUAL( 0 , well.getInjectionProperties(4).ReservoirInjectionRate);
+    BOOST_CHECK_EQUAL( 0 , well.getInjectionProperties(4).SurfaceInjectionRate);
+    BOOST_CHECK_EQUAL( 0 , well.getInjectionProperties(4).ReservoirInjectionRate);
     BOOST_CHECK_EQUAL( 100 , well.getProductionProperties(4).OilRate);
     BOOST_CHECK_EQUAL( 200 , well.getProductionProperties(4).GasRate);
     BOOST_CHECK_EQUAL( 300 , well.getProductionProperties(4).WaterRate);
     
     /* Set injection rate => Well becomes injector - all produced rates -> 0 */
-    Opm::WellInjectionProperties injectionProps3(well.getInjectionProperties(6));
-    injectionProps3.ReservoirInjectionRate = 50;
-    well.setInjectionProperties(6, injectionProps3);
+    Opm::WellProductionProperties prodProps2;
+    well.setProductionProperties(6, prodProps2);
+    Opm::WellInjectionProperties injectionProps4(well.getInjectionProperties(6));
+    injectionProps4.ReservoirInjectionRate = 50;
+    well.setInjectionProperties(6, injectionProps4);
     BOOST_CHECK_EQUAL( true  , well.isInjector(6));
     BOOST_CHECK_EQUAL( false , well.isProducer(6));
     BOOST_CHECK_EQUAL( 50 , well.getInjectionProperties(6).ReservoirInjectionRate);
-//    BOOST_CHECK_EQUAL( 0 , well.getProductionProperties(6).OilRate);
-//    BOOST_CHECK_EQUAL( 0 , well.getProductionProperties(6).GasRate);
-//    BOOST_CHECK_EQUAL( 0 , well.getProductionProperties(6).WaterRate);
+    BOOST_CHECK_EQUAL( 0 , well.getProductionProperties(6).OilRate);
+    BOOST_CHECK_EQUAL( 0 , well.getProductionProperties(6).GasRate);
+    BOOST_CHECK_EQUAL( 0 , well.getProductionProperties(6).WaterRate);
 }
 
 
@@ -321,15 +326,16 @@ BOOST_AUTO_TEST_CASE(XHPLimitDefault) {
 
     Opm::WellProductionProperties productionProps(well.getProductionProperties(1));
     productionProps.BHPLimit = 100;
+    productionProps.addProductionControl(Opm::WellProducer::BHP);
     well.setProductionProperties(1, productionProps);
     BOOST_CHECK_EQUAL( 100 , well.getProductionProperties(5).BHPLimit);
-//    BOOST_CHECK( well.hasProductionControl( 5 , Opm::WellProducer::BHP ));
+    BOOST_CHECK( well.getProductionProperties(5).hasProductionControl( Opm::WellProducer::BHP ));
     
-    Opm::WellInjectionProperties injectionProps(well.getInjectionProperties(1));
-    injectionProps.THPLimit = 200;
-    well.setInjectionProperties(1, injectionProps);
+    Opm::WellInjectionProperties injProps(well.getInjectionProperties(1));
+    injProps.THPLimit = 200;
+    well.setInjectionProperties(1, injProps);
     BOOST_CHECK_EQUAL( 200 , well.getInjectionProperties(5).THPLimit);
-//    BOOST_CHECK( !well.hasProductionControl( 5 , Opm::WellProducer::THP ));
+    BOOST_CHECK( !well.getInjectionProperties(5).hasInjectionControl( Opm::WellInjector::THP ));
 }
 
 
@@ -381,15 +387,16 @@ BOOST_AUTO_TEST_CASE(WellHaveProductionControlLimit) {
     
     BOOST_CHECK( !well.getProductionProperties(1).hasProductionControl( Opm::WellProducer::ORAT ));
     BOOST_CHECK( !well.getProductionProperties(1).hasProductionControl( Opm::WellProducer::RESV ));
-
     Opm::WellProductionProperties properties(well.getProductionProperties(1));
     properties.OilRate = 100;
+    properties.addProductionControl(Opm::WellProducer::ORAT);
     well.setProductionProperties(2, properties);
     BOOST_CHECK(  well.getProductionProperties(2).hasProductionControl( Opm::WellProducer::ORAT ));
     BOOST_CHECK( !well.getProductionProperties(2).hasProductionControl( Opm::WellProducer::RESV ));
 
     Opm::WellProductionProperties properties2(well.getProductionProperties(2));
     properties2.ResVRate = 100;
+    properties2.addProductionControl(Opm::WellProducer::RESV);
     well.setProductionProperties(2, properties2);
     BOOST_CHECK( well.getProductionProperties(2).hasProductionControl( Opm::WellProducer::RESV ));
     
@@ -427,36 +434,85 @@ BOOST_AUTO_TEST_CASE(WellHaveInjectionControlLimit) {
 
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(20);
     Opm::Well well("WELL1", 1, 2, 2334.32, timeMap, 0);
-
+    properties3.addProductionControl(Opm::WellProducer::ORAT);
+    properties3.WaterRate = 100;
+    properties3.addProductionControl(Opm::WellProducer::WRAT);
+    properties3.GasRate = 100;
+    properties3.addProductionControl(Opm::WellProducer::GRAT);
+    properties3.LiquidRate = 100;
+    properties3.addProductionControl(Opm::WellProducer::LRAT);
+    properties3.ResVRate = 100;
+    properties3.addProductionControl(Opm::WellProducer::RESV);
+    properties3.BHPLimit = 100;
+    properties3.addProductionControl(Opm::WellProducer::BHP);
+    properties3.THPLimit = 100;
+    properties3.addProductionControl(Opm::WellProducer::THP);
+    well.setProductionProperties(10, properties3);
     
-    BOOST_CHECK( !well.hasInjectionControl( 1 , Opm::WellInjector::RATE ));
-    BOOST_CHECK( !well.hasInjectionControl( 1 , Opm::WellInjector::RESV ));
+    BOOST_CHECK( well.getProductionProperties(10).hasProductionControl( Opm::WellProducer::ORAT ));
+    BOOST_CHECK( well.getProductionProperties(10).hasProductionControl( Opm::WellProducer::WRAT ));
+    BOOST_CHECK( well.getProductionProperties(10).hasProductionControl( Opm::WellProducer::GRAT ));
+    BOOST_CHECK( well.getProductionProperties(10).hasProductionControl( Opm::WellProducer::LRAT ));
+    BOOST_CHECK( well.getProductionProperties(10).hasProductionControl( Opm::WellProducer::RESV ));
+    BOOST_CHECK( well.getProductionProperties(10).hasProductionControl( Opm::WellProducer::BHP ));
+    BOOST_CHECK( well.getProductionProperties(10).hasProductionControl( Opm::WellProducer::THP ));
     
-    Opm::WellInjectionProperties injectorProperties1(well.getInjectionProperties(2));
-    injectorProperties1.SurfaceInjectionRate = 100;
-    well.setInjectionProperties(2, injectorProperties1);
-    BOOST_CHECK(  well.hasInjectionControl( 2, Opm::WellInjector::RATE ));
-    BOOST_CHECK( !well.hasInjectionControl( 2 , Opm::WellInjector::RESV ));
+    Opm::WellProductionProperties properties4(well.getProductionProperties(11));
+    properties4.dropProductionControl( Opm::WellProducer::RESV );
+    well.setProductionProperties(11, properties4);
 
-    Opm::WellInjectionProperties injectorProperties2(well.getInjectionProperties(2));
-    injectorProperties2.ReservoirInjectionRate = 100;
-    well.setInjectionProperties(2, injectorProperties2);
-    BOOST_CHECK( well.hasInjectionControl( 2 , Opm::WellInjector::RESV ));
+    BOOST_CHECK( well.getProductionProperties(11).hasProductionControl( Opm::WellProducer::ORAT ));
+    BOOST_CHECK( well.getProductionProperties(11).hasProductionControl( Opm::WellProducer::WRAT ));
+    BOOST_CHECK( well.getProductionProperties(11).hasProductionControl( Opm::WellProducer::GRAT ));
+    BOOST_CHECK( well.getProductionProperties(11).hasProductionControl( Opm::WellProducer::LRAT ));
+    BOOST_CHECK( !well.getProductionProperties(11).hasProductionControl( Opm::WellProducer::RESV ));
+    BOOST_CHECK( well.getProductionProperties(11).hasProductionControl( Opm::WellProducer::BHP ));
+    BOOST_CHECK( well.getProductionProperties(11).hasProductionControl( Opm::WellProducer::THP ));
+}
+
+
+
+BOOST_AUTO_TEST_CASE(WellHaveInjectionControlLimit) {
+
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(20);
+    Opm::Well well("WELL1", 1, 2, 2334.32, timeMap, 0);
     
-    well.setBHPLimit( 10 , 100 , false);
-    well.setTHPLimit( 10 , 100 , false);
-    
-    BOOST_CHECK( well.hasInjectionControl( 10 , Opm::WellInjector::RATE ));
-    BOOST_CHECK( well.hasInjectionControl( 10 , Opm::WellInjector::RESV ));
-    BOOST_CHECK( well.hasInjectionControl( 10 , Opm::WellInjector::THP ));
-    BOOST_CHECK( well.hasInjectionControl( 10 , Opm::WellInjector::BHP ));
+    BOOST_CHECK( !well.getInjectionProperties(1).hasInjectionControl( Opm::WellInjector::RATE ));
+    BOOST_CHECK( !well.getInjectionProperties(1).hasInjectionControl( Opm::WellInjector::RESV ));
 
-    well.dropInjectionControl( 11 , Opm::WellInjector::RESV );
+    Opm::WellInjectionProperties injProps1(well.getInjectionProperties(2));
+    injProps1.SurfaceInjectionRate = 100;
+    injProps1.addInjectionControl(Opm::WellInjector::RATE);
+    well.setInjectionProperties(2, injProps1);
+    BOOST_CHECK(  well.getInjectionProperties(2).hasInjectionControl( Opm::WellInjector::RATE ));
+    BOOST_CHECK( !well.getInjectionProperties(2).hasInjectionControl( Opm::WellInjector::RESV ));
 
-    BOOST_CHECK(  well.hasInjectionControl( 11 , Opm::WellInjector::RATE ));
-    BOOST_CHECK( !well.hasInjectionControl( 11 , Opm::WellInjector::RESV ));
-    BOOST_CHECK(  well.hasInjectionControl( 11 , Opm::WellInjector::THP ));
-    BOOST_CHECK(  well.hasInjectionControl( 11 , Opm::WellInjector::BHP ));
+    Opm::WellInjectionProperties injProps2(well.getInjectionProperties(2));
+    injProps2.ReservoirInjectionRate = 100;
+    injProps2.addInjectionControl(Opm::WellInjector::RESV);
+    well.setInjectionProperties(2, injProps2);
+    BOOST_CHECK( well.getInjectionProperties(2).hasInjectionControl( Opm::WellInjector::RESV ));
+
+    Opm::WellInjectionProperties injProps3(well.getInjectionProperties(10));
+    injProps3.BHPLimit = 100;
+    injProps3.addInjectionControl(Opm::WellInjector::BHP);
+    injProps3.THPLimit = 100;
+    injProps3.addInjectionControl(Opm::WellInjector::THP);
+    well.setInjectionProperties(10, injProps3);
+
+    BOOST_CHECK( well.getInjectionProperties(10).hasInjectionControl( Opm::WellInjector::RATE ));
+    BOOST_CHECK( well.getInjectionProperties(10).hasInjectionControl( Opm::WellInjector::RESV ));
+    BOOST_CHECK( well.getInjectionProperties(10).hasInjectionControl( Opm::WellInjector::THP ));
+    BOOST_CHECK( well.getInjectionProperties(10).hasInjectionControl( Opm::WellInjector::BHP ));
+
+    Opm::WellInjectionProperties injProps4(well.getInjectionProperties(11));
+    injProps4.dropInjectionControl( Opm::WellInjector::RESV );
+    well.setInjectionProperties(11, injProps4);
+
+    BOOST_CHECK(  well.getInjectionProperties(11).hasInjectionControl( Opm::WellInjector::RATE ));
+    BOOST_CHECK( !well.getInjectionProperties(11).hasInjectionControl( Opm::WellInjector::RESV ));
+    BOOST_CHECK(  well.getInjectionProperties(11).hasInjectionControl( Opm::WellInjector::THP ));
+    BOOST_CHECK(  well.getInjectionProperties(11).hasInjectionControl( Opm::WellInjector::BHP ));
 }
 */
 /*********************************************************************/
@@ -501,4 +557,3 @@ BOOST_AUTO_TEST_CASE(WellSetScalingFactor_ScalingFactorSetSet) {
     BOOST_CHECK_EQUAL(1.0, well.getGuideRateScalingFactor(3));
     BOOST_CHECK_EQUAL(0.6, well.getGuideRateScalingFactor(4));
 }
-
