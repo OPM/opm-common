@@ -20,6 +20,8 @@
 #include <string>
 #include <stdexcept>
 
+#include <boost/algorithm/string.hpp>
+
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 
 namespace Opm {
@@ -38,7 +40,9 @@ namespace Opm {
     }
     
     
-    CompletionStateEnum CompletionStateEnumFromString( const std::string& stringValue ) {
+    CompletionStateEnum CompletionStateEnumFromString( const std::string& origStringValue ) {
+        std::string stringValue(origStringValue);
+        boost::algorithm::trim(stringValue);
         if (stringValue == "OPEN")
             return OPEN;
         else if (stringValue == "SHUT")
@@ -73,7 +77,10 @@ namespace Opm {
         }
     
     
-        ControlEnum ControlEnumFromString( const std::string& stringValue ) {
+        ControlEnum ControlEnumFromString( const std::string& origStringValue ) {
+            std::string stringValue(origStringValue);
+            boost::algorithm::trim(stringValue);
+
             if (stringValue == "NONE")
                 return NONE;
             else if (stringValue == "RATE")
@@ -165,7 +172,10 @@ namespace Opm {
         }
 
 
-        ActionEnum ActionEnumFromString( const std::string& stringValue ) {
+        ActionEnum ActionEnumFromString( const std::string& origStringValue ) {
+            std::string stringValue(origStringValue);
+            boost::algorithm::trim(stringValue);
+
             if (stringValue == "NONE")
                 return NONE;
             else if (stringValue == "CON")
@@ -200,7 +210,10 @@ namespace Opm {
             }
         }
     
-        PhaseEnum PhaseEnumFromString( const std::string& stringValue ) {
+        PhaseEnum PhaseEnumFromString( const std::string& origStringValue ) {
+            std::string stringValue(origStringValue);
+            boost::algorithm::trim(stringValue);
+
             if (stringValue == "OIL")
                 return OIL;
             else if (stringValue == "WATER")
@@ -241,7 +254,10 @@ namespace Opm {
             }
         }
     
-        ControlModeEnum ControlModeFromString( const std::string& stringValue ) {
+        ControlModeEnum ControlModeFromString( const std::string& origStringValue ) {
+            std::string stringValue(origStringValue);
+            boost::algorithm::trim(stringValue);
+
             if (stringValue == "ORAT")
                 return ORAT;
             else if (stringValue == "WRAT")
@@ -283,7 +299,10 @@ namespace Opm {
             }
         }
     
-        TypeEnum TypeFromString( const std::string& stringValue ) {
+        TypeEnum TypeFromString( const std::string& origStringValue ) {
+            std::string stringValue(origStringValue);
+            boost::algorithm::trim(stringValue);
+
             if (stringValue == "OIL")
                 return OIL;
             else if (stringValue == "WATER")
@@ -315,7 +334,10 @@ namespace Opm {
             }
         }
     
-        ControlModeEnum ControlModeFromString( const std::string& stringValue ) {
+        ControlModeEnum ControlModeFromString( const std::string& origStringValue ) {
+            std::string stringValue(origStringValue);
+            boost::algorithm::trim(stringValue);
+
             if (stringValue == "RATE")
                 return RATE;
             else if (stringValue == "RESV")
@@ -351,7 +373,10 @@ namespace Opm {
         }
 
 
-        StatusEnum StatusFromString(const std::string& stringValue) {
+        StatusEnum StatusFromString(const std::string& origStringValue) {
+            std::string stringValue(origStringValue);
+            boost::algorithm::trim(stringValue);
+
             if (stringValue == "OPEN")
                 return OPEN;
             else if (stringValue == "SHUT")
@@ -395,7 +420,10 @@ namespace Opm {
             }
         }
 
-        GuideRatePhaseEnum GuideRatePhaseEnumFromString( const std::string& stringValue ) {
+        GuideRatePhaseEnum GuideRatePhaseEnumFromString( const std::string& origStringValue ) {
+            std::string stringValue(origStringValue);
+            boost::algorithm::trim(stringValue);
+
             if (stringValue == "OIL")
                 return OIL;
             else if (stringValue == "WAT")
