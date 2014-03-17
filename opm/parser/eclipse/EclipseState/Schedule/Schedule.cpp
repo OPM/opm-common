@@ -185,7 +185,7 @@ namespace Opm {
                 well->setProducerControlMode( currentStep , control );
             }
             well->setStatus( currentStep , status );
-            WellProductionProperties properties = well->getProductionProperties(currentStep);
+            WellProductionProperties properties = well->getProductionPropertiesCopy(currentStep);
             {
                 double liquidRate = 0;
                 double resVRate = 0;
@@ -310,7 +310,7 @@ namespace Opm {
             WellCommon::StatusEnum status             = WellCommon::StatusFromString( record->getItem("STATUS")->getString(0));
        
             well->setStatus( currentStep , status );
-            WellInjectionProperties properties(well->getInjectionProperties(currentStep));
+            WellInjectionProperties properties(well->getInjectionPropertiesCopy(currentStep));
             properties.SurfaceInjectionRate = surfaceInjectionRate;
             properties.ReservoirInjectionRate = reservoirInjectionRate;
             properties.BHPLimit = BHPLimit;
@@ -365,7 +365,7 @@ namespace Opm {
             WellCommon::StatusEnum status = WellCommon::StatusFromString( record->getItem("STATUS")->getString(0));
 
             well->setStatus( currentStep , status );
-            WellInjectionProperties properties(well->getInjectionProperties(currentStep));
+            WellInjectionProperties properties(well->getInjectionPropertiesCopy(currentStep));
             properties.SurfaceInjectionRate = injectionRate;
             properties.PredictionMode = false;
             well->setInjectionProperties(currentStep, properties);
