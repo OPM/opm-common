@@ -379,19 +379,19 @@ BOOST_AUTO_TEST_CASE(WellHaveProductionControlLimit) {
     Opm::Well well("WELL1", 1, 2, 2334.32, timeMap, 0);
 
     
-    BOOST_CHECK( !well.hasProductionControl( 1 , Opm::WellProducer::ORAT ));
-    BOOST_CHECK( !well.hasProductionControl( 1 , Opm::WellProducer::RESV ));
-    
+    BOOST_CHECK( !well.getProductionProperties(1).hasProductionControl( Opm::WellProducer::ORAT ));
+    BOOST_CHECK( !well.getProductionProperties(1).hasProductionControl( Opm::WellProducer::RESV ));
+
     Opm::WellProductionProperties properties(well.getProductionProperties(1));
     properties.OilRate = 100;
     well.setProductionProperties(2, properties);
-    BOOST_CHECK(  well.hasProductionControl( 2, Opm::WellProducer::ORAT ));
-    BOOST_CHECK( !well.hasProductionControl( 2, Opm::WellProducer::RESV ));
+    BOOST_CHECK(  well.getProductionProperties(2).hasProductionControl( Opm::WellProducer::ORAT ));
+    BOOST_CHECK( !well.getProductionProperties(2).hasProductionControl( Opm::WellProducer::RESV ));
 
     Opm::WellProductionProperties properties2(well.getProductionProperties(2));
     properties2.ResVRate = 100;
     well.setProductionProperties(2, properties2);
-    BOOST_CHECK( well.hasProductionControl( 2, Opm::WellProducer::RESV ));
+    BOOST_CHECK( well.getProductionProperties(2).hasProductionControl( Opm::WellProducer::RESV ));
     
     Opm::WellProductionProperties properties3(well.getProductionProperties(2));
     properties3.OilRate = 100;

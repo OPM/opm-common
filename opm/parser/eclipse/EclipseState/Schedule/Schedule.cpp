@@ -211,15 +211,23 @@ namespace Opm {
                 if (isPredictionMode) {
                     if (record->getItem("LRAT")->defaultApplied())
                         properties.dropProductionControl(WellProducer::LRAT);
+                    else
+                        properties.addProductionControl(WellProducer::LRAT);
                     
                     if (record->getItem("RESV")->defaultApplied())
                         properties.dropProductionControl(WellProducer::RESV);
-                    
+                    else
+                        properties.addProductionControl(WellProducer::RESV);
+
                     if (record->getItem("BHP")->defaultApplied())
                         properties.dropProductionControl(WellProducer::BHP);
-                    
+                    else
+                        properties.addProductionControl(WellProducer::BHP);
+
                     if (record->getItem("THP")->defaultApplied())
                         properties.dropProductionControl(WellProducer::THP);
+                    else
+                        properties.addProductionControl(WellProducer::THP);
                 } else {
                     properties.dropProductionControl(WellProducer::LRAT);
                     properties.dropProductionControl(WellProducer::RESV);
