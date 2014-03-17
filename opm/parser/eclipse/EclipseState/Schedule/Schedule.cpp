@@ -238,14 +238,18 @@ namespace Opm {
             
             if (record->getItem("ORAT")->defaultApplied())
                 properties.dropProductionControl(WellProducer::ORAT);
+            else
+                properties.addProductionControl(WellProducer::ORAT);
             
-            if (record->getItem("GRAT")->defaultApplied()) {
+            if (record->getItem("GRAT")->defaultApplied())
                 properties.dropProductionControl(WellProducer::GRAT);
-            }
+            else
+                properties.addProductionControl(WellProducer::GRAT);
 
-            if (record->getItem("WRAT")->defaultApplied()) {
+            if (record->getItem("WRAT")->defaultApplied())
                 properties.dropProductionControl(WellProducer::WRAT);
-            }
+            else
+                properties.addProductionControl(WellProducer::WRAT);
 
             if (status != WellCommon::SHUT) {
                 const std::string& cmodeString = record->getItem("CMODE")->getString(0);
@@ -273,6 +277,7 @@ namespace Opm {
                     throw std::invalid_argument("Tried to set invalid control: " + cmodeString + " for well: " + wellName);
                 }
             }
+
             well->setProductionProperties(currentStep, properties);
         }
     }
@@ -315,16 +320,23 @@ namespace Opm {
             
             if (record->getItem("RATE")->defaultApplied())
                 properties.dropInjectionControl(WellInjector::RATE);
+            else
+                properties.addInjectionControl(WellInjector::RATE);
 
             if (record->getItem("RESV")->defaultApplied())
                 properties.dropInjectionControl(WellInjector::RESV);
-            
+            else
+                properties.addInjectionControl(WellInjector::RESV);
+
             if (record->getItem("THP")->defaultApplied())
                 properties.dropInjectionControl(WellInjector::THP);
+            else
+                properties.addInjectionControl(WellInjector::THP);
 
             if (record->getItem("BHP")->defaultApplied())
                 properties.dropInjectionControl(WellInjector::BHP);
-            
+            else
+                properties.addInjectionControl(WellInjector::BHP);
             {
                 const std::string& cmodeString = record->getItem("CMODE")->getString(0);
                 WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( cmodeString );

@@ -100,8 +100,8 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
         BOOST_CHECK_EQUAL( WellCommon::SHUT , well2->getStatus(3));
 
         BOOST_CHECK_EQUAL( WellProducer::ORAT , well2->getProducerControlMode( 3 ));
-//        BOOST_CHECK( well2->getProductionProperties(3).hasProductionControl(WellProducer::ORAT));
-//        BOOST_CHECK( well2->getProductionProperties(3).hasProductionControl(WellProducer::GRAT));
+        BOOST_CHECK( well2->getProductionProperties(3).hasProductionControl(WellProducer::ORAT));
+        BOOST_CHECK( well2->getProductionProperties(3).hasProductionControl(WellProducer::GRAT));
         BOOST_CHECK( !well2->getProductionProperties(8).hasProductionControl(WellProducer::GRAT));
     }
 
@@ -165,15 +165,15 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
         BOOST_CHECK_EQUAL( WellCommon::OPEN , well1->getStatus( 11 ));
         BOOST_CHECK_EQUAL( WellCommon::SHUT , well1->getStatus( 12 ));
 
-//        BOOST_CHECK(  well1->getInjectionProperties(9).hasInjectionControl(WellInjector::RATE ));
-//        BOOST_CHECK(  well1->getInjectionProperties(9).hasInjectionControl(WellInjector::RESV ));
+        BOOST_CHECK(  well1->getInjectionProperties(9).hasInjectionControl(WellInjector::RATE ));
+        BOOST_CHECK(  well1->getInjectionProperties(9).hasInjectionControl(WellInjector::RESV ));
         BOOST_CHECK( !well1->getInjectionProperties(9).hasInjectionControl(WellInjector::THP));
         BOOST_CHECK( !well1->getInjectionProperties(9).hasInjectionControl(WellInjector::BHP));
         
-//        BOOST_CHECK(  well1->getInjectionProperties(12).hasInjectionControl(WellInjector::RATE ));
+        BOOST_CHECK(  well1->getInjectionProperties(12).hasInjectionControl(WellInjector::RATE ));
         BOOST_CHECK( !well1->getInjectionProperties(12).hasInjectionControl(WellInjector::RESV));
-//        BOOST_CHECK(  well1->getInjectionProperties(12).hasInjectionControl(WellInjector::THP ));
-//        BOOST_CHECK(  well1->getInjectionProperties(12).hasInjectionControl(WellInjector::BHP ));
+        BOOST_CHECK(  well1->getInjectionProperties(12).hasInjectionControl(WellInjector::THP ));
+        BOOST_CHECK(  well1->getInjectionProperties(12).hasInjectionControl(WellInjector::BHP ));
 
     }
 }
