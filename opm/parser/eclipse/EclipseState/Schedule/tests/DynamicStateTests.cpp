@@ -108,7 +108,6 @@ BOOST_AUTO_TEST_CASE(DynamicStateAddIndexAlreadySetThrows) {
 }
 
 
-
 BOOST_AUTO_TEST_CASE(DynamicStateAddAt) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
     Opm::TimeMapPtr timeMap(new Opm::TimeMap(boost::posix_time::ptime(startDate)));
@@ -126,10 +125,6 @@ BOOST_AUTO_TEST_CASE(DynamicStateAddAt) {
     }
 }
     
-    
-
-
-
 
 BOOST_AUTO_TEST_CASE(DynamicStateCheckSize) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
