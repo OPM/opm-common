@@ -48,6 +48,24 @@ BOOST_AUTO_TEST_CASE(CreateWell_CorrectNameAndDefaultValues) {
     BOOST_CHECK_EQUAL(0.0 , well.getProductionPropertiesCopy(5).OilRate);
 }
 
+BOOST_AUTO_TEST_CASE(CreateWell_GetProductionPropertiesShouldReturnSameObject) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    Opm::Well well("WELL1" , 0, 0, 0.0, timeMap , 0);
+
+    BOOST_CHECK_EQUAL(&(well.getProductionProperties(5)), &(well.getProductionProperties(5)));
+    BOOST_CHECK_EQUAL(&(well.getProductionProperties(8)), &(well.getProductionProperties(8)));
+    BOOST_CHECK_EQUAL(&(well.getProductionProperties(5)), &(well.getProductionProperties(8)));
+}
+
+BOOST_AUTO_TEST_CASE(CreateWell_GetInjectionPropertiesShouldReturnSameObject) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    Opm::Well well("WELL1" , 0, 0, 0.0, timeMap , 0);
+
+    BOOST_CHECK_EQUAL(&(well.getInjectionProperties(5)), &(well.getInjectionProperties(5)));
+    BOOST_CHECK_EQUAL(&(well.getInjectionProperties(8)), &(well.getInjectionProperties(8)));
+    BOOST_CHECK_EQUAL(&(well.getInjectionProperties(5)), &(well.getInjectionProperties(8)));
+}
+
 BOOST_AUTO_TEST_CASE(CreateWellCreateTimeStepOK) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
     Opm::Well well("WELL1" , 0, 0, 0.0, timeMap , 5);
