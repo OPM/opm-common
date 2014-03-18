@@ -1,7 +1,8 @@
 {"name" : "PLYMAX" , "size" : {"keyword" : "REGDIMS" , "item" : "NPLMIX"} , "items" : 
     [
-        {"name" : "MAX_PLOYMER_CONCENTRATION" , "value_type" : "DOUBLE"  , "dimension" : "PolymerDensity"}
+        {"name" : "MAX_PLOYMER_CONCENTRATION" , "value_type" : "DOUBLE"  , "dimension" : "PolymerDensity"},
         {"name" : "MAX_SALT_CONCENTRATION" , "value_type" : "DOUBLE" , "dimension" : "PolymerDensity"}
-    ]}
+    ]
+}
         
 
