@@ -54,7 +54,7 @@ namespace Opm {
 
         const std::string PhaseEnum2String( PhaseEnum enumValue );
         PhaseEnum PhaseEnumFromString( const std::string& stringValue );
-    };
+    }
 
 
 
@@ -87,7 +87,7 @@ namespace Opm {
 
         const std::string Type2String( TypeEnum enumValue );
         TypeEnum TypeFromString( const std::string& stringValue );
-    };
+    }
 
 
     namespace WellProducer {
@@ -114,7 +114,7 @@ namespace Opm {
 
         const std::string ControlMode2String( ControlModeEnum enumValue );
         ControlModeEnum ControlModeFromString( const std::string& stringValue );
-    };
+    }
 
     
     namespace GroupInjection {
