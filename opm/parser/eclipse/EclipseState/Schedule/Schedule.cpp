@@ -179,13 +179,9 @@ namespace Opm {
             double wrat                           = record->getItem("WRAT")->getSIDouble(0);
             double grat                           = record->getItem("GRAT")->getSIDouble(0);
             WellCommon::StatusEnum status         = WellCommon::StatusFromString( record->getItem("STATUS")->getString(0));
-
-            if (status != WellCommon::SHUT) {
-                WellProducer::ControlModeEnum control = WellProducer::ControlModeFromString( record->getItem("CMODE")->getString(0));
-                well->setProducerControlMode( currentStep , control );
-            }
+            WellProductionProperties properties   = well->getProductionPropertiesCopy(currentStep);
+            
             well->setStatus( currentStep , status );
-            WellProductionProperties properties = well->getProductionPropertiesCopy(currentStep);
             {
                 double liquidRate = 0;
                 double resVRate = 0;
@@ -255,7 +251,7 @@ namespace Opm {
                 const std::string& cmodeString = record->getItem("CMODE")->getString(0);
                 WellProducer::ControlModeEnum control = WellProducer::ControlModeFromString( cmodeString );
                 if (properties.hasProductionControl( control))
-                    well->setProducerControlMode( currentStep , control );
+                    properties.controlMode = control;
                 else {
                     /*
                       This is an awkward situation. The current control mode variable
@@ -341,7 +337,7 @@ namespace Opm {
                 const std::string& cmodeString = record->getItem("CMODE")->getString(0);
                 WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( cmodeString );
                 if (properties.hasInjectionControl( controlMode))
-                    well->setInjectorControlMode( currentStep , controlMode );
+                    properties.controlMode = controlMode;
                 else {
                     throw std::invalid_argument("Tried to set invalid control: " + cmodeString + " for well: " + wellName);
                 }

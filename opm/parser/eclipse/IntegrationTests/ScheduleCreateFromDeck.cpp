@@ -34,6 +34,7 @@
 
 using namespace Opm;
 
+
 BOOST_AUTO_TEST_CASE(CreateSchedule) {
 
     ParserPtr parser(new Parser());
@@ -63,7 +64,6 @@ BOOST_AUTO_TEST_CASE(WCONPROD_MissingCmode) {
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_MISSING_CMODE");
     DeckPtr deck =  parser->parseFile(scheduleFile.string());
-    
     BOOST_CHECK_NO_THROW( new Schedule(deck) );
 }
 
@@ -99,10 +99,13 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
 
         BOOST_CHECK_EQUAL( WellCommon::SHUT , well2->getStatus(3));
 
-        BOOST_CHECK_EQUAL( WellProducer::ORAT , well2->getProducerControlMode( 3 ));
-        BOOST_CHECK( well2->getProductionPropertiesCopy(3).hasProductionControl(WellProducer::ORAT));
-        BOOST_CHECK( well2->getProductionPropertiesCopy(3).hasProductionControl(WellProducer::GRAT));
-        BOOST_CHECK( !well2->getProductionPropertiesCopy(8).hasProductionControl(WellProducer::GRAT));
+        {
+            const WellProductionProperties& prop3 = well2->getProductionProperties(3);
+            BOOST_CHECK_EQUAL( WellProducer::ORAT , prop3.controlMode);
+            BOOST_CHECK(  prop3.hasProductionControl(WellProducer::ORAT));
+            BOOST_CHECK(  prop3.hasProductionControl(WellProducer::GRAT));
+        }
+        BOOST_CHECK( !well2->getProductionProperties(8).hasProductionControl(WellProducer::GRAT));
     }
 
 
@@ -110,12 +113,14 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
         WellPtr well3 = sched->getWell("W_3");
 
         BOOST_CHECK_EQUAL( WellCommon::AUTO , well3->getStatus(3));
-
         BOOST_CHECK_EQUAL( 0 , well3->getProductionPropertiesCopy(2).LiquidRate);
-        BOOST_CHECK_CLOSE( 999/Metric::Time , well3->getProductionPropertiesCopy(7).LiquidRate , 0.001);
+        
+        {
+            const WellProductionProperties& prop7 = well3->getProductionProperties(7);
+            BOOST_CHECK_CLOSE( 999/Metric::Time , prop7.LiquidRate , 0.001);
+            BOOST_CHECK_EQUAL( WellProducer::RESV, prop7.controlMode);
+        }
         BOOST_CHECK_EQUAL( 0 , well3->getProductionPropertiesCopy(8).LiquidRate);
-
-        BOOST_CHECK_EQUAL( WellProducer::RESV, well3->getProducerControlMode( 7 ));
     }
 
     {
@@ -150,26 +155,34 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
         BOOST_CHECK(!well1->getProductionPropertiesCopy(8).predictionMode);
         BOOST_CHECK_CLOSE(13000/Metric::Time , well1->getProductionPropertiesCopy(8).OilRate , 0.001);
         
-        BOOST_CHECK( well1->isInjector(9));
-        BOOST_CHECK_CLOSE(20000/Metric::Time , well1->getInjectionPropertiesCopy(9).surfaceInjectionRate, 0.001);
-        BOOST_CHECK_CLOSE(200000/Metric::Time, well1->getInjectionPropertiesCopy(9).reservoirInjectionRate, 0.001);
-        BOOST_CHECK_CLOSE(6891 * Metric::Pressure , well1->getInjectionPropertiesCopy(9).BHPLimit, 0.001);
-        BOOST_CHECK_CLOSE(0 , well1->getInjectionPropertiesCopy(9).THPLimit , 0.001);
         BOOST_CHECK_CLOSE(123.00 * Metric::Pressure , well1->getInjectionPropertiesCopy(10).BHPLimit, 0.001);
         BOOST_CHECK_CLOSE(678.00 * Metric::Pressure , well1->getInjectionPropertiesCopy(10).THPLimit, 0.001);
         
-        BOOST_CHECK_CLOSE(5000/Metric::Time , well1->getInjectionPropertiesCopy(11).surfaceInjectionRate, 0.001);
+        {
+            const WellInjectionProperties& prop11 = well1->getInjectionProperties(11);
+            BOOST_CHECK_CLOSE(5000/Metric::Time , prop11.surfaceInjectionRate, 0.001);
+            BOOST_CHECK_EQUAL( WellInjector::RATE  , prop11.controlMode);
+            BOOST_CHECK_EQUAL( WellCommon::OPEN , well1->getStatus( 11 ));
+        }
 
-        BOOST_CHECK_EQUAL( WellInjector::RESV  , well1->getInjectorControlMode( 9 ));
-        BOOST_CHECK_EQUAL( WellInjector::RATE  , well1->getInjectorControlMode( 11 ));
-        BOOST_CHECK_EQUAL( WellCommon::OPEN , well1->getStatus( 11 ));
-        BOOST_CHECK_EQUAL( WellCommon::SHUT , well1->getStatus( 12 ));
 
-        BOOST_CHECK(  well1->getInjectionPropertiesCopy(9).hasInjectionControl(WellInjector::RATE ));
-        BOOST_CHECK(  well1->getInjectionPropertiesCopy(9).hasInjectionControl(WellInjector::RESV ));
-        BOOST_CHECK( !well1->getInjectionPropertiesCopy(9).hasInjectionControl(WellInjector::THP));
-        BOOST_CHECK( !well1->getInjectionPropertiesCopy(9).hasInjectionControl(WellInjector::BHP));
+
+        BOOST_CHECK( well1->isInjector(9));
+        {
+            const WellInjectionProperties& prop9 = well1->getInjectionProperties(9);
+            BOOST_CHECK_CLOSE(20000/Metric::Time ,  prop9.surfaceInjectionRate  , 0.001);
+            BOOST_CHECK_CLOSE(200000/Metric::Time , prop9.reservoirInjectionRate, 0.001);
+            BOOST_CHECK_CLOSE(6891 * Metric::Pressure , prop9.BHPLimit, 0.001);
+            BOOST_CHECK_CLOSE(0 , prop9.THPLimit , 0.001);
+            BOOST_CHECK_EQUAL( WellInjector::RESV  , prop9.controlMode);
+            BOOST_CHECK(  prop9.hasInjectionControl(WellInjector::RATE ));
+            BOOST_CHECK(  prop9.hasInjectionControl(WellInjector::RESV ));
+            BOOST_CHECK( !prop9.hasInjectionControl(WellInjector::THP));
+            BOOST_CHECK( !prop9.hasInjectionControl(WellInjector::BHP));
+        }
+
         
+        BOOST_CHECK_EQUAL( WellCommon::SHUT , well1->getStatus( 12 ));
         BOOST_CHECK(  well1->getInjectionPropertiesCopy(12).hasInjectionControl(WellInjector::RATE ));
         BOOST_CHECK( !well1->getInjectionPropertiesCopy(12).hasInjectionControl(WellInjector::RESV));
         BOOST_CHECK(  well1->getInjectionPropertiesCopy(12).hasInjectionControl(WellInjector::THP ));

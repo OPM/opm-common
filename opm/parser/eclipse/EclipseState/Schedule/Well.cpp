@@ -28,9 +28,7 @@
 namespace Opm {
 
     Well::Well(const std::string& name, int headI, int headJ, double refDepth, TimeMapConstPtr timeMap , size_t creationTimeStep)
-        : m_injectorControlMode(new DynamicState<WellInjector::ControlModeEnum>(timeMap, WellInjector::RATE)),
-          m_producerControlMode(new DynamicState<WellProducer::ControlModeEnum>(timeMap, WellProducer::ORAT)),
-          m_status(new DynamicState<WellCommon::StatusEnum>(timeMap, WellCommon::OPEN)),
+        : m_status(new DynamicState<WellCommon::StatusEnum>(timeMap, WellCommon::OPEN)),
           m_isAvailableForGroupControl(new DynamicState<bool>(timeMap, true)),
           m_guideRate(new DynamicState<double>(timeMap, -1.0)),
           m_guideRatePhase(new DynamicState<GuideRate::GuideRatePhaseEnum>(timeMap, GuideRate::UNDEFINED)),
@@ -94,23 +92,6 @@ namespace Opm {
         m_status->add( timeStep , status );
     }
     
-
-    WellInjector::ControlModeEnum Well::getInjectorControlMode(size_t timeStep) const {
-        return m_injectorControlMode->get(timeStep);
-    }
-
-    void Well::setInjectorControlMode(size_t timeStep, WellInjector::ControlModeEnum injectorControlMode) {
-        m_injectorControlMode->add(timeStep , injectorControlMode);
-    }
-
-    WellProducer::ControlModeEnum Well::getProducerControlMode(size_t timeStep) const {
-        return m_producerControlMode->get(timeStep);
-    }
-
-    void Well::setProducerControlMode(size_t timeStep, WellProducer::ControlModeEnum controlMode) {
-        m_producerControlMode->add(timeStep , controlMode);
-    }
-
 
     bool Well::isProducer(size_t timeStep) const {
         return m_isProducer->get(timeStep);

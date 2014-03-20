@@ -44,6 +44,7 @@ namespace Opm {
         double  THPLimit;
         bool    predictionMode;
         int     productionControls;
+        WellProducer::ControlModeEnum controlMode;
 
         WellProductionProperties() {
             OilRate=0.0; 
@@ -55,6 +56,7 @@ namespace Opm {
             THPLimit=0.0; 
             predictionMode=true; 
             productionControls=0;
+            controlMode = WellProducer::ORAT;
         }
 
         bool hasProductionControl(WellProducer::ControlModeEnum controlMode) const {
@@ -75,26 +77,28 @@ namespace Opm {
                 productionControls += controlMode;
             }
         }
+    } WellProductionProperties;
 
-} WellProductionProperties;
 
     typedef struct WellInjectionProperties {
-        double surfaceInjectionRate;
-        double reservoirInjectionRate;
+        double  surfaceInjectionRate;
+        double  reservoirInjectionRate;
         double  BHPLimit;
         double  THPLimit;
         bool    predictionMode;
+        int     injectionControls;
         WellInjector::TypeEnum injectorType;
-        int    injectionControls;
+        WellInjector::ControlModeEnum controlMode;
 
         WellInjectionProperties() {
             surfaceInjectionRate=0.0; 
-            reservoirInjectionRate=0.0;
+            reservoirInjectionRate=0.0; 
             BHPLimit=0.0; 
             THPLimit=0.0; 
             predictionMode=true;
-            injectorType=WellInjector::WATER;
             injectionControls=0;
+            injectorType = WellInjector::WATER;
+            controlMode = WellInjector::RATE;
         }
 
         bool hasInjectionControl(WellInjector::ControlModeEnum controlMode) const {
@@ -115,8 +119,8 @@ namespace Opm {
                 injectionControls += controlMode;
             }
         }
+    } WellInjectionProperties;
 
-} WellInjectionProperties;
 
     class Well {
     public:
@@ -127,10 +131,6 @@ namespace Opm {
         const std::string getGroupName(size_t timeStep) const;
         void setGroupName(size_t timeStep , const std::string& groupName);
 
-        WellInjector::ControlModeEnum getInjectorControlMode(size_t timeStep) const;
-        void                          setInjectorControlMode(size_t timeStep, WellInjector::ControlModeEnum injectorControlMode);
-        WellProducer::ControlModeEnum getProducerControlMode(size_t timeStep) const;
-        void                          setProducerControlMode(size_t timeStep, WellProducer::ControlModeEnum controlMode);
         WellCommon::StatusEnum getStatus(size_t timeStep) const;
         void                   setStatus(size_t timeStep, WellCommon::StatusEnum Status);
         
@@ -152,19 +152,19 @@ namespace Opm {
         void addWELSPECS(DeckRecordConstPtr deckRecord);
         void addCompletions(size_t time_step , const std::vector<CompletionConstPtr>& newCompletions);
                CompletionSetConstPtr getCompletions(size_t timeStep) const;
-        void setProductionProperties(size_t timeStep , const WellProductionProperties properties);
-        WellProductionProperties getProductionPropertiesCopy(size_t timeStep) const;
+    
+        void                            setProductionProperties(size_t timeStep , const WellProductionProperties properties);
+        WellProductionProperties        getProductionPropertiesCopy(size_t timeStep) const;
         const WellProductionProperties& getProductionProperties(size_t timeStep)  const;
-        void setInjectionProperties(size_t timeStep , const WellInjectionProperties properties);
-        WellInjectionProperties getInjectionPropertiesCopy(size_t timeStep) const;
+        
+        void                           setInjectionProperties(size_t timeStep , const WellInjectionProperties properties);
+        WellInjectionProperties        getInjectionPropertiesCopy(size_t timeStep) const;
         const WellInjectionProperties& getInjectionProperties(size_t timeStep) const;
 
     private:
         size_t m_creationTimeStep;
         std::string m_name;
-
-        std::shared_ptr<DynamicState<WellInjector::ControlModeEnum> > m_injectorControlMode;
-        std::shared_ptr<DynamicState<WellProducer::ControlModeEnum> > m_producerControlMode;
+        
         std::shared_ptr<DynamicState<WellCommon::StatusEnum> > m_status;
         
         std::shared_ptr<DynamicState<bool> > m_isAvailableForGroupControl;
