@@ -199,7 +199,7 @@ namespace Opm {
                     resVRate = record->getItem("RESV")->getSIDouble(0);
                 }
                 
-                properties.PredictionMode = isPredictionMode;
+                properties.predictionMode = isPredictionMode;
                 properties.OilRate = orat;
                 properties.WaterRate = wrat;
                 properties.GasRate = grat;
@@ -311,12 +311,12 @@ namespace Opm {
        
             well->setStatus( currentStep , status );
             WellInjectionProperties properties(well->getInjectionPropertiesCopy(currentStep));
-            properties.SurfaceInjectionRate = surfaceInjectionRate;
-            properties.ReservoirInjectionRate = reservoirInjectionRate;
+            properties.surfaceInjectionRate = surfaceInjectionRate;
+            properties.reservoirInjectionRate = reservoirInjectionRate;
             properties.BHPLimit = BHPLimit;
             properties.THPLimit = THPLimit;
-            properties.InjectorType = injectorType;
-            properties.PredictionMode = true;
+            properties.injectorType = injectorType;
+            properties.predictionMode = true;
             
             if (record->getItem("RATE")->defaultApplied())
                 properties.dropInjectionControl(WellInjector::RATE);
@@ -366,8 +366,8 @@ namespace Opm {
 
             well->setStatus( currentStep , status );
             WellInjectionProperties properties(well->getInjectionPropertiesCopy(currentStep));
-            properties.SurfaceInjectionRate = injectionRate;
-            properties.PredictionMode = false;
+            properties.surfaceInjectionRate = injectionRate;
+            properties.predictionMode = false;
             well->setInjectionProperties(currentStep, properties);
         }
     }

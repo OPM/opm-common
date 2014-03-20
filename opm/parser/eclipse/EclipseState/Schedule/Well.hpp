@@ -42,66 +42,77 @@ namespace Opm {
         double  ResVRate;
         double  BHPLimit;
         double  THPLimit;
-        bool    PredictionMode;
-        int     ProductionControls;
+        bool    predictionMode;
+        int     productionControls;
 
         WellProductionProperties() {
-            OilRate=0.0; GasRate=0.0; WaterRate=0.0; LiquidRate=0.0; ResVRate=0.0;
-            BHPLimit=0.0; THPLimit=0.0; PredictionMode=true; ProductionControls=0;
+            OilRate=0.0; 
+            GasRate=0.0; 
+            WaterRate=0.0; 
+            LiquidRate=0.0; 
+            ResVRate=0.0;
+            BHPLimit=0.0; 
+            THPLimit=0.0; 
+            predictionMode=true; 
+            productionControls=0;
         }
 
         bool hasProductionControl(WellProducer::ControlModeEnum controlMode) const {
-            if (ProductionControls & controlMode)
+            if (productionControls & controlMode)
                 return true;
             else
                 return false;
         }
 
         void dropProductionControl(WellProducer::ControlModeEnum controlMode) {
-            if ((ProductionControls & controlMode) != 0) {
-                ProductionControls -= controlMode;
+            if ((productionControls & controlMode) != 0) {
+                productionControls -= controlMode;
             }
         }
 
         void addProductionControl(WellProducer::ControlModeEnum controlMode) {
-            if ((ProductionControls & controlMode) == 0) {
-                ProductionControls += controlMode;
+            if ((productionControls & controlMode) == 0) {
+                productionControls += controlMode;
             }
         }
 
 } WellProductionProperties;
 
     typedef struct WellInjectionProperties {
-        double SurfaceInjectionRate;
-        double ReservoirInjectionRate;
+        double surfaceInjectionRate;
+        double reservoirInjectionRate;
         double  BHPLimit;
         double  THPLimit;
-        bool    PredictionMode;
-        WellInjector::TypeEnum InjectorType;
-        int    InjectionControls;
+        bool    predictionMode;
+        WellInjector::TypeEnum injectorType;
+        int    injectionControls;
 
         WellInjectionProperties() {
-            SurfaceInjectionRate=0.0; ReservoirInjectionRate=0.0;
-            BHPLimit=0.0; THPLimit=0.0; PredictionMode=true;
-            InjectorType=WellInjector::WATER, InjectionControls=0;
+            surfaceInjectionRate=0.0; 
+            reservoirInjectionRate=0.0;
+            BHPLimit=0.0; 
+            THPLimit=0.0; 
+            predictionMode=true;
+            injectorType=WellInjector::WATER;
+            injectionControls=0;
         }
 
         bool hasInjectionControl(WellInjector::ControlModeEnum controlMode) const {
-            if (InjectionControls & controlMode)
+            if (injectionControls & controlMode)
                 return true;
             else
                 return false;
         }
 
         void dropInjectionControl(WellInjector::ControlModeEnum controlMode) {
-            if ((InjectionControls & controlMode) != 0) {
-                InjectionControls -= controlMode;
+            if ((injectionControls & controlMode) != 0) {
+                injectionControls -= controlMode;
             }
         }
 
         void addInjectionControl(WellInjector::ControlModeEnum controlMode) {
-            if ((InjectionControls & controlMode) == 0) {
-                InjectionControls += controlMode;
+            if ((injectionControls & controlMode) == 0) {
+                injectionControls += controlMode;
             }
         }
 
