@@ -39,16 +39,28 @@ namespace Opm {
         }
 
 
-        T get(size_t index) const {
+        const T& at(size_t index) const {
             if (index >= m_timeMap->size())
                 throw std::range_error("Index value is out range.");
             
             if (index >= m_data.size())
                 return m_currentValue;
             
+            return m_data.at(index);
+        }
+        
+
+        T get(size_t index) const {
+            if (index >= m_timeMap->size())
+                throw std::range_error("Index value is out range.");
+
+            if (index >= m_data.size())
+                return m_currentValue;
+
             return m_data[index];
         }
 
+        
 
         size_t size() const {
             return m_data.size();

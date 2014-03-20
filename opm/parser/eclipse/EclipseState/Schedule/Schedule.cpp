@@ -179,16 +179,9 @@ namespace Opm {
             double wrat                           = record->getItem("WRAT")->getSIDouble(0);
             double grat                           = record->getItem("GRAT")->getSIDouble(0);
             WellCommon::StatusEnum status         = WellCommon::StatusFromString( record->getItem("STATUS")->getString(0));
-
-            if (status != WellCommon::SHUT) {
-                WellProducer::ControlModeEnum control = WellProducer::ControlModeFromString( record->getItem("CMODE")->getString(0));
-                well->setProducerControlMode( currentStep , control );
-            }
+            WellProductionProperties properties   = well->getProductionPropertiesCopy(currentStep);
+            
             well->setStatus( currentStep , status );
-            well->setOilRate(currentStep, orat);
-            well->setWaterRate(currentStep, wrat);
-            well->setGasRate(currentStep, grat);
-            well->setInPredictionMode(currentStep, isPredictionMode);
             {
                 double liquidRate = 0;
                 double resVRate = 0;
@@ -202,46 +195,63 @@ namespace Opm {
                     resVRate = record->getItem("RESV")->getSIDouble(0);
                 }
                 
-                well->setLiquidRate( currentStep , liquidRate );
-                well->setResVRate( currentStep , resVRate );
-                well->setBHPLimit(currentStep, BHPLimit , true);
-                well->setTHPLimit(currentStep, THPLimit , true);
+                properties.predictionMode = isPredictionMode;
+                properties.OilRate = orat;
+                properties.WaterRate = wrat;
+                properties.GasRate = grat;
+                properties.LiquidRate = liquidRate;
+                properties.ResVRate = resVRate;
+                properties.BHPLimit = BHPLimit;
+                properties.THPLimit = THPLimit;
 
                 if (isPredictionMode) {
                     if (record->getItem("LRAT")->defaultApplied())
-                        well->dropProductionControl( currentStep , WellProducer::LRAT );
+                        properties.dropProductionControl(WellProducer::LRAT);
+                    else
+                        properties.addProductionControl(WellProducer::LRAT);
                     
                     if (record->getItem("RESV")->defaultApplied())
-                        well->dropProductionControl( currentStep , WellProducer::RESV );
-                    
+                        properties.dropProductionControl(WellProducer::RESV);
+                    else
+                        properties.addProductionControl(WellProducer::RESV);
+
                     if (record->getItem("BHP")->defaultApplied())
-                        well->dropProductionControl( currentStep , WellProducer::BHP );
-                    
+                        properties.dropProductionControl(WellProducer::BHP);
+                    else
+                        properties.addProductionControl(WellProducer::BHP);
+
                     if (record->getItem("THP")->defaultApplied())
-                        well->dropProductionControl( currentStep , WellProducer::THP );
+                        properties.dropProductionControl(WellProducer::THP);
+                    else
+                        properties.addProductionControl(WellProducer::THP);
                 } else {
-                    well->dropProductionControl( currentStep , WellProducer::LRAT );
-                    well->dropProductionControl( currentStep , WellProducer::RESV );
-                    well->dropProductionControl( currentStep , WellProducer::BHP );
-                    well->dropProductionControl( currentStep , WellProducer::THP );
+                    properties.dropProductionControl(WellProducer::LRAT);
+                    properties.dropProductionControl(WellProducer::RESV);
+                    properties.dropProductionControl(WellProducer::BHP);
+                    properties.dropProductionControl(WellProducer::THP);
                 }
             }
             
             if (record->getItem("ORAT")->defaultApplied())
-                well->dropProductionControl( currentStep , WellProducer::ORAT );
+                properties.dropProductionControl(WellProducer::ORAT);
+            else
+                properties.addProductionControl(WellProducer::ORAT);
             
-            if (record->getItem("GRAT")->defaultApplied()) {
-                well->dropProductionControl( currentStep , WellProducer::GRAT );
-            }
+            if (record->getItem("GRAT")->defaultApplied())
+                properties.dropProductionControl(WellProducer::GRAT);
+            else
+                properties.addProductionControl(WellProducer::GRAT);
 
             if (record->getItem("WRAT")->defaultApplied())
-                well->dropProductionControl( currentStep , WellProducer::WRAT );
+                properties.dropProductionControl(WellProducer::WRAT);
+            else
+                properties.addProductionControl(WellProducer::WRAT);
 
             if (status != WellCommon::SHUT) {
                 const std::string& cmodeString = record->getItem("CMODE")->getString(0);
                 WellProducer::ControlModeEnum control = WellProducer::ControlModeFromString( cmodeString );
-                if (well->hasProductionControl( currentStep , control))
-                    well->setProducerControlMode( currentStep , control );
+                if (properties.hasProductionControl( control))
+                    properties.controlMode = control;
                 else {
                     /*
                       This is an awkward situation. The current control mode variable
@@ -263,6 +273,8 @@ namespace Opm {
                     throw std::invalid_argument("Tried to set invalid control: " + cmodeString + " for well: " + wellName);
                 }
             }
+
+            well->setProductionProperties(currentStep, properties);
         }
     }
 
@@ -294,34 +306,43 @@ namespace Opm {
             WellCommon::StatusEnum status             = WellCommon::StatusFromString( record->getItem("STATUS")->getString(0));
        
             well->setStatus( currentStep , status );
-            well->setSurfaceInjectionRate( currentStep , surfaceInjectionRate );
-            well->setReservoirInjectionRate( currentStep , reservoirInjectionRate );
-            well->setBHPLimit(currentStep, BHPLimit , false);
-            well->setTHPLimit(currentStep, THPLimit , false);
-            well->setInjectorType( currentStep , injectorType );
-            well->setInPredictionMode(currentStep, true);
+            WellInjectionProperties properties(well->getInjectionPropertiesCopy(currentStep));
+            properties.surfaceInjectionRate = surfaceInjectionRate;
+            properties.reservoirInjectionRate = reservoirInjectionRate;
+            properties.BHPLimit = BHPLimit;
+            properties.THPLimit = THPLimit;
+            properties.injectorType = injectorType;
+            properties.predictionMode = true;
             
             if (record->getItem("RATE")->defaultApplied())
-                well->dropInjectionControl( currentStep , WellInjector::RATE );
+                properties.dropInjectionControl(WellInjector::RATE);
+            else
+                properties.addInjectionControl(WellInjector::RATE);
 
             if (record->getItem("RESV")->defaultApplied())
-                well->dropInjectionControl( currentStep , WellInjector::RESV );
-            
+                properties.dropInjectionControl(WellInjector::RESV);
+            else
+                properties.addInjectionControl(WellInjector::RESV);
+
             if (record->getItem("THP")->defaultApplied())
-                well->dropInjectionControl( currentStep , WellInjector::THP );
+                properties.dropInjectionControl(WellInjector::THP);
+            else
+                properties.addInjectionControl(WellInjector::THP);
 
             if (record->getItem("BHP")->defaultApplied())
-                well->dropInjectionControl( currentStep , WellInjector::BHP );
-            
+                properties.dropInjectionControl(WellInjector::BHP);
+            else
+                properties.addInjectionControl(WellInjector::BHP);
             {
                 const std::string& cmodeString = record->getItem("CMODE")->getString(0);
                 WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( cmodeString );
-                if (well->hasInjectionControl( currentStep , controlMode))
-                    well->setInjectorControlMode( currentStep , controlMode );
+                if (properties.hasInjectionControl( controlMode))
+                    properties.controlMode = controlMode;
                 else {
                     throw std::invalid_argument("Tried to set invalid control: " + cmodeString + " for well: " + wellName);
                 }
             }
+            well->setInjectionProperties(currentStep, properties);
         }
     }
 
@@ -340,8 +361,10 @@ namespace Opm {
             WellCommon::StatusEnum status = WellCommon::StatusFromString( record->getItem("STATUS")->getString(0));
 
             well->setStatus( currentStep , status );
-            well->setSurfaceInjectionRate( currentStep , injectionRate );
-            well->setInPredictionMode(currentStep, false );
+            WellInjectionProperties properties(well->getInjectionPropertiesCopy(currentStep));
+            properties.surfaceInjectionRate = injectionRate;
+            properties.predictionMode = false;
+            well->setInjectionProperties(currentStep, properties);
         }
     }
 
