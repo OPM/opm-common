@@ -28,6 +28,23 @@ using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(Initialize) {
     Deck deck;
-    BOOST_REQUIRE_NO_THROW(Section section(deck));
+    BOOST_REQUIRE_NO_THROW(Section section(deck, "RUNSPEC"));
+}
+
+BOOST_AUTO_TEST_CASE(ReadSimpleDeck) {
+    Deck deck;
+    DeckKeywordPtr test1(new DeckKeyword("TEST1"));
+    deck.addKeyword(test1);
+    DeckKeywordPtr runSpec(new DeckKeyword("RUNSPEC"));
+    deck.addKeyword(runSpec);
+    DeckKeywordPtr test2(new DeckKeyword("TEST2"));
+    deck.addKeyword(test2);
+    DeckKeywordPtr test3(new DeckKeyword("TEST3"));
+    deck.addKeyword(test3);
+    DeckKeywordPtr grid(new DeckKeyword("GRID"));
+    deck.addKeyword(grid);
+    Section section(deck, "RUNSPEC");
+    //BOOST_CHECK_EQUAL(false, section.hasKeyword("TEST1"));
+    BOOST_CHECK_EQUAL(true, section.hasKeyword("TEST2"));
 }
 

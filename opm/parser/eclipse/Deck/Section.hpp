@@ -27,7 +27,10 @@ namespace Opm {
     class Section
     {
     public:
-        Section(Deck& deck);
+        Section(Deck& deck, const std::string& keyword );
+        bool hasKeyword( const std::string& keyword ) const;
+    private:
+        KeywordContainer m_keywords;
     };
 }
 

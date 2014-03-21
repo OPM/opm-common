@@ -17,11 +17,22 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <iostream>
+#include <exception>
+
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 
 namespace Opm {
-    Section::Section(Deck& deck)
-    {
+    Section::Section(Deck& deck, const std::string& keyword ) {
+        if (deck.size() > 0) {
+            size_t i;
+            for (i=0; i<deck.size()-1; i++)
+                m_keywords.addKeyword(deck.getKeyword(i));
+        }
+    }
+
+    bool Section::hasKeyword( const std::string& keyword ) const {
+        return m_keywords.hasKeyword(keyword);
     }
 }
