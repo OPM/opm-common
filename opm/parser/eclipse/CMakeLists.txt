@@ -28,6 +28,7 @@ Deck/DeckDoubleItem.cpp
 Deck/DeckFloatItem.cpp
 Deck/DeckStringItem.cpp
 Deck/KeywordContainer.cpp
+Deck/Section.cpp
 )
 
 set( parser_source 
@@ -90,6 +91,7 @@ Deck/DeckDoubleItem.hpp
 Deck/DeckFloatItem.hpp
 Deck/DeckStringItem.hpp
 Deck/KeywordContainer.hpp
+Deck/Section.hpp
 #
 Parser/ParserEnums.hpp
 Parser/ParserKeyword.hpp 

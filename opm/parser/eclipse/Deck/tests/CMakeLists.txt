@@ -30,3 +30,8 @@ add_executable(runDeckKeywordTests DeckKeywordTests.cpp)
 target_link_libraries(runDeckKeywordTests Parser  ${Boost_LIBRARIES})
 add_test(NAME runDeckKeywordTests  COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runDeckKeywordTests  )
 
+add_executable(runSectionTests SectionTests.cpp)
+target_link_libraries(runSectionTests Parser  ${Boost_LIBRARIES})
+add_test(NAME runSectionTests  COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runSectionTests  )
+
+
