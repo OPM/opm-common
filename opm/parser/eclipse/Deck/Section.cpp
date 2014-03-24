@@ -37,15 +37,12 @@ namespace Opm {
         for (i=0; i<deck.size(); i++) {
             std::cout << deck.getKeyword(i)->name() << std::endl;
             if (!isCollecting && startKeyword.compare(deck.getKeyword(i)->name()) == 0) {
-                std::cout << "Found start keyword, starting to add...." << std::endl;
                 isCollecting = true;
             }
             if (std::find(stopKeywords.begin(), stopKeywords.end(), deck.getKeyword(i)->name()) != stopKeywords.end()) {
-                std::cout << "Found stop keyword, quitting...." << std::endl;
                 break;
             }
             if (isCollecting) {
-                std::cout << "Adding...." << std::endl;
                 m_keywords.addKeyword(deck.getKeyword(i));
             }
         }

@@ -32,10 +32,7 @@ namespace Opm {
 
     private:
         KeywordContainer m_keywords;
-        std::map<std::string, std::string> m_startStopKeywords;
-
         void populateKeywords(const Deck& deck, const std::string& startKeyword, const std::vector<std::string>& stopKeywords);
-        void initializeStartStopKeywords();
     };
 
     class RUNSPECSection : public Section {
