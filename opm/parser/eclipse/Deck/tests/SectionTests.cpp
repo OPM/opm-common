@@ -26,12 +26,29 @@
 
 using namespace Opm;
 
-BOOST_AUTO_TEST_CASE(Initialize) {
+BOOST_AUTO_TEST_CASE(SectionTest) {
     Deck deck;
-    BOOST_REQUIRE_NO_THROW(Section section(deck, "RUNSPEC"));
+    DeckKeywordPtr test1(new DeckKeyword("TEST1"));
+    deck.addKeyword(test1);
+    DeckKeywordPtr test2(new DeckKeyword("TEST2"));
+    deck.addKeyword(test2);
+    DeckKeywordPtr test3(new DeckKeyword("TEST3"));
+    deck.addKeyword(test3);
+    DeckKeywordPtr test4(new DeckKeyword("TEST4"));
+    deck.addKeyword(test4);
+    Section section(deck, "TEST1", std::vector<std::string>() = {"TEST3", "TEST4"});
+    BOOST_CHECK_EQUAL(true, section.hasKeyword("TEST1"));
+    BOOST_CHECK_EQUAL(true, section.hasKeyword("TEST2"));
+    BOOST_CHECK_EQUAL(false, section.hasKeyword("TEST3"));
+    BOOST_CHECK_EQUAL(false, section.hasKeyword("TEST4"));
 }
 
-BOOST_AUTO_TEST_CASE(ReadSimpleDeck) {
+BOOST_AUTO_TEST_CASE(RUNSPECSection_EmptyDeck) {
+    Deck deck;
+    BOOST_REQUIRE_NO_THROW(RUNSPECSection section(deck));
+}
+
+BOOST_AUTO_TEST_CASE(RUNSPECSection_ReadSimpleDeck) {
     Deck deck;
     DeckKeywordPtr test1(new DeckKeyword("TEST1"));
     deck.addKeyword(test1);
@@ -45,28 +62,110 @@ BOOST_AUTO_TEST_CASE(ReadSimpleDeck) {
     deck.addKeyword(grid);
     DeckKeywordPtr test4(new DeckKeyword("TEST4"));
     deck.addKeyword(test4);
-    Section section(deck, "RUNSPEC");
+    RUNSPECSection section(deck);
     BOOST_CHECK_EQUAL(false, section.hasKeyword("TEST1"));
     BOOST_CHECK_EQUAL(true, section.hasKeyword("RUNSPEC"));
     BOOST_CHECK_EQUAL(true, section.hasKeyword("TEST2"));
     BOOST_CHECK_EQUAL(true, section.hasKeyword("TEST3"));
-    BOOST_CHECK_EQUAL(true, section.hasKeyword("GRID"));
+    BOOST_CHECK_EQUAL(false, section.hasKeyword("GRID"));
     BOOST_CHECK_EQUAL(false, section.hasKeyword("TEST4"));
 }
 
-BOOST_AUTO_TEST_CASE(ReadShortestPossibleDeck) {
+BOOST_AUTO_TEST_CASE(RUNSPECSection_ReadSmallestPossibleDeck) {
     Deck deck;
     DeckKeywordPtr runSpec(new DeckKeyword("RUNSPEC"));
     deck.addKeyword(runSpec);
     DeckKeywordPtr grid(new DeckKeyword("GRID"));
     deck.addKeyword(grid);
-    Section section(deck, "RUNSPEC");
+    RUNSPECSection section(deck);
     BOOST_CHECK_EQUAL(true, section.hasKeyword("RUNSPEC"));
-    BOOST_CHECK_EQUAL(true, section.hasKeyword("GRID"));
+    BOOST_CHECK_EQUAL(false, section.hasKeyword("GRID"));
 }
 
-
-BOOST_AUTO_TEST_CASE(KeywordNotBelongingToASectionThrowsException) {
+BOOST_AUTO_TEST_CASE(GRIDSection_TerminatedByEDITKeyword) {
     Deck deck;
-    BOOST_CHECK_THROW(Section section(deck, "ERROR"), std::invalid_argument);
+    DeckKeywordPtr runSpec(new DeckKeyword("GRID"));
+    deck.addKeyword(runSpec);
+    DeckKeywordPtr grid(new DeckKeyword("EDIT"));
+    deck.addKeyword(grid);
+    GRIDSection section(deck);
+    BOOST_CHECK_EQUAL(true, section.hasKeyword("GRID"));
+    BOOST_CHECK_EQUAL(false, section.hasKeyword("EDIT"));
+}
+
+BOOST_AUTO_TEST_CASE(GRIDSection_TerminatedByPROPSKeyword) {
+    Deck deck;
+    DeckKeywordPtr runSpec(new DeckKeyword("GRID"));
+    deck.addKeyword(runSpec);
+    DeckKeywordPtr grid(new DeckKeyword("PROPS"));
+    deck.addKeyword(grid);
+    GRIDSection section(deck);
+    BOOST_CHECK_EQUAL(true, section.hasKeyword("GRID"));
+    BOOST_CHECK_EQUAL(false, section.hasKeyword("PROPS"));
+}
+
+BOOST_AUTO_TEST_CASE(EDITSection_TerminatedByPROPSKeyword) {
+    Deck deck;
+    DeckKeywordPtr runSpec(new DeckKeyword("EDIT"));
+    deck.addKeyword(runSpec);
+    DeckKeywordPtr grid(new DeckKeyword("PROPS"));
+    deck.addKeyword(grid);
+    EDITSection section(deck);
+    BOOST_CHECK_EQUAL(true, section.hasKeyword("EDIT"));
+    BOOST_CHECK_EQUAL(false, section.hasKeyword("PROPS"));
+}
+
+BOOST_AUTO_TEST_CASE(PROPSSection_TerminatedByREGIONSKeyword) {
+    Deck deck;
+    DeckKeywordPtr runSpec(new DeckKeyword("PROPS"));
+    deck.addKeyword(runSpec);
+    DeckKeywordPtr grid(new DeckKeyword("REGIONS"));
+    deck.addKeyword(grid);
+    PROPSSection section(deck);
+    BOOST_CHECK_EQUAL(true, section.hasKeyword("PROPS"));
+    BOOST_CHECK_EQUAL(false, section.hasKeyword("REGIONS"));
+}
+
+BOOST_AUTO_TEST_CASE(PROPSSection_TerminatedBySOLUTIONKeyword) {
+    Deck deck;
+    DeckKeywordPtr runSpec(new DeckKeyword("PROPS"));
+    deck.addKeyword(runSpec);
+    DeckKeywordPtr grid(new DeckKeyword("SOLUTION"));
+    deck.addKeyword(grid);
+    PROPSSection section(deck);
+    BOOST_CHECK_EQUAL(true, section.hasKeyword("PROPS"));
+    BOOST_CHECK_EQUAL(false, section.hasKeyword("SOLUTION"));
+}
+
+BOOST_AUTO_TEST_CASE(REGIONSSection_TerminatedBySOLUTIONKeyword) {
+    Deck deck;
+    DeckKeywordPtr runSpec(new DeckKeyword("REGIONS"));
+    deck.addKeyword(runSpec);
+    DeckKeywordPtr grid(new DeckKeyword("SOLUTION"));
+    deck.addKeyword(grid);
+    REGIONSSection section(deck);
+    BOOST_CHECK_EQUAL(true, section.hasKeyword("REGIONS"));
+    BOOST_CHECK_EQUAL(false, section.hasKeyword("SOLUTION"));
+}
+
+BOOST_AUTO_TEST_CASE(SOLUTIONSection_TerminatedBySUMMARYKeyword) {
+    Deck deck;
+    DeckKeywordPtr runSpec(new DeckKeyword("SOLUTION"));
+    deck.addKeyword(runSpec);
+    DeckKeywordPtr grid(new DeckKeyword("SUMMARY"));
+    deck.addKeyword(grid);
+    SOLUTIONSection section(deck);
+    BOOST_CHECK_EQUAL(true, section.hasKeyword("SOLUTION"));
+    BOOST_CHECK_EQUAL(false, section.hasKeyword("SUMMARY"));
+}
+
+BOOST_AUTO_TEST_CASE(SOLUTIONSection_TerminatedBySCHEDULEKeyword) {
+    Deck deck;
+    DeckKeywordPtr runSpec(new DeckKeyword("SOLUTION"));
+    deck.addKeyword(runSpec);
+    DeckKeywordPtr grid(new DeckKeyword("SCHEDULE"));
+    deck.addKeyword(grid);
+    SOLUTIONSection section(deck);
+    BOOST_CHECK_EQUAL(true, section.hasKeyword("SOLUTION"));
+    BOOST_CHECK_EQUAL(false, section.hasKeyword("SCHEDULE"));
 }

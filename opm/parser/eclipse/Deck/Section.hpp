@@ -27,15 +27,45 @@ namespace Opm {
     class Section
     {
     public:
-        Section(Deck& deck, const std::string& keyword );
+        Section(Deck& deck, const std::string& startKeyword, const std::vector<std::string>& stopKeywords );
         bool hasKeyword( const std::string& keyword ) const;
 
     private:
         KeywordContainer m_keywords;
         std::map<std::string, std::string> m_startStopKeywords;
 
-        void populateKeywords(const Deck& deck, const std::string& startKeyword);
+        void populateKeywords(const Deck& deck, const std::string& startKeyword, const std::vector<std::string>& stopKeywords);
         void initializeStartStopKeywords();
+    };
+
+    class RUNSPECSection : public Section {
+    public:
+        RUNSPECSection(Deck& deck) : Section (deck, "RUNSPEC", std::vector<std::string>() = {"GRID"}) {}
+    };
+
+    class GRIDSection : public Section {
+    public:
+        GRIDSection(Deck& deck) : Section (deck, "GRID", std::vector<std::string>() = {"EDIT", "PROPS"}) {}
+    };
+
+    class EDITSection : public Section {
+    public:
+        EDITSection(Deck& deck) : Section (deck, "EDIT", std::vector<std::string>() = {"PROPS"}) {}
+    };
+
+    class PROPSSection : public Section {
+    public:
+        PROPSSection(Deck& deck) : Section (deck, "PROPS", std::vector<std::string>() = {"REGIONS", "SOLUTION"}) {}
+    };
+
+    class REGIONSSection : public Section {
+    public:
+        REGIONSSection(Deck& deck) : Section (deck, "REGIONS", std::vector<std::string>() = {"SOLUTION"}) {}
+    };
+
+    class SOLUTIONSection : public Section {
+    public:
+        SOLUTIONSection(Deck& deck) : Section (deck, "SOLUTION", std::vector<std::string>() = {"SUMMARY", "SCHEDULE"}) {}
     };
 }
 

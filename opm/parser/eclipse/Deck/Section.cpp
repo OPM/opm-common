@@ -19,44 +19,36 @@
 
 #include <iostream>
 #include <exception>
+#include <algorithm>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 
 namespace Opm {
-    Section::Section(Deck& deck, const std::string& startKeyword ) {
-        initializeStartStopKeywords();
-        populateKeywords(deck, startKeyword);
+    Section::Section(Deck& deck, const std::string& startKeyword, const std::vector<std::string>& stopKeywords ) {
+        populateKeywords(deck, startKeyword, stopKeywords);
     }
 
-    void Section::populateKeywords(const Deck& deck, const std::string& startKeyword)
+    void Section::populateKeywords(const Deck& deck, const std::string& startKeyword,
+                                   const std::vector<std::string>& stopKeywords)
     {
-        if (!m_startStopKeywords.count(startKeyword))
-            throw std::invalid_argument("The specified keyword does correspond to a section");
-        std::string stopKeyword = m_startStopKeywords.at(startKeyword);
-
         size_t i;
         bool isCollecting = false;
         for (i=0; i<deck.size(); i++) {
+            std::cout << deck.getKeyword(i)->name() << std::endl;
             if (!isCollecting && startKeyword.compare(deck.getKeyword(i)->name()) == 0) {
+                std::cout << "Found start keyword, starting to add...." << std::endl;
                 isCollecting = true;
             }
-            if (isCollecting) {
-                m_keywords.addKeyword(deck.getKeyword(i));
-            }
-            if (deck.getKeyword(i)->name().compare(stopKeyword) == 0) {
+            if (std::find(stopKeywords.begin(), stopKeywords.end(), deck.getKeyword(i)->name()) != stopKeywords.end()) {
+                std::cout << "Found stop keyword, quitting...." << std::endl;
                 break;
             }
+            if (isCollecting) {
+                std::cout << "Adding...." << std::endl;
+                m_keywords.addKeyword(deck.getKeyword(i));
+            }
         }
-    }
-
-    void Section::initializeStartStopKeywords() {
-        m_startStopKeywords.insert ( std::pair<std::string, std::string>("RUNSPEC", "GRID") );
-        m_startStopKeywords.insert ( std::pair<std::string, std::string>("GRID", "EDIT") );
-        m_startStopKeywords.insert ( std::pair<std::string, std::string>("EDIT", "PROPS") );
-        m_startStopKeywords.insert ( std::pair<std::string, std::string>("PROPS", "REGIONS") );
-        m_startStopKeywords.insert ( std::pair<std::string, std::string>("SOLUTION", "SUMMARY") );
-        m_startStopKeywords.insert ( std::pair<std::string, std::string>("SUMMARY", "SCHEDULE") );
     }
 
     bool Section::hasKeyword( const std::string& keyword ) const {
