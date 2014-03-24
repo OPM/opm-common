@@ -24,12 +24,39 @@
 #include <opm/parser/eclipse/Deck/Section.hpp>
 
 namespace Opm {
-    Section::Section(Deck& deck, const std::string& keyword ) {
-        if (deck.size() > 0) {
-            size_t i;
-            for (i=0; i<deck.size()-1; i++)
+    Section::Section(Deck& deck, const std::string& startKeyword ) {
+        initializeStartStopKeywords();
+        populateKeywords(deck, startKeyword);
+    }
+
+    void Section::populateKeywords(const Deck& deck, const std::string& startKeyword)
+    {
+        if (!m_startStopKeywords.count(startKeyword))
+            throw std::invalid_argument("The specified keyword does correspond to a section");
+        std::string stopKeyword = m_startStopKeywords.at(startKeyword);
+
+        size_t i;
+        bool isCollecting = false;
+        for (i=0; i<deck.size(); i++) {
+            if (!isCollecting && startKeyword.compare(deck.getKeyword(i)->name()) == 0) {
+                isCollecting = true;
+            }
+            if (isCollecting) {
                 m_keywords.addKeyword(deck.getKeyword(i));
+            }
+            if (deck.getKeyword(i)->name().compare(stopKeyword) == 0) {
+                break;
+            }
         }
+    }
+
+    void Section::initializeStartStopKeywords() {
+        m_startStopKeywords.insert ( std::pair<std::string, std::string>("RUNSPEC", "GRID") );
+        m_startStopKeywords.insert ( std::pair<std::string, std::string>("GRID", "EDIT") );
+        m_startStopKeywords.insert ( std::pair<std::string, std::string>("EDIT", "PROPS") );
+        m_startStopKeywords.insert ( std::pair<std::string, std::string>("PROPS", "REGIONS") );
+        m_startStopKeywords.insert ( std::pair<std::string, std::string>("SOLUTION", "SUMMARY") );
+        m_startStopKeywords.insert ( std::pair<std::string, std::string>("SUMMARY", "SCHEDULE") );
     }
 
     bool Section::hasKeyword( const std::string& keyword ) const {

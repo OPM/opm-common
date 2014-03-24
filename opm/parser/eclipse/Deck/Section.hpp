@@ -29,8 +29,13 @@ namespace Opm {
     public:
         Section(Deck& deck, const std::string& keyword );
         bool hasKeyword( const std::string& keyword ) const;
+
     private:
         KeywordContainer m_keywords;
+        std::map<std::string, std::string> m_startStopKeywords;
+
+        void populateKeywords(const Deck& deck, const std::string& startKeyword);
+        void initializeStartStopKeywords();
     };
 }
 

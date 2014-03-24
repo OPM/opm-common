@@ -43,8 +43,30 @@ BOOST_AUTO_TEST_CASE(ReadSimpleDeck) {
     deck.addKeyword(test3);
     DeckKeywordPtr grid(new DeckKeyword("GRID"));
     deck.addKeyword(grid);
+    DeckKeywordPtr test4(new DeckKeyword("TEST4"));
+    deck.addKeyword(test4);
     Section section(deck, "RUNSPEC");
-    //BOOST_CHECK_EQUAL(false, section.hasKeyword("TEST1"));
+    BOOST_CHECK_EQUAL(false, section.hasKeyword("TEST1"));
+    BOOST_CHECK_EQUAL(true, section.hasKeyword("RUNSPEC"));
     BOOST_CHECK_EQUAL(true, section.hasKeyword("TEST2"));
+    BOOST_CHECK_EQUAL(true, section.hasKeyword("TEST3"));
+    BOOST_CHECK_EQUAL(true, section.hasKeyword("GRID"));
+    BOOST_CHECK_EQUAL(false, section.hasKeyword("TEST4"));
 }
 
+BOOST_AUTO_TEST_CASE(ReadShortestPossibleDeck) {
+    Deck deck;
+    DeckKeywordPtr runSpec(new DeckKeyword("RUNSPEC"));
+    deck.addKeyword(runSpec);
+    DeckKeywordPtr grid(new DeckKeyword("GRID"));
+    deck.addKeyword(grid);
+    Section section(deck, "RUNSPEC");
+    BOOST_CHECK_EQUAL(true, section.hasKeyword("RUNSPEC"));
+    BOOST_CHECK_EQUAL(true, section.hasKeyword("GRID"));
+}
+
+
+BOOST_AUTO_TEST_CASE(KeywordNotBelongingToASectionThrowsException) {
+    Deck deck;
+    BOOST_CHECK_THROW(Section section(deck, "ERROR"), std::invalid_argument);
+}
