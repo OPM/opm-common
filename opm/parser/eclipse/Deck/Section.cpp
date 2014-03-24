@@ -25,30 +25,38 @@
 #include <opm/parser/eclipse/Deck/Section.hpp>
 
 namespace Opm {
-    Section::Section(Deck& deck, const std::string& startKeyword, const std::vector<std::string>& stopKeywords ) {
+    Section::Section(DeckConstPtr deck, const std::string& startKeyword, const std::vector<std::string>& stopKeywords ) {
         populateKeywords(deck, startKeyword, stopKeywords);
     }
 
-    void Section::populateKeywords(const Deck& deck, const std::string& startKeyword,
+    void Section::populateKeywords(DeckConstPtr deck, const std::string& startKeyword,
                                    const std::vector<std::string>& stopKeywords)
     {
         size_t i;
         bool isCollecting = false;
-        for (i=0; i<deck.size(); i++) {
-            std::cout << deck.getKeyword(i)->name() << std::endl;
-            if (!isCollecting && startKeyword.compare(deck.getKeyword(i)->name()) == 0) {
+        for (i=0; i<deck->size(); i++) {
+            std::string currentKeyword = deck->getKeyword(i)->name();
+            if (!isCollecting && startKeyword.compare(currentKeyword) == 0) {
                 isCollecting = true;
             }
-            if (std::find(stopKeywords.begin(), stopKeywords.end(), deck.getKeyword(i)->name()) != stopKeywords.end()) {
+            if (std::find(stopKeywords.begin(), stopKeywords.end(), currentKeyword) != stopKeywords.end()) {
                 break;
             }
             if (isCollecting) {
-                m_keywords.addKeyword(deck.getKeyword(i));
+                m_keywords.addKeyword(deck->getKeyword(i));
             }
         }
     }
 
     bool Section::hasKeyword( const std::string& keyword ) const {
         return m_keywords.hasKeyword(keyword);
+    }
+
+    std::vector<DeckKeywordPtr>::iterator Section::begin() {
+        return m_keywords.begin();
+    }
+
+    std::vector<DeckKeywordPtr>::iterator Section::end() {
+        return m_keywords.end();
     }
 }

@@ -21,48 +21,61 @@
 #define SECTION_HPP
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <boost/iterator/iterator_facade.hpp>
 
 namespace Opm {
 
-    class Section
+    class Section : public boost::iterator_facade<Section, DeckKeywordPtr, boost::forward_traversal_tag>
     {
     public:
-        Section(Deck& deck, const std::string& startKeyword, const std::vector<std::string>& stopKeywords );
+        Section(DeckConstPtr deck, const std::string& startKeyword, const std::vector<std::string>& stopKeywords );
         bool hasKeyword( const std::string& keyword ) const;
+        std::vector<DeckKeywordPtr>::iterator begin();
+        std::vector<DeckKeywordPtr>::iterator end();
 
+        bool isStopKeyword(const std::vector<std::string>& stopKeywords, std::string currentKeyword);
     private:
         KeywordContainer m_keywords;
-        void populateKeywords(const Deck& deck, const std::string& startKeyword, const std::vector<std::string>& stopKeywords);
+        void populateKeywords(DeckConstPtr deck, const std::string& startKeyword, const std::vector<std::string>& stopKeywords);
     };
+
+    typedef std::shared_ptr<Section> SectionPtr;
+    typedef std::shared_ptr<const Section> SectionConstPtr;
+
 
     class RUNSPECSection : public Section {
     public:
-        RUNSPECSection(Deck& deck) : Section (deck, "RUNSPEC", std::vector<std::string>() = {"GRID"}) {}
+        RUNSPECSection(DeckConstPtr deck) : Section (deck, "RUNSPEC", std::vector<std::string>() = {"GRID"}) {}
     };
 
     class GRIDSection : public Section {
     public:
-        GRIDSection(Deck& deck) : Section (deck, "GRID", std::vector<std::string>() = {"EDIT", "PROPS"}) {}
+        GRIDSection(DeckConstPtr deck) : Section (deck, "GRID", std::vector<std::string>() = {"EDIT", "PROPS"}) {}
     };
 
     class EDITSection : public Section {
     public:
-        EDITSection(Deck& deck) : Section (deck, "EDIT", std::vector<std::string>() = {"PROPS"}) {}
+        EDITSection(DeckConstPtr deck) : Section (deck, "EDIT", std::vector<std::string>() = {"PROPS"}) {}
     };
 
     class PROPSSection : public Section {
     public:
-        PROPSSection(Deck& deck) : Section (deck, "PROPS", std::vector<std::string>() = {"REGIONS", "SOLUTION"}) {}
+        PROPSSection(DeckConstPtr deck) : Section (deck, "PROPS", std::vector<std::string>() = {"REGIONS", "SOLUTION"}) {}
     };
 
     class REGIONSSection : public Section {
     public:
-        REGIONSSection(Deck& deck) : Section (deck, "REGIONS", std::vector<std::string>() = {"SOLUTION"}) {}
+        REGIONSSection(DeckConstPtr deck) : Section (deck, "REGIONS", std::vector<std::string>() = {"SOLUTION"}) {}
     };
 
     class SOLUTIONSection : public Section {
     public:
-        SOLUTIONSection(Deck& deck) : Section (deck, "SOLUTION", std::vector<std::string>() = {"SUMMARY", "SCHEDULE"}) {}
+        SOLUTIONSection(DeckConstPtr deck) : Section (deck, "SOLUTION", std::vector<std::string>() = {"SUMMARY", "SCHEDULE"}) {}
+    };
+
+    class SCHEDULESection : public Section {
+    public:
+        SCHEDULESection(DeckConstPtr deck) : Section (deck, "SCHEDULE", std::vector<std::string>() = {}) {}
     };
 }
 

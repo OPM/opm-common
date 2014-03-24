@@ -30,6 +30,9 @@ namespace Opm {
         const std::vector<DeckKeywordPtr>&  getKeywordList(const std::string& keyword) const;
         size_t numKeywords(const std::string& keyword) const;
 
+        std::vector<DeckKeywordPtr>::iterator begin();
+        std::vector<DeckKeywordPtr>::iterator end();
+
     private:
         std::vector<DeckKeywordPtr> m_keywordList;
         std::map<std::string, std::vector<DeckKeywordPtr> > m_keywordMap;

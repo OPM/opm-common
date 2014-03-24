@@ -152,6 +152,22 @@ BOOST_AUTO_TEST_CASE(keywordList_getbyindex_correctkeywordreturned) {
     BOOST_CHECK_EQUAL("TRULSX", container->getKeyword(2)->name());
 }
 
+BOOST_AUTO_TEST_CASE(keywordList_canIterate) {
+    KeywordContainerPtr container(new KeywordContainer());
+    DeckKeywordPtr keyword1 = DeckKeywordPtr(new DeckKeyword("TRULS"));
+    DeckKeywordPtr keyword2 = DeckKeywordPtr(new DeckKeyword("TRULS"));
+    DeckKeywordPtr keyword3 = DeckKeywordPtr(new DeckKeyword("TRULSX"));
+    container->addKeyword(keyword1);
+    container->addKeyword(keyword2);
+    container->addKeyword(keyword3);
+    int numberOfItems = 0;
+    for (auto iter=container->begin(); iter != container->end(); ++iter) {
+//        std::cout << typeid(iter).name() << std::endl;
+//        std::cout << iter->name() << std::endl;
+        numberOfItems++;
+    }
+    BOOST_CHECK_EQUAL(3, numberOfItems);
+}
 
 
 

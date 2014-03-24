@@ -88,4 +88,11 @@ namespace Opm {
             return 0;
     }
 
+    std::vector<DeckKeywordPtr>::iterator KeywordContainer::begin() {
+        return m_keywordList.begin();
+    }
+
+    std::vector<DeckKeywordPtr>::iterator KeywordContainer::end() {
+        return m_keywordList.end();
+    }
 }
