@@ -32,6 +32,10 @@ namespace Opm {
         bool hasKeyword( const std::string& keyword ) const;
         std::vector<DeckKeywordPtr>::iterator begin();
         std::vector<DeckKeywordPtr>::iterator end();
+        DeckKeywordConstPtr getKeyword(const std::string& keyword, size_t index) const;
+        DeckKeywordConstPtr getKeyword(const std::string& keyword) const;
+        DeckKeywordConstPtr getKeyword(size_t index) const;
+        
     private:
         KeywordContainer m_keywords;
         void populateKeywords(DeckConstPtr deck, const std::string& startKeyword, const std::vector<std::string>& stopKeywords);

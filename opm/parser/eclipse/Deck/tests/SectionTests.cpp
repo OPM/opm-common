@@ -201,10 +201,20 @@ BOOST_AUTO_TEST_CASE(SCHEDULESection_NotTerminated) {
     DeckKeywordPtr test2(new DeckKeyword("TEST2"));
     deck->addKeyword(test2);
     DeckKeywordPtr test3(new DeckKeyword("TEST3"));
+    DeckKeywordPtr test4(new DeckKeyword("TEST3"));
     deck->addKeyword(test3);
+    deck->addKeyword(test4);
     SCHEDULESection section(deck);
     BOOST_CHECK_EQUAL(true, section.hasKeyword("SCHEDULE"));
     BOOST_CHECK_EQUAL(true, section.hasKeyword("TEST1"));
     BOOST_CHECK_EQUAL(true, section.hasKeyword("TEST2"));
     BOOST_CHECK_EQUAL(true, section.hasKeyword("TEST3"));
+    
+    BOOST_CHECK_EQUAL( test1 , section.getKeyword("TEST1"));
+    BOOST_CHECK_EQUAL( test2 , section.getKeyword("TEST2"));
+    BOOST_CHECK_EQUAL( test2 , section.getKeyword(2));
+
+    BOOST_CHECK_EQUAL( test4 , section.getKeyword("TEST3"));
+    BOOST_CHECK_EQUAL( test3 , section.getKeyword("TEST3",0));
+    BOOST_CHECK_EQUAL( test4 , section.getKeyword("TEST3",1));
 }
