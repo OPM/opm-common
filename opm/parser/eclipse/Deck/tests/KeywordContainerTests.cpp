@@ -21,6 +21,7 @@
 #define BOOST_TEST_MODULE KeywordContainerTests
 
 #include <stdexcept>
+#include <iostream>
 #include <boost/test/unit_test.hpp>
 #include <opm/parser/eclipse/Deck/KeywordContainer.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>

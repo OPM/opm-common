@@ -21,6 +21,7 @@
 #define BOOST_TEST_MODULE SectionTests
 
 #include <stdexcept>
+#include <iostream>
 #include <typeinfo>
 #include <boost/test/unit_test.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
