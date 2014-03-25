@@ -162,8 +162,7 @@ BOOST_AUTO_TEST_CASE(keywordList_canIterate) {
     container->addKeyword(keyword3);
     int numberOfItems = 0;
     for (auto iter=container->begin(); iter != container->end(); ++iter) {
-//        std::cout << typeid(iter).name() << std::endl;
-//        std::cout << (*iter).name() << std::endl;
+        std::cout << (*iter)->name() << std::endl;
         numberOfItems++;
     }
     BOOST_CHECK_EQUAL(3, numberOfItems);

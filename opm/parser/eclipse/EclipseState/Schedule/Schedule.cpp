@@ -19,6 +19,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
+#include <opm/parser/eclipse/Deck/Section.hpp>
 #include <boost/algorithm/string.hpp>
 #include <iostream>
 
@@ -55,12 +56,11 @@ namespace Opm {
     }
 
     void Schedule::iterateScheduleSection(DeckConstPtr deck) {
-        DeckKeywordConstPtr scheduleKeyword = deck->getKeyword("SCHEDULE");
-        size_t deckIndex = scheduleKeyword->getDeckIndex() + 1;
         size_t currentStep = 0;
-        while (deckIndex < deck->size()) {
+        SCHEDULESection section(deck);
+        for (auto iter=section.begin(); iter != section.end(); ++iter) {
 
-            DeckKeywordConstPtr keyword = deck->getKeyword(deckIndex);
+            DeckKeywordConstPtr keyword = (*iter);
 
             if (keyword->name() == "DATES") {
                 handleDATES(keyword);
@@ -105,8 +105,6 @@ namespace Opm {
 
             if (keyword->name() == "GCONPROD")
                 handleGCONPROD( keyword , currentStep );
-
-            deckIndex++;
         }
     }
 

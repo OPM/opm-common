@@ -33,18 +33,11 @@ namespace Opm {
                                    const std::vector<std::string>& stopKeywords)
     {
         size_t i;
-        bool isCollecting = false;
-        for (i=0; i<deck->size(); i++) {
-            std::string currentKeyword = deck->getKeyword(i)->name();
-            if (!isCollecting && startKeyword.compare(currentKeyword) == 0) {
-                isCollecting = true;
-            }
-            if (std::find(stopKeywords.begin(), stopKeywords.end(), currentKeyword) != stopKeywords.end()) {
+
+        for (i=deck->getKeyword(startKeyword)->getDeckIndex(); i<deck->size(); i++) {
+            if (std::find(stopKeywords.begin(), stopKeywords.end(), deck->getKeyword(i)->name()) != stopKeywords.end())
                 break;
-            }
-            if (isCollecting) {
-                m_keywords.addKeyword(deck->getKeyword(i));
-            }
+            m_keywords.addKeyword(deck->getKeyword(i));
         }
     }
 

@@ -58,8 +58,7 @@ BOOST_AUTO_TEST_CASE(IteratorTest) {
 
     int numberOfItems = 0;
     for (auto iter=section.begin(); iter != section.end(); ++iter) {
-//        std::cout << typeid(iter).name() << std::endl;
-//        std::cout << iter->name() << std::endl;
+        std::cout << (*iter)->name() << std::endl;
         numberOfItems++;
     }
     BOOST_CHECK_EQUAL(2, numberOfItems);
@@ -67,7 +66,7 @@ BOOST_AUTO_TEST_CASE(IteratorTest) {
 
 BOOST_AUTO_TEST_CASE(RUNSPECSection_EmptyDeck) {
     DeckPtr deck(new Deck());
-    BOOST_REQUIRE_NO_THROW(RUNSPECSection section(deck));
+    BOOST_REQUIRE_THROW(RUNSPECSection section(deck), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(RUNSPECSection_ReadSimpleDeck) {
