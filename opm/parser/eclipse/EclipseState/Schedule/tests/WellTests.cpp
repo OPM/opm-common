@@ -168,13 +168,13 @@ BOOST_AUTO_TEST_CASE(UpdateCompletions) {
     Opm::CompletionSetConstPtr completions = well.getCompletions( 0 );
     BOOST_CHECK_EQUAL( 0U , completions->size());
     
-    std::vector<Opm::CompletionConstPtr> newCompletions;
-    std::vector<Opm::CompletionConstPtr> newCompletions2;
-    Opm::CompletionConstPtr comp1(new Opm::Completion( 10 , 10 , 10 , Opm::AUTO , 99.0, 22.3, 33.2));
-    Opm::CompletionConstPtr comp2(new Opm::Completion( 10 , 11 , 10 , Opm::SHUT , 99.0, 22.3, 33.2));
-    Opm::CompletionConstPtr comp3(new Opm::Completion( 10 , 10 , 12 , Opm::OPEN , 99.0, 22.3, 33.2));
-    Opm::CompletionConstPtr comp4(new Opm::Completion( 10 , 10 , 12 , Opm::SHUT , 99.0, 22.3, 33.2));
-    Opm::CompletionConstPtr comp5(new Opm::Completion( 10 , 10 , 13 , Opm::OPEN , 99.0, 22.3, 33.2));
+    std::vector<Opm::CompletionPtr> newCompletions;
+    std::vector<Opm::CompletionPtr> newCompletions2;
+    Opm::CompletionPtr comp1(new Opm::Completion( 10 , 10 , 10 , Opm::AUTO , 99.0, 22.3, 33.2));
+    Opm::CompletionPtr comp2(new Opm::Completion( 10 , 11 , 10 , Opm::SHUT , 99.0, 22.3, 33.2));
+    Opm::CompletionPtr comp3(new Opm::Completion( 10 , 10 , 12 , Opm::OPEN , 99.0, 22.3, 33.2));
+    Opm::CompletionPtr comp4(new Opm::Completion( 10 , 10 , 12 , Opm::SHUT , 99.0, 22.3, 33.2));
+    Opm::CompletionPtr comp5(new Opm::Completion( 10 , 10 , 13 , Opm::OPEN , 99.0, 22.3, 33.2));
 
     //std::vector<Opm::CompletionConstPtr> newCompletions2{ comp4 , comp5}; Newer c++
 

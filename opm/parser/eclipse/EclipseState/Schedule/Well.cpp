@@ -153,13 +153,15 @@ namespace Opm {
         return m_completions->get( timeStep );
     }
     
-    void Well::addCompletions(size_t time_step , const std::vector<CompletionConstPtr>& newCompletions) {
+    void Well::addCompletions(size_t time_step , const std::vector<CompletionPtr>& newCompletions) {
         CompletionSetConstPtr currentCompletionSet = m_completions->get(time_step);
         CompletionSetPtr newCompletionSet = CompletionSetPtr( currentCompletionSet->shallowCopy() );
 
-        for (size_t ic = 0; ic < newCompletions.size(); ic++) 
+        for (size_t ic = 0; ic < newCompletions.size(); ic++) {
+            newCompletions[ic]->fixDefaultIJ( m_headI , m_headJ );
             newCompletionSet->add( newCompletions[ic] );
-
+        }
+        
         m_completions->add( time_step , newCompletionSet);
     }
     

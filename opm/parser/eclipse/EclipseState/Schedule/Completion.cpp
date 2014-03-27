@@ -50,8 +50,8 @@ namespace Opm {
        disentangled, and each completion is returned separately.
     */
     
-    std::pair<std::string , std::vector<CompletionConstPtr> > Completion::completionsFromCOMPDATRecord( DeckRecordConstPtr compdatRecord ) {
-        std::vector<CompletionConstPtr> completions;
+    std::pair<std::string , std::vector<CompletionPtr> > Completion::completionsFromCOMPDATRecord( DeckRecordConstPtr compdatRecord ) {
+        std::vector<CompletionPtr> completions;
         std::string well = compdatRecord->getItem("WELL")->getString(0);
         // We change from eclipse's 1 - n, to a 0 - n-1 solution
         int I = compdatRecord->getItem("I")->getInt(0) - 1;
@@ -66,16 +66,16 @@ namespace Opm {
                 throw std::invalid_argument("The connection factor item can not be defaulted");
         }
         double CF = compdatRecord->getItem("CF")->getSIDouble(0);
-
         double diameter = compdatRecord->getItem("DIAMETER")->getSIDouble(0);
         double skinFactor = compdatRecord->getItem("SKIN")->getRawDouble(0);
 
+
         for (int k = K1; k <= K2; k++) {
-            CompletionConstPtr completion(new Completion(I , J , k , state , CF, diameter, skinFactor ));
+            CompletionPtr completion(new Completion(I , J , k , state , CF, diameter, skinFactor ));
             completions.push_back( completion );
         }
 
-        return std::pair<std::string , std::vector<CompletionConstPtr> >( well , completions );
+        return std::pair<std::string , std::vector<CompletionPtr> >( well , completions );
     }
 
     /*
@@ -89,24 +89,32 @@ namespace Opm {
     */   
             
     
-    std::map<std::string , std::vector< CompletionConstPtr> > Completion::completionsFromCOMPDATKeyword( DeckKeywordConstPtr compdatKeyword ) {
-        std::map<std::string , std::vector< CompletionConstPtr> > completionMapList;
+    std::map<std::string , std::vector< CompletionPtr> > Completion::completionsFromCOMPDATKeyword( DeckKeywordConstPtr compdatKeyword ) {
+        std::map<std::string , std::vector< CompletionPtr> > completionMapList;
         for (size_t recordIndex = 0; recordIndex < compdatKeyword->size(); recordIndex++) {
-            std::pair<std::string , std::vector< CompletionConstPtr> > wellCompletionsPair = completionsFromCOMPDATRecord( compdatKeyword->getRecord( recordIndex ));
+            std::pair<std::string , std::vector< CompletionPtr> > wellCompletionsPair = completionsFromCOMPDATRecord( compdatKeyword->getRecord( recordIndex ));
             std::string well = wellCompletionsPair.first;
-            std::vector<CompletionConstPtr>& newCompletions = wellCompletionsPair.second;
+            std::vector<CompletionPtr>& newCompletions = wellCompletionsPair.second;
         
             if (completionMapList.find(well) == completionMapList.end()) 
-                 completionMapList[well] = std::vector<CompletionConstPtr>();
+                 completionMapList[well] = std::vector<CompletionPtr>();
             
             {
-                std::vector<CompletionConstPtr>& currentCompletions = completionMapList.find(well)->second;
+                std::vector<CompletionPtr>& currentCompletions = completionMapList.find(well)->second;
 
                 for (size_t ic = 0; ic < newCompletions.size(); ic++)
                     currentCompletions.push_back( newCompletions[ic] );
             }
         }
         return completionMapList;
+    }
+
+    void Completion::fixDefaultIJ(int wellHeadI , int wellHeadJ) {
+        if (m_i < 0)
+            m_i = wellHeadI;
+        
+        if (m_j < 0)
+            m_j = wellHeadJ;
     }
 
 
