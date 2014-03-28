@@ -1,0 +1,5 @@
+{"name":"NEXTSTEP", "size" : 1 , "action" : "IGNORE_WARNING",
+"items" : [
+   {"name" : "MAX_STEP" , "value_type" : "DOUBLE" , "dimension" : "Time"},
+   {"name" : "APPLY_TO_ALL" , "value_type" : "STRING" , "default" : "NO"}]}
+                

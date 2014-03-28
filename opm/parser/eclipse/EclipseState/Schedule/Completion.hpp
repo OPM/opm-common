@@ -42,9 +42,10 @@ namespace Opm {
         double getCF() const;
         double getDiameter() const;
         double getSkinFactor() const;
+        void   fixDefaultIJ(int wellHeadI , int wellHeadJ);
 
-        static std::map<std::string , std::vector<std::shared_ptr<const Completion> > >  completionsFromCOMPDATKeyword( DeckKeywordConstPtr compdatKeyword );
-        static std::pair<std::string , std::vector<std::shared_ptr<const Completion> > > completionsFromCOMPDATRecord( DeckRecordConstPtr compdatRecord );
+        static std::map<std::string , std::vector<std::shared_ptr<Completion> > >  completionsFromCOMPDATKeyword( DeckKeywordConstPtr compdatKeyword );
+        static std::pair<std::string , std::vector<std::shared_ptr<Completion> > > completionsFromCOMPDATRecord( DeckRecordConstPtr compdatRecord );
         
     private:
         int m_i, m_j, m_k;

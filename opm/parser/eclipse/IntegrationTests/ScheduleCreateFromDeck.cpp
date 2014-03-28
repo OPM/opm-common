@@ -537,3 +537,28 @@ BOOST_AUTO_TEST_CASE(WellTestWGRUPCONWellPropertiesSet) {
     BOOST_CHECK_EQUAL(0.5, well3->getGuideRateScalingFactor(0));
 }
 
+
+BOOST_AUTO_TEST_CASE(TestDefaultedCOMPDATIJ) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_COMPDAT_DEFAULT_IJ");
+    const char * deckString = "\n\
+START\n\
+\n\
+10 MAI 2007 /\n\
+\n\
+SCHEDULE\n\
+WELSPECS \n\
+     'W1'        'OP'   11   21  3.33       'OIL'  7* /   \n\
+/\n\
+COMPDAT \n\
+     'W1'   2*    1    1      'OPEN'  1*     32.948      0.311   3047.839  2*         'X'     22.100 /\n\
+/\n";
+    DeckPtr deck =  parser->parseString(deckString);
+    ScheduleConstPtr sched(new Schedule(deck));
+    WellConstPtr well = sched->getWell("W1");
+    CompletionSetConstPtr completions = well->getCompletions(0);
+    BOOST_CHECK_EQUAL( 10 , completions->get(0)->getI() );
+    BOOST_CHECK_EQUAL( 20 , completions->get(0)->getJ() );
+}
+
+

@@ -43,13 +43,13 @@ BOOST_AUTO_TEST_CASE( CreateCompletionsFromRecord ) {
     DeckRecordConstPtr line0 = COMPDAT1->getRecord(0);
     DeckRecordConstPtr line1 = COMPDAT1->getRecord(1);
     
-    std::pair< std::string , std::vector<CompletionConstPtr> > completionsList = Completion::completionsFromCOMPDATRecord( line0 );
+    std::pair< std::string , std::vector<CompletionPtr> > completionsList = Completion::completionsFromCOMPDATRecord( line0 );
     BOOST_CHECK_EQUAL( "W_1" , completionsList.first );
     BOOST_CHECK_EQUAL( 3U , completionsList.second.size() );
 
     {
-        CompletionConstPtr completion0 = completionsList.second[0];
-        CompletionConstPtr completion2 = completionsList.second[2];
+        CompletionPtr completion0 = completionsList.second[0];
+        CompletionPtr completion2 = completionsList.second[2];
 
         BOOST_CHECK_EQUAL( 29 , completion0->getI() );
         BOOST_CHECK_EQUAL( 36 , completion0->getJ() );
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE( CreateCompletionsFromKeyword ) {
     DeckPtr deck =  parser->parseFile(scheduleFile.string());
     DeckKeywordConstPtr COMPDAT1 = deck->getKeyword("COMPDAT" , 1);
     
-    std::map< std::string , std::vector<CompletionConstPtr> > completions = Completion::completionsFromCOMPDATKeyword( COMPDAT1 );
+    std::map< std::string , std::vector<CompletionPtr> > completions = Completion::completionsFromCOMPDATKeyword( COMPDAT1 );
     BOOST_CHECK_EQUAL( 3U , completions.size() );
     
     
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE( CreateCompletionsFromKeyword ) {
     BOOST_CHECK_EQUAL(  5U , completions.find("W_2")->second.size() );
     BOOST_CHECK_EQUAL(  5U , completions.find("W_3")->second.size() );
 
-    std::vector<CompletionConstPtr> W_3Completions = completions.find("W_3")->second;
+    std::vector<CompletionPtr> W_3Completions = completions.find("W_3")->second;
     
     CompletionConstPtr completion0 = W_3Completions[0];
     CompletionConstPtr completion4 = W_3Completions[4];

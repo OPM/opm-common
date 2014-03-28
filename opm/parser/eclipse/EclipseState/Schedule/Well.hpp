@@ -150,8 +150,8 @@ namespace Opm {
         bool isProducer(size_t timeStep) const;
         bool isInjector(size_t timeStep) const;
         void addWELSPECS(DeckRecordConstPtr deckRecord);
-        void addCompletions(size_t time_step , const std::vector<CompletionConstPtr>& newCompletions);
-               CompletionSetConstPtr getCompletions(size_t timeStep) const;
+        void addCompletions(size_t time_step , const std::vector<CompletionPtr>& newCompletions);
+        CompletionSetConstPtr getCompletions(size_t timeStep) const;
     
         void                            setProductionProperties(size_t timeStep , const WellProductionProperties properties);
         WellProductionProperties        getProductionPropertiesCopy(size_t timeStep) const;

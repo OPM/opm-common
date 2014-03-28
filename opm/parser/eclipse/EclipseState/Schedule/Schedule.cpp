@@ -439,8 +439,8 @@ namespace Opm {
     }
 
     void Schedule::handleCOMPDAT(DeckKeywordConstPtr keyword , size_t currentStep) {
-        std::map<std::string , std::vector< CompletionConstPtr> > completionMapList = Completion::completionsFromCOMPDATKeyword( keyword );
-        std::map<std::string , std::vector< CompletionConstPtr> >::iterator iter;
+        std::map<std::string , std::vector< CompletionPtr> > completionMapList = Completion::completionsFromCOMPDATKeyword( keyword );
+        std::map<std::string , std::vector< CompletionPtr> >::iterator iter;
         
         for( iter= completionMapList.begin(); iter != completionMapList.end(); iter++) {
             const std::string wellName = iter->first;
