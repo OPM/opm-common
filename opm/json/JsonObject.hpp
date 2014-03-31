@@ -53,6 +53,8 @@ namespace Json {
 
         bool is_array( ) const;
         bool is_object( ) const;
+
+        std::string get_content() const;
         
         size_t size() const;
     private:
@@ -60,6 +62,7 @@ namespace Json {
         void initialize(const std::string& inline_json);
         cJSON * root;
         bool    owner;
+        std::string content;
     };
 }
 
