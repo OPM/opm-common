@@ -87,21 +87,21 @@ void scanAllKeywords(const boost::filesystem::path& directory , std::ofstream& o
 
 int main(int argc , char ** argv) {
     const char * config_root = argv[1];
-    const char * source_file_to_generate = argv[2];
-    const char * keyword_dump_file = argv[3];
+    const char * source_file_name = argv[2];
+    const char * dump_file_name = argv[3];
     boost::filesystem::path directory(config_root);
 
-    if (keyword_dump_file) {
-        std::ofstream dump_file_stream( keyword_dump_file );
+    if (dump_file_name) {
+        std::ofstream dump_file_stream( dump_file_name );
         scanAllKeywords( directory , dump_file_stream, &generateDumpForKeyword );
         dump_file_stream.close();
     }
 
-    std::ofstream of( source_file_to_generate );
-    createHeader(of);
-    startFunction(of);
-    scanAllKeywords( directory , of, &generateSourceForKeyword );
-    endFunction(of);
-    of << "}" << std::endl;
-    of.close();
+    std::ofstream source_file_stream( source_file_name );
+    createHeader(source_file_stream);
+    startFunction(source_file_stream);
+    scanAllKeywords( directory , source_file_stream, &generateSourceForKeyword );
+    endFunction(source_file_stream);
+    source_file_stream << "}" << std::endl;
+    source_file_stream.close();
 }
