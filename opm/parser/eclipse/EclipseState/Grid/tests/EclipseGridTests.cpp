@@ -235,4 +235,5 @@ BOOST_AUTO_TEST_CASE(CreateCartesianGRIDOnlyTopLayerDZ) {
     BOOST_CHECK_EQUAL( 10 , grid->getNX( ));
     BOOST_CHECK_EQUAL(  5 , grid->getNY( ));
     BOOST_CHECK_EQUAL( 20 , grid->getNZ( ));
+    //BOOST_CHECK_EQUAL( 1000 , grid->getNumActive());
 }

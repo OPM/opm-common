@@ -88,6 +88,11 @@ add_test(NAME runParseSGOF
          WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} 
          COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runParseSGOF)         
 
+add_executable(runEclipseGridCreateFromDeck EclipseGridCreateFromDeck.cpp)
+target_link_libraries(runEclipseGridCreateFromDeck Parser ${Boost_LIBRARIES})
+add_test(NAME runEclipseGridCreateFromDeck WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runEclipseGridCreateFromDeck) 
+
+
 if (INCLUDE_STATOIL_TESTS) 
    add_executable(runIntegrationTestsInternalData IntegrationTestsInternalData.cpp)
    target_link_libraries(runIntegrationTestsInternalData Parser ${Boost_LIBRARIES})

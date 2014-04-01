@@ -20,6 +20,7 @@
 
 
 #include <opm/parser/eclipse/Deck/Section.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 #include <ert/ecl/ecl_grid.h>
@@ -35,7 +36,7 @@ namespace Opm {
                                      record->getItem("NZ")->getInt(0) };
 
             if (hasCornerPointKeywords(gridSection)) {
-                
+                initCornerPointGrid(dims , gridSection);
             } else if (hasCartesianKeywords(gridSection)) {
                 initCartesianGrid(dims , gridSection);
             } else
@@ -45,6 +46,10 @@ namespace Opm {
             throw std::invalid_argument("The RUNSPEC section must have the DIMENS keyword with grid dimensions");
     }
 
+
+    int EclipseGrid::getNumActive( ) const {
+        return ecl_grid_get_nactive( m_grid.get() );
+    }
 
     int EclipseGrid::getNX( ) const {
         return ecl_grid_get_nx( m_grid.get() );
@@ -66,6 +71,33 @@ namespace Opm {
             return false;
     }
 
+
+    void EclipseGrid::initCornerPointGrid(const std::vector<int>& dims , std::shared_ptr<const GRIDSection> gridSection) {
+        DeckKeywordConstPtr ZCORNKeyWord = gridSection->getKeyword("ZCORN");
+        DeckKeywordConstPtr COORDKeyWord = gridSection->getKeyword("COORD");
+
+        const std::vector<float>& zcorn = ZCORNKeyWord->getSIFloatData();
+        const std::vector<float>& coord = COORDKeyWord->getSIFloatData();
+        const int   * actnum = NULL;
+        const float * mapaxes = NULL;
+
+        if (gridSection->hasKeyword("ACTNUM")) {
+            DeckKeywordConstPtr actnumKeyword = gridSection->getKeyword("ACTNUM");
+            const std::vector<int>& actnumVector = actnumKeyword->getIntData();
+            actnum = actnumVector.data();
+        }
+
+        if (gridSection->hasKeyword("MAPAXES")) {
+            DeckKeywordConstPtr mapaxesKeyword = gridSection->getKeyword("MAPAXES");
+            const std::vector<float>& mapaxesVector = mapaxesKeyword->getRawFloatData();
+            mapaxes = mapaxesVector.data();
+        }
+        
+
+        ecl_grid_type * ecl_grid = ecl_grid_alloc_GRDECL_data(dims[0] , dims[1] , dims[2] , zcorn.data() , coord.data() , actnum , mapaxes);
+        m_grid.reset( ecl_grid , ecl_grid_free);    
+    }
+    
 
 
     bool EclipseGrid::hasCartesianKeywords(std::shared_ptr<const GRIDSection> gridSection) {
