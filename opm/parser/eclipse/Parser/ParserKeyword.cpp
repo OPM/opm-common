@@ -29,6 +29,7 @@
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
+#include <opm/parser/eclipse/Parser/ParserFloatItem.hpp>
 
 
 namespace Opm {
@@ -238,27 +239,34 @@ namespace Opm {
                 if (itemConfig.has_item("value_type")) {
                     ParserValueTypeEnum valueType = ParserValueTypeEnumFromString(itemConfig.get_string("value_type"));
                     switch (valueType) {
-                        case INT:
+                    case INT:
                         {
                             ParserIntItemConstPtr item = ParserIntItemConstPtr(new ParserIntItem(itemConfig));
                             addItem(item);
                         }
-                            break;
-                        case STRING:
+                        break;
+                    case STRING:
                         {
                             ParserStringItemConstPtr item = ParserStringItemConstPtr(new ParserStringItem(itemConfig));
                             addItem(item);
                         }
-                            break;
-                        case DOUBLE:
+                        break;
+                    case DOUBLE:
                         {
                             ParserDoubleItemPtr item = ParserDoubleItemPtr(new ParserDoubleItem(itemConfig));
-                            initItemDimension( item , itemConfig );
+                            initDoubleItemDimension( item , itemConfig );
                             addItem(item);
                         }
-                            break;
-                        default:
-                            throw std::invalid_argument("Not implemented.");
+                        break;
+                    case FLOAT:
+                        {
+                            ParserFloatItemPtr item = ParserFloatItemPtr(new ParserFloatItem(itemConfig));
+                            initFloatItemDimension( item , itemConfig );
+                            addItem(item);
+                        }
+                        break;
+                    default:
+                        throw std::invalid_argument("Not implemented.");
                     }
                 } else
                     throw std::invalid_argument("Json config object missing \"value_type\": ... item");
@@ -268,7 +276,23 @@ namespace Opm {
     }
 
     
-    void ParserKeyword::initItemDimension( ParserDoubleItemPtr item, const Json::JsonObject itemConfig) {
+    void ParserKeyword::initFloatItemDimension( ParserFloatItemPtr item, const Json::JsonObject itemConfig) {
+        if (itemConfig.has_item("dimension")) {
+            const Json::JsonObject dimensionConfig = itemConfig.get_item("dimension");
+            if (dimensionConfig.is_string())
+                item->push_backDimension( dimensionConfig.as_string() );
+            else if (dimensionConfig.is_array()) {
+                for (size_t idim = 0; idim < dimensionConfig.size(); idim++) {
+                    Json::JsonObject dimObject = dimensionConfig.get_array_item( idim );
+                    item->push_backDimension( dimObject.as_string());
+                }
+            } else
+                throw std::invalid_argument("The dimension: attribute must be a string/list of strings");
+        } 
+    }
+
+
+    void ParserKeyword::initDoubleItemDimension( ParserDoubleItemPtr item, const Json::JsonObject itemConfig) {
         if (itemConfig.has_item("dimension")) {
             const Json::JsonObject dimensionConfig = itemConfig.get_item("dimension");
             if (dimensionConfig.is_string())
@@ -305,7 +329,7 @@ namespace Opm {
                     }
                     addDataItem(item);
                 }
-                    break;
+                break;
                 case STRING:
                 {
                     ParserStringItemPtr item = ParserStringItemPtr(new ParserStringItem(itemName, ALL));
@@ -315,7 +339,7 @@ namespace Opm {
                     }
                     addDataItem(item);
                 }
-                    break;
+                break;
                 case DOUBLE:
                 {
                     ParserDoubleItemPtr item = ParserDoubleItemPtr(new ParserDoubleItem(itemName, ALL));
@@ -323,10 +347,21 @@ namespace Opm {
                         double defaultValue = dataConfig.get_double("default");
                         item->setDefault(defaultValue);
                     }
-                    initItemDimension( item , dataConfig );
+                    initDoubleItemDimension( item , dataConfig );
                     addDataItem(item);
                 }
-                    break;
+                break;
+                case FLOAT:
+                {
+                    ParserFloatItemPtr item = ParserFloatItemPtr(new ParserFloatItem(itemName, ALL));
+                    if (hasDefault) {
+                        double defaultValue = dataConfig.get_double("default");
+                        item->setDefault((float) defaultValue);
+                    }
+                    initFloatItemDimension( item , dataConfig );
+                    addDataItem(item);
+                }
+                break;
                 default:
                     throw std::invalid_argument("Not implemented.");
             }

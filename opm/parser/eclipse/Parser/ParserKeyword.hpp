@@ -27,6 +27,7 @@
 
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>
+#include <opm/parser/eclipse/Parser/ParserFloatItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 #include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -87,7 +88,8 @@ namespace Opm {
         void initSizeKeyword(const Json::JsonObject& sizeObject);
         void commonInit(const std::string& name, ParserKeywordSizeEnum sizeType , ParserKeywordActionEnum action);
         void addItems( const Json::JsonObject& jsonConfig);
-        static void initItemDimension( ParserDoubleItemPtr item, const Json::JsonObject itemConfig);
+        static void initDoubleItemDimension( ParserDoubleItemPtr item, const Json::JsonObject itemConfig);
+        static void initFloatItemDimension( ParserFloatItemPtr item, const Json::JsonObject itemConfig);
     };
     typedef std::shared_ptr<ParserKeyword> ParserKeywordPtr;
     typedef std::shared_ptr<const ParserKeyword> ParserKeywordConstPtr;

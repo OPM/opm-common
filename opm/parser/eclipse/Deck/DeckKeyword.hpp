@@ -34,6 +34,8 @@ namespace Opm {
         const std::vector<int>& getIntData() const;
         const std::vector<double>& getRawDoubleData() const;
         const std::vector<double>& getSIDoubleData() const;
+        const std::vector<float>& getSIFloatData() const;
+        const std::vector<float>& getRawFloatData() const;
         const std::vector<std::string>& getStringData() const;
 
     private:
