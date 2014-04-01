@@ -17,7 +17,7 @@
 using namespace Opm;
 using namespace boost::filesystem;
 
-typedef void (*keywordGenerator)(std::ofstream& of, const std::string keywordName, Json::JsonObject* jsonKeyword);
+typedef void (*keywordGenerator)(std::ofstream& of, const std::string keywordName, const Json::JsonObject* jsonKeyword);
 
 void createHeader(std::ofstream& of ) {
     of << "#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>" << std::endl;
@@ -40,7 +40,7 @@ void endFunction(std::ofstream& of) {
 }
 
 
-void generateSourceForKeyword(std::ofstream& of, const std::string keywordName, Json::JsonObject* jsonKeyword)
+void generateSourceForKeyword(std::ofstream& of, const std::string keywordName, const Json::JsonObject* jsonKeyword)
 {
     if (ParserKeyword::validName(keywordName)) {
         ParserKeywordConstPtr parserKeyword(new ParserKeyword(*jsonKeyword));
@@ -55,7 +55,7 @@ void generateSourceForKeyword(std::ofstream& of, const std::string keywordName, 
     }
 }
 
-void generateDumpForKeyword(std::ofstream& of, const std::string keywordName, Json::JsonObject* jsonKeyword)
+void generateDumpForKeyword(std::ofstream& of, const std::string keywordName, const Json::JsonObject* jsonKeyword)
 {
     of << keywordName << std::endl;
     of << jsonKeyword->get_content() << std::endl;
