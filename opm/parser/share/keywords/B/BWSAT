@@ -1,0 +1,4 @@
+{"name" : "BWSAT" , "items" : 
+      [{"name": "I" , "value_type" : "INT"}, 
+       {"name": "J" , "value_type" : "INT"}, 
+       {"name": "K" , "value_type" : "INT"}]}

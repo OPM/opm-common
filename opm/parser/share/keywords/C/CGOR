@@ -1,0 +1,5 @@
+{"name" : "CGOR" , "items" : 
+      [{"name": "WELL" , "value_type" : "STRING"},
+       {"name": "I"    , "value_type" : "INT" , "default" : 0}, 
+       {"name": "J"    , "value_type" : "INT" , "default" : 0}, 
+       {"name": "K"    , "value_type" : "INT" , "default" : 0}]}
