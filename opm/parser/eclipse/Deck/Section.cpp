@@ -52,4 +52,18 @@ namespace Opm {
     std::vector<DeckKeywordPtr>::iterator Section::end() {
         return m_keywords.end();
     }
+
+    DeckKeywordConstPtr Section::getKeyword(const std::string& keyword, size_t index) const {
+        return m_keywords.getKeyword(keyword , index);
+    }
+
+    DeckKeywordConstPtr Section::getKeyword(const std::string& keyword) const {
+        return m_keywords.getKeyword(keyword);
+    }
+    
+    DeckKeywordConstPtr Section::getKeyword(size_t index) const {
+        return m_keywords.getKeyword(index);
+    }
+
+
 }

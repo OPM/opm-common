@@ -16,4 +16,6 @@ set (opm-parser_DEPS
 	"Boost 1.44.0
 		COMPONENTS date_time filesystem system iostream unit_test_framework REQUIRED"
 	"cJSON"
+	# Ensembles-based Reservoir Tools (ERT)
+	"ERT REQUIRED"
 	)

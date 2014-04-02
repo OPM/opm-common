@@ -4,6 +4,7 @@ add_subdirectory(Deck/tests)
 add_subdirectory(IntegrationTests)
 add_subdirectory(EclipseState/tests)
 add_subdirectory(EclipseState/Schedule/tests)
+add_subdirectory(EclipseState/Grid/tests)
 add_subdirectory(Utility/tests)
 add_subdirectory(Units/tests)
 
@@ -69,7 +70,9 @@ EclipseState/Schedule/Completion.cpp
 EclipseState/Schedule/CompletionSet.cpp
 EclipseState/Schedule/ScheduleEnums.cpp 
 EclipseState/Schedule/GroupTreeNode.cpp
-EclipseState/Schedule/GroupTree.cpp)
+EclipseState/Schedule/GroupTree.cpp
+#
+EclipseState/Grid/EclipseGrid.cpp)
 
 set (utility_source
 Utility/SimpleTable.cpp
@@ -122,6 +125,8 @@ EclipseState/Schedule/ScheduleEnums.hpp
 EclipseState/Schedule/GroupTreeNode.hpp 
 EclipseState/Schedule/GroupTree.hpp 
 #
+EclipseState/Grid/EclipseGrid.hpp
+#
 Utility/WconinjeWrapper.hpp
 Utility/CompdatWrapper.hpp
 Utility/PvtoOuterTable.hpp
@@ -165,7 +170,7 @@ target_link_libraries(buildParser opm-json ${Boost_LIBRARIES})
 #-----------------------------------------------------------------
 
 add_executable( createDefaultKeywordList Parser/createDefaultKeywordList.cpp )
-target_link_libraries( createDefaultKeywordList buildParser opm-json ${Boost_LIBRARIES} )
+target_link_libraries( createDefaultKeywordList buildParser opm-json ${Boost_LIBRARIES})
 
 add_custom_command( OUTPUT ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.cpp
                     COMMAND createDefaultKeywordList ${PROJECT_SOURCE_DIR}/opm/parser/share/keywords ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.cpp
@@ -175,7 +180,7 @@ add_custom_command( OUTPUT ${PROJECT_BINARY_DIR}/generated-source/DefaultKeyword
 #-----------------------------------------------------------------
 
 add_library(Parser ${rawdeck_source} ${parser_source} ${deck_source} ${state_source} ${utility_source} ${unit_source})
-target_link_libraries(Parser opm-json ${Boost_LIBRARIES})
+target_link_libraries(Parser opm-json ${Boost_LIBRARIES}  ${ERT_LIBRARIES})
 
 include( ${PROJECT_SOURCE_DIR}/cmake/Modules/install_headers.cmake )   
 install_headers( "${HEADER_FILES}" "${CMAKE_INSTALL_PREFIX}" )

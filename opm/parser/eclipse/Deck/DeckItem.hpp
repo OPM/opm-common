@@ -79,6 +79,15 @@ namespace Opm {
             throw std::logic_error("This implementation of DeckItem does not support double");
         }
 
+        virtual const std::vector<float>& getSIFloatData() const {
+            throw std::logic_error("This implementation of DeckItem does not support float");
+        }
+
+        virtual const std::vector<float>& getRawFloatData() const {
+            throw std::logic_error("This implementation of DeckItem does not support float");
+        }
+
+
         virtual const std::vector<std::string>& getStringData() const {
             throw std::logic_error("This implementation of DeckItem does not support string");
         }
