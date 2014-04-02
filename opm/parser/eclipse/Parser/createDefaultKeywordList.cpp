@@ -52,7 +52,7 @@ void generateSourceForKeyword(std::iostream& of, std::string keywordName, const 
         of << indent << "addKeyword( ParserKeywordConstPtr(" << keywordName << "));" << std::endl;
         of << "}" << std::endl << std::endl;
 
-//        std::cout << "Creating keyword: " << keywordName << std::endl;
+        std::cout << "Creating keyword: " << keywordName << std::endl;
     }
 }
 
@@ -108,7 +108,7 @@ void readDumpFromKeywords(boost::filesystem::path keywordPath, std::iostream& ou
 
 void generateSourceFile(const char* source_file_name, boost::filesystem::path keywordPath)
 {
-    std::fstream source_file_stream( source_file_name );
+    std::fstream source_file_stream( source_file_name, std::fstream::out );
     createHeader(source_file_stream);
     startFunction(source_file_stream);
     scanAllKeywords( keywordPath , source_file_stream, &generateSourceForKeyword );
@@ -139,24 +139,24 @@ int main(int argc , char ** argv) {
     boost::filesystem::path keywordPath(config_root);
     bool needToGenerate = true;
     std::stringstream dump_stream;
-    std::fstream dump_stream_on_disk(dump_file_name);
+    std::fstream dump_stream_on_disk;
 
     if (dump_file_name) {
         readDumpFromKeywords( keywordPath , dump_stream );
+        dump_stream_on_disk.open(dump_file_name, std::fstream::in | std::fstream::out);
         needToGenerate = !areStreamsEqual(dump_stream, dump_stream_on_disk);
+        dump_stream_on_disk.close();
     }
-
-    std::cout << "needToGenerate: " << needToGenerate <<
-                 ", source file: " << source_file_name <<
-                 ", source file exists: " << boost::filesystem::exists(path(source_file_name)) << std::endl;
 
     if (needToGenerate || !boost::filesystem::exists(path(source_file_name))) {
         std::cout << "Keyword changes detected - generating keywords" << std::endl;
         generateSourceFile(source_file_name, keywordPath);
-        dump_stream_on_disk.seekp(std::ios_base::beg);
-        dump_stream.seekg(std::ios_base::beg);
-        dump_stream_on_disk << dump_stream;
-        dump_stream_on_disk.close();
+        if (dump_file_name) {
+            dump_stream_on_disk.open(dump_file_name, std::fstream::out);
+            dump_stream.seekg(std::ios_base::beg);
+            dump_stream_on_disk << dump_stream.rdbuf();
+            dump_stream_on_disk.close();
+        }
     }
     else {
         std::cout << "No keyword changes detected - quitting" << std::endl;
