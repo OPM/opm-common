@@ -1,3 +1,4 @@
+#include <ios>
 #include <iostream>
 #include <stdio.h>
 #include <fstream>
@@ -17,9 +18,9 @@
 using namespace Opm;
 using namespace boost::filesystem;
 
-typedef void (*keywordGenerator)(std::ofstream& of, const std::string keywordName, const Json::JsonObject* jsonKeyword);
+typedef void (*keywordGenerator)(std::iostream& of, const std::string keywordName, const Json::JsonObject* jsonKeyword);
 
-void createHeader(std::ofstream& of ) {
+void createHeader(std::iostream& of ) {
     of << "#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>" << std::endl;
     of << "#include <opm/parser/eclipse/Parser/ParserItem.hpp>" << std::endl;
     of << "#include <opm/parser/eclipse/Parser/ParserIntItem.hpp>" << std::endl;
@@ -30,17 +31,17 @@ void createHeader(std::ofstream& of ) {
     of << "namespace Opm {"  << std::endl << std::endl;
 }
 
-void startFunction(std::ofstream& of) {
+void startFunction(std::iostream& of) {
     of << "void Parser::addDefaultKeywords() { " << std::endl;
 }
 
 
-void endFunction(std::ofstream& of) {
+void endFunction(std::iostream& of) {
     of << "}" << std::endl;
 }
 
 
-void generateSourceForKeyword(std::ofstream& of, const std::string keywordName, const Json::JsonObject* jsonKeyword)
+void generateSourceForKeyword(std::iostream& of, std::string keywordName, const Json::JsonObject* jsonKeyword)
 {
     if (ParserKeyword::validName(keywordName)) {
         ParserKeywordConstPtr parserKeyword(new ParserKeyword(*jsonKeyword));
@@ -51,17 +52,17 @@ void generateSourceForKeyword(std::ofstream& of, const std::string keywordName, 
         of << indent << "addKeyword( ParserKeywordConstPtr(" << keywordName << "));" << std::endl;
         of << "}" << std::endl << std::endl;
 
-        std::cout << "Creating keyword: " << keywordName << std::endl;
+//        std::cout << "Creating keyword: " << keywordName << std::endl;
     }
 }
 
-void generateDumpForKeyword(std::ofstream& of, const std::string keywordName, const Json::JsonObject* jsonKeyword)
+void generateDumpForKeyword(std::iostream& of, std::string keywordName, const Json::JsonObject* jsonKeyword)
 {
     of << keywordName << std::endl;
     of << jsonKeyword->get_content() << std::endl;
 }
 
-void scanKeyword(const boost::filesystem::path& file , std::ofstream& of, keywordGenerator generate) {
+void scanKeyword(const boost::filesystem::path& file , std::iostream& of, keywordGenerator generate) {
     Json::JsonObject * jsonKeyword;
     try {
         jsonKeyword = new Json::JsonObject(file);
@@ -75,7 +76,7 @@ void scanKeyword(const boost::filesystem::path& file , std::ofstream& of, keywor
     delete jsonKeyword;
 }
 
-void scanAllKeywords(const boost::filesystem::path& directory , std::ofstream& of, keywordGenerator generate) {
+void scanAllKeywords(const boost::filesystem::path& directory , std::iostream& of, keywordGenerator generate) {
     boost::filesystem::directory_iterator end;
     for (boost::filesystem::directory_iterator iter(directory); iter != end; iter++) {
         if (boost::filesystem::is_directory(*iter))
@@ -85,55 +86,29 @@ void scanAllKeywords(const boost::filesystem::path& directory , std::ofstream& o
     }
 }
 
-bool areFilesEqual (path file1, path file2) {
-    const int BUFFER_SIZE = 1000*1024;
-    std::ifstream file1stream(file1.c_str(), std::ifstream::in | std::ifstream::binary);
-    std::ifstream file2stream(file2.c_str(), std::ifstream::in | std::ifstream::binary);
-
-    if(!file1stream.is_open() || !file2stream.is_open())
+bool areStreamsEqual( std::istream& lhs, std::istream& rhs )
+{
+    for (;;)
     {
-        return false;
-    }
-
-    char *buffer1 = new char[BUFFER_SIZE]();
-    char *buffer2 = new char[BUFFER_SIZE]();
-
-    do {
-        file1stream.read(buffer1, BUFFER_SIZE);
-        file2stream.read(buffer2, BUFFER_SIZE);
-
-        if (std::memcmp(buffer1, buffer2, BUFFER_SIZE) != 0)
-        {
-            delete[] buffer1;
-            delete[] buffer2;
+        char l = lhs.get();
+        char r = rhs.get();
+        if (!lhs || !rhs)    // if either at end of file
+            break;
+        if (l != r)        // false if chars differ
             return false;
-        }
-    } while (file1stream.good() || file2stream.good());
-
-    delete[] buffer1;
-    delete[] buffer2;
-    return true;
+    }
+    return !lhs && !rhs;    // true if both end of file
 }
 
 
-
-
-path generateDumpFile(boost::filesystem::path keywordPath)
+void readDumpFromKeywords(boost::filesystem::path keywordPath, std::iostream& outputStream)
 {
-    path root = unique_path("/tmp/%%%%-%%%%");
-    create_directories(root);
-    path temp_dump_file = root / "opm_createDefaultKeywordList_dumpfile";
-    std::string temp_dump_file_name = temp_dump_file.string().c_str();
-    std::ofstream temp_dump_file_stream( temp_dump_file_name );
-    scanAllKeywords( keywordPath , temp_dump_file_stream, &generateDumpForKeyword );
-    temp_dump_file_stream.close();
-
-    return temp_dump_file;
+    scanAllKeywords( keywordPath , outputStream, &generateDumpForKeyword );
 }
 
 void generateSourceFile(const char* source_file_name, boost::filesystem::path keywordPath)
 {
-    std::ofstream source_file_stream( source_file_name );
+    std::fstream source_file_stream( source_file_name );
     createHeader(source_file_stream);
     startFunction(source_file_stream);
     scanAllKeywords( keywordPath , source_file_stream, &generateSourceForKeyword );
@@ -151,7 +126,6 @@ void printUsage() {
     std::cout << "                   last build (used for build triggering)." << std::endl;
 }
 
-
 int main(int argc , char ** argv) {
     const char * config_root = argv[1];
     const char * source_file_name = argv[2];
@@ -163,21 +137,30 @@ int main(int argc , char ** argv) {
     }
 
     boost::filesystem::path keywordPath(config_root);
+    bool needToGenerate = true;
+    std::stringstream dump_stream;
+    std::fstream dump_stream_on_disk(dump_file_name);
 
     if (dump_file_name) {
-        path temp_dump_file = generateDumpFile(keywordPath);
-        path dump_file_reference = dump_file_name;
-        bool areEqual = areFilesEqual(dump_file_reference, temp_dump_file);
-        copy_file(temp_dump_file,dump_file_reference,copy_option::overwrite_if_exists);
-
-        if (areEqual) {
-            std::cout << "No keyword changes detected - quitting" << std::endl;
-            return 1;
-        }
-        else {
-            std::cout << "Keyword changes detected - generating keywords" << std::endl;
-        }
+        readDumpFromKeywords( keywordPath , dump_stream );
+        needToGenerate = !areStreamsEqual(dump_stream, dump_stream_on_disk);
     }
 
-    generateSourceFile(source_file_name, keywordPath);
+    std::cout << "needToGenerate: " << needToGenerate <<
+                 ", source file: " << source_file_name <<
+                 ", source file exists: " << boost::filesystem::exists(path(source_file_name)) << std::endl;
+
+    if (needToGenerate || !boost::filesystem::exists(path(source_file_name))) {
+        std::cout << "Keyword changes detected - generating keywords" << std::endl;
+        generateSourceFile(source_file_name, keywordPath);
+        dump_stream_on_disk.seekp(std::ios_base::beg);
+        dump_stream.seekg(std::ios_base::beg);
+        dump_stream_on_disk << dump_stream;
+        dump_stream_on_disk.close();
+    }
+    else {
+        std::cout << "No keyword changes detected - quitting" << std::endl;
+        return 1;
+    }
+    return 0;
 }
