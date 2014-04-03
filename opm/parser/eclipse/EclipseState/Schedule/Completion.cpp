@@ -52,13 +52,13 @@ namespace Opm {
     
     std::pair<std::string , std::vector<CompletionPtr> > Completion::completionsFromCOMPDATRecord( DeckRecordConstPtr compdatRecord ) {
         std::vector<CompletionPtr> completions;
-        std::string well = compdatRecord->getItem("WELL")->getString(0);
+        std::string well = compdatRecord->getItem("WELL")->getTrimmedString(0);
         // We change from eclipse's 1 - n, to a 0 - n-1 solution
         int I = compdatRecord->getItem("I")->getInt(0) - 1;
         int J = compdatRecord->getItem("J")->getInt(0) - 1;
         int K1 = compdatRecord->getItem("K1")->getInt(0) - 1;
         int K2 = compdatRecord->getItem("K2")->getInt(0) - 1;
-        CompletionStateEnum state = CompletionStateEnumFromString( compdatRecord->getItem("STATE")->getString(0) );
+        CompletionStateEnum state = CompletionStateEnumFromString( compdatRecord->getItem("STATE")->getTrimmedString(0) );
 
         {
             DeckItemConstPtr CFItem = compdatRecord->getItem("CF");

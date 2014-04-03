@@ -6,7 +6,8 @@ SCHEDULE
 
 WELSPECS 
      'W_1'        'GROUP1'   30   37  1*       'OIL'  7* /    
-     'W_2'        'GROUP1'   20   51  1*       'OIL'  7* /   
+-- the spaces around the names are intentional!
+     ' W_2 '        ' GROUP1 '   20   51  1*       'OIL'  7* /   
 /
 
 TSTEP

@@ -36,6 +36,8 @@ namespace Opm {
         std::string getString(size_t index) const;
         const std::vector<std::string>& getStringData() const;
 
+        std::string getTrimmedString(size_t index) const;
+
         void push_back(std::deque<std::string> data, size_t items);
         void push_back(std::deque<std::string> data);
         void push_back(std::string value);

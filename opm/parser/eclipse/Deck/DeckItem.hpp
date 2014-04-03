@@ -66,6 +66,9 @@ namespace Opm {
             throw std::logic_error("This implementation of DeckItem does not support string");
         }
 
+        virtual std::string getTrimmedString(size_t index) const  {
+            throw std::logic_error("This implementation of DeckItem does not support trimmed strings");
+        }
 
         virtual const std::vector<int>& getIntData( ) const {
             throw std::logic_error("This implementation of DeckItem does not support int");

@@ -131,8 +131,8 @@ namespace Opm {
 
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            const std::string& wellName = record->getItem("WELL")->getString(0);
-            const std::string& groupName = record->getItem("GROUP")->getString(0);
+            const std::string& wellName = record->getItem("WELL")->getTrimmedString(0);
+            const std::string& groupName = record->getItem("GROUP")->getTrimmedString(0);
 
             if (!hasGroup(groupName)) {
                 addGroup(groupName , currentStep);
@@ -171,12 +171,12 @@ namespace Opm {
     void Schedule::handleWCONProducer(DeckKeywordConstPtr keyword, size_t currentStep, bool isPredictionMode) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            const std::string& wellName = record->getItem("WELL")->getString(0);
+            const std::string& wellName = record->getItem("WELL")->getTrimmedString(0);
             WellPtr well                          = getWell(wellName);
             double orat                           = record->getItem("ORAT")->getSIDouble(0);
             double wrat                           = record->getItem("WRAT")->getSIDouble(0);
             double grat                           = record->getItem("GRAT")->getSIDouble(0);
-            WellCommon::StatusEnum status         = WellCommon::StatusFromString( record->getItem("STATUS")->getString(0));
+            WellCommon::StatusEnum status         = WellCommon::StatusFromString( record->getItem("STATUS")->getTrimmedString(0));
             WellProductionProperties properties   = well->getProductionPropertiesCopy(currentStep);
             
             well->setStatus( currentStep , status );
@@ -246,7 +246,7 @@ namespace Opm {
                 properties.addProductionControl(WellProducer::WRAT);
 
             if (status != WellCommon::SHUT) {
-                const std::string& cmodeString = record->getItem("CMODE")->getString(0);
+                const std::string& cmodeString = record->getItem("CMODE")->getTrimmedString(0);
                 WellProducer::ControlModeEnum control = WellProducer::ControlModeFromString( cmodeString );
                 if (properties.hasProductionControl( control))
                     properties.controlMode = control;
@@ -287,13 +287,13 @@ namespace Opm {
     void Schedule::handleWCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            const std::string& wellName = record->getItem("WELL")->getString(0);
+            const std::string& wellName = record->getItem("WELL")->getTrimmedString(0);
             WellPtr well = getWell(wellName);
 
             // calculate the injection rates. These are context
             // dependent, so we have to jump through some hoops
             // here...
-            WellInjector::TypeEnum injectorType = WellInjector::TypeFromString( record->getItem("TYPE")->getString(0) );
+            WellInjector::TypeEnum injectorType = WellInjector::TypeFromString( record->getItem("TYPE")->getTrimmedString(0) );
             double surfaceInjectionRate = record->getItem("RATE")->getRawDouble(0);
             double reservoirInjectionRate = record->getItem("RESV")->getRawDouble(0);
             surfaceInjectionRate = convertInjectionRateToSI(surfaceInjectionRate, injectorType, *deck->getActiveUnitSystem());
@@ -301,7 +301,7 @@ namespace Opm {
 
             double BHPLimit                           = record->getItem("BHP")->getSIDouble(0);
             double THPLimit                           = record->getItem("THP")->getSIDouble(0);
-            WellCommon::StatusEnum status             = WellCommon::StatusFromString( record->getItem("STATUS")->getString(0));
+            WellCommon::StatusEnum status             = WellCommon::StatusFromString( record->getItem("STATUS")->getTrimmedString(0));
        
             well->setStatus( currentStep , status );
             WellInjectionProperties properties(well->getInjectionPropertiesCopy(currentStep));
@@ -332,7 +332,7 @@ namespace Opm {
             else
                 properties.addInjectionControl(WellInjector::BHP);
             {
-                const std::string& cmodeString = record->getItem("CMODE")->getString(0);
+                const std::string& cmodeString = record->getItem("CMODE")->getTrimmedString(0);
                 WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( cmodeString );
                 if (properties.hasInjectionControl( controlMode))
                     properties.controlMode = controlMode;
@@ -348,15 +348,15 @@ namespace Opm {
     void Schedule::handleWCONINJH(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            const std::string& wellName = record->getItem("WELL")->getString(0);
+            const std::string& wellName = record->getItem("WELL")->getTrimmedString(0);
             WellPtr well = getWell(wellName);
 
             // convert injection rates to SI
-            WellInjector::TypeEnum wellType = WellInjector::TypeFromString( record->getItem("TYPE")->getString(0));
+            WellInjector::TypeEnum wellType = WellInjector::TypeFromString( record->getItem("TYPE")->getTrimmedString(0));
             double injectionRate = record->getItem("RATE")->getRawDouble(0);
             injectionRate = convertInjectionRateToSI(injectionRate, wellType, *deck->getActiveUnitSystem());
 
-            WellCommon::StatusEnum status = WellCommon::StatusFromString( record->getItem("STATUS")->getString(0));
+            WellCommon::StatusEnum status = WellCommon::StatusFromString( record->getItem("STATUS")->getTrimmedString(0));
 
             well->setStatus( currentStep , status );
             WellInjectionProperties properties(well->getInjectionPropertiesCopy(currentStep));
@@ -369,7 +369,7 @@ namespace Opm {
     void Schedule::handleWELOPEN(DeckKeywordConstPtr keyword, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            const std::string& wellName = record->getItem("WELL")->getString(0);
+            const std::string& wellName = record->getItem("WELL")->getTrimmedString(0);
             WellPtr well = getWell(wellName);
 
             for (size_t i=2; i<7; i++) {
@@ -377,7 +377,7 @@ namespace Opm {
                     throw std::logic_error("Error processing WELOPEN keyword, specifying specific connections is not supported yet.");
                 }
             }
-            WellCommon::StatusEnum status = WellCommon::StatusFromString( record->getItem("STATUS")->getString(0));
+            WellCommon::StatusEnum status = WellCommon::StatusFromString( record->getItem("STATUS")->getTrimmedString(0));
             well->setStatus(currentStep, status);
         }
     }
@@ -386,19 +386,19 @@ namespace Opm {
     void Schedule::handleGCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            const std::string& groupName = record->getItem("GROUP")->getString(0);
+            const std::string& groupName = record->getItem("GROUP")->getTrimmedString(0);
             GroupPtr group = getGroup(groupName);
 
             {
-                Phase::PhaseEnum phase = Phase::PhaseEnumFromString( record->getItem("PHASE")->getString(0) );
+                Phase::PhaseEnum phase = Phase::PhaseEnumFromString( record->getItem("PHASE")->getTrimmedString(0) );
                 group->setInjectionPhase( currentStep , phase );
             }
             {
-                GroupInjection::ControlEnum controlMode = GroupInjection::ControlEnumFromString( record->getItem("CONTROL_MODE")->getString(0) );
+                GroupInjection::ControlEnum controlMode = GroupInjection::ControlEnumFromString( record->getItem("CONTROL_MODE")->getTrimmedString(0) );
                 group->setInjectionControlMode( currentStep , controlMode );
             }
 
-            Phase::PhaseEnum wellPhase = Phase::PhaseEnumFromString( record->getItem("PHASE")->getString(0));
+            Phase::PhaseEnum wellPhase = Phase::PhaseEnumFromString( record->getItem("PHASE")->getTrimmedString(0));
 
             // calculate SI injection rates for the group
             double surfaceInjectionRate = record->getItem("SURFACE_TARGET")->getRawDouble(0);
@@ -419,10 +419,10 @@ namespace Opm {
     void Schedule::handleGCONPROD(DeckKeywordConstPtr keyword, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            const std::string& groupName = record->getItem("GROUP")->getString(0);
+            const std::string& groupName = record->getItem("GROUP")->getTrimmedString(0);
             GroupPtr group = getGroup(groupName);
             {
-                GroupProduction::ControlEnum controlMode = GroupProduction::ControlEnumFromString( record->getItem("CONTROL_MODE")->getString(0) );
+                GroupProduction::ControlEnum controlMode = GroupProduction::ControlEnumFromString( record->getItem("CONTROL_MODE")->getTrimmedString(0) );
                 group->setProductionControlMode( currentStep , controlMode );
             }
             group->setOilTargetRate( currentStep , record->getItem("OIL_TARGET")->getSIDouble(0));
@@ -430,7 +430,7 @@ namespace Opm {
             group->setWaterTargetRate( currentStep , record->getItem("WATER_TARGET")->getSIDouble(0));
             group->setLiquidTargetRate( currentStep , record->getItem("LIQUID_TARGET")->getSIDouble(0));
             {
-                GroupProductionExceedLimit::ActionEnum exceedAction = GroupProductionExceedLimit::ActionEnumFromString(record->getItem("EXCEED_PROC")->getString(0) );
+                GroupProductionExceedLimit::ActionEnum exceedAction = GroupProductionExceedLimit::ActionEnumFromString(record->getItem("EXCEED_PROC")->getTrimmedString(0) );
                 group->setProductionExceedLimitAction( currentStep , exceedAction );
             }
             
@@ -452,10 +452,10 @@ namespace Opm {
     void Schedule::handleWGRUPCON(DeckKeywordConstPtr keyword, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            const std::string& wellName = record->getItem("WELL")->getString(0);
+            const std::string& wellName = record->getItem("WELL")->getTrimmedString(0);
             WellPtr well = getWell(wellName);
 
-            bool availableForGroupControl = convertEclipseStringToBool(record->getItem("GROUP_CONTROLLED")->getString(0));
+            bool availableForGroupControl = convertEclipseStringToBool(record->getItem("GROUP_CONTROLLED")->getTrimmedString(0));
             well->setAvailableForGroupControl(currentStep, availableForGroupControl);
 
             well->setGuideRate(currentStep, record->getItem("GUIDE_RATE")->getRawDouble(0));
@@ -464,7 +464,7 @@ namespace Opm {
                 well->setGuideRatePhase(currentStep, GuideRate::UNDEFINED);
             }
             else {
-                std::string guideRatePhase = record->getItem("PHASE")->getString(0);
+                std::string guideRatePhase = record->getItem("PHASE")->getTrimmedString(0);
                 well->setGuideRatePhase(currentStep, GuideRate::GuideRatePhaseEnumFromString(guideRatePhase));
             }
 
@@ -477,8 +477,8 @@ namespace Opm {
         GroupTreePtr newTree = currentTree->deepCopy();
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            const std::string& childName = record->getItem("CHILD_GROUP")->getString(0);
-            const std::string& parentName = record->getItem("PARENT_GROUP")->getString(0);
+            const std::string& childName = record->getItem("CHILD_GROUP")->getTrimmedString(0);
+            const std::string& parentName = record->getItem("PARENT_GROUP")->getTrimmedString(0);
             newTree->updateTree(childName, parentName);
 
             if (!hasGroup(parentName))

@@ -20,6 +20,7 @@
 #include <vector>
 
 #include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
 
@@ -28,6 +29,13 @@ namespace Opm {
     std::string DeckStringItem::getString(size_t index) const {
         if (index < m_data.size()) {
             return m_data[index];
+        } else
+            throw std::out_of_range("Out of range, index must be lower than " + boost::lexical_cast<std::string>(m_data.size()));
+    }
+
+    std::string DeckStringItem::getTrimmedString(size_t index) const {
+        if (index < m_data.size()) {
+            return boost::algorithm::trim_copy(m_data[index]);
         } else
             throw std::out_of_range("Out of range, index must be lower than " + boost::lexical_cast<std::string>(m_data.size()));
     }

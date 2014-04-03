@@ -21,13 +21,15 @@ WELSPECS
 
 
 GCONINJE 
-    'INJ'     'WATER'      'VREP'  10 20 0.75      0.95  6* /
+-- the spaces around the strings are intentional!
+    ' INJ  '     ' WATER '      ' VREP '  10 20 0.75      0.95  6* /
 /
 
 
 
 GCONPROD 
-    'OP'     'ORAT'      10 20 30 40  +CON      /
+-- the spaces around the strings are intentional!
+    ' OP '     ' ORAT  '      10 20 30 40  +CON      /
 /
 
 
