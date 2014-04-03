@@ -141,15 +141,17 @@ int main(int argc , char ** argv) {
     std::stringstream dump_stream;
     std::fstream dump_stream_on_disk;
 
-    if (dump_file_name && boost::filesystem::exists(path(dump_file_name))) {
+    if (dump_file_name) {
         readDumpFromKeywords( keywordPath , dump_stream );
-        dump_stream_on_disk.open(dump_file_name, std::fstream::in | std::fstream::out);
-        needToGenerate = !areStreamsEqual(dump_stream, dump_stream_on_disk);
-        dump_stream_on_disk.close();
+        if (boost::filesystem::exists(path(dump_file_name))) {
+            dump_stream_on_disk.open(dump_file_name, std::fstream::in | std::fstream::out);
+            needToGenerate = !areStreamsEqual(dump_stream, dump_stream_on_disk);
+            dump_stream_on_disk.close();
+        }
     }
 
     if (needToGenerate || !boost::filesystem::exists(path(source_file_name))) {
-        std::cout << "Keyword changes detected - generating keywords" << std::endl;
+        std::cout << "Generating keywords" << std::endl;
         generateSourceFile(source_file_name, keywordPath);
         if (dump_file_name) {
             dump_stream_on_disk.open(dump_file_name, std::fstream::out);
@@ -160,7 +162,6 @@ int main(int argc , char ** argv) {
     }
     else {
         std::cout << "No keyword changes detected - quitting" << std::endl;
-        return 1;
     }
     return 0;
 }

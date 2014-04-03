@@ -167,14 +167,17 @@ target_link_libraries(buildParser opm-json ${Boost_LIBRARIES})
 add_executable( createDefaultKeywordList Parser/createDefaultKeywordList.cpp )
 target_link_libraries( createDefaultKeywordList buildParser opm-json ${Boost_LIBRARIES} )
 
-add_custom_command( OUTPUT ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.cpp
-                    COMMAND createDefaultKeywordList ${PROJECT_SOURCE_DIR}/opm/parser/share/keywords ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.cpp
-                    DEPENDS createDefaultKeywordList )
+# add_custom_command( OUTPUT ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.cpp
+#                     COMMAND createDefaultKeywordList ${PROJECT_SOURCE_DIR}/opm/parser/share/keywords ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.cpp ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.dump
+#                     DEPENDS ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.dump )
+
+add_custom_target( keywordlist ALL COMMAND createDefaultKeywordList ${PROJECT_SOURCE_DIR}/opm/parser/share/keywords ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.cpp ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.dump)
 
 
 #-----------------------------------------------------------------
 
 add_library(Parser ${rawdeck_source} ${parser_source} ${deck_source} ${state_source} ${utility_source} ${unit_source})
+add_dependencies(Parser keywordlist)
 target_link_libraries(Parser opm-json ${Boost_LIBRARIES})
 
 include( ${PROJECT_SOURCE_DIR}/cmake/Modules/install_headers.cmake )   
