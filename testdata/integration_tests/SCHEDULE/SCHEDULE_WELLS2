@@ -16,14 +16,16 @@ DATES             -- 2,3
 
 WELSPECS 
      'W_1'        'OP'   30   37  3.33       'OIL'  7* /   Crap1
-     'W_2'        'OP'   20   51  3.92       'OIL'  7* /   Crap2   Crap3
+-- the spaces around the phase name are intentional!
+     'W_2'        'OP'   20   51  3.92       ' OIL '  7* /   Crap2   Crap3
      'W_3'        'OP'   31   18  2.33       'OIL'  7* /
 /
 
 COMPDAT 
 -- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
      'W_1'   30   37    1    3      'OPEN'  1*     32.948      0.311   3047.839  2*         'X'     22.100 /
-     'W_1'   31   37   14   14      'OPEN'  1*     19.731      0.311   1831.202  3.3 1*         'X'     22.463 /
+-- the spaces around the direction indicator are intentional!
+     'W_1'   31   37   14   14      'OPEN'  1*     19.731      0.311   1831.202  3.3 1*         '  X    '     22.463 /
 --
      'W_2'   20   51    1    1      'OPEN'  1*      1.168      0.311    107.872  2*         'Y'     21.925 /
      'W_2'   20   51    5    5      'OPEN'  1*      7.359      0.311    679.489  2*         'Y'     21.903 /
@@ -36,7 +38,8 @@ COMPDAT
 
 
 WCONHIST 
-     'W_1'      'OPEN'      'ORAT'   4000.000      4.000 12345  5* /
+-- the spaces around the names indicator are intentional!
+     ' W_1 '      ' OPEN '      ' ORAT '   4000.000      4.000 12345  5* /
      'W_2'      'SHUT'      'ORAT'   7998.000      2.000 1461075.000  5* /
      'W_3'      'AUTO'      'ORAT'   7999.000      1.000 1471824.000  5* /
 /

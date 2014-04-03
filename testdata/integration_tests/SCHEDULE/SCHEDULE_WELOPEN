@@ -10,14 +10,16 @@ WELSPECS
 
 COMPDAT
 -- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro
-     'W_1'   10   32    1    1      'OPEN'  1*    118.457      0.216  12025.229  2*         'Z'     24.860 /
+-- the spaces around the name and the open/shut flag are intentional!
+     ' W_1 '   10   32    1    1      ' OPEN '  1*    118.457      0.216  12025.229  2*         'Z'     24.860 /
 /
 
 TSTEP
  10 /
 
 WELOPEN
-  'W_1'  'SHUT' 5* /
+-- the spaces around the name and the open/shut flag are intentional!
+  '  W_1 '  '  SHUT  ' 5* /
 /
 
 TSTEP
