@@ -32,7 +32,6 @@ namespace Opm {
 
     class RawRecord {
     public:
-        RawRecord();
         RawRecord(const std::string& singleRecordString, const std::string& fileName = "", const std::string& keywordName = "");
         
         std::string pop_front();
