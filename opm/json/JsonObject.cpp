@@ -32,6 +32,7 @@
 namespace Json {
 
     void JsonObject::initialize(const std::string& inline_json) {
+        content = inline_json;
         root = cJSON_Parse( inline_json.c_str() );
         if (!root)
             throw std::invalid_argument("Parsing json input failed");
@@ -192,6 +193,9 @@ namespace Json {
     }
 
 
+    std::string JsonObject::get_content() const {
+        return content;
+    }
 
 
 }
