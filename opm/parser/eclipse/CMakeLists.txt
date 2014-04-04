@@ -172,10 +172,6 @@ target_link_libraries(buildParser opm-json ${Boost_LIBRARIES})
 add_executable( createDefaultKeywordList Parser/createDefaultKeywordList.cpp )
 target_link_libraries( createDefaultKeywordList buildParser opm-json ${Boost_LIBRARIES})
 
-# add_custom_command( OUTPUT ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.cpp
-#                     COMMAND createDefaultKeywordList ${PROJECT_SOURCE_DIR}/opm/parser/share/keywords ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.cpp ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.dump
-#                     DEPENDS ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.dump )
-
 add_custom_target( keywordlist ALL COMMAND createDefaultKeywordList ${PROJECT_SOURCE_DIR}/opm/parser/share/keywords ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.cpp ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.dump)
 
 
