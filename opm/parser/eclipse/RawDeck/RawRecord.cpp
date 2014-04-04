@@ -28,9 +28,6 @@ using namespace std;
 
 namespace Opm {
 
-    RawRecord::RawRecord() : m_fileName(""), m_keywordName("") {
-    }
-
     /*
      * It is assumed that after a record is terminated, there is no quote marks
      * in the subsequent comment. This is in accordance with the Eclipse user
