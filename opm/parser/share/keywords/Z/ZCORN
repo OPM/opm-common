@@ -1,1 +1,1 @@
-{"name" : "ZCORN", "data" : {"value_type" : "FLOAT", "dimension" : "Length" }}
+{"name" : "ZCORN", "data" : {"value_type" : "DOUBLE", "dimension" : "Length" }}
