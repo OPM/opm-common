@@ -504,7 +504,8 @@ namespace Opm {
         int headI = record->getItem("HEAD_I")->getInt(0) - 1;
         int headJ = record->getItem("HEAD_J")->getInt(0) - 1;
         double refDepth = record->getItem("REF_DEPTH")->getSIDouble(0);
-        WellPtr well(new Well(wellName, headI, headJ, refDepth, m_timeMap , timeStep));
+        Phase::PhaseEnum preferredPhase = Phase::PhaseEnumFromString(record->getItem("PHASE")->getTrimmedString(0));
+        WellPtr well(new Well(wellName, headI, headJ, refDepth, preferredPhase, m_timeMap , timeStep));
         m_wells[ wellName ] = well;
     }
 

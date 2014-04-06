@@ -27,7 +27,8 @@
 
 namespace Opm {
 
-    Well::Well(const std::string& name, int headI, int headJ, double refDepth, TimeMapConstPtr timeMap , size_t creationTimeStep)
+    Well::Well(const std::string& name, int headI, int headJ, double refDepth, Phase::PhaseEnum preferredPhase,
+               TimeMapConstPtr timeMap, size_t creationTimeStep)
         : m_status(new DynamicState<WellCommon::StatusEnum>(timeMap, WellCommon::OPEN)),
           m_isAvailableForGroupControl(new DynamicState<bool>(timeMap, true)),
           m_guideRate(new DynamicState<double>(timeMap, -1.0)),
@@ -40,7 +41,8 @@ namespace Opm {
           m_groupName( new DynamicState<std::string>( timeMap , "" )),
           m_headI(headI),
           m_headJ(headJ),
-          m_refDepth(refDepth)      
+          m_refDepth(refDepth),
+          m_preferredPhase(preferredPhase)
     {
         m_name = name;
         m_creationTimeStep = creationTimeStep;
@@ -92,7 +94,6 @@ namespace Opm {
         m_status->add( timeStep , status );
     }
     
-
     bool Well::isProducer(size_t timeStep) const {
         return m_isProducer->get(timeStep);
     }
@@ -147,6 +148,10 @@ namespace Opm {
 
     double Well::getRefDepth() const {
         return m_refDepth;
+    }
+
+    Phase::PhaseEnum Well::getPreferredPhase() const {
+        return m_preferredPhase;
     }
 
     CompletionSetConstPtr Well::getCompletions(size_t timeStep) const {

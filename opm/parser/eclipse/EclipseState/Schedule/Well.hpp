@@ -124,7 +124,8 @@ namespace Opm {
 
     class Well {
     public:
-        Well(const std::string& name, int headI, int headJ, double refDepth, TimeMapConstPtr timeMap , size_t creationTimeStep);
+        Well(const std::string& name, int headI, int headJ, double refDepth, Phase::PhaseEnum preferredPhase,
+             TimeMapConstPtr timeMap, size_t creationTimeStep);
         const std::string& name() const;
 
         bool hasBeenDefined(size_t timeStep) const;
@@ -133,10 +134,11 @@ namespace Opm {
 
         WellCommon::StatusEnum getStatus(size_t timeStep) const;
         void                   setStatus(size_t timeStep, WellCommon::StatusEnum Status);
-        
+
         int    getHeadI() const;
         int    getHeadJ() const;
         double getRefDepth() const;
+        Phase::PhaseEnum getPreferredPhase() const;
         
         bool isAvailableForGroupControl(size_t timeStep) const;
         void setAvailableForGroupControl(size_t timeStep, bool isAvailableForGroupControl);
@@ -166,7 +168,7 @@ namespace Opm {
         std::string m_name;
         
         std::shared_ptr<DynamicState<WellCommon::StatusEnum> > m_status;
-        
+
         std::shared_ptr<DynamicState<bool> > m_isAvailableForGroupControl;
         std::shared_ptr<DynamicState<double> > m_guideRate;
         std::shared_ptr<DynamicState<GuideRate::GuideRatePhaseEnum> > m_guideRatePhase;
@@ -182,6 +184,7 @@ namespace Opm {
         int m_headI;
         int m_headJ;
         double m_refDepth;
+        Phase::PhaseEnum m_preferredPhase;
     };
     typedef std::shared_ptr<Well> WellPtr;
     typedef std::shared_ptr<const Well> WellConstPtr;
