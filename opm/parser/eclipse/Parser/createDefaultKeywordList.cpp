@@ -43,17 +43,15 @@ void endFunction(std::iostream& of) {
 
 void generateSourceForKeyword(std::iostream& of, std::string keywordName, const Json::JsonObject* jsonKeyword)
 {
-    if (ParserKeyword::validName(keywordName)) {
-        ParserKeywordConstPtr parserKeyword(new ParserKeyword(*jsonKeyword));
-        std::string indent("   ");
-        of << "{" << std::endl;
-        of << indent << "ParserKeyword *";
-        parserKeyword->inlineNew(of , keywordName , indent);
-        of << indent << "addKeyword( ParserKeywordConstPtr(" << keywordName << "));" << std::endl;
-        of << "}" << std::endl << std::endl;
-
-        std::cout << "Creating keyword: " << keywordName << std::endl;
-    }
+    ParserKeywordConstPtr parserKeyword(new ParserKeyword(*jsonKeyword));
+    std::string indent("   ");
+    of << "{" << std::endl;
+    of << indent << "ParserKeyword *";
+    parserKeyword->inlineNew(of , keywordName , indent);
+    of << indent << "addKeyword( ParserKeywordConstPtr(" << keywordName << "));" << std::endl;
+    of << "}" << std::endl << std::endl;
+    
+    std::cout << "Creating keyword: " << keywordName << std::endl;
 }
 
 void generateDumpForKeyword(std::iostream& of, std::string keywordName, const Json::JsonObject* jsonKeyword)
@@ -63,17 +61,20 @@ void generateDumpForKeyword(std::iostream& of, std::string keywordName, const Js
 }
 
 void scanKeyword(const boost::filesystem::path& file , std::iostream& of, keywordGenerator generate) {
-    Json::JsonObject * jsonKeyword;
-    try {
-        jsonKeyword = new Json::JsonObject(file);
-    } catch(...) {
-        std::cerr << "Parsing json config file: " << file.string() << " failed - keyword skipped." << std::endl;
-        return;
+    if (ParserKeyword::validName(file.filename().string())) {
+
+        Json::JsonObject * jsonKeyword;
+        try {
+            jsonKeyword = new Json::JsonObject(file);
+        } catch(...) {
+            std::cerr << "Parsing json config file: " << file.string() << " failed - keyword skipped." << std::endl;
+            return;
+        }
+        
+        generate(of, file.filename().string(), jsonKeyword);
+
+        delete jsonKeyword;
     }
-
-    generate(of, file.filename().string(), jsonKeyword);
-
-    delete jsonKeyword;
 }
 
 void scanAllKeywords(const boost::filesystem::path& directory , std::iostream& of, keywordGenerator generate) {
