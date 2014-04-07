@@ -127,6 +127,14 @@ void printUsage() {
     std::cout << "                   last build (used for build triggering)." << std::endl;
 }
 
+
+void ensurePath( const char * file_name ) {
+    boost::filesystem::path file(file_name);
+    if (!boost::filesystem::is_directory( file.parent_path()))
+        boost::filesystem::create_directory( file.parent_path());
+}
+
+
 int main(int argc , char ** argv) {
     const char * config_root = argv[1];
     const char * source_file_name = argv[2];
@@ -136,12 +144,14 @@ int main(int argc , char ** argv) {
         printUsage();
         return 0;
     }
-
+    
     boost::filesystem::path keywordPath(config_root);
     bool needToGenerate = true;
     std::stringstream dump_stream;
     std::fstream dump_stream_on_disk;
 
+    ensurePath( source_file_name );
+    ensurePath( dump_file_name );
     if (dump_file_name) {
         readDumpFromKeywords( keywordPath , dump_stream );
         if (boost::filesystem::exists(path(dump_file_name))) {
