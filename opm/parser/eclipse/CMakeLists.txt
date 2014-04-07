@@ -46,6 +46,8 @@ Parser/ParserStringItem.cpp
 ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.cpp
 )
 
+SET_SOURCE_FILES_PROPERTIES(${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.cpp PROPERTIES GENERATED TRUE)
+
 set( build_parser_source 
 Parser/ParserEnums.cpp
 Parser/ParserKeyword.cpp 
@@ -173,7 +175,6 @@ add_executable( createDefaultKeywordList Parser/createDefaultKeywordList.cpp )
 target_link_libraries( createDefaultKeywordList buildParser opm-json ${Boost_LIBRARIES})
 
 add_custom_target( keywordlist ALL COMMAND createDefaultKeywordList ${PROJECT_SOURCE_DIR}/opm/parser/share/keywords ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.cpp ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.dump)
-add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.cpp COMMAND true)
 
 #-----------------------------------------------------------------
 
