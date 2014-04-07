@@ -76,10 +76,10 @@ namespace Opm {
         DeckKeywordConstPtr ZCORNKeyWord = gridSection->getKeyword("ZCORN");
         DeckKeywordConstPtr COORDKeyWord = gridSection->getKeyword("COORD");
 
-        const std::vector<float>& zcorn = ZCORNKeyWord->getSIFloatData();
-        const std::vector<float>& coord = COORDKeyWord->getSIFloatData();
-        const int   * actnum = NULL;
-        const float * mapaxes = NULL;
+        const std::vector<double>& zcorn = ZCORNKeyWord->getSIDoubleData();
+        const std::vector<double>& coord = COORDKeyWord->getSIDoubleData();
+        const int     * actnum = NULL;
+        const double * mapaxes = NULL;
 
         if (gridSection->hasKeyword("ACTNUM")) {
             DeckKeywordConstPtr actnumKeyword = gridSection->getKeyword("ACTNUM");
@@ -89,13 +89,32 @@ namespace Opm {
 
         if (gridSection->hasKeyword("MAPAXES")) {
             DeckKeywordConstPtr mapaxesKeyword = gridSection->getKeyword("MAPAXES");
-            const std::vector<float>& mapaxesVector = mapaxesKeyword->getRawFloatData();
+            const std::vector<double>& mapaxesVector = mapaxesKeyword->getSIDoubleData();
             mapaxes = mapaxesVector.data();
         }
         
+        
+        /*
+          ecl_grid_type * ecl_grid = ecl_grid_alloc_GRDECL_data(dims[0] , dims[1] , dims[2] , zcorn.data() , coord.data() , actnum , mapaxes);
+          m_grid.reset( ecl_grid , ecl_grid_free);    
+        */
+        {
+            const std::vector<float> zcorn_float( zcorn.begin() , zcorn.end() );
+            const std::vector<float> coord_float( coord.begin() , coord.end() );
+            float * mapaxes_float = NULL;
+            if (mapaxes) {
+                mapaxes_float = new float[6];
+                for (size_t i=0; i < 6; i++)
+                    mapaxes_float[i] = mapaxes[i];
+            }
+            
+            ecl_grid_type * ecl_grid = ecl_grid_alloc_GRDECL_data(dims[0] , dims[1] , dims[2] , zcorn_float.data() , coord_float.data() , actnum , mapaxes_float);
+            m_grid.reset( ecl_grid , ecl_grid_free);    
 
-        ecl_grid_type * ecl_grid = ecl_grid_alloc_GRDECL_data(dims[0] , dims[1] , dims[2] , zcorn.data() , coord.data() , actnum , mapaxes);
-        m_grid.reset( ecl_grid , ecl_grid_free);    
+            if (mapaxes) 
+                delete[] mapaxes_float;
+        }
+
     }
     
 
