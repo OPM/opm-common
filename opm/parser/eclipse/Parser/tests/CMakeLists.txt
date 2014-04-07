@@ -27,21 +27,14 @@ add_custom_command( OUTPUT ${PROJECT_BINARY_DIR}/generated-source/inlineItemTest
                     COMMAND createInlineItemTest ${PROJECT_BINARY_DIR}/generated-source/inlineItemTest.cpp inlineItemTest
                     DEPENDS createInlineItemTest )
 
-
 add_executable( inlineItemTest ${PROJECT_BINARY_DIR}/generated-source/inlineItemTest.cpp )
 target_link_libraries( inlineItemTest buildParser ${Boost_LIBRARIES} )
 add_test(inlineItemTest ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/inlineItemTest)
 
 #-----------------------------------------------------------------
 
-add_executable( createInlineKeywordTest createInlineKeywordTest.cpp ) 
-target_link_libraries( createInlineKeywordTest buildParser ${Boost_LIBRARIES} )
-
-add_custom_command( OUTPUT ${PROJECT_BINARY_DIR}/generated-source/inlineKeywordTest.cpp 
-                    COMMAND createInlineKeywordTest ${PROJECT_BINARY_DIR}/generated-source/inlineKeywordTest.cpp inlineKeywordTest ${PROJECT_SOURCE_DIR}/opm/parser/share/keywords 
-                    DEPENDS createInlineKeywordTest )
+SET_SOURCE_FILES_PROPERTIES(${PROJECT_BINARY_DIR}/generated-source/inlineKeywordTest.cpp PROPERTIES GENERATED TRUE)
 
 add_executable( inlineKeywordTest ${PROJECT_BINARY_DIR}/generated-source/inlineKeywordTest.cpp )
 target_link_libraries( inlineKeywordTest buildParser ${Boost_LIBRARIES} )
 add_test(inlineKeywordTest ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/inlineKeywordTest)
-
