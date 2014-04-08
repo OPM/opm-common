@@ -28,6 +28,7 @@ add_custom_command( OUTPUT ${PROJECT_BINARY_DIR}/generated-source/inlineItemTest
                     DEPENDS createInlineItemTest )
 
 add_executable( inlineItemTest ${PROJECT_BINARY_DIR}/generated-source/inlineItemTest.cpp )
+add_dependencies( inlineItemTest keywordlist )
 target_link_libraries( inlineItemTest buildParser ${Boost_LIBRARIES} )
 add_test(inlineItemTest ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/inlineItemTest)
 
@@ -36,5 +37,6 @@ add_test(inlineItemTest ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/inlineIt
 SET_SOURCE_FILES_PROPERTIES(${PROJECT_BINARY_DIR}/generated-source/inlineKeywordTest.cpp PROPERTIES GENERATED TRUE)
 
 add_executable( inlineKeywordTest ${PROJECT_BINARY_DIR}/generated-source/inlineKeywordTest.cpp )
+add_dependencies( inlineKeywordTest keywordlist )
 target_link_libraries( inlineKeywordTest buildParser ${Boost_LIBRARIES} )
 add_test(inlineKeywordTest ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/inlineKeywordTest)
