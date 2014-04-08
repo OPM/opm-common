@@ -31,36 +31,33 @@
 
 using namespace Opm;
 
-BOOST_AUTO_TEST_CASE(Dummy) {
 
+BOOST_AUTO_TEST_CASE(CreateCPGrid) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/GRID/CORNERPOINT.DATA");
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
+    std::shared_ptr<RUNSPECSection> runspecSection(new RUNSPECSection(deck) );
+    std::shared_ptr<GRIDSection> gridSection(new GRIDSection(deck) );
+    std::shared_ptr<EclipseGrid> grid(new EclipseGrid( runspecSection , gridSection ));
+
+    BOOST_CHECK_EQUAL( 10 , grid->getNX( ));
+    BOOST_CHECK_EQUAL( 10 , grid->getNY( ));
+    BOOST_CHECK_EQUAL(  5 , grid->getNZ( ));
+    BOOST_CHECK_EQUAL( 500 , grid->getNumActive() );
 }
 
-//BOOST_AUTO_TEST_CASE(CreateCPGrid) {
-//    ParserPtr parser(new Parser());
-//    boost::filesystem::path scheduleFile("testdata/integration_tests/GRID/CORNERPOINT.DATA");
-//    DeckPtr deck =  parser->parseFile(scheduleFile.string());
-//    std::shared_ptr<RUNSPECSection> runspecSection(new RUNSPECSection(deck) );
-//    std::shared_ptr<GRIDSection> gridSection(new GRIDSection(deck) );
-//    std::shared_ptr<EclipseGrid> grid(new EclipseGrid( runspecSection , gridSection ));
 
-//    BOOST_CHECK_EQUAL( 10 , grid->getNX( ));
-//    BOOST_CHECK_EQUAL( 10 , grid->getNY( ));
-//    BOOST_CHECK_EQUAL(  5 , grid->getNZ( ));
-//    BOOST_CHECK_EQUAL( 500 , grid->getNumActive() );
-//}
+BOOST_AUTO_TEST_CASE(CreateCPActnumGrid) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/GRID/CORNERPOINT_ACTNUM.DATA");
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
+    std::shared_ptr<RUNSPECSection> runspecSection(new RUNSPECSection(deck) );
+    std::shared_ptr<GRIDSection> gridSection(new GRIDSection(deck) );
+    std::shared_ptr<EclipseGrid> grid(new EclipseGrid( runspecSection , gridSection ));
 
-
-//BOOST_AUTO_TEST_CASE(CreateCPActnumGrid) {
-//    ParserPtr parser(new Parser());
-//    boost::filesystem::path scheduleFile("testdata/integration_tests/GRID/CORNERPOINT_ACTNUM.DATA");
-//    DeckPtr deck =  parser->parseFile(scheduleFile.string());
-//    std::shared_ptr<RUNSPECSection> runspecSection(new RUNSPECSection(deck) );
-//    std::shared_ptr<GRIDSection> gridSection(new GRIDSection(deck) );
-//    std::shared_ptr<EclipseGrid> grid(new EclipseGrid( runspecSection , gridSection ));
-
-//    BOOST_CHECK_EQUAL( 10 , grid->getNX( ));
-//    BOOST_CHECK_EQUAL( 10 , grid->getNY( ));
-//    BOOST_CHECK_EQUAL(  5 , grid->getNZ( ));
-//    BOOST_CHECK_EQUAL( 100 , grid->getNumActive() );
-//}
+    BOOST_CHECK_EQUAL( 10 , grid->getNX( ));
+    BOOST_CHECK_EQUAL( 10 , grid->getNY( ));
+    BOOST_CHECK_EQUAL(  5 , grid->getNZ( ));
+    BOOST_CHECK_EQUAL( 100 , grid->getNumActive() );
+}
 
