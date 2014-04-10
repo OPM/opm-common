@@ -67,13 +67,12 @@ namespace Opm {
          DeckStringItemPtr deckItem(new DeckStringItem(name() , scalar()));
         std::string defaultValue = m_default;
 
-        if (sizeType() == ALL) {  // This can probably not be combined with a default value ....
-            // The '*' should be interpreted as a multiplication sign
+        if (sizeType() == ALL) {  
             while (rawRecord->size() > 0) {
                 std::string token = rawRecord->pop_front();
                 if (tokenContainsStar( token )) {
                     StarToken<std::string> st(token);
-                    std::string value = defaultValue;    // This probably does never apply
+                    std::string value = defaultValue;   
                     if (st.hasValue())
                         value = st.value();
                     deckItem->push_backMultiple( value , st.multiplier() );

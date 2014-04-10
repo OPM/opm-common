@@ -66,13 +66,13 @@ namespace Opm {
         int defaultValue = m_default;
 
         if (sizeType() == ALL) {  
-            // This can probably not be combined with a default value ....
-            // The '*' should be interpreted as a multiplication sign
+            // The '*' should be interpreted either as a default indicator in the cases '*' and '5*'
+            // or as multiplier in the case: '5*99'. 
             while (rawRecord->size() > 0) {
                 std::string token = rawRecord->pop_front();
                 if (tokenContainsStar( token )) {
                     StarToken<int> st(token);
-                    int value = defaultValue;    // This probably does never apply
+                    int value = defaultValue;    
                     if (st.hasValue())
                         value = st.value();
                     deckItem->push_backMultiple( value , st.multiplier() );

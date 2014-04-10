@@ -63,8 +63,8 @@ ENDSCALE\n\
      1*     1*     2 /\n\
 \n\
 ENKRVD\n\
+100 *   2  *  2*    6  7   200 11 22 33     3*55 10 /\n\
 100 *   2  3  4  5  6  7   200 11 22 33 44 55 66 77 /\n\
-100 1   2  3  4  5  6  7   200 11 22 33 44 55 66 77 /\n\
 ";
 
 
@@ -80,8 +80,22 @@ BOOST_AUTO_TEST_CASE( parse_DATAWithDefult_OK ) {
     DeckItemConstPtr item1 = rec1->getItem(0);
     
     BOOST_CHECK_EQUAL( 2U , keyword->size());
-
     BOOST_CHECK_THROW( item0->defaultApplied() , std::invalid_argument);
+
+    BOOST_CHECK_EQUAL( 100 , item0->getRawDouble(0));
+    BOOST_CHECK_EQUAL(  -1 , item0->getRawDouble(1));
+    BOOST_CHECK_EQUAL(  2  , item0->getRawDouble(2));
+    BOOST_CHECK_EQUAL( -1 , item0->getRawDouble(3));
+    BOOST_CHECK_EQUAL( -1 , item0->getRawDouble(4));
+    BOOST_CHECK_EQUAL( -1 , item0->getRawDouble(5));
+    BOOST_CHECK_EQUAL( 6  , item0->getRawDouble(6));
+    BOOST_CHECK_EQUAL( 55 , item0->getRawDouble(12));
+    BOOST_CHECK_EQUAL( 55 , item0->getRawDouble(13));
+    BOOST_CHECK_EQUAL( 55 , item0->getRawDouble(14));
+    BOOST_CHECK_EQUAL( 10 , item0->getRawDouble(15));
+    
+    BOOST_CHECK_EQUAL( 100 , item1->getRawDouble(0));
+    BOOST_CHECK_EQUAL(  -1  , item1->getRawDouble(1));
 }
 
 
