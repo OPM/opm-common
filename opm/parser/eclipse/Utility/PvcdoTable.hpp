@@ -16,21 +16,21 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPM_PARSER_PVDCO_TABLE_HPP
-#define	OPM_PARSER_PVDCO_TABLE_HPP
+#ifndef OPM_PARSER_PVCDO_TABLE_HPP
+#define	OPM_PARSER_PVCDO_TABLE_HPP
 
 #include "SimpleTable.hpp"
 
 namespace Opm {
-    class PvdcoTable : protected SimpleTable {
+    class PvcdoTable : protected SimpleTable {
         typedef SimpleTable ParentType;
 
     public:
         /*!
-         * \brief Read the PVDCO keyword and provide some convenience
+         * \brief Read the PVCDO keyword and provide some convenience
          *        methods for it.
          */
-        PvdcoTable(Opm::DeckKeywordConstPtr keyword,
+        PvcdoTable(Opm::DeckKeywordConstPtr keyword,
                   int recordIdx = 0,
                   int firstEntityOffset = 0)
             : SimpleTable(keyword,
@@ -61,5 +61,5 @@ namespace Opm {
     };
 }
 
-#endif	// OPM_PARSER_PVDCO_TABLE_HPP
+#endif	// OPM_PARSER_PVCDO_TABLE_HPP
 
