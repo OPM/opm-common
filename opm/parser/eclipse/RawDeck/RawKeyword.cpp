@@ -175,6 +175,14 @@ namespace Opm {
     }
 
 
+    void RawKeyword::finalizeUnknownSize() {
+        if (m_sizeType == Raw::UNKNOWN)
+            m_isFinished = true;
+        else
+            throw std::invalid_argument("Fatal error finalizing keyword:" + m_name + " Only RawKeywords with UNKNOWN size can be explicitly finalized.");
+    }
+
+
     bool RawKeyword::isFinished() const {
         return m_isFinished;
     }

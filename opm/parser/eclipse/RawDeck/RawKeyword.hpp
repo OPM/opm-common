@@ -54,6 +54,7 @@ namespace Opm {
         bool isPartialRecordStringEmpty() const;
         bool isFinished() const;
         bool unKnownSize() const;
+        void finalizeUnknownSize();
 
         const std::string& getFilename() const;
         size_t getLineNR() const;

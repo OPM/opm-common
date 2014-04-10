@@ -347,6 +347,7 @@ namespace Opm {
             } else {
                 if (parserState->rawKeyword->getSizeType() == Raw::UNKNOWN) {
                     if (canParseKeyword(line)) {
+                        parserState->rawKeyword->finalizeUnknownSize();
                         parserState->nextKeyword = line;
                         return true;
                     }
@@ -359,6 +360,8 @@ namespace Opm {
             if (parserState->rawKeyword != NULL && parserState->rawKeyword->isFinished())
                 return true;
         }
+        if (parserState->rawKeyword && parserState->rawKeyword->getSizeType() == Raw::UNKNOWN) 
+            parserState->rawKeyword->finalizeUnknownSize();
 
         return false;
     }
