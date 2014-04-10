@@ -128,7 +128,7 @@ namespace Opm
     /// returns a DeckItem object.
     /// NOTE: data are popped from the rawRecords deque!
     DeckItemPtr ParserFloatItem::scan(RawRecordPtr rawRecord) const {
-        DeckFloatItemPtr deckItem(new DeckFloatItem(name()));
+        DeckFloatItemPtr deckItem(new DeckFloatItem(name() , scalar()));
         float defaultValue = m_default;
 
         if (sizeType() == ALL) {  // This can probably not be combined with a default value ....

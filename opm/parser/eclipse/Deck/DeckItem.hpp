@@ -31,7 +31,7 @@ namespace Opm {
 
     class DeckItem {
     public:
-        DeckItem(const std::string& name);
+        DeckItem(const std::string& name , bool m_scalar = true);
         const std::string& name() const;
         
         bool defaultApplied() const;
@@ -106,6 +106,7 @@ namespace Opm {
         bool m_defaultApplied;
     private:
         std::string m_name;
+        bool m_scalar;
     };
 
     typedef std::shared_ptr<DeckItem> DeckItemPtr;

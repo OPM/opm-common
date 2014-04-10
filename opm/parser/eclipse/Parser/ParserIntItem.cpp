@@ -62,10 +62,11 @@ namespace Opm {
     /// returns a DeckItem object.
     /// NOTE: data are popped from the rawRecords deque!
     DeckItemPtr ParserIntItem::scan(RawRecordPtr rawRecord) const {
-        DeckIntItemPtr deckItem(new DeckIntItem(name()));
+        DeckIntItemPtr deckItem(new DeckIntItem( name() , scalar() ));
         int defaultValue = m_default;
 
-        if (sizeType() == ALL) {  // This can probably not be combined with a default value ....
+        if (sizeType() == ALL) {  
+            // This can probably not be combined with a default value ....
             // The '*' should be interpreted as a multiplication sign
             while (rawRecord->size() > 0) {
                 std::string token = rawRecord->pop_front();

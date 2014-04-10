@@ -31,7 +31,7 @@ namespace Opm {
     class DeckStringItem : public DeckItem {
     public:
 
-        DeckStringItem(std::string name) : DeckItem(name) {
+        DeckStringItem(std::string name, bool scalar = true) : DeckItem(name, scalar) {
         }
         std::string getString(size_t index) const;
         const std::vector<std::string>& getStringData() const;

@@ -104,7 +104,7 @@ void check_parser(ParserPtr parser) {
     BOOST_CHECK_EQUAL(9U , item4_1->size());
     BOOST_CHECK_EQUAL(2U , record4->size());
 
-
+    
     {
         Opm::PvtgTable pvtgTable(kw1, 0);
         

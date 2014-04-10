@@ -50,6 +50,7 @@ namespace Opm {
         const std::string& name() const;
         ParserItemSizeEnum sizeType() const;
         std::string getDescription() const;
+        bool scalar() const;
         void setDescription(std::string helpText);
 
         static int defaultInt();

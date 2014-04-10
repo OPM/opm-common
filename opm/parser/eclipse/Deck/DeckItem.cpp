@@ -19,11 +19,14 @@
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 
+#include <stdexcept>
+
 namespace Opm {
 
-    DeckItem::DeckItem(const std::string& name) {
+    DeckItem::DeckItem(const std::string& name , bool scalar) {
         m_name = name;
         m_defaultApplied = false;
+        m_scalar = scalar;
     }
 
     const std::string& DeckItem::name() const {
@@ -31,7 +34,10 @@ namespace Opm {
     }
 
     bool DeckItem::defaultApplied() const {
-        return m_defaultApplied;
+        if (m_scalar)
+            return m_defaultApplied;
+        else
+            throw std::invalid_argument("Tried query deckItem: " + m_name + " if default has been applied - that only applies to scalar items");
     }
 
 }
