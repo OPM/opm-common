@@ -18,6 +18,11 @@ add_executable(runParsePORO ParsePORO.cpp)
 target_link_libraries(runParsePORO Parser ${Boost_LIBRARIES})
 add_test(NAME runParsePORO WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runParsePORO) 
 
+add_executable(runParseDATAWithDefault ParseDATAWithDefault.cpp)
+target_link_libraries(runParseDATAWithDefault Parser ${Boost_LIBRARIES})
+add_test(NAME runParseDATAWithDefault WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runParseDATAWithDefault) 
+
+
 add_executable(runParseTVDP ParseTVDP.cpp)
 target_link_libraries(runParseTVDP Parser ${Boost_LIBRARIES})
 add_test(NAME runParseTVDP WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runParseTVDP) 

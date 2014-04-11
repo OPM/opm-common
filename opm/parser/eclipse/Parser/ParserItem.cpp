@@ -83,6 +83,13 @@ namespace Opm {
         return m_sizeType;
     }
 
+    bool ParserItem::scalar() const {
+        if (m_sizeType == SINGLE)
+            return true;
+        else
+            return false;
+    }
+
     std::string ParserItem::getDescription() const {
         return m_description;
     }

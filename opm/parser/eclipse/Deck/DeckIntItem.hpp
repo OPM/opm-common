@@ -30,7 +30,7 @@ namespace Opm {
 
     class DeckIntItem : public DeckItem {
     public:
-        DeckIntItem(std::string name) : DeckItem(name) {}
+        DeckIntItem(std::string name , bool scalar = true) : DeckItem(name , scalar) {}
         int getInt(size_t index) const;
         const std::vector<int>& getIntData() const;
 

@@ -32,7 +32,7 @@ namespace Opm {
 
     class DeckFloatItem : public DeckItem {
     public:
-        DeckFloatItem(std::string name) : DeckItem(name) {}
+        DeckFloatItem(std::string name , bool scalar = true) : DeckItem(name , scalar) {}
         float getRawFloat(size_t index) const;
         //const std::vector<float>& getRawFloatData() const;
         float getSIFloat(size_t index) const;

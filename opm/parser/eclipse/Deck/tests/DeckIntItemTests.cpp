@@ -35,6 +35,20 @@ BOOST_AUTO_TEST_CASE(GetIntAtIndex_NoData_ExceptionThrown) {
     BOOST_CHECK_THROW(deckIntItem.getInt(0), std::out_of_range);
 }
 
+ 
+BOOST_AUTO_TEST_CASE(InitializeDefaultApplied) {
+    DeckIntItem deckIntItem("TEST");
+    BOOST_REQUIRE_NO_THROW( deckIntItem.defaultApplied() );
+}
+
+
+BOOST_AUTO_TEST_CASE(InitializeDefaultApplied_Throws_for_nonScalar) {
+    DeckIntItem deckIntItem("TEST" , false);
+    BOOST_REQUIRE_THROW( deckIntItem.defaultApplied() , std::invalid_argument);
+}
+
+
+
 BOOST_AUTO_TEST_CASE(PushBack_VectorPushed_ElementsCorrect) {
     DeckIntItem deckIntItem("TEST");
     std::deque<int> pushThese;

@@ -386,12 +386,15 @@ namespace Opm {
     }
 
     DeckKeywordPtr ParserKeyword::parse(RawKeywordConstPtr rawKeyword) const {
-        DeckKeywordPtr keyword(new DeckKeyword(rawKeyword->getKeywordName()));
-        for (size_t i = 0; i < rawKeyword->size(); i++) {
-            DeckRecordConstPtr deckRecord = m_record->parse(rawKeyword->getRecord(i));
-            keyword->addRecord(deckRecord);
-        }
-        return keyword;
+        if (rawKeyword->isFinished()) {
+            DeckKeywordPtr keyword(new DeckKeyword(rawKeyword->getKeywordName()));
+            for (size_t i = 0; i < rawKeyword->size(); i++) {
+                DeckRecordConstPtr deckRecord = m_record->parse(rawKeyword->getRecord(i));
+                keyword->addRecord(deckRecord);
+            }
+            return keyword;
+        } else
+            throw std::invalid_argument("Tried to create a deck keyword from an imcomplete rawkeyword: " + rawKeyword->getKeywordName());
     }
 
     size_t ParserKeyword::getFixedSize() const {

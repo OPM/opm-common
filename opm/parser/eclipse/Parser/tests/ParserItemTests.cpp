@@ -45,6 +45,14 @@ BOOST_AUTO_TEST_CASE(Initialize) {
     BOOST_CHECK_NO_THROW(ParserFloatItem item1("ITEM1", sizeType));
 }
 
+BOOST_AUTO_TEST_CASE(ScalarCheck) {
+    ParserIntItem item1("ITEM1", SINGLE);
+    ParserIntItem item2("ITEM1", ALL);
+
+    BOOST_CHECK( item1.scalar());
+    BOOST_CHECK( !item2.scalar());
+}
+
 BOOST_AUTO_TEST_CASE(Initialize_DefaultSizeType) {
     ParserIntItem item1(std::string("ITEM1"));
     ParserStringItem item2(std::string("ITEM1"));
