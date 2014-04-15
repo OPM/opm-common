@@ -159,7 +159,7 @@ void endTest(std::ofstream& of) {
 }
 
 
-int main(int argc , char ** argv) {
+int main(int /* argc */ , char ** argv) {
     const char * test_src = argv[1];
     const char * test_module = argv[2];
     std::ofstream of( test_src );

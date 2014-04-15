@@ -32,7 +32,7 @@ namespace Opm {
     bool tokenContainsStar(const std::string& token);
     
     template <class T>
-    T readValueToken(const std::string& valueToken) {
+    T readValueToken(const std::string& /* valueToken */) {
         return 0;
     }
 

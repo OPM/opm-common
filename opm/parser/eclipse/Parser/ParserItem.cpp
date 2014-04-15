@@ -48,11 +48,11 @@ namespace Opm {
         return 0;
     }
 
-    const std::string& ParserItem::getDimension(size_t index) const {
+    const std::string& ParserItem::getDimension(size_t /* index */) const {
         throw std::invalid_argument("Should not call this ... \n");       
     }
 
-    void ParserItem::push_backDimension(const std::string& dimension) {
+    void ParserItem::push_backDimension(const std::string& /* dimension */) {
         throw std::invalid_argument("Should not call this ... \n");       
     }
     

@@ -240,7 +240,7 @@ void ensurePath( const char * file_name ) {
 }
 
 
-int main(int argc , char ** argv) {
+int main(int /* argc */, char ** argv) {
     const char * config_root = argv[1];
     const char * source_file_name = argv[2];
     const char * test_file_name = argv[3];
