@@ -179,7 +179,7 @@ Opm::DeckPtr createInvalidDXYZCARTDeck() {
         " 10 10 10 /\n"
         "GRID\n"
         "DX\n"
-        "999*0.25 /\n"
+        "99*0.25 /\n"
         "DY\n"
         "1000*0.25 /\n"
         "DZ\n"
