@@ -163,7 +163,7 @@ namespace Opm {
 
     
     
-    std::vector<double> EclipseGrid::createDVector(const std::vector<int>& dims , size_t dim , const std::string& DKey , const std::string& DVKey, std::shared_ptr<const GRIDSection> gridSection) {
+    std::vector<double> EclipseGrid::createDVector(const std::vector<int>& dims , size_t /* dim */, const std::string& DKey , const std::string& DVKey, std::shared_ptr<const GRIDSection> gridSection) {
         size_t volume = dims[0] * dims[1] * dims[2];
         size_t area = dims[0] * dims[1];
         std::vector<double> D;

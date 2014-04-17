@@ -53,9 +53,9 @@ namespace Json {
     JsonObject::JsonObject(const boost::filesystem::path& jsonFile ) {
         std::ifstream stream(jsonFile.string().c_str());
         if (stream) { 
-            std::string content( (std::istreambuf_iterator<char>(stream)), 
+            std::string content_from_file( (std::istreambuf_iterator<char>(stream)),
                                  (std::istreambuf_iterator<char>()));
-            initialize( content );
+            initialize( content_from_file );
         } else
             throw std::invalid_argument("Loading json from file: " + jsonFile.string() + " failed.");
     }

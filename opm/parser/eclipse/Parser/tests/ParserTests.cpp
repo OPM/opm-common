@@ -282,8 +282,8 @@ ParserKeywordPtr setupParserKeywordInt(std::string name, int numberOfItems) {
     ParserRecordPtr parserRecord = parserKeyword->getRecord();
 
     for (int i = 0; i < numberOfItems; i++) {
-        std::string name = "ITEM_" + boost::lexical_cast<std::string>(i);
-        ParserItemPtr intItem(new ParserIntItem(name, SINGLE));
+        std::string another_name = "ITEM_" + boost::lexical_cast<std::string>(i);
+        ParserItemPtr intItem(new ParserIntItem(another_name, SINGLE));
         parserRecord->addItem(intItem);
     }
 

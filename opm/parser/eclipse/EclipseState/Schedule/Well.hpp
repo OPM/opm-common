@@ -59,22 +59,22 @@ namespace Opm {
             controlMode = WellProducer::ORAT;
         }
 
-        bool hasProductionControl(WellProducer::ControlModeEnum controlMode) const {
-            if (productionControls & controlMode)
+        bool hasProductionControl(WellProducer::ControlModeEnum controlModeArg) const {
+            if (productionControls & controlModeArg)
                 return true;
             else
                 return false;
         }
 
-        void dropProductionControl(WellProducer::ControlModeEnum controlMode) {
-            if ((productionControls & controlMode) != 0) {
-                productionControls -= controlMode;
+        void dropProductionControl(WellProducer::ControlModeEnum controlModeArg) {
+            if ((productionControls & controlModeArg) != 0) {
+                productionControls -= controlModeArg;
             }
         }
 
-        void addProductionControl(WellProducer::ControlModeEnum controlMode) {
-            if ((productionControls & controlMode) == 0) {
-                productionControls += controlMode;
+        void addProductionControl(WellProducer::ControlModeEnum controlModeArg) {
+            if ((productionControls & controlModeArg) == 0) {
+                productionControls += controlModeArg;
             }
         }
     } WellProductionProperties;
@@ -101,22 +101,22 @@ namespace Opm {
             controlMode = WellInjector::RATE;
         }
 
-        bool hasInjectionControl(WellInjector::ControlModeEnum controlMode) const {
-            if (injectionControls & controlMode)
+        bool hasInjectionControl(WellInjector::ControlModeEnum controlModeArg) const {
+            if (injectionControls & controlModeArg)
                 return true;
             else
                 return false;
         }
 
-        void dropInjectionControl(WellInjector::ControlModeEnum controlMode) {
-            if ((injectionControls & controlMode) != 0) {
-                injectionControls -= controlMode;
+        void dropInjectionControl(WellInjector::ControlModeEnum controlModeArg) {
+            if ((injectionControls & controlModeArg) != 0) {
+                injectionControls -= controlModeArg;
             }
         }
 
-        void addInjectionControl(WellInjector::ControlModeEnum controlMode) {
-            if ((injectionControls & controlMode) == 0) {
-                injectionControls += controlMode;
+        void addInjectionControl(WellInjector::ControlModeEnum controlModeArg) {
+            if ((injectionControls & controlModeArg) == 0) {
+                injectionControls += controlModeArg;
             }
         }
     } WellInjectionProperties;
