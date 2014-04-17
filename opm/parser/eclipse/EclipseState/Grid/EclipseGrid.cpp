@@ -189,10 +189,10 @@ namespace Opm {
         } else {
             DeckKeywordConstPtr DVKeyWord = gridSection->getKeyword(DVKey);
             const std::vector<double>& DV = DVKeyWord->getSIDoubleData();
-            if (DV.size() != (size_t) dims[0])
+            if (DV.size() != (size_t) dims[dim])
                 throw std::invalid_argument(DVKey + " size mismatch");
             D.resize( volume );
-            scatterDim( dims , 0 , DV , D );
+            scatterDim( dims , dim , DV , D );
         }
         return D;
     }
