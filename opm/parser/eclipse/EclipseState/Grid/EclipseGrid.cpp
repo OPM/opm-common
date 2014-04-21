@@ -219,6 +219,15 @@ namespace Opm {
             ecl_grid_init_actnum_data( m_grid.get() , actnum.data() );
         }
     }
+
+    void EclipseGrid::exportMAPAXES( std::vector<double>& mapaxes) const {
+        if (ecl_grid_use_mapaxes( m_grid.get())) {
+            mapaxes.resize(6);
+            ecl_grid_init_mapaxes_data_double( m_grid.get() , mapaxes.data() );
+        } else {
+            mapaxes.resize(0);
+        }
+    }
         
     void EclipseGrid::exportCOORD( std::vector<double>& coord) const {
         coord.resize( ecl_grid_get_coord_size( m_grid.get() ));

@@ -42,6 +42,7 @@ namespace Opm {
         int  getNY( ) const;
         int  getNZ( ) const;
 
+        void exportMAPAXES( std::vector<double>& mapaxes) const;
         void exportCOORD( std::vector<double>& coord) const;
         void exportZCORN( std::vector<double>& zcorn) const;
         void exportACTNUM( std::vector<int>& actnum) const;
