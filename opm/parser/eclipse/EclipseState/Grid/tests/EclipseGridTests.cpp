@@ -235,5 +235,21 @@ BOOST_AUTO_TEST_CASE(CreateCartesianGRIDOnlyTopLayerDZ) {
     BOOST_CHECK_EQUAL( 10 , grid->getNX( ));
     BOOST_CHECK_EQUAL(  5 , grid->getNY( ));
     BOOST_CHECK_EQUAL( 20 , grid->getNZ( ));
-    //BOOST_CHECK_EQUAL( 1000 , grid->getNumActive());
+    BOOST_CHECK_EQUAL( 1000 , grid->getNumActive());
+}
+
+
+
+BOOST_AUTO_TEST_CASE(AllActiveExportActnum) {
+    Opm::DeckPtr deck = createOnlyTopDZCartGrid();
+    std::shared_ptr<Opm::RUNSPECSection> runspecSection(new Opm::RUNSPECSection(deck) );
+    std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
+    std::shared_ptr<Opm::EclipseGrid> grid(new Opm::EclipseGrid( runspecSection , gridSection ));
+
+    std::vector<int> actnum;
+
+    actnum.push_back(100);
+
+    grid->exportACTNUM( actnum );
+    BOOST_CHECK_EQUAL( 0U , actnum.size());
 }

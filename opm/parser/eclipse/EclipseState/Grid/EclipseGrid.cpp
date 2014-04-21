@@ -209,7 +209,29 @@ namespace Opm {
             }
         }
     } 
-    
+
+    void EclipseGrid::exportACTNUM( std::vector<int>& actnum) const {
+        int volume = getNX() * getNY() * getNZ();
+        if (getNumActive() == volume)
+            actnum.resize(0);
+        else {
+            actnum.resize( volume );
+            ecl_grid_init_actnum_data( m_grid.get() , actnum.data() );
+        }
+    }
+        
+    void EclipseGrid::exportCOORD( std::vector<double>& coord) const {
+        coord.resize( ecl_grid_get_coord_size( m_grid.get() ));
+        ecl_grid_init_coord_data_double( m_grid.get() , coord.data() );
+    }
+
+    void EclipseGrid::exportZCORN( std::vector<double>& zcorn) const {
+        zcorn.resize( ecl_grid_get_zcorn_size( m_grid.get() ));
+        ecl_grid_init_zcorn_data_double( m_grid.get() , zcorn.data() );
+    }
+
+
+
 }
 
 
