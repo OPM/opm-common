@@ -44,7 +44,17 @@ namespace Opm {
             dataFile = inputDataFile;
             deck = deckToFill;
             rootPath = commonRootPath;
-            inputstream.reset(new std::ifstream(inputDataFile.string().c_str()));
+
+            std::ifstream *ifs = new std::ifstream(inputDataFile.string().c_str());
+            inputstream.reset(ifs);
+
+            // make sure the file we'd like to parse exists and is
+            // readable
+            if (!ifs->is_open()) {
+                throw std::runtime_error(std::string("Input file '") +
+                                         inputDataFile.string() +
+                                         std::string("' does not exist or is not readable"));
+            }
         }
 
         ParserState(const std::string &inputData, DeckPtr deckToFill, bool useStrictParsing) {
