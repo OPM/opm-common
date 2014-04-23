@@ -163,7 +163,7 @@ namespace Opm {
 
     
     
-    std::vector<double> EclipseGrid::createDVector(const std::vector<int>& dims , size_t /* dim */, const std::string& DKey , const std::string& DVKey, std::shared_ptr<const GRIDSection> gridSection) {
+    std::vector<double> EclipseGrid::createDVector(const std::vector<int>& dims , size_t dim , const std::string& DKey , const std::string& DVKey, std::shared_ptr<const GRIDSection> gridSection) {
         size_t volume = dims[0] * dims[1] * dims[2];
         size_t area = dims[0] * dims[1];
         std::vector<double> D;
@@ -172,13 +172,14 @@ namespace Opm {
             D = DKeyWord->getSIDoubleData();
             
 
-            if (D.size() >= area && DKey == "DZ") {
+            if (D.size() >= area && D.size() < volume) {
                 /*
-                  Special casing of the DZ keyword where you can choose to
-                  only specify the top layer.
+                  Only the top layer is required; for layers below the
+                  top layer the value from the layer above is used.
                 */
+                size_t initialDSize = D.size();
                 D.resize( volume );
-                for (size_t targetIndex = D.size(); targetIndex < volume; targetIndex++) {
+                for (size_t targetIndex = initialDSize; targetIndex < volume; targetIndex++) {
                     size_t sourceIndex = targetIndex - area;
                     D[targetIndex] = D[sourceIndex];
                 }
@@ -189,10 +190,10 @@ namespace Opm {
         } else {
             DeckKeywordConstPtr DVKeyWord = gridSection->getKeyword(DVKey);
             const std::vector<double>& DV = DVKeyWord->getSIDoubleData();
-            if (DV.size() != (size_t) dims[0])
+            if (DV.size() != (size_t) dims[dim])
                 throw std::invalid_argument(DVKey + " size mismatch");
             D.resize( volume );
-            scatterDim( dims , 0 , DV , D );
+            scatterDim( dims , dim , DV , D );
         }
         return D;
     }
