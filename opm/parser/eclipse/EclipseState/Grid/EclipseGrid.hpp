@@ -41,7 +41,11 @@ namespace Opm {
         int  getNX( ) const;
         int  getNY( ) const;
         int  getNZ( ) const;
-                    
+
+        void exportMAPAXES( std::vector<double>& mapaxes) const;
+        void exportCOORD( std::vector<double>& coord) const;
+        void exportZCORN( std::vector<double>& zcorn) const;
+        void exportACTNUM( std::vector<int>& actnum) const;
     private:
         std::shared_ptr<ecl_grid_type> m_grid;
 

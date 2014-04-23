@@ -61,3 +61,58 @@ BOOST_AUTO_TEST_CASE(CreateCPActnumGrid) {
     BOOST_CHECK_EQUAL( 100 , grid->getNumActive() );
 }
 
+
+BOOST_AUTO_TEST_CASE(ExportFromCPGridAllActive) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/GRID/CORNERPOINT.DATA");
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
+
+    std::shared_ptr<RUNSPECSection> runspecSection(new RUNSPECSection(deck) );
+    std::shared_ptr<GRIDSection> gridSection(new GRIDSection(deck) );
+    std::shared_ptr<EclipseGrid> grid(new EclipseGrid( runspecSection , gridSection ));
+
+    std::vector<int> actnum;
+
+    actnum.push_back(100);
+    grid->exportACTNUM( actnum );
+    BOOST_CHECK_EQUAL( actnum.size() , 0U );
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(ExportFromCPGridACTNUM) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/GRID/CORNERPOINT_ACTNUM.DATA");
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
+
+    std::shared_ptr<RUNSPECSection> runspecSection(new RUNSPECSection(deck) );
+    std::shared_ptr<GRIDSection> gridSection(new GRIDSection(deck) );
+    std::shared_ptr<EclipseGrid> grid(new EclipseGrid( runspecSection , gridSection ));
+
+    std::vector<double> coord;
+    std::vector<double> zcorn;
+    std::vector<int> actnum;
+    size_t volume = grid->getNX()*grid->getNY()*grid->getNZ();
+
+    grid->exportCOORD( coord );
+    BOOST_CHECK_EQUAL( coord.size() , (size_t) (grid->getNX() + 1) * (grid->getNY() + 1) * 6);
+
+    grid->exportZCORN( zcorn );
+    BOOST_CHECK_EQUAL( zcorn.size() , volume * 8);
+
+    grid->exportACTNUM( actnum );
+    BOOST_CHECK_EQUAL( actnum.size() , volume );
+
+    {
+        const std::vector<int>& deckActnum = deck->getKeyword("ACTNUM")->getIntData();
+        const std::vector<double>& deckZCORN = deck->getKeyword("ZCORN")->getSIDoubleData();
+        
+        for (size_t i = 0; i < volume; i++) {
+            BOOST_CHECK_EQUAL( deckActnum[i] , actnum[i]);
+            for (size_t j=0; j < 8; j++)
+                BOOST_CHECK_CLOSE( zcorn[i*8 + j] , deckZCORN[i*8 + j] , 0.0001);
+        }
+    }
+}
+
