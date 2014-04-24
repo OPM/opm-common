@@ -34,6 +34,12 @@ namespace Opm {
     class SimpleMultiRecordTable : public SimpleTable {
     public:
         /*!
+         * \brief Returns the number of tables which can be found in a
+         *        given keyword.
+         */
+        static size_t numTables(Opm::DeckKeywordConstPtr keyword);
+
+        /*!
          * \brief Read simple tables from multi-item keywords like PVTW
          *
          * This creates a table out of the first N items of each of
@@ -59,7 +65,7 @@ namespace Opm {
         { return m_numRecords; }
 
     private:
-        size_t getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord) const;
+        static size_t getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord);
         double getFlatSiDoubleData_(Opm::DeckRecordConstPtr deckRecord, unsigned flatItemIdx) const;
 
         size_t m_firstRecordIdx;

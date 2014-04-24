@@ -59,6 +59,9 @@ namespace Opm {
         typedef std::shared_ptr<Self> Pointer;
         typedef std::shared_ptr<const Self> ConstPointer;
 
+        static size_t numTables(Opm::DeckKeywordConstPtr keyword)
+        { return OuterTable::numTables(keyword); }
+
         /*!
          * \brief Read full tables from keywords like PVTO
          *

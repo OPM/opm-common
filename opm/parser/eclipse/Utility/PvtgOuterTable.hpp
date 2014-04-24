@@ -26,6 +26,8 @@ namespace Opm {
         typedef SimpleMultiRecordTable ParentType;
 
     public:
+        using ParentType::numTables;
+
         /*!
          * \brief Read the per record table of the PVTG keyword and
          *        provide some convenience methods for it.

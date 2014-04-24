@@ -26,6 +26,8 @@ namespace Opm {
         typedef SimpleTable ParentType;
 
     public:
+        using ParentType::numTables;
+
         /*!
          * \brief Read the ROCKTAB keyword and provide some convenience
          *        methods for it.

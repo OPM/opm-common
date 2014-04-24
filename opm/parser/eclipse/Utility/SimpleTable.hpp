@@ -35,6 +35,15 @@ namespace Opm {
 
     public:
         /*!
+         * \brief Returns the number of tables in a keyword.
+         *
+         * For simple tables, that is identical to the number of
+         * records.
+         */
+        static size_t numTables(Opm::DeckKeywordConstPtr keyword)
+        { return keyword->size(); }
+
+        /*!
          * \brief Read simple tables from keywords like SWOF
          *
          * This requires all data to be a list of doubles in the first

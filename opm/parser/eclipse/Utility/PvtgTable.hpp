@@ -32,6 +32,8 @@ namespace Opm {
       typedef Opm::FullTable<Opm::PvtgOuterTable, Opm::PvtgInnerTable> ParentType;
 
   public:
+      using ParentType::numTables;
+
       /*!
        * \brief Read the table for the PVTG and provide convenient access to it.
        */
