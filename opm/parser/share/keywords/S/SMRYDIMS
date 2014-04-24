@@ -1,4 +1,5 @@
 {"name" : "SMRYDIMS" , "size" : 1 , 
-   "items" : [{"name" : "DIMS" , "value_type" : "INT" , "default" : 10000}]}
+   "items" : [
+   {"name" : "DIMS" , "value_type" : "INT" , "default" : 10000}]}
 
 
