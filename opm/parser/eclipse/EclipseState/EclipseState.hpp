@@ -22,6 +22,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 
 #include <set>
@@ -33,14 +34,17 @@ namespace Opm {
     public:
         EclipseState(DeckConstPtr deck);
         ScheduleConstPtr getSchedule() const;
+        EclipseGridConstPtr getEclipseGrid() const;
         bool hasPhase(enum Phase::PhaseEnum phase) const;
         std::string getTitle() const;
         
     private:
         void initSchedule(DeckConstPtr deck);
+        void initEclipseGrid(DeckConstPtr deck);
         void initPhases(DeckConstPtr deck);
         void initTitle(DeckConstPtr deck);
 
+        EclipseGridConstPtr m_eclipseGrid;
         ScheduleConstPtr schedule;
         std::set<enum Phase::PhaseEnum> phases;
         std::string m_title;

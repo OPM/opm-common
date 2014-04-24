@@ -18,6 +18,7 @@
  */
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <iostream>
@@ -27,10 +28,16 @@ namespace Opm {
     
     EclipseState::EclipseState(DeckConstPtr deck) {
         initPhases(deck);
+        initEclipseGrid(deck);
         initSchedule(deck);
         initTitle(deck);
     }
     
+
+    EclipseGridConstPtr EclipseState::getEclipseGrid() const {
+        return m_eclipseGrid;
+    }
+
 
     ScheduleConstPtr EclipseState::getSchedule() const {
         return schedule;
@@ -43,6 +50,13 @@ namespace Opm {
 
     void EclipseState::initSchedule(DeckConstPtr deck) {
         schedule = ScheduleConstPtr( new Schedule(deck) );
+    }
+
+    void EclipseState::initEclipseGrid(DeckConstPtr deck) {
+        std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
+        std::shared_ptr<Opm::RUNSPECSection> runspecSection(new Opm::RUNSPECSection(deck) );
+        
+        m_eclipseGrid = EclipseGridConstPtr( new EclipseGrid( runspecSection , gridSection ));
     }
 
 

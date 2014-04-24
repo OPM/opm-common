@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
@@ -37,6 +38,20 @@ using namespace Opm;
 
 DeckPtr createDeck() {
     const char *deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        " 10 10 10 /\n"
+        "GRID\n"
+        "DX\n"
+        "1000*0.25 /\n"
+        "DYV\n"
+        "10*0.25 /\n"
+        "DZ\n"
+        "1000*0.25 /\n"
+        "TOPS\n"
+        "1000*0.25 /\n"
+        "EDIT\n"
         "OIL\n"
         "\n"
         "GAS\n"
@@ -60,7 +75,8 @@ BOOST_AUTO_TEST_CASE(CreatSchedule) {
     DeckPtr deck = createDeck();
     EclipseState state(deck);
     ScheduleConstPtr schedule = state.getSchedule();
-    
+    EclipseGridConstPtr eclipseGrid = state.getEclipseGrid();
+
     BOOST_CHECK_EQUAL( schedule->getStartTime() , boost::posix_time::ptime(boost::gregorian::date(1998 , 3 , 8 )));
 }
 

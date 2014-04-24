@@ -40,7 +40,7 @@ namespace Opm {
             } else if (hasCartesianKeywords(gridSection)) {
                 initCartesianGrid(dims , gridSection);
             } else
-                throw std::invalid_argument("The GRID section must have COORD / ZCORN or D?? keywords");
+                throw std::invalid_argument("The GRID section must have COORD / ZCORN or D?? + TOPS keywords");
             
         } else
             throw std::invalid_argument("The RUNSPEC section must have the DIMENS keyword with grid dimensions");
