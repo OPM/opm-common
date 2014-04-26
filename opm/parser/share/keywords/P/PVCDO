@@ -1,8 +1,7 @@
-{"name" : "PVTW" , "size" : {"keyword":"TABDIMS" , "item":"NTPVT"}, "items":
-    [   {"name":"P_BUBB", "value_type" : "DOUBLE", "dimension":"Pressure" },
-        {"name":"RS_BUBB", "value_type" : "DOUBLE","dimension":"OilDissolutionFactor"},
-        {"name":"OIL_VOL_FACTOR", "value_type" : "DOUBLE","dimension":"1"},
-        {"name":"OIL_VISCOSITY", "value_type" : "DOUBLE","dimension":"Viscosity"},
-        {"name":"OIL_COMPRESSIBILITY", "value_type" : "DOUBLE","dimension":"1"},
+{"name" : "PVCDO" , "size" : {"keyword":"TABDIMS" , "item":"NTPVT"}, "items":
+    [   {"name":"P_REF", "value_type" : "DOUBLE", "dimension":"Pressure" },
+        {"name":"BO_REF", "value_type" : "DOUBLE","dimension":"1"},
+        {"name":"C_OIL_REF", "value_type" : "DOUBLE","dimension":"1"},
+        {"name":"MUO_REF", "value_type" : "DOUBLE","dimension":"Viscosity"},
         {"name":"OIL_VISCOSIBILITY", "value_type" : "DOUBLE","dimension":"1"}
 ]}
