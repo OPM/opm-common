@@ -73,50 +73,81 @@ namespace Opm {
     }
 
 
-    void EclipseGrid::initCornerPointGrid(const std::vector<int>& dims , std::shared_ptr<const GRIDSection> gridSection) {
-        DeckKeywordConstPtr ZCORNKeyWord = gridSection->getKeyword("ZCORN");
-        DeckKeywordConstPtr COORDKeyWord = gridSection->getKeyword("COORD");
-        const std::vector<double>& zcorn = ZCORNKeyWord->getSIDoubleData();
-        const std::vector<double>& coord = COORDKeyWord->getSIDoubleData();
-        const int * actnum = NULL;
-        double    * mapaxes = NULL;
-        
-        if (gridSection->hasKeyword("ACTNUM")) {
-            DeckKeywordConstPtr actnumKeyword = gridSection->getKeyword("ACTNUM");
-            const std::vector<int>& actnumVector = actnumKeyword->getIntData();
-            actnum = actnumVector.data();
+    void EclipseGrid::assertCornerPointKeywords( const std::vector<int>& dims , std::shared_ptr<const GRIDSection> gridSection ) const 
+    {
+        const int nx = dims[0];
+        const int ny = dims[1];
+        const int nz = dims[2];
+        {
+            DeckKeywordConstPtr ZCORNKeyWord = gridSection->getKeyword("ZCORN");
+            
+            if (ZCORNKeyWord->getDataSize() != 8 * nx*ny*nz)
+                throw std::invalid_argument("Wrong size in ZCORN keyword - expected 8*x*ny*nz = " + 8*nx*ny*nz);
         }
 
-        if (gridSection->hasKeyword("MAPAXES")) {
-            DeckKeywordConstPtr mapaxesKeyword = gridSection->getKeyword("MAPAXES");
-            DeckRecordConstPtr record = mapaxesKeyword->getRecord(0);
-            mapaxes = new double[6];
-            for (size_t i = 0; i < 6; i++) {
-                DeckItemConstPtr item = record->getItem(i);
-                mapaxes[i] = item->getSIDouble(0);
-            }
-        }
-        
-        
         {
-            const std::vector<float> zcorn_float( zcorn.begin() , zcorn.end() );
-            const std::vector<float> coord_float( coord.begin() , coord.end() );
-            float * mapaxes_float = NULL;
-            if (mapaxes) {
-                mapaxes_float = new float[6];
-                for (size_t i=0; i < 6; i++)
-                    mapaxes_float[i] = mapaxes[i];
+            DeckKeywordConstPtr COORDKeyWord = gridSection->getKeyword("COORD");
+            if (COORDKeyWord->getDataSize() != 6*(nx + 1)*(ny + 1))
+                throw std::invalid_argument("Wrong size in COORD keyword - expected 6*(nx + 1)*(ny + 1) = " + 6*(nx + 1)*(ny + 1));
+        }
+
+        if (gridSection->hasKeyword("ACTNUM")) {
+            DeckKeywordConstPtr ACTNUMKeyWord = gridSection->getKeyword("ACTNUM");
+            if (ACTNUMKeyWord->getDataSize() != nx*ny*nz)
+                throw std::invalid_argument("Wrong size in ACTNUM keyword - expected 8*x*ny*nz = " + nx*ny*nz);
+        }
+    }
+        
+
+
+
+    void EclipseGrid::initCornerPointGrid(const std::vector<int>& dims , std::shared_ptr<const GRIDSection> gridSection) {
+        assertCornerPointKeywords( dims , gridSection );
+        {
+            DeckKeywordConstPtr ZCORNKeyWord = gridSection->getKeyword("ZCORN");
+            DeckKeywordConstPtr COORDKeyWord = gridSection->getKeyword("COORD");
+            const std::vector<double>& zcorn = ZCORNKeyWord->getSIDoubleData();
+            const std::vector<double>& coord = COORDKeyWord->getSIDoubleData();
+            const int * actnum = NULL;
+            double    * mapaxes = NULL;
+            
+            if (gridSection->hasKeyword("ACTNUM")) {
+                DeckKeywordConstPtr actnumKeyword = gridSection->getKeyword("ACTNUM");
+                const std::vector<int>& actnumVector = actnumKeyword->getIntData();
+                actnum = actnumVector.data();
+                
             }
             
-            ecl_grid_type * ecl_grid = ecl_grid_alloc_GRDECL_data(dims[0] , dims[1] , dims[2] , zcorn_float.data() , coord_float.data() , actnum , mapaxes_float);
-            m_grid.reset( ecl_grid , ecl_grid_free);    
-
-            if (mapaxes) {
-                delete[] mapaxes_float;
-                delete[] mapaxes;
+            if (gridSection->hasKeyword("MAPAXES")) {
+                DeckKeywordConstPtr mapaxesKeyword = gridSection->getKeyword("MAPAXES");
+                DeckRecordConstPtr record = mapaxesKeyword->getRecord(0);
+                mapaxes = new double[6];
+                for (size_t i = 0; i < 6; i++) {
+                    DeckItemConstPtr item = record->getItem(i);
+                    mapaxes[i] = item->getSIDouble(0);
+                }
+            }
+            
+            
+            {
+                const std::vector<float> zcorn_float( zcorn.begin() , zcorn.end() );
+                const std::vector<float> coord_float( coord.begin() , coord.end() );
+                float * mapaxes_float = NULL;
+                if (mapaxes) {
+                    mapaxes_float = new float[6];
+                    for (size_t i=0; i < 6; i++)
+                        mapaxes_float[i] = mapaxes[i];
+                }
+                
+                ecl_grid_type * ecl_grid = ecl_grid_alloc_GRDECL_data(dims[0] , dims[1] , dims[2] , zcorn_float.data() , coord_float.data() , actnum , mapaxes_float);
+                m_grid.reset( ecl_grid , ecl_grid_free);    
+                
+                if (mapaxes) {
+                    delete[] mapaxes_float;
+                    delete[] mapaxes;
+                }
             }
         }
-
     }
     
 

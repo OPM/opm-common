@@ -253,3 +253,80 @@ BOOST_AUTO_TEST_CASE(AllActiveExportActnum) {
     grid->exportACTNUM( actnum );
     BOOST_CHECK_EQUAL( 0U , actnum.size());
 }
+
+
+BOOST_AUTO_TEST_CASE(CornerPointSizeMismatchCOORD) {
+    const char *deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        " 10 10 10 /\n"
+        "GRID\n"
+        "COORD\n"
+        "  725*1 / \n"
+        "ZCORN \n"
+        "  8000*1 / \n"
+        "ACTNUM \n"
+        "  1000*1 / \n"
+        "EDIT\n"
+        "\n";
+ 
+    Opm::ParserPtr parser(new Opm::Parser());
+    Opm::DeckConstPtr deck = parser->parseString(deckData) ;
+    std::shared_ptr<Opm::RUNSPECSection> runspecSection(new Opm::RUNSPECSection(deck) );
+    std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
+    Opm::DeckKeywordConstPtr zcorn = gridSection->getKeyword("ZCORN");
+    BOOST_CHECK_EQUAL( 8000U , zcorn->getDataSize( ));
+
+    BOOST_CHECK_THROW(Opm::EclipseGrid( runspecSection , gridSection ) , std::invalid_argument);
+}
+
+
+BOOST_AUTO_TEST_CASE(CornerPointSizeMismatchZCORN) {
+    const char *deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        " 10 10 10 /\n"
+        "GRID\n"
+        "COORD\n"
+        "  726*1 / \n"
+        "ZCORN \n"
+        "  8001*1 / \n"
+        "ACTNUM \n"
+        "  1000*1 / \n"
+        "EDIT\n"
+        "\n";
+ 
+    Opm::ParserPtr parser(new Opm::Parser());
+    Opm::DeckConstPtr deck = parser->parseString(deckData) ;
+    std::shared_ptr<Opm::RUNSPECSection> runspecSection(new Opm::RUNSPECSection(deck) );
+    std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
+    Opm::DeckKeywordConstPtr zcorn = gridSection->getKeyword("ZCORN");
+    BOOST_CHECK_THROW(Opm::EclipseGrid( runspecSection , gridSection ) , std::invalid_argument);
+}
+
+
+BOOST_AUTO_TEST_CASE(CornerPointSizeMismatchACTNUM) {
+    const char *deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        " 10 10 10 /\n"
+        "GRID\n"
+        "COORD\n"
+        "  726*1 / \n"
+        "ZCORN \n"
+        "  8000*1 / \n"
+        "ACTNUM \n"
+        "  999*1 / \n"
+        "EDIT\n"
+        "\n";
+ 
+    Opm::ParserPtr parser(new Opm::Parser());
+    Opm::DeckConstPtr deck = parser->parseString(deckData) ;
+    std::shared_ptr<Opm::RUNSPECSection> runspecSection(new Opm::RUNSPECSection(deck) );
+    std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
+    Opm::DeckKeywordConstPtr zcorn = gridSection->getKeyword("ZCORN");
+    BOOST_CHECK_THROW(Opm::EclipseGrid( runspecSection , gridSection ) , std::invalid_argument);
+}
