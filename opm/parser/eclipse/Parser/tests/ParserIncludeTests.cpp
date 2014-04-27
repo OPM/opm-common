@@ -48,6 +48,7 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_includeWrongCase) {
 
     Opm::ParserPtr parser(new Opm::Parser());
 
+#if HAVE_CASE_SENSITIVE_FILESYSTEM
     // so far, we expect the files which are included to exhibit
     // exactly the same spelling as their names on disk. Eclipse seems
     // to be a bit more relaxed when it comes to this, so we might
@@ -55,5 +56,16 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_includeWrongCase) {
     BOOST_CHECK_THROW(parser->parseFile(inputFile1Path.string()), std::runtime_error);
     BOOST_CHECK_THROW(parser->parseFile(inputFile2Path.string()), std::runtime_error);
     BOOST_CHECK_THROW(parser->parseFile(inputFile3Path.string()), std::runtime_error);
+#else
+    // for case-insensitive filesystems, the include statement will
+    // always work regardless of how the capitalization of the
+    // included files is wrong...
+    BOOST_CHECK_EQUAL(true, parser->parseFile(inputFile1Path.string())->hasKeyword("OIL"));
+    BOOST_CHECK_EQUAL(false, parser->parseFile(inputFile1Path.string())->hasKeyword("WATER"));
+    BOOST_CHECK_EQUAL(true, parser->parseFile(inputFile2Path.string())->hasKeyword("OIL"));
+    BOOST_CHECK_EQUAL(false, parser->parseFile(inputFile2Path.string())->hasKeyword("WATER"));
+    BOOST_CHECK_EQUAL(true, parser->parseFile(inputFile3Path.string())->hasKeyword("OIL"));
+    BOOST_CHECK_EQUAL(false, parser->parseFile(inputFile3Path.string())->hasKeyword("WATER"));
+#endif
 }
 
