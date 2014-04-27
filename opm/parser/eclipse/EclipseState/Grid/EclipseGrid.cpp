@@ -20,6 +20,8 @@
 
 #include <iostream>
 
+#include <boost/lexical_cast.hpp>
+
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -45,6 +47,10 @@ namespace Opm {
             
         } else
             throw std::invalid_argument("The RUNSPEC section must have the DIMENS keyword with grid dimensions");
+    }
+
+    bool EclipseGrid::equal(const EclipseGrid& other) const {
+        return ecl_grid_compare( m_grid.get() , other.m_grid.get() , true , false );
     }
 
 
@@ -81,19 +87,19 @@ namespace Opm {
         {
             DeckKeywordConstPtr ZCORNKeyWord = gridSection->getKeyword("ZCORN");
             
-            if (ZCORNKeyWord->getDataSize() != 8 * nx*ny*nz)
+            if (ZCORNKeyWord->getDataSize() != static_cast<size_t>(8*nx*ny*nz))
                 throw std::invalid_argument("Wrong size in ZCORN keyword - expected 8*x*ny*nz = " + 8*nx*ny*nz);
         }
 
         {
             DeckKeywordConstPtr COORDKeyWord = gridSection->getKeyword("COORD");
-            if (COORDKeyWord->getDataSize() != 6*(nx + 1)*(ny + 1))
+            if (COORDKeyWord->getDataSize() != static_cast<size_t>(6*(nx + 1)*(ny + 1)))
                 throw std::invalid_argument("Wrong size in COORD keyword - expected 6*(nx + 1)*(ny + 1) = " + 6*(nx + 1)*(ny + 1));
         }
 
         if (gridSection->hasKeyword("ACTNUM")) {
             DeckKeywordConstPtr ACTNUMKeyWord = gridSection->getKeyword("ACTNUM");
-            if (ACTNUMKeyWord->getDataSize() != nx*ny*nz)
+            if (ACTNUMKeyWord->getDataSize() != static_cast<size_t>(nx*ny*nz))
                 throw std::invalid_argument("Wrong size in ACTNUM keyword - expected 8*x*ny*nz = " + nx*ny*nz);
         }
     }
@@ -151,8 +157,25 @@ namespace Opm {
     }
     
 
-
     bool EclipseGrid::hasCartesianKeywords(std::shared_ptr<const GRIDSection> gridSection) {
+        if (hasDVDEPTHZKeywords( gridSection ))
+            return true;
+        else
+            return hasDTOPSKeywords(gridSection);
+    }
+
+
+    bool EclipseGrid::hasDVDEPTHZKeywords(std::shared_ptr<const GRIDSection> gridSection) {
+        if (gridSection->hasKeyword("DXV") &&
+            gridSection->hasKeyword("DYV") &&
+            gridSection->hasKeyword("DZV") &&
+            gridSection->hasKeyword("DEPTHZ"))
+            return true;
+        else
+            return false;
+    }
+
+    bool EclipseGrid::hasDTOPSKeywords(std::shared_ptr<const GRIDSection> gridSection) {
         if ((gridSection->hasKeyword("DX") || gridSection->hasKeyword("DXV")) &&
             (gridSection->hasKeyword("DY") || gridSection->hasKeyword("DYV")) &&
             (gridSection->hasKeyword("DZ") || gridSection->hasKeyword("DZV")) &&
@@ -164,6 +187,36 @@ namespace Opm {
 
 
     void EclipseGrid::initCartesianGrid(const std::vector<int>& dims , std::shared_ptr<const GRIDSection> gridSection) {
+        if (hasDVDEPTHZKeywords( gridSection ))
+            initDVDEPTHZGrid( dims , gridSection );
+        else if (hasDTOPSKeywords(gridSection))
+            initDTOPSGrid( dims ,gridSection );
+        else 
+            throw std::invalid_argument("Tried to initialize cartesian grid without all required keywords");
+    }
+    
+    void EclipseGrid::assertVectorSize(const std::vector<double>& vector , size_t expectedSize , const std::string& vectorName) {
+        if (vector.size() != expectedSize)
+            throw std::invalid_argument("Wrong size for keyword: " + vectorName + ". Expected: " + boost::lexical_cast<std::string>(expectedSize) + " got: " + boost::lexical_cast<std::string>(vector.size()));
+    }
+
+    
+    void EclipseGrid::initDVDEPTHZGrid(const std::vector<int>& dims , std::shared_ptr<const GRIDSection> gridSection) {
+        const std::vector<double>& DXV = gridSection->getKeyword("DXV")->getSIDoubleData();
+        const std::vector<double>& DYV = gridSection->getKeyword("DYV")->getSIDoubleData();
+        const std::vector<double>& DZV = gridSection->getKeyword("DZV")->getSIDoubleData();
+        const std::vector<double>& DEPTHZ = gridSection->getKeyword("DEPTHZ")->getSIDoubleData();
+
+        assertVectorSize( DEPTHZ , static_cast<size_t>( (dims[0] + 1)*(dims[1] +1 )) , "DEPTHZ");
+        assertVectorSize( DXV    , static_cast<size_t>( dims[0] ) , "DXV");
+        assertVectorSize( DYV    , static_cast<size_t>( dims[1] ) , "DYV");
+        assertVectorSize( DZV    , static_cast<size_t>( dims[2] ) , "DZV");
+        
+        m_grid.reset( ecl_grid_alloc_dxv_dyv_dzv_depthz( dims[0] , dims[1] , dims[2] , DXV.data() , DYV.data() , DZV.data() , DEPTHZ.data() , NULL ) , ecl_grid_free);
+    }
+
+
+    void EclipseGrid::initDTOPSGrid(const std::vector<int>& dims , std::shared_ptr<const GRIDSection> gridSection) {
         std::vector<double> DX = createDVector( dims , 0 , "DX" , "DXV" , gridSection);
         std::vector<double> DY = createDVector( dims , 1 , "DY" , "DYV" , gridSection);
         std::vector<double> DZ = createDVector( dims , 2 , "DZ" , "DZV" , gridSection);
@@ -171,7 +224,6 @@ namespace Opm {
         
         m_grid.reset( ecl_grid_alloc_dx_dy_dz_tops( dims[0] , dims[1] , dims[2] , DX.data() , DY.data() , DZ.data() , TOPS.data() , NULL ) , ecl_grid_free);
     }
-    
 
     
     std::vector<double> EclipseGrid::createTOPSVector(const std::vector<int>& dims , const std::vector<double>& DZ , std::shared_ptr<const GRIDSection> gridSection) {

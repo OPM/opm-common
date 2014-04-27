@@ -46,10 +46,16 @@ namespace Opm {
         void exportCOORD( std::vector<double>& coord) const;
         void exportZCORN( std::vector<double>& zcorn) const;
         void exportACTNUM( std::vector<int>& actnum) const;
+        bool equal(const EclipseGrid& other) const;
     private:
         std::shared_ptr<ecl_grid_type> m_grid;
 
         void assertCornerPointKeywords( const std::vector<int>& dims , std::shared_ptr<const GRIDSection> gridSection ) const ;
+        void initDTOPSGrid(const std::vector<int>& dims , std::shared_ptr<const GRIDSection> gridSection);
+        void initDVDEPTHZGrid(const std::vector<int>& dims , std::shared_ptr<const GRIDSection> gridSection);
+        static bool hasDVDEPTHZKeywords(std::shared_ptr<const GRIDSection> gridSection);
+        static bool hasDTOPSKeywords(std::shared_ptr<const         GRIDSection> gridSection);
+        static void assertVectorSize(const std::vector<double>& vector , size_t expectedSize , const std::string& msg);
         std::vector<double> createTOPSVector(const std::vector<int>& dims , const std::vector<double>& DZ , std::shared_ptr<const GRIDSection> gridSection);
         std::vector<double> createDVector(const std::vector<int>& dims , size_t dim , const std::string& DKey , const std::string& DVKey, std::shared_ptr<const GRIDSection> gridSection);
         void scatterDim(const std::vector<int>& dims , size_t dim , const std::vector<double>& DV , std::vector<double>& D);
