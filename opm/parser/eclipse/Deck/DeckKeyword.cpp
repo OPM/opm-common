@@ -72,7 +72,13 @@ namespace Opm {
             throw std::range_error("Not a data keyword ?");
     }
 
-    
+
+    size_t DeckKeyword::getDataSize() const {
+        DeckRecordConstPtr record = getDataRecord();
+        DeckItemConstPtr item = record->getDataItem();
+        return item->size();
+    }
+
 
     const std::vector<int>& DeckKeyword::getIntData() const {
         DeckRecordConstPtr record = getDataRecord();
