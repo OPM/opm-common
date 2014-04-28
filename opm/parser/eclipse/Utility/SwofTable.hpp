@@ -55,6 +55,8 @@ namespace Opm {
         const std::vector<double> &getKrowColumn() const
         { return ParentType::getColumn(2); }
 
+        // this column is p_o - p_w (non-wetting phase pressure minus
+        // wetting phase pressure for a given water saturation)
         const std::vector<double> &getPcowColumn() const
         { return ParentType::getColumn(3); }
     };

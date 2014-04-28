@@ -55,6 +55,10 @@ namespace Opm {
         const std::vector<double> &getKrogColumn() const
         { return ParentType::getColumn(2); }
 
+        // this column is p_g - p_o (non-wetting phase pressure minus
+        // wetting phase pressure for a given gas saturation. the name
+        // is inconsistent, but it is the one used in the Eclipse
+        // manual...)
         const std::vector<double> &getPcogColumn() const
         { return ParentType::getColumn(3); }
     };
