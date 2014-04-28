@@ -77,8 +77,8 @@ EclipseState/Schedule/GroupTree.cpp
 EclipseState/Grid/EclipseGrid.cpp)
 
 set (utility_source
-Utility/SimpleTable.cpp
-Utility/SimpleMultiRecordTable.cpp)
+Utility/SingleRecordTable.cpp
+Utility/MultiRecordTable.cpp)
 
 set( HEADER_FILES
 RawDeck/RawConsts.hpp 

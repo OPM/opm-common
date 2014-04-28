@@ -16,10 +16,10 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPM_PARSER_SIMPLE_MULTI_RECORD_TABLE_HPP
-#define	OPM_PARSER_SIMPLE_MULTI_RECORD_TABLE_HPP
+#ifndef OPM_PARSER_MULTI_RECORD_TABLE_HPP
+#define	OPM_PARSER_MULTI_RECORD_TABLE_HPP
 
-#include <opm/parser/eclipse/Utility/SimpleTable.hpp>
+#include <opm/parser/eclipse/Utility/SingleRecordTable.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
@@ -31,7 +31,7 @@
 
 namespace Opm {
     // create table from first few items of multiple records (i.e. getSIDoubleData() throws an exception)
-    class SimpleMultiRecordTable : public SimpleTable {
+    class MultiRecordTable : public SingleRecordTable {
     public:
         /*!
          * \brief Returns the number of tables which can be found in a
@@ -45,7 +45,7 @@ namespace Opm {
          * This creates a table out of the first N items of each of
          * the keyword's records. (N is the number of columns.)
          */
-        SimpleMultiRecordTable(Opm::DeckKeywordConstPtr keyword,
+        MultiRecordTable(Opm::DeckKeywordConstPtr keyword,
                                const std::vector<std::string> &columnNames,
                                size_t tableIndex,
                                size_t firstEntityOffset = 0);
@@ -72,8 +72,8 @@ namespace Opm {
         size_t m_numRecords;
     };
 
-    typedef std::shared_ptr<SimpleMultiRecordTable> SimpleMultiRecordTablePtr;
-    typedef std::shared_ptr<const SimpleMultiRecordTable> SimpleMultiRecordTableConstPtr;
+    typedef std::shared_ptr<MultiRecordTable> MultiRecordTablePtr;
+    typedef std::shared_ptr<const MultiRecordTable> MultiRecordTableConstPtr;
 
 }
 

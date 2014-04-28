@@ -19,11 +19,11 @@
 #ifndef OPM_PARSER_PVTO_OUTER_TABLE_HPP
 #define	OPM_PARSER_PVTO_OUTER_TABLE_HPP
 
-#include "SimpleMultiRecordTable.hpp"
+#include "MultiRecordTable.hpp"
 
 namespace Opm {
-    class PvtoOuterTable : protected SimpleMultiRecordTable {
-        typedef SimpleMultiRecordTable ParentType;
+    class PvtoOuterTable : protected MultiRecordTable {
+        typedef MultiRecordTable ParentType;
 
     public:
         using ParentType::numTables;

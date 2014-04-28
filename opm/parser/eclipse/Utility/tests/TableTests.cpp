@@ -20,8 +20,8 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 // generic table classes
-#include <opm/parser/eclipse/Utility/SimpleTable.hpp>
-#include <opm/parser/eclipse/Utility/SimpleMultiRecordTable.hpp>
+#include <opm/parser/eclipse/Utility/SingleRecordTable.hpp>
+#include <opm/parser/eclipse/Utility/MultiRecordTable.hpp>
 #include <opm/parser/eclipse/Utility/FullTable.hpp>
 
 // keyword specific table classes
@@ -29,7 +29,7 @@
 #include <opm/parser/eclipse/Utility/SwofTable.hpp>
 #include <opm/parser/eclipse/Utility/SgofTable.hpp>
 
-#define BOOST_TEST_MODULE SimpleTableTests
+#define BOOST_TEST_MODULE SingleRecordTableTests
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
@@ -38,7 +38,7 @@
 #include <stdexcept>
 #include <iostream>
 
-BOOST_AUTO_TEST_CASE(CreateSimpleTable) {
+BOOST_AUTO_TEST_CASE(CreateSingleRecordTable) {
     const char *deckData =
         "TABDIMS\n"
         " 2 /\n"
@@ -55,17 +55,17 @@ BOOST_AUTO_TEST_CASE(CreateSimpleTable) {
     std::vector<std::string> justRightColumnNames{"A", "B", "C", "D"};
     std::vector<std::string> tooManyColumnNames{"A", "B", "C", "D", "E"};
 
-    BOOST_CHECK_EQUAL(Opm::SimpleTable::numTables(deck->getKeyword("SWOF")), 2);
-    BOOST_CHECK_THROW(Opm::SimpleTable(deck->getKeyword("SWOF"),
+    BOOST_CHECK_EQUAL(Opm::SingleRecordTable::numTables(deck->getKeyword("SWOF")), 2);
+    BOOST_CHECK_THROW(Opm::SingleRecordTable(deck->getKeyword("SWOF"),
                                        tooFewColumnNames,
                                        /*recordIdx=*/0),
                       std::runtime_error);
-    BOOST_CHECK_THROW(Opm::SimpleTable(deck->getKeyword("SWOF"),
+    BOOST_CHECK_THROW(Opm::SingleRecordTable(deck->getKeyword("SWOF"),
                                        tooManyColumnNames,
                                        /*recordIdx=*/0),
                       std::runtime_error);
 
-    Opm::SimpleTable foo(deck->getKeyword("SWOF"),
+    Opm::SingleRecordTable foo(deck->getKeyword("SWOF"),
                          justRightColumnNames,
                          /*recordIdx=*/0);
 }
@@ -92,21 +92,21 @@ BOOST_AUTO_TEST_CASE(CreateMultiTable) {
     std::vector<std::string> justRightColumnNames{"A", "B", "C", "D"};
     std::vector<std::string> tooManyColumnNames{"A", "B", "C", "D", "E"};
 
-    BOOST_CHECK_EQUAL(Opm::SimpleMultiRecordTable::numTables(deck->getKeyword("PVTO")), 2);
+    BOOST_CHECK_EQUAL(Opm::MultiRecordTable::numTables(deck->getKeyword("PVTO")), 2);
     // this mistake can't be detected as the MultiRecordTable takes
     // the first $N items as the column names...
     /*
-    BOOST_CHECK_THROW(Opm::SimpleMultiRecordTable(deck->getKeyword("PVTO"),
+    BOOST_CHECK_THROW(Opm::MultiRecordTable(deck->getKeyword("PVTO"),
                                                   tooFewColumnNames,
                                                   0),
                       std::runtime_error);
     */
-    BOOST_CHECK_THROW(Opm::SimpleMultiRecordTable(deck->getKeyword("PVTO"),
+    BOOST_CHECK_THROW(Opm::MultiRecordTable(deck->getKeyword("PVTO"),
                                                   tooManyColumnNames,
                                                   /*tableIdx=*/0),
                       std::runtime_error);
 
-    Opm::SimpleMultiRecordTable foo(deck->getKeyword("PVTO"),
+    Opm::MultiRecordTable foo(deck->getKeyword("PVTO"),
                                     justRightColumnNames,
                                     /*recordIdx=*/0);
 }

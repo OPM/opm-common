@@ -19,11 +19,11 @@
 #ifndef OPM_PARSER_PLYADS_TABLE_HPP
 #define	OPM_PARSER_PLYADS_TABLE_HPP
 
-#include "SimpleTable.hpp"
+#include "SingleRecordTable.hpp"
 
 namespace Opm {
-    class PlyadsTable : protected SimpleTable {
-        typedef SimpleTable ParentType;
+    class PlyadsTable : protected SingleRecordTable {
+        typedef SingleRecordTable ParentType;
 
     public:
         using ParentType::numTables;

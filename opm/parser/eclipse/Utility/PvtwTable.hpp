@@ -19,11 +19,11 @@
 #ifndef OPM_PARSER_PVTW_TABLE_HPP
 #define	OPM_PARSER_PVTW_TABLE_HPP
 
-#include "SimpleTable.hpp"
+#include "SingleRecordTable.hpp"
 
 namespace Opm {
-    class PvtwTable : protected SimpleTable {
-        typedef SimpleTable ParentType;
+    class PvtwTable : protected SingleRecordTable {
+        typedef SingleRecordTable ParentType;
 
     public:
         using ParentType::numTables;
@@ -35,7 +35,7 @@ namespace Opm {
         PvtwTable(Opm::DeckKeywordConstPtr keyword,
                   int recordIdx = 0,
                   int firstEntityOffset = 0)
-            : SimpleTable(keyword,
+            : SingleRecordTable(keyword,
                           std::vector<std::string>{"P", "BW", "CW", "MUW", "CMUW"},
                           recordIdx, firstEntityOffset)
         {}

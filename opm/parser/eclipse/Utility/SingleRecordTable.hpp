@@ -16,8 +16,8 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPM_PARSER_SIMPLE_TABLE_HPP
-#define	OPM_PARSER_SIMPLE_TABLE_HPP
+#ifndef OPM_PARSER_SINGLE_RECORD_TABLE_HPP
+#define	OPM_PARSER_SINGLE_RECORD_TABLE_HPP
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
@@ -28,10 +28,10 @@
 #include <cassert>
 
 namespace Opm {
-    class SimpleTable {
+    class SingleRecordTable {
     protected:
         // protected default constructor for the derived classes
-        SimpleTable() {}
+        SingleRecordTable() {}
 
     public:
         /*!
@@ -49,13 +49,13 @@ namespace Opm {
          * This requires all data to be a list of doubles in the first
          * item of a given record index.
          */
-        SimpleTable(Opm::DeckKeywordConstPtr keyword,
+        SingleRecordTable(Opm::DeckKeywordConstPtr keyword,
                     const std::vector<std::string> &columnNames,
                     size_t recordIdx = 0,
                     size_t firstEntityOffset = 0);
 
         // constructor to make the base class compatible with specialized table implementations
-        SimpleTable(Opm::DeckKeywordConstPtr /* keyword */,
+        SingleRecordTable(Opm::DeckKeywordConstPtr /* keyword */,
                     size_t /* recordIdx = 0 */,
                     size_t /* firstEntityOffset = 0 */)
         {
@@ -95,8 +95,8 @@ namespace Opm {
         std::vector<std::vector<double> > m_columns;
     };
 
-    typedef std::shared_ptr<SimpleTable> SimpleTablePtr;
-    typedef std::shared_ptr<const SimpleTable> SimpleTableConstPtr;
+    typedef std::shared_ptr<SingleRecordTable> SingleRecordTablePtr;
+    typedef std::shared_ptr<const SingleRecordTable> SingleRecordTableConstPtr;
 }
 
 #endif	// OPM_PARSER_SIMPLE_TABLE_HPP

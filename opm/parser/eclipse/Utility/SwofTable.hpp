@@ -19,11 +19,11 @@
 #ifndef OPM_PARSER_SWOF_TABLE_HPP
 #define	OPM_PARSER_SWOF_TABLE_HPP
 
-#include "SimpleTable.hpp"
+#include "SingleRecordTable.hpp"
 
 namespace Opm {
-    class SwofTable : protected SimpleTable {
-        typedef SimpleTable ParentType;
+    class SwofTable : protected SingleRecordTable {
+        typedef SingleRecordTable ParentType;
 
     public:
         using ParentType::numTables;
@@ -35,7 +35,7 @@ namespace Opm {
         SwofTable(Opm::DeckKeywordConstPtr keyword,
                   int recordIdx = 0,
                   int firstEntityOffset = 0)
-            : SimpleTable(keyword,
+            : SingleRecordTable(keyword,
                           std::vector<std::string>{"SW", "KRW", "KROW", "PCOW"},
                           recordIdx, firstEntityOffset)
         {}

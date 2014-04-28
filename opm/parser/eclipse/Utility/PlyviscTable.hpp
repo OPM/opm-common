@@ -19,11 +19,11 @@
 #ifndef OPM_PARSER_PLYVISC_TABLE_HPP
 #define	OPM_PARSER_PLYVISC_TABLE_HPP
 
-#include "SimpleTable.hpp"
+#include "SingleRecordTable.hpp"
 
 namespace Opm {
-    class PlyviscTable : protected SimpleTable {
-        typedef SimpleTable ParentType;
+    class PlyviscTable : protected SingleRecordTable {
+        typedef SingleRecordTable ParentType;
 
     public:
         using ParentType::numTables;

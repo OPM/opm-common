@@ -19,11 +19,11 @@
 #ifndef OPM_PARSER_PVTG_INNER_TABLE_HPP
 #define	OPM_PARSER_PVTG_INNER_TABLE_HPP
 
-#include "SimpleTable.hpp"
+#include "SingleRecordTable.hpp"
 
 namespace Opm {
-    class PvtgInnerTable : protected SimpleTable {
-        typedef SimpleTable ParentType;
+    class PvtgInnerTable : protected SingleRecordTable {
+        typedef SingleRecordTable ParentType;
 
     public:
         using ParentType::numTables;
@@ -35,7 +35,7 @@ namespace Opm {
          * The first value of the record (-> Rv) is skipped.
          */
         PvtgInnerTable(Opm::DeckKeywordConstPtr keyword, size_t recordIdx = 0)
-            : SimpleTable(keyword,
+            : SingleRecordTable(keyword,
                           std::vector<std::string>{"RV", "BG", "MUG"},
                           recordIdx, 1U)
         {}

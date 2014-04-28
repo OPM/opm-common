@@ -19,11 +19,11 @@
 #ifndef OPM_PARSER_ROCKTAB_TABLE_HPP
 #define	OPM_PARSER_ROCKTAB_TABLE_HPP
 
-#include "SimpleTable.hpp"
+#include "SingleRecordTable.hpp"
 
 namespace Opm {
-    class RocktabTable : protected SimpleTable {
-        typedef SimpleTable ParentType;
+    class RocktabTable : protected SingleRecordTable {
+        typedef SingleRecordTable ParentType;
 
     public:
         using ParentType::numTables;
@@ -36,7 +36,7 @@ namespace Opm {
                      bool isDirectional,
                      int recordIdx = 0,
                      int firstEntityOffset = 0)
-            : SimpleTable(keyword,
+            : SingleRecordTable(keyword,
                           isDirectional
                           ? std::vector<std::string>{"PO", "PV_MULT", "TRANSMIS_MULT_X", "TRANSMIS_MULT_Y", "TRANSMIS_MULT_Z"}
                           : std::vector<std::string>{"PO", "PV_MULT", "TRANSMIS_MULT"},

@@ -16,11 +16,11 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <opm/parser/eclipse/Utility/SimpleTable.hpp>
+#include <opm/parser/eclipse/Utility/SingleRecordTable.hpp>
 
 namespace Opm {
 // create table from single record
-SimpleTable::SimpleTable(Opm::DeckKeywordConstPtr keyword,
+SingleRecordTable::SingleRecordTable(Opm::DeckKeywordConstPtr keyword,
                          const std::vector<std::string> &columnNames,
                          size_t recordIdx,
                          size_t firstEntityOffset)
@@ -47,7 +47,7 @@ SimpleTable::SimpleTable(Opm::DeckKeywordConstPtr keyword,
     }
 }
 
-void SimpleTable::createColumns_(const std::vector<std::string> &columnNames)
+void SingleRecordTable::createColumns_(const std::vector<std::string> &columnNames)
 {
     // Allocate column names. TODO (?): move the column names into
     // the json description of the keyword.
@@ -60,7 +60,7 @@ void SimpleTable::createColumns_(const std::vector<std::string> &columnNames)
     m_columns.resize(columnIdx);
 }
 
-size_t SimpleTable::getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord) const
+size_t SingleRecordTable::getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord) const
 {
     size_t result = 0;
     for (size_t i = 0; i < deckRecord->size(); ++ i) {
@@ -70,7 +70,7 @@ size_t SimpleTable::getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord) const
     return result;
 }
 
-double SimpleTable::getFlatSiDoubleData_(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const
+double SingleRecordTable::getFlatSiDoubleData_(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const
 {
     size_t itemFirstFlatIdx = 0;
     for (unsigned i = 0; i < deckRecord->size(); ++ i) {

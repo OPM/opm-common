@@ -16,14 +16,14 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <opm/parser/eclipse/Utility/SimpleMultiRecordTable.hpp>
+#include <opm/parser/eclipse/Utility/MultiRecordTable.hpp>
 
 namespace Opm {
 /*!
  * \brief Returns the number of tables which can be found in a
  *        given keyword.
  */
-size_t SimpleMultiRecordTable::numTables(Opm::DeckKeywordConstPtr keyword)
+size_t MultiRecordTable::numTables(Opm::DeckKeywordConstPtr keyword)
 {
     size_t result = 0;
 
@@ -42,7 +42,7 @@ size_t SimpleMultiRecordTable::numTables(Opm::DeckKeywordConstPtr keyword)
 }
 
 // create table from first few items of multiple records (i.e. getSIDoubleData() throws an exception)
-SimpleMultiRecordTable::SimpleMultiRecordTable(Opm::DeckKeywordConstPtr keyword,
+MultiRecordTable::MultiRecordTable(Opm::DeckKeywordConstPtr keyword,
                                                const std::vector<std::string> &columnNames,
                                                size_t tableIdx,
                                                size_t firstEntityOffset)
@@ -90,7 +90,7 @@ SimpleMultiRecordTable::SimpleMultiRecordTable(Opm::DeckKeywordConstPtr keyword,
     }
 }
 
-size_t SimpleMultiRecordTable::getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord)
+size_t MultiRecordTable::getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord)
 {
     int result = 0;
     for (unsigned i = 0; i < deckRecord->size(); ++ i) {
@@ -103,7 +103,7 @@ size_t SimpleMultiRecordTable::getNumFlatItems_(Opm::DeckRecordConstPtr deckReco
     return result;
 }
 
-double SimpleMultiRecordTable::getFlatSiDoubleData_(Opm::DeckRecordConstPtr deckRecord, unsigned flatItemIdx) const
+double MultiRecordTable::getFlatSiDoubleData_(Opm::DeckRecordConstPtr deckRecord, unsigned flatItemIdx) const
 {
     unsigned itemFirstFlatIdx = 0;
     for (unsigned i = 0; i < deckRecord->size(); ++ i) {
