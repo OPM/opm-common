@@ -88,19 +88,19 @@ namespace Opm {
             DeckKeywordConstPtr ZCORNKeyWord = gridSection->getKeyword("ZCORN");
             
             if (ZCORNKeyWord->getDataSize() != static_cast<size_t>(8*nx*ny*nz))
-                throw std::invalid_argument("Wrong size in ZCORN keyword - expected 8*x*ny*nz = " + 8*nx*ny*nz);
+                throw std::invalid_argument("Wrong size in ZCORN keyword - expected 8*x*ny*nz = " + boost::lexical_cast<std::string>(8*nx*ny*nz));
         }
 
         {
             DeckKeywordConstPtr COORDKeyWord = gridSection->getKeyword("COORD");
             if (COORDKeyWord->getDataSize() != static_cast<size_t>(6*(nx + 1)*(ny + 1)))
-                throw std::invalid_argument("Wrong size in COORD keyword - expected 6*(nx + 1)*(ny + 1) = " + 6*(nx + 1)*(ny + 1));
+                throw std::invalid_argument("Wrong size in COORD keyword - expected 6*(nx + 1)*(ny + 1) = " + boost::lexical_cast<std::string>(6*(nx + 1)*(ny + 1)));
         }
 
         if (gridSection->hasKeyword("ACTNUM")) {
             DeckKeywordConstPtr ACTNUMKeyWord = gridSection->getKeyword("ACTNUM");
             if (ACTNUMKeyWord->getDataSize() != static_cast<size_t>(nx*ny*nz))
-                throw std::invalid_argument("Wrong size in ACTNUM keyword - expected 8*x*ny*nz = " + nx*ny*nz);
+                throw std::invalid_argument("Wrong size in ACTNUM keyword - expected 8*x*ny*nz = " + boost::lexical_cast<std::string>(nx*ny*nz));
         }
     }
         
