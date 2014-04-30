@@ -126,6 +126,7 @@ EclipseState/Schedule/CompletionSet.hpp
 EclipseState/Schedule/ScheduleEnums.hpp
 EclipseState/Schedule/GroupTreeNode.hpp 
 EclipseState/Schedule/GroupTree.hpp 
+EclipseState/Schedule/OrderedMap.hpp 
 #
 EclipseState/Grid/EclipseGrid.hpp
 #
