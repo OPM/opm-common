@@ -506,7 +506,7 @@ namespace Opm {
         double refDepth = record->getItem("REF_DEPTH")->getSIDouble(0);
         Phase::PhaseEnum preferredPhase = Phase::PhaseEnumFromString(record->getItem("PHASE")->getTrimmedString(0));
         WellPtr well(new Well(wellName, headI, headJ, refDepth, preferredPhase, m_timeMap , timeStep));
-        m_wells[ wellName ] = well;
+        m_wells.insert( wellName  , well);
     }
 
     size_t Schedule::numWells() const {
@@ -514,14 +514,11 @@ namespace Opm {
     }
 
     bool Schedule::hasWell(const std::string& wellName) const {
-        return m_wells.find(wellName) != m_wells.end();
+        return m_wells.hasKey( wellName );
     }
 
     WellPtr Schedule::getWell(const std::string& wellName) const {
-        if (hasWell(wellName)) {
-            return m_wells.at(wellName);
-        } else
-            throw std::invalid_argument("Well: " + wellName + " does not exist");
+        return m_wells.get( wellName );
     }
 
     std::vector<WellConstPtr> Schedule::getWells() const {
@@ -535,7 +532,7 @@ namespace Opm {
 
         std::vector<WellConstPtr> wells;
         for (auto iter = m_wells.begin(); iter != m_wells.end(); ++iter) {
-            WellConstPtr well = (*iter).second;
+            WellConstPtr well = *iter;
             if (well->hasBeenDefined(timeStep)) {
                 wells.push_back(well);
             }
