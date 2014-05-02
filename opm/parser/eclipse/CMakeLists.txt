@@ -139,7 +139,8 @@ Utility/WgrupconWrapper.hpp
 Utility/PvcdoTable.hpp
 Utility/GconprodWrapper.hpp
 Utility/PvdgTable.hpp
-Utility/SimpleMultiRecordTable.hpp
+Utility/SingleRecordTable.hpp
+Utility/MultiRecordTable.hpp
 Utility/TstepWrapper.hpp
 Utility/PvtgTable.hpp
 Utility/StartWrapper.hpp
@@ -150,7 +151,6 @@ Utility/FullTable.hpp
 Utility/WconprodWrapper.hpp
 Utility/GconinjeWrapper.hpp
 Utility/WelopenWrapper.hpp
-Utility/SimpleTable.hpp
 Utility/SgofTable.hpp
 Utility/PvtoTable.hpp
 Utility/PvtoInnerTable.hpp
