@@ -19,13 +19,15 @@
 #ifndef OPM_PARSER_SWOF_TABLE_HPP
 #define	OPM_PARSER_SWOF_TABLE_HPP
 
-#include "SimpleTable.hpp"
+#include "SingleRecordTable.hpp"
 
 namespace Opm {
-    class SwofTable : protected SimpleTable {
-        typedef SimpleTable ParentType;
+    class SwofTable : protected SingleRecordTable {
+        typedef SingleRecordTable ParentType;
 
     public:
+        using ParentType::numTables;
+
         /*!
          * \brief Read the SWOF keyword and provide some convenience
          *        methods for it.
@@ -33,7 +35,7 @@ namespace Opm {
         SwofTable(Opm::DeckKeywordConstPtr keyword,
                   int recordIdx = 0,
                   int firstEntityOffset = 0)
-            : SimpleTable(keyword,
+            : SingleRecordTable(keyword,
                           std::vector<std::string>{"SW", "KRW", "KROW", "PCOW"},
                           recordIdx, firstEntityOffset)
         {}
@@ -53,6 +55,8 @@ namespace Opm {
         const std::vector<double> &getKrowColumn() const
         { return ParentType::getColumn(2); }
 
+        // this column is p_o - p_w (non-wetting phase pressure minus
+        // wetting phase pressure for a given water saturation)
         const std::vector<double> &getPcowColumn() const
         { return ParentType::getColumn(3); }
     };

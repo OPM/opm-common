@@ -19,8 +19,8 @@
 #ifndef OPM_PARSER_FULL_TABLE_HPP
 #define	OPM_PARSER_FULL_TABLE_HPP
 
-#include <opm/parser/eclipse/Utility/SimpleMultiRecordTable.hpp>
-#include <opm/parser/eclipse/Utility/SimpleTable.hpp>
+#include <opm/parser/eclipse/Utility/MultiRecordTable.hpp>
+#include <opm/parser/eclipse/Utility/SingleRecordTable.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 #include <map>
@@ -30,7 +30,7 @@
 #include <cassert>
 
 namespace Opm {
-    template <class OuterTable = Opm::SimpleMultiRecordTable, class InnerTable = Opm::SimpleTable>
+    template <class OuterTable = Opm::MultiRecordTable, class InnerTable = Opm::SingleRecordTable>
     class FullTable
     {
         typedef FullTable<OuterTable, InnerTable> Self;
@@ -59,6 +59,9 @@ namespace Opm {
         typedef std::shared_ptr<Self> Pointer;
         typedef std::shared_ptr<const Self> ConstPointer;
 
+        static size_t numTables(Opm::DeckKeywordConstPtr keyword)
+        { return OuterTable::numTables(keyword); }
+
         /*!
          * \brief Read full tables from keywords like PVTO
          *
@@ -76,11 +79,11 @@ namespace Opm {
                   const std::vector<std::string> &innerColumnNames,
                   size_t tableIdx)
         {
-            m_outerTable.reset(new SimpleMultiRecordTable(keyword, outerColumnNames, tableIdx));
+            m_outerTable.reset(new MultiRecordTable(keyword, outerColumnNames, tableIdx));
 
             for (size_t rowIdx = 0; rowIdx < m_outerTable->numRecords(); ++rowIdx) {
-                Opm::SimpleTableConstPtr curRow(
-                    new SimpleTable(keyword,
+                Opm::SingleRecordTableConstPtr curRow(
+                    new SingleRecordTable(keyword,
                                     innerColumnNames,
                                     /*recordIdx=*/m_outerTable->firstRecordIndex() + rowIdx,
                                     /*firstColumnOffset=*/1));
@@ -104,8 +107,8 @@ namespace Opm {
 
     };
 
-    typedef FullTable<Opm::SimpleMultiRecordTable, Opm::SimpleTable>::Pointer FullTablePtr;
-    typedef FullTable<Opm::SimpleMultiRecordTable, Opm::SimpleTable>::ConstPointer FullTableConstPtr;
+    typedef FullTable<Opm::MultiRecordTable, Opm::SingleRecordTable>::Pointer FullTablePtr;
+    typedef FullTable<Opm::MultiRecordTable, Opm::SingleRecordTable>::ConstPointer FullTableConstPtr;
 }
 
 #endif	// OPM_PARSER_FULL_TABLE_HPP

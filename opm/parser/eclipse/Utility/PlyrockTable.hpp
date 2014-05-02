@@ -19,13 +19,15 @@
 #ifndef OPM_PARSER_PLYROCK_TABLE_HPP
 #define	OPM_PARSER_PLYROCK_TABLE_HPP
 
-#include "SimpleTable.hpp"
+#include "SingleRecordTable.hpp"
 
 namespace Opm {
-    class PlyrockTable : protected SimpleTable {
-        typedef SimpleTable ParentType;
+    class PlyrockTable : protected SingleRecordTable {
+        typedef SingleRecordTable ParentType;
 
     public:
+        using ParentType::numTables;
+
         /*!
          * \brief Read the PLYROCK keyword and provide some convenience
          *        methods for it.

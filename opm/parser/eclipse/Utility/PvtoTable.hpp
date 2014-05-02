@@ -32,6 +32,8 @@ namespace Opm {
       typedef Opm::FullTable<Opm::PvtoOuterTable, Opm::PvtoInnerTable> ParentType;
 
   public:
+      using ParentType::numTables;
+
       /*!
        * \brief Read the table for the PVTO and provide convenient access to it.
        */

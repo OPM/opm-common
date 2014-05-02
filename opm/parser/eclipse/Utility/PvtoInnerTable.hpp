@@ -19,13 +19,15 @@
 #ifndef OPM_PARSER_PVTO_INNER_TABLE_HPP
 #define	OPM_PARSER_PVTO_INNER_TABLE_HPP
 
-#include "SimpleTable.hpp"
+#include "SingleRecordTable.hpp"
 
 namespace Opm {
-    class PvtoInnerTable : protected SimpleTable {
-        typedef SimpleTable ParentType;
+    class PvtoInnerTable : protected SingleRecordTable {
+        typedef SingleRecordTable ParentType;
 
     public:
+        using ParentType::numTables;
+
         /*!
          * \brief Read the per record table of the PVTO keyword and
          *        provide some convenience methods for it.
@@ -33,7 +35,7 @@ namespace Opm {
          * The first value of the record (-> Rs) is skipped.
          */
         PvtoInnerTable(Opm::DeckKeywordConstPtr keyword, int recordIdx = 0)
-            : SimpleTable(keyword,
+            : SingleRecordTable(keyword,
                           std::vector<std::string>{"P", "BO", "MU"},
                           recordIdx, /*firstEntityOffset=*/1)
         {}

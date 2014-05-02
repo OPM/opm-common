@@ -19,13 +19,15 @@
 #ifndef OPM_PARSER_SGOF_TABLE_HPP
 #define	OPM_PARSER_SGOF_TABLE_HPP
 
-#include "SimpleTable.hpp"
+#include "SingleRecordTable.hpp"
 
 namespace Opm {
-    class SgofTable : protected SimpleTable {
-        typedef SimpleTable ParentType;
+    class SgofTable : protected SingleRecordTable {
+        typedef SingleRecordTable ParentType;
 
     public:
+        using ParentType::numTables;
+
         /*!
          * \brief Read the SGOF keyword and provide some convenience
          *        methods for it.
@@ -33,7 +35,7 @@ namespace Opm {
         SgofTable(Opm::DeckKeywordConstPtr keyword,
                   int recordIdx = 0,
                   int firstEntityOffset = 0)
-            : SimpleTable(keyword,
+            : SingleRecordTable(keyword,
                           std::vector<std::string>{"SG", "KRG", "KROG", "PCOG"},
                           recordIdx, firstEntityOffset)
         {}
@@ -53,6 +55,10 @@ namespace Opm {
         const std::vector<double> &getKrogColumn() const
         { return ParentType::getColumn(2); }
 
+        // this column is p_g - p_o (non-wetting phase pressure minus
+        // wetting phase pressure for a given gas saturation. the name
+        // is inconsistent, but it is the one used in the Eclipse
+        // manual...)
         const std::vector<double> &getPcogColumn() const
         { return ParentType::getColumn(3); }
     };

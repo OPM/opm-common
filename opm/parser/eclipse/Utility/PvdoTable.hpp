@@ -19,13 +19,15 @@
 #ifndef OPM_PARSER_PVDO_TABLE_HPP
 #define	OPM_PARSER_PVDO_TABLE_HPP
 
-#include "SimpleTable.hpp"
+#include "SingleRecordTable.hpp"
 
 namespace Opm {
-    class PvdoTable : protected SimpleTable {
-        typedef SimpleTable ParentType;
+    class PvdoTable : protected SingleRecordTable {
+        typedef SingleRecordTable ParentType;
 
     public:
+        using ParentType::numTables;
+
         /*!
          * \brief Read the PVDO keyword and provide some convenience
          *        methods for it.
@@ -33,7 +35,7 @@ namespace Opm {
         PvdoTable(Opm::DeckKeywordConstPtr keyword,
                   int recordIdx = 0,
                   int firstEntityOffset = 0)
-            : SimpleTable(keyword,
+            : SingleRecordTable(keyword,
                           std::vector<std::string>{"P", "BO", "MUO"},
                           recordIdx, firstEntityOffset)
         {}

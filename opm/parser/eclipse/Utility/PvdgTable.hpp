@@ -19,13 +19,15 @@
 #ifndef OPM_PARSER_PVDG_TABLE_HPP
 #define	OPM_PARSER_PVDG_TABLE_HPP
 
-#include "SimpleTable.hpp"
+#include "SingleRecordTable.hpp"
 
 namespace Opm {
-    class PvdgTable : protected SimpleTable {
-        typedef SimpleTable ParentType;
+    class PvdgTable : protected SingleRecordTable {
+        typedef SingleRecordTable ParentType;
 
     public:
+        using ParentType::numTables;
+
         /*!
          * \brief Read the PVDG keyword and provide some convenience
          *        methods for it.
@@ -33,7 +35,7 @@ namespace Opm {
         PvdgTable(Opm::DeckKeywordConstPtr keyword,
                   int recordIdx = 0,
                   int firstEntityOffset = 0)
-            : SimpleTable(keyword,
+            : SingleRecordTable(keyword,
                           std::vector<std::string>{"P", "BG", "MUG"},
                           recordIdx, firstEntityOffset)
         {}

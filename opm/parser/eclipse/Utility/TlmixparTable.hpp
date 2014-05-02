@@ -19,13 +19,15 @@
 #ifndef OPM_PARSER_TLMIXPAR_TABLE_HPP
 #define	OPM_PARSER_TLMIXPAR_TABLE_HPP
 
-#include "SimpleTable.hpp"
+#include "SingleRecordTable.hpp"
 
 namespace Opm {
-    class TlmixparTable : protected SimpleTable {
-        typedef SimpleTable ParentType;
+    class TlmixparTable : protected SingleRecordTable {
+        typedef SingleRecordTable ParentType;
 
     public:
+        using ParentType::numTables;
+
         /*!
          * \brief Read the TLMIXPAR keyword and provide some convenience
          *        methods for it.
