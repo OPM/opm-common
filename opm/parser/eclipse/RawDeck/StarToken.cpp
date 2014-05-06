@@ -28,10 +28,19 @@
 namespace Opm {
 
     bool tokenContainsStar(const std::string& token) {
-        if (token.find('*') == std::string::npos)
+        size_t pos = token.find('*');
+        if (pos == std::string::npos)
             return false;
-        else
-            return true;
+        else {
+            if (pos == 0) return true;
+            try {
+                boost::lexical_cast<int>(token.substr(0, pos));
+                return true;
+            }
+            catch (boost::bad_lexical_cast&) {
+                return false;
+            }
+        }
     }
 
   

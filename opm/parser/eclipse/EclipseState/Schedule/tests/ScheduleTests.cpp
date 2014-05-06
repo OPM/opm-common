@@ -176,3 +176,26 @@ BOOST_AUTO_TEST_CASE(WellsIterator_HasWells_WellsReturned) {
 }
 
 
+BOOST_AUTO_TEST_CASE(WellsIteratorWithRegex_HasWells_WellsReturned) {
+    DeckPtr deck = createDeckWithWells();
+    Schedule schedule(deck);
+    std::string wellNamePattern;
+    std::vector<WellPtr> wells;
+
+    wellNamePattern = "*";
+    wells = schedule.getWells(wellNamePattern);
+    BOOST_CHECK_EQUAL(3U, wells.size());
+
+    wellNamePattern = "W_*";
+    wells = schedule.getWells(wellNamePattern);
+    BOOST_CHECK_EQUAL(3U, wells.size());
+
+    wellNamePattern = "*2";
+    wells = schedule.getWells(wellNamePattern);
+    BOOST_CHECK_EQUAL(1U, wells.size());
+
+    wellNamePattern = "W_3";
+    wells = schedule.getWells(wellNamePattern);
+    BOOST_CHECK_EQUAL(1U, wells.size());
+}
+

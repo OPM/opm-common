@@ -48,6 +48,7 @@ namespace Opm
         WellPtr getWell(const std::string& wellName) const;
         std::vector<WellConstPtr> getWells() const;
         std::vector<WellConstPtr> getWells(size_t timeStep) const;
+        std::vector<WellPtr> getWells(const std::string& wellNamePattern) const;
 
         GroupTreePtr getGroupTree(size_t t) const;
         size_t numGroups() const;
