@@ -70,6 +70,22 @@ DeckPtr createDeckWithWells() {
 }
 
 
+DeckPtr createDeckWithWellsOrdered() {
+    Opm::Parser parser;
+    std::string input =
+            "START             -- 0 \n"
+            "10 MAI 2007 / \n"
+            "SCHEDULE\n"
+            "WELSPECS\n"
+            "     \'CW_1\'        \'OP\'   30   37  3.33       \'OIL\'  7* /   \n"
+            "     \'BW_2\'        \'OP\'   30   37  3.33       \'OIL\'  7* /   \n"
+            "     \'AW_3\'        \'OP\'   20   51  3.92       \'OIL\'  7* /  \n"
+            "/\n";
+
+    return parser.parseString(input);
+}
+
+
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingSCHEDULE_Throws) {
     DeckPtr deck(new Deck());
@@ -84,6 +100,18 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingReturnsDefaults) {
     Schedule schedule(deck);
     BOOST_CHECK_EQUAL( schedule.getStartTime() , boost::posix_time::ptime(boost::gregorian::date( 1983  , boost::gregorian::Jan , 1)));
 }
+
+
+BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrdered) {
+    DeckPtr deck = createDeckWithWellsOrdered();
+    Schedule schedule(deck);
+    std::vector<WellConstPtr> wells = schedule.getWells();
+    
+    BOOST_CHECK_EQUAL( "CW_1" , wells[0]->name());
+    BOOST_CHECK_EQUAL( "BW_2" , wells[1]->name());
+    BOOST_CHECK_EQUAL( "AW_3" , wells[2]->name());
+}
+
 
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithStart) {

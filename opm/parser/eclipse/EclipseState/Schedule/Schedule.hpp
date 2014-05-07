@@ -24,6 +24,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/OrderedMap.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 #include <memory>
@@ -56,7 +57,7 @@ namespace Opm
   
     private:
         TimeMapPtr m_timeMap;
-        std::map<std::string , WellPtr> m_wells;
+        OrderedMap<WellPtr> m_wells;
         std::map<std::string , GroupPtr> m_groups;
         std::shared_ptr<DynamicState<GroupTreePtr> > m_rootGroupTree;
 
