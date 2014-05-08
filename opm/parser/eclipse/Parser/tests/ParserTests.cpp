@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_CASE(WildCardTest) {
 
 /***************** Simple Int parsing ********************************/
 
-ParserKeywordPtr setupParserKeywordInt(std::string name, int numberOfItems) {
+static ParserKeywordPtr __attribute__((unused)) setupParserKeywordInt(std::string name, int numberOfItems) {
     ParserKeywordPtr parserKeyword(new ParserKeyword(name));
     ParserRecordPtr parserRecord = parserKeyword->getRecord();
 

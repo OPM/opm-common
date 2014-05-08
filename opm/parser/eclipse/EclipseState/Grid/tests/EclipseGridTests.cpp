@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(CreateMissingDIMENS_throws) {
 
 
 
-Opm::DeckPtr createDeckHeaders() {
+static Opm::DeckPtr createDeckHeaders() {
     const char *deckData =
         "RUNSPEC\n"
         "\n"
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(HasGridKeywords) {
     BOOST_CHECK( !Opm::EclipseGrid::hasCartesianKeywords( gridSection ));
 }
 
-Opm::DeckPtr createCPDeck() {
+static Opm::DeckPtr createCPDeck() {
     const char *deckData =
         "RUNSPEC\n"
         "\n"
@@ -93,7 +93,7 @@ Opm::DeckPtr createCPDeck() {
 }
 
 
-Opm::DeckPtr createCARTDeck() {
+static Opm::DeckPtr createCARTDeck() {
     const char *deckData =
         "RUNSPEC\n"
         "\n"
@@ -116,7 +116,7 @@ Opm::DeckPtr createCARTDeck() {
 }
 
 
-Opm::DeckPtr createCARTDeckDEPTHZ() {
+static Opm::DeckPtr createCARTDeckDEPTHZ() {
     const char *deckData =
         "RUNSPEC\n"
         "\n"
@@ -139,7 +139,7 @@ Opm::DeckPtr createCARTDeckDEPTHZ() {
 }
 
 
-Opm::DeckPtr createCARTInvalidDeck() {
+static Opm::DeckPtr createCARTInvalidDeck() {
     const char *deckData =
         "RUNSPEC\n"
         "\n"
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(CreateMissingGRID_throws) {
 }
 
 
-Opm::DeckPtr createInvalidDXYZCARTDeck() {
+static Opm::DeckPtr createInvalidDXYZCARTDeck() {
     const char *deckData =
         "RUNSPEC\n"
         "\n"
@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(CreateCartesianGRID) {
 }
 
 
-Opm::DeckPtr createInvalidDXYZCARTDeckDEPTHZ() {
+static Opm::DeckPtr createInvalidDXYZCARTDeckDEPTHZ() {
     const char *deckData =
         "RUNSPEC\n"
         "\n"
@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE(CreateCartesianGRIDDEPTHZ) {
 }
 
 
-Opm::DeckPtr createOnlyTopDZCartGrid() {
+static Opm::DeckPtr createOnlyTopDZCartGrid() {
     const char *deckData =
         "RUNSPEC\n"
         "\n"
@@ -305,7 +305,7 @@ Opm::DeckPtr createOnlyTopDZCartGrid() {
 }
 
 
-Opm::DeckPtr createInvalidDEPTHZDeck1 () {
+static Opm::DeckPtr createInvalidDEPTHZDeck1 () {
     const char *deckData =
         "RUNSPEC\n"
         "\n"
@@ -336,7 +336,7 @@ BOOST_AUTO_TEST_CASE(CreateCartesianGRIDInvalidDEPTHZ1) {
 }
 
 
-Opm::DeckPtr createInvalidDEPTHZDeck2 () {
+static Opm::DeckPtr createInvalidDEPTHZDeck2 () {
     const char *deckData =
         "RUNSPEC\n"
         "\n"

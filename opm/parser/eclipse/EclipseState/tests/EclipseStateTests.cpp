@@ -36,7 +36,7 @@
 
 using namespace Opm;
 
-DeckPtr createDeck() {
+static DeckPtr createDeck() {
     const char *deckData =
         "RUNSPEC\n"
         "\n"

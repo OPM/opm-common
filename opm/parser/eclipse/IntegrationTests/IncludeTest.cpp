@@ -35,7 +35,7 @@
 using namespace Opm;
 using namespace boost::filesystem;
 
-void
+static void
 createDeckWithInclude(path& datafile, std::string addEndKeyword)
 {
     path root = unique_path("/tmp/%%%%-%%%%");

@@ -33,7 +33,7 @@
 
 using namespace Opm;
 
-DeckPtr createDeck() {
+static DeckPtr createDeck() {
     Opm::Parser parser;
     std::string input =
         "START\n"
@@ -45,7 +45,7 @@ DeckPtr createDeck() {
     return parser.parseString(input);
 }
 
-DeckPtr createDeckWithWells() {
+static DeckPtr createDeckWithWells() {
     Opm::Parser parser;
     std::string input =
             "START             -- 0 \n"
@@ -70,7 +70,7 @@ DeckPtr createDeckWithWells() {
 }
 
 
-DeckPtr createDeckWithWellsOrdered() {
+static DeckPtr createDeckWithWellsOrdered() {
     Opm::Parser parser;
     std::string input =
             "START             -- 0 \n"

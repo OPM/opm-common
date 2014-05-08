@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(UnitSystemParseInvalidThrows) {
 
 
 
-void checkSystemHasRequiredDimensions(std::shared_ptr<const UnitSystem> system) {
+static void checkSystemHasRequiredDimensions(std::shared_ptr<const UnitSystem> system) {
     BOOST_CHECK( system->hasDimension("1"));
     BOOST_CHECK( system->hasDimension("Length"));
     BOOST_CHECK( system->hasDimension("Mass"));

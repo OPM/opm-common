@@ -32,7 +32,7 @@
 
 using namespace Opm;
 
-ParserPtr createWWCTParser() {
+static ParserPtr createWWCTParser() {
     ParserKeywordPtr parserKeyword(new ParserKeyword("WWCT"));
     {
         ParserRecordPtr wwctRecord = parserKeyword->getRecord();
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_dataIsCorrect) {
     BOOST_CHECK_EQUAL("WELL-2", deck->getKeyword("WWCT" , 0)->getRecord(0)->getItem(0)->getString(1));
 }
 
-ParserPtr createBPRParser() {
+static ParserPtr createBPRParser() {
     ParserKeywordPtr parserKeyword(new ParserKeyword("BPR"));
     {
         ParserRecordPtr bprRecord = parserKeyword->getRecord();

@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(addItem_SameName_Throw) {
     BOOST_CHECK_THROW(record->addItem(itemInt2), std::invalid_argument);
 }
 
-ParserRecordPtr createSimpleParserRecord() {
+static ParserRecordPtr createSimpleParserRecord() {
     ParserItemSizeEnum sizeType = SINGLE;
     ParserIntItemPtr itemInt1(new ParserIntItem("ITEM1", sizeType));
     ParserIntItemPtr itemInt2(new ParserIntItem("ITEM2", sizeType));
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(parse_validRecord_deckRecordCreated) {
 
 // INT INT DOUBLE DOUBLE INT DOUBLE
 
-ParserRecordPtr createMixedParserRecord() {
+static ParserRecordPtr createMixedParserRecord() {
 
     ParserItemSizeEnum sizeType = SINGLE;
     ParserIntItemPtr itemInt1(new ParserIntItem("INTITEM1", sizeType));

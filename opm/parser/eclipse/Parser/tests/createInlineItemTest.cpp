@@ -11,7 +11,7 @@
 
 using namespace Opm;
 
-void createHeader(std::ofstream& of , const std::string& test_module) {
+static void createHeader(std::ofstream& of , const std::string& test_module) {
     of << "#define BOOST_TEST_MODULE "  << test_module << std::endl;
     of << "#include <boost/test/unit_test.hpp>" << std::endl;
     of << "#include <opm/parser/eclipse/Parser/ParserItem.hpp>" << std::endl;
@@ -23,17 +23,17 @@ void createHeader(std::ofstream& of , const std::string& test_module) {
 }
 
 
-void startTest(std::ofstream& of, const std::string& test_name) {
+static void startTest(std::ofstream& of, const std::string& test_name) {
     of << "BOOST_AUTO_TEST_CASE(" << test_name << ") {" << std::endl;
 }
 
 
-void endTest(std::ofstream& of) {
+static void endTest(std::ofstream& of) {
     of << "}" << std::endl << std::endl;
 }
 
 
- void intItem(std::ofstream& of) {
+static void intItem(std::ofstream& of) {
     startTest(of , "IntItem");
     of << "   ParserIntItem * item = new ParserIntItem(\"NAME\" , SINGLE);" << std::endl;
     of << "   ParserIntItem * inlineItem = ";
@@ -48,7 +48,7 @@ void endTest(std::ofstream& of) {
 }
 
 
- void intItemWithDefault(std::ofstream& of) {
+static void intItemWithDefault(std::ofstream& of) {
     startTest(of , "IntItemWithDefault");
     of << "   ParserIntItem * item = new ParserIntItem(\"NAME\" , SINGLE , 100);" << std::endl;
     of << "   ParserIntItem * inlineItem = ";
@@ -66,7 +66,7 @@ void endTest(std::ofstream& of) {
  /*****************************************************************/
 
 
- void DoubleItem(std::ofstream& of) {
+static void DoubleItem(std::ofstream& of) {
     startTest(of , "DoubleItem");
     of << "   ParserDoubleItem * item = new ParserDoubleItem(\"NAME\" , ALL);" << std::endl;
     of << "   ParserDoubleItem * inlineItem = ";
@@ -81,7 +81,7 @@ void endTest(std::ofstream& of) {
 }
 
 
- void DoubleItemWithDefault(std::ofstream& of) {
+static void DoubleItemWithDefault(std::ofstream& of) {
     startTest(of , "DoubleItemWithDefault");
     of << "   ParserDoubleItem * item = new ParserDoubleItem(\"NAME\" , SINGLE , 100.89);" << std::endl;
     of << "   ParserDoubleItem * inlineItem = ";
@@ -98,7 +98,7 @@ void endTest(std::ofstream& of) {
  /*****************************************************************/
 
 
- void FloatItem(std::ofstream& of) {
+static void FloatItem(std::ofstream& of) {
     startTest(of , "FloatItem");
     of << "   ParserFloatItem * item = new ParserFloatItem(\"NAME\" , ALL);" << std::endl;
     of << "   ParserFloatItem * inlineItem = ";
@@ -113,7 +113,7 @@ void endTest(std::ofstream& of) {
 }
 
 
- void FloatItemWithDefault(std::ofstream& of) {
+static void FloatItemWithDefault(std::ofstream& of) {
     startTest(of , "FloatItemWithDefault");
     of << "   ParserFloatItem * item = new ParserFloatItem(\"NAME\" , SINGLE , 100.89);" << std::endl;
     of << "   ParserFloatItem * inlineItem = ";
@@ -129,7 +129,7 @@ void endTest(std::ofstream& of) {
 
  /*****************************************************************/
 
-  void stringItem(std::ofstream& of) {
+static void stringItem(std::ofstream& of) {
     startTest(of , "StringItem");
     of << "   ParserStringItem * item = new ParserStringItem(\"NAME\" , SINGLE);" << std::endl;
     of << "   ParserStringItem * inlineItem = ";
@@ -144,7 +144,7 @@ void endTest(std::ofstream& of) {
 }
 
 
- void stringItemWithDefault(std::ofstream& of) {
+static void stringItemWithDefault(std::ofstream& of) {
     startTest(of , "StringItemWithDefault");
     of << "   ParserStringItem * item = new ParserStringItem(\"NAME\" , ALL , \"100\");" << std::endl;
     of << "   ParserStringItem * inlineItem = ";

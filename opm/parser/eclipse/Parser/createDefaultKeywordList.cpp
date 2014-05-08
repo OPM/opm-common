@@ -27,7 +27,7 @@ typedef std::map<std::string , std::pair<std::string , ParserKeywordConstPtr> > 
 
 
 
-void createHeader(std::iostream& of ) {
+static void createHeader(std::iostream& of ) {
     of << "#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>" << std::endl;
     of << "#include <opm/parser/eclipse/Parser/ParserItem.hpp>" << std::endl;
     of << "#include <opm/parser/eclipse/Parser/ParserIntItem.hpp>" << std::endl;
@@ -40,7 +40,7 @@ void createHeader(std::iostream& of ) {
 
 
 
-void createTestHeader(std::iostream& of , const std::string& test_module) {
+static void createTestHeader(std::iostream& of , const std::string& test_module) {
     of << "#define BOOST_TEST_MODULE "  << test_module << std::endl;
     of << "#include <boost/test/unit_test.hpp>" << std::endl;
     of << "#include <memory>" << std::endl;
@@ -58,18 +58,18 @@ void createTestHeader(std::iostream& of , const std::string& test_module) {
 
 
 
-void startFunction(std::iostream& of) {
+static void startFunction(std::iostream& of) {
     of << "void Parser::addDefaultKeywords() { " << std::endl;
 }
 
 
-void endFunction(std::iostream& of) {
+static void endFunction(std::iostream& of) {
     of << "}" << std::endl;
 }
 
 
 
-bool areStreamsEqual( std::istream& lhs, std::istream& rhs )
+static bool areStreamsEqual( std::istream& lhs, std::istream& rhs )
 {
     for (;;)
     {
@@ -84,7 +84,7 @@ bool areStreamsEqual( std::istream& lhs, std::istream& rhs )
 }
 
 
-void generateKeywordSignature(std::iostream& of , KeywordMapType& keywordMap)
+static void generateKeywordSignature(std::iostream& of , KeywordMapType& keywordMap)
 {    
     for (auto iter=keywordMap.begin(); iter != keywordMap.end(); ++iter) {
         KeywordElementType  keywordElement = *iter;
@@ -100,16 +100,16 @@ void generateKeywordSignature(std::iostream& of , KeywordMapType& keywordMap)
 
 //-----------------------------------------------------------------
 
-void startTest(std::iostream& of, const std::string& test_name) {
+static void startTest(std::iostream& of, const std::string& test_name) {
     of << "BOOST_AUTO_TEST_CASE(" << test_name << ") {" << std::endl;
 }
 
 
-void endTest(std::iostream& of) {
+static void endTest(std::iostream& of) {
     of << "}" << std::endl << std::endl;
 }
 
-void testKeyword(ParserKeywordConstPtr parserKeyword , const std::string& keywordName , const boost::filesystem::path& jsonFile , std::iostream& of) {
+static void testKeyword(ParserKeywordConstPtr parserKeyword , const std::string& keywordName , const boost::filesystem::path& jsonFile , std::iostream& of) {
     startTest(of , keywordName);
     of << "Json::JsonObject jsonKeyword(boost::filesystem::path(" << jsonFile << "));" << std::endl;
     of << "ParserKeywordConstPtr parserKeyword(new ParserKeyword(jsonKeyword));" << std::endl;
@@ -135,7 +135,7 @@ void testKeyword(ParserKeywordConstPtr parserKeyword , const std::string& keywor
 }
 
 
-void generateTestForKeyword(std::iostream& of, KeywordElementType keywordElement) {
+static void generateTestForKeyword(std::iostream& of, KeywordElementType keywordElement) {
     const std::string& fileName = keywordElement.first;
     const std::string& keywordName = keywordElement.second.first;
     ParserKeywordConstPtr parserKeyword = keywordElement.second.second;
@@ -144,7 +144,7 @@ void generateTestForKeyword(std::iostream& of, KeywordElementType keywordElement
 }
 
 
-void generateKeywordTest(const char * test_file_name , KeywordMapType& keywordMap) {
+static void generateKeywordTest(const char * test_file_name , KeywordMapType& keywordMap) {
     std::fstream test_file_stream( test_file_name , std::fstream::out );
     createTestHeader( test_file_stream , "TEST_KEYWORDS");
     for (auto iter=keywordMap.begin(); iter != keywordMap.end(); ++iter) 
@@ -155,7 +155,7 @@ void generateKeywordTest(const char * test_file_name , KeywordMapType& keywordMa
 
 //-----------------------------------------------------------------
 
-void generateSourceForKeyword(std::iostream& of, KeywordElementType keywordElement)
+static void generateSourceForKeyword(std::iostream& of, KeywordElementType keywordElement)
 {
     const std::string& keywordName = keywordElement.second.first;
     ParserKeywordConstPtr parserKeyword = keywordElement.second.second;
@@ -170,7 +170,7 @@ void generateSourceForKeyword(std::iostream& of, KeywordElementType keywordEleme
     std::cout << "Creating keyword: " << keywordName << std::endl;
 }
 
-void generateKeywordSource(const char * source_file_name , KeywordMapType& keywordMap) {
+static void generateKeywordSource(const char * source_file_name , KeywordMapType& keywordMap) {
     std::fstream source_file_stream( source_file_name, std::fstream::out );
     
     createHeader(source_file_stream);
@@ -186,7 +186,7 @@ void generateKeywordSource(const char * source_file_name , KeywordMapType& keywo
 
 //-----------------------------------------------------------------
 
-void scanKeyword(const boost::filesystem::path& file , KeywordMapType& keywordMap) {
+static void scanKeyword(const boost::filesystem::path& file , KeywordMapType& keywordMap) {
     if (ParserKeyword::validName(file.filename().string())) {
 
         Json::JsonObject * jsonKeyword;
@@ -209,7 +209,7 @@ void scanKeyword(const boost::filesystem::path& file , KeywordMapType& keywordMa
     }
 }
 
-void scanAllKeywords(const boost::filesystem::path& directory , KeywordMapType& keywordMap) {
+static void scanAllKeywords(const boost::filesystem::path& directory , KeywordMapType& keywordMap) {
     boost::filesystem::directory_iterator end;
     for (boost::filesystem::directory_iterator iter(directory); iter != end; iter++) {
         if (boost::filesystem::is_directory(*iter))
@@ -222,7 +222,7 @@ void scanAllKeywords(const boost::filesystem::path& directory , KeywordMapType& 
 
 //-----------------------------------------------------------------
 
-void printUsage() {
+static void printUsage() {
     std::cout << "Generates source code for populating the parser's list of known keywords." << std::endl;
     std::cout << "Usage: createDefaultKeywordList <configroot> <sourcefilename> [<dumpfilename>]" << std::endl;
     std::cout << " <configroot>:     Path to keyword (JSON) files" << std::endl;
@@ -233,7 +233,7 @@ void printUsage() {
 }
 
 
-void ensurePath( const char * file_name ) {
+static void ensurePath( const char * file_name ) {
     boost::filesystem::path file(file_name);
     if (!boost::filesystem::is_directory( file.parent_path()))
         boost::filesystem::create_directory( file.parent_path());

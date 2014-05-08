@@ -26,7 +26,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 
 
-void printKeyword(Opm::ParserKeywordConstPtr keyword)
+static void printKeyword(Opm::ParserKeywordConstPtr keyword)
 {
     std::string indent = " ";
     std::cout << keyword->getName() << std::endl;
@@ -53,7 +53,7 @@ void printKeyword(Opm::ParserKeywordConstPtr keyword)
     }
 }
 
-void printItem(Opm::ParserItemConstPtr item, std::string indent)
+static void printItem(Opm::ParserItemConstPtr item, std::string indent)
 {
     std::cout << indent << item->name() << std::endl;
     if (item->getDescription().length() > 0) {
@@ -66,7 +66,7 @@ void printItem(Opm::ParserItemConstPtr item, std::string indent)
     std::cout << std::endl;
 }
 
-void printItems(Opm::ParserKeywordConstPtr keyword)
+static void printItems(Opm::ParserKeywordConstPtr keyword)
 {
     std::string indent = "  ";
     std::cout << std::endl;
@@ -78,7 +78,7 @@ void printItems(Opm::ParserKeywordConstPtr keyword)
     }
 }
 
-void printKeywords (Opm::ParserPtr parser, std::vector<std::string>& keywords)
+static void printKeywords (Opm::ParserPtr parser, std::vector<std::string>& keywords)
 {
     for (auto iterator = keywords.begin(); iterator != keywords.end(); ++iterator) {
         Opm::ParserKeywordConstPtr keyword = parser->getKeyword(*iterator);
@@ -87,7 +87,7 @@ void printKeywords (Opm::ParserPtr parser, std::vector<std::string>& keywords)
     }
 }
 
-bool parseCommandLineForAllKeywordsOption(char** argv)
+static bool parseCommandLineForAllKeywordsOption(char** argv)
 {
     bool allKeywords = false;
     std::string arg(argv[1]);
@@ -97,7 +97,7 @@ bool parseCommandLineForAllKeywordsOption(char** argv)
     return allKeywords;
 }
 
-std::vector<std::string> createListOfKeywordsToDescribe(char** argv, bool allKeywords, Opm::ParserPtr parser)
+static std::vector<std::string> createListOfKeywordsToDescribe(char** argv, bool allKeywords, Opm::ParserPtr parser)
 {
     std::vector<std::string> keywords;
     if (allKeywords) {

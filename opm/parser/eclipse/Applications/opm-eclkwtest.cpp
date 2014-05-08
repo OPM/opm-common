@@ -22,7 +22,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 
-void printDeckDiagnostics(Opm::DeckConstPtr deck, bool printAllKeywords) {
+static void printDeckDiagnostics(Opm::DeckConstPtr deck, bool printAllKeywords) {
     int recognizedKeywords = 0;
     int unrecognizedKeywords = 0;
     

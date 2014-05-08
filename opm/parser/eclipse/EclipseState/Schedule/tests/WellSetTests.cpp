@@ -30,7 +30,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 
 
-Opm::TimeMapPtr createXDaysTimeMap(size_t numDays) {
+static Opm::TimeMapPtr createXDaysTimeMap(size_t numDays) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
     Opm::TimeMapPtr timeMap(new Opm::TimeMap(boost::posix_time::ptime(startDate)));
     for (size_t i = 0; i < numDays; i++)

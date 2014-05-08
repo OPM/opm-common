@@ -54,7 +54,7 @@ const char *parserData =
     "    0.9 0.5 0.1 8.0\n"
     "    1.0 1.0 0.1 9.0 /\n";
 
-void check_parser(ParserPtr parser) {
+static void check_parser(ParserPtr parser) {
     DeckPtr deck =  parser->parseString(parserData);
     DeckKeywordConstPtr kw1 = deck->getKeyword("SWOF");
     BOOST_CHECK_EQUAL(1U , kw1->size());
@@ -66,7 +66,7 @@ void check_parser(ParserPtr parser) {
     BOOST_CHECK_EQUAL(10U * 4, item0->size());
 }
 
-void check_SwofTable(ParserPtr parser) {
+static void check_SwofTable(ParserPtr parser) {
     DeckPtr deck =  parser->parseString(parserData);
     Opm::SwofTable swofTable(deck->getKeyword("SWOF"));
 
