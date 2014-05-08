@@ -333,7 +333,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_tree) {
     BOOST_CHECK(GROUP_NEW->hasChildGroup("GROUP_NILS"));
     GroupTreeNodePtr GROUP_NILS = GROUP_NEW->getChildGroup("GROUP_NILS");
     BOOST_CHECK_EQUAL("GROUP_NILS", GROUP_NILS->name());
-};
+}
 
 BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_WITH_REPARENT_correct_tree) {
     ParserPtr parser(new Parser());
@@ -365,7 +365,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_WITH_REPARENT_correct_tree) {
     BOOST_CHECK_EQUAL("GROUP_NILS", GROUP_NILS0->name());
     
     // SÅ den nye strukturen med et barneflytt
-};
+}
 
 
 BOOST_AUTO_TEST_CASE(GroupTreeTest_PrintGrouptree) {
