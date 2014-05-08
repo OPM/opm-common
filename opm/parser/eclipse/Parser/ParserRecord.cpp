@@ -109,7 +109,7 @@ namespace Opm {
     }
 
     bool ParserRecord::equal(const ParserRecord& other) const {
-        bool equal = true;
+        bool equal_ = true;
         if (size() == other.size()) {
            size_t itemIndex = 0;
            while (true) {
@@ -120,15 +120,15 @@ namespace Opm {
                    ParserItemConstPtr otherItem = other.get(itemIndex);
                    
                    if (!item->equal(*otherItem)) {
-                       equal = false;
+                       equal_ = false;
                        break;
                    }
                }
                itemIndex++;
             }
         } else
-            equal = false;
-        return equal;
+            equal_ = false;
+        return equal_;
     }
 
 }

@@ -29,11 +29,11 @@ namespace Opm {
     }
 
 
-    ParserStringItem::ParserStringItem(const std::string& itemName, ParserItemSizeEnum sizeType) : ParserItem(itemName, sizeType) {
+    ParserStringItem::ParserStringItem(const std::string& itemName, ParserItemSizeEnum sizeType_) : ParserItem(itemName, sizeType_) {
         m_default = defaultString();
     }
 
-    ParserStringItem::ParserStringItem(const std::string& itemName, ParserItemSizeEnum sizeType, const std::string& defaultValue) : ParserItem(itemName, sizeType) {
+    ParserStringItem::ParserStringItem(const std::string& itemName, ParserItemSizeEnum sizeType_, const std::string& defaultValue) : ParserItem(itemName, sizeType_) {
         setDefault(defaultValue);
     }
 

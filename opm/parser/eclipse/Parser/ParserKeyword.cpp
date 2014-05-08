@@ -66,9 +66,9 @@ namespace Opm {
         m_fixedSize = fixedKeywordSize;
     }
 
-    ParserKeyword::ParserKeyword(const std::string& name, const std::string& sizeKeyword, const std::string& sizeItem, ParserKeywordActionEnum action, bool isTableCollection) {
+    ParserKeyword::ParserKeyword(const std::string& name, const std::string& sizeKeyword, const std::string& sizeItem, ParserKeywordActionEnum action, bool _isTableCollection) {
         commonInit(name, OTHER_KEYWORD_IN_DECK , action);
-        m_isTableCollection = isTableCollection;
+        m_isTableCollection = _isTableCollection;
         initSizeKeyword(sizeKeyword, sizeItem);
     }
 
@@ -441,23 +441,23 @@ namespace Opm {
             (m_isDataKeyword == other.m_isDataKeyword) &&
             (m_isTableCollection == other.m_isTableCollection) &&
             (m_action == other.m_action)) {
-            bool equal = false;
+            bool equal_ = false;
             switch (m_keywordSizeType) {
                 case FIXED:
                     if (m_fixedSize == other.m_fixedSize)
-                        equal = true;
+                        equal_ = true;
                     break;
                 case OTHER_KEYWORD_IN_DECK:
                     if ((m_sizeDefinitionPair.first == other.m_sizeDefinitionPair.first) &&
                             (m_sizeDefinitionPair.second == other.m_sizeDefinitionPair.second))
-                        equal = true;
+                        equal_ = true;
                     break;
                 default:
-                    equal = true;
+                    equal_ = true;
                     break;
 
             }
-            return equal;
+            return equal_;
         } else
             return false;
     }

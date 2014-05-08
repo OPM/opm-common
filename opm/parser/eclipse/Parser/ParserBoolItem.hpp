@@ -28,7 +28,7 @@ namespace Opm {
 
     class ParserBoolItem : public ParserItem {
     public:
-        ParserBoolItem(const std::string& itemName, ParserItemSizeEnum sizeType) : ParserItem(itemName, sizeType) {};
+        ParserBoolItem(const std::string& itemName, ParserItemSizeEnum sizeType_) : ParserItem(itemName, sizeType_) {};
     private:
 
     };

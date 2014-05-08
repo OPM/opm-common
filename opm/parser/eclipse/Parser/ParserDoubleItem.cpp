@@ -31,8 +31,8 @@ namespace Opm
 {
 
     ParserDoubleItem::ParserDoubleItem(const std::string& itemName,
-            ParserItemSizeEnum sizeType) :
-            ParserItem(itemName, sizeType)
+            ParserItemSizeEnum sizeType_) :
+            ParserItem(itemName, sizeType_)
     {
         m_default = defaultDouble();
     }
@@ -49,7 +49,7 @@ namespace Opm
     }
 
 
-    ParserDoubleItem::ParserDoubleItem(const std::string& itemName, ParserItemSizeEnum sizeType, double defaultValue) : ParserItem(itemName, sizeType)
+    ParserDoubleItem::ParserDoubleItem(const std::string& itemName, ParserItemSizeEnum sizeType_, double defaultValue) : ParserItem(itemName, sizeType_)
     {
         setDefault( defaultValue );
     }
@@ -90,15 +90,15 @@ namespace Opm
 
 
     bool ParserDoubleItem::equalDimensions(const ParserItem& other) const {
-        bool equal=false;
+        bool equal_=false;
         if (other.numDimensions() == numDimensions()) {
-            equal = true;
+            equal_ = true;
             for (size_t idim=0; idim < numDimensions(); idim++) {
                 if (other.getDimension(idim) != getDimension(idim))
-                    equal = false;
+                    equal_ = false;
             }
         } 
-        return equal;
+        return equal_;
     }
 
     void ParserDoubleItem::push_backDimension(const std::string& dimension) {

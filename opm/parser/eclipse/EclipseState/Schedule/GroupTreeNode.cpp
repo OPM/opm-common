@@ -22,8 +22,8 @@
 
 namespace Opm {
 
-    GroupTreeNode::GroupTreeNode(const std::string& name) {
-        m_name = name;
+    GroupTreeNode::GroupTreeNode(const std::string& name_) {
+        m_name = name_;
     }
 
     const std::string& GroupTreeNode::name() const {

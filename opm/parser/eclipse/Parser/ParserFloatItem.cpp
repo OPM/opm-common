@@ -31,8 +31,8 @@ namespace Opm
 {
 
     ParserFloatItem::ParserFloatItem(const std::string& itemName,
-            ParserItemSizeEnum sizeType) :
-            ParserItem(itemName, sizeType)
+            ParserItemSizeEnum sizeType_) :
+            ParserItem(itemName, sizeType_)
     {
         m_default = defaultFloat();
     }
@@ -49,7 +49,7 @@ namespace Opm
     }
 
 
-    ParserFloatItem::ParserFloatItem(const std::string& itemName, ParserItemSizeEnum sizeType, float defaultValue) : ParserItem(itemName, sizeType)
+    ParserFloatItem::ParserFloatItem(const std::string& itemName, ParserItemSizeEnum sizeType_, float defaultValue) : ParserItem(itemName, sizeType_)
     {
         setDefault( defaultValue );
     }
@@ -90,15 +90,15 @@ namespace Opm
 
 
     bool ParserFloatItem::equalDimensions(const ParserItem& other) const {
-        bool equal=false;
+        bool equal_=false;
         if (other.numDimensions() == numDimensions()) {
-            equal = true;
+            equal_ = true;
             for (size_t idim=0; idim < numDimensions(); idim++) {
                 if (other.getDimension(idim) != getDimension(idim))
-                    equal = false;
+                    equal_ = false;
             }
         }
-        return equal;
+        return equal_;
     }
 
     void ParserFloatItem::push_backDimension(const std::string& dimension) {

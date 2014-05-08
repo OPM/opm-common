@@ -23,8 +23,8 @@
 
 namespace Opm {
 
-    DeckItem::DeckItem(const std::string& name , bool scalar) {
-        m_name = name;
+    DeckItem::DeckItem(const std::string& name_, bool scalar) {
+        m_name = name_;
         m_defaultApplied = false;
         m_scalar = scalar;
     }

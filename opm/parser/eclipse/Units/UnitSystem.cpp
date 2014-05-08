@@ -115,22 +115,22 @@ namespace Opm {
 
 
     bool UnitSystem::equal(const UnitSystem& other) const {
-        bool equal = (m_dimensions.size() == other.m_dimensions.size());
+        bool equal_ = (m_dimensions.size() == other.m_dimensions.size());
         
-        if (equal) {
+        if (equal_) {
             for (auto iter = m_dimensions.begin(); iter != m_dimensions.end(); ++iter) {
                 std::shared_ptr<const Dimension> dim = getDimension( iter->first );
 
                 if (other.hasDimension( iter->first )) {
                     std::shared_ptr<const Dimension> otherDim = other.getDimension( iter->first );
                     if (!dim->equal(*otherDim))
-                        equal = false;
+                        equal_ = false;
                 } else
-                    equal = false;
+                    equal_ = false;
                 
             }
         }
-        return equal;
+        return equal_;
     }
 
 

@@ -32,7 +32,7 @@ namespace Opm {
         m_default = defaultInt();
     }
 
-    ParserIntItem::ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType) : ParserItem(itemName, sizeType) {
+    ParserIntItem::ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType_) : ParserItem(itemName, sizeType_) {
         m_default = defaultInt();
     }
 
@@ -40,7 +40,7 @@ namespace Opm {
         setDefault(defaultValue);
     }
 
-    ParserIntItem::ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType, int defaultValue) : ParserItem(itemName, sizeType) {
+    ParserIntItem::ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType_, int defaultValue) : ParserItem(itemName, sizeType_) {
         setDefault(defaultValue);
     }
 
