@@ -62,7 +62,7 @@ DeckPtr createDeckWithWells() {
             "   10  AUG 2007 / \n"
             "/\n"
             "WELSPECS\n"
-            "     \'W_2\'        \'OP\'   30   37  3.33       \'OIL\'  7* /   \n"
+            "     \'WX2\'        \'OP\'   30   37  3.33       \'OIL\'  7* /   \n"
             "     \'W_3\'        \'OP\'   20   51  3.92       \'OIL\'  7* /  \n"
             "/\n";
 
@@ -188,11 +188,7 @@ BOOST_AUTO_TEST_CASE(WellsIteratorWithRegex_HasWells_WellsReturned) {
 
     wellNamePattern = "W_*";
     wells = schedule.getWells(wellNamePattern);
-    BOOST_CHECK_EQUAL(3U, wells.size());
-
-    wellNamePattern = "*2";
-    wells = schedule.getWells(wellNamePattern);
-    BOOST_CHECK_EQUAL(1U, wells.size());
+    BOOST_CHECK_EQUAL(2U, wells.size());
 
     wellNamePattern = "W_3";
     wells = schedule.getWells(wellNamePattern);

@@ -21,6 +21,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/regex.hpp>
 #include <regex>
 #include <iostream>
 
@@ -553,21 +554,17 @@ namespace Opm {
 
     std::vector<WellPtr> Schedule::getWells(const std::string& wellNamePattern) const {
         std::vector<WellPtr> wells;
-        for (auto iter = m_wells.begin(); iter != m_wells.end(); ++iter) {
-            WellPtr well = (*iter).second;
-            size_t wildcard_pos=wellNamePattern.find("*");
-            if (wildcard_pos!=std::string::npos) {
-                size_t first=well->name().find(wellNamePattern.substr(0, wildcard_pos));
-                size_t second=well->name().find(wellNamePattern.substr(wildcard_pos+1));
-                if(first!=std::string::npos && second!=std::string::npos) {
-                    wells.push_back(well);
+        size_t wildcard_pos = wellNamePattern.find("*");
+        if (wildcard_pos == wellNamePattern.length()-1) {
+            for (auto iter = m_wells.begin(); iter != m_wells.end(); ++iter) {
+                WellPtr well = (*iter).second;
+                if (wellNamePattern.compare (0, wildcard_pos, well->name(), 0, wildcard_pos) == 0) {
+                    wells.push_back (well);
                 }
             }
-            else {
-                if (well->name().compare(wellNamePattern) == 0) {
-                    wells.push_back(well);
-                }
-            }
+        }
+        else {
+            wells.push_back(getWell(wellNamePattern));
         }
         return wells;
     }
