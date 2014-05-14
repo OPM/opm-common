@@ -21,9 +21,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/regex.hpp>
-#include <regex>
-#include <iostream>
 
 
 
