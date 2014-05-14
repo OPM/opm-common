@@ -173,8 +173,8 @@ namespace Opm {
             const std::string& wellNamePattern    = record->getItem("WELL")->getTrimmedString(0);
             std::vector<WellPtr> wells       = getWells(wellNamePattern);
 
-            for (auto iter=wells.begin(); iter != wells.end(); ++iter) {
-                WellPtr well                          = *iter;
+            for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
+                WellPtr well                          = *wellIter;
                 double orat                           = record->getItem("ORAT")->getSIDouble(0);
                 double wrat                           = record->getItem("WRAT")->getSIDouble(0);
                 double grat                           = record->getItem("GRAT")->getSIDouble(0);
@@ -293,8 +293,8 @@ namespace Opm {
             const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
             std::vector<WellPtr> wells = getWells(wellNamePattern);
 
-            for (auto iter=wells.begin(); iter != wells.end(); ++iter) {
-                WellPtr well                          = *iter;
+            for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
+                WellPtr well = *wellIter;
                 // calculate the injection rates. These are context
                 // dependent, so we have to jump through some hoops
                 // here...
@@ -553,8 +553,8 @@ namespace Opm {
         std::vector<WellPtr> wells;
         size_t wildcard_pos = wellNamePattern.find("*");
         if (wildcard_pos == wellNamePattern.length()-1) {
-            for (auto iter = m_wells.begin(); iter != m_wells.end(); ++iter) {
-                WellPtr well = (*iter).second;
+            for (auto wellIter = m_wells.begin(); wellIter != m_wells.end(); ++wellIter) {
+                WellPtr well = (*wellIter).second;
                 if (wellNamePattern.compare (0, wildcard_pos, well->name(), 0, wildcard_pos) == 0) {
                     wells.push_back (well);
                 }
