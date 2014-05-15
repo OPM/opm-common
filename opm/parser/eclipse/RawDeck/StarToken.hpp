@@ -50,7 +50,7 @@ template <class T>
 class StarToken {
 
     public:
-        StarToken(const std::string& token) {  
+        StarToken(const std::string& token) : m_value(T()), m_hasValue(false) {
             size_t star_pos = token.find( STAR );
             
             if (star_pos != std::string::npos) {
