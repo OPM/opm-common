@@ -551,7 +551,7 @@ namespace Opm {
         size_t wildcard_pos = wellNamePattern.find("*");
         if (wildcard_pos == wellNamePattern.length()-1) {
             for (auto wellIter = m_wells.begin(); wellIter != m_wells.end(); ++wellIter) {
-                WellPtr well = (*wellIter).second;
+                WellPtr well = *wellIter;
                 if (wellNamePattern.compare (0, wildcard_pos, well->name(), 0, wildcard_pos) == 0) {
                     wells.push_back (well);
                 }
