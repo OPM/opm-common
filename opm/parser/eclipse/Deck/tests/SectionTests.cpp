@@ -217,4 +217,7 @@ BOOST_AUTO_TEST_CASE(SCHEDULESection_NotTerminated) {
     BOOST_CHECK_EQUAL( test4 , section.getKeyword("TEST3"));
     BOOST_CHECK_EQUAL( test3 , section.getKeyword("TEST3",0));
     BOOST_CHECK_EQUAL( test4 , section.getKeyword("TEST3",1));
+    
+    BOOST_CHECK( Section::hasSCHEDULE(deck ));
+    BOOST_CHECK( !Section::hasREGIONS(deck ));
 }

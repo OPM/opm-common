@@ -35,16 +35,24 @@ namespace Opm {
         DeckKeywordConstPtr getKeyword(const std::string& keyword, size_t index) const;
         DeckKeywordConstPtr getKeyword(const std::string& keyword) const;
         DeckKeywordConstPtr getKeyword(size_t index) const;
-        
+
+        static bool hasSCHEDULE(DeckConstPtr deck) { return hasSection( deck , "SCHEDULE" ); }
+        static bool hasSOLUTIONS(DeckConstPtr deck) { return hasSection( deck , "SOLUTIONS" ); }
+        static bool hasREGIONS(DeckConstPtr deck) { return hasSection( deck , "REGIONS" ); }
+        static bool hasPROPS(DeckConstPtr deck) { return hasSection( deck , "PROPS" ); }
+        static bool hasEDIT(DeckConstPtr deck) { return hasSection( deck , "EDIT" ); }
+        static bool hasGRID(DeckConstPtr deck) { return hasSection( deck , "GRID" ); }
+        static bool hasRUNSPEC(DeckConstPtr deck) { return hasSection( deck , "RUNSPEC" ); }
     private:
         KeywordContainer m_keywords;
+        static bool hasSection(DeckConstPtr deck, const std::string& startKeyword);
         void populateKeywords(DeckConstPtr deck, const std::string& startKeyword, const std::vector<std::string>& stopKeywords);
     };
 
     typedef std::shared_ptr<Section> SectionPtr;
     typedef std::shared_ptr<const Section> SectionConstPtr;
 
-
+    
     class RUNSPECSection : public Section {
     public:
         RUNSPECSection(DeckConstPtr deck) : Section (deck, "RUNSPEC", std::vector<std::string>() = {"GRID"}) {}
