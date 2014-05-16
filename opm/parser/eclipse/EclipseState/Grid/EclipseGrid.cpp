@@ -70,6 +70,10 @@ namespace Opm {
         return ecl_grid_get_nz( m_grid.get() );
     }
 
+    int EclipseGrid::getCartesianSize( ) const {
+        return ecl_grid_get_global_size( m_grid.get() );
+    }
+
     
     bool EclipseGrid::hasCornerPointKeywords(std::shared_ptr<const GRIDSection> gridSection) {
         if (gridSection->hasKeyword("ZCORN") && gridSection->hasKeyword("COORD"))
