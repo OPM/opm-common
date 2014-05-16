@@ -8,4 +8,7 @@ target_link_libraries(runGridPropertyTests Parser ${Boost_LIBRARIES})
 add_test(NAME runGridPropertyTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runGridPropertyTests )
 
 
+add_executable(runGridPropertiesTests GridPropertiesTests.cpp)
+target_link_libraries(runGridPropertiesTests Parser ${Boost_LIBRARIES})
+add_test(NAME runGridPropertiesTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runGridPropertiesTests )
 
