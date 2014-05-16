@@ -62,6 +62,11 @@ static DeckPtr createDeck() {
         "START\n"
         "8 MAR 1998 /\n"
         "\n"
+        "REGIONS\n"
+        "FLUXNUM\n"
+        "1000*1 /\n"
+        "SATNUM\n"
+        "1000*2 /\n"
         "SCHEDULE\n"
         "\n";
 
@@ -97,4 +102,37 @@ BOOST_AUTO_TEST_CASE(TitleCorrect) {
     EclipseState state(deck);
 
     BOOST_CHECK_EQUAL( state.getTitle(), "The title");
+}
+
+
+BOOST_AUTO_TEST_CASE(IntProperties) {
+    DeckPtr deck = createDeck();
+    EclipseState state(deck);
+
+    BOOST_CHECK_EQUAL( false , state.supportsGridProperty("PVTNUM"));
+    BOOST_CHECK_EQUAL( true  , state.supportsGridProperty("SATNUM"));
+    BOOST_CHECK_EQUAL( true  , state.hasIntGridProperty("SATNUM"));
+}
+
+
+
+BOOST_AUTO_TEST_CASE(PropertiesNotSupportedThrows) {
+    DeckPtr deck = createDeck();
+    EclipseState state(deck);
+    DeckKeywordConstPtr fluxNUM = deck->getKeyword("FLUXNUM");
+    BOOST_CHECK_THROW( state.loadGridPropertyFromDeckKeyword( fluxNUM ) , std::invalid_argument)
+}
+
+
+BOOST_AUTO_TEST_CASE(GetProperty) {
+    DeckPtr deck = createDeck();
+    EclipseState state(deck);
+
+    std::shared_ptr<GridProperty<int> > satNUM = state.getIntProperty( "SATNUM" );
+
+    BOOST_CHECK_EQUAL(1000U , satNUM->size() );
+    for (size_t i=0; i < satNUM->size(); i++) 
+        BOOST_CHECK_EQUAL( 2 , satNUM->iget(i) );
+    
+    BOOST_CHECK_THROW( satNUM->iget(100000) , std::invalid_argument);
 }

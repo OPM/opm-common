@@ -19,18 +19,22 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+
 #include <iostream>
 #include <boost/algorithm/string/join.hpp>
 
 namespace Opm {
     
-    EclipseState::EclipseState(DeckConstPtr deck) {
+    EclipseState::EclipseState(DeckConstPtr deck) 
+    {
         initPhases(deck);
         initEclipseGrid(deck);
         initSchedule(deck);
         initTitle(deck);
+        initProperties(deck);
     }
     
 
@@ -84,5 +88,46 @@ namespace Opm {
             std::vector<std::string> itemValue = item->getStringData();
             m_title = boost::algorithm::join(itemValue, " ");
         }
+    }
+
+    bool EclipseState::supportsGridProperty(const std::string& keyword) const {
+         return m_intGridProperties->supportsKeyword( keyword );
+    }   
+
+    bool EclipseState::hasIntGridProperty(const std::string& keyword) const {
+         return m_intGridProperties->hasKeyword( keyword );
+    }   
+
+    /*
+      Observe that this will autocreate a property if it has not been explicitly added. 
+    */
+    std::shared_ptr<GridProperty<int> > EclipseState::getIntProperty( const std::string& keyword ) {
+        return m_intGridProperties->getKeyword( keyword );
+    }
+
+    
+    void EclipseState::loadGridPropertyFromDeckKeyword(DeckKeywordConstPtr deckKeyword) {            
+        const std::string& keyword = deckKeyword->name();
+        auto gridProperty = m_intGridProperties->getKeyword( keyword );
+        gridProperty->loadFromDeckKeyword( deckKeyword );
+    }
+    
+    
+    void EclipseState::initProperties(DeckConstPtr deck) {
+         size_t volume = m_eclipseGrid->getCartesianSize();
+         std::vector<std::pair<std::string , int> > supportedKeywords = {{ "SATNUM" , 0 }};
+         m_intGridProperties = std::make_shared<GridProperties<int> >(volume , supportedKeywords);
+         
+         if (Section::hasREGIONS(deck)) {
+             std::shared_ptr<Opm::REGIONSSection> regionsSection(new Opm::REGIONSSection(deck) );
+             
+             for (auto iter = regionsSection->begin(); iter != regionsSection->end(); ++iter) {
+                 DeckKeywordConstPtr deckKeyword = *iter;
+                 
+                 if (supportsGridProperty( deckKeyword->name()))
+                     loadGridPropertyFromDeckKeyword( deckKeyword );
+                 
+             }
+         }
     }
 }
