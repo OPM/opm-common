@@ -31,6 +31,20 @@ BOOST_AUTO_TEST_CASE(Initialize) {
     DeckKeywordPtr deckKeyword2(new DeckKeyword("KW"));
     DeckKeywordConstPtr deckKeyword3(new DeckKeyword("KW"));
 }
+
+BOOST_AUTO_TEST_CASE(DataKeyword) {
+    DeckKeyword kw("KW");
+    BOOST_CHECK_EQUAL( false , kw.isDataKeyword());
+    kw.setDataKeyword( );
+    BOOST_CHECK_EQUAL( true , kw.isDataKeyword());
+    kw.setDataKeyword( false );
+    BOOST_CHECK_EQUAL( false , kw.isDataKeyword());
+    kw.setDataKeyword( true );
+    BOOST_CHECK_EQUAL( true , kw.isDataKeyword());
+}
+
+
+
 BOOST_AUTO_TEST_CASE(name_nameSetInConstructor_nameReturned) {
     DeckKeywordPtr deckKeyword(new DeckKeyword("KW"));
     BOOST_CHECK_EQUAL("KW", deckKeyword->name());

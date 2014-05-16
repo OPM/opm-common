@@ -392,6 +392,7 @@ namespace Opm {
                 DeckRecordConstPtr deckRecord = m_record->parse(rawKeyword->getRecord(i));
                 keyword->addRecord(deckRecord);
             }
+            keyword->setDataKeyword( isDataKeyword() );
             return keyword;
         } else
             throw std::invalid_argument("Tried to create a deck keyword from an imcomplete rawkeyword: " + rawKeyword->getKeywordName());
