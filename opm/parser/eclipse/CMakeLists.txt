@@ -129,6 +129,7 @@ EclipseState/Schedule/GroupTree.hpp
 EclipseState/Schedule/OrderedMap.hpp 
 #
 EclipseState/Grid/EclipseGrid.hpp
+EclipseState/Grid/GridProperty.hpp
 #
 Utility/WconinjeWrapper.hpp
 Utility/CompdatWrapper.hpp
