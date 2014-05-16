@@ -74,7 +74,6 @@ BOOST_AUTO_TEST_CASE( parse_WCONINJE_OK ) {
     DeckPtr deck =  parser->parseFile(wconprodFile.string());
     ScheduleConstPtr sched(new Schedule(deck));
 
-#if false
     BOOST_CHECK_EQUAL(5U, sched->numWells());
     BOOST_CHECK(sched->hasWell("PROD1"));
     BOOST_CHECK(sched->hasWell("INJE2"));
@@ -84,22 +83,21 @@ BOOST_AUTO_TEST_CASE( parse_WCONINJE_OK ) {
 
     {
         WellPtr well = sched->getWell("INJE2");
-        BOOST_CHECK_CLOSE(1000/Metric::Time, well->getProductionProperties(0).OilRate, 0.001);
-        BOOST_CHECK_CLOSE(1500/Metric::Time, well->getProductionProperties(1).OilRate, 0.001);
+        BOOST_CHECK_CLOSE(1000/Metric::Time, well->getInjectionProperties(0).surfaceInjectionRate, 0.001);
+        BOOST_CHECK_CLOSE(1500/Metric::Time, well->getInjectionProperties(1).surfaceInjectionRate, 0.001);
     }
 
     {
         WellPtr well = sched->getWell("INJE3");
-        BOOST_CHECK_CLOSE(0/Metric::Time, well->getProductionProperties(0).OilRate, 0.001);
-        BOOST_CHECK_CLOSE(1500/Metric::Time, well->getProductionProperties(1).OilRate, 0.001);
+        BOOST_CHECK_CLOSE(0/Metric::Time, well->getInjectionProperties(0).surfaceInjectionRate, 0.001);
+        BOOST_CHECK_CLOSE(1500/Metric::Time, well->getInjectionProperties(1).surfaceInjectionRate, 0.001);
     }
 
     {
         WellPtr well = sched->getWell("INJX5");
-        BOOST_CHECK_CLOSE(2000/Metric::Time, well->getProductionProperties(0).OilRate, 0.001);
-        BOOST_CHECK_CLOSE(2000/Metric::Time, well->getProductionProperties(1).OilRate, 0.001);
+        BOOST_CHECK_CLOSE(2000/Metric::Time, well->getInjectionProperties(0).surfaceInjectionRate, 0.001);
+        BOOST_CHECK_CLOSE(2000/Metric::Time, well->getInjectionProperties(1).surfaceInjectionRate, 0.001);
     }
-#endif
 }
 
 
