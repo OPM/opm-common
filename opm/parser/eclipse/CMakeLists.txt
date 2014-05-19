@@ -73,6 +73,7 @@ EclipseState/Schedule/CompletionSet.cpp
 EclipseState/Schedule/ScheduleEnums.cpp 
 EclipseState/Schedule/GroupTreeNode.cpp
 EclipseState/Schedule/GroupTree.cpp
+EclipseState/Grid/GridProperty.cpp
 #
 EclipseState/Grid/EclipseGrid.cpp)
 
