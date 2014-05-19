@@ -170,47 +170,46 @@ namespace Opm {
             ///
             const double darcy = perm_details::darcy;
             /// @}
-
-            const double Mscf = 1000.0 * cubic(feet);
-            const double MscfperStb = Mscf / stb;
-            const double LbperCFt = pound / cubic(feet);
-            const double LbperStb = pound / stb;
         }
 
-    }
+    } // namespace details
 
 
     namespace Metric {
-        const double Pressure          = 100000;
-        const double Length            = 1.0;
-        const double Time              = details::unit::day;
-        const double Mass              = 1.0;
-        const double Permeability      = 0.001 * details::unit::darcy;
-        const double GasDissolutionFactor = 1.0;
-        const double OilDissolutionFactor = 1.0;
-        const double LiquidVolume      = 1.0;
-        const double GasVolume         = 1.0;
-        const double Density           = 1.0;
-        const double PolymerDensity    = 1.0;
-        const double Viscosity         = 0.001;                // cP -> Pa s
-        const double Timestep          = details::unit::day;   // days -> s
+        using namespace details::prefix;
+        using namespace details::unit;
+        const double Pressure             = barsa;
+        const double Length               = meter;
+        const double Time                 = day;
+        const double Mass                 = kilogram;
+        const double Permeability         = milli*darcy;
+        const double LiquidVolume         = cubic(meter);
+        const double GasVolume            = cubic(meter);
+        const double GasDissolutionFactor = GasVolume/LiquidVolume;
+        const double OilDissolutionFactor = LiquidVolume/GasVolume;
+        const double Density              = kilogram/cubic(meter);
+        const double PolymerDensity       = kilogram/cubic(meter);
+        const double Viscosity            = centi*Poise;
+        const double Timestep             = day;
     }
 
 
-     namespace Field {
-         const double Pressure          = details::unit::psia;
-         const double Length            = details::unit::feet;
-         const double Time              = details::unit::day;
-         const double Mass              = details::unit::pound;
-         const double Permeability      = 0.001 * details::unit::darcy;
-         const double GasDissolutionFactor = details::unit::MscfperStb;       // Mscf / stb -> m^3/m^3
-         const double OilDissolutionFactor = 1.0/details::unit::MscfperStb;   // stb / Mscf -> m^3/m^3
-         const double LiquidVolume      = details::unit::stb;         // STB -> m^3
-         const double GasVolume         = details::unit::Mscf;           // MCFT -> m^3
-         const double Density           = details::unit::LbperCFt;            // lb/ft^3 -> kg / m^3
-         const double PolymerDensity    = details::unit::LbperStb;  // lb/STB  -> kg / m^3
-         const double Viscosity         = 0.01 * details::unit::Poise;               // cP -> Pa s
-         const double Timestep          = details::unit::day;            // days -> s
+    namespace Field {
+        using namespace details::prefix;
+        using namespace details::unit;
+        const double Pressure             = psia;
+        const double Length               = feet;
+        const double Time                 = day;
+        const double Mass                 = pound;
+        const double Permeability         = milli*darcy;
+        const double LiquidVolume         = stb;
+        const double GasVolume            = 1000*cubic(feet);
+        const double GasDissolutionFactor = GasVolume/LiquidVolume;
+        const double OilDissolutionFactor = LiquidVolume/GasVolume;
+        const double Density              = pound/cubic(feet);
+        const double PolymerDensity       = pound/stb;
+        const double Viscosity            = centi*Poise;
+        const double Timestep             = day;
     }
 
 }
