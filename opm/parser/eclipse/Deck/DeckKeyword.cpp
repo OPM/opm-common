@@ -35,8 +35,8 @@ namespace Opm {
         m_isDataKeyword = false;
     }
 
-    void DeckKeyword::setDataKeyword(bool isDataKeyword) {
-        m_isDataKeyword = isDataKeyword;
+    void DeckKeyword::setDataKeyword(bool isDataKeyword_) {
+        m_isDataKeyword = isDataKeyword_;
     }
     
     bool DeckKeyword::isDataKeyword() const {
