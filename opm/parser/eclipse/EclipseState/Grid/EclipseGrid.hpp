@@ -41,6 +41,7 @@ namespace Opm {
         int  getNX( ) const;
         int  getNY( ) const;
         int  getNZ( ) const;
+        int  getCartesianSize( ) const;
 
         void exportMAPAXES( std::vector<double>& mapaxes) const;
         void exportCOORD( std::vector<double>& coord) const;

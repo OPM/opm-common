@@ -23,6 +23,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 
 #include <set>
@@ -37,17 +38,24 @@ namespace Opm {
         EclipseGridConstPtr getEclipseGrid() const;
         bool hasPhase(enum Phase::PhaseEnum phase) const;
         std::string getTitle() const;
+        bool supportsGridProperty(const std::string& keyword) const;
+        std::shared_ptr<GridProperty<int> > getIntProperty( const std::string& keyword );
+        bool hasIntGridProperty(const std::string& keyword) const;
+        void loadGridPropertyFromDeckKeyword(DeckKeywordConstPtr deckKeyword);
         
     private:
         void initSchedule(DeckConstPtr deck);
         void initEclipseGrid(DeckConstPtr deck);
         void initPhases(DeckConstPtr deck);
         void initTitle(DeckConstPtr deck);
+        void initProperties(DeckConstPtr deck);
+
 
         EclipseGridConstPtr m_eclipseGrid;
         ScheduleConstPtr schedule;
         std::set<enum Phase::PhaseEnum> phases;
         std::string m_title;
+        std::shared_ptr<GridProperties<int> > m_intGridProperties;
     };
 
     typedef std::shared_ptr<EclipseState> EclipseStatePtr;

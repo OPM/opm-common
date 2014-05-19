@@ -65,5 +65,8 @@ namespace Opm {
         return m_keywords.getKeyword(index);
     }
 
-
+    bool Section::hasSection(DeckConstPtr deck, const std::string& startKeyword) {
+        return deck->hasKeyword(startKeyword);
+    }
+    
 }
