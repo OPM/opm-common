@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 /*
   This class implemenents a class representing properties which are
@@ -81,20 +82,6 @@ private:
     std::string m_keyword;
     std::vector<T> m_data;
 };
-
-
-template<>  
-void GridProperty<int>::loadFromDeckKeyword(DeckKeywordConstPtr deckKeyword) {
-    if (deckKeyword->isDataKeyword()) {
-        const std::vector<int>& data = deckKeyword->getIntData();
-        setFromVector(data);
-    } else
-        throw std::invalid_argument("Can only load from DATA keywords");
-}
-    
-    
-
-
 
 }
 #endif
