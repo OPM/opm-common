@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(parse_streamWithWWCTKeyword_deckReturned) {
         "WWCT\n"
         "  'WELL-1' 'WELL-2' / -- Rumpelstilzchen\n"
         "/\n";
-    std::shared_ptr<std::istringstream> wwctStream(new std::istringstream(wwctString));
+    std::shared_ptr<std::istream> wwctStream(new std::istringstream(wwctString));
 
     ParserPtr parser = createWWCTParser();
     BOOST_CHECK( parser->canParseKeyword("WWCT"));
