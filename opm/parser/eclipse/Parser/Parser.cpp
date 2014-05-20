@@ -64,6 +64,14 @@ namespace Opm {
             deck = deckToFill;
             inputstream.reset(new std::istringstream(inputData));
         }
+
+        ParserState(std::shared_ptr<std::istream> inputStream, DeckPtr deckToFill, bool useStrictParsing) {
+            lineNR = 0;
+            strictParsing = useStrictParsing;
+            dataFile = "";
+            deck = deckToFill;
+            inputstream = inputStream;
+        }
     };
 
     Parser::Parser(bool addDefault) {
@@ -91,6 +99,15 @@ namespace Opm {
     DeckPtr Parser::parseString(const std::string &data, bool strictParsing) const {
 
         std::shared_ptr<ParserState> parserState(new ParserState(data, DeckPtr(new Deck()), strictParsing));
+
+        parseStream(parserState);
+        applyUnitsToDeck(parserState->deck);
+        return parserState->deck;
+    }
+
+    DeckPtr Parser::parseStream(std::shared_ptr<std::istream> inputStream, bool strictParsing) const {
+
+        std::shared_ptr<ParserState> parserState(new ParserState(inputStream, DeckPtr(new Deck()), strictParsing));
 
         parseStream(parserState);
         applyUnitsToDeck(parserState->deck);

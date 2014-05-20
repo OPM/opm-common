@@ -55,6 +55,36 @@ BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_deckReturned) {
     BOOST_CHECK_NO_THROW(DeckPtr deck =  parser->parseFile(singleKeywordFile.string()));
 }
 
+BOOST_AUTO_TEST_CASE(parse_stringWithWWCTKeyword_deckReturned) {
+    const char *wwctString =
+        "SUMMARY\n"
+        "\n"
+        "-- Kommentar\n"
+        "WWCT\n"
+        "  'WELL-1' 'WELL-2' / -- Ehne mehne muh\n"
+        "/\n";
+    ParserPtr parser = createWWCTParser();
+    BOOST_CHECK( parser->canParseKeyword("WWCT"));
+    BOOST_CHECK( parser->canParseKeyword("SUMMARY"));
+    BOOST_CHECK_NO_THROW(DeckPtr deck =  parser->parseString(wwctString));
+}
+
+BOOST_AUTO_TEST_CASE(parse_streamWithWWCTKeyword_deckReturned) {
+    const char *wwctString =
+        "SUMMARY\n"
+        "\n"
+        "-- Kommentar\n"
+        "WWCT\n"
+        "  'WELL-1' 'WELL-2' / -- Rumpelstilzchen\n"
+        "/\n";
+    std::shared_ptr<std::istringstream> wwctStream(new std::istringstream(wwctString));
+
+    ParserPtr parser = createWWCTParser();
+    BOOST_CHECK( parser->canParseKeyword("WWCT"));
+    BOOST_CHECK( parser->canParseKeyword("SUMMARY"));
+    BOOST_CHECK_NO_THROW(DeckPtr deck =  parser->parseStream(wwctStream));
+}
+
 BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_deckHasWWCT) {
     boost::filesystem::path singleKeywordFile("testdata/integration_tests/wwct.data");
     ParserPtr parser = createWWCTParser();
