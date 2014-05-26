@@ -1,5 +1,5 @@
 /*
-  Copyright 2013 Statoil ASA.
+  Copyright 2014 Statoil ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -19,9 +19,10 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <memory>
 #include <boost/filesystem.hpp>
 
-#define BOOST_TEST_MODULE EclipseGridTests
+#define BOOST_TEST_MODULE BoxManagereTests
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
@@ -56,5 +57,39 @@ BOOST_AUTO_TEST_CASE(CreateBox) {
             }
         }
     }   
+}
+
+
+
+BOOST_AUTO_TEST_CASE(CreateSubBox) {
+    Opm::Box globalBox( 10,10,10 );
+
+    BOOST_CHECK_THROW( new Opm::Box( globalBox , -1 , 9 , 1 , 8 , 1, 8)  , std::invalid_argument);   //  Negative throw
+    BOOST_CHECK_THROW( new Opm::Box( globalBox ,  1 , 19 , 1 , 8 , 1, 8) , std::invalid_argument);   //  Bigger than global: throw
+    BOOST_CHECK_THROW( new Opm::Box( globalBox ,  9 , 1  , 1 , 8 , 1, 8) , std::invalid_argument);   //  Inverted order: throw    
     
+    Opm::Box subBox1(globalBox , 0,9,0,9,0,9);
+    BOOST_CHECK( subBox1.isGlobal());
+
+    
+    Opm::Box subBox2(globalBox , 1,3,1,4,1,5);
+    BOOST_CHECK( !subBox2.isGlobal());
+    BOOST_CHECK_EQUAL( 60U , subBox2.size() );
+    
+    {
+        size_t i,j,k;
+        size_t d = 0;
+        const std::vector<size_t>& indexList = subBox2.getIndexList();
+        
+        for (k=0; k < subBox2.getDim(2); k++) {
+            for (j=0; j < subBox2.getDim(1); j++) {
+                for (i=0; i < subBox2.getDim(0); i++) {
+                    
+                    size_t g = (i + 1) + (j + 1)*globalBox.getDim(0) + (k + 1)*globalBox.getDim(0)*globalBox.getDim(1);
+                    BOOST_CHECK_EQUAL( indexList[d] , g);
+                    d++;
+                }
+            }
+        }
+    }
 }

@@ -42,11 +42,44 @@ namespace Opm {
         m_stride[0] = 1;
         m_stride[1] = m_dims[0];
         m_stride[2] = m_dims[0] * m_dims[1];
-
+        
         m_isGlobal = true;
     }
 
+
+    Box::Box(const Box& globalBox , int i1 , int i2 , int j1 , int j2 , int k1 , int k2) {
+        assertDims(globalBox , 0 , i1 , i2);
+        assertDims(globalBox , 1 , j1 , j2);
+        assertDims(globalBox , 2 , k1 , k2);
+
+        m_dims[0] = (size_t) (i2 - i1 + 1);
+        m_dims[1] = (size_t) (j2 - j1 + 1);
+        m_dims[2] = (size_t) (k2 - k1 + 1);
+        
+        m_offset[0] = (size_t) i1;
+        m_offset[1] = (size_t) j1;
+        m_offset[2] = (size_t) k1;
+
+        m_stride[0] = 1;
+        m_stride[1] = globalBox.getDim(0);
+        m_stride[2] = globalBox.getDim(0) * globalBox.getDim(1);
+
+        if (size() == globalBox.size())
+            m_isGlobal = true;
+        else
+            m_isGlobal = false;
+    }
     
+
+    void Box::assertDims(const Box& globalBox, size_t idim , int l1 , int l2) {
+        if ((l1 < 0) || (l2 < 0) || (l1 > l2))
+            throw std::invalid_argument("Invalid index values for sub box");
+        
+        if ((size_t) l2 >= globalBox.getDim(idim))
+            throw std::invalid_argument("Invalid index values for sub box");
+    }
+
+
     size_t Box::size() const {
         return m_dims[0] * m_dims[1] * m_dims[2];
     }
@@ -80,7 +113,7 @@ namespace Opm {
 
             size_t ii,ij,ik;
             size_t l = 0;
-            
+
             for (ik=0; ik < m_dims[2]; ik++) {
                 size_t k = ik + m_offset[2];
                 for (ij=0; ij < m_dims[1]; ij++) {

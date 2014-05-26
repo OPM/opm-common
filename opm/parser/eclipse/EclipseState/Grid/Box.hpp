@@ -29,17 +29,21 @@ namespace Opm {
     class Box {
     public:
         Box(int nx , int ny , int nz);
+        Box(const Box& globalBox , int i1 , int i2 , int j1 , int j2 , int k1 , int k2); // Zero offset coordinates.
         size_t size() const;
         bool   isGlobal() const;
         size_t getDim(size_t idim) const;
         const std::vector<size_t>& getIndexList();
 
+
+
     private:
         void assertIndexList();
-
+        static void assertDims(const Box& globalBox, size_t idim , int l1 , int l2);
         size_t m_dims[3];
         size_t m_offset[3];
         size_t m_stride[3];
+
         bool   m_isGlobal;
         std::vector<size_t> m_indexList;
     };
