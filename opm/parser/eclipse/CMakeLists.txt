@@ -73,8 +73,9 @@ EclipseState/Schedule/CompletionSet.cpp
 EclipseState/Schedule/ScheduleEnums.cpp 
 EclipseState/Schedule/GroupTreeNode.cpp
 EclipseState/Schedule/GroupTree.cpp
-EclipseState/Grid/GridProperty.cpp
 #
+EclipseState/Grid/GridProperty.cpp
+EclipseState/Grid/Box.cpp
 EclipseState/Grid/EclipseGrid.cpp)
 
 set (utility_source
@@ -132,6 +133,7 @@ EclipseState/Schedule/OrderedMap.hpp
 EclipseState/Grid/EclipseGrid.hpp
 EclipseState/Grid/GridProperty.hpp
 EclipseState/Grid/GridProperties.hpp
+EclipseState/Grid/Box.hpp
 #
 Utility/WconinjeWrapper.hpp
 Utility/CompdatWrapper.hpp
