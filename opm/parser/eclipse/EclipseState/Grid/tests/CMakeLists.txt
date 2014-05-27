@@ -17,3 +17,8 @@ add_executable(runBoxTests BoxTests.cpp)
 target_link_libraries(runBoxTests Parser ${Boost_LIBRARIES})
 add_test(NAME runBoxTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runBoxTests )
 
+
+add_executable(runBoxManagerTests BoxManagerTests.cpp)
+target_link_libraries(runBoxManagerTests Parser ${Boost_LIBRARIES})
+add_test(NAME runBoxManagerTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runBoxManagerTests )
+
