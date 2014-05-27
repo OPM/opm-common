@@ -34,7 +34,7 @@ namespace Opm {
         bool   isGlobal() const;
         size_t getDim(size_t idim) const;
         const std::vector<size_t>& getIndexList();
-
+        bool equal(const Box& other) const;
 
 
     private:

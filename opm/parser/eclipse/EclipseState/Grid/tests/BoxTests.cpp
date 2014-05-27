@@ -93,3 +93,22 @@ BOOST_AUTO_TEST_CASE(CreateSubBox) {
         }
     }
 }
+
+
+BOOST_AUTO_TEST_CASE(BoxEqual) {
+    Opm::Box globalBox1( 10,10,10 );
+    Opm::Box globalBox2( 10,10,10 );
+    Opm::Box globalBox3( 10,10,11 );
+
+    Opm::Box globalBox4( 20,20,20 );
+    Opm::Box subBox1( globalBox1 , 0 , 9 , 0 , 9 , 0, 9);
+    Opm::Box subBox4( globalBox4 , 0 , 9 , 0 , 9 , 0, 9);
+    Opm::Box subBox5( globalBox4 , 10 , 19 , 10 , 19 , 10, 19);
+    
+    BOOST_CHECK( globalBox1.equal( globalBox2 ));
+    BOOST_CHECK( !globalBox1.equal( globalBox3 ));
+    BOOST_CHECK( globalBox1.equal( subBox1 ));
+
+    BOOST_CHECK( !globalBox4.equal( subBox4 ));
+    BOOST_CHECK( !subBox4.equal( subBox5 ));
+}

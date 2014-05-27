@@ -130,7 +130,26 @@ namespace Opm {
         }
     }
 
+    bool Box::equal(const Box& other) const {
+        
+        if (size() != other.size())
+            return false;
 
+        {
+            for (size_t idim = 0; idim < 3; idim++) {
+                if (m_dims[idim] != other.m_dims[idim])
+                    return false;
+
+                if (m_stride[idim] != other.m_stride[idim])
+                    return false;
+                
+                if (m_offset[idim] != other.m_offset[idim])
+                    return false;
+            }
+        }
+        
+        return true;
+    }
 
 }
 
