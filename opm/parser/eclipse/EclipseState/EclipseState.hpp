@@ -52,10 +52,12 @@ namespace Opm {
         void initTitle(DeckConstPtr deck);
         void initProperties(DeckConstPtr deck);
        
-        void setKeywordBox(DeckRecordConstPtr deckRecord , BoxManager& boxManager);
         void handleBOXKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager);
-        void handleENDBOXKeyword(DeckKeywordConstPtr deckKeyword ,  BoxManager& boxManager);
         void handleCOPYKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager);
+        void handleENDBOXKeyword(DeckKeywordConstPtr deckKeyword ,  BoxManager& boxManager);
+        void handleMULTIPLYKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager);
+        
+        void setKeywordBox(DeckRecordConstPtr deckRecord , BoxManager& boxManager);
         void copyIntKeyword(const std::string& srcField , const std::string& targetField , std::shared_ptr<const Box> inputBox);
 
         EclipseGridConstPtr m_eclipseGrid;

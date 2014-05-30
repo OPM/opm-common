@@ -36,6 +36,10 @@ FLUXNUM
 SATNUM
   1000*2 /
 
+COPY
+   SATNUM  FIPNUM /
+/
+
 BOX 
   1  2  1  2  1  2 /
 
@@ -46,6 +50,18 @@ COPY
    SATNUM  FIPNUM /
 /
 
+ENDBOX 
+
+MULTIPLY
+   FIPNUM 2 /
+/
+
+BOX 
+  1  2  1  2  1  2 /
+
+MULTIPLY
+   FIPNUM 2 /
+/
 
 ENDBOX
 

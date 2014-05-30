@@ -134,14 +134,18 @@ namespace Opm {
 
                 if (deckKeyword->name() == "BOX")
                     handleBOXKeyword(deckKeyword , boxManager);
+                
+                if (deckKeyword->name() == "COPY")
+                    handleCOPYKeyword(deckKeyword , boxManager);
 
                 if (deckKeyword->name() == "ENDBOX")
                     handleENDBOXKeyword(deckKeyword , boxManager);
 
-                if (deckKeyword->name() == "COPY")
-                    handleCOPYKeyword(deckKeyword , boxManager);
+                if (deckKeyword->name() == "MULTIPLY")
+                    handleMULTIPLYKeyword(deckKeyword , boxManager);
 
                 std::cout << "Looking at kw: " << deckKeyword->name() << std::endl;
+                boxManager.endKeyword();
             }
         }
     }
@@ -165,6 +169,26 @@ namespace Opm {
     }
 
 
+    void EclipseState::handleMULTIPLYKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager) {
+        for (auto iter = deckKeyword->begin(); iter != deckKeyword->end(); ++iter) {
+            DeckRecordConstPtr record = *iter;
+            const std::string& field = record->getItem("field")->getString(0);
+            double      scaleFactor  = record->getItem("factor")->getRawDouble(0);
+            
+            setKeywordBox( record , boxManager );
+            
+            if (m_intGridProperties->hasKeyword( field )) {
+                int intFactor = static_cast<int>(scaleFactor);
+                std::shared_ptr<GridProperty<int> > property = m_intGridProperties->getKeyword( field );
+
+                property->scale( intFactor , boxManager.getActiveBox() );
+            } else
+                throw std::invalid_argument("Fatal error processing MULTIPLY keyword. Tried to multiply not defined keyword" + field);
+            
+        }
+    }
+
+
     void EclipseState::handleCOPYKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager) {
         for (auto iter = deckKeyword->begin(); iter != deckKeyword->end(); ++iter) {
             DeckRecordConstPtr record = *iter;
@@ -173,7 +197,6 @@ namespace Opm {
             
             setKeywordBox( record , boxManager );
             
-
             if (m_intGridProperties->hasKeyword( srcField ))
                 copyIntKeyword( srcField , targetField , boxManager.getActiveBox());
             else

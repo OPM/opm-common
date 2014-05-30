@@ -139,3 +139,24 @@ BOOST_AUTO_TEST_CASE(copy) {
         }
     }
 }
+
+
+BOOST_AUTO_TEST_CASE(SCALE) {
+    Opm::GridProperty<int> prop1( 4 , 4 , 2 , "P1" , 1);
+    Opm::GridProperty<int> prop2( 4 , 4 , 2 , "P2" , 9);
+
+    std::shared_ptr<Opm::Box> global = std::make_shared<Opm::Box>(4,4,2);
+    std::shared_ptr<Opm::Box> layer0 = std::make_shared<Opm::Box>(*global , 0,3,0,3,0,0);
+    
+    prop2.copyFrom(prop1 , layer0);
+    prop2.scale( 2 , global );
+    prop2.scale( 2 , layer0 );
+
+    for (size_t j=0; j < 4; j++) {
+        for (size_t i=0; i < 4; i++) {
+            
+            BOOST_CHECK_EQUAL( prop2.iget(i,j,0) , 4 );
+            BOOST_CHECK_EQUAL( prop2.iget(i,j,1) , 18 );
+        }
+    }
+}

@@ -63,9 +63,26 @@ BOOST_AUTO_TEST_CASE( PARSE_BOX_OK ) {
 
 
 
-BOOST_AUTO_TEST_CASE( PARSE_COPY ) {
+BOOST_AUTO_TEST_CASE( PARSE_MULTIPLY_COPY ) {
     EclipseState state = makeState("testdata/integration_tests/BOX/BOXTEST1");
-    BOOST_CHECK(state.hasIntGridProperty( "FIPNUM" ));
+    std::shared_ptr<GridProperty<int> > satnum = state.getIntProperty("SATNUM");
+    std::shared_ptr<GridProperty<int> > fipnum = state.getIntProperty("FIPNUM");
+    size_t i,j,k;
+    std::shared_ptr<const EclipseGrid> grid = state.getEclipseGrid();
+    
+    for (k = 0; k < grid->getNZ(); k++) {
+        for (j = 0; j < grid->getNY(); j++) {
+            for (i = 0; i < grid->getNX(); i++) {
+                
+                size_t g = i + j*grid->getNX() + k * grid->getNX() * grid->getNY();
+                if (i <= 1 && j <= 1 && k <= 1)
+                    BOOST_CHECK_EQUAL(4*satnum->iget(g) , fipnum->iget(g));
+                else
+                    BOOST_CHECK_EQUAL(2*satnum->iget(i,j,k) , fipnum->iget(i,j,k));
+
+            }
+        }
+    }
 }
 
 
