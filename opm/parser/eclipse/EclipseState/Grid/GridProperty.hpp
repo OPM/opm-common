@@ -83,12 +83,10 @@ public:
     void loadFromDeckKeyword(DeckKeywordConstPtr deckKeyword);    
 
 
-
+    
     void copyFrom(const GridProperty<T>& src, std::shared_ptr<const Box> inputBox) {
         if (inputBox->isGlobal()) {
-            for (size_t i = 0; i < m_data.size(); i++) 
-                m_data[i] = src.m_data[i];
-            //std::copy( src.m_data.begin() , src.m_data.end() , m_data.begin() );
+            std::copy( src.m_data.begin() , src.m_data.end() , m_data.begin() );
         } else {
             const std::vector<size_t>& indexList = inputBox->getIndexList();
             for (size_t i = 0; i < indexList.size(); i++) {
@@ -108,6 +106,36 @@ public:
             for (size_t i = 0; i < indexList.size(); i++) {
                 size_t targetIndex = indexList[i];
                 m_data[targetIndex] *= scaleFactor;
+            }
+        }
+    }
+
+
+    void add(T scaleFactor , std::shared_ptr<const Box> inputBox) {
+        if (inputBox->isGlobal()) {
+            std::transform(m_data.begin(), m_data.end(), m_data.begin(),
+                           std::bind1st(std::plus<T>() , scaleFactor));
+
+        } else {
+            const std::vector<size_t>& indexList = inputBox->getIndexList();
+            for (size_t i = 0; i < indexList.size(); i++) {
+                size_t targetIndex = indexList[i];
+                m_data[targetIndex] += scaleFactor;
+            }
+        }
+    }
+
+
+    
+
+    void setScalar(T value , std::shared_ptr<const Box> inputBox) {
+        if (inputBox->isGlobal()) {
+            std::fill(m_data.begin(), m_data.end(), value);
+        } else {
+            const std::vector<size_t>& indexList = inputBox->getIndexList();
+            for (size_t i = 0; i < indexList.size(); i++) {
+                size_t targetIndex = indexList[i];
+                m_data[targetIndex] = value;
             }
         }
     }

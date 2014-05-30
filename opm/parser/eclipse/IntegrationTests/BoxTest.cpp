@@ -89,3 +89,22 @@ BOOST_AUTO_TEST_CASE( PARSE_MULTIPLY_COPY ) {
 BOOST_AUTO_TEST_CASE( INCOMPLETE_KEYWORD_BOX) {
     BOOST_CHECK_THROW( makeState("testdata/integration_tests/BOX/BOXTEST2") , std::invalid_argument);
 }
+
+BOOST_AUTO_TEST_CASE( EQUAL ) {
+    EclipseState state = makeState("testdata/integration_tests/BOX/BOXTEST1");
+    std::shared_ptr<GridProperty<int> > pvtnum = state.getIntProperty("PVTNUM");
+    std::shared_ptr<GridProperty<int> > eqlnum = state.getIntProperty("EQLNUM");
+    size_t i,j,k;
+    std::shared_ptr<const EclipseGrid> grid = state.getEclipseGrid();
+    
+    for (k = 0; k < grid->getNZ(); k++) {
+        for (j = 0; j < grid->getNY(); j++) {
+            for (i = 0; i < grid->getNX(); i++) {
+                
+                BOOST_CHECK_EQUAL( pvtnum->iget(i,j,k) , k );
+                BOOST_CHECK_EQUAL( eqlnum->iget(i,j,k) , 77 + 2 * k );
+                
+            }
+        }
+    }
+}

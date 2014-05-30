@@ -51,10 +51,12 @@ namespace Opm {
         void initPhases(DeckConstPtr deck);
         void initTitle(DeckConstPtr deck);
         void initProperties(DeckConstPtr deck);
-       
+
+        void handleADDKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager);
         void handleBOXKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager);
         void handleCOPYKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager);
         void handleENDBOXKeyword(DeckKeywordConstPtr deckKeyword ,  BoxManager& boxManager);
+        void handleEQUALSKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager);
         void handleMULTIPLYKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager);
         
         void setKeywordBox(DeckRecordConstPtr deckRecord , BoxManager& boxManager);

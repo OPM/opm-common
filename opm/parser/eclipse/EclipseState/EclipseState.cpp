@@ -120,6 +120,7 @@ namespace Opm {
         BoxManager boxManager(m_eclipseGrid->getNX( ) , m_eclipseGrid->getNY() , m_eclipseGrid->getNZ());
         std::vector<std::pair<std::string , int> > supportedIntKeywords = {{ "SATNUM" , 0 },
                                                                            { "PVTNUM" , 0 },
+                                                                           { "EQLNUM" , 0 },
                                                                            { "FIPNUM" , 0 }};
         m_intGridProperties = std::make_shared<GridProperties<int> >(m_eclipseGrid->getNX() , m_eclipseGrid->getNY() , m_eclipseGrid->getNZ() , supportedIntKeywords); 
         
@@ -132,12 +133,18 @@ namespace Opm {
                 if (supportsGridProperty( deckKeyword->name()) )
                     loadGridPropertyFromDeckKeyword( boxManager.getActiveBox() , deckKeyword );
 
+                if (deckKeyword->name() == "ADD")
+                    handleADDKeyword(deckKeyword , boxManager);
+
                 if (deckKeyword->name() == "BOX")
                     handleBOXKeyword(deckKeyword , boxManager);
                 
                 if (deckKeyword->name() == "COPY")
                     handleCOPYKeyword(deckKeyword , boxManager);
 
+                if (deckKeyword->name() == "EQUALS")
+                    handleEQUALSKeyword(deckKeyword , boxManager);
+                
                 if (deckKeyword->name() == "ENDBOX")
                     handleENDBOXKeyword(deckKeyword , boxManager);
 
@@ -184,9 +191,56 @@ namespace Opm {
                 property->scale( intFactor , boxManager.getActiveBox() );
             } else
                 throw std::invalid_argument("Fatal error processing MULTIPLY keyword. Tried to multiply not defined keyword" + field);
-            
+
         }
     }
+
+
+    /*
+      The fine print of the manual says the ADD keyword should support
+      some state dependent semantics regarding endpoint scaling arrays
+      in the PROPS section. That is not supported. 
+    */
+    
+    void EclipseState::handleADDKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager) {
+        for (auto iter = deckKeyword->begin(); iter != deckKeyword->end(); ++iter) {
+            DeckRecordConstPtr record = *iter;
+            const std::string& field = record->getItem("field")->getString(0);
+            double      shiftValue  = record->getItem("shift")->getRawDouble(0);
+            
+            setKeywordBox( record , boxManager );
+            
+            if (m_intGridProperties->hasKeyword( field )) {
+                int intShift = static_cast<int>(shiftValue);
+                std::shared_ptr<GridProperty<int> > property = m_intGridProperties->getKeyword( field );
+                
+                property->add( intShift , boxManager.getActiveBox() );
+            } else
+                throw std::invalid_argument("Fatal error processing ADD keyword. Tried to multiply not defined keyword" + field);
+
+        }
+    }
+
+
+    void EclipseState::handleEQUALSKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager) {
+        for (auto iter = deckKeyword->begin(); iter != deckKeyword->end(); ++iter) {
+            DeckRecordConstPtr record = *iter;
+            const std::string& field = record->getItem("field")->getString(0);
+            double      value  = record->getItem("value")->getRawDouble(0);
+            
+            setKeywordBox( record , boxManager );
+            
+            if (m_intGridProperties->supportsKeyword( field )) {
+                int intValue = static_cast<int>(value);
+                std::shared_ptr<GridProperty<int> > property = m_intGridProperties->getKeyword( field );
+
+                property->setScalar( intValue , boxManager.getActiveBox() );
+            } else
+                throw std::invalid_argument("Fatal error processing EQUALS keyword. Tried to set not defined keyword" + field);
+
+        }
+    }
+
 
 
     void EclipseState::handleCOPYKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager) {
