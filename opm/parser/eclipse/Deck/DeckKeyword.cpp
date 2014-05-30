@@ -68,6 +68,14 @@ namespace Opm {
         m_recordList.push_back(record);
     }
 
+    std::vector<DeckRecordConstPtr>::const_iterator DeckKeyword::begin() const {
+        return m_recordList.begin();
+    }
+
+    std::vector<DeckRecordConstPtr>::const_iterator DeckKeyword::end() const {
+        return m_recordList.end();
+    }
+
     DeckRecordConstPtr DeckKeyword::getRecord(size_t index) const {
         if (index < m_recordList.size()) {
             return m_recordList[index];

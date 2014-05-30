@@ -40,6 +40,9 @@ namespace Opm {
         const std::vector<float>& getRawFloatData() const;
         const std::vector<std::string>& getStringData() const;
         size_t getDataSize() const;
+
+        std::vector<DeckRecordConstPtr>::const_iterator begin() const;
+        std::vector<DeckRecordConstPtr>::const_iterator end() const;
     private:
         std::string m_keywordName;
         std::vector<DeckRecordConstPtr> m_recordList;

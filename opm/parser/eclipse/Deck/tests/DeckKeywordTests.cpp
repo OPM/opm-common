@@ -60,6 +60,10 @@ BOOST_AUTO_TEST_CASE(addRecord_onerecord_recordadded) {
     DeckKeywordPtr deckKeyword(new DeckKeyword("KW"));
     deckKeyword->addRecord(DeckRecordConstPtr(new DeckRecord()));
     BOOST_CHECK_EQUAL(1U, deckKeyword->size());
+    for (auto iter = deckKeyword->begin(); iter != deckKeyword->end(); ++iter) {
+        // 
+    }
+
 }
 
 BOOST_AUTO_TEST_CASE(getRecord_onerecord_recordretured) {
