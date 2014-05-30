@@ -81,6 +81,21 @@ public:
     void loadFromDeckKeyword(std::shared_ptr<const Box> inputBox , DeckKeywordConstPtr deckKeyword);
     void loadFromDeckKeyword(DeckKeywordConstPtr deckKeyword);    
 
+
+
+    void copyFrom(const GridProperty<T>& src, std::shared_ptr<const Box> inputBox) {
+        if (inputBox->isGlobal()) {
+            std::copy( src.m_data.begin() , src.m_data.end() , m_data.begin());
+        } else {
+            const std::vector<size_t>& indexList = inputBox->getIndexList();
+            for (size_t i = 0; i < indexList.size(); i++) {
+                size_t targetIndex = indexList[i];
+                m_data[targetIndex] = src.m_data[targetIndex];
+            }
+        }
+    }
+    
+
 private:
 
     void setFromVector(const std::vector<T>& data) {
