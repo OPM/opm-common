@@ -91,6 +91,13 @@ add_test(NAME runParseSWOF
          WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} 
          COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runParseSWOF)         
 
+add_executable(runBoxTest BoxTest.cpp)
+target_link_libraries(runBoxTest Parser ${Boost_LIBRARIES})
+add_test(NAME runBoxTest 
+         WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} 
+         COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runBoxTest)         
+
+
 add_executable(runParseSGOF ParseSGOF.cpp)
 target_link_libraries(runParseSGOF Parser ${Boost_LIBRARIES})
 add_test(NAME runParseSGOF 

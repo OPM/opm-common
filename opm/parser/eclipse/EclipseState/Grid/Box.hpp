@@ -33,12 +33,12 @@ namespace Opm {
         size_t size() const;
         bool   isGlobal() const;
         size_t getDim(size_t idim) const;
-        const std::vector<size_t>& getIndexList();
+        const std::vector<size_t>& getIndexList() const;
         bool equal(const Box& other) const;
 
 
     private:
-        void assertIndexList();
+        void initIndexList();
         static void assertDims(const Box& globalBox, size_t idim , int l1 , int l2);
         size_t m_dims[3];
         size_t m_offset[3];

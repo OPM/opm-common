@@ -17,7 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "GridProperty.hpp"
+#include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 
 namespace Opm {
 
@@ -26,6 +27,15 @@ void GridProperty<int>::loadFromDeckKeyword(Opm::DeckKeywordConstPtr deckKeyword
     if (deckKeyword->isDataKeyword()) {
         const std::vector<int>& data = deckKeyword->getIntData();
         setFromVector(data);
+    } else
+        throw std::invalid_argument("Can only load from DATA keywords");
+}
+
+template<>  
+void GridProperty<int>::loadFromDeckKeyword(std::shared_ptr<const Box> inputBox , Opm::DeckKeywordConstPtr deckKeyword) {
+    if (deckKeyword->isDataKeyword()) {
+        const std::vector<int>& data = deckKeyword->getIntData();
+        setFromVector(inputBox , data);
     } else
         throw std::invalid_argument("Can only load from DATA keywords");
 }

@@ -23,7 +23,9 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 
 /*
   This class implemenents a class representing properties which are

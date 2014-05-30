@@ -23,6 +23,8 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/BoxManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 
@@ -41,7 +43,7 @@ namespace Opm {
         bool supportsGridProperty(const std::string& keyword) const;
         std::shared_ptr<GridProperty<int> > getIntProperty( const std::string& keyword );
         bool hasIntGridProperty(const std::string& keyword) const;
-        void loadGridPropertyFromDeckKeyword(DeckKeywordConstPtr deckKeyword);
+        void loadGridPropertyFromDeckKeyword(std::shared_ptr<const Box> inputBox , DeckKeywordConstPtr deckKeyword);
         
     private:
         void initSchedule(DeckConstPtr deck);
@@ -49,7 +51,10 @@ namespace Opm {
         void initPhases(DeckConstPtr deck);
         void initTitle(DeckConstPtr deck);
         void initProperties(DeckConstPtr deck);
-
+       
+        void handleBOXKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager);
+        void handleENDBOXKeyword(DeckKeywordConstPtr deckKeyword ,  BoxManager& boxManager);
+          
 
         EclipseGridConstPtr m_eclipseGrid;
         ScheduleConstPtr schedule;

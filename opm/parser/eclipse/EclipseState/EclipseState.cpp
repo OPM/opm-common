@@ -20,6 +20,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/BoxManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
@@ -106,28 +108,57 @@ namespace Opm {
     }
 
     
-    void EclipseState::loadGridPropertyFromDeckKeyword(DeckKeywordConstPtr deckKeyword) {            
+    void EclipseState::loadGridPropertyFromDeckKeyword(std::shared_ptr<const Box> inputBox , DeckKeywordConstPtr deckKeyword) {            
         const std::string& keyword = deckKeyword->name();
         auto gridProperty = m_intGridProperties->getKeyword( keyword );
-        gridProperty->loadFromDeckKeyword( deckKeyword );
+        gridProperty->loadFromDeckKeyword( inputBox , deckKeyword );
     }
     
     
-    void EclipseState::initProperties(DeckConstPtr deck) {
-         size_t volume = m_eclipseGrid->getCartesianSize();
-         std::vector<std::pair<std::string , int> > supportedKeywords = {{ "SATNUM" , 0 }};
-         m_intGridProperties = std::make_shared<GridProperties<int> >(m_eclipseGrid->getNX() , m_eclipseGrid->getNY() , m_eclipseGrid->getNZ() , supportedIntKeywords); 
 
-         if (Section::hasREGIONS(deck)) {
-             std::shared_ptr<Opm::REGIONSSection> regionsSection(new Opm::REGIONSSection(deck) );
-             
-             for (auto iter = regionsSection->begin(); iter != regionsSection->end(); ++iter) {
-                 DeckKeywordConstPtr deckKeyword = *iter;
-                 
-                 if (supportsGridProperty( deckKeyword->name()))
-                     loadGridPropertyFromDeckKeyword( deckKeyword );
-                 
-             }
-         }
+    void EclipseState::initProperties(DeckConstPtr deck) {
+        BoxManager boxManager(m_eclipseGrid->getNX( ) , m_eclipseGrid->getNY() , m_eclipseGrid->getNZ());
+        std::vector<std::pair<std::string , int> > supportedIntKeywords = {{ "SATNUM" , 0 }};   // Should come in config ....
+        m_intGridProperties = std::make_shared<GridProperties<int> >(m_eclipseGrid->getNX() , m_eclipseGrid->getNY() , m_eclipseGrid->getNZ() , supportedIntKeywords); 
+        
+
+         
+        if (Section::hasREGIONS(deck)) {
+            std::shared_ptr<Opm::REGIONSSection> regionsSection(new Opm::REGIONSSection(deck) );
+            
+            for (auto iter = regionsSection->begin(); iter != regionsSection->end(); ++iter) {
+                DeckKeywordConstPtr deckKeyword = *iter;
+                
+                if (supportsGridProperty( deckKeyword->name()) )
+                    loadGridPropertyFromDeckKeyword( boxManager.getActiveBox() , deckKeyword );
+
+                if (deckKeyword->name() == "BOX")
+                    handleBOXKeyword(deckKeyword , boxManager);
+
+                if (deckKeyword->name() == "ENDBOX")
+                    handleENDBOXKeyword(deckKeyword , boxManager);
+
+                std::cout << "Looking at kw: " << deckKeyword->name() << std::endl;
+            }
+        }
     }
+
+
+    void EclipseState::handleBOXKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager) {
+        DeckRecordConstPtr record = deckKeyword->getRecord(0);
+        int I1 = record->getItem("I1")->getInt(0) - 1;
+        int I2 = record->getItem("I2")->getInt(0) - 1;
+        int J1 = record->getItem("J1")->getInt(0) - 1;
+        int J2 = record->getItem("J2")->getInt(0) - 1;
+        int K1 = record->getItem("K1")->getInt(0) - 1;
+        int K2 = record->getItem("K2")->getInt(0) - 1;
+        
+        boxManager.setInputBox( I1 , I2 , J1 , J2 , K1 , K2 );
+    }
+
+
+    void EclipseState::handleENDBOXKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager) {
+        boxManager.endInputBox();
+    }
+
 }

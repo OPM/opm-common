@@ -112,3 +112,5 @@ BOOST_AUTO_TEST_CASE(BoxEqual) {
     BOOST_CHECK( !globalBox4.equal( subBox4 ));
     BOOST_CHECK( !subBox4.equal( subBox5 ));
 }
+
+

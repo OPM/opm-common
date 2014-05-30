@@ -42,8 +42,9 @@ namespace Opm {
         m_stride[0] = 1;
         m_stride[1] = m_dims[0];
         m_stride[2] = m_dims[0] * m_dims[1];
-        
+
         m_isGlobal = true;
+        initIndexList();
     }
 
 
@@ -68,6 +69,8 @@ namespace Opm {
             m_isGlobal = true;
         else
             m_isGlobal = false;
+        
+        initIndexList();
     }
     
 
@@ -98,33 +101,27 @@ namespace Opm {
     }
 
 
-    const std::vector<size_t>& Box::getIndexList() {
-        assertIndexList();
+    const std::vector<size_t>& Box::getIndexList() const {
         return m_indexList;
     }
 
     
-    void Box::assertIndexList() {
-        if (m_indexList.size() > 0) 
-            return;
-
-        {
-            m_indexList.resize( size() );
-
-            size_t ii,ij,ik;
-            size_t l = 0;
-
-            for (ik=0; ik < m_dims[2]; ik++) {
-                size_t k = ik + m_offset[2];
-                for (ij=0; ij < m_dims[1]; ij++) {
-                    size_t j = ij + m_offset[1];
-                    for (ii=0; ii < m_dims[0]; ii++) {
-                        size_t i = ii + m_offset[0];
-                        size_t g = i * m_stride[0] + j*m_stride[1] + k*m_stride[2];
-                        
-                        m_indexList[l] = g;
-                        l++;
-                    }
+    void Box::initIndexList() {
+        m_indexList.resize( size() );
+        
+        size_t ii,ij,ik;
+        size_t l = 0;
+        
+        for (ik=0; ik < m_dims[2]; ik++) {
+            size_t k = ik + m_offset[2];
+            for (ij=0; ij < m_dims[1]; ij++) {
+                size_t j = ij + m_offset[1];
+                for (ii=0; ii < m_dims[0]; ii++) {
+                    size_t i = ii + m_offset[0];
+                    size_t g = i * m_stride[0] + j*m_stride[1] + k*m_stride[2];
+                    
+                    m_indexList[l] = g;
+                    l++;
                 }
             }
         }
