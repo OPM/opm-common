@@ -116,8 +116,8 @@ namespace Opm {
     void EclipseState::initProperties(DeckConstPtr deck) {
          size_t volume = m_eclipseGrid->getCartesianSize();
          std::vector<std::pair<std::string , int> > supportedKeywords = {{ "SATNUM" , 0 }};
-         m_intGridProperties = std::make_shared<GridProperties<int> >(volume , supportedKeywords);
-         
+         m_intGridProperties = std::make_shared<GridProperties<int> >(m_eclipseGrid->getNX() , m_eclipseGrid->getNY() , m_eclipseGrid->getNZ() , supportedIntKeywords); 
+
          if (Section::hasREGIONS(deck)) {
              std::shared_ptr<Opm::REGIONSSection> regionsSection(new Opm::REGIONSSection(deck) );
              

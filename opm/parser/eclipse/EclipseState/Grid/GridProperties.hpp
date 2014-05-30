@@ -49,8 +49,10 @@ template <typename T>
 class GridProperties {
 public:
 
-    GridProperties(size_t gridVolume , const std::vector<std::pair<std::string, T> > & supportedKeywords) {
-        m_gridVolume = gridVolume;
+    GridProperties(size_t nx , size_t ny , size_t nz , const std::vector<std::pair<std::string, T> > & supportedKeywords) {
+        m_nx = nx;
+        m_ny = ny;
+        m_nz = nz;
         
         for (auto iter = supportedKeywords.begin(); iter != supportedKeywords.end(); ++iter) 
             m_supportedKeywords.insert( std::pair<std::string , T>(*iter));
@@ -91,7 +93,7 @@ public:
             return false;
         else {
             auto supportedKeyword = m_supportedKeywords.find( keyword );
-            std::shared_ptr<GridProperty<T> > newProperty(new GridProperty<T>(m_gridVolume , keyword , (*supportedKeyword).second));
+            std::shared_ptr<GridProperty<T> > newProperty(new GridProperty<T>(m_nx , m_ny , m_nz , keyword , (*supportedKeyword).second));
             m_properties.insert( std::pair<std::string , std::shared_ptr<GridProperty<int> > > ( keyword , newProperty ));
             return true;
         }
@@ -99,7 +101,7 @@ public:
 
     
 private:
-    size_t m_gridVolume;
+    size_t m_nx, m_ny, m_nz;
     std::unordered_map<std::string, T> m_supportedKeywords;
     std::map<std::string , std::shared_ptr<GridProperty<T> > > m_properties;
 };

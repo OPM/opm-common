@@ -43,9 +43,12 @@ template <typename T>
 class GridProperty {
 public:
 
-    GridProperty(size_t gridVolume , const std::string& keyword , T defaultValue = 0) {
+    GridProperty(size_t nx , size_t ny , size_t nz , const std::string& keyword , T defaultValue = 0) {
+        m_nx = nx;
+        m_ny = ny;
+        m_nz = nz;
         m_keyword = keyword;
-        m_data.resize( gridVolume );
+        m_data.resize( nx * ny * nz );
         std::fill( m_data.begin() , m_data.end() , defaultValue );
     }
     
@@ -63,22 +66,46 @@ public:
     }
 
 
+    T iget(size_t i , size_t j , size_t k) const {
+        size_t g = i + j*m_nx + k*m_nx*m_ny;
+        return iget(g);
+    }
+
+
     const std::vector<T>& getData() {
         return m_data;
     }
 
-    void loadFromDeckKeyword( DeckKeywordConstPtr deckKeyword);
-    
+    void loadFromDeckKeyword(std::shared_ptr<const Box> inputBox , DeckKeywordConstPtr deckKeyword);
+    void loadFromDeckKeyword(DeckKeywordConstPtr deckKeyword);    
+
 private:
 
     void setFromVector(const std::vector<T>& data) {
         if (data.size() == m_data.size()) {
-            for (size_t i = 0; i < m_data.size(); i++) 
+            for (size_t i = 0; i < data.size(); i++) 
                 m_data[i] = data[i];
         } else
             throw std::invalid_argument("Size mismatch");
     }
-        
+    
+    
+    void setFromVector(std::shared_ptr<const Box> inputBox , const std::vector<T>& data) {
+        if (inputBox->isGlobal())
+            setFromVector( data );
+        else {
+            const std::vector<size_t>& indexList = inputBox->getIndexList();
+            if (data.size() == indexList.size()) {
+                for (size_t i = 0; i < data.size(); i++) {
+                    size_t targetIndex = indexList[i];
+                    m_data[targetIndex] = data[i];
+                }
+            } else
+                throw std::invalid_argument("Size mismatch");
+        }
+    }
+
+    size_t      m_nx,m_ny,m_nz;
     std::string m_keyword;
     std::vector<T> m_data;
 };
