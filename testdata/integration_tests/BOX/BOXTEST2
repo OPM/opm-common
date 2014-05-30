@@ -43,7 +43,7 @@ SATNUM
   8*10 /
 
 COPY
-   SATNUM  FIPNUM /
+   SATNUM  FIPNUM * * 4 5 * 7/
 /
 
 

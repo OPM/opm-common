@@ -118,11 +118,11 @@ namespace Opm {
 
     void EclipseState::initProperties(DeckConstPtr deck) {
         BoxManager boxManager(m_eclipseGrid->getNX( ) , m_eclipseGrid->getNY() , m_eclipseGrid->getNZ());
-        std::vector<std::pair<std::string , int> > supportedIntKeywords = {{ "SATNUM" , 0 }};   // Should come in config ....
+        std::vector<std::pair<std::string , int> > supportedIntKeywords = {{ "SATNUM" , 0 },
+                                                                           { "PVTNUM" , 0 },
+                                                                           { "FIPNUM" , 0 }};
         m_intGridProperties = std::make_shared<GridProperties<int> >(m_eclipseGrid->getNX() , m_eclipseGrid->getNY() , m_eclipseGrid->getNZ() , supportedIntKeywords); 
         
-
-         
         if (Section::hasREGIONS(deck)) {
             std::shared_ptr<Opm::REGIONSSection> regionsSection(new Opm::REGIONSSection(deck) );
             
@@ -137,6 +137,9 @@ namespace Opm {
 
                 if (deckKeyword->name() == "ENDBOX")
                     handleENDBOXKeyword(deckKeyword , boxManager);
+
+                if (deckKeyword->name() == "COPY")
+                    handleCOPYKeyword(deckKeyword , boxManager);
 
                 std::cout << "Looking at kw: " << deckKeyword->name() << std::endl;
             }
@@ -159,6 +162,73 @@ namespace Opm {
 
     void EclipseState::handleENDBOXKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager) {
         boxManager.endInputBox();
+    }
+
+
+    void EclipseState::handleCOPYKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager) {
+        for (auto iter = deckKeyword->begin(); iter != deckKeyword->end(); ++iter) {
+            DeckRecordConstPtr record = *iter;
+            const std::string& srcField = record->getItem("src")->getString(0);
+            const std::string& targetField = record->getItem("target")->getString(0);
+            
+            setKeywordBox( record , boxManager );
+            
+
+            if (m_intGridProperties->hasKeyword( srcField ))
+                copyIntKeyword( srcField , targetField , boxManager.getActiveBox());
+            else
+                throw std::invalid_argument("Fatal error processing COPY keyword. Tried to copy from not defined keyword" + srcField);
+            
+        }
+    }
+
+    
+    void EclipseState::copyIntKeyword(const std::string& srcField , const std::string& targetField , std::shared_ptr<const Box> inputBox) {
+        std::shared_ptr<const GridProperty<int> > src = m_intGridProperties->getKeyword( srcField );
+        std::shared_ptr<GridProperty<int> > target    = m_intGridProperties->getKeyword( targetField );
+        
+        target->copyFrom( *src , inputBox );
+    }
+
+
+
+    void EclipseState::setKeywordBox(DeckRecordConstPtr deckRecord , BoxManager& boxManager) {
+        DeckItemConstPtr I1Item = deckRecord->getItem("I1");
+        DeckItemConstPtr I2Item = deckRecord->getItem("I2");
+        DeckItemConstPtr J1Item = deckRecord->getItem("J1");
+        DeckItemConstPtr J2Item = deckRecord->getItem("J2");
+        DeckItemConstPtr K1Item = deckRecord->getItem("K1");
+        DeckItemConstPtr K2Item = deckRecord->getItem("K2");
+
+        size_t defaultCount = 0;
+        
+        if (I1Item->defaultApplied())
+            defaultCount++;
+
+        if (I2Item->defaultApplied())
+            defaultCount++;
+
+        if (J1Item->defaultApplied())
+            defaultCount++;
+
+        if (J2Item->defaultApplied())
+            defaultCount++;
+
+        if (K1Item->defaultApplied())
+            defaultCount++;
+
+        if (K2Item->defaultApplied())
+            defaultCount++;
+
+        if (defaultCount == 0) {
+            boxManager.setKeywordBox( I1Item->getInt(0) - 1,
+                                      I2Item->getInt(0) - 1,
+                                      J1Item->getInt(0) - 1,
+                                      J2Item->getInt(0) - 1,
+                                      K1Item->getInt(0) - 1,
+                                      K2Item->getInt(0) - 1);
+        } else if (defaultCount != 6)
+            throw std::invalid_argument("When using BOX modifiers on keywords you must specify the BOX completely.");
     }
 
 }

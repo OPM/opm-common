@@ -29,12 +29,18 @@
 using namespace Opm;
 
 
-BOOST_AUTO_TEST_CASE( PARSE_BOX_OK ) {
+EclipseState makeState(const std::string& fileName) {
     ParserPtr parser(new Parser( ));
-    boost::filesystem::path boxFile("testdata/integration_tests/BOX/BOXTEST1");
+    boost::filesystem::path boxFile(fileName);
     DeckPtr deck =  parser->parseFile(boxFile.string() , false);
     EclipseState state(deck);
+    return state;
+}
 
+
+
+BOOST_AUTO_TEST_CASE( PARSE_BOX_OK ) {
+    EclipseState state = makeState("testdata/integration_tests/BOX/BOXTEST1");
     std::shared_ptr<GridProperty<int> > satnum = state.getIntProperty("SATNUM");
     {
         size_t i,j,k;
@@ -53,4 +59,16 @@ BOOST_AUTO_TEST_CASE( PARSE_BOX_OK ) {
             }
         }
     }
+}
+
+
+
+BOOST_AUTO_TEST_CASE( PARSE_COPY ) {
+    EclipseState state = makeState("testdata/integration_tests/BOX/BOXTEST1");
+    BOOST_CHECK(state.hasIntGridProperty( "FIPNUM" ));
+}
+
+
+BOOST_AUTO_TEST_CASE( INCOMPLETE_KEYWORD_BOX) {
+    BOOST_CHECK_THROW( makeState("testdata/integration_tests/BOX/BOXTEST2") , std::invalid_argument);
 }
