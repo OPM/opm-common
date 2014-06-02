@@ -274,12 +274,12 @@ namespace Opm {
                 std::shared_ptr<GridProperty<int> > property = m_intGridProperties->getKeyword( field );
                 
                 property->add( intShift , boxManager.getActiveBox() );
-            } else if (m_intGridProperties->hasKeyword( field )) {
+            } else if (m_doubleGridProperties->hasKeyword( field )) {
                 std::shared_ptr<GridProperty<double> > property = m_doubleGridProperties->getKeyword( field );
                 
                 property->add( shiftValue , boxManager.getActiveBox() );
             } else
-                throw std::invalid_argument("Fatal error processing ADD keyword. Tried to multiply not defined keyword " + field);
+                throw std::invalid_argument("Fatal error processing ADD keyword. Tried to shift not defined keyword " + field);
 
         }
     }
