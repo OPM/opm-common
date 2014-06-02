@@ -22,7 +22,7 @@
 #define BOX_HPP_
 
 #include <vector>
-
+#include <cstddef>
 
 namespace Opm {
     
