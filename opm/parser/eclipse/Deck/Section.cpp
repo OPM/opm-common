@@ -25,7 +25,7 @@
 #include <opm/parser/eclipse/Deck/Section.hpp>
 
 namespace Opm {
-    Section::Section(DeckConstPtr deck, const std::string& startKeyword, const std::vector<std::string>& stopKeywords ) {
+    Section::Section(DeckConstPtr deck, const std::string& startKeyword, const std::vector<std::string>& stopKeywords ) : m_name( startKeyword ) {
         populateKeywords(deck, startKeyword, stopKeywords);
     }
 
@@ -39,6 +39,10 @@ namespace Opm {
                 break;
             m_keywords.addKeyword(deck->getKeyword(i));
         }
+    }
+
+    const std::string& Section::name() const {
+        return m_name;
     }
 
     bool Section::hasKeyword( const std::string& keyword ) const {

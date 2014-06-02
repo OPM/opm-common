@@ -35,9 +35,10 @@ namespace Opm {
         DeckKeywordConstPtr getKeyword(const std::string& keyword, size_t index) const;
         DeckKeywordConstPtr getKeyword(const std::string& keyword) const;
         DeckKeywordConstPtr getKeyword(size_t index) const;
+        const std::string& name() const;
 
         static bool hasSCHEDULE(DeckConstPtr deck) { return hasSection( deck , "SCHEDULE" ); }
-        static bool hasSOLUTIONS(DeckConstPtr deck) { return hasSection( deck , "SOLUTIONS" ); }
+        static bool hasSOLUTION(DeckConstPtr deck) { return hasSection( deck , "SOLUTION" ); }
         static bool hasREGIONS(DeckConstPtr deck) { return hasSection( deck , "REGIONS" ); }
         static bool hasPROPS(DeckConstPtr deck) { return hasSection( deck , "PROPS" ); }
         static bool hasEDIT(DeckConstPtr deck) { return hasSection( deck , "EDIT" ); }
@@ -45,6 +46,7 @@ namespace Opm {
         static bool hasRUNSPEC(DeckConstPtr deck) { return hasSection( deck , "RUNSPEC" ); }
     private:
         KeywordContainer m_keywords;
+        std::string m_name;
         static bool hasSection(DeckConstPtr deck, const std::string& startKeyword);
         void populateKeywords(DeckConstPtr deck, const std::string& startKeyword, const std::vector<std::string>& stopKeywords);
     };
