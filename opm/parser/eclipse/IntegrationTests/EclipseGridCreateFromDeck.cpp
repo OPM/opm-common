@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(ExportFromCPGridACTNUM) {
         for (size_t i = 0; i < volume; i++) {
             BOOST_CHECK_EQUAL( deckActnum[i] , actnum[i]);
             for (size_t j=0; j < 8; j++)
-                BOOST_CHECK_CLOSE( zcor'n[i*8 + j] , deckZCORN[i*8 + j] , 0.0001);
+                BOOST_CHECK_CLOSE( zcorn[i*8 + j] , deckZCORN[i*8 + j] , 0.0001);
         }
     }
 }
