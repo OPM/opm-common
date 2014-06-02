@@ -42,8 +42,8 @@ namespace Opm {
         std::string getTitle() const;
         bool supportsGridProperty(const std::string& keyword) const;
 
-        std::shared_ptr<GridProperty<int> > getIntProperty( const std::string& keyword );
-        std::shared_ptr<GridProperty<double> > getDoubleProperty( const std::string& keyword );
+        std::shared_ptr<GridProperty<int> > getIntProperty( const std::string& keyword ) const;
+        std::shared_ptr<GridProperty<double> > getDoubleProperty( const std::string& keyword ) const;
         bool hasIntGridProperty(const std::string& keyword) const;
         bool hasDoubleGridProperty(const std::string& keyword) const;
 

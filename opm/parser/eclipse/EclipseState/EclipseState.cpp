@@ -107,11 +107,11 @@ namespace Opm {
     /*
       Observe that this will autocreate a property if it has not been explicitly added. 
     */
-    std::shared_ptr<GridProperty<int> > EclipseState::getIntProperty( const std::string& keyword ) {
+    std::shared_ptr<GridProperty<int> > EclipseState::getIntProperty( const std::string& keyword ) const {
         return m_intGridProperties->getKeyword( keyword );
     }
 
-    std::shared_ptr<GridProperty<double> > EclipseState::getDoubleProperty( const std::string& keyword ) {
+    std::shared_ptr<GridProperty<double> > EclipseState::getDoubleProperty( const std::string& keyword ) const {
         return m_doubleGridProperties->getKeyword( keyword );
     }
 
