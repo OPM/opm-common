@@ -112,16 +112,16 @@ public:
     }
 
 
-    void add(T scaleFactor , std::shared_ptr<const Box> inputBox) {
+    void add(T shiftValue , std::shared_ptr<const Box> inputBox) {
         if (inputBox->isGlobal()) {
             std::transform(m_data.begin(), m_data.end(), m_data.begin(),
-                           std::bind1st(std::plus<T>() , scaleFactor));
+                           std::bind1st(std::plus<T>() , shiftValue));
 
         } else {
             const std::vector<size_t>& indexList = inputBox->getIndexList();
             for (size_t i = 0; i < indexList.size(); i++) {
                 size_t targetIndex = indexList[i];
-                m_data[targetIndex] += scaleFactor;
+                m_data[targetIndex] += shiftValue;
             }
         }
     }

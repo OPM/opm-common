@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(GetProperty) {
     DeckPtr deck = createDeck();
     EclipseState state(deck);
 
-    std::shared_ptr<GridProperty<int> > satNUM = state.getIntProperty( "SATNUM" );
+    std::shared_ptr<GridProperty<int> > satNUM = state.getIntGridProperty( "SATNUM" );
 
     BOOST_CHECK_EQUAL(1000U , satNUM->size() );
     for (size_t i=0; i < satNUM->size(); i++) 
