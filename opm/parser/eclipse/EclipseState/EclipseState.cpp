@@ -125,6 +125,8 @@ namespace Opm {
         } else if (m_doubleGridProperties->supportsKeyword( keyword )) {
             auto gridProperty = m_doubleGridProperties->getKeyword( keyword );
             gridProperty->loadFromDeckKeyword( inputBox , deckKeyword );
+        } else {
+            throw std::invalid_argument("Tried to load from unsupported keyword: " + deckKeyword->name());
         }
     }
         
