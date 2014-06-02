@@ -33,7 +33,9 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 
-
+// forward declarations
+Opm::DeckKeywordConstPtr createSATNUMKeyword();
+Opm::DeckKeywordConstPtr createTABDIMSKeyword();
 
 BOOST_AUTO_TEST_CASE(Empty) {
     Opm::GridProperty<int> gridProperties( 100 , "SATNUM" , 77);
@@ -54,8 +56,6 @@ BOOST_AUTO_TEST_CASE(EmptyDefault) {
     for (size_t i=0; i < data.size(); i++)
         BOOST_CHECK_EQUAL( 0 , data[i] );
 }
-
-
 
 Opm::DeckKeywordConstPtr createSATNUMKeyword( ) {
     const char *deckData =

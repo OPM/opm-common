@@ -97,7 +97,7 @@ namespace Opm {
 
         std::shared_ptr<const InnerTable> getInnerTable(size_t rowIdx) const
         {
-            assert(0 <= rowIdx && rowIdx < static_cast<size_t>(m_innerTables.size()));
+            assert(rowIdx < m_innerTables.size());
             return m_innerTables[rowIdx];
         }
 

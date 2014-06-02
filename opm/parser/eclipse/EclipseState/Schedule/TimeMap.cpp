@@ -202,7 +202,7 @@ namespace Opm {
 
     double TimeMap::getTimeStepLength(size_t tStepIdx) const
     {
-        assert(0 <= tStepIdx && tStepIdx < numTimesteps());
+        assert(tStepIdx < numTimesteps());
         const boost::posix_time::ptime &t1
             = m_timeList[tStepIdx];
         const boost::posix_time::ptime &t2
@@ -214,7 +214,7 @@ namespace Opm {
 
     double TimeMap::getTimePassedUntil(size_t tLevelIdx) const
     {
-        assert(0 <= tLevelIdx && tLevelIdx < m_timeList.size());
+        assert(tLevelIdx < m_timeList.size());
         const boost::posix_time::ptime &t1
             = m_timeList.front();
         const boost::posix_time::ptime &t2
