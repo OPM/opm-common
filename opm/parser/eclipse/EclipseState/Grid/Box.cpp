@@ -37,8 +37,10 @@ namespace Opm {
         m_dims[1] = (size_t) ny;
         m_dims[2] = (size_t) nz;
 
-        m_offset = {0,0,0};
-
+        m_offset[0] = 0;
+        m_offset[1] = 0;
+        m_offset[2] = 0;
+        
         m_stride[0] = 1;
         m_stride[1] = m_dims[0];
         m_stride[2] = m_dims[0] * m_dims[1];
