@@ -24,6 +24,7 @@
 #include <vector>
 #include <algorithm>
 #include <unordered_map>
+#include <boost/lexical_cast.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
@@ -150,7 +151,7 @@ private:
             for (size_t i = 0; i < data.size(); i++) 
                 m_data[i] = data[i];
         } else
-            throw std::invalid_argument("Size mismatch");
+            throw std::invalid_argument("Size mismatch when setting data for:" + m_keyword + " keyword size: " + boost::lexical_cast<std::string>(m_data.size()) + " input size: " + boost::lexical_cast<std::string>(data.size()));
     }
     
     
@@ -165,7 +166,7 @@ private:
                     m_data[targetIndex] = data[i];
                 }
             } else
-                throw std::invalid_argument("Size mismatch");
+                throw std::invalid_argument("Size mismatch when setting data for:" + m_keyword + " box size: " + boost::lexical_cast<std::string>(inputBox->size()) + " input size: " + boost::lexical_cast<std::string>(data.size()));
         }
     }
 

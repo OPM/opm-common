@@ -41,8 +41,12 @@ namespace Opm {
         bool hasPhase(enum Phase::PhaseEnum phase) const;
         std::string getTitle() const;
         bool supportsGridProperty(const std::string& keyword) const;
+
         std::shared_ptr<GridProperty<int> > getIntProperty( const std::string& keyword );
+        std::shared_ptr<GridProperty<double> > getDoubleProperty( const std::string& keyword );
         bool hasIntGridProperty(const std::string& keyword) const;
+        bool hasDoubleGridProperty(const std::string& keyword) const;
+
         void loadGridPropertyFromDeckKeyword(std::shared_ptr<const Box> inputBox , DeckKeywordConstPtr deckKeyword);
         
     private:
@@ -52,6 +56,7 @@ namespace Opm {
         void initTitle(DeckConstPtr deck);
         void initProperties(DeckConstPtr deck);
 
+        void scanSection(std::shared_ptr<Opm::Section> section , BoxManager& boxManager);
         void handleADDKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager);
         void handleBOXKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager);
         void handleCOPYKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager);
@@ -60,13 +65,16 @@ namespace Opm {
         void handleMULTIPLYKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager);
         
         void setKeywordBox(DeckRecordConstPtr deckRecord , BoxManager& boxManager);
+
         void copyIntKeyword(const std::string& srcField , const std::string& targetField , std::shared_ptr<const Box> inputBox);
+        void copyDoubleKeyword(const std::string& srcField , const std::string& targetField , std::shared_ptr<const Box> inputBox);
 
         EclipseGridConstPtr m_eclipseGrid;
         ScheduleConstPtr schedule;
         std::set<enum Phase::PhaseEnum> phases;
         std::string m_title;
         std::shared_ptr<GridProperties<int> > m_intGridProperties;
+        std::shared_ptr<GridProperties<double> > m_doubleGridProperties;
     };
 
     typedef std::shared_ptr<EclipseState> EclipseStatePtr;

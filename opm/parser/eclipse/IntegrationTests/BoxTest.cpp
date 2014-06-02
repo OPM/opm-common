@@ -108,3 +108,25 @@ BOOST_AUTO_TEST_CASE( EQUAL ) {
         }
     }
 }
+
+
+
+BOOST_AUTO_TEST_CASE( PERMX ) {
+    EclipseState state = makeState("testdata/integration_tests/BOX/BOXTEST1");
+    std::shared_ptr<GridProperty<double> > permx = state.getDoubleProperty("PERMX");
+    std::shared_ptr<GridProperty<double> > permy = state.getDoubleProperty("PERMY");
+    std::shared_ptr<GridProperty<double> > permz = state.getDoubleProperty("PERMZ");
+    size_t i,j,k;
+    std::shared_ptr<const EclipseGrid> grid = state.getEclipseGrid();
+    
+    for (k = 0; k < grid->getNZ(); k++) {
+        for (j = 0; j < grid->getNY(); j++) {
+            for (i = 0; i < grid->getNX(); i++) {
+                
+                BOOST_CHECK_CLOSE( permx->iget(i,j,k) * 0.25 , permz->iget(i,j,k) , 0.001);
+                BOOST_CHECK_EQUAL( permx->iget(i,j,k) , permy->iget(i,j,k));
+                    
+            }
+        }
+    }
+}

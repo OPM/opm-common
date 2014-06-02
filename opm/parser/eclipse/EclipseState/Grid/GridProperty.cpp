@@ -40,4 +40,24 @@ void GridProperty<int>::loadFromDeckKeyword(std::shared_ptr<const Box> inputBox 
         throw std::invalid_argument("Can only load from DATA keywords");
 }
 
+/*****************************************************************/
+
+template<>  
+void GridProperty<double>::loadFromDeckKeyword(Opm::DeckKeywordConstPtr deckKeyword) {
+    if (deckKeyword->isDataKeyword()) {
+        const std::vector<double>& data = deckKeyword->getSIDoubleData();
+        setFromVector(data);
+    } else
+        throw std::invalid_argument("Can only load from DATA keywords");
+}
+
+template<>  
+void GridProperty<double>::loadFromDeckKeyword(std::shared_ptr<const Box> inputBox , Opm::DeckKeywordConstPtr deckKeyword) {
+    if (deckKeyword->isDataKeyword()) {
+        const std::vector<double>& data = deckKeyword->getSIDoubleData();
+        setFromVector(inputBox , data);
+    } else
+        throw std::invalid_argument("Can only load from DATA keywords");
+}
+
 }

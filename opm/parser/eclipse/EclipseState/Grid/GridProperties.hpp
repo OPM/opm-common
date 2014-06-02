@@ -94,7 +94,7 @@ public:
         else {
             auto supportedKeyword = m_supportedKeywords.find( keyword );
             std::shared_ptr<GridProperty<T> > newProperty(new GridProperty<T>(m_nx , m_ny , m_nz , keyword , (*supportedKeyword).second));
-            m_properties.insert( std::pair<std::string , std::shared_ptr<GridProperty<int> > > ( keyword , newProperty ));
+            m_properties.insert( std::pair<std::string , std::shared_ptr<GridProperty<T> > > ( keyword , newProperty ));
             return true;
         }
     }
