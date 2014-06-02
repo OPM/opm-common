@@ -37,11 +37,11 @@ namespace Opm {
         static bool hasCartesianKeywords(std::shared_ptr<const GRIDSection> gridSection);
         void initCartesianGrid(const std::vector<int>& dims , std::shared_ptr<const GRIDSection> gridSection);
         void initCornerPointGrid(const std::vector<int>& dims , std::shared_ptr<const GRIDSection> gridSection);
-        int  getNumActive( ) const;
-        int  getNX( ) const;
-        int  getNY( ) const;
-        int  getNZ( ) const;
-        int  getCartesianSize( ) const;
+        size_t  getNumActive( ) const;
+        size_t  getNX( ) const;
+        size_t  getNY( ) const;
+        size_t  getNZ( ) const;
+        size_t  getCartesianSize( ) const;
 
         void exportMAPAXES( std::vector<double>& mapaxes) const;
         void exportCOORD( std::vector<double>& coord) const;

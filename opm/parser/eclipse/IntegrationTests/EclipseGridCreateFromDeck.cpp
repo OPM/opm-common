@@ -40,10 +40,10 @@ BOOST_AUTO_TEST_CASE(CreateCPGrid) {
     std::shared_ptr<GRIDSection> gridSection(new GRIDSection(deck) );
     std::shared_ptr<EclipseGrid> grid(new EclipseGrid( runspecSection , gridSection ));
 
-    BOOST_CHECK_EQUAL( 10 , grid->getNX( ));
-    BOOST_CHECK_EQUAL( 10 , grid->getNY( ));
-    BOOST_CHECK_EQUAL(  5 , grid->getNZ( ));
-    BOOST_CHECK_EQUAL( 500 , grid->getNumActive() );
+    BOOST_CHECK_EQUAL( 10U  , grid->getNX( ));
+    BOOST_CHECK_EQUAL( 10U  , grid->getNY( ));
+    BOOST_CHECK_EQUAL(  5U  , grid->getNZ( ));
+    BOOST_CHECK_EQUAL( 500U , grid->getNumActive() );
 }
 
 
@@ -55,10 +55,10 @@ BOOST_AUTO_TEST_CASE(CreateCPActnumGrid) {
     std::shared_ptr<GRIDSection> gridSection(new GRIDSection(deck) );
     std::shared_ptr<EclipseGrid> grid(new EclipseGrid( runspecSection , gridSection ));
 
-    BOOST_CHECK_EQUAL( 10 , grid->getNX( ));
-    BOOST_CHECK_EQUAL( 10 , grid->getNY( ));
-    BOOST_CHECK_EQUAL(  5 , grid->getNZ( ));
-    BOOST_CHECK_EQUAL( 100 , grid->getNumActive() );
+    BOOST_CHECK_EQUAL(  10U , grid->getNX( ));
+    BOOST_CHECK_EQUAL(  10U , grid->getNY( ));
+    BOOST_CHECK_EQUAL(   5U , grid->getNZ( ));
+    BOOST_CHECK_EQUAL( 100U , grid->getNumActive() );
 }
 
 
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(ExportFromCPGridACTNUM) {
     size_t volume = grid->getNX()*grid->getNY()*grid->getNZ();
 
     grid->exportCOORD( coord );
-    BOOST_CHECK_EQUAL( coord.size() , (size_t) (grid->getNX() + 1) * (grid->getNY() + 1) * 6);
+    BOOST_CHECK_EQUAL( coord.size() , (grid->getNX() + 1) * (grid->getNY() + 1) * 6);
 
     grid->exportZCORN( zcorn );
     BOOST_CHECK_EQUAL( zcorn.size() , volume * 8);
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(ExportFromCPGridACTNUM) {
         for (size_t i = 0; i < volume; i++) {
             BOOST_CHECK_EQUAL( deckActnum[i] , actnum[i]);
             for (size_t j=0; j < 8; j++)
-                BOOST_CHECK_CLOSE( zcorn[i*8 + j] , deckZCORN[i*8 + j] , 0.0001);
+                BOOST_CHECK_CLOSE( zcor'n[i*8 + j] , deckZCORN[i*8 + j] , 0.0001);
         }
     }
 }

@@ -54,24 +54,24 @@ namespace Opm {
     }
 
 
-    int EclipseGrid::getNumActive( ) const {
-        return ecl_grid_get_nactive( m_grid.get() );
+    size_t EclipseGrid::getNumActive( ) const {
+        return static_cast<size_t>(ecl_grid_get_nactive( m_grid.get() ));
     }
 
-    int EclipseGrid::getNX( ) const {
-        return ecl_grid_get_nx( m_grid.get() );
+    size_t EclipseGrid::getNX( ) const {
+        return static_cast<size_t>(ecl_grid_get_nx( m_grid.get() ));
     }
 
-    int EclipseGrid::getNY( ) const {
-        return ecl_grid_get_ny( m_grid.get() );
+    size_t EclipseGrid::getNY( ) const {
+        return static_cast<size_t>(ecl_grid_get_ny( m_grid.get() ));
     }
 
-    int EclipseGrid::getNZ( ) const {
-        return ecl_grid_get_nz( m_grid.get() );
+    size_t EclipseGrid::getNZ( ) const {
+        return static_cast<size_t>(ecl_grid_get_nz( m_grid.get() ));
     }
 
-    int EclipseGrid::getCartesianSize( ) const {
-        return ecl_grid_get_global_size( m_grid.get() );
+    size_t EclipseGrid::getCartesianSize( ) const {
+        return static_cast<size_t>( ecl_grid_get_global_size( m_grid.get() ));
     }
 
     
