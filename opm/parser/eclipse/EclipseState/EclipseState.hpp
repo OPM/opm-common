@@ -60,7 +60,7 @@ namespace Opm {
         void handleADDKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager);
         void handleBOXKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager);
         void handleCOPYKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager);
-        void handleENDBOXKeyword(DeckKeywordConstPtr deckKeyword ,  BoxManager& boxManager);
+        void handleENDBOXKeyword(BoxManager& boxManager);
         void handleEQUALSKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager);
         void handleMULTIPLYKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager);
         

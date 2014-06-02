@@ -198,7 +198,7 @@ namespace Opm {
                 handleEQUALSKeyword(deckKeyword , boxManager);
             
             if (deckKeyword->name() == "ENDBOX")
-                handleENDBOXKeyword(deckKeyword , boxManager);
+                handleENDBOXKeyword(boxManager);
             
             if (deckKeyword->name() == "MULTIPLY")
                 handleMULTIPLYKeyword(deckKeyword , boxManager);
@@ -224,7 +224,7 @@ namespace Opm {
     }
 
 
-    void EclipseState::handleENDBOXKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager) {
+    void EclipseState::handleENDBOXKeyword(BoxManager& boxManager) {
         boxManager.endInputBox();
     }
 
