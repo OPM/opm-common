@@ -33,12 +33,12 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 
-// forward declarations
-Opm::DeckKeywordConstPtr createSATNUMKeyword();
-Opm::DeckKeywordConstPtr createTABDIMSKeyword();
+// forward declarations to avoid some pedantic warnings
+Opm::DeckKeywordConstPtr createSATNUMKeyword( );
+Opm::DeckKeywordConstPtr createTABDIMSKeyword( );
 
 BOOST_AUTO_TEST_CASE(Empty) {
-    typedef typename Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
+    typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
     SupportedKeywordInfo keywordInfo("SATNUM" , 77, "1");
     Opm::GridProperty<int> gridProperty( 5 , 5 , 4 , keywordInfo);
     const std::vector<int>& data = gridProperty.getData();

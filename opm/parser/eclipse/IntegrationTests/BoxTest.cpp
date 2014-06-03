@@ -28,6 +28,8 @@
 
 using namespace Opm;
 
+// forward declaration to avoid a pedantic compiler warning
+EclipseState makeState(const std::string& fileName);
 
 EclipseState makeState(const std::string& fileName) {
     ParserPtr parser(new Parser( ));

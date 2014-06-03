@@ -36,7 +36,7 @@
 
 
 BOOST_AUTO_TEST_CASE(Empty) {
-    typedef typename Opm::GridProperties<int>::SupportedKeywordInfo SupportedKeywordInfo;
+    typedef Opm::GridProperties<int>::SupportedKeywordInfo SupportedKeywordInfo;
     std::vector<SupportedKeywordInfo> supportedKeywords =
         { SupportedKeywordInfo("SATNUM" , 0, "1"),
           SupportedKeywordInfo("FIPNUM" , 2, "1") };
