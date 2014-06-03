@@ -32,6 +32,8 @@ namespace Opm {
     
     EclipseState::EclipseState(DeckConstPtr deck) 
     {
+        m_unitSystem = deck->getActiveUnitSystem();
+
         initPhases(deck);
         initEclipseGrid(deck);
         initSchedule(deck);
@@ -134,20 +136,22 @@ namespace Opm {
 
     void EclipseState::initProperties(DeckConstPtr deck) {
         BoxManager boxManager(m_eclipseGrid->getNX( ) , m_eclipseGrid->getNY() , m_eclipseGrid->getNZ());
-        std::vector<std::pair<std::string , int> > supportedIntKeywords = {{ "SATNUM" , 0 },
-                                                                           { "PVTNUM" , 0 },
-                                                                           { "EQLNUM" , 0 },
-                                                                           { "FIPNUM" , 0 }};
-        
-        std::vector<std::pair<std::string , double> > supportedDoubleKeywords = {{ "PORO"  , 0 },
-                                                                                 { "PERMX" , 0 },
-                                                                                 { "PERMY" , 0 },
-                                                                                 { "PERMZ" , 0 }};
-        
-        
+        typedef GridProperties<int>::SupportedKeywordInfo SupportedIntKeywordInfo;
+        static std::vector<SupportedIntKeywordInfo> supportedIntKeywords =
+            {SupportedIntKeywordInfo( "SATNUM" , 0.0, "1" ),
+             SupportedIntKeywordInfo( "PVTNUM" , 0.0, "1" ),
+             SupportedIntKeywordInfo( "EQLNUM" , 0.0, "1" ),
+             SupportedIntKeywordInfo( "FIPNUM" , 0.0, "1" )};
+
+        typedef GridProperties<double>::SupportedKeywordInfo SupportedDoubleKeywordInfo;
+        static std::vector<SupportedDoubleKeywordInfo> supportedDoubleKeywords =
+            {SupportedDoubleKeywordInfo( "PORO"  , 0.0, "1" ),
+             SupportedDoubleKeywordInfo( "PERMX" , 0.0, "Permeability" ),
+             SupportedDoubleKeywordInfo( "PERMY" , 0.0, "Permeability" ),
+             SupportedDoubleKeywordInfo( "PERMZ" , 0.0, "Permeability" )};
 
         m_intGridProperties = std::make_shared<GridProperties<int> >(m_eclipseGrid->getNX() , m_eclipseGrid->getNY() , m_eclipseGrid->getNZ() , supportedIntKeywords); 
-        m_doubleGridProperties = std::make_shared<GridProperties<double> >(m_eclipseGrid->getNX() , m_eclipseGrid->getNY() , m_eclipseGrid->getNZ() , supportedDoubleKeywords); 
+        m_doubleGridProperties.reset(new GridProperties<double>(m_eclipseGrid->getNX() , m_eclipseGrid->getNY() , m_eclipseGrid->getNZ() , supportedDoubleKeywords)); 
         
         
         if (Section::hasGRID(deck)) {
@@ -176,10 +180,12 @@ namespace Opm {
             scanSection( solutionSection , boxManager );
         }
     }
-    
-    
 
-    
+    double EclipseState::getSIScaling(const std::string &dimensionString) const
+    {
+        return m_unitSystem->getDimension(dimensionString)->getSIScaling();
+    }
+
     void EclipseState::scanSection(std::shared_ptr<Opm::Section> section , BoxManager& boxManager) {
         for (auto iter = section->begin(); iter != section->end(); ++iter) {
             DeckKeywordConstPtr deckKeyword = *iter;
@@ -276,8 +282,9 @@ namespace Opm {
                 property->add( intShift , boxManager.getActiveBox() );
             } else if (m_doubleGridProperties->hasKeyword( field )) {
                 std::shared_ptr<GridProperty<double> > property = m_doubleGridProperties->getKeyword( field );
-                
-                property->add( shiftValue , boxManager.getActiveBox() );
+
+                double siShiftValue = shiftValue * getSIScaling(property->getDimensionString());
+                property->add(siShiftValue , boxManager.getActiveBox() );
             } else
                 throw std::invalid_argument("Fatal error processing ADD keyword. Tried to shift not defined keyword " + field);
 
@@ -301,7 +308,8 @@ namespace Opm {
             } else if (m_doubleGridProperties->supportsKeyword( field )) {
                 std::shared_ptr<GridProperty<double> > property = m_doubleGridProperties->getKeyword( field );
 
-                property->setScalar( value , boxManager.getActiveBox() );
+                double siValue = value * getSIScaling(property->getDimensionString());
+                property->setScalar( siValue , boxManager.getActiveBox() );
             } else
                 throw std::invalid_argument("Fatal error processing EQUALS keyword. Tried to set not defined keyword " + field);
 

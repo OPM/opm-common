@@ -18,12 +18,16 @@ TOPS
 1000*0.25 /
 
 PERMX
-  1000*100 /
+  1000*1 /
 
 COPY
   PERMX PERMZ /
   PERMX PERMY /
 /
+
+ADD
+  PERMY 1 /
+/ 
 
 MULTIPLY
   PERMZ 0.25 /

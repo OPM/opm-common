@@ -56,6 +56,8 @@ namespace Opm {
         void initTitle(DeckConstPtr deck);
         void initProperties(DeckConstPtr deck);
 
+        double getSIScaling(const std::string &dimensionString) const;
+
         void scanSection(std::shared_ptr<Opm::Section> section , BoxManager& boxManager);
         void handleADDKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager);
         void handleBOXKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager);
@@ -73,6 +75,7 @@ namespace Opm {
         ScheduleConstPtr schedule;
         std::set<enum Phase::PhaseEnum> phases;
         std::string m_title;
+        std::shared_ptr<UnitSystem> m_unitSystem;
         std::shared_ptr<GridProperties<int> > m_intGridProperties;
         std::shared_ptr<GridProperties<double> > m_doubleGridProperties;
     };

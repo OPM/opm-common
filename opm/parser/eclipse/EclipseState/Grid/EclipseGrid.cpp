@@ -301,7 +301,7 @@ namespace Opm {
     } 
 
     void EclipseGrid::exportACTNUM( std::vector<int>& actnum) const {
-        int volume = getNX() * getNY() * getNZ();
+        size_t volume = getNX() * getNY() * getNZ();
         if (getNumActive() == volume)
             actnum.resize(0);
         else {

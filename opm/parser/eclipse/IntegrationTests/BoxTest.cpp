@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE( PERMX ) {
             for (i = 0; i < grid->getNX(); i++) {
                 
                 BOOST_CHECK_CLOSE( permx->iget(i,j,k) * 0.25 , permz->iget(i,j,k) , 0.001);
-                BOOST_CHECK_EQUAL( permx->iget(i,j,k) , permy->iget(i,j,k));
+                BOOST_CHECK_EQUAL( permx->iget(i,j,k) * 2 , permy->iget(i,j,k));
                     
             }
         }

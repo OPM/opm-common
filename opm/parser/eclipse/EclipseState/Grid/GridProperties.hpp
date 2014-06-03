@@ -22,6 +22,7 @@
 
 #include <string>
 #include <vector>
+#include <tuple>
 #include <unordered_map>
 
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
@@ -48,53 +49,47 @@ namespace Opm {
 template <typename T>
 class GridProperties {
 public:
+    typedef typename GridProperty<T>::SupportedKeywordInfo SupportedKeywordInfo;
 
-    GridProperties(size_t nx , size_t ny , size_t nz , const std::vector<std::pair<std::string, T> > & supportedKeywords) {
+    GridProperties(size_t nx , size_t ny , size_t nz ,
+                   const std::vector<SupportedKeywordInfo> & supportedKeywords) {
         m_nx = nx;
         m_ny = ny;
         m_nz = nz;
         
         for (auto iter = supportedKeywords.begin(); iter != supportedKeywords.end(); ++iter) 
-            m_supportedKeywords.insert( std::pair<std::string , T>(*iter));
+            m_supportedKeywords[std::get<0>(*iter)] = *iter;
     }
 
     
     bool supportsKeyword(const std::string& keyword) {
-        if (m_supportedKeywords.find( keyword ) == m_supportedKeywords.end())
-            return false;
-        else
-            return true;
+        return m_supportedKeywords.count( keyword ) > 0;
     }
 
     bool hasKeyword(const std::string& keyword) {
-        if (m_properties.find( keyword ) == m_properties.end())
-            return false;
-        else
-            return true;
+        return m_properties.count( keyword ) > 0;
     }
 
 
     std::shared_ptr<GridProperty<T> > getKeyword(const std::string& keyword) {
         if (!hasKeyword(keyword))
             addKeyword(keyword);
-        
-        {
-            auto pair = m_properties.find( keyword );
-            return (*pair).second;
-        }
+
+        return m_properties.at( keyword );
     }
 
     
-    bool addKeyword(const std::string& keyword) {
-        if (!supportsKeyword( keyword )) 
-            throw std::invalid_argument("The keyword: " + keyword + " is not supported in this container");
+    bool addKeyword(const std::string& keywordName) {
+        if (!supportsKeyword( keywordName )) 
+            throw std::invalid_argument("The keyword: " + keywordName + " is not supported in this container");
 
-        if (hasKeyword(keyword)) 
+        if (hasKeyword(keywordName)) 
             return false;
         else {
-            auto supportedKeyword = m_supportedKeywords.find( keyword );
-            std::shared_ptr<GridProperty<T> > newProperty(new GridProperty<T>(m_nx , m_ny , m_nz , keyword , (*supportedKeyword).second));
-            m_properties.insert( std::pair<std::string , std::shared_ptr<GridProperty<T> > > ( keyword , newProperty ));
+            auto supportedKeyword = m_supportedKeywords.at( keywordName );
+            std::shared_ptr<GridProperty<T> > newProperty(new GridProperty<T>(m_nx , m_ny , m_nz , supportedKeyword));
+
+            m_properties.insert( std::pair<std::string , std::shared_ptr<GridProperty<T> > > ( keywordName , newProperty ));
             return true;
         }
     }
@@ -102,7 +97,7 @@ public:
     
 private:
     size_t m_nx, m_ny, m_nz;
-    std::unordered_map<std::string, T> m_supportedKeywords;
+    std::unordered_map<std::string, SupportedKeywordInfo> m_supportedKeywords;
     std::map<std::string , std::shared_ptr<GridProperty<T> > > m_properties;
 };
 

@@ -38,17 +38,19 @@ Opm::DeckKeywordConstPtr createSATNUMKeyword();
 Opm::DeckKeywordConstPtr createTABDIMSKeyword();
 
 BOOST_AUTO_TEST_CASE(Empty) {
-    Opm::GridProperty<int> gridProperties( 5 , 5 , 4 , "SATNUM" , 77);
-    const std::vector<int>& data = gridProperties.getData();
+    typedef typename Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
+    SupportedKeywordInfo keywordInfo("SATNUM" , 77, "1");
+    Opm::GridProperty<int> gridProperty( 5 , 5 , 4 , keywordInfo);
+    const std::vector<int>& data = gridProperty.getData();
     BOOST_CHECK_EQUAL( 100U , data.size());
-    BOOST_CHECK_EQUAL( 100U , gridProperties.size());
+    BOOST_CHECK_EQUAL( 100U , gridProperty.size());
     for (size_t k=0; k < 4; k++) {
         for (size_t j=0; j < 5; j++) {
             for (size_t i=0; i < 5; i++) {
                 size_t g = i + j*5 + k*25;
                 BOOST_CHECK_EQUAL( 77 , data[g] );
-                BOOST_CHECK_EQUAL( 77 , gridProperties.iget( g ));
-                BOOST_CHECK_EQUAL( 77 , gridProperties.iget( i,j,k ));
+                BOOST_CHECK_EQUAL( 77 , gridProperty.iget( g ));
+                BOOST_CHECK_EQUAL( 77 , gridProperty.iget( i,j,k ));
             }
         }
     }
@@ -56,8 +58,13 @@ BOOST_AUTO_TEST_CASE(Empty) {
 
 
 BOOST_AUTO_TEST_CASE(EmptyDefault) {
-    Opm::GridProperty<int> gridProperties( 10,10,1 , "SATNUM");
-    const std::vector<int>& data = gridProperties.getData();
+    typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
+    SupportedKeywordInfo keywordInfo("SATNUM" , 0, "1");
+    Opm::GridProperty<int> gridProperty( /*nx=*/10,
+                                         /*ny=*/10,
+                                         /*nz=*/1 ,
+                                         keywordInfo);
+    const std::vector<int>& data = gridProperty.getData();
     BOOST_CHECK_EQUAL( 100U , data.size());
     for (size_t i=0; i < data.size(); i++)
         BOOST_CHECK_EQUAL( 0 , data[i] );
@@ -89,14 +96,18 @@ Opm::DeckKeywordConstPtr createTABDIMSKeyword( ) {
 
 BOOST_AUTO_TEST_CASE(SetFromDeckKeyword_notData_Throws) {
     Opm::DeckKeywordConstPtr tabdimsKw = createTABDIMSKeyword(); 
-    Opm::GridProperty<int> gridProperty( 6 ,1,1 , "TABDIMS" , 100);
+    typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
+    SupportedKeywordInfo keywordInfo("TABDIMS" , 100, "1");
+    Opm::GridProperty<int> gridProperty( 6 ,1,1 , keywordInfo);
     BOOST_CHECK_THROW( gridProperty.loadFromDeckKeyword( tabdimsKw ) , std::invalid_argument );
 }
 
 
 BOOST_AUTO_TEST_CASE(SetFromDeckKeyword_wrong_size_throws) {
     Opm::DeckKeywordConstPtr satnumKw = createSATNUMKeyword(); 
-    Opm::GridProperty<int> gridProperty( 15 ,1,1, "SATNUM",66);
+    typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
+    SupportedKeywordInfo keywordInfo("SATNUM" , 66, "1");
+    Opm::GridProperty<int> gridProperty( 15 ,1,1, keywordInfo);
     BOOST_CHECK_THROW( gridProperty.loadFromDeckKeyword( satnumKw ) , std::invalid_argument );
 }
 
@@ -104,7 +115,9 @@ BOOST_AUTO_TEST_CASE(SetFromDeckKeyword_wrong_size_throws) {
 
 BOOST_AUTO_TEST_CASE(SetFromDeckKeyword) {
     Opm::DeckKeywordConstPtr satnumKw = createSATNUMKeyword(); 
-    Opm::GridProperty<int> gridProperty( 4 , 4 , 2 , "SATNUM" , 99);
+    typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
+    SupportedKeywordInfo keywordInfo("SATNUM" , 99, "1");
+    Opm::GridProperty<int> gridProperty( 4 , 4 , 2 , keywordInfo);
     gridProperty.loadFromDeckKeyword( satnumKw );
     const std::vector<int>& data = gridProperty.getData();
     for (size_t k=0; k < 2; k++) {
@@ -123,12 +136,15 @@ BOOST_AUTO_TEST_CASE(SetFromDeckKeyword) {
 
 
 BOOST_AUTO_TEST_CASE(copy) {
-    Opm::GridProperty<int> prop1( 4 , 4 , 2 , "P1" , 0);
-    Opm::GridProperty<int> prop2( 4 , 4 , 2 , "P2" , 9);
+    typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
+    SupportedKeywordInfo keywordInfo1("P1" , 0, "1");
+    SupportedKeywordInfo keywordInfo2("P2" , 9, "1");
+    Opm::GridProperty<int> prop1( 4 , 4 , 2 , keywordInfo1);
+    Opm::GridProperty<int> prop2( 4 , 4 , 2 , keywordInfo2);
 
     Opm::Box global(4,4,2);
     std::shared_ptr<Opm::Box> layer0 = std::make_shared<Opm::Box>(global , 0,3,0,3,0,0);
-    
+
     prop2.copyFrom(prop1 , layer0);
 
     for (size_t j=0; j < 4; j++) {
@@ -142,8 +158,12 @@ BOOST_AUTO_TEST_CASE(copy) {
 
 
 BOOST_AUTO_TEST_CASE(SCALE) {
-    Opm::GridProperty<int> prop1( 4 , 4 , 2 , "P1" , 1);
-    Opm::GridProperty<int> prop2( 4 , 4 , 2 , "P2" , 9);
+    typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
+    SupportedKeywordInfo keywordInfo1("P1" , 1, "1");
+    SupportedKeywordInfo keywordInfo2("P2" , 9, "1");
+
+    Opm::GridProperty<int> prop1( 4 , 4 , 2 , keywordInfo1);
+    Opm::GridProperty<int> prop2( 4 , 4 , 2 , keywordInfo2);
 
     std::shared_ptr<Opm::Box> global = std::make_shared<Opm::Box>(4,4,2);
     std::shared_ptr<Opm::Box> layer0 = std::make_shared<Opm::Box>(*global , 0,3,0,3,0,0);
@@ -163,7 +183,9 @@ BOOST_AUTO_TEST_CASE(SCALE) {
 
 
 BOOST_AUTO_TEST_CASE(SET) {
-    Opm::GridProperty<int> prop( 4 , 4 , 2 , "P1" , 1);
+    typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
+    SupportedKeywordInfo keywordInfo("P1" , 1, "1");
+    Opm::GridProperty<int> prop( 4 , 4 , 2 , keywordInfo);
 
     std::shared_ptr<Opm::Box> global = std::make_shared<Opm::Box>(4,4,2);
     std::shared_ptr<Opm::Box> layer0 = std::make_shared<Opm::Box>(*global , 0,3,0,3,0,0);
@@ -182,8 +204,11 @@ BOOST_AUTO_TEST_CASE(SET) {
 
 
 BOOST_AUTO_TEST_CASE(ADD) {
-    Opm::GridProperty<int> prop1( 4 , 4 , 2 , "P1" , 1);
-    Opm::GridProperty<int> prop2( 4 , 4 , 2 , "P2" , 9);
+    typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
+    SupportedKeywordInfo keywordInfo1("P1" , 1, "1");
+    SupportedKeywordInfo keywordInfo2("P2" , 9, "1");
+    Opm::GridProperty<int> prop1( 4 , 4 , 2 , keywordInfo1);
+    Opm::GridProperty<int> prop2( 4 , 4 , 2 , keywordInfo2);
 
     std::shared_ptr<Opm::Box> global = std::make_shared<Opm::Box>(4,4,2);
     std::shared_ptr<Opm::Box> layer0 = std::make_shared<Opm::Box>(*global , 0,3,0,3,0,0);
