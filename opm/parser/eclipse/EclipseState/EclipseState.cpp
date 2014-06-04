@@ -138,17 +138,174 @@ namespace Opm {
         BoxManager boxManager(m_eclipseGrid->getNX( ) , m_eclipseGrid->getNY() , m_eclipseGrid->getNZ());
         typedef GridProperties<int>::SupportedKeywordInfo SupportedIntKeywordInfo;
         static std::vector<SupportedIntKeywordInfo> supportedIntKeywords =
-            {SupportedIntKeywordInfo( "SATNUM" , 0.0 ),
-             SupportedIntKeywordInfo( "PVTNUM" , 0.0 ),
-             SupportedIntKeywordInfo( "EQLNUM" , 0.0 ),
-             SupportedIntKeywordInfo( "FIPNUM" , 0.0 )};
+            {SupportedIntKeywordInfo( "SATNUM" , 0 ),
+             SupportedIntKeywordInfo( "PVTNUM" , 0 ),
+             SupportedIntKeywordInfo( "EQLNUM" , 0 ),
+             SupportedIntKeywordInfo( "IMBNUM" , 0 ),
+             // TODO: implement regular expression matching for
+             // keyword names?
+//             SupportedIntKeywordInfo( "FIP???"  , 0 ),
+             SupportedIntKeywordInfo( "FIPNUM" , 0 )};
 
+        // Note that the variants of grid keywords for radial grids
+        // are not supported. (and hopefully never will be)
         typedef GridProperties<double>::SupportedKeywordInfo SupportedDoubleKeywordInfo;
-        static std::vector<SupportedDoubleKeywordInfo> supportedDoubleKeywords =
-            {SupportedDoubleKeywordInfo( "PORO"  , 0.0, "1" ),
-             SupportedDoubleKeywordInfo( "PERMX" , 0.0, "Permeability" ),
-             SupportedDoubleKeywordInfo( "PERMY" , 0.0, "Permeability" ),
-             SupportedDoubleKeywordInfo( "PERMZ" , 0.0, "Permeability" )};
+        static std::vector<SupportedDoubleKeywordInfo> supportedDoubleKeywords = {
+            // keywords to specify the scaled connate gas
+            // saturations.
+            SupportedDoubleKeywordInfo( "SGL"    , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISGL"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SGLX"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SGLX-"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISGLX"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISGLX-" , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SGLY"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SGLY-"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISGLY"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISGLY-" , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SGLZ"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SGLZ-"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISGLZ"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISGLZ-" , 0.0, "1" ),
+
+            // keywords to specify the connate water saturation.
+            SupportedDoubleKeywordInfo( "SWL"    , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISWL"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SWLX"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SWLX-"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISWLX"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISWLX-" , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SWLY"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SWLY-"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISWLY"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISWLY-" , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SWLZ"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SWLZ-"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISWLZ"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISWLZ-" , 0.0, "1" ),
+
+            // keywords to specify the maximum gas saturation.
+            SupportedDoubleKeywordInfo( "SGU"    , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISGU"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SGUX"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SGUX-"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISGUX"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISGUX-" , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SGUY"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SGUY-"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISGUY"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISGUY-" , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SGUZ"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SGUZ-"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISGUZ"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISGUZ-" , 0.0, "1" ),
+
+            // keywords to specify the maximum water saturation.
+            SupportedDoubleKeywordInfo( "SWU"    , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISWU"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SWUX"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SWUX-"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISWUX"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISWUX-" , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SWUY"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SWUY-"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISWUY"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISWUY-" , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SWUZ"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SWUZ-"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISWUZ"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISWUZ-" , 0.0, "1" ),
+
+            // keywords to specify the scaled critical gas
+            // saturation.
+            SupportedDoubleKeywordInfo( "SGCR"     , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISGCR"    , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SGCRX"    , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SGCRX-"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISGCRX"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISGCRX-"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SGCRY"    , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SGCRY-"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISGCRY"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISGCRY-"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SGCRZ"    , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SGCRZ-"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISGCRZ"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISGCRZ-"  , 0.0, "1" ),
+
+            // keywords to specify the scaled critical oil-in-water
+            // saturation.
+            SupportedDoubleKeywordInfo( "SOWCR"    , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISOWCR"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SOWCRX"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SOWCRX-"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISOWCRX"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISOWCRX-" , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SOWCRY"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SOWCRY-"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISOWCRY"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISOWCRY-" , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SOWCRZ"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SOWCRZ-"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISOWCRZ"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISOWCRZ-" , 0.0, "1" ),
+
+            // keywords to specify the scaled critical oil-in-gas
+            // saturation.
+            SupportedDoubleKeywordInfo( "SOGCR"    , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISOGCR"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SOGCRX"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SOGCRX-"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISOGCRX"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISOGCRX-" , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SOGCRY"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SOGCRY-"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISOGCRY"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISOGCRY-" , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SOGCRZ"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SOGCRZ-"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISOGCRZ"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISOGCRZ-" , 0.0, "1" ),
+
+            // keywords to specify the scaled critical water
+            // saturation.
+            SupportedDoubleKeywordInfo( "SWCR"     , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISWCR"    , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SWCRX"    , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SWCRX-"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISWCRX"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISWCRX-"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SWCRY"    , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SWCRY-"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISWCRY"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISWCRY-"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SWCRZ"    , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "SWCRZ-"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISWCRZ"   , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "ISWCRZ-"  , 0.0, "1" ),
+
+            // porosity
+            SupportedDoubleKeywordInfo( "PORO"  , 0.0, "1" ),
+
+            // transmissibility multipliers
+            SupportedDoubleKeywordInfo( "MULTX" , 1.0, "1" ),
+            SupportedDoubleKeywordInfo( "MULTY" , 1.0, "1" ),
+            SupportedDoubleKeywordInfo( "MULTZ" , 1.0, "1" ),
+            SupportedDoubleKeywordInfo( "MULTX-", 1.0, "1" ),
+            SupportedDoubleKeywordInfo( "MULTY-", 1.0, "1" ),
+            SupportedDoubleKeywordInfo( "MULTZ-", 1.0, "1" ),
+
+            // pore volume multipliers
+            SupportedDoubleKeywordInfo( "MULTPV", 1.0, "1" ),
+
+            // the permeability keywords
+            SupportedDoubleKeywordInfo( "PERMX" , 0.0, "Permeability" ),
+            SupportedDoubleKeywordInfo( "PERMY" , 0.0, "Permeability" ),
+            SupportedDoubleKeywordInfo( "PERMZ" , 0.0, "Permeability" ),
+            SupportedDoubleKeywordInfo( "PERMXY", 0.0, "Permeability" ), // E300 only
+            SupportedDoubleKeywordInfo( "PERMXZ", 0.0, "Permeability" ), // E300 only
+            SupportedDoubleKeywordInfo( "PERMYZ", 0.0, "Permeability" ), // E300 only
+        };
 
         m_intGridProperties = std::make_shared<GridProperties<int> >(m_eclipseGrid->getNX() , m_eclipseGrid->getNY() , m_eclipseGrid->getNZ() , supportedIntKeywords); 
         m_doubleGridProperties.reset(new GridProperties<double>(m_eclipseGrid->getNX() , m_eclipseGrid->getNY() , m_eclipseGrid->getNZ() , supportedDoubleKeywords)); 
