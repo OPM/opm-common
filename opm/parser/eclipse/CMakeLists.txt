@@ -172,6 +172,11 @@ Utility/EnptvdTable.hpp
 Utility/EnkrvdTable.hpp
 Utility/RocktabTable.hpp
 Utility/RockTable.hpp
+Utility/PlymaxTable.hpp
+Utility/TlmixparTable.hpp
+Utility/PlyrockTable.hpp
+Utility/PlyviscTable.hpp
+Utility/PlyadsTable.hpp
 )
 
 add_library(buildParser ${rawdeck_source} ${build_parser_source} ${deck_source} ${unit_source})
