@@ -43,10 +43,83 @@
 
 namespace Opm {
 
+template <class DataType>
+class GridPropertySupportedKeywordInfo;
+
+template <>
+class GridPropertySupportedKeywordInfo<int>
+{
+public:
+    GridPropertySupportedKeywordInfo()
+    {}
+
+    GridPropertySupportedKeywordInfo(const std::string& name,
+                                     int defaultValue)
+        : m_keywordName(name)
+        , m_defaultValue(defaultValue)
+    {}
+
+    GridPropertySupportedKeywordInfo(const GridPropertySupportedKeywordInfo &other)
+        : m_keywordName(other.m_keywordName)
+        , m_defaultValue(other.m_defaultValue)
+    {}
+
+    const std::string& getKeywordName() const {
+        return m_keywordName;
+    }
+
+    int getDefaultValue() const {
+        return m_defaultValue;
+    }
+
+private:
+    std::string m_keywordName;
+    int m_defaultValue;
+};
+
+template <>
+class GridPropertySupportedKeywordInfo<double>
+{
+public:
+    GridPropertySupportedKeywordInfo()
+    {}
+
+    GridPropertySupportedKeywordInfo(const std::string& name,
+                                     double defaultValue,
+                                     const std::string& dimensionString)
+        : m_keywordName(name)
+        , m_defaultValue(defaultValue)
+        , m_dimensionString(dimensionString)
+    {}
+
+    GridPropertySupportedKeywordInfo(const GridPropertySupportedKeywordInfo &other)
+        : m_keywordName(other.m_keywordName)
+        , m_defaultValue(other.m_defaultValue)
+        , m_dimensionString(other.m_dimensionString)
+    {}
+
+    const std::string& getKeywordName() const {
+        return m_keywordName;
+    }
+
+    double getDefaultValue() const {
+        return m_defaultValue;
+    }
+
+    const std::string& getDimensionString() const {
+        return m_dimensionString;
+    }
+
+private:
+    std::string m_keywordName;
+    double m_defaultValue;
+    std::string m_dimensionString;
+};
+
 template <typename T>
 class GridProperty {
 public:
-    typedef std::tuple</*name=*/std::string, /*dataType=*/T, /*unit=*/std::string> SupportedKeywordInfo;
+    typedef GridPropertySupportedKeywordInfo<T> SupportedKeywordInfo;
 
     GridProperty(size_t nx , size_t ny , size_t nz , const SupportedKeywordInfo& kwInfo) {
         m_nx = nx;
@@ -54,7 +127,7 @@ public:
         m_nz = nz;
         m_kwInfo = kwInfo;
         m_data.resize( nx * ny * nz );
-        std::fill( m_data.begin() , m_data.end() ,  std::get<1>(m_kwInfo));
+        std::fill( m_data.begin() , m_data.end() ,  m_kwInfo.getDefaultValue());
     }
 
     size_t size() const {
@@ -140,16 +213,13 @@ public:
             }
         }
     }
-    
 
-    const std::string& getKeywordName() const
-    {
-        return std::get<0>(m_kwInfo);
+    const std::string& getKeywordName() const {
+        return m_kwInfo.getKeywordName();
     }
 
-    const std::string& getDimensionString() const
-    {
-        return std::get<2>(m_kwInfo);
+    const SupportedKeywordInfo& getKeywordInfo() const {
+        return m_kwInfo;
     }
 
 private:

@@ -138,10 +138,10 @@ namespace Opm {
         BoxManager boxManager(m_eclipseGrid->getNX( ) , m_eclipseGrid->getNY() , m_eclipseGrid->getNZ());
         typedef GridProperties<int>::SupportedKeywordInfo SupportedIntKeywordInfo;
         static std::vector<SupportedIntKeywordInfo> supportedIntKeywords =
-            {SupportedIntKeywordInfo( "SATNUM" , 0.0, "1" ),
-             SupportedIntKeywordInfo( "PVTNUM" , 0.0, "1" ),
-             SupportedIntKeywordInfo( "EQLNUM" , 0.0, "1" ),
-             SupportedIntKeywordInfo( "FIPNUM" , 0.0, "1" )};
+            {SupportedIntKeywordInfo( "SATNUM" , 0.0 ),
+             SupportedIntKeywordInfo( "PVTNUM" , 0.0 ),
+             SupportedIntKeywordInfo( "EQLNUM" , 0.0 ),
+             SupportedIntKeywordInfo( "FIPNUM" , 0.0 )};
 
         typedef GridProperties<double>::SupportedKeywordInfo SupportedDoubleKeywordInfo;
         static std::vector<SupportedDoubleKeywordInfo> supportedDoubleKeywords =
@@ -283,7 +283,7 @@ namespace Opm {
             } else if (m_doubleGridProperties->hasKeyword( field )) {
                 std::shared_ptr<GridProperty<double> > property = m_doubleGridProperties->getKeyword( field );
 
-                double siShiftValue = shiftValue * getSIScaling(property->getDimensionString());
+                double siShiftValue = shiftValue * getSIScaling(property->getKeywordInfo().getDimensionString());
                 property->add(siShiftValue , boxManager.getActiveBox() );
             } else
                 throw std::invalid_argument("Fatal error processing ADD keyword. Tried to shift not defined keyword " + field);
@@ -308,7 +308,7 @@ namespace Opm {
             } else if (m_doubleGridProperties->supportsKeyword( field )) {
                 std::shared_ptr<GridProperty<double> > property = m_doubleGridProperties->getKeyword( field );
 
-                double siValue = value * getSIScaling(property->getDimensionString());
+                double siValue = value * getSIScaling(property->getKeywordInfo().getDimensionString());
                 property->setScalar( siValue , boxManager.getActiveBox() );
             } else
                 throw std::invalid_argument("Fatal error processing EQUALS keyword. Tried to set not defined keyword " + field);
