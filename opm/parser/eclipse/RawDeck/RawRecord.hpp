@@ -50,8 +50,8 @@ namespace Opm {
     private:
         std::string m_sanitizedRecordString;
         std::deque<std::string> m_recordItems;
-        const std::string& m_fileName;
-        const std::string& m_keywordName;
+        const std::string m_fileName;
+        const std::string m_keywordName;
         
         void setRecordString(const std::string& singleRecordString);
         void splitSingleRecordString();
