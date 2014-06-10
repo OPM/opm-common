@@ -58,7 +58,7 @@ public:
         m_nz = nz;
         
         for (auto iter = supportedKeywords.begin(); iter != supportedKeywords.end(); ++iter) 
-            m_supportedKeywords[std::get<0>(*iter)] = *iter;
+            m_supportedKeywords[iter->getKeywordName()] = *iter;
     }
 
     
