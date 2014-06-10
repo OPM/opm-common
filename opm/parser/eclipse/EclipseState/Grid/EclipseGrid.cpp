@@ -237,8 +237,9 @@ namespace Opm {
         std::vector<double> TOPS = TOPSKeyWord->getSIDoubleData();
         
         if (TOPS.size() >= area) {
+            size_t initialTOPSize = TOPS.size();
             TOPS.resize( volume );
-            for (size_t targetIndex = TOPS.size(); targetIndex < volume; targetIndex++) {
+            for (size_t targetIndex = initialTOPSize; targetIndex < volume; targetIndex++) {
                 size_t sourceIndex = targetIndex - area;
                 TOPS[targetIndex] = TOPS[sourceIndex] + DZ[sourceIndex];
             }
