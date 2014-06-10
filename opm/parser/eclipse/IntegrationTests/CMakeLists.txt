@@ -10,6 +10,11 @@ add_executable(runParseTITLE ParseTITLE.cpp)
 target_link_libraries(runParseTITLE Parser ${Boost_LIBRARIES})
 add_test(NAME runParseTITLE WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND runParseTITLE)
 
+add_executable(runParseTOPS ParseTOPS.cpp)
+target_link_libraries(runParseTOPS Parser ${Boost_LIBRARIES})
+add_test(NAME runParseTOPS WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND runParseTOPS)
+
+
 add_executable(runParseWCONHIST ParseWCONHIST.cpp)
 target_link_libraries(runParseWCONHIST Parser ${Boost_LIBRARIES})
 add_test(NAME runParseWCONHIST WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runParseWCONHIST)
