@@ -170,7 +170,39 @@ BOOST_AUTO_TEST_CASE(DEPTHZ_EQUAL_TOPS) {
     std::shared_ptr<Opm::EclipseGrid> grid2(new Opm::EclipseGrid( runspecSection , gridSection2 ));
 
     BOOST_CHECK( grid1->equal( *(grid2.get()) ));
-    
+
+    {
+        BOOST_CHECK_THROW( grid1->getCellVolume(1000) , std::invalid_argument);
+        BOOST_CHECK_THROW( grid1->getCellVolume(10,0,0) , std::invalid_argument);
+        BOOST_CHECK_THROW( grid1->getCellVolume(0,10,0) , std::invalid_argument);
+        BOOST_CHECK_THROW( grid1->getCellVolume(0,0,10) , std::invalid_argument);
+        
+        for (size_t g=0; g < 1000; g++)
+            BOOST_CHECK_CLOSE( grid1->getCellVolume(g) , 0.25*0.25*0.25 , 0.001);
+        
+        
+        for (size_t k= 0; k < 10; k++)
+            for (size_t j= 0; j < 10; j++)  
+                for (size_t i= 0; i < 10; i++)
+                    BOOST_CHECK_CLOSE( grid1->getCellVolume(i,j,k) , 0.25*0.25*0.25 , 0.001 );
+    }
+    {
+        BOOST_CHECK_THROW( grid1->getCellCenter(1000) , std::invalid_argument);
+        BOOST_CHECK_THROW( grid1->getCellCenter(10,0,0) , std::invalid_argument);
+        BOOST_CHECK_THROW( grid1->getCellCenter(0,10,0) , std::invalid_argument);
+        BOOST_CHECK_THROW( grid1->getCellCenter(0,0,10) , std::invalid_argument);
+
+        for (size_t k= 0; k < 10; k++)
+            for (size_t j= 0; j < 10; j++)  
+                for (size_t i= 0; i < 10; i++) {
+                    auto pos = grid1->getCellCenter(i,j,k);
+                    
+                    BOOST_CHECK_CLOSE( std::get<0>(pos) , i*0.25 + 0.125, 0.001);
+                    BOOST_CHECK_CLOSE( std::get<1>(pos) , j*0.25 + 0.125, 0.001);
+                    BOOST_CHECK_CLOSE( std::get<2>(pos) , k*0.25 + 0.125 + 0.25, 0.001);
+                    
+                }
+    }
 }
 
 

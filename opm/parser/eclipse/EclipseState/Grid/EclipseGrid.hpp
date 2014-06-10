@@ -43,6 +43,13 @@ namespace Opm {
         size_t  getNZ( ) const;
         size_t  getCartesianSize( ) const;
 
+        void assertGlobalIndex(size_t globalIndex) const;
+        void assertIJK(size_t i , size_t j , size_t k) const;
+        std::tuple<double,double,double> getCellCenter(size_t i,size_t j, size_t k) const;
+        std::tuple<double,double,double> getCellCenter(size_t globalIndex) const;
+        double getCellVolume(size_t globalIndex) const;
+        double getCellVolume(size_t i , size_t j , size_t k) const;
+
         void exportMAPAXES( std::vector<double>& mapaxes) const;
         void exportCOORD( std::vector<double>& coord) const;
         void exportZCORN( std::vector<double>& zcorn) const;

@@ -19,6 +19,7 @@
 
 
 #include <iostream>
+#include <tuple>
 
 #include <boost/lexical_cast.hpp>
 
@@ -73,8 +74,49 @@ namespace Opm {
     size_t EclipseGrid::getCartesianSize( ) const {
         return static_cast<size_t>( ecl_grid_get_global_size( m_grid.get() ));
     }
-
     
+    void EclipseGrid::assertGlobalIndex(size_t globalIndex) const {
+        if (globalIndex >= getCartesianSize())
+            throw std::invalid_argument("input index above valid range");
+    }
+
+    void EclipseGrid::assertIJK(size_t i , size_t j , size_t k) const {
+        if (i >= getNX() || j >= getNY() || k >= getNZ())
+            throw std::invalid_argument("input index above valid range");
+    }
+
+
+    double EclipseGrid::getCellVolume(size_t globalIndex) const {
+        assertGlobalIndex( globalIndex );
+        return ecl_grid_get_cell_volume1( m_grid.get() , static_cast<int>(globalIndex));
+    }
+
+
+    double EclipseGrid::getCellVolume(size_t i , size_t j , size_t k) const {
+        assertIJK(i,j,k);
+        return ecl_grid_get_cell_volume3( m_grid.get() , static_cast<int>(i),static_cast<int>(j),static_cast<int>(k));
+    }
+
+    std::tuple<double,double,double> EclipseGrid::getCellCenter(size_t globalIndex) const {
+        assertGlobalIndex( globalIndex );
+        {
+            double x,y,z;
+            ecl_grid_get_xyz1( m_grid.get() , static_cast<int>(globalIndex) , &x , &y , &z);
+            return std::tuple<double,double,double> {x,y,z};
+        }
+    }
+
+
+    std::tuple<double,double,double> EclipseGrid::getCellCenter(size_t i,size_t j, size_t k) const {
+        assertIJK(i,j,k);
+        {
+            double x,y,z;
+            ecl_grid_get_xyz3( m_grid.get() , static_cast<int>(i),static_cast<int>(j),static_cast<int>(k), &x , &y , &z);
+            return std::tuple<double,double,double> {x,y,z};
+        }
+    }
+
+
     bool EclipseGrid::hasCornerPointKeywords(std::shared_ptr<const GRIDSection> gridSection) {
         if (gridSection->hasKeyword("ZCORN") && gridSection->hasKeyword("COORD"))
             return true;
