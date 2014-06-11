@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_notRecursive_allNames) {
         ParserPtr parser(new Parser(false));
         BOOST_CHECK_EQUAL(false , parser->canParseKeyword("BPR"));
         boost::filesystem::path configPath("testdata/config/directory1");
-        BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath, false , false));
+        BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath, false));
         BOOST_CHECK(parser->canParseKeyword("WWCT"));
         BOOST_CHECK_EQUAL(true , parser->canParseKeyword("BPR"));
         BOOST_CHECK_EQUAL(false , parser->canParseKeyword("DIMENS"));
@@ -203,9 +203,11 @@ BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_notRecursive_allNames) {
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_notRecursive_strictNames) {
         ParserPtr parser(new Parser(false));
         boost::filesystem::path configPath("testdata/config/directory1");
-        BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath, false , true ));
+        BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath, false));
         BOOST_CHECK(parser->canParseKeyword("WWCT"));
-        BOOST_CHECK_EQUAL(false , parser->canParseKeyword("BPR"));
+        // the file name for the following keyword is "Bpr", but that
+        // does not matter
+        BOOST_CHECK_EQUAL(true , parser->canParseKeyword("BPR"));
         BOOST_CHECK_EQUAL(false , parser->canParseKeyword("DIMENS"));
 }
 
@@ -214,7 +216,7 @@ BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_Recursive_allNames) {
         ParserPtr parser(new Parser(false));
         BOOST_CHECK_EQUAL(false , parser->canParseKeyword("BPR"));
         boost::filesystem::path configPath("testdata/config/directory1");
-        BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath, true, false));
+        BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath, true));
         BOOST_CHECK(parser->canParseKeyword("WWCT"));
         BOOST_CHECK_EQUAL(true , parser->canParseKeyword("BPR"));
         BOOST_CHECK_EQUAL(true , parser->canParseKeyword("DIMENS"));
@@ -227,7 +229,9 @@ BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_default) {
         boost::filesystem::path configPath("testdata/config/directory1");
         BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath ));
         BOOST_CHECK(parser->canParseKeyword("WWCT"));
-        BOOST_CHECK_EQUAL(false , parser->canParseKeyword("BPR"));
+        // the file name for the following keyword is "Bpr", but that
+        // does not matter
+        BOOST_CHECK_EQUAL(true , parser->canParseKeyword("BPR"));
         BOOST_CHECK_EQUAL(true , parser->canParseKeyword("DIMENS"));
 }
 
