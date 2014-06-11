@@ -36,16 +36,64 @@
 
 
 namespace Opm {
+    class ParserKeyword;
+    typedef std::shared_ptr<ParserKeyword> ParserKeywordPtr;
+    typedef std::shared_ptr<const ParserKeyword> ParserKeywordConstPtr;
 
     class ParserKeyword {
-    public:
-        ParserKeyword(const char * name , ParserKeywordSizeEnum sizeType = SLASH_TERMINATED , ParserKeywordActionEnum action = INTERNALIZE);
-        ParserKeyword(const std::string& name , ParserKeywordSizeEnum sizeType = SLASH_TERMINATED , ParserKeywordActionEnum action = INTERNALIZE);
-        ParserKeyword(const std::string& name , size_t fixedKeywordSize,ParserKeywordActionEnum action = INTERNALIZE);
-        ParserKeyword(const std::string& name , const std::string& sizeKeyword , const std::string& sizeItem, ParserKeywordActionEnum action = INTERNALIZE , bool isTableCollection = false);
+        ParserKeyword(const std::string& name ,
+                      const std::string& sizeKeyword ,
+                      const std::string& sizeItem,
+                      ParserKeywordActionEnum action = INTERNALIZE ,
+                      bool isTableCollection = false);
+        ParserKeyword(const std::string& name ,
+                      ParserKeywordSizeEnum sizeType = SLASH_TERMINATED ,
+                      ParserKeywordActionEnum action = INTERNALIZE);
+        ParserKeyword(const std::string& name ,
+                      size_t fixedKeywordSize,
+                      ParserKeywordActionEnum action = INTERNALIZE);
         ParserKeyword(const Json::JsonObject& jsonConfig);
-        
-        
+
+    public:
+        /*!
+         * \brief Factory method to create a keyword where the number
+         *        of items per record is defined at compile time.
+         *
+         * This are for example well specifcation keywords like WCONPROD...
+         */
+        static ParserKeywordPtr createFixedSized(const std::string& name,
+                                                 size_t fixedKeywordSize,
+                                                 ParserKeywordActionEnum action = INTERNALIZE);
+
+        /*!
+         * \brief Factory method to create a keyword with an per-se
+         *        unspecified number of items per record.
+         *
+         * This are for example grid properties like PERM?...
+         */
+        static ParserKeywordPtr createDynamicSized(const std::string& name,
+                                                   ParserKeywordSizeEnum sizeType = SLASH_TERMINATED ,
+                                                   ParserKeywordActionEnum action = INTERNALIZE);
+
+        /*!
+         * \brief Factory method to create a keyword which has a
+         *        dynamic number of items per record.
+         *
+         * But with the number of items are specified via an item of a
+         * different keyword, e.g. for tables.
+         */
+        static ParserKeywordPtr createTable(const std::string& name,
+                                            const std::string& sizeKeyword,
+                                            const std::string& sizeItem,
+                                            ParserKeywordActionEnum action = INTERNALIZE,
+                                            bool isTableCollection = false);
+
+        /*!
+         * \brief Factory method to create a keyword from a JSON
+         *        configuration object.
+         */
+        static ParserKeywordPtr createFromJson(const Json::JsonObject& jsonConfig);
+
         static bool validName(const std::string& name);
         static bool wildCardName(const std::string& name);
         bool matches(const std::string& keyword) const;
@@ -91,8 +139,6 @@ namespace Opm {
         static void initDoubleItemDimension( ParserDoubleItemPtr item, const Json::JsonObject itemConfig);
         static void initFloatItemDimension( ParserFloatItemPtr item, const Json::JsonObject itemConfig);
     };
-    typedef std::shared_ptr<ParserKeyword> ParserKeywordPtr;
-    typedef std::shared_ptr<const ParserKeyword> ParserKeywordConstPtr;
 }
 
 #endif

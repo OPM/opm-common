@@ -111,10 +111,10 @@ static void endTest(std::iostream& of) {
 
 static void testKeyword(ParserKeywordConstPtr parserKeyword , const std::string& keywordName , const boost::filesystem::path& jsonFile , std::iostream& of) {
     startTest(of , keywordName);
-    of << "Json::JsonObject jsonKeyword(boost::filesystem::path(" << jsonFile << "));" << std::endl;
-    of << "ParserKeywordConstPtr parserKeyword(new ParserKeyword(jsonKeyword));" << std::endl;
+    of << "    Json::JsonObject jsonKeyword(boost::filesystem::path(" << jsonFile << "));" << std::endl;
+    of << "    ParserKeywordConstPtr parserKeyword = ParserKeyword::createFromJson(jsonKeyword);" << std::endl;
 
-    of << "ParserKeyword * ";
+    of << "    ParserKeywordPtr ";
     parserKeyword->inlineNew(of , "inlineKeyword" , "   ");
     
     of << "BOOST_CHECK( parserKeyword->equal( *inlineKeyword));" << std::endl;
@@ -130,7 +130,6 @@ static void testKeyword(ParserKeywordConstPtr parserKeyword , const std::string&
         of << "    }" << std::endl;
         of << "}" << std::endl;
     }
-    of << "  delete inlineKeyword;" << std::endl;
     endTest( of );
 }
 
@@ -162,9 +161,9 @@ static void generateSourceForKeyword(std::iostream& of, KeywordElementType keywo
 
     std::string indent("   ");
     of << "{" << std::endl;
-    of << indent << "ParserKeyword *";
+    of << indent << "ParserKeywordPtr ";
     parserKeyword->inlineNew(of , keywordName , indent);
-    of << indent << "addKeyword( ParserKeywordConstPtr(" << keywordName << "));" << std::endl;
+    of << indent << "addKeyword( " << keywordName << ");" << std::endl;
     of << "}" << std::endl << std::endl;
     
     std::cout << "Creating keyword: " << keywordName << std::endl;
@@ -199,7 +198,7 @@ static void scanKeyword(const boost::filesystem::path& file , KeywordMapType& ke
         
         
         {
-            std::pair<std::string , ParserKeywordConstPtr> elm(file.filename().string() , std::shared_ptr<const ParserKeyword>(new ParserKeyword( *jsonKeyword )));
+            std::pair<std::string , ParserKeywordConstPtr> elm(file.filename().string() , ParserKeyword::createFromJson( *jsonKeyword ));
             std::pair<std::string , std::pair<std::string , ParserKeywordConstPtr> > pair(file.string() , elm);
             
             keywordMap.insert(pair);

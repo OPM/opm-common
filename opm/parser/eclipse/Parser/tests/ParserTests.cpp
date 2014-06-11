@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(Initializing) {
 BOOST_AUTO_TEST_CASE(addKeyword_keyword_doesntfail) {
     Parser parser;
     {
-        ParserKeywordPtr equilKeyword(new ParserKeyword("EQUIL"));
+        ParserKeywordPtr equilKeyword = ParserKeyword::createDynamicSized("EQUIL");
         parser.addKeyword(equilKeyword);
     }
 }
@@ -54,21 +54,21 @@ BOOST_AUTO_TEST_CASE(addKeyword_keyword_doesntfail) {
 
 BOOST_AUTO_TEST_CASE(canParseKeyword_canParseKeyword_returnstrue) {
     ParserPtr parser(new Parser());
-    parser->addKeyword(ParserKeywordConstPtr(new ParserKeyword("FJAS")));
+    parser->addKeyword(ParserKeyword::createDynamicSized("FJAS"));
     BOOST_CHECK(parser->canParseKeyword("FJAS"));
 }
 
 
 BOOST_AUTO_TEST_CASE(getKeyword_haskeyword_returnskeyword) {
     ParserPtr parser(new Parser());
-    ParserKeywordConstPtr parserKeyword(new ParserKeyword("FJAS"));
+    ParserKeywordConstPtr parserKeyword = ParserKeyword::createDynamicSized("FJAS");
     parser->addKeyword(parserKeyword);
     BOOST_CHECK_EQUAL(parserKeyword, parser->getKeyword("FJAS"));
 }
 
 BOOST_AUTO_TEST_CASE(getKeyword_hasnotkeyword_getKeywordThrowsException) {
     ParserPtr parser(new Parser());
-    ParserKeywordConstPtr parserKeyword(new ParserKeyword("FJAS"));
+    ParserKeywordConstPtr parserKeyword = ParserKeyword::createDynamicSized("FJAS");
     parser->addKeyword(parserKeyword);
     BOOST_CHECK_THROW(parser->getKeyword("FJASS"), std::invalid_argument);
 }
@@ -76,9 +76,9 @@ BOOST_AUTO_TEST_CASE(getKeyword_hasnotkeyword_getKeywordThrowsException) {
 BOOST_AUTO_TEST_CASE(getAllKeywords_hasTwoKeywords_returnsCompleteList) {
     ParserPtr parser(new Parser(false));
     std::cout << parser->getAllKeywords().size() << std::endl;
-    ParserKeywordConstPtr firstParserKeyword(new ParserKeyword("FJAS"));
+    ParserKeywordConstPtr firstParserKeyword = ParserKeyword::createDynamicSized("FJAS");
     parser->addKeyword(firstParserKeyword);
-    ParserKeywordConstPtr secondParserKeyword(new ParserKeyword("SAJF"));
+    ParserKeywordConstPtr secondParserKeyword = ParserKeyword::createDynamicSized("SAJF");
     parser->addKeyword(secondParserKeyword);
     BOOST_CHECK_EQUAL(2U, parser->getAllKeywords().size());
 }
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(getAllKeywords_hasNoKeywords_returnsEmptyList) {
 BOOST_AUTO_TEST_CASE(addKeywordJSON_canParseKeyword_returnstrue) {
     ParserPtr parser(new Parser());
     Json::JsonObject jsonConfig("{\"name\": \"BPR\", \"size\" : 100 ,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}");
-    parser->addKeyword(ParserKeywordConstPtr(new ParserKeyword( jsonConfig )));
+    parser->addKeyword(ParserKeyword::createFromJson( jsonConfig ));
     BOOST_CHECK(parser->canParseKeyword("BPR"));
 }
 
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(addKeywordJSON_canParseKeyword_returnstrue) {
 BOOST_AUTO_TEST_CASE(addKeywordJSON_size_isObject_allGood) {
     ParserPtr parser(new Parser());
     Json::JsonObject jsonConfig("{\"name\": \"EQUIXL\", \"size\" : {\"keyword\":\"EQLDIMS\" , \"item\" : \"NTEQUL\"},  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}");
-    parser->addKeyword(ParserKeywordConstPtr(new ParserKeyword( jsonConfig )));
+    parser->addKeyword(ParserKeyword::createFromJson( jsonConfig ));
     BOOST_CHECK(parser->canParseKeyword("EQUIXL"));
 }
 
@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(WildCardTest) {
 /***************** Simple Int parsing ********************************/
 
 static ParserKeywordPtr __attribute__((unused)) setupParserKeywordInt(std::string name, int numberOfItems) {
-    ParserKeywordPtr parserKeyword(new ParserKeyword(name));
+    ParserKeywordPtr parserKeyword = ParserKeyword::createDynamicSized(name);
     ParserRecordPtr parserRecord = parserKeyword->getRecord();
 
     for (int i = 0; i < numberOfItems; i++) {

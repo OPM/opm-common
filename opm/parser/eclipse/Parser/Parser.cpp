@@ -297,7 +297,7 @@ namespace Opm {
         if (jsonKeywords.is_array()) {
             for (size_t index = 0; index < jsonKeywords.size(); index++) {
                 Json::JsonObject jsonKeyword = jsonKeywords.get_array_item(index);
-                ParserKeywordConstPtr parserKeyword(new ParserKeyword(jsonKeyword));
+                ParserKeywordConstPtr parserKeyword = ParserKeyword::createFromJson(jsonKeyword);
 
                 addKeyword(parserKeyword);
             }
@@ -397,7 +397,7 @@ namespace Opm {
 
         try {
             Json::JsonObject jsonKeyword(configFile);
-            ParserKeywordConstPtr parserKeyword(new ParserKeyword(jsonKeyword));
+            ParserKeywordConstPtr parserKeyword = ParserKeyword::createFromJson(jsonKeyword);
             addKeyword(parserKeyword);
             return true;
         } 

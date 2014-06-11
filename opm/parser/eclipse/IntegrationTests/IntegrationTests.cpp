@@ -33,13 +33,12 @@
 using namespace Opm;
 
 static ParserPtr createWWCTParser() {
-    ParserKeywordPtr parserKeyword(new ParserKeyword("WWCT"));
+    ParserKeywordPtr parserKeyword = ParserKeyword::createDynamicSized("WWCT");
     {
         ParserRecordPtr wwctRecord = parserKeyword->getRecord();
         wwctRecord->addItem(ParserStringItemConstPtr(new ParserStringItem("WELL", ALL)));
     }
-    ParserKeywordPtr summaryKeyword(new ParserKeyword("SUMMARY" , (size_t) 0));
-
+    ParserKeywordPtr summaryKeyword = ParserKeyword::createFixedSized("SUMMARY" , (size_t) 0);
 
     ParserPtr parser(new Parser());
     parser->addKeyword(parserKeyword);
@@ -102,14 +101,14 @@ BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_dataIsCorrect) {
 }
 
 static ParserPtr createBPRParser() {
-    ParserKeywordPtr parserKeyword(new ParserKeyword("BPR"));
+    ParserKeywordPtr parserKeyword = ParserKeyword::createDynamicSized("BPR");
     {
         ParserRecordPtr bprRecord = parserKeyword->getRecord();
         bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("I", SINGLE)));
         bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("J", SINGLE)));
         bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("K", SINGLE)));
     }
-    ParserKeywordPtr summaryKeyword(new ParserKeyword("SUMMARY" , (size_t) 0));
+    ParserKeywordPtr summaryKeyword = ParserKeyword::createFixedSized("SUMMARY" , (size_t) 0);
     ParserPtr parser(new Parser());
     parser->addKeyword(parserKeyword);
     parser->addKeyword(summaryKeyword);
