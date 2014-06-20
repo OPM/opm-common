@@ -120,31 +120,25 @@ namespace Opm {
     
     
     void Parser::addKeyword(ParserKeywordConstPtr parserKeyword) {
+        for (auto nameIt = parserKeyword->deckNamesBegin();
+             nameIt != parserKeyword->deckNamesEnd();
+             ++nameIt)
+        {
+            m_parserKeywords[*nameIt] = parserKeyword;
+        }
+
         const std::string& name = parserKeyword->getName();
-        dropKeyword( name );
-        
-        m_parserKeywords.insert(std::make_pair(name, parserKeyword));
-        if (ParserKeyword::wildCardName(name)) 
+        if (ParserKeyword::wildCardName(name))
             m_wildCardKeywords.insert( std::make_pair(name , parserKeyword ));
     }
 
 
     ParserKeywordConstPtr Parser::matchingKeyword(const std::string& name) const {
-        std::map<std::string, ParserKeywordConstPtr>::const_iterator iter = m_wildCardKeywords.begin();
-        ParserKeywordConstPtr keyword;
-        
-        while (true) {
-            if (iter == m_wildCardKeywords.end())
-                break;
-
-            if ((*iter).second->matches(name)) {
-                keyword = (*iter).second;
-                break;
-            }
-
-            ++iter;
+        for (auto iter = m_wildCardKeywords.begin(); iter != m_wildCardKeywords.end(); ++iter) {
+            if (iter->second->matches(name))
+                return iter->second;
         }
-        return keyword;
+        return ParserKeywordConstPtr();
     }
 
 
@@ -174,8 +168,7 @@ namespace Opm {
 
     bool Parser::dropKeyword(const std::string& keyword) {
         bool erase = (m_parserKeywords.erase( keyword ) == 1);
-        if (erase)
-            m_wildCardKeywords.erase( keyword );
+        m_wildCardKeywords.erase( keyword );
         
         return erase;
     }
@@ -407,7 +400,7 @@ namespace Opm {
     }
 
 
-    void Parser::loadKeywordsFromDirectory(const boost::filesystem::path& directory, bool recursive, bool onlyALLCAPS8) {
+    void Parser::loadKeywordsFromDirectory(const boost::filesystem::path& directory, bool recursive) {
         if (!boost::filesystem::exists(directory))
             throw std::invalid_argument("Directory: " + directory.string() + " does not exist.");
         else {
@@ -415,9 +408,9 @@ namespace Opm {
             for (boost::filesystem::directory_iterator iter(directory); iter != end; iter++) {
                 if (boost::filesystem::is_directory(*iter)) {
                     if (recursive)
-                        loadKeywordsFromDirectory(*iter, recursive, onlyALLCAPS8);
+                        loadKeywordsFromDirectory(*iter, recursive);
                 } else {
-                    if (ParserKeyword::validName(iter->path().filename().string()) || !onlyALLCAPS8) {
+                    if (ParserKeyword::validInternalName(iter->path().filename().string())) {
                         if (!loadKeywordFromFile(*iter))
                             std::cerr << "** Warning: failed to load keyword from file:" << iter->path() << std::endl;
                     }

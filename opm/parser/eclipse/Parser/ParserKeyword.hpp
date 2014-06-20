@@ -21,8 +21,8 @@
 
 #include <string>
 #include <iostream>
-
 #include <memory>
+#include <set>
 #include <opm/json/JsonObject.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
@@ -55,6 +55,8 @@ namespace Opm {
         ParserKeyword(const Json::JsonObject& jsonConfig);
 
     public:
+        typedef std::set<std::string> DeckNameSet;
+
         /*!
          * \brief Factory method to create a keyword where the number
          *        of items per record is defined at compile time.
@@ -94,9 +96,10 @@ namespace Opm {
          */
         static ParserKeywordPtr createFromJson(const Json::JsonObject& jsonConfig);
 
-        static bool validName(const std::string& name);
+        static bool validInternalName(const std::string& name);
+        static bool validDeckName(const std::string& name);
         static bool wildCardName(const std::string& name);
-        bool matches(const std::string& keyword) const;
+        bool matches(const std::string& deckKeyword) const;
         bool hasDimension() const;
         ParserRecordPtr getRecord() const;
         const std::string& getName() const;
@@ -108,7 +111,13 @@ namespace Opm {
         void setDescription(const std::string &description);
 
         size_t numItems() const;
-        
+
+        bool hasMultipleDeckNames() const;
+        void clearDeckNames();
+        void addDeckName( const std::string& deckName );
+        DeckNameSet::const_iterator deckNamesBegin() const;
+        DeckNameSet::const_iterator deckNamesEnd() const;
+
         DeckKeywordPtr parse(RawKeywordConstPtr rawKeyword) const;
         enum ParserKeywordSizeEnum getSizeType() const;
         const std::pair<std::string,std::string>& getSizeDefinitionPair() const;
@@ -121,6 +130,7 @@ namespace Opm {
     private:
         std::pair<std::string,std::string> m_sizeDefinitionPair;
         std::string m_name;
+        DeckNameSet m_deckNames;
         ParserRecordPtr m_record;
         enum ParserKeywordSizeEnum m_keywordSizeType;
         size_t m_fixedSize;
@@ -130,6 +140,7 @@ namespace Opm {
         std::string m_Description;
 
         static bool validNameStart(const std::string& name);
+        void initDeckNames( const Json::JsonObject& jsonConfig );
         void initData( const Json::JsonObject& jsonConfig );
         void initSize( const Json::JsonObject& jsonConfig );
         void initSizeKeyword( const std::string& sizeKeyword, const std::string& sizeItem);

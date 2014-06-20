@@ -72,17 +72,40 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_wildCardName) {
     BOOST_CHECK_EQUAL( false , ParserKeyword::wildCardName("ABCDEFGH*"));
 }
 
-BOOST_AUTO_TEST_CASE(ParserKeyword_validName) {
-    BOOST_CHECK_EQUAL( true , ParserKeyword::validName("SUMMARY"));
-    BOOST_CHECK_EQUAL( false , ParserKeyword::validName("MixeCase"));
-    BOOST_CHECK_EQUAL( false , ParserKeyword::validName("NAMETOOLONG"));
-    BOOST_CHECK_EQUAL( true , ParserKeyword::validName("STRING88"));
-    BOOST_CHECK_EQUAL( false , ParserKeyword::validName("88STRING"));
-    BOOST_CHECK_EQUAL( false , ParserKeyword::validName("KEY.EXT"));
-    BOOST_CHECK_EQUAL( false , ParserKeyword::validName("STRING~"));
+BOOST_AUTO_TEST_CASE(ParserKeyword_validDeckName) {
+    BOOST_CHECK_EQUAL( true , ParserKeyword::validDeckName("SUMMARY"));
+    BOOST_CHECK_EQUAL( false , ParserKeyword::validDeckName("MixeCase"));
+    BOOST_CHECK_EQUAL( false , ParserKeyword::validDeckName("NAMETOOLONG"));
+    BOOST_CHECK_EQUAL( true , ParserKeyword::validDeckName("STRING88"));
+    BOOST_CHECK_EQUAL( false , ParserKeyword::validDeckName("88STRING"));
+    BOOST_CHECK_EQUAL( false , ParserKeyword::validDeckName("KEY.EXT"));
+    BOOST_CHECK_EQUAL( false , ParserKeyword::validDeckName("STRING~"));
+    BOOST_CHECK_EQUAL( true , ParserKeyword::validDeckName("MINUS-"));
+    BOOST_CHECK_EQUAL( true , ParserKeyword::validDeckName("PLUS+"));
+    BOOST_CHECK_EQUAL( true , ParserKeyword::validDeckName("SHARP#"));
+    BOOST_CHECK_EQUAL( false , ParserKeyword::validDeckName("-MINUS"));
+    BOOST_CHECK_EQUAL( false , ParserKeyword::validDeckName("+PLUS"));
+    BOOST_CHECK_EQUAL( false , ParserKeyword::validDeckName("#SHARP"));
 
-    BOOST_CHECK_EQUAL( true  , ParserKeyword::validName("TVDP*"));
-    BOOST_CHECK_EQUAL( false , ParserKeyword::validName("*"));
+    BOOST_CHECK_EQUAL( false  , ParserKeyword::validDeckName("TVDP*"));
+    BOOST_CHECK_EQUAL( false , ParserKeyword::validDeckName("*"));
+}
+
+BOOST_AUTO_TEST_CASE(ParserKeyword_validInternalName) {
+    BOOST_CHECK_EQUAL( true , ParserKeyword::validInternalName("SUMMARY"));
+    BOOST_CHECK_EQUAL( true , ParserKeyword::validInternalName("MixeCase"));
+    BOOST_CHECK_EQUAL( true , ParserKeyword::validInternalName("NAMEISQUITELONG"));
+    BOOST_CHECK_EQUAL( true , ParserKeyword::validInternalName("I_have_underscores"));
+    BOOST_CHECK_EQUAL( false , ParserKeyword::validInternalName("WHATABOUT+"));
+    BOOST_CHECK_EQUAL( false , ParserKeyword::validInternalName("ORMINUS-"));
+    BOOST_CHECK_EQUAL( false , ParserKeyword::validInternalName("NOSHARP#"));
+    BOOST_CHECK_EQUAL( true , ParserKeyword::validInternalName("STRING88"));
+    BOOST_CHECK_EQUAL( false , ParserKeyword::validInternalName("88STRING"));
+    BOOST_CHECK_EQUAL( false , ParserKeyword::validInternalName("KEY.EXT"));
+    BOOST_CHECK_EQUAL( false , ParserKeyword::validInternalName("STRING~"));
+
+    BOOST_CHECK_EQUAL( false  , ParserKeyword::validInternalName("TVDP*"));
+    BOOST_CHECK_EQUAL( false , ParserKeyword::validInternalName("*"));
 }
 
 BOOST_AUTO_TEST_CASE(ParserKeywordMathces) {
@@ -145,6 +168,26 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject) {
     BOOST_CHECK_EQUAL( true , parserKeyword->hasFixedSize() );
 }
 
+BOOST_AUTO_TEST_CASE(ConstructMultiNameFromJsonObject) {
+    const auto jsonString =
+        "{"
+        "  \"name\": \"XXX\" ,"
+        "  \"size\" : 0,"
+        "  \"deck_names\" : ["
+        "    \"XXA\","
+        "    \"XXB\","
+        "    \"XXC\""
+        "  ]"
+        "}";
+    Json::JsonObject jsonObject(jsonString);
+    auto parserKeyword = ParserKeyword::createFromJson(jsonObject);
+    BOOST_CHECK_EQUAL("XXX" , parserKeyword->getName());
+    BOOST_CHECK(parserKeyword->matches("XXA"));
+    BOOST_CHECK(parserKeyword->matches("XXB"));
+    BOOST_CHECK(parserKeyword->hasMultipleDeckNames());
+    BOOST_CHECK(!parserKeyword->matches("XXD"));
+    BOOST_CHECK(!parserKeyword->matches("XXX"));
+}
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObjectWithActionInvalidThrows) {
     Json::JsonObject jsonObject("{\"name\": \"XXX\" , \"size\" : 0, \"action\" : \"WhatEver?\"}");
     BOOST_CHECK_THROW(ParserKeyword::createFromJson(jsonObject) , std::invalid_argument);
@@ -153,6 +196,8 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObjectWithActionInvalidThrows) {
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObjectWithAction) {
     Json::JsonObject jsonObject("{\"name\": \"XXX\" , \"size\" : 0, \"action\" : \"IGNORE\"}");
     ParserKeywordConstPtr parserKeyword = ParserKeyword::createFromJson(jsonObject);
+    BOOST_CHECK(parserKeyword->matches("XXX"));
+    BOOST_CHECK(!parserKeyword->hasMultipleDeckNames());
     BOOST_CHECK_EQUAL( IGNORE , parserKeyword->getAction() );
 }
 
@@ -310,22 +355,6 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_WithoutDescription_DescriptionPrope
 
 /* </Json> */
 /*****************************************************************/
-BOOST_AUTO_TEST_CASE(constructor_nametoolongwithfixedsize_exceptionthrown) {
-    std::string keyword("KEYWORDTOOLONG");
-    BOOST_CHECK_THROW(ParserKeyword::createFixedSized(keyword, (size_t) 100), std::invalid_argument);
-}
-
-BOOST_AUTO_TEST_CASE(constructor_nametoolong_exceptionthrown) {
-    std::string keyword("KEYWORDTOOLONG");
-    BOOST_CHECK_THROW(ParserKeyword::createDynamicSized(keyword), std::invalid_argument);
-}
-
-BOOST_AUTO_TEST_CASE(MixedCase) {
-    std::string keyword("KeyWord");
-
-    BOOST_CHECK_THROW(ParserKeyword::createFixedSized(keyword, (size_t) 100), std::invalid_argument);
-}
-
 BOOST_AUTO_TEST_CASE(getFixedSize_sizeObjectHasFixedSize_sizeReturned) {
     ParserKeywordPtr parserKeyword = ParserKeyword::createFixedSized("JA", (size_t) 3);
     BOOST_CHECK_EQUAL(3U, parserKeyword->getFixedSize());

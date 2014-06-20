@@ -35,9 +35,6 @@
 namespace Opm {
 
     void ParserKeyword::commonInit(const std::string& name, ParserKeywordSizeEnum sizeType , ParserKeywordActionEnum action) {
-        if (!validName(name))
-            throw std::invalid_argument("Invalid name: " + name + "keyword must be all upper case, max 8 characters. Starting with character.");
-
         m_isDataKeyword = false;
         m_isTableCollection = false;
         m_name = name;
@@ -45,6 +42,8 @@ namespace Opm {
         m_record = ParserRecordPtr(new ParserRecord);
         m_keywordSizeType = sizeType;
         m_Description = "";
+
+        m_deckNames.insert(m_name);
     }
 
     ParserKeyword::ParserKeyword(const std::string& name, ParserKeywordSizeEnum sizeType, ParserKeywordActionEnum action) {
@@ -63,6 +62,14 @@ namespace Opm {
         commonInit(name, OTHER_KEYWORD_IN_DECK , action);
         m_isTableCollection = _isTableCollection;
         initSizeKeyword(sizeKeyword, sizeItem);
+    }
+
+    void ParserKeyword::clearDeckNames() {
+        m_deckNames.clear();
+    }
+
+    void ParserKeyword::addDeckName( const std::string& deckName ) {
+        m_deckNames.insert(deckName);
     }
 
     bool ParserKeyword::hasDimension() const {
@@ -128,6 +135,7 @@ namespace Opm {
             throw std::invalid_argument("Json object is missing name: property");
 
         initSize(jsonConfig);
+        initDeckNames(jsonConfig);
 
         if (jsonConfig.has_item("items"))
             addItems(jsonConfig);
@@ -138,7 +146,7 @@ namespace Opm {
         if (jsonConfig.has_item("description")) {
             m_Description = jsonConfig.get_string("description");
         }
-        
+
         if ((m_keywordSizeType == FIXED && m_fixedSize == 0) || (m_action != INTERNALIZE))
             return;
         else {
@@ -214,19 +222,45 @@ namespace Opm {
         return false;
     }
 
+    bool ParserKeyword::validInternalName(const std::string& name) {
+        if (name.length() < 2)
+            return false;
+        else if (!std::isalpha(name[0]))
+            return false;
 
-    bool ParserKeyword::validName(const std::string& name) {
+        for (size_t i = 1; i < name.length(); i++) {
+            char c = name[i];
+            if (!isalnum(c) &&
+                c != '_')
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    bool ParserKeyword::validDeckName(const std::string& name) {
         if (!validNameStart(name))
             return false;
 
         for (size_t i = 1; i < name.length(); i++) {
             char c = name[i];
-            if (!(isupper(c) || isdigit(c))) 
-                return wildCardName(name);
+            if (!isupper(c) &&
+                !isdigit(c) &&
+                c != '-' &&
+                c != '+' &&
+                c != '#')
+            {
+                return false;
+            }
         }
         return true;
     }
 
+    bool ParserKeyword::hasMultipleDeckNames() const {
+        return m_deckNames.size() > 1;
+    }
 
     void ParserKeyword::addItem(ParserItemConstPtr item) {
         if (m_isDataKeyword)
@@ -244,6 +278,27 @@ namespace Opm {
             m_isDataKeyword = true;
         } else
             throw std::invalid_argument("Keyword:" + getName() + ". When calling addDataItem() the keyword must be configured with fixed size == 1.");
+    }
+
+    void ParserKeyword::initDeckNames(const Json::JsonObject& jsonObject) {
+        if (!jsonObject.has_item("deck_names"))
+            return;
+
+        const Json::JsonObject namesObject = jsonObject.get_item("deck_names");
+        if (!namesObject.is_array())
+            throw std::invalid_argument("The 'deck_names' JSON item needs to be a list (keyword: '"+m_name+"')");
+
+        if (namesObject.size() > 0)
+            m_deckNames.clear();
+
+        for (size_t nameIdx = 0; nameIdx < namesObject.size(); ++ nameIdx) {
+            const Json::JsonObject nameObject = namesObject.get_array_item(nameIdx);
+
+            if (!nameObject.is_string())
+                throw std::invalid_argument("The items of 'deck_names' need to be strings (keyword: '"+m_name+"')");
+
+            addDeckName(nameObject.as_string());
+        }
     }
 
     void ParserKeyword::addItems(const Json::JsonObject& jsonConfig) {
@@ -402,6 +457,14 @@ namespace Opm {
         return m_record->size();
     }
 
+    ParserKeyword::DeckNameSet::const_iterator ParserKeyword::deckNamesBegin() const {
+        return m_deckNames.begin();
+    }
+
+    ParserKeyword::DeckNameSet::const_iterator ParserKeyword::deckNamesEnd() const  {
+        return m_deckNames.end();
+    }
+
     DeckKeywordPtr ParserKeyword::parse(RawKeywordConstPtr rawKeyword) const {
         if (rawKeyword->isFinished()) {
             DeckKeywordPtr keyword(new DeckKeyword(rawKeyword->getKeywordName()));
@@ -439,16 +502,12 @@ namespace Opm {
     }
 
 
-    bool ParserKeyword::matches(const std::string& keyword) const {
-        size_t cmpLength = m_name.find('*');
-        if (cmpLength == std::string::npos)
-            return (keyword == m_name);
-        else {
-            if (keyword.length() < cmpLength)
-                return false;
-            
-            return (m_name.compare( 0 , cmpLength , keyword , 0 , cmpLength) == 0);
-        }
+    bool ParserKeyword::matches(const std::string& deckKeyword) const {
+        size_t starPos = m_name.find('*');
+        if (starPos == std::string::npos)
+            return (m_deckNames.count(deckKeyword) > 0);
+        else
+            return (m_name.compare( 0 , starPos , deckKeyword , 0 , starPos) == 0);
     }
 
 
@@ -503,6 +562,15 @@ namespace Opm {
             }
         }
         os << indent << lhs << "->setDescription(\"" << getDescription() << "\");" << std::endl;
+
+        // add the deck names
+        os << indent << lhs << "->clearDeckNames();\n";
+        for (auto deckNameIt = m_deckNames.begin();
+             deckNameIt != m_deckNames.end();
+             ++deckNameIt)
+        {
+            os << indent << lhs << "->addDeckName(\"" << *deckNameIt << "\");" << std::endl;
+        }
 
         for (size_t i = 0; i < m_record->size(); i++) {
             os << indent << "{" << std::endl;

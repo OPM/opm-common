@@ -186,26 +186,31 @@ static void generateKeywordSource(const char * source_file_name , KeywordMapType
 //-----------------------------------------------------------------
 
 static void scanKeyword(const boost::filesystem::path& file , KeywordMapType& keywordMap) {
-    if (ParserKeyword::validName(file.filename().string())) {
-
-        Json::JsonObject * jsonKeyword;
-        try {
-            jsonKeyword = new Json::JsonObject(file);
-        } catch(...) {
-            std::cerr << "Parsing json config file: " << file.string() << " failed - keyword skipped." << std::endl;
-            return;
-        }
-        
-        
-        {
-            std::pair<std::string , ParserKeywordConstPtr> elm(file.filename().string() , ParserKeyword::createFromJson( *jsonKeyword ));
-            std::pair<std::string , std::pair<std::string , ParserKeywordConstPtr> > pair(file.string() , elm);
-            
-            keywordMap.insert(pair);
-        }
-
-        delete jsonKeyword;
+    if (!ParserKeyword::validInternalName(file.filename().string())) {
+        std::cerr << "Warning: Ignoring incorrectly named file '" << file.string() << "'.\n";
+        return;
     }
+
+    Json::JsonObject * jsonKeyword;
+    try {
+        jsonKeyword = new Json::JsonObject(file);
+    } catch(...) {
+        std::cerr << "Parsing json config file: " << file.string() << " failed - keyword skipped." << std::endl;
+        return;
+    }
+
+    {
+        ParserKeywordConstPtr parserKeyword(ParserKeyword::createFromJson( *jsonKeyword ));
+        if (parserKeyword->getName() != boost::filesystem::basename(file))
+            std::cerr << "Warning: The name '" << parserKeyword->getName() << " specified in the JSON definitions of file '" << file
+                      << "' does not match the file's name!\n";
+        std::pair<std::string , ParserKeywordConstPtr> elm(file.filename().string(), parserKeyword);
+        std::pair<std::string , std::pair<std::string , ParserKeywordConstPtr> > pair(file.string() , elm);
+
+        keywordMap.insert(pair);
+    }
+
+    delete jsonKeyword;
 }
 
 static void scanAllKeywords(const boost::filesystem::path& directory , KeywordMapType& keywordMap) {

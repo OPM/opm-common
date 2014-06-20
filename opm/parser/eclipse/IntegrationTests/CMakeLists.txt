@@ -5,6 +5,9 @@ target_link_libraries(runIntegrationTests Parser ${Boost_LIBRARIES})
 add_test(NAME runIntegrationTests WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runIntegrationTests)
 set_property(SOURCE IntegrationTests.cpp PROPERTY COMPILE_FLAGS "-Wno-error")
 
+add_executable(runParseWellProbe ParseWellProbe.cpp)
+target_link_libraries(runParseWellProbe Parser ${Boost_LIBRARIES})
+add_test(NAME runParseWellProbe WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND runParseWellProbe)
 
 add_executable(runParseTITLE ParseTITLE.cpp)
 target_link_libraries(runParseTITLE Parser ${Boost_LIBRARIES})
