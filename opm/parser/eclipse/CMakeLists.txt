@@ -78,6 +78,7 @@ EclipseState/Grid/GridProperty.cpp
 EclipseState/Grid/Box.cpp
 EclipseState/Grid/BoxManager.cpp
 EclipseState/Grid/FaceDir.cpp
+EclipseState/Grid/TransMult.cpp        
 EclipseState/Grid/EclipseGrid.cpp)
 
 set (utility_source
@@ -138,6 +139,7 @@ EclipseState/Grid/GridProperties.hpp
 EclipseState/Grid/Box.hpp
 EclipseState/Grid/BoxManager.hpp
 EclispeState/Grid/FaceDir.hpp
+EclispeState/Grid/TransMult.hpp        
 #
 Utility/WconinjeWrapper.hpp
 Utility/CompdatWrapper.hpp
