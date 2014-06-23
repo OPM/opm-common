@@ -77,6 +77,7 @@ EclipseState/Schedule/GroupTree.cpp
 EclipseState/Grid/GridProperty.cpp
 EclipseState/Grid/Box.cpp
 EclipseState/Grid/BoxManager.cpp
+EclipseState/Grid/FaceDir.cpp
 EclipseState/Grid/EclipseGrid.cpp)
 
 set (utility_source
@@ -136,6 +137,7 @@ EclipseState/Grid/GridProperty.hpp
 EclipseState/Grid/GridProperties.hpp
 EclipseState/Grid/Box.hpp
 EclipseState/Grid/BoxManager.hpp
+EclispeState/Grid/FaceDir.hpp
 #
 Utility/WconinjeWrapper.hpp
 Utility/CompdatWrapper.hpp
