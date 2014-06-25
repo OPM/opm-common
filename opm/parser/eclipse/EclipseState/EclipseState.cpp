@@ -287,6 +287,19 @@ namespace Opm {
             // porosity
             SupportedDoubleKeywordInfo( "PORO"  , 0.0, "1" ),
 
+            // the permeability keywords
+            SupportedDoubleKeywordInfo( "PERMX" , 0.0, "Permeability" ),
+            SupportedDoubleKeywordInfo( "PERMY" , 0.0, "Permeability" ),
+            SupportedDoubleKeywordInfo( "PERMZ" , 0.0, "Permeability" ),
+            SupportedDoubleKeywordInfo( "PERMXY", 0.0, "Permeability" ), // E300 only
+            SupportedDoubleKeywordInfo( "PERMXZ", 0.0, "Permeability" ), // E300 only
+            SupportedDoubleKeywordInfo( "PERMYZ", 0.0, "Permeability" ), // E300 only
+
+            // gross-to-net thickness (acts as a multiplier for PORO
+            // and the permeabilities in the X-Y plane as well as for
+            // the well rates.)
+            SupportedDoubleKeywordInfo( "NTG"   , 1.0, "1" ),
+
             // transmissibility multipliers
             SupportedDoubleKeywordInfo( "MULTX" , 1.0, "1" ),
             SupportedDoubleKeywordInfo( "MULTY" , 1.0, "1" ),
@@ -297,14 +310,6 @@ namespace Opm {
 
             // pore volume multipliers
             SupportedDoubleKeywordInfo( "MULTPV", 1.0, "1" ),
-
-            // the permeability keywords
-            SupportedDoubleKeywordInfo( "PERMX" , 0.0, "Permeability" ),
-            SupportedDoubleKeywordInfo( "PERMY" , 0.0, "Permeability" ),
-            SupportedDoubleKeywordInfo( "PERMZ" , 0.0, "Permeability" ),
-            SupportedDoubleKeywordInfo( "PERMXY", 0.0, "Permeability" ), // E300 only
-            SupportedDoubleKeywordInfo( "PERMXZ", 0.0, "Permeability" ), // E300 only
-            SupportedDoubleKeywordInfo( "PERMYZ", 0.0, "Permeability" ), // E300 only
         };
 
         m_intGridProperties = std::make_shared<GridProperties<int> >(m_eclipseGrid->getNX() , m_eclipseGrid->getNY() , m_eclipseGrid->getNZ() , supportedIntKeywords); 
