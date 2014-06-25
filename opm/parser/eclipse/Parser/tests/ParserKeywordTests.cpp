@@ -63,15 +63,6 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_withOtherSize_SizeTypeOTHER) {
     BOOST_CHECK_EQUAL("NTEQUIL" , sizeKW.second );
 }
 
-BOOST_AUTO_TEST_CASE(ParserKeyword_wildCardName) {
-    BOOST_CHECK_EQUAL( true  , ParserKeyword::wildCardName("SUM*"));
-    BOOST_CHECK_EQUAL( false , ParserKeyword::wildCardName("SUM*X"));
-    BOOST_CHECK_EQUAL( false , ParserKeyword::wildCardName("sUM*"));
-    BOOST_CHECK_EQUAL( false , ParserKeyword::wildCardName("5UM*"));
-    BOOST_CHECK_EQUAL( true , ParserKeyword::wildCardName("U5M*"));
-    BOOST_CHECK_EQUAL( false , ParserKeyword::wildCardName("ABCDEFGH*"));
-}
-
 BOOST_AUTO_TEST_CASE(ParserKeyword_validDeckName) {
     BOOST_CHECK_EQUAL( true , ParserKeyword::validDeckName("SUMMARY"));
     BOOST_CHECK_EQUAL( false , ParserKeyword::validDeckName("MixeCase"));
@@ -108,13 +99,15 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_validInternalName) {
     BOOST_CHECK_EQUAL( false , ParserKeyword::validInternalName("*"));
 }
 
-BOOST_AUTO_TEST_CASE(ParserKeywordMathces) {
-    ParserKeywordConstPtr parserKeyword = ParserKeyword::createFixedSized("TVDP*", (size_t) 1);
-    BOOST_CHECK_EQUAL( true , parserKeyword->matches("TVDP"));
-    BOOST_CHECK_EQUAL( true , parserKeyword->matches("TVDPX"));
-    BOOST_CHECK_EQUAL( true , parserKeyword->matches("TVDPXY"));
-    BOOST_CHECK_EQUAL( false , parserKeyword->matches("TVD"));
-    BOOST_CHECK_EQUAL( false , parserKeyword->matches("ATVDP"));
+BOOST_AUTO_TEST_CASE(ParserKeywordMatches) {
+    ParserKeywordPtr parserKeyword = ParserKeyword::createFixedSized("HELLO", (size_t) 1);
+    parserKeyword->clearDeckNames();
+    parserKeyword->setMatchRegex("WORLD.+");
+    BOOST_CHECK_EQUAL( false , parserKeyword->matches("HELLO"));
+    BOOST_CHECK_EQUAL( false , parserKeyword->matches("WORLD"));
+    BOOST_CHECK_EQUAL( true , parserKeyword->matches("WORLDABC"));
+    BOOST_CHECK_EQUAL( false , parserKeyword->matches("WORLD#BC"));
+    BOOST_CHECK_EQUAL( false , parserKeyword->matches("WORLDIAMTOOLONG"));
 }
 
 BOOST_AUTO_TEST_CASE(AddDataKeyword_correctlyConfigured) {

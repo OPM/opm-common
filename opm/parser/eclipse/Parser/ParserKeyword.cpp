@@ -134,8 +134,15 @@ namespace Opm {
         } else
             throw std::invalid_argument("Json object is missing name: property");
 
+        if (jsonConfig.has_item("deck_names") || jsonConfig.has_item("deck_name_regex") )
+            // if either the deck names or the regular expression for deck names are
+            // explicitly specified, we do not implicitly add the contents of the 'name'
+            // item to the deck names...
+            clearDeckNames();
+
         initSize(jsonConfig);
         initDeckNames(jsonConfig);
+        initMatchRegex(jsonConfig);
 
         if (jsonConfig.has_item("items"))
             addItems(jsonConfig);
@@ -203,23 +210,6 @@ namespace Opm {
             return false;
         
         return true;
-    }
-
-
-    bool ParserKeyword::wildCardName(const std::string& name) {
-        if (!validNameStart(name))
-            return false;
-                              
-        for (size_t i = 1; i < name.length(); i++) {
-            char c = name[i];
-            if (!(isupper(c) || isdigit(c))) {
-                if ((i == (name.length() - 1)) && (c == '*'))
-                    return true;
-                else
-                    return false;
-            }
-        }
-        return false;
     }
 
     bool ParserKeyword::validInternalName(const std::string& name) {
@@ -299,6 +289,17 @@ namespace Opm {
 
             addDeckName(nameObject.as_string());
         }
+    }
+
+    void ParserKeyword::initMatchRegex(const Json::JsonObject& jsonObject) {
+        if (!jsonObject.has_item("deck_name_regex"))
+            return;
+
+        const Json::JsonObject regexStringObject = jsonObject.get_item("deck_name_regex");
+        if (!regexStringObject.is_string())
+            throw std::invalid_argument("The 'deck_name_regex' JSON item needs to be a string (keyword: '"+m_name+"')");
+
+        setMatchRegex(regexStringObject.as_string());
     }
 
     void ParserKeyword::addItems(const Json::JsonObject& jsonConfig) {
@@ -501,18 +502,43 @@ namespace Opm {
         return m_isDataKeyword;
     }
 
-
-    bool ParserKeyword::matches(const std::string& deckKeyword) const {
-        size_t starPos = m_name.find('*');
-        if (starPos == std::string::npos)
-            return (m_deckNames.count(deckKeyword) > 0);
-        else
-            return (m_name.compare( 0 , starPos , deckKeyword , 0 , starPos) == 0);
+    bool ParserKeyword::hasMatchRegex() const {
+        return !m_matchRegexString.empty();
     }
 
+    void ParserKeyword::setMatchRegex(const std::string& deckNameRegexp) {
+        try {
+            m_matchRegex = boost::regex::basic_regex<std::string::value_type>(deckNameRegexp);
+            m_matchRegexString = deckNameRegexp;
+        }
+        catch (const boost::bad_expression &e) {
+            std::cerr << "Warning: Malformed regular expression for keyword '" << getName() << "':\n"
+                      << "\n"
+                      << e.what() << "\n"
+                      << "\n"
+                      << "Ignoring expression!\n";
+        }
+    }
+
+    bool ParserKeyword::matches(const std::string& deckKeywordName) const {
+        if (m_deckNames.count(deckKeywordName) > 0)
+            return true;
+        else if (hasMatchRegex())
+            return boost::regex_match(deckKeywordName, m_matchRegex);
+        return false;
+    }
 
     bool ParserKeyword::equal(const ParserKeyword& other) const {
+        // compare the deck names. we don't care about the ordering of the strings.
+        for (auto deckNameIt = m_deckNames.begin(); deckNameIt != m_deckNames.end(); ++deckNameIt)
+            if (!other.m_deckNames.count(*deckNameIt))
+                return false;
+        for (auto deckNameIt = other.m_deckNames.begin(); deckNameIt != other.m_deckNames.end(); ++deckNameIt)
+            if (!m_deckNames.count(*deckNameIt))
+                return false;
+
         if ((m_name == other.m_name) &&
+            (m_matchRegexString == other.m_matchRegexString) &&
             (m_record->equal(*(other.m_record))) &&
             (m_keywordSizeType == other.m_keywordSizeType) &&
             (m_isDataKeyword == other.m_isDataKeyword) &&
@@ -571,6 +597,10 @@ namespace Opm {
         {
             os << indent << lhs << "->addDeckName(\"" << *deckNameIt << "\");" << std::endl;
         }
+
+        // set the deck name match regex
+        if (hasMatchRegex())
+            os << indent << lhs << "->setMatchRegex(\"" << m_matchRegexString << "\");" << std::endl;
 
         for (size_t i = 0; i < m_record->size(); i++) {
             os << indent << "{" << std::endl;

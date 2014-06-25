@@ -127,9 +127,8 @@ namespace Opm {
             m_parserKeywords[*nameIt] = parserKeyword;
         }
 
-        const std::string& name = parserKeyword->getName();
-        if (ParserKeyword::wildCardName(name))
-            m_wildCardKeywords.insert( std::make_pair(name , parserKeyword ));
+        if (parserKeyword->hasMatchRegex())
+            m_wildCardKeywords[parserKeyword->getName()] = parserKeyword;
     }
 
 

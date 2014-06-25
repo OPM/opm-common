@@ -23,6 +23,9 @@
 #include <iostream>
 #include <memory>
 #include <set>
+
+#include <boost/regex.hpp>
+
 #include <opm/json/JsonObject.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
@@ -98,8 +101,9 @@ namespace Opm {
 
         static bool validInternalName(const std::string& name);
         static bool validDeckName(const std::string& name);
-        static bool wildCardName(const std::string& name);
-        bool matches(const std::string& deckKeyword) const;
+        bool hasMatchRegex() const;
+        void setMatchRegex(const std::string& deckNameRegexp);
+        bool matches(const std::string& deckKeywordName) const;
         bool hasDimension() const;
         ParserRecordPtr getRecord() const;
         const std::string& getName() const;
@@ -131,6 +135,8 @@ namespace Opm {
         std::pair<std::string,std::string> m_sizeDefinitionPair;
         std::string m_name;
         DeckNameSet m_deckNames;
+        std::string m_matchRegexString;
+        boost::basic_regex<std::string::value_type> m_matchRegex;
         ParserRecordPtr m_record;
         enum ParserKeywordSizeEnum m_keywordSizeType;
         size_t m_fixedSize;
@@ -141,6 +147,7 @@ namespace Opm {
 
         static bool validNameStart(const std::string& name);
         void initDeckNames( const Json::JsonObject& jsonConfig );
+        void initMatchRegex( const Json::JsonObject& jsonObject );
         void initData( const Json::JsonObject& jsonConfig );
         void initSize( const Json::JsonObject& jsonConfig );
         void initSizeKeyword( const std::string& sizeKeyword, const std::string& sizeItem);
