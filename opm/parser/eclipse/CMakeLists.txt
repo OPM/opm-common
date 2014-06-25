@@ -138,8 +138,8 @@ EclipseState/Grid/GridProperty.hpp
 EclipseState/Grid/GridProperties.hpp
 EclipseState/Grid/Box.hpp
 EclipseState/Grid/BoxManager.hpp
-EclispeState/Grid/FaceDir.hpp
-EclispeState/Grid/TransMult.hpp        
+EclipseState/Grid/FaceDir.hpp
+EclipseState/Grid/TransMult.hpp        
 #
 Utility/WconinjeWrapper.hpp
 Utility/CompdatWrapper.hpp
