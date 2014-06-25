@@ -137,3 +137,14 @@ BOOST_AUTO_TEST_CASE(GetProperty) {
     
     BOOST_CHECK_THROW( satNUM->iget(100000) , std::invalid_argument);
 }
+
+
+BOOST_AUTO_TEST_CASE(GetTransMult) {
+    DeckPtr deck = createDeck();
+    EclipseState state(deck);
+    std::shared_ptr<const TransMult> transMult = state.getTransMult();
+    
+    
+    BOOST_CHECK_EQUAL( 1.0 , transMult->getMultiplier(0,0,0,FaceDir::XPluss));
+    BOOST_CHECK_THROW(transMult->getMultiplier(1000 , FaceDir::XPluss) , std::invalid_argument);
+}

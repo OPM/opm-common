@@ -39,6 +39,7 @@ namespace Opm {
         initSchedule(deck);
         initTitle(deck);
         initProperties(deck);
+        initTransMult(deck);
     }
     
 
@@ -51,6 +52,9 @@ namespace Opm {
         return schedule;
     }
 
+    std::shared_ptr<const TransMult> EclipseState::getTransMult() const {
+        return m_transMult;
+    }
 
     std::string EclipseState::getTitle() const {
         return m_title;
@@ -59,6 +63,12 @@ namespace Opm {
     void EclipseState::initSchedule(DeckConstPtr deck) {
         schedule = ScheduleConstPtr( new Schedule(deck) );
     }
+
+    void EclipseState::initTransMult(DeckConstPtr deck) {
+        EclipseGridConstPtr grid = getEclipseGrid();
+        m_transMult = std::make_shared<TransMult>( grid->getNX() , grid->getNY() , grid->getNZ());
+    }
+
 
     void EclipseState::initEclipseGrid(DeckConstPtr deck) {
         std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
