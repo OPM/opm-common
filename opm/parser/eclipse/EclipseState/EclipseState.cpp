@@ -317,6 +317,9 @@ namespace Opm {
             SupportedDoubleKeywordInfo( "MULTX-", 1.0, "1" ),
             SupportedDoubleKeywordInfo( "MULTY-", 1.0, "1" ),
             SupportedDoubleKeywordInfo( "MULTZ-", 1.0, "1" ),
+            
+            // initialisation
+            SupportedDoubleKeywordInfo( "SWATINIT" , 0.0, "1");
 
             // pore volume multipliers
             SupportedDoubleKeywordInfo( "MULTPV", 1.0, "1" ),
