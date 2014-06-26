@@ -239,8 +239,8 @@ namespace Opm {
             if (!isupper(c) &&
                 !isdigit(c) &&
                 c != '-' &&
-                c != '+' &&
-                c != '#')
+                c != '_' &&
+                c != '+')
             {
                 return false;
             }

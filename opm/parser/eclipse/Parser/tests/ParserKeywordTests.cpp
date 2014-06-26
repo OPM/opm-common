@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_validDeckName) {
     BOOST_CHECK_EQUAL( false , ParserKeyword::validDeckName("STRING~"));
     BOOST_CHECK_EQUAL( true , ParserKeyword::validDeckName("MINUS-"));
     BOOST_CHECK_EQUAL( true , ParserKeyword::validDeckName("PLUS+"));
-    BOOST_CHECK_EQUAL( true , ParserKeyword::validDeckName("SHARP#"));
+    BOOST_CHECK_EQUAL( false , ParserKeyword::validDeckName("SHARP#"));
     BOOST_CHECK_EQUAL( false , ParserKeyword::validDeckName("-MINUS"));
     BOOST_CHECK_EQUAL( false , ParserKeyword::validDeckName("+PLUS"));
     BOOST_CHECK_EQUAL( false , ParserKeyword::validDeckName("#SHARP"));
