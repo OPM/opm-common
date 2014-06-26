@@ -238,10 +238,10 @@ BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_default) {
 
 BOOST_AUTO_TEST_CASE(DropKeyword) {
     ParserPtr parser(new Parser());
-    BOOST_CHECK_EQUAL(false , parser->dropParserKeyword("DoesNotHaveThis"));
+    BOOST_CHECK_EQUAL(false , parser->dropKeyword("DoesNotHaveThis"));
     BOOST_CHECK_EQUAL(true , parser->canParseKeyword("BPR"));
-    BOOST_CHECK_EQUAL(true  , parser->dropParserKeyword("BLOCK_PROBE"));
-    BOOST_CHECK_EQUAL(false  , parser->dropParserKeyword("BLOCK_PROBE"));
+    BOOST_CHECK_EQUAL(true  , parser->dropKeyword("BLOCK_PROBE"));
+    BOOST_CHECK_EQUAL(false  , parser->dropKeyword("BLOCK_PROBE"));
     BOOST_CHECK_EQUAL(false , parser->canParseKeyword("BPR"));
 
     BOOST_CHECK_EQUAL(true , parser->canParseKeyword("TVDPX"));
@@ -273,9 +273,9 @@ BOOST_AUTO_TEST_CASE(WildCardTest) {
 
     BOOST_CHECK(!parser->canParseKeyword("TVDP"));
 
-    ParserKeywordConstPtr keyword1 = parser->getParserKeyword("TVDPA");
-    ParserKeywordConstPtr keyword2 = parser->getParserKeyword("TVDPBC");
-    ParserKeywordConstPtr keyword3 = parser->getParserKeyword("TVDPXXX");
+    ParserKeywordConstPtr keyword1 = parser->getKeyword("TVDPA");
+    ParserKeywordConstPtr keyword2 = parser->getKeyword("TVDPBC");
+    ParserKeywordConstPtr keyword3 = parser->getKeyword("TVDPXXX");
 
     BOOST_CHECK_EQUAL( keyword1 , keyword2 );
     BOOST_CHECK_EQUAL( keyword1 , keyword3 );
