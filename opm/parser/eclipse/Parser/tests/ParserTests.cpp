@@ -263,15 +263,17 @@ BOOST_AUTO_TEST_CASE(ReplaceKeyword) {
 
 BOOST_AUTO_TEST_CASE(WildCardTest) {
     ParserPtr parser(new Parser());
-    BOOST_CHECK_EQUAL(true  , parser->canParseKeyword("TVDP*"));
-    BOOST_CHECK_EQUAL(true  , parser->canParseKeyword("TVDP"));
-    BOOST_CHECK_EQUAL(true  , parser->canParseKeyword("TVDPXXX"));
-    BOOST_CHECK_EQUAL(false , parser->canParseKeyword("TVD"));
+    BOOST_CHECK(!parser->canParseKeyword("TVDP*"));
+    BOOST_CHECK(!parser->canParseKeyword("TVDP"));
+    BOOST_CHECK(parser->canParseKeyword("TVDPXXX"));
+    BOOST_CHECK(!parser->canParseKeyword("TVDPIAMTOOLONG"));
+    BOOST_CHECK(!parser->canParseKeyword("TVD"));
 
+    BOOST_CHECK(!parser->canParseKeyword("TVDP"));
 
-    ParserKeywordConstPtr keyword1 = parser->getKeyword("TVDP*");
-    ParserKeywordConstPtr keyword2 = parser->getKeyword("TVDP");
-    ParserKeywordConstPtr keyword3 = parser->getKeyword("TVDPXXX");
+    ParserKeywordConstPtr keyword1 = parser->getParserKeyword("TVDPA");
+    ParserKeywordConstPtr keyword2 = parser->getParserKeyword("TVDPBC");
+    ParserKeywordConstPtr keyword3 = parser->getParserKeyword("TVDPXXX");
 
     BOOST_CHECK_EQUAL( keyword1 , keyword2 );
     BOOST_CHECK_EQUAL( keyword1 , keyword3 );

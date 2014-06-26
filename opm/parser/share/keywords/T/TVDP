@@ -1,2 +1,13 @@
-{"name" : "TVDP*" , "size" : {"keyword":"EQLDIMS" , "item":"NTTRVD"}, "items" : 
-        [ {"name" : "table" , "value_type" : "DOUBLE" , "size_type" : "ALL" , "dimension" : ["Length" , "ContextDependent"]}]}
+{
+ "name" : "TVDP",
+ "deck_name_regex" : "TVDP.+",
+ "size" : {
+  "keyword":"EQLDIMS" , "item":"NTTRVD"
+ },
+ "items" : [{
+  "name" : "table",
+  "value_type" : "DOUBLE",
+  "size_type" : "ALL",
+  "dimension" : ["Length" , "ContextDependent"]
+ }]
+}
