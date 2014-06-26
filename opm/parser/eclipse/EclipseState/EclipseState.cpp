@@ -322,7 +322,7 @@ namespace Opm {
             SupportedDoubleKeywordInfo( "SWATINIT" , 0.0, "1"),
 
             // pore volume multipliers
-            SupportedDoubleKeywordInfo( "MULTPV", 1.0, "1" ),
+            SupportedDoubleKeywordInfo( "MULTPV", 1.0, "1" )
         };
 
         m_intGridProperties = std::make_shared<GridProperties<int> >(m_eclipseGrid->getNX() , m_eclipseGrid->getNY() , m_eclipseGrid->getNZ() , supportedIntKeywords); 
