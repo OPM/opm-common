@@ -22,7 +22,8 @@
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <boost/algorithm/string.hpp>
 
-
+#include <cstddef>
+#include <string>
 
 namespace Opm {
 
@@ -165,115 +166,129 @@ namespace Opm {
         }
     }
 
-    
+    namespace {
+        WellProductionProperties
+        matchingProperties(DeckRecordConstPtr record)
+        {
+            WellProductionProperties p;
+
+            p.predictionMode = false;
+
+            // Modes supported in WCONHIST just from {O,W,G}RAT values
+            const std::string m[] =
+                {
+                    "ORAT", "WRAT", "GRAT", "LRAT", "RESV"
+                };
+
+            for (std::size_t i = 0, n = (sizeof m) / (sizeof m[0]);
+                 i < n; ++i)
+            {
+                const WellProducer::ControlModeEnum cmod =
+                    WellProducer::ControlModeFromString(m[i]);
+
+                p.addProductionControl(cmod);
+            }
+
+            // BHP mode needs explicit value
+            if (! record->getItem("BHP")->defaultApplied()) {
+                p.addProductionControl(WellProducer::BHP);
+            }
+
+            return p;
+        }
+
+        WellProductionProperties
+        predictionProperties(DeckRecordConstPtr record)
+        {
+            WellProductionProperties p;
+
+            p.LiquidRate = record->getItem("LRAT")->getSIDouble(0);
+            p.ResVRate   = record->getItem("RESV")->getSIDouble(0);
+            p.BHPLimit   = record->getItem("BHP" )->getSIDouble(0);
+            p.THPLimit   = record->getItem("THP" )->getSIDouble(0);
+
+            p.predictionMode = true;
+
+            const std::string m[] =
+                {
+                    "ORAT", "WRAT", "GRAT", "LRAT",
+                    "RESV", "BHP" , "THP"
+                };
+
+            for (std::size_t i = 0, n = (sizeof m) / (sizeof m[0]);
+                 i < n; ++i)
+            {
+                if (! record->getItem(m[i])->defaultApplied()) {
+                    const WellProducer::ControlModeEnum cmod =
+                        WellProducer::ControlModeFromString(m[i]);
+
+                    p.addProductionControl(cmod);
+                }
+            }
+
+            return p;
+        }
+
+        WellProductionProperties
+        producerProperties(DeckRecordConstPtr     record,
+                           WellCommon::StatusEnum status,
+                           bool                   is_pred,
+                           const std::string&     wname)
+        {
+            WellProductionProperties p;
+
+            if (is_pred) {
+                p = predictionProperties(record);
+            }
+            else {
+                p = matchingProperties(record);
+            }
+
+            p.WaterRate = record->getItem("WRAT")->getSIDouble(0);
+            p.OilRate   = record->getItem("ORAT")->getSIDouble(0);
+            p.GasRate   = record->getItem("GRAT")->getSIDouble(0);
+
+            if (status != WellCommon::SHUT) {
+                const std::string& cmodeString =
+                    record->getItem("CMODE")->getTrimmedString(0);
+
+                WellProducer::ControlModeEnum control =
+                    WellProducer::ControlModeFromString(cmodeString);
+
+                if (p.hasProductionControl(control)) {
+                    p.controlMode = control;
+                }
+		else {
+                    throw std::invalid_argument("Tried to set invalid control: " +
+                                                cmodeString + " for well: " + wname);
+		}
+            }
+
+            return p;
+        }
+    } // namespace anonymous
 
     void Schedule::handleWCONProducer(DeckKeywordConstPtr keyword, size_t currentStep, bool isPredictionMode) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            const std::string& wellNamePattern    = record->getItem("WELL")->getTrimmedString(0);
-            std::vector<WellPtr> wells       = getWells(wellNamePattern);
+
+            const std::string& wellNamePattern =
+                record->getItem("WELL")->getTrimmedString(0);
+
+            const WellCommon::StatusEnum status =
+                WellCommon::StatusFromString(record->getItem("STATUS")->getTrimmedString(0));
+
+            const WellProductionProperties& properties =
+                producerProperties(record, status,
+                                   isPredictionMode,
+                                   wellNamePattern);
+
+            const std::vector<WellPtr>& wells = getWells(wellNamePattern);
 
             for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
-                WellPtr well                          = *wellIter;
-                double orat                           = record->getItem("ORAT")->getSIDouble(0);
-                double wrat                           = record->getItem("WRAT")->getSIDouble(0);
-                double grat                           = record->getItem("GRAT")->getSIDouble(0);
-                WellCommon::StatusEnum status         = WellCommon::StatusFromString( record->getItem("STATUS")->getTrimmedString(0));
-                WellProductionProperties properties   = well->getProductionProperties(currentStep);
+                WellPtr well = *wellIter;
 
                 well->setStatus( currentStep , status );
-                {
-                    double liquidRate = 0;
-                    double resVRate = 0;
-                    double BHPLimit = 0;
-                    double THPLimit = 0;
-
-                    if (isPredictionMode) {
-                        liquidRate = record->getItem("LRAT")->getSIDouble(0);
-                        BHPLimit = record->getItem("BHP")->getSIDouble(0);
-                        THPLimit = record->getItem("THP")->getSIDouble(0);
-                        resVRate = record->getItem("RESV")->getSIDouble(0);
-                    }
-
-                    properties.predictionMode = isPredictionMode;
-                    properties.OilRate = orat;
-                    properties.WaterRate = wrat;
-                    properties.GasRate = grat;
-                    properties.LiquidRate = liquidRate;
-                    properties.ResVRate = resVRate;
-                    properties.BHPLimit = BHPLimit;
-                    properties.THPLimit = THPLimit;
-
-                    if (isPredictionMode) {
-                        if (record->getItem("LRAT")->defaultApplied())
-                            properties.dropProductionControl(WellProducer::LRAT);
-                        else
-                            properties.addProductionControl(WellProducer::LRAT);
-
-                        if (record->getItem("RESV")->defaultApplied())
-                            properties.dropProductionControl(WellProducer::RESV);
-                        else
-                            properties.addProductionControl(WellProducer::RESV);
-
-                        if (record->getItem("BHP")->defaultApplied())
-                            properties.dropProductionControl(WellProducer::BHP);
-                        else
-                            properties.addProductionControl(WellProducer::BHP);
-
-                        if (record->getItem("THP")->defaultApplied())
-                            properties.dropProductionControl(WellProducer::THP);
-                        else
-                            properties.addProductionControl(WellProducer::THP);
-                    } else {
-                        properties.dropProductionControl(WellProducer::LRAT);
-                        properties.dropProductionControl(WellProducer::RESV);
-                        properties.dropProductionControl(WellProducer::BHP);
-                        properties.dropProductionControl(WellProducer::THP);
-                    }
-                }
-
-                if (record->getItem("ORAT")->defaultApplied())
-                    properties.dropProductionControl(WellProducer::ORAT);
-                else
-                    properties.addProductionControl(WellProducer::ORAT);
-
-                if (record->getItem("GRAT")->defaultApplied())
-                    properties.dropProductionControl(WellProducer::GRAT);
-                else
-                    properties.addProductionControl(WellProducer::GRAT);
-
-                if (record->getItem("WRAT")->defaultApplied())
-                    properties.dropProductionControl(WellProducer::WRAT);
-                else
-                    properties.addProductionControl(WellProducer::WRAT);
-
-                if (status != WellCommon::SHUT) {
-                    const std::string& cmodeString = record->getItem("CMODE")->getTrimmedString(0);
-                    WellProducer::ControlModeEnum control = WellProducer::ControlModeFromString( cmodeString );
-                    if (properties.hasProductionControl( control))
-                        properties.controlMode = control;
-                    else {
-                        /*
-                          This is an awkward situation. The current control mode variable
-                          points to a control which has not been specified in the deck; i.e. a
-                          situation like this:
-
-                            WCONHIST
-                               'WELL'      'OPEN'      'RESV'      0.000      0.000      0.000  5* /
-                            /
-
-                          We have specified that the well should be controlled with 'RESV'
-                          mode, but actual RESV value has been defaulted. ECLIPSE seems to
-                          handle this, but the well machinery in OPM-Core keeps close track of
-                          which controls are available, i.e. have a value set, and will be
-                          confused by this. We therefor throw here; the fix is to modify the
-                          deck to set an explicit value for the defaulted control, or
-                          alternatively change control mode.
-                        */
-                        throw std::invalid_argument("Tried to set invalid control: " + cmodeString + " for well: " + wellNamePattern);
-                    }
-                }
-
                 well->setProductionProperties(currentStep, properties);
             }
         }
