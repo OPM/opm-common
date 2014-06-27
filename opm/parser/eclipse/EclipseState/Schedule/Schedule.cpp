@@ -183,10 +183,10 @@ namespace Opm {
                      mode = controlModes.begin(), end = controlModes.end();
                  mode != end; ++mode)
             {
-                const WellProducer::ControlModeEnum cmod =
+                const WellProducer::ControlModeEnum cmode =
                     WellProducer::ControlModeFromString(*mode);
 
-                p.addProductionControl(cmod);
+                p.addProductionControl(cmode);
             }
 
             // BHP mode needs explicit value
@@ -219,10 +219,10 @@ namespace Opm {
                  mode != end; ++mode)
             {
                 if (! record->getItem(*mode)->defaultApplied()) {
-                    const WellProducer::ControlModeEnum cmod =
+                    const WellProducer::ControlModeEnum cmode =
                         WellProducer::ControlModeFromString(*mode);
 
-                    p.addProductionControl(cmod);
+                    p.addProductionControl(cmode);
                 }
             }
 
