@@ -163,7 +163,7 @@ static void generateSourceForKeyword(std::iostream& of, KeywordElementType keywo
     of << "{" << std::endl;
     of << indent << "ParserKeywordPtr ";
     parserKeyword->inlineNew(of , keywordName , indent);
-    of << indent << "addKeyword( " << keywordName << ");" << std::endl;
+    of << indent << "addParserKeyword( " << keywordName << ");" << std::endl;
     of << "}" << std::endl << std::endl;
     
     std::cout << "Creating keyword: " << keywordName << std::endl;

@@ -81,7 +81,7 @@ static void printItems(Opm::ParserKeywordConstPtr keyword)
 static void printKeywords (Opm::ParserPtr parser, std::vector<std::string>& keywords)
 {
     for (auto iterator = keywords.begin(); iterator != keywords.end(); ++iterator) {
-        Opm::ParserKeywordConstPtr keyword = parser->getKeyword(*iterator);
+        Opm::ParserKeywordConstPtr keyword = parser->getParserKeyword(*iterator);
         printKeyword(keyword);
         printItems(keyword);
     }
@@ -101,7 +101,7 @@ static std::vector<std::string> createListOfKeywordsToDescribe(char** argv, bool
 {
     std::vector<std::string> keywords;
     if (allKeywords) {
-        keywords = parser->getAllKeywords();
+        keywords = parser->getAllParserKeywordNames();
     } else {
         keywords.push_back(argv[1]);
     }

@@ -47,14 +47,14 @@ BOOST_AUTO_TEST_CASE(addKeyword_keyword_doesntfail) {
     Parser parser;
     {
         ParserKeywordPtr equilKeyword = ParserKeyword::createDynamicSized("EQUIL");
-        parser.addKeyword(equilKeyword);
+        parser.addParserKeyword(equilKeyword);
     }
 }
 
 
 BOOST_AUTO_TEST_CASE(canParseKeyword_canParseKeyword_returnstrue) {
     ParserPtr parser(new Parser());
-    parser->addKeyword(ParserKeyword::createDynamicSized("FJAS"));
+    parser->addParserKeyword(ParserKeyword::createDynamicSized("FJAS"));
     BOOST_CHECK(parser->canParseKeyword("FJAS"));
 }
 
@@ -62,30 +62,30 @@ BOOST_AUTO_TEST_CASE(canParseKeyword_canParseKeyword_returnstrue) {
 BOOST_AUTO_TEST_CASE(getKeyword_haskeyword_returnskeyword) {
     ParserPtr parser(new Parser());
     ParserKeywordConstPtr parserKeyword = ParserKeyword::createDynamicSized("FJAS");
-    parser->addKeyword(parserKeyword);
-    BOOST_CHECK_EQUAL(parserKeyword, parser->getKeyword("FJAS"));
+    parser->addParserKeyword(parserKeyword);
+    BOOST_CHECK_EQUAL(parserKeyword, parser->getParserKeyword("FJAS"));
 }
 
 BOOST_AUTO_TEST_CASE(getKeyword_hasnotkeyword_getKeywordThrowsException) {
     ParserPtr parser(new Parser());
     ParserKeywordConstPtr parserKeyword = ParserKeyword::createDynamicSized("FJAS");
-    parser->addKeyword(parserKeyword);
-    BOOST_CHECK_THROW(parser->getKeyword("FJASS"), std::invalid_argument);
+    parser->addParserKeyword(parserKeyword);
+    BOOST_CHECK_THROW(parser->getParserKeyword("FJASS"), std::invalid_argument);
 }
 
-BOOST_AUTO_TEST_CASE(getAllKeywords_hasTwoKeywords_returnsCompleteList) {
+BOOST_AUTO_TEST_CASE(getAllParserKeywordNames_hasTwoKeywords_returnsCompleteList) {
     ParserPtr parser(new Parser(false));
-    std::cout << parser->getAllKeywords().size() << std::endl;
+    std::cout << parser->getAllParserKeywordNames().size() << std::endl;
     ParserKeywordConstPtr firstParserKeyword = ParserKeyword::createDynamicSized("FJAS");
-    parser->addKeyword(firstParserKeyword);
+    parser->addParserKeyword(firstParserKeyword);
     ParserKeywordConstPtr secondParserKeyword = ParserKeyword::createDynamicSized("SAJF");
-    parser->addKeyword(secondParserKeyword);
-    BOOST_CHECK_EQUAL(2U, parser->getAllKeywords().size());
+    parser->addParserKeyword(secondParserKeyword);
+    BOOST_CHECK_EQUAL(2U, parser->getAllParserKeywordNames().size());
 }
 
-BOOST_AUTO_TEST_CASE(getAllKeywords_hasNoKeywords_returnsEmptyList) {
+BOOST_AUTO_TEST_CASE(getAllParserKeywordNames_hasNoKeywords_returnsEmptyList) {
     ParserPtr parser(new Parser(false));
-    BOOST_CHECK_EQUAL(0U, parser->getAllKeywords().size());
+    BOOST_CHECK_EQUAL(0U, parser->getAllParserKeywordNames().size());
 }
 
 
@@ -93,18 +93,18 @@ BOOST_AUTO_TEST_CASE(getAllKeywords_hasNoKeywords_returnsEmptyList) {
 /************************ JSON config related tests **********************'*/
 
 
-BOOST_AUTO_TEST_CASE(addKeywordJSON_canParseKeyword_returnstrue) {
+BOOST_AUTO_TEST_CASE(addParserKeywordJSON_canParseKeyword_returnstrue) {
     ParserPtr parser(new Parser());
     Json::JsonObject jsonConfig("{\"name\": \"BPR\", \"size\" : 100 ,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}");
-    parser->addKeyword(ParserKeyword::createFromJson( jsonConfig ));
+    parser->addParserKeyword(ParserKeyword::createFromJson( jsonConfig ));
     BOOST_CHECK(parser->canParseKeyword("BPR"));
 }
 
 
-BOOST_AUTO_TEST_CASE(addKeywordJSON_size_isObject_allGood) {
+BOOST_AUTO_TEST_CASE(addParserKeywordJSON_size_isObject_allGood) {
     ParserPtr parser(new Parser());
     Json::JsonObject jsonConfig("{\"name\": \"EQUIXL\", \"size\" : {\"keyword\":\"EQLDIMS\" , \"item\" : \"NTEQUL\"},  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}");
-    parser->addKeyword(ParserKeyword::createFromJson( jsonConfig ));
+    parser->addParserKeyword(ParserKeyword::createFromJson( jsonConfig ));
     BOOST_CHECK(parser->canParseKeyword("EQUIXL"));
 }
 
@@ -238,27 +238,27 @@ BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_default) {
 
 BOOST_AUTO_TEST_CASE(DropKeyword) {
     ParserPtr parser(new Parser());
-    BOOST_CHECK_EQUAL(false , parser->dropKeyword("DoesNotHaveThis"));
+    BOOST_CHECK_EQUAL(false , parser->dropParserKeyword("DoesNotHaveThis"));
     BOOST_CHECK_EQUAL(true , parser->canParseKeyword("BPR"));
-    BOOST_CHECK_EQUAL(true  , parser->dropKeyword("BLOCK_PROBE"));
-    BOOST_CHECK_EQUAL(false  , parser->dropKeyword("BLOCK_PROBE"));
+    BOOST_CHECK_EQUAL(true  , parser->dropParserKeyword("BLOCK_PROBE"));
+    BOOST_CHECK_EQUAL(false  , parser->dropParserKeyword("BLOCK_PROBE"));
     BOOST_CHECK_EQUAL(false , parser->canParseKeyword("BPR"));
 
     BOOST_CHECK_EQUAL(true , parser->canParseKeyword("TVDPX"));
-    BOOST_CHECK_EQUAL(true , parser->dropKeyword("TVDP*"));
+    BOOST_CHECK_EQUAL(true , parser->dropParserKeyword("TVDP"));
     BOOST_CHECK_EQUAL(false , parser->canParseKeyword("TVDPX"));
 }
 
 
 BOOST_AUTO_TEST_CASE(ReplaceKeyword) {
     ParserPtr parser(new Parser());
-    ParserKeywordConstPtr eqldims = parser->getKeyword("EQLDIMS");
+    ParserKeywordConstPtr eqldims = parser->getParserKeyword("EQLDIMS");
 
     BOOST_CHECK_EQUAL( 5U , eqldims->numItems());
     BOOST_CHECK( parser->loadKeywordFromFile( "testdata/parser/EQLDIMS2" ) );
     
 
-    eqldims = parser->getKeyword("EQLDIMS");
+    eqldims = parser->getParserKeyword("EQLDIMS");
     BOOST_CHECK_EQUAL( 1U , eqldims->numItems());
 }
 
@@ -273,9 +273,9 @@ BOOST_AUTO_TEST_CASE(WildCardTest) {
 
     BOOST_CHECK(!parser->canParseKeyword("TVDP"));
 
-    ParserKeywordConstPtr keyword1 = parser->getKeyword("TVDPA");
-    ParserKeywordConstPtr keyword2 = parser->getKeyword("TVDPBC");
-    ParserKeywordConstPtr keyword3 = parser->getKeyword("TVDPXXX");
+    ParserKeywordConstPtr keyword1 = parser->getParserKeyword("TVDPA");
+    ParserKeywordConstPtr keyword2 = parser->getParserKeyword("TVDPBC");
+    ParserKeywordConstPtr keyword3 = parser->getParserKeyword("TVDPXXX");
 
     BOOST_CHECK_EQUAL( keyword1 , keyword2 );
     BOOST_CHECK_EQUAL( keyword1 , keyword3 );

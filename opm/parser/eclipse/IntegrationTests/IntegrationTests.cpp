@@ -41,8 +41,8 @@ static ParserPtr createWWCTParser() {
     ParserKeywordPtr summaryKeyword = ParserKeyword::createFixedSized("SUMMARY" , (size_t) 0);
 
     ParserPtr parser(new Parser());
-    parser->addKeyword(parserKeyword);
-    parser->addKeyword(summaryKeyword);
+    parser->addParserKeyword(parserKeyword);
+    parser->addParserKeyword(summaryKeyword);
     return parser;
 }
 
@@ -110,8 +110,8 @@ static ParserPtr createBPRParser() {
     }
     ParserKeywordPtr summaryKeyword = ParserKeyword::createFixedSized("SUMMARY" , (size_t) 0);
     ParserPtr parser(new Parser());
-    parser->addKeyword(parserKeyword);
-    parser->addKeyword(summaryKeyword);
+    parser->addParserKeyword(parserKeyword);
+    parser->addParserKeyword(summaryKeyword);
     return parser;
 }
 
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(parse_truncatedrecords_deckFilledWithDefaults) {
     BOOST_CHECK_EQUAL(ParserItem::defaultInt(), radfin4_2_nodata->getRecord(0)->getItem(1)->getInt(0));
     
     
-    ParserKeywordConstPtr parserKeyword = parser->getKeyword("RADFIN4");
+    ParserKeywordConstPtr parserKeyword = parser->getParserKeyword("RADFIN4");
     ParserRecordConstPtr parserRecord = parserKeyword->getRecord();
     ParserItemConstPtr nwmaxItem = parserRecord->get("NWMAX");
     ParserIntItemConstPtr intItem = std::static_pointer_cast<const ParserIntItem>(nwmaxItem);

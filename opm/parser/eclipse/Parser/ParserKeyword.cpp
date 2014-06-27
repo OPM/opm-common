@@ -530,12 +530,8 @@ namespace Opm {
 
     bool ParserKeyword::equal(const ParserKeyword& other) const {
         // compare the deck names. we don't care about the ordering of the strings.
-        for (auto deckNameIt = m_deckNames.begin(); deckNameIt != m_deckNames.end(); ++deckNameIt)
-            if (!other.m_deckNames.count(*deckNameIt))
-                return false;
-        for (auto deckNameIt = other.m_deckNames.begin(); deckNameIt != other.m_deckNames.end(); ++deckNameIt)
-            if (!m_deckNames.count(*deckNameIt))
-                return false;
+        if (m_deckNames != other.m_deckNames)
+            return false;
 
         if ((m_name == other.m_name) &&
             (m_matchRegexString == other.m_matchRegexString) &&

@@ -51,20 +51,32 @@ namespace Opm {
         DeckPtr parseStream(std::shared_ptr<std::istream> inputStream, bool strictParsing=true) const;
 
         /// Method to add ParserKeyword instances, these holding type and size information about the keywords and their data.
-        void addKeyword(ParserKeywordConstPtr parserKeyword);
-        bool dropKeyword(const std::string& keyword);
-        bool canParseKeyword( const std::string& keyword) const;
-        ParserKeywordConstPtr getKeyword(const std::string& keyword) const;
-        std::vector<std::string> getAllKeywords () const;
+        void addParserKeyword(ParserKeywordConstPtr parserKeyword);
+        bool dropParserKeyword(const std::string& parserKeywordName);
+        bool canParseKeyword( const std::string& deckKeywordName) const;
+        ParserKeywordConstPtr getParserKeyword(const std::string& deckKeywordName) const;
+        std::vector<std::string> getAllParserKeywordNames () const;
 
         void loadKeywords(const Json::JsonObject& jsonKeywords);
         bool loadKeywordFromFile(const boost::filesystem::path& configFile);
 
         void loadKeywordsFromDirectory(const boost::filesystem::path& directory , bool recursive = true);
-        size_t size() const;
         void applyUnitsToDeck(DeckPtr deck) const;
+
+        /*!
+         * \brief Returns the approximate number of recognized keywords in decks
+         *
+         * This is an approximate number because regular expresions are disconsidered.
+         */
+        size_t size() const;
+
     private:
-        std::map<std::string, ParserKeywordConstPtr> m_parserKeywords;
+        // associative map of the parser internal name and the corresponding ParserKeyword object
+        std::map<std::string, ParserKeywordConstPtr> m_internalParserKeywords;
+        // associative map of deck names and the corresponding ParserKeyword object
+        std::map<std::string, ParserKeywordConstPtr> m_deckParserKeywords;
+        // associative map of the parser internal names and the corresponding
+        // ParserKeyword object for keywords which match a regular expression
         std::map<std::string, ParserKeywordConstPtr> m_wildCardKeywords;
 
         bool hasKeyword(const std::string& keyword) const;
