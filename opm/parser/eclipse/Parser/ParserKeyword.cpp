@@ -521,7 +521,9 @@ namespace Opm {
     }
 
     bool ParserKeyword::matches(const std::string& deckKeywordName) const {
-        if (m_deckNames.count(deckKeywordName) > 0)
+        if (!validDeckName(deckKeywordName))
+            return false;
+        else if (m_deckNames.count(deckKeywordName) > 0)
             return true;
         else if (hasMatchRegex())
             return boost::regex_match(deckKeywordName, m_matchRegex);
