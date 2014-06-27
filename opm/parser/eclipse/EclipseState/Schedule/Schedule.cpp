@@ -195,6 +195,8 @@ namespace Opm {
 
             // BHP mode needs explicit value
             if (! record->getItem("BHP")->defaultApplied()) {
+                p.BHPLimit = record->getItem("BHP")->getSIDouble(0);
+
                 p.addProductionControl(WellProducer::BHP);
             }
 
