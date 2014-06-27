@@ -22,8 +22,8 @@
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <boost/algorithm/string.hpp>
 
-#include <cstddef>
 #include <string>
+#include <vector>
 
 namespace Opm {
 
@@ -175,16 +175,16 @@ namespace Opm {
             p.predictionMode = false;
 
             // Modes supported in WCONHIST just from {O,W,G}RAT values
-            const std::string m[] =
-                {
+            const std::vector<std::string> controlModes{
                     "ORAT", "WRAT", "GRAT", "LRAT", "RESV"
                 };
 
-            for (std::size_t i = 0, n = (sizeof m) / (sizeof m[0]);
-                 i < n; ++i)
+            for (std::vector<std::string>::const_iterator
+                     mode = controlModes.begin(), end = controlModes.end();
+                 mode != end; ++mode)
             {
                 const WellProducer::ControlModeEnum cmod =
-                    WellProducer::ControlModeFromString(m[i]);
+                    WellProducer::ControlModeFromString(*mode);
 
                 p.addProductionControl(cmod);
             }
@@ -209,18 +209,18 @@ namespace Opm {
 
             p.predictionMode = true;
 
-            const std::string m[] =
-                {
+            const std::vector<std::string> controlModes{
                     "ORAT", "WRAT", "GRAT", "LRAT",
                     "RESV", "BHP" , "THP"
                 };
 
-            for (std::size_t i = 0, n = (sizeof m) / (sizeof m[0]);
-                 i < n; ++i)
+            for (std::vector<std::string>::const_iterator
+                     mode = controlModes.begin(), end = controlModes.end();
+                 mode != end; ++mode)
             {
-                if (! record->getItem(m[i])->defaultApplied()) {
+                if (! record->getItem(*mode)->defaultApplied()) {
                     const WellProducer::ControlModeEnum cmod =
-                        WellProducer::ControlModeFromString(m[i]);
+                        WellProducer::ControlModeFromString(*mode);
 
                     p.addProductionControl(cmod);
                 }
