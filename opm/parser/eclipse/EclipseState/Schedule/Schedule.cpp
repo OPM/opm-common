@@ -175,6 +175,10 @@ namespace Opm {
             p.predictionMode = false;
 
             // Modes supported in WCONHIST just from {O,W,G}RAT values
+            //
+            // Note: The default value of observed {O,W,G}RAT is zero
+            // (numerically) whence the following control modes are
+            // unconditionally supported.
             const std::vector<std::string> controlModes{
                     "ORAT", "WRAT", "GRAT", "LRAT", "RESV"
                 };
