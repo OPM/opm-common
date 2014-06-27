@@ -168,7 +168,7 @@ namespace Opm {
 
     namespace {
         WellProductionProperties
-        matchingProperties(DeckRecordConstPtr record)
+        historyProperties(DeckRecordConstPtr record)
         {
             WellProductionProperties p;
 
@@ -241,7 +241,7 @@ namespace Opm {
                 p = predictionProperties(record);
             }
             else {
-                p = matchingProperties(record);
+                p = historyProperties(record);
             }
 
             p.WaterRate = record->getItem("WRAT")->getSIDouble(0);
