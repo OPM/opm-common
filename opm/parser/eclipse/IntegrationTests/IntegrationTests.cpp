@@ -49,8 +49,8 @@ static ParserPtr createWWCTParser() {
 BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_deckReturned) {
     boost::filesystem::path singleKeywordFile("testdata/integration_tests/wwct.data");
     ParserPtr parser = createWWCTParser();
-    BOOST_CHECK( parser->canParseKeyword("WWCT"));
-    BOOST_CHECK( parser->canParseKeyword("SUMMARY"));
+    BOOST_CHECK( parser->canParseDeckKeyword("WWCT"));
+    BOOST_CHECK( parser->canParseDeckKeyword("SUMMARY"));
     BOOST_CHECK_NO_THROW(DeckPtr deck =  parser->parseFile(singleKeywordFile.string()));
 }
 
@@ -63,8 +63,8 @@ BOOST_AUTO_TEST_CASE(parse_stringWithWWCTKeyword_deckReturned) {
         "  'WELL-1' 'WELL-2' / -- Ehne mehne muh\n"
         "/\n";
     ParserPtr parser = createWWCTParser();
-    BOOST_CHECK( parser->canParseKeyword("WWCT"));
-    BOOST_CHECK( parser->canParseKeyword("SUMMARY"));
+    BOOST_CHECK( parser->canParseDeckKeyword("WWCT"));
+    BOOST_CHECK( parser->canParseDeckKeyword("SUMMARY"));
     BOOST_CHECK_NO_THROW(DeckPtr deck =  parser->parseString(wwctString));
 }
 
@@ -79,8 +79,8 @@ BOOST_AUTO_TEST_CASE(parse_streamWithWWCTKeyword_deckReturned) {
     std::shared_ptr<std::istream> wwctStream(new std::istringstream(wwctString));
 
     ParserPtr parser = createWWCTParser();
-    BOOST_CHECK( parser->canParseKeyword("WWCT"));
-    BOOST_CHECK( parser->canParseKeyword("SUMMARY"));
+    BOOST_CHECK( parser->canParseDeckKeyword("WWCT"));
+    BOOST_CHECK( parser->canParseDeckKeyword("SUMMARY"));
     BOOST_CHECK_NO_THROW(DeckPtr deck =  parser->parseStream(wwctStream));
 }
 
@@ -98,6 +98,29 @@ BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_dataIsCorrect) {
     DeckPtr deck =  parser->parseFile(singleKeywordFile.string());
     BOOST_CHECK_EQUAL("WELL-1", deck->getKeyword("WWCT" , 0)->getRecord(0)->getItem(0)->getString(0));
     BOOST_CHECK_EQUAL("WELL-2", deck->getKeyword("WWCT" , 0)->getRecord(0)->getItem(0)->getString(1));
+}
+
+BOOST_AUTO_TEST_CASE(parser_internal_name_vs_deck_name) {
+    ParserPtr parser(new Opm::Parser());
+
+    // the WELL_PROBE keyword is present by default
+    BOOST_CHECK(parser->hasInternalKeyword("WELL_PROBE"));
+
+    // the NONEXISTING_PROBE keyword is _not_ present by default
+    BOOST_CHECK(!parser->hasInternalKeyword("NONEXISTING_PROBE"));
+
+    // internal names cannot appear in the deck if the deck names and/or deck regular
+    // match expressions are given
+    BOOST_CHECK(!parser->canParseDeckKeyword("WELL_PROBE"));
+
+    // an existing deck name
+    BOOST_CHECK(parser->canParseDeckKeyword("WWPR"));
+
+    // a non-existing deck name
+    BOOST_CHECK(!parser->canParseDeckKeyword("WWPRFOO"));
+
+    // user defined quantity. (regex needs to be used.)
+    BOOST_CHECK(parser->canParseDeckKeyword("WUFOO"));
 }
 
 static ParserPtr createBPRParser() {
@@ -221,7 +244,7 @@ BOOST_AUTO_TEST_CASE(parse_truncatedrecords_deckFilledWithDefaults) {
     BOOST_CHECK_EQUAL(ParserItem::defaultInt(), radfin4_2_nodata->getRecord(0)->getItem(1)->getInt(0));
     
     
-    ParserKeywordConstPtr parserKeyword = parser->getParserKeyword("RADFIN4");
+    ParserKeywordConstPtr parserKeyword = parser->getParserKeywordFromDeckName("RADFIN4");
     ParserRecordConstPtr parserRecord = parserKeyword->getRecord();
     ParserItemConstPtr nwmaxItem = parserRecord->get("NWMAX");
     ParserIntItemConstPtr intItem = std::static_pointer_cast<const ParserIntItem>(nwmaxItem);

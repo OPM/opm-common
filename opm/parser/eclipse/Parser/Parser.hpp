@@ -53,9 +53,10 @@ namespace Opm {
         /// Method to add ParserKeyword instances, these holding type and size information about the keywords and their data.
         void addParserKeyword(ParserKeywordConstPtr parserKeyword);
         bool dropParserKeyword(const std::string& parserKeywordName);
-        bool canParseKeyword( const std::string& deckKeywordName) const;
-        ParserKeywordConstPtr getParserKeyword(const std::string& deckKeywordName) const;
-        std::vector<std::string> getAllParserKeywordNames () const;
+
+        bool canParseDeckKeyword( const std::string& deckKeywordName) const;
+        ParserKeywordConstPtr getParserKeywordFromDeckName(const std::string& deckKeywordName) const;
+        std::vector<std::string> getAllDeckNames () const;
 
         void loadKeywords(const Json::JsonObject& jsonKeywords);
         bool loadKeywordFromFile(const boost::filesystem::path& configFile);
@@ -70,6 +71,17 @@ namespace Opm {
          */
         size_t size() const;
 
+        /*!
+         * \brief Returns whether the parser knows about an keyword with a given internal
+         *        name.
+         */
+        bool hasInternalKeyword(const std::string& internalKeywordName) const;
+
+        /*!
+         * \brief Retrieve a ParserKeyword object given an internal keyword name.
+         */
+        ParserKeywordConstPtr getParserKeywordFromInternalName(const std::string& internalKeywordName) const;
+
     private:
         // associative map of the parser internal name and the corresponding ParserKeyword object
         std::map<std::string, ParserKeywordConstPtr> m_internalParserKeywords;
@@ -79,7 +91,6 @@ namespace Opm {
         // ParserKeyword object for keywords which match a regular expression
         std::map<std::string, ParserKeywordConstPtr> m_wildCardKeywords;
 
-        bool hasKeyword(const std::string& keyword) const;
         bool hasWildCardKeyword(const std::string& keyword) const;
         ParserKeywordConstPtr matchingKeyword(const std::string& keyword) const;
 

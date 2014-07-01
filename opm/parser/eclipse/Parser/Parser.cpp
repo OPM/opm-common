@@ -118,6 +118,14 @@ namespace Opm {
         return m_deckParserKeywords.size();
     }
 
+    bool Parser::hasInternalKeyword(const std::string& internalKeywordName) const {
+        return (m_internalParserKeywords.count(internalKeywordName) > 0);
+    }
+
+    ParserKeywordConstPtr Parser::getParserKeywordFromInternalName(const std::string& internalKeywordName) const {
+        return m_internalParserKeywords.at(internalKeywordName);
+    }
+
     ParserKeywordConstPtr Parser::matchingKeyword(const std::string& name) const {
         for (auto iter = m_wildCardKeywords.begin(); iter != m_wildCardKeywords.end(); ++iter) {
             if (iter->second->matches(name))
@@ -126,16 +134,11 @@ namespace Opm {
         return ParserKeywordConstPtr();
     }
 
-
-    bool Parser::hasKeyword(const std::string& internalKeywordName) const {
-        return (m_internalParserKeywords.count(internalKeywordName) > 0);
-    }
-
     bool Parser::hasWildCardKeyword(const std::string& internalKeywordName) const {
         return (m_wildCardKeywords.count(internalKeywordName) > 0);
     }
 
-    bool Parser::canParseKeyword( const std::string& deckKeywordName) const {
+    bool Parser::canParseDeckKeyword( const std::string& deckKeywordName) const {
         if (!ParserKeyword::validDeckName(deckKeywordName))
             return false;
 
@@ -183,8 +186,8 @@ namespace Opm {
 
 
 
-    ParserKeywordConstPtr Parser::getParserKeyword(const std::string& deckKeywordName) const {
-        if (hasKeyword(deckKeywordName)) {
+    ParserKeywordConstPtr Parser::getParserKeywordFromDeckName(const std::string& deckKeywordName) const {
+        if (m_deckParserKeywords.count(deckKeywordName)) {
             return m_deckParserKeywords.at(deckKeywordName);
         } else {
             ParserKeywordConstPtr wildCardKeyword = matchingKeyword( deckKeywordName );
@@ -196,7 +199,7 @@ namespace Opm {
         }
     }
 
-    std::vector<std::string> Parser::getAllParserKeywordNames () const {
+    std::vector<std::string> Parser::getAllDeckNames () const {
         std::vector<std::string> keywords;
         for (auto iterator = m_deckParserKeywords.begin(); iterator != m_deckParserKeywords.end(); iterator++) {
             keywords.push_back(iterator->first);
@@ -269,8 +272,8 @@ namespace Opm {
                         if (verbose)
                             std::cout << parserState->rawKeyword->getKeywordName() << std::endl;
                         
-                        if (canParseKeyword(parserState->rawKeyword->getKeywordName())) {
-                            ParserKeywordConstPtr parserKeyword = getParserKeyword(parserState->rawKeyword->getKeywordName());
+                        if (canParseDeckKeyword(parserState->rawKeyword->getKeywordName())) {
+                            ParserKeywordConstPtr parserKeyword = getParserKeywordFromDeckName(parserState->rawKeyword->getKeywordName());
                             ParserKeywordActionEnum action = parserKeyword->getAction();
                             if (action == INTERNALIZE) {
                                 DeckKeywordPtr deckKeyword = parserKeyword->parse(parserState->rawKeyword);
@@ -307,8 +310,8 @@ namespace Opm {
     }
 
     RawKeywordPtr Parser::createRawKeyword(const std::string & keywordString, std::shared_ptr<ParserState> parserState) const {
-        if (canParseKeyword(keywordString)) {
-            ParserKeywordConstPtr parserKeyword = getParserKeyword( keywordString );
+        if (canParseDeckKeyword(keywordString)) {
+            ParserKeywordConstPtr parserKeyword = getParserKeywordFromDeckName( keywordString );
             ParserKeywordActionEnum action = parserKeyword->getAction();
             
             if (action == THROW_EXCEPTION)
@@ -374,7 +377,7 @@ namespace Opm {
                 }
             } else {
                 if (parserState->rawKeyword->getSizeType() == Raw::UNKNOWN) {
-                    if (canParseKeyword(line)) {
+                    if (canParseDeckKeyword(line)) {
                         parserState->rawKeyword->finalizeUnknownSize();
                         parserState->nextKeyword = line;
                         return true;
@@ -440,8 +443,8 @@ namespace Opm {
         deck->initUnitSystem();
         for (size_t index=0; index < deck->size(); ++index) {
             DeckKeywordPtr deckKeyword = deck->getKeyword( index );
-            if (canParseKeyword( deckKeyword->name())) {
-                ParserKeywordConstPtr parserKeyword = getParserKeyword( deckKeyword->name() );
+            if (canParseDeckKeyword( deckKeyword->name())) {
+                ParserKeywordConstPtr parserKeyword = getParserKeywordFromDeckName( deckKeyword->name() );
                 if (parserKeyword->hasDimension()) {
                     parserKeyword->applyUnitsToDeck(deck , deckKeyword);
                 }
