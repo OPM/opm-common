@@ -508,7 +508,7 @@ namespace Opm {
 
     void ParserKeyword::setMatchRegex(const std::string& deckNameRegexp) {
         try {
-            m_matchRegex = boost::regex::basic_regex<std::string::value_type>(deckNameRegexp);
+            m_matchRegex = boost::regex(deckNameRegexp);
             m_matchRegexString = deckNameRegexp;
         }
         catch (const boost::bad_expression &e) {
