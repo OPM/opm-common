@@ -31,7 +31,10 @@
 
 
 #include <cstddef>
+#include <map>
 #include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
 
 
 namespace Opm {
@@ -41,12 +44,19 @@ namespace Opm {
         TransMult(size_t nx , size_t ny , size_t nz);
         double getMultiplier(size_t globalIndex, FaceDir::DirEnum faceDir) const;
         double getMultiplier(size_t i , size_t j , size_t k, FaceDir::DirEnum faceDir) const;
+        bool hasDirectionProperty(FaceDir::DirEnum faceDir) const;
+        std::shared_ptr<GridProperty<double> > getDirectionProperty(FaceDir::DirEnum faceDir);
+        void applyMULTFLT( std::shared_ptr<const FaultCollection> faults);
 
     private:
         size_t getGlobalIndex(size_t i , size_t j , size_t k) const;
         void assertIJK(size_t i , size_t j , size_t k) const;
-        
+        double getMultiplier__(size_t globalIndex , FaceDir::DirEnum faceDir) const;
+        void insertNewProperty(FaceDir::DirEnum faceDir);
+
         size_t m_nx , m_ny , m_nz;
+        std::map<FaceDir::DirEnum , std::shared_ptr<GridProperty<double> > > m_trans;
+        std::map<FaceDir::DirEnum , std::string> m_names;
     };
 
 }

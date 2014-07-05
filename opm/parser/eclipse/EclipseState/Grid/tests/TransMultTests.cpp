@@ -27,6 +27,7 @@
 
 
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 
 BOOST_AUTO_TEST_CASE(Empty) {
     Opm::TransMult transMult(10,10,10);
@@ -39,4 +40,11 @@ BOOST_AUTO_TEST_CASE(Empty) {
 
     BOOST_CHECK_EQUAL( transMult.getMultiplier(9,9,9, Opm::FaceDir::YMinus) , 1.0 );
     BOOST_CHECK_EQUAL( transMult.getMultiplier(100 , Opm::FaceDir::ZMinus) , 1.0 );
+
+    BOOST_CHECK( !transMult.hasDirectionProperty( Opm::FaceDir::XPlus ));
+    BOOST_CHECK( !transMult.hasDirectionProperty( Opm::FaceDir::ZMinus ));
+
+    std::shared_ptr<Opm::GridProperty<double> > mult = transMult.getDirectionProperty( Opm::FaceDir::ZPlus );
+    BOOST_CHECK_EQUAL( mult->getKeywordName() , "MULTZ");
+    BOOST_CHECK( transMult.hasDirectionProperty( Opm::FaceDir::ZPlus ));
 }

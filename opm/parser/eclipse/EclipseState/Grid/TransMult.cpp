@@ -28,7 +28,14 @@ namespace Opm {
         m_ny(ny),
         m_nz(nz) 
     {
+        m_names[FaceDir::XPlus]  = "MULTX";
+        m_names[FaceDir::YPlus]  = "MULTY";
+        m_names[FaceDir::ZPlus]  = "MULTZ";
+        m_names[FaceDir::XMinus] = "MULTX-";
+        m_names[FaceDir::YMinus] = "MULTY-";
+        m_names[FaceDir::ZMinus] = "MULTZ-";
     }
+    
 
 
     void TransMult::assertIJK(size_t i , size_t j , size_t k) const {
@@ -43,16 +50,73 @@ namespace Opm {
     }
 
 
-    double TransMult::getMultiplier(size_t globalIndex,  FaceDir::DirEnum /* Unused for now: faceDir*/) const {
+    double TransMult::getMultiplier(size_t globalIndex,  FaceDir::DirEnum faceDir) const {
         if (globalIndex < m_nx * m_ny * m_nz)
-            return 1.0;
+            return getMultiplier__(globalIndex , faceDir);
         else
             throw std::invalid_argument("Invalid global index");
     }
 
+    double TransMult::getMultiplier__(size_t globalIndex,  FaceDir::DirEnum faceDir) const {
+        if (hasDirectionProperty( faceDir )) {
+            std::shared_ptr<const GridProperty<double> > property = m_trans.at(faceDir);
+            return property->iget( globalIndex );
+        } else
+            return 1.0;
+    }
+    
+    
+
 
     double TransMult::getMultiplier(size_t i , size_t j , size_t k, FaceDir::DirEnum faceDir) const {
         size_t globalIndex = getGlobalIndex(i,j,k);
-        return getMultiplier( globalIndex , faceDir );
+        return getMultiplier__( globalIndex , faceDir );
     }
+
+    
+    bool TransMult::hasDirectionProperty(FaceDir::DirEnum faceDir) const {
+        if (m_trans.count(faceDir) == 1)
+            return true;
+        else
+            return false;
+    }
+    
+
+    void TransMult::insertNewProperty(FaceDir::DirEnum faceDir) {
+        GridPropertySupportedKeywordInfo<double> kwInfo(m_names[faceDir] , 1.0 , "1");
+        std::shared_ptr<GridProperty<double> > property = std::make_shared<GridProperty<double> >( m_nx , m_ny , m_nz , kwInfo );
+        std::pair<FaceDir::DirEnum , std::shared_ptr<GridProperty<double> > > pair(faceDir , property); 
+        
+        m_trans.insert( pair );
+    }
+
+    
+    std::shared_ptr<GridProperty<double> > TransMult::getDirectionProperty(FaceDir::DirEnum faceDir) {
+        if (m_trans.count(faceDir) == 0) 
+            insertNewProperty(faceDir);
+        
+        return m_trans.at( faceDir );
+    }
+    
+
+    void TransMult::applyMULTFLT( std::shared_ptr<const FaultCollection> faults) {
+        for (size_t faultIndex = 0; faultIndex < faults->size(); faultIndex++) {
+            std::shared_ptr<const Fault> fault = faults->getFault( faultIndex );
+            double transMult = fault->getTransMult();
+
+            for (auto face_iter = fault->begin(); face_iter != fault->end(); ++face_iter) {
+                std::shared_ptr<const FaultFace> face = *face_iter;
+                FaceDir::DirEnum faceDir = face->getDir();
+                std::shared_ptr<GridProperty<double> > multProperty = getDirectionProperty(faceDir);
+                std::vector<double>& data = multProperty->getData();
+                
+                for (auto cell_iter = face->begin(); cell_iter != face->end(); ++cell_iter) {
+                    size_t globalIndex = *cell_iter;
+                    data[globalIndex] *= transMult;
+                }
+            }
+            
+        }
+    }
+    
 }
