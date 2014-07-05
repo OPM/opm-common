@@ -25,6 +25,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Grid/Fault.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultFace.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
 
@@ -71,4 +72,31 @@ BOOST_AUTO_TEST_CASE(CreateFace) {
         }
     }
     BOOST_CHECK_EQUAL( face1->getDir() , Opm::FaceDir::YPlus);
+}
+
+
+BOOST_AUTO_TEST_CASE(CreateFault) {
+    Opm::Fault fault("FAULT1");
+    BOOST_CHECK_EQUAL( "FAULT1" , fault.getName());
+    BOOST_CHECK_EQUAL( 1.0 , fault.getTransMult());
+}
+
+
+
+BOOST_AUTO_TEST_CASE(AddFaceToFaults) {
+    Opm::Fault fault("FAULT1");
+    std::shared_ptr<Opm::FaultFace> face1 = std::make_shared<Opm::FaultFace>(10,10,10,0, 2  , 0 , 0 , 0 , 0 , Opm::FaceDir::YPlus);
+    std::shared_ptr<Opm::FaultFace> face2 = std::make_shared<Opm::FaultFace>(10,10,10,0, 2  , 1 , 1 , 0 , 0 , Opm::FaceDir::YPlus);
+    std::shared_ptr<Opm::FaultFace> face3 = std::make_shared<Opm::FaultFace>(10,10,10,0, 2  , 0 , 0 , 1 , 1 , Opm::FaceDir::YPlus);
+    fault.addFace( face1 );
+    fault.addFace( face2 );
+    fault.addFace( face3 );
+
+    {
+        auto iter = fault.begin();
+        BOOST_CHECK_EQUAL( *iter , face1 ); ++iter;
+        BOOST_CHECK_EQUAL( *iter , face2 ); ++iter;
+        BOOST_CHECK_EQUAL( *iter , face3 ); ++iter;
+    }    
+    
 }
