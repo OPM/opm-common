@@ -17,6 +17,9 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _ORDERED_MAP_
+#define _ORDERED_MAP_
+
 #include <unordered_map>
 #include <vector>
 #include <string>
@@ -88,3 +91,4 @@ public:
 };
 }
 
+#endif 
