@@ -150,7 +150,7 @@ public:
     }
 
 
-    const std::vector<T>& getData() {
+    std::vector<T>& getData() {
         return m_data;
     }
 
