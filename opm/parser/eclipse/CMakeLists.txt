@@ -80,7 +80,8 @@ EclipseState/Grid/Box.cpp
 EclipseState/Grid/BoxManager.cpp
 EclipseState/Grid/FaceDir.cpp
 EclipseState/Grid/TransMult.cpp        
-EclipseState/Grid/EclipseGrid.cpp)
+EclipseState/Grid/EclipseGrid.cpp
+EclipseState/Grid/FaultFace.cpp)
 
 set (utility_source
 Utility/SingleRecordTable.cpp
@@ -141,7 +142,8 @@ EclipseState/Grid/GridProperties.hpp
 EclipseState/Grid/Box.hpp
 EclipseState/Grid/BoxManager.hpp
 EclipseState/Grid/FaceDir.hpp
-EclipseState/Grid/TransMult.hpp        
+EclipseState/Grid/TransMult.hpp       
+EclipseState/Grid/FaultFace.hpp
 #
 Utility/WconinjeWrapper.hpp
 Utility/CompdatWrapper.hpp

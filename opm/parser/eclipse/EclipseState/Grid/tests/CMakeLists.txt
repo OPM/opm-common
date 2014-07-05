@@ -31,3 +31,8 @@ add_executable(runTransMultTests TransMultTests.cpp)
 target_link_libraries(runTransMultTests Parser ${Boost_LIBRARIES})
 add_test(NAME runTransMultTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runTransMultTests )
 
+
+add_executable(runFaultTests FaultTests.cpp)
+target_link_libraries(runFaultTests Parser ${Boost_LIBRARIES})
+add_test(NAME runFaultTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runFaultTests )
+
