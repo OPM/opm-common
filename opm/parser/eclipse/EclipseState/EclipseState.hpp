@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
 
 #include <set>
 #include <memory>
@@ -50,6 +51,7 @@ namespace Opm {
 
         void loadGridPropertyFromDeckKeyword(std::shared_ptr<const Box> inputBox , DeckKeywordConstPtr deckKeyword);
 
+        std::shared_ptr<const FaultCollection> getFaults() const;
         std::shared_ptr<const TransMult> getTransMult() const;
     private:
         void initSchedule(DeckConstPtr deck);
@@ -58,6 +60,8 @@ namespace Opm {
         void initTitle(DeckConstPtr deck);
         void initProperties(DeckConstPtr deck);
         void initTransMult(DeckConstPtr deck);
+        void initFaults(DeckConstPtr deck);
+        void setMULTFLT(std::shared_ptr<const Section> section) const;
 
         double getSIScaling(const std::string &dimensionString) const;
 
@@ -82,6 +86,7 @@ namespace Opm {
         std::shared_ptr<GridProperties<int> > m_intGridProperties;
         std::shared_ptr<GridProperties<double> > m_doubleGridProperties;
         std::shared_ptr<TransMult> m_transMult;
+        std::shared_ptr<FaultCollection> m_faults;
     };
 
     typedef std::shared_ptr<EclipseState> EclipseStatePtr;

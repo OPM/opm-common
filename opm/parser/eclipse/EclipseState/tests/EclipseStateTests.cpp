@@ -51,7 +51,18 @@ static DeckPtr createDeck() {
         "1000*0.25 /\n"
         "TOPS\n"
         "1000*0.25 /\n"
+        "FAULTS \n"
+        "  'F1'  1  1  1  4   1  4  'X' / \n"
+        "  'F2'  5  5  1  4   1  4  'X-' / \n"
+        "/\n"
+        "MULTFLT \n"
+        "  'F1' 0.50 / \n"
+        "  'F2' 0.50 / \n"
+        "/\n"
         "EDIT\n"
+        "MULTFLT /\n"
+        "  'F2' 0.25 / \n"
+        "/\n"
         "OIL\n"
         "\n"
         "GAS\n"
@@ -145,6 +156,29 @@ BOOST_AUTO_TEST_CASE(GetTransMult) {
     std::shared_ptr<const TransMult> transMult = state.getTransMult();
     
     
-    BOOST_CHECK_EQUAL( 1.0 , transMult->getMultiplier(0,0,0,FaceDir::XPlus));
+    BOOST_CHECK_EQUAL( 1.0 , transMult->getMultiplier(1,0,0,FaceDir::XPlus));
     BOOST_CHECK_THROW(transMult->getMultiplier(1000 , FaceDir::XPlus) , std::invalid_argument);
 }
+
+
+
+BOOST_AUTO_TEST_CASE(GetFaults) {
+    DeckPtr deck = createDeck();
+    EclipseState state(deck);
+    std::shared_ptr<const FaultCollection> faults = state.getFaults();
+
+    BOOST_CHECK( faults->hasFault("F1") );
+    BOOST_CHECK( faults->hasFault("F2") );
+
+    std::shared_ptr<Fault> F1 = faults->getFault("F1");
+    std::shared_ptr<Fault> F2 = faults->getFault("F2");
+
+    BOOST_CHECK_EQUAL( 0.50 , F1->getTransMult());
+    BOOST_CHECK_EQUAL( 0.25 , F2->getTransMult());
+
+    std::shared_ptr<const TransMult> transMult = state.getTransMult();
+    BOOST_CHECK_EQUAL( transMult->getMultiplier(0 , 0 , 0 , FaceDir::XPlus) , 0.50 );
+    BOOST_CHECK_EQUAL( transMult->getMultiplier(4 , 3 , 0 , FaceDir::XMinus) , 0.25 );
+    BOOST_CHECK_EQUAL( transMult->getMultiplier(4 , 3 , 0 , FaceDir::ZPlus) , 1.00 );
+}
+
