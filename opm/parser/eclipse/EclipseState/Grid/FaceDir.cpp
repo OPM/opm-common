@@ -43,7 +43,7 @@ namespace Opm {
             if ((stringValue == "Z-") || (stringValue == "K-"))
                 return ZMinus;
             
-            throw std::invalid_argument("The string value" + stringValue + " could not be converted to a FaceDir enum value");
+            throw std::invalid_argument("The string value " + stringValue + " could not be converted to a FaceDir enum value");
         }
     }
 }
