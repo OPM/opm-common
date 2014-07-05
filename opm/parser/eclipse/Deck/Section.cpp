@@ -41,6 +41,10 @@ namespace Opm {
         }
     }
 
+    size_t Section::count(const std::string& keyword) const {
+        return m_keywords.numKeywords( keyword );
+    }
+
     const std::string& Section::name() const {
         return m_name;
     }

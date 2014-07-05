@@ -45,6 +45,8 @@ BOOST_AUTO_TEST_CASE(SectionTest) {
     BOOST_CHECK_EQUAL(false, section.hasKeyword("TEST4"));
 
     BOOST_CHECK_EQUAL( section.name() , "TEST1" );
+    BOOST_CHECK_EQUAL( section.count("TEST1") , 1);
+
 }
 
 BOOST_AUTO_TEST_CASE(IteratorTest) {
