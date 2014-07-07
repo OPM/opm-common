@@ -24,7 +24,11 @@
 #include <memory>
 #include <set>
 
+#if HAVE_REGEX
+#include <regex>
+#else
 #include <boost/regex.hpp>
+#endif
 
 #include <opm/json/JsonObject.hpp>
 
@@ -136,7 +140,11 @@ namespace Opm {
         std::string m_name;
         DeckNameSet m_deckNames;
         std::string m_matchRegexString;
-        boost::basic_regex<std::string::value_type> m_matchRegex;
+#if HAVE_REGEX
+        std::regex m_matchRegex;
+#else
+        boost::regex m_matchRegex;
+#endif
         ParserRecordPtr m_record;
         enum ParserKeywordSizeEnum m_keywordSizeType;
         size_t m_fixedSize;

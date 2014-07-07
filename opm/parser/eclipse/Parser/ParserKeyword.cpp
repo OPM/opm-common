@@ -508,10 +508,14 @@ namespace Opm {
 
     void ParserKeyword::setMatchRegex(const std::string& deckNameRegexp) {
         try {
+#if HAVE_REGEX
+            m_matchRegex = std::regex(deckNameRegexp);
+#else
             m_matchRegex = boost::regex(deckNameRegexp);
+#endif
             m_matchRegexString = deckNameRegexp;
         }
-        catch (const boost::bad_expression &e) {
+        catch (const std::exception &e) {
             std::cerr << "Warning: Malformed regular expression for keyword '" << getName() << "':\n"
                       << "\n"
                       << e.what() << "\n"
@@ -525,8 +529,14 @@ namespace Opm {
             return false;
         else if (m_deckNames.count(deckKeywordName) > 0)
             return true;
-        else if (hasMatchRegex())
+        else if (hasMatchRegex()) {
+#if HAVE_REGEX
+            return std::regex_match(deckKeywordName, m_matchRegex);
+#else
             return boost::regex_match(deckKeywordName, m_matchRegex);
+#endif
+        }
+
         return false;
     }
 
