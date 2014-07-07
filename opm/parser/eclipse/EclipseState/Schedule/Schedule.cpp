@@ -187,6 +187,13 @@ namespace Opm {
             for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
                 WellPtr well = *wellIter;
 
+                if (well->isAvailableForGroupControl(currentStep)) {
+                    properties.addProductionControl(WellProducer::GRUP);
+                }
+                else {
+                    properties.dropProductionControl(WellProducer::GRUP);
+                }
+
                 if (status != WellCommon::SHUT) {
                     const std::string& cmodeString =
                         record->getItem("CMODE")->getTrimmedString(0);
@@ -267,6 +274,11 @@ namespace Opm {
                     properties.dropInjectionControl(WellInjector::BHP);
                 else
                     properties.addInjectionControl(WellInjector::BHP);
+
+                if (well->isAvailableForGroupControl(currentStep))
+                    properties.addInjectionControl(WellInjector::GRUP);
+                else
+                    properties.dropInjectionControl(WellInjector::GRUP);
                 {
                     const std::string& cmodeString = record->getItem("CMODE")->getTrimmedString(0);
                     WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( cmodeString );
