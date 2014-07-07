@@ -13,6 +13,11 @@ target_link_libraries(runWellTests Parser ${Boost_LIBRARIES})
 add_test(NAME runWellTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runWellTests )
 
 
+add_executable(runWellPropertiesTests WellPropertiesTests.cpp)
+target_link_libraries(runWellPropertiesTests Parser ${Boost_LIBRARIES})
+add_test(NAME runWellPropertiesTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runWellPropertiesTests )
+
+
 add_executable(runWellSetTests WellSetTests.cpp)
 target_link_libraries(runWellSetTests Parser ${Boost_LIBRARIES})
 add_test(NAME runWellSetTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runWellSetTests )

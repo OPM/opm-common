@@ -25,6 +25,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
 
 #include <boost/optional.hpp>
 
@@ -33,52 +34,6 @@
 #include <limits>
 
 namespace Opm {
-
-    typedef struct WellProductionProperties {
-        double  OilRate;
-        double  GasRate;
-        double  WaterRate;
-        double  LiquidRate;
-        double  ResVRate;
-        double  BHPLimit;
-        double  THPLimit;
-        bool    predictionMode;
-        int     productionControls;
-        WellProducer::ControlModeEnum controlMode;
-
-        WellProductionProperties() {
-            OilRate=0.0; 
-            GasRate=0.0; 
-            WaterRate=0.0; 
-            LiquidRate=0.0; 
-            ResVRate=0.0;
-            BHPLimit=0.0; 
-            THPLimit=0.0; 
-            predictionMode=true; 
-            productionControls=0;
-            controlMode = WellProducer::ORAT;
-        }
-
-        bool hasProductionControl(WellProducer::ControlModeEnum controlModeArg) const {
-            if (productionControls & controlModeArg)
-                return true;
-            else
-                return false;
-        }
-
-        void dropProductionControl(WellProducer::ControlModeEnum controlModeArg) {
-            if ((productionControls & controlModeArg) != 0) {
-                productionControls -= controlModeArg;
-            }
-        }
-
-        void addProductionControl(WellProducer::ControlModeEnum controlModeArg) {
-            if ((productionControls & controlModeArg) == 0) {
-                productionControls += controlModeArg;
-            }
-        }
-    } WellProductionProperties;
-
 
     typedef struct WellInjectionProperties {
         double  surfaceInjectionRate;

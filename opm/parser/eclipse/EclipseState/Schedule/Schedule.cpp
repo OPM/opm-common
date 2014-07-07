@@ -19,6 +19,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -166,114 +167,6 @@ namespace Opm {
         }
     }
 
-    namespace {
-        WellProductionProperties
-        historyProperties(DeckRecordConstPtr record)
-        {
-            WellProductionProperties p;
-
-            p.predictionMode = false;
-
-            // Modes supported in WCONHIST just from {O,W,G}RAT values
-            //
-            // Note: The default value of observed {O,W,G}RAT is zero
-            // (numerically) whence the following control modes are
-            // unconditionally supported.
-            const std::vector<std::string> controlModes{
-                    "ORAT", "WRAT", "GRAT", "LRAT", "RESV"
-                };
-
-            for (std::vector<std::string>::const_iterator
-                     mode = controlModes.begin(), end = controlModes.end();
-                 mode != end; ++mode)
-            {
-                const WellProducer::ControlModeEnum cmode =
-                    WellProducer::ControlModeFromString(*mode);
-
-                p.addProductionControl(cmode);
-            }
-
-            // BHP mode needs explicit value
-            if (! record->getItem("BHP")->defaultApplied()) {
-                p.BHPLimit = record->getItem("BHP")->getSIDouble(0);
-
-                p.addProductionControl(WellProducer::BHP);
-            }
-
-            return p;
-        }
-
-        WellProductionProperties
-        predictionProperties(DeckRecordConstPtr record)
-        {
-            WellProductionProperties p;
-
-            p.LiquidRate = record->getItem("LRAT")->getSIDouble(0);
-            p.ResVRate   = record->getItem("RESV")->getSIDouble(0);
-            p.BHPLimit   = record->getItem("BHP" )->getSIDouble(0);
-            p.THPLimit   = record->getItem("THP" )->getSIDouble(0);
-
-            p.predictionMode = true;
-
-            const std::vector<std::string> controlModes{
-                    "ORAT", "WRAT", "GRAT", "LRAT",
-                    "RESV", "BHP" , "THP"
-                };
-
-            for (std::vector<std::string>::const_iterator
-                     mode = controlModes.begin(), end = controlModes.end();
-                 mode != end; ++mode)
-            {
-                if (! record->getItem(*mode)->defaultApplied()) {
-                    const WellProducer::ControlModeEnum cmode =
-                        WellProducer::ControlModeFromString(*mode);
-
-                    p.addProductionControl(cmode);
-                }
-            }
-
-            return p;
-        }
-
-        WellProductionProperties
-        producerProperties(DeckRecordConstPtr     record,
-                           WellCommon::StatusEnum status,
-                           bool                   is_pred,
-                           const std::string&     wname)
-        {
-            WellProductionProperties p;
-
-            if (is_pred) {
-                p = predictionProperties(record);
-            }
-            else {
-                p = historyProperties(record);
-            }
-
-            p.WaterRate = record->getItem("WRAT")->getSIDouble(0);
-            p.OilRate   = record->getItem("ORAT")->getSIDouble(0);
-            p.GasRate   = record->getItem("GRAT")->getSIDouble(0);
-
-            if (status != WellCommon::SHUT) {
-                const std::string& cmodeString =
-                    record->getItem("CMODE")->getTrimmedString(0);
-
-                WellProducer::ControlModeEnum control =
-                    WellProducer::ControlModeFromString(cmodeString);
-
-                if (p.hasProductionControl(control)) {
-                    p.controlMode = control;
-                }
-		else {
-                    throw std::invalid_argument("Tried to set invalid control: " +
-                                                cmodeString + " for well: " + wname);
-		}
-            }
-
-            return p;
-        }
-    } // namespace anonymous
-
     void Schedule::handleWCONProducer(DeckKeywordConstPtr keyword, size_t currentStep, bool isPredictionMode) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
@@ -284,15 +177,32 @@ namespace Opm {
             const WellCommon::StatusEnum status =
                 WellCommon::StatusFromString(record->getItem("STATUS")->getTrimmedString(0));
 
-            const WellProductionProperties& properties =
-                producerProperties(record, status,
-                                   isPredictionMode,
-                                   wellNamePattern);
+            WellProductionProperties properties =
+                ((isPredictionMode)
+                 ? WellProductionProperties::prediction(record)
+                 : WellProductionProperties::history   (record));
 
             const std::vector<WellPtr>& wells = getWells(wellNamePattern);
 
             for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
                 WellPtr well = *wellIter;
+
+                if (status != WellCommon::SHUT) {
+                    const std::string& cmodeString =
+                        record->getItem("CMODE")->getTrimmedString(0);
+
+                    WellProducer::ControlModeEnum control =
+                        WellProducer::ControlModeFromString(cmodeString);
+
+                    if (properties.hasProductionControl(control)) {
+                        properties.controlMode = control;
+                    }
+                    else {
+                        throw std::invalid_argument("Tried to set invalid control: " +
+                                                    cmodeString + " for well: " +
+                                                    wellNamePattern);
+                    }
+                }
 
                 well->setStatus( currentStep , status );
                 well->setProductionProperties(currentStep, properties);

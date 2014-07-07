@@ -66,6 +66,7 @@ EclipseState/EclipseState.cpp
 EclipseState/Schedule/TimeMap.cpp 
 EclipseState/Schedule/Schedule.cpp 
 EclipseState/Schedule/Well.cpp
+EclipseState/Schedule/WellProductionProperties.cpp
 EclipseState/Schedule/WellSet.cpp
 EclipseState/Schedule/Group.cpp
 EclipseState/Schedule/Completion.cpp
@@ -123,6 +124,7 @@ EclipseState/EclipseState.hpp
 EclipseState/Schedule/TimeMap.hpp
 EclipseState/Schedule/Schedule.hpp
 EclipseState/Schedule/Well.hpp
+EclipseState/Schedule/WellProductionProperties.hpp
 EclipseState/Schedule/WellSet.hpp
 EclipseState/Schedule/Group.hpp
 EclipseState/Schedule/DynamicState.hpp

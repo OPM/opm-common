@@ -32,6 +32,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
 
 static Opm::TimeMapPtr createXDaysTimeMap(size_t numDays) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
