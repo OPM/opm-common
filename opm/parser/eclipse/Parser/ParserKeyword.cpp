@@ -508,8 +508,8 @@ namespace Opm {
 
     void ParserKeyword::setMatchRegex(const std::string& deckNameRegexp) {
         try {
-#if HAVE_REGEX
-            m_matchRegex = std::regex(deckNameRegexp);
+#ifdef HAVE_REGEX
+            m_matchRegex = std::regex(deckNameRegexp, std::regex::extended);
 #else
             m_matchRegex = boost::regex(deckNameRegexp);
 #endif
@@ -530,7 +530,7 @@ namespace Opm {
         else if (m_deckNames.count(deckKeywordName) > 0)
             return true;
         else if (hasMatchRegex()) {
-#if HAVE_REGEX
+#ifdef HAVE_REGEX
             return std::regex_match(deckKeywordName, m_matchRegex);
 #else
             return boost::regex_match(deckKeywordName, m_matchRegex);

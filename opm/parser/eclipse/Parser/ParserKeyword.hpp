@@ -24,7 +24,7 @@
 #include <memory>
 #include <set>
 
-#if HAVE_REGEX
+#ifdef HAVE_REGEX
 #include <regex>
 #else
 #include <boost/regex.hpp>
@@ -140,7 +140,7 @@ namespace Opm {
         std::string m_name;
         DeckNameSet m_deckNames;
         std::string m_matchRegexString;
-#if HAVE_REGEX
+#ifdef HAVE_REGEX
         std::regex m_matchRegex;
 #else
         boost::regex m_matchRegex;
