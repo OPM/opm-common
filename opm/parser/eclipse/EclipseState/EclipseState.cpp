@@ -79,9 +79,7 @@ namespace Opm {
         EclipseGridConstPtr grid = getEclipseGrid();
         m_faults = std::make_shared<FaultCollection>( grid->getNX() , grid->getNY() , grid->getNZ());
         std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
-        std::shared_ptr<Opm::EDITSection> editSection(new Opm::EDITSection(deck) );
 
-        
         for (size_t index=0; index < gridSection->count("FAULTS"); index++) {
             DeckKeywordConstPtr faultsKeyword = gridSection->getKeyword("FAULTS" , index);
             for (auto iter = faultsKeyword->begin(); iter != faultsKeyword->end(); ++iter) {
@@ -112,7 +110,12 @@ namespace Opm {
         }
         
         setMULTFLT( gridSection );
-        setMULTFLT( editSection );
+
+        if (Section::hasEDIT(deck)) {
+            std::shared_ptr<Opm::EDITSection> editSection(new Opm::EDITSection(deck) );
+            setMULTFLT( editSection );
+        }
+
         m_transMult->applyMULTFLT( m_faults );
     }
 
