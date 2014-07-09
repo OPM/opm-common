@@ -150,7 +150,13 @@ public:
     }
 
 
-    std::vector<T>& getData() {
+    void multiplyValueAtIndex(size_t index, T factor) {
+        m_data[index] *= factor;
+    }
+
+
+
+    const std::vector<T>& getData() {
         return m_data;
     }
 

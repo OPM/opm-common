@@ -108,15 +108,13 @@ namespace Opm {
                 std::shared_ptr<const FaultFace> face = *face_iter;
                 FaceDir::DirEnum faceDir = face->getDir();
                 std::shared_ptr<GridProperty<double> > multProperty = getDirectionProperty(faceDir);
-                std::vector<double>& data = multProperty->getData();
-                
+                                
                 for (auto cell_iter = face->begin(); cell_iter != face->end(); ++cell_iter) {
                     size_t globalIndex = *cell_iter;
-                    data[globalIndex] *= transMult;
+                    multProperty->multiplyValueAtIndex( globalIndex , transMult);
                 }
             }
             
         }
     }
-    
 }
