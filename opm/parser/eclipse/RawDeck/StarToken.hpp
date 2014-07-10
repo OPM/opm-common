@@ -24,26 +24,24 @@
 #include <iostream>
 #include <cstdlib> // strtol, strtod
 
+#include <boost/lexical_cast.hpp>
+
 #define STAR    '*'
 #define C_EOS  '\0'
 
 namespace Opm {
 
     bool tokenContainsStar(const std::string& token);
-    
+
     template <class T>
-    T readValueToken(const std::string& /* valueToken */) {
-        return 0;
+    T readValueToken(const std::string& valueToken ) {
+        try {
+            return boost::lexical_cast<T>(valueToken);
+        }
+        catch (boost::bad_lexical_cast&) {
+            throw std::invalid_argument("Unable to parse string" + valueToken + " to typeid: " + typeid(T).name());
+        }
     }
-
-    template <>
-    std::string readValueToken(const std::string& valueToken);
-
-    template <>
-    double readValueToken(const std::string& valueToken);
-
-    template <>
-    int readValueToken(const std::string& valueToken);
 
 
 template <class T>

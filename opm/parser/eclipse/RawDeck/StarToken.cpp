@@ -42,35 +42,4 @@ namespace Opm {
             }
         }
     }
-
-  
-    template <>
-    int readValueToken(const std::string& valueToken) {
-        try {
-            return boost::lexical_cast<int>(valueToken);
-        }
-        catch (boost::bad_lexical_cast&) {
-            throw std::invalid_argument("Unable to parse string" + valueToken + " to an integer");
-        }
-    }
-    
-
-    template <>
-    double readValueToken(const std::string& valueToken) {
-        try {
-            return boost::lexical_cast<double>(valueToken);
-        }
-        catch (boost::bad_lexical_cast&) {
-            throw std::invalid_argument("Unable to parse string " + valueToken + " to a double");
-        }
-    }
-
-
-    template <>
-    std::string readValueToken(const std::string& valueToken) {
-        return valueToken;
-    }
-
-
-    
 }

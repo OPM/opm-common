@@ -120,3 +120,10 @@ BOOST_AUTO_TEST_CASE( ContainsStar_WithStar_ReturnsTrue ) {
     
     BOOST_CHECK_EQUAL( false , Opm::tokenContainsStar("12") );
 }
+
+BOOST_AUTO_TEST_CASE( readValueToken_basic_validity_tests ) {
+    BOOST_CHECK_THROW( Opm::readValueToken<int>("3.3"), std::invalid_argument );
+    BOOST_CHECK_THROW( Opm::readValueToken<double>("truls"), std::invalid_argument );
+    BOOST_CHECK_EQUAL( "3.3", Opm::readValueToken<std::string>("3.3") );
+    BOOST_CHECK_EQUAL( "OLGA", Opm::readValueToken<std::string>("OLGA") );
+}
