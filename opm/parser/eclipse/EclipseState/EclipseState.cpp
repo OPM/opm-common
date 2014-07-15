@@ -39,7 +39,7 @@ namespace Opm {
         initSchedule(deck);
         initTitle(deck);
         initProperties(deck);
-        initTransMult(deck);
+        initTransMult();
         initFaults(deck);
     }
     
@@ -69,12 +69,26 @@ namespace Opm {
         schedule = ScheduleConstPtr( new Schedule(deck) );
     }
 
-    void EclipseState::initTransMult(DeckConstPtr deck) {
+    void EclipseState::initTransMult() {
         EclipseGridConstPtr grid = getEclipseGrid();
         m_transMult = std::make_shared<TransMult>( grid->getNX() , grid->getNY() , grid->getNZ());
+
+        if (hasDoubleGridProperty("MULTX"))
+            m_transMult->applyMULT(getDoubleGridProperty("MULTX"), FaceDir::XPlus);
+        if (hasDoubleGridProperty("MULTX-"))
+            m_transMult->applyMULT(getDoubleGridProperty("MULTX-"), FaceDir::XMinus);
+
+        if (hasDoubleGridProperty("MULTY"))
+            m_transMult->applyMULT(getDoubleGridProperty("MULTY"), FaceDir::YPlus);
+        if (hasDoubleGridProperty("MULTY-"))
+            m_transMult->applyMULT(getDoubleGridProperty("MULTY-"), FaceDir::YMinus);
+
+        if (hasDoubleGridProperty("MULTZ"))
+            m_transMult->applyMULT(getDoubleGridProperty("MULTZ"), FaceDir::ZPlus);
+        if (hasDoubleGridProperty("MULTZ-"))
+            m_transMult->applyMULT(getDoubleGridProperty("MULTZ-"), FaceDir::ZMinus);
     }
 
-    
     void EclipseState::initFaults(DeckConstPtr deck) {
         EclipseGridConstPtr grid = getEclipseGrid();
         m_faults = std::make_shared<FaultCollection>( grid->getNX() , grid->getNY() , grid->getNZ());

@@ -46,6 +46,7 @@ namespace Opm {
         double getMultiplier(size_t i , size_t j , size_t k, FaceDir::DirEnum faceDir) const;
         bool hasDirectionProperty(FaceDir::DirEnum faceDir) const;
         std::shared_ptr<GridProperty<double> > getDirectionProperty(FaceDir::DirEnum faceDir);
+        void applyMULT(std::shared_ptr<const GridProperty<double> > srcMultProp, FaceDir::DirEnum faceDir);
         void applyMULTFLT( std::shared_ptr<const FaultCollection> faults);
 
     private:

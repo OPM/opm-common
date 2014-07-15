@@ -59,7 +59,7 @@ namespace Opm {
         void initPhases(DeckConstPtr deck);
         void initTitle(DeckConstPtr deck);
         void initProperties(DeckConstPtr deck);
-        void initTransMult(DeckConstPtr deck);
+        void initTransMult();
         void initFaults(DeckConstPtr deck);
         void setMULTFLT(std::shared_ptr<const Section> section) const;
 

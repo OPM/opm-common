@@ -80,7 +80,6 @@ namespace Opm {
         else
             return false;
     }
-    
 
     void TransMult::insertNewProperty(FaceDir::DirEnum faceDir) {
         GridPropertySupportedKeywordInfo<double> kwInfo(m_names[faceDir] , 1.0 , "1");
@@ -97,7 +96,15 @@ namespace Opm {
         
         return m_trans.at( faceDir );
     }
-    
+
+    void TransMult::applyMULT(std::shared_ptr<const GridProperty<double> > srcProp, FaceDir::DirEnum faceDir)
+    {
+        std::shared_ptr<GridProperty<double> > dstProp = getDirectionProperty(faceDir);
+
+        const std::vector<double> &srcData = srcProp->getData();
+        for (size_t i = 0; i < srcData.size(); ++i)
+            dstProp->multiplyValueAtIndex(i, srcData[i]);
+    }
 
     void TransMult::applyMULTFLT( std::shared_ptr<const FaultCollection> faults) {
         for (size_t faultIndex = 0; faultIndex < faults->size(); faultIndex++) {
