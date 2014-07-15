@@ -21,6 +21,7 @@
 #include <boost/algorithm/string.hpp>
 #include "RawKeyword.hpp"
 #include "RawConsts.hpp"
+#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <iostream>
 
 namespace Opm {
@@ -121,7 +122,15 @@ namespace Opm {
     }
 
     bool RawKeyword::tryParseKeyword(const std::string& keywordCandidate, std::string& result) {
-        result = boost::trim_right_copy_if(keywordCandidate.substr(0, 8), boost::is_any_of("- \t"));
+        // get rid of comments
+        size_t commentPos = keywordCandidate.find("--");
+        if (commentPos != std::string::npos)
+            result = keywordCandidate.substr(0, commentPos);
+        else
+            result = keywordCandidate;
+
+        // white space is for dicks!
+        result = boost::trim_right_copy_if(result.substr(0, 8), boost::is_any_of(" \t"));
         if (isValidKeyword(result))
             return true;
         else
@@ -129,21 +138,7 @@ namespace Opm {
     }
 
     bool RawKeyword::isValidKeyword(const std::string& keywordCandidate) {
-        std::string keywordRegex = "^[A-Z][A-Z,0-9]{1,7}$";
-        int status;
-        regex_t regularExpression;
-        regmatch_t rm;
-        if (regcomp(&regularExpression, keywordRegex.c_str(), REG_EXTENDED) != 0) {
-            throw std::runtime_error("Unable to compile regular expression for keyword! Expression: " + keywordRegex);
-        }
-
-        status = regexec(&regularExpression, keywordCandidate.c_str(), 1, &rm, 0);
-        regfree(&regularExpression);
-
-        if (status == 0) {
-            return true;
-        }
-        return false;
+        return ParserKeyword::validDeckName(keywordCandidate);
     }
 
 
