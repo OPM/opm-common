@@ -154,9 +154,7 @@ public:
         m_data[index] *= factor;
     }
 
-
-
-    const std::vector<T>& getData() {
+    const std::vector<T>& getData() const {
         return m_data;
     }
 
