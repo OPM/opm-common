@@ -31,6 +31,7 @@ namespace Opm {
 
     class EclipseGrid {
     public:
+        EclipseGrid(const std::string& filename);
         EclipseGrid(std::shared_ptr<const RUNSPECSection> runspecSection, std::shared_ptr<const GRIDSection> gridSection);
         
         static bool hasCornerPointKeywords(std::shared_ptr<const GRIDSection> gridSection);
@@ -56,6 +57,7 @@ namespace Opm {
         void exportACTNUM( std::vector<int>& actnum) const;
         void resetACTNUM( const int * actnum);
         bool equal(const EclipseGrid& other) const;
+        void fwriteEGRID( const std::string& filename );
     private:
         std::shared_ptr<ecl_grid_type> m_grid;
 

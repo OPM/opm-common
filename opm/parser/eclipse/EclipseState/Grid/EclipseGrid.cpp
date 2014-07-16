@@ -30,6 +30,18 @@
 #include <ert/ecl/ecl_grid.h>
 namespace Opm {
 
+    /**
+       Will create an EclipseGrid instance based on an existing
+       GRID/EGRID file.
+    */
+    EclipseGrid::EclipseGrid(const std::string& filename ) {
+        ecl_grid_type * c_ptr = ecl_grid_load_case( filename.c_str() );
+        if (c_ptr)
+            m_grid.reset( c_ptr , ecl_grid_free );
+        else
+            throw std::invalid_argument("Could not load grid from binary file: " + filename);
+    }
+
     
     EclipseGrid::EclipseGrid(std::shared_ptr<const RUNSPECSection> runspecSection, std::shared_ptr<const GRIDSection> gridSection) {
         if (runspecSection->hasKeyword("DIMENS")) {
@@ -376,6 +388,11 @@ namespace Opm {
     
     void EclipseGrid::resetACTNUM( const int * actnum) {
         ecl_grid_reset_actnum( m_grid.get() , actnum );
+    }
+
+
+    void EclipseGrid::fwriteEGRID( const std::string& filename ) {
+        ecl_grid_fwrite_EGRID( m_grid.get() , filename.c_str() );
     }
 
 
