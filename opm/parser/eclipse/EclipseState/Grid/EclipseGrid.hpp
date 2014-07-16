@@ -54,6 +54,7 @@ namespace Opm {
         void exportCOORD( std::vector<double>& coord) const;
         void exportZCORN( std::vector<double>& zcorn) const;
         void exportACTNUM( std::vector<int>& actnum) const;
+        void resetACTNUM( const int * actnum);
         bool equal(const EclipseGrid& other) const;
     private:
         std::shared_ptr<ecl_grid_type> m_grid;

@@ -372,6 +372,12 @@ namespace Opm {
         ecl_grid_init_zcorn_data_double( m_grid.get() , zcorn.data() );
     }
 
+    
+    
+    void EclipseGrid::resetACTNUM( const int * actnum) {
+        ecl_grid_reset_actnum( m_grid.get() , actnum );
+    }
+
 
 
 }
