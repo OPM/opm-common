@@ -36,7 +36,7 @@ namespace Opm {
 
 class FaultCollection {
 public:
-    FaultCollection(size_t nx , size_t ny , size_t nz);
+    FaultCollection();
     size_t size() const;
     bool hasFault(const std::string& faultName) const;
     std::shared_ptr<Fault>  getFault(const std::string& faultName) const;
@@ -45,8 +45,6 @@ public:
     void setTransMult(const std::string& faultName , double transMult);
 
 private:
-
-    size_t m_nx, m_ny, m_nz;
     OrderedMap<std::shared_ptr<Fault > > m_faults;
 };
 }

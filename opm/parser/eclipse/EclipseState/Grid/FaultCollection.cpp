@@ -23,10 +23,7 @@
 
 namespace Opm {
 
-    FaultCollection::FaultCollection(size_t nx , size_t ny , size_t nz) :
-        m_nx(nx),
-        m_ny(ny),
-        m_nz(nz)
+    FaultCollection::FaultCollection()
     {
         
     }

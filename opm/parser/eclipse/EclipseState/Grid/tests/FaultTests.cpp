@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(AddFaceToFaults) {
 
 
 BOOST_AUTO_TEST_CASE(CreateFaultCollection) {
-    Opm::FaultCollection faults(100,10,6);
+    Opm::FaultCollection faults;
     BOOST_CHECK_EQUAL( faults.size() , 0 );
     BOOST_CHECK(! faults.hasFault("NO-NotThisOne"));
     BOOST_CHECK_THROW( faults.getFault("NO") , std::invalid_argument );
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(CreateFaultCollection) {
 
 
 BOOST_AUTO_TEST_CASE(AddFaultsToCollection) {
-    Opm::FaultCollection faults(10,10,10);
+    Opm::FaultCollection faults;
     std::shared_ptr<Opm::Fault> fault = std::make_shared<Opm::Fault>("FAULT");
     
     faults.addFault(fault);

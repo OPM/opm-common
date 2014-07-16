@@ -96,7 +96,7 @@ namespace Opm {
 
     void EclipseState::initFaults(DeckConstPtr deck) {
         EclipseGridConstPtr grid = getEclipseGrid();
-        m_faults = std::make_shared<FaultCollection>( grid->getNX() , grid->getNY() , grid->getNZ());
+        m_faults = std::make_shared<FaultCollection>();
         std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
 
         for (size_t index=0; index < gridSection->count("FAULTS"); index++) {
