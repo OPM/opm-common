@@ -391,10 +391,14 @@ namespace Opm {
     }
 
 
-    void EclipseGrid::fwriteEGRID( const std::string& filename ) {
+    void EclipseGrid::fwriteEGRID( const std::string& filename ) const {
         ecl_grid_fwrite_EGRID( m_grid.get() , filename.c_str() );
     }
 
+
+    const ecl_grid_type * EclipseGrid::c_ptr() const {
+        return m_grid.get();
+    }
 
 
 }

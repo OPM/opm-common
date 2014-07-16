@@ -57,7 +57,8 @@ namespace Opm {
         void exportACTNUM( std::vector<int>& actnum) const;
         void resetACTNUM( const int * actnum);
         bool equal(const EclipseGrid& other) const;
-        void fwriteEGRID( const std::string& filename );
+        void fwriteEGRID( const std::string& filename ) const;
+        const ecl_grid_type * c_ptr() const;
     private:
         std::shared_ptr<ecl_grid_type> m_grid;
 
