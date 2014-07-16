@@ -20,6 +20,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <boost/filesystem.hpp>
+#include <cstdio>
 
 #define BOOST_TEST_MODULE EclipseGridTests
 #include <boost/test/unit_test.hpp>
@@ -500,6 +501,73 @@ BOOST_AUTO_TEST_CASE(CornerPointSizeMismatchACTNUM) {
     Opm::DeckConstPtr deck = parser->parseString(deckData) ;
     std::shared_ptr<Opm::RUNSPECSection> runspecSection(new Opm::RUNSPECSection(deck) );
     std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
-    Opm::DeckKeywordConstPtr zcorn = gridSection->getKeyword("ZCORN");
     BOOST_CHECK_THROW(Opm::EclipseGrid( runspecSection , gridSection ) , std::invalid_argument);
 }
+
+
+
+BOOST_AUTO_TEST_CASE(ResetACTNUM) {
+    const char *deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        " 10 10 10 /\n"
+        "GRID\n"
+        "COORD\n"
+        "  726*1 / \n"
+        "ZCORN \n"
+        "  8000*1 / \n"
+        "EDIT\n"
+        "\n";
+ 
+    Opm::ParserPtr parser(new Opm::Parser());
+    Opm::DeckConstPtr deck = parser->parseString(deckData) ;
+    std::shared_ptr<Opm::RUNSPECSection> runspecSection(new Opm::RUNSPECSection(deck) );
+    std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
+    
+    Opm::EclipseGrid grid(runspecSection , gridSection );
+    BOOST_CHECK_EQUAL( 1000U , grid.getNumActive());
+    std::vector<int> actnum(1000);
+    actnum[0] = 1;
+    grid.resetACTNUM( actnum.data() );
+    BOOST_CHECK_EQUAL( 1U , grid.getNumActive() );
+    
+    grid.resetACTNUM( NULL );
+    BOOST_CHECK_EQUAL( 1000U , grid.getNumActive() );
+}
+
+
+BOOST_AUTO_TEST_CASE(LoadFromBinary) {
+    BOOST_CHECK_THROW(Opm::EclipseGrid( "No/does/not/exist" ) , std::invalid_argument);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(Fwrite) {
+    const char *deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        " 10 10 10 /\n"
+        "GRID\n"
+        "COORD\n"
+        "  726*1 / \n"
+        "ZCORN \n"
+        "  8000*1 / \n"
+        "EDIT\n"
+        "\n";
+ 
+    Opm::ParserPtr parser(new Opm::Parser());
+    Opm::DeckConstPtr deck = parser->parseString(deckData) ;
+    std::shared_ptr<Opm::RUNSPECSection> runspecSection(new Opm::RUNSPECSection(deck) );
+    std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
+    Opm::EclipseGrid grid1(runspecSection , gridSection );
+
+    grid1.fwriteEGRID( "TEST.EGRID" );
+
+    Opm::EclipseGrid grid2( "TEST.EGRID" );
+
+    BOOST_CHECK( grid1.equal( grid2 ));
+    remove("TEST.EGRID");
+}
+
