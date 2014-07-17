@@ -40,6 +40,7 @@ namespace Opm {
         EclipseState(DeckConstPtr deck);
         ScheduleConstPtr getSchedule() const;
         EclipseGridConstPtr getEclipseGrid() const;
+        EclipseGridPtr getEclipseGridCopy() const;
         bool hasPhase(enum Phase::PhaseEnum phase) const;
         std::string getTitle() const;
         bool supportsGridProperty(const std::string& keyword) const;

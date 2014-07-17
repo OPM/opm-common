@@ -49,6 +49,11 @@ namespace Opm {
     }
 
 
+    EclipseGridPtr EclipseState::getEclipseGridCopy() const {
+        return std::make_shared<EclipseGrid>( m_eclipseGrid->c_ptr() );
+    }
+
+
     ScheduleConstPtr EclipseState::getSchedule() const {
         return schedule;
     }
