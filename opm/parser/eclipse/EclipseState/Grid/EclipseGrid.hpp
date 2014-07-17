@@ -32,7 +32,9 @@ namespace Opm {
     class EclipseGrid {
     public:
         EclipseGrid(const std::string& filename);
+        EclipseGrid(const ecl_grid_type * src_ptr);
         EclipseGrid(std::shared_ptr<const RUNSPECSection> runspecSection, std::shared_ptr<const GRIDSection> gridSection);
+
         
         static bool hasCornerPointKeywords(std::shared_ptr<const GRIDSection> gridSection);
         static bool hasCartesianKeywords(std::shared_ptr<const GRIDSection> gridSection);

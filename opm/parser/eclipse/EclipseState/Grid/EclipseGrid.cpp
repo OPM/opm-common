@@ -35,11 +35,15 @@ namespace Opm {
        GRID/EGRID file.
     */
     EclipseGrid::EclipseGrid(const std::string& filename ) {
-        ecl_grid_type * c_ptr = ecl_grid_load_case( filename.c_str() );
-        if (c_ptr)
-            m_grid.reset( c_ptr , ecl_grid_free );
+        ecl_grid_type * new_ptr = ecl_grid_load_case( filename.c_str() );
+        if (new_ptr)
+            m_grid.reset( new_ptr , ecl_grid_free );
         else
             throw std::invalid_argument("Could not load grid from binary file: " + filename);
+    }
+
+    EclipseGrid::EclipseGrid(const ecl_grid_type * src_ptr) {
+        m_grid.reset( ecl_grid_alloc_copy( src_ptr ) , ecl_grid_free );
     }
 
     
