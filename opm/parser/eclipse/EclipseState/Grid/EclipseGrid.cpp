@@ -63,7 +63,7 @@ namespace Opm {
     }
 
     bool EclipseGrid::equal(const EclipseGrid& other) const {
-        return ecl_grid_compare( m_grid.get() , other.m_grid.get() , true , false );
+        return ecl_grid_compare( m_grid.get() , other.m_grid.get() , true , false , false );
     }
 
 
