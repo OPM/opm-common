@@ -81,6 +81,9 @@ namespace Opm {
     public:
         Well(const std::string& name, int headI, int headJ, double refDepth, Phase::PhaseEnum preferredPhase,
              TimeMapConstPtr timeMap, size_t creationTimeStep);
+        /// Use this constructor when reference depth is defaulted.
+        Well(const std::string& name, int headI, int headJ, Phase::PhaseEnum preferredPhase,
+             TimeMapConstPtr timeMap, size_t creationTimeStep);
         const std::string& name() const;
 
         bool hasBeenDefined(size_t timeStep) const;
@@ -92,6 +95,7 @@ namespace Opm {
 
         int    getHeadI() const;
         int    getHeadJ() const;
+        bool   getRefDepthDefaulted() const;
         double getRefDepth() const;
         Phase::PhaseEnum getPreferredPhase() const;
         
@@ -138,6 +142,7 @@ namespace Opm {
         // WELSPECS data - assumes this is not dynamic
         int m_headI;
         int m_headJ;
+        bool m_refDepthDefaulted;
         double m_refDepth;
         Phase::PhaseEnum m_preferredPhase;
     };
