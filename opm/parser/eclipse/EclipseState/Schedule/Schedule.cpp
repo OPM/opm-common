@@ -162,8 +162,13 @@ namespace Opm {
         if (well->getHeadJ() != record->getItem("HEAD_J")->getInt(0) - 1) {
             throw std::invalid_argument("Unable process WELSPECS for well " + well->name() + ", HEAD_J deviates from existing value");
         }
-        if (well->getRefDepth() != record->getItem("REF_DEPTH")->getSIDouble(0)) {
-            throw std::invalid_argument("Unable process WELSPECS for well " + well->name() + ", REF_DEPTH deviates from existing value");
+        if (well->getRefDepthDefaulted() != record->getItem("REF_DEPTH")->defaultApplied()) {
+            throw std::invalid_argument("Unable process WELSPECS for well " + well->name() + ", REF_DEPTH defaulted state deviates from existing value");
+        }
+        if (!well->getRefDepthDefaulted()) {
+            if (well->getRefDepth() != record->getItem("REF_DEPTH")->getSIDouble(0)) {
+                throw std::invalid_argument("Unable process WELSPECS for well " + well->name() + ", REF_DEPTH deviates from existing value");
+            }
         }
     }
 
