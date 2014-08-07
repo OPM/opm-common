@@ -79,7 +79,9 @@ namespace Opm {
 
     class Well {
     public:
-        Well(const std::string& name, int headI, int headJ, double refDepth, Phase::PhaseEnum preferredPhase,
+        Well(const std::string& name, int headI, int headJ,
+             bool refDepthDefaulted, double refDepth,
+             Phase::PhaseEnum preferredPhase,
              TimeMapConstPtr timeMap, size_t creationTimeStep);
         const std::string& name() const;
 
@@ -92,6 +94,7 @@ namespace Opm {
 
         int    getHeadI() const;
         int    getHeadJ() const;
+        bool   getRefDepthDefaulted() const;
         double getRefDepth() const;
         Phase::PhaseEnum getPreferredPhase() const;
         
@@ -138,6 +141,7 @@ namespace Opm {
         // WELSPECS data - assumes this is not dynamic
         int m_headI;
         int m_headJ;
+        bool m_refDepthDefaulted;
         double m_refDepth;
         Phase::PhaseEnum m_preferredPhase;
     };

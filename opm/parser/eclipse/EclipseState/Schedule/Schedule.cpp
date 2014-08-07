@@ -452,9 +452,10 @@ namespace Opm {
         // We change from eclipse's 1 - n, to a 0 - n-1 solution
         int headI = record->getItem("HEAD_I")->getInt(0) - 1;
         int headJ = record->getItem("HEAD_J")->getInt(0) - 1;
+        bool refDepthDefaulted = record->getItem("REF_DEPTH")->defaultApplied();
         double refDepth = record->getItem("REF_DEPTH")->getSIDouble(0);
         Phase::PhaseEnum preferredPhase = Phase::PhaseEnumFromString(record->getItem("PHASE")->getTrimmedString(0));
-        WellPtr well(new Well(wellName, headI, headJ, refDepth, preferredPhase, m_timeMap , timeStep));
+        WellPtr well(new Well(wellName, headI, headJ, refDepthDefaulted, refDepth, preferredPhase, m_timeMap , timeStep));
         m_wells.insert( wellName  , well);
     }
 

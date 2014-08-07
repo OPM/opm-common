@@ -27,7 +27,8 @@
 
 namespace Opm {
 
-    Well::Well(const std::string& name_, int headI, int headJ, double refDepth, Phase::PhaseEnum preferredPhase,
+    Well::Well(const std::string& name_, int headI, int headJ,
+               bool refDepthDefaulted, double refDepth, Phase::PhaseEnum preferredPhase,
                TimeMapConstPtr timeMap, size_t creationTimeStep)
         : m_status(new DynamicState<WellCommon::StatusEnum>(timeMap, WellCommon::OPEN)),
           m_isAvailableForGroupControl(new DynamicState<bool>(timeMap, true)),
@@ -41,6 +42,7 @@ namespace Opm {
           m_groupName( new DynamicState<std::string>( timeMap , "" )),
           m_headI(headI),
           m_headJ(headJ),
+          m_refDepthDefaulted(refDepthDefaulted),
           m_refDepth(refDepth),
           m_preferredPhase(preferredPhase)
     {
@@ -144,6 +146,10 @@ namespace Opm {
 
     int Well::getHeadJ() const {
         return m_headJ;
+    }
+
+    bool Well::getRefDepthDefaulted() const {
+        return m_refDepthDefaulted;
     }
 
     double Well::getRefDepth() const {
