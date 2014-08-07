@@ -79,9 +79,10 @@ namespace Opm {
 
     class Well {
     public:
-        Well(const std::string& name, int headI, int headJ,
-             bool refDepthDefaulted, double refDepth,
-             Phase::PhaseEnum preferredPhase,
+        Well(const std::string& name, int headI, int headJ, double refDepth, Phase::PhaseEnum preferredPhase,
+             TimeMapConstPtr timeMap, size_t creationTimeStep);
+        /// Use this constructor when reference depth is defaulted.
+        Well(const std::string& name, int headI, int headJ, Phase::PhaseEnum preferredPhase,
              TimeMapConstPtr timeMap, size_t creationTimeStep);
         const std::string& name() const;
 
