@@ -19,6 +19,7 @@
 #ifndef ECLIPSE_GRIDPROPERTY_HPP_
 #define ECLIPSE_GRIDPROPERTY_HPP_
 
+#include "GridPropertyInitializers.hpp"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -32,87 +33,56 @@
 /*
   This class implemenents a class representing properties which are
   define over an ECLIPSE grid, i.e. with one value for each logical
-  cartesian cell in the grid. 
+  cartesian cell in the grid.
 
   The class is implemented as a thin wrapper around std::vector<T>;
   where the most relevant specialisations of T are 'int' and 'float'.
 */
-
-
-
-
 namespace Opm {
-
 template <class DataType>
-class GridPropertySupportedKeywordInfo;
-
-template <>
-class GridPropertySupportedKeywordInfo<int>
+class GridPropertySupportedKeywordInfo
 {
 public:
+    typedef GridPropertyBaseInitializer<DataType> Initializer;
+
     GridPropertySupportedKeywordInfo()
     {}
 
     GridPropertySupportedKeywordInfo(const std::string& name,
-                                     int defaultValue)
+                                     std::shared_ptr<const Initializer> initializer,
+                                     const std::string& dimString)
         : m_keywordName(name)
-        , m_defaultValue(defaultValue)
+        , m_initializer(initializer)
+        , m_dimensionString(dimString)
     {}
 
-    GridPropertySupportedKeywordInfo(const GridPropertySupportedKeywordInfo &other)
-        : m_keywordName(other.m_keywordName)
-        , m_defaultValue(other.m_defaultValue)
-    {}
-
-    const std::string& getKeywordName() const {
-        return m_keywordName;
-    }
-
-    int getDefaultValue() const {
-        return m_defaultValue;
-    }
-
-private:
-    std::string m_keywordName;
-    int m_defaultValue;
-};
-
-template <>
-class GridPropertySupportedKeywordInfo<double>
-{
-public:
-    GridPropertySupportedKeywordInfo()
-    {}
-
+    // this is a convenience constructor which can be used if the default value for the
+    // grid property is just a constant...
     GridPropertySupportedKeywordInfo(const std::string& name,
-                                     double defaultValue,
-                                     const std::string& dimensionString)
+                                     const DataType defaultValue,
+                                     const std::string& dimString)
         : m_keywordName(name)
-        , m_defaultValue(defaultValue)
-        , m_dimensionString(dimensionString)
+        , m_initializer(new Opm::GridPropertyConstantInitializer<DataType>(defaultValue))
+        , m_dimensionString(dimString)
     {}
 
-    GridPropertySupportedKeywordInfo(const GridPropertySupportedKeywordInfo &other)
-        : m_keywordName(other.m_keywordName)
-        , m_defaultValue(other.m_defaultValue)
-        , m_dimensionString(other.m_dimensionString)
-    {}
+    GridPropertySupportedKeywordInfo(const GridPropertySupportedKeywordInfo&) = default;
 
     const std::string& getKeywordName() const {
         return m_keywordName;
-    }
-
-    double getDefaultValue() const {
-        return m_defaultValue;
     }
 
     const std::string& getDimensionString() const {
         return m_dimensionString;
     }
 
+    std::shared_ptr<const Initializer> getInitializer() const {
+        return m_initializer;
+    }
+
 private:
     std::string m_keywordName;
-    double m_defaultValue;
+    std::shared_ptr<const Initializer> m_initializer;
     std::string m_dimensionString;
 };
 
@@ -127,7 +97,8 @@ public:
         m_nz = nz;
         m_kwInfo = kwInfo;
         m_data.resize( nx * ny * nz );
-        std::fill( m_data.begin() , m_data.end() ,  m_kwInfo.getDefaultValue());
+
+        m_kwInfo.getInitializer()->apply(m_data, m_kwInfo.getKeywordName());
     }
 
     size_t size() const {

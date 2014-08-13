@@ -39,7 +39,7 @@ Opm::DeckKeywordConstPtr createTABDIMSKeyword( );
 
 BOOST_AUTO_TEST_CASE(Empty) {
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
-    SupportedKeywordInfo keywordInfo("SATNUM" , 77);
+    SupportedKeywordInfo keywordInfo("SATNUM" , 77, "1");
     Opm::GridProperty<int> gridProperty( 5 , 5 , 4 , keywordInfo);
     const std::vector<int>& data = gridProperty.getData();
     BOOST_CHECK_EQUAL( 100U , data.size());
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(Empty) {
 
 BOOST_AUTO_TEST_CASE(EmptyDefault) {
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
-    SupportedKeywordInfo keywordInfo("SATNUM" , 0);
+    SupportedKeywordInfo keywordInfo("SATNUM" , 0, "1");
     Opm::GridProperty<int> gridProperty( /*nx=*/10,
                                          /*ny=*/10,
                                          /*nz=*/1 ,
@@ -97,7 +97,7 @@ Opm::DeckKeywordConstPtr createTABDIMSKeyword( ) {
 BOOST_AUTO_TEST_CASE(SetFromDeckKeyword_notData_Throws) {
     Opm::DeckKeywordConstPtr tabdimsKw = createTABDIMSKeyword(); 
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
-    SupportedKeywordInfo keywordInfo("TABDIMS" , 100);
+    SupportedKeywordInfo keywordInfo("TABDIMS" , 100, "1");
     Opm::GridProperty<int> gridProperty( 6 ,1,1 , keywordInfo);
     BOOST_CHECK_THROW( gridProperty.loadFromDeckKeyword( tabdimsKw ) , std::invalid_argument );
 }
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(SetFromDeckKeyword_notData_Throws) {
 BOOST_AUTO_TEST_CASE(SetFromDeckKeyword_wrong_size_throws) {
     Opm::DeckKeywordConstPtr satnumKw = createSATNUMKeyword(); 
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
-    SupportedKeywordInfo keywordInfo("SATNUM" , 66);
+    SupportedKeywordInfo keywordInfo("SATNUM" , 66, "1");
     Opm::GridProperty<int> gridProperty( 15 ,1,1, keywordInfo);
     BOOST_CHECK_THROW( gridProperty.loadFromDeckKeyword( satnumKw ) , std::invalid_argument );
 }
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(SetFromDeckKeyword_wrong_size_throws) {
 BOOST_AUTO_TEST_CASE(SetFromDeckKeyword) {
     Opm::DeckKeywordConstPtr satnumKw = createSATNUMKeyword(); 
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
-    SupportedKeywordInfo keywordInfo("SATNUM" , 99);
+    SupportedKeywordInfo keywordInfo("SATNUM" , 99, "1");
     Opm::GridProperty<int> gridProperty( 4 , 4 , 2 , keywordInfo);
     gridProperty.loadFromDeckKeyword( satnumKw );
     const std::vector<int>& data = gridProperty.getData();
@@ -137,8 +137,8 @@ BOOST_AUTO_TEST_CASE(SetFromDeckKeyword) {
 
 BOOST_AUTO_TEST_CASE(copy) {
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
-    SupportedKeywordInfo keywordInfo1("P1" , 0);
-    SupportedKeywordInfo keywordInfo2("P2" , 9);
+    SupportedKeywordInfo keywordInfo1("P1" , 0, "1");
+    SupportedKeywordInfo keywordInfo2("P2" , 9, "1");
     Opm::GridProperty<int> prop1( 4 , 4 , 2 , keywordInfo1);
     Opm::GridProperty<int> prop2( 4 , 4 , 2 , keywordInfo2);
 
@@ -159,8 +159,8 @@ BOOST_AUTO_TEST_CASE(copy) {
 
 BOOST_AUTO_TEST_CASE(SCALE) {
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
-    SupportedKeywordInfo keywordInfo1("P1" , 1);
-    SupportedKeywordInfo keywordInfo2("P2" , 9);
+    SupportedKeywordInfo keywordInfo1("P1" , 1, "1");
+    SupportedKeywordInfo keywordInfo2("P2" , 9, "1");
 
     Opm::GridProperty<int> prop1( 4 , 4 , 2 , keywordInfo1);
     Opm::GridProperty<int> prop2( 4 , 4 , 2 , keywordInfo2);
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(SCALE) {
 
 BOOST_AUTO_TEST_CASE(SET) {
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
-    SupportedKeywordInfo keywordInfo("P1" , 1);
+    SupportedKeywordInfo keywordInfo("P1" , 1, "1");
     Opm::GridProperty<int> prop( 4 , 4 , 2 , keywordInfo);
 
     std::shared_ptr<Opm::Box> global = std::make_shared<Opm::Box>(4,4,2);
@@ -205,8 +205,8 @@ BOOST_AUTO_TEST_CASE(SET) {
 
 BOOST_AUTO_TEST_CASE(ADD) {
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
-    SupportedKeywordInfo keywordInfo1("P1" , 1);
-    SupportedKeywordInfo keywordInfo2("P2" , 9);
+    SupportedKeywordInfo keywordInfo1("P1" , 1, "1");
+    SupportedKeywordInfo keywordInfo2("P2" , 9, "1");
     Opm::GridProperty<int> prop1( 4 , 4 , 2 , keywordInfo1);
     Opm::GridProperty<int> prop2( 4 , 4 , 2 , keywordInfo2);
 

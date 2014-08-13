@@ -139,6 +139,7 @@ EclipseState/Util/Value.hpp
 EclipseState/Grid/EclipseGrid.hpp
 EclipseState/Grid/GridProperty.hpp
 EclipseState/Grid/GridProperties.hpp
+EclipseState/Grid/GridPropertyInitializers.hpp
 EclipseState/Grid/Box.hpp
 EclipseState/Grid/BoxManager.hpp
 EclipseState/Grid/FaceDir.hpp

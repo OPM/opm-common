@@ -379,15 +379,15 @@ namespace Opm {
     void EclipseState::initProperties(DeckConstPtr deck) {
         typedef GridProperties<int>::SupportedKeywordInfo SupportedIntKeywordInfo;
         static std::vector<SupportedIntKeywordInfo> supportedIntKeywords =
-            {SupportedIntKeywordInfo( "SATNUM" , 1 ),
-             SupportedIntKeywordInfo( "IMBNUM" , 1 ),
-             SupportedIntKeywordInfo( "PVTNUM" , 1 ),
-             SupportedIntKeywordInfo( "EQLNUM" , 1 ),
-             SupportedIntKeywordInfo( "ENDNUM" , 1 ),
+            {SupportedIntKeywordInfo( "SATNUM" , 1, "1" ),
+             SupportedIntKeywordInfo( "IMBNUM" , 1, "1" ),
+             SupportedIntKeywordInfo( "PVTNUM" , 1, "1" ),
+             SupportedIntKeywordInfo( "EQLNUM" , 1, "1" ),
+             SupportedIntKeywordInfo( "ENDNUM" , 1, "1" ),
              // TODO: implement regular expression matching for
              // keyword names?
 //             SupportedIntKeywordInfo( "FIP???"  , 0 ),
-             SupportedIntKeywordInfo( "FIPNUM" , 1 )};
+             SupportedIntKeywordInfo( "FIPNUM" , 1, "1" )};
 
         // Note that the variants of grid keywords for radial grids
         // are not supported. (and hopefully never will be)

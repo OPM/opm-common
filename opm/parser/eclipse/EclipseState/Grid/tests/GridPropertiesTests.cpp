@@ -38,8 +38,8 @@
 BOOST_AUTO_TEST_CASE(Empty) {
     typedef Opm::GridProperties<int>::SupportedKeywordInfo SupportedKeywordInfo;
     std::vector<SupportedKeywordInfo> supportedKeywords =
-        { SupportedKeywordInfo("SATNUM" , 0),
-          SupportedKeywordInfo("FIPNUM" , 2) };
+        { SupportedKeywordInfo("SATNUM" , 0, "1"),
+          SupportedKeywordInfo("FIPNUM" , 2, "1") };
     Opm::GridProperties<int> gridProperties( 10, 10, 100 , supportedKeywords);
     
     BOOST_CHECK( gridProperties.supportsKeyword("SATNUM") );
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(Empty) {
 BOOST_AUTO_TEST_CASE(addKeyword) {
     typedef Opm::GridProperties<int>::SupportedKeywordInfo SupportedKeywordInfo;
     std::vector<SupportedKeywordInfo> supportedKeywords =
-        { SupportedKeywordInfo("SATNUM" , 0) };
+        { SupportedKeywordInfo("SATNUM" , 0, "1") };
     Opm::GridProperties<int> gridProperties( 100, 10 , 10 , supportedKeywords);
     
     BOOST_CHECK_THROW( gridProperties.addKeyword("NOT-SUPPORTED") , std::invalid_argument);
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(addKeyword) {
 BOOST_AUTO_TEST_CASE(getKeyword) {
     typedef Opm::GridProperties<int>::SupportedKeywordInfo SupportedKeywordInfo;
     std::vector<SupportedKeywordInfo> supportedKeywords =
-        { SupportedKeywordInfo("SATNUM" , 0) };
+        { SupportedKeywordInfo("SATNUM" , 0, "1") };
     Opm::GridProperties<int> gridProperties( 100,25,4 , supportedKeywords);
     std::shared_ptr<Opm::GridProperty<int> > satnum1 = gridProperties.getKeyword("SATNUM");
     std::shared_ptr<Opm::GridProperty<int> > satnum2 = gridProperties.getKeyword("SATNUM");
