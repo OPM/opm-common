@@ -494,11 +494,13 @@ for a in "${VARS[@]}"; do
       ;;
     CFLAGS=*)
       a=${a#CFLAGS=}
-      c_opts=" -DCMAKE_C_FLAGS=\"${a/\"/\\\"}\""
+      a="${a/\"/\\\"}"
+      c_opts=" -DCMAKE_C_FLAGS=\"$a\"  -DCMAKE_C_FLAGS_DEBUG=\"$a\" -DCMAKE_C_FLAGS_RELEASE=\"$a\" "
       ;;
     CXXFLAGS=*)
       a=${a#CXXFLAGS=}
-      cxx_opts=" -DCMAKE_CXX_FLAGS=\"${a/\"/\\\"}\""
+      a="${a/\"/\\\"}"
+      cxx_opts=" -DCMAKE_CXX_FLAGS=\"$a\"  -DCMAKE_CXX_FLAGS_DEBUG=\"$a\" -DCMAKE_CXX_FLAGS_RELEASE=\"$a\" "
       ;;
     FC=*)
       a=${a#FC=}
