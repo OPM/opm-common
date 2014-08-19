@@ -83,9 +83,11 @@ static Opm::DeckPtr createCPDeck() {
         " 10 10 10 /\n"
         "GRID\n"
         "COORD\n"
-        "1000*0.25 /\n"
-        "ZCORN\n"
-        "1000*0.25 /\n"
+        "  726*1 / \n"
+        "ZCORN \n"
+        "  8000*1 / \n"
+        "ACTNUM \n"
+        "  1000*1 / \n"
         "EDIT\n"
         "\n";
  
@@ -571,3 +573,30 @@ BOOST_AUTO_TEST_CASE(Fwrite) {
     remove("TEST.EGRID");
 }
 
+
+
+
+BOOST_AUTO_TEST_CASE(ConstructorNORUNSPEC) {
+    const char *deckData =
+        "GRID\n"
+        "COORD\n"
+        "  726*1 / \n"
+        "ZCORN \n"
+        "  8000*1 / \n"
+        "ACTNUM \n"
+        "  1000*1 / \n"
+        "EDIT\n"
+        "\n";
+
+    Opm::ParserPtr parser(new Opm::Parser());
+    Opm::DeckConstPtr deck1 = parser->parseString(deckData) ;
+    Opm::DeckConstPtr deck2 = createCPDeck();
+    std::shared_ptr<Opm::GRIDSection> gridSection1(new Opm::GRIDSection(deck1) );
+    std::shared_ptr<Opm::GRIDSection> gridSection2(new Opm::GRIDSection(deck2) );
+    std::shared_ptr<Opm::RUNSPECSection> runspecSection2(new Opm::RUNSPECSection(deck2) );
+    
+    Opm::EclipseGrid grid1(10,10,10 , gridSection1 );
+    Opm::EclipseGrid grid2(runspecSection2 , gridSection2 );
+
+    BOOST_CHECK(grid1.equal( grid2 ));
+}

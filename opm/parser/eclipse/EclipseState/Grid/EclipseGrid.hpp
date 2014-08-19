@@ -34,6 +34,7 @@ namespace Opm {
         EclipseGrid(const std::string& filename);
         EclipseGrid(const ecl_grid_type * src_ptr);
         EclipseGrid(std::shared_ptr<const RUNSPECSection> runspecSection, std::shared_ptr<const GRIDSection> gridSection);
+        EclipseGrid(int nx, int ny , int nz , std::shared_ptr<const GRIDSection> gridSection);
 
         
         static bool hasCornerPointKeywords(std::shared_ptr<const GRIDSection> gridSection);
@@ -67,6 +68,7 @@ namespace Opm {
         void assertCornerPointKeywords( const std::vector<int>& dims , std::shared_ptr<const GRIDSection> gridSection ) const ;
         void initDTOPSGrid(const std::vector<int>& dims , std::shared_ptr<const GRIDSection> gridSection);
         void initDVDEPTHZGrid(const std::vector<int>& dims , std::shared_ptr<const GRIDSection> gridSection);
+        void initGrid( const std::vector<int>& dims , std::shared_ptr<const GRIDSection> gridSection );
         static bool hasDVDEPTHZKeywords(std::shared_ptr<const GRIDSection> gridSection);
         static bool hasDTOPSKeywords(std::shared_ptr<const         GRIDSection> gridSection);
         static void assertVectorSize(const std::vector<double>& vector , size_t expectedSize , const std::string& msg);

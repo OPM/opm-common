@@ -55,16 +55,28 @@ namespace Opm {
                                      record->getItem("NY")->getInt(0) , 
                                      record->getItem("NZ")->getInt(0) };
 
-            if (hasCornerPointKeywords(gridSection)) {
-                initCornerPointGrid(dims , gridSection);
-            } else if (hasCartesianKeywords(gridSection)) {
-                initCartesianGrid(dims , gridSection);
-            } else
-                throw std::invalid_argument("The GRID section must have COORD / ZCORN or D?? + TOPS keywords");
-            
+            initGrid( dims , gridSection );
         } else
             throw std::invalid_argument("The RUNSPEC section must have the DIMENS keyword with grid dimensions");
     }
+
+    
+    EclipseGrid::EclipseGrid(int nx, int ny , int nz , std::shared_ptr<const GRIDSection> gridSection) {
+        std::vector<int> dims = {nx , ny , nz};
+        initGrid( dims , gridSection );
+    }
+
+    
+    void EclipseGrid::initGrid( const std::vector<int>& dims , std::shared_ptr<const GRIDSection> gridSection ) {
+        if (hasCornerPointKeywords(gridSection)) {
+            initCornerPointGrid(dims , gridSection);
+        } else if (hasCartesianKeywords(gridSection)) {
+            initCartesianGrid(dims , gridSection);
+        } else
+            throw std::invalid_argument("The GRID section must have COORD / ZCORN or D?? + TOPS keywords");
+    }
+    
+
 
     bool EclipseGrid::equal(const EclipseGrid& other) const {
         return ecl_grid_compare( m_grid.get() , other.m_grid.get() , true , false , false );
