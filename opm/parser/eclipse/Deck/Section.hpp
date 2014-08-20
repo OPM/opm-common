@@ -58,37 +58,37 @@ namespace Opm {
     
     class RUNSPECSection : public Section {
     public:
-        RUNSPECSection(DeckConstPtr deck) : Section (deck, "RUNSPEC", std::vector<std::string>() = {"GRID"}) {}
+        RUNSPECSection(DeckConstPtr deck) : Section (deck, "RUNSPEC", std::vector<std::string>() = {"GRID", "EDIT", "PROPS", "REGIONS", "SOLUTION", "SUMMARY", "SCHEDULE"}) {}
     };
 
     class GRIDSection : public Section {
     public:
-        GRIDSection(DeckConstPtr deck) : Section (deck, "GRID", std::vector<std::string>() = {"EDIT", "PROPS"}) {}
+        GRIDSection(DeckConstPtr deck) : Section (deck, "GRID", std::vector<std::string>() = {"RUNSPEC", "EDIT", "PROPS", "REGIONS", "SOLUTION", "SUMMARY", "SCHEDULE"}) {}
     };
 
     class EDITSection : public Section {
     public:
-        EDITSection(DeckConstPtr deck) : Section (deck, "EDIT", std::vector<std::string>() = {"PROPS"}) {}
+        EDITSection(DeckConstPtr deck) : Section (deck, "EDIT", std::vector<std::string>() = {"RUNSPEC", "GRID", "PROPS", "REGIONS", "SOLUTION", "SUMMARY", "SCHEDULE"}) {}
     };
 
     class PROPSSection : public Section {
     public:
-        PROPSSection(DeckConstPtr deck) : Section (deck, "PROPS", std::vector<std::string>() = {"REGIONS", "SOLUTION"}) {}
+        PROPSSection(DeckConstPtr deck) : Section (deck, "PROPS", std::vector<std::string>() = {"RUNSPEC", "GRID", "EDIT", "REGIONS", "SOLUTION", "SUMMARY", "SCHEDULE"}) {}
     };
 
     class REGIONSSection : public Section {
     public:
-        REGIONSSection(DeckConstPtr deck) : Section (deck, "REGIONS", std::vector<std::string>() = {"SOLUTION"}) {}
+        REGIONSSection(DeckConstPtr deck) : Section (deck, "REGIONS", std::vector<std::string>() = {"RUNSPEC", "GRID", "EDIT", "PROPS", "SOLUTION", "SUMMARY", "SCHEDULE"}) {}
     };
 
     class SOLUTIONSection : public Section {
     public:
-        SOLUTIONSection(DeckConstPtr deck) : Section (deck, "SOLUTION", std::vector<std::string>() = {"SUMMARY", "SCHEDULE"}) {}
+        SOLUTIONSection(DeckConstPtr deck) : Section (deck, "SOLUTION", std::vector<std::string>() = {"RUNSPEC", "GRID", "EDIT", "PROPS", "REGIONS", "SUMMARY", "SCHEDULE"}) {}
     };
 
     class SCHEDULESection : public Section {
     public:
-        SCHEDULESection(DeckConstPtr deck) : Section (deck, "SCHEDULE", std::vector<std::string>() = {}) {}
+        SCHEDULESection(DeckConstPtr deck) : Section (deck, "SCHEDULE", std::vector<std::string>() = {"RUNSPEC", "GRID", "EDIT", "PROPS", "REGIONS", "SOLUTION", "SUMMARY"}) {}
     };
 }
 

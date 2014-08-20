@@ -20,6 +20,7 @@
 #include <iostream>
 #include <exception>
 #include <algorithm>
+#include <cassert>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
@@ -32,13 +33,22 @@ namespace Opm {
     void Section::populateKeywords(DeckConstPtr deck, const std::string& startKeyword,
                                    const std::vector<std::string>& stopKeywords)
     {
-        size_t i;
+        // find the first occurence of the section's start keyword
+        size_t i = 0;
+        for (; i<deck->size() && deck->getKeyword(i)->name() != startKeyword; i++);
 
-        for (i=deck->getKeyword(startKeyword)->getDeckIndex(); i<deck->size(); i++) {
+        if (i == deck->size())
+            throw std::invalid_argument(std::string("Deck requires a '")+startKeyword+"' section");
+
+        for (; i<deck->size(); i++) {
             if (std::find(stopKeywords.begin(), stopKeywords.end(), deck->getKeyword(i)->name()) != stopKeywords.end())
                 break;
             m_keywords.addKeyword(deck->getKeyword(i));
         }
+
+        for (; i<deck->size(); i++)
+            if (deck->getKeyword(i)->name() == startKeyword)
+                throw std::invalid_argument(std::string("Deck contains the '")+startKeyword+"' section multiple times");
     }
 
     size_t Section::count(const std::string& keyword) const {
