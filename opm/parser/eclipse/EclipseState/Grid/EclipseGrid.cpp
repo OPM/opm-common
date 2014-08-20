@@ -124,7 +124,11 @@ namespace Opm {
     }
 
     double EclipseGrid::getPinchThresholdThickness( ) const {
-        return m_pinch_threshold_thickness;
+        if (isPinchActive()) {
+            return m_pinch_threshold_thickness;
+        } else {
+            throw std::logic_error("cannot call getPinchThresholdThickness() when isPinchActive() is false");
+        }
     }
 
     void EclipseGrid::assertGlobalIndex(size_t globalIndex) const {
