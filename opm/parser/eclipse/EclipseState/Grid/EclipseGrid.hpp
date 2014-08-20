@@ -46,6 +46,8 @@ namespace Opm {
         size_t  getNY( ) const;
         size_t  getNZ( ) const;
         size_t  getCartesianSize( ) const;
+        bool isPinchActive( ) const;
+        double getPinchThresholdThickness( ) const;
 
         void assertGlobalIndex(size_t globalIndex) const;
         void assertIJK(size_t i , size_t j , size_t k) const;
@@ -64,6 +66,8 @@ namespace Opm {
         const ecl_grid_type * c_ptr() const;
     private:
         std::shared_ptr<ecl_grid_type> m_grid;
+        bool m_pinch_active;
+        double m_pinch_threshold_thickness;
 
         void assertCornerPointKeywords( const std::vector<int>& dims , std::shared_ptr<const GRIDSection> gridSection ) const ;
         void initDTOPSGrid(const std::vector<int>& dims , std::shared_ptr<const GRIDSection> gridSection);

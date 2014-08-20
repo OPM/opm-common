@@ -34,7 +34,10 @@ namespace Opm {
        Will create an EclipseGrid instance based on an existing
        GRID/EGRID file.
     */
-    EclipseGrid::EclipseGrid(const std::string& filename ) {
+    EclipseGrid::EclipseGrid(const std::string& filename )
+        : m_pinch_active(false),
+          m_pinch_threshold_thickness(-1e100)
+    {
         ecl_grid_type * new_ptr = ecl_grid_load_case( filename.c_str() );
         if (new_ptr)
             m_grid.reset( new_ptr , ecl_grid_free );
@@ -47,7 +50,10 @@ namespace Opm {
     }
 
     
-    EclipseGrid::EclipseGrid(std::shared_ptr<const RUNSPECSection> runspecSection, std::shared_ptr<const GRIDSection> gridSection) {
+    EclipseGrid::EclipseGrid(std::shared_ptr<const RUNSPECSection> runspecSection, std::shared_ptr<const GRIDSection> gridSection)
+        : m_pinch_active(false),
+          m_pinch_threshold_thickness(-1e100)
+    {
         if (runspecSection->hasKeyword("DIMENS")) {
             DeckKeywordConstPtr dimens = runspecSection->getKeyword("DIMENS");
             DeckRecordConstPtr record = dimens->getRecord(0);
@@ -61,7 +67,10 @@ namespace Opm {
     }
 
     
-    EclipseGrid::EclipseGrid(int nx, int ny , int nz , std::shared_ptr<const GRIDSection> gridSection) {
+    EclipseGrid::EclipseGrid(int nx, int ny , int nz , std::shared_ptr<const GRIDSection> gridSection)
+        : m_pinch_active(false),
+          m_pinch_threshold_thickness(-1e100)
+    {
         std::vector<int> dims = {nx , ny , nz};
         initGrid( dims , gridSection );
     }
@@ -72,14 +81,21 @@ namespace Opm {
             initCornerPointGrid(dims , gridSection);
         } else if (hasCartesianKeywords(gridSection)) {
             initCartesianGrid(dims , gridSection);
-        } else
+        } else {
             throw std::invalid_argument("The GRID section must have COORD / ZCORN or D?? + TOPS keywords");
+        }
+        if (gridSection->hasKeyword("PINCH")) {
+            m_pinch_active = true;
+            m_pinch_threshold_thickness = gridSection->getKeyword("PINCH")->getRecord(0)->getItem("THRESHOLD_THICKNESS")->getSIDouble(0);
+        }
     }
     
 
 
     bool EclipseGrid::equal(const EclipseGrid& other) const {
-        return ecl_grid_compare( m_grid.get() , other.m_grid.get() , true , false , false );
+        return (m_pinch_active == other.m_pinch_active)
+            && (m_pinch_threshold_thickness == other.m_pinch_threshold_thickness)
+            && ecl_grid_compare( m_grid.get() , other.m_grid.get() , true , false , false );
     }
 
 
@@ -103,6 +119,14 @@ namespace Opm {
         return static_cast<size_t>( ecl_grid_get_global_size( m_grid.get() ));
     }
     
+    bool EclipseGrid::isPinchActive( ) const {
+        return m_pinch_active;
+    }
+
+    double EclipseGrid::getPinchThresholdThickness( ) const {
+        return m_pinch_threshold_thickness;
+    }
+
     void EclipseGrid::assertGlobalIndex(size_t globalIndex) const {
         if (globalIndex >= getCartesianSize())
             throw std::invalid_argument("input index above valid range");
