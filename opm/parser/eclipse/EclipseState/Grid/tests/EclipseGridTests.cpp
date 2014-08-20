@@ -96,6 +96,29 @@ static Opm::DeckPtr createCPDeck() {
 }
 
 
+static Opm::DeckPtr createPinchedCPDeck() {
+    const char *deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        " 10 10 10 /\n"
+        "GRID\n"
+        "COORD\n"
+        "  726*1 / \n"
+        "ZCORN \n"
+        "  8000*1 / \n"
+        "ACTNUM \n"
+        "  1000*1 / \n"
+        "PINCH \n"
+        "  0.2 / \n"
+        "EDIT\n"
+        "\n";
+
+    Opm::ParserPtr parser(new Opm::Parser());
+    return parser->parseString(deckData) ;
+}
+
+
 static Opm::DeckPtr createCARTDeck() {
     const char *deckData =
         "RUNSPEC\n"
@@ -599,4 +622,22 @@ BOOST_AUTO_TEST_CASE(ConstructorNORUNSPEC) {
     Opm::EclipseGrid grid2(runspecSection2 , gridSection2 );
 
     BOOST_CHECK(grid1.equal( grid2 ));
+}
+
+
+BOOST_AUTO_TEST_CASE(ConstructorNORUNSPEC_PINCH) {
+    Opm::DeckConstPtr deck1 = createCPDeck();
+    Opm::DeckConstPtr deck2 = createPinchedCPDeck();
+    std::shared_ptr<Opm::GRIDSection> gridSection1(new Opm::GRIDSection(deck1) );
+    std::shared_ptr<Opm::GRIDSection> gridSection2(new Opm::GRIDSection(deck2) );
+    std::shared_ptr<Opm::RUNSPECSection> runspecSection1(new Opm::RUNSPECSection(deck1) );
+    std::shared_ptr<Opm::RUNSPECSection> runspecSection2(new Opm::RUNSPECSection(deck2) );
+
+    Opm::EclipseGrid grid1(runspecSection1 , gridSection1 );
+    Opm::EclipseGrid grid2(runspecSection2 , gridSection2 );
+
+    BOOST_CHECK(!grid1.equal( grid2 ));
+    BOOST_CHECK(grid2.isPinchActive());
+    BOOST_CHECK_EQUAL(grid2.getPinchThresholdThickness(), 0.2);
+
 }
