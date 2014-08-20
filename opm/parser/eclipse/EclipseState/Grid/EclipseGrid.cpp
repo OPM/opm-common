@@ -30,13 +30,15 @@
 #include <ert/ecl/ecl_grid.h>
 namespace Opm {
 
+    const double invalidThickness = -1e100;
+
     /**
        Will create an EclipseGrid instance based on an existing
        GRID/EGRID file.
     */
     EclipseGrid::EclipseGrid(const std::string& filename )
         : m_pinchActive(false),
-          m_pinchThresholdThickness(-1e100)
+          m_pinchThresholdThickness(invalidThickness)
     {
         ecl_grid_type * new_ptr = ecl_grid_load_case( filename.c_str() );
         if (new_ptr)
@@ -52,7 +54,7 @@ namespace Opm {
     
     EclipseGrid::EclipseGrid(std::shared_ptr<const RUNSPECSection> runspecSection, std::shared_ptr<const GRIDSection> gridSection)
         : m_pinchActive(false),
-          m_pinchThresholdThickness(-1e100)
+          m_pinchThresholdThickness(invalidThickness)
     {
         if (runspecSection->hasKeyword("DIMENS")) {
             DeckKeywordConstPtr dimens = runspecSection->getKeyword("DIMENS");
@@ -69,7 +71,7 @@ namespace Opm {
     
     EclipseGrid::EclipseGrid(int nx, int ny , int nz , std::shared_ptr<const GRIDSection> gridSection)
         : m_pinchActive(false),
-          m_pinchThresholdThickness(-1e100)
+          m_pinchThresholdThickness(invalidThickness)
     {
         std::vector<int> dims = {nx , ny , nz};
         initGrid( dims , gridSection );
