@@ -637,6 +637,8 @@ BOOST_AUTO_TEST_CASE(ConstructorNORUNSPEC_PINCH) {
     Opm::EclipseGrid grid2(runspecSection2 , gridSection2 );
 
     BOOST_CHECK(!grid1.equal( grid2 ));
+    BOOST_CHECK(!grid1.isPinchActive());
+    BOOST_CHECK_THROW(grid1.getPinchThresholdThickness(), std::logic_error);
     BOOST_CHECK(grid2.isPinchActive());
     BOOST_CHECK_EQUAL(grid2.getPinchThresholdThickness(), 0.2);
 
