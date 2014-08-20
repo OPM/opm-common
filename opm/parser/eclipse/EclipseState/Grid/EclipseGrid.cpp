@@ -35,8 +35,8 @@ namespace Opm {
        GRID/EGRID file.
     */
     EclipseGrid::EclipseGrid(const std::string& filename )
-        : m_pinch_active(false),
-          m_pinch_threshold_thickness(-1e100)
+        : m_pinchActive(false),
+          m_pinchThresholdThickness(-1e100)
     {
         ecl_grid_type * new_ptr = ecl_grid_load_case( filename.c_str() );
         if (new_ptr)
@@ -51,8 +51,8 @@ namespace Opm {
 
     
     EclipseGrid::EclipseGrid(std::shared_ptr<const RUNSPECSection> runspecSection, std::shared_ptr<const GRIDSection> gridSection)
-        : m_pinch_active(false),
-          m_pinch_threshold_thickness(-1e100)
+        : m_pinchActive(false),
+          m_pinchThresholdThickness(-1e100)
     {
         if (runspecSection->hasKeyword("DIMENS")) {
             DeckKeywordConstPtr dimens = runspecSection->getKeyword("DIMENS");
@@ -68,8 +68,8 @@ namespace Opm {
 
     
     EclipseGrid::EclipseGrid(int nx, int ny , int nz , std::shared_ptr<const GRIDSection> gridSection)
-        : m_pinch_active(false),
-          m_pinch_threshold_thickness(-1e100)
+        : m_pinchActive(false),
+          m_pinchThresholdThickness(-1e100)
     {
         std::vector<int> dims = {nx , ny , nz};
         initGrid( dims , gridSection );
@@ -85,16 +85,16 @@ namespace Opm {
             throw std::invalid_argument("The GRID section must have COORD / ZCORN or D?? + TOPS keywords");
         }
         if (gridSection->hasKeyword("PINCH")) {
-            m_pinch_active = true;
-            m_pinch_threshold_thickness = gridSection->getKeyword("PINCH")->getRecord(0)->getItem("THRESHOLD_THICKNESS")->getSIDouble(0);
+            m_pinchActive = true;
+            m_pinchThresholdThickness = gridSection->getKeyword("PINCH")->getRecord(0)->getItem("THRESHOLD_THICKNESS")->getSIDouble(0);
         }
     }
     
 
 
     bool EclipseGrid::equal(const EclipseGrid& other) const {
-        return (m_pinch_active == other.m_pinch_active)
-            && (m_pinch_threshold_thickness == other.m_pinch_threshold_thickness)
+        return (m_pinchActive == other.m_pinchActive)
+            && (m_pinchThresholdThickness == other.m_pinchThresholdThickness)
             && ecl_grid_compare( m_grid.get() , other.m_grid.get() , true , false , false );
     }
 
@@ -120,12 +120,12 @@ namespace Opm {
     }
     
     bool EclipseGrid::isPinchActive( ) const {
-        return m_pinch_active;
+        return m_pinchActive;
     }
 
     double EclipseGrid::getPinchThresholdThickness( ) const {
         if (isPinchActive()) {
-            return m_pinch_threshold_thickness;
+            return m_pinchThresholdThickness;
         } else {
             throw std::logic_error("cannot call getPinchThresholdThickness() when isPinchActive() is false");
         }

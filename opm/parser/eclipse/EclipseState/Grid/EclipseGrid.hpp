@@ -66,8 +66,8 @@ namespace Opm {
         const ecl_grid_type * c_ptr() const;
     private:
         std::shared_ptr<ecl_grid_type> m_grid;
-        bool m_pinch_active;
-        double m_pinch_threshold_thickness;
+        bool m_pinchActive;
+        double m_pinchThresholdThickness;
 
         void assertCornerPointKeywords( const std::vector<int>& dims , std::shared_ptr<const GRIDSection> gridSection ) const ;
         void initDTOPSGrid(const std::vector<int>& dims , std::shared_ptr<const GRIDSection> gridSection);
