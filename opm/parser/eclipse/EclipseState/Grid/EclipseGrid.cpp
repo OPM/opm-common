@@ -98,8 +98,8 @@ namespace Opm {
         const bool hasGRID = Section::hasGRID(deck);
         if (hasRUNSPEC && hasGRID) {
             // Equivalent to first constructor.
-            auto runspecSection = std::make_shared<RUNSPECSection>(deck);
-            auto gridSection = std::make_shared<GRIDSection>(deck);
+            auto runspecSection = std::make_shared<const RUNSPECSection>(deck);
+            auto gridSection = std::make_shared<const GRIDSection>(deck);
             if (runspecSection->hasKeyword("DIMENS")) {
                 DeckKeywordConstPtr dimens = runspecSection->getKeyword("DIMENS");
                 std::vector<int> dims = getDims(dimens);
@@ -109,7 +109,7 @@ namespace Opm {
             }
         } else if (hasGRID) {
             // Look for SPECGRID instead of DIMENS.
-            auto gridSection = std::make_shared<GRIDSection>(deck);
+            auto gridSection = std::make_shared<const GRIDSection>(deck);
             if (gridSection->hasKeyword("SPECGRID")) {
                 DeckKeywordConstPtr specgrid = gridSection->getKeyword("SPECGRID");
                 std::vector<int> dims = getDims(specgrid);
