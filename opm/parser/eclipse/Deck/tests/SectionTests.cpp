@@ -30,43 +30,47 @@ using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(SectionTest) {
     DeckPtr deck(new Deck());
-    DeckKeywordPtr test1(new DeckKeyword("TEST1"));
-    deck->addKeyword(test1);
-    DeckKeywordPtr test2(new DeckKeyword("TEST2"));
-    deck->addKeyword(test2);
-    DeckKeywordPtr test3(new DeckKeyword("TEST3"));
-    deck->addKeyword(test3);
-    DeckKeywordPtr test4(new DeckKeyword("TEST4"));
-    deck->addKeyword(test4);
-    Section section(deck, "TEST1", std::vector<std::string>() = {"TEST3", "TEST4"});
-    BOOST_CHECK_EQUAL(true, section.hasKeyword("TEST1"));
-    BOOST_CHECK_EQUAL(true, section.hasKeyword("TEST2"));
-    BOOST_CHECK_EQUAL(false, section.hasKeyword("TEST3"));
-    BOOST_CHECK_EQUAL(false, section.hasKeyword("TEST4"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST0"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("RUNSPEC"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST1"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("GRID"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST2"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST3"));
 
-    BOOST_CHECK_EQUAL( section.name() , "TEST1" );
-    BOOST_CHECK_EQUAL( section.count("TEST1") , 1);
+    Section runspecSection(deck, "RUNSPEC");
+    Section gridSection(deck, "GRID");
+    BOOST_CHECK(runspecSection.hasKeyword("TEST1"));
+    BOOST_CHECK(gridSection.hasKeyword("TEST2"));
 
+    BOOST_CHECK(!runspecSection.hasKeyword("TEST0"));
+    BOOST_CHECK(!gridSection.hasKeyword("TEST0"));
+    BOOST_CHECK(!runspecSection.hasKeyword("TEST3"));
+    BOOST_CHECK(!gridSection.hasKeyword("TEST3"));
+    BOOST_CHECK(!runspecSection.hasKeyword("TEST2"));
+    BOOST_CHECK(!gridSection.hasKeyword("TEST1"));
 }
 
 BOOST_AUTO_TEST_CASE(IteratorTest) {
     DeckPtr deck(new Deck());
-    DeckKeywordPtr test1(new DeckKeyword("TEST1"));
+    DeckKeywordPtr test1(new DeckKeyword("RUNSPEC"));
     deck->addKeyword(test1);
     DeckKeywordPtr test2(new DeckKeyword("TEST2"));
     deck->addKeyword(test2);
     DeckKeywordPtr test3(new DeckKeyword("TEST3"));
     deck->addKeyword(test3);
-    DeckKeywordPtr test4(new DeckKeyword("TEST4"));
+    DeckKeywordPtr test4(new DeckKeyword("GRID"));
     deck->addKeyword(test4);
-    Section section(deck, "TEST1", std::vector<std::string>() = {"TEST3", "TEST4"});
+    Section section(deck, "RUNSPEC");
 
     int numberOfItems = 0;
     for (auto iter=section.begin(); iter != section.end(); ++iter) {
         std::cout << (*iter)->name() << std::endl;
         numberOfItems++;
     }
-    BOOST_CHECK_EQUAL(2, numberOfItems);
+
+    // the keywords expected here are RUNSPEC, TEST2 and TEST3...
+    BOOST_CHECK_EQUAL(3, numberOfItems);
 }
 
 BOOST_AUTO_TEST_CASE(RUNSPECSection_EmptyDeck) {
@@ -76,25 +80,20 @@ BOOST_AUTO_TEST_CASE(RUNSPECSection_EmptyDeck) {
 
 BOOST_AUTO_TEST_CASE(RUNSPECSection_ReadSimpleDeck) {
     DeckPtr deck(new Deck());
-    DeckKeywordPtr test1(new DeckKeyword("TEST1"));
-    deck->addKeyword(test1);
-    DeckKeywordPtr runSpec(new DeckKeyword("RUNSPEC"));
-    deck->addKeyword(runSpec);
-    DeckKeywordPtr test2(new DeckKeyword("TEST2"));
-    deck->addKeyword(test2);
-    DeckKeywordPtr test3(new DeckKeyword("TEST3"));
-    deck->addKeyword(test3);
-    DeckKeywordPtr grid(new DeckKeyword("GRID"));
-    deck->addKeyword(grid);
-    DeckKeywordPtr test4(new DeckKeyword("TEST4"));
-    deck->addKeyword(test4);
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST1"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("RUNSPEC"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST2"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST3"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("GRID"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST4"));
+
     RUNSPECSection section(deck);
-    BOOST_CHECK_EQUAL(false, section.hasKeyword("TEST1"));
-    BOOST_CHECK_EQUAL(true, section.hasKeyword("RUNSPEC"));
-    BOOST_CHECK_EQUAL(true, section.hasKeyword("TEST2"));
-    BOOST_CHECK_EQUAL(true, section.hasKeyword("TEST3"));
-    BOOST_CHECK_EQUAL(false, section.hasKeyword("GRID"));
-    BOOST_CHECK_EQUAL(false, section.hasKeyword("TEST4"));
+    BOOST_CHECK(!section.hasKeyword("TEST1"));
+    BOOST_CHECK(section.hasKeyword("RUNSPEC"));
+    BOOST_CHECK(section.hasKeyword("TEST2"));
+    BOOST_CHECK(section.hasKeyword("TEST3"));
+    BOOST_CHECK(!section.hasKeyword("GRID"));
+    BOOST_CHECK(!section.hasKeyword("TEST4"));
 }
 
 BOOST_AUTO_TEST_CASE(RUNSPECSection_ReadSmallestPossibleDeck) {
@@ -224,4 +223,248 @@ BOOST_AUTO_TEST_CASE(SCHEDULESection_NotTerminated) {
     
     BOOST_CHECK( Section::hasSCHEDULE(deck ));
     BOOST_CHECK( !Section::hasREGIONS(deck ));
+}
+
+BOOST_AUTO_TEST_CASE(Section_ValidDecks) {
+    // minimal deck
+    DeckPtr deck(new Deck());
+    deck->addKeyword(std::make_shared<DeckKeyword>("RUNSPEC"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST1"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("GRID"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST2"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("PROPS"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST3"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("SOLUTION"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST4"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST5"));
+
+    BOOST_CHECK(Opm::Section::checkSectionTopology(deck));
+
+    // deck with all optional sections
+    deck.reset(new Deck());
+    deck->addKeyword(std::make_shared<DeckKeyword>("RUNSPEC"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST1"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("GRID"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST2"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("EDIT"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST3"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("PROPS"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST4"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("REGIONS"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST5"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("SOLUTION"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST6"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("SUMMARY"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST7"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST8"));
+
+    BOOST_CHECK(Opm::Section::checkSectionTopology(deck));
+}
+
+BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
+    // keyword before RUNSPEC
+    DeckPtr deck(new Deck());
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST0"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("RUNSPEC"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST1"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("GRID"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST2"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("PROPS"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST3"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("SOLUTION"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST4"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST5"));
+
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck));
+
+    // wrong section order
+    deck.reset(new Deck());
+    deck->addKeyword(std::make_shared<DeckKeyword>("RUNSPEC"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST1"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("EDIT"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST3"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("GRID"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST2"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("PROPS"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST4"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("REGIONS"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST5"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("SOLUTION"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST6"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("SUMMARY"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST7"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST8"));
+
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck));
+
+    // duplicate section
+    deck.reset(new Deck());
+    deck->addKeyword(std::make_shared<DeckKeyword>("RUNSPEC"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST1"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("GRID"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST2"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("GRID"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST21"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("EDIT"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST3"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("PROPS"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST4"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("REGIONS"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST5"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("SOLUTION"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST6"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("SUMMARY"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST7"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST8"));
+
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck));
+
+    // section after SCHEDULE
+    deck.reset(new Deck());
+    deck->addKeyword(std::make_shared<DeckKeyword>("RUNSPEC"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST1"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("GRID"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST2"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("PROPS"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST4"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("REGIONS"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST5"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("SOLUTION"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST6"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("SUMMARY"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST7"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST8"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("EDIT"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST3"));
+
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck));
+
+    // missing RUNSPEC
+    deck.reset(new Deck());
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("GRID"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST2"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("PROPS"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST3"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("SOLUTION"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST4"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST5"));
+
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck));
+
+    // missing GRID
+    deck.reset(new Deck());
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("RUNSPEC"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST1"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("PROPS"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST3"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("SOLUTION"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST4"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST5"));
+
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck));
+
+    // missing PROPS
+    deck.reset(new Deck());
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("RUNSPEC"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST1"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("GRID"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST2"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("SOLUTION"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST4"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST5"));
+
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck));
+
+    // missing SOLUTION
+    deck.reset(new Deck());
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("RUNSPEC"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST1"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("GRID"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST2"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("PROPS"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST3"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST5"));
+
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck));
+
+    // missing SCHEDULE
+    deck.reset(new Deck());
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("RUNSPEC"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST1"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("GRID"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST2"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("PROPS"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST3"));
+
+    deck->addKeyword(std::make_shared<DeckKeyword>("SOLUTION"));
+    deck->addKeyword(std::make_shared<DeckKeyword>("TEST4"));
+
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck));
 }
