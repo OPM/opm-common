@@ -625,6 +625,33 @@ BOOST_AUTO_TEST_CASE(ConstructorNORUNSPEC) {
 }
 
 
+
+BOOST_AUTO_TEST_CASE(ConstructorNoSections) {
+    const char *deckData =
+        "DIMENS \n"
+        "  10 10 10 / \n"
+        "COORD \n"
+        "  726*1 / \n"
+        "ZCORN \n"
+        "  8000*1 / \n"
+        "ACTNUM \n"
+        "  1000*1 / \n"
+        "\n";
+
+    Opm::ParserPtr parser(new Opm::Parser());
+    Opm::DeckConstPtr deck1 = parser->parseString(deckData) ;
+    Opm::DeckConstPtr deck2 = createCPDeck();
+    std::shared_ptr<Opm::GRIDSection> gridSection2(new Opm::GRIDSection(deck2) );
+    std::shared_ptr<Opm::RUNSPECSection> runspecSection2(new Opm::RUNSPECSection(deck2) );
+
+    Opm::EclipseGrid grid1(deck1);
+    Opm::EclipseGrid grid2(runspecSection2 , gridSection2 );
+
+    BOOST_CHECK(grid1.equal( grid2 ));
+}
+
+
+
 BOOST_AUTO_TEST_CASE(ConstructorNORUNSPEC_PINCH) {
     Opm::DeckConstPtr deck1 = createCPDeck();
     Opm::DeckConstPtr deck2 = createPinchedCPDeck();
