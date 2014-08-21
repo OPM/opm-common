@@ -25,8 +25,8 @@ namespace Opm {
 
     DeckItem::DeckItem(const std::string& name_, bool scalar) {
         m_name = name_;
-        m_defaultApplied = false;
         m_scalar = scalar;
+        m_valueStatus = DeckValue::NOT_SET;
     }
 
     const std::string& DeckItem::name() const {
@@ -34,9 +34,12 @@ namespace Opm {
     }
 
     bool DeckItem::defaultApplied() const {
-        if (m_scalar)
-            return m_defaultApplied;
-        else
+        if (m_scalar) {
+            if (m_valueStatus == DeckValue::DEFAULT)
+                return true;
+            else
+                return false;
+        } else
             throw std::invalid_argument("Tried query deckItem: " + m_name + " if default has been applied - that only applies to scalar items");
     }
 

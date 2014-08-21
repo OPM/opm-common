@@ -51,7 +51,7 @@ namespace Opm {
 
     void DeckIntItem::push_backDefault(int data) {
         m_data.push_back( data );
-        m_defaultApplied = true;
+        m_valueStatus = DeckValue::DEFAULT;
     }
 
 

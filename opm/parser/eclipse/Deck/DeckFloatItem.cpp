@@ -91,7 +91,7 @@ namespace Opm {
 
     void DeckFloatItem::push_backDefault(float data) {
         m_data.push_back( data );
-        m_defaultApplied = true;
+        m_valueStatus = DeckValue::DEFAULT;
     }
 
 
@@ -102,7 +102,7 @@ namespace Opm {
 
 
     void DeckFloatItem::push_backDimension(std::shared_ptr<const Dimension> activeDimension , std::shared_ptr<const Dimension> defaultDimension) {
-        if (m_defaultApplied)
+        if (m_valueStatus == DeckValue::DEFAULT)
             m_dimensions.push_back( defaultDimension );
         else
             m_dimensions.push_back( activeDimension );

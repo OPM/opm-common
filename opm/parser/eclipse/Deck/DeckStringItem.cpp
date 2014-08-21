@@ -62,7 +62,7 @@ namespace Opm {
   
     void DeckStringItem::push_backDefault(std::string data) {
         m_data.push_back( data );
-        m_defaultApplied = true;
+        m_valueStatus = DeckValue::DEFAULT;
     }
     
     

@@ -29,6 +29,15 @@
 
 namespace Opm {
 
+    namespace DeckValue {
+        enum StatusEnum {
+            VALID = 0,
+            DEFAULT = 1,
+            NOT_SET = 2
+        };
+    }
+
+
     class DeckItem {
     public:
         DeckItem(const std::string& name , bool m_scalar = true);
@@ -103,7 +112,9 @@ namespace Opm {
         virtual ~DeckItem() {
         }
 
-        bool m_defaultApplied;
+    protected:
+        DeckValue::StatusEnum m_valueStatus;
+
     private:
         std::string m_name;
         bool m_scalar;
