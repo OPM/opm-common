@@ -54,19 +54,28 @@ namespace Opm {
         m_grid.reset( ecl_grid_alloc_copy( src_ptr ) , ecl_grid_free );
     }
 
+
+    namespace
+    {
+        // keyword must be DIMENS or SPECGRID
+        std::vector<int> getDims(DeckKeywordConstPtr keyword)
+        {
+            DeckRecordConstPtr record = keyword->getRecord(0);
+            std::vector<int> dims = {record->getItem("NX")->getInt(0) ,
+                                     record->getItem("NY")->getInt(0) ,
+                                     record->getItem("NZ")->getInt(0) };
+            return dims;
+        }
+    } // anonymous namespace
+
     
     EclipseGrid::EclipseGrid(std::shared_ptr<const RUNSPECSection> runspecSection, std::shared_ptr<const GRIDSection> gridSection)
         : m_pinchActive(false),
           m_pinchThresholdThickness(invalidThickness)
     {
         if (runspecSection->hasKeyword("DIMENS")) {
-            DeckKeywordConstPtr dimens = runspecSection->getKeyword("DIMENS");
-            DeckRecordConstPtr record = dimens->getRecord(0);
-            std::vector<int> dims = {record->getItem("NX")->getInt(0) ,
-                                     record->getItem("NY")->getInt(0) ,
-                                     record->getItem("NZ")->getInt(0) };
-
-            initGrid( dims , gridSection );
+            std::vector<int> dims = getDims(runspecSection->getKeyword("DIMENS"));
+            initGrid(dims, gridSection);
         } else
             throw std::invalid_argument("The RUNSPEC section must have the DIMENS keyword with grid dimensions");
     }
@@ -93,38 +102,34 @@ namespace Opm {
             auto gridSection = std::make_shared<GRIDSection>(deck);
             if (runspecSection->hasKeyword("DIMENS")) {
                 DeckKeywordConstPtr dimens = runspecSection->getKeyword("DIMENS");
-                DeckRecordConstPtr record = dimens->getRecord(0);
-                std::vector<int> dims = { record->getItem("NX")->getInt(0) ,
-                                          record->getItem("NY")->getInt(0) ,
-                                          record->getItem("NZ")->getInt(0) };
+                std::vector<int> dims = getDims(dimens);
                 initGrid(dims, gridSection);
             } else {
-                throw std::invalid_argument("The RUNSPEC section must have the DIMENS keyword with grid dimensions");
+                throw std::invalid_argument("The RUNSPEC section must have the DIMENS keyword with grid dimensions.");
             }
         } else if (hasGRID) {
             // Look for SPECGRID instead of DIMENS.
             auto gridSection = std::make_shared<GRIDSection>(deck);
             if (gridSection->hasKeyword("SPECGRID")) {
                 DeckKeywordConstPtr specgrid = gridSection->getKeyword("SPECGRID");
-                DeckRecordConstPtr record = specgrid->getRecord(0);
-                std::vector<int> dims = { record->getItem("NX")->getInt(0) ,
-                                          record->getItem("NY")->getInt(0) ,
-                                          record->getItem("NZ")->getInt(0) };
+                std::vector<int> dims = getDims(specgrid);
                 initGrid(dims, gridSection);
             } else {
-                throw std::invalid_argument("With no RUNSPEC section, the GRID section must have the SPECGRID keyword with grid dimensions");
+                throw std::invalid_argument("With no RUNSPEC section, the GRID section must have the SPECGRID keyword with grid dimensions.");
             }
         } else {
             // The deck contains no relevant section, so it is probably a sectionless GRDECL file.
+            // Either SPECGRID or DIMENS is OK.
             if (deck->hasKeyword("SPECGRID")) {
                 DeckKeywordConstPtr specgrid = deck->getKeyword("SPECGRID");
-                DeckRecordConstPtr record = specgrid->getRecord(0);
-                std::vector<int> dims = { record->getItem("NX")->getInt(0) ,
-                                          record->getItem("NY")->getInt(0) ,
-                                          record->getItem("NZ")->getInt(0) };
+                std::vector<int> dims = getDims(specgrid);
+                initGrid(dims, deck);
+            } else if (deck->hasKeyword("DIMENS")) {
+                DeckKeywordConstPtr dimens = deck->getKeyword("DIMENS");
+                std::vector<int> dims = getDims(dimens);
                 initGrid(dims, deck);
             } else {
-                throw std::invalid_argument("Must specify grid dimensions with DIMENS (for a complete deck) or SPECGRID (for GRDECL files).");
+                throw std::invalid_argument("Must specify grid dimensions with DIMENS or SPECGRID.");
             }
         }
     }
