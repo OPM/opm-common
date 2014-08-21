@@ -111,16 +111,11 @@ namespace Opm {
 
     bool ParserIntItem::equal(const ParserItem& other) const
     {
-        // cast to a pointer to avoid bad_cast exception
-        const ParserIntItem* rhs = dynamic_cast<const ParserIntItem*>(&other);
-        if (rhs && ParserItem::equal(other) && (getDefault() == rhs->getDefault()))
-            return true;
-        else
-            return false;
+        return ParserItemEqual<ParserIntItem>(this , other);
     }
+    
 
-
-  void ParserIntItem::inlineNew(std::ostream& os) const {
+    void ParserIntItem::inlineNew(std::ostream& os) const {
         os << "new ParserIntItem(" << "\"" << name() << "\"" << "," << ParserItemSizeEnum2String( sizeType() );
         if (m_defaultSet)
             os << "," << getDefault();

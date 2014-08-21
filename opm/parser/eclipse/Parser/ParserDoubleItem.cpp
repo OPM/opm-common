@@ -76,17 +76,9 @@ namespace Opm
             m_default = defaultDouble();
     }
 
-
     bool ParserDoubleItem::equal(const ParserItem& other) const
     {
-        // cast to a pointer to avoid bad_cast exception
-        const ParserDoubleItem* rhs = dynamic_cast<const ParserDoubleItem*>(&other);
-        if (rhs && ParserItem::equal(other) && (getDefault() == rhs->getDefault())) {
-            return equalDimensions( other );
-        }
-        else
-            return false;
-    }
+        return (ParserItemEqual<ParserDoubleItem>(this , other) && equalDimensions(other));    }
 
 
     bool ParserDoubleItem::equalDimensions(const ParserItem& other) const {

@@ -115,10 +115,16 @@ namespace Opm {
         return "DEFAULT";
     }
 
+    bool ParserItem::defaultSet() const {
+        return m_defaultSet;
+    }
+
 
     bool ParserItem::equal(const ParserItem& other) const {
         if (typeid(this) == typeid(&other)) {
-            if ((name() == other.name()) && (sizeType() == other.sizeType()))
+            if ((name() == other.name()) && 
+                (sizeType() == other.sizeType()) &&
+                (m_defaultSet == other.m_defaultSet))
                 return true;
             else
                 return false;

@@ -50,6 +50,7 @@ namespace Opm {
         const std::string& name() const;
         ParserItemSizeEnum sizeType() const;
         std::string getDescription() const;
+        bool defaultSet() const;
         bool scalar() const;
         void setDescription(std::string helpText);
 
@@ -78,6 +79,21 @@ namespace Opm {
     typedef std::shared_ptr<const ParserItem> ParserItemConstPtr;
     typedef std::shared_ptr<ParserItem> ParserItemPtr;
 
+
+    template<typename T>
+    bool ParserItemEqual(const T * self , const ParserItem& other) {
+        const T * rhs = dynamic_cast<const T*>(&other);     
+        if (rhs && self->ParserItem::equal(other)) {              
+            if (self->defaultSet()) {                          
+                if (self->getDefault() == rhs->getDefault())  
+                    return true;                        
+                else                                    
+                    return false;                       
+            } else                                      
+                return true;                            
+        } else                                          
+            return false;
+    }
 
 }
 

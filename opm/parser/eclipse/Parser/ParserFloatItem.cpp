@@ -79,15 +79,8 @@ namespace Opm
 
     bool ParserFloatItem::equal(const ParserItem& other) const
     {
-        // cast to a pointer to avoid bad_cast exception
-        const ParserFloatItem* rhs = dynamic_cast<const ParserFloatItem*>(&other);
-        if (rhs && ParserItem::equal(other) && (getDefault() == rhs->getDefault())) {
-            return equalDimensions( other );
-        }
-        else
-            return false;
+        return (ParserItemEqual<ParserFloatItem>(this , other) && equalDimensions(other));
     }
-
 
     bool ParserFloatItem::equalDimensions(const ParserItem& other) const {
         bool equal_=false;
