@@ -59,54 +59,11 @@ namespace Opm {
 
 
 
-    /// Scans the rawRecords data according to the ParserItems definition.
-    /// returns a DeckItem object.
-    /// NOTE: data are popped from the rawRecords deque!
 
-     DeckItemPtr ParserStringItem::scan(RawRecordPtr rawRecord) const {
-         DeckStringItemPtr deckItem(new DeckStringItem(name() , scalar()));
-        std::string defaultValue = m_default;
-
-        if (sizeType() == ALL) {  
-            while (rawRecord->size() > 0) {
-                std::string token = rawRecord->pop_front();
-                if (tokenContainsStar( token )) {
-                    StarToken<std::string> st(token);
-                    std::string value = defaultValue;   
-                    if (st.hasValue())
-                        value = st.value();
-                    deckItem->push_backMultiple( value , st.multiplier() );
-                } else {
-                    std::string value = readValueToken<std::string>(token);
-                    deckItem->push_back(value);
-                }
-            }
-        } else {
-            // The '*' should be interpreted as a default indicator
-            if (rawRecord->size() > 0) {
-                std::string token = rawRecord->pop_front();
-                if (tokenContainsStar( token )) {
-                    StarToken<std::string> st(token);
-        
-                    if (st.hasValue()) { // Probably never true
-                        deckItem->push_back( st.value() ); 
-                        std::string stringValue = boost::lexical_cast<std::string>(st.value());
-                        for (size_t i=1; i < st.multiplier(); i++)
-                            rawRecord->push_front( stringValue );
-                    } else {
-                        deckItem->push_backDefault( defaultValue );
-                        for (size_t i=1; i < st.multiplier(); i++)
-                            rawRecord->push_front( "*" );
-                    }
-                } else {
-                    std::string value = readValueToken<std::string>(token);
-                    deckItem->push_back(value);
-                }
-            } else
-                deckItem->push_backDefault( defaultValue );
-        }
-        return deckItem;
+    DeckItemPtr ParserStringItem::scan(RawRecordPtr rawRecord) const {
+        return ParserItemScan<ParserStringItem,DeckStringItem,std::string>(this , rawRecord);
     }
+
      
      
     bool ParserStringItem::equal(const ParserItem& other) const

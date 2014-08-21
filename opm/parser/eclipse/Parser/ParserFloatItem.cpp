@@ -116,56 +116,11 @@ namespace Opm
             throw std::invalid_argument("Invalid index ");
     }
 
-
-    /// Scans the rawRecords data according to the ParserItems definition.
-    /// returns a DeckItem object.
-    /// NOTE: data are popped from the rawRecords deque!
     DeckItemPtr ParserFloatItem::scan(RawRecordPtr rawRecord) const {
-        DeckFloatItemPtr deckItem(new DeckFloatItem(name() , scalar()));
-        float defaultValue = m_default;
-
-        if (sizeType() == ALL) {  
-            while (rawRecord->size() > 0) {
-                std::string token = rawRecord->pop_front();
-                if (tokenContainsStar( token )) {
-                    StarToken<float> st(token);
-                    float value = defaultValue; 
-                    if (st.hasValue())
-                        value = st.value();
-                    deckItem->push_backMultiple( value , st.multiplier() );
-                } else {
-                    float value = readValueToken<float>(token);
-                    deckItem->push_back(value);
-                }
-            }
-        } else {
-            // The '*' should be interpreted as a default indicator
-            if (rawRecord->size() > 0) {
-                std::string token = rawRecord->pop_front();
-                if (tokenContainsStar( token )) {
-                    StarToken<float> st(token);
-
-                    if (st.hasValue()) { // Probably never true
-                        deckItem->push_back( st.value() );
-                        std::string stringValue = boost::lexical_cast<std::string>(st.value());
-                        for (size_t i=1; i < st.multiplier(); i++)
-                            rawRecord->push_front( stringValue );
-                    } else {
-                        deckItem->push_backDefault( defaultValue );
-                        for (size_t i=1; i < st.multiplier(); i++)
-                            rawRecord->push_front( "*" );
-                    }
-                } else {
-                    float value = readValueToken<float>(token);
-                    deckItem->push_back(value);
-                }
-            } else
-                deckItem->push_backDefault( defaultValue );
-        }
-        return deckItem;
+        return ParserItemScan<ParserFloatItem,DeckFloatItem,float>(this , rawRecord);
     }
-
-  void ParserFloatItem::inlineNew(std::ostream& os) const {
+    
+    void ParserFloatItem::inlineNew(std::ostream& os) const {
         os << "new ParserFloatItem(" << "\"" << name() << "\"" << "," << ParserItemSizeEnum2String( sizeType() );
         if (m_defaultSet)
             os << "," << getDefault();

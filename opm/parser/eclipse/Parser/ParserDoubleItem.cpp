@@ -116,55 +116,11 @@ namespace Opm
     }
 
 
-    /// Scans the rawRecords data according to the ParserItems definition.
-    /// returns a DeckItem object.
-    /// NOTE: data are popped from the rawRecords deque!
     DeckItemPtr ParserDoubleItem::scan(RawRecordPtr rawRecord) const {
-        DeckDoubleItemPtr deckItem(new DeckDoubleItem(name() , scalar()));
-        double defaultValue = m_default;
-
-        if (sizeType() == ALL) {  
-            while (rawRecord->size() > 0) {
-                std::string token = rawRecord->pop_front();
-                if (tokenContainsStar( token )) {
-                    StarToken<double> st(token);
-                    double value = defaultValue;  
-                    if (st.hasValue())
-                        value = st.value();
-                    deckItem->push_backMultiple( value , st.multiplier() );
-                } else {
-                    double value = readValueToken<double>(token);
-                    deckItem->push_back(value);
-                }
-            }
-        } else {
-            // The '*' should be interpreted as a default indicator
-            if (rawRecord->size() > 0) {
-                std::string token = rawRecord->pop_front();
-                if (tokenContainsStar( token )) {
-                    StarToken<double> st(token);
-        
-                    if (st.hasValue()) { // Probably never true
-                        deckItem->push_back( st.value() ); 
-                        std::string stringValue = boost::lexical_cast<std::string>(st.value());
-                        for (size_t i=1; i < st.multiplier(); i++)
-                            rawRecord->push_front( stringValue );
-                    } else {
-                        deckItem->push_backDefault( defaultValue );
-                        for (size_t i=1; i < st.multiplier(); i++)
-                            rawRecord->push_front( "*" );
-                    }
-                } else {
-                    double value = readValueToken<double>(token);
-                    deckItem->push_back(value);
-                }
-            } else
-                deckItem->push_backDefault( defaultValue );
-        }
-        return deckItem;
+        return ParserItemScan<ParserDoubleItem,DeckDoubleItem,double>(this , rawRecord);
     }
     
-  void ParserDoubleItem::inlineNew(std::ostream& os) const {
+    void ParserDoubleItem::inlineNew(std::ostream& os) const {
         os << "new ParserDoubleItem(" << "\"" << name() << "\"" << "," << ParserItemSizeEnum2String( sizeType() );
         if (m_defaultSet)
             os << "," << getDefault();

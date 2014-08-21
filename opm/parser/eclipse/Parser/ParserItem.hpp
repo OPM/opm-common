@@ -32,7 +32,7 @@
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 #include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
-
+#include <opm/parser/eclipse/RawDeck/StarToken.hpp>
 
 namespace Opm {
     
@@ -94,6 +94,64 @@ namespace Opm {
         } else                                          
             return false;
     }
+
+
+
+    
+    /// Scans the rawRecords data according to the ParserItems definition.
+    /// returns a DeckItem object.
+    /// NOTE: data are popped from the rawRecords deque!
+    template<typename ParserItemType , typename DeckItemType , typename valueType>
+    DeckItemPtr ParserItemScan(const ParserItemType * self , RawRecordPtr rawRecord) {
+        std::shared_ptr<DeckItemType> deckItem = std::make_shared<DeckItemType>( self->name() , self->scalar() );
+        
+        if (self->sizeType() == ALL) {  
+            // The '*' should be interpreted either as a default indicator in the cases '*' and '5*'
+            // or as multiplier in the case: '5*99'. 
+            while (rawRecord->size() > 0) {
+                std::string token = rawRecord->pop_front();
+                if (tokenContainsStar( token )) {
+                    StarToken<valueType> st(token);
+                    valueType value;
+                    if (st.hasValue())
+                        value = st.value();
+                    else
+                        value = self->getDefault(); 
+                    
+                    deckItem->push_backMultiple( value , st.multiplier() );
+                } else {
+                    valueType value = readValueToken<valueType>(token);
+                    deckItem->push_back(value);
+                }
+            }
+        } else {
+            // The '*' should be interpreted as a default indicator
+            if (rawRecord->size() > 0) {
+                std::string token = rawRecord->pop_front();
+                if (tokenContainsStar( token )) {
+                    StarToken<valueType> st(token);
+        
+                    if (st.hasValue()) { // Probably never true
+                        deckItem->push_back( st.value() ); 
+                        std::string stringValue = boost::lexical_cast<std::string>(st.value());
+                        for (size_t i=1; i < st.multiplier(); i++)
+                            rawRecord->push_front( stringValue );
+                    } else {
+                        deckItem->push_backDefault( self->getDefault() );
+                        for (size_t i=1; i < st.multiplier(); i++)
+                            rawRecord->push_front( "*" );
+                    }
+                } else {
+                    valueType value = readValueToken<valueType>(token);
+                    deckItem->push_back(value);
+                }
+            } else
+                deckItem->push_backDefault( self->getDefault() );
+        }
+        return deckItem;
+    }
+
+
 
 }
 
