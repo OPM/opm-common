@@ -36,9 +36,7 @@ BOOST_AUTO_TEST_CASE(CreateCPGrid) {
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/GRID/CORNERPOINT.DATA");
     DeckPtr deck =  parser->parseFile(scheduleFile.string());
-    std::shared_ptr<RUNSPECSection> runspecSection(new RUNSPECSection(deck) );
-    std::shared_ptr<GRIDSection> gridSection(new GRIDSection(deck) );
-    std::shared_ptr<EclipseGrid> grid(new EclipseGrid( runspecSection , gridSection ));
+    std::shared_ptr<EclipseGrid> grid(new EclipseGrid( deck ));
 
     BOOST_CHECK_EQUAL( 10U  , grid->getNX( ));
     BOOST_CHECK_EQUAL( 10U  , grid->getNY( ));
@@ -51,9 +49,7 @@ BOOST_AUTO_TEST_CASE(CreateCPActnumGrid) {
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/GRID/CORNERPOINT_ACTNUM.DATA");
     DeckPtr deck =  parser->parseFile(scheduleFile.string());
-    std::shared_ptr<RUNSPECSection> runspecSection(new RUNSPECSection(deck) );
-    std::shared_ptr<GRIDSection> gridSection(new GRIDSection(deck) );
-    std::shared_ptr<EclipseGrid> grid(new EclipseGrid( runspecSection , gridSection ));
+    std::shared_ptr<EclipseGrid> grid(new EclipseGrid( deck ));
 
     BOOST_CHECK_EQUAL(  10U , grid->getNX( ));
     BOOST_CHECK_EQUAL(  10U , grid->getNY( ));
@@ -67,9 +63,7 @@ BOOST_AUTO_TEST_CASE(ExportFromCPGridAllActive) {
     boost::filesystem::path scheduleFile("testdata/integration_tests/GRID/CORNERPOINT.DATA");
     DeckPtr deck =  parser->parseFile(scheduleFile.string());
 
-    std::shared_ptr<RUNSPECSection> runspecSection(new RUNSPECSection(deck) );
-    std::shared_ptr<GRIDSection> gridSection(new GRIDSection(deck) );
-    std::shared_ptr<EclipseGrid> grid(new EclipseGrid( runspecSection , gridSection ));
+    std::shared_ptr<EclipseGrid> grid(new EclipseGrid( deck ));
 
     std::vector<int> actnum;
 
@@ -86,9 +80,7 @@ BOOST_AUTO_TEST_CASE(ExportFromCPGridACTNUM) {
     boost::filesystem::path scheduleFile("testdata/integration_tests/GRID/CORNERPOINT_ACTNUM.DATA");
     DeckPtr deck =  parser->parseFile(scheduleFile.string());
 
-    std::shared_ptr<RUNSPECSection> runspecSection(new RUNSPECSection(deck) );
-    std::shared_ptr<GRIDSection> gridSection(new GRIDSection(deck) );
-    std::shared_ptr<EclipseGrid> grid(new EclipseGrid( runspecSection , gridSection ));
+    std::shared_ptr<EclipseGrid> grid(new EclipseGrid( deck ));
 
     std::vector<double> coord;
     std::vector<double> zcorn;

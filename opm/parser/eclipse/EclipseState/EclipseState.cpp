@@ -154,10 +154,7 @@ namespace Opm {
 
 
     void EclipseState::initEclipseGrid(DeckConstPtr deck) {
-        std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
-        std::shared_ptr<Opm::RUNSPECSection> runspecSection(new Opm::RUNSPECSection(deck) );
-        
-        m_eclipseGrid = EclipseGridConstPtr( new EclipseGrid( runspecSection , gridSection ));
+        m_eclipseGrid = EclipseGridConstPtr( new EclipseGrid( deck ));
     }
 
 
