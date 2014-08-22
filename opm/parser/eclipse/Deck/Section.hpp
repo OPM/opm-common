@@ -31,13 +31,22 @@ namespace Opm {
 
     class Section : public boost::iterator_facade<Section, DeckKeywordPtr, boost::forward_traversal_tag>
     {
+        // Defining a no-op output stream nullStream.
         // see https://stackoverflow.com/questions/11826554/standard-no-op-output-stream
-        class NullStream : public std::ostream
+        class NullBuffer : public std::streambuf
         {
         public:
             int overflow(int c) { return c; }
         };
+        class NullStream : public std::ostream
+        {
+        public:
+            NullStream() : std::ostream(&m_sb) {}
+        private:
+            NullBuffer m_sb;
+        };
         static NullStream nullStream;
+
     public:
         Section(DeckConstPtr deck, const std::string& startKeyword);
         bool hasKeyword( const std::string& keyword ) const;
