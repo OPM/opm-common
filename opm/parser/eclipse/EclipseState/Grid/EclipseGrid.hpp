@@ -34,12 +34,10 @@ namespace Opm {
     public:
         explicit EclipseGrid(const std::string& filename);
         explicit EclipseGrid(const ecl_grid_type * src_ptr);
-        EclipseGrid(std::shared_ptr<const RUNSPECSection> runspecSection, std::shared_ptr<const GRIDSection> gridSection);
-        EclipseGrid(int nx, int ny , int nz , std::shared_ptr<const GRIDSection> gridSection);
         explicit EclipseGrid(std::shared_ptr<const Deck> deck);
 
-        static bool hasCornerPointKeywords(std::shared_ptr<const GRIDSection> gridSection);
-        static bool hasCartesianKeywords(std::shared_ptr<const GRIDSection> gridSection);
+        static bool hasCornerPointKeywords(std::shared_ptr<const Deck> deck);
+        static bool hasCartesianKeywords(std::shared_ptr<const Deck> deck);
         size_t  getNumActive( ) const;
         size_t  getNX( ) const;
         size_t  getNY( ) const;
@@ -68,31 +66,17 @@ namespace Opm {
         bool m_pinchActive;
         double m_pinchThresholdThickness;
 
-        template <class DeckOrSectionConstPtr>
-        static bool hasCornerPointKeywordsGeneric(DeckOrSectionConstPtr gridSection);
-        template <class DeckOrSectionConstPtr>
-        static bool hasCartesianKeywordsGeneric(DeckOrSectionConstPtr gridSection);
-        template <class DeckOrSectionConstPtr>
-        void initCartesianGrid(const std::vector<int>& dims , DeckOrSectionConstPtr gridSection);
-        template <class DeckOrSectionConstPtr>
-        void initCornerPointGrid(const std::vector<int>& dims , DeckOrSectionConstPtr gridSection);
-        template <class DeckOrSectionConstPtr>
-        void assertCornerPointKeywords( const std::vector<int>& dims , DeckOrSectionConstPtr gridSection ) const ;
-        template <class DeckOrSectionConstPtr>
-        void initDTOPSGrid(const std::vector<int>& dims , DeckOrSectionConstPtr gridSection);
-        template <class DeckOrSectionConstPtr>
-        void initDVDEPTHZGrid(const std::vector<int>& dims , DeckOrSectionConstPtr gridSection);
-        template <class DeckOrSectionConstPtr>
-        void initGrid( const std::vector<int>& dims , DeckOrSectionConstPtr gridSection );
-        template <class DeckOrSectionConstPtr>
-        static bool hasDVDEPTHZKeywords(DeckOrSectionConstPtr gridSection);
-        template <class DeckOrSectionConstPtr>
-        static bool hasDTOPSKeywords(DeckOrSectionConstPtr gridSection);
+        void initCartesianGrid(const std::vector<int>& dims , DeckConstPtr deck);
+        void initCornerPointGrid(const std::vector<int>& dims , DeckConstPtr deck);
+        void assertCornerPointKeywords( const std::vector<int>& dims , DeckConstPtr deck ) const ;
+        void initDTOPSGrid(const std::vector<int>& dims , DeckConstPtr deck);
+        void initDVDEPTHZGrid(const std::vector<int>& dims , DeckConstPtr deck);
+        void initGrid( const std::vector<int>& dims , DeckConstPtr deck );
+        static bool hasDVDEPTHZKeywords(DeckConstPtr deck);
+        static bool hasDTOPSKeywords(DeckConstPtr deck);
         static void assertVectorSize(const std::vector<double>& vector , size_t expectedSize , const std::string& msg);
-        template <class DeckOrSectionConstPtr>
-        std::vector<double> createTOPSVector(const std::vector<int>& dims , const std::vector<double>& DZ , DeckOrSectionConstPtr gridSection);
-        template <class DeckOrSectionConstPtr>
-        std::vector<double> createDVector(const std::vector<int>& dims , size_t dim , const std::string& DKey , const std::string& DVKey, DeckOrSectionConstPtr gridSection);
+        std::vector<double> createTOPSVector(const std::vector<int>& dims , const std::vector<double>& DZ , DeckConstPtr deck);
+        std::vector<double> createDVector(const std::vector<int>& dims , size_t dim , const std::string& DKey , const std::string& DVKey, DeckConstPtr deck);
         void scatterDim(const std::vector<int>& dims , size_t dim , const std::vector<double>& DV , std::vector<double>& D);
    };
 

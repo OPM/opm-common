@@ -45,9 +45,7 @@ BOOST_AUTO_TEST_CASE(CreateMissingDIMENS_throws) {
     deck->addKeyword(test1);
     deck->addKeyword(test2);
 
-    std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
-    std::shared_ptr<Opm::RUNSPECSection> runspecSection(new Opm::RUNSPECSection(deck) );
-    BOOST_CHECK_THROW(new Opm::EclipseGrid( runspecSection , gridSection ) , std::invalid_argument);
+    BOOST_CHECK_THROW(new Opm::EclipseGrid( deck ) , std::invalid_argument);
 }
 
 
@@ -70,9 +68,8 @@ static Opm::DeckPtr createDeckHeaders() {
 
 BOOST_AUTO_TEST_CASE(HasGridKeywords) {
     Opm::DeckPtr deck = createDeckHeaders();
-    std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
-    BOOST_CHECK( !Opm::EclipseGrid::hasCornerPointKeywords( gridSection ));
-    BOOST_CHECK( !Opm::EclipseGrid::hasCartesianKeywords( gridSection ));
+    BOOST_CHECK( !Opm::EclipseGrid::hasCornerPointKeywords( deck ));
+    BOOST_CHECK( !Opm::EclipseGrid::hasCartesianKeywords( deck ));
 }
 
 static Opm::DeckPtr createCPDeck() {
@@ -188,12 +185,9 @@ static Opm::DeckPtr createCARTInvalidDeck() {
 BOOST_AUTO_TEST_CASE(DEPTHZ_EQUAL_TOPS) {
     Opm::DeckPtr deck1 = createCARTDeck();
     Opm::DeckPtr deck2 = createCARTDeckDEPTHZ();
-    std::shared_ptr<Opm::RUNSPECSection> runspecSection(new Opm::RUNSPECSection(deck1) );
-    std::shared_ptr<Opm::GRIDSection> gridSection1(new Opm::GRIDSection(deck1) );
-    std::shared_ptr<Opm::GRIDSection> gridSection2(new Opm::GRIDSection(deck2) );
     
-    std::shared_ptr<Opm::EclipseGrid> grid1(new Opm::EclipseGrid( runspecSection , gridSection1 ));
-    std::shared_ptr<Opm::EclipseGrid> grid2(new Opm::EclipseGrid( runspecSection , gridSection2 ));
+    std::shared_ptr<Opm::EclipseGrid> grid1(new Opm::EclipseGrid( deck1 ));
+    std::shared_ptr<Opm::EclipseGrid> grid2(new Opm::EclipseGrid( deck2 ));
 
     BOOST_CHECK( grid1->equal( *(grid2.get()) ));
 
@@ -235,33 +229,29 @@ BOOST_AUTO_TEST_CASE(DEPTHZ_EQUAL_TOPS) {
 
 BOOST_AUTO_TEST_CASE(HasCPKeywords) {
     Opm::DeckPtr deck = createCPDeck();
-    std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
-    BOOST_CHECK(  Opm::EclipseGrid::hasCornerPointKeywords( gridSection ));
-    BOOST_CHECK( !Opm::EclipseGrid::hasCartesianKeywords( gridSection ));
+    BOOST_CHECK(  Opm::EclipseGrid::hasCornerPointKeywords( deck ));
+    BOOST_CHECK( !Opm::EclipseGrid::hasCartesianKeywords( deck ));
 }
 
 
 BOOST_AUTO_TEST_CASE(HasCartKeywords) {
     Opm::DeckPtr deck = createCARTDeck();
-    std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
-    BOOST_CHECK( !Opm::EclipseGrid::hasCornerPointKeywords( gridSection ));
-    BOOST_CHECK(  Opm::EclipseGrid::hasCartesianKeywords( gridSection ));
+    BOOST_CHECK( !Opm::EclipseGrid::hasCornerPointKeywords( deck ));
+    BOOST_CHECK(  Opm::EclipseGrid::hasCartesianKeywords( deck ));
 }
 
 
 BOOST_AUTO_TEST_CASE(HasCartKeywordsDEPTHZ) {
     Opm::DeckPtr deck = createCARTDeckDEPTHZ();
-    std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
-    BOOST_CHECK( !Opm::EclipseGrid::hasCornerPointKeywords( gridSection ));
-    BOOST_CHECK(  Opm::EclipseGrid::hasCartesianKeywords( gridSection ));
+    BOOST_CHECK( !Opm::EclipseGrid::hasCornerPointKeywords( deck ));
+    BOOST_CHECK(  Opm::EclipseGrid::hasCartesianKeywords( deck ));
 }
 
 
 BOOST_AUTO_TEST_CASE(HasINVALIDCartKeywords) {
     Opm::DeckPtr deck = createCARTInvalidDeck();
-    std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
-    BOOST_CHECK( !Opm::EclipseGrid::hasCornerPointKeywords( gridSection ));
-    BOOST_CHECK( !Opm::EclipseGrid::hasCartesianKeywords( gridSection ));
+    BOOST_CHECK( !Opm::EclipseGrid::hasCornerPointKeywords( deck ));
+    BOOST_CHECK( !Opm::EclipseGrid::hasCartesianKeywords( deck ));
 }
 
 
@@ -270,9 +260,7 @@ BOOST_AUTO_TEST_CASE(HasINVALIDCartKeywords) {
 
 BOOST_AUTO_TEST_CASE(CreateMissingGRID_throws) {
     Opm::DeckPtr deck = createDeckHeaders();
-    std::shared_ptr<Opm::RUNSPECSection> runspecSection(new Opm::RUNSPECSection(deck) );
-    std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
-    BOOST_CHECK_THROW(new Opm::EclipseGrid( runspecSection , gridSection ) , std::invalid_argument);
+    BOOST_CHECK_THROW(new Opm::EclipseGrid( deck ) , std::invalid_argument);
 }
 
 
@@ -302,9 +290,7 @@ static Opm::DeckPtr createInvalidDXYZCARTDeck() {
 
 BOOST_AUTO_TEST_CASE(CreateCartesianGRID) {
     Opm::DeckPtr deck = createInvalidDXYZCARTDeck();
-    std::shared_ptr<Opm::RUNSPECSection> runspecSection(new Opm::RUNSPECSection(deck) );
-    std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
-    BOOST_CHECK_THROW(new Opm::EclipseGrid( runspecSection , gridSection ) , std::invalid_argument);
+    BOOST_CHECK_THROW(new Opm::EclipseGrid( deck ) , std::invalid_argument);
 }
 
 
@@ -334,9 +320,7 @@ static Opm::DeckPtr createInvalidDXYZCARTDeckDEPTHZ() {
 
 BOOST_AUTO_TEST_CASE(CreateCartesianGRIDDEPTHZ) {
     Opm::DeckPtr deck = createInvalidDXYZCARTDeckDEPTHZ();
-    std::shared_ptr<Opm::RUNSPECSection> runspecSection(new Opm::RUNSPECSection(deck) );
-    std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
-    BOOST_CHECK_THROW(new Opm::EclipseGrid( runspecSection , gridSection ) , std::invalid_argument);
+    BOOST_CHECK_THROW(new Opm::EclipseGrid( deck ) , std::invalid_argument);
 }
 
 
@@ -388,9 +372,7 @@ static Opm::DeckPtr createInvalidDEPTHZDeck1 () {
 
 BOOST_AUTO_TEST_CASE(CreateCartesianGRIDInvalidDEPTHZ1) {
     Opm::DeckPtr deck = createInvalidDEPTHZDeck1();
-    std::shared_ptr<Opm::RUNSPECSection> runspecSection(new Opm::RUNSPECSection(deck) );
-    std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
-    BOOST_CHECK_THROW(new Opm::EclipseGrid( runspecSection , gridSection ) , std::invalid_argument);
+    BOOST_CHECK_THROW(new Opm::EclipseGrid( deck ) , std::invalid_argument);
 }
 
 
@@ -418,18 +400,14 @@ static Opm::DeckPtr createInvalidDEPTHZDeck2 () {
 
 BOOST_AUTO_TEST_CASE(CreateCartesianGRIDInvalidDEPTHZ2) {
     Opm::DeckPtr deck = createInvalidDEPTHZDeck2();
-    std::shared_ptr<Opm::RUNSPECSection> runspecSection(new Opm::RUNSPECSection(deck) );
-    std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
-    BOOST_CHECK_THROW(new Opm::EclipseGrid( runspecSection , gridSection ) , std::invalid_argument);
+    BOOST_CHECK_THROW(new Opm::EclipseGrid( deck ) , std::invalid_argument);
 }
 
 
 
 BOOST_AUTO_TEST_CASE(CreateCartesianGRIDOnlyTopLayerDZ) {
     Opm::DeckPtr deck = createOnlyTopDZCartGrid();
-    std::shared_ptr<Opm::RUNSPECSection> runspecSection(new Opm::RUNSPECSection(deck) );
-    std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
-    std::shared_ptr<Opm::EclipseGrid> grid(new Opm::EclipseGrid( runspecSection , gridSection ));
+    std::shared_ptr<Opm::EclipseGrid> grid(new Opm::EclipseGrid( deck ));
 
     BOOST_CHECK_EQUAL( 10 , grid->getNX( ));
     BOOST_CHECK_EQUAL(  5 , grid->getNY( ));
@@ -441,9 +419,7 @@ BOOST_AUTO_TEST_CASE(CreateCartesianGRIDOnlyTopLayerDZ) {
 
 BOOST_AUTO_TEST_CASE(AllActiveExportActnum) {
     Opm::DeckPtr deck = createOnlyTopDZCartGrid();
-    std::shared_ptr<Opm::RUNSPECSection> runspecSection(new Opm::RUNSPECSection(deck) );
-    std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
-    std::shared_ptr<Opm::EclipseGrid> grid(new Opm::EclipseGrid( runspecSection , gridSection ));
+    std::shared_ptr<Opm::EclipseGrid> grid(new Opm::EclipseGrid( deck ));
 
     std::vector<int> actnum;
 
@@ -472,12 +448,10 @@ BOOST_AUTO_TEST_CASE(CornerPointSizeMismatchCOORD) {
  
     Opm::ParserPtr parser(new Opm::Parser());
     Opm::DeckConstPtr deck = parser->parseString(deckData) ;
-    std::shared_ptr<Opm::RUNSPECSection> runspecSection(new Opm::RUNSPECSection(deck) );
-    std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
-    Opm::DeckKeywordConstPtr zcorn = gridSection->getKeyword("ZCORN");
+    Opm::DeckKeywordConstPtr zcorn = deck->getKeyword("ZCORN");
     BOOST_CHECK_EQUAL( 8000U , zcorn->getDataSize( ));
 
-    BOOST_CHECK_THROW(Opm::EclipseGrid( runspecSection , gridSection ) , std::invalid_argument);
+    BOOST_CHECK_THROW(Opm::EclipseGrid( std::move(deck) ) , std::invalid_argument);
 }
 
 
@@ -499,10 +473,8 @@ BOOST_AUTO_TEST_CASE(CornerPointSizeMismatchZCORN) {
  
     Opm::ParserPtr parser(new Opm::Parser());
     Opm::DeckConstPtr deck = parser->parseString(deckData) ;
-    std::shared_ptr<Opm::RUNSPECSection> runspecSection(new Opm::RUNSPECSection(deck) );
-    std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
-    Opm::DeckKeywordConstPtr zcorn = gridSection->getKeyword("ZCORN");
-    BOOST_CHECK_THROW(Opm::EclipseGrid( runspecSection , gridSection ) , std::invalid_argument);
+    Opm::DeckKeywordConstPtr zcorn = deck->getKeyword("ZCORN");
+    BOOST_CHECK_THROW((void)Opm::EclipseGrid(deck), std::invalid_argument);
 }
 
 
@@ -524,9 +496,7 @@ BOOST_AUTO_TEST_CASE(CornerPointSizeMismatchACTNUM) {
  
     Opm::ParserPtr parser(new Opm::Parser());
     Opm::DeckConstPtr deck = parser->parseString(deckData) ;
-    std::shared_ptr<Opm::RUNSPECSection> runspecSection(new Opm::RUNSPECSection(deck) );
-    std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
-    BOOST_CHECK_THROW(Opm::EclipseGrid( runspecSection , gridSection ) , std::invalid_argument);
+    BOOST_CHECK_THROW((void)Opm::EclipseGrid( deck ) , std::invalid_argument);
 }
 
 
@@ -547,10 +517,8 @@ BOOST_AUTO_TEST_CASE(ResetACTNUM) {
  
     Opm::ParserPtr parser(new Opm::Parser());
     Opm::DeckConstPtr deck = parser->parseString(deckData) ;
-    std::shared_ptr<Opm::RUNSPECSection> runspecSection(new Opm::RUNSPECSection(deck) );
-    std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
     
-    Opm::EclipseGrid grid(runspecSection , gridSection );
+    Opm::EclipseGrid grid(deck);
     BOOST_CHECK_EQUAL( 1000U , grid.getNumActive());
     std::vector<int> actnum(1000);
     actnum[0] = 1;
@@ -584,9 +552,7 @@ BOOST_AUTO_TEST_CASE(Fwrite) {
  
     Opm::ParserPtr parser(new Opm::Parser());
     Opm::DeckConstPtr deck = parser->parseString(deckData) ;
-    std::shared_ptr<Opm::RUNSPECSection> runspecSection(new Opm::RUNSPECSection(deck) );
-    std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
-    Opm::EclipseGrid grid1(runspecSection , gridSection );
+    Opm::EclipseGrid grid1(deck );
 
     grid1.fwriteEGRID( "TEST.EGRID" );
 
@@ -602,6 +568,8 @@ BOOST_AUTO_TEST_CASE(Fwrite) {
 BOOST_AUTO_TEST_CASE(ConstructorNORUNSPEC) {
     const char *deckData =
         "GRID\n"
+        "SPECGRID \n"
+        "  10 10 10 / \n"
         "COORD\n"
         "  726*1 / \n"
         "ZCORN \n"
@@ -614,12 +582,9 @@ BOOST_AUTO_TEST_CASE(ConstructorNORUNSPEC) {
     Opm::ParserPtr parser(new Opm::Parser());
     Opm::DeckConstPtr deck1 = parser->parseString(deckData) ;
     Opm::DeckConstPtr deck2 = createCPDeck();
-    std::shared_ptr<Opm::GRIDSection> gridSection1(new Opm::GRIDSection(deck1) );
-    std::shared_ptr<Opm::GRIDSection> gridSection2(new Opm::GRIDSection(deck2) );
-    std::shared_ptr<Opm::RUNSPECSection> runspecSection2(new Opm::RUNSPECSection(deck2) );
-    
-    Opm::EclipseGrid grid1(10,10,10 , gridSection1 );
-    Opm::EclipseGrid grid2(runspecSection2 , gridSection2 );
+
+    Opm::EclipseGrid grid1(deck1);
+    Opm::EclipseGrid grid2(deck2);
 
     BOOST_CHECK(grid1.equal( grid2 ));
 }
@@ -641,11 +606,9 @@ BOOST_AUTO_TEST_CASE(ConstructorNoSections) {
     Opm::ParserPtr parser(new Opm::Parser());
     Opm::DeckConstPtr deck1 = parser->parseString(deckData) ;
     Opm::DeckConstPtr deck2 = createCPDeck();
-    std::shared_ptr<Opm::GRIDSection> gridSection2(new Opm::GRIDSection(deck2) );
-    std::shared_ptr<Opm::RUNSPECSection> runspecSection2(new Opm::RUNSPECSection(deck2) );
 
     Opm::EclipseGrid grid1(deck1);
-    Opm::EclipseGrid grid2(runspecSection2 , gridSection2 );
+    Opm::EclipseGrid grid2(deck2);
 
     BOOST_CHECK(grid1.equal( grid2 ));
 }
@@ -655,13 +618,9 @@ BOOST_AUTO_TEST_CASE(ConstructorNoSections) {
 BOOST_AUTO_TEST_CASE(ConstructorNORUNSPEC_PINCH) {
     Opm::DeckConstPtr deck1 = createCPDeck();
     Opm::DeckConstPtr deck2 = createPinchedCPDeck();
-    std::shared_ptr<Opm::GRIDSection> gridSection1(new Opm::GRIDSection(deck1) );
-    std::shared_ptr<Opm::GRIDSection> gridSection2(new Opm::GRIDSection(deck2) );
-    std::shared_ptr<Opm::RUNSPECSection> runspecSection1(new Opm::RUNSPECSection(deck1) );
-    std::shared_ptr<Opm::RUNSPECSection> runspecSection2(new Opm::RUNSPECSection(deck2) );
 
-    Opm::EclipseGrid grid1(runspecSection1 , gridSection1 );
-    Opm::EclipseGrid grid2(runspecSection2 , gridSection2 );
+    Opm::EclipseGrid grid1(deck1);
+    Opm::EclipseGrid grid2(deck2);
 
     BOOST_CHECK(!grid1.equal( grid2 ));
     BOOST_CHECK(!grid1.isPinchActive());
