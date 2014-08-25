@@ -611,25 +611,21 @@ namespace Opm {
             os << indent << lhs << "->setMatchRegex(\"" << m_matchRegexString << "\");" << std::endl;
 
         for (size_t i = 0; i < m_record->size(); i++) {
-            os << indent << "{" << std::endl;
+            const std::string local_indent = indent + "   ";
+            ParserItemConstPtr item = m_record->get(i);
+            os << local_indent << "ParserItemPtr "<<item->name()<<"item(";
+            item->inlineNew(os);
+            os << ");" << std::endl;
+            os << local_indent << item->name()<<"item->setDescription(\"" << item->getDescription() << "\");" << std::endl;
+            for (size_t idim=0; idim < item->numDimensions(); idim++)
+                os << local_indent <<item->name()<<"item->push_backDimension(\"" << item->getDimension( idim ) << "\");" << std::endl;
             {
-                const std::string local_indent = indent + "   ";
-                ParserItemConstPtr item = m_record->get(i);
-                os << local_indent << "ParserItemPtr item(";
-                item->inlineNew(os);
-                os << ");" << std::endl;
-                os << local_indent << "item->setDescription(\"" << item->getDescription() << "\");" << std::endl;
-                for (size_t idim=0; idim < item->numDimensions(); idim++)
-                    os << local_indent << "item->push_backDimension(\"" << item->getDimension( idim ) << "\");" << std::endl;
-                {
-                    std::string addItemMethod = "addItem";
-                    if (m_isDataKeyword)
-                        addItemMethod = "addDataItem";
+                std::string addItemMethod = "addItem";
+                if (m_isDataKeyword)
+                    addItemMethod = "addDataItem";
 
-                    os << local_indent << lhs << "->" << addItemMethod << "(item);" << std::endl;
-                }
+                os << local_indent << lhs << "->" << addItemMethod << "("<<item->name()<<"item);" << std::endl;
             }
-            os << indent << "}" << std::endl;
         }
     }
 

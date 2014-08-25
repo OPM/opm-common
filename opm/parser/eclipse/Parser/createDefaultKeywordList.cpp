@@ -163,7 +163,7 @@ static void generateSourceForKeyword(std::iostream& of, KeywordElementType keywo
     of << "{" << std::endl;
     of << indent << "ParserKeywordPtr ";
     parserKeyword->inlineNew(of , keywordName , indent);
-    of << indent << "addParserKeyword( " << keywordName << ");" << std::endl;
+    of << indent << "parser->addParserKeyword( " << keywordName << ");" << std::endl;
     of << "}" << std::endl << std::endl;
     
     std::cout << "Creating keyword: " << keywordName << std::endl;
@@ -171,15 +171,26 @@ static void generateSourceForKeyword(std::iostream& of, KeywordElementType keywo
 
 static void generateKeywordSource(const char * source_file_name , KeywordMapType& keywordMap) {
     std::fstream source_file_stream( source_file_name, std::fstream::out );
-    
-    createHeader(source_file_stream);
-    startFunction(source_file_stream);
-    for (auto iter=keywordMap.begin(); iter != keywordMap.end(); ++iter) 
-        generateSourceForKeyword(source_file_stream , *iter);
 
+    createHeader(source_file_stream);
+
+    for (auto iter=keywordMap.begin(); iter != keywordMap.end(); ++iter) {
+        // the stupid default compiler flags will cause a warning if a function is
+        // defined without declaring a prototype before. So let's give the compiler a
+        // cookie to make it happy...
+        source_file_stream << "void add" << iter->second.first << "Keyword(Opm::Parser *parser);\n";
+
+        source_file_stream << "void add" << iter->second.first << "Keyword(Opm::Parser *parser)\n";
+        generateSourceForKeyword(source_file_stream , *iter);
+    }
+
+    startFunction(source_file_stream);
+    for (auto iter=keywordMap.begin(); iter != keywordMap.end(); ++iter)
+        source_file_stream << "    add" << iter->second.first << "Keyword(this);\n";
     endFunction(source_file_stream);
-    source_file_stream << "}" << std::endl;
-    
+
+    source_file_stream << "} // end namespace Opm\n";
+
     source_file_stream.close( );
 }
 
@@ -282,7 +293,6 @@ int main(int /* argc */, char ** argv) {
         } else
             needToGenerate = true;
     }
-
 
     if (needToGenerate) {
         std::cout << "Generating keywords:" << std::endl;
