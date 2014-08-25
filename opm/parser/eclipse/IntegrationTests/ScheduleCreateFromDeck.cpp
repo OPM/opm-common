@@ -81,10 +81,8 @@ BOOST_AUTO_TEST_CASE(WCONPROD_Missing_DATA) {
 BOOST_AUTO_TEST_CASE(WellTesting) {
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELLS2");
-    std::cout << "Parsing file SCHEDULE_WELLS2" << std::endl;
     DeckPtr deck =  parser->parseFile(scheduleFile.string());
     ScheduleConstPtr sched(new Schedule(deck));
-    std::cout << "Finished parsing file SCHEDULE_WELLS2" << std::endl;
 
     BOOST_CHECK_EQUAL(3U, sched->numWells());
     BOOST_CHECK(sched->hasWell("W_1"));
@@ -230,7 +228,6 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_with_explicit_L0_parenting) {
 
     GroupTreeNodePtr rootNode = sched->getGroupTree(0)->getNode("FIELD");
 
-    sched->getGroupTree(0)->printTree();
 
     BOOST_REQUIRE_EQUAL("FIELD", rootNode->name());
 
@@ -278,10 +275,9 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_iter_function) 
 
     int iter_counted = 0;
 
-    for (auto iter=root->begin(); iter != root->end(); ++iter) {
-        std::cout << "Child of FIELD: " << (*iter).second->name() << std::endl;
+    for (auto iter=root->begin(); iter != root->end(); ++iter) 
         iter_counted++;
-    }
+    
     BOOST_CHECK_EQUAL(2, iter_counted);
     // Time 1, a new group added in tree
     iter_counted = 0;
@@ -342,8 +338,6 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_WITH_REPARENT_correct_tree) {
     DeckPtr deck =  parser->parseFile(scheduleFile.string());
     ScheduleConstPtr schedule(new Schedule(deck));
 
-    schedule->getGroupTree(0)->printTree();
-    schedule->getGroupTree(1)->printTree();
 
     // Time , from  first GRUPTREE
     GroupTreeNodePtr root0 = schedule->getGroupTree(0)->getNode("FIELD");
