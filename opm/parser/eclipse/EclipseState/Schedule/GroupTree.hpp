@@ -40,7 +40,7 @@ namespace Opm {
         GroupTreeNodePtr getParent(const std::string& childName) const;
 
         std::shared_ptr<GroupTree> deepCopy() const;
-        void printTree() const;
+        void printTree(std::ostream &os) const;
 
 
     private:
@@ -50,7 +50,7 @@ namespace Opm {
 
         void getNodes(GroupTreeNodePtr fromNode, std::vector<GroupTreeNodeConstPtr>& nodes) const;
         void deepCopy(GroupTreeNodePtr origin, GroupTreeNodePtr copy) const;
-        void printTree(GroupTreeNodePtr fromNode) const;
+        void printTree(std::ostream &os , GroupTreeNodePtr fromNode) const;
     };
 
     typedef std::shared_ptr<GroupTree> GroupTreePtr;

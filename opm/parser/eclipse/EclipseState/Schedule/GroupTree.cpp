@@ -133,19 +133,19 @@ namespace Opm {
         }
     }
 
-    void GroupTree::printTree() const {
-        printTree(m_root);
-        std::cout << std::endl;
-        std::cout << "End of tree" << std::endl;
+    void GroupTree::printTree(std::ostream &os) const {
+        printTree(os , m_root);
+        os << std::endl;
+        os << "End of tree" << std::endl;
     }
 
-    void GroupTree::printTree(GroupTreeNodePtr fromNode) const {
-        std::cout << fromNode->name() << "(" << fromNode.get() << ")";
+    void GroupTree::printTree(std::ostream &os , GroupTreeNodePtr fromNode) const {
+        os << fromNode->name() << "(" << fromNode.get() << ")";
         std::map<std::string, GroupTreeNodePtr >::const_iterator iter = fromNode->begin();
         while (iter != fromNode->end()) {
             GroupTreeNodePtr child = (*iter).second;
-            std::cout << "<-" << child->name() << "(" << child.get() << ")" << std::endl;
-            printTree(child);
+            os << "<-" << child->name() << "(" << child.get() << ")" << std::endl;
+            printTree(os , child);
             ++iter;
         }
     }

@@ -376,7 +376,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_PrintGrouptree) {
     ScheduleConstPtr sched(new Schedule(deck));
 
     GroupTreePtr rootNode = sched->getGroupTree(0);
-    rootNode->printTree();
+    rootNode->printTree(std::cout);
 
 }
 
