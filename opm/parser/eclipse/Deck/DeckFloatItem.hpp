@@ -34,7 +34,6 @@ namespace Opm {
     public:
         DeckFloatItem(std::string name_, bool scalar = true) : DeckItem(name_, scalar) {}
         float getRawFloat(size_t index) const;
-        //const std::vector<float>& getRawFloatData() const;
         float getSIFloat(size_t index) const;
         const std::vector<float>& getSIFloatData() const;
 

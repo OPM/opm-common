@@ -28,6 +28,8 @@
 namespace Opm {
 
     float DeckFloatItem::getRawFloat(size_t index) const {
+        assertValueSet();
+
         if (index < m_data.size()) {
             return m_data[index];
         } else
@@ -40,18 +42,21 @@ namespace Opm {
 
     float DeckFloatItem::getSIFloat(size_t index) const {
         assertSIData();
-        {
-            if (index < m_data.size()) {
-                return m_SIdata[index];
-            } else
-                throw std::out_of_range("Out of range, index must be lower than " + boost::lexical_cast<std::string>(m_data.size()));
-        }
+        assertValueSet();
+
+        if (index < m_data.size()) {
+            return m_SIdata[index];
+        } else
+            throw std::out_of_range("Out of range, index must be lower than " + boost::lexical_cast<std::string>(m_data.size()));
     }
 
     const std::vector<float>& DeckFloatItem::getSIFloatData() const {
         assertSIData();
+        assertValueSet();
         return m_SIdata;
     }
+
+
 
     void DeckFloatItem::assertSIData() const {
         if (m_dimensions.size() > 0) {
@@ -90,6 +95,7 @@ namespace Opm {
         m_data.push_back( data );
         m_valueStatus |= DeckValue::SET_IN_DECK;
     }
+
 
 
     void DeckFloatItem::push_backMultiple(float value, size_t numValues) {

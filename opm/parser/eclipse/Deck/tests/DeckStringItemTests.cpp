@@ -32,8 +32,10 @@ BOOST_AUTO_TEST_CASE(InitializeString) {
 }
 
 BOOST_AUTO_TEST_CASE(GetStringAtIndex_NoData_ExceptionThrown) {
-    const DeckStringItem deckStringItem("TEST");
-    BOOST_CHECK_THROW(deckStringItem.getString(0), std::out_of_range);
+    DeckStringItem deckStringItem("TEST");
+    BOOST_CHECK_THROW(deckStringItem.getString(0), std::invalid_argument);
+    deckStringItem.push_back("SA");
+    BOOST_CHECK_THROW(deckStringItem.getString(1), std::out_of_range);
 }
 
 BOOST_AUTO_TEST_CASE(PushBack_VectorPushed_ElementsCorrect) {

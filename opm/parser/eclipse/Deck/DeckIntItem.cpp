@@ -24,6 +24,8 @@
 namespace Opm {
 
     int DeckIntItem::getInt(size_t index) const {
+        assertValueSet();        
+
         if (index < m_data.size()) {
             return m_data[index];
         } else
@@ -32,6 +34,7 @@ namespace Opm {
 
 
     const std::vector<int>& DeckIntItem::getIntData() const {
+        assertValueSet();        
         return m_data;
     }
 
@@ -51,16 +54,18 @@ namespace Opm {
         m_data.push_back(data);
         m_valueStatus |= DeckValue::SET_IN_DECK;
     }
-    
-    void DeckIntItem::push_backMultiple(int value, size_t numValues) {
-        for (size_t i = 0; i < numValues; i++) 
-            m_data.push_back( value );
-        m_valueStatus |= DeckValue::SET_IN_DECK;
-    }
 
     void DeckIntItem::push_backDefault(int data) {
         m_data.push_back( data );
-        m_valueStatus |= DeckValue::DEFAULT; 
+        m_valueStatus |= DeckValue::DEFAULT;
+    }
+
+
+
+    void DeckIntItem::push_backMultiple(int value, size_t numValues) {
+        for (size_t i = 0; i < numValues; i++) 
+            m_data.push_back( value );
+        m_valueStatus = DeckValue::SET_IN_DECK;
     }
 
 

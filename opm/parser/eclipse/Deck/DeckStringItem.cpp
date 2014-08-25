@@ -27,6 +27,8 @@
 namespace Opm {
 
     std::string DeckStringItem::getString(size_t index) const {
+        assertValueSet();        
+
         if (index < m_data.size()) {
             return m_data[index];
         } else
@@ -41,6 +43,8 @@ namespace Opm {
     }
 
     const std::vector<std::string>& DeckStringItem::getStringData() const {
+        assertValueSet();        
+
         return m_data;
     }
 

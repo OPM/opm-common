@@ -28,13 +28,17 @@
 namespace Opm {
 
     double DeckDoubleItem::getRawDouble(size_t index) const {
+        assertValueSet();
+
         if (index < m_data.size()) {
             return m_data[index];
         } else
             throw std::out_of_range("Out of range, index must be lower than " + boost::lexical_cast<std::string>(m_data.size()));
     }
     
+
     const std::vector<double>& DeckDoubleItem::getRawDoubleData() const {
+        assertValueSet();
         return m_data;
     }
 
@@ -64,16 +68,17 @@ namespace Opm {
 
     double DeckDoubleItem::getSIDouble(size_t index) const {
         assertSIData();
-        {
-            if (index < m_data.size()) {
-                return m_SIdata[index];
-            } else
-                throw std::out_of_range("Out of range, index must be lower than " + boost::lexical_cast<std::string>(m_data.size()));
-        }
+        assertValueSet();
+
+        if (index < m_data.size()) {
+            return m_SIdata[index];
+        } else
+            throw std::out_of_range("Out of range, index must be lower than " + boost::lexical_cast<std::string>(m_data.size()));
     }
     
     const std::vector<double>& DeckDoubleItem::getSIDoubleData() const {
         assertSIData();
+        assertValueSet();
         return m_SIdata;
     }
 

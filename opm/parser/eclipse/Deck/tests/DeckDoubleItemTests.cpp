@@ -35,8 +35,11 @@ BOOST_AUTO_TEST_CASE(InitializeDouble) {
 }
 
 BOOST_AUTO_TEST_CASE(GetDoubleAtIndex_NoData_ExceptionThrown) {
-    const DeckDoubleItem deckDoubleItem("TEST");
-    BOOST_CHECK_THROW(deckDoubleItem.getRawDouble(0), std::out_of_range);
+    DeckDoubleItem deckDoubleItem("TEST");
+
+    BOOST_CHECK_THROW(deckDoubleItem.getRawDouble(0), std::invalid_argument);
+    deckDoubleItem.push_back(1.89);
+    BOOST_CHECK_THROW(deckDoubleItem.getRawDouble(1), std::out_of_range);
 }
 
 
