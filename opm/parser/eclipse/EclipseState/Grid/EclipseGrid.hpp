@@ -45,6 +45,8 @@ namespace Opm {
         size_t  getCartesianSize( ) const;
         bool isPinchActive( ) const;
         double getPinchThresholdThickness( ) const;
+        bool isMinpvActive( ) const;
+        double getMinpvValue( ) const;
 
         void assertGlobalIndex(size_t globalIndex) const;
         void assertIJK(size_t i , size_t j , size_t k) const;
@@ -65,6 +67,8 @@ namespace Opm {
         std::shared_ptr<ecl_grid_type> m_grid;
         bool m_pinchActive;
         double m_pinchThresholdThickness;
+        bool m_minpvActive;
+        double m_minpvValue;
 
         void initCartesianGrid(const std::vector<int>& dims , DeckConstPtr deck);
         void initCornerPointGrid(const std::vector<int>& dims , DeckConstPtr deck);

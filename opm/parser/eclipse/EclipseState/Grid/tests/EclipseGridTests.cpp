@@ -116,6 +116,52 @@ static Opm::DeckPtr createPinchedCPDeck() {
 }
 
 
+static Opm::DeckPtr createMinpvDefaultCPDeck() {
+    const char *deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        " 10 10 10 /\n"
+        "GRID\n"
+        "COORD\n"
+        "  726*1 / \n"
+        "ZCORN \n"
+        "  8000*1 / \n"
+        "ACTNUM \n"
+        "  1000*1 / \n"
+        "MINPV \n"
+        "  / \n"
+        "EDIT\n"
+        "\n";
+
+    Opm::ParserPtr parser(new Opm::Parser());
+    return parser->parseString(deckData) ;
+}
+
+
+static Opm::DeckPtr createMinpvCPDeck() {
+    const char *deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        " 10 10 10 /\n"
+        "GRID\n"
+        "COORD\n"
+        "  726*1 / \n"
+        "ZCORN \n"
+        "  8000*1 / \n"
+        "ACTNUM \n"
+        "  1000*1 / \n"
+        "MINPV \n"
+        "  10 / \n"
+        "EDIT\n"
+        "\n";
+
+    Opm::ParserPtr parser(new Opm::Parser());
+    return parser->parseString(deckData) ;
+}
+
+
 static Opm::DeckPtr createCARTDeck() {
     const char *deckData =
         "RUNSPEC\n"
@@ -627,5 +673,27 @@ BOOST_AUTO_TEST_CASE(ConstructorNORUNSPEC_PINCH) {
     BOOST_CHECK_THROW(grid1.getPinchThresholdThickness(), std::logic_error);
     BOOST_CHECK(grid2.isPinchActive());
     BOOST_CHECK_EQUAL(grid2.getPinchThresholdThickness(), 0.2);
+}
 
+
+
+
+BOOST_AUTO_TEST_CASE(ConstructorMINPV) {
+    Opm::DeckConstPtr deck1 = createCPDeck();
+    Opm::DeckConstPtr deck2 = createMinpvDefaultCPDeck();
+    Opm::DeckConstPtr deck3 = createMinpvCPDeck();
+
+    Opm::EclipseGrid grid1(deck1);
+    Opm::EclipseGrid grid2(deck2);
+    Opm::EclipseGrid grid3(deck3);
+
+    BOOST_CHECK(!grid1.equal( grid2 ));
+    BOOST_CHECK(!grid1.equal( grid3 ));
+    BOOST_CHECK(!grid2.equal( grid3 ));
+    BOOST_CHECK(!grid1.isMinpvActive());
+    BOOST_CHECK_THROW(grid1.getMinpvValue(), std::logic_error);
+    BOOST_CHECK(grid2.isMinpvActive());
+    BOOST_CHECK_EQUAL(grid2.getMinpvValue(), 1e-6);
+    BOOST_CHECK(grid3.isMinpvActive());
+    BOOST_CHECK_EQUAL(grid3.getMinpvValue(), 10.0);
 }
