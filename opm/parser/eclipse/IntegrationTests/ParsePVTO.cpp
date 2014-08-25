@@ -86,7 +86,7 @@ static void check_parser(ParserPtr parser) {
 
     DeckItemConstPtr item2_0 = record2->getItem("RS");
     DeckItemConstPtr item2_1 = record2->getItem("DATA");
-    BOOST_CHECK_EQUAL(1U , item2_0->size());
+    BOOST_CHECK(!item2_0->setInDeck());
     BOOST_CHECK_EQUAL(0U , item2_1->size());
     BOOST_CHECK_EQUAL(2U , record2->size());
 
