@@ -558,3 +558,14 @@ COMPDAT \n\
 }
 
 
+/**
+   This is a deck used in the opm-core wellsManager testing; just be
+   certain we can parse it.
+*/
+BOOST_AUTO_TEST_CASE(OpmCode) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/wells_group.data");
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
+    ScheduleConstPtr sched(new Schedule(deck));
+}
+
