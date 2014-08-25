@@ -26,13 +26,22 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 #include <iostream>
+#include <sstream>
 #include <boost/algorithm/string/join.hpp>
 
 namespace Opm {
     
-    EclipseState::EclipseState(DeckConstPtr deck) 
+    EclipseState::EclipseState(DeckConstPtr deck, bool beStrict)
     {
         m_unitSystem = deck->getActiveUnitSystem();
+
+        if (beStrict) {
+            // make sure all mandatory sections are present and that their order is correct
+            std::ostringstream oss;
+            if (!Section::checkSectionTopology(deck, oss))
+                throw std::invalid_argument("Section topology of deck is invalid: "
+                                            + oss.str());
+        }
 
         initPhases(deck);
         initEclipseGrid(deck);

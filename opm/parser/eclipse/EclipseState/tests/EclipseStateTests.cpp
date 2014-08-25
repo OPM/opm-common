@@ -73,12 +73,12 @@ static DeckPtr createDeck() {
         "START\n"
         "8 MAR 1998 /\n"
         "\n"
+        "PROPS\n"
         "REGIONS\n"
         "FLUXNUM\n"
         "1000*1 /\n"
         "SATNUM\n"
         "1000*2 /\n"
-        "SCHEDULE\n"
         "\n";
 
     ParserPtr parser(new Parser());
@@ -100,6 +100,7 @@ static DeckPtr createDeckNoFaults() {
         "1000*0.25 /\n"
         "TOPS\n"
         "1000*0.25 /\n"
+        "PROPS\n"
         "-- multiply one layer for each face\n"
         "MULTX\n"
         " 100*1 100*10 800*1 /\n"
@@ -113,16 +114,22 @@ static DeckPtr createDeckNoFaults() {
         " 500*1 100*14 400*1 /\n"
         "MULTZ-\n"
         " 600*1 100*15 300*1 /\n"
-        "SCHEDULE\n"
         "\n";
 
     ParserPtr parser(new Parser());
     return parser->parseString(deckData) ;
 }
 
+BOOST_AUTO_TEST_CASE(StrictSemantics) {
+    DeckPtr deck = createDeck();
+    EclipseState state(deck, /*beStrict=*/false);
+
+    BOOST_CHECK_THROW(EclipseState(deck, /*beStrict=*/true), std::invalid_argument);
+}
+
 BOOST_AUTO_TEST_CASE(CreatSchedule) {
     DeckPtr deck = createDeck();
-    EclipseState state(deck);
+    EclipseState state(deck, /*beStrict=*/false);
     ScheduleConstPtr schedule = state.getSchedule();
     EclipseGridConstPtr eclipseGrid = state.getEclipseGrid();
 
@@ -133,7 +140,7 @@ BOOST_AUTO_TEST_CASE(CreatSchedule) {
 
 BOOST_AUTO_TEST_CASE(PhasesCorrect) {
     DeckPtr deck = createDeck();
-    EclipseState state(deck);
+    EclipseState state(deck, /*beStrict=*/false);
 
     BOOST_CHECK(  state.hasPhase( Phase::PhaseEnum::OIL ));
     BOOST_CHECK(  state.hasPhase( Phase::PhaseEnum::GAS ));
@@ -143,7 +150,7 @@ BOOST_AUTO_TEST_CASE(PhasesCorrect) {
 
 BOOST_AUTO_TEST_CASE(TitleCorrect) {
     DeckPtr deck = createDeck();
-    EclipseState state(deck);
+    EclipseState state(deck, /*beStrict=*/false);
 
     BOOST_CHECK_EQUAL( state.getTitle(), "The title");
 }
@@ -151,7 +158,7 @@ BOOST_AUTO_TEST_CASE(TitleCorrect) {
 
 BOOST_AUTO_TEST_CASE(IntProperties) {
     DeckPtr deck = createDeck();
-    EclipseState state(deck);
+    EclipseState state(deck, /*beStrict=*/false);
 
     BOOST_CHECK_EQUAL( false , state.supportsGridProperty("NONO"));
     BOOST_CHECK_EQUAL( true  , state.supportsGridProperty("SATNUM"));
@@ -162,7 +169,7 @@ BOOST_AUTO_TEST_CASE(IntProperties) {
 
 BOOST_AUTO_TEST_CASE(PropertiesNotSupportedThrows) {
     DeckPtr deck = createDeck();
-    EclipseState state(deck);
+    EclipseState state(deck, /*beStrict=*/false);
     DeckKeywordConstPtr fluxNUM = deck->getKeyword("FLUXNUM");
     BOOST_CHECK_EQUAL( false , state.supportsGridProperty("FLUXNUM"));
     BOOST_CHECK_THROW( state.loadGridPropertyFromDeckKeyword( std::make_shared<const Box>(10,10,10) , fluxNUM ) , std::invalid_argument)
@@ -171,7 +178,7 @@ BOOST_AUTO_TEST_CASE(PropertiesNotSupportedThrows) {
 
 BOOST_AUTO_TEST_CASE(GetProperty) {
     DeckPtr deck = createDeck();
-    EclipseState state(deck);
+    EclipseState state(deck, /*beStrict=*/false);
 
     std::shared_ptr<GridProperty<int> > satNUM = state.getIntGridProperty( "SATNUM" );
 
@@ -185,7 +192,7 @@ BOOST_AUTO_TEST_CASE(GetProperty) {
 
 BOOST_AUTO_TEST_CASE(GetTransMult) {
     DeckPtr deck = createDeck();
-    EclipseState state(deck);
+    EclipseState state(deck, /*beStrict=*/false);
     std::shared_ptr<const TransMult> transMult = state.getTransMult();
     
     
@@ -197,7 +204,7 @@ BOOST_AUTO_TEST_CASE(GetTransMult) {
 
 BOOST_AUTO_TEST_CASE(GetFaults) {
     DeckPtr deck = createDeck();
-    EclipseState state(deck);
+    EclipseState state(deck, /*beStrict=*/false);
     std::shared_ptr<const FaultCollection> faults = state.getFaults();
 
     BOOST_CHECK( faults->hasFault("F1") );
@@ -218,7 +225,7 @@ BOOST_AUTO_TEST_CASE(GetFaults) {
 
 BOOST_AUTO_TEST_CASE(FaceTransMults) {
     DeckPtr deck = createDeckNoFaults();
-    EclipseState state(deck);
+    EclipseState state(deck, /*beStrict=*/false);
     std::shared_ptr<const TransMult> transMult = state.getTransMult();
 
     for (int i = 0; i < 10; ++ i) {

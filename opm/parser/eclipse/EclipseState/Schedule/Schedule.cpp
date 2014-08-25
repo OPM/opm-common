@@ -28,11 +28,8 @@
 
 namespace Opm {
 
-    Schedule::Schedule(DeckConstPtr deck) {
-        if (deck->hasKeyword("SCHEDULE")) {
-            initFromDeck(deck);
-        } else
-            throw std::invalid_argument("Deck does not contain SCHEDULE section.\n");
+   Schedule::Schedule(DeckConstPtr deck) {
+       initFromDeck(deck);
     }
 
     void Schedule::initFromDeck(DeckConstPtr deck) {
@@ -58,10 +55,9 @@ namespace Opm {
 
     void Schedule::iterateScheduleSection(DeckConstPtr deck) {
         size_t currentStep = 0;
-        SCHEDULESection section(deck);
-        for (auto iter=section.begin(); iter != section.end(); ++iter) {
 
-            DeckKeywordConstPtr keyword = (*iter);
+        for (size_t keywordIdx = 0; keywordIdx < deck->size(); ++keywordIdx) {
+            DeckKeywordConstPtr keyword = deck->getKeyword(keywordIdx);
 
             if (keyword->name() == "DATES") {
                 handleDATES(keyword);

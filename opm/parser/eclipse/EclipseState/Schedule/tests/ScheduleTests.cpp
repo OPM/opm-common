@@ -85,14 +85,6 @@ static DeckPtr createDeckWithWellsOrdered() {
     return parser.parseString(input);
 }
 
-
-
-BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingSCHEDULE_Throws) {
-    DeckPtr deck(new Deck());
-    BOOST_CHECK_THROW(Schedule schedule(deck) , std::invalid_argument);
-}
-
-
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingReturnsDefaults) {
     DeckPtr deck(new Deck());
     DeckKeywordPtr keyword(new DeckKeyword("SCHEDULE"));
