@@ -22,7 +22,7 @@
 
 #include <string>
 #include <deque>
-
+#include <memory>
 
 namespace Opm {
 

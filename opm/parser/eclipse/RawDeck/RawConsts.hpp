@@ -20,6 +20,7 @@
 #ifndef RAWCONSTS_HPP
 #define	RAWCONSTS_HPP
 
+#include <string>
 
 namespace Opm {
 
