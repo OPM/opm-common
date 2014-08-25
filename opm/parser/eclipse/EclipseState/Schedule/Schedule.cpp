@@ -234,49 +234,46 @@ namespace Opm {
 
             for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
                 WellPtr well = *wellIter;
-                // calculate the injection rates. These are context
-                // dependent, so we have to jump through some hoops
-                // here...
                 WellInjector::TypeEnum injectorType = WellInjector::TypeFromString( record->getItem("TYPE")->getTrimmedString(0) );
-                double surfaceInjectionRate = record->getItem("RATE")->getRawDouble(0);
-                double reservoirInjectionRate = record->getItem("RESV")->getRawDouble(0);
-                surfaceInjectionRate = convertInjectionRateToSI(surfaceInjectionRate, injectorType, *deck->getActiveUnitSystem());
-                reservoirInjectionRate = convertInjectionRateToSI(reservoirInjectionRate, injectorType, *deck->getActiveUnitSystem());
-
-                double BHPLimit                           = record->getItem("BHP")->getSIDouble(0);
-                double THPLimit                           = record->getItem("THP")->getSIDouble(0);
                 WellCommon::StatusEnum status             = WellCommon::StatusFromString( record->getItem("STATUS")->getTrimmedString(0));
 
                 well->setStatus( currentStep , status );
                 WellInjectionProperties properties(well->getInjectionPropertiesCopy(currentStep));
-                properties.surfaceInjectionRate = surfaceInjectionRate;
-                properties.reservoirInjectionRate = reservoirInjectionRate;
-                properties.BHPLimit = BHPLimit;
-                properties.THPLimit = THPLimit;
+
                 properties.injectorType = injectorType;
                 properties.predictionMode = true;
-
-                if (record->getItem("RATE")->setInDeck())
+                
+                if (record->getItem("RATE")->setInDeck()) {
+                    properties.surfaceInjectionRate = convertInjectionRateToSI(record->getItem("RATE")->getRawDouble(0) , injectorType, *deck->getActiveUnitSystem());
                     properties.addInjectionControl(WellInjector::RATE);
-                else
+                } else
                     properties.dropInjectionControl(WellInjector::RATE);
 
 
-                if (record->getItem("RESV")->setInDeck())
+                if (record->getItem("RESV")->setInDeck()) {
+                    properties.reservoirInjectionRate = convertInjectionRateToSI(record->getItem("RESV")->getRawDouble(0) , injectorType, *deck->getActiveUnitSystem());
                     properties.addInjectionControl(WellInjector::RESV);
-                else
+                } else
                     properties.dropInjectionControl(WellInjector::RESV);
 
 
-                if (record->getItem("THP")->setInDeck())
+                if (record->getItem("THP")->setInDeck()) {
+                    properties.THPLimit = record->getItem("THP")->getSIDouble(0);
                     properties.addInjectionControl(WellInjector::THP);
-                else
+                } else
                     properties.dropInjectionControl(WellInjector::THP);                                    
 
-
-                if (record->getItem("BHP")->setInDeck())
+                /*
+                  What a mess; there is a sensible default BHP limit
+                  defined, so the BHPLimit can be safely set
+                  unconditionally - but should we make BHP control
+                  available based on that default value - currently we
+                  do not do that.
+                */
+                properties.BHPLimit = record->getItem("BHP")->getSIDouble(0);
+                if (record->getItem("BHP")->setInDeck()) {
                     properties.addInjectionControl(WellInjector::BHP);
-                else
+                } else
                     properties.dropInjectionControl(WellInjector::BHP);
 
                 if (well->isAvailableForGroupControl(currentStep))
