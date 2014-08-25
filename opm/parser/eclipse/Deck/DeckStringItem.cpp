@@ -49,28 +49,36 @@ namespace Opm {
         for (size_t i = 0; i < items; i++) {
             m_data.push_back(data[i]);
         }
+        m_valueStatus |= DeckValue::SET_IN_DECK;
     }
+
 
     void DeckStringItem::push_back(std::deque<std::string> data) {
         push_back(data, data.size());
+        m_valueStatus |= DeckValue::SET_IN_DECK;
     }
 
-    void DeckStringItem::push_back(std::string data) {
-        m_data.push_back(data);
+
+    void DeckStringItem::push_back(const std::string& data ) {
+        m_data.push_back( data );
+        m_valueStatus |= DeckValue::SET_IN_DECK;
     }
+
 
   
-    void DeckStringItem::push_backDefault(std::string data) {
-        m_data.push_back( data );
-        m_valueStatus = DeckValue::DEFAULT;
-    }
-    
-    
     void DeckStringItem::push_backMultiple(std::string value, size_t numValues) {
         for (size_t i = 0; i < numValues; i++) 
             m_data.push_back( value );
+        m_valueStatus |= DeckValue::SET_IN_DECK;
     }
 
+
+    void DeckStringItem::push_backDefault(std::string data) {
+        m_data.push_back( data );
+        m_valueStatus |= DeckValue::DEFAULT;
+    }
+    
+    
 
     size_t DeckStringItem::size() const {
         return m_data.size();

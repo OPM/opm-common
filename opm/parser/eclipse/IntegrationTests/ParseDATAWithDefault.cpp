@@ -60,11 +60,12 @@ BOOST_AUTO_TEST_CASE( ParseMissingRECORD_THrows) {
 
 const char *data = "\n\
 ENDSCALE\n\
-     1*     1*     2 /\n\
+     1*     1*     3 /\n\
 \n\
 ENKRVD\n\
 100 *   2  *  2*    6  7   200 11 22 33     3*55 10 /\n\
 100 *   2  3  4  5  6  7   200 11 22 33 44 55 66 77 /\n\
+100 *   2  3  4  5  6  7   200 11 22 33 44 55 66 *  /\n\
 ";
 
 
@@ -75,12 +76,14 @@ BOOST_AUTO_TEST_CASE( parse_DATAWithDefult_OK ) {
     DeckKeywordConstPtr keyword = deck->getKeyword( "ENKRVD" );
     DeckRecordConstPtr rec0 = keyword->getRecord(0);
     DeckRecordConstPtr rec1 = keyword->getRecord(1);
+    DeckRecordConstPtr rec2 = keyword->getRecord(2);
     
     DeckItemConstPtr item0 = rec0->getItem(0);
     DeckItemConstPtr item1 = rec1->getItem(0);
+    DeckItemConstPtr item2 = rec2->getItem(0);
     
-    BOOST_CHECK_EQUAL( 2U , keyword->size());
-    BOOST_CHECK_THROW( item0->defaultApplied() , std::invalid_argument);
+    BOOST_CHECK_EQUAL( 3U , keyword->size());
+    BOOST_CHECK( item0->setInDeck() );
 
     BOOST_CHECK_EQUAL( 100 , item0->getRawDouble(0));
     BOOST_CHECK_EQUAL(  -1 , item0->getRawDouble(1));
@@ -96,6 +99,8 @@ BOOST_AUTO_TEST_CASE( parse_DATAWithDefult_OK ) {
     
     BOOST_CHECK_EQUAL( 100 , item1->getRawDouble(0));
     BOOST_CHECK_EQUAL(  -1  , item1->getRawDouble(1));
+
+    BOOST_CHECK( item2->setInDeck() );
 }
 
 

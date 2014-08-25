@@ -84,13 +84,27 @@ BOOST_AUTO_TEST_CASE(size_correct) {
     BOOST_CHECK_EQUAL( 3U , deckIntItem.size());
 }
 
-
-
-BOOST_AUTO_TEST_CASE(DefaultApplied) {
+BOOST_AUTO_TEST_CASE(SetInDeck) {
     DeckIntItem deckIntItem("TEST");
-    BOOST_CHECK_EQUAL( false , deckIntItem.defaultApplied() );
+    BOOST_CHECK( !deckIntItem.setInDeck() );
+
+    deckIntItem.push_back( 100 );
+    BOOST_CHECK( deckIntItem.setInDeck() );
+}
+
+
+BOOST_AUTO_TEST_CASE(SetInDeckData) {
+    DeckIntItem deckIntItem("TEST");
+    BOOST_CHECK_EQUAL( false , deckIntItem.setInDeck() );
+    BOOST_CHECK_EQUAL( false , deckIntItem.defaultApplied());
     deckIntItem.push_backDefault( 1 );
-    BOOST_CHECK_EQUAL( true , deckIntItem.defaultApplied() );
+    BOOST_CHECK_EQUAL( false , deckIntItem.setInDeck() );
+    BOOST_CHECK_EQUAL( true  , deckIntItem.defaultApplied());
+    deckIntItem.push_back( 10 );
+    BOOST_CHECK_EQUAL( true , deckIntItem.setInDeck() );
+    BOOST_CHECK_EQUAL( true  , deckIntItem.defaultApplied());
+    deckIntItem.push_backDefault( 1 );
+    BOOST_CHECK_EQUAL( true , deckIntItem.setInDeck() );
 }
 
 

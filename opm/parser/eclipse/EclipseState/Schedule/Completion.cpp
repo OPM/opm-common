@@ -63,7 +63,7 @@ namespace Opm {
 
         {
             DeckItemConstPtr CFItem = compdatRecord->getItem("CF");
-            if (CFItem->defaultApplied())
+            if (!CFItem->setInDeck())
                 throw std::invalid_argument("The connection factor item can not be defaulted");
         }
         double CF = compdatRecord->getItem("CF")->getSIDouble(0);

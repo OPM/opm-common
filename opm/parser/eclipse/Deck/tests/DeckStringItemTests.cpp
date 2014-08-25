@@ -71,11 +71,15 @@ BOOST_AUTO_TEST_CASE(size_variouspushes_sizecorrect) {
 }
 
 
-BOOST_AUTO_TEST_CASE(DefaultApplied) {
+BOOST_AUTO_TEST_CASE(SetInDeckData) {
     DeckStringItem deckStringItem("TEST");
-    BOOST_CHECK_EQUAL( false , deckStringItem.defaultApplied() );
-    deckStringItem.push_backDefault( "1" );
-    BOOST_CHECK_EQUAL( true , deckStringItem.defaultApplied() );
+    BOOST_CHECK_EQUAL( false , deckStringItem.setInDeck() );
+    deckStringItem.push_backDefault( "Default" );
+    BOOST_CHECK_EQUAL( false , deckStringItem.setInDeck() );
+    deckStringItem.push_back( "Value" );
+    BOOST_CHECK_EQUAL( true , deckStringItem.setInDeck() );
+    deckStringItem.push_backDefault( "Deafult" );
+    BOOST_CHECK_EQUAL( true , deckStringItem.setInDeck() );
 }
 
 

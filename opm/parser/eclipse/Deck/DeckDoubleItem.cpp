@@ -82,27 +82,30 @@ namespace Opm {
         for (size_t i=0; i<items; i++) {
             m_data.push_back(data[i]);
         }
+        m_valueStatus |= DeckValue::SET_IN_DECK;
     }
 
 
     void DeckDoubleItem::push_back(std::deque<double> data) {
         push_back( data  , data.size() );
+        m_valueStatus |= DeckValue::SET_IN_DECK;
     }
 
     void DeckDoubleItem::push_back(double data) {
         m_data.push_back( data );
+        m_valueStatus |= DeckValue::SET_IN_DECK;
+    }
+
+    void DeckDoubleItem::push_backMultiple(double value, size_t numValues) {
+        for (size_t i = 0; i < numValues; i++) 
+            m_data.push_back( value );
+        m_valueStatus |= DeckValue::SET_IN_DECK;
     }
 
 
     void DeckDoubleItem::push_backDefault(double data) {
         m_data.push_back( data );
-        m_valueStatus = DeckValue::DEFAULT;
-    }
-    
-    
-    void DeckDoubleItem::push_backMultiple(double value, size_t numValues) {
-        for (size_t i = 0; i < numValues; i++) 
-            m_data.push_back( value );
+        m_valueStatus |= DeckValue::DEFAULT;
     }
 
 

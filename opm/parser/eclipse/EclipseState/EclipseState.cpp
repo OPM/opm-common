@@ -626,35 +626,35 @@ namespace Opm {
         DeckItemConstPtr K1Item = deckRecord->getItem("K1");
         DeckItemConstPtr K2Item = deckRecord->getItem("K2");
 
-        size_t defaultCount = 0;
+        size_t setCount = 0;
         
-        if (I1Item->defaultApplied())
-            defaultCount++;
+        if (I1Item->setInDeck())
+            setCount++;
 
-        if (I2Item->defaultApplied())
-            defaultCount++;
+        if (I2Item->setInDeck())
+            setCount++;
 
-        if (J1Item->defaultApplied())
-            defaultCount++;
+        if (J1Item->setInDeck())
+            setCount++;
 
-        if (J2Item->defaultApplied())
-            defaultCount++;
+        if (J2Item->setInDeck())
+            setCount++;
 
-        if (K1Item->defaultApplied())
-            defaultCount++;
+        if (K1Item->setInDeck())
+            setCount++;
 
-        if (K2Item->defaultApplied())
-            defaultCount++;
-
-        if (defaultCount == 0) {
+        if (K2Item->setInDeck())
+            setCount++;
+        
+        if (setCount == 6) {
             boxManager.setKeywordBox( I1Item->getInt(0) - 1,
                                       I2Item->getInt(0) - 1,
                                       J1Item->getInt(0) - 1,
                                       J2Item->getInt(0) - 1,
                                       K1Item->getInt(0) - 1,
                                       K2Item->getInt(0) - 1);
-        } else if (defaultCount != 6)
-            throw std::invalid_argument("When using BOX modifiers on keywords you must specify the BOX completely.");
+        } else if (setCount != 0)
+            throw std::invalid_argument("When using BOX modifiers on keywords you must specify the BOX completely - or not at all.");
     }
 
 }
