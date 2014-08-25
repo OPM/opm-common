@@ -146,10 +146,10 @@ static void stringItem(std::ofstream& of) {
 
 static void stringItemWithDefault(std::ofstream& of) {
     startTest(of , "StringItemWithDefault");
-    of << "   ParserStringItem * item = new ParserStringItem(\"NAME\" , ALL , \"100\");" << std::endl;
+    of << "   ParserStringItem * item = new ParserStringItem(\"NAME\" , SINGLE , \"100\");" << std::endl;
     of << "   ParserStringItem * inlineItem = ";
     {
-       ParserStringItem * item = new ParserStringItem("NAME" , ALL , "100");
+       ParserStringItem * item = new ParserStringItem("NAME" , SINGLE , "100");
        item->inlineNew( of );
        of << ";" << std::endl;
        delete item;

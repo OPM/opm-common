@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(ParserKeywordMatches) {
 
 BOOST_AUTO_TEST_CASE(AddDataKeyword_correctlyConfigured) {
     ParserKeywordPtr parserKeyword = ParserKeyword::createFixedSized("PORO", (size_t) 1);
-    ParserIntItemConstPtr item = ParserIntItemConstPtr(new ParserIntItem( "ACTNUM" , ALL , 0 ));
+    ParserIntItemConstPtr item = ParserIntItemConstPtr(new ParserIntItem( "ACTNUM" , ALL));
     BOOST_CHECK_EQUAL( false , parserKeyword->isDataKeyword() );
     parserKeyword->addDataItem( item );
     BOOST_CHECK_EQUAL( true , parserKeyword->isDataKeyword() );
@@ -124,14 +124,14 @@ BOOST_AUTO_TEST_CASE(AddDataKeyword_correctlyConfigured) {
 
 BOOST_AUTO_TEST_CASE(WrongConstructor_addDataItem_throws) {
     ParserKeywordPtr parserKeyword = ParserKeyword::createDynamicSized("PORO");
-    ParserIntItemConstPtr dataItem = ParserIntItemConstPtr(new ParserIntItem( "ACTNUM" , ALL , 0 ));
+    ParserIntItemConstPtr dataItem = ParserIntItemConstPtr(new ParserIntItem( "ACTNUM" , ALL ));
     BOOST_CHECK_THROW( parserKeyword->addDataItem( dataItem ) , std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(MixingDataAndItems_throws1) {
     ParserKeywordPtr parserKeyword = ParserKeyword::createFixedSized("PORO", (size_t) 1);
-    ParserIntItemConstPtr dataItem = ParserIntItemConstPtr(new ParserIntItem( "ACTNUM" , ALL , 0 ));
-    ParserIntItemConstPtr item     = ParserIntItemConstPtr(new ParserIntItem( "XXX" , ALL , 0 ));
+    ParserIntItemConstPtr dataItem = ParserIntItemConstPtr(new ParserIntItem( "ACTNUM" , ALL));
+    ParserIntItemConstPtr item     = ParserIntItemConstPtr(new ParserIntItem( "XXX" , ALL));
     parserKeyword->addDataItem( dataItem );
     BOOST_CHECK_THROW( parserKeyword->addItem( item ) , std::invalid_argument);
     BOOST_CHECK_THROW( parserKeyword->addItem( dataItem ) , std::invalid_argument);
@@ -139,8 +139,8 @@ BOOST_AUTO_TEST_CASE(MixingDataAndItems_throws1) {
 
 BOOST_AUTO_TEST_CASE(MixingDataAndItems_throws2) {
     ParserKeywordPtr parserKeyword = ParserKeyword::createFixedSized("PORO", (size_t) 1);
-    ParserIntItemConstPtr dataItem = ParserIntItemConstPtr(new ParserIntItem( "ACTNUM" , ALL , 0 ));
-    ParserIntItemConstPtr item     = ParserIntItemConstPtr(new ParserIntItem( "XXX" , ALL , 0 ));
+    ParserIntItemConstPtr dataItem = ParserIntItemConstPtr(new ParserIntItem( "ACTNUM" , ALL));
+    ParserIntItemConstPtr item     = ParserIntItemConstPtr(new ParserIntItem( "XXX" , ALL));
     parserKeyword->addItem( item );
     BOOST_CHECK_THROW( parserKeyword->addDataItem( dataItem ) , std::invalid_argument);
 }
@@ -284,8 +284,14 @@ BOOST_AUTO_TEST_CASE(Default_NotData) {
     BOOST_CHECK_EQUAL( false , parserKeyword->isDataKeyword());
 }
 
-BOOST_AUTO_TEST_CASE(AddDataKeywordFromJson_correctlyConfigured) {
+
+BOOST_AUTO_TEST_CASE(AddDataKeywordFromJson_defaultThrows) {
     Json::JsonObject jsonConfig("{\"name\": \"ACTNUM\", \"data\" : {\"value_type\": \"INT\" , \"default\" : 100}}");
+    BOOST_CHECK_THROW( ParserKeyword::createFromJson(jsonConfig) , std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(AddDataKeywordFromJson_correctlyConfigured) {
+    Json::JsonObject jsonConfig("{\"name\": \"ACTNUM\", \"data\" : {\"value_type\": \"INT\"}}");
     ParserKeywordConstPtr parserKeyword = ParserKeyword::createFromJson(jsonConfig);
     ParserRecordConstPtr parserRecord = parserKeyword->getRecord();
     ParserItemConstPtr item = parserRecord->get(0);
