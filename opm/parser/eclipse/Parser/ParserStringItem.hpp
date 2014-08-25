@@ -42,9 +42,7 @@ namespace Opm {
         DeckItemPtr scan(RawRecordPtr rawRecord) const;
         void inlineNew(std::ostream& os) const;
         void setDefault(const std::string& defaultValue);
-        std::string getDefault() const {
-            return m_default;
-        }
+        std::string getDefault() const;
 
     private:
         std::string m_default;

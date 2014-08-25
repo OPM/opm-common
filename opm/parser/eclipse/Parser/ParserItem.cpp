@@ -99,22 +99,6 @@ namespace Opm {
     }
 
 
-    int ParserItem::defaultInt() {
-        return 0;
-    }
-
-    float ParserItem::defaultFloat() {
-        return 0.0F;
-    }
-
-    double ParserItem::defaultDouble() {
-        return 0.0;
-    }
-
-    std::string ParserItem::defaultString() {
-        return "DEFAULT";
-    }
-
     bool ParserItem::defaultSet() const {
         return m_defaultSet;
     }

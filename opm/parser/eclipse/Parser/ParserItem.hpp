@@ -54,11 +54,6 @@ namespace Opm {
         bool scalar() const;
         void setDescription(std::string helpText);
 
-        static int defaultInt();
-        static std::string defaultString();
-        static float defaultFloat();
-        static double defaultDouble();
-      
         virtual bool equal(const ParserItem& other) const;
         virtual void inlineNew(std::ostream& /* os */) const {}
       

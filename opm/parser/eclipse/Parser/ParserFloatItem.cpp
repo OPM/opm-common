@@ -34,12 +34,10 @@ namespace Opm
             ParserItemSizeEnum sizeType_) :
             ParserItem(itemName, sizeType_)
     {
-        m_default = defaultFloat();
     }
 
     ParserFloatItem::ParserFloatItem(const std::string& itemName) : ParserItem(itemName)
     {
-        m_default = defaultFloat();
     }
 
 
@@ -56,11 +54,16 @@ namespace Opm
 
 
     float ParserFloatItem::getDefault() const {
-        return m_default;
+        if (m_defaultSet) 
+            return m_default;
+        else
+            throw std::invalid_argument("Tried get default from parser item " + name() + " No default has been configured");
     }
 
 
     void ParserFloatItem::setDefault(float defaultValue) {
+        if (sizeType() == ALL)
+            throw std::invalid_argument("The size type ALL can not be combined with an explicit default value");
         m_default = defaultValue;
         m_defaultSet = true;
     }
@@ -72,8 +75,6 @@ namespace Opm
     {
         if (jsonConfig.has_item("default"))
             setDefault( jsonConfig.get_double("default"));
-        else
-            m_default = defaultFloat();
     }
 
 

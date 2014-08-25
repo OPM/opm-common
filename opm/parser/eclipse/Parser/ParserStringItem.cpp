@@ -24,13 +24,13 @@
 #include <opm/parser/eclipse/RawDeck/StarToken.hpp>
 namespace Opm {
 
-    ParserStringItem::ParserStringItem(const std::string& itemName) : ParserItem(itemName) {
-        m_default = defaultString();
+    ParserStringItem::ParserStringItem(const std::string& itemName) : ParserItem(itemName) 
+    {
     }
 
 
-    ParserStringItem::ParserStringItem(const std::string& itemName, ParserItemSizeEnum sizeType_) : ParserItem(itemName, sizeType_) {
-        m_default = defaultString();
+    ParserStringItem::ParserStringItem(const std::string& itemName, ParserItemSizeEnum sizeType_) : ParserItem(itemName, sizeType_) 
+    {
     }
 
     ParserStringItem::ParserStringItem(const std::string& itemName, ParserItemSizeEnum sizeType_, const std::string& defaultValue) : ParserItem(itemName, sizeType_) {
@@ -46,17 +46,24 @@ namespace Opm {
     ParserStringItem::ParserStringItem(const Json::JsonObject& jsonConfig) : ParserItem(jsonConfig) {
         if (jsonConfig.has_item("default")) 
             setDefault( jsonConfig.get_string("default") );
-        else
-            m_default = defaultString();
     }
 
 
 
     void ParserStringItem::setDefault(const std::string& defaultValue) {
+        if (sizeType() == ALL)
+            throw std::invalid_argument("The size type ALL can not be combined with an explicit default value");
+
         m_default = defaultValue;
         m_defaultSet = true;
     }
 
+    std::string ParserStringItem::getDefault() const {
+        if (m_defaultSet) 
+            return m_default;
+        else
+            throw std::invalid_argument("Tried get default from parser item " + name() + " No default has been configured");
+    }
 
 
 

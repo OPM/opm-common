@@ -44,12 +44,9 @@ namespace Opm {
         DeckItemPtr scan(RawRecordPtr rawRecord) const;
         bool equal(const ParserItem& other) const;
         void inlineNew(std::ostream& os) const;
-        
-        void setDefault(int defaultValue);
-        int getDefault() const {
-            return m_default;
-        }
 
+        int  getDefault() const;
+        void setDefault(int defaultValue);
     private:
         int  m_default;
     };

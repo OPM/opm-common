@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(Initialize_DefaultSizeType) {
 BOOST_AUTO_TEST_CASE(Initialize_Default) {
     ParserIntItem item1(std::string("ITEM1"));
     ParserIntItem item2(std::string("ITEM1"), 88);
-    BOOST_CHECK_EQUAL(item1.getDefault(), ParserItem::defaultInt());
+    BOOST_CHECK_THROW(item1.getDefault(), std::invalid_argument);
     BOOST_CHECK_EQUAL(item2.getDefault(), 88);
 }
 
@@ -78,15 +78,24 @@ BOOST_AUTO_TEST_CASE(Initialize_Default) {
 BOOST_AUTO_TEST_CASE(Initialize_Default_Double) {
     ParserDoubleItem item1(std::string("ITEM1"));
     ParserDoubleItem item2("ITEM1",  88.91);
-    BOOST_CHECK_EQUAL(item1.getDefault(), ParserItem::defaultDouble());
+    BOOST_CHECK_THROW(item1.getDefault(), std::invalid_argument);
     BOOST_CHECK_EQUAL( 88.91 , item2.getDefault());
 }
 
 BOOST_AUTO_TEST_CASE(Initialize_Default_Float) {
     ParserFloatItem item1(std::string("ITEM1"));
     ParserFloatItem item2("ITEM1",  88.91F);
-    BOOST_CHECK_EQUAL(item1.getDefault(), ParserItem::defaultFloat());
+    BOOST_CHECK_THROW(item1.getDefault(), std::invalid_argument);
     BOOST_CHECK_EQUAL( 88.91F , item2.getDefault());
+}
+
+
+BOOST_AUTO_TEST_CASE(Initialize_Default_String) {
+    ParserStringItem item1(std::string("ITEM1"));
+    BOOST_CHECK_THROW( item1.getDefault(), std::invalid_argument);
+
+    ParserStringItem item2("ITEM1",  "String");
+    BOOST_CHECK_EQUAL( "String" , item2.getDefault());
 }
 
 BOOST_AUTO_TEST_CASE(scan_PreMatureTerminator_defaultUsed) {
@@ -94,7 +103,7 @@ BOOST_AUTO_TEST_CASE(scan_PreMatureTerminator_defaultUsed) {
 
     RawRecordPtr rawRecord1(new RawRecord("/"));
     DeckItemConstPtr defaulted = itemInt.scan(rawRecord1);
-    BOOST_CHECK_EQUAL(ParserItem::defaultInt(), defaulted->getInt(0));
+    BOOST_CHECK_THROW(defaulted->getInt(0) , std::invalid_argument);
 }    
 
 BOOST_AUTO_TEST_CASE(InitializeIntItem_setDescription_canReadBack) {
@@ -127,19 +136,25 @@ BOOST_AUTO_TEST_CASE(InitializeIntItem_FromJsonObject) {
     ParserIntItem item1( jsonConfig );
     BOOST_CHECK_EQUAL( "ITEM1" , item1.name() );
     BOOST_CHECK_EQUAL( ALL , item1.sizeType() );
-    BOOST_CHECK_EQUAL( ParserItem::defaultInt() , item1.getDefault() );
+    BOOST_CHECK_THROW( item1.getDefault(), std::invalid_argument);
 }
 
 
 BOOST_AUTO_TEST_CASE(InitializeIntItem_FromJsonObject_withDefault) {
-    Json::JsonObject jsonConfig("{\"name\": \"ITEM1\" , \"size_type\" : \"ALL\", \"default\" : 100}");
+    Json::JsonObject jsonConfig("{\"name\": \"ITEM1\" , \"size_type\" : \"SINGLE\", \"default\" : 100}");
     ParserIntItem item1( jsonConfig );
     BOOST_CHECK_EQUAL( 100 , item1.getDefault() );
 }
 
 
 BOOST_AUTO_TEST_CASE(InitializeIntItem_FromJsonObject_withDefaultInvalid_throws) {
-    Json::JsonObject jsonConfig("{\"name\": \"ITEM1\" , \"size_type\" : \"ALL\", \"default\" : \"100X\"}");
+    Json::JsonObject jsonConfig("{\"name\": \"ITEM1\" , \"size_type\" : \"SINGLE\", \"default\" : \"100X\"}");
+    BOOST_CHECK_THROW( ParserIntItem item1( jsonConfig ) , std::invalid_argument );
+}
+
+
+BOOST_AUTO_TEST_CASE(InitializeIntItem_FromJsonObject_withSizeTypeALL_throws) {
+    Json::JsonObject jsonConfig("{\"name\": \"ITEM1\" , \"size_type\" : \"ALL\", \"default\" : 100}");
     BOOST_CHECK_THROW( ParserIntItem item1( jsonConfig ) , std::invalid_argument );
 }
 
@@ -367,9 +382,10 @@ BOOST_AUTO_TEST_CASE(Scan_All_CorrectIntSetInDeckItem) {
     ParserItemSizeEnum sizeType = ALL;
     ParserIntItem itemInt("ITEM", sizeType);
 
-    RawRecordPtr rawRecord(new RawRecord("100 443 10* 10*1 25/"));
+    RawRecordPtr rawRecord(new RawRecord("100 443 10*77 10*1 25/"));
     DeckItemConstPtr deckIntItem = itemInt.scan(rawRecord);
     BOOST_CHECK_EQUAL(23U, deckIntItem->size());
+    BOOST_CHECK_EQUAL(77, deckIntItem->getInt(3));
     BOOST_CHECK_EQUAL(1, deckIntItem->getInt(21));
     BOOST_CHECK_EQUAL(25, deckIntItem->getInt(22));
 }
@@ -398,24 +414,9 @@ BOOST_AUTO_TEST_CASE(Scan_SeveralInts_CorrectIntsSetInDeckItem) {
     BOOST_CHECK_EQUAL(338932, deckIntItem3->getInt(0));
 }
 
-BOOST_AUTO_TEST_CASE(Scan_Default_CorrectIntsSetInDeckItem) {
-    ParserItemSizeEnum sizeType = ALL;
-    int defaultValue = 199;
-    ParserIntItem itemInt("ITEM2", sizeType, defaultValue);
-
-    RawRecordPtr rawRecord1(new RawRecord("* /"));
-    DeckItemConstPtr deckIntItem = itemInt.scan(rawRecord1);
-    BOOST_CHECK_EQUAL(1U, deckIntItem->size());
-    BOOST_CHECK_EQUAL(defaultValue, deckIntItem->getInt(0));
 
 
-    RawRecordPtr rawRecord2(new RawRecord("20* /"));
-    deckIntItem = itemInt.scan(rawRecord2);
-    BOOST_CHECK_EQUAL(defaultValue, deckIntItem->getInt(0));
-    BOOST_CHECK_EQUAL(20U, deckIntItem->size());
-    BOOST_CHECK_EQUAL(defaultValue, deckIntItem->getInt(19));
-    BOOST_CHECK_EQUAL(defaultValue, deckIntItem->getInt(9));
-}
+
 
 BOOST_AUTO_TEST_CASE(Scan_Multiplier_CorrectIntsSetInDeckItem) {
     ParserItemSizeEnum sizeType = ALL;
@@ -430,7 +431,7 @@ BOOST_AUTO_TEST_CASE(Scan_Multiplier_CorrectIntsSetInDeckItem) {
 
 BOOST_AUTO_TEST_CASE(Scan_StarNoMultiplier_ExceptionThrown) {
     ParserItemSizeEnum sizeType = SINGLE;
-    ParserIntItem itemInt("ITEM2", sizeType);
+    ParserIntItem itemInt("ITEM2", sizeType , 100);
 
     RawRecordPtr rawRecord(new RawRecord("*45 /"));
     BOOST_CHECK_THROW(itemInt.scan(rawRecord), std::invalid_argument);
@@ -531,12 +532,12 @@ BOOST_AUTO_TEST_CASE(InitializeStringItem_FromJsonObject) {
     ParserStringItem item1( jsonConfig );
     BOOST_CHECK_EQUAL( "ITEM1" , item1.name() );
     BOOST_CHECK_EQUAL( ALL , item1.sizeType() );
-    BOOST_CHECK_EQUAL( ParserItem::defaultString() , item1.getDefault() );
+    BOOST_CHECK_THROW( item1.getDefault() , std::invalid_argument );
 }
 
 
 BOOST_AUTO_TEST_CASE(InitializeStringItem_FromJsonObject_withDefault) {
-    Json::JsonObject jsonConfig("{\"name\": \"ITEM1\" , \"size_type\" : \"ALL\", \"default\" : \"100\"}");
+    Json::JsonObject jsonConfig("{\"name\": \"ITEM1\" , \"size_type\" : \"SINGLE\", \"default\" : \"100\"}");
     ParserStringItem item1( jsonConfig );
     BOOST_CHECK_EQUAL( "100" , item1.getDefault() );
 }
@@ -551,18 +552,18 @@ BOOST_AUTO_TEST_CASE(InitializeStringItem_FromJsonObject_withDefaultInvalid_thro
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(init_defaultvalue_defaultset) {
-    ParserStringItem itemString(std::string("ITEM1"));
+    ParserStringItem itemString(std::string("ITEM1") , "DEFAULT");
     RawRecordPtr rawRecord(new RawRecord(("'1*'/")));
     DeckItemConstPtr deckItem = itemString.scan(rawRecord);
-    BOOST_CHECK_EQUAL(itemString.defaultString(), deckItem->getString(0));
+    BOOST_CHECK_EQUAL("DEFAULT", deckItem->getString(0));
 
     rawRecord.reset(new RawRecord("13*/"));
     deckItem = itemString.scan(rawRecord);
-    BOOST_CHECK_EQUAL(itemString.defaultString(), deckItem->getString(0));
+    BOOST_CHECK_EQUAL("DEFAULT" , deckItem->getString(0));
 
     rawRecord.reset(new RawRecord(("*/")));
     deckItem = itemString.scan(rawRecord);
-    BOOST_CHECK_EQUAL(itemString.defaultString(), deckItem->getString(0));
+    BOOST_CHECK_EQUAL("DEFAULT", deckItem->getString(0));
 
     ParserStringItem itemStringDefaultChanged("ITEM2", "SPECIAL");
     rawRecord.reset(new RawRecord(("*/")));
@@ -573,34 +574,19 @@ BOOST_AUTO_TEST_CASE(init_defaultvalue_defaultset) {
 BOOST_AUTO_TEST_CASE(scan_all_valuesCorrect) {
     ParserItemSizeEnum sizeType = ALL;
     ParserStringItem itemString("ITEMWITHMANY", sizeType);
-    RawRecordPtr rawRecord(new RawRecord("'WELL1' '*' FISK BANAN 3* OPPLEGG_FOR_DATAANALYSE /"));
+    RawRecordPtr rawRecord(new RawRecord("'WELL1' FISK BANAN 3*X OPPLEGG_FOR_DATAANALYSE /"));
     DeckItemConstPtr deckItem = itemString.scan(rawRecord);
-    BOOST_CHECK_EQUAL(8U, deckItem->size());
+    BOOST_CHECK_EQUAL(7U, deckItem->size());
 
     BOOST_CHECK_EQUAL("WELL1", deckItem->getString(0));
-    BOOST_CHECK_EQUAL("DEFAULT", deckItem->getString(1));
-    BOOST_CHECK_EQUAL("FISK", deckItem->getString(2));
-    BOOST_CHECK_EQUAL("BANAN", deckItem->getString(3));
-    BOOST_CHECK_EQUAL("DEFAULT", deckItem->getString(4));
-    BOOST_CHECK_EQUAL("DEFAULT", deckItem->getString(5));
-    BOOST_CHECK_EQUAL("DEFAULT", deckItem->getString(6));
-    BOOST_CHECK_EQUAL("OPPLEGG_FOR_DATAANALYSE", deckItem->getString(7));
+    BOOST_CHECK_EQUAL("FISK", deckItem->getString(1));
+    BOOST_CHECK_EQUAL("BANAN", deckItem->getString(2));
+    BOOST_CHECK_EQUAL("X", deckItem->getString(3));
+    BOOST_CHECK_EQUAL("X", deckItem->getString(4));
+    BOOST_CHECK_EQUAL("X", deckItem->getString(5));
+    BOOST_CHECK_EQUAL("OPPLEGG_FOR_DATAANALYSE", deckItem->getString(6));
 }
 
-BOOST_AUTO_TEST_CASE(scan_givenNumber_valuesCorrect) {
-    ParserItemSizeEnum sizeType = ALL;
-    ParserStringItem itemString("ITEMWITHMANY", sizeType);
-    RawRecordPtr rawRecord(new RawRecord("'WELL1' '*' BIG SMALL 3* COMPUTER_STUFF /"));
-    DeckItemConstPtr deckItem = itemString.scan(rawRecord);
-    BOOST_CHECK_EQUAL(8U, deckItem->size());
-
-    BOOST_CHECK_EQUAL("WELL1", deckItem->getString(0));
-    BOOST_CHECK_EQUAL(ParserStringItem::defaultString(), deckItem->getString(1));
-    BOOST_CHECK_EQUAL("BIG", deckItem->getString(2));
-    BOOST_CHECK_EQUAL(ParserStringItem::defaultString(), deckItem->getString(5));
-    BOOST_CHECK_EQUAL("COMPUTER_STUFF", deckItem->getString(7));
-
-}
 
 BOOST_AUTO_TEST_CASE(scan_single_dataCorrect) {
     ParserStringItem itemString(std::string("ITEM1"));

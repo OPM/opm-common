@@ -34,12 +34,10 @@ namespace Opm
             ParserItemSizeEnum sizeType_) :
             ParserItem(itemName, sizeType_)
     {
-        m_default = defaultDouble();
     }
 
     ParserDoubleItem::ParserDoubleItem(const std::string& itemName) : ParserItem(itemName)
     {
-        m_default = defaultDouble();
     }
 
 
@@ -56,7 +54,10 @@ namespace Opm
 
 
     double ParserDoubleItem::getDefault() const {
-        return m_default;
+        if (m_defaultSet) 
+            return m_default;
+        else
+            throw std::invalid_argument("Tried get default from parser item " + name() + " No default has been configured");
     }
     
 
@@ -72,8 +73,6 @@ namespace Opm
     {
         if (jsonConfig.has_item("default")) 
             setDefault( jsonConfig.get_double("default") );
-        else
-            m_default = defaultDouble();
     }
 
     bool ParserDoubleItem::equal(const ParserItem& other) const

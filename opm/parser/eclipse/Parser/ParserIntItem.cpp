@@ -28,19 +28,22 @@
 namespace Opm {
 
 
-    ParserIntItem::ParserIntItem(const std::string& itemName) : ParserItem(itemName) {
-        m_default = defaultInt();
+    ParserIntItem::ParserIntItem(const std::string& itemName) : ParserItem(itemName) 
+    {
     }
 
-    ParserIntItem::ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType_) : ParserItem(itemName, sizeType_) {
-        m_default = defaultInt();
+    ParserIntItem::ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType_) : ParserItem(itemName, sizeType_) 
+    {
     }
 
-    ParserIntItem::ParserIntItem(const std::string& itemName, int defaultValue) : ParserItem(itemName) {
+    ParserIntItem::ParserIntItem(const std::string& itemName, int defaultValue) : ParserItem(itemName) 
+    {
         setDefault(defaultValue);
     }
 
-    ParserIntItem::ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType_, int defaultValue) : ParserItem(itemName, sizeType_) {
+
+    ParserIntItem::ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType_, int defaultValue) : ParserItem(itemName, sizeType_) 
+    {
         setDefault(defaultValue);
     }
 
@@ -48,15 +51,22 @@ namespace Opm {
     {
         if (jsonConfig.has_item("default")) 
             setDefault( jsonConfig.get_int("default") );
-        else
-            m_default = defaultInt();
     }
+
 
     void ParserIntItem::setDefault(int defaultValue) {
-        m_default = defaultValue;
+        if (sizeType() == ALL)
+            throw std::invalid_argument("The size type ALL can not be combined with an explicit default value");
         m_defaultSet = true;
+        m_default = defaultValue;
     }
 
+    int ParserIntItem::getDefault() const {
+        if (m_defaultSet) 
+            return m_default;
+        else
+            throw std::invalid_argument("Tried get default from parser item " + name() + " No default has been configured");
+    }
 
     DeckItemPtr ParserIntItem::scan(RawRecordPtr rawRecord) const {
         return ParserItemScan<ParserIntItem,DeckIntItem,int>(this , rawRecord);
