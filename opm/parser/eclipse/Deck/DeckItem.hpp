@@ -46,6 +46,7 @@ namespace Opm {
         
         bool setInDeck() const;
         bool defaultApplied() const;
+        bool hasData() const;
 
         virtual size_t size() const = 0;
         

@@ -52,6 +52,13 @@ namespace Opm {
             return false;
     }
 
+    bool DeckItem::hasData() const {
+        if (m_valueStatus & (DeckValue::DEFAULT + DeckValue::SET_IN_DECK))
+            return true;
+        else
+            return false;
+    }
+
     
     void DeckItem::assertValueSet() const {
         if (m_valueStatus == DeckValue::NOT_SET)

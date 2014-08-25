@@ -103,14 +103,18 @@ BOOST_AUTO_TEST_CASE(SetInDeckData) {
     DeckIntItem deckIntItem("TEST");
     BOOST_CHECK_EQUAL( false , deckIntItem.setInDeck() );
     BOOST_CHECK_EQUAL( false , deckIntItem.defaultApplied());
+    BOOST_CHECK_EQUAL( false , deckIntItem.hasData());
     deckIntItem.push_backDefault( 1 );
     BOOST_CHECK_EQUAL( false , deckIntItem.setInDeck() );
     BOOST_CHECK_EQUAL( true  , deckIntItem.defaultApplied());
+    BOOST_CHECK_EQUAL( true , deckIntItem.hasData());
     deckIntItem.push_back( 10 );
     BOOST_CHECK_EQUAL( true , deckIntItem.setInDeck() );
     BOOST_CHECK_EQUAL( true  , deckIntItem.defaultApplied());
+    BOOST_CHECK_EQUAL( true  , deckIntItem.hasData());
     deckIntItem.push_backDefault( 1 );
     BOOST_CHECK_EQUAL( true , deckIntItem.setInDeck() );
+    BOOST_CHECK_EQUAL( true  , deckIntItem.hasData());
 }
 
 
