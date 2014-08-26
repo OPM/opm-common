@@ -37,7 +37,7 @@ namespace Opm {
     
     class EclipseState {
     public:
-        EclipseState(DeckConstPtr deck);
+        EclipseState(DeckConstPtr deck, bool beStrict = false);
         ScheduleConstPtr getSchedule() const;
         EclipseGridConstPtr getEclipseGrid() const;
         EclipseGridPtr getEclipseGridCopy() const;
