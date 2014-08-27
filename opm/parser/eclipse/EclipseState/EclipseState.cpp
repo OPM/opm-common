@@ -193,9 +193,14 @@ namespace Opm {
         }
     }
 
-    bool EclipseState::supportsGridProperty(const std::string& keyword) const {
-        return (m_intGridProperties->supportsKeyword( keyword ) || m_doubleGridProperties->supportsKeyword( keyword ));
-    }   
+    bool EclipseState::supportsGridProperty(const std::string& keyword, int enabledTypes) const {
+        bool result = false;
+        if (enabledTypes & IntProperties)
+            result = result || m_intGridProperties->supportsKeyword( keyword );
+        if (enabledTypes & DoubleProperties)
+            result = result || m_doubleGridProperties->supportsKeyword( keyword );
+        return result;
+    }
 
     bool EclipseState::hasIntGridProperty(const std::string& keyword) const {
          return m_intGridProperties->hasKeyword( keyword );
@@ -218,14 +223,18 @@ namespace Opm {
 
     
     
-    void EclipseState::loadGridPropertyFromDeckKeyword(std::shared_ptr<const Box> inputBox , DeckKeywordConstPtr deckKeyword) {            
+    void EclipseState::loadGridPropertyFromDeckKeyword(std::shared_ptr<const Box> inputBox , DeckKeywordConstPtr deckKeyword, int enabledTypes) {
         const std::string& keyword = deckKeyword->name();
         if (m_intGridProperties->supportsKeyword( keyword )) {
-            auto gridProperty = m_intGridProperties->getKeyword( keyword );
-            gridProperty->loadFromDeckKeyword( inputBox , deckKeyword );
+            if (enabledTypes & IntProperties) {
+                auto gridProperty = m_intGridProperties->getKeyword( keyword );
+                gridProperty->loadFromDeckKeyword( inputBox , deckKeyword );
+            }
         } else if (m_doubleGridProperties->supportsKeyword( keyword )) {
-            auto gridProperty = m_doubleGridProperties->getKeyword( keyword );
-            gridProperty->loadFromDeckKeyword( inputBox , deckKeyword );
+            if (enabledTypes & DoubleProperties) {
+                auto gridProperty = m_doubleGridProperties->getKeyword( keyword );
+                gridProperty->loadFromDeckKeyword( inputBox , deckKeyword );
+            }
         } else {
             throw std::invalid_argument("Tried to load from unsupported keyword: " + deckKeyword->name());
         }
@@ -234,7 +243,6 @@ namespace Opm {
     
 
     void EclipseState::initProperties(DeckConstPtr deck) {
-        BoxManager boxManager(m_eclipseGrid->getNX( ) , m_eclipseGrid->getNY() , m_eclipseGrid->getNZ());
         typedef GridProperties<int>::SupportedKeywordInfo SupportedIntKeywordInfo;
         static std::vector<SupportedIntKeywordInfo> supportedIntKeywords =
             {SupportedIntKeywordInfo( "SATNUM" , 0 ),
@@ -414,35 +422,20 @@ namespace Opm {
             SupportedDoubleKeywordInfo( "MULTPV", 1.0, "1" )
         };
 
-        m_intGridProperties = std::make_shared<GridProperties<int> >(m_eclipseGrid->getNX() , m_eclipseGrid->getNY() , m_eclipseGrid->getNZ() , supportedIntKeywords); 
-        m_doubleGridProperties.reset(new GridProperties<double>(m_eclipseGrid->getNX() , m_eclipseGrid->getNY() , m_eclipseGrid->getNZ() , supportedDoubleKeywords)); 
-        
-        
-        if (Section::hasGRID(deck)) {
-            std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
-            scanSection( gridSection , boxManager );
-        }
+        // create the grid properties
+        m_intGridProperties = std::make_shared<GridProperties<int> >(m_eclipseGrid->getNX(),
+                                                                     m_eclipseGrid->getNY(),
+                                                                     m_eclipseGrid->getNZ(),
+                                                                     supportedIntKeywords);
+        m_doubleGridProperties = std::make_shared<GridProperties<double> >(m_eclipseGrid->getNX(),
+                                                                           m_eclipseGrid->getNY(),
+                                                                           m_eclipseGrid->getNZ(),
+                                                                           supportedDoubleKeywords);
 
-
-        if (Section::hasEDIT(deck)) {
-            std::shared_ptr<Opm::EDITSection> editSection(new Opm::EDITSection(deck) );
-            scanSection( editSection , boxManager );
-        }
-
-        if (Section::hasPROPS(deck)) {
-            std::shared_ptr<Opm::PROPSSection> propsSection(new Opm::PROPSSection(deck) );
-            scanSection( propsSection , boxManager );
-        }
-
-        if (Section::hasREGIONS(deck)) {
-            std::shared_ptr<Opm::REGIONSSection> regionsSection(new Opm::REGIONSSection(deck) );
-            scanSection( regionsSection , boxManager );
-        }
-
-        if (Section::hasSOLUTION(deck)) {
-            std::shared_ptr<Opm::SOLUTIONSection> solutionSection(new Opm::SOLUTIONSection(deck) );
-            scanSection( solutionSection , boxManager );
-        }
+        // first process all integer grid properties as these may be needed in order to
+        // initialize the double properties
+        processGridProperties(deck, /*enabledTypes=*/IntProperties);
+        processGridProperties(deck, /*enabledTypes=*/DoubleProperties);
     }
 
     double EclipseState::getSIScaling(const std::string &dimensionString) const
@@ -450,32 +443,64 @@ namespace Opm {
         return m_unitSystem->getDimension(dimensionString)->getSIScaling();
     }
 
-    void EclipseState::scanSection(std::shared_ptr<Opm::Section> section , BoxManager& boxManager) {
+    void EclipseState::processGridProperties(Opm::DeckConstPtr deck, int enabledTypes) {
+        
+        if (Section::hasGRID(deck)) {
+            std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
+            scanSection(gridSection, enabledTypes);
+        }
+
+
+        if (Section::hasEDIT(deck)) {
+            std::shared_ptr<Opm::EDITSection> editSection(new Opm::EDITSection(deck) );
+            scanSection(editSection, enabledTypes);
+        }
+
+        if (Section::hasPROPS(deck)) {
+            std::shared_ptr<Opm::PROPSSection> propsSection(new Opm::PROPSSection(deck) );
+            scanSection(propsSection, enabledTypes);
+        }
+
+        if (Section::hasREGIONS(deck)) {
+            std::shared_ptr<Opm::REGIONSSection> regionsSection(new Opm::REGIONSSection(deck) );
+            scanSection(regionsSection, enabledTypes);
+        }
+
+        if (Section::hasSOLUTION(deck)) {
+            std::shared_ptr<Opm::SOLUTIONSection> solutionSection(new Opm::SOLUTIONSection(deck) );
+            scanSection(solutionSection, enabledTypes);
+        }
+    }
+
+    void EclipseState::scanSection(std::shared_ptr<Opm::Section> section,
+                                   int enabledTypes) {
+        BoxManager boxManager(m_eclipseGrid->getNX( ) , m_eclipseGrid->getNY() , m_eclipseGrid->getNZ());
         for (auto iter = section->begin(); iter != section->end(); ++iter) {
             DeckKeywordConstPtr deckKeyword = *iter;
+
+            if (supportsGridProperty(deckKeyword->name(), enabledTypes) )
+                loadGridPropertyFromDeckKeyword(boxManager.getActiveBox(), deckKeyword, enabledTypes);
+            else {
+                if (deckKeyword->name() == "ADD")
+                    handleADDKeyword(deckKeyword , boxManager, enabledTypes);
             
-            if (supportsGridProperty( deckKeyword->name()) )
-                loadGridPropertyFromDeckKeyword( boxManager.getActiveBox() , deckKeyword );
+                if (deckKeyword->name() == "BOX")
+                    handleBOXKeyword(deckKeyword , boxManager);
             
-            if (deckKeyword->name() == "ADD")
-                handleADDKeyword(deckKeyword , boxManager);
+                if (deckKeyword->name() == "COPY")
+                    handleCOPYKeyword(deckKeyword , boxManager, enabledTypes);
             
-            if (deckKeyword->name() == "BOX")
-                handleBOXKeyword(deckKeyword , boxManager);
+                if (deckKeyword->name() == "EQUALS")
+                    handleEQUALSKeyword(deckKeyword , boxManager, enabledTypes);
             
-            if (deckKeyword->name() == "COPY")
-                handleCOPYKeyword(deckKeyword , boxManager);
+                if (deckKeyword->name() == "ENDBOX")
+                    handleENDBOXKeyword(boxManager);
             
-            if (deckKeyword->name() == "EQUALS")
-                handleEQUALSKeyword(deckKeyword , boxManager);
+                if (deckKeyword->name() == "MULTIPLY")
+                    handleMULTIPLYKeyword(deckKeyword , boxManager, enabledTypes);
             
-            if (deckKeyword->name() == "ENDBOX")
-                handleENDBOXKeyword(boxManager);
-            
-            if (deckKeyword->name() == "MULTIPLY")
-                handleMULTIPLYKeyword(deckKeyword , boxManager);
-            
-            boxManager.endKeyword();
+                boxManager.endKeyword();
+            }
         }
         boxManager.endSection();
     }
@@ -501,7 +526,7 @@ namespace Opm {
     }
 
 
-    void EclipseState::handleMULTIPLYKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager) {
+    void EclipseState::handleMULTIPLYKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager, int enabledTypes) {
         for (auto iter = deckKeyword->begin(); iter != deckKeyword->end(); ++iter) {
             DeckRecordConstPtr record = *iter;
             const std::string& field = record->getItem("field")->getString(0);
@@ -510,17 +535,20 @@ namespace Opm {
             setKeywordBox( record , boxManager );
             
             if (m_intGridProperties->hasKeyword( field )) {
-                int intFactor = static_cast<int>(scaleFactor);
-                std::shared_ptr<GridProperty<int> > property = m_intGridProperties->getKeyword( field );
+                if (enabledTypes & IntProperties) {
+                    int intFactor = static_cast<int>(scaleFactor);
+                    std::shared_ptr<GridProperty<int> > property = m_intGridProperties->getKeyword( field );
 
-                property->scale( intFactor , boxManager.getActiveBox() );
+                    property->scale( intFactor , boxManager.getActiveBox() );
+                }
             } else if (m_doubleGridProperties->hasKeyword( field )) {
-                std::shared_ptr<GridProperty<double> > property = m_doubleGridProperties->getKeyword( field );
-                
-                property->scale( scaleFactor , boxManager.getActiveBox() );
-            } else
+                if (enabledTypes & DoubleProperties) {
+                    std::shared_ptr<GridProperty<double> > property = m_doubleGridProperties->getKeyword( field );
+                    property->scale( scaleFactor , boxManager.getActiveBox() );
+                }
+            } else if (!m_intGridProperties->supportsKeyword(field) &&
+                       !m_doubleGridProperties->supportsKeyword(field))
                 throw std::invalid_argument("Fatal error processing MULTIPLY keyword. Tried to multiply not defined keyword " + field);
-
         }
     }
 
@@ -530,8 +558,7 @@ namespace Opm {
       some state dependent semantics regarding endpoint scaling arrays
       in the PROPS section. That is not supported. 
     */
-    
-    void EclipseState::handleADDKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager) {
+    void EclipseState::handleADDKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager, int enabledTypes) {
         for (auto iter = deckKeyword->begin(); iter != deckKeyword->end(); ++iter) {
             DeckRecordConstPtr record = *iter;
             const std::string& field = record->getItem("field")->getString(0);
@@ -540,23 +567,28 @@ namespace Opm {
             setKeywordBox( record , boxManager );
             
             if (m_intGridProperties->hasKeyword( field )) {
-                int intShift = static_cast<int>(shiftValue);
-                std::shared_ptr<GridProperty<int> > property = m_intGridProperties->getKeyword( field );
-                
-                property->add( intShift , boxManager.getActiveBox() );
-            } else if (m_doubleGridProperties->hasKeyword( field )) {
-                std::shared_ptr<GridProperty<double> > property = m_doubleGridProperties->getKeyword( field );
+                if (enabledTypes & IntProperties) {
+                    int intShift = static_cast<int>(shiftValue);
+                    std::shared_ptr<GridProperty<int> > property = m_intGridProperties->getKeyword( field );
 
-                double siShiftValue = shiftValue * getSIScaling(property->getKeywordInfo().getDimensionString());
-                property->add(siShiftValue , boxManager.getActiveBox() );
-            } else
+                    property->add( intShift , boxManager.getActiveBox() );
+                }
+            } else if (m_doubleGridProperties->hasKeyword( field )) {
+                if (enabledTypes & DoubleProperties) {
+                    std::shared_ptr<GridProperty<double> > property = m_doubleGridProperties->getKeyword( field );
+
+                    double siShiftValue = shiftValue * getSIScaling(property->getKeywordInfo().getDimensionString());
+                    property->add(siShiftValue , boxManager.getActiveBox() );
+                }
+            } else if (!m_intGridProperties->supportsKeyword(field) &&
+                       !m_doubleGridProperties->supportsKeyword(field))
                 throw std::invalid_argument("Fatal error processing ADD keyword. Tried to shift not defined keyword " + field);
 
         }
     }
 
 
-    void EclipseState::handleEQUALSKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager) {
+    void EclipseState::handleEQUALSKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager, int enabledTypes) {
         for (auto iter = deckKeyword->begin(); iter != deckKeyword->end(); ++iter) {
             DeckRecordConstPtr record = *iter;
             const std::string& field = record->getItem("field")->getString(0);
@@ -565,15 +597,20 @@ namespace Opm {
             setKeywordBox( record , boxManager );
             
             if (m_intGridProperties->supportsKeyword( field )) {
-                int intValue = static_cast<int>(value);
-                std::shared_ptr<GridProperty<int> > property = m_intGridProperties->getKeyword( field );
+                if (enabledTypes & IntProperties) {
+                    int intValue = static_cast<int>(value);
+                    std::shared_ptr<GridProperty<int> > property = m_intGridProperties->getKeyword( field );
 
-                property->setScalar( intValue , boxManager.getActiveBox() );
+                    property->setScalar( intValue , boxManager.getActiveBox() );
+                }
             } else if (m_doubleGridProperties->supportsKeyword( field )) {
-                std::shared_ptr<GridProperty<double> > property = m_doubleGridProperties->getKeyword( field );
 
-                double siValue = value * getSIScaling(property->getKeywordInfo().getDimensionString());
-                property->setScalar( siValue , boxManager.getActiveBox() );
+                if (enabledTypes & DoubleProperties) {
+                    std::shared_ptr<GridProperty<double> > property = m_doubleGridProperties->getKeyword( field );
+
+                    double siValue = value * getSIScaling(property->getKeywordInfo().getDimensionString());
+                    property->setScalar( siValue , boxManager.getActiveBox() );
+                }
             } else
                 throw std::invalid_argument("Fatal error processing EQUALS keyword. Tried to set not defined keyword " + field);
 
@@ -582,7 +619,7 @@ namespace Opm {
 
 
 
-    void EclipseState::handleCOPYKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager) {
+    void EclipseState::handleCOPYKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager, int enabledTypes) {
         for (auto iter = deckKeyword->begin(); iter != deckKeyword->end(); ++iter) {
             DeckRecordConstPtr record = *iter;
             const std::string& srcField = record->getItem("src")->getString(0);
@@ -590,13 +627,17 @@ namespace Opm {
             
             setKeywordBox( record , boxManager );
             
-            if (m_intGridProperties->hasKeyword( srcField ))
-                copyIntKeyword( srcField , targetField , boxManager.getActiveBox());
-            else if (m_doubleGridProperties->hasKeyword( srcField ))
-                copyDoubleKeyword( srcField , targetField , boxManager.getActiveBox());
-            else
+            if (m_intGridProperties->hasKeyword( srcField )) {
+                if (enabledTypes & IntProperties)
+                    copyIntKeyword( srcField , targetField , boxManager.getActiveBox());
+            }
+            else if (m_doubleGridProperties->hasKeyword( srcField )) {
+                if (enabledTypes & DoubleProperties)
+                    copyDoubleKeyword( srcField , targetField , boxManager.getActiveBox());
+            }
+            else if (!m_intGridProperties->supportsKeyword(srcField) &&
+                     !m_doubleGridProperties->supportsKeyword(srcField))
                 throw std::invalid_argument("Fatal error processing COPY keyword. Tried to copy from not defined keyword " + srcField);
-            
         }
     }
 
