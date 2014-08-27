@@ -227,20 +227,21 @@ public:
     }
 
 private:
-
     void setFromVector(const std::vector<T>& data) {
-        if (data.size() == m_data.size()) {
-            for (size_t i = 0; i < data.size(); i++) 
+        if (data.size() <= m_data.size()) {
+            // note that the 'data' vector (which gets specified in the deck) may be
+            // smaller than the size of the grid property (i.e., the 'm_data'
+            // vector). The remaining values are left at their defaults...
+            for (size_t i = 0; i < data.size(); i++)
                 m_data[i] = data[i];
         } else
             throw std::invalid_argument("Size mismatch when setting data for:" + getKeywordName() + " keyword size: " + boost::lexical_cast<std::string>(m_data.size()) + " input size: " + boost::lexical_cast<std::string>(data.size()));
     }
-    
-    
+
     void setFromVector(std::shared_ptr<const Box> inputBox , const std::vector<T>& data) {
-        if (inputBox->isGlobal())
-            setFromVector( data );
-        else {
+        if (inputBox->isGlobal()) {
+            setFromVector(data);
+        } else {
             const std::vector<size_t>& indexList = inputBox->getIndexList();
             if (data.size() == indexList.size()) {
                 for (size_t i = 0; i < data.size(); i++) {
