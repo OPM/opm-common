@@ -158,11 +158,26 @@ public:
         return m_data;
     }
 
-    void loadFromDeckKeyword(std::shared_ptr<const Box> inputBox , DeckKeywordConstPtr deckKeyword);
-    void loadFromDeckKeyword(DeckKeywordConstPtr deckKeyword);    
+    void loadFromDeckKeyword(std::shared_ptr<const Box> inputBox, DeckKeywordConstPtr deckKeyword) {
+        const auto deckItem = getDeckItem(deckKeyword);
 
+        const std::vector<size_t>& indexList = inputBox->getIndexList();
+        for (size_t sourceIdx = 0; sourceIdx < indexList.size(); sourceIdx++) {
+            size_t targetIdx = indexList[sourceIdx];
+            if (!deckItem->defaultApplied(sourceIdx))
+                setDataPoint(sourceIdx, targetIdx, deckItem);
+        }
+    }
 
-    
+    void loadFromDeckKeyword(DeckKeywordConstPtr deckKeyword) {
+        const auto deckItem = getDeckItem(deckKeyword);
+
+        for (size_t dataPointIdx = 0; dataPointIdx < deckItem->size(); ++dataPointIdx) {
+            if (!deckItem->defaultApplied(dataPointIdx))
+                setDataPoint(dataPointIdx, dataPointIdx, deckItem);
+        }
+    }
+
     void copyFrom(const GridProperty<T>& src, std::shared_ptr<const Box> inputBox) {
         if (inputBox->isGlobal()) {
             for (size_t i = 0; i < src.size(); ++i)
@@ -227,31 +242,27 @@ public:
     }
 
 private:
-    void setFromVector(const std::vector<T>& data) {
-        if (data.size() <= m_data.size()) {
-            // note that the 'data' vector (which gets specified in the deck) may be
-            // smaller than the size of the grid property (i.e., the 'm_data'
-            // vector). The remaining values are left at their defaults...
-            for (size_t i = 0; i < data.size(); i++)
-                m_data[i] = data[i];
-        } else
-            throw std::invalid_argument("Size mismatch when setting data for:" + getKeywordName() + " keyword size: " + boost::lexical_cast<std::string>(m_data.size()) + " input size: " + boost::lexical_cast<std::string>(data.size()));
+    Opm::DeckItemConstPtr getDeckItem(Opm::DeckKeywordConstPtr deckKeyword) {
+        if (deckKeyword->size() != 1)
+            throw std::invalid_argument("Grid properties can only have a single record (keyword "
+                                        + deckKeyword->name() + ")");
+        if (deckKeyword->getRecord(0)->size() != 1)
+            // this is an error of the definition of the ParserKeyword (most likely in
+            // the corresponding JSON file)
+            throw std::invalid_argument("Grid properties may only exhibit a single item  (keyword "
+                                        + deckKeyword->name() + ")");
+
+        const auto deckItem = deckKeyword->getRecord(0)->getItem(0);
+
+        if (deckItem->size() > m_data.size())
+            throw std::invalid_argument("Size mismatch when setting data for:" + getKeywordName() +
+                                        " keyword size: " + boost::lexical_cast<std::string>(deckItem->size())
+                                        + " input size: " + boost::lexical_cast<std::string>(m_data.size()));
+
+        return deckItem;
     }
 
-    void setFromVector(std::shared_ptr<const Box> inputBox , const std::vector<T>& data) {
-        if (inputBox->isGlobal()) {
-            setFromVector(data);
-        } else {
-            const std::vector<size_t>& indexList = inputBox->getIndexList();
-            if (data.size() == indexList.size()) {
-                for (size_t i = 0; i < data.size(); i++) {
-                    size_t targetIndex = indexList[i];
-                    m_data[targetIndex] = data[i];
-                }
-            } else
-                throw std::invalid_argument("Size mismatch when setting data for:" + getKeywordName() + " box size: " + boost::lexical_cast<std::string>(inputBox->size()) + " input size: " + boost::lexical_cast<std::string>(data.size()));
-        }
-    }
+    void setDataPoint(size_t sourceIdx, size_t targetIdx, Opm::DeckItemConstPtr deckItem);
 
     size_t      m_nx,m_ny,m_nz;
     SupportedKeywordInfo m_kwInfo;

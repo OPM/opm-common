@@ -22,42 +22,14 @@
 
 namespace Opm {
 
-template<>  
-void GridProperty<int>::loadFromDeckKeyword(Opm::DeckKeywordConstPtr deckKeyword) {
-    if (deckKeyword->isDataKeyword()) {
-        const std::vector<int>& data = deckKeyword->getIntData();
-        setFromVector(data);
-    } else
-        throw std::invalid_argument("Can only load from DATA keywords");
+template<>
+void GridProperty<int>::setDataPoint(size_t sourceIdx, size_t targetIdx, Opm::DeckItemConstPtr deckItem) {
+    m_data[targetIdx] = deckItem->getInt(sourceIdx);
 }
 
-template<>  
-void GridProperty<int>::loadFromDeckKeyword(std::shared_ptr<const Box> inputBox , Opm::DeckKeywordConstPtr deckKeyword) {
-    if (deckKeyword->isDataKeyword()) {
-        const std::vector<int>& data = deckKeyword->getIntData();
-        setFromVector(inputBox , data);
-    } else
-        throw std::invalid_argument("Can only load from DATA keywords");
-}
-
-/*****************************************************************/
-
-template<>  
-void GridProperty<double>::loadFromDeckKeyword(Opm::DeckKeywordConstPtr deckKeyword) {
-    if (deckKeyword->isDataKeyword()) {
-        const std::vector<double>& data = deckKeyword->getSIDoubleData();
-        setFromVector(data);
-    } else
-        throw std::invalid_argument("Can only load from DATA keywords");
-}
-
-template<>  
-void GridProperty<double>::loadFromDeckKeyword(std::shared_ptr<const Box> inputBox , Opm::DeckKeywordConstPtr deckKeyword) {
-    if (deckKeyword->isDataKeyword()) {
-        const std::vector<double>& data = deckKeyword->getSIDoubleData();
-        setFromVector(inputBox , data);
-    } else
-        throw std::invalid_argument("Can only load from DATA keywords");
+template<>
+void GridProperty<double>::setDataPoint(size_t sourceIdx, size_t targetIdx, Opm::DeckItemConstPtr deckItem) {
+    m_data[targetIdx] = deckItem->getSIDouble(sourceIdx);
 }
 
 }
