@@ -1,4 +1,4 @@
-{"name" : "ROCKTAB" , "size" : {"keyword" : "ROCKCOMP" , "item" : "NTROCC"}, 
+{"name" : "ROCKTAB" , "size" : {"keyword" : "ROCKCOMP" , "item" : "NTROCC"},
         "items" : [{
                 "name":"DATA",
                 "value_type":"DOUBLE",

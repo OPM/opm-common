@@ -104,7 +104,7 @@
   "RTFTTSUR",
   "RTADSUR"
  ],
- "comment":"Tracer keywords where the 2nd letter is a 'T' should be compounded with the tracer name", 
+ "comment":"Tracer keywords where the 2nd letter is a 'T' should be compounded with the tracer name",
  "deck_name_regex": "R[OGW]?[IP][PRT]_.+|RU.+|RTIPF.+|RTIPS.+|RTFTF.+|RTFTS.+|RTFTT.+|RTIPT.+|RTIPF.+|RTIPS.+|RTIP[1-9][0-9]*.+|RTFTT.+|RTFTF.+|RTFTS.+|RTFT[1-9][0-9]*.+|RTADS.+|RTDCY.+",
 
  "size" : 1,

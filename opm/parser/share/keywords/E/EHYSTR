@@ -1,5 +1,5 @@
-{"name" : "EHYSTR" , "size" : 1, "items" : 
-[ 
+{"name" : "EHYSTR" , "size" : 1, "items" :
+[
  {"name" : "curvature_caplillary_pressure_hyst", "value_type" : "DOUBLE", "default" : 0.1},
  {"name" : "relative_perm_hyst", "value_type" : "INT", "default" : 0, "comment" : "Default is 2 for Eclipse300"},
  {"name" : "curvature_param_killough_wetting", "value_type" : "DOUBLE", "default" : 1.0},

@@ -5,5 +5,4 @@
         {"name" : "MAX_GCT_TABLE" , "value_type" : "INT" , "default" : 0},
         {"name" : "MAX_ALQ_TABLE" , "value_type" : "INT" , "default" : 0},
         {"name" : "MAX_PROD_VFP_TABLE" , "value_type" : "INT" , "default" : 0}]}
-                
-        
+

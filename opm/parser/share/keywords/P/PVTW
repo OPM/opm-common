@@ -5,4 +5,4 @@
         {"name":"WATER_VISCOSITY", "value_type" : "DOUBLE", "default" : 0.5, "dimension":"Viscosity", "comment" : "Default is 0.3 in Eclipse300"},
         {"name":"WATER_VISCOSIBILITY", "value_type" : "DOUBLE", "default" : 0.0, "dimension":"1/Pressure"}
     ]}
-    
+

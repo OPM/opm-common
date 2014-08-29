@@ -4,4 +4,3 @@
     {"name" : "CONCENTRATION" , "value_type" : "DOUBLE"},
     {"name" : "CUM_TRACER_FACTOR" , "value_type" : "DOUBLE"},
     {"name" : "PRODUCTION_GROUP" , "value_type" : "STRING"}]}
-    

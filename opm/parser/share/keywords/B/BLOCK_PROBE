@@ -137,8 +137,8 @@
  "deck_name_regex":"BU.+|BTIPF.+|BTIPS.+|BTCNF.+|BTCNS.+|BTCN[1-9][0-9]*.+|BTIPT.+|BTIPF.+|BTIPS.+|BTIP[1-9][0-9]*.+|BTADS.+|BTDCY",
 
  "items" : [
-  {"name": "I" , "value_type" : "INT"}, 
-  {"name": "J" , "value_type" : "INT"}, 
+  {"name": "I" , "value_type" : "INT"},
+  {"name": "J" , "value_type" : "INT"},
   {"name": "K" , "value_type" : "INT"}
  ]
 }

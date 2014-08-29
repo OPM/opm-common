@@ -1,6 +1,6 @@
-{"name"     :  "VFPPROD" , 
- "size"     :  "UNKNOWN" , 
- "items"    : [{"name" : "STRING" , "value_type" : "STRING" , "size_type" : "ALL"}], 
+{"name"     :  "VFPPROD" ,
+ "size"     :  "UNKNOWN" ,
+ "items"    : [{"name" : "STRING" , "value_type" : "STRING" , "size_type" : "ALL"}],
  "comments" : [
 "The VFPPROD/VFPINJ keywords break the keyword model in two ways:                ",
 "                                                                                ",
@@ -9,7 +9,7 @@
 "     properly supported in the parser code, the support is based on the size    ",
 "     UNKNOWN which is interpreted as continue reading records until:            ",
 "     a) Another known keyword appears.                                          ",
-"     b) EOF                                                                     ", 
+"     b) EOF                                                                     ",
 "                                                                                ",
 "  2. The different records have different item definitions; we therefor do not  ",
 "     really internalize these properly - in the deck they are just a list of    ",

@@ -11,4 +11,3 @@
     {"name" : "STOP_LIMIT4"  , "value_type" : "INT" , "default" : 100},
     {"name" : "STOP_LIMIT5"  , "value_type" : "INT" , "default" : 10},
     {"name" : "STOP_LIMIT6"  , "value_type" : "INT" , "default" : 1}]}
-    

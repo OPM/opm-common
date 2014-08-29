@@ -1,7 +1,7 @@
-{"name" : "RSVD" , "size" : {"keyword" : "EQLDIMS" , "item" : "NTEQUL"}, 
-        "items" : [{"name" : "table" , 
-                   "value_type" : "DOUBLE" , 
+{"name" : "RSVD" , "size" : {"keyword" : "EQLDIMS" , "item" : "NTEQUL"},
+        "items" : [{"name" : "table" ,
+                   "value_type" : "DOUBLE" ,
                    "size_type" : "ALL",
                    "dimension" : ["Length" , "GasDissolutionFactor"]}]}
 
-        
+

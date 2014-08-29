@@ -281,6 +281,6 @@
       "FTIRALK",
       "FTITALK"
    ],
-   "comment":"Tracer keywords where the 2nd letter is a 'T' should be compounded with the tracer name", 
+   "comment":"Tracer keywords where the 2nd letter is a 'T' should be compounded with the tracer name",
    "deck_name_regex" : "FU.+|FTPR.+|FTPT.+|FTPC.+|FTIR.+|FTIT.+|FTIC.+|FTIPT.+|FTIPF.+|FTIPS|FTIP[1-9][0-9]*.+|FTPR.+|FTPT.+|FTPC.+|FTIR.+|FTIT.+|FTIC.+|FTADS.+|FTDCY.+|FTIRF.+|FTIRS.+|FTPRF.+|FTPRS.+|FTITF.+|FTITS.+|FTPTF.+|FTPTS.+|FTICF.+|FTICS.+|FTPCF.+|FTPCS.+"
 }
