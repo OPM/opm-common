@@ -1,4 +1,4 @@
-{"name" : "WTEST" , "items" : [
+{"name" : "WTEST" , "sections" : ["SCHEDULE"], "items" : [
         {"name" : "well" , "value_type" : "STRING"},
         {"name" : "interval" , "value_type" : "DOUBLE" },
         {"name" : "reason" , "value_type" : "STRING"},

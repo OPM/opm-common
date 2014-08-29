@@ -1,1 +1,1 @@
-{"name" : "SGL" , "data" : {"value_type" : "DOUBLE", "dimension" : "1"}}
+{"name" : "SGL" , "sections" : ["PROPS"], "data" : {"value_type" : "DOUBLE", "dimension" : "1"}}

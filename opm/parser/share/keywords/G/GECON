@@ -1,4 +1,4 @@
-{"name" : "GECON" , "items" : [
+{"name" : "GECON" , "sections" : ["SCHEDULE"], "items" : [
     {"name" : "GROUP" , "value_type" : "STRING"},
     {"name" : "MIN_OIL_RATE" , "value_type" : "DOUBLE" , "default" : 0.0},
     {"name" : "MIN_GAS_RATE" , "value_type" : "DOUBLE" , "default" : 0.0},

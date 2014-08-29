@@ -1,1 +1,1 @@
-{"name" : "SWAT" , "data" : {"value_type" : "DOUBLE", "dimension" : "1"}}
+{"name" : "SWAT" , "sections" : ["SOLUTION"], "data" : {"value_type" : "DOUBLE", "dimension" : "1"}}

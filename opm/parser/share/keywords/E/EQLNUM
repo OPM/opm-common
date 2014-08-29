@@ -1,1 +1,1 @@
-{"name" : "EQLNUM", "data" : {"value_type" : "INT" }}
+{"name" : "EQLNUM", "sections" : ["REGIONS"], "data" : {"value_type" : "INT" }}

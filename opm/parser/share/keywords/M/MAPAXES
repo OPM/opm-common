@@ -1,4 +1,4 @@
-{"name" : "MAPAXES" , "size" : 1 , "items" : [
+{"name" : "MAPAXES" , "sections" : ["GRID"], "size" : 1 , "items" : [
     {"name" : "X1" , "value_type" : "DOUBLE", "dimension" : "Length" },
     {"name" : "Y1" , "value_type" : "DOUBLE", "dimension" : "Length" },
     {"name" : "X2" , "value_type" : "DOUBLE", "dimension" : "Length" },

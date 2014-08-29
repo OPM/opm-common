@@ -1,1 +1,1 @@
-{"name" : "NTG" , "data" : {"value_type" : "DOUBLE", "dimension" : "1"}}
+{"name" : "NTG" , "sections" : ["GRID"], "data" : {"value_type" : "DOUBLE", "dimension" : "1"}}

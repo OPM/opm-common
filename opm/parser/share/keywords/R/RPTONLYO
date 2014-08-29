@@ -1,1 +1,8 @@
-{"name" : "RPTONLYO"}
+{
+  "name" : "RPTONLYO",
+  "sections": [
+    "SUMMARY",
+    "SCHEDULE"
+  ]
+
+}

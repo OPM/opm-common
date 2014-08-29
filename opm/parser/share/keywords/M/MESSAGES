@@ -1,4 +1,4 @@
-{"name" : "MESSAGES" , "size" : 1 , "items" : [
+{"name" : "MESSAGES" , "sections" : ["RUNSPEC", "GRID", "EDIT", "PROPS", "REGIONS", "SOLUTION", "SUMMARY", "SCHEDULE"], "size" : 1 , "items" : [
     {"name" : "PRINT_LIMIT1" , "value_type" : "INT" , "default" : 1000000},
     {"name" : "PRINT_LIMIT2" , "value_type" : "INT" , "default" : 1000000},
     {"name" : "PRINT_LIMIT3" , "value_type" : "INT" , "default" : 10000},

@@ -1,4 +1,4 @@
-{"name" : "PLYADS" , "size" : {"keyword" : "TABDIMS" , "item" : "NTSFUN"} , "items" :
+{"name" : "PLYADS" , "sections" : ["SPECIAL", "PROPS"], "size" : {"keyword" : "TABDIMS" , "item" : "NTSFUN"} , "items" :
     [
         {"name":"DATA", "value_type":"DOUBLE","size_type":"ALL", "dimension":["PolymerDensity", "1"]}
     ]

@@ -1,4 +1,6 @@
 {"name" : "MULT_XYZ" ,
+ "sections" : ["GRID"],
+
  "deck_names" : [
   "MULTX",
   "MULTX-",

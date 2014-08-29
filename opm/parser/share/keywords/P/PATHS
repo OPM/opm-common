@@ -1,4 +1,4 @@
-{"name" : "PATHS" , "items" :
+{"name" : "PATHS" , "sections" : ["RUNSPEC"], "items" :
    [
     {"name" : "PathName"   , "value_type" : "STRING"},
     {"name" : "PathValue"   , "value_type" : "STRING"}

@@ -1,1 +1,1 @@
-{"name" : "PERMYZ" , "data" : {"value_type" : "DOUBLE" , "dimension" : "Permeability"}}
+{"name" : "PERMYZ" , "sections" : ["GRID"], "data" : {"value_type" : "DOUBLE" , "dimension" : "Permeability"}}

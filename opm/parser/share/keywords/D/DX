@@ -1,1 +1,1 @@
-{"name":"DX", "data" : {"value_type" : "DOUBLE", "dimension":"Length" }}
+{"name":"DX", "sections" : ["GRID"], "data" : {"value_type" : "DOUBLE", "dimension":"Length" }}

@@ -1,4 +1,4 @@
-{"name" : "DATES", "items" : [
+{"name" : "DATES", "sections" : ["SCHEDULE"], "items" : [
     {"name" : "DAY"   , "value_type" : "INT" },
     {"name" : "MONTH" , "value_type" : "STRING"},
     {"name" : "YEAR"  , "value_type" : "INT" },

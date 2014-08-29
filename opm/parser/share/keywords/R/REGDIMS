@@ -1,4 +1,4 @@
-{"name" : "REGDIMS", "size"  : 1 , "items" : [
+{"name" : "REGDIMS", "sections" : ["RUNSPEC"], "size"  : 1 , "items" : [
     {"name" : "NTFIP"            , "value_type" : "INT" , "default" : 1},
     {"name" : "NMFIPR"           , "value_type" : "INT" , "default" : 1},
     {"name" : "NRFREG"           , "value_type" : "INT" , "default" : 0},

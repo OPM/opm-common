@@ -1,1 +1,7 @@
-{"name" : "NOMONITO"}
+{
+  "name" : "NOMONITO",
+  "sections": [
+    "RUNSPEC",
+    "SUMMARY"
+  ]
+}

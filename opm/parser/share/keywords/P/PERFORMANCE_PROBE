@@ -1,5 +1,6 @@
 {
    "name" : "PERFORMANCE_PROBE",
+   "sections" : [ "SUMMARY" ],
    "deck_names" : [
      "ELAPSED",
      "HLINEARS",

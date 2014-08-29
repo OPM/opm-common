@@ -1,1 +1,1 @@
-{"name" : "SWATINIT" , "data" : {"value_type" : "DOUBLE" , "dimension" : "1"}}
+{"name" : "SWATINIT" , "sections" : ["PROPS"], "data" : {"value_type" : "DOUBLE" , "dimension" : "1"}}

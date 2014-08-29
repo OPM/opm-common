@@ -1,4 +1,4 @@
-{"name" : "TABDIMS", "size"  : 1, "items" : [
+{"name" : "TABDIMS", "sections" : ["RUNSPEC"], "size"  : 1, "items" : [
         {"name" : "NTSFUN" , "value_type" : "INT" , "default" : 1},
         {"name" : "NTPVT"  , "value_type" : "INT" , "default" : 1},
         {"name" : "NSSFUN" , "value_type" : "INT" , "default" : 20},

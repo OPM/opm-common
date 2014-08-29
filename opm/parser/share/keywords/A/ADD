@@ -1,4 +1,4 @@
-{"name" : "ADD", "items" : [
+{"name" : "ADD", "sections" : ["GRID", "EDIT", "PROPS", "REGIONS", "SOLUTION"], "items" : [
         {"name" : "field" , "value_type" : "STRING"},
         {"name" : "shift" , "value_type" : "DOUBLE"},
         {"name" : "I1" , "value_type" : "INT", "default" : 0},

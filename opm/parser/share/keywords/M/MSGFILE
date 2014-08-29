@@ -1,3 +1,9 @@
-{"name" : "MSGFILE" , "size" : 1 , "items" : [
+{
+  "name" : "MSGFILE",
+  "sections": [
+    "RUNSPEC"
+  ],
+  "size" : 1,
+  "items" : [
     {"name" : "ENABLE_FLAG" , "value_type" : "INT" }
 ]}

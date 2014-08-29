@@ -1,4 +1,4 @@
-{"name" : "WTRACER" , "items" : [
+{"name" : "WTRACER" , "sections" : ["SCHEDULE"], "items" : [
     {"name" : "WELL" , "value_type" : "STRING"},
     {"name" : "TRACER" , "value_type" : "STRING"},
     {"name" : "CONCENTRATION" , "value_type" : "DOUBLE"},

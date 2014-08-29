@@ -1,4 +1,4 @@
-{"name" : "SPECGRID" , "size" : 1 , "items" : [
+{"name" : "SPECGRID" , "sections" : ["GRID"], "size" : 1 , "items" : [
     {"name" : "NX" , "value_type" : "INT" , "default" : 1},
     {"name" : "NY" , "value_type" : "INT" , "default" : 1},
     {"name" : "NZ" , "value_type" : "INT" , "default" : 1},

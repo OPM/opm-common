@@ -1,1 +1,6 @@
-{"name" : "SKIPREST"}
+{
+  "name" : "SKIPREST",
+  "sections": [
+    "SCHEDULE"
+  ]
+}

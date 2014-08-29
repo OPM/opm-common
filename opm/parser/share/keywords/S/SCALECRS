@@ -1,2 +1,2 @@
-{"name" : "SCALECRS" , "size" : 1 , "items" : [
+{"name" : "SCALECRS" , "sections" : ["PROPS"], "size" : 1 , "items" : [
         {"name" : "SCALECRS" , "value_type" : "STRING" , "default" : "NO"}]}
