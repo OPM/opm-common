@@ -64,6 +64,7 @@ namespace Opm {
         std::string m_keywordName;
         std::string m_fileName;
         int m_lineNumber;
+
         std::shared_ptr<const ParserKeyword> m_parserKeyword;
         std::vector<DeckRecordConstPtr> m_recordList;
         bool m_knownKeyword;
