@@ -389,6 +389,7 @@ namespace Opm {
 //             SupportedIntKeywordInfo( "FIP???"  , 0 ),
              SupportedIntKeywordInfo( "FIPNUM" , 1, "1" )};
 
+        double nan = std::numeric_limits<double>::quiet_NaN();
         const auto eptLookup = std::make_shared<GridPropertyEndpointTableLookupInitializer<>>(*deck, *this);
 
         // Note that the variants of grid keywords for radial grids
@@ -529,15 +530,21 @@ namespace Opm {
             SupportedDoubleKeywordInfo( "ISWCRZ-"  , eptLookup, "1" ),
 
             // porosity
-            SupportedDoubleKeywordInfo( "PORO"  , 0.0, "1" ),
+            SupportedDoubleKeywordInfo( "PORO"  , nan, "1" ),
+
+            // pore volume
+            SupportedDoubleKeywordInfo( "PORV"  , nan, "Volume" ),
+
+            // pore volume multipliers
+            SupportedDoubleKeywordInfo( "MULTPV", 1.0, "1" ),
 
             // the permeability keywords
-            SupportedDoubleKeywordInfo( "PERMX" , 0.0, "Permeability" ),
-            SupportedDoubleKeywordInfo( "PERMY" , 0.0, "Permeability" ),
-            SupportedDoubleKeywordInfo( "PERMZ" , 0.0, "Permeability" ),
-            SupportedDoubleKeywordInfo( "PERMXY", 0.0, "Permeability" ), // E300 only
-            SupportedDoubleKeywordInfo( "PERMXZ", 0.0, "Permeability" ), // E300 only
-            SupportedDoubleKeywordInfo( "PERMYZ", 0.0, "Permeability" ), // E300 only
+            SupportedDoubleKeywordInfo( "PERMX" , nan, "Permeability" ),
+            SupportedDoubleKeywordInfo( "PERMY" , nan, "Permeability" ),
+            SupportedDoubleKeywordInfo( "PERMZ" , nan, "Permeability" ),
+            SupportedDoubleKeywordInfo( "PERMXY", nan, "Permeability" ), // E300 only
+            SupportedDoubleKeywordInfo( "PERMXZ", nan, "Permeability" ), // E300 only
+            SupportedDoubleKeywordInfo( "PERMYZ", nan, "Permeability" ), // E300 only
 
             // gross-to-net thickness (acts as a multiplier for PORO
             // and the permeabilities in the X-Y plane as well as for
@@ -551,12 +558,9 @@ namespace Opm {
             SupportedDoubleKeywordInfo( "MULTX-", 1.0, "1" ),
             SupportedDoubleKeywordInfo( "MULTY-", 1.0, "1" ),
             SupportedDoubleKeywordInfo( "MULTZ-", 1.0, "1" ),
-            
-            // initialisation
-            SupportedDoubleKeywordInfo( "SWATINIT" , 0.0, "1"),
 
-            // pore volume multipliers
-            SupportedDoubleKeywordInfo( "MULTPV", 1.0, "1" )
+            // initialisation
+            SupportedDoubleKeywordInfo( "SWATINIT" , 0.0, "1")
         };
 
         // create the grid properties
