@@ -53,7 +53,6 @@
 #include <memory>
 
 namespace Opm {
-    
     class EclipseState {
     public:
         enum EnabledTypes {
@@ -63,7 +62,7 @@ namespace Opm {
             AllProperties = IntProperties | DoubleProperties
         };
 
-        EclipseState(DeckConstPtr deck, bool beStrict = false);
+        EclipseState(DeckConstPtr deck);
 
         ScheduleConstPtr getSchedule() const;
         EclipseGridConstPtr getEclipseGrid() const;

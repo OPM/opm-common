@@ -31,18 +31,9 @@
 #include <boost/algorithm/string/join.hpp>
 
 namespace Opm {
-    
-    EclipseState::EclipseState(DeckConstPtr deck, bool beStrict)
+    EclipseState::EclipseState(DeckConstPtr deck)
     {
         m_deckUnitSystem = deck->getActiveUnitSystem();
-
-        if (beStrict) {
-            // make sure all mandatory sections are present and that their order is correct
-            std::ostringstream oss;
-            if (!Section::checkSectionTopology(deck, oss))
-                throw std::invalid_argument("Section topology of deck is invalid: "
-                                            + oss.str());
-        }
 
         initPhases(deck);
         initTables(deck);

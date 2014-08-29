@@ -61,6 +61,8 @@ Parser/ParserStringItem.cpp
 set (state_source
 EclipseState/EclipseState.cpp
 #
+EclipseState/checkDeck.cpp
+#
 EclipseState/Schedule/TimeMap.cpp 
 EclipseState/Schedule/Schedule.cpp 
 EclipseState/Schedule/Well.cpp
@@ -120,6 +122,8 @@ Units/Dimension.hpp
 Units/ConversionFactors.hpp
 #
 EclipseState/EclipseState.hpp
+#
+EclipseState/checkDeck.hpp
 #
 EclipseState/Schedule/TimeMap.hpp
 EclipseState/Schedule/Schedule.hpp
