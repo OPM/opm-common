@@ -22,7 +22,7 @@
 
 namespace Opm {
 
-    Completion::Completion(int i, int j , int k , CompletionStateEnum state , double CF, double diameter, double skinFactor) {
+    Completion::Completion(int i, int j , int k , CompletionStateEnum state , double CF, double diameter, double skinFactor, const CompletionDirection::DirectionEnum direction) {
         m_i = i;
         m_j = j;
         m_k = k;
@@ -31,6 +31,7 @@ namespace Opm {
         m_CF = CF;
         m_diameter = diameter;
         m_skinFactor = skinFactor;
+        m_direction = direction;
     }
 
 
@@ -68,10 +69,10 @@ namespace Opm {
         double CF = compdatRecord->getItem("CF")->getSIDouble(0);
         double diameter = compdatRecord->getItem("DIAMETER")->getSIDouble(0);
         double skinFactor = compdatRecord->getItem("SKIN")->getRawDouble(0);
-
+        const CompletionDirection::DirectionEnum& direction = CompletionDirection::DirectionEnumFromString(compdatRecord->getItem("DIR")->getTrimmedString(0));
 
         for (int k = K1; k <= K2; k++) {
-            CompletionPtr completion(new Completion(I , J , k , state , CF, diameter, skinFactor ));
+            CompletionPtr completion(new Completion(I , J , k , state , CF, diameter, skinFactor, direction ));
             completions.push_back( completion );
         }
 
@@ -144,6 +145,10 @@ namespace Opm {
     
     double Completion::getSkinFactor() const {
         return m_skinFactor;
+    }
+
+    CompletionDirection::DirectionEnum Completion::getDirection() const {
+        return m_direction;
     }
 }
 

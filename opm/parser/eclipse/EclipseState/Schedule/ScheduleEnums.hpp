@@ -45,6 +45,18 @@ namespace Opm {
     };
 
 
+    namespace CompletionDirection {
+        enum DirectionEnum {
+            X = 1,
+            Y = 2,
+            Z = 3
+        };
+
+        std::string   DirectionEnum2String(const DirectionEnum enumValue);
+        DirectionEnum DirectionEnumFromString(const std::string& stringValue);
+    } // namespace CompletionDirection
+
+
     namespace Phase { 
         enum PhaseEnum {
             OIL   = 1,

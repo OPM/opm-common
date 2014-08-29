@@ -51,6 +51,42 @@ BOOST_AUTO_TEST_CASE(TestCompletionStateEnumLoop) {
     BOOST_CHECK_EQUAL( "SHUT" , CompletionStateEnum2String(CompletionStateEnumFromString(  "SHUT" ) ));
 }
 
+
+/*****************************************************************/
+
+BOOST_AUTO_TEST_CASE(TestCompletionDirectionEnum2String)
+{
+    using namespace CompletionDirection;
+
+    BOOST_CHECK_EQUAL("X", DirectionEnum2String(DirectionEnum::X));
+    BOOST_CHECK_EQUAL("Y", DirectionEnum2String(DirectionEnum::Y));
+    BOOST_CHECK_EQUAL("Z", DirectionEnum2String(DirectionEnum::Z));
+}
+
+BOOST_AUTO_TEST_CASE(TestCompletionDirectionEnumFromString)
+{
+    using namespace CompletionDirection;
+
+    BOOST_CHECK_THROW(DirectionEnumFromString("XXX"), std::invalid_argument);
+
+    BOOST_CHECK_EQUAL(DirectionEnum::X, DirectionEnumFromString("X"));
+    BOOST_CHECK_EQUAL(DirectionEnum::Y, DirectionEnumFromString("Y"));
+    BOOST_CHECK_EQUAL(DirectionEnum::Z, DirectionEnumFromString("Z"));
+}
+
+BOOST_AUTO_TEST_CASE(TestCompletionDirectionEnumLoop)
+{
+    using namespace CompletionDirection;
+
+    BOOST_CHECK_EQUAL(DirectionEnum::X, DirectionEnumFromString(DirectionEnum2String(DirectionEnum::X)));
+    BOOST_CHECK_EQUAL(DirectionEnum::Y, DirectionEnumFromString(DirectionEnum2String(DirectionEnum::Y)));
+    BOOST_CHECK_EQUAL(DirectionEnum::Z, DirectionEnumFromString(DirectionEnum2String(DirectionEnum::Z)));
+
+    BOOST_CHECK_EQUAL("X", DirectionEnum2String(DirectionEnumFromString("X")));
+    BOOST_CHECK_EQUAL("Y", DirectionEnum2String(DirectionEnumFromString("Y")));
+    BOOST_CHECK_EQUAL("Z", DirectionEnum2String(DirectionEnumFromString("Z")));
+}
+
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(TestGroupInjectionControlEnum2String) {

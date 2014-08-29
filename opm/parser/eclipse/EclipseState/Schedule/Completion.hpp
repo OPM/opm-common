@@ -22,6 +22,7 @@
 #define COMPLETION_HPP_
 
 #include <memory>
+#include <string>
 #include <boost/date_time.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -33,7 +34,7 @@ namespace Opm {
 
     class Completion {
     public:
-        Completion(int i, int j , int k , CompletionStateEnum state , double CF, double diameter, double skinFactor);
+        Completion(int i, int j , int k , CompletionStateEnum state , double CF, double diameter, double skinFactor, const CompletionDirection::DirectionEnum direction = CompletionDirection::DirectionEnum::Z);
         bool sameCoordinate(const Completion& other) const;
         int getI() const;
         int getJ() const;
@@ -44,6 +45,8 @@ namespace Opm {
         double getSkinFactor() const;
         void   fixDefaultIJ(int wellHeadI , int wellHeadJ);
 
+        CompletionDirection::DirectionEnum getDirection() const;
+
         static std::map<std::string , std::vector<std::shared_ptr<Completion> > >  completionsFromCOMPDATKeyword( DeckKeywordConstPtr compdatKeyword );
         static std::pair<std::string , std::vector<std::shared_ptr<Completion> > > completionsFromCOMPDATRecord( DeckRecordConstPtr compdatRecord );
         
@@ -51,6 +54,7 @@ namespace Opm {
         int m_i, m_j, m_k;
         double m_CF, m_diameter, m_skinFactor;
         CompletionStateEnum m_state;
+        CompletionDirection::DirectionEnum m_direction;
     };
 
     typedef std::shared_ptr<Completion> CompletionPtr;
