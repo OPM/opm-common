@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
     Opm::ParserPtr parser(new Opm::Parser());
     std::string file = argv[1];
     Opm::ParserLogPtr parserLog(new Opm::ParserLog);
-    Opm::DeckConstPtr deck = parser->parseFile(file, true, parserLog);
+    Opm::DeckConstPtr deck = parser->parseFile(file, parserLog);
 
     printDeckDiagnostics(deck, parserLog, printKeywords);
 

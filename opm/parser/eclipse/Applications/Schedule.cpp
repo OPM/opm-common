@@ -14,7 +14,7 @@
 int main(int /* argc */, char** argv) {
     Opm::ParserPtr parser(new Opm::Parser());
     std::string file = argv[1];
-    Opm::DeckConstPtr deck = parser->parseFile(file, false);
+    Opm::DeckConstPtr deck = parser->parseFile(file);
     Opm::Schedule sched( deck );
 
     std::cout << "Wells: " << sched.numWells() << std::endl;

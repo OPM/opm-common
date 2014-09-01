@@ -1,8 +1,4 @@
 
-UNRECOGNIZED
-  This Keyword should give a warning at line 2/
-
-
 DIMENS           -- /This is flagged as IGNORE_WARNING - and should give a warning at line: 6
    10 10 10 /     
 

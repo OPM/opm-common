@@ -34,7 +34,7 @@ EclipseState makeState(const std::string& fileName, ParserLogPtr parserLog);
 EclipseState makeState(const std::string& fileName, ParserLogPtr parserLog) {
     ParserPtr parser(new Parser( ));
     boost::filesystem::path boxFile(fileName);
-    DeckPtr deck =  parser->parseFile(boxFile.string() , false);
+    DeckPtr deck =  parser->parseFile(boxFile.string());
     EclipseState state(deck, parserLog);
     return state;
 }

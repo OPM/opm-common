@@ -203,17 +203,9 @@ BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_dataiscorrect) {
 
 
 /***************** Testing non-recognized keywords ********************/
-BOOST_AUTO_TEST_CASE(parse_unknownkeywordWithnonstrictparsing_keywordmarked) {
+BOOST_AUTO_TEST_CASE(parse_unknownkeyword_exceptionthrown) {
     ParserPtr parser(new Parser());
-    DeckPtr deck =  parser->parseFile("testdata/integration_tests/someobscureelements.data", false);
-    BOOST_CHECK_EQUAL(4U, deck->size());
-    DeckKeywordConstPtr unknown = deck->getKeyword("GRUDINT");
-    BOOST_CHECK(!unknown->isKnown());
-}
-
-BOOST_AUTO_TEST_CASE(parse_unknownkeywordWithstrictparsing_exceptionthrown) {
-    ParserPtr parser(new Parser());
-    BOOST_CHECK_THROW( parser->parseFile("testdata/integration_tests/someobscureelements.data", true), std::invalid_argument);
+    BOOST_CHECK_THROW( parser->parseFile("testdata/integration_tests/someobscureelements.data"), std::invalid_argument);
 }
 
 /*********************Testing truncated (default) records ***************************/
