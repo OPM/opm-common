@@ -62,7 +62,11 @@ BOOST_AUTO_TEST_CASE(RawKeywordSetKeywordInitialWhitespaceInKeywordThrows) {
 }
 
 BOOST_AUTO_TEST_CASE(constructor_mixedCaseName_throws) {
-    BOOST_CHECK_THROW(RawKeyword("Test", Raw::SLASH_TERMINATED , "FILE" , 10U), std::invalid_argument);
+    // raw keywords may be lower-case even if this is not allowed in valid deck
+    // names... (this will produce a warning if the deck is checked.)
+    RawKeyword("Test", Raw::SLASH_TERMINATED , "FILE" , 10U);
+    RawKeyword("test", Raw::SLASH_TERMINATED , "FILE" , 10U);
+    BOOST_CHECK_THROW(RawKeyword keyword("1test", Raw::SLASH_TERMINATED , "FILE" , 10U), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(RawKeywordSetKeywordInitialTabInKeywordThrows) {

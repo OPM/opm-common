@@ -106,7 +106,7 @@ namespace Opm {
 
         static std::string getDeckName(const std::string& rawString);
         static bool validInternalName(const std::string& name);
-        static bool validDeckName(const std::string& name);
+        static bool validDeckName(const std::string& name, bool acceptLowerCaseLetters = false);
         bool hasMatchRegex() const;
         void setMatchRegex(const std::string& deckNameRegexp);
         bool matches(const std::string& deckKeywordName) const;
@@ -162,7 +162,7 @@ namespace Opm {
         ParserKeywordActionEnum m_action;
         std::string m_Description;
 
-        static bool validNameStart(const std::string& name);
+        static bool validNameStart(const std::string& name, bool acceptLowerCaseLetters);
         void initDeckNames( const Json::JsonObject& jsonConfig );
         void initSectionNames( const Json::JsonObject& jsonConfig );
         void initMatchRegex( const Json::JsonObject& jsonObject );
