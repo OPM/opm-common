@@ -304,7 +304,7 @@ namespace Opm {
 						     parserState->rawKeyword->getLineNR());
                             parserState->deck->addKeyword(deckKeyword);
                             parserState->parserLog.addWarning(parserState->dataFile.string(),
-                                                              parserState->lineNR,
+                                                              parserState->rawKeyword->getLineNR(),
                                                               "The keyword " + parserState->rawKeyword->getKeywordName() + " is not recognized");
                         }
                     }
