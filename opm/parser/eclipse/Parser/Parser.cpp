@@ -400,6 +400,9 @@ namespace Opm {
             parserState->nextKeyword = "";
         }
 
+        if (parserState->rawKeyword && parserState->rawKeyword->isFinished())
+            return true;
+
         while (std::getline(*parserState->inputstream, line)) {
             // remove comments. note that this is a bit too simplistic as it fails when
             //  having '--' in strings. _nobody_ does this, though ;)...
