@@ -85,7 +85,7 @@ namespace Opm {
                     m_isFinished = true;
                     m_partialRecordString.clear();
                 }
-            } else {
+            } else if (m_sizeType != Raw::UNKNOWN) {
                 m_isFinished = true;
                 m_partialRecordString.clear();
             }
