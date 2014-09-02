@@ -401,10 +401,20 @@ namespace Opm {
         }
 
         while (std::getline(*parserState->inputstream, line)) {
+            // remove comments. note that this is a bit too simplistic as it fails when
+            //  having '--' in strings. _nobody_ does this, though ;)...
+            int commentPos = line.find("--");
+            line = line.substr(0, commentPos);
+
             boost::algorithm::trim_right(line); // Removing garbage (eg. \r)
             line = doSpecialHandlingForTitleKeyword(line, parserState);
             std::string keywordString;
             parserState->lineNR++;
+
+            // skip empty lines
+            if (line.size() == 0)
+                continue;
+
             if (parserState->rawKeyword == NULL) {
                 if (RawKeyword::isKeywordPrefix(line, keywordString)) {
                     parserState->rawKeyword = createRawKeyword(keywordString, parserState);
@@ -417,9 +427,8 @@ namespace Opm {
                         return true;
                     }
                 }
-                if (RawKeyword::useLine(line)) {
-                    parserState->rawKeyword->addRawRecordString(line);
-                }
+                parserState->rawKeyword->addRawRecordString(line);
+                line = "";
             }
 
             if (parserState->rawKeyword != NULL && parserState->rawKeyword->isFinished())

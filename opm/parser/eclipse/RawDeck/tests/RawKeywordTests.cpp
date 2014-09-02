@@ -157,17 +157,6 @@ BOOST_AUTO_TEST_CASE(isKeywordTerminator) {
     BOOST_CHECK( !RawKeyword::isTerminator("  X/  "));
 }
 
-
-BOOST_AUTO_TEST_CASE(useLine) {
-    BOOST_CHECK( !RawKeyword::useLine("                   "));
-    BOOST_CHECK( !RawKeyword::useLine("-- ggg"));
-
-    BOOST_CHECK( RawKeyword::useLine("Data -- ggg"));
-    BOOST_CHECK( RawKeyword::useLine("/ -- ggg"));
-    BOOST_CHECK( RawKeyword::useLine("/"));
-}
-
-
 BOOST_AUTO_TEST_CASE(isTableCollection) {
     RawKeyword keyword1("TEST" , "FILE" , 10U, 4U , false);
     RawKeyword keyword2("TEST2", Raw::SLASH_TERMINATED , "FILE" , 10U);
