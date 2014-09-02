@@ -20,8 +20,6 @@
 #include <string>
 #include <stdexcept>
 
-
-
 #include <opm/json/JsonObject.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserConst.hpp>
@@ -31,6 +29,7 @@
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserFloatItem.hpp>
 
+#include <boost/algorithm/string.hpp>
 
 namespace Opm {
 
@@ -229,6 +228,17 @@ namespace Opm {
         }
 
         return true;
+    }
+
+    std::string ParserKeyword::getDeckName(const std::string& rawString)
+    {
+        // only look at the first 8 characters (at most)
+        std::string result = rawString.substr(0, 8);
+
+        // remove any white space
+        boost::algorithm::trim(result);
+
+        return result;
     }
 
     bool ParserKeyword::validDeckName(const std::string& name) {

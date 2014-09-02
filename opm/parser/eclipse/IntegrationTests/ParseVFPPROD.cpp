@@ -38,7 +38,7 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE( parse_VFPPROD_OK ) {
     ParserPtr parser(new Parser());
     boost::filesystem::path file("testdata/integration_tests/VFPPROD/VFPPROD1");
-    BOOST_CHECK( parser->canParseDeckKeyword("VFPPROD"));
+    BOOST_CHECK( parser->isRecognizedKeyword("VFPPROD"));
 
     DeckPtr deck =  parser->parseFile(file.string());
 

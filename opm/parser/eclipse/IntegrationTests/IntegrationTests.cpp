@@ -49,8 +49,8 @@ static ParserPtr createWWCTParser() {
 BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_deckReturned) {
     boost::filesystem::path singleKeywordFile("testdata/integration_tests/wwct.data");
     ParserPtr parser = createWWCTParser();
-    BOOST_CHECK( parser->canParseDeckKeyword("WWCT"));
-    BOOST_CHECK( parser->canParseDeckKeyword("SUMMARY"));
+    BOOST_CHECK( parser->isRecognizedKeyword("WWCT"));
+    BOOST_CHECK( parser->isRecognizedKeyword("SUMMARY"));
     BOOST_CHECK_NO_THROW(DeckPtr deck =  parser->parseFile(singleKeywordFile.string()));
 }
 
@@ -63,8 +63,8 @@ BOOST_AUTO_TEST_CASE(parse_stringWithWWCTKeyword_deckReturned) {
         "  'WELL-1' 'WELL-2' / -- Ehne mehne muh\n"
         "/\n";
     ParserPtr parser = createWWCTParser();
-    BOOST_CHECK( parser->canParseDeckKeyword("WWCT"));
-    BOOST_CHECK( parser->canParseDeckKeyword("SUMMARY"));
+    BOOST_CHECK( parser->isRecognizedKeyword("WWCT"));
+    BOOST_CHECK( parser->isRecognizedKeyword("SUMMARY"));
     BOOST_CHECK_NO_THROW(DeckPtr deck =  parser->parseString(wwctString));
 }
 
@@ -79,8 +79,8 @@ BOOST_AUTO_TEST_CASE(parse_streamWithWWCTKeyword_deckReturned) {
     std::shared_ptr<std::istream> wwctStream(new std::istringstream(wwctString));
 
     ParserPtr parser = createWWCTParser();
-    BOOST_CHECK( parser->canParseDeckKeyword("WWCT"));
-    BOOST_CHECK( parser->canParseDeckKeyword("SUMMARY"));
+    BOOST_CHECK( parser->isRecognizedKeyword("WWCT"));
+    BOOST_CHECK( parser->isRecognizedKeyword("SUMMARY"));
     BOOST_CHECK_NO_THROW(DeckPtr deck =  parser->parseStream(wwctStream));
 }
 
@@ -111,16 +111,16 @@ BOOST_AUTO_TEST_CASE(parser_internal_name_vs_deck_name) {
 
     // internal names cannot appear in the deck if the deck names and/or deck regular
     // match expressions are given
-    BOOST_CHECK(!parser->canParseDeckKeyword("WELL_PROBE"));
+    BOOST_CHECK(!parser->isRecognizedKeyword("WELL_PROBE"));
 
     // an existing deck name
-    BOOST_CHECK(parser->canParseDeckKeyword("WWPR"));
+    BOOST_CHECK(parser->isRecognizedKeyword("WWPR"));
 
     // a non-existing deck name
-    BOOST_CHECK(!parser->canParseDeckKeyword("WWPRFOO"));
+    BOOST_CHECK(!parser->isRecognizedKeyword("WWPRFOO"));
 
     // user defined quantity. (regex needs to be used.)
-    BOOST_CHECK(parser->canParseDeckKeyword("WUFOO"));
+    BOOST_CHECK(parser->isRecognizedKeyword("WUFOO"));
 }
 
 static ParserPtr createBPRParser() {
@@ -200,8 +200,6 @@ BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_dataiscorrect) {
     K1 = record2->getItem("K");
     BOOST_CHECK_EQUAL(3, K1->getInt(0));
 }
-
-
 
 
 /***************** Testing non-recognized keywords ********************/

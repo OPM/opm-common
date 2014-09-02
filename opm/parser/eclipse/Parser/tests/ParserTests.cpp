@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(addKeyword_keyword_doesntfail) {
 BOOST_AUTO_TEST_CASE(canParseDeckKeyword_returnstrue) {
     ParserPtr parser(new Parser());
     parser->addParserKeyword(ParserKeyword::createDynamicSized("FJAS"));
-    BOOST_CHECK(parser->canParseDeckKeyword("FJAS"));
+    BOOST_CHECK(parser->isRecognizedKeyword("FJAS"));
 }
 
 
@@ -93,11 +93,11 @@ BOOST_AUTO_TEST_CASE(getAllDeckNames_hasNoKeywords_returnsEmptyList) {
 /************************ JSON config related tests **********************'*/
 
 
-BOOST_AUTO_TEST_CASE(addParserKeywordJSON_canParseDEckkeyword_returnstrue) {
+BOOST_AUTO_TEST_CASE(addParserKeywordJSON_isRecognizedKeyword_returnstrue) {
     ParserPtr parser(new Parser());
     Json::JsonObject jsonConfig("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : 100 ,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}");
     parser->addParserKeyword(ParserKeyword::createFromJson( jsonConfig ));
-    BOOST_CHECK(parser->canParseDeckKeyword("BPR"));
+    BOOST_CHECK(parser->isRecognizedKeyword("BPR"));
 }
 
 
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(addParserKeywordJSON_size_isObject_allGood) {
     ParserPtr parser(new Parser());
     Json::JsonObject jsonConfig("{\"name\": \"EQUIXL\", \"sections\":[], \"size\" : {\"keyword\":\"EQLDIMS\" , \"item\" : \"NTEQUL\"},  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}");
     parser->addParserKeyword(ParserKeyword::createFromJson( jsonConfig ));
-    BOOST_CHECK(parser->canParseDeckKeyword("EQUIXL"));
+    BOOST_CHECK(parser->isRecognizedKeyword("EQUIXL"));
 }
 
 
@@ -125,12 +125,12 @@ BOOST_AUTO_TEST_CASE(loadKeywordsJSON_noSectionsItem_throw) {
 }
 
 
-BOOST_AUTO_TEST_CASE(loadKeywordsJSON_canParseDeckKeyword_returnstrue) {
+BOOST_AUTO_TEST_CASE(loadKeywordsJSON_isRecognizedKeyword_returnstrue) {
     ParserPtr parser(new Parser());
     Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100, \"sections\":[\"SUMMARY\"], \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}]");
     
     parser->loadKeywords( jsonConfig );
-    BOOST_CHECK(parser->canParseDeckKeyword("BPR"));
+    BOOST_CHECK(parser->isRecognizedKeyword("BPR"));
 }
 
 
@@ -146,9 +146,9 @@ BOOST_AUTO_TEST_CASE(loadKeywordsJSON_manyKeywords_returnstrue) {
     Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100, \"sections\":[\"SUMMARY\"] ,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}, {\"name\" : \"WWCT\", \"sections\":[\"SUMMARY\"], \"size\" : 0} , {\"name\" : \"EQUIL\", \"sections\":[\"PROPS\"], \"size\" : 0}]");
     
     parser->loadKeywords( jsonConfig );
-    BOOST_CHECK(parser->canParseDeckKeyword("BPR"));
-    BOOST_CHECK(parser->canParseDeckKeyword("WWCT"));
-    BOOST_CHECK(parser->canParseDeckKeyword("EQUIL"));
+    BOOST_CHECK(parser->isRecognizedKeyword("BPR"));
+    BOOST_CHECK(parser->isRecognizedKeyword("WWCT"));
+    BOOST_CHECK(parser->isRecognizedKeyword("EQUIL"));
     BOOST_CHECK_EQUAL( 3U , parser->size() );
 }
 
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(loadKeywordFromFile_validKeyword_returnsTrueHasKeyword) {
     boost::filesystem::path configFile("testdata/json/BPR");
     BOOST_CHECK_EQUAL( true , parser->loadKeywordFromFile( configFile ));
     BOOST_CHECK_EQUAL( 1U , parser->size() );
-    BOOST_CHECK_EQUAL( true , parser->canParseDeckKeyword("BPR") );
+    BOOST_CHECK_EQUAL( true , parser->isRecognizedKeyword("BPR") );
 }
 
 
@@ -197,12 +197,12 @@ BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_directoryDoesNotexist_throws) {
 
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_notRecursive_allNames) {
         ParserPtr parser(new Parser(false));
-        BOOST_CHECK_EQUAL(false , parser->canParseDeckKeyword("BPR"));
+        BOOST_CHECK_EQUAL(false , parser->isRecognizedKeyword("BPR"));
         boost::filesystem::path configPath("testdata/config/directory1");
         BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath, false));
-        BOOST_CHECK(parser->canParseDeckKeyword("WWCT"));
-        BOOST_CHECK_EQUAL(true , parser->canParseDeckKeyword("BPR"));
-        BOOST_CHECK_EQUAL(false , parser->canParseDeckKeyword("DIMENS"));
+        BOOST_CHECK(parser->isRecognizedKeyword("WWCT"));
+        BOOST_CHECK_EQUAL(true , parser->isRecognizedKeyword("BPR"));
+        BOOST_CHECK_EQUAL(false , parser->isRecognizedKeyword("DIMENS"));
 }
 
 
@@ -210,49 +210,49 @@ BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_notRecursive_strictNames) {
         ParserPtr parser(new Parser(false));
         boost::filesystem::path configPath("testdata/config/directory1");
         BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath, false));
-        BOOST_CHECK(parser->canParseDeckKeyword("WWCT"));
+        BOOST_CHECK(parser->isRecognizedKeyword("WWCT"));
         // the file name for the following keyword is "Bpr", but that
         // does not matter
-        BOOST_CHECK_EQUAL(true , parser->canParseDeckKeyword("BPR"));
-        BOOST_CHECK_EQUAL(false , parser->canParseDeckKeyword("DIMENS"));
+        BOOST_CHECK_EQUAL(true , parser->isRecognizedKeyword("BPR"));
+        BOOST_CHECK_EQUAL(false , parser->isRecognizedKeyword("DIMENS"));
 }
 
 
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_Recursive_allNames) {
         ParserPtr parser(new Parser(false));
-        BOOST_CHECK_EQUAL(false , parser->canParseDeckKeyword("BPR"));
+        BOOST_CHECK_EQUAL(false , parser->isRecognizedKeyword("BPR"));
         boost::filesystem::path configPath("testdata/config/directory1");
         BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath, true));
-        BOOST_CHECK(parser->canParseDeckKeyword("WWCT"));
-        BOOST_CHECK_EQUAL(true , parser->canParseDeckKeyword("BPR"));
-        BOOST_CHECK_EQUAL(true , parser->canParseDeckKeyword("DIMENS"));
+        BOOST_CHECK(parser->isRecognizedKeyword("WWCT"));
+        BOOST_CHECK_EQUAL(true , parser->isRecognizedKeyword("BPR"));
+        BOOST_CHECK_EQUAL(true , parser->isRecognizedKeyword("DIMENS"));
 }
 
 
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_default) {
         ParserPtr parser(new Parser(false));
-        BOOST_CHECK_EQUAL(false , parser->canParseDeckKeyword("BPR"));
+        BOOST_CHECK_EQUAL(false , parser->isRecognizedKeyword("BPR"));
         boost::filesystem::path configPath("testdata/config/directory1");
         BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath ));
-        BOOST_CHECK(parser->canParseDeckKeyword("WWCT"));
+        BOOST_CHECK(parser->isRecognizedKeyword("WWCT"));
         // the file name for the following keyword is "Bpr", but that
         // does not matter
-        BOOST_CHECK_EQUAL(true , parser->canParseDeckKeyword("BPR"));
-        BOOST_CHECK_EQUAL(true , parser->canParseDeckKeyword("DIMENS"));
+        BOOST_CHECK_EQUAL(true , parser->isRecognizedKeyword("BPR"));
+        BOOST_CHECK_EQUAL(true , parser->isRecognizedKeyword("DIMENS"));
 }
 
 
 BOOST_AUTO_TEST_CASE(DropKeyword) {
     ParserPtr parser(new Parser());
     BOOST_CHECK_EQUAL(false , parser->dropParserKeyword("DoesNotHaveThis"));
-    BOOST_CHECK_EQUAL(true , parser->canParseDeckKeyword("BPR"));
+    BOOST_CHECK_EQUAL(true , parser->isRecognizedKeyword("BPR"));
     BOOST_CHECK_EQUAL(true  , parser->dropParserKeyword("BLOCK_PROBE"));
     BOOST_CHECK_EQUAL(false  , parser->dropParserKeyword("BLOCK_PROBE"));
-    BOOST_CHECK_EQUAL(false , parser->canParseDeckKeyword("BPR"));
+    BOOST_CHECK_EQUAL(false , parser->isRecognizedKeyword("BPR"));
 
-    BOOST_CHECK_EQUAL(true , parser->canParseDeckKeyword("TVDPX"));
+    BOOST_CHECK_EQUAL(true , parser->isRecognizedKeyword("TVDPX"));
     BOOST_CHECK_EQUAL(true , parser->dropParserKeyword("TVDP"));
-    BOOST_CHECK_EQUAL(false , parser->canParseDeckKeyword("TVDPX"));
+    BOOST_CHECK_EQUAL(false , parser->isRecognizedKeyword("TVDPX"));
 }
 
 
@@ -271,13 +271,13 @@ BOOST_AUTO_TEST_CASE(ReplaceKeyword) {
 
 BOOST_AUTO_TEST_CASE(WildCardTest) {
     ParserPtr parser(new Parser());
-    BOOST_CHECK(!parser->canParseDeckKeyword("TVDP*"));
-    BOOST_CHECK(!parser->canParseDeckKeyword("TVDP"));
-    BOOST_CHECK(parser->canParseDeckKeyword("TVDPXXX"));
-    BOOST_CHECK(!parser->canParseDeckKeyword("TVDPIAMTOOLONG"));
-    BOOST_CHECK(!parser->canParseDeckKeyword("TVD"));
+    BOOST_CHECK(!parser->isRecognizedKeyword("TVDP*"));
+    BOOST_CHECK(!parser->isRecognizedKeyword("TVDP"));
+    BOOST_CHECK(parser->isRecognizedKeyword("TVDPXXX"));
+    BOOST_CHECK(!parser->isRecognizedKeyword("TVDPIAMTOOLONG"));
+    BOOST_CHECK(!parser->isRecognizedKeyword("TVD"));
 
-    BOOST_CHECK(!parser->canParseDeckKeyword("TVDP"));
+    BOOST_CHECK(!parser->isRecognizedKeyword("TVDP"));
 
     ParserKeywordConstPtr keyword1 = parser->getParserKeywordFromDeckName("TVDPA");
     ParserKeywordConstPtr keyword2 = parser->getParserKeywordFromDeckName("TVDPBC");

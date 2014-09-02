@@ -104,6 +104,7 @@ namespace Opm {
          */
         static ParserKeywordPtr createFromJson(const Json::JsonObject& jsonConfig);
 
+        static std::string getDeckName(const std::string& rawString);
         static bool validInternalName(const std::string& name);
         static bool validDeckName(const std::string& name);
         bool hasMatchRegex() const;

@@ -55,7 +55,7 @@ namespace Opm {
         void addParserKeyword(ParserKeywordConstPtr parserKeyword);
         bool dropParserKeyword(const std::string& parserKeywordName);
 
-        bool canParseDeckKeyword( const std::string& deckKeywordName) const;
+        bool isRecognizedKeyword( const std::string& deckKeywordName) const;
         ParserKeywordConstPtr getParserKeywordFromDeckName(const std::string& deckKeywordName) const;
         std::vector<std::string> getAllDeckNames () const;
 
