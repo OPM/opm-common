@@ -396,7 +396,7 @@ namespace Opm {
             std::string keywordString;
             parserState->lineNR++;
             if (parserState->rawKeyword == NULL) {
-                if (RawKeyword::tryParseKeyword(line, keywordString)) {
+                if (RawKeyword::isKeywordPrefix(line, keywordString)) {
                     parserState->rawKeyword = createRawKeyword(keywordString, parserState);
                 }
             } else {

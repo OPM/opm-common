@@ -46,7 +46,7 @@ namespace Opm {
         Raw::KeywordSizeEnum getSizeType() const;
         RawRecordPtr getRecord(size_t index) const;
         
-        static bool tryParseKeyword(const std::string& line, std::string& result);
+        static bool isKeywordPrefix(const std::string& line, std::string& keywordName);
         static bool isTerminator(std::string line);
         static bool useLine(std::string line);
         

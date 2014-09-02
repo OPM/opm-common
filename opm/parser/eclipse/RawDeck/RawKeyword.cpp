@@ -121,7 +121,7 @@ namespace Opm {
             throw std::range_error("Index out of range");
     }
 
-    bool RawKeyword::tryParseKeyword(const std::string& keywordCandidate, std::string& result) {
+    bool RawKeyword::isKeywordPrefix(const std::string& keywordCandidate, std::string& result) {
         // get rid of comments
         size_t commentPos = keywordCandidate.find("--");
         if (commentPos != std::string::npos)
