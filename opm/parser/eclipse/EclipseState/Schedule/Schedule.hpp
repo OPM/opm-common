@@ -24,7 +24,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/OrderedMap.hpp>
+#include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 #include <memory>

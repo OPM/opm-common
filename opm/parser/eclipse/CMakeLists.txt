@@ -7,6 +7,7 @@ add_subdirectory(EclipseState/Schedule/tests)
 add_subdirectory(EclipseState/Grid/tests)
 add_subdirectory(Utility/tests)
 add_subdirectory(Units/tests)
+add_subdirectory(EclipseState/Util/tests)
 
 add_subdirectory( Applications )
 
@@ -136,7 +137,7 @@ EclipseState/Schedule/CompletionSet.hpp
 EclipseState/Schedule/ScheduleEnums.hpp
 EclipseState/Schedule/GroupTreeNode.hpp 
 EclipseState/Schedule/GroupTree.hpp 
-EclipseState/Schedule/OrderedMap.hpp 
+EclipseState/Util/OrderedMap.hpp 
 #
 EclipseState/Grid/EclipseGrid.hpp
 EclipseState/Grid/GridProperty.hpp

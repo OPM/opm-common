@@ -25,7 +25,7 @@
 #include <map>
 
 
-#include <opm/parser/eclipse/EclipseState/Schedule/OrderedMap.hpp>
+#include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Grid/Fault.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultFace.hpp>
