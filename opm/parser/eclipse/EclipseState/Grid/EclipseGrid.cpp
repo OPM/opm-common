@@ -30,17 +30,13 @@
 #include <ert/ecl/ecl_grid.h>
 namespace Opm {
 
-    const double invalidValue = -1e100;
-
     /**
        Will create an EclipseGrid instance based on an existing
        GRID/EGRID file.
     */
     EclipseGrid::EclipseGrid(const std::string& filename )
-        : m_pinchActive(false),
-          m_pinchThresholdThickness(invalidValue),
-          m_minpvActive(false),
-          m_minpvValue(invalidValue)
+        : m_minpv("MINPV"), 
+          m_pinch("PINCH")
     {
         ecl_grid_type * new_ptr = ecl_grid_load_case( filename.c_str() );
         if (new_ptr)
@@ -50,10 +46,8 @@ namespace Opm {
     }
 
     EclipseGrid::EclipseGrid(const ecl_grid_type * src_ptr)
-        : m_pinchActive(false),
-          m_pinchThresholdThickness(invalidValue),
-          m_minpvActive(false),
-          m_minpvValue(invalidValue)
+        : m_minpv("MINPV"),
+          m_pinch("PINCH")
     {
         m_grid.reset( ecl_grid_alloc_copy( src_ptr ) , ecl_grid_free );
     }
@@ -74,10 +68,8 @@ namespace Opm {
 
     
     EclipseGrid::EclipseGrid(std::shared_ptr<const Deck> deck)
-        : m_pinchActive(false),
-          m_pinchThresholdThickness(invalidValue),
-          m_minpvActive(false),
-          m_minpvValue(invalidValue)
+        : m_minpv("MINPV"), 
+          m_pinch("PINCH")
     {
         const bool hasRUNSPEC = Section::hasRUNSPEC(deck);
         const bool hasGRID = Section::hasGRID(deck);
@@ -126,26 +118,24 @@ namespace Opm {
         } else {
             throw std::invalid_argument("The deck must have COORD / ZCORN or D?? + TOPS keywords");
         }
+
         if (deck->hasKeyword("PINCH")) {
-            m_pinchActive = true;
-            m_pinchThresholdThickness = deck->getKeyword("PINCH")->getRecord(0)->getItem("THRESHOLD_THICKNESS")->getSIDouble(0);
+            m_pinch.setValue( deck->getKeyword("PINCH")->getRecord(0)->getItem("THRESHOLD_THICKNESS")->getSIDouble(0) );
         }
+
         if (deck->hasKeyword("MINPV")) {
-            m_minpvActive = true;
-            m_minpvValue = deck->getKeyword("MINPV")->getRecord(0)->getItem("MINPV")->getSIDouble(0);
+            m_minpv.setValue( deck->getKeyword("MINPV")->getRecord(0)->getItem("MINPV")->getSIDouble(0) );
         }
     }
     
 
 
     bool EclipseGrid::equal(const EclipseGrid& other) const {
-        return (m_pinchActive == other.m_pinchActive)
-            && (m_pinchThresholdThickness == other.m_pinchThresholdThickness)
-            && (m_minpvActive == other.m_minpvActive)
-            && (m_minpvValue == other.m_minpvValue)
-            && ecl_grid_compare( m_grid.get() , other.m_grid.get() , true , false , false );
+        return (m_pinch.equal( other.m_pinch ) &&
+                m_minpv.equal( other.m_minpv ) &&
+                ecl_grid_compare( m_grid.get() , other.m_grid.get() , true , false , false ));
     }
-
+            
 
     size_t EclipseGrid::getNumActive( ) const {
         return static_cast<size_t>(ecl_grid_get_nactive( m_grid.get() ));
@@ -168,27 +158,19 @@ namespace Opm {
     }
     
     bool EclipseGrid::isPinchActive( ) const {
-        return m_pinchActive;
+        return m_pinch.hasValue();
     }
 
     double EclipseGrid::getPinchThresholdThickness( ) const {
-        if (isPinchActive()) {
-            return m_pinchThresholdThickness;
-        } else {
-            throw std::logic_error("cannot call getPinchThresholdThickness() when isPinchActive() is false");
-        }
+        return m_pinch.getValue();
     }
 
     bool EclipseGrid::isMinpvActive( ) const {
-        return m_minpvActive;
+        return m_minpv.hasValue();
     }
 
     double EclipseGrid::getMinpvValue( ) const {
-        if (isMinpvActive()) {
-            return m_minpvValue;
-        } else {
-            throw std::logic_error("cannot call getMinpvValue() when isMinpvActive() is false");
-        }
+        return m_minpv.getValue();
     }
 
     void EclipseGrid::assertGlobalIndex(size_t globalIndex) const {

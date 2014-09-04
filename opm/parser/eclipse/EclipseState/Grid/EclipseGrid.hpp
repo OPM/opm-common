@@ -24,6 +24,8 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
+
 #include <ert/ecl/ecl_grid.h>
 
 #include <memory>
@@ -65,10 +67,8 @@ namespace Opm {
         const ecl_grid_type * c_ptr() const;
     private:
         std::shared_ptr<ecl_grid_type> m_grid;
-        bool m_pinchActive;
-        double m_pinchThresholdThickness;
-        bool m_minpvActive;
-        double m_minpvValue;
+        Value<double> m_minpv;
+        Value<double> m_pinch;
 
         void initCartesianGrid(const std::vector<int>& dims , DeckConstPtr deck);
         void initCornerPointGrid(const std::vector<int>& dims , DeckConstPtr deck);
