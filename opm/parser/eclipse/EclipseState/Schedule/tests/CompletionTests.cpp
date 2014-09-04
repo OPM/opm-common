@@ -39,29 +39,29 @@
 
 
 BOOST_AUTO_TEST_CASE(CreateCompletionOK) {
-    Opm::Completion completion(10,10,10,Opm::OPEN,100, 3.33, 3.3);
+    Opm::Completion completion(10,10,10,Opm::OPEN,Opm::Value<double>("CF",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22));
 }
 
 
 BOOST_AUTO_TEST_CASE(testGetFunctions) {
-    Opm::Completion completion(10,11,12,Opm::OPEN,100, 44, 33);
+    Opm::Completion completion(10,11,12,Opm::OPEN,Opm::Value<double>("CF",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22));
     BOOST_CHECK_EQUAL( 10 , completion.getI() );
     BOOST_CHECK_EQUAL( 11 , completion.getJ() );
     BOOST_CHECK_EQUAL( 12 , completion.getK() );
 
     BOOST_CHECK_EQUAL( Opm::OPEN , completion.getState());
-    BOOST_CHECK_EQUAL( 100 , completion.getCF());
-    BOOST_CHECK_EQUAL( 44 , completion.getDiameter());
-    BOOST_CHECK_EQUAL( 33 , completion.getSkinFactor());
+    BOOST_CHECK_EQUAL( 99.88 , completion.getCF());
+    BOOST_CHECK_EQUAL( 22.33 , completion.getDiameter());
+    BOOST_CHECK_EQUAL( 33.22 , completion.getSkinFactor());
 }
 
 
 BOOST_AUTO_TEST_CASE(CompletionTestssameCoordinate) {
-    Opm::Completion completion1(10,10,10,Opm::OPEN, 100.0, 30, 40);
-    Opm::Completion completion2(10,10,10,Opm::OPEN, 100.0, 30, 40);
-    Opm::Completion completion3(11,10,10,Opm::OPEN, 100.0, 30, 40);
-    Opm::Completion completion4(10,11,10,Opm::OPEN, 100.0, 30, 40);
-    Opm::Completion completion5(10,10,11,Opm::OPEN, 100.0, 30, 40);
+    Opm::Completion completion1(10,10,10,Opm::OPEN, Opm::Value<double>("CF",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22));
+    Opm::Completion completion2(10,10,10,Opm::OPEN, Opm::Value<double>("CF",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22));
+    Opm::Completion completion3(11,10,10,Opm::OPEN, Opm::Value<double>("CF",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22));
+    Opm::Completion completion4(10,11,10,Opm::OPEN, Opm::Value<double>("CF",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22));
+    Opm::Completion completion5(10,10,11,Opm::OPEN, Opm::Value<double>("CF",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22));
 
     BOOST_CHECK( completion1.sameCoordinate( completion2 ));
     BOOST_CHECK_EQUAL( false , completion1.sameCoordinate( completion3 ));

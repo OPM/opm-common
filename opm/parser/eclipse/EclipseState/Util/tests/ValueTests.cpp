@@ -70,3 +70,11 @@ BOOST_AUTO_TEST_CASE( check_equal2 ) {
     v2.setValue(110);
     BOOST_CHECK_EQUAL( true , v1.equal(v2));
 }
+
+
+BOOST_AUTO_TEST_CASE( check_assign) {
+    Opm::Value<int> v1("v1",100);
+    Opm::Value<int> v2(v1);
+
+    BOOST_CHECK(v1.equal(v2));
+}

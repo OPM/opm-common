@@ -19,7 +19,10 @@
 
 #define BOOST_TEST_MODULE CompletionIntegrationTests
 
+
 #include <map>
+#include <stdexcept>
+
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -65,9 +68,17 @@ BOOST_AUTO_TEST_CASE( CreateCompletionsFromRecord ) {
         BOOST_CHECK_EQUAL( 3.8134259259259256e-12  , completion2->getCF() );
         BOOST_CHECK_EQUAL( Opm::CompletionDirection::DirectionEnum::X, completion2->getDirection() );
     }
-        
-    // We do not accept a defaulted Connection Factor
-    BOOST_CHECK_THROW(Completion::completionsFromCOMPDATRecord( line1 ) , std::invalid_argument );
+
+    {
+        std::pair<std::string , std::vector<CompletionPtr> > pair = Completion::completionsFromCOMPDATRecord( line1 );
+
+        // We try to get the numerical value of a default CF:
+        CompletionPtr comp = pair.second[0];
+        /*
+          This statement gives a compilation error:
+          BOOST_CHECK_THROW( comp->getCF() , std::logical_error );
+        */
+    }
 }
 
 
@@ -109,9 +120,6 @@ BOOST_AUTO_TEST_CASE( CreateCompletionsFromKeyword ) {
     BOOST_CHECK_EQUAL( OPEN   , completion4->getState() );
     BOOST_CHECK_EQUAL( 5.4722222222222212e-13 , completion4->getCF() );
     BOOST_CHECK_EQUAL( Opm::CompletionDirection::DirectionEnum::Y, completion4->getDirection() );
-
-    
-    
 }
 
 

@@ -48,8 +48,8 @@ BOOST_AUTO_TEST_CASE(CreateCompletionSetOK) {
 
 BOOST_AUTO_TEST_CASE(AddCompletionSizeCorrect) {
     Opm::CompletionSet completionSet;
-    Opm::CompletionConstPtr completion1(new Opm::Completion(10,10,10,Opm::OPEN , 99.88, 22.33, 33.22));
-    Opm::CompletionConstPtr completion2(new Opm::Completion(11,10,10,Opm::OPEN , 99.88, 22.33, 33.22));
+    Opm::CompletionConstPtr completion1(new Opm::Completion(10,10,10,Opm::OPEN , Opm::Value<double>("CF",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
+    Opm::CompletionConstPtr completion2(new Opm::Completion(11,10,10,Opm::OPEN , Opm::Value<double>("CF",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
     completionSet.add( completion1 );
     BOOST_CHECK_EQUAL( 1U , completionSet.size() );
 
@@ -62,8 +62,8 @@ BOOST_AUTO_TEST_CASE(AddCompletionSizeCorrect) {
 
 BOOST_AUTO_TEST_CASE(CompletionSetGetOutOfRangeThrows) {
     Opm::CompletionSet completionSet;
-    Opm::CompletionConstPtr completion1(new Opm::Completion(10,10,10,Opm::OPEN , 99.88, 22.33, 33.22));
-    Opm::CompletionConstPtr completion2(new Opm::Completion(11,10,10,Opm::OPEN , 99.88, 22.33, 33.22));
+    Opm::CompletionConstPtr completion1(new Opm::Completion(10,10,10,Opm::OPEN , Opm::Value<double>("CF",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
+    Opm::CompletionConstPtr completion2(new Opm::Completion(11,10,10,Opm::OPEN , Opm::Value<double>("CF",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
     completionSet.add( completion1 );
     BOOST_CHECK_EQUAL( 1U , completionSet.size() );
 
@@ -78,8 +78,8 @@ BOOST_AUTO_TEST_CASE(CompletionSetGetOutOfRangeThrows) {
 
 BOOST_AUTO_TEST_CASE(AddCompletionSameCellUpdates) {
     Opm::CompletionSet completionSet;
-    Opm::CompletionConstPtr completion1(new Opm::Completion(10,10,10,Opm::OPEN , 99.88, 22.33, 33.22));
-    Opm::CompletionConstPtr completion2(new Opm::Completion(10,10,10,Opm::SHUT , 99.88, 22.33, 33.22));
+    Opm::CompletionConstPtr completion1(new Opm::Completion(10,10,10,Opm::OPEN , Opm::Value<double>("CF",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
+    Opm::CompletionConstPtr completion2(new Opm::Completion(10,10,10,Opm::SHUT , Opm::Value<double>("CF",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
     
 
     completionSet.add( completion1 );
@@ -94,9 +94,9 @@ BOOST_AUTO_TEST_CASE(AddCompletionSameCellUpdates) {
 BOOST_AUTO_TEST_CASE(AddCompletionShallowCopy) {
     Opm::CompletionSet completionSet;
 
-    Opm::CompletionConstPtr completion1(new Opm::Completion(10,10,10,Opm::OPEN , 99.88, 22.33, 33.22));
-    Opm::CompletionConstPtr completion2(new Opm::Completion(10,10,11,Opm::SHUT , 99.88, 22.33, 33.22));
-    Opm::CompletionConstPtr completion3(new Opm::Completion(10,10,12,Opm::SHUT , 99.88, 22.33, 33.22));
+    Opm::CompletionConstPtr completion1(new Opm::Completion(10,10,10,Opm::OPEN , Opm::Value<double>("CF",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
+    Opm::CompletionConstPtr completion2(new Opm::Completion(10,10,11,Opm::SHUT , Opm::Value<double>("CF",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
+    Opm::CompletionConstPtr completion3(new Opm::Completion(10,10,12,Opm::SHUT , Opm::Value<double>("CF",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
 
     completionSet.add( completion1 );
     completionSet.add( completion2 );

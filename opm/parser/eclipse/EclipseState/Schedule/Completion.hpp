@@ -28,13 +28,19 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 
 
 namespace Opm {
 
     class Completion {
     public:
-        Completion(int i, int j , int k , CompletionStateEnum state , double CF, double diameter, double skinFactor, const CompletionDirection::DirectionEnum direction = CompletionDirection::DirectionEnum::Z);
+        Completion(int i, int j , int k , CompletionStateEnum state , 
+                   const Value<double>& CF,
+                   const Value<double>& diameter, 
+                   const Value<double>& skinFactor, 
+                   const CompletionDirection::DirectionEnum direction = CompletionDirection::DirectionEnum::Z);
+
         bool sameCoordinate(const Completion& other) const;
         int getI() const;
         int getJ() const;
@@ -52,7 +58,9 @@ namespace Opm {
         
     private:
         int m_i, m_j, m_k;
-        double m_CF, m_diameter, m_skinFactor;
+        Value<double> m_diameter;
+        Value<double> m_CF;
+        Value<double> m_skinFactor;
         CompletionStateEnum m_state;
         CompletionDirection::DirectionEnum m_direction;
     };

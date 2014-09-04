@@ -19,20 +19,23 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 
 namespace Opm {
 
-    Completion::Completion(int i, int j , int k , CompletionStateEnum state , double CF, double diameter, double skinFactor, const CompletionDirection::DirectionEnum direction) {
-        m_i = i;
-        m_j = j;
-        m_k = k;
-
-        m_state = state;
-        m_CF = CF;
-        m_diameter = diameter;
-        m_skinFactor = skinFactor;
-        m_direction = direction;
-    }
+    Completion::Completion(int i, int j , int k , CompletionStateEnum state , 
+                           const Value<double>& CF,
+                           const Value<double>& diameter, 
+                           const Value<double>& skinFactor, 
+                           const CompletionDirection::DirectionEnum direction) : m_i(i),
+                                                                                 m_j(j),
+                                                                                 m_k(k),
+        m_state(state),
+        m_CF(CF),
+        m_diameter(diameter),
+        m_skinFactor(skinFactor),
+        m_direction(direction) 
+    {  }
 
 
     bool Completion::sameCoordinate(const Completion& other) const {
@@ -60,15 +63,25 @@ namespace Opm {
         int K1 = compdatRecord->getItem("K1")->getInt(0) - 1;
         int K2 = compdatRecord->getItem("K2")->getInt(0) - 1;
         CompletionStateEnum state = CompletionStateEnumFromString( compdatRecord->getItem("STATE")->getTrimmedString(0) );
+        Value<double> CF("CF");
+        Value<double> diameter("Diameter");
+        Value<double> skinFactor("SkinFactor");
 
         {
             DeckItemConstPtr CFItem = compdatRecord->getItem("CF");
-            if (!CFItem->setInDeck())
-                throw std::invalid_argument("The connection factor item can not be defaulted");
+            DeckItemConstPtr diameterItem = compdatRecord->getItem("DIAMETER");
+            DeckItemConstPtr skinFactorItem = compdatRecord->getItem("SKIN");
+
+            if (CFItem->hasData())
+                CF.setValue( CFItem->getSIDouble(0));
+            
+            if (diameterItem->hasData())
+                diameter.setValue( diameterItem->getSIDouble(0));
+
+            if (skinFactorItem->hasData())
+                skinFactor.setValue( skinFactorItem->getRawDouble(0));
         }
-        double CF = compdatRecord->getItem("CF")->getSIDouble(0);
-        double diameter = compdatRecord->getItem("DIAMETER")->getSIDouble(0);
-        double skinFactor = compdatRecord->getItem("SKIN")->getRawDouble(0);
+        
         const CompletionDirection::DirectionEnum& direction = CompletionDirection::DirectionEnumFromString(compdatRecord->getItem("DIR")->getTrimmedString(0));
 
         for (int k = K1; k <= K2; k++) {
@@ -136,15 +149,15 @@ namespace Opm {
     }
 
     double Completion::getCF() const {
-        return m_CF;
+        return m_CF.getValue();
     }
 
     double Completion::getDiameter() const {
-        return m_diameter;
+        return m_diameter.getValue();
     }
     
     double Completion::getSkinFactor() const {
-        return m_skinFactor;
+        return m_skinFactor.getValue();
     }
 
     CompletionDirection::DirectionEnum Completion::getDirection() const {
