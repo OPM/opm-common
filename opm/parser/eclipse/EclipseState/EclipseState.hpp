@@ -37,20 +37,28 @@ namespace Opm {
     
     class EclipseState {
     public:
+        enum EnabledTypes {
+            IntProperties = 0x01,
+            DoubleProperties = 0x02,
+
+            AllProperties = IntProperties | DoubleProperties
+        };
+
         EclipseState(DeckConstPtr deck, bool beStrict = false);
+
         ScheduleConstPtr getSchedule() const;
         EclipseGridConstPtr getEclipseGrid() const;
         EclipseGridPtr getEclipseGridCopy() const;
         bool hasPhase(enum Phase::PhaseEnum phase) const;
         std::string getTitle() const;
-        bool supportsGridProperty(const std::string& keyword) const;
+        bool supportsGridProperty(const std::string& keyword, int enabledTypes=AllProperties) const;
 
         std::shared_ptr<GridProperty<int> > getIntGridProperty( const std::string& keyword ) const;
         std::shared_ptr<GridProperty<double> > getDoubleGridProperty( const std::string& keyword ) const;
         bool hasIntGridProperty(const std::string& keyword) const;
         bool hasDoubleGridProperty(const std::string& keyword) const;
 
-        void loadGridPropertyFromDeckKeyword(std::shared_ptr<const Box> inputBox , DeckKeywordConstPtr deckKeyword);
+        void loadGridPropertyFromDeckKeyword(std::shared_ptr<const Box> inputBox , DeckKeywordConstPtr deckKeyword, int enabledTypes = AllProperties);
 
         std::shared_ptr<const FaultCollection> getFaults() const;
         std::shared_ptr<const TransMult> getTransMult() const;
@@ -66,13 +74,14 @@ namespace Opm {
 
         double getSIScaling(const std::string &dimensionString) const;
 
-        void scanSection(std::shared_ptr<Opm::Section> section , BoxManager& boxManager);
-        void handleADDKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager);
+        void processGridProperties(Opm::DeckConstPtr deck, int enabledTypes);
+        void scanSection(std::shared_ptr<Opm::Section> section, int enabledTypes);
+        void handleADDKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager, int enabledTypes);
         void handleBOXKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager);
-        void handleCOPYKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager);
+        void handleCOPYKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager, int enabledTypes);
         void handleENDBOXKeyword(BoxManager& boxManager);
-        void handleEQUALSKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager);
-        void handleMULTIPLYKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager);
+        void handleEQUALSKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager, int enabledTypes);
+        void handleMULTIPLYKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager, int enabledTypes);
         
         void setKeywordBox(DeckRecordConstPtr deckRecord , BoxManager& boxManager);
 
