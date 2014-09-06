@@ -6,7 +6,7 @@
     {"name" : "K2" , "value_type" : "INT" },
     {"name" : "STATE" , "value_type" : "STRING" , "default" : "OPEN"},
     {"name" : "SAT_TABLE" , "value_type" : "INT" , "default" : 0},
-    {"name" : "CF"     , "value_type" : "DOUBLE", "dimension" : "Viscosity*LiquidVolume/Time*Pressure"},
+    {"name" : "CONNECTION_TRANSMISSIBILITY_FACTOR"     , "value_type" : "DOUBLE", "dimension" : "Viscosity*LiquidVolume/Time*Pressure"},
     {"name" : "DIAMETER" , "value_type" : "DOUBLE", "dimension" : "Length"},
     {"name" : "Kh" , "value_type" : "DOUBLE", "dimension" : "Permeability" , "default" : -1},
     {"name" : "SKIN" , "value_type" : "DOUBLE", "dimension" : "1" , "default" : 0},

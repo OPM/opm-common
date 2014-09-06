@@ -24,17 +24,16 @@
 namespace Opm {
 
     Completion::Completion(int i, int j , int k , CompletionStateEnum state , 
-                           const Value<double>& CF,
+                           const Value<double>& connectionTransmissibilityFactor,
                            const Value<double>& diameter, 
                            const Value<double>& skinFactor, 
-                           const CompletionDirection::DirectionEnum direction) : m_i(i),
-                                                                                 m_j(j),
-                                                                                 m_k(k),
-        m_state(state),
-        m_CF(CF),
-        m_diameter(diameter),
-        m_skinFactor(skinFactor),
-        m_direction(direction) 
+                           const CompletionDirection::DirectionEnum direction)
+        : m_i(i), m_j(j), m_k(k),
+          m_diameter(diameter),
+          m_connectionTransmissibilityFactor(connectionTransmissibilityFactor),
+          m_skinFactor(skinFactor),
+          m_state(state),
+          m_direction(direction) 
     {  }
 
 
@@ -63,17 +62,17 @@ namespace Opm {
         int K1 = compdatRecord->getItem("K1")->getInt(0) - 1;
         int K2 = compdatRecord->getItem("K2")->getInt(0) - 1;
         CompletionStateEnum state = CompletionStateEnumFromString( compdatRecord->getItem("STATE")->getTrimmedString(0) );
-        Value<double> CF("CF");
+        Value<double> connectionTransmissibilityFactor("ConnectionTransmissibilityFactor");
         Value<double> diameter("Diameter");
         Value<double> skinFactor("SkinFactor");
 
         {
-            DeckItemConstPtr CFItem = compdatRecord->getItem("CF");
+            DeckItemConstPtr connectionTransmissibilityFactorItem = compdatRecord->getItem("CONNECTION_TRANSMISSIBILITY_FACTOR");
             DeckItemConstPtr diameterItem = compdatRecord->getItem("DIAMETER");
             DeckItemConstPtr skinFactorItem = compdatRecord->getItem("SKIN");
 
-            if (CFItem->hasData())
-                CF.setValue( CFItem->getSIDouble(0));
+            if (connectionTransmissibilityFactorItem->hasData())
+                connectionTransmissibilityFactor.setValue( connectionTransmissibilityFactorItem->getSIDouble(0));
             
             if (diameterItem->hasData())
                 diameter.setValue( diameterItem->getSIDouble(0));
@@ -85,7 +84,7 @@ namespace Opm {
         const CompletionDirection::DirectionEnum& direction = CompletionDirection::DirectionEnumFromString(compdatRecord->getItem("DIR")->getTrimmedString(0));
 
         for (int k = K1; k <= K2; k++) {
-            CompletionPtr completion(new Completion(I , J , k , state , CF, diameter, skinFactor, direction ));
+            CompletionPtr completion(new Completion(I , J , k , state , connectionTransmissibilityFactor, diameter, skinFactor, direction ));
             completions.push_back( completion );
         }
 
@@ -148,8 +147,8 @@ namespace Opm {
         return m_state;
     }
 
-    double Completion::getCF() const {
-        return m_CF.getValue();
+    double Completion::getConnectionTransmissibilityFactor() const {
+        return m_connectionTransmissibilityFactor.getValue();
     }
 
     double Completion::getDiameter() const {

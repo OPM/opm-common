@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(WellTestCOMPDAT) {
         BOOST_CHECK_EQUAL(4U, completions->size());
 
         BOOST_CHECK_EQUAL(OPEN, completions->get(3)->getState());
-        BOOST_CHECK_EQUAL(2.2836805555555556e-12 , completions->get(3)->getCF());
+        BOOST_CHECK_EQUAL(2.2836805555555556e-12 , completions->get(3)->getConnectionTransmissibilityFactor());
         BOOST_CHECK_EQUAL(0.311/Metric::Length, completions->get(3)->getDiameter());
         BOOST_CHECK_EQUAL(3.3, completions->get(3)->getSkinFactor());
 

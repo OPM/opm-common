@@ -36,7 +36,7 @@ namespace Opm {
     class Completion {
     public:
         Completion(int i, int j , int k , CompletionStateEnum state , 
-                   const Value<double>& CF,
+                   const Value<double>& connectionTransmissibilityFactor,
                    const Value<double>& diameter, 
                    const Value<double>& skinFactor, 
                    const CompletionDirection::DirectionEnum direction = CompletionDirection::DirectionEnum::Z);
@@ -46,7 +46,7 @@ namespace Opm {
         int getJ() const;
         int getK() const;
         CompletionStateEnum getState() const;
-        double getCF() const;
+        double getConnectionTransmissibilityFactor() const;
         double getDiameter() const;
         double getSkinFactor() const;
         void   fixDefaultIJ(int wellHeadI , int wellHeadJ);
@@ -59,7 +59,7 @@ namespace Opm {
     private:
         int m_i, m_j, m_k;
         Value<double> m_diameter;
-        Value<double> m_CF;
+        Value<double> m_connectionTransmissibilityFactor;
         Value<double> m_skinFactor;
         CompletionStateEnum m_state;
         CompletionDirection::DirectionEnum m_direction;
