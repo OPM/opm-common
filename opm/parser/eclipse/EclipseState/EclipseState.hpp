@@ -62,6 +62,12 @@ namespace Opm {
 
         std::shared_ptr<const FaultCollection> getFaults() const;
         std::shared_ptr<const TransMult> getTransMult() const;
+
+        // the unit system used by the deck. note that it is rarely needed to convert
+        // units because internally to opm-parser everything is represented by SI
+        // units...
+        std::shared_ptr<const UnitSystem> getDeckUnitSystem()  const;
+
     private:
         void initSchedule(DeckConstPtr deck);
         void initEclipseGrid(DeckConstPtr deck);
@@ -92,7 +98,7 @@ namespace Opm {
         ScheduleConstPtr schedule;
         std::set<enum Phase::PhaseEnum> phases;
         std::string m_title;
-        std::shared_ptr<UnitSystem> m_unitSystem;
+        std::shared_ptr<const UnitSystem> m_deckUnitSystem;
         std::shared_ptr<GridProperties<int> > m_intGridProperties;
         std::shared_ptr<GridProperties<double> > m_doubleGridProperties;
         std::shared_ptr<TransMult> m_transMult;

@@ -33,7 +33,7 @@ namespace Opm {
     
     EclipseState::EclipseState(DeckConstPtr deck, bool beStrict)
     {
-        m_unitSystem = deck->getActiveUnitSystem();
+        m_deckUnitSystem = deck->getActiveUnitSystem();
 
         if (beStrict) {
             // make sure all mandatory sections are present and that their order is correct
@@ -51,12 +51,14 @@ namespace Opm {
         initTransMult();
         initFaults(deck);
     }
-    
+
+    std::shared_ptr<const UnitSystem> EclipseState::getDeckUnitSystem() const {
+        return m_deckUnitSystem;
+    }
 
     EclipseGridConstPtr EclipseState::getEclipseGrid() const {
         return m_eclipseGrid;
     }
-
 
     EclipseGridPtr EclipseState::getEclipseGridCopy() const {
         return std::make_shared<EclipseGrid>( m_eclipseGrid->c_ptr() );
@@ -440,7 +442,7 @@ namespace Opm {
 
     double EclipseState::getSIScaling(const std::string &dimensionString) const
     {
-        return m_unitSystem->getDimension(dimensionString)->getSIScaling();
+        return m_deckUnitSystem->getDimension(dimensionString)->getSIScaling();
     }
 
     void EclipseState::processGridProperties(Opm::DeckConstPtr deck, int enabledTypes) {
