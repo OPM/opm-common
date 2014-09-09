@@ -50,5 +50,31 @@ BOOST_AUTO_TEST_CASE(CheckEnum) {
     BOOST_CHECK_THROW( FaceDir::FromString("??") , std::invalid_argument);
 }
 
+BOOST_AUTO_TEST_CASE(CheckComposite) {
+    BOOST_CHECK( FaceDir::XPlus & FaceDir::FromMULTREGTString("X"));
+    BOOST_CHECK( FaceDir::XMinus & FaceDir::FromMULTREGTString("X"));
+    BOOST_CHECK_EQUAL( FaceDir::XPlus  + FaceDir::XMinus ,  FaceDir::FromMULTREGTString("X"));
+
+    BOOST_CHECK( FaceDir::YPlus & FaceDir::FromMULTREGTString("Y"));
+    BOOST_CHECK( FaceDir::YMinus & FaceDir::FromMULTREGTString("Y"));
+    BOOST_CHECK_EQUAL( FaceDir::YPlus  + FaceDir::YMinus ,  FaceDir::FromMULTREGTString("Y"));
+
+    BOOST_CHECK( FaceDir::ZPlus & FaceDir::FromMULTREGTString("Z"));
+    BOOST_CHECK( FaceDir::ZMinus & FaceDir::FromMULTREGTString("Z"));
+    BOOST_CHECK_EQUAL( FaceDir::ZPlus  + FaceDir::ZMinus ,  FaceDir::FromMULTREGTString("Z"));
+
+    
+    BOOST_CHECK_EQUAL( FaceDir::XPlus + FaceDir::YPlus + FaceDir::XMinus + FaceDir::YMinus , FaceDir::FromMULTREGTString("XY"));
+    BOOST_CHECK_EQUAL( FaceDir::XPlus + FaceDir::ZPlus + FaceDir::XMinus + FaceDir::ZMinus, FaceDir::FromMULTREGTString("XZ"));
+    BOOST_CHECK_EQUAL( FaceDir::ZPlus + FaceDir::YPlus + FaceDir::ZMinus + FaceDir::YMinus, FaceDir::FromMULTREGTString("YZ"));
+    BOOST_CHECK_EQUAL( FaceDir::ZPlus + FaceDir::XPlus + FaceDir::YPlus + FaceDir::ZMinus + FaceDir::XMinus + FaceDir::YMinus , FaceDir::FromMULTREGTString("XYZ"));
+
+    BOOST_CHECK_THROW( FaceDir::FromString("??") , std::invalid_argument);
+    BOOST_CHECK_THROW( FaceDir::FromString("x") , std::invalid_argument);
+    BOOST_CHECK_THROW( FaceDir::FromString("ZY") , std::invalid_argument);
+    BOOST_CHECK_THROW( FaceDir::FromString("YX") , std::invalid_argument);
+}
+
+
 }
 

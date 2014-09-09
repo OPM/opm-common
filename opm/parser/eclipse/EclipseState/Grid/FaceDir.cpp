@@ -45,5 +45,33 @@ namespace Opm {
             
             throw std::invalid_argument("The string value " + stringValue + " could not be converted to a FaceDir enum value");
         }
+
+
+        int FromMULTREGTString(const std::string& stringValue) {
+            if (stringValue == "X")
+                return XPlus + XMinus;
+
+            if (stringValue == "Y")
+                return YPlus + YMinus;
+
+            if (stringValue == "Z")
+                return ZPlus + ZMinus;
+            
+            if (stringValue == "XY")
+                return XPlus + YPlus + XMinus + YMinus;
+
+            if (stringValue == "XZ")
+                return XPlus + ZPlus + XMinus + ZMinus;
+            
+            if (stringValue == "YZ")
+                return YPlus + ZPlus + YMinus + ZMinus;
+            
+            if (stringValue == "XYZ")
+                return XPlus + YPlus + ZPlus + XMinus + YMinus + ZMinus;
+
+            throw std::invalid_argument("The string " + stringValue + " is not a valid MULTREGT direction value");
+        }
+        
+
     }
 }

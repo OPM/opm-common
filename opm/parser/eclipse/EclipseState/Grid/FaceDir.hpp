@@ -30,13 +30,19 @@ namespace Opm {
         enum DirEnum {
             XPlus  = 1,
             XMinus = 2,
-            YPlus  = 3,
-            YMinus = 4,
-            ZPlus  = 5,
-            ZMinus = 6
+            YPlus  = 4,
+            YMinus = 8,
+            ZPlus  = 16,
+            ZMinus = 32
         };
+        /**
+           The MULTREGTScanner will use these values as bitmaps;
+           i.e. it is essential they form a 2^n sequence.
+        */
+
 
         DirEnum FromString(const std::string& stringValue);
+        int     FromMULTREGTString(const std::string& stringValue);
     }
 }
 
