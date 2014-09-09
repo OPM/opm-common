@@ -44,9 +44,9 @@ namespace Opm {
         DeckItem(const std::string& name , bool m_scalar = true);
         const std::string& name() const;
         
-        bool setInDeck() const;
-        bool defaultApplied() const;
-        bool hasData() const;
+        bool wasSetInDeck(size_t index) const;
+        bool defaultApplied(size_t index) const;
+        bool hasData(size_t index) const;
 
         virtual size_t size() const = 0;
         

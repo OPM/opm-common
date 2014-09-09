@@ -42,15 +42,15 @@ BOOST_AUTO_TEST_CASE(GetIntAtIndex_NoData_ExceptionThrown) {
  
 BOOST_AUTO_TEST_CASE(InitializeDefaultApplied) {
     DeckIntItem deckIntItem("TEST");
-    BOOST_REQUIRE_NO_THROW( deckIntItem.setInDeck() );
-    BOOST_CHECK( !deckIntItem.setInDeck());
+    BOOST_REQUIRE_NO_THROW( deckIntItem.wasSetInDeck(0) );
+    BOOST_CHECK( !deckIntItem.wasSetInDeck(0));
 }
 
 
 BOOST_AUTO_TEST_CASE(InitializeDefaultApplied_Throws_for_nonScalar) {
     DeckIntItem deckIntItem("TEST" , false);
-    BOOST_REQUIRE_NO_THROW( deckIntItem.setInDeck() );
-    BOOST_CHECK( !deckIntItem.setInDeck());
+    BOOST_REQUIRE_NO_THROW( deckIntItem.wasSetInDeck(0) );
+    BOOST_CHECK( !deckIntItem.wasSetInDeck(0));
 }
 
 
@@ -92,29 +92,29 @@ BOOST_AUTO_TEST_CASE(size_correct) {
 
 BOOST_AUTO_TEST_CASE(SetInDeck) {
     DeckIntItem deckIntItem("TEST");
-    BOOST_CHECK( !deckIntItem.setInDeck() );
+    BOOST_CHECK( !deckIntItem.wasSetInDeck(0) );
 
     deckIntItem.push_back( 100 );
-    BOOST_CHECK( deckIntItem.setInDeck() );
+    BOOST_CHECK( deckIntItem.wasSetInDeck(0) );
 }
 
 
 BOOST_AUTO_TEST_CASE(SetInDeckData) {
     DeckIntItem deckIntItem("TEST");
-    BOOST_CHECK_EQUAL( false , deckIntItem.setInDeck() );
-    BOOST_CHECK_EQUAL( false , deckIntItem.defaultApplied());
-    BOOST_CHECK_EQUAL( false , deckIntItem.hasData());
+    BOOST_CHECK_EQUAL( false , deckIntItem.wasSetInDeck(0) );
+    BOOST_CHECK_EQUAL( false , deckIntItem.defaultApplied(0));
+    BOOST_CHECK_EQUAL( false , deckIntItem.hasData(0));
     deckIntItem.push_backDefault( 1 );
-    BOOST_CHECK_EQUAL( false , deckIntItem.setInDeck() );
-    BOOST_CHECK_EQUAL( true  , deckIntItem.defaultApplied());
-    BOOST_CHECK_EQUAL( true , deckIntItem.hasData());
+    BOOST_CHECK_EQUAL( false , deckIntItem.wasSetInDeck(0) );
+    BOOST_CHECK_EQUAL( true  , deckIntItem.defaultApplied(0));
+    BOOST_CHECK_EQUAL( true , deckIntItem.hasData(0));
     deckIntItem.push_back( 10 );
-    BOOST_CHECK_EQUAL( true , deckIntItem.setInDeck() );
-    BOOST_CHECK_EQUAL( true  , deckIntItem.defaultApplied());
-    BOOST_CHECK_EQUAL( true  , deckIntItem.hasData());
+    BOOST_CHECK_EQUAL( true , deckIntItem.wasSetInDeck(0) );
+    BOOST_CHECK_EQUAL( true  , deckIntItem.defaultApplied(0));
+    BOOST_CHECK_EQUAL( true  , deckIntItem.hasData(0));
     deckIntItem.push_backDefault( 1 );
-    BOOST_CHECK_EQUAL( true , deckIntItem.setInDeck() );
-    BOOST_CHECK_EQUAL( true  , deckIntItem.hasData());
+    BOOST_CHECK_EQUAL( true , deckIntItem.wasSetInDeck(0) );
+    BOOST_CHECK_EQUAL( true  , deckIntItem.hasData(0));
 }
 
 

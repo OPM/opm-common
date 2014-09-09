@@ -99,7 +99,7 @@ size_t MultiRecordTable::getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord)
     int result = 0;
     for (unsigned i = 0; i < deckRecord->size(); ++ i) {
         Opm::DeckItemConstPtr item(deckRecord->getItem(i));
-        if (i == 0 && !item->setInDeck())
+        if (i == 0 && !item->wasSetInDeck(0))
             return result;
         result += item->size();
     }

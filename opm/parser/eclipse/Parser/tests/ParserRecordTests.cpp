@@ -215,9 +215,9 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
         DeckItemConstPtr deckIntItem = itemInt->scan(rawRecord);
         DeckItemConstPtr deckDoubleItem = itemDouble->scan(rawRecord);
 
-        BOOST_CHECK(!deckStringItem->setInDeck());
-        BOOST_CHECK(!deckIntItem->setInDeck());
-        BOOST_CHECK(!deckDoubleItem->setInDeck());
+        BOOST_CHECK(!deckStringItem->wasSetInDeck(0));
+        BOOST_CHECK(!deckIntItem->wasSetInDeck(0));
+        BOOST_CHECK(!deckDoubleItem->wasSetInDeck(0));
     }
 
 
@@ -227,9 +227,9 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
         DeckItemConstPtr deckIntItem = itemInt->scan(rawRecord);
         DeckItemConstPtr deckDoubleItem = itemDouble->scan(rawRecord);
 
-        BOOST_CHECK(!deckStringItem->setInDeck());
-        BOOST_CHECK(!deckIntItem->setInDeck());
-        BOOST_CHECK(!deckDoubleItem->setInDeck());
+        BOOST_CHECK(!deckStringItem->wasSetInDeck(0));
+        BOOST_CHECK(!deckIntItem->wasSetInDeck(0));
+        BOOST_CHECK(!deckDoubleItem->wasSetInDeck(0));
     }
 
 
@@ -239,9 +239,9 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
         DeckItemConstPtr deckIntItem = itemInt->scan(rawRecord);
         DeckItemConstPtr deckDoubleItem = itemDouble->scan(rawRecord);
         
-        BOOST_CHECK(deckStringItem->setInDeck());
-        BOOST_CHECK(deckIntItem->setInDeck());
-        BOOST_CHECK(deckDoubleItem->setInDeck());
+        BOOST_CHECK(deckStringItem->wasSetInDeck(0));
+        BOOST_CHECK(deckIntItem->wasSetInDeck(0));
+        BOOST_CHECK(deckDoubleItem->wasSetInDeck(0));
     }
 
 
@@ -251,9 +251,9 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
         DeckItemConstPtr deckIntItem = itemInt->scan(rawRecord);
         DeckItemConstPtr deckDoubleItem = itemDouble->scan(rawRecord);
 
-        BOOST_CHECK(!deckStringItem->setInDeck());
-        BOOST_CHECK(!deckIntItem->setInDeck());
-        BOOST_CHECK(!deckDoubleItem->setInDeck());
+        BOOST_CHECK(!deckStringItem->wasSetInDeck(0));
+        BOOST_CHECK(!deckIntItem->wasSetInDeck(0));
+        BOOST_CHECK(!deckDoubleItem->wasSetInDeck(0));
     }
 
     {
@@ -262,9 +262,9 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
         DeckItemConstPtr deckIntItem = itemInt->scan(rawRecord);
         DeckItemConstPtr deckDoubleItem = itemDouble->scan(rawRecord);
 
-        BOOST_CHECK(!deckStringItem->setInDeck());
-        BOOST_CHECK(!deckIntItem->setInDeck());
-        BOOST_CHECK(!deckDoubleItem->setInDeck());
+        BOOST_CHECK(!deckStringItem->wasSetInDeck(0));
+        BOOST_CHECK(!deckIntItem->wasSetInDeck(0));
+        BOOST_CHECK(!deckDoubleItem->wasSetInDeck(0));
     }
 }
 

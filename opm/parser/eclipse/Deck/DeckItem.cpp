@@ -37,26 +37,17 @@ namespace Opm {
        This function will return true if the item has been explicitly
        set in the deck.
     */
-    bool DeckItem::setInDeck() const {
-        if ((m_valueStatus & DeckValue::SET_IN_DECK) == DeckValue::SET_IN_DECK)
-            return true;
-        else
-            return false;
+    bool DeckItem::wasSetInDeck(size_t /*index*/) const {
+        return (m_valueStatus & DeckValue::SET_IN_DECK) == DeckValue::SET_IN_DECK;
     }
 
 
-    bool DeckItem::defaultApplied() const {
-        if ((m_valueStatus & DeckValue::DEFAULT) == DeckValue::DEFAULT)
-            return true;
-        else
-            return false;
+    bool DeckItem::defaultApplied(size_t /*index*/) const {
+        return (m_valueStatus & DeckValue::DEFAULT) == DeckValue::DEFAULT;
     }
 
-    bool DeckItem::hasData() const {
-        if (m_valueStatus & (DeckValue::DEFAULT + DeckValue::SET_IN_DECK))
-            return true;
-        else
-            return false;
+    bool DeckItem::hasData(size_t index) const {
+        return defaultApplied(index) || wasSetInDeck(index);
     }
 
     

@@ -83,13 +83,13 @@ BOOST_AUTO_TEST_CASE(sizeFloat_correct) {
 
 BOOST_AUTO_TEST_CASE(SetInDeck) {
     DeckFloatItem deckFloatItem("TEST");
-    BOOST_CHECK_EQUAL( false , deckFloatItem.setInDeck() );
+    BOOST_CHECK_EQUAL( false , deckFloatItem.wasSetInDeck(0) );
     deckFloatItem.push_backDefault( 1 );
-    BOOST_CHECK_EQUAL( false , deckFloatItem.setInDeck() );
+    BOOST_CHECK_EQUAL( false , deckFloatItem.wasSetInDeck(0) );
     deckFloatItem.push_back( 10 );
-    BOOST_CHECK_EQUAL( true , deckFloatItem.setInDeck() );
+    BOOST_CHECK_EQUAL( true , deckFloatItem.wasSetInDeck(0) );
     deckFloatItem.push_backDefault( 1 );
-    BOOST_CHECK_EQUAL( true , deckFloatItem.setInDeck() );
+    BOOST_CHECK_EQUAL( true , deckFloatItem.wasSetInDeck(0) );
 }
 
 

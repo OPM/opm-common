@@ -50,7 +50,7 @@ namespace Opm {
         }
 
         // BHP control must be explictly provided.
-        if (record->getItem("BHP")->setInDeck()) {
+        if (record->getItem("BHP")->wasSetInDeck(0)) {
             p.addProductionControl(WellProducer::BHP);
         }
 
@@ -78,7 +78,7 @@ namespace Opm {
                  mode = controlModes.begin(), end = controlModes.end();
              mode != end; ++mode)
         {
-            if (record->getItem(*mode)->setInDeck()) {
+            if (record->getItem(*mode)->wasSetInDeck(0)) {
                 const WellProducer::ControlModeEnum cmode =
                     WellProducer::ControlModeFromString(*mode);
 
