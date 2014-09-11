@@ -26,7 +26,6 @@
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
-#include <opm/parser/eclipse/Parser/ParserBoolItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserFloatItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
