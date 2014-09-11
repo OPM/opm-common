@@ -28,21 +28,25 @@ BOOST_AUTO_TEST_CASE(NoStarThrows) {
 }
 
 
-BOOST_AUTO_TEST_CASE(InvalidMultiplierThrow) {
+BOOST_AUTO_TEST_CASE(InvalidCountThrow) {
     BOOST_REQUIRE_THROW( Opm::StarToken<int> st("X*") , std::invalid_argument);
     BOOST_REQUIRE_THROW( Opm::StarToken<int> st("1.25*") , std::invalid_argument);
     BOOST_REQUIRE_THROW( Opm::StarToken<int> st("-3*") , std::invalid_argument);
     BOOST_REQUIRE_THROW( Opm::StarToken<int> st("0*") , std::invalid_argument);
+    BOOST_REQUIRE_THROW( Opm::StarToken<int> st("*123") , std::invalid_argument);
 }
 
 
-BOOST_AUTO_TEST_CASE(MultiplierCOrrect) {
+BOOST_AUTO_TEST_CASE(CountCorrect) {
     Opm::StarToken<int> st1("*");
     Opm::StarToken<int> st2("5*");
     Opm::StarToken<int> st3("54*");
-    BOOST_REQUIRE_EQUAL(1U , st1.multiplier());
-    BOOST_REQUIRE_EQUAL(5U , st2.multiplier());
-    BOOST_REQUIRE_EQUAL(54U , st3.multiplier());
+    BOOST_CHECK(st1.count() == 1);
+    BOOST_CHECK(st1.countString() == "");
+    BOOST_CHECK(st1.valueString() == "");
+    BOOST_CHECK(!st1.hasValue());
+    BOOST_REQUIRE_EQUAL(5U , st2.count());
+    BOOST_REQUIRE_EQUAL(54U , st3.count());
 }
 
 
@@ -63,7 +67,7 @@ BOOST_AUTO_TEST_CASE(IntMalformedValueThrows) {
 }
 
 
-BOOST_AUTO_TEST_CASE(StarNoMultiplierThrows) {
+BOOST_AUTO_TEST_CASE(StarNoCountThrows) {
     BOOST_CHECK_THROW( Opm::StarToken<int> st1("*10") , std::invalid_argument);
     BOOST_CHECK_THROW( Opm::StarToken<double> st1("*1.0") , std::invalid_argument);
     BOOST_CHECK_THROW( Opm::StarToken<std::string> st1("*String") , std::invalid_argument);
@@ -114,11 +118,13 @@ BOOST_AUTO_TEST_CASE(CorrectStringValue) {
 
 
 BOOST_AUTO_TEST_CASE( ContainsStar_WithStar_ReturnsTrue ) {
-    BOOST_CHECK_EQUAL( true , Opm::tokenContainsStar("*") );
-    BOOST_CHECK_EQUAL( true , Opm::tokenContainsStar("1*") );
-    BOOST_CHECK_EQUAL( true , Opm::tokenContainsStar("1*2") );
+    std::string countString, valueString;
+    BOOST_CHECK_EQUAL( true , Opm::isStarToken("*", countString, valueString) );
+    BOOST_CHECK_EQUAL( true , Opm::isStarToken("*1", countString, valueString) );
+    BOOST_CHECK_EQUAL( true , Opm::isStarToken("1*", countString, valueString) );
+    BOOST_CHECK_EQUAL( true , Opm::isStarToken("1*2", countString, valueString) );
     
-    BOOST_CHECK_EQUAL( false , Opm::tokenContainsStar("12") );
+    BOOST_CHECK_EQUAL( false , Opm::isStarToken("12", countString, valueString) );
 }
 
 BOOST_AUTO_TEST_CASE( readValueToken_basic_validity_tests ) {

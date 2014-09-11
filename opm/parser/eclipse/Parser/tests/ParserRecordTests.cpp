@@ -209,6 +209,8 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
     parserRecord.addItem(itemString);
     parserRecord.addItem(itemDouble);
 
+    // according to the RM, this is invalid ("an asterisk by itself is not sufficient"),
+    // but it seems to appear in the wild. Thus, we interpret this as "1*"...
     {
         RawRecordPtr rawRecord(new RawRecord("* /"));
         DeckItemConstPtr deckStringItem = itemString->scan(rawRecord);
@@ -223,7 +225,6 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
         BOOST_CHECK(deckIntItem->defaultApplied(0));
         BOOST_CHECK(deckDoubleItem->defaultApplied(0));
     }
-
 
     {
         RawRecordPtr rawRecord(new RawRecord("/"));
@@ -259,7 +260,7 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
         BOOST_CHECK(!deckDoubleItem->defaultApplied(0));
     }
 
-
+    // again this is invalid according to the RM, but it is used anyway in the wild...
     {
         RawRecordPtr rawRecord(new RawRecord("* * * /"));
         DeckItemConstPtr deckStringItem = itemString->scan(rawRecord);

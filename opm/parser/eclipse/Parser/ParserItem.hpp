@@ -96,16 +96,19 @@ namespace Opm {
         if (self->sizeType() == ALL) {
             while (rawRecord->size() > 0) {
                 std::string token = rawRecord->pop_front();
-                if (tokenContainsStar( token )) {
-                    StarToken<ValueType> st(token);
+
+                std::string countString;
+                std::string valueString;
+                if (isStarToken(token, countString, valueString)) {
+                    StarToken<ValueType> st(token, countString, valueString);
                     ValueType value;
 
                     if (st.hasValue()) {
                         value = st.value();
-                        deckItem->push_backMultiple( value , st.multiplier());
+                        deckItem->push_backMultiple( value , st.count());
                     } else {
                         value = self->getDefault();
-                        for (size_t i=0; i < st.multiplier(); i++)
+                        for (size_t i=0; i < st.count(); i++)
                             deckItem->push_backDefault( value );
                     }
                 } else {
@@ -122,8 +125,10 @@ namespace Opm {
                 // The '*' should be interpreted as a repetition indicator, but it must
                 // be preceeded by an integer...
                 std::string token = rawRecord->pop_front();
-                if (tokenContainsStar( token )) {
-                    StarToken<ValueType> st(token);
+                std::string countString;
+                std::string valueString;
+                if (isStarToken(token, countString, valueString)) {
+                    StarToken<ValueType> st(token, countString, valueString);
 
                     if (!st.hasValue())
                         deckItem->push_backDefault( self->getDefault() );
@@ -135,11 +140,11 @@ namespace Opm {
                     // number of defaults pass item boundaries...
                     std::string singleRepetition;
                     if (st.hasValue())
-                        singleRepetition = boost::lexical_cast<std::string>(st.value());
+                        singleRepetition = st.valueString();
                     else
                         singleRepetition = "1*";
 
-                    for (size_t i=0; i < st.multiplier() - 1; i++)
+                    for (size_t i=0; i < st.count() - 1; i++)
                         rawRecord->push_front(singleRepetition);
                 } else {
                     ValueType value = readValueToken<ValueType>(token);

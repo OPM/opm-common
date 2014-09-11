@@ -22,16 +22,13 @@
 
 #include <string>
 #include <iostream>
-#include <cstdlib> // strtol, strtod
 
 #include <boost/lexical_cast.hpp>
 
-#define STAR    '*'
-#define C_EOS  '\0'
-
 namespace Opm {
-
-    bool tokenContainsStar(const std::string& token);
+    bool isStarToken(const std::string& token,
+                           std::string& countString,
+                           std::string& valueString);
 
     template <class T>
     T readValueToken(const std::string& valueToken ) {
@@ -46,60 +43,83 @@ namespace Opm {
 
 template <class T>
 class StarToken {
+public:
+    StarToken(const std::string& token)
+    {
+        if (!isStarToken(token, m_countString, m_valueString))
+            throw std::invalid_argument("Token \""+token+"\" is not a repetition specifier");
+        init_(token);
+    }
 
-    public:
-        StarToken(const std::string& token) : m_value(T()), m_hasValue(false) {
-            size_t star_pos = token.find( STAR );
-            
-            if (star_pos != std::string::npos) {
-                
-                if (token[0] == STAR) 
-                m_multiplier = 1;
-                else {
-                    char * error_ptr;
-                    m_multiplier = strtol( token.c_str() , &error_ptr , 10);
+    StarToken(const std::string& token, const std::string& countStr, const std::string& valueStr)
+        : m_countString(countStr)
+        , m_valueString(valueStr)
+    {
+        init_(token);
+    }
 
-                    if (m_multiplier <= 0 || error_ptr[0] != STAR)
-                        throw std::invalid_argument("Parsing multiplier from " + token + " failed");
-                }
-                {
-                    const std::string& value_token = token.substr( star_pos + 1);
-                    if (value_token.size()) {
-                        m_value = readValueToken<T>( value_token );
-                        m_hasValue = true;
-                        if (star_pos == 0)
-                          throw std::invalid_argument("Failed to extract multiplier from token:"  + token);
-                    } else {
-                        m_hasValue = false;
-                    }
-                }
-            } else
-                throw std::invalid_argument("The input token: \'" + token + "\' does not contain a \'*\'.");
+    size_t count() const {
+        return m_count;
+    }
+
+    T value() const {
+        if (!hasValue())
+            throw std::invalid_argument("The input token did not specify a value ");
+        return m_value;
+    }
+
+    bool hasValue() const {
+        return !m_valueString.empty();
+    }
+
+    // returns the coubt as rendered in the deck. note that this might be different
+    // than just converting the return value of count() to a string because an empty
+    // count is interpreted as 1...
+    const std::string& countString() const {
+        return m_countString;
+    }
+
+    // returns the value as rendered in the deck. note that this might be different
+    // than just converting the return value of value() to a string because values
+    // might have different representations in the deck (e.g. strings can be
+    // specified with and without quotes and but spaces are only allowed using the
+    // first representation.)
+    const std::string& valueString() const {
+        return m_valueString;
+    }
+
+private:
+    // internal initialization method. the m_countString and m_valueString attributes
+    // must be set before calling this method.
+    void init_(const std::string& token) {
+        // special-case the interpretation of a lone star as "1*" but do not
+        // allow constructs like "*123"...
+        if (m_countString == "") {
+            if (m_valueString != "")
+                // TODO: decorate the deck with a warning instead?
+                throw std::invalid_argument("Not specifying a count also implies not specifying a value. Token: \'" + token + "\'.");
+
+            // TODO: since this is explicitly forbidden by the documentation it might
+            // be a good idea to decorate the deck with a warning?
+            m_count = 1;
+        }
+        else {
+            m_count = boost::lexical_cast<int>(m_countString);
+
+            if (m_count == 0)
+                // TODO: decorate the deck with a warning instead?
+                throw std::invalid_argument("Specifing zero repetitions is not allowed. Token: \'" + token + "\'.");
         }
 
-        size_t multiplier() const {
-            return m_multiplier;
-        }        
+        if (!m_valueString.empty())
+            m_value = readValueToken<T>( m_valueString );
+    }
 
-
-        T value() const {
-            if (!m_hasValue)
-                throw std::invalid_argument("The input token did not specify a value ");
-            return m_value; 
-        }     
-
-
-        bool hasValue() const {
-            return m_hasValue;
-        }
-
-
- 
-    private:
-        ssize_t m_multiplier;
-        T m_value;
-        bool m_hasValue;
-    };
+    ssize_t m_count;
+    T m_value;
+    std::string m_countString;
+    std::string m_valueString;
+};
 }
 
 
