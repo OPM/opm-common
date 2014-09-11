@@ -215,9 +215,13 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
         DeckItemConstPtr deckIntItem = itemInt->scan(rawRecord);
         DeckItemConstPtr deckDoubleItem = itemDouble->scan(rawRecord);
 
-        BOOST_CHECK(!deckStringItem->wasSetInDeck(0));
-        BOOST_CHECK(!deckIntItem->wasSetInDeck(0));
-        BOOST_CHECK(!deckDoubleItem->wasSetInDeck(0));
+        BOOST_CHECK(deckStringItem->size() == 1);
+        BOOST_CHECK(deckIntItem->size() == 1);
+        BOOST_CHECK(deckDoubleItem->size() == 1);
+
+        BOOST_CHECK(deckStringItem->defaultApplied(0));
+        BOOST_CHECK(deckIntItem->defaultApplied(0));
+        BOOST_CHECK(deckDoubleItem->defaultApplied(0));
     }
 
 
@@ -227,21 +231,32 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
         DeckItemConstPtr deckIntItem = itemInt->scan(rawRecord);
         DeckItemConstPtr deckDoubleItem = itemDouble->scan(rawRecord);
 
-        BOOST_CHECK(!deckStringItem->wasSetInDeck(0));
-        BOOST_CHECK(!deckIntItem->wasSetInDeck(0));
-        BOOST_CHECK(!deckDoubleItem->wasSetInDeck(0));
+        BOOST_CHECK(deckStringItem->size() == 1);
+        BOOST_CHECK(deckIntItem->size() == 1);
+        BOOST_CHECK(deckDoubleItem->size() == 1);
+
+        BOOST_CHECK(deckStringItem->defaultApplied(0));
+        BOOST_CHECK(deckIntItem->defaultApplied(0));
+        BOOST_CHECK(deckDoubleItem->defaultApplied(0));
     }
 
 
     {
         RawRecordPtr rawRecord(new RawRecord("TRYGVE 10 2.9 /"));
+
+        // let the raw record be "consumed" by the items. Note that the scan() method
+        // modifies the rawRecord object!
         DeckItemConstPtr deckStringItem = itemString->scan(rawRecord);
         DeckItemConstPtr deckIntItem = itemInt->scan(rawRecord);
         DeckItemConstPtr deckDoubleItem = itemDouble->scan(rawRecord);
         
-        BOOST_CHECK(deckStringItem->wasSetInDeck(0));
-        BOOST_CHECK(deckIntItem->wasSetInDeck(0));
-        BOOST_CHECK(deckDoubleItem->wasSetInDeck(0));
+        BOOST_CHECK(deckStringItem->size() == 1);
+        BOOST_CHECK(deckIntItem->size() == 1);
+        BOOST_CHECK(deckDoubleItem->size() == 1);
+
+        BOOST_CHECK(!deckStringItem->defaultApplied(0));
+        BOOST_CHECK(!deckIntItem->defaultApplied(0));
+        BOOST_CHECK(!deckDoubleItem->defaultApplied(0));
     }
 
 
@@ -251,9 +266,13 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
         DeckItemConstPtr deckIntItem = itemInt->scan(rawRecord);
         DeckItemConstPtr deckDoubleItem = itemDouble->scan(rawRecord);
 
-        BOOST_CHECK(!deckStringItem->wasSetInDeck(0));
-        BOOST_CHECK(!deckIntItem->wasSetInDeck(0));
-        BOOST_CHECK(!deckDoubleItem->wasSetInDeck(0));
+        BOOST_CHECK(deckStringItem->size() == 1);
+        BOOST_CHECK(deckIntItem->size() == 1);
+        BOOST_CHECK(deckDoubleItem->size() == 1);
+
+        BOOST_CHECK(deckStringItem->defaultApplied(0));
+        BOOST_CHECK(deckIntItem->defaultApplied(0));
+        BOOST_CHECK(deckDoubleItem->defaultApplied(0));
     }
 
     {
@@ -262,9 +281,13 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
         DeckItemConstPtr deckIntItem = itemInt->scan(rawRecord);
         DeckItemConstPtr deckDoubleItem = itemDouble->scan(rawRecord);
 
-        BOOST_CHECK(!deckStringItem->wasSetInDeck(0));
-        BOOST_CHECK(!deckIntItem->wasSetInDeck(0));
-        BOOST_CHECK(!deckDoubleItem->wasSetInDeck(0));
+        BOOST_CHECK(deckStringItem->size() == 1);
+        BOOST_CHECK(deckIntItem->size() == 1);
+        BOOST_CHECK(deckDoubleItem->size() == 1);
+
+        BOOST_CHECK(deckStringItem->defaultApplied(0));
+        BOOST_CHECK(deckIntItem->defaultApplied(0));
+        BOOST_CHECK(deckDoubleItem->defaultApplied(0));
     }
 }
 

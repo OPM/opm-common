@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(InitializeString) {
 
 BOOST_AUTO_TEST_CASE(GetStringAtIndex_NoData_ExceptionThrown) {
     DeckStringItem deckStringItem("TEST");
-    BOOST_CHECK_THROW(deckStringItem.getString(0), std::invalid_argument);
+    BOOST_CHECK_THROW(deckStringItem.getString(0), std::out_of_range);
     deckStringItem.push_back("SA");
     BOOST_CHECK_THROW(deckStringItem.getString(1), std::out_of_range);
 }
@@ -72,16 +72,24 @@ BOOST_AUTO_TEST_CASE(size_variouspushes_sizecorrect) {
     BOOST_CHECK_EQUAL(3U, deckStringItem.size());
 }
 
-
-BOOST_AUTO_TEST_CASE(SetInDeckData) {
+BOOST_AUTO_TEST_CASE(DefaultNotApplied) {
     DeckStringItem deckStringItem("TEST");
-    BOOST_CHECK_EQUAL( false , deckStringItem.wasSetInDeck(0) );
-    deckStringItem.push_backDefault( "Default" );
-    BOOST_CHECK_EQUAL( false , deckStringItem.wasSetInDeck(0) );
-    deckStringItem.push_back( "Value" );
-    BOOST_CHECK_EQUAL( true , deckStringItem.wasSetInDeck(0) );
-    deckStringItem.push_backDefault( "Deafult" );
-    BOOST_CHECK_EQUAL( true , deckStringItem.wasSetInDeck(0) );
+    BOOST_CHECK( deckStringItem.size() == 0 );
+
+    deckStringItem.push_back( "FOO" );
+    BOOST_CHECK( deckStringItem.size() == 1 );
+    BOOST_CHECK( deckStringItem.getString(0) == "FOO" );
+    BOOST_CHECK( !deckStringItem.defaultApplied(0) );
+}
+
+BOOST_AUTO_TEST_CASE(DefaultApplied) {
+    DeckStringItem deckStringItem("TEST");
+    BOOST_CHECK( deckStringItem.size() == 0 );
+
+    deckStringItem.push_backDefault( "FOO" );
+    BOOST_CHECK( deckStringItem.size() == 1 );
+    BOOST_CHECK( deckStringItem.getString(0) == "FOO" );
+    BOOST_CHECK( deckStringItem.defaultApplied(0) );
 }
 
 

@@ -34,7 +34,6 @@ namespace Opm {
             // These values are used as a bitmask.
             NOT_SET = 0 ,
             SET_IN_DECK = 1,  
-            DEFAULT = 2
         };
     }
 
@@ -43,11 +42,17 @@ namespace Opm {
     public:
         DeckItem(const std::string& name , bool m_scalar = true);
         const std::string& name() const;
-        
-        bool wasSetInDeck(size_t index) const;
-        bool defaultApplied(size_t index) const;
-        bool hasData(size_t index) const;
 
+        bool wasSetInDeck(size_t index) const;
+
+        // return true if the default value was used for a given data point
+        bool defaultApplied(size_t index) const;
+
+        // if the number returned by this method is less than what is semantically
+        // expected (e.g. size() is less than the number of cells in the grid for
+        // keywords like e.g. SGL), then the remaining values are defaulted. The deck
+        // creates the defaulted items if all their sizes are fully specified by the
+        // keyword, though...
         virtual size_t size() const = 0;
         
         virtual int getInt(size_t /* index */) const {
@@ -116,8 +121,10 @@ namespace Opm {
         }
 
     protected:
-        void assertValueSet() const;
+        void assertSize(size_t index) const;
+
         int m_valueStatus;
+        std::vector<bool> m_dataPointDefaulted;
 
     private:
         std::string m_name;

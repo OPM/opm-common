@@ -102,7 +102,8 @@ BOOST_AUTO_TEST_CASE(scan_PreMatureTerminator_defaultUsed) {
 
     RawRecordPtr rawRecord1(new RawRecord("/"));
     DeckItemConstPtr defaulted = itemInt.scan(rawRecord1);
-    BOOST_CHECK_THROW(defaulted->getInt(0) , std::invalid_argument);
+    BOOST_CHECK_THROW(defaulted->defaultApplied(0), std::out_of_range);
+    BOOST_CHECK_THROW(defaulted->getInt(0) , std::out_of_range);
 }    
 
 BOOST_AUTO_TEST_CASE(InitializeIntItem_setDescription_canReadBack) {
@@ -387,6 +388,14 @@ BOOST_AUTO_TEST_CASE(Scan_All_CorrectIntSetInDeckItem) {
     BOOST_CHECK_EQUAL(77, deckIntItem->getInt(3));
     BOOST_CHECK_EQUAL(1, deckIntItem->getInt(21));
     BOOST_CHECK_EQUAL(25, deckIntItem->getInt(22));
+}
+
+BOOST_AUTO_TEST_CASE(Scan_All_WithDefaults) {
+    ParserItemSizeEnum sizeType = ALL;
+    ParserIntItem itemInt("ITEM", sizeType);
+
+    RawRecordPtr rawRecord(new RawRecord("100 10* 10*1 25/"));
+    BOOST_CHECK_THROW(itemInt.scan(rawRecord), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(Scan_SINGLE_CorrectIntSetInDeckItem) {

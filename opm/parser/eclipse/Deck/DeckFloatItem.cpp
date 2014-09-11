@@ -28,12 +28,9 @@
 namespace Opm {
 
     float DeckFloatItem::getRawFloat(size_t index) const {
-        assertValueSet();
+        assertSize(index);
 
-        if (index < m_data.size()) {
-            return m_data[index];
-        } else
-            throw std::out_of_range("Out of range, index must be lower than " + boost::lexical_cast<std::string>(m_data.size()));
+        return m_data[index];
     }
 
     size_t DeckFloatItem::size() const {
@@ -41,18 +38,15 @@ namespace Opm {
     }
 
     float DeckFloatItem::getSIFloat(size_t index) const {
+        assertSize(index);
         assertSIData();
-        assertValueSet();
 
-        if (index < m_data.size()) {
-            return m_SIdata[index];
-        } else
-            throw std::out_of_range("Out of range, index must be lower than " + boost::lexical_cast<std::string>(m_data.size()));
+        return m_SIdata[index];
     }
 
     const std::vector<float>& DeckFloatItem::getSIFloatData() const {
         assertSIData();
-        assertValueSet();
+
         return m_SIdata;
     }
 
@@ -82,6 +76,7 @@ namespace Opm {
     void DeckFloatItem::push_back(std::deque<float> data , size_t items) {
         for (size_t i=0; i<items; i++) {
             m_data.push_back(data[i]);
+            m_dataPointDefaulted.push_back(false);
         }
         m_valueStatus |= DeckValue::SET_IN_DECK;
     }
@@ -89,30 +84,34 @@ namespace Opm {
     void DeckFloatItem::push_back(std::deque<float> data) {
         push_back( data  , data.size() );
         m_valueStatus |= DeckValue::SET_IN_DECK;
+        m_dataPointDefaulted.push_back(false);
     }
 
     void DeckFloatItem::push_back(float data) {
         m_data.push_back( data );
         m_valueStatus |= DeckValue::SET_IN_DECK;
+        m_dataPointDefaulted.push_back(false);
     }
 
 
 
     void DeckFloatItem::push_backMultiple(float value, size_t numValues) {
-        for (size_t i = 0; i < numValues; i++)
+        for (size_t i = 0; i < numValues; i++) {
             m_data.push_back( value );
+            m_dataPointDefaulted.push_back(false);
+        }
         m_valueStatus |= DeckValue::SET_IN_DECK;
     }
 
 
     void DeckFloatItem::push_backDefault(float data) {
         m_data.push_back( data );
-        m_valueStatus |= DeckValue::DEFAULT;
+        m_dataPointDefaulted.push_back(true);
     }
 
 
     void DeckFloatItem::push_backDimension(std::shared_ptr<const Dimension> activeDimension , std::shared_ptr<const Dimension> defaultDimension) {
-        if (m_valueStatus == DeckValue::DEFAULT)
+        if (m_dataPointDefaulted.empty() || m_dataPointDefaulted.back())
             m_dimensions.push_back( defaultDimension );
         else
             m_dimensions.push_back( activeDimension );

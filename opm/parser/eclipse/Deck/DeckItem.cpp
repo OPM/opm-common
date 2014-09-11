@@ -19,7 +19,10 @@
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 
+#include <boost/lexical_cast.hpp>
+
 #include <stdexcept>
+#include <cassert>
 
 namespace Opm {
 
@@ -41,19 +44,19 @@ namespace Opm {
         return (m_valueStatus & DeckValue::SET_IN_DECK) == DeckValue::SET_IN_DECK;
     }
 
+    bool DeckItem::defaultApplied(size_t index) const {
+        assert(m_dataPointDefaulted.size() == size());
+        assertSize(index);
 
-    bool DeckItem::defaultApplied(size_t /*index*/) const {
-        return (m_valueStatus & DeckValue::DEFAULT) == DeckValue::DEFAULT;
+        return m_dataPointDefaulted[index];
     }
 
-    bool DeckItem::hasData(size_t index) const {
-        return defaultApplied(index) || wasSetInDeck(index);
-    }
-
-    
-    void DeckItem::assertValueSet() const {
-        if (m_valueStatus == DeckValue::NOT_SET)
-            throw std::invalid_argument("Trying to access property: " + name() + " which has not been properly set - either explicitly or with a default.");
+    void DeckItem::assertSize(size_t index) const {
+        if (index >= size())
+            throw std::out_of_range("Index must be smaller than "
+                                    + boost::lexical_cast<std::string>(size())
+                                    + " but is "
+                                    + boost::lexical_cast<std::string>(index));
     }
 
 

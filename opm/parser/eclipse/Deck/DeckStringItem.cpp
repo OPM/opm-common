@@ -27,31 +27,27 @@
 namespace Opm {
 
     std::string DeckStringItem::getString(size_t index) const {
-        assertValueSet();        
+        assertSize(index);
 
-        if (index < m_data.size()) {
-            return m_data[index];
-        } else
-            throw std::out_of_range("Out of range, index must be lower than " + boost::lexical_cast<std::string>(m_data.size()));
+        return m_data[index];
     }
 
     std::string DeckStringItem::getTrimmedString(size_t index) const {
-        if (index < m_data.size()) {
-            return boost::algorithm::trim_copy(m_data[index]);
-        } else
-            throw std::out_of_range("Out of range, index must be lower than " + boost::lexical_cast<std::string>(m_data.size()));
+        assertSize(index);
+
+        return boost::algorithm::trim_copy(m_data[index]);
     }
 
     const std::vector<std::string>& DeckStringItem::getStringData() const {
-        assertValueSet();        
-
         return m_data;
     }
 
 
+
     void DeckStringItem::push_back(std::deque<std::string> data, size_t items) {
-        for (size_t i = 0; i < items; i++) {
+        for (size_t i=0; i<items; i++) {
             m_data.push_back(data[i]);
+            m_dataPointDefaulted.push_back(false);
         }
         m_valueStatus |= DeckValue::SET_IN_DECK;
     }
@@ -60,26 +56,30 @@ namespace Opm {
     void DeckStringItem::push_back(std::deque<std::string> data) {
         push_back(data, data.size());
         m_valueStatus |= DeckValue::SET_IN_DECK;
+        m_dataPointDefaulted.push_back(false);
     }
 
 
     void DeckStringItem::push_back(const std::string& data ) {
         m_data.push_back( data );
         m_valueStatus |= DeckValue::SET_IN_DECK;
+        m_dataPointDefaulted.push_back(false);
     }
 
 
   
     void DeckStringItem::push_backMultiple(std::string value, size_t numValues) {
-        for (size_t i = 0; i < numValues; i++) 
+        for (size_t i = 0; i < numValues; i++) {
             m_data.push_back( value );
+            m_dataPointDefaulted.push_back(false);
+        }
         m_valueStatus |= DeckValue::SET_IN_DECK;
     }
 
 
     void DeckStringItem::push_backDefault(std::string data) {
         m_data.push_back( data );
-        m_valueStatus |= DeckValue::DEFAULT;
+        m_dataPointDefaulted.push_back(true);
     }
     
     

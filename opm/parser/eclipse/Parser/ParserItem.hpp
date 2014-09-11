@@ -76,76 +76,82 @@ namespace Opm {
 
     template<typename T>
     bool ParserItemEqual(const T * self , const ParserItem& other) {
-        const T * rhs = dynamic_cast<const T*>(&other);     
-        if (rhs && self->ParserItem::equal(other)) {              
-            if (self->defaultSet()) {                          
-                if (self->getDefault() == rhs->getDefault())  
-                    return true;                        
-                else                                    
-                    return false;                       
-            } else                                      
-                return true;                            
-        } else                                          
-            return false;
+        const T * rhs = dynamic_cast<const T*>(&other);
+        if (rhs && self->ParserItem::equal(other)) {
+            if (self->defaultSet())
+                return self->getDefault() == rhs->getDefault();
+            return true;
+        } else
+              return false;
     }
 
         
     /// Scans the rawRecords data according to the ParserItems definition.
     /// returns a DeckItem object.
     /// NOTE: data are popped from the rawRecords deque!
-    template<typename ParserItemType , typename DeckItemType , typename valueType>
+    template<typename ParserItemType , typename DeckItemType , typename ValueType>
     DeckItemPtr ParserItemScan(const ParserItemType * self , RawRecordPtr rawRecord) {
         std::shared_ptr<DeckItemType> deckItem = std::make_shared<DeckItemType>( self->name() , self->scalar() );
         
-        if (self->sizeType() == ALL) {  
+        if (self->sizeType() == ALL) {
             while (rawRecord->size() > 0) {
                 std::string token = rawRecord->pop_front();
                 if (tokenContainsStar( token )) {
-                    StarToken<valueType> st(token);
-                    valueType value;
-                    
+                    StarToken<ValueType> st(token);
+                    ValueType value;
+
                     if (st.hasValue()) {
-                        value = st.value();   
-                        deckItem->push_backMultiple( value , st.multiplier() );
+                        value = st.value();
+                        deckItem->push_backMultiple( value , st.multiplier());
                     } else {
-                        value = self->getDefault();
-                        for (size_t i=0; i < st.multiplier(); i++)
-                            deckItem->push_backDefault( value );
+                        if (self->defaultSet()) {
+                            value = self->getDefault();
+                            for (size_t i=0; i < st.multiplier(); i++)
+                                deckItem->push_backDefault( value );
+                        }
+                        else
+                            throw std::invalid_argument("No default specified for item of DATA kind");
                     }
-                    
-                        
                 } else {
-                    valueType value = readValueToken<valueType>(token);
+                    ValueType value = readValueToken<ValueType>(token);
                     deckItem->push_back(value);
                 }
             }
         } else {
-            // The '*' should be interpreted as a default indicator
-            if (rawRecord->size() > 0) {
-                std::string token = rawRecord->pop_front();
-                if (tokenContainsStar( token )) {
-                    StarToken<valueType> st(token);
-        
-                    if (st.hasValue()) { // Probably never true
-                        deckItem->push_back( st.value() ); 
-                        std::string stringValue = boost::lexical_cast<std::string>(st.value());
-                        for (size_t i=1; i < st.multiplier(); i++)
-                            rawRecord->push_front( stringValue );
-                    } else {
-                        if (self->defaultSet())
-                            deckItem->push_backDefault( self->getDefault() );
-                        
-                        for (size_t i=1; i < st.multiplier(); i++)
-                            rawRecord->push_front( "*" );
-                    }
-                } else {
-                    valueType value = readValueToken<valueType>(token);
-                    deckItem->push_back(value);
-                }
-            } else {
+            if (rawRecord->size() == 0) {
+                // if the record was ended prematurely, use the default value for the
+                // item...
                 if (self->defaultSet())
                     deckItem->push_backDefault( self->getDefault() );
-                
+            } else {
+                // The '*' should be interpreted as a repetition indicator, but it must
+                // be preceeded by an integer...
+                std::string token = rawRecord->pop_front();
+                if (tokenContainsStar( token )) {
+                    StarToken<ValueType> st(token);
+
+                    if (!st.hasValue()) {
+                        if (self->defaultSet())
+                            deckItem->push_backDefault( self->getDefault() );
+                    }
+                    else
+                        deckItem->push_back(st.value());
+
+                    // replace the first occurence of "N*FOO" by a sequence of N-1 times
+                    // "1*FOO". this is slightly hacky, but it makes it work if the
+                    // number of defaults pass item boundaries...
+                    std::string singleRepetition;
+                    if (st.hasValue())
+                        singleRepetition = boost::lexical_cast<std::string>(st.value());
+                    else
+                        singleRepetition = "1*";
+
+                    for (size_t i=0; i < st.multiplier() - 1; i++)
+                        rawRecord->push_front(singleRepetition);
+                } else {
+                    ValueType value = readValueToken<ValueType>(token);
+                    deckItem->push_back(value);
+                }
             }
         }
         return deckItem;

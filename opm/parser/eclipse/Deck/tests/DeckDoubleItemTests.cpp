@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(InitializeDouble) {
 BOOST_AUTO_TEST_CASE(GetDoubleAtIndex_NoData_ExceptionThrown) {
     DeckDoubleItem deckDoubleItem("TEST");
 
-    BOOST_CHECK_THROW(deckDoubleItem.getRawDouble(0), std::invalid_argument);
+    BOOST_CHECK_THROW(deckDoubleItem.getRawDouble(0), std::out_of_range);
     deckDoubleItem.push_back(1.89);
     BOOST_CHECK_THROW(deckDoubleItem.getRawDouble(1), std::out_of_range);
 }
@@ -111,6 +111,10 @@ BOOST_AUTO_TEST_CASE(PushBackDimension) {
     std::shared_ptr<Dimension> activeDimension(new Dimension("Length" , 100));
     std::shared_ptr<Dimension> defaultDimension(new Dimension("Length" , 10));
 
+    item.push_back(1.234);
+    item.push_backDimension( activeDimension , defaultDimension);
+
+    item.push_backDefault(5.678);
     item.push_backDimension( activeDimension , defaultDimension);
 }
 
