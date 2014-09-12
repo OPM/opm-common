@@ -29,19 +29,10 @@ namespace Opm {
     DeckItem::DeckItem(const std::string& name_, bool scalar) {
         m_name = name_;
         m_scalar = scalar;
-        m_valueStatus = DeckValue::NOT_SET;
     }
 
     const std::string& DeckItem::name() const {
         return m_name;
-    }
-
-    /**
-       This function will return true if the item has been explicitly
-       set in the deck.
-    */
-    bool DeckItem::wasSetInDeck(size_t /*index*/) const {
-        return (m_valueStatus & DeckValue::SET_IN_DECK) == DeckValue::SET_IN_DECK;
     }
 
     bool DeckItem::defaultApplied(size_t index) const {

@@ -81,19 +81,16 @@ namespace Opm {
             m_data.push_back(data[i]);
             m_dataPointDefaulted.push_back(false);
         }
-        m_valueStatus |= DeckValue::SET_IN_DECK;
     }
 
 
     void DeckDoubleItem::push_back(std::deque<double> data) {
         push_back( data  , data.size() );
-        m_valueStatus |= DeckValue::SET_IN_DECK;
         m_dataPointDefaulted.push_back(false);
     }
 
     void DeckDoubleItem::push_back(double data) {
         m_data.push_back( data );
-        m_valueStatus |= DeckValue::SET_IN_DECK;
         m_dataPointDefaulted.push_back(false);
     }
 
@@ -102,7 +99,6 @@ namespace Opm {
             m_data.push_back( value );
             m_dataPointDefaulted.push_back(false);
         }
-        m_valueStatus |= DeckValue::SET_IN_DECK;
     }
 
 

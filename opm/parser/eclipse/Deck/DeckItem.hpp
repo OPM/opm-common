@@ -28,22 +28,10 @@
 #include <memory>
 
 namespace Opm {
-
-    namespace DeckValue {
-        enum StatusEnum {
-            // These values are used as a bitmask.
-            NOT_SET = 0 ,
-            SET_IN_DECK = 1,  
-        };
-    }
-
-
     class DeckItem {
     public:
         DeckItem(const std::string& name , bool m_scalar = true);
         const std::string& name() const;
-
-        bool wasSetInDeck(size_t index) const;
 
         // return true if the default value was used for a given data point
         bool defaultApplied(size_t index) const;
@@ -123,7 +111,6 @@ namespace Opm {
     protected:
         void assertSize(size_t index) const;
 
-        int m_valueStatus;
         std::vector<bool> m_dataPointDefaulted;
 
     private:

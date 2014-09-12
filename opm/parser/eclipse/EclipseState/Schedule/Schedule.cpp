@@ -158,7 +158,7 @@ namespace Opm {
         if (well->getHeadJ() != record->getItem("HEAD_J")->getInt(0) - 1) {
             throw std::invalid_argument("Unable process WELSPECS for well " + well->name() + ", HEAD_J deviates from existing value");
         }
-        if (well->getRefDepthDefaulted() == record->getItem("REF_DEPTH")->wasSetInDeck(0)) {
+        if (well->getRefDepthDefaulted() != record->getItem("REF_DEPTH")->defaultApplied(0)) {
             throw std::invalid_argument("Unable process WELSPECS for well " + well->name() + ", REF_DEPTH defaulted state deviates from existing value");
         }
         if (!well->getRefDepthDefaulted()) {
@@ -243,21 +243,21 @@ namespace Opm {
                 properties.injectorType = injectorType;
                 properties.predictionMode = true;
                 
-                if (record->getItem("RATE")->wasSetInDeck(0)) {
+                if (!record->getItem("RATE")->defaultApplied(0)) {
                     properties.surfaceInjectionRate = convertInjectionRateToSI(record->getItem("RATE")->getRawDouble(0) , injectorType, *deck->getActiveUnitSystem());
                     properties.addInjectionControl(WellInjector::RATE);
                 } else
                     properties.dropInjectionControl(WellInjector::RATE);
 
 
-                if (record->getItem("RESV")->wasSetInDeck(0)) {
+                if (!record->getItem("RESV")->defaultApplied(0)) {
                     properties.reservoirInjectionRate = convertInjectionRateToSI(record->getItem("RESV")->getRawDouble(0) , injectorType, *deck->getActiveUnitSystem());
                     properties.addInjectionControl(WellInjector::RESV);
                 } else
                     properties.dropInjectionControl(WellInjector::RESV);
 
 
-                if (record->getItem("THP")->wasSetInDeck(0)) {
+                if (!record->getItem("THP")->defaultApplied(0)) {
                     properties.THPLimit = record->getItem("THP")->getSIDouble(0);
                     properties.addInjectionControl(WellInjector::THP);
                 } else
@@ -271,7 +271,7 @@ namespace Opm {
                   do not do that.
                 */
                 properties.BHPLimit = record->getItem("BHP")->getSIDouble(0);
-                if (record->getItem("BHP")->wasSetInDeck(0)) {
+                if (!record->getItem("BHP")->defaultApplied(0)) {
                     properties.addInjectionControl(WellInjector::BHP);
                 } else
                     properties.dropInjectionControl(WellInjector::BHP);
@@ -410,7 +410,7 @@ namespace Opm {
 
             well->setGuideRate(currentStep, record->getItem("GUIDE_RATE")->getRawDouble(0));
 
-            if (record->getItem("PHASE")->wasSetInDeck(0)) {
+            if (!record->getItem("PHASE")->defaultApplied(0)) {
                 std::string guideRatePhase = record->getItem("PHASE")->getTrimmedString(0);
                 well->setGuideRatePhase(currentStep, GuideRate::GuideRatePhaseEnumFromString(guideRatePhase));
             } else 
@@ -454,7 +454,7 @@ namespace Opm {
         Phase::PhaseEnum preferredPhase = Phase::PhaseEnumFromString(record->getItem("PHASE")->getTrimmedString(0));
         WellPtr well;
 
-        if (record->getItem("REF_DEPTH")->wasSetInDeck(0)) {
+        if (!record->getItem("REF_DEPTH")->defaultApplied(0)) {
             double refDepth = record->getItem("REF_DEPTH")->getSIDouble(0);
             well = std::make_shared<Well>(wellName, headI, headJ, refDepth, preferredPhase, m_timeMap , timeStep);
         } else {
