@@ -608,6 +608,29 @@ BOOST_AUTO_TEST_CASE(scan_all_valuesCorrect) {
     BOOST_CHECK_EQUAL("OPPLEGG_FOR_DATAANALYSE", deckItem->getString(6));
 }
 
+BOOST_AUTO_TEST_CASE(scan_all_withdefaults) {
+    ParserItemSizeEnum sizeType = ALL;
+    ParserIntItem itemString("ITEMWITHMANY", sizeType);
+    RawRecordPtr rawRecord(new RawRecord("10*1 10* 10*2 /"));
+    DeckItemConstPtr deckItem = itemString.scan(rawRecord);
+
+    BOOST_CHECK_EQUAL(30U, deckItem->size());
+
+    BOOST_CHECK_EQUAL(false, deckItem->defaultApplied(0));
+    BOOST_CHECK_EQUAL(false, deckItem->defaultApplied(9));
+    BOOST_CHECK_EQUAL(true, deckItem->defaultApplied(10));
+    BOOST_CHECK_EQUAL(true, deckItem->defaultApplied(19));
+    BOOST_CHECK_EQUAL(false, deckItem->defaultApplied(20));
+    BOOST_CHECK_EQUAL(false, deckItem->defaultApplied(29));
+
+    BOOST_CHECK_THROW(deckItem->getInt(30), std::out_of_range);
+    BOOST_CHECK_THROW(deckItem->defaultApplied(30), std::out_of_range);
+
+    BOOST_CHECK_EQUAL(1, deckItem->getInt(0));
+    BOOST_CHECK_EQUAL(1, deckItem->getInt(9));
+    BOOST_CHECK_EQUAL(2, deckItem->getInt(20));
+    BOOST_CHECK_EQUAL(2, deckItem->getInt(29));
+}
 
 BOOST_AUTO_TEST_CASE(scan_single_dataCorrect) {
     ParserStringItem itemString(std::string("ITEM1"));
