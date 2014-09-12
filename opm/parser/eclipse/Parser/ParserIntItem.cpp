@@ -30,10 +30,15 @@ namespace Opm {
 
     ParserIntItem::ParserIntItem(const std::string& itemName) : ParserItem(itemName) 
     {
+        // integers do not have a representation for NaN. Let's use a negative value as
+        // this is usually meaningless. (Keep in mind that in the deck it can be queried
+        // using deckItem->defaultApplied(idx) if an item was defaulted or not...
+        m_default = -1;
     }
 
     ParserIntItem::ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType_) : ParserItem(itemName, sizeType_) 
     {
+        m_default = -1;
     }
 
     ParserIntItem::ParserIntItem(const std::string& itemName, int defaultValue) : ParserItem(itemName) 
@@ -49,6 +54,7 @@ namespace Opm {
 
     ParserIntItem::ParserIntItem(const Json::JsonObject& jsonConfig) : ParserItem(jsonConfig)
     {
+        m_default = -1;
         if (jsonConfig.has_item("default")) 
             setDefault( jsonConfig.get_int("default") );
     }
@@ -62,10 +68,7 @@ namespace Opm {
     }
 
     int ParserIntItem::getDefault() const {
-        if (m_defaultSet) 
-            return m_default;
-        else
-            throw std::invalid_argument("Tried get default from parser item " + name() + " No default has been configured");
+        return m_default;
     }
 
     DeckItemPtr ParserIntItem::scan(RawRecordPtr rawRecord) const {

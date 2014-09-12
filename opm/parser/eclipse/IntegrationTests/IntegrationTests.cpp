@@ -235,14 +235,16 @@ BOOST_AUTO_TEST_CASE(parse_truncatedrecords_deckFilledWithDefaults) {
     BOOST_CHECK_EQUAL("NAME", radfin4_1_partial->getRecord(0)->getItem(0)->getString(0));
     // Default string
 
-    BOOST_CHECK_THROW(radfin4_2_nodata->getRecord(0)->getItem(0)->getString(0), std::out_of_range);
+    BOOST_CHECK_NO_THROW(radfin4_2_nodata->getRecord(0)->getItem(0)->getString(0));
+    BOOST_CHECK( radfin4_2_nodata->getRecord(0)->getItem(0)->defaultApplied(0));
 
     
     // Specified in datafile
     BOOST_CHECK_EQUAL(213, radfin4_0_full->getRecord(0)->getItem(1)->getInt(0));
     BOOST_CHECK_EQUAL(213, radfin4_1_partial->getRecord(0)->getItem(1)->getInt(0));
     // Default int
-    BOOST_CHECK_THROW( radfin4_2_nodata->getRecord(0)->getItem(1)->getInt(0), std::out_of_range);
+    BOOST_CHECK_NO_THROW( radfin4_2_nodata->getRecord(0)->getItem(1)->getInt(0));
+    BOOST_CHECK( radfin4_2_nodata->getRecord(0)->getItem(1)->defaultApplied(0));
     
     
     ParserKeywordConstPtr parserKeyword = parser->getParserKeywordFromDeckName("RADFIN4");

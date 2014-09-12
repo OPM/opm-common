@@ -104,13 +104,9 @@ namespace Opm {
                         value = st.value();
                         deckItem->push_backMultiple( value , st.multiplier());
                     } else {
-                        if (self->defaultSet()) {
-                            value = self->getDefault();
-                            for (size_t i=0; i < st.multiplier(); i++)
-                                deckItem->push_backDefault( value );
-                        }
-                        else
-                            throw std::invalid_argument("No default specified for item of DATA kind");
+                        value = self->getDefault();
+                        for (size_t i=0; i < st.multiplier(); i++)
+                            deckItem->push_backDefault( value );
                     }
                 } else {
                     ValueType value = readValueToken<ValueType>(token);
@@ -118,22 +114,19 @@ namespace Opm {
                 }
             }
         } else {
-            if (rawRecord->size() == 0) {
+            if (rawRecord->size() == 0)
                 // if the record was ended prematurely, use the default value for the
                 // item...
-                if (self->defaultSet())
-                    deckItem->push_backDefault( self->getDefault() );
-            } else {
+                deckItem->push_backDefault( self->getDefault() );
+            else {
                 // The '*' should be interpreted as a repetition indicator, but it must
                 // be preceeded by an integer...
                 std::string token = rawRecord->pop_front();
                 if (tokenContainsStar( token )) {
                     StarToken<ValueType> st(token);
 
-                    if (!st.hasValue()) {
-                        if (self->defaultSet())
-                            deckItem->push_backDefault( self->getDefault() );
-                    }
+                    if (!st.hasValue())
+                        deckItem->push_backDefault( self->getDefault() );
                     else
                         deckItem->push_back(st.value());
 

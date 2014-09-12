@@ -34,10 +34,14 @@ namespace Opm
             ParserItemSizeEnum sizeType_) :
             ParserItem(itemName, sizeType_)
     {
+        // use NaN as 'default default'. (Keep in mind that in the deck it can be queried
+        // using deckItem->defaultApplied(idx) if an item was defaulted or not...
+        m_default = std::numeric_limits<double>::quiet_NaN();
     }
 
     ParserDoubleItem::ParserDoubleItem(const std::string& itemName) : ParserItem(itemName)
     {
+        m_default = std::numeric_limits<double>::quiet_NaN();
     }
 
 
@@ -54,10 +58,7 @@ namespace Opm
 
 
     double ParserDoubleItem::getDefault() const {
-        if (m_defaultSet) 
-            return m_default;
-        else
-            throw std::invalid_argument("Tried get default from parser item " + name() + " No default has been configured");
+        return m_default;
     }
     
 
@@ -71,6 +72,7 @@ namespace Opm
     ParserDoubleItem::ParserDoubleItem(const Json::JsonObject& jsonConfig) :
             ParserItem(jsonConfig)
     {
+        m_default = std::numeric_limits<double>::quiet_NaN();
         if (jsonConfig.has_item("default")) 
             setDefault( jsonConfig.get_double("default") );
     }
