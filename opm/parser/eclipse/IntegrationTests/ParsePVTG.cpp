@@ -52,8 +52,8 @@ PVTG\n\
               0.00000314   0.030249     0.01383\n\
               0.00000000   0.030245     0.01383 /\n\
 /\n\
-    197.66    0.00006327   0.005820     0.02160\n\
-              0.00003164   0.005840     0.02122\n\
+    197.66    0.00006327   1*           0.02160\n\
+              0.00003164   *            0.02122\n\
               0.00000000   0.005860     0.02086 /\n\
     231.13    0.00010861   0.005042     0.02477\n\
               0.00005431   0.005061     0.02389\n\
@@ -86,12 +86,19 @@ static void check_parser(ParserPtr parser) {
 
     DeckItemConstPtr item2_0 = record2->getItem("GAS_PRESSURE");
     DeckItemConstPtr item2_1 = record2->getItem("DATA");
+    BOOST_CHECK( item2_0->defaultApplied(0));
     BOOST_CHECK_EQUAL(0U , item2_1->size());
     BOOST_CHECK_EQUAL(2U , record2->size());
 
 
     DeckItemConstPtr item3_0 = record3->getItem("GAS_PRESSURE");
     DeckItemConstPtr item3_1 = record3->getItem("DATA");
+    BOOST_CHECK( !item3_1->defaultApplied(0));
+    BOOST_CHECK( item3_1->defaultApplied(1));
+    BOOST_CHECK( !item3_1->defaultApplied(2));
+    BOOST_CHECK( !item3_1->defaultApplied(3));
+    BOOST_CHECK( item3_1->defaultApplied(4));
+    BOOST_CHECK( !item3_1->defaultApplied(5));
     BOOST_CHECK_EQUAL(1U , item3_0->size());
     BOOST_CHECK_EQUAL(9U , item3_1->size());
     BOOST_CHECK_EQUAL(2U , record3->size());
