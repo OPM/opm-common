@@ -79,10 +79,9 @@ namespace Opm
             setDefault( jsonConfig.get_double("default"));
     }
 
-
     bool ParserFloatItem::equal(const ParserItem& other) const
     {
-        return (ParserItemEqual<ParserFloatItem>(this , other) && equalDimensions(other));
+        return parserRawItemEqual<ParserFloatItem>(other) && equalDimensions(other);
     }
 
     bool ParserFloatItem::equalDimensions(const ParserItem& other) const {

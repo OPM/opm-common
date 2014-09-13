@@ -50,17 +50,44 @@ namespace Opm {
         const std::string& name() const;
         ParserItemSizeEnum sizeType() const;
         std::string getDescription() const;
-        bool defaultSet() const;
         bool scalar() const;
         void setDescription(std::string helpText);
 
-        virtual bool equal(const ParserItem& other) const;
-        virtual void inlineNew(std::ostream& /* os */) const {}
-      
+        virtual void inlineNew(std::ostream& /* os */) const = 0;
+
         virtual ~ParserItem() {
         }
-    
+
+        virtual bool equal(const ParserItem& other) const = 0;
+
     protected:
+        template <class T>
+        bool parserRawItemEqual(const ParserItem &other) const {
+            const T * lhs = dynamic_cast<const T*>(this);
+            const T * rhs = dynamic_cast<const T*>(&other);
+            if (!lhs || !rhs)
+                return false;
+
+            if (lhs->name() != rhs->name())
+                return false;
+
+            if (lhs->getDescription() != rhs->getDescription())
+                return false;
+
+            if (lhs->sizeType() != rhs->sizeType())
+                return false;
+
+            if (lhs->m_defaultSet != rhs->m_defaultSet)
+                return false;
+
+            // we only care that the default value is equal if it was
+            // specified...
+            if (lhs->m_defaultSet && lhs->getDefault() != rhs->getDefault())
+                return false;
+
+            return true;
+        }
+
         bool m_defaultSet;
 
     private:
@@ -72,20 +99,6 @@ namespace Opm {
     typedef std::shared_ptr<const ParserItem> ParserItemConstPtr;
     typedef std::shared_ptr<ParserItem> ParserItemPtr;
 
-
-
-    template<typename T>
-    bool ParserItemEqual(const T * self , const ParserItem& other) {
-        const T * rhs = dynamic_cast<const T*>(&other);
-        if (rhs && self->ParserItem::equal(other)) {
-            if (self->defaultSet())
-                return self->getDefault() == rhs->getDefault();
-            return true;
-        } else
-              return false;
-    }
-
-        
     /// Scans the rawRecords data according to the ParserItems definition.
     /// returns a DeckItem object.
     /// NOTE: data are popped from the rawRecords deque!

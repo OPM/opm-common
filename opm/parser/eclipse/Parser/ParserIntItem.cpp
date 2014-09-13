@@ -78,7 +78,7 @@ namespace Opm {
 
     bool ParserIntItem::equal(const ParserItem& other) const
     {
-        return ParserItemEqual<ParserIntItem>(this , other);
+        return parserRawItemEqual<ParserIntItem>(other);
     }
     
 

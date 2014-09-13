@@ -75,7 +75,7 @@ namespace Opm {
      
     bool ParserStringItem::equal(const ParserItem& other) const
     {
-        return ParserItemEqual<ParserStringItem>(this , other);
+        return parserRawItemEqual<ParserStringItem>(other);
     }
     
     void ParserStringItem::inlineNew(std::ostream& os) const {
