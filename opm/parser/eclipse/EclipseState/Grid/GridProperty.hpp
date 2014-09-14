@@ -105,6 +105,18 @@ public:
         return m_data.size();
     }
 
+    size_t getNX() const {
+        return m_nx;
+    }
+
+    size_t getNY() const {
+        return m_ny;
+    }
+
+    size_t getNZ() const {
+        return m_nz;
+    }
+    
     
     T iget(size_t index) const {
         if (index < m_data.size()) {
