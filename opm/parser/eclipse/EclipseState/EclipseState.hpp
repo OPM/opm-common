@@ -30,6 +30,23 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
 
+#include <opm/parser/eclipse/Utility/EnkrvdTable.hpp>
+#include <opm/parser/eclipse/Utility/EnptvdTable.hpp>
+#include <opm/parser/eclipse/Utility/PlyadsTable.hpp>
+#include <opm/parser/eclipse/Utility/PlymaxTable.hpp>
+#include <opm/parser/eclipse/Utility/PlyrockTable.hpp>
+#include <opm/parser/eclipse/Utility/PlyviscTable.hpp>
+#include <opm/parser/eclipse/Utility/PvdgTable.hpp>
+#include <opm/parser/eclipse/Utility/PvdoTable.hpp>
+#include <opm/parser/eclipse/Utility/PvtgTable.hpp>
+#include <opm/parser/eclipse/Utility/PvtoTable.hpp>
+#include <opm/parser/eclipse/Utility/RocktabTable.hpp>
+#include <opm/parser/eclipse/Utility/RsvdTable.hpp>
+#include <opm/parser/eclipse/Utility/RvvdTable.hpp>
+#include <opm/parser/eclipse/Utility/SgofTable.hpp>
+#include <opm/parser/eclipse/Utility/SwofTable.hpp>
+#include <opm/parser/eclipse/Utility/TlmixparTable.hpp>
+
 #include <set>
 #include <memory>
 
@@ -63,12 +80,33 @@ namespace Opm {
         std::shared_ptr<const FaultCollection> getFaults() const;
         std::shared_ptr<const TransMult> getTransMult() const;
 
+        // the tables used by the deck. If the tables had some defaulted data in the
+        // deck, the objects returned here exhibit the correct values. If the table is
+        // not present in the deck, the corresponding vector is of size zero.
+        const std::vector<EnkrvdTable>& getEnkrvdTables() const;
+        const std::vector<EnptvdTable>& getEnptvdTables() const;
+        const std::vector<PlyadsTable>& getPlyadsTables() const;
+        const std::vector<PlymaxTable>& getPlymaxTables() const;
+        const std::vector<PlyrockTable>& getPlyrockTables() const;
+        const std::vector<PlyviscTable>& getPlyviscTables() const;
+        const std::vector<PvdgTable>& getPvdgTables() const;
+        const std::vector<PvdoTable>& getPvdoTables() const;
+        const std::vector<PvtgTable>& getPvtgTables() const;
+        const std::vector<PvtoTable>& getPvtoTables() const;
+        const std::vector<RocktabTable>& getRocktabTables() const;
+        const std::vector<RsvdTable>& getRsvdTables() const;
+        const std::vector<RvvdTable>& getRvvdTables() const;
+        const std::vector<SgofTable>& getSgofTables() const;
+        const std::vector<SwofTable>& getSwofTables() const;
+        const std::vector<TlmixparTable>& getTlmixparTables() const;
+
         // the unit system used by the deck. note that it is rarely needed to convert
         // units because internally to opm-parser everything is represented by SI
         // units...
         std::shared_ptr<const UnitSystem> getDeckUnitSystem()  const;
 
     private:
+        void initTables(DeckConstPtr deck);
         void initSchedule(DeckConstPtr deck);
         void initEclipseGrid(DeckConstPtr deck);
         void initPhases(DeckConstPtr deck);
@@ -76,6 +114,56 @@ namespace Opm {
         void initProperties(DeckConstPtr deck);
         void initTransMult();
         void initFaults(DeckConstPtr deck);
+
+        template <class TableType>
+        void initSimpleTables(DeckConstPtr deck,
+                              const std::string& keywordName,
+                              std::vector<TableType>& tableVector) {
+            if (!deck->hasKeyword(keywordName))
+                return; // the table is not featured by the deck...
+
+            if (deck->numKeywords(keywordName) > 1)
+                throw std::invalid_argument("The "+keywordName+" keyword must be unique in the deck");
+
+            const auto& tableKeyword = deck->getKeyword(keywordName);
+            tableVector.resize(tableKeyword->size());
+
+            for (size_t tableIdx = 0; tableIdx < tableKeyword->size(); ++tableIdx) {
+                if (tableKeyword->getRecord(tableIdx)->getItem(0)->size() == 0) {
+                    // for simple tables, an empty record indicates that the previous table
+                    // should be copied...
+                    if (tableIdx == 0)
+                        throw std::invalid_argument("The first table for keyword "+keywordName+
+                                                    " must be explicitly defined!");
+                    tableVector[tableIdx] = tableVector[tableIdx - 1];
+                    continue;
+                }
+
+                tableVector[tableIdx].init(tableKeyword, tableIdx);
+            }
+        }
+
+        template <class TableType>
+        void initFullTables(DeckConstPtr deck,
+                            const std::string& keywordName,
+                            std::vector<TableType>& tableVector) {
+            if (!deck->hasKeyword(keywordName))
+                return; // the table is not featured by the deck...
+
+            if (deck->numKeywords(keywordName) > 1)
+                throw std::invalid_argument("The "+keywordName+" keyword must be unique in the deck");
+
+            const auto& tableKeyword = deck->getKeyword(keywordName);
+
+            int numTables = TableType::numTables(tableKeyword);
+            tableVector.resize(numTables);
+
+            for (int tableIdx = 0; tableIdx < numTables; ++tableIdx)
+                tableVector[tableIdx].init(tableKeyword, tableIdx);
+        }
+
+        void initRocktabTables(DeckConstPtr deck);
+
         void setMULTFLT(std::shared_ptr<const Section> section) const;
 
         double getSIScaling(const std::string &dimensionString) const;
@@ -96,6 +184,24 @@ namespace Opm {
 
         EclipseGridConstPtr m_eclipseGrid;
         ScheduleConstPtr schedule;
+
+        std::vector<EnkrvdTable> m_enkrvdTables;
+        std::vector<EnptvdTable> m_enptvdTables;
+        std::vector<PlyadsTable> m_plyadsTables;
+        std::vector<PlymaxTable> m_plymaxTables;
+        std::vector<PlyrockTable> m_plyrockTables;
+        std::vector<PlyviscTable> m_plyviscTables;
+        std::vector<PvdgTable> m_pvdgTables;
+        std::vector<PvdoTable> m_pvdoTables;
+        std::vector<PvtgTable> m_pvtgTables;
+        std::vector<PvtoTable> m_pvtoTables;
+        std::vector<RocktabTable> m_rocktabTables;
+        std::vector<RsvdTable> m_rsvdTables;
+        std::vector<RvvdTable> m_rvvdTables;
+        std::vector<SgofTable> m_sgofTables;
+        std::vector<SwofTable> m_swofTables;
+        std::vector<TlmixparTable> m_tlmixparTables;
+
         std::set<enum Phase::PhaseEnum> phases;
         std::string m_title;
         std::shared_ptr<const UnitSystem> m_deckUnitSystem;

@@ -44,6 +44,7 @@ namespace Opm {
         }
 
         initPhases(deck);
+        initTables(deck);
         initEclipseGrid(deck);
         initSchedule(deck);
         initTitle(deck);
@@ -64,6 +65,69 @@ namespace Opm {
         return std::make_shared<EclipseGrid>( m_eclipseGrid->c_ptr() );
     }
 
+    const std::vector<EnkrvdTable>& EclipseState::getEnkrvdTables() const {
+        return m_enkrvdTables;
+    }
+
+    const std::vector<EnptvdTable>& EclipseState::getEnptvdTables() const {
+        return m_enptvdTables;
+    }
+
+    const std::vector<PlyadsTable>& EclipseState::getPlyadsTables() const {
+        return m_plyadsTables;
+    }
+
+    const std::vector<PlymaxTable>& EclipseState::getPlymaxTables() const {
+        return m_plymaxTables;
+    }
+
+    const std::vector<PlyrockTable>& EclipseState::getPlyrockTables() const {
+        return m_plyrockTables;
+    }
+
+    const std::vector<PlyviscTable>& EclipseState::getPlyviscTables() const {
+        return m_plyviscTables;
+    }
+
+    const std::vector<PvdgTable>& EclipseState::getPvdgTables() const {
+        return m_pvdgTables;
+    }
+
+    const std::vector<PvdoTable>& EclipseState::getPvdoTables() const {
+        return m_pvdoTables;
+    }
+
+    const std::vector<PvtgTable>& EclipseState::getPvtgTables() const {
+        return m_pvtgTables;
+    }
+
+    const std::vector<PvtoTable>& EclipseState::getPvtoTables() const {
+        return m_pvtoTables;
+    }
+
+    const std::vector<RocktabTable>& EclipseState::getRocktabTables() const {
+        return m_rocktabTables;
+    }
+
+    const std::vector<RsvdTable>& EclipseState::getRsvdTables() const {
+        return m_rsvdTables;
+    }
+
+    const std::vector<RvvdTable>& EclipseState::getRvvdTables() const {
+        return m_rvvdTables;
+    }
+
+    const std::vector<SgofTable>& EclipseState::getSgofTables() const {
+        return m_sgofTables;
+    }
+
+    const std::vector<SwofTable>& EclipseState::getSwofTables() const {
+        return m_swofTables;
+    }
+
+    const std::vector<TlmixparTable>& EclipseState::getTlmixparTables() const {
+        return m_tlmixparTables;
+    }
 
     ScheduleConstPtr EclipseState::getSchedule() const {
         return schedule;
@@ -80,6 +144,29 @@ namespace Opm {
     std::string EclipseState::getTitle() const {
         return m_title;
     }
+
+    void EclipseState::initTables(DeckConstPtr deck) {
+        initSimpleTables(deck, "ENKRVD", m_enkrvdTables);
+        initSimpleTables(deck, "ENPTVD", m_enptvdTables);
+        initSimpleTables(deck, "PLYADS", m_plyadsTables);
+        initSimpleTables(deck, "PLYMAX", m_plymaxTables);
+        initSimpleTables(deck, "PLYROCK", m_plyrockTables);
+        initSimpleTables(deck, "PLYVISC", m_plyviscTables);
+        initSimpleTables(deck, "PVDG", m_pvdgTables);
+        initSimpleTables(deck, "PVDO", m_pvdoTables);
+        initSimpleTables(deck, "RSVD", m_rsvdTables);
+        initSimpleTables(deck, "RVVD", m_rvvdTables);
+        initSimpleTables(deck, "SGOF", m_sgofTables);
+        initSimpleTables(deck, "SWOF", m_swofTables);
+        initSimpleTables(deck, "TLMIXPAR", m_tlmixparTables);
+
+        // the ROCKTAB table comes with additional fun because the number of columns
+        //depends on the presence of the RKTRMDIR keyword...
+        initRocktabTables(deck);
+
+        initFullTables(deck, "PVTG", m_pvtgTables);
+        initFullTables(deck, "PVTO", m_pvtoTables);
+   }
 
     void EclipseState::initSchedule(DeckConstPtr deck) {
         schedule = ScheduleConstPtr( new Schedule(deck) );
@@ -192,6 +279,41 @@ namespace Opm {
             DeckItemPtr item = record->getItem(0);
             std::vector<std::string> itemValue = item->getStringData();
             m_title = boost::algorithm::join(itemValue, " ");
+        }
+    }
+
+    void EclipseState::initRocktabTables(DeckConstPtr deck) {
+        if (!deck->hasKeyword("ROCKTAB"))
+            return; // ROCKTAB is not featured by the deck...
+
+        if (deck->numKeywords("ROCKTAB") > 1)
+            throw std::invalid_argument("The ROCKTAB keyword must be unique in the deck");
+
+        const auto rocktabKeyword = deck->getKeyword("ROCKTAB");
+
+        bool isDirectional = deck->hasKeyword("RKTRMDIR");
+        bool useStressOption = false;
+        if (deck->hasKeyword("ROCKOPTS")) {
+            const auto rockoptsKeyword = deck->getKeyword("ROCKOPTS");
+            useStressOption = (rockoptsKeyword->getRecord(0)->getItem("METHOD")->getTrimmedString(0) == "STRESS");
+        }
+
+        for (size_t tableIdx = 0; tableIdx < rocktabKeyword->size(); ++tableIdx) {
+            if (rocktabKeyword->getRecord(tableIdx)->getItem(0)->size() == 0) {
+                // for ROCKTAB tables, an empty record indicates that the previous table
+                // should be copied...
+                if (tableIdx == 0)
+                    throw std::invalid_argument("The first table for keyword ROCKTAB"
+                                                " must be explicitly defined!");
+                m_rocktabTables[tableIdx] = m_rocktabTables[tableIdx - 1];
+                continue;
+            }
+
+            m_rocktabTables.push_back(RocktabTable());
+            m_rocktabTables[tableIdx].init(rocktabKeyword,
+                                           isDirectional,
+                                           useStressOption,
+                                           tableIdx);
         }
     }
 
