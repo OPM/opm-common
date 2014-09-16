@@ -105,6 +105,12 @@ add_test(NAME runBoxTest
          WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} 
          COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runBoxTest)         
 
+add_executable(runParseMULTREGT ParseMULTREGT.cpp)
+target_link_libraries(runParseMULTREGT Parser ${Boost_LIBRARIES})
+add_test(NAME runParseMULTREGT 
+         WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} 
+         COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runParseMULTREGT)         
+
 
 add_executable(runParseSGOF ParseSGOF.cpp)
 target_link_libraries(runParseSGOF Parser ${Boost_LIBRARIES})
