@@ -185,7 +185,6 @@ Utility/EnkrvdTable.hpp
 Utility/ImptvdTable.hpp
 Utility/ImkrvdTable.hpp
 Utility/RocktabTable.hpp
-Utility/RockTable.hpp
 Utility/PlymaxTable.hpp
 Utility/TlmixparTable.hpp
 Utility/PlyrockTable.hpp
