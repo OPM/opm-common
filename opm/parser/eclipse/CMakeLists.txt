@@ -166,7 +166,6 @@ Utility/PvtgTable.hpp
 Utility/StartWrapper.hpp
 Utility/SpecgridWrapper.hpp
 Utility/SwofTable.hpp
-Utility/PvtwTable.hpp
 Utility/FullTable.hpp
 Utility/WconprodWrapper.hpp
 Utility/GconinjeWrapper.hpp
