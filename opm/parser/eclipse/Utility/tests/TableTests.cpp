@@ -56,18 +56,22 @@ BOOST_AUTO_TEST_CASE(CreateSingleRecordTable) {
     std::vector<std::string> tooManyColumnNames{"A", "B", "C", "D", "E"};
 
     BOOST_CHECK_EQUAL(Opm::SingleRecordTable::numTables(deck->getKeyword("SWOF")), 2);
-    BOOST_CHECK_THROW(Opm::SingleRecordTable(deck->getKeyword("SWOF"),
-                                       tooFewColumnNames,
-                                       /*recordIdx=*/0),
+    Opm::SingleRecordTable tmpTable;
+    BOOST_CHECK_THROW(tmpTable.init(deck->getKeyword("SWOF"),
+                                    tooFewColumnNames,
+                                    /*recordIdx=*/0,
+                                    /*firstEntryOffset=*/0),
                       std::runtime_error);
-    BOOST_CHECK_THROW(Opm::SingleRecordTable(deck->getKeyword("SWOF"),
-                                       tooManyColumnNames,
-                                       /*recordIdx=*/0),
+    BOOST_CHECK_THROW(tmpTable.init(deck->getKeyword("SWOF"),
+                                    tooManyColumnNames,
+                                    /*recordIdx=*/0,
+                                    /*firstEntryOffset=*/0),
                       std::runtime_error);
 
-    Opm::SingleRecordTable foo(deck->getKeyword("SWOF"),
-                         justRightColumnNames,
-                         /*recordIdx=*/0);
+    tmpTable.init(deck->getKeyword("SWOF"),
+                  justRightColumnNames,
+                  /*recordIdx=*/0,
+                  /*firstEntryOffset=*/0);
 }
 
 BOOST_AUTO_TEST_CASE(CreateMultiTable) {
@@ -101,14 +105,17 @@ BOOST_AUTO_TEST_CASE(CreateMultiTable) {
                                                   0),
                       std::runtime_error);
     */
-    BOOST_CHECK_THROW(Opm::MultiRecordTable(deck->getKeyword("PVTO"),
-                                                  tooManyColumnNames,
-                                                  /*tableIdx=*/0),
+    Opm::MultiRecordTable mrt;
+    BOOST_CHECK_THROW(mrt.init(deck->getKeyword("PVTO"),
+                               tooManyColumnNames,
+                               /*tableIdx=*/0,
+                               /*firstEntryOffset=*/0),
                       std::runtime_error);
 
-    Opm::MultiRecordTable foo(deck->getKeyword("PVTO"),
-                                    justRightColumnNames,
-                                    /*recordIdx=*/0);
+    BOOST_CHECK_NO_THROW(mrt.init(deck->getKeyword("PVTO"),
+                                  justRightColumnNames,
+                                  /*recordIdx=*/0,
+                                  /*firstEntryOffset=*/0));
 }
 
 BOOST_AUTO_TEST_CASE(SwofTable_Tests) {
@@ -129,8 +136,11 @@ BOOST_AUTO_TEST_CASE(SwofTable_Tests) {
 
     BOOST_CHECK_EQUAL(Opm::SwofTable::numTables(swofKeyword), 2);
 
-    Opm::SwofTable swof1Table(deck->getKeyword("SWOF"), /*tableIdx=*/0);
-    Opm::SwofTable swof2Table(deck->getKeyword("SWOF"), /*tableIdx=*/1);
+    Opm::SwofTable swof1Table;
+    Opm::SwofTable swof2Table;
+
+    swof1Table.init(deck->getKeyword("SWOF"), /*tableIdx=*/0);
+    swof2Table.init(deck->getKeyword("SWOF"), /*tableIdx=*/1);
 
     BOOST_CHECK_EQUAL(swof1Table.numRows(), 2);
     BOOST_CHECK_EQUAL(swof2Table.numRows(), 3);
@@ -174,8 +184,11 @@ BOOST_AUTO_TEST_CASE(SgofTable_Tests) {
 
     BOOST_CHECK_EQUAL(Opm::SgofTable::numTables(sgofKeyword), 2);
 
-    Opm::SgofTable sgof1Table(deck->getKeyword("SGOF"), /*tableIdx=*/0);
-    Opm::SgofTable sgof2Table(deck->getKeyword("SGOF"), /*tableIdx=*/1);
+    Opm::SgofTable sgof1Table;
+    Opm::SgofTable sgof2Table;
+
+    sgof1Table.init(deck->getKeyword("SGOF"), /*tableIdx=*/0);
+    sgof2Table.init(deck->getKeyword("SGOF"), /*tableIdx=*/1);
 
     BOOST_CHECK_EQUAL(sgof1Table.numRows(), 2);
     BOOST_CHECK_EQUAL(sgof2Table.numRows(), 3);
@@ -223,8 +236,11 @@ BOOST_AUTO_TEST_CASE(PvtoTable_Tests) {
 
     BOOST_CHECK_EQUAL(Opm::PvtoTable::numTables(pvtoKeyword), 2);
 
-    Opm::PvtoTable pvto1Table(deck->getKeyword("PVTO"), /*tableIdx=*/0);
-    Opm::PvtoTable pvto2Table(deck->getKeyword("PVTO"), /*tableIdx=*/1);
+    Opm::PvtoTable pvto1Table;
+    Opm::PvtoTable pvto2Table;
+
+    pvto1Table.init(deck->getKeyword("PVTO"), /*tableIdx=*/0);
+    pvto2Table.init(deck->getKeyword("PVTO"), /*tableIdx=*/1);
 
     const auto pvto1OuterTable = pvto1Table.getOuterTable();
     const auto pvto2OuterTable = pvto2Table.getOuterTable();

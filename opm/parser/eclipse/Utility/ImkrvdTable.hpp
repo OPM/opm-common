@@ -37,8 +37,7 @@ namespace Opm {
          *        methods for it.
          */
         void init(Opm::DeckKeywordConstPtr keyword,
-                  int recordIdx = 0,
-                  int firstEntityOffset = 0)
+                  int recordIdx)
         {
             ParentType::init(keyword,
                              std::vector<std::string>{"DEPTH",
@@ -49,7 +48,8 @@ namespace Opm {
                                      "KRGCRIT",
                                      "KROCRITG",
                                      "KROCRITW" },
-                             recordIdx, firstEntityOffset);
+                             recordIdx,
+                             /*firstEntityOffset=*/0);
         }
 
         /*!
@@ -102,5 +102,5 @@ namespace Opm {
     };
 }
 
-#endif	// OPM_PARSER_SIMPLE_TABLE_HPP
+#endif
 

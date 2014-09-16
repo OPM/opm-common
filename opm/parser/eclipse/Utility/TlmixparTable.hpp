@@ -26,24 +26,23 @@ namespace Opm {
         typedef SingleRecordTable ParentType;
 
     public:
+        TlmixparTable() = default;
+
         using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
 
         /*!
          * \brief Read the TLMIXPAR keyword and provide some convenience
          *        methods for it.
          */
-        TlmixparTable(Opm::DeckKeywordConstPtr keyword, int recordIdx = 0)
-            : ParentType(keyword,
-                         std::vector<std::string>{"ViscosityParameter", "DensityParameter"},
-                         recordIdx,
-                         /*firstEntityOffset=*/0)
-        {}
-
-        int numRows() const
-        { return ParentType::numRows(); };
-
-        int numColumns() const
-        { return ParentType::numColumns(); };
+        void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
+        {
+            ParentType::init(keyword,
+                             std::vector<std::string>{"VISC_PARA", "DENS_PARA"},
+                             recordIdx,
+                             /*firstEntityOffset=*/0);
+        }
 
         const std::vector<double> &getViscosityParameterColumn() const
         { return ParentType::getColumn(0); }
@@ -53,5 +52,4 @@ namespace Opm {
     };
 }
 
-#endif	// OPM_PARSER_SIMPLE_TABLE_HPP
-
+#endif

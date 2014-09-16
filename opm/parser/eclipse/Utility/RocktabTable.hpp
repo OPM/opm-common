@@ -26,29 +26,28 @@ namespace Opm {
         typedef SingleRecordTable ParentType;
 
     public:
+        RocktabTable() = default;
+
         using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
 
         /*!
          * \brief Read the ROCKTAB keyword and provide some convenience
          *        methods for it.
          */
-        RocktabTable(Opm::DeckKeywordConstPtr keyword,
-                     bool isDirectional,
-                     int recordIdx = 0,
-                     int firstEntityOffset = 0)
-            : SingleRecordTable(keyword,
-                          isDirectional
-                          ? std::vector<std::string>{"PO", "PV_MULT", "TRANSMIS_MULT_X", "TRANSMIS_MULT_Y", "TRANSMIS_MULT_Z"}
-                          : std::vector<std::string>{"PO", "PV_MULT", "TRANSMIS_MULT"},
-                          recordIdx, firstEntityOffset),
-              m_isDirectional(isDirectional)
-        {}
-
-        int numRows() const
-        { return ParentType::numRows(); };
-
-        int numColumns() const
-        { return ParentType::numColumns(); };
+        void init(Opm::DeckKeywordConstPtr keyword,
+                  bool isDirectional,
+                  int recordIdx)
+        {
+            ParentType::init(keyword,
+                             isDirectional
+                             ? std::vector<std::string>{"PO", "PV_MULT", "TRANSMIS_MULT_X", "TRANSMIS_MULT_Y", "TRANSMIS_MULT_Z"}
+                             : std::vector<std::string>{"PO", "PV_MULT", "TRANSMIS_MULT"},
+                             recordIdx,
+                             /*firstEntityOffset=*/0);
+            m_isDirectional = isDirectional;
+        }
 
         const std::vector<double> &getPressureColumn() const
         { return ParentType::getColumn(0); }
@@ -81,5 +80,4 @@ namespace Opm {
     };
 }
 
-#endif	// OPM_PARSER_ROCKTAB_TABLE_HPP
-
+#endif

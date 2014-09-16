@@ -26,7 +26,11 @@ namespace Opm {
         typedef SingleRecordTable ParentType;
 
     public:
+        PvtgInnerTable() = default;
+
         using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
 
         /*!
          * \brief Read the per record table of the PVTG keyword and
@@ -34,17 +38,13 @@ namespace Opm {
          *
          * The first value of the record (-> Rv) is skipped.
          */
-        PvtgInnerTable(Opm::DeckKeywordConstPtr keyword, size_t recordIdx = 0)
-            : SingleRecordTable(keyword,
-                          std::vector<std::string>{"RV", "BG", "MUG"},
-                          recordIdx, 1U)
-        {}
+        void init(Opm::DeckKeywordConstPtr keyword, size_t recordIdx)
+        {
+            ParentType::init(keyword,
+                             std::vector<std::string>{"RV", "BG", "MUG"},
+                             recordIdx, 1U);
 
-        size_t numRows() const
-        { return ParentType::numRows(); };
-
-        size_t numColumns() const
-        { return ParentType::numColumns(); };
+        }
 
         const std::vector<double> &getOilSolubilityColumn() const
         { return ParentType::getColumn(0); }
@@ -57,5 +57,4 @@ namespace Opm {
     };
 }
 
-#endif	// OPM_PARSER_SIMPLE_TABLE_HPP
-
+#endif

@@ -26,25 +26,24 @@ namespace Opm {
         typedef SingleRecordTable ParentType;
 
     public:
+        SgofTable() = default;
+
         using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
 
         /*!
          * \brief Read the SGOF keyword and provide some convenience
          *        methods for it.
          */
-        SgofTable(Opm::DeckKeywordConstPtr keyword,
-                  int recordIdx = 0,
-                  int firstEntityOffset = 0)
-            : SingleRecordTable(keyword,
-                          std::vector<std::string>{"SG", "KRG", "KROG", "PCOG"},
-                          recordIdx, firstEntityOffset)
-        {}
-
-        int numRows() const
-        { return ParentType::numRows(); };
-
-        int numColumns() const
-        { return ParentType::numColumns(); };
+        void init(Opm::DeckKeywordConstPtr keyword,
+                  int recordIdx)
+        {
+            ParentType::init(keyword,
+                             std::vector<std::string>{"SG", "KRG", "KROG", "PCOG"},
+                             recordIdx,
+                             /*firstEntityOffset=*/0);
+        }
 
         const std::vector<double> &getSgColumn() const
         { return ParentType::getColumn(0); }
@@ -64,5 +63,4 @@ namespace Opm {
     };
 }
 
-#endif	// OPM_PARSER_SGOF_TABLE_HPP
-
+#endif

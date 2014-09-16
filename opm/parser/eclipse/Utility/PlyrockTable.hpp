@@ -26,30 +26,29 @@ namespace Opm {
         typedef SingleRecordTable ParentType;
 
     public:
+        PlyrockTable() = default;
+
         using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
 
         /*!
          * \brief Read the PLYROCK keyword and provide some convenience
          *        methods for it.
          */
-        PlyrockTable(Opm::DeckKeywordConstPtr keyword, int recordIdx = 0)
-            : ParentType(keyword,
-                         std::vector<std::string>{
-                             "DeadPoreVolume",
-                             "ResidualResistanceFactor",
-                             "RockDensityFactor",
-                             "AdsorbtionIndex",
-                             "MaxAdsorbtion"
-                         },
-                         recordIdx,
-                         /*firstEntityOffset=*/0)
-        {}
-
-        int numRows() const
-        { return ParentType::numRows(); };
-
-        int numColumns() const
-        { return ParentType::numColumns(); };
+        void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
+        {
+            ParentType::init(keyword,
+                             std::vector<std::string>{
+                                 "DeadPoreVolume",
+                                 "ResidualResistanceFactor",
+                                 "RockDensityFactor",
+                                 "AdsorbtionIndex",
+                                 "MaxAdsorbtion"
+                             },
+                             recordIdx,
+                             /*firstEntityOffset=*/0);
+        }
 
         const std::vector<double> &getDeadPoreVolumeColumn() const
         { return ParentType::getColumn(0); }
@@ -76,5 +75,4 @@ namespace Opm {
     };
 }
 
-#endif	// OPM_PARSER_PLYROCK_TABLE_HPP
-
+#endif

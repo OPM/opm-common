@@ -45,11 +45,11 @@ size_t MultiRecordTable::numTables(Opm::DeckKeywordConstPtr keyword)
     return result;
 }
 
-// create table from first few items of multiple records (i.e. getSIDoubleData() throws an exception)
-MultiRecordTable::MultiRecordTable(Opm::DeckKeywordConstPtr keyword,
-                                               const std::vector<std::string> &columnNames,
-                                               size_t tableIdx,
-                                               size_t firstEntityOffset)
+// create table from first few items of multiple records
+void MultiRecordTable::init(Opm::DeckKeywordConstPtr keyword,
+                            const std::vector<std::string> &columnNames,
+                            size_t tableIdx,
+                            size_t firstEntityOffset)
 {
     createColumns_(columnNames);
 
@@ -92,6 +92,16 @@ MultiRecordTable::MultiRecordTable(Opm::DeckKeywordConstPtr keyword,
             m_columns[colIdx].push_back(getFlatSiDoubleData_(deckRecord, deckItemIdx));
         }
     }
+}
+
+size_t MultiRecordTable::firstRecordIndex() const
+{
+    return m_firstRecordIdx;
+}
+
+size_t MultiRecordTable::numRecords() const
+{
+    return m_numRecords;
 }
 
 size_t MultiRecordTable::getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord)

@@ -30,30 +30,13 @@
 #include <cassert>
 
 namespace Opm {
-    template <class OuterTable = Opm::MultiRecordTable, class InnerTable = Opm::SingleRecordTable>
+    template <class OuterTable, class InnerTable>
     class FullTable
     {
         typedef FullTable<OuterTable, InnerTable> Self;
         typedef std::shared_ptr<const OuterTable> OuterTableConstPtr;
+        typedef std::shared_ptr<InnerTable> InnerTablePtr;
         typedef std::shared_ptr<const InnerTable> InnerTableConstPtr;
-
-    protected:
-        // protected default constructor for the derived classes
-        FullTable() {}
-
-        // protected constructor for the case that the derived classes
-        // use specialized classes for the outer and inner tables
-        FullTable(Opm::DeckKeywordConstPtr keyword, size_t tableIdx)
-        {
-            m_outerTable.reset(new OuterTable(keyword, tableIdx));
-
-            size_t firstRecordIdx = m_outerTable->firstRecordIndex();
-            size_t numRecords = m_outerTable->numRecords();
-            for (size_t rowIdx = firstRecordIdx; rowIdx < firstRecordIdx + numRecords; ++rowIdx) {
-                InnerTableConstPtr curRow(new InnerTable(keyword, /*recordIdx=*/rowIdx));
-                m_innerTables.push_back(curRow);
-            }
-        }
 
     public:
         typedef std::shared_ptr<Self> Pointer;
@@ -61,6 +44,8 @@ namespace Opm {
 
         static size_t numTables(Opm::DeckKeywordConstPtr keyword)
         { return OuterTable::numTables(keyword); }
+
+        FullTable() = default;
 
         /*!
          * \brief Read full tables from keywords like PVTO
@@ -74,20 +59,17 @@ namespace Opm {
          * the pressure, volume factor and viscosity of untersaturated
          * oil with the same gas dissolution factor.
          */
-        FullTable(Opm::DeckKeywordConstPtr keyword,
-                  const std::vector<std::string> &outerColumnNames,
-                  const std::vector<std::string> &innerColumnNames,
-                  size_t tableIdx)
+        void init(Opm::DeckKeywordConstPtr keyword, size_t tableIdx)
         {
-            m_outerTable.reset(new MultiRecordTable(keyword, outerColumnNames, tableIdx));
+            OuterTable* outerTable = new OuterTable;
+            outerTable->init(keyword, tableIdx);
+            m_outerTable.reset(outerTable);
 
             for (size_t rowIdx = 0; rowIdx < m_outerTable->numRecords(); ++rowIdx) {
-                Opm::SingleRecordTableConstPtr curRow(
-                    new SingleRecordTable(keyword,
-                                    innerColumnNames,
-                                    /*recordIdx=*/m_outerTable->firstRecordIndex() + rowIdx,
-                                    /*firstColumnOffset=*/1));
-                m_innerTables.push_back(curRow);
+                InnerTable *curRow = new InnerTable;
+                curRow->init(keyword,
+                             /*recordIdx=*/m_outerTable->firstRecordIndex() + rowIdx);
+                m_innerTables.push_back(std::shared_ptr<const InnerTable>(curRow));
             }
         }
 
@@ -111,5 +93,5 @@ namespace Opm {
     typedef FullTable<Opm::MultiRecordTable, Opm::SingleRecordTable>::ConstPointer FullTableConstPtr;
 }
 
-#endif	// OPM_PARSER_FULL_TABLE_HPP
+#endif
 

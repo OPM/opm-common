@@ -29,10 +29,6 @@
 
 namespace Opm {
     class SingleRecordTable {
-    protected:
-        // protected default constructor for the derived classes
-        SingleRecordTable() {}
-
     public:
         /*!
          * \brief Returns the number of tables in a keyword.
@@ -40,8 +36,7 @@ namespace Opm {
          * For simple tables, that is identical to the number of
          * records.
          */
-        static size_t numTables(Opm::DeckKeywordConstPtr keyword)
-        { return keyword->size(); }
+        static size_t numTables(Opm::DeckKeywordConstPtr keyword);
 
         /*!
          * \brief Read simple tables from keywords like SWOF
@@ -49,55 +44,35 @@ namespace Opm {
          * This requires all data to be a list of doubles in the first
          * item of a given record index.
          */
-        SingleRecordTable(Opm::DeckKeywordConstPtr keyword,
-                    const std::vector<std::string> &columnNames,
-                    size_t recordIdx = 0,
-                    size_t firstEntityOffset = 0);
+        void init(Opm::DeckKeywordConstPtr keyword,
+                  const std::vector<std::string> &columnNames,
+                  size_t recordIdx,
+                  size_t firstEntityOffset);
 
-        // constructor to make the base class compatible with specialized table implementations
-        SingleRecordTable(Opm::DeckKeywordConstPtr /* keyword */,
-                    size_t /* recordIdx = 0 */,
-                    size_t /* firstEntityOffset = 0 */)
-        {
-            throw std::logic_error("The base class of simple tables can't be "
-                                   "instantiated without specifying columns!");
-        }
-
-        size_t numColumns() const
-        { return m_columns.size(); }
-
-        size_t numRows() const
-        { return m_columns[0].size(); }
-
-        const std::vector<double> &getColumn(const std::string &name) const
-        {
-            const auto &colIt = m_columnNames.find(name);
-            if (colIt == m_columnNames.end())
-                throw std::runtime_error("Unknown column name \""+name+"\"");
-
-            size_t colIdx = colIt->second;
-            assert(colIdx < static_cast<size_t>(m_columns.size()));
-            return m_columns[colIdx];
-        }
-        const std::vector<double> &getColumn(size_t colIdx) const
-        {
-            assert(colIdx < static_cast<size_t>(m_columns.size()));
-            return m_columns[colIdx];
-        }
+        size_t numColumns() const;
+        size_t numRows() const;
+        const std::vector<double> &getColumn(const std::string &name) const;
+        const std::vector<double> &getColumn(size_t colIdx) const;
 
     protected:
         void createColumns_(const std::vector<std::string> &columnNames);
+        bool isDefaulted_(const std::string& columnName, size_t rowIdx) const
+        {
+            int columnIdx = m_columnNames.at(columnName);
+            return m_valueDefaulted[columnIdx][rowIdx];
+        }
 
         size_t getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord) const;
         double getFlatSiDoubleData_(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const;
+        bool getFlatIsDefaulted_(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const;
 
         std::map<std::string, size_t> m_columnNames;
         std::vector<std::vector<double> > m_columns;
+        std::vector<std::vector<bool> > m_valueDefaulted;
     };
 
     typedef std::shared_ptr<SingleRecordTable> SingleRecordTablePtr;
     typedef std::shared_ptr<const SingleRecordTable> SingleRecordTableConstPtr;
 }
 
-#endif	// OPM_PARSER_SIMPLE_TABLE_HPP
-
+#endif

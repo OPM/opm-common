@@ -19,11 +19,16 @@
 #include <opm/parser/eclipse/Utility/SingleRecordTable.hpp>
 
 namespace Opm {
+size_t SingleRecordTable::numTables(Opm::DeckKeywordConstPtr keyword)
+{
+    return keyword->size();
+}
+
 // create table from single record
-SingleRecordTable::SingleRecordTable(Opm::DeckKeywordConstPtr keyword,
-                         const std::vector<std::string> &columnNames,
-                         size_t recordIdx,
-                         size_t firstEntityOffset)
+void SingleRecordTable::init(Opm::DeckKeywordConstPtr keyword,
+                             const std::vector<std::string> &columnNames,
+                             size_t recordIdx,
+                             size_t firstEntityOffset)
 {
     createColumns_(columnNames);
 
@@ -45,6 +50,28 @@ SingleRecordTable::SingleRecordTable(Opm::DeckKeywordConstPtr keyword,
             m_columns[colIdx].push_back(getFlatSiDoubleData_(deckRecord, deckItemIdx));
         }
     }
+}
+
+size_t SingleRecordTable::numColumns() const
+{ return m_columns.size(); }
+
+size_t SingleRecordTable::numRows() const
+{ return m_columns[0].size(); }
+
+const std::vector<double> &SingleRecordTable::getColumn(const std::string &name) const
+{
+    const auto &colIt = m_columnNames.find(name);
+    if (colIt == m_columnNames.end())
+        throw std::runtime_error("Unknown column name \""+name+"\"");
+
+    size_t colIdx = colIt->second;
+    assert(colIdx < static_cast<size_t>(m_columns.size()));
+    return m_columns[colIdx];
+}
+const std::vector<double> &SingleRecordTable::getColumn(size_t colIdx) const
+{
+    assert(colIdx < static_cast<size_t>(m_columns.size()));
+    return m_columns[colIdx];
 }
 
 void SingleRecordTable::createColumns_(const std::vector<std::string> &columnNames)

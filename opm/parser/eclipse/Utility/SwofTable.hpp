@@ -26,25 +26,24 @@ namespace Opm {
         typedef SingleRecordTable ParentType;
 
     public:
+        SwofTable() = default;
+
         using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
 
         /*!
          * \brief Read the SWOF keyword and provide some convenience
          *        methods for it.
          */
-        SwofTable(Opm::DeckKeywordConstPtr keyword,
-                  int recordIdx = 0,
-                  int firstEntityOffset = 0)
-            : SingleRecordTable(keyword,
-                          std::vector<std::string>{"SW", "KRW", "KROW", "PCOW"},
-                          recordIdx, firstEntityOffset)
-        {}
-
-        int numRows() const
-        { return ParentType::numRows(); };
-
-        int numColumns() const
-        { return ParentType::numColumns(); };
+        void init(Opm::DeckKeywordConstPtr keyword,
+                  int recordIdx)
+        {
+            ParentType::init(keyword,
+                             std::vector<std::string>{"SW", "KRW", "KROW", "PCOW"},
+                             recordIdx,
+                             /*firstEntityOffset=*/0);
+        }
 
         const std::vector<double> &getSwColumn() const
         { return ParentType::getColumn(0); }
@@ -62,5 +61,5 @@ namespace Opm {
     };
 }
 
-#endif	// OPM_PARSER_SIMPLE_TABLE_HPP
+#endif
 

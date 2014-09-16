@@ -26,27 +26,26 @@ namespace Opm {
         typedef SingleRecordTable ParentType;
 
     public:
+        PlyviscTable() = default;
+
         using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
 
         /*!
          * \brief Read the PLYVISC keyword and provide some convenience
          *        methods for it.
          */
-        PlyviscTable(Opm::DeckKeywordConstPtr keyword, int recordIdx = 0)
-            : ParentType(keyword,
-                         std::vector<std::string>{
-                             "PolymerConcentration",
-                             "ViscosityMultiplier"
-                         },
-                         recordIdx,
-                         /*firstEntityOffset=*/0)
-        {}
-
-        int numRows() const
-        { return ParentType::numRows(); };
-
-        int numColumns() const
-        { return ParentType::numColumns(); };
+        void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
+        {
+            ParentType::init(keyword,
+                             std::vector<std::string>{
+                                 "PolymerConcentration",
+                                 "ViscosityMultiplier"
+                             },
+                             recordIdx,
+                             /*firstEntityOffset=*/0);
+        }
 
         const std::vector<double> &getPolymerConcentrationColumn() const
         { return ParentType::getColumn(0); }
@@ -56,5 +55,4 @@ namespace Opm {
     };
 }
 
-#endif	// OPM_PARSER_PLYVISC_TABLE_HPP
-
+#endif

@@ -26,32 +26,32 @@ namespace Opm {
         typedef SingleRecordTable ParentType;
 
     public:
+        EnkrvdTable() = default;
+
         using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
 
         /*!
          * \brief Read the ENKRVD keyword and provide some convenience
          *        methods for it.
          */
-        EnkrvdTable(Opm::DeckKeywordConstPtr keyword,
-                  int recordIdx = 0,
-                  int firstEntityOffset = 0)
-            : SingleRecordTable(keyword,
-                          std::vector<std::string>{"DEPTH",
-                                  "KRWMAX",
-                                  "KRGMAX",
-                                  "KROMAX",
-                                  "KRWCRIT",
-                                  "KRGCRIT",
-                                  "KROCRITG",
-                                  "KROCRITW" },
-                          recordIdx, firstEntityOffset)
-        {}
+        void init(Opm::DeckKeywordConstPtr keyword,
+                  int recordIdx)
+        {
+            ParentType::init(keyword,
+                             std::vector<std::string>{"DEPTH",
+                                     "KRWMAX",
+                                     "KRGMAX",
+                                     "KROMAX",
+                                     "KRWCRIT",
+                                     "KRGCRIT",
+                                     "KROCRITG",
+                                     "KROCRITW" },
+                             recordIdx,
+                             /*firstEntityOffset=*/0);
 
-        int numRows() const
-        { return ParentType::numRows(); };
-
-        int numColumns() const
-        { return ParentType::numColumns(); };
+        }
 
         /*!
          * \brief The datum depth for the remaining columns
@@ -103,5 +103,5 @@ namespace Opm {
     };
 }
 
-#endif	// OPM_PARSER_SIMPLE_TABLE_HPP
+#endif
 

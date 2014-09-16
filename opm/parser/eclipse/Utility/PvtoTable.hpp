@@ -24,27 +24,14 @@
 #include "PvtoOuterTable.hpp"
 
 namespace Opm {
-  /*!
-   * \brief Read the table for the PVTO and provide convenient access to it.
-   */
-  class PvtoTable : public Opm::FullTable<Opm::PvtoOuterTable, Opm::PvtoInnerTable>
-  {
-      typedef Opm::FullTable<Opm::PvtoOuterTable, Opm::PvtoInnerTable> ParentType;
-
-  public:
-      using ParentType::numTables;
-
-      /*!
-       * \brief Read the table for the PVTO and provide convenient access to it.
-       */
-      PvtoTable(Opm::DeckKeywordConstPtr keyword, int tableIdx)
-          : ParentType(keyword, tableIdx)
-      { }
-    };
+    /*!
+     * \brief Read the table for the PVTO and provide convenient access to it.
+     */
+    class PvtoTable : public Opm::FullTable<Opm::PvtoOuterTable, Opm::PvtoInnerTable>
+    { };
 
     typedef std::shared_ptr<PvtoTable> PvtoTablePtr;
     typedef std::shared_ptr<const PvtoTable> PvtoConstTablePtr;
 }
 
-#endif	// OPM_PARSER_FULL_TABLE_HPP
-
+#endif

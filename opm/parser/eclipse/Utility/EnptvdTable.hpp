@@ -26,33 +26,32 @@ namespace Opm {
         typedef SingleRecordTable ParentType;
 
     public:
+        EnptvdTable() = default;
+
         using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
 
         /*!
          * \brief Read the ENPTVD keyword and provide some convenience
          *        methods for it.
          */
-        EnptvdTable(Opm::DeckKeywordConstPtr keyword,
-                  int recordIdx = 0,
-                  int firstEntityOffset = 0)
-            : SingleRecordTable(keyword,
-                          std::vector<std::string>{"DEPTH",
-                                  "SWCO",
-                                  "SWCRIT",
-                                  "SWMAX",
-                                  "SGCO",
-                                  "SGCRIT",
-                                  "SGMAX",
-                                  "SOWCRIT",
-                                  "SOGCRIT"},
-                          recordIdx, firstEntityOffset)
-        {}
-
-        int numRows() const
-        { return ParentType::numRows(); };
-
-        int numColumns() const
-        { return ParentType::numColumns(); };
+        void init(Opm::DeckKeywordConstPtr keyword,
+                  int recordIdx)
+        {
+            ParentType::init(keyword,
+                             std::vector<std::string>{"DEPTH",
+                                     "SWCO",
+                                     "SWCRIT",
+                                     "SWMAX",
+                                     "SGCO",
+                                     "SGCRIT",
+                                     "SGMAX",
+                                     "SOWCRIT",
+                                     "SOGCRIT"},
+                             recordIdx,
+                             /*firstEntityOffset=*/0);
+        }
 
         const std::vector<double> &getDepthColumn() const
         { return ParentType::getColumn(0); }
@@ -107,5 +106,5 @@ namespace Opm {
     };
 }
 
-#endif	// OPM_PARSER_SIMPLE_TABLE_HPP
+#endif
 

@@ -26,29 +26,26 @@ namespace Opm {
         typedef MultiRecordTable ParentType;
 
     public:
+        PvtgOuterTable() = default;
+
         using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
+        using ParentType::firstRecordIndex;
+        using ParentType::numRecords;
 
         /*!
          * \brief Read the per record table of the PVTG keyword and
          *        provide some convenience methods for it.
          */
-        PvtgOuterTable(Opm::DeckKeywordConstPtr keyword, size_t tableIdx)
-            : ParentType(keyword,
-                         std::vector<std::string>{"P", "RV", "BG", "MUG"},
-                         tableIdx)
-        {}
+        void init(Opm::DeckKeywordConstPtr keyword, size_t tableIdx)
+        {
+            ParentType::init(keyword,
+                             std::vector<std::string>{"P", "RV", "BG", "MUG"},
+                             tableIdx,
+                             /*firstEntryOffset=*/0);
 
-        size_t numRows() const
-        { return ParentType::numRows(); };
-
-        size_t numColumns() const
-        { return ParentType::numColumns(); };
-
-        size_t firstRecordIndex() const
-        { return ParentType::firstRecordIndex(); }
-
-        size_t numRecords() const
-        { return ParentType::numRecords(); }
+        }
 
         const std::vector<double> &getPressureColumn() const
         { return ParentType::getColumn(0); }
@@ -64,5 +61,4 @@ namespace Opm {
     };
 }
 
-#endif	// OPM_PARSER_PVTO_OUTER_TABLE_HPP
-
+#endif

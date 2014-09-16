@@ -26,7 +26,11 @@ namespace Opm {
         typedef SingleRecordTable ParentType;
 
     public:
+        PvtoInnerTable() = default;
+
         using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
 
         /*!
          * \brief Read the per record table of the PVTO keyword and
@@ -34,17 +38,14 @@ namespace Opm {
          *
          * The first value of the record (-> Rs) is skipped.
          */
-        PvtoInnerTable(Opm::DeckKeywordConstPtr keyword, int recordIdx = 0)
-            : SingleRecordTable(keyword,
-                          std::vector<std::string>{"P", "BO", "MU"},
-                          recordIdx, /*firstEntityOffset=*/1)
-        {}
+        void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
+        {
+            ParentType::init(keyword,
+                             std::vector<std::string>{"P", "BO", "MU"},
+                             recordIdx,
+                             /*firstEntityOffset=*/1);
 
-        int numRows() const
-        { return ParentType::numRows(); };
-
-        int numColumns() const
-        { return ParentType::numColumns(); };
+        }
 
         const std::vector<double> &getPressureColumn() const
         { return ParentType::getColumn(0); }
@@ -57,5 +58,4 @@ namespace Opm {
     };
 }
 
-#endif	// OPM_PARSER_SIMPLE_TABLE_HPP
-
+#endif

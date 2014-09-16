@@ -45,24 +45,22 @@ namespace Opm {
          * This creates a table out of the first N items of each of
          * the keyword's records. (N is the number of columns.)
          */
-        MultiRecordTable(Opm::DeckKeywordConstPtr keyword,
-                               const std::vector<std::string> &columnNames,
-                               size_t tableIndex,
-                               size_t firstEntityOffset = 0);
+        void init(Opm::DeckKeywordConstPtr keyword,
+                  const std::vector<std::string> &columnNames,
+                  size_t tableIndex,
+                  size_t firstEntityOffset);
 
         /*!
          * \brief Return the index of the first record which applies
          *        for this table object.
          */
-        size_t firstRecordIndex() const
-        { return m_firstRecordIdx; }
+        size_t firstRecordIndex() const;
 
         /*!
          * \brief Return the number of records which are used by this
          *        this table object.
          */
-        size_t numRecords() const
-        { return m_numRecords; }
+        size_t numRecords() const;
 
     private:
         static size_t getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord);
@@ -77,5 +75,5 @@ namespace Opm {
 
 }
 
-#endif	// OPM_PARSER_SIMPLE_MULTI_RECORD_TABLE_HPP
+#endif
 

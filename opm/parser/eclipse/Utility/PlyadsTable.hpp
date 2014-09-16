@@ -26,27 +26,29 @@ namespace Opm {
         typedef SingleRecordTable ParentType;
 
     public:
+        PlyadsTable() = default;
+
         using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
 
         /*!
          * \brief Read the PLYADS keyword and provide some convenience
          *        methods for it.
          */
-        PlyadsTable(Opm::DeckKeywordConstPtr keyword, int recordIdx = 0)
-            : ParentType(keyword,
-                         std::vector<std::string>{
-                             "PolymerConcentration",
-                             "AdsorbedPolymer"
-                         },
-                         recordIdx,
-                         /*firstEntityOffset=*/0)
-        {}
+        void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
+        {
+            ParentType::init(keyword,
+                             std::vector<std::string>{
+                                 "PolymerConcentration",
+                                 "AdsorbedPolymer"
+                             },
+                             recordIdx,
+                             /*firstEntityOffset=*/0);
 
-        int numRows() const
-        { return ParentType::numRows(); };
-
-        int numColumns() const
-        { return ParentType::numColumns(); };
+            ParentType::checkNonDefaultable_("PolymerConcentration", /*isAscending=*/true);
+            ParentType::checkNonDefaultable_("AdsorbedPolymer", /*isAscending=*/true);
+        }
 
         const std::vector<double> &getPolymerConcentrationColumn() const
         { return ParentType::getColumn(0); }
@@ -56,5 +58,4 @@ namespace Opm {
     };
 }
 
-#endif	// OPM_PARSER_PLYADS_TABLE_HPP
-
+#endif

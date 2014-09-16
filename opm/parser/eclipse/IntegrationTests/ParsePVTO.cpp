@@ -102,7 +102,8 @@ static void check_parser(ParserPtr parser) {
     BOOST_CHECK_EQUAL(9U , item4_1->size());
     BOOST_CHECK_EQUAL(2U , record4->size());
 
-    Opm::PvtoTable pvtoTable(kw1, /*tableIdx=*/0);
+    Opm::PvtoTable pvtoTable;
+    pvtoTable.init(kw1, /*tableIdx=*/0);
     const auto &outerTable = *pvtoTable.getOuterTable();
     const auto &innerTable0 = *pvtoTable.getInnerTable(0);
 
