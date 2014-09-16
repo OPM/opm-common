@@ -47,8 +47,10 @@ namespace Opm {
                              recordIdx,
                              /*firstEntityOffset=*/0);
 
-            ParentType::checkNonDefaultable_("PolymerConcentration", /*isAscending=*/true);
-            ParentType::checkNonDefaultable_("AdsorbedPolymer", /*isAscending=*/true);
+            ParentType::checkNonDefaultable("PolymerConcentration");
+            ParentType::checkMonotonic("PolymerConcentration", /*isAscending=*/true);
+            ParentType::checkNonDefaultable("AdsorbedPolymer");
+            ParentType::checkMonotonic("AdsorbedPolymer", /*isAscending=*/true);
         }
 
         const std::vector<double> &getPolymerConcentrationColumn() const

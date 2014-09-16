@@ -43,16 +43,16 @@ const char *parserData =
     "\n"
     "--  S_w k_rw k_row p_cow\n"
     "SWOF\n"
-    "    0.1 0.0 1.0 0.0\n"
+    "    0.1  2*     0.0\n"
     "    0.2 0.1 1.0 1.0\n"
-    "    0.3 0.2 0.9 2.0\n"
-    "    0.4 0.3 0.8 3.0\n"
+    "    0.3  1* 0.9 2.0\n"
+    "    0.4 0.3  1* 3.0\n"
     "    0.5 0.5 0.5 4.0\n"
-    "    0.6 0.6 0.4 5.0\n"
+    "    0.6 0.6 0.4  1*\n"
     "    0.7 0.8 0.3 6.0\n"
     "    0.8 0.9 0.2 7.0\n"
     "    0.9 0.5 0.1 8.0\n"
-    "    1.0 1.0 0.1 9.0 /\n";
+    "    1.0  1* 0.1 9.0 /\n";
 
 static void check_parser(ParserPtr parser) {
     DeckPtr deck =  parser->parseString(parserData);
@@ -72,14 +72,27 @@ static void check_SwofTable(ParserPtr parser) {
     swofTable.init(deck->getKeyword("SWOF"), /*recordIdx=*/0);
 
     BOOST_CHECK_EQUAL(10U, swofTable.getSwColumn().size());
-    BOOST_CHECK_EQUAL(0.1, swofTable.getSwColumn()[0]);
-    BOOST_CHECK_EQUAL(0.0, swofTable.getKrwColumn()[0]);
-    BOOST_CHECK_EQUAL(1.0, swofTable.getKrowColumn()[0]);
-    BOOST_CHECK_EQUAL(0.0, swofTable.getPcowColumn()[0]);
+    BOOST_CHECK_CLOSE(0.1, swofTable.getSwColumn()[0], 1e-8);
+    BOOST_CHECK_CLOSE(1.0, swofTable.getSwColumn().back(), 1e-8);
 
-    BOOST_CHECK_CLOSE(0.00, swofTable.evaluate("KRW", -0.1), 1e-8);
-    BOOST_CHECK_CLOSE(0.05, swofTable.evaluate("KRW", 0.15), 1e-8);
-    BOOST_CHECK_CLOSE(1.00, swofTable.evaluate("KRW", 1.1), 1e-8);
+    BOOST_CHECK_CLOSE(0.1, swofTable.getKrwColumn()[0], 1e-8);
+    BOOST_CHECK_CLOSE(0.1, swofTable.getKrwColumn()[1], 1e-8);
+    BOOST_CHECK_CLOSE(0.2, swofTable.getKrwColumn()[2], 1e-8);
+    BOOST_CHECK_CLOSE(0.3, swofTable.getKrwColumn()[3], 1e-8);
+    BOOST_CHECK_CLOSE(0.5, swofTable.getKrwColumn().back(), 1e-8);
+
+    BOOST_CHECK_CLOSE(1.0, swofTable.getKrowColumn()[0], 1e-8);
+    BOOST_CHECK_CLOSE(0.9, swofTable.getKrowColumn()[2], 1e-8);
+    BOOST_CHECK_CLOSE(0.7, swofTable.getKrowColumn()[3], 1e-8);
+    BOOST_CHECK_CLOSE(0.5, swofTable.getKrowColumn()[4], 1e-8);
+
+    BOOST_CHECK_CLOSE(4.0e5, swofTable.getPcowColumn()[4], 1e-8);
+    BOOST_CHECK_CLOSE(5.0e5, swofTable.getPcowColumn()[5], 1e-8);
+    BOOST_CHECK_CLOSE(6.0e5, swofTable.getPcowColumn()[6], 1e-8);
+
+    BOOST_CHECK_CLOSE(0.10, swofTable.evaluate("KRW", -0.1), 1e-8);
+    BOOST_CHECK_CLOSE(0.15, swofTable.evaluate("KRW", 0.25), 1e-8);
+    BOOST_CHECK_CLOSE(0.50, swofTable.evaluate("KRW", 1.1), 1e-8);
 }
 
 BOOST_AUTO_TEST_CASE( parse_SWOF_OK ) {

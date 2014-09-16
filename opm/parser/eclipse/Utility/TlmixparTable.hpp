@@ -45,6 +45,22 @@ namespace Opm {
                              std::vector<std::string>{"VISC_PARA", "DENS_PARA"},
                              recordIdx,
                              /*firstEntityOffset=*/0);
+
+            // make sure the first column is not defaulted and copy the value from the
+            // first column to the second one if the second column is defaulted
+            int nRows = numRows();
+            auto& viscColumn = m_columns[0];
+            auto& densColumn = m_columns[1];
+            auto& viscColumnDefaulted = m_valueDefaulted[0];
+            auto& densColumnDefaulted = m_valueDefaulted[1];
+            for (int rowIdx = 0; rowIdx < nRows; ++ rowIdx) {
+                if (viscColumnDefaulted[rowIdx])
+                    throw std::invalid_argument("The first column of the TLMIXPAR table cannot be defaulted");
+                if (densColumnDefaulted[rowIdx]) {
+                    densColumn[rowIdx] = viscColumn[rowIdx];
+                    densColumnDefaulted[rowIdx] = false;
+                }
+            }
         }
 
         const std::vector<double> &getViscosityParameterColumn() const

@@ -62,16 +62,16 @@ namespace Opm {
          */
         double evaluate(const std::string& columnName, double xPos) const;
     protected:
+        void checkNonDefaultable(const std::string& columnName);
+        void checkMonotonic(const std::string& columnName,
+                             bool isAscending,
+                             bool isStrictlyMonotonic = true);
+        void applyDefaultsConstant(const std::string& columnName, double value);
+        void applyDefaultsLinear(const std::string& columnName);
         void createColumns_(const std::vector<std::string> &columnNames);
-        bool isDefaulted_(const std::string& columnName, size_t rowIdx) const
-        {
-            int columnIdx = m_columnNames.at(columnName);
-            return m_valueDefaulted[columnIdx][rowIdx];
-        }
-
         size_t getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord) const;
         double getFlatSiDoubleData_(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const;
-        bool getFlatIsDefaulted_(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const;
+        bool getFlatIsDefaulted(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const;
 
         std::map<std::string, size_t> m_columnNames;
         std::vector<std::vector<double> > m_columns;

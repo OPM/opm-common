@@ -45,7 +45,14 @@ namespace Opm {
                              recordIdx,
                              /*firstEntityOffset=*/0);
 
+            ParentType::checkNonDefaultable("P");
+            ParentType::checkMonotonic("P", /*isAscending=*/true);
 
+            ParentType::applyDefaultsLinear("BO");
+            ParentType::checkMonotonic("BO", /*isAscending=*/false);
+
+            ParentType::applyDefaultsLinear("MUO");
+            ParentType::checkMonotonic("MUO", /*isAscending=*/true, /*strictlyMonotonic=*/false);
         }
 
         const std::vector<double> &getPressureColumn() const

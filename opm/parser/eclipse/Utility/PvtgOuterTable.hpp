@@ -46,6 +46,11 @@ namespace Opm {
                              tableIdx,
                              /*firstEntryOffset=*/0);
 
+            ParentType::checkNonDefaultable("P");
+            ParentType::checkMonotonic("P", /*isAscending=*/true);
+            ParentType::applyDefaultsLinear("RV");
+            ParentType::applyDefaultsLinear("BG");
+            ParentType::applyDefaultsLinear("MUG");
         }
 
         const std::vector<double> &getPressureColumn() const

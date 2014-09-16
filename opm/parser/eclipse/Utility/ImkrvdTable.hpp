@@ -50,6 +50,15 @@ namespace Opm {
                                      "KROCRITW" },
                              recordIdx,
                              /*firstEntityOffset=*/0);
+
+            ParentType::checkNonDefaultable("DEPTH", /*isAscending=*/true);
+            ParentType::applyDefaultsLinear("KRWMAX");
+            ParentType::applyDefaultsLinear("KRGMAX");
+            ParentType::applyDefaultsLinear("KROMAX");
+            ParentType::applyDefaultsLinear("KRWCRIT");
+            ParentType::applyDefaultsLinear("KRGCRIT");
+            ParentType::applyDefaultsLinear("KROCRITG");
+            ParentType::applyDefaultsLinear("KROCRITW");
         }
 
         /*!

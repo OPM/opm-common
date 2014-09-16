@@ -39,6 +39,7 @@ namespace Opm {
          */
         void init(Opm::DeckKeywordConstPtr keyword,
                   bool isDirectional,
+                  bool hasStressOption,
                   int recordIdx)
         {
             ParentType::init(keyword,
@@ -48,6 +49,17 @@ namespace Opm {
                              recordIdx,
                              /*firstEntityOffset=*/0);
             m_isDirectional = isDirectional;
+
+            ParentType::checkNonDefaultable("PO");
+            ParentType::checkMonotonic("PO", /*isAscending=*/hasStressOption);
+            ParentType::applyDefaultsLinear("PV_MULT");
+            if (isDirectional) {
+                ParentType::applyDefaultsLinear("TRANSMIS_MULT");
+            } else {
+                ParentType::applyDefaultsLinear("TRANSMIS_MULT_X");
+                ParentType::applyDefaultsLinear("TRANSMIS_MULT_Y");
+                ParentType::applyDefaultsLinear("TRANSMIS_MULT_Z");
+            }
         }
 
         const std::vector<double> &getPressureColumn() const

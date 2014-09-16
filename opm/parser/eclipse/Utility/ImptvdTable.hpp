@@ -51,14 +51,14 @@ namespace Opm {
                                      "SOGCRIT"},
                              recordIdx,
                              /*firstEntityOffset=*/0);
-            ParentType::checkNonDefaultable_("DEPTH", /*isAscending=*/true);
-            ParentType::healDefaultsLinear_("SWCO");
-            ParentType::healDefaultsLinear_("SWCRIT");
-            ParentType::healDefaultsLinear_("SGCO");
-            ParentType::healDefaultsLinear_("SGCRIT");
-            ParentType::healDefaultsLinear_("SGMAX");
-            ParentType::healDefaultsLinear_("SOWCRIT");
-            ParentType::healDefaultsLinear_("SOGCRIT");
+            ParentType::checkNonDefaultable("DEPTH", /*isAscending=*/true);
+            ParentType::applyDefaultsLinear("SWCO");
+            ParentType::applyDefaultsLinear("SWCRIT");
+            ParentType::applyDefaultsLinear("SGCO");
+            ParentType::applyDefaultsLinear("SGCRIT");
+            ParentType::applyDefaultsLinear("SGMAX");
+            ParentType::applyDefaultsLinear("SOWCRIT");
+            ParentType::applyDefaultsLinear("SOGCRIT");
         }
 
         const std::vector<double> &getDepthColumn() const

@@ -44,6 +44,12 @@ namespace Opm {
                              std::vector<std::string>{"SW", "KRW", "KROW", "PCOW"},
                              recordIdx,
                              /*firstEntityOffset=*/0);
+
+            ParentType::checkNonDefaultable("SW");
+            ParentType::checkMonotonic("SW", /*isAscending=*/true);
+            ParentType::applyDefaultsLinear("KRW");
+            ParentType::applyDefaultsLinear("KROW");
+            ParentType::applyDefaultsLinear("PCOW");
         }
 
         const std::vector<double> &getSwColumn() const

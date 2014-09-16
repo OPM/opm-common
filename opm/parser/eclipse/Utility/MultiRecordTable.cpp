@@ -90,6 +90,7 @@ void MultiRecordTable::init(Opm::DeckKeywordConstPtr keyword,
         for (size_t colIdx = 0; colIdx < numColumns(); ++colIdx) {
             size_t deckItemIdx = colIdx + firstEntityOffset;
             m_columns[colIdx].push_back(getFlatSiDoubleData_(deckRecord, deckItemIdx));
+            m_valueDefaulted[colIdx].push_back(getFlatIsDefaulted(deckRecord, deckItemIdx));
         }
     }
 }

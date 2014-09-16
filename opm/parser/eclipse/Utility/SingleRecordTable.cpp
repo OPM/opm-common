@@ -48,6 +48,7 @@ void SingleRecordTable::init(Opm::DeckKeywordConstPtr keyword,
         for (size_t colIdx = 0; colIdx < numColumns(); ++colIdx) {
             size_t deckItemIdx = rowIdx*numColumns() + firstEntityOffset + colIdx;
             m_columns[colIdx].push_back(getFlatSiDoubleData_(deckRecord, deckItemIdx));
+            m_valueDefaulted[colIdx].push_back(getFlatIsDefaulted(deckRecord, deckItemIdx));
         }
     }
 }
@@ -124,6 +125,100 @@ double SingleRecordTable::evaluate(const std::string& columnName, double xPos) c
     return yColumn[intervalIdx]*(1-alpha) + yColumn[intervalIdx + 1]*alpha;
 }
 
+void SingleRecordTable::checkNonDefaultable(const std::string& columnName)
+{
+    int columnIdx = m_columnNames.at(columnName);
+
+    int nRows = numRows();
+
+    for (int rowIdx = 0; rowIdx < nRows; ++rowIdx) {
+        if (m_valueDefaulted[columnIdx][rowIdx])
+            throw std::invalid_argument("Column " + columnName + " is not defaultable");
+    }
+}
+
+
+void SingleRecordTable::checkMonotonic(const std::string& columnName,
+                                        bool isAscending,
+                                        bool isStrictlyMonotonic)
+{
+    int columnIdx = m_columnNames.at(columnName);
+
+    int nRows = numRows();
+
+    for (int rowIdx = 0; rowIdx < nRows; ++rowIdx) {
+        if (rowIdx > 0) {
+            if (isAscending && m_columns[columnIdx][rowIdx] < m_columns[columnIdx][rowIdx - 1])
+                throw std::invalid_argument("Column " + columnName + " must be monotonically increasing");
+            else if (!isAscending && m_columns[columnIdx][rowIdx] > m_columns[columnIdx][rowIdx - 1])
+                throw std::invalid_argument("Column " + columnName + " must be monotonically decreasing");
+
+            if (isStrictlyMonotonic) {
+                if (m_columns[columnIdx][rowIdx] == m_columns[columnIdx][rowIdx - 1])
+                    throw std::invalid_argument("Column " + columnName + " must be strictly monotonic");
+            }
+        }
+    }
+}
+
+void SingleRecordTable::applyDefaultsConstant(const std::string& columnName, double value)
+{
+    int columnIdx = m_columnNames.at(columnName);
+    int nRows = numRows();
+
+    for (int rowIdx = 0; rowIdx < nRows; ++rowIdx) {
+        if (m_valueDefaulted[columnIdx][rowIdx]) {
+            m_columns[columnIdx][rowIdx] = value;
+            m_valueDefaulted[columnIdx][rowIdx] = false;
+        }
+    }
+}
+
+void SingleRecordTable::applyDefaultsLinear(const std::string& columnName)
+{
+    int columnIdx = m_columnNames.at(columnName);
+    const std::vector<double>& xColumn = m_columns[0];
+    std::vector<double>& yColumn = m_columns[columnIdx];
+    int nRows = numRows();
+
+    for (int rowIdx = 0; rowIdx < nRows; ++rowIdx) {
+        if (m_valueDefaulted[columnIdx][rowIdx]) {
+            // find first row which was not defaulted before the current one
+            int rowBeforeIdx = rowIdx;
+            for (; rowBeforeIdx >= 0; -- rowBeforeIdx)
+                if (!m_valueDefaulted[columnIdx][rowBeforeIdx])
+                    break;
+
+            // find first row which was not defaulted after the current one
+            int rowAfterIdx = rowIdx;
+            for (; rowAfterIdx < static_cast<int>(yColumn.size()); ++ rowAfterIdx)
+                if (!m_valueDefaulted[columnIdx][rowAfterIdx])
+                    break;
+
+            // switch to extrapolation by a constant at the fringes
+            if (rowBeforeIdx < 0 && rowAfterIdx >= static_cast<int>(yColumn.size()))
+                throw std::invalid_argument("Column " + columnName + " can't be fully defaulted");
+            else if (rowBeforeIdx < 0)
+                rowBeforeIdx = rowAfterIdx;
+            else if (rowAfterIdx >= static_cast<int>(yColumn.size()))
+                rowAfterIdx = rowBeforeIdx;
+
+            // linear interpolation
+            double alpha = 0.0;
+            if (rowBeforeIdx != rowAfterIdx) {
+                alpha = xColumn[rowIdx] - xColumn[rowBeforeIdx];
+                alpha /= (xColumn[rowAfterIdx] - xColumn[rowBeforeIdx]);
+            }
+
+            double value =
+                yColumn[rowBeforeIdx]*(1-alpha) + yColumn[rowAfterIdx]*alpha;
+
+            m_columns[columnIdx][rowIdx] = value;
+            m_valueDefaulted[columnIdx][rowIdx] = false;
+        }
+    }
+}
+
 void SingleRecordTable::createColumns_(const std::vector<std::string> &columnNames)
 {
     // Allocate column names. TODO (?): move the column names into
@@ -135,6 +230,7 @@ void SingleRecordTable::createColumns_(const std::vector<std::string> &columnNam
         m_columnNames[*columnNameIt] = columnIdx;
     }
     m_columns.resize(columnIdx);
+    m_valueDefaulted.resize(columnIdx);
 }
 
 size_t SingleRecordTable::getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord) const
@@ -154,6 +250,20 @@ double SingleRecordTable::getFlatSiDoubleData_(Opm::DeckRecordConstPtr deckRecor
         Opm::DeckItemConstPtr item = deckRecord->getItem(i);
         if (itemFirstFlatIdx + item->size() > flatItemIdx)
             return item->getSIDouble(flatItemIdx - itemFirstFlatIdx);
+        else
+            itemFirstFlatIdx += item->size();
+    }
+
+    throw std::range_error("Tried to access out-of-range flat item");
+}
+
+bool SingleRecordTable::getFlatIsDefaulted(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const
+{
+    size_t itemFirstFlatIdx = 0;
+    for (unsigned i = 0; i < deckRecord->size(); ++ i) {
+        Opm::DeckItemConstPtr item = deckRecord->getItem(i);
+        if (itemFirstFlatIdx + item->size() > flatItemIdx)
+            return item->defaultApplied(flatItemIdx - itemFirstFlatIdx);
         else
             itemFirstFlatIdx += item->size();
     }

@@ -40,6 +40,12 @@ namespace Opm {
                              std::vector<std::string>{"RS", "P", "BO", "MU"},
                              tableIdx,
                              /*firstEntryOffset=*/0);
+
+            ParentType::checkNonDefaultable("RS");
+            ParentType::checkMonotonic("RS", /*isAscending=*/true);
+            ParentType::applyDefaultsLinear("P");
+            ParentType::applyDefaultsLinear("BO");
+            ParentType::applyDefaultsLinear("MU");
         }
 
         using ParentType::numTables;

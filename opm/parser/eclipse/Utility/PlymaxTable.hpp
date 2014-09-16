@@ -43,6 +43,11 @@ namespace Opm {
                              std::vector<std::string>{"C_POLYMER", "C_POLYMER_MAX"},
                              recordIdx,
                              /*firstEntityOffset=*/0);
+
+            ParentType::checkNonDefaultable("C_POLYMER");
+            ParentType::checkMonotonic("C_POLYMER", /*isAscending=*/false);
+            ParentType::checkNonDefaultable("C_POLYMER_MAX");
+            ParentType::checkMonotonic("C_POLYMER_MAX", /*isAscending=*/false);
         }
 
         const std::vector<double> &getPolymerConcentrationColumn() const

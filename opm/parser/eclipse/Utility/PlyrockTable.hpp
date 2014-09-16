@@ -51,6 +51,23 @@ namespace Opm {
                              },
                              recordIdx,
                              /*firstEntityOffset=*/0);
+
+            // the entries of this keyword cannot be defaulted except for the
+            // forth. ensure this.
+            int nRows = numRows();
+            int nCols = numColumns();
+            for (int rowIdx = 0; rowIdx < nRows; ++rowIdx) {
+                for (int colIdx = 0; colIdx < nCols; ++colIdx) {
+                    if (m_valueDefaulted[colIdx][rowIdx]) {
+                        if (colIdx == 3) {
+                            m_valueDefaulted[colIdx][rowIdx] = false;
+                            m_columns[colIdx][rowIdx] = 1.0;
+                        }
+                        else
+                            throw std::invalid_argument("The values of the PLYROCK table cannot be defaulted");
+                    }
+                }
+            }
         }
 
         const std::vector<double> &getDeadPoreVolumeColumn() const

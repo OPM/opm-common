@@ -45,6 +45,10 @@ namespace Opm {
                              std::vector<std::string>{"RV", "BG", "MUG"},
                              recordIdx, 1U);
 
+            ParentType::checkNonDefaultable("RV");
+            ParentType::checkMonotonic("RV", /*isAscending=*/false);
+            ParentType::applyDefaultsLinear("BG");
+            ParentType::applyDefaultsLinear("MUG");
         }
 
         const std::vector<double> &getOilSolubilityColumn() const
