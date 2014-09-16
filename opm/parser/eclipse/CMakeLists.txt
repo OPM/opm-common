@@ -182,6 +182,8 @@ Utility/EndscaleWrapper.hpp
 Utility/ScalecrsWrapper.hpp
 Utility/EnptvdTable.hpp
 Utility/EnkrvdTable.hpp
+Utility/ImptvdTable.hpp
+Utility/ImkrvdTable.hpp
 Utility/RocktabTable.hpp
 Utility/RockTable.hpp
 Utility/PlymaxTable.hpp
