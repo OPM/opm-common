@@ -76,6 +76,10 @@ static void check_SwofTable(ParserPtr parser) {
     BOOST_CHECK_EQUAL(0.0, swofTable.getKrwColumn()[0]);
     BOOST_CHECK_EQUAL(1.0, swofTable.getKrowColumn()[0]);
     BOOST_CHECK_EQUAL(0.0, swofTable.getPcowColumn()[0]);
+
+    BOOST_CHECK_CLOSE(0.00, swofTable.evaluate("KRW", -0.1), 1e-8);
+    BOOST_CHECK_CLOSE(0.05, swofTable.evaluate("KRW", 0.15), 1e-8);
+    BOOST_CHECK_CLOSE(1.00, swofTable.evaluate("KRW", 1.1), 1e-8);
 }
 
 BOOST_AUTO_TEST_CASE( parse_SWOF_OK ) {

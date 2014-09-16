@@ -31,6 +31,7 @@ namespace Opm {
         using ParentType::numTables;
         using ParentType::numRows;
         using ParentType::numColumns;
+        using ParentType::evaluate;
 
         /*!
          * \brief Read the per record table of the PVTO keyword and

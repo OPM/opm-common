@@ -32,6 +32,9 @@ namespace Opm {
         using ParentType::numRows;
         using ParentType::numColumns;
 
+        // this table is not necessarily monotonic, so it cannot be evaluated!
+        //using ParentType::evaluate;
+
         /*!
          * \brief Read the TLMIXPAR keyword and provide some convenience
          *        methods for it.

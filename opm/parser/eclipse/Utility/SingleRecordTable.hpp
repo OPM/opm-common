@@ -54,6 +54,13 @@ namespace Opm {
         const std::vector<double> &getColumn(const std::string &name) const;
         const std::vector<double> &getColumn(size_t colIdx) const;
 
+        /*!
+         * \brief Evaluate a column of the table at a given position.
+         *
+         * This method uses linear interpolation and always uses the first column as the
+         * X coordinate.
+         */
+        double evaluate(const std::string& columnName, double xPos) const;
     protected:
         void createColumns_(const std::vector<std::string> &columnNames);
         bool isDefaulted_(const std::string& columnName, size_t rowIdx) const

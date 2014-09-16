@@ -74,6 +74,56 @@ const std::vector<double> &SingleRecordTable::getColumn(size_t colIdx) const
     return m_columns[colIdx];
 }
 
+double SingleRecordTable::evaluate(const std::string& columnName, double xPos) const
+{
+    const std::vector<double>& xColumn = getColumn(0);
+    const std::vector<double>& yColumn = getColumn(columnName);
+
+    bool isDescending = false;
+    if (xColumn.front() > xColumn.back())
+        isDescending = true;
+
+    // handle the constant interpolation cases
+    if (isDescending) {
+        if (xColumn.front() < xPos)
+            return yColumn.front();
+        else if (xPos < xColumn.back())
+            return yColumn.back();
+    }
+    else {
+        if (xPos < xColumn.front())
+            return yColumn.front();
+        else if (xColumn.back() < xPos)
+            return yColumn.back();
+    }
+
+    // find the interval which contains the x position using interval halfing
+    size_t lowIntervalIdx = 0;
+    size_t intervalIdx = (xColumn.size() - 1)/2;
+    size_t highIntervalIdx = xColumn.size()-1;
+    while (lowIntervalIdx + 1 < highIntervalIdx) {
+        if (isDescending) {
+            if (xColumn[intervalIdx] < xPos)
+                highIntervalIdx = intervalIdx;
+            else
+                lowIntervalIdx = intervalIdx;
+        }
+        else {
+            if (xColumn[intervalIdx] < xPos)
+                lowIntervalIdx = intervalIdx;
+            else
+                highIntervalIdx = intervalIdx;
+        }
+
+        intervalIdx = (highIntervalIdx + lowIntervalIdx)/2;
+    }
+
+    // use linear interpolation if the x position is in between two non-defaulted
+    // values, else use the non-defaulted value
+    double alpha = (xPos - xColumn[intervalIdx])/(xColumn[intervalIdx + 1] - xColumn[intervalIdx]);
+    return yColumn[intervalIdx]*(1-alpha) + yColumn[intervalIdx + 1]*alpha;
+}
+
 void SingleRecordTable::createColumns_(const std::vector<std::string> &columnNames)
 {
     // Allocate column names. TODO (?): move the column names into

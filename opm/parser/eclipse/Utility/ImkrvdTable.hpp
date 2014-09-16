@@ -31,7 +31,7 @@ namespace Opm {
         using ParentType::numTables;
         using ParentType::numRows;
         using ParentType::numColumns;
-
+        using ParentType::evaluate;
         /*!
          * \brief Read the IMKRVD keyword and provide some convenience
          *        methods for it.

@@ -31,6 +31,7 @@ namespace Opm {
         using ParentType::numTables;
         using ParentType::numRows;
         using ParentType::numColumns;
+        using ParentType::evaluate;
 
         /*!
          * \brief Read the ENPTVD keyword and provide some convenience

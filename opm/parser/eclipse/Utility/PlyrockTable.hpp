@@ -32,6 +32,9 @@ namespace Opm {
         using ParentType::numRows;
         using ParentType::numColumns;
 
+        // since this keyword is not necessarily monotonic, it cannot be evaluated!
+        //using ParentType::evaluate;
+
         /*!
          * \brief Read the PLYROCK keyword and provide some convenience
          *        methods for it.

@@ -31,6 +31,7 @@ namespace Opm {
         using ParentType::numTables;
         using ParentType::numRows;
         using ParentType::numColumns;
+        using ParentType::evaluate;
         using ParentType::firstRecordIndex;
         using ParentType::numRecords;
 

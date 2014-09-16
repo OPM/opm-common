@@ -31,6 +31,7 @@ namespace Opm {
         using ParentType::numTables;
         using ParentType::numRows;
         using ParentType::numColumns;
+        using ParentType::evaluate;
 
         /*!
          * \brief Read the ROCKTAB keyword and provide some convenience
