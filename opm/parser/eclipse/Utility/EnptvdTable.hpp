@@ -33,6 +33,10 @@ namespace Opm {
         using ParentType::numColumns;
         using ParentType::evaluate;
 
+        // using this method is strongly discouraged but the current endpoint scaling
+        // code makes it hard to avoid
+        using ParentType::getColumn;
+
         /*!
          * \brief Read the ENPTVD keyword and provide some convenience
          *        methods for it.
