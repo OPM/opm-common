@@ -22,10 +22,18 @@
 #include "MultiRecordTable.hpp"
 
 namespace Opm {
+    // forward declaration
+    template <class OuterTable, class InnerTable>
+    class FullTable;
+    class PvtoTable;
+    class PvtoOuterTable;
+    class PvtoInnerTable;
+
     class PvtoOuterTable : protected MultiRecordTable {
         typedef MultiRecordTable ParentType;
 
-    public:
+        friend class PvtoTable;
+        friend class FullTable<PvtoOuterTable, PvtoInnerTable>;
         PvtoOuterTable() = default;
 
         /*!
@@ -48,6 +56,7 @@ namespace Opm {
             ParentType::applyDefaultsLinear("MU");
         }
 
+    public:
         using ParentType::numTables;
         using ParentType::numRows;
         using ParentType::numColumns;

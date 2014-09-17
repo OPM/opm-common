@@ -22,16 +22,15 @@
 #include "SingleRecordTable.hpp"
 
 namespace Opm {
+    // forward declaration
+    class EclipseState;
+
     class PlyadsTable : protected SingleRecordTable {
         typedef SingleRecordTable ParentType;
 
-    public:
-        PlyadsTable() = default;
+        friend class EclipseState;
 
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        PlyadsTable() = default;
 
         /*!
          * \brief Read the PLYADS keyword and provide some convenience
@@ -52,6 +51,12 @@ namespace Opm {
             ParentType::checkNonDefaultable("AdsorbedPolymer");
             ParentType::checkMonotonic("AdsorbedPolymer", /*isAscending=*/true);
         }
+
+    public:
+        using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
+        using ParentType::evaluate;
 
         const std::vector<double> &getPolymerConcentrationColumn() const
         { return ParentType::getColumn(0); }

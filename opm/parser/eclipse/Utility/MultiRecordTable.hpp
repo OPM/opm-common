@@ -30,15 +30,12 @@
 #include <cassert>
 
 namespace Opm {
+    // forward declaration
+    class EclipseState;
+
     // create table from first few items of multiple records (i.e. getSIDoubleData() throws an exception)
     class MultiRecordTable : public SingleRecordTable {
-    public:
-        /*!
-         * \brief Returns the number of tables which can be found in a
-         *        given keyword.
-         */
-        static size_t numTables(Opm::DeckKeywordConstPtr keyword);
-
+    protected:
         /*!
          * \brief Read simple tables from multi-item keywords like PVTW
          *
@@ -49,6 +46,24 @@ namespace Opm {
                   const std::vector<std::string> &columnNames,
                   size_t tableIndex,
                   size_t firstEntityOffset);
+
+    public:
+        MultiRecordTable() = default;
+
+#ifdef BOOST_TEST_MODULE
+        // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
+        void initFORUNITTESTONLY(Opm::DeckKeywordConstPtr keyword,
+                                 const std::vector<std::string> &columnNames,
+                                 size_t tableIndex,
+                                 size_t firstEntityOffset)
+        { init(keyword, columnNames, tableIndex, firstEntityOffset); }
+#endif
+
+        /*!
+         * \brief Returns the number of tables which can be found in a
+         *        given keyword.
+         */
+        static size_t numTables(Opm::DeckKeywordConstPtr keyword);
 
         /*!
          * \brief Return the index of the first record which applies

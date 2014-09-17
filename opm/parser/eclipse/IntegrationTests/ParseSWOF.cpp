@@ -69,7 +69,7 @@ static void check_parser(ParserPtr parser) {
 static void check_SwofTable(ParserPtr parser) {
     DeckPtr deck =  parser->parseString(parserData);
     Opm::SwofTable swofTable;
-    swofTable.init(deck->getKeyword("SWOF"), /*recordIdx=*/0);
+    swofTable.initFORUNITTESTONLY(deck->getKeyword("SWOF"), /*recordIdx=*/0);
 
     BOOST_CHECK_EQUAL(10U, swofTable.getSwColumn().size());
     BOOST_CHECK_CLOSE(0.1, swofTable.getSwColumn()[0], 1e-8);

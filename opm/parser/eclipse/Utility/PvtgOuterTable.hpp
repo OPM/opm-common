@@ -22,18 +22,19 @@
 #include "MultiRecordTable.hpp"
 
 namespace Opm {
+    // forward declarations
+    template <class OuterTable, class InnerTable>
+    class FullTable;
+    class PvtgTable;
+    class PvtgOuterTable;
+    class PvtgInnerTable;
+
     class PvtgOuterTable : protected MultiRecordTable {
         typedef MultiRecordTable ParentType;
 
-    public:
+        friend class PvtgTable;
+        friend class FullTable<PvtgOuterTable, PvtgInnerTable>;
         PvtgOuterTable() = default;
-
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
-        using ParentType::firstRecordIndex;
-        using ParentType::numRecords;
 
         /*!
          * \brief Read the per record table of the PVTG keyword and
@@ -52,6 +53,14 @@ namespace Opm {
             ParentType::applyDefaultsLinear("BG");
             ParentType::applyDefaultsLinear("MUG");
         }
+
+    public:
+        using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
+        using ParentType::evaluate;
+        using ParentType::firstRecordIndex;
+        using ParentType::numRecords;
 
         const std::vector<double> &getPressureColumn() const
         { return ParentType::getColumn(0); }

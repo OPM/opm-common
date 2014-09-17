@@ -22,16 +22,13 @@
 #include "SingleRecordTable.hpp"
 
 namespace Opm {
+    // forward declaration
+    class EclipseState;
+
     class SgofTable : protected SingleRecordTable {
         typedef SingleRecordTable ParentType;
 
-    public:
-        SgofTable() = default;
-
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        friend class EclipseState;
 
         /*!
          * \brief Read the SGOF keyword and provide some convenience
@@ -51,6 +48,20 @@ namespace Opm {
             ParentType::applyDefaultsLinear("KROG");
             ParentType::applyDefaultsLinear("PCOG");
         }
+
+    public:
+        SgofTable() = default;
+
+#ifdef BOOST_TEST_MODULE
+        // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
+        void initFORUNITTESTONLY(Opm::DeckKeywordConstPtr keyword, size_t tableIdx)
+        { init(keyword, tableIdx); }
+#endif
+
+        using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
+        using ParentType::evaluate;
 
         const std::vector<double> &getSgColumn() const
         { return ParentType::getColumn(0); }

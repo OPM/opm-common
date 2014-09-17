@@ -113,7 +113,7 @@ static void check_parser(ParserPtr parser) {
     
     {
         Opm::PvtgTable pvtgTable;
-        pvtgTable.init(kw1, 0);
+        pvtgTable.initFORUNITTESTONLY(kw1, 0);
         
         const auto &outerTable = *pvtgTable.getOuterTable();
         const auto &innerTable0 = *pvtgTable.getInnerTable(0);

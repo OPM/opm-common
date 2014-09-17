@@ -22,16 +22,15 @@
 #include "SingleRecordTable.hpp"
 
 namespace Opm {
+    // forward declaration
+    class EclipseState;
+
     class PvdgTable : protected SingleRecordTable {
         typedef SingleRecordTable ParentType;
 
-    public:
-        PvdgTable() = default;
+        friend class EclipseState;
 
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        PvdgTable() = default;
 
         /*!
          * \brief Read the PVDG keyword and provide some convenience
@@ -54,6 +53,12 @@ namespace Opm {
             ParentType::applyDefaultsLinear("MUG");
             ParentType::checkMonotonic("MUG", /*isAscending=*/true, /*strictlyMonotonic=*/false);
         }
+
+    public:
+        using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
+        using ParentType::evaluate;
 
         const std::vector<double> &getPressureColumn() const
         { return ParentType::getColumn(0); }

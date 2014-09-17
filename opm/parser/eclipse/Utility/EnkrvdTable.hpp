@@ -22,20 +22,14 @@
 #include "SingleRecordTable.hpp"
 
 namespace Opm {
+    // forward declaration
+    class EclipseState;
+
     class EnkrvdTable : protected SingleRecordTable {
         typedef SingleRecordTable ParentType;
 
-    public:
+        friend class EclipseState;
         EnkrvdTable() = default;
-
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
-
-        // using this method is strongly discouraged but the current endpoint scaling
-        // code makes it hard to avoid
-        using ParentType::getColumn;
 
         /*!
          * \brief Read the ENKRVD keyword and provide some convenience
@@ -66,6 +60,16 @@ namespace Opm {
             ParentType::applyDefaultsLinear("KROCRITG");
             ParentType::applyDefaultsLinear("KROCRITW");
         }
+
+    public:
+        using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
+        using ParentType::evaluate;
+
+        // using this method is strongly discouraged but the current endpoint scaling
+        // code makes it hard to avoid
+        using ParentType::getColumn;
 
         /*!
          * \brief The datum depth for the remaining columns

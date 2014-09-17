@@ -126,8 +126,6 @@ namespace Opm {
                 throw std::invalid_argument("The "+keywordName+" keyword must be unique in the deck");
 
             const auto& tableKeyword = deck->getKeyword(keywordName);
-            tableVector.resize(tableKeyword->size());
-
             for (size_t tableIdx = 0; tableIdx < tableKeyword->size(); ++tableIdx) {
                 if (tableKeyword->getRecord(tableIdx)->getItem(0)->size() == 0) {
                     // for simple tables, an empty record indicates that the previous table
@@ -135,10 +133,11 @@ namespace Opm {
                     if (tableIdx == 0)
                         throw std::invalid_argument("The first table for keyword "+keywordName+
                                                     " must be explicitly defined!");
-                    tableVector[tableIdx] = tableVector[tableIdx - 1];
+                    tableVector.push_back(tableVector.back());
                     continue;
                 }
 
+                tableVector.push_back(TableType());
                 tableVector[tableIdx].init(tableKeyword, tableIdx);
             }
         }
@@ -156,10 +155,10 @@ namespace Opm {
             const auto& tableKeyword = deck->getKeyword(keywordName);
 
             int numTables = TableType::numTables(tableKeyword);
-            tableVector.resize(numTables);
-
-            for (int tableIdx = 0; tableIdx < numTables; ++tableIdx)
+            for (int tableIdx = 0; tableIdx < numTables; ++tableIdx) {
+                tableVector.push_back(TableType());
                 tableVector[tableIdx].init(tableKeyword, tableIdx);
+            }
         }
 
         void initRocktabTables(DeckConstPtr deck);

@@ -22,16 +22,14 @@
 #include "SingleRecordTable.hpp"
 
 namespace Opm {
+    // forward declaration
+    class EclipseState;
+
     class RocktabTable : protected SingleRecordTable {
         typedef SingleRecordTable ParentType;
 
-    public:
+        friend class EclipseState;
         RocktabTable() = default;
-
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
 
         /*!
          * \brief Read the ROCKTAB keyword and provide some convenience
@@ -61,6 +59,12 @@ namespace Opm {
                 ParentType::applyDefaultsLinear("TRANSMIS_MULT_Z");
             }
         }
+
+    public:
+        using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
+        using ParentType::evaluate;
 
         const std::vector<double> &getPressureColumn() const
         { return ParentType::getColumn(0); }

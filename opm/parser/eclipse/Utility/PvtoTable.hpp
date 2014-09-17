@@ -24,11 +24,28 @@
 #include "PvtoOuterTable.hpp"
 
 namespace Opm {
+    // forward declaration
+    class EclipseState;
+
     /*!
      * \brief Read the table for the PVTO and provide convenient access to it.
      */
     class PvtoTable : public Opm::FullTable<Opm::PvtoOuterTable, Opm::PvtoInnerTable>
-    { };
+    {
+        typedef Opm::FullTable<Opm::PvtoOuterTable, Opm::PvtoInnerTable> ParentType;
+        friend class EclipseState;
+        using ParentType::init;
+
+    public:
+        PvtoTable() = default;
+
+#ifdef BOOST_TEST_MODULE
+        // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
+        void initFORUNITTESTONLY(Opm::DeckKeywordConstPtr keyword, size_t tableIdx)
+        { init(keyword, tableIdx); }
+#endif
+
+    };
 
     typedef std::shared_ptr<PvtoTable> PvtoTablePtr;
     typedef std::shared_ptr<const PvtoTable> PvtoConstTablePtr;

@@ -22,16 +22,15 @@
 #include "SingleRecordTable.hpp"
 
 namespace Opm {
+    // forward declaration
+    class EclipseState;
+
     class ImkrvdTable : protected SingleRecordTable {
         typedef SingleRecordTable ParentType;
 
-    public:
+        friend class EclipseState;
         ImkrvdTable() = default;
 
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
         /*!
          * \brief Read the IMKRVD keyword and provide some convenience
          *        methods for it.
@@ -60,6 +59,12 @@ namespace Opm {
             ParentType::applyDefaultsLinear("KROCRITG");
             ParentType::applyDefaultsLinear("KROCRITW");
         }
+
+    public:
+        using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
+        using ParentType::evaluate;
 
         /*!
          * \brief The datum depth for the remaining columns

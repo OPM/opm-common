@@ -38,14 +38,8 @@ namespace Opm {
         typedef std::shared_ptr<InnerTable> InnerTablePtr;
         typedef std::shared_ptr<const InnerTable> InnerTableConstPtr;
 
-    public:
-        typedef std::shared_ptr<Self> Pointer;
-        typedef std::shared_ptr<const Self> ConstPointer;
-
-        static size_t numTables(Opm::DeckKeywordConstPtr keyword)
-        { return OuterTable::numTables(keyword); }
-
-        FullTable() = default;
+    protected:
+        FullTable(const FullTable&) = default;
 
         /*!
          * \brief Read full tables from keywords like PVTO
@@ -73,6 +67,14 @@ namespace Opm {
             }
         }
 
+    public:
+        FullTable() = default;
+
+        typedef std::shared_ptr<Self> Pointer;
+        typedef std::shared_ptr<const Self> ConstPointer;
+
+        static size_t numTables(Opm::DeckKeywordConstPtr keyword)
+        { return OuterTable::numTables(keyword); }
 
         std::shared_ptr<const OuterTable> getOuterTable() const
         { return m_outerTable; }

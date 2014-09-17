@@ -22,18 +22,14 @@
 #include "SingleRecordTable.hpp"
 
 namespace Opm {
+    // forward declaration
+    class EclipseState;
+
     class PlyrockTable : protected SingleRecordTable {
         typedef SingleRecordTable ParentType;
 
-    public:
+        friend class EclipseState;
         PlyrockTable() = default;
-
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-
-        // since this keyword is not necessarily monotonic, it cannot be evaluated!
-        //using ParentType::evaluate;
 
         /*!
          * \brief Read the PLYROCK keyword and provide some convenience
@@ -69,6 +65,14 @@ namespace Opm {
                 }
             }
         }
+
+    public:
+        using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
+
+        // since this keyword is not necessarily monotonic, it cannot be evaluated!
+        //using ParentType::evaluate;
 
         const std::vector<double> &getDeadPoreVolumeColumn() const
         { return ParentType::getColumn(0); }

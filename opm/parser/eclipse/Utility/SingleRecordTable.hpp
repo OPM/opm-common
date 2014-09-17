@@ -29,14 +29,8 @@
 
 namespace Opm {
     class SingleRecordTable {
-    public:
-        /*!
-         * \brief Returns the number of tables in a keyword.
-         *
-         * For simple tables, that is identical to the number of
-         * records.
-         */
-        static size_t numTables(Opm::DeckKeywordConstPtr keyword);
+    protected:
+        SingleRecordTable(const SingleRecordTable&) = default;
 
         /*!
          * \brief Read simple tables from keywords like SWOF
@@ -48,6 +42,26 @@ namespace Opm {
                   const std::vector<std::string> &columnNames,
                   size_t recordIdx,
                   size_t firstEntityOffset);
+
+    public:
+        SingleRecordTable() = default;
+
+        /*!
+         * \brief Returns the number of tables in a keyword.
+         *
+         * For simple tables, that is identical to the number of
+         * records.
+         */
+        static size_t numTables(Opm::DeckKeywordConstPtr keyword);
+
+#ifdef BOOST_TEST_MODULE
+        // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
+        void initFORUNITTESTONLY(Opm::DeckKeywordConstPtr keyword,
+                  const std::vector<std::string> &columnNames,
+                  size_t recordIdx,
+                  size_t firstEntityOffset)
+        { init(keyword, columnNames, recordIdx, firstEntityOffset); }
+#endif
 
         size_t numColumns() const;
         size_t numRows() const;

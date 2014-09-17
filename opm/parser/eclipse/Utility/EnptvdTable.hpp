@@ -22,20 +22,14 @@
 #include "SingleRecordTable.hpp"
 
 namespace Opm {
+    // forward declaration
+    class EclipseState;
+
     class EnptvdTable : protected SingleRecordTable {
         typedef SingleRecordTable ParentType;
 
-    public:
+        friend class EclipseState;
         EnptvdTable() = default;
-
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
-
-        // using this method is strongly discouraged but the current endpoint scaling
-        // code makes it hard to avoid
-        using ParentType::getColumn;
 
         /*!
          * \brief Read the ENPTVD keyword and provide some convenience
@@ -67,6 +61,16 @@ namespace Opm {
             ParentType::applyDefaultsLinear("SOWCRIT");
             ParentType::applyDefaultsLinear("SOGCRIT");
         }
+
+    public:
+        using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
+        using ParentType::evaluate;
+
+        // using this method is strongly discouraged but the current endpoint scaling
+        // code makes it hard to avoid
+        using ParentType::getColumn;
 
         const std::vector<double> &getDepthColumn() const
         { return ParentType::getColumn(0); }

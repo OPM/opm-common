@@ -22,16 +22,14 @@
 #include "SingleRecordTable.hpp"
 
 namespace Opm {
+    // forward declaration
+    class EclipseState;
+
     class PlymaxTable : protected SingleRecordTable {
         typedef SingleRecordTable ParentType;
 
-    public:
+        friend class EclipseState;
         PlymaxTable() = default;
-
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
 
         /*!
          * \brief Read the PLYMAX keyword and provide some convenience
@@ -49,6 +47,12 @@ namespace Opm {
             ParentType::checkNonDefaultable("C_POLYMER_MAX");
             ParentType::checkMonotonic("C_POLYMER_MAX", /*isAscending=*/false);
         }
+
+    public:
+        using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
+        using ParentType::evaluate;
 
         const std::vector<double> &getPolymerConcentrationColumn() const
         { return ParentType::getColumn(0); }

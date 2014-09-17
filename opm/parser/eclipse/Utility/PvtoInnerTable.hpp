@@ -22,16 +22,19 @@
 #include "SingleRecordTable.hpp"
 
 namespace Opm {
-    class PvtoInnerTable : protected SingleRecordTable {
+    // forward declarations
+    template <class OuterTable, class InnerTable>
+    class FullTable;
+    class PvtoTable;
+    class PvtoOuterTable;
+    class PvtoInnerTable;
+
+    class PvtoInnerTable : protected MultiRecordTable {
         typedef SingleRecordTable ParentType;
 
-    public:
+        friend class PvtoTable;
+        friend class FullTable<PvtoOuterTable, PvtoInnerTable>;
         PvtoInnerTable() = default;
-
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
 
         /*!
          * \brief Read the per record table of the PVTO keyword and
@@ -51,6 +54,12 @@ namespace Opm {
             ParentType::applyDefaultsLinear("BO");
             ParentType::applyDefaultsLinear("MU");
         }
+
+    public:
+        using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
+        using ParentType::evaluate;
 
         const std::vector<double> &getPressureColumn() const
         { return ParentType::getColumn(0); }

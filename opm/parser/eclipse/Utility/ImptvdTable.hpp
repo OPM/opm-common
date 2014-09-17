@@ -22,16 +22,15 @@
 #include "SingleRecordTable.hpp"
 
 namespace Opm {
+    // forward declaration
+    class EclipseState;
+
     class ImptvdTable : protected SingleRecordTable {
         typedef SingleRecordTable ParentType;
 
-    public:
+        friend class EclipseState;
         ImptvdTable() = default;
 
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
         /*!
          * \brief Read the IMPTVD keyword and provide some convenience
          *        methods for it.
@@ -60,6 +59,12 @@ namespace Opm {
             ParentType::applyDefaultsLinear("SOWCRIT");
             ParentType::applyDefaultsLinear("SOGCRIT");
         }
+
+    public:
+        using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
+        using ParentType::evaluate;
 
         const std::vector<double> &getDepthColumn() const
         { return ParentType::getColumn(0); }

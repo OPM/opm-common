@@ -16,6 +16,9 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
+#define BOOST_TEST_MODULE SingleRecordTableTests
+#include <boost/test/unit_test.hpp>
+
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
@@ -29,8 +32,6 @@
 #include <opm/parser/eclipse/Utility/SwofTable.hpp>
 #include <opm/parser/eclipse/Utility/SgofTable.hpp>
 
-#define BOOST_TEST_MODULE SingleRecordTableTests
-#include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <boost/filesystem.hpp>
@@ -57,21 +58,21 @@ BOOST_AUTO_TEST_CASE(CreateSingleRecordTable) {
 
     BOOST_CHECK_EQUAL(Opm::SingleRecordTable::numTables(deck->getKeyword("SWOF")), 2);
     Opm::SingleRecordTable tmpTable;
-    BOOST_CHECK_THROW(tmpTable.init(deck->getKeyword("SWOF"),
-                                    tooFewColumnNames,
-                                    /*recordIdx=*/0,
-                                    /*firstEntryOffset=*/0),
+    BOOST_CHECK_THROW(tmpTable.initFORUNITTESTONLY(deck->getKeyword("SWOF"),
+                                                   tooFewColumnNames,
+                                                   /*recordIdx=*/0,
+                                                   /*firstEntryOffset=*/0),
                       std::runtime_error);
-    BOOST_CHECK_THROW(tmpTable.init(deck->getKeyword("SWOF"),
-                                    tooManyColumnNames,
-                                    /*recordIdx=*/0,
-                                    /*firstEntryOffset=*/0),
+    BOOST_CHECK_THROW(tmpTable.initFORUNITTESTONLY(deck->getKeyword("SWOF"),
+                                                   tooManyColumnNames,
+                                                   /*recordIdx=*/0,
+                                                   /*firstEntryOffset=*/0),
                       std::runtime_error);
 
-    tmpTable.init(deck->getKeyword("SWOF"),
-                  justRightColumnNames,
-                  /*recordIdx=*/0,
-                  /*firstEntryOffset=*/0);
+    tmpTable.initFORUNITTESTONLY(deck->getKeyword("SWOF"),
+                                 justRightColumnNames,
+                                 /*recordIdx=*/0,
+                                 /*firstEntryOffset=*/0);
 }
 
 BOOST_AUTO_TEST_CASE(CreateMultiTable) {
@@ -106,16 +107,16 @@ BOOST_AUTO_TEST_CASE(CreateMultiTable) {
                       std::runtime_error);
     */
     Opm::MultiRecordTable mrt;
-    BOOST_CHECK_THROW(mrt.init(deck->getKeyword("PVTO"),
-                               tooManyColumnNames,
-                               /*tableIdx=*/0,
-                               /*firstEntryOffset=*/0),
+    BOOST_CHECK_THROW(mrt.initFORUNITTESTONLY(deck->getKeyword("PVTO"),
+                                              tooManyColumnNames,
+                                              /*tableIdx=*/0,
+                                              /*firstEntryOffset=*/0),
                       std::runtime_error);
 
-    BOOST_CHECK_NO_THROW(mrt.init(deck->getKeyword("PVTO"),
-                                  justRightColumnNames,
-                                  /*recordIdx=*/0,
-                                  /*firstEntryOffset=*/0));
+    BOOST_CHECK_NO_THROW(mrt.initFORUNITTESTONLY(deck->getKeyword("PVTO"),
+                                                 justRightColumnNames,
+                                                 /*recordIdx=*/0,
+                                                 /*firstEntryOffset=*/0));
 }
 
 BOOST_AUTO_TEST_CASE(SwofTable_Tests) {
@@ -139,8 +140,8 @@ BOOST_AUTO_TEST_CASE(SwofTable_Tests) {
     Opm::SwofTable swof1Table;
     Opm::SwofTable swof2Table;
 
-    swof1Table.init(deck->getKeyword("SWOF"), /*tableIdx=*/0);
-    swof2Table.init(deck->getKeyword("SWOF"), /*tableIdx=*/1);
+    swof1Table.initFORUNITTESTONLY(deck->getKeyword("SWOF"), /*tableIdx=*/0);
+    swof2Table.initFORUNITTESTONLY(deck->getKeyword("SWOF"), /*tableIdx=*/1);
 
     BOOST_CHECK_EQUAL(swof1Table.numRows(), 2);
     BOOST_CHECK_EQUAL(swof2Table.numRows(), 3);
@@ -187,8 +188,8 @@ BOOST_AUTO_TEST_CASE(SgofTable_Tests) {
     Opm::SgofTable sgof1Table;
     Opm::SgofTable sgof2Table;
 
-    sgof1Table.init(deck->getKeyword("SGOF"), /*tableIdx=*/0);
-    sgof2Table.init(deck->getKeyword("SGOF"), /*tableIdx=*/1);
+    sgof1Table.initFORUNITTESTONLY(deck->getKeyword("SGOF"), /*tableIdx=*/0);
+    sgof2Table.initFORUNITTESTONLY(deck->getKeyword("SGOF"), /*tableIdx=*/1);
 
     BOOST_CHECK_EQUAL(sgof1Table.numRows(), 2);
     BOOST_CHECK_EQUAL(sgof2Table.numRows(), 3);
@@ -239,8 +240,8 @@ BOOST_AUTO_TEST_CASE(PvtoTable_Tests) {
     Opm::PvtoTable pvto1Table;
     Opm::PvtoTable pvto2Table;
 
-    pvto1Table.init(deck->getKeyword("PVTO"), /*tableIdx=*/0);
-    pvto2Table.init(deck->getKeyword("PVTO"), /*tableIdx=*/1);
+    pvto1Table.initFORUNITTESTONLY(deck->getKeyword("PVTO"), /*tableIdx=*/0);
+    pvto2Table.initFORUNITTESTONLY(deck->getKeyword("PVTO"), /*tableIdx=*/1);
 
     const auto pvto1OuterTable = pvto1Table.getOuterTable();
     const auto pvto2OuterTable = pvto2Table.getOuterTable();

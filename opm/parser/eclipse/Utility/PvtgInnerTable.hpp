@@ -22,16 +22,19 @@
 #include "SingleRecordTable.hpp"
 
 namespace Opm {
-    class PvtgInnerTable : protected SingleRecordTable {
+    // forward declarations
+    template <class OuterTable, class InnerTable>
+    class FullTable;
+    class PvtgTable;
+    class PvtgOuterTable;
+    class PvtgInnerTable;
+
+    class PvtgInnerTable : protected MultiRecordTable {
         typedef SingleRecordTable ParentType;
 
-    public:
+        friend class PvtgTable;
+        friend class FullTable<PvtgOuterTable, PvtgInnerTable>;
         PvtgInnerTable() = default;
-
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
 
         /*!
          * \brief Read the per record table of the PVTG keyword and
@@ -50,6 +53,12 @@ namespace Opm {
             ParentType::applyDefaultsLinear("BG");
             ParentType::applyDefaultsLinear("MUG");
         }
+
+    public:
+        using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
+        using ParentType::evaluate;
 
         const std::vector<double> &getOilSolubilityColumn() const
         { return ParentType::getColumn(0); }

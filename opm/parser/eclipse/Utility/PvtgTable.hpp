@@ -24,11 +24,29 @@
 #include "PvtgOuterTable.hpp"
 
 namespace Opm {
+    // forward declaration
+    class EclipseState;
+
     /*!
      * \brief Read the table for the PVTG and provide convenient access to it.
      */
     class PvtgTable : public Opm::FullTable<Opm::PvtgOuterTable, Opm::PvtgInnerTable>
-    { };
+    {
+        typedef Opm::FullTable<Opm::PvtgOuterTable, Opm::PvtgInnerTable> ParentType;
+
+        friend class EclipseState;
+
+        using ParentType::init;
+
+    public:
+        PvtgTable() = default;
+
+#ifdef BOOST_TEST_MODULE
+        // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
+        void initFORUNITTESTONLY(Opm::DeckKeywordConstPtr keyword, size_t tableIdx)
+        { init(keyword, tableIdx); }
+#endif
+    };
 
     typedef std::shared_ptr<PvtgTable> PvtgTablePtr;
     typedef std::shared_ptr<const PvtgTable> PvtgConstTablePtr;

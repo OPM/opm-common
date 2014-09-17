@@ -22,16 +22,15 @@
 #include "SingleRecordTable.hpp"
 
 namespace Opm {
+    // forward declaration
+    class EclipseState;
+
     class RvvdTable : protected SingleRecordTable {
         typedef SingleRecordTable ParentType;
 
-    public:
-        RvvdTable() = default;
+        friend class EclipseState;
 
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        RvvdTable() = default;
 
         /*!
          * \brief Read the RSVD keyword and provide some convenience
@@ -48,6 +47,12 @@ namespace Opm {
             ParentType::checkMonotonic("DEPTH", /*isAscending=*/true);
             ParentType::checkNonDefaultable("RV");
         }
+
+    public:
+        using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
+        using ParentType::evaluate;
 
         const std::vector<double> &getDepthColumn() const
         { return ParentType::getColumn(0); }
