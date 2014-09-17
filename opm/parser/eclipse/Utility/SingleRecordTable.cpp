@@ -30,13 +30,13 @@ void SingleRecordTable::init(Opm::DeckKeywordConstPtr keyword,
                              size_t recordIdx,
                              size_t firstEntityOffset)
 {
-    createColumns_(columnNames);
+    createColumns(columnNames);
 
     // extract the actual data from the deck
     Opm::DeckRecordConstPtr deckRecord =
         keyword->getRecord(recordIdx);
 
-    size_t numFlatItems = getNumFlatItems_(deckRecord);
+    size_t numFlatItems = getNumFlatItems(deckRecord);
     if ( (numFlatItems - firstEntityOffset) % numColumns() != 0)
         throw std::runtime_error("Number of columns in the data file is"
                                  "inconsistent with the ones specified");
@@ -47,7 +47,7 @@ void SingleRecordTable::init(Opm::DeckKeywordConstPtr keyword,
     {
         for (size_t colIdx = 0; colIdx < numColumns(); ++colIdx) {
             size_t deckItemIdx = rowIdx*numColumns() + firstEntityOffset + colIdx;
-            m_columns[colIdx].push_back(getFlatSiDoubleData_(deckRecord, deckItemIdx));
+            m_columns[colIdx].push_back(getFlatSiDoubleData(deckRecord, deckItemIdx));
             m_valueDefaulted[colIdx].push_back(getFlatIsDefaulted(deckRecord, deckItemIdx));
         }
     }
@@ -219,7 +219,7 @@ void SingleRecordTable::applyDefaultsLinear(const std::string& columnName)
     }
 }
 
-void SingleRecordTable::createColumns_(const std::vector<std::string> &columnNames)
+void SingleRecordTable::createColumns(const std::vector<std::string> &columnNames)
 {
     // Allocate column names. TODO (?): move the column names into
     // the json description of the keyword.
@@ -233,7 +233,7 @@ void SingleRecordTable::createColumns_(const std::vector<std::string> &columnNam
     m_valueDefaulted.resize(columnIdx);
 }
 
-size_t SingleRecordTable::getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord) const
+size_t SingleRecordTable::getNumFlatItems(Opm::DeckRecordConstPtr deckRecord) const
 {
     size_t result = 0;
     for (size_t i = 0; i < deckRecord->size(); ++ i) {
@@ -243,7 +243,7 @@ size_t SingleRecordTable::getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord) c
     return result;
 }
 
-double SingleRecordTable::getFlatSiDoubleData_(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const
+double SingleRecordTable::getFlatSiDoubleData(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const
 {
     size_t itemFirstFlatIdx = 0;
     for (unsigned i = 0; i < deckRecord->size(); ++ i) {

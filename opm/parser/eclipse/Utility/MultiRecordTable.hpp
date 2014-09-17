@@ -78,8 +78,8 @@ namespace Opm {
         size_t numRecords() const;
 
     private:
-        static size_t getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord);
-        double getFlatSiDoubleData_(Opm::DeckRecordConstPtr deckRecord, unsigned flatItemIdx) const;
+        static size_t getNumFlatItems(Opm::DeckRecordConstPtr deckRecord);
+        double getFlatSiDoubleData(Opm::DeckRecordConstPtr deckRecord, unsigned flatItemIdx) const;
 
         size_t m_firstRecordIdx;
         size_t m_numRecords;

@@ -82,9 +82,9 @@ namespace Opm {
                              bool isStrictlyMonotonic = true);
         void applyDefaultsConstant(const std::string& columnName, double value);
         void applyDefaultsLinear(const std::string& columnName);
-        void createColumns_(const std::vector<std::string> &columnNames);
-        size_t getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord) const;
-        double getFlatSiDoubleData_(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const;
+        void createColumns(const std::vector<std::string> &columnNames);
+        size_t getNumFlatItems(Opm::DeckRecordConstPtr deckRecord) const;
+        double getFlatSiDoubleData(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const;
         bool getFlatIsDefaulted(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const;
 
         std::map<std::string, size_t> m_columnNames;
