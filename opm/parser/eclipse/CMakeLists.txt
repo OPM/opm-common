@@ -162,6 +162,8 @@ Utility/SingleRecordTable.hpp
 Utility/MultiRecordTable.hpp
 Utility/TstepWrapper.hpp
 Utility/PvtgTable.hpp
+Utility/RsvdTable.hpp
+Utility/RvvdTable.hpp
 Utility/StartWrapper.hpp
 Utility/SpecgridWrapper.hpp
 Utility/SwofTable.hpp
