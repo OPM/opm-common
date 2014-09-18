@@ -48,11 +48,11 @@ namespace Opm {
         return m_keywords->getKeyword(index);
     }
       
-    size_t Deck::numKeywords(const std::string& keyword) {
+    size_t Deck::numKeywords(const std::string& keyword) const {
         return m_keywords->numKeywords( keyword );
     }
 
-    const std::vector<DeckKeywordPtr>& Deck::getKeywordList(const std::string& keyword) {
+    const std::vector<DeckKeywordPtr>& Deck::getKeywordList(const std::string& keyword) const {
         return m_keywords->getKeywordList( keyword );
     }
 
