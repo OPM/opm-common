@@ -4,9 +4,8 @@ add_subdirectory(Deck/tests)
 add_subdirectory(IntegrationTests)
 add_subdirectory(EclipseState/tests)
 add_subdirectory(EclipseState/Schedule/tests)
+add_subdirectory(EclipseState/Tables/tests)
 add_subdirectory(EclipseState/Grid/tests)
-add_subdirectory(Utility/tests)
-add_subdirectory(Units/tests)
 add_subdirectory(EclipseState/Util/tests)
 
 add_subdirectory( Applications )
@@ -74,6 +73,9 @@ EclipseState/Schedule/ScheduleEnums.cpp
 EclipseState/Schedule/GroupTreeNode.cpp
 EclipseState/Schedule/GroupTree.cpp
 #
+EclipseState/Tables/SingleRecordTable.cpp
+EclipseState/Tables/MultiRecordTable.cpp
+#
 EclipseState/Grid/GridProperty.cpp
 EclipseState/Grid/Box.cpp
 EclipseState/Grid/BoxManager.cpp
@@ -83,10 +85,6 @@ EclipseState/Grid/EclipseGrid.cpp
 EclipseState/Grid/FaultFace.cpp
 EclipseState/Grid/Fault.cpp
 EclipseState/Grid/FaultCollection.cpp)
-
-set (utility_source
-Utility/SingleRecordTable.cpp
-Utility/MultiRecordTable.cpp)
 
 set( HEADER_FILES
 RawDeck/RawConsts.hpp 
@@ -149,47 +147,48 @@ EclipseState/Grid/FaultFace.hpp
 EclipseState/Grid/Fault.hpp
 EclipseState/Grid/FaultCollection.hpp
 #
+EclipseState/Tables/PlyadsTable.hpp
+EclipseState/Tables/PvtoOuterTable.hpp
+EclipseState/Tables/RocktabTable.hpp
+EclipseState/Tables/PvtgInnerTable.hpp
+EclipseState/Tables/PvdoTable.hpp
+EclipseState/Tables/MultiRecordTable.hpp
+EclipseState/Tables/PvdgTable.hpp
+EclipseState/Tables/SingleRecordTable.hpp
+EclipseState/Tables/TlmixparTable.hpp
+EclipseState/Tables/PlymaxTable.hpp
+EclipseState/Tables/PvtgTable.hpp
+EclipseState/Tables/PlyrockTable.hpp
+EclipseState/Tables/SwofTable.hpp
+EclipseState/Tables/EnptvdTable.hpp
+EclipseState/Tables/FullTable.hpp
+EclipseState/Tables/PlyviscTable.hpp
+EclipseState/Tables/EnkrvdTable.hpp
+EclipseState/Tables/ImkrvdTable.hpp
+EclipseState/Tables/SgofTable.hpp
+EclipseState/Tables/PvtoTable.hpp
+EclipseState/Tables/ImptvdTable.hpp
+EclipseState/Tables/RsvdTable.hpp
+EclipseState/Tables/PvtoInnerTable.hpp
+EclipseState/Tables/RvvdTable.hpp
+EclipseState/Tables/PvtgOuterTable.hpp
+#
 Utility/WconinjeWrapper.hpp
 Utility/CompdatWrapper.hpp
-Utility/PvtoOuterTable.hpp
 Utility/WconinjWrapper.hpp
-Utility/PvtgInnerTable.hpp
-Utility/PvdoTable.hpp
 Utility/WgrupconWrapper.hpp
 Utility/GconprodWrapper.hpp
-Utility/PvdgTable.hpp
-Utility/SingleRecordTable.hpp
-Utility/MultiRecordTable.hpp
 Utility/TstepWrapper.hpp
-Utility/PvtgTable.hpp
-Utility/RsvdTable.hpp
-Utility/RvvdTable.hpp
 Utility/StartWrapper.hpp
 Utility/SpecgridWrapper.hpp
-Utility/SwofTable.hpp
-Utility/FullTable.hpp
 Utility/WconprodWrapper.hpp
 Utility/GconinjeWrapper.hpp
 Utility/WelopenWrapper.hpp
-Utility/SgofTable.hpp
-Utility/PvtoTable.hpp
-Utility/PvtoInnerTable.hpp
 Utility/GruptreeWrapper.hpp
 Utility/WelspecsWrapper.hpp
-Utility/PvtgOuterTable.hpp
 Utility/EquilWrapper.hpp
 Utility/EndscaleWrapper.hpp
 Utility/ScalecrsWrapper.hpp
-Utility/EnptvdTable.hpp
-Utility/EnkrvdTable.hpp
-Utility/ImptvdTable.hpp
-Utility/ImkrvdTable.hpp
-Utility/RocktabTable.hpp
-Utility/PlymaxTable.hpp
-Utility/TlmixparTable.hpp
-Utility/PlyrockTable.hpp
-Utility/PlyviscTable.hpp
-Utility/PlyadsTable.hpp
 )
 
 add_library(buildParser ${rawdeck_source} ${build_parser_source} ${deck_source} ${unit_source})
@@ -208,7 +207,7 @@ add_custom_target( keywordlist ALL COMMAND createDefaultKeywordList
 
 #-----------------------------------------------------------------
 
-add_library(Parser ${rawdeck_source} ${parser_source} ${deck_source} ${state_source} ${utility_source} ${unit_source})
+add_library(Parser ${rawdeck_source} ${parser_source} ${deck_source} ${state_source} ${unit_source})
 add_dependencies(Parser keywordlist)
 target_link_libraries(Parser opm-json ${Boost_LIBRARIES}  ${ERT_LIBRARIES})
 

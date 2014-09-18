@@ -31,7 +31,7 @@
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>
 
-#include <opm/parser/eclipse/Utility/SwofTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
 
 using namespace Opm;
 

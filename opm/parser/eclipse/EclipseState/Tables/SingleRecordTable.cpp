@@ -16,7 +16,7 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <opm/parser/eclipse/Utility/SingleRecordTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SingleRecordTable.hpp>
 
 namespace Opm {
 size_t SingleRecordTable::numTables(Opm::DeckKeywordConstPtr keyword)

@@ -19,7 +19,7 @@
 #ifndef OPM_PARSER_MULTI_RECORD_TABLE_HPP
 #define	OPM_PARSER_MULTI_RECORD_TABLE_HPP
 
-#include <opm/parser/eclipse/Utility/SingleRecordTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SingleRecordTable.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 

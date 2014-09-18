@@ -11,7 +11,7 @@
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>
 
-#include <opm/parser/eclipse/Utility/SgofTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
 
 using namespace Opm;
 
