@@ -31,17 +31,27 @@ namespace Opm {
                            std::string& valueString);
 
     template <class T>
-    T readValueToken(const std::string& valueToken ) {
+    T readValueToken(const std::string& valueString) {
         try {
-            return boost::lexical_cast<T>(valueToken);
+            return boost::lexical_cast<T>(valueString);
         }
         catch (boost::bad_lexical_cast&) {
-            throw std::invalid_argument("Unable to parse string" + valueToken + " to typeid: " + typeid(T).name());
+            throw std::invalid_argument("Unable to parse string" + valueString + " to typeid: " + typeid(T).name());
         }
     }
 
+    template <>
+    inline std::string readValueToken<std::string>(const std::string& valueString) {
+        if (valueString.size() > 0 && valueString[0] == '\'') {
+            if (valueString.size() < 2 || valueString[valueString.size() - 1] != '\'')
+                throw std::invalid_argument("Unable to parse string" + valueString + " as a string token");
+            return valueString.substr(1, valueString.size() - 2);
+        }
+        else
+            return valueString;
+    }
 
-template <class T>
+
 class StarToken {
 public:
     StarToken(const std::string& token)
@@ -60,12 +70,6 @@ public:
 
     size_t count() const {
         return m_count;
-    }
-
-    T value() const {
-        if (!hasValue())
-            throw std::invalid_argument("The input token did not specify a value ");
-        return m_value;
     }
 
     bool hasValue() const {
@@ -110,13 +114,9 @@ private:
                 // TODO: decorate the deck with a warning instead?
                 throw std::invalid_argument("Specifing zero repetitions is not allowed. Token: \'" + token + "\'.");
         }
-
-        if (!m_valueString.empty())
-            m_value = readValueToken<T>( m_valueString );
     }
 
     ssize_t m_count;
-    T m_value;
     std::string m_countString;
     std::string m_valueString;
 };

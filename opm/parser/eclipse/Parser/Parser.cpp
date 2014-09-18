@@ -266,14 +266,14 @@ namespace Opm {
                     else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::paths) {
                         for (size_t i = 0; i < parserState->rawKeyword->size(); i++) {
                              RawRecordConstPtr record = parserState->rawKeyword->getRecord(i);
-                             std::string pathName = record->getItem(0);
-                             std::string pathValue = record->getItem(1);
+                             std::string pathName = readValueToken<std::string>(record->getItem(0));
+                             std::string pathValue = readValueToken<std::string>(record->getItem(1));
                              parserState->pathMap.insert(std::pair<std::string, std::string>(pathName, pathValue));
                         }
                     }
                     else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::include) {
                         RawRecordConstPtr firstRecord = parserState->rawKeyword->getRecord(0);
-                        std::string includeFileAsString = firstRecord->getItem(0);
+                        std::string includeFileAsString = readValueToken<std::string>(firstRecord->getItem(0));
                         boost::filesystem::path includeFile = getIncludeFilePath(parserState, includeFileAsString);
 
                         if (verbose)

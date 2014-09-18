@@ -33,8 +33,8 @@ BOOST_AUTO_TEST_CASE(RawRecordGetRecordsCorrectElementsReturned) {
 
     BOOST_CHECK_EQUAL((unsigned) 4, record->size());
 
-    BOOST_CHECK_EQUAL("NODIR ", record->getItem(0));
-    BOOST_CHECK_EQUAL("REVERS", record->getItem(1));
+    BOOST_CHECK_EQUAL("'NODIR '", record->getItem(0));
+    BOOST_CHECK_EQUAL("'REVERS'", record->getItem(1));
     BOOST_CHECK_EQUAL("1", record->getItem(2));
     BOOST_CHECK_EQUAL("20", record->getItem(3));
 }
@@ -55,8 +55,8 @@ BOOST_AUTO_TEST_CASE(Rawrecord_OperatorThis_OK) {
     Opm::RawRecord record(" 'NODIR '  'REVERS'  1  20  /");
     Opm::RawRecordPtr recordPtr(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20  /"));
 
-    BOOST_CHECK_EQUAL("NODIR ", record.getItem(0));
-    BOOST_CHECK_EQUAL("REVERS", record.getItem(1));
+    BOOST_CHECK_EQUAL("'NODIR '", record.getItem(0));
+    BOOST_CHECK_EQUAL("'REVERS'", record.getItem(1));
     BOOST_CHECK_EQUAL("1", record.getItem(2));
     BOOST_CHECK_EQUAL("20", record.getItem(3));
 

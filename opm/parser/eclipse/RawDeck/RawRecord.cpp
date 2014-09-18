@@ -103,12 +103,14 @@ namespace Opm {
         char currentChar;
         char tokenStartCharacter=' ';
         std::string currentToken = "";
+        bool inQuote = false;
         for (unsigned i = 0; i < m_sanitizedRecordString.size(); i++) {
             currentChar = m_sanitizedRecordString[i];
-            if (charIsSeparator(currentChar)) {
+            if (!inQuote && charIsSeparator(currentChar)) {
                 processSeparatorCharacter(currentToken, currentChar, tokenStartCharacter);
             } else if (currentChar == RawConsts::quote) {
-                processQuoteCharacters(currentToken, currentChar, tokenStartCharacter);
+                inQuote = !inQuote;
+                processNonSpecialCharacters(currentToken, currentChar);
             } else {
                 processNonSpecialCharacters(currentToken, currentChar);
             }
@@ -128,19 +130,6 @@ namespace Opm {
                 currentToken.clear();
             }
             tokenStartCharacter = currentChar;
-        }
-    }
-
-    void RawRecord::processQuoteCharacters(std::string& currentToken, const char& currentChar, char& tokenStartCharacter) {
-        if (currentChar == tokenStartCharacter) {
-            if (currentToken.size() > 0) {
-                m_recordItems.push_back(currentToken);
-                currentToken.clear();
-            }
-            tokenStartCharacter = '\0';
-        } else {
-            tokenStartCharacter = currentChar;
-            currentToken.clear();
         }
     }
 

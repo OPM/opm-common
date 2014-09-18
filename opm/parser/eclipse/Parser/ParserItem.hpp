@@ -113,11 +113,11 @@ namespace Opm {
                 std::string countString;
                 std::string valueString;
                 if (isStarToken(token, countString, valueString)) {
-                    StarToken<ValueType> st(token, countString, valueString);
+                    StarToken st(token, countString, valueString);
                     ValueType value;
 
                     if (st.hasValue()) {
-                        value = st.value();
+                        value = readValueToken<ValueType>(st.valueString());
                         deckItem->push_backMultiple( value , st.count());
                     } else {
                         value = self->getDefault();
@@ -141,12 +141,12 @@ namespace Opm {
                 std::string countString;
                 std::string valueString;
                 if (isStarToken(token, countString, valueString)) {
-                    StarToken<ValueType> st(token, countString, valueString);
+                    StarToken st(token, countString, valueString);
 
                     if (!st.hasValue())
                         deckItem->push_backDefault( self->getDefault() );
                     else
-                        deckItem->push_back(st.value());
+                        deckItem->push_back(readValueToken<ValueType>(st.valueString()));
 
                     // replace the first occurence of "N*FOO" by a sequence of N-1 times
                     // "1*FOO". this is slightly hacky, but it makes it work if the

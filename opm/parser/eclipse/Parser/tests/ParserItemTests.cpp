@@ -576,7 +576,7 @@ BOOST_AUTO_TEST_CASE(init_defaultvalue_defaultset) {
     ParserStringItem itemString(std::string("ITEM1") , "DEFAULT");
     RawRecordPtr rawRecord(new RawRecord(("'1*'/")));
     DeckItemConstPtr deckItem = itemString.scan(rawRecord);
-    BOOST_CHECK_EQUAL("DEFAULT", deckItem->getString(0));
+    BOOST_CHECK_EQUAL("1*", deckItem->getString(0));
 
     rawRecord.reset(new RawRecord("13*/"));
     deckItem = itemString.scan(rawRecord);
@@ -595,9 +595,9 @@ BOOST_AUTO_TEST_CASE(init_defaultvalue_defaultset) {
 BOOST_AUTO_TEST_CASE(scan_all_valuesCorrect) {
     ParserItemSizeEnum sizeType = ALL;
     ParserStringItem itemString("ITEMWITHMANY", sizeType);
-    RawRecordPtr rawRecord(new RawRecord("'WELL1' FISK BANAN 3*X OPPLEGG_FOR_DATAANALYSE /"));
+    RawRecordPtr rawRecord(new RawRecord("'WELL1' FISK BANAN 3*X OPPLEGG_FOR_DATAANALYSE 'Foo$*!% BAR' /"));
     DeckItemConstPtr deckItem = itemString.scan(rawRecord);
-    BOOST_CHECK_EQUAL(7U, deckItem->size());
+    BOOST_CHECK_EQUAL(8U, deckItem->size());
 
     BOOST_CHECK_EQUAL("WELL1", deckItem->getString(0));
     BOOST_CHECK_EQUAL("FISK", deckItem->getString(1));
@@ -606,6 +606,7 @@ BOOST_AUTO_TEST_CASE(scan_all_valuesCorrect) {
     BOOST_CHECK_EQUAL("X", deckItem->getString(4));
     BOOST_CHECK_EQUAL("X", deckItem->getString(5));
     BOOST_CHECK_EQUAL("OPPLEGG_FOR_DATAANALYSE", deckItem->getString(6));
+    BOOST_CHECK_EQUAL("Foo$*!% BAR", deckItem->getString(7));
 }
 
 BOOST_AUTO_TEST_CASE(scan_all_withdefaults) {
