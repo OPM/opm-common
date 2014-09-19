@@ -314,6 +314,7 @@ namespace Opm {
             properties.surfaceInjectionRate = injectionRate;
             // History matches are usually rate controled. Here, we assume it.
             properties.addInjectionControl(WellInjector::RATE);
+            properties.controlMode = WellInjector::RATE;
             properties.predictionMode = false;
             well->setInjectionProperties(currentStep, properties);
         }
