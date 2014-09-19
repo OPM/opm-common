@@ -16,42 +16,55 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPM_PARSER_ENKRVD_TABLE_HPP
-#define	OPM_PARSER_ENKRVD_TABLE_HPP
+#ifndef OPM_PARSER_IMKRVD_TABLE_HPP
+#define	OPM_PARSER_IMKRVD_TABLE_HPP
 
 #include "SingleRecordTable.hpp"
 
 namespace Opm {
-    class EnkrvdTable : protected SingleRecordTable {
+    // forward declaration
+    class EclipseState;
+
+    class ImkrvdTable : protected SingleRecordTable {
         typedef SingleRecordTable ParentType;
+
+        friend class EclipseState;
+        ImkrvdTable() = default;
+
+        /*!
+         * \brief Read the IMKRVD keyword and provide some convenience
+         *        methods for it.
+         */
+        void init(Opm::DeckKeywordConstPtr keyword,
+                  int recordIdx)
+        {
+            ParentType::init(keyword,
+                             std::vector<std::string>{"DEPTH",
+                                     "KRWMAX",
+                                     "KRGMAX",
+                                     "KROMAX",
+                                     "KRWCRIT",
+                                     "KRGCRIT",
+                                     "KROCRITG",
+                                     "KROCRITW" },
+                             recordIdx,
+                             /*firstEntityOffset=*/0);
+
+            ParentType::checkNonDefaultable("DEPTH", /*isAscending=*/true);
+            ParentType::applyDefaultsLinear("KRWMAX");
+            ParentType::applyDefaultsLinear("KRGMAX");
+            ParentType::applyDefaultsLinear("KROMAX");
+            ParentType::applyDefaultsLinear("KRWCRIT");
+            ParentType::applyDefaultsLinear("KRGCRIT");
+            ParentType::applyDefaultsLinear("KROCRITG");
+            ParentType::applyDefaultsLinear("KROCRITW");
+        }
 
     public:
         using ParentType::numTables;
-
-        /*!
-         * \brief Read the ENKRVD keyword and provide some convenience
-         *        methods for it.
-         */
-        EnkrvdTable(Opm::DeckKeywordConstPtr keyword,
-                  int recordIdx = 0,
-                  int firstEntityOffset = 0)
-            : SingleRecordTable(keyword,
-                          std::vector<std::string>{"DEPTH",
-                                  "KRWMAX",
-                                  "KRGMAX",
-                                  "KROMAX",
-                                  "KRWCRIT",
-                                  "KRGCRIT",
-                                  "KROCRITG",
-                                  "KROCRITW" },
-                          recordIdx, firstEntityOffset)
-        {}
-
-        int numRows() const
-        { return ParentType::numRows(); };
-
-        int numColumns() const
-        { return ParentType::numColumns(); };
+        using ParentType::numRows;
+        using ParentType::numColumns;
+        using ParentType::evaluate;
 
         /*!
          * \brief The datum depth for the remaining columns
@@ -103,5 +116,5 @@ namespace Opm {
     };
 }
 
-#endif	// OPM_PARSER_SIMPLE_TABLE_HPP
+#endif
 

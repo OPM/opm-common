@@ -22,34 +22,57 @@
 #include "SingleRecordTable.hpp"
 
 namespace Opm {
+    // forward declaration
+    class EclipseState;
+
     class PlyrockTable : protected SingleRecordTable {
         typedef SingleRecordTable ParentType;
 
-    public:
-        using ParentType::numTables;
+        friend class EclipseState;
+        PlyrockTable() = default;
 
         /*!
          * \brief Read the PLYROCK keyword and provide some convenience
          *        methods for it.
          */
-        PlyrockTable(Opm::DeckKeywordConstPtr keyword, int recordIdx = 0)
-            : ParentType(keyword,
-                         std::vector<std::string>{
-                             "DeadPoreVolume",
-                             "ResidualResistanceFactor",
-                             "RockDensityFactor",
-                             "AdsorbtionIndex",
-                             "MaxAdsorbtion"
-                         },
-                         recordIdx,
-                         /*firstEntityOffset=*/0)
-        {}
+        void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
+        {
+            ParentType::init(keyword,
+                             std::vector<std::string>{
+                                 "DeadPoreVolume",
+                                 "ResidualResistanceFactor",
+                                 "RockDensityFactor",
+                                 "AdsorbtionIndex",
+                                 "MaxAdsorbtion"
+                             },
+                             recordIdx,
+                             /*firstEntityOffset=*/0);
 
-        int numRows() const
-        { return ParentType::numRows(); };
+            // the entries of this keyword cannot be defaulted except for the
+            // forth. ensure this.
+            int nRows = numRows();
+            int nCols = numColumns();
+            for (int rowIdx = 0; rowIdx < nRows; ++rowIdx) {
+                for (int colIdx = 0; colIdx < nCols; ++colIdx) {
+                    if (m_valueDefaulted[colIdx][rowIdx]) {
+                        if (colIdx == 3) {
+                            m_valueDefaulted[colIdx][rowIdx] = false;
+                            m_columns[colIdx][rowIdx] = 1.0;
+                        }
+                        else
+                            throw std::invalid_argument("The values of the PLYROCK table cannot be defaulted");
+                    }
+                }
+            }
+        }
 
-        int numColumns() const
-        { return ParentType::numColumns(); };
+    public:
+        using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
+
+        // since this keyword is not necessarily monotonic, it cannot be evaluated!
+        //using ParentType::evaluate;
 
         const std::vector<double> &getDeadPoreVolumeColumn() const
         { return ParentType::getColumn(0); }
@@ -76,5 +99,4 @@ namespace Opm {
     };
 }
 
-#endif	// OPM_PARSER_PLYROCK_TABLE_HPP
-
+#endif

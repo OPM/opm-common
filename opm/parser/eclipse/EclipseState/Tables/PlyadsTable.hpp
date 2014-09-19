@@ -22,31 +22,41 @@
 #include "SingleRecordTable.hpp"
 
 namespace Opm {
+    // forward declaration
+    class EclipseState;
+
     class PlyadsTable : protected SingleRecordTable {
         typedef SingleRecordTable ParentType;
 
-    public:
-        using ParentType::numTables;
+        friend class EclipseState;
+
+        PlyadsTable() = default;
 
         /*!
          * \brief Read the PLYADS keyword and provide some convenience
          *        methods for it.
          */
-        PlyadsTable(Opm::DeckKeywordConstPtr keyword, int recordIdx = 0)
-            : ParentType(keyword,
-                         std::vector<std::string>{
-                             "PolymerConcentration",
-                             "AdsorbedPolymer"
-                         },
-                         recordIdx,
-                         /*firstEntityOffset=*/0)
-        {}
+        void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
+        {
+            ParentType::init(keyword,
+                             std::vector<std::string>{
+                                 "PolymerConcentration",
+                                 "AdsorbedPolymer"
+                             },
+                             recordIdx,
+                             /*firstEntityOffset=*/0);
 
-        int numRows() const
-        { return ParentType::numRows(); };
+            ParentType::checkNonDefaultable("PolymerConcentration");
+            ParentType::checkMonotonic("PolymerConcentration", /*isAscending=*/true);
+            ParentType::checkNonDefaultable("AdsorbedPolymer");
+            ParentType::checkMonotonic("AdsorbedPolymer", /*isAscending=*/true);
+        }
 
-        int numColumns() const
-        { return ParentType::numColumns(); };
+    public:
+        using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
+        using ParentType::evaluate;
 
         const std::vector<double> &getPolymerConcentrationColumn() const
         { return ParentType::getColumn(0); }
@@ -56,5 +66,4 @@ namespace Opm {
     };
 }
 
-#endif	// OPM_PARSER_PLYADS_TABLE_HPP
-
+#endif

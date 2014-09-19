@@ -22,11 +22,19 @@
 #include "SingleRecordTable.hpp"
 
 namespace Opm {
-    class PvtgInnerTable : protected SingleRecordTable {
+    // forward declarations
+    template <class OuterTable, class InnerTable>
+    class FullTable;
+    class PvtgTable;
+    class PvtgOuterTable;
+    class PvtgInnerTable;
+
+    class PvtgInnerTable : protected MultiRecordTable {
         typedef SingleRecordTable ParentType;
 
-    public:
-        using ParentType::numTables;
+        friend class PvtgTable;
+        friend class FullTable<PvtgOuterTable, PvtgInnerTable>;
+        PvtgInnerTable() = default;
 
         /*!
          * \brief Read the per record table of the PVTG keyword and
@@ -34,17 +42,23 @@ namespace Opm {
          *
          * The first value of the record (-> Rv) is skipped.
          */
-        PvtgInnerTable(Opm::DeckKeywordConstPtr keyword, size_t recordIdx = 0)
-            : SingleRecordTable(keyword,
-                          std::vector<std::string>{"RV", "BG", "MUG"},
-                          recordIdx, 1U)
-        {}
+        void init(Opm::DeckKeywordConstPtr keyword, size_t recordIdx)
+        {
+            ParentType::init(keyword,
+                             std::vector<std::string>{"RV", "BG", "MUG"},
+                             recordIdx, 1U);
 
-        size_t numRows() const
-        { return ParentType::numRows(); };
+            ParentType::checkNonDefaultable("RV");
+            ParentType::checkMonotonic("RV", /*isAscending=*/false);
+            ParentType::applyDefaultsLinear("BG");
+            ParentType::applyDefaultsLinear("MUG");
+        }
 
-        size_t numColumns() const
-        { return ParentType::numColumns(); };
+    public:
+        using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
+        using ParentType::evaluate;
 
         const std::vector<double> &getOilSolubilityColumn() const
         { return ParentType::getColumn(0); }
@@ -57,5 +71,4 @@ namespace Opm {
     };
 }
 
-#endif	// OPM_PARSER_SIMPLE_TABLE_HPP
-
+#endif

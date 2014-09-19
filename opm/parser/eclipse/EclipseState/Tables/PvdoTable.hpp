@@ -22,29 +22,42 @@
 #include "SingleRecordTable.hpp"
 
 namespace Opm {
+    // forward declaration
+    class EclipseState;
+
     class PvdoTable : protected SingleRecordTable {
         typedef SingleRecordTable ParentType;
 
-    public:
-        using ParentType::numTables;
+        friend class EclipseState;
+        PvdoTable() = default;
 
         /*!
          * \brief Read the PVDO keyword and provide some convenience
          *        methods for it.
          */
-        PvdoTable(Opm::DeckKeywordConstPtr keyword,
-                  int recordIdx = 0,
-                  int firstEntityOffset = 0)
-            : SingleRecordTable(keyword,
-                          std::vector<std::string>{"P", "BO", "MUO"},
-                          recordIdx, firstEntityOffset)
-        {}
+        void init(Opm::DeckKeywordConstPtr keyword,
+                  int recordIdx)
+        {
+            ParentType::init(keyword,
+                             std::vector<std::string>{"P", "BO", "MUO"},
+                             recordIdx,
+                             /*firstEntityOffset=*/0);
 
-        int numRows() const
-        { return ParentType::numRows(); };
+            ParentType::checkNonDefaultable("P");
+            ParentType::checkMonotonic("P", /*isAscending=*/true);
 
-        int numColumns() const
-        { return ParentType::numColumns(); };
+            ParentType::applyDefaultsLinear("BO");
+            ParentType::checkMonotonic("BO", /*isAscending=*/false);
+
+            ParentType::applyDefaultsLinear("MUO");
+            ParentType::checkMonotonic("MUO", /*isAscending=*/true, /*strictlyMonotonic=*/false);
+        }
+
+    public:
+        using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
+        using ParentType::evaluate;
 
         const std::vector<double> &getPressureColumn() const
         { return ParentType::getColumn(0); }
@@ -57,5 +70,4 @@ namespace Opm {
     };
 }
 
-#endif	// OPM_PARSER_PVDO_TABLE_HPP
-
+#endif

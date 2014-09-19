@@ -24,27 +24,31 @@
 #include "PvtoOuterTable.hpp"
 
 namespace Opm {
-  /*!
-   * \brief Read the table for the PVTO and provide convenient access to it.
-   */
-  class PvtoTable : public Opm::FullTable<Opm::PvtoOuterTable, Opm::PvtoInnerTable>
-  {
-      typedef Opm::FullTable<Opm::PvtoOuterTable, Opm::PvtoInnerTable> ParentType;
+    // forward declaration
+    class EclipseState;
 
-  public:
-      using ParentType::numTables;
+    /*!
+     * \brief Read the table for the PVTO and provide convenient access to it.
+     */
+    class PvtoTable : public Opm::FullTable<Opm::PvtoOuterTable, Opm::PvtoInnerTable>
+    {
+        typedef Opm::FullTable<Opm::PvtoOuterTable, Opm::PvtoInnerTable> ParentType;
+        friend class EclipseState;
+        using ParentType::init;
 
-      /*!
-       * \brief Read the table for the PVTO and provide convenient access to it.
-       */
-      PvtoTable(Opm::DeckKeywordConstPtr keyword, int tableIdx)
-          : ParentType(keyword, tableIdx)
-      { }
+    public:
+        PvtoTable() = default;
+
+#ifdef BOOST_TEST_MODULE
+        // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
+        void initFORUNITTESTONLY(Opm::DeckKeywordConstPtr keyword, size_t tableIdx)
+        { init(keyword, tableIdx); }
+#endif
+
     };
 
     typedef std::shared_ptr<PvtoTable> PvtoTablePtr;
     typedef std::shared_ptr<const PvtoTable> PvtoConstTablePtr;
 }
 
-#endif	// OPM_PARSER_FULL_TABLE_HPP
-
+#endif

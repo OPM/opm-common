@@ -22,33 +22,49 @@
 #include "SingleRecordTable.hpp"
 
 namespace Opm {
+    // forward declaration
+    class EclipseState;
+
     class RocktabTable : protected SingleRecordTable {
         typedef SingleRecordTable ParentType;
 
-    public:
-        using ParentType::numTables;
+        friend class EclipseState;
+        RocktabTable() = default;
 
         /*!
          * \brief Read the ROCKTAB keyword and provide some convenience
          *        methods for it.
          */
-        RocktabTable(Opm::DeckKeywordConstPtr keyword,
-                     bool isDirectional,
-                     int recordIdx = 0,
-                     int firstEntityOffset = 0)
-            : SingleRecordTable(keyword,
-                          isDirectional
-                          ? std::vector<std::string>{"PO", "PV_MULT", "TRANSMIS_MULT_X", "TRANSMIS_MULT_Y", "TRANSMIS_MULT_Z"}
-                          : std::vector<std::string>{"PO", "PV_MULT", "TRANSMIS_MULT"},
-                          recordIdx, firstEntityOffset),
-              m_isDirectional(isDirectional)
-        {}
+        void init(Opm::DeckKeywordConstPtr keyword,
+                  bool isDirectional,
+                  bool hasStressOption,
+                  int recordIdx)
+        {
+            ParentType::init(keyword,
+                             isDirectional
+                             ? std::vector<std::string>{"PO", "PV_MULT", "TRANSMIS_MULT_X", "TRANSMIS_MULT_Y", "TRANSMIS_MULT_Z"}
+                             : std::vector<std::string>{"PO", "PV_MULT", "TRANSMIS_MULT"},
+                             recordIdx,
+                             /*firstEntityOffset=*/0);
+            m_isDirectional = isDirectional;
 
-        int numRows() const
-        { return ParentType::numRows(); };
+            ParentType::checkNonDefaultable("PO");
+            ParentType::checkMonotonic("PO", /*isAscending=*/hasStressOption);
+            ParentType::applyDefaultsLinear("PV_MULT");
+            if (isDirectional) {
+                ParentType::applyDefaultsLinear("TRANSMIS_MULT");
+            } else {
+                ParentType::applyDefaultsLinear("TRANSMIS_MULT_X");
+                ParentType::applyDefaultsLinear("TRANSMIS_MULT_Y");
+                ParentType::applyDefaultsLinear("TRANSMIS_MULT_Z");
+            }
+        }
 
-        int numColumns() const
-        { return ParentType::numColumns(); };
+    public:
+        using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
+        using ParentType::evaluate;
 
         const std::vector<double> &getPressureColumn() const
         { return ParentType::getColumn(0); }
@@ -81,5 +97,4 @@ namespace Opm {
     };
 }
 
-#endif	// OPM_PARSER_ROCKTAB_TABLE_HPP
-
+#endif

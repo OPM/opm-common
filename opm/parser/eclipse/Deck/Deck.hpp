@@ -37,8 +37,8 @@ namespace Opm {
         DeckKeywordPtr getKeyword(const std::string& keyword) const;
         DeckKeywordPtr getKeyword(size_t index) const;
 
-        size_t numKeywords(const std::string& keyword);
-        const std::vector<DeckKeywordPtr>& getKeywordList(const std::string& keyword);
+        size_t numKeywords(const std::string& keyword) const;
+        const std::vector<DeckKeywordPtr>& getKeywordList(const std::string& keyword) const;
         size_t size() const;
         size_t numWarnings() const;
         void addWarning(const std::string& warningText , const std::string& filename , size_t lineNR);

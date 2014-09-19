@@ -19,7 +19,7 @@
 #ifndef OPM_PARSER_MULTI_RECORD_TABLE_HPP
 #define	OPM_PARSER_MULTI_RECORD_TABLE_HPP
 
-#include <opm/parser/eclipse/Utility/SingleRecordTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SingleRecordTable.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
@@ -30,9 +30,35 @@
 #include <cassert>
 
 namespace Opm {
+    // forward declaration
+    class EclipseState;
+
     // create table from first few items of multiple records (i.e. getSIDoubleData() throws an exception)
     class MultiRecordTable : public SingleRecordTable {
+    protected:
+        /*!
+         * \brief Read simple tables from multi-item keywords like PVTW
+         *
+         * This creates a table out of the first N items of each of
+         * the keyword's records. (N is the number of columns.)
+         */
+        void init(Opm::DeckKeywordConstPtr keyword,
+                  const std::vector<std::string> &columnNames,
+                  size_t tableIndex,
+                  size_t firstEntityOffset);
+
     public:
+        MultiRecordTable() = default;
+
+#ifdef BOOST_TEST_MODULE
+        // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
+        void initFORUNITTESTONLY(Opm::DeckKeywordConstPtr keyword,
+                                 const std::vector<std::string> &columnNames,
+                                 size_t tableIndex,
+                                 size_t firstEntityOffset)
+        { init(keyword, columnNames, tableIndex, firstEntityOffset); }
+#endif
+
         /*!
          * \brief Returns the number of tables which can be found in a
          *        given keyword.
@@ -40,33 +66,20 @@ namespace Opm {
         static size_t numTables(Opm::DeckKeywordConstPtr keyword);
 
         /*!
-         * \brief Read simple tables from multi-item keywords like PVTW
-         *
-         * This creates a table out of the first N items of each of
-         * the keyword's records. (N is the number of columns.)
-         */
-        MultiRecordTable(Opm::DeckKeywordConstPtr keyword,
-                               const std::vector<std::string> &columnNames,
-                               size_t tableIndex,
-                               size_t firstEntityOffset = 0);
-
-        /*!
          * \brief Return the index of the first record which applies
          *        for this table object.
          */
-        size_t firstRecordIndex() const
-        { return m_firstRecordIdx; }
+        size_t firstRecordIndex() const;
 
         /*!
          * \brief Return the number of records which are used by this
          *        this table object.
          */
-        size_t numRecords() const
-        { return m_numRecords; }
+        size_t numRecords() const;
 
     private:
-        static size_t getNumFlatItems_(Opm::DeckRecordConstPtr deckRecord);
-        double getFlatSiDoubleData_(Opm::DeckRecordConstPtr deckRecord, unsigned flatItemIdx) const;
+        static size_t getNumFlatItems(Opm::DeckRecordConstPtr deckRecord);
+        double getFlatSiDoubleData(Opm::DeckRecordConstPtr deckRecord, unsigned flatItemIdx) const;
 
         size_t m_firstRecordIdx;
         size_t m_numRecords;
@@ -77,5 +90,5 @@ namespace Opm {
 
 }
 
-#endif	// OPM_PARSER_SIMPLE_MULTI_RECORD_TABLE_HPP
+#endif
 

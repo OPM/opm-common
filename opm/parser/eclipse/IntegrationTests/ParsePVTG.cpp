@@ -23,7 +23,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
 
-#include <opm/parser/eclipse/Utility/PvtgTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
@@ -112,7 +112,8 @@ static void check_parser(ParserPtr parser) {
 
     
     {
-        Opm::PvtgTable pvtgTable(kw1, 0);
+        Opm::PvtgTable pvtgTable;
+        pvtgTable.initFORUNITTESTONLY(kw1, 0);
         
         const auto &outerTable = *pvtgTable.getOuterTable();
         const auto &innerTable0 = *pvtgTable.getInnerTable(0);

@@ -22,11 +22,19 @@
 #include "SingleRecordTable.hpp"
 
 namespace Opm {
-    class PvtoInnerTable : protected SingleRecordTable {
+    // forward declarations
+    template <class OuterTable, class InnerTable>
+    class FullTable;
+    class PvtoTable;
+    class PvtoOuterTable;
+    class PvtoInnerTable;
+
+    class PvtoInnerTable : protected MultiRecordTable {
         typedef SingleRecordTable ParentType;
 
-    public:
-        using ParentType::numTables;
+        friend class PvtoTable;
+        friend class FullTable<PvtoOuterTable, PvtoInnerTable>;
+        PvtoInnerTable() = default;
 
         /*!
          * \brief Read the per record table of the PVTO keyword and
@@ -34,17 +42,24 @@ namespace Opm {
          *
          * The first value of the record (-> Rs) is skipped.
          */
-        PvtoInnerTable(Opm::DeckKeywordConstPtr keyword, int recordIdx = 0)
-            : SingleRecordTable(keyword,
-                          std::vector<std::string>{"P", "BO", "MU"},
-                          recordIdx, /*firstEntityOffset=*/1)
-        {}
+        void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
+        {
+            ParentType::init(keyword,
+                             std::vector<std::string>{"P", "BO", "MU"},
+                             recordIdx,
+                             /*firstEntityOffset=*/1);
 
-        int numRows() const
-        { return ParentType::numRows(); };
+            ParentType::checkNonDefaultable("P");
+            ParentType::checkMonotonic("P", /*isAscending=*/true);
+            ParentType::applyDefaultsLinear("BO");
+            ParentType::applyDefaultsLinear("MU");
+        }
 
-        int numColumns() const
-        { return ParentType::numColumns(); };
+    public:
+        using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
+        using ParentType::evaluate;
 
         const std::vector<double> &getPressureColumn() const
         { return ParentType::getColumn(0); }
@@ -57,5 +72,4 @@ namespace Opm {
     };
 }
 
-#endif	// OPM_PARSER_SIMPLE_TABLE_HPP
-
+#endif

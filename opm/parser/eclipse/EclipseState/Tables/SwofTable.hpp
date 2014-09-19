@@ -22,29 +22,46 @@
 #include "SingleRecordTable.hpp"
 
 namespace Opm {
+    // forward declaration
+    class EclipseState;
+
     class SwofTable : protected SingleRecordTable {
         typedef SingleRecordTable ParentType;
 
-    public:
-        using ParentType::numTables;
+        friend class EclipseState;
 
         /*!
          * \brief Read the SWOF keyword and provide some convenience
          *        methods for it.
          */
-        SwofTable(Opm::DeckKeywordConstPtr keyword,
-                  int recordIdx = 0,
-                  int firstEntityOffset = 0)
-            : SingleRecordTable(keyword,
-                          std::vector<std::string>{"SW", "KRW", "KROW", "PCOW"},
-                          recordIdx, firstEntityOffset)
-        {}
+        void init(Opm::DeckKeywordConstPtr keyword,
+                  int recordIdx)
+        {
+            ParentType::init(keyword,
+                             std::vector<std::string>{"SW", "KRW", "KROW", "PCOW"},
+                             recordIdx,
+                             /*firstEntityOffset=*/0);
 
-        int numRows() const
-        { return ParentType::numRows(); };
+            ParentType::checkNonDefaultable("SW");
+            ParentType::checkMonotonic("SW", /*isAscending=*/true);
+            ParentType::applyDefaultsLinear("KRW");
+            ParentType::applyDefaultsLinear("KROW");
+            ParentType::applyDefaultsLinear("PCOW");
+        }
 
-        int numColumns() const
-        { return ParentType::numColumns(); };
+    public:
+        SwofTable() = default;
+
+#ifdef BOOST_TEST_MODULE
+        // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
+        void initFORUNITTESTONLY(Opm::DeckKeywordConstPtr keyword, size_t tableIdx)
+        { init(keyword, tableIdx); }
+#endif
+
+        using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
+        using ParentType::evaluate;
 
         const std::vector<double> &getSwColumn() const
         { return ParentType::getColumn(0); }
@@ -62,5 +79,5 @@ namespace Opm {
     };
 }
 
-#endif	// OPM_PARSER_SIMPLE_TABLE_HPP
+#endif
 

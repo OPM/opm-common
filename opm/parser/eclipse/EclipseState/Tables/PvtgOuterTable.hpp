@@ -22,33 +22,45 @@
 #include "MultiRecordTable.hpp"
 
 namespace Opm {
+    // forward declarations
+    template <class OuterTable, class InnerTable>
+    class FullTable;
+    class PvtgTable;
+    class PvtgOuterTable;
+    class PvtgInnerTable;
+
     class PvtgOuterTable : protected MultiRecordTable {
         typedef MultiRecordTable ParentType;
 
-    public:
-        using ParentType::numTables;
+        friend class PvtgTable;
+        friend class FullTable<PvtgOuterTable, PvtgInnerTable>;
+        PvtgOuterTable() = default;
 
         /*!
          * \brief Read the per record table of the PVTG keyword and
          *        provide some convenience methods for it.
          */
-        PvtgOuterTable(Opm::DeckKeywordConstPtr keyword, size_t tableIdx)
-            : ParentType(keyword,
-                         std::vector<std::string>{"P", "RV", "BG", "MUG"},
-                         tableIdx)
-        {}
+        void init(Opm::DeckKeywordConstPtr keyword, size_t tableIdx)
+        {
+            ParentType::init(keyword,
+                             std::vector<std::string>{"P", "RV", "BG", "MUG"},
+                             tableIdx,
+                             /*firstEntryOffset=*/0);
 
-        size_t numRows() const
-        { return ParentType::numRows(); };
+            ParentType::checkNonDefaultable("P");
+            ParentType::checkMonotonic("P", /*isAscending=*/true);
+            ParentType::applyDefaultsLinear("RV");
+            ParentType::applyDefaultsLinear("BG");
+            ParentType::applyDefaultsLinear("MUG");
+        }
 
-        size_t numColumns() const
-        { return ParentType::numColumns(); };
-
-        size_t firstRecordIndex() const
-        { return ParentType::firstRecordIndex(); }
-
-        size_t numRecords() const
-        { return ParentType::numRecords(); }
+    public:
+        using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
+        using ParentType::evaluate;
+        using ParentType::firstRecordIndex;
+        using ParentType::numRecords;
 
         const std::vector<double> &getPressureColumn() const
         { return ParentType::getColumn(0); }
@@ -64,5 +76,4 @@ namespace Opm {
     };
 }
 
-#endif	// OPM_PARSER_PVTO_OUTER_TABLE_HPP
-
+#endif

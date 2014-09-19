@@ -22,29 +22,43 @@
 #include "SingleRecordTable.hpp"
 
 namespace Opm {
+    // forward declaration
+    class EclipseState;
+
     class PvdgTable : protected SingleRecordTable {
         typedef SingleRecordTable ParentType;
 
-    public:
-        using ParentType::numTables;
+        friend class EclipseState;
+
+        PvdgTable() = default;
 
         /*!
          * \brief Read the PVDG keyword and provide some convenience
          *        methods for it.
          */
-        PvdgTable(Opm::DeckKeywordConstPtr keyword,
-                  int recordIdx = 0,
-                  int firstEntityOffset = 0)
-            : SingleRecordTable(keyword,
-                          std::vector<std::string>{"P", "BG", "MUG"},
-                          recordIdx, firstEntityOffset)
-        {}
+        void init(Opm::DeckKeywordConstPtr keyword,
+                  int recordIdx)
+        {
+            ParentType::init(keyword,
+                             std::vector<std::string>{"P", "BG", "MUG"},
+                             recordIdx,
+                             /*firstEntityOffset=*/0);
 
-        int numRows() const
-        { return ParentType::numRows(); };
+            ParentType::checkNonDefaultable("P");
+            ParentType::checkMonotonic("P", /*isAscending=*/true);
 
-        int numColumns() const
-        { return ParentType::numColumns(); };
+            ParentType::applyDefaultsLinear("BG");
+            ParentType::checkMonotonic("BG", /*isAscending=*/false);
+
+            ParentType::applyDefaultsLinear("MUG");
+            ParentType::checkMonotonic("MUG", /*isAscending=*/true, /*strictlyMonotonic=*/false);
+        }
+
+    public:
+        using ParentType::numTables;
+        using ParentType::numRows;
+        using ParentType::numColumns;
+        using ParentType::evaluate;
 
         const std::vector<double> &getPressureColumn() const
         { return ParentType::getColumn(0); }
@@ -57,5 +71,4 @@ namespace Opm {
     };
 }
 
-#endif	// OPM_PARSER_PVDG_TABLE_HPP
-
+#endif

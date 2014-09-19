@@ -16,43 +16,55 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPM_PARSER_ENPTVD_TABLE_HPP
-#define	OPM_PARSER_ENPTVD_TABLE_HPP
+#ifndef OPM_PARSER_IMPTVD_TABLE_HPP
+#define	OPM_PARSER_IMPTVD_TABLE_HPP
 
 #include "SingleRecordTable.hpp"
 
 namespace Opm {
-    class EnptvdTable : protected SingleRecordTable {
+    // forward declaration
+    class EclipseState;
+
+    class ImptvdTable : protected SingleRecordTable {
         typedef SingleRecordTable ParentType;
+
+        friend class EclipseState;
+        ImptvdTable() = default;
+
+        /*!
+         * \brief Read the IMPTVD keyword and provide some convenience
+         *        methods for it.
+         */
+        void init(Opm::DeckKeywordConstPtr keyword,
+                  int recordIdx)
+        {
+            ParentType::init(keyword,
+                             std::vector<std::string>{"DEPTH",
+                                     "SWCO",
+                                     "SWCRIT",
+                                     "SWMAX",
+                                     "SGCO",
+                                     "SGCRIT",
+                                     "SGMAX",
+                                     "SOWCRIT",
+                                     "SOGCRIT"},
+                             recordIdx,
+                             /*firstEntityOffset=*/0);
+            ParentType::checkNonDefaultable("DEPTH", /*isAscending=*/true);
+            ParentType::applyDefaultsLinear("SWCO");
+            ParentType::applyDefaultsLinear("SWCRIT");
+            ParentType::applyDefaultsLinear("SGCO");
+            ParentType::applyDefaultsLinear("SGCRIT");
+            ParentType::applyDefaultsLinear("SGMAX");
+            ParentType::applyDefaultsLinear("SOWCRIT");
+            ParentType::applyDefaultsLinear("SOGCRIT");
+        }
 
     public:
         using ParentType::numTables;
-
-        /*!
-         * \brief Read the ENPTVD keyword and provide some convenience
-         *        methods for it.
-         */
-        EnptvdTable(Opm::DeckKeywordConstPtr keyword,
-                  int recordIdx = 0,
-                  int firstEntityOffset = 0)
-            : SingleRecordTable(keyword,
-                          std::vector<std::string>{"DEPTH",
-                                  "SWCO",
-                                  "SWCRIT",
-                                  "SWMAX",
-                                  "SGCO",
-                                  "SGCRIT",
-                                  "SGMAX",
-                                  "SOWCRIT",
-                                  "SOGCRIT"},
-                          recordIdx, firstEntityOffset)
-        {}
-
-        int numRows() const
-        { return ParentType::numRows(); };
-
-        int numColumns() const
-        { return ParentType::numColumns(); };
+        using ParentType::numRows;
+        using ParentType::numColumns;
+        using ParentType::evaluate;
 
         const std::vector<double> &getDepthColumn() const
         { return ParentType::getColumn(0); }
@@ -107,5 +119,5 @@ namespace Opm {
     };
 }
 
-#endif	// OPM_PARSER_SIMPLE_TABLE_HPP
+#endif
 
