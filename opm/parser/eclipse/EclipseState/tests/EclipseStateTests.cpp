@@ -182,8 +182,8 @@ BOOST_AUTO_TEST_CASE(GetProperty) {
 
     std::shared_ptr<GridProperty<int> > satNUM = state.getIntGridProperty( "SATNUM" );
 
-    BOOST_CHECK_EQUAL(1000U , satNUM->size() );
-    for (size_t i=0; i < satNUM->size(); i++) 
+    BOOST_CHECK_EQUAL(1000U , satNUM->getCartesianSize() );
+    for (size_t i=0; i < satNUM->getCartesianSize(); i++) 
         BOOST_CHECK_EQUAL( 2 , satNUM->iget(i) );
     
     BOOST_CHECK_THROW( satNUM->iget(100000) , std::invalid_argument);

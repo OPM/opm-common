@@ -101,7 +101,7 @@ public:
         m_kwInfo.getInitializer()->apply(m_data, m_kwInfo.getKeywordName());
     }
 
-    size_t size() const {
+    size_t getCartesianSize() const {
         return m_data.size();
     }
 
@@ -166,7 +166,7 @@ public:
 
     void copyFrom(const GridProperty<T>& src, std::shared_ptr<const Box> inputBox) {
         if (inputBox->isGlobal()) {
-            for (size_t i = 0; i < src.size(); ++i)
+            for (size_t i = 0; i < src.getCartesianSize(); ++i)
                 m_data[i] = src.m_data[i];
         } else {
             const std::vector<size_t>& indexList = inputBox->getIndexList();
