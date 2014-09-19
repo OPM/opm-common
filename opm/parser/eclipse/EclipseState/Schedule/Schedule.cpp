@@ -310,12 +310,15 @@ namespace Opm {
 
             well->setStatus( currentStep , status );
             WellInjectionProperties properties(well->getInjectionPropertiesCopy(currentStep));
+
             properties.injectorType = injectorType;
-            properties.surfaceInjectionRate = injectionRate;
-            // History matches are usually rate controled. Here, we assume it.
-            properties.addInjectionControl(WellInjector::RATE);
-            properties.controlMode = WellInjector::RATE;
+            if (!record->getItem("RATE")->defaultApplied(0)) {
+                properties.surfaceInjectionRate = injectionRate;
+                properties.addInjectionControl(WellInjector::RATE);
+                properties.controlMode = WellInjector::RATE;
+            }
             properties.predictionMode = false;
+
             well->setInjectionProperties(currentStep, properties);
         }
     }
