@@ -168,6 +168,7 @@ namespace Opm {
         void initRocktabTables(DeckConstPtr deck);
 
         void setMULTFLT(std::shared_ptr<const Section> section) const;
+        void initMULTREGT(DeckConstPtr deck);
 
         double getSIScaling(const std::string &dimensionString) const;
 

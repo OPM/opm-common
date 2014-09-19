@@ -124,4 +124,21 @@ namespace Opm {
             
         }
     }
+
+
+
+    void TransMult::applyMULTREGT( std::shared_ptr<MULTREGTScanner> multregtScanner , std::shared_ptr<GridProperties<int> > regions) {
+        const std::vector< MULTREGTConnection > connections = multregtScanner->scanRegions( regions );
+        for (auto iter = connections.begin(); iter != connections.end(); ++iter) {
+            MULTREGTConnection connection = *iter;
+            FaceDir::DirEnum faceDir = std::get<1>( connection );
+            std::shared_ptr<GridProperty<double> > multProperty = getDirectionProperty(faceDir);
+            {
+                size_t globalIndex = std::get<0>( connection );
+                double transMult = std::get<2>( connection );
+                
+                multProperty->multiplyValueAtIndex( globalIndex , transMult);
+            }
+        }
+    }
 }

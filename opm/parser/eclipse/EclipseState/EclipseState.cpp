@@ -24,6 +24,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/BoxManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
 
 #include <iostream>
 #include <sstream>
@@ -51,6 +52,7 @@ namespace Opm {
         initProperties(deck);
         initTransMult();
         initFaults(deck);
+        initMULTREGT(deck);
     }
 
     std::shared_ptr<const UnitSystem> EclipseState::getDeckUnitSystem() const {
@@ -247,6 +249,7 @@ namespace Opm {
     }
 
 
+
     void EclipseState::setMULTFLT(std::shared_ptr<const Section> section) const {
         for (size_t index=0; index < section->count("MULTFLT"); index++) {
             DeckKeywordConstPtr faultsKeyword = section->getKeyword("MULTFLT" , index);
@@ -259,6 +262,33 @@ namespace Opm {
             }
         }
     }
+
+
+    
+    void EclipseState::initMULTREGT(DeckConstPtr deck) {
+        EclipseGridConstPtr grid = getEclipseGrid();
+        std::shared_ptr<MULTREGTScanner> scanner = std::make_shared<MULTREGTScanner>();
+
+        {
+            std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
+            for (size_t index=0; index < gridSection->count("MULTREGT"); index++) {
+                DeckKeywordConstPtr multregtKeyword = gridSection->getKeyword("MULTREGT" , index);
+                scanner->addKeyword( multregtKeyword );
+            }
+        }            
+
+
+        if (Section::hasEDIT(deck)) {
+            std::shared_ptr<Opm::EDITSection> editSection(new Opm::EDITSection(deck) );
+            for (size_t index=0; index < editSection->count("MULTREGT"); index++) {
+                DeckKeywordConstPtr multregtKeyword = editSection->getKeyword("MULTREGT" , index);
+                scanner->addKeyword( multregtKeyword );
+            }
+        }
+
+        m_transMult->applyMULTREGT( scanner , m_intGridProperties);
+    }
+    
 
 
     void EclipseState::initEclipseGrid(DeckConstPtr deck) {
@@ -384,9 +414,8 @@ namespace Opm {
              SupportedIntKeywordInfo( "PVTNUM" , 1, "1" ),
              SupportedIntKeywordInfo( "EQLNUM" , 1, "1" ),
              SupportedIntKeywordInfo( "ENDNUM" , 1, "1" ),
-             // TODO: implement regular expression matching for
-             // keyword names?
-//             SupportedIntKeywordInfo( "FIP???"  , 0 ),
+             SupportedIntKeywordInfo( "FLUXNUM" , 1 , "1" ),
+             SupportedIntKeywordInfo( "MULTNUM", 1 , "1" ),
              SupportedIntKeywordInfo( "FIPNUM" , 1, "1" )};
 
         double nan = std::numeric_limits<double>::quiet_NaN();

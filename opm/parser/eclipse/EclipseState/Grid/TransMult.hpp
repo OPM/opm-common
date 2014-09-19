@@ -32,9 +32,13 @@
 
 #include <cstddef>
 #include <map>
+#include <memory>
+
 #include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
 
 
 namespace Opm {
@@ -48,6 +52,7 @@ namespace Opm {
         std::shared_ptr<GridProperty<double> > getDirectionProperty(FaceDir::DirEnum faceDir);
         void applyMULT(std::shared_ptr<const GridProperty<double> > srcMultProp, FaceDir::DirEnum faceDir);
         void applyMULTFLT( std::shared_ptr<const FaultCollection> faults);
+        void applyMULTREGT( std::shared_ptr<MULTREGTScanner> multregtScanner , std::shared_ptr<GridProperties<int> > regions);
 
     private:
         size_t getGlobalIndex(size_t i , size_t j , size_t k) const;
