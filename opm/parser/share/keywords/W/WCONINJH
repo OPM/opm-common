@@ -10,5 +10,5 @@
     {"name" : "SURFACE_OIL_FRACTION" , "value_type" : "DOUBLE" , "default" : 0},
     {"name" : "SURFACE_WATER_FRACTION" , "value_type" : "DOUBLE" , "default" : 0},
     {"name" : "SURFACE_GAS_FRACTION" , "value_type" : "DOUBLE" , "default" : 0},
-    {"name" : "CMODE"        , "value_type" : "STRING" }
+    {"name" : "CMODE"        , "value_type" : "STRING", "default" : "RATE" }
 ]}

@@ -312,10 +312,13 @@ namespace Opm {
             WellInjectionProperties properties(well->getInjectionPropertiesCopy(currentStep));
 
             properties.injectorType = injectorType;
+
+            const std::string& cmodeString = record->getItem("CMODE")->getTrimmedString(0);
+            WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( cmodeString );
             if (!record->getItem("RATE")->defaultApplied(0)) {
                 properties.surfaceInjectionRate = injectionRate;
-                properties.addInjectionControl(WellInjector::RATE);
-                properties.controlMode = WellInjector::RATE;
+                properties.addInjectionControl(controlMode);
+                properties.controlMode = controlMode;
             }
             properties.predictionMode = false;
 
