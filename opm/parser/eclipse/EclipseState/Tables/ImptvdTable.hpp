@@ -50,7 +50,8 @@ namespace Opm {
                                      "SOGCRIT"},
                              recordIdx,
                              /*firstEntityOffset=*/0);
-            ParentType::checkNonDefaultable("DEPTH", /*isAscending=*/true);
+            ParentType::checkNonDefaultable("DEPTH");
+            ParentType::checkMonotonic("DEPTH", /*isAscending=*/true);
             ParentType::applyDefaultsLinear("SWCO");
             ParentType::applyDefaultsLinear("SWCRIT");
             ParentType::applyDefaultsLinear("SGCO");

@@ -32,6 +32,8 @@
 
 #include <opm/parser/eclipse/EclipseState/Tables/EnkrvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/EnptvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/ImkrvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/ImptvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyadsTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlymaxTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyrockTable.hpp>
@@ -85,6 +87,8 @@ namespace Opm {
         // not present in the deck, the corresponding vector is of size zero.
         const std::vector<EnkrvdTable>& getEnkrvdTables() const;
         const std::vector<EnptvdTable>& getEnptvdTables() const;
+        const std::vector<ImkrvdTable>& getImkrvdTables() const;
+        const std::vector<ImptvdTable>& getImptvdTables() const;
         const std::vector<PlyadsTable>& getPlyadsTables() const;
         const std::vector<PlymaxTable>& getPlymaxTables() const;
         const std::vector<PlyrockTable>& getPlyrockTables() const;
@@ -186,6 +190,8 @@ namespace Opm {
 
         std::vector<EnkrvdTable> m_enkrvdTables;
         std::vector<EnptvdTable> m_enptvdTables;
+        std::vector<ImkrvdTable> m_imkrvdTables;
+        std::vector<ImptvdTable> m_imptvdTables;
         std::vector<PlyadsTable> m_plyadsTables;
         std::vector<PlymaxTable> m_plymaxTables;
         std::vector<PlyrockTable> m_plyrockTables;

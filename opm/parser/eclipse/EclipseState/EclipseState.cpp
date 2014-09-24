@@ -73,6 +73,14 @@ namespace Opm {
         return m_enptvdTables;
     }
 
+    const std::vector<ImkrvdTable>& EclipseState::getImkrvdTables() const {
+        return m_imkrvdTables;
+    }
+
+    const std::vector<ImptvdTable>& EclipseState::getImptvdTables() const {
+        return m_imptvdTables;
+    }
+
     const std::vector<PlyadsTable>& EclipseState::getPlyadsTables() const {
         return m_plyadsTables;
     }
@@ -148,6 +156,8 @@ namespace Opm {
     void EclipseState::initTables(DeckConstPtr deck) {
         initSimpleTables(deck, "ENKRVD", m_enkrvdTables);
         initSimpleTables(deck, "ENPTVD", m_enptvdTables);
+        initSimpleTables(deck, "IMKRVD", m_imkrvdTables);
+        initSimpleTables(deck, "IMPTVD", m_imptvdTables);
         initSimpleTables(deck, "PLYADS", m_plyadsTables);
         initSimpleTables(deck, "PLYMAX", m_plymaxTables);
         initSimpleTables(deck, "PLYROCK", m_plyrockTables);

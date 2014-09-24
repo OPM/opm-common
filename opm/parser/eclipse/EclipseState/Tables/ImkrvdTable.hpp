@@ -50,7 +50,8 @@ namespace Opm {
                              recordIdx,
                              /*firstEntityOffset=*/0);
 
-            ParentType::checkNonDefaultable("DEPTH", /*isAscending=*/true);
+            ParentType::checkNonDefaultable("DEPTH");
+            ParentType::checkMonotonic("DEPTH", /*isAscending=*/true);
             ParentType::applyDefaultsLinear("KRWMAX");
             ParentType::applyDefaultsLinear("KRGMAX");
             ParentType::applyDefaultsLinear("KROMAX");
