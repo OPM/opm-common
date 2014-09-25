@@ -135,8 +135,11 @@ public:
         const std::vector<size_t>& indexList = inputBox->getIndexList();
         for (size_t sourceIdx = 0; sourceIdx < indexList.size(); sourceIdx++) {
             size_t targetIdx = indexList[sourceIdx];
-            if (!deckItem->defaultApplied(sourceIdx))
+            if (sourceIdx < deckItem->size()
+                && !deckItem->defaultApplied(sourceIdx))
+            {
                 setDataPoint(sourceIdx, targetIdx, deckItem);
+            }
         }
     }
 
