@@ -1,7 +1,6 @@
 {"name" : "PLYVISC" , "size" : {"keyword" : "TABDIMS" , "item" : "NTPVT"} , "items" :
     [
-        {"name" : "POLYMER_CONCENTRATION" , "value_type" : "DOUBLE"  , "dimension" : "PolymerDensity"},
-        {"name" : "VISC_MULTIPLIER", "value_type" : "DOUBLE", "dimension" : "1"}
+        {"name":"DATA", "value_type":"DOUBLE", "size_type" : "ALL" , "dimension" : ["1","PolymerDensity"]}
     ]
 }
 
