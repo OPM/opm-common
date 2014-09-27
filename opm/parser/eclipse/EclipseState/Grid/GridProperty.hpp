@@ -132,6 +132,17 @@ public:
         return iget(g);
     }
 
+    void iset(size_t index, T value) {
+        if (index < m_data.size())
+            m_data[index] = value;
+        else 
+            throw std::invalid_argument("Index out of range \n");
+    }
+
+    void iset(size_t i , size_t j , size_t k , T value) {
+        size_t g = i + j*m_nx + k*m_nx*m_ny;
+        iset(g,value);
+    }
 
     void multiplyValueAtIndex(size_t index, T factor) {
         m_data[index] *= factor;
