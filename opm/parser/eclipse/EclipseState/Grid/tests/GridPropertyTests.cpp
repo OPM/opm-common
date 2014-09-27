@@ -61,6 +61,21 @@ BOOST_AUTO_TEST_CASE(Empty) {
 }
 
 
+BOOST_AUTO_TEST_CASE(HasNAN) {
+    double nan = std::numeric_limits<double>::quiet_NaN();
+    typedef Opm::GridProperty<double>::SupportedKeywordInfo SupportedKeywordInfo;
+    SupportedKeywordInfo keywordInfo("PORO" , nan , "1");
+    Opm::GridProperty<double> poro( 2 , 2 , 1 , keywordInfo);
+    
+    BOOST_CHECK( poro.containsNaN() );
+    poro.iset(0,0.15);
+    poro.iset(1,0.15);
+    poro.iset(2,0.15);
+    BOOST_CHECK( poro.containsNaN() );
+    poro.iset(3,0.15);
+    BOOST_CHECK( !poro.containsNaN() );
+}
+
 BOOST_AUTO_TEST_CASE(EmptyDefault) {
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
     SupportedKeywordInfo keywordInfo("SATNUM" , 0, "1");
