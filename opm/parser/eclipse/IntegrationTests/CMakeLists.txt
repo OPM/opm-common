@@ -34,6 +34,10 @@ add_executable(runParsePLYVISC ParsePLYVISC.cpp)
 target_link_libraries(runParsePLYVISC Parser ${Boost_LIBRARIES})
 add_test(NAME runParsePLYVISC WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runParsePLYVISC) 
 
+add_executable(runParsePLYADS ParsePLYADS.cpp)
+target_link_libraries(runParsePLYADS Parser ${Boost_LIBRARIES})
+add_test(NAME runParsePLYADS WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runParsePLYADS) 
+
 add_executable(runParseDATAWithDefault ParseDATAWithDefault.cpp)
 target_link_libraries(runParseDATAWithDefault Parser ${Boost_LIBRARIES})
 add_test(NAME runParseDATAWithDefault WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runParseDATAWithDefault) 

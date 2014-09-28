@@ -1,7 +1,6 @@
 {"name" : "PLYADS" , "size" : {"keyword" : "TABDIMS" , "item" : "NTSFUN"} , "items" :
     [
-        {"name" : "POLYMER_CONCENTRATION" , "value_type" : "DOUBLE"  , "dimension" : "PolymerDensity"},
-        {"name" : "POLYMER_ADSORBED", "value_type" : "DOUBLE", "dimension" : "1"}
+        {"name":"DATA", "value_type":"DOUBLE","size_type":"ALL", "dimension":["PolymerDensity", "1"]}
     ]
 }
 
