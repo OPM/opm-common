@@ -26,6 +26,8 @@ namespace Opm {
         m_keywordName = keywordName;
         m_deckIndex = -1;
         m_isDataKeyword = false;
+        m_fileName = "";
+        m_lineNumber = -1;
     }
     
     DeckKeyword::DeckKeyword(const std::string& keywordName, bool knownKeyword) {
@@ -33,6 +35,21 @@ namespace Opm {
         m_keywordName = keywordName;
         m_deckIndex = -1;
         m_isDataKeyword = false;
+        m_fileName = "";
+        m_lineNumber = -1;
+    }
+
+    void DeckKeyword::setLocation(const std::string& fileName, int lineNumber) {
+        m_fileName = fileName;
+        m_lineNumber = lineNumber;
+    }
+
+    const std::string& DeckKeyword::getFileName() const {
+        return m_fileName;
+    }
+
+    int DeckKeyword::getLineNumber() const {
+        return m_lineNumber;
     }
 
     void DeckKeyword::setDataKeyword(bool isDataKeyword_) {

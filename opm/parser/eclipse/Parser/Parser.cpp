@@ -282,6 +282,8 @@ namespace Opm {
                                 parserState->deck->addWarning( "The keyword " + parserState->rawKeyword->getKeywordName() + " is ignored - this might potentially affect the results" , parserState->dataFile.string() , parserState->rawKeyword->getLineNR());
                         } else {
                             DeckKeywordPtr deckKeyword(new DeckKeyword(parserState->rawKeyword->getKeywordName(), false));
+			    deckKeyword->setLocation(parserState->rawKeyword->getFilename(),
+						     parserState->rawKeyword->getLineNR());
                             parserState->deck->addKeyword(deckKeyword);
                             parserState->deck->addWarning( "The keyword " + parserState->rawKeyword->getKeywordName() + " is not recognized" , parserState->dataFile.string() , parserState->lineNR);
                         }

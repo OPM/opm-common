@@ -22,6 +22,10 @@ namespace Opm {
         DeckKeyword(const std::string& keywordName, bool knownKeyword);
 
         std::string name() const;
+        void setLocation(const std::string& fileName, int lineNumber);
+        const std::string& getFileName() const;
+        int getLineNumber() const;
+
         size_t size() const;
         void addRecord(DeckRecordConstPtr record);
         DeckRecordConstPtr getRecord(size_t index) const;
@@ -45,6 +49,8 @@ namespace Opm {
         std::vector<DeckRecordConstPtr>::const_iterator end() const;
     private:
         std::string m_keywordName;
+        std::string m_fileName;
+        int m_lineNumber;
         std::vector<DeckRecordConstPtr> m_recordList;
         bool m_knownKeyword;
         ssize_t m_deckIndex;
