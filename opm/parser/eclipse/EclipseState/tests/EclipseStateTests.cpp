@@ -126,7 +126,8 @@ BOOST_AUTO_TEST_CASE(StrictSemantics) {
     EclipseState state(deck);
 
     // the deck misses a few sections...
-    BOOST_CHECK(!checkDeck(deck));
+    ParserLogPtr parserLog(new ParserLog());
+    BOOST_CHECK(!checkDeck(deck, parserLog));
 }
 
 BOOST_AUTO_TEST_CASE(CreatSchedule) {

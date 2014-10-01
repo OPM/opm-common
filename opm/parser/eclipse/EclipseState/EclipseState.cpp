@@ -26,6 +26,8 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
 
+#include <opm/parser/eclipse/Parser/ParserLog.hpp>
+
 #include <iostream>
 #include <sstream>
 #include <boost/algorithm/string/join.hpp>

@@ -17,10 +17,12 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ECLIPSESTATE_H
-#define ECLIPSESTATE_H
+#ifndef OPM_ECLIPSE_STATE_HPP
+#define OPM_ECLIPSE_STATE_HPP
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Parser/ParserLog.hpp>
+
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>

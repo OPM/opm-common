@@ -20,6 +20,7 @@
 #include <memory>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParserLog.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
 #include <opm/parser/eclipse/RawDeck/RawEnums.hpp>
@@ -30,6 +31,7 @@ namespace Opm {
 
     struct ParserState {
         DeckPtr deck;
+        ParserLog parserLog;
         boost::filesystem::path dataFile;
         boost::filesystem::path rootPath;
         std::map<std::string, std::string> pathMap;
@@ -87,30 +89,42 @@ namespace Opm {
      is retained in the current implementation.
      */
 
-    DeckPtr Parser::parseFile(const std::string &dataFileName, bool strictParsing) const {
+    DeckPtr Parser::parseFile(const std::string &dataFileName, bool strictParsing, ParserLogPtr parserLog) const {
 
         std::shared_ptr<ParserState> parserState(new ParserState(dataFileName, DeckPtr(new Deck()), getRootPathFromFile(dataFileName), strictParsing));
 
         parseStream(parserState);
         applyUnitsToDeck(parserState->deck);
+
+        if (parserLog)
+            *parserLog = parserState->parserLog;
+
         return parserState->deck;
     }
 
-    DeckPtr Parser::parseString(const std::string &data, bool strictParsing) const {
+    DeckPtr Parser::parseString(const std::string &data, bool strictParsing, ParserLogPtr parserLog) const {
 
         std::shared_ptr<ParserState> parserState(new ParserState(data, DeckPtr(new Deck()), strictParsing));
 
         parseStream(parserState);
         applyUnitsToDeck(parserState->deck);
+
+        if (parserLog)
+            *parserLog = parserState->parserLog;
+
         return parserState->deck;
     }
 
-    DeckPtr Parser::parseStream(std::shared_ptr<std::istream> inputStream, bool strictParsing) const {
+    DeckPtr Parser::parseStream(std::shared_ptr<std::istream> inputStream, bool strictParsing, ParserLogPtr parserLog) const {
 
         std::shared_ptr<ParserState> parserState(new ParserState(inputStream, DeckPtr(new Deck()), strictParsing));
 
         parseStream(parserState);
         applyUnitsToDeck(parserState->deck);
+
+        if (parserLog)
+            *parserLog = parserState->parserLog;
+
         return parserState->deck;
     }
 
@@ -280,13 +294,17 @@ namespace Opm {
                                 deckKeyword->setParserKeyword(parserKeyword);
                                 parserState->deck->addKeyword(deckKeyword);
                             } else if (action == IGNORE_WARNING) 
-                                parserState->deck->addWarning( "The keyword " + parserState->rawKeyword->getKeywordName() + " is ignored - this might potentially affect the results" , parserState->dataFile.string() , parserState->rawKeyword->getLineNR());
+                                parserState->parserLog.addWarning(parserState->dataFile.string(),
+                                                                  parserState->rawKeyword->getLineNR(),
+                                                                  "The keyword " + parserState->rawKeyword->getKeywordName() + " is ignored - this might potentially affect the results");
                         } else {
                             DeckKeywordPtr deckKeyword(new DeckKeyword(parserState->rawKeyword->getKeywordName(), false));
 			    deckKeyword->setLocation(parserState->rawKeyword->getFilename(),
 						     parserState->rawKeyword->getLineNR());
                             parserState->deck->addKeyword(deckKeyword);
-                            parserState->deck->addWarning( "The keyword " + parserState->rawKeyword->getKeywordName() + " is not recognized" , parserState->dataFile.string() , parserState->lineNR);
+                            parserState->parserLog.addWarning(parserState->dataFile.string(),
+                                                              parserState->lineNR,
+                                                              "The keyword " + parserState->rawKeyword->getKeywordName() + " is not recognized");
                         }
                     }
                     parserState->rawKeyword.reset();

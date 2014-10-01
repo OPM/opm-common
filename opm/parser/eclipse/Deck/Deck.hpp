@@ -40,11 +40,7 @@ namespace Opm {
         size_t numKeywords(const std::string& keyword) const;
         const std::vector<DeckKeywordPtr>& getKeywordList(const std::string& keyword) const;
         size_t size() const;
-        size_t numWarnings() const;
-        void addWarning(const std::string& warningText , const std::string& filename , size_t lineNR);
-        const std::pair<std::string , std::pair<std::string,size_t> >& getWarning( size_t index ) const;
         void initUnitSystem();
-        
         std::shared_ptr<UnitSystem> getDefaultUnitSystem() const;
         std::shared_ptr<UnitSystem> getActiveUnitSystem()  const;
 
@@ -52,8 +48,6 @@ namespace Opm {
         KeywordContainerPtr m_keywords;
         std::shared_ptr<UnitSystem> m_defaultUnits;
         std::shared_ptr<UnitSystem> m_activeUnits;
-        
-        std::vector<std::pair<std::string , std::pair<std::string,size_t> > > m_warnings; //<"Warning Text" , <"Filename" , LineNR>>
     };
 
     typedef std::shared_ptr<Deck> DeckPtr;

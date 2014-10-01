@@ -52,8 +52,8 @@ BOOST_AUTO_TEST_CASE( parse_ACTION_OK ) {
     
     BOOST_REQUIRE_THROW(  parser->parseFile( actionFile2.string() , false) , std::invalid_argument );
     
-                       
-    DeckPtr deck =  parser->parseFile(actionFile.string() , false);
+    ParserLogPtr parserLog(new ParserLog);
+    DeckPtr deck =  parser->parseFile(actionFile.string() , false, parserLog);
     DeckKeywordConstPtr kw1 = deck->getKeyword("WCONHIST" , 0);
     BOOST_CHECK_EQUAL( 3U , kw1->size() );
 
@@ -76,18 +76,14 @@ BOOST_AUTO_TEST_CASE( parse_ACTION_OK ) {
     
     
     BOOST_CHECK_EQUAL( false , deck->hasKeyword( "DIMENS" ));
-    BOOST_CHECK_EQUAL( 2U , deck->numWarnings() );
+    BOOST_CHECK_EQUAL( 2U , parserLog->size() );
     {
-      const std::pair<std::string,std::pair<std::string,size_t> >& warning = deck->getWarning( 0 );
-      const std::pair<std::string,size_t>& location = warning.second;
-      BOOST_CHECK_EQUAL( actionFile.string() ,  location.first);
-      BOOST_CHECK_EQUAL( 2U , location.second);
+        BOOST_CHECK_EQUAL( actionFile.string() ,  parserLog->getFileName(0));
+        BOOST_CHECK_EQUAL( 2U , parserLog->getLineNumber(0));
     }
     {
-      const std::pair<std::string,std::pair<std::string,size_t> >& warning = deck->getWarning( 1 );
-      const std::pair<std::string,size_t>& location = warning.second;
-      BOOST_CHECK_EQUAL( actionFile.string() , location.first);
-      BOOST_CHECK_EQUAL( 6U , location.second);
+        BOOST_CHECK_EQUAL( actionFile.string() ,  parserLog->getFileName(1));
+        BOOST_CHECK_EQUAL( 6U , parserLog->getLineNumber(1));
     }
     
 }
