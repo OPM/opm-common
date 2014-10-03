@@ -105,9 +105,11 @@ namespace Opm {
             return false;
         }
 
+        bool deckValid = true;
+
         if (deck->getKeyword(0)->name() != "RUNSPEC") {
             os << "The first keyword of a valid deck must be RUNSPEC\n";
-            return false;
+            deckValid = false;
         }
 
         std::string curSectionName = deck->getKeyword(0)->name();
@@ -121,7 +123,7 @@ namespace Opm {
                 if (curKeywordName != "GRID") {
                     os << "The RUNSPEC section must be followed by GRID instead of "
                        << curKeywordName << "\n";
-                    return false;
+                    deckValid = false;
                 }
 
                 curSectionName = curKeywordName;
@@ -130,7 +132,7 @@ namespace Opm {
                 if (curKeywordName != "EDIT" && curKeywordName != "PROPS") {
                     os << "The GRID section must be followed by EDIT or PROPS instead of "
                        << curKeywordName << "\n";
-                    return false;
+                    deckValid = false;
                 }
 
                 curSectionName = curKeywordName;
@@ -139,7 +141,7 @@ namespace Opm {
                 if (curKeywordName != "PROPS") {
                     os << "The EDIT section must be followed by PROPS instead of "
                        << curKeywordName << "\n";
-                    return false;
+                    deckValid = false;
                 }
 
                 curSectionName = curKeywordName;
@@ -148,7 +150,7 @@ namespace Opm {
                 if (curKeywordName != "REGIONS" && curKeywordName != "SOLUTION") {
                     os << "The PROPS section must be followed by REGIONS or SOLUTION instead of "
                        << curKeywordName << "\n";
-                    return false;
+                    deckValid = false;
                 }
 
                 curSectionName = curKeywordName;
@@ -157,7 +159,7 @@ namespace Opm {
                 if (curKeywordName != "SOLUTION") {
                     os << "The REGIONS section must be followed by SOLUTION instead of "
                        << curKeywordName << "\n";
-                    return false;
+                    deckValid = false;
                 }
 
                 curSectionName = curKeywordName;
@@ -166,7 +168,7 @@ namespace Opm {
                 if (curKeywordName != "SUMMARY" && curKeywordName != "SCHEDULE") {
                     os << "The SOLUTION section must be followed by SUMMARY or SCHEDULE instead of "
                        << curKeywordName << "\n";
-                    return false;
+                    deckValid = false;
                 }
 
                 curSectionName = curKeywordName;
@@ -175,7 +177,7 @@ namespace Opm {
                 if (curKeywordName != "SCHEDULE") {
                     os << "The SUMMARY section must be followed by SCHEDULE instead of "
                        << curKeywordName << "\n";
-                    return false;
+                    deckValid = false;
                 }
 
                 curSectionName = curKeywordName;
@@ -184,17 +186,17 @@ namespace Opm {
                 // schedule is the last section, so every section delimiter after it is wrong...
                 os << "The SCHEDULE section must be the last one ("
                    << curKeywordName << " specified after SCHEDULE)\n";
-                return false;
+                deckValid = false;
             }
         }
 
         // SCHEDULE is the last section and it is mandatory, so make sure it is there
         if (curSectionName != "SCHEDULE") {
             os << "The last section of a valid deck must be SCHEDULE\n";
-            return false;
+            deckValid = false;
         }
 
-        return true;
+        return deckValid;
     }
 
     bool Section::isSectionDelimiter(const std::string& keywordName) {
