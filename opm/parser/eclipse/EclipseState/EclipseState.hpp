@@ -64,7 +64,7 @@ namespace Opm {
             AllProperties = IntProperties | DoubleProperties
         };
 
-        EclipseState(DeckConstPtr deck);
+        EclipseState(DeckConstPtr deck, ParserLogPtr parserLog = std::make_shared<ParserLog>());
 
         ScheduleConstPtr getSchedule() const;
         EclipseGridConstPtr getEclipseGrid() const;
@@ -78,7 +78,10 @@ namespace Opm {
         bool hasIntGridProperty(const std::string& keyword) const;
         bool hasDoubleGridProperty(const std::string& keyword) const;
 
-        void loadGridPropertyFromDeckKeyword(std::shared_ptr<const Box> inputBox , DeckKeywordConstPtr deckKeyword, int enabledTypes = AllProperties);
+        void loadGridPropertyFromDeckKeyword(std::shared_ptr<const Box> inputBox,
+                                             DeckKeywordConstPtr deckKeyword,
+                                             ParserLogPtr parserLog,
+                                             int enabledTypes = AllProperties);
 
         std::shared_ptr<const FaultCollection> getFaults() const;
         std::shared_ptr<const TransMult> getTransMult() const;
@@ -111,33 +114,40 @@ namespace Opm {
         std::shared_ptr<const UnitSystem> getDeckUnitSystem()  const;
 
     private:
-        void initTables(DeckConstPtr deck);
-        void initSchedule(DeckConstPtr deck);
-        void initEclipseGrid(DeckConstPtr deck);
-        void initPhases(DeckConstPtr deck);
-        void initTitle(DeckConstPtr deck);
-        void initProperties(DeckConstPtr deck);
-        void initTransMult();
-        void initFaults(DeckConstPtr deck);
+        void initTables(DeckConstPtr deck, ParserLogPtr parserLog);
+        void initSchedule(DeckConstPtr deck, ParserLogPtr parserLog);
+        void initEclipseGrid(DeckConstPtr deck, ParserLogPtr parserLog);
+        void initPhases(DeckConstPtr deck, ParserLogPtr parserLog);
+        void initTitle(DeckConstPtr deck, ParserLogPtr parserLog);
+        void initProperties(DeckConstPtr deck, ParserLogPtr parserLog);
+        void initTransMult(ParserLogPtr parserLog);
+        void initFaults(DeckConstPtr deck, ParserLogPtr parserLog);
 
         template <class TableType>
         void initSimpleTables(DeckConstPtr deck,
+                              ParserLogPtr parserLog,
                               const std::string& keywordName,
                               std::vector<TableType>& tableVector) {
             if (!deck->hasKeyword(keywordName))
                 return; // the table is not featured by the deck...
 
-            if (deck->numKeywords(keywordName) > 1)
-                throw std::invalid_argument("The "+keywordName+" keyword must be unique in the deck");
+            if (deck->numKeywords(keywordName) > 1) {
+                complainAboutAmbiguousKeyword(deck, parserLog, keywordName);
+                return;
+            }
 
             const auto& tableKeyword = deck->getKeyword(keywordName);
             for (size_t tableIdx = 0; tableIdx < tableKeyword->size(); ++tableIdx) {
                 if (tableKeyword->getRecord(tableIdx)->getItem(0)->size() == 0) {
                     // for simple tables, an empty record indicates that the previous table
                     // should be copied...
-                    if (tableIdx == 0)
-                        throw std::invalid_argument("The first table for keyword "+keywordName+
-                                                    " must be explicitly defined!");
+                    if (tableIdx == 0) {
+                        parserLog->addError(tableKeyword->getFileName(),
+                                            tableKeyword->getLineNumber(),
+                                            "The first table for keyword "+keywordName+
+                                            " must be explicitly defined! Ignoring keyword");
+                        return;
+                    }
                     tableVector.push_back(tableVector.back());
                     continue;
                 }
@@ -149,13 +159,16 @@ namespace Opm {
 
         template <class TableType>
         void initFullTables(DeckConstPtr deck,
+                            ParserLogPtr parserLog,
                             const std::string& keywordName,
                             std::vector<TableType>& tableVector) {
             if (!deck->hasKeyword(keywordName))
                 return; // the table is not featured by the deck...
 
-            if (deck->numKeywords(keywordName) > 1)
-                throw std::invalid_argument("The "+keywordName+" keyword must be unique in the deck");
+            if (deck->numKeywords(keywordName) > 1) {
+                complainAboutAmbiguousKeyword(deck, parserLog, keywordName);
+                return;
+            }
 
             const auto& tableKeyword = deck->getKeyword(keywordName);
 
@@ -166,26 +179,28 @@ namespace Opm {
             }
         }
 
-        void initRocktabTables(DeckConstPtr deck);
+        void initRocktabTables(DeckConstPtr deck, ParserLogPtr parserLog);
 
-        void setMULTFLT(std::shared_ptr<const Section> section) const;
-        void initMULTREGT(DeckConstPtr deck);
+        void setMULTFLT(std::shared_ptr<const Section> section, ParserLogPtr parserLog) const;
+        void initMULTREGT(DeckConstPtr deck, ParserLogPtr parserLog);
 
         double getSIScaling(const std::string &dimensionString) const;
 
-        void processGridProperties(Opm::DeckConstPtr deck, int enabledTypes);
-        void scanSection(std::shared_ptr<Opm::Section> section, int enabledTypes);
-        void handleADDKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager, int enabledTypes);
-        void handleBOXKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager);
-        void handleCOPYKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager, int enabledTypes);
+        void processGridProperties(Opm::DeckConstPtr deck, ParserLogPtr parserLog, int enabledTypes);
+        void scanSection(std::shared_ptr<Opm::Section> section, ParserLogPtr parserLog, int enabledTypes);
+        void handleADDKeyword(DeckKeywordConstPtr deckKeyword , ParserLogPtr parserLog, BoxManager& boxManager, int enabledTypes);
+        void handleBOXKeyword(DeckKeywordConstPtr deckKeyword , ParserLogPtr parserLog, BoxManager& boxManager);
+        void handleCOPYKeyword(DeckKeywordConstPtr deckKeyword , ParserLogPtr parserLog, BoxManager& boxManager, int enabledTypes);
         void handleENDBOXKeyword(BoxManager& boxManager);
-        void handleEQUALSKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager, int enabledTypes);
-        void handleMULTIPLYKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager, int enabledTypes);
+        void handleEQUALSKeyword(DeckKeywordConstPtr deckKeyword , ParserLogPtr parserLog, BoxManager& boxManager, int enabledTypes);
+        void handleMULTIPLYKeyword(DeckKeywordConstPtr deckKeyword , ParserLogPtr parserLog, BoxManager& boxManager, int enabledTypes);
         
-        void setKeywordBox(DeckRecordConstPtr deckRecord , BoxManager& boxManager);
+        void setKeywordBox(DeckKeywordConstPtr deckKeyword, size_t recordIdx, ParserLogPtr parserLog, BoxManager& boxManager);
 
         void copyIntKeyword(const std::string& srcField , const std::string& targetField , std::shared_ptr<const Box> inputBox);
         void copyDoubleKeyword(const std::string& srcField , const std::string& targetField , std::shared_ptr<const Box> inputBox);
+
+        void complainAboutAmbiguousKeyword(DeckConstPtr deck, ParserLogPtr parserLog, const std::string& keywordName) const;
 
         EclipseGridConstPtr m_eclipseGrid;
         ScheduleConstPtr schedule;

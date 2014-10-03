@@ -29,20 +29,21 @@
 using namespace Opm;
 
 // forward declaration to avoid a pedantic compiler warning
-EclipseState makeState(const std::string& fileName);
+EclipseState makeState(const std::string& fileName, ParserLogPtr parserLog);
 
-EclipseState makeState(const std::string& fileName) {
+EclipseState makeState(const std::string& fileName, ParserLogPtr parserLog) {
     ParserPtr parser(new Parser( ));
     boost::filesystem::path boxFile(fileName);
     DeckPtr deck =  parser->parseFile(boxFile.string() , false);
-    EclipseState state(deck);
+    EclipseState state(deck, parserLog);
     return state;
 }
 
 
 
 BOOST_AUTO_TEST_CASE( PARSE_BOX_OK ) {
-    EclipseState state = makeState("testdata/integration_tests/BOX/BOXTEST1");
+    ParserLogPtr parserLog(new ParserLog());
+    EclipseState state = makeState("testdata/integration_tests/BOX/BOXTEST1", parserLog);
     std::shared_ptr<GridProperty<int> > satnum = state.getIntGridProperty("SATNUM");
     {
         size_t i,j,k;
@@ -66,7 +67,8 @@ BOOST_AUTO_TEST_CASE( PARSE_BOX_OK ) {
 
 
 BOOST_AUTO_TEST_CASE( PARSE_MULTIPLY_COPY ) {
-    EclipseState state = makeState("testdata/integration_tests/BOX/BOXTEST1");
+    ParserLogPtr parserLog(new ParserLog());
+    EclipseState state = makeState("testdata/integration_tests/BOX/BOXTEST1", parserLog);
     std::shared_ptr<GridProperty<int> > satnum = state.getIntGridProperty("SATNUM");
     std::shared_ptr<GridProperty<int> > fipnum = state.getIntGridProperty("FIPNUM");
     size_t i,j,k;
@@ -89,11 +91,15 @@ BOOST_AUTO_TEST_CASE( PARSE_MULTIPLY_COPY ) {
 
 
 BOOST_AUTO_TEST_CASE( INCOMPLETE_KEYWORD_BOX) {
-    BOOST_CHECK_THROW( makeState("testdata/integration_tests/BOX/BOXTEST2") , std::invalid_argument);
+    ParserLogPtr parserLog(new ParserLog());
+    makeState("testdata/integration_tests/BOX/BOXTEST2", parserLog);
+    parserLog->printAll();
+    BOOST_CHECK(parserLog->numErrors() > 1);
 }
 
 BOOST_AUTO_TEST_CASE( EQUAL ) {
-    EclipseState state = makeState("testdata/integration_tests/BOX/BOXTEST1");
+    ParserLogPtr parserLog(new ParserLog());
+    EclipseState state = makeState("testdata/integration_tests/BOX/BOXTEST1", parserLog);
     std::shared_ptr<GridProperty<int> > pvtnum = state.getIntGridProperty("PVTNUM");
     std::shared_ptr<GridProperty<int> > eqlnum = state.getIntGridProperty("EQLNUM");
     size_t i,j,k;
@@ -114,7 +120,8 @@ BOOST_AUTO_TEST_CASE( EQUAL ) {
 
 
 BOOST_AUTO_TEST_CASE( PERMX ) {
-    EclipseState state = makeState("testdata/integration_tests/BOX/BOXTEST1");
+    ParserLogPtr parserLog(new ParserLog());
+    EclipseState state = makeState("testdata/integration_tests/BOX/BOXTEST1", parserLog);
     std::shared_ptr<GridProperty<double> > permx = state.getDoubleGridProperty("PERMX");
     std::shared_ptr<GridProperty<double> > permy = state.getDoubleGridProperty("PERMY");
     std::shared_ptr<GridProperty<double> > permz = state.getDoubleGridProperty("PERMZ");

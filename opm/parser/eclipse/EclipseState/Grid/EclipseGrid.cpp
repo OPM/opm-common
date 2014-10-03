@@ -66,9 +66,8 @@ namespace Opm {
         }
     } // anonymous namespace
 
-    
-    EclipseGrid::EclipseGrid(std::shared_ptr<const Deck> deck)
-        : m_minpv("MINPV"), 
+    EclipseGrid::EclipseGrid(std::shared_ptr<const Deck> deck, ParserLogPtr parserLog)
+        : m_minpv("MINPV"),
           m_pinch("PINCH")
     {
         const bool hasRUNSPEC = Section::hasRUNSPEC(deck);
@@ -79,18 +78,22 @@ namespace Opm {
             if (runspecSection->hasKeyword("DIMENS")) {
                 DeckKeywordConstPtr dimens = runspecSection->getKeyword("DIMENS");
                 std::vector<int> dims = getDims(dimens);
-                initGrid(dims, deck);
+                initGrid(dims, deck, parserLog);
             } else {
-                throw std::invalid_argument("The RUNSPEC section must have the DIMENS keyword with grid dimensions.");
+                const std::string msg = "The RUNSPEC section must have the DIMENS keyword with logically Cartesian grid dimensions.";
+                parserLog->addError("", -1, msg);
+                throw std::invalid_argument(msg);
             }
         } else if (hasGRID) {
             // Look for SPECGRID instead of DIMENS.
             if (deck->hasKeyword("SPECGRID")) {
                 DeckKeywordConstPtr specgrid = deck->getKeyword("SPECGRID");
                 std::vector<int> dims = getDims(specgrid);
-                initGrid(dims, deck);
+                initGrid(dims, deck, parserLog);
             } else {
-                throw std::invalid_argument("With no RUNSPEC section, the GRID section must have the SPECGRID keyword with grid dimensions.");
+                const std::string msg = "With no RUNSPEC section, the GRID section must specify the grid dimensions using the SPECGRID keyword.";
+                parserLog->addError("", -1, msg);
+                throw std::invalid_argument(msg);
             }
         } else {
             // The deck contains no relevant section, so it is probably a sectionless GRDECL file.
@@ -98,25 +101,29 @@ namespace Opm {
             if (deck->hasKeyword("SPECGRID")) {
                 DeckKeywordConstPtr specgrid = deck->getKeyword("SPECGRID");
                 std::vector<int> dims = getDims(specgrid);
-                initGrid(dims, deck);
+                initGrid(dims, deck, parserLog);
             } else if (deck->hasKeyword("DIMENS")) {
                 DeckKeywordConstPtr dimens = deck->getKeyword("DIMENS");
                 std::vector<int> dims = getDims(dimens);
-                initGrid(dims, deck);
+                initGrid(dims, deck, parserLog);
             } else {
-                throw std::invalid_argument("Must specify grid dimensions with DIMENS or SPECGRID.");
+                const std::string msg = "The deck must specify grid dimensions using either DIMENS or SPECGRID.";
+                parserLog->addError("", -1, msg);
+                throw std::invalid_argument(msg);
             }
         }
     }
 
 
-    void EclipseGrid::initGrid( const std::vector<int>& dims , DeckConstPtr deck ) {
+    void EclipseGrid::initGrid( const std::vector<int>& dims, DeckConstPtr deck, ParserLogPtr parserLog) {
         if (hasCornerPointKeywords(deck)) {
-            initCornerPointGrid(dims , deck);
+            initCornerPointGrid(dims , deck, parserLog);
         } else if (hasCartesianKeywords(deck)) {
             initCartesianGrid(dims , deck);
         } else {
-            throw std::invalid_argument("The deck must have COORD / ZCORN or D?? + TOPS keywords");
+            const std::string msg = "The deck must have COORD / ZCORN or D?? + TOPS keywords";
+            parserLog->addError("", -1, msg);
+            throw std::invalid_argument(msg);
         }
 
         if (deck->hasKeyword("PINCH")) {
@@ -222,7 +229,7 @@ namespace Opm {
     }
 
 
-    void EclipseGrid::assertCornerPointKeywords( const std::vector<int>& dims , DeckConstPtr deck ) const
+    void EclipseGrid::assertCornerPointKeywords( const std::vector<int>& dims , DeckConstPtr deck, ParserLogPtr parserLog) const
     {
         const int nx = dims[0];
         const int ny = dims[1];
@@ -230,28 +237,46 @@ namespace Opm {
         {
             DeckKeywordConstPtr ZCORNKeyWord = deck->getKeyword("ZCORN");
             
-            if (ZCORNKeyWord->getDataSize() != static_cast<size_t>(8*nx*ny*nz))
-                throw std::invalid_argument("Wrong size in ZCORN keyword - expected 8*x*ny*nz = " + boost::lexical_cast<std::string>(8*nx*ny*nz));
+            if (ZCORNKeyWord->getDataSize() != static_cast<size_t>(8*nx*ny*nz)) {
+                const std::string msg =
+                    "Wrong size of the ZCORN keyword: Expected 8*x*ny*nz = "
+                    + std::to_string(8*nx*ny*nz) + " is "
+                    + std::to_string(ZCORNKeyWord->getDataSize());
+                parserLog->addError("", -1, msg);
+                throw std::invalid_argument(msg);
+            }
         }
 
         {
             DeckKeywordConstPtr COORDKeyWord = deck->getKeyword("COORD");
-            if (COORDKeyWord->getDataSize() != static_cast<size_t>(6*(nx + 1)*(ny + 1)))
-                throw std::invalid_argument("Wrong size in COORD keyword - expected 6*(nx + 1)*(ny + 1) = " + boost::lexical_cast<std::string>(6*(nx + 1)*(ny + 1)));
+            if (COORDKeyWord->getDataSize() != static_cast<size_t>(6*(nx + 1)*(ny + 1))) {
+                const std::string msg =
+                    "Wrong size of the COORD keyword: Expected 8*(nx + 1)*(ny + 1) = "
+                    + std::to_string(8*(nx + 1)*(ny + 1)) + " is "
+                    + std::to_string(COORDKeyWord->getDataSize());
+                parserLog->addError("", -1, msg);
+                throw std::invalid_argument(msg);
+            }
         }
 
         if (deck->hasKeyword("ACTNUM")) {
             DeckKeywordConstPtr ACTNUMKeyWord = deck->getKeyword("ACTNUM");
-            if (ACTNUMKeyWord->getDataSize() != static_cast<size_t>(nx*ny*nz))
-                throw std::invalid_argument("Wrong size in ACTNUM keyword - expected 8*x*ny*nz = " + boost::lexical_cast<std::string>(nx*ny*nz));
+            if (ACTNUMKeyWord->getDataSize() != static_cast<size_t>(nx*ny*nz)) {
+                const std::string msg =
+                    "Wrong size of the ACTNUM keyword: Expected nx*ny*nz = "
+                    + std::to_string(nx*ny*nz) + " is "
+                    + std::to_string(ACTNUMKeyWord->getDataSize());
+                parserLog->addError("", -1, msg);
+                throw std::invalid_argument(msg);
+            }
         }
     }
         
 
 
 
-    void EclipseGrid::initCornerPointGrid(const std::vector<int>& dims , DeckConstPtr deck) {
-        assertCornerPointKeywords( dims , deck );
+    void EclipseGrid::initCornerPointGrid(const std::vector<int>& dims , DeckConstPtr deck, ParserLogPtr parserLog) {
+        assertCornerPointKeywords( dims , deck, parserLog);
         {
             DeckKeywordConstPtr ZCORNKeyWord = deck->getKeyword("ZCORN");
             DeckKeywordConstPtr COORDKeyWord = deck->getKeyword("COORD");
