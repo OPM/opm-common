@@ -41,6 +41,9 @@ public:
     };
 
     ParserLog();
+    ParserLog(std::ostream* os);
+
+    void setOutStream(std::ostream* os);
 
     size_t size() const;
     size_t numErrors() const;
@@ -61,7 +64,6 @@ public:
     void addError(const std::string& fileName,
                   int lineNumber,
                   const std::string& description);
-
 
     const std::string& getFileName(size_t msgIdx) const;
     int getLineNumber(size_t msgIdx) const;
@@ -98,6 +100,8 @@ private:
     size_t m_numErrors;
     size_t m_numWarnings;
     size_t m_numNotes;
+
+    mutable std::ostream* m_outStream;
 };
 
 typedef std::shared_ptr<ParserLog> ParserLogPtr;

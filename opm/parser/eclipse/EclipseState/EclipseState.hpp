@@ -53,6 +53,7 @@
 
 #include <set>
 #include <memory>
+#include <iostream>
 
 namespace Opm {
     class EclipseState {
@@ -64,7 +65,7 @@ namespace Opm {
             AllProperties = IntProperties | DoubleProperties
         };
 
-        EclipseState(DeckConstPtr deck, ParserLogPtr parserLog = std::make_shared<ParserLog>());
+        EclipseState(DeckConstPtr deck, ParserLogPtr parserLog = std::make_shared<ParserLog>(&std::cout));
 
         ScheduleConstPtr getSchedule() const;
         EclipseGridConstPtr getEclipseGrid() const;

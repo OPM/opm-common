@@ -27,6 +27,20 @@ ParserLog::ParserLog() {
     m_numErrors = 0;
     m_numWarnings = 0;
     m_numNotes = 0;
+
+    setOutStream(NULL);
+}
+
+ParserLog::ParserLog(std::ostream* os) {
+    m_numErrors = 0;
+    m_numWarnings = 0;
+    m_numNotes = 0;
+
+    setOutStream(os);
+}
+
+void ParserLog::setOutStream(std::ostream* os) {
+    m_outStream = os;
 }
 
 size_t ParserLog::size() const {
@@ -67,11 +81,16 @@ void ParserLog::addMessage(const std::string& fileName,
     }
 
     m_messages.push_back(MessageTuple(fileName, lineNumber, messageType, description));
+
+    if (m_outStream) {
+        (*m_outStream) << getFormattedMessage(size() - 1) << "\n";
+        (*m_outStream) << (std::flush);
+    }
 }
 
 void ParserLog::addNote(const std::string& fileName,
-                           int lineNumber,
-                           const std::string& description) {
+                        int lineNumber,
+                        const std::string& description) {
     addMessage(fileName, lineNumber, Note, description);
 }
 
