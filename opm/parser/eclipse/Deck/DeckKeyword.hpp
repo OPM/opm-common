@@ -15,6 +15,7 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 namespace Opm {
+    class ParserKeyword;
 
     class DeckKeyword {
     public:
@@ -25,6 +26,18 @@ namespace Opm {
         void setLocation(const std::string& fileName, int lineNumber);
         const std::string& getFileName() const;
         int getLineNumber() const;
+
+        /*!
+         * \brief Returns the Parser keyword from which the current deck keyword was created from.
+         *
+         * If no parser keyword is available, this method throws
+         * std::invalid_exception. Use hasParserKeyword() to test if one is available..
+         */
+        std::shared_ptr<const ParserKeyword> getParserKeyword() const;
+
+        bool hasParserKeyword() const;
+
+        void setParserKeyword(std::shared_ptr<const ParserKeyword> &parserKeyword);
 
         size_t size() const;
         void addRecord(DeckRecordConstPtr record);
@@ -51,6 +64,7 @@ namespace Opm {
         std::string m_keywordName;
         std::string m_fileName;
         int m_lineNumber;
+        std::shared_ptr<const ParserKeyword> m_parserKeyword;
         std::vector<DeckRecordConstPtr> m_recordList;
         bool m_knownKeyword;
         ssize_t m_deckIndex;

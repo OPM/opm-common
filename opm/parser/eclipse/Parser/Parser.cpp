@@ -277,6 +277,7 @@ namespace Opm {
                             ParserKeywordActionEnum action = parserKeyword->getAction();
                             if (action == INTERNALIZE) {
                                 DeckKeywordPtr deckKeyword = parserKeyword->parse(parserState->rawKeyword);
+                                deckKeyword->setParserKeyword(parserKeyword);
                                 parserState->deck->addKeyword(deckKeyword);
                             } else if (action == IGNORE_WARNING) 
                                 parserState->deck->addWarning( "The keyword " + parserState->rawKeyword->getKeywordName() + " is ignored - this might potentially affect the results" , parserState->dataFile.string() , parserState->rawKeyword->getLineNR());
