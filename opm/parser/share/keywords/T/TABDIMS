@@ -4,5 +4,7 @@
         {"name" : "NSSFUN" , "value_type" : "INT" , "default" : 20},
         {"name" : "NPPVT"  , "value_type" : "INT" , "default" : 20},
         {"name" : "NTFIP"  , "value_type" : "INT" , "default" : 1},
-        {"name" : "NRPVT"  , "value_type" : "INT" , "default" : 20}
+        {"name" : "NRPVT"  , "value_type" : "INT" , "default" : 20},
+        {"name" : "NTENDP"  , "value_type" : "INT" , "default" : 1, "comment" : "This item is ECLIPSE300 specific"},
+        {"name" : "NUM_STATE_EQ"  , "value_type" : "INT" , "default" : 1, "comment" : "This item is ECLIPSE300 specific"}
      ]}
