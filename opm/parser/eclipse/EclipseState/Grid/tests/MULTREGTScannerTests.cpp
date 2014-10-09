@@ -25,7 +25,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
@@ -303,4 +303,46 @@ BOOST_AUTO_TEST_CASE(SimpleMULTREGT) {
         BOOST_CHECK_EQUAL( 1.50 , std::get<2>(cell1));
     }
 
+}
+
+
+static Opm::DeckPtr createCopyMULTNUMDeck() {
+    const char *deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        "2 2 2 /\n"
+        "GRID\n"
+        "DX\n"
+        "8*0.25 /\n"
+        "DYV\n"
+        "2*0.25 /\n"
+        "DZ\n"
+        "8*0.25 /\n"
+        "TOPS\n"
+        "4*0.25 /\n"
+        "FLUXNUM\n"
+        "1 2\n"
+        "1 2\n"
+        "3 4\n"
+        "3 4\n"
+        "/\n"
+        "COPY\n"
+        " FLUXNUM  MULTNUM /\n"
+        "/\n"
+        "MULTREGT\n"  
+        "1  2   0.50/ \n"
+        "/\n"
+        "EDIT\n"
+        "\n";
+ 
+    Opm::ParserPtr parser(new Opm::Parser());
+    return parser->parseString(deckData) ;
+}
+
+
+
+BOOST_AUTO_TEST_CASE(MULTREGT_COPY_MULTNUM) {
+    Opm::DeckPtr deck = createCopyMULTNUMDeck();
+    BOOST_CHECK_NO_THROW( Opm::EclipseState( deck, false ));
 }
