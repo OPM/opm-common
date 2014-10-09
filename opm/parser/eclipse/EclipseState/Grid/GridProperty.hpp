@@ -144,6 +144,16 @@ public:
         iset(g,value);
     }
 
+
+    void multiplyWith(const GridProperty<T>& other) {
+        if ((m_nx == other.m_nx) && (m_ny == other.m_ny) && (m_nz == other.m_nz)) {
+            for (size_t g=0; g < m_data.size(); g++)
+                m_data[g] *= other.m_data[g];
+        } else
+            throw std::invalid_argument("Size mismatch between properties in mulitplyWith.");
+    }
+
+
     void multiplyValueAtIndex(size_t index, T factor) {
         m_data[index] *= factor;
     }

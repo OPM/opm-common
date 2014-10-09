@@ -353,3 +353,21 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitializers) {
     BOOST_CHECK_EQUAL(sguPropData[2 * 3*3], 0.80);
 }
 
+
+
+
+BOOST_AUTO_TEST_CASE(multiply) {
+    typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
+    SupportedKeywordInfo keywordInfo("P" , 10 , "1");
+    Opm::GridProperty<int> p1( 5 , 5 , 4 , keywordInfo);
+    Opm::GridProperty<int> p2( 5 , 5 , 5 , keywordInfo);
+    Opm::GridProperty<int> p3( 5 , 5 , 4 , keywordInfo);
+
+    BOOST_CHECK_THROW( p1.multiplyWith(p2) , std::invalid_argument );
+    p1.multiplyWith(p3);
+    
+    for (size_t g = 0; g < p1.getCartesianSize(); g++)
+        BOOST_CHECK_EQUAL( 100 , p1.iget(g));
+
+}
+
