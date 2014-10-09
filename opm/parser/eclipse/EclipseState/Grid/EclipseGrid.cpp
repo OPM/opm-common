@@ -242,6 +242,7 @@ namespace Opm {
                     "Wrong size of the ZCORN keyword: Expected 8*x*ny*nz = "
                     + std::to_string(static_cast<long long>(8*nx*ny*nz)) + " is "
                     + std::to_string(static_cast<long long>(ZCORNKeyWord->getDataSize()));
+
                 parserLog->addError("", -1, msg);
                 throw std::invalid_argument(msg);
             }

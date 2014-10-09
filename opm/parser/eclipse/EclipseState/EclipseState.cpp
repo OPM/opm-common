@@ -33,7 +33,37 @@
 #include <boost/algorithm/string/join.hpp>
 
 namespace Opm {
-    EclipseState::EclipseState(DeckConstPtr deck, ParserLogPtr parserLog)
+
+    namespace GridPropertyPostProcessor {
+
+        class DistributeTopLayer : public GridPropertyBasePostProcessor<double>
+        {
+        public:
+            DistributeTopLayer(const EclipseState& eclipseState) : 
+                m_eclipseState( eclipseState )
+            { }
+            
+            
+            void apply(std::vector<double>& values) const {
+                EclipseGridConstPtr grid = m_eclipseState.getEclipseGrid();
+                size_t layerSize = grid->getNX() * grid->getNY();
+                size_t gridSize  = grid->getCartesianSize();
+                
+                for (size_t globalIndex = layerSize; globalIndex < gridSize; globalIndex++) {
+                    if (std::isnan( values[ globalIndex ] ))
+                        values[globalIndex] = values[globalIndex - layerSize];
+                }
+            }
+            
+            
+        private:
+            const EclipseState& m_eclipseState;
+        };
+        
+    }
+
+
+    EclipseState::EclipseState(DeckConstPtr deck, ParserLogPtr parserLog)    
     {
         m_deckUnitSystem = deck->getActiveUnitSystem();
 
@@ -380,7 +410,11 @@ namespace Opm {
     }
 
     std::shared_ptr<GridProperty<double> > EclipseState::getDoubleGridProperty( const std::string& keyword ) const {
-        return m_doubleGridProperties->getKeyword( keyword );
+        auto gridProperty = m_doubleGridProperties->getKeyword( keyword );
+        if (gridProperty->postProcessorRunRequired())
+            gridProperty->runPostProcessor();
+
+        return gridProperty;
     }
 
     void EclipseState::loadGridPropertyFromDeckKeyword(std::shared_ptr<const Box> inputBox,
@@ -421,6 +455,8 @@ namespace Opm {
 
         double nan = std::numeric_limits<double>::quiet_NaN();
         const auto eptLookup = std::make_shared<GridPropertyEndpointTableLookupInitializer<>>(*deck, *this);
+        const auto distributeTopLayer = std::make_shared<GridPropertyPostProcessor::DistributeTopLayer>(*this);
+
 
         // Note that the variants of grid keywords for radial grids
         // are not supported. (and hopefully never will be)
@@ -560,7 +596,7 @@ namespace Opm {
             SupportedDoubleKeywordInfo( "ISWCRZ-"  , eptLookup, "1" ),
 
             // porosity
-            SupportedDoubleKeywordInfo( "PORO"  , nan, "1" ),
+            SupportedDoubleKeywordInfo( "PORO"  , nan, distributeTopLayer , "1" ),
 
             // pore volume
             SupportedDoubleKeywordInfo( "PORV"  , nan, "Volume" ),
@@ -569,12 +605,12 @@ namespace Opm {
             SupportedDoubleKeywordInfo( "MULTPV", 1.0, "1" ),
 
             // the permeability keywords
-            SupportedDoubleKeywordInfo( "PERMX" , nan, "Permeability" ),
-            SupportedDoubleKeywordInfo( "PERMY" , nan, "Permeability" ),
-            SupportedDoubleKeywordInfo( "PERMZ" , nan, "Permeability" ),
-            SupportedDoubleKeywordInfo( "PERMXY", nan, "Permeability" ), // E300 only
-            SupportedDoubleKeywordInfo( "PERMXZ", nan, "Permeability" ), // E300 only
-            SupportedDoubleKeywordInfo( "PERMYZ", nan, "Permeability" ), // E300 only
+            SupportedDoubleKeywordInfo( "PERMX" , nan,  distributeTopLayer , "Permeability" ),
+            SupportedDoubleKeywordInfo( "PERMY" , nan,  distributeTopLayer , "Permeability" ),
+            SupportedDoubleKeywordInfo( "PERMZ" , nan,  distributeTopLayer , "Permeability" ),
+            SupportedDoubleKeywordInfo( "PERMXY", nan,  distributeTopLayer , "Permeability" ), // E300 only
+            SupportedDoubleKeywordInfo( "PERMXZ", nan,  distributeTopLayer , "Permeability" ), // E300 only
+            SupportedDoubleKeywordInfo( "PERMYZ", nan,  distributeTopLayer , "Permeability" ), // E300 only
 
             // gross-to-net thickness (acts as a multiplier for PORO
             // and the permeabilities in the X-Y plane as well as for
