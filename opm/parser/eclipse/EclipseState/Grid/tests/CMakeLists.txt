@@ -27,6 +27,11 @@ target_link_libraries(runBoxTests Parser ${Boost_LIBRARIES})
 add_test(NAME runBoxTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runBoxTests )
 
 
+add_executable(runPORVTests PORVTests.cpp)
+target_link_libraries(runPORVTests Parser ${Boost_LIBRARIES})
+add_test(NAME runPORVTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runPORVTests )
+
+
 add_executable(runBoxManagerTests BoxManagerTests.cpp)
 target_link_libraries(runBoxManagerTests Parser ${Boost_LIBRARIES})
 add_test(NAME runBoxManagerTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runBoxManagerTests )

@@ -59,6 +59,53 @@ namespace Opm {
         private:
             const EclipseState& m_eclipseState;
         };
+
+        /*-----------------------------------------------------------------*/
+
+        class InitPORV : public GridPropertyBasePostProcessor<double>
+        {
+        public:
+            InitPORV(const EclipseState& eclipseState) : 
+                m_eclipseState( eclipseState )
+            { }
+            
+            
+            void apply(std::vector<double>& ) const {
+                EclipseGridConstPtr grid = m_eclipseState.getEclipseGrid();
+                /*
+                  Observe that this apply method does not alter the
+                  values input vector, instead it fetches the PORV
+                  property one more time, and then manipulates that.
+                */
+                auto porv = m_eclipseState.getDoubleGridProperty("PORV");   
+                if (porv->containsNaN()) {
+                    auto poro = m_eclipseState.getDoubleGridProperty("PORO");
+                    auto ntg = m_eclipseState.getDoubleGridProperty("NTG");   
+                    if (poro->containsNaN())
+                        throw std::logic_error("Do not have information for the PORV keyword - some defaulted values in PORO");
+                    {
+                        for (size_t globalIndex = 0; globalIndex < porv->getCartesianSize(); globalIndex++) {
+                            if (std::isnan(porv->iget(globalIndex))) {
+                                double cell_poro = poro->iget(globalIndex);
+                                double cell_ntg = ntg->iget(globalIndex);
+                                double cell_volume = grid->getCellVolume(globalIndex);
+                                porv->iset( globalIndex , cell_poro * cell_volume * cell_ntg);
+                            }
+                        }
+                    } 
+                }
+                
+                if (m_eclipseState.hasDoubleGridProperty("MULTPV")) {
+                    auto multpv = m_eclipseState.getDoubleGridProperty("MULTPV");   
+                    porv->multiplyWith( *multpv );
+                }
+            }
+            
+            
+        private:
+            const EclipseState& m_eclipseState;
+        };
+
         
     }
 
@@ -212,19 +259,19 @@ namespace Opm {
         m_transMult = std::make_shared<TransMult>( grid->getNX() , grid->getNY() , grid->getNZ());
 
         if (hasDoubleGridProperty("MULTX"))
-            m_transMult->applyMULT(getDoubleGridProperty("MULTX"), FaceDir::XPlus);
+            m_transMult->applyMULT(m_doubleGridProperties->getKeyword("MULTX"), FaceDir::XPlus);
         if (hasDoubleGridProperty("MULTX-"))
-            m_transMult->applyMULT(getDoubleGridProperty("MULTX-"), FaceDir::XMinus);
+            m_transMult->applyMULT(m_doubleGridProperties->getKeyword("MULTX-"), FaceDir::XMinus);
 
         if (hasDoubleGridProperty("MULTY"))
-            m_transMult->applyMULT(getDoubleGridProperty("MULTY"), FaceDir::YPlus);
+            m_transMult->applyMULT(m_doubleGridProperties->getKeyword("MULTY"), FaceDir::YPlus);
         if (hasDoubleGridProperty("MULTY-"))
-            m_transMult->applyMULT(getDoubleGridProperty("MULTY-"), FaceDir::YMinus);
+            m_transMult->applyMULT(m_doubleGridProperties->getKeyword("MULTY-"), FaceDir::YMinus);
 
         if (hasDoubleGridProperty("MULTZ"))
-            m_transMult->applyMULT(getDoubleGridProperty("MULTZ"), FaceDir::ZPlus);
+            m_transMult->applyMULT(m_doubleGridProperties->getKeyword("MULTZ"), FaceDir::ZPlus);
         if (hasDoubleGridProperty("MULTZ-"))
-            m_transMult->applyMULT(getDoubleGridProperty("MULTZ-"), FaceDir::ZMinus);
+            m_transMult->applyMULT(m_doubleGridProperties->getKeyword("MULTZ-"), FaceDir::ZMinus);
     }
 
     void EclipseState::initFaults(DeckConstPtr deck, ParserLogPtr parserLog) {
@@ -402,9 +449,22 @@ namespace Opm {
          return m_doubleGridProperties->hasKeyword( keyword );
     }   
 
+
     /*
-      Observe that this will autocreate a property if it has not been explicitly added. 
+      1. The public methods getIntGridProperty & getDoubleGridProperty
+         will invoke and run the property post processor (if any is
+         registered); the post processor will only run one time. 
+
+         It is important that post processor is not run prematurely,
+         internal functions in EclipseState should therefor ask for
+         properties by invoking the getKeyword() method of the
+         m_intGridProperties / m_doubleGridProperties() directly and
+         not through these methods.
+
+      2. Observe that this will autocreate a property if it has not
+         been explicitly added.
     */
+
     std::shared_ptr<GridProperty<int> > EclipseState::getIntGridProperty( const std::string& keyword ) const {
         return m_intGridProperties->getKeyword( keyword );
     }
@@ -416,6 +476,15 @@ namespace Opm {
 
         return gridProperty;
     }
+
+
+    /*
+       Due to the post processor which might be applied to the
+       GridProperty objects it is essential that this method use the
+       m_intGridProperties / m_doubleGridProperties fields directly
+       and *NOT* use the public methods getIntGridProperty /
+       getDoubleGridProperty.
+    */
 
     void EclipseState::loadGridPropertyFromDeckKeyword(std::shared_ptr<const Box> inputBox,
                                                        DeckKeywordConstPtr deckKeyword,
@@ -456,6 +525,7 @@ namespace Opm {
         double nan = std::numeric_limits<double>::quiet_NaN();
         const auto eptLookup = std::make_shared<GridPropertyEndpointTableLookupInitializer<>>(*deck, *this);
         const auto distributeTopLayer = std::make_shared<GridPropertyPostProcessor::DistributeTopLayer>(*this);
+        const auto initPORV = std::make_shared<GridPropertyPostProcessor::InitPORV>(*this);
 
 
         // Note that the variants of grid keywords for radial grids
@@ -599,7 +669,7 @@ namespace Opm {
             SupportedDoubleKeywordInfo( "PORO"  , nan, distributeTopLayer , "1" ),
 
             // pore volume
-            SupportedDoubleKeywordInfo( "PORV"  , nan, "Volume" ),
+            SupportedDoubleKeywordInfo( "PORV"  , nan, initPORV , "Volume" ),
 
             // pore volume multipliers
             SupportedDoubleKeywordInfo( "MULTPV", 1.0, "1" ),
