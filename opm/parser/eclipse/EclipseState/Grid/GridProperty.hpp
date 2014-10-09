@@ -19,7 +19,6 @@
 #ifndef ECLIPSE_GRIDPROPERTY_HPP_
 #define ECLIPSE_GRIDPROPERTY_HPP_
 
-#include "GridPropertyInitializers.hpp"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -29,6 +28,7 @@
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/GridPropertyInitializers.hpp>
 
 /*
   This class implemenents a class representing properties which are
@@ -38,22 +38,52 @@
   The class is implemented as a thin wrapper around std::vector<T>;
   where the most relevant specialisations of T are 'int' and 'float'.
 */
+
+
+
+
 namespace Opm {
+
+template <class ValueType>
+class GridPropertyBasePostProcessor
+{
+protected:
+    GridPropertyBasePostProcessor() { }
+
+public:
+    virtual void apply(std::vector<ValueType>& values) const = 0;
+};
+
+
+
+
 template <class DataType>
 class GridPropertySupportedKeywordInfo
 {
 public:
     typedef GridPropertyBaseInitializer<DataType> Initializer;
+    typedef GridPropertyBasePostProcessor<DataType> PostProcessor;
 
     GridPropertySupportedKeywordInfo()
     {}
 
     GridPropertySupportedKeywordInfo(const std::string& name,
                                      std::shared_ptr<const Initializer> initializer,
+                                     std::shared_ptr<const PostProcessor> postProcessor,
                                      const std::string& dimString)
-        : m_keywordName(name)
-        , m_initializer(initializer)
-        , m_dimensionString(dimString)
+        : m_keywordName(name),
+          m_initializer(initializer),
+          m_postProcessor(postProcessor),
+          m_dimensionString(dimString)
+    {}
+
+
+    GridPropertySupportedKeywordInfo(const std::string& name,
+                                     std::shared_ptr<const Initializer> initializer,
+                                     const std::string& dimString)
+        : m_keywordName(name),
+          m_initializer(initializer),
+          m_dimensionString(dimString)
     {}
 
     // this is a convenience constructor which can be used if the default value for the
@@ -61,30 +91,60 @@ public:
     GridPropertySupportedKeywordInfo(const std::string& name,
                                      const DataType defaultValue,
                                      const std::string& dimString)
-        : m_keywordName(name)
-        , m_initializer(new Opm::GridPropertyConstantInitializer<DataType>(defaultValue))
-        , m_dimensionString(dimString)
+        : m_keywordName(name),
+          m_initializer(new Opm::GridPropertyConstantInitializer<DataType>(defaultValue)),
+          m_dimensionString(dimString)
+    {}
+    
+    GridPropertySupportedKeywordInfo(const std::string& name,
+                                     const DataType defaultValue,
+                                     std::shared_ptr<const PostProcessor> postProcessor,
+                                     const std::string& dimString)
+        : m_keywordName(name),
+          m_initializer(new Opm::GridPropertyConstantInitializer<DataType>(defaultValue)),
+          m_postProcessor(postProcessor),
+          m_dimensionString(dimString)
     {}
 
+        
+
     GridPropertySupportedKeywordInfo(const GridPropertySupportedKeywordInfo&) = default;
+
 
     const std::string& getKeywordName() const {
         return m_keywordName;
     }
 
+
     const std::string& getDimensionString() const {
         return m_dimensionString;
     }
+
 
     std::shared_ptr<const Initializer> getInitializer() const {
         return m_initializer;
     }
 
+    
+    std::shared_ptr<const PostProcessor> getPostProcessor() const {
+        return m_postProcessor;
+    }
+
+    
+    bool hasPostProcessor() const {
+        return static_cast<bool>(m_postProcessor);
+    }   
+
+
+
 private:
     std::string m_keywordName;
     std::shared_ptr<const Initializer> m_initializer;
+    std::shared_ptr<const PostProcessor> m_postProcessor;
     std::string m_dimensionString;
 };
+
+
 
 template <typename T>
 class GridProperty {
@@ -97,8 +157,9 @@ public:
         m_nz = nz;
         m_kwInfo = kwInfo;
         m_data.resize( nx * ny * nz );
-
+        
         m_kwInfo.getInitializer()->apply(m_data, m_kwInfo.getKeywordName());
+        m_hasRunPostProcessor = false;
     }
 
     size_t getCartesianSize() const {
@@ -251,6 +312,30 @@ public:
         return m_kwInfo;
     }
 
+    
+    bool postProcessorRunRequired() {
+        if (m_kwInfo.hasPostProcessor() && !m_hasRunPostProcessor)
+            return true;
+        else
+            return false;
+    }
+
+
+    void runPostProcessor() {
+        if (postProcessorRunRequired()) {
+            // This is set here before the post processor has actually
+            // completed; this is to protect against circular loops if
+            // the post processor itself calls for the same grid
+            // property.
+            m_hasRunPostProcessor = true;
+            auto postProcessor = m_kwInfo.getPostProcessor();
+            postProcessor->apply( m_data );
+        }
+    }
+    
+    
+
+
 private:
     Opm::DeckItemConstPtr getDeckItem(Opm::DeckKeywordConstPtr deckKeyword) {
         if (deckKeyword->size() != 1)
@@ -277,6 +362,7 @@ private:
     size_t      m_nx,m_ny,m_nz;
     SupportedKeywordInfo m_kwInfo;
     std::vector<T> m_data;
+    bool m_hasRunPostProcessor;
 };
 
 }
