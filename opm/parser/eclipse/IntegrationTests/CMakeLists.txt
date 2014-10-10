@@ -1,5 +1,9 @@
 add_definitions( -DKEYWORD_DIRECTORY="${PROJECT_SOURCE_DIR}/opm/parser/share/keywords")
 
+add_executable(runCheckDeckValidity CheckDeckValidity.cpp)
+target_link_libraries(runCheckDeckValidity Parser ${Boost_LIBRARIES})
+add_test(NAME runCheckDeckValidity WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runCheckDeckValidity)
+
 add_executable(runIntegrationTests IntegrationTests.cpp)
 target_link_libraries(runIntegrationTests Parser ${Boost_LIBRARIES})
 add_test(NAME runIntegrationTests WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runIntegrationTests)

@@ -21,6 +21,7 @@
 #ifndef ECLIPSE_GRID_HPP_
 #define ECLIPSE_GRID_HPP_
 
+#include <opm/parser/eclipse/Parser/ParserLog.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 
@@ -36,7 +37,7 @@ namespace Opm {
     public:
         explicit EclipseGrid(const std::string& filename);
         explicit EclipseGrid(const ecl_grid_type * src_ptr);
-        explicit EclipseGrid(std::shared_ptr<const Deck> deck);
+        explicit EclipseGrid(std::shared_ptr<const Deck> deck, ParserLogPtr parserLog = std::make_shared<ParserLog>());
 
         static bool hasCornerPointKeywords(std::shared_ptr<const Deck> deck);
         static bool hasCartesianKeywords(std::shared_ptr<const Deck> deck);
@@ -71,11 +72,11 @@ namespace Opm {
         Value<double> m_pinch;
 
         void initCartesianGrid(const std::vector<int>& dims , DeckConstPtr deck);
-        void initCornerPointGrid(const std::vector<int>& dims , DeckConstPtr deck);
-        void assertCornerPointKeywords( const std::vector<int>& dims , DeckConstPtr deck ) const ;
+        void initCornerPointGrid(const std::vector<int>& dims , DeckConstPtr deck, ParserLogPtr parserLog);
+        void assertCornerPointKeywords(const std::vector<int>& dims, DeckConstPtr deck, ParserLogPtr parserLog) const ;
         void initDTOPSGrid(const std::vector<int>& dims , DeckConstPtr deck);
         void initDVDEPTHZGrid(const std::vector<int>& dims , DeckConstPtr deck);
-        void initGrid( const std::vector<int>& dims , DeckConstPtr deck );
+        void initGrid(const std::vector<int>& dims, DeckConstPtr deck, ParserLogPtr parserLog);
         static bool hasDVDEPTHZKeywords(DeckConstPtr deck);
         static bool hasDTOPSKeywords(DeckConstPtr deck);
         static void assertVectorSize(const std::vector<double>& vector , size_t expectedSize , const std::string& msg);

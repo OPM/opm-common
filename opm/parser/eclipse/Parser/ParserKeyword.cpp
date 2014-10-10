@@ -469,6 +469,7 @@ namespace Opm {
     DeckKeywordPtr ParserKeyword::parse(RawKeywordConstPtr rawKeyword) const {
         if (rawKeyword->isFinished()) {
             DeckKeywordPtr keyword(new DeckKeyword(rawKeyword->getKeywordName()));
+	    keyword->setLocation(rawKeyword->getFilename(), rawKeyword->getLineNR());
             for (size_t i = 0; i < rawKeyword->size(); i++) {
                 DeckRecordConstPtr deckRecord = m_record->parse(rawKeyword->getRecord(i));
                 keyword->addRecord(deckRecord);

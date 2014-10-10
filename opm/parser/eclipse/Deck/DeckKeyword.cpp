@@ -26,6 +26,8 @@ namespace Opm {
         m_keywordName = keywordName;
         m_deckIndex = -1;
         m_isDataKeyword = false;
+        m_fileName = "";
+        m_lineNumber = -1;
     }
     
     DeckKeyword::DeckKeyword(const std::string& keywordName, bool knownKeyword) {
@@ -33,6 +35,35 @@ namespace Opm {
         m_keywordName = keywordName;
         m_deckIndex = -1;
         m_isDataKeyword = false;
+        m_fileName = "";
+        m_lineNumber = -1;
+    }
+
+    void DeckKeyword::setLocation(const std::string& fileName, int lineNumber) {
+        m_fileName = fileName;
+        m_lineNumber = lineNumber;
+    }
+
+    std::shared_ptr<const ParserKeyword> DeckKeyword::getParserKeyword() const {
+        if (!m_parserKeyword)
+            throw std::invalid_argument("No ParserKeyword object available");
+        return m_parserKeyword;
+    }
+
+    bool DeckKeyword::hasParserKeyword() const {
+        return static_cast<bool>(m_parserKeyword);
+    }
+
+    const std::string& DeckKeyword::getFileName() const {
+        return m_fileName;
+    }
+
+    int DeckKeyword::getLineNumber() const {
+        return m_lineNumber;
+    }
+
+    void DeckKeyword::setParserKeyword(std::shared_ptr<const ParserKeyword> &parserKeyword) {
+        m_parserKeyword = parserKeyword;
     }
 
     void DeckKeyword::setDataKeyword(bool isDataKeyword_) {

@@ -36,6 +36,7 @@ set( parser_source
 Parser/ParserEnums.cpp
 Parser/ParserKeyword.cpp 
 Parser/Parser.cpp 
+Parser/ParserLog.cpp 
 Parser/ParserRecord.cpp
 Parser/ParserItem.cpp
 Parser/ParserIntItem.cpp  
@@ -60,6 +61,8 @@ Parser/ParserStringItem.cpp
 
 set (state_source
 EclipseState/EclipseState.cpp
+#
+EclipseState/checkDeck.cpp
 #
 EclipseState/Schedule/TimeMap.cpp 
 EclipseState/Schedule/Schedule.cpp 
@@ -108,6 +111,7 @@ Deck/Section.hpp
 Parser/ParserEnums.hpp
 Parser/ParserKeyword.hpp 
 Parser/Parser.hpp 
+Parser/ParserLog.hpp 
 Parser/ParserRecord.hpp
 Parser/ParserItem.hpp
 Parser/ParserIntItem.hpp  
@@ -120,6 +124,8 @@ Units/Dimension.hpp
 Units/ConversionFactors.hpp
 #
 EclipseState/EclipseState.hpp
+#
+EclipseState/checkDeck.hpp
 #
 EclipseState/Schedule/TimeMap.hpp
 EclipseState/Schedule/Schedule.hpp

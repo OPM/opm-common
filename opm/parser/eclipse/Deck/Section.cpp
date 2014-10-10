@@ -28,8 +28,6 @@
 #include <opm/parser/eclipse/Deck/Section.hpp>
 
 namespace Opm {
-    Section::NullStream Section::nullStream;
-
     Section::Section(DeckConstPtr deck, const std::string& startKeywordName)
         : m_name(startKeywordName)
     {
@@ -98,103 +96,141 @@ namespace Opm {
         return m_keywords.getKeyword(index);
     }
 
-    bool Section::checkSectionTopology(DeckConstPtr deck, std::ostream& os)
+    bool Section::checkSectionTopology(DeckConstPtr deck,
+                                       ParserLogPtr parserLog)
     {
         if (deck->size() == 0) {
-            os << "empty decks are invalid\n";
+            std::string msg = "empty decks are invalid\n";
+            parserLog->addWarning("", -1, msg);
             return false;
         }
 
+        bool deckValid = true;
+
         if (deck->getKeyword(0)->name() != "RUNSPEC") {
-            os << "The first keyword of a valid deck must be RUNSPEC\n";
-            return false;
+            std::string msg = "The first keyword of a valid deck must be RUNSPEC\n";
+            parserLog->addWarning(deck->getKeyword(0)->getFileName(),
+                                  deck->getKeyword(0)->getLineNumber(),
+                                  msg);
+            deckValid = false;
         }
 
         std::string curSectionName = deck->getKeyword(0)->name();
         size_t curKwIdx = 1;
         for (; curKwIdx < deck->size(); ++curKwIdx) {
-            const std::string& curKeywordName = deck->getKeyword(curKwIdx)->name();
+            Opm::DeckKeywordConstPtr curKeyword = deck->getKeyword(curKwIdx);
+            const std::string& curKeywordName = curKeyword->name();
             if (!isSectionDelimiter(curKeywordName))
                 continue;
 
             if (curSectionName == "RUNSPEC") {
                 if (curKeywordName != "GRID") {
-                    os << "The RUNSPEC section must be followed by GRID instead of "
-                       << curKeywordName << "\n";
-                    return false;
+                    std::string msg =
+                        "The RUNSPEC section must be followed by GRID instead of "+curKeywordName;
+                    parserLog->addWarning(curKeyword->getFileName(),
+                                          curKeyword->getLineNumber(),
+                                          msg);
+                    deckValid = false;
                 }
 
                 curSectionName = curKeywordName;
             }
             else if (curSectionName == "GRID") {
                 if (curKeywordName != "EDIT" && curKeywordName != "PROPS") {
-                    os << "The GRID section must be followed by EDIT or PROPS instead of "
-                       << curKeywordName << "\n";
-                    return false;
+                    std::string msg =
+                        "The GRID section must be followed by EDIT or PROPS instead of "+curKeywordName;
+                    parserLog->addWarning(curKeyword->getFileName(),
+                                          curKeyword->getLineNumber(),
+                                          msg);
+                    deckValid = false;
                 }
 
                 curSectionName = curKeywordName;
             }
             else if (curSectionName == "EDIT") {
                 if (curKeywordName != "PROPS") {
-                    os << "The EDIT section must be followed by PROPS instead of "
-                       << curKeywordName << "\n";
-                    return false;
+                    std::string msg =
+                        "The EDIT section must be followed by PROPS instead of "+curKeywordName;
+                    parserLog->addWarning(curKeyword->getFileName(),
+                                          curKeyword->getLineNumber(),
+                                          msg);
+                    deckValid = false;
                 }
 
                 curSectionName = curKeywordName;
             }
             else if (curSectionName == "PROPS") {
                 if (curKeywordName != "REGIONS" && curKeywordName != "SOLUTION") {
-                    os << "The PROPS section must be followed by REGIONS or SOLUTION instead of "
-                       << curKeywordName << "\n";
-                    return false;
+                    std::string msg =
+                        "The PROPS section must be followed by REGIONS or SOLUTION instead of "+curKeywordName;
+                    parserLog->addWarning(curKeyword->getFileName(),
+                                          curKeyword->getLineNumber(),
+                                          msg);
+                    deckValid = false;
                 }
 
                 curSectionName = curKeywordName;
             }
             else if (curSectionName == "REGIONS") {
                 if (curKeywordName != "SOLUTION") {
-                    os << "The REGIONS section must be followed by SOLUTION instead of "
-                       << curKeywordName << "\n";
-                    return false;
+                    std::string msg =
+                        "The REGIONS section must be followed by SOLUTION instead of "+curKeywordName;
+                    parserLog->addWarning(curKeyword->getFileName(),
+                                          curKeyword->getLineNumber(),
+                                          msg);
+                    deckValid = false;
                 }
 
                 curSectionName = curKeywordName;
             }
             else if (curSectionName == "SOLUTION") {
                 if (curKeywordName != "SUMMARY" && curKeywordName != "SCHEDULE") {
-                    os << "The SOLUTION section must be followed by SUMMARY or SCHEDULE instead of "
-                       << curKeywordName << "\n";
-                    return false;
+                    std::string msg =
+                        "The SOLUTION section must be followed by SUMMARY or SCHEDULE instead of "+curKeywordName;
+                    parserLog->addWarning(curKeyword->getFileName(),
+                                          curKeyword->getLineNumber(),
+                                          msg);
+                    deckValid = false;
                 }
 
                 curSectionName = curKeywordName;
             }
             else if (curSectionName == "SUMMARY") {
                 if (curKeywordName != "SCHEDULE") {
-                    os << "The SUMMARY section must be followed by SCHEDULE instead of "
-                       << curKeywordName << "\n";
-                    return false;
+                    std::string msg =
+                        "The SUMMARY section must be followed by SCHEDULE instead of "+curKeywordName;
+                    parserLog->addWarning(curKeyword->getFileName(),
+                                          curKeyword->getLineNumber(),
+                                          msg);
+                    deckValid = false;
                 }
 
                 curSectionName = curKeywordName;
             }
             else if (curSectionName == "SCHEDULE") {
                 // schedule is the last section, so every section delimiter after it is wrong...
-                os << "The SCHEDULE section must be the last one ("
-                   << curKeywordName << " specified after SCHEDULE)\n";
-                return false;
+                std::string msg =
+                    "The SCHEDULE section must be the last one ("
+                    +curKeywordName+" specified after SCHEDULE)";
+                parserLog->addWarning(curKeyword->getFileName(),
+                                      curKeyword->getLineNumber(),
+                                      msg);
+                deckValid = false;
             }
         }
 
         // SCHEDULE is the last section and it is mandatory, so make sure it is there
         if (curSectionName != "SCHEDULE") {
-            os << "The last section of a valid deck must be SCHEDULE\n";
-            return false;
+            const auto& curKeyword = deck->getKeyword(deck->size() - 1);
+            std::string msg =
+                "The last section of a valid deck must be SCHEDULE (is "+curSectionName+")";
+            parserLog->addWarning(curKeyword->getFileName(),
+                                  curKeyword->getLineNumber(),
+                                  msg);
+            deckValid = false;
         }
 
-        return true;
+        return deckValid;
     }
 
     bool Section::isSectionDelimiter(const std::string& keywordName) {
@@ -216,5 +252,4 @@ namespace Opm {
     bool Section::hasSection(DeckConstPtr deck, const std::string& startKeywordName) {
         return deck->hasKeyword(startKeywordName);
     }
-    
 }

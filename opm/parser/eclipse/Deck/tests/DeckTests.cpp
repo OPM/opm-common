@@ -22,6 +22,7 @@
 
 #include <stdexcept>
 #include <boost/test/unit_test.hpp>
+#include <opm/parser/eclipse/Parser/ParserLog.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 using namespace Opm;
@@ -119,25 +120,36 @@ BOOST_AUTO_TEST_CASE(size_twokeyword_return2) {
 
 
 BOOST_AUTO_TEST_CASE(DECKWARNING_EMPTYOK) {
-    Deck deck;
-    BOOST_CHECK_EQUAL(0U, deck.numWarnings());
+    ParserLog parserLog;
+    BOOST_CHECK_EQUAL(0U, parserLog.size());
 }
 
 
 BOOST_AUTO_TEST_CASE(DECKAddWarning) {
-    Deck deck;
-    deck.addWarning("WARNING" , "FILE" , 100U);
-    BOOST_CHECK_EQUAL(1U, deck.numWarnings());
+    ParserLog parserLog;
+    parserLog.addNote("FILE", 100U, "NOTE");
+    BOOST_CHECK_EQUAL(1U, parserLog.size());
 
-    deck.addWarning("WARNING2" , "FILE2" , 200U);
-    BOOST_CHECK_EQUAL(2U, deck.numWarnings());
+    parserLog.addWarning("FILE2", 200U, "WARNING");
+    BOOST_CHECK_EQUAL(2U, parserLog.size());
 
-    const std::pair<std::string,std::pair<std::string,size_t> >& warning = deck.getWarning( 0 );
-    const std::pair<std::string,size_t>& location = warning.second;
+    parserLog.addError("FILE3", 300U, "ERROR");
+    BOOST_CHECK_EQUAL(3U, parserLog.size());
 
-    BOOST_CHECK_EQUAL( warning.first   , "WARNING" );
-    BOOST_CHECK_EQUAL( location.first  , "FILE" );
-    BOOST_CHECK_EQUAL( location.second , 100U );
+    BOOST_CHECK_EQUAL(parserLog.getMessageType(0), ParserLog::Note);
+    BOOST_CHECK_EQUAL(parserLog.getDescription(0), "NOTE");
+    BOOST_CHECK_EQUAL(parserLog.getFileName(0), "FILE");
+    BOOST_CHECK_EQUAL(parserLog.getLineNumber(0), 100U);
+
+    BOOST_CHECK_EQUAL(parserLog.getMessageType(1), ParserLog::Warning);
+    BOOST_CHECK_EQUAL(parserLog.getDescription(1), "WARNING");
+    BOOST_CHECK_EQUAL(parserLog.getFileName(1), "FILE2");
+    BOOST_CHECK_EQUAL(parserLog.getLineNumber(1), 200U);
+
+    BOOST_CHECK_EQUAL(parserLog.getMessageType(2), ParserLog::Error);
+    BOOST_CHECK_EQUAL(parserLog.getDescription(2), "ERROR");
+    BOOST_CHECK_EQUAL(parserLog.getFileName(2), "FILE3");
+    BOOST_CHECK_EQUAL(parserLog.getLineNumber(2), 300U);
     
 }
 

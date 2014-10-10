@@ -21,6 +21,8 @@
 #define SECTION_HPP
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Parser/ParserLog.hpp>
+
 #include <boost/iterator/iterator_facade.hpp>
 
 #include <iostream>
@@ -31,22 +33,6 @@ namespace Opm {
 
     class Section : public boost::iterator_facade<Section, DeckKeywordPtr, boost::forward_traversal_tag>
     {
-        // Defining a no-op output stream nullStream.
-        // see https://stackoverflow.com/questions/11826554/standard-no-op-output-stream
-        class NullBuffer : public std::streambuf
-        {
-        public:
-            int overflow(int c) { return c; }
-        };
-        class NullStream : public std::ostream
-        {
-        public:
-            NullStream() : std::ostream(&m_sb) {}
-        private:
-            NullBuffer m_sb;
-        };
-        static NullStream nullStream;
-
     public:
         Section(DeckConstPtr deck, const std::string& startKeyword);
         bool hasKeyword( const std::string& keyword ) const;
@@ -68,7 +54,7 @@ namespace Opm {
 
         // returns whether the deck has all mandatory sections and if all sections are in
         // the right order
-        static bool checkSectionTopology(DeckConstPtr deck, std::ostream& os = nullStream);
+        static bool checkSectionTopology(DeckConstPtr deck, ParserLogPtr parserLog);
 
     private:
         KeywordContainer m_keywords;
