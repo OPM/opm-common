@@ -33,6 +33,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParserLog.hpp>
 
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -344,5 +345,6 @@ static Opm::DeckPtr createCopyMULTNUMDeck() {
 
 BOOST_AUTO_TEST_CASE(MULTREGT_COPY_MULTNUM) {
     Opm::DeckPtr deck = createCopyMULTNUMDeck();
-    BOOST_CHECK_NO_THROW( Opm::EclipseState( deck, false ));
+    Opm::ParserLogPtr parserLog(new Opm::ParserLog());
+    BOOST_CHECK_NO_THROW( Opm::EclipseState( deck , parserLog ));     
 }
