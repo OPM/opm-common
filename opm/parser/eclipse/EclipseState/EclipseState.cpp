@@ -300,8 +300,7 @@ namespace Opm {
             phases.insert(Phase::PhaseEnum::WATER);
 
         if (phases.size() < 3)
-            parserLog->addNote("", -1,
-                               "Only " + std::to_string(phases.size()) + " fluid phases are enabled");
+            parserLog->addNote("", -1, "Only " + std::to_string(static_cast<long long>(phases.size())) + " fluid phases are enabled");
     }
 
 

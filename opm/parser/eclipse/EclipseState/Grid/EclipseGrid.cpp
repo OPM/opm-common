@@ -240,8 +240,8 @@ namespace Opm {
             if (ZCORNKeyWord->getDataSize() != static_cast<size_t>(8*nx*ny*nz)) {
                 const std::string msg =
                     "Wrong size of the ZCORN keyword: Expected 8*x*ny*nz = "
-                    + std::to_string(8*nx*ny*nz) + " is "
-                    + std::to_string(ZCORNKeyWord->getDataSize());
+                    + std::to_string(static_cast<long long>(8*nx*ny*nz)) + " is "
+                    + std::to_string(static_cast<long long>(ZCORNKeyWord->getDataSize()));
                 parserLog->addError("", -1, msg);
                 throw std::invalid_argument(msg);
             }
@@ -252,8 +252,8 @@ namespace Opm {
             if (COORDKeyWord->getDataSize() != static_cast<size_t>(6*(nx + 1)*(ny + 1))) {
                 const std::string msg =
                     "Wrong size of the COORD keyword: Expected 8*(nx + 1)*(ny + 1) = "
-                    + std::to_string(8*(nx + 1)*(ny + 1)) + " is "
-                    + std::to_string(COORDKeyWord->getDataSize());
+                    + std::to_string(static_cast<long long>(8*(nx + 1)*(ny + 1))) + " is "
+                    + std::to_string(static_cast<long long>(COORDKeyWord->getDataSize()));
                 parserLog->addError("", -1, msg);
                 throw std::invalid_argument(msg);
             }
@@ -264,8 +264,8 @@ namespace Opm {
             if (ACTNUMKeyWord->getDataSize() != static_cast<size_t>(nx*ny*nz)) {
                 const std::string msg =
                     "Wrong size of the ACTNUM keyword: Expected nx*ny*nz = "
-                    + std::to_string(nx*ny*nz) + " is "
-                    + std::to_string(ACTNUMKeyWord->getDataSize());
+                    + std::to_string(static_cast<long long>(nx*ny*nz)) + " is "
+                    + std::to_string(static_cast<long long>(ACTNUMKeyWord->getDataSize()));
                 parserLog->addError("", -1, msg);
                 throw std::invalid_argument(msg);
             }
