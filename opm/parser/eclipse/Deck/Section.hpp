@@ -54,7 +54,9 @@ namespace Opm {
 
         // returns whether the deck has all mandatory sections and if all sections are in
         // the right order
-        static bool checkSectionTopology(DeckConstPtr deck, ParserLogPtr parserLog);
+        static bool checkSectionTopology(DeckConstPtr deck,
+                                         ParserLogPtr parserLog,
+                                         bool ensureKeywordSectionAffiliation = false);
 
     private:
         KeywordContainer m_keywords;
