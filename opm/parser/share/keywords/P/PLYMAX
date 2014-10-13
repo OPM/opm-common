@@ -1,4 +1,4 @@
-{"name" : "PLYMAX" , "size" : {"keyword" : "MISCIBLE" , "item" : "NTMISC"} , "items" :
+{"name" : "PLYMAX" , "size" : {"keyword" : "REGDIMS" , "item" : "NPLMIX"} , "items" :
     [
         {"name" : "MAX_POLYMER_CONCENTRATION" , "value_type" : "DOUBLE"  , "dimension" : "PolymerDensity"},
         {"name" : "MAX_SALT_CONCENTRATION" , "value_type" : "DOUBLE" , "dimension" : "PolymerDensity"}
