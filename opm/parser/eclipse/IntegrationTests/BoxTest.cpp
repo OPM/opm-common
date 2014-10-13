@@ -126,9 +126,16 @@ BOOST_AUTO_TEST_CASE( PARSE_MULTIPLY_COPY ) {
 BOOST_AUTO_TEST_CASE( INCOMPLETE_KEYWORD_BOX) {
     ParserLogPtr parserLog(new ParserLog());
     makeState("testdata/integration_tests/BOX/BOXTEST2", parserLog);
-    parserLog->printAll();
     BOOST_CHECK(parserLog->numErrors() > 1);
 }
+
+
+BOOST_AUTO_TEST_CASE( KEYWORD_BOX_TOO_SMALL) {
+    ParserLogPtr parserLog(new ParserLog());
+    BOOST_CHECK_THROW( makeState("testdata/integration_tests/BOX/BOXTEST3", parserLog) , std::invalid_argument);
+}
+
+
 
 BOOST_AUTO_TEST_CASE( EQUAL ) {
     ParserLogPtr parserLog(new ParserLog());

@@ -226,28 +226,48 @@ public:
         return m_data;
     }
 
-    void loadFromDeckKeyword(std::shared_ptr<const Box> inputBox, DeckKeywordConstPtr deckKeyword) {
-        const auto deckItem = getDeckItem(deckKeyword);
-
-        const std::vector<size_t>& indexList = inputBox->getIndexList();
-        for (size_t sourceIdx = 0; sourceIdx < indexList.size(); sourceIdx++) {
-            size_t targetIdx = indexList[sourceIdx];
-            if (sourceIdx < deckItem->size()
-                && !deckItem->defaultApplied(sourceIdx))
-            {
-                setDataPoint(sourceIdx, targetIdx, deckItem);
-            }
-        }
-    }
+    /**
+       Due to the convention where it is only neceassary to supply the
+       top layer of the petrophysical properties we can unfortunately
+       not enforce that the number of elements elements in the
+       deckkeyword equals nx*ny*nz. 
+    */
 
     void loadFromDeckKeyword(DeckKeywordConstPtr deckKeyword) {
         const auto deckItem = getDeckItem(deckKeyword);
-
         for (size_t dataPointIdx = 0; dataPointIdx < deckItem->size(); ++dataPointIdx) {
             if (!deckItem->defaultApplied(dataPointIdx))
                 setDataPoint(dataPointIdx, dataPointIdx, deckItem);
         }
     }
+
+
+
+    void loadFromDeckKeyword(std::shared_ptr<const Box> inputBox, DeckKeywordConstPtr deckKeyword) {
+        if (inputBox->isGlobal())
+            loadFromDeckKeyword( deckKeyword );
+        else {
+            const auto deckItem = getDeckItem(deckKeyword);
+            const std::vector<size_t>& indexList = inputBox->getIndexList();
+            if (indexList.size() == deckItem->size()) {
+                for (size_t sourceIdx = 0; sourceIdx < indexList.size(); sourceIdx++) {
+                    size_t targetIdx = indexList[sourceIdx];
+                    if (sourceIdx < deckItem->size()
+                        && !deckItem->defaultApplied(sourceIdx))
+                        {
+                            setDataPoint(sourceIdx, targetIdx, deckItem);
+                        }
+                }
+            } else {
+                std::string boxSize = std::to_string(static_cast<long long>(indexList.size()));
+                std::string keywordSize = std::to_string(static_cast<long long>(deckItem->size()));
+                
+                throw std::invalid_argument("Size mismatch: Box:" + boxSize + "  DecKeyword:" + keywordSize);
+            }
+        }
+    }
+
+
 
     void copyFrom(const GridProperty<T>& src, std::shared_ptr<const Box> inputBox) {
         if (inputBox->isGlobal()) {
