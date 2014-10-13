@@ -26,6 +26,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 
 #include <boost/optional.hpp>
 
@@ -35,46 +36,6 @@
 
 namespace Opm {
 
-    typedef struct WellInjectionProperties {
-        double  surfaceInjectionRate;
-        double  reservoirInjectionRate;
-        double  BHPLimit;
-        double  THPLimit;
-        bool    predictionMode;
-        int     injectionControls;
-        WellInjector::TypeEnum injectorType;
-        WellInjector::ControlModeEnum controlMode;
-
-        WellInjectionProperties() {
-            surfaceInjectionRate=0.0; 
-            reservoirInjectionRate=0.0; 
-            BHPLimit=0.0; 
-            THPLimit=0.0; 
-            predictionMode=true;
-            injectionControls=0;
-            injectorType = WellInjector::WATER;
-            controlMode = WellInjector::RATE;
-        }
-
-        bool hasInjectionControl(WellInjector::ControlModeEnum controlModeArg) const {
-            if (injectionControls & controlModeArg)
-                return true;
-            else
-                return false;
-        }
-
-        void dropInjectionControl(WellInjector::ControlModeEnum controlModeArg) {
-            if ((injectionControls & controlModeArg) != 0) {
-                injectionControls -= controlModeArg;
-            }
-        }
-
-        void addInjectionControl(WellInjector::ControlModeEnum controlModeArg) {
-            if ((injectionControls & controlModeArg) == 0) {
-                injectionControls += controlModeArg;
-            }
-        }
-    } WellInjectionProperties;
 
 
     class Well {
