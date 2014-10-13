@@ -18,6 +18,7 @@
  */
 
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 
 #define BOOST_TEST_MODULE WellPropertiesTest
 #include <boost/test/unit_test.hpp>
@@ -30,6 +31,18 @@
 
 namespace {
     namespace WCONHIST {
+        std::string
+        all_specified_CMODE_BHP()
+        {
+            const std::string input =
+                "WCONHIST\n"
+                "'P' 'OPEN' 'BHP' 1 2 3/\n/\n";
+
+            return input;
+        }
+
+
+
         std::string
         all_specified()
         {
@@ -93,6 +106,32 @@ namespace {
             return Opm::WellProductionProperties::history(record);
         }
     } // namespace WCONHIST
+
+    namespace WCONPROD {
+        std::string
+        all_specified_CMODE_BHP()
+        {
+            const std::string input =
+                "WCONPROD\n"
+                "'P' 'OPEN' 'BHP' 1 2 3/\n/\n";
+
+            return input;
+        }
+
+
+        Opm::WellProductionProperties
+        properties(const std::string& input)
+        {
+            Opm::Parser parser;
+            
+            Opm::DeckPtr             deck   = parser.parseString(input);
+            Opm::DeckKeywordConstPtr kwd    = deck->getKeyword("WCONHIST");
+            Opm::DeckRecordConstPtr  record = kwd->getRecord(0);
+
+            return Opm::WellProductionProperties::prediction(record);
+        }
+    }
+
 } // namespace anonymous
 
 BOOST_AUTO_TEST_CASE(WCH_All_Specified_BHP_Defaulted)
@@ -108,6 +147,8 @@ BOOST_AUTO_TEST_CASE(WCH_All_Specified_BHP_Defaulted)
     BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::LRAT));
     BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::RESV));
 
+    BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::ORAT);
+    
     // BHP must be explicitly provided/specified
     BOOST_REQUIRE(! p.hasProductionControl(Opm::WellProducer::BHP));
 }
@@ -124,6 +165,7 @@ BOOST_AUTO_TEST_CASE(WCH_ORAT_Defaulted_BHP_Defaulted)
     BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::GRAT));
     BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::LRAT));
     BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::RESV));
+    BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::WRAT);
 
     // BHP must be explicitly provided/specified
     BOOST_REQUIRE(! p.hasProductionControl(Opm::WellProducer::BHP));
@@ -141,7 +183,8 @@ BOOST_AUTO_TEST_CASE(WCH_OWRAT_Defaulted_BHP_Defaulted)
     BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::GRAT));
     BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::LRAT));
     BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::RESV));
-
+    BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::GRAT);
+    
     // BHP must be explicitly provided/specified
     BOOST_REQUIRE(! p.hasProductionControl(Opm::WellProducer::BHP));
 }
@@ -158,6 +201,7 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Defaulted)
     BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::GRAT));
     BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::LRAT));
     BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::RESV));
+    BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::LRAT);
 
     // BHP must be explicitly provided/specified
     BOOST_REQUIRE(! p.hasProductionControl(Opm::WellProducer::BHP));
@@ -176,6 +220,25 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Specified)
     BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::LRAT));
     BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::RESV));
 
+    BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::RESV);
     // BHP must be explicitly provided/specified
     BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::BHP));
+}
+
+
+BOOST_AUTO_TEST_CASE(BHP_CMODE)
+{
+    BOOST_CHECK_THROW( WCONHIST::properties(WCONHIST::all_specified_CMODE_BHP()) , std::invalid_argument);
+    BOOST_CHECK_THROW( WCONPROD::properties(WCONPROD::all_specified_CMODE_BHP()) , std::invalid_argument);
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(CMODE_DEFAULT) {
+    const Opm::WellProductionProperties Pproperties;
+    const Opm::WellInjectionProperties Iproperties;
+
+    BOOST_CHECK_EQUAL( Pproperties.controlMode , Opm::WellProducer::CMODE_UNDEFINED );
+    BOOST_CHECK_EQUAL( Iproperties.controlMode , Opm::WellInjector::CMODE_UNDEFINED );
 }

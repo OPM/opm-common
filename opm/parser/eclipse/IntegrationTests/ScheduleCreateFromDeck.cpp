@@ -102,6 +102,7 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
             BOOST_CHECK_EQUAL( WellProducer::ORAT , prop3.controlMode);
             BOOST_CHECK(  prop3.hasProductionControl(WellProducer::ORAT));
             BOOST_CHECK(  prop3.hasProductionControl(WellProducer::GRAT));
+            BOOST_CHECK(  prop3.hasProductionControl(WellProducer::WRAT));
         }
 
         // BOOST_CHECK( !well2->getProductionProperties(8).hasProductionControl(WellProducer::GRAT));
