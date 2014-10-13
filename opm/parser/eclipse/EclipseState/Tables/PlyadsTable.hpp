@@ -49,7 +49,7 @@ namespace Opm {
             ParentType::checkNonDefaultable("PolymerConcentration");
             ParentType::checkMonotonic("PolymerConcentration", /*isAscending=*/true);
             ParentType::checkNonDefaultable("AdsorbedPolymer");
-            ParentType::checkMonotonic("AdsorbedPolymer", /*isAscending=*/true);
+            ParentType::checkMonotonic("AdsorbedPolymer", /*isAscending=*/true, /*strictlyMonotonic=*/false);
         }
 
     public:
