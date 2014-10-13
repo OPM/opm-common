@@ -294,15 +294,14 @@ namespace Opm {
 
     void ParserKeyword::initSectionNames(const Json::JsonObject& jsonObject) {
         if (!jsonObject.has_item("sections"))
-            return;
+            throw std::invalid_argument("The 'sections' JSON item needs to be defined (keyword: '"+m_name+"')");
 
         const Json::JsonObject namesObject = jsonObject.get_item("sections");
+
         if (!namesObject.is_array())
-            throw std::invalid_argument("The 'deck_names' JSON item needs to be a list (keyword: '"+m_name+"')");
+            throw std::invalid_argument("The 'sections' JSON item needs to be a list (keyword: '"+m_name+"')");
 
-        if (namesObject.size() > 0)
-            m_validSectionNames.clear();
-
+        m_validSectionNames.clear();
         for (size_t nameIdx = 0; nameIdx < namesObject.size(); ++ nameIdx) {
             const Json::JsonObject nameObject = namesObject.get_array_item(nameIdx);
 
@@ -489,7 +488,7 @@ namespace Opm {
     }
 
     bool ParserKeyword::isValidSection(const std::string& sectionName) const {
-        return m_validSectionNames.count(sectionName) > 0;
+        return m_validSectionNames.size() == 0 || m_validSectionNames.count(sectionName) > 0;
     }
 
     ParserKeyword::SectionNameSet::const_iterator ParserKeyword::validSectionNamesBegin() const {
