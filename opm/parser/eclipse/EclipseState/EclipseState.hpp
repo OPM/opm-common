@@ -49,7 +49,6 @@
 #include <opm/parser/eclipse/EclipseState/Tables/RvvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/TlmixparTable.hpp>
 
 #include <set>
 #include <memory>
@@ -107,7 +106,6 @@ namespace Opm {
         const std::vector<RvvdTable>& getRvvdTables() const;
         const std::vector<SgofTable>& getSgofTables() const;
         const std::vector<SwofTable>& getSwofTables() const;
-        const std::vector<TlmixparTable>& getTlmixparTables() const;
 
         // the unit system used by the deck. note that it is rarely needed to convert
         // units because internally to opm-parser everything is represented by SI
@@ -223,7 +221,6 @@ namespace Opm {
         std::vector<RvvdTable> m_rvvdTables;
         std::vector<SgofTable> m_sgofTables;
         std::vector<SwofTable> m_swofTables;
-        std::vector<TlmixparTable> m_tlmixparTables;
 
         std::set<enum Phase::PhaseEnum> phases;
         std::string m_title;

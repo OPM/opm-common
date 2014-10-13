@@ -164,7 +164,6 @@ EclipseState/Tables/PvdoTable.hpp
 EclipseState/Tables/MultiRecordTable.hpp
 EclipseState/Tables/PvdgTable.hpp
 EclipseState/Tables/SingleRecordTable.hpp
-EclipseState/Tables/TlmixparTable.hpp
 EclipseState/Tables/PlymaxTable.hpp
 EclipseState/Tables/PvtgTable.hpp
 EclipseState/Tables/PlyrockTable.hpp
