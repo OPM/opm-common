@@ -230,7 +230,7 @@ namespace Opm {
                     else {
                         std::string msg =
                             "Tried to set invalid control: " +
-                            cmodeString + " for well: " + wellNamePattern;
+                            cmodeString + " for well: " + well->name();
                         parserLog->addError(keyword->getFileName(),
                                             keyword->getLineNumber(),
                                             msg);
