@@ -31,6 +31,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PlyadsTable.hpp>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
@@ -213,6 +214,91 @@ BOOST_AUTO_TEST_CASE(SgofTable_Tests) {
     // that everything else is fine...
     BOOST_CHECK_EQUAL(sgof2Table.getSgColumn().front(), 9.0);
     BOOST_CHECK_EQUAL(sgof2Table.getSgColumn().back(), 17.0);
+}
+
+BOOST_AUTO_TEST_CASE(PlyadsTable_Tests) {
+    {
+        const char *correctDeckData =
+            "TABDIMS\n"
+            "/\n"
+            "PLYADS\n"
+            "0.00    0.0 \n"
+            "0.25    0.000010\n"
+            "0.50    0.000018\n"
+            "0.75    0.000023\n"
+            "1.00    0.000027\n"
+            "1.25    0.000030\n"
+            "1.50    0.000030\n"
+            "1.75    0.000030\n"
+            "2.00    0.000030\n"
+            "3.00    0.000030 /\n";
+        Opm::ParserPtr parser(new Opm::Parser);
+        Opm::DeckConstPtr deck(parser->parseString(correctDeckData));
+        Opm::DeckKeywordConstPtr plyadsKeyword = deck->getKeyword("PLYADS");
+
+        BOOST_CHECK_EQUAL(Opm::PlyadsTable::numTables(plyadsKeyword), 1);
+
+        Opm::PlyadsTable plyadsTable;
+        plyadsTable.initFORUNITTESTONLY(plyadsKeyword, /*tableIdx=*/0);
+
+        BOOST_CHECK_CLOSE(plyadsTable.getPolymerConcentrationColumn().front(), 0.0, 1e-6);
+        BOOST_CHECK_CLOSE(plyadsTable.getPolymerConcentrationColumn().back(), 3.0, 1e-6);
+
+        BOOST_CHECK_CLOSE(plyadsTable.getAdsorbedPolymerColumn().front(), 0.0, 1e-6);
+        BOOST_CHECK_CLOSE(plyadsTable.getAdsorbedPolymerColumn().back(), 0.000030, 1e-6);
+    }
+
+    {
+        // first column not strictly monotonic
+        const char *incorrectDeckData =
+            "TABDIMS\n"
+            "/\n"
+            "PLYADS\n"
+            "0.00    0.0 \n"
+            "0.00    0.000010\n"
+            "0.50    0.000018\n"
+            "0.75    0.000023\n"
+            "1.00    0.000027\n"
+            "1.25    0.000030\n"
+            "1.50    0.000030\n"
+            "1.75    0.000030\n"
+            "2.00    0.000030\n"
+            "3.00    0.000030 /\n";
+        Opm::ParserPtr parser(new Opm::Parser);
+        Opm::DeckConstPtr deck(parser->parseString(incorrectDeckData));
+        Opm::DeckKeywordConstPtr plyadsKeyword = deck->getKeyword("PLYADS");
+
+        BOOST_CHECK_EQUAL(Opm::PlyadsTable::numTables(plyadsKeyword), 1);
+
+        Opm::PlyadsTable plyadsTable;
+        BOOST_CHECK_THROW(plyadsTable.initFORUNITTESTONLY(plyadsKeyword, /*tableIdx=*/0), std::invalid_argument);
+    }
+
+    {
+        // second column not monotonic
+        const char *incorrectDeckData =
+            "TABDIMS\n"
+            "/\n"
+            "PLYADS\n"
+            "0.00    0.0 \n"
+            "0.25    0.000010\n"
+            "0.50    0.000018\n"
+            "0.75    0.000023\n"
+            "1.00    0.000027\n"
+            "1.25    0.000030\n"
+            "1.50    0.000030\n"
+            "1.75    0.000030\n"
+            "2.00    0.000030\n"
+            "3.00    0.000029 /\n";
+        Opm::ParserPtr parser(new Opm::Parser);
+        Opm::DeckConstPtr deck(parser->parseString(incorrectDeckData));
+        Opm::DeckKeywordConstPtr plyadsKeyword = deck->getKeyword("PLYADS");
+
+        BOOST_CHECK_EQUAL(Opm::PlyadsTable::numTables(plyadsKeyword), 1);
+
+        Opm::PlyadsTable plyadsTable;
+        BOOST_CHECK_THROW(plyadsTable.initFORUNITTESTONLY(plyadsKeyword, /*tableIdx=*/0), std::invalid_argument);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(PvtoTable_Tests) {

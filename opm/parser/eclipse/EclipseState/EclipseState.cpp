@@ -128,10 +128,6 @@ namespace Opm {
         return m_swofTables;
     }
 
-    const std::vector<TlmixparTable>& EclipseState::getTlmixparTables() const {
-        return m_tlmixparTables;
-    }
-
     ScheduleConstPtr EclipseState::getSchedule() const {
         return schedule;
     }
@@ -163,7 +159,6 @@ namespace Opm {
         initSimpleTables(deck, parserLog, "RVVD", m_rvvdTables);
         initSimpleTables(deck, parserLog, "SGOF", m_sgofTables);
         initSimpleTables(deck, parserLog, "SWOF", m_swofTables);
-        initSimpleTables(deck, parserLog, "TLMIXPAR", m_tlmixparTables);
 
         // the ROCKTAB table comes with additional fun because the number of columns
         //depends on the presence of the RKTRMDIR keyword...

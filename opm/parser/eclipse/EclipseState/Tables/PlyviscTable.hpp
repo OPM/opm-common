@@ -61,7 +61,7 @@ namespace Opm {
         { return ParentType::getColumn(0); }
 
         const std::vector<double> &getViscosityMultiplierColumn() const
-        { return ParentType::getColumn(0); }
+        { return ParentType::getColumn(1); }
     };
 }
 

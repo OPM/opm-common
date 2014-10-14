@@ -30,8 +30,6 @@ namespace Opm {
 
         friend class EclipseState;
 
-        PlyadsTable() = default;
-
         /*!
          * \brief Read the PLYADS keyword and provide some convenience
          *        methods for it.
@@ -49,10 +47,18 @@ namespace Opm {
             ParentType::checkNonDefaultable("PolymerConcentration");
             ParentType::checkMonotonic("PolymerConcentration", /*isAscending=*/true);
             ParentType::checkNonDefaultable("AdsorbedPolymer");
-            ParentType::checkMonotonic("AdsorbedPolymer", /*isAscending=*/true);
+            ParentType::checkMonotonic("AdsorbedPolymer", /*isAscending=*/true, /*strictlyMonotonic=*/false);
         }
 
     public:
+        PlyadsTable() = default;
+
+#ifdef BOOST_TEST_MODULE
+        // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
+        void initFORUNITTESTONLY(Opm::DeckKeywordConstPtr keyword, size_t tableIdx)
+        { init(keyword, tableIdx); }
+#endif
+
         using ParentType::numTables;
         using ParentType::numRows;
         using ParentType::numColumns;
@@ -62,7 +68,7 @@ namespace Opm {
         { return ParentType::getColumn(0); }
 
         const std::vector<double> &getAdsorbedPolymerColumn() const
-        { return ParentType::getColumn(0); }
+        { return ParentType::getColumn(1); }
     };
 }
 
