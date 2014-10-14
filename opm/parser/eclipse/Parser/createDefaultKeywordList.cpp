@@ -110,7 +110,8 @@ static void endTest(std::iostream& of) {
 }
 
 static void testKeyword(ParserKeywordConstPtr parserKeyword , const std::string& keywordName , const boost::filesystem::path& jsonFile , std::iostream& of) {
-    startTest(of , keywordName);
+    std::string testName("test"+keywordName+"Keyword");
+    startTest(of , testName);
     of << "    Json::JsonObject jsonKeyword(boost::filesystem::path(" << jsonFile << "));" << std::endl;
     of << "    ParserKeywordConstPtr parserKeyword = ParserKeyword::createFromJson(jsonKeyword);" << std::endl;
 
