@@ -1,4 +1,7 @@
-{"name" : "OPTIONS" , "size" : 1 , "items" : [
+{"name" : "OPTIONS" ,
+  "sections" : ["RUNSPEC", "SCHEDULE"],
+  "size" : 1 ,
+  "items" : [
   {"name" : "ITEM1", "value_type" : "INT" , "default" : 0},
   {"name" : "ITEM2", "value_type" : "INT" , "default" : 0},
   {"name" : "ITEM3", "value_type" : "INT" , "default" : 0},

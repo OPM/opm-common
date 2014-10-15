@@ -142,6 +142,7 @@ namespace Opm {
 
         initSize(jsonConfig);
         initDeckNames(jsonConfig);
+        initSectionNames(jsonConfig);
         initMatchRegex(jsonConfig);
 
         if (jsonConfig.has_item("items"))
@@ -288,6 +289,26 @@ namespace Opm {
                 throw std::invalid_argument("The items of 'deck_names' need to be strings (keyword: '"+m_name+"')");
 
             addDeckName(nameObject.as_string());
+        }
+    }
+
+    void ParserKeyword::initSectionNames(const Json::JsonObject& jsonObject) {
+        if (!jsonObject.has_item("sections"))
+            throw std::invalid_argument("The 'sections' JSON item needs to be defined (keyword: '"+m_name+"')");
+
+        const Json::JsonObject namesObject = jsonObject.get_item("sections");
+
+        if (!namesObject.is_array())
+            throw std::invalid_argument("The 'sections' JSON item needs to be a list (keyword: '"+m_name+"')");
+
+        m_validSectionNames.clear();
+        for (size_t nameIdx = 0; nameIdx < namesObject.size(); ++ nameIdx) {
+            const Json::JsonObject nameObject = namesObject.get_array_item(nameIdx);
+
+            if (!nameObject.is_string())
+                throw std::invalid_argument("The items of 'sections' need to be strings (keyword: '"+m_name+"')");
+
+            addValidSectionName(nameObject.as_string());
         }
     }
 
@@ -458,6 +479,26 @@ namespace Opm {
         return m_record->size();
     }
 
+    void ParserKeyword::clearValidSectionNames() {
+        m_validSectionNames.clear();
+    }
+
+    void ParserKeyword::addValidSectionName( const std::string& sectionName ) {
+        m_validSectionNames.insert(sectionName);
+    }
+
+    bool ParserKeyword::isValidSection(const std::string& sectionName) const {
+        return m_validSectionNames.size() == 0 || m_validSectionNames.count(sectionName) > 0;
+    }
+
+    ParserKeyword::SectionNameSet::const_iterator ParserKeyword::validSectionNamesBegin() const {
+        return m_validSectionNames.begin();
+    }
+
+    ParserKeyword::SectionNameSet::const_iterator ParserKeyword::validSectionNamesEnd() const  {
+        return m_validSectionNames.end();
+    }
+
     ParserKeyword::DeckNameSet::const_iterator ParserKeyword::deckNamesBegin() const {
         return m_deckNames.begin();
     }
@@ -597,6 +638,15 @@ namespace Opm {
             }
         }
         os << indent << lhs << "->setDescription(\"" << getDescription() << "\");" << std::endl;
+
+        // add the valid sections for the keyword
+        os << indent << lhs << "->clearValidSectionNames();\n";
+        for (auto sectionNameIt = m_validSectionNames.begin();
+             sectionNameIt != m_validSectionNames.end();
+             ++sectionNameIt)
+        {
+            os << indent << lhs << "->addValidSectionName(\"" << *sectionNameIt << "\");" << std::endl;
+        }
 
         // add the deck names
         os << indent << lhs << "->clearDeckNames();\n";

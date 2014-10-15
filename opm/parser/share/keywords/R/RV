@@ -1,1 +1,1 @@
-{"name" : "RV" , "data" : {"value_type" : "DOUBLE", "dimension" : "OilDissolutionFactor"}}
+{"name" : "RV" , "sections" : ["SOLUTION"], "data" : {"value_type" : "DOUBLE", "dimension" : "OilDissolutionFactor"}}

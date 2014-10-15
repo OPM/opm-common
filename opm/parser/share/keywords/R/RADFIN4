@@ -1,4 +1,4 @@
-{"name" : "RADFIN4", "size" : 1,  "items" :
+{"name" : "RADFIN4", "sections" : ["SPECIAL", "GRID"], "size" : 1,  "items" :
 [
     {"name" : "NAME"  , "value_type" : "STRING"},
     {"name" : "I1"    , "value_type" : "INT"},

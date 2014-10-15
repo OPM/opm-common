@@ -39,7 +39,8 @@ bool checkDeck(DeckConstPtr deck, ParserLogPtr parserLog, size_t enabledChecks) 
 
     // make sure all mandatory sections are present and that their order is correct
     if (enabledChecks & SectionTopology) {
-        deckValid = deckValid && Section::checkSectionTopology(deck, parserLog);
+        bool ensureKeywordSection = enabledChecks & KeywordSection;
+        deckValid = deckValid && Section::checkSectionTopology(deck, parserLog, ensureKeywordSection);
     }
 
     return deckValid;

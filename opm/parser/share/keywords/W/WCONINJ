@@ -1,1 +1,1 @@
-{"name" : "WCONINJ" , "action" : "THROW_EXCEPTION"}
+{"name" : "WCONINJ" , "sections" : ["SCHEDULE"], "action" : "THROW_EXCEPTION"}

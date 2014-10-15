@@ -1,1 +1,1 @@
-{"name":"DXV", "data" : {"value_type" : "DOUBLE", "dimension":"Length" }}
+{"name":"DXV", "sections" : ["GRID"], "data" : {"value_type" : "DOUBLE", "dimension":"Length" }}

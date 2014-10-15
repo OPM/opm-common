@@ -1,4 +1,4 @@
-{"name" : "GCONINJE" , "items" : [
+{"name" : "GCONINJE" , "sections" : ["SCHEDULE"], "items" : [
     {"name" : "GROUP"    , "value_type" : "STRING" },
     {"name" : "PHASE"  , "value_type" : "STRING"},
     {"name" : "CONTROL_MODE" , "value_type" : "STRING" , "default" : "NONE"},

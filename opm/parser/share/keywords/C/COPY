@@ -1,4 +1,4 @@
-{"name" : "COPY" , "items" : [
+{"name" : "COPY" , "sections" : ["GRID", "EDIT", "PROPS", "REGIONS", "SOLUTION"], "items" : [
         {"name" : "src", "value_type" : "STRING"},
         {"name" : "target", "value_type" : "STRING"},
         {"name" : "I1" , "value_type" : "INT"},

@@ -1,4 +1,4 @@
-{"name" : "FAULTS", "items" :
+{"name" : "FAULTS", "sections" : ["GRID"], "items" :
 [
  {"name" : "NAME", "value_type" : "STRING"},
  {"name" : "IX1", "value_type" : "INT"},

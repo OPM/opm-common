@@ -1,1 +1,1 @@
-{"name":"DEPTH", "data": {"value_type" : "DOUBLE"}}
+{"name":"DEPTH", "sections" : ["EDIT"], "data": {"value_type" : "DOUBLE"}}

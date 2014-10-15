@@ -1,4 +1,4 @@
-{"name" : "WELSPECS" , "items" : [
+{"name" : "WELSPECS" , "sections" : ["SCHEDULE"], "items" : [
   {"name" : "WELL" , "value_type" : "STRING" },
   {"name" : "GROUP" , "value_type" : "STRING" },
   {"name" : "HEAD_I" , "value_type" : "INT"},

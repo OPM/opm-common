@@ -1,1 +1,1 @@
-{"name" : "TUNING" , "size" : 3 , "action" : "IGNORE_WARNING"}
+{"name" : "TUNING" , "sections" : ["SCHEDULE"], "size" : 3 , "action" : "IGNORE_WARNING"}

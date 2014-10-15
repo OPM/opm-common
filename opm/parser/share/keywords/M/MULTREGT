@@ -1,4 +1,4 @@
-{"name" : "MULTREGT" , "items" : [
+{"name" : "MULTREGT" , "sections" : ["GRID", "EDIT", "SCHEDULE"], "items" : [
     {"name" : "SRC_REGION" , "value_type" : "INT"},
     {"name" : "TARGET_REGION" , "value_type" : "INT" },
     {"name" : "TRAN_MULT" , "value_type" : "DOUBLE" },

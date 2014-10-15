@@ -1,1 +1,13 @@
-{"name" : "ECHO"}
+{
+  "name" : "ECHO",
+  "sections": [
+    "RUNSPEC",
+    "GRID",
+    "EDIT",
+    "PROPS",
+    "REGIONS",
+    "SOLUTION",
+    "SUMMARY",
+    "SCHEDULE"
+  ]
+}

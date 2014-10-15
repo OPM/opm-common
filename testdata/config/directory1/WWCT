@@ -1,1 +1,5 @@
-{"name" : "WWCT", "items" : [{"name" : "wells" , "size_type" : "ALL" , "value_type" : "STRING"}]}
+{
+  "name" : "WWCT",
+  "sections":["SUMMARY"],
+  "items" : [{"name" : "wells" , "size_type" : "ALL" , "value_type" : "STRING"}]
+}

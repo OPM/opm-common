@@ -1,4 +1,4 @@
-{"name" : "MULTIPLY", "items" : [
+{"name" : "MULTIPLY", "sections" : ["GRID", "EDIT", "PROPS", "REGIONS", "SOLUTION"], "items" : [
         {"name" : "field" , "value_type" : "STRING"},
         {"name" : "factor" , "value_type" : "DOUBLE"},
         {"name" : "I1" , "value_type" : "INT" , "default" : 0},

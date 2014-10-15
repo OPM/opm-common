@@ -1,4 +1,4 @@
-{"name" : "DRSDT", "size" : 1, "items" :
+{"name" : "DRSDT", "sections" : ["SCHEDULE"], "size" : 1, "items" :
  [{"name" : "DRSDT" , "value_type" : "DOUBLE"},
   {"name" : "Option" , "value_type" : "STRING", "default" : "ALL"}]
 }

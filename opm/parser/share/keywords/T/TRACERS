@@ -1,4 +1,4 @@
-{"name" : "TRACERS" , "size" : 1 , "items" : [
+{"name" : "TRACERS" , "sections" : ["RUNSPEC"], "size" : 1 , "items" : [
         {"name" : "MAX_OIL_TRACERS"   , "value_type" : "INT" , "default" : 0},
         {"name" : "MAX_WATER_TRACERS" , "value_type" : "INT" , "default" : 0},
         {"name" : "MAX_GAS_TRACERS"   , "value_type" : "INT" , "default" : 0},

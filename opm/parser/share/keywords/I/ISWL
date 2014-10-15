@@ -1,1 +1,1 @@
-{"name" : "ISWL" , "data" : {"value_type" : "DOUBLE", "dimension" : "1"}}
+{"name" : "ISWL" , "sections" : ["PROPS"], "data" : {"value_type" : "DOUBLE", "dimension" : "1"}}

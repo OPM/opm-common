@@ -1,1 +1,1 @@
-{"name" : "IPCG" , "data" : {"value_type" : "DOUBLE", "dimension" : "Pressure"}}
+{"name" : "IPCG" , "sections" : ["PROPS"], "data" : {"value_type" : "DOUBLE", "dimension" : "Pressure"}}

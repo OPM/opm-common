@@ -1,4 +1,4 @@
-{"name" : "PINCH" , "size" : 1 , "items" : [
+{"name" : "PINCH" , "sections" : ["GRID"], "size" : 1 , "items" : [
      {"name" : "THRESHOLD_THICKNESS" , "value_type" : "DOUBLE" , "default" : 0.001, "dimension":"Length"},
      {"name" : "CONTROL_OPTION", "value_type" : "STRING" , "default" : "GAP"},
      {"name" : "MAX_EMPTY_GAP" , "value_type" : "DOUBLE" , "default" : 1e20, "dimension":"Length"},

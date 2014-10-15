@@ -1,1 +1,1 @@
-{"name" : "ENDINC"}
+{"name" : "ENDINC", "sections" : ["RUNSPEC", "GRID", "EDIT", "PROPS", "REGIONS", "SOLUTION", "SUMMARY", "SCHEDULE"]}

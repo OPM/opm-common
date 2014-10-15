@@ -1,4 +1,4 @@
-{"name" : "GCONPROD" , "items" : [
+{"name" : "GCONPROD" , "sections" : ["SCHEDULE"], "items" : [
         {"name" : "GROUP" , "value_type" : "STRING" },
         {"name" : "CONTROL_MODE" , "value_type" : "STRING" , "default" : "NONE"},
         {"name" : "OIL_TARGET" , "value_type" : "DOUBLE" , "dimension" : "LiquidVolume/Time", "default" : 0},

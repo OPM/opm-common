@@ -1,1 +1,1 @@
-{"name" : "SOGCR" , "data" : {"value_type" : "DOUBLE", "dimension" : "1"}}
+{"name" : "SOGCR" , "sections" : ["PROPS"], "data" : {"value_type" : "DOUBLE", "dimension" : "1"}}

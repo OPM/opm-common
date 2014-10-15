@@ -63,6 +63,7 @@ namespace Opm {
 
     public:
         typedef std::set<std::string> DeckNameSet;
+        typedef std::set<std::string> SectionNameSet;
 
         /*!
          * \brief Factory method to create a keyword where the number
@@ -126,6 +127,12 @@ namespace Opm {
         DeckNameSet::const_iterator deckNamesBegin() const;
         DeckNameSet::const_iterator deckNamesEnd() const;
 
+        void clearValidSectionNames();
+        void addValidSectionName(const std::string& sectionName);
+        bool isValidSection(const std::string& sectionName) const;
+        SectionNameSet::const_iterator validSectionNamesBegin() const;
+        SectionNameSet::const_iterator validSectionNamesEnd() const;
+
         DeckKeywordPtr parse(RawKeywordConstPtr rawKeyword) const;
         enum ParserKeywordSizeEnum getSizeType() const;
         const std::pair<std::string,std::string>& getSizeDefinitionPair() const;
@@ -139,6 +146,7 @@ namespace Opm {
         std::pair<std::string,std::string> m_sizeDefinitionPair;
         std::string m_name;
         DeckNameSet m_deckNames;
+        DeckNameSet m_validSectionNames;
         std::string m_matchRegexString;
 #ifdef HAVE_REGEX
         std::regex m_matchRegex;
@@ -155,6 +163,7 @@ namespace Opm {
 
         static bool validNameStart(const std::string& name);
         void initDeckNames( const Json::JsonObject& jsonConfig );
+        void initSectionNames( const Json::JsonObject& jsonConfig );
         void initMatchRegex( const Json::JsonObject& jsonObject );
         void initData( const Json::JsonObject& jsonConfig );
         void initSize( const Json::JsonObject& jsonConfig );

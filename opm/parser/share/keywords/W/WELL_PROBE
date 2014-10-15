@@ -1,5 +1,7 @@
 {
    "name" : "WELL_PROBE",
+   "sections" : ["SUMMARY"],
+
    "comment": "E100 only",
    "deck_names" : [
         "WOFRL",

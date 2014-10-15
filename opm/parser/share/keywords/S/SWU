@@ -1,1 +1,1 @@
-{"name" : "SWU" , "data" : {"value_type" : "DOUBLE", "dimension" : "1"}}
+{"name" : "SWU" , "sections" : ["PROPS"], "data" : {"value_type" : "DOUBLE", "dimension" : "1"}}

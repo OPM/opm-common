@@ -93,9 +93,9 @@ BOOST_AUTO_TEST_CASE(getAllDeckNames_hasNoKeywords_returnsEmptyList) {
 /************************ JSON config related tests **********************'*/
 
 
-BOOST_AUTO_TEST_CASE(addParserKeywordJSON_canParseDeckKeyword_returnstrue) {
+BOOST_AUTO_TEST_CASE(addParserKeywordJSON_canParseDEckkeyword_returnstrue) {
     ParserPtr parser(new Parser());
-    Json::JsonObject jsonConfig("{\"name\": \"BPR\", \"size\" : 100 ,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}");
+    Json::JsonObject jsonConfig("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : 100 ,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}");
     parser->addParserKeyword(ParserKeyword::createFromJson( jsonConfig ));
     BOOST_CHECK(parser->canParseDeckKeyword("BPR"));
 }
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(addParserKeywordJSON_canParseDeckKeyword_returnstrue) {
 
 BOOST_AUTO_TEST_CASE(addParserKeywordJSON_size_isObject_allGood) {
     ParserPtr parser(new Parser());
-    Json::JsonObject jsonConfig("{\"name\": \"EQUIXL\", \"size\" : {\"keyword\":\"EQLDIMS\" , \"item\" : \"NTEQUL\"},  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}");
+    Json::JsonObject jsonConfig("{\"name\": \"EQUIXL\", \"sections\":[], \"size\" : {\"keyword\":\"EQLDIMS\" , \"item\" : \"NTEQUL\"},  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}");
     parser->addParserKeyword(ParserKeyword::createFromJson( jsonConfig ));
     BOOST_CHECK(parser->canParseDeckKeyword("EQUIXL"));
 }
@@ -112,16 +112,22 @@ BOOST_AUTO_TEST_CASE(addParserKeywordJSON_size_isObject_allGood) {
 
 BOOST_AUTO_TEST_CASE(loadKeywordsJSON_notArray_throw) {
     ParserPtr parser(new Parser());
-    Json::JsonObject jsonConfig( "{\"name\" : \"BPR\" , \"size\" : 100}");
+    Json::JsonObject jsonConfig( "{\"name\" : \"BPR\" , \"size\" : 100, \"sections\":[\"SUMMARY\"]}");
+    
+    BOOST_CHECK_THROW(parser->loadKeywords( jsonConfig ) , std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(loadKeywordsJSON_noSectionsItem_throw) {
+    ParserPtr parser(new Parser());
+    Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100, \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}]");
     
     BOOST_CHECK_THROW(parser->loadKeywords( jsonConfig ) , std::invalid_argument);
 }
 
 
-
 BOOST_AUTO_TEST_CASE(loadKeywordsJSON_canParseDeckKeyword_returnstrue) {
     ParserPtr parser(new Parser());
-    Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}]");
+    Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100, \"sections\":[\"SUMMARY\"], \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}]");
     
     parser->loadKeywords( jsonConfig );
     BOOST_CHECK(parser->canParseDeckKeyword("BPR"));
@@ -137,7 +143,7 @@ BOOST_AUTO_TEST_CASE(empty_sizeReturns0) {
 
 BOOST_AUTO_TEST_CASE(loadKeywordsJSON_manyKeywords_returnstrue) {
     ParserPtr parser(new Parser( false ));
-    Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100 ,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}, {\"name\" : \"WWCT\", \"size\" : 0} , {\"name\" : \"EQUIL\" , \"size\" : 0}]");
+    Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100, \"sections\":[\"SUMMARY\"] ,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}, {\"name\" : \"WWCT\", \"sections\":[\"SUMMARY\"], \"size\" : 0} , {\"name\" : \"EQUIL\", \"sections\":[\"PROPS\"], \"size\" : 0}]");
     
     parser->loadKeywords( jsonConfig );
     BOOST_CHECK(parser->canParseDeckKeyword("BPR"));

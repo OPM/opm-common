@@ -1,5 +1,6 @@
 {
    "name" : "FIELD_PROBE",
+   "sections" : ["SUMMARY"],
    "comment":"E100 names only...",
 
    "deck_names" : [

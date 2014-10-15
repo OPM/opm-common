@@ -1,4 +1,4 @@
-{"name" : "PLYROCK" , "size" : {"keyword":"TABDIMS" , "item":"NTSFUN"}, "items":
+{"name" : "PLYROCK" , "sections" : ["SPECIAL", "PROPS"], "size" : {"keyword":"TABDIMS" , "item":"NTSFUN"}, "items":
     [   {"name":"IPV", "value_type" : "DOUBLE", "dimension":"1" },
         {"name":"RRF", "value_type" : "DOUBLE", "dimension":"1" },
         {"name":"ROCK_DENSITY", "value_type" : "DOUBLE", "dimension":"Density"},

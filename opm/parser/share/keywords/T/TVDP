@@ -1,5 +1,6 @@
 {
  "name" : "TVDP",
+ "sections" : ["SOLUTION"],
  "deck_name_regex" : "TVDP.+",
  "size" : {
   "keyword":"EQLDIMS" , "item":"NTTRVD"

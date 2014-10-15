@@ -26,6 +26,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 
 namespace Opm {
     Section::Section(DeckConstPtr deck, const std::string& startKeywordName)
@@ -97,7 +98,8 @@ namespace Opm {
     }
 
     bool Section::checkSectionTopology(DeckConstPtr deck,
-                                       ParserLogPtr parserLog)
+                                       ParserLogPtr parserLog,
+                                       bool ensureKeywordSectionAffiliation)
     {
         if (deck->size() == 0) {
             std::string msg = "empty decks are invalid\n";
@@ -118,10 +120,28 @@ namespace Opm {
         std::string curSectionName = deck->getKeyword(0)->name();
         size_t curKwIdx = 1;
         for (; curKwIdx < deck->size(); ++curKwIdx) {
-            Opm::DeckKeywordConstPtr curKeyword = deck->getKeyword(curKwIdx);
+            const auto& curKeyword = deck->getKeyword(curKwIdx);
             const std::string& curKeywordName = curKeyword->name();
-            if (!isSectionDelimiter(curKeywordName))
+
+            if (!isSectionDelimiter(curKeywordName)) {
+                if (!curKeyword->hasParserKeyword())
+                    // ignore unknown keywords for now (i.e. they can appear in any section)
+                    continue;
+
+                const auto &parserKeyword = curKeyword->getParserKeyword();
+                if (ensureKeywordSectionAffiliation && !parserKeyword->isValidSection(curSectionName)) {
+                    std::string msg =
+                        "The keyword '"+curKeywordName+"' is located in the '"+curSectionName
+                        +"' section where it is invalid";
+
+                    parserLog->addWarning(curKeyword->getFileName(),
+                                          curKeyword->getLineNumber(),
+                                          msg);
+                    deckValid = false;
+                }
+
                 continue;
+            }
 
             if (curSectionName == "RUNSPEC") {
                 if (curKeywordName != "GRID") {

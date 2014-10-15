@@ -1,4 +1,4 @@
-     {"name" : "WELLDIMS", "size" : 1, "items" : [
+     {"name" : "WELLDIMS", "sections" : ["RUNSPEC"], "size" : 1, "items" : [
          {"name" : "MAXWELLS"             , "value_type" : "INT" , "default" : 0},
          {"name" : "MAXCONN"              , "value_type" : "INT" , "default" : 0},
          {"name" : "MAXGROUPS"            , "value_type" : "INT" , "default" : 0},
