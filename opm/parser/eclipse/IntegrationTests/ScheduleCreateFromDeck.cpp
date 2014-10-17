@@ -102,6 +102,7 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
             BOOST_CHECK_EQUAL( WellProducer::ORAT , prop3.controlMode);
             BOOST_CHECK(  prop3.hasProductionControl(WellProducer::ORAT));
             BOOST_CHECK(  prop3.hasProductionControl(WellProducer::GRAT));
+            BOOST_CHECK(  prop3.hasProductionControl(WellProducer::WRAT));
         }
 
         // BOOST_CHECK( !well2->getProductionProperties(8).hasProductionControl(WellProducer::GRAT));
@@ -566,6 +567,28 @@ BOOST_AUTO_TEST_CASE(OpmCode) {
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/wells_group.data");
     DeckPtr deck =  parser->parseFile(scheduleFile.string());
+    BOOST_CHECK_NO_THROW( new Schedule(deck) );
+}
+
+
+
+BOOST_AUTO_TEST_CASE(WELLS_SHUT) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_SHUT_WELL");
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
     ScheduleConstPtr sched(new Schedule(deck));
+    
+    WellConstPtr well1 = sched->getWell("W1");
+    WellConstPtr well2 = sched->getWell("W2");
+    WellConstPtr well3 = sched->getWell("W3");
+
+    BOOST_CHECK_EQUAL( WellCommon::StatusEnum::OPEN , well1->getStatus(1));
+    BOOST_CHECK_EQUAL( WellCommon::StatusEnum::OPEN , well2->getStatus(1));
+    BOOST_CHECK_EQUAL( WellCommon::StatusEnum::OPEN , well3->getStatus(1));
+
+    
+    BOOST_CHECK_EQUAL( WellCommon::StatusEnum::SHUT , well1->getStatus(2));
+    BOOST_CHECK_EQUAL( WellCommon::StatusEnum::SHUT , well2->getStatus(2));
+    BOOST_CHECK_EQUAL( WellCommon::StatusEnum::SHUT , well3->getStatus(2));
 }
 

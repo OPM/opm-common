@@ -53,7 +53,19 @@ namespace Opm {
         if (!record->getItem("BHP")->defaultApplied(0)) {
             p.addProductionControl(WellProducer::BHP);
         }
-
+        
+        {
+            const auto cmodeItem = record->getItem("CMODE");
+            if (!cmodeItem->defaultApplied(0)) {
+                const WellProducer::ControlModeEnum cmode = WellProducer::ControlModeFromString( cmodeItem->getString(0) );
+                
+                if (p.hasProductionControl( cmode ))
+                    p.controlMode = cmode;
+                else 
+                    throw std::invalid_argument("Setting CMODE to unspecified control");
+            }
+        }
+        
         return p;
     }
 
@@ -86,6 +98,18 @@ namespace Opm {
             }
         }
 
+        {
+            const auto cmodeItem = record->getItem("CMODE");
+            if (!cmodeItem->defaultApplied(0)) {
+                const WellProducer::ControlModeEnum cmode = WellProducer::ControlModeFromString( cmodeItem->getString(0) );
+                
+                if (p.hasProductionControl( cmode ))
+                    p.controlMode = cmode;
+                else 
+                    throw std::invalid_argument("Setting CMODE to unspecified control");
+            }
+        }
+
         return p;
     }
 
@@ -100,7 +124,7 @@ namespace Opm {
         ResVRate    = 0.0;
         BHPLimit    = 0.0;
         THPLimit    = 0.0;
-        controlMode = WellProducer::ORAT;
+        controlMode = WellProducer::CMODE_UNDEFINED;
 
         // private: property
         productionControls = 0;

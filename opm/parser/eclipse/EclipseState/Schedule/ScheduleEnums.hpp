@@ -84,7 +84,8 @@ namespace Opm {
             RESV =  2 , 
             BHP  =  4 ,
             THP  =  8 ,
-            GRUP = 16
+            GRUP = 16 ,
+            CMODE_UNDEFINED = 512
         };
         /*
           The elements in this enum are used as bitmasks to keep track
@@ -105,15 +106,16 @@ namespace Opm {
     namespace WellProducer {
 
         enum ControlModeEnum {
-            ORAT =   1,
-            WRAT =   2, 
-            GRAT =   4,
-            LRAT =   8,
-            CRAT =  16,
-            RESV =  32,
-            BHP  =  64, 
-            THP  = 128, 
-            GRUP = 256  
+            ORAT =     1,
+            WRAT =     2, 
+            GRAT =     4,
+            LRAT =     8,
+            CRAT =    16,
+            RESV =    32,
+            BHP  =    64, 
+            THP  =   128, 
+            GRUP =   256,  
+            CMODE_UNDEFINED = 1024   
         };
 
         /*
@@ -121,6 +123,10 @@ namespace Opm {
           WCONPROD. The elements in this enum are used as bitmasks to
           keep track of which controls are present, i.e. the 2^n
           structure must be intact.
+
+          The properties are initialized with the CMODE_UNDEFINED
+          value, but the undefined value is never assigned apart from
+          that; and it is not part of the string conversion routines.
         */
 
 
