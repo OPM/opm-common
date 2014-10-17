@@ -35,10 +35,10 @@ public:
     enum MessageType {
         Note = 0x01,
         Warning = 0x02,
-        Error = 0x04,
-
-        AllTypes = 0xff
+        Error = 0x04
     };
+
+    static const int AllMessageTypes = 0xff;
 
     ParserLog();
     ParserLog(std::ostream* os);
@@ -67,8 +67,11 @@ public:
 
     const std::string& getFileName(size_t msgIdx) const;
     int getLineNumber(size_t msgIdx) const;
-    int getMessageType(size_t msgIdx) const;
+    MessageType getMessageType(size_t msgIdx) const;
     const std::string& getDescription(size_t msgIdx) const;
+
+    void clear();
+    void append(const ParserLog &other);
 
     /*!
      * \brief This method takes the information provided by the methods above and returns
@@ -88,12 +91,12 @@ public:
      * This is just another convenience method...
      */
     void printAll(std::ostream &os = std::cerr,
-                  size_t enabledTypes = AllTypes) const;
+                  size_t enabledTypes = AllMessageTypes) const;
 
 private:
     typedef std::tuple</*file=*/std::string,
                        /*line=*/int,
-                       /*MessageType=*/int,
+                       /*MessageType=*/MessageType,
                        std::string> MessageTuple;
     std::vector<MessageTuple> m_messages;
 

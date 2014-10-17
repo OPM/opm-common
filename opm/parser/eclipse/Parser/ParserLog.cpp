@@ -106,6 +106,25 @@ void ParserLog::addError(const std::string& fileName,
     addMessage(fileName, lineNumber, Error, description);
 }
 
+void ParserLog::clear()
+{
+    m_numErrors = 0;
+    m_numWarnings = 0;
+    m_numNotes = 0;
+
+    m_messages.clear();
+}
+
+void ParserLog::append(const ParserLog &other)
+{
+    for (size_t i = 0; i < other.size(); ++i) {
+        addMessage(other.getFileName(i),
+                   other.getLineNumber(i),
+                   other.getMessageType(i),
+                   other.getDescription(i));
+    }
+}
+
 const std::string& ParserLog::getFileName(size_t msgIdx) const {
     assert(msgIdx < size());
     return std::get<0>(m_messages[msgIdx]);
@@ -116,7 +135,7 @@ int ParserLog::getLineNumber(size_t msgIdx) const {
     return std::get<1>(m_messages[msgIdx]);
 }
 
-int ParserLog::getMessageType(size_t msgIdx) const {
+ParserLog::MessageType ParserLog::getMessageType(size_t msgIdx) const {
     assert(msgIdx < size());
     return std::get<2>(m_messages[msgIdx]);
 }
