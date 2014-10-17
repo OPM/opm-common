@@ -35,6 +35,7 @@ namespace Opm {
         boost::filesystem::path dataFile;
         boost::filesystem::path rootPath;
         std::map<std::string, std::string> pathMap;
+        bool initSuccessful;
         size_t lineNR;
         std::shared_ptr<std::istream> inputstream;
         RawKeywordPtr rawKeyword;
@@ -48,6 +49,7 @@ namespace Opm {
             rootPath = commonRootPath;
 
             std::ifstream *ifs = new std::ifstream(inputDataFile.string().c_str());
+            initSuccessful = ifs->is_open();
             inputstream.reset(ifs);
 
             // make sure the file we'd like to parse exists and is
@@ -64,6 +66,7 @@ namespace Opm {
             strictParsing = useStrictParsing;
             dataFile = "";
             deck = deckToFill;
+            initSuccessful = true;
             inputstream.reset(new std::istringstream(inputData));
         }
 
@@ -72,6 +75,7 @@ namespace Opm {
             strictParsing = useStrictParsing;
             dataFile = "";
             deck = deckToFill;
+            initSuccessful = true;
             inputstream = inputStream;
         }
     };
@@ -92,6 +96,10 @@ namespace Opm {
     DeckPtr Parser::parseFile(const std::string &dataFileName, bool strictParsing, ParserLogPtr parserLog) const {
 
         std::shared_ptr<ParserState> parserState(new ParserState(dataFileName, DeckPtr(new Deck()), getRootPathFromFile(dataFileName), strictParsing));
+
+        // warn if the file we'd like to parse does not exist or is not readable
+        if (!parserState->initSuccessful)
+            throw std::invalid_argument("Input file '" + dataFileName + "' does not exist or is not readable.");
 
         parseState(parserState);
         applyUnitsToDeck(parserState->deck);
@@ -280,6 +288,9 @@ namespace Opm {
                             std::cout << parserState->rawKeyword->getKeywordName() << "  " << includeFile << std::endl;
 
                         std::shared_ptr<ParserState> newParserState (new ParserState(includeFile.string(), parserState->deck, parserState->rootPath, parserState->strictParsing));
+                        if (!newParserState->initSuccessful)
+                            throw std::invalid_argument("Included file '" + includeFile.string() + "' does not exist or is not readable.");
+
                         stopParsing = parseState(newParserState);
                         if (stopParsing) break;
                     } else {
