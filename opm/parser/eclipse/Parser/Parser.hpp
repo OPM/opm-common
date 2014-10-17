@@ -96,7 +96,7 @@ namespace Opm {
         ParserKeywordConstPtr matchingKeyword(const std::string& keyword) const;
 
         bool tryParseKeyword(std::shared_ptr<ParserState> parserState) const;
-        bool parseStream(std::shared_ptr<ParserState> parserState) const;
+        bool parseState(std::shared_ptr<ParserState> parserState) const;
         RawKeywordPtr createRawKeyword(const std::string& keywordString, std::shared_ptr<ParserState> parserState) const;
         void addDefaultKeywords();
 

@@ -93,7 +93,7 @@ namespace Opm {
 
         std::shared_ptr<ParserState> parserState(new ParserState(dataFileName, DeckPtr(new Deck()), getRootPathFromFile(dataFileName), strictParsing));
 
-        parseStream(parserState);
+        parseState(parserState);
         applyUnitsToDeck(parserState->deck);
 
         if (parserLog)
@@ -106,7 +106,7 @@ namespace Opm {
 
         std::shared_ptr<ParserState> parserState(new ParserState(data, DeckPtr(new Deck()), strictParsing));
 
-        parseStream(parserState);
+        parseState(parserState);
         applyUnitsToDeck(parserState->deck);
 
         if (parserLog)
@@ -116,10 +116,9 @@ namespace Opm {
     }
 
     DeckPtr Parser::parseStream(std::shared_ptr<std::istream> inputStream, bool strictParsing, ParserLogPtr parserLog) const {
-
         std::shared_ptr<ParserState> parserState(new ParserState(inputStream, DeckPtr(new Deck()), strictParsing));
 
-        parseStream(parserState);
+        parseState(parserState);
         applyUnitsToDeck(parserState->deck);
 
         if (parserLog)
@@ -249,7 +248,7 @@ namespace Opm {
         return includeFilePath;
     }
 
-    bool Parser::parseStream(std::shared_ptr<ParserState> parserState) const {
+    bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
         bool verbose = false;
         bool stopParsing = false;
 
@@ -281,7 +280,7 @@ namespace Opm {
                             std::cout << parserState->rawKeyword->getKeywordName() << "  " << includeFile << std::endl;
 
                         std::shared_ptr<ParserState> newParserState (new ParserState(includeFile.string(), parserState->deck, parserState->rootPath, parserState->strictParsing));
-                        stopParsing = parseStream(newParserState);
+                        stopParsing = parseState(newParserState);
                         if (stopParsing) break;
                     } else {
                         if (verbose)
