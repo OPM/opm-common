@@ -40,6 +40,39 @@ EclipseState makeState(const std::string& fileName, ParserLogPtr parserLog) {
 }
 
 
+/*
+  There is something fishy with the tests involving grid property post
+  processors. It seems that halfways through the test suddenly the
+  adress of a EclipseState object from a previous test is used; this
+  leads to segmentation fault. The problem is 'solved' by having
+  running this test first.
+
+  An issue has been posted on Stackoverflow: questions/26275555
+
+*/ 
+
+BOOST_AUTO_TEST_CASE( PERMX ) {
+    ParserLogPtr parserLog(new ParserLog());
+    EclipseState state = makeState("testdata/integration_tests/BOX/BOXTEST1" , parserLog);
+    std::shared_ptr<GridProperty<double> > permx = state.getDoubleGridProperty("PERMX");
+    std::shared_ptr<GridProperty<double> > permy = state.getDoubleGridProperty("PERMY");
+    std::shared_ptr<GridProperty<double> > permz = state.getDoubleGridProperty("PERMZ");
+    size_t i,j,k;
+    std::shared_ptr<const EclipseGrid> grid = state.getEclipseGrid();
+    
+    for (k = 0; k < grid->getNZ(); k++) {
+        for (j = 0; j < grid->getNY(); j++) {
+            for (i = 0; i < grid->getNX(); i++) {
+                
+                BOOST_CHECK_CLOSE( permx->iget(i,j,k) * 0.25 , permz->iget(i,j,k) , 0.001);
+                BOOST_CHECK_EQUAL( permx->iget(i,j,k) * 2 , permy->iget(i,j,k));
+                    
+            }
+        }
+    }
+}
+
+
 
 BOOST_AUTO_TEST_CASE( PARSE_BOX_OK ) {
     ParserLogPtr parserLog(new ParserLog());
@@ -93,9 +126,16 @@ BOOST_AUTO_TEST_CASE( PARSE_MULTIPLY_COPY ) {
 BOOST_AUTO_TEST_CASE( INCOMPLETE_KEYWORD_BOX) {
     ParserLogPtr parserLog(new ParserLog());
     makeState("testdata/integration_tests/BOX/BOXTEST2", parserLog);
-    parserLog->printAll();
     BOOST_CHECK(parserLog->numErrors() > 1);
 }
+
+
+BOOST_AUTO_TEST_CASE( KEYWORD_BOX_TOO_SMALL) {
+    ParserLogPtr parserLog(new ParserLog());
+    BOOST_CHECK_THROW( makeState("testdata/integration_tests/BOX/BOXTEST3", parserLog) , std::invalid_argument);
+}
+
+
 
 BOOST_AUTO_TEST_CASE( EQUAL ) {
     ParserLogPtr parserLog(new ParserLog());
@@ -119,23 +159,3 @@ BOOST_AUTO_TEST_CASE( EQUAL ) {
 
 
 
-BOOST_AUTO_TEST_CASE( PERMX ) {
-    ParserLogPtr parserLog(new ParserLog());
-    EclipseState state = makeState("testdata/integration_tests/BOX/BOXTEST1", parserLog);
-    std::shared_ptr<GridProperty<double> > permx = state.getDoubleGridProperty("PERMX");
-    std::shared_ptr<GridProperty<double> > permy = state.getDoubleGridProperty("PERMY");
-    std::shared_ptr<GridProperty<double> > permz = state.getDoubleGridProperty("PERMZ");
-    size_t i,j,k;
-    std::shared_ptr<const EclipseGrid> grid = state.getEclipseGrid();
-    
-    for (k = 0; k < grid->getNZ(); k++) {
-        for (j = 0; j < grid->getNY(); j++) {
-            for (i = 0; i < grid->getNX(); i++) {
-                
-                BOOST_CHECK_CLOSE( permx->iget(i,j,k) * 0.25 , permz->iget(i,j,k) , 0.001);
-                BOOST_CHECK_EQUAL( permx->iget(i,j,k) * 2 , permy->iget(i,j,k));
-                    
-            }
-        }
-    }
-}

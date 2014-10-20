@@ -19,6 +19,7 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <memory>
 #include <boost/filesystem.hpp>
 
 #define BOOST_TEST_MODULE EclipseGridTests
@@ -37,6 +38,9 @@
 // forward declarations to avoid some pedantic warnings
 Opm::DeckKeywordConstPtr createSATNUMKeyword( );
 Opm::DeckKeywordConstPtr createTABDIMSKeyword( );
+
+
+
 
 BOOST_AUTO_TEST_CASE(Empty) {
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
@@ -60,6 +64,21 @@ BOOST_AUTO_TEST_CASE(Empty) {
     }
 }
 
+
+BOOST_AUTO_TEST_CASE(HasNAN) {
+    double nan = std::numeric_limits<double>::quiet_NaN();
+    typedef Opm::GridProperty<double>::SupportedKeywordInfo SupportedKeywordInfo;
+    SupportedKeywordInfo keywordInfo("PORO" , nan , "1");
+    Opm::GridProperty<double> poro( 2 , 2 , 1 , keywordInfo);
+    
+    BOOST_CHECK( poro.containsNaN() );
+    poro.iset(0,0.15);
+    poro.iset(1,0.15);
+    poro.iset(2,0.15);
+    BOOST_CHECK( poro.containsNaN() );
+    poro.iset(3,0.15);
+    BOOST_CHECK( !poro.containsNaN() );
+}
 
 BOOST_AUTO_TEST_CASE(EmptyDefault) {
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
@@ -351,5 +370,115 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitializers) {
     BOOST_CHECK_EQUAL(sguPropData[0 * 3*3], 0.9);
     BOOST_CHECK_EQUAL(sguPropData[1 * 3*3], 0.85);
     BOOST_CHECK_EQUAL(sguPropData[2 * 3*3], 0.80);
+}
+
+template <class ValueType>
+class TestPostProcessorMul : public Opm::GridPropertyBasePostProcessor<ValueType>
+{
+public:
+    TestPostProcessorMul(ValueType factor) { 
+        m_factor = factor; 
+    }
+    
+    void apply(std::vector<ValueType>& values) const { 
+        for (size_t g = 0; g < values.size(); g++) 
+            values[g] *= m_factor;
+    };
+
+private:
+    ValueType m_factor;
+};
+    
+
+
+
+static Opm::DeckPtr createDeck() {
+    const char *deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        " 10 10 10 /\n"
+        "GRID\n"
+        "DX\n"
+        "1000*0.25 /\n"
+        "DYV\n"
+        "10*0.25 /\n"
+        "DZ\n"
+        "1000*0.25 /\n"
+        "TOPS\n"
+        "100*0.25 /\n"
+        "MULTPV \n"
+        "1000*0.10 / \n"
+        "PORO \n"
+        "1000*0.10 / \n"
+        "EDIT\n"
+        "\n";
+ 
+    Opm::ParserPtr parser(new Opm::Parser());
+    return parser->parseString(deckData) ;
+}
+
+
+BOOST_AUTO_TEST_CASE(GridPropertyPostProcessors) {
+    std::shared_ptr<TestPostProcessorMul<double> > testPostP = std::make_shared<TestPostProcessorMul<double> >(2.0);
+    
+
+    Opm::GridPropertySupportedKeywordInfo<double> kwInfo1("MULTPV" , 1.0 , "1");
+    Opm::GridPropertySupportedKeywordInfo<double> kwInfo2("PORO"   , 1.0 , testPostP , "1");
+    Opm::GridProperties<double> properties(10,10,10, std::vector<Opm::GridPropertySupportedKeywordInfo<double> > { kwInfo1 , kwInfo2 });
+    Opm::DeckPtr deck = createDeck();
+    Opm::EclipseGrid grid(deck);
+    
+    {
+        auto poro = properties.getKeyword("PORO"); 
+        auto multpv = properties.getKeyword("MULTPV"); 
+
+        poro->loadFromDeckKeyword( deck->getKeyword("PORO" , 0));
+        multpv->loadFromDeckKeyword( deck->getKeyword("MULTPV" , 0));
+
+        if (poro->postProcessorRunRequired())
+            poro->runPostProcessor();
+
+        if (multpv->postProcessorRunRequired())
+            multpv->runPostProcessor();
+
+        for (size_t g = 0; g < 1000; g++) {
+            BOOST_CHECK_EQUAL( multpv->iget(g) , 0.10 );
+            BOOST_CHECK_EQUAL( poro->iget(g)  , 0.20 );
+        }
+
+        if (poro->postProcessorRunRequired())
+            poro->runPostProcessor();
+
+        if (multpv->postProcessorRunRequired())
+            multpv->runPostProcessor();
+
+        for (size_t g = 0; g < 1000; g++) {
+            BOOST_CHECK_EQUAL( multpv->iget(g) , 0.10 );
+            BOOST_CHECK_EQUAL( poro->iget(g)  , 0.20 );
+        }
+
+    }
+    
+    
+    BOOST_CHECK( !kwInfo1.hasPostProcessor() );
+    BOOST_CHECK( kwInfo2.hasPostProcessor() );
+}
+
+
+
+BOOST_AUTO_TEST_CASE(multiply) {
+    typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
+    SupportedKeywordInfo keywordInfo("P" , 10 , "1");
+    Opm::GridProperty<int> p1( 5 , 5 , 4 , keywordInfo);
+    Opm::GridProperty<int> p2( 5 , 5 , 5 , keywordInfo);
+    Opm::GridProperty<int> p3( 5 , 5 , 4 , keywordInfo);
+
+    BOOST_CHECK_THROW( p1.multiplyWith(p2) , std::invalid_argument );
+    p1.multiplyWith(p3);
+    
+    for (size_t g = 0; g < p1.getCartesianSize(); g++)
+        BOOST_CHECK_EQUAL( 100 , p1.iget(g));
+
 }
 

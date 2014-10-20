@@ -30,12 +30,88 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/checkDeck.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/Units/ConversionFactors.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 using namespace Opm;
+
+/*
+  There is something fishy with the tests involving grid property post
+  processors. It seems that halfways through the test suddenly the
+  adress of a EclipseState object from a previous test is used; this
+  leads to segmentation fault. The problem is 'solved' by having
+  running this test first.
+
+  An issue has been posted on Stackoverflow: questions/26275555
+
+*/ 
+
+static DeckPtr createDeckTOP() {
+    const char *deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        " 10 10 10 /\n"
+        "GRID\n"
+        "DX\n"
+        "1000*0.25 /\n"
+        "DYV\n"
+        "10*0.25 /\n"
+        "DZ\n"
+        "1000*0.25 /\n"
+        "TOPS\n"
+        "1000*0.25 /\n"
+        "PORO \n"
+        "100*0.10 /\n"
+        "PERMX \n"
+        "100*0.25 /\n"
+        "EDIT\n"
+        "/\n"
+        "OIL\n"
+        "\n"
+        "GAS\n"
+        "\n"
+        "TITLE\n"
+        "The title\n"
+        "\n"
+        "START\n"
+        "8 MAR 1998 /\n"
+        "\n"
+        "PROPS\n"
+        "REGIONS\n"
+        "SWAT\n"
+        "1000*1 /\n"
+        "SATNUM\n"
+        "1000*2 /\n"
+        "\n";
+
+    ParserPtr parser(new Parser());
+    return parser->parseString(deckData) ;
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(GetPOROTOPBased) {
+    DeckPtr deck = createDeckTOP();
+    ParserLogPtr parserLog(new ParserLog());
+    EclipseState state(deck, parserLog);
+
+    std::shared_ptr<GridProperty<double> > poro = state.getDoubleGridProperty( "PORO" );
+    std::shared_ptr<GridProperty<double> > permx = state.getDoubleGridProperty( "PERMX" );
+
+    BOOST_CHECK_EQUAL(1000U , poro->getCartesianSize() );
+    BOOST_CHECK_EQUAL(1000U , permx->getCartesianSize() );
+    for (size_t i=0; i < poro->getCartesianSize(); i++) {
+        BOOST_CHECK_EQUAL( 0.10 , poro->iget(i) );
+        BOOST_CHECK_EQUAL( 0.25 * Metric::Permeability , permx->iget(i) );
+    }
+    
+}
+
 
 static DeckPtr createDeck() {
     const char *deckData =

@@ -33,7 +33,84 @@
 #include <boost/algorithm/string/join.hpp>
 
 namespace Opm {
-    EclipseState::EclipseState(DeckConstPtr deck, ParserLogPtr parserLog)
+
+    namespace GridPropertyPostProcessor {
+
+        class DistributeTopLayer : public GridPropertyBasePostProcessor<double>
+        {
+        public:
+            DistributeTopLayer(const EclipseState& eclipseState) : 
+                m_eclipseState( eclipseState )
+            { }
+            
+            
+            void apply(std::vector<double>& values) const {
+                EclipseGridConstPtr grid = m_eclipseState.getEclipseGrid();
+                size_t layerSize = grid->getNX() * grid->getNY();
+                size_t gridSize  = grid->getCartesianSize();
+                
+                for (size_t globalIndex = layerSize; globalIndex < gridSize; globalIndex++) {
+                    if (std::isnan( values[ globalIndex ] ))
+                        values[globalIndex] = values[globalIndex - layerSize];
+                }
+            }
+            
+            
+        private:
+            const EclipseState& m_eclipseState;
+        };
+
+        /*-----------------------------------------------------------------*/
+
+        class InitPORV : public GridPropertyBasePostProcessor<double>
+        {
+        public:
+            InitPORV(const EclipseState& eclipseState) : 
+                m_eclipseState( eclipseState )
+            { }
+            
+            
+            void apply(std::vector<double>& ) const {
+                EclipseGridConstPtr grid = m_eclipseState.getEclipseGrid();
+                /*
+                  Observe that this apply method does not alter the
+                  values input vector, instead it fetches the PORV
+                  property one more time, and then manipulates that.
+                */
+                auto porv = m_eclipseState.getDoubleGridProperty("PORV");   
+                if (porv->containsNaN()) {
+                    auto poro = m_eclipseState.getDoubleGridProperty("PORO");
+                    auto ntg = m_eclipseState.getDoubleGridProperty("NTG");   
+                    if (poro->containsNaN())
+                        throw std::logic_error("Do not have information for the PORV keyword - some defaulted values in PORO");
+                    {
+                        for (size_t globalIndex = 0; globalIndex < porv->getCartesianSize(); globalIndex++) {
+                            if (std::isnan(porv->iget(globalIndex))) {
+                                double cell_poro = poro->iget(globalIndex);
+                                double cell_ntg = ntg->iget(globalIndex);
+                                double cell_volume = grid->getCellVolume(globalIndex);
+                                porv->iset( globalIndex , cell_poro * cell_volume * cell_ntg);
+                            }
+                        }
+                    } 
+                }
+                
+                if (m_eclipseState.hasDoubleGridProperty("MULTPV")) {
+                    auto multpv = m_eclipseState.getDoubleGridProperty("MULTPV");   
+                    porv->multiplyWith( *multpv );
+                }
+            }
+            
+            
+        private:
+            const EclipseState& m_eclipseState;
+        };
+
+        
+    }
+
+
+    EclipseState::EclipseState(DeckConstPtr deck, ParserLogPtr parserLog)    
     {
         m_deckUnitSystem = deck->getActiveUnitSystem();
 
@@ -177,19 +254,19 @@ namespace Opm {
         m_transMult = std::make_shared<TransMult>( grid->getNX() , grid->getNY() , grid->getNZ());
 
         if (hasDoubleGridProperty("MULTX"))
-            m_transMult->applyMULT(getDoubleGridProperty("MULTX"), FaceDir::XPlus);
+            m_transMult->applyMULT(m_doubleGridProperties->getKeyword("MULTX"), FaceDir::XPlus);
         if (hasDoubleGridProperty("MULTX-"))
-            m_transMult->applyMULT(getDoubleGridProperty("MULTX-"), FaceDir::XMinus);
+            m_transMult->applyMULT(m_doubleGridProperties->getKeyword("MULTX-"), FaceDir::XMinus);
 
         if (hasDoubleGridProperty("MULTY"))
-            m_transMult->applyMULT(getDoubleGridProperty("MULTY"), FaceDir::YPlus);
+            m_transMult->applyMULT(m_doubleGridProperties->getKeyword("MULTY"), FaceDir::YPlus);
         if (hasDoubleGridProperty("MULTY-"))
-            m_transMult->applyMULT(getDoubleGridProperty("MULTY-"), FaceDir::YMinus);
+            m_transMult->applyMULT(m_doubleGridProperties->getKeyword("MULTY-"), FaceDir::YMinus);
 
         if (hasDoubleGridProperty("MULTZ"))
-            m_transMult->applyMULT(getDoubleGridProperty("MULTZ"), FaceDir::ZPlus);
+            m_transMult->applyMULT(m_doubleGridProperties->getKeyword("MULTZ"), FaceDir::ZPlus);
         if (hasDoubleGridProperty("MULTZ-"))
-            m_transMult->applyMULT(getDoubleGridProperty("MULTZ-"), FaceDir::ZMinus);
+            m_transMult->applyMULT(m_doubleGridProperties->getKeyword("MULTZ-"), FaceDir::ZMinus);
     }
 
     void EclipseState::initFaults(DeckConstPtr deck, ParserLogPtr parserLog) {
@@ -367,16 +444,42 @@ namespace Opm {
          return m_doubleGridProperties->hasKeyword( keyword );
     }   
 
+
     /*
-      Observe that this will autocreate a property if it has not been explicitly added. 
+      1. The public methods getIntGridProperty & getDoubleGridProperty
+         will invoke and run the property post processor (if any is
+         registered); the post processor will only run one time. 
+
+         It is important that post processor is not run prematurely,
+         internal functions in EclipseState should therefor ask for
+         properties by invoking the getKeyword() method of the
+         m_intGridProperties / m_doubleGridProperties() directly and
+         not through these methods.
+
+      2. Observe that this will autocreate a property if it has not
+         been explicitly added.
     */
+
     std::shared_ptr<GridProperty<int> > EclipseState::getIntGridProperty( const std::string& keyword ) const {
         return m_intGridProperties->getKeyword( keyword );
     }
 
     std::shared_ptr<GridProperty<double> > EclipseState::getDoubleGridProperty( const std::string& keyword ) const {
-        return m_doubleGridProperties->getKeyword( keyword );
+        auto gridProperty = m_doubleGridProperties->getKeyword( keyword );
+        if (gridProperty->postProcessorRunRequired())
+            gridProperty->runPostProcessor();
+
+        return gridProperty;
     }
+
+
+    /*
+       Due to the post processor which might be applied to the
+       GridProperty objects it is essential that this method use the
+       m_intGridProperties / m_doubleGridProperties fields directly
+       and *NOT* use the public methods getIntGridProperty /
+       getDoubleGridProperty.
+    */
 
     void EclipseState::loadGridPropertyFromDeckKeyword(std::shared_ptr<const Box> inputBox,
                                                        DeckKeywordConstPtr deckKeyword,
@@ -416,6 +519,9 @@ namespace Opm {
 
         double nan = std::numeric_limits<double>::quiet_NaN();
         const auto eptLookup = std::make_shared<GridPropertyEndpointTableLookupInitializer<>>(*deck, *this);
+        const auto distributeTopLayer = std::make_shared<GridPropertyPostProcessor::DistributeTopLayer>(*this);
+        const auto initPORV = std::make_shared<GridPropertyPostProcessor::InitPORV>(*this);
+
 
         // Note that the variants of grid keywords for radial grids
         // are not supported. (and hopefully never will be)
@@ -555,21 +661,21 @@ namespace Opm {
             SupportedDoubleKeywordInfo( "ISWCRZ-"  , eptLookup, "1" ),
 
             // porosity
-            SupportedDoubleKeywordInfo( "PORO"  , nan, "1" ),
+            SupportedDoubleKeywordInfo( "PORO"  , nan, distributeTopLayer , "1" ),
 
             // pore volume
-            SupportedDoubleKeywordInfo( "PORV"  , nan, "Volume" ),
+            SupportedDoubleKeywordInfo( "PORV"  , nan, initPORV , "Volume" ),
 
             // pore volume multipliers
             SupportedDoubleKeywordInfo( "MULTPV", 1.0, "1" ),
 
             // the permeability keywords
-            SupportedDoubleKeywordInfo( "PERMX" , nan, "Permeability" ),
-            SupportedDoubleKeywordInfo( "PERMY" , nan, "Permeability" ),
-            SupportedDoubleKeywordInfo( "PERMZ" , nan, "Permeability" ),
-            SupportedDoubleKeywordInfo( "PERMXY", nan, "Permeability" ), // E300 only
-            SupportedDoubleKeywordInfo( "PERMXZ", nan, "Permeability" ), // E300 only
-            SupportedDoubleKeywordInfo( "PERMYZ", nan, "Permeability" ), // E300 only
+            SupportedDoubleKeywordInfo( "PERMX" , nan,  distributeTopLayer , "Permeability" ),
+            SupportedDoubleKeywordInfo( "PERMY" , nan,  distributeTopLayer , "Permeability" ),
+            SupportedDoubleKeywordInfo( "PERMZ" , nan,  distributeTopLayer , "Permeability" ),
+            SupportedDoubleKeywordInfo( "PERMXY", nan,  distributeTopLayer , "Permeability" ), // E300 only
+            SupportedDoubleKeywordInfo( "PERMXZ", nan,  distributeTopLayer , "Permeability" ), // E300 only
+            SupportedDoubleKeywordInfo( "PERMYZ", nan,  distributeTopLayer , "Permeability" ), // E300 only
 
             // gross-to-net thickness (acts as a multiplier for PORO
             // and the permeabilities in the X-Y plane as well as for

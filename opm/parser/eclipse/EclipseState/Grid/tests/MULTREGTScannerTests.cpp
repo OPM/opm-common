@@ -346,5 +346,5 @@ static Opm::DeckPtr createCopyMULTNUMDeck() {
 BOOST_AUTO_TEST_CASE(MULTREGT_COPY_MULTNUM) {
     Opm::DeckPtr deck = createCopyMULTNUMDeck();
     Opm::ParserLogPtr parserLog(new Opm::ParserLog());
-    BOOST_CHECK_NO_THROW( Opm::EclipseState( deck , parserLog ));     
+    BOOST_CHECK_NO_THROW( Opm::EclipseState( deck, parserLog ));
 }
