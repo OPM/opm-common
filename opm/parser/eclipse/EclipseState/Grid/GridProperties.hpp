@@ -52,12 +52,12 @@ public:
     typedef typename GridProperty<T>::SupportedKeywordInfo SupportedKeywordInfo;
 
     GridProperties(size_t nx , size_t ny , size_t nz ,
-                   const std::vector<SupportedKeywordInfo> & supportedKeywords) {
+                   std::shared_ptr<const std::vector<SupportedKeywordInfo> > supportedKeywords) {
         m_nx = nx;
         m_ny = ny;
         m_nz = nz;
         
-        for (auto iter = supportedKeywords.begin(); iter != supportedKeywords.end(); ++iter) 
+        for (auto iter = supportedKeywords->begin(); iter != supportedKeywords->end(); ++iter) 
             m_supportedKeywords[iter->getKeywordName()] = *iter;
     }
 

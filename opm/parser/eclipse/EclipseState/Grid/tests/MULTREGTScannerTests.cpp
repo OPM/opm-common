@@ -107,9 +107,10 @@ static Opm::DeckPtr createInvalidMULTREGTDeck() {
 
 BOOST_AUTO_TEST_CASE(InvalidInput) {
     typedef Opm::GridProperties<int>::SupportedKeywordInfo SupportedKeywordInfo;
-    std::vector<SupportedKeywordInfo> supportedKeywords = { SupportedKeywordInfo("FLUXNUM" , 1 , "1") , 
-                                                            SupportedKeywordInfo("OPERNUM" , 1 , "1") ,
-                                                            SupportedKeywordInfo("MULTNUM" , 1 , "1") };
+    std::shared_ptr<std::vector<SupportedKeywordInfo> > supportedKeywords(new std::vector<SupportedKeywordInfo>{
+            SupportedKeywordInfo("FLUXNUM" , 1 , "1") , 
+            SupportedKeywordInfo("OPERNUM" , 1 , "1") ,
+            SupportedKeywordInfo("MULTNUM" , 1 , "1") });
 
     Opm::MULTREGTScanner scanner;
     Opm::DeckPtr deck = createInvalidMULTREGTDeck();
@@ -244,9 +245,10 @@ static Opm::DeckPtr createSimpleMULTREGTDeck() {
 
 BOOST_AUTO_TEST_CASE(SimpleMULTREGT) {
     typedef Opm::GridProperties<int>::SupportedKeywordInfo SupportedKeywordInfo;
-    std::vector<SupportedKeywordInfo> supportedKeywords = { SupportedKeywordInfo("FLUXNUM" , 1 , "1") , 
-                                                            SupportedKeywordInfo("OPERNUM" , 1 , "1") ,
-                                                            SupportedKeywordInfo("MULTNUM" , 1 , "1") };
+    std::shared_ptr<std::vector<SupportedKeywordInfo> > supportedKeywords(new std::vector<SupportedKeywordInfo>{
+            SupportedKeywordInfo("FLUXNUM" , 1 , "1") , 
+                SupportedKeywordInfo("OPERNUM" , 1 , "1") ,
+                SupportedKeywordInfo("MULTNUM" , 1 , "1") });
 
     Opm::DeckPtr deck = createSimpleMULTREGTDeck();
     Opm::EclipseGrid grid(deck);
