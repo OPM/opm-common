@@ -205,9 +205,7 @@ public:
         iset(g,value);
     }
 
-    bool containsNaN( ) {
-        throw std::logic_error("Only <double> and can be meaningfully queried for nan");
-    }
+    bool containsNaN();
 
     void multiplyWith(const GridProperty<T>& other) {
         if ((m_nx == other.m_nx) && (m_ny == other.m_ny) && (m_nz == other.m_nz)) {

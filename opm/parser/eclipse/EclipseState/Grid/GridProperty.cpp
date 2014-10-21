@@ -32,6 +32,10 @@ void GridProperty<double>::setDataPoint(size_t sourceIdx, size_t targetIdx, Opm:
     m_data[targetIdx] = deckItem->getSIDouble(sourceIdx);
 }
 
+template<>
+bool GridProperty<int>::containsNaN( ) {
+    throw std::logic_error("Only <double> and can be meaningfully queried for nan");
+}
 
 template<>
 bool GridProperty<double>::containsNaN( ) {
