@@ -47,7 +47,7 @@ namespace Opm {
 
     ParserKeyword::ParserKeyword(const std::string& name, ParserKeywordSizeEnum sizeType, ParserKeywordActionEnum action) {
         if (!(sizeType == SLASH_TERMINATED || sizeType == UNKNOWN)) {
-            throw std::invalid_argument("Size type " + ParserKeywordSizeEnum2String(sizeType) + " can not be set explicitly.");
+            throw std::invalid_argument("Size type " + ParserKeywordSizeEnum2String(sizeType) + " cannot be set explicitly.");
         }
         commonInit(name, sizeType , action);
     }
@@ -131,7 +131,7 @@ namespace Opm {
             ParserKeywordSizeEnum sizeType = UNKNOWN;
             commonInit(jsonConfig.get_string("name"), sizeType , action);
         } else
-            throw std::invalid_argument("Json object is missing name: property");
+            throw std::invalid_argument("Json object is missing the 'name' property");
 
         if (jsonConfig.has_item("deck_names") || jsonConfig.has_item("deck_name_regex") )
             // if either the deck names or the regular expression for deck names are
@@ -158,7 +158,7 @@ namespace Opm {
             return;
         else {
             if (numItems() == 0)
-                throw std::invalid_argument("Json object for keyword: " + jsonConfig.get_string("name") + " is missing items specifier");
+                throw std::invalid_argument("Json object for keyword "+getName()+" is missing the 'items' property");
         }
     }
 
@@ -269,20 +269,20 @@ namespace Opm {
 
     void ParserKeyword::addItem(ParserItemConstPtr item) {
         if (m_isDataKeyword)
-            throw std::invalid_argument("Keyword:" + getName() + " is already configured as data keyword - can not add more items.");
+            throw std::invalid_argument("Keyword " + getName() + " is already configured as a data keyword; cannot add items.");
 
         m_record->addItem(item);
     }
 
     void ParserKeyword::addDataItem(ParserItemConstPtr item) {
         if (m_record->size())
-            throw std::invalid_argument("Keyword:" + getName() + " already has items - can not add a data item.");
+            throw std::invalid_argument("Keyword " + getName() + " already contains all specified items; cannot add a data item.");
 
         if ((m_keywordSizeType == FIXED) && (m_fixedSize == 1U)) {
             addItem(item);
             m_isDataKeyword = true;
         } else
-            throw std::invalid_argument("Keyword:" + getName() + ". When calling addDataItem() the keyword must be configured with fixed size == 1.");
+            throw std::invalid_argument("When calling addDataItem() for keyword " + getName() + ", it must be configured with fixed size == 1.");
     }
 
     void ParserKeyword::initDeckNames(const Json::JsonObject& jsonObject) {
@@ -291,7 +291,7 @@ namespace Opm {
 
         const Json::JsonObject namesObject = jsonObject.get_item("deck_names");
         if (!namesObject.is_array())
-            throw std::invalid_argument("The 'deck_names' JSON item needs to be a list (keyword: '"+m_name+"')");
+            throw std::invalid_argument("The 'deck_names' JSON item of keyword "+m_name+" needs to be a list");
 
         if (namesObject.size() > 0)
             m_deckNames.clear();
@@ -300,7 +300,7 @@ namespace Opm {
             const Json::JsonObject nameObject = namesObject.get_array_item(nameIdx);
 
             if (!nameObject.is_string())
-                throw std::invalid_argument("The items of 'deck_names' need to be strings (keyword: '"+m_name+"')");
+                throw std::invalid_argument("The sub-items of 'deck_names' of keyword "+m_name+" need to be strings");
 
             addDeckName(nameObject.as_string());
         }
@@ -308,19 +308,19 @@ namespace Opm {
 
     void ParserKeyword::initSectionNames(const Json::JsonObject& jsonObject) {
         if (!jsonObject.has_item("sections"))
-            throw std::invalid_argument("The 'sections' JSON item needs to be defined (keyword: '"+m_name+"')");
+            throw std::invalid_argument("The 'sections' JSON item of keyword "+m_name+" needs to be defined");
 
         const Json::JsonObject namesObject = jsonObject.get_item("sections");
 
         if (!namesObject.is_array())
-            throw std::invalid_argument("The 'sections' JSON item needs to be a list (keyword: '"+m_name+"')");
+            throw std::invalid_argument("The 'sections' JSON item of keyword "+m_name+" needs to be a list");
 
         m_validSectionNames.clear();
         for (size_t nameIdx = 0; nameIdx < namesObject.size(); ++ nameIdx) {
             const Json::JsonObject nameObject = namesObject.get_array_item(nameIdx);
 
             if (!nameObject.is_string())
-                throw std::invalid_argument("The items of 'sections' need to be strings (keyword: '"+m_name+"')");
+                throw std::invalid_argument("The sub-items of 'sections' of keyword "+m_name+" need to be strings");
 
             addValidSectionName(nameObject.as_string());
         }
@@ -332,7 +332,7 @@ namespace Opm {
 
         const Json::JsonObject regexStringObject = jsonObject.get_item("deck_name_regex");
         if (!regexStringObject.is_string())
-            throw std::invalid_argument("The 'deck_name_regex' JSON item needs to be a string (keyword: '"+m_name+"')");
+            throw std::invalid_argument("The 'deck_name_regex' JSON item of keyword "+m_name+" need to be a string");
 
         setMatchRegex(regexStringObject.as_string());
     }
@@ -374,13 +374,13 @@ namespace Opm {
                         }
                         break;
                     default:
-                        throw std::invalid_argument("Not implemented.");
+                        throw std::invalid_argument("While parsing "+getName()+": Values of type "+itemConfig.get_string("value_type")+" are not implemented.");
                     }
                 } else
-                    throw std::invalid_argument("Json config object missing \"value_type\": ... item");
+                    throw std::invalid_argument("'value_type' JSON item missing for keyword "+getName()+".");
             }
         } else
-            throw std::invalid_argument("The items: object must be an array");
+            throw std::invalid_argument("The 'items' JSON item missing must be an array in keyword "+getName()+".");
     }
 
 
@@ -395,7 +395,7 @@ namespace Opm {
                     item->push_backDimension( dimObject.as_string());
                 }
             } else
-                throw std::invalid_argument("The dimension: attribute must be a string/list of strings");
+                throw std::invalid_argument("The 'dimension' attribute of keyword "+getName()+" must be a string or a list of strings");
         }
     }
 
@@ -411,7 +411,7 @@ namespace Opm {
                     item->push_backDimension( dimObject.as_string());
                 }
             } else
-                throw std::invalid_argument("The dimension: attribute must be a string/list of strings");
+                throw std::invalid_argument("The 'dimension' attribute of keyword "+getName()+" must be a string or a list of strings");
         }
     }
 
@@ -471,10 +471,10 @@ namespace Opm {
                 }
                 break;
                 default:
-                    throw std::invalid_argument("Not implemented.");
+                    throw std::invalid_argument("While initializing keyword "+getName()+": Values of type "+dataConfig.get_string("value_type")+" are not implemented.");
             }
         } else
-            throw std::invalid_argument("Json config object missing \"value_type\": ... item");
+            throw std::invalid_argument("The 'value_type' JSON item of keyword "+getName()+" is missing");
     }
 
     ParserRecordPtr ParserKeyword::getRecord() const {
