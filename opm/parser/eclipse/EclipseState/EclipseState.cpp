@@ -507,26 +507,27 @@ namespace Opm {
 
     void EclipseState::initProperties(DeckConstPtr deck, ParserLogPtr parserLog) {
         typedef GridProperties<int>::SupportedKeywordInfo SupportedIntKeywordInfo;
-        static std::vector<SupportedIntKeywordInfo> supportedIntKeywords =
-            {SupportedIntKeywordInfo( "SATNUM" , 1, "1" ),
-             SupportedIntKeywordInfo( "IMBNUM" , 1, "1" ),
-             SupportedIntKeywordInfo( "PVTNUM" , 1, "1" ),
-             SupportedIntKeywordInfo( "EQLNUM" , 1, "1" ),
-             SupportedIntKeywordInfo( "ENDNUM" , 1, "1" ),
-             SupportedIntKeywordInfo( "FLUXNUM" , 1 , "1" ),
-             SupportedIntKeywordInfo( "MULTNUM", 1 , "1" ),
-             SupportedIntKeywordInfo( "FIPNUM" , 1, "1" )};
+        std::shared_ptr<std::vector<SupportedIntKeywordInfo> > supportedIntKeywords(new std::vector<SupportedIntKeywordInfo>{
+            SupportedIntKeywordInfo( "SATNUM" , 1, "1" ),
+            SupportedIntKeywordInfo( "IMBNUM" , 1, "1" ),
+            SupportedIntKeywordInfo( "PVTNUM" , 1, "1" ),
+            SupportedIntKeywordInfo( "EQLNUM" , 1, "1" ),
+            SupportedIntKeywordInfo( "ENDNUM" , 1, "1" ),
+            SupportedIntKeywordInfo( "FLUXNUM" , 1 , "1" ),
+            SupportedIntKeywordInfo( "MULTNUM", 1 , "1" ),
+            SupportedIntKeywordInfo( "FIPNUM" , 1, "1" )
+            });
 
         double nan = std::numeric_limits<double>::quiet_NaN();
         const auto eptLookup = std::make_shared<GridPropertyEndpointTableLookupInitializer<>>(*deck, *this);
-        const auto distributeTopLayer = std::make_shared<GridPropertyPostProcessor::DistributeTopLayer>(*this);
+        const auto distributeTopLayer = std::make_shared<const GridPropertyPostProcessor::DistributeTopLayer>(*this);
         const auto initPORV = std::make_shared<GridPropertyPostProcessor::InitPORV>(*this);
 
 
         // Note that the variants of grid keywords for radial grids
         // are not supported. (and hopefully never will be)
         typedef GridProperties<double>::SupportedKeywordInfo SupportedDoubleKeywordInfo;
-        static std::vector<SupportedDoubleKeywordInfo> supportedDoubleKeywords = {
+        std::shared_ptr<std::vector<SupportedDoubleKeywordInfo> > supportedDoubleKeywords(new std::vector<SupportedDoubleKeywordInfo>{
             // keywords to specify the scaled connate gas
             // saturations.
             SupportedDoubleKeywordInfo( "SGL"    , eptLookup, "1" ),
@@ -692,7 +693,7 @@ namespace Opm {
 
             // initialisation
             SupportedDoubleKeywordInfo( "SWATINIT" , 0.0, "1")
-        };
+                });
 
         // create the grid properties
         m_intGridProperties = std::make_shared<GridProperties<int> >(m_eclipseGrid->getNX(),

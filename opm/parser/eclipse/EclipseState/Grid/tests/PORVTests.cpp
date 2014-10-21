@@ -227,20 +227,20 @@ static Opm::DeckPtr createDeckWithNTG() {
 BOOST_AUTO_TEST_CASE(PORV_cartesianDeck) {
     /* Check that an exception is raised if we try to create a PORV field without PORO. */
     Opm::DeckPtr deck = createCARTDeck();
-    Opm::EclipseState state(deck);
-    auto poro = state.getDoubleGridProperty("PORO");
+    auto state = std::make_shared<Opm::EclipseState>(deck);
+    auto poro = state->getDoubleGridProperty("PORO");
     BOOST_CHECK( poro->containsNaN() );
-    BOOST_CHECK_THROW( state.getDoubleGridProperty("PORV") , std::logic_error );
+    BOOST_CHECK_THROW( state->getDoubleGridProperty("PORV") , std::logic_error );
 }
 
 BOOST_AUTO_TEST_CASE(PORV_initFromPoro) {
     /* Check that the PORV field is correctly calculated from PORO. */
     Opm::DeckPtr deck = createDeckWithPORO();
-    Opm::EclipseState state(deck);
-    auto poro = state.getDoubleGridProperty("PORO");
+    auto state = std::make_shared<Opm::EclipseState>(deck);
+    auto poro = state->getDoubleGridProperty("PORO");
     BOOST_CHECK( !poro->containsNaN() );
 
-    auto porv = state.getDoubleGridProperty("PORV");
+    auto porv = state->getDoubleGridProperty("PORV");
     double cell_volume = 0.25 * 0.25 * 0.25;
 
     BOOST_CHECK_CLOSE( cell_volume * 0.10 , porv->iget(0,0,0) , 0.001);
@@ -256,8 +256,8 @@ BOOST_AUTO_TEST_CASE(PORV_initFromPoro) {
 BOOST_AUTO_TEST_CASE(PORV_initFromPoroWithCellVolume) {
     /* Check that explicit PORV and CellVOlume * PORO can be combined. */
     Opm::DeckPtr deck = createDeckWithPORVPORO();
-    Opm::EclipseState state(deck);
-    auto porv = state.getDoubleGridProperty("PORV");
+    auto state = std::make_shared<Opm::EclipseState>(deck);
+    auto porv = state->getDoubleGridProperty("PORV");
     double cell_volume = 0.25 * 0.25 * 0.25;
 
     BOOST_CHECK_CLOSE( 77.0 , porv->iget(0,0,0) , 0.001);
@@ -273,8 +273,8 @@ BOOST_AUTO_TEST_CASE(PORV_initFromPoroWithCellVolume) {
 BOOST_AUTO_TEST_CASE(PORV_multpv) {
     /* Check that MULTPV is correctly accounted for. */
     Opm::DeckPtr deck = createDeckWithMULTPV();
-    Opm::EclipseState state(deck);
-    auto porv = state.getDoubleGridProperty("PORV");
+    auto state = std::make_shared<Opm::EclipseState>(deck);
+    auto porv = state->getDoubleGridProperty("PORV");
     double cell_volume = 0.25 * 0.25 * 0.25;
 
     BOOST_CHECK_CLOSE( 770.0 , porv->iget(0,0,0) , 0.001);
@@ -294,8 +294,8 @@ BOOST_AUTO_TEST_CASE(PORV_multpv) {
 BOOST_AUTO_TEST_CASE(PORV_mutipleBoxAndMultpv) {
     /* Check that MULTIPLE Boxed PORV and MULTPV statements work */
     Opm::DeckPtr deck = createDeckWithBOXPORV();
-    Opm::EclipseState state(deck);
-    auto porv = state.getDoubleGridProperty("PORV");
+    auto state = std::make_shared<Opm::EclipseState>(deck);
+    auto porv = state->getDoubleGridProperty("PORV");
 
     BOOST_CHECK_CLOSE( 1234.56 , porv->iget(0,0,0) , 0.001);
     BOOST_CHECK_CLOSE( 1234.56 , porv->iget(9,9,9) , 0.001);
@@ -308,8 +308,8 @@ BOOST_AUTO_TEST_CASE(PORV_mutipleBoxAndMultpv) {
 BOOST_AUTO_TEST_CASE(PORV_multpvAndNtg) {
     /* Check that MULTIPLE Boxed PORV and MULTPV statements work and NTG */
     Opm::DeckPtr deck = createDeckWithNTG();
-    Opm::EclipseState state(deck);
-    auto porv = state.getDoubleGridProperty("PORV");
+    auto state = std::make_shared<Opm::EclipseState>(deck);
+    auto porv = state->getDoubleGridProperty("PORV");
     double cell_volume = 0.25 * 0.25 * 0.25;
     double poro = 0.20;
     double multpv = 10;
