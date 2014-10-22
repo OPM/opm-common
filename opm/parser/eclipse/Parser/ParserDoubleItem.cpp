@@ -96,7 +96,7 @@ namespace Opm
 
     void ParserDoubleItem::push_backDimension(const std::string& dimension) {
         if ((sizeType() == SINGLE) && (m_dimensions.size() > 0))
-            throw std::invalid_argument("Internal error - can not add more than one dimension to a Item os size 1");
+            throw std::invalid_argument("Internal error: cannot add more than one dimension to an item of size 1");
         
         m_dimensions.push_back( dimension );
     }
