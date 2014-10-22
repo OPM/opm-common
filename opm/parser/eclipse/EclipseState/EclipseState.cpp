@@ -116,20 +116,36 @@ namespace Opm {
 
         initPhases(deck, parserLog);
         initTables(deck, parserLog);
-        initEclipseGrid(deck, parserLog);
         initSchedule(deck, parserLog);
         initTitle(deck, parserLog);
-        initProperties(deck, parserLog);
-        initTransMult(parserLog);
-        initFaults(deck, parserLog);
-        initMULTREGT(deck, parserLog);
+
+        initEclipseGrid(deck, parserLog);
+
+        if (hasEclipseGrid()) {
+            initProperties(deck, parserLog);
+            initTransMult(parserLog);
+            initFaults(deck, parserLog);
+            initMULTREGT(deck, parserLog);
+        }
+        else {
+            std::string msg("Grid could not be initialized. Skipping grid properties, "
+                            "faults, as well as transmissibility and region multipliers.");
+            parserLog->addWarning("", -1, msg);
+        }
     }
 
     std::shared_ptr<const UnitSystem> EclipseState::getDeckUnitSystem() const {
         return m_deckUnitSystem;
     }
 
+    bool EclipseState::hasEclipseGrid() const {
+        return static_cast<bool>(m_eclipseGrid);
+    }
+
     EclipseGridConstPtr EclipseState::getEclipseGrid() const {
+        if (!hasEclipseGrid())
+            throw std::logic_error("The eclipse grid object cannot be retrieved if no grid is featured by the deck.");
+
         return m_eclipseGrid;
     }
 
@@ -357,7 +373,12 @@ namespace Opm {
 
 
     void EclipseState::initEclipseGrid(DeckConstPtr deck, ParserLogPtr parserLog) {
-        m_eclipseGrid = EclipseGridConstPtr( new EclipseGrid(deck, parserLog));
+        try {
+            m_eclipseGrid = EclipseGridConstPtr( new EclipseGrid(deck, parserLog));
+        } catch (const std::exception& e) {
+            std::string msg("Could not create a grid: "+std::string(e.what()));
+            parserLog->addWarning("", -1, msg);
+        }
     }
 
 

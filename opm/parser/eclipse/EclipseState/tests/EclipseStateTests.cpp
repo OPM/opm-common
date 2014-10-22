@@ -112,6 +112,24 @@ BOOST_AUTO_TEST_CASE(GetPOROTOPBased) {
     
 }
 
+static DeckPtr createEmptyDeck() {
+    const char *deckData =
+        "";
+
+    ParserPtr parser(new Parser());
+    return parser->parseString(deckData) ;
+}
+
+static DeckPtr createDeckWithoutGrid() {
+    const char *deckData =
+        "PROPS\n"
+        "EQUALS\n"
+        "'PERMX' 1.23 /\n"
+        "/\n";
+
+    ParserPtr parser(new Parser());
+    return parser->parseString(deckData) ;
+}
 
 static DeckPtr createDeck() {
     const char *deckData =
@@ -197,16 +215,7 @@ static DeckPtr createDeckNoFaults() {
     return parser->parseString(deckData) ;
 }
 
-BOOST_AUTO_TEST_CASE(StrictSemantics) {
-    DeckPtr deck = createDeck();
-    EclipseState state(deck);
-
-    // the deck misses a few sections...
-    ParserLogPtr parserLog(new ParserLog());
-    BOOST_CHECK(!checkDeck(deck, parserLog));
-}
-
-BOOST_AUTO_TEST_CASE(CreatSchedule) {
+BOOST_AUTO_TEST_CASE(CreateSchedule) {
     DeckPtr deck = createDeck();
     EclipseState state(deck);
     ScheduleConstPtr schedule = state.getSchedule();
@@ -234,6 +243,27 @@ BOOST_AUTO_TEST_CASE(TitleCorrect) {
     BOOST_CHECK_EQUAL( state.getTitle(), "The title");
 }
 
+BOOST_AUTO_TEST_CASE(SupportsEmptyDeck) {
+    DeckPtr deck = createEmptyDeck();
+    ParserLogPtr parserLog(new ParserLog);
+    BOOST_CHECK_NO_THROW(EclipseState(deck, parserLog));
+
+    // we need to get two warnings: The first that no grid could be
+    // instantiated, the second that grid properties (et al.) are
+    // skipped...
+    BOOST_CHECK_EQUAL(parserLog->numWarnings(), 2);
+}
+
+BOOST_AUTO_TEST_CASE(SupportsDeckWithoutGrid) {
+    DeckPtr deck = createDeckWithoutGrid();
+    ParserLogPtr parserLog(new ParserLog);
+    BOOST_CHECK_NO_THROW(EclipseState(deck, parserLog));
+
+    // we need to get two warnings: The first that no grid could be
+    // instantiated, the second that grid properties (et al.) are
+    // skipped...
+    BOOST_CHECK_EQUAL(parserLog->numWarnings(), 2);
+}
 
 BOOST_AUTO_TEST_CASE(IntProperties) {
     DeckPtr deck = createDeck();
