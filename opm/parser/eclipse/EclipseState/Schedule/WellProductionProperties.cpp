@@ -113,20 +113,16 @@ namespace Opm {
         return p;
     }
 
-    void
-    WellProductionProperties::init()
-    {
-        // public: properties (in order of declaration)
-        OilRate     = 0.0;
-        GasRate     = 0.0;
-        WaterRate   = 0.0;
-        LiquidRate  = 0.0;
-        ResVRate    = 0.0;
-        BHPLimit    = 0.0;
-        THPLimit    = 0.0;
+    void WellProductionProperties::init() {
+        OilRate = 0.0;
+        GasRate = 0.0;
+        WaterRate = 0.0;
+        LiquidRate = 0.0;
+        ResVRate = 0.0;
+        BHPLimit = 0.0;
+        THPLimit = 0.0;
         controlMode = WellProducer::CMODE_UNDEFINED;
 
-        // private: property
-        productionControls = 0;
+        m_productionControls = 0;
     }
 } // namespace Opm

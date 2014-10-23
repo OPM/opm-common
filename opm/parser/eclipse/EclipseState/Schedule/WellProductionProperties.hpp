@@ -38,41 +38,30 @@ namespace Opm {
 
         WellProductionProperties();
 
-        static WellProductionProperties
-        history(DeckRecordConstPtr record);
+        static WellProductionProperties history(DeckRecordConstPtr record);
 
-        static WellProductionProperties
-        prediction(DeckRecordConstPtr record);
+        static WellProductionProperties prediction(DeckRecordConstPtr record);
 
-        bool
-        hasProductionControl(WellProducer::ControlModeEnum controlModeArg) const
-        {
-            return (productionControls & controlModeArg) != 0;
+        bool hasProductionControl(WellProducer::ControlModeEnum controlModeArg) const {
+            return (m_productionControls & controlModeArg) != 0;
         }
 
-        void
-        dropProductionControl(WellProducer::ControlModeEnum controlModeArg)
-        {
-            if (hasProductionControl(controlModeArg)) {
-                productionControls -= controlModeArg;
-            }
+        void dropProductionControl(WellProducer::ControlModeEnum controlModeArg) {
+            if (hasProductionControl(controlModeArg))
+                m_productionControls -= controlModeArg;
         }
 
-        void
-        addProductionControl(WellProducer::ControlModeEnum controlModeArg)
-        {
-            if (! hasProductionControl(controlModeArg)) {
-                productionControls += controlModeArg;
-            }
+        void addProductionControl(WellProducer::ControlModeEnum controlModeArg) {
+            if (! hasProductionControl(controlModeArg))
+                m_productionControls += controlModeArg;
         }
 
     private:
-        int     productionControls;
+        int m_productionControls;
 
         WellProductionProperties(DeckRecordConstPtr record);
 
-        void
-        init();
+        void init();
     };
 } // namespace Opm
 

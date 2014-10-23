@@ -31,9 +31,7 @@
 
 namespace {
     namespace WCONHIST {
-        std::string
-        all_specified_CMODE_BHP()
-        {
+        std::string all_specified_CMODE_BHP() {
             const std::string input =
                 "WCONHIST\n"
                 "'P' 'OPEN' 'BHP' 1 2 3/\n/\n";
@@ -43,9 +41,7 @@ namespace {
 
 
 
-        std::string
-        all_specified()
-        {
+        std::string all_specified() {
             const std::string input =
                 "WCONHIST\n"
                 "'P' 'OPEN' 'ORAT' 1 2 3/\n/\n";
@@ -53,9 +49,7 @@ namespace {
             return input;
         }
 
-        std::string
-        orat_defaulted()
-        {
+        std::string orat_defaulted() {
             const std::string input =
                 "WCONHIST\n"
                 "'P' 'OPEN' 'WRAT' 1* 2 3/\n/\n";
@@ -63,9 +57,7 @@ namespace {
             return input;
         }
 
-        std::string
-        owrat_defaulted()
-        {
+        std::string owrat_defaulted() {
             const std::string input =
                 "WCONHIST\n"
                 "'P' 'OPEN' 'GRAT' 1* 1* 3/\n/\n";
@@ -73,9 +65,7 @@ namespace {
             return input;
         }
 
-        std::string
-        all_defaulted()
-        {
+        std::string all_defaulted() {
             const std::string input =
                 "WCONHIST\n"
                 "'P' 'OPEN' 'LRAT'/\n/\n";
@@ -83,9 +73,7 @@ namespace {
             return input;
         }
 
-        std::string
-        all_defaulted_with_bhp()
-        {
+        std::string all_defaulted_with_bhp() {
             const std::string input =
                 "WCONHIST\n"
                 "-- 1    2     3      4-9 10\n"
@@ -94,14 +82,11 @@ namespace {
             return input;
         }
 
-        Opm::WellProductionProperties
-        properties(const std::string& input)
-        {
+        Opm::WellProductionProperties properties(const std::string& input) {
             Opm::Parser parser;
 
-            Opm::DeckPtr             deck   = parser.parseString(input);
-            Opm::DeckKeywordConstPtr kwd    = deck->getKeyword("WCONHIST");
-            Opm::DeckRecordConstPtr  record = kwd->getRecord(0);
+            Opm::DeckPtr deck = parser.parseString(input);
+            Opm::DeckRecordConstPtr record = deck->getKeyword("WCONHIST")->getRecord(0);
 
             return Opm::WellProductionProperties::history(record);
         }
@@ -141,16 +126,16 @@ BOOST_AUTO_TEST_CASE(WCH_All_Specified_BHP_Defaulted)
 
     // WCONHIST always supports {O,W,G}RAT, LRAT, and
     // RESV--irrespective of actual specification.
-    BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::ORAT));
-    BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::WRAT));
-    BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::GRAT));
-    BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::LRAT));
-    BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::RESV));
+    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::ORAT));
+    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::WRAT));
+    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::GRAT));
+    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::LRAT));
+    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::RESV));
 
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::ORAT);
 
     // BHP must be explicitly provided/specified
-    BOOST_REQUIRE(! p.hasProductionControl(Opm::WellProducer::BHP));
+    BOOST_CHECK(! p.hasProductionControl(Opm::WellProducer::BHP));
 }
 
 BOOST_AUTO_TEST_CASE(WCH_ORAT_Defaulted_BHP_Defaulted)
@@ -160,15 +145,15 @@ BOOST_AUTO_TEST_CASE(WCH_ORAT_Defaulted_BHP_Defaulted)
 
     // WCONHIST always supports {O,W,G}RAT, LRAT, and
     // RESV--irrespective of actual specification.
-    BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::ORAT));
-    BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::WRAT));
-    BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::GRAT));
-    BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::LRAT));
-    BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::RESV));
+    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::ORAT));
+    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::WRAT));
+    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::GRAT));
+    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::LRAT));
+    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::RESV));
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::WRAT);
 
     // BHP must be explicitly provided/specified
-    BOOST_REQUIRE(! p.hasProductionControl(Opm::WellProducer::BHP));
+    BOOST_CHECK(! p.hasProductionControl(Opm::WellProducer::BHP));
 }
 
 BOOST_AUTO_TEST_CASE(WCH_OWRAT_Defaulted_BHP_Defaulted)
@@ -178,15 +163,15 @@ BOOST_AUTO_TEST_CASE(WCH_OWRAT_Defaulted_BHP_Defaulted)
 
     // WCONHIST always supports {O,W,G}RAT, LRAT, and
     // RESV--irrespective of actual specification.
-    BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::ORAT));
-    BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::WRAT));
-    BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::GRAT));
-    BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::LRAT));
-    BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::RESV));
+    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::ORAT));
+    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::WRAT));
+    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::GRAT));
+    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::LRAT));
+    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::RESV));
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::GRAT);
 
     // BHP must be explicitly provided/specified
-    BOOST_REQUIRE(! p.hasProductionControl(Opm::WellProducer::BHP));
+    BOOST_CHECK(! p.hasProductionControl(Opm::WellProducer::BHP));
 }
 
 BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Defaulted)
@@ -196,15 +181,15 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Defaulted)
 
     // WCONHIST always supports {O,W,G}RAT, LRAT, and
     // RESV--irrespective of actual specification.
-    BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::ORAT));
-    BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::WRAT));
-    BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::GRAT));
-    BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::LRAT));
-    BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::RESV));
+    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::ORAT));
+    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::WRAT));
+    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::GRAT));
+    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::LRAT));
+    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::RESV));
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::LRAT);
 
     // BHP must be explicitly provided/specified
-    BOOST_REQUIRE(! p.hasProductionControl(Opm::WellProducer::BHP));
+    BOOST_CHECK(! p.hasProductionControl(Opm::WellProducer::BHP));
 }
 
 BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Specified)
@@ -214,15 +199,15 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Specified)
 
     // WCONHIST always supports {O,W,G}RAT, LRAT, and
     // RESV--irrespective of actual specification.
-    BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::ORAT));
-    BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::WRAT));
-    BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::GRAT));
-    BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::LRAT));
-    BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::RESV));
+    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::ORAT));
+    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::WRAT));
+    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::GRAT));
+    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::LRAT));
+    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::RESV));
 
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::RESV);
     // BHP must be explicitly provided/specified
-    BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::BHP));
+    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::BHP));
 }
 
 
