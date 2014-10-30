@@ -248,14 +248,14 @@ public:
             else if (propertyName.find("SWU") == 0)
                 values[cellIdx] = selectValue(enptvdTables,
                                               (useEnptvd && endNum >= 0) ? endNum : -1,
-                                              "SWCO",
+                                              "SWMAX",
                                               cellDepth,
                                               maxWaterSat[satTableIdx],
                                               /*useOneMinusTableValue=*/true);
             else if (propertyName.find("ISWU") == 0)
                 values[cellIdx] = selectValue(imptvdTables,
                                               (useEnptvd && endNum >= 0) ? endNum : -1,
-                                              "SWCO",
+                                              "SWMAX",
                                               cellDepth,
                                               maxWaterSat[imbTableIdx],
                                               /*useOneMinusTableValue=*/true);

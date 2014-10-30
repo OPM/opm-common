@@ -55,6 +55,7 @@ namespace Opm {
             ParentType::checkMonotonic("DEPTH", /*isAscending=*/true);
             ParentType::applyDefaultsLinear("SWCO");
             ParentType::applyDefaultsLinear("SWCRIT");
+            ParentType::applyDefaultsLinear("SWMAX");
             ParentType::applyDefaultsLinear("SGCO");
             ParentType::applyDefaultsLinear("SGCRIT");
             ParentType::applyDefaultsLinear("SGMAX");
