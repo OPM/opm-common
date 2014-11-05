@@ -1,4 +1,5 @@
 if (BUILD_TESTING)
+   add_subdirectory(Log/tests)
    add_subdirectory(Parser/tests)
    add_subdirectory(RawDeck/tests)
    add_subdirectory(Deck/tests)
