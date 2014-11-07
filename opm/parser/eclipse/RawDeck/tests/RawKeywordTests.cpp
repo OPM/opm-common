@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(RawKeywordSetKeywordInitialWhitespaceInKeywordThrows) {
 }
 
 BOOST_AUTO_TEST_CASE(constructor_mixedCaseName_throws) {
-    BOOST_CHECK_THROW(RawKeyword("Test", Raw::SLASH_TERMINATED , "FILE" , 10U), std::invalid_argument);
+    BOOST_CHECK_NO_THROW(RawKeyword("Test", Raw::SLASH_TERMINATED , "FILE" , 10U));
 }
 
 BOOST_AUTO_TEST_CASE(RawKeywordSetKeywordInitialTabInKeywordThrows) {

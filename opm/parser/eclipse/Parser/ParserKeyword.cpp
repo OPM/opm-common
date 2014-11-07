@@ -206,7 +206,7 @@ namespace Opm {
         if (name.length() > ParserConst::maxKeywordLength)
             return false;
 
-        if (!isupper(name[0]))
+        if (!isalpha(name[0]))
             return false;
         
         return true;
@@ -242,13 +242,17 @@ namespace Opm {
     }
 
     bool ParserKeyword::validDeckName(const std::string& name) {
-        if (!validNameStart(name))
+        // make the keyword string ALL_UPPERCASE because Eclipse seems
+        // to be case-insensitive (although this is one of its
+        // undocumented features...)
+        std::string upperCaseName = boost::to_upper_copy(name);
+
+        if (!validNameStart(upperCaseName))
             return false;
 
-        for (size_t i = 1; i < name.length(); i++) {
-            char c = name[i];
-            if (!isupper(c) &&
-                !isdigit(c) &&
+        for (size_t i = 1; i < upperCaseName.length(); i++) {
+            char c = upperCaseName[i];
+            if (!isalnum(c) &&
                 c != '-' &&
                 c != '_' &&
                 c != '+')

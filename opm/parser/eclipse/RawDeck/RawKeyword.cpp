@@ -131,6 +131,12 @@ namespace Opm {
 
         // white space is for dicks!
         result = boost::trim_right_copy_if(result.substr(0, 8), boost::is_any_of(" \t"));
+
+        // make the keyword string ALL_UPPERCASE because Eclipse seems
+        // to be case-insensitive (although this is one of its
+        // undocumented features...)
+        boost::to_upper(result);
+
         if (isValidKeyword(result))
             return true;
         else
