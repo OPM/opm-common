@@ -160,8 +160,9 @@ namespace Opm {
     }
 
     bool Parser::isRecognizedKeyword(const std::string& deckKeywordName) const {
-        if (!ParserKeyword::validDeckName(deckKeywordName, /*acceptLowerCase=*/true))
+        if (!ParserKeyword::validDeckName(deckKeywordName)) {
             return false;
+        }
 
         if (m_deckParserKeywords.count(deckKeywordName) > 0)
             return true;
@@ -309,8 +310,8 @@ namespace Opm {
                                                                   "The keyword " + parserState->rawKeyword->getKeywordName() + " is ignored - this might potentially affect the results");
                         } else {
                             DeckKeywordPtr deckKeyword(new DeckKeyword(parserState->rawKeyword->getKeywordName(), false));
-                            deckKeyword->setLocation(parserState->rawKeyword->getFilename(),
-                                                     parserState->rawKeyword->getLineNR());
+			    deckKeyword->setLocation(parserState->rawKeyword->getFilename(),
+						     parserState->rawKeyword->getLineNR());
                             parserState->deck->addKeyword(deckKeyword);
                             parserState->parserLog.addWarning(parserState->dataFile.string(),
                                                               parserState->rawKeyword->getLineNR(),

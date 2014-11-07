@@ -202,11 +202,11 @@ namespace Opm {
     }
 
 
-    bool ParserKeyword::validNameStart(const std::string& name, bool acceptLowerCaseLetters) {
+    bool ParserKeyword::validNameStart(const std::string& name) {
         if (name.length() > ParserConst::maxKeywordLength)
             return false;
 
-        if (!isupper(name[0]) && !(acceptLowerCaseLetters && islower(name[0])))
+        if (!isupper(name[0]))
             return false;
         
         return true;
@@ -241,14 +241,13 @@ namespace Opm {
         return result;
     }
 
-    bool ParserKeyword::validDeckName(const std::string& name, bool acceptLowerCaseLetters) {
-        if (!validNameStart(name, acceptLowerCaseLetters))
+    bool ParserKeyword::validDeckName(const std::string& name) {
+        if (!validNameStart(name))
             return false;
 
         for (size_t i = 1; i < name.length(); i++) {
             char c = name[i];
             if (!isupper(c) &&
-                !(acceptLowerCaseLetters && islower(c)) &&
                 !isdigit(c) &&
                 c != '-' &&
                 c != '_' &&
