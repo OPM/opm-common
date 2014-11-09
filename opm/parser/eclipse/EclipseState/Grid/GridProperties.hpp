@@ -52,7 +52,7 @@ class GridProperties {
 public:
     typedef typename GridProperty<T>::SupportedKeywordInfo SupportedKeywordInfo;
 
-    GridProperties(const EclipseGrid* eclipseGrid, std::shared_ptr<const std::vector<SupportedKeywordInfo> > supportedKeywords) {
+    GridProperties(std::shared_ptr<const EclipseGrid> eclipseGrid , std::shared_ptr<const std::vector<SupportedKeywordInfo> > supportedKeywords) {
         m_eclipseGrid = eclipseGrid;
 
         for (auto iter = supportedKeywords->begin(); iter != supportedKeywords->end(); ++iter) 
@@ -96,7 +96,7 @@ public:
 
     
 private:
-    const EclipseGrid* m_eclipseGrid;
+    std::shared_ptr<const EclipseGrid> m_eclipseGrid;
     std::unordered_map<std::string, SupportedKeywordInfo> m_supportedKeywords;
     std::map<std::string , std::shared_ptr<GridProperty<T> > > m_properties;
 };

@@ -733,8 +733,8 @@ namespace Opm {
                 });
 
         // register the grid properties
-        m_intGridProperties = std::make_shared<GridProperties<int> >(m_eclipseGrid.get(), supportedIntKeywords);
-        m_doubleGridProperties = std::make_shared<GridProperties<double> >(m_eclipseGrid.get(), supportedDoubleKeywords);
+        m_intGridProperties = std::make_shared<GridProperties<int> >(m_eclipseGrid , supportedIntKeywords);
+        m_doubleGridProperties = std::make_shared<GridProperties<double> >(m_eclipseGrid , supportedDoubleKeywords);
 
         if (!hasEclipseGrid()) {
             // make sure that no grid properties are specified by the deck

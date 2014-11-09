@@ -114,8 +114,8 @@ BOOST_AUTO_TEST_CASE(InvalidInput) {
 
     Opm::MULTREGTScanner scanner;
     Opm::DeckPtr deck = createInvalidMULTREGTDeck();
-    Opm::EclipseGrid grid(deck);
-    std::shared_ptr<Opm::GridProperties<int> > gridProperties = std::make_shared<Opm::GridProperties<int> >(&grid, supportedKeywords);
+    std::shared_ptr<Opm::EclipseGrid> grid = std::make_shared<Opm::EclipseGrid>( deck );
+    std::shared_ptr<Opm::GridProperties<int> > gridProperties = std::make_shared<Opm::GridProperties<int> >(grid, supportedKeywords);
     Opm::DeckKeywordConstPtr multregtKeyword0 = deck->getKeyword("MULTREGT",0);
     Opm::DeckKeywordConstPtr multregtKeyword1 = deck->getKeyword("MULTREGT",1);
     Opm::DeckKeywordConstPtr multregtKeyword2 = deck->getKeyword("MULTREGT",2);
@@ -251,10 +251,10 @@ BOOST_AUTO_TEST_CASE(SimpleMULTREGT) {
                 SupportedKeywordInfo("MULTNUM" , 1 , "1") });
 
     Opm::DeckPtr deck = createSimpleMULTREGTDeck();
-    Opm::EclipseGrid grid(deck);
-    std::shared_ptr<const Opm::Box> inputBox = std::make_shared<const Opm::Box>( grid.getNX() , grid.getNY() , grid.getNZ() );
+    std::shared_ptr<Opm::EclipseGrid> grid = std::make_shared<Opm::EclipseGrid>( deck );
+    std::shared_ptr<const Opm::Box> inputBox = std::make_shared<const Opm::Box>( grid->getNX() , grid->getNY() , grid->getNZ() );
 
-    std::shared_ptr<Opm::GridProperties<int> > gridProperties = std::make_shared<Opm::GridProperties<int> >(&grid, supportedKeywords);
+    std::shared_ptr<Opm::GridProperties<int> > gridProperties = std::make_shared<Opm::GridProperties<int> >(grid, supportedKeywords);
     std::shared_ptr<Opm::GridProperty<int> > fluxNum = gridProperties->getKeyword("FLUXNUM");
     std::shared_ptr<Opm::GridProperty<int> > multNum = gridProperties->getKeyword("MULTNUM");
     Opm::DeckKeywordConstPtr fluxnumKeyword = deck->getKeyword("FLUXNUM",0);

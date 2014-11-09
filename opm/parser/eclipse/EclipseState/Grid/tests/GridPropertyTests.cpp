@@ -428,8 +428,8 @@ BOOST_AUTO_TEST_CASE(GridPropertyPostProcessors) {
     std::shared_ptr<std::vector<SupportedKeywordInfo> > supportedKeywords(new std::vector<SupportedKeywordInfo>{
         kwInfo1 , kwInfo2 });
     Opm::DeckPtr deck = createDeck();
-    Opm::EclipseGrid grid(deck);
-    Opm::GridProperties<double> properties(&grid, supportedKeywords);
+    std::shared_ptr<Opm::EclipseGrid> grid = std::make_shared<Opm::EclipseGrid>(deck);
+    Opm::GridProperties<double> properties(grid, supportedKeywords);
     
     {
         auto poro = properties.getKeyword("PORO"); 
