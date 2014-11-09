@@ -67,7 +67,6 @@ namespace Opm {
         EclipseState(DeckConstPtr deck, ParserLogPtr parserLog = std::make_shared<ParserLog>(&std::cout));
 
         ScheduleConstPtr getSchedule() const;
-        bool hasEclipseGrid() const;
         EclipseGridConstPtr getEclipseGrid() const;
         EclipseGridPtr getEclipseGridCopy() const;
         bool hasPhase(enum Phase::PhaseEnum phase) const;

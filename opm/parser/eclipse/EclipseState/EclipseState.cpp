@@ -131,14 +131,8 @@ namespace Opm {
         return m_deckUnitSystem;
     }
 
-    bool EclipseState::hasEclipseGrid() const {
-        return static_cast<bool>(m_eclipseGrid);
-    }
 
     EclipseGridConstPtr EclipseState::getEclipseGrid() const {
-        if (!hasEclipseGrid())
-            throw std::logic_error("The eclipse grid object cannot be retrieved if no grid is featured by the deck.");
-
         return m_eclipseGrid;
     }
 
@@ -259,12 +253,6 @@ namespace Opm {
     }
 
     void EclipseState::initTransMult(ParserLogPtr /*parserLog*/) {
-        if (!hasEclipseGrid())
-            // no checking required here as the class will already
-            // refrain from processing the MULT* grid properties if no
-            // grid is available...
-            return;
-
         EclipseGridConstPtr grid = getEclipseGrid();
         m_transMult = std::make_shared<TransMult>( grid->getNX() , grid->getNY() , grid->getNZ());
 
@@ -285,16 +273,6 @@ namespace Opm {
     }
 
     void EclipseState::initFaults(DeckConstPtr deck, ParserLogPtr parserLog) {
-        if (!hasEclipseGrid()) {
-            if (deck->hasKeyword("FAULTS") ||
-                deck->hasKeyword("MULTFAULT"))
-            {
-                throw std::logic_error("Grid could not be initialized, but fault transmissibility multipliers have been detected.");
-            }
-            else
-                return;
-        }
-
         EclipseGridConstPtr grid = getEclipseGrid();
         m_faults = std::make_shared<FaultCollection>();
         std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
@@ -356,14 +334,6 @@ namespace Opm {
 
     
     void EclipseState::initMULTREGT(DeckConstPtr deck, ParserLogPtr /*parserLog*/) {
-        if (!hasEclipseGrid()) {
-            if (deck->hasKeyword("MULTREGT")) {
-                throw std::logic_error("Grid could not be initialized, but region transmissibility multipliers have been detected.");
-            }
-            else
-                return;
-        }
-
         EclipseGridConstPtr grid = getEclipseGrid();
         std::shared_ptr<MULTREGTScanner> scanner = std::make_shared<MULTREGTScanner>();
 
@@ -390,12 +360,7 @@ namespace Opm {
 
 
     void EclipseState::initEclipseGrid(DeckConstPtr deck, ParserLogPtr parserLog) {
-        try {
-            m_eclipseGrid = EclipseGridConstPtr( new EclipseGrid(deck, parserLog));
-        } catch (const std::exception& e) {
-            std::string msg("Could not create a grid: "+std::string(e.what()));
-            parserLog->addWarning("", -1, msg);
-        }
+        m_eclipseGrid = EclipseGridConstPtr( new EclipseGrid(deck, parserLog));
     }
 
 
@@ -735,31 +700,6 @@ namespace Opm {
         // register the grid properties
         m_intGridProperties = std::make_shared<GridProperties<int> >(m_eclipseGrid , supportedIntKeywords);
         m_doubleGridProperties = std::make_shared<GridProperties<double> >(m_eclipseGrid , supportedDoubleKeywords);
-
-        if (!hasEclipseGrid()) {
-            // make sure that no grid properties are specified by the deck
-            for (size_t kwIdx = 0; kwIdx < deck->size(); ++ kwIdx) {
-                const std::string& kwName = deck->getKeyword(kwIdx)->name();
-                if (supportsGridProperty(kwName))
-                    throw std::logic_error("Grid could not be initialized, but grid property " + kwName + " has been detected.");
-            }
-
-            // make sure that no grid property modifier keywords
-            // (which can make grid properties appear out of thin air)
-            // are present in the deck.
-            if (deck->hasKeyword("ADD") ||
-                deck->hasKeyword("BOX") ||
-                deck->hasKeyword("COPY") ||
-                deck->hasKeyword("EQUALS") ||
-                deck->hasKeyword("MULTIPLY"))
-            {
-                throw std::logic_error("Grid could not be initialized, but grid properties have been detected.");
-            }
-
-            // if we don't have a grid and also no grid properties, we
-            // just skip this method.
-            return;
-        }
 
         // actually create the grid property objects. we need to first
         // process all integer grid properties before the double ones
