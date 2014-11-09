@@ -248,21 +248,16 @@ BOOST_AUTO_TEST_CASE(SupportsEmptyDeck) {
     ParserLogPtr parserLog(new ParserLog);
     BOOST_CHECK_NO_THROW(EclipseState(deck, parserLog));
 
-    // we need to get two warnings: The first that no grid could be
-    // instantiated, the second that grid properties (et al.) are
-    // skipped...
-    BOOST_CHECK_EQUAL(parserLog->numWarnings(), 2);
+    // we need to get a warning because no grid could be instantiated
+    BOOST_CHECK_EQUAL(parserLog->numWarnings(), 1);
 }
 
 BOOST_AUTO_TEST_CASE(SupportsDeckWithoutGrid) {
     DeckPtr deck = createDeckWithoutGrid();
     ParserLogPtr parserLog(new ParserLog);
-    BOOST_CHECK_NO_THROW(EclipseState(deck, parserLog));
 
-    // we need to get two warnings: The first that no grid could be
-    // instantiated, the second that grid properties (et al.) are
-    // skipped...
-    BOOST_CHECK_EQUAL(parserLog->numWarnings(), 2);
+    // specifying grid properties without a grid is not supported!
+    BOOST_CHECK_THROW(EclipseState(deck, parserLog), std::logic_error);
 }
 
 BOOST_AUTO_TEST_CASE(IntProperties) {
