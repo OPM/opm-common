@@ -319,3 +319,29 @@ BOOST_AUTO_TEST_CASE(PORV_multpvAndNtg) {
     BOOST_CHECK_CLOSE( PORV * multpv                 , porv->iget(0,0,0) , 0.001);
     BOOST_CHECK_CLOSE( cell_volume * poro*multpv*NTG , porv->iget(9,9,9) , 0.001);
 }
+
+
+
+static Opm::DeckPtr createDeckNakedGRID() {
+    const char *deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        " 10 10 10 /\n"
+        "GRID\n"
+        "PORO\n"
+        "100*0.10 100*0.20 100*0.30 100*0.40 100*0.50 100*0.60 100*0.70 100*0.80 100*0.90 100*1.0 /\n"
+        "EDIT\n"
+        "\n";
+
+    Opm::ParserPtr parser(new Opm::Parser());
+    return parser->parseString(deckData) ;
+}
+
+
+BOOST_AUTO_TEST_CASE(NAKED_GRID_THROWS) {
+    /* Check that MULTIPLE Boxed PORV and MULTPV statements work and NTG */
+    Opm::DeckPtr deck = createDeckNakedGRID();
+    auto state = std::make_shared<Opm::EclipseState>(deck);
+    BOOST_CHECK_THROW( state->getDoubleGridProperty("PORV") , std::invalid_argument );
+}
