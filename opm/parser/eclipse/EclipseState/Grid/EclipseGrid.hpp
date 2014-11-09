@@ -105,19 +105,22 @@ namespace Opm {
         size_t m_nx;
         size_t m_ny;
         size_t m_nz;
+        
+        void assertCellInfo() const;
 
         void initCartesianGrid(const std::vector<int>& dims , DeckConstPtr deck);
         void initCornerPointGrid(const std::vector<int>& dims , DeckConstPtr deck, ParserLogPtr parserLog);
-        void assertCornerPointKeywords(const std::vector<int>& dims, DeckConstPtr deck, ParserLogPtr parserLog) const ;
         void initDTOPSGrid(const std::vector<int>& dims , DeckConstPtr deck);
         void initDVDEPTHZGrid(const std::vector<int>& dims , DeckConstPtr deck);
         void initGrid(const std::vector<int>& dims, DeckConstPtr deck, ParserLogPtr parserLog);
+
+        static void assertCornerPointKeywords(const std::vector<int>& dims, DeckConstPtr deck, ParserLogPtr parserLog) ;
         static bool hasDVDEPTHZKeywords(DeckConstPtr deck);
         static bool hasDTOPSKeywords(DeckConstPtr deck);
         static void assertVectorSize(const std::vector<double>& vector , size_t expectedSize , const std::string& msg);
-        std::vector<double> createTOPSVector(const std::vector<int>& dims , const std::vector<double>& DZ , DeckConstPtr deck);
-        std::vector<double> createDVector(const std::vector<int>& dims , size_t dim , const std::string& DKey , const std::string& DVKey, DeckConstPtr deck);
-        void scatterDim(const std::vector<int>& dims , size_t dim , const std::vector<double>& DV , std::vector<double>& D);
+        static std::vector<double> createTOPSVector(const std::vector<int>& dims , const std::vector<double>& DZ , DeckConstPtr deck);
+        static std::vector<double> createDVector(const std::vector<int>& dims , size_t dim , const std::string& DKey , const std::string& DVKey, DeckConstPtr deck);
+        static void scatterDim(const std::vector<int>& dims , size_t dim , const std::vector<double>& DV , std::vector<double>& D);
    };
 
     typedef std::shared_ptr<EclipseGrid> EclipseGridPtr;
