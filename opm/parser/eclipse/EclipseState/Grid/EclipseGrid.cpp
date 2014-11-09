@@ -43,6 +43,10 @@ namespace Opm {
             m_grid.reset( new_ptr , ecl_grid_free );
         else
             throw std::invalid_argument("Could not load grid from binary file: " + filename);
+
+        m_nx = static_cast<size_t>( ecl_grid_get_nx( m_grid.get() ));
+        m_ny = static_cast<size_t>( ecl_grid_get_ny( m_grid.get() ));
+        m_nz = static_cast<size_t>( ecl_grid_get_nz( m_grid.get() ));
     }
 
     EclipseGrid::EclipseGrid(const ecl_grid_type * src_ptr)
@@ -50,6 +54,26 @@ namespace Opm {
           m_pinch("PINCH")
     {
         m_grid.reset( ecl_grid_alloc_copy( src_ptr ) , ecl_grid_free );
+
+        m_nx = static_cast<size_t>( ecl_grid_get_nx( m_grid.get() ));
+        m_ny = static_cast<size_t>( ecl_grid_get_ny( m_grid.get() ));
+        m_nz = static_cast<size_t>( ecl_grid_get_nz( m_grid.get() ));
+    }
+
+    /*
+      This creates a grid which only has dimension, and no pointer to
+      a true grid structure. This grid will answer false to
+      hasCellInfo() - but can be used in all situations where the grid
+      dependency is really only on the dimensions.
+    */
+    
+    EclipseGrid::EclipseGrid(size_t nx, size_t ny , size_t nz) 
+        : m_minpv("MINPV"), 
+          m_pinch("PINCH")
+    {
+        m_nx = nx;
+        m_ny = ny;
+        m_nz = nz;
     }
 
 
@@ -116,16 +140,16 @@ namespace Opm {
 
 
     void EclipseGrid::initGrid( const std::vector<int>& dims, DeckConstPtr deck, ParserLogPtr parserLog) {
+        m_nx = static_cast<size_t>(dims[0]);
+        m_ny = static_cast<size_t>(dims[1]);
+        m_nz = static_cast<size_t>(dims[2]);
+
         if (hasCornerPointKeywords(deck)) {
             initCornerPointGrid(dims , deck, parserLog);
         } else if (hasCartesianKeywords(deck)) {
             initCartesianGrid(dims , deck);
-        } else {
-            const std::string msg = "The deck must have COORD / ZCORN or D?? + TOPS keywords";
-            parserLog->addError("", -1, msg);
-            throw std::invalid_argument(msg);
-        }
-
+        } 
+        
         if (deck->hasKeyword("PINCH")) {
             m_pinch.setValue( deck->getKeyword("PINCH")->getRecord(0)->getItem("THRESHOLD_THICKNESS")->getSIDouble(0) );
         }
@@ -149,21 +173,30 @@ namespace Opm {
     }
 
     size_t EclipseGrid::getNX( ) const {
-        return static_cast<size_t>(ecl_grid_get_nx( m_grid.get() ));
+        return m_nx;
     }
 
     size_t EclipseGrid::getNY( ) const {
-        return static_cast<size_t>(ecl_grid_get_ny( m_grid.get() ));
+        return m_ny;
     }
 
     size_t EclipseGrid::getNZ( ) const {
-        return static_cast<size_t>(ecl_grid_get_nz( m_grid.get() ));
+        return m_nz;
     }
 
     size_t EclipseGrid::getCartesianSize( ) const {
-        return static_cast<size_t>( ecl_grid_get_global_size( m_grid.get() ));
+        return m_nx * m_ny * m_nz;
     }
     
+    /*
+      This function checks if the grid has a pointer to an underlying
+      ecl_grid_type; which must be used to read cell info as
+      size/depth/active of individual cells. 
+    */
+    bool EclipseGrid::hasCellInfo() const {
+        return static_cast<bool>( m_grid );
+    }
+
     bool EclipseGrid::isPinchActive( ) const {
         return m_pinch.hasValue();
     }

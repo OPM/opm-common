@@ -65,12 +65,41 @@ static Opm::DeckPtr createDeckHeaders() {
 }
 
 
+static Opm::DeckPtr createDeckMissingDIMS() {
+    const char *deckData =
+        "RUNSPEC\n"
+        "\n"
+        "GRID\n"
+        "EDIT\n"
+        "\n";
+ 
+    Opm::ParserPtr parser(new Opm::Parser());
+    return parser->parseString(deckData) ;
+}
+
+BOOST_AUTO_TEST_CASE(MissingDimsThrows) {
+    Opm::DeckPtr deck = createDeckMissingDIMS();
+    BOOST_CHECK_THROW( new Opm::EclipseGrid( deck ) , std::invalid_argument);
+}
+
 
 BOOST_AUTO_TEST_CASE(HasGridKeywords) {
     Opm::DeckPtr deck = createDeckHeaders();
     BOOST_CHECK( !Opm::EclipseGrid::hasCornerPointKeywords( deck ));
     BOOST_CHECK( !Opm::EclipseGrid::hasCartesianKeywords( deck ));
 }
+
+
+BOOST_AUTO_TEST_CASE(CreateGridNoCells) {
+    Opm::DeckPtr deck = createDeckHeaders();
+    Opm::EclipseGrid grid( deck );
+    BOOST_CHECK_EQUAL( 10 , grid.getNX());
+    BOOST_CHECK_EQUAL( 10 , grid.getNY());
+    BOOST_CHECK_EQUAL( 10 , grid.getNZ());
+    BOOST_CHECK_EQUAL( 1000 , grid.getCartesianSize());
+}
+
+
 
 static Opm::DeckPtr createCPDeck() {
     const char *deckData =
@@ -228,6 +257,17 @@ static Opm::DeckPtr createCARTInvalidDeck() {
     return parser->parseString(deckData) ;
 }
 
+BOOST_AUTO_TEST_CASE(CREATE_SIMPLE) {
+    Opm::EclipseGrid grid(10,20,30);
+
+    BOOST_CHECK_EQUAL( grid.getNX() , 10 );
+    BOOST_CHECK_EQUAL( grid.getNY() , 20 ); 
+    BOOST_CHECK_EQUAL( grid.getNZ() , 30 );
+    BOOST_CHECK_EQUAL( grid.getCartesianSize() , 6000 );
+    BOOST_CHECK_EQUAL( false , grid.hasCellInfo() );
+    
+}
+
 BOOST_AUTO_TEST_CASE(DEPTHZ_EQUAL_TOPS) {
     Opm::DeckPtr deck1 = createCARTDeck();
     Opm::DeckPtr deck2 = createCARTDeckDEPTHZ();
@@ -306,7 +346,8 @@ BOOST_AUTO_TEST_CASE(HasINVALIDCartKeywords) {
 
 BOOST_AUTO_TEST_CASE(CreateMissingGRID_throws) {
     Opm::DeckPtr deck = createDeckHeaders();
-    BOOST_CHECK_THROW(new Opm::EclipseGrid( deck ) , std::invalid_argument);
+    Opm::EclipseGrid grid( deck );
+    BOOST_CHECK_EQUAL( false , grid.hasCellInfo() );
 }
 
 
@@ -366,7 +407,8 @@ static Opm::DeckPtr createInvalidDXYZCARTDeckDEPTHZ() {
 
 BOOST_AUTO_TEST_CASE(CreateCartesianGRIDDEPTHZ) {
     Opm::DeckPtr deck = createInvalidDXYZCARTDeckDEPTHZ();
-    BOOST_CHECK_THROW(new Opm::EclipseGrid( deck ) , std::invalid_argument);
+    Opm::EclipseGrid grid( deck );
+    BOOST_CHECK_EQUAL( false , grid.hasCellInfo() );
 }
 
 
