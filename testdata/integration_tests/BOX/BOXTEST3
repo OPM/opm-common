@@ -5,18 +5,6 @@ DIMENS
 
 GRID
 
-DX
-1000*0.25 /
-
-DYV
-10*0.25 /
-
-DZ
-1000*0.25 /
-
-TOPS
-1000*0.25 /
-
 EDIT
 
 OIL
