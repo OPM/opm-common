@@ -21,6 +21,10 @@ MULTIPLY
   PERMZ 0.25 /
 / 
 
+EQUALS
+   PORO 0.25 /
+/
+
 EDIT
 
 OIL
