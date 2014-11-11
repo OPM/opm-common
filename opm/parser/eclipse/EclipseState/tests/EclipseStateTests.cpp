@@ -113,6 +113,7 @@ BOOST_AUTO_TEST_CASE(GetPOROTOPBased) {
 }
 
 
+
 static DeckPtr createDeck() {
     const char *deckData =
         "RUNSPEC\n"
@@ -120,14 +121,6 @@ static DeckPtr createDeck() {
         "DIMENS\n"
         " 10 10 10 /\n"
         "GRID\n"
-        "DX\n"
-        "1000*0.25 /\n"
-        "DYV\n"
-        "10*0.25 /\n"
-        "DZ\n"
-        "1000*0.25 /\n"
-        "TOPS\n"
-        "1000*0.25 /\n"
         "FAULTS \n"
         "  'F1'  1  1  1  4   1  4  'X' / \n"
         "  'F2'  5  5  1  4   1  4  'X-' / \n"
@@ -169,14 +162,6 @@ static DeckPtr createDeckNoFaults() {
         "DIMENS\n"
         " 10 10 10 /\n"
         "GRID\n"
-        "DX\n"
-        "1000*0.25 /\n"
-        "DYV\n"
-        "10*0.25 /\n"
-        "DZ\n"
-        "1000*0.25 /\n"
-        "TOPS\n"
-        "1000*0.25 /\n"
         "PROPS\n"
         "-- multiply one layer for each face\n"
         "MULTX\n"
@@ -197,16 +182,7 @@ static DeckPtr createDeckNoFaults() {
     return parser->parseString(deckData) ;
 }
 
-BOOST_AUTO_TEST_CASE(StrictSemantics) {
-    DeckPtr deck = createDeck();
-    EclipseState state(deck);
-
-    // the deck misses a few sections...
-    ParserLogPtr parserLog(new ParserLog());
-    BOOST_CHECK(!checkDeck(deck, parserLog));
-}
-
-BOOST_AUTO_TEST_CASE(CreatSchedule) {
+BOOST_AUTO_TEST_CASE(CreateSchedule) {
     DeckPtr deck = createDeck();
     EclipseState state(deck);
     ScheduleConstPtr schedule = state.getSchedule();

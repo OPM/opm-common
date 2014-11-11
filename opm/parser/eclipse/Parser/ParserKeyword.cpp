@@ -524,7 +524,7 @@ namespace Opm {
     DeckKeywordPtr ParserKeyword::parse(RawKeywordConstPtr rawKeyword) const {
         if (rawKeyword->isFinished()) {
             DeckKeywordPtr keyword(new DeckKeyword(rawKeyword->getKeywordName()));
-	    keyword->setLocation(rawKeyword->getFilename(), rawKeyword->getLineNR());
+            keyword->setLocation(rawKeyword->getFilename(), rawKeyword->getLineNR());
             for (size_t i = 0; i < rawKeyword->size(); i++) {
                 DeckRecordConstPtr deckRecord = m_record->parse(rawKeyword->getRecord(i));
                 keyword->addRecord(deckRecord);
@@ -532,13 +532,12 @@ namespace Opm {
             keyword->setDataKeyword( isDataKeyword() );
             return keyword;
         } else
-            throw std::invalid_argument("Tried to create a deck keyword from an imcomplete rawkeyword: " + rawKeyword->getKeywordName());
+            throw std::invalid_argument("Tried to create a deck keyword from an incomplete raw keyword " + rawKeyword->getKeywordName());
     }
 
     size_t ParserKeyword::getFixedSize() const {
-        if (!hasFixedSize()) {
-            throw std::logic_error("This parser keyword does not have a fixed size!");
-        }
+        if (!hasFixedSize())
+            throw std::logic_error("The parser keyword "+getName()+" does not have a fixed size!");
         return m_fixedSize;
     }
 

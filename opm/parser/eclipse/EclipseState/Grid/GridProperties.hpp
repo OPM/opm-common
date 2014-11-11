@@ -25,6 +25,7 @@
 #include <tuple>
 #include <unordered_map>
 
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 
 /*
@@ -51,12 +52,9 @@ class GridProperties {
 public:
     typedef typename GridProperty<T>::SupportedKeywordInfo SupportedKeywordInfo;
 
-    GridProperties(size_t nx , size_t ny , size_t nz ,
-                   std::shared_ptr<const std::vector<SupportedKeywordInfo> > supportedKeywords) {
-        m_nx = nx;
-        m_ny = ny;
-        m_nz = nz;
-        
+    GridProperties(std::shared_ptr<const EclipseGrid> eclipseGrid , std::shared_ptr<const std::vector<SupportedKeywordInfo> > supportedKeywords) {
+        m_eclipseGrid = eclipseGrid;
+
         for (auto iter = supportedKeywords->begin(); iter != supportedKeywords->end(); ++iter) 
             m_supportedKeywords[iter->getKeywordName()] = *iter;
     }
@@ -78,7 +76,6 @@ public:
         return m_properties.at( keyword );
     }
 
-    
     bool addKeyword(const std::string& keywordName) {
         if (!supportsKeyword( keywordName )) 
             throw std::invalid_argument("The keyword: " + keywordName + " is not supported in this container");
@@ -87,7 +84,10 @@ public:
             return false;
         else {
             auto supportedKeyword = m_supportedKeywords.at( keywordName );
-            std::shared_ptr<GridProperty<T> > newProperty(new GridProperty<T>(m_nx , m_ny , m_nz , supportedKeyword));
+            int nx = m_eclipseGrid->getNX();
+            int ny = m_eclipseGrid->getNY();
+            int nz = m_eclipseGrid->getNZ();
+            std::shared_ptr<GridProperty<T> > newProperty(new GridProperty<T>(nx , ny , nz , supportedKeyword));
 
             m_properties.insert( std::pair<std::string , std::shared_ptr<GridProperty<T> > > ( keywordName , newProperty ));
             return true;
@@ -96,7 +96,7 @@ public:
 
     
 private:
-    size_t m_nx, m_ny, m_nz;
+    std::shared_ptr<const EclipseGrid> m_eclipseGrid;
     std::unordered_map<std::string, SupportedKeywordInfo> m_supportedKeywords;
     std::map<std::string , std::shared_ptr<GridProperty<T> > > m_properties;
 };

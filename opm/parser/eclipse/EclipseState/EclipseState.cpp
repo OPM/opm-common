@@ -116,9 +116,11 @@ namespace Opm {
 
         initPhases(deck, parserLog);
         initTables(deck, parserLog);
-        initEclipseGrid(deck, parserLog);
         initSchedule(deck, parserLog);
         initTitle(deck, parserLog);
+
+        initEclipseGrid(deck, parserLog);
+
         initProperties(deck, parserLog);
         initTransMult(parserLog);
         initFaults(deck, parserLog);
@@ -128,6 +130,7 @@ namespace Opm {
     std::shared_ptr<const UnitSystem> EclipseState::getDeckUnitSystem() const {
         return m_deckUnitSystem;
     }
+
 
     EclipseGridConstPtr EclipseState::getEclipseGrid() const {
         return m_eclipseGrid;
@@ -504,7 +507,6 @@ namespace Opm {
     }
         
     
-
     void EclipseState::initProperties(DeckConstPtr deck, ParserLogPtr parserLog) {
         typedef GridProperties<int>::SupportedKeywordInfo SupportedIntKeywordInfo;
         std::shared_ptr<std::vector<SupportedIntKeywordInfo> > supportedIntKeywords(new std::vector<SupportedIntKeywordInfo>{
@@ -695,18 +697,14 @@ namespace Opm {
             SupportedDoubleKeywordInfo( "SWATINIT" , 0.0, "1")
                 });
 
-        // create the grid properties
-        m_intGridProperties = std::make_shared<GridProperties<int> >(m_eclipseGrid->getNX(),
-                                                                     m_eclipseGrid->getNY(),
-                                                                     m_eclipseGrid->getNZ(),
-                                                                     supportedIntKeywords);
-        m_doubleGridProperties = std::make_shared<GridProperties<double> >(m_eclipseGrid->getNX(),
-                                                                           m_eclipseGrid->getNY(),
-                                                                           m_eclipseGrid->getNZ(),
-                                                                           supportedDoubleKeywords);
+        // register the grid properties
+        m_intGridProperties = std::make_shared<GridProperties<int> >(m_eclipseGrid , supportedIntKeywords);
+        m_doubleGridProperties = std::make_shared<GridProperties<double> >(m_eclipseGrid , supportedDoubleKeywords);
 
-        // first process all integer grid properties as these may be needed in order to
-        // initialize the double properties
+        // actually create the grid property objects. we need to first
+        // process all integer grid properties before the double ones
+        // as these may be needed in order to initialize the double
+        // properties
         processGridProperties(deck, parserLog, /*enabledTypes=*/IntProperties);
         processGridProperties(deck, parserLog, /*enabledTypes=*/DoubleProperties);
     }

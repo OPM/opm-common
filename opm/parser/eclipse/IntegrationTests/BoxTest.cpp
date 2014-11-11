@@ -142,6 +142,7 @@ BOOST_AUTO_TEST_CASE( EQUAL ) {
     EclipseState state = makeState("testdata/integration_tests/BOX/BOXTEST1", parserLog);
     std::shared_ptr<GridProperty<int> > pvtnum = state.getIntGridProperty("PVTNUM");
     std::shared_ptr<GridProperty<int> > eqlnum = state.getIntGridProperty("EQLNUM");
+    std::shared_ptr<GridProperty<double> > poro = state.getDoubleGridProperty("PORO");
     size_t i,j,k;
     std::shared_ptr<const EclipseGrid> grid = state.getEclipseGrid();
     
@@ -151,6 +152,7 @@ BOOST_AUTO_TEST_CASE( EQUAL ) {
                 
                 BOOST_CHECK_EQUAL( pvtnum->iget(i,j,k) , k );
                 BOOST_CHECK_EQUAL( eqlnum->iget(i,j,k) , 77 + 2 * k );
+                BOOST_CHECK_EQUAL( poro->iget(i,j,k) , 0.25 );
                 
             }
         }

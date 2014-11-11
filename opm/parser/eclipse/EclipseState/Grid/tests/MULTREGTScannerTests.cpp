@@ -70,14 +70,6 @@ static Opm::DeckPtr createInvalidMULTREGTDeck() {
         "DIMENS\n"
         " 3 3 2 /\n"
         "GRID\n"
-        "DX\n"
-        "18*0.25 /\n"
-        "DYV\n"
-        "3*0.25 /\n"
-        "DZ\n"
-        "18*0.25 /\n"
-        "TOPS\n"
-        "9*0.25 /\n"
         "FLUXNUM\n"
         "1 1 2\n"
         "1 1 2\n"
@@ -114,8 +106,8 @@ BOOST_AUTO_TEST_CASE(InvalidInput) {
 
     Opm::MULTREGTScanner scanner;
     Opm::DeckPtr deck = createInvalidMULTREGTDeck();
-    Opm::EclipseGrid grid(deck);
-    std::shared_ptr<Opm::GridProperties<int> > gridProperties = std::make_shared<Opm::GridProperties<int> >( grid.getNX() , grid.getNY() , grid.getNZ() , supportedKeywords);
+    std::shared_ptr<Opm::EclipseGrid> grid = std::make_shared<Opm::EclipseGrid>( deck );
+    std::shared_ptr<Opm::GridProperties<int> > gridProperties = std::make_shared<Opm::GridProperties<int> >(grid, supportedKeywords);
     Opm::DeckKeywordConstPtr multregtKeyword0 = deck->getKeyword("MULTREGT",0);
     Opm::DeckKeywordConstPtr multregtKeyword1 = deck->getKeyword("MULTREGT",1);
     Opm::DeckKeywordConstPtr multregtKeyword2 = deck->getKeyword("MULTREGT",2);
@@ -140,14 +132,6 @@ static Opm::DeckPtr createNotSupportedMULTREGTDeck() {
         "DIMENS\n"
         " 3 3 2 /\n"
         "GRID\n"
-        "DX\n"
-        "18*0.25 /\n"
-        "DYV\n"
-        "3*0.25 /\n"
-        "DZ\n"
-        "18*0.25 /\n"
-        "TOPS\n"
-        "9*0.25 /\n"
         "FLUXNUM\n"
         "1 1 2\n"
         "1 1 2\n"
@@ -209,14 +193,6 @@ static Opm::DeckPtr createSimpleMULTREGTDeck() {
         "DIMENS\n"
         "2 2 2 /\n"
         "GRID\n"
-        "DX\n"
-        "8*0.25 /\n"
-        "DYV\n"
-        "2*0.25 /\n"
-        "DZ\n"
-        "8*0.25 /\n"
-        "TOPS\n"
-        "4*0.25 /\n"
         "FLUXNUM\n"
         "1 2\n"
         "1 2\n"
@@ -251,10 +227,10 @@ BOOST_AUTO_TEST_CASE(SimpleMULTREGT) {
                 SupportedKeywordInfo("MULTNUM" , 1 , "1") });
 
     Opm::DeckPtr deck = createSimpleMULTREGTDeck();
-    Opm::EclipseGrid grid(deck);
-    std::shared_ptr<const Opm::Box> inputBox = std::make_shared<const Opm::Box>( grid.getNX() , grid.getNY() , grid.getNZ() );
+    std::shared_ptr<Opm::EclipseGrid> grid = std::make_shared<Opm::EclipseGrid>( deck );
+    std::shared_ptr<const Opm::Box> inputBox = std::make_shared<const Opm::Box>( grid->getNX() , grid->getNY() , grid->getNZ() );
 
-    std::shared_ptr<Opm::GridProperties<int> > gridProperties = std::make_shared<Opm::GridProperties<int> >( grid.getNX() , grid.getNY() , grid.getNZ() , supportedKeywords);
+    std::shared_ptr<Opm::GridProperties<int> > gridProperties = std::make_shared<Opm::GridProperties<int> >(grid, supportedKeywords);
     std::shared_ptr<Opm::GridProperty<int> > fluxNum = gridProperties->getKeyword("FLUXNUM");
     std::shared_ptr<Opm::GridProperty<int> > multNum = gridProperties->getKeyword("MULTNUM");
     Opm::DeckKeywordConstPtr fluxnumKeyword = deck->getKeyword("FLUXNUM",0);
@@ -316,14 +292,6 @@ static Opm::DeckPtr createCopyMULTNUMDeck() {
         "DIMENS\n"
         "2 2 2 /\n"
         "GRID\n"
-        "DX\n"
-        "8*0.25 /\n"
-        "DYV\n"
-        "2*0.25 /\n"
-        "DZ\n"
-        "8*0.25 /\n"
-        "TOPS\n"
-        "4*0.25 /\n"
         "FLUXNUM\n"
         "1 2\n"
         "1 2\n"

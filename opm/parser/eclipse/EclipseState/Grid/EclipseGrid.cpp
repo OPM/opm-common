@@ -43,6 +43,10 @@ namespace Opm {
             m_grid.reset( new_ptr , ecl_grid_free );
         else
             throw std::invalid_argument("Could not load grid from binary file: " + filename);
+
+        m_nx = static_cast<size_t>( ecl_grid_get_nx( c_ptr() ));
+        m_ny = static_cast<size_t>( ecl_grid_get_ny( c_ptr() ));
+        m_nz = static_cast<size_t>( ecl_grid_get_nz( c_ptr() ));
     }
 
     EclipseGrid::EclipseGrid(const ecl_grid_type * src_ptr)
@@ -50,6 +54,26 @@ namespace Opm {
           m_pinch("PINCH")
     {
         m_grid.reset( ecl_grid_alloc_copy( src_ptr ) , ecl_grid_free );
+
+        m_nx = static_cast<size_t>( ecl_grid_get_nx( c_ptr() ));
+        m_ny = static_cast<size_t>( ecl_grid_get_ny( c_ptr() ));
+        m_nz = static_cast<size_t>( ecl_grid_get_nz( c_ptr() ));
+    }
+
+    /*
+      This creates a grid which only has dimension, and no pointer to
+      a true grid structure. This grid will answer false to
+      hasCellInfo() - but can be used in all situations where the grid
+      dependency is really only on the dimensions.
+    */
+    
+    EclipseGrid::EclipseGrid(size_t nx, size_t ny , size_t nz) 
+        : m_minpv("MINPV"), 
+          m_pinch("PINCH")
+    {
+        m_nx = nx;
+        m_ny = ny;
+        m_nz = nz;
     }
 
 
@@ -116,16 +140,16 @@ namespace Opm {
 
 
     void EclipseGrid::initGrid( const std::vector<int>& dims, DeckConstPtr deck, ParserLogPtr parserLog) {
+        m_nx = static_cast<size_t>(dims[0]);
+        m_ny = static_cast<size_t>(dims[1]);
+        m_nz = static_cast<size_t>(dims[2]);
+
         if (hasCornerPointKeywords(deck)) {
             initCornerPointGrid(dims , deck, parserLog);
         } else if (hasCartesianKeywords(deck)) {
             initCartesianGrid(dims , deck);
-        } else {
-            const std::string msg = "The deck must have COORD / ZCORN or D?? + TOPS keywords";
-            parserLog->addError("", -1, msg);
-            throw std::invalid_argument(msg);
-        }
-
+        } 
+        
         if (deck->hasKeyword("PINCH")) {
             m_pinch.setValue( deck->getKeyword("PINCH")->getRecord(0)->getItem("THRESHOLD_THICKNESS")->getSIDouble(0) );
         }
@@ -137,33 +161,22 @@ namespace Opm {
     
 
 
-    bool EclipseGrid::equal(const EclipseGrid& other) const {
-        return (m_pinch.equal( other.m_pinch ) &&
-                m_minpv.equal( other.m_minpv ) &&
-                ecl_grid_compare( m_grid.get() , other.m_grid.get() , true , false , false ));
-    }
-            
-
-    size_t EclipseGrid::getNumActive( ) const {
-        return static_cast<size_t>(ecl_grid_get_nactive( m_grid.get() ));
-    }
-
     size_t EclipseGrid::getNX( ) const {
-        return static_cast<size_t>(ecl_grid_get_nx( m_grid.get() ));
+        return m_nx;
     }
 
     size_t EclipseGrid::getNY( ) const {
-        return static_cast<size_t>(ecl_grid_get_ny( m_grid.get() ));
+        return m_ny;
     }
 
     size_t EclipseGrid::getNZ( ) const {
-        return static_cast<size_t>(ecl_grid_get_nz( m_grid.get() ));
+        return m_nz;
     }
 
     size_t EclipseGrid::getCartesianSize( ) const {
-        return static_cast<size_t>( ecl_grid_get_global_size( m_grid.get() ));
+        return m_nx * m_ny * m_nz;
     }
-    
+
     bool EclipseGrid::isPinchActive( ) const {
         return m_pinch.hasValue();
     }
@@ -191,91 +204,43 @@ namespace Opm {
     }
 
 
-    double EclipseGrid::getCellVolume(size_t globalIndex) const {
-        assertGlobalIndex( globalIndex );
-        return ecl_grid_get_cell_volume1( m_grid.get() , static_cast<int>(globalIndex));
+    
+    void EclipseGrid::initCartesianGrid(const std::vector<int>& dims , DeckConstPtr deck) {
+        if (hasDVDEPTHZKeywords( deck ))
+            initDVDEPTHZGrid( dims , deck );
+        else if (hasDTOPSKeywords(deck))
+            initDTOPSGrid( dims ,deck );
+        else 
+            throw std::invalid_argument("Tried to initialize cartesian grid without all required keywords");
     }
 
+    
+    void EclipseGrid::initDVDEPTHZGrid(const std::vector<int>& dims , DeckConstPtr deck) {
+        const std::vector<double>& DXV = deck->getKeyword("DXV")->getSIDoubleData();
+        const std::vector<double>& DYV = deck->getKeyword("DYV")->getSIDoubleData();
+        const std::vector<double>& DZV = deck->getKeyword("DZV")->getSIDoubleData();
+        const std::vector<double>& DEPTHZ = deck->getKeyword("DEPTHZ")->getSIDoubleData();
 
-    double EclipseGrid::getCellVolume(size_t i , size_t j , size_t k) const {
-        assertIJK(i,j,k);
-        return ecl_grid_get_cell_volume3( m_grid.get() , static_cast<int>(i),static_cast<int>(j),static_cast<int>(k));
-    }
-
-    std::tuple<double,double,double> EclipseGrid::getCellCenter(size_t globalIndex) const {
-        assertGlobalIndex( globalIndex );
-        {
-            double x,y,z;
-            ecl_grid_get_xyz1( m_grid.get() , static_cast<int>(globalIndex) , &x , &y , &z);
-            return std::tuple<double,double,double> {x,y,z};
-        }
-    }
-
-
-    std::tuple<double,double,double> EclipseGrid::getCellCenter(size_t i,size_t j, size_t k) const {
-        assertIJK(i,j,k);
-        {
-            double x,y,z;
-            ecl_grid_get_xyz3( m_grid.get() , static_cast<int>(i),static_cast<int>(j),static_cast<int>(k), &x , &y , &z);
-            return std::tuple<double,double,double> {x,y,z};
-        }
-    }
-
-    bool EclipseGrid::hasCornerPointKeywords(DeckConstPtr deck) {
-        if (deck->hasKeyword("ZCORN") && deck->hasKeyword("COORD"))
-            return true;
-        else
-            return false;
-    }
-
-
-    void EclipseGrid::assertCornerPointKeywords( const std::vector<int>& dims , DeckConstPtr deck, ParserLogPtr parserLog) const
-    {
-        const int nx = dims[0];
-        const int ny = dims[1];
-        const int nz = dims[2];
-        {
-            DeckKeywordConstPtr ZCORNKeyWord = deck->getKeyword("ZCORN");
-            
-            if (ZCORNKeyWord->getDataSize() != static_cast<size_t>(8*nx*ny*nz)) {
-                const std::string msg =
-                    "Wrong size of the ZCORN keyword: Expected 8*x*ny*nz = "
-                    + std::to_string(static_cast<long long>(8*nx*ny*nz)) + " is "
-                    + std::to_string(static_cast<long long>(ZCORNKeyWord->getDataSize()));
-
-                parserLog->addError("", -1, msg);
-                throw std::invalid_argument(msg);
-            }
-        }
-
-        {
-            DeckKeywordConstPtr COORDKeyWord = deck->getKeyword("COORD");
-            if (COORDKeyWord->getDataSize() != static_cast<size_t>(6*(nx + 1)*(ny + 1))) {
-                const std::string msg =
-                    "Wrong size of the COORD keyword: Expected 8*(nx + 1)*(ny + 1) = "
-                    + std::to_string(static_cast<long long>(8*(nx + 1)*(ny + 1))) + " is "
-                    + std::to_string(static_cast<long long>(COORDKeyWord->getDataSize()));
-                parserLog->addError("", -1, msg);
-                throw std::invalid_argument(msg);
-            }
-        }
-
-        if (deck->hasKeyword("ACTNUM")) {
-            DeckKeywordConstPtr ACTNUMKeyWord = deck->getKeyword("ACTNUM");
-            if (ACTNUMKeyWord->getDataSize() != static_cast<size_t>(nx*ny*nz)) {
-                const std::string msg =
-                    "Wrong size of the ACTNUM keyword: Expected nx*ny*nz = "
-                    + std::to_string(static_cast<long long>(nx*ny*nz)) + " is "
-                    + std::to_string(static_cast<long long>(ACTNUMKeyWord->getDataSize()));
-                parserLog->addError("", -1, msg);
-                throw std::invalid_argument(msg);
-            }
-        }
-    }
+        assertVectorSize( DEPTHZ , static_cast<size_t>( (dims[0] + 1)*(dims[1] +1 )) , "DEPTHZ");
+        assertVectorSize( DXV    , static_cast<size_t>( dims[0] ) , "DXV");
+        assertVectorSize( DYV    , static_cast<size_t>( dims[1] ) , "DYV");
+        assertVectorSize( DZV    , static_cast<size_t>( dims[2] ) , "DZV");
         
+        m_grid.reset( ecl_grid_alloc_dxv_dyv_dzv_depthz( dims[0] , dims[1] , dims[2] , DXV.data() , DYV.data() , DZV.data() , DEPTHZ.data() , NULL ) , ecl_grid_free);
+    }
 
 
+    void EclipseGrid::initDTOPSGrid(const std::vector<int>& dims , DeckConstPtr deck) {
+        std::vector<double> DX = createDVector( dims , 0 , "DX" , "DXV" , deck);
+        std::vector<double> DY = createDVector( dims , 1 , "DY" , "DYV" , deck);
+        std::vector<double> DZ = createDVector( dims , 2 , "DZ" , "DZV" , deck);
+        std::vector<double> TOPS = createTOPSVector( dims , DZ , deck );
+        
+        m_grid.reset( ecl_grid_alloc_dx_dy_dz_tops( dims[0] , dims[1] , dims[2] , DX.data() , DY.data() , DZ.data() , TOPS.data() , NULL ) , ecl_grid_free);
+    }
 
+
+    
     void EclipseGrid::initCornerPointGrid(const std::vector<int>& dims , DeckConstPtr deck, ParserLogPtr parserLog) {
         assertCornerPointKeywords( dims , deck, parserLog);
         {
@@ -326,6 +291,61 @@ namespace Opm {
     }
 
 
+
+    bool EclipseGrid::hasCornerPointKeywords(DeckConstPtr deck) {
+        if (deck->hasKeyword("ZCORN") && deck->hasKeyword("COORD"))
+            return true;
+        else
+            return false;
+    }
+
+
+    void EclipseGrid::assertCornerPointKeywords( const std::vector<int>& dims , DeckConstPtr deck, ParserLogPtr parserLog) 
+    {
+        const int nx = dims[0];
+        const int ny = dims[1];
+        const int nz = dims[2];
+        {
+            DeckKeywordConstPtr ZCORNKeyWord = deck->getKeyword("ZCORN");
+            
+            if (ZCORNKeyWord->getDataSize() != static_cast<size_t>(8*nx*ny*nz)) {
+                const std::string msg =
+                    "Wrong size of the ZCORN keyword: Expected 8*x*ny*nz = "
+                    + std::to_string(static_cast<long long>(8*nx*ny*nz)) + " is "
+                    + std::to_string(static_cast<long long>(ZCORNKeyWord->getDataSize()));
+
+                parserLog->addError("", -1, msg);
+                throw std::invalid_argument(msg);
+            }
+        }
+
+        {
+            DeckKeywordConstPtr COORDKeyWord = deck->getKeyword("COORD");
+            if (COORDKeyWord->getDataSize() != static_cast<size_t>(6*(nx + 1)*(ny + 1))) {
+                const std::string msg =
+                    "Wrong size of the COORD keyword: Expected 8*(nx + 1)*(ny + 1) = "
+                    + std::to_string(static_cast<long long>(8*(nx + 1)*(ny + 1))) + " is "
+                    + std::to_string(static_cast<long long>(COORDKeyWord->getDataSize()));
+                parserLog->addError("", -1, msg);
+                throw std::invalid_argument(msg);
+            }
+        }
+
+        if (deck->hasKeyword("ACTNUM")) {
+            DeckKeywordConstPtr ACTNUMKeyWord = deck->getKeyword("ACTNUM");
+            if (ACTNUMKeyWord->getDataSize() != static_cast<size_t>(nx*ny*nz)) {
+                const std::string msg =
+                    "Wrong size of the ACTNUM keyword: Expected nx*ny*nz = "
+                    + std::to_string(static_cast<long long>(nx*ny*nz)) + " is "
+                    + std::to_string(static_cast<long long>(ACTNUMKeyWord->getDataSize()));
+                parserLog->addError("", -1, msg);
+                throw std::invalid_argument(msg);
+            }
+        }
+    }
+        
+
+
     bool EclipseGrid::hasCartesianKeywords(DeckConstPtr deck) {
         if (hasDVDEPTHZKeywords( deck ))
             return true;
@@ -355,44 +375,13 @@ namespace Opm {
     }
 
 
-    void EclipseGrid::initCartesianGrid(const std::vector<int>& dims , DeckConstPtr deck) {
-        if (hasDVDEPTHZKeywords( deck ))
-            initDVDEPTHZGrid( dims , deck );
-        else if (hasDTOPSKeywords(deck))
-            initDTOPSGrid( dims ,deck );
-        else 
-            throw std::invalid_argument("Tried to initialize cartesian grid without all required keywords");
-    }
     
     void EclipseGrid::assertVectorSize(const std::vector<double>& vector , size_t expectedSize , const std::string& vectorName) {
         if (vector.size() != expectedSize)
             throw std::invalid_argument("Wrong size for keyword: " + vectorName + ". Expected: " + boost::lexical_cast<std::string>(expectedSize) + " got: " + boost::lexical_cast<std::string>(vector.size()));
     }
 
-    
-    void EclipseGrid::initDVDEPTHZGrid(const std::vector<int>& dims , DeckConstPtr deck) {
-        const std::vector<double>& DXV = deck->getKeyword("DXV")->getSIDoubleData();
-        const std::vector<double>& DYV = deck->getKeyword("DYV")->getSIDoubleData();
-        const std::vector<double>& DZV = deck->getKeyword("DZV")->getSIDoubleData();
-        const std::vector<double>& DEPTHZ = deck->getKeyword("DEPTHZ")->getSIDoubleData();
 
-        assertVectorSize( DEPTHZ , static_cast<size_t>( (dims[0] + 1)*(dims[1] +1 )) , "DEPTHZ");
-        assertVectorSize( DXV    , static_cast<size_t>( dims[0] ) , "DXV");
-        assertVectorSize( DYV    , static_cast<size_t>( dims[1] ) , "DYV");
-        assertVectorSize( DZV    , static_cast<size_t>( dims[2] ) , "DZV");
-        
-        m_grid.reset( ecl_grid_alloc_dxv_dyv_dzv_depthz( dims[0] , dims[1] , dims[2] , DXV.data() , DYV.data() , DZV.data() , DEPTHZ.data() , NULL ) , ecl_grid_free);
-    }
-
-
-    void EclipseGrid::initDTOPSGrid(const std::vector<int>& dims , DeckConstPtr deck) {
-        std::vector<double> DX = createDVector( dims , 0 , "DX" , "DXV" , deck);
-        std::vector<double> DY = createDVector( dims , 1 , "DY" , "DYV" , deck);
-        std::vector<double> DZ = createDVector( dims , 2 , "DZ" , "DZV" , deck);
-        std::vector<double> TOPS = createTOPSVector( dims , DZ , deck );
-        
-        m_grid.reset( ecl_grid_alloc_dx_dy_dz_tops( dims[0] , dims[1] , dims[2] , DX.data() , DY.data() , DZ.data() , TOPS.data() , NULL ) , ecl_grid_free);
-    }
 
     
     std::vector<double> EclipseGrid::createTOPSVector(const std::vector<int>& dims , const std::vector<double>& DZ , DeckConstPtr deck) {
@@ -466,49 +455,114 @@ namespace Opm {
         }
     } 
 
+
+    /*
+      This function checks if the grid has a pointer to an underlying
+      ecl_grid_type; which must be used to read cell info as
+      size/depth/active of individual cells. 
+    */
+
+    bool EclipseGrid::hasCellInfo() const {
+        return static_cast<bool>( m_grid );
+    }
+
+
+    void EclipseGrid::assertCellInfo() const {
+        if (!hasCellInfo())
+            throw std::invalid_argument("Tried to access cell information in a grid with only dimensions");
+    }
+
+
+    const ecl_grid_type * EclipseGrid::c_ptr() const {
+        assertCellInfo();
+        return m_grid.get();
+    }
+
+
+    bool EclipseGrid::equal(const EclipseGrid& other) const {
+        return (m_pinch.equal( other.m_pinch ) &&
+                m_minpv.equal( other.m_minpv ) &&
+                ecl_grid_compare( c_ptr() , other.c_ptr() , true , false , false ));
+    }
+            
+
+    size_t EclipseGrid::getNumActive( ) const {
+        return static_cast<size_t>(ecl_grid_get_nactive( c_ptr() ));
+    }
+
+    
+    double EclipseGrid::getCellVolume(size_t globalIndex) const {
+        assertGlobalIndex( globalIndex );
+        return ecl_grid_get_cell_volume1( c_ptr() , static_cast<int>(globalIndex));
+    }
+
+
+    double EclipseGrid::getCellVolume(size_t i , size_t j , size_t k) const {
+        assertIJK(i,j,k);
+        return ecl_grid_get_cell_volume3( c_ptr() , static_cast<int>(i),static_cast<int>(j),static_cast<int>(k));
+    }
+
+    std::tuple<double,double,double> EclipseGrid::getCellCenter(size_t globalIndex) const {
+        assertGlobalIndex( globalIndex );
+        {
+            double x,y,z;
+            ecl_grid_get_xyz1( c_ptr() , static_cast<int>(globalIndex) , &x , &y , &z);
+            return std::tuple<double,double,double> {x,y,z};
+        }
+    }
+
+
+    std::tuple<double,double,double> EclipseGrid::getCellCenter(size_t i,size_t j, size_t k) const {
+        assertIJK(i,j,k);
+        {
+            double x,y,z;
+            ecl_grid_get_xyz3( c_ptr() , static_cast<int>(i),static_cast<int>(j),static_cast<int>(k), &x , &y , &z);
+            return std::tuple<double,double,double> {x,y,z};
+        }
+    }
+
+
+
     void EclipseGrid::exportACTNUM( std::vector<int>& actnum) const {
         size_t volume = getNX() * getNY() * getNZ();
         if (getNumActive() == volume)
             actnum.resize(0);
         else {
             actnum.resize( volume );
-            ecl_grid_init_actnum_data( m_grid.get() , actnum.data() );
+            ecl_grid_init_actnum_data( c_ptr() , actnum.data() );
         }
     }
 
     void EclipseGrid::exportMAPAXES( std::vector<double>& mapaxes) const {
-        if (ecl_grid_use_mapaxes( m_grid.get())) {
+        if (ecl_grid_use_mapaxes( c_ptr())) {
             mapaxes.resize(6);
-            ecl_grid_init_mapaxes_data_double( m_grid.get() , mapaxes.data() );
+            ecl_grid_init_mapaxes_data_double( c_ptr() , mapaxes.data() );
         } else {
             mapaxes.resize(0);
         }
     }
         
     void EclipseGrid::exportCOORD( std::vector<double>& coord) const {
-        coord.resize( ecl_grid_get_coord_size( m_grid.get() ));
-        ecl_grid_init_coord_data_double( m_grid.get() , coord.data() );
+        coord.resize( ecl_grid_get_coord_size( c_ptr() ));
+        ecl_grid_init_coord_data_double( c_ptr() , coord.data() );
     }
 
     void EclipseGrid::exportZCORN( std::vector<double>& zcorn) const {
-        zcorn.resize( ecl_grid_get_zcorn_size( m_grid.get() ));
-        ecl_grid_init_zcorn_data_double( m_grid.get() , zcorn.data() );
+        zcorn.resize( ecl_grid_get_zcorn_size( c_ptr() ));
+        ecl_grid_init_zcorn_data_double( c_ptr() , zcorn.data() );
     }
 
     
     
     void EclipseGrid::resetACTNUM( const int * actnum) {
+        assertCellInfo();
         ecl_grid_reset_actnum( m_grid.get() , actnum );
     }
 
 
     void EclipseGrid::fwriteEGRID( const std::string& filename ) const {
+        assertCellInfo();
         ecl_grid_fwrite_EGRID( m_grid.get() , filename.c_str() );
-    }
-
-
-    const ecl_grid_type * EclipseGrid::c_ptr() const {
-        return m_grid.get();
     }
 
 
