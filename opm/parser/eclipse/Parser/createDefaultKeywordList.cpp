@@ -267,7 +267,7 @@ int main(int /* argc */, char ** argv) {
         return 0;
     }
     KeywordMapType keywordMap;
-    boost::filesystem::path keywordPath(config_root);
+
     bool needToGenerate = false;
 
     std::stringstream signature_stream;
