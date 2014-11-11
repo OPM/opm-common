@@ -39,26 +39,36 @@ namespace Opm
         m_default = std::numeric_limits<double>::quiet_NaN();
     }
 
-    ParserDoubleItem::ParserDoubleItem(const std::string& itemName) : ParserItem(itemName)
+    ParserDoubleItem::ParserDoubleItem(const std::string& itemName)
+        : ParserItem(itemName)
     {
         m_default = std::numeric_limits<double>::quiet_NaN();
+        m_defaultSet = false;
     }
 
 
-    ParserDoubleItem::ParserDoubleItem(const std::string& itemName, double defaultValue) : ParserItem(itemName)
+    ParserDoubleItem::ParserDoubleItem(const std::string& itemName, double defaultValue)
+        : ParserItem(itemName)
     {
         setDefault( defaultValue );
     }
 
 
-    ParserDoubleItem::ParserDoubleItem(const std::string& itemName, ParserItemSizeEnum sizeType_, double defaultValue) : ParserItem(itemName, sizeType_)
+    ParserDoubleItem::ParserDoubleItem(const std::string& itemName, ParserItemSizeEnum sizeType, double defaultValue)
+        : ParserItem(itemName, sizeType)
     {
         setDefault( defaultValue );
     }
 
 
     double ParserDoubleItem::getDefault() const {
-        return m_default;
+        if (hasDefault())
+            return m_default;
+
+        if (sizeType() == Opm::ALL)
+            return std::numeric_limits<double>::quiet_NaN();
+
+        throw std::invalid_argument("No default value available for item "+name());
     }
 
 
@@ -67,7 +77,9 @@ namespace Opm
         m_defaultSet = true;
     }
 
-
+    bool ParserDoubleItem::hasDefault() const {
+        return m_defaultSet;
+    }
 
     ParserDoubleItem::ParserDoubleItem(const Json::JsonObject& jsonConfig) :
             ParserItem(jsonConfig)

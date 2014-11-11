@@ -58,9 +58,18 @@ namespace Opm
 
 
     float ParserFloatItem::getDefault() const {
-        return m_default;
+        if (hasDefault())
+            return m_default;
+
+        if (sizeType() == Opm::ALL)
+            return std::numeric_limits<float>::quiet_NaN();
+
+        throw std::invalid_argument("No default value available for item "+name());
     }
 
+    bool ParserFloatItem::hasDefault() const {
+        return m_defaultSet;
+    }
 
     void ParserFloatItem::setDefault(float defaultValue) {
         if (sizeType() == ALL)

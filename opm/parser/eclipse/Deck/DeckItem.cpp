@@ -36,8 +36,11 @@ namespace Opm {
     }
 
     bool DeckItem::defaultApplied(size_t index) const {
-        assert(m_dataPointDefaulted.size() == size());
-        assertSize(index);
+        if (index >= m_dataPointDefaulted.size())
+            throw std::out_of_range("Index must be smaller than "
+                                    + boost::lexical_cast<std::string>(m_dataPointDefaulted.size())
+                                    + " but is "
+                                    + boost::lexical_cast<std::string>(index));
 
         return m_dataPointDefaulted[index];
     }

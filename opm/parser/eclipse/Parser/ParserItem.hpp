@@ -131,8 +131,7 @@ namespace Opm {
             }
         } else {
             if (rawRecord->size() == 0)
-                // if the record was ended prematurely, use the default value for the
-                // item...
+                // if the record was ended prematurely, use the default value for the item...
                 deckItem->push_backDefault( self->getDefault() );
             else {
                 // The '*' should be interpreted as a repetition indicator, but it must

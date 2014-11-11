@@ -27,12 +27,14 @@ namespace Opm {
     ParserStringItem::ParserStringItem(const std::string& itemName) : ParserItem(itemName)
     {
         m_default = "";
+        m_defaultSet = false;
     }
 
 
     ParserStringItem::ParserStringItem(const std::string& itemName, ParserItemSizeEnum sizeType_) : ParserItem(itemName, sizeType_)
     {
         m_default = "";
+        m_defaultSet = false;
     }
 
     ParserStringItem::ParserStringItem(const std::string& itemName, ParserItemSizeEnum sizeType_, const std::string& defaultValue) : ParserItem(itemName, sizeType_) {
@@ -62,10 +64,18 @@ namespace Opm {
     }
 
     std::string ParserStringItem::getDefault() const {
-        return m_default;
+        if (hasDefault())
+            return m_default;
+
+        if (sizeType() == Opm::ALL)
+            return "";
+
+        throw std::invalid_argument("No default value available for item "+name());
     }
 
-
+    bool ParserStringItem::hasDefault() const {
+        return m_defaultSet;
+    }
 
     DeckItemPtr ParserStringItem::scan(RawRecordPtr rawRecord) const {
         return ParserItemScan<ParserStringItem,DeckStringItem,std::string>(this , rawRecord);

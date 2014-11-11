@@ -34,11 +34,14 @@ namespace Opm {
         // this is usually meaningless. (Keep in mind that in the deck it can be queried
         // using deckItem->defaultApplied(idx) if an item was defaulted or not...
         m_default = -1;
+        m_defaultSet = false;
     }
 
-    ParserIntItem::ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType_) : ParserItem(itemName, sizeType_)
+    ParserIntItem::ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType)
+        : ParserItem(itemName, sizeType)
     {
         m_default = -1;
+        m_defaultSet = false;
     }
 
     ParserIntItem::ParserIntItem(const std::string& itemName, int defaultValue) : ParserItem(itemName)
@@ -68,7 +71,17 @@ namespace Opm {
     }
 
     int ParserIntItem::getDefault() const {
-        return m_default;
+        if (hasDefault())
+            return m_default;
+
+        if (sizeType() == Opm::ALL)
+            return -1;
+
+        throw std::invalid_argument("No default value available for item "+name());
+    }
+
+    bool ParserIntItem::hasDefault() const {
+        return m_defaultSet;
     }
 
     DeckItemPtr ParserIntItem::scan(RawRecordPtr rawRecord) const {
