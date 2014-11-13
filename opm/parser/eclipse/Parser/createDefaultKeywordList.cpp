@@ -88,8 +88,8 @@ static void generateKeywordSignature(std::iostream& of , KeywordMapType& keyword
 {    
     for (auto iter=keywordMap.begin(); iter != keywordMap.end(); ++iter) {
         KeywordElementType  keywordElement = *iter;
-        const std::string& fileName = keywordElement.first;
-        const std::string& keywordName = keywordElement.second.first;
+        const std::string& keywordName = keywordElement.first;
+        const std::string& fileName = keywordElement.second.first;
         Json::JsonObject * jsonKeyword = new Json::JsonObject(boost::filesystem::path(fileName));
 
         of << keywordName << std::endl << jsonKeyword->get_content() << std::endl;
@@ -136,8 +136,8 @@ static void testKeyword(ParserKeywordConstPtr parserKeyword , const std::string&
 
 
 static void generateTestForKeyword(std::iostream& of, KeywordElementType keywordElement) {
-    const std::string& fileName = keywordElement.first;
-    const std::string& keywordName = keywordElement.second.first;
+    const std::string& keywordName = keywordElement.first;
+    const std::string& fileName = keywordElement.second.first;
     ParserKeywordConstPtr parserKeyword = keywordElement.second.second;
 
     testKeyword( parserKeyword , keywordName , fileName , of );
@@ -157,7 +157,7 @@ static void generateKeywordTest(const char * test_file_name , KeywordMapType& ke
 
 static void generateSourceForKeyword(std::iostream& of, KeywordElementType keywordElement)
 {
-    const std::string& keywordName = keywordElement.second.first;
+    const std::string& keywordName = keywordElement.first;
     ParserKeywordConstPtr parserKeyword = keywordElement.second.second;
 
     std::string indent("   ");
@@ -179,15 +179,15 @@ static void generateKeywordSource(const char * source_file_name , KeywordMapType
         // the stupid default compiler flags will cause a warning if a function is
         // defined without declaring a prototype before. So let's give the compiler a
         // cookie to make it happy...
-        source_file_stream << "void add" << iter->second.first << "Keyword(Opm::Parser *parser);\n";
+        source_file_stream << "void add" << iter->first << "Keyword(Opm::Parser *parser);\n";
 
-        source_file_stream << "void add" << iter->second.first << "Keyword(Opm::Parser *parser)\n";
+        source_file_stream << "void add" << iter->first << "Keyword(Opm::Parser *parser)\n";
         generateSourceForKeyword(source_file_stream , *iter);
     }
 
     startFunction(source_file_stream);
     for (auto iter=keywordMap.begin(); iter != keywordMap.end(); ++iter)
-        source_file_stream << "    add" << iter->second.first << "Keyword(this);\n";
+        source_file_stream << "    add" << iter->first << "Keyword(this);\n";
     endFunction(source_file_stream);
 
     source_file_stream << "} // end namespace Opm\n";
@@ -216,8 +216,8 @@ static void scanKeyword(const boost::filesystem::path& file , KeywordMapType& ke
         if (parserKeyword->getName() != boost::filesystem::basename(file))
             std::cerr << "Warning: The name '" << parserKeyword->getName() << " specified in the JSON definitions of file '" << file
                       << "' does not match the file's name!\n";
-        std::pair<std::string , ParserKeywordConstPtr> elm(file.filename().string(), parserKeyword);
-        std::pair<std::string , std::pair<std::string , ParserKeywordConstPtr> > pair(file.string() , elm);
+        std::pair<std::string , ParserKeywordConstPtr> elm(file.string(), parserKeyword);
+        std::pair<std::string , std::pair<std::string , ParserKeywordConstPtr> > pair(parserKeyword->getName() , elm);
 
         keywordMap.insert(pair);
     }
