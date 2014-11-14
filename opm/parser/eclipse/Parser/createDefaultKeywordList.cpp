@@ -198,9 +198,19 @@ static void generateKeywordSource(const char * source_file_name , KeywordMapType
 //-----------------------------------------------------------------
 
 static void scanKeyword(const boost::filesystem::path& file , KeywordMapType& keywordMap) {
-    if (!ParserKeyword::validInternalName(file.filename().string())) {
+    std::cerr << "Scanning file: " << file.string() << std::endl;
+
+    std::string internalName = file.filename().string();
+    if (!ParserKeyword::validInternalName(internalName)) {
         std::cerr << "Warning: Ignoring incorrectly named file '" << file.string() << "'.\n";
         return;
+    }
+
+    KeywordMapType::iterator existingEntry = keywordMap.find(internalName);
+    bool alreadyExists = existingEntry != keywordMap.end();
+    if (alreadyExists) {
+        std::cerr << "Warning: Ignoring the the keyword " << internalName << " in '" << file.string()
+                  << "', it has already been read from '" << existingEntry->second.first << "'" << std::endl;
     }
 
     Json::JsonObject * jsonKeyword;
@@ -226,6 +236,7 @@ static void scanKeyword(const boost::filesystem::path& file , KeywordMapType& ke
 }
 
 static void scanAllKeywords(const boost::filesystem::path& directory , KeywordMapType& keywordMap) {
+    std::cerr << "Scanning path: " << directory.string() << std::endl;
     boost::filesystem::directory_iterator end;
     for (boost::filesystem::directory_iterator iter(directory); iter != end; iter++) {
         if (boost::filesystem::is_directory(*iter))
