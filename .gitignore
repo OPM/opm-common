@@ -1,5 +1,6 @@
 *~
 *.user
+.dir-locals.el
 gmon.out
 log.log
 build
