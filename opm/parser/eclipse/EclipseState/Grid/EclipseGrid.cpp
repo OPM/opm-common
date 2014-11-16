@@ -490,7 +490,17 @@ namespace Opm {
         return static_cast<size_t>(ecl_grid_get_nactive( c_ptr() ));
     }
 
+    bool EclipseGrid::cellActive( size_t globalIndex ) const {
+        assertGlobalIndex( globalIndex );
+        return ecl_grid_cell_active1( c_ptr() , static_cast<int>(globalIndex));
+    }
     
+    bool EclipseGrid::cellActive( size_t i , size_t j , size_t k ) const {
+        assertIJK(i,j,k);
+        return ecl_grid_cell_active3( c_ptr() , static_cast<int>(i),static_cast<int>(j),static_cast<int>(k));
+    }
+
+
     double EclipseGrid::getCellVolume(size_t globalIndex) const {
         assertGlobalIndex( globalIndex );
         return ecl_grid_get_cell_volume1( c_ptr() , static_cast<int>(globalIndex));

@@ -89,6 +89,8 @@ namespace Opm {
         std::tuple<double,double,double> getCellCenter(size_t globalIndex) const;
         double getCellVolume(size_t globalIndex) const;
         double getCellVolume(size_t i , size_t j , size_t k) const;
+        bool cellActive( size_t globalIndex ) const;
+        bool cellActive( size_t i , size_t , size_t k ) const;
 
         void exportMAPAXES( std::vector<double>& mapaxes) const;
         void exportCOORD( std::vector<double>& coord) const;
