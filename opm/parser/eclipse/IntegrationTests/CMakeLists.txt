@@ -1,4 +1,4 @@
-add_definitions( -DKEYWORD_DIRECTORY="${PROJECT_SOURCE_DIR}/opm/parser/share/keywords")
+add_definitions( -DKEYWORD_DIRECTORY="${PROJECT_SOURCE_DIR}/opm/parser/share/keywords/000_Eclipse100")
 
 add_executable(runCheckDeckValidity CheckDeckValidity.cpp)
 target_link_libraries(runCheckDeckValidity Parser ${Boost_LIBRARIES})

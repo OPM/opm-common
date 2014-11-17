@@ -198,8 +198,6 @@ static void generateKeywordSource(const char * source_file_name , KeywordMapType
 //-----------------------------------------------------------------
 
 static void scanKeyword(const boost::filesystem::path& file , KeywordMapType& keywordMap) {
-    std::cerr << "Scanning file: " << file.string() << std::endl;
-
     std::string internalName = file.filename().string();
     if (!ParserKeyword::validInternalName(internalName)) {
         std::cerr << "Warning: Ignoring incorrectly named file '" << file.string() << "'.\n";
@@ -209,8 +207,8 @@ static void scanKeyword(const boost::filesystem::path& file , KeywordMapType& ke
     KeywordMapType::iterator existingEntry = keywordMap.find(internalName);
     bool alreadyExists = existingEntry != keywordMap.end();
     if (alreadyExists) {
-        std::cerr << "Warning: Ignoring the the keyword " << internalName << " in '" << file.string()
-                  << "', it has already been read from '" << existingEntry->second.first << "'" << std::endl;
+        std::cerr << "Warning: Ignoring the the keyword " << internalName << " in '" << file.string() << "'," << std::endl
+                     << "\tit has already been read from '" << existingEntry->second.first << "'" << std::endl;
     }
 
     Json::JsonObject * jsonKeyword;
@@ -236,7 +234,6 @@ static void scanKeyword(const boost::filesystem::path& file , KeywordMapType& ke
 }
 
 static void scanAllKeywords(const boost::filesystem::path& directory , KeywordMapType& keywordMap) {
-    std::cerr << "Scanning path: " << directory.string() << std::endl;
     boost::filesystem::directory_iterator end;
     for (boost::filesystem::directory_iterator iter(directory); iter != end; iter++) {
         if (boost::filesystem::is_directory(*iter))
@@ -252,7 +249,7 @@ static void scanAllKeywords(const boost::filesystem::path& directory , KeywordMa
 static void printUsage() {
     std::cout << "Generates source code for populating the parser's list of known keywords." << std::endl;
     std::cout << "Usage: createDefaultKeywordList <configroot> <sourcefilename> [<dumpfilename>]" << std::endl;
-    std::cout << " <configroot>:     Path to keyword (JSON) files" << std::endl;
+    std::cout << " <configroot>:     Path to keyword (JSON) files, first level below this will be read in alfanumerical order. Ignoring repeated keywords." << std::endl;
     std::cout << " <sourcefilename>: Path to source file to generate" << std::endl;
     std::cout << " <testfilename>  : Path to source file with keyword testing" << std::endl;
     std::cout << " <dumpfilename>:   Path to dump file containing state of keyword list at" << std::endl;
@@ -266,6 +263,29 @@ static void ensurePath( const char * file_name ) {
         boost::filesystem::create_directory( file.parent_path());
 }
 
+
+static std::vector<boost::filesystem::path> getPathsInAlfanumOrder(const char* config_root)
+{
+    boost::filesystem::path root(config_root);
+    std::vector<std::string> paths_in_root;
+    boost::filesystem::directory_iterator end;
+    for (boost::filesystem::directory_iterator iter(root); iter != end; iter++) {
+        if (boost::filesystem::is_directory(*iter)) {
+            paths_in_root.push_back(iter->path().string());
+        }
+    }
+
+    std::sort(paths_in_root.begin(), paths_in_root.end());
+    std::vector<boost::filesystem::path> paths_in_alfanum_order;
+
+    std::cout << "Paths will be scanned for keyword definitions in the following order, ignoring repeats:" << std::endl;
+    for (auto it = paths_in_root.begin(); it != paths_in_root.end(); ++it) {
+        std::cerr << "-- " << *it << std::endl;
+        paths_in_alfanum_order.push_back(boost::filesystem::path(*it));
+    }
+
+    return paths_in_alfanum_order;
+}
 
 int main(int /* argc */, char ** argv) {
     const char * config_root = argv[1];
@@ -287,7 +307,11 @@ int main(int /* argc */, char ** argv) {
     ensurePath( test_file_name );
     ensurePath( signature_file_name );
 
-    scanAllKeywords( config_root , keywordMap );
+    std::vector<boost::filesystem::path> paths_in_alfanum_order = getPathsInAlfanumOrder(config_root);
+
+    for (auto it = paths_in_alfanum_order.begin(); it != paths_in_alfanum_order.end(); ++it) {
+        scanAllKeywords( *it , keywordMap );
+    }
 
     generateKeywordSignature(signature_stream , keywordMap);
 
