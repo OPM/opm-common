@@ -51,6 +51,7 @@ SET_SOURCE_FILES_PROPERTIES(${PROJECT_BINARY_DIR}/generated-source/DefaultKeywor
 set( build_parser_source 
 Parser/ParserEnums.cpp
 Parser/ParserKeyword.cpp 
+Parser/ParserLog.cpp
 Parser/ParserRecord.cpp
 Parser/ParserItem.cpp
 Parser/ParserIntItem.cpp  
