@@ -202,7 +202,7 @@ Utility/EndscaleWrapper.hpp
 Utility/ScalecrsWrapper.hpp
 )
 
-add_library(buildParser ${rawdeck_source} ${build_parser_source} ${deck_source} ${unit_source})
+add_library(buildParser STATIC ${rawdeck_source} ${build_parser_source} ${deck_source} ${unit_source})
 target_link_libraries(buildParser opm-json ${Boost_LIBRARIES})
 
 #-----------------------------------------------------------------
