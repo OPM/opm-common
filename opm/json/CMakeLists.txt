@@ -1,9 +1,7 @@
 if (NOT HAVE_CJSON)
-    add_library( cjson cjson/cJSON.c )
+    add_library( cjson STATIC cjson/cJSON.c )
+    set_target_properties(cjson PROPERTIES COMPILE_FLAGS -fPIC)
     set( CJSON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
-    install( TARGETS cjson DESTINATION ${CMAKE_INSTALL_LIBDIR} )
-    install( FILES cjson/cJSON.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include/cjson )
-
     set( CJSON_LIBRARY cjson )
 endif()
 

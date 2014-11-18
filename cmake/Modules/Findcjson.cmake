@@ -20,10 +20,8 @@ endif (CJSON_ROOT)
 find_path (CJSON_INCLUDE_DIR
   NAMES "cjson/cJSON.h"
   HINTS "${CJSON_ROOT}"
-  PATHS "${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/../opm-parser"
   PATH_SUFFIXES "include" "opm/json"
-  DOC "Path to cjson library header files"
-  ${_no_default_path} )
+  DOC "Path to cjson library header files")
 
 # find out the size of a pointer. this is required to only search for
 # libraries in the directories relevant for the architecture
@@ -36,13 +34,9 @@ string(REGEX REPLACE "${PROJECT_SOURCE_DIR}/?(.*)" "\\1"  BUILD_DIR_SUFFIX "${PR
 find_library (CJSON_LIBRARY
   NAMES "cjson"
   HINTS "${CJSON_ROOT}"
-  PATHS "${PROJECT_BINARY_DIR}/../opm-parser"
-        "${PROJECT_BINARY_DIR}/../opm-parser${BUILD_DIR_SUFFIX}"
-        "${PROJECT_BINARY_DIR}/../../opm-parser/${BUILD_DIR_SUFFIX}"
   PATH_SUFFIXES "lib" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}"
                 "opm/json"
-  DOC "Path to cjson library archive/shared object files"
-  ${_no_default_path} )
+  DOC "Path to cjson library archive/shared object files")
 
 # setup list of all required libraries to link with cjson
 set (CJSON_INCLUDE_DIRS ${CJSON_INCLUDE_DIR})
