@@ -1,13 +1,10 @@
-if (NOT HAVE_CJSON)
-    add_library( cjson STATIC cjson/cJSON.c )
-    set_target_properties(cjson PROPERTIES COMPILE_FLAGS -fPIC)
-    set( CJSON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
-    set( CJSON_LIBRARY cjson )
-endif()
-
-
 set( json_source JsonObject.cpp )
 set( json_headers JsonObject.hpp )
+if (NOT HAVE_CJSON)
+    list(APPEND json_source cjson/cJSON.c)
+    set( CJSON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
+    set(CJSON_LIBRARY "")
+endif()
 add_library(opm-json ${json_source})
 target_link_libraries( opm-json ${CJSON_LIBRARY} ${Boost_LIBRARIES} )
 
