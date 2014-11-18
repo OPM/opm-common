@@ -207,8 +207,9 @@ static void scanKeyword(const boost::filesystem::path& file , KeywordMapType& ke
     KeywordMapType::iterator existingEntry = keywordMap.find(internalName);
     bool alreadyExists = existingEntry != keywordMap.end();
     if (alreadyExists) {
-        std::cerr << "Warning: Ignoring the the keyword " << internalName << " in '" << file.string() << "'," << std::endl
-                     << "\tit has already been read from '" << existingEntry->second.first << "'" << std::endl;
+        std::cerr << "Warning: Ignoring the the keyword " << internalName << " found in '" << existingEntry->second.first  << "'," << std::endl
+                     << "\treplacing it with data from '" << file.string() << "'" << std::endl;
+        keywordMap.erase(existingEntry);
     }
 
     Json::JsonObject * jsonKeyword;
@@ -234,8 +235,8 @@ static void scanKeyword(const boost::filesystem::path& file , KeywordMapType& ke
 }
 
 static void scanAllKeywords(const boost::filesystem::path& directory , KeywordMapType& keywordMap) {
-    boost::filesystem::directory_iterator end;
-    for (boost::filesystem::directory_iterator iter(directory); iter != end; iter++) {
+    boost::filesystem::directory_iterator end_iterator;
+    for (boost::filesystem::directory_iterator iter(directory); iter != end_iterator; iter++) {
         if (boost::filesystem::is_directory(*iter))
             scanAllKeywords(*iter , keywordMap);
         else
@@ -268,8 +269,8 @@ static std::vector<boost::filesystem::path> getPathsInAlfanumOrder(const char* c
 {
     boost::filesystem::path root(config_root);
     std::vector<std::string> paths_in_root;
-    boost::filesystem::directory_iterator end;
-    for (boost::filesystem::directory_iterator iter(root); iter != end; iter++) {
+    boost::filesystem::directory_iterator end_iterator;
+    for (boost::filesystem::directory_iterator iter(root); iter != end_iterator; iter++) {
         if (boost::filesystem::is_directory(*iter)) {
             paths_in_root.push_back(iter->path().string());
         }
