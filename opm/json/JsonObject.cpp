@@ -27,7 +27,7 @@
 #include <boost/filesystem/operations.hpp>
 
 #include <opm/json/JsonObject.hpp>
-#include <opm/json/cjson/cJSON.h>
+#include "cjson/cJSON.h"
 
 namespace Json {
 
