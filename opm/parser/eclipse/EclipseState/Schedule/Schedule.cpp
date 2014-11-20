@@ -336,13 +336,19 @@ namespace Opm {
 
                 WellPolymerProperties properties(well->getPolymerPropertiesCopy(currentStep));
                 
-                if (!record->getItem("POLYMER_CONCENTRATION")->defaultApplied(0)) {
-                    properties.m_polymerConcentration = record->getItem("POLYMER_CONCENTRATION")->getSIDouble(0);
-                }
-                if (!record->getItem("SALT_CONCENTRATION")->defaultApplied(0)) {
-                    properties.m_saltConcentration = record->getItem("SALT_CONCENTRATION")->getSIDouble(0);
+                properties.m_polymerConcentration = record->getItem("POLYMER_CONCENTRATION")->getSIDouble(0);
+                properties.m_saltConcentration = record->getItem("SALT_CONCENTRATION")->getSIDouble(0);
+
+                auto group_polymer_item = record->getItem("GROUP_POLYMER_CONCENTRATION");
+                auto group_salt_item = record->getItem("GROUP_SALT_CONCENTRATION");
+
+                if (!group_polymer_item->defaultApplied(0)) {
+                    throw std::logic_error("Sorry explicit setting of \`GROUP_POLYMER_CONCENTRATION\` is not supported!");
                 }
 
+                if (!group_salt_item->defaultApplied(0)) {
+                    throw std::logic_error("Sorry explicit setting of \`GROUP_SALT_CONCENTRATION\` is not supported!");
+                }
                 well->setPolymerProperties(currentStep, properties);
             }
         }
