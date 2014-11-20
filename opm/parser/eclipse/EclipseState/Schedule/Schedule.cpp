@@ -21,6 +21,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -82,6 +83,9 @@ namespace Opm {
 
             if (keyword->name() == "WCONINJE")
                 handleWCONINJE(deck, keyword, parserLog, currentStep);
+
+            if (keyword->name() == "WPOLYMER")
+                handleWPOLYMER(deck, keyword, parserLog, currentStep);
 
             if (keyword->name() == "WCONINJH")
                 handleWCONINJH(deck, keyword, parserLog, currentStep);
@@ -320,6 +324,29 @@ namespace Opm {
         }
     }
 
+
+    void Schedule::handleWPOLYMER(DeckConstPtr deck, DeckKeywordConstPtr keyword, ParserLogPtr /*parserLog*/, size_t currentStep) {
+        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
+            DeckRecordConstPtr record = keyword->getRecord(recordNr);
+            const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
+            std::vector<WellPtr> wells = getWells(wellNamePattern);
+
+            for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
+                WellPtr well = *wellIter;
+
+                WellPolymerProperties properties(well->getPolymerPropertiesCopy(currentStep));
+                
+                if (!record->getItem("POLYMER_CONCENTRATION")->defaultApplied(0)) {
+                    properties.m_polymerConcentration = record->getItem("POLYMER_CONCENTRATION")->getSIDouble(0);
+                }
+                if (!record->getItem("SALT_CONCENTRATION")->defaultApplied(0)) {
+                    properties.m_saltConcentration = record->getItem("SALT_CONCENTRATION")->getSIDouble(0);
+                }
+
+                well->setPolymerProperties(currentStep, properties);
+            }
+        }
+    }
 
     void Schedule::handleWCONINJH(DeckConstPtr deck, DeckKeywordConstPtr keyword, ParserLogPtr /*parserLog*/, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
@@ -617,6 +644,7 @@ namespace Opm {
         }
     }
     
+
     bool Schedule::convertEclipseStringToBool(const std::string& eclipseString) {
         std::string lowerTrimmed = boost::algorithm::to_lower_copy(eclipseString);
         boost::algorithm::trim(lowerTrimmed);

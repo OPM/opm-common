@@ -27,6 +27,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
 
 #include <boost/optional.hpp>
 
@@ -83,6 +84,10 @@ namespace Opm {
         WellInjectionProperties        getInjectionPropertiesCopy(size_t timeStep) const;
         const WellInjectionProperties& getInjectionProperties(size_t timeStep) const;
 
+        void                           setPolymerProperties(size_t timeStep , const WellPolymerProperties properties);
+        WellPolymerProperties          getPolymerPropertiesCopy(size_t timeStep) const;
+        const WellPolymerProperties&   getPolymerProperties(size_t timeStep) const;
+
     private:
         size_t m_creationTimeStep;
         std::string m_name;
@@ -98,6 +103,7 @@ namespace Opm {
         std::shared_ptr<DynamicState<CompletionSetConstPtr> > m_completions;
         std::shared_ptr<DynamicState<WellProductionProperties> > m_productionProperties;
         std::shared_ptr<DynamicState<WellInjectionProperties> > m_injectionProperties;
+        std::shared_ptr<DynamicState<WellPolymerProperties> > m_polymerProperties;
         std::shared_ptr<DynamicState<std::string> > m_groupName;
 
         // WELSPECS data - assumes this is not dynamic

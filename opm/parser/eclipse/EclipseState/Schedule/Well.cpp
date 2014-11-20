@@ -38,6 +38,7 @@ namespace Opm {
           m_completions( new DynamicState<CompletionSetConstPtr>( timeMap , CompletionSetConstPtr( new CompletionSet()) )),
           m_productionProperties( new DynamicState<WellProductionProperties>(timeMap, WellProductionProperties() )),
           m_injectionProperties( new DynamicState<WellInjectionProperties>(timeMap, WellInjectionProperties() )),
+          m_polymerProperties( new DynamicState<WellPolymerProperties>(timeMap, WellPolymerProperties() )),
           m_groupName( new DynamicState<std::string>( timeMap , "" )),
           m_headI(headI),
           m_headJ(headJ),
@@ -60,6 +61,7 @@ namespace Opm {
           m_completions( new DynamicState<CompletionSetConstPtr>( timeMap , CompletionSetConstPtr( new CompletionSet()) )),
           m_productionProperties( new DynamicState<WellProductionProperties>(timeMap, WellProductionProperties() )),
           m_injectionProperties( new DynamicState<WellInjectionProperties>(timeMap, WellInjectionProperties() )),
+          m_polymerProperties( new DynamicState<WellPolymerProperties>(timeMap, WellPolymerProperties() )),
           m_groupName( new DynamicState<std::string>( timeMap , "" )),
           m_headI(headI),
           m_headJ(headJ),
@@ -100,6 +102,19 @@ namespace Opm {
 
     const WellInjectionProperties& Well::getInjectionProperties(size_t timeStep) const {
         return m_injectionProperties->at(timeStep);
+    }
+
+    void Well::setPolymerProperties(size_t timeStep , const WellPolymerProperties newProperties) {
+        m_isProducer->add(timeStep , false);
+        m_polymerProperties->add(timeStep, newProperties);
+    }
+
+    WellPolymerProperties Well::getPolymerPropertiesCopy(size_t timeStep) const {
+        return m_polymerProperties->get(timeStep);
+    }
+
+    const WellPolymerProperties& Well::getPolymerProperties(size_t timeStep) const {
+        return m_polymerProperties->at(timeStep);
     }
 
     bool Well::hasBeenDefined(size_t timeStep) const {
