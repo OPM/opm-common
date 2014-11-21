@@ -592,3 +592,46 @@ BOOST_AUTO_TEST_CASE(WELLS_SHUT) {
     BOOST_CHECK_EQUAL( WellCommon::StatusEnum::SHUT , well3->getStatus(2));
 }
 
+BOOST_AUTO_TEST_CASE(WellTestWPOLYMER) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_POLYMER");
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
+    ScheduleConstPtr sched(new Schedule(deck));
+
+    BOOST_CHECK_EQUAL(4U, sched->numWells());
+    BOOST_CHECK(sched->hasWell("INJE01"));
+    BOOST_CHECK(sched->hasWell("PROD01"));
+    
+    WellConstPtr well1 = sched->getWell("INJE01");
+    BOOST_CHECK( well1->isInjector(0));
+    {
+        const WellPolymerProperties& props_well10 = well1->getPolymerProperties(0);
+        BOOST_CHECK_CLOSE(1.5*Metric::PolymerDensity, props_well10.m_polymerConcentration, 0.0001);
+        const WellPolymerProperties& props_well11 = well1->getPolymerProperties(1);
+        BOOST_CHECK_CLOSE(1.0*Metric::PolymerDensity, props_well11.m_polymerConcentration, 0.0001);
+        const WellPolymerProperties& props_well12 = well1->getPolymerProperties(2);
+        BOOST_CHECK_CLOSE(0.1*Metric::PolymerDensity, props_well12.m_polymerConcentration, 0.0001);
+    }
+
+    WellConstPtr well2 = sched->getWell("INJE02");
+    BOOST_CHECK( well2->isInjector(0));
+    {
+        const WellPolymerProperties& props_well20 = well2->getPolymerProperties(0);
+        BOOST_CHECK_CLOSE(2.0*Metric::PolymerDensity, props_well20.m_polymerConcentration, 0.0001);
+        const WellPolymerProperties& props_well21 = well2->getPolymerProperties(1);
+        BOOST_CHECK_CLOSE(1.5*Metric::PolymerDensity, props_well21.m_polymerConcentration, 0.0001);
+        const WellPolymerProperties& props_well22 = well2->getPolymerProperties(2);
+        BOOST_CHECK_CLOSE(0.2*Metric::PolymerDensity, props_well22.m_polymerConcentration, 0.0001);
+    }
+
+    WellConstPtr well3 = sched->getWell("INJE03");
+    BOOST_CHECK( well3->isInjector(0));
+    {
+        const WellPolymerProperties& props_well30 = well3->getPolymerProperties(0);
+        BOOST_CHECK_CLOSE(2.5*Metric::PolymerDensity, props_well30.m_polymerConcentration, 0.0001);
+        const WellPolymerProperties& props_well31 = well3->getPolymerProperties(1);
+        BOOST_CHECK_CLOSE(2.0*Metric::PolymerDensity, props_well31.m_polymerConcentration, 0.0001);
+        const WellPolymerProperties& props_well32 = well3->getPolymerProperties(2);
+        BOOST_CHECK_CLOSE(0.3*Metric::PolymerDensity, props_well32.m_polymerConcentration, 0.0001);
+    }
+}
