@@ -66,8 +66,8 @@ namespace Opm {
         m_dimensions.insert( std::make_pair(dimension->getName() , dimension));
     }
 
-    void UnitSystem::addDimension(const std::string& dimension , double SI_factor) {
-        std::shared_ptr<const Dimension> dim( new Dimension(dimension , SI_factor) );
+    void UnitSystem::addDimension(const std::string& dimension , double SIfactor, double SIoffset) {
+        std::shared_ptr<const Dimension> dim( new Dimension(dimension , SIfactor, SIoffset) );
         addDimension(dim);
     }
 
@@ -82,6 +82,13 @@ namespace Opm {
         double SIfactor = 1.0;
         for (auto iter = dimensionList.begin(); iter != dimensionList.end(); ++iter) {
             std::shared_ptr<const Dimension> dim = getDimension( *iter );
+
+            // all constituing dimension must be compositable. The
+            // only exception is if there is the "composite" dimension
+            // consists of exactly a single atomic dimension...
+            if (dimensionList.size() > 1 && !dim->isCompositable())
+                throw std::invalid_argument("Composite dimensions currently cannot require a conversion offset");
+
             SIfactor *= dim->getSIScaling();
         }
         return std::shared_ptr<Dimension>(Dimension::newComposite( dimension , SIfactor ));
@@ -106,6 +113,9 @@ namespace Opm {
             boost::split(parts , dimension , boost::is_any_of("/"));
             std::shared_ptr<const Dimension> dividend = parseFactor( parts[0] );
             std::shared_ptr<const Dimension> divisor = parseFactor( parts[1] );
+
+            if (dividend->getSIOffset() != 0.0 || divisor->getSIOffset() != 0.0)
+                throw std::invalid_argument("Composite dimensions cannot currently require a conversion offset");
         
             return std::shared_ptr<Dimension>( Dimension::newComposite( dimension , dividend->getSIScaling() / divisor->getSIScaling() ));
         } else {
@@ -139,6 +149,7 @@ namespace Opm {
         
         system->addDimension("1"         , 1.0);
         system->addDimension("Pressure"  , Metric::Pressure );
+        system->addDimension("Temperature", Metric::Temperature, Metric::TemperatureOffset);
         system->addDimension("Length"    , Metric::Length);
         system->addDimension("Time"      , Metric::Time );
         system->addDimension("Mass"         , Metric::Mass );
@@ -162,6 +173,7 @@ namespace Opm {
         
         system->addDimension("1"    , 1.0);
         system->addDimension("Pressure", Field::Pressure );
+        system->addDimension("Temperature", Field::Temperature, Field::TemperatureOffset);
         system->addDimension("Length", Field::Length);
         system->addDimension("Time" , Field::Time);
         system->addDimension("Mass", Field::Mass);

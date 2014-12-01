@@ -143,6 +143,19 @@ namespace Opm {
             const double psia   = lbf / square(inch);
             /// @}
 
+            /// \name Temperature. This one is more complicated
+            /// because the unit systems used by Eclipse (i.e. degrees
+            /// Celsius and degrees Fahrenheit require to add or
+            /// subtract an offset for the conversion between from/to
+            /// Kelvin
+            /// @{
+            const double degCelsius = 1.0; // scaling factor °C -> K
+            const double degCelsiusOffset = 273.15; // offset for the °C -> K conversion
+
+            const double degFahrenheit = 5.0/9; // scaling factor °F -> K
+            const double degFahrenheitOffset = 255.37; // offset for the °C -> K conversion
+            /// @}
+
             /// \name Viscosity
             /// @{
             const double Pas   = Pascal * second; // == 1
@@ -179,6 +192,8 @@ namespace Opm {
         using namespace details::prefix;
         using namespace details::unit;
         const double Pressure             = barsa;
+        const double Temperature          = degCelsius;
+        const double TemperatureOffset    = degCelsiusOffset;
         const double Length               = meter;
         const double Time                 = day;
         const double Mass                 = kilogram;
@@ -198,6 +213,8 @@ namespace Opm {
         using namespace details::prefix;
         using namespace details::unit;
         const double Pressure             = psia;
+        const double Temperature          = degFahrenheit;
+        const double TemperatureOffset    = degFahrenheitOffset;
         const double Length               = feet;
         const double Time                 = day;
         const double Mass                 = pound;

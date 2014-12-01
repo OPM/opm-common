@@ -26,16 +26,24 @@ namespace Opm {
 
     class Dimension {
     public:
-        Dimension(const std::string& name, double SI_factor);
+        Dimension(const std::string& name, double SIfactor, double SIoffset = 0.0);
+
         double getSIScaling() const;
+        double getSIOffset() const;
+
+        double convertRawToSi(double rawValue) const;
+        double convertSiToRaw(double siValue) const;
+
         bool equal(const Dimension& other) const;
         const std::string& getName() const;
-        static Dimension * newComposite(const std::string& dim , double SIfactor);
+        bool isCompositable() const;
+        static Dimension * newComposite(const std::string& dim, double SIfactor, double SIoffset = 0.0);
 
     private:
         Dimension();
         std::string m_name;
         double m_SIfactor;
+        double m_SIoffset;
     };
 }
 

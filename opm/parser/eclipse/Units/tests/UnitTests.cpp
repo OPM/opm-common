@@ -41,6 +41,11 @@ BOOST_AUTO_TEST_CASE(makeComposite) {
     BOOST_CHECK_EQUAL(100 , composite->getSIScaling());
 }
 
+BOOST_AUTO_TEST_CASE(MakeCompositeInvalid) {
+    // conversion to SI temperatures requires an offset, but such
+    // composite units are (currently?) invalid
+    BOOST_CHECK_THROW(Dimension::newComposite("Length*Temperature", 100), std::logic_error);
+}
 
 BOOST_AUTO_TEST_CASE(CreateDimensionInvalidNameThrows) {
     BOOST_CHECK_THROW(Dimension(" " , 1) , std::invalid_argument);
@@ -89,11 +94,15 @@ BOOST_AUTO_TEST_CASE(UnitSystemAddDimensions) {
     UnitSystem system("Metric");
     system.addDimension("Length" , 1 );
     system.addDimension("Time" , 86400 );
+    system.addDimension("Temperature", 1.0, 273.15);
 
     std::shared_ptr<const Dimension> length = system.getDimension("Length");
     std::shared_ptr<const Dimension> time = system.getDimension("Time");
+    std::shared_ptr<const Dimension> temperature = system.getDimension("Temperature");
     BOOST_CHECK_EQUAL(1     , length->getSIScaling());
     BOOST_CHECK_EQUAL(86400 , time->getSIScaling());
+    BOOST_CHECK_EQUAL(1.0   , temperature->getSIScaling());
+    BOOST_CHECK_EQUAL(273.15, temperature->getSIOffset());
 
     system.addDimension("Length" , 0.3048);
     length = system.getDimension("Length");
@@ -123,6 +132,7 @@ static void checkSystemHasRequiredDimensions(std::shared_ptr<const UnitSystem> s
     BOOST_CHECK( system->hasDimension("Time"));
     BOOST_CHECK( system->hasDimension("Permeability"));
     BOOST_CHECK( system->hasDimension("Pressure"));
+    BOOST_CHECK( system->hasDimension("Temperature"));
 }
 
 
