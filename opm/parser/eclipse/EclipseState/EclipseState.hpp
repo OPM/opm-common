@@ -47,6 +47,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/RocktabTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RsvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RvvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/RtempvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
 
@@ -104,6 +105,7 @@ namespace Opm {
         const std::vector<RocktabTable>& getRocktabTables() const;
         const std::vector<RsvdTable>& getRsvdTables() const;
         const std::vector<RvvdTable>& getRvvdTables() const;
+        const std::vector<RtempvdTable>& getRtempvdTables() const;
         const std::vector<SgofTable>& getSgofTables() const;
         const std::vector<SwofTable>& getSwofTables() const;
 
@@ -219,6 +221,7 @@ namespace Opm {
         std::vector<RocktabTable> m_rocktabTables;
         std::vector<RsvdTable> m_rsvdTables;
         std::vector<RvvdTable> m_rvvdTables;
+        std::vector<RtempvdTable> m_rtempvdTables;
         std::vector<SgofTable> m_sgofTables;
         std::vector<SwofTable> m_swofTables;
 
