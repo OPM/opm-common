@@ -79,6 +79,7 @@ namespace Opm
         void handleWGRUPCON(DeckKeywordConstPtr keyword, ParserLogPtr parserLog, size_t currentStep);
         void handleCOMPDAT(DeckKeywordConstPtr keyword, ParserLogPtr parserLog, size_t currentStep);
         void handleWCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, ParserLogPtr parserLog, size_t currentStep);
+        void handleWPOLYMER(DeckConstPtr deck, DeckKeywordConstPtr keyword, ParserLogPtr parserLog, size_t currentStep);
         void handleWCONINJH(DeckConstPtr deck, DeckKeywordConstPtr keyword, ParserLogPtr parserLog, size_t currentStep);
         void handleWELOPEN(DeckKeywordConstPtr keyword, ParserLogPtr parserLog, size_t currentStep);
         void handleGCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, ParserLogPtr parserLog, size_t currentStep);
