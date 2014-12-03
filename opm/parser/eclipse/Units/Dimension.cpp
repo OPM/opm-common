@@ -29,7 +29,7 @@ namespace Opm {
         
     }
 
-    Dimension::Dimension(const std::string& name, double SIfactor) 
+    Dimension::Dimension(const std::string& name, double SIfactor, double SIoffset)
     {
         for (auto iter = name.begin(); iter != name.end(); ++iter) {
             if (!isalpha(*iter) && (*iter) != '1')
@@ -37,9 +37,9 @@ namespace Opm {
         }
         m_name = name;
         m_SIfactor = SIfactor;
+        m_SIoffset = SIoffset;
     }
 
-    
     double Dimension::getSIScaling() const {
         if (!std::isfinite(m_SIfactor))
             throw std::logic_error("The DeckItem contains a field with a context dependent unit. "
@@ -47,15 +47,39 @@ namespace Opm {
         return m_SIfactor;
     }
 
+    double Dimension::getSIOffset() const {
+        return m_SIoffset;
+    }
+
+    double Dimension::convertRawToSi(double rawValue) const {
+        if (!std::isfinite(m_SIfactor))
+            throw std::logic_error("The DeckItem contains a field with a context dependent unit. "
+                                   "Use getRawDoubleData() and convert the returned value manually!");
+
+        return rawValue*m_SIfactor + m_SIoffset;
+    }
+
+    double Dimension::convertSiToRaw(double siValue) const {
+        if (!std::isfinite(m_SIfactor))
+            throw std::logic_error("The DeckItem contains a field with a context dependent unit. "
+                                   "Use getRawDoubleData() and convert the returned value manually!");
+
+        return (siValue - m_SIoffset)/m_SIfactor;
+    }
+
     const std::string& Dimension::getName() const {
         return m_name;
     }
 
+    // only dimensions with zero offset are compositable...
+    bool Dimension::isCompositable() const
+    { return m_SIoffset == 0.0; }
 
-    Dimension * Dimension::newComposite(const std::string& dim , double SIfactor) {
+    Dimension * Dimension::newComposite(const std::string& dim , double SIfactor, double SIoffset) {
         Dimension * dimension = new Dimension();
         dimension->m_name = dim;
         dimension->m_SIfactor = SIfactor;
+        dimension->m_SIoffset = SIoffset;
 
         return dimension;
     }
@@ -64,7 +88,7 @@ namespace Opm {
     bool Dimension::equal(const Dimension& other) const {
         if (m_name != other.m_name)
             return false;
-        if (m_SIfactor == other.m_SIfactor)
+        if (m_SIfactor == other.m_SIfactor && m_SIoffset == other.m_SIoffset)
             return true;
         if (std::isnan(m_SIfactor) && std::isnan(other.m_SIfactor))
             return true;

@@ -33,7 +33,7 @@ namespace Opm {
         UnitSystem(const std::string& unitSystem);
         const std::string& getName() const;
 
-        void addDimension(const std::string& dimension , double SI_factor);
+        void addDimension(const std::string& dimension, double SIfactor, double SIoffset = 0.0);
         void addDimension(std::shared_ptr<const Dimension> dimension);
         std::shared_ptr<const Dimension> getNewDimension(const std::string& dimension);
         std::shared_ptr<const Dimension> getDimension(const std::string& dimension) const;

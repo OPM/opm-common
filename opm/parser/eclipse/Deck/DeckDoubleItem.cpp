@@ -46,15 +46,10 @@ namespace Opm {
                 return;
             }
             m_SIdata.resize( m_data.size() );
-            if (m_dimensions.size() == 1) {
-                double SIfactor = m_dimensions[0]->getSIScaling();
-                std::transform( m_data.begin() , m_data.end() , m_SIdata.begin() , std::bind1st(std::multiplies<double>(),SIfactor));
-            } else {
-                for (size_t index=0; index < m_data.size(); index++) {
-                    size_t dimIndex = (index % m_dimensions.size());
-                    double SIfactor = m_dimensions[dimIndex]->getSIScaling();
-                    m_SIdata[index] = m_data[index] * SIfactor;
-                }
+
+            for (size_t index=0; index < m_data.size(); index++) {
+                size_t dimIndex = (index % m_dimensions.size());
+                m_SIdata[index] = m_dimensions[dimIndex]->convertRawToSi(m_data[index]);
             }
         } else
             throw std::invalid_argument("No dimension has been set for item:" + name() + " can not ask for SI data");

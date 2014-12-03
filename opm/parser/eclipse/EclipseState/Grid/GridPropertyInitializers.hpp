@@ -21,6 +21,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/RtempvdTable.hpp>
 
 #include <vector>
 #include <string>
@@ -349,6 +350,51 @@ private:
     const Deck& m_deck;
     const EclipseState& m_eclipseState;
 };
+
+// initialize the TEMPI grid property using the temperature vs depth
+// table (stemming from the TEMPVD or the RTEMPVD keyword)
+template <class EclipseState=Opm::EclipseState,
+          class Deck=Opm::Deck>
+class GridPropertyTemperatureLookupInitializer
+    : public GridPropertyBaseInitializer<double>
+{
+public:
+    GridPropertyTemperatureLookupInitializer(const Deck& deck, const EclipseState& eclipseState)
+        : m_deck(deck)
+        , m_eclipseState(eclipseState)
+    { }
+
+    void apply(std::vector<double>& values,
+               const std::string& propertyName) const
+    {
+        if (propertyName != "TEMPI")
+            throw std::logic_error("The TemperatureLookupInitializer can only be used for the initial temperature!");
+
+        if (!m_deck.hasKeyword("EQLNUM")) {
+            // if values are defaulted in the TEMPI keyword, but no
+            // EQLNUM is specified, you will get NaNs...
+            double nan = std::numeric_limits<double>::quiet_NaN();
+            std::fill(values.begin(), values.end(), nan);
+            return;
+        }
+
+        auto eclipseGrid = m_eclipseState.getEclipseGrid();
+        const std::vector<RtempvdTable>& rtempvdTables = m_eclipseState.getRtempvdTables();
+        const std::vector<int>& eqlNum = m_eclipseState.getIntGridProperty("EQLNUM")->getData();
+
+        for (int cellIdx = 0; cellIdx < eqlNum.size(); ++ cellIdx) {
+            int cellEquilNum = eqlNum[cellIdx];
+            const RtempvdTable& rtempvdTable = rtempvdTables[cellEquilNum];
+            double cellDepth = std::get<2>(eclipseGrid->getCellCenter(cellIdx));
+            values[cellIdx] = rtempvdTable.evaluate("Temperature", cellDepth);
+        }
+    }
+
+private:
+    const Deck& m_deck;
+    const EclipseState& m_eclipseState;
+};
+
 }
 
 #endif

@@ -184,6 +184,7 @@ EclipseState/Tables/ImptvdTable.hpp
 EclipseState/Tables/RsvdTable.hpp
 EclipseState/Tables/PvtoInnerTable.hpp
 EclipseState/Tables/RvvdTable.hpp
+EclipseState/Tables/RtempvdTable.hpp
 EclipseState/Tables/PvtgOuterTable.hpp
 #
 Utility/WconinjeWrapper.hpp
