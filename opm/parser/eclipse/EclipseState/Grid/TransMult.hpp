@@ -48,11 +48,12 @@ namespace Opm {
         TransMult(size_t nx , size_t ny , size_t nz);
         double getMultiplier(size_t globalIndex, FaceDir::DirEnum faceDir) const;
         double getMultiplier(size_t i , size_t j , size_t k, FaceDir::DirEnum faceDir) const;
+        double getRegionMultiplier( size_t globalCellIndex1, size_t globalCellIndex2, FaceDir::DirEnum faceDir) const;
         bool hasDirectionProperty(FaceDir::DirEnum faceDir) const;
         std::shared_ptr<GridProperty<double> > getDirectionProperty(FaceDir::DirEnum faceDir);
         void applyMULT(std::shared_ptr<const GridProperty<double> > srcMultProp, FaceDir::DirEnum faceDir);
         void applyMULTFLT( std::shared_ptr<const FaultCollection> faults);
-        void applyMULTREGT( std::shared_ptr<MULTREGTScanner> multregtScanner , std::shared_ptr<GridProperties<int> > regions);
+        void setMultregtScanner(std::shared_ptr<const MULTREGTScanner> multregtScanner);
 
     private:
         size_t getGlobalIndex(size_t i , size_t j , size_t k) const;
@@ -63,6 +64,7 @@ namespace Opm {
         size_t m_nx , m_ny , m_nz;
         std::map<FaceDir::DirEnum , std::shared_ptr<GridProperty<double> > > m_trans;
         std::map<FaceDir::DirEnum , std::string> m_names;
+        std::shared_ptr<const MULTREGTScanner> m_multregtScanner;
     };
 
 }

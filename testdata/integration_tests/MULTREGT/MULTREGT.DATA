@@ -31,7 +31,8 @@ MULTNUM
 /
 
 MULTREGT  
-1  2   0.10   X   ALL    M / 
+1  2   0.10   X   NONNC M / 
+3  4   0.50   X   NNC   M / 
 /
 
 MULTREGT  

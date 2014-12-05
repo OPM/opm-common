@@ -66,16 +66,15 @@ namespace Opm {
     class MULTREGTScanner {
 
     public:
-        MULTREGTScanner();
-        void addKeyword(DeckKeywordConstPtr deckKeyword);
-        const std::vector< std::tuple<size_t , FaceDir::DirEnum , double> > scanRegions( std::shared_ptr<Opm::GridProperties<int> > regions);
-        static void assertKeywordSupported(DeckKeywordConstPtr deckKeyword);
+        MULTREGTScanner(std::shared_ptr<GridProperties<int> > cellRegionNumbers, const std::vector<DeckKeywordConstPtr>& keywords);
+        double getRegionMultiplier(size_t globalCellIdx1, size_t globalCellIdx2, FaceDir::DirEnum faceDir) const;
 
     private:
-        void checkConnection( MULTREGTSearchMap& map , std::vector< MULTREGTConnection >& connections, std::shared_ptr<GridProperty<int> > region , size_t globalIndex1 , size_t globalIndex2 , FaceDir::DirEnum faceDir1 ,FaceDir::DirEnum faceDir2);
-
-
+        void addKeyword(DeckKeywordConstPtr deckKeyword);
+        void assertKeywordSupported(DeckKeywordConstPtr deckKeyword);
         std::vector< MULTREGTRecord > m_records;
+        std::map<std::string , MULTREGTSearchMap> m_searchMap;
+        std::shared_ptr<GridProperties<int> > m_cellRegionNumbers;
     };
 
 }

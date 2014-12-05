@@ -73,6 +73,10 @@ namespace Opm {
         return getMultiplier__( globalIndex , faceDir );
     }
 
+    double TransMult::getRegionMultiplier(size_t globalCellIndex1,  size_t globalCellIndex2, FaceDir::DirEnum faceDir) const {
+            return m_multregtScanner->getRegionMultiplier(globalCellIndex1, globalCellIndex2, faceDir);
+    }
+
 
     bool TransMult::hasDirectionProperty(FaceDir::DirEnum faceDir) const {
         if (m_trans.count(faceDir) == 1)
@@ -127,18 +131,7 @@ namespace Opm {
 
 
 
-    void TransMult::applyMULTREGT( std::shared_ptr<MULTREGTScanner> multregtScanner , std::shared_ptr<GridProperties<int> > regions) {
-        const std::vector< MULTREGTConnection > connections = multregtScanner->scanRegions( regions );
-        for (auto iter = connections.begin(); iter != connections.end(); ++iter) {
-            MULTREGTConnection connection = *iter;
-            FaceDir::DirEnum faceDir = std::get<1>( connection );
-            std::shared_ptr<GridProperty<double> > multProperty = getDirectionProperty(faceDir);
-            {
-                size_t globalIndex = std::get<0>( connection );
-                double transMult = std::get<2>( connection );
-
-                multProperty->multiplyValueAtIndex( globalIndex , transMult);
-            }
-        }
+    void TransMult::setMultregtScanner( std::shared_ptr<const MULTREGTScanner> multregtScanner) {
+        m_multregtScanner = multregtScanner;
     }
 }
