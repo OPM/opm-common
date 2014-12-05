@@ -85,6 +85,43 @@ static DeckPtr createDeckWithWellsOrdered() {
     return parser.parseString(input);
 }
 
+
+static DeckPtr createDeckWithWellsAndCompletionData() {
+    Opm::Parser parser;
+    std::string input =
+      "START             -- 0 \n"
+      "1 NOV 1979 / \n"
+      "SCHEDULE\n"
+      "DATES             -- 1\n"
+      " 1 DES 1979/ \n"
+      "/\n"
+      "WELSPECS\n"
+      "    \'OP_1\'       \'OP'\   9   9 1*     \'OIL\' 1*      1*  1*   1*  1*   1*  1*  / \n"
+      "    \'OP_2\'       \'OP'\   8   8 1*     \'OIL\' 1*      1*  1*   1*  1*   1*  1*  / \n"
+      "    \'OP_3\'       \'OP'\   7   7 1*     \'OIL\' 1*      1*  1*   1*  1*   1*  1*  / \n"
+      "/\n"
+      "COMPDAT\n"
+      " \'OP_1\'  9  9   1   1 \'OPEN\' 1*   32.948   0.311  3047.839 1*  1*  \'X\'  22.100 / \n"
+      " \'OP_1\'  9  9   2   2 \'OPEN\' 1*   46.825   0.311  4332.346 1*  1*  \'X\'  22.123 / \n"
+      " \'OP_2\'  8  8   1   3 \'OPEN\' 1*    1.168   0.311   107.872 1*  1*  \'Y\'  21.925 / \n"
+      " \'OP_2\'  8  7   3   3 \'OPEN\' 1*   15.071   0.311  1391.859 1*  1*  \'Y\'  21.920 / \n"
+      " \'OP_2\'  8  7   3   6 \'OPEN\' 1*    6.242   0.311   576.458 1*  1*  \'Y\'  21.915 / \n"
+      " \'OP_3\'  7  7   1   1 \'OPEN\' 1*   27.412   0.311  2445.337 1*  1*  \'Y\'  18.521 / \n"
+      " \'OP_3\'  7  7   2   2 \'OPEN\' 1*   55.195   0.311  4923.842 1*  1*  \'Y\'  18.524 / \n"
+      "/\n"
+      "DATES             -- 2,3\n"
+      " 10  JUL 2007 / \n"
+      " 10  AUG 2007 / \n"
+      "/\n"
+      "COMPDAT\n"
+      " \'OP_1\'  9  9   3  9 \'OPEN\' 1*   32.948   0.311  3047.839 1*  1*  \'X\'  22.100 / \n"
+      "/\n";
+
+
+    return parser.parseString(input);
+}
+
+
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingReturnsDefaults) {
     DeckPtr deck(new Deck());
     DeckKeywordPtr keyword(new DeckKeyword("SCHEDULE"));
@@ -214,4 +251,23 @@ BOOST_AUTO_TEST_CASE(WellsIteratorWithRegex_HasWells_WellsReturned) {
     wells = schedule.getWells(wellNamePattern);
     BOOST_CHECK_EQUAL(1U, wells.size());
 }
+
+BOOST_AUTO_TEST_CASE(ReturnNumWellsTimestep) {
+    DeckPtr deck = createDeckWithWells();
+    Schedule schedule(deck);
+
+    BOOST_CHECK_EQUAL(schedule.numWells(0), 1);
+    BOOST_CHECK_EQUAL(schedule.numWells(1), 1);
+    BOOST_CHECK_EQUAL(schedule.numWells(2), 1);
+    BOOST_CHECK_EQUAL(schedule.numWells(3), 3);
+}
+
+BOOST_AUTO_TEST_CASE(ReturnMaxNumCompletionsForWellsInTimestep) {
+    DeckPtr deck = createDeckWithWellsAndCompletionData();
+    Schedule schedule(deck);
+
+    BOOST_CHECK_EQUAL(schedule.getMaxNumCompletionsForWells(1), 7);
+    BOOST_CHECK_EQUAL(schedule.getMaxNumCompletionsForWells(3), 9);
+}
+
 
