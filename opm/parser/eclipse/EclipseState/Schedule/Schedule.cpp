@@ -85,7 +85,7 @@ namespace Opm {
                 handleWCONINJE(deck, keyword, parserLog, currentStep);
 
             if (keyword->name() == "WPOLYMER")
-                handleWPOLYMER(deck, keyword, parserLog, currentStep);
+                handleWPOLYMER(keyword, parserLog, currentStep);
 
             if (keyword->name() == "WCONINJH")
                 handleWCONINJH(deck, keyword, parserLog, currentStep);
@@ -325,7 +325,7 @@ namespace Opm {
     }
 
 
-    void Schedule::handleWPOLYMER(DeckConstPtr deck, DeckKeywordConstPtr keyword, ParserLogPtr /*parserLog*/, size_t currentStep) {
+    void Schedule::handleWPOLYMER(DeckKeywordConstPtr keyword, ParserLogPtr /*parserLog*/, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
