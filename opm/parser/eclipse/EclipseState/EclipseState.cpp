@@ -39,23 +39,23 @@ namespace Opm {
         class DistributeTopLayer : public GridPropertyBasePostProcessor<double>
         {
         public:
-            DistributeTopLayer(const EclipseState& eclipseState) : 
+            DistributeTopLayer(const EclipseState& eclipseState) :
                 m_eclipseState( eclipseState )
             { }
-            
-            
+
+
             void apply(std::vector<double>& values) const {
                 EclipseGridConstPtr grid = m_eclipseState.getEclipseGrid();
                 size_t layerSize = grid->getNX() * grid->getNY();
                 size_t gridSize  = grid->getCartesianSize();
-                
+
                 for (size_t globalIndex = layerSize; globalIndex < gridSize; globalIndex++) {
                     if (std::isnan( values[ globalIndex ] ))
                         values[globalIndex] = values[globalIndex - layerSize];
                 }
             }
-            
-            
+
+
         private:
             const EclipseState& m_eclipseState;
         };
@@ -65,11 +65,11 @@ namespace Opm {
         class InitPORV : public GridPropertyBasePostProcessor<double>
         {
         public:
-            InitPORV(const EclipseState& eclipseState) : 
+            InitPORV(const EclipseState& eclipseState) :
                 m_eclipseState( eclipseState )
             { }
-            
-            
+
+
             void apply(std::vector<double>& ) const {
                 EclipseGridConstPtr grid = m_eclipseState.getEclipseGrid();
                 /*
@@ -77,10 +77,10 @@ namespace Opm {
                   values input vector, instead it fetches the PORV
                   property one more time, and then manipulates that.
                 */
-                auto porv = m_eclipseState.getDoubleGridProperty("PORV");   
+                auto porv = m_eclipseState.getDoubleGridProperty("PORV");
                 if (porv->containsNaN()) {
                     auto poro = m_eclipseState.getDoubleGridProperty("PORO");
-                    auto ntg = m_eclipseState.getDoubleGridProperty("NTG");   
+                    auto ntg = m_eclipseState.getDoubleGridProperty("NTG");
                     if (poro->containsNaN())
                         throw std::logic_error("Do not have information for the PORV keyword - some defaulted values in PORO");
                     {
@@ -92,25 +92,25 @@ namespace Opm {
                                 porv->iset( globalIndex , cell_poro * cell_volume * cell_ntg);
                             }
                         }
-                    } 
+                    }
                 }
-                
+
                 if (m_eclipseState.hasDoubleGridProperty("MULTPV")) {
-                    auto multpv = m_eclipseState.getDoubleGridProperty("MULTPV");   
+                    auto multpv = m_eclipseState.getDoubleGridProperty("MULTPV");
                     porv->multiplyWith( *multpv );
                 }
             }
-            
-            
+
+
         private:
             const EclipseState& m_eclipseState;
         };
 
-        
+
     }
 
 
-    EclipseState::EclipseState(DeckConstPtr deck, ParserLogPtr parserLog)    
+    EclipseState::EclipseState(DeckConstPtr deck, ParserLogPtr parserLog)
     {
         m_deckUnitSystem = deck->getActiveUnitSystem();
 
@@ -208,8 +208,16 @@ namespace Opm {
         return m_sgofTables;
     }
 
+    const std::vector<Sof2Table>& EclipseState::getSof2Tables() const {
+        return m_sof2Tables;
+    }
+
     const std::vector<SwofTable>& EclipseState::getSwofTables() const {
         return m_swofTables;
+    }
+
+    const std::vector<SwfnTable>& EclipseState::getSwfnTables() const {
+        return m_swfnTables;
     }
 
     ScheduleConstPtr EclipseState::getSchedule() const {
@@ -242,7 +250,9 @@ namespace Opm {
         initSimpleTables(deck, parserLog, "RSVD", m_rsvdTables);
         initSimpleTables(deck, parserLog, "RVVD", m_rvvdTables);
         initSimpleTables(deck, parserLog, "SGOF", m_sgofTables);
+        initSimpleTables(deck, parserLog, "SOF2", m_sof2Tables);
         initSimpleTables(deck, parserLog, "SWOF", m_swofTables);
+        initSimpleTables(deck, parserLog, "SWFN", m_swfnTables);
 
         // the ROCKTAB table comes with additional fun because the number of columns
         //depends on the presence of the RKTRMDIR keyword...
@@ -305,8 +315,8 @@ namespace Opm {
                 int K2 = faultRecord->getItem(6)->getInt(0) - 1;
                 FaceDir::DirEnum faceDir = FaceDir::FromString( faultRecord->getItem(7)->getString(0) );
                 std::shared_ptr<const FaultFace> face = std::make_shared<const FaultFace>(grid->getNX() , grid->getNY() , grid->getNZ(),
-                                                                                          static_cast<size_t>(I1) , static_cast<size_t>(I2) , 
-                                                                                          static_cast<size_t>(J1) , static_cast<size_t>(J2) , 
+                                                                                          static_cast<size_t>(I1) , static_cast<size_t>(I2) ,
+                                                                                          static_cast<size_t>(J1) , static_cast<size_t>(J2) ,
                                                                                           static_cast<size_t>(K1) , static_cast<size_t>(K2) ,
                                                                                           faceDir);
                 if (!m_faults->hasFault(faultName)) {
@@ -320,7 +330,7 @@ namespace Opm {
                 }
             }
         }
-        
+
         setMULTFLT(gridSection, parserLog);
 
         if (Section::hasEDIT(deck)) {
@@ -340,14 +350,14 @@ namespace Opm {
                 DeckRecordConstPtr faultRecord = *iter;
                 const std::string& faultName = faultRecord->getItem(0)->getString(0);
                 double multFlt = faultRecord->getItem(1)->getRawDouble(0);
-                
+
                 m_faults->setTransMult( faultName , multFlt );
             }
         }
     }
 
 
-    
+
     void EclipseState::initMULTREGT(DeckConstPtr deck, ParserLogPtr /*parserLog*/) {
         EclipseGridConstPtr grid = getEclipseGrid();
         std::shared_ptr<MULTREGTScanner> scanner = std::make_shared<MULTREGTScanner>();
@@ -358,7 +368,7 @@ namespace Opm {
                 DeckKeywordConstPtr multregtKeyword = gridSection->getKeyword("MULTREGT" , index);
                 scanner->addKeyword( multregtKeyword );
             }
-        }            
+        }
 
 
         if (Section::hasEDIT(deck)) {
@@ -371,7 +381,7 @@ namespace Opm {
 
         m_transMult->applyMULTREGT( scanner , m_intGridProperties);
     }
-    
+
 
 
     void EclipseState::initEclipseGrid(DeckConstPtr deck, ParserLogPtr parserLog) {
@@ -456,17 +466,17 @@ namespace Opm {
 
     bool EclipseState::hasIntGridProperty(const std::string& keyword) const {
          return m_intGridProperties->hasKeyword( keyword );
-    }   
+    }
 
     bool EclipseState::hasDoubleGridProperty(const std::string& keyword) const {
          return m_doubleGridProperties->hasKeyword( keyword );
-    }   
+    }
 
 
     /*
       1. The public methods getIntGridProperty & getDoubleGridProperty
          will invoke and run the property post processor (if any is
-         registered); the post processor will only run one time. 
+         registered); the post processor will only run one time.
 
          It is important that post processor is not run prematurely,
          internal functions in EclipseState should therefor ask for
@@ -520,8 +530,8 @@ namespace Opm {
                                 "Tried to load unsupported grid property from keyword: " + deckKeyword->name());
         }
     }
-        
-    
+
+
     void EclipseState::initProperties(DeckConstPtr deck, ParserLogPtr parserLog) {
         typedef GridProperties<int>::SupportedKeywordInfo SupportedIntKeywordInfo;
         std::shared_ptr<std::vector<SupportedIntKeywordInfo> > supportedIntKeywords(new std::vector<SupportedIntKeywordInfo>{
@@ -734,7 +744,7 @@ namespace Opm {
     }
 
     void EclipseState::processGridProperties(Opm::DeckConstPtr deck, ParserLogPtr parserLog, int enabledTypes) {
-        
+
         if (Section::hasGRID(deck)) {
             std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
             scanSection(gridSection, parserLog, enabledTypes);
@@ -774,22 +784,22 @@ namespace Opm {
             else {
                 if (deckKeyword->name() == "ADD")
                     handleADDKeyword(deckKeyword, parserLog, boxManager, enabledTypes);
-            
+
                 if (deckKeyword->name() == "BOX")
                     handleBOXKeyword(deckKeyword, parserLog, boxManager);
-            
+
                 if (deckKeyword->name() == "COPY")
                     handleCOPYKeyword(deckKeyword, parserLog, boxManager, enabledTypes);
-            
+
                 if (deckKeyword->name() == "EQUALS")
                     handleEQUALSKeyword(deckKeyword, parserLog, boxManager, enabledTypes);
-            
+
                 if (deckKeyword->name() == "ENDBOX")
                     handleENDBOXKeyword(boxManager);
-            
+
                 if (deckKeyword->name() == "MULTIPLY")
                     handleMULTIPLYKeyword(deckKeyword, parserLog, boxManager, enabledTypes);
-            
+
                 boxManager.endKeyword();
             }
         }
@@ -807,7 +817,7 @@ namespace Opm {
         int J2 = record->getItem("J2")->getInt(0) - 1;
         int K1 = record->getItem("K1")->getInt(0) - 1;
         int K2 = record->getItem("K2")->getInt(0) - 1;
-        
+
         boxManager.setInputBox( I1 , I2 , J1 , J2 , K1 , K2 );
     }
 
@@ -822,9 +832,9 @@ namespace Opm {
             DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
             const std::string& field = record->getItem("field")->getString(0);
             double      scaleFactor  = record->getItem("factor")->getRawDouble(0);
-            
+
             setKeywordBox(deckKeyword, recordIdx, parserLog, boxManager);
-            
+
             if (m_intGridProperties->hasKeyword( field )) {
                 if (enabledTypes & IntProperties) {
                     int intFactor = static_cast<int>(scaleFactor);
@@ -847,16 +857,16 @@ namespace Opm {
     /*
       The fine print of the manual says the ADD keyword should support
       some state dependent semantics regarding endpoint scaling arrays
-      in the PROPS section. That is not supported. 
+      in the PROPS section. That is not supported.
     */
     void EclipseState::handleADDKeyword(DeckKeywordConstPtr deckKeyword, ParserLogPtr parserLog, BoxManager& boxManager, int enabledTypes) {
         for (size_t recordIdx = 0; recordIdx < deckKeyword->size(); ++recordIdx) {
             DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
             const std::string& field = record->getItem("field")->getString(0);
             double      shiftValue  = record->getItem("shift")->getRawDouble(0);
-            
+
             setKeywordBox(deckKeyword, recordIdx, parserLog, boxManager);
-            
+
             if (m_intGridProperties->hasKeyword( field )) {
                 if (enabledTypes & IntProperties) {
                     int intShift = static_cast<int>(shiftValue);
@@ -884,9 +894,9 @@ namespace Opm {
             DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
             const std::string& field = record->getItem("field")->getString(0);
             double      value  = record->getItem("value")->getRawDouble(0);
-            
+
             setKeywordBox(deckKeyword, recordIdx, parserLog, boxManager);
-            
+
             if (m_intGridProperties->supportsKeyword( field )) {
                 if (enabledTypes & IntProperties) {
                     int intValue = static_cast<int>(value);
@@ -915,9 +925,9 @@ namespace Opm {
             DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
             const std::string& srcField = record->getItem("src")->getString(0);
             const std::string& targetField = record->getItem("target")->getString(0);
-            
+
             setKeywordBox(deckKeyword, recordIdx, parserLog, boxManager);
-            
+
             if (m_intGridProperties->hasKeyword( srcField )) {
                 if (enabledTypes & IntProperties)
                     copyIntKeyword( srcField , targetField , boxManager.getActiveBox());
@@ -932,7 +942,7 @@ namespace Opm {
         }
     }
 
-    
+
     void EclipseState::copyIntKeyword(const std::string& srcField , const std::string& targetField , std::shared_ptr<const Box> inputBox) {
         std::shared_ptr<const GridProperty<int> > src = m_intGridProperties->getKeyword( srcField );
         std::shared_ptr<GridProperty<int> > target    = m_intGridProperties->getKeyword( targetField );
@@ -961,7 +971,7 @@ namespace Opm {
         DeckItemConstPtr K2Item = deckRecord->getItem("K2");
 
         size_t setCount = 0;
-        
+
         if (!I1Item->defaultApplied(0))
             setCount++;
 
@@ -979,7 +989,7 @@ namespace Opm {
 
         if (!K2Item->defaultApplied(0))
             setCount++;
-        
+
         if (setCount == 6) {
             boxManager.setKeywordBox( I1Item->getInt(0) - 1,
                                       I2Item->getInt(0) - 1,

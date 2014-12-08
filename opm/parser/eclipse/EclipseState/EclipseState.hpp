@@ -49,7 +49,9 @@
 #include <opm/parser/eclipse/EclipseState/Tables/RvvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RtempvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/Sof2Table.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SwfnTable.hpp>
 
 #include <set>
 #include <memory>
@@ -107,7 +109,9 @@ namespace Opm {
         const std::vector<RvvdTable>& getRvvdTables() const;
         const std::vector<RtempvdTable>& getRtempvdTables() const;
         const std::vector<SgofTable>& getSgofTables() const;
+        const std::vector<Sof2Table>& getSof2Tables() const;
         const std::vector<SwofTable>& getSwofTables() const;
+        const std::vector<SwfnTable>& getSwfnTables() const;
 
         // the unit system used by the deck. note that it is rarely needed to convert
         // units because internally to opm-parser everything is represented by SI
@@ -195,7 +199,7 @@ namespace Opm {
         void handleENDBOXKeyword(BoxManager& boxManager);
         void handleEQUALSKeyword(DeckKeywordConstPtr deckKeyword , ParserLogPtr parserLog, BoxManager& boxManager, int enabledTypes);
         void handleMULTIPLYKeyword(DeckKeywordConstPtr deckKeyword , ParserLogPtr parserLog, BoxManager& boxManager, int enabledTypes);
-        
+
         void setKeywordBox(DeckKeywordConstPtr deckKeyword, size_t recordIdx, ParserLogPtr parserLog, BoxManager& boxManager);
 
         void copyIntKeyword(const std::string& srcField , const std::string& targetField , std::shared_ptr<const Box> inputBox);
@@ -223,7 +227,9 @@ namespace Opm {
         std::vector<RvvdTable> m_rvvdTables;
         std::vector<RtempvdTable> m_rtempvdTables;
         std::vector<SgofTable> m_sgofTables;
+        std::vector<Sof2Table> m_sof2Tables;
         std::vector<SwofTable> m_swofTables;
+        std::vector<SwfnTable> m_swfnTables;
 
         std::set<enum Phase::PhaseEnum> phases;
         std::string m_title;
