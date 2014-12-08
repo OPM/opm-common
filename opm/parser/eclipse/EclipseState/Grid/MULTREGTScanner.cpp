@@ -125,9 +125,8 @@ namespace Opm {
     MULTREGTScanner::MULTREGTScanner(std::shared_ptr<GridProperties<int> > cellRegionNumbers, const std::vector<DeckKeywordConstPtr>& keywords ) :
         m_cellRegionNumbers(cellRegionNumbers) {
 
-        for (int indx = 0; indx < keywords.size(); indx++){
-            addKeyword(keywords[indx]);
-        }
+        for (size_t idx = 0; idx < keywords.size(); idx++)
+            addKeyword(keywords[idx]);
 
         MULTREGTSearchMap searchPairs;
         for (std::vector<MULTREGTRecord>::const_iterator record = m_records.begin(); record != m_records.end(); ++record) {

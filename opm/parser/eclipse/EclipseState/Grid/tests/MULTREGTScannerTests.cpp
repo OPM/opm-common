@@ -202,44 +202,6 @@ BOOST_AUTO_TEST_CASE(NotSupported) {
 
 }
 
-
-static Opm::DeckPtr createSimpleMULTREGTDeck() {
-    const char *deckData =
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        "2 2 2 /\n"
-        "GRID\n"
-        "FLUXNUM\n"
-        "1 2\n"
-        "1 2\n"
-        "3 4\n"
-        "3 4\n"
-        "/\n"
-        "MULTNUM\n"
-        "1 2\n"
-        "1 2\n"
-        "3 4\n"
-        "3 4\n"
-        "/\n"
-        "MULTREGT\n"
-        "1  2   0.50   X   ALL    M / \n"
-        "/\n"
-        "MULTREGT\n"
-        "2  1   1.50   X   ALL    M / \n"
-        "/\n"
-        "MULTREGT\n"
-        "2  1   2.50   XYZ   NNC      M / \n"
-        "2  1   3.50   XYZ   NONNC    M / \n"
-        "/\n"
-        "EDIT\n"
-        "\n";
-
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData) ;
-}
-
-
 static Opm::DeckPtr createCopyMULTNUMDeck() {
     const char *deckData =
         "RUNSPEC\n"
