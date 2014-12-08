@@ -46,6 +46,8 @@ namespace Opm
         TimeMapConstPtr getTimeMap() const;
 
         size_t numWells() const;
+        size_t numWells(size_t timestep) const;
+        size_t getMaxNumCompletionsForWells(size_t timestep) const;
         bool hasWell(const std::string& wellName) const;
         WellPtr getWell(const std::string& wellName) const;
         std::vector<WellConstPtr> getWells() const;
@@ -56,6 +58,7 @@ namespace Opm
         size_t numGroups() const;
         bool hasGroup(const std::string& groupName) const;
         GroupPtr getGroup(const std::string& groupName) const;
+
   
     private:
         TimeMapPtr m_timeMap;
