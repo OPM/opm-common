@@ -382,7 +382,7 @@ public:
         const std::vector<RtempvdTable>& rtempvdTables = m_eclipseState.getRtempvdTables();
         const std::vector<int>& eqlNum = m_eclipseState.getIntGridProperty("EQLNUM")->getData();
 
-        for (int cellIdx = 0; cellIdx < eqlNum.size(); ++ cellIdx) {
+        for (size_t cellIdx = 0; cellIdx < eqlNum.size(); ++ cellIdx) {
             int cellEquilNum = eqlNum[cellIdx];
             const RtempvdTable& rtempvdTable = rtempvdTables[cellEquilNum];
             double cellDepth = std::get<2>(eclipseGrid->getCellCenter(cellIdx));
