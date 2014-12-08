@@ -343,11 +343,11 @@ namespace Opm {
                 auto group_salt_item = record->getItem("GROUP_SALT_CONCENTRATION");
 
                 if (!group_polymer_item->defaultApplied(0)) {
-                    throw std::logic_error("Sorry explicit setting of \`GROUP_POLYMER_CONCENTRATION\` is not supported!");
+                    throw std::logic_error("Sorry explicit setting of \'GROUP_POLYMER_CONCENTRATION\' is not supported!");
                 }
 
                 if (!group_salt_item->defaultApplied(0)) {
-                    throw std::logic_error("Sorry explicit setting of \`GROUP_SALT_CONCENTRATION\` is not supported!");
+                    throw std::logic_error("Sorry explicit setting of \'GROUP_SALT_CONCENTRATION\' is not supported!");
                 }
                 well->setPolymerProperties(currentStep, properties);
             }
