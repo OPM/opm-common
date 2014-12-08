@@ -85,7 +85,7 @@ namespace Opm {
                 handleWCONINJE(deck, keyword, parserLog, currentStep);
 
             if (keyword->name() == "WPOLYMER")
-                handleWPOLYMER(deck, keyword, parserLog, currentStep);
+                handleWPOLYMER(keyword, parserLog, currentStep);
 
             if (keyword->name() == "WCONINJH")
                 handleWCONINJH(deck, keyword, parserLog, currentStep);
@@ -325,7 +325,7 @@ namespace Opm {
     }
 
 
-    void Schedule::handleWPOLYMER(DeckConstPtr deck, DeckKeywordConstPtr keyword, ParserLogPtr /*parserLog*/, size_t currentStep) {
+    void Schedule::handleWPOLYMER(DeckKeywordConstPtr keyword, ParserLogPtr /*parserLog*/, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
@@ -343,11 +343,11 @@ namespace Opm {
                 auto group_salt_item = record->getItem("GROUP_SALT_CONCENTRATION");
 
                 if (!group_polymer_item->defaultApplied(0)) {
-                    throw std::logic_error("Sorry explicit setting of \`GROUP_POLYMER_CONCENTRATION\` is not supported!");
+                    throw std::logic_error("Sorry explicit setting of \'GROUP_POLYMER_CONCENTRATION\' is not supported!");
                 }
 
                 if (!group_salt_item->defaultApplied(0)) {
-                    throw std::logic_error("Sorry explicit setting of \`GROUP_SALT_CONCENTRATION\` is not supported!");
+                    throw std::logic_error("Sorry explicit setting of \'GROUP_SALT_CONCENTRATION\' is not supported!");
                 }
                 well->setPolymerProperties(currentStep, properties);
             }
