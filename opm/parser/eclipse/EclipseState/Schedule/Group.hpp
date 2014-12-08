@@ -36,11 +36,11 @@ namespace Opm {
         struct InjectionData;
     }
 
-    
+
     namespace GroupProduction {
         struct ProductionData;
     }
-    
+
     class Group {
     public:
         Group(const std::string& name, TimeMapConstPtr timeMap , size_t creationTimeStep);
@@ -53,13 +53,13 @@ namespace Opm {
         /******************************************************************/
         void             setInjectionPhase(size_t time_step , Phase::PhaseEnum phase);
         Phase::PhaseEnum getInjectionPhase(size_t time_step) const;
-        
+
         void                      setInjectionControlMode(size_t time_step , GroupInjection::ControlEnum ControlMode);
         GroupInjection::ControlEnum getInjectionControlMode( size_t time_step) const;
 
         void   setInjectionRate(size_t time_step , double rate);
         double getInjectionRate( size_t time_step) const;
-        
+
         void   setSurfaceMaxRate( size_t time_step , double rate);
         double getSurfaceMaxRate( size_t time_step ) const;
 
@@ -79,7 +79,7 @@ namespace Opm {
 
         GroupProductionExceedLimit::ActionEnum getProductionExceedLimitAction(size_t time_step) const;
         void setProductionExceedLimitAction(size_t time_step , GroupProductionExceedLimit::ActionEnum action);
-        
+
         void   setOilTargetRate(size_t time_step , double oilTargetRate);
         double getOilTargetRate(size_t time_step) const;
         void   setGasTargetRate(size_t time_step , double gasTargetRate);

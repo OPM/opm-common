@@ -59,7 +59,7 @@ static Opm::DeckPtr createDeckHeaders() {
         "GRID\n"
         "EDIT\n"
         "\n";
- 
+
     Opm::ParserPtr parser(new Opm::Parser());
     return parser->parseString(deckData) ;
 }
@@ -72,7 +72,7 @@ static Opm::DeckPtr createDeckMissingDIMS() {
         "GRID\n"
         "EDIT\n"
         "\n";
- 
+
     Opm::ParserPtr parser(new Opm::Parser());
     return parser->parseString(deckData) ;
 }
@@ -116,7 +116,7 @@ static Opm::DeckPtr createCPDeck() {
         "  1000*1 / \n"
         "EDIT\n"
         "\n";
- 
+
     Opm::ParserPtr parser(new Opm::Parser());
     return parser->parseString(deckData) ;
 }
@@ -208,7 +208,7 @@ static Opm::DeckPtr createCARTDeck() {
         "100*0.25 /\n"
         "EDIT\n"
         "\n";
- 
+
     Opm::ParserPtr parser(new Opm::Parser());
     return parser->parseString(deckData) ;
 }
@@ -231,7 +231,7 @@ static Opm::DeckPtr createCARTDeckDEPTHZ() {
         "121*0.25 /\n"
         "EDIT\n"
         "\n";
- 
+
     Opm::ParserPtr parser(new Opm::Parser());
     return parser->parseString(deckData) ;
 }
@@ -252,7 +252,7 @@ static Opm::DeckPtr createCARTInvalidDeck() {
         "1000*0.25 /\n"
         "EDIT\n"
         "\n";
- 
+
     Opm::ParserPtr parser(new Opm::Parser());
     return parser->parseString(deckData) ;
 }
@@ -261,17 +261,17 @@ BOOST_AUTO_TEST_CASE(CREATE_SIMPLE) {
     Opm::EclipseGrid grid(10,20,30);
 
     BOOST_CHECK_EQUAL( grid.getNX() , 10 );
-    BOOST_CHECK_EQUAL( grid.getNY() , 20 ); 
+    BOOST_CHECK_EQUAL( grid.getNY() , 20 );
     BOOST_CHECK_EQUAL( grid.getNZ() , 30 );
     BOOST_CHECK_EQUAL( grid.getCartesianSize() , 6000 );
     BOOST_CHECK_EQUAL( false , grid.hasCellInfo() );
-    
+
 }
 
 BOOST_AUTO_TEST_CASE(DEPTHZ_EQUAL_TOPS) {
     Opm::DeckPtr deck1 = createCARTDeck();
     Opm::DeckPtr deck2 = createCARTDeckDEPTHZ();
-    
+
     std::shared_ptr<Opm::EclipseGrid> grid1(new Opm::EclipseGrid( deck1 ));
     std::shared_ptr<Opm::EclipseGrid> grid2(new Opm::EclipseGrid( deck2 ));
 
@@ -282,13 +282,13 @@ BOOST_AUTO_TEST_CASE(DEPTHZ_EQUAL_TOPS) {
         BOOST_CHECK_THROW( grid1->getCellVolume(10,0,0) , std::invalid_argument);
         BOOST_CHECK_THROW( grid1->getCellVolume(0,10,0) , std::invalid_argument);
         BOOST_CHECK_THROW( grid1->getCellVolume(0,0,10) , std::invalid_argument);
-        
+
         for (size_t g=0; g < 1000; g++)
             BOOST_CHECK_CLOSE( grid1->getCellVolume(g) , 0.25*0.25*0.25 , 0.001);
-        
-        
+
+
         for (size_t k= 0; k < 10; k++)
-            for (size_t j= 0; j < 10; j++)  
+            for (size_t j= 0; j < 10; j++)
                 for (size_t i= 0; i < 10; i++)
                     BOOST_CHECK_CLOSE( grid1->getCellVolume(i,j,k) , 0.25*0.25*0.25 , 0.001 );
     }
@@ -299,14 +299,14 @@ BOOST_AUTO_TEST_CASE(DEPTHZ_EQUAL_TOPS) {
         BOOST_CHECK_THROW( grid1->getCellCenter(0,0,10) , std::invalid_argument);
 
         for (size_t k= 0; k < 10; k++)
-            for (size_t j= 0; j < 10; j++)  
+            for (size_t j= 0; j < 10; j++)
                 for (size_t i= 0; i < 10; i++) {
                     auto pos = grid1->getCellCenter(i,j,k);
-                    
+
                     BOOST_CHECK_CLOSE( std::get<0>(pos) , i*0.25 + 0.125, 0.001);
                     BOOST_CHECK_CLOSE( std::get<1>(pos) , j*0.25 + 0.125, 0.001);
                     BOOST_CHECK_CLOSE( std::get<2>(pos) , k*0.25 + 0.125 + 0.25, 0.001);
-                    
+
                 }
     }
 }
@@ -368,7 +368,7 @@ static Opm::DeckPtr createInvalidDXYZCARTDeck() {
         "1000*0.25 /\n"
         "EDIT\n"
         "\n";
- 
+
     Opm::ParserPtr parser(new Opm::Parser());
     return parser->parseString(deckData) ;
 }
@@ -398,7 +398,7 @@ static Opm::DeckPtr createInvalidDXYZCARTDeckDEPTHZ() {
         "101*0.25 /\n"
         "EDIT\n"
         "\n";
- 
+
     Opm::ParserPtr parser(new Opm::Parser());
     return parser->parseString(deckData) ;
 }
@@ -429,7 +429,7 @@ static Opm::DeckPtr createOnlyTopDZCartGrid() {
         "110*0.25 /\n"
         "EDIT\n"
         "\n";
- 
+
     Opm::ParserPtr parser(new Opm::Parser());
     return parser->parseString(deckData) ;
 }
@@ -452,7 +452,7 @@ static Opm::DeckPtr createInvalidDEPTHZDeck1 () {
         "66*0.25 /\n"
         "EDIT\n"
         "\n";
- 
+
     Opm::ParserPtr parser(new Opm::Parser());
     return parser->parseString(deckData) ;
 }
@@ -481,7 +481,7 @@ static Opm::DeckPtr createInvalidDEPTHZDeck2 () {
         "67*0.25 /\n"
         "EDIT\n"
         "\n";
- 
+
     Opm::ParserPtr parser(new Opm::Parser());
     return parser->parseString(deckData) ;
 }
@@ -533,7 +533,7 @@ BOOST_AUTO_TEST_CASE(CornerPointSizeMismatchCOORD) {
         "  1000*1 / \n"
         "EDIT\n"
         "\n";
- 
+
     Opm::ParserPtr parser(new Opm::Parser());
     Opm::DeckConstPtr deck = parser->parseString(deckData) ;
     Opm::DeckKeywordConstPtr zcorn = deck->getKeyword("ZCORN");
@@ -558,7 +558,7 @@ BOOST_AUTO_TEST_CASE(CornerPointSizeMismatchZCORN) {
         "  1000*1 / \n"
         "EDIT\n"
         "\n";
- 
+
     Opm::ParserPtr parser(new Opm::Parser());
     Opm::DeckConstPtr deck = parser->parseString(deckData) ;
     Opm::DeckKeywordConstPtr zcorn = deck->getKeyword("ZCORN");
@@ -581,7 +581,7 @@ BOOST_AUTO_TEST_CASE(CornerPointSizeMismatchACTNUM) {
         "  999*1 / \n"
         "EDIT\n"
         "\n";
- 
+
     Opm::ParserPtr parser(new Opm::Parser());
     Opm::DeckConstPtr deck = parser->parseString(deckData) ;
     BOOST_CHECK_THROW((void)Opm::EclipseGrid( deck ) , std::invalid_argument);
@@ -602,17 +602,17 @@ BOOST_AUTO_TEST_CASE(ResetACTNUM) {
         "  8000*1 / \n"
         "EDIT\n"
         "\n";
- 
+
     Opm::ParserPtr parser(new Opm::Parser());
     Opm::DeckConstPtr deck = parser->parseString(deckData) ;
-    
+
     Opm::EclipseGrid grid(deck);
     BOOST_CHECK_EQUAL( 1000U , grid.getNumActive());
     std::vector<int> actnum(1000);
     actnum[0] = 1;
     grid.resetACTNUM( actnum.data() );
     BOOST_CHECK_EQUAL( 1U , grid.getNumActive() );
-    
+
     grid.resetACTNUM( NULL );
     BOOST_CHECK_EQUAL( 1000U , grid.getNumActive() );
 }
@@ -637,7 +637,7 @@ BOOST_AUTO_TEST_CASE(Fwrite) {
         "  8000*1 / \n"
         "EDIT\n"
         "\n";
- 
+
     Opm::ParserPtr parser(new Opm::Parser());
     Opm::DeckConstPtr deck = parser->parseString(deckData) ;
     Opm::EclipseGrid grid1(deck );

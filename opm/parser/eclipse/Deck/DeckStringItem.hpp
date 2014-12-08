@@ -52,5 +52,5 @@ namespace Opm {
     typedef std::shared_ptr<DeckStringItem> DeckStringItemPtr;
     typedef std::shared_ptr<const DeckStringItem> DeckStringItemConstPtr;
 }
-#endif  
+#endif
 

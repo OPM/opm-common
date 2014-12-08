@@ -121,7 +121,7 @@ namespace Opm
     DeckItemPtr ParserFloatItem::scan(RawRecordPtr rawRecord) const {
         return ParserItemScan<ParserFloatItem,DeckFloatItem,float>(this , rawRecord);
     }
-    
+
     void ParserFloatItem::inlineNew(std::ostream& os) const {
         os << "new ParserFloatItem(" << "\"" << name() << "\"" << "," << ParserItemSizeEnum2String( sizeType() );
         if (m_defaultSet)

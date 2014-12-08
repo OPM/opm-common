@@ -66,14 +66,14 @@ namespace Opm {
                 addFromDATESKeyword(keyword);
         }
     }
-    
-    size_t TimeMap::numTimesteps() const { 
-        return m_timeList.size() - 1; 
+
+    size_t TimeMap::numTimesteps() const {
+        return m_timeList.size() - 1;
     }
 
 
     boost::posix_time::ptime TimeMap::getStartTime(size_t tStepIdx) const {
-        return m_timeList[tStepIdx]; 
+        return m_timeList[tStepIdx];
     }
 
 
@@ -128,7 +128,7 @@ namespace Opm {
             monthNames.insert( std::make_pair( "DEC" , boost::gregorian::Dec ));
             monthNames.insert( std::make_pair( "DES" , boost::gregorian::Dec ));
         }
-        
+
         return monthNames;
     }
 
@@ -187,7 +187,7 @@ namespace Opm {
         {
             DeckRecordConstPtr record = TSTEPKeyword->getRecord( 0 );
             DeckItemConstPtr item = record->getItem( 0 );
-            
+
             for (size_t itemIndex = 0; itemIndex < item->size(); itemIndex++) {
                 double days = item->getRawDouble( itemIndex );
                 long int wholeSeconds = static_cast<long int>(days * 24*60*60);
@@ -198,7 +198,7 @@ namespace Opm {
                 addTStep( step );
             }
         }
-    } 
+    }
 
     double TimeMap::getTimeStepLength(size_t tStepIdx) const
     {

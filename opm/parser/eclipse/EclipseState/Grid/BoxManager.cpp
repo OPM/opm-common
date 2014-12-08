@@ -61,7 +61,7 @@ namespace Opm {
     void BoxManager::endInputBox() {
         if (m_keywordBox)
             throw std::invalid_argument("Hmmm - this seems like an internal error - the SECTION is terminated with an active keyword box");
-        
+
         m_inputBox.reset( );
     }
 

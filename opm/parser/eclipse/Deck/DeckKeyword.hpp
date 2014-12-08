@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   DeckKeyword.hpp
  * Author: kflik
  *

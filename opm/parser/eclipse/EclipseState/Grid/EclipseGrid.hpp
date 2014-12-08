@@ -107,7 +107,7 @@ namespace Opm {
         size_t m_nx;
         size_t m_ny;
         size_t m_nz;
-        
+
         void assertCellInfo() const;
 
         void initCartesianGrid(const std::vector<int>& dims , DeckConstPtr deck);

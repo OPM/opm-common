@@ -29,7 +29,7 @@
 #include <map>
 
 namespace Opm {
-    
+
     class WellSet {
     public:
         WellSet();
@@ -42,7 +42,7 @@ namespace Opm {
     private:
         std::map<std::string , WellPtr> m_wells;
     };
-    
+
     typedef std::shared_ptr<WellSet> WellSetPtr;
     typedef std::shared_ptr<const WellSet> WellSetConstPtr;
 }

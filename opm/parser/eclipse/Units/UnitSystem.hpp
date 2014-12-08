@@ -39,14 +39,14 @@ namespace Opm {
         std::shared_ptr<const Dimension> getDimension(const std::string& dimension) const;
         bool hasDimension(const std::string& dimension) const;
         bool equal(const UnitSystem& other) const;
-        
+
         std::shared_ptr<const Dimension> parse(const std::string& dimension) const;
 
         static UnitSystem * newMETRIC();
         static UnitSystem * newFIELD();
     private:
         std::shared_ptr<const Dimension> parseFactor(const std::string& dimension) const;
-        
+
         const std::string m_name;
         std::map<std::string , std::shared_ptr<const Dimension> > m_dimensions;
     };

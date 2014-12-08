@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(GetIntAtIndex_NoData_ExceptionThrown) {
 
 
 
- 
+
 BOOST_AUTO_TEST_CASE(InitializeDefaultApplied) {
     DeckIntItem deckIntItem("TEST");
     BOOST_CHECK( deckIntItem.size() == 0 );
@@ -73,11 +73,11 @@ BOOST_AUTO_TEST_CASE(PushBack_subVectorPushed_ElementsCorrect) {
 
 BOOST_AUTO_TEST_CASE(size_correct) {
     DeckIntItem deckIntItem("TEST");
-    
+
     BOOST_CHECK_EQUAL( 0U , deckIntItem.size());
     deckIntItem.push_back( 100 );
     BOOST_CHECK_EQUAL( 1U , deckIntItem.size());
-    
+
     deckIntItem.push_back( 100 );
     deckIntItem.push_back( 100 );
     BOOST_CHECK_EQUAL( 3U , deckIntItem.size());

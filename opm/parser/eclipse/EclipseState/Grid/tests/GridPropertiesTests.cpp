@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(Empty) {
 
     std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>(10,7,9);
     Opm::GridProperties<int> gridProperties( grid , supportedKeywords);
-    
+
     BOOST_CHECK( gridProperties.supportsKeyword("SATNUM") );
     BOOST_CHECK( gridProperties.supportsKeyword("FIPNUM") );
     BOOST_CHECK( !gridProperties.supportsKeyword("FLUXNUM") );
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(addKeyword) {
     });
     std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>(10,7,9);
     Opm::GridProperties<int> gridProperties( grid , supportedKeywords);
-    
+
     BOOST_CHECK_THROW( gridProperties.addKeyword("NOT-SUPPORTED") , std::invalid_argument);
 
     BOOST_CHECK(  gridProperties.addKeyword("SATNUM"));
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(getKeyword) {
     Opm::GridProperties<int> gridProperties( grid , supportedKeywords);
     std::shared_ptr<Opm::GridProperty<int> > satnum1 = gridProperties.getKeyword("SATNUM");
     std::shared_ptr<Opm::GridProperty<int> > satnum2 = gridProperties.getKeyword("SATNUM");
-    
+
     BOOST_CHECK_EQUAL( satnum1.get() , satnum2.get());
     BOOST_CHECK_THROW( gridProperties.getKeyword("NOT-SUPPORTED") , std::invalid_argument );
 }

@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(isFinished_undef_size) {
 
 BOOST_AUTO_TEST_CASE(isFinished_Fixedsize0) {
     RawKeyword keyword("TEST" , "FILE" , 10U , 0U);
-    
+
     BOOST_CHECK(  keyword.isFinished() );
 }
 
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(isFinished_FixedsizeMulti) {
     BOOST_CHECK(  !keyword.isFinished() );
     keyword.addRawRecordString("1 2 3 3 /");
     BOOST_CHECK(  keyword.isFinished() );
-    
+
     RawRecordConstPtr record = keyword.getRecord(3);
     BOOST_CHECK_EQUAL( 4U , record->size() );
 

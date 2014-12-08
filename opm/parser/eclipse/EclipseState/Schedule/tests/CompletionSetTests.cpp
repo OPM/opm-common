@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(AddCompletionSameCellUpdates) {
     Opm::CompletionSet completionSet;
     Opm::CompletionConstPtr completion1(new Opm::Completion(10,10,10,Opm::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
     Opm::CompletionConstPtr completion2(new Opm::Completion(10,10,10,Opm::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
-    
+
 
     completionSet.add( completion1 );
     BOOST_CHECK_EQUAL( 1U , completionSet.size() );
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(AddCompletionShallowCopy) {
 
     Opm::CompletionSetConstPtr copy = Opm::CompletionSetConstPtr( completionSet.shallowCopy() );
     BOOST_CHECK_EQUAL( 3U , copy->size() );
-    
+
     BOOST_CHECK_EQUAL( completion1 , copy->get(0));
     BOOST_CHECK_EQUAL( completion2 , copy->get(1));
     BOOST_CHECK_EQUAL( completion3 , copy->get(2));

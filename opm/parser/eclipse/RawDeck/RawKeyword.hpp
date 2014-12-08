@@ -45,12 +45,12 @@ namespace Opm {
         size_t size() const;
         Raw::KeywordSizeEnum getSizeType() const;
         RawRecordPtr getRecord(size_t index) const;
-        
+
         static bool isKeywordPrefix(const std::string& line, std::string& keywordName);
         static bool isTerminator(std::string line);
         static bool useLine(std::string line);
-        
-        
+
+
         bool isPartialRecordStringEmpty() const;
         bool isFinished() const;
         bool unKnownSize() const;
@@ -58,7 +58,7 @@ namespace Opm {
 
         const std::string& getFilename() const;
         size_t getLineNR() const;
-        
+
 
     private:
         Raw::KeywordSizeEnum m_sizeType;

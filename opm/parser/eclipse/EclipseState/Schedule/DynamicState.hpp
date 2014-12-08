@@ -42,13 +42,13 @@ namespace Opm {
         const T& at(size_t index) const {
             if (index >= m_timeMap->size())
                 throw std::range_error("Index value is out range.");
-            
+
             if (index >= m_data.size())
                 return m_currentValue;
-            
+
             return m_data.at(index);
         }
-        
+
 
         T get(size_t index) const {
             if (index >= m_timeMap->size())
@@ -60,7 +60,7 @@ namespace Opm {
             return m_data[index];
         }
 
-        
+
 
         size_t size() const {
             return m_data.size();
@@ -70,12 +70,12 @@ namespace Opm {
         void add(size_t index , T value) {
             if (index >= (m_timeMap->size()))
                 throw std::range_error("Index value is out range.");
- 
+
            if (m_data.size() > 0) {
                 if (index < (m_data.size() - 1))
                     throw std::invalid_argument("Elements must be added in weakly increasing order");
             }
-           
+
            {
                size_t currentSize = m_data.size();
                if (currentSize <= index) {
@@ -83,7 +83,7 @@ namespace Opm {
                        m_data.push_back( m_currentValue );
                }
            }
-           
+
            m_data[index] = value;
            m_currentValue = value;
         }
@@ -99,4 +99,4 @@ namespace Opm {
 
 
 
-#endif 
+#endif

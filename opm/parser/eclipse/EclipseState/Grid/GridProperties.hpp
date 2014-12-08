@@ -36,12 +36,12 @@
        supported keywords as a list of strings to the constructor.
 
     2. Query the container with the supportsKeyword() and hasKeyword()
-       methods. 
-       
+       methods.
+
     3. When you ask the container to get a keyword with the
        getKeyword() method it will automatically create a new
        GridProperty object if the container does not have this
-       property. 
+       property.
 */
 
 
@@ -55,11 +55,11 @@ public:
     GridProperties(std::shared_ptr<const EclipseGrid> eclipseGrid , std::shared_ptr<const std::vector<SupportedKeywordInfo> > supportedKeywords) {
         m_eclipseGrid = eclipseGrid;
 
-        for (auto iter = supportedKeywords->begin(); iter != supportedKeywords->end(); ++iter) 
+        for (auto iter = supportedKeywords->begin(); iter != supportedKeywords->end(); ++iter)
             m_supportedKeywords[iter->getKeywordName()] = *iter;
     }
 
-    
+
     bool supportsKeyword(const std::string& keyword) {
         return m_supportedKeywords.count( keyword ) > 0;
     }
@@ -77,10 +77,10 @@ public:
     }
 
     bool addKeyword(const std::string& keywordName) {
-        if (!supportsKeyword( keywordName )) 
+        if (!supportsKeyword( keywordName ))
             throw std::invalid_argument("The keyword: " + keywordName + " is not supported in this container");
 
-        if (hasKeyword(keywordName)) 
+        if (hasKeyword(keywordName))
             return false;
         else {
             auto supportedKeyword = m_supportedKeywords.at( keywordName );
@@ -94,7 +94,7 @@ public:
         }
     }
 
-    
+
 private:
     std::shared_ptr<const EclipseGrid> m_eclipseGrid;
     std::unordered_map<std::string, SupportedKeywordInfo> m_supportedKeywords;

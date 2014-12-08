@@ -26,7 +26,7 @@ namespace Opm {
                          size_t I1 , size_t I2,
                          size_t J1 , size_t J2,
                          size_t K1 , size_t K2,
-                         FaceDir::DirEnum faceDir) 
+                         FaceDir::DirEnum faceDir)
         : m_faceDir( faceDir )
     {
         checkCoord(nx , I1,I2);
@@ -37,11 +37,11 @@ namespace Opm {
         if ((faceDir == FaceDir::XPlus) || (faceDir == FaceDir::XMinus))
             if (I1 != I2)
                 throw std::invalid_argument("When the face is in X direction we must have I1 == I2");
-        
+
         if ((faceDir == FaceDir::YPlus) || (faceDir == FaceDir::YMinus))
             if (J1 != J2)
                 throw std::invalid_argument("When the face is in Y direction we must have J1 == J2");
-        
+
         if ((faceDir == FaceDir::ZPlus) || (faceDir == FaceDir::ZMinus))
             if (K1 != K2)
                 throw std::invalid_argument("When the face is in Z direction we must have K1 == K2");
@@ -55,24 +55,24 @@ namespace Opm {
                 }
     }
 
-    
+
     void FaultFace::checkCoord(size_t dim , size_t l1 , size_t l2) {
         if (l1 > l2)
             throw std::invalid_argument("Invalid coordinates");
 
         if (l2 >= dim)
-            throw std::invalid_argument("Invalid coordinates");            
+            throw std::invalid_argument("Invalid coordinates");
     }
 
 
     std::vector<size_t>::const_iterator FaultFace::begin() const {
         return m_indexList.begin();
     }
-    
+
     std::vector<size_t>::const_iterator FaultFace::end() const {
         return m_indexList.end();
     }
-    
+
 
     FaceDir::DirEnum FaultFace::getDir() const {
         return m_faceDir;

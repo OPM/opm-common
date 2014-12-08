@@ -97,14 +97,14 @@ BOOST_AUTO_TEST_CASE(UpdateTree_ChildExists_ChildMoved) {
     BOOST_CHECK(oldParent->hasChildGroup("THECHILD"));
     GroupTreeNodePtr theChild = oldParent->getChildGroup("THECHILD");
     BOOST_CHECK(theChild->hasChildGroup("GRANDCHILD1"));
-    
+
     GroupTreeNodePtr newParent = tree.getNode("NEWPARENT");
     BOOST_CHECK(!newParent->hasChildGroup("THECHILD"));
 
     tree.updateTree("THECHILD", "NEWPARENT");
-    
+
     BOOST_CHECK(!oldParent->hasChildGroup("THECHILD"));
-    
+
     BOOST_CHECK(newParent->hasChildGroup("THECHILD"));
     theChild = newParent->getChildGroup("THECHILD");
     BOOST_CHECK(theChild->hasChildGroup("GRANDCHILD1"));

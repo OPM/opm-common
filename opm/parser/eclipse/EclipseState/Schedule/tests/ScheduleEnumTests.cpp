@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(TestGroupProductionExceedLimitControlEnum2String) {
 
 BOOST_AUTO_TEST_CASE(TestGroupProductionExceedLimitActionEnumFromString) {
     BOOST_CHECK_THROW( GroupProductionExceedLimit::ActionEnumFromString("XXX") , std::invalid_argument );
-    
+
     BOOST_CHECK_EQUAL(GroupProductionExceedLimit::NONE     , GroupProductionExceedLimit::ActionEnumFromString("NONE"));
     BOOST_CHECK_EQUAL(GroupProductionExceedLimit::CON      , GroupProductionExceedLimit::ActionEnumFromString("CON" ));
     BOOST_CHECK_EQUAL(GroupProductionExceedLimit::CON_PLUS , GroupProductionExceedLimit::ActionEnumFromString("+CON"));

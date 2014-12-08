@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE( PARSE_PLYADS_OK) {
     ParserPtr parser(new Parser());
     boost::filesystem::path deckFile("testdata/integration_tests/POLYMER/plyads.data");
     DeckPtr deck =  parser->parseFile(deckFile.string());
-    DeckKeywordConstPtr kw = deck->getKeyword("PLYADS");    
+    DeckKeywordConstPtr kw = deck->getKeyword("PLYADS");
     DeckRecordConstPtr rec = kw->getRecord(0);
     DeckItemPtr item = rec->getItem(0);
 

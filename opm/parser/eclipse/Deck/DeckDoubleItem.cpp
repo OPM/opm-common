@@ -32,7 +32,7 @@ namespace Opm {
 
         return m_data[index];
     }
-    
+
 
     const std::vector<double>& DeckDoubleItem::getRawDoubleData() const {
         return m_data;
@@ -54,7 +54,7 @@ namespace Opm {
         } else
             throw std::invalid_argument("No dimension has been set for item:" + name() + " can not ask for SI data");
     }
-    
+
 
 
     double DeckDoubleItem::getSIDouble(size_t index) const {
@@ -63,7 +63,7 @@ namespace Opm {
 
         return m_SIdata[index];
     }
-    
+
     const std::vector<double>& DeckDoubleItem::getSIDoubleData() const {
         assertSIData();
 
@@ -113,7 +113,7 @@ namespace Opm {
         else
             m_dimensions.push_back( activeDimension );
     }
-    
+
 
 }
 

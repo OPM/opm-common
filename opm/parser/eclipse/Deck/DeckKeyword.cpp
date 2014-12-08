@@ -29,7 +29,7 @@ namespace Opm {
         m_fileName = "";
         m_lineNumber = -1;
     }
-    
+
     DeckKeyword::DeckKeyword(const std::string& keywordName, bool knownKeyword) {
         m_knownKeyword = knownKeyword;
         m_keywordName = keywordName;
@@ -69,7 +69,7 @@ namespace Opm {
     void DeckKeyword::setDataKeyword(bool isDataKeyword_) {
         m_isDataKeyword = isDataKeyword_;
     }
-    
+
     bool DeckKeyword::isDataKeyword() const {
         return m_isDataKeyword;
     }
@@ -94,7 +94,7 @@ namespace Opm {
     bool DeckKeyword::isKnown() const {
         return m_knownKeyword;
     }
-    
+
     void DeckKeyword::addRecord(DeckRecordConstPtr record) {
         m_recordList.push_back(record);
     }

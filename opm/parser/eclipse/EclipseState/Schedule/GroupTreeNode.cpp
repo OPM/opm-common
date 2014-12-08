@@ -38,7 +38,7 @@ namespace Opm {
         m_childGroups[childName] = child;
         return child;
     }
-    
+
     void GroupTreeNode::addChildGroup(std::shared_ptr<GroupTreeNode> childGroup) {
         if (hasChildGroup(childGroup->name())) {
             throw std::invalid_argument("Child group with name \"" + childGroup->name() + "\"already exists under node " + m_name);

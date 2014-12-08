@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrdered) {
     DeckPtr deck = createDeckWithWellsOrdered();
     Schedule schedule(deck);
     std::vector<WellConstPtr> wells = schedule.getWells();
-    
+
     BOOST_CHECK_EQUAL( "CW_1" , wells[0]->name());
     BOOST_CHECK_EQUAL( "BW_2" , wells[1]->name());
     BOOST_CHECK_EQUAL( "AW_3" , wells[2]->name());
@@ -154,14 +154,14 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithSCHEDULENoThrow) {
     DeckPtr deck(new Deck());
     DeckKeywordPtr keyword(new DeckKeyword("SCHEDULE"));
     deck->addKeyword( keyword );
-    
+
     BOOST_CHECK_NO_THROW(Schedule schedule(deck));
 }
 
 
 BOOST_AUTO_TEST_CASE(EmptyScheduleHasNoWells) {
     DeckPtr deck = createDeck();
-    Schedule schedule(deck); 
+    Schedule schedule(deck);
     BOOST_CHECK_EQUAL( 0U , schedule.numWells() );
     BOOST_CHECK_EQUAL( false , schedule.hasWell("WELL1") );
     BOOST_CHECK_THROW( schedule.getWell("WELL2") , std::invalid_argument );
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(EmptyScheduleHasNoWells) {
 
 BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithoutGRUPTREE_HasRootGroupTreeNodeForTimeStepZero) {
     DeckPtr deck = createDeck();
-    Schedule schedule(deck); 
+    Schedule schedule(deck);
     BOOST_CHECK_EQUAL("FIELD", schedule.getGroupTree(0)->getNode("FIELD")->name());
 }
 
@@ -178,18 +178,18 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithoutGRUPTREE_HasRootGroupTreeNodeForT
 BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithGRUPTREE_HasRootGroupTreeNodeForTimeStepZero) {
     DeckPtr deck = createDeck();
     DeckKeywordPtr gruptreeKeyword(new DeckKeyword("GRUPTREE"));
-    
+
     DeckRecordPtr recordChildOfField(new DeckRecord());
     DeckStringItemPtr itemChild1(new DeckStringItem("CHILD_GROUP"));
     itemChild1->push_back("BARNET");
     DeckStringItemPtr itemParent1(new DeckStringItem("PARENT_GROUP"));
     itemParent1->push_back("FAREN");
-    
+
     recordChildOfField->addItem(itemChild1);
     recordChildOfField->addItem(itemParent1);
     gruptreeKeyword->addRecord(recordChildOfField);
     deck->addKeyword(gruptreeKeyword);
-    Schedule schedule(deck); 
+    Schedule schedule(deck);
     GroupTreeNodePtr fieldNode = schedule.getGroupTree(0)->getNode("FIELD");
     BOOST_CHECK_EQUAL("FIELD", fieldNode->name());
     GroupTreeNodePtr FAREN = fieldNode->getChildGroup("FAREN");
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithGRUPTREE_HasRootGroupTreeNodeForTime
 
 BOOST_AUTO_TEST_CASE(EmptyScheduleHasFIELDGroup) {
     DeckPtr deck = createDeck();
-    Schedule schedule(deck); 
+    Schedule schedule(deck);
     BOOST_CHECK_EQUAL( 1U , schedule.numGroups() );
     BOOST_CHECK_EQUAL( true , schedule.hasGroup("FIELD") );
     BOOST_CHECK_EQUAL( false , schedule.hasGroup("GROUP") );

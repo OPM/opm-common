@@ -30,7 +30,7 @@
 namespace Opm {
 
     namespace MULTREGT {
-        
+
 
         enum NNCBehaviourEnum {
             NNC = 1,
@@ -49,7 +49,7 @@ namespace Opm {
     class MULTREGTRecord {
     public:
         MULTREGTRecord(DeckRecordConstPtr deckRecord);
-        
+
         Value<int> m_srcRegion;
         Value<int> m_targetRegion;
         double m_transMultiplier;
@@ -70,7 +70,7 @@ namespace Opm {
         void addKeyword(DeckKeywordConstPtr deckKeyword);
         const std::vector< std::tuple<size_t , FaceDir::DirEnum , double> > scanRegions( std::shared_ptr<Opm::GridProperties<int> > regions);
         static void assertKeywordSupported(DeckKeywordConstPtr deckKeyword);
-  
+
     private:
         void checkConnection( MULTREGTSearchMap& map , std::vector< MULTREGTConnection >& connections, std::shared_ptr<GridProperty<int> > region , size_t globalIndex1 , size_t globalIndex2 , FaceDir::DirEnum faceDir1 ,FaceDir::DirEnum faceDir2);
 

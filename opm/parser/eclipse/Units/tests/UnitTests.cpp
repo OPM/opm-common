@@ -117,11 +117,11 @@ BOOST_AUTO_TEST_CASE(UnitSystemParseInvalidThrows) {
 
     system.addDimension("Length" , 3.00 );
     system.addDimension("Time" , 9.0 );
-    
+
     std::shared_ptr<const Dimension> volumePerTime = system.parse("Length*Length*Length/Time");
     BOOST_CHECK_EQUAL("Length*Length*Length/Time" , volumePerTime->getName() );
     BOOST_CHECK_EQUAL(3.0 , volumePerTime->getSIScaling());
-}    
+}
 
 
 

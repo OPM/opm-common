@@ -35,10 +35,10 @@ namespace Opm {
 
     class Completion {
     public:
-        Completion(int i, int j , int k , CompletionStateEnum state , 
+        Completion(int i, int j , int k , CompletionStateEnum state ,
                    const Value<double>& connectionTransmissibilityFactor,
-                   const Value<double>& diameter, 
-                   const Value<double>& skinFactor, 
+                   const Value<double>& diameter,
+                   const Value<double>& skinFactor,
                    const CompletionDirection::DirectionEnum direction = CompletionDirection::DirectionEnum::Z);
 
         bool sameCoordinate(const Completion& other) const;
@@ -55,7 +55,7 @@ namespace Opm {
 
         static std::map<std::string , std::vector<std::shared_ptr<Completion> > >  completionsFromCOMPDATKeyword( DeckKeywordConstPtr compdatKeyword );
         static std::pair<std::string , std::vector<std::shared_ptr<Completion> > > completionsFromCOMPDATRecord( DeckRecordConstPtr compdatRecord );
-        
+
     private:
         int m_i, m_j, m_k;
         Value<double> m_diameter;

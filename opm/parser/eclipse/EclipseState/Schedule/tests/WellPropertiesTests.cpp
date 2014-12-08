@@ -123,7 +123,7 @@ namespace {
         properties(const std::string& input)
         {
             Opm::Parser parser;
-            
+
             Opm::DeckPtr             deck   = parser.parseString(input);
             Opm::DeckKeywordConstPtr kwd    = deck->getKeyword("WCONHIST");
             Opm::DeckRecordConstPtr  record = kwd->getRecord(0);
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(WCH_All_Specified_BHP_Defaulted)
     BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::RESV));
 
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::ORAT);
-    
+
     // BHP must be explicitly provided/specified
     BOOST_REQUIRE(! p.hasProductionControl(Opm::WellProducer::BHP));
 }
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(WCH_OWRAT_Defaulted_BHP_Defaulted)
     BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::LRAT));
     BOOST_REQUIRE(p.hasProductionControl(Opm::WellProducer::RESV));
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::GRAT);
-    
+
     // BHP must be explicitly provided/specified
     BOOST_REQUIRE(! p.hasProductionControl(Opm::WellProducer::BHP));
 }

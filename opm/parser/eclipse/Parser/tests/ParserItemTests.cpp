@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(scan_PreMatureTerminator_defaultUsed) {
     // whit the defaultApplied(0) method returning true...
     BOOST_CHECK(defaulted->defaultApplied(0));
     BOOST_CHECK(defaulted->getInt(0) < 0);
-}    
+}
 
 BOOST_AUTO_TEST_CASE(InitializeIntItem_setDescription_canReadBack) {
     ParserIntItem itemInt(std::string("ITEM1"));
@@ -242,7 +242,7 @@ BOOST_AUTO_TEST_CASE(DoubleItem_DimEqual_ReturnsTrue) {
 
     item1.push_backDimension("Length*Length");
     item2.push_backDimension("Length*Length");
-    
+
     BOOST_CHECK( item1.equal( item2 ));
 }
 
@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(DoubleItem_DimDifferent_ReturnsFalse) {
 
     item3.push_backDimension("Length");
     item3.push_backDimension("Length");
-    
+
     item4.push_backDimension("Time");
 
     BOOST_CHECK_EQUAL(false , item1.equal( item2 ));
@@ -427,7 +427,7 @@ BOOST_AUTO_TEST_CASE(Scan_SeveralInts_CorrectIntsSetInDeckItem) {
     RawRecordPtr rawRecord(new RawRecord("100 443 338932 222.33 'Heisann' /"));
     DeckItemConstPtr deckIntItem1 = itemInt1.scan(rawRecord);
     BOOST_CHECK_EQUAL(100, deckIntItem1->getInt(0));
-        
+
     DeckItemConstPtr deckIntItem2 = itemInt2.scan(rawRecord);
     BOOST_CHECK_EQUAL(443, deckIntItem2->getInt(0));
 
@@ -675,7 +675,7 @@ BOOST_AUTO_TEST_CASE(scan_intsAndStrings_dataCorrect) {
 BOOST_AUTO_TEST_CASE(ParserItemCheckEqualsOverride) {
     ParserItemConstPtr itemDefault10( new ParserIntItem("ITEM" ,  10) );
     ParserItemConstPtr itemDefault20( new ParserIntItem("ITEM" ,  20) );
-    
+
     BOOST_CHECK( itemDefault10->equal( *itemDefault10 ));
     BOOST_CHECK_EQUAL( false , itemDefault10->equal( *itemDefault20 ));
 }
@@ -706,7 +706,7 @@ BOOST_AUTO_TEST_CASE(ParserIntItemGetDimensionThrows) {
 
 BOOST_AUTO_TEST_CASE(ParserDoubleItemAddMultipleDimensionToSIngleSizeThrows) {
     ParserDoubleItem doubleItem(std::string("SOMEDOUBLE"));
-    
+
     doubleItem.push_backDimension("Length*Length");
     BOOST_CHECK_THROW( doubleItem.push_backDimension("Length*Length"), std::invalid_argument);
 }

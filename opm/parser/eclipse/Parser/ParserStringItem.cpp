@@ -24,13 +24,13 @@
 #include <opm/parser/eclipse/RawDeck/StarToken.hpp>
 namespace Opm {
 
-    ParserStringItem::ParserStringItem(const std::string& itemName) : ParserItem(itemName) 
+    ParserStringItem::ParserStringItem(const std::string& itemName) : ParserItem(itemName)
     {
         m_default = "";
     }
 
 
-    ParserStringItem::ParserStringItem(const std::string& itemName, ParserItemSizeEnum sizeType_) : ParserItem(itemName, sizeType_) 
+    ParserStringItem::ParserStringItem(const std::string& itemName, ParserItemSizeEnum sizeType_) : ParserItem(itemName, sizeType_)
     {
         m_default = "";
     }
@@ -47,7 +47,7 @@ namespace Opm {
 
     ParserStringItem::ParserStringItem(const Json::JsonObject& jsonConfig) : ParserItem(jsonConfig) {
         m_default = "";
-        if (jsonConfig.has_item("default")) 
+        if (jsonConfig.has_item("default"))
             setDefault( jsonConfig.get_string("default") );
     }
 
@@ -71,13 +71,13 @@ namespace Opm {
         return ParserItemScan<ParserStringItem,DeckStringItem,std::string>(this , rawRecord);
     }
 
-     
-     
+
+
     bool ParserStringItem::equal(const ParserItem& other) const
     {
         return parserRawItemEqual<ParserStringItem>(other);
     }
-    
+
     void ParserStringItem::inlineNew(std::ostream& os) const {
         os << "new ParserStringItem(" << "\"" << name() << "\"" << "," << ParserItemSizeEnum2String( sizeType() );
         if (m_defaultSet)

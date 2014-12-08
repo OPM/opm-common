@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(DECKAddWarning) {
     BOOST_CHECK_EQUAL(parserLog.getDescription(2), "ERROR");
     BOOST_CHECK_EQUAL(parserLog.getFileName(2), "FILE3");
     BOOST_CHECK_EQUAL(parserLog.getLineNumber(2), 300U);
-    
+
 }
 
 

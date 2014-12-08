@@ -30,7 +30,7 @@
 
 BOOST_AUTO_TEST_CASE( check_default_constructor ) {
     Opm::Value<int> v("Value");
-    
+
     BOOST_CHECK_EQUAL( false , v.hasValue() );
     BOOST_CHECK_THROW( v.getValue() , std::logic_error );
 
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE( check_default_constructor ) {
 
 BOOST_AUTO_TEST_CASE( check_value_constructor ) {
     Opm::Value<int> v("Value" , 100);
-    
+
     BOOST_CHECK_EQUAL( true , v.hasValue() );
     BOOST_CHECK_EQUAL( 100 , v.getValue());
 }

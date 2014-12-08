@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE( parse_ACTION_OK ) {
     boost::filesystem::path actionFile2("testdata/integration_tests/ACTION/ACTION_EXCEPTION.txt");
     ParserKeywordConstPtr DIMENS = ParserKeyword::createFixedSized("DIMENS" , (size_t) 1 , IGNORE_WARNING );
     ParserKeywordConstPtr THROW = ParserKeyword::createFixedSized("THROW" , UNKNOWN , THROW_EXCEPTION );
-    
+
     BOOST_REQUIRE( parser->loadKeywordFromFile( boost::filesystem::path( std::string(KEYWORD_DIRECTORY) + std::string("/W/WCONHIST") )) );
     parser->addParserKeyword( DIMENS );
     parser->addParserKeyword( THROW );
@@ -49,9 +49,9 @@ BOOST_AUTO_TEST_CASE( parse_ACTION_OK ) {
     BOOST_REQUIRE( parser->isRecognizedKeyword( "DIMENS" ));
     BOOST_REQUIRE( parser->isRecognizedKeyword( "WCONHIST" ));
     BOOST_REQUIRE( parser->isRecognizedKeyword( "THROW" ));
-    
+
     BOOST_REQUIRE_THROW(  parser->parseFile( actionFile2.string() , false) , std::invalid_argument );
-    
+
     ParserLogPtr parserLog(new ParserLog);
     DeckPtr deck =  parser->parseFile(actionFile.string() , false, parserLog);
     DeckKeywordConstPtr kw1 = deck->getKeyword("WCONHIST" , 0);
@@ -66,15 +66,15 @@ BOOST_AUTO_TEST_CASE( parse_ACTION_OK ) {
 
     DeckItemConstPtr item1       = rec1->getItem("WELL");
     DeckItemConstPtr item1_index = rec1->getItem(0);
-    
+
     BOOST_CHECK_EQUAL( item1  , item1_index );
     BOOST_CHECK_EQUAL( "OP_1" , item1->getString(0));
 
 
     item1 = rec3->getItem("WELL");
     BOOST_CHECK_EQUAL( "OP_3" , item1->getString(0));
-    
-    
+
+
     BOOST_CHECK_EQUAL( false , deck->hasKeyword( "DIMENS" ));
     BOOST_CHECK_EQUAL( 2U , parserLog->size() );
     {
@@ -85,5 +85,5 @@ BOOST_AUTO_TEST_CASE( parse_ACTION_OK ) {
         BOOST_CHECK_EQUAL( actionFile.string() ,  parserLog->getFileName(1));
         BOOST_CHECK_EQUAL( 6U , parserLog->getLineNumber(1));
     }
-    
+
 }

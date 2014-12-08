@@ -26,7 +26,7 @@
 namespace Opm {
 
     Dimension::Dimension() {
-        
+
     }
 
     Dimension::Dimension(const std::string& name, double SIfactor, double SIoffset)

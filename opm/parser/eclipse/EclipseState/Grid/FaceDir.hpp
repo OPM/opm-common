@@ -26,7 +26,7 @@ namespace Opm {
 
 
     namespace FaceDir {
-        
+
         enum DirEnum {
             XPlus  = 1,
             XMinus = 2,

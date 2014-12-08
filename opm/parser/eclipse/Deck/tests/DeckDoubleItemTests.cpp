@@ -71,11 +71,11 @@ BOOST_AUTO_TEST_CASE(PushBackDouble_subVectorPushed_ElementsCorrect) {
 
 BOOST_AUTO_TEST_CASE(sizeDouble_correct) {
     DeckDoubleItem deckDoubleItem("TEST");
-    
+
     BOOST_CHECK_EQUAL( 0U , deckDoubleItem.size());
     deckDoubleItem.push_back( 100 );
     BOOST_CHECK_EQUAL( 1U , deckDoubleItem.size());
-    
+
     deckDoubleItem.push_back( 100 );
     deckDoubleItem.push_back( 100 );
     BOOST_CHECK_EQUAL( 3U , deckDoubleItem.size());
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(PushBackDimensionInvalidType) {
 BOOST_AUTO_TEST_CASE(GetSIWithoutDimensionThrows) {
     DeckDoubleItem item("HEI");
     item.push_backMultiple(10.22 , 100 );
-    
+
     BOOST_CHECK_THROW( item.getSIDouble(0) , std::invalid_argument );
     BOOST_CHECK_THROW( item.getSIDoubleData( ) , std::invalid_argument );
 }
@@ -182,10 +182,10 @@ BOOST_AUTO_TEST_CASE(GetSIMultipleDim) {
     item.push_backDimension( dim4 , defaultDim );
 
     for (size_t i=0; i < 16; i+= 4) {
-        BOOST_CHECK_EQUAL( 2   , item.getSIDouble(i) );        
-        BOOST_CHECK_EQUAL( 4   , item.getSIDouble(i+ 1) );        
-        BOOST_CHECK_EQUAL( 8   , item.getSIDouble(i+2) );        
-        BOOST_CHECK_EQUAL(16   , item.getSIDouble(i+3) );        
+        BOOST_CHECK_EQUAL( 2   , item.getSIDouble(i) );
+        BOOST_CHECK_EQUAL( 4   , item.getSIDouble(i+ 1) );
+        BOOST_CHECK_EQUAL( 8   , item.getSIDouble(i+2) );
+        BOOST_CHECK_EQUAL(16   , item.getSIDouble(i+3) );
     }
 }
 

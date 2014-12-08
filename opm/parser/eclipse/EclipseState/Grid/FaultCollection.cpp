@@ -25,18 +25,18 @@ namespace Opm {
 
     FaultCollection::FaultCollection()
     {
-        
+
     }
 
     size_t FaultCollection::size() const {
         return m_faults.size();
     }
-    
+
 
     bool FaultCollection::hasFault(const std::string& faultName) const {
         return m_faults.hasKey( faultName );
     }
-    
+
 
     std::shared_ptr<Fault> FaultCollection::getFault(const std::string& faultName) const {
         return m_faults.get( faultName );
@@ -45,8 +45,8 @@ namespace Opm {
     std::shared_ptr<Fault> FaultCollection::getFault(size_t faultIndex) const {
         return m_faults.get( faultIndex );
     }
-    
-    
+
+
     void FaultCollection::addFault(std::shared_ptr<Fault> fault) {
         m_faults.insert(fault->getName() , fault);
     }

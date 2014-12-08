@@ -49,10 +49,10 @@ namespace Json {
     }
 
 
-    
+
     JsonObject::JsonObject(const boost::filesystem::path& jsonFile ) {
         std::ifstream stream(jsonFile.string().c_str());
-        if (stream) { 
+        if (stream) {
             std::string content_from_file( (std::istreambuf_iterator<char>(stream)),
                                  (std::istreambuf_iterator<char>()));
             initialize( content_from_file );
@@ -67,24 +67,24 @@ namespace Json {
         root = object;
         owner = false;
     }
-    
-    
+
+
     JsonObject::~JsonObject() {
         if (owner && root)
             cJSON_Delete(root);
     }
-    
+
 
 
     bool JsonObject::has_item( const std::string& key) const {
         cJSON * object = cJSON_GetObjectItem( root , key.c_str() );
-        if (object) 
+        if (object)
             return true;
         else
             return false;
     }
 
-    
+
     bool JsonObject::is_array( ) const {
         if (root->type == cJSON_Array)
             return true;
@@ -113,8 +113,8 @@ namespace Json {
         else
             return false;
     }
-    
-    
+
+
     size_t JsonObject::size() const {
         int int_size = cJSON_GetArraySize( root );
         return (size_t) int_size;
@@ -131,17 +131,17 @@ namespace Json {
         } else
             throw std::invalid_argument("Object is not an array.");
     }
-    
+
 
     JsonObject JsonObject::get_item(const std::string& key) const {
         cJSON * c_ptr = cJSON_GetObjectItem( root , key.c_str() );
-        if (c_ptr) 
+        if (c_ptr)
             return JsonObject( c_ptr );
         else
             throw std::invalid_argument("Key: " + key + " does not exist in json object");
     }
 
-    
+
     std::string JsonObject::get_string(const std::string& key) const {
         JsonObject child = get_scalar_object( key );
         return child.as_string();
@@ -160,9 +160,9 @@ namespace Json {
         JsonObject child = get_scalar_object( key );
         return child.as_int( );
     }
-    
 
-    int JsonObject::as_int() const {    
+
+    int JsonObject::as_int() const {
         if (root->type == cJSON_Number)
             return root->valueint;
         else
@@ -174,9 +174,9 @@ namespace Json {
         JsonObject child = get_scalar_object( key );
         return child.as_double( );
     }
-    
 
-    double JsonObject::as_double() const {    
+
+    double JsonObject::as_double() const {
         if (root->type == cJSON_Number)
             return root->valuedouble;
         else

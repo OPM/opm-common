@@ -37,14 +37,14 @@ namespace Opm {
         const std::vector<double>& getRawDoubleData() const;
         double getSIDouble(size_t index) const;
         const std::vector<double>& getSIDoubleData() const;
-        
+
         void push_back(std::deque<double> data , size_t items);
         void push_back(std::deque<double> data);
         void push_back(double value);
         void push_backDefault(double value);
         void push_backMultiple(double value, size_t numValues);
         void push_backDimension(std::shared_ptr<const Dimension> activeDimension , std::shared_ptr<const Dimension> defaultDimension);
-        
+
         size_t size() const;
     private:
         void assertSIData() const;

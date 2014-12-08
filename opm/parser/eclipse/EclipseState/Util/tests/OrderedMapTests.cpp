@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE( check_order ) {
     BOOST_CHECK( map.hasKey("CKEY1"));
     BOOST_CHECK( map.hasKey("BKEY2"));
     BOOST_CHECK( map.hasKey("AKEY3"));
-    
+
     BOOST_CHECK_EQUAL( "Value1" , map.get("CKEY1"));
     BOOST_CHECK_EQUAL( "Value1" , map.get( 0 ));
 
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE( check_order ) {
 
     {
         std::vector<std::string> values;
-        for (auto iter = map.begin(); iter != map.end(); ++iter) 
+        for (auto iter = map.begin(); iter != map.end(); ++iter)
             values.push_back( *iter );
 
         BOOST_CHECK_EQUAL( values[0] , "NewValue1");

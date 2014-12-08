@@ -38,7 +38,7 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE( parse_END_OK ) {
     ParserPtr parser(new Parser());
     boost::filesystem::path fileWithTitleKeyword("testdata/integration_tests/END/END1.txt");
-    
+
     DeckPtr deck = parser->parseFile (fileWithTitleKeyword.string(), true);
 
     BOOST_CHECK_EQUAL(size_t(1), deck->size());

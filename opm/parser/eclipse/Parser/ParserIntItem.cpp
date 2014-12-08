@@ -28,7 +28,7 @@
 namespace Opm {
 
 
-    ParserIntItem::ParserIntItem(const std::string& itemName) : ParserItem(itemName) 
+    ParserIntItem::ParserIntItem(const std::string& itemName) : ParserItem(itemName)
     {
         // integers do not have a representation for NaN. Let's use a negative value as
         // this is usually meaningless. (Keep in mind that in the deck it can be queried
@@ -36,18 +36,18 @@ namespace Opm {
         m_default = -1;
     }
 
-    ParserIntItem::ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType_) : ParserItem(itemName, sizeType_) 
+    ParserIntItem::ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType_) : ParserItem(itemName, sizeType_)
     {
         m_default = -1;
     }
 
-    ParserIntItem::ParserIntItem(const std::string& itemName, int defaultValue) : ParserItem(itemName) 
+    ParserIntItem::ParserIntItem(const std::string& itemName, int defaultValue) : ParserItem(itemName)
     {
         setDefault(defaultValue);
     }
 
 
-    ParserIntItem::ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType_, int defaultValue) : ParserItem(itemName, sizeType_) 
+    ParserIntItem::ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType_, int defaultValue) : ParserItem(itemName, sizeType_)
     {
         setDefault(defaultValue);
     }
@@ -55,7 +55,7 @@ namespace Opm {
     ParserIntItem::ParserIntItem(const Json::JsonObject& jsonConfig) : ParserItem(jsonConfig)
     {
         m_default = -1;
-        if (jsonConfig.has_item("default")) 
+        if (jsonConfig.has_item("default"))
             setDefault( jsonConfig.get_int("default") );
     }
 
@@ -80,7 +80,7 @@ namespace Opm {
     {
         return parserRawItemEqual<ParserIntItem>(other);
     }
-    
+
 
     void ParserIntItem::inlineNew(std::ostream& os) const {
         os << "new ParserIntItem(" << "\"" << name() << "\"" << "," << ParserItemSizeEnum2String( sizeType() );

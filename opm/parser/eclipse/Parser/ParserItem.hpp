@@ -35,7 +35,7 @@
 #include <opm/parser/eclipse/RawDeck/StarToken.hpp>
 
 namespace Opm {
-    
+
     class ParserItem {
     public:
         ParserItem(const std::string& itemName);
@@ -105,7 +105,7 @@ namespace Opm {
     template<typename ParserItemType , typename DeckItemType , typename ValueType>
     DeckItemPtr ParserItemScan(const ParserItemType * self , RawRecordPtr rawRecord) {
         std::shared_ptr<DeckItemType> deckItem = std::make_shared<DeckItemType>( self->name() , self->scalar() );
-        
+
         if (self->sizeType() == ALL) {
             while (rawRecord->size() > 0) {
                 std::string token = rawRecord->pop_front();
@@ -168,7 +168,7 @@ namespace Opm {
         return deckItem;
     }
 
-    
+
 
 }
 

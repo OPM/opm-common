@@ -25,19 +25,19 @@ namespace Opm {
 
     CompletionSet::CompletionSet() {}
 
-    
+
     size_t CompletionSet::size() const {
         return m_completions.size();
     }
 
-    
+
     CompletionConstPtr CompletionSet::get(size_t index) const {
         if (index >= m_completions.size())
             throw std::range_error("Out of bounds");
-        
+
         return m_completions[index];
     }
-    
+
 
     void CompletionSet::add(CompletionConstPtr completion) {
         bool inserted = false;
@@ -49,7 +49,7 @@ namespace Opm {
                 inserted = true;
             }
         }
-        
+
         if (!inserted)
             m_completions.push_back( completion );
     }
@@ -64,5 +64,5 @@ namespace Opm {
         return copy;
     }
 
-    
+
 }

@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(TestKeywordSizeEnumLoop) {
     BOOST_CHECK_EQUAL( SLASH_TERMINATED , ParserKeywordSizeEnumFromString( ParserKeywordSizeEnum2String( SLASH_TERMINATED ) ));
     BOOST_CHECK_EQUAL( OTHER_KEYWORD_IN_DECK     , ParserKeywordSizeEnumFromString( ParserKeywordSizeEnum2String( OTHER_KEYWORD_IN_DECK ) ));
     BOOST_CHECK_EQUAL( UNKNOWN , ParserKeywordSizeEnumFromString( ParserKeywordSizeEnum2String( UNKNOWN ) ));
-    
+
     BOOST_CHECK_EQUAL( "FIXED"     , ParserKeywordSizeEnum2String(ParserKeywordSizeEnumFromString(  "FIXED" ) ));
     BOOST_CHECK_EQUAL( "SLASH_TERMINATED" , ParserKeywordSizeEnum2String(ParserKeywordSizeEnumFromString(  "SLASH_TERMINATED" ) ));
     BOOST_CHECK_EQUAL( "OTHER_KEYWORD_IN_DECK"     , ParserKeywordSizeEnum2String(ParserKeywordSizeEnumFromString(  "OTHER_KEYWORD_IN_DECK" ) ));
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(TestKeywordActionEnum2String) {
     BOOST_CHECK_EQUAL( "IGNORE_WARNING"  , ParserKeywordActionEnum2String(IGNORE_WARNING));
     BOOST_CHECK_EQUAL( "THROW_EXCEPTION" , ParserKeywordActionEnum2String(THROW_EXCEPTION));
 }
- 
+
 
 BOOST_AUTO_TEST_CASE(TestKeywordActionEnumFromString) {
     BOOST_CHECK_THROW( ParserKeywordActionEnumFromString("XXX") , std::invalid_argument );
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(TestKeywordActionEnumLoop) {
     BOOST_CHECK_EQUAL( IGNORE , ParserKeywordActionEnumFromString( ParserKeywordActionEnum2String( IGNORE ) ));
     BOOST_CHECK_EQUAL( IGNORE_WARNING    , ParserKeywordActionEnumFromString( ParserKeywordActionEnum2String( IGNORE_WARNING ) ));
     BOOST_CHECK_EQUAL( THROW_EXCEPTION    , ParserKeywordActionEnumFromString( ParserKeywordActionEnum2String( THROW_EXCEPTION ) ));
-    
+
     BOOST_CHECK_EQUAL( "INTERNALIZE"    , ParserKeywordActionEnum2String(ParserKeywordActionEnumFromString(  "INTERNALIZE" ) ));
     BOOST_CHECK_EQUAL( "IGNORE" , ParserKeywordActionEnum2String(ParserKeywordActionEnumFromString(  "IGNORE" ) ));
     BOOST_CHECK_EQUAL( "IGNORE_WARNING"    , ParserKeywordActionEnum2String(ParserKeywordActionEnumFromString(  "IGNORE_WARNING" ) ));

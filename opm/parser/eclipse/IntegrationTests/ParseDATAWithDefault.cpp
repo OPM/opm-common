@@ -77,11 +77,11 @@ BOOST_AUTO_TEST_CASE( parse_DATAWithDefult_OK ) {
     DeckRecordConstPtr rec0 = keyword->getRecord(0);
     DeckRecordConstPtr rec1 = keyword->getRecord(1);
     DeckRecordConstPtr rec2 = keyword->getRecord(2);
-    
+
     DeckItemConstPtr item0 = rec0->getItem(0);
     DeckItemConstPtr item1 = rec1->getItem(0);
     DeckItemConstPtr item2 = rec2->getItem(0);
-    
+
     BOOST_CHECK_EQUAL( 3U , keyword->size());
     BOOST_CHECK( !item0->defaultApplied(0) );
     BOOST_CHECK( item0->defaultApplied(1) );
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE( parse_DATAWithDefult_OK ) {
     BOOST_CHECK_EQUAL( 55 , item0->getRawDouble(13));
     BOOST_CHECK_EQUAL( 55 , item0->getRawDouble(14));
     BOOST_CHECK_EQUAL( 10 , item0->getRawDouble(15));
-    
+
     BOOST_CHECK_EQUAL( 100 , item1->getRawDouble(0));
     BOOST_CHECK_EQUAL(  -1  , item1->getRawDouble(1));
 

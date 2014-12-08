@@ -60,7 +60,7 @@ namespace Opm {
         bool   getRefDepthDefaulted() const;
         double getRefDepth() const;
         Phase::PhaseEnum getPreferredPhase() const;
-        
+
         bool isAvailableForGroupControl(size_t timeStep) const;
         void setAvailableForGroupControl(size_t timeStep, bool isAvailableForGroupControl);
         double getGuideRate(size_t timeStep) const;
@@ -75,11 +75,11 @@ namespace Opm {
         void addWELSPECS(DeckRecordConstPtr deckRecord);
         void addCompletions(size_t time_step , const std::vector<CompletionPtr>& newCompletions);
         CompletionSetConstPtr getCompletions(size_t timeStep) const;
-    
+
         void                            setProductionProperties(size_t timeStep , const WellProductionProperties properties);
         WellProductionProperties        getProductionPropertiesCopy(size_t timeStep) const;
         const WellProductionProperties& getProductionProperties(size_t timeStep)  const;
-        
+
         void                           setInjectionProperties(size_t timeStep , const WellInjectionProperties properties);
         WellInjectionProperties        getInjectionPropertiesCopy(size_t timeStep) const;
         const WellInjectionProperties& getInjectionProperties(size_t timeStep) const;
@@ -91,7 +91,7 @@ namespace Opm {
     private:
         size_t m_creationTimeStep;
         std::string m_name;
-        
+
         std::shared_ptr<DynamicState<WellCommon::StatusEnum> > m_status;
 
         std::shared_ptr<DynamicState<bool> > m_isAvailableForGroupControl;

@@ -27,11 +27,11 @@
 namespace Opm {
 
     namespace MULTREGT {
-        
+
         std::string RegionNameFromDeckValue(const std::string& stringValue) {
             if (stringValue == "O")
                 return "OPERNUM";
-            
+
             if (stringValue == "F")
                 return "FLUXNUM";
 
@@ -41,8 +41,8 @@ namespace Opm {
             throw std::invalid_argument("The input string: " + stringValue + " was invalid. Expected: O/F/M");
         }
 
-        
-        
+
+
         NNCBehaviourEnum NNCBehaviourFromString(const std::string& stringValue) {
             if (stringValue == "ALL")
                 return ALL;
@@ -55,17 +55,17 @@ namespace Opm {
 
             if (stringValue == "NOAQUNNC")
                 return NOAQUNNC;
-            
+
             throw std::invalid_argument("The input string: " + stringValue + " was invalid. Expected: ALL/NNC/NONNC/NOAQUNNC");
         }
 
 
     }
-    
 
-    
 
-    MULTREGTRecord::MULTREGTRecord(DeckRecordConstPtr deckRecord) : 
+
+
+    MULTREGTRecord::MULTREGTRecord(DeckRecordConstPtr deckRecord) :
         m_srcRegion("SRC_REGION"),
         m_targetRegion("TARGET_REGION"),
         m_region("REGION")
@@ -90,23 +90,23 @@ namespace Opm {
 
         if (!defItem->defaultApplied(0))
             m_region.setValue( MULTREGT::RegionNameFromDeckValue ( defItem->getString(0) ));
-    } 
+    }
 
 
     /*****************************************************************/
 
     MULTREGTScanner::MULTREGTScanner() {
-        
+
     }
 
 
     void MULTREGTScanner::assertKeywordSupported(DeckKeywordConstPtr deckKeyword) {
         for (auto iter = deckKeyword->begin(); iter != deckKeyword->end(); ++iter) {
             MULTREGTRecord record( *iter );
-            
+
             if (record.m_nncBehaviour != MULTREGT::ALL)
                 throw std::invalid_argument("Sorry - currently only \'ALL\' is supported for MULTREGT NNC behaviour.");
-            
+
             if (!record.m_srcRegion.hasValue())
                 throw std::invalid_argument("Sorry - currently it is not supported with a defaulted source region value.");
 
@@ -115,12 +115,12 @@ namespace Opm {
 
             if (record.m_srcRegion.getValue() == record.m_targetRegion.getValue())
                 throw std::invalid_argument("Sorry - multregt applied internally to a region is not yet supported");
-            
+
         }
     }
-    
 
-    
+
+
     void MULTREGTScanner::addKeyword(DeckKeywordConstPtr deckKeyword) {
         assertKeywordSupported( deckKeyword );
 
@@ -140,9 +140,9 @@ namespace Opm {
             }
             m_records.push_back( record );
         }
-        
+
     }
-    
+
 
     /*
       This function will check the region values in globalIndex1 and
@@ -169,7 +169,7 @@ namespace Opm {
     void MULTREGTScanner::checkConnection( MULTREGTSearchMap& map , std::vector< MULTREGTConnection >& connections, std::shared_ptr<GridProperty<int> > region, size_t globalIndex1 , size_t globalIndex2 , FaceDir::DirEnum faceDir1 ,FaceDir::DirEnum faceDir2) {
         int regionValue1 = region->iget(globalIndex1);
         int regionValue2 = region->iget(globalIndex2);
-        
+
         std::pair<int,int> pair{regionValue1 , regionValue2};
         if (map.count(pair) == 1) {
             const MULTREGTRecord * record = map[pair];
@@ -177,7 +177,7 @@ namespace Opm {
                 connections.push_back( MULTREGTConnection{ globalIndex1 , faceDir1 , record->m_transMultiplier } );
             }
         }
-        
+
         pair = std::pair<int,int>{regionValue2 , regionValue1};
         if (map.count(pair) == 1) {
             const MULTREGTRecord * record = map[pair];
@@ -196,9 +196,9 @@ namespace Opm {
       i.e. for the MULTREGT keyword
 
         MULTREGT
-          2  4   0.75    Z   ALL    M / 
-          2  4   2.50   XY   ALL    F / 
-        /   
+          2  4   0.75    Z   ALL    M /
+          2  4   2.50   XY   ALL    F /
+        /
 
       The first record is completely overweritten by the second
       record, this is because the both have the (2 -> 4) region
@@ -214,7 +214,7 @@ namespace Opm {
                                    ...},
                       "FLUXNUM" : {std::pair(4,8) : std::tuple(TransFactor , Face , Region),
                                    std::pair(1,4) : std::tuple(TransFactor , Face , Region),
-                                   ...}}     
+                                   ...}}
 
       Then it will go through the different regions and looking for
       interface with the wanted region values.
@@ -245,9 +245,9 @@ namespace Opm {
                 const MULTREGTRecord * record = (*iter).second;
                 std::pair<int,int> pair = (*iter).first;
                 const std::string& keyword = record->m_region.getValue();
-                if (searchMap.count(keyword) == 0) 
+                if (searchMap.count(keyword) == 0)
                     searchMap[keyword] = MULTREGTSearchMap();
-                
+
                 searchMap[keyword][pair] = record;
             }
         }
@@ -256,7 +256,7 @@ namespace Opm {
         for (auto iter = searchMap.begin(); iter != searchMap.end(); iter++) {
             std::shared_ptr<GridProperty<int> > region = regions->getKeyword( (*iter).first );
             MULTREGTSearchMap map = (*iter).second;
-            
+
 
             // Iterate through all the cells in the region.
             for (size_t k=0; k < region->getNZ(); k++) {
@@ -287,9 +287,9 @@ namespace Opm {
                     }
                 }
             }
-                
+
         }
-        
+
         return connections;
     }
 

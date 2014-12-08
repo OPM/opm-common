@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(ParseFileWithManyKeywords) {
     ParserPtr parser(new Parser());
     DeckPtr deck =  parser->parseFile(multipleKeywordFile.string() , false);
     SchedulePtr schedule(new Schedule(deck));
-    
+
     GroupTreePtr treeAtStart = schedule->getGroupTree(0);
     GroupTreeNodePtr fieldNode = treeAtStart->getNode("FIELD");
     BOOST_CHECK(fieldNode);

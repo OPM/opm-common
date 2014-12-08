@@ -35,7 +35,7 @@ namespace Json {
         explicit JsonObject(const char * inline_json);
         explicit JsonObject(cJSON * root);
         ~JsonObject();
-        
+
         bool has_item(const std::string& key) const;
         JsonObject get_array_item( size_t index ) const;
         JsonObject get_item(const std::string& key) const;
@@ -54,7 +54,7 @@ namespace Json {
         bool is_object( ) const;
 
         std::string get_content() const;
-        
+
         size_t size() const;
     private:
         JsonObject get_scalar_object(const std::string& key) const;

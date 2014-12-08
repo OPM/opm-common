@@ -43,19 +43,19 @@ BOOST_AUTO_TEST_CASE(ParseDENSITY) {
     DeckPtr deck =  parser->parseFile(file.string());
     DeckKeywordPtr densityKw = deck->getKeyword("DENSITY" , 0);
 
-    
+
     BOOST_CHECK_EQUAL( 2U , densityKw->size());
     DeckRecordConstPtr rec1 = densityKw->getRecord(0);
     DeckRecordConstPtr rec2 = densityKw->getRecord(1);
-    
+
     {
         DeckItemPtr oilDensity = rec1->getItem("OIL");
         DeckItemPtr waterDensity = rec1->getItem("WATER");
         DeckItemPtr gasDensity = rec1->getItem("GAS");
-        
+
         BOOST_CHECK_CLOSE(  500 * Field::Density , oilDensity->getSIDouble(0) , 0.001);
         BOOST_CHECK_CLOSE( 1000 * Field::Density , waterDensity->getSIDouble(0) , 0.001);
         BOOST_CHECK_CLOSE(    1 * Field::Density , gasDensity->getSIDouble(0) , 0.001);
     }
-    
+
 }

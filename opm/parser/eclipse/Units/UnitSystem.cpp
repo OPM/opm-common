@@ -15,7 +15,7 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
-*/ 
+*/
 
 
 #include <iostream>
@@ -31,10 +31,10 @@
 
 namespace Opm {
 
-    UnitSystem::UnitSystem(const std::string& unitSystem) : 
+    UnitSystem::UnitSystem(const std::string& unitSystem) :
         m_name( unitSystem )
     {
-        
+
     }
 
     bool UnitSystem::hasDimension(const std::string& dimension) const {
@@ -52,17 +52,17 @@ namespace Opm {
 
 
     std::shared_ptr<const Dimension> UnitSystem::getDimension(const std::string& dimension) const {
-        if (hasDimension( dimension )) 
+        if (hasDimension( dimension ))
             return m_dimensions.at( dimension );
         else
             throw std::invalid_argument("Dimension: " + dimension + " not recognized ");
     }
 
-    
+
     void UnitSystem::addDimension(std::shared_ptr<const Dimension> dimension) {
         if (hasDimension(dimension->getName()))
             m_dimensions.erase( dimension->getName() );
-        
+
         m_dimensions.insert( std::make_pair(dimension->getName() , dimension));
     }
 
@@ -93,7 +93,7 @@ namespace Opm {
         }
         return std::shared_ptr<Dimension>(Dimension::newComposite( dimension , SIfactor ));
     }
-    
+
 
 
     std::shared_ptr<const Dimension> UnitSystem::parse(const std::string& dimension) const {
@@ -116,7 +116,7 @@ namespace Opm {
 
             if (dividend->getSIOffset() != 0.0 || divisor->getSIOffset() != 0.0)
                 throw std::invalid_argument("Composite dimensions cannot currently require a conversion offset");
-        
+
             return std::shared_ptr<Dimension>( Dimension::newComposite( dimension , dividend->getSIScaling() / divisor->getSIScaling() ));
         } else {
             return parseFactor( dimension );
@@ -126,7 +126,7 @@ namespace Opm {
 
     bool UnitSystem::equal(const UnitSystem& other) const {
         bool equal_ = (m_dimensions.size() == other.m_dimensions.size());
-        
+
         if (equal_) {
             for (auto iter = m_dimensions.begin(); iter != m_dimensions.end(); ++iter) {
                 std::shared_ptr<const Dimension> dim = getDimension( iter->first );
@@ -137,7 +137,7 @@ namespace Opm {
                         equal_ = false;
                 } else
                     equal_ = false;
-                
+
             }
         }
         return equal_;
@@ -146,7 +146,7 @@ namespace Opm {
 
     UnitSystem * UnitSystem::newMETRIC() {
         UnitSystem * system = new UnitSystem("Metric");
-        
+
         system->addDimension("1"         , 1.0);
         system->addDimension("Pressure"  , Metric::Pressure );
         system->addDimension("Temperature", Metric::Temperature, Metric::TemperatureOffset);
@@ -167,10 +167,10 @@ namespace Opm {
     }
 
 
-    
+
     UnitSystem * UnitSystem::newFIELD() {
         UnitSystem * system = new UnitSystem("Field");
-        
+
         system->addDimension("1"    , 1.0);
         system->addDimension("Pressure", Field::Pressure );
         system->addDimension("Temperature", Field::Temperature, Field::TemperatureOffset);

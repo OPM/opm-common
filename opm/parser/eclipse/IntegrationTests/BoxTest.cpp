@@ -49,7 +49,7 @@ EclipseState makeState(const std::string& fileName, ParserLogPtr parserLog) {
 
   An issue has been posted on Stackoverflow: questions/26275555
 
-*/ 
+*/
 
 BOOST_AUTO_TEST_CASE( PERMX ) {
     ParserLogPtr parserLog(new ParserLog());
@@ -59,14 +59,14 @@ BOOST_AUTO_TEST_CASE( PERMX ) {
     std::shared_ptr<GridProperty<double> > permz = state.getDoubleGridProperty("PERMZ");
     size_t i,j,k;
     std::shared_ptr<const EclipseGrid> grid = state.getEclipseGrid();
-    
+
     for (k = 0; k < grid->getNZ(); k++) {
         for (j = 0; j < grid->getNY(); j++) {
             for (i = 0; i < grid->getNX(); i++) {
-                
+
                 BOOST_CHECK_CLOSE( permx->iget(i,j,k) * 0.25 , permz->iget(i,j,k) , 0.001);
                 BOOST_CHECK_EQUAL( permx->iget(i,j,k) * 2 , permy->iget(i,j,k));
-                    
+
             }
         }
     }
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE( PARSE_BOX_OK ) {
                         BOOST_CHECK_EQUAL(satnum->iget(g) , 10);
                     else
                         BOOST_CHECK_EQUAL(satnum->iget(g) , 2);
-                    
+
                 }
             }
         }
@@ -106,11 +106,11 @@ BOOST_AUTO_TEST_CASE( PARSE_MULTIPLY_COPY ) {
     std::shared_ptr<GridProperty<int> > fipnum = state.getIntGridProperty("FIPNUM");
     size_t i,j,k;
     std::shared_ptr<const EclipseGrid> grid = state.getEclipseGrid();
-    
+
     for (k = 0; k < grid->getNZ(); k++) {
         for (j = 0; j < grid->getNY(); j++) {
             for (i = 0; i < grid->getNX(); i++) {
-                
+
                 size_t g = i + j*grid->getNX() + k * grid->getNX() * grid->getNY();
                 if (i <= 1 && j <= 1 && k <= 1)
                     BOOST_CHECK_EQUAL(4*satnum->iget(g) , fipnum->iget(g));
@@ -145,15 +145,15 @@ BOOST_AUTO_TEST_CASE( EQUAL ) {
     std::shared_ptr<GridProperty<double> > poro = state.getDoubleGridProperty("PORO");
     size_t i,j,k;
     std::shared_ptr<const EclipseGrid> grid = state.getEclipseGrid();
-    
+
     for (k = 0; k < grid->getNZ(); k++) {
         for (j = 0; j < grid->getNY(); j++) {
             for (i = 0; i < grid->getNX(); i++) {
-                
+
                 BOOST_CHECK_EQUAL( pvtnum->iget(i,j,k) , k );
                 BOOST_CHECK_EQUAL( eqlnum->iget(i,j,k) , 77 + 2 * k );
                 BOOST_CHECK_EQUAL( poro->iget(i,j,k) , 0.25 );
-                
+
             }
         }
     }

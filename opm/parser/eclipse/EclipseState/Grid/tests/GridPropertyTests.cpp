@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(HasNAN) {
     typedef Opm::GridProperty<double>::SupportedKeywordInfo SupportedKeywordInfo;
     SupportedKeywordInfo keywordInfo("PORO" , nan , "1");
     Opm::GridProperty<double> poro( 2 , 2 , 1 , keywordInfo);
-    
+
     BOOST_CHECK( poro.containsNaN() );
     poro.iset(0,0.15);
     poro.iset(1,0.15);
@@ -118,7 +118,7 @@ Opm::DeckKeywordConstPtr createTABDIMSKeyword( ) {
 
 
 BOOST_AUTO_TEST_CASE(SetFromDeckKeyword_notData_Throws) {
-    Opm::DeckKeywordConstPtr tabdimsKw = createTABDIMSKeyword(); 
+    Opm::DeckKeywordConstPtr tabdimsKw = createTABDIMSKeyword();
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
     SupportedKeywordInfo keywordInfo("TABDIMS" , 100, "1");
     Opm::GridProperty<int> gridProperty( 6 ,1,1 , keywordInfo);
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(SetFromDeckKeyword_notData_Throws) {
 
 
 BOOST_AUTO_TEST_CASE(SetFromDeckKeyword_wrong_size_throws) {
-    Opm::DeckKeywordConstPtr satnumKw = createSATNUMKeyword(); 
+    Opm::DeckKeywordConstPtr satnumKw = createSATNUMKeyword();
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
     SupportedKeywordInfo keywordInfo("SATNUM" , 66, "1");
     Opm::GridProperty<int> gridProperty( 15 ,1,1, keywordInfo);
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(SetFromDeckKeyword_wrong_size_throws) {
 
 
 BOOST_AUTO_TEST_CASE(SetFromDeckKeyword) {
-    Opm::DeckKeywordConstPtr satnumKw = createSATNUMKeyword(); 
+    Opm::DeckKeywordConstPtr satnumKw = createSATNUMKeyword();
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
     SupportedKeywordInfo keywordInfo("SATNUM" , 99, "1");
     Opm::GridProperty<int> gridProperty( 4 , 4 , 2 , keywordInfo);
@@ -147,11 +147,11 @@ BOOST_AUTO_TEST_CASE(SetFromDeckKeyword) {
         for (size_t j=0; j < 4; j++) {
             for (size_t i=0; i < 4; i++) {
                 size_t g = i + j*4 + k*16;
-                
+
                 BOOST_CHECK_EQUAL( g , data[g] );
                 BOOST_CHECK_EQUAL( g , gridProperty.iget(g) );
                 BOOST_CHECK_EQUAL( g , gridProperty.iget(i,j,k) );
-                
+
             }
         }
     }
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(copy) {
 
     for (size_t j=0; j < 4; j++) {
         for (size_t i=0; i < 4; i++) {
-            
+
             BOOST_CHECK_EQUAL( prop2.iget(i,j,0) , 0 );
             BOOST_CHECK_EQUAL( prop2.iget(i,j,1) , 9 );
         }
@@ -190,14 +190,14 @@ BOOST_AUTO_TEST_CASE(SCALE) {
 
     std::shared_ptr<Opm::Box> global = std::make_shared<Opm::Box>(4,4,2);
     std::shared_ptr<Opm::Box> layer0 = std::make_shared<Opm::Box>(*global , 0,3,0,3,0,0);
-    
+
     prop2.copyFrom(prop1 , layer0);
     prop2.scale( 2 , global );
     prop2.scale( 2 , layer0 );
 
     for (size_t j=0; j < 4; j++) {
         for (size_t i=0; i < 4; i++) {
-            
+
             BOOST_CHECK_EQUAL( prop2.iget(i,j,0) , 4 );
             BOOST_CHECK_EQUAL( prop2.iget(i,j,1) , 18 );
         }
@@ -212,13 +212,13 @@ BOOST_AUTO_TEST_CASE(SET) {
 
     std::shared_ptr<Opm::Box> global = std::make_shared<Opm::Box>(4,4,2);
     std::shared_ptr<Opm::Box> layer0 = std::make_shared<Opm::Box>(*global , 0,3,0,3,0,0);
-    
+
     prop.setScalar( 2 , global );
     prop.setScalar( 4 , layer0 );
 
     for (size_t j=0; j < 4; j++) {
         for (size_t i=0; i < 4; i++) {
-            
+
             BOOST_CHECK_EQUAL( prop.iget(i,j,0) , 4 );
             BOOST_CHECK_EQUAL( prop.iget(i,j,1) , 2 );
         }
@@ -235,14 +235,14 @@ BOOST_AUTO_TEST_CASE(ADD) {
 
     std::shared_ptr<Opm::Box> global = std::make_shared<Opm::Box>(4,4,2);
     std::shared_ptr<Opm::Box> layer0 = std::make_shared<Opm::Box>(*global , 0,3,0,3,0,0);
-    
+
     prop2.copyFrom(prop1 , layer0);
     prop2.add( 2 , global );
     prop2.add( 2 , layer0 );
 
     for (size_t j=0; j < 4; j++) {
         for (size_t i=0; i < 4; i++) {
-            
+
             BOOST_CHECK_EQUAL( prop2.iget(i,j,0) , 5 );
             BOOST_CHECK_EQUAL( prop2.iget(i,j,1) , 11 );
         }
@@ -376,19 +376,19 @@ template <class ValueType>
 class TestPostProcessorMul : public Opm::GridPropertyBasePostProcessor<ValueType>
 {
 public:
-    TestPostProcessorMul(ValueType factor) { 
-        m_factor = factor; 
+    TestPostProcessorMul(ValueType factor) {
+        m_factor = factor;
     }
-    
-    void apply(std::vector<ValueType>& values) const { 
-        for (size_t g = 0; g < values.size(); g++) 
+
+    void apply(std::vector<ValueType>& values) const {
+        for (size_t g = 0; g < values.size(); g++)
             values[g] *= m_factor;
     };
 
 private:
     ValueType m_factor;
 };
-    
+
 
 
 
@@ -413,7 +413,7 @@ static Opm::DeckPtr createDeck() {
         "1000*0.10 / \n"
         "EDIT\n"
         "\n";
- 
+
     Opm::ParserPtr parser(new Opm::Parser());
     return parser->parseString(deckData) ;
 }
@@ -421,7 +421,7 @@ static Opm::DeckPtr createDeck() {
 
 BOOST_AUTO_TEST_CASE(GridPropertyPostProcessors) {
     std::shared_ptr<TestPostProcessorMul<double> > testPostP = std::make_shared<TestPostProcessorMul<double> >(2.0);
-    
+
     typedef Opm::GridPropertySupportedKeywordInfo<double> SupportedKeywordInfo;
     SupportedKeywordInfo kwInfo1("MULTPV" , 1.0 , "1");
     SupportedKeywordInfo kwInfo2("PORO"   , 1.0 , testPostP , "1");
@@ -430,10 +430,10 @@ BOOST_AUTO_TEST_CASE(GridPropertyPostProcessors) {
     Opm::DeckPtr deck = createDeck();
     std::shared_ptr<Opm::EclipseGrid> grid = std::make_shared<Opm::EclipseGrid>(deck);
     Opm::GridProperties<double> properties(grid, supportedKeywords);
-    
+
     {
-        auto poro = properties.getKeyword("PORO"); 
-        auto multpv = properties.getKeyword("MULTPV"); 
+        auto poro = properties.getKeyword("PORO");
+        auto multpv = properties.getKeyword("MULTPV");
 
         poro->loadFromDeckKeyword( deck->getKeyword("PORO" , 0));
         multpv->loadFromDeckKeyword( deck->getKeyword("MULTPV" , 0));
@@ -461,8 +461,8 @@ BOOST_AUTO_TEST_CASE(GridPropertyPostProcessors) {
         }
 
     }
-    
-    
+
+
     BOOST_CHECK( !kwInfo1.hasPostProcessor() );
     BOOST_CHECK( kwInfo2.hasPostProcessor() );
 }
@@ -478,7 +478,7 @@ BOOST_AUTO_TEST_CASE(multiply) {
 
     BOOST_CHECK_THROW( p1.multiplyWith(p2) , std::invalid_argument );
     p1.multiplyWith(p3);
-    
+
     for (size_t g = 0; g < p1.getCartesianSize(); g++)
         BOOST_CHECK_EQUAL( 100 , p1.iget(g));
 

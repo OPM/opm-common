@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   EclipseDataDoctor.cpp
  * Author: kflik
  *
@@ -16,9 +16,9 @@ int main(int /* argc */, char** argv) {
     std::string file = argv[1];
     Opm::DeckConstPtr deck = parser->parseFile(file, false);
     Opm::Schedule sched( deck );
-    
+
     std::cout << "Wells: " << sched.numWells() << std::endl;
-    
+
 
     return 0;
 }

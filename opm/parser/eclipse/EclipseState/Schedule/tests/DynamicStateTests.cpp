@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(DynamicStateSetOutOfRangeThrows) {
     Opm::DynamicState<int> state(timeMap , 137);
     for (size_t i = 0; i < 2; i++)
         timeMap->addTStep( boost::posix_time::hours( (i+1) * 24 ));
-    
+
     BOOST_CHECK_THROW( state.add(3 , 100) , std::range_error);
 }
 
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(DynamicStateSetOK) {
     Opm::DynamicState<int> state(timeMap , 137);
     for (size_t i = 0; i < 10; i++)
         timeMap->addTStep( boost::posix_time::hours( (i+1) * 24 ));
-    
+
     state.add(2 , 23 );
     BOOST_CHECK_EQUAL( 137 , state.get(0));
     BOOST_CHECK_EQUAL( 137 , state.get(1));
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(DynamicStateSetOK) {
     BOOST_CHECK_EQUAL( 137 , state.get(1));
     BOOST_CHECK_EQUAL( 17 , state.get(2));
     BOOST_CHECK_EQUAL( 17 , state.get(5));
-    
+
     state.add(6 , 60);
     BOOST_CHECK_EQUAL( 17 , state.get(2));
     BOOST_CHECK_EQUAL( 17 , state.get(5));
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(DynamicStateAddAt) {
         BOOST_CHECK( &v1 != &v2 );
     }
 }
-    
+
 
 BOOST_AUTO_TEST_CASE(DynamicStateCheckSize) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);

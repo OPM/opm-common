@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(AddDataKeyword_correctlyConfigured) {
     BOOST_CHECK_EQUAL( false , parserKeyword->isDataKeyword() );
     parserKeyword->addDataItem( item );
     BOOST_CHECK_EQUAL( true , parserKeyword->isDataKeyword() );
-    
+
     BOOST_CHECK_EQUAL(true , parserKeyword->hasFixedSize( ));
     BOOST_CHECK_EQUAL(1U , parserKeyword->getFixedSize() );
     BOOST_CHECK_EQUAL(1U , parserKeyword->numItems() );
@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_ItemMissingValueType_throws) {
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_ItemInvalidEnum_throws) {
     Json::JsonObject jsonObject1("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : 100 , \"items\" : [{\"name\" : \"I\" , \"size_type\" : \"XSINGLE\" , \"value_type\" : \"INT\"}]}");
     Json::JsonObject jsonObject2("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : 100 , \"items\" : [{\"name\" : \"I\" , \"size_type\" : \"SINGLE\" , \"value_type\" : \"INTX\"}]}");
-    
+
     BOOST_CHECK_THROW(ParserKeyword::createFromJson(jsonObject1) , std::invalid_argument);
     BOOST_CHECK_THROW(ParserKeyword::createFromJson(jsonObject2) , std::invalid_argument);
 }
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObjectItemsOK) {
     ParserItemConstPtr item = record->get( 0 );
     BOOST_CHECK_EQUAL( 1U , record->size( ) );
     BOOST_CHECK_EQUAL( "I" , item->name( ) );
-    BOOST_CHECK_EQUAL( SINGLE , item->sizeType()); 
+    BOOST_CHECK_EQUAL( SINGLE , item->sizeType());
 }
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_sizeFromOther) {
@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE(AddkeywordFromJson_isTableCollection) {
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_InvalidSize_throws) {
     Json::JsonObject jsonObject1("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : \"string\" , \"items\" : [{\"name\" : \"I\" , \"size_type\" : \"SINGLE\" , \"value_type\" : \"INT\"}]}");
     Json::JsonObject jsonObject2("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : [1,2,3]    , \"items\" : [{\"name\" : \"I\" , \"size_type\" : \"SINGLE\" , \"value_type\" : \"INT\"}]}");
-    
+
     BOOST_CHECK_THROW(ParserKeyword::createFromJson(jsonObject1) , std::invalid_argument);
     BOOST_CHECK_THROW(ParserKeyword::createFromJson(jsonObject2) , std::invalid_argument);
 
@@ -335,7 +335,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_InvalidSize_throws) {
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_SizeUNKNOWN_OK) {
     Json::JsonObject jsonObject1("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : \"UNKNOWN\" , \"items\" : [{\"name\" : \"I\" , \"size_type\" : \"SINGLE\" , \"value_type\" : \"INT\"}]}");
     ParserKeywordConstPtr parserKeyword = ParserKeyword::createFromJson(jsonObject1);
-    
+
     BOOST_CHECK_EQUAL( UNKNOWN , parserKeyword->getSizeType() );
 }
 
@@ -431,9 +431,9 @@ BOOST_AUTO_TEST_CASE(ParseKeywordHasDimensionCorrect) {
     ParserKeywordPtr parserKeyword = ParserKeyword::createDynamicSized("JA");
     ParserIntItemConstPtr itemI(new ParserIntItem("I", SINGLE));
     ParserDoubleItemPtr item2(new ParserDoubleItem("ID", SINGLE));
-    
+
     BOOST_CHECK_EQUAL( false , parserKeyword->hasDimension());
-    
+
     parserKeyword->addItem( itemI );
     parserKeyword->addItem( item2 );
     BOOST_CHECK_EQUAL( false , parserKeyword->hasDimension());
@@ -448,7 +448,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withDimension) {
     Json::JsonObject jsonObject("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : 100 , \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\" , \"dimension\" : \"Length*Length/Time\"}]}");
     ParserKeywordPtr parserKeyword = ParserKeyword::createFromJson(jsonObject);
     ParserRecordConstPtr record = parserKeyword->getRecord();
-    ParserItemConstPtr item = record->get("ItemX");      
+    ParserItemConstPtr item = record->get("ItemX");
 
     BOOST_CHECK_EQUAL("BPR" , parserKeyword->getName());
     BOOST_CHECK_EQUAL( true , parserKeyword->hasFixedSize() );
@@ -464,7 +464,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withDimensionList) {
     Json::JsonObject jsonObject("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : 100 , \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"ALL\" , \"value_type\" : \"DOUBLE\" , \"dimension\" : [\"Length*Length/Time\" , \"Time\", \"1\"]}]}");
     ParserKeywordPtr parserKeyword = ParserKeyword::createFromJson(jsonObject);
     ParserRecordConstPtr record = parserKeyword->getRecord();
-    ParserItemConstPtr item = record->get("ItemX");      
+    ParserItemConstPtr item = record->get("ItemX");
 
     BOOST_CHECK_EQUAL("BPR" , parserKeyword->getName());
     BOOST_CHECK_EQUAL( true , parserKeyword->hasFixedSize() );

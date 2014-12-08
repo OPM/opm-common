@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE( parse_WCHONHIST_OK ) {
 
     DeckItemConstPtr item1       = rec1->getItem("WELL");
     DeckItemConstPtr item1_index = rec1->getItem(0);
-    
+
     BOOST_CHECK_EQUAL( item1  , item1_index );
     BOOST_CHECK_EQUAL( "OP_1" , item1->getString(0));
 
@@ -59,9 +59,9 @@ BOOST_AUTO_TEST_CASE( parse_WCHONHIST_OK ) {
     item1 = rec3->getItem("WELL");
     BOOST_CHECK_EQUAL( "OP_3" , item1->getString(0));
 
-    
+
     /*****************************************************************/
-    
+
     BOOST_CHECK_EQUAL( 2U , deck->numKeywords("WCONHIST"));
     kw1 = deck->getKeyword("WCONHIST" , 1 );
     rec3 = kw1->getRecord(2);

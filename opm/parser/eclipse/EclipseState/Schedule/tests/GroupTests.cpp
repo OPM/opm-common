@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(GroupChangePhaseSameTimeThrows) {
 BOOST_AUTO_TEST_CASE(GroupMiscInjection) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
     Opm::Group group("G1" , timeMap , 0);
-    
+
     group.setSurfaceMaxRate( 3 , 100 );
     BOOST_CHECK_EQUAL( 100 , group.getSurfaceMaxRate( 5 ));
 
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(GroupMiscInjection) {
 BOOST_AUTO_TEST_CASE(GroupDoesNotHaveWell) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
     Opm::Group group("G1" , timeMap , 0);
-    
+
     BOOST_CHECK_EQUAL(false , group.hasWell("NO", 2));
     BOOST_CHECK_EQUAL(0U , group.numWells(2));
     BOOST_CHECK_THROW(group.getWell("NO" , 2) , std::invalid_argument);
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(GroupAddWell) {
     Opm::Group group("G1" , timeMap , 0);
     Opm::WellPtr well1(new Opm::Well("WELL1" , 0, 0, 0.0, Opm::Phase::OIL, timeMap, 0));
     Opm::WellPtr well2(new Opm::Well("WELL2" , 0, 0, 0.0, Opm::Phase::OIL, timeMap, 0));
-    
+
     BOOST_CHECK_EQUAL(0U , group.numWells(2));
     group.addWell( 3 , well1 );
     BOOST_CHECK_EQUAL( 1U , group.numWells(3));
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(GroupAddAndDelWell) {
     BOOST_CHECK_EQUAL( 1U , group.numWells(5));
     BOOST_CHECK_EQUAL( 2U , group.numWells(6));
     BOOST_CHECK_EQUAL( 2U , group.numWells(8));
-    
+
     group.delWell( 7 , "WELL1");
     BOOST_CHECK_EQUAL(false , group.hasWell("WELL1" , 7));
     BOOST_CHECK_EQUAL(true , group.hasWell("WELL2" , 7));

@@ -85,7 +85,7 @@ static bool areStreamsEqual( std::istream& lhs, std::istream& rhs )
 
 
 static void generateKeywordSignature(std::iostream& of , KeywordMapType& keywordMap)
-{    
+{
     for (auto iter=keywordMap.begin(); iter != keywordMap.end(); ++iter) {
         KeywordElementType  keywordElement = *iter;
         const std::string& keywordName = keywordElement.first;
@@ -93,7 +93,7 @@ static void generateKeywordSignature(std::iostream& of , KeywordMapType& keyword
         Json::JsonObject * jsonKeyword = new Json::JsonObject(boost::filesystem::path(fileName));
 
         of << keywordName << std::endl << jsonKeyword->get_content() << std::endl;
-        
+
         delete jsonKeyword;
     }
 }
@@ -117,7 +117,7 @@ static void testKeyword(ParserKeywordConstPtr parserKeyword , const std::string&
 
     of << "    ParserKeywordPtr ";
     parserKeyword->inlineNew(of , "inlineKeyword" , "   ");
-    
+
     of << "BOOST_CHECK( parserKeyword->equal( *inlineKeyword));" << std::endl;
     if (parserKeyword->hasDimension()) {
         of << "{" << std::endl;
@@ -127,7 +127,7 @@ static void testKeyword(ParserKeywordConstPtr parserKeyword , const std::string&
         of << "        for (size_t j=0; j < item->numDimensions(); j++) {" << std::endl;
         of << "            std::string dimString = item->getDimension(j);" << std::endl;
         of << "            BOOST_CHECK_NO_THROW( unitSystem->getNewDimension( dimString ));" << std::endl;
-        of << "         }" << std::endl; 
+        of << "         }" << std::endl;
         of << "    }" << std::endl;
         of << "}" << std::endl;
     }
@@ -147,9 +147,9 @@ static void generateTestForKeyword(std::iostream& of, KeywordElementType keyword
 static void generateKeywordTest(const char * test_file_name , KeywordMapType& keywordMap) {
     std::fstream test_file_stream( test_file_name , std::fstream::out );
     createTestHeader( test_file_stream , "TEST_KEYWORDS");
-    for (auto iter=keywordMap.begin(); iter != keywordMap.end(); ++iter) 
+    for (auto iter=keywordMap.begin(); iter != keywordMap.end(); ++iter)
         generateTestForKeyword(test_file_stream , *iter);
-    
+
     test_file_stream.close( );
 }
 
@@ -166,7 +166,7 @@ static void generateSourceForKeyword(std::iostream& of, KeywordElementType keywo
     parserKeyword->inlineNew(of , keywordName , indent);
     of << indent << "parser->addParserKeyword( " << keywordName << ");" << std::endl;
     of << "}" << std::endl << std::endl;
-    
+
     std::cout << "Creating keyword: " << keywordName << std::endl;
 }
 

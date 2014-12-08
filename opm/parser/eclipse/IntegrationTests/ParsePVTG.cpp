@@ -110,11 +110,11 @@ static void check_parser(ParserPtr parser) {
     BOOST_CHECK_EQUAL(9U , item4_1->size());
     BOOST_CHECK_EQUAL(2U , record4->size());
 
-    
+
     {
         Opm::PvtgTable pvtgTable;
         pvtgTable.initFORUNITTESTONLY(kw1, 0);
-        
+
         const auto &outerTable = *pvtgTable.getOuterTable();
         const auto &innerTable0 = *pvtgTable.getInnerTable(0);
 
@@ -122,7 +122,7 @@ static void check_parser(ParserPtr parser) {
         BOOST_CHECK_EQUAL(4U, outerTable.numColumns());
         BOOST_CHECK_EQUAL(3U, innerTable0.numRows());
         BOOST_CHECK_EQUAL(3U, innerTable0.numColumns());
-        
+
         BOOST_CHECK_EQUAL(20.0e5, outerTable.getPressureColumn()[0]);
         BOOST_CHECK_EQUAL(0.00002448, outerTable.getOilSolubilityColumn()[0]);
         BOOST_CHECK_EQUAL(outerTable.getOilSolubilityColumn()[0], innerTable0.getOilSolubilityColumn()[0]);

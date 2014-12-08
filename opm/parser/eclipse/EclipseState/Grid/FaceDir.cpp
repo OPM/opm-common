@@ -26,7 +26,7 @@
 namespace Opm {
 
     namespace FaceDir {
-        
+
         DirEnum FromString(const std::string& stringValue) {
             if ((stringValue == "X") || (stringValue == "I"))
                 return XPlus;
@@ -42,7 +42,7 @@ namespace Opm {
                 return ZPlus;
             if ((stringValue == "Z-") || (stringValue == "K-"))
                 return ZMinus;
-            
+
             throw std::invalid_argument("The string value " + stringValue + " could not be converted to a FaceDir enum value");
         }
 
@@ -56,22 +56,22 @@ namespace Opm {
 
             if (stringValue == "Z")
                 return ZPlus + ZMinus;
-            
+
             if (stringValue == "XY")
                 return XPlus + YPlus + XMinus + YMinus;
 
             if (stringValue == "XZ")
                 return XPlus + ZPlus + XMinus + ZMinus;
-            
+
             if (stringValue == "YZ")
                 return YPlus + ZPlus + YMinus + ZMinus;
-            
+
             if (stringValue == "XYZ")
                 return XPlus + YPlus + ZPlus + XMinus + YMinus + ZMinus;
 
             throw std::invalid_argument("The string " + stringValue + " is not a valid MULTREGT direction value");
         }
-        
+
 
     }
 }

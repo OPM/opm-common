@@ -127,11 +127,11 @@ namespace Opm {
     WellCommon::StatusEnum Well::getStatus(size_t timeStep) const {
         return m_status->get( timeStep );
     }
-    
+
     void Well::setStatus(size_t timeStep, WellCommon::StatusEnum status) {
         m_status->add( timeStep , status );
     }
-    
+
     bool Well::isProducer(size_t timeStep) const {
         return m_isProducer->get(timeStep);
     }
@@ -139,7 +139,7 @@ namespace Opm {
     bool Well::isInjector(size_t timeStep) const {
         return !isProducer(timeStep);
     }
-    
+
     bool Well::isAvailableForGroupControl(size_t timeStep) const {
         return m_isAvailableForGroupControl->get(timeStep);
     }
@@ -175,7 +175,7 @@ namespace Opm {
     /*****************************************************************/
 
     // WELSPECS
-    
+
     int Well::getHeadI() const {
         return m_headI;
     }
@@ -199,7 +199,7 @@ namespace Opm {
     CompletionSetConstPtr Well::getCompletions(size_t timeStep) const {
         return m_completions->get( timeStep );
     }
-    
+
     void Well::addCompletions(size_t time_step , const std::vector<CompletionPtr>& newCompletions) {
         CompletionSetConstPtr currentCompletionSet = m_completions->get(time_step);
         CompletionSetPtr newCompletionSet = CompletionSetPtr( currentCompletionSet->shallowCopy() );
@@ -208,10 +208,10 @@ namespace Opm {
             newCompletions[ic]->fixDefaultIJ( m_headI , m_headJ );
             newCompletionSet->add( newCompletions[ic] );
         }
-        
+
         m_completions->add( time_step , newCompletionSet);
     }
-    
+
     const std::string Well::getGroupName(size_t time_step) const {
         return m_groupName->get(time_step);
     }
