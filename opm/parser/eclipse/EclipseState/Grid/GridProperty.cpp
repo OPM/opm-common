@@ -41,13 +41,13 @@ template<>
 bool GridProperty<double>::containsNaN( ) {
     bool return_value = false;
     size_t size = m_data.size();
-    size_t index = 0;    
+    size_t index = 0;
     while (true) {
         if (std::isnan(m_data[index])) {
             return_value = true;
             break;
         }
-    
+
         index++;
         if (index == size)
             break;

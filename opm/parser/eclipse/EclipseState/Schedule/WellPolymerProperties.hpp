@@ -22,13 +22,13 @@
 
 
 namespace Opm {
-    
+
     struct WellPolymerProperties {
         double m_polymerConcentration;
         double m_saltConcentration;
 
         WellPolymerProperties();
-    }; 
+    };
 }
 
 #endif

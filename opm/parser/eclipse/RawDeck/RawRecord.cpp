@@ -32,10 +32,10 @@ namespace Opm {
      * It is assumed that after a record is terminated, there is no quote marks
      * in the subsequent comment. This is in accordance with the Eclipse user
      * manual.
-     * 
+     *
      * If a "non-complete" record string is supplied, an invalid_argument
      * exception is thrown.
-     * 
+     *
      */
     RawRecord::RawRecord(const std::string& singleRecordString, const std::string& fileName, const std::string& keywordName) : m_fileName(fileName), m_keywordName(keywordName){
         if (isTerminatedRecordString(singleRecordString)) {
@@ -46,15 +46,15 @@ namespace Opm {
                     " offending string: " + singleRecordString);
         }
     }
-    
+
     const std::string& RawRecord::getFileName() const {
         return m_fileName;
     }
-    
+
     const std::string& RawRecord::getKeywordName() const {
         return m_keywordName;
     }
-    
+
 
     std::string RawRecord::pop_front() {
         std::string front = m_recordItems.front();
@@ -151,8 +151,8 @@ namespace Opm {
         unsigned int terminatingSlash = singleRecordString.find_first_of(RawConsts::slash);
         unsigned int lastQuotePosition = singleRecordString.find_last_of(RawConsts::quote);
 
-        // Checks lastQuotePosition vs terminatingSlashPosition, 
-        // since specifications of WELLS, FILENAMES etc can include slash, but 
+        // Checks lastQuotePosition vs terminatingSlashPosition,
+        // since specifications of WELLS, FILENAMES etc can include slash, but
         // these are always in quotes (and there are no quotes after record-end).
         if (terminatingSlash < lastQuotePosition && lastQuotePosition < singleRecordString.size()) {
             terminatingSlash = singleRecordString.find_first_of(RawConsts::slash, lastQuotePosition);

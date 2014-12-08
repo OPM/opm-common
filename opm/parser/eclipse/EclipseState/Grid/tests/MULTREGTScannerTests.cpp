@@ -78,18 +78,18 @@ static Opm::DeckPtr createInvalidMULTREGTDeck() {
         "3 4 5\n"
         "3 4 5\n"
         "/\n"
-        "MULTREGT\n"  
+        "MULTREGT\n"
         "1  2   0.50   G   ALL    M / -- Invalid direction\n"
         "/\n"
-        "MULTREGT\n"  
+        "MULTREGT\n"
         "1  2   0.50   X   ALL    G / -- Invalid region \n"
         "/\n"
-        "MULTREGT\n"  
+        "MULTREGT\n"
         "1  2   0.50   X   ALL    M / -- Region not in deck \n"
         "/\n"
         "EDIT\n"
         "\n";
- 
+
     Opm::ParserPtr parser(new Opm::Parser());
     return parser->parseString(deckData) ;
 }
@@ -100,7 +100,7 @@ static Opm::DeckPtr createInvalidMULTREGTDeck() {
 BOOST_AUTO_TEST_CASE(InvalidInput) {
     typedef Opm::GridProperties<int>::SupportedKeywordInfo SupportedKeywordInfo;
     std::shared_ptr<std::vector<SupportedKeywordInfo> > supportedKeywords(new std::vector<SupportedKeywordInfo>{
-            SupportedKeywordInfo("FLUXNUM" , 1 , "1") , 
+            SupportedKeywordInfo("FLUXNUM" , 1 , "1") ,
             SupportedKeywordInfo("OPERNUM" , 1 , "1") ,
             SupportedKeywordInfo("MULTNUM" , 1 , "1") });
 
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(InvalidInput) {
     // Invalid direction
     BOOST_CHECK_THROW( scanner.addKeyword( multregtKeyword0 ) , std::invalid_argument);
 
-    // Not supported region 
+    // Not supported region
     BOOST_CHECK_THROW( scanner.addKeyword( multregtKeyword1 ) , std::invalid_argument);
 
     // The keyword is ok; but it refers to a region which is not in the deck.
@@ -140,21 +140,21 @@ static Opm::DeckPtr createNotSupportedMULTREGTDeck() {
         "3 4 5\n"
         "3 4 5\n"
         "/\n"
-        "MULTREGT\n"  
+        "MULTREGT\n"
         "1  2   0.50   X   NNC    M / -- Not yet support NNC behaviour \n"
         "/\n"
-        "MULTREGT\n"  
+        "MULTREGT\n"
         "*  2   0.50   X   ALL    M / -- Defaulted from region value \n"
         "/\n"
-        "MULTREGT\n"  
+        "MULTREGT\n"
         "2  *   0.50   X   ALL    M / -- Defaulted to region value \n"
         "/\n"
-        "MULTREGT\n"  
+        "MULTREGT\n"
         "2  2   0.50   X   ALL    M / -- Region values equal \n"
         "/\n"
         "EDIT\n"
         "\n";
- 
+
     Opm::ParserPtr parser(new Opm::Parser());
     return parser->parseString(deckData) ;
 }
@@ -205,15 +205,15 @@ static Opm::DeckPtr createSimpleMULTREGTDeck() {
         "3 4\n"
         "3 4\n"
         "/\n"
-        "MULTREGT\n"  
+        "MULTREGT\n"
         "1  2   0.50   X   ALL    M / \n"
         "/\n"
-        "MULTREGT\n"  
+        "MULTREGT\n"
         "2  1   1.50   X   ALL    M / \n"
         "/\n"
         "EDIT\n"
         "\n";
- 
+
     Opm::ParserPtr parser(new Opm::Parser());
     return parser->parseString(deckData) ;
 }
@@ -222,7 +222,7 @@ static Opm::DeckPtr createSimpleMULTREGTDeck() {
 BOOST_AUTO_TEST_CASE(SimpleMULTREGT) {
     typedef Opm::GridProperties<int>::SupportedKeywordInfo SupportedKeywordInfo;
     std::shared_ptr<std::vector<SupportedKeywordInfo> > supportedKeywords(new std::vector<SupportedKeywordInfo>{
-            SupportedKeywordInfo("FLUXNUM" , 1 , "1") , 
+            SupportedKeywordInfo("FLUXNUM" , 1 , "1") ,
                 SupportedKeywordInfo("OPERNUM" , 1 , "1") ,
                 SupportedKeywordInfo("MULTNUM" , 1 , "1") });
 
@@ -238,16 +238,16 @@ BOOST_AUTO_TEST_CASE(SimpleMULTREGT) {
 
     Opm::DeckKeywordConstPtr multregtKeyword0 = deck->getKeyword("MULTREGT",0);
     Opm::DeckKeywordConstPtr multregtKeyword1 = deck->getKeyword("MULTREGT",1);
-    
+
     multNum->loadFromDeckKeyword( inputBox , multnumKeyword );
     fluxNum->loadFromDeckKeyword( inputBox , fluxnumKeyword );
-    
+
     {
         Opm::MULTREGTScanner scanner;
         scanner.addKeyword(multregtKeyword0);
-    
+
         auto cells = scanner.scanRegions(gridProperties);
-        
+
         BOOST_CHECK_EQUAL( 2 , cells.size() );
         auto cell0 = cells[0];
         auto cell1 = cells[1];
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(SimpleMULTREGT) {
         BOOST_CHECK_EQUAL( 0 , std::get<0>(cell0));
         BOOST_CHECK_EQUAL( Opm::FaceDir::XPlus , std::get<1>(cell0));
         BOOST_CHECK_EQUAL( 0.50 , std::get<2>(cell0));
-        
+
         BOOST_CHECK_EQUAL( 2 , std::get<0>(cell1));
         BOOST_CHECK_EQUAL( Opm::FaceDir::XPlus , std::get<1>(cell1));
         BOOST_CHECK_EQUAL( 0.50 , std::get<2>(cell1));
@@ -264,15 +264,15 @@ BOOST_AUTO_TEST_CASE(SimpleMULTREGT) {
     {
         Opm::MULTREGTScanner scanner;
         scanner.addKeyword(multregtKeyword1);
-        
+
         auto cells = scanner.scanRegions(gridProperties);
-        
+
         BOOST_CHECK_EQUAL( 2 , cells.size() );
-        
+
         auto cell0 = cells[0];
         auto cell1 = cells[1];
 
-        
+
         BOOST_CHECK_EQUAL( 1 , std::get<0>(cell0));
         BOOST_CHECK_EQUAL( Opm::FaceDir::XMinus , std::get<1>(cell0));
         BOOST_CHECK_EQUAL( 1.50 , std::get<2>(cell0));
@@ -301,12 +301,12 @@ static Opm::DeckPtr createCopyMULTNUMDeck() {
         "COPY\n"
         " FLUXNUM  MULTNUM /\n"
         "/\n"
-        "MULTREGT\n"  
+        "MULTREGT\n"
         "1  2   0.50/ \n"
         "/\n"
         "EDIT\n"
         "\n";
- 
+
     Opm::ParserPtr parser(new Opm::Parser());
     return parser->parseString(deckData) ;
 }

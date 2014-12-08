@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(CreateBox) {
     BOOST_CHECK_EQUAL( 4 , box.getDim(0) );
     BOOST_CHECK_EQUAL( 3 , box.getDim(1) );
     BOOST_CHECK_EQUAL( 2 , box.getDim(2) );
-    
+
     BOOST_CHECK_THROW( box.getDim(5) , std::invalid_argument);
 
 
@@ -52,11 +52,11 @@ BOOST_AUTO_TEST_CASE(CreateBox) {
                 for (i=0; i < box.getDim(0); i++) {
                     size_t g = i + j*box.getDim(0) + k*box.getDim(0)*box.getDim(1);
                     BOOST_CHECK_EQUAL( indexList[g] , g);
-                    
+
                 }
             }
         }
-    }   
+    }
 }
 
 
@@ -66,25 +66,25 @@ BOOST_AUTO_TEST_CASE(CreateSubBox) {
 
     BOOST_CHECK_THROW( new Opm::Box( globalBox , -1 , 9 , 1 , 8 , 1, 8)  , std::invalid_argument);   //  Negative throw
     BOOST_CHECK_THROW( new Opm::Box( globalBox ,  1 , 19 , 1 , 8 , 1, 8) , std::invalid_argument);   //  Bigger than global: throw
-    BOOST_CHECK_THROW( new Opm::Box( globalBox ,  9 , 1  , 1 , 8 , 1, 8) , std::invalid_argument);   //  Inverted order: throw    
-    
+    BOOST_CHECK_THROW( new Opm::Box( globalBox ,  9 , 1  , 1 , 8 , 1, 8) , std::invalid_argument);   //  Inverted order: throw
+
     Opm::Box subBox1(globalBox , 0,9,0,9,0,9);
     BOOST_CHECK( subBox1.isGlobal());
 
-    
+
     Opm::Box subBox2(globalBox , 1,3,1,4,1,5);
     BOOST_CHECK( !subBox2.isGlobal());
     BOOST_CHECK_EQUAL( 60U , subBox2.size() );
-    
+
     {
         size_t i,j,k;
         size_t d = 0;
         const std::vector<size_t>& indexList = subBox2.getIndexList();
-        
+
         for (k=0; k < subBox2.getDim(2); k++) {
             for (j=0; j < subBox2.getDim(1); j++) {
                 for (i=0; i < subBox2.getDim(0); i++) {
-                    
+
                     size_t g = (i + 1) + (j + 1)*globalBox.getDim(0) + (k + 1)*globalBox.getDim(0)*globalBox.getDim(1);
                     BOOST_CHECK_EQUAL( indexList[d] , g);
                     d++;
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(BoxEqual) {
     Opm::Box subBox1( globalBox1 , 0 , 9 , 0 , 9 , 0, 9);
     Opm::Box subBox4( globalBox4 , 0 , 9 , 0 , 9 , 0, 9);
     Opm::Box subBox5( globalBox4 , 10 , 19 , 10 , 19 , 10, 19);
-    
+
     BOOST_CHECK( globalBox1.equal( globalBox2 ));
     BOOST_CHECK( !globalBox1.equal( globalBox3 ));
     BOOST_CHECK( globalBox1.equal( subBox1 ));

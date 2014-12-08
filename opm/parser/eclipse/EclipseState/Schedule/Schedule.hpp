@@ -33,9 +33,9 @@
 
 #include <map>
 
-namespace Opm 
+namespace Opm
 {
-    
+
     const boost::gregorian::date defaultStartDate( 1983 , boost::gregorian::Jan , 1);
 
     class Schedule {
@@ -59,7 +59,7 @@ namespace Opm
         bool hasGroup(const std::string& groupName) const;
         GroupPtr getGroup(const std::string& groupName) const;
 
-  
+
     private:
         TimeMapPtr m_timeMap;
         OrderedMap<WellPtr> m_wells;

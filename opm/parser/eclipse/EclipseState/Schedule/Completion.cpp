@@ -23,23 +23,23 @@
 
 namespace Opm {
 
-    Completion::Completion(int i, int j , int k , CompletionStateEnum state , 
+    Completion::Completion(int i, int j , int k , CompletionStateEnum state ,
                            const Value<double>& connectionTransmissibilityFactor,
-                           const Value<double>& diameter, 
-                           const Value<double>& skinFactor, 
+                           const Value<double>& diameter,
+                           const Value<double>& skinFactor,
                            const CompletionDirection::DirectionEnum direction)
         : m_i(i), m_j(j), m_k(k),
           m_diameter(diameter),
           m_connectionTransmissibilityFactor(connectionTransmissibilityFactor),
           m_skinFactor(skinFactor),
           m_state(state),
-          m_direction(direction) 
+          m_direction(direction)
     {  }
 
 
     bool Completion::sameCoordinate(const Completion& other) const {
-        if ((m_i == other.m_i) && 
-            (m_j == other.m_j) && 
+        if ((m_i == other.m_i) &&
+            (m_j == other.m_j) &&
             (m_k == other.m_k))
             return true;
         else
@@ -52,7 +52,7 @@ namespace Opm {
        will return a list is that the 'K1 K2' structure is
        disentangled, and each completion is returned separately.
     */
-    
+
     std::pair<std::string , std::vector<CompletionPtr> > Completion::completionsFromCOMPDATRecord( DeckRecordConstPtr compdatRecord ) {
         std::vector<CompletionPtr> completions;
         std::string well = compdatRecord->getItem("WELL")->getTrimmedString(0);
@@ -77,7 +77,7 @@ namespace Opm {
             diameter.setValue( diameterItem->getSIDouble(0));
             skinFactor.setValue( skinFactorItem->getRawDouble(0));
         }
-        
+
         const CompletionDirection::DirectionEnum& direction = CompletionDirection::DirectionEnumFromString(compdatRecord->getItem("DIR")->getTrimmedString(0));
 
         for (int k = K1; k <= K2; k++) {
@@ -96,19 +96,19 @@ namespace Opm {
          "WELL2" : [ Completion1 , Completion2 , ... , CompletionN ],
          ...
       }
-    */   
-            
-    
+    */
+
+
     std::map<std::string , std::vector< CompletionPtr> > Completion::completionsFromCOMPDATKeyword( DeckKeywordConstPtr compdatKeyword ) {
         std::map<std::string , std::vector< CompletionPtr> > completionMapList;
         for (size_t recordIndex = 0; recordIndex < compdatKeyword->size(); recordIndex++) {
             std::pair<std::string , std::vector< CompletionPtr> > wellCompletionsPair = completionsFromCOMPDATRecord( compdatKeyword->getRecord( recordIndex ));
             std::string well = wellCompletionsPair.first;
             std::vector<CompletionPtr>& newCompletions = wellCompletionsPair.second;
-        
-            if (completionMapList.find(well) == completionMapList.end()) 
+
+            if (completionMapList.find(well) == completionMapList.end())
                  completionMapList[well] = std::vector<CompletionPtr>();
-            
+
             {
                 std::vector<CompletionPtr>& currentCompletions = completionMapList.find(well)->second;
 
@@ -122,7 +122,7 @@ namespace Opm {
     void Completion::fixDefaultIJ(int wellHeadI , int wellHeadJ) {
         if (m_i < 0)
             m_i = wellHeadI;
-        
+
         if (m_j < 0)
             m_j = wellHeadJ;
     }
@@ -151,7 +151,7 @@ namespace Opm {
     double Completion::getDiameter() const {
         return m_diameter.getValue();
     }
-    
+
     double Completion::getSkinFactor() const {
         return m_skinFactor.getValue();
     }

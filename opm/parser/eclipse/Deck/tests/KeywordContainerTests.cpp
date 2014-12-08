@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(addKeyword_keywordAdded_keywordAdded) {
     KeywordContainerPtr container(new KeywordContainer());
     DeckKeywordPtr keyword = DeckKeywordPtr(new DeckKeyword("Truls"));
     container->addKeyword(keyword);
-    
+
     BOOST_CHECK_EQUAL(true, container->hasKeyword("Truls"));
     BOOST_CHECK_EQUAL(1U, container->size());
 }

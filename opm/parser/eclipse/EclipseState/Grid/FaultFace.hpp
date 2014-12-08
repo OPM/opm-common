@@ -34,12 +34,12 @@ public:
               size_t J1 , size_t J2,
               size_t K1 , size_t K2,
               FaceDir::DirEnum faceDir);
-    
+
     std::vector<size_t>::const_iterator begin() const;
     std::vector<size_t>::const_iterator end() const;
     FaceDir::DirEnum getDir() const;
-    
-private:    
+
+private:
     static void checkCoord(size_t dim , size_t l1 , size_t l2);
     FaceDir::DirEnum m_faceDir;
     std::vector<size_t> m_indexList;

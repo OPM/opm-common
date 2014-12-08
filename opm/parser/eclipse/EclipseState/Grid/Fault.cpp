@@ -21,17 +21,17 @@
 
 namespace Opm {
 
-    Fault::Fault(const std::string& faultName) : 
-        m_name( faultName ), 
+    Fault::Fault(const std::string& faultName) :
+        m_name( faultName ),
         m_transMult( 1 )
     {
     }
 
-    
+
     const std::string& Fault::getName() const {
         return m_name;
     }
-    
+
     double Fault::getTransMult() const {
         return m_transMult;
     }
@@ -49,7 +49,7 @@ namespace Opm {
         return m_faceList.begin();
     }
 
-    
+
     std::vector<std::shared_ptr<const FaultFace> >::const_iterator Fault::end() const {
         return m_faceList.end();
     }

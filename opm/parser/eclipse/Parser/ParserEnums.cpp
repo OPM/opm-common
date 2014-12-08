@@ -22,7 +22,7 @@
 
 namespace Opm {
 
-    
+
 
     const std::string ParserItemSizeEnum2String(ParserItemSizeEnum enumValue) {
         switch (enumValue) {
@@ -36,7 +36,7 @@ namespace Opm {
             throw std::invalid_argument("Implementation error - should NOT be here");
         }
     }
-    
+
 
     ParserItemSizeEnum ParserItemSizeEnumFromString(const std::string& stringValue) {
         if (stringValue == "ALL")
@@ -83,7 +83,7 @@ namespace Opm {
         else
             throw std::invalid_argument("String: " + stringValue + " can not be converted to enum value");
     }
-    
+
     /*****************************************************************/
 
     const std::string ParserValueTypeEnum2String(ParserValueTypeEnum enumValue) {
@@ -101,7 +101,7 @@ namespace Opm {
             throw std::invalid_argument("Implementation error - should NOT be here");
         }
     }
-    
+
 
     ParserValueTypeEnum ParserValueTypeEnumFromString(const std::string& stringValue) {
         if (stringValue == "INT")
@@ -136,7 +136,7 @@ namespace Opm {
             throw std::invalid_argument("Implementation error - should NOT be here");
         }
     }
-    
+
     ParserKeywordActionEnum ParserKeywordActionEnumFromString(const std::string& stringValue) {
         if (stringValue == "INTERNALIZE")
             return INTERNALIZE;

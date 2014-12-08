@@ -25,7 +25,7 @@
 #include <cstddef>
 
 namespace Opm {
-    
+
     class Box {
     public:
         Box(int nx , int ny , int nz);

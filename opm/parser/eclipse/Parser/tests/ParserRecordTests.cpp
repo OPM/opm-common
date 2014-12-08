@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
         DeckItemConstPtr deckStringItem = itemString->scan(rawRecord);
         DeckItemConstPtr deckIntItem = itemInt->scan(rawRecord);
         DeckItemConstPtr deckDoubleItem = itemDouble->scan(rawRecord);
-        
+
         BOOST_CHECK(deckStringItem->size() == 1);
         BOOST_CHECK(deckIntItem->size() == 1);
         BOOST_CHECK(deckDoubleItem->size() == 1);
@@ -302,10 +302,10 @@ BOOST_AUTO_TEST_CASE(Parse_RawRecordTooManyItems_Throws) {
     parserRecord->addItem(itemJ);
     parserRecord->addItem(itemK);
 
-        
+
     RawRecordPtr rawRecord(new RawRecord("3 3 3 /"));
     BOOST_CHECK_NO_THROW(parserRecord->parse(rawRecord));
-    
+
     RawRecordPtr rawRecordOneExtra(new RawRecord("3 3 3 4 /"));
     BOOST_CHECK_THROW(parserRecord->parse(rawRecordOneExtra), std::invalid_argument);
 
@@ -335,13 +335,13 @@ BOOST_AUTO_TEST_CASE(ParseRecordHasDimensionCorrect) {
     ParserRecordPtr parserRecord(new ParserRecord());
     ParserIntItemConstPtr itemI(new ParserIntItem("I", SINGLE));
     ParserDoubleItemPtr item2(new ParserDoubleItem("ID", SINGLE));
-    
+
     BOOST_CHECK_EQUAL( false , parserRecord->hasDimension());
-    
+
     parserRecord->addItem( itemI );
     parserRecord->addItem( item2 );
     BOOST_CHECK_EQUAL( false , parserRecord->hasDimension());
-    
+
     item2->push_backDimension("Length*Length/Time");
     BOOST_CHECK_EQUAL( true , parserRecord->hasDimension());
 }

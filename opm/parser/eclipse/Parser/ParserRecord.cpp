@@ -68,7 +68,7 @@ namespace Opm {
                 for (size_t idim=0; idim < (*iter)->numDimensions(); idim++) {
                     std::shared_ptr<const Dimension> activeDimension  = deck->getActiveUnitSystem()->getNewDimension( parserItem->getDimension(idim) );
                     std::shared_ptr<const Dimension> defaultDimension = deck->getDefaultUnitSystem()->getNewDimension( parserItem->getDimension(idim) );
-                    deckItem->push_backDimension( activeDimension , defaultDimension ); 
+                    deckItem->push_backDimension( activeDimension , defaultDimension );
                 }
             }
         }
@@ -101,8 +101,8 @@ namespace Opm {
         }
         const size_t recordSize = rawRecord->size();
         if (recordSize > 0)
-            throw std::invalid_argument("The RawRecord for keyword \""  + rawRecord->getKeywordName() + "\" in file\"" + rawRecord->getFileName() + "\" contained " + 
-                                        boost::lexical_cast<std::string>(recordSize) + 
+            throw std::invalid_argument("The RawRecord for keyword \""  + rawRecord->getKeywordName() + "\" in file\"" + rawRecord->getFileName() + "\" contained " +
+                                        boost::lexical_cast<std::string>(recordSize) +
                                         " too many items according to the spec. RawRecord was: " + recordBeforeParsing);
 
         return deckRecord;
@@ -118,7 +118,7 @@ namespace Opm {
                {
                    ParserItemConstPtr item = get(itemIndex);
                    ParserItemConstPtr otherItem = other.get(itemIndex);
-                   
+
                    if (!item->equal(*otherItem)) {
                        equal_ = false;
                        break;

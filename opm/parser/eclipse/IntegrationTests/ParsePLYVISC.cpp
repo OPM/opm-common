@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE( PARSE_PLYVISC_OK) {
     ParserPtr parser(new Parser());
     boost::filesystem::path deckFile("testdata/integration_tests/POLYMER/plyvisc.data");
     DeckPtr deck =  parser->parseFile(deckFile.string());
-    DeckKeywordConstPtr kw = deck->getKeyword("PLYVISC");    
+    DeckKeywordConstPtr kw = deck->getKeyword("PLYVISC");
     DeckRecordConstPtr rec = kw->getRecord(0);
     DeckItemPtr item = rec->getItem(0);
 

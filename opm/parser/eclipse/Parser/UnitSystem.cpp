@@ -15,7 +15,7 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
-*/ 
+*/
 
 /*#include <boost/algorithm/string.hpp>
 #include <stdexcept>
@@ -34,17 +34,17 @@
 
 namespace Opm {
 
-    UnitSystem::UnitSystem(const std::string& unitSystem) : 
+    UnitSystem::UnitSystem(const std::string& unitSystem) :
         m_name( unitSystem )
     {
-        
+
     }
 
     bool UnitSystem::hasDimension(const std::string& dimension) const {
         return (m_dimensions.find( dimension ) != m_dimensions.end());
     }
 
-    
+
     const Dimension& UnitSystem::getDimension(const std::string& dimension) const {
         if (hasDimension( dimension ))
             return m_dimensions.at( dimension );
@@ -56,7 +56,7 @@ namespace Opm {
     void UnitSystem::addDimension(const std::string& dimension , double SI_factor) {
         if (hasDimension(dimension))
             m_dimensions.erase( dimension );
-        
+
         m_dimensions.insert( std::make_pair(dimension , Dimension(dimension , SI_factor)));
     }
 
@@ -76,7 +76,7 @@ namespace Opm {
         }
         return Dimension::newComposite( dimension , SIfactor );
     }
-    
+
 
 
     std::shared_ptr<const Dimension> UnitSystem::parse(const std::string& dimension) const {
@@ -96,7 +96,7 @@ namespace Opm {
             boost::split(parts , dimension , boost::is_any_of("/"));
             Dimension dividend = parseFactor( parts[0] );
             Dimension divisor = parseFactor( parts[1] );
-        
+
             return Dimension::newComposite( dimension , dividend.getSIScaling() / divisor.getSIScaling() );
         } else {
             return parseFactor( dimension );
@@ -106,7 +106,7 @@ namespace Opm {
 
     UnitSystem * UnitSystem::newMETRIC() {
         UnitSystem * system = new UnitSystem("Metric");
-        
+
         system->addDimension("1" , 1);
         system->addDimension("Length" , 1);
         system->addDimension("Time" , 86400 );
@@ -115,15 +115,15 @@ namespace Opm {
         system->addDimension("Permeability" , 9.869233e-10 );
         system->addDimension("Viscosity" , 0.001); // viscosity. ECLiPSE uses cP for metric units
         system->addDimension("GasDissolutionFactor" , 1); // Gas dissolution factor. ECLiPSE uses m^3/m^3 for metric units
-        
+
         return system;
     }
 
 
-    
+
     UnitSystem * UnitSystem::newFIELD() {
         UnitSystem * system = new UnitSystem("Field");
-        
+
         system->addDimension("1" , 1);
         system->addDimension("Length" , 0.3048);
         system->addDimension("Time" , 86400 );
@@ -132,7 +132,7 @@ namespace Opm {
         system->addDimension("Permeability" , 9.869233e-10 );
         system->addDimension("Viscosity" , 0.001); // viscosity. ECLiPSE uses cP for field units
         system->addDimension("GasDissolutionFactor" , 28.316847/0.15898729); // Gas dissolution factor. ECLiPSE uses Mscft/stb for field units
-        
+
         return system;
     }
 

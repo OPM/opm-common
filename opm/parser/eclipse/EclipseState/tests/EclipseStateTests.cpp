@@ -47,7 +47,7 @@ using namespace Opm;
 
   An issue has been posted on Stackoverflow: questions/26275555
 
-*/ 
+*/
 
 static DeckPtr createDeckTOP() {
     const char *deckData =
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(GetPOROTOPBased) {
         BOOST_CHECK_EQUAL( 0.10 , poro->iget(i) );
         BOOST_CHECK_EQUAL( 0.25 * Metric::Permeability , permx->iget(i) );
     }
-    
+
 }
 
 
@@ -240,9 +240,9 @@ BOOST_AUTO_TEST_CASE(GetProperty) {
     std::shared_ptr<GridProperty<int> > satNUM = state.getIntGridProperty( "SATNUM" );
 
     BOOST_CHECK_EQUAL(1000U , satNUM->getCartesianSize() );
-    for (size_t i=0; i < satNUM->getCartesianSize(); i++) 
+    for (size_t i=0; i < satNUM->getCartesianSize(); i++)
         BOOST_CHECK_EQUAL( 2 , satNUM->iget(i) );
-    
+
     BOOST_CHECK_THROW( satNUM->iget(100000) , std::invalid_argument);
 }
 
@@ -251,8 +251,8 @@ BOOST_AUTO_TEST_CASE(GetTransMult) {
     DeckPtr deck = createDeck();
     EclipseState state(deck);
     std::shared_ptr<const TransMult> transMult = state.getTransMult();
-    
-    
+
+
     BOOST_CHECK_EQUAL( 1.0 , transMult->getMultiplier(1,0,0,FaceDir::XPlus));
     BOOST_CHECK_THROW(transMult->getMultiplier(1000 , FaceDir::XPlus) , std::invalid_argument);
 }

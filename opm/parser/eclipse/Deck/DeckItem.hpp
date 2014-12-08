@@ -42,7 +42,7 @@ namespace Opm {
         // creates the defaulted items if all their sizes are fully specified by the
         // keyword, though...
         virtual size_t size() const = 0;
-        
+
         virtual int getInt(size_t /* index */) const {
             throw std::logic_error("This implementation of DeckItem does not support int");
         }

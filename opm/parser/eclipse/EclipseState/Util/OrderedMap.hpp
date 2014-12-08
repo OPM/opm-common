@@ -28,7 +28,7 @@
 
 namespace Opm {
 
-template <typename T> 
+template <typename T>
 class OrderedMap {
 private:
     std::unordered_map<std::string , size_t> m_map;
@@ -37,7 +37,7 @@ private:
 public:
     bool hasKey(const std::string& key) const {
         auto iter = m_map.find(key);
-        if (iter == m_map.end()) 
+        if (iter == m_map.end())
             return false;
         else
             return true;
@@ -55,7 +55,7 @@ public:
             m_map.insert( std::pair<std::string, size_t>(key , index));
         }
     }
-    
+
 
     T get(const std::string& key) const {
         auto iter = m_map.find( key );
@@ -91,4 +91,4 @@ public:
 };
 }
 
-#endif 
+#endif

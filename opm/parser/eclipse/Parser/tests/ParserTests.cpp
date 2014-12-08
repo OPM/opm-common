@@ -113,14 +113,14 @@ BOOST_AUTO_TEST_CASE(addParserKeywordJSON_size_isObject_allGood) {
 BOOST_AUTO_TEST_CASE(loadKeywordsJSON_notArray_throw) {
     ParserPtr parser(new Parser());
     Json::JsonObject jsonConfig( "{\"name\" : \"BPR\" , \"size\" : 100, \"sections\":[\"SUMMARY\"]}");
-    
+
     BOOST_CHECK_THROW(parser->loadKeywords( jsonConfig ) , std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(loadKeywordsJSON_noSectionsItem_throw) {
     ParserPtr parser(new Parser());
     Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100, \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}]");
-    
+
     BOOST_CHECK_THROW(parser->loadKeywords( jsonConfig ) , std::invalid_argument);
 }
 
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(loadKeywordsJSON_noSectionsItem_throw) {
 BOOST_AUTO_TEST_CASE(loadKeywordsJSON_isRecognizedKeyword_returnstrue) {
     ParserPtr parser(new Parser());
     Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100, \"sections\":[\"SUMMARY\"], \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}]");
-    
+
     parser->loadKeywords( jsonConfig );
     BOOST_CHECK(parser->isRecognizedKeyword("BPR"));
 }
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(empty_sizeReturns0) {
 BOOST_AUTO_TEST_CASE(loadKeywordsJSON_manyKeywords_returnstrue) {
     ParserPtr parser(new Parser( false ));
     Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100, \"sections\":[\"SUMMARY\"] ,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}, {\"name\" : \"WWCT\", \"sections\":[\"SUMMARY\"], \"size\" : 0} , {\"name\" : \"EQUIL\", \"sections\":[\"PROPS\"], \"size\" : 0}]");
-    
+
     parser->loadKeywords( jsonConfig );
     BOOST_CHECK(parser->isRecognizedKeyword("BPR"));
     BOOST_CHECK(parser->isRecognizedKeyword("WWCT"));
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(ReplaceKeyword) {
 
     BOOST_CHECK_EQUAL( 5U , eqldims->numItems());
     BOOST_CHECK( parser->loadKeywordFromFile( "testdata/parser/EQLDIMS2" ) );
-    
+
 
     eqldims = parser->getParserKeywordFromDeckName("EQLDIMS");
     BOOST_CHECK_EQUAL( 1U , eqldims->numItems());

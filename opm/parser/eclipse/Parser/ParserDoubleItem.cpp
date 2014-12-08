@@ -60,7 +60,7 @@ namespace Opm
     double ParserDoubleItem::getDefault() const {
         return m_default;
     }
-    
+
 
     void ParserDoubleItem::setDefault(double defaultValue) {
         m_default = defaultValue;
@@ -73,7 +73,7 @@ namespace Opm
             ParserItem(jsonConfig)
     {
         m_default = std::numeric_limits<double>::quiet_NaN();
-        if (jsonConfig.has_item("default")) 
+        if (jsonConfig.has_item("default"))
             setDefault( jsonConfig.get_double("default") );
     }
 
@@ -90,14 +90,14 @@ namespace Opm
                 if (other.getDimension(idim) != getDimension(idim))
                     equal_ = false;
             }
-        } 
+        }
         return equal_;
     }
 
     void ParserDoubleItem::push_backDimension(const std::string& dimension) {
         if ((sizeType() == SINGLE) && (m_dimensions.size() > 0))
             throw std::invalid_argument("Internal error: cannot add more than one dimension to an item of size 1");
-        
+
         m_dimensions.push_back( dimension );
     }
 
@@ -120,7 +120,7 @@ namespace Opm
     DeckItemPtr ParserDoubleItem::scan(RawRecordPtr rawRecord) const {
         return ParserItemScan<ParserDoubleItem,DeckDoubleItem,double>(this , rawRecord);
     }
-    
+
     void ParserDoubleItem::inlineNew(std::ostream& os) const {
         os << "new ParserDoubleItem(" << "\"" << name() << "\"" << "," << ParserItemSizeEnum2String( sizeType() );
         if (m_defaultSet)

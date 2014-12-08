@@ -304,7 +304,7 @@ namespace Opm {
                                 DeckKeywordPtr deckKeyword = parserKeyword->parse(parserState->rawKeyword);
                                 deckKeyword->setParserKeyword(parserKeyword);
                                 parserState->deck->addKeyword(deckKeyword);
-                            } else if (action == IGNORE_WARNING) 
+                            } else if (action == IGNORE_WARNING)
                                 parserState->parserLog.addWarning(parserState->dataFile.string(),
                                                                   parserState->rawKeyword->getLineNR(),
                                                                   "The keyword " + parserState->rawKeyword->getKeywordName() + " is ignored - this might potentially affect the results");
@@ -347,10 +347,10 @@ namespace Opm {
         if (isRecognizedKeyword(keywordString)) {
             ParserKeywordConstPtr parserKeyword = getParserKeywordFromDeckName( keywordString );
             ParserKeywordActionEnum action = parserKeyword->getAction();
-            
+
             if (action == THROW_EXCEPTION)
                 throw std::invalid_argument("Parsing terminated by fatal keyword: " + keywordString);
-            
+
             if (parserKeyword->getSizeType() == SLASH_TERMINATED || parserKeyword->getSizeType() == UNKNOWN) {
                 Raw::KeywordSizeEnum rawSizeType;
                 if (parserKeyword->getSizeType() == SLASH_TERMINATED)
@@ -425,7 +425,7 @@ namespace Opm {
             if (parserState->rawKeyword != NULL && parserState->rawKeyword->isFinished())
                 return true;
         }
-        if (parserState->rawKeyword && parserState->rawKeyword->getSizeType() == Raw::UNKNOWN) 
+        if (parserState->rawKeyword && parserState->rawKeyword->getSizeType() == Raw::UNKNOWN)
             parserState->rawKeyword->finalizeUnknownSize();
 
         return false;
@@ -438,7 +438,7 @@ namespace Opm {
             ParserKeywordConstPtr parserKeyword = ParserKeyword::createFromJson(jsonKeyword);
             addParserKeyword(parserKeyword);
             return true;
-        } 
+        }
         catch (...) {
             return false;
         }
@@ -485,6 +485,6 @@ namespace Opm {
             }
         }
     }
-    
+
 
 } // namespace Opm

@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(CreateFace) {
             size_t index1 = *iter1;
             size_t index2 = *iter2;
             size_t index3 = *iter3;
-        
+
             BOOST_CHECK_EQUAL( index1 , trueValues1[i] );
             BOOST_CHECK_EQUAL( index2 , trueValues2[i] );
             BOOST_CHECK_EQUAL( index3 , trueValues3[i] );
@@ -98,8 +98,8 @@ BOOST_AUTO_TEST_CASE(AddFaceToFaults) {
         BOOST_CHECK_EQUAL( *iter , face1 ); ++iter;
         BOOST_CHECK_EQUAL( *iter , face2 ); ++iter;
         BOOST_CHECK_EQUAL( *iter , face3 ); ++iter;
-    }    
-    
+    }
+
 }
 
 
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(CreateFaultCollection) {
 BOOST_AUTO_TEST_CASE(AddFaultsToCollection) {
     Opm::FaultCollection faults;
     std::shared_ptr<Opm::Fault> fault = std::make_shared<Opm::Fault>("FAULT");
-    
+
     faults.addFault(fault);
     BOOST_CHECK_EQUAL( faults.size() , 1 );
     BOOST_CHECK(faults.hasFault("FAULT"));

@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   KeywordContainer.hpp
  * Author: kflik
  *

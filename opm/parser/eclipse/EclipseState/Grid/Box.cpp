@@ -40,7 +40,7 @@ namespace Opm {
         m_offset[0] = 0;
         m_offset[1] = 0;
         m_offset[2] = 0;
-        
+
         m_stride[0] = 1;
         m_stride[1] = m_dims[0];
         m_stride[2] = m_dims[0] * m_dims[1];
@@ -58,7 +58,7 @@ namespace Opm {
         m_dims[0] = (size_t) (i2 - i1 + 1);
         m_dims[1] = (size_t) (j2 - j1 + 1);
         m_dims[2] = (size_t) (k2 - k1 + 1);
-        
+
         m_offset[0] = (size_t) i1;
         m_offset[1] = (size_t) j1;
         m_offset[2] = (size_t) k1;
@@ -71,15 +71,15 @@ namespace Opm {
             m_isGlobal = true;
         else
             m_isGlobal = false;
-        
+
         initIndexList();
     }
-    
+
 
     void Box::assertDims(const Box& globalBox, size_t idim , int l1 , int l2) {
         if ((l1 < 0) || (l2 < 0) || (l1 > l2))
             throw std::invalid_argument("Invalid index values for sub box");
-        
+
         if ((size_t) l2 >= globalBox.getDim(idim))
             throw std::invalid_argument("Invalid index values for sub box");
     }
@@ -107,13 +107,13 @@ namespace Opm {
         return m_indexList;
     }
 
-    
+
     void Box::initIndexList() {
         m_indexList.resize( size() );
-        
+
         size_t ii,ij,ik;
         size_t l = 0;
-        
+
         for (ik=0; ik < m_dims[2]; ik++) {
             size_t k = ik + m_offset[2];
             for (ij=0; ij < m_dims[1]; ij++) {
@@ -121,7 +121,7 @@ namespace Opm {
                 for (ii=0; ii < m_dims[0]; ii++) {
                     size_t i = ii + m_offset[0];
                     size_t g = i * m_stride[0] + j*m_stride[1] + k*m_stride[2];
-                    
+
                     m_indexList[l] = g;
                     l++;
                 }
@@ -130,7 +130,7 @@ namespace Opm {
     }
 
     bool Box::equal(const Box& other) const {
-        
+
         if (size() != other.size())
             return false;
 
@@ -141,12 +141,12 @@ namespace Opm {
 
                 if (m_stride[idim] != other.m_stride[idim])
                     return false;
-                
+
                 if (m_offset[idim] != other.m_offset[idim])
                     return false;
             }
         }
-        
+
         return true;
     }
 

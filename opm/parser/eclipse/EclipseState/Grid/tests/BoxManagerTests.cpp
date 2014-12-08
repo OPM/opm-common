@@ -71,10 +71,10 @@ BOOST_AUTO_TEST_CASE(TestKeywordBox) {
     BOOST_CHECK( inputBox.equal( *boxManager.getInputBox()) );
     BOOST_CHECK( keywordBox.equal( *boxManager.getKeywordBox()) );
     BOOST_CHECK( keywordBox.equal( *boxManager.getActiveBox()) );
-    
+
     // Must end keyword first
     BOOST_CHECK_THROW( boxManager.endSection() , std::invalid_argument );
-    
+
     boxManager.endKeyword();
     BOOST_CHECK( inputBox.equal( *boxManager.getActiveBox()) );
     BOOST_CHECK( !boxManager.getKeywordBox() );

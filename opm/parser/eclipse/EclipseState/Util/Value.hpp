@@ -35,43 +35,43 @@
 
 namespace Opm {
 
-template <typename T> 
+template <typename T>
 class Value {
 
 private:
     std::string m_name;
     bool m_initialized;
     T m_value;
-    
-    
+
+
 public:
 
-    Value(const std::string& name) : 
+    Value(const std::string& name) :
         m_name( name ),
         m_initialized( false )
     { }
 
 
-    Value(const std::string& name ,T value) : 
+    Value(const std::string& name ,T value) :
         m_name( name )
-    { 
+    {
         setValue( value );
     }
-    
-    
+
+
     bool hasValue() const {
         return m_initialized;
     }
-    
+
 
     T getValue() const {
         if (m_initialized)
             return m_value;
         else
-            throw std::logic_error("The value has: " + m_name + " has not been initialized"); 
+            throw std::logic_error("The value has: " + m_name + " has not been initialized");
     }
 
-    
+
     void setValue( T value ) {
         m_initialized = true;
         m_value = value;
@@ -94,8 +94,8 @@ public:
         } else
             return false;
     }
-    
-    
+
+
 };
 }
 

@@ -49,13 +49,13 @@ namespace Opm {
     }
 
     const std::string& ParserItem::getDimension(size_t /* index */) const {
-        throw std::invalid_argument("Should not call this ... \n");       
+        throw std::invalid_argument("Should not call this ... \n");
     }
 
     void ParserItem::push_backDimension(const std::string& /* dimension */) {
-        throw std::invalid_argument("Should not call this ... \n");       
+        throw std::invalid_argument("Should not call this ... \n");
     }
-    
+
     ParserItem::ParserItem(const Json::JsonObject& jsonConfig) {
         if (jsonConfig.has_item("name"))
             m_name = jsonConfig.get_string("name");
@@ -67,7 +67,7 @@ namespace Opm {
             m_sizeType = ParserItemSizeEnumFromString( sizeTypeString );
         } else
           m_sizeType = SINGLE;
-        
+
         if (jsonConfig.has_item("description")) {
             m_description = jsonConfig.get_string("description");
         }

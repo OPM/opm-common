@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(ParseInvalidJSON_throw) {
 BOOST_AUTO_TEST_CASE(ParsevalidJSON_getString) {
     std::string inline_json = "{\"key\": \"value\"}";
     Json::JsonObject parser(inline_json);
-    
+
     BOOST_CHECK_EQUAL( "value" , parser.get_string("key") );
 }
 
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(ParsevalidJSONString_asString) {
     std::string inline_json = "{\"key\": \"value\"}";
     Json::JsonObject parser(inline_json);
     Json::JsonObject value = parser.get_item("key");
-    
+
     BOOST_CHECK_EQUAL( "value" , value.as_string() );
 }
 
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(ParsevalidJSONnotString_asString_throws) {
     std::string inline_json = "{\"key\": 100}";
     Json::JsonObject parser(inline_json);
     Json::JsonObject value = parser.get_item("key");
-    
+
     BOOST_CHECK_THROW( value.as_string() , std::invalid_argument );
 }
 
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(ParsevalidJSONint_asNumber) {
     Json::JsonObject parser(inline_json);
     Json::JsonObject value1 = parser.get_item("key1");
     Json::JsonObject value2 = parser.get_item("key2");
-    
+
     BOOST_CHECK_EQUAL( 100 , value1.as_int() );
     BOOST_CHECK( fabs(100.100 - value2.as_double()) < 0.00001 );
 }
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(ParsevalidJSONint_isNumber) {
     Json::JsonObject value1 = parser.get_item("key1");
     Json::JsonObject value2 = parser.get_item("key2");
     Json::JsonObject value3 = parser.get_item("key3");
-    
+
     BOOST_CHECK( value1.is_number()) ;
     BOOST_CHECK( value2.is_number()) ;
     BOOST_CHECK_EQUAL( false , value3.is_number()) ;
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(ParsevalidJSONnotNumber_asNumber_throws) {
     std::string inline_json = "{\"key\": \"100X\"}";
     Json::JsonObject parser(inline_json);
     Json::JsonObject value = parser.get_item("key");
-    
+
     BOOST_CHECK_THROW( value.as_int()    , std::invalid_argument );
     BOOST_CHECK_THROW( value.as_double() , std::invalid_argument );
 }
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(ParsevalidJSON_CheckArraySize) {
 }
 
 
-BOOST_AUTO_TEST_CASE(ParsevalidJSON_isArray){ 
+BOOST_AUTO_TEST_CASE(ParsevalidJSON_isArray){
     std::string inline_json = "{\"key\": \"value\", \"list\": [1,2,3]}";
     Json::JsonObject parser(inline_json);
     Json::JsonObject list = parser.get_item("list");
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(ParsevalidJSON_arrayGet) {
     BOOST_CHECK_NO_THROW( list.get_array_item( 0U ));
     BOOST_CHECK_NO_THROW( list.get_array_item( 1U ));
     BOOST_CHECK_NO_THROW( list.get_array_item( 2U ));
-    
+
     BOOST_CHECK_THROW( list.get_array_item( 3U ) , std::invalid_argument );
     BOOST_CHECK_THROW( key.get_array_item( 0U ) , std::invalid_argument );
 }
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(ParsevalidJSON_arrayGet) {
 
 BOOST_AUTO_TEST_CASE(parseJSONString_testType) {
     std::string inline_json = "{\"item\": \"string\"}";
-    Json::JsonObject json(inline_json);    
+    Json::JsonObject json(inline_json);
     Json::JsonObject item = json.get_item( "item" );
 
     BOOST_CHECK( item.is_string() );
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(parseJSONString_testType) {
 
 BOOST_AUTO_TEST_CASE(parseJSONNumber_testType) {
     std::string inline_json = "{\"item\": 100}";
-    Json::JsonObject json(inline_json);    
+    Json::JsonObject json(inline_json);
     Json::JsonObject item = json.get_item( "item" );
 
     BOOST_CHECK_EQUAL( true  , item.is_number( ) );
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(parseJSONNumber_testType) {
 
 BOOST_AUTO_TEST_CASE(parseJSONArray_testType) {
     std::string inline_json = "{\"item\": [1,2,3]}";
-    Json::JsonObject json(inline_json);    
+    Json::JsonObject json(inline_json);
     Json::JsonObject item = json.get_item( "item" );
 
     BOOST_CHECK_EQUAL( false , item.is_number( ) );
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(parseJSONArray_testType) {
 
 BOOST_AUTO_TEST_CASE(parseJSONObject_testType) {
     std::string inline_json = "{\"item\": {\"list\": [0,1,2]}}";
-    Json::JsonObject json(inline_json);    
+    Json::JsonObject json(inline_json);
     Json::JsonObject item = json.get_item( "item" );
 
     BOOST_CHECK_EQUAL( false , item.is_number( ) );

@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(StringsWithSpaceOK) {
     RawRecordPtr rawRecord(new Opm::RawRecord(" ' VALUE ' /"));
     record1->addItem( itemString );
 
-    
+
     DeckRecordConstPtr deckRecord = record1->parse( rawRecord );
     BOOST_CHECK_EQUAL(" VALUE " , deckRecord->getItem(0)->getString(0));
 }

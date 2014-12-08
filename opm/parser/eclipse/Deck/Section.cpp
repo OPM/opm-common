@@ -92,7 +92,7 @@ namespace Opm {
     DeckKeywordConstPtr Section::getKeyword(const std::string& keyword) const {
         return m_keywords.getKeyword(keyword);
     }
-    
+
     DeckKeywordConstPtr Section::getKeyword(size_t index) const {
         return m_keywords.getKeyword(index);
     }

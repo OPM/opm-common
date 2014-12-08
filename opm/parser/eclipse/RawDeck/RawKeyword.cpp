@@ -96,7 +96,7 @@ namespace Opm {
                 RawRecordPtr record(new RawRecord(m_partialRecordString, m_filename, m_name));
                 m_records.push_back(record);
                 m_partialRecordString.clear();
-                
+
                 if (m_sizeType == Raw::FIXED && (m_records.size() == m_fixedSize))
                     m_isFinished = true;
             }
@@ -117,7 +117,7 @@ namespace Opm {
         if (index < m_records.size()) {
             return m_records[index];
         }
-        else 
+        else
             throw std::range_error("Index out of range");
     }
 

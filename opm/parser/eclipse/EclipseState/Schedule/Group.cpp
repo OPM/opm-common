@@ -34,10 +34,10 @@ namespace Opm {
             std::shared_ptr<DynamicState<double> > waterTarget;
             std::shared_ptr<DynamicState<double> > gasTarget;
             std::shared_ptr<DynamicState<double> > liquidTarget;
-            
+
         };
-        
-        ProductionData::ProductionData(TimeMapConstPtr timeMap) : 
+
+        ProductionData::ProductionData(TimeMapConstPtr timeMap) :
             controlMode( new DynamicState<GroupProduction::ControlEnum>(timeMap , GroupProduction::NONE)),
             exceedAction( new DynamicState<GroupProductionExceedLimit::ActionEnum>(timeMap , GroupProductionExceedLimit::NONE)),
             oilTarget( new DynamicState<double>(timeMap , 0)),
@@ -49,13 +49,13 @@ namespace Opm {
         }
     }
 
-    
-    
+
+
 
     namespace GroupInjection {
         struct InjectionData {
             InjectionData(TimeMapConstPtr timeMap);
-            
+
             std::shared_ptr<DynamicState<Phase::PhaseEnum> > phase;
             std::shared_ptr<DynamicState<GroupInjection::ControlEnum> > controlMode;
             std::shared_ptr<DynamicState<double> > rate;
@@ -64,8 +64,8 @@ namespace Opm {
             std::shared_ptr<DynamicState<double> > targetReinjectFraction;
             std::shared_ptr<DynamicState<double> > targetVoidReplacementFraction;
         };
-        
-        InjectionData::InjectionData(TimeMapConstPtr timeMap) : 
+
+        InjectionData::InjectionData(TimeMapConstPtr timeMap) :
             phase( new DynamicState<Phase::PhaseEnum>( timeMap , Phase::WATER )),
             controlMode( new DynamicState<GroupInjection::ControlEnum>( timeMap , NONE )),
             rate( new DynamicState<double>( timeMap , 0 )),
@@ -74,16 +74,16 @@ namespace Opm {
             targetReinjectFraction( new DynamicState<double>( timeMap , 0)),
             targetVoidReplacementFraction( new DynamicState<double>( timeMap , 0))
         {
-        
+
         }
     }
 
-    
-        
+
+
 
     /*****************************************************************/
-    
-    Group::Group(const std::string& name_, TimeMapConstPtr timeMap , size_t creationTimeStep) : 
+
+    Group::Group(const std::string& name_, TimeMapConstPtr timeMap , size_t creationTimeStep) :
         m_injection( new GroupInjection::InjectionData(timeMap) ),
         m_production( new GroupProduction::ProductionData( timeMap )),
         m_wells( new DynamicState<WellSetConstPtr>(timeMap , WellSetConstPtr(new WellSet() ))),
@@ -121,7 +121,7 @@ namespace Opm {
 
     /**********************************************************************/
 
-    
+
     void Group::setInjectionPhase(size_t time_step , Phase::PhaseEnum phase){
         if (m_injection->phase->size() == time_step + 1) {
             Phase::PhaseEnum currentPhase = m_injection->phase->get(time_step);
@@ -206,7 +206,7 @@ namespace Opm {
     void Group::setProductionControlMode( size_t time_step , GroupProduction::ControlEnum controlMode) {
         m_production->controlMode->add(time_step , controlMode );
     }
-    
+
     GroupProduction::ControlEnum Group::getProductionControlMode( size_t time_step ) const {
         return m_production->controlMode->get(time_step);
     }
@@ -263,7 +263,7 @@ namespace Opm {
 
 
     /*****************************************************************/
-    
+
     WellSetConstPtr Group::wellMap(size_t time_step) const {
         return m_wells->get(time_step);
     }
@@ -285,11 +285,11 @@ namespace Opm {
         WellSetConstPtr wellSet = wellMap(time_step);
         return wellSet->size();
     }
-    
+
     void Group::addWell(size_t time_step , WellPtr well) {
         WellSetConstPtr wellSet = wellMap(time_step);
         WellSetPtr newWellSet = WellSetPtr( wellSet->shallowCopy() );
-        
+
         newWellSet->addWell(well);
         m_wells->add(time_step , newWellSet);
     }
@@ -298,7 +298,7 @@ namespace Opm {
     void Group::delWell(size_t time_step, const std::string& wellName) {
         WellSetConstPtr wellSet = wellMap(time_step);
         WellSetPtr newWellSet = WellSetPtr( wellSet->shallowCopy() );
-        
+
         newWellSet->delWell(wellName);
         m_wells->add(time_step , newWellSet);
     }

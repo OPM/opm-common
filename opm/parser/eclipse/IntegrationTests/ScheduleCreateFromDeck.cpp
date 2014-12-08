@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(WCONPROD_Missing_DATA) {
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_CMODE_MISSING_DATA");
     DeckPtr deck =  parser->parseFile(scheduleFile.string());
-    
+
     BOOST_CHECK_THROW( new Schedule(deck) , std::invalid_argument );
 }
 
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
 
         BOOST_CHECK_EQUAL( WellCommon::AUTO , well3->getStatus(3));
         BOOST_CHECK_EQUAL( 0 , well3->getProductionPropertiesCopy(2).LiquidRate);
-        
+
         {
             const WellProductionProperties& prop7 = well3->getProductionProperties(7);
             BOOST_CHECK_CLOSE( 999/Metric::Time , prop7.LiquidRate , 0.001);
@@ -154,10 +154,10 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
 
         BOOST_CHECK(!well1->getProductionPropertiesCopy(8).predictionMode);
         BOOST_CHECK_CLOSE(13000/Metric::Time , well1->getProductionPropertiesCopy(8).OilRate , 0.001);
-        
+
         BOOST_CHECK_CLOSE(123.00 * Metric::Pressure , well1->getInjectionPropertiesCopy(10).BHPLimit, 0.001);
         BOOST_CHECK_CLOSE(678.00 * Metric::Pressure , well1->getInjectionPropertiesCopy(10).THPLimit, 0.001);
-        
+
         {
             const WellInjectionProperties& prop11 = well1->getInjectionProperties(11);
             BOOST_CHECK_CLOSE(5000/Metric::Time , prop11.surfaceInjectionRate, 0.001);
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
             BOOST_CHECK( !prop9.hasInjectionControl(WellInjector::BHP));
         }
 
-        
+
         BOOST_CHECK_EQUAL( WellCommon::SHUT , well1->getStatus( 12 ));
         BOOST_CHECK(  well1->getInjectionPropertiesCopy(12).hasInjectionControl(WellInjector::RATE ));
         BOOST_CHECK( !well1->getInjectionPropertiesCopy(12).hasInjectionControl(WellInjector::RESV));
@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_correct) {
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELSPECS_GRUPTREE");
     DeckPtr deck =  parser->parseFile(scheduleFile.string());
     ScheduleConstPtr schedule(new Schedule(deck));
-    
+
     BOOST_CHECK( schedule->hasGroup( "FIELD" ));
     BOOST_CHECK( schedule->hasGroup( "PROD" ));
     BOOST_CHECK( schedule->hasGroup( "INJE" ));
@@ -276,9 +276,9 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_iter_function) 
 
     int iter_counted = 0;
 
-    for (auto iter=root->begin(); iter != root->end(); ++iter) 
+    for (auto iter=root->begin(); iter != root->end(); ++iter)
         iter_counted++;
-    
+
     BOOST_CHECK_EQUAL(2, iter_counted);
     // Time 1, a new group added in tree
     iter_counted = 0;
@@ -319,7 +319,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_tree) {
     BOOST_CHECK_EQUAL("GROUP_ODD", GROUP_ODD1->name());
 
     // - from GRUPTREE
-    
+
     BOOST_CHECK(GROUP_BJARNE1->hasChildGroup("GROUP_BIRGER"));
     GroupTreeNodePtr GROUP_BIRGER = GROUP_BJARNE1->getChildGroup("GROUP_BIRGER");
     BOOST_CHECK_EQUAL("GROUP_BIRGER", GROUP_BIRGER->name());
@@ -327,7 +327,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_tree) {
     BOOST_CHECK(root1->hasChildGroup("GROUP_NEW"));
     GroupTreeNodePtr GROUP_NEW = root1->getChildGroup("GROUP_NEW");
     BOOST_CHECK_EQUAL("GROUP_NEW", GROUP_NEW->name());
-    
+
     BOOST_CHECK(GROUP_NEW->hasChildGroup("GROUP_NILS"));
     GroupTreeNodePtr GROUP_NILS = GROUP_NEW->getChildGroup("GROUP_NILS");
     BOOST_CHECK_EQUAL("GROUP_NILS", GROUP_NILS->name());
@@ -351,7 +351,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_WITH_REPARENT_correct_tree) {
     GroupTreeNodePtr GROUP_NEW0 = root0->getChildGroup("GROUP_NEW");
     BOOST_CHECK_EQUAL("GROUP_NEW", GROUP_NEW0->name());
 
-    
+
     BOOST_CHECK(GROUP_BJARNE0->hasChildGroup("GROUP_BIRGER"));
     GroupTreeNodePtr GROUP_BIRGER0 = GROUP_BJARNE0->getChildGroup("GROUP_BIRGER");
     BOOST_CHECK_EQUAL("GROUP_BIRGER", GROUP_BIRGER0->name());
@@ -359,7 +359,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_WITH_REPARENT_correct_tree) {
     BOOST_CHECK(GROUP_NEW0->hasChildGroup("GROUP_NILS"));
     GroupTreeNodePtr GROUP_NILS0 = GROUP_NEW0->getChildGroup("GROUP_NILS");
     BOOST_CHECK_EQUAL("GROUP_NILS", GROUP_NILS0->name());
-    
+
     // SÅ den nye strukturen med et barneflytt
 }
 
@@ -381,7 +381,7 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_GROUPS");
     DeckPtr deck =  parser->parseFile(scheduleFile.string());
     ScheduleConstPtr sched( new Schedule(deck));
-    
+
     BOOST_CHECK_EQUAL( 3U , sched->numGroups() );
     BOOST_CHECK( sched->hasGroup( "INJ" ));
     BOOST_CHECK( sched->hasGroup( "OP" ));
@@ -394,14 +394,14 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
         BOOST_CHECK_CLOSE( 20/Metric::Time , group->getReservoirMaxRate( 3 ) , 0.001);
         BOOST_CHECK_EQUAL( 0.75 , group->getTargetReinjectFraction( 3 ));
         BOOST_CHECK_EQUAL( 0.95 , group->getTargetVoidReplacementFraction( 3 ));
-    
+
         BOOST_CHECK_EQUAL( Phase::OIL , group->getInjectionPhase( 6 ));
         BOOST_CHECK_EQUAL( GroupInjection::RATE , group->getInjectionControlMode( 6 ));
         BOOST_CHECK_CLOSE( 1000/Metric::Time , group->getSurfaceMaxRate( 6 ) , 0.0001);
 
         BOOST_CHECK(group->isInjectionGroup(3));
     }
-    
+
     {
         GroupPtr group = sched->getGroup("OP");
         BOOST_CHECK_EQUAL( GroupProduction::ORAT , group->getProductionControlMode(3));
@@ -424,7 +424,7 @@ BOOST_AUTO_TEST_CASE( WellTestGroupAndWellRelation ) {
 
     GroupPtr group1 = sched->getGroup("GROUP1");
     GroupPtr group2 = sched->getGroup("GROUP2");
-    
+
     BOOST_CHECK( group1->hasBeenDefined(0) );
     BOOST_CHECK_EQUAL(false , group2->hasBeenDefined(0));
     BOOST_CHECK( group2->hasBeenDefined(1));
@@ -433,7 +433,7 @@ BOOST_AUTO_TEST_CASE( WellTestGroupAndWellRelation ) {
     BOOST_CHECK_EQUAL( true , group1->hasWell("W_2" , 0));
     BOOST_CHECK_EQUAL( false, group2->hasWell("W_1" , 0));
     BOOST_CHECK_EQUAL( false, group2->hasWell("W_2" , 0));
-    
+
 
 
     BOOST_CHECK_EQUAL( true  , group1->hasWell("W_1" , 1));
@@ -577,7 +577,7 @@ BOOST_AUTO_TEST_CASE(WELLS_SHUT) {
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_SHUT_WELL");
     DeckPtr deck =  parser->parseFile(scheduleFile.string());
     ScheduleConstPtr sched(new Schedule(deck));
-    
+
     WellConstPtr well1 = sched->getWell("W1");
     WellConstPtr well2 = sched->getWell("W2");
     WellConstPtr well3 = sched->getWell("W3");
@@ -586,7 +586,7 @@ BOOST_AUTO_TEST_CASE(WELLS_SHUT) {
     BOOST_CHECK_EQUAL( WellCommon::StatusEnum::OPEN , well2->getStatus(1));
     BOOST_CHECK_EQUAL( WellCommon::StatusEnum::OPEN , well3->getStatus(1));
 
-    
+
     BOOST_CHECK_EQUAL( WellCommon::StatusEnum::SHUT , well1->getStatus(2));
     BOOST_CHECK_EQUAL( WellCommon::StatusEnum::SHUT , well2->getStatus(2));
     BOOST_CHECK_EQUAL( WellCommon::StatusEnum::SHUT , well3->getStatus(2));
@@ -601,7 +601,7 @@ BOOST_AUTO_TEST_CASE(WellTestWPOLYMER) {
     BOOST_CHECK_EQUAL(4U, sched->numWells());
     BOOST_CHECK(sched->hasWell("INJE01"));
     BOOST_CHECK(sched->hasWell("PROD01"));
-    
+
     WellConstPtr well1 = sched->getWell("INJE01");
     BOOST_CHECK( well1->isInjector(0));
     {

@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE( ContainsStar_WithStar_ReturnsTrue ) {
     BOOST_CHECK_EQUAL( true , Opm::isStarToken("*1", countString, valueString) );
     BOOST_CHECK_EQUAL( true , Opm::isStarToken("1*", countString, valueString) );
     BOOST_CHECK_EQUAL( true , Opm::isStarToken("1*2", countString, valueString) );
-    
+
     BOOST_CHECK_EQUAL( false , Opm::isStarToken("12", countString, valueString) );
     BOOST_CHECK_EQUAL( false , Opm::isStarToken("'12*34'", countString, valueString) );
 }

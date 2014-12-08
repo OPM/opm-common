@@ -56,18 +56,18 @@ BOOST_AUTO_TEST_CASE(AddAndDeleteWell) {
     Opm::WellPtr well(new Opm::Well("WELL1" , 0, 0, 0.0, Opm::Phase::OIL, timeMap , 0));
     Opm::WellPtr well2(new Opm::Well("WELL2" , 0, 0, 0.0, Opm::Phase::OIL, timeMap , 0));
 
-    wellSet.addWell( well ); 
+    wellSet.addWell( well );
     BOOST_CHECK_EQUAL(true , wellSet.hasWell("WELL1"));
     BOOST_CHECK_EQUAL(1U , wellSet.size());
     BOOST_CHECK_EQUAL( well , wellSet.getWell("WELL1"));
 
 
-    wellSet.addWell( well2 ); 
+    wellSet.addWell( well2 );
     BOOST_CHECK_EQUAL(true , wellSet.hasWell("WELL2"));
     BOOST_CHECK_EQUAL(2U , wellSet.size());
     BOOST_CHECK_EQUAL( well2 , wellSet.getWell("WELL2"));
 
-    wellSet.delWell("WELL1"); 
+    wellSet.delWell("WELL1");
     BOOST_CHECK_EQUAL(false , wellSet.hasWell("WELL1"));
     BOOST_CHECK_EQUAL(1U , wellSet.size());
     BOOST_CHECK_EQUAL( well2 , wellSet.getWell("WELL2"));
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(AddWellSameName) {
     Opm::WellPtr well1(new Opm::Well("WELL" , 0, 0, 0.0, Opm::Phase::OIL, timeMap , 0));
     Opm::WellPtr well2(new Opm::Well("WELL" , 0, 0, 0.0, Opm::Phase::OIL, timeMap , 0));
 
-    wellSet.addWell( well1 ); 
+    wellSet.addWell( well1 );
     BOOST_CHECK_EQUAL(true , wellSet.hasWell("WELL"));
 
     BOOST_CHECK_NO_THROW( wellSet.addWell( well1 ));

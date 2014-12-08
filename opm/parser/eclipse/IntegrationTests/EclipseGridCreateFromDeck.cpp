@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(ExportFromCPGridACTNUM) {
     {
         const std::vector<int>& deckActnum = deck->getKeyword("ACTNUM")->getIntData();
         const std::vector<double>& deckZCORN = deck->getKeyword("ZCORN")->getSIDoubleData();
-        
+
         for (size_t i = 0; i < volume; i++) {
             BOOST_CHECK_EQUAL( deckActnum[i] , actnum[i]);
             for (size_t j=0; j < 8; j++)

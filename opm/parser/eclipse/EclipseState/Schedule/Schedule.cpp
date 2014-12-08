@@ -272,7 +272,7 @@ namespace Opm {
 
                 properties.injectorType = injectorType;
                 properties.predictionMode = true;
-                
+
                 if (!record->getItem("RATE")->defaultApplied(0)) {
                     properties.surfaceInjectionRate = convertInjectionRateToSI(record->getItem("RATE")->getRawDouble(0) , injectorType, *deck->getActiveUnitSystem());
                     properties.addInjectionControl(WellInjector::RATE);
@@ -291,7 +291,7 @@ namespace Opm {
                     properties.THPLimit = record->getItem("THP")->getSIDouble(0);
                     properties.addInjectionControl(WellInjector::THP);
                 } else
-                    properties.dropInjectionControl(WellInjector::THP);                                    
+                    properties.dropInjectionControl(WellInjector::THP);
 
                 /*
                   What a mess; there is a sensible default BHP limit
@@ -335,7 +335,7 @@ namespace Opm {
                 WellPtr well = *wellIter;
 
                 WellPolymerProperties properties(well->getPolymerPropertiesCopy(currentStep));
-                
+
                 properties.m_polymerConcentration = record->getItem("POLYMER_CONCENTRATION")->getSIDouble(0);
                 properties.m_saltConcentration = record->getItem("SALT_CONCENTRATION")->getSIDouble(0);
 
@@ -452,7 +452,7 @@ namespace Opm {
                 GroupProductionExceedLimit::ActionEnum exceedAction = GroupProductionExceedLimit::ActionEnumFromString(record->getItem("EXCEED_PROC")->getTrimmedString(0) );
                 group->setProductionExceedLimitAction( currentStep , exceedAction );
             }
-            
+
             group->setProductionGroup(currentStep, true);
         }
     }
@@ -460,7 +460,7 @@ namespace Opm {
     void Schedule::handleCOMPDAT(DeckKeywordConstPtr keyword, ParserLogPtr /*parserLog*/, size_t currentStep) {
         std::map<std::string , std::vector< CompletionPtr> > completionMapList = Completion::completionsFromCOMPDATKeyword( keyword );
         std::map<std::string , std::vector< CompletionPtr> >::iterator iter;
-        
+
         for( iter= completionMapList.begin(); iter != completionMapList.end(); iter++) {
             const std::string wellName = iter->first;
             WellPtr well = getWell(wellName);
@@ -482,7 +482,7 @@ namespace Opm {
             if (!record->getItem("PHASE")->defaultApplied(0)) {
                 std::string guideRatePhase = record->getItem("PHASE")->getTrimmedString(0);
                 well->setGuideRatePhase(currentStep, GuideRate::GuideRatePhaseEnumFromString(guideRatePhase));
-            } else 
+            } else
                 well->setGuideRatePhase(currentStep, GuideRate::UNDEFINED);
 
             well->setGuideRateScalingFactor(currentStep, record->getItem("SCALING_FACTOR")->getRawDouble(0));
@@ -500,7 +500,7 @@ namespace Opm {
 
             if (!hasGroup(parentName))
                 addGroup( parentName , currentStep );
-            
+
             if (!hasGroup(childName))
                 addGroup( childName , currentStep );
         }
@@ -655,7 +655,7 @@ namespace Opm {
             throw std::logic_error("Unknown injection phase");
         }
     }
-    
+
 
     bool Schedule::convertEclipseStringToBool(const std::string& eclipseString) {
         std::string lowerTrimmed = boost::algorithm::to_lower_copy(eclipseString);

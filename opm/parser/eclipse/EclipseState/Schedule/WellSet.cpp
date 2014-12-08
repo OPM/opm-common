@@ -19,8 +19,8 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/WellSet.hpp>
 namespace Opm {
-    
-        
+
+
     WellSet::WellSet() {
     }
 
@@ -41,10 +41,10 @@ namespace Opm {
             throw std::invalid_argument("Does not have this well?!\n");
     }
 
-    
+
     void WellSet::addWell(WellPtr well) {
         const std::string& wellName = well->name();
-        if (!hasWell(wellName)) 
+        if (!hasWell(wellName))
             m_wells[wellName] = well;
         else if (well != getWell(wellName))
             throw std::invalid_argument("Well has changed - internal fuckup");
@@ -61,10 +61,10 @@ namespace Opm {
 
     WellSet * WellSet::shallowCopy() const {
         WellSet * copy = new WellSet();
-        
-        for (std::map<std::string , WellPtr>::const_iterator iter=m_wells.begin(); iter != m_wells.end(); ++iter) 
+
+        for (std::map<std::string , WellPtr>::const_iterator iter=m_wells.begin(); iter != m_wells.end(); ++iter)
             copy->addWell( (*iter).second );
-        
+
         return copy;
     }
 }

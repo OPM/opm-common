@@ -29,8 +29,8 @@ namespace Opm {
         enum StatusEnum {
             OPEN = 1,
             STOP = 2,
-            SHUT = 3, 
-            AUTO = 4 
+            SHUT = 3,
+            AUTO = 4
         };
 
         const std::string Status2String(StatusEnum enumValue);
@@ -57,7 +57,7 @@ namespace Opm {
     } // namespace CompletionDirection
 
 
-    namespace Phase { 
+    namespace Phase {
         enum PhaseEnum {
             OIL   = 1,
             GAS   = 2,
@@ -78,10 +78,10 @@ namespace Opm {
             MULTI = 4
         };
 
-        
+
         enum ControlModeEnum {
             RATE =  1 ,
-            RESV =  2 , 
+            RESV =  2 ,
             BHP  =  4 ,
             THP  =  8 ,
             GRUP = 16 ,
@@ -92,8 +92,8 @@ namespace Opm {
           of which controls are present, i.e. the 2^n structure must
           be intact.
         */
-        
-        
+
+
 
         const std::string ControlMode2String( ControlModeEnum enumValue );
         ControlModeEnum ControlModeFromString( const std::string& stringValue );
@@ -107,15 +107,15 @@ namespace Opm {
 
         enum ControlModeEnum {
             ORAT =     1,
-            WRAT =     2, 
+            WRAT =     2,
             GRAT =     4,
             LRAT =     8,
             CRAT =    16,
             RESV =    32,
-            BHP  =    64, 
-            THP  =   128, 
-            GRUP =   256,  
-            CMODE_UNDEFINED = 1024   
+            BHP  =    64,
+            THP  =   128,
+            GRUP =   256,
+            CMODE_UNDEFINED = 1024
         };
 
         /*
@@ -134,9 +134,9 @@ namespace Opm {
         ControlModeEnum ControlModeFromString( const std::string& stringValue );
     }
 
-    
+
     namespace GroupInjection {
-        
+
           enum ControlEnum {
             NONE = 0,
             RATE = 1,
@@ -150,7 +150,7 @@ namespace Opm {
         ControlEnum ControlEnumFromString( const std::string& stringValue );
     }
 
-    
+
     namespace GroupProductionExceedLimit {
         enum ActionEnum {
             NONE = 0,
@@ -160,12 +160,12 @@ namespace Opm {
             PLUG = 4,
             RATE = 5
         };
-            
+
         const std::string ActionEnum2String( ActionEnum enumValue );
         ActionEnum ActionEnumFromString( const std::string& stringValue );
     }
-    
-    
+
+
 
     namespace GroupProduction {
 
@@ -179,9 +179,9 @@ namespace Opm {
             RESV = 6,
             PRBL = 7
         };
-        
+
         const std::string ControlEnum2String( GroupProduction::ControlEnum enumValue );
-        GroupProduction::ControlEnum ControlEnumFromString( const std::string& stringValue );    
+        GroupProduction::ControlEnum ControlEnumFromString( const std::string& stringValue );
     }
 
     namespace GuideRate {
@@ -204,7 +204,7 @@ namespace Opm {
     const std::string CompletionStateEnum2String( CompletionStateEnum enumValue );
     CompletionStateEnum CompletionStateEnumFromString( const std::string& stringValue );
 
-    
+
 }
 
 #endif

@@ -95,7 +95,7 @@ public:
           m_initializer(new Opm::GridPropertyConstantInitializer<DataType>(defaultValue)),
           m_dimensionString(dimString)
     {}
-    
+
     GridPropertySupportedKeywordInfo(const std::string& name,
                                      const DataType defaultValue,
                                      std::shared_ptr<const PostProcessor> postProcessor,
@@ -106,7 +106,7 @@ public:
           m_dimensionString(dimString)
     {}
 
-        
+
 
     GridPropertySupportedKeywordInfo(const GridPropertySupportedKeywordInfo&) = default;
 
@@ -125,15 +125,15 @@ public:
         return m_initializer;
     }
 
-    
+
     std::shared_ptr<const PostProcessor> getPostProcessor() const {
         return m_postProcessor;
     }
 
-    
+
     bool hasPostProcessor() const {
         return static_cast<bool>(m_postProcessor);
-    }   
+    }
 
 
 
@@ -157,7 +157,7 @@ public:
         m_nz = nz;
         m_kwInfo = kwInfo;
         m_data.resize( nx * ny * nz );
-        
+
         m_kwInfo.getInitializer()->apply(m_data, m_kwInfo.getKeywordName());
         m_hasRunPostProcessor = false;
     }
@@ -177,8 +177,8 @@ public:
     size_t getNZ() const {
         return m_nz;
     }
-    
-    
+
+
     T iget(size_t index) const {
         if (index < m_data.size()) {
             return m_data[index];
@@ -196,7 +196,7 @@ public:
     void iset(size_t index, T value) {
         if (index < m_data.size())
             m_data[index] = value;
-        else 
+        else
             throw std::invalid_argument("Index out of range \n");
     }
 
@@ -228,7 +228,7 @@ public:
        Due to the convention where it is only neceassary to supply the
        top layer of the petrophysical properties we can unfortunately
        not enforce that the number of elements elements in the
-       deckkeyword equals nx*ny*nz. 
+       deckkeyword equals nx*ny*nz.
     */
 
     void loadFromDeckKeyword(DeckKeywordConstPtr deckKeyword) {
@@ -259,7 +259,7 @@ public:
             } else {
                 std::string boxSize = std::to_string(static_cast<long long>(indexList.size()));
                 std::string keywordSize = std::to_string(static_cast<long long>(deckItem->size()));
-                
+
                 throw std::invalid_argument("Size mismatch: Box:" + boxSize + "  DecKeyword:" + keywordSize);
             }
         }
@@ -279,7 +279,7 @@ public:
             }
         }
     }
-    
+
     void scale(T scaleFactor , std::shared_ptr<const Box> inputBox) {
         if (inputBox->isGlobal()) {
             for (size_t i = 0; i < m_data.size(); ++i)
@@ -308,7 +308,7 @@ public:
     }
 
 
-    
+
 
     void setScalar(T value , std::shared_ptr<const Box> inputBox) {
         if (inputBox->isGlobal()) {
@@ -330,7 +330,7 @@ public:
         return m_kwInfo;
     }
 
-    
+
     bool postProcessorRunRequired() {
         if (m_kwInfo.hasPostProcessor() && !m_hasRunPostProcessor)
             return true;
@@ -350,8 +350,8 @@ public:
             postProcessor->apply( m_data );
         }
     }
-    
-    
+
+
 
 
 private:

@@ -104,7 +104,7 @@ namespace Opm {
 
             if (!numTablesObject.is_object())
                 throw std::invalid_argument("The num_tables key must point to a {} object");
-            
+
             initSizeKeyword(numTablesObject);
             m_isTableCollection = true;
         } else {
@@ -208,7 +208,7 @@ namespace Opm {
 
         if (!isalpha(name[0]))
             return false;
-        
+
         return true;
     }
 
@@ -383,7 +383,7 @@ namespace Opm {
             throw std::invalid_argument("The items: object must be an array");
     }
 
-    
+
     void ParserKeyword::initFloatItemDimension( ParserFloatItemPtr item, const Json::JsonObject itemConfig) {
         if (itemConfig.has_item("dimension")) {
             const Json::JsonObject dimensionConfig = itemConfig.get_item("dimension");
@@ -396,7 +396,7 @@ namespace Opm {
                 }
             } else
                 throw std::invalid_argument("The dimension: attribute must be a string/list of strings");
-        } 
+        }
     }
 
 
@@ -412,10 +412,10 @@ namespace Opm {
                 }
             } else
                 throw std::invalid_argument("The dimension: attribute must be a string/list of strings");
-        } 
+        }
     }
 
-    
+
 
     void ParserKeyword::initData(const Json::JsonObject& jsonConfig) {
         m_fixedSize = 1U;

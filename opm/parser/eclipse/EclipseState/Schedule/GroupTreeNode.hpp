@@ -26,9 +26,9 @@
 
 namespace Opm {
 
-    /// This Class is currently ONLY keeping track of the actual group nodes, 
-    /// and knows nothing about the wells. The wells will know which group 
-    /// (leaf) node they belong to. 
+    /// This Class is currently ONLY keeping track of the actual group nodes,
+    /// and knows nothing about the wells. The wells will know which group
+    /// (leaf) node they belong to.
     class GroupTreeNode {
     public:
         const std::string& name() const;
@@ -43,7 +43,7 @@ namespace Opm {
         std::map<std::string, std::shared_ptr<GroupTreeNode> >::const_iterator begin() const;
         std::map<std::string, std::shared_ptr<GroupTreeNode> >::const_iterator end() const;
 
-        
+
     private:
         GroupTreeNode(const std::string& name);
         std::string m_name;

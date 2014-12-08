@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(CheckComposite) {
     BOOST_CHECK( FaceDir::ZMinus & FaceDir::FromMULTREGTString("Z"));
     BOOST_CHECK_EQUAL( FaceDir::ZPlus  + FaceDir::ZMinus ,  FaceDir::FromMULTREGTString("Z"));
 
-    
+
     BOOST_CHECK_EQUAL( FaceDir::XPlus + FaceDir::YPlus + FaceDir::XMinus + FaceDir::YMinus , FaceDir::FromMULTREGTString("XY"));
     BOOST_CHECK_EQUAL( FaceDir::XPlus + FaceDir::ZPlus + FaceDir::XMinus + FaceDir::ZMinus, FaceDir::FromMULTREGTString("XZ"));
     BOOST_CHECK_EQUAL( FaceDir::ZPlus + FaceDir::YPlus + FaceDir::ZMinus + FaceDir::YMinus, FaceDir::FromMULTREGTString("YZ"));

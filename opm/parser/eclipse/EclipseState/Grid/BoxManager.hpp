@@ -40,8 +40,8 @@
           - ENDBOX
           - A new BOX
           - End of current section
-          
-       is encountered. 
+
+       is encountered.
 
    3. Some keywords allow for a Box which applies only to the elements
       of that keyword.
@@ -50,7 +50,7 @@
 
 
 namespace Opm {
-    
+
     class BoxManager {
     public:
         BoxManager(int nx , int ny , int nz);
@@ -61,7 +61,7 @@ namespace Opm {
         void endSection();
         void endInputBox();
         void endKeyword();
-        
+
         std::shared_ptr<const Box> getActiveBox() const;
         std::shared_ptr<const Box> getGlobalBox() const;
         std::shared_ptr<const Box> getInputBox() const;

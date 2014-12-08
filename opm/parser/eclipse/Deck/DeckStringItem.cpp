@@ -64,7 +64,7 @@ namespace Opm {
     }
 
 
-  
+
     void DeckStringItem::push_backMultiple(std::string value, size_t numValues) {
         for (size_t i = 0; i < numValues; i++) {
             m_data.push_back( value );
@@ -77,8 +77,8 @@ namespace Opm {
         m_data.push_back( data );
         m_dataPointDefaulted.push_back(true);
     }
-    
-    
+
+
 
     size_t DeckStringItem::size() const {
         return m_data.size();

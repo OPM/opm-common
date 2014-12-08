@@ -38,8 +38,8 @@ namespace Opm {
           throw std::invalid_argument("Unhandled enum value");
         }
     }
-    
-    
+
+
     CompletionStateEnum CompletionStateEnumFromString( const std::string& origStringValue ) {
         std::string stringValue(origStringValue);
         boost::algorithm::trim(stringValue);
@@ -56,7 +56,7 @@ namespace Opm {
     /*****************************************************************/
 
     namespace GroupInjection {
-    
+
         const std::string ControlEnum2String( ControlEnum enumValue ) {
             switch( enumValue ) {
             case NONE:
@@ -75,8 +75,8 @@ namespace Opm {
                 throw std::invalid_argument("Unhandled enum value");
             }
         }
-    
-    
+
+
         ControlEnum ControlEnumFromString( const std::string& origStringValue ) {
             std::string stringValue(origStringValue);
             boost::algorithm::trim(stringValue);
@@ -96,13 +96,13 @@ namespace Opm {
             else
                 throw std::invalid_argument("Unknown enum state string: " + stringValue );
         }
-        
+
     }
 
     /*****************************************************************/
 
     namespace GroupProduction {
-        
+
         const std::string ControlEnum2String( ControlEnum enumValue ) {
             switch( enumValue ) {
             case NONE:
@@ -125,8 +125,8 @@ namespace Opm {
                 throw std::invalid_argument("Unhandled enum value");
             }
         }
-    
-    
+
+
         ControlEnum ControlEnumFromString( const std::string& stringValue ) {
             if (stringValue == "NONE")
                 return NONE;
@@ -167,7 +167,7 @@ namespace Opm {
             case RATE:
                 return "RATE";
             default:
-                throw std::invalid_argument("unhandled enum value"); 
+                throw std::invalid_argument("unhandled enum value");
             }
         }
 
@@ -195,7 +195,7 @@ namespace Opm {
     }
 
     /*****************************************************************/
-    
+
     namespace Phase {
         const std::string PhaseEnum2String( PhaseEnum enumValue ) {
             switch( enumValue ) {
@@ -209,7 +209,7 @@ namespace Opm {
                 throw std::invalid_argument("unhandled enum value");
             }
         }
-    
+
         PhaseEnum PhaseEnumFromString( const std::string& origStringValue ) {
             std::string stringValue(origStringValue);
             boost::algorithm::trim(stringValue);
@@ -224,11 +224,11 @@ namespace Opm {
                 throw std::invalid_argument("Unknown enum state string: " + stringValue );
         }
     }
-    
+
     /*****************************************************************/
 
     namespace WellProducer {
-        
+
         const std::string ControlMode2String( ControlModeEnum enumValue ) {
             switch( enumValue ) {
             case ORAT:
@@ -253,7 +253,7 @@ namespace Opm {
                 throw std::invalid_argument("unhandled enum value");
             }
         }
-    
+
         ControlModeEnum ControlModeFromString( const std::string& origStringValue ) {
             std::string stringValue(origStringValue);
             boost::algorithm::trim(stringValue);
@@ -298,7 +298,7 @@ namespace Opm {
                 throw std::invalid_argument("unhandled enum value");
             }
         }
-    
+
         TypeEnum TypeFromString( const std::string& origStringValue ) {
             std::string stringValue(origStringValue);
             boost::algorithm::trim(stringValue);
@@ -333,7 +333,7 @@ namespace Opm {
                 throw std::invalid_argument("unhandled enum value");
             }
         }
-    
+
         ControlModeEnum ControlModeFromString( const std::string& origStringValue ) {
             std::string stringValue(origStringValue);
             boost::algorithm::trim(stringValue);
@@ -356,7 +356,7 @@ namespace Opm {
 
 
     namespace WellCommon {
-        
+
         const std::string Status2String(StatusEnum enumValue) {
             switch( enumValue ) {
             case OPEN:
@@ -388,7 +388,7 @@ namespace Opm {
             else
                 throw std::invalid_argument("Unknown enum state string: " + stringValue );
         }
-        
+
     }
 
     namespace GuideRate {

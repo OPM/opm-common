@@ -31,11 +31,11 @@ namespace Opm {
     bool Deck::hasKeyword(const std::string& keyword) const {
         return m_keywords->hasKeyword(keyword);
     }
-    
+
     void Deck::addKeyword( DeckKeywordPtr keyword) {
         m_keywords->addKeyword(keyword);
     }
-    
+
     DeckKeywordPtr Deck::getKeyword(const std::string& keyword, size_t index) const {
         return m_keywords->getKeyword(keyword , index);
     }
@@ -43,11 +43,11 @@ namespace Opm {
     DeckKeywordPtr Deck::getKeyword(const std::string& keyword) const {
         return m_keywords->getKeyword(keyword);
     }
-    
+
     DeckKeywordPtr Deck::getKeyword(size_t index) const {
         return m_keywords->getKeyword(index);
     }
-      
+
     size_t Deck::numKeywords(const std::string& keyword) const {
         return m_keywords->numKeywords( keyword );
     }
@@ -71,7 +71,7 @@ namespace Opm {
     std::shared_ptr<UnitSystem> Deck::getActiveUnitSystem() const {
         return m_activeUnits;
     }
-    
+
 
     std::shared_ptr<UnitSystem> Deck::getDefaultUnitSystem() const {
         return m_defaultUnits;
