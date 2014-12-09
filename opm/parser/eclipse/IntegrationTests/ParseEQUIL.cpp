@@ -43,10 +43,6 @@ BOOST_AUTO_TEST_CASE( parse_EQUIL_OK ) {
     DeckKeywordConstPtr kw1 = deck->getKeyword("EQUIL" , 0);
     BOOST_CHECK_EQUAL( 3U , kw1->size() );
 
-    BOOST_CHECK_EQUAL(0 , kw0->getDeckIndex());
-    BOOST_CHECK_EQUAL(1 , kw1->getDeckIndex());
-
-
     DeckRecordConstPtr rec1 = kw1->getRecord(0);
     BOOST_CHECK_EQUAL( 9U , rec1->size() );
 

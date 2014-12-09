@@ -37,7 +37,6 @@ namespace Opm {
     }
 
     void KeywordContainer::addKeyword(DeckKeywordPtr keyword) {
-        keyword->setDeckIndex( m_keywordList.size());
         m_keywordList.push_back(keyword);
 
         if (!hasKeyword(keyword->name())) {

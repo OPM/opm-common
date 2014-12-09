@@ -87,12 +87,6 @@ BOOST_AUTO_TEST_CASE(setUnknown_wasknown_nowunknown) {
 }
 
 
-BOOST_AUTO_TEST_CASE(DeckIndex) {
-    DeckKeywordPtr deckKeyword(new DeckKeyword("KW"));
-    BOOST_CHECK_EQUAL( -1 , deckKeyword->getDeckIndex());
-    deckKeyword->setDeckIndex( 10);
-    BOOST_CHECK_EQUAL(10 , deckKeyword->getDeckIndex());
-}
 
 
 

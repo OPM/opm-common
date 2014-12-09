@@ -47,9 +47,6 @@ namespace Opm {
         bool isKnown() const;
         bool isDataKeyword() const;
 
-        ssize_t getDeckIndex() const;
-        void    setDeckIndex(size_t deckIndex);
-
         const std::vector<int>& getIntData() const;
         const std::vector<double>& getRawDoubleData() const;
         const std::vector<double>& getSIDoubleData() const;
@@ -68,7 +65,6 @@ namespace Opm {
         std::shared_ptr<const ParserKeyword> m_parserKeyword;
         std::vector<DeckRecordConstPtr> m_recordList;
         bool m_knownKeyword;
-        ssize_t m_deckIndex;
         bool m_isDataKeyword;
     };
     typedef std::shared_ptr<DeckKeyword> DeckKeywordPtr;
