@@ -694,7 +694,7 @@ namespace Opm {
     }
 
 
-    void ParserKeyword::applyUnitsToDeck(std::shared_ptr<const Deck> deck , std::shared_ptr<DeckKeyword> deckKeyword) const {
+    void ParserKeyword::applyUnitsToDeck(std::shared_ptr<const Deck> deck , std::shared_ptr<const DeckKeyword> deckKeyword) const {
         std::shared_ptr<const ParserRecord> parserRecord = getRecord();
         for (size_t index = 0; index < deckKeyword->size(); index++) {
             std::shared_ptr<const DeckRecord> deckRecord = deckKeyword->getRecord(index);

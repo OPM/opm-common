@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(ParseDENSITY) {
     ParserPtr parser(new Parser());
     boost::filesystem::path file("testdata/integration_tests/DENSITY/DENSITY1");
     DeckPtr deck =  parser->parseFile(file.string());
-    DeckKeywordPtr densityKw = deck->getKeyword("DENSITY" , 0);
+    DeckKeywordConstPtr densityKw = deck->getKeyword("DENSITY" , 0);
 
 
     BOOST_CHECK_EQUAL( 2U , densityKw->size());

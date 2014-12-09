@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(ParsePOROandPERMX) {
     boost::filesystem::path poroFile("testdata/integration_tests/PORO/PORO1");
     DeckPtr deck =  parser->parseFile(poroFile.string());
     DeckKeywordConstPtr kw1 = deck->getKeyword("PORO" , 0);
-    DeckKeywordPtr kw2 = deck->getKeyword("PERMX" , 0);
+    DeckKeywordConstPtr kw2 = deck->getKeyword("PERMX" , 0);
 
     BOOST_CHECK_THROW( kw1->getIntData() , std::logic_error );
     BOOST_CHECK_THROW( kw1->getStringData() , std::logic_error );

@@ -77,11 +77,11 @@ namespace Opm {
         return m_keywords.hasKeyword(keyword);
     }
 
-    std::vector<DeckKeywordPtr>::iterator Section::begin() {
+    std::vector<DeckKeywordConstPtr>::iterator Section::begin() {
         return m_keywords.begin();
     }
 
-    std::vector<DeckKeywordPtr>::iterator Section::end() {
+    std::vector<DeckKeywordConstPtr>::iterator Section::end() {
         return m_keywords.end();
     }
 

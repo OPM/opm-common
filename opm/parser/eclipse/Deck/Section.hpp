@@ -36,8 +36,8 @@ namespace Opm {
     public:
         Section(DeckConstPtr deck, const std::string& startKeyword);
         bool hasKeyword( const std::string& keyword ) const;
-        std::vector<DeckKeywordPtr>::iterator begin();
-        std::vector<DeckKeywordPtr>::iterator end();
+        std::vector<DeckKeywordConstPtr>::iterator begin();
+        std::vector<DeckKeywordConstPtr>::iterator end();
         DeckKeywordConstPtr getKeyword(const std::string& keyword, size_t index) const;
         DeckKeywordConstPtr getKeyword(const std::string& keyword) const;
         DeckKeywordConstPtr getKeyword(size_t index) const;

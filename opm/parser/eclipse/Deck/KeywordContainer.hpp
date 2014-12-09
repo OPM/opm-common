@@ -22,20 +22,20 @@ namespace Opm {
         KeywordContainer();
         bool hasKeyword(const std::string& keyword) const;
         size_t size() const;
-        void addKeyword(DeckKeywordPtr keyword);
-        DeckKeywordPtr getKeyword(const std::string& keyword, size_t index) const;
-        DeckKeywordPtr getKeyword(const std::string& keyword) const;
-        DeckKeywordPtr      getKeyword(size_t index) const;
+        void addKeyword(DeckKeywordConstPtr keyword);
+        DeckKeywordConstPtr getKeyword(const std::string& keyword, size_t index) const;
+        DeckKeywordConstPtr getKeyword(const std::string& keyword) const;
+        DeckKeywordConstPtr      getKeyword(size_t index) const;
 
-        const std::vector<DeckKeywordPtr>&  getKeywordList(const std::string& keyword) const;
+        const std::vector<DeckKeywordConstPtr>&  getKeywordList(const std::string& keyword) const;
         size_t numKeywords(const std::string& keyword) const;
 
-        std::vector<DeckKeywordPtr>::iterator begin();
-        std::vector<DeckKeywordPtr>::iterator end();
+        std::vector<DeckKeywordConstPtr>::iterator begin();
+        std::vector<DeckKeywordConstPtr>::iterator end();
 
     private:
-        std::vector<DeckKeywordPtr> m_keywordList;
-        std::map<std::string, std::vector<DeckKeywordPtr> > m_keywordMap;
+        std::vector<DeckKeywordConstPtr> m_keywordList;
+        std::map<std::string, std::vector<DeckKeywordConstPtr> > m_keywordMap;
     };
     typedef std::shared_ptr<KeywordContainer> KeywordContainerPtr;
     typedef std::shared_ptr<const KeywordContainer> KeywordContainerConstPtr;

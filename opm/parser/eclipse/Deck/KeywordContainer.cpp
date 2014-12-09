@@ -36,30 +36,30 @@ namespace Opm {
         return m_keywordList.size();
     }
 
-    void KeywordContainer::addKeyword(DeckKeywordPtr keyword) {
+    void KeywordContainer::addKeyword(DeckKeywordConstPtr keyword) {
         m_keywordList.push_back(keyword);
 
         if (!hasKeyword(keyword->name())) {
-            m_keywordMap[keyword->name()] = std::vector<DeckKeywordPtr>();
+            m_keywordMap[keyword->name()] = std::vector<DeckKeywordConstPtr>();
         }
 
         {
-            std::vector<DeckKeywordPtr>& keywordList = m_keywordMap[keyword->name()];
+            std::vector<DeckKeywordConstPtr>& keywordList = m_keywordMap[keyword->name()];
             keywordList.push_back(keyword);
         }
     }
 
-    const std::vector<DeckKeywordPtr>&  KeywordContainer::getKeywordList(const std::string& keyword) const {
+    const std::vector<DeckKeywordConstPtr>&  KeywordContainer::getKeywordList(const std::string& keyword) const {
         if (hasKeyword(keyword)) {
-            const std::vector<DeckKeywordPtr>& keywordList = m_keywordMap.find(keyword)->second;
+            const std::vector<DeckKeywordConstPtr>& keywordList = m_keywordMap.find(keyword)->second;
             return keywordList;
         } else
             throw std::invalid_argument("Keyword: " + keyword + " is not found in the container");
     }
 
 
-    DeckKeywordPtr KeywordContainer::getKeyword(const std::string& keyword, size_t index) const {
-        const std::vector<DeckKeywordPtr>& keywordList = getKeywordList( keyword );
+    DeckKeywordConstPtr KeywordContainer::getKeyword(const std::string& keyword, size_t index) const {
+        const std::vector<DeckKeywordConstPtr>& keywordList = getKeywordList( keyword );
         if (index < keywordList.size())
             return keywordList[index];
         else
@@ -67,12 +67,12 @@ namespace Opm {
     }
 
 
-    DeckKeywordPtr KeywordContainer::getKeyword(const std::string& keyword) const {
-        const std::vector<DeckKeywordPtr>& keywordList = getKeywordList( keyword );
+    DeckKeywordConstPtr KeywordContainer::getKeyword(const std::string& keyword) const {
+        const std::vector<DeckKeywordConstPtr>& keywordList = getKeywordList( keyword );
         return keywordList.back();
     }
 
-    DeckKeywordPtr KeywordContainer::getKeyword(size_t index) const {
+    DeckKeywordConstPtr KeywordContainer::getKeyword(size_t index) const {
         if (index < m_keywordList.size())
             return m_keywordList[index];
         else
@@ -81,17 +81,17 @@ namespace Opm {
 
     size_t KeywordContainer::numKeywords(const std::string& keyword) const{
         if (hasKeyword(keyword)) {
-            const std::vector<DeckKeywordPtr>& keywordList = getKeywordList( keyword );
+            const std::vector<DeckKeywordConstPtr>& keywordList = getKeywordList( keyword );
             return keywordList.size();
         } else
             return 0;
     }
 
-    std::vector<DeckKeywordPtr>::iterator KeywordContainer::begin() {
+    std::vector<DeckKeywordConstPtr>::iterator KeywordContainer::begin() {
         return m_keywordList.begin();
     }
 
-    std::vector<DeckKeywordPtr>::iterator KeywordContainer::end() {
+    std::vector<DeckKeywordConstPtr>::iterator KeywordContainer::end() {
         return m_keywordList.end();
     }
 }

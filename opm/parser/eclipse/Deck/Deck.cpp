@@ -32,19 +32,19 @@ namespace Opm {
         return m_keywords->hasKeyword(keyword);
     }
 
-    void Deck::addKeyword( DeckKeywordPtr keyword) {
+    void Deck::addKeyword( DeckKeywordConstPtr keyword) {
         m_keywords->addKeyword(keyword);
     }
 
-    DeckKeywordPtr Deck::getKeyword(const std::string& keyword, size_t index) const {
+    DeckKeywordConstPtr Deck::getKeyword(const std::string& keyword, size_t index) const {
         return m_keywords->getKeyword(keyword , index);
     }
 
-    DeckKeywordPtr Deck::getKeyword(const std::string& keyword) const {
+    DeckKeywordConstPtr Deck::getKeyword(const std::string& keyword) const {
         return m_keywords->getKeyword(keyword);
     }
 
-    DeckKeywordPtr Deck::getKeyword(size_t index) const {
+    DeckKeywordConstPtr Deck::getKeyword(size_t index) const {
         return m_keywords->getKeyword(index);
     }
 
@@ -52,7 +52,7 @@ namespace Opm {
         return m_keywords->numKeywords( keyword );
     }
 
-    const std::vector<DeckKeywordPtr>& Deck::getKeywordList(const std::string& keyword) const {
+    const std::vector<DeckKeywordConstPtr>& Deck::getKeywordList(const std::string& keyword) const {
         return m_keywords->getKeywordList( keyword );
     }
 

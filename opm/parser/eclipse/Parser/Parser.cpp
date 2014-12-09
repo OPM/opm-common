@@ -476,7 +476,7 @@ namespace Opm {
     void Parser::applyUnitsToDeck(DeckPtr deck) const {
         deck->initUnitSystem();
         for (size_t index=0; index < deck->size(); ++index) {
-            DeckKeywordPtr deckKeyword = deck->getKeyword( index );
+            DeckKeywordConstPtr deckKeyword = deck->getKeyword( index );
             if (isRecognizedKeyword( deckKeyword->name())) {
                 ParserKeywordConstPtr parserKeyword = getParserKeywordFromDeckName( deckKeyword->name() );
                 if (parserKeyword->hasDimension()) {

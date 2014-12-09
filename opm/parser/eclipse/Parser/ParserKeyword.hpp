@@ -142,7 +142,7 @@ namespace Opm {
         bool isDataKeyword() const;
         bool equal(const ParserKeyword& other) const;
         void inlineNew(std::ostream& os , const std::string& lhs, const std::string& indent) const;
-        void applyUnitsToDeck(std::shared_ptr<const Deck> deck , std::shared_ptr<DeckKeyword> deckKeyword) const;
+        void applyUnitsToDeck(std::shared_ptr<const Deck> deck , std::shared_ptr<const DeckKeyword> deckKeyword) const;
     private:
         std::pair<std::string,std::string> m_sizeDefinitionPair;
         std::string m_name;
