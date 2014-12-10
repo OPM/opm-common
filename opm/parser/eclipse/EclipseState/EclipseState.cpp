@@ -699,6 +699,13 @@ namespace Opm {
             SupportedDoubleKeywordInfo( "PERMXZ", nan,  distributeTopLayer , "Permeability" ), // E300 only
             SupportedDoubleKeywordInfo( "PERMYZ", nan,  distributeTopLayer , "Permeability" ), // E300 only
 
+            // the transmissibility keywords for neighboring
+            // conections. note that these keywords don't seem to
+            // require a post-processor...
+            SupportedDoubleKeywordInfo( "TRANX", nan, "Transmissibility" ),
+            SupportedDoubleKeywordInfo( "TRANY", nan, "Transmissibility" ),
+            SupportedDoubleKeywordInfo( "TRANZ", nan, "Transmissibility" ),
+
             // gross-to-net thickness (acts as a multiplier for PORO
             // and the permeabilities in the X-Y plane as well as for
             // the well rates.)
