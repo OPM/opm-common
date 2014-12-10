@@ -198,6 +198,7 @@ namespace Opm {
         const double Time                 = day;
         const double Mass                 = kilogram;
         const double Permeability         = milli*darcy;
+        const double Transmissibility     = centi*Poise*stb/(day*barsa);
         const double LiquidVolume         = cubic(meter);
         const double GasVolume            = cubic(meter);
         const double GasDissolutionFactor = GasVolume/LiquidVolume;
@@ -219,6 +220,7 @@ namespace Opm {
         const double Time                 = day;
         const double Mass                 = pound;
         const double Permeability         = milli*darcy;
+        const double Transmissibility     = centi*Poise*stb/(day*psia);
         const double LiquidVolume         = stb;
         const double GasVolume            = 1000*cubic(feet);
         const double GasDissolutionFactor = GasVolume/LiquidVolume;
