@@ -257,7 +257,6 @@ namespace Opm {
     }
 
     bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
-        bool verbose = false;
         bool stopParsing = false;
 
         if (parserState->inputstream) {
@@ -284,8 +283,6 @@ namespace Opm {
                         std::string includeFileAsString = readValueToken<std::string>(firstRecord->getItem(0));
                         boost::filesystem::path includeFile = getIncludeFilePath(parserState, includeFileAsString);
 
-                        if (verbose)
-                            std::cout << parserState->rawKeyword->getKeywordName() << "  " << includeFile << std::endl;
 
                         std::shared_ptr<ParserState> newParserState (new ParserState(includeFile.string(), parserState->deck, parserState->rootPath, parserState->strictParsing));
                         if (!newParserState->initSuccessful)
@@ -294,8 +291,6 @@ namespace Opm {
                         stopParsing = parseState(newParserState);
                         if (stopParsing) break;
                     } else {
-                        if (verbose)
-                            std::cout << parserState->rawKeyword->getKeywordName() << std::endl;
 
                         if (isRecognizedKeyword(parserState->rawKeyword->getKeywordName())) {
                             ParserKeywordConstPtr parserKeyword = getParserKeywordFromDeckName(parserState->rawKeyword->getKeywordName());
@@ -400,11 +395,24 @@ namespace Opm {
             parserState->nextKeyword = "";
         }
 
+        if (parserState->rawKeyword && parserState->rawKeyword->isFinished())
+            return true;
+
         while (std::getline(*parserState->inputstream, line)) {
+            // remove comments. note that this is a bit too simplistic as it fails when
+            //  having '--' in strings. _nobody_ does this, though ;)...
+            int commentPos = line.find("--");
+            line = line.substr(0, commentPos);
+
             boost::algorithm::trim_right(line); // Removing garbage (eg. \r)
             line = doSpecialHandlingForTitleKeyword(line, parserState);
             std::string keywordString;
             parserState->lineNR++;
+
+            // skip empty lines
+            if (line.size() == 0)
+                continue;
+
             if (parserState->rawKeyword == NULL) {
                 if (RawKeyword::isKeywordPrefix(line, keywordString)) {
                     parserState->rawKeyword = createRawKeyword(keywordString, parserState);
@@ -417,9 +425,8 @@ namespace Opm {
                         return true;
                     }
                 }
-                if (RawKeyword::useLine(line)) {
-                    parserState->rawKeyword->addRawRecordString(line);
-                }
+                parserState->rawKeyword->addRawRecordString(line);
+                line = "";
             }
 
             if (parserState->rawKeyword != NULL && parserState->rawKeyword->isFinished())
