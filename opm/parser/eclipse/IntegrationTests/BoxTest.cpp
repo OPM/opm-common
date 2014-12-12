@@ -40,16 +40,6 @@ EclipseState makeState(const std::string& fileName, LoggerPtr logger) {
 }
 
 
-/*
-  There is something fishy with the tests involving grid property post
-  processors. It seems that halfways through the test suddenly the
-  adress of a EclipseState object from a previous test is used; this
-  leads to segmentation fault. The problem is 'solved' by having
-  running this test first.
-
-  An issue has been posted on Stackoverflow: questions/26275555
-
-*/
 
 BOOST_AUTO_TEST_CASE( PERMX ) {
     LoggerPtr logger(new Logger());
