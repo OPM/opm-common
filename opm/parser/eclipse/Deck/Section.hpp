@@ -20,8 +20,9 @@
 #ifndef SECTION_HPP
 #define SECTION_HPP
 
+#include <opm/parser/eclipse/Log/Logger.hpp>
+
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Parser/ParserLog.hpp>
 
 #include <boost/iterator/iterator_facade.hpp>
 
@@ -55,7 +56,7 @@ namespace Opm {
         // returns whether the deck has all mandatory sections and if all sections are in
         // the right order
         static bool checkSectionTopology(DeckConstPtr deck,
-                                         ParserLogPtr parserLog,
+                                         LoggerPtr logger,
                                          bool ensureKeywordSectionAffiliation = false);
 
     private:

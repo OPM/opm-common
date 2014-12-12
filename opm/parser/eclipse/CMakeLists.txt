@@ -12,6 +12,9 @@ endif()
 
 add_subdirectory( Applications )
 
+set( log_source
+Log/Logger.cpp )
+
 set( rawdeck_source 
 RawDeck/StarToken.cpp
 RawDeck/RawKeyword.cpp 
@@ -38,7 +41,6 @@ set( parser_source
 Parser/ParserEnums.cpp
 Parser/ParserKeyword.cpp 
 Parser/Parser.cpp 
-Parser/ParserLog.cpp 
 Parser/ParserRecord.cpp
 Parser/ParserItem.cpp
 Parser/ParserIntItem.cpp  
@@ -53,7 +55,6 @@ SET_SOURCE_FILES_PROPERTIES(${PROJECT_BINARY_DIR}/generated-source/DefaultKeywor
 set( build_parser_source 
 Parser/ParserEnums.cpp
 Parser/ParserKeyword.cpp 
-Parser/ParserLog.cpp
 Parser/ParserRecord.cpp
 Parser/ParserItem.cpp
 Parser/ParserIntItem.cpp  
@@ -96,6 +97,8 @@ EclipseState/Grid/Fault.cpp
 EclipseState/Grid/FaultCollection.cpp)
 
 set( HEADER_FILES
+Log/Logger.hpp
+#
 RawDeck/RawConsts.hpp 
 RawDeck/RawKeyword.hpp 
 RawDeck/RawRecord.hpp 
@@ -116,7 +119,6 @@ Deck/Section.hpp
 Parser/ParserEnums.hpp
 Parser/ParserKeyword.hpp 
 Parser/Parser.hpp 
-Parser/ParserLog.hpp 
 Parser/ParserRecord.hpp
 Parser/ParserItem.hpp
 Parser/ParserIntItem.hpp  
@@ -225,7 +227,7 @@ add_custom_target( keywordlist ALL COMMAND createDefaultKeywordList
 
 #-----------------------------------------------------------------
 
-add_library(Parser ${rawdeck_source} ${parser_source} ${deck_source} ${state_source} ${unit_source})
+add_library(Parser ${rawdeck_source} ${parser_source} ${deck_source} ${state_source} ${unit_source} ${log_source})
 add_dependencies(Parser keywordlist)
 target_link_libraries(Parser opm-json ${Boost_LIBRARIES}  ${ERT_LIBRARIES})
 

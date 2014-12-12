@@ -21,7 +21,8 @@
 #ifndef ECLIPSE_GRID_HPP_
 #define ECLIPSE_GRID_HPP_
 
-#include <opm/parser/eclipse/Parser/ParserLog.hpp>
+#include <opm/parser/eclipse/Log/Logger.hpp>
+
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 
@@ -68,7 +69,7 @@ namespace Opm {
         explicit EclipseGrid(const std::string& filename);
         explicit EclipseGrid(const ecl_grid_type * src_ptr);
         explicit EclipseGrid(size_t nx, size_t ny , size_t nz);
-        explicit EclipseGrid(std::shared_ptr<const Deck> deck, ParserLogPtr parserLog = std::make_shared<ParserLog>());
+        explicit EclipseGrid(std::shared_ptr<const Deck> deck, LoggerPtr logger = std::make_shared<Logger>());
 
         static bool hasCornerPointKeywords(std::shared_ptr<const Deck> deck);
         static bool hasCartesianKeywords(std::shared_ptr<const Deck> deck);
@@ -111,12 +112,12 @@ namespace Opm {
         void assertCellInfo() const;
 
         void initCartesianGrid(const std::vector<int>& dims , DeckConstPtr deck);
-        void initCornerPointGrid(const std::vector<int>& dims , DeckConstPtr deck, ParserLogPtr parserLog);
+        void initCornerPointGrid(const std::vector<int>& dims , DeckConstPtr deck, LoggerPtr logger);
         void initDTOPSGrid(const std::vector<int>& dims , DeckConstPtr deck);
         void initDVDEPTHZGrid(const std::vector<int>& dims , DeckConstPtr deck);
-        void initGrid(const std::vector<int>& dims, DeckConstPtr deck, ParserLogPtr parserLog);
+        void initGrid(const std::vector<int>& dims, DeckConstPtr deck, LoggerPtr logger);
 
-        static void assertCornerPointKeywords(const std::vector<int>& dims, DeckConstPtr deck, ParserLogPtr parserLog) ;
+        static void assertCornerPointKeywords(const std::vector<int>& dims, DeckConstPtr deck, LoggerPtr logger) ;
         static bool hasDVDEPTHZKeywords(DeckConstPtr deck);
         static bool hasDTOPSKeywords(DeckConstPtr deck);
         static void assertVectorSize(const std::vector<double>& vector , size_t expectedSize , const std::string& msg);

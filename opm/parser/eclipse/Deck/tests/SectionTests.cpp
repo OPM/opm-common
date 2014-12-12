@@ -243,8 +243,8 @@ BOOST_AUTO_TEST_CASE(Section_ValidDecks) {
     deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
     deck->addKeyword(std::make_shared<DeckKeyword>("TEST5"));
 
-    ParserLogPtr parserLog(new ParserLog());
-    BOOST_CHECK(Opm::Section::checkSectionTopology(deck, parserLog));
+    LoggerPtr logger(new Logger());
+    BOOST_CHECK(Opm::Section::checkSectionTopology(deck, logger));
 
     // deck with all optional sections
     deck.reset(new Deck());
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(Section_ValidDecks) {
     deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
     deck->addKeyword(std::make_shared<DeckKeyword>("TEST8"));
 
-    BOOST_CHECK(Opm::Section::checkSectionTopology(deck, parserLog));
+    BOOST_CHECK(Opm::Section::checkSectionTopology(deck, logger));
 }
 
 BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
@@ -295,8 +295,8 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
     deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
     deck->addKeyword(std::make_shared<DeckKeyword>("TEST5"));
 
-    ParserLogPtr parserLog(new ParserLog());
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, parserLog));
+    LoggerPtr logger(new Logger());
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, logger));
 
     // wrong section order
     deck.reset(new Deck());
@@ -324,7 +324,7 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
     deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
     deck->addKeyword(std::make_shared<DeckKeyword>("TEST8"));
 
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, parserLog));
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, logger));
 
     // duplicate section
     deck.reset(new Deck());
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
     deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
     deck->addKeyword(std::make_shared<DeckKeyword>("TEST8"));
 
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, parserLog));
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, logger));
 
     // section after SCHEDULE
     deck.reset(new Deck());
@@ -383,7 +383,7 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
     deck->addKeyword(std::make_shared<DeckKeyword>("EDIT"));
     deck->addKeyword(std::make_shared<DeckKeyword>("TEST3"));
 
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, parserLog));
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, logger));
 
     // missing RUNSPEC
     deck.reset(new Deck());
@@ -400,7 +400,7 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
     deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
     deck->addKeyword(std::make_shared<DeckKeyword>("TEST5"));
 
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, parserLog));
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, logger));
 
     // missing GRID
     deck.reset(new Deck());
@@ -417,7 +417,7 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
     deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
     deck->addKeyword(std::make_shared<DeckKeyword>("TEST5"));
 
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, parserLog));
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, logger));
 
     // missing PROPS
     deck.reset(new Deck());
@@ -434,7 +434,7 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
     deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
     deck->addKeyword(std::make_shared<DeckKeyword>("TEST5"));
 
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, parserLog));
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, logger));
 
     // missing SOLUTION
     deck.reset(new Deck());
@@ -451,7 +451,7 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
     deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
     deck->addKeyword(std::make_shared<DeckKeyword>("TEST5"));
 
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, parserLog));
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, logger));
 
     // missing SCHEDULE
     deck.reset(new Deck());
@@ -468,5 +468,5 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
     deck->addKeyword(std::make_shared<DeckKeyword>("SOLUTION"));
     deck->addKeyword(std::make_shared<DeckKeyword>("TEST4"));
 
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, parserLog));
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, logger));
 }

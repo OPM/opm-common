@@ -52,8 +52,8 @@ BOOST_AUTO_TEST_CASE( parse_ACTION_OK ) {
 
     BOOST_REQUIRE_THROW(  parser->parseFile(actionFile2.string()) , std::invalid_argument );
 
-    ParserLogPtr parserLog(new ParserLog);
-    DeckPtr deck =  parser->parseFile(actionFile.string(), parserLog);
+    LoggerPtr logger(new Logger);
+    DeckPtr deck =  parser->parseFile(actionFile.string(), logger);
     DeckKeywordConstPtr kw1 = deck->getKeyword("WCONHIST" , 0);
     BOOST_CHECK_EQUAL( 3U , kw1->size() );
 
@@ -76,10 +76,10 @@ BOOST_AUTO_TEST_CASE( parse_ACTION_OK ) {
 
 
     BOOST_CHECK_EQUAL( false , deck->hasKeyword( "DIMENS" ));
-    BOOST_CHECK_EQUAL( 1U , parserLog->size() );
+    BOOST_CHECK_EQUAL( 1U , logger->size() );
     {
-        BOOST_CHECK_EQUAL( actionFile.string() ,  parserLog->getFileName(0));
-        BOOST_CHECK_EQUAL( 2U , parserLog->getLineNumber(0));
+        BOOST_CHECK_EQUAL( actionFile.string() ,  logger->getFileName(0));
+        BOOST_CHECK_EQUAL( 2U , logger->getLineNumber(0));
     }
 
 }

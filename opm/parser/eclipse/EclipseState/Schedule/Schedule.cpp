@@ -17,35 +17,38 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <string>
+#include <vector>
+
+#include <boost/algorithm/string.hpp>
+
+#include <opm/parser/eclipse/Deck/Section.hpp>
+
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
-#include <opm/parser/eclipse/Deck/Section.hpp>
-#include <boost/algorithm/string.hpp>
 
-#include <string>
-#include <vector>
 
 namespace Opm {
 
-    Schedule::Schedule(DeckConstPtr deck, ParserLogPtr parserLog) {
-        initFromDeck(deck, parserLog);
+    Schedule::Schedule(DeckConstPtr deck, LoggerPtr logger) {
+        initFromDeck(deck, logger);
     }
 
-    void Schedule::initFromDeck(DeckConstPtr deck, ParserLogPtr parserLog) {
-        createTimeMap(deck, parserLog);
+    void Schedule::initFromDeck(DeckConstPtr deck, LoggerPtr logger) {
+        createTimeMap(deck, logger);
         addGroup( "FIELD", 0 );
         initRootGroupTreeNode(getTimeMap());
-        iterateScheduleSection(deck, parserLog);
+        iterateScheduleSection(deck, logger);
     }
 
     void Schedule::initRootGroupTreeNode(TimeMapConstPtr timeMap) {
         m_rootGroupTree.reset(new DynamicState<GroupTreePtr>(timeMap, GroupTreePtr(new GroupTree())));
     }
 
-    void Schedule::createTimeMap(DeckConstPtr deck, ParserLogPtr /*parserLog*/) {
+    void Schedule::createTimeMap(DeckConstPtr deck, LoggerPtr /*logger*/) {
         boost::posix_time::ptime startTime(defaultStartDate);
         if (deck->hasKeyword("START")) {
             DeckKeywordConstPtr startKeyword = deck->getKeyword("START");
@@ -55,66 +58,66 @@ namespace Opm {
         m_timeMap.reset(new TimeMap(startTime));
     }
 
-    void Schedule::iterateScheduleSection(DeckConstPtr deck, ParserLogPtr parserLog) {
+    void Schedule::iterateScheduleSection(DeckConstPtr deck, LoggerPtr logger) {
         size_t currentStep = 0;
 
         for (size_t keywordIdx = 0; keywordIdx < deck->size(); ++keywordIdx) {
             DeckKeywordConstPtr keyword = deck->getKeyword(keywordIdx);
 
             if (keyword->name() == "DATES") {
-                handleDATES(keyword, parserLog);
+                handleDATES(keyword, logger);
                 currentStep += keyword->size();
             }
 
             if (keyword->name() == "TSTEP") {
-                handleTSTEP(keyword, parserLog);
+                handleTSTEP(keyword, logger);
                 currentStep += keyword->getRecord(0)->getItem(0)->size(); // This is a bit weird API.
             }
 
             if (keyword->name() == "WELSPECS") {
-                handleWELSPECS(keyword, parserLog, currentStep);
+                handleWELSPECS(keyword, logger, currentStep);
             }
 
             if (keyword->name() == "WCONHIST")
-                handleWCONHIST(keyword, parserLog, currentStep);
+                handleWCONHIST(keyword, logger, currentStep);
 
             if (keyword->name() == "WCONPROD")
-                handleWCONPROD(keyword, parserLog, currentStep);
+                handleWCONPROD(keyword, logger, currentStep);
 
             if (keyword->name() == "WCONINJE")
-                handleWCONINJE(deck, keyword, parserLog, currentStep);
+                handleWCONINJE(deck, keyword, logger, currentStep);
 
             if (keyword->name() == "WPOLYMER")
-                handleWPOLYMER(keyword, parserLog, currentStep);
+                handleWPOLYMER(keyword, logger, currentStep);
 
             if (keyword->name() == "WCONINJH")
-                handleWCONINJH(deck, keyword, parserLog, currentStep);
+                handleWCONINJH(deck, keyword, logger, currentStep);
 
             if (keyword->name() == "WGRUPCON")
-                handleWGRUPCON(keyword, parserLog, currentStep);
+                handleWGRUPCON(keyword, logger, currentStep);
 
             if (keyword->name() == "COMPDAT")
-                handleCOMPDAT(keyword, parserLog, currentStep);
+                handleCOMPDAT(keyword, logger, currentStep);
 
             if (keyword->name() == "WELOPEN")
-                handleWELOPEN(keyword, parserLog, currentStep);
+                handleWELOPEN(keyword, logger, currentStep);
 
             if (keyword->name() == "GRUPTREE")
-                handleGRUPTREE(keyword, parserLog, currentStep);
+                handleGRUPTREE(keyword, logger, currentStep);
 
             if (keyword->name() == "GCONINJE")
-                handleGCONINJE(deck, keyword, parserLog, currentStep);
+                handleGCONINJE(deck, keyword, logger, currentStep);
 
             if (keyword->name() == "GCONPROD")
-                handleGCONPROD(keyword, parserLog, currentStep);
+                handleGCONPROD(keyword, logger, currentStep);
         }
     }
 
-    void Schedule::handleDATES(DeckKeywordConstPtr keyword, ParserLogPtr /*parserLog*/) {
+    void Schedule::handleDATES(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/) {
         m_timeMap->addFromDATESKeyword(keyword);
     }
 
-    void Schedule::handleTSTEP(DeckKeywordConstPtr keyword, ParserLogPtr /*parserLog*/) {
+    void Schedule::handleTSTEP(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/) {
         m_timeMap->addFromTSTEPKeyword(keyword);
     }
 
@@ -127,7 +130,7 @@ namespace Opm {
         return treeUpdated;
     }
 
-    void Schedule::handleWELSPECS(DeckKeywordConstPtr keyword, ParserLogPtr parserLog, size_t currentStep) {
+    void Schedule::handleWELSPECS(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep) {
         bool needNewTree = false;
         GroupTreePtr newTree = m_rootGroupTree->get(currentStep)->deepCopy();
 
@@ -145,7 +148,7 @@ namespace Opm {
             }
 
             WellConstPtr currentWell = getWell(wellName);
-            checkWELSPECSConsistency(currentWell, keyword, recordNr, parserLog);
+            checkWELSPECSConsistency(currentWell, keyword, recordNr, logger);
 
             addWellToGroup( getGroup(groupName) , getWell(wellName) , currentStep);
             bool treeChanged = handleGroupFromWELSPECS(groupName, newTree);
@@ -156,12 +159,12 @@ namespace Opm {
         }
     }
 
-    void Schedule::checkWELSPECSConsistency(WellConstPtr well, DeckKeywordConstPtr keyword, size_t recordIdx, ParserLogPtr parserLog) const {
+    void Schedule::checkWELSPECSConsistency(WellConstPtr well, DeckKeywordConstPtr keyword, size_t recordIdx, LoggerPtr logger) const {
         DeckRecordConstPtr record = keyword->getRecord(recordIdx);
         if (well->getHeadI() != record->getItem("HEAD_I")->getInt(0) - 1) {
             std::string msg =
                 "Unable process WELSPECS for well " + well->name() + ", HEAD_I deviates from existing value";
-            parserLog->addError(keyword->getFileName(),
+            logger->addError(keyword->getFileName(),
                                 keyword->getLineNumber(),
                                 msg);
             throw std::invalid_argument(msg);
@@ -169,7 +172,7 @@ namespace Opm {
         if (well->getHeadJ() != record->getItem("HEAD_J")->getInt(0) - 1) {
             std::string msg =
                 "Unable process WELSPECS for well " + well->name() + ", HEAD_J deviates from existing value";
-            parserLog->addError(keyword->getFileName(),
+            logger->addError(keyword->getFileName(),
                                 keyword->getLineNumber(),
                                 msg);
             throw std::invalid_argument(msg);
@@ -177,7 +180,7 @@ namespace Opm {
         if (well->getRefDepthDefaulted() != record->getItem("REF_DEPTH")->defaultApplied(0)) {
             std::string msg =
                 "Unable process WELSPECS for well " + well->name() + ", REF_DEPTH defaulted state deviates from existing value";
-            parserLog->addError(keyword->getFileName(),
+            logger->addError(keyword->getFileName(),
                                 keyword->getLineNumber(),
                                 msg);
             throw std::invalid_argument(msg);
@@ -186,7 +189,7 @@ namespace Opm {
             if (well->getRefDepth() != record->getItem("REF_DEPTH")->getSIDouble(0)) {
                 std::string msg =
                     "Unable process WELSPECS for well " + well->name() + ", REF_DEPTH deviates from existing value";
-                parserLog->addError(keyword->getFileName(),
+                logger->addError(keyword->getFileName(),
                                     keyword->getLineNumber(),
                                     msg);
                 throw std::invalid_argument(msg);
@@ -194,7 +197,7 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleWCONProducer(DeckKeywordConstPtr keyword, ParserLogPtr parserLog, size_t currentStep, bool isPredictionMode) {
+    void Schedule::handleWCONProducer(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep, bool isPredictionMode) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
 
@@ -235,7 +238,7 @@ namespace Opm {
                         std::string msg =
                             "Tried to set invalid control: " +
                             cmodeString + " for well: " + well->name();
-                        parserLog->addError(keyword->getFileName(),
+                        logger->addError(keyword->getFileName(),
                                             keyword->getLineNumber(),
                                             msg);
                         throw std::invalid_argument(msg);
@@ -248,15 +251,15 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleWCONHIST(DeckKeywordConstPtr keyword, ParserLogPtr parserLog, size_t currentStep) {
-        handleWCONProducer(keyword, parserLog, currentStep, false);
+    void Schedule::handleWCONHIST(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep) {
+        handleWCONProducer(keyword, logger, currentStep, false);
     }
 
-    void Schedule::handleWCONPROD(DeckKeywordConstPtr keyword, ParserLogPtr parserLog, size_t currentStep) {
-        handleWCONProducer(keyword, parserLog, currentStep, true);
+    void Schedule::handleWCONPROD(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep) {
+        handleWCONProducer(keyword, logger, currentStep, true);
     }
 
-    void Schedule::handleWCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, ParserLogPtr /*parserLog*/, size_t currentStep) {
+    void Schedule::handleWCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, LoggerPtr /*logger*/, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
@@ -325,7 +328,7 @@ namespace Opm {
     }
 
 
-    void Schedule::handleWPOLYMER(DeckKeywordConstPtr keyword, ParserLogPtr /*parserLog*/, size_t currentStep) {
+    void Schedule::handleWPOLYMER(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
@@ -354,7 +357,7 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleWCONINJH(DeckConstPtr deck, DeckKeywordConstPtr keyword, ParserLogPtr /*parserLog*/, size_t currentStep) {
+    void Schedule::handleWCONINJH(DeckConstPtr deck, DeckKeywordConstPtr keyword, LoggerPtr /*logger*/, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellName = record->getItem("WELL")->getTrimmedString(0);
@@ -385,7 +388,7 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleWELOPEN(DeckKeywordConstPtr keyword, ParserLogPtr /*parserLog*/, size_t currentStep) {
+    void Schedule::handleWELOPEN(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellName = record->getItem("WELL")->getTrimmedString(0);
@@ -402,7 +405,7 @@ namespace Opm {
     }
 
 
-    void Schedule::handleGCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, ParserLogPtr /*parserLog*/, size_t currentStep) {
+    void Schedule::handleGCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, LoggerPtr /*logger*/, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& groupName = record->getItem("GROUP")->getTrimmedString(0);
@@ -435,7 +438,7 @@ namespace Opm {
     }
 
 
-    void Schedule::handleGCONPROD(DeckKeywordConstPtr keyword, ParserLogPtr /*parserLog*/, size_t currentStep) {
+    void Schedule::handleGCONPROD(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& groupName = record->getItem("GROUP")->getTrimmedString(0);
@@ -457,7 +460,7 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleCOMPDAT(DeckKeywordConstPtr keyword, ParserLogPtr /*parserLog*/, size_t currentStep) {
+    void Schedule::handleCOMPDAT(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/, size_t currentStep) {
         std::map<std::string , std::vector< CompletionPtr> > completionMapList = Completion::completionsFromCOMPDATKeyword( keyword );
         std::map<std::string , std::vector< CompletionPtr> >::iterator iter;
 
@@ -468,7 +471,7 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleWGRUPCON(DeckKeywordConstPtr keyword, ParserLogPtr /*parserLog*/, size_t currentStep) {
+    void Schedule::handleWGRUPCON(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellName = record->getItem("WELL")->getTrimmedString(0);
@@ -489,7 +492,7 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleGRUPTREE(DeckKeywordConstPtr keyword, ParserLogPtr /*parserLog*/, size_t currentStep) {
+    void Schedule::handleGRUPTREE(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/, size_t currentStep) {
         GroupTreePtr currentTree = m_rootGroupTree->get(currentStep);
         GroupTreePtr newTree = currentTree->deepCopy();
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {

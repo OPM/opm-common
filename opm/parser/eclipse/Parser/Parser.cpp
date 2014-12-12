@@ -19,8 +19,9 @@
 
 #include <memory>
 
+#include <opm/parser/eclipse/Log/Logger.hpp>
+
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParserLog.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
 #include <opm/parser/eclipse/RawDeck/RawEnums.hpp>
@@ -31,7 +32,7 @@ namespace Opm {
 
     struct ParserState {
         DeckPtr deck;
-        ParserLog parserLog;
+        Logger logger;
         boost::filesystem::path dataFile;
         boost::filesystem::path rootPath;
         std::map<std::string, std::string> pathMap;
@@ -89,7 +90,7 @@ namespace Opm {
      is retained in the current implementation.
      */
 
-    DeckPtr Parser::parseFile(const std::string &dataFileName, ParserLogPtr parserLog) const {
+    DeckPtr Parser::parseFile(const std::string &dataFileName, LoggerPtr logger) const {
 
         std::shared_ptr<ParserState> parserState(new ParserState(dataFileName, DeckPtr(new Deck()), getRootPathFromFile(dataFileName)));
 
@@ -100,33 +101,33 @@ namespace Opm {
         parseState(parserState);
         applyUnitsToDeck(parserState->deck);
 
-        if (parserLog)
-            *parserLog = parserState->parserLog;
+        if (logger)
+            *logger = parserState->logger;
 
         return parserState->deck;
     }
 
-    DeckPtr Parser::parseString(const std::string &data, ParserLogPtr parserLog) const {
+    DeckPtr Parser::parseString(const std::string &data, LoggerPtr logger) const {
 
         std::shared_ptr<ParserState> parserState(new ParserState(data, DeckPtr(new Deck())));
 
         parseState(parserState);
         applyUnitsToDeck(parserState->deck);
 
-        if (parserLog)
-            *parserLog = parserState->parserLog;
+        if (logger)
+            *logger = parserState->logger;
 
         return parserState->deck;
     }
 
-    DeckPtr Parser::parseStream(std::shared_ptr<std::istream> inputStream, ParserLogPtr parserLog) const {
+    DeckPtr Parser::parseStream(std::shared_ptr<std::istream> inputStream, LoggerPtr logger) const {
         std::shared_ptr<ParserState> parserState(new ParserState(inputStream, DeckPtr(new Deck())));
 
         parseState(parserState);
         applyUnitsToDeck(parserState->deck);
 
-        if (parserLog)
-            *parserLog = parserState->parserLog;
+        if (logger)
+            *logger = parserState->logger;
 
         return parserState->deck;
     }
@@ -296,15 +297,15 @@ namespace Opm {
                                 deckKeyword->setParserKeyword(parserKeyword);
                                 parserState->deck->addKeyword(deckKeyword);
                             } else if (action == IGNORE_WARNING)
-                                parserState->parserLog.addWarning(parserState->dataFile.string(),
-                                                                  parserState->rawKeyword->getLineNR(),
-                                                                  "The keyword " + parserState->rawKeyword->getKeywordName() + " is ignored - this might potentially affect the results");
+                                parserState->logger.addWarning(parserState->dataFile.string(),
+                                                               parserState->rawKeyword->getLineNR(),
+                                                               "The keyword " + parserState->rawKeyword->getKeywordName() + " is ignored - this might potentially affect the results");
                         } else {
                             DeckKeywordPtr deckKeyword(new DeckKeyword(parserState->rawKeyword->getKeywordName(), false));
 			    deckKeyword->setLocation(parserState->rawKeyword->getFilename(),
 						     parserState->rawKeyword->getLineNR());
                             parserState->deck->addKeyword(deckKeyword);
-                            parserState->parserLog.addWarning(parserState->dataFile.string(),
+                            parserState->logger.addWarning(parserState->dataFile.string(),
                                                               parserState->rawKeyword->getLineNR(),
                                                               "The keyword " + parserState->rawKeyword->getKeywordName() + " is not recognized");
                         }
