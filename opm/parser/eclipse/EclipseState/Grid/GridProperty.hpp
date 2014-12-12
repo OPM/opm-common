@@ -205,7 +205,7 @@ public:
         iset(g,value);
     }
 
-    bool containsNaN();
+    bool containsNaN() const;
 
     void multiplyWith(const GridProperty<T>& other) {
         if ((m_nx == other.m_nx) && (m_ny == other.m_ny) && (m_nz == other.m_nz)) {

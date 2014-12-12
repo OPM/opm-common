@@ -33,12 +33,13 @@ void GridProperty<double>::setDataPoint(size_t sourceIdx, size_t targetIdx, Opm:
 }
 
 template<>
-bool GridProperty<int>::containsNaN( ) {
+bool GridProperty<int>::containsNaN( ) const {
     throw std::logic_error("Only <double> and can be meaningfully queried for nan");
 }
 
+
 template<>
-bool GridProperty<double>::containsNaN( ) {
+bool GridProperty<double>::containsNaN( ) const {
     bool return_value = false;
     size_t size = m_data.size();
     size_t index = 0;
