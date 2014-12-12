@@ -484,3 +484,20 @@ BOOST_AUTO_TEST_CASE(multiply) {
 
 }
 
+
+
+BOOST_AUTO_TEST_CASE(mask) {
+    typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
+    SupportedKeywordInfo keywordInfo1("P" , 10 , "1");
+    SupportedKeywordInfo keywordInfo2("P" , 20 , "1");
+    Opm::GridProperty<int> p1( 5 , 5 , 4 , keywordInfo1);
+    Opm::GridProperty<int> p2( 5 , 5 , 4 , keywordInfo2);
+
+    std::vector<bool> mask;
+
+    p1.initMask(10 , mask);
+    p2.maskedSet( 10 , mask);
+    
+    for (size_t g = 0; g < p1.getCartesianSize(); g++)
+        BOOST_CHECK_EQUAL( p1.iget(g) , p2.iget(g));
+}

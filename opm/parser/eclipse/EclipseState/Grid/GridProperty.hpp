@@ -224,6 +224,27 @@ public:
         return m_data;
     }
 
+    
+    void maskedSet(T value, const std::vector<bool>& mask) {
+        for (size_t g = 0; g < getCartesianSize(); g++) {
+            if (mask[g])
+                m_data[g] = value;
+        }
+    }
+
+
+    void initMask(T value, std::vector<bool>& mask) {
+        mask.resize(getCartesianSize());
+        for (size_t g = 0; g < getCartesianSize(); g++) {
+            if (m_data[g] == value)
+                mask[g] = true;
+            else
+                mask[g] = false;
+        }
+    }
+
+
+
     /**
        Due to the convention where it is only neceassary to supply the
        top layer of the petrophysical properties we can unfortunately
