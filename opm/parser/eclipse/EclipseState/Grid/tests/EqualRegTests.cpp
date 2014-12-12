@@ -164,6 +164,10 @@ static Opm::DeckPtr createValidPERMXDeck() {
         "  PERMX 1 1     / \n"
         "  PERMX 2 2     / \n"
         "/\n"
+        "EQUALS\n"
+        "   PERMY 1 1 2 1 5 1 1 / \n"
+        "   PERMY 2 3 5 1 5 1 1 / \n"
+        "/\n"
         "EDIT\n"
         "\n";
 
@@ -217,7 +221,10 @@ BOOST_AUTO_TEST_CASE(UnitAppliedCorrectly) {
     Opm::DeckPtr deck = createValidPERMXDeck();
     Opm::EclipseState state(deck);
     std::shared_ptr<Opm::GridProperty<double> > permx = state.getDoubleGridProperty( "PERMX");
+    std::shared_ptr<Opm::GridProperty<double> > permy = state.getDoubleGridProperty( "PERMY");
     std::shared_ptr<Opm::GridProperty<double> > permz = state.getDoubleGridProperty( "PERMZ");
-    for (size_t g=0; g< 25; g++)
+    for (size_t g=0; g< 25; g++) {
         BOOST_CHECK_EQUAL( permz->iget(g), permx->iget(g));
+        BOOST_CHECK_EQUAL( permy->iget(g), permx->iget(g));
+    }
 }
