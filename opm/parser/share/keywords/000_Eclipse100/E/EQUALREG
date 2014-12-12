@@ -1,4 +1,4 @@
-{"name" : "EQUALREG" , "sections" : ["GRID","EDIT","PROP","REGIONS","SOLUTION"], 
+{"name" : "EQUALREG" , "sections" : ["GRID","EDIT","PROPS","REGIONS","SOLUTION"], 
  "items" :
  [{"name" : "ARRAY" , "value_type" : "STRING" , "description" : "The 3D array we will update"},
   {"name" : "VALUE" , "value_type" : "DOUBLE" , "description" : "The value we will assign" , "default" : 0} ,
