@@ -207,6 +207,8 @@ public:
 
     bool containsNaN() const;
 
+    const std::string& getDimensionString() const;
+
     void multiplyWith(const GridProperty<T>& other) {
         if ((m_nx == other.m_nx) && (m_ny == other.m_ny) && (m_nz == other.m_nz)) {
             for (size_t g=0; g < m_data.size(); g++)
@@ -224,7 +226,7 @@ public:
         return m_data;
     }
 
-    
+
     void maskedSet(T value, const std::vector<bool>& mask) {
         for (size_t g = 0; g < getCartesianSize(); g++) {
             if (mask[g])
@@ -371,8 +373,6 @@ public:
             postProcessor->apply( m_data );
         }
     }
-
-
 
 
 private:

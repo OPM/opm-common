@@ -875,7 +875,7 @@ namespace Opm {
                 if (enabledTypes & DoubleProperties) {
                     std::shared_ptr<GridProperty<double> > property = m_doubleGridProperties->getKeyword( field );
 
-                    double siShiftValue = shiftValue * getSIScaling(property->getKeywordInfo().getDimensionString());
+                    double siShiftValue = shiftValue * getSIScaling(property->getDimensionString());
                     property->add(siShiftValue , boxManager.getActiveBox() );
                 }
             } else if (!m_intGridProperties->supportsKeyword(field) &&

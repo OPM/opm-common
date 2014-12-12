@@ -55,6 +55,16 @@ bool GridProperty<double>::containsNaN( ) const {
     }
     return return_value;
 }
+
+template<>
+const std::string& GridProperty<int>::getDimensionString() const {
+    throw std::logic_error("Only <double> grid properties have dimension");
+}
+
+template<>
+const std::string& GridProperty<double>::getDimensionString() const {
+    return m_kwInfo.getDimensionString();
+}
 }
 
 
