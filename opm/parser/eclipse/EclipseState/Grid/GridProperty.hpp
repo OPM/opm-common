@@ -235,6 +235,14 @@ public:
     }
 
 
+    void maskedMultiply(T value, const std::vector<bool>& mask) {
+        for (size_t g = 0; g < getCartesianSize(); g++) {
+            if (mask[g])
+                m_data[g] *= value;
+        }
+    }
+
+
     void initMask(T value, std::vector<bool>& mask) {
         mask.resize(getCartesianSize());
         for (size_t g = 0; g < getCartesianSize(); g++) {
