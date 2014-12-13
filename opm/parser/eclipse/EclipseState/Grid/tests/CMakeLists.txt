@@ -51,3 +51,7 @@ add_executable(runEqualRegTests EqualRegTests.cpp)
 target_link_libraries(runEqualRegTests Parser ${Boost_LIBRARIES})
 add_test(NAME runEqualRegTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runEqualRegTests )
 
+add_executable(runMultiRegTests MultiRegTests.cpp)
+target_link_libraries(runMultiRegTests Parser ${Boost_LIBRARIES})
+add_test(NAME runMultiRegTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runMultiRegTests )
+

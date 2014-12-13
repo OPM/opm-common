@@ -807,6 +807,9 @@ namespace Opm {
                 if (deckKeyword->name() == "EQUALREG")
                     handleEQUALREGKeyword(deckKeyword , parserLog , enabledTypes);
 
+                if (deckKeyword->name() == "MULTIREG")
+                    handleMULTIREGKeyword(deckKeyword , parserLog , enabledTypes);
+
                 if (deckKeyword->name() == "MULTIPLY")
                     handleMULTIPLYKeyword(deckKeyword, logger, boxManager, enabledTypes);
 
@@ -837,7 +840,7 @@ namespace Opm {
     }
 
 
-    void EclipseState::handleEQUALREGKeyword(DeckKeywordConstPtr deckKeyword, ParserLogPtr parserLog, int enabledTypes) {
+    void EclipseState::handleEQUALREGKeyword(DeckKeywordConstPtr deckKeyword, LoggerPtr logger, int enabledTypes) {
         EclipseGridConstPtr grid = getEclipseGrid();
         for (size_t recordIdx = 0; recordIdx < deckKeyword->size(); ++recordIdx) {
             DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
@@ -883,7 +886,51 @@ namespace Opm {
 
 
 
-    void EclipseState::handleMULTIPLYKeyword(DeckKeywordConstPtr deckKeyword, LoggerLogPtr logger, BoxManager& boxManager, int enabledTypes) {
+    void EclipseState::handleMULTIREGKeyword(DeckKeywordConstPtr deckKeyword, LoggerPtr logger, int enabledTypes) {
+        EclipseGridConstPtr grid = getEclipseGrid();
+        for (size_t recordIdx = 0; recordIdx < deckKeyword->size(); ++recordIdx) {
+            DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
+            const std::string& targetArray = record->getItem("ARRAY")->getString(0);
+
+            if (!supportsGridProperty( targetArray , IntProperties + DoubleProperties))
+                throw std::invalid_argument("Fatal error processing MULTIREG keyword - invalid/undefined keyword: " + targetArray);
+            
+            if (supportsGridProperty( targetArray , enabledTypes)) {
+                double doubleValue = record->getItem("FACTOR")->getRawDouble(0);
+                int regionValue = record->getItem("REGION_NUMBER")->getInt(0);
+                const std::string regionArray = MULTREGT::RegionNameFromDeckValue( record->getItem("REGION_NAME")->getString(0) );
+                std::shared_ptr<Opm::GridProperty<int> > regionProperty = m_intGridProperties->getInitializedKeyword( regionArray );
+                std::vector<bool> mask;
+                
+                regionProperty->initMask( regionValue , mask);
+                
+                if (m_intGridProperties->hasKeyword( targetArray )) {
+                    if (enabledTypes & IntProperties) {
+                        if (isInt( doubleValue )) {
+                            std::shared_ptr<Opm::GridProperty<int> > targetProperty = m_intGridProperties->getKeyword( targetArray );
+                            int intValue = static_cast<int>( doubleValue + 0.5 );
+                            targetProperty->maskedMultiply( intValue , mask);
+                        } else
+                            throw std::invalid_argument("Fatal error processing MULTIREG keyword - expected integer value for: " + targetArray);
+                    }
+                }
+                else if (m_doubleGridProperties->hasKeyword( targetArray )) {
+                    if (enabledTypes & DoubleProperties) {
+                        std::shared_ptr<Opm::GridProperty<double> > targetProperty = m_doubleGridProperties->getKeyword(targetArray);
+                        targetProperty->maskedMultiply( doubleValue , mask);
+                    }
+                }
+                else {
+                    throw std::invalid_argument("Fatal error processing MULTIREG keyword - invalid/undefined keyword: " + targetArray);
+                }
+            }
+        }
+    }
+
+
+
+
+    void EclipseState::handleMULTIPLYKeyword(DeckKeywordConstPtr deckKeyword, LoggerPtr logger, BoxManager& boxManager, int enabledTypes) {
         for (size_t recordIdx = 0; recordIdx < deckKeyword->size(); ++recordIdx) {
             DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
             const std::string& field = record->getItem("field")->getString(0);
