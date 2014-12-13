@@ -50,6 +50,9 @@ BOOST_AUTO_TEST_CASE(Empty) {
     BOOST_CHECK( !gridProperties.supportsKeyword("FLUXNUM") );
     BOOST_CHECK( !gridProperties.hasKeyword("SATNUM"));
     BOOST_CHECK( !gridProperties.hasKeyword("FLUXNUM"));
+
+    BOOST_CHECK_THROW( gridProperties.getInitializedKeyword("SATNUM") , std::invalid_argument);
+    BOOST_CHECK_THROW( gridProperties.getInitializedKeyword("NONONO") , std::invalid_argument);
 }
 
 
