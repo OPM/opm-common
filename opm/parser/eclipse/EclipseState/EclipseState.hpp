@@ -203,6 +203,7 @@ namespace Opm {
         void handleEQUALREGKeyword(DeckKeywordConstPtr deckKeyword, LoggerPtr logger, int enabledTypes);
         void handleMULTIREGKeyword(DeckKeywordConstPtr deckKeyword, LoggerPtr logger, int enabledTypes);
         void handleADDREGKeyword(DeckKeywordConstPtr deckKeyword, LoggerPtr logger, int enabledTypes);
+        void handleCOPYREGKeyword(DeckKeywordConstPtr deckKeyword, LoggerPtr logger, int enabledTypes);
 
         void setKeywordBox(DeckKeywordConstPtr deckKeyword, size_t recordIdx, LoggerPtr logger, BoxManager& boxManager);
 
