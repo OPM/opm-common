@@ -7,11 +7,10 @@
         {"name" : "LIQUID_TARGET" , "value_type" : "DOUBLE" , "dimension" : "LiquidVolume/Time", "default" : 0},
         {"name" : "EXCEED_PROC" , "value_type" : "STRING" , "default" : "NONE"},
         {"name" : "RESPOND_TO_PARENT" , "value_type" : "STRING" , "default" : "YES"},
-        {"name" : "GUIDE_RATE" , "value_type" : "DOUBLE", "default": -1e100},
-        {"name" : "GUIDE_RATE_DEF" , "value_type" : "STRING", "default": "" },
-        {"name" : "WATER_EXCEED_PROCEDURE" , "value_type" : "STRING", "default": "" },
-        {"name" : "GAS_EXCEED_PROCEDURE" , "value_type" : "STRING", "default": "" },
-        {"name" : "LIQUID_EXCEED_PROCEDURE" , "value_type" : "STRING", "default": "" },
-        {"name" : "RESERVOIR_FLUID_TARGET" , "value_type" : "DOUBLE", "default": -1e100 },
-        {"name" : "RESERVOIR_VOLUME_BALANCE" , "value_type" : "DOUBLE", "default": -1e100 }
-]}
+        {"name" : "GUIDE_RATE" , "value_type" : "DOUBLE"},
+        {"name" : "GUIDE_RATE_DEF" , "value_type" : "STRING"},
+        {"name" : "WATER_EXCEED_PROCEDURE" , "value_type" : "STRING"},
+        {"name" : "GAS_EXCEED_PROCEDURE" , "value_type" : "STRING"},
+        {"name" : "LIQUID_EXCEED_PROCEDURE" , "value_type" : "STRING"},
+        {"name" : "RESERVOIR_FLUID_TARGET" , "value_type" : "DOUBLE"},
+        {"name" : "RESERVOIR_VOLUME_BALANCE" , "value_type" : "DOUBLE"}]}

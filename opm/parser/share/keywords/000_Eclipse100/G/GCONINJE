@@ -8,8 +8,8 @@
     {"name" : "VOIDAGE_TARGET" , "value_type" : "DOUBLE" , "default" : 0, "dimension":"1"},
     {"name" : "FREE" , "value_type" : "STRING" , "default" : "YES"},
     {"name" : "GUIDE_FRACTION" , "value_type" : "DOUBLE" , "default" : 0, "dimension":"1"},
-    {"name" : "GUIDE_DEF" , "value_type" : "STRING", "default": ""},
-    {"name" : "REINJECT_GROUP" , "value_type" : "STRING", "default": ""},
-    {"name" : "VOIDAGE_GROUP" , "value_type" : "STRING", "default": ""},
-    {"name" : "WETGAS_TARGET", "value_type" : "DOUBLE" , "dimension" : "GasVolume/Time", "default": -1e100}
+    {"name" : "GUIDE_DEF" , "value_type" : "STRING"},
+    {"name" : "REINJECT_GROUP" , "value_type" : "STRING"},
+    {"name" : "VOIDAGE_GROUP" , "value_type" : "STRING"},
+    {"name" : "WETGAS_TARGET", "value_type" : "DOUBLE" , "dimension" : "GasVolume/Time"}
 ]}
