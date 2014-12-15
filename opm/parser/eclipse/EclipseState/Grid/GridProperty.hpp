@@ -241,6 +241,23 @@ public:
                 m_data[g] *= value;
         }
     }
+    
+
+    void maskedAdd(T value, const std::vector<bool>& mask) {
+        for (size_t g = 0; g < getCartesianSize(); g++) {
+            if (mask[g])
+                m_data[g] += value;
+        }
+    }
+
+
+    void maskedCopy(const GridProperty<T>& other, const std::vector<bool>& mask) {
+        for (size_t g = 0; g < getCartesianSize(); g++) {
+            if (mask[g])
+                m_data[g] = other.m_data[g];
+        }
+    }
+
 
 
     void initMask(T value, std::vector<bool>& mask) {
