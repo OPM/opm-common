@@ -100,7 +100,15 @@ BOOST_AUTO_TEST_CASE(SetInDeck) {
     BOOST_CHECK_EQUAL( true , deckDoubleItem.defaultApplied(2) );
 }
 
+BOOST_AUTO_TEST_CASE(DummyDefaults) {
+    DeckDoubleItem deckDoubleItem("TEST");
+    BOOST_CHECK_EQUAL(deckDoubleItem.size(), 0);
 
+    deckDoubleItem.push_backDummyDefault();
+    BOOST_CHECK_EQUAL(deckDoubleItem.size(), 0);
+    BOOST_CHECK_EQUAL(true, deckDoubleItem.defaultApplied(0));
+    BOOST_CHECK_THROW(deckDoubleItem.getRawDouble(0), std::out_of_range);
+}
 
 BOOST_AUTO_TEST_CASE(PushBackMultiple) {
     DeckDoubleItem item("HEI");

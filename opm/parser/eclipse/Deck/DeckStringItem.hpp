@@ -42,6 +42,8 @@ namespace Opm {
         void push_back(std::deque<std::string> data);
         void push_back(const std::string& value);
         void push_backDefault(std::string value);
+        // trying to access the data of a "dummy default item" will raise an exception
+        void push_backDummyDefault();
         void push_backMultiple(std::string value, size_t numItems);
 
         size_t size() const;
