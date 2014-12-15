@@ -199,8 +199,10 @@ namespace Opm {
         void handleENDBOXKeyword(BoxManager& boxManager);
         void handleEQUALSKeyword(DeckKeywordConstPtr deckKeyword , LoggerPtr logger, BoxManager& boxManager, int enabledTypes);
         void handleMULTIPLYKeyword(DeckKeywordConstPtr deckKeyword , LoggerPtr logger, BoxManager& boxManager, int enabledTypes);
-        void handleEQUALREGKeyword(DeckKeywordConstPtr deckKeyword, ParserLogPtr parserLog, int enabledTypes);
-        void handleMULTIREGKeyword(DeckKeywordConstPtr deckKeyword, ParserLogPtr parserLog, int enabledTypes);
+
+        void handleEQUALREGKeyword(DeckKeywordConstPtr deckKeyword, LoggerPtr logger, int enabledTypes);
+        void handleMULTIREGKeyword(DeckKeywordConstPtr deckKeyword, LoggerPtr logger, int enabledTypes);
+        void handleADDREGKeyword(DeckKeywordConstPtr deckKeyword, LoggerPtr logger, int enabledTypes);
 
         void setKeywordBox(DeckKeywordConstPtr deckKeyword, size_t recordIdx, LoggerPtr logger, BoxManager& boxManager);
 

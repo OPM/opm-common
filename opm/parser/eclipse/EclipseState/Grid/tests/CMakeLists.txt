@@ -55,3 +55,7 @@ add_executable(runMultiRegTests MultiRegTests.cpp)
 target_link_libraries(runMultiRegTests Parser ${Boost_LIBRARIES})
 add_test(NAME runMultiRegTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runMultiRegTests )
 
+add_executable(runADDREGTests ADDREGTests.cpp)
+target_link_libraries(runADDREGTests Parser ${Boost_LIBRARIES})
+add_test(NAME runADDREGTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runADDREGTests )
+
