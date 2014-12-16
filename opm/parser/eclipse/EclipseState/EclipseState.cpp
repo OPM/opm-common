@@ -23,6 +23,7 @@
 #include <boost/algorithm/string/join.hpp>
 
 #include <opm/parser/eclipse/Log/Logger.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
@@ -805,16 +806,16 @@ namespace Opm {
                     handleENDBOXKeyword(boxManager);
 
                 if (deckKeyword->name() == "EQUALREG")
-                    handleEQUALREGKeyword(deckKeyword , parserLog , enabledTypes);
+                    handleEQUALREGKeyword(deckKeyword , logger , enabledTypes);
 
                 if (deckKeyword->name() == "ADDREG")
-                    handleADDREGKeyword(deckKeyword , parserLog , enabledTypes);
+                    handleADDREGKeyword(deckKeyword , logger , enabledTypes);
 
                 if (deckKeyword->name() == "MULTIREG")
-                    handleMULTIREGKeyword(deckKeyword , parserLog , enabledTypes);
+                    handleMULTIREGKeyword(deckKeyword , logger , enabledTypes);
 
                 if (deckKeyword->name() == "COPYREG")
-                    handleCOPYREGKeyword(deckKeyword , parserLog , enabledTypes);
+                    handleCOPYREGKeyword(deckKeyword , logger , enabledTypes);
 
                 if (deckKeyword->name() == "MULTIPLY")
                     handleMULTIPLYKeyword(deckKeyword, logger, boxManager, enabledTypes);
@@ -846,7 +847,7 @@ namespace Opm {
     }
 
 
-    void EclipseState::handleEQUALREGKeyword(DeckKeywordConstPtr deckKeyword, LoggerPtr logger, int enabledTypes) {
+    void EclipseState::handleEQUALREGKeyword(DeckKeywordConstPtr deckKeyword, LoggerPtr , int enabledTypes) {
         EclipseGridConstPtr grid = getEclipseGrid();
         for (size_t recordIdx = 0; recordIdx < deckKeyword->size(); ++recordIdx) {
             DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
@@ -890,7 +891,7 @@ namespace Opm {
     }
 
 
-    void EclipseState::handleADDREGKeyword(DeckKeywordConstPtr deckKeyword, ParserLogPtr parserLog, int enabledTypes) {
+    void EclipseState::handleADDREGKeyword(DeckKeywordConstPtr deckKeyword, LoggerPtr , int enabledTypes) {
         EclipseGridConstPtr grid = getEclipseGrid();
         for (size_t recordIdx = 0; recordIdx < deckKeyword->size(); ++recordIdx) {
             DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
@@ -936,7 +937,7 @@ namespace Opm {
 
 
 
-    void EclipseState::handleMULTIREGKeyword(DeckKeywordConstPtr deckKeyword, LoggerPtr logger, int enabledTypes) {
+    void EclipseState::handleMULTIREGKeyword(DeckKeywordConstPtr deckKeyword, LoggerPtr , int enabledTypes) {
         EclipseGridConstPtr grid = getEclipseGrid();
         for (size_t recordIdx = 0; recordIdx < deckKeyword->size(); ++recordIdx) {
             DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
@@ -978,7 +979,7 @@ namespace Opm {
     }
 
 
-    void EclipseState::handleCOPYREGKeyword(DeckKeywordConstPtr deckKeyword, ParserLogPtr parserLog, int enabledTypes) {
+    void EclipseState::handleCOPYREGKeyword(DeckKeywordConstPtr deckKeyword, LoggerPtr , int enabledTypes) {
         EclipseGridConstPtr grid = getEclipseGrid();
         for (size_t recordIdx = 0; recordIdx < deckKeyword->size(); ++recordIdx) {
             DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
