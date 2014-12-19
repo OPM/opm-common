@@ -34,16 +34,6 @@ BOOST_AUTO_TEST_CASE(InitializeFloat) {
     BOOST_REQUIRE_NO_THROW(DeckFloatItem deckFloatItem("TEST"));
 }
 
-BOOST_AUTO_TEST_CASE(DummyDefaults) {
-    DeckFloatItem deckFloatItem("TEST");
-    BOOST_CHECK_EQUAL(deckFloatItem.size(), 0);
-
-    deckFloatItem.push_backDummyDefault();
-    BOOST_CHECK_EQUAL(deckFloatItem.size(), 0);
-    BOOST_CHECK_EQUAL(true, deckFloatItem.defaultApplied(0));
-    BOOST_CHECK_THROW(deckFloatItem.getRawFloat(0), std::out_of_range);
-}
-
 BOOST_AUTO_TEST_CASE(GetFloatAtIndex_NoData_ExceptionThrown) {
     DeckFloatItem deckFloatItem("TEST");
 

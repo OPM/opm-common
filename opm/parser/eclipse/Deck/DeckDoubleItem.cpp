@@ -72,9 +72,6 @@ namespace Opm {
 
 
     void DeckDoubleItem::push_back(std::deque<double> data , size_t items) {
-        if (m_dataPointDefaulted.size() != m_data.size())
-            throw std::logic_error("To add a value to an item, no \"pseudo defaults\" can be added before");
-
         for (size_t i=0; i<items; i++) {
             m_data.push_back(data[i]);
             m_dataPointDefaulted.push_back(false);
@@ -83,25 +80,16 @@ namespace Opm {
 
 
     void DeckDoubleItem::push_back(std::deque<double> data) {
-        if (m_dataPointDefaulted.size() != m_data.size())
-            throw std::logic_error("To add a value to an item, no \"pseudo defaults\" can be added before");
-
         push_back( data  , data.size() );
         m_dataPointDefaulted.push_back(false);
     }
 
     void DeckDoubleItem::push_back(double data) {
-        if (m_dataPointDefaulted.size() != m_data.size())
-            throw std::logic_error("To add a value to an item, no \"pseudo defaults\" can be added before");
-
         m_data.push_back( data );
         m_dataPointDefaulted.push_back(false);
     }
 
     void DeckDoubleItem::push_backMultiple(double value, size_t numValues) {
-        if (m_dataPointDefaulted.size() != m_data.size())
-            throw std::logic_error("To add a value to an item, no \"pseudo defaults\" can be added before");
-
         for (size_t i = 0; i < numValues; i++) {
             m_data.push_back( value );
             m_dataPointDefaulted.push_back(false);
@@ -110,19 +98,10 @@ namespace Opm {
 
 
     void DeckDoubleItem::push_backDefault(double data) {
-        if (m_dataPointDefaulted.size() != m_data.size())
-            throw std::logic_error("To add a value to an item, no \"pseudo defaults\" can be added before");
-
         m_data.push_back( data );
         m_dataPointDefaulted.push_back(true);
     }
 
-    void DeckDoubleItem::push_backDummyDefault() {
-        if (m_dataPointDefaulted.size() != 0)
-            throw std::logic_error("Pseudo defaults can only be specified for empty items");
-
-        m_dataPointDefaulted.push_back(true);
-    }
 
     size_t DeckDoubleItem::size() const {
         return m_data.size();

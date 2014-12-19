@@ -31,16 +31,6 @@ BOOST_AUTO_TEST_CASE(InitializeString) {
     BOOST_CHECK_EQUAL("TEST", stringItem.name());
 }
 
-BOOST_AUTO_TEST_CASE(DummyDefaults) {
-    DeckStringItem deckStringItem("TEST");
-    BOOST_CHECK_EQUAL(deckStringItem.size(), 0);
-
-    deckStringItem.push_backDummyDefault();
-    BOOST_CHECK_EQUAL(deckStringItem.size(), 0);
-    BOOST_CHECK_EQUAL(true, deckStringItem.defaultApplied(0));
-    BOOST_CHECK_THROW(deckStringItem.getString(0), std::out_of_range);
-}
-
 BOOST_AUTO_TEST_CASE(GetStringAtIndex_NoData_ExceptionThrown) {
     DeckStringItem deckStringItem("TEST");
     BOOST_CHECK_THROW(deckStringItem.getString(0), std::out_of_range);

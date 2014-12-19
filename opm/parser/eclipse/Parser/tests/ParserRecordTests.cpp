@@ -326,12 +326,8 @@ BOOST_AUTO_TEST_CASE(Parse_RawRecordTooFewItems) {
     parserRecord->addItem(itemK);
 
     RawRecordPtr rawRecord(new RawRecord("3 3  /"));
-    // no default specified for the third item, record can be parsed just fine but trying
-    // to access the data will raise an exception...
-    DeckRecordConstPtr record;
-    BOOST_CHECK_NO_THROW(record = parserRecord->parse(rawRecord));
-    BOOST_CHECK_NO_THROW(record->getItem(2));
-    BOOST_CHECK_THROW(record->getItem(2)->getInt(0), std::out_of_range);
+    // no default specified for the third item, record cannot be parsed.
+    BOOST_CHECK_THROW(parserRecord->parse(rawRecord), std::invalid_argument);
 }
 
 

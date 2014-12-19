@@ -34,7 +34,6 @@
 
 using namespace Opm;
 
-#if 0
 
 BOOST_AUTO_TEST_CASE(CreateSchedule) {
 
@@ -74,7 +73,7 @@ BOOST_AUTO_TEST_CASE(WCONPROD_Missing_DATA) {
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_CMODE_MISSING_DATA");
     DeckPtr deck =  parser->parseFile(scheduleFile.string());
 
-    BOOST_CHECK_THROW( new Schedule(deck) , std::out_of_range );
+    BOOST_CHECK_THROW( new Schedule(deck) , std::invalid_argument );
 }
 
 
@@ -592,7 +591,6 @@ BOOST_AUTO_TEST_CASE(WELLS_SHUT) {
     BOOST_CHECK_EQUAL( WellCommon::StatusEnum::SHUT , well2->getStatus(2));
     BOOST_CHECK_EQUAL( WellCommon::StatusEnum::SHUT , well3->getStatus(2));
 }
-#endif
 
 BOOST_AUTO_TEST_CASE(WellTestWPOLYMER) {
     ParserPtr parser(new Parser());
