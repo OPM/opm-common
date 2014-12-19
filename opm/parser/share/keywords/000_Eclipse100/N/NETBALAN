@@ -6,5 +6,5 @@
     {"name" : "MAX_ITER_THP" , "value_type" : "INT"  , "default" : 10},
     {"name" : "TARGET_BALANCE_ERROR" , "value_type" : "DOUBLE" , "default" : 1e20},
     {"name" : "MAX_BALANCE_ERROR" , "value_type" : "DOUBLE" , "default" : 1e20},
-    {"name" : "MIN_TIME_STEP" , "value_type" : "DOUBLE"}
+    {"name" : "MIN_TIME_STEP" , "value_type" : "DOUBLE", "default":-1e100}
 ]}

@@ -6,10 +6,10 @@
     {"name" : "K2" , "value_type" : "INT" },
     {"name" : "STATE" , "value_type" : "STRING" , "default" : "OPEN"},
     {"name" : "SAT_TABLE" , "value_type" : "INT" , "default" : 0},
-    {"name" : "CONNECTION_TRANSMISSIBILITY_FACTOR"     , "value_type" : "DOUBLE", "dimension" : "Viscosity*LiquidVolume/Time*Pressure"},
-    {"name" : "DIAMETER" , "value_type" : "DOUBLE", "dimension" : "Length"},
+    {"name" : "CONNECTION_TRANSMISSIBILITY_FACTOR"     , "value_type" : "DOUBLE", "dimension" : "Viscosity*LiquidVolume/Time*Pressure", "default":-1e100},
+    {"name" : "DIAMETER" , "value_type" : "DOUBLE", "dimension" : "Length", "default":1.0},
     {"name" : "Kh" , "value_type" : "DOUBLE", "dimension" : "Permeability*Length" , "default" : -1},
     {"name" : "SKIN" , "value_type" : "DOUBLE", "dimension" : "1" , "default" : 0},
-    {"name" : "D_FACTOR" , "value_type" : "DOUBLE", "dimension" : "1" },
+    {"name" : "D_FACTOR" , "value_type" : "DOUBLE", "dimension" : "1", "default":-1e100 },
     {"name" : "DIR" , "value_type" : "STRING" , "default" : "Z"},
-    {"name" : "PR" , "value_type" : "DOUBLE", "dimension" : "Pressure" }]}
+    {"name" : "PR" , "value_type" : "DOUBLE", "dimension" : "Pressure", "default":-1e100 }]}
