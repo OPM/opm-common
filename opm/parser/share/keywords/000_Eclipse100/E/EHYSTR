@@ -7,7 +7,7 @@
  {"name" : "limiting_hyst_flag", "value_type" : "STRING", "default" : "BOTH"},
  {"name" : "shape_cap_press_flag", "value_type" : "STRING", "default" : "RETR"},
  {"name" : "init_fluid_mob_flag", "value_type" : "STRING", "default" : "DRAIN"},
- {"name" : "wetting_phase_flag", "value_type" : "STRING"},
+ {"name" : "wetting_phase_flag", "value_type" : "STRING", "default": "OIL"},
  {"name" : "baker_flag_oil", "value_type" : "STRING", "default" : "NO"},
  {"name" : "baker_flag_gas", "value_type" : "STRING", "default" : "NO"},
  {"name" : "baker_flag_water", "value_type" : "STRING", "default" : "NO"},

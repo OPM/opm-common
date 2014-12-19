@@ -1,6 +1,6 @@
 {"name" : "WTRACER" , "sections" : ["SCHEDULE"], "items" : [
     {"name" : "WELL" , "value_type" : "STRING"},
     {"name" : "TRACER" , "value_type" : "STRING"},
-    {"name" : "CONCENTRATION" , "value_type" : "DOUBLE"},
-    {"name" : "CUM_TRACER_FACTOR" , "value_type" : "DOUBLE"},
-    {"name" : "PRODUCTION_GROUP" , "value_type" : "STRING"}]}
+    {"name" : "CONCENTRATION" , "value_type" : "DOUBLE" },
+    {"name" : "CUM_TRACER_FACTOR" , "value_type" : "DOUBLE", "default": -1},
+    {"name" : "PRODUCTION_GROUP" , "value_type" : "STRING", "default":"", "comment":"defaulted means same as the CONCENTRATION item"}]}
