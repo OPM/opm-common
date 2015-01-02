@@ -192,6 +192,15 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
     }
 }
 
+
+BOOST_AUTO_TEST_CASE(WellTestCOMPDAT_DEFAULTED_ITEMS) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_COMPDAT1");
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
+    ScheduleConstPtr sched(new Schedule(deck));
+}
+
+
 BOOST_AUTO_TEST_CASE(WellTestCOMPDAT) {
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELLS2");

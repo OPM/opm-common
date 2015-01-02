@@ -74,8 +74,11 @@ namespace Opm {
             if (!connectionTransmissibilityFactorItem->defaultApplied(0))
                 connectionTransmissibilityFactor.setValue(connectionTransmissibilityFactorItem->getSIDouble(0));
 
-            diameter.setValue( diameterItem->getSIDouble(0));
-            skinFactor.setValue( skinFactorItem->getRawDouble(0));
+            if (diameterItem->hasValue(0))
+                diameter.setValue( diameterItem->getSIDouble(0));
+
+            if (skinFactorItem->hasValue(0))
+                skinFactor.setValue( skinFactorItem->getRawDouble(0));
         }
 
         const CompletionDirection::DirectionEnum& direction = CompletionDirection::DirectionEnumFromString(compdatRecord->getItem("DIR")->getTrimmedString(0));
