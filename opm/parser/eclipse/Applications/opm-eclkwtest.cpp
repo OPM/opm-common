@@ -22,6 +22,7 @@
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 
 static void printDeckDiagnostics(Opm::DeckConstPtr deck, Opm::LoggerConstPtr logger, bool printAllKeywords) {
@@ -69,6 +70,7 @@ int main(int argc, char** argv) {
     std::string file = argv[1];
     Opm::LoggerPtr logger(new Opm::Logger);
     Opm::DeckConstPtr deck = parser->parseFile(file, logger);
+    Opm::EclipseState state(deck);
 
     printDeckDiagnostics(deck, logger, printKeywords);
 
