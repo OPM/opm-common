@@ -1,9 +1,7 @@
-{"name" : "TRACER" , "sections" : ["PROPS"],
- "comment": "The defaults for the items must be handled by the higher level code!",
- "items" : [
+{"name" : "TRACER" , "sections" : ["PROPS"], "items" : [
     {"name" : "NAME"           , "value_type" : "STRING"},
     {"name" : "FLUID"          , "value_type" : "STRING"},
-    {"name" : "UNIT"           , "value_type" : "STRING", "default": ""},
-    {"name" : "SOLUTION_PHASE" , "value_type" : "STRING", "default": ""},
-    {"name" : "NUM_PART_TABLE" , "value_type" : "INT", "default": -1},
-    {"name" : "ADSORB_PHASE"   , "value_type" : "STRING", "default": ""}]}
+    {"name" : "UNIT"           , "value_type" : "STRING"},
+    {"name" : "SOLUTION_PHASE" , "value_type" : "STRING"},
+    {"name" : "NUM_PART_TABLE" , "value_type" : "INT"},
+    {"name" : "ADSORB_PHASE"   , "value_type" : "STRING"}]}
