@@ -30,6 +30,18 @@ BOOST_AUTO_TEST_CASE(Initialize) {
     BOOST_REQUIRE_NO_THROW(DeckIntItem deckIntItem("TEST"));
 }
 
+
+BOOST_AUTO_TEST_CASE(HasValue) {
+    DeckIntItem deckIntItem("TEST");
+    BOOST_CHECK_EQUAL( false , deckIntItem.hasValue(0) );
+    deckIntItem.push_back(1);
+    BOOST_CHECK_EQUAL( true  , deckIntItem.hasValue(0) );
+    BOOST_CHECK_EQUAL( false , deckIntItem.hasValue(1) );
+}
+
+
+
+
 BOOST_AUTO_TEST_CASE(DummyDefaults) {
     DeckIntItem deckIntItem("TEST");
     BOOST_CHECK_EQUAL(deckIntItem.size(), 0);
@@ -37,6 +49,8 @@ BOOST_AUTO_TEST_CASE(DummyDefaults) {
     deckIntItem.push_backDummyDefault();
     BOOST_CHECK_EQUAL(deckIntItem.size(), 0);
     BOOST_CHECK_EQUAL(true, deckIntItem.defaultApplied(0));
+    BOOST_CHECK_EQUAL( false , deckIntItem.hasValue(0));
+    BOOST_CHECK_EQUAL( false , deckIntItem.hasValue(1));
     BOOST_CHECK_THROW(deckIntItem.getInt(0), std::out_of_range);
 }
 

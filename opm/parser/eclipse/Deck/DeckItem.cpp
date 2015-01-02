@@ -54,4 +54,12 @@ namespace Opm {
     }
 
 
+    bool DeckItem::hasValue(size_t index) const {
+        if (index < size())
+            return true;
+        else
+            return false;
+    }
+
+
 }

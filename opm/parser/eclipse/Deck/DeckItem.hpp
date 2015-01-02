@@ -36,6 +36,11 @@ namespace Opm {
         // return true if the default value was used for a given data point
         bool defaultApplied(size_t index) const;
 
+        // Return true if the item has a value for the current index;
+        // does not differentiate between default values from the
+        // config and values which have been set in the deck.
+        bool hasValue(size_t index) const;
+
         // if the number returned by this method is less than what is semantically
         // expected (e.g. size() is less than the number of cells in the grid for
         // keywords like e.g. SGL), then the remaining values are defaulted. The deck
