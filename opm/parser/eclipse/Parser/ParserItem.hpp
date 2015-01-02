@@ -130,10 +130,17 @@ namespace Opm {
                 }
             }
         } else {
-            if (rawRecord->size() == 0)
-                // if the record was ended prematurely, use the default value for the item...
-                deckItem->push_backDefault( self->getDefault() );
-            else {
+            if (rawRecord->size() == 0) {
+                // if the record was ended prematurely,
+                if (self->hasDefault()) {
+                    // use the default value for the item, if there is one...
+                    deckItem->push_backDefault( self->getDefault() );
+                } else {
+                    // ... otherwise indicate that the deck item should throw once the
+                    // item's data is accessed.
+                    deckItem->push_backDummyDefault();
+                }
+            } else {
                 // The '*' should be interpreted as a repetition indicator, but it must
                 // be preceeded by an integer...
                 std::string token = rawRecord->pop_front();
@@ -142,9 +149,12 @@ namespace Opm {
                 if (isStarToken(token, countString, valueString)) {
                     StarToken st(token, countString, valueString);
 
-                    if (!st.hasValue())
-                        deckItem->push_backDefault( self->getDefault() );
-                    else
+                    if (!st.hasValue()) {
+                        if (self->hasDefault())
+                            deckItem->push_backDefault( self->getDefault() );
+                        else
+                            deckItem->push_backDummyDefault();
+                    } else
                         deckItem->push_back(readValueToken<ValueType>(st.valueString()));
 
                     // replace the first occurence of "N*FOO" by a sequence of N-1 times
