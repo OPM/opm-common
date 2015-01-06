@@ -21,6 +21,7 @@
 #define OPMLOG_HPP
 
 #include <memory>
+#include <cstdint>
 
 namespace Opm {
 
@@ -39,7 +40,7 @@ public:
         Error = 0x04
     };
 
-    static const int AllMessageTypes = 0xff;
+    static const int64_t AllMessageTypes = 0xff;
 
     static void addMessage(MessageType messageType , const std::string& message);
     static std::string fileMessage(const std::string& path, size_t line , const std::string& msg);

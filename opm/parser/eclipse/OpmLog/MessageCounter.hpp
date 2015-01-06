@@ -25,14 +25,15 @@
 #include <tuple>
 #include <memory>
 
-#include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
+#include <opm/parser/eclipse/OpmLog/LogBackend.hpp>
+#include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
 
 namespace Opm {
 /*!
  * \brief Provides a simple sytem for log message which are found by the
  *        Parser/Deck/EclipseState classes during processing the deck.
  */
-class MessageCounter {
+    class MessageCounter : public LogBackend {
 public:
 
     MessageCounter();
@@ -87,7 +88,8 @@ public:
      */
     void printAll(std::ostream &os = std::cerr,
                   size_t enabledTypes = OpmLog::AllMessageTypes) const;
-
+    void close();
+    ~MessageCounter() {};
 private:
     typedef std::tuple</*file=*/std::string,
                       /*line=*/int,

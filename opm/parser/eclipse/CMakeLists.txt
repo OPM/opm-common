@@ -16,6 +16,9 @@ add_subdirectory( Applications )
 
 set( log_source
 OpmLog/MessageCounter.cpp 
+OpmLog/LogUtil.cpp
+OpmLog/Logger.cpp 
+OpmLog/LogBackend.cpp 
 OpmLog/OpmLog.cpp )
 
 set( rawdeck_source 
@@ -103,6 +106,7 @@ EclipseState/SimulationConfig/SimulationConfig.cpp
 EclipseState/SimulationConfig/ThresholdPressure.cpp)
 
 set( HEADER_FILES
+OpmLog/LogBackend.hpp
 OpmLog/MessageCounter.hpp
 OpmLog/OpmLog.hpp
 #
