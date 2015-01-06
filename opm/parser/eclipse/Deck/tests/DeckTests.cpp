@@ -25,6 +25,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/parser/eclipse/Log/Logger.hpp>
+#include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 using namespace Opm;
@@ -138,17 +139,17 @@ BOOST_AUTO_TEST_CASE(DECKAddWarning) {
     logger.addError("FILE3", 300U, "ERROR");
     BOOST_CHECK_EQUAL(3U, logger.size());
 
-    BOOST_CHECK_EQUAL(logger.getMessageType(0), Logger::Note);
+    BOOST_CHECK_EQUAL(logger.getMessageType(0), OpmLog::Note);
     BOOST_CHECK_EQUAL(logger.getDescription(0), "NOTE");
     BOOST_CHECK_EQUAL(logger.getFileName(0), "FILE");
     BOOST_CHECK_EQUAL(logger.getLineNumber(0), 100U);
 
-    BOOST_CHECK_EQUAL(logger.getMessageType(1), Logger::Warning);
+    BOOST_CHECK_EQUAL(logger.getMessageType(1), OpmLog::Warning);
     BOOST_CHECK_EQUAL(logger.getDescription(1), "WARNING");
     BOOST_CHECK_EQUAL(logger.getFileName(1), "FILE2");
     BOOST_CHECK_EQUAL(logger.getLineNumber(1), 200U);
 
-    BOOST_CHECK_EQUAL(logger.getMessageType(2), Logger::Error);
+    BOOST_CHECK_EQUAL(logger.getMessageType(2), OpmLog::Error);
     BOOST_CHECK_EQUAL(logger.getDescription(2), "ERROR");
     BOOST_CHECK_EQUAL(logger.getFileName(2), "FILE3");
     BOOST_CHECK_EQUAL(logger.getLineNumber(2), 300U);

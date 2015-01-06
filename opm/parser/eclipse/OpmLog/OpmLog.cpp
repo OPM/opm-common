@@ -19,17 +19,10 @@
 #include <sstream>
 #include <stdexcept>
 
-#include <opm/parser/eclipse/Log/Logger.hpp>
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 
 namespace Opm {
 
-    std::shared_ptr<Logger> OpmLog::getLogger() {
-        if (!m_logger)
-            m_logger.reset( new Logger() );
-
-        return m_logger;
-    }
 
 
     std::string OpmLog::fileMessage(const std::string& filename , size_t line , const std::string& message) {
@@ -41,16 +34,16 @@ namespace Opm {
     }
 
 
-    std::string OpmLog::prefixMessage(Logger::MessageType messageType, const std::string& message) {
+    std::string OpmLog::prefixMessage(MessageType messageType, const std::string& message) {
         std::string prefix;
         switch (messageType) {
-        case Logger::Note:
+        case Note:
             prefix = "note";
             break;
-        case Logger::Warning:
+        case Warning:
             prefix = "warning";
             break;
-        case Logger::Error:
+        case Error:
             prefix = "error";
             break;
         default:
@@ -60,16 +53,24 @@ namespace Opm {
         return prefix + ": " + message;
     }
 
+    /*
+    std::shared_ptr<Logger> OpmLog::getLogger() {
+          if (!m_logger)
+          m_logger.reset( new Logger() );
 
-    void OpmLog::addMessage(Logger::MessageType messageType , const std::string& message) {
-        auto logger = OpmLog::getLogger();
-        logger->addMessage( "" , -1 , messageType , message );
+          return m_logger;
     }
+    */
 
-
+    void OpmLog::addMessage(MessageType messageType , const std::string& message) {
+        /*
+          auto logger = OpmLog::getLogger();
+          logger->addMessage( "" , -1 , messageType , message );
+        */
+    }
 
 
 /******************************************************************/
 
-    std::shared_ptr<Logger> OpmLog::m_logger;
+    //std::shared_ptr<Logger> OpmLog::m_logger;
 }

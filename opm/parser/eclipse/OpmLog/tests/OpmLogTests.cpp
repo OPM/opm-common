@@ -22,23 +22,22 @@
 
 #include <stdexcept>
 #include <boost/test/unit_test.hpp>
-#include <opm/parser/eclipse/Log/Logger.hpp>
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 
 using namespace Opm;
 
 
 BOOST_AUTO_TEST_CASE(DoLogging) {
-    OpmLog::addMessage(Logger::MessageType::Warning , "Warning1");
-    OpmLog::addMessage(Logger::MessageType::Warning , "Warning2");
+    OpmLog::addMessage(OpmLog::MessageType::Warning , "Warning1");
+    OpmLog::addMessage(OpmLog::MessageType::Warning , "Warning2");
 }
 
 
 BOOST_AUTO_TEST_CASE(Test_Format) {
     BOOST_CHECK_EQUAL( "/path/to/file:100: There is a mild fuckup here?" , OpmLog::fileMessage("/path/to/file" , 100 , "There is a mild fuckup here?"));
 
-    BOOST_CHECK_EQUAL( "error: This is the error" ,     OpmLog::prefixMessage(Logger::MessageType::Error , "This is the error"));
-    BOOST_CHECK_EQUAL( "warning: This is the warning" , OpmLog::prefixMessage(Logger::MessageType::Warning , "This is the warning"));
-    BOOST_CHECK_EQUAL( "note: This is the note" ,       OpmLog::prefixMessage(Logger::MessageType::Note , "This is the note"));
+    BOOST_CHECK_EQUAL( "error: This is the error" ,     OpmLog::prefixMessage(OpmLog::MessageType::Error , "This is the error"));
+    BOOST_CHECK_EQUAL( "warning: This is the warning" , OpmLog::prefixMessage(OpmLog::MessageType::Warning , "This is the warning"));
+    BOOST_CHECK_EQUAL( "note: This is the note" ,       OpmLog::prefixMessage(OpmLog::MessageType::Note , "This is the note"));
 
 }

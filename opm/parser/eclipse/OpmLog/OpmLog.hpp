@@ -21,8 +21,6 @@
 #define OPMLOG_HPP
 
 #include <memory>
-#include <opm/parser/eclipse/Log/Logger.hpp>
-
 
 namespace Opm {
 
@@ -32,15 +30,25 @@ namespace Opm {
   Logger instance.
 */
 
-class OpmLog {
 
+class OpmLog {
 public:
-    static void addMessage(Logger::MessageType messageType , const std::string& message);
+    enum MessageType {
+        Note = 0x01,
+        Warning = 0x02,
+        Error = 0x04
+    };
+
+    static const int AllMessageTypes = 0xff;
+
+    static void addMessage(MessageType messageType , const std::string& message);
     static std::string fileMessage(const std::string& path, size_t line , const std::string& msg);
-    static std::string prefixMessage(Logger::MessageType messageType , const std::string& msg);
+    static std::string prefixMessage(MessageType messageType , const std::string& msg);
 private:
-    static std::shared_ptr<Logger> getLogger();
-    static std::shared_ptr<Logger> m_logger;
+    /*
+      static std::shared_ptr<Logger> getLogger();
+      static std::shared_ptr<Logger> m_logger;
+    */
 };
 
 

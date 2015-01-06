@@ -20,6 +20,7 @@
 #include <sstream>
 #include <cassert>
 
+#include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/Log/Logger.hpp>
 
 
@@ -62,19 +63,19 @@ size_t Logger::numNotes() const {
 }
 
 void Logger::addMessage(const std::string& fileName,
-                           int lineNumber,
-                           MessageType messageType,
-                           const std::string& description) {
+                            int lineNumber,
+                            OpmLog::MessageType messageType,
+                            const std::string& description) {
     switch (messageType) {
-    case Note:
+    case OpmLog::Note:
         ++m_numNotes;
         break;
 
-    case Warning:
+    case OpmLog::Warning:
         ++m_numWarnings;
         break;
 
-    case Error:
+    case OpmLog::Error:
         ++m_numErrors;
         break;
 
@@ -93,19 +94,19 @@ void Logger::addMessage(const std::string& fileName,
 void Logger::addNote(const std::string& fileName,
                         int lineNumber,
                         const std::string& description) {
-    addMessage(fileName, lineNumber, Note, description);
+    addMessage(fileName, lineNumber, OpmLog::Note, description);
 }
 
 void Logger::addWarning(const std::string& fileName,
                            int lineNumber,
                            const std::string& description) {
-    addMessage(fileName, lineNumber, Warning, description);
+    addMessage(fileName, lineNumber, OpmLog::Warning, description);
 }
 
 void Logger::addError(const std::string& fileName,
                          int lineNumber,
                          const std::string& description) {
-    addMessage(fileName, lineNumber, Error, description);
+    addMessage(fileName, lineNumber, OpmLog::Error, description);
 }
 
 void Logger::clear()
@@ -137,7 +138,7 @@ int Logger::getLineNumber(size_t msgIdx) const {
     return std::get<1>(m_messages[msgIdx]);
 }
 
-Logger::MessageType Logger::getMessageType(size_t msgIdx) const {
+OpmLog::MessageType Logger::getMessageType(size_t msgIdx) const {
     assert(msgIdx < size());
     return std::get<2>(m_messages[msgIdx]);
 }
@@ -155,13 +156,13 @@ const std::string Logger::getFormattedMessage(size_t msgIdx) const {
     }
 
     switch (getMessageType(msgIdx)) {
-    case Note:
+    case OpmLog::Note:
         oss << " note:";
         break;
-    case Warning:
+    case OpmLog::Warning:
         oss << " warning:";
         break;
-    case Error:
+    case OpmLog::Error:
         oss << " error:";
         break;
     }
