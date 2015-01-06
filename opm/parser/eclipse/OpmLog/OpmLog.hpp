@@ -23,33 +23,23 @@
 #include <memory>
 #include <cstdint>
 
+#include <opm/parser/eclipse/OpmLog/Logger.hpp>
+#include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
 namespace Opm {
 
 
 /*
   The OpmLog class is a fully static class which manages a proper
-  MessageCounter instance.
+  Logger instance.
 */
 
 
 class OpmLog {
 public:
-    enum MessageType {
-        Note = 0x01,
-        Warning = 0x02,
-        Error = 0x04
-    };
-
-    static const int64_t AllMessageTypes = 0xff;
-
-    static void addMessage(MessageType messageType , const std::string& message);
-    static std::string fileMessage(const std::string& path, size_t line , const std::string& msg);
-    static std::string prefixMessage(MessageType messageType , const std::string& msg);
+    static void addMessage(int64_t messageFlag , const std::string& message);
 private:
-    /*
-      static std::shared_ptr<MessageCounter> getMessageCounter();
-      static std::shared_ptr<MessageCounter> m_logger;
-    */
+    static std::shared_ptr<Logger> getLogger();
+    static std::shared_ptr<Logger> m_logger;
 };
 
 

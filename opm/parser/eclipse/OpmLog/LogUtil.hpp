@@ -1,5 +1,5 @@
 /*
-  Copyright 2014 Statoil ASA.
+  Copyright 2015 Statoil ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -16,30 +16,29 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <sstream>
-#include <stdexcept>
 
-#include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
-#include <opm/parser/eclipse/OpmLog/Logger.hpp>
+#ifndef OPM_LOG_UTIL_HPP
+#define OPM_LOG_UTIL_HPP
+
+#include <cstdint>
+#include <string>
 
 namespace Opm {
+namespace Log {
 
+    enum MessageType {
+        Note = 0x01,
+        Warning = 0x02,
+        Error = 0x04
+    };
 
-    std::shared_ptr<Logger> OpmLog::getLogger() {
-        if (!m_logger)
-            m_logger.reset( new Logger() );
+    const int64_t AllMessageTypes = 0xff;
 
-        return m_logger;
-    }
+    std::string fileMessage(const std::string& path, size_t line , const std::string& msg);
+    std::string fileMessage(Log::MessageType messageType , const std::string& path, size_t line , const std::string& msg);
+    std::string prefixMessage(Log::MessageType messageType , const std::string& msg);
 
-
-    void OpmLog::addMessage(int64_t messageFlag , const std::string& message) {
-        auto logger = OpmLog::getLogger();
-        logger->addMessage( messageFlag , message );
-    }
-
-
-/******************************************************************/
-
-    std::shared_ptr<Logger> OpmLog::m_logger;
 }
+}
+
+#endif

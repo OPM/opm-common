@@ -25,6 +25,7 @@
 #include <memory>
 #include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
 #include <opm/parser/eclipse/OpmLog/LogBackend.hpp>
+#include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
 
 namespace Opm {
 

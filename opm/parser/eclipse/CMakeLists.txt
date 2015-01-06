@@ -108,7 +108,9 @@ EclipseState/SimulationConfig/ThresholdPressure.cpp)
 set( HEADER_FILES
 OpmLog/LogBackend.hpp
 OpmLog/MessageCounter.hpp
+OpmLog/Logger.hpp
 OpmLog/OpmLog.hpp
+OpmLog/LogUtil.hpp
 #
 RawDeck/RawConsts.hpp 
 RawDeck/RawKeyword.hpp 

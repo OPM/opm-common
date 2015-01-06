@@ -25,6 +25,7 @@
 #include <tuple>
 #include <memory>
 
+
 #include <opm/parser/eclipse/OpmLog/LogBackend.hpp>
 #include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
 
@@ -48,7 +49,7 @@ public:
 
     void addMessage(const std::string& fileName,
                     int lineNumber,
-                    OpmLog::MessageType messageType,
+                    Log::MessageType messageType,
                     const std::string& description);
 
     void addNote(const std::string& fileName,
@@ -63,7 +64,7 @@ public:
 
     const std::string& getFileName(size_t msgIdx) const;
     int getLineNumber(size_t msgIdx) const;
-    OpmLog::MessageType getMessageType(size_t msgIdx) const;
+    Log::MessageType getMessageType(size_t msgIdx) const;
     const std::string& getDescription(size_t msgIdx) const;
 
     void clear();
@@ -87,13 +88,13 @@ public:
      * This is just another convenience method...
      */
     void printAll(std::ostream &os = std::cerr,
-                  size_t enabledTypes = OpmLog::AllMessageTypes) const;
+                  size_t enabledTypes = Log::AllMessageTypes) const;
     void close();
     ~MessageCounter() {};
 private:
-    typedef std::tuple</*file=*/std::string,
-                      /*line=*/int,
-                      /*MessageType=*/OpmLog::MessageType,
+    typedef std::tuple<std::string,
+                       int,
+                       Log::MessageType,
                        std::string> MessageTuple;
     std::vector<MessageTuple> m_messages;
 

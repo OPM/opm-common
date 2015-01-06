@@ -21,6 +21,7 @@
 #include <cassert>
 
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
+#include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
 #include <opm/parser/eclipse/OpmLog/MessageCounter.hpp>
 
 
@@ -66,49 +67,53 @@ size_t MessageCounter::numNotes() const {
 
 void MessageCounter::addMessage(const std::string& fileName,
                             int lineNumber,
-                            OpmLog::MessageType messageType,
+                            Log::MessageType messageType,
                             const std::string& description) {
-    switch (messageType) {
-    case OpmLog::Note:
-        ++m_numNotes;
-        break;
 
-    case OpmLog::Warning:
-        ++m_numWarnings;
-        break;
+    if (includeMessage( messageType )) {
+        switch (messageType) {
+        case Log::Note:
+            ++m_numNotes;
+            break;
 
-    case OpmLog::Error:
-        ++m_numErrors;
-        break;
+        case Log::Warning:
+            ++m_numWarnings;
+            break;
 
-    default:
-        throw std::invalid_argument("Log messages must be of type Note, Warning or Error");
-    }
+        case Log::Error:
+            ++m_numErrors;
+            break;
 
-    m_messages.push_back(MessageTuple(fileName, lineNumber, messageType, description));
+        default:
+            throw std::invalid_argument("Log messages must be of type Note, Warning or Error");
+        }
 
-    if (m_outStream) {
-        (*m_outStream) << getFormattedMessage(size() - 1) << "\n";
-        (*m_outStream) << (std::flush);
+        m_messages.push_back(MessageTuple(fileName, lineNumber, messageType, description));
+
+        if (m_outStream) {
+            (*m_outStream) << getFormattedMessage(size() - 1) << "\n";
+            (*m_outStream) << (std::flush);
+        }
     }
 }
+
 
 void MessageCounter::addNote(const std::string& fileName,
                         int lineNumber,
                         const std::string& description) {
-    addMessage(fileName, lineNumber, OpmLog::Note, description);
+    addMessage(fileName, lineNumber, Log::Note, description);
 }
 
 void MessageCounter::addWarning(const std::string& fileName,
                            int lineNumber,
                            const std::string& description) {
-    addMessage(fileName, lineNumber, OpmLog::Warning, description);
+    addMessage(fileName, lineNumber, Log::Warning, description);
 }
 
 void MessageCounter::addError(const std::string& fileName,
                          int lineNumber,
                          const std::string& description) {
-    addMessage(fileName, lineNumber, OpmLog::Error, description);
+    addMessage(fileName, lineNumber, Log::Error, description);
 }
 
 void MessageCounter::clear()
@@ -140,7 +145,7 @@ int MessageCounter::getLineNumber(size_t msgIdx) const {
     return std::get<1>(m_messages[msgIdx]);
 }
 
-OpmLog::MessageType MessageCounter::getMessageType(size_t msgIdx) const {
+Log::MessageType MessageCounter::getMessageType(size_t msgIdx) const {
     assert(msgIdx < size());
     return std::get<2>(m_messages[msgIdx]);
 }
@@ -158,13 +163,13 @@ const std::string MessageCounter::getFormattedMessage(size_t msgIdx) const {
     }
 
     switch (getMessageType(msgIdx)) {
-    case OpmLog::Note:
+    case Log::Note:
         oss << " note:";
         break;
-    case OpmLog::Warning:
+    case Log::Warning:
         oss << " warning:";
         break;
-    case OpmLog::Error:
+    case Log::Error:
         oss << " error:";
         break;
     }
