@@ -156,26 +156,19 @@ const std::string& MessageCounter::getDescription(size_t msgIdx) const {
 }
 
 const std::string MessageCounter::getFormattedMessage(size_t msgIdx) const {
-    std::ostringstream oss;
-    if (getLineNumber(msgIdx) > 0) {
-        oss << getFileName(msgIdx) << ":"
-            << getLineNumber(msgIdx) << ":";
-    }
+    const std::string& description = getDescription( msgIdx );
+    Log::MessageType messageType = getMessageType( msgIdx );
+    std::string prefixedMessage = Log::prefixMessage( messageType  , description);
+    int lineNumber = getLineNumber(msgIdx);
 
-    switch (getMessageType(msgIdx)) {
-    case Log::Note:
-        oss << " note:";
-        break;
-    case Log::Warning:
-        oss << " warning:";
-        break;
-    case Log::Error:
-        oss << " error:";
-        break;
-    }
-    oss << " " << getDescription(msgIdx);
-    return oss.str();
+    if (lineNumber > 0) {
+        const std::string& filename = getFileName(msgIdx);
+        return Log::fileMessage( filename , getLineNumber(msgIdx) , prefixedMessage);
+    } else
+        return prefixedMessage;
 }
+
+
 
 void MessageCounter::printAll(std::ostream& os, size_t enabledTypes) const {
     for (size_t i = 0; i < size(); ++i)
