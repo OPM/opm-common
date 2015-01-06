@@ -1,5 +1,5 @@
 if (BUILD_TESTING)
-   add_subdirectory(SingleTonLog/tests)
+   add_subdirectory(OpmLog/tests)
    add_subdirectory(Parser/tests)
    add_subdirectory(RawDeck/tests)
    add_subdirectory(Deck/tests)
@@ -15,7 +15,8 @@ endif()
 add_subdirectory( Applications )
 
 set( log_source
-Log/Logger.cpp )
+Log/Logger.cpp 
+OpmLog/OpmLog.cpp )
 
 set( rawdeck_source 
 RawDeck/StarToken.cpp
@@ -103,6 +104,7 @@ EclipseState/SimulationConfig/ThresholdPressure.cpp)
 
 set( HEADER_FILES
 Log/Logger.hpp
+OpmLog/OpmLog.hpp
 #
 RawDeck/RawConsts.hpp 
 RawDeck/RawKeyword.hpp 
