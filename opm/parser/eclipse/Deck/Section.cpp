@@ -24,7 +24,7 @@
 #include <set>
 #include <string>
 
-#include <opm/parser/eclipse/Log/Logger.hpp>
+#include <opm/parser/eclipse/OpmLog/MessageCounter.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
@@ -100,7 +100,7 @@ namespace Opm {
     }
 
     bool Section::checkSectionTopology(DeckConstPtr deck,
-                                       LoggerPtr logger,
+                                       MessageCounterPtr logger,
                                        bool ensureKeywordSectionAffiliation)
     {
         if (deck->size() == 0) {

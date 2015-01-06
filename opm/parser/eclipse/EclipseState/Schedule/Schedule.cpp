@@ -35,13 +35,13 @@
 
 namespace Opm {
 
-    Schedule::Schedule(std::shared_ptr<const EclipseGrid> grid , DeckConstPtr deck, LoggerPtr logger)
+    Schedule::Schedule(std::shared_ptr<const EclipseGrid> grid , DeckConstPtr deck, MessageCounterPtr logger)
         : m_grid(grid)
     {
         initFromDeck(deck, logger);
     }
 
-    void Schedule::initFromDeck(DeckConstPtr deck, LoggerPtr logger) {
+    void Schedule::initFromDeck(DeckConstPtr deck, MessageCounterPtr logger) {
         createTimeMap(deck, logger);
         addGroup( "FIELD", 0 );
         initRootGroupTreeNode(getTimeMap());
@@ -52,7 +52,7 @@ namespace Opm {
         m_rootGroupTree.reset(new DynamicState<GroupTreePtr>(timeMap, GroupTreePtr(new GroupTree())));
     }
 
-    void Schedule::createTimeMap(DeckConstPtr deck, LoggerPtr /*logger*/) {
+    void Schedule::createTimeMap(DeckConstPtr deck, MessageCounterPtr /*logger*/) {
         boost::posix_time::ptime startTime(defaultStartDate);
         if (deck->hasKeyword("START")) {
             DeckKeywordConstPtr startKeyword = deck->getKeyword("START");
@@ -62,7 +62,7 @@ namespace Opm {
         m_timeMap.reset(new TimeMap(startTime));
     }
 
-    void Schedule::iterateScheduleSection(DeckConstPtr deck, LoggerPtr logger) {
+    void Schedule::iterateScheduleSection(DeckConstPtr deck, MessageCounterPtr logger) {
         size_t currentStep = 0;
 
         std::vector<std::pair<DeckKeywordConstPtr , size_t> > rftProperties;
@@ -140,11 +140,11 @@ namespace Opm {
         checkUnhandledKeywords(deck);
     }
 
-    void Schedule::handleDATES(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/) {
+    void Schedule::handleDATES(DeckKeywordConstPtr keyword, MessageCounterPtr /*logger*/) {
         m_timeMap->addFromDATESKeyword(keyword);
     }
 
-    void Schedule::handleTSTEP(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/) {
+    void Schedule::handleTSTEP(DeckKeywordConstPtr keyword, MessageCounterPtr /*logger*/) {
         m_timeMap->addFromTSTEPKeyword(keyword);
     }
 
@@ -157,7 +157,7 @@ namespace Opm {
         return treeUpdated;
     }
 
-    void Schedule::handleWELSPECS(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep) {
+    void Schedule::handleWELSPECS(DeckKeywordConstPtr keyword, MessageCounterPtr logger, size_t currentStep) {
         bool needNewTree = false;
         GroupTreePtr newTree = m_rootGroupTree->get(currentStep)->deepCopy();
 
@@ -186,7 +186,7 @@ namespace Opm {
         }
     }
 
-    void Schedule::checkWELSPECSConsistency(WellConstPtr well, DeckKeywordConstPtr keyword, size_t recordIdx, LoggerPtr logger) const {
+    void Schedule::checkWELSPECSConsistency(WellConstPtr well, DeckKeywordConstPtr keyword, size_t recordIdx, MessageCounterPtr logger) const {
         DeckRecordConstPtr record = keyword->getRecord(recordIdx);
         if (well->getHeadI() != record->getItem("HEAD_I")->getInt(0) - 1) {
             std::string msg =
@@ -206,7 +206,7 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleWCONProducer(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep, bool isPredictionMode) {
+    void Schedule::handleWCONProducer(DeckKeywordConstPtr keyword, MessageCounterPtr logger, size_t currentStep, bool isPredictionMode) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
 
@@ -260,15 +260,15 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleWCONHIST(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep) {
+    void Schedule::handleWCONHIST(DeckKeywordConstPtr keyword, MessageCounterPtr logger, size_t currentStep) {
         handleWCONProducer(keyword, logger, currentStep, false);
     }
 
-    void Schedule::handleWCONPROD(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep) {
+    void Schedule::handleWCONPROD(DeckKeywordConstPtr keyword, MessageCounterPtr logger, size_t currentStep) {
         handleWCONProducer(keyword, logger, currentStep, true);
     }
 
-    void Schedule::handleWCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, LoggerPtr /*logger*/, size_t currentStep) {
+    void Schedule::handleWCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, MessageCounterPtr /*logger*/, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
@@ -337,7 +337,7 @@ namespace Opm {
     }
 
 
-    void Schedule::handleWPOLYMER(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/, size_t currentStep) {
+    void Schedule::handleWPOLYMER(DeckKeywordConstPtr keyword, MessageCounterPtr /*logger*/, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
@@ -366,7 +366,7 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleWCONINJH(DeckConstPtr deck, DeckKeywordConstPtr keyword, LoggerPtr /*logger*/, size_t currentStep) {
+    void Schedule::handleWCONINJH(DeckConstPtr deck, DeckKeywordConstPtr keyword, MessageCounterPtr /*logger*/, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellName = record->getItem("WELL")->getTrimmedString(0);
@@ -408,7 +408,7 @@ namespace Opm {
         return data;
     }
 
-    void Schedule::handleWELOPEN(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/, size_t currentStep, bool hascomplump) {
+    void Schedule::handleWELOPEN(DeckKeywordConstPtr keyword, MessageCounterPtr /*logger*/, size_t currentStep , bool hascomplump) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
 
@@ -503,7 +503,7 @@ namespace Opm {
     }
 
 
-    void Schedule::handleGCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, LoggerPtr /*logger*/, size_t currentStep) {
+    void Schedule::handleGCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, MessageCounterPtr /*logger*/, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& groupName = record->getItem("GROUP")->getTrimmedString(0);
@@ -535,7 +535,7 @@ namespace Opm {
     }
 
 
-    void Schedule::handleGCONPROD(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/, size_t currentStep) {
+    void Schedule::handleGCONPROD(DeckKeywordConstPtr keyword, MessageCounterPtr /*logger*/, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& groupName = record->getItem("GROUP")->getTrimmedString(0);
@@ -557,7 +557,7 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleCOMPDAT(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/, size_t currentStep) {
+    void Schedule::handleCOMPDAT(DeckKeywordConstPtr keyword, MessageCounterPtr /*logger*/, size_t currentStep) {
         std::map<std::string , std::vector< CompletionPtr> > completionMapList = Completion::completionsFromCOMPDATKeyword( keyword );
         std::map<std::string , std::vector< CompletionPtr> >::iterator iter;
 
@@ -568,7 +568,7 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleWGRUPCON(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/, size_t currentStep) {
+    void Schedule::handleWGRUPCON(DeckKeywordConstPtr keyword, MessageCounterPtr /*logger*/, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellName = record->getItem("WELL")->getTrimmedString(0);
@@ -589,7 +589,7 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleGRUPTREE(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/, size_t currentStep) {
+    void Schedule::handleGRUPTREE(DeckKeywordConstPtr keyword, MessageCounterPtr /*logger*/, size_t currentStep) {
         GroupTreePtr currentTree = m_rootGroupTree->get(currentStep);
         GroupTreePtr newTree = currentTree->deepCopy();
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {

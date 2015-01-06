@@ -16,8 +16,8 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPM_LOGGER_HPP
-#define OPM_LOGGER_HPP
+#ifndef OPM_MESSAGECOUNTER_HPP
+#define OPM_MESSAGECOUNTER_HPP
 
 #include <iostream>
 #include <string>
@@ -32,11 +32,11 @@ namespace Opm {
  * \brief Provides a simple sytem for log message which are found by the
  *        Parser/Deck/EclipseState classes during processing the deck.
  */
-class Logger {
+class MessageCounter {
 public:
 
-    Logger();
-    Logger(std::ostream* os);
+    MessageCounter();
+    MessageCounter(std::ostream* os);
 
     void setOutStream(std::ostream* os);
 
@@ -66,7 +66,7 @@ public:
     const std::string& getDescription(size_t msgIdx) const;
 
     void clear();
-    void append(const Logger &other);
+    void append(const MessageCounter &other);
 
     /*!
      * \brief This method takes the information provided by the methods above and returns
@@ -102,8 +102,8 @@ private:
     mutable std::ostream* m_outStream;
 };
 
-typedef std::shared_ptr<Logger> LoggerPtr;
-typedef std::shared_ptr<const Logger> LoggerConstPtr;
+typedef std::shared_ptr<MessageCounter> MessageCounterPtr;
+typedef std::shared_ptr<const MessageCounter> MessageCounterConstPtr;
 } // namespace Opm
 
 #endif

@@ -27,7 +27,7 @@ namespace Opm {
 
 /*
   The OpmLog class is a fully static class which manages a proper
-  Logger instance.
+  MessageCounter instance.
 */
 
 
@@ -46,8 +46,8 @@ public:
     static std::string prefixMessage(MessageType messageType , const std::string& msg);
 private:
     /*
-      static std::shared_ptr<Logger> getLogger();
-      static std::shared_ptr<Logger> m_logger;
+      static std::shared_ptr<MessageCounter> getMessageCounter();
+      static std::shared_ptr<MessageCounter> m_logger;
     */
 };
 

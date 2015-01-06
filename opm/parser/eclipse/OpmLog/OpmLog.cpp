@@ -54,9 +54,9 @@ namespace Opm {
     }
 
     /*
-    std::shared_ptr<Logger> OpmLog::getLogger() {
+    std::shared_ptr<MessageCounter> OpmLog::getMessageCounter() {
           if (!m_logger)
-          m_logger.reset( new Logger() );
+          m_logger.reset( new MessageCounter() );
 
           return m_logger;
     }
@@ -64,7 +64,7 @@ namespace Opm {
 
     void OpmLog::addMessage(MessageType messageType , const std::string& message) {
         /*
-          auto logger = OpmLog::getLogger();
+          auto logger = OpmLog::getMessageCounter();
           logger->addMessage( "" , -1 , messageType , message );
         */
     }
@@ -72,5 +72,5 @@ namespace Opm {
 
 /******************************************************************/
 
-    //std::shared_ptr<Logger> OpmLog::m_logger;
+    //std::shared_ptr<MessageCounter> OpmLog::m_logger;
 }

@@ -96,7 +96,7 @@ namespace Opm {
         }
     } // anonymous namespace
 
-    EclipseGrid::EclipseGrid(std::shared_ptr<const Deck> deck, LoggerPtr logger)
+    EclipseGrid::EclipseGrid(std::shared_ptr<const Deck> deck, MessageCounterPtr logger)
         : m_minpvValue(0),
           m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH")
@@ -146,7 +146,7 @@ namespace Opm {
     }
 
 
-    void EclipseGrid::initGrid( const std::vector<int>& dims, DeckConstPtr deck, LoggerPtr logger) {
+    void EclipseGrid::initGrid( const std::vector<int>& dims, DeckConstPtr deck, MessageCounterPtr logger) {
         m_nx = static_cast<size_t>(dims[0]);
         m_ny = static_cast<size_t>(dims[1]);
         m_nz = static_cast<size_t>(dims[2]);
@@ -259,7 +259,7 @@ namespace Opm {
 
 
 
-    void EclipseGrid::initCornerPointGrid(const std::vector<int>& dims , DeckConstPtr deck, LoggerPtr logger) {
+    void EclipseGrid::initCornerPointGrid(const std::vector<int>& dims , DeckConstPtr deck, MessageCounterPtr logger) {
         assertCornerPointKeywords( dims , deck, logger);
         {
             DeckKeywordConstPtr ZCORNKeyWord = deck->getKeyword("ZCORN");
@@ -318,7 +318,7 @@ namespace Opm {
     }
 
 
-    void EclipseGrid::assertCornerPointKeywords( const std::vector<int>& dims , DeckConstPtr deck, LoggerPtr logger)
+    void EclipseGrid::assertCornerPointKeywords( const std::vector<int>& dims , DeckConstPtr deck, MessageCounterPtr logger)
     {
         const int nx = dims[0];
         const int ny = dims[1];

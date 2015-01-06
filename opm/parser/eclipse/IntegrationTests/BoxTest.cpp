@@ -29,9 +29,9 @@
 using namespace Opm;
 
 // forward declaration to avoid a pedantic compiler warning
-EclipseState makeState(const std::string& fileName, LoggerPtr logger);
+EclipseState makeState(const std::string& fileName, MessageCounterPtr logger);
 
-EclipseState makeState(const std::string& fileName, LoggerPtr logger) {
+EclipseState makeState(const std::string& fileName, MessageCounterPtr logger) {
     ParserPtr parser(new Parser( ));
     boost::filesystem::path boxFile(fileName);
     DeckPtr deck =  parser->parseFile(boxFile.string());
@@ -42,7 +42,7 @@ EclipseState makeState(const std::string& fileName, LoggerPtr logger) {
 
 
 BOOST_AUTO_TEST_CASE( PERMX ) {
-    LoggerPtr logger(new Logger());
+    MessageCounterPtr logger(new MessageCounter());
     EclipseState state = makeState("testdata/integration_tests/BOX/BOXTEST1" , logger);
     std::shared_ptr<GridProperty<double> > permx = state.getDoubleGridProperty("PERMX");
     std::shared_ptr<GridProperty<double> > permy = state.getDoubleGridProperty("PERMY");
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE( PERMX ) {
 
 
 BOOST_AUTO_TEST_CASE( PARSE_BOX_OK ) {
-    LoggerPtr logger(new Logger());
+    MessageCounterPtr logger(new MessageCounter());
     EclipseState state = makeState("testdata/integration_tests/BOX/BOXTEST1", logger);
     std::shared_ptr<GridProperty<int> > satnum = state.getIntGridProperty("SATNUM");
     {
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE( PARSE_BOX_OK ) {
 
 
 BOOST_AUTO_TEST_CASE( PARSE_MULTIPLY_COPY ) {
-    LoggerPtr logger(new Logger());
+    MessageCounterPtr logger(new MessageCounter());
     EclipseState state = makeState("testdata/integration_tests/BOX/BOXTEST1", logger);
     std::shared_ptr<GridProperty<int> > satnum = state.getIntGridProperty("SATNUM");
     std::shared_ptr<GridProperty<int> > fipnum = state.getIntGridProperty("FIPNUM");
@@ -114,21 +114,21 @@ BOOST_AUTO_TEST_CASE( PARSE_MULTIPLY_COPY ) {
 
 
 BOOST_AUTO_TEST_CASE( INCOMPLETE_KEYWORD_BOX) {
-    LoggerPtr logger(new Logger());
+    MessageCounterPtr logger(new MessageCounter());
     makeState("testdata/integration_tests/BOX/BOXTEST2", logger);
     BOOST_CHECK(logger->numErrors() > 1);
 }
 
 
 BOOST_AUTO_TEST_CASE( KEYWORD_BOX_TOO_SMALL) {
-    LoggerPtr logger(new Logger());
+    MessageCounterPtr logger(new MessageCounter());
     BOOST_CHECK_THROW( makeState("testdata/integration_tests/BOX/BOXTEST3", logger) , std::invalid_argument);
 }
 
 
 
 BOOST_AUTO_TEST_CASE( EQUAL ) {
-    LoggerPtr logger(new Logger());
+    MessageCounterPtr logger(new MessageCounter());
     EclipseState state = makeState("testdata/integration_tests/BOX/BOXTEST1", logger);
     std::shared_ptr<GridProperty<int> > pvtnum = state.getIntGridProperty("PVTNUM");
     std::shared_ptr<GridProperty<int> > eqlnum = state.getIntGridProperty("EQLNUM");

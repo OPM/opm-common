@@ -21,12 +21,12 @@
 #include <cassert>
 
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
-#include <opm/parser/eclipse/Log/Logger.hpp>
+#include <opm/parser/eclipse/OpmLog/MessageCounter.hpp>
 
 
 
 namespace Opm {
-Logger::Logger() {
+MessageCounter::MessageCounter() {
     m_numErrors = 0;
     m_numWarnings = 0;
     m_numNotes = 0;
@@ -34,7 +34,7 @@ Logger::Logger() {
     setOutStream(NULL);
 }
 
-Logger::Logger(std::ostream* os) {
+MessageCounter::MessageCounter(std::ostream* os) {
     m_numErrors = 0;
     m_numWarnings = 0;
     m_numNotes = 0;
@@ -42,27 +42,27 @@ Logger::Logger(std::ostream* os) {
     setOutStream(os);
 }
 
-void Logger::setOutStream(std::ostream* os) {
+void MessageCounter::setOutStream(std::ostream* os) {
     m_outStream = os;
 }
 
-size_t Logger::size() const {
+size_t MessageCounter::size() const {
     return m_messages.size();
 }
 
-size_t Logger::numErrors() const {
+size_t MessageCounter::numErrors() const {
     return m_numErrors;
 }
 
-size_t Logger::numWarnings() const {
+size_t MessageCounter::numWarnings() const {
     return m_numWarnings;
 }
 
-size_t Logger::numNotes() const {
+size_t MessageCounter::numNotes() const {
     return m_numNotes;
 }
 
-void Logger::addMessage(const std::string& fileName,
+void MessageCounter::addMessage(const std::string& fileName,
                             int lineNumber,
                             OpmLog::MessageType messageType,
                             const std::string& description) {
@@ -91,25 +91,25 @@ void Logger::addMessage(const std::string& fileName,
     }
 }
 
-void Logger::addNote(const std::string& fileName,
+void MessageCounter::addNote(const std::string& fileName,
                         int lineNumber,
                         const std::string& description) {
     addMessage(fileName, lineNumber, OpmLog::Note, description);
 }
 
-void Logger::addWarning(const std::string& fileName,
+void MessageCounter::addWarning(const std::string& fileName,
                            int lineNumber,
                            const std::string& description) {
     addMessage(fileName, lineNumber, OpmLog::Warning, description);
 }
 
-void Logger::addError(const std::string& fileName,
+void MessageCounter::addError(const std::string& fileName,
                          int lineNumber,
                          const std::string& description) {
     addMessage(fileName, lineNumber, OpmLog::Error, description);
 }
 
-void Logger::clear()
+void MessageCounter::clear()
 {
     m_numErrors = 0;
     m_numWarnings = 0;
@@ -118,7 +118,7 @@ void Logger::clear()
     m_messages.clear();
 }
 
-void Logger::append(const Logger &other)
+void MessageCounter::append(const MessageCounter &other)
 {
     for (size_t i = 0; i < other.size(); ++i) {
         addMessage(other.getFileName(i),
@@ -128,27 +128,27 @@ void Logger::append(const Logger &other)
     }
 }
 
-const std::string& Logger::getFileName(size_t msgIdx) const {
+const std::string& MessageCounter::getFileName(size_t msgIdx) const {
     assert(msgIdx < size());
     return std::get<0>(m_messages[msgIdx]);
 }
 
-int Logger::getLineNumber(size_t msgIdx) const {
+int MessageCounter::getLineNumber(size_t msgIdx) const {
     assert(msgIdx < size());
     return std::get<1>(m_messages[msgIdx]);
 }
 
-OpmLog::MessageType Logger::getMessageType(size_t msgIdx) const {
+OpmLog::MessageType MessageCounter::getMessageType(size_t msgIdx) const {
     assert(msgIdx < size());
     return std::get<2>(m_messages[msgIdx]);
 }
 
-const std::string& Logger::getDescription(size_t msgIdx) const {
+const std::string& MessageCounter::getDescription(size_t msgIdx) const {
     assert(msgIdx < size());
     return std::get<3>(m_messages[msgIdx]);
 }
 
-const std::string Logger::getFormattedMessage(size_t msgIdx) const {
+const std::string MessageCounter::getFormattedMessage(size_t msgIdx) const {
     std::ostringstream oss;
     if (getLineNumber(msgIdx) > 0) {
         oss << getFileName(msgIdx) << ":"
@@ -170,7 +170,7 @@ const std::string Logger::getFormattedMessage(size_t msgIdx) const {
     return oss.str();
 }
 
-void Logger::printAll(std::ostream& os, size_t enabledTypes) const {
+void MessageCounter::printAll(std::ostream& os, size_t enabledTypes) const {
     for (size_t i = 0; i < size(); ++i)
         if (enabledTypes & getMessageType(i))
             os << getFormattedMessage(i) << "\n";
