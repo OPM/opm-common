@@ -16,6 +16,8 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <sstream>
+#include <stdexcept>
 
 #include <opm/parser/eclipse/Log/Logger.hpp>
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
@@ -29,13 +31,45 @@ namespace Opm {
         return m_logger;
     }
 
-    
+
+    std::string OpmLog::fileMessage(const std::string& filename , size_t line , const std::string& message) {
+        std::ostringstream oss;
+
+        oss << filename << ":" << line << ": " << message;
+
+        return oss.str();
+    }
+
+
+    std::string OpmLog::prefixMessage(Logger::MessageType messageType, const std::string& message) {
+        std::string prefix;
+        switch (messageType) {
+        case Logger::Note:
+            prefix = "note";
+            break;
+        case Logger::Warning:
+            prefix = "warning";
+            break;
+        case Logger::Error:
+            prefix = "error";
+            break;
+        default:
+            throw std::invalid_argument("Unhandled messagetype");
+        }
+
+        return prefix + ": " + message;
+    }
+
 
     void OpmLog::addMessage(Logger::MessageType messageType , const std::string& message) {
         auto logger = OpmLog::getLogger();
         logger->addMessage( "" , -1 , messageType , message );
     }
 
+
+
+
+/******************************************************************/
 
     std::shared_ptr<Logger> OpmLog::m_logger;
 }

@@ -33,8 +33,11 @@ namespace Opm {
 */
 
 class OpmLog {
+
 public:
     static void addMessage(Logger::MessageType messageType , const std::string& message);
+    static std::string fileMessage(const std::string& path, size_t line , const std::string& msg);
+    static std::string prefixMessage(Logger::MessageType messageType , const std::string& msg);
 private:
     static std::shared_ptr<Logger> getLogger();
     static std::shared_ptr<Logger> m_logger;
