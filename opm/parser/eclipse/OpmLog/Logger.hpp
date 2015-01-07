@@ -25,7 +25,6 @@
 #include <memory>
 #include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
 #include <opm/parser/eclipse/OpmLog/LogBackend.hpp>
-#include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
 
 namespace Opm {
 
@@ -33,7 +32,7 @@ class Logger {
 public:
     Logger();
     void addMessage(int64_t messageFlag , const std::string& message) const;
-    void addBackend(const std::string& name , std::shared_ptr<LogBackend> backend);
+    void addBackend(const std::string& name , std::shared_ptr<LogSink> backend);
     bool hasBackend(const std::string& name);
 
 private:

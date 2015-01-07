@@ -34,6 +34,7 @@ virtual void close() { }
 virtual ~LogBackend() { }
 virtual bool addMessage(int64_t messageFlag , const std::string& message) { return false; };
 
+int64_t getMask() const;
 bool includeMessage(int64_t messageFlag);
 
 private:

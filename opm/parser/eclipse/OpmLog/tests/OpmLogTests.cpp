@@ -65,4 +65,15 @@ BOOST_AUTO_TEST_CASE(Test_AbstractBackend) {
 
 BOOST_AUTO_TEST_CASE(Test_Logger) {
     Logger logger;
+    std::shared_ptr<MessageCounter> counter = std::make_shared<MessageCounter>();
+    BOOST_CHECK_EQUAL( false , logger.hasBackend("NO"));
+
+    logger.addBackend("COUNTER" , counter);
+    BOOST_CHECK_EQUAL( true , logger.hasBackend("COUNTER"));
+
+    logger.addMessage( Log::MessageType::Error , "Error");
+    logger.addMessage( Log::MessageType::Warning , "Warning");
+    BOOST_CHECK_EQUAL( 1 , counter->numWarnings() );
+    BOOST_CHECK_EQUAL( 1 , counter->numErrors() );
+    BOOST_CHECK_EQUAL( 0 , counter->numNotes() );
 }

@@ -47,6 +47,10 @@ public:
     size_t numWarnings() const;
     size_t numNotes() const;
 
+    bool addMessage(int64_t messageFlag ,
+                    const std::string& message);
+
+
     void addMessage(const std::string& fileName,
                     int lineNumber,
                     Log::MessageType messageType,

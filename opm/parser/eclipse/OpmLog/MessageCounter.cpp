@@ -97,6 +97,16 @@ void MessageCounter::addMessage(const std::string& fileName,
     }
 }
 
+bool MessageCounter::addMessage(int64_t messageFlag , const std::string& message) {
+    if (includeMessage( messageFlag )) {
+        addMessage("???" , -1 , static_cast<Log::MessageType>(messageFlag) , message);
+        return true;
+    } else
+        return false;
+}
+
+
+
 
 void MessageCounter::addNote(const std::string& fileName,
                         int lineNumber,
