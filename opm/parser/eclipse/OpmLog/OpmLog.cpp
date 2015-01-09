@@ -39,6 +39,18 @@ namespace Opm {
     }
 
 
+    bool OpmLog::hasBackend(const std::string& name) {
+        auto logger = OpmLog::getLogger();
+        return logger->hasBackend( name );
+    }
+
+
+    void OpmLog::addBackend(const std::string& name , std::shared_ptr<LogBackend> backend) {
+        auto logger = OpmLog::getLogger();
+        return logger->addBackend( name , backend );
+    }
+
+
 /******************************************************************/
 
     std::shared_ptr<Logger> OpmLog::m_logger;

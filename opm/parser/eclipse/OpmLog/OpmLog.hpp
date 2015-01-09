@@ -37,6 +37,16 @@ namespace Opm {
 class OpmLog {
 public:
     static void addMessage(int64_t messageFlag , const std::string& message);
+
+    static bool hasBackend( const std::string& backendName );
+    static void addBackend(const std::string& name , std::shared_ptr<LogBackend> backend);
+    
+    template <class BackendType>
+    static std::shared_ptr<BackendType> getBackend(const std::string& name) {
+        auto logger = OpmLog::getLogger();
+        return logger->getBackend<BackendType>(name);
+    }
+
 private:
     static std::shared_ptr<Logger> getLogger();
     static std::shared_ptr<Logger> m_logger;

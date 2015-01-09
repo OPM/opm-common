@@ -119,3 +119,38 @@ BOOST_AUTO_TEST_CASE(LoggerDefaultTypesEnabled) {
     BOOST_CHECK( logger.enabledMessageType( Log::MessageType::Warning ));
     BOOST_CHECK( logger.enabledMessageType( Log::MessageType::Note ));
 }
+
+/*****************************************************************/
+
+void initLogger(std::ostringstream& log_stream) {
+    std::shared_ptr<MessageCounter> counter = std::make_shared<MessageCounter>();
+    std::shared_ptr<StreamLog> streamLog = std::make_shared<StreamLog>( log_stream , Log::MessageType::Warning );
+
+    BOOST_CHECK_EQUAL( false , OpmLog::hasBackend("NO"));
+
+    OpmLog::addBackend("COUNTER" , counter);
+    OpmLog::addBackend("STREAM" , streamLog);
+    BOOST_CHECK_EQUAL( true , OpmLog::hasBackend("COUNTER"));
+    BOOST_CHECK_EQUAL( true , OpmLog::hasBackend("STREAM"));
+}
+
+
+
+BOOST_AUTO_TEST_CASE(TestOpmLog) {
+    std::ostringstream log_stream;
+
+    initLogger(log_stream);
+
+    OpmLog::addMessage( Log::MessageType::Warning , "Warning");
+    OpmLog::addMessage( Log::MessageType::Error , "Error");
+
+    {
+        auto counter = OpmLog::getBackend<MessageCounter>("COUNTER");
+
+        BOOST_CHECK_EQUAL( 1 , counter->numWarnings() );
+        BOOST_CHECK_EQUAL( 1 , counter->numErrors() );
+        BOOST_CHECK_EQUAL( 0 , counter->numNotes() );
+    }
+
+    BOOST_CHECK_EQUAL( log_stream.str() , "Warning\n");
+}
