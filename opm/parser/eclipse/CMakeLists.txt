@@ -19,6 +19,7 @@ OpmLog/MessageCounter.cpp
 OpmLog/LogUtil.cpp
 OpmLog/Logger.cpp 
 OpmLog/LogBackend.cpp 
+OpmLog/StreamLog.cpp 
 OpmLog/OpmLog.cpp )
 
 set( rawdeck_source 
@@ -111,6 +112,7 @@ OpmLog/MessageCounter.hpp
 OpmLog/Logger.hpp
 OpmLog/OpmLog.hpp
 OpmLog/LogUtil.hpp
+OpmLog/StreamLog.hpp
 #
 RawDeck/RawConsts.hpp 
 RawDeck/RawKeyword.hpp 

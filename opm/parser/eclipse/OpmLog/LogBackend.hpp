@@ -29,16 +29,15 @@ namespace Opm {
 class LogBackend {
 
 public:
-LogBackend( int64_t mask );
-virtual void close() { }
-virtual ~LogBackend() { }
-virtual bool addMessage(int64_t messageFlag , const std::string& message) { return false; };
+    LogBackend( int64_t mask );
+    virtual ~LogBackend() { };
+    virtual void addMessage(int64_t messageFlag , const std::string& message) { };
 
-int64_t getMask() const;
-bool includeMessage(int64_t messageFlag);
+    int64_t getMask() const;
+    bool    includeMessage(int64_t messageFlag);
 
 private:
-   int64_t m_mask;
+    int64_t m_mask;
 };
 }
 

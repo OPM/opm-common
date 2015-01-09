@@ -17,28 +17,34 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef OPM_LOG_UTIL_HPP
-#define OPM_LOG_UTIL_HPP
+#ifndef STREAMLOG_H
+#define STREAMLOG_H
 
+
+#include <stdexcept>
+#include <fstream>
+#include <iostream>
 #include <cstdint>
-#include <string>
+
+#include <opm/parser/eclipse/OpmLog/LogBackend.hpp>
 
 namespace Opm {
-namespace Log {
 
-    namespace MessageType {
-        const int64_t Note = 0x01;
-        const int64_t Warning = 0x02;
-        const int64_t Error = 0x04;
-    }
+class StreamLog : public LogBackend {
 
-    const int64_t AllMessageTypes = 0xff;
+public:
+    StreamLog(const std::string& logFile , int64_t messageMask);
+    StreamLog(std::ostream& os , int64_t messageMask);
+    void addMessage(int64_t messageType , const std::string& message);
+    ~StreamLog();
 
-    std::string fileMessage(const std::string& path, size_t line , const std::string& msg);
-    std::string fileMessage(int64_t messageType , const std::string& path, size_t line , const std::string& msg);
-    std::string prefixMessage(int64_t messageType , const std::string& msg);
+private:
+    void close();
 
-}
+    std::ofstream   m_ofstream;
+    std::ostream  * m_ostream;
+    bool m_streamOwner;
+};
 }
 
 #endif

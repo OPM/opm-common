@@ -19,6 +19,8 @@
 
 #include <iostream>
 #include <opm/parser/eclipse/OpmLog/MessageCounter.hpp>
+#include <opm/parser/eclipse/OpmLog/StreamLog.hpp>
+#include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -65,6 +67,7 @@ int main(int argc, char** argv) {
         if (arg == "-l")
             printKeywords = true;
     }
+    std::shared_ptr<Opm::StreamLog> streamLog = std::make_shared<Opm::StreamLog>("log.txt" , Opm::Log::MessageType::Warning);
 
     Opm::ParserPtr parser(new Opm::Parser());
     std::string file = argv[1];

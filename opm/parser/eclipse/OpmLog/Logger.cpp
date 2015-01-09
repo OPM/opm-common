@@ -18,22 +18,34 @@
 */
 #include <sstream>
 #include <stdexcept>
+#include <iostream>
 
 #include <opm/parser/eclipse/OpmLog/Logger.hpp>
 #include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
 
+
+
+static bool isPower2(int64_t x) {
+    return ((x != 0) && !(x & (x - 1)));
+}
+
 namespace Opm {
 
+
     Logger::Logger()
-        : m_globalMask(0)
+        : m_globalMask(0),
+          m_enabledTypes(0)
     {
+        addMessageType( Log::MessageType::Error , "error");
+        addMessageType( Log::MessageType::Warning , "warning");
+        addMessageType( Log::MessageType::Note , "note");
     }
 
-    void Logger::addMessage(int64_t messageFlag , const std::string& message) const {
-        if (m_globalMask & messageFlag) {
+    void Logger::addMessage(int64_t messageType , const std::string& message) const {
+        if (m_globalMask & messageType) {
             for (auto iter = m_backends.begin(); iter != m_backends.end(); ++iter) {
                 std::shared_ptr<LogBackend> backend = (*iter).second;
-                backend->addMessage( messageFlag , message );
+                backend->addMessage( messageType , message );
             }
         }
     }
@@ -58,5 +70,24 @@ namespace Opm {
     }
 
 
+
+    bool Logger::enabledMessageType( int64_t messageType) const {
+        if (isPower2( messageType)) {
+            if ((messageType & m_enabledTypes) == 0)
+                return false;
+            else
+                return true;
+        } else
+            throw std::invalid_argument("The message type id must be ~ 2^n");
+    }
+
+
+
+    void Logger::addMessageType( int64_t messageType , const std::string& prefix) {
+        if (isPower2( messageType)) {
+            m_enabledTypes |= messageType;
+        } else
+            throw std::invalid_argument("The message type id must be ~ 2^n");
+    }
 
 }

@@ -34,21 +34,21 @@ namespace Log {
         return oss.str();
     }
 
-    std::string fileMessage(MessageType messageType , const std::string& filename , size_t line , const std::string& message) {
+    std::string fileMessage(int64_t messageType , const std::string& filename , size_t line , const std::string& message) {
         return fileMessage( filename , line , prefixMessage( messageType , message ));
     }
 
 
-    std::string prefixMessage(MessageType messageType, const std::string& message) {
+    std::string prefixMessage(int64_t messageType, const std::string& message) {
         std::string prefix;
         switch (messageType) {
-        case Note:
+        case MessageType::Note:
             prefix = "note";
             break;
-        case Warning:
+        case MessageType::Warning:
             prefix = "warning";
             break;
-        case Error:
+        case MessageType::Error:
             prefix = "error";
             break;
         default:

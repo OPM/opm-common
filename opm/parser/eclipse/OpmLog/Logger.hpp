@@ -31,13 +31,16 @@ namespace Opm {
 class Logger {
 public:
     Logger();
-    void addMessage(int64_t messageFlag , const std::string& message) const;
-    void addBackend(const std::string& name , std::shared_ptr<LogSink> backend);
+    void addMessage(int64_t messageType , const std::string& message) const;
+    void addBackend(const std::string& name , std::shared_ptr<LogBackend> backend);
     bool hasBackend(const std::string& name);
 
+    bool enabledMessageType( int64_t messageType) const;
+    void addMessageType( int64_t messageType , const std::string& prefix);
 private:
     void updateGlobalMask( int64_t mask );
 
+    int64_t m_enabledTypes;
     int64_t m_globalMask;
     std::map<std::string , std::shared_ptr<LogBackend> > m_backends;
 };

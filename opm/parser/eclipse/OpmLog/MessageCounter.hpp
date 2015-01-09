@@ -47,28 +47,30 @@ public:
     size_t numWarnings() const;
     size_t numNotes() const;
 
-    bool addMessage(int64_t messageFlag ,
-                    const std::string& message);
+        void addMessage(int64_t messageFlag ,
+                        const std::string& message);
 
 
     void addMessage(const std::string& fileName,
                     int lineNumber,
-                    Log::MessageType messageType,
+                    int64_t messageType,
                     const std::string& description);
 
     void addNote(const std::string& fileName,
                  int lineNumber,
                  const std::string& description);
+
     void addWarning(const std::string& fileName,
                     int lineNumber,
                     const std::string& description);
+
     void addError(const std::string& fileName,
                   int lineNumber,
                   const std::string& description);
 
     const std::string& getFileName(size_t msgIdx) const;
     int getLineNumber(size_t msgIdx) const;
-    Log::MessageType getMessageType(size_t msgIdx) const;
+    int64_t getMessageType(size_t msgIdx) const;
     const std::string& getDescription(size_t msgIdx) const;
 
     void clear();
@@ -93,12 +95,11 @@ public:
      */
     void printAll(std::ostream &os = std::cerr,
                   size_t enabledTypes = Log::AllMessageTypes) const;
-    void close();
     ~MessageCounter() {};
 private:
     typedef std::tuple<std::string,
                        int,
-                       Log::MessageType,
+                       int64_t,
                        std::string> MessageTuple;
     std::vector<MessageTuple> m_messages;
 

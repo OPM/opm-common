@@ -66,21 +66,21 @@ size_t MessageCounter::numNotes() const {
 }
 
 void MessageCounter::addMessage(const std::string& fileName,
-                            int lineNumber,
-                            Log::MessageType messageType,
-                            const std::string& description) {
+                                int lineNumber,
+                                int64_t messageType,
+                                const std::string& description) {
 
     if (includeMessage( messageType )) {
         switch (messageType) {
-        case Log::Note:
+        case Log::MessageType::Note:
             ++m_numNotes;
             break;
 
-        case Log::Warning:
+        case Log::MessageType::Warning:
             ++m_numWarnings;
             break;
 
-        case Log::Error:
+        case Log::MessageType::Error:
             ++m_numErrors;
             break;
 
@@ -97,34 +97,32 @@ void MessageCounter::addMessage(const std::string& fileName,
     }
 }
 
-bool MessageCounter::addMessage(int64_t messageFlag , const std::string& message) {
-    if (includeMessage( messageFlag )) {
-        addMessage("???" , -1 , static_cast<Log::MessageType>(messageFlag) , message);
-        return true;
-    } else
-        return false;
+void MessageCounter::addMessage(int64_t messageType , const std::string& message) {
+    if (includeMessage( messageType ))
+        addMessage("???" , -1 , messageType , message);
 }
 
 
 
 
 void MessageCounter::addNote(const std::string& fileName,
-                        int lineNumber,
-                        const std::string& description) {
-    addMessage(fileName, lineNumber, Log::Note, description);
+                             int lineNumber,
+                             const std::string& description) {
+    addMessage(fileName, lineNumber, Log::MessageType::Note, description);
 }
 
 void MessageCounter::addWarning(const std::string& fileName,
-                           int lineNumber,
-                           const std::string& description) {
-    addMessage(fileName, lineNumber, Log::Warning, description);
+                                int lineNumber,
+                                const std::string& description) {
+    addMessage(fileName, lineNumber, Log::MessageType::Warning, description);
 }
 
 void MessageCounter::addError(const std::string& fileName,
-                         int lineNumber,
-                         const std::string& description) {
-    addMessage(fileName, lineNumber, Log::Error, description);
+                              int lineNumber,
+                              const std::string& description) {
+    addMessage(fileName, lineNumber, Log::MessageType::Error, description);
 }
+
 
 void MessageCounter::clear()
 {
@@ -155,7 +153,7 @@ int MessageCounter::getLineNumber(size_t msgIdx) const {
     return std::get<1>(m_messages[msgIdx]);
 }
 
-Log::MessageType MessageCounter::getMessageType(size_t msgIdx) const {
+int64_t MessageCounter::getMessageType(size_t msgIdx) const {
     assert(msgIdx < size());
     return std::get<2>(m_messages[msgIdx]);
 }
@@ -167,7 +165,7 @@ const std::string& MessageCounter::getDescription(size_t msgIdx) const {
 
 const std::string MessageCounter::getFormattedMessage(size_t msgIdx) const {
     const std::string& description = getDescription( msgIdx );
-    Log::MessageType messageType = getMessageType( msgIdx );
+    int64_t messageType = getMessageType( msgIdx );
     std::string prefixedMessage = Log::prefixMessage( messageType  , description);
     int lineNumber = getLineNumber(msgIdx);
 
@@ -185,10 +183,6 @@ void MessageCounter::printAll(std::ostream& os, size_t enabledTypes) const {
         if (enabledTypes & getMessageType(i))
             os << getFormattedMessage(i) << "\n";
 }
-
-void MessageCounter::close() {
-}
-
 
 
 } // namespace Opm
