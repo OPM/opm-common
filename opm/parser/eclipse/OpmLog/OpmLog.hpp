@@ -40,7 +40,9 @@ public:
 
     static bool hasBackend( const std::string& backendName );
     static void addBackend(const std::string& name , std::shared_ptr<LogBackend> backend);
-    
+    static bool enabledMessageType( int64_t messageType );
+    static void addMessageType( int64_t messageType , const std::string& prefix);
+
     template <class BackendType>
     static std::shared_ptr<BackendType> getBackend(const std::string& name) {
         auto logger = OpmLog::getLogger();

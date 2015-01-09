@@ -38,6 +38,18 @@ namespace Opm {
         logger->addMessage( messageFlag , message );
     }
 
+    /*****************************************************************/
+
+    bool OpmLog::enabledMessageType( int64_t messageType ) {
+        auto logger = OpmLog::getLogger();
+        return logger->enabledMessageType( messageType );
+    }
+
+    void OpmLog::addMessageType( int64_t messageType , const std::string& prefix) {
+        auto logger = OpmLog::getLogger();
+        logger->addMessageType( messageType , prefix );
+    }
+
 
     bool OpmLog::hasBackend(const std::string& name) {
         auto logger = OpmLog::getLogger();
