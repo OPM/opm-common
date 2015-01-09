@@ -71,6 +71,8 @@ namespace Opm {
 
 
 
+
+
     bool Logger::enabledMessageType( int64_t messageType) const {
         if (isPower2( messageType)) {
             if ((messageType & m_enabledTypes) == 0)

@@ -32,11 +32,24 @@ class Logger {
 public:
     Logger();
     void addMessage(int64_t messageType , const std::string& message) const;
-    void addBackend(const std::string& name , std::shared_ptr<LogBackend> backend);
-    bool hasBackend(const std::string& name);
 
     bool enabledMessageType( int64_t messageType) const;
     void addMessageType( int64_t messageType , const std::string& prefix);
+
+    void addBackend(const std::string& name , std::shared_ptr<LogBackend> backend);
+    bool hasBackend(const std::string& name);
+
+
+    template <class BackendType>
+    std::shared_ptr<BackendType> getBackend(const std::string& name) const {
+        auto pair = m_backends.find( name );
+        if (pair == m_backends.end())
+            throw std::invalid_argument("Invalid backend name: " + name);
+        else
+            return std::static_pointer_cast<BackendType>(m_backends.find(name)->second);
+    }
+
+
 private:
     void updateGlobalMask( int64_t mask );
 

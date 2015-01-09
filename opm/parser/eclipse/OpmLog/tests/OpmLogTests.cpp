@@ -81,11 +81,20 @@ BOOST_AUTO_TEST_CASE(Test_Logger) {
 
     logger.addMessage( Log::MessageType::Error , "Error");
     logger.addMessage( Log::MessageType::Warning , "Warning");
-    BOOST_CHECK_EQUAL( 1 , counter->numWarnings() );
-    BOOST_CHECK_EQUAL( 1 , counter->numErrors() );
-    BOOST_CHECK_EQUAL( 0 , counter->numNotes() );
+    BOOST_CHECK_EQUAL( 1U , counter->numWarnings() );
+    BOOST_CHECK_EQUAL( 1U , counter->numErrors() );
+    BOOST_CHECK_EQUAL( 0U , counter->numNotes() );
 
     BOOST_CHECK_EQUAL( log_stream.str() , "Warning\n");
+
+
+    BOOST_CHECK_THROW( logger.getBackend<LogBackend>("No") , std::invalid_argument );
+    {
+        auto counter2 = logger.getBackend<MessageCounter>("COUNTER");
+        BOOST_CHECK_EQUAL( 1U , counter2->numWarnings() );
+        BOOST_CHECK_EQUAL( 1U , counter2->numErrors() );
+        BOOST_CHECK_EQUAL( 0U , counter2->numNotes() );
+    }
 }
 
 
