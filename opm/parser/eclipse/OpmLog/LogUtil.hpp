@@ -25,14 +25,13 @@
 
 namespace Opm {
 namespace Log {
-
     namespace MessageType {
         const int64_t Note = 0x01;
         const int64_t Warning = 0x02;
         const int64_t Error = 0x04;
     }
 
-    const int64_t AllMessageTypes = 0xff;
+    const int64_t DefaultMessageTypes = MessageType::Note + MessageType::Warning + MessageType::Error;
 
     std::string fileMessage(const std::string& path, size_t line , const std::string& msg);
     std::string fileMessage(int64_t messageType , const std::string& path, size_t line , const std::string& msg);

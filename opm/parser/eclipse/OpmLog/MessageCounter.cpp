@@ -27,7 +27,7 @@
 
 
 namespace Opm {
-MessageCounter::MessageCounter() : LogBackend(Log::AllMessageTypes)
+MessageCounter::MessageCounter() : LogBackend(Log::DefaultMessageTypes)
 {
     m_numErrors = 0;
     m_numWarnings = 0;
@@ -36,7 +36,7 @@ MessageCounter::MessageCounter() : LogBackend(Log::AllMessageTypes)
     setOutStream(NULL);
 }
 
-MessageCounter::MessageCounter(std::ostream* os) : LogBackend(Log::AllMessageTypes)
+MessageCounter::MessageCounter(std::ostream* os) : LogBackend(Log::DefaultMessageTypes)
 {
     m_numErrors = 0;
     m_numWarnings = 0;

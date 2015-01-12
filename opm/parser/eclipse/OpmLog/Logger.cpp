@@ -70,7 +70,9 @@ namespace Opm {
     }
 
 
-
+    int64_t Logger::enabledMessageTypes() const {
+        return m_enabledTypes;
+    }
 
 
     bool Logger::enabledMessageType( int64_t messageType) const {

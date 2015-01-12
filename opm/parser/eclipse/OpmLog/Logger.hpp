@@ -35,6 +35,7 @@ public:
 
     bool enabledMessageType( int64_t messageType) const;
     void addMessageType( int64_t messageType , const std::string& prefix);
+    int64_t enabledMessageTypes() const;
 
     void addBackend(const std::string& name , std::shared_ptr<LogBackend> backend);
     bool hasBackend(const std::string& name);

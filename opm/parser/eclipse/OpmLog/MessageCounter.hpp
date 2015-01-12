@@ -94,7 +94,7 @@ public:
      * This is just another convenience method...
      */
     void printAll(std::ostream &os = std::cerr,
-                  size_t enabledTypes = Log::AllMessageTypes) const;
+                  size_t enabledTypes = Log::DefaultMessageTypes) const;
     ~MessageCounter() {};
 private:
     typedef std::tuple<std::string,

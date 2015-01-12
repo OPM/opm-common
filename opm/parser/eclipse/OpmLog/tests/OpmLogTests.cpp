@@ -115,9 +115,7 @@ BOOST_AUTO_TEST_CASE(LoggerAddTypes_PowerOf2) {
 
 BOOST_AUTO_TEST_CASE(LoggerDefaultTypesEnabled) {
     Logger logger;
-    BOOST_CHECK( logger.enabledMessageType( Log::MessageType::Error ));
-    BOOST_CHECK( logger.enabledMessageType( Log::MessageType::Warning ));
-    BOOST_CHECK( logger.enabledMessageType( Log::MessageType::Note ));
+    BOOST_CHECK_EQUAL( logger.enabledMessageTypes() , Log::DefaultMessageTypes);
 }
 
 /*****************************************************************/
