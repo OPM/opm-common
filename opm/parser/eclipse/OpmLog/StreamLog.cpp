@@ -45,8 +45,12 @@ void StreamLog::close() {
 }
 
 void StreamLog::addMessage(int64_t messageType , const std::string& message) {
-    if (includeMessage( messageType ))
+    if (includeMessage( messageType )) {
         (*m_ostream) << message << std::endl;
+
+        if (m_ofstream.is_open())
+            m_ofstream.flush();
+    }
 }
 
 
