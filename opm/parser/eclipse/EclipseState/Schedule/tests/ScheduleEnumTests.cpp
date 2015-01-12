@@ -36,6 +36,7 @@ BOOST_AUTO_TEST_CASE(TestCompletionStateEnumFromString) {
     BOOST_CHECK_THROW( WellCompletion::StateEnumFromString("XXX") , std::invalid_argument );
     BOOST_CHECK_EQUAL( WellCompletion::AUTO , WellCompletion::StateEnumFromString("AUTO"));
     BOOST_CHECK_EQUAL( WellCompletion::SHUT , WellCompletion::StateEnumFromString("SHUT"));
+    BOOST_CHECK_EQUAL( WellCompletion::SHUT , WellCompletion::StateEnumFromString("STOP"));
     BOOST_CHECK_EQUAL( WellCompletion::OPEN , WellCompletion::StateEnumFromString("OPEN"));
 }
 

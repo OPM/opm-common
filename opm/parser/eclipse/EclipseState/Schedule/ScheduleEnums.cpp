@@ -91,6 +91,8 @@ namespace Opm {
                 return OPEN;
             else if (stringValue == "SHUT")
                 return SHUT;
+            else if (stringValue == "STOP")
+                return SHUT;
             else if (stringValue == "AUTO")
                 return AUTO;
             else
