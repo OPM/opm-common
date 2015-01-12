@@ -37,15 +37,15 @@ namespace Opm {
         StatusEnum StatusFromString(const std::string& stringValue);
     }
 
+    namespace WellCompletion {
 
-    enum CompletionStateEnum {
-        OPEN = 1,
-        SHUT = 2,
-        AUTO = 3
-    };
+        enum StateEnum {
+            OPEN = 1,
+            SHUT = 2,
+            AUTO = 3
+        };
 
 
-    namespace CompletionDirection {
         enum DirectionEnum {
             X = 1,
             Y = 2,
@@ -54,7 +54,10 @@ namespace Opm {
 
         std::string   DirectionEnum2String(const DirectionEnum enumValue);
         DirectionEnum DirectionEnumFromString(const std::string& stringValue);
-    } // namespace CompletionDirection
+
+        const std::string StateEnum2String( StateEnum enumValue );
+        StateEnum StateEnumFromString( const std::string& stringValue );
+    }
 
 
     namespace Phase {
@@ -200,9 +203,6 @@ namespace Opm {
         const std::string GuideRatePhaseEnum2String( GuideRatePhaseEnum enumValue );
         GuideRatePhaseEnum GuideRatePhaseEnumFromString( const std::string& stringValue );
     }
-
-    const std::string CompletionStateEnum2String( CompletionStateEnum enumValue );
-    CompletionStateEnum CompletionStateEnumFromString( const std::string& stringValue );
 
 
 }

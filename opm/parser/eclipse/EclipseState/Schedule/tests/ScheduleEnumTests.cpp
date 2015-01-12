@@ -26,29 +26,29 @@
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(TestCompletionStateEnum2String) {
-    BOOST_CHECK_EQUAL( "AUTO" , CompletionStateEnum2String(AUTO));
-    BOOST_CHECK_EQUAL( "OPEN" , CompletionStateEnum2String(OPEN));
-    BOOST_CHECK_EQUAL( "SHUT" , CompletionStateEnum2String(SHUT));
+    BOOST_CHECK_EQUAL( "AUTO" , WellCompletion::StateEnum2String(WellCompletion::AUTO));
+    BOOST_CHECK_EQUAL( "OPEN" , WellCompletion::StateEnum2String(WellCompletion::OPEN));
+    BOOST_CHECK_EQUAL( "SHUT" , WellCompletion::StateEnum2String(WellCompletion::SHUT));
 }
 
 
 BOOST_AUTO_TEST_CASE(TestCompletionStateEnumFromString) {
-    BOOST_CHECK_THROW( CompletionStateEnumFromString("XXX") , std::invalid_argument );
-    BOOST_CHECK_EQUAL( AUTO , CompletionStateEnumFromString("AUTO"));
-    BOOST_CHECK_EQUAL( SHUT , CompletionStateEnumFromString("SHUT"));
-    BOOST_CHECK_EQUAL( OPEN , CompletionStateEnumFromString("OPEN"));
+    BOOST_CHECK_THROW( WellCompletion::StateEnumFromString("XXX") , std::invalid_argument );
+    BOOST_CHECK_EQUAL( WellCompletion::AUTO , WellCompletion::StateEnumFromString("AUTO"));
+    BOOST_CHECK_EQUAL( WellCompletion::SHUT , WellCompletion::StateEnumFromString("SHUT"));
+    BOOST_CHECK_EQUAL( WellCompletion::OPEN , WellCompletion::StateEnumFromString("OPEN"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(TestCompletionStateEnumLoop) {
-    BOOST_CHECK_EQUAL( AUTO , CompletionStateEnumFromString( CompletionStateEnum2String( AUTO ) ));
-    BOOST_CHECK_EQUAL( SHUT , CompletionStateEnumFromString( CompletionStateEnum2String( SHUT ) ));
-    BOOST_CHECK_EQUAL( OPEN , CompletionStateEnumFromString( CompletionStateEnum2String( OPEN ) ));
+    BOOST_CHECK_EQUAL( WellCompletion::AUTO , WellCompletion::StateEnumFromString( WellCompletion::StateEnum2String( WellCompletion::AUTO ) ));
+    BOOST_CHECK_EQUAL( WellCompletion::SHUT , WellCompletion::StateEnumFromString( WellCompletion::StateEnum2String( WellCompletion::SHUT ) ));
+    BOOST_CHECK_EQUAL( WellCompletion::OPEN , WellCompletion::StateEnumFromString( WellCompletion::StateEnum2String( WellCompletion::OPEN ) ));
 
-    BOOST_CHECK_EQUAL( "AUTO" , CompletionStateEnum2String(CompletionStateEnumFromString(  "AUTO" ) ));
-    BOOST_CHECK_EQUAL( "OPEN" , CompletionStateEnum2String(CompletionStateEnumFromString(  "OPEN" ) ));
-    BOOST_CHECK_EQUAL( "SHUT" , CompletionStateEnum2String(CompletionStateEnumFromString(  "SHUT" ) ));
+    BOOST_CHECK_EQUAL( "AUTO" , WellCompletion::StateEnum2String(WellCompletion::StateEnumFromString(  "AUTO" ) ));
+    BOOST_CHECK_EQUAL( "OPEN" , WellCompletion::StateEnum2String(WellCompletion::StateEnumFromString(  "OPEN" ) ));
+    BOOST_CHECK_EQUAL( "SHUT" , WellCompletion::StateEnum2String(WellCompletion::StateEnumFromString(  "SHUT" ) ));
 }
 
 
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(TestCompletionStateEnumLoop) {
 
 BOOST_AUTO_TEST_CASE(TestCompletionDirectionEnum2String)
 {
-    using namespace CompletionDirection;
+    using namespace WellCompletion;
 
     BOOST_CHECK_EQUAL("X", DirectionEnum2String(DirectionEnum::X));
     BOOST_CHECK_EQUAL("Y", DirectionEnum2String(DirectionEnum::Y));
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(TestCompletionDirectionEnum2String)
 
 BOOST_AUTO_TEST_CASE(TestCompletionDirectionEnumFromString)
 {
-    using namespace CompletionDirection;
+    using namespace WellCompletion;
 
     BOOST_CHECK_THROW(DirectionEnumFromString("XXX"), std::invalid_argument);
 
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(TestCompletionDirectionEnumFromString)
 
 BOOST_AUTO_TEST_CASE(TestCompletionDirectionEnumLoop)
 {
-    using namespace CompletionDirection;
+    using namespace WellCompletion;
 
     BOOST_CHECK_EQUAL(DirectionEnum::X, DirectionEnumFromString(DirectionEnum2String(DirectionEnum::X)));
     BOOST_CHECK_EQUAL(DirectionEnum::Y, DirectionEnumFromString(DirectionEnum2String(DirectionEnum::Y)));

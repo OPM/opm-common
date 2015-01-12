@@ -35,23 +35,23 @@ namespace Opm {
 
     class Completion {
     public:
-        Completion(int i, int j , int k , CompletionStateEnum state ,
+        Completion(int i, int j , int k , WellCompletion::StateEnum state ,
                    const Value<double>& connectionTransmissibilityFactor,
                    const Value<double>& diameter,
                    const Value<double>& skinFactor,
-                   const CompletionDirection::DirectionEnum direction = CompletionDirection::DirectionEnum::Z);
+                   const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z);
 
         bool sameCoordinate(const Completion& other) const;
         int getI() const;
         int getJ() const;
         int getK() const;
-        CompletionStateEnum getState() const;
+        WellCompletion::StateEnum getState() const;
         double getConnectionTransmissibilityFactor() const;
         double getDiameter() const;
         double getSkinFactor() const;
         void   fixDefaultIJ(int wellHeadI , int wellHeadJ);
 
-        CompletionDirection::DirectionEnum getDirection() const;
+        WellCompletion::DirectionEnum getDirection() const;
 
         static std::map<std::string , std::vector<std::shared_ptr<Completion> > >  completionsFromCOMPDATKeyword( DeckKeywordConstPtr compdatKeyword );
         static std::pair<std::string , std::vector<std::shared_ptr<Completion> > > completionsFromCOMPDATRecord( DeckRecordConstPtr compdatRecord );
@@ -61,8 +61,8 @@ namespace Opm {
         Value<double> m_diameter;
         Value<double> m_connectionTransmissibilityFactor;
         Value<double> m_skinFactor;
-        CompletionStateEnum m_state;
-        CompletionDirection::DirectionEnum m_direction;
+        WellCompletion::StateEnum m_state;
+        WellCompletion::DirectionEnum m_direction;
     };
 
     typedef std::shared_ptr<Completion> CompletionPtr;
