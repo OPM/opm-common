@@ -389,7 +389,7 @@ namespace Opm {
     void Schedule::handleWELOPEN(DeckKeywordConstPtr keyword, ParserLogPtr /*parserLog*/, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
-//record->getItem(i)->hasValue(0);
+            record->getItem(1)->hasValue(0);
             bool haveCompletionData = false;
             for (size_t i=2; i<7; i++) {
                 if (record->getItem(i)->getInt(0) > -1 ) {
@@ -418,37 +418,48 @@ namespace Opm {
                     Opm::Value<int> C1("C1", record->getItem("C1")->getInt(0));
                     Opm::Value<int> C2("C2", record->getItem("C2")->getInt(0));
 
-                    size_t completionSize = newCompletionSet->size();
+                    size_t completionSize = currentCompletionSet->size();
 
                     for(size_t i = 0; i < completionSize;i++) {
 
+                        CompletionConstPtr completion = currentCompletionSet->get(i);
+
                         if (C1.hasValue()) {
                             if (i < (size_t) C1.getValue()) {
+                                newCompletionSet->add(completion);
                                 continue;
                             }
                         }
                         if (C2.hasValue()) {
                             if (i > (size_t) C2.getValue()) {
-                                break;
+                                newCompletionSet->add(completion);
+                                continue;
                             }
                         }
 
-                        CompletionConstPtr completion = currentCompletionSet->get(i);
+
                         int ci = completion->getI();
                         int cj = completion->getJ();
                         int ck = completion->getK();
-
-                        if ((I.hasValue() && (!(I.getValue() < 1) || !(I.getValue() == ci)))) {
+                        /*
+                        bool t1 = I.hasValue();
+                        bool t2 = (!(I.getValue() < 1));
+                        bool t3 = (I.getValue() == ci);
+                        bool t4 = I.getValue()!=0;
+                        bool t5 = t3 && t4;
+                        bool t6 = t2 || t5;
+                        */
+                        if ((I.hasValue() && (!(I.getValue() < 1) || (!(I.getValue() == ci) && I.getValue()!=0)))) {
                             newCompletionSet->add(completion);
                             continue;
                         }
 
-                        if ((J.hasValue() && (!(J.getValue() < 1) || !(J.getValue() == cj)))) {
+                        if ((J.hasValue() && (!(J.getValue() < 1) || !(J.getValue() == cj) && I.getValue()!=0))) {
                             newCompletionSet->add(completion);
                             continue;
                         }
 
-                        if ((K.hasValue() && (!(K.getValue() < 1) || !(K.getValue() == ck)))) {
+                        if ((K.hasValue() && (!(K.getValue() < 1) || !(K.getValue() == ck) && I.getValue()!=0))) {
                             newCompletionSet->add(completion);
                             continue;
                         }
