@@ -389,7 +389,7 @@ namespace Opm {
     void Schedule::handleWELOPEN(DeckKeywordConstPtr keyword, ParserLogPtr /*parserLog*/, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            record->getItem(1)->hasValue(0);
+            //record->getItem(1)->hasValue(0);
             bool haveCompletionData = false;
             for (size_t i=2; i<7; i++) {
                 if (record->getItem(i)->getInt(0) > -1 ) {
