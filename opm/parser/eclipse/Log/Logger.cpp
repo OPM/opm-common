@@ -16,14 +16,16 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "ParserLog.hpp"
-
 #include <stdexcept>
 #include <sstream>
 #include <cassert>
 
+#include <opm/parser/eclipse/Log/Logger.hpp>
+
+
+
 namespace Opm {
-ParserLog::ParserLog() {
+Logger::Logger() {
     m_numErrors = 0;
     m_numWarnings = 0;
     m_numNotes = 0;
@@ -31,7 +33,7 @@ ParserLog::ParserLog() {
     setOutStream(NULL);
 }
 
-ParserLog::ParserLog(std::ostream* os) {
+Logger::Logger(std::ostream* os) {
     m_numErrors = 0;
     m_numWarnings = 0;
     m_numNotes = 0;
@@ -39,27 +41,27 @@ ParserLog::ParserLog(std::ostream* os) {
     setOutStream(os);
 }
 
-void ParserLog::setOutStream(std::ostream* os) {
+void Logger::setOutStream(std::ostream* os) {
     m_outStream = os;
 }
 
-size_t ParserLog::size() const {
+size_t Logger::size() const {
     return m_messages.size();
 }
 
-size_t ParserLog::numErrors() const {
+size_t Logger::numErrors() const {
     return m_numErrors;
 }
 
-size_t ParserLog::numWarnings() const {
+size_t Logger::numWarnings() const {
     return m_numWarnings;
 }
 
-size_t ParserLog::numNotes() const {
+size_t Logger::numNotes() const {
     return m_numNotes;
 }
 
-void ParserLog::addMessage(const std::string& fileName,
+void Logger::addMessage(const std::string& fileName,
                            int lineNumber,
                            MessageType messageType,
                            const std::string& description) {
@@ -88,25 +90,25 @@ void ParserLog::addMessage(const std::string& fileName,
     }
 }
 
-void ParserLog::addNote(const std::string& fileName,
+void Logger::addNote(const std::string& fileName,
                         int lineNumber,
                         const std::string& description) {
     addMessage(fileName, lineNumber, Note, description);
 }
 
-void ParserLog::addWarning(const std::string& fileName,
+void Logger::addWarning(const std::string& fileName,
                            int lineNumber,
                            const std::string& description) {
     addMessage(fileName, lineNumber, Warning, description);
 }
 
-void ParserLog::addError(const std::string& fileName,
+void Logger::addError(const std::string& fileName,
                          int lineNumber,
                          const std::string& description) {
     addMessage(fileName, lineNumber, Error, description);
 }
 
-void ParserLog::clear()
+void Logger::clear()
 {
     m_numErrors = 0;
     m_numWarnings = 0;
@@ -115,7 +117,7 @@ void ParserLog::clear()
     m_messages.clear();
 }
 
-void ParserLog::append(const ParserLog &other)
+void Logger::append(const Logger &other)
 {
     for (size_t i = 0; i < other.size(); ++i) {
         addMessage(other.getFileName(i),
@@ -125,27 +127,27 @@ void ParserLog::append(const ParserLog &other)
     }
 }
 
-const std::string& ParserLog::getFileName(size_t msgIdx) const {
+const std::string& Logger::getFileName(size_t msgIdx) const {
     assert(msgIdx < size());
     return std::get<0>(m_messages[msgIdx]);
 }
 
-int ParserLog::getLineNumber(size_t msgIdx) const {
+int Logger::getLineNumber(size_t msgIdx) const {
     assert(msgIdx < size());
     return std::get<1>(m_messages[msgIdx]);
 }
 
-ParserLog::MessageType ParserLog::getMessageType(size_t msgIdx) const {
+Logger::MessageType Logger::getMessageType(size_t msgIdx) const {
     assert(msgIdx < size());
     return std::get<2>(m_messages[msgIdx]);
 }
 
-const std::string& ParserLog::getDescription(size_t msgIdx) const {
+const std::string& Logger::getDescription(size_t msgIdx) const {
     assert(msgIdx < size());
     return std::get<3>(m_messages[msgIdx]);
 }
 
-const std::string ParserLog::getFormattedMessage(size_t msgIdx) const {
+const std::string Logger::getFormattedMessage(size_t msgIdx) const {
     std::ostringstream oss;
     if (getLineNumber(msgIdx) > 0) {
         oss << getFileName(msgIdx) << ":"
@@ -167,7 +169,7 @@ const std::string ParserLog::getFormattedMessage(size_t msgIdx) const {
     return oss.str();
 }
 
-void ParserLog::printAll(std::ostream& os, size_t enabledTypes) const {
+void Logger::printAll(std::ostream& os, size_t enabledTypes) const {
     for (size_t i = 0; i < size(); ++i)
         if (enabledTypes & getMessageType(i))
             os << getFormattedMessage(i) << "\n";

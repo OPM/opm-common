@@ -16,8 +16,8 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPM_PARSER_LOG_HPP
-#define OPM_PARSER_LOG_HPP
+#ifndef OPM_LOGGER_HPP
+#define OPM_LOGGER_HPP
 
 #include <iostream>
 #include <string>
@@ -30,7 +30,7 @@ namespace Opm {
  * \brief Provides a simple sytem for log message which are found by the
  *        Parser/Deck/EclipseState classes during processing the deck.
  */
-class ParserLog {
+class Logger {
 public:
     enum MessageType {
         Note = 0x01,
@@ -40,8 +40,8 @@ public:
 
     static const int AllMessageTypes = 0xff;
 
-    ParserLog();
-    ParserLog(std::ostream* os);
+    Logger();
+    Logger(std::ostream* os);
 
     void setOutStream(std::ostream* os);
 
@@ -71,7 +71,7 @@ public:
     const std::string& getDescription(size_t msgIdx) const;
 
     void clear();
-    void append(const ParserLog &other);
+    void append(const Logger &other);
 
     /*!
      * \brief This method takes the information provided by the methods above and returns
@@ -107,8 +107,8 @@ private:
     mutable std::ostream* m_outStream;
 };
 
-typedef std::shared_ptr<ParserLog> ParserLogPtr;
-typedef std::shared_ptr<const ParserLog> ParserLogConstPtr;
+typedef std::shared_ptr<Logger> LoggerPtr;
+typedef std::shared_ptr<const Logger> LoggerConstPtr;
 } // namespace Opm
 
 #endif

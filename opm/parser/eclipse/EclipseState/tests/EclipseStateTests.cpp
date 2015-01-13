@@ -38,16 +38,6 @@
 
 using namespace Opm;
 
-/*
-  There is something fishy with the tests involving grid property post
-  processors. It seems that halfways through the test suddenly the
-  adress of a EclipseState object from a previous test is used; this
-  leads to segmentation fault. The problem is 'solved' by having
-  running this test first.
-
-  An issue has been posted on Stackoverflow: questions/26275555
-
-*/
 
 static DeckPtr createDeckTOP() {
     const char *deckData =
@@ -97,8 +87,8 @@ static DeckPtr createDeckTOP() {
 
 BOOST_AUTO_TEST_CASE(GetPOROTOPBased) {
     DeckPtr deck = createDeckTOP();
-    ParserLogPtr parserLog(new ParserLog());
-    EclipseState state(deck, parserLog);
+    LoggerPtr logger(new Logger());
+    EclipseState state(deck, logger);
 
     std::shared_ptr<GridProperty<double> > poro = state.getDoubleGridProperty( "PORO" );
     std::shared_ptr<GridProperty<double> > permx = state.getDoubleGridProperty( "PERMX" );
@@ -224,12 +214,12 @@ BOOST_AUTO_TEST_CASE(IntProperties) {
 
 BOOST_AUTO_TEST_CASE(PropertiesNotSupportedThrows) {
     DeckPtr deck = createDeck();
-    ParserLogPtr parserLog(new ParserLog());
+    LoggerPtr logger(new Logger());
     EclipseState state(deck);
     DeckKeywordConstPtr swat = deck->getKeyword("SWAT");
     BOOST_CHECK_EQUAL( false , state.supportsGridProperty("SWAT"));
-    state.loadGridPropertyFromDeckKeyword(std::make_shared<const Box>(10,10,10), swat, parserLog);
-    BOOST_CHECK(parserLog->numErrors() > 0);
+    state.loadGridPropertyFromDeckKeyword(std::make_shared<const Box>(10,10,10), swat, logger);
+    BOOST_CHECK(logger->numErrors() > 0);
 }
 
 

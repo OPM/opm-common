@@ -18,12 +18,14 @@
  */
 
 #include <iostream>
+#include <opm/parser/eclipse/Log/Logger.hpp>
+
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParserLog.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 
-static void printDeckDiagnostics(Opm::DeckConstPtr deck, Opm::ParserLogConstPtr parserLog, bool printAllKeywords) {
+static void printDeckDiagnostics(Opm::DeckConstPtr deck, Opm::LoggerConstPtr logger, bool printAllKeywords) {
     int recognizedKeywords = 0;
     int unrecognizedKeywords = 0;
 
@@ -38,11 +40,11 @@ static void printDeckDiagnostics(Opm::DeckConstPtr deck, Opm::ParserLogConstPtr 
         }
     }
     {
-        for (size_t iw = 0; iw < parserLog->size(); iw++) {
-            std::cout << parserLog->getFormattedMessage(iw) << "\n";
+        for (size_t iw = 0; iw < logger->size(); iw++) {
+            std::cout << logger->getFormattedMessage(iw) << "\n";
         }
     }
-    std::cout << "Total number of log messages:    " << parserLog->size() << std::endl;
+    std::cout << "Total number of log messages:    " << logger->size() << std::endl;
     std::cout << "Number of recognized keywords:   " << recognizedKeywords << std::endl;
     std::cout << "Number of unrecognized keywords: " << unrecognizedKeywords << std::endl;
     std::cout << "Total number of keywords:        " << deck->size() << std::endl;
@@ -66,10 +68,11 @@ int main(int argc, char** argv) {
 
     Opm::ParserPtr parser(new Opm::Parser());
     std::string file = argv[1];
-    Opm::ParserLogPtr parserLog(new Opm::ParserLog);
-    Opm::DeckConstPtr deck = parser->parseFile(file, true, parserLog);
+    Opm::LoggerPtr logger(new Opm::Logger);
+    Opm::DeckConstPtr deck = parser->parseFile(file, logger);
+    Opm::EclipseState state(deck);
 
-    printDeckDiagnostics(deck, parserLog, printKeywords);
+    printDeckDiagnostics(deck, logger, printKeywords);
 
     return 0;
 }

@@ -19,8 +19,9 @@
 
 #include <memory>
 
+#include <opm/parser/eclipse/Log/Logger.hpp>
+
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParserLog.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
 #include <opm/parser/eclipse/RawDeck/RawEnums.hpp>
@@ -31,7 +32,7 @@ namespace Opm {
 
     struct ParserState {
         DeckPtr deck;
-        ParserLog parserLog;
+        Logger logger;
         boost::filesystem::path dataFile;
         boost::filesystem::path rootPath;
         std::map<std::string, std::string> pathMap;
@@ -39,11 +40,9 @@ namespace Opm {
         size_t lineNR;
         std::shared_ptr<std::istream> inputstream;
         RawKeywordPtr rawKeyword;
-        bool strictParsing;
         std::string nextKeyword;
-        ParserState(const boost::filesystem::path &inputDataFile, DeckPtr deckToFill, const boost::filesystem::path &commonRootPath, bool useStrictParsing) {
+        ParserState(const boost::filesystem::path &inputDataFile, DeckPtr deckToFill, const boost::filesystem::path &commonRootPath) {
             lineNR = 0;
-            strictParsing = useStrictParsing;
             dataFile = inputDataFile;
             deck = deckToFill;
             rootPath = commonRootPath;
@@ -61,18 +60,16 @@ namespace Opm {
             }
         }
 
-        ParserState(const std::string &inputData, DeckPtr deckToFill, bool useStrictParsing) {
+        ParserState(const std::string &inputData, DeckPtr deckToFill) {
             lineNR = 0;
-            strictParsing = useStrictParsing;
             dataFile = "";
             deck = deckToFill;
             initSuccessful = true;
             inputstream.reset(new std::istringstream(inputData));
         }
 
-        ParserState(std::shared_ptr<std::istream> inputStream, DeckPtr deckToFill, bool useStrictParsing) {
+        ParserState(std::shared_ptr<std::istream> inputStream, DeckPtr deckToFill) {
             lineNR = 0;
-            strictParsing = useStrictParsing;
             dataFile = "";
             deck = deckToFill;
             initSuccessful = true;
@@ -93,9 +90,9 @@ namespace Opm {
      is retained in the current implementation.
      */
 
-    DeckPtr Parser::parseFile(const std::string &dataFileName, bool strictParsing, ParserLogPtr parserLog) const {
+    DeckPtr Parser::parseFile(const std::string &dataFileName, LoggerPtr logger) const {
 
-        std::shared_ptr<ParserState> parserState(new ParserState(dataFileName, DeckPtr(new Deck()), getRootPathFromFile(dataFileName), strictParsing));
+        std::shared_ptr<ParserState> parserState(new ParserState(dataFileName, DeckPtr(new Deck()), getRootPathFromFile(dataFileName)));
 
         // warn if the file we'd like to parse does not exist or is not readable
         if (!parserState->initSuccessful)
@@ -104,33 +101,33 @@ namespace Opm {
         parseState(parserState);
         applyUnitsToDeck(parserState->deck);
 
-        if (parserLog)
-            *parserLog = parserState->parserLog;
+        if (logger)
+            *logger = parserState->logger;
 
         return parserState->deck;
     }
 
-    DeckPtr Parser::parseString(const std::string &data, bool strictParsing, ParserLogPtr parserLog) const {
+    DeckPtr Parser::parseString(const std::string &data, LoggerPtr logger) const {
 
-        std::shared_ptr<ParserState> parserState(new ParserState(data, DeckPtr(new Deck()), strictParsing));
+        std::shared_ptr<ParserState> parserState(new ParserState(data, DeckPtr(new Deck())));
 
         parseState(parserState);
         applyUnitsToDeck(parserState->deck);
 
-        if (parserLog)
-            *parserLog = parserState->parserLog;
+        if (logger)
+            *logger = parserState->logger;
 
         return parserState->deck;
     }
 
-    DeckPtr Parser::parseStream(std::shared_ptr<std::istream> inputStream, bool strictParsing, ParserLogPtr parserLog) const {
-        std::shared_ptr<ParserState> parserState(new ParserState(inputStream, DeckPtr(new Deck()), strictParsing));
+    DeckPtr Parser::parseStream(std::shared_ptr<std::istream> inputStream, LoggerPtr logger) const {
+        std::shared_ptr<ParserState> parserState(new ParserState(inputStream, DeckPtr(new Deck())));
 
         parseState(parserState);
         applyUnitsToDeck(parserState->deck);
 
-        if (parserLog)
-            *parserLog = parserState->parserLog;
+        if (logger)
+            *logger = parserState->logger;
 
         return parserState->deck;
     }
@@ -257,7 +254,6 @@ namespace Opm {
     }
 
     bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
-        bool verbose = false;
         bool stopParsing = false;
 
         if (parserState->inputstream) {
@@ -284,18 +280,14 @@ namespace Opm {
                         std::string includeFileAsString = readValueToken<std::string>(firstRecord->getItem(0));
                         boost::filesystem::path includeFile = getIncludeFilePath(parserState, includeFileAsString);
 
-                        if (verbose)
-                            std::cout << parserState->rawKeyword->getKeywordName() << "  " << includeFile << std::endl;
 
-                        std::shared_ptr<ParserState> newParserState (new ParserState(includeFile.string(), parserState->deck, parserState->rootPath, parserState->strictParsing));
+                        std::shared_ptr<ParserState> newParserState (new ParserState(includeFile.string(), parserState->deck, parserState->rootPath));
                         if (!newParserState->initSuccessful)
                             throw std::invalid_argument("Included file '" + includeFile.string() + "' does not exist or is not readable.");
 
                         stopParsing = parseState(newParserState);
                         if (stopParsing) break;
                     } else {
-                        if (verbose)
-                            std::cout << parserState->rawKeyword->getKeywordName() << std::endl;
 
                         if (isRecognizedKeyword(parserState->rawKeyword->getKeywordName())) {
                             ParserKeywordConstPtr parserKeyword = getParserKeywordFromDeckName(parserState->rawKeyword->getKeywordName());
@@ -305,15 +297,15 @@ namespace Opm {
                                 deckKeyword->setParserKeyword(parserKeyword);
                                 parserState->deck->addKeyword(deckKeyword);
                             } else if (action == IGNORE_WARNING)
-                                parserState->parserLog.addWarning(parserState->dataFile.string(),
-                                                                  parserState->rawKeyword->getLineNR(),
-                                                                  "The keyword " + parserState->rawKeyword->getKeywordName() + " is ignored - this might potentially affect the results");
+                                parserState->logger.addWarning(parserState->dataFile.string(),
+                                                               parserState->rawKeyword->getLineNR(),
+                                                               "The keyword " + parserState->rawKeyword->getKeywordName() + " is ignored - this might potentially affect the results");
                         } else {
                             DeckKeywordPtr deckKeyword(new DeckKeyword(parserState->rawKeyword->getKeywordName(), false));
-			    deckKeyword->setLocation(parserState->rawKeyword->getFilename(),
-						     parserState->rawKeyword->getLineNR());
+                            deckKeyword->setLocation(parserState->rawKeyword->getFilename(),
+                                                     parserState->rawKeyword->getLineNR());
                             parserState->deck->addKeyword(deckKeyword);
-                            parserState->parserLog.addWarning(parserState->dataFile.string(),
+                            parserState->logger.addWarning(parserState->dataFile.string(),
                                                               parserState->rawKeyword->getLineNR(),
                                                               "The keyword " + parserState->rawKeyword->getKeywordName() + " is not recognized");
                         }
@@ -376,13 +368,8 @@ namespace Opm {
                 }
                 return RawKeywordPtr(new RawKeyword(keywordString, parserState->dataFile.string() , parserState->lineNR , targetSize , parserKeyword->isTableCollection()));
             }
-        } else {
-            if (parserState->strictParsing) {
-                throw std::invalid_argument("Keyword " + keywordString + " not recognized ");
-            } else {
-                return RawKeywordPtr(new RawKeyword(keywordString, parserState->dataFile.string(), parserState->lineNR , 0));
-            }
-        }
+        } else
+           throw std::invalid_argument("Keyword " + keywordString + " not recognized ");
     }
 
 
@@ -400,11 +387,24 @@ namespace Opm {
             parserState->nextKeyword = "";
         }
 
+        if (parserState->rawKeyword && parserState->rawKeyword->isFinished())
+            return true;
+
         while (std::getline(*parserState->inputstream, line)) {
+            // remove comments. note that this is a bit too simplistic as it fails when
+            //  having '--' in strings. _nobody_ does this, though ;)...
+            int commentPos = line.find("--");
+            line = line.substr(0, commentPos);
+
             boost::algorithm::trim_right(line); // Removing garbage (eg. \r)
             line = doSpecialHandlingForTitleKeyword(line, parserState);
             std::string keywordString;
             parserState->lineNR++;
+
+            // skip empty lines
+            if (line.size() == 0)
+                continue;
+
             if (parserState->rawKeyword == NULL) {
                 if (RawKeyword::isKeywordPrefix(line, keywordString)) {
                     parserState->rawKeyword = createRawKeyword(keywordString, parserState);
@@ -417,16 +417,22 @@ namespace Opm {
                         return true;
                     }
                 }
-                if (RawKeyword::useLine(line)) {
-                    parserState->rawKeyword->addRawRecordString(line);
-                }
+                parserState->rawKeyword->addRawRecordString(line);
+                line = "";
             }
 
-            if (parserState->rawKeyword != NULL && parserState->rawKeyword->isFinished())
+            if (parserState->rawKeyword
+                && parserState->rawKeyword->isFinished()
+                && parserState->rawKeyword->getSizeType() != Raw::UNKNOWN)
+            {
                 return true;
+            }
         }
-        if (parserState->rawKeyword && parserState->rawKeyword->getSizeType() == Raw::UNKNOWN)
+        if (parserState->rawKeyword
+            && parserState->rawKeyword->getSizeType() == Raw::UNKNOWN)
+        {
             parserState->rawKeyword->finalizeUnknownSize();
+        }
 
         return false;
     }

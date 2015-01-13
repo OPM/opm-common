@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE( parse_TITLE_OK ) {
     ParserPtr parser(new Parser());
     boost::filesystem::path fileWithTitleKeyword("testdata/integration_tests/TITLE/TITLE1.txt");
 
-    DeckPtr deck = parser->parseFile (fileWithTitleKeyword.string(), true);
+    DeckPtr deck = parser->parseFile(fileWithTitleKeyword.string());
 
     BOOST_CHECK_EQUAL(size_t(2), deck->size());
     BOOST_CHECK_EQUAL (true, deck->hasKeyword("TITLE"));

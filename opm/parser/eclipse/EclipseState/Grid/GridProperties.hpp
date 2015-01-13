@@ -76,6 +76,19 @@ public:
         return m_properties.at( keyword );
     }
 
+
+    std::shared_ptr<GridProperty<T> > getInitializedKeyword(const std::string& keyword) {
+        if (hasKeyword(keyword))
+            return m_properties.at( keyword );
+        else {
+            if (supportsKeyword(keyword))
+                throw std::invalid_argument("Keyword: " + keyword + " is supported - but not initialized.");
+            else
+                throw std::invalid_argument("Keyword: " + keyword + " is not supported.");
+        }
+    }
+
+
     bool addKeyword(const std::string& keywordName) {
         if (!supportsKeyword( keywordName ))
             throw std::invalid_argument("The keyword: " + keywordName + " is not supported in this container");

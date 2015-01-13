@@ -46,3 +46,20 @@ add_executable(runFaultTests FaultTests.cpp)
 target_link_libraries(runFaultTests Parser ${Boost_LIBRARIES})
 add_test(NAME runFaultTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runFaultTests )
 
+
+add_executable(runEqualRegTests EqualRegTests.cpp)
+target_link_libraries(runEqualRegTests Parser ${Boost_LIBRARIES})
+add_test(NAME runEqualRegTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runEqualRegTests )
+
+add_executable(runMultiRegTests MultiRegTests.cpp)
+target_link_libraries(runMultiRegTests Parser ${Boost_LIBRARIES})
+add_test(NAME runMultiRegTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runMultiRegTests )
+
+add_executable(runADDREGTests ADDREGTests.cpp)
+target_link_libraries(runADDREGTests Parser ${Boost_LIBRARIES})
+add_test(NAME runADDREGTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runADDREGTests )
+
+add_executable(runCopyRegTests CopyRegTests.cpp)
+target_link_libraries(runCopyRegTests Parser ${Boost_LIBRARIES})
+add_test(NAME runCopyRegTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runCopyRegTests )
+

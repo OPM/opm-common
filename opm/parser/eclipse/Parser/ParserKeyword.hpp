@@ -172,8 +172,8 @@ namespace Opm {
         void initSizeKeyword(const Json::JsonObject& sizeObject);
         void commonInit(const std::string& name, ParserKeywordSizeEnum sizeType , ParserKeywordActionEnum action);
         void addItems( const Json::JsonObject& jsonConfig);
-        static void initDoubleItemDimension( ParserDoubleItemPtr item, const Json::JsonObject itemConfig);
-        static void initFloatItemDimension( ParserFloatItemPtr item, const Json::JsonObject itemConfig);
+        void initDoubleItemDimension( ParserDoubleItemPtr item, const Json::JsonObject itemConfig);
+        void initFloatItemDimension( ParserFloatItemPtr item, const Json::JsonObject itemConfig);
     };
 }
 

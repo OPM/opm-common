@@ -42,6 +42,8 @@ namespace Opm {
         void push_back(std::deque<double> data);
         void push_back(double value);
         void push_backDefault(double value);
+        // trying to access the data of a "dummy default item" will raise an exception
+        void push_backDummyDefault();
         void push_backMultiple(double value, size_t numValues);
         void push_backDimension(std::shared_ptr<const Dimension> activeDimension , std::shared_ptr<const Dimension> defaultDimension);
 

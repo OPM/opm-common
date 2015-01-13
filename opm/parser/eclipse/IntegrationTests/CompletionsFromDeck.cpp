@@ -57,16 +57,16 @@ BOOST_AUTO_TEST_CASE( CreateCompletionsFromRecord ) {
         BOOST_CHECK_EQUAL( 29 , completion0->getI() );
         BOOST_CHECK_EQUAL( 36 , completion0->getJ() );
         BOOST_CHECK_EQUAL( 0  , completion0->getK() );
-        BOOST_CHECK_EQUAL( OPEN  , completion0->getState() );
+        BOOST_CHECK_EQUAL( WellCompletion::OPEN  , completion0->getState() );
         BOOST_CHECK_EQUAL(  3.8134259259259256e-12 , completion0->getConnectionTransmissibilityFactor() );
-        BOOST_CHECK_EQUAL( Opm::CompletionDirection::DirectionEnum::X, completion0->getDirection() );
+        BOOST_CHECK_EQUAL( WellCompletion::DirectionEnum::X, completion0->getDirection() );
 
         BOOST_CHECK_EQUAL( 29 , completion2->getI() );
         BOOST_CHECK_EQUAL( 36 , completion2->getJ() );
         BOOST_CHECK_EQUAL( 2  , completion2->getK() );
-        BOOST_CHECK_EQUAL( OPEN  , completion2->getState() );
+        BOOST_CHECK_EQUAL( WellCompletion::OPEN  , completion2->getState() );
         BOOST_CHECK_EQUAL( 3.8134259259259256e-12  , completion2->getConnectionTransmissibilityFactor() );
-        BOOST_CHECK_EQUAL( Opm::CompletionDirection::DirectionEnum::X, completion2->getDirection() );
+        BOOST_CHECK_EQUAL( WellCompletion::DirectionEnum::X, completion2->getDirection() );
     }
 
     {
@@ -110,16 +110,16 @@ BOOST_AUTO_TEST_CASE( CreateCompletionsFromKeyword ) {
     BOOST_CHECK_EQUAL( 30     , completion0->getI() );
     BOOST_CHECK_EQUAL( 17     , completion0->getJ() );
     BOOST_CHECK_EQUAL( 0      , completion0->getK() );
-    BOOST_CHECK_EQUAL( OPEN   , completion0->getState() );
+    BOOST_CHECK_EQUAL( WellCompletion::OPEN   , completion0->getState() );
     BOOST_CHECK_EQUAL( 3.1726851851851847e-12 , completion0->getConnectionTransmissibilityFactor() );
-    BOOST_CHECK_EQUAL( Opm::CompletionDirection::DirectionEnum::Y, completion0->getDirection() );
+    BOOST_CHECK_EQUAL( WellCompletion::DirectionEnum::Y, completion0->getDirection() );
 
     BOOST_CHECK_EQUAL( 30     , completion4->getI() );
     BOOST_CHECK_EQUAL( 16     , completion4->getJ() );
     BOOST_CHECK_EQUAL( 3      , completion4->getK() );
-    BOOST_CHECK_EQUAL( OPEN   , completion4->getState() );
+    BOOST_CHECK_EQUAL( WellCompletion::OPEN   , completion4->getState() );
     BOOST_CHECK_EQUAL( 5.4722222222222212e-13 , completion4->getConnectionTransmissibilityFactor() );
-    BOOST_CHECK_EQUAL( Opm::CompletionDirection::DirectionEnum::Y, completion4->getDirection() );
+    BOOST_CHECK_EQUAL( WellCompletion::DirectionEnum::Y, completion4->getDirection() );
 }
 
 

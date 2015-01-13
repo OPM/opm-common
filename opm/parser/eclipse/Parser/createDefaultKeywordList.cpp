@@ -215,9 +215,10 @@ static void scanKeyword(const boost::filesystem::path& file , KeywordMapType& ke
     Json::JsonObject * jsonKeyword;
     try {
         jsonKeyword = new Json::JsonObject(file);
-    } catch(...) {
-        std::cerr << "Parsing json config file: " << file.string() << " failed - keyword skipped." << std::endl;
-        return;
+    } catch(const std::exception& e) {
+        std::cerr << "Parsing JSON keyword definition from file '" << file.string() << "' failed: "
+                  << e.what() << "\n";
+        std::exit(1);
     }
 
     {

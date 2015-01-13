@@ -46,6 +46,7 @@ namespace Opm {
         void inlineNew(std::ostream& os) const;
 
         int  getDefault() const;
+        bool hasDefault() const;
         void setDefault(int defaultValue);
     private:
         int  m_default;

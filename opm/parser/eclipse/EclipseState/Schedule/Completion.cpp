@@ -23,11 +23,11 @@
 
 namespace Opm {
 
-    Completion::Completion(int i, int j , int k , CompletionStateEnum state ,
+    Completion::Completion(int i, int j , int k , WellCompletion::StateEnum state ,
                            const Value<double>& connectionTransmissibilityFactor,
                            const Value<double>& diameter,
                            const Value<double>& skinFactor,
-                           const CompletionDirection::DirectionEnum direction)
+                           const WellCompletion::DirectionEnum direction)
         : m_i(i), m_j(j), m_k(k),
           m_diameter(diameter),
           m_connectionTransmissibilityFactor(connectionTransmissibilityFactor),
@@ -61,7 +61,7 @@ namespace Opm {
         int J = compdatRecord->getItem("J")->getInt(0) - 1;
         int K1 = compdatRecord->getItem("K1")->getInt(0) - 1;
         int K2 = compdatRecord->getItem("K2")->getInt(0) - 1;
-        CompletionStateEnum state = CompletionStateEnumFromString( compdatRecord->getItem("STATE")->getTrimmedString(0) );
+        WellCompletion::StateEnum state = WellCompletion::StateEnumFromString( compdatRecord->getItem("STATE")->getTrimmedString(0) );
         Value<double> connectionTransmissibilityFactor("ConnectionTransmissibilityFactor");
         Value<double> diameter("Diameter");
         Value<double> skinFactor("SkinFactor");
@@ -74,11 +74,14 @@ namespace Opm {
             if (!connectionTransmissibilityFactorItem->defaultApplied(0))
                 connectionTransmissibilityFactor.setValue(connectionTransmissibilityFactorItem->getSIDouble(0));
 
-            diameter.setValue( diameterItem->getSIDouble(0));
-            skinFactor.setValue( skinFactorItem->getRawDouble(0));
+            if (diameterItem->hasValue(0))
+                diameter.setValue( diameterItem->getSIDouble(0));
+
+            if (skinFactorItem->hasValue(0))
+                skinFactor.setValue( skinFactorItem->getRawDouble(0));
         }
 
-        const CompletionDirection::DirectionEnum& direction = CompletionDirection::DirectionEnumFromString(compdatRecord->getItem("DIR")->getTrimmedString(0));
+        const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnumFromString(compdatRecord->getItem("DIR")->getTrimmedString(0));
 
         for (int k = K1; k <= K2; k++) {
             CompletionPtr completion(new Completion(I , J , k , state , connectionTransmissibilityFactor, diameter, skinFactor, direction ));
@@ -140,7 +143,7 @@ namespace Opm {
         return m_k;
     }
 
-    CompletionStateEnum Completion::getState() const {
+    WellCompletion::StateEnum Completion::getState() const {
         return m_state;
     }
 
@@ -156,7 +159,7 @@ namespace Opm {
         return m_skinFactor.getValue();
     }
 
-    CompletionDirection::DirectionEnum Completion::getDirection() const {
+    WellCompletion::DirectionEnum Completion::getDirection() const {
         return m_direction;
     }
 }

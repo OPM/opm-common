@@ -71,7 +71,9 @@ BOOST_AUTO_TEST_CASE(Initialize_DefaultSizeType) {
 BOOST_AUTO_TEST_CASE(Initialize_Default) {
     ParserIntItem item1(std::string("ITEM1"));
     ParserIntItem item2(std::string("ITEM1"), 88);
-    BOOST_CHECK(item1.getDefault() < 0);
+    BOOST_CHECK(!item1.hasDefault());
+    BOOST_CHECK_THROW(item1.getDefault(), std::invalid_argument);
+    BOOST_CHECK(item2.hasDefault());
     BOOST_CHECK_EQUAL(item2.getDefault(), 88);
 }
 
@@ -79,37 +81,41 @@ BOOST_AUTO_TEST_CASE(Initialize_Default) {
 BOOST_AUTO_TEST_CASE(Initialize_Default_Double) {
     ParserDoubleItem item1(std::string("ITEM1"));
     ParserDoubleItem item2("ITEM1",  88.91);
-    BOOST_CHECK(!std::isfinite(item1.getDefault()));
+    BOOST_CHECK(!item1.hasDefault());
+    BOOST_CHECK_THROW(item1.getDefault(), std::invalid_argument);
     BOOST_CHECK_EQUAL( 88.91 , item2.getDefault());
 }
 
 BOOST_AUTO_TEST_CASE(Initialize_Default_Float) {
     ParserFloatItem item1(std::string("ITEM1"));
     ParserFloatItem item2("ITEM1",  88.91F);
-    BOOST_CHECK(!std::isfinite(item1.getDefault()));
+
+    BOOST_CHECK(!item1.hasDefault());
+    BOOST_CHECK_THROW(item1.getDefault(), std::invalid_argument);
+
+    BOOST_CHECK(item2.hasDefault());
     BOOST_CHECK_EQUAL( 88.91F , item2.getDefault());
 }
 
 
 BOOST_AUTO_TEST_CASE(Initialize_Default_String) {
     ParserStringItem item1(std::string("ITEM1"));
-    BOOST_CHECK(item1.getDefault() == "");
+    BOOST_CHECK(!item1.hasDefault());
+    BOOST_CHECK_THROW(item1.getDefault(), std::invalid_argument);
 
     ParserStringItem item2("ITEM1",  "String");
+    BOOST_CHECK(item2.hasDefault());
     BOOST_CHECK_EQUAL( "String" , item2.getDefault());
 }
 
 BOOST_AUTO_TEST_CASE(scan_PreMatureTerminator_defaultUsed) {
-    ParserIntItem itemInt(std::string("ITEM2"));
+    ParserIntItem itemInt(std::string("ITEM2"), 123);
 
     RawRecordPtr rawRecord1(new RawRecord("/"));
     DeckItemConstPtr defaulted = itemInt.scan(rawRecord1);
-    // an item is always present even if the record was ended. If the deck specified no
-    // data and the item does not have a meaningful default, the item gets assigned a NaN
-    // (for float and double items), -1 (for integer items) and "" (for string items)
-    // whit the defaultApplied(0) method returning true...
+
     BOOST_CHECK(defaulted->defaultApplied(0));
-    BOOST_CHECK(defaulted->getInt(0) < 0);
+    BOOST_CHECK_EQUAL(defaulted->getInt(0), 123);
 }
 
 BOOST_AUTO_TEST_CASE(InitializeIntItem_setDescription_canReadBack) {

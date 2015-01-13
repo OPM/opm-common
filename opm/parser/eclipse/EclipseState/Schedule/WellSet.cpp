@@ -38,7 +38,7 @@ namespace Opm {
         if (hasWell(wellName))
             return m_wells.find(wellName)->second;
         else
-            throw std::invalid_argument("Does not have this well?!\n");
+            throw std::invalid_argument("Do not have well '"+wellName+"'?!\n");
     }
 
 
@@ -55,7 +55,7 @@ namespace Opm {
         if (hasWell(wellName))
             m_wells.erase( wellName );
         else
-            throw std::invalid_argument("Does not have this well?");
+            throw std::invalid_argument("Cannot delete unknown well '"+wellName+"'");
     }
 
 

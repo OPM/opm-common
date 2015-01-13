@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE( parse_END_OK ) {
     ParserPtr parser(new Parser());
     boost::filesystem::path fileWithTitleKeyword("testdata/integration_tests/END/END1.txt");
 
-    DeckPtr deck = parser->parseFile (fileWithTitleKeyword.string(), true);
+    DeckPtr deck = parser->parseFile(fileWithTitleKeyword.string());
 
     BOOST_CHECK_EQUAL(size_t(1), deck->size());
     BOOST_CHECK_EQUAL (true, deck->hasKeyword("OIL"));
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE( parse_ENDINC_OK ) {
     ParserPtr parser(new Parser());
     boost::filesystem::path fileWithTitleKeyword("testdata/integration_tests/END/ENDINC1.txt");
 
-    DeckPtr deck = parser->parseFile (fileWithTitleKeyword.string(), true);
+    DeckPtr deck = parser->parseFile(fileWithTitleKeyword.string());
 
     BOOST_CHECK_EQUAL(size_t(1), deck->size());
     BOOST_CHECK_EQUAL (true, deck->hasKeyword("OIL"));

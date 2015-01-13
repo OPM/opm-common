@@ -26,31 +26,78 @@
 
 namespace Opm {
 
-    const std::string CompletionStateEnum2String( CompletionStateEnum enumValue ) {
-        switch( enumValue ) {
-        case OPEN:
-            return "OPEN";
-        case AUTO:
-            return "AUTO";
-        case SHUT:
-            return "SHUT";
-        default:
-          throw std::invalid_argument("Unhandled enum value");
+    namespace WellCompletion {
+
+        std::string
+        DirectionEnum2String(const DirectionEnum enumValue)
+        {
+            std::string stringValue;
+
+            switch (enumValue) {
+            case DirectionEnum::X:
+                stringValue = "X";
+                break;
+
+            case DirectionEnum::Y:
+                stringValue = "Y";
+                break;
+
+            case DirectionEnum::Z:
+                stringValue = "Z";
+                break;
+            }
+
+            return stringValue;
         }
-    }
+
+        DirectionEnum
+        DirectionEnumFromString(const std::string& stringValue)
+        {
+            std::string s(stringValue);
+            boost::algorithm::trim(s);
+
+            DirectionEnum direction;
+
+            if      (s == "X") { direction = DirectionEnum::X; }
+            else if (s == "Y") { direction = DirectionEnum::Y; }
+            else if (s == "Z") { direction = DirectionEnum::Z; }
+            else {
+                std::string msg = "Unsupported completion direction " + s;
+                throw std::invalid_argument(msg);
+            }
+
+            return direction;
+        }
 
 
-    CompletionStateEnum CompletionStateEnumFromString( const std::string& origStringValue ) {
-        std::string stringValue(origStringValue);
-        boost::algorithm::trim(stringValue);
-        if (stringValue == "OPEN")
-            return OPEN;
-        else if (stringValue == "SHUT")
-            return SHUT;
-        else if (stringValue == "AUTO")
-            return AUTO;
-        else
-            throw std::invalid_argument("Unknown enum state string: " + stringValue );
+        const std::string StateEnum2String( StateEnum enumValue ) {
+            switch( enumValue ) {
+            case OPEN:
+                return "OPEN";
+            case AUTO:
+                return "AUTO";
+            case SHUT:
+                return "SHUT";
+            default:
+                throw std::invalid_argument("Unhandled enum value");
+            }
+        }
+
+
+        StateEnum StateEnumFromString( const std::string& origStringValue ) {
+            std::string stringValue(origStringValue);
+            boost::algorithm::trim(stringValue);
+            if (stringValue == "OPEN")
+                return OPEN;
+            else if (stringValue == "SHUT")
+                return SHUT;
+            else if (stringValue == "STOP")
+                return SHUT;
+            else if (stringValue == "AUTO")
+                return AUTO;
+            else
+                throw std::invalid_argument("Unknown enum state string: " + stringValue );
+        }
     }
 
     /*****************************************************************/
@@ -449,47 +496,4 @@ namespace Opm {
         }
     }
 
-
-    namespace CompletionDirection {
-        std::string
-        DirectionEnum2String(const DirectionEnum enumValue)
-        {
-            std::string stringValue;
-
-            switch (enumValue) {
-            case DirectionEnum::X:
-                stringValue = "X";
-                break;
-
-            case DirectionEnum::Y:
-                stringValue = "Y";
-                break;
-
-            case DirectionEnum::Z:
-                stringValue = "Z";
-                break;
-            }
-
-            return stringValue;
-        }
-
-        DirectionEnum
-        DirectionEnumFromString(const std::string& stringValue)
-        {
-            std::string s(stringValue);
-            boost::algorithm::trim(s);
-
-            DirectionEnum direction;
-
-            if      (s == "X") { direction = DirectionEnum::X; }
-            else if (s == "Y") { direction = DirectionEnum::Y; }
-            else if (s == "Z") { direction = DirectionEnum::Z; }
-            else {
-                std::string msg = "Unsupported completion direction " + s;
-                throw std::invalid_argument(msg);
-            }
-
-            return direction;
-        }
-    } // namespace CompletionDirection
 }

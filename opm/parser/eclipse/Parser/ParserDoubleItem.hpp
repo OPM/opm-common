@@ -51,6 +51,8 @@ namespace Opm {
         void inlineNew(std::ostream& os) const;
         void setDefault(double defaultValue);
         double getDefault() const;
+        bool hasDefault() const;
+
         size_t dimensionSize() const;
 
     private:

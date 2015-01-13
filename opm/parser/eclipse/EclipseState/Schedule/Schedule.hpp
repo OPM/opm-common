@@ -19,6 +19,8 @@
 #ifndef SCHEDULE_HPP
 #define SCHEDULE_HPP
 
+#include <opm/parser/eclipse/Log/Logger.hpp>
+
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
@@ -26,7 +28,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Parser/ParserLog.hpp>
 
 #include <memory>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -40,7 +41,7 @@ namespace Opm
 
     class Schedule {
     public:
-        Schedule(DeckConstPtr deck, ParserLogPtr parserLog=std::make_shared<ParserLog>());
+        Schedule(DeckConstPtr deck, LoggerPtr logger=std::make_shared<Logger>());
         boost::posix_time::ptime getStartTime() const
         { return m_timeMap->getStartTime(/*timeStepIdx=*/0); }
         TimeMapConstPtr getTimeMap() const;
@@ -67,29 +68,29 @@ namespace Opm
         std::shared_ptr<DynamicState<GroupTreePtr> > m_rootGroupTree;
 
         void addWellToGroup( GroupPtr newGroup , WellPtr well , size_t timeStep);
-        void initFromDeck(DeckConstPtr deck, ParserLogPtr parserLog);
-        void createTimeMap(DeckConstPtr deck, ParserLogPtr parserLog);
+        void initFromDeck(DeckConstPtr deck, LoggerPtr logger);
+        void createTimeMap(DeckConstPtr deck, LoggerPtr logger);
         void initRootGroupTreeNode(TimeMapConstPtr timeMap);
-        void iterateScheduleSection(DeckConstPtr deck, ParserLogPtr parserLog);
+        void iterateScheduleSection(DeckConstPtr deck, LoggerPtr logger);
         bool handleGroupFromWELSPECS(const std::string& groupName, GroupTreePtr newTree) const;
         void addGroup(const std::string& groupName , size_t timeStep);
         void addWell(const std::string& wellName, DeckRecordConstPtr record, size_t timeStep);
-        void checkWELSPECSConsistency(WellConstPtr well, DeckKeywordConstPtr keyword, size_t recordIdx, ParserLogPtr parserLog) const;
-        void handleWELSPECS(DeckKeywordConstPtr keyword, ParserLogPtr parserLog, size_t currentStep);
-        void handleWCONProducer(DeckKeywordConstPtr keyword, ParserLogPtr parserLog, size_t currentStep, bool isPredictionMode);
-        void handleWCONHIST(DeckKeywordConstPtr keyword, ParserLogPtr parserLog, size_t currentStep);
-        void handleWCONPROD(DeckKeywordConstPtr keyword, ParserLogPtr parserLog, size_t currentStep);
-        void handleWGRUPCON(DeckKeywordConstPtr keyword, ParserLogPtr parserLog, size_t currentStep);
-        void handleCOMPDAT(DeckKeywordConstPtr keyword, ParserLogPtr parserLog, size_t currentStep);
-        void handleWCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, ParserLogPtr parserLog, size_t currentStep);
-        void handleWPOLYMER(DeckKeywordConstPtr keyword, ParserLogPtr parserLog, size_t currentStep);
-        void handleWCONINJH(DeckConstPtr deck, DeckKeywordConstPtr keyword, ParserLogPtr parserLog, size_t currentStep);
-        void handleWELOPEN(DeckKeywordConstPtr keyword, ParserLogPtr parserLog, size_t currentStep);
-        void handleGCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, ParserLogPtr parserLog, size_t currentStep);
-        void handleGCONPROD(DeckKeywordConstPtr keyword, ParserLogPtr parserLog, size_t currentStep);
-        void handleDATES(DeckKeywordConstPtr keyword, ParserLogPtr parserLog);
-        void handleTSTEP(DeckKeywordConstPtr keyword, ParserLogPtr parserLog);
-        void handleGRUPTREE(DeckKeywordConstPtr keyword, ParserLogPtr parserLog, size_t currentStep);
+        void checkWELSPECSConsistency(WellConstPtr well, DeckKeywordConstPtr keyword, size_t recordIdx, LoggerPtr logger) const;
+        void handleWELSPECS(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep);
+        void handleWCONProducer(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep, bool isPredictionMode);
+        void handleWCONHIST(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep);
+        void handleWCONPROD(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep);
+        void handleWGRUPCON(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep);
+        void handleCOMPDAT(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep);
+        void handleWCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep);
+        void handleWPOLYMER(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep);
+        void handleWCONINJH(DeckConstPtr deck, DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep);
+        void handleWELOPEN(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep);
+        void handleGCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep);
+        void handleGCONPROD(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep);
+        void handleDATES(DeckKeywordConstPtr keyword, LoggerPtr logger);
+        void handleTSTEP(DeckKeywordConstPtr keyword, LoggerPtr logger);
+        void handleGRUPTREE(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep);
 
         double convertInjectionRateToSI(double rawRate, WellInjector::TypeEnum wellType, const Opm::UnitSystem &unitSystem) const;
         double convertInjectionRateToSI(double rawRate, Phase::PhaseEnum wellPhase, const Opm::UnitSystem &unitSystem) const;

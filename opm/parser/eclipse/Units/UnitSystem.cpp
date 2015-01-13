@@ -154,6 +154,7 @@ namespace Opm {
         system->addDimension("Time"      , Metric::Time );
         system->addDimension("Mass"         , Metric::Mass );
         system->addDimension("Permeability", Metric::Permeability );
+        system->addDimension("Transmissibility", Metric::Transmissibility );
         system->addDimension("GasDissolutionFactor", Metric::GasDissolutionFactor);
         system->addDimension("OilDissolutionFactor", Metric::OilDissolutionFactor);
         system->addDimension("LiquidVolume", Metric::LiquidVolume );
@@ -178,6 +179,7 @@ namespace Opm {
         system->addDimension("Time" , Field::Time);
         system->addDimension("Mass", Field::Mass);
         system->addDimension("Permeability", Field::Permeability );
+        system->addDimension("Transmissibility", Field::Transmissibility );
         system->addDimension("GasDissolutionFactor" , Field::GasDissolutionFactor);
         system->addDimension("OilDissolutionFactor", Field::OilDissolutionFactor);
         system->addDimension("LiquidVolume", Field::LiquidVolume );

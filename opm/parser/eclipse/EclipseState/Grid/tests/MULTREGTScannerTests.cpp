@@ -25,6 +25,14 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include <opm/parser/eclipse/Log/Logger.hpp>
+
+#include <opm/parser/eclipse/Parser/Parser.hpp>
+
+#include <opm/parser/eclipse/Deck/Section.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -32,12 +40,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
-#include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParserLog.hpp>
 
-#include <opm/parser/eclipse/Deck/Section.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 
 
@@ -232,6 +235,6 @@ static Opm::DeckPtr createCopyMULTNUMDeck() {
 
 BOOST_AUTO_TEST_CASE(MULTREGT_COPY_MULTNUM) {
     Opm::DeckPtr deck = createCopyMULTNUMDeck();
-    Opm::ParserLogPtr parserLog(new Opm::ParserLog());
-    BOOST_CHECK_NO_THROW( Opm::EclipseState( deck, parserLog ));
+    Opm::LoggerPtr logger(new Opm::Logger());
+    BOOST_CHECK_NO_THROW( Opm::EclipseState( deck, logger ));
 }

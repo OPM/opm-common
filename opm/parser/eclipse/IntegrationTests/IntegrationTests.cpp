@@ -203,17 +203,9 @@ BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_dataiscorrect) {
 
 
 /***************** Testing non-recognized keywords ********************/
-BOOST_AUTO_TEST_CASE(parse_unknownkeywordWithnonstrictparsing_keywordmarked) {
+BOOST_AUTO_TEST_CASE(parse_unknownkeyword_exceptionthrown) {
     ParserPtr parser(new Parser());
-    DeckPtr deck =  parser->parseFile("testdata/integration_tests/someobscureelements.data", false);
-    BOOST_CHECK_EQUAL(4U, deck->size());
-    DeckKeywordConstPtr unknown = deck->getKeyword("GRUDINT");
-    BOOST_CHECK(!unknown->isKnown());
-}
-
-BOOST_AUTO_TEST_CASE(parse_unknownkeywordWithstrictparsing_exceptionthrown) {
-    ParserPtr parser(new Parser());
-    BOOST_CHECK_THROW( parser->parseFile("testdata/integration_tests/someobscureelements.data", true), std::invalid_argument);
+    BOOST_CHECK_THROW( parser->parseFile("testdata/integration_tests/someobscureelements.data"), std::invalid_argument);
 }
 
 /*********************Testing truncated (default) records ***************************/
@@ -223,27 +215,28 @@ BOOST_AUTO_TEST_CASE(parse_unknownkeywordWithstrictparsing_exceptionthrown) {
 BOOST_AUTO_TEST_CASE(parse_truncatedrecords_deckFilledWithDefaults) {
     ParserPtr parser(new Parser());
     DeckPtr deck =  parser->parseFile("testdata/integration_tests/truncated_records.data");
-    BOOST_CHECK_EQUAL(4U, deck->size());
+    BOOST_CHECK_EQUAL(3U, deck->size());
     DeckKeywordConstPtr radfin4_0_full= deck->getKeyword("RADFIN4", 0);
     DeckKeywordConstPtr radfin4_1_partial= deck->getKeyword("RADFIN4", 1);
-    DeckKeywordConstPtr radfin4_2_nodata= deck->getKeyword("RADFIN4", 2);
 
     // Specified in datafile
     BOOST_CHECK_EQUAL("NAME", radfin4_0_full->getRecord(0)->getItem(0)->getString(0));
     BOOST_CHECK_EQUAL("NAME", radfin4_1_partial->getRecord(0)->getItem(0)->getString(0));
-    // Default string
-
-    BOOST_CHECK_NO_THROW(radfin4_2_nodata->getRecord(0)->getItem(0)->getString(0));
-    BOOST_CHECK( radfin4_2_nodata->getRecord(0)->getItem(0)->defaultApplied(0));
-
 
     // Specified in datafile
     BOOST_CHECK_EQUAL(213, radfin4_0_full->getRecord(0)->getItem(1)->getInt(0));
     BOOST_CHECK_EQUAL(213, radfin4_1_partial->getRecord(0)->getItem(1)->getInt(0));
-    // Default int
-    BOOST_CHECK_NO_THROW( radfin4_2_nodata->getRecord(0)->getItem(1)->getInt(0));
-    BOOST_CHECK( radfin4_2_nodata->getRecord(0)->getItem(1)->defaultApplied(0));
 
+    const auto record_0 = radfin4_0_full->getRecord(0);
+    const auto lastItem_0 = record_0->getItem(record_0->size() - 1);
+    BOOST_CHECK(!lastItem_0->defaultApplied(0));
+    BOOST_CHECK_EQUAL(lastItem_0->getInt(0), 18);
+
+    const auto record_1 = radfin4_1_partial->getRecord(0);
+    const auto lastItem_1 = record_1->getItem(record_1->size() - 1);
+    BOOST_CHECK_EQUAL(213, radfin4_1_partial->getRecord(0)->getItem(1)->getInt(0));
+    BOOST_CHECK(lastItem_1->defaultApplied(0));
+    BOOST_CHECK_EQUAL(lastItem_1->getInt(0), 1);
 
     ParserKeywordConstPtr parserKeyword = parser->getParserKeywordFromDeckName("RADFIN4");
     ParserRecordConstPtr parserRecord = parserKeyword->getRecord();
@@ -252,6 +245,4 @@ BOOST_AUTO_TEST_CASE(parse_truncatedrecords_deckFilledWithDefaults) {
 
     BOOST_CHECK_EQUAL(18, radfin4_0_full->getRecord(0)->getItem(10)->getInt(0));
     BOOST_CHECK_EQUAL(intItem->getDefault(), radfin4_1_partial->getRecord(0)->getItem(10)->getInt(0));
-    BOOST_CHECK_EQUAL(intItem->getDefault(), radfin4_2_nodata->getRecord(0)->getItem(10)->getInt(0));
-
 }

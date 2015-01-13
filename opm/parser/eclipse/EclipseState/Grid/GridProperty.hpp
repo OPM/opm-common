@@ -205,7 +205,9 @@ public:
         iset(g,value);
     }
 
-    bool containsNaN();
+    bool containsNaN() const;
+
+    const std::string& getDimensionString() const;
 
     void multiplyWith(const GridProperty<T>& other) {
         if ((m_nx == other.m_nx) && (m_ny == other.m_ny) && (m_nz == other.m_nz)) {
@@ -223,6 +225,52 @@ public:
     const std::vector<T>& getData() const {
         return m_data;
     }
+
+
+    void maskedSet(T value, const std::vector<bool>& mask) {
+        for (size_t g = 0; g < getCartesianSize(); g++) {
+            if (mask[g])
+                m_data[g] = value;
+        }
+    }
+
+
+    void maskedMultiply(T value, const std::vector<bool>& mask) {
+        for (size_t g = 0; g < getCartesianSize(); g++) {
+            if (mask[g])
+                m_data[g] *= value;
+        }
+    }
+    
+
+    void maskedAdd(T value, const std::vector<bool>& mask) {
+        for (size_t g = 0; g < getCartesianSize(); g++) {
+            if (mask[g])
+                m_data[g] += value;
+        }
+    }
+
+
+    void maskedCopy(const GridProperty<T>& other, const std::vector<bool>& mask) {
+        for (size_t g = 0; g < getCartesianSize(); g++) {
+            if (mask[g])
+                m_data[g] = other.m_data[g];
+        }
+    }
+
+
+
+    void initMask(T value, std::vector<bool>& mask) {
+        mask.resize(getCartesianSize());
+        for (size_t g = 0; g < getCartesianSize(); g++) {
+            if (m_data[g] == value)
+                mask[g] = true;
+            else
+                mask[g] = false;
+        }
+    }
+
+
 
     /**
        Due to the convention where it is only neceassary to supply the
@@ -350,8 +398,6 @@ public:
             postProcessor->apply( m_data );
         }
     }
-
-
 
 
 private:
