@@ -304,12 +304,15 @@ static DeckPtr createDeckWithWellsAndCompletionDataWithWELOPEN() {
                     " 'OP_1' SHUT / \n"
                     " '*'    OPEN 0 0 3 / \n"
                     " 'OP_2' SHUT 0 0 0 4 6 / \n "
+                    " 'OP_3' SHUT 0 0 0 / \n"
                     "/\n"
                     "DATES             -- 4\n"
                     " 10  JUL 2008 / \n"
                     "/\n"
                     "WELOPEN\n"
+                    " 'OP_1' OPEN / \n"
                     " 'OP_2' OPEN 0 0 0 4 6 / \n "
+                    " 'OP_3' OPEN 0 0 0 / \n"
                     "/\n";
 
     return parser.parseString(input);
@@ -330,32 +333,58 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndCompletionDataWithWELOPEN) {
 
     size_t index = 3;
     CompletionConstPtr completion = completionSet->get(index);
-    BOOST_CHECK_EQUAL(CompletionStateEnum::OPEN, completion->getState());
+    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::SHUT, completion->getState());
     index = 4;
     completion = completionSet->get(index);
-    BOOST_CHECK_EQUAL(CompletionStateEnum::SHUT, completion->getState());
+    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::SHUT, completion->getState());
     index = 5;
     completion = completionSet->get(index);
-    BOOST_CHECK_EQUAL(CompletionStateEnum::SHUT, completion->getState());
+    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::SHUT, completion->getState());
     index = 6;
     completion = completionSet->get(index);
-    BOOST_CHECK_EQUAL(CompletionStateEnum::SHUT, completion->getState());
+    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::OPEN, completion->getState());
 
     currentStep = 4;
     completionSet = well->getCompletions(currentStep);
     index = 3;
     completion = completionSet->get(index);
-    BOOST_CHECK_EQUAL(CompletionStateEnum::OPEN, completion->getState());
+    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::OPEN, completion->getState());
     index = 4;
     completion = completionSet->get(index);
-    BOOST_CHECK_EQUAL(CompletionStateEnum::OPEN, completion->getState());
+    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::OPEN, completion->getState());
     index = 5;
     completion = completionSet->get(index);
-    BOOST_CHECK_EQUAL(CompletionStateEnum::OPEN, completion->getState());
+    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::OPEN, completion->getState());
     index = 6;
     completion = completionSet->get(index);
-    BOOST_CHECK_EQUAL(CompletionStateEnum::OPEN, completion->getState());
+    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::OPEN, completion->getState());
+
+    well = schedule.getWell("OP_3");
+    currentStep = 3;
+    completionSet = well->getCompletions(currentStep);
+
+    index = 0;
+    completion = completionSet->get(index);
+    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::SHUT, completion->getState());
+
+    currentStep = 4;
+    completionSet = well->getCompletions(currentStep);
+
+    index = 0;
+    completion = completionSet->get(index);
+    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::OPEN, completion->getState());
+
+
+    well = schedule.getWell("OP_1");
+    currentStep = 0;
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well->getStatus(currentStep));
+
 
 }
+
+
+
+
+
 
 
