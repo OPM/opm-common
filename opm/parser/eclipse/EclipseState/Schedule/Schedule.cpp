@@ -28,6 +28,7 @@
 #include <string>
 #include <vector>
 
+
 namespace Opm {
 
     Schedule::Schedule(DeckConstPtr deck, ParserLogPtr parserLog) {
@@ -388,16 +389,95 @@ namespace Opm {
     void Schedule::handleWELOPEN(DeckKeywordConstPtr keyword, ParserLogPtr /*parserLog*/, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            const std::string& wellName = record->getItem("WELL")->getTrimmedString(0);
-            WellPtr well = getWell(wellName);
-
+//record->getItem(i)->hasValue(0);
+            bool haveCompletionData = false;
             for (size_t i=2; i<7; i++) {
-                if (record->getItem(i)->getInt(0) > 0 ) {
-                    throw std::logic_error("Error processing WELOPEN keyword, specifying specific connections is not supported yet.");
+                if (record->getItem(i)->getInt(0) > -1 ) {
+                    haveCompletionData = true;
+                    break;
                 }
             }
+
+
+            const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
+            const std::vector<WellPtr>& wells = getWells(wellNamePattern);
+
             WellCommon::StatusEnum status = WellCommon::StatusFromString( record->getItem("STATUS")->getTrimmedString(0));
-            well->setStatus(currentStep, status);
+
+            for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
+                WellPtr well = *wellIter;
+
+                if(haveCompletionData){
+                    CompletionSetConstPtr currentCompletionSet = well->getCompletions(currentStep);
+
+                    CompletionSetPtr newCompletionSet(new CompletionSet( ));
+
+                    Opm::Value<int> I("I", record->getItem("I")->getInt(0));
+                    Opm::Value<int> J("J", record->getItem("J")->getInt(0));
+                    Opm::Value<int> K("K", record->getItem("K")->getInt(0));
+                    Opm::Value<int> C1("C1", record->getItem("C1")->getInt(0));
+                    Opm::Value<int> C2("C2", record->getItem("C2")->getInt(0));
+
+                    size_t completionSize = newCompletionSet->size();
+
+                    for(size_t i = 0; i < completionSize;i++) {
+
+                        if (C1.hasValue()) {
+                            if (i < (size_t) C1.getValue()) {
+                                continue;
+                            }
+                        }
+                        if (C2.hasValue()) {
+                            if (i > (size_t) C2.getValue()) {
+                                break;
+                            }
+                        }
+
+                        CompletionConstPtr completion = currentCompletionSet->get(i);
+                        int ci = completion->getI();
+                        int cj = completion->getJ();
+                        int ck = completion->getK();
+
+                        if ((I.hasValue() && (!(I.getValue() < 1) || !(I.getValue() == ci)))) {
+                            newCompletionSet->add(completion);
+                            continue;
+                        }
+
+                        if ((J.hasValue() && (!(J.getValue() < 1) || !(J.getValue() == cj)))) {
+                            newCompletionSet->add(completion);
+                            continue;
+                        }
+
+                        if ((K.hasValue() && (!(K.getValue() < 1) || !(K.getValue() == ck)))) {
+                            newCompletionSet->add(completion);
+                            continue;
+                        }
+
+                        Value<double> transmissibilityFactor("transmissibilityFactor", completion->getConnectionTransmissibilityFactor());
+                        Value<double> diameter("diameter", completion->getDiameter());
+                        Value<double> skinFactor("skinFactor", completion->getSkinFactor());
+
+                        CompletionStateEnum completionStatus = Opm::CompletionStateEnumFromString(WellCommon::Status2String(status));
+
+
+                        CompletionPtr newCompletion(new Completion(completion->getI(),
+                                completion->getJ(),
+                                completion->getK(),
+                                completionStatus,
+                                transmissibilityFactor,
+                                diameter,
+                                skinFactor,
+                                completion->getDirection()));
+
+                        newCompletionSet->add(newCompletion);
+                    }
+                    well->addCompletionsSet(currentStep, newCompletionSet);
+                }
+                if(!haveCompletionData) {
+                    well->setStatus(currentStep, status);
+                }
+
+            }
         }
     }
 
