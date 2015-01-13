@@ -302,10 +302,15 @@ static DeckPtr createDeckWithWellsAndCompletionDataWithWELOPEN() {
                     "/\n"
                     "WELOPEN\n"
                     " 'OP_1' SHUT / \n"
-                    " 'OP_2' SHUT 0 0 0 4 6 / \n "
                     " '*'    OPEN 0 0 3 / \n"
+                    " 'OP_2' SHUT 0 0 0 4 6 / \n "
+                    "/\n"
+                    "DATES             -- 4\n"
+                    " 10  JUL 2008 / \n"
+                    "/\n"
+                    "WELOPEN\n"
+                    " 'OP_2' OPEN 0 0 0 4 6 / \n "
                     "/\n";
-
 
     return parser.parseString(input);
 }
@@ -318,15 +323,38 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndCompletionDataWithWELOPEN) {
     size_t currentStep = 0;
     BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well->getStatus(currentStep));
     currentStep = 3;
-    //BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus(currentStep));
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus(currentStep));
 
     well = schedule.getWell("OP_2");
     CompletionSetConstPtr completionSet = well->getCompletions(currentStep);
-    //size_t index = 5;
-    //CompletionConstPtr completion = completionSet->get(index);
-    //BOOST_CHECK_EQUAL(CompletionStateEnum::SHUT, completion->getState());
 
+    size_t index = 3;
+    CompletionConstPtr completion = completionSet->get(index);
+    BOOST_CHECK_EQUAL(CompletionStateEnum::OPEN, completion->getState());
+    index = 4;
+    completion = completionSet->get(index);
+    BOOST_CHECK_EQUAL(CompletionStateEnum::SHUT, completion->getState());
+    index = 5;
+    completion = completionSet->get(index);
+    BOOST_CHECK_EQUAL(CompletionStateEnum::SHUT, completion->getState());
+    index = 6;
+    completion = completionSet->get(index);
+    BOOST_CHECK_EQUAL(CompletionStateEnum::SHUT, completion->getState());
 
+    currentStep = 4;
+    completionSet = well->getCompletions(currentStep);
+    index = 3;
+    completion = completionSet->get(index);
+    BOOST_CHECK_EQUAL(CompletionStateEnum::OPEN, completion->getState());
+    index = 4;
+    completion = completionSet->get(index);
+    BOOST_CHECK_EQUAL(CompletionStateEnum::OPEN, completion->getState());
+    index = 5;
+    completion = completionSet->get(index);
+    BOOST_CHECK_EQUAL(CompletionStateEnum::OPEN, completion->getState());
+    index = 6;
+    completion = completionSet->get(index);
+    BOOST_CHECK_EQUAL(CompletionStateEnum::OPEN, completion->getState());
 
 }
 
