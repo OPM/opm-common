@@ -389,13 +389,24 @@ namespace Opm {
         }
     }
 
+    Opm::Value<int> Schedule::getValueItem(DeckItemPtr item){
+        Opm::Value<int> data(item->name());
+        if(item->hasValue(0)) {
+            int tempValue = item->getInt(0);
+            if( tempValue >0){
+                data.setValue(tempValue-1);
+            }
+        }
+        return data;
+    }
+
     void Schedule::handleWELOPEN(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            //record->getItem(1)->hasValue(0);
+
             bool haveCompletionData = false;
             for (size_t i=2; i<7; i++) {
-                if (record->getItem(i)->getInt(0) > -1 ) {
+                if (record->getItem(i)->hasValue(0)) {
                     haveCompletionData = true;
                     break;
                 }
@@ -409,17 +420,17 @@ namespace Opm {
 
             for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
                 WellPtr well = *wellIter;
-
+                std::string wellName = well->name();
                 if(haveCompletionData){
                     CompletionSetConstPtr currentCompletionSet = well->getCompletions(currentStep);
 
                     CompletionSetPtr newCompletionSet(new CompletionSet( ));
 
-                    Opm::Value<int> I("I", record->getItem("I")->getInt(0));
-                    Opm::Value<int> J("J", record->getItem("J")->getInt(0));
-                    Opm::Value<int> K("K", record->getItem("K")->getInt(0));
-                    Opm::Value<int> C1("C1", record->getItem("C1")->getInt(0));
-                    Opm::Value<int> C2("C2", record->getItem("C2")->getInt(0));
+                    Opm::Value<int> I  = getValueItem(record->getItem("I"));
+                    Opm::Value<int> J  = getValueItem(record->getItem("J"));
+                    Opm::Value<int> K  = getValueItem(record->getItem("K"));
+                    Opm::Value<int> C1 = getValueItem(record->getItem("C1"));
+                    Opm::Value<int> C2 = getValueItem(record->getItem("C2"));
 
                     size_t completionSize = currentCompletionSet->size();
 
@@ -440,29 +451,21 @@ namespace Opm {
                             }
                         }
 
-
                         int ci = completion->getI();
                         int cj = completion->getJ();
                         int ck = completion->getK();
-                        /*
-                        bool t1 = I.hasValue();
-                        bool t2 = (!(I.getValue() < 1));
-                        bool t3 = (I.getValue() == ci);
-                        bool t4 = I.getValue()!=0;
-                        bool t5 = t3 && t4;
-                        bool t6 = t2 || t5;
-                        */
-                        if ((I.hasValue() && (!(I.getValue() < 1) || (!(I.getValue() == ci) && I.getValue()!=0)))) {
+
+                        if ((I.hasValue() && (!(I.getValue() == ci) || I.getValue() !=0))) {
                             newCompletionSet->add(completion);
                             continue;
                         }
 
-                        if ((J.hasValue() && (!(J.getValue() < 1) || !(J.getValue() == cj) && I.getValue()!=0))) {
+                        if ((J.hasValue() && (!(J.getValue() == cj) || J.getValue()!=0))) {
                             newCompletionSet->add(completion);
                             continue;
                         }
 
-                        if ((K.hasValue() && (!(K.getValue() < 1) || !(K.getValue() == ck) && I.getValue()!=0))) {
+                        if ((K.hasValue() && (!(K.getValue() == ck) || K.getValue()!=0))) {
                             newCompletionSet->add(completion);
                             continue;
                         }
@@ -471,8 +474,7 @@ namespace Opm {
                         Value<double> diameter("diameter", completion->getDiameter());
                         Value<double> skinFactor("skinFactor", completion->getSkinFactor());
 
-                        CompletionStateEnum completionStatus = Opm::CompletionStateEnumFromString(WellCommon::Status2String(status));
-
+                        WellCompletion::StateEnum completionStatus = WellCompletion::StateEnumFromString(WellCommon::Status2String(status));
 
                         CompletionPtr newCompletion(new Completion(completion->getI(),
                                 completion->getJ(),
