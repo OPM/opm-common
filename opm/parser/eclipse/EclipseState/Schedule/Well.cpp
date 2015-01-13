@@ -212,6 +212,10 @@ namespace Opm {
         m_completions->add( time_step , newCompletionSet);
     }
 
+    void Well::addCompletionsSet(size_t time_step, const CompletionSetConstPtr newCompletionSet){
+        m_completions->add(time_step, newCompletionSet);
+    }
+
     const std::string Well::getGroupName(size_t time_step) const {
         return m_groupName->get(time_step);
     }
