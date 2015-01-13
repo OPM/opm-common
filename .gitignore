@@ -8,3 +8,4 @@ install
 .cproject
 .project
 /testdata/statoil
+.idea
