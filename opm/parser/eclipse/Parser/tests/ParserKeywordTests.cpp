@@ -182,18 +182,7 @@ BOOST_AUTO_TEST_CASE(ConstructMultiNameFromJsonObject) {
     BOOST_CHECK(!parserKeyword->matches("XXD"));
     BOOST_CHECK(!parserKeyword->matches("XXX"));
 }
-BOOST_AUTO_TEST_CASE(ConstructFromJsonObjectWithActionInvalidThrows) {
-    Json::JsonObject jsonObject("{\"name\": \"XXX\", \"sections\":[], \"size\" : 0, \"action\" : \"WhatEver?\"}");
-    BOOST_CHECK_THROW(ParserKeyword::createFromJson(jsonObject) , std::invalid_argument);
-}
 
-BOOST_AUTO_TEST_CASE(ConstructFromJsonObjectWithAction) {
-    Json::JsonObject jsonObject("{\"name\": \"XXX\", \"sections\":[], \"size\" : 0, \"action\" : \"IGNORE\"}");
-    ParserKeywordConstPtr parserKeyword = ParserKeyword::createFromJson(jsonObject);
-    BOOST_CHECK(parserKeyword->matches("XXX"));
-    BOOST_CHECK(!parserKeyword->hasMultipleDeckNames());
-    BOOST_CHECK_EQUAL( IGNORE , parserKeyword->getAction() );
-}
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withSize) {
     Json::JsonObject jsonObject("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : 100 , \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}");
@@ -211,10 +200,6 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_missingItemThrows) {
     BOOST_CHECK_THROW( ParserKeyword::createFromJson(jsonObject) , std::invalid_argument);
 }
 
-BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_missingItemActionIgnoreOK) {
-    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : 100, \"action\" : \"IGNORE\"}");
-    BOOST_CHECK_NO_THROW( ParserKeyword::createFromJson(jsonObject));
-}
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_nosize_notItems_OK) {
     Json::JsonObject jsonObject("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"]}");
@@ -384,7 +369,7 @@ BOOST_AUTO_TEST_CASE(DefaultIsNot_TableKeyword) {
 }
 
 BOOST_AUTO_TEST_CASE(ConstructorIsTableCollection) {
-    ParserKeywordPtr parserKeyword = ParserKeyword::createTable("JA" , "TABDIMS" , "NTPVT" , INTERNALIZE , true);
+    ParserKeywordPtr parserKeyword = ParserKeyword::createTable("JA" , "TABDIMS" , "NTPVT" , true);
     const std::pair<std::string,std::string>& sizeKW = parserKeyword->getSizeDefinitionPair();
     BOOST_CHECK(parserKeyword->isTableCollection());
     BOOST_CHECK(!parserKeyword->hasFixedSize());
@@ -413,17 +398,7 @@ BOOST_AUTO_TEST_CASE(ParseEmptyRecord) {
     BOOST_CHECK_EQUAL(0U , deckItem->size());
 }
 
-/*****************************************************************/
-/* Action value */
-BOOST_AUTO_TEST_CASE(DefaultActionISINTERNALIZE) {
-    ParserKeywordPtr parserKeyword = ParserKeyword::createDynamicSized("JA");
-    BOOST_CHECK_EQUAL(INTERNALIZE , parserKeyword->getAction());
-}
 
-BOOST_AUTO_TEST_CASE(CreateWithAction) {
-    ParserKeywordPtr parserKeyword = ParserKeyword::createDynamicSized("JA" , UNKNOWN , IGNORE);
-    BOOST_CHECK_EQUAL(IGNORE , parserKeyword->getAction());
-}
 
 /*****************************************************************/
 /* Dimension */
