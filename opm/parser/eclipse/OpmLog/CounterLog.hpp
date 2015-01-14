@@ -37,8 +37,10 @@ namespace Opm {
     class CounterLog : public LogBackend {
 public:
 
+    CounterLog(int64_t messageMask);
     CounterLog();
     CounterLog(std::ostream* os);
+
 
     void setOutStream(std::ostream* os);
 

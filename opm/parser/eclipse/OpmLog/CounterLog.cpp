@@ -27,6 +27,17 @@
 
 
 namespace Opm {
+
+CounterLog::CounterLog(int64_t messageTypes) : LogBackend(messageTypes)
+{
+    m_numErrors = 0;
+    m_numWarnings = 0;
+    m_numNotes = 0;
+
+    setOutStream(NULL);
+}
+
+
 CounterLog::CounterLog() : LogBackend(Log::DefaultMessageTypes)
 {
     m_numErrors = 0;
