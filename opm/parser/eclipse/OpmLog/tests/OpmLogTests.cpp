@@ -112,6 +112,54 @@ BOOST_AUTO_TEST_CASE(LoggerAddTypes_PowerOf2) {
 }
 
 
+class TestLog: public LogBackend {
+public:
+    TestLog( int64_t messageMask ) : LogBackend( messageMask )
+    {
+        m_defaultMessages = 0;
+        m_specialMessages = 0;
+    }
+
+    void addMessage(int64_t messageType , const std::string& message) {
+        if (messageType & Log::DefaultMessageTypes)
+            m_defaultMessages +=1;
+        else
+            m_specialMessages += 1;
+    }
+
+    int m_defaultMessages;
+    int m_specialMessages;
+};
+/*
+  Testing that the logger frontend does not let unknown message types
+  pass through; even though the backend has shown interest in the
+  phony 4096 messagetype.
+*/
+
+BOOST_AUTO_TEST_CASE(LoggerMasksTypes) {
+    Logger logger;
+    int64_t power_of2 = 4096;
+
+    std::shared_ptr<TestLog> testLog = std::make_shared<TestLog>(Log::DefaultMessageTypes + power_of2);
+    logger.addBackend("TEST" , testLog);
+    BOOST_CHECK_EQUAL( false , logger.enabledMessageType( power_of2 ));
+
+    logger.addMessage( Log::MessageType::Error , "Error");
+    logger.addMessage( Log::MessageType::Warning , "Warning");
+    logger.addMessage( Log::MessageType::Note , "Note");
+
+    BOOST_CHECK_THROW( logger.addMessage( power_of2 , "Blocked message") , std::invalid_argument );
+    BOOST_CHECK_EQUAL( testLog->m_defaultMessages , 3 );
+    BOOST_CHECK_EQUAL( testLog->m_specialMessages , 0 );
+
+    logger.addMessageType( power_of2 , "Phony");
+    logger.addMessage( power_of2 , "Passing through");
+    BOOST_CHECK_EQUAL( testLog->m_specialMessages , 1 );
+}
+
+
+
+
 
 BOOST_AUTO_TEST_CASE(LoggerDefaultTypesEnabled) {
     Logger logger;
