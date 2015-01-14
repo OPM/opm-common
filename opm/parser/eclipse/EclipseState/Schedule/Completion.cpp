@@ -36,6 +36,18 @@ namespace Opm {
           m_direction(direction)
     {  }
 
+    Completion::Completion(std::shared_ptr<const Completion> oldCompletion, WellCompletion::StateEnum newStatus)
+    :
+        m_i(oldCompletion->getI()),
+        m_j(oldCompletion->getJ()),
+        m_k(oldCompletion->getK()),
+        m_diameter(oldCompletion->getDiameterAsValueObject()),
+        m_connectionTransmissibilityFactor(oldCompletion->getConnectionTransmissibilityFactorAsValueObject()),
+        m_skinFactor(oldCompletion->getSkinFactorAsValueObject()),
+        m_state(newStatus),
+        m_direction(oldCompletion->getDirection())
+    {}
+
 
     bool Completion::sameCoordinate(const Completion& other) const {
         if ((m_i == other.m_i) &&
@@ -157,6 +169,18 @@ namespace Opm {
 
     double Completion::getSkinFactor() const {
         return m_skinFactor.getValue();
+    }
+
+    Value<double> Completion::getConnectionTransmissibilityFactorAsValueObject() const {
+        return m_connectionTransmissibilityFactor;
+    }
+
+    Value<double> Completion::getDiameterAsValueObject() const {
+        return m_diameter;
+    }
+
+    Value<double> Completion::getSkinFactorAsValueObject() const {
+        return m_skinFactor;
     }
 
     WellCompletion::DirectionEnum Completion::getDirection() const {

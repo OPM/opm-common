@@ -41,6 +41,8 @@ namespace Opm {
                    const Value<double>& skinFactor,
                    const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z);
 
+        Completion(std::shared_ptr<const Completion> oldCompletion, WellCompletion::StateEnum newStatus);
+
         bool sameCoordinate(const Completion& other) const;
         int getI() const;
         int getJ() const;
@@ -63,6 +65,10 @@ namespace Opm {
         Value<double> m_skinFactor;
         WellCompletion::StateEnum m_state;
         WellCompletion::DirectionEnum m_direction;
+        Value<double> getConnectionTransmissibilityFactorAsValueObject() const;
+        Value<double> getDiameterAsValueObject() const;
+        Value<double> getSkinFactorAsValueObject() const;
+
     };
 
     typedef std::shared_ptr<Completion> CompletionPtr;
