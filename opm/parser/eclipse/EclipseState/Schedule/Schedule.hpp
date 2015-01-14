@@ -19,7 +19,7 @@
 #ifndef SCHEDULE_HPP
 #define SCHEDULE_HPP
 
-#include <opm/parser/eclipse/OpmLog/MessageCounter.hpp>
+#include <opm/parser/eclipse/OpmLog/CounterLog.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
@@ -42,7 +42,11 @@ namespace Opm
 
     class Schedule {
     public:
+<<<<<<< HEAD
         Schedule(std::shared_ptr<const EclipseGrid> grid , DeckConstPtr deck, MessageCounterPtr logger=std::make_shared<MessageCounter>());
+=======
+        Schedule(DeckConstPtr deck, CounterLogPtr logger=std::make_shared<CounterLog>());
+>>>>>>> Renamed MessageCounter -> CounterLog
         boost::posix_time::ptime getStartTime() const
         { return m_timeMap->getStartTime(/*timeStepIdx=*/0); }
         TimeMapConstPtr getTimeMap() const;
@@ -70,29 +74,29 @@ namespace Opm
         std::shared_ptr<DynamicState<GroupTreePtr> > m_rootGroupTree;
 
         void addWellToGroup( GroupPtr newGroup , WellPtr well , size_t timeStep);
-        void initFromDeck(DeckConstPtr deck, MessageCounterPtr logger);
-        void createTimeMap(DeckConstPtr deck, MessageCounterPtr logger);
+        void initFromDeck(DeckConstPtr deck, CounterLogPtr logger);
+        void createTimeMap(DeckConstPtr deck, CounterLogPtr logger);
         void initRootGroupTreeNode(TimeMapConstPtr timeMap);
-        void iterateScheduleSection(DeckConstPtr deck, MessageCounterPtr logger);
+        void iterateScheduleSection(DeckConstPtr deck, CounterLogPtr logger);
         bool handleGroupFromWELSPECS(const std::string& groupName, GroupTreePtr newTree) const;
         void addGroup(const std::string& groupName , size_t timeStep);
         void addWell(const std::string& wellName, DeckRecordConstPtr record, size_t timeStep);
-        void checkWELSPECSConsistency(WellConstPtr well, DeckKeywordConstPtr keyword, size_t recordIdx, MessageCounterPtr logger) const;
-        void handleWELSPECS(DeckKeywordConstPtr keyword, MessageCounterPtr logger, size_t currentStep);
-        void handleWCONProducer(DeckKeywordConstPtr keyword, MessageCounterPtr logger, size_t currentStep, bool isPredictionMode);
-        void handleWCONHIST(DeckKeywordConstPtr keyword, MessageCounterPtr logger, size_t currentStep);
-        void handleWCONPROD(DeckKeywordConstPtr keyword, MessageCounterPtr logger, size_t currentStep);
-        void handleWGRUPCON(DeckKeywordConstPtr keyword, MessageCounterPtr logger, size_t currentStep);
-        void handleCOMPDAT(DeckKeywordConstPtr keyword, MessageCounterPtr logger, size_t currentStep);
-        void handleWCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, MessageCounterPtr logger, size_t currentStep);
-        void handleWPOLYMER(DeckKeywordConstPtr keyword, MessageCounterPtr logger, size_t currentStep);
-        void handleWCONINJH(DeckConstPtr deck, DeckKeywordConstPtr keyword, MessageCounterPtr logger, size_t currentStep);
-        void handleWELOPEN(DeckKeywordConstPtr keyword, MessageCounterPtr logger, size_t currentStep);
-        void handleGCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, MessageCounterPtr logger, size_t currentStep);
-        void handleGCONPROD(DeckKeywordConstPtr keyword, MessageCounterPtr logger, size_t currentStep);
-        void handleDATES(DeckKeywordConstPtr keyword, MessageCounterPtr logger);
-        void handleTSTEP(DeckKeywordConstPtr keyword, MessageCounterPtr logger);
-        void handleGRUPTREE(DeckKeywordConstPtr keyword, MessageCounterPtr logger, size_t currentStep);
+        void checkWELSPECSConsistency(WellConstPtr well, DeckKeywordConstPtr keyword, size_t recordIdx, CounterLogPtr logger) const;
+        void handleWELSPECS(DeckKeywordConstPtr keyword, CounterLogPtr logger, size_t currentStep);
+        void handleWCONProducer(DeckKeywordConstPtr keyword, CounterLogPtr logger, size_t currentStep, bool isPredictionMode);
+        void handleWCONHIST(DeckKeywordConstPtr keyword, CounterLogPtr logger, size_t currentStep);
+        void handleWCONPROD(DeckKeywordConstPtr keyword, CounterLogPtr logger, size_t currentStep);
+        void handleWGRUPCON(DeckKeywordConstPtr keyword, CounterLogPtr logger, size_t currentStep);
+        void handleCOMPDAT(DeckKeywordConstPtr keyword, CounterLogPtr logger, size_t currentStep);
+        void handleWCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, CounterLogPtr logger, size_t currentStep);
+        void handleWPOLYMER(DeckKeywordConstPtr keyword, CounterLogPtr logger, size_t currentStep);
+        void handleWCONINJH(DeckConstPtr deck, DeckKeywordConstPtr keyword, CounterLogPtr logger, size_t currentStep);
+        void handleWELOPEN(DeckKeywordConstPtr keyword, CounterLogPtr logger, size_t currentStep);
+        void handleGCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, CounterLogPtr logger, size_t currentStep);
+        void handleGCONPROD(DeckKeywordConstPtr keyword, CounterLogPtr logger, size_t currentStep);
+        void handleDATES(DeckKeywordConstPtr keyword, CounterLogPtr logger);
+        void handleTSTEP(DeckKeywordConstPtr keyword, CounterLogPtr logger);
+        void handleGRUPTREE(DeckKeywordConstPtr keyword, CounterLogPtr logger, size_t currentStep);
         void handleWRFT(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleWRFTPLT(DeckKeywordConstPtr keyword, size_t currentStep);
 

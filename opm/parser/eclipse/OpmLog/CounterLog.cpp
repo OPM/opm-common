@@ -22,12 +22,12 @@
 
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
-#include <opm/parser/eclipse/OpmLog/MessageCounter.hpp>
+#include <opm/parser/eclipse/OpmLog/CounterLog.hpp>
 
 
 
 namespace Opm {
-MessageCounter::MessageCounter() : LogBackend(Log::DefaultMessageTypes)
+CounterLog::CounterLog() : LogBackend(Log::DefaultMessageTypes)
 {
     m_numErrors = 0;
     m_numWarnings = 0;
@@ -36,7 +36,7 @@ MessageCounter::MessageCounter() : LogBackend(Log::DefaultMessageTypes)
     setOutStream(NULL);
 }
 
-MessageCounter::MessageCounter(std::ostream* os) : LogBackend(Log::DefaultMessageTypes)
+CounterLog::CounterLog(std::ostream* os) : LogBackend(Log::DefaultMessageTypes)
 {
     m_numErrors = 0;
     m_numWarnings = 0;
@@ -45,27 +45,27 @@ MessageCounter::MessageCounter(std::ostream* os) : LogBackend(Log::DefaultMessag
     setOutStream(os);
 }
 
-void MessageCounter::setOutStream(std::ostream* os) {
+void CounterLog::setOutStream(std::ostream* os) {
     m_outStream = os;
 }
 
-size_t MessageCounter::size() const {
+size_t CounterLog::size() const {
     return m_messages.size();
 }
 
-size_t MessageCounter::numErrors() const {
+size_t CounterLog::numErrors() const {
     return m_numErrors;
 }
 
-size_t MessageCounter::numWarnings() const {
+size_t CounterLog::numWarnings() const {
     return m_numWarnings;
 }
 
-size_t MessageCounter::numNotes() const {
+size_t CounterLog::numNotes() const {
     return m_numNotes;
 }
 
-void MessageCounter::addMessage(const std::string& fileName,
+void CounterLog::addMessage(const std::string& fileName,
                                 int lineNumber,
                                 int64_t messageType,
                                 const std::string& description) {
@@ -97,7 +97,7 @@ void MessageCounter::addMessage(const std::string& fileName,
     }
 }
 
-void MessageCounter::addMessage(int64_t messageType , const std::string& message) {
+void CounterLog::addMessage(int64_t messageType , const std::string& message) {
     if (includeMessage( messageType ))
         addMessage("???" , -1 , messageType , message);
 }
@@ -105,26 +105,26 @@ void MessageCounter::addMessage(int64_t messageType , const std::string& message
 
 
 
-void MessageCounter::addNote(const std::string& fileName,
+void CounterLog::addNote(const std::string& fileName,
                              int lineNumber,
                              const std::string& description) {
     addMessage(fileName, lineNumber, Log::MessageType::Note, description);
 }
 
-void MessageCounter::addWarning(const std::string& fileName,
+void CounterLog::addWarning(const std::string& fileName,
                                 int lineNumber,
                                 const std::string& description) {
     addMessage(fileName, lineNumber, Log::MessageType::Warning, description);
 }
 
-void MessageCounter::addError(const std::string& fileName,
+void CounterLog::addError(const std::string& fileName,
                               int lineNumber,
                               const std::string& description) {
     addMessage(fileName, lineNumber, Log::MessageType::Error, description);
 }
 
 
-void MessageCounter::clear()
+void CounterLog::clear()
 {
     m_numErrors = 0;
     m_numWarnings = 0;
@@ -133,7 +133,7 @@ void MessageCounter::clear()
     m_messages.clear();
 }
 
-void MessageCounter::append(const MessageCounter &other)
+void CounterLog::append(const CounterLog &other)
 {
     for (size_t i = 0; i < other.size(); ++i) {
         addMessage(other.getFileName(i),
@@ -143,27 +143,27 @@ void MessageCounter::append(const MessageCounter &other)
     }
 }
 
-const std::string& MessageCounter::getFileName(size_t msgIdx) const {
+const std::string& CounterLog::getFileName(size_t msgIdx) const {
     assert(msgIdx < size());
     return std::get<0>(m_messages[msgIdx]);
 }
 
-int MessageCounter::getLineNumber(size_t msgIdx) const {
+int CounterLog::getLineNumber(size_t msgIdx) const {
     assert(msgIdx < size());
     return std::get<1>(m_messages[msgIdx]);
 }
 
-int64_t MessageCounter::getMessageType(size_t msgIdx) const {
+int64_t CounterLog::getMessageType(size_t msgIdx) const {
     assert(msgIdx < size());
     return std::get<2>(m_messages[msgIdx]);
 }
 
-const std::string& MessageCounter::getDescription(size_t msgIdx) const {
+const std::string& CounterLog::getDescription(size_t msgIdx) const {
     assert(msgIdx < size());
     return std::get<3>(m_messages[msgIdx]);
 }
 
-const std::string MessageCounter::getFormattedMessage(size_t msgIdx) const {
+const std::string CounterLog::getFormattedMessage(size_t msgIdx) const {
     const std::string& description = getDescription( msgIdx );
     int64_t messageType = getMessageType( msgIdx );
     std::string prefixedMessage = Log::prefixMessage( messageType  , description);
@@ -178,7 +178,7 @@ const std::string MessageCounter::getFormattedMessage(size_t msgIdx) const {
 
 
 
-void MessageCounter::printAll(std::ostream& os, size_t enabledTypes) const {
+void CounterLog::printAll(std::ostream& os, size_t enabledTypes) const {
     for (size_t i = 0; i < size(); ++i)
         if (enabledTypes & getMessageType(i))
             os << getFormattedMessage(i) << "\n";

@@ -22,7 +22,7 @@
 #include <math.h>
 #include <boost/algorithm/string/join.hpp>
 
-#include <opm/parser/eclipse/OpmLog/MessageCounter.hpp>
+#include <opm/parser/eclipse/OpmLog/CounterLog.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
@@ -121,7 +121,7 @@ namespace Opm {
     }
 
 
-    EclipseState::EclipseState(DeckConstPtr deck, MessageCounterPtr logger)
+    EclipseState::EclipseState(DeckConstPtr deck, CounterLogPtr logger)
         : m_defaultRegion("FLUXNUM")
     {
         m_deckUnitSystem = deck->getActiveUnitSystem();
@@ -264,7 +264,7 @@ namespace Opm {
         return m_title;
     }
 
-    void EclipseState::initTables(DeckConstPtr deck, MessageCounterPtr logger) {
+    void EclipseState::initTables(DeckConstPtr deck, CounterLogPtr logger) {
         initSimpleTables(deck, logger, "ENKRVD", m_enkrvdTables);
         initSimpleTables(deck, logger, "ENPTVD", m_enptvdTables);
         initSimpleTables(deck, logger, "IMKRVD", m_imkrvdTables);
@@ -315,7 +315,7 @@ namespace Opm {
         m_simulationConfig = std::make_shared<const SimulationConfig>(deck , m_intGridProperties);
     }
 
-    void EclipseState::initTransMult(MessageCounterPtr /*logger*/) {
+    void EclipseState::initTransMult(CounterLogPtr /*logger*/) {
         EclipseGridConstPtr grid = getEclipseGrid();
         m_transMult = std::make_shared<TransMult>( grid->getNX() , grid->getNY() , grid->getNZ());
 
@@ -335,7 +335,7 @@ namespace Opm {
             m_transMult->applyMULT(m_doubleGridProperties->getKeyword("MULTZ-"), FaceDir::ZMinus);
     }
 
-    void EclipseState::initFaults(DeckConstPtr deck, MessageCounterPtr logger) {
+    void EclipseState::initFaults(DeckConstPtr deck, CounterLogPtr logger) {
         EclipseGridConstPtr grid = getEclipseGrid();
         m_faults = std::make_shared<FaultCollection>();
         std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
@@ -381,7 +381,7 @@ namespace Opm {
 
 
 
-    void EclipseState::setMULTFLT(std::shared_ptr<const Section> section, MessageCounterPtr /*logger*/) const {
+    void EclipseState::setMULTFLT(std::shared_ptr<const Section> section, CounterLogPtr /*logger*/) const {
         for (size_t index=0; index < section->count("MULTFLT"); index++) {
             DeckKeywordConstPtr faultsKeyword = section->getKeyword("MULTFLT" , index);
             for (auto iter = faultsKeyword->begin(); iter != faultsKeyword->end(); ++iter) {
@@ -396,7 +396,7 @@ namespace Opm {
 
 
 
-    void EclipseState::initMULTREGT(DeckConstPtr deck, MessageCounterPtr /*logger*/) {
+    void EclipseState::initMULTREGT(DeckConstPtr deck, CounterLogPtr /*logger*/) {
         EclipseGridConstPtr grid = getEclipseGrid();
 
         std::vector<Opm::DeckKeywordConstPtr> multregtKeywords;
@@ -409,11 +409,12 @@ namespace Opm {
 
 
 
-    void EclipseState::initEclipseGrid(DeckConstPtr deck, MessageCounterPtr logger) {
+    void EclipseState::initEclipseGrid(DeckConstPtr deck, CounterLogPtr logger) {
         m_eclipseGrid = EclipseGridConstPtr( new EclipseGrid(deck, logger));
     }
 
 
+<<<<<<< HEAD
     void EclipseState::initGridopts(DeckConstPtr deck) {
         if (deck->hasKeyword("GRIDOPTS")) {
             /*
@@ -461,7 +462,7 @@ namespace Opm {
     }
 
 
-    void EclipseState::initPhases(DeckConstPtr deck, MessageCounterPtr logger) {
+    void EclipseState::initPhases(DeckConstPtr deck, CounterLogPtr logger) {
         if (deck->hasKeyword("OIL"))
             phases.insert(Phase::PhaseEnum::OIL);
 
@@ -480,7 +481,7 @@ namespace Opm {
          return (phases.count(phase) == 1);
     }
 
-    void EclipseState::initTitle(DeckConstPtr deck, MessageCounterPtr /*logger*/){
+    void EclipseState::initTitle(DeckConstPtr deck, CounterLogPtr /*logger*/){
         if (deck->hasKeyword("TITLE")) {
             DeckKeywordConstPtr titleKeyword = deck->getKeyword("TITLE");
             DeckRecordConstPtr record = titleKeyword->getRecord(0);
@@ -490,7 +491,7 @@ namespace Opm {
         }
     }
 
-    void EclipseState::initRocktabTables(DeckConstPtr deck, MessageCounterPtr logger) {
+    void EclipseState::initRocktabTables(DeckConstPtr deck, CounterLogPtr logger) {
         if (!deck->hasKeyword("ROCKTAB"))
             return; // ROCKTAB is not featured by the deck...
 
@@ -630,7 +631,7 @@ namespace Opm {
 
     void EclipseState::loadGridPropertyFromDeckKeyword(std::shared_ptr<const Box> inputBox,
                                                        DeckKeywordConstPtr deckKeyword,
-                                                       MessageCounterPtr logger,
+                                                       CounterLogPtr logger,
                                                        int enabledTypes) {
         const std::string& keyword = deckKeyword->name();
         if (m_intGridProperties->supportsKeyword( keyword )) {
@@ -651,7 +652,7 @@ namespace Opm {
     }
 
 
-    void EclipseState::initProperties(DeckConstPtr deck, MessageCounterPtr logger) {
+    void EclipseState::initProperties(DeckConstPtr deck, CounterLogPtr logger) {
         typedef GridProperties<int>::SupportedKeywordInfo SupportedIntKeywordInfo;
         std::shared_ptr<std::vector<SupportedIntKeywordInfo> > supportedIntKeywords(new std::vector<SupportedIntKeywordInfo>{
             SupportedIntKeywordInfo( "SATNUM" , 1, "1" ),
@@ -869,7 +870,7 @@ namespace Opm {
         return m_deckUnitSystem->getDimension(dimensionString)->getSIScaling();
     }
 
-    void EclipseState::processGridProperties(Opm::DeckConstPtr deck, MessageCounterPtr logger, int enabledTypes) {
+    void EclipseState::processGridProperties(Opm::DeckConstPtr deck, CounterLogPtr logger, int enabledTypes) {
 
         if (Section::hasGRID(deck)) {
             std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
@@ -899,7 +900,7 @@ namespace Opm {
     }
 
     void EclipseState::scanSection(std::shared_ptr<Opm::Section> section,
-                                   MessageCounterPtr logger,
+                                   CounterLogPtr logger,
                                    int enabledTypes) {
         BoxManager boxManager(m_eclipseGrid->getNX( ) , m_eclipseGrid->getNY() , m_eclipseGrid->getNZ());
         for (auto iter = section->begin(); iter != section->end(); ++iter) {
@@ -947,7 +948,7 @@ namespace Opm {
 
 
 
-    void EclipseState::handleBOXKeyword(DeckKeywordConstPtr deckKeyword, MessageCounterPtr /*logger*/, BoxManager& boxManager) {
+    void EclipseState::handleBOXKeyword(DeckKeywordConstPtr deckKeyword, CounterLogPtr /*logger*/, BoxManager& boxManager) {
         DeckRecordConstPtr record = deckKeyword->getRecord(0);
         int I1 = record->getItem("I1")->getInt(0) - 1;
         int I2 = record->getItem("I2")->getInt(0) - 1;
@@ -965,7 +966,7 @@ namespace Opm {
     }
 
 
-    void EclipseState::handleEQUALREGKeyword(DeckKeywordConstPtr deckKeyword, MessageCounterPtr , int enabledTypes) {
+    void EclipseState::handleEQUALREGKeyword(DeckKeywordConstPtr deckKeyword, CounterLogPtr , int enabledTypes) {
         EclipseGridConstPtr grid = getEclipseGrid();
         for (size_t recordIdx = 0; recordIdx < deckKeyword->size(); ++recordIdx) {
             DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
@@ -1008,7 +1009,7 @@ namespace Opm {
     }
 
 
-    void EclipseState::handleADDREGKeyword(DeckKeywordConstPtr deckKeyword, MessageCounterPtr , int enabledTypes) {
+    void EclipseState::handleADDREGKeyword(DeckKeywordConstPtr deckKeyword, CounterLogPtr , int enabledTypes) {
         EclipseGridConstPtr grid = getEclipseGrid();
         for (size_t recordIdx = 0; recordIdx < deckKeyword->size(); ++recordIdx) {
             DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
@@ -1053,7 +1054,7 @@ namespace Opm {
 
 
 
-    void EclipseState::handleMULTIREGKeyword(DeckKeywordConstPtr deckKeyword, MessageCounterPtr , int enabledTypes) {
+    void EclipseState::handleMULTIREGKeyword(DeckKeywordConstPtr deckKeyword, CounterLogPtr , int enabledTypes) {
         EclipseGridConstPtr grid = getEclipseGrid();
         for (size_t recordIdx = 0; recordIdx < deckKeyword->size(); ++recordIdx) {
             DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
@@ -1094,7 +1095,7 @@ namespace Opm {
     }
 
 
-    void EclipseState::handleCOPYREGKeyword(DeckKeywordConstPtr deckKeyword, MessageCounterPtr , int enabledTypes) {
+    void EclipseState::handleCOPYREGKeyword(DeckKeywordConstPtr deckKeyword, CounterLogPtr , int enabledTypes) {
         EclipseGridConstPtr grid = getEclipseGrid();
         for (size_t recordIdx = 0; recordIdx < deckKeyword->size(); ++recordIdx) {
             DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
@@ -1138,7 +1139,7 @@ namespace Opm {
 
 
 
-    void EclipseState::handleMULTIPLYKeyword(DeckKeywordConstPtr deckKeyword, MessageCounterPtr logger, BoxManager& boxManager, int enabledTypes) {
+    void EclipseState::handleMULTIPLYKeyword(DeckKeywordConstPtr deckKeyword, CounterLogPtr logger, BoxManager& boxManager, int enabledTypes) {
         for (size_t recordIdx = 0; recordIdx < deckKeyword->size(); ++recordIdx) {
             DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
             const std::string& field = record->getItem("field")->getString(0);
@@ -1170,7 +1171,7 @@ namespace Opm {
       some state dependent semantics regarding endpoint scaling arrays
       in the PROPS section. That is not supported.
     */
-    void EclipseState::handleADDKeyword(DeckKeywordConstPtr deckKeyword, MessageCounterPtr logger, BoxManager& boxManager, int enabledTypes) {
+    void EclipseState::handleADDKeyword(DeckKeywordConstPtr deckKeyword, CounterLogPtr logger, BoxManager& boxManager, int enabledTypes) {
         for (size_t recordIdx = 0; recordIdx < deckKeyword->size(); ++recordIdx) {
             DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
             const std::string& field = record->getItem("field")->getString(0);
@@ -1200,7 +1201,7 @@ namespace Opm {
     }
 
 
-    void EclipseState::handleEQUALSKeyword(DeckKeywordConstPtr deckKeyword, MessageCounterPtr logger, BoxManager& boxManager, int enabledTypes) {
+    void EclipseState::handleEQUALSKeyword(DeckKeywordConstPtr deckKeyword, CounterLogPtr logger, BoxManager& boxManager, int enabledTypes) {
         for (size_t recordIdx = 0; recordIdx < deckKeyword->size(); ++recordIdx) {
             DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
             const std::string& field = record->getItem("field")->getString(0);
@@ -1231,7 +1232,7 @@ namespace Opm {
 
 
 
-    void EclipseState::handleCOPYKeyword(DeckKeywordConstPtr deckKeyword, MessageCounterPtr logger, BoxManager& boxManager, int enabledTypes) {
+    void EclipseState::handleCOPYKeyword(DeckKeywordConstPtr deckKeyword, CounterLogPtr logger, BoxManager& boxManager, int enabledTypes) {
         for (size_t recordIdx = 0; recordIdx < deckKeyword->size(); ++recordIdx) {
             DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
             const std::string& srcField = record->getItem("src")->getString(0);
@@ -1271,7 +1272,7 @@ namespace Opm {
 
 
 
-    void EclipseState::setKeywordBox(DeckKeywordConstPtr deckKeyword, size_t recordIdx, MessageCounterPtr logger, BoxManager& boxManager) {
+    void EclipseState::setKeywordBox(DeckKeywordConstPtr deckKeyword, size_t recordIdx, CounterLogPtr logger, BoxManager& boxManager) {
         auto deckRecord = deckKeyword->getRecord(recordIdx);
 
         DeckItemConstPtr I1Item = deckRecord->getItem("I1");
@@ -1314,7 +1315,7 @@ namespace Opm {
                                 "BOX modifiers on keywords must be either specified completely or not at all. Ignoring.");
     }
 
-    void EclipseState::complainAboutAmbiguousKeyword(DeckConstPtr deck, MessageCounterPtr logger, const std::string& keywordName) const {
+    void EclipseState::complainAboutAmbiguousKeyword(DeckConstPtr deck, CounterLogPtr logger, const std::string& keywordName) const {
         logger->addError("", -1,
                             "The "+keywordName+" keyword must be unique in the deck. Ignoring all!");
         auto keywords = deck->getKeywordList(keywordName);

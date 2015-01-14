@@ -16,8 +16,8 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPM_MESSAGECOUNTER_HPP
-#define OPM_MESSAGECOUNTER_HPP
+#ifndef OPM_COUNTERLOG_HPP
+#define OPM_COUNTERLOG_HPP
 
 #include <iostream>
 #include <string>
@@ -34,11 +34,11 @@ namespace Opm {
  * \brief Provides a simple sytem for log message which are found by the
  *        Parser/Deck/EclipseState classes during processing the deck.
  */
-    class MessageCounter : public LogBackend {
+    class CounterLog : public LogBackend {
 public:
 
-    MessageCounter();
-    MessageCounter(std::ostream* os);
+    CounterLog();
+    CounterLog(std::ostream* os);
 
     void setOutStream(std::ostream* os);
 
@@ -74,7 +74,7 @@ public:
     const std::string& getDescription(size_t msgIdx) const;
 
     void clear();
-    void append(const MessageCounter &other);
+    void append(const CounterLog &other);
 
     /*!
      * \brief This method takes the information provided by the methods above and returns
@@ -95,7 +95,7 @@ public:
      */
     void printAll(std::ostream &os = std::cerr,
                   size_t enabledTypes = Log::DefaultMessageTypes) const;
-    ~MessageCounter() {};
+    ~CounterLog() {};
 private:
     typedef std::tuple<std::string,
                        int,
@@ -110,8 +110,8 @@ private:
     mutable std::ostream* m_outStream;
 };
 
-typedef std::shared_ptr<MessageCounter> MessageCounterPtr;
-typedef std::shared_ptr<const MessageCounter> MessageCounterConstPtr;
+typedef std::shared_ptr<CounterLog> CounterLogPtr;
+typedef std::shared_ptr<const CounterLog> CounterLogConstPtr;
 } // namespace Opm
 
 #endif

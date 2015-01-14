@@ -21,7 +21,7 @@
 #include <opm/parser/eclipse/Deck/Section.hpp>
 
 namespace Opm {
-bool checkDeck(DeckConstPtr deck, MessageCounterPtr logger, size_t enabledChecks) {
+bool checkDeck(DeckConstPtr deck, CounterLogPtr logger, size_t enabledChecks) {
     bool deckValid = true;
 
     // make sure that the deck does not contain unknown keywords

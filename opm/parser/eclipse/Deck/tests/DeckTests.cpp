@@ -24,7 +24,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <opm/parser/eclipse/OpmLog/MessageCounter.hpp>
+#include <opm/parser/eclipse/OpmLog/CounterLog.hpp>
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
@@ -123,13 +123,13 @@ BOOST_AUTO_TEST_CASE(size_twokeyword_return2) {
 
 
 BOOST_AUTO_TEST_CASE(DECKWARNING_EMPTYOK) {
-    MessageCounter logger;
+    CounterLog logger;
     BOOST_CHECK_EQUAL(0U, logger.size());
 }
 
 
 BOOST_AUTO_TEST_CASE(DECKAddWarning) {
-    MessageCounter logger;
+    CounterLog logger;
     logger.addNote("FILE", 100U, "NOTE");
     BOOST_CHECK_EQUAL(1U, logger.size());
 

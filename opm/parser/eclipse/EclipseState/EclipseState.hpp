@@ -21,7 +21,7 @@
 #define OPM_ECLIPSE_STATE_HPP
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/OpmLog/MessageCounter.hpp>
+#include <opm/parser/eclipse/OpmLog/CounterLog.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -72,7 +72,7 @@ namespace Opm {
             AllProperties = IntProperties | DoubleProperties
         };
 
-        EclipseState(DeckConstPtr deck, MessageCounterPtr logger = std::make_shared<MessageCounter>(&std::cout));
+        EclipseState(DeckConstPtr deck, CounterLogPtr logger = std::make_shared<CounterLog>(&std::cout));
 
         ScheduleConstPtr getSchedule() const;
         SimulationConfigConstPtr getSimulationConfig() const;
@@ -91,7 +91,7 @@ namespace Opm {
 
         void loadGridPropertyFromDeckKeyword(std::shared_ptr<const Box> inputBox,
                                              DeckKeywordConstPtr deckKeyword,
-                                             MessageCounterPtr logger,
+                                             CounterLogPtr logger,
                                              int enabledTypes = AllProperties);
 
         std::shared_ptr<const FaultCollection> getFaults() const;
@@ -130,20 +130,20 @@ namespace Opm {
         std::shared_ptr<const UnitSystem> getDeckUnitSystem()  const;
 
     private:
-        void initTables(DeckConstPtr deck, MessageCounterPtr logger);
-        void initSchedule(DeckConstPtr deck, MessageCounterPtr logger);
+        void initTables(DeckConstPtr deck, CounterLogPtr logger);
+        void initSchedule(DeckConstPtr deck, CounterLogPtr logger);
         void initSimulationConfig(DeckConstPtr deck);
-        void initEclipseGrid(DeckConstPtr deck, MessageCounterPtr logger);
+        void initEclipseGrid(DeckConstPtr deck, CounterLogPtr logger);
         void initGridopts(DeckConstPtr deck);
-        void initPhases(DeckConstPtr deck, MessageCounterPtr logger);
-        void initTitle(DeckConstPtr deck, MessageCounterPtr logger);
-        void initProperties(DeckConstPtr deck, MessageCounterPtr logger);
-        void initTransMult(MessageCounterPtr logger);
-        void initFaults(DeckConstPtr deck, MessageCounterPtr logger);
+        void initPhases(DeckConstPtr deck, CounterLogPtr logger);
+        void initTitle(DeckConstPtr deck, CounterLogPtr logger);
+        void initProperties(DeckConstPtr deck, CounterLogPtr logger);
+        void initTransMult(CounterLogPtr logger);
+        void initFaults(DeckConstPtr deck, CounterLogPtr logger);
 
         template <class TableType>
         void initSimpleTables(DeckConstPtr deck,
-                              MessageCounterPtr logger,
+                              CounterLogPtr logger,
                               const std::string& keywordName,
                               std::vector<TableType>& tableVector) {
             if (!deck->hasKeyword(keywordName))
@@ -177,7 +177,7 @@ namespace Opm {
 
         template <class TableType>
         void initFullTables(DeckConstPtr deck,
-                            MessageCounterPtr logger,
+                            CounterLogPtr logger,
                             const std::string& keywordName,
                             std::vector<TableType>& tableVector) {
             if (!deck->hasKeyword(keywordName))
@@ -197,38 +197,37 @@ namespace Opm {
             }
         }
 
-        void initRocktabTables(DeckConstPtr deck, MessageCounterPtr logger);
+        void initRocktabTables(DeckConstPtr deck, CounterLogPtr logger);
         void initGasvisctTables(DeckConstPtr deck,
-                                LoggerPtr logger,
+                                CounterLogPtr logger,
                                 const std::string& keywordName,
                                 std::vector<GasvisctTable>& tableVector);
-        void initRocktabTables(DeckConstPtr deck, MessageCounterPtr logger);
 
-        void setMULTFLT(std::shared_ptr<const Section> section, MessageCounterPtr logger) const;
-        void initMULTREGT(DeckConstPtr deck, MessageCounterPtr logger);
+        void setMULTFLT(std::shared_ptr<const Section> section, CounterLogPtr logger) const;
+        void initMULTREGT(DeckConstPtr deck, CounterLogPtr logger);
 
         double getSIScaling(const std::string &dimensionString) const;
 
-        void processGridProperties(Opm::DeckConstPtr deck, MessageCounterPtr logger, int enabledTypes);
-        void scanSection(std::shared_ptr<Opm::Section> section, MessageCounterPtr logger, int enabledTypes);
-        void handleADDKeyword(DeckKeywordConstPtr deckKeyword , MessageCounterPtr logger, BoxManager& boxManager, int enabledTypes);
-        void handleBOXKeyword(DeckKeywordConstPtr deckKeyword , MessageCounterPtr logger, BoxManager& boxManager);
-        void handleCOPYKeyword(DeckKeywordConstPtr deckKeyword , MessageCounterPtr logger, BoxManager& boxManager, int enabledTypes);
+        void processGridProperties(Opm::DeckConstPtr deck, CounterLogPtr logger, int enabledTypes);
+        void scanSection(std::shared_ptr<Opm::Section> section, CounterLogPtr logger, int enabledTypes);
+        void handleADDKeyword(DeckKeywordConstPtr deckKeyword , CounterLogPtr logger, BoxManager& boxManager, int enabledTypes);
+        void handleBOXKeyword(DeckKeywordConstPtr deckKeyword , CounterLogPtr logger, BoxManager& boxManager);
+        void handleCOPYKeyword(DeckKeywordConstPtr deckKeyword , CounterLogPtr logger, BoxManager& boxManager, int enabledTypes);
         void handleENDBOXKeyword(BoxManager& boxManager);
-        void handleEQUALSKeyword(DeckKeywordConstPtr deckKeyword , MessageCounterPtr logger, BoxManager& boxManager, int enabledTypes);
-        void handleMULTIPLYKeyword(DeckKeywordConstPtr deckKeyword , MessageCounterPtr logger, BoxManager& boxManager, int enabledTypes);
+        void handleEQUALSKeyword(DeckKeywordConstPtr deckKeyword , CounterLogPtr logger, BoxManager& boxManager, int enabledTypes);
+        void handleMULTIPLYKeyword(DeckKeywordConstPtr deckKeyword , CounterLogPtr logger, BoxManager& boxManager, int enabledTypes);
 
-        void handleEQUALREGKeyword(DeckKeywordConstPtr deckKeyword, MessageCounterPtr logger, int enabledTypes);
-        void handleMULTIREGKeyword(DeckKeywordConstPtr deckKeyword, MessageCounterPtr logger, int enabledTypes);
-        void handleADDREGKeyword(DeckKeywordConstPtr deckKeyword, MessageCounterPtr logger, int enabledTypes);
-        void handleCOPYREGKeyword(DeckKeywordConstPtr deckKeyword, MessageCounterPtr logger, int enabledTypes);
+        void handleEQUALREGKeyword(DeckKeywordConstPtr deckKeyword, CounterLogPtr logger, int enabledTypes);
+        void handleMULTIREGKeyword(DeckKeywordConstPtr deckKeyword, CounterLogPtr logger, int enabledTypes);
+        void handleADDREGKeyword(DeckKeywordConstPtr deckKeyword, CounterLogPtr logger, int enabledTypes);
+        void handleCOPYREGKeyword(DeckKeywordConstPtr deckKeyword, CounterLogPtr logger, int enabledTypes);
 
-        void setKeywordBox(DeckKeywordConstPtr deckKeyword, size_t recordIdx, MessageCounterPtr logger, BoxManager& boxManager);
+        void setKeywordBox(DeckKeywordConstPtr deckKeyword, size_t recordIdx, CounterLogPtr logger, BoxManager& boxManager);
 
         void copyIntKeyword(const std::string& srcField , const std::string& targetField , std::shared_ptr<const Box> inputBox);
         void copyDoubleKeyword(const std::string& srcField , const std::string& targetField , std::shared_ptr<const Box> inputBox);
 
-        void complainAboutAmbiguousKeyword(DeckConstPtr deck, MessageCounterPtr logger, const std::string& keywordName) const;
+        void complainAboutAmbiguousKeyword(DeckConstPtr deck, CounterLogPtr logger, const std::string& keywordName) const;
 
         EclipseGridConstPtr m_eclipseGrid;
         ScheduleConstPtr schedule;

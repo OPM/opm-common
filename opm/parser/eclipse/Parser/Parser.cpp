@@ -19,7 +19,7 @@
 
 #include <memory>
 
-#include <opm/parser/eclipse/OpmLog/MessageCounter.hpp>
+#include <opm/parser/eclipse/OpmLog/CounterLog.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -33,7 +33,7 @@ namespace Opm {
 
     struct ParserState {
         DeckPtr deck;
-        MessageCounter logger;
+        CounterLog logger;
         boost::filesystem::path dataFile;
         boost::filesystem::path rootPath;
         std::map<std::string, std::string> pathMap;
@@ -91,7 +91,7 @@ namespace Opm {
      is retained in the current implementation.
      */
 
-    DeckPtr Parser::parseFile(const std::string &dataFileName, MessageCounterPtr logger) const {
+    DeckPtr Parser::parseFile(const std::string &dataFileName, CounterLogPtr logger) const {
 
         std::shared_ptr<ParserState> parserState(new ParserState(dataFileName, DeckPtr(new Deck()), getRootPathFromFile(dataFileName)));
 
@@ -108,7 +108,7 @@ namespace Opm {
         return parserState->deck;
     }
 
-    DeckPtr Parser::parseString(const std::string &data, MessageCounterPtr logger) const {
+    DeckPtr Parser::parseString(const std::string &data, CounterLogPtr logger) const {
 
         std::shared_ptr<ParserState> parserState(new ParserState(data, DeckPtr(new Deck())));
 
@@ -121,7 +121,7 @@ namespace Opm {
         return parserState->deck;
     }
 
-    DeckPtr Parser::parseStream(std::shared_ptr<std::istream> inputStream, MessageCounterPtr logger) const {
+    DeckPtr Parser::parseStream(std::shared_ptr<std::istream> inputStream, CounterLogPtr logger) const {
         std::shared_ptr<ParserState> parserState(new ParserState(inputStream, DeckPtr(new Deck())));
 
         parseState(parserState);

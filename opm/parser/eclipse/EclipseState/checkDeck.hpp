@@ -20,7 +20,7 @@
 #ifndef OPM_CHECK_DECK_HPP
 #define OPM_CHECK_DECK_HPP
 
-#include <opm/parser/eclipse/OpmLog/MessageCounter.hpp>
+#include <opm/parser/eclipse/OpmLog/CounterLog.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 namespace Opm {
@@ -37,7 +37,7 @@ enum DeckChecks {
 
 // some semantical correctness checks of the deck. this method adds a warning to
 // the deck object if any issue is found ...
-bool checkDeck(DeckConstPtr deck, MessageCounterPtr logger, size_t enabledChecks = AllChecks);
+bool checkDeck(DeckConstPtr deck, CounterLogPtr logger, size_t enabledChecks = AllChecks);
 }
 
 #endif

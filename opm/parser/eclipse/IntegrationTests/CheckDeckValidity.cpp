@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE( KeywordInCorrectSection ) {
             "SCHEDULE\n";
 
         auto deck = parser->parseString(correctDeckString);
-        Opm::MessageCounterPtr logger(new Opm::MessageCounter());
+        Opm::CounterLogPtr logger(new Opm::CounterLog());
         BOOST_CHECK(Opm::checkDeck(deck, logger));
     }
 
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE( KeywordInCorrectSection ) {
             "SCHEDULE\n";
 
         auto deck = parser->parseString(correctDeckString);
-        Opm::MessageCounterPtr logger(new Opm::MessageCounter());
+        Opm::CounterLogPtr logger(new Opm::CounterLog());
         BOOST_CHECK(!Opm::checkDeck(deck, logger));
         BOOST_CHECK(Opm::checkDeck(deck, logger, ~Opm::SectionTopology));
     }
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE( KeywordInCorrectSection ) {
             "SCHEDULE\n";
 
         auto deck = parser->parseString(incorrectDeckString);
-        Opm::MessageCounterPtr logger(new Opm::MessageCounter());
+        Opm::CounterLogPtr logger(new Opm::CounterLog());
         BOOST_CHECK(!Opm::checkDeck(deck, logger));
 
         // this is supposed to succeed as we don't ensure that all keywords are in the

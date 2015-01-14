@@ -18,7 +18,7 @@
  */
 
 #include <iostream>
-#include <opm/parser/eclipse/OpmLog/MessageCounter.hpp>
+#include <opm/parser/eclipse/OpmLog/CounterLog.hpp>
 #include <opm/parser/eclipse/OpmLog/StreamLog.hpp>
 #include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
 
@@ -27,7 +27,7 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 
-static void printDeckDiagnostics(Opm::DeckConstPtr deck, Opm::MessageCounterConstPtr logger, bool printAllKeywords) {
+static void printDeckDiagnostics(Opm::DeckConstPtr deck, Opm::CounterLogConstPtr logger, bool printAllKeywords) {
     int recognizedKeywords = 0;
     int unrecognizedKeywords = 0;
 
@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
 
     Opm::ParserPtr parser(new Opm::Parser());
     std::string file = argv[1];
-    Opm::MessageCounterPtr logger(new Opm::MessageCounter);
+    Opm::CounterLogPtr logger(new Opm::CounterLog);
     Opm::DeckConstPtr deck = parser->parseFile(file, logger);
     Opm::EclipseState state(deck);
 

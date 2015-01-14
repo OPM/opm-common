@@ -86,7 +86,7 @@ static DeckPtr createDeckTOP() {
 
 BOOST_AUTO_TEST_CASE(GetPOROTOPBased) {
     DeckPtr deck = createDeckTOP();
-    MessageCounterPtr logger(new MessageCounter());
+    CounterLogPtr logger(new CounterLog());
     EclipseState state(deck, logger);
 
     std::shared_ptr<GridProperty<double> > poro = state.getDoubleGridProperty( "PORO" );
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(IntProperties) {
 
 BOOST_AUTO_TEST_CASE(PropertiesNotSupportedThrows) {
     DeckPtr deck = createDeck();
-    MessageCounterPtr logger(new MessageCounter());
+    CounterLogPtr logger(new CounterLog());
     EclipseState state(deck);
     DeckKeywordConstPtr swat = deck->getKeyword("SWAT");
     BOOST_CHECK_EQUAL( false , state.supportsGridProperty("SWAT"));

@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(Section_ValidDecks) {
     deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
     deck->addKeyword(std::make_shared<DeckKeyword>("TEST5"));
 
-    MessageCounterPtr logger(new MessageCounter());
+    CounterLogPtr logger(new CounterLog());
     BOOST_CHECK(Opm::Section::checkSectionTopology(deck, logger));
 
     // deck with all optional sections
@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
     deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
     deck->addKeyword(std::make_shared<DeckKeyword>("TEST5"));
 
-    MessageCounterPtr logger(new MessageCounter());
+    CounterLogPtr logger(new CounterLog());
     BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, logger));
 
     // wrong section order

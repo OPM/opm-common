@@ -27,7 +27,7 @@
 #include <boost/test/unit_test.hpp>
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/OpmLog/LogBackend.hpp>
-#include <opm/parser/eclipse/OpmLog/MessageCounter.hpp>
+#include <opm/parser/eclipse/OpmLog/CounterLog.hpp>
 #include <opm/parser/eclipse/OpmLog/StreamLog.hpp>
 #include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
 
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(Test_AbstractBackend) {
 BOOST_AUTO_TEST_CASE(Test_Logger) {
     Logger logger;
     std::ostringstream log_stream;
-    std::shared_ptr<MessageCounter> counter = std::make_shared<MessageCounter>();
+    std::shared_ptr<CounterLog> counter = std::make_shared<CounterLog>();
     std::shared_ptr<StreamLog> streamLog = std::make_shared<StreamLog>( log_stream , Log::MessageType::Warning );
     BOOST_CHECK_EQUAL( false , logger.hasBackend("NO"));
 
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(Test_Logger) {
 
     BOOST_CHECK_THROW( logger.getBackend<LogBackend>("No") , std::invalid_argument );
     {
-        auto counter2 = logger.getBackend<MessageCounter>("COUNTER");
+        auto counter2 = logger.getBackend<CounterLog>("COUNTER");
         BOOST_CHECK_EQUAL( 1U , counter2->numWarnings() );
         BOOST_CHECK_EQUAL( 1U , counter2->numErrors() );
         BOOST_CHECK_EQUAL( 0U , counter2->numNotes() );
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(LoggerDefaultTypesEnabled) {
 /*****************************************************************/
 
 void initLogger(std::ostringstream& log_stream) {
-    std::shared_ptr<MessageCounter> counter = std::make_shared<MessageCounter>();
+    std::shared_ptr<CounterLog> counter = std::make_shared<CounterLog>();
     std::shared_ptr<StreamLog> streamLog = std::make_shared<StreamLog>( log_stream , Log::MessageType::Warning );
 
     BOOST_CHECK_EQUAL( false , OpmLog::hasBackend("NO"));
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(TestOpmLog) {
     OpmLog::addMessage( Log::MessageType::Error , "Error");
 
     {
-        auto counter = OpmLog::getBackend<MessageCounter>("COUNTER");
+        auto counter = OpmLog::getBackend<CounterLog>("COUNTER");
 
         BOOST_CHECK_EQUAL( 1 , counter->numWarnings() );
         BOOST_CHECK_EQUAL( 1 , counter->numErrors() );
