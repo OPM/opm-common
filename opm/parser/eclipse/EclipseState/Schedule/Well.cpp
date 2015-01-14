@@ -209,10 +209,10 @@ namespace Opm {
             newCompletionSet->add( newCompletions[ic] );
         }
 
-        m_completions->add( time_step , newCompletionSet);
+        addCompletionSet( time_step , newCompletionSet);
     }
 
-    void Well::addCompletionsSet(size_t time_step, const CompletionSetConstPtr newCompletionSet){
+    void Well::addCompletionSet(size_t time_step, const CompletionSetConstPtr newCompletionSet){
         m_completions->add(time_step, newCompletionSet);
     }
 

@@ -74,7 +74,7 @@ namespace Opm {
         bool isInjector(size_t timeStep) const;
         void addWELSPECS(DeckRecordConstPtr deckRecord);
         void addCompletions(size_t time_step , const std::vector<CompletionPtr>& newCompletions);
-        void addCompletionsSet(size_t time_step, const CompletionSetConstPtr newCompletionSet);
+        void addCompletionSet(size_t time_step, const CompletionSetConstPtr newCompletionSet);
         CompletionSetConstPtr getCompletions(size_t timeStep) const;
 
         void                            setProductionProperties(size_t timeStep , const WellProductionProperties properties);
