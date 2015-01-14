@@ -32,6 +32,7 @@
 
 
 
+
 namespace Opm {
 
     Schedule::Schedule(DeckConstPtr deck, LoggerPtr logger) {
@@ -389,7 +390,7 @@ namespace Opm {
         }
     }
 
-    Opm::Value<int> Schedule::getValueItem(DeckItemPtr item){
+    static Opm::Value<int> getValueItem(DeckItemPtr item){
         Opm::Value<int> data(item->name());
         if(item->hasValue(0)) {
             int tempValue = item->getInt(0);
@@ -416,11 +417,11 @@ namespace Opm {
             const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
             const std::vector<WellPtr>& wells = getWells(wellNamePattern);
 
-            WellCommon::StatusEnum status = WellCommon::StatusFromString( record->getItem("STATUS")->getTrimmedString(0));
+
 
             for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
                 WellPtr well = *wellIter;
-                std::string wellName = well->name();
+
                 if(haveCompletionData){
                     CompletionSetConstPtr currentCompletionSet = well->getCompletions(currentStep);
 
@@ -436,60 +437,47 @@ namespace Opm {
 
                     for(size_t i = 0; i < completionSize;i++) {
 
-                        CompletionConstPtr completion = currentCompletionSet->get(i);
+                        CompletionConstPtr currentCompletion = currentCompletionSet->get(i);
 
                         if (C1.hasValue()) {
                             if (i < (size_t) C1.getValue()) {
-                                newCompletionSet->add(completion);
+                                newCompletionSet->add(currentCompletion);
                                 continue;
                             }
                         }
                         if (C2.hasValue()) {
                             if (i > (size_t) C2.getValue()) {
-                                newCompletionSet->add(completion);
+                                newCompletionSet->add(currentCompletion);
                                 continue;
                             }
                         }
 
-                        int ci = completion->getI();
-                        int cj = completion->getJ();
-                        int ck = completion->getK();
+                        int ci = currentCompletion->getI();
+                        int cj = currentCompletion->getJ();
+                        int ck = currentCompletion->getK();
 
-                        if ((I.hasValue() && (!(I.getValue() == ci) || I.getValue() !=0))) {
-                            newCompletionSet->add(completion);
+                        if (I.hasValue() && (!(I.getValue() == ci) )) {
+                            newCompletionSet->add(currentCompletion);
                             continue;
                         }
 
-                        if ((J.hasValue() && (!(J.getValue() == cj) || J.getValue()!=0))) {
-                            newCompletionSet->add(completion);
+                        if (J.hasValue() && (!(J.getValue() == cj) )) {
+                            newCompletionSet->add(currentCompletion);
                             continue;
                         }
 
-                        if ((K.hasValue() && (!(K.getValue() == ck) || K.getValue()!=0))) {
-                            newCompletionSet->add(completion);
+                        if (K.hasValue() && (!(K.getValue() == ck) )) {
+                            newCompletionSet->add(currentCompletion);
                             continue;
                         }
-
-                        Value<double> transmissibilityFactor("transmissibilityFactor", completion->getConnectionTransmissibilityFactor());
-                        Value<double> diameter("diameter", completion->getDiameter());
-                        Value<double> skinFactor("skinFactor", completion->getSkinFactor());
-
-                        WellCompletion::StateEnum completionStatus = WellCompletion::StateEnumFromString(WellCommon::Status2String(status));
-
-                        CompletionPtr newCompletion(new Completion(completion->getI(),
-                                completion->getJ(),
-                                completion->getK(),
-                                completionStatus,
-                                transmissibilityFactor,
-                                diameter,
-                                skinFactor,
-                                completion->getDirection()));
-
+                        WellCompletion::StateEnum completionStatus = WellCompletion::StateEnumFromString(record->getItem("STATUS")->getTrimmedString(0));
+                        CompletionPtr newCompletion = std::make_shared<Completion>(currentCompletion, completionStatus);
                         newCompletionSet->add(newCompletion);
                     }
-                    well->addCompletionsSet(currentStep, newCompletionSet);
+                    well->addCompletionSet(currentStep, newCompletionSet);
                 }
                 if(!haveCompletionData) {
+                    WellCommon::StatusEnum status = WellCommon::StatusFromString( record->getItem("STATUS")->getTrimmedString(0));
                     well->setStatus(currentStep, status);
                 }
 
