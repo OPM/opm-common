@@ -1,1 +1,10 @@
-{"name" : "TUNING" , "sections" : ["SCHEDULE"], "size" : 3 , "action" : "IGNORE_WARNING"}
+{"name" : "TUNING" ,
+ "sections" : ["SCHEDULE"],
+ "size" : 3 ,
+  "items" : [{
+    "name" : "tuning" ,
+    "value_type" : "STRING" ,
+    "size_type" : "ALL"}] }
+
+
+
