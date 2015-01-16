@@ -41,16 +41,10 @@ static void printDeckDiagnostics(Opm::DeckConstPtr deck, Opm::CounterLogConstPtr
             std::cout << "Keyword (" << i << "): " << deck->getKeyword(i)->name() << " " << std::endl;
         }
     }
-    {
-        for (size_t iw = 0; iw < logger->size(); iw++) {
-            std::cout << logger->getFormattedMessage(iw) << "\n";
-        }
-    }
-    std::cout << "Total number of log messages:    " << logger->size() << std::endl;
+
     std::cout << "Number of recognized keywords:   " << recognizedKeywords << std::endl;
     std::cout << "Number of unrecognized keywords: " << unrecognizedKeywords << std::endl;
     std::cout << "Total number of keywords:        " << deck->size() << std::endl;
-
 }
 /*
  *

@@ -19,12 +19,11 @@
 #ifndef OPM_COUNTERLOG_HPP
 #define OPM_COUNTERLOG_HPP
 
-#include <iostream>
 #include <string>
 #include <vector>
 #include <tuple>
 #include <memory>
-
+#include <map>
 
 #include <opm/parser/eclipse/OpmLog/LogBackend.hpp>
 #include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
@@ -39,36 +38,16 @@ public:
 
     CounterLog(int64_t messageMask);
     CounterLog();
-    CounterLog(std::ostream* os);
 
-
-    void setOutStream(std::ostream* os);
-
-    size_t size() const;
     size_t numErrors() const;
     size_t numWarnings() const;
     size_t numNotes() const;
-
-        void addMessage(int64_t messageFlag ,
-                        const std::string& message);
+    size_t numMessages(int64_t messageType) const;
 
 
-    void addMessage(const std::string& fileName,
-                    int lineNumber,
-                    int64_t messageType,
-                    const std::string& description);
+    void addMessage(int64_t messageFlag ,
+                    const std::string& message);
 
-    void addNote(const std::string& fileName,
-                 int lineNumber,
-                 const std::string& description);
-
-    void addWarning(const std::string& fileName,
-                    int lineNumber,
-                    const std::string& description);
-
-    void addError(const std::string& fileName,
-                  int lineNumber,
-                  const std::string& description);
 
     const std::string& getFileName(size_t msgIdx) const;
     int getLineNumber(size_t msgIdx) const;
@@ -76,8 +55,6 @@ public:
     const std::string& getDescription(size_t msgIdx) const;
 
     void clear();
-    void append(const CounterLog &other);
-
     /*!
      * \brief This method takes the information provided by the methods above and returns
      *        them in a fully-formatted string.
@@ -89,27 +66,15 @@ public:
      * SPE1DECK.DATA:15:note: No grid found.
      */
     const std::string getFormattedMessage(size_t msgIdx) const;
-
-    /*!
-     * \brief Print all issues described in a log object to a std::ostream.
-     *
-     * This is just another convenience method...
-     */
-    void printAll(std::ostream &os = std::cerr,
-                  size_t enabledTypes = Log::DefaultMessageTypes) const;
     ~CounterLog() {};
 private:
     typedef std::tuple<std::string,
                        int,
                        int64_t,
                        std::string> MessageTuple;
+
     std::vector<MessageTuple> m_messages;
-
-    size_t m_numErrors;
-    size_t m_numWarnings;
-    size_t m_numNotes;
-
-    mutable std::ostream* m_outStream;
+    std::map<int64_t , size_t> m_count;
 };
 
 typedef std::shared_ptr<CounterLog> CounterLogPtr;

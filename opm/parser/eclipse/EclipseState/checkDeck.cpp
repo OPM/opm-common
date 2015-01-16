@@ -31,7 +31,7 @@ bool checkDeck(DeckConstPtr deck, CounterLogPtr logger, size_t enabledChecks) {
             const auto& keyword = deck->getKeyword(keywordIdx);
             if (!keyword->hasParserKeyword()) {
                 std::string msg("Keyword '" + keyword->name() + "' is unknown.");
-                logger->addWarning(keyword->getFileName(), keyword->getLineNumber(), msg);
+                logger->addMessage(Log::MessageType::Warning , Log::fileMessage( keyword->getFileName(), keyword->getLineNumber(), msg));
                 deckValid = false;
             }
         }

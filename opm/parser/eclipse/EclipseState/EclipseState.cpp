@@ -473,7 +473,7 @@ namespace Opm {
             phases.insert(Phase::PhaseEnum::WATER);
 
         if (phases.size() < 3)
-            logger->addNote("", -1, "Only " + std::to_string(static_cast<long long>(phases.size())) + " fluid phases are enabled");
+            logger->addMessage(Log::MessageType::Note , "Only " + std::to_string(static_cast<long long>(phases.size())) + " fluid phases are enabled");
     }
 
 
@@ -645,9 +645,10 @@ namespace Opm {
                 gridProperty->loadFromDeckKeyword( inputBox , deckKeyword );
             }
         } else {
-            logger->addError(deckKeyword->getFileName(),
-                                deckKeyword->getLineNumber(),
-                                "Tried to load unsupported grid property from keyword: " + deckKeyword->name());
+            std::string msg = Log::fileMessage(deckKeyword->getFileName(),
+                                               deckKeyword->getLineNumber(),
+                                               "Tried to load unsupported grid property from keyword: " + deckKeyword->name());
+            logger->addMessage(Log::MessageType::Error , msg);
         }
     }
 
@@ -1309,19 +1310,20 @@ namespace Opm {
                                       J2Item->getInt(0) - 1,
                                       K1Item->getInt(0) - 1,
                                       K2Item->getInt(0) - 1);
-        } else if (setCount != 0)
-            logger->addError(deckKeyword->getFileName(),
-                                deckKeyword->getLineNumber(),
-                                "BOX modifiers on keywords must be either specified completely or not at all. Ignoring.");
+        } else if (setCount != 0) {
+            std::string msg = "BOX modifiers on keywords must be either specified completely or not at all. Ignoring.";
+            logger->addMessage(Log::MessageType::Error , Log::fileMessage(deckKeyword->getFileName() , deckKeyword->getLineNumber() , msg));
+        }
     }
 
+
     void EclipseState::complainAboutAmbiguousKeyword(DeckConstPtr deck, CounterLogPtr logger, const std::string& keywordName) const {
-        logger->addError("", -1,
-                            "The "+keywordName+" keyword must be unique in the deck. Ignoring all!");
+        logger->addMessage(Log::MessageType::Error, "The " + keywordName + " keyword must be unique in the deck. Ignoring all!");
         auto keywords = deck->getKeywordList(keywordName);
-        for (size_t i = 0; i < keywords.size(); ++i)
-            logger->addError(keywords[i]->getFileName(), keywords[i]->getLineNumber(),
-                                "Ambiguous keyword "+keywordName+" defined here");
+        for (size_t i = 0; i < keywords.size(); ++i) {
+            std::string msg = "Ambiguous keyword "+keywordName+" defined here";
+            logger->addMessage(Log::MessageType::Error , Log::fileMessage( keywords[i]->getFileName(), keywords[i]->getLineNumber(),msg));
+        }
     }
 
 }

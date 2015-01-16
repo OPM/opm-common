@@ -26,7 +26,13 @@ namespace Opm {
 
 namespace Log {
 
-    std::string fileMessage(const std::string& filename , size_t line , const std::string& message) {
+    bool isPower2(int64_t x) {
+        return ((x != 0) && !(x & (x - 1)));
+    }
+
+
+
+    std::string fileMessage(const std::string& filename , int line , const std::string& message) {
         std::ostringstream oss;
 
         oss << filename << ":" << line << ": " << message;
@@ -34,7 +40,7 @@ namespace Log {
         return oss.str();
     }
 
-    std::string fileMessage(int64_t messageType , const std::string& filename , size_t line , const std::string& message) {
+    std::string fileMessage(int64_t messageType , const std::string& filename , int line , const std::string& message) {
         return fileMessage( filename , line , prefixMessage( messageType , message ));
     }
 

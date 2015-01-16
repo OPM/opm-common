@@ -33,8 +33,9 @@ namespace Log {
 
     const int64_t DefaultMessageTypes = MessageType::Note + MessageType::Warning + MessageType::Error;
 
-    std::string fileMessage(const std::string& path, size_t line , const std::string& msg);
-    std::string fileMessage(int64_t messageType , const std::string& path, size_t line , const std::string& msg);
+    bool isPower2(int64_t x);
+    std::string fileMessage(const std::string& path, int line , const std::string& msg);
+    std::string fileMessage(int64_t messageType , const std::string& path, int line , const std::string& msg);
     std::string prefixMessage(int64_t messageType , const std::string& msg);
 
 }

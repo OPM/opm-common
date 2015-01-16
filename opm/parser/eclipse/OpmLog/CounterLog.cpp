@@ -29,149 +29,66 @@
 namespace Opm {
 
 CounterLog::CounterLog(int64_t messageTypes) : LogBackend(messageTypes)
-{
-    m_numErrors = 0;
-    m_numWarnings = 0;
-    m_numNotes = 0;
-
-    setOutStream(NULL);
-}
+{ }
 
 
 CounterLog::CounterLog() : LogBackend(Log::DefaultMessageTypes)
-{
-    m_numErrors = 0;
-    m_numWarnings = 0;
-    m_numNotes = 0;
+{ }
 
-    setOutStream(NULL);
-}
 
-CounterLog::CounterLog(std::ostream* os) : LogBackend(Log::DefaultMessageTypes)
-{
-    m_numErrors = 0;
-    m_numWarnings = 0;
-    m_numNotes = 0;
-
-    setOutStream(os);
-}
-
-void CounterLog::setOutStream(std::ostream* os) {
-    m_outStream = os;
-}
-
-size_t CounterLog::size() const {
-    return m_messages.size();
-}
 
 size_t CounterLog::numErrors() const {
-    return m_numErrors;
+    return numMessages( Log::MessageType::Error );
 }
 
 size_t CounterLog::numWarnings() const {
-    return m_numWarnings;
+    return numMessages( Log::MessageType::Warning );
 }
 
 size_t CounterLog::numNotes() const {
-    return m_numNotes;
+    return numMessages( Log::MessageType::Note );
 }
 
-void CounterLog::addMessage(const std::string& fileName,
-                                int lineNumber,
-                                int64_t messageType,
-                                const std::string& description) {
 
-    if (includeMessage( messageType )) {
-        switch (messageType) {
-        case Log::MessageType::Note:
-            ++m_numNotes;
-            break;
-
-        case Log::MessageType::Warning:
-            ++m_numWarnings;
-            break;
-
-        case Log::MessageType::Error:
-            ++m_numErrors;
-            break;
-
-        default:
-            throw std::invalid_argument("Log messages must be of type Note, Warning or Error");
-        }
-
-        m_messages.push_back(MessageTuple(fileName, lineNumber, messageType, description));
-
-        if (m_outStream) {
-            (*m_outStream) << getFormattedMessage(size() - 1) << "\n";
-            (*m_outStream) << (std::flush);
-        }
-    }
+size_t CounterLog::numMessages(int64_t messageType) const {
+    if (Log::isPower2( messageType )) {
+        auto iter = m_count.find( messageType );
+        if (iter == m_count.end())
+            return 0;
+        else
+            return (*iter).second;
+    } else
+        throw std::invalid_argument("The messageType ID must be 2^n");
 }
+
+
 
 void CounterLog::addMessage(int64_t messageType , const std::string& message) {
     if (includeMessage( messageType ))
-        addMessage("???" , -1 , messageType , message);
-}
-
-
-
-
-void CounterLog::addNote(const std::string& fileName,
-                             int lineNumber,
-                             const std::string& description) {
-    addMessage(fileName, lineNumber, Log::MessageType::Note, description);
-}
-
-void CounterLog::addWarning(const std::string& fileName,
-                                int lineNumber,
-                                const std::string& description) {
-    addMessage(fileName, lineNumber, Log::MessageType::Warning, description);
-}
-
-void CounterLog::addError(const std::string& fileName,
-                              int lineNumber,
-                              const std::string& description) {
-    addMessage(fileName, lineNumber, Log::MessageType::Error, description);
+        m_count[messageType]++;
 }
 
 
 void CounterLog::clear()
 {
-    m_numErrors = 0;
-    m_numWarnings = 0;
-    m_numNotes = 0;
-
-    m_messages.clear();
+    m_count.clear();
 }
 
-void CounterLog::append(const CounterLog &other)
-{
-    for (size_t i = 0; i < other.size(); ++i) {
-        addMessage(other.getFileName(i),
-                   other.getLineNumber(i),
-                   other.getMessageType(i),
-                   other.getDescription(i));
-    }
-}
 
 const std::string& CounterLog::getFileName(size_t msgIdx) const {
-    assert(msgIdx < size());
-    return std::get<0>(m_messages[msgIdx]);
+    return "";
 }
 
 int CounterLog::getLineNumber(size_t msgIdx) const {
-    assert(msgIdx < size());
-    return std::get<1>(m_messages[msgIdx]);
+    return -1;
 }
 
 int64_t CounterLog::getMessageType(size_t msgIdx) const {
-    assert(msgIdx < size());
-    return std::get<2>(m_messages[msgIdx]);
+    return 1;
 }
 
 const std::string& CounterLog::getDescription(size_t msgIdx) const {
-    assert(msgIdx < size());
-    return std::get<3>(m_messages[msgIdx]);
+    return "";
 }
 
 const std::string CounterLog::getFormattedMessage(size_t msgIdx) const {
@@ -187,13 +104,6 @@ const std::string CounterLog::getFormattedMessage(size_t msgIdx) const {
         return prefixedMessage;
 }
 
-
-
-void CounterLog::printAll(std::ostream& os, size_t enabledTypes) const {
-    for (size_t i = 0; i < size(); ++i)
-        if (enabledTypes & getMessageType(i))
-            os << getFormattedMessage(i) << "\n";
-}
 
 
 } // namespace Opm

@@ -166,6 +166,26 @@ BOOST_AUTO_TEST_CASE(LoggerDefaultTypesEnabled) {
     BOOST_CHECK_EQUAL( logger.enabledMessageTypes() , Log::DefaultMessageTypes);
 }
 
+BOOST_AUTO_TEST_CASE( CounterLogTesting) {
+    CounterLog counter(Log::DefaultMessageTypes);
+
+    counter.addMessage( Log::MessageType::Error , "This is an error ...");
+    counter.addMessage( Log::MessageType::Warning , "This is a warning");
+
+    BOOST_CHECK_EQUAL(1U , counter.numMessages( Log::MessageType::Error ));
+    BOOST_CHECK_EQUAL(1U , counter.numMessages( Log::MessageType::Warning ));
+    BOOST_CHECK_EQUAL(0  , counter.numMessages( Log::MessageType::Note ));
+
+    {
+        int64_t not_enabled = 4096;
+        int64_t not_power2  = 4095;
+
+        BOOST_CHECK_EQUAL( 0 , counter.numMessages( not_enabled ));
+        BOOST_CHECK_THROW( counter.numMessages( not_power2 ) , std::invalid_argument);
+    }
+}
+
+
 /*****************************************************************/
 
 void initLogger(std::ostringstream& log_stream) {

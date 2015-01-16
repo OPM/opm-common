@@ -25,9 +25,6 @@
 
 
 
-static bool isPower2(int64_t x) {
-    return ((x != 0) && !(x & (x - 1)));
-}
 
 namespace Opm {
 
@@ -79,7 +76,7 @@ namespace Opm {
 
 
     bool Logger::enabledMessageType( int64_t messageType) const {
-        if (isPower2( messageType)) {
+        if (Log::isPower2( messageType)) {
             if ((messageType & m_enabledTypes) == 0)
                 return false;
             else
@@ -91,7 +88,7 @@ namespace Opm {
 
 
     void Logger::addMessageType( int64_t messageType , const std::string& prefix) {
-        if (isPower2( messageType)) {
+        if (Log::isPower2( messageType)) {
             m_enabledTypes |= messageType;
         } else
             throw std::invalid_argument("The message type id must be ~ 2^n");

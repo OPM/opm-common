@@ -191,17 +191,13 @@ namespace Opm {
         if (well->getHeadI() != record->getItem("HEAD_I")->getInt(0) - 1) {
             std::string msg =
                 "Unable process WELSPECS for well " + well->name() + ", HEAD_I deviates from existing value";
-            logger->addError(keyword->getFileName(),
-                                keyword->getLineNumber(),
-                                msg);
+            logger->addMessage(Log::MessageType::Error , Log::fileMessage( keyword->getFileName(), keyword->getLineNumber(), msg));
             throw std::invalid_argument(msg);
         }
         if (well->getHeadJ() != record->getItem("HEAD_J")->getInt(0) - 1) {
             std::string msg =
                 "Unable process WELSPECS for well " + well->name() + ", HEAD_J deviates from existing value";
-            logger->addError(keyword->getFileName(),
-                                keyword->getLineNumber(),
-                                msg);
+            logger->addMessage(Log::MessageType::Error , Log::fileMessage( keyword->getFileName(), keyword->getLineNumber(), msg));
             throw std::invalid_argument(msg);
         }
     }
@@ -247,9 +243,7 @@ namespace Opm {
                         std::string msg =
                             "Tried to set invalid control: " +
                             cmodeString + " for well: " + well->name();
-                        logger->addError(keyword->getFileName(),
-                                            keyword->getLineNumber(),
-                                            msg);
+                        logger->addMessage(Log::MessageType::Error , Log::fileMessage( keyword->getFileName(), keyword->getLineNumber(), msg));
                         throw std::invalid_argument(msg);
                     }
                 }

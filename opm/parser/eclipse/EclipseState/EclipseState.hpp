@@ -72,7 +72,7 @@ namespace Opm {
             AllProperties = IntProperties | DoubleProperties
         };
 
-        EclipseState(DeckConstPtr deck, CounterLogPtr logger = std::make_shared<CounterLog>(&std::cout));
+        EclipseState(DeckConstPtr deck , CounterLogPtr logger = std::make_shared<CounterLog>(Log::DefaultMessageTypes));
 
         ScheduleConstPtr getSchedule() const;
         SimulationConfigConstPtr getSimulationConfig() const;
@@ -160,10 +160,8 @@ namespace Opm {
                     // for simple tables, an empty record indicates that the previous table
                     // should be copied...
                     if (tableIdx == 0) {
-                        logger->addError(tableKeyword->getFileName(),
-                                            tableKeyword->getLineNumber(),
-                                            "The first table for keyword "+keywordName+
-                                            " must be explicitly defined! Ignoring keyword");
+                        std::string msg = "The first table for keyword "+keywordName+" must be explicitly defined! Ignoring keyword";
+                        logger->addMessage(Log::MessageType::Warning , Log::fileMessage( tableKeyword->getFileName(), tableKeyword->getLineNumber(), msg));
                         return;
                     }
                     tableVector.push_back(tableVector.back());

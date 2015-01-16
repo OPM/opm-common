@@ -31,7 +31,7 @@ class LogBackend {
 public:
     LogBackend( int64_t mask );
     virtual ~LogBackend() { };
-    virtual void addMessage(int64_t messageFlag , const std::string& message) { };
+    virtual void addMessage(int64_t , const std::string& ) { };
 
     int64_t getMask() const;
     bool    includeMessage(int64_t messageFlag);

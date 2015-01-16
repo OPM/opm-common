@@ -302,19 +302,16 @@ namespace Opm {
 
                         if (isRecognizedKeyword(parserState->rawKeyword->getKeywordName())) {
                             ParserKeywordConstPtr parserKeyword = getParserKeywordFromDeckName(parserState->rawKeyword->getKeywordName());
-
                             DeckKeywordPtr deckKeyword = parserKeyword->parse(parserState->rawKeyword);
                             deckKeyword->setParserKeyword(parserKeyword);
                             parserState->deck->addKeyword(deckKeyword);
-
                         } else {
                             DeckKeywordPtr deckKeyword(new DeckKeyword(parserState->rawKeyword->getKeywordName(), false));
+                            const std::string msg = "The keyword " + parserState->rawKeyword->getKeywordName() + " is not recognized";
                             deckKeyword->setLocation(parserState->rawKeyword->getFilename(),
                                                      parserState->rawKeyword->getLineNR());
                             parserState->deck->addKeyword(deckKeyword);
-                            parserState->logger.addWarning(parserState->dataFile.string(),
-                                                              parserState->rawKeyword->getLineNR(),
-                                                              "The keyword " + parserState->rawKeyword->getKeywordName() + " is not recognized");
+                            parserState->logger.addMessage(Log::MessageType::Warning , Log::fileMessage(parserState->dataFile.string() , parserState->lineNR , msg));
                         }
                     }
                     parserState->rawKeyword.reset();

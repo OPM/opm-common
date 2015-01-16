@@ -112,7 +112,7 @@ namespace Opm {
                 initGrid(dims, deck, logger);
             } else {
                 const std::string msg = "The RUNSPEC section must have the DIMENS keyword with logically Cartesian grid dimensions.";
-                logger->addError("", -1, msg);
+                logger->addMessage(Log::MessageType::Error , msg);
                 throw std::invalid_argument(msg);
             }
         } else if (hasGRID) {
@@ -123,7 +123,7 @@ namespace Opm {
                 initGrid(dims, deck, logger);
             } else {
                 const std::string msg = "With no RUNSPEC section, the GRID section must specify the grid dimensions using the SPECGRID keyword.";
-                logger->addError("", -1, msg);
+                logger->addMessage(Log::MessageType::Error , msg);
                 throw std::invalid_argument(msg);
             }
         } else {
@@ -139,7 +139,7 @@ namespace Opm {
                 initGrid(dims, deck, logger);
             } else {
                 const std::string msg = "The deck must specify grid dimensions using either DIMENS or SPECGRID.";
-                logger->addError("", -1, msg);
+                logger->addMessage(Log::MessageType::Error , msg);
                 throw std::invalid_argument(msg);
             }
         }
@@ -332,7 +332,7 @@ namespace Opm {
                     + std::to_string(static_cast<long long>(8*nx*ny*nz)) + " is "
                     + std::to_string(static_cast<long long>(ZCORNKeyWord->getDataSize()));
 
-                logger->addError("", -1, msg);
+                logger->addMessage(Log::MessageType::Error , msg);
                 throw std::invalid_argument(msg);
             }
         }
@@ -344,7 +344,7 @@ namespace Opm {
                     "Wrong size of the COORD keyword: Expected 8*(nx + 1)*(ny + 1) = "
                     + std::to_string(static_cast<long long>(8*(nx + 1)*(ny + 1))) + " is "
                     + std::to_string(static_cast<long long>(COORDKeyWord->getDataSize()));
-                logger->addError("", -1, msg);
+                logger->addMessage(Log::MessageType::Error , msg);
                 throw std::invalid_argument(msg);
             }
         }
@@ -356,7 +356,7 @@ namespace Opm {
                     "Wrong size of the ACTNUM keyword: Expected nx*ny*nz = "
                     + std::to_string(static_cast<long long>(nx*ny*nz)) + " is "
                     + std::to_string(static_cast<long long>(ACTNUMKeyWord->getDataSize()));
-                logger->addError("", -1, msg);
+                logger->addMessage(Log::MessageType::Error , msg);
                 throw std::invalid_argument(msg);
             }
         }
