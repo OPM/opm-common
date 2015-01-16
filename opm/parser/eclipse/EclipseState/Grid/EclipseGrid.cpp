@@ -23,6 +23,7 @@
 
 #include <boost/lexical_cast.hpp>
 
+#include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -96,7 +97,7 @@ namespace Opm {
         }
     } // anonymous namespace
 
-    EclipseGrid::EclipseGrid(std::shared_ptr<const Deck> deck, CounterLogPtr logger)
+    EclipseGrid::EclipseGrid(std::shared_ptr<const Deck> deck)
         : m_minpvValue(0),
           m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH")
@@ -109,10 +110,10 @@ namespace Opm {
             if (runspecSection->hasKeyword("DIMENS")) {
                 DeckKeywordConstPtr dimens = runspecSection->getKeyword("DIMENS");
                 std::vector<int> dims = getDims(dimens);
-                initGrid(dims, deck, logger);
+                initGrid(dims, deck);
             } else {
                 const std::string msg = "The RUNSPEC section must have the DIMENS keyword with logically Cartesian grid dimensions.";
-                logger->addMessage(Log::MessageType::Error , msg);
+                OpmLog::addMessage(Log::MessageType::Error , msg);
                 throw std::invalid_argument(msg);
             }
         } else if (hasGRID) {
@@ -120,10 +121,10 @@ namespace Opm {
             if (deck->hasKeyword("SPECGRID")) {
                 DeckKeywordConstPtr specgrid = deck->getKeyword("SPECGRID");
                 std::vector<int> dims = getDims(specgrid);
-                initGrid(dims, deck, logger);
+                initGrid(dims, deck);
             } else {
                 const std::string msg = "With no RUNSPEC section, the GRID section must specify the grid dimensions using the SPECGRID keyword.";
-                logger->addMessage(Log::MessageType::Error , msg);
+                OpmLog::addMessage(Log::MessageType::Error , msg);
                 throw std::invalid_argument(msg);
             }
         } else {
@@ -132,27 +133,27 @@ namespace Opm {
             if (deck->hasKeyword("SPECGRID")) {
                 DeckKeywordConstPtr specgrid = deck->getKeyword("SPECGRID");
                 std::vector<int> dims = getDims(specgrid);
-                initGrid(dims, deck, logger);
+                initGrid(dims, deck);
             } else if (deck->hasKeyword("DIMENS")) {
                 DeckKeywordConstPtr dimens = deck->getKeyword("DIMENS");
                 std::vector<int> dims = getDims(dimens);
-                initGrid(dims, deck, logger);
+                initGrid(dims, deck);
             } else {
                 const std::string msg = "The deck must specify grid dimensions using either DIMENS or SPECGRID.";
-                logger->addMessage(Log::MessageType::Error , msg);
+                OpmLog::addMessage(Log::MessageType::Error , msg);
                 throw std::invalid_argument(msg);
             }
         }
     }
 
 
-    void EclipseGrid::initGrid( const std::vector<int>& dims, DeckConstPtr deck, CounterLogPtr logger) {
+    void EclipseGrid::initGrid( const std::vector<int>& dims, DeckConstPtr deck) {
         m_nx = static_cast<size_t>(dims[0]);
         m_ny = static_cast<size_t>(dims[1]);
         m_nz = static_cast<size_t>(dims[2]);
 
         if (hasCornerPointKeywords(deck)) {
-            initCornerPointGrid(dims , deck, logger);
+            initCornerPointGrid(dims , deck);
         } else if (hasCartesianKeywords(deck)) {
             initCartesianGrid(dims , deck);
         }
@@ -259,8 +260,8 @@ namespace Opm {
 
 
 
-    void EclipseGrid::initCornerPointGrid(const std::vector<int>& dims , DeckConstPtr deck, CounterLogPtr logger) {
-        assertCornerPointKeywords( dims , deck, logger);
+    void EclipseGrid::initCornerPointGrid(const std::vector<int>& dims , DeckConstPtr deck) {
+        assertCornerPointKeywords( dims , deck);
         {
             DeckKeywordConstPtr ZCORNKeyWord = deck->getKeyword("ZCORN");
             DeckKeywordConstPtr COORDKeyWord = deck->getKeyword("COORD");
@@ -318,7 +319,7 @@ namespace Opm {
     }
 
 
-    void EclipseGrid::assertCornerPointKeywords( const std::vector<int>& dims , DeckConstPtr deck, CounterLogPtr logger)
+    void EclipseGrid::assertCornerPointKeywords( const std::vector<int>& dims , DeckConstPtr deck)
     {
         const int nx = dims[0];
         const int ny = dims[1];
@@ -332,7 +333,7 @@ namespace Opm {
                     + std::to_string(static_cast<long long>(8*nx*ny*nz)) + " is "
                     + std::to_string(static_cast<long long>(ZCORNKeyWord->getDataSize()));
 
-                logger->addMessage(Log::MessageType::Error , msg);
+                OpmLog::addMessage(Log::MessageType::Error , msg);
                 throw std::invalid_argument(msg);
             }
         }
@@ -344,7 +345,7 @@ namespace Opm {
                     "Wrong size of the COORD keyword: Expected 8*(nx + 1)*(ny + 1) = "
                     + std::to_string(static_cast<long long>(8*(nx + 1)*(ny + 1))) + " is "
                     + std::to_string(static_cast<long long>(COORDKeyWord->getDataSize()));
-                logger->addMessage(Log::MessageType::Error , msg);
+                OpmLog::addMessage(Log::MessageType::Error , msg);
                 throw std::invalid_argument(msg);
             }
         }
@@ -356,7 +357,7 @@ namespace Opm {
                     "Wrong size of the ACTNUM keyword: Expected nx*ny*nz = "
                     + std::to_string(static_cast<long long>(nx*ny*nz)) + " is "
                     + std::to_string(static_cast<long long>(ACTNUMKeyWord->getDataSize()));
-                logger->addMessage(Log::MessageType::Error , msg);
+                OpmLog::addMessage(Log::MessageType::Error , msg);
                 throw std::invalid_argument(msg);
             }
         }

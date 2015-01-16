@@ -25,6 +25,9 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
+#include <opm/parser/eclipse/OpmLog/CounterLog.hpp>
+
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -86,8 +89,7 @@ static DeckPtr createDeckTOP() {
 
 BOOST_AUTO_TEST_CASE(GetPOROTOPBased) {
     DeckPtr deck = createDeckTOP();
-    CounterLogPtr logger(new CounterLog());
-    EclipseState state(deck, logger);
+    EclipseState state(deck);
 
     std::shared_ptr<GridProperty<double> > poro = state.getDoubleGridProperty( "PORO" );
     std::shared_ptr<GridProperty<double> > permx = state.getDoubleGridProperty( "PERMX" );
@@ -251,13 +253,14 @@ BOOST_AUTO_TEST_CASE(IntProperties) {
 
 
 BOOST_AUTO_TEST_CASE(PropertiesNotSupportedThrows) {
+    std::shared_ptr<CounterLog> counter = std::make_shared<CounterLog>(Log::MessageType::Error);
+    OpmLog::addBackend("COUNTER" , counter);
     DeckPtr deck = createDeck();
-    CounterLogPtr logger(new CounterLog());
     EclipseState state(deck);
     DeckKeywordConstPtr swat = deck->getKeyword("SWAT");
     BOOST_CHECK_EQUAL( false , state.supportsGridProperty("SWAT"));
-    state.loadGridPropertyFromDeckKeyword(std::make_shared<const Box>(10,10,10), swat, logger);
-    BOOST_CHECK_EQUAL( 1 , logger->numMessages(Log::MessageType::Error) );
+    state.loadGridPropertyFromDeckKeyword(std::make_shared<const Box>(10,10,10), swat);
+    BOOST_CHECK_EQUAL( 1 , counter->numMessages(Log::MessageType::Error) );
 }
 
 

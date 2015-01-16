@@ -29,8 +29,6 @@
 
 #include <opm/json/JsonObject.hpp>
 
-#include <opm/parser/eclipse/OpmLog/CounterLog.hpp>
-
 #include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
@@ -48,9 +46,9 @@ namespace Opm {
         Parser(bool addDefault = true);
 
         /// The starting point of the parsing process. The supplied file is parsed, and the resulting Deck is returned.
-        DeckPtr parseFile(const std::string &dataFile, CounterLogPtr logger = std::make_shared<CounterLog>(Log::DefaultMessageTypes)) const;
-        DeckPtr parseString(const std::string &data, CounterLogPtr logger = std::make_shared<CounterLog>(Log::DefaultMessageTypes)) const;
-        DeckPtr parseStream(std::shared_ptr<std::istream> inputStream, CounterLogPtr logger = std::make_shared<CounterLog>(Log::DefaultMessageTypes)) const;
+        DeckPtr parseFile(const std::string &dataFile) const;
+        DeckPtr parseString(const std::string &data) const;
+        DeckPtr parseStream(std::shared_ptr<std::istream> inputStream) const;
 
         /// Method to add ParserKeyword instances, these holding type and size information about the keywords and their data.
         void addParserKeyword(ParserKeywordConstPtr parserKeyword);

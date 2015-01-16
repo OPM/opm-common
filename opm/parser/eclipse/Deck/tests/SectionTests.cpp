@@ -243,8 +243,7 @@ BOOST_AUTO_TEST_CASE(Section_ValidDecks) {
     deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
     deck->addKeyword(std::make_shared<DeckKeyword>("TEST5"));
 
-    CounterLogPtr logger(new CounterLog());
-    BOOST_CHECK(Opm::Section::checkSectionTopology(deck, logger));
+    BOOST_CHECK(Opm::Section::checkSectionTopology(deck));
 
     // deck with all optional sections
     deck.reset(new Deck());
@@ -272,7 +271,7 @@ BOOST_AUTO_TEST_CASE(Section_ValidDecks) {
     deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
     deck->addKeyword(std::make_shared<DeckKeyword>("TEST8"));
 
-    BOOST_CHECK(Opm::Section::checkSectionTopology(deck, logger));
+    BOOST_CHECK(Opm::Section::checkSectionTopology(deck));
 }
 
 BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
@@ -295,8 +294,7 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
     deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
     deck->addKeyword(std::make_shared<DeckKeyword>("TEST5"));
 
-    CounterLogPtr logger(new CounterLog());
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, logger));
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck));
 
     // wrong section order
     deck.reset(new Deck());
@@ -324,7 +322,7 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
     deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
     deck->addKeyword(std::make_shared<DeckKeyword>("TEST8"));
 
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, logger));
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck));
 
     // duplicate section
     deck.reset(new Deck());
@@ -355,7 +353,7 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
     deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
     deck->addKeyword(std::make_shared<DeckKeyword>("TEST8"));
 
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, logger));
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck));
 
     // section after SCHEDULE
     deck.reset(new Deck());
@@ -383,7 +381,7 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
     deck->addKeyword(std::make_shared<DeckKeyword>("EDIT"));
     deck->addKeyword(std::make_shared<DeckKeyword>("TEST3"));
 
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, logger));
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck));
 
     // missing RUNSPEC
     deck.reset(new Deck());
@@ -400,7 +398,7 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
     deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
     deck->addKeyword(std::make_shared<DeckKeyword>("TEST5"));
 
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, logger));
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck));
 
     // missing GRID
     deck.reset(new Deck());
@@ -417,7 +415,7 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
     deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
     deck->addKeyword(std::make_shared<DeckKeyword>("TEST5"));
 
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, logger));
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck));
 
     // missing PROPS
     deck.reset(new Deck());
@@ -434,7 +432,7 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
     deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
     deck->addKeyword(std::make_shared<DeckKeyword>("TEST5"));
 
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, logger));
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck));
 
     // missing SOLUTION
     deck.reset(new Deck());
@@ -451,7 +449,7 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
     deck->addKeyword(std::make_shared<DeckKeyword>("SCHEDULE"));
     deck->addKeyword(std::make_shared<DeckKeyword>("TEST5"));
 
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, logger));
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck));
 
     // missing SCHEDULE
     deck.reset(new Deck());
@@ -468,5 +466,5 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
     deck->addKeyword(std::make_shared<DeckKeyword>("SOLUTION"));
     deck->addKeyword(std::make_shared<DeckKeyword>("TEST4"));
 
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck, logger));
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(deck));
 }

@@ -19,7 +19,7 @@
 
 #include <memory>
 
-#include <opm/parser/eclipse/OpmLog/CounterLog.hpp>
+#include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -33,7 +33,6 @@ namespace Opm {
 
     struct ParserState {
         DeckPtr deck;
-        CounterLog logger;
         boost::filesystem::path dataFile;
         boost::filesystem::path rootPath;
         std::map<std::string, std::string> pathMap;
@@ -91,7 +90,7 @@ namespace Opm {
      is retained in the current implementation.
      */
 
-    DeckPtr Parser::parseFile(const std::string &dataFileName, CounterLogPtr logger) const {
+    DeckPtr Parser::parseFile(const std::string &dataFileName) const {
 
         std::shared_ptr<ParserState> parserState(new ParserState(dataFileName, DeckPtr(new Deck()), getRootPathFromFile(dataFileName)));
 
@@ -102,33 +101,22 @@ namespace Opm {
         parseState(parserState);
         applyUnitsToDeck(parserState->deck);
 
-        if (logger)
-            *logger = parserState->logger;
-
         return parserState->deck;
     }
 
-    DeckPtr Parser::parseString(const std::string &data, CounterLogPtr logger) const {
+    DeckPtr Parser::parseString(const std::string &data) const {
 
         std::shared_ptr<ParserState> parserState(new ParserState(data, DeckPtr(new Deck())));
-
         parseState(parserState);
         applyUnitsToDeck(parserState->deck);
-
-        if (logger)
-            *logger = parserState->logger;
-
         return parserState->deck;
     }
 
-    DeckPtr Parser::parseStream(std::shared_ptr<std::istream> inputStream, CounterLogPtr logger) const {
+    DeckPtr Parser::parseStream(std::shared_ptr<std::istream> inputStream) const {
         std::shared_ptr<ParserState> parserState(new ParserState(inputStream, DeckPtr(new Deck())));
 
         parseState(parserState);
         applyUnitsToDeck(parserState->deck);
-
-        if (logger)
-            *logger = parserState->logger;
 
         return parserState->deck;
     }
@@ -311,7 +299,7 @@ namespace Opm {
                             deckKeyword->setLocation(parserState->rawKeyword->getFilename(),
                                                      parserState->rawKeyword->getLineNR());
                             parserState->deck->addKeyword(deckKeyword);
-                            parserState->logger.addMessage(Log::MessageType::Warning , Log::fileMessage(parserState->dataFile.string() , parserState->lineNR , msg));
+                            OpmLog::addMessage(Log::MessageType::Warning , Log::fileMessage(parserState->dataFile.string() , parserState->lineNR , msg));
                         }
                     }
                     parserState->rawKeyword.reset();

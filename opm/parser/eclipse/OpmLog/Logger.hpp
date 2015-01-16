@@ -20,6 +20,7 @@
 #ifndef OPM_LOGGER_HPP
 #define OPM_LOGGER_HPP
 
+#include <stdexcept>
 #include <cstdint>
 #include <map>
 #include <memory>
