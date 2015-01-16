@@ -313,10 +313,19 @@ static DeckPtr createDeckWithWellsAndCompletionDataWithWELOPEN() {
                     " 'OP_1' OPEN / \n"
                     " 'OP_2' OPEN 0 0 0 4 6 / \n "
                     " 'OP_3' OPEN 0 0 0 / \n"
+                    "/\n"
+                    "DATES             -- 5\n"
+                    " 10  OKT 2008 / \n"
+                    "/\n"
+                    "WELOPEN\n"
+                    " 'OP_1' SHUT 0 0 0 0 0 / \n "
                     "/\n";
 
     return parser.parseString(input);
 }
+
+
+
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndCompletionDataWithWELOPEN) {
     DeckPtr deck = createDeckWithWellsAndCompletionDataWithWELOPEN();
@@ -374,14 +383,64 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndCompletionDataWithWELOPEN) {
     completion = completionSet->get(index);
     BOOST_CHECK_EQUAL(WellCompletion::StateEnum::OPEN, completion->getState());
 
-
     well = schedule.getWell("OP_1");
     currentStep = 0;
     BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well->getStatus(currentStep));
 
+    currentStep = 3;
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus(currentStep));
+
+    currentStep = 4;
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well->getStatus(currentStep));
+
+    currentStep = 5;
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus(currentStep));
+
 
 }
 
+
+
+BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_OpenWellWithShutCompletionsThrowsExcpetion) {
+  Opm::Parser parser;
+  std::string input =
+          "START             -- 0 \n"
+                  "1 NOV 1979 / \n"
+                  "SCHEDULE\n"
+                  "DATES             -- 1\n"
+                  " 1 DES 1979/ \n"
+                  "/\n"
+                  "WELSPECS\n"
+                  "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+                  "/\n"
+                  "COMPDAT\n"
+                  " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+                  " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
+                  " 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+                  "/\n"
+                  "DATES             -- 2\n"
+                  " 10  JUL 2008 / \n"
+                  "/\n"
+                  "WELOPEN\n"
+                  " 'OP_1' OPEN / \n"
+                  "/\n"
+                  "DATES             -- 3\n"
+                  " 10  OKT 2008 / \n"
+                  "/\n"
+                  "WELOPEN\n"
+                  " 'OP_1' SHUT 0 0 0 0 0 / \n "
+                  "/\n"
+                  "DATES             -- 4\n"
+                  " 10  NOV 2008 / \n"
+                  "/\n"
+                  "WELOPEN\n"
+                  " 'OP_1' OPEN / \n "
+                  "/\n";
+
+
+  DeckPtr deck = parser.parseString(input);
+  BOOST_CHECK_THROW(Schedule schedule(deck), std::exception);
+}
 
 
 

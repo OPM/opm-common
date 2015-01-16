@@ -39,6 +39,7 @@ namespace Opm {
         size_t size() const;
         CompletionSet * shallowCopy() const;
         CompletionConstPtr get(size_t index) const;
+        bool allCompletionsShut() const;
     private:
         std::vector<CompletionConstPtr> m_completions;
     };

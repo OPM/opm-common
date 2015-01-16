@@ -65,4 +65,16 @@ namespace Opm {
     }
 
 
+    bool CompletionSet::allCompletionsShut( ) const {
+      bool allShut = true;
+      for (auto ci = m_completions.begin(); ci != m_completions.end(); ++ci) {
+          CompletionConstPtr completion_ptr = *ci;
+          if (completion_ptr->getState() != WellCompletion::StateEnum::SHUT) {
+              allShut = false;
+              break;
+          }
+      }
+      return allShut;
+    }
+
 }
