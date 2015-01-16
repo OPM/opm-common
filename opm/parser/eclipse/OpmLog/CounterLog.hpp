@@ -39,9 +39,6 @@ public:
     CounterLog(int64_t messageMask);
     CounterLog();
 
-    size_t numErrors() const;
-    size_t numWarnings() const;
-    size_t numNotes() const;
     size_t numMessages(int64_t messageType) const;
 
 
@@ -49,31 +46,9 @@ public:
                     const std::string& message);
 
 
-    const std::string& getFileName(size_t msgIdx) const;
-    int getLineNumber(size_t msgIdx) const;
-    int64_t getMessageType(size_t msgIdx) const;
-    const std::string& getDescription(size_t msgIdx) const;
-
     void clear();
-    /*!
-     * \brief This method takes the information provided by the methods above and returns
-     *        them in a fully-formatted string.
-     *
-     * It is thus covenience method to convert a log message into a GCC-like format,
-     * e.g. a "Note" message triggered by the file "SPE1DECK.DATA" on line 15 which says
-     * that no grid can be constructed would yield:
-     *
-     * SPE1DECK.DATA:15:note: No grid found.
-     */
-    const std::string getFormattedMessage(size_t msgIdx) const;
     ~CounterLog() {};
 private:
-    typedef std::tuple<std::string,
-                       int,
-                       int64_t,
-                       std::string> MessageTuple;
-
-    std::vector<MessageTuple> m_messages;
     std::map<int64_t , size_t> m_count;
 };
 

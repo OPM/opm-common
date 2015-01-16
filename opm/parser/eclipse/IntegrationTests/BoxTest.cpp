@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE( PARSE_MULTIPLY_COPY ) {
 BOOST_AUTO_TEST_CASE( INCOMPLETE_KEYWORD_BOX) {
     CounterLogPtr logger(new CounterLog());
     makeState("testdata/integration_tests/BOX/BOXTEST2", logger);
-    BOOST_CHECK(logger->numErrors() > 1);
+    BOOST_CHECK(logger->numMessages(Log::MessageType::Error) > 1);
 }
 
 

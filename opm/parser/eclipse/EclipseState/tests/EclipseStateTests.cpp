@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(PropertiesNotSupportedThrows) {
     DeckKeywordConstPtr swat = deck->getKeyword("SWAT");
     BOOST_CHECK_EQUAL( false , state.supportsGridProperty("SWAT"));
     state.loadGridPropertyFromDeckKeyword(std::make_shared<const Box>(10,10,10), swat, logger);
-    BOOST_CHECK(logger->numErrors() > 0);
+    BOOST_CHECK_EQUAL( 1 , logger->numMessages(Log::MessageType::Error) );
 }
 
 

@@ -31,23 +31,8 @@ namespace Opm {
 CounterLog::CounterLog(int64_t messageTypes) : LogBackend(messageTypes)
 { }
 
-
 CounterLog::CounterLog() : LogBackend(Log::DefaultMessageTypes)
 { }
-
-
-
-size_t CounterLog::numErrors() const {
-    return numMessages( Log::MessageType::Error );
-}
-
-size_t CounterLog::numWarnings() const {
-    return numMessages( Log::MessageType::Warning );
-}
-
-size_t CounterLog::numNotes() const {
-    return numMessages( Log::MessageType::Note );
-}
 
 
 size_t CounterLog::numMessages(int64_t messageType) const {
@@ -63,7 +48,7 @@ size_t CounterLog::numMessages(int64_t messageType) const {
 
 
 
-void CounterLog::addMessage(int64_t messageType , const std::string& message) {
+void CounterLog::addMessage(int64_t messageType , const std::string& ) {
     if (includeMessage( messageType ))
         m_count[messageType]++;
 }
@@ -72,36 +57,6 @@ void CounterLog::addMessage(int64_t messageType , const std::string& message) {
 void CounterLog::clear()
 {
     m_count.clear();
-}
-
-
-const std::string& CounterLog::getFileName(size_t msgIdx) const {
-    return "";
-}
-
-int CounterLog::getLineNumber(size_t msgIdx) const {
-    return -1;
-}
-
-int64_t CounterLog::getMessageType(size_t msgIdx) const {
-    return 1;
-}
-
-const std::string& CounterLog::getDescription(size_t msgIdx) const {
-    return "";
-}
-
-const std::string CounterLog::getFormattedMessage(size_t msgIdx) const {
-    const std::string& description = getDescription( msgIdx );
-    int64_t messageType = getMessageType( msgIdx );
-    std::string prefixedMessage = Log::prefixMessage( messageType  , description);
-    int lineNumber = getLineNumber(msgIdx);
-
-    if (lineNumber > 0) {
-        const std::string& filename = getFileName(msgIdx);
-        return Log::fileMessage( filename , getLineNumber(msgIdx) , prefixedMessage);
-    } else
-        return prefixedMessage;
 }
 
 
