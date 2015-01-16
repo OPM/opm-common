@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/OpmLog/LogBackend.hpp>
 #include <opm/parser/eclipse/OpmLog/CounterLog.hpp>
+#include <opm/parser/eclipse/OpmLog/TimerLog.hpp>
 #include <opm/parser/eclipse/OpmLog/StreamLog.hpp>
 #include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
 
@@ -183,6 +184,19 @@ BOOST_AUTO_TEST_CASE( CounterLogTesting) {
         BOOST_CHECK_EQUAL( 0 , counter.numMessages( not_enabled ));
         BOOST_CHECK_THROW( counter.numMessages( not_power2 ) , std::invalid_argument);
     }
+}
+
+BOOST_AUTO_TEST_CASE(TestTimerLog) {
+    Logger logger;
+    std::ostringstream sstream;
+    std::shared_ptr<TimerLog> timer = std::make_shared<TimerLog>(sstream);
+    logger.addBackend( "TIMER" , timer );
+    logger.addMessageType( TimerLog::StartTimer , "Start");
+    logger.addMessageType( TimerLog::StopTimer , "Stop");
+
+    logger.addMessage( TimerLog::StartTimer , "");
+    logger.addMessage( TimerLog::StopTimer , "This was fast");
+    std::cout << sstream.str() << std::endl;
 }
 
 

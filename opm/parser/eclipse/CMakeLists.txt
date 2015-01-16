@@ -15,6 +15,7 @@ endif()
 add_subdirectory( Applications )
 
 set( log_source
+OpmLog/TimerLog.cpp 
 OpmLog/CounterLog.cpp 
 OpmLog/LogUtil.cpp
 OpmLog/Logger.cpp 
@@ -108,6 +109,7 @@ EclipseState/SimulationConfig/ThresholdPressure.cpp)
 
 set( HEADER_FILES
 OpmLog/LogBackend.hpp
+OpmLog/TimerLog.hpp 
 OpmLog/CounterLog.hpp
 OpmLog/Logger.hpp
 OpmLog/OpmLog.hpp
