@@ -51,14 +51,11 @@ namespace Opm {
         ParserKeyword(const std::string& name ,
                       const std::string& sizeKeyword ,
                       const std::string& sizeItem,
-                      ParserKeywordActionEnum action = INTERNALIZE ,
                       bool isTableCollection = false);
         ParserKeyword(const std::string& name ,
-                      ParserKeywordSizeEnum sizeType = SLASH_TERMINATED ,
-                      ParserKeywordActionEnum action = INTERNALIZE);
+                      ParserKeywordSizeEnum sizeType = SLASH_TERMINATED);
         ParserKeyword(const std::string& name ,
-                      size_t fixedKeywordSize,
-                      ParserKeywordActionEnum action = INTERNALIZE);
+                      size_t fixedKeywordSize);
         ParserKeyword(const Json::JsonObject& jsonConfig);
 
     public:
@@ -72,8 +69,7 @@ namespace Opm {
          * This are for example well specifcation keywords like WCONPROD...
          */
         static ParserKeywordPtr createFixedSized(const std::string& name,
-                                                 size_t fixedKeywordSize,
-                                                 ParserKeywordActionEnum action = INTERNALIZE);
+                                                 size_t fixedKeywordSize);
 
         /*!
          * \brief Factory method to create a keyword with an per-se
@@ -82,8 +78,7 @@ namespace Opm {
          * This are for example grid properties like PERM?...
          */
         static ParserKeywordPtr createDynamicSized(const std::string& name,
-                                                   ParserKeywordSizeEnum sizeType = SLASH_TERMINATED ,
-                                                   ParserKeywordActionEnum action = INTERNALIZE);
+                                                   ParserKeywordSizeEnum sizeType = SLASH_TERMINATED);
 
         /*!
          * \brief Factory method to create a keyword which has a
@@ -95,7 +90,6 @@ namespace Opm {
         static ParserKeywordPtr createTable(const std::string& name,
                                             const std::string& sizeKeyword,
                                             const std::string& sizeItem,
-                                            ParserKeywordActionEnum action = INTERNALIZE,
                                             bool isTableCollection = false);
 
         /*!
@@ -113,7 +107,6 @@ namespace Opm {
         bool hasDimension() const;
         ParserRecordPtr getRecord() const;
         const std::string& getName() const;
-        ParserKeywordActionEnum getAction() const;
         size_t getFixedSize() const;
         bool hasFixedSize() const;
         bool isTableCollection() const;
@@ -159,7 +152,6 @@ namespace Opm {
         size_t m_fixedSize;
         bool m_isDataKeyword;
         bool m_isTableCollection;
-        ParserKeywordActionEnum m_action;
         std::string m_Description;
 
         static bool validNameStart(const std::string& name);
@@ -170,7 +162,7 @@ namespace Opm {
         void initSize( const Json::JsonObject& jsonConfig );
         void initSizeKeyword( const std::string& sizeKeyword, const std::string& sizeItem);
         void initSizeKeyword(const Json::JsonObject& sizeObject);
-        void commonInit(const std::string& name, ParserKeywordSizeEnum sizeType , ParserKeywordActionEnum action);
+        void commonInit(const std::string& name, ParserKeywordSizeEnum sizeType);
         void addItems( const Json::JsonObject& jsonConfig);
         void initDoubleItemDimension( ParserDoubleItemPtr item, const Json::JsonObject itemConfig);
         void initFloatItemDimension( ParserFloatItemPtr item, const Json::JsonObject itemConfig);

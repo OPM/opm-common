@@ -67,10 +67,6 @@ add_executable(runCompletionsFromDeck CompletionsFromDeck.cpp)
 target_link_libraries(runCompletionsFromDeck Parser ${Boost_LIBRARIES})
 add_test(NAME runCompletionsFromDeck WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runCompletionsFromDeck) 
 
-add_executable(runParseACTION ParseACTION.cpp)
-target_link_libraries(runParseACTION Parser ${Boost_LIBRARIES})
-add_test(NAME runParseACTION WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runParseACTION)
-
 add_executable(runParseEND ParseEND.cpp)
 target_link_libraries(runParseEND Parser ${Boost_LIBRARIES})
 add_test(NAME runParseEND WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH} COMMAND runParseEND)
