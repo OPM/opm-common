@@ -34,6 +34,7 @@ public:
     Logger();
     void addMessage(int64_t messageType , const std::string& message) const;
 
+    static bool enabledDefaultMessageType( int64_t messageType);
     bool enabledMessageType( int64_t messageType) const;
     void addMessageType( int64_t messageType , const std::string& prefix);
     int64_t enabledMessageTypes() const;
@@ -54,6 +55,7 @@ public:
 
 private:
     void updateGlobalMask( int64_t mask );
+    static bool enabledMessageType( int64_t enabledTypes , int64_t messageType);
 
     int64_t m_enabledTypes;
     int64_t m_globalMask;
