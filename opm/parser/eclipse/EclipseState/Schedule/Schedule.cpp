@@ -66,6 +66,11 @@ namespace Opm {
         for (size_t keywordIdx = 0; keywordIdx < deck->size(); ++keywordIdx) {
             DeckKeywordConstPtr keyword = deck->getKeyword(keywordIdx);
 
+            if (keyword->name() == "COMPLUMP") {
+                std::cerr << "ERROR the keyword COMPLUMP is not supported" << std::endl;
+                throw std::exception();
+            }
+
             if (keyword->name() == "DATES") {
                 handleDATES(keyword, logger);
                 currentStep += keyword->size();
