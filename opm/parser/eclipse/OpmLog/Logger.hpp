@@ -41,7 +41,7 @@ public:
 
     void addBackend(const std::string& name , std::shared_ptr<LogBackend> backend);
     bool hasBackend(const std::string& name);
-
+    bool removeBackend(const std::string& name);
 
     template <class BackendType>
     std::shared_ptr<BackendType> getBackend(const std::string& name) const {
@@ -50,6 +50,17 @@ public:
             throw std::invalid_argument("Invalid backend name: " + name);
         else
             return std::static_pointer_cast<BackendType>(m_backends.find(name)->second);
+    }
+
+    template <class BackendType>
+    std::shared_ptr<BackendType> popBackend(const std::string& name)  {
+        auto pair = m_backends.find( name );
+        if (pair == m_backends.end())
+            throw std::invalid_argument("Invalid backend name: " + name);
+        else {
+            removeBackend( name );
+            return std::static_pointer_cast<BackendType>(m_backends.find(name)->second);
+        }
     }
 
 

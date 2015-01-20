@@ -54,6 +54,14 @@ namespace Opm {
     }
 
 
+    bool OpmLog::removeBackend(const std::string& name) {
+        if (m_logger)
+            return m_logger->removeBackend( name );
+        else
+            return false;
+    }
+
+
     void OpmLog::addMessageType( int64_t messageType , const std::string& prefix) {
         auto logger = OpmLog::getLogger();
         logger->addMessageType( messageType , prefix );

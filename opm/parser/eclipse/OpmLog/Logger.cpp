@@ -63,6 +63,14 @@ namespace Opm {
             return true;
     }
 
+    bool Logger::removeBackend(const std::string& name) {
+        size_t eraseCount = m_backends.erase( name );
+        if (eraseCount == 1)
+            return true;
+        else
+            return false;
+    }
+
 
     void Logger::addBackend(const std::string& name , std::shared_ptr<LogBackend> backend) {
         updateGlobalMask( backend->getMask() );

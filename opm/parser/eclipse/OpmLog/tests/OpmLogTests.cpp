@@ -96,6 +96,16 @@ BOOST_AUTO_TEST_CASE(Test_Logger) {
         BOOST_CHECK_EQUAL( 1U , counter2->numMessages( Log::MessageType::Error));
         BOOST_CHECK_EQUAL( 0  , counter2->numMessages( Log::MessageType::Note));
     }
+
+    BOOST_CHECK_EQUAL( false , logger.removeBackend("NO-not-found"));
+    BOOST_CHECK_EQUAL( true , logger.removeBackend("COUNTER"));
+    BOOST_CHECK_EQUAL( false , logger.hasBackend("COUNTER") );
+
+    {
+        auto stream2 = logger.popBackend<StreamLog>("STREAM");
+        BOOST_CHECK_EQUAL( false , logger.hasBackend("STREAM") );
+        BOOST_CHECK_THROW( logger.popBackend<StreamLog>("STREAM") , std::invalid_argument );
+    }
 }
 
 
