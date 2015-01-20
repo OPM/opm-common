@@ -548,7 +548,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithCOMPLUMPwithC2_ThrowsExcpetion) {
     BOOST_CHECK_THROW(Schedule schedule(deck), std::exception);
 }
 
-BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithCOMPLUMPwithDefaultValues_ThrowsExcpetion) {
+BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithCOMPLUMPwithDefaultValuesInWELOPEN) {
     Opm::Parser parser;
     std::string input =
             "START             -- 0 \n"

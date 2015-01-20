@@ -433,7 +433,7 @@ namespace Opm {
                     Opm::Value<int> C2 = getValueItem(record->getItem("C2"));
 
                     if(hascomplump && (C2.hasValue() || C1.hasValue())){
-                        std::cerr << "ERROR the keyword COMPLUMP is not supported" << std::endl;
+                        std::cerr << "ERROR the keyword COMPLUMP is not supported used when C1 or C2 in WELOPEN have values" << std::endl;
                         throw std::exception();
                     }
 
