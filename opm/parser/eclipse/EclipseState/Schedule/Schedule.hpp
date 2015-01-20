@@ -85,7 +85,7 @@ namespace Opm
         void handleWCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep);
         void handleWPOLYMER(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep);
         void handleWCONINJH(DeckConstPtr deck, DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep);
-        void handleWELOPEN(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep);
+        void handleWELOPEN(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep, bool hascomplump);
         void handleGCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep);
         void handleGCONPROD(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep);
         void handleDATES(DeckKeywordConstPtr keyword, LoggerPtr logger);

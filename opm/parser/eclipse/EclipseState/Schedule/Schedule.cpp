@@ -66,11 +66,6 @@ namespace Opm {
         for (size_t keywordIdx = 0; keywordIdx < deck->size(); ++keywordIdx) {
             DeckKeywordConstPtr keyword = deck->getKeyword(keywordIdx);
 
-            if (keyword->name() == "COMPLUMP") {
-                std::cerr << "ERROR the keyword COMPLUMP is not supported" << std::endl;
-                throw std::exception();
-            }
-
             if (keyword->name() == "DATES") {
                 handleDATES(keyword, logger);
                 currentStep += keyword->size();
@@ -107,7 +102,7 @@ namespace Opm {
                 handleCOMPDAT(keyword, logger, currentStep);
 
             if (keyword->name() == "WELOPEN")
-                handleWELOPEN(keyword, logger, currentStep);
+                handleWELOPEN(keyword, logger, currentStep, deck->hasKeyword("COMPLUMP"));
 
             if (keyword->name() == "GRUPTREE")
                 handleGRUPTREE(keyword, logger, currentStep);
@@ -406,7 +401,7 @@ namespace Opm {
         return data;
     }
 
-    void Schedule::handleWELOPEN(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/, size_t currentStep) {
+    void Schedule::handleWELOPEN(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/, size_t currentStep, bool hascomplump) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
 
@@ -436,6 +431,11 @@ namespace Opm {
                     Opm::Value<int> K  = getValueItem(record->getItem("K"));
                     Opm::Value<int> C1 = getValueItem(record->getItem("C1"));
                     Opm::Value<int> C2 = getValueItem(record->getItem("C2"));
+
+                    if(hascomplump && (C2.hasValue() || C1.hasValue())){
+                        std::cerr << "ERROR the keyword COMPLUMP is not supported" << std::endl;
+                        throw std::exception();
+                    }
 
                     size_t completionSize = currentCompletionSet->size();
 
