@@ -401,7 +401,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndCompletionDataWithWELOPEN) {
 
 
 
-BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_OpenWellWithShutCompletionsThrowsExcpetion) {
+BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_TryToOpenWellWithShutCompletionsDoNotOpenWell) {
   Opm::Parser parser;
   std::string input =
           "START             -- 0 \n"
@@ -439,7 +439,13 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_OpenWellWithShutCompletionsTh
 
 
   DeckPtr deck = parser.parseString(input);
-  BOOST_CHECK_THROW(Schedule schedule(deck), std::exception);
+  Schedule schedule(deck);
+  WellPtr well;
+  well = schedule.getWell("OP_1");
+  size_t currentStep = 3;
+  BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus(currentStep));
+  currentStep = 3;
+  BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus(currentStep));
 }
 
 

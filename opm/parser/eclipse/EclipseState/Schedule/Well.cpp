@@ -129,7 +129,13 @@ namespace Opm {
     }
 
     void Well::setStatus(size_t timeStep, WellCommon::StatusEnum status) {
-        m_status->add( timeStep , status );
+        if ((WellCommon::StatusEnum::OPEN == status) && this->getCompletions(timeStep)->allCompletionsShut()) {
+            std::cerr << "ERROR when handling WELOPEN for well "<< this->name()  << ": Cannot open a well where all completions are shut" << std::endl;
+        } else
+        {
+            m_status->add( timeStep , status );
+        }
+
     }
 
     bool Well::isProducer(size_t timeStep) const {

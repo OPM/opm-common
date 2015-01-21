@@ -481,14 +481,8 @@ namespace Opm {
                 }
                 else if(!haveCompletionData) {
                     WellCommon::StatusEnum status = WellCommon::StatusFromString( record->getItem("STATUS")->getTrimmedString(0));
+                    well->setStatus(currentStep, status);
 
-                    if ((WellCommon::StatusEnum::OPEN == status) && well->getCompletions(currentStep)->allCompletionsShut()) {
-                      std::cerr << "ERROR when handling WELOPEN for well "<< well->name()  << ": Cannot open a well where all completions are shut" << std::endl;
-                      throw std::exception();
-                    } else
-                    {
-                      well->setStatus(currentStep, status);
-                    }
                 }
 
 
