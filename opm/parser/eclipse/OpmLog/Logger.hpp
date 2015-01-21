@@ -68,8 +68,8 @@ private:
     void updateGlobalMask( int64_t mask );
     static bool enabledMessageType( int64_t enabledTypes , int64_t messageType);
 
-    int64_t m_enabledTypes;
     int64_t m_globalMask;
+    int64_t m_enabledTypes;
     std::map<std::string , std::shared_ptr<LogBackend> > m_backends;
 };
 

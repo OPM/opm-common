@@ -48,14 +48,23 @@ namespace Log {
     std::string prefixMessage(int64_t messageType, const std::string& message) {
         std::string prefix;
         switch (messageType) {
-        case MessageType::Note:
-            prefix = "note";
+        case MessageType::Debug:
+            prefix = "debug";
+            break;
+        case MessageType::Info:
+            prefix = "info";
             break;
         case MessageType::Warning:
             prefix = "warning";
             break;
         case MessageType::Error:
             prefix = "error";
+            break;
+        case MessageType::Problem:
+            prefix = "problem";
+            break;
+        case MessageType::Bug:
+            prefix = "bug";
             break;
         default:
             throw std::invalid_argument("Unhandled messagetype");

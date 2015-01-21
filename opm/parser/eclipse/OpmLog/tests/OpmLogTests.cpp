@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(Test_Format) {
 
     BOOST_CHECK_EQUAL( "error: This is the error" ,     Log::prefixMessage(Log::MessageType::Error , "This is the error"));
     BOOST_CHECK_EQUAL( "warning: This is the warning" , Log::prefixMessage(Log::MessageType::Warning , "This is the warning"));
-    BOOST_CHECK_EQUAL( "note: This is the note" ,       Log::prefixMessage(Log::MessageType::Note , "This is the note"));
+    BOOST_CHECK_EQUAL( "info: This is the info" ,       Log::prefixMessage(Log::MessageType::Info , "This is the info"));
 }
 
 
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(Test_Logger) {
     logger.addMessage( Log::MessageType::Warning , "Warning");
     BOOST_CHECK_EQUAL( 1U , counter->numMessages(Log::MessageType::Error) );
     BOOST_CHECK_EQUAL( 1U , counter->numMessages(Log::MessageType::Warning) );
-    BOOST_CHECK_EQUAL( 0U , counter->numMessages(Log::MessageType::Note) );
+    BOOST_CHECK_EQUAL( 0U , counter->numMessages(Log::MessageType::Info) );
 
     BOOST_CHECK_EQUAL( log_stream.str() , "Warning\n");
 
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(Test_Logger) {
         auto counter2 = logger.getBackend<CounterLog>("COUNTER");
         BOOST_CHECK_EQUAL( 1U , counter2->numMessages( Log::MessageType::Warning));
         BOOST_CHECK_EQUAL( 1U , counter2->numMessages( Log::MessageType::Error));
-        BOOST_CHECK_EQUAL( 0  , counter2->numMessages( Log::MessageType::Note));
+        BOOST_CHECK_EQUAL( 0  , counter2->numMessages( Log::MessageType::Info));
     }
 
     BOOST_CHECK_EQUAL( false , logger.removeBackend("NO-not-found"));
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(LoggerMasksTypes) {
 
     logger.addMessage( Log::MessageType::Error , "Error");
     logger.addMessage( Log::MessageType::Warning , "Warning");
-    logger.addMessage( Log::MessageType::Note , "Note");
+    logger.addMessage( Log::MessageType::Info , "Info");
 
     BOOST_CHECK_THROW( logger.addMessage( power_of2 , "Blocked message") , std::invalid_argument );
     BOOST_CHECK_EQUAL( testLog->m_defaultMessages , 3 );
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE( CounterLogTesting) {
 
     BOOST_CHECK_EQUAL(1U , counter.numMessages( Log::MessageType::Error ));
     BOOST_CHECK_EQUAL(1U , counter.numMessages( Log::MessageType::Warning ));
-    BOOST_CHECK_EQUAL(0  , counter.numMessages( Log::MessageType::Note ));
+    BOOST_CHECK_EQUAL(0  , counter.numMessages( Log::MessageType::Info ));
 
     {
         int64_t not_enabled = 4096;
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(TestOpmLog) {
 
         BOOST_CHECK_EQUAL( 1 , counter->numMessages(Log::MessageType::Error) );
         BOOST_CHECK_EQUAL( 1 , counter->numMessages(Log::MessageType::Warning) );
-        BOOST_CHECK_EQUAL( 0 , counter->numMessages(Log::MessageType::Note) );
+        BOOST_CHECK_EQUAL( 0 , counter->numMessages(Log::MessageType::Info) );
     }
 
     BOOST_CHECK_EQUAL( log_stream.str() , "Warning\n");

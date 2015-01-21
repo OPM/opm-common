@@ -474,7 +474,7 @@ namespace Opm {
             phases.insert(Phase::PhaseEnum::WATER);
 
         if (phases.size() < 3)
-            OpmLog::addMessage(Log::MessageType::Note , "Only " + std::to_string(static_cast<long long>(phases.size())) + " fluid phases are enabled");
+            OpmLog::addMessage(Log::MessageType::Info , "Only " + std::to_string(static_cast<long long>(phases.size())) + " fluid phases are enabled");
     }
 
 

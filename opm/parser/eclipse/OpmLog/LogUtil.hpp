@@ -26,12 +26,15 @@
 namespace Opm {
 namespace Log {
     namespace MessageType {
-        const int64_t Note = 0x01;
-        const int64_t Warning = 0x02;
-        const int64_t Error = 0x04;
+        const int64_t Debug     =  1;   /* Excessive information */
+        const int64_t Info      =  2;   /* Normal status information */
+        const int64_t Warning   =  4;   /* Input anomaly - possible error */
+        const int64_t Error     =  8;   /* Error in the input data - should probably exit. */
+        const int64_t Problem   = 16;   /* Calculation problems - e.g. convergence failure. */
+        const int64_t Bug       = 32;   /* An inconsistent state has been encountered in the simulator - should probably exit. */
     }
 
-    const int64_t DefaultMessageTypes = MessageType::Note + MessageType::Warning + MessageType::Error;
+    const int64_t DefaultMessageTypes = MessageType::Debug + MessageType::Info + MessageType::Warning + MessageType::Error + MessageType::Problem + MessageType::Bug;
 
     bool isPower2(int64_t x);
     std::string fileMessage(const std::string& path, int line , const std::string& msg);

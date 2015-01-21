@@ -33,9 +33,12 @@ namespace Opm {
         : m_globalMask(0),
           m_enabledTypes(0)
     {
-        addMessageType( Log::MessageType::Error , "error");
+        addMessageType( Log::MessageType::Debug , "debug");
+        addMessageType( Log::MessageType::Info , "info");
         addMessageType( Log::MessageType::Warning , "warning");
-        addMessageType( Log::MessageType::Note , "note");
+        addMessageType( Log::MessageType::Error , "error");
+        addMessageType( Log::MessageType::Problem , "problem");
+        addMessageType( Log::MessageType::Bug , "bug");
     }
 
     void Logger::addMessage(int64_t messageType , const std::string& message) const {
