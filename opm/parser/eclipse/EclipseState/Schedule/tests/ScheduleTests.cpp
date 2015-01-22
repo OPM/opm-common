@@ -444,7 +444,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_TryToOpenWellWithShutCompleti
   well = schedule.getWell("OP_1");
   size_t currentStep = 3;
   BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus(currentStep));
-  currentStep = 3;
+  currentStep = 4;
   BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus(currentStep));
 }
 
