@@ -624,7 +624,7 @@ namespace Opm {
         if (refDepthItem->hasValue(0))
             refDepth.setValue( refDepthItem->getSIDouble(0));
 
-        well = std::make_shared<Well>(wellName, headI, headJ, refDepth, preferredPhase, m_timeMap , timeStep);
+        well = std::make_shared<Well>(wellName, m_grid , headI, headJ, refDepth, preferredPhase, m_timeMap , timeStep);
         m_wells.insert( wellName  , well);
     }
 

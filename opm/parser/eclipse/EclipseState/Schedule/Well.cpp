@@ -28,7 +28,7 @@
 
 namespace Opm {
 
-    Well::Well(const std::string& name_, int headI, int headJ, Value<double> refDepth , Phase::PhaseEnum preferredPhase,
+    Well::Well(const std::string& name_, std::shared_ptr<const EclipseGrid> grid , int headI, int headJ, Value<double> refDepth , Phase::PhaseEnum preferredPhase,
                TimeMapConstPtr timeMap, size_t creationTimeStep)
         : m_status(new DynamicState<WellCommon::StatusEnum>(timeMap, WellCommon::OPEN)),
           m_isAvailableForGroupControl(new DynamicState<bool>(timeMap, true)),
@@ -41,6 +41,7 @@ namespace Opm {
           m_injectionProperties( new DynamicState<WellInjectionProperties>(timeMap, WellInjectionProperties() )),
           m_polymerProperties( new DynamicState<WellPolymerProperties>(timeMap, WellPolymerProperties() )),
           m_groupName( new DynamicState<std::string>( timeMap , "" )),
+          m_grid( grid ),
           m_headI(headI),
           m_headJ(headJ),
           m_refDepth(refDepth),

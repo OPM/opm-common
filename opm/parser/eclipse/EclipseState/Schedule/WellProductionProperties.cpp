@@ -100,7 +100,7 @@ namespace Opm {
 
         {
             const auto cmodeItem = record->getItem("CMODE");
-            if (!cmodeItem->defaultApplied(0)) {
+            if (cmodeItem->hasValue(0)) {
                 const WellProducer::ControlModeEnum cmode = WellProducer::ControlModeFromString( cmodeItem->getString(0) );
 
                 if (p.hasProductionControl( cmode ))

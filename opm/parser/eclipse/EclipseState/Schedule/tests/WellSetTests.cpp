@@ -53,8 +53,9 @@ BOOST_AUTO_TEST_CASE(AddAndDeleteWell) {
     Opm::WellSet wellSet;
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
 
-    Opm::WellPtr well(new Opm::Well("WELL1"  , 0, 0, Opm::Value<double>("REF_DEPTH") , Opm::Phase::OIL, timeMap , 0));
-    Opm::WellPtr well2(new Opm::Well("WELL2" , 0, 0, Opm::Value<double>("REF_DEPTH") , Opm::Phase::OIL, timeMap , 0));
+    std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>(10,10,10);
+    Opm::WellPtr well(new Opm::Well("WELL1"  , grid , 0, 0, Opm::Value<double>("REF_DEPTH") , Opm::Phase::OIL, timeMap , 0));
+    Opm::WellPtr well2(new Opm::Well("WELL2" , grid , 0, 0, Opm::Value<double>("REF_DEPTH") , Opm::Phase::OIL, timeMap , 0));
 
     wellSet.addWell( well );
     BOOST_CHECK_EQUAL(true , wellSet.hasWell("WELL1"));
@@ -78,8 +79,9 @@ BOOST_AUTO_TEST_CASE(AddWellSameName) {
     Opm::WellSet wellSet;
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
 
-    Opm::WellPtr well1(new Opm::Well("WELL" , 0, 0,Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap , 0));
-    Opm::WellPtr well2(new Opm::Well("WELL" , 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap , 0));
+    std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>(10,10,10);
+    Opm::WellPtr well1(new Opm::Well("WELL" , grid , 0, 0,Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap , 0));
+    Opm::WellPtr well2(new Opm::Well("WELL" , grid , 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap , 0));
 
     wellSet.addWell( well1 );
     BOOST_CHECK_EQUAL(true , wellSet.hasWell("WELL"));

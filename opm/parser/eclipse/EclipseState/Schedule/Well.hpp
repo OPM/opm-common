@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 #include <boost/optional.hpp>
 
@@ -41,7 +42,7 @@ namespace Opm {
 
     class Well {
     public:
-        Well(const std::string& name, int headI, int headJ, Value<double> refDepth , Phase::PhaseEnum preferredPhase,
+        Well(const std::string& name, std::shared_ptr<const EclipseGrid> grid , int headI, int headJ, Value<double> refDepth , Phase::PhaseEnum preferredPhase,
              TimeMapConstPtr timeMap, size_t creationTimeStep);
         const std::string& name() const;
 
@@ -109,6 +110,7 @@ namespace Opm {
         int m_headJ;
         Value<double> m_refDepth;
         Phase::PhaseEnum m_preferredPhase;
+        std::shared_ptr<const EclipseGrid> m_grid;
     };
     typedef std::shared_ptr<Well> WellPtr;
     typedef std::shared_ptr<const Well> WellConstPtr;
