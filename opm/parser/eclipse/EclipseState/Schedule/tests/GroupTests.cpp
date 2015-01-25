@@ -27,6 +27,7 @@
 
 
 
+#include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
@@ -148,8 +149,8 @@ BOOST_AUTO_TEST_CASE(GroupAddWell) {
 
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
     Opm::Group group("G1" , timeMap , 0);
-    Opm::WellPtr well1(new Opm::Well("WELL1" , 0, 0, 0.0, Opm::Phase::OIL, timeMap, 0));
-    Opm::WellPtr well2(new Opm::Well("WELL2" , 0, 0, 0.0, Opm::Phase::OIL, timeMap, 0));
+    Opm::WellPtr well1(new Opm::Well("WELL1" , 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0));
+    Opm::WellPtr well2(new Opm::Well("WELL2" , 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0));
 
     BOOST_CHECK_EQUAL(0U , group.numWells(2));
     group.addWell( 3 , well1 );
@@ -185,8 +186,8 @@ BOOST_AUTO_TEST_CASE(GroupAddAndDelWell) {
 
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
     Opm::Group group("G1" , timeMap , 0);
-    Opm::WellPtr well1(new Opm::Well("WELL1" , 0, 0, 0.0, Opm::Phase::OIL, timeMap, 0));
-    Opm::WellPtr well2(new Opm::Well("WELL2" , 0, 0, 0.0, Opm::Phase::OIL, timeMap, 0));
+    Opm::WellPtr well1(new Opm::Well("WELL1" , 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0));
+    Opm::WellPtr well2(new Opm::Well("WELL2" , 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0));
 
     BOOST_CHECK_EQUAL(0U , group.numWells(2));
     group.addWell( 3 , well1 );
