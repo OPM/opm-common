@@ -285,7 +285,7 @@ namespace Opm {
    }
 
     void EclipseState::initSchedule(DeckConstPtr deck, LoggerPtr logger) {
-        schedule = ScheduleConstPtr( new Schedule(deck, logger) );
+        schedule = ScheduleConstPtr( new Schedule(getEclipseGrid() , deck, logger) );
     }
 
     void EclipseState::initTransMult(LoggerPtr /*logger*/) {

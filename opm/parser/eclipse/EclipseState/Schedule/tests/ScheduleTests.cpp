@@ -126,14 +126,16 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingReturnsDefaults) {
     DeckPtr deck(new Deck());
     DeckKeywordPtr keyword(new DeckKeyword("SCHEDULE"));
     deck->addKeyword( keyword );
-    Schedule schedule(deck);
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,10);
+    Schedule schedule(grid , deck);
     BOOST_CHECK_EQUAL( schedule.getStartTime() , boost::posix_time::ptime(boost::gregorian::date( 1983  , boost::gregorian::Jan , 1)));
 }
 
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrdered) {
     DeckPtr deck = createDeckWithWellsOrdered();
-    Schedule schedule(deck);
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(100,100,100);
+    Schedule schedule(grid , deck);
     std::vector<WellConstPtr> wells = schedule.getWells();
 
     BOOST_CHECK_EQUAL( "CW_1" , wells[0]->name());
@@ -145,7 +147,8 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrdered) {
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithStart) {
     DeckPtr deck = createDeck();
-    Schedule schedule(deck);
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,10);
+    Schedule schedule(grid , deck);
     BOOST_CHECK_EQUAL( schedule.getStartTime() , boost::posix_time::ptime(boost::gregorian::date( 1998  , boost::gregorian::Mar , 8)));
 }
 
@@ -153,15 +156,17 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithStart) {
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithSCHEDULENoThrow) {
     DeckPtr deck(new Deck());
     DeckKeywordPtr keyword(new DeckKeyword("SCHEDULE"));
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,10);
     deck->addKeyword( keyword );
 
-    BOOST_CHECK_NO_THROW(Schedule schedule(deck));
+    BOOST_CHECK_NO_THROW(Schedule schedule(grid , deck));
 }
 
 
 BOOST_AUTO_TEST_CASE(EmptyScheduleHasNoWells) {
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,10);
     DeckPtr deck = createDeck();
-    Schedule schedule(deck);
+    Schedule schedule(grid , deck);
     BOOST_CHECK_EQUAL( 0U , schedule.numWells() );
     BOOST_CHECK_EQUAL( false , schedule.hasWell("WELL1") );
     BOOST_CHECK_THROW( schedule.getWell("WELL2") , std::invalid_argument );
@@ -169,13 +174,15 @@ BOOST_AUTO_TEST_CASE(EmptyScheduleHasNoWells) {
 
 
 BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithoutGRUPTREE_HasRootGroupTreeNodeForTimeStepZero) {
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,10);
     DeckPtr deck = createDeck();
-    Schedule schedule(deck);
+    Schedule schedule(grid , deck);
     BOOST_CHECK_EQUAL("FIELD", schedule.getGroupTree(0)->getNode("FIELD")->name());
 }
 
 
 BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithGRUPTREE_HasRootGroupTreeNodeForTimeStepZero) {
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,10);
     DeckPtr deck = createDeck();
     DeckKeywordPtr gruptreeKeyword(new DeckKeyword("GRUPTREE"));
 
@@ -189,7 +196,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithGRUPTREE_HasRootGroupTreeNodeForTime
     recordChildOfField->addItem(itemParent1);
     gruptreeKeyword->addRecord(recordChildOfField);
     deck->addKeyword(gruptreeKeyword);
-    Schedule schedule(deck);
+    Schedule schedule(grid , deck);
     GroupTreeNodePtr fieldNode = schedule.getGroupTree(0)->getNode("FIELD");
     BOOST_CHECK_EQUAL("FIELD", fieldNode->name());
     GroupTreeNodePtr FAREN = fieldNode->getChildGroup("FAREN");
@@ -200,8 +207,9 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithGRUPTREE_HasRootGroupTreeNodeForTime
 
 
 BOOST_AUTO_TEST_CASE(EmptyScheduleHasFIELDGroup) {
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,10);
     DeckPtr deck = createDeck();
-    Schedule schedule(deck);
+    Schedule schedule(grid , deck);
     BOOST_CHECK_EQUAL( 1U , schedule.numGroups() );
     BOOST_CHECK_EQUAL( true , schedule.hasGroup("FIELD") );
     BOOST_CHECK_EQUAL( false , schedule.hasGroup("GROUP") );
@@ -209,8 +217,9 @@ BOOST_AUTO_TEST_CASE(EmptyScheduleHasFIELDGroup) {
 }
 
 BOOST_AUTO_TEST_CASE(WellsIterator_Empty_EmptyVectorReturned) {
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,10);
     DeckPtr deck = createDeck();
-    Schedule schedule(deck);
+    Schedule schedule(grid , deck);
 
     std::vector<WellConstPtr> wells_alltimesteps = schedule.getWells();
     BOOST_CHECK_EQUAL(0U, wells_alltimesteps.size());
@@ -221,8 +230,9 @@ BOOST_AUTO_TEST_CASE(WellsIterator_Empty_EmptyVectorReturned) {
 }
 
 BOOST_AUTO_TEST_CASE(WellsIterator_HasWells_WellsReturned) {
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,10);
     DeckPtr deck = createDeckWithWells();
-    Schedule schedule(deck);
+    Schedule schedule(grid , deck);
 
     std::vector<WellConstPtr> wells_alltimesteps = schedule.getWells();
     BOOST_CHECK_EQUAL(3U, wells_alltimesteps.size());
@@ -234,8 +244,9 @@ BOOST_AUTO_TEST_CASE(WellsIterator_HasWells_WellsReturned) {
 
 
 BOOST_AUTO_TEST_CASE(WellsIteratorWithRegex_HasWells_WellsReturned) {
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,10);
     DeckPtr deck = createDeckWithWells();
-    Schedule schedule(deck);
+    Schedule schedule(grid , deck);
     std::string wellNamePattern;
     std::vector<WellPtr> wells;
 
@@ -253,8 +264,9 @@ BOOST_AUTO_TEST_CASE(WellsIteratorWithRegex_HasWells_WellsReturned) {
 }
 
 BOOST_AUTO_TEST_CASE(ReturnNumWellsTimestep) {
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,10);
     DeckPtr deck = createDeckWithWells();
-    Schedule schedule(deck);
+    Schedule schedule(grid , deck);
 
     BOOST_CHECK_EQUAL(schedule.numWells(0), 1);
     BOOST_CHECK_EQUAL(schedule.numWells(1), 1);
@@ -263,8 +275,9 @@ BOOST_AUTO_TEST_CASE(ReturnNumWellsTimestep) {
 }
 
 BOOST_AUTO_TEST_CASE(ReturnMaxNumCompletionsForWellsInTimestep) {
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,10);
     DeckPtr deck = createDeckWithWellsAndCompletionData();
-    Schedule schedule(deck);
+    Schedule schedule(grid , deck);
 
     BOOST_CHECK_EQUAL(schedule.getMaxNumCompletionsForWells(1), 7);
     BOOST_CHECK_EQUAL(schedule.getMaxNumCompletionsForWells(3), 9);
@@ -328,8 +341,9 @@ static DeckPtr createDeckWithWellsAndCompletionDataWithWELOPEN() {
 
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndCompletionDataWithWELOPEN) {
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,10);
     DeckPtr deck = createDeckWithWellsAndCompletionDataWithWELOPEN();
-    Schedule schedule(deck);
+    Schedule schedule(grid , deck);
     WellPtr well;
     well = schedule.getWell("OP_1");
     size_t currentStep = 0;
@@ -437,9 +451,9 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_TryToOpenWellWithShutCompleti
                   " 'OP_1' OPEN / \n "
                   "/\n";
 
-
+  std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,10);
   DeckPtr deck = parser.parseString(input);
-  Schedule schedule(deck);
+  Schedule schedule(grid , deck);
   WellPtr well;
   well = schedule.getWell("OP_1");
   size_t currentStep = 3;

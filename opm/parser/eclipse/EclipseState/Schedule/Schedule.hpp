@@ -27,6 +27,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 #include <memory>
@@ -41,7 +42,8 @@ namespace Opm
 
     class Schedule {
     public:
-        Schedule(DeckConstPtr deck, LoggerPtr logger=std::make_shared<Logger>());
+        Schedule(std::shared_ptr<const EclipseGrid> grid , DeckConstPtr deck, LoggerPtr logger=std::make_shared<Logger>());
+
         boost::posix_time::ptime getStartTime() const
         { return m_timeMap->getStartTime(/*timeStepIdx=*/0); }
         TimeMapConstPtr getTimeMap() const;
@@ -64,6 +66,7 @@ namespace Opm
     private:
         TimeMapPtr m_timeMap;
         OrderedMap<WellPtr> m_wells;
+        std::shared_ptr<const EclipseGrid> m_grid;
         std::map<std::string , GroupPtr> m_groups;
         std::shared_ptr<DynamicState<GroupTreePtr> > m_rootGroupTree;
 

@@ -35,7 +35,9 @@
 
 namespace Opm {
 
-    Schedule::Schedule(DeckConstPtr deck, LoggerPtr logger) {
+    Schedule::Schedule(std::shared_ptr<const EclipseGrid> grid , DeckConstPtr deck, LoggerPtr logger)
+        : m_grid(grid)
+    {
         initFromDeck(deck, logger);
     }
 
