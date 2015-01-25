@@ -862,9 +862,9 @@ namespace Opm {
                 const std::string regionArray = MULTREGT::RegionNameFromDeckValue( record->getItem("REGION_NAME")->getString(0) );
                 std::shared_ptr<Opm::GridProperty<int> > regionProperty = m_intGridProperties->getInitializedKeyword(regionArray);
                 std::vector<bool> mask;
-                
+
                 regionProperty->initMask( regionValue , mask);
-                
+
                 if (m_intGridProperties->supportsKeyword( targetArray )) {
                     if (enabledTypes & IntProperties) {
                         if (isInt( doubleValue )) {
@@ -896,19 +896,19 @@ namespace Opm {
         for (size_t recordIdx = 0; recordIdx < deckKeyword->size(); ++recordIdx) {
             DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
             const std::string& targetArray = record->getItem("ARRAY")->getString(0);
-            
+
             if (!supportsGridProperty( targetArray , IntProperties + DoubleProperties))
                 throw std::invalid_argument("Fatal error processing ADDREG keyword - invalid/undefined keyword: " + targetArray);
-            
+
             if (supportsGridProperty( targetArray , enabledTypes)) {
                 double doubleValue = record->getItem("SHIFT")->getRawDouble(0);
                 int regionValue = record->getItem("REGION_NUMBER")->getInt(0);
                 const std::string regionArray = MULTREGT::RegionNameFromDeckValue( record->getItem("REGION_NAME")->getString(0) );
                 std::shared_ptr<Opm::GridProperty<int> > regionProperty = m_intGridProperties->getInitializedKeyword(regionArray);
                 std::vector<bool> mask;
-                
+
                 regionProperty->initMask( regionValue , mask);
-                
+
                 if (m_intGridProperties->hasKeyword( targetArray )) {
                     if (enabledTypes & IntProperties) {
                         if (isInt( doubleValue )) {
@@ -945,16 +945,16 @@ namespace Opm {
 
             if (!supportsGridProperty( targetArray , IntProperties + DoubleProperties))
                 throw std::invalid_argument("Fatal error processing MULTIREG keyword - invalid/undefined keyword: " + targetArray);
-            
+
             if (supportsGridProperty( targetArray , enabledTypes)) {
                 double doubleValue = record->getItem("FACTOR")->getRawDouble(0);
                 int regionValue = record->getItem("REGION_NUMBER")->getInt(0);
                 const std::string regionArray = MULTREGT::RegionNameFromDeckValue( record->getItem("REGION_NAME")->getString(0) );
                 std::shared_ptr<Opm::GridProperty<int> > regionProperty = m_intGridProperties->getInitializedKeyword( regionArray );
                 std::vector<bool> mask;
-                
+
                 regionProperty->initMask( regionValue , mask);
-                
+
                 if (m_intGridProperties->hasKeyword( targetArray )) {
                     if (enabledTypes & IntProperties) {
                         if (isInt( doubleValue )) {
@@ -988,24 +988,24 @@ namespace Opm {
 
             if (!supportsGridProperty( targetArray , IntProperties + DoubleProperties))
                 throw std::invalid_argument("Fatal error processing MULTIREG keyword - invalid/undefined keyword: " + targetArray);
-            
+
             if (!supportsGridProperty( srcArray , IntProperties + DoubleProperties))
                 throw std::invalid_argument("Fatal error processing MULTIREG keyword - invalid/undefined keyword: " + srcArray);
-            
+
             if (supportsGridProperty( srcArray , enabledTypes)) {
                 int regionValue = record->getItem("REGION_NUMBER")->getInt(0);
                 const std::string regionArray = MULTREGT::RegionNameFromDeckValue( record->getItem("REGION_NAME")->getString(0) );
                 std::shared_ptr<Opm::GridProperty<int> > regionProperty = m_intGridProperties->getInitializedKeyword( regionArray );
                 std::vector<bool> mask;
-                
+
                 regionProperty->initMask( regionValue , mask );
-                
+
                 if (m_intGridProperties->hasKeyword( srcArray )) {
                     std::shared_ptr<Opm::GridProperty<int> > srcProperty = m_intGridProperties->getInitializedKeyword( srcArray );
                     if (supportsGridProperty( targetArray , IntProperties)) {
                         std::shared_ptr<Opm::GridProperty<int> > targetProperty = m_intGridProperties->getKeyword( targetArray );
                         targetProperty->maskedCopy( *srcProperty , mask );
-                    } else 
+                    } else
                         throw std::invalid_argument("Fatal error processing COPYREG keyword.");
                 } else if (m_doubleGridProperties->hasKeyword( srcArray )) {
                     std::shared_ptr<Opm::GridProperty<double> > srcProperty = m_doubleGridProperties->getInitializedKeyword( srcArray );
