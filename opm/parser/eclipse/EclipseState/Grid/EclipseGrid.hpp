@@ -92,6 +92,9 @@ namespace Opm {
         double getCellVolume(size_t i , size_t j , size_t k) const;
         bool cellActive( size_t globalIndex ) const;
         bool cellActive( size_t i , size_t , size_t k ) const;
+        double getCellDepth(size_t i,size_t j, size_t k) const;
+        double getCellDepth(size_t globalIndex) const;
+
 
         void exportMAPAXES( std::vector<double>& mapaxes) const;
         void exportCOORD( std::vector<double>& coord) const;

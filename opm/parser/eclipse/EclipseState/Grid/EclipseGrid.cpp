@@ -532,6 +532,17 @@ namespace Opm {
         }
     }
 
+    double EclipseGrid::getCellDepth(size_t globalIndex) const {
+        assertGlobalIndex( globalIndex );
+        return ecl_grid_get_cdepth1( c_ptr() , static_cast<int>(globalIndex));
+    }
+
+
+    double EclipseGrid::getCellDepth(size_t i,size_t j, size_t k) const {
+        assertIJK(i,j,k);
+        return ecl_grid_get_cdepth3( c_ptr() , static_cast<int>(i),static_cast<int>(j),static_cast<int>(k));
+    }
+
 
 
     void EclipseGrid::exportACTNUM( std::vector<int>& actnum) const {

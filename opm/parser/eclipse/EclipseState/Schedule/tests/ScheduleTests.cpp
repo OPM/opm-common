@@ -495,7 +495,8 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithCOMPLUMPwithC1_ThrowsExcpetion) {
 
 
     DeckPtr deck = parser.parseString(input);
-    BOOST_CHECK_THROW(Schedule schedule(deck), std::exception);
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
+    BOOST_CHECK_THROW(Schedule schedule(grid , deck), std::exception);
 }
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithCOMPLUMPwithC1andC2_ThrowsExcpetion) {
@@ -530,7 +531,8 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithCOMPLUMPwithC1andC2_ThrowsExcpetion) 
 
 
     DeckPtr deck = parser.parseString(input);
-    BOOST_CHECK_THROW(Schedule schedule(deck), std::exception);
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
+    BOOST_CHECK_THROW(Schedule schedule(grid , deck), std::exception);
 }
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithCOMPLUMPwithC2_ThrowsExcpetion) {
@@ -565,7 +567,8 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithCOMPLUMPwithC2_ThrowsExcpetion) {
 
 
     DeckPtr deck = parser.parseString(input);
-    BOOST_CHECK_THROW(Schedule schedule(deck), std::exception);
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
+    BOOST_CHECK_THROW(Schedule schedule(grid , deck), std::exception);
 }
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithCOMPLUMPwithDefaultValuesInWELOPEN) {
@@ -598,9 +601,9 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithCOMPLUMPwithDefaultValuesInWELOPEN) {
                     " 10  NOV 2008 / \n"
                     "/\n";
 
-
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
     DeckPtr deck = parser.parseString(input);
-    Schedule schedule(deck);
+    Schedule schedule(grid , deck);
     WellPtr well;
     well = schedule.getWell("OP_1");
     size_t currentStep = 0;
