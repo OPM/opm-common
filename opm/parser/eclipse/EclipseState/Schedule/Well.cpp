@@ -217,7 +217,9 @@ namespace Opm {
     }
 
     void Well::addCompletionSet(size_t time_step, const CompletionSetConstPtr newCompletionSet){
-        m_completions->add(time_step, newCompletionSet);
+        CompletionSetPtr mutable_copy(newCompletionSet->shallowCopy());
+        mutable_copy->orderCompletions(m_headI, m_headJ, m_grid);
+        m_completions->add(time_step, mutable_copy);
     }
 
     const std::string Well::getGroupName(size_t time_step) const {
