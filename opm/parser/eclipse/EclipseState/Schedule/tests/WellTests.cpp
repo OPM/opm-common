@@ -26,13 +26,17 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <opm/parser/eclipse/Units/ConversionFactors.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
 
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
+
+#include <opm/parser/eclipse/Parser/Parser.hpp>
 
 static Opm::TimeMapPtr createXDaysTimeMap(size_t numDays) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
@@ -175,7 +179,26 @@ BOOST_AUTO_TEST_CASE(NewWellZeroCompletions) {
 
 BOOST_AUTO_TEST_CASE(UpdateCompletions) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
-    std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>(10,10,10);
+    // Using an inline string to get a proper EclipseGrid.
+    std::string deckstr =
+"RUNSPEC\n"
+"DIMENS\n"
+"    20 20 20 /\n"
+"\n"
+"GRID\n"
+"DXV\n"
+"    20*400   /\n"
+"DYV\n"
+"    20*300   /\n"
+"DZV\n"
+"    20*10    /\n"
+"TOPS\n"
+"    400*2202 /\n"
+"\n";
+    Opm::ParserPtr parser(new Opm::Parser());
+    Opm::DeckPtr deck =  parser->parseString(deckstr);
+    Opm::EclipseState state(deck);
+    Opm::EclipseGridConstPtr grid = state.getEclipseGrid();
     Opm::Well well("WELL1" , grid , 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap , 0);
     Opm::CompletionSetConstPtr completions = well.getCompletions( 0 );
     BOOST_CHECK_EQUAL( 0U , completions->size());
@@ -183,7 +206,7 @@ BOOST_AUTO_TEST_CASE(UpdateCompletions) {
     std::vector<Opm::CompletionPtr> newCompletions;
     std::vector<Opm::CompletionPtr> newCompletions2;
     Opm::CompletionPtr comp1(new Opm::Completion( 10 , 10 , 10 , Opm::WellCompletion::AUTO , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
-    Opm::CompletionPtr comp2(new Opm::Completion( 10 , 11 , 10 , Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
+    Opm::CompletionPtr comp2(new Opm::Completion( 10 , 10 , 11 , Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
     Opm::CompletionPtr comp3(new Opm::Completion( 10 , 10 , 12 , Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
     Opm::CompletionPtr comp4(new Opm::Completion( 10 , 10 , 12 , Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
     Opm::CompletionPtr comp5(new Opm::Completion( 10 , 10 , 13 , Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
@@ -210,6 +233,99 @@ BOOST_AUTO_TEST_CASE(UpdateCompletions) {
     BOOST_CHECK_EQUAL( comp4 , completions->get(2));
 
 }
+
+// Helper function for CompletionOrder test.
+Opm::CompletionPtr completion(const size_t i, const size_t j, const size_t k,
+                              const Opm::WellCompletion::DirectionEnum direction
+                              = Opm::WellCompletion::DirectionEnum::Z)
+{
+    return std::make_shared<Opm::Completion>(i, j, k,
+                                             Opm::WellCompletion::AUTO,
+                                             Opm::Value<double>("ConnectionTransmissibilityFactor",99.88),
+                                             Opm::Value<double>("D",22.33),
+                                             Opm::Value<double>("SKIN",33.22),
+                                             direction);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(CompletionOrder) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+
+    // Using an inline string to get a proper EclipseGrid.
+    std::string deckstr =
+"RUNSPEC\n"
+"DIMENS\n"
+"    10 10 10 /\n"
+"\n"
+"GRID\n"
+"DXV\n"
+"    10*400   /\n"
+"DYV\n"
+"    10*300   /\n"
+"DZV\n"
+"    10*10    /\n"
+"TOPS\n"
+"    100*2202 /\n"
+"\n";
+    Opm::ParserPtr parser(new Opm::Parser());
+    Opm::DeckPtr deck =  parser->parseString(deckstr);
+    Opm::EclipseState state(deck);
+    Opm::EclipseGridConstPtr grid = state.getEclipseGrid();
+
+    {
+        // Vertical well.
+        Opm::Well well("WELL1" , grid , 5, 5, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap , 0);
+        auto c1 = completion(5, 5, 8);
+        auto c2 = completion(5, 5, 9);
+        auto c3 = completion(5, 5, 1);
+        auto c4 = completion(5, 5, 0);
+        std::vector<Opm::CompletionPtr> cv1 = { c1, c2 };
+        well.addCompletions(1, cv1);
+        BOOST_CHECK_EQUAL(well.getCompletions(1)->get(0), c1);
+        std::vector<Opm::CompletionPtr> cv2 = { c3, c4 };
+        well.addCompletions(2, cv2);
+        BOOST_CHECK_EQUAL(well.getCompletions(1)->get(0), c1);
+        BOOST_CHECK_EQUAL(well.getCompletions(2)->get(0), c4);
+    }
+
+    {
+        // Horizontal well.
+        Opm::Well well("WELL1" , grid , 5, 5, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap , 0);
+        auto c1 = completion(6, 5, 8);
+        auto c2 = completion(5, 6, 7);
+        auto c3 = completion(7, 5, 8);
+        auto c4 = completion(9, 5, 8);
+        auto c5 = completion(8, 5, 9);
+        auto c6 = completion(5, 5, 4);
+        std::vector<Opm::CompletionPtr> cv1 = { c1, c2 };
+        well.addCompletions(1, cv1);
+        BOOST_CHECK_EQUAL(well.getCompletions(1)->get(0), c2);
+        std::vector<Opm::CompletionPtr> cv2 = { c3, c4, c5 };
+        well.addCompletions(2, cv2);
+        BOOST_CHECK_EQUAL(well.getCompletions(1)->get(0), c2);
+        BOOST_CHECK_EQUAL(well.getCompletions(2)->get(0), c2);
+        BOOST_CHECK_EQUAL(well.getCompletions(2)->get(1), c1);
+        BOOST_CHECK_EQUAL(well.getCompletions(2)->get(2), c3);
+        BOOST_CHECK_EQUAL(well.getCompletions(2)->get(3), c5);
+        BOOST_CHECK_EQUAL(well.getCompletions(2)->get(4), c4);
+        std::vector<Opm::CompletionPtr> cv3 = { c6 };
+        well.addCompletions(3, cv3);
+        BOOST_CHECK_EQUAL(well.getCompletions(1)->get(0), c2);
+        BOOST_CHECK_EQUAL(well.getCompletions(2)->get(0), c2);
+        BOOST_CHECK_EQUAL(well.getCompletions(2)->get(1), c1);
+        BOOST_CHECK_EQUAL(well.getCompletions(2)->get(2), c3);
+        BOOST_CHECK_EQUAL(well.getCompletions(2)->get(3), c5);
+        BOOST_CHECK_EQUAL(well.getCompletions(2)->get(4), c4);
+        BOOST_CHECK_EQUAL(well.getCompletions(3)->get(0), c6);
+        BOOST_CHECK_EQUAL(well.getCompletions(3)->get(1), c2);
+        BOOST_CHECK_EQUAL(well.getCompletions(3)->get(2), c1);
+        BOOST_CHECK_EQUAL(well.getCompletions(3)->get(3), c3);
+        BOOST_CHECK_EQUAL(well.getCompletions(3)->get(4), c5);
+        BOOST_CHECK_EQUAL(well.getCompletions(3)->get(5), c4);
+    }
+}
+
 
 
 BOOST_AUTO_TEST_CASE(setGasRate_RateSetCorrect) {
