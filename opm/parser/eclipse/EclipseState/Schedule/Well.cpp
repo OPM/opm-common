@@ -42,11 +42,11 @@ namespace Opm {
           m_polymerProperties( new DynamicState<WellPolymerProperties>(timeMap, WellPolymerProperties() )),
           m_groupName( new DynamicState<std::string>( timeMap , "" )),
           m_timeMap( timeMap ),
-          m_grid( grid ),
           m_headI(headI),
           m_headJ(headJ),
           m_refDepth(refDepth),
-          m_preferredPhase(preferredPhase)
+          m_preferredPhase(preferredPhase),
+          m_grid( grid )
     {
         m_name = name_;
         m_creationTimeStep = creationTimeStep;
