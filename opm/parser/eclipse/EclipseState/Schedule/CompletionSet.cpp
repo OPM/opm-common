@@ -20,6 +20,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
+#include <limits>
 
 namespace Opm {
 
@@ -75,6 +76,74 @@ namespace Opm {
           }
       }
       return allShut;
+    }
+
+
+
+    /// Order completions irrespective of input order.
+    /// The algorithm used is the following:
+    ///     1. The completion nearest to the given (well_i, well_j)
+    ///        coordinates in terms of the completion's (i, j) is chosen
+    ///        to be the first completion. If non-unique, choose one with
+    ///        lowest z-depth (shallowest).
+    ///     2. Choose next completion to be nearest to current in (i, j) sense.
+    ///        If non-unique choose closest in z-depth (not logical cartesian k).
+    ///
+    /// \param[in] well_i  logical cartesian i-coordinate of well head
+    /// \param[in] well_j  logical cartesian j-coordinate of well head
+    /// \param[in] grid    EclipseGrid object, used for cell depths
+    void CompletionSet::orderCompletions(const size_t well_i, const size_t well_j, EclipseGridConstPtr grid)
+    {
+        if (m_completions.empty()) {
+            return;
+        }
+
+        // Find the first completion and swap it into the 0-position.
+        const double surface_z = 0.0;
+        size_t first_index = findClosestCompletion(well_i, well_j, grid, surface_z, 0);
+        std::swap(m_completions[first_index], m_completions[0]);
+
+        // Repeat for remaining completions.
+        // Note that since findClosestCompletion() is O(n) if n is the number of completions,
+        // this is an O(n^2) algorithm. However, it should be acceptable since the expected
+        // number of completions is fairly low (< 100).
+        for (size_t pos = 1; pos < m_completions.size() - 1; ++pos) {
+            CompletionConstPtr prev = m_completions[pos - 1];
+            const double prevz = grid->getCellDepth(prev->getI(), prev->getJ(), prev->getK());
+            size_t next_index = findClosestCompletion(prev->getI(), prev->getJ(), grid, prevz, pos);
+            std::swap(m_completions[next_index], m_completions[pos]);
+        }
+    }
+
+
+
+    /// Helper for orderCompletions.
+    size_t CompletionSet::findClosestCompletion(const int oi, const int oj, EclipseGridConstPtr grid,
+                                                const double oz, const size_t start_pos)
+    {
+        size_t closest = std::numeric_limits<size_t>::max();
+        int min_ijdist2 = std::numeric_limits<int>::max();
+        double min_zdiff = std::numeric_limits<double>::max();
+        for (size_t pos = start_pos; pos < m_completions.size(); ++pos) {
+            const int ci = m_completions[pos]->getI();
+            const int cj = m_completions[pos]->getJ();
+            // Using square of distance to avoid non-integer arithmetics.
+            const int ijdist2 = (ci - oi) * (ci - oi) + (cj - oj) * (cj - oj);
+            if (ijdist2 < min_ijdist2) {
+                min_ijdist2 = ijdist2;
+                const int ck = m_completions[pos]->getK();
+                min_zdiff = std::abs(grid->getCellDepth(ci, cj, ck) - oz);
+                closest = pos;
+            } else if (ijdist2 == min_ijdist2) {
+                const int ck = m_completions[pos]->getK();
+                const double zdiff = std::abs(grid->getCellDepth(ci, cj, ck) - oz);
+                if (zdiff < min_zdiff) {
+                    min_zdiff = zdiff;
+                    closest = pos;
+                }
+            }
+        }
+        return closest;
     }
 
 }
