@@ -127,10 +127,9 @@ namespace Opm {
 
         initPhases(deck, logger);
         initTables(deck, logger);
+        initEclipseGrid(deck, logger);
         initSchedule(deck, logger);
         initTitle(deck, logger);
-
-        initEclipseGrid(deck, logger);
 
         initProperties(deck, logger);
         initTransMult(logger);
