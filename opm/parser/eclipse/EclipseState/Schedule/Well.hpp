@@ -55,7 +55,6 @@ namespace Opm {
 
         int    getHeadI() const;
         int    getHeadJ() const;
-        bool   getRefDepthDefaulted() const;
         double getRefDepth() const;
         Phase::PhaseEnum getPreferredPhase() const;
 

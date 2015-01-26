@@ -181,25 +181,6 @@ namespace Opm {
                                 msg);
             throw std::invalid_argument(msg);
         }
-
-        if (well->getRefDepthDefaulted() == record->getItem("REF_DEPTH")->hasValue(0)) {
-            std::string msg =
-                "Unable process WELSPECS for well " + well->name() + ", REF_DEPTH defaulted state deviates from existing value";
-            logger->addError(keyword->getFileName(),
-                                keyword->getLineNumber(),
-                                msg);
-            throw std::invalid_argument(msg);
-        }
-        if (!well->getRefDepthDefaulted()) {
-            if (well->getRefDepth() != record->getItem("REF_DEPTH")->getSIDouble(0)) {
-                std::string msg =
-                    "Unable process WELSPECS for well " + well->name() + ", REF_DEPTH deviates from existing value";
-                logger->addError(keyword->getFileName(),
-                                    keyword->getLineNumber(),
-                                    msg);
-                throw std::invalid_argument(msg);
-            }
-        }
     }
 
     void Schedule::handleWCONProducer(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep, bool isPredictionMode) {

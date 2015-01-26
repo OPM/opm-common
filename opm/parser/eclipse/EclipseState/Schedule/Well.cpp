@@ -169,9 +169,6 @@ namespace Opm {
         return m_headJ;
     }
 
-    bool Well::getRefDepthDefaulted() const {
-        return !m_refDepth.hasValue();
-    }
 
     double Well::getRefDepth() const{
         if (!m_refDepth.hasValue())
