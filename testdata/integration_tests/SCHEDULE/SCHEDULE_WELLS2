@@ -33,11 +33,12 @@ DATES             -- 2,3
 /      
 
 WELSPECS 
-     'W_1'        'OP'   30   37  3.33       'OIL'  7* /   Crap1
+     'W_1'        'OP'   30   37  1*       'OIL'  7* /   Crap1
 -- the spaces around the phase name are intentional!
-     'W_2'        'OP'   20   51  3.92       ' OIL '  7* /   Crap2   Crap3
+     'W_2'        'OP'   20   51  100       ' OIL '  7* /   Crap2   Crap3
 -- Note defaulted reference depth for W_3
      'W_3'        'OP'   31   18    1*       'OIL'  7* /
+     'W_4'        'OP'   32   19    1*       'OIL'  7* /
 /
 
 COMPDAT 

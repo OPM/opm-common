@@ -88,6 +88,7 @@ namespace Opm {
         const WellPolymerProperties&   getPolymerProperties(size_t timeStep) const;
 
     private:
+        void setRefDepthFromCompletions() const;
         size_t m_creationTimeStep;
         std::string m_name;
 
@@ -106,9 +107,11 @@ namespace Opm {
         std::shared_ptr<DynamicState<std::string> > m_groupName;
 
         // WELSPECS data - assumes this is not dynamic
+
+        TimeMapConstPtr m_timeMap;
         int m_headI;
         int m_headJ;
-        Value<double> m_refDepth;
+        mutable Value<double> m_refDepth;
         Phase::PhaseEnum m_preferredPhase;
         std::shared_ptr<const EclipseGrid> m_grid;
     };

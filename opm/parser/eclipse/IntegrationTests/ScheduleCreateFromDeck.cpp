@@ -80,6 +80,23 @@ BOOST_AUTO_TEST_CASE(WCONPROD_Missing_DATA) {
 }
 
 
+BOOST_AUTO_TEST_CASE(WellTestRefDepth) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELLS2");
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(deck);
+    ScheduleConstPtr sched(new Schedule(grid , deck));
+
+    WellPtr well1 = sched->getWell("W_1");
+    WellPtr well2 = sched->getWell("W_2");
+    WellPtr well4 = sched->getWell("W_4");
+    BOOST_CHECK_EQUAL( well1->getRefDepth() , grid->getCellDepth( 29 , 36 , 0 ));
+    BOOST_CHECK_EQUAL( well2->getRefDepth() , 100 );
+    BOOST_CHECK_THROW( well4->getRefDepth() , std::invalid_argument );
+}
+
+
+
 
 BOOST_AUTO_TEST_CASE(WellTesting) {
     ParserPtr parser(new Parser());
@@ -88,7 +105,7 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(deck);
     ScheduleConstPtr sched(new Schedule(grid , deck));
 
-    BOOST_CHECK_EQUAL(3U, sched->numWells());
+    BOOST_CHECK_EQUAL(4U, sched->numWells());
     BOOST_CHECK(sched->hasWell("W_1"));
     BOOST_CHECK(sched->hasWell("W_2"));
     BOOST_CHECK(sched->hasWell("W_3"));
@@ -212,7 +229,7 @@ BOOST_AUTO_TEST_CASE(WellTestCOMPDAT) {
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(40,60,30);
     ScheduleConstPtr sched(new Schedule(grid , deck));
 
-    BOOST_CHECK_EQUAL(3U, sched->numWells());
+    BOOST_CHECK_EQUAL(4U, sched->numWells());
     BOOST_CHECK(sched->hasWell("W_1"));
     BOOST_CHECK(sched->hasWell("W_2"));
     BOOST_CHECK(sched->hasWell("W_3"));
@@ -473,7 +490,7 @@ BOOST_AUTO_TEST_CASE(WellTestWELSPECSDataLoaded) {
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(deck);
     ScheduleConstPtr sched(new Schedule(grid , deck));
 
-    BOOST_CHECK_EQUAL(3U, sched->numWells());
+    BOOST_CHECK_EQUAL(4U, sched->numWells());
     BOOST_CHECK(sched->hasWell("W_1"));
     BOOST_CHECK(sched->hasWell("W_2"));
     BOOST_CHECK(sched->hasWell("W_3"));
@@ -483,23 +500,18 @@ BOOST_AUTO_TEST_CASE(WellTestWELSPECSDataLoaded) {
         BOOST_CHECK(well1->hasBeenDefined(3));
         BOOST_CHECK_EQUAL(29, well1->getHeadI());
         BOOST_CHECK_EQUAL(36, well1->getHeadJ());
-        BOOST_CHECK(!well1->getRefDepthDefaulted());
-        BOOST_CHECK_EQUAL(3.33, well1->getRefDepth());
 
         WellConstPtr well2 = sched->getWell("W_2");
         BOOST_CHECK(!well2->hasBeenDefined(2));
         BOOST_CHECK(well2->hasBeenDefined(3));
         BOOST_CHECK_EQUAL(19, well2->getHeadI());
         BOOST_CHECK_EQUAL(50, well2->getHeadJ());
-        BOOST_CHECK(!well2->getRefDepthDefaulted());
-        BOOST_CHECK_EQUAL(3.92, well2->getRefDepth());
 
         WellConstPtr well3 = sched->getWell("W_3");
         BOOST_CHECK(!well3->hasBeenDefined(2));
         BOOST_CHECK(well3->hasBeenDefined(3));
         BOOST_CHECK_EQUAL(30, well3->getHeadI());
         BOOST_CHECK_EQUAL(17, well3->getHeadJ());
-        BOOST_CHECK(well3->getRefDepthDefaulted());
     }
 }
 

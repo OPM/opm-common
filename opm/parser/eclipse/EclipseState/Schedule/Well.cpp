@@ -41,6 +41,7 @@ namespace Opm {
           m_injectionProperties( new DynamicState<WellInjectionProperties>(timeMap, WellInjectionProperties() )),
           m_polymerProperties( new DynamicState<WellPolymerProperties>(timeMap, WellPolymerProperties() )),
           m_groupName( new DynamicState<std::string>( timeMap , "" )),
+          m_timeMap( timeMap ),
           m_grid( grid ),
           m_headI(headI),
           m_headJ(headJ),
@@ -172,9 +173,31 @@ namespace Opm {
         return !m_refDepth.hasValue();
     }
 
-    double Well::getRefDepth() const {
+    double Well::getRefDepth() const{
+        if (!m_refDepth.hasValue())
+            setRefDepthFromCompletions();
+
         return m_refDepth.getValue();
     }
+
+
+    void Well::setRefDepthFromCompletions() const {
+        size_t timeStep = m_creationTimeStep;
+        while (true) {
+            auto completions = getCompletions( timeStep );
+            if (completions->size() > 0) {
+                auto firstCompletion = completions->get(0);
+                double depth = m_grid->getCellDepth( firstCompletion->getI() , firstCompletion->getJ() , firstCompletion->getK());
+                m_refDepth.setValue( depth );
+                break;
+            } else {
+                timeStep++;
+                if (timeStep >= m_timeMap->size())
+                    throw std::invalid_argument("No completions defined for well: " + name() + " can not infer reference depth");
+            }
+        }
+    }
+
 
     Phase::PhaseEnum Well::getPreferredPhase() const {
         return m_preferredPhase;
