@@ -179,26 +179,8 @@ BOOST_AUTO_TEST_CASE(NewWellZeroCompletions) {
 
 BOOST_AUTO_TEST_CASE(UpdateCompletions) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
-    // Using an inline string to get a proper EclipseGrid.
-    std::string deckstr =
-"RUNSPEC\n"
-"DIMENS\n"
-"    20 20 20 /\n"
-"\n"
-"GRID\n"
-"DXV\n"
-"    20*400   /\n"
-"DYV\n"
-"    20*300   /\n"
-"DZV\n"
-"    20*10    /\n"
-"TOPS\n"
-"    400*2202 /\n"
-"\n";
-    Opm::ParserPtr parser(new Opm::Parser());
-    Opm::DeckPtr deck =  parser->parseString(deckstr);
-    Opm::EclipseState state(deck);
-    Opm::EclipseGridConstPtr grid = state.getEclipseGrid();
+    Opm::EclipseGridConstPtr grid = std::make_shared<Opm::EclipseGrid>(20, 20, 20);
+
     Opm::Well well("WELL1" , grid , 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap , 0);
     Opm::CompletionSetConstPtr completions = well.getCompletions( 0 );
     BOOST_CHECK_EQUAL( 0U , completions->size());
@@ -251,27 +233,7 @@ Opm::CompletionPtr completion(const size_t i, const size_t j, const size_t k,
 
 BOOST_AUTO_TEST_CASE(CompletionOrder) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
-
-    // Using an inline string to get a proper EclipseGrid.
-    std::string deckstr =
-"RUNSPEC\n"
-"DIMENS\n"
-"    10 10 10 /\n"
-"\n"
-"GRID\n"
-"DXV\n"
-"    10*400   /\n"
-"DYV\n"
-"    10*300   /\n"
-"DZV\n"
-"    10*10    /\n"
-"TOPS\n"
-"    100*2202 /\n"
-"\n";
-    Opm::ParserPtr parser(new Opm::Parser());
-    Opm::DeckPtr deck =  parser->parseString(deckstr);
-    Opm::EclipseState state(deck);
-    Opm::EclipseGridConstPtr grid = state.getEclipseGrid();
+    Opm::EclipseGridConstPtr grid = std::make_shared<Opm::EclipseGrid>(10, 10, 10);
 
     {
         // Vertical well.
