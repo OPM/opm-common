@@ -68,7 +68,8 @@ namespace Opm {
     public:
         explicit EclipseGrid(const std::string& filename);
         explicit EclipseGrid(const ecl_grid_type * src_ptr);
-        explicit EclipseGrid(size_t nx, size_t ny , size_t nz);
+        explicit EclipseGrid(size_t nx, size_t ny, size_t nz,
+                             double dx = 1.0, double dy = 1.0, double dz = 1.0);
         explicit EclipseGrid(std::shared_ptr<const Deck> deck, LoggerPtr logger = std::make_shared<Logger>());
 
         static bool hasCornerPointKeywords(std::shared_ptr<const Deck> deck);
