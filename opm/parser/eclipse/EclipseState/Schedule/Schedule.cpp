@@ -115,6 +115,8 @@ namespace Opm {
             if (keyword->name() == "GCONPROD")
                 handleGCONPROD(keyword, logger, currentStep);
         }
+
+        checkUnhandledKeywords(deck);
     }
 
     void Schedule::handleDATES(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/) {
@@ -694,6 +696,18 @@ namespace Opm {
         }
         well->setGroupName(timeStep , newGroup->name());
         newGroup->addWell(timeStep , well);
+    }
+
+
+    void Schedule::checkUnhandledKeywords(DeckConstPtr deck) const {
+        if (deck->hasKeyword("COMPORD")) {
+            auto compordKeyword = deck->getKeyword("COMPORD");
+            for (auto record = compordKeyword->begin(); record != compordKeyword->end(); ++record) {
+                auto methodItem = (*record)->getItem(1);
+                if (methodItem->getString(0) != "TRACK")
+                    throw std::invalid_argument("Can only handle TRACK in well order");
+            }
+        }
     }
 
 
