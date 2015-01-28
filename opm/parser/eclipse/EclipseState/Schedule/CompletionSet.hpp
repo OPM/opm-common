@@ -56,7 +56,6 @@ namespace Opm {
         void orderCompletions(size_t well_i, size_t well_j, EclipseGridConstPtr grid);
     private:
         std::vector<CompletionConstPtr> m_completions;
-        /// Helper for orderCompletions.
         size_t findClosestCompletion(int oi, int oj, EclipseGridConstPtr grid,
                                      double oz, size_t start_pos);
     };

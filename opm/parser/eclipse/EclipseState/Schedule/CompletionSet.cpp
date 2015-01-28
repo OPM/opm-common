@@ -80,18 +80,6 @@ namespace Opm {
 
 
 
-    /// Order completions irrespective of input order.
-    /// The algorithm used is the following:
-    ///     1. The completion nearest to the given (well_i, well_j)
-    ///        coordinates in terms of the completion's (i, j) is chosen
-    ///        to be the first completion. If non-unique, choose one with
-    ///        lowest z-depth (shallowest).
-    ///     2. Choose next completion to be nearest to current in (i, j) sense.
-    ///        If non-unique choose closest in z-depth (not logical cartesian k).
-    ///
-    /// \param[in] well_i  logical cartesian i-coordinate of well head
-    /// \param[in] well_j  logical cartesian j-coordinate of well head
-    /// \param[in] grid    EclipseGrid object, used for cell depths
     void CompletionSet::orderCompletions(size_t well_i, size_t well_j, EclipseGridConstPtr grid)
     {
         if (m_completions.empty()) {
@@ -117,7 +105,6 @@ namespace Opm {
 
 
 
-    /// Helper for orderCompletions.
     size_t CompletionSet::findClosestCompletion(int oi, int oj, EclipseGridConstPtr grid,
                                                 double oz, size_t start_pos)
     {
