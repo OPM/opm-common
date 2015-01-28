@@ -143,6 +143,7 @@ namespace Opm {
                 }
             }
         }
+        assert(closest != std::numeric_limits<size_t>::max());
         return closest;
     }
 
