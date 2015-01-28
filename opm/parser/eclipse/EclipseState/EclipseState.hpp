@@ -34,8 +34,10 @@
 
 #include <opm/parser/eclipse/EclipseState/Tables/EnkrvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/EnptvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/GasvisctTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/ImkrvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/ImptvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/OilvisctTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyadsTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlymaxTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyrockTable.hpp>
@@ -48,6 +50,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/RsvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RvvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RtempvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/WatvisctTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Sof2Table.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
@@ -94,8 +97,10 @@ namespace Opm {
         // not present in the deck, the corresponding vector is of size zero.
         const std::vector<EnkrvdTable>& getEnkrvdTables() const;
         const std::vector<EnptvdTable>& getEnptvdTables() const;
+        const std::vector<GasvisctTable>& getGasvisctTables() const;
         const std::vector<ImkrvdTable>& getImkrvdTables() const;
         const std::vector<ImptvdTable>& getImptvdTables() const;
+        const std::vector<OilvisctTable>& getOilvisctTables() const;
         const std::vector<PlyadsTable>& getPlyadsTables() const;
         const std::vector<PlymaxTable>& getPlymaxTables() const;
         const std::vector<PlyrockTable>& getPlyrockTables() const;
@@ -112,6 +117,7 @@ namespace Opm {
         const std::vector<Sof2Table>& getSof2Tables() const;
         const std::vector<SwofTable>& getSwofTables() const;
         const std::vector<SwfnTable>& getSwfnTables() const;
+        const std::vector<WatvisctTable>& getWatvisctTables() const;
 
         // the unit system used by the deck. note that it is rarely needed to convert
         // units because internally to opm-parser everything is represented by SI
@@ -217,8 +223,10 @@ namespace Opm {
 
         std::vector<EnkrvdTable> m_enkrvdTables;
         std::vector<EnptvdTable> m_enptvdTables;
+        std::vector<GasvisctTable> m_gasvisctTables;
         std::vector<ImkrvdTable> m_imkrvdTables;
         std::vector<ImptvdTable> m_imptvdTables;
+        std::vector<OilvisctTable> m_oilvisctTables;
         std::vector<PlyadsTable> m_plyadsTables;
         std::vector<PlymaxTable> m_plymaxTables;
         std::vector<PlyrockTable> m_plyrockTables;
@@ -235,6 +243,7 @@ namespace Opm {
         std::vector<Sof2Table> m_sof2Tables;
         std::vector<SwofTable> m_swofTables;
         std::vector<SwfnTable> m_swfnTables;
+        std::vector<WatvisctTable> m_watvisctTables;
 
         std::set<enum Phase::PhaseEnum> phases;
         std::string m_title;

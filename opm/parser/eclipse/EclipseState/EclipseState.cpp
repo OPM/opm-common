@@ -158,12 +158,20 @@ namespace Opm {
         return m_enptvdTables;
     }
 
+    const std::vector<GasvisctTable>& EclipseState::getGasvisctTables() const {
+        return m_gasvisctTables;
+    }
+
     const std::vector<ImkrvdTable>& EclipseState::getImkrvdTables() const {
         return m_imkrvdTables;
     }
 
     const std::vector<ImptvdTable>& EclipseState::getImptvdTables() const {
         return m_imptvdTables;
+    }
+
+    const std::vector<OilvisctTable>& EclipseState::getOilvisctTables() const {
+        return m_oilvisctTables;
     }
 
     const std::vector<PlyadsTable>& EclipseState::getPlyadsTables() const {
@@ -214,6 +222,10 @@ namespace Opm {
         return m_rtempvdTables;
     }
 
+    const std::vector<WatvisctTable>& EclipseState::getWatvisctTables() const {
+        return m_watvisctTables;
+    }
+
     const std::vector<SgofTable>& EclipseState::getSgofTables() const {
         return m_sgofTables;
     }
@@ -249,8 +261,10 @@ namespace Opm {
     void EclipseState::initTables(DeckConstPtr deck, LoggerPtr logger) {
         initSimpleTables(deck, logger, "ENKRVD", m_enkrvdTables);
         initSimpleTables(deck, logger, "ENPTVD", m_enptvdTables);
+        initSimpleTables(deck, logger, "GASVISCT", m_gasvisctTables);
         initSimpleTables(deck, logger, "IMKRVD", m_imkrvdTables);
         initSimpleTables(deck, logger, "IMPTVD", m_imptvdTables);
+        initSimpleTables(deck, logger, "OILVISCT", m_oilvisctTables);
         initSimpleTables(deck, logger, "PLYADS", m_plyadsTables);
         initSimpleTables(deck, logger, "PLYMAX", m_plymaxTables);
         initSimpleTables(deck, logger, "PLYROCK", m_plyrockTables);
@@ -263,6 +277,7 @@ namespace Opm {
         initSimpleTables(deck, logger, "SOF2", m_sof2Tables);
         initSimpleTables(deck, logger, "SWOF", m_swofTables);
         initSimpleTables(deck, logger, "SWFN", m_swfnTables);
+        initSimpleTables(deck, logger, "WATVISCT", m_watvisctTables);
 
         // the ROCKTAB table comes with additional fun because the number of columns
         //depends on the presence of the RKTRMDIR keyword...
