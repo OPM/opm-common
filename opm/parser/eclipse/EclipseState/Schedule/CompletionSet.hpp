@@ -53,12 +53,12 @@ namespace Opm {
         /// \param[in] well_i  logical cartesian i-coordinate of well head
         /// \param[in] well_j  logical cartesian j-coordinate of well head
         /// \param[in] grid    EclipseGrid object, used for cell depths
-        void orderCompletions(const size_t well_i, const size_t well_j, EclipseGridConstPtr grid);
+        void orderCompletions(size_t well_i, size_t well_j, EclipseGridConstPtr grid);
     private:
         std::vector<CompletionConstPtr> m_completions;
         /// Helper for orderCompletions.
-        size_t findClosestCompletion(const int oi, const int oj, EclipseGridConstPtr grid,
-                                     const double oz, const size_t start_pos);
+        size_t findClosestCompletion(int oi, int oj, EclipseGridConstPtr grid,
+                                     double oz, size_t start_pos);
     };
 
     typedef std::shared_ptr<CompletionSet> CompletionSetPtr;
