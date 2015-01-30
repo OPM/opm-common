@@ -47,7 +47,7 @@ namespace Opm {
             columnNames.push_back("Temperature");
 
             for (int compIdx = 0; compIdx < numComponents; ++ compIdx)
-                columnNames.push_back("Viscosity" + std::to_string(compIdx));
+                columnNames.push_back("Viscosity" + std::to_string(static_cast<long long>(compIdx)));
 
             ParentType::createColumns(columnNames);
 
@@ -95,7 +95,7 @@ namespace Opm {
             ParentType::checkMonotonic("Temperature", /*isAscending=*/true);
 
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
-                std::string columnName = "Viscosity" + std::to_string(compIdx);
+                std::string columnName = "Viscosity" + std::to_string(static_cast<long long>(compIdx));
                 ParentType::checkNonDefaultable(columnName);
                 ParentType::checkMonotonic(columnName,
                                            /*isAscending=*/true,
