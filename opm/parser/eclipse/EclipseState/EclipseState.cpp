@@ -261,7 +261,6 @@ namespace Opm {
     void EclipseState::initTables(DeckConstPtr deck, LoggerPtr logger) {
         initSimpleTables(deck, logger, "ENKRVD", m_enkrvdTables);
         initSimpleTables(deck, logger, "ENPTVD", m_enptvdTables);
-        initSimpleTables(deck, logger, "GASVISCT", m_gasvisctTables);
         initSimpleTables(deck, logger, "IMKRVD", m_imkrvdTables);
         initSimpleTables(deck, logger, "IMPTVD", m_imptvdTables);
         initSimpleTables(deck, logger, "OILVISCT", m_oilvisctTables);
@@ -278,6 +277,10 @@ namespace Opm {
         initSimpleTables(deck, logger, "SWOF", m_swofTables);
         initSimpleTables(deck, logger, "SWFN", m_swfnTables);
         initSimpleTables(deck, logger, "WATVISCT", m_watvisctTables);
+
+        // the number of columns of the GASVSISCT tables depends on the value of the
+        // COMPS keyword...
+        initGasvisctTables(deck, logger, "GASVISCT", m_gasvisctTables);
 
         // the ROCKTAB table comes with additional fun because the number of columns
         //depends on the presence of the RKTRMDIR keyword...
@@ -467,6 +470,39 @@ namespace Opm {
                                            isDirectional,
                                            useStressOption,
                                            tableIdx);
+        }
+    }
+
+    void EclipseState::initGasvisctTables(DeckConstPtr deck,
+                                          LoggerPtr logger,
+                                          const std::string& keywordName,
+                                          std::vector<GasvisctTable>& tableVector) {
+        if (!deck->hasKeyword(keywordName))
+            return; // the table is not featured by the deck...
+
+        if (deck->numKeywords(keywordName) > 1) {
+            complainAboutAmbiguousKeyword(deck, logger, keywordName);
+            return;
+        }
+
+        const auto& tableKeyword = deck->getKeyword(keywordName);
+        for (size_t tableIdx = 0; tableIdx < tableKeyword->size(); ++tableIdx) {
+            if (tableKeyword->getRecord(tableIdx)->getItem(0)->size() == 0) {
+                // for simple tables, an empty record indicates that the previous table
+                // should be copied...
+                if (tableIdx == 0) {
+                    logger->addError(tableKeyword->getFileName(),
+                                     tableKeyword->getLineNumber(),
+                                     "The first table for keyword "+keywordName+
+                                     " must be explicitly defined! Ignoring keyword");
+                    return;
+                }
+                tableVector.push_back(tableVector.back());
+                continue;
+            }
+
+            tableVector.push_back(GasvisctTable());
+            tableVector[tableIdx].init(deck, tableKeyword, tableIdx);
         }
     }
 

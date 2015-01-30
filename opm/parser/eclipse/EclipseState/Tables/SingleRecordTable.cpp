@@ -243,6 +243,20 @@ size_t SingleRecordTable::getNumFlatItems(Opm::DeckRecordConstPtr deckRecord) co
     return result;
 }
 
+double SingleRecordTable::getFlatRawDoubleData(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const
+{
+    size_t itemFirstFlatIdx = 0;
+    for (unsigned i = 0; i < deckRecord->size(); ++ i) {
+        Opm::DeckItemConstPtr item = deckRecord->getItem(i);
+        if (itemFirstFlatIdx + item->size() > flatItemIdx)
+            return item->getRawDouble(flatItemIdx - itemFirstFlatIdx);
+        else
+            itemFirstFlatIdx += item->size();
+    }
+
+    throw std::range_error("Tried to access out-of-range flat item");
+}
+
 double SingleRecordTable::getFlatSiDoubleData(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const
 {
     size_t itemFirstFlatIdx = 0;

@@ -191,6 +191,10 @@ namespace Opm {
         }
 
         void initRocktabTables(DeckConstPtr deck, LoggerPtr logger);
+        void initGasvisctTables(DeckConstPtr deck,
+                                LoggerPtr logger,
+                                const std::string& keywordName,
+                                std::vector<GasvisctTable>& tableVector);
 
         void setMULTFLT(std::shared_ptr<const Section> section, LoggerPtr logger) const;
         void initMULTREGT(DeckConstPtr deck, LoggerPtr logger);
