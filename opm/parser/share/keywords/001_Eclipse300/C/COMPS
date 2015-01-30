@@ -1,0 +1,7 @@
+{
+  "name": "COMPS",
+  "sections": ["RUNSPEC"],
+  "items": [
+    {"name" : "NUM_COMPS" , "value_type" : "INT"}
+  ]
+}
