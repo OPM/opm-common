@@ -49,6 +49,7 @@ namespace Opm {
         int getK() const;
         WellCompletion::StateEnum getState() const;
         double getConnectionTransmissibilityFactor() const;
+        const Value<double>& getConnectionTransmissibilityFactorAsValueObject() const;
         double getDiameter() const;
         double getSkinFactor() const;
         void   fixDefaultIJ(int wellHeadI , int wellHeadJ);
@@ -65,7 +66,6 @@ namespace Opm {
         Value<double> m_skinFactor;
         WellCompletion::StateEnum m_state;
         WellCompletion::DirectionEnum m_direction;
-        Value<double> getConnectionTransmissibilityFactorAsValueObject() const;
         Value<double> getDiameterAsValueObject() const;
         Value<double> getSkinFactorAsValueObject() const;
 
