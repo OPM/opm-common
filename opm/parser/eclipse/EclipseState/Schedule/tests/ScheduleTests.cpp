@@ -347,7 +347,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndCompletionDataWithWELOPEN) {
     WellPtr well;
     well = schedule.getWell("OP_1");
     size_t currentStep = 0;
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well->getStatus(currentStep));
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus(currentStep));
     currentStep = 3;
     BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus(currentStep));
 
@@ -398,8 +398,6 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndCompletionDataWithWELOPEN) {
     BOOST_CHECK_EQUAL(WellCompletion::StateEnum::OPEN, completion->getState());
 
     well = schedule.getWell("OP_1");
-    currentStep = 0;
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well->getStatus(currentStep));
 
     currentStep = 3;
     BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus(currentStep));
@@ -592,7 +590,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithCOMPLUMPwithDefaultValuesInWELOPEN) {
                     " 10  OKT 2008 / \n"
                     "/\n"
                     "WELOPEN\n"
-                    " 'OP_1' OPEN 0 0 0 0 0 / \n"
+                    " 'OP_1' OPEN/ \n"
                     "/\n"
                     "COMPLUMP\n"
                     " 'OP_1' 0 0 0 0 0 / \n "
@@ -606,9 +604,117 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithCOMPLUMPwithDefaultValuesInWELOPEN) {
     Schedule schedule(grid , deck);
     WellPtr well;
     well = schedule.getWell("OP_1");
-    size_t currentStep = 0;
+    size_t currentStep = 3;
     BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well->getStatus(currentStep));
 }
 
+BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFT) {
+    Opm::Parser parser;
+    std::string input =
+            "START             -- 0 \n"
+                    "1 NOV 1979 / \n"
+                    "SCHEDULE\n"
+                    "DATES             -- 1\n"
+                    " 1 DES 1979/ \n"
+                    "/\n"
+                    "WELSPECS\n"
+                    "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+                    "    'OP_2'       'OP'   4   4 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+                    "/\n"
+                    "COMPDAT\n"
+                    " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+                    " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
+                    " 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+                    " 'OP_2'  4  4   4  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+                    "/\n"
+                    "DATES             -- 2\n"
+                    " 10  OKT 2008 / \n"
+                    "/\n"
+                    "WRFT \n"
+                    "/ \n"
+                    "WELOPEN\n"
+                    " 'OP_1' OPEN / \n"
+                    " 'OP_2' OPEN / \n"
+                    "/\n"
+                    "DATES             -- 3\n"
+                    " 10  NOV 2008 / \n"
+                    "/\n";
 
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
+    DeckPtr deck = parser.parseString(input);
+    Schedule schedule(grid , deck);
+    WellPtr well;
+    size_t currentStep = 2;
+    well = schedule.getWell("OP_1");
+    BOOST_CHECK_EQUAL(well->getRFT(currentStep),true);
+    well = schedule.getWell("OP_2");
+    BOOST_CHECK_EQUAL(well->getRFT(currentStep),true);
+
+}
+
+
+BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFTPLT) {
+    Opm::Parser parser;
+    std::string input =
+            "START             -- 0 \n"
+                    "1 NOV 1979 / \n"
+                    "SCHEDULE\n"
+                    "DATES             -- 1\n"
+                    " 1 DES 1979/ \n"
+                    "/\n"
+                    "WELSPECS\n"
+                    "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+                    "/\n"
+                    "COMPDAT\n"
+                    " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+                    " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
+                    " 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+                    "/\n"
+                    "WELOPEN\n"
+                    " 'OP_1' SHUT / \n"
+                    "/\n"
+                    "DATES             -- 2\n"
+                    " 10  OKT 2006 / \n"
+                    "/\n"
+                    "WELOPEN\n"
+                    " 'OP_1' SHUT / \n"
+                    "/\n"
+                    "WRFTPLT \n"
+                    " 'OP_1' FOPN / \n"
+                    "/ \n"
+                    "DATES             -- 3\n"
+                    " 10  OKT 2007 / \n"
+                    "/\n"
+                    "WELOPEN\n"
+                    " 'OP_1' OPEN 0 0 0 0 0 / \n"
+                    "/\n"
+                    "DATES             -- 4\n"
+                    " 10  OKT 2008 / \n"
+                    "/\n"
+                    "WELOPEN\n"
+                    " 'OP_1' OPEN / \n"
+                    "/\n"
+
+                    "COMPLUMP\n"
+                    " 'OP_1' 0 0 0 0 0 / \n "
+                    "/\n"
+                    "DATES             -- 5\n"
+                    " 10  NOV 2008 / \n"
+                    "/\n";
+
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
+    DeckPtr deck = parser.parseString(input);
+    Schedule schedule(grid , deck);
+    WellPtr well;
+    well = schedule.getWell("OP_1");
+
+
+    size_t currentStep = 3;
+    BOOST_CHECK_EQUAL(well->getRFT(currentStep),false);
+    currentStep = 4;
+    BOOST_CHECK_EQUAL(well->getRFT(currentStep),true);
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well->getStatus(currentStep));
+    currentStep = 5;
+    BOOST_CHECK_EQUAL(well->getRFT(currentStep),false);
+}
 
