@@ -182,6 +182,16 @@ namespace Opm {
             m_wildCardKeywords[parserKeyword->getName()] = parserKeyword;
     }
 
+
+    ParserKeywordConstPtr Parser::getKeyword(const std::string& name ) const {
+        auto iter = m_deckParserKeywords.find( name );
+        if (iter == m_deckParserKeywords.end())
+            throw std::invalid_argument("Keyword not found");
+        else
+            return iter->second;
+    }
+
+
     bool Parser::dropParserKeyword(const std::string& parserKeywordName) {
         // remove from the internal from the internal names
         bool erase = (m_internalParserKeywords.erase( parserKeywordName ) > 0);

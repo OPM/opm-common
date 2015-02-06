@@ -55,6 +55,7 @@ namespace Opm {
         /// Method to add ParserKeyword instances, these holding type and size information about the keywords and their data.
         void addParserKeyword(ParserKeywordConstPtr parserKeyword);
         bool dropParserKeyword(const std::string& parserKeywordName);
+        ParserKeywordConstPtr getKeyword(const std::string& name) const;
 
         bool isRecognizedKeyword( const std::string& deckKeywordName) const;
         ParserKeywordConstPtr getParserKeywordFromDeckName(const std::string& deckKeywordName) const;
