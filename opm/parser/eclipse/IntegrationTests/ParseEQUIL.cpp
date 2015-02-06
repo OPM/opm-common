@@ -35,6 +35,24 @@ using namespace Opm;
 
 
 
+BOOST_AUTO_TEST_CASE( parse_EQUIL_MISSING_DIMS ) {
+    Parser parser;
+    const std::string equil = "EQUIL\n"
+        "2469   382.4   1705.0  0.0    500    0.0     1     1      20 /";
+    std::shared_ptr<const Deck> deck = parser.parseString(equil);
+    DeckKeywordConstPtr kw1 = deck->getKeyword("EQUIL" , 0);
+    BOOST_CHECK_EQUAL( 1U , kw1->size() );
+
+    DeckRecordConstPtr rec1 = kw1->getRecord(0);
+    DeckItemPtr item1       = rec1->getItem("OWC");
+    DeckItemPtr item1_index = rec1->getItem(2);
+
+    BOOST_CHECK_EQUAL( item1  , item1_index );
+    BOOST_CHECK( fabs(item1->getSIDouble(0) - 1705) < 0.001);
+
+}
+
+
 BOOST_AUTO_TEST_CASE( parse_EQUIL_OK ) {
     ParserPtr parser(new Parser());
     boost::filesystem::path pvtgFile("testdata/integration_tests/EQUIL/EQUIL1");
