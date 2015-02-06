@@ -204,6 +204,30 @@ namespace Opm {
         GuideRatePhaseEnum GuideRatePhaseEnumFromString( const std::string& stringValue );
     }
 
+    namespace RFTConnections {
+        enum RFTEnum {
+            YES = 1,
+            REPT = 2,
+            TIMESTEP = 3,
+            FOPN = 4,
+            NO = 5
+        };
+
+        const std::string RFTEnum2String(RFTEnum enumValue);
+
+        RFTEnum RFTEnumFromString(const std::string &stringValue);
+    }
+    namespace PLTConnections{
+        enum PLTEnum{
+            YES      = 1,
+            REPT     = 2,
+            TIMESTEP = 3,
+            NO       = 4
+        };
+        const std::string PLTEnum2String( PLTEnum enumValue);
+        PLTEnum PLTEnumFromString( const std::string& stringValue);
+    }
+
 
 }
 

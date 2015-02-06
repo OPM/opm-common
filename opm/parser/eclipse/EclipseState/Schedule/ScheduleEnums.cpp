@@ -496,4 +496,74 @@ namespace Opm {
         }
     }
 
+    namespace RFTConnections {
+        const std::string RFTEnum2String(RFTEnum enumValue) {
+            switch (enumValue) {
+                case YES:
+                    return "YES";
+                case REPT:
+                    return "REPT";
+                case TIMESTEP:
+                    return "TIMESTEP";
+                case FOPN:
+                    return "FOPN";
+                case NO:
+                    return "NO";
+                default:
+                    throw std::invalid_argument("unhandled enum value");
+            }
+        }
+
+        RFTEnum RFTEnumFromString(const std::string &origStringValue) {
+            std::string stringValue(origStringValue);
+            boost::algorithm::trim(stringValue);
+
+            if (stringValue == "YES")
+                return YES;
+            else if (stringValue == "REPT")
+                return REPT;
+            else if (stringValue == "TIMESTEP")
+                return TIMESTEP;
+            else if (stringValue == "FOPN")
+                return FOPN;
+            else if (stringValue == "NO")
+                return NO;
+            else
+                throw std::invalid_argument("Unknown enum state string: " + stringValue);
+        };
+
+    }
+    namespace PLTConnections {
+        const std::string PLTEnum2String(PLTEnum enumValue) {
+            switch (enumValue) {
+                case YES:
+                    return "YES";
+                case REPT:
+                    return "REPT";
+                case TIMESTEP:
+                    return "TIMESTEP";
+                case NO:
+                    return "NO";
+                default:
+                    throw std::invalid_argument("unhandled enum value");
+            }
+        }
+
+        PLTEnum PLTEnumFromString( const std::string& origStringValue){
+            std::string stringValue(origStringValue);
+            boost::algorithm::trim(stringValue);
+
+            if (stringValue == "YES")
+                return YES;
+            else if (stringValue == "REPT")
+                return REPT;
+            else if (stringValue == "TIMESTEP")
+                return TIMESTEP;
+            else if (stringValue == "NO")
+                return NO;
+            else
+                throw std::invalid_argument("Unknown enum state string: " + stringValue );
+        };
+    }
+
 }
