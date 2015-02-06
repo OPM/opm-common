@@ -94,6 +94,8 @@ namespace Opm
         void handleDATES(DeckKeywordConstPtr keyword, LoggerPtr logger);
         void handleTSTEP(DeckKeywordConstPtr keyword, LoggerPtr logger);
         void handleGRUPTREE(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep);
+        void handleWRFT(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep);
+        void handleWRFTPLT(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep);
 
         double convertInjectionRateToSI(double rawRate, WellInjector::TypeEnum wellType, const Opm::UnitSystem &unitSystem) const;
         double convertInjectionRateToSI(double rawRate, Phase::PhaseEnum wellPhase, const Opm::UnitSystem &unitSystem) const;

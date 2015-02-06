@@ -29,6 +29,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellRFTProperties.hpp>
 
 
 
@@ -64,6 +65,8 @@ namespace Opm {
 
     void Schedule::iterateScheduleSection(DeckConstPtr deck, LoggerPtr logger) {
         size_t currentStep = 0;
+
+        std::vector<WellRFTPropertiesConstPtr> m_rftproperties;
 
         for (size_t keywordIdx = 0; keywordIdx < deck->size(); ++keywordIdx) {
             DeckKeywordConstPtr keyword = deck->getKeyword(keywordIdx);
@@ -114,7 +117,31 @@ namespace Opm {
 
             if (keyword->name() == "GCONPROD")
                 handleGCONPROD(keyword, logger, currentStep);
+
+            if (keyword->name() == "WRFT") {
+                WellRFTPropertiesConstPtr rft = std::make_shared<WellRFTProperties>(keyword, currentStep);
+                m_rftproperties.push_back(rft);
+            }
+
+            if (keyword->name() == "WRFTPLT"){
+                WellRFTPropertiesConstPtr rft = std::make_shared<WellRFTProperties>(keyword, currentStep);
+                m_rftproperties.push_back(rft);
+            }
+                
         }
+        for (auto key=m_rftproperties.begin(); key != m_rftproperties.end(); ++key) {
+            DeckKeywordConstPtr keyword  = key->get()->getKeyword();
+            size_t timestep = key->get()->getTimeStep();
+            if (keyword->name() == "WRFT") {
+                handleWRFT(keyword, logger, timestep);
+            }
+
+            if (keyword->name() == "WRFTPLT"){
+                handleWRFTPLT(keyword, logger, timestep);
+            }
+        }
+
+
     }
 
     void Schedule::handleDATES(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/) {
@@ -583,6 +610,96 @@ namespace Opm {
                 addGroup( childName , currentStep );
         }
         m_rootGroupTree->add(currentStep, newTree);
+    }
+/*
+    static void setRFTForWellWhenFirstOpen(WellPtr well, int numSteps,size_t currentStep){
+        int time;
+        if(well->getStatus(currentStep)==WellCommon::StatusEnum::OPEN ){
+            time = currentStep;
+        }else {
+            time = well->findWellFirstOpen(currentStep);
+        }
+        if(time>-1){
+            well->setRFT(time, true);
+            if(time < numSteps){
+                well->setRFT(time+1, false);
+            }
+        }
+    }
+*/
+    void Schedule::handleWRFT(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/, size_t currentStep) {
+
+        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
+            DeckRecordConstPtr record = keyword->getRecord(recordNr);
+
+            const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
+            const std::vector<WellPtr>& wells = getWells(wellNamePattern);
+
+            for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
+                WellPtr well = *wellIter;
+                well->setRFT(currentStep, true);
+            }
+        }
+
+        const std::vector<WellPtr>& wells = getWells("*");
+        for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
+            WellPtr well = *wellIter;
+            well->setRFTForWellWhenFirstOpen(m_timeMap->numTimesteps(), currentStep);
+        }
+
+    }
+
+
+
+    void Schedule::handleWRFTPLT(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/, size_t currentStep) {
+
+        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
+            DeckRecordConstPtr record = keyword->getRecord(recordNr);
+
+            const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
+            const std::vector<WellPtr>& wells = getWells(wellNamePattern);
+
+            RFTConnections::RFTEnum RFTKey = RFTConnections::RFTEnumFromString(record->getItem("OUTPUT_RFT")->getTrimmedString(0));
+
+            PLTConnections::PLTEnum PLTKey = PLTConnections::PLTEnumFromString(record->getItem("OUTPUT_PLT")->getTrimmedString(0));
+
+            for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
+                WellPtr well = *wellIter;
+                switch(RFTKey){
+                    case RFTConnections::RFTEnum::YES:
+                        well->setRFT(currentStep, true);
+                        break;
+                    case RFTConnections::RFTEnum::REPT:
+                        well->setRFT(currentStep, true);
+                        break;
+                    case RFTConnections::RFTEnum::TIMESTEP:
+                        well->setRFT(currentStep, true);
+                        break;
+                    case RFTConnections::RFTEnum::FOPN:
+                        well->setRFTForWellWhenFirstOpen(m_timeMap->numTimesteps(),currentStep);
+                        break;
+                    case RFTConnections::RFTEnum::NO:
+                        well->setRFT(currentStep, false);
+                        break;
+                }
+
+                switch(PLTKey){
+                    case PLTConnections::PLTEnum::YES:
+                        well->setPLT(currentStep, true);
+                        break;
+                    case PLTConnections::PLTEnum::REPT:
+                        well->setPLT(currentStep, true);
+                        break;
+                    case PLTConnections::PLTEnum::TIMESTEP:
+                        well->setPLT(currentStep, true);
+                        break;
+                    case PLTConnections::PLTEnum::NO:
+                        well->setPLT(currentStep, false);
+                        break;
+                }
+
+            }
+        }
     }
 
     TimeMapConstPtr Schedule::getTimeMap() const {
