@@ -49,13 +49,7 @@ namespace Opm {
           m_headI(headI),
           m_headJ(headJ),
           m_refDepth(refDepth),
-<<<<<<< HEAD
-
           m_preferredPhase(preferredPhase),
-
-=======
-          m_preferredPhase(preferredPhase),
->>>>>>> upstream/master
           m_grid( grid )
     {
         m_name = name_;

@@ -140,12 +140,7 @@ namespace Opm {
                 handleWRFTPLT(keyword, logger, timestep);
             }
         }
-
-<<<<<<< HEAD
-
-=======
         checkUnhandledKeywords(deck);
->>>>>>> upstream/master
     }
 
     void Schedule::handleDATES(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/) {
