@@ -75,6 +75,7 @@ namespace Opm {
          * X coordinate.
          */
         double evaluate(const std::string& columnName, double xPos) const;
+
     protected:
         void checkNonDefaultable(const std::string& columnName);
         void checkMonotonic(const std::string& columnName,
@@ -84,6 +85,7 @@ namespace Opm {
         void applyDefaultsLinear(const std::string& columnName);
         void createColumns(const std::vector<std::string> &columnNames);
         size_t getNumFlatItems(Opm::DeckRecordConstPtr deckRecord) const;
+        double getFlatRawDoubleData(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const;
         double getFlatSiDoubleData(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const;
         bool getFlatIsDefaulted(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const;
 

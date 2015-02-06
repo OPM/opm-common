@@ -171,7 +171,7 @@ namespace Opm {
         return m_skinFactor.getValue();
     }
 
-    Value<double> Completion::getConnectionTransmissibilityFactorAsValueObject() const {
+    const Value<double>& Completion::getConnectionTransmissibilityFactorAsValueObject() const {
         return m_connectionTransmissibilityFactor;
     }
 
