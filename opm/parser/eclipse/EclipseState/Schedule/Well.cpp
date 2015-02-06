@@ -26,11 +26,13 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
 
+
+
 namespace Opm {
 
     Well::Well(const std::string& name_, std::shared_ptr<const EclipseGrid> grid , int headI, int headJ, Value<double> refDepth , Phase::PhaseEnum preferredPhase,
                TimeMapConstPtr timeMap, size_t creationTimeStep)
-        : m_status(new DynamicState<WellCommon::StatusEnum>(timeMap, WellCommon::OPEN)),
+        : m_status(new DynamicState<WellCommon::StatusEnum>(timeMap, WellCommon::SHUT)),
           m_isAvailableForGroupControl(new DynamicState<bool>(timeMap, true)),
           m_guideRate(new DynamicState<double>(timeMap, -1.0)),
           m_guideRatePhase(new DynamicState<GuideRate::GuideRatePhaseEnum>(timeMap, GuideRate::UNDEFINED)),
@@ -41,15 +43,21 @@ namespace Opm {
           m_injectionProperties( new DynamicState<WellInjectionProperties>(timeMap, WellInjectionProperties() )),
           m_polymerProperties( new DynamicState<WellPolymerProperties>(timeMap, WellPolymerProperties() )),
           m_groupName( new DynamicState<std::string>( timeMap , "" )),
+          m_rft( new DynamicState<bool>(timeMap,false)),
+          m_plt( new DynamicState<bool>(timeMap,false)),
           m_timeMap( timeMap ),
-          m_grid( grid ),
           m_headI(headI),
           m_headJ(headJ),
           m_refDepth(refDepth),
-          m_preferredPhase(preferredPhase)
+
+          m_preferredPhase(preferredPhase),
+
+          m_grid( grid )
     {
         m_name = name_;
         m_creationTimeStep = creationTimeStep;
+
+
     }
 
     const std::string& Well::name() const {
@@ -107,14 +115,13 @@ namespace Opm {
         return m_status->get( timeStep );
     }
 
-    void Well::setStatus(size_t timeStep, WellCommon::StatusEnum status) {
+    void Well::setStatus(size_t timeStep, const WellCommon::StatusEnum status) {
         if ((WellCommon::StatusEnum::OPEN == status) && this->getCompletions(timeStep)->allCompletionsShut()) {
-            std::cerr << "ERROR when handling WELOPEN for well "<< this->name()  << ": Cannot open a well where all completions are shut" << std::endl;
+            std::cerr << "ERROR when handling keyword for well "<< this->name()  << ": Cannot open a well where all completions are shut" << std::endl;
         } else
         {
             m_status->add( timeStep , status );
         }
-
     }
 
     bool Well::isProducer(size_t timeStep) const {
@@ -229,6 +236,47 @@ namespace Opm {
         m_groupName->add(time_step , groupName);
     }
 
+
+
+    void Well::setRFT(size_t time_step, bool value){
+        m_rft->add(time_step, value);
+    }
+
+    bool Well::getRFT(size_t time_step) const{
+        return m_rft->get(time_step);
+    }
+
+    bool Well::getPLT(size_t time_step) const{
+     return m_plt->get(time_step);
+    }
+    void Well::setPLT(size_t time_step, bool value){
+        m_plt->add(time_step, value);
+    }
+
+    int Well::findWellFirstOpen(int startTimeStep) const{
+        int numberOfTimeSteps = m_timeMap->numTimesteps();
+        for(int i = startTimeStep; i < numberOfTimeSteps;i++){
+            if(this->getStatus(i)==WellCommon::StatusEnum::OPEN){
+                return i;
+            }
+        }
+        return -1;
+    };
+
+    void Well::setRFTForWellWhenFirstOpen(int numSteps,size_t currentStep){
+        int time;
+        if(this->getStatus(currentStep)==WellCommon::StatusEnum::OPEN ){
+            time = currentStep;
+        }else {
+            time = this->findWellFirstOpen(currentStep);
+        }
+        if(time>-1){
+            this->setRFT(time, true);
+            if(time < numSteps){
+                this->setRFT(time+1, false);
+            }
+        }
+    }
 
 }
 

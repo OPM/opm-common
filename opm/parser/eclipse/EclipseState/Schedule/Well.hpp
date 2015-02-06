@@ -51,7 +51,7 @@ namespace Opm {
         void setGroupName(size_t timeStep , const std::string& groupName);
 
         WellCommon::StatusEnum getStatus(size_t timeStep) const;
-        void                   setStatus(size_t timeStep, WellCommon::StatusEnum Status);
+        void                   setStatus(size_t timeStep, const WellCommon::StatusEnum Status);
 
         int    getHeadI() const;
         int    getHeadJ() const;
@@ -86,6 +86,15 @@ namespace Opm {
         WellPolymerProperties          getPolymerPropertiesCopy(size_t timeStep) const;
         const WellPolymerProperties&   getPolymerProperties(size_t timeStep) const;
 
+        bool getRFT(size_t time_step) const;
+        void setRFT(size_t time_step, bool value);
+        bool getPLT(size_t time_step) const;
+        void setPLT(size_t time_step, bool value);
+        int  findWellFirstOpen(int startTimeStep) const;
+        void setRFTForWellWhenFirstOpen(int numSteps,size_t currentStep);
+
+
+
     private:
         void setRefDepthFromCompletions() const;
         size_t m_creationTimeStep;
@@ -104,6 +113,9 @@ namespace Opm {
         std::shared_ptr<DynamicState<WellInjectionProperties> > m_injectionProperties;
         std::shared_ptr<DynamicState<WellPolymerProperties> > m_polymerProperties;
         std::shared_ptr<DynamicState<std::string> > m_groupName;
+        std::shared_ptr<DynamicState<bool> > m_rft;
+        std::shared_ptr<DynamicState<bool> > m_plt;
+
 
         // WELSPECS data - assumes this is not dynamic
 
