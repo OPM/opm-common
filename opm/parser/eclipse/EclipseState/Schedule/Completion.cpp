@@ -83,7 +83,7 @@ namespace Opm {
             DeckItemConstPtr diameterItem = compdatRecord->getItem("DIAMETER");
             DeckItemConstPtr skinFactorItem = compdatRecord->getItem("SKIN");
 
-            if (!connectionTransmissibilityFactorItem->defaultApplied(0))
+            if (connectionTransmissibilityFactorItem->hasValue(0) && connectionTransmissibilityFactorItem->getSIDouble(0) > 0)
                 connectionTransmissibilityFactor.setValue(connectionTransmissibilityFactorItem->getSIDouble(0));
 
             if (diameterItem->hasValue(0))
