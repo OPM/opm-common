@@ -611,22 +611,7 @@ namespace Opm {
         }
         m_rootGroupTree->add(currentStep, newTree);
     }
-/*
-    static void setRFTForWellWhenFirstOpen(WellPtr well, int numSteps,size_t currentStep){
-        int time;
-        if(well->getStatus(currentStep)==WellCommon::StatusEnum::OPEN ){
-            time = currentStep;
-        }else {
-            time = well->findWellFirstOpen(currentStep);
-        }
-        if(time>-1){
-            well->setRFT(time, true);
-            if(time < numSteps){
-                well->setRFT(time+1, false);
-            }
-        }
-    }
-*/
+
     void Schedule::handleWRFT(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/, size_t currentStep) {
 
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
