@@ -191,6 +191,9 @@ EclipseState/Tables/RsvdTable.hpp
 EclipseState/Tables/PvtoInnerTable.hpp
 EclipseState/Tables/RvvdTable.hpp
 EclipseState/Tables/RtempvdTable.hpp
+EclipseState/Tables/OilvisctTable.hpp
+EclipseState/Tables/GasvisctTable.hpp
+EclipseState/Tables/WatvisctTable.hpp
 EclipseState/Tables/PvtgOuterTable.hpp
 #
 Utility/WconinjeWrapper.hpp

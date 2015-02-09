@@ -70,7 +70,8 @@ namespace Opm {
       dependency is really only on the dimensions.
     */
 
-    EclipseGrid::EclipseGrid(size_t nx, size_t ny , size_t nz)
+    EclipseGrid::EclipseGrid(size_t nx, size_t ny , size_t nz,
+                             double dx, double dy, double dz)
         : m_minpv("MINPV"),
           m_minpvf("MINPVF"),
           m_pinch("PINCH")
@@ -78,6 +79,7 @@ namespace Opm {
         m_nx = nx;
         m_ny = ny;
         m_nz = nz;
+        m_grid.reset(ecl_grid_alloc_rectangular(nx, ny, nz, dx, dy, dz, NULL), ecl_grid_free);
     }
 
 

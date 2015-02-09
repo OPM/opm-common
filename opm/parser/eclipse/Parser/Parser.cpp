@@ -21,6 +21,7 @@
 
 #include <opm/parser/eclipse/Log/Logger.hpp>
 
+#include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
@@ -181,6 +182,16 @@ namespace Opm {
         if (parserKeyword->hasMatchRegex())
             m_wildCardKeywords[parserKeyword->getName()] = parserKeyword;
     }
+
+
+    ParserKeywordConstPtr Parser::getKeyword(const std::string& name ) const {
+        auto iter = m_deckParserKeywords.find( name );
+        if (iter == m_deckParserKeywords.end())
+            throw std::invalid_argument("Keyword not found");
+        else
+            return iter->second;
+    }
+
 
     bool Parser::dropParserKeyword(const std::string& parserKeywordName) {
         // remove from the internal from the internal names
@@ -350,13 +361,22 @@ namespace Opm {
                     targetSize = parserKeyword->getFixedSize();
                 else {
                     const std::pair<std::string, std::string> sizeKeyword = parserKeyword->getSizeDefinitionPair();
-                    DeckKeywordConstPtr sizeDefinitionKeyword = parserState->deck->getKeyword(sizeKeyword.first);
-                    DeckItemPtr sizeDefinitionItem;
-                    {
-                        DeckRecordConstPtr record = sizeDefinitionKeyword->getRecord(0);
-                        sizeDefinitionItem = record->getItem(sizeKeyword.second);
+                    DeckConstPtr deck = parserState->deck;
+                    if (deck->hasKeyword(sizeKeyword.first)) {
+                        DeckKeywordConstPtr sizeDefinitionKeyword = deck->getKeyword(sizeKeyword.first);
+                        DeckItemPtr sizeDefinitionItem;
+                        {
+                            DeckRecordConstPtr record = sizeDefinitionKeyword->getRecord(0);
+                            sizeDefinitionItem = record->getItem(sizeKeyword.second);
+                        }
+                        targetSize = sizeDefinitionItem->getInt(0);
+                    } else {
+                        auto keyword = getKeyword( sizeKeyword.first );
+                        auto record = keyword->getRecord();
+                        auto int_item = std::dynamic_pointer_cast<const ParserIntItem>( record->get( sizeKeyword.second ) );
+
+                        targetSize = int_item->getDefault( );
                     }
-                    targetSize = sizeDefinitionItem->getInt(0);
                 }
                 return RawKeywordPtr(new RawKeyword(keywordString, parserState->dataFile.string() , parserState->lineNR , targetSize , parserKeyword->isTableCollection()));
             }

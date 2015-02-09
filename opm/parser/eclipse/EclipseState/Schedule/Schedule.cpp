@@ -115,6 +115,8 @@ namespace Opm {
             if (keyword->name() == "GCONPROD")
                 handleGCONPROD(keyword, logger, currentStep);
         }
+
+        checkUnhandledKeywords(deck);
     }
 
     void Schedule::handleDATES(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/) {
@@ -697,7 +699,19 @@ namespace Opm {
     }
 
 
-    double Schedule::convertInjectionRateToSI(double rawRate, WellInjector::TypeEnum wellType, const Opm::UnitSystem &unitSystem) const {
+    void Schedule::checkUnhandledKeywords(DeckConstPtr deck) const {
+        if (deck->hasKeyword("COMPORD")) {
+            auto compordKeyword = deck->getKeyword("COMPORD");
+            for (auto record = compordKeyword->begin(); record != compordKeyword->end(); ++record) {
+                auto methodItem = (*record)->getItem(1);
+                if (methodItem->getString(0) != "TRACK")
+                    throw std::invalid_argument("Can only handle TRACK in well order");
+            }
+        }
+    }
+
+
+    double Schedule::convertInjectionRateToSI(double rawRate, WellInjector::TypeEnum wellType, const Opm::UnitSystem &unitSystem) {
         switch (wellType) {
         case WellInjector::MULTI:
             // multi-phase controlled injectors are a really funny
@@ -718,7 +732,7 @@ namespace Opm {
         }
     }
 
-    double Schedule::convertInjectionRateToSI(double rawRate, Phase::PhaseEnum wellPhase, const Opm::UnitSystem &unitSystem) const {
+    double Schedule::convertInjectionRateToSI(double rawRate, Phase::PhaseEnum wellPhase, const Opm::UnitSystem &unitSystem) {
         switch (wellPhase) {
         case Phase::OIL:
         case Phase::WATER:

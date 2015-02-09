@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(CREATE_SIMPLE) {
     BOOST_CHECK_EQUAL( grid.getNY() , 20 );
     BOOST_CHECK_EQUAL( grid.getNZ() , 30 );
     BOOST_CHECK_EQUAL( grid.getCartesianSize() , 6000 );
-    BOOST_CHECK_EQUAL( false , grid.hasCellInfo() );
+    BOOST_CHECK_EQUAL( true , grid.hasCellInfo() );
 
 }
 
