@@ -37,6 +37,7 @@ namespace Opm {
     */
     EclipseGrid::EclipseGrid(const std::string& filename )
         : m_minpv("MINPV"),
+          m_minpvf("MINPVF"),
           m_pinch("PINCH")
     {
         ecl_grid_type * new_ptr = ecl_grid_load_case( filename.c_str() );
@@ -52,6 +53,7 @@ namespace Opm {
 
     EclipseGrid::EclipseGrid(const ecl_grid_type * src_ptr)
         : m_minpv("MINPV"),
+          m_minpvf("MINPVF"),
           m_pinch("PINCH")
     {
         m_grid.reset( ecl_grid_alloc_copy( src_ptr ) , ecl_grid_free );
@@ -70,6 +72,7 @@ namespace Opm {
 
     EclipseGrid::EclipseGrid(size_t nx, size_t ny , size_t nz)
         : m_minpv("MINPV"),
+          m_minpvf("MINPVF"),
           m_pinch("PINCH")
     {
         m_nx = nx;
@@ -93,6 +96,7 @@ namespace Opm {
 
     EclipseGrid::EclipseGrid(std::shared_ptr<const Deck> deck, LoggerPtr logger)
         : m_minpv("MINPV"),
+          m_minpvf("MINPVF"),
           m_pinch("PINCH")
     {
         const bool hasRUNSPEC = Section::hasRUNSPEC(deck);
@@ -158,6 +162,10 @@ namespace Opm {
         if (deck->hasKeyword("MINPV")) {
             m_minpv.setValue( deck->getKeyword("MINPV")->getRecord(0)->getItem("MINPV")->getSIDouble(0) );
         }
+
+        if (deck->hasKeyword("MINPVF")) {
+            m_minpvf.setValue( deck->getKeyword("MINPVF")->getRecord(0)->getItem("MINPVF")->getSIDouble(0) );
+        }
     }
 
 
@@ -192,6 +200,14 @@ namespace Opm {
 
     double EclipseGrid::getMinpvValue( ) const {
         return m_minpv.getValue();
+    }
+
+    bool EclipseGrid::isMinpvfActive( ) const {
+        return m_minpvf.hasValue();
+    }
+
+    double EclipseGrid::getMinpvfValue( ) const {
+        return m_minpvf.getValue();
     }
 
     void EclipseGrid::assertGlobalIndex(size_t globalIndex) const {
@@ -483,6 +499,7 @@ namespace Opm {
     bool EclipseGrid::equal(const EclipseGrid& other) const {
         return (m_pinch.equal( other.m_pinch ) &&
                 m_minpv.equal( other.m_minpv ) &&
+                m_minpvf.equal(other.m_minpvf ) &&
                 ecl_grid_compare( c_ptr() , other.c_ptr() , true , false , false ));
     }
 

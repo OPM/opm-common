@@ -82,6 +82,8 @@ namespace Opm {
         double getPinchThresholdThickness( ) const;
         bool isMinpvActive( ) const;
         double getMinpvValue( ) const;
+        bool isMinpvfActive() const;
+        double getMinpvfValue() const;
         bool hasCellInfo() const;
 
         void assertGlobalIndex(size_t globalIndex) const;
@@ -107,6 +109,7 @@ namespace Opm {
     private:
         std::shared_ptr<ecl_grid_type> m_grid;
         Value<double> m_minpv;
+        Value<double> m_minpvf;
         Value<double> m_pinch;
         size_t m_nx;
         size_t m_ny;
