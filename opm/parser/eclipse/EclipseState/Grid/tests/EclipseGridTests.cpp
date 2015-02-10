@@ -160,7 +160,7 @@ static Opm::DeckPtr createMinpvDefaultCPDeck() {
         "  1000*1 / \n"
         "MINPV \n"
         "  / \n"
-        "MINPVF \n"
+        "MINPVFIL \n"
         "  / \n"
         "EDIT\n"
         "\n";
@@ -185,7 +185,29 @@ static Opm::DeckPtr createMinpvCPDeck() {
         "  1000*1 / \n"
         "MINPV \n"
         "  10 / \n"
-        "MINPVF \n"
+        "EDIT\n"
+        "\n";
+
+    Opm::ParserPtr parser(new Opm::Parser());
+    return parser->parseString(deckData) ;
+}
+
+
+
+static Opm::DeckPtr createMinpvFilCPDeck() {
+    const char *deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        " 10 10 10 /\n"
+        "GRID\n"
+        "COORD\n"
+        "  726*1 / \n"
+        "ZCORN \n"
+        "  8000*1 / \n"
+        "ACTNUM \n"
+        "  1000*1 / \n"
+        "MINPVFIL \n"
         "  20 / \n"
         "EDIT\n"
         "\n";
@@ -728,41 +750,24 @@ BOOST_AUTO_TEST_CASE(ConstructorMINPV) {
     Opm::DeckConstPtr deck1 = createCPDeck();
     Opm::DeckConstPtr deck2 = createMinpvDefaultCPDeck();
     Opm::DeckConstPtr deck3 = createMinpvCPDeck();
+    Opm::DeckConstPtr deck4 = createMinpvFilCPDeck();
 
     Opm::EclipseGrid grid1(deck1);
     Opm::EclipseGrid grid2(deck2);
     Opm::EclipseGrid grid3(deck3);
+    Opm::EclipseGrid grid4(deck4);
 
     BOOST_CHECK(!grid1.equal( grid2 ));
     BOOST_CHECK(!grid1.equal( grid3 ));
     BOOST_CHECK(!grid2.equal( grid3 ));
-    BOOST_CHECK(!grid1.isMinpvActive());
-    BOOST_CHECK_THROW(grid1.getMinpvValue(), std::logic_error);
-    BOOST_CHECK(grid2.isMinpvActive());
-    BOOST_CHECK_EQUAL(grid2.getMinpvValue(), 1e-6);
-    BOOST_CHECK(grid3.isMinpvActive());
+    BOOST_CHECK_EQUAL(grid1.getMinpvMode(), Opm::MinpvMode::Inactive);
+    BOOST_CHECK_EQUAL(grid3.getMinpvMode(), Opm::MinpvMode::EclSTD);
     BOOST_CHECK_EQUAL(grid3.getMinpvValue(), 10.0);
+    BOOST_CHECK_EQUAL(grid4.getMinpvMode(), Opm::MinpvMode::OpmFIL);
+    BOOST_CHECK_EQUAL(grid4.getMinpvValue(), 20.0);
 }
 
 
 
 
-BOOST_AUTO_TEST_CASE(ConstructorMINPVF) {
-    Opm::DeckConstPtr deck1 = createCPDeck();
-    Opm::DeckConstPtr deck2 = createMinpvDefaultCPDeck();
-    Opm::DeckConstPtr deck3 = createMinpvCPDeck();
 
-    Opm::EclipseGrid grid1(deck1);
-    Opm::EclipseGrid grid2(deck2);
-    Opm::EclipseGrid grid3(deck3);
-
-    BOOST_CHECK(!grid1.equal( grid2 ));
-    BOOST_CHECK(!grid1.equal( grid3 ));
-    BOOST_CHECK(!grid2.equal( grid3 ));
-    BOOST_CHECK(!grid1.isMinpvfActive());
-    BOOST_CHECK_THROW(grid1.getMinpvfValue(), std::logic_error);
-    BOOST_CHECK(grid2.isMinpvfActive());
-    BOOST_CHECK_EQUAL(grid2.getMinpvfValue(), 1e-6);
-    BOOST_CHECK(grid3.isMinpvfActive());
-    BOOST_CHECK_EQUAL(grid3.getMinpvfValue(), 20.0);
-}
