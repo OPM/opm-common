@@ -748,18 +748,14 @@ BOOST_AUTO_TEST_CASE(ConstructorNORUNSPEC_PINCH) {
 
 BOOST_AUTO_TEST_CASE(ConstructorMINPV) {
     Opm::DeckConstPtr deck1 = createCPDeck();
-    Opm::DeckConstPtr deck2 = createMinpvDefaultCPDeck();
     Opm::DeckConstPtr deck3 = createMinpvCPDeck();
     Opm::DeckConstPtr deck4 = createMinpvFilCPDeck();
 
     Opm::EclipseGrid grid1(deck1);
-    Opm::EclipseGrid grid2(deck2);
     Opm::EclipseGrid grid3(deck3);
     Opm::EclipseGrid grid4(deck4);
 
-    BOOST_CHECK(!grid1.equal( grid2 ));
     BOOST_CHECK(!grid1.equal( grid3 ));
-    BOOST_CHECK(!grid2.equal( grid3 ));
     BOOST_CHECK_EQUAL(grid1.getMinpvMode(), Opm::MinpvMode::ModeEnum::Inactive);
     BOOST_CHECK_EQUAL(grid3.getMinpvMode(), Opm::MinpvMode::ModeEnum::EclSTD);
     BOOST_CHECK_EQUAL(grid3.getMinpvValue(), 10.0);

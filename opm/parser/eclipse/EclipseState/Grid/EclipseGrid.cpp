@@ -498,8 +498,11 @@ namespace Opm {
 
 
     bool EclipseGrid::equal(const EclipseGrid& other) const {
-        return (m_pinch.equal( other.m_pinch ) &&
-                ecl_grid_compare( c_ptr() , other.c_ptr() , true , false , false ));
+        bool status = (m_pinch.equal( other.m_pinch ) && (ecl_grid_compare( c_ptr() , other.c_ptr() , true , false , false )) && (m_minpvMode == other.getMinpvMode()));
+        if(m_minpvMode!=MinpvMode::ModeEnum::Inactive){
+            status = status && (m_minpvValue == other.getMinpvValue());
+        }
+        return  status;
     }
 
 
