@@ -51,7 +51,7 @@ namespace Opm {
         void setGroupName(size_t timeStep , const std::string& groupName);
 
         WellCommon::StatusEnum getStatus(size_t timeStep) const;
-        void                   setStatus(size_t timeStep, const WellCommon::StatusEnum Status);
+        void                   setStatus(size_t timeStep, WellCommon::StatusEnum Status);
 
         int    getHeadI() const;
         int    getHeadJ() const;
@@ -86,10 +86,10 @@ namespace Opm {
         WellPolymerProperties          getPolymerPropertiesCopy(size_t timeStep) const;
         const WellPolymerProperties&   getPolymerProperties(size_t timeStep) const;
 
-        bool getRFT(size_t time_step) const;
-        void setRFT(size_t time_step, bool value);
-        bool getPLT(size_t time_step) const;
-        void setPLT(size_t time_step, bool value);
+        bool getRFTActive(size_t time_step) const;
+        void setRFTActive(size_t time_step, bool value);
+        bool getPLTActive(size_t time_step) const;
+        void setPLTActive(size_t time_step, bool value);
         int  findWellFirstOpen(int startTimeStep) const;
         void setRFTForWellWhenFirstOpen(int numSteps,size_t currentStep);
 

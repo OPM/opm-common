@@ -113,9 +113,9 @@ namespace Opm {
         return m_status->get( timeStep );
     }
 
-    void Well::setStatus(size_t timeStep, const WellCommon::StatusEnum status) {
-        if ((WellCommon::StatusEnum::OPEN == status) && this->getCompletions(timeStep)->allCompletionsShut()) {
-            std::cerr << "ERROR when handling keyword for well "<< this->name()  << ": Cannot open a well where all completions are shut" << std::endl;
+    void Well::setStatus(size_t timeStep, WellCommon::StatusEnum status) {
+        if ((WellCommon::StatusEnum::OPEN == status) && getCompletions(timeStep)->allCompletionsShut()) {
+            std::cerr << "ERROR when handling keyword for well "<< name()  << ": Cannot open a well where all completions are shut" << std::endl;
         } else
         {
             m_status->add( timeStep , status );
@@ -238,25 +238,25 @@ namespace Opm {
 
 
 
-    void Well::setRFT(size_t time_step, bool value){
+    void Well::setRFTActive(size_t time_step, bool value){
         m_rft->add(time_step, value);
     }
 
-    bool Well::getRFT(size_t time_step) const{
+    bool Well::getRFTActive(size_t time_step) const{
         return m_rft->get(time_step);
     }
 
-    bool Well::getPLT(size_t time_step) const{
+    bool Well::getPLTActive(size_t time_step) const{
      return m_plt->get(time_step);
     }
-    void Well::setPLT(size_t time_step, bool value){
+    void Well::setPLTActive(size_t time_step, bool value){
         m_plt->add(time_step, value);
     }
 
     int Well::findWellFirstOpen(int startTimeStep) const{
         int numberOfTimeSteps = m_timeMap->numTimesteps();
         for(int i = startTimeStep; i < numberOfTimeSteps;i++){
-            if(this->getStatus(i)==WellCommon::StatusEnum::OPEN){
+            if(getStatus(i)==WellCommon::StatusEnum::OPEN){
                 return i;
             }
         }
@@ -265,15 +265,15 @@ namespace Opm {
 
     void Well::setRFTForWellWhenFirstOpen(int numSteps,size_t currentStep){
         int time;
-        if(this->getStatus(currentStep)==WellCommon::StatusEnum::OPEN ){
+        if(getStatus(currentStep)==WellCommon::StatusEnum::OPEN ){
             time = currentStep;
         }else {
-            time = this->findWellFirstOpen(currentStep);
+            time = findWellFirstOpen(currentStep);
         }
         if(time>-1){
-            this->setRFT(time, true);
+            setRFTActive(time, true);
             if(time < numSteps){
-                this->setRFT(time+1, false);
+                setRFTActive(time+1, false);
             }
         }
     }
