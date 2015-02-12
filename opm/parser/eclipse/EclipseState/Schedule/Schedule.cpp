@@ -29,7 +29,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/WellRFTProperties.hpp>
 
 
 
@@ -66,7 +65,7 @@ namespace Opm {
     void Schedule::iterateScheduleSection(DeckConstPtr deck, LoggerPtr logger) {
         size_t currentStep = 0;
 
-        std::vector<WellRFTPropertiesConstPtr> m_rftproperties;
+        std::vector<std::pair<DeckKeywordConstPtr , size_t> > rftProperties;
 
         for (size_t keywordIdx = 0; keywordIdx < deck->size(); ++keywordIdx) {
             DeckKeywordConstPtr keyword = deck->getKeyword(keywordIdx);
@@ -119,25 +118,23 @@ namespace Opm {
                 handleGCONPROD(keyword, logger, currentStep);
 
             if (keyword->name() == "WRFT") {
-                WellRFTPropertiesConstPtr rft = std::make_shared<WellRFTProperties>(keyword, currentStep);
-                m_rftproperties.push_back(rft);
+                rftProperties.push_back( std::make_pair( keyword , currentStep ));
             }
 
             if (keyword->name() == "WRFTPLT"){
-                WellRFTPropertiesConstPtr rft = std::make_shared<WellRFTProperties>(keyword, currentStep);
-                m_rftproperties.push_back(rft);
+                rftProperties.push_back( std::make_pair( keyword , currentStep ));
             }
                 
         }
-        for (auto key=m_rftproperties.begin(); key != m_rftproperties.end(); ++key) {
-            DeckKeywordConstPtr keyword  = key->get()->getKeyword();
-            size_t timestep = key->get()->getTimeStep();
+        for (auto rftPair = rftProperties.begin(); rftPair != rftProperties.end(); ++rftPair) {
+            DeckKeywordConstPtr keyword = rftPair->first;
+            size_t timeStep = rftPair->second;
             if (keyword->name() == "WRFT") {
-                handleWRFT(keyword, logger, timestep);
+                handleWRFT(keyword,  timeStep);
             }
 
             if (keyword->name() == "WRFTPLT"){
-                handleWRFTPLT(keyword, logger, timestep);
+                handleWRFTPLT(keyword, timeStep);
             }
         }
         checkUnhandledKeywords(deck);
@@ -224,7 +221,7 @@ namespace Opm {
                  ? WellProductionProperties::prediction(record)
                  : WellProductionProperties::history   (record));
 
-            const std::vector<WellPtr>& wells = getWells(wellNamePattern);
+            const std::vector<WellPtr> wells = getWells(wellNamePattern);
 
             for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
                 WellPtr well = *wellIter;
@@ -611,21 +608,29 @@ namespace Opm {
         m_rootGroupTree->add(currentStep, newTree);
     }
 
-    void Schedule::handleWRFT(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/, size_t currentStep) {
+    void Schedule::handleWRFT(DeckKeywordConstPtr keyword, size_t currentStep) {
+
+        /* Rule for handling RFT: Request current RFT data output for specified wells, plus output when
+         * any well is subsequently opened
+         */
 
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
 
             const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
-            const std::vector<WellPtr>& wells = getWells(wellNamePattern);
+            const std::vector<WellPtr> wells = getWells(wellNamePattern);
 
             for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
                 WellPtr well = *wellIter;
-                well->setRFT(currentStep, true);
+                well->setRFTActive(currentStep, true);
+                int numStep = m_timeMap->numTimesteps();
+                if(currentStep<numStep){
+                    well->setRFTActive(currentStep+1, false);
+                }
             }
         }
 
-        const std::vector<WellPtr>& wells = getWells("*");
+        const std::vector<WellPtr> wells = getWells();
         for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
             WellPtr well = *wellIter;
             well->setRFTForWellWhenFirstOpen(m_timeMap->numTimesteps(), currentStep);
@@ -635,13 +640,13 @@ namespace Opm {
 
 
 
-    void Schedule::handleWRFTPLT(DeckKeywordConstPtr keyword, LoggerPtr /*logger*/, size_t currentStep) {
+    void Schedule::handleWRFTPLT(DeckKeywordConstPtr keyword,  size_t currentStep) {
 
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
 
             const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
-            const std::vector<WellPtr>& wells = getWells(wellNamePattern);
+            const std::vector<WellPtr> wells = getWells(wellNamePattern);
 
             RFTConnections::RFTEnum RFTKey = RFTConnections::RFTEnumFromString(record->getItem("OUTPUT_RFT")->getTrimmedString(0));
 
@@ -651,34 +656,34 @@ namespace Opm {
                 WellPtr well = *wellIter;
                 switch(RFTKey){
                     case RFTConnections::RFTEnum::YES:
-                        well->setRFT(currentStep, true);
+                        well->setRFTActive(currentStep, true);
                         break;
                     case RFTConnections::RFTEnum::REPT:
-                        well->setRFT(currentStep, true);
+                        well->setRFTActive(currentStep, true);
                         break;
                     case RFTConnections::RFTEnum::TIMESTEP:
-                        well->setRFT(currentStep, true);
+                        well->setRFTActive(currentStep, true);
                         break;
                     case RFTConnections::RFTEnum::FOPN:
                         well->setRFTForWellWhenFirstOpen(m_timeMap->numTimesteps(),currentStep);
                         break;
                     case RFTConnections::RFTEnum::NO:
-                        well->setRFT(currentStep, false);
+                        well->setRFTActive(currentStep, false);
                         break;
                 }
 
                 switch(PLTKey){
                     case PLTConnections::PLTEnum::YES:
-                        well->setPLT(currentStep, true);
+                        well->setPLTActive(currentStep, true);
                         break;
                     case PLTConnections::PLTEnum::REPT:
-                        well->setPLT(currentStep, true);
+                        well->setPLTActive(currentStep, true);
                         break;
                     case PLTConnections::PLTEnum::TIMESTEP:
-                        well->setPLT(currentStep, true);
+                        well->setPLTActive(currentStep, true);
                         break;
                     case PLTConnections::PLTEnum::NO:
-                        well->setPLT(currentStep, false);
+                        well->setPLTActive(currentStep, false);
                         break;
                 }
 
@@ -714,8 +719,8 @@ namespace Opm {
         return m_wells.size();
     }
 
-    size_t Schedule::numWells(size_t timestep) const {
-      std::vector<WellConstPtr> wells = getWells(timestep);
+    size_t Schedule::numWells(size_t timestep) {
+      std::vector<WellPtr> wells = getWells(timestep);
       return wells.size();
     }
 
@@ -728,18 +733,18 @@ namespace Opm {
         return m_wells.get( wellName );
     }
 
-    std::vector<WellConstPtr> Schedule::getWells() const {
+    std::vector<WellPtr> Schedule::getWells() {
         return getWells(m_timeMap->size()-1);
     }
 
-    std::vector<WellConstPtr> Schedule::getWells(size_t timeStep) const {
+    std::vector<WellPtr> Schedule::getWells(size_t timeStep) {
         if (timeStep >= m_timeMap->size()) {
             throw std::invalid_argument("Timestep to large");
         }
 
-        std::vector<WellConstPtr> wells;
+        std::vector<WellPtr> wells;
         for (auto iter = m_wells.begin(); iter != m_wells.end(); ++iter) {
-            WellConstPtr well = *iter;
+            WellPtr well = *iter;
             if (well->hasBeenDefined(timeStep)) {
                 wells.push_back(well);
             }
@@ -747,7 +752,7 @@ namespace Opm {
         return wells;
     }
 
-    std::vector<WellPtr> Schedule::getWells(const std::string& wellNamePattern) const {
+    std::vector<WellPtr> Schedule::getWells(const std::string& wellNamePattern) {
         std::vector<WellPtr> wells;
         size_t wildcard_pos = wellNamePattern.find("*");
         if (wildcard_pos == wellNamePattern.length()-1) {
@@ -860,11 +865,11 @@ namespace Opm {
     }
 
 
-    size_t Schedule::getMaxNumCompletionsForWells(size_t timestep) const {
+    size_t Schedule::getMaxNumCompletionsForWells(size_t timestep) {
       size_t ncwmax = 0;
-      const std::vector<WellConstPtr>& wells = getWells();
+      const std::vector<WellPtr>& wells = getWells();
       for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
-        WellConstPtr wellPtr = *wellIter;
+        WellPtr wellPtr = *wellIter;
         CompletionSetConstPtr completionsSetPtr = wellPtr->getCompletions(timestep);
 
         if (completionsSetPtr->size() > ncwmax )

@@ -49,13 +49,13 @@ namespace Opm
         TimeMapConstPtr getTimeMap() const;
 
         size_t numWells() const;
-        size_t numWells(size_t timestep) const;
-        size_t getMaxNumCompletionsForWells(size_t timestep) const;
+        size_t numWells(size_t timestep);
+        size_t getMaxNumCompletionsForWells(size_t timestep);
         bool hasWell(const std::string& wellName) const;
         WellPtr getWell(const std::string& wellName) const;
-        std::vector<WellConstPtr> getWells() const;
-        std::vector<WellConstPtr> getWells(size_t timeStep) const;
-        std::vector<WellPtr> getWells(const std::string& wellNamePattern) const;
+        std::vector<WellPtr> getWells();
+        std::vector<WellPtr> getWells(size_t timeStep);
+        std::vector<WellPtr> getWells(const std::string& wellNamePattern);
 
         GroupTreePtr getGroupTree(size_t t) const;
         size_t numGroups() const;
@@ -94,8 +94,8 @@ namespace Opm
         void handleDATES(DeckKeywordConstPtr keyword, LoggerPtr logger);
         void handleTSTEP(DeckKeywordConstPtr keyword, LoggerPtr logger);
         void handleGRUPTREE(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep);
-        void handleWRFT(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep);
-        void handleWRFTPLT(DeckKeywordConstPtr keyword, LoggerPtr logger, size_t currentStep);
+        void handleWRFT(DeckKeywordConstPtr keyword, size_t currentStep);
+        void handleWRFTPLT(DeckKeywordConstPtr keyword, size_t currentStep);
 
         void checkUnhandledKeywords(DeckConstPtr deck) const;
 

@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrdered) {
     DeckPtr deck = createDeckWithWellsOrdered();
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(100,100,100);
     Schedule schedule(grid , deck);
-    std::vector<WellConstPtr> wells = schedule.getWells();
+    std::vector<WellPtr> wells = schedule.getWells();
 
     BOOST_CHECK_EQUAL( "CW_1" , wells[0]->name());
     BOOST_CHECK_EQUAL( "BW_2" , wells[1]->name());
@@ -221,9 +221,9 @@ BOOST_AUTO_TEST_CASE(WellsIterator_Empty_EmptyVectorReturned) {
     DeckPtr deck = createDeck();
     Schedule schedule(grid , deck);
 
-    std::vector<WellConstPtr> wells_alltimesteps = schedule.getWells();
+    std::vector<WellPtr> wells_alltimesteps = schedule.getWells();
     BOOST_CHECK_EQUAL(0U, wells_alltimesteps.size());
-    std::vector<WellConstPtr> wells_t0 = schedule.getWells(0);
+    std::vector<WellPtr> wells_t0 = schedule.getWells(0);
     BOOST_CHECK_EQUAL(0U, wells_t0.size());
 
     BOOST_CHECK_THROW(schedule.getWells(1), std::invalid_argument);
@@ -234,11 +234,11 @@ BOOST_AUTO_TEST_CASE(WellsIterator_HasWells_WellsReturned) {
     DeckPtr deck = createDeckWithWells();
     Schedule schedule(grid , deck);
 
-    std::vector<WellConstPtr> wells_alltimesteps = schedule.getWells();
+    std::vector<WellPtr> wells_alltimesteps = schedule.getWells();
     BOOST_CHECK_EQUAL(3U, wells_alltimesteps.size());
-    std::vector<WellConstPtr> wells_t0 = schedule.getWells(0);
+    std::vector<WellPtr> wells_t0 = schedule.getWells(0);
     BOOST_CHECK_EQUAL(1U, wells_t0.size());
-    std::vector<WellConstPtr> wells_t3 = schedule.getWells(3);
+    std::vector<WellPtr> wells_t3 = schedule.getWells(3);
     BOOST_CHECK_EQUAL(3U, wells_t3.size());
 }
 
@@ -646,9 +646,9 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFT) {
     WellPtr well;
     size_t currentStep = 2;
     well = schedule.getWell("OP_1");
-    BOOST_CHECK_EQUAL(well->getRFT(currentStep),true);
+    BOOST_CHECK_EQUAL(well->getRFTActive(currentStep),true);
     well = schedule.getWell("OP_2");
-    BOOST_CHECK_EQUAL(well->getRFT(currentStep),true);
+    BOOST_CHECK_EQUAL(well->getRFTActive(currentStep),true);
 
 }
 
@@ -710,11 +710,11 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFTPLT) {
 
 
     size_t currentStep = 3;
-    BOOST_CHECK_EQUAL(well->getRFT(currentStep),false);
+    BOOST_CHECK_EQUAL(well->getRFTActive(currentStep),false);
     currentStep = 4;
-    BOOST_CHECK_EQUAL(well->getRFT(currentStep),true);
+    BOOST_CHECK_EQUAL(well->getRFTActive(currentStep),true);
     BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well->getStatus(currentStep));
     currentStep = 5;
-    BOOST_CHECK_EQUAL(well->getRFT(currentStep),false);
+    BOOST_CHECK_EQUAL(well->getRFTActive(currentStep),false);
 }
 
