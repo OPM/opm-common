@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrdered) {
     DeckPtr deck = createDeckWithWellsOrdered();
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(100,100,100);
     Schedule schedule(grid , deck);
-    std::vector<WellPtr> wells = schedule.getWells();
+    std::vector<WellConstPtr> wells = schedule.getWells();
 
     BOOST_CHECK_EQUAL( "CW_1" , wells[0]->name());
     BOOST_CHECK_EQUAL( "BW_2" , wells[1]->name());
@@ -221,9 +221,9 @@ BOOST_AUTO_TEST_CASE(WellsIterator_Empty_EmptyVectorReturned) {
     DeckPtr deck = createDeck();
     Schedule schedule(grid , deck);
 
-    std::vector<WellPtr> wells_alltimesteps = schedule.getWells();
+    std::vector<WellConstPtr> wells_alltimesteps = schedule.getWells();
     BOOST_CHECK_EQUAL(0U, wells_alltimesteps.size());
-    std::vector<WellPtr> wells_t0 = schedule.getWells(0);
+    std::vector<WellConstPtr> wells_t0 = schedule.getWells(0);
     BOOST_CHECK_EQUAL(0U, wells_t0.size());
 
     BOOST_CHECK_THROW(schedule.getWells(1), std::invalid_argument);
@@ -234,11 +234,11 @@ BOOST_AUTO_TEST_CASE(WellsIterator_HasWells_WellsReturned) {
     DeckPtr deck = createDeckWithWells();
     Schedule schedule(grid , deck);
 
-    std::vector<WellPtr> wells_alltimesteps = schedule.getWells();
+    std::vector<WellConstPtr> wells_alltimesteps = schedule.getWells();
     BOOST_CHECK_EQUAL(3U, wells_alltimesteps.size());
-    std::vector<WellPtr> wells_t0 = schedule.getWells(0);
+    std::vector<WellConstPtr> wells_t0 = schedule.getWells(0);
     BOOST_CHECK_EQUAL(1U, wells_t0.size());
-    std::vector<WellPtr> wells_t3 = schedule.getWells(3);
+    std::vector<WellConstPtr> wells_t3 = schedule.getWells(3);
     BOOST_CHECK_EQUAL(3U, wells_t3.size());
 }
 

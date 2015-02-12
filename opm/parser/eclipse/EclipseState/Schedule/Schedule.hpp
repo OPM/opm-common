@@ -53,11 +53,9 @@ namespace Opm
         size_t getMaxNumCompletionsForWells(size_t timestep) const;
         bool hasWell(const std::string& wellName) const;
         WellPtr getWell(const std::string& wellName) const;
-        std::vector<WellPtr> getWells();
-        std::vector<WellPtr> getWells(size_t timeStep);
-        std::vector<WellPtr> getWells(const std::string& wellNamePattern);
         std::vector<WellConstPtr> getWells() const;
         std::vector<WellConstPtr> getWells(size_t timeStep) const;
+        std::vector<WellPtr> getWells(const std::string& wellNamePattern) const;
 
         GroupTreePtr getGroupTree(size_t t) const;
         size_t numGroups() const;
