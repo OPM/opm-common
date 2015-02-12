@@ -81,7 +81,6 @@ EclipseState/Schedule/CompletionSet.cpp
 EclipseState/Schedule/ScheduleEnums.cpp 
 EclipseState/Schedule/GroupTreeNode.cpp
 EclipseState/Schedule/GroupTree.cpp
-EclipseState/Schedule/WellRFTProperties.cpp
 #
 EclipseState/Tables/SingleRecordTable.cpp
 EclipseState/Tables/MultiRecordTable.cpp
@@ -148,8 +147,7 @@ EclipseState/Schedule/Completion.hpp
 EclipseState/Schedule/CompletionSet.hpp
 EclipseState/Schedule/ScheduleEnums.hpp
 EclipseState/Schedule/GroupTreeNode.hpp 
-EclipseState/Schedule/GroupTree.hpp 
-EclipseState/Schedule/WellRFTProperties.hpp
+EclipseState/Schedule/GroupTree.hpp
 #
 EclipseState/Util/OrderedMap.hpp 
 EclipseState/Util/Value.hpp 
