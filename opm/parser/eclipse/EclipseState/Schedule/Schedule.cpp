@@ -719,8 +719,8 @@ namespace Opm {
         return m_wells.size();
     }
 
-    size_t Schedule::numWells(size_t timestep) {
-      std::vector<WellPtr> wells = getWells(timestep);
+    size_t Schedule::numWells(size_t timestep) const {
+      std::vector<WellConstPtr> wells = getWells(timestep);
       return wells.size();
     }
 
@@ -758,6 +758,42 @@ namespace Opm {
         if (wildcard_pos == wellNamePattern.length()-1) {
             for (auto wellIter = m_wells.begin(); wellIter != m_wells.end(); ++wellIter) {
                 WellPtr well = *wellIter;
+                if (wellNamePattern.compare (0, wildcard_pos, well->name(), 0, wildcard_pos) == 0) {
+                    wells.push_back (well);
+                }
+            }
+        }
+        else {
+            wells.push_back(getWell(wellNamePattern));
+        }
+        return wells;
+    }
+
+    std::vector<WellConstPtr> Schedule::getWells() const {
+        return getWells(m_timeMap->size()-1);
+    }
+
+    std::vector<WellConstPtr> Schedule::getWells(size_t timeStep) const {
+        if (timeStep >= m_timeMap->size()) {
+            throw std::invalid_argument("Timestep to large");
+        }
+
+        std::vector<WellConstPtr> wells;
+        for (auto iter = m_wells.begin(); iter != m_wells.end(); ++iter) {
+            WellConstPtr well = *iter;
+            if (well->hasBeenDefined(timeStep)) {
+                wells.push_back(well);
+            }
+        }
+        return wells;
+    }
+
+    std::vector<WellConstPtr> Schedule::getWells(const std::string& wellNamePattern) const {
+        std::vector<WellConstPtr> wells;
+        size_t wildcard_pos = wellNamePattern.find("*");
+        if (wildcard_pos == wellNamePattern.length()-1) {
+            for (auto wellIter = m_wells.begin(); wellIter != m_wells.end(); ++wellIter) {
+                WellConstPtr well = *wellIter;
                 if (wellNamePattern.compare (0, wildcard_pos, well->name(), 0, wildcard_pos) == 0) {
                     wells.push_back (well);
                 }
@@ -865,11 +901,11 @@ namespace Opm {
     }
 
 
-    size_t Schedule::getMaxNumCompletionsForWells(size_t timestep) {
+    size_t Schedule::getMaxNumCompletionsForWells(size_t timestep) const {
       size_t ncwmax = 0;
-      const std::vector<WellPtr>& wells = getWells();
+      const std::vector<WellConstPtr>& wells = getWells();
       for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
-        WellPtr wellPtr = *wellIter;
+        WellConstPtr wellPtr = *wellIter;
         CompletionSetConstPtr completionsSetPtr = wellPtr->getCompletions(timestep);
 
         if (completionsSetPtr->size() > ncwmax )
