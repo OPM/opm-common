@@ -5,6 +5,7 @@ if (BUILD_TESTING)
    add_subdirectory(IntegrationTests)
    add_subdirectory(EclipseState/tests)
    add_subdirectory(EclipseState/Schedule/tests)
+   add_subdirectory(EclipseState/SimulationConfig/tests)
    add_subdirectory(EclipseState/Tables/tests)
    add_subdirectory(EclipseState/Grid/tests)
    add_subdirectory(EclipseState/Util/tests)
@@ -94,7 +95,10 @@ EclipseState/Grid/MULTREGTScanner.cpp
 EclipseState/Grid/EclipseGrid.cpp
 EclipseState/Grid/FaultFace.cpp
 EclipseState/Grid/Fault.cpp
-EclipseState/Grid/FaultCollection.cpp)
+EclipseState/Grid/FaultCollection.cpp
+#
+EclipseState/SimulationConfig/SimulationConfig.cpp
+EclipseState/SimulationConfig/ThresholdPressure.cpp)
 
 set( HEADER_FILES
 Log/Logger.hpp
@@ -165,6 +169,9 @@ EclipseState/Grid/TransMult.hpp
 EclipseState/Grid/FaultFace.hpp
 EclipseState/Grid/Fault.hpp
 EclipseState/Grid/FaultCollection.hpp
+#
+EclipseState/SimulationConfig/SimulationConfig.hpp
+EclipseState/SimulationConfig/ThresholdPressure.hpp
 #
 EclipseState/Tables/PlyadsTable.hpp
 EclipseState/Tables/PvtoOuterTable.hpp

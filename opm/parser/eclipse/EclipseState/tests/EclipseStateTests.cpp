@@ -84,7 +84,6 @@ static DeckPtr createDeckTOP() {
 
 
 
-
 BOOST_AUTO_TEST_CASE(GetPOROTOPBased) {
     DeckPtr deck = createDeckTOP();
     LoggerPtr logger(new Logger());
@@ -101,7 +100,6 @@ BOOST_AUTO_TEST_CASE(GetPOROTOPBased) {
     }
 
 }
-
 
 
 static DeckPtr createDeck() {
@@ -145,6 +143,7 @@ static DeckPtr createDeck() {
     return parser->parseString(deckData) ;
 }
 
+
 static DeckPtr createDeckNoFaults() {
     const char *deckData =
         "RUNSPEC\n"
@@ -172,6 +171,7 @@ static DeckPtr createDeckNoFaults() {
     return parser->parseString(deckData) ;
 }
 
+
 BOOST_AUTO_TEST_CASE(CreateSchedule) {
     DeckPtr deck = createDeck();
     EclipseState state(deck);
@@ -179,6 +179,44 @@ BOOST_AUTO_TEST_CASE(CreateSchedule) {
     EclipseGridConstPtr eclipseGrid = state.getEclipseGrid();
 
     BOOST_CHECK_EQUAL( schedule->getStartTime() , boost::posix_time::ptime(boost::gregorian::date(1998 , 3 , 8 )));
+}
+
+
+
+static DeckPtr createDeckSimConfig() {
+    const std::string& inputStr = "RUNSPEC\n"
+                                  "EQLOPTS\n"
+                                  "THPRES /\n "
+                                  "DIMENS\n"
+                                  "10 3 4 /\n"
+                                  "\n"
+                                  "GRID\n"
+                                  "REGIONS\n"
+                                  "EQLNUM\n"
+                                  "10*1 10*2 100*3 /\n "
+                                  "\n"
+
+                                  "SOLUTION\n"
+                                  "THPRES\n"
+                                  "1 2 12.0/\n"
+                                  "1 3 5.0/\n"
+                                  "2 3 7.0/\n"
+                                  "/\n"
+                                  "\n";
+
+
+    ParserPtr parser(new Parser());
+    return parser->parseString(inputStr) ;
+}
+
+
+BOOST_AUTO_TEST_CASE(CreateSimulationConfig) {
+
+    DeckPtr deck = createDeckSimConfig();
+    EclipseState state(deck);
+    SimulationConfigConstPtr simulationConfig = state.getSimulationConfig();
+    const std::vector<double> thresholdPressureTable = simulationConfig->getThresholdPressureTable();
+    BOOST_CHECK_EQUAL(thresholdPressureTable.size(), 9);
 }
 
 

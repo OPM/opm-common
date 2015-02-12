@@ -56,6 +56,8 @@
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwfnTable.hpp>
 
+#include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
+
 #include <set>
 #include <memory>
 #include <iostream>
@@ -73,6 +75,7 @@ namespace Opm {
         EclipseState(DeckConstPtr deck, LoggerPtr logger = std::make_shared<Logger>(&std::cout));
 
         ScheduleConstPtr getSchedule() const;
+        SimulationConfigConstPtr getSimulationConfig() const;
         EclipseGridConstPtr getEclipseGrid() const;
         EclipseGridPtr getEclipseGridCopy() const;
         bool hasPhase(enum Phase::PhaseEnum phase) const;
@@ -127,6 +130,7 @@ namespace Opm {
     private:
         void initTables(DeckConstPtr deck, LoggerPtr logger);
         void initSchedule(DeckConstPtr deck, LoggerPtr logger);
+        void initSimulationConfig(DeckConstPtr deck);
         void initEclipseGrid(DeckConstPtr deck, LoggerPtr logger);
         void initPhases(DeckConstPtr deck, LoggerPtr logger);
         void initTitle(DeckConstPtr deck, LoggerPtr logger);
@@ -224,6 +228,7 @@ namespace Opm {
 
         EclipseGridConstPtr m_eclipseGrid;
         ScheduleConstPtr schedule;
+        SimulationConfigConstPtr m_simulationConfig;
 
         std::vector<EnkrvdTable> m_enkrvdTables;
         std::vector<EnptvdTable> m_enptvdTables;
