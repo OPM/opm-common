@@ -727,10 +727,6 @@ namespace Opm {
         return m_wells.hasKey( wellName );
     }
 
-    WellPtr Schedule::getWell(const std::string& wellName) const {
-        return m_wells.get( wellName );
-    }
-
 
     std::vector<WellConstPtr> Schedule::getWells() const {
         return getWells(m_timeMap->size()-1);
@@ -751,6 +747,10 @@ namespace Opm {
         return wells;
     }
 
+
+    WellPtr Schedule::getWell(const std::string& wellName) const {
+        return m_wells.get( wellName );
+    }
 
     std::vector<WellPtr> Schedule::getWells(const std::string& wellNamePattern) const {
         std::vector<WellPtr> wells;
