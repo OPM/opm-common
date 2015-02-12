@@ -36,7 +36,8 @@ namespace Opm {
        GRID/EGRID file.
     */
     EclipseGrid::EclipseGrid(const std::string& filename )
-        : m_minpv("MINPV"),
+        : m_minpvValue(0),
+          m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH")
     {
         ecl_grid_type * new_ptr = ecl_grid_load_case( filename.c_str() );
@@ -51,7 +52,8 @@ namespace Opm {
     }
 
     EclipseGrid::EclipseGrid(const ecl_grid_type * src_ptr)
-        : m_minpv("MINPV"),
+        : m_minpvValue(0),
+          m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH")
     {
         m_grid.reset( ecl_grid_alloc_copy( src_ptr ) , ecl_grid_free );
@@ -70,7 +72,8 @@ namespace Opm {
 
     EclipseGrid::EclipseGrid(size_t nx, size_t ny , size_t nz,
                              double dx, double dy, double dz)
-        : m_minpv("MINPV"),
+        : m_minpvValue(0),
+          m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH")
     {
         m_nx = nx;
@@ -94,7 +97,8 @@ namespace Opm {
     } // anonymous namespace
 
     EclipseGrid::EclipseGrid(std::shared_ptr<const Deck> deck, LoggerPtr logger)
-        : m_minpv("MINPV"),
+        : m_minpvValue(0),
+          m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH")
     {
         const bool hasRUNSPEC = Section::hasRUNSPEC(deck);
@@ -157,8 +161,18 @@ namespace Opm {
             m_pinch.setValue( deck->getKeyword("PINCH")->getRecord(0)->getItem("THRESHOLD_THICKNESS")->getSIDouble(0) );
         }
 
+        if (deck->hasKeyword("MINPV") && deck->hasKeyword("MINPVFIL")) {
+            throw std::invalid_argument("Can not have both MINPV and MINPVFIL in deck.");
+        }
+        
         if (deck->hasKeyword("MINPV")) {
-            m_minpv.setValue( deck->getKeyword("MINPV")->getRecord(0)->getItem("MINPV")->getSIDouble(0) );
+            m_minpvValue = deck->getKeyword("MINPV")->getRecord(0)->getItem("MINPV")->getSIDouble(0);
+            m_minpvMode = MinpvMode::ModeEnum::EclSTD;
+        }
+
+        if (deck->hasKeyword("MINPVFIL")) {
+            m_minpvValue = deck->getKeyword("MINPVFIL")->getRecord(0)->getItem("MINPVFIL")->getSIDouble(0);
+            m_minpvMode = MinpvMode::ModeEnum::OpmFIL;
         }
     }
 
@@ -188,13 +202,14 @@ namespace Opm {
         return m_pinch.getValue();
     }
 
-    bool EclipseGrid::isMinpvActive( ) const {
-        return m_minpv.hasValue();
+    MinpvMode::ModeEnum EclipseGrid::getMinpvMode() const {
+        return m_minpvMode;
     }
 
     double EclipseGrid::getMinpvValue( ) const {
-        return m_minpv.getValue();
+        return m_minpvValue;
     }
+
 
     void EclipseGrid::assertGlobalIndex(size_t globalIndex) const {
         if (globalIndex >= getCartesianSize())
@@ -484,7 +499,6 @@ namespace Opm {
 
     bool EclipseGrid::equal(const EclipseGrid& other) const {
         return (m_pinch.equal( other.m_pinch ) &&
-                m_minpv.equal( other.m_minpv ) &&
                 ecl_grid_compare( c_ptr() , other.c_ptr() , true , false , false ));
     }
 

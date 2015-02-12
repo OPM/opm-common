@@ -159,6 +159,7 @@ EclipseState/Grid/GridPropertyInitializers.hpp
 EclipseState/Grid/Box.hpp
 EclipseState/Grid/BoxManager.hpp
 EclipseState/Grid/FaceDir.hpp
+EclipseState/Grid/MinpvMode.hpp
 EclipseState/Grid/MULTREGTScanner.hpp        
 EclipseState/Grid/TransMult.hpp       
 EclipseState/Grid/FaultFace.hpp
