@@ -475,10 +475,18 @@ BOOST_AUTO_TEST_CASE(InjectorType) {
 
 BOOST_AUTO_TEST_CASE(WellStatus) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
-    std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>(10,10,10);
-    Opm::Well well("WELL1", grid , 1, 2, Opm::Value<double>("REF_DEPTH" , 2334.32), Opm::Phase::WATER, timeMap, 0);
+    Opm::EclipseGridConstPtr grid = std::make_shared<Opm::EclipseGrid>(20, 20, 20);
 
-    well.setStatus( 1 , Opm::WellCommon::OPEN );
+    Opm::Well well("WELL1" , grid , 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap , 0);
+
+    std::vector<Opm::CompletionPtr> newCompletions;
+    Opm::CompletionPtr comp1(new Opm::Completion( 10 , 10 , 10 , Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
+
+    newCompletions.push_back( comp1 );
+
+    well.addCompletions( 2 , newCompletions );
+
+    well.setStatus( 3 , Opm::WellCommon::OPEN );
     BOOST_CHECK_EQUAL( Opm::WellCommon::OPEN , well.getStatus( 5 ));
 }
 
