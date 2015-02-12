@@ -23,12 +23,14 @@
 #include <string>
 
 namespace Opm {
-
-    enum MinpvMode {
-        Inactive  = 1,
-        EclSTD = 2,
-        OpmFIL = 4
-    };
+    
+    namespace MinpvMode {
+        enum ModeEnum {
+            Inactive  = 1,
+            EclSTD = 2,
+            OpmFIL = 3
+        };
+    }
 }
 
 #endif

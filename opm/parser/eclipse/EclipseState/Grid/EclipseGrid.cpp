@@ -37,7 +37,7 @@ namespace Opm {
     */
     EclipseGrid::EclipseGrid(const std::string& filename )
         : m_minpvValue(0),
-          m_minpvMode(MinpvMode::Inactive),
+          m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH")
     {
         ecl_grid_type * new_ptr = ecl_grid_load_case( filename.c_str() );
@@ -53,7 +53,7 @@ namespace Opm {
 
     EclipseGrid::EclipseGrid(const ecl_grid_type * src_ptr)
         : m_minpvValue(0),
-          m_minpvMode(MinpvMode::Inactive),
+          m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH")
     {
         m_grid.reset( ecl_grid_alloc_copy( src_ptr ) , ecl_grid_free );
@@ -73,7 +73,7 @@ namespace Opm {
     EclipseGrid::EclipseGrid(size_t nx, size_t ny , size_t nz,
                              double dx, double dy, double dz)
         : m_minpvValue(0),
-          m_minpvMode(MinpvMode::Inactive),
+          m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH")
     {
         m_nx = nx;
@@ -98,7 +98,7 @@ namespace Opm {
 
     EclipseGrid::EclipseGrid(std::shared_ptr<const Deck> deck, LoggerPtr logger)
         : m_minpvValue(0),
-          m_minpvMode(MinpvMode::Inactive),
+          m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH")
     {
         const bool hasRUNSPEC = Section::hasRUNSPEC(deck);
@@ -167,12 +167,12 @@ namespace Opm {
         
         if (deck->hasKeyword("MINPV")) {
             m_minpvValue = deck->getKeyword("MINPV")->getRecord(0)->getItem("MINPV")->getSIDouble(0);
-            m_minpvMode = MinpvMode::EclSTD;
+            m_minpvMode = MinpvMode::ModeEnum::EclSTD;
         }
 
         if (deck->hasKeyword("MINPVFIL")) {
             m_minpvValue = deck->getKeyword("MINPVFIL")->getRecord(0)->getItem("MINPVFIL")->getSIDouble(0);
-            m_minpvMode = MinpvMode::OpmFIL;
+            m_minpvMode = MinpvMode::ModeEnum::OpmFIL;
         }
     }
 
@@ -202,7 +202,7 @@ namespace Opm {
         return m_pinch.getValue();
     }
 
-    MinpvMode EclipseGrid::getMinpvMode() const {
+    MinpvMode::ModeEnum EclipseGrid::getMinpvMode() const {
         return m_minpvMode;
     }
 

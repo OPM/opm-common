@@ -82,7 +82,7 @@ namespace Opm {
         bool isPinchActive( ) const;
         double getPinchThresholdThickness( ) const;
 
-        MinpvMode getMinpvMode() const;
+        MinpvMode::ModeEnum getMinpvMode() const;
         double getMinpvValue( ) const;
         
         bool hasCellInfo() const;
@@ -110,7 +110,7 @@ namespace Opm {
     private:
         std::shared_ptr<ecl_grid_type> m_grid;
         double m_minpvValue;
-        MinpvMode m_minpvMode;
+        MinpvMode::ModeEnum m_minpvMode;
         Value<double> m_pinch;
         size_t m_nx;
         size_t m_ny;
