@@ -752,22 +752,6 @@ namespace Opm {
         return wells;
     }
 
-    std::vector<WellPtr> Schedule::getWells(const std::string& wellNamePattern) {
-        std::vector<WellPtr> wells;
-        size_t wildcard_pos = wellNamePattern.find("*");
-        if (wildcard_pos == wellNamePattern.length()-1) {
-            for (auto wellIter = m_wells.begin(); wellIter != m_wells.end(); ++wellIter) {
-                WellPtr well = *wellIter;
-                if (wellNamePattern.compare (0, wildcard_pos, well->name(), 0, wildcard_pos) == 0) {
-                    wells.push_back (well);
-                }
-            }
-        }
-        else {
-            wells.push_back(getWell(wellNamePattern));
-        }
-        return wells;
-    }
 
     std::vector<WellConstPtr> Schedule::getWells() const {
         return getWells(m_timeMap->size()-1);
@@ -788,12 +772,13 @@ namespace Opm {
         return wells;
     }
 
-    std::vector<WellConstPtr> Schedule::getWells(const std::string& wellNamePattern) const {
-        std::vector<WellConstPtr> wells;
+
+    std::vector<WellPtr> Schedule::getWells(const std::string& wellNamePattern) {
+        std::vector<WellPtr> wells;
         size_t wildcard_pos = wellNamePattern.find("*");
         if (wildcard_pos == wellNamePattern.length()-1) {
             for (auto wellIter = m_wells.begin(); wellIter != m_wells.end(); ++wellIter) {
-                WellConstPtr well = *wellIter;
+                WellPtr well = *wellIter;
                 if (wellNamePattern.compare (0, wildcard_pos, well->name(), 0, wildcard_pos) == 0) {
                     wells.push_back (well);
                 }
@@ -804,6 +789,8 @@ namespace Opm {
         }
         return wells;
     }
+
+
 
     void Schedule::addGroup(const std::string& groupName, size_t timeStep) {
         if (!m_timeMap) {
