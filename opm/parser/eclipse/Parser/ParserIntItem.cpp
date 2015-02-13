@@ -37,8 +37,8 @@ namespace Opm {
         m_defaultSet = false;
     }
 
-    ParserIntItem::ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType)
-        : ParserItem(itemName, sizeType)
+    ParserIntItem::ParserIntItem(const std::string& itemName, ParserItemSizeEnum p_sizeType)
+        : ParserItem(itemName, p_sizeType)
     {
         m_default = -1;
         m_defaultSet = false;

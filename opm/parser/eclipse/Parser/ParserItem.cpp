@@ -25,9 +25,9 @@
 
 namespace Opm {
 
-    ParserItem::ParserItem(const std::string& itemName, ParserItemSizeEnum sizeType) {
+    ParserItem::ParserItem(const std::string& itemName, ParserItemSizeEnum p_sizeType) {
         m_name.assign(itemName);
-        m_sizeType = sizeType;
+        m_sizeType = p_sizeType;
         m_defaultSet = false;
         m_description = "";
     }

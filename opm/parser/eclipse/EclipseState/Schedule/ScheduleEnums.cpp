@@ -530,7 +530,7 @@ namespace Opm {
                 return NO;
             else
                 throw std::invalid_argument("Unknown enum state string: " + stringValue);
-        };
+        }
 
     }
     namespace PLTConnections {
@@ -563,7 +563,7 @@ namespace Opm {
                 return NO;
             else
                 throw std::invalid_argument("Unknown enum state string: " + stringValue );
-        };
+        }
     }
 
 }

@@ -623,7 +623,7 @@ namespace Opm {
             for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
                 WellPtr well = *wellIter;
                 well->setRFTActive(currentStep, true);
-                int numStep = m_timeMap->numTimesteps();
+                size_t numStep = m_timeMap->numTimesteps();
                 if(currentStep<numStep){
                     well->setRFTActive(currentStep+1, false);
                 }

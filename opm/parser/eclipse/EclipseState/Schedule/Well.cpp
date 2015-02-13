@@ -261,7 +261,7 @@ namespace Opm {
             }
         }
         return -1;
-    };
+    }
 
     void Well::setRFTForWellWhenFirstOpen(int numSteps,size_t currentStep){
         int time;

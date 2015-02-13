@@ -31,8 +31,8 @@ namespace Opm
 {
 
     ParserDoubleItem::ParserDoubleItem(const std::string& itemName,
-            ParserItemSizeEnum sizeType_) :
-            ParserItem(itemName, sizeType_)
+            ParserItemSizeEnum p_sizeType) :
+            ParserItem(itemName, p_sizeType)
     {
         // use NaN as 'default default'. (Keep in mind that in the deck it can be queried
         // using deckItem->defaultApplied(idx) if an item was defaulted or not...
@@ -54,8 +54,8 @@ namespace Opm
     }
 
 
-    ParserDoubleItem::ParserDoubleItem(const std::string& itemName, ParserItemSizeEnum sizeType, double defaultValue)
-        : ParserItem(itemName, sizeType)
+    ParserDoubleItem::ParserDoubleItem(const std::string& itemName, ParserItemSizeEnum p_sizeType, double defaultValue)
+        : ParserItem(itemName, p_sizeType)
     {
         setDefault( defaultValue );
     }
