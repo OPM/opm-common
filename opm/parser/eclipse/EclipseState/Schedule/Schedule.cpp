@@ -523,8 +523,7 @@ namespace Opm {
             // calculate SI injection rates for the group
             double surfaceInjectionRate = record->getItem("SURFACE_TARGET")->getRawDouble(0);
             surfaceInjectionRate = convertInjectionRateToSI(surfaceInjectionRate, wellPhase, *deck->getActiveUnitSystem());
-            double reservoirInjectionRate = record->getItem("RESV_TARGET")->getRawDouble(0);
-            reservoirInjectionRate = convertInjectionRateToSI(reservoirInjectionRate, wellPhase, *deck->getActiveUnitSystem());
+            double reservoirInjectionRate = record->getItem("RESV_TARGET")->getSIDouble(0);
 
             group->setSurfaceMaxRate( currentStep , surfaceInjectionRate);
             group->setReservoirMaxRate( currentStep , reservoirInjectionRate);
@@ -828,10 +827,10 @@ namespace Opm {
 
         case WellInjector::OIL:
         case WellInjector::WATER:
-            return rawRate * unitSystem.parse("LiquidVolume/Time")->getSIScaling();
+            return rawRate * unitSystem.parse("LiquidSurfaceVolume/Time")->getSIScaling();
 
         case WellInjector::GAS:
-            return rawRate * unitSystem.parse("GasVolume/Time")->getSIScaling();
+            return rawRate * unitSystem.parse("GasSurfaceVolume/Time")->getSIScaling();
 
         default:
             throw std::logic_error("Unknown injector type");
@@ -842,10 +841,10 @@ namespace Opm {
         switch (wellPhase) {
         case Phase::OIL:
         case Phase::WATER:
-            return rawRate * unitSystem.parse("LiquidVolume/Time")->getSIScaling();
+            return rawRate * unitSystem.parse("LiquidSurfaceVolume/Time")->getSIScaling();
 
         case Phase::GAS:
-            return rawRate * unitSystem.parse("GasVolume/Time")->getSIScaling();
+            return rawRate * unitSystem.parse("GasSurfaceVolume/Time")->getSIScaling();
 
         default:
             throw std::logic_error("Unknown injection phase");

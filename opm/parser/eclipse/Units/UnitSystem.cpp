@@ -157,8 +157,9 @@ namespace Opm {
         system->addDimension("Transmissibility", Metric::Transmissibility );
         system->addDimension("GasDissolutionFactor", Metric::GasDissolutionFactor);
         system->addDimension("OilDissolutionFactor", Metric::OilDissolutionFactor);
-        system->addDimension("LiquidVolume", Metric::LiquidVolume );
-        system->addDimension("GasVolume" , Metric::GasVolume );
+        system->addDimension("LiquidSurfaceVolume", Metric::LiquidSurfaceVolume );
+        system->addDimension("GasSurfaceVolume" , Metric::GasSurfaceVolume );
+        system->addDimension("ReservoirVolume", Metric::ReservoirVolume );
         system->addDimension("Density"   , Metric::Density );
         system->addDimension("PolymerDensity", Metric::PolymerDensity);
         system->addDimension("Viscosity" , Metric::Viscosity);
@@ -182,8 +183,9 @@ namespace Opm {
         system->addDimension("Transmissibility", Field::Transmissibility );
         system->addDimension("GasDissolutionFactor" , Field::GasDissolutionFactor);
         system->addDimension("OilDissolutionFactor", Field::OilDissolutionFactor);
-        system->addDimension("LiquidVolume", Field::LiquidVolume );
-        system->addDimension("GasVolume", Field::GasVolume );
+        system->addDimension("LiquidSurfaceVolume", Field::LiquidSurfaceVolume );
+        system->addDimension("GasSurfaceVolume", Field::GasSurfaceVolume );
+        system->addDimension("ReservoirVolume", Field::ReservoirVolume );
         system->addDimension("Density", Field::Density );
         system->addDimension("PolymerDensity", Field::PolymerDensity);
         system->addDimension("Viscosity", Field::Viscosity);
