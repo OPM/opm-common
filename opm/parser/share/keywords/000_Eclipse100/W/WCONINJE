@@ -4,7 +4,7 @@
     {"name" : "STATUS"       , "value_type" : "STRING" , "default" : "OPEN"},
     {"name" : "CMODE"        , "value_type" : "STRING" },
     {"name" : "RATE" , "value_type" : "DOUBLE" , "dimension" : "ContextDependent"},
-    {"name" : "RESV" , "value_type" : "DOUBLE" , "dimension" : "ContextDependent"},
+    {"name" : "RESV" , "value_type" : "DOUBLE" , "dimension" : "LiquidVolume/Time"},
     {"name" : "BHP"  , "value_type" : "DOUBLE" , "dimension" : "Pressure" , "default" : 6891},
     {"name" : "THP"  , "value_type" : "DOUBLE" , "dimension" : "Pressure"},
     {"name" : "VFP_TABLE" , "value_type" : "INT" , "default" : 0},

@@ -293,7 +293,7 @@ namespace Opm {
 
 
                 if (!record->getItem("RESV")->defaultApplied(0)) {
-                    properties.reservoirInjectionRate = convertInjectionRateToSI(record->getItem("RESV")->getRawDouble(0) , injectorType, *deck->getActiveUnitSystem());
+                    properties.reservoirInjectionRate = record->getItem("RESV")->getSIDouble(0);
                     properties.addInjectionControl(WellInjector::RESV);
                 } else
                     properties.dropInjectionControl(WellInjector::RESV);
