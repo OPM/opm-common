@@ -106,7 +106,7 @@ namespace Opm {
                 handleCOMPDAT(keyword, currentStep);
 
             if (keyword->name() == "WELOPEN")
-                handleWELOPEN(keyword, logger, deck->hasKeyword("COMPLUMP"));
+                handleWELOPEN(keyword, currentStep , deck->hasKeyword("COMPLUMP"));
 
             if (keyword->name() == "GRUPTREE")
                 handleGRUPTREE(keyword, currentStep);
@@ -115,7 +115,7 @@ namespace Opm {
                 handleGCONINJE(deck, keyword, currentStep);
 
             if (keyword->name() == "GCONPROD")
-                handleGCONPROD(keyword, logger, currentStep);
+                handleGCONPROD(keyword, currentStep);
 
             if (keyword->name() == "WRFT")
                 rftProperties.push_back( std::make_pair( keyword , currentStep ));
@@ -200,23 +200,6 @@ namespace Opm {
             OpmLog::addMessage(Log::MessageType::Error , Log::fileMessage( keyword->getFileName(), keyword->getLineNumber(), msg));
             throw std::invalid_argument(msg);
         }
-<<<<<<< HEAD
-=======
-        if (well->getRefDepthDefaulted() != record->getItem("REF_DEPTH")->defaultApplied(0)) {
-            std::string msg =
-                "Unable process WELSPECS for well " + well->name() + ", REF_DEPTH defaulted state deviates from existing value";
-            OpmLog::addMessage(Log::MessageType::Error , Log::fileMessage( keyword->getFileName(), keyword->getLineNumber(), msg));
-            throw std::invalid_argument(msg);
-        }
-        if (!well->getRefDepthDefaulted()) {
-            if (well->getRefDepth() != record->getItem("REF_DEPTH")->getSIDouble(0)) {
-                std::string msg =
-                    "Unable process WELSPECS for well " + well->name() + ", REF_DEPTH deviates from existing value";
-                OpmLog::addMessage(Log::MessageType::Error , Log::fileMessage( keyword->getFileName(), keyword->getLineNumber(), msg));
-                throw std::invalid_argument(msg);
-            }
-        }
->>>>>>> Replaced references to logger with OpmLog::addMessage()
     }
 
     void Schedule::handleWCONProducer(DeckKeywordConstPtr keyword, size_t currentStep, bool isPredictionMode) {
@@ -419,12 +402,7 @@ namespace Opm {
         return data;
     }
 
-<<<<<<< HEAD
-
-    void Schedule::handleWELOPEN(DeckKeywordConstPtr keyword, CounterLogPtr /*logger*/, size_t currentStep, bool hascomplump) {
-=======
-    void Schedule::handleWELOPEN(DeckKeywordConstPtr keyword, size_t currentStep) {
->>>>>>> Replaced references to logger with OpmLog::addMessage()
+    void Schedule::handleWELOPEN(DeckKeywordConstPtr keyword, size_t currentStep , bool hascomplump) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
 

@@ -193,30 +193,10 @@ namespace Opm {
             }
         }
 
-<<<<<<< HEAD
-        void initRocktabTables(DeckConstPtr deck, CounterLogPtr logger);
-=======
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-        void initRocktabTables(DeckConstPtr deck, LoggerPtr logger);
->>>>>>> Replaced references to logger with OpmLog::addMessage()
+        void initRocktabTables(DeckConstPtr deck);
         void initGasvisctTables(DeckConstPtr deck,
-                                CounterLogPtr logger,
                                 const std::string& keywordName,
                                 std::vector<GasvisctTable>& tableVector);
-<<<<<<< HEAD
-=======
-=======
-        void initRocktabTables(DeckConstPtr deck, MessageCounterPtr logger);
->>>>>>> Renamed existing Logger -> MessageCounter
-=======
-        void initRocktabTables(DeckConstPtr deck, CounterLogPtr logger);
->>>>>>> Renamed MessageCounter -> CounterLog
-=======
-        void initRocktabTables(DeckConstPtr deck);
->>>>>>> Replaced references to logger with OpmLog::addMessage()
->>>>>>> Replaced references to logger with OpmLog::addMessage()
 
         void setMULTFLT(std::shared_ptr<const Section> section) const;
         void initMULTREGT(DeckConstPtr deck);

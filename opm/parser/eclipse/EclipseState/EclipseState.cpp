@@ -30,6 +30,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/BoxManager.hpp>
+#include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 
 
 namespace Opm {
@@ -312,7 +313,8 @@ namespace Opm {
     }
 
     void EclipseState::initSchedule(DeckConstPtr deck) {
-        schedule = ScheduleConstPtr( new Schedule(deck) );
+        EclipseGridConstPtr grid = getEclipseGrid();
+        schedule = ScheduleConstPtr( new Schedule(grid , deck) );
     }
 
     void EclipseState::initTransMult() {
@@ -414,8 +416,6 @@ namespace Opm {
     }
 
 
-<<<<<<< HEAD
-<<<<<<< HEAD
     void EclipseState::initGridopts(DeckConstPtr deck) {
         if (deck->hasKeyword("GRIDOPTS")) {
             /*
@@ -530,14 +530,13 @@ namespace Opm {
     }
 
     void EclipseState::initGasvisctTables(DeckConstPtr deck,
-                                          MessageCounterPtr logger,
                                           const std::string& keywordName,
                                           std::vector<GasvisctTable>& tableVector) {
         if (!deck->hasKeyword(keywordName))
             return; // the table is not featured by the deck...
 
         if (deck->numKeywords(keywordName) > 1) {
-            complainAboutAmbiguousKeyword(deck, logger, keywordName);
+            complainAboutAmbiguousKeyword(deck, keywordName);
             return;
         }
 
@@ -547,10 +546,8 @@ namespace Opm {
                 // for simple tables, an empty record indicates that the previous table
                 // should be copied...
                 if (tableIdx == 0) {
-                    logger->addError(tableKeyword->getFileName(),
-                                     tableKeyword->getLineNumber(),
-                                     "The first table for keyword "+keywordName+
-                                     " must be explicitly defined! Ignoring keyword");
+                    std::string msg = "The first table for keyword " + keywordName + " must be explicitly defined! Ignoring keyword";
+                    OpmLog::addMessage(Log::MessageType::Error , Log::fileMessage(tableKeyword->getFileName(),tableKeyword->getLineNumber(),msg));
                     return;
                 }
                 tableVector.push_back(tableVector.back());
