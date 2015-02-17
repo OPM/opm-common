@@ -748,10 +748,12 @@ BOOST_AUTO_TEST_CASE(ConstructorNORUNSPEC_PINCH) {
 
 BOOST_AUTO_TEST_CASE(ConstructorMINPV) {
     Opm::DeckConstPtr deck1 = createCPDeck();
+    Opm::DeckConstPtr deck2 = createMinpvDefaultCPDeck();
     Opm::DeckConstPtr deck3 = createMinpvCPDeck();
     Opm::DeckConstPtr deck4 = createMinpvFilCPDeck();
 
     Opm::EclipseGrid grid1(deck1);
+    BOOST_CHECK_THROW(Opm::EclipseGrid grid2(deck2), std::invalid_argument);
     Opm::EclipseGrid grid3(deck3);
     Opm::EclipseGrid grid4(deck4);
 
