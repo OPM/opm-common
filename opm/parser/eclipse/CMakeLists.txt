@@ -153,6 +153,7 @@ EclipseState/Schedule/ScheduleEnums.hpp
 EclipseState/Schedule/GroupTreeNode.hpp 
 EclipseState/Schedule/GroupTree.hpp
 #
+EclipseState/Util/ElasticVector.hpp 
 EclipseState/Util/OrderedMap.hpp 
 EclipseState/Util/Value.hpp 
 #
