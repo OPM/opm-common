@@ -71,7 +71,7 @@ static void printItems(Opm::ParserKeywordConstPtr keyword)
     std::string indent = "  ";
     std::cout << std::endl;
     std::cout << indent << "List of items:" << std::endl;
-    Opm::ParserRecordPtr parserRecord = keyword->getRecord();
+    Opm::ParserRecordPtr parserRecord = keyword->getRecord(0);
     for (auto iterator = parserRecord->begin(); iterator != parserRecord->end(); ++iterator) {
         Opm::ParserItemConstPtr item = *iterator;
         printItem(item, indent);

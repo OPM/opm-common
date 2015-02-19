@@ -121,7 +121,7 @@ static void testKeyword(ParserKeywordConstPtr parserKeyword , const std::string&
     of << "BOOST_CHECK( parserKeyword->equal( *inlineKeyword));" << std::endl;
     if (parserKeyword->hasDimension()) {
         of << "{" << std::endl;
-        of << "    ParserRecordConstPtr parserRecord = parserKeyword->getRecord();" << std::endl;
+        of << "    ParserRecordConstPtr parserRecord = parserKeyword->getRecord(0);" << std::endl;
         of << "    for (size_t i=0; i < parserRecord->size(); i++) { " << std::endl;
         of << "        ParserItemConstPtr item = parserRecord->get( i );" << std::endl;
         of << "        for (size_t j=0; j < item->numDimensions(); j++) {" << std::endl;

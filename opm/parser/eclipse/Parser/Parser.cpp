@@ -372,7 +372,7 @@ namespace Opm {
                         targetSize = sizeDefinitionItem->getInt(0);
                     } else {
                         auto keyword = getKeyword( sizeKeyword.first );
-                        auto record = keyword->getRecord();
+                        auto record = keyword->getRecord(0);
                         auto int_item = std::dynamic_pointer_cast<const ParserIntItem>( record->get( sizeKeyword.second ) );
 
                         targetSize = int_item->getDefault( );

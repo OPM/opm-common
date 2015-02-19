@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_ItemInvalidEnum_throws) {
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObjectItemsOK) {
     Json::JsonObject jsonObject("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : 100 , \"items\" : [{\"name\" : \"I\", \"value_type\" : \"INT\"}]}");
     ParserKeywordConstPtr parserKeyword = ParserKeyword::createFromJson(jsonObject);
-    ParserRecordConstPtr record = parserKeyword->getRecord();
+    ParserRecordConstPtr record = parserKeyword->getRecord(0);
     ParserItemConstPtr item = record->get( 0 );
     BOOST_CHECK_EQUAL( 1U , record->size( ) );
     BOOST_CHECK_EQUAL( "I" , item->name( ) );
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(AddDataKeywordFromJson_defaultThrows) {
 BOOST_AUTO_TEST_CASE(AddDataKeywordFromJson_correctlyConfigured) {
     Json::JsonObject jsonConfig("{\"name\": \"ACTNUM\", \"sections\":[\"GRID\"], \"data\" : {\"value_type\": \"INT\"}}");
     ParserKeywordConstPtr parserKeyword = ParserKeyword::createFromJson(jsonConfig);
-    ParserRecordConstPtr parserRecord = parserKeyword->getRecord();
+    ParserRecordConstPtr parserRecord = parserKeyword->getRecord(0);
     ParserItemConstPtr item = parserRecord->get(0);
 
 
@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE(AddkeywordFromJson_numTables_incoorect_throw) {
 BOOST_AUTO_TEST_CASE(AddkeywordFromJson_isTableCollection) {
     Json::JsonObject jsonConfig("{\"name\": \"PVTG\", \"sections\":[\"PROPS\"], \"num_tables\" : {\"keyword\": \"TABDIMS\" , \"item\" : \"NTPVT\"} , \"items\" : [{\"name\" : \"data\", \"value_type\" : \"DOUBLE\"}]}");
     ParserKeywordConstPtr parserKeyword = ParserKeyword::createFromJson(jsonConfig);
-    ParserRecordConstPtr parserRecord = parserKeyword->getRecord();
+    ParserRecordConstPtr parserRecord = parserKeyword->getRecord(0);
 
 
     BOOST_CHECK_EQUAL( true , parserKeyword->isTableCollection() );
@@ -422,7 +422,7 @@ BOOST_AUTO_TEST_CASE(ParseKeywordHasDimensionCorrect) {
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withDimension) {
     Json::JsonObject jsonObject("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : 100 , \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\" , \"dimension\" : \"Length*Length/Time\"}]}");
     ParserKeywordPtr parserKeyword = ParserKeyword::createFromJson(jsonObject);
-    ParserRecordConstPtr record = parserKeyword->getRecord();
+    ParserRecordConstPtr record = parserKeyword->getRecord(0);
     ParserItemConstPtr item = record->get("ItemX");
 
     BOOST_CHECK_EQUAL("BPR" , parserKeyword->getName());
@@ -438,7 +438,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withDimension) {
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withDimensionList) {
     Json::JsonObject jsonObject("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : 100 , \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"ALL\" , \"value_type\" : \"DOUBLE\" , \"dimension\" : [\"Length*Length/Time\" , \"Time\", \"1\"]}]}");
     ParserKeywordPtr parserKeyword = ParserKeyword::createFromJson(jsonObject);
-    ParserRecordConstPtr record = parserKeyword->getRecord();
+    ParserRecordConstPtr record = parserKeyword->getRecord(0);
     ParserItemConstPtr item = record->get("ItemX");
 
     BOOST_CHECK_EQUAL("BPR" , parserKeyword->getName());

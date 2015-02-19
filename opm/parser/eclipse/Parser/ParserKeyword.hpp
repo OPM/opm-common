@@ -40,6 +40,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Util/ElasticVector.hpp>
 
 
 namespace Opm {
@@ -105,7 +106,7 @@ namespace Opm {
         void setMatchRegex(const std::string& deckNameRegexp);
         bool matches(const std::string& deckKeywordName) const;
         bool hasDimension() const;
-        ParserRecordPtr getRecord() const;
+        ParserRecordPtr getRecord(size_t recordIndex) const;
         const std::string& getName() const;
         size_t getFixedSize() const;
         bool hasFixedSize() const;
@@ -147,7 +148,7 @@ namespace Opm {
 #else
         boost::regex m_matchRegex;
 #endif
-        ParserRecordPtr m_record;
+        ElasticVector<ParserRecordPtr> m_records;
         enum ParserKeywordSizeEnum m_keywordSizeType;
         size_t m_fixedSize;
         bool m_isDataKeyword;

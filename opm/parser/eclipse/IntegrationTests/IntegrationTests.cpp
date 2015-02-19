@@ -35,7 +35,7 @@ using namespace Opm;
 static ParserPtr createWWCTParser() {
     ParserKeywordPtr parserKeyword = ParserKeyword::createDynamicSized("WWCT");
     {
-        ParserRecordPtr wwctRecord = parserKeyword->getRecord();
+        ParserRecordPtr wwctRecord = parserKeyword->getRecord(0);
         wwctRecord->addItem(ParserStringItemConstPtr(new ParserStringItem("WELL", ALL)));
     }
     ParserKeywordPtr summaryKeyword = ParserKeyword::createFixedSized("SUMMARY" , (size_t) 0);
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(parser_internal_name_vs_deck_name) {
 static ParserPtr createBPRParser() {
     ParserKeywordPtr parserKeyword = ParserKeyword::createDynamicSized("BPR");
     {
-        ParserRecordPtr bprRecord = parserKeyword->getRecord();
+        ParserRecordPtr bprRecord = parserKeyword->getRecord(0);
         bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("I", SINGLE)));
         bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("J", SINGLE)));
         bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("K", SINGLE)));
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(parse_truncatedrecords_deckFilledWithDefaults) {
     BOOST_CHECK_EQUAL(lastItem_1->getInt(0), 1);
 
     ParserKeywordConstPtr parserKeyword = parser->getParserKeywordFromDeckName("RADFIN4");
-    ParserRecordConstPtr parserRecord = parserKeyword->getRecord();
+    ParserRecordConstPtr parserRecord = parserKeyword->getRecord(0);
     ParserItemConstPtr nwmaxItem = parserRecord->get("NWMAX");
     ParserIntItemConstPtr intItem = std::static_pointer_cast<const ParserIntItem>(nwmaxItem);
 
