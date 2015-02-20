@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(WildCardTest) {
 
 static ParserKeywordPtr __attribute__((unused)) setupParserKeywordInt(std::string name, int numberOfItems) {
     ParserKeywordPtr parserKeyword = ParserKeyword::createDynamicSized(name);
-    ParserRecordPtr parserRecord = parserKeyword->getRecord();
+    ParserRecordPtr parserRecord = parserKeyword->getRecord(0);
 
     for (int i = 0; i < numberOfItems; i++) {
         std::string another_name = "ITEM_" + boost::lexical_cast<std::string>(i);

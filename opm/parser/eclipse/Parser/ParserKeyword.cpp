@@ -37,10 +37,13 @@ namespace Opm {
         m_isDataKeyword = false;
         m_isTableCollection = false;
         m_name = name;
-        m_record = ParserRecordPtr(new ParserRecord);
         m_keywordSizeType = sizeType;
         m_Description = "";
 
+        {
+            std::shared_ptr<ParserRecord> record = std::make_shared<ParserRecord>();
+            m_records.push_back( record );
+        }
         m_deckNames.insert(m_name);
     }
 
@@ -71,8 +74,10 @@ namespace Opm {
     }
 
     bool ParserKeyword::hasDimension() const {
-        return m_record->hasDimension();
+        std::shared_ptr<ParserRecord> record = getRecord(0);
+        return record->hasDimension();
     }
+
 
     bool ParserKeyword::isTableCollection() const {
         return m_isTableCollection;
@@ -262,12 +267,15 @@ namespace Opm {
     void ParserKeyword::addItem(ParserItemConstPtr item) {
         if (m_isDataKeyword)
             throw std::invalid_argument("Keyword " + getName() + " is already configured as a data keyword; cannot add items.");
-
-        m_record->addItem(item);
+        {
+            std::shared_ptr<ParserRecord> record = getRecord(0);
+            record->addItem(item);
+        }
     }
 
     void ParserKeyword::addDataItem(ParserItemConstPtr item) {
-        if (m_record->size())
+        std::shared_ptr<ParserRecord> record = getRecord(0);
+        if (record->size())
             throw std::invalid_argument("Keyword " + getName() + " already contains all specified items; cannot add a data item.");
 
         if ((m_keywordSizeType == FIXED) && (m_fixedSize == 1U)) {
@@ -469,8 +477,8 @@ namespace Opm {
             throw std::invalid_argument("The 'value_type' JSON item of keyword "+getName()+" is missing");
     }
 
-    ParserRecordPtr ParserKeyword::getRecord() const {
-        return m_record;
+    ParserRecordPtr ParserKeyword::getRecord(size_t recordIndex) const {
+        return m_records.get( recordIndex );
     }
 
 
@@ -479,7 +487,8 @@ namespace Opm {
     }
 
     size_t ParserKeyword::numItems() const {
-        return m_record->size();
+        auto record = getRecord(0);
+        return record->size();
     }
 
     void ParserKeyword::clearValidSectionNames() {
@@ -511,12 +520,13 @@ namespace Opm {
     }
 
     DeckKeywordPtr ParserKeyword::parse(RawKeywordConstPtr rawKeyword) const {
+        std::shared_ptr<ParserRecord> record = getRecord(0);
         if (rawKeyword->isFinished()) {
             DeckKeywordPtr keyword(new DeckKeyword(rawKeyword->getKeywordName()));
             keyword->setLocation(rawKeyword->getFilename(), rawKeyword->getLineNR());
             keyword->setDataKeyword( isDataKeyword() );
             for (size_t i = 0; i < rawKeyword->size(); i++) {
-                DeckRecordConstPtr deckRecord = m_record->parse(rawKeyword->getRecord(i));
+                DeckRecordConstPtr deckRecord = record->parse(rawKeyword->getRecord(i));
                 keyword->addRecord(deckRecord);
             }
             return keyword;
@@ -588,32 +598,36 @@ namespace Opm {
         // compare the deck names. we don't care about the ordering of the strings.
         if (m_deckNames != other.m_deckNames)
             return false;
+        {
+            std::shared_ptr<ParserRecord> record = getRecord(0);
+            std::shared_ptr<ParserRecord> other_record = other.getRecord(0);
 
-        if ((m_name == other.m_name) &&
-            (m_matchRegexString == other.m_matchRegexString) &&
-            (m_record->equal(*(other.m_record))) &&
-            (m_keywordSizeType == other.m_keywordSizeType) &&
-            (m_isDataKeyword == other.m_isDataKeyword) &&
-            (m_isTableCollection == other.m_isTableCollection)) {
-            bool equal_ = false;
-            switch (m_keywordSizeType) {
+            if ((m_name == other.m_name) &&
+                (m_matchRegexString == other.m_matchRegexString) &&
+                (record->equal(*(other_record))) &&
+                (m_keywordSizeType == other.m_keywordSizeType) &&
+                (m_isDataKeyword == other.m_isDataKeyword) &&
+                (m_isTableCollection == other.m_isTableCollection)) {
+
+                bool equal_ = false;
+                switch (m_keywordSizeType) {
                 case FIXED:
                     if (m_fixedSize == other.m_fixedSize)
                         equal_ = true;
                     break;
                 case OTHER_KEYWORD_IN_DECK:
                     if ((m_sizeDefinitionPair.first == other.m_sizeDefinitionPair.first) &&
-                            (m_sizeDefinitionPair.second == other.m_sizeDefinitionPair.second))
+                        (m_sizeDefinitionPair.second == other.m_sizeDefinitionPair.second))
                         equal_ = true;
                     break;
                 default:
                     equal_ = true;
                     break;
-
-            }
-            return equal_;
-        } else
-            return false;
+                }
+                return equal_;
+            } else
+                return false;
+        }
     }
 
     void ParserKeyword::inlineNew(std::ostream& os, const std::string& lhs, const std::string& indent) const {
@@ -661,28 +675,31 @@ namespace Opm {
         if (hasMatchRegex())
             os << indent << lhs << "->setMatchRegex(\"" << m_matchRegexString << "\");" << std::endl;
 
-        for (size_t i = 0; i < m_record->size(); i++) {
-            const std::string local_indent = indent + "   ";
-            ParserItemConstPtr item = m_record->get(i);
-            os << local_indent << "ParserItemPtr "<<item->name()<<"item(";
-            item->inlineNew(os);
-            os << ");" << std::endl;
-            os << local_indent << item->name()<<"item->setDescription(\"" << item->getDescription() << "\");" << std::endl;
-            for (size_t idim=0; idim < item->numDimensions(); idim++)
-                os << local_indent <<item->name()<<"item->push_backDimension(\"" << item->getDimension( idim ) << "\");" << std::endl;
-            {
-                std::string addItemMethod = "addItem";
-                if (m_isDataKeyword)
-                    addItemMethod = "addDataItem";
+        {
+            std::shared_ptr<ParserRecord> record = getRecord(0);
+            for (size_t i = 0; i < record->size(); i++) {
+                const std::string local_indent = indent + "   ";
+                ParserItemConstPtr item = record->get(i);
+                os << local_indent << "ParserItemPtr "<<item->name()<<"item(";
+                item->inlineNew(os);
+                os << ");" << std::endl;
+                os << local_indent << item->name()<<"item->setDescription(\"" << item->getDescription() << "\");" << std::endl;
+                for (size_t idim=0; idim < item->numDimensions(); idim++)
+                    os << local_indent <<item->name()<<"item->push_backDimension(\"" << item->getDimension( idim ) << "\");" << std::endl;
+                {
+                    std::string addItemMethod = "addItem";
+                    if (m_isDataKeyword)
+                        addItemMethod = "addDataItem";
 
-                os << local_indent << lhs << "->" << addItemMethod << "("<<item->name()<<"item);" << std::endl;
+                    os << local_indent << lhs << "->" << addItemMethod << "("<<item->name()<<"item);" << std::endl;
+                }
             }
         }
     }
 
 
     void ParserKeyword::applyUnitsToDeck(std::shared_ptr<const Deck> deck , std::shared_ptr<const DeckKeyword> deckKeyword) const {
-        std::shared_ptr<const ParserRecord> parserRecord = getRecord();
+        std::shared_ptr<const ParserRecord> parserRecord = getRecord(0);
         for (size_t index = 0; index < deckKeyword->size(); index++) {
             std::shared_ptr<const DeckRecord> deckRecord = deckKeyword->getRecord(index);
             parserRecord->applyUnitsToDeck( deck , deckRecord);
