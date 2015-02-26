@@ -113,8 +113,11 @@ BOOST_AUTO_TEST_CASE(ParserKeywordMatches) {
 BOOST_AUTO_TEST_CASE(AddDataKeyword_correctlyConfigured) {
     ParserKeywordPtr parserKeyword = ParserKeyword::createFixedSized("PORO", (size_t) 1);
     ParserIntItemConstPtr item = ParserIntItemConstPtr(new ParserIntItem( "ACTNUM" , ALL));
+    std::shared_ptr<ParserRecord> record = std::make_shared<ParserRecord>();
+
     BOOST_CHECK_EQUAL( false , parserKeyword->isDataKeyword() );
-    parserKeyword->addDataItem( item );
+    record->addDataItem( item );
+    parserKeyword->addRecord( record );
     BOOST_CHECK_EQUAL( true , parserKeyword->isDataKeyword() );
 
     BOOST_CHECK_EQUAL(true , parserKeyword->hasFixedSize( ));
@@ -125,25 +128,11 @@ BOOST_AUTO_TEST_CASE(AddDataKeyword_correctlyConfigured) {
 BOOST_AUTO_TEST_CASE(WrongConstructor_addDataItem_throws) {
     ParserKeywordPtr parserKeyword = ParserKeyword::createDynamicSized("PORO");
     ParserIntItemConstPtr dataItem = ParserIntItemConstPtr(new ParserIntItem( "ACTNUM" , ALL ));
-    BOOST_CHECK_THROW( parserKeyword->addDataItem( dataItem ) , std::invalid_argument);
+    std::shared_ptr<ParserRecord> record = std::make_shared<ParserRecord>();
+    record->addDataItem( dataItem );
+    BOOST_CHECK_THROW( parserKeyword->addDataRecord( record ) , std::invalid_argument);
 }
 
-BOOST_AUTO_TEST_CASE(MixingDataAndItems_throws1) {
-    ParserKeywordPtr parserKeyword = ParserKeyword::createFixedSized("PORO", (size_t) 1);
-    ParserIntItemConstPtr dataItem = ParserIntItemConstPtr(new ParserIntItem( "ACTNUM" , ALL));
-    ParserIntItemConstPtr item     = ParserIntItemConstPtr(new ParserIntItem( "XXX" , ALL));
-    parserKeyword->addDataItem( dataItem );
-    BOOST_CHECK_THROW( parserKeyword->addItem( item ) , std::invalid_argument);
-    BOOST_CHECK_THROW( parserKeyword->addItem( dataItem ) , std::invalid_argument);
-}
-
-BOOST_AUTO_TEST_CASE(MixingDataAndItems_throws2) {
-    ParserKeywordPtr parserKeyword = ParserKeyword::createFixedSized("PORO", (size_t) 1);
-    ParserIntItemConstPtr dataItem = ParserIntItemConstPtr(new ParserIntItem( "ACTNUM" , ALL));
-    ParserIntItemConstPtr item     = ParserIntItemConstPtr(new ParserIntItem( "XXX" , ALL));
-    parserKeyword->addItem( item );
-    BOOST_CHECK_THROW( parserKeyword->addDataItem( dataItem ) , std::invalid_argument);
-}
 
 BOOST_AUTO_TEST_CASE(DefaultConstructur_setDescription_canReadBack) {
     ParserKeywordPtr parserKeyword = ParserKeyword::createDynamicSized("BPR");
@@ -381,12 +370,14 @@ BOOST_AUTO_TEST_CASE(ConstructorIsTableCollection) {
 
 BOOST_AUTO_TEST_CASE(ParseEmptyRecord) {
     ParserKeywordPtr tabdimsKeyword = ParserKeyword::createFixedSized("TEST" , 1);
+    std::shared_ptr<ParserRecord> record = std::make_shared<ParserRecord>();
     ParserIntItemConstPtr item(new ParserIntItem(std::string("ITEM") , ALL));
     RawKeywordPtr rawkeyword(new RawKeyword( tabdimsKeyword->getName() , "FILE" , 10U , 1));
 
     BOOST_CHECK_EQUAL( Raw::FIXED , rawkeyword->getSizeType());
     rawkeyword->addRawRecordString("/");
-    tabdimsKeyword->addItem(item);
+    record->addItem(item);
+    tabdimsKeyword->addRecord( record );
 
     DeckKeywordConstPtr deckKeyword = tabdimsKeyword->parse( rawkeyword );
     BOOST_REQUIRE_EQUAL( 1U , deckKeyword->size());
@@ -406,11 +397,13 @@ BOOST_AUTO_TEST_CASE(ParseKeywordHasDimensionCorrect) {
     ParserKeywordPtr parserKeyword = ParserKeyword::createDynamicSized("JA");
     ParserIntItemConstPtr itemI(new ParserIntItem("I", SINGLE));
     ParserDoubleItemPtr item2(new ParserDoubleItem("ID", SINGLE));
+    std::shared_ptr<ParserRecord> record = std::make_shared<ParserRecord>();
 
     BOOST_CHECK_EQUAL( false , parserKeyword->hasDimension());
 
-    parserKeyword->addItem( itemI );
-    parserKeyword->addItem( item2 );
+    record->addItem( itemI );
+    record->addItem( item2 );
+    parserKeyword->addRecord( record );
     BOOST_CHECK_EQUAL( false , parserKeyword->hasDimension());
     BOOST_CHECK_EQUAL( 0U , itemI->numDimensions() );
 

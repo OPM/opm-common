@@ -35,8 +35,9 @@ using namespace Opm;
 static ParserPtr createWWCTParser() {
     ParserKeywordPtr parserKeyword = ParserKeyword::createDynamicSized("WWCT");
     {
-        ParserRecordPtr wwctRecord = parserKeyword->getRecord(0);
-        wwctRecord->addItem(ParserStringItemConstPtr(new ParserStringItem("WELL", ALL)));
+        std::shared_ptr<ParserRecord> record = std::make_shared<ParserRecord>();
+        record->addItem( ParserStringItemConstPtr(new ParserStringItem("WELL", ALL)) );
+        parserKeyword->addRecord( record );
     }
     ParserKeywordPtr summaryKeyword = ParserKeyword::createFixedSized("SUMMARY" , (size_t) 0);
 
@@ -51,7 +52,7 @@ BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_deckReturned) {
     ParserPtr parser = createWWCTParser();
     BOOST_CHECK( parser->isRecognizedKeyword("WWCT"));
     BOOST_CHECK( parser->isRecognizedKeyword("SUMMARY"));
-    BOOST_CHECK_NO_THROW(DeckPtr deck =  parser->parseFile(singleKeywordFile.string()));
+    BOOST_CHECK_NO_THROW( parser->parseFile(singleKeywordFile.string()) );
 }
 
 BOOST_AUTO_TEST_CASE(parse_stringWithWWCTKeyword_deckReturned) {
@@ -87,7 +88,7 @@ BOOST_AUTO_TEST_CASE(parse_streamWithWWCTKeyword_deckReturned) {
 BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_deckHasWWCT) {
     boost::filesystem::path singleKeywordFile("testdata/integration_tests/wwct.data");
     ParserPtr parser = createWWCTParser();
-    DeckPtr deck =  parser->parseFile(singleKeywordFile.string());
+    DeckPtr deck = parser->parseFile(singleKeywordFile.string());
     BOOST_CHECK(deck->hasKeyword("SUMMARY"));
     BOOST_CHECK(deck->hasKeyword("WWCT"));
 }
@@ -126,10 +127,11 @@ BOOST_AUTO_TEST_CASE(parser_internal_name_vs_deck_name) {
 static ParserPtr createBPRParser() {
     ParserKeywordPtr parserKeyword = ParserKeyword::createDynamicSized("BPR");
     {
-        ParserRecordPtr bprRecord = parserKeyword->getRecord(0);
+        std::shared_ptr<ParserRecord> bprRecord = std::make_shared<ParserRecord>();
         bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("I", SINGLE)));
         bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("J", SINGLE)));
         bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("K", SINGLE)));
+        parserKeyword->addRecord( bprRecord );
     }
     ParserKeywordPtr summaryKeyword = ParserKeyword::createFixedSized("SUMMARY" , (size_t) 0);
     ParserPtr parser(new Parser());
@@ -142,7 +144,7 @@ BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_deckReturned) {
     boost::filesystem::path singleKeywordFile("testdata/integration_tests/bpr.data");
     ParserPtr parser = createBPRParser();
 
-    BOOST_CHECK_NO_THROW(DeckPtr deck =  parser->parseFile(singleKeywordFile.string()));
+    BOOST_CHECK_NO_THROW(parser->parseFile(singleKeywordFile.string()));
 }
 
 BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_DeckhasBRP) {

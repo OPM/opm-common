@@ -106,6 +106,8 @@ namespace Opm {
         void setMatchRegex(const std::string& deckNameRegexp);
         bool matches(const std::string& deckKeywordName) const;
         bool hasDimension() const;
+        void addRecord(std::shared_ptr<ParserRecord> record);
+        void addDataRecord(std::shared_ptr<ParserRecord> record);
         ParserRecordPtr getRecord(size_t recordIndex) const;
         const std::string& getName() const;
         size_t getFixedSize() const;
@@ -131,8 +133,6 @@ namespace Opm {
         DeckKeywordPtr parse(RawKeywordConstPtr rawKeyword) const;
         enum ParserKeywordSizeEnum getSizeType() const;
         const std::pair<std::string,std::string>& getSizeDefinitionPair() const;
-        void addItem( ParserItemConstPtr item );
-        void addDataItem( ParserItemConstPtr item );
         bool isDataKeyword() const;
         bool equal(const ParserKeyword& other) const;
         void inlineNew(std::ostream& os , const std::string& lhs, const std::string& indent) const;
@@ -151,7 +151,6 @@ namespace Opm {
         ElasticVector<ParserRecordPtr> m_records;
         enum ParserKeywordSizeEnum m_keywordSizeType;
         size_t m_fixedSize;
-        bool m_isDataKeyword;
         bool m_isTableCollection;
         std::string m_Description;
 
