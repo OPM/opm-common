@@ -99,25 +99,26 @@ namespace Opm {
             } else
                 initSizeKeyword(sizeObject);
 
-        } else
-            if (jsonConfig.has_item("num_tables")) {
-            Json::JsonObject numTablesObject = jsonConfig.get_item("num_tables");
-
-            if (!numTablesObject.is_object())
-                throw std::invalid_argument("The num_tables key must point to a {} object");
-
-            initSizeKeyword(numTablesObject);
-            m_isTableCollection = true;
         } else {
-            if (jsonConfig.has_item("items"))
-                // The number of records is undetermined - the keyword will be '/' terminated.
-                m_keywordSizeType = SLASH_TERMINATED;
-            else {
-                m_keywordSizeType = FIXED;
-                if (jsonConfig.has_item("data"))
-                    m_fixedSize = 1;
-                else
-                    m_fixedSize = 0;
+            if (jsonConfig.has_item("num_tables")) {
+                Json::JsonObject numTablesObject = jsonConfig.get_item("num_tables");
+
+                if (!numTablesObject.is_object())
+                    throw std::invalid_argument("The num_tables key must point to a {} object");
+
+                initSizeKeyword(numTablesObject);
+                m_isTableCollection = true;
+            } else {
+                if (jsonConfig.has_item("items") || jsonConfig.has_item("records"))
+                    // The number of records is undetermined - the keyword will be '/' terminated.
+                    m_keywordSizeType = SLASH_TERMINATED;
+                else {
+                    m_keywordSizeType = FIXED;
+                    if (jsonConfig.has_item("data"))
+                        m_fixedSize = 1;
+                    else
+                        m_fixedSize = 0;
+                }
             }
         }
     }
@@ -141,9 +142,25 @@ namespace Opm {
         initSectionNames(jsonConfig);
         initMatchRegex(jsonConfig);
 
+        if (jsonConfig.has_item("items") && jsonConfig.has_item("records"))
+            throw std::invalid_argument("Fatal error in " + getName() + " configuration. Can NOT have both records: and items:");
+
         if (jsonConfig.has_item("items")) {
             const Json::JsonObject itemsConfig = jsonConfig.get_item("items");
             addItems(itemsConfig);
+        }
+
+        if (jsonConfig.has_item("records")) {
+            const Json::JsonObject recordsConfig = jsonConfig.get_item("records");
+            if (recordsConfig.is_array()) {
+                size_t num_records = recordsConfig.size();
+                for (size_t i = 0; i < num_records; i++) {
+                    const Json::JsonObject itemsConfig = recordsConfig.get_array_item(i);
+                    addItems(itemsConfig);
+                    std::cout << "Adding items record " << i << "/" << num_records << std::endl;
+                }
+            } else
+                throw std::invalid_argument("The records item must point to an array item");
         }
 
         if (jsonConfig.has_item("data"))

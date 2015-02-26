@@ -443,3 +443,36 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withDimensionList) {
     BOOST_CHECK( item->hasDimension() );
     BOOST_CHECK_EQUAL( 3U , item->numDimensions() );
 }
+
+
+
+
+
+BOOST_AUTO_TEST_CASE(ConstructFromJson_withRecords) {
+    const std::string json_string1 = "{\"name\" : \"MULTFLT\", \"sections\" : [\"GRID\", \"EDIT\", \"SCHEDULE\"], \"records\" : [["
+        "{\"name\" : \"fault\" , \"value_type\" : \"STRING\"},"
+        "{\"name\" : \"factor\" , \"value_type\" : \"DOUBLE\"}]]}";
+
+    const std::string json_string2 = "{\"name\" : \"MULTFLT\", \"sections\" : [\"GRID\", \"EDIT\", \"SCHEDULE\"], \"items\" : ["
+        "{\"name\" : \"fault\" , \"value_type\" : \"STRING\"},"
+        "{\"name\" : \"factor\" , \"value_type\" : \"DOUBLE\"}]}";
+
+
+    Json::JsonObject jsonObject1( json_string1 );
+    Json::JsonObject jsonObject2( json_string2 );
+    ParserKeywordPtr kw1 = ParserKeyword::createFromJson( jsonObject1 );
+    ParserKeywordPtr kw2 = ParserKeyword::createFromJson( jsonObject2 );
+
+    BOOST_CHECK( kw1->equal( *kw2 ));
+
+}
+
+BOOST_AUTO_TEST_CASE(ConstructFromJson_withRecords_and_items_throws) {
+    const std::string json_string = "{\"name\" : \"MULTFLT\", \"sections\" : [\"GRID\", \"EDIT\", \"SCHEDULE\"], \"records\" : [["
+        "{\"name\" : \"fault\" , \"value_type\" : \"STRING\"},"
+        "{\"name\" : \"factor\" , \"value_type\" : \"DOUBLE\"}]],\"items\" : ["
+        "{\"name\" : \"fault\" , \"value_type\" : \"STRING\"},"
+        "{\"name\" : \"factor\" , \"value_type\" : \"DOUBLE\"}]}";
+    Json::JsonObject jsonObject( json_string );
+    BOOST_CHECK_THROW( ParserKeyword::createFromJson( jsonObject ) , std::invalid_argument);
+}
