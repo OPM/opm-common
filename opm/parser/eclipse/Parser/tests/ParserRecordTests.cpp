@@ -350,3 +350,29 @@ BOOST_AUTO_TEST_CASE(ParseRecordHasDimensionCorrect) {
     item2->push_backDimension("Length*Length/Time");
     BOOST_CHECK_EQUAL( true , parserRecord->hasDimension());
 }
+
+
+BOOST_AUTO_TEST_CASE(DefaultNotDataRecord) {
+    ParserRecord record;
+    BOOST_CHECK_EQUAL( false , record.isDataRecord() );
+}
+
+
+
+BOOST_AUTO_TEST_CASE(MixingDataAndItems_throws1) {
+    ParserRecord record;
+    ParserIntItemConstPtr dataItem = ParserIntItemConstPtr(new ParserIntItem( "ACTNUM" , ALL));
+    ParserIntItemConstPtr item     = ParserIntItemConstPtr(new ParserIntItem( "XXX" , ALL));
+    record.addDataItem( dataItem );
+    BOOST_CHECK_THROW( record.addItem( item ) , std::invalid_argument);
+    BOOST_CHECK_THROW( record.addItem( dataItem ) , std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(MixingDataAndItems_throws2) {
+    ParserRecord record;
+    ParserIntItemConstPtr dataItem = ParserIntItemConstPtr(new ParserIntItem( "ACTNUM" , ALL));
+    ParserIntItemConstPtr item     = ParserIntItemConstPtr(new ParserIntItem( "XXX" , ALL));
+
+    record.addItem( item );
+    BOOST_CHECK_THROW( record.addDataItem( dataItem ) , std::invalid_argument);
+}

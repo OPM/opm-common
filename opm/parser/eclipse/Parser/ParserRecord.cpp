@@ -23,7 +23,9 @@
 
 namespace Opm {
 
-    ParserRecord::ParserRecord() {
+    ParserRecord::ParserRecord()
+        : m_dataRecord( false )
+    {
     }
 
     size_t ParserRecord::size() const {
@@ -31,12 +33,25 @@ namespace Opm {
     }
 
     void ParserRecord::addItem(ParserItemConstPtr item) {
+        if (m_dataRecord)
+            throw std::invalid_argument("Record is already marked as DataRecord - can not add items");
+
         if (m_itemMap.find(item->name()) == m_itemMap.end()) {
             m_items.push_back(item);
             m_itemMap[item->name()] = item;
         } else
             throw std::invalid_argument("Itemname: " + item->name() + " already exists.");
     }
+
+    void ParserRecord::addDataItem(ParserItemConstPtr item) {
+        if (m_items.size() > 0)
+            throw std::invalid_argument("Record already contains items - can not add Data Item");
+
+        addItem(item);
+        m_dataRecord = true;
+    }
+
+
 
     std::vector<ParserItemConstPtr>::const_iterator ParserRecord::begin() const {
         return m_items.begin();
@@ -130,5 +145,10 @@ namespace Opm {
             equal_ = false;
         return equal_;
     }
+
+    bool ParserRecord::isDataRecord() const {
+        return m_dataRecord;
+    }
+
 
 }
