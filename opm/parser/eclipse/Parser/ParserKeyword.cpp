@@ -540,7 +540,7 @@ namespace Opm {
             keyword->setDataKeyword( isDataKeyword() );
 
             for (size_t i = 0; i < rawKeyword->size(); i++) {
-                std::shared_ptr<ParserRecord> record = getRecord(0);
+                std::shared_ptr<ParserRecord> record = getRecord(i);
                 DeckRecordConstPtr deckRecord = record->parse(rawKeyword->getRecord(i));
                 keyword->addRecord(deckRecord);
             }
