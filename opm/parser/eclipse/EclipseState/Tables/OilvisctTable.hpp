@@ -49,7 +49,7 @@ namespace Opm {
             ParentType::checkMonotonic("Temperature", /*isAscending=*/true);
 
             ParentType::checkNonDefaultable("Viscosity");
-            ParentType::checkMonotonic("Viscosity", /*isAscending=*/true, /*strictlyMonotonic=*/false);
+            ParentType::checkMonotonic("Viscosity", /*isAscending=*/false, /*strictlyMonotonic=*/false);
         }
 
     public:

@@ -39,7 +39,7 @@ namespace Opm {
         {
             ParentType::init(keyword,
                              std::vector<std::string>{
-                                 "Temperature"
+                                 "Temperature",
                                  "Viscosity"
                              },
                              recordIdx,
@@ -49,7 +49,7 @@ namespace Opm {
             ParentType::checkMonotonic("Temperature", /*isAscending=*/true);
 
             ParentType::checkNonDefaultable("Viscosity");
-            ParentType::checkMonotonic("Viscosity", /*isAscending=*/true, /*strictlyMonotonic=*/false);
+            ParentType::checkMonotonic("Viscosity", /*isAscending=*/false, /*strictlyMonotonic=*/false);
         }
 
     public:
