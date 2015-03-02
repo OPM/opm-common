@@ -150,6 +150,7 @@ namespace Opm {
         system->addDimension("1"         , 1.0);
         system->addDimension("Pressure"  , Metric::Pressure );
         system->addDimension("Temperature", Metric::Temperature, Metric::TemperatureOffset);
+        system->addDimension("AbsoluteTemperature", Metric::AbsoluteTemperature);
         system->addDimension("Length"    , Metric::Length);
         system->addDimension("Time"      , Metric::Time );
         system->addDimension("Mass"         , Metric::Mass );
@@ -176,6 +177,7 @@ namespace Opm {
         system->addDimension("1"    , 1.0);
         system->addDimension("Pressure", Field::Pressure );
         system->addDimension("Temperature", Field::Temperature, Field::TemperatureOffset);
+        system->addDimension("AbsoluteTemperature", Field::AbsoluteTemperature);
         system->addDimension("Length", Field::Length);
         system->addDimension("Time" , Field::Time);
         system->addDimension("Mass", Field::Mass);

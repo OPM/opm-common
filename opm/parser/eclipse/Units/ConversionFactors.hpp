@@ -194,6 +194,7 @@ namespace Opm {
         const double Pressure             = barsa;
         const double Temperature          = degCelsius;
         const double TemperatureOffset    = degCelsiusOffset;
+        const double AbsoluteTemperature  = degCelsius; // actually [K], but the these two are identical
         const double Length               = meter;
         const double Time                 = day;
         const double Mass                 = kilogram;
@@ -217,6 +218,7 @@ namespace Opm {
         const double Pressure             = psia;
         const double Temperature          = degFahrenheit;
         const double TemperatureOffset    = degFahrenheitOffset;
+        const double AbsoluteTemperature  = degFahrenheit; // actually [°R], but the these two are identical
         const double Length               = feet;
         const double Time                 = day;
         const double Mass                 = pound;
