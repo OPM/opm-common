@@ -65,10 +65,10 @@ namespace Opm {
 
 
 
-    MULTREGTRecord::MULTREGTRecord(DeckRecordConstPtr deckRecord) :
+    MULTREGTRecord::MULTREGTRecord(DeckRecordConstPtr deckRecord , const std::string& defaultRegion) :
         m_srcRegion("SRC_REGION"),
         m_targetRegion("TARGET_REGION"),
-        m_region("REGION")
+        m_region("REGION" , defaultRegion)
     {
         DeckItemConstPtr srcItem = deckRecord->getItem("SRC_REGION");
         DeckItemConstPtr targetItem = deckRecord->getItem("TARGET_REGION");
@@ -122,11 +122,11 @@ namespace Opm {
       Then it will go through the different regions and looking for
       interface with the wanted region values.
     */
-    MULTREGTScanner::MULTREGTScanner(std::shared_ptr<GridProperties<int> > cellRegionNumbers, const std::vector<DeckKeywordConstPtr>& keywords ) :
+    MULTREGTScanner::MULTREGTScanner(std::shared_ptr<GridProperties<int> > cellRegionNumbers, const std::vector<DeckKeywordConstPtr>& keywords , const std::string& defaultRegion ) :
         m_cellRegionNumbers(cellRegionNumbers) {
 
         for (size_t idx = 0; idx < keywords.size(); idx++)
-            addKeyword(keywords[idx]);
+            addKeyword(keywords[idx] , defaultRegion);
 
         MULTREGTSearchMap searchPairs;
         for (std::vector<MULTREGTRecord>::const_iterator record = m_records.begin(); record != m_records.end(); ++record) {
@@ -159,9 +159,9 @@ namespace Opm {
     }
 
 
-    void MULTREGTScanner::assertKeywordSupported(DeckKeywordConstPtr deckKeyword) {
+    void MULTREGTScanner::assertKeywordSupported(DeckKeywordConstPtr deckKeyword, const std::string& defaultRegion) {
         for (auto iter = deckKeyword->begin(); iter != deckKeyword->end(); ++iter) {
-            MULTREGTRecord record( *iter );
+            MULTREGTRecord record( *iter , defaultRegion);
 
             if (record.m_nncBehaviour == MULTREGT::NOAQUNNC)
                 throw std::invalid_argument("Sorry - currently we do not support \'NOAQUNNC\' for MULTREGT.");
@@ -180,11 +180,11 @@ namespace Opm {
 
 
 
-    void MULTREGTScanner::addKeyword(DeckKeywordConstPtr deckKeyword) {
-        assertKeywordSupported( deckKeyword );
+    void MULTREGTScanner::addKeyword(DeckKeywordConstPtr deckKeyword , const std::string& defaultRegion) {
+        assertKeywordSupported( deckKeyword , defaultRegion );
 
         for (auto iter = deckKeyword->begin(); iter != deckKeyword->end(); ++iter) {
-            MULTREGTRecord record( *iter );
+            MULTREGTRecord record( *iter , defaultRegion );
             /*
               The default value for the region item is to use the
               region item on the previous record, or alternatively

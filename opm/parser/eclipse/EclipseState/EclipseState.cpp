@@ -403,10 +403,7 @@ namespace Opm {
         if (deck->hasKeyword("MULTREGT"))
             multregtKeywords = deck->getKeywordList("MULTREGT");
 
-        std::shared_ptr<MULTREGTScanner> scanner =
-            std::make_shared<MULTREGTScanner>(m_intGridProperties,
-                                              multregtKeywords);
-
+        std::shared_ptr<MULTREGTScanner> scanner = std::make_shared<MULTREGTScanner>(m_intGridProperties, multregtKeywords , m_defaultRegion);
         m_transMult->setMultregtScanner( scanner );
     }
 
