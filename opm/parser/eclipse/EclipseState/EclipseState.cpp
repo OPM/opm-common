@@ -122,12 +122,14 @@ namespace Opm {
 
 
     EclipseState::EclipseState(DeckConstPtr deck, LoggerPtr logger)
+        : m_defaultRegion("FLUXNUM")
     {
         m_deckUnitSystem = deck->getActiveUnitSystem();
 
         initPhases(deck, logger);
         initTables(deck, logger);
         initEclipseGrid(deck, logger);
+        initGridopts(deck);
         initSchedule(deck, logger);
         initTitle(deck, logger);
         initProperties(deck, logger);
@@ -415,6 +417,53 @@ namespace Opm {
     }
 
 
+    void EclipseState::initGridopts(DeckConstPtr deck) {
+        if (deck->hasKeyword("GRIDOPTS")) {
+            /*
+              The EQUALREG, MULTREG, COPYREG, ... keywords are used to
+              manipulate vectors based on region values; for instance
+              the statement
+
+                EQUALREG
+                   PORO  0.25  3    /   -- Region array not specified
+                   PERMX 100   3  F /
+                /
+
+              will set the PORO field to 0.25 for all cells in region
+              3 and the PERMX value to 100 mD for the same cells. The
+              fourth optional argument to the EQUALREG keyword is used
+              to indicate which REGION array should be used for the
+              selection.
+
+              If the REGION array is not indicated (as in the PORO
+              case) above, the default region to use in the xxxREG
+              keywords depends on the GRIDOPTS keyword:
+
+                1. If GRIDOPTS is present, and the NRMULT item is
+                   greater than zero, the xxxREG keywords will default
+                   to use the MULTNUM region.
+
+                2. If the GRIDOPTS keyword is not present - or the
+                   NRMULT item equals zero, the xxxREG keywords will
+                   default to use the FLUXNUM keyword.
+
+              This quite weird behaviour comes from reading the
+              GRIDOPTS and MULTNUM documentation, and practical
+              experience with ECLIPSE simulations. Ufortunately the
+              documentation of the xxxREG keywords does not confirm
+              this.
+            */
+
+            auto gridOpts = deck->getKeyword("GRIDOPTS");
+            auto record = gridOpts->getRecord(0);
+            auto nrmult_item = record->getItem("NRMULT");
+
+            if (nrmult_item->getInt(0) > 0)
+                m_defaultRegion = "MULTNUM";
+        }
+    }
+
+
     void EclipseState::initPhases(DeckConstPtr deck, LoggerPtr logger) {
         if (deck->hasKeyword("OIL"))
             phases.insert(Phase::PhaseEnum::OIL);
@@ -557,6 +606,10 @@ namespace Opm {
             gridProperty->runPostProcessor();
 
         return gridProperty;
+    }
+
+    std::shared_ptr<GridProperty<int> > EclipseState::getDefaultRegion() const {
+        return m_intGridProperties->getInitializedKeyword( m_defaultRegion );
     }
 
 

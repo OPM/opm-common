@@ -349,3 +349,62 @@ BOOST_AUTO_TEST_CASE(FaceTransMults) {
         }
     }
 }
+
+
+static DeckPtr createDeckNoGridOpts() {
+    const char *deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        " 10 10 10 /\n"
+        "GRID\n"
+        "FLUXNUM\n"
+        "  1000*1 /\n"
+        "MULTNUM\n"
+        "  1000*1 /\n";
+
+    ParserPtr parser(new Parser());
+    return parser->parseString(deckData) ;
+}
+
+
+static DeckPtr createDeckWithGridOpts() {
+    const char *deckData =
+        "RUNSPEC\n"
+        "GRIDOPTS\n"
+        "  'YES'   10 /"
+        "\n"
+        "DIMENS\n"
+        " 10 10 10 /\n"
+        "GRID\n"
+        "FLUXNUM\n"
+        "  1000*1 /\n"
+        "MULTNUM\n"
+        "  1000*1 /\n";
+
+    ParserPtr parser(new Parser());
+    return parser->parseString(deckData) ;
+}
+
+
+BOOST_AUTO_TEST_CASE(NoGridOptsDefaultRegion) {
+    DeckPtr deck = createDeckNoGridOpts();
+    EclipseState state(deck);
+    auto multnum = state.getIntGridProperty("MULTNUM");
+    auto fluxnum = state.getIntGridProperty("FLUXNUM");
+    auto def_property = state.getDefaultRegion();
+
+    BOOST_CHECK_EQUAL( fluxnum  , def_property );
+}
+
+
+BOOST_AUTO_TEST_CASE(WithGridOptsDefaultRegion) {
+    DeckPtr deck = createDeckWithGridOpts();
+    EclipseState state(deck);
+    auto multnum = state.getIntGridProperty("MULTNUM");
+    auto fluxnum = state.getIntGridProperty("FLUXNUM");
+    auto def_property = state.getDefaultRegion();
+
+    BOOST_CHECK_EQUAL( multnum , def_property );
+}
+

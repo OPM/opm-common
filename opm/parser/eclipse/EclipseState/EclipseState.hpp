@@ -82,6 +82,7 @@ namespace Opm {
         std::string getTitle() const;
         bool supportsGridProperty(const std::string& keyword, int enabledTypes=AllProperties) const;
 
+        std::shared_ptr<GridProperty<int> > getDefaultRegion() const;
         std::shared_ptr<GridProperty<int> > getIntGridProperty( const std::string& keyword ) const;
         std::shared_ptr<GridProperty<double> > getDoubleGridProperty( const std::string& keyword ) const;
         bool hasIntGridProperty(const std::string& keyword) const;
@@ -132,6 +133,7 @@ namespace Opm {
         void initSchedule(DeckConstPtr deck, LoggerPtr logger);
         void initSimulationConfig(DeckConstPtr deck);
         void initEclipseGrid(DeckConstPtr deck, LoggerPtr logger);
+        void initGridopts(DeckConstPtr deck);
         void initPhases(DeckConstPtr deck, LoggerPtr logger);
         void initTitle(DeckConstPtr deck, LoggerPtr logger);
         void initProperties(DeckConstPtr deck, LoggerPtr logger);
@@ -261,6 +263,7 @@ namespace Opm {
         std::shared_ptr<GridProperties<double> > m_doubleGridProperties;
         std::shared_ptr<TransMult> m_transMult;
         std::shared_ptr<FaultCollection> m_faults;
+        std::string m_defaultRegion;
     };
 
     typedef std::shared_ptr<EclipseState> EclipseStatePtr;
