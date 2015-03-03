@@ -49,4 +49,136 @@ BOOST_AUTO_TEST_CASE( parse_VFPPROD_OK ) {
     BOOST_CHECK_EQUAL( 573U  , VFPPROD1->size() );
     BOOST_CHECK_EQUAL( 1U    , BPR->size());
     BOOST_CHECK_EQUAL( 573U  , VFPPROD2->size());
+
+    {
+        auto record = VFPPROD1->getRecord(0);
+        {
+            auto item = record->getItem("TABLE");
+            BOOST_CHECK_EQUAL( item->getInt(0) , 32 );
+        }
+
+        {
+            auto item = record->getItem("DATUM_DEPTH");
+            BOOST_CHECK_EQUAL( item->getSIDouble(0) , 394);
+        }
+
+        {
+            auto item = record->getItem("RATE_TYPE");
+            BOOST_CHECK_EQUAL( item->getString(0) , "LIQ");
+        }
+
+
+        {
+            auto item = record->getItem("WFR");
+            BOOST_CHECK_EQUAL( item->getString(0) , "WCT");
+        }
+
+        {
+            auto item = record->getItem("GFR");
+            BOOST_CHECK_EQUAL( item->getString(0) , "GOR");
+        }
+    }
+    {
+        auto record = VFPPROD1->getRecord(1);
+        auto item = record->getItem("FLOW_VALUES");
+
+        BOOST_CHECK_EQUAL( item->size() , 12 );
+        BOOST_CHECK_EQUAL( item->getRawDouble(0)  ,   100 );
+        BOOST_CHECK_EQUAL( item->getRawDouble(11) , 20000 );
+    }
+
+    {
+        auto record = VFPPROD1->getRecord(4);
+        auto item = record->getItem("GFR_VALUES");
+
+        BOOST_CHECK_EQUAL( item->size() , 9 );
+        BOOST_CHECK_EQUAL( item->getRawDouble(0)  ,   90 );
+        BOOST_CHECK_EQUAL( item->getRawDouble(8) , 10000 );
+    }
+
+    {
+        auto record = VFPPROD1->getRecord(4);
+        auto item = record->getItem("GFR_VALUES");
+
+        BOOST_CHECK_EQUAL( item->size() , 9 );
+        BOOST_CHECK_EQUAL( item->getRawDouble(0)  ,   90 );
+        BOOST_CHECK_EQUAL( item->getRawDouble(8) , 10000 );
+    }
+
+    {
+        auto record = VFPPROD1->getRecord(4);
+        auto item = record->getItem("GFR_VALUES");
+
+        BOOST_CHECK_EQUAL( item->size() , 9 );
+        BOOST_CHECK_EQUAL( item->getRawDouble(0)  ,   90 );
+        BOOST_CHECK_EQUAL( item->getRawDouble(8) , 10000 );
+    }
+
+    {
+        auto record = VFPPROD1->getRecord(5);
+        auto item = record->getItem("ALQ_VALUES");
+
+        BOOST_CHECK_EQUAL( item->size() , 1 );
+        BOOST_CHECK_EQUAL( item->getRawDouble(0)  ,   0 );
+    }
+
+    {
+        auto record = VFPPROD1->getRecord(6);
+        {
+            auto item = record->getItem("THP_INDEX");
+            BOOST_CHECK_EQUAL( item->size() , 1 );
+            BOOST_CHECK_EQUAL( item->getInt(0) , 1 );
+        }
+        {
+            auto item = record->getItem("WFR_INDEX");
+            BOOST_CHECK_EQUAL( item->size() , 1 );
+            BOOST_CHECK_EQUAL( item->getInt(0) , 1 );
+        }
+        {
+            auto item = record->getItem("GFR_INDEX");
+            BOOST_CHECK_EQUAL( item->size() , 1 );
+            BOOST_CHECK_EQUAL( item->getInt(0) , 1 );
+        }
+        {
+            auto item = record->getItem("ALQ_INDEX");
+            BOOST_CHECK_EQUAL( item->size() , 1 );
+            BOOST_CHECK_EQUAL( item->getInt(0) , 1 );
+        }
+        {
+            auto item = record->getItem("VALUES");
+            BOOST_CHECK_EQUAL( item->size() , 12 );
+            BOOST_CHECK_EQUAL( item->getRawDouble(0) , 44.85 );
+            BOOST_CHECK_EQUAL( item->getRawDouble(11) , 115.14 );
+        }
+    }
+
+    {
+        auto record = VFPPROD1->getRecord(572);
+        {
+            auto item = record->getItem("THP_INDEX");
+            BOOST_CHECK_EQUAL( item->size() , 1 );
+            BOOST_CHECK_EQUAL( item->getInt(0) , 7 );
+        }
+        {
+            auto item = record->getItem("WFR_INDEX");
+            BOOST_CHECK_EQUAL( item->size() , 1 );
+            BOOST_CHECK_EQUAL( item->getInt(0) , 9 );
+        }
+        {
+            auto item = record->getItem("GFR_INDEX");
+            BOOST_CHECK_EQUAL( item->size() , 1 );
+            BOOST_CHECK_EQUAL( item->getInt(0) , 9 );
+        }
+        {
+            auto item = record->getItem("ALQ_INDEX");
+            BOOST_CHECK_EQUAL( item->size() , 1 );
+            BOOST_CHECK_EQUAL( item->getInt(0) , 1 );
+        }
+        {
+            auto item = record->getItem("VALUES");
+            BOOST_CHECK_EQUAL( item->size() , 12 );
+            BOOST_CHECK_EQUAL( item->getRawDouble(0) , 100.80 );
+            BOOST_CHECK_EQUAL( item->getRawDouble(11) , 147.79 );
+        }
+    }
 }
