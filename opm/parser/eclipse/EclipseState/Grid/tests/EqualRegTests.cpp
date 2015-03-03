@@ -113,10 +113,19 @@ static Opm::DeckPtr createDeckUnInitialized() {
 static Opm::DeckPtr createValidIntDeck() {
     const char *deckData =
         "RUNSPEC\n"
+        "GRIDOPTS\n"
+        " 'YES'   2 /"
         "\n"
         "DIMENS\n"
         " 5 5 1 /\n"
         "GRID\n"
+        "FLUXNUM \n"
+        "1  1  2  2 2\n"
+        "1  1  2  2 2\n"
+        "1  1  2  2 2\n"
+        "1  1  2  2 2\n"
+        "1  1  2  2 2\n"
+        "/\n"
         "MULTNUM \n"
         "1  1  2  2 2\n"
         "1  1  2  2 2\n"
@@ -139,6 +148,8 @@ static Opm::DeckPtr createValidIntDeck() {
 static Opm::DeckPtr createValidPERMXDeck() {
     const char *deckData =
         "RUNSPEC\n"
+        "GRIDOPTS\n"
+        " 'YES'   2 /"
         "\n"
         "DIMENS\n"
         " 5 5 1 /\n"

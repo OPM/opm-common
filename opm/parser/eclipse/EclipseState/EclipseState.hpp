@@ -82,6 +82,7 @@ namespace Opm {
         std::string getTitle() const;
         bool supportsGridProperty(const std::string& keyword, int enabledTypes=AllProperties) const;
 
+        std::shared_ptr<GridProperty<int> > getRegion(DeckItemConstPtr regionItem) const;
         std::shared_ptr<GridProperty<int> > getDefaultRegion() const;
         std::shared_ptr<GridProperty<int> > getIntGridProperty( const std::string& keyword ) const;
         std::shared_ptr<GridProperty<double> > getDoubleGridProperty( const std::string& keyword ) const;

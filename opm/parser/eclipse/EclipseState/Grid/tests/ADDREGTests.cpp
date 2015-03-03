@@ -140,6 +140,8 @@ static Opm::DeckPtr createDeckUnInitializedVector() {
 static Opm::DeckPtr createValidIntDeck() {
     const char *deckData =
         "RUNSPEC\n"
+        "GRIDOPTS\n"
+        "  'YES'  2 /\n"
         "\n"
         "DIMENS\n"
         " 5 5 1 /\n"
@@ -169,6 +171,8 @@ static Opm::DeckPtr createValidIntDeck() {
 static Opm::DeckPtr createValidPERMXDeck() {
     const char *deckData =
         "RUNSPEC\n"
+        "GRIDOPTS\n"
+        "  'YES'  2 /\n"
         "\n"
         "DIMENS\n"
         " 5 5 1 /\n"
@@ -194,7 +198,7 @@ static Opm::DeckPtr createValidPERMXDeck() {
         "25*1 /\n"
         "ADDREG\n"
         "  PERMX 1 1     / \n"
-        "  PERMX 2 2     / \n"
+        "  PERMX 3 2     / \n"
         "/\n"
         "EDIT\n"
         "\n";
@@ -258,14 +262,13 @@ BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
 BOOST_AUTO_TEST_CASE(UnitAppliedCorrectly) {
     Opm::DeckPtr deck = createValidPERMXDeck();
     Opm::EclipseState state(deck);
-    /*std::shared_ptr<Opm::GridProperty<double> > permz = state.getDoubleGridProperty( "PERMZ");
+    std::shared_ptr<Opm::GridProperty<double> > permx = state.getDoubleGridProperty( "PERMX");
 
     for (size_t j=0; j< 5; j++)
         for (size_t i = 0; i < 5; i++) {
             if (i < 2)
-                BOOST_CHECK_EQUAL( 2 * Opm::Metric::Permeability , permz->iget(i,j,0));
+                BOOST_CHECK_EQUAL( 2 * Opm::Metric::Permeability , permx->iget(i,j,0));
             else
-                BOOST_CHECK_EQUAL( 4 * Opm::Metric::Permeability , permz->iget(i,j,0));
+                BOOST_CHECK_EQUAL( 4 * Opm::Metric::Permeability , permx->iget(i,j,0));
         }
-    */
 }

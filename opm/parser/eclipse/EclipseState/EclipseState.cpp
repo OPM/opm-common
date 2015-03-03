@@ -612,6 +612,16 @@ namespace Opm {
         return m_intGridProperties->getInitializedKeyword( m_defaultRegion );
     }
 
+    std::shared_ptr<GridProperty<int> > EclipseState::getRegion(DeckItemConstPtr regionItem) const {
+        if (regionItem->defaultApplied(0))
+            return getDefaultRegion();
+        else {
+            const std::string regionArray = MULTREGT::RegionNameFromDeckValue( regionItem->getString(0) );
+            return m_intGridProperties->getInitializedKeyword( regionArray );
+        }
+    }
+
+
 
     /*
        Due to the post processor which might be applied to the
@@ -970,8 +980,7 @@ namespace Opm {
             if (supportsGridProperty( targetArray , enabledTypes)) {
                 double doubleValue = record->getItem("VALUE")->getRawDouble(0);
                 int regionValue = record->getItem("REGION_NUMBER")->getInt(0);
-                const std::string regionArray = MULTREGT::RegionNameFromDeckValue( record->getItem("REGION_NAME")->getString(0) );
-                std::shared_ptr<Opm::GridProperty<int> > regionProperty = m_intGridProperties->getInitializedKeyword(regionArray);
+                std::shared_ptr<Opm::GridProperty<int> > regionProperty = getRegion( record->getItem("REGION_NAME") );
                 std::vector<bool> mask;
 
                 regionProperty->initMask( regionValue , mask);
@@ -1014,8 +1023,7 @@ namespace Opm {
             if (supportsGridProperty( targetArray , enabledTypes)) {
                 double doubleValue = record->getItem("SHIFT")->getRawDouble(0);
                 int regionValue = record->getItem("REGION_NUMBER")->getInt(0);
-                const std::string regionArray = MULTREGT::RegionNameFromDeckValue( record->getItem("REGION_NAME")->getString(0) );
-                std::shared_ptr<Opm::GridProperty<int> > regionProperty = m_intGridProperties->getInitializedKeyword(regionArray);
+                std::shared_ptr<Opm::GridProperty<int> > regionProperty = getRegion( record->getItem("REGION_NAME") );
                 std::vector<bool> mask;
 
                 regionProperty->initMask( regionValue , mask);
@@ -1060,8 +1068,7 @@ namespace Opm {
             if (supportsGridProperty( targetArray , enabledTypes)) {
                 double doubleValue = record->getItem("FACTOR")->getRawDouble(0);
                 int regionValue = record->getItem("REGION_NUMBER")->getInt(0);
-                const std::string regionArray = MULTREGT::RegionNameFromDeckValue( record->getItem("REGION_NAME")->getString(0) );
-                std::shared_ptr<Opm::GridProperty<int> > regionProperty = m_intGridProperties->getInitializedKeyword( regionArray );
+                std::shared_ptr<Opm::GridProperty<int> > regionProperty = getRegion( record->getItem("REGION_NAME") );
                 std::vector<bool> mask;
 
                 regionProperty->initMask( regionValue , mask);
@@ -1105,8 +1112,7 @@ namespace Opm {
 
             if (supportsGridProperty( srcArray , enabledTypes)) {
                 int regionValue = record->getItem("REGION_NUMBER")->getInt(0);
-                const std::string regionArray = MULTREGT::RegionNameFromDeckValue( record->getItem("REGION_NAME")->getString(0) );
-                std::shared_ptr<Opm::GridProperty<int> > regionProperty = m_intGridProperties->getInitializedKeyword( regionArray );
+                std::shared_ptr<Opm::GridProperty<int> > regionProperty = getRegion( record->getItem("REGION_NAME") );
                 std::vector<bool> mask;
 
                 regionProperty->initMask( regionValue , mask );

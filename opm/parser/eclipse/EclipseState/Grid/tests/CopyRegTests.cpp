@@ -22,7 +22,7 @@
 #include <boost/filesystem.hpp>
 #include <cstdio>
 
-#define BOOST_TEST_MODULE EqualRegTests
+#define BOOST_TEST_MODULE CopyRegTests
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 

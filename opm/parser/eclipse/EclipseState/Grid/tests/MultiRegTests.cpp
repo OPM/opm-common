@@ -140,6 +140,8 @@ static Opm::DeckPtr createDeckUnInitialized() {
 static Opm::DeckPtr createValidIntDeck() {
     const char *deckData =
         "RUNSPEC\n"
+        "GRIDOPTS\n"
+        "  'YES'  2 /\n"
         "\n"
         "DIMENS\n"
         " 5 5 1 /\n"
