@@ -55,6 +55,15 @@ public:
         m_data.push_back(value);
     }
 
+    typename std::vector<T>::const_iterator begin() const {
+        return m_data.begin();
+    }
+
+
+    typename std::vector<T>::const_iterator end() const {
+        return m_data.end();
+    }
+
 };
 }
 
