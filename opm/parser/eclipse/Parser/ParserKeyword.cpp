@@ -157,7 +157,6 @@ namespace Opm {
                 for (size_t i = 0; i < num_records; i++) {
                     const Json::JsonObject itemsConfig = recordsConfig.get_array_item(i);
                     addItems(itemsConfig);
-                    std::cout << "Adding items record " << i << "/" << num_records << std::endl;
                 }
             } else
                 throw std::invalid_argument("The records item must point to an array item");
@@ -712,33 +711,35 @@ namespace Opm {
 
         {
             if (m_records.size() > 0 ) {
-                std::shared_ptr<ParserRecord> record = getRecord(0);
-                os << indent << "{" << std::endl;
-                os << indent << "std::shared_ptr<ParserRecord> record = std::make_shared<ParserRecord>();" << std::endl;
-                for (size_t i = 0; i < record->size(); i++) {
+                for (auto iter = recordBegin(); iter != recordEnd(); ++iter) {
+                    std::shared_ptr<ParserRecord> record = *iter;
                     const std::string local_indent = indent + "   ";
-                    ParserItemConstPtr item = record->get(i);
-                    os << local_indent << "ParserItemPtr "<<item->name()<<"item(";
-                    item->inlineNew(os);
-                    os << ");" << std::endl;
-                    os << local_indent << item->name()<<"item->setDescription(\"" << item->getDescription() << "\");" << std::endl;
-                    for (size_t idim=0; idim < item->numDimensions(); idim++)
-                        os << local_indent <<item->name()<<"item->push_backDimension(\"" << item->getDimension( idim ) << "\");" << std::endl;
-                    {
-                        std::string addItemMethod = "addItem";
-                        if (isDataKeyword())
-                            addItemMethod = "addDataItem";
+                    os << indent << "{" << std::endl;
+                    os << local_indent << "std::shared_ptr<ParserRecord> record = std::make_shared<ParserRecord>();" << std::endl;
+                    for (size_t i = 0; i < record->size(); i++) {
+                        ParserItemConstPtr item = record->get(i);
+                        os << local_indent << "ParserItemPtr "<<item->name()<<"item(";
+                        item->inlineNew(os);
+                        os << ");" << std::endl;
+                        os << local_indent << item->name()<<"item->setDescription(\"" << item->getDescription() << "\");" << std::endl;
+                        for (size_t idim=0; idim < item->numDimensions(); idim++)
+                            os << local_indent <<item->name()<<"item->push_backDimension(\"" << item->getDimension( idim ) << "\");" << std::endl;
+                        {
+                            std::string addItemMethod = "addItem";
+                            if (isDataKeyword())
+                                addItemMethod = "addDataItem";
 
-                        os << local_indent << "record->" << addItemMethod << "("<<item->name()<<"item);" << std::endl;
+                            os << local_indent << "record->" << addItemMethod << "("<<item->name()<<"item);" << std::endl;
+                        }
                     }
+
+                    if (record->isDataRecord())
+                        os << local_indent << lhs << "->addDataRecord( record );" << std::endl;
+                    else
+                        os << local_indent << lhs << "->addRecord( record );" << std::endl;
+
+                    os << indent << "}" << std::endl;
                 }
-
-                if (record->isDataRecord())
-                    os << indent << lhs << "->addDataRecord( record );" << std::endl;
-                else
-                    os << indent << lhs << "->addRecord( record );" << std::endl;
-
-                os << indent << "}" << std::endl;
             }
         }
     }
