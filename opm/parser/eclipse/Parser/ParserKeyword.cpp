@@ -482,6 +482,16 @@ namespace Opm {
     }
 
 
+    std::vector<ParserRecordPtr>::const_iterator ParserKeyword::recordBegin() const {
+        return m_records.begin();
+    }
+
+    std::vector<ParserRecordPtr>::const_iterator ParserKeyword::recordEnd() const {
+        return m_records.end();
+    }
+
+
+
     void ParserKeyword::addRecord(std::shared_ptr<ParserRecord> record) {
         m_records.push_back( record );
     }

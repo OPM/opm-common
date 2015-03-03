@@ -109,6 +109,8 @@ namespace Opm {
         void addRecord(std::shared_ptr<ParserRecord> record);
         void addDataRecord(std::shared_ptr<ParserRecord> record);
         ParserRecordPtr getRecord(size_t recordIndex) const;
+        std::vector<ParserRecordPtr>::const_iterator recordBegin() const;
+        std::vector<ParserRecordPtr>::const_iterator recordEnd() const;
         const std::string& getName() const;
         size_t getFixedSize() const;
         bool hasFixedSize() const;
