@@ -87,6 +87,7 @@ namespace Opm {
         
         bool hasCellInfo() const;
 
+        size_t getGlobalIndex(size_t i, size_t j, size_t k) const;
         void assertGlobalIndex(size_t globalIndex) const;
         void assertIJK(size_t i , size_t j , size_t k) const;
         std::tuple<double,double,double> getCellCenter(size_t i,size_t j, size_t k) const;

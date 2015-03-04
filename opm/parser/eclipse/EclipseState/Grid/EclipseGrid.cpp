@@ -211,6 +211,10 @@ namespace Opm {
     }
 
 
+    size_t EclipseGrid::getGlobalIndex(size_t i, size_t j, size_t k) const {
+        return (i + j * getNX() + k * getNX() * getNY());
+    }
+
     void EclipseGrid::assertGlobalIndex(size_t globalIndex) const {
         if (globalIndex >= getCartesianSize())
             throw std::invalid_argument("input index above valid range");
