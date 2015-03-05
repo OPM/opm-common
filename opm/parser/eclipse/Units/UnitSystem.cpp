@@ -31,11 +31,25 @@
 
 namespace Opm {
 
-    UnitSystem::UnitSystem(const std::string& unitSystem) :
-        m_name( unitSystem )
+    UnitSystem::UnitSystem(const UnitType unit) :
+        m_unittype( unit )
     {
-
+        switch(unit) {
+            case(UNIT_TYPE_METRIC):
+                m_name = "Metric";
+                break;
+            case(UNIT_TYPE_FIELD):
+                m_name = "Field";
+                break;
+            case(UNIT_TYPE_LAB):
+                m_name = "Lab";
+                break;
+            default:
+                //do nothing
+                break;
+        };
     }
+
 
     bool UnitSystem::hasDimension(const std::string& dimension) const {
         return (m_dimensions.find( dimension ) != m_dimensions.end());
@@ -73,6 +87,10 @@ namespace Opm {
 
     const std::string& UnitSystem::getName() const {
         return m_name;
+    }
+
+    const UnitSystem::UnitType UnitSystem::getType() const {
+        return m_unittype;
     }
 
 
@@ -145,7 +163,7 @@ namespace Opm {
 
 
     UnitSystem * UnitSystem::newMETRIC() {
-        UnitSystem * system = new UnitSystem("Metric");
+        UnitSystem * system = new UnitSystem(UNIT_TYPE_METRIC);
 
         system->addDimension("1"         , 1.0);
         system->addDimension("Pressure"  , Metric::Pressure );
@@ -172,7 +190,7 @@ namespace Opm {
 
 
     UnitSystem * UnitSystem::newFIELD() {
-        UnitSystem * system = new UnitSystem("Field");
+        UnitSystem * system = new UnitSystem(UNIT_TYPE_FIELD);
 
         system->addDimension("1"    , 1.0);
         system->addDimension("Pressure", Field::Pressure );

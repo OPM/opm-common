@@ -30,8 +30,16 @@ namespace Opm {
 
     class UnitSystem {
     public:
-        UnitSystem(const std::string& unitSystem);
+        enum UnitType {
+          UNIT_TYPE_METRIC = 0,
+          UNIT_TYPE_FIELD  = 1,
+          UNIT_TYPE_LAB    = 2
+        };
+
+        UnitSystem(UnitType unit);
+
         const std::string& getName() const;
+        const UnitType getType() const;
 
         void addDimension(const std::string& dimension, double SIfactor, double SIoffset = 0.0);
         void addDimension(std::shared_ptr<const Dimension> dimension);
@@ -47,7 +55,8 @@ namespace Opm {
     private:
         std::shared_ptr<const Dimension> parseFactor(const std::string& dimension) const;
 
-        const std::string m_name;
+        std::string m_name;
+        UnitType m_unittype;
         std::map<std::string , std::shared_ptr<const Dimension> > m_dimensions;
     };
 }
