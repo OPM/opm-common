@@ -89,7 +89,7 @@ namespace Opm {
         return m_name;
     }
 
-    const UnitSystem::UnitType UnitSystem::getType() const {
+    UnitSystem::UnitType UnitSystem::getType() const {
         return m_unittype;
     }
 

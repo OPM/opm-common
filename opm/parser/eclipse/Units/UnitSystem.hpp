@@ -39,7 +39,7 @@ namespace Opm {
         UnitSystem(UnitType unit);
 
         const std::string& getName() const;
-        const UnitType getType() const;
+        UnitType getType() const;
 
         void addDimension(const std::string& dimension, double SIfactor, double SIoffset = 0.0);
         void addDimension(std::shared_ptr<const Dimension> dimension);
