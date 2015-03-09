@@ -1,5 +1,5 @@
 /*
-  Copyright 2014 Andreas Lauser
+  Copyright 2015 Statoil ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -15,29 +15,36 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
-#ifndef OPM_CHECK_DECK_HPP
-#define OPM_CHECK_DECK_HPP
+#ifndef STREAMLOG_H
+#define STREAMLOG_H
 
-#include <opm/parser/eclipse/Deck/Deck.hpp>
+
+#include <stdexcept>
+#include <fstream>
+#include <iostream>
+#include <cstdint>
+
+#include <opm/parser/eclipse/OpmLog/LogBackend.hpp>
 
 namespace Opm {
-enum DeckChecks {
-    SectionTopology = 0x0001,
 
-    // KeywordSection check only has an effect of the SectionTopology test is enabled
-    KeywordSection = 0x0002,
+class StreamLog : public LogBackend {
 
-    UnknownKeywords = 0x0004,
+public:
+    StreamLog(const std::string& logFile , int64_t messageMask);
+    StreamLog(std::ostream& os , int64_t messageMask);
+    void addMessage(int64_t messageType , const std::string& message);
+    ~StreamLog();
 
-    AllChecks = 0xffff
+private:
+    void close();
+
+    std::ofstream   m_ofstream;
+    std::ostream  * m_ostream;
+    bool m_streamOwner;
 };
-
-// some semantical correctness checks of the deck. this method adds a warning to
-// the deck object if any issue is found ...
-bool checkDeck(DeckConstPtr deck, size_t enabledChecks = AllChecks);
-
 }
 
 #endif

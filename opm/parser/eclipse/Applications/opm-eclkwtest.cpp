@@ -15,17 +15,21 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #include <iostream>
-#include <opm/parser/eclipse/Log/Logger.hpp>
+
+#include <opm/parser/eclipse/OpmLog/CounterLog.hpp>
+#include <opm/parser/eclipse/OpmLog/StreamLog.hpp>
+#include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
+#include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 
-static void printDeckDiagnostics(Opm::DeckConstPtr deck, Opm::LoggerConstPtr logger, bool printAllKeywords) {
+static void printDeckDiagnostics(Opm::DeckConstPtr deck, bool printAllKeywords) {
     int recognizedKeywords = 0;
     int unrecognizedKeywords = 0;
 
@@ -39,16 +43,10 @@ static void printDeckDiagnostics(Opm::DeckConstPtr deck, Opm::LoggerConstPtr log
             std::cout << "Keyword (" << i << "): " << deck->getKeyword(i)->name() << " " << std::endl;
         }
     }
-    {
-        for (size_t iw = 0; iw < logger->size(); iw++) {
-            std::cout << logger->getFormattedMessage(iw) << "\n";
-        }
-    }
-    std::cout << "Total number of log messages:    " << logger->size() << std::endl;
+
     std::cout << "Number of recognized keywords:   " << recognizedKeywords << std::endl;
     std::cout << "Number of unrecognized keywords: " << unrecognizedKeywords << std::endl;
     std::cout << "Total number of keywords:        " << deck->size() << std::endl;
-
 }
 /*
  *
@@ -65,14 +63,14 @@ int main(int argc, char** argv) {
         if (arg == "-l")
             printKeywords = true;
     }
+    //std::shared_ptr<Opm::StreamLog> streamLog = std::make_shared<Opm::StreamLog>("log.txt" , Opm::Log::MessageType::Warning);
 
     Opm::ParserPtr parser(new Opm::Parser());
     std::string file = argv[1];
-    Opm::LoggerPtr logger(new Opm::Logger);
-    Opm::DeckConstPtr deck = parser->parseFile(file, logger);
+    Opm::DeckConstPtr deck = parser->parseFile(file);
     Opm::EclipseState state(deck);
 
-    printDeckDiagnostics(deck, logger, printKeywords);
+    printDeckDiagnostics(deck, printKeywords);
 
     return 0;
 }

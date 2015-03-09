@@ -25,8 +25,6 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include <opm/parser/eclipse/Log/Logger.hpp>
-
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
 #include <opm/parser/eclipse/Deck/Section.hpp>
@@ -235,6 +233,5 @@ static Opm::DeckPtr createCopyMULTNUMDeck() {
 
 BOOST_AUTO_TEST_CASE(MULTREGT_COPY_MULTNUM) {
     Opm::DeckPtr deck = createCopyMULTNUMDeck();
-    Opm::LoggerPtr logger(new Opm::Logger());
-    BOOST_CHECK_NO_THROW( Opm::EclipseState( deck, logger ));
+    Opm::EclipseState state(deck);
 }

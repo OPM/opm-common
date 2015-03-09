@@ -58,12 +58,9 @@ BOOST_AUTO_TEST_CASE( parse_WCHONHIST_OK ) {
 
     item1 = rec3->getItem("WELL");
     BOOST_CHECK_EQUAL( "OP_3" , item1->getString(0));
-
-
-    /*****************************************************************/
-
     BOOST_CHECK_EQUAL( 2U , deck->numKeywords("WCONHIST"));
     kw1 = deck->getKeyword("WCONHIST" , 1 );
     rec3 = kw1->getRecord(2);
     BOOST_CHECK_EQUAL( "OP_3_B" , rec3->getItem("WELL")->getString(0));
+    BOOST_CHECK_EQUAL( false , deck->hasKeyword( "DIMENS" ));
 }

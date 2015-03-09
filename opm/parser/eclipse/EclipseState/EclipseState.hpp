@@ -21,7 +21,7 @@
 #define OPM_ECLIPSE_STATE_HPP
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Log/Logger.hpp>
+#include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -72,7 +72,7 @@ namespace Opm {
             AllProperties = IntProperties | DoubleProperties
         };
 
-        EclipseState(DeckConstPtr deck, LoggerPtr logger = std::make_shared<Logger>(&std::cout));
+        EclipseState(DeckConstPtr deck);
 
         ScheduleConstPtr getSchedule() const;
         SimulationConfigConstPtr getSimulationConfig() const;
@@ -91,7 +91,6 @@ namespace Opm {
 
         void loadGridPropertyFromDeckKeyword(std::shared_ptr<const Box> inputBox,
                                              DeckKeywordConstPtr deckKeyword,
-                                             LoggerPtr logger,
                                              int enabledTypes = AllProperties);
 
         std::shared_ptr<const FaultCollection> getFaults() const;
@@ -130,27 +129,27 @@ namespace Opm {
         std::shared_ptr<const UnitSystem> getDeckUnitSystem()  const;
 
     private:
-        void initTables(DeckConstPtr deck, LoggerPtr logger);
-        void initSchedule(DeckConstPtr deck, LoggerPtr logger);
+        void initTables(DeckConstPtr deck);
+        void initSchedule(DeckConstPtr deck);
         void initSimulationConfig(DeckConstPtr deck);
-        void initEclipseGrid(DeckConstPtr deck, LoggerPtr logger);
+        void initEclipseGrid(DeckConstPtr deck);
         void initGridopts(DeckConstPtr deck);
-        void initPhases(DeckConstPtr deck, LoggerPtr logger);
-        void initTitle(DeckConstPtr deck, LoggerPtr logger);
-        void initProperties(DeckConstPtr deck, LoggerPtr logger);
-        void initTransMult(LoggerPtr logger);
-        void initFaults(DeckConstPtr deck, LoggerPtr logger);
+        void initPhases(DeckConstPtr deck);
+        void initTitle(DeckConstPtr deck);
+        void initProperties(DeckConstPtr deck);
+        void initTransMult();
+        void initFaults(DeckConstPtr deck);
+
 
         template <class TableType>
         void initSimpleTables(DeckConstPtr deck,
-                              LoggerPtr logger,
                               const std::string& keywordName,
                               std::vector<TableType>& tableVector) {
             if (!deck->hasKeyword(keywordName))
                 return; // the table is not featured by the deck...
 
             if (deck->numKeywords(keywordName) > 1) {
-                complainAboutAmbiguousKeyword(deck, logger, keywordName);
+                complainAboutAmbiguousKeyword(deck, keywordName);
                 return;
             }
 
@@ -160,10 +159,8 @@ namespace Opm {
                     // for simple tables, an empty record indicates that the previous table
                     // should be copied...
                     if (tableIdx == 0) {
-                        logger->addError(tableKeyword->getFileName(),
-                                            tableKeyword->getLineNumber(),
-                                            "The first table for keyword "+keywordName+
-                                            " must be explicitly defined! Ignoring keyword");
+                        std::string msg = "The first table for keyword "+keywordName+" must be explicitly defined! Ignoring keyword";
+                        OpmLog::addMessage(Log::MessageType::Warning , Log::fileMessage( tableKeyword->getFileName(), tableKeyword->getLineNumber(), msg));
                         return;
                     }
                     tableVector.push_back(tableVector.back());
@@ -177,14 +174,13 @@ namespace Opm {
 
         template <class TableType>
         void initFullTables(DeckConstPtr deck,
-                            LoggerPtr logger,
                             const std::string& keywordName,
                             std::vector<TableType>& tableVector) {
             if (!deck->hasKeyword(keywordName))
                 return; // the table is not featured by the deck...
 
             if (deck->numKeywords(keywordName) > 1) {
-                complainAboutAmbiguousKeyword(deck, logger, keywordName);
+                complainAboutAmbiguousKeyword(deck, keywordName);
                 return;
             }
 
@@ -197,37 +193,36 @@ namespace Opm {
             }
         }
 
-        void initRocktabTables(DeckConstPtr deck, LoggerPtr logger);
+        void initRocktabTables(DeckConstPtr deck);
         void initGasvisctTables(DeckConstPtr deck,
-                                LoggerPtr logger,
                                 const std::string& keywordName,
                                 std::vector<GasvisctTable>& tableVector);
 
-        void setMULTFLT(std::shared_ptr<const Section> section, LoggerPtr logger) const;
-        void initMULTREGT(DeckConstPtr deck, LoggerPtr logger);
+        void setMULTFLT(std::shared_ptr<const Section> section) const;
+        void initMULTREGT(DeckConstPtr deck);
 
         double getSIScaling(const std::string &dimensionString) const;
 
-        void processGridProperties(Opm::DeckConstPtr deck, LoggerPtr logger, int enabledTypes);
-        void scanSection(std::shared_ptr<Opm::Section> section, LoggerPtr logger, int enabledTypes);
-        void handleADDKeyword(DeckKeywordConstPtr deckKeyword , LoggerPtr logger, BoxManager& boxManager, int enabledTypes);
-        void handleBOXKeyword(DeckKeywordConstPtr deckKeyword , LoggerPtr logger, BoxManager& boxManager);
-        void handleCOPYKeyword(DeckKeywordConstPtr deckKeyword , LoggerPtr logger, BoxManager& boxManager, int enabledTypes);
+        void processGridProperties(Opm::DeckConstPtr deck, int enabledTypes);
+        void scanSection(std::shared_ptr<Opm::Section> section , int enabledTypes);
+        void handleADDKeyword(DeckKeywordConstPtr deckKeyword  , BoxManager& boxManager, int enabledTypes);
+        void handleBOXKeyword(DeckKeywordConstPtr deckKeyword  , BoxManager& boxManager);
+        void handleCOPYKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager, int enabledTypes);
         void handleENDBOXKeyword(BoxManager& boxManager);
-        void handleEQUALSKeyword(DeckKeywordConstPtr deckKeyword , LoggerPtr logger, BoxManager& boxManager, int enabledTypes);
-        void handleMULTIPLYKeyword(DeckKeywordConstPtr deckKeyword , LoggerPtr logger, BoxManager& boxManager, int enabledTypes);
+        void handleEQUALSKeyword(DeckKeywordConstPtr deckKeyword   , BoxManager& boxManager, int enabledTypes);
+        void handleMULTIPLYKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager, int enabledTypes);
 
-        void handleEQUALREGKeyword(DeckKeywordConstPtr deckKeyword, LoggerPtr logger, int enabledTypes);
-        void handleMULTIREGKeyword(DeckKeywordConstPtr deckKeyword, LoggerPtr logger, int enabledTypes);
-        void handleADDREGKeyword(DeckKeywordConstPtr deckKeyword, LoggerPtr logger, int enabledTypes);
-        void handleCOPYREGKeyword(DeckKeywordConstPtr deckKeyword, LoggerPtr logger, int enabledTypes);
+        void handleEQUALREGKeyword(DeckKeywordConstPtr deckKeyword, int enabledTypes);
+        void handleMULTIREGKeyword(DeckKeywordConstPtr deckKeyword, int enabledTypes);
+        void handleADDREGKeyword(DeckKeywordConstPtr deckKeyword  , int enabledTypes);
+        void handleCOPYREGKeyword(DeckKeywordConstPtr deckKeyword , int enabledTypes);
 
-        void setKeywordBox(DeckKeywordConstPtr deckKeyword, size_t recordIdx, LoggerPtr logger, BoxManager& boxManager);
+        void setKeywordBox(DeckKeywordConstPtr deckKeyword, size_t recordIdx, BoxManager& boxManager);
 
         void copyIntKeyword(const std::string& srcField , const std::string& targetField , std::shared_ptr<const Box> inputBox);
         void copyDoubleKeyword(const std::string& srcField , const std::string& targetField , std::shared_ptr<const Box> inputBox);
 
-        void complainAboutAmbiguousKeyword(DeckConstPtr deck, LoggerPtr logger, const std::string& keywordName) const;
+        void complainAboutAmbiguousKeyword(DeckConstPtr deck, const std::string& keywordName) const;
 
         EclipseGridConstPtr m_eclipseGrid;
         ScheduleConstPtr schedule;

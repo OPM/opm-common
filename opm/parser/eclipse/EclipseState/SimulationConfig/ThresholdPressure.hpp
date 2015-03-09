@@ -24,7 +24,6 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
-#include <opm/parser/eclipse/Log/Logger.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
 
 

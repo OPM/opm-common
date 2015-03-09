@@ -1,4 +1,5 @@
 if (BUILD_TESTING)
+   add_subdirectory(OpmLog/tests)
    add_subdirectory(Parser/tests)
    add_subdirectory(RawDeck/tests)
    add_subdirectory(Deck/tests)
@@ -14,7 +15,13 @@ endif()
 add_subdirectory( Applications )
 
 set( log_source
-Log/Logger.cpp )
+OpmLog/TimerLog.cpp 
+OpmLog/CounterLog.cpp 
+OpmLog/LogUtil.cpp
+OpmLog/Logger.cpp 
+OpmLog/LogBackend.cpp 
+OpmLog/StreamLog.cpp 
+OpmLog/OpmLog.cpp )
 
 set( rawdeck_source 
 RawDeck/StarToken.cpp
@@ -101,7 +108,13 @@ EclipseState/SimulationConfig/SimulationConfig.cpp
 EclipseState/SimulationConfig/ThresholdPressure.cpp)
 
 set( HEADER_FILES
-Log/Logger.hpp
+OpmLog/LogBackend.hpp
+OpmLog/TimerLog.hpp 
+OpmLog/CounterLog.hpp
+OpmLog/Logger.hpp
+OpmLog/OpmLog.hpp
+OpmLog/LogUtil.hpp
+OpmLog/StreamLog.hpp
 #
 RawDeck/RawConsts.hpp 
 RawDeck/RawKeyword.hpp 

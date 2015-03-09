@@ -18,10 +18,12 @@
  */
 #include "checkDeck.hpp"
 
+#include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
+
 #include <opm/parser/eclipse/Deck/Section.hpp>
 
 namespace Opm {
-bool checkDeck(DeckConstPtr deck, LoggerPtr logger, size_t enabledChecks) {
+bool checkDeck(DeckConstPtr deck, size_t enabledChecks) {
     bool deckValid = true;
 
     // make sure that the deck does not contain unknown keywords
@@ -31,7 +33,7 @@ bool checkDeck(DeckConstPtr deck, LoggerPtr logger, size_t enabledChecks) {
             const auto& keyword = deck->getKeyword(keywordIdx);
             if (!keyword->hasParserKeyword()) {
                 std::string msg("Keyword '" + keyword->name() + "' is unknown.");
-                logger->addWarning(keyword->getFileName(), keyword->getLineNumber(), msg);
+                OpmLog::addMessage(Log::MessageType::Warning , Log::fileMessage( keyword->getFileName(), keyword->getLineNumber(), msg));
                 deckValid = false;
             }
         }
@@ -40,7 +42,7 @@ bool checkDeck(DeckConstPtr deck, LoggerPtr logger, size_t enabledChecks) {
     // make sure all mandatory sections are present and that their order is correct
     if (enabledChecks & SectionTopology) {
         bool ensureKeywordSection = enabledChecks & KeywordSection;
-        deckValid = deckValid && Section::checkSectionTopology(deck, logger, ensureKeywordSection);
+        deckValid = deckValid && Section::checkSectionTopology(deck, ensureKeywordSection);
     }
 
     return deckValid;
