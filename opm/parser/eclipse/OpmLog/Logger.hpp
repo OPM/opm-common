@@ -58,8 +58,9 @@ public:
         if (pair == m_backends.end())
             throw std::invalid_argument("Invalid backend name: " + name);
         else {
+            std::shared_ptr<LogBackend> backend = (*pair).second;
             removeBackend( name );
-            return std::static_pointer_cast<BackendType>(m_backends.find(name)->second);
+            return std::static_pointer_cast<BackendType>(backend);
         }
     }
 
