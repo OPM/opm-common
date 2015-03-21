@@ -192,6 +192,7 @@ EclipseState/Grid/FaultCollection.hpp
 EclipseState/SimulationConfig/SimulationConfig.hpp
 EclipseState/SimulationConfig/ThresholdPressure.hpp
 #
+EclipseState/Tables/Tabdims.hpp
 EclipseState/Tables/PlyadsTable.hpp
 EclipseState/Tables/PvtoOuterTable.hpp
 EclipseState/Tables/RocktabTable.hpp
