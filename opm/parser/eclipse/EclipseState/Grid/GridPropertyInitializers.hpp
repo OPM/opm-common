@@ -91,7 +91,7 @@ public:
                const std::string& propertyName) const
     {
         auto eclipseGrid = m_eclipseState.getEclipseGrid();
-
+        auto tabdims = m_eclipseState.getTabdims();
         // calculate drainage and imbibition saturation table of each cell
         std::vector<int> satnumData(values.size(), 1);
         if (m_eclipseState.hasIntGridProperty("SATNUM"))
@@ -112,7 +112,7 @@ public:
 
         // create the SWOF tables
         const std::vector<SwofTable>& swofTables = m_eclipseState.getSwofTables();
-        int numSatTables = swofTables.size();
+        int numSatTables = tabdims->getNumSatTables();
 
         // create the SGOF tables
         const std::vector<SgofTable>& sgofTables = m_eclipseState.getSgofTables();
