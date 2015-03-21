@@ -128,6 +128,20 @@ public:
         std::vector<double> maxGasSat(numSatTables, 0.0);
         std::vector<double> minWaterSat(numSatTables, 1.0);
         std::vector<double> maxWaterSat(numSatTables, 0.0);
+
+
+        /*
+          The code block here goes through the SWOF and SGOF tables to
+          determine the critical saturations of the various
+          phases. The code in question has a hard assumption that
+          relperm properties is entered using the SGOF and SWOF
+          keywords, however other keyword combinations can be used -
+          and then this will break.
+
+          ** Must be fixed. **
+        */
+
+        if (swofTables.size() == numSatTables) {
         for (int tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
             minWaterSat[tableIdx] = swofTables[tableIdx].getSwColumn().front();
             maxWaterSat[tableIdx] = swofTables[tableIdx].getSwColumn().back();
@@ -182,6 +196,7 @@ public:
                     break;
                 }
             }
+        }
         }
 
         // acctually assign the defaults. if the ENPVD keyword was specified in the deck,
