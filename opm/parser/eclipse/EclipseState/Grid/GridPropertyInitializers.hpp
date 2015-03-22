@@ -93,22 +93,12 @@ public:
         auto eclipseGrid = m_eclipseState.getEclipseGrid();
         auto tabdims = m_eclipseState.getTabdims();
         // calculate drainage and imbibition saturation table of each cell
-        std::vector<int> satnumData(values.size(), 1);
-        if (m_eclipseState.hasIntGridProperty("SATNUM"))
-            satnumData = m_eclipseState.getIntGridProperty("SATNUM")->getData();
-
-        // TODO (?): IMBNUM[XYZ]-?
-        std::vector<int> imbnumData(satnumData);
-        if (m_eclipseState.hasIntGridProperty("IMBNUM"))
-            imbnumData = m_eclipseState.getIntGridProperty("IMBNUM")->getData();
+        std::vector<int> satnumData = m_eclipseState.getIntGridProperty("SATNUM")->getData();
+        std::vector<int> imbnumData = m_eclipseState.getIntGridProperty("IMBNUM")->getData();
+        std::vector<int> endnumData = m_eclipseState.getIntGridProperty("ENDNUM")->getData();
 
         assert(satnumData.size() == values.size());
         assert(imbnumData.size() == values.size());
-
-        // calculate drainage and imbibition saturation table of each cell
-        std::vector<int> endnumData(values.size(), 1);
-        if (m_eclipseState.hasIntGridProperty("ENDNUM"))
-            satnumData = m_eclipseState.getIntGridProperty("ENDNUM")->getData();
 
         // create the SWOF tables
         const std::vector<SwofTable>& swofTables = m_eclipseState.getSwofTables();
