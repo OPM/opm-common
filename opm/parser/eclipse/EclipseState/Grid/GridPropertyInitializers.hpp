@@ -87,6 +87,14 @@ public:
         , m_eclipseState(eclipseState)
     { }
 
+    /*
+      See the "Saturation Functions" chapter in the Eclipse Technical
+      Description; there are several alternative families of keywords
+      which can be used to enter relperm and capillary pressure
+      tables.
+    */
+
+
     void apply(std::vector<double>& values,
                const std::string& propertyName) const
     {
