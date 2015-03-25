@@ -131,7 +131,7 @@ public:
         m_specialMessages = 0;
     }
 
-    void addMessage(int64_t messageType , const std::string& message) {
+    void addMessage(int64_t messageType , const std::string& /* message */) {
         if (messageType & Log::DefaultMessageTypes)
             m_defaultMessages +=1;
         else
