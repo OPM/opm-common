@@ -107,7 +107,7 @@ namespace Opm {
     }
 
 
-    void Logger::addMessageType( int64_t messageType , const std::string& prefix) {
+    void Logger::addMessageType( int64_t messageType , const std::string& /* prefix */) {
         if (Log::isPower2( messageType)) {
             m_enabledTypes |= messageType;
         } else
