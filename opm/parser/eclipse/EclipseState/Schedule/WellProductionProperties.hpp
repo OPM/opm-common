@@ -29,9 +29,20 @@ namespace Opm {
         double  GasRate;
         double  WaterRate;
         double  LiquidRate;
+        double  LinearlyCombinedRate;
         double  ResVRate;
         double  BHPLimit;
         double  THPLimit;
+        double  VFPTableNumber;
+        double  ArtificialLiftQuantity;
+        double  GuideRate;
+        double  WetGasRate;
+        double  NGLRate;
+        double  CalorificProductionRate;
+        double  ReinjectionFraction;
+        double  SteamRate;
+        double  SaturationPressureOffset;
+        double  SaturationTemperatureOffset;
         bool    predictionMode;
 
         WellProducer::ControlModeEnum controlMode;

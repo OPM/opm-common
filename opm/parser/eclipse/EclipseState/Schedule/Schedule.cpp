@@ -64,7 +64,6 @@ namespace Opm {
 
     void Schedule::iterateScheduleSection(DeckConstPtr deck) {
         size_t currentStep = 0;
-
         std::vector<std::pair<DeckKeywordConstPtr , size_t> > rftProperties;
 
         for (size_t keywordIdx = 0; keywordIdx < deck->size(); ++keywordIdx) {
@@ -107,6 +106,9 @@ namespace Opm {
 
             if (keyword->name() == "WELOPEN")
                 handleWELOPEN(keyword, currentStep , deck->hasKeyword("COMPLUMP"));
+
+            if (keyword->name() == "WELTARG")
+                handleWELTARG(keyword, currentStep);
 
             if (keyword->name() == "GRUPTREE")
                 handleGRUPTREE(keyword, currentStep);
@@ -185,7 +187,7 @@ namespace Opm {
             m_rootGroupTree->add(currentStep, newTree);
         }
     }
-
+    
     void Schedule::checkWELSPECSConsistency(WellConstPtr well, DeckKeywordConstPtr keyword, size_t recordIdx) const {
         DeckRecordConstPtr record = keyword->getRecord(recordIdx);
         if (well->getHeadI() != record->getItem("HEAD_I")->getInt(0) - 1) {
@@ -490,12 +492,82 @@ namespace Opm {
                     well->setStatus(currentStep, status);
 
                 }
-
-
             }
         }
     }
 
+    void Schedule::handleWELTARG(DeckKeywordConstPtr keyword, size_t currentStep) {
+        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
+            DeckRecordConstPtr record = keyword->getRecord(recordNr);
+
+            const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
+            const std::string& cMode = record->getItem("CMODE")->getTrimmedString(0);
+            double newValue = record->getItem("NEW_VALUE")->getRawDouble(0);
+            const std::vector<WellPtr>& wells = getWells(wellNamePattern);
+
+            for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
+                WellPtr well = *wellIter;
+                WellProductionProperties prop = well->getProductionPropertiesCopy(currentStep);
+
+                if (cMode == "ORAT"){
+                    prop.OilRate = newValue;
+                }
+                else if (cMode == "WRAT"){
+                    prop.WaterRate = newValue;
+                }
+                else if (cMode == "GRAT"){
+                    prop.GasRate = newValue;
+                }
+                else if (cMode == "LRAT"){
+                    prop.LiquidRate = newValue;
+                }
+                else if (cMode == "CRAT"){
+                    prop.LinearlyCombinedRate = newValue;
+                }
+                else if (cMode == "RESV"){
+                    prop.ResVRate = newValue;
+                }
+                else if (cMode == "BHP"){
+                    prop.BHPLimit = newValue;
+                }
+                else if (cMode == "THP"){
+                    prop.THPLimit = newValue;
+                }
+                else if (cMode == "VFP"){
+                    prop.VFPTableNumber = newValue;
+                }
+                else if (cMode == "LIFT"){
+                    prop.ArtificialLiftQuantity = newValue;
+                }
+                else if (cMode == "GUID"){
+                    prop.GuideRate = newValue;
+                }
+                else if (cMode == "WGRA"){
+                    prop.WetGasRate = newValue;
+                }
+                else if (cMode == "NGL"){
+                    prop.NGLRate = newValue;
+                }
+                else if (cMode == "CVAL"){
+                    prop.CalorificProductionRate = newValue;
+                }
+                else if (cMode == "REIN"){
+                    prop.ReinjectionFraction = newValue;
+                }
+                else if (cMode == "STRA"){
+                    prop.SteamRate = newValue;
+                }
+                else if (cMode == "SATP"){
+                    prop.SaturationPressureOffset = newValue;
+                }
+                else if (cMode == "SATT"){
+                    prop.SaturationTemperatureOffset = newValue;
+                }
+
+                well->setProductionProperties(currentStep, prop);
+            }
+        }
+    }
 
     void Schedule::handleGCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
@@ -600,6 +672,9 @@ namespace Opm {
         }
         m_rootGroupTree->add(currentStep, newTree);
     }
+
+//
+//
 
     void Schedule::handleWRFT(DeckKeywordConstPtr keyword, size_t currentStep) {
 

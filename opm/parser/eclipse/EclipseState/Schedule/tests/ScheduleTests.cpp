@@ -339,7 +339,6 @@ static DeckPtr createDeckWithWellsAndCompletionDataWithWELOPEN() {
 
 
 
-
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndCompletionDataWithWELOPEN) {
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,10);
     DeckPtr deck = createDeckWithWellsAndCompletionDataWithWELOPEN();
@@ -694,7 +693,6 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFTPLT) {
                     "WELOPEN\n"
                     " 'OP_1' OPEN / \n"
                     "/\n"
-
                     "COMPLUMP\n"
                     " 'OP_1' 0 0 0 0 0 / \n "
                     "/\n"
@@ -708,7 +706,6 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFTPLT) {
     WellPtr well;
     well = schedule.getWell("OP_1");
 
-
     size_t currentStep = 3;
     BOOST_CHECK_EQUAL(well->getRFTActive(currentStep),false);
     currentStep = 4;
@@ -718,3 +715,74 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFTPLT) {
     BOOST_CHECK_EQUAL(well->getRFTActive(currentStep),false);
 }
 
+BOOST_AUTO_TEST_CASE(createDeckWithWeltArg) {
+    Opm::Parser parser;
+    std::string input =
+            "START             -- 0 \n"
+            "19 JUN 2007 / \n"
+            "SCHEDULE\n"
+            "DATES             -- 1\n"
+            " 10  OKT 2008 / \n"
+            "/\n"
+            "WELSPECS\n"
+            "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+            "/\n"
+            "COMPDAT\n"
+            " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+            " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
+            " 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+            "/\n"
+            "DATES             -- 2\n"
+            " 20  JAN 2010 / \n"
+            "/\n"
+            "WELTARG\n"
+            " OP_1     ORAT        1300 /\n"
+            " OP_1     WRAT        1400 /\n"
+            " OP_1     GRAT        1500 /\n"
+            " OP_1     LRAT        1600.58 /\n"
+            " OP_1     CRAT        1722.15 /\n"
+            " OP_1     RESV        1801.05 /\n"
+            " OP_1     BHP         1900 /\n"
+            " OP_1     THP         2000 /\n"
+            " OP_1     VFP         2100 /\n"
+            " OP_1     LIFT        2200 /\n"
+            " OP_1     GUID        2300 /\n"
+            " OP_1     WGRA        2490.09 /\n"
+            " OP_1     NGL         2519.51 /\n"
+            " OP_1     CVAL        2600 /\n"
+            " OP_1     REIN        2700 /\n"
+            " OP_1     STRA        2800 /\n"
+            " OP_1     SATP        2900 /\n"
+            " OP_1     SATT        3000 /\n"
+            "/\n";
+
+    DeckPtr deck = parser.parseString(input);
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
+    Schedule schedule(grid , deck);
+    WellPtr well = schedule.getWell("OP_1");
+
+    size_t currentStep = 1;
+    WellProductionProperties wpp = well->getProductionProperties(currentStep);
+    BOOST_CHECK_EQUAL(wpp.WaterRate,0);
+
+    currentStep = 2;
+    wpp = well->getProductionProperties(currentStep);
+    BOOST_CHECK_EQUAL(wpp.OilRate, 1300);
+    BOOST_CHECK_EQUAL(wpp.WaterRate, 1400);
+    BOOST_CHECK_EQUAL(wpp.GasRate, 1500);
+    BOOST_CHECK_EQUAL(wpp.LiquidRate, 1600.58);
+    BOOST_CHECK_EQUAL(wpp.LinearlyCombinedRate, 1722.15);
+    BOOST_CHECK_EQUAL(wpp.ResVRate, 1801.05);
+    BOOST_CHECK_EQUAL(wpp.BHPLimit, 1900);
+    BOOST_CHECK_EQUAL(wpp.THPLimit, 2000);
+    BOOST_CHECK_EQUAL(wpp.VFPTableNumber, 2100);
+    BOOST_CHECK_EQUAL(wpp.ArtificialLiftQuantity, 2200);
+    BOOST_CHECK_EQUAL(wpp.GuideRate, 2300);
+    BOOST_CHECK_EQUAL(wpp.WetGasRate, 2490.09);
+    BOOST_CHECK_EQUAL(wpp.NGLRate, 2519.51);
+    BOOST_CHECK_EQUAL(wpp.CalorificProductionRate, 2600);
+    BOOST_CHECK_EQUAL(wpp.ReinjectionFraction, 2700);
+    BOOST_CHECK_EQUAL(wpp.SteamRate, 2800);
+    BOOST_CHECK_EQUAL(wpp.SaturationPressureOffset, 2900);
+    BOOST_CHECK_EQUAL(wpp.SaturationTemperatureOffset, 3000);
+}

@@ -118,9 +118,20 @@ namespace Opm {
         GasRate = 0.0;
         WaterRate = 0.0;
         LiquidRate = 0.0;
+        LinearlyCombinedRate = 0.0;
         ResVRate = 0.0;
         BHPLimit = 0.0;
         THPLimit = 0.0;
+        VFPTableNumber = 0.0;
+        ArtificialLiftQuantity = 0.0;
+        GuideRate = 0.0;
+        WetGasRate = 0.0;
+        NGLRate = 0.0;
+        CalorificProductionRate = 0.0;
+        ReinjectionFraction = 0.0;
+        SteamRate = 0.0;
+        SaturationPressureOffset = 0.0;
+        SaturationTemperatureOffset = 0.0;
         controlMode = WellProducer::CMODE_UNDEFINED;
 
         m_productionControls = 0;
