@@ -134,22 +134,8 @@ public:
             assert(0 <= satTableIdx && satTableIdx < numSatTables);
             assert(0 <= imbTableIdx && imbTableIdx < numSatTables);
 
-            // the SGL keyword family
-            if (propertyName.find("SGL") == 0)
-                values[cellIdx] = selectValue(enptvdTables,
-                                              (useEnptvd && endNum >= 0) ? endNum : -1,
-                                              "SGCO",
-                                              cellDepth,
-                                              m_minGasSat[satTableIdx]);
-            else if (propertyName.find("ISGL") == 0)
-                values[cellIdx] = selectValue(imptvdTables,
-                                              (useImptvd && endNum >= 0) ? endNum : -1,
-                                              "SGCO",
-                                              cellDepth,
-                                              m_minGasSat[imbTableIdx]);
-
             // the SWL keyword family
-            else if (propertyName.find("SWL") == 0)
+            if (propertyName.find("SWL") == 0)
                 values[cellIdx] = selectValue(enptvdTables,
                                               (useEnptvd && endNum >= 0) ? endNum : -1,
                                               "SWCO",
