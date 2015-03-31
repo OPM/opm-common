@@ -724,8 +724,12 @@ namespace Opm {
 
         double nan = std::numeric_limits<double>::quiet_NaN();
         const auto eptLookup = std::make_shared<EndpointInitializer<>>(*deck, *this);
+
         const auto SGLLookup = std::make_shared<SGLEndpointInitializer<>>(*deck, *this);
         const auto ISGLLookup = std::make_shared<ISGLEndpointInitializer<>>(*deck, *this);
+        const auto SWLLookup = std::make_shared<SWLEndpointInitializer<>>(*deck, *this);
+        const auto ISWLLookup = std::make_shared<ISWLEndpointInitializer<>>(*deck, *this);
+
         const auto tempLookup = std::make_shared<GridPropertyTemperatureLookupInitializer<>>(*deck, *this);
         const auto distributeTopLayer = std::make_shared<const GridPropertyPostProcessor::DistributeTopLayer>(*this);
         const auto initPORV = std::make_shared<GridPropertyPostProcessor::InitPORV>(*this);
@@ -753,20 +757,20 @@ namespace Opm {
             SupportedDoubleKeywordInfo( "ISGLZ-" , ISGLLookup, "1" ),
 
             // keywords to specify the connate water saturation.
-            SupportedDoubleKeywordInfo( "SWL"    , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWL"   , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SWLX"   , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SWLX-"  , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWLX"  , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWLX-" , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SWLY"   , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SWLY-"  , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWLY"  , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWLY-" , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SWLZ"   , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SWLZ-"  , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWLZ"  , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWLZ-" , eptLookup, "1" ),
+            SupportedDoubleKeywordInfo( "SWL"    , SWLLookup, "1" ),
+            SupportedDoubleKeywordInfo( "SWLX"   , SWLLookup, "1" ),
+            SupportedDoubleKeywordInfo( "SWLX-"  , SWLLookup, "1" ),
+            SupportedDoubleKeywordInfo( "SWLY"   , SWLLookup, "1" ),
+            SupportedDoubleKeywordInfo( "SWLY-"  , SWLLookup, "1" ),
+            SupportedDoubleKeywordInfo( "SWLZ"   , SWLLookup, "1" ),
+            SupportedDoubleKeywordInfo( "SWLZ-"  , SWLLookup, "1" ),
+            SupportedDoubleKeywordInfo( "ISWL"   , ISWLLookup, "1" ),
+            SupportedDoubleKeywordInfo( "ISWLX"  , ISWLLookup, "1" ),
+            SupportedDoubleKeywordInfo( "ISWLX-" , ISWLLookup, "1" ),
+            SupportedDoubleKeywordInfo( "ISWLY"  , ISWLLookup, "1" ),
+            SupportedDoubleKeywordInfo( "ISWLY-" , ISWLLookup, "1" ),
+            SupportedDoubleKeywordInfo( "ISWLZ"  , ISWLLookup, "1" ),
+            SupportedDoubleKeywordInfo( "ISWLZ-" , ISWLLookup, "1" ),
 
             // keywords to specify the maximum gas saturation.
             SupportedDoubleKeywordInfo( "SGU"    , eptLookup, "1" ),
