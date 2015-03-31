@@ -722,6 +722,7 @@ namespace Opm {
 
         double nan = std::numeric_limits<double>::quiet_NaN();
         const auto eptLookup = std::make_shared<EndpointInitializer<>>(*deck, *this);
+        const auto SGLLookup = std::make_shared<SGLEndpointInitializer<>>(*deck, *this);
         const auto tempLookup = std::make_shared<GridPropertyTemperatureLookupInitializer<>>(*deck, *this);
         const auto distributeTopLayer = std::make_shared<const GridPropertyPostProcessor::DistributeTopLayer>(*this);
         const auto initPORV = std::make_shared<GridPropertyPostProcessor::InitPORV>(*this);
@@ -733,18 +734,18 @@ namespace Opm {
         std::shared_ptr<std::vector<SupportedDoubleKeywordInfo> > supportedDoubleKeywords(new std::vector<SupportedDoubleKeywordInfo>{
             // keywords to specify the scaled connate gas
             // saturations.
-            SupportedDoubleKeywordInfo( "SGL"    , eptLookup, "1" ),
+            SupportedDoubleKeywordInfo( "SGL"    , SGLLookup, "1" ),
+            SupportedDoubleKeywordInfo( "SGLX"   , SGLLookup, "1" ),
+            SupportedDoubleKeywordInfo( "SGLX-"  , SGLLookup, "1" ),
+            SupportedDoubleKeywordInfo( "SGLY"   , SGLLookup, "1" ),
+            SupportedDoubleKeywordInfo( "SGLY-"  , SGLLookup, "1" ),
+            SupportedDoubleKeywordInfo( "SGLZ"   , SGLLookup, "1" ),
+            SupportedDoubleKeywordInfo( "SGLZ-"  , SGLLookup, "1" ),
             SupportedDoubleKeywordInfo( "ISGL"   , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGLX"   , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGLX-"  , eptLookup, "1" ),
             SupportedDoubleKeywordInfo( "ISGLX"  , eptLookup, "1" ),
             SupportedDoubleKeywordInfo( "ISGLX-" , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGLY"   , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGLY-"  , eptLookup, "1" ),
             SupportedDoubleKeywordInfo( "ISGLY"  , eptLookup, "1" ),
             SupportedDoubleKeywordInfo( "ISGLY-" , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGLZ"   , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGLZ-"  , eptLookup, "1" ),
             SupportedDoubleKeywordInfo( "ISGLZ"  , eptLookup, "1" ),
             SupportedDoubleKeywordInfo( "ISGLZ-" , eptLookup, "1" ),
 
