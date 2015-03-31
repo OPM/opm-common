@@ -504,6 +504,7 @@ BOOST_AUTO_TEST_CASE(mask_test) {
 }
 
 
+
 BOOST_AUTO_TEST_CASE(kw_test) {
     Opm::GridProperty<int>::SupportedKeywordInfo keywordInfo1("P" , 10 , "1");
     Opm::GridProperty<double>::SupportedKeywordInfo keywordInfo2("P" , 20 , "1");
@@ -520,4 +521,12 @@ BOOST_AUTO_TEST_CASE(kw_test) {
     for (size_t g = 0; g < kw2.size(); g++)
         BOOST_CHECK_EQUAL( p2.iget(g) , kw2[g]);
 
+
+BOOST_AUTO_TEST_CASE(CheckLimits) {
+    typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
+    SupportedKeywordInfo keywordInfo1("P" , 1 , "1");
+    Opm::GridProperty<int> p1( 5 , 5 , 4 , keywordInfo1);
+
+    p1.checkLimits(0,2);
+    BOOST_CHECK_THROW( p1.checkLimits(-2,0) , std::invalid_argument);
 }

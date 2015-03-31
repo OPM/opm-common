@@ -244,7 +244,7 @@ public:
                 m_data[g] *= value;
         }
     }
-    
+
 
     void maskedAdd(T value, const std::vector<bool>& mask) {
         for (size_t g = 0; g < getCartesianSize(); g++) {
@@ -426,6 +426,19 @@ public:
 
 
     
+    /**
+       Will check that all elements in the property are in the closed
+       interval [min,max].
+    */
+    void checkLimits(T min , T max) const {
+        for (size_t g=0; g < m_data.size(); g++) {
+            T value = m_data[g];
+            if ((value < min) || (value > max))
+                throw std::invalid_argument("Property element outside valid limits");
+        }
+    }
+
+
 private:
     Opm::DeckItemConstPtr getDeckItem(Opm::DeckKeywordConstPtr deckKeyword) {
         if (deckKeyword->size() != 1)
