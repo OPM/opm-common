@@ -140,61 +140,8 @@ public:
         */
 
         if (swofTables.size() == numSatTables) {
-        for (int tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
-            minWaterSat[tableIdx] = swofTables[tableIdx].getSwColumn().front();
-            maxWaterSat[tableIdx] = swofTables[tableIdx].getSwColumn().back();
-
-            minGasSat[tableIdx] = sgofTables[tableIdx].getSgColumn().front();
-            maxGasSat[tableIdx] = sgofTables[tableIdx].getSgColumn().back();
-
-            // find the critical water saturation
-            int numRows = swofTables[tableIdx].numRows();
-            const auto &krwCol = swofTables[tableIdx].getKrwColumn();
-            for (int rowIdx = 0; rowIdx < numRows; ++rowIdx) {
-                if (krwCol[rowIdx] > 0.0) {
-                    double Sw = 0.0;
-                    if (rowIdx > 0)
-                        Sw = swofTables[tableIdx].getSwColumn()[rowIdx - 1];
-                    criticalWaterSat[tableIdx] = Sw;
-                    break;
-                }
-            }
-
-            // find the critical gas saturation
-            numRows = sgofTables[tableIdx].numRows();
-            const auto &krgCol = sgofTables[tableIdx].getKrgColumn();
-            for (int rowIdx = 0; rowIdx < numRows; ++rowIdx) {
-                if (krgCol[rowIdx] > 0.0) {
-                    double Sg = 0.0;
-                    if (rowIdx > 0)
-                        Sg = sgofTables[tableIdx].getSgColumn()[rowIdx - 1];
-                    criticalGasSat[tableIdx] = Sg;
-                    break;
-                }
-            }
-
-            // find the critical oil saturation of the oil-gas system
-            numRows = sgofTables[tableIdx].numRows();
-            const auto &kroOGCol = sgofTables[tableIdx].getKrogColumn();
-            for (int rowIdx = 0; rowIdx < numRows; ++rowIdx) {
-                if (kroOGCol[rowIdx] == 0.0) {
-                    double Sg = sgofTables[tableIdx].getSgColumn()[rowIdx];
-                    criticalOilOGSat[tableIdx] = 1 - Sg - minWaterSat[tableIdx];
-                    break;
-                }
-            }
-
-            // find the critical oil saturation of the water-oil system
-            numRows = swofTables[tableIdx].numRows();
-            const auto &kroOWCol = swofTables[tableIdx].getKrowColumn();
-            for (int rowIdx = 0; rowIdx < numRows; ++rowIdx) {
-                if (kroOWCol[rowIdx] == 0.0) {
-                    double Sw = swofTables[tableIdx].getSwColumn()[rowIdx];
-                    criticalOilOWSat[tableIdx] = 1 - Sw - minGasSat[tableIdx];
-                    break;
-                }
-            }
-        }
+            findSaturationEndpoints( numSatTables , minGasSat , maxGasSat , minWaterSat , maxWaterSat);
+            findCriticalPoints( numSatTables , minGasSat , maxGasSat , minWaterSat , maxWaterSat, criticalWaterSat , criticalGasSat , criticalOilOGSat , criticalOilOWSat);
         }
 
         // acctually assign the defaults. if the ENPVD keyword was specified in the deck,
@@ -331,6 +278,93 @@ public:
                                               criticalOilOWSat[imbTableIdx]);
         }
     }
+
+
+private:
+    void findSaturationEndpoints(int numSatTables,
+                                 std::vector<double>& minGasSat,
+                                 std::vector<double>& maxGasSat,
+                                 std::vector<double>& minWaterSat,
+                                 std::vector<double>& maxWaterSat) const {
+
+        const std::vector<SwofTable>& swofTables = m_eclipseState.getSwofTables();
+        const std::vector<SgofTable>& sgofTables = m_eclipseState.getSgofTables();
+
+        for (int tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
+            minWaterSat[tableIdx] = swofTables[tableIdx].getSwColumn().front();
+            maxWaterSat[tableIdx] = swofTables[tableIdx].getSwColumn().back();
+
+            minGasSat[tableIdx] = sgofTables[tableIdx].getSgColumn().front();
+            maxGasSat[tableIdx] = sgofTables[tableIdx].getSgColumn().back();
+        }
+    }
+
+
+    void findCriticalPoints(int numSatTables ,
+                            std::vector<double>& minGasSat,
+                            std::vector<double>& maxGasSat,
+                            std::vector<double>& minWaterSat,
+                            std::vector<double>& maxWaterSat,
+                            std::vector<double>& criticalWaterSat ,
+                            std::vector<double>& criticalGasSat ,
+                            std::vector<double>& criticalOilOGSat ,
+                            std::vector<double>& criticalOilOWSat ) const {
+
+        const std::vector<SwofTable>& swofTables = m_eclipseState.getSwofTables();
+        const std::vector<SgofTable>& sgofTables = m_eclipseState.getSgofTables();
+
+        for (int tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
+            // find the critical water saturation
+            int numRows = swofTables[tableIdx].numRows();
+            const auto &krwCol = swofTables[tableIdx].getKrwColumn();
+            for (int rowIdx = 0; rowIdx < numRows; ++rowIdx) {
+                if (krwCol[rowIdx] > 0.0) {
+                    double Sw = 0.0;
+                    if (rowIdx > 0)
+                        Sw = swofTables[tableIdx].getSwColumn()[rowIdx - 1];
+                    criticalWaterSat[tableIdx] = Sw;
+                    break;
+                }
+            }
+
+            // find the critical gas saturation
+            numRows = sgofTables[tableIdx].numRows();
+            const auto &krgCol = sgofTables[tableIdx].getKrgColumn();
+            for (int rowIdx = 0; rowIdx < numRows; ++rowIdx) {
+                if (krgCol[rowIdx] > 0.0) {
+                    double Sg = 0.0;
+                    if (rowIdx > 0)
+                        Sg = sgofTables[tableIdx].getSgColumn()[rowIdx - 1];
+                    criticalGasSat[tableIdx] = Sg;
+                    break;
+                }
+            }
+
+            // find the critical oil saturation of the oil-gas system
+            numRows = sgofTables[tableIdx].numRows();
+            const auto &kroOGCol = sgofTables[tableIdx].getKrogColumn();
+            for (int rowIdx = 0; rowIdx < numRows; ++rowIdx) {
+                if (kroOGCol[rowIdx] == 0.0) {
+                    double Sg = sgofTables[tableIdx].getSgColumn()[rowIdx];
+                    criticalOilOGSat[tableIdx] = 1 - Sg - minWaterSat[tableIdx];
+                    break;
+                }
+            }
+
+            // find the critical oil saturation of the water-oil system
+            numRows = swofTables[tableIdx].numRows();
+            const auto &kroOWCol = swofTables[tableIdx].getKrowColumn();
+            for (int rowIdx = 0; rowIdx < numRows; ++rowIdx) {
+                if (kroOWCol[rowIdx] == 0.0) {
+                    double Sw = swofTables[tableIdx].getSwColumn()[rowIdx];
+                    criticalOilOWSat[tableIdx] = 1 - Sw - minGasSat[tableIdx];
+                    break;
+                }
+            }
+        }
+    }
+
+
 
 private:
     template <class TableType>
