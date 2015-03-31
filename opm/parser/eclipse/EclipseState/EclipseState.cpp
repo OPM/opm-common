@@ -729,6 +729,9 @@ namespace Opm {
         const auto ISGLLookup = std::make_shared<ISGLEndpointInitializer<>>(*deck, *this);
         const auto SWLLookup = std::make_shared<SWLEndpointInitializer<>>(*deck, *this);
         const auto ISWLLookup = std::make_shared<ISWLEndpointInitializer<>>(*deck, *this);
+        const auto SGULookup = std::make_shared<SGUEndpointInitializer<>>(*deck, *this);
+        const auto ISGULookup = std::make_shared<ISGUEndpointInitializer<>>(*deck, *this);
+
 
         const auto tempLookup = std::make_shared<GridPropertyTemperatureLookupInitializer<>>(*deck, *this);
         const auto distributeTopLayer = std::make_shared<const GridPropertyPostProcessor::DistributeTopLayer>(*this);
@@ -773,20 +776,20 @@ namespace Opm {
             SupportedDoubleKeywordInfo( "ISWLZ-" , ISWLLookup, "1" ),
 
             // keywords to specify the maximum gas saturation.
-            SupportedDoubleKeywordInfo( "SGU"    , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGU"   , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGUX"   , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGUX-"  , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGUX"  , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGUX-" , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGUY"   , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGUY-"  , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGUY"  , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGUY-" , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGUZ"   , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGUZ-"  , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGUZ"  , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGUZ-" , eptLookup, "1" ),
+            SupportedDoubleKeywordInfo( "SGU"    , SGULookup, "1" ),
+            SupportedDoubleKeywordInfo( "SGUX"   , SGULookup, "1" ),
+            SupportedDoubleKeywordInfo( "SGUX-"  , SGULookup, "1" ),
+            SupportedDoubleKeywordInfo( "SGUY"   , SGULookup, "1" ),
+            SupportedDoubleKeywordInfo( "SGUY-"  , SGULookup, "1" ),
+            SupportedDoubleKeywordInfo( "SGUZ"   , SGULookup, "1" ),
+            SupportedDoubleKeywordInfo( "SGUZ-"  , SGULookup, "1" ),
+            SupportedDoubleKeywordInfo( "ISGU"   , ISGULookup, "1" ),
+            SupportedDoubleKeywordInfo( "ISGUX"  , ISGULookup, "1" ),
+            SupportedDoubleKeywordInfo( "ISGUX-" , ISGULookup, "1" ),
+            SupportedDoubleKeywordInfo( "ISGUY"  , ISGULookup, "1" ),
+            SupportedDoubleKeywordInfo( "ISGUY-" , ISGULookup, "1" ),
+            SupportedDoubleKeywordInfo( "ISGUZ"  , ISGULookup, "1" ),
+            SupportedDoubleKeywordInfo( "ISGUZ-" , ISGULookup, "1" ),
 
             // keywords to specify the maximum water saturation.
             SupportedDoubleKeywordInfo( "SWU"    , eptLookup, "1" ),

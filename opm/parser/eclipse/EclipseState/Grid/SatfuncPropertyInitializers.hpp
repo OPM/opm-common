@@ -99,22 +99,8 @@ public:
             assert(0 <= imbTableIdx && imbTableIdx < numSatTables);
 
 
-            // the SGU keyword family
-            if (propertyName.find("SGU") == 0)
-                values[cellIdx] = selectValue(enptvdTables,
-                                              (useEnptvd && endNum >= 0) ? endNum : -1,
-                                              "SGMAX",
-                                              cellDepth,
-                                              m_maxGasSat[satTableIdx]);
-            else if (propertyName.find("ISGU") == 0)
-                values[cellIdx] = selectValue(imptvdTables,
-                                              (useImptvd && endNum >= 0) ? endNum : -1,
-                                              "SGMAX",
-                                              cellDepth,
-                                              m_maxGasSat[imbTableIdx]);
-
             // the SWU keyword family
-            else if (propertyName.find("SWU") == 0)
+            if (propertyName.find("SWU") == 0)
                 values[cellIdx] = selectValue(enptvdTables,
                                               (useEnptvd && endNum >= 0) ? endNum : -1,
                                               "SWMAX",
@@ -427,6 +413,97 @@ public:
         }
     }
 };
+
+
+template <class EclipseState=Opm::EclipseState,
+          class Deck=Opm::Deck>
+class SGUEndpointInitializer
+    : public EndpointInitializer<EclipseState,Deck>
+{
+public:
+    SGUEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
+        : EndpointInitializer<EclipseState,Deck>( deck , eclipseState )
+    { }
+
+    void apply(std::vector<double>& values,
+               const std::string& /* propertyname */ ) const
+    {
+        auto eclipseGrid = this->m_eclipseState.getEclipseGrid();
+        auto tabdims = this->m_eclipseState.getTabdims();
+        auto satnum = this->m_eclipseState.getIntGridProperty("SATNUM");
+        auto endnum = this->m_eclipseState.getIntGridProperty("ENDNUM");
+        int numSatTables = tabdims->getNumSatTables();
+
+
+        satnum->checkLimits(1 , numSatTables);
+        this->findSaturationEndpoints( );
+
+        // acctually assign the defaults. if the ENPVD keyword was specified in the deck,
+        // this currently cannot be done because we would need the Z-coordinate of the
+        // cell and we would need to know how the simulator wants to interpolate between
+        // sampling points. Both of these are outside the scope of opm-parser, so we just
+        // assign a NaN in this case...
+        bool useEnptvd = this->m_deck.hasKeyword("ENPTVD");
+        const auto& enptvdTables = this->m_eclipseState.getEnptvdTables();
+        for (size_t cellIdx = 0; cellIdx < eclipseGrid->getCartesianSize(); cellIdx++) {
+            int satTableIdx = satnum->iget( cellIdx ) - 1;
+            int endNum = endnum->iget( cellIdx ) - 1;
+            double cellDepth = std::get<2>(eclipseGrid->getCellCenter(cellIdx));
+
+
+            values[cellIdx] = selectValue(enptvdTables,
+                                          (useEnptvd && endNum >= 0) ? endNum : -1,
+                                          "SGMAX",
+                                          cellDepth,
+                                          this->m_maxGasSat[satTableIdx]);
+        }
+    }
+};
+
+
+template <class EclipseState=Opm::EclipseState,
+          class Deck=Opm::Deck>
+class ISGUEndpointInitializer
+    : public EndpointInitializer<EclipseState,Deck>
+{
+public:
+    ISGUEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
+        : EndpointInitializer<EclipseState,Deck>( deck , eclipseState )
+    { }
+
+    void apply(std::vector<double>& values,
+               const std::string& /* propertyname */ ) const
+    {
+        auto eclipseGrid = this->m_eclipseState.getEclipseGrid();
+        auto tabdims = this->m_eclipseState.getTabdims();
+        auto imbnum = this->m_eclipseState.getIntGridProperty("IMBNUM");
+        auto endnum = this->m_eclipseState.getIntGridProperty("ENDNUM");
+        int numSatTables = tabdims->getNumSatTables();
+
+        imbnum->checkLimits(1 , numSatTables);
+        this->findSaturationEndpoints( );
+
+        // acctually assign the defaults. if the ENPVD keyword was specified in the deck,
+        // this currently cannot be done because we would need the Z-coordinate of the
+        // cell and we would need to know how the simulator wants to interpolate between
+        // sampling points. Both of these are outside the scope of opm-parser, so we just
+        // assign a NaN in this case...
+        bool useImptvd = this->m_deck.hasKeyword("IMPTVD");
+        const auto& imptvdTables = this->m_eclipseState.getImptvdTables();
+        for (size_t cellIdx = 0; cellIdx < eclipseGrid->getCartesianSize(); cellIdx++) {
+            int imbTableIdx = imbnum->iget( cellIdx ) - 1;
+            int endNum = endnum->iget( cellIdx ) - 1;
+            double cellDepth = std::get<2>(eclipseGrid->getCellCenter(cellIdx));
+
+            values[cellIdx] = selectValue(imptvdTables,
+                                          (useImptvd && endNum >= 0) ? endNum : -1,
+                                          "SGMAX",
+                                          cellDepth,
+                                          this->m_maxGasSat[imbTableIdx]);
+        }
+    }
+};
+
 
 
 template <class EclipseState=Opm::EclipseState,
