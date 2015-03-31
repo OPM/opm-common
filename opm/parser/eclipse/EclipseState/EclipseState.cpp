@@ -723,6 +723,7 @@ namespace Opm {
         double nan = std::numeric_limits<double>::quiet_NaN();
         const auto eptLookup = std::make_shared<EndpointInitializer<>>(*deck, *this);
         const auto SGLLookup = std::make_shared<SGLEndpointInitializer<>>(*deck, *this);
+        const auto ISGLLookup = std::make_shared<ISGLEndpointInitializer<>>(*deck, *this);
         const auto tempLookup = std::make_shared<GridPropertyTemperatureLookupInitializer<>>(*deck, *this);
         const auto distributeTopLayer = std::make_shared<const GridPropertyPostProcessor::DistributeTopLayer>(*this);
         const auto initPORV = std::make_shared<GridPropertyPostProcessor::InitPORV>(*this);
@@ -741,13 +742,13 @@ namespace Opm {
             SupportedDoubleKeywordInfo( "SGLY-"  , SGLLookup, "1" ),
             SupportedDoubleKeywordInfo( "SGLZ"   , SGLLookup, "1" ),
             SupportedDoubleKeywordInfo( "SGLZ-"  , SGLLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGL"   , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGLX"  , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGLX-" , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGLY"  , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGLY-" , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGLZ"  , eptLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGLZ-" , eptLookup, "1" ),
+            SupportedDoubleKeywordInfo( "ISGL"   , ISGLLookup, "1" ),
+            SupportedDoubleKeywordInfo( "ISGLX"  , ISGLLookup, "1" ),
+            SupportedDoubleKeywordInfo( "ISGLX-" , ISGLLookup, "1" ),
+            SupportedDoubleKeywordInfo( "ISGLY"  , ISGLLookup, "1" ),
+            SupportedDoubleKeywordInfo( "ISGLY-" , ISGLLookup, "1" ),
+            SupportedDoubleKeywordInfo( "ISGLZ"  , ISGLLookup, "1" ),
+            SupportedDoubleKeywordInfo( "ISGLZ-" , ISGLLookup, "1" ),
 
             // keywords to specify the connate water saturation.
             SupportedDoubleKeywordInfo( "SWL"    , eptLookup, "1" ),

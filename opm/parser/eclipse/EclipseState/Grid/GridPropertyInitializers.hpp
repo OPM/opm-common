@@ -448,6 +448,52 @@ public:
 };
 
 
+template <class EclipseState=Opm::EclipseState,
+          class Deck=Opm::Deck>
+class ISGLEndpointInitializer
+    : public EndpointInitializer<EclipseState,Deck>
+{
+public:
+    ISGLEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
+        : EndpointInitializer<EclipseState,Deck>( deck , eclipseState )
+    { }
+
+    void apply(std::vector<double>& values,
+               const std::string& /* propertyname */ ) const
+    {
+        auto eclipseGrid = this->m_eclipseState.getEclipseGrid();
+        auto tabdims = this->m_eclipseState.getTabdims();
+        auto imbnum = this->m_eclipseState.getIntGridProperty("IMBNUM");
+        auto endnum = this->m_eclipseState.getIntGridProperty("ENDNUM");
+        int numSatTables = tabdims->getNumSatTables();
+
+        imbnum->checkLimits(1 , numSatTables);
+        this->findSaturationEndpoints( );
+
+        // acctually assign the defaults. if the ENPVD keyword was specified in the deck,
+        // this currently cannot be done because we would need the Z-coordinate of the
+        // cell and we would need to know how the simulator wants to interpolate between
+        // sampling points. Both of these are outside the scope of opm-parser, so we just
+        // assign a NaN in this case...
+        bool useImptvd = this->m_deck.hasKeyword("IMPTVD");
+        const auto& imptvdTables = this->m_eclipseState.getImptvdTables();
+        for (size_t cellIdx = 0; cellIdx < eclipseGrid->getCartesianSize(); cellIdx++) {
+            int imbTableIdx = imbnum->iget( cellIdx ) - 1;
+            int endNum = endnum->iget( cellIdx ) - 1;
+            double cellDepth = std::get<2>(eclipseGrid->getCellCenter(cellIdx));
+
+            values[cellIdx] = selectValue(imptvdTables,
+                                          (useImptvd && endNum >= 0) ? endNum : -1,
+                                          "SGCO",
+                                          cellDepth,
+                                          this->m_minGasSat[imbTableIdx]);
+        }
+    }
+};
+
+
+
+
 
 // initialize the TEMPI grid property using the temperature vs depth
 // table (stemming from the TEMPVD or the RTEMPVD keyword)
