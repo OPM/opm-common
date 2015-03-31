@@ -75,6 +75,12 @@ namespace Opm {
             initSuccessful = true;
             inputstream = inputStream;
         }
+
+        ParserState(const boost::filesystem::path &inputDataFile, DeckPtr deckToFill, const boost::filesystem::path &commonRootPath, std::map<std::string, std::string> &pathMapRef) {
+            new (this) ParserState(inputDataFile, deckToFill, commonRootPath);
+            pathMap = pathMapRef;
+        }
+
     };
 
     Parser::Parser(bool addDefault) {
@@ -279,8 +285,7 @@ namespace Opm {
                         std::string includeFileAsString = readValueToken<std::string>(firstRecord->getItem(0));
                         boost::filesystem::path includeFile = getIncludeFilePath(parserState, includeFileAsString);
 
-
-                        std::shared_ptr<ParserState> newParserState (new ParserState(includeFile.string(), parserState->deck, parserState->rootPath));
+                        std::shared_ptr<ParserState> newParserState (new ParserState(includeFile.string(), parserState->deck, parserState->rootPath, parserState->pathMap));
                         if (!newParserState->initSuccessful)
                             throw std::invalid_argument("Included file '" + includeFile.string() + "' does not exist or is not readable.");
 
