@@ -721,7 +721,7 @@ namespace Opm {
             });
 
         double nan = std::numeric_limits<double>::quiet_NaN();
-        const auto eptLookup = std::make_shared<GridPropertyEndpointTableLookupInitializer<>>(*deck, *this);
+        const auto eptLookup = std::make_shared<EndpointInitializer<>>(*deck, *this);
         const auto tempLookup = std::make_shared<GridPropertyTemperatureLookupInitializer<>>(*deck, *this);
         const auto distributeTopLayer = std::make_shared<const GridPropertyPostProcessor::DistributeTopLayer>(*this);
         const auto initPORV = std::make_shared<GridPropertyPostProcessor::InitPORV>(*this);

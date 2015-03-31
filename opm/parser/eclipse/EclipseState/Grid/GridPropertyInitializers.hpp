@@ -78,11 +78,11 @@ private:
 
 template <class EclipseState=Opm::EclipseState,
           class Deck=Opm::Deck>
-class GridPropertyEndpointTableLookupInitializer
+class EndpointInitializer
     : public GridPropertyBaseInitializer<double>
 {
 public:
-    GridPropertyEndpointTableLookupInitializer(const Deck& deck, const EclipseState& eclipseState)
+    EndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
         : m_deck(deck)
         , m_eclipseState(eclipseState)
     { }
