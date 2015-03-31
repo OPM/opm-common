@@ -116,18 +116,6 @@ public:
         const std::vector<SgofTable>& sgofTables = m_eclipseState.getSgofTables();
         assert(swofTables.size() == sgofTables.size());
 
-        // find the critical saturations for each table
-        std::vector<double> criticalGasSat(numSatTables, 0.0);
-        std::vector<double> criticalWaterSat(numSatTables, 0.0);
-        std::vector<double> criticalOilOWSat(numSatTables, 0.0);
-        std::vector<double> criticalOilOGSat(numSatTables, 0.0);
-
-        std::vector<double> minGasSat(numSatTables, 1.0);
-        std::vector<double> maxGasSat(numSatTables, 0.0);
-        std::vector<double> minWaterSat(numSatTables, 1.0);
-        std::vector<double> maxWaterSat(numSatTables, 0.0);
-
-
         /*
           The code block here goes through the SWOF and SGOF tables to
           determine the critical saturations of the various
@@ -140,9 +128,10 @@ public:
         */
 
         if (swofTables.size() == numSatTables) {
-            findSaturationEndpoints( numSatTables , minGasSat , maxGasSat , minWaterSat , maxWaterSat);
-            findCriticalPoints( numSatTables , minGasSat , maxGasSat , minWaterSat , maxWaterSat, criticalWaterSat , criticalGasSat , criticalOilOGSat , criticalOilOWSat);
+            findSaturationEndpoints( );
+            findCriticalPoints( );
         }
+
 
         // acctually assign the defaults. if the ENPVD keyword was specified in the deck,
         // this currently cannot be done because we would need the Z-coordinate of the
@@ -169,13 +158,13 @@ public:
                                               (useEnptvd && endNum >= 0) ? endNum : -1,
                                               "SGCO",
                                               cellDepth,
-                                              minGasSat[satTableIdx]);
+                                              m_minGasSat[satTableIdx]);
             else if (propertyName.find("ISGL") == 0)
                 values[cellIdx] = selectValue(imptvdTables,
                                               (useImptvd && endNum >= 0) ? endNum : -1,
                                               "SGCO",
                                               cellDepth,
-                                              minGasSat[imbTableIdx]);
+                                              m_minGasSat[imbTableIdx]);
 
             // the SWL keyword family
             else if (propertyName.find("SWL") == 0)
@@ -183,13 +172,13 @@ public:
                                               (useEnptvd && endNum >= 0) ? endNum : -1,
                                               "SWCO",
                                               cellDepth,
-                                              minWaterSat[satTableIdx]);
+                                              m_minWaterSat[satTableIdx]);
             else if (propertyName.find("ISWL") == 0)
                 values[cellIdx] = selectValue(imptvdTables,
                                               (useImptvd && endNum >= 0) ? endNum : -1,
                                               "SWCO",
                                               cellDepth,
-                                              minWaterSat[imbTableIdx]);
+                                              m_minWaterSat[imbTableIdx]);
 
             // the SGU keyword family
             else if (propertyName.find("SGU") == 0)
@@ -197,13 +186,13 @@ public:
                                               (useEnptvd && endNum >= 0) ? endNum : -1,
                                               "SGMAX",
                                               cellDepth,
-                                              maxGasSat[satTableIdx]);
+                                              m_maxGasSat[satTableIdx]);
             else if (propertyName.find("ISGU") == 0)
                 values[cellIdx] = selectValue(imptvdTables,
                                               (useImptvd && endNum >= 0) ? endNum : -1,
                                               "SGMAX",
                                               cellDepth,
-                                              maxGasSat[imbTableIdx]);
+                                              m_maxGasSat[imbTableIdx]);
 
             // the SWU keyword family
             else if (propertyName.find("SWU") == 0)
@@ -211,14 +200,14 @@ public:
                                               (useEnptvd && endNum >= 0) ? endNum : -1,
                                               "SWMAX",
                                               cellDepth,
-                                              maxWaterSat[satTableIdx],
+                                              m_maxWaterSat[satTableIdx],
                                               /*useOneMinusTableValue=*/true);
             else if (propertyName.find("ISWU") == 0)
                 values[cellIdx] = selectValue(imptvdTables,
                                               (useEnptvd && endNum >= 0) ? endNum : -1,
                                               "SWMAX",
                                               cellDepth,
-                                              maxWaterSat[imbTableIdx],
+                                              m_maxWaterSat[imbTableIdx],
                                               /*useOneMinusTableValue=*/true);
 
             // the SGCR keyword family
@@ -227,13 +216,13 @@ public:
                                               (useEnptvd && endNum >= 0) ? endNum : -1,
                                               "SGCRIT",
                                               cellDepth,
-                                              criticalGasSat[satTableIdx]);
+                                              m_criticalGasSat[satTableIdx]);
             else if (propertyName.find("ISGCR") == 0)
                 values[cellIdx] = selectValue(imptvdTables,
                                               (useImptvd && endNum >= 0) ? endNum : -1,
                                               "SGCRIT",
                                               cellDepth,
-                                              criticalGasSat[imbTableIdx]);
+                                              m_criticalGasSat[imbTableIdx]);
 
             // the SWCR keyword family
             else if (propertyName.find("SWCR") == 0)
@@ -241,13 +230,13 @@ public:
                                               (useEnptvd && endNum >= 0) ? endNum : -1,
                                               "SWCRIT",
                                               cellDepth,
-                                              criticalWaterSat[satTableIdx]);
+                                              m_criticalWaterSat[satTableIdx]);
             else if (propertyName.find("ISWCR") == 0)
                 values[cellIdx] = selectValue(imptvdTables,
                                               (useImptvd && endNum >= 0) ? endNum : -1,
                                               "SWCRIT",
                                               cellDepth,
-                                              criticalWaterSat[imbTableIdx]);
+                                              m_criticalWaterSat[imbTableIdx]);
 
             // the SOGCR keyword family
             else if (propertyName.find("SOGCR") == 0)
@@ -255,13 +244,13 @@ public:
                                               (useEnptvd && endNum >= 0) ? endNum : -1,
                                               "SOGCRIT",
                                               cellDepth,
-                                              criticalOilOGSat[satTableIdx]);
+                                              m_criticalOilOGSat[satTableIdx]);
             else if (propertyName.find("ISOGCR") == 0)
                 values[cellIdx] = selectValue(imptvdTables,
                                               (useImptvd && endNum >= 0) ? endNum : -1,
                                               "SOGCRIT",
                                               cellDepth,
-                                              criticalOilOGSat[imbTableIdx]);
+                                              m_criticalOilOGSat[imbTableIdx]);
 
             // the SOWCR keyword family
             else if (propertyName.find("SOWCR") == 0)
@@ -269,49 +258,50 @@ public:
                                               (useEnptvd && endNum >= 0) ? endNum : -1,
                                               "SOWCRIT",
                                               cellDepth,
-                                              criticalOilOWSat[satTableIdx]);
+                                              m_criticalOilOWSat[satTableIdx]);
             else if (propertyName.find("ISOWCR") == 0)
                 values[cellIdx] = selectValue(imptvdTables,
                                               (useImptvd && endNum >= 0) ? endNum : -1,
                                               "SOWCRIT",
                                               cellDepth,
-                                              criticalOilOWSat[imbTableIdx]);
+                                              m_criticalOilOWSat[imbTableIdx]);
         }
     }
 
 
 private:
-    void findSaturationEndpoints(int numSatTables,
-                                 std::vector<double>& minGasSat,
-                                 std::vector<double>& maxGasSat,
-                                 std::vector<double>& minWaterSat,
-                                 std::vector<double>& maxWaterSat) const {
-
+    void findSaturationEndpoints( ) const {
         const std::vector<SwofTable>& swofTables = m_eclipseState.getSwofTables();
         const std::vector<SgofTable>& sgofTables = m_eclipseState.getSgofTables();
+        auto tabdims = m_eclipseState.getTabdims();
+        int numSatTables = tabdims->getNumSatTables();
+
+        m_minWaterSat.resize( numSatTables , 0 );
+        m_maxWaterSat.resize( numSatTables , 0 );
+        m_minGasSat.resize( numSatTables , 0 );
+        m_maxGasSat.resize( numSatTables , 0 );
 
         for (int tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
-            minWaterSat[tableIdx] = swofTables[tableIdx].getSwColumn().front();
-            maxWaterSat[tableIdx] = swofTables[tableIdx].getSwColumn().back();
+            m_minWaterSat[tableIdx] = swofTables[tableIdx].getSwColumn().front();
+            m_maxWaterSat[tableIdx] = swofTables[tableIdx].getSwColumn().back();
 
-            minGasSat[tableIdx] = sgofTables[tableIdx].getSgColumn().front();
-            maxGasSat[tableIdx] = sgofTables[tableIdx].getSgColumn().back();
+            m_minGasSat[tableIdx] = sgofTables[tableIdx].getSgColumn().front();
+            m_maxGasSat[tableIdx] = sgofTables[tableIdx].getSgColumn().back();
         }
     }
 
 
-    void findCriticalPoints(int numSatTables ,
-                            std::vector<double>& minGasSat,
-                            std::vector<double>& maxGasSat,
-                            std::vector<double>& minWaterSat,
-                            std::vector<double>& maxWaterSat,
-                            std::vector<double>& criticalWaterSat ,
-                            std::vector<double>& criticalGasSat ,
-                            std::vector<double>& criticalOilOGSat ,
-                            std::vector<double>& criticalOilOWSat ) const {
+    void findCriticalPoints( ) const {
 
         const std::vector<SwofTable>& swofTables = m_eclipseState.getSwofTables();
         const std::vector<SgofTable>& sgofTables = m_eclipseState.getSgofTables();
+        auto tabdims = m_eclipseState.getTabdims();
+        int numSatTables = tabdims->getNumSatTables();
+
+        m_criticalWaterSat.resize( numSatTables , 0 );
+        m_criticalGasSat.resize( numSatTables , 0 );
+        m_criticalOilOGSat.resize( numSatTables , 0 );
+        m_criticalOilOWSat.resize( numSatTables , 0 );
 
         for (int tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
             // find the critical water saturation
@@ -322,7 +312,7 @@ private:
                     double Sw = 0.0;
                     if (rowIdx > 0)
                         Sw = swofTables[tableIdx].getSwColumn()[rowIdx - 1];
-                    criticalWaterSat[tableIdx] = Sw;
+                    m_criticalWaterSat[tableIdx] = Sw;
                     break;
                 }
             }
@@ -335,7 +325,7 @@ private:
                     double Sg = 0.0;
                     if (rowIdx > 0)
                         Sg = sgofTables[tableIdx].getSgColumn()[rowIdx - 1];
-                    criticalGasSat[tableIdx] = Sg;
+                    m_criticalGasSat[tableIdx] = Sg;
                     break;
                 }
             }
@@ -346,7 +336,7 @@ private:
             for (int rowIdx = 0; rowIdx < numRows; ++rowIdx) {
                 if (kroOGCol[rowIdx] == 0.0) {
                     double Sg = sgofTables[tableIdx].getSgColumn()[rowIdx];
-                    criticalOilOGSat[tableIdx] = 1 - Sg - minWaterSat[tableIdx];
+                    m_criticalOilOGSat[tableIdx] = 1 - Sg - m_minWaterSat[tableIdx];
                     break;
                 }
             }
@@ -357,7 +347,7 @@ private:
             for (int rowIdx = 0; rowIdx < numRows; ++rowIdx) {
                 if (kroOWCol[rowIdx] == 0.0) {
                     double Sw = swofTables[tableIdx].getSwColumn()[rowIdx];
-                    criticalOilOWSat[tableIdx] = 1 - Sw - minGasSat[tableIdx];
+                    m_criticalOilOWSat[tableIdx] = 1 - Sw - m_minGasSat[tableIdx];
                     break;
                 }
             }
@@ -396,6 +386,16 @@ private:
 
     const Deck& m_deck;
     const EclipseState& m_eclipseState;
+
+    mutable std::vector<double> m_criticalGasSat;
+    mutable std::vector<double> m_criticalWaterSat;
+    mutable std::vector<double> m_criticalOilOWSat;
+    mutable std::vector<double> m_criticalOilOGSat;
+
+    mutable std::vector<double> m_minGasSat;
+    mutable std::vector<double> m_maxGasSat;
+    mutable std::vector<double> m_minWaterSat;
+    mutable std::vector<double> m_maxWaterSat;
 };
 
 // initialize the TEMPI grid property using the temperature vs depth
