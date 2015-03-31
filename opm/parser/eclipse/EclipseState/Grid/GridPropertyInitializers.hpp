@@ -19,18 +19,21 @@
 #ifndef ECLIPSE_GRIDPROPERTY_INITIALIZERS_HPP
 #define ECLIPSE_GRIDPROPERTY_INITIALIZERS_HPP
 
-#include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/RtempvdTable.hpp>
-
 #include <vector>
 #include <string>
+#include <exception>
 #include <memory>
 #include <limits>
 #include <algorithm>
 #include <cmath>
 
 #include <cassert>
+
+#include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/RtempvdTable.hpp>
+
+
 
 /*
   This classes initialize GridProperty objects. Most commonly, they just get a constant
@@ -100,7 +103,7 @@ public:
     {
         auto eclipseGrid = m_eclipseState.getEclipseGrid();
         auto tabdims = m_eclipseState.getTabdims();
-        // calculate drainage and imbibition saturation table of each cell
+        int numSatTables = tabdims->getNumSatTables();
         const std::vector<int>& satnumData = m_eclipseState.getIntGridProperty("SATNUM")->getData();
         const std::vector<int>& imbnumData = m_eclipseState.getIntGridProperty("IMBNUM")->getData();
         const std::vector<int>& endnumData = m_eclipseState.getIntGridProperty("ENDNUM")->getData();
@@ -108,30 +111,9 @@ public:
         assert(satnumData.size() == values.size());
         assert(imbnumData.size() == values.size());
 
-        // create the SWOF tables
-        const std::vector<SwofTable>& swofTables = m_eclipseState.getSwofTables();
-        int numSatTables = tabdims->getNumSatTables();
 
-        // create the SGOF tables
-        const std::vector<SgofTable>& sgofTables = m_eclipseState.getSgofTables();
-        assert(swofTables.size() == sgofTables.size());
-
-        /*
-          The code block here goes through the SWOF and SGOF tables to
-          determine the critical saturations of the various
-          phases. The code in question has a hard assumption that
-          relperm properties is entered using the SGOF and SWOF
-          keywords, however other keyword combinations can be used -
-          and then this will break.
-
-          ** Must be fixed. **
-        */
-
-        if (swofTables.size() == numSatTables) {
-            findSaturationEndpoints( );
-            findCriticalPoints( );
-        }
-
+        findSaturationEndpoints( );
+        findCriticalPoints( );
 
         // acctually assign the defaults. if the ENPVD keyword was specified in the deck,
         // this currently cannot be done because we would need the Z-coordinate of the
@@ -269,25 +251,44 @@ public:
     }
 
 
-private:
+protected:
+
+    /*
+      The method here goes through the SWOF and SGOF tables to
+      determine the critical saturations of the various
+      phases. The code in question has a hard assumption that
+      relperm properties is entered using the SGOF and SWOF
+      keywords, however other keyword combinations can be used -
+      and then this will break.
+
+      ** Must be fixed. **
+      */
+
+
     void findSaturationEndpoints( ) const {
+
         const std::vector<SwofTable>& swofTables = m_eclipseState.getSwofTables();
         const std::vector<SgofTable>& sgofTables = m_eclipseState.getSgofTables();
         auto tabdims = m_eclipseState.getTabdims();
         int numSatTables = tabdims->getNumSatTables();
 
-        m_minWaterSat.resize( numSatTables , 0 );
-        m_maxWaterSat.resize( numSatTables , 0 );
-        m_minGasSat.resize( numSatTables , 0 );
-        m_maxGasSat.resize( numSatTables , 0 );
+        if (swofTables.size() == numSatTables) {
+            assert(swofTables.size() == sgofTables.size());
 
-        for (int tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
-            m_minWaterSat[tableIdx] = swofTables[tableIdx].getSwColumn().front();
-            m_maxWaterSat[tableIdx] = swofTables[tableIdx].getSwColumn().back();
+            m_minWaterSat.resize( numSatTables , 0 );
+            m_maxWaterSat.resize( numSatTables , 0 );
+            m_minGasSat.resize( numSatTables , 0 );
+            m_maxGasSat.resize( numSatTables , 0 );
 
-            m_minGasSat[tableIdx] = sgofTables[tableIdx].getSgColumn().front();
-            m_maxGasSat[tableIdx] = sgofTables[tableIdx].getSgColumn().back();
-        }
+            for (int tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
+                m_minWaterSat[tableIdx] = swofTables[tableIdx].getSwColumn().front();
+                m_maxWaterSat[tableIdx] = swofTables[tableIdx].getSwColumn().back();
+
+                m_minGasSat[tableIdx] = sgofTables[tableIdx].getSgColumn().front();
+                m_maxGasSat[tableIdx] = sgofTables[tableIdx].getSgColumn().back();
+            }
+        } else
+            throw std::domain_error("Hardcoded assumption absout saturation keyword family has failed");
     }
 
 
@@ -356,7 +357,6 @@ private:
 
 
 
-private:
     template <class TableType>
     double selectValue(const std::vector<TableType>& depthTables,
                        int tableIdx,
