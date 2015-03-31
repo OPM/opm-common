@@ -101,9 +101,9 @@ public:
         auto eclipseGrid = m_eclipseState.getEclipseGrid();
         auto tabdims = m_eclipseState.getTabdims();
         // calculate drainage and imbibition saturation table of each cell
-        std::vector<int> satnumData = m_eclipseState.getIntGridProperty("SATNUM")->getData();
-        std::vector<int> imbnumData = m_eclipseState.getIntGridProperty("IMBNUM")->getData();
-        std::vector<int> endnumData = m_eclipseState.getIntGridProperty("ENDNUM")->getData();
+        const std::vector<int>& satnumData = m_eclipseState.getIntGridProperty("SATNUM")->getData();
+        const std::vector<int>& imbnumData = m_eclipseState.getIntGridProperty("IMBNUM")->getData();
+        const std::vector<int>& endnumData = m_eclipseState.getIntGridProperty("ENDNUM")->getData();
 
         assert(satnumData.size() == values.size());
         assert(imbnumData.size() == values.size());
@@ -154,9 +154,9 @@ public:
         const auto& enptvdTables = m_eclipseState.getEnptvdTables();
         const auto& imptvdTables = m_eclipseState.getImptvdTables();
         for (size_t cellIdx = 0; cellIdx < satnumData.size(); ++cellIdx) {
-            int satTableIdx = satnumData.at(cellIdx) - 1;
-            int imbTableIdx = imbnumData.at(cellIdx) - 1;
-            int endNum = endnumData.at(cellIdx) - 1;
+            int satTableIdx = satnumData[cellIdx] - 1;
+            int imbTableIdx = imbnumData[cellIdx] - 1;
+            int endNum = endnumData[cellIdx] - 1;
 
             double cellDepth = std::get<2>(eclipseGrid->getCellCenter(cellIdx));
 
