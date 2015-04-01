@@ -61,8 +61,8 @@ namespace Opm {
             inputstream = inputStream;
         }
 	
-	void SetValues(const boost::filesystem::path &inputDataFile, DeckPtr deckToFill, const boost::filesystem::path &commonRootPath){
-	    lineNR = 0;
+	    void SetValues(const boost::filesystem::path &inputDataFile, DeckPtr deckToFill, const boost::filesystem::path &commonRootPath){
+	        lineNR = 0;
             dataFile = inputDataFile;
             deck = deckToFill;
             rootPath = commonRootPath;
@@ -78,10 +78,10 @@ namespace Opm {
                                          inputDataFile.string() +
                                          std::string("' does not exist or is not readable"));
             }
-	}
+	    }
 
         ParserState(const boost::filesystem::path &inputDataFile, DeckPtr deckToFill, const boost::filesystem::path &commonRootPath, std::map<std::string, std::string> &pathMapRef) {
-		SetValues(inputDataFile, deckToFill, commonRootPath);
+		    SetValues(inputDataFile, deckToFill, commonRootPath);
             pathMap = pathMapRef;
         }
 
