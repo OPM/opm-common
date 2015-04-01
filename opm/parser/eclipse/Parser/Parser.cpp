@@ -42,22 +42,7 @@ namespace Opm {
         RawKeywordPtr rawKeyword;
         std::string nextKeyword;
         ParserState(const boost::filesystem::path &inputDataFile, DeckPtr deckToFill, const boost::filesystem::path &commonRootPath) {
-            lineNR = 0;
-            dataFile = inputDataFile;
-            deck = deckToFill;
-            rootPath = commonRootPath;
-
-            std::ifstream *ifs = new std::ifstream(inputDataFile.string().c_str());
-            initSuccessful = ifs->is_open();
-            inputstream.reset(ifs);
-
-            // make sure the file we'd like to parse exists and is
-            // readable
-            if (!ifs->is_open()) {
-                throw std::runtime_error(std::string("Input file '") +
-                                         inputDataFile.string() +
-                                         std::string("' does not exist or is not readable"));
-            }
+            SetValues(inputDataFile, deckToFill, commonRootPath);
         }
 
         ParserState(const std::string &inputData, DeckPtr deckToFill) {
@@ -75,8 +60,28 @@ namespace Opm {
             initSuccessful = true;
             inputstream = inputStream;
         }
+	
+	void SetValues(const boost::filesystem::path &inputDataFile, DeckPtr deckToFill, const boost::filesystem::path &commonRootPath){
+	    lineNR = 0;
+            dataFile = inputDataFile;
+            deck = deckToFill;
+            rootPath = commonRootPath;
 
-        ParserState(const boost::filesystem::path &inputDataFile, DeckPtr deckToFill, const boost::filesystem::path &commonRootPath, std::map<std::string, std::string> &pathMapRef):ParserState(inputDataFile, deckToFill, commonRootPath) {
+            std::ifstream *ifs = new std::ifstream(inputDataFile.string().c_str());
+            initSuccessful = ifs->is_open();
+            inputstream.reset(ifs);
+
+            // make sure the file we'd like to parse exists and is
+            // readable
+            if (!ifs->is_open()) {
+                throw std::runtime_error(std::string("Input file '") +
+                                         inputDataFile.string() +
+                                         std::string("' does not exist or is not readable"));
+            }
+	}
+
+        ParserState(const boost::filesystem::path &inputDataFile, DeckPtr deckToFill, const boost::filesystem::path &commonRootPath, std::map<std::string, std::string> &pathMapRef) {
+		SetValues(inputDataFile, deckToFill, commonRootPath);
             pathMap = pathMapRef;
         }
 
