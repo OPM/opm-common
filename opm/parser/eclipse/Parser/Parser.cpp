@@ -76,8 +76,7 @@ namespace Opm {
             inputstream = inputStream;
         }
 
-        ParserState(const boost::filesystem::path &inputDataFile, DeckPtr deckToFill, const boost::filesystem::path &commonRootPath, std::map<std::string, std::string> &pathMapRef) {
-            new (this) ParserState(inputDataFile, deckToFill, commonRootPath);
+        ParserState(const boost::filesystem::path &inputDataFile, DeckPtr deckToFill, const boost::filesystem::path &commonRootPath, std::map<std::string, std::string> &pathMapRef):ParserState(inputDataFile, deckToFill, commonRootPath) {
             pathMap = pathMapRef;
         }
 
