@@ -514,12 +514,13 @@ BOOST_AUTO_TEST_CASE(kw_test) {
 
     ERT::EclKW<int> kw1 = p1.getEclKW();
     ERT::EclKW<double> kw2 = p2.getEclKW();
-    
+
     for (size_t g = 0; g < kw1.size(); g++)
         BOOST_CHECK_EQUAL( p1.iget(g) , kw1[g]);
 
     for (size_t g = 0; g < kw2.size(); g++)
         BOOST_CHECK_EQUAL( p2.iget(g) , kw2[g]);
+}
 
 
 BOOST_AUTO_TEST_CASE(CheckLimits) {

@@ -54,8 +54,7 @@ protected:
     { }
 
 public:
-    virtual void apply(std::vector<ValueType>& values,
-                       const std::string& propertyName) const = 0;
+    virtual void apply(std::vector<ValueType>& values) const = 0;
 };
 
 template <class ValueType>
@@ -67,8 +66,7 @@ public:
         : m_value(value)
     { }
 
-    void apply(std::vector<ValueType>& values,
-               const std::string& /*propertyName*/) const
+    void apply(std::vector<ValueType>& values) const
     {
         std::fill(values.begin(), values.end(), m_value);
     }
@@ -94,12 +92,8 @@ public:
         , m_eclipseState(eclipseState)
     { }
 
-    void apply(std::vector<double>& values,
-               const std::string& propertyName) const
+    void apply(std::vector<double>& values) const
     {
-        if (propertyName != "TEMPI")
-            throw std::logic_error("The TemperatureLookupInitializer can only be used for the initial temperature!");
-
         if (!m_deck.hasKeyword("EQLNUM")) {
             // if values are defaulted in the TEMPI keyword, but no
             // EQLNUM is specified, you will get NaNs...

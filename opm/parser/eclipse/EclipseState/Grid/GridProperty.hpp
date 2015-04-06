@@ -160,7 +160,7 @@ public:
         m_kwInfo = kwInfo;
         m_data.resize( nx * ny * nz );
 
-        m_kwInfo.getInitializer()->apply(m_data, m_kwInfo.getKeywordName());
+        m_kwInfo.getInitializer()->apply(m_data);
         m_hasRunPostProcessor = false;
     }
 
