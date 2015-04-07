@@ -29,9 +29,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
-
-
-
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 namespace Opm {
 
@@ -108,7 +106,7 @@ namespace Opm {
                 handleWELOPEN(keyword, currentStep , deck->hasKeyword("COMPLUMP"));
 
             if (keyword->name() == "WELTARG")
-                handleWELTARG(keyword, currentStep);
+                handleWELTARG(deck, keyword, currentStep);
 
             if (keyword->name() == "GRUPTREE")
                 handleGRUPTREE(keyword, currentStep);
@@ -416,10 +414,8 @@ namespace Opm {
                 }
             }
 
-
             const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
             const std::vector<WellPtr>& wells = getWells(wellNamePattern);
-
 
             for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
                 WellPtr well = *wellIter;
@@ -490,19 +486,28 @@ namespace Opm {
                 else if(!haveCompletionData) {
                     WellCommon::StatusEnum status = WellCommon::StatusFromString( record->getItem("STATUS")->getTrimmedString(0));
                     well->setStatus(currentStep, status);
-
                 }
             }
         }
     }
 
-    void Schedule::handleWELTARG(DeckKeywordConstPtr keyword, size_t currentStep) {
+    /*
+    The documentation for the WELTARG keyword says that the well must have been fully specified and initialized using one of the WCONxxxx keywords prior to
+    modifying the well using the WELTARG keyword. The following implementation of handling the WELTARG keyword does not check or enforce in any way that
+    this is done (i.e. it is not checked or verified that the well is initialized with any WCONxxxx keyword).
+    */
+    void Schedule::handleWELTARG(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep) {
+        Opm::UnitSystem unitSystem = *deck->getActiveUnitSystem();
+        double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time")->getSIScaling();
+        double siFactorG = unitSystem.parse("GasSurfaceVolume/Time")->getSIScaling();
+        double siFactorP = unitSystem.parse("Pressure")->getSIScaling();
+
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
 
             const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
             const std::string& cMode = record->getItem("CMODE")->getTrimmedString(0);
-            double newValue = record->getItem("NEW_VALUE")->getRawDouble(0);
+            double newValue = getNewValue(record);
             const std::vector<WellPtr>& wells = getWells(wellNamePattern);
 
             for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
@@ -510,63 +515,53 @@ namespace Opm {
                 WellProductionProperties prop = well->getProductionPropertiesCopy(currentStep);
 
                 if (cMode == "ORAT"){
-                    prop.OilRate = newValue;
+                    prop.OilRate = newValue * siFactorL;
                 }
                 else if (cMode == "WRAT"){
-                    prop.WaterRate = newValue;
+                    prop.WaterRate = newValue * siFactorL;
                 }
                 else if (cMode == "GRAT"){
-                    prop.GasRate = newValue;
+                    prop.GasRate = newValue * siFactorG;
                 }
                 else if (cMode == "LRAT"){
-                    prop.LiquidRate = newValue;
-                }
-                else if (cMode == "CRAT"){
-                    prop.LinearlyCombinedRate = newValue;
+                    prop.LiquidRate = newValue * siFactorL;
                 }
                 else if (cMode == "RESV"){
-                    prop.ResVRate = newValue;
+                    prop.ResVRate = newValue * siFactorL;
                 }
                 else if (cMode == "BHP"){
-                    prop.BHPLimit = newValue;
+                    prop.BHPLimit = newValue * siFactorP;
                 }
                 else if (cMode == "THP"){
-                    prop.THPLimit = newValue;
+                    prop.THPLimit = newValue * siFactorP;
                 }
                 else if (cMode == "VFP"){
-                    prop.VFPTableNumber = newValue;
-                }
-                else if (cMode == "LIFT"){
-                    prop.ArtificialLiftQuantity = newValue;
+                    prop.VFPTableNumber = static_cast<int> (newValue);
                 }
                 else if (cMode == "GUID"){
-                    prop.GuideRate = newValue;
+                    well->setGuideRate(currentStep, newValue);
                 }
-                else if (cMode == "WGRA"){
-                    prop.WetGasRate = newValue;
-                }
-                else if (cMode == "NGL"){
-                    prop.NGLRate = newValue;
-                }
-                else if (cMode == "CVAL"){
-                    prop.CalorificProductionRate = newValue;
-                }
-                else if (cMode == "REIN"){
-                    prop.ReinjectionFraction = newValue;
-                }
-                else if (cMode == "STRA"){
-                    prop.SteamRate = newValue;
-                }
-                else if (cMode == "SATP"){
-                    prop.SaturationPressureOffset = newValue;
-                }
-                else if (cMode == "SATT"){
-                    prop.SaturationTemperatureOffset = newValue;
+                else{
+                    throw std::invalid_argument("Invalid keyword (MODE) supplied");
                 }
 
                 well->setProductionProperties(currentStep, prop);
             }
         }
+    }
+
+    double Schedule::getNewValue(DeckRecordConstPtr record) {
+        double newValue = 0.0;
+        auto item = record->getItem("NEW_VALUE");
+
+        if (!item->hasValue(0)){
+            throw std::invalid_argument("Sorry - the value item in WELTARG can not be defaulted");
+        }
+        else{
+            newValue = item->getRawDouble(0);
+        }
+
+        return newValue;
     }
 
     void Schedule::handleGCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep) {
@@ -599,7 +594,6 @@ namespace Opm {
             group->setProductionGroup(currentStep, false);
         }
     }
-
 
     void Schedule::handleGCONPROD(DeckKeywordConstPtr keyword, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
@@ -673,9 +667,6 @@ namespace Opm {
         m_rootGroupTree->add(currentStep, newTree);
     }
 
-//
-//
-
     void Schedule::handleWRFT(DeckKeywordConstPtr keyword, size_t currentStep) {
 
         /* Rule for handling RFT: Request current RFT data output for specified wells, plus output when
@@ -703,8 +694,6 @@ namespace Opm {
             well->setRFTForWellWhenFirstOpen(m_timeMap->numTimesteps(), currentStep);
         }
     }
-
-
 
     void Schedule::handleWRFTPLT(DeckKeywordConstPtr keyword,  size_t currentStep) {
 
@@ -752,7 +741,6 @@ namespace Opm {
                         well->setPLTActive(currentStep, false);
                         break;
                 }
-
             }
         }
     }
@@ -790,11 +778,9 @@ namespace Opm {
       return wells.size();
     }
 
-
     bool Schedule::hasWell(const std::string& wellName) const {
         return m_wells.hasKey( wellName );
     }
-
 
     std::vector<WellConstPtr> Schedule::getWells() const {
         return getWells(m_timeMap->size()-1);
@@ -814,7 +800,6 @@ namespace Opm {
         }
         return wells;
     }
-
 
     WellPtr Schedule::getWell(const std::string& wellName) const {
         return m_wells.get( wellName );
@@ -836,8 +821,6 @@ namespace Opm {
         }
         return wells;
     }
-
-
 
     void Schedule::addGroup(const std::string& groupName, size_t timeStep) {
         if (!m_timeMap) {
@@ -872,7 +855,6 @@ namespace Opm {
         newGroup->addWell(timeStep , well);
     }
 
-
     void Schedule::checkUnhandledKeywords(DeckConstPtr deck) const {
         if (deck->hasKeyword("COMPORD")) {
             auto compordKeyword = deck->getKeyword("COMPORD");
@@ -883,7 +865,6 @@ namespace Opm {
             }
         }
     }
-
 
     double Schedule::convertInjectionRateToSI(double rawRate, WellInjector::TypeEnum wellType, const Opm::UnitSystem &unitSystem) {
         switch (wellType) {
@@ -920,7 +901,6 @@ namespace Opm {
         }
     }
 
-
     bool Schedule::convertEclipseStringToBool(const std::string& eclipseString) {
         std::string lowerTrimmed = boost::algorithm::to_lower_copy(eclipseString);
         boost::algorithm::trim(lowerTrimmed);
@@ -933,7 +913,6 @@ namespace Opm {
         }
         else throw std::invalid_argument("String " + eclipseString + " not recognized as a boolean-convertible string.");
     }
-
 
     size_t Schedule::getMaxNumCompletionsForWells(size_t timestep) const {
       size_t ncwmax = 0;

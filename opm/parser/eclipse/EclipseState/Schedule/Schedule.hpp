@@ -86,7 +86,7 @@ namespace Opm
         void handleWPOLYMER(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleWCONINJH(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep);
         void handleWELOPEN(DeckKeywordConstPtr keyword, size_t currentStep, bool hascomplump);
-        void handleWELTARG(DeckKeywordConstPtr keyword, size_t currentStep);
+        void handleWELTARG(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep);
         void handleGCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep);
         void handleGCONPROD(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleDATES(DeckKeywordConstPtr keyword);
@@ -99,6 +99,7 @@ namespace Opm
 
         static double convertInjectionRateToSI(double rawRate, WellInjector::TypeEnum wellType, const Opm::UnitSystem &unitSystem);
         static double convertInjectionRateToSI(double rawRate, Phase::PhaseEnum wellPhase, const Opm::UnitSystem &unitSystem);
+        double getNewValue(DeckRecordConstPtr record);
         static bool convertEclipseStringToBool(const std::string& eclipseString);
 
     };
