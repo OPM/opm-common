@@ -115,12 +115,13 @@ namespace Opm {
 
     void WellProductionProperties::init() {
         OilRate = 0.0;
-        GasRate = 0.0;
         WaterRate = 0.0;
+        GasRate = 0.0;
         LiquidRate = 0.0;
         ResVRate = 0.0;
         BHPLimit = 0.0;
         THPLimit = 0.0;
+        VFPTableNumber = 0;
         controlMode = WellProducer::CMODE_UNDEFINED;
 
         m_productionControls = 0;

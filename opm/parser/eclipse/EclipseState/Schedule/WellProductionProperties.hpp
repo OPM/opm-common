@@ -26,12 +26,13 @@
 namespace Opm {
     struct WellProductionProperties {
         double  OilRate;
-        double  GasRate;
         double  WaterRate;
+        double  GasRate;
         double  LiquidRate;
         double  ResVRate;
         double  BHPLimit;
         double  THPLimit;
+        int  VFPTableNumber;
         bool    predictionMode;
 
         WellProducer::ControlModeEnum controlMode;
