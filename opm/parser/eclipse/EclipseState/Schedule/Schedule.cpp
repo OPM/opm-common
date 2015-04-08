@@ -507,7 +507,7 @@ namespace Opm {
 
             const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
             const std::string& cMode = record->getItem("CMODE")->getTrimmedString(0);
-            double newValue = getNewValue(record);
+            double newValue = record->getItem("NEW_VALUE")->getRawDouble(0);
             const std::vector<WellPtr>& wells = getWells(wellNamePattern);
 
             for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
@@ -548,20 +548,6 @@ namespace Opm {
                 well->setProductionProperties(currentStep, prop);
             }
         }
-    }
-
-    double Schedule::getNewValue(DeckRecordConstPtr record) {
-        double newValue = 0.0;
-        auto item = record->getItem("NEW_VALUE");
-
-        if (!item->hasValue(0)){
-            throw std::invalid_argument("Sorry - the value item in WELTARG can not be defaulted");
-        }
-        else{
-            newValue = item->getRawDouble(0);
-        }
-
-        return newValue;
     }
 
     void Schedule::handleGCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep) {

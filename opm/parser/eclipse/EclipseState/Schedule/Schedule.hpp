@@ -99,7 +99,6 @@ namespace Opm
 
         static double convertInjectionRateToSI(double rawRate, WellInjector::TypeEnum wellType, const Opm::UnitSystem &unitSystem);
         static double convertInjectionRateToSI(double rawRate, Phase::PhaseEnum wellPhase, const Opm::UnitSystem &unitSystem);
-        double getNewValue(DeckRecordConstPtr record);
         static bool convertEclipseStringToBool(const std::string& eclipseString);
 
     };

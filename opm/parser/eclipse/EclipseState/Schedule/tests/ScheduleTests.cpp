@@ -750,3 +750,32 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArg) {
     BOOST_CHECK_EQUAL(wpp.VFPTableNumber, 2100);
     BOOST_CHECK_EQUAL(well->getGuideRate(2), 2300.14);
 }
+
+BOOST_AUTO_TEST_CASE(createDeckWithWeltArgException) {
+    Opm::Parser parser;
+    std::string input =
+            "WELTARG\n"
+            " OP_1     GRAT        1500.52 /\n"
+            " OP_1     LRAT        /\n"
+            " OP_1     RESV        1801.05 /\n"
+            "/\n";
+
+    DeckPtr deck = parser.parseString(input);
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
+
+    BOOST_CHECK_THROW(Schedule (grid , deck), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(createDeckWithWeltArgException2) {
+    Opm::Parser parser;
+    std::string input =
+            "WELTARG\n"
+            " OP_1     LRAT        /\n"
+            " OP_1     RESV        1801.05 /\n"
+            "/\n";
+
+    DeckPtr deck = parser.parseString(input);
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
+
+    BOOST_CHECK_THROW(Schedule (grid , deck), std::out_of_range);
+}
