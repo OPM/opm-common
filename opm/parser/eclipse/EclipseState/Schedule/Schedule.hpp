@@ -61,6 +61,7 @@ namespace Opm
         GroupPtr getGroup(const std::string& groupName) const;
         TuningPtr getTuning() const;
 
+        bool initOnly() const;
 
 
     private:
@@ -70,9 +71,11 @@ namespace Opm
         std::map<std::string , GroupPtr> m_groups;
         std::shared_ptr<DynamicState<GroupTreePtr> > m_rootGroupTree;
         TuningPtr m_tuning;
+        bool nosim;
 
         void addWellToGroup( GroupPtr newGroup , WellPtr well , size_t timeStep);
         void initFromDeck(DeckConstPtr deck);
+        void initializeNOSIM();
         void createTimeMap(DeckConstPtr deck);
         void initRootGroupTreeNode(TimeMapConstPtr timeMap);
         void iterateScheduleSection(DeckConstPtr deck);
@@ -94,6 +97,7 @@ namespace Opm
         void handleGCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep);
         void handleGCONPROD(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleTUNING(DeckKeywordConstPtr keyword, size_t currentStep);
+        void handleNOSIM();
         void handleDATES(DeckKeywordConstPtr keyword);
         void handleTSTEP(DeckKeywordConstPtr keyword);
         void handleGRUPTREE(DeckKeywordConstPtr keyword, size_t currentStep);
