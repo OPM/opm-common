@@ -40,7 +40,7 @@ namespace Opm {
     }
 
     void Schedule::initFromDeck(DeckConstPtr deck) {
-        initializeNOSIM();
+        initializeNOSIM(deck);
         createTimeMap(deck);
         m_tuning.reset(new Tuning(m_timeMap));
         addGroup( "FIELD", 0 );
@@ -52,8 +52,12 @@ namespace Opm {
         m_rootGroupTree.reset(new DynamicState<GroupTreePtr>(timeMap, GroupTreePtr(new GroupTree())));
     }
 
-    void Schedule::initializeNOSIM() {
-        nosim = false;
+    void Schedule::initializeNOSIM(DeckConstPtr deck) {
+        if (deck->hasKeyword("NOSIM")){
+            nosim = true;
+        } else {
+            nosim = false;
+        }
     }
 
     void Schedule::createTimeMap(DeckConstPtr deck) {

@@ -75,7 +75,7 @@ namespace Opm
 
         void addWellToGroup( GroupPtr newGroup , WellPtr well , size_t timeStep);
         void initFromDeck(DeckConstPtr deck);
-        void initializeNOSIM();
+        void initializeNOSIM(DeckConstPtr deck);
         void createTimeMap(DeckConstPtr deck);
         void initRootGroupTreeNode(TimeMapConstPtr timeMap);
         void iterateScheduleSection(DeckConstPtr deck);
