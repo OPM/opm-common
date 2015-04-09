@@ -53,6 +53,11 @@ createDeckWithInclude(path& datafile, std::string addEndKeyword)
 
             std::ofstream of(datafile.string().c_str());
 
+            of << "PATHS" << std::endl;
+            of << "PATH1 '" << includePath1.string() << "' /" << std::endl;
+            of << "PATH2 '" << includePath2.string() << "' /" << std::endl;
+            of << "/" << std::endl;
+
             of << "INCLUDE" << std::endl;
             of << "   \'relative.include\' /" << std::endl;
 
@@ -68,10 +73,7 @@ createDeckWithInclude(path& datafile, std::string addEndKeyword)
 
             of << std::endl;
 
-            of << "PATHS" << std::endl;
-            of << "PATH1 '" << includePath1.string() << "' /" << std::endl;
-            of << "PATH2 '" << includePath2.string() << "' /" << std::endl;
-            of << "/" << std::endl;
+
 
             of << std::endl;
 
@@ -112,7 +114,7 @@ createDeckWithInclude(path& datafile, std::string addEndKeyword)
             std::ofstream of(nestedInclude.string().c_str());
 
             of << "INCLUDE" << std::endl;
-            of << "   \'include/grid.include\'  /" << std::endl;
+            of << "   \'$PATH1/grid.include\'  /" << std::endl;
             of.close();
 
             std::ofstream of2(gridInclude.string().c_str());
