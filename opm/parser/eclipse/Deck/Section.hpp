@@ -20,26 +20,22 @@
 #ifndef SECTION_HPP
 #define SECTION_HPP
 
-#include <opm/parser/eclipse/Deck/Deck.hpp>
 
-#include <boost/iterator/iterator_facade.hpp>
 
 #include <iostream>
 #include <string>
 #include <memory>
 
+#include <boost/iterator/iterator_facade.hpp>
+
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+
 namespace Opm {
 
-    class Section : public boost::iterator_facade<Section, DeckKeywordPtr, boost::forward_traversal_tag>
+class Section : public Deck
     {
     public:
         Section(DeckConstPtr deck, const std::string& startKeyword);
-        bool hasKeyword( const std::string& keyword ) const;
-        std::vector<DeckKeywordConstPtr>::iterator begin();
-        std::vector<DeckKeywordConstPtr>::iterator end();
-        DeckKeywordConstPtr getKeyword(const std::string& keyword, size_t index) const;
-        DeckKeywordConstPtr getKeyword(const std::string& keyword) const;
-        DeckKeywordConstPtr getKeyword(size_t index) const;
         const std::string& name() const;
         size_t count(const std::string& keyword) const;
 
@@ -57,7 +53,6 @@ namespace Opm {
                                          bool ensureKeywordSectionAffiliation = false);
 
     private:
-        KeywordContainer m_keywords;
         std::string m_name;
         static bool isSectionDelimiter(const std::string& keywordName);
         static bool hasSection(DeckConstPtr deck, const std::string& startKeyword);

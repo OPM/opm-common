@@ -22,10 +22,6 @@ add_executable(runDeckTests DeckTests.cpp)
 target_link_libraries(runDeckTests Parser  ${Boost_LIBRARIES})
 add_test(NAME runDeckTests  COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runDeckTests  )
 
-add_executable(runKeywordContainerTests KeywordContainerTests.cpp)
-target_link_libraries(runKeywordContainerTests Parser  ${Boost_LIBRARIES})
-add_test(NAME runKeywordContainerTests  COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runKeywordContainerTests  )
-
 add_executable(runDeckKeywordTests DeckKeywordTests.cpp)
 target_link_libraries(runDeckKeywordTests Parser  ${Boost_LIBRARIES})
 add_test(NAME runDeckKeywordTests  COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runDeckKeywordTests  )

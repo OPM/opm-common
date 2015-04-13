@@ -122,6 +122,97 @@ BOOST_AUTO_TEST_CASE(size_twokeyword_return2) {
 }
 
 
+BOOST_AUTO_TEST_CASE(getKeyword_multipleKeyword_keywordReturned) {
+    Deck deck;
+    DeckKeywordPtr keyword1 = DeckKeywordPtr(new DeckKeyword("TRULS"));
+    DeckKeywordPtr keyword2 = DeckKeywordPtr(new DeckKeyword("TRULS"));
+    DeckKeywordPtr keyword3 = DeckKeywordPtr(new DeckKeyword("TRULS"));
+    deck.addKeyword(keyword1);
+    deck.addKeyword(keyword2);
+    deck.addKeyword(keyword3);
+
+    BOOST_CHECK_EQUAL(keyword1, deck.getKeyword("TRULS", 0));
+    BOOST_CHECK_EQUAL(keyword3, deck.getKeyword("TRULS", 2));
+    BOOST_CHECK_EQUAL(keyword3, deck.getKeyword("TRULS"));
+}
+
+
+
+BOOST_AUTO_TEST_CASE(getKeyword_outOfRange_throws) {
+    Deck deck;
+    DeckKeywordPtr keyword = DeckKeywordPtr(new DeckKeyword("TRULS"));
+    deck.addKeyword(keyword);
+    BOOST_CHECK_THROW( deck.getKeyword("TRULS" , 3) , std::out_of_range)
+}
+
+
+BOOST_AUTO_TEST_CASE(getKeywordList_notFound_throws) {
+    Deck deck;
+    DeckKeywordPtr keyword = DeckKeywordPtr(new DeckKeyword("TRULS"));
+    deck.addKeyword(keyword);
+    BOOST_CHECK_THROW( deck.getKeywordList("TRULSX") , std::invalid_argument)
+}
+
+BOOST_AUTO_TEST_CASE(getKeywordList_OK) {
+    Deck deck;
+    DeckKeywordPtr keyword1 = DeckKeywordPtr(new DeckKeyword("TRULS"));
+    DeckKeywordPtr keyword2 = DeckKeywordPtr(new DeckKeyword("TRULS"));
+    DeckKeywordPtr keyword3 = DeckKeywordPtr(new DeckKeyword("TRULS"));
+    deck.addKeyword(keyword1);
+    deck.addKeyword(keyword2);
+    deck.addKeyword(keyword3);
+
+    const std::vector<DeckKeywordConstPtr>& keywordList = deck.getKeywordList("TRULS");
+    BOOST_CHECK_EQUAL( 3U , keywordList.size() );
+}
+
+
+
+
+
+BOOST_AUTO_TEST_CASE(keywordList_getnum_OK) {
+    Deck deck;
+    DeckKeywordPtr keyword1 = DeckKeywordPtr(new DeckKeyword("TRULS"));
+    DeckKeywordPtr keyword2 = DeckKeywordPtr(new DeckKeyword("TRULS"));
+    DeckKeywordPtr keyword3 = DeckKeywordPtr(new DeckKeyword("TRULSX"));
+    deck.addKeyword(keyword1);
+    deck.addKeyword(keyword2);
+    deck.addKeyword(keyword3);
+
+    BOOST_CHECK_EQUAL( 0U , deck.numKeywords( "TRULSY" ));
+    BOOST_CHECK_EQUAL( 2U , deck.numKeywords( "TRULS" ));
+    BOOST_CHECK_EQUAL( 1U , deck.numKeywords( "TRULSX" ));
+}
+
+
+BOOST_AUTO_TEST_CASE(keywordList_getbyindexoutofbounds_exceptionthrown) {
+    Deck deck;
+    BOOST_CHECK_THROW(deck.getKeyword(0), std::out_of_range);
+    DeckKeywordPtr keyword1 = DeckKeywordPtr(new DeckKeyword("TRULS"));
+    DeckKeywordPtr keyword2 = DeckKeywordPtr(new DeckKeyword("TRULS"));
+    DeckKeywordPtr keyword3 = DeckKeywordPtr(new DeckKeyword("TRULSX"));
+    deck.addKeyword(keyword1);
+    deck.addKeyword(keyword2);
+    deck.addKeyword(keyword3);
+    BOOST_CHECK_NO_THROW(deck.getKeyword(2));
+    BOOST_CHECK_THROW(deck.getKeyword(3), std::out_of_range);
+}
+
+BOOST_AUTO_TEST_CASE(keywordList_getbyindex_correctkeywordreturned) {
+    Deck deck;
+    DeckKeywordPtr keyword1 = DeckKeywordPtr(new DeckKeyword("TRULS"));
+    DeckKeywordPtr keyword2 = DeckKeywordPtr(new DeckKeyword("TRULS"));
+    DeckKeywordPtr keyword3 = DeckKeywordPtr(new DeckKeyword("TRULSX"));
+    deck.addKeyword(keyword1);
+    deck.addKeyword(keyword2);
+    deck.addKeyword(keyword3);
+    BOOST_CHECK_EQUAL("TRULS",  deck.getKeyword(0)->name());
+    BOOST_CHECK_EQUAL("TRULS",  deck.getKeyword(1)->name());
+    BOOST_CHECK_EQUAL("TRULSX", deck.getKeyword(2)->name());
+}
+
+
+
 
 
 

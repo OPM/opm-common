@@ -40,65 +40,37 @@ namespace Opm {
 
     void Section::populateSection(DeckConstPtr deck, const std::string& startKeywordName)
     {
-        // find the first occurence of the section's start keyword
-        size_t startKeywordIdx = 0;
-        for (; startKeywordIdx<deck->size(); startKeywordIdx++) {
-            if (deck->getKeyword(startKeywordIdx)->name() == startKeywordName)
-                break;
-        }
+        bool inSection = false;
+        for (auto iter = deck->begin(); iter != deck->end(); ++iter) {
+            auto keyword = *iter;
+            if (!inSection) {
+                if (keyword->name() == startKeywordName) {
+                    inSection = true;
+                    addKeyword(keyword);
+                }
+            } else {
+                if (keyword->name() == startKeywordName)
+                    throw std::invalid_argument(std::string("Deck contains the '")+startKeywordName+"' section multiple times");
 
-        if (startKeywordIdx >= deck->size())
+                if (isSectionDelimiter(keyword->name()))
+                    break;
+
+                addKeyword(keyword);
+            }
+        }
+        if (!inSection)
             throw std::invalid_argument(std::string("Deck requires a '")+startKeywordName+"' section");
-
-        // make sure that the section identifier is unique
-        for (size_t j = startKeywordIdx + 1; j < deck->size(); j++)
-            if (deck->getKeyword(j)->name() == startKeywordName)
-                throw std::invalid_argument(std::string("Deck contains the '")+startKeywordName+"' section multiple times");
-
-        // populate the section with keywords
-        for (size_t curKeywordIdx = startKeywordIdx;
-             curKeywordIdx < deck->size();
-             curKeywordIdx++)
-        {
-            const std::string &keywordName = deck->getKeyword(curKeywordIdx)->name();
-            if (curKeywordIdx > startKeywordIdx && isSectionDelimiter(keywordName))
-                break;
-
-            m_keywords.addKeyword(deck->getKeyword(curKeywordIdx));
-        }
     }
 
+
     size_t Section::count(const std::string& keyword) const {
-        return m_keywords.numKeywords( keyword );
+        return numKeywords( keyword );
     }
 
     const std::string& Section::name() const {
         return m_name;
     }
 
-    bool Section::hasKeyword( const std::string& keyword ) const {
-        return m_keywords.hasKeyword(keyword);
-    }
-
-    std::vector<DeckKeywordConstPtr>::iterator Section::begin() {
-        return m_keywords.begin();
-    }
-
-    std::vector<DeckKeywordConstPtr>::iterator Section::end() {
-        return m_keywords.end();
-    }
-
-    DeckKeywordConstPtr Section::getKeyword(const std::string& keyword, size_t index) const {
-        return m_keywords.getKeyword(keyword , index);
-    }
-
-    DeckKeywordConstPtr Section::getKeyword(const std::string& keyword) const {
-        return m_keywords.getKeyword(keyword);
-    }
-
-    DeckKeywordConstPtr Section::getKeyword(size_t index) const {
-        return m_keywords.getKeyword(index);
-    }
 
     bool Section::checkSectionTopology(DeckConstPtr deck,
                                        bool ensureKeywordSectionAffiliation)

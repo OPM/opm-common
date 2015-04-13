@@ -23,7 +23,8 @@
 #include <vector>
 #include <memory>
 
-#include <opm/parser/eclipse/Deck/KeywordContainer.hpp>
+//#include <opm/parser/eclipse/Deck/KeywordContainer.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm {
@@ -43,11 +44,15 @@ namespace Opm {
         void initUnitSystem();
         std::shared_ptr<UnitSystem> getDefaultUnitSystem() const;
         std::shared_ptr<UnitSystem> getActiveUnitSystem()  const;
+        std::vector<DeckKeywordConstPtr>::const_iterator begin() const;
+        std::vector<DeckKeywordConstPtr>::const_iterator end() const;
 
     private:
-        KeywordContainerPtr m_keywords;
         std::shared_ptr<UnitSystem> m_defaultUnits;
         std::shared_ptr<UnitSystem> m_activeUnits;
+
+        std::vector<DeckKeywordConstPtr> m_keywordList;
+        std::map<std::string, std::vector<DeckKeywordConstPtr> > m_keywordMap;
     };
 
     typedef std::shared_ptr<Deck> DeckPtr;
