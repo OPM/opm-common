@@ -212,6 +212,22 @@ BOOST_AUTO_TEST_CASE(keywordList_getbyindex_correctkeywordreturned) {
 }
 
 
+BOOST_AUTO_TEST_CASE(KeywordIndexCorrect) {
+    Deck deck;
+    DeckKeywordPtr keyword1 = DeckKeywordPtr(new DeckKeyword("TRULS"));
+    DeckKeywordPtr keyword2 = DeckKeywordPtr(new DeckKeyword("TRULS"));
+    DeckKeywordPtr keyword3 = DeckKeywordPtr(new DeckKeyword("TRULS"));
+    DeckKeywordPtr keyword4 = DeckKeywordPtr(new DeckKeyword("TRULS4"));
+    deck.addKeyword(keyword1);
+    deck.addKeyword(keyword2);
+    deck.addKeyword(keyword3);
+
+    BOOST_CHECK_THROW( deck.getKeywordIndex( keyword4 ) , std::invalid_argument);
+
+    BOOST_CHECK_EQUAL(0U , deck.getKeywordIndex(keyword1));
+    BOOST_CHECK_EQUAL(1U , deck.getKeywordIndex(keyword2));
+    BOOST_CHECK_EQUAL(2U , deck.getKeywordIndex(keyword3));
+}
 
 
 

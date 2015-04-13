@@ -32,11 +32,15 @@ namespace Opm {
     class Deck {
     public:
         Deck();
+        bool hasKeyword(DeckKeywordConstPtr keyword) const;
         bool hasKeyword( const std::string& keyword ) const;
         void addKeyword( DeckKeywordConstPtr keyword);
         DeckKeywordConstPtr getKeyword(const std::string& keyword , size_t index) const;
         DeckKeywordConstPtr getKeyword(const std::string& keyword) const;
         DeckKeywordConstPtr getKeyword(size_t index) const;
+
+        size_t getKeywordIndex(DeckKeywordConstPtr keyword) const;
+
 
         size_t numKeywords(const std::string& keyword) const;
         const std::vector<DeckKeywordConstPtr>& getKeywordList(const std::string& keyword) const;
@@ -53,6 +57,7 @@ namespace Opm {
 
         std::vector<DeckKeywordConstPtr> m_keywordList;
         std::map<std::string, std::vector<DeckKeywordConstPtr> > m_keywordMap;
+        std::map<const DeckKeyword *, size_t> m_keywordIndex;
     };
 
     typedef std::shared_ptr<Deck> DeckPtr;

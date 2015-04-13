@@ -27,11 +27,17 @@ namespace Opm {
     Deck::Deck() {
     }
 
+    bool Deck::hasKeyword(DeckKeywordConstPtr keyword) const {
+        return (m_keywordIndex.find( const_cast<DeckKeyword *>(keyword.get()) ) != m_keywordIndex.end());
+    }
+
+
     bool Deck::hasKeyword(const std::string& keyword) const {
         return (m_keywordMap.find(keyword) != m_keywordMap.end());
     }
 
     void Deck::addKeyword( DeckKeywordConstPtr keyword) {
+        m_keywordIndex[ keyword.get() ] = m_keywordList.size();
         m_keywordList.push_back(keyword);
 
         if (!hasKeyword(keyword->name())) {
@@ -42,8 +48,16 @@ namespace Opm {
             std::vector<DeckKeywordConstPtr>& keywordList = m_keywordMap[keyword->name()];
             keywordList.push_back(keyword);
         }
-
     }
+
+    size_t Deck::getKeywordIndex(DeckKeywordConstPtr keyword) const {
+        auto iter = m_keywordIndex.find( const_cast<DeckKeyword *>(keyword.get()));
+        if (iter == m_keywordIndex.end())
+            throw std::invalid_argument("Keyword not in deck.");
+
+        return (*iter).second;
+    }
+
 
     DeckKeywordConstPtr Deck::getKeyword(const std::string& keyword, size_t index) const {
         const std::vector<DeckKeywordConstPtr>& keywordList = getKeywordList( keyword );
