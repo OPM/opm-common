@@ -16,6 +16,10 @@ if(ZOLTAN_ROOT)
   set(ZOLTAN_NO_DEFAULT_PATH "NO_DEFAULT_PATH")
 endif()
 
+# Make sure we have checked for the underlying partitioners.
+find_package(PTScotch)
+#find_package(ParMETIS)
+
 # search for files which implements this module
 find_path (ZOLTAN_INCLUDE_DIRS
   NAMES "zoltan.h"
@@ -38,6 +42,9 @@ set (ZOLTAN_FOUND FALSE)
 if (ZOLTAN_INCLUDE_DIRS OR ZOLTAN_LIBRARIES)
   set(ZOLTAN_FOUND TRUE)
   set(HAVE_ZOLTAN 1)
+  set(ZOLTAN_LIBRARIES ${ZOLTAN_LIBRARIES} ${PARMETIS_LIBRARIES} ${PTSCOTCH_LIBRARIES})
+  set(ZOLTAN_INCLUDE_DIRS ${ZOLTAN_INCLUDE_DIRS} ${PARMETIS_INCLUDE_DIRS}
+      ${PTSCOTCH_INCLUDE_DIRS})
 endif()
 
 set (ZOLTAN_CONFIG_VAR HAVE_ZOLTAN)

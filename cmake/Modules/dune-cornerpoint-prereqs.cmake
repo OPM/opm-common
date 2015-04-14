@@ -9,6 +9,7 @@ set (dune-cornerpoint_CONFIG_VAR
 	DUNE_COMMON_VERSION_MAJOR
 	DUNE_COMMON_VERSION_MINOR
 	DUNE_COMMON_VERSION_REVISION
+	HAVE_ZOLTAN
 	)
 
 # dependencies
@@ -26,4 +27,5 @@ set (dune-cornerpoint_DEPS
 	dune-geometry REQUIRED"
 	# OPM dependency
 	"opm-core REQUIRED"
+	"ZOLTAN"
 	)
