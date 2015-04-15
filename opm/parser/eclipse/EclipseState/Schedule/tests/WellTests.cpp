@@ -216,17 +216,17 @@ BOOST_AUTO_TEST_CASE(UpdateCompletions) {
 
 }
 
+Opm::CompletionPtr completion(const size_t i, const size_t j, const size_t k);
+
 // Helper function for CompletionOrder test.
-Opm::CompletionPtr completion(const size_t i, const size_t j, const size_t k,
-                              const Opm::WellCompletion::DirectionEnum direction
-                              = Opm::WellCompletion::DirectionEnum::Z)
+Opm::CompletionPtr completion(const size_t i, const size_t j, const size_t k)
 {
     return std::make_shared<Opm::Completion>(i, j, k,
                                              Opm::WellCompletion::AUTO,
                                              Opm::Value<double>("ConnectionTransmissibilityFactor",99.88),
                                              Opm::Value<double>("D",22.33),
                                              Opm::Value<double>("SKIN",33.22),
-                                             direction);
+                                             Opm::WellCompletion::DirectionEnum::Z);
 }
 
 

@@ -211,6 +211,7 @@ BOOST_AUTO_TEST_CASE(TestTimerLog) {
 
 
 /*****************************************************************/
+void initLogger(std::ostringstream& log_stream);
 
 void initLogger(std::ostringstream& log_stream) {
     std::shared_ptr<CounterLog> counter = std::make_shared<CounterLog>();

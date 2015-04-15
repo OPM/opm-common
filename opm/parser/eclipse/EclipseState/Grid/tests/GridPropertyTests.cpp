@@ -486,7 +486,7 @@ BOOST_AUTO_TEST_CASE(multiply) {
 
 
 
-BOOST_AUTO_TEST_CASE(mask) {
+BOOST_AUTO_TEST_CASE(mask_test) {
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
     SupportedKeywordInfo keywordInfo1("P" , 10 , "1");
     SupportedKeywordInfo keywordInfo2("P" , 20 , "1");
