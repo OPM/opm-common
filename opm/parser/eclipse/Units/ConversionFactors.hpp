@@ -207,6 +207,7 @@ namespace Opm {
         const double OilDissolutionFactor = LiquidSurfaceVolume/GasSurfaceVolume;
         const double Density              = kilogram/cubic(meter);
         const double PolymerDensity       = kilogram/cubic(meter);
+        const double Salinity             = kilogram/cubic(meter);
         const double Viscosity            = centi*Poise;
         const double Timestep             = day;
     }
@@ -231,6 +232,7 @@ namespace Opm {
         const double OilDissolutionFactor = LiquidSurfaceVolume/GasSurfaceVolume;
         const double Density              = pound/cubic(feet);
         const double PolymerDensity       = pound/stb;
+        const double Salinity             = pound/stb;
         const double Viscosity            = centi*Poise;
         const double Timestep             = day;
     }

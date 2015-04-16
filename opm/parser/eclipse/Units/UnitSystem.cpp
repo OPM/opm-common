@@ -181,6 +181,7 @@ namespace Opm {
         system->addDimension("ReservoirVolume", Metric::ReservoirVolume );
         system->addDimension("Density"   , Metric::Density );
         system->addDimension("PolymerDensity", Metric::PolymerDensity);
+        system->addDimension("Salinity", Metric::Salinity);
         system->addDimension("Viscosity" , Metric::Viscosity);
         system->addDimension("Timestep"  , Metric::Timestep);
         system->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
@@ -208,6 +209,7 @@ namespace Opm {
         system->addDimension("ReservoirVolume", Field::ReservoirVolume );
         system->addDimension("Density", Field::Density );
         system->addDimension("PolymerDensity", Field::PolymerDensity);
+        system->addDimension("Salinity", Field::Salinity);
         system->addDimension("Viscosity", Field::Viscosity);
         system->addDimension("Timestep", Field::Timestep);
         system->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
