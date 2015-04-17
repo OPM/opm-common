@@ -56,3 +56,8 @@ add_test(NAME runGroupTreeNodeTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMM
 add_executable(runGroupTreeTests GroupTreeTests.cpp)
 target_link_libraries(runGroupTreeTests Parser ${Boost_LIBRARIES})
 add_test(NAME runGroupTreeTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runGroupTreeTests )
+
+
+add_executable(runTuningTests TuningTests.cpp)
+target_link_libraries(runTuningTests Parser ${Boost_LIBRARIES})
+add_test(NAME runTuningTests WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} COMMAND ${TEST_MEMCHECK_TOOL} ${EXECUTABLE_OUTPUT_PATH}/runTuningTests )
