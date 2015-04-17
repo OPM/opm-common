@@ -24,6 +24,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -58,6 +59,8 @@ namespace Opm
         size_t numGroups() const;
         bool hasGroup(const std::string& groupName) const;
         GroupPtr getGroup(const std::string& groupName) const;
+        TuningPtr getTuning() const;
+
 
 
     private:
@@ -66,6 +69,7 @@ namespace Opm
         std::shared_ptr<const EclipseGrid> m_grid;
         std::map<std::string , GroupPtr> m_groups;
         std::shared_ptr<DynamicState<GroupTreePtr> > m_rootGroupTree;
+        TuningPtr m_tuning;
 
         void addWellToGroup( GroupPtr newGroup , WellPtr well , size_t timeStep);
         void initFromDeck(DeckConstPtr deck);
@@ -89,6 +93,7 @@ namespace Opm
         void handleWELTARG(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep);
         void handleGCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep);
         void handleGCONPROD(DeckKeywordConstPtr keyword, size_t currentStep);
+        void handleTUNING(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleDATES(DeckKeywordConstPtr keyword);
         void handleTSTEP(DeckKeywordConstPtr keyword);
         void handleGRUPTREE(DeckKeywordConstPtr keyword, size_t currentStep);

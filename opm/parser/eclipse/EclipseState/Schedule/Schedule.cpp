@@ -41,6 +41,7 @@ namespace Opm {
 
     void Schedule::initFromDeck(DeckConstPtr deck) {
         createTimeMap(deck);
+        m_tuning.reset(new Tuning(m_timeMap));
         addGroup( "FIELD", 0 );
         initRootGroupTreeNode(getTimeMap());
         iterateScheduleSection(deck);
@@ -116,6 +117,10 @@ namespace Opm {
 
             if (keyword->name() == "GCONPROD")
                 handleGCONPROD(keyword, currentStep);
+
+            if (keyword->name() == "TUNING")
+                handleTUNING(keyword, currentStep);
+
 
             if (keyword->name() == "WRFT")
                 rftProperties.push_back( std::make_pair( keyword , currentStep ));
@@ -603,6 +608,136 @@ namespace Opm {
         }
     }
 
+
+    void Schedule::handleTUNING(DeckKeywordConstPtr keyword, size_t currentStep) {
+
+        int numrecords = keyword->size();
+
+        if (numrecords > 0) {
+            DeckRecordConstPtr record1 = keyword->getRecord(0);
+
+            double TSINIT = record1->getItem("TSINIT")->getSIDouble(0);
+            m_tuning->setTSINIT(currentStep, TSINIT);
+
+            double TSMAXZ = record1->getItem("TSMAXZ")->getSIDouble(0);
+            m_tuning->setTSMAXZ(currentStep, TSMAXZ);
+
+            double TSMINZ = record1->getItem("TSMINZ")->getSIDouble(0);
+            m_tuning->setTSMINZ(currentStep, TSMINZ);
+
+            double TSMCHP = record1->getItem("TSMCHP")->getSIDouble(0);
+            m_tuning->setTSMCHP(currentStep, TSMCHP);
+
+            double TSFMAX = record1->getItem("TSFMAX")->getRawDouble(0);
+            m_tuning->setTSFMAX(currentStep, TSFMAX);
+
+            double TSFMIN = record1->getItem("TSFMIN")->getRawDouble(0);
+            m_tuning->setTSFMIN(currentStep, TSFMIN);
+
+            double TSFCNV = record1->getItem("TSFCNV")->getRawDouble(0);
+            m_tuning->setTSFCNV(currentStep, TSFCNV);
+
+            double TFDIFF = record1->getItem("TFDIFF")->getRawDouble(0);
+            m_tuning->setTFDIFF(currentStep, TFDIFF);
+
+            double THRUPT = record1->getItem("THRUPT")->getRawDouble(0);
+            m_tuning->setTHRUPT(currentStep, THRUPT);
+
+            DeckItemConstPtr TMAXWCdeckItem = record1->getItem("TMAXWC");
+            if (TMAXWCdeckItem->hasValue(0)) {
+                double TMAXWC = TMAXWCdeckItem->getSIDouble(0);
+                m_tuning->setTMAXWC(currentStep, TMAXWC);
+            }
+        }
+
+
+        if (numrecords > 1) {
+            DeckRecordConstPtr record2 = keyword->getRecord(1);
+
+            double TRGTTE = record2->getItem("TRGTTE")->getRawDouble(0);
+            m_tuning->setTRGTTE(currentStep, TRGTTE);
+
+            double TRGCNV = record2->getItem("TRGCNV")->getRawDouble(0);
+            m_tuning->setTRGCNV(currentStep, TRGCNV);
+
+            double TRGMBE = record2->getItem("TRGMBE")->getRawDouble(0);
+            m_tuning->setTRGMBE(currentStep, TRGMBE);
+
+            double TRGLCV = record2->getItem("TRGLCV")->getRawDouble(0);
+            m_tuning->setTRGLCV(currentStep, TRGLCV);
+
+            double XXXTTE = record2->getItem("XXXTTE")->getRawDouble(0);
+            m_tuning->setXXXTTE(currentStep, XXXTTE);
+
+            double XXXCNV = record2->getItem("XXXCNV")->getRawDouble(0);
+            m_tuning->setXXXCNV(currentStep, XXXCNV);
+
+            double XXXMBE = record2->getItem("XXXMBE")->getRawDouble(0);
+            m_tuning->setXXXMBE(currentStep, XXXMBE);
+
+            double XXXLCV = record2->getItem("XXXLCV")->getRawDouble(0);
+            m_tuning->setXXXLCV(currentStep, XXXLCV);
+
+            double XXXWFL = record2->getItem("XXXWFL")->getRawDouble(0);
+            m_tuning->setXXXWFL(currentStep, XXXWFL);
+
+            double TRGFIP = record2->getItem("TRGFIP")->getRawDouble(0);
+            m_tuning->setTRGFIP(currentStep, TRGFIP);
+
+            DeckItemConstPtr TRGSFTdeckItem = record2->getItem("TRGSFT");
+            if (TRGSFTdeckItem->hasValue(0)) {
+                double TRGSFT = TRGSFTdeckItem->getRawDouble(0);
+                m_tuning->setTRGSFT(currentStep, TRGSFT);
+            }
+
+            double THIONX = record2->getItem("THIONX")->getRawDouble(0);
+            m_tuning->setTHIONX(currentStep, THIONX);
+
+            int TRWGHT = record2->getItem("TRWGHT")->getInt(0);
+            m_tuning->setTRWGHT(currentStep, TRWGHT);
+        }
+
+
+        if (numrecords > 2) {
+            DeckRecordConstPtr record3 = keyword->getRecord(2);
+
+            int NEWTMX = record3->getItem("NEWTMX")->getInt(0);
+            m_tuning->setNEWTMX(currentStep, NEWTMX);
+
+            int NEWTMN = record3->getItem("NEWTMN")->getInt(0);
+            m_tuning->setNEWTMN(currentStep, NEWTMN);
+
+            int LITMAX = record3->getItem("LITMAX")->getInt(0);
+            m_tuning->setLITMAX(currentStep, LITMAX);
+
+            int LITMIN = record3->getItem("LITMIN")->getInt(0);
+            m_tuning->setLITMIN(currentStep, LITMIN);
+
+            int MXWSIT = record3->getItem("MXWSIT")->getInt(0);
+            m_tuning->setMXWSIT(currentStep, MXWSIT);
+
+            int MXWPIT = record3->getItem("MXWPIT")->getInt(0);
+            m_tuning->setMXWPIT(currentStep, MXWPIT);
+
+            double DDPLIM = record3->getItem("DDPLIM")->getSIDouble(0);
+            m_tuning->setDDPLIM(currentStep, DDPLIM);
+
+            double DDSLIM = record3->getItem("DDSLIM")->getRawDouble(0);
+            m_tuning->setDDSLIM(currentStep, DDSLIM);
+
+            double TRGDPR = record3->getItem("TRGDPR")->getSIDouble(0);
+            m_tuning->setTRGDPR(currentStep, TRGDPR);
+
+            DeckItemConstPtr XXXDPRdeckItem = record3->getItem("XXXDPR");
+            if (XXXDPRdeckItem->hasValue(0)) {
+                double XXXDPR = XXXDPRdeckItem->getSIDouble(0);
+                m_tuning->setXXXDPR(currentStep, XXXDPR);
+            }
+        }
+    }
+
+
+
     void Schedule::handleCOMPDAT(DeckKeywordConstPtr keyword, size_t currentStep) {
         std::map<std::string , std::vector< CompletionPtr> > completionMapList = Completion::completionsFromCOMPDATKeyword( keyword );
         std::map<std::string , std::vector< CompletionPtr> >::iterator iter;
@@ -831,6 +966,7 @@ namespace Opm {
             throw std::invalid_argument("Group: " + groupName + " does not exist");
     }
 
+
     void Schedule::addWellToGroup( GroupPtr newGroup , WellPtr well , size_t timeStep) {
         const std::string currentGroupName = well->getGroupName(timeStep);
         if (currentGroupName != "") {
@@ -912,5 +1048,9 @@ namespace Opm {
 
       }
       return ncwmax;
+    }
+
+    TuningPtr Schedule::getTuning() const {
+      return m_tuning;
     }
 }
