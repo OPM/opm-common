@@ -50,6 +50,11 @@ namespace Opm {
         }
 
 
+        const T& operator[](size_t index) const {
+            return at(index);
+        }
+
+
         T get(size_t index) const {
             if (index >= m_timeMap->size())
                 throw std::range_error("Index value is out range.");
