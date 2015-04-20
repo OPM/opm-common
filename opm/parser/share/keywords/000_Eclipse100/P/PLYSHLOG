@@ -1,7 +1,6 @@
-{ "name" : "PLYSHLOG" , "sections" : ["SPECIAL", "PROPS", "SCHEDULE"] , "records" : [
+{ "name" : "PLYSHLOG" , "size" : 2 , "sections" : ["SPECIAL", "PROPS", "SCHEDULE"] , "records" : [
     [{"name" : "REF_POLYMER_CONCENTRATION" , "value_type" : "DOUBLE"  , "dimension" : "PolymerDensity"},
      {"name" : "REF_SALINITY" , "value_type" : "DOUBLE" , "dimension" : "Salinity"},
      {"name" : "REF_TEMPERATURE" , "value_type" : "DOUBLE" , "dimension" : "Temperature"}],
-    [{"name" : "WATER_VELOCITY" , "value_type" : "DOUBLE"  , "dimension" : "Length/Time"},
-     {"name" : "SHEAR_MULTIPLIER" , "value_type" : "DOUBLE", "dimension" : "1"}]
+    [{"name" : "DATA" , "value_type" : "DOUBLE"  , "size_type" : "ALL" , "dimension" : ["Length/Time" , "1"]}]
 ]}
