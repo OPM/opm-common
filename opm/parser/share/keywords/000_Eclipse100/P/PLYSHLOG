@@ -1,4 +1,4 @@
-{ "name" : "PLYSHLOG" , "sections" : ["SPECIAL", "PROPS", "SCHEDULE"], "size" : {"keyword" : "TABDIMS" , "item" : "NTPVT"} , "records" : [
+{ "name" : "PLYSHLOG" , "sections" : ["SPECIAL", "PROPS", "SCHEDULE"] , "records" : [
     [{"name" : "REF_POLYMER_CONCENTRATION" , "value_type" : "DOUBLE"  , "dimension" : "PolymerDensity"},
      {"name" : "REF_SALINITY" , "value_type" : "DOUBLE" , "dimension" : "Salinity"},
      {"name" : "REF_TEMPERATURE" , "value_type" : "DOUBLE" , "dimension" : "Temperature"}],
