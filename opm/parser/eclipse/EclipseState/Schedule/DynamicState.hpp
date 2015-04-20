@@ -33,9 +33,11 @@ namespace Opm {
     class DynamicState {
     public:
 
-        DynamicState(const TimeMapConstPtr timeMap, T defaultValue) {
+        DynamicState(const TimeMapConstPtr timeMap, T initialValue) {
             m_timeMap = timeMap;
-            m_currentValue = defaultValue;
+            m_currentValue = initialValue;
+            m_initialValue = initialValue;
+            m_initialRange = 0;
         }
 
 
@@ -50,6 +52,11 @@ namespace Opm {
         }
 
 
+        const T& operator[](size_t index) const {
+            return at(index);
+        }
+
+
         T get(size_t index) const {
             if (index >= m_timeMap->size())
                 throw std::range_error("Index value is out range.");
@@ -60,6 +67,16 @@ namespace Opm {
             return m_data[index];
         }
 
+
+
+        void updateInitial(T initialValue) {
+            if (m_initialValue != initialValue) {
+                size_t index;
+                m_initialValue = initialValue;
+                for (index = 0; index < m_initialRange; index++)
+                    m_data[index] = m_initialValue;
+            }
+        }
 
 
         size_t size() const {
@@ -86,6 +103,8 @@ namespace Opm {
 
            m_data[index] = value;
            m_currentValue = value;
+           if (m_initialRange == 0)
+               m_initialRange = index;
         }
 
 
@@ -94,6 +113,8 @@ namespace Opm {
         std::vector<T> m_data;
         TimeMapConstPtr m_timeMap;
         T m_currentValue;
+        T m_initialValue;
+        size_t m_initialRange;
     };
 }
 
