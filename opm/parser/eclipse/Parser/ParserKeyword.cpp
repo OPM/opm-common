@@ -421,7 +421,7 @@ namespace Opm {
         const Json::JsonObject dataConfig = jsonConfig.get_item("data");
         if (dataConfig.has_item("value_type")) {
             ParserValueTypeEnum valueType = ParserValueTypeEnumFromString(dataConfig.get_string("value_type"));
-            const std::string itemName(getName());
+            const std::string itemName("data");
             bool hasDefault = dataConfig.has_item("default");
             std::shared_ptr<ParserRecord> record = std::make_shared<ParserRecord>();
 
