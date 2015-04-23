@@ -79,6 +79,12 @@ namespace Opm {
         return m_name;
     }
 
+    const std::string ParserItem::className() const {
+        return m_name;
+    }
+
+
+
     ParserItemSizeEnum ParserItem::sizeType() const {
         return m_sizeType;
     }

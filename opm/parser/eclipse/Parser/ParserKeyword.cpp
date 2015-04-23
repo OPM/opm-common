@@ -32,6 +32,20 @@
 
 namespace Opm {
 
+    void ParserKeyword::setSizeType( ParserKeywordSizeEnum sizeType ) {
+        m_keywordSizeType = sizeType;
+    }
+
+    void ParserKeyword::setFixedSize( size_t keywordSize) {
+        m_keywordSizeType = FIXED;
+        m_fixedSize = keywordSize;
+    }
+
+    void ParserKeyword::setTableCollection(bool isTableCollection) {
+        m_isTableCollection = isTableCollection;
+    }
+
+
     void ParserKeyword::commonInit(const std::string& name, ParserKeywordSizeEnum sizeType) {
         m_isTableCollection = false;
         m_name = name;
@@ -172,34 +186,7 @@ namespace Opm {
         }
     }
 
-    ParserKeywordPtr ParserKeyword::createFixedSized(const std::string& name,
-                                                     size_t fixedKeywordSize) {
-        auto kw = std::make_shared<ParserKeyword>( name );
-        kw->m_keywordSizeType = FIXED;
-        kw->m_fixedSize = fixedKeywordSize;
-        return kw;
-    }
 
-
-
-    ParserKeywordPtr ParserKeyword::createDynamicSized(const std::string& name,
-                                                       ParserKeywordSizeEnum sizeType) {
-        auto kw = std::make_shared<ParserKeyword>( name );
-        kw->m_keywordSizeType = sizeType;
-        return kw;
-    }
-
-
-    ParserKeywordPtr ParserKeyword::createTable(const std::string& name,
-                                                const std::string& sizeKeyword,
-                                                const std::string& sizeItem,
-                                                bool isTableCollection) {
-        return ParserKeywordPtr(new ParserKeyword(name, sizeKeyword, sizeItem, isTableCollection));
-    }
-
-    ParserKeywordPtr ParserKeyword::createFromJson(const Json::JsonObject& jsonConfig) {
-        return ParserKeywordPtr(new ParserKeyword(jsonConfig));
-    }
 
     void ParserKeyword::initSizeKeyword(const std::string& sizeKeyword, const std::string& sizeItem) {
         m_sizeDefinitionPair = std::pair<std::string, std::string>(sizeKeyword, sizeItem);
@@ -507,6 +494,9 @@ namespace Opm {
     }
 
 
+    const std::string ParserKeyword::className() const {
+        return getName();
+    }
 
     const std::string& ParserKeyword::getName() const {
         return m_name;
@@ -667,84 +657,135 @@ namespace Opm {
         }
     }
 
-    void ParserKeyword::inlineNew(std::ostream& os, const std::string& lhs, const std::string& indent) const {
+
+    std::string ParserKeyword::createDeclaration(const std::string& indent) const {
+        std::stringstream ss;
+        ss << indent << "class " << className() << " : public ParserKeyword {" << std::endl;
+        ss << indent << "public:" << std::endl;
+        {
+            std::string local_indent = indent + "    ";
+            ss << local_indent << className() << "();" << std::endl;
+            ss << local_indent << "static const std::string keywordName;" << std::endl;
+            if (m_records.size() > 0 ) {
+                for (auto iter = recordBegin(); iter != recordEnd(); ++iter) {
+                    std::shared_ptr<ParserRecord> record = *iter;
+                    for (size_t i = 0; i < record->size(); i++) {
+                        ParserItemConstPtr item = record->get(i);
+                        ss << std::endl;
+                        item->inlineClass(ss , local_indent );
+                    }
+                }
+            }
+        }
+        ss << indent << "};" << std::endl << std::endl << std::endl;
+        return ss.str();
+    }
+
+
+    std::string ParserKeyword::createDecl() const {
+        return className() + "::" + className() + "()";
+    }
+
+
+    std::string ParserKeyword::createCode() const {
+        std::stringstream ss;
+        const std::string lhs = "keyword";
+        const std::string indent = "  ";
+
+        ss << className() << "::" << className() << "( ) : ParserKeyword(\"" << m_name << "\") {" << std::endl;
         {
             const std::string sizeString(ParserKeywordSizeEnum2String(m_keywordSizeType));
+            ss << indent;
             switch (m_keywordSizeType) {
                 case SLASH_TERMINATED:
-                    os << lhs << " = ParserKeyword::createDynamicSized(\"" << m_name << "\"," << sizeString << ");" << std::endl;
+                    ss << "setSizeType(" << sizeString << ");" << std::endl;
                     break;
                 case UNKNOWN:
-                    os << lhs << " = ParserKeyword::createDynamicSized(\"" << m_name << "\"," << sizeString << ");" << std::endl;
+                    ss << "setSizeType(" << sizeString << ");" << std::endl;
                     break;
                 case FIXED:
-                    os << lhs << " = ParserKeyword::createFixedSized(\"" << m_name << "\",(size_t)" << m_fixedSize << ");" << std::endl;
+                    ss << "setFixedSize( (size_t) " << m_fixedSize << ");" << std::endl;
                     break;
                 case OTHER_KEYWORD_IN_DECK:
-                    if (isTableCollection())
-                        os << lhs << " = ParserKeyword::createTable(\"" << m_name << "\",\"" << m_sizeDefinitionPair.first << "\",\"" << m_sizeDefinitionPair.second << "\", true);" << std::endl;
-                    else
-                        os << lhs << " = ParserKeyword::createTable(\"" << m_name << "\",\"" << m_sizeDefinitionPair.first << "\",\"" << m_sizeDefinitionPair.second << "\");" << std::endl;
+                    ss << "setSizeType(" << sizeString << ");" << std::endl;
+                    ss << indent << "initSizeKeyword(\"" << m_sizeDefinitionPair.first << "\",\"" << m_sizeDefinitionPair.second << "\");" << std::endl;
+                    if (m_isTableCollection)
+                        ss << "setTableCollection( true );" << std::endl;
                     break;
             }
         }
-        os << indent << lhs << "->setDescription(\"" << getDescription() << "\");" << std::endl;
+        ss << indent << "setDescription(\"" << getDescription() << "\");" << std::endl;
 
         // add the valid sections for the keyword
-        os << indent << lhs << "->clearValidSectionNames();\n";
+        ss << indent << "clearValidSectionNames();\n";
         for (auto sectionNameIt = m_validSectionNames.begin();
              sectionNameIt != m_validSectionNames.end();
              ++sectionNameIt)
         {
-            os << indent << lhs << "->addValidSectionName(\"" << *sectionNameIt << "\");" << std::endl;
+            ss << indent << "addValidSectionName(\"" << *sectionNameIt << "\");" << std::endl;
         }
 
         // add the deck names
-        os << indent << lhs << "->clearDeckNames();\n";
+        ss << indent << "clearDeckNames();\n";
         for (auto deckNameIt = m_deckNames.begin();
              deckNameIt != m_deckNames.end();
              ++deckNameIt)
         {
-            os << indent << lhs << "->addDeckName(\"" << *deckNameIt << "\");" << std::endl;
+            ss << indent << "addDeckName(\"" << *deckNameIt << "\");" << std::endl;
         }
 
         // set the deck name match regex
         if (hasMatchRegex())
-            os << indent << lhs << "->setMatchRegex(\"" << m_matchRegexString << "\");" << std::endl;
+            ss << indent << "setMatchRegex(\"" << m_matchRegexString << "\");" << std::endl;
 
         {
             if (m_records.size() > 0 ) {
                 for (auto iter = recordBegin(); iter != recordEnd(); ++iter) {
                     std::shared_ptr<ParserRecord> record = *iter;
                     const std::string local_indent = indent + "   ";
-                    os << indent << "{" << std::endl;
-                    os << local_indent << "std::shared_ptr<ParserRecord> record = std::make_shared<ParserRecord>();" << std::endl;
+                    ss << indent << "{" << std::endl;
+                    ss << local_indent << "std::shared_ptr<ParserRecord> record = std::make_shared<ParserRecord>();" << std::endl;
                     for (size_t i = 0; i < record->size(); i++) {
                         ParserItemConstPtr item = record->get(i);
-                        os << local_indent << "ParserItemPtr "<<item->name()<<"item(";
-                        item->inlineNew(os);
-                        os << ");" << std::endl;
-                        os << local_indent << item->name()<<"item->setDescription(\"" << item->getDescription() << "\");" << std::endl;
-                        for (size_t idim=0; idim < item->numDimensions(); idim++)
-                            os << local_indent <<item->name()<<"item->push_backDimension(\"" << item->getDimension( idim ) << "\");" << std::endl;
+                        ss << local_indent << "{" << std::endl;
                         {
-                            std::string addItemMethod = "addItem";
-                            if (isDataKeyword())
-                                addItemMethod = "addDataItem";
+                            std::string indent3 = local_indent + "   ";
+                            ss << indent3 << "ParserItemPtr item(" << item->createCode() << ");" << std::endl;
+                            ss << indent3 << "item->setDescription(\"" << item->getDescription() << "\");" << std::endl;
+                            for (size_t idim=0; idim < item->numDimensions(); idim++)
+                                ss << indent3 <<"item->push_backDimension(\"" << item->getDimension( idim ) << "\");" << std::endl;
+                            {
+                                std::string addItemMethod = "addItem";
+                                if (isDataKeyword())
+                                    addItemMethod = "addDataItem";
 
-                            os << local_indent << "record->" << addItemMethod << "("<<item->name()<<"item);" << std::endl;
+                                ss << indent3 << "record->" << addItemMethod << "(item);" << std::endl;
+                            }
                         }
+                        ss << local_indent << "}" << std::endl;
                     }
 
                     if (record->isDataRecord())
-                        os << local_indent << lhs << "->addDataRecord( record );" << std::endl;
+                        ss << local_indent << "addDataRecord( record );" << std::endl;
                     else
-                        os << local_indent << lhs << "->addRecord( record );" << std::endl;
+                        ss << local_indent << "addRecord( record );" << std::endl;
 
-                    os << indent << "}" << std::endl;
+                    ss << indent << "}" << std::endl;
                 }
             }
         }
+        ss << "}" << std::endl;
+
+        ss << "const std::string " << className() << "::keywordName = \"" << getName() << "\";" << std::endl;
+        for (auto iter = recordBegin(); iter != recordEnd(); ++iter) {
+            std::shared_ptr<ParserRecord> record = *iter;
+            for (size_t i = 0; i < record->size(); i++) {
+                ParserItemConstPtr item = record->get(i);
+                ss << item->inlineClassInit(className());
+            }
+        }
+        ss << std::endl;
+        return ss.str();
     }
 
 

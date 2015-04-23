@@ -326,7 +326,7 @@ namespace Opm {
         if (jsonKeywords.is_array()) {
             for (size_t index = 0; index < jsonKeywords.size(); index++) {
                 Json::JsonObject jsonKeyword = jsonKeywords.get_array_item(index);
-                ParserKeywordConstPtr parserKeyword = ParserKeyword::createFromJson(jsonKeyword);
+                ParserKeywordConstPtr parserKeyword = std::make_shared<const ParserKeyword>(jsonKeyword);
 
                 addParserKeyword(parserKeyword);
             }
@@ -447,7 +447,7 @@ namespace Opm {
 
         try {
             Json::JsonObject jsonKeyword(configFile);
-            ParserKeywordConstPtr parserKeyword = ParserKeyword::createFromJson(jsonKeyword);
+            ParserKeywordConstPtr parserKeyword = std::make_shared<const ParserKeyword>(jsonKeyword);
             addParserKeyword(parserKeyword);
             return true;
         }

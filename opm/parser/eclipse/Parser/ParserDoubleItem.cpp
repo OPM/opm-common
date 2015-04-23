@@ -133,12 +133,27 @@ namespace Opm
         return ParserItemScan<ParserDoubleItem,DeckDoubleItem,double>(this , rawRecord);
     }
 
-    void ParserDoubleItem::inlineNew(std::ostream& os) const {
-        os << "new ParserDoubleItem(" << "\"" << name() << "\"" << "," << ParserItemSizeEnum2String( sizeType() );
+    std::string ParserDoubleItem::createCode() const {
+        std::stringstream ss;
+
+        ss << "new ParserDoubleItem(" << "\"" << name() << "\"" << ",Opm::" << ParserItemSizeEnum2String( sizeType() );
         if (m_defaultSet)
-            os << "," << boost::lexical_cast<std::string>(getDefault());
-        os << ")";
+            ss << "," << boost::lexical_cast<std::string>(getDefault());
+        ss << ")";
+
+        return ss.str();
     }
+
+
+
+    void ParserDoubleItem::inlineClass(std::ostream& os, const std::string& indent) const {
+        ParserItemInlineClassDeclaration<ParserDoubleItem,double>(this , os , indent , "double");
+    }
+
+    std::string ParserDoubleItem::inlineClassInit(const std::string& parentClass) const {
+        return ParserItemInlineClassInit<ParserDoubleItem,int>(this ,  parentClass , "double");
+    }
+
 
 }
 
