@@ -134,7 +134,7 @@ namespace Opm
     void ParserFloatItem::inlineNew(std::ostream& os) const {
         os << "new ParserFloatItem(" << "\"" << name() << "\"" << "," << ParserItemSizeEnum2String( sizeType() );
         if (m_defaultSet)
-            os << "," << getDefault();
+            os << "," << boost::lexical_cast<std::string>(getDefault());
         os << ")";
     }
 
