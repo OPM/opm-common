@@ -288,6 +288,8 @@ namespace Opm {
 
         initGasvisctTables(deck, "GASVISCT", m_gasvisctTables);
 
+        initPlyshlogTables(deck, "PLYSHLOG", m_plyshlogTables);
+
         // the ROCKTAB table comes with additional fun because the number of columns
         //depends on the presence of the RKTRMDIR keyword...
         initRocktabTables(deck);
@@ -557,6 +559,27 @@ namespace Opm {
             tableVector.push_back(GasvisctTable());
             tableVector[tableIdx].init(deck, tableKeyword, tableIdx);
         }
+    }
+
+    void EclipseState::initPlyshlogTables(DeckConstPtr deck,
+                                          const std::string& keywordName,
+                                          std::vector<PlyshlogTable>& tableVector){
+
+        if (!deck->hasKeyword(keywordName)) {
+            return;
+        }
+
+        if (!deck->numKeywords(keywordName)) {
+            complainAboutAmbiguousKeyword(deck, keywordName);
+            return;
+        }
+
+        const auto& keyword = deck->getKeyword(keywordName);
+
+        tableVector.push_back(PlyshlogTable());
+
+        tableVector[0].init(keyword);
+
     }
 
     bool EclipseState::supportsGridProperty(const std::string& keyword, int enabledTypes) const {

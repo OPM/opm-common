@@ -28,7 +28,9 @@
 #include <cassert>
 
 namespace Opm {
+    class PlyshlogTable;
     class SingleRecordTable {
+        friend class PlyshlogTable;
     protected:
         SingleRecordTable(const SingleRecordTable&) = default;
 
