@@ -23,6 +23,7 @@
 
 #include <opm/json/JsonObject.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
@@ -303,7 +304,7 @@ BOOST_AUTO_TEST_CASE(AddDataKeywordFromJson_correctlyConfigured) {
     BOOST_CHECK_EQUAL(1U , parserKeyword->getFixedSize() );
     BOOST_CHECK_EQUAL(1U , parserKeyword->numItems() );
 
-    BOOST_CHECK_EQUAL( item->name() , parserKeyword->getName());
+    BOOST_CHECK_EQUAL( item->name() , ParserKeywords::ACTNUM::data::itemName );
     BOOST_CHECK_EQUAL( ALL , item->sizeType() );
 }
 

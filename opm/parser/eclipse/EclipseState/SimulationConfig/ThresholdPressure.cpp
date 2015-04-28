@@ -20,7 +20,7 @@
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
-
+#include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
 
 namespace Opm {
 
@@ -39,14 +39,14 @@ namespace Opm {
                                                   std::shared_ptr<GridProperties<int>> gridProperties) {
 
         bool       thpresOption     = false;
-        const bool thpresKeyword    = solutionSection->hasKeyword("THPRES");
-        const bool hasEqlnumKeyword = gridProperties->hasKeyword("EQLNUM");
+        const bool thpresKeyword    = solutionSection->hasKeyword<ParserKeywords::THPRES>( );
+        const bool hasEqlnumKeyword = gridProperties->hasKeyword<ParserKeywords::EQLNUM>( );
         int        maxEqlnum        = 0;
 
 
         //Is THPRES option set?
-        if (runspecSection->hasKeyword("EQLOPTS")) {
-            auto eqlopts = runspecSection->getKeyword("EQLOPTS");
+        if (runspecSection->hasKeyword<ParserKeywords::EQLOPTS>( )) {
+            auto eqlopts = runspecSection->getKeyword<ParserKeywords::EQLOPTS>( );
             auto rec = eqlopts->getRecord(0);
             for (size_t i = 0; i < rec->size(); ++i) {
                 auto item = rec->getItem(i);
@@ -66,29 +66,29 @@ namespace Opm {
         {
             //Find max of eqlnum
             if (hasEqlnumKeyword) {
-              auto eqlnumKeyword = gridProperties->getKeyword( "EQLNUM" );
-              auto eqlnum = eqlnumKeyword->getData();
-              maxEqlnum = *std::max_element(eqlnum.begin(), eqlnum.end());
+                auto eqlnumKeyword = gridProperties->getKeyword<ParserKeywords::EQLNUM>( );
+                auto eqlnum = eqlnumKeyword->getData();
+                maxEqlnum = *std::max_element(eqlnum.begin(), eqlnum.end());
 
-              if (0 == maxEqlnum) {
-                  throw std::runtime_error("Error in EQLNUM data: all values are 0");
-              }
+                if (0 == maxEqlnum) {
+                    throw std::runtime_error("Error in EQLNUM data: all values are 0");
+                }
             } else {
                 throw std::runtime_error("Error when internalizing THPRES: EQLNUM keyword not found in deck");
             }
 
 
             // Fill threshold pressure table.
-            auto thpres = solutionSection->getKeyword("THPRES");
+            auto thpres = solutionSection->getKeyword<ParserKeywords::THPRES>( );
 
             m_thresholdPressureTable.resize(maxEqlnum * maxEqlnum, 0.0);
 
             const int numRecords = thpres->size();
             for (int rec_ix = 0; rec_ix < numRecords; ++rec_ix) {
                 auto rec = thpres->getRecord(rec_ix);
-                auto region1Item = rec->getItem("REGION1");
-                auto region2Item = rec->getItem("REGION2");
-                auto thpressItem = rec->getItem("THPRES");
+                auto region1Item = rec->getItem<ParserKeywords::THPRES::REGION1>();
+                auto region2Item = rec->getItem<ParserKeywords::THPRES::REGION2>();
+                auto thpressItem = rec->getItem<ParserKeywords::THPRES::VALUE>();
 
                 if (region1Item->hasValue(0) && region2Item->hasValue(0) && thpressItem->hasValue(0)) {
                     const int r1 = region1Item->getInt(0) - 1;
