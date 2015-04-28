@@ -42,6 +42,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PlymaxTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyrockTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyviscTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PlyshlogTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvdgTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvdoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
@@ -198,6 +199,11 @@ namespace Opm {
                                 const std::string& keywordName,
                                 std::vector<GasvisctTable>& tableVector);
 
+        void initPlyshlogTables(DeckConstPtr deck,
+                                              const std::string& keywordName,
+                                              std::vector<PlyshlogTable>& tableVector);
+
+
         void setMULTFLT(std::shared_ptr<const Section> section) const;
         void initMULTREGT(DeckConstPtr deck);
 
@@ -238,6 +244,7 @@ namespace Opm {
         std::vector<PlymaxTable> m_plymaxTables;
         std::vector<PlyrockTable> m_plyrockTables;
         std::vector<PlyviscTable> m_plyviscTables;
+        std::vector<PlyshlogTable> m_plyshlogTables;
         std::vector<PvdgTable> m_pvdgTables;
         std::vector<PvdoTable> m_pvdoTables;
         std::vector<PvtgTable> m_pvtgTables;
