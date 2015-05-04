@@ -101,8 +101,6 @@ namespace Opm {
         }
     }
 
-
-
     void Tuning::getTuningItemValue(const std::string& tuningItem, size_t timestep, int& value) {
 
         /*The following code diverges from coding standard to improve readabillity*/
@@ -114,6 +112,112 @@ namespace Opm {
         else if   ("LITMIN" == tuningItem)  {  value = m_LITMIN->get(timestep); }
         else if   ("MXWSIT" == tuningItem)  {  value = m_MXWSIT->get(timestep); }
         else if   ("MXWPIT" == tuningItem)  {  value = m_MXWPIT->get(timestep); }
+
+        else {
+            throw std::invalid_argument("Method getTuningItemValue(): The TUNING keyword item: " + tuningItem + " was not recognized or has wrong type");
+        }
+    }
+
+
+    void Tuning::setTuningResetInitialValue(const std::string tuningItem, double value) {
+        /*The following code diverges from coding standard to improve readabillity*/
+        if        ("TSINIT" == tuningItem)  {  m_TSINIT->resetWithNewInitial(value); }  //RECORD 1
+        else if   ("TSMAXZ" == tuningItem)  {  m_TSMAXZ->resetWithNewInitial(value); }
+        else if   ("TSMINZ" == tuningItem)  {  m_TSMINZ->resetWithNewInitial(value); }
+        else if   ("TSMCHP" == tuningItem)  {  m_TSMCHP->resetWithNewInitial(value); }
+        else if   ("TSFMAX" == tuningItem)  {  m_TSFMAX->resetWithNewInitial(value); }
+        else if   ("TSFMIN" == tuningItem)  {  m_TSFMIN->resetWithNewInitial(value); }
+        else if   ("TSFCNV" == tuningItem)  {  m_TSFCNV->resetWithNewInitial(value); }
+        else if   ("TFDIFF" == tuningItem)  {  m_TFDIFF->resetWithNewInitial(value); }
+        else if   ("THRUPT" == tuningItem)  {  m_THRUPT->resetWithNewInitial(value); }
+        else if   ("TMAXWC" == tuningItem)  {  m_TMAXWC->resetWithNewInitial(value); }
+
+        else if   ("TRGTTE" == tuningItem)  {  m_TRGTTE->resetWithNewInitial(value); }  //RECORD 2
+        else if   ("TRGCNV" == tuningItem)  {  m_TRGCNV->resetWithNewInitial(value); }
+        else if   ("TRGMBE" == tuningItem)  {  m_TRGMBE->resetWithNewInitial(value); }
+        else if   ("TRGLCV" == tuningItem)  {  m_TRGLCV->resetWithNewInitial(value); }
+        else if   ("XXXTTE" == tuningItem)  {  m_XXXTTE->resetWithNewInitial(value); }
+        else if   ("XXXCNV" == tuningItem)  {  m_XXXCNV->resetWithNewInitial(value); }
+        else if   ("XXXMBE" == tuningItem)  {  m_XXXMBE->resetWithNewInitial(value); }
+        else if   ("XXXLCV" == tuningItem)  {  m_XXXLCV->resetWithNewInitial(value); }
+        else if   ("XXXWFL" == tuningItem)  {  m_XXXWFL->resetWithNewInitial(value); }
+        else if   ("TRGFIP" == tuningItem)  {  m_TRGFIP->resetWithNewInitial(value); }
+        else if   ("TRGSFT" == tuningItem)  {  m_TRGSFT->resetWithNewInitial(value); }
+        else if   ("THIONX" == tuningItem)  {  m_THIONX->resetWithNewInitial(value); }
+
+        else if   ("DDPLIM" == tuningItem)  {  m_DDPLIM->resetWithNewInitial(value); }  //RECORD 3
+        else if   ("DDSLIM" == tuningItem)  {  m_DDSLIM->resetWithNewInitial(value); }
+        else if   ("TRGDPR" == tuningItem)  {  m_TRGDPR->resetWithNewInitial(value); }
+        else if   ("XXXDPR" == tuningItem)  {  m_XXXDPR->resetWithNewInitial(value); }
+
+        else {
+            throw std::invalid_argument("Method getTuningItemValue(): The TUNING keyword item: " + tuningItem + " was not recognized or has wrong type");
+        }
+    }
+
+    void Tuning::setTuningResetInitialValue(const std::string tuningItem, int value) {
+        /*The following code diverges from coding standard to improve readabillity*/
+        if        ("TRWGHT" == tuningItem)  { m_TRWGHT->resetWithNewInitial(value); }  //RECORD 2
+
+        else if   ("NEWTMX" == tuningItem)  { m_NEWTMX->resetWithNewInitial(value); }  //RECORD 3
+        else if   ("NEWTMN" == tuningItem)  { m_NEWTMN->resetWithNewInitial(value); }
+        else if   ("LITMAX" == tuningItem)  { m_LITMAX->resetWithNewInitial(value); }
+        else if   ("LITMIN" == tuningItem)  { m_LITMIN->resetWithNewInitial(value); }
+        else if   ("MXWSIT" == tuningItem)  { m_MXWSIT->resetWithNewInitial(value); }
+        else if   ("MXWPIT" == tuningItem)  { m_MXWPIT->resetWithNewInitial(value); }
+
+        else {
+            throw std::invalid_argument("Method getTuningItemValue(): The TUNING keyword item: " + tuningItem + " was not recognized or has wrong type");
+        }
+    }
+
+
+    void Tuning::setTuningInitialValue(const std::string tuningItem, double value) {
+        /*The following code diverges from coding standard to improve readabillity*/
+        if        ("TSINIT" == tuningItem)  {  m_TSINIT->updateInitial(value); }  //RECORD 1
+        else if   ("TSMAXZ" == tuningItem)  {  m_TSMAXZ->updateInitial(value); }
+        else if   ("TSMINZ" == tuningItem)  {  m_TSMINZ->updateInitial(value); }
+        else if   ("TSMCHP" == tuningItem)  {  m_TSMCHP->updateInitial(value); }
+        else if   ("TSFMAX" == tuningItem)  {  m_TSFMAX->updateInitial(value); }
+        else if   ("TSFMIN" == tuningItem)  {  m_TSFMIN->updateInitial(value); }
+        else if   ("TSFCNV" == tuningItem)  {  m_TSFCNV->updateInitial(value); }
+        else if   ("TFDIFF" == tuningItem)  {  m_TFDIFF->updateInitial(value); }
+        else if   ("THRUPT" == tuningItem)  {  m_THRUPT->updateInitial(value); }
+        else if   ("TMAXWC" == tuningItem)  {  m_TMAXWC->updateInitial(value); }
+
+        else if   ("TRGTTE" == tuningItem)  {  m_TRGTTE->updateInitial(value); }  //RECORD 2
+        else if   ("TRGCNV" == tuningItem)  {  m_TRGCNV->updateInitial(value); }
+        else if   ("TRGMBE" == tuningItem)  {  m_TRGMBE->updateInitial(value); }
+        else if   ("TRGLCV" == tuningItem)  {  m_TRGLCV->updateInitial(value); }
+        else if   ("XXXTTE" == tuningItem)  {  m_XXXTTE->updateInitial(value); }
+        else if   ("XXXCNV" == tuningItem)  {  m_XXXCNV->updateInitial(value); }
+        else if   ("XXXMBE" == tuningItem)  {  m_XXXMBE->updateInitial(value); }
+        else if   ("XXXLCV" == tuningItem)  {  m_XXXLCV->updateInitial(value); }
+        else if   ("XXXWFL" == tuningItem)  {  m_XXXWFL->updateInitial(value); }
+        else if   ("TRGFIP" == tuningItem)  {  m_TRGFIP->updateInitial(value); }
+        else if   ("TRGSFT" == tuningItem)  {  m_TRGSFT->updateInitial(value); }
+        else if   ("THIONX" == tuningItem)  {  m_THIONX->updateInitial(value); }
+
+        else if   ("DDPLIM" == tuningItem)  {  m_DDPLIM->updateInitial(value); }  //RECORD 3
+        else if   ("DDSLIM" == tuningItem)  {  m_DDSLIM->updateInitial(value); }
+        else if   ("TRGDPR" == tuningItem)  {  m_TRGDPR->updateInitial(value); }
+        else if   ("XXXDPR" == tuningItem)  {  m_XXXDPR->updateInitial(value); }
+
+        else {
+            throw std::invalid_argument("Method getTuningItemValue(): The TUNING keyword item: " + tuningItem + " was not recognized or has wrong type");
+        }
+    }
+
+    void Tuning::setTuningInitialValue(const std::string tuningItem, int value) {
+        /*The following code diverges from coding standard to improve readabillity*/
+        if        ("TRWGHT" == tuningItem)  { m_TRWGHT->updateInitial(value); }  //RECORD 2
+
+        else if   ("NEWTMX" == tuningItem)  { m_NEWTMX->updateInitial(value); }  //RECORD 3
+        else if   ("NEWTMN" == tuningItem)  { m_NEWTMN->updateInitial(value); }
+        else if   ("LITMAX" == tuningItem)  { m_LITMAX->updateInitial(value); }
+        else if   ("LITMIN" == tuningItem)  { m_LITMIN->updateInitial(value); }
+        else if   ("MXWSIT" == tuningItem)  { m_MXWSIT->updateInitial(value); }
+        else if   ("MXWPIT" == tuningItem)  { m_MXWPIT->updateInitial(value); }
 
         else {
             throw std::invalid_argument("Method getTuningItemValue(): The TUNING keyword item: " + tuningItem + " was not recognized or has wrong type");

@@ -46,6 +46,11 @@ namespace Opm {
     public:
         Tuning(TimeMapConstPtr timemap);
 
+        void setTuningInitialValue(const std::string tuningItem, double value);
+        void setTuningInitialValue(const std::string tuningItem, int value);
+        void setTuningResetInitialValue(const std::string tuningItem, double value);
+        void setTuningResetInitialValue(const std::string tuningItem, int value);
+
         void getTuningItemValue(const std::string& tuningItem, size_t timestep, double& value);
         void getTuningItemValue(const std::string& tuningItem, size_t timestep, int& value);
 
