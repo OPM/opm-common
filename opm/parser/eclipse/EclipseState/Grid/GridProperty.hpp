@@ -26,8 +26,10 @@
 #include <unordered_map>
 #include <boost/lexical_cast.hpp>
 
+#include <opm/parser/eclipse/ert/EclKW.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridPropertyInitializers.hpp>
 
 /*
@@ -226,6 +228,7 @@ public:
         return m_data;
     }
 
+    
 
     void maskedSet(T value, const std::vector<bool>& mask) {
         for (size_t g = 0; g < getCartesianSize(); g++) {
@@ -399,7 +402,30 @@ public:
         }
     }
 
+    
+    ERT::EclKW<T> getEclKW() const {
+        ERT::EclKW<T> eclKW( getKeywordName() , getCartesianSize());
+        eclKW.assignVector( getData() );
+        return eclKW;
+    }
 
+
+    ERT::EclKW<T> getEclKW(std::shared_ptr<const EclipseGrid> grid) const {
+        ERT::EclKW<T> eclKW( getKeywordName() , grid->getNumActive());
+        size_t activeIndex = 0;
+        for (size_t g = 0; g < getCartesianSize(); g++) {
+            if (grid->cellActive( g )) {
+                eclKW[activeIndex] = iget(g);
+                activeIndex++;
+            }
+        }
+        
+        return eclKW;
+    }
+
+
+
+    
 private:
     Opm::DeckItemConstPtr getDeckItem(Opm::DeckKeywordConstPtr deckKeyword) {
         if (deckKeyword->size() != 1)
@@ -429,5 +455,6 @@ private:
     bool m_hasRunPostProcessor;
 };
 
+    
 }
 #endif

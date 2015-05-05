@@ -10,6 +10,7 @@ if (BUILD_TESTING)
    add_subdirectory(EclipseState/Tables/tests)
    add_subdirectory(EclipseState/Grid/tests)
    add_subdirectory(EclipseState/Util/tests)
+   add_subdirectory(ert/tests)
 endif()
 
 add_subdirectory( Applications )
@@ -105,7 +106,10 @@ EclipseState/Grid/Fault.cpp
 EclipseState/Grid/FaultCollection.cpp
 #
 EclipseState/SimulationConfig/SimulationConfig.cpp
-EclipseState/SimulationConfig/ThresholdPressure.cpp)
+EclipseState/SimulationConfig/ThresholdPressure.cpp
+#
+ert/EclKW.cpp
+ert/FortIO.cpp)
 
 
 set( HEADER_FILES
@@ -236,6 +240,9 @@ Utility/WelspecsWrapper.hpp
 Utility/EquilWrapper.hpp
 Utility/EndscaleWrapper.hpp
 Utility/ScalecrsWrapper.hpp
+#
+ert/EclKW.hpp
+ert/FortIO.hpp
 )
 
 add_library(buildParser STATIC ${rawdeck_source} ${build_parser_source} ${deck_source} ${unit_source})

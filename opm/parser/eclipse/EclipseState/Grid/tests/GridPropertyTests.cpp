@@ -27,6 +27,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 
+#include <opm/parser/eclipse/ert/EclKW.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
 #include <opm/parser/eclipse/Deck/Section.hpp>
@@ -497,7 +498,26 @@ BOOST_AUTO_TEST_CASE(mask_test) {
 
     p1.initMask(10 , mask);
     p2.maskedSet( 10 , mask);
-    
+
     for (size_t g = 0; g < p1.getCartesianSize(); g++)
         BOOST_CHECK_EQUAL( p1.iget(g) , p2.iget(g));
+}
+
+
+BOOST_AUTO_TEST_CASE(kw_test) {
+    Opm::GridProperty<int>::SupportedKeywordInfo keywordInfo1("P" , 10 , "1");
+    Opm::GridProperty<double>::SupportedKeywordInfo keywordInfo2("P" , 20 , "1");
+    Opm::GridProperty<int> p1( 5 , 5 , 4 , keywordInfo1);
+    Opm::GridProperty<double> p2( 5 , 5 , 4 , keywordInfo2);
+
+
+    ERT::EclKW<int> kw1 = p1.getEclKW();
+    ERT::EclKW<double> kw2 = p2.getEclKW();
+    
+    for (size_t g = 0; g < kw1.size(); g++)
+        BOOST_CHECK_EQUAL( p1.iget(g) , kw1[g]);
+
+    for (size_t g = 0; g < kw2.size(); g++)
+        BOOST_CHECK_EQUAL( p2.iget(g) , kw2[g]);
+
 }
