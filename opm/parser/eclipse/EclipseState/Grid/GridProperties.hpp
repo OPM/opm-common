@@ -68,12 +68,23 @@ public:
         return m_properties.count( keyword ) > 0;
     }
 
+    size_t size() const {
+        return m_property_list.size();
+    }
+
 
     std::shared_ptr<GridProperty<T> > getKeyword(const std::string& keyword) {
         if (!hasKeyword(keyword))
             addKeyword(keyword);
 
         return m_properties.at( keyword );
+    }
+
+    std::shared_ptr<GridProperty<T> > getKeyword(size_t index) {
+        if (index < size())
+            return m_property_list[index];
+        else
+            throw std::invalid_argument("Invalid index");
     }
 
 
@@ -103,15 +114,18 @@ public:
             std::shared_ptr<GridProperty<T> > newProperty(new GridProperty<T>(nx , ny , nz , supportedKeyword));
 
             m_properties.insert( std::pair<std::string , std::shared_ptr<GridProperty<T> > > ( keywordName , newProperty ));
+            m_property_list.push_back( newProperty );
             return true;
         }
     }
+
 
 
 private:
     std::shared_ptr<const EclipseGrid> m_eclipseGrid;
     std::unordered_map<std::string, SupportedKeywordInfo> m_supportedKeywords;
     std::map<std::string , std::shared_ptr<GridProperty<T> > > m_properties;
+    std::vector<std::shared_ptr<GridProperty<T> > > m_property_list;
 };
 
 }

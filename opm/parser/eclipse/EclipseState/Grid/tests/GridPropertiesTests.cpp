@@ -83,9 +83,13 @@ BOOST_AUTO_TEST_CASE(getKeyword) {
     Opm::GridProperties<int> gridProperties( grid , supportedKeywords);
     std::shared_ptr<Opm::GridProperty<int> > satnum1 = gridProperties.getKeyword("SATNUM");
     std::shared_ptr<Opm::GridProperty<int> > satnum2 = gridProperties.getKeyword("SATNUM");
+    std::shared_ptr<Opm::GridProperty<int> > satnum3 = gridProperties.getKeyword(0);
 
+    BOOST_CHECK_EQUAL( 1 , gridProperties.size() );
     BOOST_CHECK_EQUAL( satnum1.get() , satnum2.get());
+    BOOST_CHECK_EQUAL( satnum1.get() , satnum3.get());
     BOOST_CHECK_THROW( gridProperties.getKeyword("NOT-SUPPORTED") , std::invalid_argument );
+    BOOST_CHECK_THROW( gridProperties.getKeyword(3) , std::invalid_argument );
 }
 
 
