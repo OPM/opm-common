@@ -110,7 +110,6 @@ namespace Opm {
         void resetWithNewInitial(T initialVale){
           size_t currentSize = m_data.size() - m_initialRange;
           for (size_t i = 0; i < currentSize; i++){
-              //m_data.erase(m_initialRange + i);
               m_data.pop_back();
           }
           updateInitial(initialVale);
