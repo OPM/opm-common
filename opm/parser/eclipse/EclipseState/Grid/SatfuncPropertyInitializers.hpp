@@ -81,7 +81,7 @@ protected:
         const std::vector<SwofTable>& swofTables = m_eclipseState.getSwofTables();
         const std::vector<SgofTable>& sgofTables = m_eclipseState.getSgofTables();
         auto tabdims = m_eclipseState.getTabdims();
-        int numSatTables = tabdims->getNumSatTables();
+        size_t numSatTables = tabdims->getNumSatTables();
 
         if (swofTables.size() == numSatTables) {
             assert(swofTables.size() == sgofTables.size());
@@ -91,7 +91,7 @@ protected:
             m_minGasSat.resize( numSatTables , 0 );
             m_maxGasSat.resize( numSatTables , 0 );
 
-            for (int tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
+            for (size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
                 m_minWaterSat[tableIdx] = swofTables[tableIdx].getSwColumn().front();
                 m_maxWaterSat[tableIdx] = swofTables[tableIdx].getSwColumn().back();
 
@@ -223,7 +223,7 @@ public:
     void apply(std::vector<double>& ) const = 0;
 
 
-    void SatnumApply( std::vector<double>& values,
+    void satnumApply( std::vector<double>& values,
                       const std::string& columnName,
                       const std::vector<double>& fallbackValues,
                       bool useOneMinusTableValue) const
@@ -251,12 +251,12 @@ public:
             double cellDepth = std::get<2>(eclipseGrid->getCellCenter(cellIdx));
 
 
-            values[cellIdx] = selectValue(enptvdTables,
-                                          (useEnptvd && endNum >= 0) ? endNum : -1,
-                                          columnName ,
-                                          cellDepth,
-                                          fallbackValues[satTableIdx],
-                                          useOneMinusTableValue);
+            values[cellIdx] = this->selectValue(enptvdTables,
+                                                (useEnptvd && endNum >= 0) ? endNum : -1,
+                                                columnName ,
+                                                cellDepth,
+                                                fallbackValues[satTableIdx],
+                                                useOneMinusTableValue);
         }
     }
 };
@@ -275,7 +275,7 @@ public:
 
     void apply(std::vector<double>& ) const = 0;
 
-    void ImbnumApply( std::vector<double>& values,
+    void imbnumApply( std::vector<double>& values,
                       const std::string& columnName,
                       const std::vector<double>& fallBackValues ,
                       bool useOneMinusTableValue) const
@@ -302,12 +302,12 @@ public:
             int endNum = endnum->iget( cellIdx ) - 1;
             double cellDepth = std::get<2>(eclipseGrid->getCellCenter(cellIdx));
 
-            values[cellIdx] = selectValue(imptvdTables,
-                                          (useImptvd && endNum >= 0) ? endNum : -1,
-                                          columnName,
-                                          cellDepth,
-                                          fallBackValues[imbTableIdx],
-                                          useOneMinusTableValue);
+            values[cellIdx] = this->selectValue(imptvdTables,
+                                                (useImptvd && endNum >= 0) ? endNum : -1,
+                                                columnName,
+                                                cellDepth,
+                                                fallBackValues[imbTableIdx],
+                                                useOneMinusTableValue);
         }
     }
 };
@@ -327,7 +327,7 @@ public:
 
     void apply(std::vector<double>& values) const
     {
-        SatnumApply(values , "SGCO" , this->m_minGasSat , false);
+        this->satnumApply(values , "SGCO" , this->m_minGasSat , false);
     }
 };
 
@@ -344,7 +344,7 @@ public:
 
     void apply(std::vector<double>& values) const
     {
-        ImbnumApply(values , "SGCO" , this->m_minGasSat , false);
+        this->imbnumApply(values , "SGCO" , this->m_minGasSat , false);
     }
 };
 
@@ -362,7 +362,7 @@ public:
 
     void apply(std::vector<double>& values) const
     {
-        SatnumApply(values , "SGMAX" , this->m_maxGasSat, false);
+        this->satnumApply(values , "SGMAX" , this->m_maxGasSat, false);
     }
 };
 
@@ -379,7 +379,7 @@ public:
 
     void apply(std::vector<double>& values) const
     {
-        ImbnumApply(values , "SGMAX" , this->m_maxGasSat , false);
+        this->imbnumApply(values , "SGMAX" , this->m_maxGasSat , false);
     }
 };
 
@@ -397,7 +397,7 @@ public:
 
     void apply(std::vector<double>& values) const
     {
-        SatnumApply(values , "SWCO" , this->m_minWaterSat , false);
+        this->satnumApply(values , "SWCO" , this->m_minWaterSat , false);
     }
 };
 
@@ -415,7 +415,7 @@ public:
 
     void apply(std::vector<double>& values) const
     {
-        ImbnumApply(values , "SWCO" , this->m_minWaterSat , false);
+        this->imbnumApply(values , "SWCO" , this->m_minWaterSat , false);
     }
 };
 
@@ -433,7 +433,7 @@ public:
 
     void apply(std::vector<double>& values) const
     {
-        SatnumApply(values , "SWMAX" , this->m_maxWaterSat , true);
+        this->satnumApply(values , "SWMAX" , this->m_maxWaterSat , true);
     }
 };
 
@@ -451,7 +451,7 @@ public:
 
     void apply(std::vector<double>& values) const
     {
-        ImbnumApply(values , "SWMAX" , this->m_maxWaterSat , true);
+        this->imbnumApply(values , "SWMAX" , this->m_maxWaterSat , true);
     }
 };
 
@@ -469,7 +469,7 @@ public:
 
     void apply(std::vector<double>& values) const
     {
-        SatnumApply(values , "SGCRIT" , this->m_criticalGasSat , false);
+        this->satnumApply(values , "SGCRIT" , this->m_criticalGasSat , false);
     }
 };
 
@@ -487,7 +487,7 @@ public:
 
     void apply(std::vector<double>& values) const
     {
-        ImbnumApply(values , "SGCRIT" , this->m_criticalGasSat , false);
+        this->imbnumApply(values , "SGCRIT" , this->m_criticalGasSat , false);
     }
 };
 
@@ -505,7 +505,7 @@ public:
 
     void apply(std::vector<double>& values) const
     {
-        SatnumApply(values , "SOWCRIT", this->m_criticalOilOWSat , false);
+        this->satnumApply(values , "SOWCRIT", this->m_criticalOilOWSat , false);
     }
 };
 
@@ -523,7 +523,7 @@ public:
 
     void apply(std::vector<double>& values) const
     {
-        ImbnumApply(values , "SOWCRIT" , this->m_criticalOilOWSat , false);
+        this->imbnumApply(values , "SOWCRIT" , this->m_criticalOilOWSat , false);
     }
 };
 
@@ -541,7 +541,7 @@ public:
 
     void apply(std::vector<double>& values) const
     {
-        SatnumApply(values , "SOGCRIT" , this->m_criticalOilOGSat , false);
+        this->satnumApply(values , "SOGCRIT" , this->m_criticalOilOGSat , false);
     }
 };
 
@@ -559,7 +559,7 @@ public:
 
     void apply(std::vector<double>& values) const
     {
-        ImbnumApply(values , "SOGCRIT" , this->m_criticalOilOGSat , false);
+        this->imbnumApply(values , "SOGCRIT" , this->m_criticalOilOGSat , false);
     }
 };
 
@@ -577,7 +577,7 @@ public:
 
     void apply(std::vector<double>& values) const
     {
-        SatnumApply(values , "SWCRIT" , this->m_criticalOilOWSat , false);
+        this->satnumApply(values , "SWCRIT" , this->m_criticalOilOWSat , false);
     }
 };
 
@@ -595,7 +595,7 @@ public:
 
     void apply(std::vector<double>& values) const
     {
-        ImbnumApply(values , "SWCRIT" , this->m_criticalWaterSat , false);
+        this->imbnumApply(values , "SWCRIT" , this->m_criticalWaterSat , false);
     }
 };
 
