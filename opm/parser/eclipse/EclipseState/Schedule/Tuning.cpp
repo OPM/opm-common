@@ -66,6 +66,10 @@ namespace Opm {
 
 
     void Tuning::getTuningItemValue(const std::string& tuningItem, size_t timestep, double& value) {
+        if(m_ResetValue.find(tuningItem)!= m_ResetValue.end()){
+            timestep = 0;
+        }
+
         /*The following code diverges from coding standard to improve readabillity*/
         if        ("TSINIT" == tuningItem)  {  value = m_TSINIT->get(timestep); }  //RECORD 1
         else if   ("TSMAXZ" == tuningItem)  {  value = m_TSMAXZ->get(timestep); }
@@ -101,8 +105,6 @@ namespace Opm {
         }
     }
 
-
-
     void Tuning::getTuningItemValue(const std::string& tuningItem, size_t timestep, int& value) {
 
         /*The following code diverges from coding standard to improve readabillity*/
@@ -120,47 +122,124 @@ namespace Opm {
         }
     }
 
+    void Tuning::setTuningInitialValue(const std::string tuningItem, double value, bool resetVector) {
+        /*The following code diverges from coding standard to improve readabillity*/
+        if        ("TSINIT" == tuningItem)  {  m_TSINIT->updateInitial(value); }  //RECORD 1
+        else if   ("TSMAXZ" == tuningItem)  {  m_TSMAXZ->updateInitial(value); }
+        else if   ("TSMINZ" == tuningItem)  {  m_TSMINZ->updateInitial(value); }
+        else if   ("TSMCHP" == tuningItem)  {  m_TSMCHP->updateInitial(value); }
+        else if   ("TSFMAX" == tuningItem)  {  m_TSFMAX->updateInitial(value); }
+        else if   ("TSFMIN" == tuningItem)  {  m_TSFMIN->updateInitial(value); }
+        else if   ("TSFCNV" == tuningItem)  {  m_TSFCNV->updateInitial(value); }
+        else if   ("TFDIFF" == tuningItem)  {  m_TFDIFF->updateInitial(value); }
+        else if   ("THRUPT" == tuningItem)  {  m_THRUPT->updateInitial(value); }
+        else if   ("TMAXWC" == tuningItem)  {  m_TMAXWC->updateInitial(value); }
 
+        else if   ("TRGTTE" == tuningItem)  {  m_TRGTTE->updateInitial(value); }  //RECORD 2
+        else if   ("TRGCNV" == tuningItem)  {  m_TRGCNV->updateInitial(value); }
+        else if   ("TRGMBE" == tuningItem)  {  m_TRGMBE->updateInitial(value); }
+        else if   ("TRGLCV" == tuningItem)  {  m_TRGLCV->updateInitial(value); }
+        else if   ("XXXTTE" == tuningItem)  {  m_XXXTTE->updateInitial(value); }
+        else if   ("XXXCNV" == tuningItem)  {  m_XXXCNV->updateInitial(value); }
+        else if   ("XXXMBE" == tuningItem)  {  m_XXXMBE->updateInitial(value); }
+        else if   ("XXXLCV" == tuningItem)  {  m_XXXLCV->updateInitial(value); }
+        else if   ("XXXWFL" == tuningItem)  {  m_XXXWFL->updateInitial(value); }
+        else if   ("TRGFIP" == tuningItem)  {  m_TRGFIP->updateInitial(value); }
+        else if   ("TRGSFT" == tuningItem)  {  m_TRGSFT->updateInitial(value); }
+        else if   ("THIONX" == tuningItem)  {  m_THIONX->updateInitial(value); }
+
+        else if   ("DDPLIM" == tuningItem)  {  m_DDPLIM->updateInitial(value); }  //RECORD 3
+        else if   ("DDSLIM" == tuningItem)  {  m_DDSLIM->updateInitial(value); }
+        else if   ("TRGDPR" == tuningItem)  {  m_TRGDPR->updateInitial(value); }
+        else if   ("XXXDPR" == tuningItem)  {  m_XXXDPR->updateInitial(value); }
+
+        else {
+            throw std::invalid_argument("Method getTuningItemValue(): The TUNING keyword item: " + tuningItem + " was not recognized or has wrong type");
+        }
+        if(resetVector){
+            m_ResetValue[tuningItem]=true;
+        }
+    }
+
+    void Tuning::setTuningInitialValue(const std::string tuningItem, int value, bool resetVector) {
+        /*The following code diverges from coding standard to improve readabillity*/
+        if        ("TRWGHT" == tuningItem)  { m_TRWGHT->updateInitial(value); }  //RECORD 2
+
+        else if   ("NEWTMX" == tuningItem)  { m_NEWTMX->updateInitial(value); }  //RECORD 3
+        else if   ("NEWTMN" == tuningItem)  { m_NEWTMN->updateInitial(value); }
+        else if   ("LITMAX" == tuningItem)  { m_LITMAX->updateInitial(value); }
+        else if   ("LITMIN" == tuningItem)  { m_LITMIN->updateInitial(value); }
+        else if   ("MXWSIT" == tuningItem)  { m_MXWSIT->updateInitial(value); }
+        else if   ("MXWPIT" == tuningItem)  { m_MXWPIT->updateInitial(value); }
+
+        else {
+            throw std::invalid_argument("Method getTuningItemValue(): The TUNING keyword item: " + tuningItem + " was not recognized or has wrong type");
+        }
+        if(resetVector){
+            m_ResetValue[tuningItem]=true;
+        }
+    }
+
+    double Tuning::getDoubleValue(const std::string tuningItem, std::shared_ptr<DynamicState<double>> values, size_t timestep) const{
+        if(m_ResetValue.find(tuningItem)!= m_ResetValue.end()){
+            timestep = 0;
+        }
+        return values->get(timestep);
+    }
+
+    int Tuning::getIntValue(const std::string tuningItem, std::shared_ptr<DynamicState<int>> values, size_t timestep) const{
+        if(m_ResetValue.find(tuningItem)!= m_ResetValue.end()){
+            timestep = 0;
+        }
+        return values->get(timestep);
+    }
+
+    bool Tuning::getBoolValue(const std::string tuningItem, std::shared_ptr<DynamicState<bool>> values, size_t timestep) const{
+        if(m_ResetValue.find(tuningItem)!= m_ResetValue.end()){
+            timestep = 0;
+        }
+        return values->get(timestep);
+    }
 
 
 
     /*The following "get" method declarations diverges from coding standard to improve readability*/
-    double Tuning::getTSINIT(size_t timestep) const {  return m_TSINIT->get(timestep); }
-    double Tuning::getTSMAXZ(size_t timestep) const {  return m_TSMAXZ->get(timestep); }
-    double Tuning::getTSMINZ(size_t timestep) const {  return m_TSMINZ->get(timestep); }
-    double Tuning::getTSMCHP(size_t timestep) const {  return m_TSMCHP->get(timestep); }
-    double Tuning::getTSFMAX(size_t timestep) const {  return m_TSFMAX->get(timestep); }
-    double Tuning::getTSFMIN(size_t timestep) const {  return m_TSFMIN->get(timestep); }
-    double Tuning::getTSFCNV(size_t timestep) const {  return m_TSFCNV->get(timestep); }
-    double Tuning::getTFDIFF(size_t timestep) const {  return m_TFDIFF->get(timestep); }
-    double Tuning::getTHRUPT(size_t timestep) const {  return m_THRUPT->get(timestep); }
-    double Tuning::getTMAXWC(size_t timestep) const {  return m_TMAXWC->get(timestep); }
-    bool   Tuning::getTMAXWChasValue(size_t timestep) const { return m_TMAXWC_has_value->get(timestep); }
-    double Tuning::getTRGTTE(size_t timestep) const {  return m_TRGTTE->get(timestep); }
-    double Tuning::getTRGCNV(size_t timestep) const {  return m_TRGCNV->get(timestep); }
-    double Tuning::getTRGMBE(size_t timestep) const {  return m_TRGMBE->get(timestep); }
-    double Tuning::getTRGLCV(size_t timestep) const {  return m_TRGLCV->get(timestep); }
-    double Tuning::getXXXTTE(size_t timestep) const {  return m_XXXTTE->get(timestep); }
-    double Tuning::getXXXCNV(size_t timestep) const {  return m_XXXCNV->get(timestep); }
-    double Tuning::getXXXMBE(size_t timestep) const {  return m_XXXMBE->get(timestep); }
-    double Tuning::getXXXLCV(size_t timestep) const {  return m_XXXLCV->get(timestep); }
-    double Tuning::getXXXWFL(size_t timestep) const {  return m_XXXWFL->get(timestep); }
-    double Tuning::getTRGFIP(size_t timestep) const {  return m_TRGFIP->get(timestep); }
-    double Tuning::getTRGSFT(size_t timestep) const {  return m_TRGSFT->get(timestep); }
-    bool   Tuning::getTRGSFThasValue(size_t timestep) const { return m_TRGSFT_has_value->get(timestep);  }
-    double Tuning::getTHIONX(size_t timestep) const {  return m_THIONX->get(timestep); }
-    int    Tuning::getTRWGHT(size_t timestep) const {  return m_TRWGHT->get(timestep); }
-    int    Tuning::getNEWTMX(size_t timestep) const {  return m_NEWTMX->get(timestep); }
-    int    Tuning::getNEWTMN(size_t timestep) const {  return m_NEWTMN->get(timestep); }
-    int    Tuning::getLITMAX(size_t timestep) const {  return m_LITMAX->get(timestep); }
-    int    Tuning::getLITMIN(size_t timestep) const {  return m_LITMIN->get(timestep); }
-    int    Tuning::getMXWSIT(size_t timestep) const {  return m_MXWSIT->get(timestep); }
-    int    Tuning::getMXWPIT(size_t timestep) const {  return m_MXWPIT->get(timestep); }
-    double Tuning::getDDPLIM(size_t timestep) const {  return m_DDPLIM->get(timestep); }
-    double Tuning::getDDSLIM(size_t timestep) const {  return m_DDSLIM->get(timestep); }
-    double Tuning::getTRGDPR(size_t timestep) const {  return m_TRGDPR->get(timestep); }
-    double Tuning::getXXXDPR(size_t timestep) const {  return m_XXXDPR->get(timestep); }
-    bool   Tuning::getXXXDPRhasValue(size_t timestep) const { return m_XXXDPR_has_value->get(timestep);
+    double Tuning::getTSINIT(size_t timestep) const {  return getDoubleValue("TSINIT",m_TSINIT, timestep); }
+    double Tuning::getTSMAXZ(size_t timestep) const {  return getDoubleValue("TSMAXZ",m_TSMAXZ, timestep); }
+    double Tuning::getTSMINZ(size_t timestep) const {  return getDoubleValue("TSMINZ",m_TSMINZ, timestep); }
+    double Tuning::getTSMCHP(size_t timestep) const {  return getDoubleValue("TSMCHP",m_TSMCHP, timestep); }
+    double Tuning::getTSFMAX(size_t timestep) const {  return getDoubleValue("TSFMAX",m_TSFMAX, timestep); }
+    double Tuning::getTSFMIN(size_t timestep) const {  return getDoubleValue("TSFMIN",m_TSFMIN, timestep); }
+    double Tuning::getTSFCNV(size_t timestep) const {  return getDoubleValue("TSFCNV",m_TSFCNV, timestep); }
+    double Tuning::getTFDIFF(size_t timestep) const {  return getDoubleValue("TFDIFF",m_TFDIFF, timestep); }
+    double Tuning::getTHRUPT(size_t timestep) const {  return getDoubleValue("THRUPT",m_THRUPT, timestep); }
+    double Tuning::getTMAXWC(size_t timestep) const {  return getDoubleValue("TMAXWC",m_TMAXWC, timestep); }
+    bool   Tuning::getTMAXWChasValue(size_t timestep) const { return getBoolValue("TMAXWC",m_TMAXWC_has_value, timestep); }
+    double Tuning::getTRGTTE(size_t timestep) const {  return getDoubleValue("TRGTTE",m_TRGTTE, timestep); }
+    double Tuning::getTRGCNV(size_t timestep) const {  return getDoubleValue("TRGCNV",m_TRGCNV, timestep); }
+    double Tuning::getTRGMBE(size_t timestep) const {  return getDoubleValue("TRGMBE",m_TRGMBE, timestep); }
+    double Tuning::getTRGLCV(size_t timestep) const {  return getDoubleValue("TRGLCV",m_TRGLCV, timestep); }
+    double Tuning::getXXXTTE(size_t timestep) const {  return getDoubleValue("XXXTTE",m_XXXTTE, timestep); }
+    double Tuning::getXXXCNV(size_t timestep) const {  return getDoubleValue("XXXCNV",m_XXXCNV, timestep); }
+    double Tuning::getXXXMBE(size_t timestep) const {  return getDoubleValue("XXXMBE",m_XXXMBE, timestep); }
+    double Tuning::getXXXLCV(size_t timestep) const {  return getDoubleValue("XXXLCV",m_XXXLCV, timestep); }
+    double Tuning::getXXXWFL(size_t timestep) const {  return getDoubleValue("XXXWFL",m_XXXWFL, timestep); }
+    double Tuning::getTRGFIP(size_t timestep) const {  return getDoubleValue("TRGFIP",m_TRGFIP, timestep); }
+    double Tuning::getTRGSFT(size_t timestep) const {  return getDoubleValue("TRGSFT", m_TRGSFT, timestep); }
+    bool   Tuning::getTRGSFThasValue(size_t timestep) const { return getBoolValue("TRGSFT",m_TRGSFT_has_value, timestep);  }
+    double Tuning::getTHIONX(size_t timestep) const {  return getDoubleValue("",m_THIONX, timestep); }
+    int    Tuning::getTRWGHT(size_t timestep) const {  return getIntValue("TRWGHT",m_TRWGHT, timestep); }
+    int    Tuning::getNEWTMX(size_t timestep) const {  return getIntValue("NEWTMX",m_NEWTMX, timestep); }
+    int    Tuning::getNEWTMN(size_t timestep) const {  return getIntValue("NEWTMN",m_NEWTMN, timestep); }
+    int    Tuning::getLITMAX(size_t timestep) const {  return getIntValue("LITMAX",m_LITMAX, timestep); }
+    int    Tuning::getLITMIN(size_t timestep) const {  return getIntValue("LITMIN",m_LITMIN, timestep); }
+    int    Tuning::getMXWSIT(size_t timestep) const {  return getIntValue("MXWSIT",m_MXWSIT, timestep); }
+    int    Tuning::getMXWPIT(size_t timestep) const {  return getIntValue("MXWPIT",m_MXWPIT, timestep); }
+    double Tuning::getDDPLIM(size_t timestep) const {  return getDoubleValue("DDPLIM",m_DDPLIM, timestep); }
+    double Tuning::getDDSLIM(size_t timestep) const {  return getDoubleValue("DDSLIM",m_DDSLIM, timestep); }
+    double Tuning::getTRGDPR(size_t timestep) const {  return getDoubleValue("TRGDPR",m_TRGDPR, timestep); }
+    double Tuning::getXXXDPR(size_t timestep) const {  return getDoubleValue("XXXDPR",m_XXXDPR, timestep); }
+    bool   Tuning::getXXXDPRhasValue(size_t timestep) const { return getBoolValue("XXXDPR", m_XXXDPR_has_value, timestep);
     }
 
     /*The following "set" method declarations diverges from coding standard to improve readability*/

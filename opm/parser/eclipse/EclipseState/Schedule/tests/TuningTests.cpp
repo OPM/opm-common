@@ -313,3 +313,56 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
 
 }
 
+
+BOOST_AUTO_TEST_CASE(TuningInitTest) {
+
+  DeckPtr deck = createDeck(deckStr);
+  std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
+  Schedule schedule(grid , deck);
+  TuningPtr tuning = schedule.getTuning();
+
+
+  const double diff = 1.0e-14;
+
+  /*** TIMESTEP 4***/
+  /********* Record 1 ***********/
+  size_t timestep = 0;
+  double value = 100.00;
+  tuning->setTuningInitialValue("TSINIT",value, false);
+  double TSINIT_default = tuning->getTSINIT(timestep);
+  BOOST_CHECK_CLOSE(TSINIT_default, 100.00, diff);
+
+  timestep = 10;
+  bool TMAXWC_has_value = tuning->getTMAXWChasValue(timestep);
+  double TMAXWC_default = tuning->getTMAXWC(timestep);
+  BOOST_CHECK_EQUAL(true, TMAXWC_has_value);
+  BOOST_CHECK_CLOSE(TMAXWC_default, 10.0 * Metric::Time, diff);
+
+  
+  }
+
+
+BOOST_AUTO_TEST_CASE(TuningResetTest) {
+
+  DeckPtr deck = createDeck(deckStr);
+  std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
+  Schedule schedule(grid , deck);
+  TuningPtr tuning = schedule.getTuning();
+
+
+  const double diff = 1.0e-14;
+
+  /*** TIMESTEP 4***/
+  /********* Record 1 ***********/
+  size_t timestep = 0;
+  double value = 666.00;
+  tuning->setTuningInitialValue("TSINIT",value, true);
+  double TSINIT_default = tuning->getTSINIT(timestep);
+  BOOST_CHECK_CLOSE(TSINIT_default, 666.00, diff);
+
+  timestep = 10;
+  TSINIT_default = tuning->getTSINIT(timestep);
+  BOOST_CHECK_CLOSE(TSINIT_default, 666.00, diff);
+
+  
+  }

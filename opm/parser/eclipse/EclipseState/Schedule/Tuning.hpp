@@ -46,6 +46,9 @@ namespace Opm {
     public:
         Tuning(TimeMapConstPtr timemap);
 
+        void setTuningInitialValue(const std::string tuningItem, double value,bool resetVector);
+        void setTuningInitialValue(const std::string tuningItem, int value, bool resetVector);
+        
         void getTuningItemValue(const std::string& tuningItem, size_t timestep, double& value);
         void getTuningItemValue(const std::string& tuningItem, size_t timestep, int& value);
 
@@ -164,6 +167,11 @@ namespace Opm {
         std::shared_ptr<DynamicState<double>> m_TRGDPR;
         std::shared_ptr<DynamicState<double>> m_XXXDPR;
         std::shared_ptr<DynamicState<bool>>   m_XXXDPR_has_value;
+        std::map<std::string, bool> m_ResetValue;
+
+        double getDoubleValue(const std::string tuningItem, std::shared_ptr<DynamicState<double>> values, size_t timestep) const;
+        int getIntValue(const std::string tuningItem, std::shared_ptr<DynamicState<int>> values, size_t timestep) const;
+        bool getBoolValue(const std::string tuningItem, std::shared_ptr<DynamicState<bool>> values, size_t timestep) const;
 
     };
 

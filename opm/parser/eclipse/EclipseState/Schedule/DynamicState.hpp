@@ -108,7 +108,6 @@ namespace Opm {
         }
 
 
-
     private:
         std::vector<T> m_data;
         TimeMapConstPtr m_timeMap;
