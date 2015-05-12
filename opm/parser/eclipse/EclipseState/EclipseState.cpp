@@ -197,6 +197,10 @@ namespace Opm {
         return m_plyviscTables;
     }
 
+    const std::vector<PlyshlogTable>& EclipseState::getPlyshlogTables() const {
+        return m_plyshlogTables;
+    }
+
     const std::vector<PvdgTable>& EclipseState::getPvdgTables() const {
         return m_pvdgTables;
     }

@@ -112,6 +112,7 @@ namespace Opm {
         const std::vector<PlymaxTable>& getPlymaxTables() const;
         const std::vector<PlyrockTable>& getPlyrockTables() const;
         const std::vector<PlyviscTable>& getPlyviscTables() const;
+        const std::vector<PlyshlogTable>& getPlyshlogTables() const;
         const std::vector<PvdgTable>& getPvdgTables() const;
         const std::vector<PvdoTable>& getPvdoTables() const;
         const std::vector<PvtgTable>& getPvtgTables() const;
