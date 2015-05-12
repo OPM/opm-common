@@ -81,6 +81,7 @@ namespace Opm {
 
         }
 
+    public:
 
         double getRefPolymerConcentration() const {
             return m_refPolymerConcentration;
@@ -105,11 +106,11 @@ namespace Opm {
             m_refTemperature = refTemperature;
         }
 
-        bool hasRefSalinity() {
+        bool hasRefSalinity() const {
             return m_hasRefSalinity;
         }
 
-        bool hasRefTemperature() {
+        bool hasRefTemperature() const {
             return m_hasRefTemperature;
         }
 
