@@ -10,7 +10,6 @@ add_subdirectory(EclipseState/Tables/tests)
 add_subdirectory(EclipseState/Grid/tests)
 add_subdirectory(EclipseState/Util/tests)
 add_subdirectory(EclipseState/IOConfig/tests)
-add_subdirectory(ert/tests)
 
 add_subdirectory( Applications )
 
@@ -107,10 +106,7 @@ EclipseState/Grid/FaultCollection.cpp
 EclipseState/SimulationConfig/SimulationConfig.cpp
 EclipseState/SimulationConfig/ThresholdPressure.cpp
 #
-EclipseState/IOConfig/IOConfig.cpp
-#
-ert/EclKW.cpp
-ert/FortIO.cpp)
+EclipseState/IOConfig/IOConfig.cpp)
 
 
 set( HEADER_FILES
@@ -244,11 +240,7 @@ Utility/GruptreeWrapper.hpp
 Utility/WelspecsWrapper.hpp
 Utility/EquilWrapper.hpp
 Utility/EndscaleWrapper.hpp
-Utility/ScalecrsWrapper.hpp
-#
-ert/EclKW.hpp
-ert/FortIO.hpp
-)
+Utility/ScalecrsWrapper.hpp)
 
 add_library(buildParser STATIC ${rawdeck_source} ${build_parser_source} ${deck_source} ${unit_source})
 target_link_libraries(buildParser opmjson ${Boost_LIBRARIES})

@@ -26,7 +26,8 @@
 #include <unordered_map>
 #include <boost/lexical_cast.hpp>
 
-#include <opm/parser/eclipse/ert/EclKW.hpp>
+#include <ert/ecl/EclKW.hpp>
+
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
