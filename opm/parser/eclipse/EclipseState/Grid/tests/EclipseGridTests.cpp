@@ -668,7 +668,7 @@ BOOST_AUTO_TEST_CASE(Fwrite) {
     Opm::DeckConstPtr deck = parser->parseString(deckData) ;
     Opm::EclipseGrid grid1(deck );
 
-    grid1.fwriteEGRID( "TEST.EGRID" );
+    grid1.fwriteEGRID( "TEST.EGRID" , true);
 
     Opm::EclipseGrid grid2( "TEST.EGRID" );
 
