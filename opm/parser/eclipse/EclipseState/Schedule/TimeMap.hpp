@@ -21,6 +21,8 @@
 #ifndef TIMEMAP_HPP_
 #define TIMEMAP_HPP_
 
+#include <vector>
+
 #include <boost/date_time.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -46,6 +48,10 @@ namespace Opm {
         double getTimePassedUntil(size_t tLevelIdx) const;
         /// Return the length of a given time step in seconds.
         double getTimeStepLength(size_t tStepIdx) const;
+        /// Return a list of the first timesteps of each month
+        void initFirstTimestepsMonths(std::vector<size_t>& timesteps, size_t timestep=0) const;
+        /// Return a list of the first timesteps of each year
+        void initFirstTimestepsYears(std::vector<size_t>& timesteps, size_t start_timestep=0) const;
         static boost::posix_time::ptime timeFromEclipse(DeckRecordConstPtr dateRecord);
         static boost::posix_time::ptime timeFromEclipse(int day , const std::string& month, int year, const std::string& eclipseTimeString = "00:00:00.000");
         static boost::posix_time::time_duration dayTimeFromEclipse(const std::string& eclipseTimeString);

@@ -269,4 +269,29 @@ BOOST_AUTO_TEST_CASE(TimeStepsCorrect) {
                                                boost::posix_time::milliseconds(123)));
     BOOST_CHECK_EQUAL(tmap.getTimeStepLength(/*index=*/8), 6*24*60*60);
     BOOST_CHECK_EQUAL(tmap.getTimeStepLength(/*index=*/9), 7*24*60*60);
+
+    std::vector<size_t> first_timestep_of_each_month;
+    tmap.initFirstTimestepsMonths(first_timestep_of_each_month);
+    BOOST_CHECK_EQUAL(3, first_timestep_of_each_month.size());
+    int expected_results[3] = {0,5,6};
+    BOOST_CHECK_EQUAL_COLLECTIONS(expected_results, expected_results+3, first_timestep_of_each_month.begin(), first_timestep_of_each_month.end());
+
+    first_timestep_of_each_month.clear();
+    tmap.initFirstTimestepsMonths(first_timestep_of_each_month, 5);
+    BOOST_CHECK_EQUAL(2, first_timestep_of_each_month.size());
+    int expected_results2[2] = {5,6};
+    BOOST_CHECK_EQUAL_COLLECTIONS(expected_results2, expected_results2+2, first_timestep_of_each_month.begin(), first_timestep_of_each_month.end());
+
+    std::vector<size_t> first_timestep_of_each_year;
+    tmap.initFirstTimestepsYears(first_timestep_of_each_year);
+    BOOST_CHECK_EQUAL(2, first_timestep_of_each_year.size());
+    int expected_results_years[2] = {0,6};
+    BOOST_CHECK_EQUAL_COLLECTIONS(expected_results_years, expected_results_years+2, first_timestep_of_each_year.begin(), first_timestep_of_each_year.end());
+
+    first_timestep_of_each_year.clear();
+    tmap.initFirstTimestepsYears(first_timestep_of_each_year, 6);
+    BOOST_CHECK_EQUAL(1, first_timestep_of_each_year.size());
+    BOOST_CHECK_EQUAL(6, first_timestep_of_each_year[0]);
+
+
 }

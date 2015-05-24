@@ -22,6 +22,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
 
+
 namespace Opm {
     TimeMap::TimeMap(boost::posix_time::ptime startDate) {
         if (startDate.is_not_a_date_time())
@@ -223,6 +224,42 @@ namespace Opm {
             = t2 - t1;
         return static_cast<double>(deltaT.total_milliseconds())/1000.0;
     }
+
+
+    void TimeMap::initFirstTimestepsMonths(std::vector<size_t>& timesteps, size_t start_timestep) const {
+        boost::gregorian::date prev_date;
+        for (size_t timestepIndex = start_timestep; timestepIndex < m_timeList.size(); ++timestepIndex) {
+            const boost::posix_time::ptime& ptime = getStartTime(timestepIndex);
+            if (start_timestep == timestepIndex) {
+                prev_date = ptime.date();
+                timesteps.push_back(timestepIndex);
+            } else {
+                boost::gregorian::date cur_date = ptime.date();
+                if (cur_date.month() != prev_date.month()) {
+                    timesteps.push_back(timestepIndex);
+                }
+                prev_date = cur_date;
+            }
+        }
+    }
+
+
+    void TimeMap::initFirstTimestepsYears(std::vector<size_t>& timesteps, size_t start_timestep) const {
+        boost::gregorian::date prev_date;
+        for (size_t timestepIndex = start_timestep; timestepIndex < m_timeList.size(); ++timestepIndex) {
+            const boost::posix_time::ptime& ptime = getStartTime(timestepIndex);
+            if (start_timestep == timestepIndex) {
+                prev_date = ptime.date();
+                timesteps.push_back(timestepIndex);
+            } else {
+                boost::gregorian::date cur_date = ptime.date();
+                if (cur_date.year() != prev_date.year()) {
+                    timesteps.push_back(timestepIndex);
+                }
+                prev_date = cur_date;
+            }
+        }
+  }
 
 }
 
