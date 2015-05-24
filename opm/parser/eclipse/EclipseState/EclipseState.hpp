@@ -59,6 +59,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/SwfnTable.hpp>
 
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 
 #include <set>
 #include <memory>
@@ -77,6 +78,7 @@ namespace Opm {
         EclipseState(DeckConstPtr deck);
 
         ScheduleConstPtr getSchedule() const;
+        IOConfigConstPtr getIOConfig() const;
         SimulationConfigConstPtr getSimulationConfig() const;
         EclipseGridConstPtr getEclipseGrid() const;
         EclipseGridPtr getEclipseGridCopy() const;
@@ -135,7 +137,9 @@ namespace Opm {
     private:
         void initTabdims(DeckConstPtr deck);
         void initTables(DeckConstPtr deck);
+        void initIOConfig(DeckConstPtr deck);
         void initSchedule(DeckConstPtr deck);
+        void initIOConfigPostSchedule(DeckConstPtr deck);
         void initSimulationConfig(DeckConstPtr deck);
         void initEclipseGrid(DeckConstPtr deck);
         void initGridopts(DeckConstPtr deck);
@@ -234,9 +238,11 @@ namespace Opm {
 
         void complainAboutAmbiguousKeyword(DeckConstPtr deck, const std::string& keywordName) const;
 
-        EclipseGridConstPtr m_eclipseGrid;
-        ScheduleConstPtr schedule;
+        EclipseGridConstPtr      m_eclipseGrid;
+        IOConfigPtr              m_ioConfig;
+        ScheduleConstPtr         schedule;
         SimulationConfigConstPtr m_simulationConfig;
+
 
         std::shared_ptr<const Tabdims> m_tabdims;
         std::vector<EnkrvdTable> m_enkrvdTables;

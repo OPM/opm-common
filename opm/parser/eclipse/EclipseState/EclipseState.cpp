@@ -131,7 +131,9 @@ namespace Opm {
         initTables(deck);
         initEclipseGrid(deck);
         initGridopts(deck);
+        initIOConfig(deck);
         initSchedule(deck);
+        initIOConfigPostSchedule(deck);
         initTitle(deck);
         initProperties(deck);
         initSimulationConfig(deck);
@@ -257,6 +259,10 @@ namespace Opm {
         return schedule;
     }
 
+    IOConfigConstPtr EclipseState::getIOConfig() const {
+        return m_ioConfig;
+    }
+
     SimulationConfigConstPtr EclipseState::getSimulationConfig() const {
         return m_simulationConfig;
     }
@@ -350,15 +356,38 @@ namespace Opm {
         initFullTables(deck, "PVTO", m_pvtoTables);
    }
 
+    void EclipseState::initIOConfig(DeckConstPtr deck) {
+        m_ioConfig = std::make_shared<IOConfig>(deck);
+        if (Section::hasGRID(deck)) {
+            std::shared_ptr<const GRIDSection> gridSection = std::make_shared<const GRIDSection>(deck);
+            m_ioConfig->handleGridSection(gridSection);
+        }
+        if (Section::hasRUNSPEC(deck)) {
+            std::shared_ptr<const RUNSPECSection> runspecSection = std::make_shared<const RUNSPECSection>(deck);
+            m_ioConfig->handleRunspecSection(runspecSection);
+        }
+    }
+
+
+    void EclipseState::initIOConfigPostSchedule(DeckConstPtr deck) {
+        if (Section::hasSOLUTION(deck)) {
+            std::shared_ptr<const SOLUTIONSection> solutionSection = std::make_shared<const SOLUTIONSection>(deck);
+            m_ioConfig->handleSolutionSection(schedule->getTimeMap(), solutionSection);
+        }
+    }
+
 
     void EclipseState::initSimulationConfig(DeckConstPtr deck) {
         m_simulationConfig = std::make_shared<const SimulationConfig>(deck , m_intGridProperties);
     }
 
+
     void EclipseState::initSchedule(DeckConstPtr deck) {
         EclipseGridConstPtr grid = getEclipseGrid();
-        schedule = ScheduleConstPtr( new Schedule(grid , deck) );
+        schedule = ScheduleConstPtr( new Schedule(grid , deck, m_ioConfig) );
     }
+
+
 
     void EclipseState::initTransMult() {
         EclipseGridConstPtr grid = getEclipseGrid();
