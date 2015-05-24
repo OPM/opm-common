@@ -16,7 +16,8 @@ int main(int /* argc */, char** argv) {
     std::string file = argv[1];
     Opm::DeckConstPtr deck = parser->parseFile(file);
     std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>( deck );
-    Opm::Schedule sched( grid , deck );
+    Opm::IOConfigPtr ioConfig;
+    Opm::Schedule sched( grid , deck, ioConfig );
 
     std::cout << "Wells: " << sched.numWells() << std::endl;
 
