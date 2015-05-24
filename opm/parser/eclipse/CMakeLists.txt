@@ -10,7 +10,9 @@ if (BUILD_TESTING)
    add_subdirectory(EclipseState/Tables/tests)
    add_subdirectory(EclipseState/Grid/tests)
    add_subdirectory(EclipseState/Util/tests)
+   add_subdirectory(EclipseState/IOConfig/tests)
    add_subdirectory(ert/tests)
+
 endif()
 
 add_subdirectory( Applications )
@@ -108,6 +110,8 @@ EclipseState/Grid/FaultCollection.cpp
 EclipseState/SimulationConfig/SimulationConfig.cpp
 EclipseState/SimulationConfig/ThresholdPressure.cpp
 #
+EclipseState/IOConfig/IOConfig.cpp
+#
 ert/EclKW.cpp
 ert/FortIO.cpp)
 
@@ -192,6 +196,8 @@ EclipseState/Grid/FaultCollection.hpp
 #
 EclipseState/SimulationConfig/SimulationConfig.hpp
 EclipseState/SimulationConfig/ThresholdPressure.hpp
+#
+EclipseState/IOConfig/IOConfig.hpp
 #
 EclipseState/Tables/Tabdims.hpp
 EclipseState/Tables/PlyadsTable.hpp
