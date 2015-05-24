@@ -25,6 +25,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
+#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -41,7 +42,7 @@ namespace Opm
 
     class Schedule {
     public:
-        Schedule(std::shared_ptr<const EclipseGrid> grid , DeckConstPtr deck);
+        Schedule(std::shared_ptr<const EclipseGrid> grid , DeckConstPtr deck, IOConfigPtr ioConfig);
         boost::posix_time::ptime getStartTime() const
         { return m_timeMap->getStartTime(/*timeStepIdx=*/0); }
         TimeMapConstPtr getTimeMap() const;
@@ -73,12 +74,13 @@ namespace Opm
         TuningPtr m_tuning;
         bool nosim;
 
+
         void addWellToGroup( GroupPtr newGroup , WellPtr well , size_t timeStep);
-        void initFromDeck(DeckConstPtr deck);
+        void initFromDeck(DeckConstPtr deck, IOConfigPtr ioConfig);
         void initializeNOSIM(DeckConstPtr deck);
         void createTimeMap(DeckConstPtr deck);
         void initRootGroupTreeNode(TimeMapConstPtr timeMap);
-        void iterateScheduleSection(DeckConstPtr deck);
+        void iterateScheduleSection(DeckConstPtr deck, IOConfigPtr ioConfig);
         bool handleGroupFromWELSPECS(const std::string& groupName, GroupTreePtr newTree) const;
         void addGroup(const std::string& groupName , size_t timeStep);
         void addWell(const std::string& wellName, DeckRecordConstPtr record, size_t timeStep);
@@ -98,6 +100,7 @@ namespace Opm
         void handleGCONPROD(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleTUNING(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleNOSIM();
+        void handleRPTRST(DeckKeywordConstPtr keyword, size_t currentStep, IOConfigPtr ioConfig);
         void handleDATES(DeckKeywordConstPtr keyword);
         void handleTSTEP(DeckKeywordConstPtr keyword);
         void handleGRUPTREE(DeckKeywordConstPtr keyword, size_t currentStep);

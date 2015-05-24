@@ -33,19 +33,19 @@
 
 namespace Opm {
 
-    Schedule::Schedule(std::shared_ptr<const EclipseGrid> grid , DeckConstPtr deck)
+    Schedule::Schedule(std::shared_ptr<const EclipseGrid> grid , DeckConstPtr deck, IOConfigPtr ioConfig)
         : m_grid(grid)
     {
-        initFromDeck(deck);
+        initFromDeck(deck, ioConfig);
     }
 
-    void Schedule::initFromDeck(DeckConstPtr deck) {
+    void Schedule::initFromDeck(DeckConstPtr deck, IOConfigPtr ioConfig) {
         initializeNOSIM(deck);
         createTimeMap(deck);
         m_tuning.reset(new Tuning(m_timeMap));
         addGroup( "FIELD", 0 );
         initRootGroupTreeNode(getTimeMap());
-        iterateScheduleSection(deck);
+        iterateScheduleSection(deck, ioConfig);
     }
 
     void Schedule::initRootGroupTreeNode(TimeMapConstPtr timeMap) {
@@ -70,7 +70,7 @@ namespace Opm {
         m_timeMap.reset(new TimeMap(startTime));
     }
 
-    void Schedule::iterateScheduleSection(DeckConstPtr deck) {
+    void Schedule::iterateScheduleSection(DeckConstPtr deck, IOConfigPtr ioConfig) {
         size_t currentStep = 0;
         std::vector<std::pair<DeckKeywordConstPtr , size_t> > rftProperties;
 
@@ -132,6 +132,9 @@ namespace Opm {
 
             if (keyword->name() == "NOSIM")
                 handleNOSIM();
+
+            if (keyword->name() == "RPTRST")
+                handleRPTRST(keyword, currentStep, ioConfig);
 
             if (keyword->name() == "WRFT")
                 rftProperties.push_back( std::make_pair( keyword , currentStep ));
@@ -750,6 +753,34 @@ namespace Opm {
     void Schedule::handleNOSIM() {
         nosim = true;
     }
+
+    void Schedule::handleRPTRST(DeckKeywordConstPtr keyword, size_t currentStep, IOConfigPtr ioConfig) {
+        DeckRecordConstPtr record = keyword->getRecord(0);
+
+        size_t basic = 1;
+        size_t freq  = 0;
+
+        DeckItemConstPtr item = record->getItem(0);
+
+        for (size_t index = 0; index < item->size(); ++index) {
+            const std::string& mnemonic = item->getString(index);
+
+            size_t found_basic = mnemonic.find("BASIC=");
+            if (found_basic != std::string::npos) {
+                std::string basic_no = mnemonic.substr(found_basic+6, mnemonic.size());
+                basic = boost::lexical_cast<size_t>(basic_no);
+            }
+
+            size_t found_freq = mnemonic.find("FREQ=");
+            if (found_freq != std::string::npos) {
+                std::string freq_no = mnemonic.substr(found_freq+5, mnemonic.size());
+                freq = boost::lexical_cast<size_t>(freq_no);
+            }
+        }
+
+        ioConfig->handleRPTRSTBasic(m_timeMap, currentStep, basic, freq);
+    }
+
 
     void Schedule::handleCOMPDAT(DeckKeywordConstPtr keyword, size_t currentStep) {
         std::map<std::string , std::vector< CompletionPtr> > completionMapList = Completion::completionsFromCOMPDATKeyword( keyword );
