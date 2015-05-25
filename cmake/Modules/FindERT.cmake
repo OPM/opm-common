@@ -46,6 +46,14 @@ find_path (ERT_ECL_WELL_INCLUDE_DIR
   DOC "Path to ERT Eclipse library header files"
   ${_no_default_path}
   )
+find_path (ERT_ECLXX_INCLUDE_DIR
+  NAMES "ert/ecl/EclKW.hpp"
+  HINTS "${ERT_ROOT}"
+  PATHS "${PROJECT_SOURCE_DIR}/../ert"
+  PATH_SUFFIXES "devel/libeclxx/include/" "include"
+  DOC "Path to ERT Eclipse C++ library header files"
+  ${_no_default_path}
+  )
 find_path (ERT_UTIL_INCLUDE_DIR
   NAMES "ert/util/stringlist.h"
   HINTS "${ERT_ROOT}"
@@ -78,6 +86,18 @@ find_library (ERT_LIBRARY_ECL
         "${PROJECT_BINARY_DIR}/../ert/devel"
   PATH_SUFFIXES "lib" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}"
   DOC "Path to ERT Eclipse library archive/shared object files"
+  ${_no_default_path}
+  )
+find_library (ERT_LIBRARY_ECLXX
+  NAMES "eclxx"
+  HINTS "${ERT_ROOT}"
+  PATHS "${PROJECT_BINARY_DIR}/../ert"
+        "${PROJECT_SOURCE_DIR}/../ert/build"
+        "${PROJECT_SOURCE_DIR}/../ert/devel/build"
+        "${PROJECT_BINARY_DIR}/../ert-build"
+        "${PROJECT_BINARY_DIR}/../ert/devel"
+  PATH_SUFFIXES "lib" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}"
+  DOC "Path to ERT Eclipse C++ library archive/shared object files"
   ${_no_default_path}
   )
 find_library (ERT_LIBRARY_ECL_WELL
@@ -120,11 +140,13 @@ find_library (ERT_LIBRARY_UTIL
 list (APPEND ERT_INCLUDE_DIR
   ${ERT_ECL_INCLUDE_DIR}
   ${ERT_ECL_WELL_INCLUDE_DIR}
+  ${ERT_ECLXX_INCLUDE_DIR}
   ${ERT_UTIL_INCLUDE_DIR}
   ${ERT_GEN_INCLUDE_DIR}
   )
 list (APPEND ERT_LIBRARY
   ${ERT_LIBRARY_ECL}
+  ${ERT_LIBRARY_ECLXX}
   ${ERT_LIBRARY_ECL_WELL}
   ${ERT_LIBRARY_GEOMETRY}
   ${ERT_LIBRARY_UTIL}
@@ -237,11 +259,11 @@ if (NOT (ERT_INCLUDE_DIR MATCHES "-NOTFOUND" OR ERT_LIBRARIES MATCHES "-NOTFOUND
   cmake_push_check_state ()
   set (CMAKE_REQUIRED_INCLUDES ${ERT_INCLUDE_DIR})
   set (CMAKE_REQUIRED_LIBRARIES ${ERT_LIBRARIES})
-  check_c_source_compiles (
-	"#include <ert/ecl/ecl_util.h>
-int main (void) {
-  bool ok;
-  ok = ecl_util_fmt_file (\"foo.bar\", &ok);
+  check_cxx_source_compiles (
+"#include <ert/ecl/EclKW.hpp>
+int main ( ) {
+  ERT::EclKW<int> kw(\"SATNUM\" , 1000);
+  kw[0] = 10;
   return 0;
 }" HAVE_ERT)
   cmake_pop_check_state ()
