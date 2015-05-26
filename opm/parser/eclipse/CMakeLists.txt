@@ -254,20 +254,34 @@ add_library(buildParser STATIC ${rawdeck_source} ${build_parser_source} ${deck_s
 target_link_libraries(buildParser opmjson ${Boost_LIBRARIES})
 
 #-----------------------------------------------------------------
+# This section manages the generation of C++ code for the default keywords.
+
+# 1. Create an executable 'createDefaultKeywordList'.
 
 add_executable( createDefaultKeywordList Parser/createDefaultKeywordList.cpp )
 target_link_libraries( createDefaultKeywordList buildParser opmjson ${Boost_LIBRARIES})
 
-add_custom_target( keywordlist ALL COMMAND createDefaultKeywordList 
-                   ${PROJECT_SOURCE_DIR}/opm/parser/share/keywords 
-                   ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.cpp 
-                   ${PROJECT_BINARY_DIR}/generated-source/inlineKeywordTest.cpp 
-                   ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.signature)
+
+
+# 2. Run the generated application createDefaultKeywordlist - this
+#    application will recursively scan through all the json keyword
+#    files in the source tree. It will maintain a signature of these json files,
+#    and only update the generated files if the json files have changed.
+#
+#    This target will always run - the dependency "management" is
+#    implicitly handled in the createDefaultKeywordList application.
+
+add_custom_target( generatedCode ALL
+                   COMMAND createDefaultKeywordList
+                   ${PROJECT_SOURCE_DIR}/opm/parser/share/keywords
+                   ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.cpp
+                   ${PROJECT_BINARY_DIR}/generated-source/inlineKeywordTest.cpp
+                   ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.signature )
 
 #-----------------------------------------------------------------
 
 add_library(opmparser ${rawdeck_source} ${parser_source} ${deck_source} ${state_source} ${unit_source} ${log_source})
-add_dependencies(opmparser keywordlist)
+add_dependencies(opmparser generatedCode)
 target_link_libraries(opmparser opmjson ${Boost_LIBRARIES}  ${ERT_LIBRARIES})
 
 include( ${PROJECT_SOURCE_DIR}/cmake/Modules/install_headers.cmake )   
