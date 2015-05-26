@@ -1,14 +1,14 @@
 foreach(tapp ParserTests ParserKeywordTests ParserRecordTests
              ParserItemTests ParserEnumTests ParserIncludeTests)
   opm_add_test(run${tapp} SOURCES ${tapp}.cpp
-                          LIBRARIES Parser ${Boost_LIBRARIES})
+                          LIBRARIES opmparser ${Boost_LIBRARIES})
 endforeach()
 set_property(SOURCE ParserRecordTests.cpp PROPERTY COMPILE_FLAGS "-Wno-error")
 
 #-----------------------------------------------------------------
 
 add_executable( createInlineItemTest EXCLUDE_FROM_ALL createInlineItemTest.cpp)
-target_link_libraries( createInlineItemTest Parser ${Boost_LIBRARIES})
+target_link_libraries( createInlineItemTest opmparser ${Boost_LIBRARIES})
 
 add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/generated-source/inlineItemTest.cpp
                    COMMAND createInlineItemTest ${PROJECT_BINARY_DIR}/generated-source/inlineItemTest.cpp inlineItemTest

@@ -8,5 +8,5 @@ foreach(tapp CheckDeckValidity IntegrationTests ParseWellProbe
              ParseRSVD ParsePVTG ParsePVTO ParseSWOF BoxTest
              ParseMULTREGT ParseSGOF EclipseGridCreateFromDeck)
   opm_add_test(run${tapp} SOURCES ${tapp}.cpp
-                          LIBRARIES Parser ${Boost_LIBRARIES})
+                          LIBRARIES opmparser ${Boost_LIBRARIES})
 endforeach()

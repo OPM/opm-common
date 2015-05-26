@@ -3,5 +3,5 @@ foreach(tapp EclipseGridTests MULTREGTScannerTests GridPropertyTests
              BoxManagerTests TransMultTests FaultTests
              EqualRegTests MultiRegTests ADDREGTests CopyRegTests)
   opm_add_test(run${tapp} SOURCES ${tapp}.cpp
-                          LIBRARIES Parser ${Boost_LIBRARIES})
+                          LIBRARIES opmparser ${Boost_LIBRARIES})
 endforeach()

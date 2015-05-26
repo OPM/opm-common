@@ -269,10 +269,10 @@ add_custom_target( keywordlist ALL COMMAND createDefaultKeywordList
 
 #-----------------------------------------------------------------
 
-add_library(Parser ${rawdeck_source} ${parser_source} ${deck_source} ${state_source} ${unit_source} ${log_source})
-add_dependencies(Parser keywordlist)
-target_link_libraries(Parser opmjson ${Boost_LIBRARIES}  ${ERT_LIBRARIES})
+add_library(opmparser ${rawdeck_source} ${parser_source} ${deck_source} ${state_source} ${unit_source} ${log_source})
+add_dependencies(opmparser keywordlist)
+target_link_libraries(opmparser opmjson ${Boost_LIBRARIES}  ${ERT_LIBRARIES})
 
 include( ${PROJECT_SOURCE_DIR}/cmake/Modules/install_headers.cmake )   
 install_headers( "${HEADER_FILES}" "${CMAKE_INSTALL_PREFIX}" )
-install( TARGETS Parser DESTINATION ${CMAKE_INSTALL_LIBDIR} )
+install( TARGETS opmparser DESTINATION ${CMAKE_INSTALL_LIBDIR} )
