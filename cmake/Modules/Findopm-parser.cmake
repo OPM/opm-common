@@ -86,7 +86,7 @@ endif ()
 
 # these libraries constitute the parser core
 find_library (OPM_PARSER_LIBRARY
-  NAMES "Parser"
+  NAMES "opmparser"
   HINTS "${OPM_PARSER_ROOT}"
   PATHS ${_opm_parser_build}
   PATH_SUFFIXES "lib" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}"
@@ -96,7 +96,7 @@ find_library (OPM_PARSER_LIBRARY
 
 # find the OPM-parser wrapper library around cJSON
 find_library (OPM_JSON_LIBRARY
-  NAMES "opm-json"
+  NAMES "opmjson"
   HINTS "${OPM_PARSER_ROOT}"
   PATHS ${_opm_parser_build}
   PATH_SUFFIXES "lib" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}"
