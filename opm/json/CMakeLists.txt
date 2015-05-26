@@ -14,6 +14,4 @@ foreach ( header ${json_headers} )
      install( FILES ${header} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/opm/json RENAME ${header})
 endforeach()
 
-if (BUILD_TESTING)
-   add_subdirectory( tests )
-endif()
+add_subdirectory( tests )
