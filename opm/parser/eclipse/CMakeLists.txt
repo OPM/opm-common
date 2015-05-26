@@ -254,12 +254,12 @@ ert/FortIO.hpp
 )
 
 add_library(buildParser STATIC ${rawdeck_source} ${build_parser_source} ${deck_source} ${unit_source})
-target_link_libraries(buildParser opm-json ${Boost_LIBRARIES})
+target_link_libraries(buildParser opmjson ${Boost_LIBRARIES})
 
 #-----------------------------------------------------------------
 
 add_executable( createDefaultKeywordList Parser/createDefaultKeywordList.cpp )
-target_link_libraries( createDefaultKeywordList buildParser opm-json ${Boost_LIBRARIES})
+target_link_libraries( createDefaultKeywordList buildParser opmjson ${Boost_LIBRARIES})
 
 add_custom_target( keywordlist ALL COMMAND createDefaultKeywordList 
                    ${PROJECT_SOURCE_DIR}/opm/parser/share/keywords 
@@ -271,7 +271,7 @@ add_custom_target( keywordlist ALL COMMAND createDefaultKeywordList
 
 add_library(Parser ${rawdeck_source} ${parser_source} ${deck_source} ${state_source} ${unit_source} ${log_source})
 add_dependencies(Parser keywordlist)
-target_link_libraries(Parser opm-json ${Boost_LIBRARIES}  ${ERT_LIBRARIES})
+target_link_libraries(Parser opmjson ${Boost_LIBRARIES}  ${ERT_LIBRARIES})
 
 include( ${PROJECT_SOURCE_DIR}/cmake/Modules/install_headers.cmake )   
 install_headers( "${HEADER_FILES}" "${CMAKE_INSTALL_PREFIX}" )
