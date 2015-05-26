@@ -256,7 +256,7 @@ endif (BUILD_TESTING)
 # use this target to run all tests
 add_custom_target (check
 	COMMAND ${CMAKE_CTEST_COMMAND}
-	DEPENDS tests
+	DEPENDS test-suite
 	COMMENT "Checking if library is functional"
 	VERBATIM
 	)

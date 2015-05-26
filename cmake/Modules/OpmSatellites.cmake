@@ -157,3 +157,100 @@ macro (opm_data satellite target dirname)
 	COMMENT "Making \"${satellite}\" data available in output tree"
 	)
 endmacro (opm_data satellite target dirname files)
+
+# Add a test
+# Synopsis:
+#       opm_add_test (TestName)
+# Parameters:
+#       TestName           Name of test
+#       ONLY_COMPILE       Only build test (optional)
+#       ALWAYS_ENABLE      Force enabling test (optional)
+#       EXE_NAME           Name of test executable (optional)
+#       CONDITION          Condition to enable test (optional, cmake code)
+#       DRIVER_ARGS        Arguments to pass to test (optional)
+#       SOURCES            Sources for test (optional)
+#       PROCESSORS         Number of processors to run test on (optional)
+#       DEPENDS            Additional dependencies for test (optional)
+#       LIBRARIES          Libraries to link test against (optional)
+#       WORKING_DIRECTORY  Working directory for test (optional)
+# Example:
+# opm_add_test(TestName
+#              [NO_COMPILE]
+#              [ONLY_COMPILE]
+#              [ALWAYS_ENABLE]
+#              [EXE_NAME TestExecutableName]
+#              [CONDITION ConditionalExpression]
+#              [DRIVER_ARGS TestDriverScriptArguments]
+#              [WORKING_DIRECTORY dir]
+#              [SOURCES SourceFile1 SourceFile2 ...]
+#              [PROCESSORS NumberOfRequiredCores]
+#              [DEPENDS TestName1 TestName2 ...]
+#              [LIBRARIES Lib1 Lib2 ...])
+include(CMakeParseArguments)
+
+macro(opm_add_test TestName)
+  cmake_parse_arguments(CURTEST
+                        "NO_COMPILE;ONLY_COMPILE;ALWAYS_ENABLE" # flags
+                        "EXE_NAME;PROCESSORS;WORKING_DIRECTORY" # one value args
+                        "CONDITION;DEPENDS;DRIVER_ARGS;SOURCES;LIBRARIES" # multi-value args
+                        ${ARGN})
+
+  set(BUILD_TESTING "${BUILD_TESTING}")
+
+  if (NOT CURTEST_EXE_NAME)
+    set(CURTEST_EXE_NAME ${TestName})
+  endif()
+  if (NOT CURTEST_SOURCES)
+    set(CURTEST_SOURCES ${CURTEST_EXE_NAME}.cpp)
+  endif()
+  if (NOT CURTEST_WORKING_DIRECTORY)
+    set(CURTEST_WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+  endif()
+
+  set(CURTEST_EXCLUDE_FROM_ALL "")
+  if (NOT BUILD_TESTING AND NOT CURTEST_ALWAYS_ENABLE)
+    # don't build the tests by _default_ (i.e., when typing
+    # 'make'). Though they can still be build using 'make ctests' and
+    # they can be build and run using 'make check'
+    set(CURTEST_EXCLUDE_FROM_ALL "EXCLUDE_FROM_ALL")
+  endif()
+
+  set(SKIP_CUR_TEST "1")
+  # the "AND OR " is a hack which is required to prevent CMake from
+  # evaluating the condition in the string. (which might
+  # evaluate to an empty string even though "${CURTEST_CONDITION}"
+  # is not empty.)
+  if ("AND OR ${CURTEST_CONDITION}" STREQUAL "AND OR ")
+    set(SKIP_CUR_TEST "0")
+  elseif(${CURTEST_CONDITION})
+    set(SKIP_CUR_TEST "0")
+  endif()
+
+  if (NOT SKIP_CUR_TEST)
+    if (CURTEST_ONLY_COMPILE)
+      add_executable("${CURTEST_EXE_NAME}" ${CURTEST_EXCLUDE_FROM_ALL} ${CURTEST_SOURCES})
+      target_link_libraries (${CURTEST_EXE_NAME} ${CURTEST_LIBRARIES})
+    else()
+      if (NOT CURTEST_NO_COMPILE)
+        add_executable("${CURTEST_EXE_NAME}" ${CURTEST_EXCLUDE_FROM_ALL} ${CURTEST_SOURCES})
+        target_link_libraries (${CURTEST_EXE_NAME} ${CURTEST_LIBRARIES})
+
+        if(NOT TARGET test-suite)
+          add_custom_target(test-suite)
+        endif()
+        add_dependencies(test-suite "${CURTEST_EXE_NAME}")
+      endif()
+
+      add_test(NAME ${TestName}
+               WORKING_DIRECTORY "${CURTEST_WORKING_DIRECTORY}"
+               ${DEPENDS_ON}
+               COMMAND ${CURTEST_EXE_NAME} ${CURTEST_DRIVER_ARGS})
+      if (CURTEST_DEPENDS)
+        set_tests_properties(${TestName} PROPERTIES DEPENDS "${CURTEST_DEPENDS}")
+      endif()
+      if (CURTEST_PROCESSORS)
+        set_tests_properties(${TestName} PROPERTIES PROCESSORS "${CURTEST_PROCESSORS}")
+      endif()
+    endif()
+  endif()
+endmacro()
