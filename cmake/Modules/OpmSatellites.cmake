@@ -168,9 +168,10 @@ endmacro (opm_data satellite target dirname files)
 #       EXE_NAME           Name of test executable (optional)
 #       CONDITION          Condition to enable test (optional, cmake code)
 #       DRIVER_ARGS        Arguments to pass to test (optional)
+#       DEPENDS            Targets test depends on (optional)
 #       SOURCES            Sources for test (optional)
 #       PROCESSORS         Number of processors to run test on (optional)
-#       DEPENDS            Additional dependencies for test (optional)
+#       TEST_DEPENDS       Additional test dependencies for test (optional)
 #       LIBRARIES          Libraries to link test against (optional)
 #       WORKING_DIRECTORY  Working directory for test (optional)
 # Example:
@@ -184,7 +185,8 @@ endmacro (opm_data satellite target dirname files)
 #              [WORKING_DIRECTORY dir]
 #              [SOURCES SourceFile1 SourceFile2 ...]
 #              [PROCESSORS NumberOfRequiredCores]
-#              [DEPENDS TestName1 TestName2 ...]
+#              [DEPENDS Target1 Target2 ...]
+#              [TEST_DEPENDS TestName1 TestName2 ...]
 #              [LIBRARIES Lib1 Lib2 ...])
 include(CMakeParseArguments)
 
@@ -192,7 +194,7 @@ macro(opm_add_test TestName)
   cmake_parse_arguments(CURTEST
                         "NO_COMPILE;ONLY_COMPILE;ALWAYS_ENABLE" # flags
                         "EXE_NAME;PROCESSORS;WORKING_DIRECTORY" # one value args
-                        "CONDITION;DEPENDS;DRIVER_ARGS;SOURCES;LIBRARIES" # multi-value args
+                        "CONDITION;TEST_DEPENDS;DRIVER_ARGS;DEPENDS;SOURCES;LIBRARIES" # multi-value args
                         ${ARGN})
 
   set(BUILD_TESTING "${BUILD_TESTING}")
@@ -234,6 +236,9 @@ macro(opm_add_test TestName)
       if (NOT CURTEST_NO_COMPILE)
         add_executable("${CURTEST_EXE_NAME}" ${CURTEST_EXCLUDE_FROM_ALL} ${CURTEST_SOURCES})
         target_link_libraries (${CURTEST_EXE_NAME} ${CURTEST_LIBRARIES})
+        if(CURTEST_DEPENDS)
+          add_dependencies("${CURTEST_EXE_NAME}" ${CURTEST_DEPENDS})
+        endif()
 
         if(NOT TARGET test-suite)
           add_custom_target(test-suite)
@@ -245,8 +250,8 @@ macro(opm_add_test TestName)
                WORKING_DIRECTORY "${CURTEST_WORKING_DIRECTORY}"
                ${DEPENDS_ON}
                COMMAND ${CURTEST_EXE_NAME} ${CURTEST_DRIVER_ARGS})
-      if (CURTEST_DEPENDS)
-        set_tests_properties(${TestName} PROPERTIES DEPENDS "${CURTEST_DEPENDS}")
+      if (CURTEST_TEST_DEPENDS)
+        set_tests_properties(${TestName} PROPERTIES DEPENDS "${CURTEST_TEST_DEPENDS}")
       endif()
       if (CURTEST_PROCESSORS)
         set_tests_properties(${TestName} PROPERTIES PROCESSORS "${CURTEST_PROCESSORS}")
