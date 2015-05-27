@@ -147,6 +147,7 @@ Parser/ParserIntItem.hpp
 Parser/ParserFloatItem.hpp
 Parser/ParserDoubleItem.hpp
 Parser/ParserStringItem.hpp
+Parser/ParserKeywords.hpp # PlaceHolder for future generated header
 #
 Units/UnitSystem.hpp
 Units/Dimension.hpp
