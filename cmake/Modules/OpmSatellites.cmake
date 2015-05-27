@@ -216,9 +216,15 @@ macro(opm_add_test TestName)
     endforeach()
   endif()
 
-  # the default working directory is the build directory
+  # the default working directory is the content of
+  # OPM_TEST_DEFAULT_WORKING_DIRECTORY or the source directory if this
+  # is unspecified
   if (NOT CURTEST_WORKING_DIRECTORY)
-    set(CURTEST_WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+    if (OPM_TEST_DEFAULT_WORKING_DIRECTORY)
+      set(CURTEST_WORKING_DIRECTORY ${OPM_TEST_DEFAULT_WORKING_DIRECTORY})
+    else()
+      set(CURTEST_WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+    endif()
   endif()
 
   # don't build the tests by _default_ if BUILD_TESTING is false,
@@ -328,4 +334,10 @@ endmacro()
 macro(opm_set_test_driver DriverBinary DriverDefaultArgs)
   set(OPM_TEST_DRIVER "${DriverBinary}")
   set(OPM_TEST_DRIVER_ARGS "${DriverDefaultArgs}")
+endmacro()
+
+# macro to set the default test driver script and the its default
+# arguments
+macro(opm_set_test_default_working_directory Dir)
+  set(OPM_TEST_DEFAULT_WORKING_DIRECTORY "${Dir}")
 endmacro()
