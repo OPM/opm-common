@@ -158,84 +158,123 @@ macro (opm_data satellite target dirname)
 	)
 endmacro (opm_data satellite target dirname files)
 
-# Add a test
+# Add a single unit test (can be orchestrated by the 'ctest' command)
+#
 # Synopsis:
-#       opm_add_test (TestName)
+#       opm_add_test(TestName)
+#
 # Parameters:
 #       TestName           Name of test
-#       ONLY_COMPILE       Only build test (optional)
-#       ALWAYS_ENABLE      Force enabling test (optional)
-#       EXE_NAME           Name of test executable (optional)
+#       ONLY_COMPILE       Only build test but do not run it (optional)
+#       ALWAYS_ENABLE      Force enabling test even if -DBUILD_TESTING=OFF was set (optional)
+#       EXE_NAME           Name of test executable (optional, default: ./bin/${TestName})
 #       CONDITION          Condition to enable test (optional, cmake code)
-#       DRIVER_ARGS        Arguments to pass to test (optional)
-#       DEPENDS            Targets test depends on (optional)
-#       SOURCES            Sources for test (optional)
-#       PROCESSORS         Number of processors to run test on (optional)
-#       TEST_DEPENDS       Additional test dependencies for test (optional)
+#       DEPENDS            Targets which the test depends on (optional)
+#       DRIVER             The script which supervises the test (optional, default: ${OPM_TEST_DRIVER})
+#       DRIVER_ARGS        The script which supervises the test (optional, default: ${OPM_TEST_DRIVER_ARGS})
+#       TEST_ARGS          Arguments to pass to test's binary (optional, default: empty)
+#       SOURCES            Source files for the test (optional, default: ${EXE_NAME}.cpp)
+#       PROCESSORS         Number of processors to run test on (optional, default: 1)
+#       TEST_DEPENDS       Other tests which must be run before running this test (optional, default: None)
 #       LIBRARIES          Libraries to link test against (optional)
-#       WORKING_DIRECTORY  Working directory for test (optional)
+#       WORKING_DIRECTORY  Working directory for test (optional, default: ${PROJECT_BINARY_DIR})
+#
 # Example:
-# opm_add_test(TestName
-#              [NO_COMPILE]
-#              [ONLY_COMPILE]
-#              [ALWAYS_ENABLE]
-#              [EXE_NAME TestExecutableName]
-#              [CONDITION ConditionalExpression]
-#              [DRIVER_ARGS TestDriverScriptArguments]
-#              [WORKING_DIRECTORY dir]
-#              [SOURCES SourceFile1 SourceFile2 ...]
-#              [PROCESSORS NumberOfRequiredCores]
-#              [DEPENDS Target1 Target2 ...]
-#              [TEST_DEPENDS TestName1 TestName2 ...]
-#              [LIBRARIES Lib1 Lib2 ...])
+#
+# opm_add_test(funky_test
+#              ALWAYS_ENABLE
+#              CONDITION FUNKY_GRID_FOUND
+#              SOURCES tests/MyFunkyTest.cpp
+#              LIBRARIES -lgmp -lm)
 include(CMakeParseArguments)
 
 macro(opm_add_test TestName)
   cmake_parse_arguments(CURTEST
                         "NO_COMPILE;ONLY_COMPILE;ALWAYS_ENABLE" # flags
                         "EXE_NAME;PROCESSORS;WORKING_DIRECTORY" # one value args
-                        "CONDITION;TEST_DEPENDS;DRIVER_ARGS;DEPENDS;SOURCES;LIBRARIES" # multi-value args
+                        "CONDITION;TEST_DEPENDS;DRIVER;DRIVER_ARGS;DEPENDS;TEST_ARGS;SOURCES;LIBRARIES" # multi-value args
                         ${ARGN})
 
   set(BUILD_TESTING "${BUILD_TESTING}")
 
+  # set the default values for optional parameters
   if (NOT CURTEST_EXE_NAME)
     set(CURTEST_EXE_NAME ${TestName})
   endif()
+
+  # try to auto-detect the name of the source file if SOURCES are not
+  # explicitly specified.
   if (NOT CURTEST_SOURCES)
-    set(CURTEST_SOURCES ${CURTEST_EXE_NAME}.cpp)
+    set(CURTEST_SOURCES "")
+    foreach(CURTEST_CANDIDATE "${CURTEST_EXE_NAME}.cpp"
+                              "${CURTEST_EXE_NAME}.cc"
+                              "tests/${CURTEST_EXE_NAME}.cpp"
+                              "tests/${CURTEST_EXE_NAME}.cc")
+      if (EXISTS "${CURTEST_CANDIDATE}")
+        set(CURTEST_SOURCES "${CURTEST_CANDIDATE}")
+      endif()
+    endforeach()
   endif()
+
+  # the default working directory is the build directory
   if (NOT CURTEST_WORKING_DIRECTORY)
     set(CURTEST_WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
   endif()
 
+  # don't build the tests by _default_ if BUILD_TESTING is false,
+  # i.e., when typing 'make' the tests are not build in that
+  # case. They can still be build using 'make test-suite' and they can
+  # be build and run using 'make check'
   set(CURTEST_EXCLUDE_FROM_ALL "")
   if (NOT BUILD_TESTING AND NOT CURTEST_ALWAYS_ENABLE)
-    # don't build the tests by _default_ (i.e., when typing
-    # 'make'). Though they can still be build using 'make ctests' and
-    # they can be build and run using 'make check'
     set(CURTEST_EXCLUDE_FROM_ALL "EXCLUDE_FROM_ALL")
   endif()
 
-  set(SKIP_CUR_TEST "1")
-  # the "AND OR " is a hack which is required to prevent CMake from
-  # evaluating the condition in the string. (which might
-  # evaluate to an empty string even though "${CURTEST_CONDITION}"
-  # is not empty.)
+  # figure out the test driver script and its arguments. (the variable
+  # for the driver script may be empty. In this case the binary is run
+  # "bare metal".)
+  if (NOT CURTEST_DRIVER)
+    set(CURTEST_DRIVER "${OPM_TEST_DRIVER}")
+  endif()
+  if (NOT CURTEST_DRIVER_ARGS)
+    set(CURTEST_DRIVER_ARGS "${OPM_TEST_DRIVER_ARGS}")
+  endif()
+
+  # the libraries to link against
+  if (NOT CURTEST_LIBRARIES)
+    SET(CURTEST_LIBRARIES "${${CMAKE_PROJECT_NAME}_LIBRARIES}")
+  endif()
+
+  # determine if the test should be completely ignored, i.e., the
+  # CONDITION argument evaluates to false. the "AND OR " is a hack
+  # which is required to prevent CMake from evaluating the condition
+  # in the string. (which might evaluate to an empty string even
+  # though "${CURTEST_CONDITION}" is not empty.)
   if ("AND OR ${CURTEST_CONDITION}" STREQUAL "AND OR ")
     set(SKIP_CUR_TEST "0")
   elseif(${CURTEST_CONDITION})
     set(SKIP_CUR_TEST "0")
+  else()
+    set(SKIP_CUR_TEST "1")
   endif()
 
   if (NOT SKIP_CUR_TEST)
     if (CURTEST_ONLY_COMPILE)
+      # only compile the binary but do not run it as a test
       add_executable("${CURTEST_EXE_NAME}" ${CURTEST_EXCLUDE_FROM_ALL} ${CURTEST_SOURCES})
       target_link_libraries (${CURTEST_EXE_NAME} ${CURTEST_LIBRARIES})
+
+      if(CURTEST_DEPENDS)
+        add_dependencies("${CURTEST_EXE_NAME}" ${CURTEST_DEPENDS})
+      endif()
     else()
       if (NOT CURTEST_NO_COMPILE)
+        # in addition to being run, the test must be compiled. (the
+        # run-only case occurs if the binary is already compiled by an
+        # earlier test.)
         add_executable("${CURTEST_EXE_NAME}" ${CURTEST_EXCLUDE_FROM_ALL} ${CURTEST_SOURCES})
         target_link_libraries (${CURTEST_EXE_NAME} ${CURTEST_LIBRARIES})
+
         if(CURTEST_DEPENDS)
           add_dependencies("${CURTEST_EXE_NAME}" ${CURTEST_DEPENDS})
         endif()
@@ -246,16 +285,47 @@ macro(opm_add_test TestName)
         add_dependencies(test-suite "${CURTEST_EXE_NAME}")
       endif()
 
+      # figure out how the test should be run. if a test driver script
+      # has been specified to supervise the test binary, use it else
+      # run the test binary "naked".
+      if (CURTEST_DRIVER)
+        set(CURTEST_COMMAND ${CURTEST_DRIVER} ${CURTEST_DRIVER_ARGS} ${CURTEST_EXE_NAME} ${CURTEST_TEST_ARGS})
+      else()
+        set(CURTEST_COMMAND "${PROJECT_BINARY_DIR}/bin/${CURTEST_EXE_NAME}")
+        if (CURTEST_TEST_ARGS)
+          set(CURTEST_COMMAND "${CURTEST_COMMAND} ${CURTEST_TEST_ARGS}")
+        endif()
+      endif()
+
       add_test(NAME ${TestName}
                WORKING_DIRECTORY "${CURTEST_WORKING_DIRECTORY}"
-               ${DEPENDS_ON}
-               COMMAND ${CURTEST_EXE_NAME} ${CURTEST_DRIVER_ARGS})
+               COMMAND ${CURTEST_COMMAND})
+
+      # specify the dependencies between the tests
       if (CURTEST_TEST_DEPENDS)
         set_tests_properties(${TestName} PROPERTIES DEPENDS "${CURTEST_TEST_DEPENDS}")
       endif()
+
+      # tell ctest how many cores it should reserve to run the test
       if (CURTEST_PROCESSORS)
         set_tests_properties(${TestName} PROPERTIES PROCESSORS "${CURTEST_PROCESSORS}")
       endif()
     endif()
+
+  else() # test is skipped
+
+    # the following causes the test to appear as 'skipped' in the
+    # CDash dashboard. it this is removed, the test is just silently
+    # ignored.
+    if (NOT CURTEST_ONLY_COMPILE)
+      add_test(${TestName} skip_test_dummy)
+    endif()
   endif()
+endmacro()
+
+# macro to set the default test driver script and the its default
+# arguments
+macro(opm_set_test_driver DriverBinary DriverDefaultArgs)
+  set(OPM_TEST_DRIVER "${DriverBinary}")
+  set(OPM_TEST_DRIVER_ARGS "${DriverDefaultArgs}")
 endmacro()
