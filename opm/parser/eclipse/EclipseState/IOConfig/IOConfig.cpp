@@ -20,14 +20,12 @@
 #include <iterator>
 
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 
 
 namespace Opm {
 
-    IOConfig::IOConfig(DeckConstPtr deck, const std::string& input_path):
+    IOConfig::IOConfig(const std::string& input_path):
         m_write_INIT_file(false),
         m_write_EGRID_file(true),
         m_UNIFIN(false),

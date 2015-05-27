@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     DeckPtr deck = createDeck(deckStr);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
     IOConfigPtr ioConfigPtr;
-    BOOST_CHECK_NO_THROW(ioConfigPtr = std::make_shared<IOConfig>(deck));
+    BOOST_CHECK_NO_THROW(ioConfigPtr = std::make_shared<IOConfig>());
 
     std::shared_ptr<const GRIDSection> gridSection = std::make_shared<const GRIDSection>(deck);
     std::shared_ptr<const RUNSPECSection> runspecSection = std::make_shared<const RUNSPECSection>(deck);
@@ -273,14 +273,14 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     /*Throw exception if write GRID file is specified*/
     DeckPtr deck2 = createDeck(deckStr2);
     IOConfigPtr ioConfigPtr2;
-    BOOST_CHECK_NO_THROW(ioConfigPtr2 = std::make_shared<IOConfig>(deck2));
+    BOOST_CHECK_NO_THROW(ioConfigPtr2 = std::make_shared<IOConfig>());
     std::shared_ptr<const GRIDSection> gridSection2 = std::make_shared<const GRIDSection>(deck2);
     BOOST_CHECK_THROW(ioConfigPtr2->handleGridSection(gridSection2), std::runtime_error);
 
     /*If NOGGF keyword is present, no EGRID file is written*/
     DeckPtr deck3 = createDeck(deckStr3);
     IOConfigPtr ioConfigPtr3;
-    BOOST_CHECK_NO_THROW(ioConfigPtr3 = std::make_shared<IOConfig>(deck3));
+    BOOST_CHECK_NO_THROW(ioConfigPtr3 = std::make_shared<IOConfig>());
 
     std::shared_ptr<const GRIDSection> gridSection3 = std::make_shared<const GRIDSection>(deck3);
     std::shared_ptr<const RUNSPECSection> runspecSection3 = std::make_shared<const RUNSPECSection>(deck3);
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     /*If GRIDFILE 0 0 is specified, no EGRID file is written */
     DeckPtr deck4 = createDeck(deckStr4);
     IOConfigPtr ioConfigPtr4;
-    BOOST_CHECK_NO_THROW(ioConfigPtr4 = std::make_shared<IOConfig>(deck4));
+    BOOST_CHECK_NO_THROW(ioConfigPtr4 = std::make_shared<IOConfig>());
 
     std::shared_ptr<const GRIDSection> gridSection4 = std::make_shared<const GRIDSection>(deck4);
     std::shared_ptr<const RUNSPECSection> runspecSection4 = std::make_shared<const RUNSPECSection>(deck4);

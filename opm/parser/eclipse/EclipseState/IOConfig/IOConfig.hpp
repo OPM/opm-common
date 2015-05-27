@@ -20,7 +20,6 @@
 #ifndef OPM_IO_CONFIG_HPP
 #define OPM_IO_CONFIG_HPP
 
-#include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
@@ -32,7 +31,7 @@ namespace Opm {
 
     public:
 
-        IOConfig(DeckConstPtr deck, const std::string& input_path = "");
+        explicit IOConfig(const std::string& input_path = "");
 
 
         bool getWriteRestartFile(size_t timestep) const;

@@ -852,7 +852,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithRPTRST) {
     Opm::Parser parser;
 
     DeckPtr deck = parser.parseString(deckData);
-    IOConfigPtr ioConfig = std::make_shared<IOConfig>(deck);
+    IOConfigPtr ioConfig = std::make_shared<IOConfig>();
     Schedule schedule(grid , deck, ioConfig);
 
     BOOST_CHECK_EQUAL(false, ioConfig->getWriteRestartFile(0));
@@ -861,7 +861,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithRPTRST) {
 
 
     DeckPtr deck2 = parser.parseString(deckData2) ;
-    IOConfigPtr ioConfig2 = std::make_shared<IOConfig>(deck2);
+    IOConfigPtr ioConfig2 = std::make_shared<IOConfig>();
     Schedule schedule2(grid , deck2, ioConfig2);
 
     BOOST_CHECK_EQUAL(false, ioConfig2->getWriteRestartFile(0));
