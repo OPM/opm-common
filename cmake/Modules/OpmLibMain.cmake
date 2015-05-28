@@ -261,6 +261,13 @@ add_custom_target (check
 	VERBATIM
 	)
 
+# use this target to check local git commits
+add_custom_target(check-commits
+                  COMMAND ${CMAKE_COMMAND}
+                          -DPROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}
+                          -DCMAKE_BINARY_DIR=${CMAKE_BINARY_DIR}
+                          -P ${OPM_MACROS_ROOT}/cmake/Scripts/CheckCommits.cmake)
+
 # generate documentation from source code with Doxygen;
 # setup install target for this documentation
 include (OpmDoc)
