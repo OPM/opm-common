@@ -104,6 +104,45 @@ BOOST_AUTO_TEST_CASE(WellTestRefDepth) {
 }
 
 
+BOOST_AUTO_TEST_CASE(WellTestOpen) {
+    BOOST_CHECK_EQUAL(2, 2);
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELLS2");
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(40,60,30);
+    IOConfigPtr ioConfig;
+    ScheduleConstPtr sched(new Schedule(grid , deck, ioConfig));
+
+    auto well1 = sched->getWell( "W_1" );
+    auto well2 = sched->getWell( "W_2" );
+    auto well3 = sched->getWell( "W_3" );
+
+    {
+        auto wells = sched->getOpenWells( 3 );
+        BOOST_CHECK_EQUAL( 1U , wells.size() );
+        BOOST_CHECK_EQUAL( well1 , wells[0] );
+    }
+
+    {
+        auto wells = sched->getOpenWells(6);
+        BOOST_CHECK_EQUAL( 3U , wells.size() );
+
+        BOOST_CHECK_EQUAL( well1 , wells[0] );
+        BOOST_CHECK_EQUAL( well2 , wells[1] );
+        BOOST_CHECK_EQUAL( well3 , wells[2] );
+    }
+
+    {
+        auto wells = sched->getOpenWells(12);
+        BOOST_CHECK_EQUAL( 2U , wells.size() );
+
+        BOOST_CHECK_EQUAL( well2 , wells[0] );
+        BOOST_CHECK_EQUAL( well3 , wells[1] );
+    }
+}
+
+
+
 
 
 BOOST_AUTO_TEST_CASE(WellTesting) {
