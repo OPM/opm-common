@@ -38,6 +38,14 @@ find_path (ERT_ECL_INCLUDE_DIR
   DOC "Path to ERT Eclipse library header files"
   ${_no_default_path}
   )
+find_path (ERT_ECL_WELL_INCLUDE_DIR
+  NAMES "ert/ecl_well/well_const.h"
+  HINTS "${ERT_ROOT}"
+  PATHS "${PROJECT_SOURCE_DIR}/../ert"
+  PATH_SUFFIXES "devel/libecl_well/include/" "include"
+  DOC "Path to ERT Eclipse library header files"
+  ${_no_default_path}
+  )
 find_path (ERT_UTIL_INCLUDE_DIR
   NAMES "ert/util/stringlist.h"
   HINTS "${ERT_ROOT}"
@@ -111,6 +119,7 @@ find_library (ERT_LIBRARY_UTIL
 # the "library" found here is actually a list of several files
 list (APPEND ERT_INCLUDE_DIR
   ${ERT_ECL_INCLUDE_DIR}
+  ${ERT_ECL_WELL_INCLUDE_DIR}
   ${ERT_UTIL_INCLUDE_DIR}
   ${ERT_GEN_INCLUDE_DIR}
   )
