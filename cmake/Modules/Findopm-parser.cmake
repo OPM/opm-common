@@ -59,6 +59,15 @@ find_path (OPM_PARSER_INCLUDE_DIR
   DOC "Path to OPM parser header files"
   ${_no_default_path} )
 
+find_path (OPM_PARSER_GEN_INCLUDE_DIR
+  NAMES "opm/parser/eclipse/Parser/ParserKeywords.hpp"
+  HINTS "${OPM_PARSER_ROOT}"
+  PATHS ${_opm_parser_build}
+  PATH_SUFFIXES "generated-source/include" "include"
+  DOC "Path to OPM parser generated header files"
+  ${_no_default_path} )
+
+
 # backup: if we didn't find any headers there, but a CMakeCache.txt,
 # then it is probably a build directory; read the CMake cache of
 # opm-parser to figure out where the source directory is
@@ -118,6 +127,7 @@ if (ERT_FOUND AND Boost_FOUND AND
   # we use the plural form to get *all* the libraries needed by cjson
   set (opm-parser_INCLUDE_DIRS
     ${OPM_PARSER_INCLUDE_DIR}
+    ${OPM_PARSER_GEN_INCLUDE_DIR}
     ${Boost_INCLUDE_DIRS}
     ${ERT_INCLUDE_DIRS})
 
