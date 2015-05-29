@@ -92,7 +92,7 @@ static void generateKeywordSignature(std::iostream& of , KeywordMapType& keyword
         const std::string& fileName = keywordElement.second.first;
         Json::JsonObject * jsonKeyword = new Json::JsonObject(boost::filesystem::path(fileName));
 
-        of << keywordName << std::endl << jsonKeyword->get_content() << std::endl;
+        of << keywordName << std::endl << jsonKeyword->to_string() << std::endl;
 
         delete jsonKeyword;
     }

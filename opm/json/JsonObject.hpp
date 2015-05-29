@@ -40,6 +40,7 @@ namespace Json {
         JsonObject get_array_item( size_t index ) const;
         JsonObject get_item(const std::string& key) const;
 
+        std::string to_string() const;
         std::string get_string(const std::string& key) const;
         std::string as_string() const;
         bool is_string( ) const;
@@ -53,15 +54,12 @@ namespace Json {
         bool is_array( ) const;
         bool is_object( ) const;
 
-        std::string get_content() const;
-
         size_t size() const;
     private:
         JsonObject get_scalar_object(const std::string& key) const;
-        void initialize(const std::string& inline_json);
+        void  initialize(const std::string& inline_json);
         cJSON * root;
         bool    owner;
-        std::string content;
     };
 }
 
