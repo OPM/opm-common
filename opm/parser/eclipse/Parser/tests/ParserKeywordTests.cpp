@@ -48,6 +48,7 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_default_SizeTypedefault) {
     BOOST_CHECK_EQUAL(parserKeyword->getSizeType() , SLASH_TERMINATED);
 }
 
+
 BOOST_AUTO_TEST_CASE(ParserKeyword_withSize_SizeTypeFIXED) {
     std::string keyword("KEYWORD");
     ParserKeywordConstPtr parserKeyword = ParserKeyword::createFixedSized(keyword, (size_t) 100);
@@ -475,4 +476,14 @@ BOOST_AUTO_TEST_CASE(ConstructFromJson_withRecords_and_items_throws) {
         "{\"name\" : \"factor\" , \"value_type\" : \"DOUBLE\"}]}";
     Json::JsonObject jsonObject( json_string );
     BOOST_CHECK_THROW( ParserKeyword::createFromJson( jsonObject ) , std::invalid_argument);
+}
+
+
+BOOST_AUTO_TEST_CASE(Create1Arg) {
+    ParserKeyword kw("GRID");
+    BOOST_CHECK_EQUAL( false , kw.hasDimension() );
+    BOOST_CHECK( kw.hasFixedSize() );
+    BOOST_CHECK_EQUAL( kw.getFixedSize( ) , 0 );
+
+    BOOST_CHECK_THROW( kw.getRecord( 0 ) , std::invalid_argument );
 }

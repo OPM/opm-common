@@ -37,24 +37,19 @@ namespace Opm {
         m_name = name;
         m_keywordSizeType = sizeType;
         m_Description = "";
+        m_fixedSize = 0;
 
         m_deckNames.insert(m_name);
     }
 
-    ParserKeyword::ParserKeyword(const std::string& name, ParserKeywordSizeEnum sizeType) {
-        if (!(sizeType == SLASH_TERMINATED || sizeType == UNKNOWN)) {
-            throw std::invalid_argument("Size type " + ParserKeywordSizeEnum2String(sizeType) + " cannot be set explicitly.");
-        }
-        commonInit(name, sizeType);
-    }
-
-    ParserKeyword::ParserKeyword(const std::string& name, size_t fixedKeywordSize) {
+    ParserKeyword::ParserKeyword(const std::string& name) {
         commonInit(name, FIXED);
-        m_fixedSize = fixedKeywordSize;
     }
 
-    ParserKeyword::ParserKeyword(const std::string& name, const std::string& sizeKeyword, const std::string& sizeItem, bool _isTableCollection) {
-        commonInit(name, OTHER_KEYWORD_IN_DECK);
+
+    ParserKeyword::ParserKeyword(const std::string& name, const std::string& sizeKeyword, const std::string& sizeItem, bool _isTableCollection)
+    {
+        commonInit( name , OTHER_KEYWORD_IN_DECK);
         m_isTableCollection = _isTableCollection;
         initSizeKeyword(sizeKeyword, sizeItem);
     }
@@ -179,13 +174,21 @@ namespace Opm {
 
     ParserKeywordPtr ParserKeyword::createFixedSized(const std::string& name,
                                                      size_t fixedKeywordSize) {
-        return ParserKeywordPtr(new ParserKeyword(name, fixedKeywordSize));
+        auto kw = std::make_shared<ParserKeyword>( name );
+        kw->m_keywordSizeType = FIXED;
+        kw->m_fixedSize = fixedKeywordSize;
+        return kw;
     }
+
+
 
     ParserKeywordPtr ParserKeyword::createDynamicSized(const std::string& name,
                                                        ParserKeywordSizeEnum sizeType) {
-        return ParserKeywordPtr(new ParserKeyword(name, sizeType));
+        auto kw = std::make_shared<ParserKeyword>( name );
+        kw->m_keywordSizeType = sizeType;
+        return kw;
     }
+
 
     ParserKeywordPtr ParserKeyword::createTable(const std::string& name,
                                                 const std::string& sizeKeyword,

@@ -54,10 +54,7 @@ namespace Opm {
                       const std::string& sizeKeyword ,
                       const std::string& sizeItem,
                       bool isTableCollection = false);
-        ParserKeyword(const std::string& name ,
-                      ParserKeywordSizeEnum sizeType = SLASH_TERMINATED);
-        ParserKeyword(const std::string& name ,
-                      size_t fixedKeywordSize);
+        ParserKeyword(const std::string& name);
         ParserKeyword(const Json::JsonObject& jsonConfig);
 
         typedef std::set<std::string> DeckNameSet;
