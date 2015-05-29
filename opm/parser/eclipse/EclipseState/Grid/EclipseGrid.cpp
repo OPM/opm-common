@@ -606,9 +606,9 @@ namespace Opm {
     }
 
 
-    void EclipseGrid::fwriteEGRID( const std::string& filename ) const {
+    void EclipseGrid::fwriteEGRID( const std::string& filename, bool output_metric ) const {
         assertCellInfo();
-        ecl_grid_fwrite_EGRID( m_grid.get() , filename.c_str() );
+        ecl_grid_fwrite_EGRID( m_grid.get() , filename.c_str(), output_metric );
     }
 
 
