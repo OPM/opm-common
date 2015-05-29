@@ -102,6 +102,7 @@ namespace Opm
         void handleTUNING(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleNOSIM();
         void handleRPTRST(DeckKeywordConstPtr keyword, size_t currentStep, IOConfigPtr ioConfig);
+        void handleRPTSCHED(DeckKeywordConstPtr keyword, size_t currentStep, IOConfigPtr ioConfig);
         void handleDATES(DeckKeywordConstPtr keyword);
         void handleTSTEP(DeckKeywordConstPtr keyword);
         void handleGRUPTREE(DeckKeywordConstPtr keyword, size_t currentStep);
