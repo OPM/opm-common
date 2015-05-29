@@ -27,7 +27,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 
-#include <opm/parser/eclipse/ert/EclKW.hpp>
+#include <ert/ecl/EclKW.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
 #include <opm/parser/eclipse/Deck/Section.hpp>
