@@ -204,6 +204,7 @@ namespace Opm {
             m_rootGroupTree->add(currentStep, newTree);
         }
     }
+
     
     void Schedule::checkWELSPECSConsistency(WellConstPtr well, DeckKeywordConstPtr keyword, size_t recordIdx) const {
         DeckRecordConstPtr record = keyword->getRecord(recordIdx);
@@ -969,6 +970,24 @@ namespace Opm {
     WellPtr Schedule::getWell(const std::string& wellName) const {
         return m_wells.get( wellName );
     }
+
+
+    /*
+      Observe that this method only returns wells which have state ==
+      OPEN; it does not include wells in state AUTO which might have
+      been opened by the simulator.
+    */
+
+    std::vector<WellPtr> Schedule::getOpenWells(size_t timeStep) const {
+        std::vector<WellPtr> wells;
+        for (auto well_iter = m_wells.begin(); well_iter != m_wells.end(); ++well_iter) {
+            auto well = *well_iter;
+            if (well->getStatus( timeStep ) == WellCommon::OPEN)
+                wells.push_back( well );
+        }
+        return wells;
+    }
+
 
     std::vector<WellPtr> Schedule::getWells(const std::string& wellNamePattern) const {
         std::vector<WellPtr> wells;
