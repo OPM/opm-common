@@ -1,9 +1,0 @@
-Strange structure, records not equally long. Defaults?
-
-EQUALS
- SWL   0.10                                     /  Connate water saturation
- SWU   1.0                                      /  Maximum water saturation
- SGCR  0.10                                     /  Critical gas saturation 
- SOWCR 0.2                                      /  Residual oil saturation after water-flood
- SOGCR 0.1                                      /  Residual oil sat. after gas-flood
-/
