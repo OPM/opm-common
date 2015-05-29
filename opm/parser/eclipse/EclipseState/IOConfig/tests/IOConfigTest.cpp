@@ -54,14 +54,6 @@ const std::string& deckStr =  "RUNSPEC\n"
                               "\n"
                               "/\n";
 
-const std::string& deckStr2 =  "RUNSPEC\n"
-                               "\n"
-                               "DIMENS\n"
-                               "10 10 10 /\n"
-                               "GRID\n"
-                               "GRIDFILE\n"
-                               " 1 1 /\n"
-                               "\n";
 
 const std::string& deckStr3 =  "RUNSPEC\n"
                                "UNIFIN\n"
@@ -360,13 +352,6 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
 
     /*If no FMTOUT keyword is specified, verify FMTOUT false (default is unformatted) */
     BOOST_CHECK_EQUAL(false, ioConfigPtr->getFMTOUT());
-
-    /*Throw exception if write GRID file is specified*/
-    DeckPtr deck2 = createDeck(deckStr2);
-    IOConfigPtr ioConfigPtr2;
-    BOOST_CHECK_NO_THROW(ioConfigPtr2 = std::make_shared<IOConfig>());
-    std::shared_ptr<const GRIDSection> gridSection2 = std::make_shared<const GRIDSection>(deck2);
-    BOOST_CHECK_THROW(ioConfigPtr2->handleGridSection(gridSection2), std::runtime_error);
 
     /*If NOGGF keyword is present, no EGRID file is written*/
     DeckPtr deck3 = createDeck(deckStr3);

@@ -227,7 +227,7 @@ namespace Opm {
                 auto rec = gridfilekeyword->getRecord(0);
                 auto item1 = rec->getItem(0);
                 if ((item1->hasValue(0)) && (item1->getInt(0) !=  0)) {
-                    throw std::runtime_error("IOConfig: Reading GRIDFILE keyword from GRID section: Output of GRID file is not supported") ;
+                    std::cerr << "IOConfig: Reading GRIDFILE keyword from GRID section: Output of GRID file is not supported" << std::endl;
                 }
                 if (rec->size() > 1) {
                     auto item2 = rec->getItem(1);
