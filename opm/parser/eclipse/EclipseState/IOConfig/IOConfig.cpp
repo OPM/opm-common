@@ -120,7 +120,7 @@ namespace Opm {
             throw std::runtime_error("OPM does not support the RPTRST BASIC=6 setting (write restart file every timestep)");
         }
 
-        if (2 < basic) {
+        if (basic > 2) {
             m_ignore_RPTSCHED_RESTART = true;
         } else {
             m_ignore_RPTSCHED_RESTART = false;
