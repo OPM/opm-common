@@ -142,6 +142,10 @@ namespace Opm {
             if (keyword->name() == "WRFTPLT")
                 rftProperties.push_back( std::make_pair( keyword , currentStep ));
 
+            if (keyword->name() == "WPIMULT")
+                handleWPIMULT(keyword, currentStep);
+
+
         }
 
         for (auto rftPair = rftProperties.begin(); rftPair != rftProperties.end(); ++rftPair) {
@@ -281,6 +285,22 @@ namespace Opm {
     void Schedule::handleWCONPROD(DeckKeywordConstPtr keyword, size_t currentStep) {
         handleWCONProducer(keyword, currentStep, true);
     }
+
+
+    void Schedule::handleWPIMULT(DeckKeywordConstPtr keyword, size_t currentStep) {
+        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
+            DeckRecordConstPtr record = keyword->getRecord(recordNr);
+            const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
+            double multiplier = record->getItem("MULTIPLIER")->getRawDouble(0);
+            std::vector<WellPtr> wells = getWells(wellNamePattern);
+
+            for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
+                WellPtr well = *wellIter;
+
+            }
+        }
+    }
+
 
     void Schedule::handleWCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {

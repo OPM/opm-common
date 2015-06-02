@@ -1,0 +1,8 @@
+{"name" : "WPIMULT" , "sections" : ["SCHEDULE"] , "records" : [
+  [{"name" : "WELL" , "value_type" : "STRING"},
+   {"name" : "MULTIPLIER" , "value_type" : "DOUBLE" },
+   {"name" : "I", "value_type" : "DOUBLE" , "default" : -1},
+   {"name" : "J", "value_type" : "DOUBLE" , "default" : -1},
+   {"name" : "K", "value_type" : "DOUBLE" , "default" : -1},
+   {"name" : "FIRST", "value_type" : "DOUBLE" , "default" : -1},
+   {"name" : "LAST", "value_type" : "DOUBLE" , "default" : -1}]]}
