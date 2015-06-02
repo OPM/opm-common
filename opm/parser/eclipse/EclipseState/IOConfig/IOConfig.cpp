@@ -32,7 +32,8 @@ namespace Opm {
         m_UNIFOUT(false),
         m_FMTIN(false),
         m_FMTOUT(false),
-        m_eclipse_input_path(input_path) {
+        m_eclipse_input_path(input_path),
+        m_ignore_RPTSCHED_RESTART(false){
     }
 
     bool IOConfig::getWriteEGRIDFile() const {
@@ -50,6 +51,9 @@ namespace Opm {
             restartConfig ts_restart_config = m_restart_output_config->get(timestep);
 
             switch (ts_restart_config.basic) {
+                case 0: //Do not write restart files
+                    write_restart_ts = false;
+                    break;
                 case 1: //Write restart file every report time
                     write_restart_ts = true;
                     break;
@@ -64,9 +68,6 @@ namespace Opm {
                     break;
                 case 5: //First reportstep of every month, or if n > 1, n'th months
                     write_restart_ts = getWriteRestartFileFrequency(timestep, ts_restart_config.timestep, ts_restart_config.frequency, false, true);
-                    break;
-                case 6: //Write restart file every timestep
-                    throw std::runtime_error("OPM does not support the RPTRST BASIC=6 setting (write restart file every timestep)");
                     break;
                 default:
                     // do nothing
@@ -113,6 +114,19 @@ namespace Opm {
 
 
     void IOConfig::handleRPTRSTBasic(TimeMapConstPtr timemap, size_t timestep, size_t basic, size_t frequency, bool update_default) {
+
+        if (6 == basic )
+        {
+            throw std::runtime_error("OPM does not support the RPTRST BASIC=6 setting (write restart file every timestep)");
+        }
+
+        if (basic > 2) {
+            m_ignore_RPTSCHED_RESTART = true;
+        } else {
+            m_ignore_RPTSCHED_RESTART = false;
+        }
+
+
         if (!m_timemap) {
             initRestartOutputConfig(timemap);
         }
@@ -129,6 +143,30 @@ namespace Opm {
         }
     }
 
+
+    void IOConfig::handleRPTSCHEDRestart(TimeMapConstPtr timemap, size_t timestep, size_t restart) {
+        if (6 == restart )
+        {
+            throw std::runtime_error("OPM does not support the RPTSCHED RESTART=6 setting (write restart file every timestep)");
+        }
+
+        if (m_ignore_RPTSCHED_RESTART) { //If previously RPTRST BASIC has been set >2, ignore RPTSCHED RESTART
+            return;
+        }
+
+        if (!m_timemap) {
+            initRestartOutputConfig(timemap);
+        }
+
+        //RPTSCHED Restart mnemonic == 0: same logic as RPTRST Basic mnemonic = 0
+        //RPTSCHED Restart mnemonic >= 1; same logic as RPTRST Basic mnemonic = 1
+
+        restartConfig rs;
+        rs.timestep  = timestep;
+        rs.basic     = (restart == 0) ? 0 : 1;
+
+        m_restart_output_config->add(timestep, rs);
+    }
 
 
     void IOConfig::initRestartOutputConfig(TimeMapConstPtr timemap) {
@@ -174,7 +212,6 @@ namespace Opm {
                     }
                 }
             }
-            std::cout << "SOLUTION SECTION; BASIC FREQ IS " << basic << "," << freq << std::endl;
             handleRPTRSTBasic(m_timemap, currentStep, basic, freq, true);
         }
     }
@@ -190,7 +227,7 @@ namespace Opm {
                 auto rec = gridfilekeyword->getRecord(0);
                 auto item1 = rec->getItem(0);
                 if ((item1->hasValue(0)) && (item1->getInt(0) !=  0)) {
-                    throw std::runtime_error("IOConfig: Reading GRIDFILE keyword from GRID section: Output of GRID file is not supported") ;
+                    std::cerr << "IOConfig: Reading GRIDFILE keyword from GRID section: Output of GRID file is not supported" << std::endl;
                 }
                 if (rec->size() > 1) {
                     auto item2 = rec->getItem(1);

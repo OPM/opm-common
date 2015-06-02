@@ -136,6 +136,9 @@ namespace Opm {
             if (keyword->name() == "RPTRST")
                 handleRPTRST(keyword, currentStep, ioConfig);
 
+            if (keyword->name() == "RPTSCHED")
+                handleRPTSCHED(keyword, currentStep, ioConfig);
+
             if (keyword->name() == "WRFT")
                 rftProperties.push_back( std::make_pair( keyword , currentStep ));
 
@@ -780,6 +783,7 @@ namespace Opm {
 
         size_t basic = 1;
         size_t freq  = 0;
+        bool handle_RPTRST_BASIC = false;
 
         DeckItemConstPtr item = record->getItem(0);
 
@@ -790,6 +794,7 @@ namespace Opm {
             if (found_basic != std::string::npos) {
                 std::string basic_no = mnemonic.substr(found_basic+6, mnemonic.size());
                 basic = boost::lexical_cast<size_t>(basic_no);
+                handle_RPTRST_BASIC = true;
             }
 
             size_t found_freq = mnemonic.find("FREQ=");
@@ -799,9 +804,60 @@ namespace Opm {
             }
         }
 
-        ioConfig->handleRPTRSTBasic(m_timeMap, currentStep, basic, freq);
+        if (handle_RPTRST_BASIC) {
+            ioConfig->handleRPTRSTBasic(m_timeMap, currentStep, basic, freq);
+        }
     }
 
+
+    void Schedule::handleRPTSCHED(DeckKeywordConstPtr keyword, size_t currentStep, IOConfigPtr ioConfig) {
+        DeckRecordConstPtr record = keyword->getRecord(0);
+
+        size_t restart = 0;
+        size_t found_mnemonic_RESTART = 0;
+        size_t found_mnemonic_NOTHING = 0;
+        DeckItemConstPtr item = record->getItem(0);
+        bool handle_RPTSCHED_RESTART = false;
+
+        for (size_t index = 0; index < item->size(); ++index) {
+            const std::string& mnemonic = item->getString(index);
+
+            found_mnemonic_RESTART = mnemonic.find("RESTART=");
+            if (found_mnemonic_RESTART != std::string::npos) {
+                std::string restart_no = mnemonic.substr(found_mnemonic_RESTART+8, mnemonic.size());
+                restart = boost::lexical_cast<size_t>(restart_no);
+                handle_RPTSCHED_RESTART = true;
+            }
+            found_mnemonic_NOTHING = mnemonic.find("NOTHING");
+            if (found_mnemonic_NOTHING != std::string::npos) {
+                restart = 0;
+                handle_RPTSCHED_RESTART = true;
+            }
+        }
+
+
+        /* If no RESTART mnemonic is found, either it is not present or we might
+           have an old data set containing integer controls instead of mnemonics.
+           Restart integer switch is integer control nr 7 */
+
+        if (found_mnemonic_RESTART == std::string::npos) {
+            if (item->size() >= 7)  {
+                const std::string& integer_control = item->getString(6);
+                try {
+                    restart = boost::lexical_cast<size_t>(integer_control);
+                    handle_RPTSCHED_RESTART = true;
+                } catch (boost::bad_lexical_cast &) {
+                    //do nothing
+                }
+            }
+        }
+
+
+        if (handle_RPTSCHED_RESTART) {
+            ioConfig->handleRPTSCHEDRestart(m_timeMap, currentStep, restart);
+        }
+
+    }
 
     void Schedule::handleCOMPDAT(DeckKeywordConstPtr keyword, size_t currentStep) {
         std::map<std::string , std::vector< CompletionPtr> > completionMapList = Completion::completionsFromCOMPDATKeyword( keyword );

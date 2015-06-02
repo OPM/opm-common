@@ -869,3 +869,158 @@ BOOST_AUTO_TEST_CASE(createDeckWithRPTRST) {
     BOOST_CHECK_EQUAL(false, ioConfig2->getWriteRestartFile(2));
     BOOST_CHECK_EQUAL(true, ioConfig2->getWriteRestartFile(3));
 }
+
+BOOST_AUTO_TEST_CASE(createDeckWithRPTSCHED) {
+
+    const char *deckData =
+                          "RUNSPEC\n"
+                          "DIMENS\n"
+                          " 10 10 10 /\n"
+                          "GRID\n"
+                          "START             -- 0 \n"
+                          "19 JUN 2007 / \n"
+                          "SCHEDULE\n"
+                          "DATES             -- 1\n"
+                          " 10  OKT 2008 / \n"
+                          "/\n"
+                          "RPTSCHED\n"
+                          "RESTART=1\n"
+                          "/\n"
+                          "DATES             -- 2\n"
+                          " 20  JAN 2010 / \n"
+                          "/\n"
+                          "DATES             -- 3\n"
+                          " 20  FEB 2010 / \n"
+                          "/\n"
+                          "RPTSCHED\n"
+                          "RESTART=0\n"
+                          "/\n"
+                          "/\n";
+
+
+    const char *deckData1 =
+                          "RUNSPEC\n"
+                          "DIMENS\n"
+                          " 10 10 10 /\n"
+                          "GRID\n"
+                          "START             -- 0 \n"
+                          "19 JUN 2007 / \n"
+                          "SCHEDULE\n"
+                          "DATES             -- 1\n"
+                          " 10  OKT 2008 / \n"
+                          "/\n"
+                          "RPTSCHED\n"
+                          "RESTART=1\n"
+                          "/\n"
+                          "DATES             -- 2\n"
+                          " 20  JAN 2010 / \n"
+                          "/\n"
+                          "DATES             -- 3\n"
+                          " 20  FEB 2010 / \n"
+                          "/\n"
+                          "RPTSCHED\n"
+                          "NOTHING RUBBISH\n"
+                          "/\n"
+                          "/\n";
+
+    const char *deckData2 =
+                          "RUNSPEC\n"
+                          "DIMENS\n"
+                          " 10 10 10 /\n"
+                          "GRID\n"
+                          "START             -- 0 \n"
+                          "19 JUN 2007 / \n"
+                          "SCHEDULE\n"
+                          "DATES             -- 1\n"
+                          " 10  OKT 2008 / \n"
+                          "/\n"
+                          "RPTRST\n"
+                          "BASIC=3 FREQ=1 RUBBISH=5\n"
+                          "/\n"
+                          "DATES             -- 2\n"
+                          " 20  JAN 2010 / \n"
+                          "/\n"
+                          "DATES             -- 3\n"
+                          " 20  FEB 2010 / \n"
+                          "/\n"
+                          "RPTSCHED\n"
+                          "0 0 0 0 0 0 0 0\n"
+                          "/\n"
+                          "/\n";
+
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
+    Opm::Parser parser;
+
+    DeckPtr deck = parser.parseString(deckData);
+    IOConfigPtr ioConfig = std::make_shared<IOConfig>();
+    Schedule schedule(grid , deck, ioConfig);
+
+    BOOST_CHECK_EQUAL(false, ioConfig->getWriteRestartFile(0));
+    BOOST_CHECK_EQUAL(true, ioConfig->getWriteRestartFile(1));
+    BOOST_CHECK_EQUAL(true, ioConfig->getWriteRestartFile(2));
+    BOOST_CHECK_EQUAL(false, ioConfig->getWriteRestartFile(3));
+
+
+    DeckPtr deck1 = parser.parseString(deckData1);
+    IOConfigPtr ioConfig1 = std::make_shared<IOConfig>();
+    Schedule schedule1(grid , deck1, ioConfig1);
+
+    BOOST_CHECK_EQUAL(false, ioConfig1->getWriteRestartFile(0));
+    BOOST_CHECK_EQUAL(true, ioConfig1->getWriteRestartFile(1));
+    BOOST_CHECK_EQUAL(true, ioConfig1->getWriteRestartFile(2));
+    BOOST_CHECK_EQUAL(false, ioConfig1->getWriteRestartFile(3));
+
+
+    /*Older ECLIPSE 100 data set may use integer controls instead of mnemonics*/
+
+    DeckPtr deck2 = parser.parseString(deckData2) ;
+    IOConfigPtr ioConfig2 = std::make_shared<IOConfig>();
+    Schedule schedule2(grid , deck2, ioConfig2);
+
+    BOOST_CHECK_EQUAL(false, ioConfig->getWriteRestartFile(0));
+    BOOST_CHECK_EQUAL(true, ioConfig->getWriteRestartFile(1));
+    BOOST_CHECK_EQUAL(true, ioConfig->getWriteRestartFile(2));
+    BOOST_CHECK_EQUAL(false, ioConfig->getWriteRestartFile(3));
+}
+
+BOOST_AUTO_TEST_CASE(createDeckWithRPTSCHEDandRPTRST) {
+  const char *deckData =
+                        "RUNSPEC\n"
+                        "DIMENS\n"
+                        " 10 10 10 /\n"
+                        "GRID\n"
+                        "START             -- 0 \n"
+                        "19 JUN 2007 / \n"
+                        "SCHEDULE\n"
+                        "DATES             -- 1\n"
+                        " 10  OKT 2008 / \n"
+                        "/\n"
+                        "RPTRST\n"
+                        "BASIC=3 FREQ=3\n"
+                        "/\n"
+                        "DATES             -- 2\n"
+                        " 20  JAN 2010 / \n"
+                        "/\n"
+                        "DATES             -- 3\n"
+                        " 20  FEB 2010 / \n"
+                        "/\n"
+                        "RPTSCHED\n"
+                        "RESTART=1\n"
+                        "/\n"
+                        "/\n";
+
+
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
+    Opm::Parser parser;
+
+    DeckPtr deck = parser.parseString(deckData);
+    IOConfigPtr ioConfig = std::make_shared<IOConfig>();
+    Schedule schedule(grid , deck, ioConfig);
+
+    BOOST_CHECK_EQUAL(false, ioConfig->getWriteRestartFile(0));
+    BOOST_CHECK_EQUAL(true, ioConfig->getWriteRestartFile(1));
+    BOOST_CHECK_EQUAL(false, ioConfig->getWriteRestartFile(2));
+    BOOST_CHECK_EQUAL(false, ioConfig->getWriteRestartFile(3));
+}
+
+

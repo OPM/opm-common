@@ -54,14 +54,6 @@ const std::string& deckStr =  "RUNSPEC\n"
                               "\n"
                               "/\n";
 
-const std::string& deckStr2 =  "RUNSPEC\n"
-                               "\n"
-                               "DIMENS\n"
-                               "10 10 10 /\n"
-                               "GRID\n"
-                               "GRIDFILE\n"
-                               " 1 1 /\n"
-                               "\n";
 
 const std::string& deckStr3 =  "RUNSPEC\n"
                                "UNIFIN\n"
@@ -241,7 +233,7 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     frequency     = 2;
     ioConfigPtr->handleRPTRSTBasic(schedule.getTimeMap(), timestep, basic, frequency);
 
-    /*Expected results: Write timestep for timestep 37, 38, 42, 44 */
+    /*Expected results: Write timestep for timestep 37, 42 */
 
     for (size_t ts = 37; ts <= 46; ++ts) {
         if ((37 == ts) || (42 == ts)) {
@@ -250,6 +242,97 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
             BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(ts));
         }
     }
+
+    //Add timestep 47, 48, 49
+    writableTimemap->addTStep(boost::posix_time::hours(750)); //june
+    writableTimemap->addTStep(boost::posix_time::hours(750)); //july
+    writableTimemap->addTStep(boost::posix_time::hours(750)); //august
+
+    /* BASIC=0, no restart files are written*/
+    timestep      = 47;
+    basic         = 0;
+    frequency     = 0;
+    ioConfigPtr->handleRPTRSTBasic(schedule.getTimeMap(), timestep, basic, frequency);
+
+    BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(47));
+    BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(48));
+    BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(49));
+
+
+    /************************* Test RPTSCHED RESTART *************************/
+
+    //Add timestep 50, 51
+    writableTimemap->addTStep(boost::posix_time::hours(24));
+    writableTimemap->addTStep(boost::posix_time::hours(24));
+
+    /* RPTSCHED RESTART=1, restart files are written*/
+    timestep       = 50;
+    size_t restart = 1;
+    ioConfigPtr->handleRPTSCHEDRestart(schedule.getTimeMap(), timestep, restart);
+
+    BOOST_CHECK_EQUAL(true, ioConfigPtr->getWriteRestartFile(50));
+    BOOST_CHECK_EQUAL(true, ioConfigPtr->getWriteRestartFile(51));
+
+    //Add timestep 52, 53
+    writableTimemap->addTStep(boost::posix_time::hours(24));
+    writableTimemap->addTStep(boost::posix_time::hours(24));
+
+    /* RPTSCHED RESTART=0, no restart files are written*/
+    timestep      = 52;
+    restart       = 0;
+    ioConfigPtr->handleRPTSCHEDRestart(schedule.getTimeMap(), timestep, restart);
+
+    BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(52));
+    BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(53));
+
+    //Add timestep 54, 55
+    writableTimemap->addTStep(boost::posix_time::hours(24));
+    writableTimemap->addTStep(boost::posix_time::hours(24));
+    timestep      = 54;
+    basic         = 0;
+    ioConfigPtr->handleRPTSCHEDRestart(schedule.getTimeMap(), timestep, restart);
+
+
+    /* RPTSCHED RESTART IGNORED IF RPTRST BASIC > 2 */
+
+    //Add timestep 56, 57, 58, 59
+    writableTimemap->addTStep(boost::posix_time::hours(24));
+    writableTimemap->addTStep(boost::posix_time::hours(24));
+    timestep      = 56;
+    basic         = 3;
+    frequency     = 1;
+    ioConfigPtr->handleRPTRSTBasic(schedule.getTimeMap(), timestep, basic, frequency);
+
+    timestep      = 58;
+    restart       = 0;
+    writableTimemap->addTStep(boost::posix_time::hours(24));
+    writableTimemap->addTStep(boost::posix_time::hours(24));
+    BOOST_CHECK_EQUAL(true, ioConfigPtr->getWriteRestartFile(timestep));
+
+    /* RPTSCHED RESTART IGNORED IF RPTRST BASIC > 2 */
+    ioConfigPtr->handleRPTSCHEDRestart(schedule.getTimeMap(), timestep, restart);
+    BOOST_CHECK_EQUAL(true, ioConfigPtr->getWriteRestartFile(timestep));
+
+
+    /* RPTSCHED RESTART NOT IGNORED IF RPTRST BASIC <= 2 */
+    //Add timestep 60, 61
+    writableTimemap->addTStep(boost::posix_time::hours(24));
+    writableTimemap->addTStep(boost::posix_time::hours(24));
+    timestep      = 60;
+    basic         = 1;
+    frequency     = 0;
+    ioConfigPtr->handleRPTRSTBasic(schedule.getTimeMap(), timestep, basic, frequency);
+
+    timestep      = 61;
+    restart       = 0;
+    writableTimemap->addTStep(boost::posix_time::hours(24));
+    writableTimemap->addTStep(boost::posix_time::hours(24));
+    BOOST_CHECK_EQUAL(true, ioConfigPtr->getWriteRestartFile(timestep));
+
+    ioConfigPtr->handleRPTSCHEDRestart(schedule.getTimeMap(), timestep, restart);
+    BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(timestep));
+
+
 
 
     /*If no GRIDFILE nor NOGGF keywords are specified, default output an EGRID file*/
@@ -269,13 +352,6 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
 
     /*If no FMTOUT keyword is specified, verify FMTOUT false (default is unformatted) */
     BOOST_CHECK_EQUAL(false, ioConfigPtr->getFMTOUT());
-
-    /*Throw exception if write GRID file is specified*/
-    DeckPtr deck2 = createDeck(deckStr2);
-    IOConfigPtr ioConfigPtr2;
-    BOOST_CHECK_NO_THROW(ioConfigPtr2 = std::make_shared<IOConfig>());
-    std::shared_ptr<const GRIDSection> gridSection2 = std::make_shared<const GRIDSection>(deck2);
-    BOOST_CHECK_THROW(ioConfigPtr2->handleGridSection(gridSection2), std::runtime_error);
 
     /*If NOGGF keyword is present, no EGRID file is written*/
     DeckPtr deck3 = createDeck(deckStr3);
