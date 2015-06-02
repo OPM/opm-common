@@ -108,6 +108,7 @@ namespace Opm
         void handleGRUPTREE(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleWRFT(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleWRFTPLT(DeckKeywordConstPtr keyword, size_t currentStep);
+        void handleWPIMULT(DeckKeywordConstPtr keyword, size_t currentStep);
 
         void checkUnhandledKeywords(DeckConstPtr deck) const;
 
