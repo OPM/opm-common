@@ -124,7 +124,7 @@ namespace Opm {
             newSource << "void Parser::addDefaultKeywords() {" << std::endl;
             for (auto iter = loader.keyword_begin(); iter != loader.keyword_end(); ++iter) {
                 std::shared_ptr<ParserKeyword> keyword = (*iter).second;
-                newSource << "   addParserKeyword( std::shared_ptr<ParserKeyword>( new ParserKeywords::" << keyword->className() << "()));" << std::endl;
+                newSource << "   addKeyword<ParserKeywords::" << keyword->className() << ">();" << std::endl;
             }
             newSource << "}" << std::endl;
         }
