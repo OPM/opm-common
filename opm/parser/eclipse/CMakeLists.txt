@@ -108,6 +108,7 @@ EclipseState/Grid/EclipseGrid.cpp
 EclipseState/Grid/FaultFace.cpp
 EclipseState/Grid/Fault.cpp
 EclipseState/Grid/FaultCollection.cpp
+EclipseState/Grid/NNC.cpp
 #
 EclipseState/SimulationConfig/SimulationConfig.cpp
 EclipseState/SimulationConfig/ThresholdPressure.cpp
@@ -195,6 +196,7 @@ EclipseState/Grid/TransMult.hpp
 EclipseState/Grid/FaultFace.hpp
 EclipseState/Grid/Fault.hpp
 EclipseState/Grid/FaultCollection.hpp
+EclipseState/Grid/NNC.hpp
 #
 EclipseState/SimulationConfig/SimulationConfig.hpp
 EclipseState/SimulationConfig/ThresholdPressure.hpp
