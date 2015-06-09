@@ -37,6 +37,14 @@ namespace Opm {
         DeckItemPtr getItem(size_t index) const;
         DeckItemPtr getItem(const std::string& name) const;
         DeckItemPtr getDataItem() const;
+
+        
+    template <class Item>
+    DeckItemPtr getItem() const {
+        return getItem( Item::itemName );
+    }
+
+
     private:
         std::vector<DeckItemPtr> m_items;
         std::map<std::string, DeckItemPtr> m_itemMap;

@@ -50,6 +50,23 @@ namespace Opm {
         std::vector<DeckKeywordConstPtr>::const_iterator begin() const;
         std::vector<DeckKeywordConstPtr>::const_iterator end() const;
 
+
+        template <class Keyword>
+        bool hasKeyword() const {
+            return hasKeyword( Keyword::keywordName );
+        }
+
+        template <class Keyword>
+        DeckKeywordConstPtr getKeyword(size_t index) const {
+            return getkeyword( Keyword::keywordName , index );
+        }
+
+        template <class Keyword>
+        DeckKeywordConstPtr getKeyword() const {
+            return getKeyword( Keyword::keywordName );
+        }
+
+
     private:
         std::shared_ptr<UnitSystem> m_defaultUnits;
         std::shared_ptr<UnitSystem> m_activeUnits;

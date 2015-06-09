@@ -83,6 +83,13 @@ namespace Opm {
          */
         ParserKeywordConstPtr getParserKeywordFromInternalName(const std::string& internalKeywordName) const;
 
+
+        template <class T>
+        void addKeyword() {
+            addParserKeyword( std::make_shared<T>());
+        }
+
+
     private:
         // associative map of the parser internal name and the corresponding ParserKeyword object
         std::map<std::string, ParserKeywordConstPtr> m_internalParserKeywords;

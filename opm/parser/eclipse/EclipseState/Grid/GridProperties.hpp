@@ -60,11 +60,11 @@ public:
     }
 
 
-    bool supportsKeyword(const std::string& keyword) {
+    bool supportsKeyword(const std::string& keyword) const {
         return m_supportedKeywords.count( keyword ) > 0;
     }
 
-    bool hasKeyword(const std::string& keyword) {
+    bool hasKeyword(const std::string& keyword) const {
         return m_properties.count( keyword ) > 0;
     }
 
@@ -88,7 +88,7 @@ public:
     }
 
 
-    std::shared_ptr<GridProperty<T> > getInitializedKeyword(const std::string& keyword) {
+    std::shared_ptr<GridProperty<T> > getInitializedKeyword(const std::string& keyword) const {
         if (hasKeyword(keyword))
             return m_properties.at( keyword );
         else {
@@ -117,6 +117,22 @@ public:
             m_property_list.push_back( newProperty );
             return true;
         }
+    }
+
+
+    template <class Keyword>
+    bool hasKeyword() const {
+        return hasKeyword( Keyword::keywordName );
+    }
+
+    template <class Keyword>
+    std::shared_ptr<GridProperty<T> > getKeyword() {
+        return getKeyword( Keyword::keywordName );
+    }
+
+    template <class Keyword>
+    std::shared_ptr<GridProperty<T> > getInitializedKeyword() const {
+        return getInitializedKeyword( Keyword::keywordName );
     }
 
 

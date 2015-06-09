@@ -43,6 +43,7 @@ namespace Opm {
         bool isDataRecord() const;
         bool equal(const ParserRecord& other) const;
         bool hasDimension() const;
+        bool hasItem(const std::string& itemName) const;
         void applyUnitsToDeck(std::shared_ptr<const Deck> deck , std::shared_ptr<const DeckRecord> deckRecord) const;
         std::vector<ParserItemConstPtr>::const_iterator begin() const;
         std::vector<ParserItemConstPtr>::const_iterator end() const;
