@@ -58,7 +58,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/Sof2Table.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwfnTable.hpp>
-
+#include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 
@@ -80,6 +80,7 @@ namespace Opm {
 
         ScheduleConstPtr getSchedule() const;
         IOConfigConstPtr getIOConfig() const;
+        InitConfigConstPtr getInitConfig() const;
         SimulationConfigConstPtr getSimulationConfig() const;
         EclipseGridConstPtr getEclipseGrid() const;
         EclipseGridPtr getEclipseGridCopy() const;
@@ -144,6 +145,7 @@ namespace Opm {
         void initIOConfig(DeckConstPtr deck);
         void initSchedule(DeckConstPtr deck);
         void initIOConfigPostSchedule(DeckConstPtr deck);
+        void initInitConfig(DeckConstPtr deck);
         void initSimulationConfig(DeckConstPtr deck);
         void initEclipseGrid(DeckConstPtr deck);
         void initGridopts(DeckConstPtr deck);
@@ -245,6 +247,7 @@ namespace Opm {
 
         EclipseGridConstPtr      m_eclipseGrid;
         IOConfigPtr              m_ioConfig;
+        InitConfigConstPtr       m_initConfig;
         ScheduleConstPtr         schedule;
         SimulationConfigConstPtr m_simulationConfig;
 
