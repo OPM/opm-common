@@ -13,6 +13,7 @@ add_subdirectory(EclipseState/Tables/tests)
 add_subdirectory(EclipseState/Grid/tests)
 add_subdirectory(EclipseState/Util/tests)
 add_subdirectory(EclipseState/IOConfig/tests)
+add_subdirectory(EclipseState/InitConfig/tests)
 
 add_subdirectory( Applications )
 
@@ -110,6 +111,7 @@ EclipseState/Grid/Fault.cpp
 EclipseState/Grid/FaultCollection.cpp
 EclipseState/Grid/NNC.cpp
 #
+EclipseState/InitConfig/InitConfig.cpp
 EclipseState/SimulationConfig/SimulationConfig.cpp
 EclipseState/SimulationConfig/ThresholdPressure.cpp
 #
@@ -198,6 +200,7 @@ EclipseState/Grid/Fault.hpp
 EclipseState/Grid/FaultCollection.hpp
 EclipseState/Grid/NNC.hpp
 #
+EclipseState/InitConfig/InitConfig.hpp
 EclipseState/SimulationConfig/SimulationConfig.hpp
 EclipseState/SimulationConfig/ThresholdPressure.hpp
 #
