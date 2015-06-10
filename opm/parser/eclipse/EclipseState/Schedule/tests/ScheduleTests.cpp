@@ -1058,8 +1058,23 @@ BOOST_AUTO_TEST_CASE(createDeckWithWPIMULT) {
                     " OP_1     GUID        2300.14 /\n"
                     "/\n"
                     "WPIMULT\n"
-                    "OP_1  1.3 /\n"
+                    "OP_1  1.30 /\n"
+                    "/\n"
+                    "DATES             -- 3\n"
+                    " 20  JAN 2011 / \n"
+                    "/\n"
+                    "WPIMULT\n"
+                    "OP_1  1.30 /\n"
+                    "/\n"
+                    "DATES             -- 4\n"
+                    " 20  JAN 2012 / \n"
+                    "/\n"
+                    "COMPDAT\n"
+                    " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+                    " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
+                    " 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
                     "/\n";
+
 
     DeckPtr deck = parser.parseString(input);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10, 10, 10);
@@ -1075,6 +1090,25 @@ BOOST_AUTO_TEST_CASE(createDeckWithWPIMULT) {
         CompletionConstPtr currentCompletion = currentCompletionSet->get(i);
         BOOST_CHECK_EQUAL(currentCompletion->getWellPi(), 1.3);
     }
+
+    currentStep = 3;
+    currentCompletionSet = well->getCompletions(currentStep);
+    completionSize = currentCompletionSet->size();
+
+    for(size_t i = 0; i < completionSize;i++) {
+        CompletionConstPtr currentCompletion = currentCompletionSet->get(i);
+        BOOST_CHECK_EQUAL(currentCompletion->getWellPi(), (1.3*1.3));
+    }
+
+    currentStep = 4;
+    currentCompletionSet = well->getCompletions(currentStep);
+    completionSize = currentCompletionSet->size();
+
+    for(size_t i = 0; i < completionSize;i++) {
+        CompletionConstPtr currentCompletion = currentCompletionSet->get(i);
+        BOOST_CHECK_EQUAL(currentCompletion->getWellPi(), 1.0);
+    }
+
 }
 
 
