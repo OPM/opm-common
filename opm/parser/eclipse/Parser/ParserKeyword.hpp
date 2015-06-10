@@ -49,6 +49,7 @@ namespace Opm {
     typedef std::shared_ptr<const ParserKeyword> ParserKeywordConstPtr;
 
     class ParserKeyword {
+    public:
         ParserKeyword(const std::string& name ,
                       const std::string& sizeKeyword ,
                       const std::string& sizeItem,
@@ -59,7 +60,6 @@ namespace Opm {
                       size_t fixedKeywordSize);
         ParserKeyword(const Json::JsonObject& jsonConfig);
 
-    public:
         typedef std::set<std::string> DeckNameSet;
         typedef std::set<std::string> SectionNameSet;
 
