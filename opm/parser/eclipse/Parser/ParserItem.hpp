@@ -47,13 +47,16 @@ namespace Opm {
         virtual DeckItemPtr scan(RawRecordPtr rawRecord) const = 0;
         virtual bool hasDimension() const;
         virtual size_t numDimensions() const;
+        const std::string className() const;
         const std::string& name() const;
         ParserItemSizeEnum sizeType() const;
         std::string getDescription() const;
         bool scalar() const;
         void setDescription(std::string helpText);
 
-        virtual void inlineNew(std::ostream& /* os */) const = 0;
+        virtual std::string createCode() const = 0;
+        virtual void inlineClass(std::ostream& /* os */ , const std::string& indent) const = 0;
+        virtual std::string inlineClassInit(const std::string& parentClass) const = 0;
 
         virtual ~ParserItem() {
         }
@@ -98,6 +101,45 @@ namespace Opm {
 
     typedef std::shared_ptr<const ParserItem> ParserItemConstPtr;
     typedef std::shared_ptr<ParserItem> ParserItemPtr;
+
+
+
+    template<typename ParserItemType, typename ValueType>
+    void ParserItemInlineClassDeclaration(const ParserItemType * self , std::ostream& os, const std::string& indent , const std::string& typeString) {
+        os << indent << "class " << self->className( ) << " {" << std::endl;
+        os << indent << "public:" << std::endl;
+        {
+            std::string local_indent = indent + "    ";
+            os << local_indent << "static const std::string itemName;" << std::endl;
+            if (self->hasDefault())
+                os << local_indent << "static const " << typeString << " defaultValue;" << std::endl;
+        }
+        os << indent << "};" << std::endl;
+    }
+
+
+    template<typename ParserItemType, typename ValueType>
+    std::string ParserItemInlineClassInit(const ParserItemType * self ,
+                                          const std::string& parentClass ,
+                                          const std::string& typeString ,
+                                          const std::string * defaultValue = NULL) {
+
+        std::stringstream ss;
+        ss << "const std::string " << parentClass << "::" << self->className() << "::itemName = \"" << self->name() << "\";" << std::endl;
+
+        if (self->hasDefault()) {
+            if (defaultValue)
+                ss << "const " << typeString << " " << parentClass << "::" << self->className() << "::defaultValue = " << *defaultValue << ";" << std::endl;
+            else
+                ss << "const " << typeString << " " << parentClass << "::" << self->className() << "::defaultValue = " << self->getDefault() << ";" << std::endl;
+        }
+
+        return ss.str();
+    }
+
+
+
+
 
     /// Scans the rawRecords data according to the ParserItems definition.
     /// returns a DeckItem object.

@@ -549,6 +549,9 @@ namespace Opm {
             OpmLog::addMessage(Log::MessageType::Info , "Only " + std::to_string(static_cast<long long>(phases.size())) + " fluid phases are enabled");
     }
 
+    size_t EclipseState::getNumPhases() const{
+        return phases.size();
+    }
 
     bool EclipseState::hasPhase(enum Phase::PhaseEnum phase) const {
          return (phases.count(phase) == 1);

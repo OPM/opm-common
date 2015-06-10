@@ -26,6 +26,7 @@
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 #include <ert/ecl/ecl_grid.h>
@@ -107,8 +108,8 @@ namespace Opm {
         if (hasRUNSPEC && hasGRID) {
             // Equivalent to first constructor.
             auto runspecSection = std::make_shared<const RUNSPECSection>(deck);
-            if (runspecSection->hasKeyword("DIMENS")) {
-                DeckKeywordConstPtr dimens = runspecSection->getKeyword("DIMENS");
+            if (runspecSection->hasKeyword<ParserKeywords::DIMENS>()) {
+                DeckKeywordConstPtr dimens = runspecSection->getKeyword<ParserKeywords::DIMENS>();
                 std::vector<int> dims = getDims(dimens);
                 initGrid(dims, deck);
             } else {
@@ -118,8 +119,8 @@ namespace Opm {
             }
         } else if (hasGRID) {
             // Look for SPECGRID instead of DIMENS.
-            if (deck->hasKeyword("SPECGRID")) {
-                DeckKeywordConstPtr specgrid = deck->getKeyword("SPECGRID");
+            if (deck->hasKeyword<ParserKeywords::SPECGRID>()) {
+                DeckKeywordConstPtr specgrid = deck->getKeyword<ParserKeywords::SPECGRID>();
                 std::vector<int> dims = getDims(specgrid);
                 initGrid(dims, deck);
             } else {
@@ -131,11 +132,11 @@ namespace Opm {
             // The deck contains no relevant section, so it is probably a sectionless GRDECL file.
             // Either SPECGRID or DIMENS is OK.
             if (deck->hasKeyword("SPECGRID")) {
-                DeckKeywordConstPtr specgrid = deck->getKeyword("SPECGRID");
+                DeckKeywordConstPtr specgrid = deck->getKeyword<ParserKeywords::SPECGRID>();
                 std::vector<int> dims = getDims(specgrid);
                 initGrid(dims, deck);
-            } else if (deck->hasKeyword("DIMENS")) {
-                DeckKeywordConstPtr dimens = deck->getKeyword("DIMENS");
+            } else if (deck->hasKeyword<ParserKeywords::DIMENS>()) {
+                DeckKeywordConstPtr dimens = deck->getKeyword<ParserKeywords::DIMENS>();
                 std::vector<int> dims = getDims(dimens);
                 initGrid(dims, deck);
             } else {
@@ -158,21 +159,28 @@ namespace Opm {
             initCartesianGrid(dims , deck);
         }
 
-        if (deck->hasKeyword("PINCH")) {
-            m_pinch.setValue( deck->getKeyword("PINCH")->getRecord(0)->getItem("THRESHOLD_THICKNESS")->getSIDouble(0) );
+        if (deck->hasKeyword<ParserKeywords::PINCH>()) {
+            auto record = deck->getKeyword<ParserKeywords::PINCH>( )->getRecord(0);
+            auto item = record->getItem<ParserKeywords::PINCH::THRESHOLD_THICKNESS>( );
+            m_pinch.setValue( item->getSIDouble(0) );
         }
 
-        if (deck->hasKeyword("MINPV") && deck->hasKeyword("MINPVFIL")) {
+        if (deck->hasKeyword<ParserKeywords::MINPV>() && deck->hasKeyword<ParserKeywords::MINPVFIL>()) {
             throw std::invalid_argument("Can not have both MINPV and MINPVFIL in deck.");
         }
-        
-        if (deck->hasKeyword("MINPV")) {
-            m_minpvValue = deck->getKeyword("MINPV")->getRecord(0)->getItem("MINPV")->getSIDouble(0);
+
+        if (deck->hasKeyword<ParserKeywords::MINPV>()) {
+            auto record = deck->getKeyword<ParserKeywords::MINPV>( )->getRecord(0);
+            auto item = record->getItem<ParserKeywords::MINPV::VALUE>( );
+            m_minpvValue = item->getSIDouble(0);
             m_minpvMode = MinpvMode::ModeEnum::EclSTD;
         }
 
-        if (deck->hasKeyword("MINPVFIL")) {
-            m_minpvValue = deck->getKeyword("MINPVFIL")->getRecord(0)->getItem("MINPVFIL")->getSIDouble(0);
+
+        if (deck->hasKeyword<ParserKeywords::MINPVFIL>()) {
+            auto record = deck->getKeyword<ParserKeywords::MINPVFIL>( )->getRecord(0);
+            auto item = record->getItem<ParserKeywords::MINPVFIL::VALUE>( );
+            m_minpvValue = item->getSIDouble(0);
             m_minpvMode = MinpvMode::ModeEnum::OpmFIL;
         }
     }
@@ -239,10 +247,10 @@ namespace Opm {
 
 
     void EclipseGrid::initDVDEPTHZGrid(const std::vector<int>& dims , DeckConstPtr deck) {
-        const std::vector<double>& DXV = deck->getKeyword("DXV")->getSIDoubleData();
-        const std::vector<double>& DYV = deck->getKeyword("DYV")->getSIDoubleData();
-        const std::vector<double>& DZV = deck->getKeyword("DZV")->getSIDoubleData();
-        const std::vector<double>& DEPTHZ = deck->getKeyword("DEPTHZ")->getSIDoubleData();
+        const std::vector<double>& DXV = deck->getKeyword<ParserKeywords::DXV>()->getSIDoubleData();
+        const std::vector<double>& DYV = deck->getKeyword<ParserKeywords::DYV>()->getSIDoubleData();
+        const std::vector<double>& DZV = deck->getKeyword<ParserKeywords::DZV>()->getSIDoubleData();
+        const std::vector<double>& DEPTHZ = deck->getKeyword<ParserKeywords::DEPTHZ>()->getSIDoubleData();
 
         assertVectorSize( DEPTHZ , static_cast<size_t>( (dims[0] + 1)*(dims[1] +1 )) , "DEPTHZ");
         assertVectorSize( DXV    , static_cast<size_t>( dims[0] ) , "DXV");
@@ -267,22 +275,22 @@ namespace Opm {
     void EclipseGrid::initCornerPointGrid(const std::vector<int>& dims , DeckConstPtr deck) {
         assertCornerPointKeywords( dims , deck);
         {
-            DeckKeywordConstPtr ZCORNKeyWord = deck->getKeyword("ZCORN");
-            DeckKeywordConstPtr COORDKeyWord = deck->getKeyword("COORD");
+            DeckKeywordConstPtr ZCORNKeyWord = deck->getKeyword<ParserKeywords::ZCORN>();
+            DeckKeywordConstPtr COORDKeyWord = deck->getKeyword<ParserKeywords::COORD>();
             const std::vector<double>& zcorn = ZCORNKeyWord->getSIDoubleData();
             const std::vector<double>& coord = COORDKeyWord->getSIDoubleData();
             const int * actnum = NULL;
             double    * mapaxes = NULL;
 
-            if (deck->hasKeyword("ACTNUM")) {
-                DeckKeywordConstPtr actnumKeyword = deck->getKeyword("ACTNUM");
+            if (deck->hasKeyword<ParserKeywords::ACTNUM>()) {
+                DeckKeywordConstPtr actnumKeyword = deck->getKeyword<ParserKeywords::ACTNUM>();
                 const std::vector<int>& actnumVector = actnumKeyword->getIntData();
                 actnum = actnumVector.data();
 
             }
 
-            if (deck->hasKeyword("MAPAXES")) {
-                DeckKeywordConstPtr mapaxesKeyword = deck->getKeyword("MAPAXES");
+            if (deck->hasKeyword<ParserKeywords::MAPAXES>()) {
+                DeckKeywordConstPtr mapaxesKeyword = deck->getKeyword<ParserKeywords::MAPAXES>();
                 DeckRecordConstPtr record = mapaxesKeyword->getRecord(0);
                 mapaxes = new double[6];
                 for (size_t i = 0; i < 6; i++) {
@@ -316,7 +324,7 @@ namespace Opm {
 
 
     bool EclipseGrid::hasCornerPointKeywords(DeckConstPtr deck) {
-        if (deck->hasKeyword("ZCORN") && deck->hasKeyword("COORD"))
+        if (deck->hasKeyword<ParserKeywords::ZCORN>() && deck->hasKeyword<ParserKeywords::COORD>())
             return true;
         else
             return false;
@@ -329,7 +337,7 @@ namespace Opm {
         const int ny = dims[1];
         const int nz = dims[2];
         {
-            DeckKeywordConstPtr ZCORNKeyWord = deck->getKeyword("ZCORN");
+            DeckKeywordConstPtr ZCORNKeyWord = deck->getKeyword<ParserKeywords::ZCORN>();
 
             if (ZCORNKeyWord->getDataSize() != static_cast<size_t>(8*nx*ny*nz)) {
                 const std::string msg =
@@ -343,7 +351,7 @@ namespace Opm {
         }
 
         {
-            DeckKeywordConstPtr COORDKeyWord = deck->getKeyword("COORD");
+            DeckKeywordConstPtr COORDKeyWord = deck->getKeyword<ParserKeywords::COORD>();
             if (COORDKeyWord->getDataSize() != static_cast<size_t>(6*(nx + 1)*(ny + 1))) {
                 const std::string msg =
                     "Wrong size of the COORD keyword: Expected 8*(nx + 1)*(ny + 1) = "
@@ -354,8 +362,8 @@ namespace Opm {
             }
         }
 
-        if (deck->hasKeyword("ACTNUM")) {
-            DeckKeywordConstPtr ACTNUMKeyWord = deck->getKeyword("ACTNUM");
+        if (deck->hasKeyword<ParserKeywords::ACTNUM>()) {
+            DeckKeywordConstPtr ACTNUMKeyWord = deck->getKeyword<ParserKeywords::ACTNUM>();
             if (ACTNUMKeyWord->getDataSize() != static_cast<size_t>(nx*ny*nz)) {
                 const std::string msg =
                     "Wrong size of the ACTNUM keyword: Expected nx*ny*nz = "
@@ -378,20 +386,20 @@ namespace Opm {
 
 
     bool EclipseGrid::hasDVDEPTHZKeywords(DeckConstPtr deck) {
-        if (deck->hasKeyword("DXV") &&
-            deck->hasKeyword("DYV") &&
-            deck->hasKeyword("DZV") &&
-            deck->hasKeyword("DEPTHZ"))
+        if (deck->hasKeyword<ParserKeywords::DXV>() &&
+            deck->hasKeyword<ParserKeywords::DYV>() &&
+            deck->hasKeyword<ParserKeywords::DZV>() &&
+            deck->hasKeyword<ParserKeywords::DEPTHZ>())
             return true;
         else
             return false;
     }
 
     bool EclipseGrid::hasDTOPSKeywords(DeckConstPtr deck) {
-        if ((deck->hasKeyword("DX") || deck->hasKeyword("DXV")) &&
-            (deck->hasKeyword("DY") || deck->hasKeyword("DYV")) &&
-            (deck->hasKeyword("DZ") || deck->hasKeyword("DZV")) &&
-            deck->hasKeyword("TOPS"))
+        if ((deck->hasKeyword<ParserKeywords::DX>() || deck->hasKeyword<ParserKeywords::DXV>()) &&
+            (deck->hasKeyword<ParserKeywords::DY>() || deck->hasKeyword<ParserKeywords::DYV>()) &&
+            (deck->hasKeyword<ParserKeywords::DZ>() || deck->hasKeyword<ParserKeywords::DZV>()) &&
+            deck->hasKeyword<ParserKeywords::TOPS>())
             return true;
         else
             return false;
@@ -410,7 +418,7 @@ namespace Opm {
     std::vector<double> EclipseGrid::createTOPSVector(const std::vector<int>& dims , const std::vector<double>& DZ , DeckConstPtr deck) {
         size_t volume = dims[0] * dims[1] * dims[2];
         size_t area = dims[0] * dims[1];
-        DeckKeywordConstPtr TOPSKeyWord = deck->getKeyword("TOPS");
+        DeckKeywordConstPtr TOPSKeyWord = deck->getKeyword<ParserKeywords::TOPS>();
         std::vector<double> TOPS = TOPSKeyWord->getSIDoubleData();
 
         if (TOPS.size() >= area) {

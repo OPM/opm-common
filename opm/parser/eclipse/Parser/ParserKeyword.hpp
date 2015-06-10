@@ -49,55 +49,23 @@ namespace Opm {
     typedef std::shared_ptr<const ParserKeyword> ParserKeywordConstPtr;
 
     class ParserKeyword {
+    public:
         ParserKeyword(const std::string& name ,
                       const std::string& sizeKeyword ,
                       const std::string& sizeItem,
                       bool isTableCollection = false);
-        ParserKeyword(const std::string& name ,
-                      ParserKeywordSizeEnum sizeType = SLASH_TERMINATED);
-        ParserKeyword(const std::string& name ,
-                      size_t fixedKeywordSize);
-        ParserKeyword(const Json::JsonObject& jsonConfig);
+        explicit ParserKeyword(const std::string& name);
+        explicit ParserKeyword(const Json::JsonObject& jsonConfig);
 
-    public:
+        void setFixedSize( size_t keywordSize);
+        void setSizeType( ParserKeywordSizeEnum sizeType );
+        void setTableCollection(bool isTableCollection);
+        void initSizeKeyword( const std::string& sizeKeyword, const std::string& sizeItem);
+
+
         typedef std::set<std::string> DeckNameSet;
         typedef std::set<std::string> SectionNameSet;
 
-        /*!
-         * \brief Factory method to create a keyword where the number
-         *        of items per record is defined at compile time.
-         *
-         * This are for example well specifcation keywords like WCONPROD...
-         */
-        static ParserKeywordPtr createFixedSized(const std::string& name,
-                                                 size_t fixedKeywordSize);
-
-        /*!
-         * \brief Factory method to create a keyword with an per-se
-         *        unspecified number of items per record.
-         *
-         * This are for example grid properties like PERM?...
-         */
-        static ParserKeywordPtr createDynamicSized(const std::string& name,
-                                                   ParserKeywordSizeEnum sizeType = SLASH_TERMINATED);
-
-        /*!
-         * \brief Factory method to create a keyword which has a
-         *        dynamic number of items per record.
-         *
-         * But with the number of items are specified via an item of a
-         * different keyword, e.g. for tables.
-         */
-        static ParserKeywordPtr createTable(const std::string& name,
-                                            const std::string& sizeKeyword,
-                                            const std::string& sizeItem,
-                                            bool isTableCollection = false);
-
-        /*!
-         * \brief Factory method to create a keyword from a JSON
-         *        configuration object.
-         */
-        static ParserKeywordPtr createFromJson(const Json::JsonObject& jsonConfig);
 
         static std::string getDeckName(const std::string& rawString);
         static bool validInternalName(const std::string& name);
@@ -111,6 +79,7 @@ namespace Opm {
         ParserRecordPtr getRecord(size_t recordIndex) const;
         std::vector<ParserRecordPtr>::const_iterator recordBegin() const;
         std::vector<ParserRecordPtr>::const_iterator recordEnd() const;
+        const std::string className() const;
         const std::string& getName() const;
         size_t getFixedSize() const;
         bool hasFixedSize() const;
@@ -137,7 +106,10 @@ namespace Opm {
         const std::pair<std::string,std::string>& getSizeDefinitionPair() const;
         bool isDataKeyword() const;
         bool equal(const ParserKeyword& other) const;
-        void inlineNew(std::ostream& os , const std::string& lhs, const std::string& indent) const;
+
+        std::string createDeclaration(const std::string& indent) const;
+        std::string createDecl() const;
+        std::string createCode() const;
         void applyUnitsToDeck(std::shared_ptr<const Deck> deck , std::shared_ptr<const DeckKeyword> deckKeyword) const;
     private:
         std::pair<std::string,std::string> m_sizeDefinitionPair;
@@ -162,7 +134,6 @@ namespace Opm {
         void initMatchRegex( const Json::JsonObject& jsonObject );
         void initData( const Json::JsonObject& jsonConfig );
         void initSize( const Json::JsonObject& jsonConfig );
-        void initSizeKeyword( const std::string& sizeKeyword, const std::string& sizeItem);
         void initSizeKeyword(const Json::JsonObject& sizeObject);
         void commonInit(const std::string& name, ParserKeywordSizeEnum sizeType);
         void addItems( const Json::JsonObject& jsonConfig);

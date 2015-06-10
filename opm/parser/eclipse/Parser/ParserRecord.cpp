@@ -97,6 +97,13 @@ namespace Opm {
             throw std::out_of_range("Out of range");
     }
 
+    bool ParserRecord::hasItem(const std::string& itemName) const {
+        if (m_itemMap.find(itemName) == m_itemMap.end())
+            return false;
+        else
+            return true;
+    }
+
     ParserItemConstPtr ParserRecord::get(const std::string& itemName) const {
         if (m_itemMap.find(itemName) == m_itemMap.end())
             throw std::invalid_argument("Itemname: " + itemName + " does not exist.");

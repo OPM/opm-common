@@ -131,11 +131,25 @@ namespace Opm
         return ParserItemScan<ParserFloatItem,DeckFloatItem,float>(this , rawRecord);
     }
 
-    void ParserFloatItem::inlineNew(std::ostream& os) const {
-        os << "new ParserFloatItem(" << "\"" << name() << "\"" << "," << ParserItemSizeEnum2String( sizeType() );
+    std::string ParserFloatItem::createCode() const {
+        std::stringstream ss;
+
+        ss << "new ParserFloatItem(" << "\"" << name() << "\"" << ",Opm::" << ParserItemSizeEnum2String( sizeType() );
         if (m_defaultSet)
-            os << "," << boost::lexical_cast<std::string>(getDefault());
-        os << ")";
+            ss << "," << boost::lexical_cast<std::string>(getDefault());
+        ss << ")";
+
+        return ss.str();
+    }
+
+
+
+    void ParserFloatItem::inlineClass(std::ostream& os, const std::string& indent) const {
+        ParserItemInlineClassDeclaration<ParserFloatItem , float>(this , os , indent , "float");
+    }
+
+    std::string ParserFloatItem::inlineClassInit(const std::string& parentClass) const {
+        return ParserItemInlineClassInit<ParserFloatItem,int>(this ,  parentClass , "Float");
     }
 
 }

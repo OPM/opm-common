@@ -88,10 +88,33 @@ namespace Opm {
         return parserRawItemEqual<ParserStringItem>(other);
     }
 
-    void ParserStringItem::inlineNew(std::ostream& os) const {
-        os << "new ParserStringItem(" << "\"" << name() << "\"" << "," << ParserItemSizeEnum2String( sizeType() );
+    std::string ParserStringItem::createCode() const {
+        std::stringstream ss;
+
+        ss << "new ParserStringItem(" << "\"" << name() << "\"" << ",Opm::" << ParserItemSizeEnum2String( sizeType() );
         if (m_defaultSet)
-            os << ",\"" << getDefault() << "\"";
-        os << ")";
+            ss << ",\"" << getDefault() << "\"";
+        ss << ")";
+
+        return ss.str();
     }
+
+
+
+
+    void ParserStringItem::inlineClass(std::ostream& os , const std::string& indent) const {
+        ParserItemInlineClassDeclaration<ParserStringItem,std::string>(this , os , indent , "std::string");
+    }
+
+
+    std::string ParserStringItem::inlineClassInit(const std::string& parentClass) const {
+        if (hasDefault()) {
+            std::string quotedDefault = "\"" + getDefault() + "\"";
+            return ParserItemInlineClassInit<ParserStringItem,std::string>(this ,  parentClass , "std::string" , &quotedDefault);
+        } else
+            return ParserItemInlineClassInit<ParserStringItem,std::string>(this ,  parentClass , "std::string");
+    }
+
+
+
 }

@@ -128,6 +128,7 @@ namespace Opm {
         const std::vector<SwofTable>& getSwofTables() const;
         const std::vector<SwfnTable>& getSwfnTables() const;
         const std::vector<WatvisctTable>& getWatvisctTables() const;
+        size_t getNumPhases() const;
 
         // the unit system used by the deck. note that it is rarely needed to convert
         // units because internally to opm-parser everything is represented by SI

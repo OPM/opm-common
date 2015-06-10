@@ -18,6 +18,7 @@
  */
 #include <stdexcept>
 #include <math.h>
+#include <iostream>
 
 #define BOOST_TEST_MODULE jsonParserTests
 #include <boost/test/unit_test.hpp>
@@ -250,6 +251,28 @@ BOOST_AUTO_TEST_CASE(Parse_fileDoesNotExist_Throws) {
 BOOST_AUTO_TEST_CASE(Parse_fileExists_OK) {
     boost::filesystem::path jsonFile("testdata/json/example1.json");
     BOOST_CHECK_NO_THROW( Json::JsonObject parser(jsonFile) );
+}
+
+
+BOOST_AUTO_TEST_CASE(to_string_ok) {
+    boost::filesystem::path jsonFile("testdata/json/example1.json");
+    Json::JsonObject parser(jsonFile);
+    std::string json_string =
+        "{\n"
+        "	\"keywords\":	[{\n"
+        "			\"name\":	\"BPR\",\n"
+        "			\"items\":	[{\n"
+        "					\"name\":	\"ItemX\",\n"
+        "					\"size_type\":	\"SINGLE\",\n"
+        "					\"value_type\":	\"FLOAT\"\n"
+        "				}]\n"
+        "		}, {\n"
+        "			\"name\":	\"WWCT\",\n"
+        "			\"size\":	0\n"
+        "		}]\n"
+        "}";
+
+    BOOST_CHECK_EQUAL( parser.to_string() , json_string);
 }
 
 

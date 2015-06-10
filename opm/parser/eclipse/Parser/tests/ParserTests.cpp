@@ -34,6 +34,13 @@
 
 using namespace Opm;
 
+std::shared_ptr<ParserKeyword> createDynamicSized(const std::string& kw) {
+    std::shared_ptr<ParserKeyword> pkw = std::make_shared<ParserKeyword>(kw);
+    pkw->setSizeType(SLASH_TERMINATED);
+    return pkw;
+}
+
+
 /************************Basic structural tests**********************'*/
 
 BOOST_AUTO_TEST_CASE(Initializing) {
@@ -46,7 +53,7 @@ BOOST_AUTO_TEST_CASE(Initializing) {
 BOOST_AUTO_TEST_CASE(addKeyword_keyword_doesntfail) {
     Parser parser;
     {
-        ParserKeywordPtr equilKeyword = ParserKeyword::createDynamicSized("EQUIL");
+        ParserKeywordPtr equilKeyword = createDynamicSized("EQUIL");
         parser.addParserKeyword(equilKeyword);
     }
 }
@@ -54,21 +61,21 @@ BOOST_AUTO_TEST_CASE(addKeyword_keyword_doesntfail) {
 
 BOOST_AUTO_TEST_CASE(canParseDeckKeyword_returnstrue) {
     ParserPtr parser(new Parser());
-    parser->addParserKeyword(ParserKeyword::createDynamicSized("FJAS"));
+    parser->addParserKeyword(createDynamicSized("FJAS"));
     BOOST_CHECK(parser->isRecognizedKeyword("FJAS"));
 }
 
 
 BOOST_AUTO_TEST_CASE(getKeyword_haskeyword_returnskeyword) {
     ParserPtr parser(new Parser());
-    ParserKeywordConstPtr parserKeyword = ParserKeyword::createDynamicSized("FJAS");
+    ParserKeywordConstPtr parserKeyword = createDynamicSized("FJAS");
     parser->addParserKeyword(parserKeyword);
     BOOST_CHECK_EQUAL(parserKeyword, parser->getParserKeywordFromDeckName("FJAS"));
 }
 
 BOOST_AUTO_TEST_CASE(getKeyword_hasnotkeyword_getKeywordThrowsException) {
     ParserPtr parser(new Parser());
-    ParserKeywordConstPtr parserKeyword = ParserKeyword::createDynamicSized("FJAS");
+    ParserKeywordConstPtr parserKeyword = createDynamicSized("FJAS");
     parser->addParserKeyword(parserKeyword);
     BOOST_CHECK_THROW(parser->getParserKeywordFromDeckName("FJASS"), std::invalid_argument);
 }
@@ -76,9 +83,9 @@ BOOST_AUTO_TEST_CASE(getKeyword_hasnotkeyword_getKeywordThrowsException) {
 BOOST_AUTO_TEST_CASE(getAllDeckNames_hasTwoKeywords_returnsCompleteList) {
     ParserPtr parser(new Parser(false));
     std::cout << parser->getAllDeckNames().size() << std::endl;
-    ParserKeywordConstPtr firstParserKeyword = ParserKeyword::createDynamicSized("FJAS");
+    ParserKeywordConstPtr firstParserKeyword = createDynamicSized("FJAS");
     parser->addParserKeyword(firstParserKeyword);
-    ParserKeywordConstPtr secondParserKeyword = ParserKeyword::createDynamicSized("SAJF");
+    ParserKeywordConstPtr secondParserKeyword = createDynamicSized("SAJF");
     parser->addParserKeyword(secondParserKeyword);
     BOOST_CHECK_EQUAL(2U, parser->getAllDeckNames().size());
 }
@@ -96,7 +103,7 @@ BOOST_AUTO_TEST_CASE(getAllDeckNames_hasNoKeywords_returnsEmptyList) {
 BOOST_AUTO_TEST_CASE(addParserKeywordJSON_isRecognizedKeyword_returnstrue) {
     ParserPtr parser(new Parser());
     Json::JsonObject jsonConfig("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : 100 ,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}");
-    parser->addParserKeyword(ParserKeyword::createFromJson( jsonConfig ));
+    parser->addParserKeyword(std::make_shared<const ParserKeyword>( jsonConfig ));
     BOOST_CHECK(parser->isRecognizedKeyword("BPR"));
 }
 
@@ -104,7 +111,7 @@ BOOST_AUTO_TEST_CASE(addParserKeywordJSON_isRecognizedKeyword_returnstrue) {
 BOOST_AUTO_TEST_CASE(addParserKeywordJSON_size_isObject_allGood) {
     ParserPtr parser(new Parser());
     Json::JsonObject jsonConfig("{\"name\": \"EQUIXL\", \"sections\":[], \"size\" : {\"keyword\":\"EQLDIMS\" , \"item\" : \"NTEQUL\"},  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}");
-    parser->addParserKeyword(ParserKeyword::createFromJson( jsonConfig ));
+    parser->addParserKeyword(std::make_shared<const ParserKeyword>( jsonConfig ));
     BOOST_CHECK(parser->isRecognizedKeyword("EQUIXL"));
 }
 
@@ -292,7 +299,7 @@ BOOST_AUTO_TEST_CASE(WildCardTest) {
 /***************** Simple Int parsing ********************************/
 
 static ParserKeywordPtr __attribute__((unused)) setupParserKeywordInt(std::string name, int numberOfItems) {
-    ParserKeywordPtr parserKeyword = ParserKeyword::createDynamicSized(name);
+    ParserKeywordPtr parserKeyword = createDynamicSized(name);
     ParserRecordPtr parserRecord = parserKeyword->getRecord(0);
 
     for (int i = 0; i < numberOfItems; i++) {

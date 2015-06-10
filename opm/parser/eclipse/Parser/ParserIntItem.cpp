@@ -1,4 +1,5 @@
 /*
+
   Copyright 2013 Statoil ASA.
 
   This file is part of the Open Porous Media project (OPM).
@@ -18,6 +19,7 @@
  */
 
 #include <boost/lexical_cast.hpp>
+#include <sstream>
 
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
@@ -95,10 +97,27 @@ namespace Opm {
     }
 
 
-    void ParserIntItem::inlineNew(std::ostream& os) const {
-        os << "new ParserIntItem(" << "\"" << name() << "\"" << "," << ParserItemSizeEnum2String( sizeType() );
+    std::string ParserIntItem::createCode() const {
+        std::stringstream ss;
+
+        ss << "new ParserIntItem(" << "\"" << name() << "\"" << ",Opm::" << ParserItemSizeEnum2String( sizeType() );
         if (m_defaultSet)
-            os << "," << getDefault();
-        os << ")";
+            ss << "," << getDefault();
+        ss << ")";
+
+        return ss.str();
     }
+
+
+
+    void ParserIntItem::inlineClass(std::ostream& os, const std::string& indent) const {
+        ParserItemInlineClassDeclaration<ParserIntItem,int>(this , os , indent , "int");
+    }
+
+
+    std::string ParserIntItem::inlineClassInit(const std::string& parentClass) const {
+        return ParserItemInlineClassInit<ParserIntItem,int>(this , parentClass , "int");
+    }
+
+
 }

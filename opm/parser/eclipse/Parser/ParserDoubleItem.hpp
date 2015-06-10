@@ -48,7 +48,10 @@ namespace Opm {
 
         DeckItemPtr scan(RawRecordPtr rawRecord) const;
         bool equal(const ParserItem& other) const;
-        void inlineNew(std::ostream& os) const;
+
+        std::string createCode() const;
+	void inlineClass(std::ostream& os, const std::string& indent) const;
+        std::string inlineClassInit(const std::string& parentClass) const;
         void setDefault(double defaultValue);
         double getDefault() const;
         bool hasDefault() const;

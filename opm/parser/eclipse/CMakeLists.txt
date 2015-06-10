@@ -1,5 +1,8 @@
+include_directories(${PROJECT_BINARY_DIR}/generated-source/include)
+
 add_subdirectory(OpmLog/tests)
 add_subdirectory(Parser/tests)
+add_subdirectory(Generator/tests)
 add_subdirectory(RawDeck/tests)
 add_subdirectory(Deck/tests)
 add_subdirectory(IntegrationTests)
@@ -53,10 +56,12 @@ Parser/ParserIntItem.cpp
 Parser/ParserFloatItem.cpp
 Parser/ParserDoubleItem.cpp
 Parser/ParserStringItem.cpp  
-${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.cpp
+${PROJECT_BINARY_DIR}/generated-source/ParserKeywords.cpp
 )
 
-SET_SOURCE_FILES_PROPERTIES(${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.cpp PROPERTIES GENERATED TRUE)
+set( generator_source
+Generator/KeywordGenerator.cpp
+Generator/KeywordLoader.cpp )
 
 set( build_parser_source 
 Parser/ParserEnums.cpp
@@ -67,6 +72,7 @@ Parser/ParserIntItem.cpp
 Parser/ParserFloatItem.cpp
 Parser/ParserDoubleItem.cpp
 Parser/ParserStringItem.cpp  
+${generator_source}
 )
 
 set (state_source
@@ -143,7 +149,9 @@ Parser/ParserIntItem.hpp
 Parser/ParserFloatItem.hpp
 Parser/ParserDoubleItem.hpp
 Parser/ParserStringItem.hpp
-Parser/ParserKeywords.hpp # PlaceHolder for future generated header
+#
+Generator/KeywordLoader.hpp
+Generator/KeywordGenerator.hpp
 #
 Units/UnitSystem.hpp
 Units/Dimension.hpp
@@ -243,7 +251,7 @@ Utility/EquilWrapper.hpp
 Utility/EndscaleWrapper.hpp
 Utility/ScalecrsWrapper.hpp)
 
-add_library(buildParser STATIC ${rawdeck_source} ${build_parser_source} ${deck_source} ${unit_source})
+add_library(buildParser STATIC ${rawdeck_source} ${build_parser_source} ${deck_source} ${unit_source} ${generator_source})
 target_link_libraries(buildParser opmjson ${Boost_LIBRARIES})
 
 #-----------------------------------------------------------------
@@ -264,19 +272,27 @@ target_link_libraries( createDefaultKeywordList buildParser opmjson ${Boost_LIBR
 #    This target will always run - the dependency "management" is
 #    implicitly handled in the createDefaultKeywordList application.
 
-add_custom_target( generatedCode ALL
-                   COMMAND createDefaultKeywordList
-                   ${PROJECT_SOURCE_DIR}/opm/parser/share/keywords
-                   ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.cpp
-                   ${PROJECT_BINARY_DIR}/generated-source/inlineKeywordTest.cpp
-                   ${PROJECT_BINARY_DIR}/generated-source/DefaultKeywordList.signature )
+add_custom_target( generatedCode ALL COMMAND createDefaultKeywordList 
+                   ${PROJECT_SOURCE_DIR}/opm/parser/share/keywords 
+                   ${PROJECT_BINARY_DIR}/generated-source/ParserKeywords.cpp 
+                   ${PROJECT_BINARY_DIR}/generated-source/include/opm/parser/eclipse/Parser/ParserKeywords.hpp
+                   ${PROJECT_BINARY_DIR}/generated-source/inlineKeywordTest.cpp )
+
+set_source_files_properties(${PROJECT_BINARY_DIR}/generated-source/ParserKeywords.cpp PROPERTIES GENERATED TRUE)
+set_source_files_properties(${PROJECT_BINARY_DIR}/generated-source/inlcude/opm/parser/eclipse/Parser/ParserKeywords.hpp PROPERTIES GENERATED TRUE)
+set_source_files_properties(${PROJECT_BINARY_DIR}/generated-source/inlineKeywordTest.cpp PROPERTIES GENERATED TRUE)
+
+opm_add_test( runInlineKeywordTest SOURCES ${PROJECT_BINARY_DIR}/generated-source/inlineKeywordTest.cpp
+              LIBRARIES opmparser ${Boost_LIBRARIES}
+              DEPENDS generatedCode )
 
 #-----------------------------------------------------------------
 
-add_library(opmparser ${rawdeck_source} ${parser_source} ${deck_source} ${state_source} ${unit_source} ${log_source})
-add_dependencies(opmparser generatedCode)
+add_library(opmparser ${rawdeck_source} ${parser_source} ${deck_source} ${state_source} ${unit_source} ${log_source} ${generator_source})
+add_dependencies( opmparser generatedCode )
 target_link_libraries(opmparser opmjson ${Boost_LIBRARIES}  ${ERT_LIBRARIES})
 
 include( ${PROJECT_SOURCE_DIR}/cmake/Modules/install_headers.cmake )   
 install_headers( "${HEADER_FILES}" "${CMAKE_INSTALL_PREFIX}" )
 install( TARGETS opmparser DESTINATION ${CMAKE_INSTALL_LIBDIR} )
+install( FILES ${PROJECT_BINARY_DIR}/generated-source/include/opm/parser/eclipse/Parser/ParserKeywords.hpp DESTINATION "include/opm/parser/eclipse/Parser")
