@@ -35,14 +35,13 @@ public:
     const std::vector<int>& nnc1() const { return nnc1_; }
     const std::vector<int>& nnc2() const { return nnc2_; }
     const std::vector<double>& trans() const { return trans_; }
-    int numNNC();
-    bool hasNNC();
+    size_t numNNC() const;
+    bool hasNNC() const;
 
 private:
     std::vector<int> nnc1_;
     std::vector<int> nnc2_;
     std::vector<double> trans_;
-    bool hasNNC_;
 };
 
 

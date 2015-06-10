@@ -48,10 +48,11 @@ namespace Opm
                     nnc2_.push_back(global_index2);
 
                     const double trans = nnc->getRecord(i)->getItem(6)->getRawDouble(0);
+
                     trans_.push_back(trans);
+                    //std::cout << trans << std::endl;
                 }
             }
-            hasNNC_ = true;
         }
     }
 
@@ -61,12 +62,12 @@ namespace Opm
         trans_.push_back(trans);
     }
 
-    int NNC::numNNC() {
+    size_t NNC::numNNC() const {
         return(nnc1_.size());
     }
 
-    bool NNC::hasNNC() {
-        return hasNNC_;
+    bool NNC::hasNNC() const {
+        return nnc1_.size()>0;
     }
 
 
