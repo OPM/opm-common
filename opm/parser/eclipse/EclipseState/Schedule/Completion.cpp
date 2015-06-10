@@ -34,7 +34,7 @@ namespace Opm {
           m_skinFactor(skinFactor),
           m_state(state),
           m_direction(direction),
-          m_wellPi("WellPi",1.0)
+          m_wellPi(1.0)
     {}
 
     Completion::Completion(std::shared_ptr<const Completion> oldCompletion, WellCompletion::StateEnum newStatus)
@@ -47,7 +47,7 @@ namespace Opm {
         m_skinFactor(oldCompletion->getSkinFactorAsValueObject()),
         m_state(newStatus),
         m_direction(oldCompletion->getDirection()),
-        m_wellPi(oldCompletion->getWellPiAsValueObject())
+        m_wellPi(oldCompletion->getWellPi())
     {}
 
     Completion::Completion(std::shared_ptr<const Completion> oldCompletion, double wellPi)
@@ -60,8 +60,14 @@ namespace Opm {
             m_skinFactor(oldCompletion->getSkinFactorAsValueObject()),
             m_state(oldCompletion->getState()),
             m_direction(oldCompletion->getDirection()),
-            m_wellPi("WellPi",wellPi)
-    {}
+            m_wellPi(oldCompletion->getWellPi())
+    {
+        if(m_wellPi!=0){
+            m_wellPi*=wellPi;
+        }else{
+            m_wellPi=wellPi;
+        }
+    }
 
 
     bool Completion::sameCoordinate(const Completion& other) const {
@@ -203,12 +209,10 @@ namespace Opm {
     }
 
     double Completion::getWellPi() const {
-        return m_wellPi.getValue();
-    }
-
-    Value<double> Completion::getWellPiAsValueObject() const {
         return m_wellPi;
     }
+
+
 }
 
 

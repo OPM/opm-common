@@ -65,13 +65,12 @@ namespace Opm {
         int m_i, m_j, m_k;
         Value<double> m_diameter;
         Value<double> m_connectionTransmissibilityFactor;
-        Value<double> m_wellPi;
+        double m_wellPi;
         Value<double> m_skinFactor;
         WellCompletion::StateEnum m_state;
         WellCompletion::DirectionEnum m_direction;
         Value<double> getDiameterAsValueObject() const;
         Value<double> getSkinFactorAsValueObject() const;
-        Value<double> getWellPiAsValueObject() const;
 
     };
 
