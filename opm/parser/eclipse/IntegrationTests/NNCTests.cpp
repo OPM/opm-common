@@ -22,6 +22,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/Units/ConversionFactors.hpp>
 
 #if HAVE_DYNAMIC_BOOST_TEST
 #define BOOST_TEST_DYN_LINK
@@ -61,10 +62,10 @@ BOOST_AUTO_TEST_CASE(readDeck)
     BOOST_CHECK_EQUAL(nnc.numNNC(), 4);
     BOOST_CHECK_EQUAL(NNC1[0], 0);
     BOOST_CHECK_EQUAL(NNC2[0], 1);
-    BOOST_CHECK_EQUAL(trans[0], 0.5);
+    BOOST_CHECK_EQUAL(trans[0], 0.5 * Opm::Metric::Transmissibility);
     BOOST_CHECK_EQUAL(NNC1[1], 0);
     BOOST_CHECK_EQUAL(NNC2[1], 10);
-    BOOST_CHECK_EQUAL(trans[1], 1.0);
+    BOOST_CHECK_EQUAL(trans[1], 1.0 * Opm::Metric::Transmissibility);
 
 }
 BOOST_AUTO_TEST_CASE(addNNC)

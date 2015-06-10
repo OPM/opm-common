@@ -47,7 +47,7 @@ namespace Opm
                     size_t global_index2 = eclipseGrid->getGlobalIndex(xyz2[0],xyz2[1],xyz2[2]);
                     nnc2_.push_back(global_index2);
 
-                    const double trans = nnc->getRecord(i)->getItem(6)->getRawDouble(0);
+                    const double trans = nnc->getRecord(i)->getItem(6)->getSIDouble(0);
 
                     trans_.push_back(trans);
                     //std::cout << trans << std::endl;
