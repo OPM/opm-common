@@ -96,6 +96,10 @@ macro (opm_compile_satellites opm satellite excl_all test_regexp)
 		  WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/${${satellite}_DIR}
 		  )
 	  endif (CMAKE_VERSION VERSION_LESS "2.8.4")
+          if(NOT TARGET test-suite)
+            add_custom_target(test-suite)
+          endif()
+          add_dependencies(test-suite "${_sat_NAME}")
 	endif(NOT "${test_regexp}" STREQUAL "")
 
 	# if this program on the list of files that should be distributed?
