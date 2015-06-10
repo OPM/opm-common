@@ -48,6 +48,7 @@ Optional Packages:
   --with-superlu=PATH     user defined path to SuperLU library
   --with-umfpack=PATH     use UMFPACK/SuiteSparse from a specified location
   --with-ert=PATH         Use ERT libraries
+  --with-zoltan=PATH      Use ZOLTAN libraries
   --with-tinyxml=PATH     use TinyXML library from a specified location
                           (Note: if not found, then a bundled library will
                            be used)
@@ -265,6 +266,7 @@ for OPT in "$@"; do
             opm-*       |\
             dune        |\
             dune-*      |\
+            zoltan      |\
             zlib)
               rootvar="$(uppercase ${pkgname})_ROOT"
               rootvar="${rootvar/-/_}"
