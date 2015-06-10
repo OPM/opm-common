@@ -30,6 +30,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/BoxManager.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
 
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
@@ -140,6 +141,7 @@ namespace Opm {
         initTransMult();
         initFaults(deck);
         initMULTREGT(deck);
+        initNNC(deck);
     }
 
     std::shared_ptr<const UnitSystem> EclipseState::getDeckUnitSystem() const {
@@ -275,6 +277,10 @@ namespace Opm {
         return m_transMult;
     }
 
+    std::shared_ptr<const NNC> EclipseState::getNNC() const {
+        return m_nnc;
+    }
+
     std::string EclipseState::getTitle() const {
         return m_title;
     }
@@ -387,7 +393,10 @@ namespace Opm {
         schedule = ScheduleConstPtr( new Schedule(grid , deck, m_ioConfig) );
     }
 
-
+    void EclipseState::initNNC(DeckConstPtr deck) {
+        EclipseGridConstPtr grid = getEclipseGrid();
+        m_nnc = std::make_shared<NNC>( deck, grid);
+    }
 
     void EclipseState::initTransMult() {
         EclipseGridConstPtr grid = getEclipseGrid();

@@ -31,6 +31,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/EnkrvdTable.hpp>
@@ -99,6 +100,8 @@ namespace Opm {
 
         std::shared_ptr<const FaultCollection> getFaults() const;
         std::shared_ptr<const TransMult> getTransMult() const;
+        std::shared_ptr<const NNC> getNNC() const;
+        bool hasNNC() const;
 
         // the tables used by the deck. If the tables had some defaulted data in the
         // deck, the objects returned here exhibit the correct values. If the table is
@@ -149,6 +152,7 @@ namespace Opm {
         void initProperties(DeckConstPtr deck);
         void initTransMult();
         void initFaults(DeckConstPtr deck);
+        void initNNC(DeckConstPtr deck);
 
 
         template <class TableType>
@@ -278,6 +282,7 @@ namespace Opm {
         std::shared_ptr<GridProperties<double> > m_doubleGridProperties;
         std::shared_ptr<TransMult> m_transMult;
         std::shared_ptr<FaultCollection> m_faults;
+        std::shared_ptr<NNC> m_nnc;
         std::string m_defaultRegion;
     };
 
