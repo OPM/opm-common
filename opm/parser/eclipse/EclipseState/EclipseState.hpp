@@ -79,7 +79,8 @@ namespace Opm {
         EclipseState(DeckConstPtr deck);
 
         ScheduleConstPtr getSchedule() const;
-        IOConfigConstPtr getIOConfig() const;
+        IOConfigConstPtr getIOConfigConst() const;
+        IOConfigPtr getIOConfig() const;
         InitConfigConstPtr getInitConfig() const;
         SimulationConfigConstPtr getSimulationConfig() const;
         EclipseGridConstPtr getEclipseGrid() const;

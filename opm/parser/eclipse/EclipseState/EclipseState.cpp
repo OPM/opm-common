@@ -262,7 +262,11 @@ namespace Opm {
         return schedule;
     }
 
-    IOConfigConstPtr EclipseState::getIOConfig() const {
+    IOConfigConstPtr EclipseState::getIOConfigConst() const {
+        return m_ioConfig;
+    }
+
+    IOConfigPtr EclipseState::getIOConfig() const {
         return m_ioConfig;
     }
 

@@ -443,7 +443,7 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreation) {
     DeckPtr deck = parser->parseString(deckData) ;
     EclipseState state(deck);
 
-    IOConfigConstPtr ioConfig = state.getIOConfig();
+    IOConfigConstPtr ioConfig = state.getIOConfigConst();
 
     BOOST_CHECK_EQUAL(false, ioConfig->getWriteRestartFile(0));
     BOOST_CHECK_EQUAL(true, ioConfig->getWriteRestartFile(1));
@@ -490,7 +490,7 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTRST) {
     DeckPtr deck = parser->parseString(deckData) ;
     EclipseState state(deck);
 
-    IOConfigConstPtr ioConfig = state.getIOConfig();
+    IOConfigConstPtr ioConfig = state.getIOConfigConst();
 
     BOOST_CHECK_EQUAL(true, ioConfig->getWriteRestartFile(0));
     BOOST_CHECK_EQUAL(false, ioConfig->getWriteRestartFile(1));
