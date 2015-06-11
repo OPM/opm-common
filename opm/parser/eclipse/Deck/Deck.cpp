@@ -60,16 +60,22 @@ namespace Opm {
 
 
     DeckKeywordConstPtr Deck::getKeyword(const std::string& keyword, size_t index) const {
-        const std::vector<DeckKeywordConstPtr>& keywordList = getKeywordList( keyword );
-        if (index < keywordList.size())
-            return keywordList[index];
-        else
-            throw std::out_of_range("Keyword index is out of range.");
+        if (hasKeyword(keyword)) {
+            const std::vector<DeckKeywordConstPtr>& keywordList = getKeywordList( keyword );
+            if (index < keywordList.size())
+                return keywordList[index];
+            else
+                throw std::out_of_range("Keyword index is out of range.");
+        } else
+            throw std::invalid_argument("Keyword not in deck.");
     }
 
     DeckKeywordConstPtr Deck::getKeyword(const std::string& keyword) const {
-        const std::vector<DeckKeywordConstPtr>& keywordList = getKeywordList( keyword );
-        return keywordList.back();
+        if (hasKeyword(keyword)) {
+            const std::vector<DeckKeywordConstPtr>& keywordList = getKeywordList( keyword );
+            return keywordList.back();
+        } else
+            throw std::invalid_argument("Keyword not in deck.");
     }
 
     DeckKeywordConstPtr Deck::getKeyword(size_t index) const {
@@ -92,7 +98,7 @@ namespace Opm {
             const std::vector<DeckKeywordConstPtr>& keywordList = m_keywordMap.find(keyword)->second;
             return keywordList;
         } else
-            throw std::invalid_argument("Keyword: " + keyword + " is not found in the container");
+            return m_emptyList;
     }
 
     std::vector<DeckKeywordConstPtr>::const_iterator Deck::begin() const {

@@ -39,6 +39,7 @@ BOOST_AUTO_TEST_CASE(Initialize) {
 BOOST_AUTO_TEST_CASE(hasKeyword_empty_returnFalse) {
     Deck deck;
     BOOST_CHECK_EQUAL(false, deck.hasKeyword("Bjarne"));
+    BOOST_CHECK_THROW( deck.getKeyword("Bjarne") , std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(addKeyword_singlekeyword_keywordAdded) {
@@ -47,14 +48,11 @@ BOOST_AUTO_TEST_CASE(addKeyword_singlekeyword_keywordAdded) {
     BOOST_CHECK_NO_THROW(deck.addKeyword(keyword));
 }
 
-BOOST_AUTO_TEST_CASE(getKeyword_nosuchkeyword_throws) {
-    Deck deck;
-    BOOST_CHECK_THROW(deck.getKeyword("TRULS" , 0), std::invalid_argument);
-}
 
-BOOST_AUTO_TEST_CASE(getKeywordList_nosuchkeyword_throws) {
+BOOST_AUTO_TEST_CASE(getKeywordList_empty_list) {
     Deck deck;
-    BOOST_CHECK_THROW(deck.getKeywordList("TRULS"), std::invalid_argument);
+    auto kw_list = deck.getKeywordList("TRULS");
+    BOOST_CHECK_EQUAL( kw_list.size() , 0 );
 }
 
 BOOST_AUTO_TEST_CASE(getKeyword_singlekeyword_keywordreturned) {
@@ -146,12 +144,6 @@ BOOST_AUTO_TEST_CASE(getKeyword_outOfRange_throws) {
 }
 
 
-BOOST_AUTO_TEST_CASE(getKeywordList_notFound_throws) {
-    Deck deck;
-    DeckKeywordPtr keyword = DeckKeywordPtr(new DeckKeyword("TRULS"));
-    deck.addKeyword(keyword);
-    BOOST_CHECK_THROW( deck.getKeywordList("TRULSX") , std::invalid_argument)
-}
 
 BOOST_AUTO_TEST_CASE(getKeywordList_OK) {
     Deck deck;

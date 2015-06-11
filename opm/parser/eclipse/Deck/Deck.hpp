@@ -76,6 +76,7 @@ namespace Opm {
         std::shared_ptr<UnitSystem> m_defaultUnits;
         std::shared_ptr<UnitSystem> m_activeUnits;
 
+        std::vector<DeckKeywordConstPtr> m_emptyList;
         std::vector<DeckKeywordConstPtr> m_keywordList;
         std::map<std::string, std::vector<DeckKeywordConstPtr> > m_keywordMap;
         std::map<const DeckKeyword *, size_t> m_keywordIndex;

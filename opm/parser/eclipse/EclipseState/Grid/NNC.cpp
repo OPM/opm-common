@@ -16,35 +16,36 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "NNC.hpp"
 #include <array>
+
+#include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
+
 
 namespace Opm
 {
     NNC::NNC(Opm::DeckConstPtr deck, EclipseGridConstPtr eclipseGrid)
     {
-        if (deck->hasKeyword("NNC")) {
-            const std::vector<DeckKeywordConstPtr>& nncs = deck->getKeywordList("NNC");
-            for (size_t idx_nnc = 0; idx_nnc<nncs.size(); ++idx_nnc) {
-                Opm::DeckKeywordConstPtr nnc = nncs[idx_nnc];
-                size_t numNNC = nnc->size();
-                for (size_t i = 0; i<numNNC; ++i) {
-                    std::array<size_t, 3> ijk1;
-                    ijk1[0] = static_cast<size_t>(nnc->getRecord(i)->getItem(0)->getInt(0)-1);
-                    ijk1[1] = static_cast<size_t>(nnc->getRecord(i)->getItem(1)->getInt(0)-1);
-                    ijk1[2] = static_cast<size_t>(nnc->getRecord(i)->getItem(2)->getInt(0)-1);
-                    size_t global_index1 = eclipseGrid->getGlobalIndex(ijk1[0],ijk1[1],ijk1[2]);
-
-                    std::array<size_t, 3> ijk2;
-                    ijk2[0] = static_cast<size_t>(nnc->getRecord(i)->getItem(3)->getInt(0)-1);
-                    ijk2[1] = static_cast<size_t>(nnc->getRecord(i)->getItem(4)->getInt(0)-1);
-                    ijk2[2] = static_cast<size_t>(nnc->getRecord(i)->getItem(5)->getInt(0)-1);
-                    size_t global_index2 = eclipseGrid->getGlobalIndex(ijk2[0],ijk2[1],ijk2[2]);
-
-                    const double trans = nnc->getRecord(i)->getItem(6)->getSIDouble(0);
-
-                    addNNC(global_index1,global_index2,trans);
-                }
+        const std::vector<DeckKeywordConstPtr>& nncs = deck->getKeywordList<ParserKeywords::NNC>();
+        for (size_t idx_nnc = 0; idx_nnc<nncs.size(); ++idx_nnc) {
+            Opm::DeckKeywordConstPtr nnc = nncs[idx_nnc];
+            size_t numNNC = nnc->size();
+            for (size_t i = 0; i<numNNC; ++i) {
+                std::array<size_t, 3> ijk1;
+                ijk1[0] = static_cast<size_t>(nnc->getRecord(i)->getItem(0)->getInt(0)-1);
+                ijk1[1] = static_cast<size_t>(nnc->getRecord(i)->getItem(1)->getInt(0)-1);
+                ijk1[2] = static_cast<size_t>(nnc->getRecord(i)->getItem(2)->getInt(0)-1);
+                size_t global_index1 = eclipseGrid->getGlobalIndex(ijk1[0],ijk1[1],ijk1[2]);
+                
+                std::array<size_t, 3> ijk2;
+                ijk2[0] = static_cast<size_t>(nnc->getRecord(i)->getItem(3)->getInt(0)-1);
+                ijk2[1] = static_cast<size_t>(nnc->getRecord(i)->getItem(4)->getInt(0)-1);
+                ijk2[2] = static_cast<size_t>(nnc->getRecord(i)->getItem(5)->getInt(0)-1);
+                size_t global_index2 = eclipseGrid->getGlobalIndex(ijk2[0],ijk2[1],ijk2[2]);
+                
+                const double trans = nnc->getRecord(i)->getItem(6)->getSIDouble(0);
+                
+                addNNC(global_index1,global_index2,trans);
             }
         }
     }
