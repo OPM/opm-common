@@ -24,7 +24,7 @@ find_package(PTScotch)
 find_path (ZOLTAN_INCLUDE_DIRS
   NAMES "zoltan.h"
   PATHS ${ZOLTAN_SEARCH_PATH}
-  PATH_SUFFIXES "include" 
+  PATH_SUFFIXES "include"
   ${ZOLTAN_NO_DEFAULT_PATH})
 
 # only search in architecture-relevant directory
@@ -48,7 +48,7 @@ if (ZOLTAN_INCLUDE_DIRS OR ZOLTAN_LIBRARIES)
 endif()
 
 set (ZOLTAN_CONFIG_VAR HAVE_ZOLTAN)
-  
+
 # print a message to indicate status of this package
 include (FindPackageHandleStandardArgs)
 find_package_handle_standard_args(ZOLTAN
