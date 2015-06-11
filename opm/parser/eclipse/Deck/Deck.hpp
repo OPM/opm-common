@@ -66,6 +66,11 @@ namespace Opm {
             return getKeyword( Keyword::keywordName );
         }
 
+        template <class Keyword>
+        const std::vector<DeckKeywordConstPtr>& getKeywordList() const {
+            return getKeywordList( Keyword::keywordName );
+        }
+
 
     private:
         std::shared_ptr<UnitSystem> m_defaultUnits;
