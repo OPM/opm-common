@@ -113,7 +113,7 @@ namespace Opm {
     }
 
 
-    void IOConfig::handleRPTRSTBasic(TimeMapConstPtr timemap, size_t timestep, size_t basic, size_t frequency, bool update_default) {
+    void IOConfig::handleRPTRSTBasic(TimeMapConstPtr timemap, size_t timestep, size_t basic, size_t frequency, bool update_default, bool reset_global) {
 
         if (6 == basic )
         {
@@ -136,10 +136,14 @@ namespace Opm {
         rs.basic     = basic;
         rs.frequency = frequency;
 
-        if (!update_default) {
-            m_restart_output_config->add(timestep, rs);
-        } else {
+        if (update_default) {
             m_restart_output_config->updateInitial(rs);
+        }
+        else if (reset_global) {
+            m_restart_output_config->globalReset(rs);
+        }
+        else {
+            m_restart_output_config->add(timestep, rs);
         }
     }
 
@@ -251,6 +255,18 @@ namespace Opm {
     }
 
 
+    bool IOConfig::overrideRestartWriteInterval(size_t interval) {
+        if (interval > 0) {
+            size_t basic = 3;
+            size_t timestep = 0;
+            handleRPTRSTBasic(m_timemap, timestep, basic, interval, false, true);
+        } else {
+            size_t basic = 0;
+            size_t timestep = 0;
+            handleRPTRSTBasic(m_timemap, timestep, basic, interval, false, true);
+        }
+    }
+
     bool IOConfig::getUNIFIN() const {
         return m_UNIFIN;
     }
@@ -267,13 +283,11 @@ namespace Opm {
         return m_FMTOUT;
     }
 
-    void IOConfig::setEclipseInputPath(const std::string& path) {
-        m_eclipse_input_path = path;
-    }
-
     const std::string& IOConfig::getEclipseInputPath() const {
         return m_eclipse_input_path;
     }
+
+
 
 
 } //namespace Opm

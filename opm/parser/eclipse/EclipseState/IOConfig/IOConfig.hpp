@@ -43,14 +43,24 @@ namespace Opm {
         bool getFMTOUT() const;
         const std::string& getEclipseInputPath() const;
 
-        void setEclipseInputPath(const std::string& path);
-        void handleRPTRSTBasic(TimeMapConstPtr timemap, size_t timestep, size_t basic, size_t frequency=1, bool update_default=false);
+        bool overrideRestartWriteInterval(size_t interval);
+
+        void handleRPTRSTBasic(TimeMapConstPtr timemap,
+                               size_t timestep,
+                               size_t basic,
+                               size_t frequency = 1,
+                               bool update_default = false,
+                               bool reset_global = false);
         void handleRPTSCHEDRestart(TimeMapConstPtr timemap, size_t timestep, size_t restart);
         void handleSolutionSection(TimeMapConstPtr timemap, std::shared_ptr<const SOLUTIONSection> solutionSection);
         void handleGridSection(std::shared_ptr<const GRIDSection> gridSection);
         void handleRunspecSection(std::shared_ptr<const RUNSPECSection> runspecSection);
 
+
     private:
+
+
+
 
 
 
