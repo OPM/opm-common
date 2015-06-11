@@ -28,48 +28,40 @@ namespace Opm
             for (size_t idx_nnc = 0; idx_nnc<nncs.size(); ++idx_nnc) {
                 Opm::DeckKeywordConstPtr nnc = nncs[idx_nnc];
                 size_t numNNC = nnc->size();
-                nnc1_.reserve(numNNC);
-                nnc2_.reserve(numNNC);
-                trans_.reserve(numNNC);
-
                 for (size_t i = 0; i<numNNC; ++i) {
-                    std::array<int, 3> xyz1;
-                    xyz1[0] = nnc->getRecord(i)->getItem(0)->getInt(0)-1;
-                    xyz1[1] = nnc->getRecord(i)->getItem(1)->getInt(0)-1;
-                    xyz1[2] = nnc->getRecord(i)->getItem(2)->getInt(0)-1;
-                    size_t global_index1 = eclipseGrid->getGlobalIndex(xyz1[0],xyz1[1],xyz1[2]);
-                    nnc1_.push_back(global_index1);
+                    std::array<size_t, 3> ijk1;
+                    ijk1[0] = static_cast<size_t>(nnc->getRecord(i)->getItem(0)->getInt(0)-1);
+                    ijk1[1] = static_cast<size_t>(nnc->getRecord(i)->getItem(1)->getInt(0)-1);
+                    ijk1[2] = static_cast<size_t>(nnc->getRecord(i)->getItem(2)->getInt(0)-1);
+                    size_t global_index1 = eclipseGrid->getGlobalIndex(ijk1[0],ijk1[1],ijk1[2]);
 
-                    std::array<int, 3> xyz2;
-                    xyz2[0] = nnc->getRecord(i)->getItem(3)->getInt(0)-1;
-                    xyz2[1] = nnc->getRecord(i)->getItem(4)->getInt(0)-1;
-                    xyz2[2] = nnc->getRecord(i)->getItem(5)->getInt(0)-1;
-                    size_t global_index2 = eclipseGrid->getGlobalIndex(xyz2[0],xyz2[1],xyz2[2]);
-                    nnc2_.push_back(global_index2);
+                    std::array<size_t, 3> ijk2;
+                    ijk2[0] = static_cast<size_t>(nnc->getRecord(i)->getItem(3)->getInt(0)-1);
+                    ijk2[1] = static_cast<size_t>(nnc->getRecord(i)->getItem(4)->getInt(0)-1);
+                    ijk2[2] = static_cast<size_t>(nnc->getRecord(i)->getItem(5)->getInt(0)-1);
+                    size_t global_index2 = eclipseGrid->getGlobalIndex(ijk2[0],ijk2[1],ijk2[2]);
 
                     const double trans = nnc->getRecord(i)->getItem(6)->getSIDouble(0);
 
-                    trans_.push_back(trans);
-                    //std::cout << trans << std::endl;
+                    addNNC(global_index1,global_index2,trans);
                 }
             }
         }
     }
 
-    void NNC::addNNC(const int NNC1, const int NNC2, const double trans) {
-        nnc1_.push_back(NNC1);
-        nnc2_.push_back(NNC2);
-        trans_.push_back(trans);
+    void NNC::addNNC(const size_t NNC1, const size_t NNC2, const double trans) {
+        m_nnc1.push_back(NNC1);
+        m_nnc2.push_back(NNC2);
+        m_trans.push_back(trans);
     }
 
     size_t NNC::numNNC() const {
-        return(nnc1_.size());
+        return(m_nnc1.size());
     }
 
     bool NNC::hasNNC() const {
-        return nnc1_.size()>0;
+        return m_nnc1.size()>0;
     }
-
 
 } // namespace Opm
 

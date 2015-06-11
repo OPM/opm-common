@@ -54,8 +54,8 @@ BOOST_AUTO_TEST_CASE(readDeck)
     auto eclGrid = eclipseState->getEclipseGrid();
     Opm::NNC nnc(deck, eclGrid);
     BOOST_CHECK(nnc.hasNNC());
-    const std::vector<int>& NNC1 = nnc.nnc1();
-    const std::vector<int>& NNC2 = nnc.nnc2();
+    const std::vector<size_t>& NNC1 = nnc.nnc1();
+    const std::vector<size_t>& NNC2 = nnc.nnc2();
     const std::vector<double>& trans = nnc.trans();
 
     // test the NNCs in nnc.DATA
@@ -76,8 +76,8 @@ BOOST_AUTO_TEST_CASE(addNNC)
     Opm::EclipseStateConstPtr eclipseState(new EclipseState(deck));
     auto eclGrid = eclipseState->getEclipseGrid();
     Opm::NNC nnc(deck, eclGrid);
-    const std::vector<int>& NNC1 = nnc.nnc1();
-    const std::vector<int>& NNC2 = nnc.nnc2();
+    const std::vector<size_t>& NNC1 = nnc.nnc1();
+    const std::vector<size_t>& NNC2 = nnc.nnc2();
     const std::vector<double>& trans = nnc.trans();
 
     // test add NNC
