@@ -12,6 +12,45 @@
 # This module should be the first to be included in the project,
 # because most of the others (OpmXxx.cmake) use these variables.
 
+
+# add ${basePath}/cmake/Modules to the cmake search path for modules
+# if it exists
+function(AddToCMakeSearchPath basePath)
+  set(CMakeModuleDir "${basePath}/cmake/Modules")
+  if(EXISTS "${CMakeModuleDir}" AND IS_DIRECTORY "${CMakeModuleDir}")
+    list(INSERT CMAKE_MODULE_PATH 0 "${CMakeModuleDir}")
+  endif()
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} PARENT_SCOPE)
+
+  # TODO (?): warn if a file from the new path is already contained in
+  # the existing search path. (this could lead to hard to find build
+  # system issues)
+endfunction()
+
+# add all relevant directories to the search path for cmake
+function(UpdateCMakeModulePath)
+  # add all paths which are specified in variables named "*_ROOT" to
+  # the CMake search path, but only if they contain CMake modules
+  get_cmake_property(allVariableNames VARIABLES)
+  foreach(variableName ${allVariableNames})
+    STRING(REGEX MATCH "_ROOT$" variableNameIsModuleRoot "${variableName}")
+    if(variableNameIsModuleRoot)
+      AddToCMakeSearchPath("${${variableName}}")
+    endif()
+  endforeach()
+
+  # finally add the current source directory to the module search path
+  AddToCMakeSearchPath("${CMAKE_CURRENT_SOURCE_DIR}")
+
+  # we want to set the global CMAKE_MODULE_PATH variable which we have
+  # to do this way. note that this is a bit hacky because the parent
+  # scope is not necessarily the global scope. (we need to do it this
+  # way anyway because CMake does not seem to expose a GLOBAL_SCOPE
+  # for this...)
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} PARENT_SCOPE)
+endfunction()
+
+
 # helper macro to retrieve a single field of a dune.module file
 macro(OpmGetDuneModuleDirective field variable contents)
   string (REGEX MATCH ".*${field}:[ ]*([^\n]+).*" ${variable} "${contents}")
@@ -56,6 +95,11 @@ macro (OpmInitDirVars)
 	dir_hook ()	
   endif (COMMAND dir_hook)
 endmacro ()
+
+# add paths which are specified by the user to the search path for
+# CMake modules. (This allows to distribute the required build system
+# files with the modules that need them instead of centrally.)
+UpdateCMakeModulePath()
 
 OpmInitProjVars ()
 OpmInitDirVars ()
