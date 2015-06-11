@@ -431,42 +431,13 @@ namespace Opm {
 
     void EclipseState::initFaults(DeckConstPtr deck) {
         EclipseGridConstPtr grid = getEclipseGrid();
-        m_faults = std::make_shared<FaultCollection>();
-        std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
+        std::shared_ptr<GRIDSection> gridSection = std::make_shared<GRIDSection>( deck );
 
-        for (size_t index=0; index < gridSection->count("FAULTS"); index++) {
-            DeckKeywordConstPtr faultsKeyword = gridSection->getKeyword("FAULTS" , index);
-            for (auto iter = faultsKeyword->begin(); iter != faultsKeyword->end(); ++iter) {
-                DeckRecordConstPtr faultRecord = *iter;
-                const std::string& faultName = faultRecord->getItem(0)->getString(0);
-                int I1 = faultRecord->getItem(1)->getInt(0) - 1;
-                int I2 = faultRecord->getItem(2)->getInt(0) - 1;
-                int J1 = faultRecord->getItem(3)->getInt(0) - 1;
-                int J2 = faultRecord->getItem(4)->getInt(0) - 1;
-                int K1 = faultRecord->getItem(5)->getInt(0) - 1;
-                int K2 = faultRecord->getItem(6)->getInt(0) - 1;
-                FaceDir::DirEnum faceDir = FaceDir::FromString( faultRecord->getItem(7)->getString(0) );
-                std::shared_ptr<const FaultFace> face = std::make_shared<const FaultFace>(grid->getNX() , grid->getNY() , grid->getNZ(),
-                                                                                          static_cast<size_t>(I1) , static_cast<size_t>(I2) ,
-                                                                                          static_cast<size_t>(J1) , static_cast<size_t>(J2) ,
-                                                                                          static_cast<size_t>(K1) , static_cast<size_t>(K2) ,
-                                                                                          faceDir);
-                if (!m_faults->hasFault(faultName)) {
-                    std::shared_ptr<Fault> fault = std::make_shared<Fault>( faultName );
-                    m_faults->addFault( fault );
-                }
-
-                {
-                    std::shared_ptr<Fault> fault = m_faults->getFault( faultName );
-                    fault->addFace( face );
-                }
-            }
-        }
-
+        m_faults = std::make_shared<FaultCollection>(gridSection , grid);
         setMULTFLT(gridSection);
 
         if (Section::hasEDIT(deck)) {
-            std::shared_ptr<Opm::EDITSection> editSection(new Opm::EDITSection(deck) );
+            std::shared_ptr<EDITSection> editSection = std::make_shared<EDITSection>( deck );
             setMULTFLT(editSection);
         }
 

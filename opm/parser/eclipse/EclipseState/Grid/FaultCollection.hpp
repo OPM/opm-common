@@ -27,6 +27,9 @@
 
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Fault.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultFace.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
@@ -37,6 +40,8 @@ namespace Opm {
 class FaultCollection {
 public:
     FaultCollection();
+    FaultCollection( std::shared_ptr<const Deck> deck, std::shared_ptr<const EclipseGrid> grid);
+
     size_t size() const;
     bool hasFault(const std::string& faultName) const;
     std::shared_ptr<Fault>  getFault(const std::string& faultName) const;
