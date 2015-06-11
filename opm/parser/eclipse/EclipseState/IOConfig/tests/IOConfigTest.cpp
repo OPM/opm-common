@@ -332,8 +332,21 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     ioConfigPtr->handleRPTSCHEDRestart(schedule.getTimeMap(), timestep, restart);
     BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(timestep));
 
+    /*Override, interval = 2*/
+    ioConfigPtr->overrideRestartWriteInterval(2);
+    for (size_t timestep = 0; timestep <= 61; ++timestep) {
+        if ((timestep % 2) == 0) {
+            BOOST_CHECK_EQUAL(true, ioConfigPtr->getWriteRestartFile(timestep));
+        } else {
+            BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(timestep));
+        }
+    }
 
-
+    /*Override, turn off RESTART write*/
+    ioConfigPtr->overrideRestartWriteInterval(0);
+    for (size_t timestep = 0; timestep <= 61; ++timestep) {
+        BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(timestep));
+    }
 
     /*If no GRIDFILE nor NOGGF keywords are specified, default output an EGRID file*/
     BOOST_CHECK_EQUAL(true, ioConfigPtr->getWriteEGRIDFile());
