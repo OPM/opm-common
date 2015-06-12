@@ -1024,3 +1024,91 @@ BOOST_AUTO_TEST_CASE(createDeckWithRPTSCHEDandRPTRST) {
 }
 
 
+
+
+BOOST_AUTO_TEST_CASE(createDeckWithWPIMULT) {
+    Opm::Parser parser;
+    std::string input =
+            "START             -- 0 \n"
+                    "19 JUN 2007 / \n"
+                    "SCHEDULE\n"
+                    "DATES             -- 1\n"
+                    " 10  OKT 2008 / \n"
+                    "/\n"
+                    "WELSPECS\n"
+                    "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+                    "/\n"
+                    "COMPDAT\n"
+                    " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+                    " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
+                    " 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+                    "/\n"
+                    "DATES             -- 2\n"
+                    " 20  JAN 2010 / \n"
+                    "/\n"
+                    "WELTARG\n"
+                    " OP_1     ORAT        1300 /\n"
+                    " OP_1     WRAT        1400 /\n"
+                    " OP_1     GRAT        1500.52 /\n"
+                    " OP_1     LRAT        1600.58 /\n"
+                    " OP_1     RESV        1801.05 /\n"
+                    " OP_1     BHP         1900 /\n"
+                    " OP_1     THP         2000 /\n"
+                    " OP_1     VFP         2100.09 /\n"
+                    " OP_1     GUID        2300.14 /\n"
+                    "/\n"
+                    "WPIMULT\n"
+                    "OP_1  1.30 /\n"
+                    "/\n"
+                    "DATES             -- 3\n"
+                    " 20  JAN 2011 / \n"
+                    "/\n"
+                    "WPIMULT\n"
+                    "OP_1  1.30 /\n"
+                    "/\n"
+                    "DATES             -- 4\n"
+                    " 20  JAN 2012 / \n"
+                    "/\n"
+                    "COMPDAT\n"
+                    " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+                    " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
+                    " 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+                    "/\n";
+
+
+    DeckPtr deck = parser.parseString(input);
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10, 10, 10);
+    IOConfigPtr ioConfig;
+    Schedule schedule(grid, deck, ioConfig);
+    WellPtr well = schedule.getWell("OP_1");
+
+    size_t currentStep = 2;
+    CompletionSetConstPtr currentCompletionSet = well->getCompletions(currentStep);
+    size_t completionSize = currentCompletionSet->size();
+
+    for(size_t i = 0; i < completionSize;i++) {
+        CompletionConstPtr currentCompletion = currentCompletionSet->get(i);
+        BOOST_CHECK_EQUAL(currentCompletion->getWellPi(), 1.3);
+    }
+
+    currentStep = 3;
+    currentCompletionSet = well->getCompletions(currentStep);
+    completionSize = currentCompletionSet->size();
+
+    for(size_t i = 0; i < completionSize;i++) {
+        CompletionConstPtr currentCompletion = currentCompletionSet->get(i);
+        BOOST_CHECK_EQUAL(currentCompletion->getWellPi(), (1.3*1.3));
+    }
+
+    currentStep = 4;
+    currentCompletionSet = well->getCompletions(currentStep);
+    completionSize = currentCompletionSet->size();
+
+    for(size_t i = 0; i < completionSize;i++) {
+        CompletionConstPtr currentCompletion = currentCompletionSet->get(i);
+        BOOST_CHECK_EQUAL(currentCompletion->getWellPi(), 1.0);
+    }
+
+}
+
+

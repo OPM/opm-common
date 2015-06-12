@@ -145,6 +145,10 @@ namespace Opm {
             if (keyword->name() == "WRFTPLT")
                 rftProperties.push_back( std::make_pair( keyword , currentStep ));
 
+            if (keyword->name() == "WPIMULT")
+                handleWPIMULT(keyword, currentStep);
+
+
         }
 
         for (auto rftPair = rftProperties.begin(); rftPair != rftProperties.end(); ++rftPair) {
@@ -285,6 +289,87 @@ namespace Opm {
         handleWCONProducer(keyword, currentStep, true);
     }
 
+    static Opm::Value<int> getValueItem(DeckItemPtr item){
+        Opm::Value<int> data(item->name());
+        if(item->hasValue(0)) {
+            int tempValue = item->getInt(0);
+            if( tempValue >0){
+                data.setValue(tempValue-1);
+            }
+        }
+        return data;
+    }
+
+
+    void Schedule::handleWPIMULT(DeckKeywordConstPtr keyword, size_t currentStep) {
+        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
+            DeckRecordConstPtr record = keyword->getRecord(recordNr);
+            const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
+            double wellPi = record->getItem("WELLPI")->getRawDouble(0);
+            std::vector<WellPtr> wells = getWells(wellNamePattern);
+
+            for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
+                WellPtr well = *wellIter;
+                CompletionSetConstPtr currentCompletionSet = well->getCompletions(currentStep);
+
+                CompletionSetPtr newCompletionSet(new CompletionSet( ));
+
+                Opm::Value<int> I  = getValueItem(record->getItem("I"));
+                Opm::Value<int> J  = getValueItem(record->getItem("J"));
+                Opm::Value<int> K  = getValueItem(record->getItem("K"));
+                Opm::Value<int> FIRST = getValueItem(record->getItem("FIRST"));
+                Opm::Value<int> LAST = getValueItem(record->getItem("LAST"));
+
+                size_t completionSize = currentCompletionSet->size();
+
+                for(size_t i = 0; i < completionSize;i++) {
+
+                    CompletionConstPtr currentCompletion = currentCompletionSet->get(i);
+
+                    if (FIRST.hasValue()) {
+                        if (i < (size_t) FIRST.getValue()) {
+                            newCompletionSet->add(currentCompletion);
+                            continue;
+                        }
+                    }
+                    if (LAST.hasValue()) {
+                        if (i > (size_t) LAST.getValue()) {
+                            newCompletionSet->add(currentCompletion);
+                            continue;
+                        }
+                    }
+
+                    int ci = currentCompletion->getI();
+                    int cj = currentCompletion->getJ();
+                    int ck = currentCompletion->getK();
+
+                    if (I.hasValue() && (!(I.getValue() == ci) )) {
+                        newCompletionSet->add(currentCompletion);
+                        continue;
+                    }
+
+                    if (J.hasValue() && (!(J.getValue() == cj) )) {
+                        newCompletionSet->add(currentCompletion);
+                        continue;
+                    }
+
+                    if (K.hasValue() && (!(K.getValue() == ck) )) {
+                        newCompletionSet->add(currentCompletion);
+                        continue;
+                    }
+
+                    CompletionPtr newCompletion = std::make_shared<Completion>(currentCompletion, wellPi);
+                    newCompletionSet->add(newCompletion);
+                }
+                well->addCompletionSet(currentStep, newCompletionSet);
+
+
+
+            }
+        }
+    }
+
+
     void Schedule::handleWCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
@@ -414,16 +499,7 @@ namespace Opm {
         }
     }
 
-    static Opm::Value<int> getValueItem(DeckItemPtr item){
-        Opm::Value<int> data(item->name());
-        if(item->hasValue(0)) {
-            int tempValue = item->getInt(0);
-            if( tempValue >0){
-                data.setValue(tempValue-1);
-            }
-        }
-        return data;
-    }
+
 
     void Schedule::handleWELOPEN(DeckKeywordConstPtr keyword, size_t currentStep , bool hascomplump) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
