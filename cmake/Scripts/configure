@@ -509,11 +509,11 @@ for a in "${VARS[@]}"; do
       ;;
     CFLAGS=*)
       a=${a#CFLAGS=}
-      c_opts=" -DCMAKE_C_FLAGS=\"${a/\"/\\\"}\""
+      c_opts=" -DCMAKE_BUILD_TYPE=Custom -DCMAKE_C_FLAGS=\"${a/\"/\\\"}\""
       ;;
     CXXFLAGS=*)
       a=${a#CXXFLAGS=}
-      cxx_opts=" -DCMAKE_CXX_FLAGS=\"${a/\"/\\\"}\""
+      cxx_opts=" -DCMAKE_BUILD_TYPE=Custom -DCMAKE_CXX_FLAGS=\"${a/\"/\\\"}\""
       ;;
     FC=*)
       a=${a#FC=}
@@ -522,7 +522,7 @@ for a in "${VARS[@]}"; do
       ;;
     FFLAGS=*)
       a=${a#FFLAGS=}
-      fort_opts=" -DCMAKE_Fortran_FLAGS=\"${a/\"/\\\"}\""
+      fort_opts=" -DCMAKE_BUILD_TYPE=Custom -DCMAKE_Fortran_FLAGS=\"${a/\"/\\\"}\""
       ;;
     *)
       ENVVARS="$ENVVARS \"${a/\"/\\\"}\""
