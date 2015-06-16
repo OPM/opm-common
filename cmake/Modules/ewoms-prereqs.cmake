@@ -25,6 +25,8 @@ set (ewoms_DEPS
 	"opm-material REQUIRED"
 	"dune-alugrid"
 	"dune-cornerpoint"
+	# librt (on some systems necessary for clock_gettime()) 
+	"librt REQUIRED"
 	# valgrind client requests
 	"Valgrind"
 	# quadruple precision floating point calculations
