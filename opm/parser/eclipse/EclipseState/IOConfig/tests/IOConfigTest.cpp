@@ -334,18 +334,18 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
 
     /*Override, interval = 2*/
     ioConfigPtr->overrideRestartWriteInterval(2);
-    for (size_t timestep = 0; timestep <= 61; ++timestep) {
-        if ((timestep % 2) == 0) {
-            BOOST_CHECK_EQUAL(true, ioConfigPtr->getWriteRestartFile(timestep));
+    for (size_t tstep = 0; tstep <= 61; ++tstep) {
+        if ((tstep % 2) == 0) {
+            BOOST_CHECK_EQUAL(true, ioConfigPtr->getWriteRestartFile(tstep));
         } else {
-            BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(timestep));
+            BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(tstep));
         }
     }
 
     /*Override, turn off RESTART write*/
     ioConfigPtr->overrideRestartWriteInterval(0);
-    for (size_t timestep = 0; timestep <= 61; ++timestep) {
-        BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(timestep));
+    for (size_t tstep = 0; tstep <= 61; ++tstep) {
+        BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(tstep));
     }
 
     /*If no GRIDFILE nor NOGGF keywords are specified, default output an EGRID file*/
