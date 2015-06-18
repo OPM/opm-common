@@ -4,10 +4,13 @@ parser.
 1. The structure of a keyword
 -----------------------------
 
-A keyword is the fundamental unit when parsing. The schema definition
-of the keywords are given as Json files under the opm/share/keywords
-directory. As part of the build process these keyword definitions are
-compiled to ParserKeyword instances.
+A keyword is the fundamental unit when parsing. Keywords are added to
+the parser by shema definitions. The schema definition of the keywords
+are given as Json files under the opm/share/keywords directory. Json
+can be thought of as a lean alternative to XML, you will find it described
+here: http://www.json.org/
+As part of the build process these keyword definitions are compiled
+to ParserKeyword instances.
 
 
 1.1 Starting a keyword
