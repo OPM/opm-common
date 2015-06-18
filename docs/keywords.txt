@@ -5,7 +5,7 @@ parser.
 -----------------------------
 
 A keyword is the fundamental unit when parsing. Keywords are added to
-the parser by shema definitions. The schema definition of the keywords
+the parser by schema definitions. The schema definition of the keywords
 are given as Json files under the opm/share/keywords directory. Json
 can be thought of as a lean alternative to XML, you will find it described
 here: http://www.json.org/
