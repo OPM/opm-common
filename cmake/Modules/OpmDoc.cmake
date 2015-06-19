@@ -25,6 +25,16 @@ macro (opm_doc opm doxy_dir)
   file (WRITE ${PROJECT_BINARY_DIR}/${doxy_dir}/Doxyfile.in ${_doxy_templ} ${_doxy_local})
   # set this generically named variable so even the custom file can be shared
   set (src_DIR "${${opm}_DIR}")
+
+  # copy the doxygen layout XML file to the build directorie's doxygen
+  # directory. if the source module ships with such a file it takes
+  # precedence over the one shipped with the build system.
+  if (EXISTS ${PROJECT_SOURCE_DIR}/${doxy_dir}/DoxygenLayout.xml)
+    file(COPY ${PROJECT_SOURCE_DIR}/${doxy_dir}/DoxygenLayout.xml DESTINATION ${PROJECT_BINARY_DIR}/${doxy_dir})
+  else()
+    file(COPY ${OPM_MACROS_ROOT}/cmake/Templates/DoxygenLayout.xml DESTINATION ${PROJECT_BINARY_DIR}/${doxy_dir})
+  endif()
+
   # replace variables in this combined file
   configure_file (
 	${PROJECT_BINARY_DIR}/${doxy_dir}/Doxyfile.in
