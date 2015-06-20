@@ -45,6 +45,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PlyrockTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyviscTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyshlogTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PlydhflfTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvdgTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvdoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
@@ -119,6 +120,7 @@ namespace Opm {
         const std::vector<PlymaxTable>& getPlymaxTables() const;
         const std::vector<PlyrockTable>& getPlyrockTables() const;
         const std::vector<PlyviscTable>& getPlyviscTables() const;
+        const std::vector<PlydhflfTable>& getPlydhflfTables() const;
         const std::vector<PlyshlogTable>& getPlyshlogTables() const;
         const std::vector<PvdgTable>& getPvdgTables() const;
         const std::vector<PvdoTable>& getPvdoTables() const;
@@ -264,6 +266,7 @@ namespace Opm {
         std::vector<PlymaxTable> m_plymaxTables;
         std::vector<PlyrockTable> m_plyrockTables;
         std::vector<PlyviscTable> m_plyviscTables;
+        std::vector<PlydhflfTable> m_plydhflfTables;
         std::vector<PlyshlogTable> m_plyshlogTables;
         std::vector<PvdgTable> m_pvdgTables;
         std::vector<PvdoTable> m_pvdoTables;
