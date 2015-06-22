@@ -224,6 +224,7 @@ EclipseState/Tables/Sof2Table.hpp
 EclipseState/Tables/EnptvdTable.hpp
 EclipseState/Tables/FullTable.hpp
 EclipseState/Tables/PlyviscTable.hpp
+EclipseState/Tables/PlydhflfTable.hpp
 EclipseState/Tables/PlyshlogTable.hpp
 EclipseState/Tables/EnkrvdTable.hpp
 EclipseState/Tables/ImkrvdTable.hpp

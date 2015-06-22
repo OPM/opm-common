@@ -2,7 +2,7 @@ add_definitions( -DKEYWORD_DIRECTORY="${PROJECT_SOURCE_DIR}/opm/parser/share/key
 
 foreach(tapp CheckDeckValidity IntegrationTests ParseWellProbe
              ParseTITLE ParseTOPS ParseWCONHIST ParseWellWithWildcards
-             ParsePORO ParsePLYVISC ParsePLYSHLOG ParseDATAWithDefault
+             ParsePORO ParsePLYVISC ParsePLYDHFLF ParsePLYSHLOG ParseDATAWithDefault
              ParseTVDP ParseDENSITY ParseVFPPROD ScheduleCreateFromDeck
              CompletionsFromDeck ParseEND IncludeTest ParseEQUIL
              ParseRSVD ParsePVTG ParsePVTO ParseSWOF BoxTest
