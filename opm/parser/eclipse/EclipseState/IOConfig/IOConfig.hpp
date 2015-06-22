@@ -43,7 +43,7 @@ namespace Opm {
         bool getFMTOUT() const;
         const std::string& getEclipseInputPath() const;
 
-        bool overrideRestartWriteInterval(size_t interval);
+        void overrideRestartWriteInterval(size_t interval);
 
         void handleRPTRSTBasic(TimeMapConstPtr timemap,
                                size_t timestep,

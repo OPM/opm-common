@@ -255,7 +255,7 @@ namespace Opm {
     }
 
 
-    bool IOConfig::overrideRestartWriteInterval(size_t interval) {
+    void IOConfig::overrideRestartWriteInterval(size_t interval) {
         if (interval > 0) {
             size_t basic = 3;
             size_t timestep = 0;
