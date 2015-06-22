@@ -39,7 +39,7 @@ namespace Opm {
         static std::string startTest(const std::string& test_name);
         static std::string sourceHeader();
         static std::string headerHeader();
-        static bool updateFile(std::stringstream& newContent , const std::string& filename);
+        static bool updateFile(const std::stringstream& newContent, const std::string& filename);
 
         bool updateSource(const KeywordLoader& loader, const std::string& sourceFile) const;
         bool updateHeader(const KeywordLoader& loader, const std::string& headerFile) const;

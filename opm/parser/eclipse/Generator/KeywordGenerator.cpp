@@ -89,22 +89,24 @@ namespace Opm {
             boost::filesystem::create_directories( file.parent_path());
     }
 
-    bool KeywordGenerator::updateFile(std::stringstream& newContent , const std::string& filename) {
-        std::ifstream stream(filename.c_str());
+    bool KeywordGenerator::updateFile(const std::stringstream& newContent , const std::string& filename) {
         bool update = true;
-
-        ensurePath( filename );
-        if (stream.is_open()) {
-            std::stringstream oldContent;
-            oldContent << stream.rdbuf( );
-            if (oldContent.str() == newContent.str())
-                update = false;
+        {
+            // Check if file already contains the newContent.
+            std::ifstream inputStream(filename);
+            if (inputStream) {
+                std::stringstream oldContent;
+                oldContent << inputStream.rdbuf();
+                if (oldContent.str() == newContent.str()) {
+                    update = false;
+                }
+            }
         }
 
         if (update) {
-            std::fstream stream(filename.c_str() , std::fstream::out);
-            stream << newContent.str();
-            stream.close();
+            ensurePath(filename);
+            std::ofstream outputStream(filename);
+            outputStream << newContent.str();
         }
 
         return update;
