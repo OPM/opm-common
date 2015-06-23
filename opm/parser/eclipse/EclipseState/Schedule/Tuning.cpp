@@ -243,39 +243,39 @@ namespace Opm {
     }
 
     /*The following "set" method declarations diverges from coding standard to improve readability*/
-    void Tuning::setTSINIT(size_t timestep, double TSINIT) { m_TSINIT->add(timestep, TSINIT); }
-    void Tuning::setTSMAXZ(size_t timestep, double TSMAXZ) { m_TSMAXZ->add(timestep, TSMAXZ); }
-    void Tuning::setTSMINZ(size_t timestep, double TSMINZ) { m_TSMINZ->add(timestep, TSMINZ); }
-    void Tuning::setTSMCHP(size_t timestep, double TSMCHP) { m_TSMCHP->add(timestep, TSMCHP); }
-    void Tuning::setTSFMAX(size_t timestep, double TSFMAX) { m_TSFMAX->add(timestep, TSFMAX); }
-    void Tuning::setTSFMIN(size_t timestep, double TSFMIN) { m_TSFMIN->add(timestep, TSFMIN); }
-    void Tuning::setTSFCNV(size_t timestep, double TSFCNV) { m_TSFCNV->add(timestep, TSFCNV); }
-    void Tuning::setTFDIFF(size_t timestep, double TFDIFF) { m_TFDIFF->add(timestep, TFDIFF); }
-    void Tuning::setTHRUPT(size_t timestep, double THRUPT) { m_THRUPT->add(timestep, THRUPT); }
-    void Tuning::setTMAXWC(size_t timestep, double TMAXWC) { m_TMAXWC->add(timestep, TMAXWC); m_TMAXWC_has_value->add(timestep, true); }
-    void Tuning::setTRGTTE(size_t timestep, double TRGTTE) { m_TRGTTE->add(timestep, TRGTTE); }
-    void Tuning::setTRGCNV(size_t timestep, double TRGCNV) { m_TRGCNV->add(timestep, TRGCNV); }
-    void Tuning::setTRGMBE(size_t timestep, double TRGMBE) { m_TRGMBE->add(timestep, TRGMBE); }
-    void Tuning::setTRGLCV(size_t timestep, double TRGLCV) { m_TRGLCV->add(timestep, TRGLCV); }
-    void Tuning::setXXXTTE(size_t timestep, double XXXTTE) { m_XXXTTE->add(timestep, XXXTTE); }
-    void Tuning::setXXXCNV(size_t timestep, double XXXCNV) { m_XXXCNV->add(timestep, XXXCNV); }
-    void Tuning::setXXXMBE(size_t timestep, double XXXMBE) { m_XXXMBE->add(timestep, XXXMBE); }
-    void Tuning::setXXXLCV(size_t timestep, double XXXLCV) { m_XXXLCV->add(timestep, XXXLCV); }
-    void Tuning::setXXXWFL(size_t timestep, double XXXWFL) { m_XXXWFL->add(timestep, XXXWFL); }
-    void Tuning::setTRGFIP(size_t timestep, double TRGFIP) { m_TRGFIP->add(timestep, TRGFIP); }
-    void Tuning::setTRGSFT(size_t timestep, double TRGSFT) { m_TRGSFT->add(timestep, TRGSFT); m_TRGSFT_has_value->add(timestep, true); }
-    void Tuning::setTHIONX(size_t timestep, double THIONX) { m_THIONX->add(timestep, THIONX); }
-    void Tuning::setTRWGHT(size_t timestep, int TRWGHT) {    m_TRWGHT->add(timestep, TRWGHT); }
-    void Tuning::setNEWTMX(size_t timestep, int NEWTMX) {    m_NEWTMX->add(timestep, NEWTMX); }
-    void Tuning::setNEWTMN(size_t timestep, int NEWTMN) {    m_NEWTMN->add(timestep, NEWTMN); }
-    void Tuning::setLITMAX(size_t timestep, int LITMAX) {    m_LITMAX->add(timestep, LITMAX); }
-    void Tuning::setLITMIN(size_t timestep, int LITMIN) {    m_LITMIN->add(timestep, LITMIN); }
-    void Tuning::setMXWSIT(size_t timestep, int MXWSIT) {    m_MXWSIT->add(timestep, MXWSIT); }
-    void Tuning::setMXWPIT(size_t timestep, int MXWPIT) {    m_MXWPIT->add(timestep, MXWPIT); }
-    void Tuning::setDDPLIM(size_t timestep, double DDPLIM) { m_DDPLIM->add(timestep, DDPLIM); }
-    void Tuning::setDDSLIM(size_t timestep, double DDSLIM) { m_DDSLIM->add(timestep, DDSLIM); }
-    void Tuning::setTRGDPR(size_t timestep, double TRGDPR) { m_TRGDPR->add(timestep, TRGDPR); }
-    void Tuning::setXXXDPR(size_t timestep, double XXXDPR) { m_XXXDPR->add(timestep, XXXDPR); m_XXXDPR_has_value->add(timestep, true); }
+    void Tuning::setTSINIT(size_t timestep, double TSINIT) { m_TSINIT->update(timestep, TSINIT); }
+    void Tuning::setTSMAXZ(size_t timestep, double TSMAXZ) { m_TSMAXZ->update(timestep, TSMAXZ); }
+    void Tuning::setTSMINZ(size_t timestep, double TSMINZ) { m_TSMINZ->update(timestep, TSMINZ); }
+    void Tuning::setTSMCHP(size_t timestep, double TSMCHP) { m_TSMCHP->update(timestep, TSMCHP); }
+    void Tuning::setTSFMAX(size_t timestep, double TSFMAX) { m_TSFMAX->update(timestep, TSFMAX); }
+    void Tuning::setTSFMIN(size_t timestep, double TSFMIN) { m_TSFMIN->update(timestep, TSFMIN); }
+    void Tuning::setTSFCNV(size_t timestep, double TSFCNV) { m_TSFCNV->update(timestep, TSFCNV); }
+    void Tuning::setTFDIFF(size_t timestep, double TFDIFF) { m_TFDIFF->update(timestep, TFDIFF); }
+    void Tuning::setTHRUPT(size_t timestep, double THRUPT) { m_THRUPT->update(timestep, THRUPT); }
+    void Tuning::setTMAXWC(size_t timestep, double TMAXWC) { m_TMAXWC->update(timestep, TMAXWC); m_TMAXWC_has_value->update(timestep, true); }
+    void Tuning::setTRGTTE(size_t timestep, double TRGTTE) { m_TRGTTE->update(timestep, TRGTTE); }
+    void Tuning::setTRGCNV(size_t timestep, double TRGCNV) { m_TRGCNV->update(timestep, TRGCNV); }
+    void Tuning::setTRGMBE(size_t timestep, double TRGMBE) { m_TRGMBE->update(timestep, TRGMBE); }
+    void Tuning::setTRGLCV(size_t timestep, double TRGLCV) { m_TRGLCV->update(timestep, TRGLCV); }
+    void Tuning::setXXXTTE(size_t timestep, double XXXTTE) { m_XXXTTE->update(timestep, XXXTTE); }
+    void Tuning::setXXXCNV(size_t timestep, double XXXCNV) { m_XXXCNV->update(timestep, XXXCNV); }
+    void Tuning::setXXXMBE(size_t timestep, double XXXMBE) { m_XXXMBE->update(timestep, XXXMBE); }
+    void Tuning::setXXXLCV(size_t timestep, double XXXLCV) { m_XXXLCV->update(timestep, XXXLCV); }
+    void Tuning::setXXXWFL(size_t timestep, double XXXWFL) { m_XXXWFL->update(timestep, XXXWFL); }
+    void Tuning::setTRGFIP(size_t timestep, double TRGFIP) { m_TRGFIP->update(timestep, TRGFIP); }
+    void Tuning::setTRGSFT(size_t timestep, double TRGSFT) { m_TRGSFT->update(timestep, TRGSFT); m_TRGSFT_has_value->update(timestep, true); }
+    void Tuning::setTHIONX(size_t timestep, double THIONX) { m_THIONX->update(timestep, THIONX); }
+    void Tuning::setTRWGHT(size_t timestep, int TRWGHT) {    m_TRWGHT->update(timestep, TRWGHT); }
+    void Tuning::setNEWTMX(size_t timestep, int NEWTMX) {    m_NEWTMX->update(timestep, NEWTMX); }
+    void Tuning::setNEWTMN(size_t timestep, int NEWTMN) {    m_NEWTMN->update(timestep, NEWTMN); }
+    void Tuning::setLITMAX(size_t timestep, int LITMAX) {    m_LITMAX->update(timestep, LITMAX); }
+    void Tuning::setLITMIN(size_t timestep, int LITMIN) {    m_LITMIN->update(timestep, LITMIN); }
+    void Tuning::setMXWSIT(size_t timestep, int MXWSIT) {    m_MXWSIT->update(timestep, MXWSIT); }
+    void Tuning::setMXWPIT(size_t timestep, int MXWPIT) {    m_MXWPIT->update(timestep, MXWPIT); }
+    void Tuning::setDDPLIM(size_t timestep, double DDPLIM) { m_DDPLIM->update(timestep, DDPLIM); }
+    void Tuning::setDDSLIM(size_t timestep, double DDSLIM) { m_DDSLIM->update(timestep, DDSLIM); }
+    void Tuning::setTRGDPR(size_t timestep, double TRGDPR) { m_TRGDPR->update(timestep, TRGDPR); }
+    void Tuning::setXXXDPR(size_t timestep, double XXXDPR) { m_XXXDPR->update(timestep, XXXDPR); m_XXXDPR_has_value->update(timestep, true); }
 
 } //namespace Opm
 

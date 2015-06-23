@@ -208,11 +208,11 @@ namespace Opm {
             needNewTree = needNewTree || treeChanged;
         }
         if (needNewTree) {
-            m_rootGroupTree->add(currentStep, newTree);
+            m_rootGroupTree->update(currentStep, newTree);
         }
     }
 
-    
+
     void Schedule::checkWELSPECSConsistency(WellConstPtr well, DeckKeywordConstPtr keyword, size_t recordIdx) const {
         DeckRecordConstPtr record = keyword->getRecord(recordIdx);
         if (well->getHeadI() != record->getItem("HEAD_I")->getInt(0) - 1) {
@@ -962,7 +962,7 @@ namespace Opm {
             if (!hasGroup(childName))
                 addGroup( childName , currentStep );
         }
-        m_rootGroupTree->add(currentStep, newTree);
+        m_rootGroupTree->update(currentStep, newTree);
     }
 
     void Schedule::handleWRFT(DeckKeywordConstPtr keyword, size_t currentStep) {

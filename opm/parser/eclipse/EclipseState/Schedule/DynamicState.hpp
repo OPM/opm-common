@@ -88,7 +88,7 @@ namespace Opm {
         }
 
 
-        void add(size_t index , T value) {
+        void update(size_t index , T value) {
             if (index >= (m_timeMap->size()))
                 throw std::range_error("Index value is out range.");
 
