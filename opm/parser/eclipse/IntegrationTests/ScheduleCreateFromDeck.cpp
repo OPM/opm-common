@@ -29,6 +29,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
 #include <opm/parser/eclipse/Units/ConversionFactors.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/GroupTreeNode.hpp>
 
@@ -751,3 +752,37 @@ BOOST_AUTO_TEST_CASE(WellTestWPOLYMER) {
         BOOST_CHECK_CLOSE(0.3*Metric::PolymerDensity, props_well32.m_polymerConcentration, 0.0001);
     }
 }
+
+
+BOOST_AUTO_TEST_CASE(TestEvents) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_EVENTS");
+
+    DeckPtr deck =  parser->parseFile(scheduleFile.string());
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(40,40,30);
+    IOConfigPtr ioConfig;
+    ScheduleConstPtr sched(new Schedule(grid , deck, ioConfig));
+    const Events& events = sched->getEvents();
+
+    BOOST_CHECK_EQUAL( true  , events.hasEvent(ScheduleEvents::NEW_WELL , 0 ) );
+    BOOST_CHECK_EQUAL( false , events.hasEvent(ScheduleEvents::NEW_WELL , 1 ) );
+    BOOST_CHECK_EQUAL( true  , events.hasEvent(ScheduleEvents::NEW_WELL , 2 ) );
+    BOOST_CHECK_EQUAL( false , events.hasEvent(ScheduleEvents::NEW_WELL , 3 ) );
+
+    BOOST_CHECK_EQUAL( true  , events.hasEvent(ScheduleEvents::COMPLETION_CHANGE , 0 ) );
+    BOOST_CHECK_EQUAL( false , events.hasEvent(ScheduleEvents::COMPLETION_CHANGE , 1) );
+    BOOST_CHECK_EQUAL( true  , events.hasEvent(ScheduleEvents::COMPLETION_CHANGE , 5 ) );
+
+    BOOST_CHECK_EQUAL( true , events.hasEvent(ScheduleEvents::WELL_STATUS_CHANGE , 1 ));
+    BOOST_CHECK_EQUAL( false , events.hasEvent(ScheduleEvents::WELL_STATUS_CHANGE , 2 ));
+    BOOST_CHECK_EQUAL( true , events.hasEvent(ScheduleEvents::WELL_STATUS_CHANGE , 3 ));
+    BOOST_CHECK_EQUAL( true  , events.hasEvent(ScheduleEvents::COMPLETION_CHANGE , 5) );
+
+    BOOST_CHECK_EQUAL( true  , events.hasEvent(ScheduleEvents::GROUP_CHANGE , 0 ));
+    BOOST_CHECK_EQUAL( false , events.hasEvent(ScheduleEvents::GROUP_CHANGE , 1 ));
+    BOOST_CHECK_EQUAL( true  , events.hasEvent(ScheduleEvents::GROUP_CHANGE , 3 ) );
+    BOOST_CHECK_EQUAL( false , events.hasEvent(ScheduleEvents::NEW_GROUP , 2 ) );
+    BOOST_CHECK_EQUAL( true  , events.hasEvent(ScheduleEvents::NEW_GROUP , 3 ) );
+}
+
+

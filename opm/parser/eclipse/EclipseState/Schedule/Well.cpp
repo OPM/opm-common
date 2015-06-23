@@ -63,9 +63,9 @@ namespace Opm {
     }
 
 
-    void Well::setProductionProperties(size_t timeStep , const WellProductionProperties newProperties) {
+    bool Well::setProductionProperties(size_t timeStep , const WellProductionProperties newProperties) {
         m_isProducer->update(timeStep , true);
-        m_productionProperties->update(timeStep, newProperties);
+        return m_productionProperties->update(timeStep, newProperties);
     }
 
     WellProductionProperties Well::getProductionPropertiesCopy(size_t timeStep) const {
@@ -76,9 +76,9 @@ namespace Opm {
         return m_productionProperties->at(timeStep);
     }
 
-    void Well::setInjectionProperties(size_t timeStep , const WellInjectionProperties newProperties) {
+    bool Well::setInjectionProperties(size_t timeStep , const WellInjectionProperties newProperties) {
         m_isProducer->update(timeStep , false);
-        m_injectionProperties->update(timeStep, newProperties);
+        return m_injectionProperties->update(timeStep, newProperties);
     }
 
     WellInjectionProperties Well::getInjectionPropertiesCopy(size_t timeStep) const {
@@ -89,9 +89,9 @@ namespace Opm {
         return m_injectionProperties->at(timeStep);
     }
 
-    void Well::setPolymerProperties(size_t timeStep , const WellPolymerProperties newProperties) {
+    bool Well::setPolymerProperties(size_t timeStep , const WellPolymerProperties newProperties) {
         m_isProducer->update(timeStep , false);
-        m_polymerProperties->update(timeStep, newProperties);
+        return m_polymerProperties->update(timeStep, newProperties);
     }
 
     WellPolymerProperties Well::getPolymerPropertiesCopy(size_t timeStep) const {
@@ -113,13 +113,12 @@ namespace Opm {
         return m_status->get( timeStep );
     }
 
-    void Well::setStatus(size_t timeStep, WellCommon::StatusEnum status) {
+    bool Well::setStatus(size_t timeStep, WellCommon::StatusEnum status) {
         if ((WellCommon::StatusEnum::OPEN == status) && getCompletions(timeStep)->allCompletionsShut()) {
             std::cerr << "ERROR when handling keyword for well "<< name()  << ": Cannot open a well where all completions are shut" << std::endl;
+            return false;
         } else
-        {
-            m_status->update( timeStep , status );
-        }
+            return m_status->update( timeStep , status );
     }
 
     bool Well::isProducer(size_t timeStep) const {

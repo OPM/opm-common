@@ -19,6 +19,7 @@
 #ifndef SCHEDULE_HPP
 #define SCHEDULE_HPP
 
+#include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
@@ -64,7 +65,7 @@ namespace Opm
         TuningPtr getTuning() const;
 
         bool initOnly() const;
-
+        const Events& getEvents() const;
 
     private:
         TimeMapPtr m_timeMap;
@@ -72,10 +73,11 @@ namespace Opm
         std::shared_ptr<const EclipseGrid> m_grid;
         std::map<std::string , GroupPtr> m_groups;
         std::shared_ptr<DynamicState<GroupTreePtr> > m_rootGroupTree;
+        Events m_events;
         TuningPtr m_tuning;
         bool nosim;
 
-
+        void updateWellStatus(std::shared_ptr<Well> well, size_t reportStep , WellCommon::StatusEnum status);
         void addWellToGroup( GroupPtr newGroup , WellPtr well , size_t timeStep);
         void initFromDeck(DeckConstPtr deck, IOConfigPtr ioConfig);
         void initializeNOSIM(DeckConstPtr deck);

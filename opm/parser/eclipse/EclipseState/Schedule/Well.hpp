@@ -51,7 +51,7 @@ namespace Opm {
         void setGroupName(size_t timeStep , const std::string& groupName);
 
         WellCommon::StatusEnum getStatus(size_t timeStep) const;
-        void                   setStatus(size_t timeStep, WellCommon::StatusEnum Status);
+        bool                   setStatus(size_t timeStep, WellCommon::StatusEnum Status);
 
         int    getHeadI() const;
         int    getHeadJ() const;
@@ -74,15 +74,15 @@ namespace Opm {
         void addCompletionSet(size_t time_step, const CompletionSetConstPtr newCompletionSet);
         CompletionSetConstPtr getCompletions(size_t timeStep) const;
 
-        void                            setProductionProperties(size_t timeStep , const WellProductionProperties properties);
+        bool                            setProductionProperties(size_t timeStep , const WellProductionProperties properties);
         WellProductionProperties        getProductionPropertiesCopy(size_t timeStep) const;
         const WellProductionProperties& getProductionProperties(size_t timeStep)  const;
 
-        void                           setInjectionProperties(size_t timeStep , const WellInjectionProperties properties);
+        bool                           setInjectionProperties(size_t timeStep , const WellInjectionProperties properties);
         WellInjectionProperties        getInjectionPropertiesCopy(size_t timeStep) const;
         const WellInjectionProperties& getInjectionProperties(size_t timeStep) const;
 
-        void                           setPolymerProperties(size_t timeStep , const WellPolymerProperties properties);
+        bool                           setPolymerProperties(size_t timeStep , const WellPolymerProperties properties);
         WellPolymerProperties          getPolymerPropertiesCopy(size_t timeStep) const;
         const WellPolymerProperties&   getPolymerProperties(size_t timeStep) const;
 
