@@ -129,4 +129,27 @@ namespace Opm {
 
         m_productionControls = 0;
     }
+
+    bool WellProductionProperties::operator==(const WellProductionProperties& other) const {
+        if ((OilRate == other.OilRate) &&
+            (WaterRate == other.WaterRate) &&
+            (GasRate == other.GasRate) &&
+            (LiquidRate == other.LiquidRate) &&
+            (ResVRate == other.ResVRate) &&
+            (BHPLimit == other.BHPLimit) &&
+            (THPLimit == other.THPLimit) &&
+            (VFPTableNumber == other.VFPTableNumber) &&
+            (controlMode == other.controlMode) &&
+            (m_productionControls == other.m_productionControls))
+            return true;
+        else
+            return false;
+    }
+
+
+    bool WellProductionProperties::operator!=(const WellProductionProperties& other) const {
+        return !(*this == other);
+    }
+
+
 } // namespace Opm

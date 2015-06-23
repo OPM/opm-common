@@ -154,7 +154,7 @@ namespace Opm {
     }
 
     void Group::setInjectionRate( size_t time_step , double rate) {
-        return m_injection->rate->update( time_step , rate);
+        m_injection->rate->update( time_step , rate);
     }
 
     double Group::getInjectionRate( size_t time_step ) const {
@@ -170,7 +170,7 @@ namespace Opm {
     }
 
     void Group::setSurfaceMaxRate( size_t time_step , double rate) {
-        return m_injection->surfaceFlowMaxRate->update( time_step , rate);
+        m_injection->surfaceFlowMaxRate->update( time_step , rate);
     }
 
     double Group::getSurfaceMaxRate( size_t time_step ) const {
@@ -178,7 +178,7 @@ namespace Opm {
     }
 
     void Group::setReservoirMaxRate( size_t time_step , double rate) {
-        return m_injection->reservoirFlowMaxRate->update( time_step , rate);
+        m_injection->reservoirFlowMaxRate->update( time_step , rate);
     }
 
     double Group::getReservoirMaxRate( size_t time_step ) const {
@@ -186,7 +186,7 @@ namespace Opm {
     }
 
     void Group::setTargetReinjectFraction( size_t time_step , double rate) {
-        return m_injection->targetReinjectFraction->update( time_step , rate);
+        m_injection->targetReinjectFraction->update( time_step , rate);
     }
 
     double Group::getTargetReinjectFraction( size_t time_step ) const {
@@ -194,7 +194,7 @@ namespace Opm {
     }
 
     void Group::setTargetVoidReplacementFraction( size_t time_step , double rate) {
-        return m_injection->targetVoidReplacementFraction->update( time_step , rate);
+        m_injection->targetVoidReplacementFraction->update( time_step , rate);
     }
 
     double Group::getTargetVoidReplacementFraction( size_t time_step ) const {

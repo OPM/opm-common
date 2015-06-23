@@ -34,8 +34,10 @@ namespace Opm {
         WellInjector::TypeEnum injectorType;
         WellInjector::ControlModeEnum controlMode;
 
-        WellInjectionProperties();
+        bool operator==(const WellInjectionProperties& other) const;
+        bool operator!=(const WellInjectionProperties& other) const;
 
+        WellInjectionProperties();
         bool hasInjectionControl(WellInjector::ControlModeEnum controlModeArg) const {
             if (injectionControls & controlModeArg)
                 return true;

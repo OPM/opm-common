@@ -24,7 +24,8 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 namespace Opm {
-    struct WellProductionProperties {
+    class WellProductionProperties {
+    public:
         double  OilRate;
         double  WaterRate;
         double  GasRate;
@@ -38,6 +39,8 @@ namespace Opm {
 
         WellProducer::ControlModeEnum controlMode;
 
+        bool operator==(const WellProductionProperties& other) const;
+        bool operator!=(const WellProductionProperties& other) const;
         WellProductionProperties();
 
         static WellProductionProperties history(DeckRecordConstPtr record);

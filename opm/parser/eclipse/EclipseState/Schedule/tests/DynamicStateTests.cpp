@@ -222,3 +222,16 @@ BOOST_AUTO_TEST_CASE( ResetGlobal ) {
     BOOST_CHECK_EQUAL( state[5] , 88 );
     BOOST_CHECK_EQUAL( state[9] , 88 );
 }
+
+
+BOOST_AUTO_TEST_CASE( CheckReturn ) {
+    boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
+    Opm::TimeMapPtr timeMap(new Opm::TimeMap(boost::posix_time::ptime(startDate)));
+    Opm::DynamicState<int> state(timeMap , 137);
+    for (size_t i = 0; i < 10; i++)
+        timeMap->addTStep( boost::posix_time::hours( (i+1) * 24 ));
+
+    BOOST_CHECK_EQUAL( false , state.update( 0 , 137 ));
+    BOOST_CHECK_EQUAL( false , state.update( 3 , 137 ));
+    BOOST_CHECK_EQUAL( true , state.update( 5 , 200 ));
+}
