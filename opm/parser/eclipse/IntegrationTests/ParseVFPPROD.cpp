@@ -88,21 +88,21 @@ BOOST_AUTO_TEST_CASE( parse_VFPPROD_OK ) {
     }
 
     {
-        auto record = VFPPROD1->getRecord(4);
-        auto item = record->getItem("GFR_VALUES");
+        auto record = VFPPROD1->getRecord(2);
+        auto item = record->getItem("THP_VALUES");
 
-        BOOST_CHECK_EQUAL( item->size() , 9 );
-        BOOST_CHECK_EQUAL( item->getRawDouble(0)  ,   90 );
-        BOOST_CHECK_EQUAL( item->getRawDouble(8) , 10000 );
+        BOOST_CHECK_EQUAL( item->size() , 7 );
+        BOOST_CHECK_CLOSE( item->getRawDouble(0)  , 16.01 , 0.0001 );
+        BOOST_CHECK_CLOSE( item->getRawDouble(6) ,  61.01 , 0.0001 );
     }
 
     {
-        auto record = VFPPROD1->getRecord(4);
-        auto item = record->getItem("GFR_VALUES");
+        auto record = VFPPROD1->getRecord(3);
+        auto item = record->getItem("WFR_VALUES");
 
         BOOST_CHECK_EQUAL( item->size() , 9 );
-        BOOST_CHECK_EQUAL( item->getRawDouble(0)  ,   90 );
-        BOOST_CHECK_EQUAL( item->getRawDouble(8) , 10000 );
+        BOOST_CHECK_CLOSE( item->getRawDouble(1)  , 0.1 , 0.0001 );
+        BOOST_CHECK_CLOSE( item->getRawDouble(7) ,  0.9 , 0.0001 );
     }
 
     {
