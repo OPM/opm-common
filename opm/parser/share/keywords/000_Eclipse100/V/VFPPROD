@@ -8,7 +8,7 @@
  {"name" : "WFR" , "value_type" : "STRING"},
  {"name" : "GFR" , "value_type" : "STRING"},
  {"name" : "PRESSURE_DEF" , "value_type" : "STRING" , "default" : "THP"},
- {"name" : "ALQ_DEF" , "value_type" : "STRING" , "default" : "UNDEF"},
+ {"name" : "ALQ_DEF" , "value_type" : "STRING"},
  {"name" : "UNITS" , "value_type" : "STRING"},
  {"name" : "BODY_DEF" , "value_type" : "STRING" , "default" : "BHP"}],
 [{"name" : "FLOW_VALUES" , "value_type" : "DOUBLE" , "dimension" : "Density", "size_type" : "ALL"}],
