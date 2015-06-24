@@ -66,6 +66,7 @@
 #include <set>
 #include <memory>
 #include <iostream>
+#include "Tables/VFPProdTable.hpp"
 
 namespace Opm {
     class EclipseState {
@@ -135,6 +136,7 @@ namespace Opm {
         const std::vector<SwofTable>& getSwofTables() const;
         const std::vector<SwfnTable>& getSwfnTables() const;
         const std::vector<WatvisctTable>& getWatvisctTables() const;
+        const std::vector<VFPProdTable>& getVFPProdTables() const;
         size_t getNumPhases() const;
 
         // the unit system used by the deck. note that it is rarely needed to convert
@@ -220,6 +222,9 @@ namespace Opm {
         void initPlyshlogTables(DeckConstPtr deck,
                                               const std::string& keywordName,
                                               std::vector<PlyshlogTable>& tableVector);
+        void initVFPProdTables(DeckConstPtr deck,
+                                              const std::string& keywordName,
+                                              std::vector<VFPProdTable>& tableVector);
 
 
         void setMULTFLT(std::shared_ptr<const Section> section) const;
@@ -281,6 +286,7 @@ namespace Opm {
         std::vector<SwofTable> m_swofTables;
         std::vector<SwfnTable> m_swfnTables;
         std::vector<WatvisctTable> m_watvisctTables;
+        std::vector<VFPProdTable> m_vfpprodTables;
 
         std::set<enum Phase::PhaseEnum> phases;
         std::string m_title;

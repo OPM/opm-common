@@ -246,6 +246,10 @@ namespace Opm {
         return m_watvisctTables;
     }
 
+    const std::vector<VFPProdTable>& EclipseState::getVFPProdTables() const {
+        return m_vfpprodTables;
+    }
+
     const std::vector<SgofTable>& EclipseState::getSgofTables() const {
         return m_sgofTables;
     }
@@ -356,6 +360,8 @@ namespace Opm {
         initGasvisctTables(deck, "GASVISCT", m_gasvisctTables);
 
         initPlyshlogTables(deck, "PLYSHLOG", m_plyshlogTables);
+
+        initVFPProdTables(deck, "VFPPROD", m_vfpprodTables);
 
         // the ROCKTAB table comes with additional fun because the number of columns
         //depends on the presence of the RKTRMDIR keyword...
@@ -650,6 +656,25 @@ namespace Opm {
 
         tableVector[0].init(keyword);
 
+    }
+
+    void EclipseState::initVFPProdTables(DeckConstPtr deck,
+                                          const std::string& keywordName,
+                                          std::vector<VFPProdTable>& tableVector) {
+        if (!deck->hasKeyword(keywordName)) {
+            return;
+        }
+
+        if (!deck->numKeywords(keywordName)) {
+            complainAboutAmbiguousKeyword(deck, keywordName);
+            return;
+        }
+
+        const auto& keyword = deck->getKeyword(keywordName);
+
+        tableVector.push_back(VFPProdTable());
+
+        tableVector[0].init(keyword);
     }
 
     bool EclipseState::supportsGridProperty(const std::string& keyword, int enabledTypes) const {
