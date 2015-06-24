@@ -665,16 +665,12 @@ namespace Opm {
             return;
         }
 
-        if (!deck->numKeywords(keywordName)) {
-            complainAboutAmbiguousKeyword(deck, keywordName);
-            return;
+        int num_tables = deck->numKeywords("VFPPROD");
+        tableVector.resize(num_tables);
+        for (int i=0; i<num_tables; ++i) {
+            const auto& keyword = deck->getKeyword(keywordName, i);
+            tableVector[i].init(keyword);
         }
-
-        const auto& keyword = deck->getKeyword(keywordName);
-
-        tableVector.push_back(VFPProdTable());
-
-        tableVector[0].init(keyword);
     }
 
     bool EclipseState::supportsGridProperty(const std::string& keyword, int enabledTypes) const {
