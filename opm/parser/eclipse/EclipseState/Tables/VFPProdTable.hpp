@@ -257,7 +257,7 @@ public:
             //Rest of values (bottom hole pressure or tubing head temperature) have index of flo value
             const std::vector<double>& bhp_tht = (*iter)->getItem("VALUES")->getRawDoubleData();
 
-            for (int f=0; f<bhp_tht.size(); ++f) {
+            for (unsigned int f=0; f<bhp_tht.size(); ++f) {
                 m_data[t][w][g][a][f] = table_scaling_factor*bhp_tht[f];
             }
         }
@@ -559,7 +559,7 @@ private:
             return;
         }
         else {
-            for (int i=0; i<values.size(); ++i) {
+            for (unsigned int i=0; i<values.size(); ++i) {
                 values[i] *= scaling_factor;
             }
         }
