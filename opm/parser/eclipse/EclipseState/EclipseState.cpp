@@ -669,7 +669,7 @@ namespace Opm {
         tableVector.resize(num_tables);
         for (int i=0; i<num_tables; ++i) {
             const auto& keyword = deck->getKeyword(keywordName, i);
-            tableVector[i].init(keyword);
+            tableVector[i].init(keyword, deck->getActiveUnitSystem());
         }
     }
 

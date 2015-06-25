@@ -11,14 +11,14 @@
  {"name" : "ALQ_DEF" , "value_type" : "STRING"},
  {"name" : "UNITS" , "value_type" : "STRING"},
  {"name" : "BODY_DEF" , "value_type" : "STRING" , "default" : "BHP"}],
-[{"name" : "FLOW_VALUES" , "value_type" : "DOUBLE" , "dimension" : "Density", "size_type" : "ALL"}],
-[{"name" : "THP_VALUES" , "value_type" : "DOUBLE" , "dimension" : "Pressure", "size_type" : "ALL"}],
-[{"name" : "WFR_VALUES" , "value_type" : "DOUBLE" , "size_type" : "ALL"}],
-[{"name" : "GFR_VALUES" , "value_type" : "DOUBLE" , "size_type" : "ALL"}],
-[{"name" : "ALQ_VALUES" , "value_type" : "DOUBLE" , "size_type" : "ALL"}],
+[{"name" : "FLOW_VALUES" , "value_type" : "DOUBLE" , "dimension" : "ContextDependent" , "size_type" : "ALL"}],
+[{"name" : "THP_VALUES"  , "value_type" : "DOUBLE" , "dimension" : "ContextDependent" , "size_type" : "ALL"}],
+[{"name" : "WFR_VALUES"  , "value_type" : "DOUBLE" , "dimension" : "ContextDependent" , "size_type" : "ALL"}],
+[{"name" : "GFR_VALUES"  , "value_type" : "DOUBLE" , "dimension" : "ContextDependent" , "size_type" : "ALL"}],
+[{"name" : "ALQ_VALUES"  , "value_type" : "DOUBLE" , "dimension" : "ContextDependent" , "size_type" : "ALL"}],
 [{"name" : "THP_INDEX" , "value_type" : "INT"},
  {"name" : "WFR_INDEX" , "value_type" : "INT"},
  {"name" : "GFR_INDEX" , "value_type" : "INT"},
  {"name" : "ALQ_INDEX" , "value_type" : "INT"},
- {"name" : "VALUES" , "value_type" : "DOUBLE" , "size_type" : "ALL"}]
+ {"name" : "VALUES" , "value_type" : "DOUBLE" , "dimension" : "ContextDependent" , "size_type" : "ALL"}]
 ]}

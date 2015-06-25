@@ -395,12 +395,13 @@ VFPPROD \n\
     Opm::ParserPtr parser(new Opm::Parser);
     Opm::DeckConstPtr deck(parser->parseString(deckData));
     Opm::DeckKeywordConstPtr vfpprodKeyword = deck->getKeyword("VFPPROD");
+    std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
 
     BOOST_CHECK_EQUAL(deck->numKeywords("VFPPROD"), 1);
 
     Opm::VFPProdTable vfpprodTable;
 
-    vfpprodTable.init(vfpprodKeyword);
+    vfpprodTable.init(vfpprodKeyword, units);
 
     BOOST_CHECK_EQUAL(vfpprodTable.getTableNum(), 5);
     BOOST_CHECK_EQUAL(vfpprodTable.getDatumDepth(), 32.9);
@@ -415,23 +416,31 @@ VFPPROD \n\
     {
         const std::vector<double>& flo = vfpprodTable.getFloAxis();
         BOOST_REQUIRE_EQUAL(flo.size(), 3);
-        BOOST_CHECK_EQUAL(flo[0], 1);
-        BOOST_CHECK_EQUAL(flo[1], 3);
-        BOOST_CHECK_EQUAL(flo[2], 5);
+
+        //Unit of FLO is SM3/day, convert to SM3/second
+        double conversion_factor = 1.0 / (60*60*24);
+        BOOST_CHECK_EQUAL(flo[0], 1*conversion_factor);
+        BOOST_CHECK_EQUAL(flo[1], 3*conversion_factor);
+        BOOST_CHECK_EQUAL(flo[2], 5*conversion_factor);
     }
 
     //THP axis
     {
         const std::vector<double>& thp = vfpprodTable.getTHPAxis();
         BOOST_REQUIRE_EQUAL(thp.size(), 2);
-        BOOST_CHECK_EQUAL(thp[0], 700000);
-        BOOST_CHECK_EQUAL(thp[1], 1100000);
+
+        //Unit of THP is barsa => convert to pascal
+        double conversion_factor = 100000.0;
+        BOOST_CHECK_EQUAL(thp[0], 7*conversion_factor);
+        BOOST_CHECK_EQUAL(thp[1], 11*conversion_factor);
     }
 
     //WFR axis
     {
         const std::vector<double>& wfr = vfpprodTable.getWFRAxis();
         BOOST_REQUIRE_EQUAL(wfr.size(), 2);
+
+        //Unit of WFR is SM3/SM3
         BOOST_CHECK_EQUAL(wfr[0], 13);
         BOOST_CHECK_EQUAL(wfr[1], 17);
     }
@@ -440,6 +449,8 @@ VFPPROD \n\
     {
         const std::vector<double>& gfr = vfpprodTable.getGFRAxis();
         BOOST_REQUIRE_EQUAL(gfr.size(), 2);
+
+        //Unit of GFR is SM3/SM3
         BOOST_CHECK_EQUAL(gfr[0], 19);
         BOOST_CHECK_EQUAL(gfr[1], 23);
     }
@@ -448,6 +459,8 @@ VFPPROD \n\
     {
         const std::vector<double>& alq = vfpprodTable.getALQAxis();
         BOOST_REQUIRE_EQUAL(alq.size(), 2);
+
+        //FIXME: Unit of ALQ not handled yet.
         BOOST_CHECK_EQUAL(alq[0], 29);
         BOOST_CHECK_EQUAL(alq[1], 31);
     }
@@ -458,6 +471,9 @@ VFPPROD \n\
         const Opm::VFPProdTable::array_type& data = vfpprodTable.getTable();
         const size_type* size = data.shape();
 
+        //Table given as BHP => barsa. Convert to pascal
+        double conversion_factor = 100000.0;
+
         double index = 0.5;
         for (size_type a=0; a<size[3]; ++a) {
             for (size_type g=0; g<size[2]; ++g) {
@@ -465,7 +481,7 @@ VFPPROD \n\
                     for (size_type t=0; t<size[0]; ++t) {
                         for (size_type f=0; f<size[4]; ++f) {
                             index += 1.0;
-                            BOOST_CHECK_EQUAL(data[t][w][g][a][f], index);
+                            BOOST_CHECK_EQUAL(data[t][w][g][a][f], index*conversion_factor);
                         }
                     }
                 }
