@@ -220,12 +220,12 @@ namespace Opm {
                                 std::vector<GasvisctTable>& tableVector);
 
         void initPlyshlogTables(DeckConstPtr deck,
-                                              const std::string& keywordName,
-                                              std::vector<PlyshlogTable>& tableVector);
-        void initVFPProdTables(DeckConstPtr deck,
-                                              const std::string& keywordName,
-                                              std::vector<VFPProdTable>& tableVector);
+                                const std::string& keywordName,
+                                std::vector<PlyshlogTable>& tableVector);
 
+        void initVFPProdTables(DeckConstPtr deck,
+                               const std::string& keywordName,
+                               std::vector<VFPProdTable>& tableVector);
 
         void setMULTFLT(std::shared_ptr<const Section> section) const;
         void initMULTREGT(DeckConstPtr deck);
