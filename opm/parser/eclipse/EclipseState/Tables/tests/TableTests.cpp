@@ -358,7 +358,10 @@ BOOST_AUTO_TEST_CASE(PvtoTable_Tests) {
 }
 
 
-BOOST_AUTO_TEST_CASE(VFPProdTable_Tests) {
+/**
+ * Tests "happy path" for a VFPPROD table, i.e., when everything goes well
+ */
+BOOST_AUTO_TEST_CASE(VFPProdTable_happy_Test) {
     const char *deckData = "\
 VFPPROD \n\
 -- Table Depth  Rate   WFR   GFR   TAB ALQ    UNITS  BODY    \n\
@@ -409,8 +412,6 @@ VFPPROD \n\
     BOOST_CHECK_EQUAL(vfpprodTable.getWFRType(), Opm::VFPProdTable::WFR_WCT);
     BOOST_CHECK_EQUAL(vfpprodTable.getGFRType(), Opm::VFPProdTable::GFR_GOR);
     BOOST_CHECK_EQUAL(vfpprodTable.getALQType(), Opm::VFPProdTable::ALQ_UNDEF);
-    //TODO: Units
-    //TODO: Table entries can be either BHP or TEMP => Tubing head temperature. Only BHP supported now
 
     //Flo axis
     {
@@ -460,7 +461,7 @@ VFPPROD \n\
         const std::vector<double>& alq = vfpprodTable.getALQAxis();
         BOOST_REQUIRE_EQUAL(alq.size(), 2);
 
-        //FIXME: Unit of ALQ not handled yet.
+        //Unit of ALQ undefined
         BOOST_CHECK_EQUAL(alq[0], 29);
         BOOST_CHECK_EQUAL(alq[1], 31);
     }
@@ -470,6 +471,12 @@ VFPPROD \n\
         typedef Opm::VFPProdTable::array_type::size_type size_type;
         const Opm::VFPProdTable::array_type& data = vfpprodTable.getTable();
         const size_type* size = data.shape();
+
+        BOOST_CHECK_EQUAL(size[0], 2);
+        BOOST_CHECK_EQUAL(size[1], 2);
+        BOOST_CHECK_EQUAL(size[2], 2);
+        BOOST_CHECK_EQUAL(size[3], 2);
+        BOOST_CHECK_EQUAL(size[4], 3);
 
         //Table given as BHP => barsa. Convert to pascal
         double conversion_factor = 100000.0;
@@ -487,5 +494,260 @@ VFPPROD \n\
                 }
             }
         }
+    }
+}
+
+
+
+/**
+ * Checks that the VFPPROD table will succeed with a minimal set of
+ * specified values.
+ */
+BOOST_AUTO_TEST_CASE(VFPProdTable_minimal_Test) {
+    const char *deckData = "\
+VFPPROD \n\
+-- Table Depth  Rate   WFR   GFR      \n\
+-- ----- ----- ----- ----- -----      \n\
+      5  32.9  'LIQ' 'WCT' 'GOR'    / \n\
+-- Rate axis \n\
+1 /          \n\
+-- THP axis  \n\
+7 /          \n\
+-- WFR axis  \n\
+13 /         \n\
+-- GFR axis  \n\
+19 /         \n\
+-- ALQ axis  \n\
+29 /         \n\
+-- Table data with THP# WFR# GFR# ALQ# <values 1-num_rates> \n\
+1 1 1 1 1.5 /    \n";
+
+    Opm::ParserPtr parser(new Opm::Parser);
+    Opm::DeckConstPtr deck(parser->parseString(deckData));
+    Opm::DeckKeywordConstPtr vfpprodKeyword = deck->getKeyword("VFPPROD");
+    std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
+
+    BOOST_CHECK_EQUAL(deck->numKeywords("VFPPROD"), 1);
+
+    Opm::VFPProdTable vfpprodTable;
+
+    vfpprodTable.init(vfpprodKeyword, units);
+
+    BOOST_CHECK_EQUAL(vfpprodTable.getTableNum(), 5);
+    BOOST_CHECK_EQUAL(vfpprodTable.getDatumDepth(), 32.9);
+    BOOST_CHECK_EQUAL(vfpprodTable.getFloType(), Opm::VFPProdTable::FLO_LIQ);
+    BOOST_CHECK_EQUAL(vfpprodTable.getWFRType(), Opm::VFPProdTable::WFR_WCT);
+    BOOST_CHECK_EQUAL(vfpprodTable.getGFRType(), Opm::VFPProdTable::GFR_GOR);
+    BOOST_CHECK_EQUAL(vfpprodTable.getALQType(), Opm::VFPProdTable::ALQ_UNDEF);
+
+    //Flo axis
+    {
+        const std::vector<double>& flo = vfpprodTable.getFloAxis();
+        BOOST_REQUIRE_EQUAL(flo.size(), 1);
+
+        //Unit of FLO is SM3/day, convert to SM3/second
+        double conversion_factor = 1.0 / (60*60*24);
+        BOOST_CHECK_EQUAL(flo[0], 1*conversion_factor);
+    }
+
+    //THP axis
+    {
+        const std::vector<double>& thp = vfpprodTable.getTHPAxis();
+        BOOST_REQUIRE_EQUAL(thp.size(), 1);
+
+        //Unit of THP is barsa => convert to pascal
+        double conversion_factor = 100000.0;
+        BOOST_CHECK_EQUAL(thp[0], 7*conversion_factor);
+    }
+
+    //WFR axis
+    {
+        const std::vector<double>& wfr = vfpprodTable.getWFRAxis();
+        BOOST_REQUIRE_EQUAL(wfr.size(), 1);
+
+        //Unit of WFR is SM3/SM3
+        BOOST_CHECK_EQUAL(wfr[0], 13);
+    }
+
+    //GFR axis
+    {
+        const std::vector<double>& gfr = vfpprodTable.getGFRAxis();
+        BOOST_REQUIRE_EQUAL(gfr.size(), 1);
+
+        //Unit of GFR is SM3/SM3
+        BOOST_CHECK_EQUAL(gfr[0], 19);
+    }
+
+    //ALQ axis
+    {
+        const std::vector<double>& alq = vfpprodTable.getALQAxis();
+        BOOST_REQUIRE_EQUAL(alq.size(), 1);
+
+        //Unit of ALQ undefined
+        BOOST_CHECK_EQUAL(alq[0], 29);
+    }
+
+    //The data itself
+    {
+        typedef Opm::VFPProdTable::array_type::size_type size_type;
+        const Opm::VFPProdTable::array_type& data = vfpprodTable.getTable();
+        const size_type* size = data.shape();
+
+        //Table given as BHP => barsa. Convert to pascal
+        double conversion_factor = 100000.0;
+
+        BOOST_CHECK_EQUAL(size[0]*size[1]*size[2]*size[3]*size[4], 1);
+        BOOST_CHECK_EQUAL(data[0][0][0][0][0], 1.5*conversion_factor);
+    }
+}
+
+
+
+
+
+
+
+/**
+ * Spot checks that the VFPPROD table will fail nicely when given invalid data
+ */
+BOOST_AUTO_TEST_CASE(VFPProdTable_sad_Test) {
+    /**
+     * Missing value in table
+     */
+    {
+        const char *missing_values = "\
+VFPPROD \n\
+-- Table Depth  Rate   WFR   GFR      \n\
+-- ----- ----- ----- ----- -----      \n\
+      5  32.9  'LIQ' 'WCT' 'GOR'    / \n\
+-- Rate axis \n\
+1 2 /        \n\
+-- THP axis  \n\
+7 /          \n\
+-- WFR axis  \n\
+13 /         \n\
+-- GFR axis  \n\
+19 /         \n\
+-- ALQ axis  \n\
+29 /         \n\
+-- Table data with THP# WFR# GFR# ALQ# <values 1-num_rates> \n\
+-- Will fail, as rate axis requires two elements            \n\
+1 1 1 1 1.5 /    \n";
+
+        Opm::ParserPtr parser(new Opm::Parser);
+        Opm::DeckConstPtr deck(parser->parseString(missing_values));
+        Opm::DeckKeywordConstPtr vfpprodKeyword = deck->getKeyword("VFPPROD");
+        std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
+        BOOST_CHECK_EQUAL(deck->numKeywords("VFPPROD"), 1);
+
+        Opm::VFPProdTable vfpprodTable;
+
+
+        BOOST_CHECK_THROW(vfpprodTable.init(vfpprodKeyword, units), std::invalid_argument);
+    }
+
+
+    /**
+     * Missing items in header
+     */
+    {
+        const char *missing_metadata = "\
+VFPPROD \n\
+-- Table Depth   \n\
+-- ----- -----   \n\
+      5  32.9  / \n\
+-- Rate axis \n\
+1 2 /        \n\
+-- THP axis  \n\
+7 /          \n\
+-- WFR axis  \n\
+13 /         \n\
+-- GFR axis  \n\
+19 /         \n\
+-- ALQ axis  \n\
+29 /         \n\
+-- Table data with THP# WFR# GFR# ALQ# <values 1-num_rates> \n\
+1 1 1 1 1.5 2.5 /    \n";
+
+        Opm::ParserPtr parser(new Opm::Parser);
+        Opm::DeckConstPtr deck(parser->parseString(missing_metadata));
+        Opm::DeckKeywordConstPtr vfpprodKeyword = deck->getKeyword("VFPPROD");
+        std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
+        BOOST_CHECK_EQUAL(deck->numKeywords("VFPPROD"), 1);
+
+        Opm::VFPProdTable vfpprodTable;
+
+
+        BOOST_CHECK_THROW(vfpprodTable.init(vfpprodKeyword, units), std::invalid_argument);
+    }
+
+
+
+    /**
+     * Wrong items in header
+     */
+    {
+        const char *wrong_metadata = "\
+VFPPROD \n\
+-- Table Depth   \n\
+-- ----- -----   \n\
+      5  32.9  'WCT' 'LIC' 'GARBAGE'    / \n\
+-- Rate axis \n\
+1 2 /        \n\
+-- THP axis  \n\
+7 /          \n\
+-- WFR axis  \n\
+13 /         \n\
+-- GFR axis  \n\
+19 /         \n\
+-- ALQ axis  \n\
+29 /         \n\
+-- Table data with THP# WFR# GFR# ALQ# <values 1-num_rates> \n\
+1 1 1 1 1.5 2.5 /    \n";
+
+        Opm::ParserPtr parser(new Opm::Parser);
+        Opm::DeckConstPtr deck(parser->parseString(wrong_metadata));
+        Opm::DeckKeywordConstPtr vfpprodKeyword = deck->getKeyword("VFPPROD");
+        std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
+        BOOST_CHECK_EQUAL(deck->numKeywords("VFPPROD"), 1);
+
+        Opm::VFPProdTable vfpprodTable;
+
+        BOOST_CHECK_THROW(vfpprodTable.init(vfpprodKeyword, units), std::invalid_argument);
+    }
+
+
+
+    /**
+     * Wrong axes in header
+     */
+    {
+        const char *missing_axes = "\
+VFPPROD \n\
+-- Table Depth   \n\
+-- ----- -----   \n\
+      5  32.9  'LIC' 'WCT' 'OGR'    / \n\
+-- Rate axis \n\
+1 2 /        \n\
+-- THP axis  \n\
+7 /          \n\
+-- WFR axis  \n\
+13 /         \n\
+-- GFR axis  \n\
+19 /         \n\
+-- ALQ axis  \n\
+-- Missing!  \n\
+-- Table data with THP# WFR# GFR# ALQ# <values 1-num_rates> \n\
+1 1 1 1 1.5 2.5 /    \n";
+
+        Opm::ParserPtr parser(new Opm::Parser);
+        Opm::DeckConstPtr deck(parser->parseString(missing_axes));
+        Opm::DeckKeywordConstPtr vfpprodKeyword = deck->getKeyword("VFPPROD");
+        std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
+        BOOST_CHECK_EQUAL(deck->numKeywords("VFPPROD"), 1);
+
+        Opm::VFPProdTable vfpprodTable;
+
+        BOOST_CHECK_THROW(vfpprodTable.init(vfpprodKeyword, units), std::invalid_argument);
     }
 }

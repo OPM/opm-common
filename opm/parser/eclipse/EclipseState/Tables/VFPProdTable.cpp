@@ -4,6 +4,24 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
 
 
+//Anonymous namespace
+namespace {
+
+/**
+ * Trivial helper function that throws if a zero-sized item is found.
+ */
+template <typename T>
+inline Opm::DeckItemPtr getNonEmptyItem(Opm::DeckRecordConstPtr record) {
+    auto retval = record->getItem<T>();
+    if (retval->size() == 0) {
+        throw std::invalid_argument("Zero-sized record found where non-empty record expected");
+    }
+    return retval;
+}
+
+} //Namespace
+
+
 
 
 namespace Opm {
@@ -62,25 +80,25 @@ void VFPProdTable::init(DeckKeywordConstPtr table, std::shared_ptr<Opm::UnitSyst
     auto header = table->getRecord(0);
 
     //Get the different header items
-    m_table_num = header->getItem<VFPPROD::TABLE>()->getInt(0);
-    m_datum_depth = header->getItem<VFPPROD::DATUM_DEPTH>()->getSIDouble(0);
-    m_flo_type = getFloType(header->getItem<VFPPROD::RATE_TYPE>()->getString(0));
-    m_wfr_type = getWFRType(header->getItem<VFPPROD::WFR>()->getString(0));
-    m_gfr_type = getGFRType(header->getItem<VFPPROD::GFR>()->getString(0));
+    m_table_num   = getNonEmptyItem<VFPPROD::TABLE>(header)->getInt(0);
+    m_datum_depth = getNonEmptyItem<VFPPROD::DATUM_DEPTH>(header)->getSIDouble(0);
+
+    m_flo_type = getFloType(getNonEmptyItem<VFPPROD::RATE_TYPE>(header)->getString(0));
+    m_wfr_type = getWFRType(getNonEmptyItem<VFPPROD::WFR>(header)->getString(0));
+    m_gfr_type = getGFRType(getNonEmptyItem<VFPPROD::GFR>(header)->getString(0));
 
     //Not used, but check that PRESSURE_DEF is indeed THP
-    std::string quantity_string = header->getItem<VFPPROD::PRESSURE_DEF>()->getString(0);
+    std::string quantity_string = getNonEmptyItem<VFPPROD::PRESSURE_DEF>(header)->getString(0);
     if (quantity_string != "THP") {
         throw std::invalid_argument("PRESSURE_DEF is required to be THP");
     }
 
-    m_alq_type = getALQType(header->getItem<VFPPROD::ALQ_DEF>()->getString(0));
+    m_alq_type = getALQType(getNonEmptyItem<VFPPROD::ALQ_DEF>(header)->getString(0));
 
     //Check units used for this table
     std::string units_string = "";
     try {
-        auto units_item = header->getItem<VFPPROD::UNITS>();
-        units_string = units_item->getString(0);
+        units_string = getNonEmptyItem<VFPPROD::UNITS>(header)->getString(0);
     }
     catch (...) {
         //If units does not exist in record, the default value is the
@@ -92,18 +110,17 @@ void VFPProdTable::init(DeckKeywordConstPtr table, std::shared_ptr<Opm::UnitSyst
 
         //FIXME: Only metric and field supported at the moment.
         //Need to change all of the convertToSI functions to support LAB/PVT-M
-        std::string unit_string = header->getItem("UNITS")->getString(0);
 
-        if (unit_string == "METRIC") {
+        if (units_string == "METRIC") {
             table_unit_type = UnitSystem::UNIT_TYPE_METRIC;
         }
-        else if (unit_string == "FIELD") {
+        else if (units_string == "FIELD") {
             table_unit_type = UnitSystem::UNIT_TYPE_FIELD;
         }
-        else if (unit_string == "LAB") {
+        else if (units_string == "LAB") {
             throw std::invalid_argument("Unsupported UNITS string: 'LAB'");
         }
-        else if (unit_string == "PVT-M") {
+        else if (units_string == "PVT-M") {
             throw std::invalid_argument("Unsupported UNITS string: 'PVT-M'");
         }
         else {
@@ -117,7 +134,7 @@ void VFPProdTable::init(DeckKeywordConstPtr table, std::shared_ptr<Opm::UnitSyst
     }
 
     //Quantity in the body of the table
-    std::string body_string = header->getItem<VFPPROD::BODY_DEF>()->getString(0);
+    std::string body_string = getNonEmptyItem<VFPPROD::BODY_DEF>(header)->getString(0);
     if (body_string == "TEMP") {
         throw std::invalid_argument("Invalid BODY_DEF string: TEMP not supported");
     }
@@ -130,23 +147,23 @@ void VFPProdTable::init(DeckKeywordConstPtr table, std::shared_ptr<Opm::UnitSyst
 
 
     //Get actual rate / flow values
-    m_flo_data = table->getRecord(1)->getItem<VFPPROD::FLOW_VALUES>()->getRawDoubleData();
+    m_flo_data = getNonEmptyItem<VFPPROD::FLOW_VALUES>(table->getRecord(1))->getRawDoubleData();
     convertFloToSI(m_flo_type, m_flo_data, deck_unit_system);
 
     //Get actual tubing head pressure values
-    m_thp_data = table->getRecord(2)->getItem<VFPPROD::THP_VALUES>()->getRawDoubleData();
+    m_thp_data = getNonEmptyItem<VFPPROD::THP_VALUES>(table->getRecord(2))->getRawDoubleData();
     convertTHPToSI(m_thp_data, deck_unit_system);
 
     //Get actual water fraction values
-    m_wfr_data = table->getRecord(3)->getItem<VFPPROD::WFR_VALUES>()->getRawDoubleData();
+    m_wfr_data = getNonEmptyItem<VFPPROD::WFR_VALUES>(table->getRecord(3))->getRawDoubleData();
     convertWFRToSI(m_wfr_type, m_wfr_data, deck_unit_system);
 
     //Get actual gas fraction values
-    m_gfr_data = table->getRecord(4)->getItem<VFPPROD::GFR_VALUES>()->getRawDoubleData();
+    m_gfr_data = getNonEmptyItem<VFPPROD::GFR_VALUES>(table->getRecord(4))->getRawDoubleData();
     convertGFRToSI(m_gfr_type, m_gfr_data, deck_unit_system);
 
     //Get actual gas fraction values
-    m_alq_data = table->getRecord(5)->getItem<VFPPROD::ALQ_VALUES>()->getRawDoubleData();
+    m_alq_data = getNonEmptyItem<VFPPROD::ALQ_VALUES>(table->getRecord(5))->getRawDoubleData();
     convertALQToSI(m_alq_type, m_alq_data, deck_unit_system);
 
     //Finally, read the actual table itself.
@@ -173,13 +190,17 @@ void VFPProdTable::init(DeckKeywordConstPtr table, std::shared_ptr<Opm::UnitSyst
     for (int i=6; i<table->size(); ++i) {
         const auto& record = table->getRecord(i);
         //Get indices (subtract 1 to get 0-based index)
-        int t = record->getItem<VFPPROD::THP_INDEX>()->getInt(0) - 1;
-        int w = record->getItem<VFPPROD::WFR_INDEX>()->getInt(0) - 1;
-        int g = record->getItem<VFPPROD::GFR_INDEX>()->getInt(0) - 1;
-        int a = record->getItem<VFPPROD::ALQ_INDEX>()->getInt(0) - 1;
+        int t = getNonEmptyItem<VFPPROD::THP_INDEX>(record)->getInt(0) - 1;
+        int w = getNonEmptyItem<VFPPROD::WFR_INDEX>(record)->getInt(0) - 1;
+        int g = getNonEmptyItem<VFPPROD::GFR_INDEX>(record)->getInt(0) - 1;
+        int a = getNonEmptyItem<VFPPROD::ALQ_INDEX>(record)->getInt(0) - 1;
 
         //Rest of values (bottom hole pressure or tubing head temperature) have index of flo value
-        const std::vector<double>& bhp_tht = record->getItem<VFPPROD::VALUES>()->getRawDoubleData();
+        const std::vector<double>& bhp_tht = getNonEmptyItem<VFPPROD::VALUES>(record)->getRawDoubleData();
+
+        if (bhp_tht.size() != nf) {
+            throw std::invalid_argument("VFPPROD table does not contain enough FLO values.");
+        }
 
         for (unsigned int f=0; f<bhp_tht.size(); ++f) {
             m_data[t][w][g][a][f] = table_scaling_factor*bhp_tht[f];
@@ -191,32 +212,6 @@ void VFPProdTable::init(DeckKeywordConstPtr table, std::shared_ptr<Opm::UnitSyst
 
 
 
-
-
-
-
-bool VFPProdTable::itemValid(DeckRecordConstPtr& record, const char* name) {
-    if (record->size() == 0) {
-        return false;
-    }
-    else {
-        DeckItemPtr item;
-        //TODO: Should we instead here allow the exception to propagate?
-        try {
-            item = record->getItem(name);
-        }
-        catch (...) {
-            return false;
-        }
-
-        if (item->size() > 0) {
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-}
 
 
 

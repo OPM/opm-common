@@ -246,13 +246,6 @@ private:
     //The data itself, using the data ordering m_data[thp][wfr][gfr][alq][flo]
     array_type m_data;
 
-
-    /**
-     * Helper function that checks if an item exists in a record, and has a
-     * non-zero size
-     */
-    bool itemValid(DeckRecordConstPtr& record, const char* name);
-
     /**
      * Debug function that runs a series of asserts to check for sanity of inputs.
      * Called after init to check that everything looks ok.
