@@ -33,6 +33,7 @@ macro (opm_sources opm)
   # - TEST_DATA_FILES
   # - PUBLIC_HEADER_FILES
   # - PROGRAM_SOURCE_FILES
+  # - ADDITIONAL_SOURCE_FILES
 
   # rename from "friendly" names to ones that fit the "almost-structural"
   # scheme used in the .cmake modules, converting them to absolute file
@@ -61,6 +62,9 @@ macro (opm_sources opm)
   endforeach (_file)
   foreach (_file IN LISTS EXAMPLE_SOURCE_FILES)
 	list (APPEND examples_SOURCES ${PROJECT_SOURCE_DIR}/${_file})
+  endforeach (_file)
+  foreach (_file IN LISTS ADDITIONAL_SOURCE_FILES)
+	list (APPEND additionals_SOURCES ${PROJECT_SOURCE_DIR}/${_file})
   endforeach (_file)
   foreach (_file IN LISTS PROGRAM_SOURCE_FILES)
 	list (APPEND examples_SOURCES_DIST ${PROJECT_SOURCE_DIR}/${_file})
