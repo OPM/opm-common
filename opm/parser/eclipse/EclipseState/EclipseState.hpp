@@ -224,7 +224,6 @@ namespace Opm {
                                 std::vector<PlyshlogTable>& tableVector);
 
         void initVFPProdTables(DeckConstPtr deck,
-                               const std::string& keywordName,
                                std::vector<VFPProdTable>& tableVector);
 
         void setMULTFLT(std::shared_ptr<const Section> section) const;

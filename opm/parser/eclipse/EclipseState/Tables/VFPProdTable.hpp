@@ -74,7 +74,7 @@ public:
     /**
      * Constructor
      */
-    VFPProdTable() : m_table_num(-1),
+    inline VFPProdTable() : m_table_num(-1),
             m_datum_depth(-1),
             m_flo_type(FLO_INVALID),
             m_wfr_type(WFR_INVALID),
@@ -110,166 +110,19 @@ public:
             const std::vector<double>& wfr_data,
             const std::vector<double>& gfr_data,
             const std::vector<double>& alq_data,
-            array_type data) {
-        m_table_num = table_num;
-        m_datum_depth = datum_depth;
-        m_flo_type = flo_type;
-        m_wfr_type = wfr_type;
-        m_gfr_type = gfr_type;
-        m_alq_type = alq_type;
-        m_flo_data = flo_data;
-        m_thp_data = thp_data;
-        m_wfr_data = wfr_data;
-        m_gfr_data = gfr_data;
-        m_alq_data = alq_data;
-        m_data = data;
-        check();
-    }
+            const array_type& data);
 
     /**
      * Constructor which parses a deck keyword and retrieves the relevant parts for a
      * VFP table.
      */
-    void init(DeckKeywordConstPtr table, std::shared_ptr<Opm::UnitSystem> deck_unit_system) {
-        auto iter = table->begin();
-
-        auto header = (*iter++);
-
-        assert(itemValid(header, "TABLE"));
-        m_table_num = header->getItem("TABLE")->getInt(0);
-
-        assert(itemValid(header, "DATUM_DEPTH"));
-        m_datum_depth = header->getItem("DATUM_DEPTH")->getSIDouble(0);
-
-        assert(itemValid(header, "RATE_TYPE"));
-        m_flo_type = getFloType(header->getItem("RATE_TYPE")->getString(0));
-
-        assert(itemValid(header, "WFR"));
-        m_wfr_type = getWFRType(header->getItem("WFR")->getString(0));
-
-        assert(itemValid(header, "GFR"));
-        m_gfr_type = getGFRType(header->getItem("GFR")->getString(0));
-
-        if (itemValid(header, "PRESSURE_DEF")) {
-            //Definition of THP values, required to be THP
-            std::string quantity_string = header->getItem("PRESSURE_DEF")->getString(0);
-            assert(quantity_string == "THP");
-        }
-
-        //Artificial lift
-        if (itemValid(header, "ALQ_DEF")) {
-            m_alq_type = getALQType(header->getItem("ALQ_DEF")->getString(0));
-        }
-        else {
-            m_alq_type = ALQ_UNDEF;
-        }
-
-        //Check units used for this table
-        if (itemValid(header, "UNITS")) {
-            UnitSystem::UnitType table_unit_type;
-            //FIXME: Only metric and field supported at the moment.
-            //Need to change all of the convertToSI functions to support LAB/PVT-M
-            std::string unit_string = header->getItem("UNITS")->getString(0);
-
-            if (unit_string == "METRIC") {
-                table_unit_type = UnitSystem::UNIT_TYPE_METRIC;
-            }
-            else if (unit_string == "FIELD") {
-                table_unit_type = UnitSystem::UNIT_TYPE_FIELD;
-            }
-            else if (unit_string == "LAB") {
-                throw std::invalid_argument("Unsupported UNITS string: 'LAB'");
-            }
-            else if (unit_string == "PVT-M") {
-                throw std::invalid_argument("Unsupported UNITS string: 'PVT-M'");
-            }
-            else {
-                throw std::invalid_argument("Invalid UNITS string");
-            }
-
-            //Sanity check
-            if(table_unit_type != deck_unit_system->getType()) {
-                throw std::invalid_argument("Deck units are not equal VFPPROD table units.");
-            }
-        }
-
-        //Quantity in the body of the table
-        if (itemValid(header, "BODY_DEF")) {
-            std::string body_string = header->getItem("BODY_DEF")->getString(0);
-            if (body_string == "TEMP") {
-                throw std::invalid_argument("Invalid BODY_DEF string: TEMP not supported");
-            }
-            else if (body_string == "BHP") {
-
-            }
-            else {
-                throw std::invalid_argument("Invalid BODY_DEF string");
-            }
-        }
-        else {
-            //Default to BHP
-        }
-
-
-        //Get actual rate / flow values
-        m_flo_data = (*iter++)->getItem("FLOW_VALUES")->getRawDoubleData();
-        convertFloToSI(m_flo_type, m_flo_data, deck_unit_system);
-
-        //Get actual tubing head pressure values
-        m_thp_data = (*iter++)->getItem("THP_VALUES")->getRawDoubleData();
-        convertTHPToSI(m_thp_data, deck_unit_system);
-
-        //Get actual water fraction values
-        m_wfr_data = (*iter++)->getItem("WFR_VALUES")->getRawDoubleData();
-        convertWFRToSI(m_wfr_type, m_wfr_data, deck_unit_system);
-
-        //Get actual gas fraction values
-        m_gfr_data = (*iter++)->getItem("GFR_VALUES")->getRawDoubleData();
-        convertGFRToSI(m_gfr_type, m_gfr_data, deck_unit_system);
-
-        //Get actual gas fraction values
-        m_alq_data = (*iter++)->getItem("ALQ_VALUES")->getRawDoubleData();
-        convertALQToSI(m_alq_type, m_alq_data, deck_unit_system);
-
-        //Finally, read the actual table itself.
-        size_t nt = m_thp_data.size();
-        size_t nw = m_wfr_data.size();
-        size_t ng = m_gfr_data.size();
-        size_t na = m_alq_data.size();
-        size_t nf = m_flo_data.size();
-        extents shape;
-        shape[0] = nt;
-        shape[1] = nw;
-        shape[2] = ng;
-        shape[3] = na;
-        shape[4] = nf;
-        m_data.resize(shape);
-
-        //FIXME: Unit for TEMP=Tubing head temperature is not Pressure, see BODY_DEF
-        const double table_scaling_factor = deck_unit_system->parse("Pressure")->getSIScaling();
-        for (; iter!=table->end(); ++iter) {
-            //Get indices (subtract 1 to get 0-based index)
-            int t = (*iter)->getItem("THP_INDEX")->getInt(0) - 1;
-            int w = (*iter)->getItem("WFR_INDEX")->getInt(0) - 1;
-            int g = (*iter)->getItem("GFR_INDEX")->getInt(0) - 1;
-            int a = (*iter)->getItem("ALQ_INDEX")->getInt(0) - 1;
-
-            //Rest of values (bottom hole pressure or tubing head temperature) have index of flo value
-            const std::vector<double>& bhp_tht = (*iter)->getItem("VALUES")->getRawDoubleData();
-
-            for (unsigned int f=0; f<bhp_tht.size(); ++f) {
-                m_data[t][w][g][a][f] = table_scaling_factor*bhp_tht[f];
-            }
-        }
-
-        check();
-    }
+    void init(DeckKeywordConstPtr table, std::shared_ptr<Opm::UnitSystem> deck_unit_system);
 
     /**
      * Returns the table number
      * @return table number
      */
-    inline int getTableNum() {
+    inline int getTableNum() const {
         return m_table_num;
     }
 
@@ -277,7 +130,7 @@ public:
      * Returns the datum depth for the table data
      * @return datum depth
      */
-    inline double getDatumDepth() {
+    inline double getDatumDepth() const {
         return m_datum_depth;
     }
 
@@ -285,7 +138,7 @@ public:
      * Returns the rate/flo type for the flo axis
      * @return flo type
      */
-    inline FLO_TYPE getFloType() {
+    inline FLO_TYPE getFloType() const {
         return m_flo_type;
     }
 
@@ -293,7 +146,7 @@ public:
      * Returns the water fraction type for the WFR axis
      * @return water fraction type
      */
-    inline WFR_TYPE getWFRType() {
+    inline WFR_TYPE getWFRType() const {
         return m_wfr_type;
     }
 
@@ -301,7 +154,7 @@ public:
      * Returns the gas fraction type for the GFR axis
      * @return gas fraction type
      */
-    inline GFR_TYPE getGFRType() {
+    inline GFR_TYPE getGFRType() const {
         return m_gfr_type;
     }
 
@@ -309,7 +162,7 @@ public:
      * Returns the artificial lift quantity type for the ALQ axis
      * @return artificial lift quantity type
      */
-    inline ALQ_TYPE getALQType() {
+    inline ALQ_TYPE getALQType() const {
         return m_alq_type;
     }
 
@@ -317,7 +170,7 @@ public:
      * Returns the coordinates of the FLO sample points in the table
      * @return Flo sample coordinates
      */
-    inline const std::vector<double>& getFloAxis() {
+    inline const std::vector<double>& getFloAxis() const {
         return m_flo_data;
     }
 
@@ -325,7 +178,7 @@ public:
      * Returns the coordinates for the tubing head pressure sample points in the table
      * @return Tubing head pressure coordinates
      */
-    inline const std::vector<double>& getTHPAxis() {
+    inline const std::vector<double>& getTHPAxis() const {
         return m_thp_data;
     }
 
@@ -333,7 +186,7 @@ public:
      * Returns the coordinates for the water fraction sample points in the table
      * @return Water fraction coordinates
      */
-    inline const std::vector<double>& getWFRAxis() {
+    inline const std::vector<double>& getWFRAxis() const {
         return m_wfr_data;
     }
 
@@ -341,7 +194,7 @@ public:
      * Returns the coordinates for the gas fraction sample points in the table
      * @return Gas fraction coordinates
      */
-    inline const std::vector<double>& getGFRAxis() {
+    inline const std::vector<double>& getGFRAxis() const {
         return m_gfr_data;
     }
 
@@ -349,7 +202,7 @@ public:
      * Returns the coordinates for the artificial lift quantity points in the table
      * @return Artificial lift quantity coordinates
      */
-    inline const std::vector<double>& getALQAxis() {
+    inline const std::vector<double>& getALQAxis() const {
         return m_alq_data;
     }
 
@@ -369,7 +222,7 @@ public:
      * thp_coord = thp_axis(thp_idx);
      * ...
      */
-    inline const array_type& getTable() {
+    inline const array_type& getTable() const {
         return m_data;
     }
 
@@ -398,258 +251,41 @@ private:
      * Helper function that checks if an item exists in a record, and has a
      * non-zero size
      */
-    bool itemValid(DeckRecordConstPtr& record, const char* name) {
-        if (record->size() == 0) {
-            return false;
-        }
-        else {
-            DeckItemPtr item;
-            //TODO: Should we instead here allow the exception to propagate?
-            try {
-                item = record->getItem(name);
-            }
-            catch (...) {
-                return false;
-            }
-
-            if (item->size() > 0) {
-                return true;
-            }
-            else {
-                return false;
-            }
-        }
-    }
+    bool itemValid(DeckRecordConstPtr& record, const char* name);
 
     /**
      * Debug function that runs a series of asserts to check for sanity of inputs.
      * Called after init to check that everything looks ok.
      */
-    void check() {
-        //Table number
-        assert(m_table_num > 0);
+    void check();
 
-        //Misc types
-        assert(m_flo_type >= FLO_OIL && m_flo_type < FLO_INVALID);
-        assert(m_wfr_type >= WFR_WOR && m_wfr_type < WFR_INVALID);
-        assert(m_gfr_type >= GFR_GOR && m_gfr_type < GFR_INVALID);
-        assert(m_alq_type >= ALQ_GRAT && m_alq_type < ALQ_INVALID);
-
-        //Data axis size
-        assert(m_flo_data.size() > 0);
-        assert(m_thp_data.size() > 0);
-        assert(m_wfr_data.size() > 0);
-        assert(m_gfr_data.size() > 0);
-        assert(m_alq_data.size() > 0);
-
-        //Data axis sorted?
-        assert(is_sorted(m_flo_data.begin(), m_flo_data.end()));
-        assert(is_sorted(m_thp_data.begin(), m_thp_data.end()));
-        assert(is_sorted(m_wfr_data.begin(), m_wfr_data.end()));
-        assert(is_sorted(m_gfr_data.begin(), m_gfr_data.end()));
-        assert(is_sorted(m_alq_data.begin(), m_alq_data.end()));
-
-        //Check data size matches axes
-        assert(m_data.num_dimensions() == 5);
-        assert(m_data.shape()[0] == m_thp_data.size());
-        assert(m_data.shape()[1] == m_wfr_data.size());
-        assert(m_data.shape()[2] == m_gfr_data.size());
-        assert(m_data.shape()[3] == m_alq_data.size());
-        assert(m_data.shape()[4] == m_flo_data.size());
-
-        //Finally, check that all data is within reasonable ranges, defined to be up-to 1.0e10...
-        typedef array_type::size_type size_type;
-        for (size_type t=0; t<m_data.shape()[0]; ++t) {
-            for (size_type w=0; w<m_data.shape()[1]; ++w) {
-                for (size_type g=0; g<m_data.shape()[2]; ++g) {
-                    for (size_type a=0; a<m_data.shape()[3]; ++a) {
-                        for (size_type f=0; f<m_data.shape()[4]; ++f) {
-                            if (m_data[t][w][g][a][f] > 1.0e10) {
-                                //TODO: Replace with proper log message
-                                std::cerr << "Too large value encountered in VFPPROD in ["
-                                        << t << "," << w << "," << g << "," << a << "," << f << "]="
-                                        << m_data[t][w][g][a][f] << std::endl;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    static FLO_TYPE getFloType(std::string flo_string) {
-        if (flo_string == "OIL") {
-            return FLO_OIL;
-        }
-        else if (flo_string == "LIQ") {
-            return FLO_LIQ;
-        }
-        else if (flo_string == "GAS") {
-            return FLO_GAS;
-        }
-        else {
-            throw std::invalid_argument("Invalid RATE_TYPE string");
-        }
-        return FLO_INVALID;
-    }
-
-    static WFR_TYPE getWFRType(std::string wfr_string) {
-        if (wfr_string == "WOR") {
-            return WFR_WOR;
-        }
-        else if (wfr_string == "WCT") {
-            return WFR_WCT;
-        }
-        else if (wfr_string == "WGR") {
-            return WFR_WGR;
-        }
-        else {
-            throw std::invalid_argument("Invalid WFR string");
-        }
-        return WFR_INVALID;
-    }
-
-    static GFR_TYPE getGFRType(std::string gfr_string) {;
-        if (gfr_string == "GOR") {
-            return GFR_GOR;
-        }
-        else if (gfr_string == "GLR") {
-            return GFR_GLR;
-        }
-        else if (gfr_string == "OGR") {
-            return GFR_OGR;
-        }
-        else {
-            throw std::invalid_argument("Invalid GFR string");
-        }
-        return GFR_INVALID;
-    }
-
-    static ALQ_TYPE getALQType(std::string alq_string) {
-        if (alq_string == "GRAT") {
-            return ALQ_GRAT;
-        }
-        else if (alq_string == "IGLR") {
-            return ALQ_IGLR;
-        }
-        else if (alq_string == "TGLR") {
-            return ALQ_TGLR;
-        }
-        else if (alq_string == "PUMP") {
-            return ALQ_PUMP;
-        }
-        else if (alq_string == "COMP") {
-            return ALQ_COMP;
-        }
-        else if (alq_string == "BEAN") {
-            return ALQ_BEAN;
-        }
-        else if (alq_string == " ") {
-            return ALQ_UNDEF;
-        }
-        else {
-            throw std::invalid_argument("Invalid ALQ_DEF string");
-        }
-        return ALQ_INVALID;
-    }
+    static FLO_TYPE getFloType(std::string flo_string);
+    static WFR_TYPE getWFRType(std::string wfr_string);
+    static GFR_TYPE getGFRType(std::string gfr_string);
+    static ALQ_TYPE getALQType(std::string alq_string);
 
     static void scaleValues(std::vector<double>& values,
-                            const double& scaling_factor) {
-        if (scaling_factor == 1.0) {
-            return;
-        }
-        else {
-            for (unsigned int i=0; i<values.size(); ++i) {
-                values[i] *= scaling_factor;
-            }
-        }
-    }
+                            const double& scaling_factor);
 
     static void convertFloToSI(const FLO_TYPE& type,
                             std::vector<double>& values,
-                            std::shared_ptr<Opm::UnitSystem> unit_system) {
-        double scaling_factor = 1.0;
-        switch (type) {
-            case FLO_OIL:
-            case FLO_LIQ:
-                scaling_factor = unit_system->parse("LiquidSurfaceVolume/Time")->getSIScaling();
-                break;
-            case FLO_GAS:
-                scaling_factor = unit_system->parse("GasSurfaceVolume/Time")->getSIScaling();
-                break;
-            default:
-                throw std::logic_error("Invalid FLO type");
-        }
-        scaleValues(values, scaling_factor);
-    }
-
+                            std::shared_ptr<Opm::UnitSystem> unit_system);
     static void convertTHPToSI(std::vector<double>& values,
-                               std::shared_ptr<Opm::UnitSystem> unit_system) {
-        double scaling_factor = unit_system->parse("Pressure")->getSIScaling();
-        scaleValues(values, scaling_factor);
-    }
-
+                               std::shared_ptr<Opm::UnitSystem> unit_system);
     static void convertWFRToSI(const WFR_TYPE& type,
                                std::vector<double>& values,
-                               std::shared_ptr<Opm::UnitSystem> unit_system) {
-        double scaling_factor = 1.0;
-        switch (type) {
-            case WFR_WOR:
-            case WFR_WCT:
-                scaling_factor = unit_system->parse("LiquidSurfaceVolume/LiquidSurfaceVolume")->getSIScaling();
-                break;
-            case WFR_WGR:
-                scaling_factor = unit_system->parse("LiquidSurfaceVolume/GasSurfaceVolume")->getSIScaling();
-                break;
-            default:
-                throw std::logic_error("Invalid FLO type");
-        }
-        scaleValues(values, scaling_factor);
-    }
-
+                               std::shared_ptr<Opm::UnitSystem> unit_system);
     static void convertGFRToSI(const GFR_TYPE& type,
                                std::vector<double>& values,
-                               std::shared_ptr<Opm::UnitSystem> unit_system) {
-        double scaling_factor = 1.0;
-        switch (type) {
-            case GFR_GOR:
-            case GFR_GLR:
-                scaling_factor = unit_system->parse("GasSurfaceVolume/LiquidSurfaceVolume")->getSIScaling();
-                break;
-            case GFR_OGR:
-                scaling_factor = unit_system->parse("LiquidSurfaceVolume/GasSurfaceVolume")->getSIScaling();
-                break;
-            default:
-                throw std::logic_error("Invalid FLO type");
-        }
-        scaleValues(values, scaling_factor);
-    }
-
+                               std::shared_ptr<Opm::UnitSystem> unit_system);
     static void convertALQToSI(const ALQ_TYPE& type,
                                std::vector<double>& values,
-                               std::shared_ptr<Opm::UnitSystem> unit_system) {
-        double scaling_factor = 1.0;
-        switch (type) {
-            case ALQ_GRAT:
-                scaling_factor = unit_system->parse("GasSurfaceVolume/Time")->getSIScaling();
-                break;
-            case ALQ_IGLR:
-            case ALQ_TGLR:
-                scaling_factor = unit_system->parse("GasSurfaceVolume/LiquidSurfaceVolume")->getSIScaling();
-                break;
-            case ALQ_PUMP:
-            case ALQ_COMP:
-            case ALQ_BEAN:
-            case ALQ_UNDEF:
-                break;
-            default:
-                throw std::logic_error("Invalid FLO type");
-        }
-        scaleValues(values, scaling_factor);
-    }
+                               std::shared_ptr<Opm::UnitSystem> unit_system);
 };
 
-}
+
+
+} //Namespace opm
 
 
 #endif /* OPM_PARSER_ECLIPSE_ECLIPSESTATE_TABLES_VFPPRODTABLE_HPP_ */

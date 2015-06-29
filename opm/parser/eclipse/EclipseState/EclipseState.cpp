@@ -32,6 +32,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/BoxManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
 
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 
@@ -361,7 +362,7 @@ namespace Opm {
 
         initPlyshlogTables(deck, "PLYSHLOG", m_plyshlogTables);
 
-        initVFPProdTables(deck, "VFPPROD", m_vfpprodTables);
+        initVFPProdTables(deck, m_vfpprodTables);
 
         // the ROCKTAB table comes with additional fun because the number of columns
         //depends on the presence of the RKTRMDIR keyword...
@@ -659,16 +660,16 @@ namespace Opm {
     }
 
     void EclipseState::initVFPProdTables(DeckConstPtr deck,
-                                          const std::string& keywordName,
                                           std::vector<VFPProdTable>& tableVector) {
-        if (!deck->hasKeyword(keywordName)) {
+        if (!deck->hasKeyword(ParserKeywords::VFPPROD::keywordName)) {
             return;
         }
 
-        int num_tables = deck->numKeywords("VFPPROD");
+        int num_tables = deck->numKeywords(ParserKeywords::VFPPROD::keywordName);
+        const auto& keywords = deck->getKeywordList<ParserKeywords::VFPPROD>();
         tableVector.resize(num_tables);
         for (int i=0; i<num_tables; ++i) {
-            const auto& keyword = deck->getKeyword(keywordName, i);
+            const auto& keyword = keywords[i];
             tableVector[i].init(keyword, deck->getActiveUnitSystem());
         }
     }
@@ -697,7 +698,7 @@ namespace Opm {
          registered); the post processor will only run one time.
 
          It is important that post processor is not run prematurely,
-         internal functions in EclipseState should therefor ask for
+         internal functions in EclipseState should therefore ask for
          properties by invoking the getKeyword() method of the
          m_intGridProperties / m_doubleGridProperties() directly and
          not through these methods.
