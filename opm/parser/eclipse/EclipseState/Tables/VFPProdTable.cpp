@@ -206,7 +206,7 @@ void VFPProdTable::init(DeckKeywordConstPtr table, std::shared_ptr<Opm::UnitSyst
 
     //FIXME: Unit for TEMP=Tubing head temperature is not Pressure, see BODY_DEF
     const double table_scaling_factor = deck_unit_system->parse("Pressure")->getSIScaling();
-    for (int i=6; i<table->size(); ++i) {
+    for (size_t i=6; i<table->size(); ++i) {
         const auto& record = table->getRecord(i);
         //Get indices (subtract 1 to get 0-based index)
         int t = getNonEmptyItem<VFPPROD::THP_INDEX>(record)->getInt(0) - 1;
@@ -221,7 +221,7 @@ void VFPProdTable::init(DeckKeywordConstPtr table, std::shared_ptr<Opm::UnitSyst
             throw std::invalid_argument("VFPPROD table does not contain enough FLO values.");
         }
 
-        for (unsigned int f=0; f<bhp_tht.size(); ++f) {
+        for (size_t f=0; f<bhp_tht.size(); ++f) {
             m_data[t][w][g][a][f] = table_scaling_factor*bhp_tht[f];
         }
     }
@@ -402,7 +402,7 @@ void VFPProdTable::scaleValues(std::vector<double>& values,
         return;
     }
     else {
-        for (unsigned int i=0; i<values.size(); ++i) {
+        for (size_t i=0; i<values.size(); ++i) {
             values[i] *= scaling_factor;
         }
     }
