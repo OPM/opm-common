@@ -223,6 +223,8 @@ if (BUILD_EXAMPLES)
 	opm_compile_satellites (${project} examples "" "")
 endif (BUILD_EXAMPLES)
 
+opm_compile_satellites (${project} additionals EXCLUDE_FROM_ALL "")
+
 # attic are programs which are not quite abandoned yet; however, they
 # are not actively maintained, so they should not be a part of the
 # default compile
