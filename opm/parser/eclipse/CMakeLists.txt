@@ -99,6 +99,7 @@ EclipseState/Schedule/Tuning.cpp
 EclipseState/Tables/SingleRecordTable.cpp
 EclipseState/Tables/MultiRecordTable.cpp
 EclipseState/Tables/VFPProdTable.cpp
+EclipseState/Tables/VFPInjTable.cpp
 #
 EclipseState/Grid/GridProperty.cpp
 EclipseState/Grid/Box.cpp

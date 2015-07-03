@@ -1,5 +1,15 @@
 {"name"     :  "VFPINJ" ,
  "sections" : ["SCHEDULE"],
  "size"     :  "UNKNOWN" ,
- "items"    : [{"name" : "STRING" , "value_type" : "STRING" , "size_type" : "ALL"}],
- "comments" : "See further comments in the VFPPROD keyword"}
+ "records"  : [
+[{"name" : "TABLE" , "value_type" : "INT"},
+ {"name" : "DATUM_DEPTH" , "value_type" : "DOUBLE" , "dimension" : "Length"},        
+ {"name" : "RATE_TYPE" , "value_type" : "STRING"},
+ {"name" : "PRESSURE_DEF" , "value_type" : "STRING" , "default" : "THP"},
+ {"name" : "UNITS" , "value_type" : "STRING"},
+ {"name" : "BODY_DEF" , "value_type" : "STRING" , "default" : "BHP"}],
+[{"name" : "FLOW_VALUES" , "value_type" : "DOUBLE" , "size_type" : "ALL"}],
+[{"name" : "THP_VALUES"  , "value_type" : "DOUBLE" , "size_type" : "ALL"}],
+[{"name" : "THP_INDEX" , "value_type" : "INT"},
+ {"name" : "VALUES" , "value_type" : "DOUBLE" , "size_type" : "ALL"}]
+]}

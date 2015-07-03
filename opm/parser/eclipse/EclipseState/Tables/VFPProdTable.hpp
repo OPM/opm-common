@@ -92,7 +92,7 @@ public:
      * @param gfr_type Specifies what gfr_data represents
      * @param alq_type Specifies what alq_data represents
      * @param flo_data Axis for flo_type
-     * @param thp_data Axis for thp_type
+     * @param thp_data Axis for tubing head pressure
      * @param wfr_data Axis for wfr_type
      * @param gfr_data Axis for gfr_type
      * @param alq_data Axis for alq_type

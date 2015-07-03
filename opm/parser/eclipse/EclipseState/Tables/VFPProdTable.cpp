@@ -1,5 +1,23 @@
-#include <opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp>
+/*
+  Copyright 2015 SINTEF ICT, Applied Mathematics.
 
+  This file is part of the Open Porous Media project (OPM).
+
+  OPM is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  OPM is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#include <opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
 
@@ -179,6 +197,7 @@ void VFPProdTable::init(DeckKeywordConstPtr table, std::shared_ptr<Opm::UnitSyst
     shape[3] = na;
     shape[4] = nf;
     m_data.resize(shape);
+    std::fill_n(m_data.data(), m_data.num_elements(), std::nan("0"));
 
     //Check that size of table matches size of axis:
     if (table->size() != nt*nw*ng*na + 6) {
@@ -257,11 +276,12 @@ void VFPProdTable::check() {
             for (size_type g=0; g<m_data.shape()[2]; ++g) {
                 for (size_type a=0; a<m_data.shape()[3]; ++a) {
                     for (size_type f=0; f<m_data.shape()[4]; ++f) {
-                        if (m_data[t][w][g][a][f] > 1.0e10) {
+                        if (std::isnan(m_data[t][w][g][a][f])) {
                             //TODO: Replace with proper log message
-                            std::cerr << "Too large value encountered in VFPPROD in ["
-                                    << t << "," << w << "," << g << "," << a << "," << f << "]="
-                                    << m_data[t][w][g][a][f] << std::endl;
+                            std::cerr << "VFPPROD element ["
+                                    << t << "," << w << "," << g << "," << a << "," << f
+                                    << "] not set!" << std::endl;
+                            throw std::invalid_argument("Missing VFPPROD value");
                         }
                     }
                 }
