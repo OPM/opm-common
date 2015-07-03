@@ -60,6 +60,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/VFPInjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
@@ -67,6 +68,8 @@
 #include <set>
 #include <memory>
 #include <iostream>
+#include <map>
+#include <vector>
 
 namespace Opm {
     class EclipseState {
@@ -136,7 +139,8 @@ namespace Opm {
         const std::vector<SwofTable>& getSwofTables() const;
         const std::vector<SwfnTable>& getSwfnTables() const;
         const std::vector<WatvisctTable>& getWatvisctTables() const;
-        const std::vector<VFPProdTable>& getVFPProdTables() const;
+        const std::map<int, VFPProdTable>& getVFPProdTables() const;
+        const std::map<int, VFPInjTable>& getVFPInjTables() const;
         size_t getNumPhases() const;
 
         // the unit system used by the deck. note that it is rarely needed to convert
@@ -224,7 +228,10 @@ namespace Opm {
                                 std::vector<PlyshlogTable>& tableVector);
 
         void initVFPProdTables(DeckConstPtr deck,
-                               std::vector<VFPProdTable>& tableVector);
+                               std::map<int, VFPProdTable>& tableMap);
+
+        void initVFPInjTables(DeckConstPtr deck,
+                              std::map<int, VFPInjTable>& tableMap);
 
         void setMULTFLT(std::shared_ptr<const Section> section) const;
         void initMULTREGT(DeckConstPtr deck);
@@ -285,7 +292,8 @@ namespace Opm {
         std::vector<SwofTable> m_swofTables;
         std::vector<SwfnTable> m_swfnTables;
         std::vector<WatvisctTable> m_watvisctTables;
-        std::vector<VFPProdTable> m_vfpprodTables;
+        std::map<int, VFPProdTable> m_vfpprodTables;
+        std::map<int, VFPInjTable> m_vfpinjTables;
 
         std::set<enum Phase::PhaseEnum> phases;
         std::string m_title;
