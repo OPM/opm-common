@@ -32,7 +32,8 @@ namespace Opm {
         double  ResVRate;
         double  BHPLimit;
         double  THPLimit;
-        int  VFPTableNumber;
+        int     VFPTableNumber;
+        double  ALQValue;
         bool    predictionMode;
 
         WellProducer::ControlModeEnum controlMode;
