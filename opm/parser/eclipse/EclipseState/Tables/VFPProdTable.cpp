@@ -18,8 +18,9 @@
 */
 
 #include <opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp>
-
 #include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
+#include <algorithm>
+
 
 
 //Anonymous namespace
@@ -222,6 +223,13 @@ void VFPProdTable::init(DeckKeywordConstPtr table, std::shared_ptr<Opm::UnitSyst
         }
 
         for (size_t f=0; f<bhp_tht.size(); ++f) {
+            //Check that all data is within reasonable ranges, defined to be up-to 1.0e10...
+            if (bhp_tht[f] > 1.0e10) {
+                //TODO: Replace with proper log message
+                std::cerr << "VFPPROD element ["
+                        << t << "," << w << "," << g << "," << a << "," << f
+                        << "]=" << bhp_tht[f] << " too large" << std::endl;
+            }
             m_data[t][w][g][a][f] = table_scaling_factor*bhp_tht[f];
         }
     }
@@ -255,11 +263,11 @@ void VFPProdTable::check() {
     assert(m_alq_data.size() > 0);
 
     //Data axis sorted?
-    assert(is_sorted(m_flo_data.begin(), m_flo_data.end()));
-    assert(is_sorted(m_thp_data.begin(), m_thp_data.end()));
-    assert(is_sorted(m_wfr_data.begin(), m_wfr_data.end()));
-    assert(is_sorted(m_gfr_data.begin(), m_gfr_data.end()));
-    assert(is_sorted(m_alq_data.begin(), m_alq_data.end()));
+    assert(std::is_sorted(m_flo_data.begin(), m_flo_data.end()));
+    assert(std::is_sorted(m_thp_data.begin(), m_thp_data.end()));
+    assert(std::is_sorted(m_wfr_data.begin(), m_wfr_data.end()));
+    assert(std::is_sorted(m_gfr_data.begin(), m_gfr_data.end()));
+    assert(std::is_sorted(m_alq_data.begin(), m_alq_data.end()));
 
     //Check data size matches axes
     assert(m_data.num_dimensions() == 5);
@@ -269,7 +277,8 @@ void VFPProdTable::check() {
     assert(m_data.shape()[3] == m_alq_data.size());
     assert(m_data.shape()[4] == m_flo_data.size());
 
-    //Finally, check that all data is within reasonable ranges, defined to be up-to 1.0e10...
+
+    //Check that all elements have been set
     typedef array_type::size_type size_type;
     for (size_type t=0; t<m_data.shape()[0]; ++t) {
         for (size_type w=0; w<m_data.shape()[1]; ++w) {
@@ -283,6 +292,30 @@ void VFPProdTable::check() {
                                     << "] not set!" << std::endl;
                             throw std::invalid_argument("Missing VFPPROD value");
                         }
+                    }
+                }
+            }
+        }
+    }
+
+
+    for (size_type w=0; w<m_data.shape()[1]; ++w) {
+        for (size_type g=0; g<m_data.shape()[2]; ++g) {
+            for (size_type a=0; a<m_data.shape()[3]; ++a) {
+                for (size_type f=0; f<m_data.shape()[4]; ++f) {
+                    double bhp_last = m_data[0][w][g][a][f];
+                    for (size_type t=0; t<m_data.shape()[0]; ++t) {
+                        //Check that bhp(thp) is a monotonic increasing function.
+                        //If this is not the case, we might not be able to determine
+                        //the thp from the bhp...
+                        if (m_data[t][w][g][a][f] < bhp_last) {
+                            //TODO: Replace with proper log message
+                            std::cerr << "VFPPROD bhp(thp) not monotonic increasing: "
+                                    << "Element ["
+                                    << t << "," << w << "," << g << "," << a << "," << f
+                                    << "] < " << bhp_last << std::endl;
+                        }
+                        bhp_last = m_data[t][w][g][a][f];
                     }
                 }
             }
