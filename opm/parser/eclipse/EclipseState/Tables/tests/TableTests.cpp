@@ -716,7 +716,7 @@ VFPPROD \n\
         Opm::VFPProdTable vfpprodTable;
 
 
-        BOOST_CHECK_THROW(vfpprodTable.init(vfpprodKeyword, units), std::invalid_argument);
+        BOOST_CHECK_THROW(vfpprodTable.init(vfpprodKeyword, units), std::out_of_range);
     }
 
 
