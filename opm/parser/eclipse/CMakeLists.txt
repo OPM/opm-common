@@ -241,6 +241,8 @@ EclipseState/Tables/OilvisctTable.hpp
 EclipseState/Tables/GasvisctTable.hpp
 EclipseState/Tables/WatvisctTable.hpp
 EclipseState/Tables/PvtgOuterTable.hpp
+EclipseState/Tables/VFPProdTable.hpp
+EclipseState/Tables/VFPInjTable.hpp
 #
 Utility/WconinjeWrapper.hpp
 Utility/CompdatWrapper.hpp
