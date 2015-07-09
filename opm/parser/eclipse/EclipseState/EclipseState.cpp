@@ -936,8 +936,8 @@ namespace Opm {
             SupportedDoubleKeywordInfo( "PERMY" , nan,  distributeTopLayer , "Permeability" ),
             SupportedDoubleKeywordInfo( "PERMZ" , nan,  distributeTopLayer , "Permeability" ),
             SupportedDoubleKeywordInfo( "PERMXY", nan,  distributeTopLayer , "Permeability" ), // E300 only
-            SupportedDoubleKeywordInfo( "PERMXZ", nan,  distributeTopLayer , "Permeability" ), // E300 only
             SupportedDoubleKeywordInfo( "PERMYZ", nan,  distributeTopLayer , "Permeability" ), // E300 only
+            SupportedDoubleKeywordInfo( "PERMZX", nan,  distributeTopLayer , "Permeability" ), // E300 only
 
             // the transmissibility keywords for neighboring
             // conections. note that these keywords don't seem to
