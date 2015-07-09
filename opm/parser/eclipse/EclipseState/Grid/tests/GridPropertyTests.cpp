@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(ADD) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(GridPropertyInitializers) {
+BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
     const char *deckString =
         "RUNSPEC\n"
         "\n"
@@ -353,6 +353,15 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitializers) {
     auto deck = parser->parseString(deckString);
 
     auto eclipseState = std::make_shared<Opm::EclipseState>(deck);
+
+    // make sure that EclipseState throws if it is bugged about an _unsupported_ keyword
+    BOOST_CHECK_THROW(eclipseState->hasIntGridProperty("ISWU"), std::logic_error);
+    BOOST_CHECK_THROW(eclipseState->hasDoubleGridProperty("FLUXNUM"), std::logic_error);
+
+    // make sure that EclipseState does not throw if it is asked for a supported grid
+    // property that is not contained  in the deck
+    BOOST_CHECK(!eclipseState->hasDoubleGridProperty("ISWU"));
+    BOOST_CHECK(!eclipseState->hasIntGridProperty("FLUXNUM"));
 
     BOOST_CHECK(eclipseState->hasIntGridProperty("SATNUM"));
     BOOST_CHECK(eclipseState->hasIntGridProperty("IMBNUM"));
