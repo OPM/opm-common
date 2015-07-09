@@ -281,27 +281,32 @@ void VFPProdTable::check() {
     }
 
 
+    //Check that bhp(thp) is a monotonic increasing function.
+    //If this is not the case, we might not be able to determine
+    //the thp from the bhp easily
+    int num_decreasing = 0;
     for (size_type w=0; w<m_data.shape()[1]; ++w) {
         for (size_type g=0; g<m_data.shape()[2]; ++g) {
             for (size_type a=0; a<m_data.shape()[3]; ++a) {
                 for (size_type f=0; f<m_data.shape()[4]; ++f) {
                     double bhp_last = m_data[0][w][g][a][f];
                     for (size_type t=0; t<m_data.shape()[0]; ++t) {
-                        //Check that bhp(thp) is a monotonic increasing function.
-                        //If this is not the case, we might not be able to determine
-                        //the thp from the bhp...
                         if (m_data[t][w][g][a][f] < bhp_last) {
-                            //TODO: Replace with proper log message
-                            std::cerr << "VFPPROD bhp(thp) not monotonic increasing: "
-                                    << "Element ["
-                                    << t << "," << w << "," << g << "," << a << "," << f
-                                    << "] < " << bhp_last << std::endl;
+                            ++num_decreasing;
                         }
                         bhp_last = m_data[t][w][g][a][f];
                     }
                 }
             }
         }
+    }
+
+    if (num_decreasing > 0) {
+        //TODO: Replace with proper log message
+        std::cerr << "VFPPROD bhp versus thp not monotonic increasing: "
+                << num_decreasing << "/" << m_data.num_elements()
+                << "(" << static_cast<int>(100 * num_decreasing / (double) m_data.num_elements()) << "%)"
+                << " elements failed test" << std::endl;
     }
 }
 
