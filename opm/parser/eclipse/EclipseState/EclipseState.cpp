@@ -662,10 +662,16 @@ namespace Opm {
     }
 
     bool EclipseState::hasIntGridProperty(const std::string& keyword) const {
+        if (!m_intGridProperties->supportsKeyword( keyword ))
+            throw std::logic_error("Integer grid property " + keyword + " is unsupported!");
+
          return m_intGridProperties->hasKeyword( keyword );
     }
 
     bool EclipseState::hasDoubleGridProperty(const std::string& keyword) const {
+        if (!m_doubleGridProperties->supportsKeyword( keyword ))
+            throw std::logic_error("Double grid property " + keyword + " is unsupported!");
+
          return m_doubleGridProperties->hasKeyword( keyword );
     }
 
