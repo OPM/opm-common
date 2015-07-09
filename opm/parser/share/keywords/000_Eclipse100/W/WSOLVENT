@@ -1,0 +1,8 @@
+{
+  "name" : "WSOLVENT",
+  "sections" : [ "SPECIAL", "SCHEDULE" ],
+  "items" :
+    [{"name" : "WELL"                        , "value_type" : "STRING"},
+     {"name" : "SOLVENT_FRACTION"            , "value_type" : "DOUBLE" , "dimension" : "1"}
+    ]
+}
