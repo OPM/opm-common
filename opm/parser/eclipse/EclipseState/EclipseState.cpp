@@ -726,10 +726,16 @@ namespace Opm {
     }
 
     bool EclipseState::hasIntGridProperty(const std::string& keyword) const {
+        if (!m_intGridProperties->supportsKeyword( keyword ))
+            throw std::logic_error("Integer grid property " + keyword + " is unsupported!");
+
          return m_intGridProperties->hasKeyword( keyword );
     }
 
     bool EclipseState::hasDoubleGridProperty(const std::string& keyword) const {
+        if (!m_doubleGridProperties->supportsKeyword( keyword ))
+            throw std::logic_error("Double grid property " + keyword + " is unsupported!");
+
          return m_doubleGridProperties->hasKeyword( keyword );
     }
 
@@ -838,8 +844,24 @@ namespace Opm {
         const auto SWCRLookup = std::make_shared<SWCREndpointInitializer<>>(*deck, *this);
         const auto ISWCRLookup = std::make_shared<ISWCREndpointInitializer<>>(*deck, *this);
 
-
-
+        const auto PCWLookup = std::make_shared<PCWEndpointInitializer<>>(*deck, *this);
+        const auto IPCWLookup = std::make_shared<IPCWEndpointInitializer<>>(*deck, *this);
+        const auto PCGLookup = std::make_shared<PCGEndpointInitializer<>>(*deck, *this);
+        const auto IPCGLookup = std::make_shared<IPCGEndpointInitializer<>>(*deck, *this);
+        const auto KRWLookup = std::make_shared<KRWEndpointInitializer<>>(*deck, *this);
+        const auto IKRWLookup = std::make_shared<IKRWEndpointInitializer<>>(*deck, *this);
+        const auto KRWRLookup = std::make_shared<KRWREndpointInitializer<>>(*deck, *this);
+        const auto IKRWRLookup = std::make_shared<IKRWREndpointInitializer<>>(*deck, *this);
+        const auto KROLookup = std::make_shared<KROEndpointInitializer<>>(*deck, *this);
+        const auto IKROLookup = std::make_shared<IKROEndpointInitializer<>>(*deck, *this);
+        const auto KRORWLookup = std::make_shared<KRORWEndpointInitializer<>>(*deck, *this);
+        const auto IKRORWLookup = std::make_shared<IKRORWEndpointInitializer<>>(*deck, *this);
+        const auto KRORGLookup = std::make_shared<KRORGEndpointInitializer<>>(*deck, *this);
+        const auto IKRORGLookup = std::make_shared<IKRORGEndpointInitializer<>>(*deck, *this);
+        const auto KRGLookup = std::make_shared<KRGEndpointInitializer<>>(*deck, *this);
+        const auto IKRGLookup = std::make_shared<IKRGEndpointInitializer<>>(*deck, *this);
+        const auto KRGRLookup = std::make_shared<KRGREndpointInitializer<>>(*deck, *this);
+        const auto IKRGRLookup = std::make_shared<IKRGREndpointInitializer<>>(*deck, *this);
 
         const auto tempLookup = std::make_shared<GridPropertyTemperatureLookupInitializer<>>(*deck, *this);
         const auto distributeTopLayer = std::make_shared<const GridPropertyPostProcessor::DistributeTopLayer>(*this);
@@ -983,6 +1005,153 @@ namespace Opm {
             SupportedDoubleKeywordInfo( "ISWCRZ"   , ISWCRLookup, "1" ),
             SupportedDoubleKeywordInfo( "ISWCRZ-"  , ISWCRLookup, "1" ),
 
+            // keywords to specify the scaled oil-water capillary pressure
+            SupportedDoubleKeywordInfo( "PCW"    , PCWLookup, "Pressure" ),
+            SupportedDoubleKeywordInfo( "PCWX"   , PCWLookup, "Pressure" ),
+            SupportedDoubleKeywordInfo( "PCWX-"  , PCWLookup, "Pressure" ),
+            SupportedDoubleKeywordInfo( "PCWY"   , PCWLookup, "Pressure" ),
+            SupportedDoubleKeywordInfo( "PCWY-"  , PCWLookup, "Pressure" ),
+            SupportedDoubleKeywordInfo( "PCWZ"   , PCWLookup, "Pressure" ),
+            SupportedDoubleKeywordInfo( "PCWZ-"  , PCWLookup, "Pressure" ),
+            SupportedDoubleKeywordInfo( "IPCW"   , IPCWLookup, "Pressure" ),
+            SupportedDoubleKeywordInfo( "IPCWX"  , IPCWLookup, "Pressure" ),
+            SupportedDoubleKeywordInfo( "IPCWX-" , IPCWLookup, "Pressure" ),
+            SupportedDoubleKeywordInfo( "IPCWY"  , IPCWLookup, "Pressure" ),
+            SupportedDoubleKeywordInfo( "IPCWY-" , IPCWLookup, "Pressure" ),
+            SupportedDoubleKeywordInfo( "IPCWZ"  , IPCWLookup, "Pressure" ),
+            SupportedDoubleKeywordInfo( "IPCWZ-" , IPCWLookup, "Pressure" ),
+
+            // keywords to specify the scaled gas-oil capillary pressure
+            SupportedDoubleKeywordInfo( "PCG"    , PCGLookup, "Pressure" ),
+            SupportedDoubleKeywordInfo( "PCGX"   , PCGLookup, "Pressure" ),
+            SupportedDoubleKeywordInfo( "PCGX-"  , PCGLookup, "Pressure" ),
+            SupportedDoubleKeywordInfo( "PCGY"   , PCGLookup, "Pressure" ),
+            SupportedDoubleKeywordInfo( "PCGY-"  , PCGLookup, "Pressure" ),
+            SupportedDoubleKeywordInfo( "PCGZ"   , PCGLookup, "Pressure" ),
+            SupportedDoubleKeywordInfo( "PCGZ-"  , PCGLookup, "Pressure" ),
+            SupportedDoubleKeywordInfo( "IPCG"   , IPCGLookup, "Pressure" ),
+            SupportedDoubleKeywordInfo( "IPCGX"  , IPCGLookup, "Pressure" ),
+            SupportedDoubleKeywordInfo( "IPCGX-" , IPCGLookup, "Pressure" ),
+            SupportedDoubleKeywordInfo( "IPCGY"  , IPCGLookup, "Pressure" ),
+            SupportedDoubleKeywordInfo( "IPCGY-" , IPCGLookup, "Pressure" ),
+            SupportedDoubleKeywordInfo( "IPCGZ"  , IPCGLookup, "Pressure" ),
+            SupportedDoubleKeywordInfo( "IPCGZ-" , IPCGLookup, "Pressure" ),
+
+            // keywords to specify the scaled water relative permeability
+            SupportedDoubleKeywordInfo( "KRW"    , KRWLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRWX"   , KRWLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRWX-"  , KRWLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRWY"   , KRWLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRWY-"  , KRWLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRWZ"   , KRWLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRWZ-"  , KRWLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRW"   , IKRWLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRWX"  , IKRWLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRWX-" , IKRWLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRWY"  , IKRWLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRWY-" , IKRWLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRWZ"  , IKRWLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRWZ-" , IKRWLookup, "1" ),
+
+            // keywords to specify the scaled water relative permeability at the critical
+            // saturation
+            SupportedDoubleKeywordInfo( "KRWR"    , KRWRLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRWRX"   , KRWRLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRWRX-"  , KRWRLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRWRY"   , KRWRLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRWRY-"  , KRWRLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRWRZ"   , KRWRLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRWRZ-"  , KRWRLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRWR"   , IKRWRLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRWRX"  , IKRWRLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRWRX-" , IKRWRLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRWRY"  , IKRWRLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRWRY-" , IKRWRLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRWRZ"  , IKRWRLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRWRZ-" , IKRWRLookup, "1" ),
+
+            // keywords to specify the scaled oil relative permeability
+            SupportedDoubleKeywordInfo( "KRO"    , KROLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KROX"   , KROLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KROX-"  , KROLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KROY"   , KROLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KROY-"  , KROLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KROZ"   , KROLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KROZ-"  , KROLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRO"   , IKROLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKROX"  , IKROLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKROX-" , IKROLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKROY"  , IKROLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKROY-" , IKROLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKROZ"  , IKROLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKROZ-" , IKROLookup, "1" ),
+
+            // keywords to specify the scaled water relative permeability at the critical
+            // water saturation
+            SupportedDoubleKeywordInfo( "KRORW"    , KRORWLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRORWX"   , KRORWLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRORWX-"  , KRORWLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRORWY"   , KRORWLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRORWY-"  , KRORWLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRORWZ"   , KRORWLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRORWZ-"  , KRORWLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRORW"   , IKRORWLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRORWX"  , IKRORWLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRORWX-" , IKRORWLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRORWY"  , IKRORWLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRORWY-" , IKRORWLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRORWZ"  , IKRORWLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRORWZ-" , IKRORWLookup, "1" ),
+
+            // keywords to specify the scaled water relative permeability at the critical
+            // water saturation
+            SupportedDoubleKeywordInfo( "KRORG"    , KRORGLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRORGX"   , KRORGLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRORGX-"  , KRORGLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRORGY"   , KRORGLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRORGY-"  , KRORGLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRORGZ"   , KRORGLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRORGZ-"  , KRORGLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRORG"   , IKRORGLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRORGX"  , IKRORGLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRORGX-" , IKRORGLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRORGY"  , IKRORGLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRORGY-" , IKRORGLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRORGZ"  , IKRORGLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRORGZ-" , IKRORGLookup, "1" ),
+
+            // keywords to specify the scaled gas relative permeability
+            SupportedDoubleKeywordInfo( "KRG"    , KRGLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRGX"   , KRGLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRGX-"  , KRGLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRGY"   , KRGLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRGY-"  , KRGLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRGZ"   , KRGLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRGZ-"  , KRGLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRG"   , IKRGLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRGX"  , IKRGLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRGX-" , IKRGLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRGY"  , IKRGLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRGY-" , IKRGLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRGZ"  , IKRGLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRGZ-" , IKRGLookup, "1" ),
+
+            // keywords to specify the scaled gas relative permeability
+            SupportedDoubleKeywordInfo( "KRGR"    , KRGRLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRGRX"   , KRGRLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRGRX-"  , KRGRLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRGRY"   , KRGRLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRGRY-"  , KRGRLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRGRZ"   , KRGRLookup, "1" ),
+            SupportedDoubleKeywordInfo( "KRGRZ-"  , KRGRLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRGR"   , IKRGRLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRGRX"  , IKRGRLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRGRX-" , IKRGRLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRGRY"  , IKRGRLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRGRY-" , IKRGRLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRGRZ"  , IKRGRLookup, "1" ),
+            SupportedDoubleKeywordInfo( "IKRGRZ-" , IKRGRLookup, "1" ),
+
             // cell temperature (E300 only, but makes a lot of sense for E100, too)
             SupportedDoubleKeywordInfo( "TEMPI"    , tempLookup, "Temperature" ),
 
@@ -1000,8 +1169,8 @@ namespace Opm {
             SupportedDoubleKeywordInfo( "PERMY" , nan,  distributeTopLayer , "Permeability" ),
             SupportedDoubleKeywordInfo( "PERMZ" , nan,  distributeTopLayer , "Permeability" ),
             SupportedDoubleKeywordInfo( "PERMXY", nan,  distributeTopLayer , "Permeability" ), // E300 only
-            SupportedDoubleKeywordInfo( "PERMXZ", nan,  distributeTopLayer , "Permeability" ), // E300 only
             SupportedDoubleKeywordInfo( "PERMYZ", nan,  distributeTopLayer , "Permeability" ), // E300 only
+            SupportedDoubleKeywordInfo( "PERMZX", nan,  distributeTopLayer , "Permeability" ), // E300 only
 
             // the transmissibility keywords for neighboring
             // conections. note that these keywords don't seem to

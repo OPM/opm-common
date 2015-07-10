@@ -166,6 +166,64 @@ protected:
         }
     }
 
+    void findVerticalPoints( ) const {
+
+        const std::vector<SwofTable>& swofTables = m_eclipseState.getSwofTables();
+        const std::vector<SgofTable>& sgofTables = m_eclipseState.getSgofTables();
+        auto tabdims = m_eclipseState.getTabdims();
+        int numSatTables = tabdims->getNumSatTables();
+
+        m_maxPcog.resize( numSatTables , 0 );
+        m_maxPcow.resize( numSatTables , 0 );
+        m_maxKrg.resize( numSatTables , 0 );
+        m_krgr.resize( numSatTables , 0 );
+        m_maxKro.resize( numSatTables , 0 );
+        m_krorw.resize( numSatTables , 0 );
+        m_krorg.resize( numSatTables , 0 );
+        m_maxKrw.resize( numSatTables , 0 );
+        m_krwr.resize( numSatTables , 0 );
+
+        for (int tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
+            // find the maximum output values of the oil-gas system
+            m_maxPcog[tableIdx] = sgofTables[tableIdx].getPcogColumn().front();
+            m_maxKrg[tableIdx] = sgofTables[tableIdx].getKrgColumn().back();
+
+            m_krgr[tableIdx] = sgofTables[tableIdx].getKrgColumn().front();
+            m_krwr[tableIdx] = swofTables[tableIdx].getKrwColumn().front();
+
+            // find the oil relperm which corresponds to the critical water saturation
+            const auto &krwCol = swofTables[tableIdx].getKrwColumn();
+            const auto &krowCol = swofTables[tableIdx].getKrowColumn();
+            for (int rowIdx = 0; rowIdx < krwCol.size(); ++rowIdx) {
+                if (krwCol[rowIdx] == 0.0) {
+                    m_krorw[tableIdx] = krowCol[rowIdx - 1];
+                    break;
+                }
+            }
+
+            // find the oil relperm which corresponds to the critical gas saturation
+            const auto &krgCol = sgofTables[tableIdx].getKrgColumn();
+            const auto &krogCol = sgofTables[tableIdx].getKrogColumn();
+            for (int rowIdx = 0; rowIdx < krgCol.size(); ++rowIdx) {
+                if (krgCol[rowIdx] == 0.0) {
+                    m_krorg[tableIdx] = krogCol[rowIdx - 1];
+                    break;
+                }
+            }
+
+            // find the maximum output values of the water-oil system. the maximum oil
+            // relperm is possibly wrong because we have two oil relperms in a threephase
+            // system. the documentation is very ambiguos here, though: it says that the
+            // oil relperm at the maximum oil saturation is scaled according to maximum
+            // specified the KRO keyword. the first part of the statement points at
+            // scaling the resultant threephase oil relperm, but then the gas saturation
+            // is not taken into account which means that some twophase quantity must be
+            // scaled.
+            m_maxPcow[tableIdx] = swofTables[tableIdx].getPcowColumn().front();
+            m_maxKro[tableIdx] = swofTables[tableIdx].getKrowColumn().front();
+            m_maxKrw[tableIdx] = swofTables[tableIdx].getKrwColumn().back();
+        }
+    }
 
 
     template <class TableType>
@@ -207,6 +265,16 @@ protected:
     mutable std::vector<double> m_maxGasSat;
     mutable std::vector<double> m_minWaterSat;
     mutable std::vector<double> m_maxWaterSat;
+
+    mutable std::vector<double> m_maxPcow;
+    mutable std::vector<double> m_maxPcog;
+    mutable std::vector<double> m_maxKrw;
+    mutable std::vector<double> m_krwr;
+    mutable std::vector<double> m_maxKro;
+    mutable std::vector<double> m_krorw;
+    mutable std::vector<double> m_krorg;
+    mutable std::vector<double> m_maxKrg;
+    mutable std::vector<double> m_krgr;
 };
 
 
@@ -238,6 +306,8 @@ public:
         satnum->checkLimits(1 , numSatTables);
         this->findSaturationEndpoints( );
         this->findCriticalPoints( );
+        this->findVerticalPoints( );
+
         // acctually assign the defaults. if the ENPVD keyword was specified in the deck,
         // this currently cannot be done because we would need the Z-coordinate of the
         // cell and we would need to know how the simulator wants to interpolate between
@@ -289,6 +359,7 @@ public:
         imbnum->checkLimits(1 , numSatTables);
         this->findSaturationEndpoints( );
         this->findCriticalPoints( );
+        this->findVerticalPoints( );
 
         // acctually assign the defaults. if the ENPVD keyword was specified in the deck,
         // this currently cannot be done because we would need the Z-coordinate of the
@@ -599,6 +670,332 @@ public:
     }
 };
 
+/*****************************************************************/
+
+template <class EclipseState=Opm::EclipseState,
+          class Deck=Opm::Deck>
+class PCWEndpointInitializer
+    : public SatnumEndpointInitializer<EclipseState,Deck>
+{
+public:
+    PCWEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
+        : SatnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
+    { }
+
+    void apply(std::vector<double>& values) const
+    {
+        this->satnumApply(values , "PCW" , this->m_maxPcow , false);
+    }
+};
+
+
+
+template <class EclipseState=Opm::EclipseState,
+          class Deck=Opm::Deck>
+class IPCWEndpointInitializer
+    : public ImbnumEndpointInitializer<EclipseState,Deck>
+{
+public:
+    IPCWEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
+        : ImbnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
+    { }
+
+    void apply(std::vector<double>& values) const
+    {
+        this->imbnumApply(values , "IPCW" , this->m_maxPcow , false);
+    }
+};
+
+
+/*****************************************************************/
+
+template <class EclipseState=Opm::EclipseState,
+          class Deck=Opm::Deck>
+class PCGEndpointInitializer
+    : public SatnumEndpointInitializer<EclipseState,Deck>
+{
+public:
+    PCGEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
+        : SatnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
+    { }
+
+    void apply(std::vector<double>& values) const
+    {
+        this->satnumApply(values , "PCG" , this->m_maxPcog , false);
+    }
+};
+
+
+
+template <class EclipseState=Opm::EclipseState,
+          class Deck=Opm::Deck>
+class IPCGEndpointInitializer
+    : public ImbnumEndpointInitializer<EclipseState,Deck>
+{
+public:
+    IPCGEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
+        : ImbnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
+    { }
+
+    void apply(std::vector<double>& values) const
+    {
+        this->imbnumApply(values , "IPCG" , this->m_maxPcog , false);
+    }
+};
+
+/*****************************************************************/
+
+template <class EclipseState=Opm::EclipseState,
+          class Deck=Opm::Deck>
+class KRWEndpointInitializer
+    : public SatnumEndpointInitializer<EclipseState,Deck>
+{
+public:
+    KRWEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
+        : SatnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
+    { }
+
+    void apply(std::vector<double>& values) const
+    {
+        this->satnumApply(values , "KRW" , this->m_maxKrw , false);
+    }
+};
+
+
+
+template <class EclipseState=Opm::EclipseState,
+          class Deck=Opm::Deck>
+class IKRWEndpointInitializer
+    : public ImbnumEndpointInitializer<EclipseState,Deck>
+{
+public:
+    IKRWEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
+        : ImbnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
+    { }
+
+    void apply(std::vector<double>& values) const
+    {
+        this->imbnumApply(values , "IKRW" , this->m_maxKrw , false);
+    }
+};
+
+
+/*****************************************************************/
+
+template <class EclipseState=Opm::EclipseState,
+          class Deck=Opm::Deck>
+class KRWREndpointInitializer
+    : public SatnumEndpointInitializer<EclipseState,Deck>
+{
+public:
+    KRWREndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
+        : SatnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
+    { }
+
+    void apply(std::vector<double>& values) const
+    {
+        this->satnumApply(values , "KRWR" , this->m_krwr , false);
+    }
+};
+
+
+
+template <class EclipseState=Opm::EclipseState,
+          class Deck=Opm::Deck>
+class IKRWREndpointInitializer
+    : public ImbnumEndpointInitializer<EclipseState,Deck>
+{
+public:
+    IKRWREndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
+        : ImbnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
+    { }
+
+    void apply(std::vector<double>& values) const
+    {
+        this->imbnumApply(values , "IKRWR" , this->m_krwr , false);
+    }
+};
+
+/*****************************************************************/
+
+template <class EclipseState=Opm::EclipseState,
+          class Deck=Opm::Deck>
+class KROEndpointInitializer
+    : public SatnumEndpointInitializer<EclipseState,Deck>
+{
+public:
+    KROEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
+        : SatnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
+    { }
+
+    void apply(std::vector<double>& values) const
+    {
+        this->satnumApply(values , "KRO" , this->m_maxKro , false);
+    }
+};
+
+
+
+template <class EclipseState=Opm::EclipseState,
+          class Deck=Opm::Deck>
+class IKROEndpointInitializer
+    : public ImbnumEndpointInitializer<EclipseState,Deck>
+{
+public:
+    IKROEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
+        : ImbnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
+    { }
+
+    void apply(std::vector<double>& values) const
+    {
+        this->imbnumApply(values , "IKRO" , this->m_maxKro , false);
+    }
+};
+
+
+/*****************************************************************/
+
+template <class EclipseState=Opm::EclipseState,
+          class Deck=Opm::Deck>
+class KRORWEndpointInitializer
+    : public SatnumEndpointInitializer<EclipseState,Deck>
+{
+public:
+    KRORWEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
+        : SatnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
+    { }
+
+    void apply(std::vector<double>& values) const
+    {
+        this->satnumApply(values , "KRORW" , this->m_krorw , false);
+    }
+};
+
+
+
+template <class EclipseState=Opm::EclipseState,
+          class Deck=Opm::Deck>
+class IKRORWEndpointInitializer
+    : public ImbnumEndpointInitializer<EclipseState,Deck>
+{
+public:
+    IKRORWEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
+        : ImbnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
+    { }
+
+    void apply(std::vector<double>& values) const
+    {
+        this->imbnumApply(values , "IKRORW" , this->m_krorw , false);
+    }
+};
+
+/*****************************************************************/
+
+template <class EclipseState=Opm::EclipseState,
+          class Deck=Opm::Deck>
+class KRORGEndpointInitializer
+    : public SatnumEndpointInitializer<EclipseState,Deck>
+{
+public:
+    KRORGEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
+        : SatnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
+    { }
+
+    void apply(std::vector<double>& values) const
+    {
+        this->satnumApply(values , "KRORG" , this->m_krorg , false);
+    }
+};
+
+
+
+template <class EclipseState=Opm::EclipseState,
+          class Deck=Opm::Deck>
+class IKRORGEndpointInitializer
+    : public ImbnumEndpointInitializer<EclipseState,Deck>
+{
+public:
+    IKRORGEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
+        : ImbnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
+    { }
+
+    void apply(std::vector<double>& values) const
+    {
+        this->imbnumApply(values , "IKRORG" , this->m_krorg , false);
+    }
+};
+
+/*****************************************************************/
+
+template <class EclipseState=Opm::EclipseState,
+          class Deck=Opm::Deck>
+class KRGEndpointInitializer
+    : public SatnumEndpointInitializer<EclipseState,Deck>
+{
+public:
+    KRGEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
+        : SatnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
+    { }
+
+    void apply(std::vector<double>& values) const
+    {
+        this->satnumApply(values , "KRG" , this->m_maxKrg , false);
+    }
+};
+
+
+
+template <class EclipseState=Opm::EclipseState,
+          class Deck=Opm::Deck>
+class IKRGEndpointInitializer
+    : public ImbnumEndpointInitializer<EclipseState,Deck>
+{
+public:
+    IKRGEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
+        : ImbnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
+    { }
+
+    void apply(std::vector<double>& values) const
+    {
+        this->imbnumApply(values , "IKRG" , this->m_maxKrg , false);
+    }
+};
+
+/*****************************************************************/
+
+template <class EclipseState=Opm::EclipseState,
+          class Deck=Opm::Deck>
+class KRGREndpointInitializer
+    : public SatnumEndpointInitializer<EclipseState,Deck>
+{
+public:
+    KRGREndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
+        : SatnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
+    { }
+
+    void apply(std::vector<double>& values) const
+    {
+        this->satnumApply(values , "KRGR" , this->m_krgr , false);
+    }
+};
+
+
+
+template <class EclipseState=Opm::EclipseState,
+          class Deck=Opm::Deck>
+class IKRGREndpointInitializer
+    : public ImbnumEndpointInitializer<EclipseState,Deck>
+{
+public:
+    IKRGREndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
+        : ImbnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
+    { }
+
+    void apply(std::vector<double>& values) const
+    {
+        this->imbnumApply(values , "IKRGR" , this->m_krgr , false);
+    }
+};
 
 }
 
