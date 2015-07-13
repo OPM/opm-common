@@ -303,6 +303,10 @@ namespace Opm {
         return m_nnc;
     }
 
+    bool EclipseState::hasNNC() const {
+        return m_nnc->hasNNC();
+    }
+
     std::string EclipseState::getTitle() const {
         return m_title;
     }
