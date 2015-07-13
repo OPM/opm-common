@@ -875,330 +875,330 @@ namespace Opm {
         // Note that the variants of grid keywords for radial grids
         // are not supported. (and hopefully never will be)
         typedef GridProperties<double>::SupportedKeywordInfo SupportedDoubleKeywordInfo;
-        std::shared_ptr<std::vector<SupportedDoubleKeywordInfo> > supportedDoubleKeywords(new std::vector<SupportedDoubleKeywordInfo>{
-            // keywords to specify the scaled connate gas
-            // saturations.
-            SupportedDoubleKeywordInfo( "SGL"    , SGLLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGLX"   , SGLLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGLX-"  , SGLLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGLY"   , SGLLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGLY-"  , SGLLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGLZ"   , SGLLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGLZ-"  , SGLLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGL"   , ISGLLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGLX"  , ISGLLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGLX-" , ISGLLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGLY"  , ISGLLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGLY-" , ISGLLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGLZ"  , ISGLLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGLZ-" , ISGLLookup, "1" ),
+        std::shared_ptr<std::vector<SupportedDoubleKeywordInfo> > supportedDoubleKeywords(new std::vector<SupportedDoubleKeywordInfo>);
 
-            // keywords to specify the connate water saturation.
-            SupportedDoubleKeywordInfo( "SWL"    , SWLLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SWLX"   , SWLLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SWLX-"  , SWLLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SWLY"   , SWLLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SWLY-"  , SWLLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SWLZ"   , SWLLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SWLZ-"  , SWLLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWL"   , ISWLLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWLX"  , ISWLLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWLX-" , ISWLLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWLY"  , ISWLLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWLY-" , ISWLLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWLZ"  , ISWLLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWLZ-" , ISWLLookup, "1" ),
+        // keywords to specify the scaled connate gas
+        // saturations.
+        supportedDoubleKeywords->emplace_back( "SGL"    , SGLLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SGLX"   , SGLLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SGLX-"  , SGLLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SGLY"   , SGLLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SGLY-"  , SGLLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SGLZ"   , SGLLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SGLZ-"  , SGLLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISGL"   , ISGLLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISGLX"  , ISGLLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISGLX-" , ISGLLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISGLY"  , ISGLLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISGLY-" , ISGLLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISGLZ"  , ISGLLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISGLZ-" , ISGLLookup, "1" );
 
-            // keywords to specify the maximum gas saturation.
-            SupportedDoubleKeywordInfo( "SGU"    , SGULookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGUX"   , SGULookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGUX-"  , SGULookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGUY"   , SGULookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGUY-"  , SGULookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGUZ"   , SGULookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGUZ-"  , SGULookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGU"   , ISGULookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGUX"  , ISGULookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGUX-" , ISGULookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGUY"  , ISGULookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGUY-" , ISGULookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGUZ"  , ISGULookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGUZ-" , ISGULookup, "1" ),
+        // keywords to specify the connate water saturation.
+        supportedDoubleKeywords->emplace_back( "SWL"    , SWLLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SWLX"   , SWLLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SWLX-"  , SWLLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SWLY"   , SWLLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SWLY-"  , SWLLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SWLZ"   , SWLLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SWLZ-"  , SWLLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISWL"   , ISWLLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISWLX"  , ISWLLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISWLX-" , ISWLLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISWLY"  , ISWLLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISWLY-" , ISWLLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISWLZ"  , ISWLLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISWLZ-" , ISWLLookup, "1" );
 
-            // keywords to specify the maximum water saturation.
-            SupportedDoubleKeywordInfo( "SWU"    , SWULookup, "1" ),
-            SupportedDoubleKeywordInfo( "SWUX"   , SWULookup, "1" ),
-            SupportedDoubleKeywordInfo( "SWUX-"  , SWULookup, "1" ),
-            SupportedDoubleKeywordInfo( "SWUY"   , SWULookup, "1" ),
-            SupportedDoubleKeywordInfo( "SWUY-"  , SWULookup, "1" ),
-            SupportedDoubleKeywordInfo( "SWUZ"   , SWULookup, "1" ),
-            SupportedDoubleKeywordInfo( "SWUZ-"  , SWULookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWU"   , ISWULookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWUX"  , ISWULookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWUX-" , ISWULookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWUY"  , ISWULookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWUY-" , ISWULookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWUZ"  , ISWULookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWUZ-" , ISWULookup, "1" ),
+        // keywords to specify the maximum gas saturation.
+        supportedDoubleKeywords->emplace_back( "SGU"    , SGULookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SGUX"   , SGULookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SGUX-"  , SGULookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SGUY"   , SGULookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SGUY-"  , SGULookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SGUZ"   , SGULookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SGUZ-"  , SGULookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISGU"   , ISGULookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISGUX"  , ISGULookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISGUX-" , ISGULookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISGUY"  , ISGULookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISGUY-" , ISGULookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISGUZ"  , ISGULookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISGUZ-" , ISGULookup, "1" );
 
-            // keywords to specify the scaled critical gas
-            // saturation.
-            SupportedDoubleKeywordInfo( "SGCR"     , SGCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGCRX"    , SGCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGCRX-"   , SGCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGCRY"    , SGCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGCRY-"   , SGCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGCRZ"    , SGCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SGCRZ-"   , SGCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGCR"    , ISGCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGCRX"   , ISGCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGCRX-"  , ISGCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGCRY"   , ISGCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGCRY-"  , ISGCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGCRZ"   , ISGCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISGCRZ-"  , ISGCRLookup, "1" ),
+        // keywords to specify the maximum water saturation.
+        supportedDoubleKeywords->emplace_back( "SWU"    , SWULookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SWUX"   , SWULookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SWUX-"  , SWULookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SWUY"   , SWULookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SWUY-"  , SWULookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SWUZ"   , SWULookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SWUZ-"  , SWULookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISWU"   , ISWULookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISWUX"  , ISWULookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISWUX-" , ISWULookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISWUY"  , ISWULookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISWUY-" , ISWULookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISWUZ"  , ISWULookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISWUZ-" , ISWULookup, "1" );
 
-            // keywords to specify the scaled critical oil-in-water
-            // saturation.
-            SupportedDoubleKeywordInfo( "SOWCR"    , SOWCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SOWCRX"   , SOWCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SOWCRX-"  , SOWCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SOWCRY"   , SOWCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SOWCRY-"  , SOWCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SOWCRZ"   , SOWCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SOWCRZ-"  , SOWCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISOWCR"   , ISOWCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISOWCRX"  , ISOWCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISOWCRX-" , ISOWCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISOWCRY"  , ISOWCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISOWCRY-" , ISOWCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISOWCRZ"  , ISOWCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISOWCRZ-" , ISOWCRLookup, "1" ),
+        // keywords to specify the scaled critical gas
+        // saturation.
+        supportedDoubleKeywords->emplace_back( "SGCR"     , SGCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SGCRX"    , SGCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SGCRX-"   , SGCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SGCRY"    , SGCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SGCRY-"   , SGCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SGCRZ"    , SGCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SGCRZ-"   , SGCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISGCR"    , ISGCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISGCRX"   , ISGCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISGCRX-"  , ISGCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISGCRY"   , ISGCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISGCRY-"  , ISGCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISGCRZ"   , ISGCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISGCRZ-"  , ISGCRLookup, "1" );
 
-            // keywords to specify the scaled critical oil-in-gas
-            // saturation.
-            SupportedDoubleKeywordInfo( "SOGCR"    , SOGCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SOGCRX"   , SOGCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SOGCRX-"  , SOGCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SOGCRY"   , SOGCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SOGCRY-"  , SOGCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SOGCRZ"   , SOGCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SOGCRZ-"  , SOGCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISOGCR"   , ISOGCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISOGCRX"  , ISOGCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISOGCRX-" , ISOGCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISOGCRY"  , ISOGCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISOGCRY-" , ISOGCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISOGCRZ"  , ISOGCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISOGCRZ-" , ISOGCRLookup, "1" ),
+        // keywords to specify the scaled critical oil-in-water
+        // saturation.
+        supportedDoubleKeywords->emplace_back( "SOWCR"    , SOWCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SOWCRX"   , SOWCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SOWCRX-"  , SOWCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SOWCRY"   , SOWCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SOWCRY-"  , SOWCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SOWCRZ"   , SOWCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SOWCRZ-"  , SOWCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISOWCR"   , ISOWCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISOWCRX"  , ISOWCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISOWCRX-" , ISOWCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISOWCRY"  , ISOWCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISOWCRY-" , ISOWCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISOWCRZ"  , ISOWCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISOWCRZ-" , ISOWCRLookup, "1" );
 
-            // keywords to specify the scaled critical water
-            // saturation.
-            SupportedDoubleKeywordInfo( "SWCR"     , SWCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SWCRX"    , SWCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SWCRX-"   , SWCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SWCRY"    , SWCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SWCRY-"   , SWCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SWCRZ"    , SWCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "SWCRZ-"   , SWCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWCR"    , ISWCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWCRX"   , ISWCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWCRX-"  , ISWCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWCRY"   , ISWCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWCRY-"  , ISWCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWCRZ"   , ISWCRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "ISWCRZ-"  , ISWCRLookup, "1" ),
+        // keywords to specify the scaled critical oil-in-gas
+        // saturation.
+        supportedDoubleKeywords->emplace_back( "SOGCR"    , SOGCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SOGCRX"   , SOGCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SOGCRX-"  , SOGCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SOGCRY"   , SOGCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SOGCRY-"  , SOGCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SOGCRZ"   , SOGCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SOGCRZ-"  , SOGCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISOGCR"   , ISOGCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISOGCRX"  , ISOGCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISOGCRX-" , ISOGCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISOGCRY"  , ISOGCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISOGCRY-" , ISOGCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISOGCRZ"  , ISOGCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISOGCRZ-" , ISOGCRLookup, "1" );
 
-            // keywords to specify the scaled oil-water capillary pressure
-            SupportedDoubleKeywordInfo( "PCW"    , PCWLookup, "Pressure" ),
-            SupportedDoubleKeywordInfo( "PCWX"   , PCWLookup, "Pressure" ),
-            SupportedDoubleKeywordInfo( "PCWX-"  , PCWLookup, "Pressure" ),
-            SupportedDoubleKeywordInfo( "PCWY"   , PCWLookup, "Pressure" ),
-            SupportedDoubleKeywordInfo( "PCWY-"  , PCWLookup, "Pressure" ),
-            SupportedDoubleKeywordInfo( "PCWZ"   , PCWLookup, "Pressure" ),
-            SupportedDoubleKeywordInfo( "PCWZ-"  , PCWLookup, "Pressure" ),
-            SupportedDoubleKeywordInfo( "IPCW"   , IPCWLookup, "Pressure" ),
-            SupportedDoubleKeywordInfo( "IPCWX"  , IPCWLookup, "Pressure" ),
-            SupportedDoubleKeywordInfo( "IPCWX-" , IPCWLookup, "Pressure" ),
-            SupportedDoubleKeywordInfo( "IPCWY"  , IPCWLookup, "Pressure" ),
-            SupportedDoubleKeywordInfo( "IPCWY-" , IPCWLookup, "Pressure" ),
-            SupportedDoubleKeywordInfo( "IPCWZ"  , IPCWLookup, "Pressure" ),
-            SupportedDoubleKeywordInfo( "IPCWZ-" , IPCWLookup, "Pressure" ),
+        // keywords to specify the scaled critical water
+        // saturation.
+        supportedDoubleKeywords->emplace_back( "SWCR"     , SWCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SWCRX"    , SWCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SWCRX-"   , SWCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SWCRY"    , SWCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SWCRY-"   , SWCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SWCRZ"    , SWCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "SWCRZ-"   , SWCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISWCR"    , ISWCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISWCRX"   , ISWCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISWCRX-"  , ISWCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISWCRY"   , ISWCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISWCRY-"  , ISWCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISWCRZ"   , ISWCRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "ISWCRZ-"  , ISWCRLookup, "1" );
 
-            // keywords to specify the scaled gas-oil capillary pressure
-            SupportedDoubleKeywordInfo( "PCG"    , PCGLookup, "Pressure" ),
-            SupportedDoubleKeywordInfo( "PCGX"   , PCGLookup, "Pressure" ),
-            SupportedDoubleKeywordInfo( "PCGX-"  , PCGLookup, "Pressure" ),
-            SupportedDoubleKeywordInfo( "PCGY"   , PCGLookup, "Pressure" ),
-            SupportedDoubleKeywordInfo( "PCGY-"  , PCGLookup, "Pressure" ),
-            SupportedDoubleKeywordInfo( "PCGZ"   , PCGLookup, "Pressure" ),
-            SupportedDoubleKeywordInfo( "PCGZ-"  , PCGLookup, "Pressure" ),
-            SupportedDoubleKeywordInfo( "IPCG"   , IPCGLookup, "Pressure" ),
-            SupportedDoubleKeywordInfo( "IPCGX"  , IPCGLookup, "Pressure" ),
-            SupportedDoubleKeywordInfo( "IPCGX-" , IPCGLookup, "Pressure" ),
-            SupportedDoubleKeywordInfo( "IPCGY"  , IPCGLookup, "Pressure" ),
-            SupportedDoubleKeywordInfo( "IPCGY-" , IPCGLookup, "Pressure" ),
-            SupportedDoubleKeywordInfo( "IPCGZ"  , IPCGLookup, "Pressure" ),
-            SupportedDoubleKeywordInfo( "IPCGZ-" , IPCGLookup, "Pressure" ),
+        // keywords to specify the scaled oil-water capillary pressure
+        supportedDoubleKeywords->emplace_back( "PCW"    , PCWLookup, "Pressure" );
+        supportedDoubleKeywords->emplace_back( "PCWX"   , PCWLookup, "Pressure" );
+        supportedDoubleKeywords->emplace_back( "PCWX-"  , PCWLookup, "Pressure" );
+        supportedDoubleKeywords->emplace_back( "PCWY"   , PCWLookup, "Pressure" );
+        supportedDoubleKeywords->emplace_back( "PCWY-"  , PCWLookup, "Pressure" );
+        supportedDoubleKeywords->emplace_back( "PCWZ"   , PCWLookup, "Pressure" );
+        supportedDoubleKeywords->emplace_back( "PCWZ-"  , PCWLookup, "Pressure" );
+        supportedDoubleKeywords->emplace_back( "IPCW"   , IPCWLookup, "Pressure" );
+        supportedDoubleKeywords->emplace_back( "IPCWX"  , IPCWLookup, "Pressure" );
+        supportedDoubleKeywords->emplace_back( "IPCWX-" , IPCWLookup, "Pressure" );
+        supportedDoubleKeywords->emplace_back( "IPCWY"  , IPCWLookup, "Pressure" );
+        supportedDoubleKeywords->emplace_back( "IPCWY-" , IPCWLookup, "Pressure" );
+        supportedDoubleKeywords->emplace_back( "IPCWZ"  , IPCWLookup, "Pressure" );
+        supportedDoubleKeywords->emplace_back( "IPCWZ-" , IPCWLookup, "Pressure" );
 
-            // keywords to specify the scaled water relative permeability
-            SupportedDoubleKeywordInfo( "KRW"    , KRWLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRWX"   , KRWLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRWX-"  , KRWLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRWY"   , KRWLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRWY-"  , KRWLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRWZ"   , KRWLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRWZ-"  , KRWLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRW"   , IKRWLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRWX"  , IKRWLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRWX-" , IKRWLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRWY"  , IKRWLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRWY-" , IKRWLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRWZ"  , IKRWLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRWZ-" , IKRWLookup, "1" ),
+        // keywords to specify the scaled gas-oil capillary pressure
+        supportedDoubleKeywords->emplace_back( "PCG"    , PCGLookup, "Pressure" );
+        supportedDoubleKeywords->emplace_back( "PCGX"   , PCGLookup, "Pressure" );
+        supportedDoubleKeywords->emplace_back( "PCGX-"  , PCGLookup, "Pressure" );
+        supportedDoubleKeywords->emplace_back( "PCGY"   , PCGLookup, "Pressure" );
+        supportedDoubleKeywords->emplace_back( "PCGY-"  , PCGLookup, "Pressure" );
+        supportedDoubleKeywords->emplace_back( "PCGZ"   , PCGLookup, "Pressure" );
+        supportedDoubleKeywords->emplace_back( "PCGZ-"  , PCGLookup, "Pressure" );
+        supportedDoubleKeywords->emplace_back( "IPCG"   , IPCGLookup, "Pressure" );
+        supportedDoubleKeywords->emplace_back( "IPCGX"  , IPCGLookup, "Pressure" );
+        supportedDoubleKeywords->emplace_back( "IPCGX-" , IPCGLookup, "Pressure" );
+        supportedDoubleKeywords->emplace_back( "IPCGY"  , IPCGLookup, "Pressure" );
+        supportedDoubleKeywords->emplace_back( "IPCGY-" , IPCGLookup, "Pressure" );
+        supportedDoubleKeywords->emplace_back( "IPCGZ"  , IPCGLookup, "Pressure" );
+        supportedDoubleKeywords->emplace_back( "IPCGZ-" , IPCGLookup, "Pressure" );
 
-            // keywords to specify the scaled water relative permeability at the critical
-            // saturation
-            SupportedDoubleKeywordInfo( "KRWR"    , KRWRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRWRX"   , KRWRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRWRX-"  , KRWRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRWRY"   , KRWRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRWRY-"  , KRWRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRWRZ"   , KRWRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRWRZ-"  , KRWRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRWR"   , IKRWRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRWRX"  , IKRWRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRWRX-" , IKRWRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRWRY"  , IKRWRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRWRY-" , IKRWRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRWRZ"  , IKRWRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRWRZ-" , IKRWRLookup, "1" ),
+        // keywords to specify the scaled water relative permeability
+        supportedDoubleKeywords->emplace_back( "KRW"    , KRWLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRWX"   , KRWLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRWX-"  , KRWLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRWY"   , KRWLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRWY-"  , KRWLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRWZ"   , KRWLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRWZ-"  , KRWLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRW"   , IKRWLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRWX"  , IKRWLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRWX-" , IKRWLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRWY"  , IKRWLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRWY-" , IKRWLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRWZ"  , IKRWLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRWZ-" , IKRWLookup, "1" );
 
-            // keywords to specify the scaled oil relative permeability
-            SupportedDoubleKeywordInfo( "KRO"    , KROLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KROX"   , KROLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KROX-"  , KROLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KROY"   , KROLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KROY-"  , KROLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KROZ"   , KROLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KROZ-"  , KROLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRO"   , IKROLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKROX"  , IKROLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKROX-" , IKROLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKROY"  , IKROLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKROY-" , IKROLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKROZ"  , IKROLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKROZ-" , IKROLookup, "1" ),
+        // keywords to specify the scaled water relative permeability at the critical
+        // saturation
+        supportedDoubleKeywords->emplace_back( "KRWR"    , KRWRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRWRX"   , KRWRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRWRX-"  , KRWRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRWRY"   , KRWRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRWRY-"  , KRWRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRWRZ"   , KRWRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRWRZ-"  , KRWRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRWR"   , IKRWRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRWRX"  , IKRWRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRWRX-" , IKRWRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRWRY"  , IKRWRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRWRY-" , IKRWRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRWRZ"  , IKRWRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRWRZ-" , IKRWRLookup, "1" );
 
-            // keywords to specify the scaled water relative permeability at the critical
-            // water saturation
-            SupportedDoubleKeywordInfo( "KRORW"    , KRORWLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRORWX"   , KRORWLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRORWX-"  , KRORWLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRORWY"   , KRORWLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRORWY-"  , KRORWLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRORWZ"   , KRORWLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRORWZ-"  , KRORWLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRORW"   , IKRORWLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRORWX"  , IKRORWLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRORWX-" , IKRORWLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRORWY"  , IKRORWLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRORWY-" , IKRORWLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRORWZ"  , IKRORWLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRORWZ-" , IKRORWLookup, "1" ),
+        // keywords to specify the scaled oil relative permeability
+        supportedDoubleKeywords->emplace_back( "KRO"    , KROLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KROX"   , KROLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KROX-"  , KROLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KROY"   , KROLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KROY-"  , KROLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KROZ"   , KROLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KROZ-"  , KROLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRO"   , IKROLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKROX"  , IKROLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKROX-" , IKROLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKROY"  , IKROLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKROY-" , IKROLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKROZ"  , IKROLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKROZ-" , IKROLookup, "1" );
 
-            // keywords to specify the scaled water relative permeability at the critical
-            // water saturation
-            SupportedDoubleKeywordInfo( "KRORG"    , KRORGLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRORGX"   , KRORGLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRORGX-"  , KRORGLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRORGY"   , KRORGLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRORGY-"  , KRORGLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRORGZ"   , KRORGLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRORGZ-"  , KRORGLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRORG"   , IKRORGLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRORGX"  , IKRORGLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRORGX-" , IKRORGLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRORGY"  , IKRORGLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRORGY-" , IKRORGLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRORGZ"  , IKRORGLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRORGZ-" , IKRORGLookup, "1" ),
+        // keywords to specify the scaled water relative permeability at the critical
+        // water saturation
+        supportedDoubleKeywords->emplace_back( "KRORW"    , KRORWLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRORWX"   , KRORWLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRORWX-"  , KRORWLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRORWY"   , KRORWLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRORWY-"  , KRORWLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRORWZ"   , KRORWLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRORWZ-"  , KRORWLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRORW"   , IKRORWLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRORWX"  , IKRORWLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRORWX-" , IKRORWLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRORWY"  , IKRORWLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRORWY-" , IKRORWLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRORWZ"  , IKRORWLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRORWZ-" , IKRORWLookup, "1" );
 
-            // keywords to specify the scaled gas relative permeability
-            SupportedDoubleKeywordInfo( "KRG"    , KRGLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRGX"   , KRGLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRGX-"  , KRGLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRGY"   , KRGLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRGY-"  , KRGLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRGZ"   , KRGLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRGZ-"  , KRGLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRG"   , IKRGLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRGX"  , IKRGLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRGX-" , IKRGLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRGY"  , IKRGLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRGY-" , IKRGLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRGZ"  , IKRGLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRGZ-" , IKRGLookup, "1" ),
+        // keywords to specify the scaled water relative permeability at the critical
+        // water saturation
+        supportedDoubleKeywords->emplace_back( "KRORG"    , KRORGLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRORGX"   , KRORGLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRORGX-"  , KRORGLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRORGY"   , KRORGLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRORGY-"  , KRORGLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRORGZ"   , KRORGLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRORGZ-"  , KRORGLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRORG"   , IKRORGLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRORGX"  , IKRORGLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRORGX-" , IKRORGLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRORGY"  , IKRORGLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRORGY-" , IKRORGLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRORGZ"  , IKRORGLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRORGZ-" , IKRORGLookup, "1" );
 
-            // keywords to specify the scaled gas relative permeability
-            SupportedDoubleKeywordInfo( "KRGR"    , KRGRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRGRX"   , KRGRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRGRX-"  , KRGRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRGRY"   , KRGRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRGRY-"  , KRGRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRGRZ"   , KRGRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "KRGRZ-"  , KRGRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRGR"   , IKRGRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRGRX"  , IKRGRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRGRX-" , IKRGRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRGRY"  , IKRGRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRGRY-" , IKRGRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRGRZ"  , IKRGRLookup, "1" ),
-            SupportedDoubleKeywordInfo( "IKRGRZ-" , IKRGRLookup, "1" ),
+        // keywords to specify the scaled gas relative permeability
+        supportedDoubleKeywords->emplace_back( "KRG"    , KRGLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRGX"   , KRGLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRGX-"  , KRGLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRGY"   , KRGLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRGY-"  , KRGLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRGZ"   , KRGLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRGZ-"  , KRGLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRG"   , IKRGLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRGX"  , IKRGLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRGX-" , IKRGLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRGY"  , IKRGLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRGY-" , IKRGLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRGZ"  , IKRGLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRGZ-" , IKRGLookup, "1" );
 
-            // cell temperature (E300 only, but makes a lot of sense for E100, too)
-            SupportedDoubleKeywordInfo( "TEMPI"    , tempLookup, "Temperature" ),
+        // keywords to specify the scaled gas relative permeability
+        supportedDoubleKeywords->emplace_back( "KRGR"    , KRGRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRGRX"   , KRGRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRGRX-"  , KRGRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRGRY"   , KRGRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRGRY-"  , KRGRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRGRZ"   , KRGRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "KRGRZ-"  , KRGRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRGR"   , IKRGRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRGRX"  , IKRGRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRGRX-" , IKRGRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRGRY"  , IKRGRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRGRY-" , IKRGRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRGRZ"  , IKRGRLookup, "1" );
+        supportedDoubleKeywords->emplace_back( "IKRGRZ-" , IKRGRLookup, "1" );
 
-            // porosity
-            SupportedDoubleKeywordInfo( "PORO"  , nan, distributeTopLayer , "1" ),
+        // cell temperature (E300 only, but makes a lot of sense for E100, too)
+        supportedDoubleKeywords->emplace_back( "TEMPI"    , tempLookup, "Temperature" );
 
-            // pore volume
-            SupportedDoubleKeywordInfo( "PORV"  , nan, initPORV , "Volume" ),
+        // porosity
+        supportedDoubleKeywords->emplace_back( "PORO"  , nan, distributeTopLayer , "1" );
 
-            // pore volume multipliers
-            SupportedDoubleKeywordInfo( "MULTPV", 1.0, "1" ),
+        // pore volume
+        supportedDoubleKeywords->emplace_back( "PORV"  , nan, initPORV , "Volume" );
 
-            // the permeability keywords
-            SupportedDoubleKeywordInfo( "PERMX" , nan,  distributeTopLayer , "Permeability" ),
-            SupportedDoubleKeywordInfo( "PERMY" , nan,  distributeTopLayer , "Permeability" ),
-            SupportedDoubleKeywordInfo( "PERMZ" , nan,  distributeTopLayer , "Permeability" ),
-            SupportedDoubleKeywordInfo( "PERMXY", nan,  distributeTopLayer , "Permeability" ), // E300 only
-            SupportedDoubleKeywordInfo( "PERMYZ", nan,  distributeTopLayer , "Permeability" ), // E300 only
-            SupportedDoubleKeywordInfo( "PERMZX", nan,  distributeTopLayer , "Permeability" ), // E300 only
+        // pore volume multipliers
+        supportedDoubleKeywords->emplace_back( "MULTPV", 1.0, "1" );
 
-            // the transmissibility keywords for neighboring
-            // conections. note that these keywords don't seem to
-            // require a post-processor...
-            SupportedDoubleKeywordInfo( "TRANX", nan, "Transmissibility" ),
-            SupportedDoubleKeywordInfo( "TRANY", nan, "Transmissibility" ),
-            SupportedDoubleKeywordInfo( "TRANZ", nan, "Transmissibility" ),
+        // the permeability keywords
+        supportedDoubleKeywords->emplace_back( "PERMX" , nan,  distributeTopLayer , "Permeability" );
+        supportedDoubleKeywords->emplace_back( "PERMY" , nan,  distributeTopLayer , "Permeability" );
+        supportedDoubleKeywords->emplace_back( "PERMZ" , nan,  distributeTopLayer , "Permeability" );
+        supportedDoubleKeywords->emplace_back( "PERMXY", nan,  distributeTopLayer , "Permeability" ); // E300 only
+        supportedDoubleKeywords->emplace_back( "PERMYZ", nan,  distributeTopLayer , "Permeability" ); // E300 only
+        supportedDoubleKeywords->emplace_back( "PERMZX", nan,  distributeTopLayer , "Permeability" ); // E300 only
 
-            // gross-to-net thickness (acts as a multiplier for PORO
-            // and the permeabilities in the X-Y plane as well as for
-            // the well rates.)
-            SupportedDoubleKeywordInfo( "NTG"   , 1.0, "1" ),
+        // the transmissibility keywords for neighboring
+        // conections. note that these keywords don't seem to
+        // require a post-processor...
+        supportedDoubleKeywords->emplace_back( "TRANX", nan, "Transmissibility" );
+        supportedDoubleKeywords->emplace_back( "TRANY", nan, "Transmissibility" );
+        supportedDoubleKeywords->emplace_back( "TRANZ", nan, "Transmissibility" );
 
-            // transmissibility multipliers
-            SupportedDoubleKeywordInfo( "MULTX" , 1.0, "1" ),
-            SupportedDoubleKeywordInfo( "MULTY" , 1.0, "1" ),
-            SupportedDoubleKeywordInfo( "MULTZ" , 1.0, "1" ),
-            SupportedDoubleKeywordInfo( "MULTX-", 1.0, "1" ),
-            SupportedDoubleKeywordInfo( "MULTY-", 1.0, "1" ),
-            SupportedDoubleKeywordInfo( "MULTZ-", 1.0, "1" ),
+        // gross-to-net thickness (acts as a multiplier for PORO
+        // and the permeabilities in the X-Y plane as well as for
+        // the well rates.)
+        supportedDoubleKeywords->emplace_back( "NTG"   , 1.0, "1" );
 
-            // initialisation
-            SupportedDoubleKeywordInfo( "SWATINIT" , 0.0, "1")
-                });
+        // transmissibility multipliers
+        supportedDoubleKeywords->emplace_back( "MULTX" , 1.0, "1" );
+        supportedDoubleKeywords->emplace_back( "MULTY" , 1.0, "1" );
+        supportedDoubleKeywords->emplace_back( "MULTZ" , 1.0, "1" );
+        supportedDoubleKeywords->emplace_back( "MULTX-", 1.0, "1" );
+        supportedDoubleKeywords->emplace_back( "MULTY-", 1.0, "1" );
+        supportedDoubleKeywords->emplace_back( "MULTZ-", 1.0, "1" );
+
+        // initialisation
+        supportedDoubleKeywords->emplace_back( "SWATINIT" , 0.0, "1");
 
         // register the grid properties
         m_intGridProperties = std::make_shared<GridProperties<int> >(m_eclipseGrid , supportedIntKeywords);
