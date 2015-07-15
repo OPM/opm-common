@@ -31,10 +31,10 @@ namespace Opm {
         : m_i(i), m_j(j), m_k(k),
           m_diameter(diameter),
           m_connectionTransmissibilityFactor(connectionTransmissibilityFactor),
+          m_wellPi(1.0),
           m_skinFactor(skinFactor),
           m_state(state),
-          m_direction(direction),
-          m_wellPi(1.0)
+          m_direction(direction)
     {}
 
     Completion::Completion(std::shared_ptr<const Completion> oldCompletion, WellCompletion::StateEnum newStatus)
@@ -44,10 +44,10 @@ namespace Opm {
         m_k(oldCompletion->getK()),
         m_diameter(oldCompletion->getDiameterAsValueObject()),
         m_connectionTransmissibilityFactor(oldCompletion->getConnectionTransmissibilityFactorAsValueObject()),
+        m_wellPi(oldCompletion->getWellPi()),
         m_skinFactor(oldCompletion->getSkinFactorAsValueObject()),
         m_state(newStatus),
-        m_direction(oldCompletion->getDirection()),
-        m_wellPi(oldCompletion->getWellPi())
+        m_direction(oldCompletion->getDirection())
     {}
 
     Completion::Completion(std::shared_ptr<const Completion> oldCompletion, double wellPi)
@@ -57,10 +57,10 @@ namespace Opm {
             m_k(oldCompletion->getK()),
             m_diameter(oldCompletion->getDiameterAsValueObject()),
             m_connectionTransmissibilityFactor(oldCompletion->getConnectionTransmissibilityFactorAsValueObject()),
+            m_wellPi(oldCompletion->getWellPi()),
             m_skinFactor(oldCompletion->getSkinFactorAsValueObject()),
             m_state(oldCompletion->getState()),
-            m_direction(oldCompletion->getDirection()),
-            m_wellPi(oldCompletion->getWellPi())
+            m_direction(oldCompletion->getDirection())
     {
         if(m_wellPi!=0){
             m_wellPi*=wellPi;
