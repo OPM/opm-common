@@ -242,6 +242,14 @@ macro (cond_disable_test name)
 	endif ((NOT DEFINED HAVE_${name}) OR (NOT HAVE_${name}))
 endmacro (cond_disable_test name)
 
+# use this target to run all tests
+add_custom_target (check
+	COMMAND ${CMAKE_CTEST_COMMAND}
+	DEPENDS test-suite
+	COMMENT "Checking if library is functional"
+	VERBATIM
+	)
+
 # special processing for tests
 if (COMMAND tests_hook)
 	tests_hook ()
@@ -252,14 +260,6 @@ if (BUILD_TESTING)
 	opm_data (tests datafiles "${tests_DIR}")
 	opm_compile_satellites (${project} tests "" "${tests_REGEXP}")
 endif (BUILD_TESTING)
-
-# use this target to run all tests
-add_custom_target (check
-	COMMAND ${CMAKE_CTEST_COMMAND}
-	DEPENDS test-suite
-	COMMENT "Checking if library is functional"
-	VERBATIM
-	)
 
 # use this target to check local git commits
 add_custom_target(check-commits
