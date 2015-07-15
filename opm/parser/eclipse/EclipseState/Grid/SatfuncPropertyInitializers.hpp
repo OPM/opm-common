@@ -171,7 +171,7 @@ protected:
         const std::vector<SwofTable>& swofTables = m_eclipseState.getSwofTables();
         const std::vector<SgofTable>& sgofTables = m_eclipseState.getSgofTables();
         auto tabdims = m_eclipseState.getTabdims();
-        int numSatTables = tabdims->getNumSatTables();
+        size_t numSatTables = tabdims->getNumSatTables();
 
         m_maxPcog.resize( numSatTables , 0 );
         m_maxPcow.resize( numSatTables , 0 );
@@ -183,7 +183,7 @@ protected:
         m_maxKrw.resize( numSatTables , 0 );
         m_krwr.resize( numSatTables , 0 );
 
-        for (int tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
+        for (size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
             // find the maximum output values of the oil-gas system
             m_maxPcog[tableIdx] = sgofTables[tableIdx].getPcogColumn().front();
             m_maxKrg[tableIdx] = sgofTables[tableIdx].getKrgColumn().back();
@@ -194,7 +194,7 @@ protected:
             // find the oil relperm which corresponds to the critical water saturation
             const auto &krwCol = swofTables[tableIdx].getKrwColumn();
             const auto &krowCol = swofTables[tableIdx].getKrowColumn();
-            for (int rowIdx = 0; rowIdx < krwCol.size(); ++rowIdx) {
+            for (size_t rowIdx = 0; rowIdx < krwCol.size(); ++rowIdx) {
                 if (krwCol[rowIdx] == 0.0) {
                     m_krorw[tableIdx] = krowCol[rowIdx - 1];
                     break;
@@ -204,7 +204,7 @@ protected:
             // find the oil relperm which corresponds to the critical gas saturation
             const auto &krgCol = sgofTables[tableIdx].getKrgColumn();
             const auto &krogCol = sgofTables[tableIdx].getKrogColumn();
-            for (int rowIdx = 0; rowIdx < krgCol.size(); ++rowIdx) {
+            for (size_t rowIdx = 0; rowIdx < krgCol.size(); ++rowIdx) {
                 if (krgCol[rowIdx] == 0.0) {
                     m_krorg[tableIdx] = krogCol[rowIdx - 1];
                     break;

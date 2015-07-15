@@ -164,7 +164,7 @@ void VFPInjTable::init(DeckKeywordConstPtr table, std::shared_ptr<Opm::UnitSyste
     }
 
     const double table_scaling_factor = deck_unit_system->parse("Pressure")->getSIScaling();
-    for (int i=3; i<table->size(); ++i) {
+    for (size_t i=3; i<table->size(); ++i) {
         const auto& record = table->getRecord(i);
         //Get indices (subtract 1 to get 0-based index)
         int t = getNonEmptyItem<VFPINJ::THP_INDEX>(record)->getInt(0) - 1;
