@@ -145,10 +145,10 @@ protected:
             // find the critical oil saturation of the oil-gas system
             numRows = sgofTables[tableIdx].numRows();
             const auto &kroOGCol = sgofTables[tableIdx].getKrogColumn();
-            for (int rowIdx = 0; rowIdx < numRows; ++rowIdx) {
-                if (kroOGCol[rowIdx] == 0.0) {
-                    double Sg = sgofTables[tableIdx].getSgColumn()[rowIdx];
-                    m_criticalOilOGSat[tableIdx] = 1 - Sg - m_minWaterSat[tableIdx];
+            for (int rowIdx = numRows - 1; rowIdx >= 0; --rowIdx) {
+                if (kroOGCol[rowIdx] > 0.0) {
+                    double Sg = sgofTables[tableIdx].getSgColumn()[rowIdx + 1];
+                    m_criticalOilOGSat[tableIdx] = 1 - Sg;
                     break;
                 }
             }
@@ -156,10 +156,10 @@ protected:
             // find the critical oil saturation of the water-oil system
             numRows = swofTables[tableIdx].numRows();
             const auto &kroOWCol = swofTables[tableIdx].getKrowColumn();
-            for (int rowIdx = 0; rowIdx < numRows; ++rowIdx) {
-                if (kroOWCol[rowIdx] == 0.0) {
-                    double Sw = swofTables[tableIdx].getSwColumn()[rowIdx];
-                    m_criticalOilOWSat[tableIdx] = 1 - Sw - m_minGasSat[tableIdx];
+            for (int rowIdx = numRows - 1; rowIdx >= 0; --rowIdx) {
+                if (kroOWCol[rowIdx] > 0.0) {
+                    double Sw = swofTables[tableIdx].getSwColumn()[rowIdx + 1];
+                    m_criticalOilOWSat[tableIdx] = 1 - Sw;
                     break;
                 }
             }
@@ -195,7 +195,7 @@ protected:
             const auto &krwCol = swofTables[tableIdx].getKrwColumn();
             const auto &krowCol = swofTables[tableIdx].getKrowColumn();
             for (size_t rowIdx = 0; rowIdx < krwCol.size(); ++rowIdx) {
-                if (krwCol[rowIdx] == 0.0) {
+                if (krwCol[rowIdx] > 0.0) {
                     m_krorw[tableIdx] = krowCol[rowIdx - 1];
                     break;
                 }
@@ -205,7 +205,7 @@ protected:
             const auto &krgCol = sgofTables[tableIdx].getKrgColumn();
             const auto &krogCol = sgofTables[tableIdx].getKrogColumn();
             for (size_t rowIdx = 0; rowIdx < krgCol.size(); ++rowIdx) {
-                if (krgCol[rowIdx] == 0.0) {
+                if (krgCol[rowIdx] > 0.0) {
                     m_krorg[tableIdx] = krogCol[rowIdx - 1];
                     break;
                 }
