@@ -288,6 +288,7 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
         "/\n"
         // table 2
         // S_w    k_r,w    k_r,o    p_c,ow
+        "  0.00   0        1.0      2.0\n"
         "  0.05   0.01     1.0      2.0\n"
         "  0.10   0.02     0.9      1.0\n"
         "  0.15   0.03     0.5      0.5\n"
@@ -295,7 +296,7 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
         "/\n"
         // table 3
         // S_w    k_r,w    k_r,o    p_c,ow
-        "  0.00   0.01     0.9      2.0\n"
+        "  0.00   0.00     0.9      2.0\n"
         "  0.05   0.02     0.8      1.0\n"
         "  0.10   0.03     0.5      0.5\n"
         "  0.801  1.00     0.0      0.0\n"
@@ -304,14 +305,14 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
         "SGOF\n"
         // table 1
         // S_g    k_r,g    k_r,o    p_c,og
-        "  0.00   0.01     0.9      2.0\n"
+        "  0.00   0.00     0.9      2.0\n"
         "  0.05   0.02     0.8      1.0\n"
         "  0.10   0.03     0.5      0.5\n"
         "  0.80   1.00     0.0      0.0\n"
         "/\n"
         // table 2
         // S_g    k_r,g    k_r,o    p_c,og
-        "  0.05   0.01     1.0      2\n"
+        "  0.05   0.00     1.0      2\n"
         "  0.10   0.02     0.9      1\n"
         "  0.15   0.03     0.5      0.5\n"
         "  0.85   1.00     0.0      0\n"
