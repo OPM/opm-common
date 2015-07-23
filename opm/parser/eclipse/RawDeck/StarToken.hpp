@@ -36,15 +36,39 @@ namespace Opm {
             return boost::lexical_cast<T>(valueString);
         }
         catch (boost::bad_lexical_cast&) {
-            throw std::invalid_argument("Unable to parse string" + valueString + " to typeid: " + typeid(T).name());
+            throw std::invalid_argument("Unable to convert string '" + valueString + "' to typeid: " + typeid(T).name());
         }
+    }
+
+    template <>
+    inline double readValueToken<double>(const std::string& valueString) {
+        // Eclipse supports Fortran syntax for specifying exponents of floating point
+        // numbers ('D' and 'E', e.g., 1.234d5) while C++ only supports the 'e' (e.g.,
+        // 1.234e5). the quick fix is to replace 'D' by 'E' and 'd' by 'e' before trying
+        // to convert the string into a floating point value. This may not be the most
+        // performant thing to do, but it is probably fast enough.
+        std::string vs(valueString);
+        std::replace(vs.begin(), vs.end(), 'D', 'E');
+        std::replace(vs.begin(), vs.end(), 'd', 'e');
+
+        try {
+            return boost::lexical_cast<double>(vs);
+        }
+        catch (boost::bad_lexical_cast&) {
+            throw std::invalid_argument("Unable to convert string '" + valueString + "' to double");
+        }
+    }
+
+    template <>
+    inline float readValueToken<float>(const std::string& valueString) {
+        return readValueToken<double>(valueString);
     }
 
     template <>
     inline std::string readValueToken<std::string>(const std::string& valueString) {
         if (valueString.size() > 0 && valueString[0] == '\'') {
             if (valueString.size() < 2 || valueString[valueString.size() - 1] != '\'')
-                throw std::invalid_argument("Unable to parse string" + valueString + " as a string token");
+                throw std::invalid_argument("Unable to parse string '" + valueString + "' as a string token");
             return valueString.substr(1, valueString.size() - 2);
         }
         else
