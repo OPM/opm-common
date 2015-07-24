@@ -824,7 +824,6 @@ BOOST_AUTO_TEST_CASE(createDeckWithRPTRST) {
                           "/\n"
                           "DATES             -- 2\n"
                           " 20  JAN 2010 / \n"
-                          "/\n"
                           "/\n";
 
     const char *deckData2 =
@@ -846,7 +845,6 @@ BOOST_AUTO_TEST_CASE(createDeckWithRPTRST) {
                           "/\n"
                           "DATES             -- 3\n"
                           " 20  JAN 2011 / \n"
-                          "/\n"
                           "/\n";
 
     const char *deckData3 =
@@ -868,7 +866,6 @@ BOOST_AUTO_TEST_CASE(createDeckWithRPTRST) {
                           "/\n"
                           "DATES             -- 3\n"
                           " 20  JAN 2011 / \n"
-                          "/\n"
                           "/\n";
 
 
@@ -929,7 +926,6 @@ BOOST_AUTO_TEST_CASE(createDeckWithRPTSCHED) {
                           "/\n"
                           "RPTSCHED\n"
                           "RESTART=0\n"
-                          "/\n"
                           "/\n";
 
 
@@ -955,7 +951,6 @@ BOOST_AUTO_TEST_CASE(createDeckWithRPTSCHED) {
                           "/\n"
                           "RPTSCHED\n"
                           "NOTHING RUBBISH\n"
-                          "/\n"
                           "/\n";
 
     const char *deckData2 =
@@ -980,7 +975,6 @@ BOOST_AUTO_TEST_CASE(createDeckWithRPTSCHED) {
                           "/\n"
                           "RPTSCHED\n"
                           "0 0 0 0 0 0 0 0\n"
-                          "/\n"
                           "/\n";
 
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
@@ -1042,7 +1036,6 @@ BOOST_AUTO_TEST_CASE(createDeckWithRPTSCHEDandRPTRST) {
                         "/\n"
                         "RPTSCHED\n"
                         "RESTART=1\n"
-                        "/\n"
                         "/\n";
 
 

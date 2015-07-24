@@ -31,60 +31,55 @@
 using namespace Opm;
 
 const std::string& deckStr =
-                            "RUNSPEC\n"
-                            "DIMENS\n"
-                            " 10 10 10 /\n"
-                            "SOLUTION\n"
-                            "RESTART\n"
-                            "BASE 5\n"
-                            "/\n"
-                            "GRID\n"
-                            "START             -- 0 \n"
-                            "19 JUN 2007 / \n"
-                            "SCHEDULE\n"
-                            "SKIPREST \n"
-                            "/\n";
+    "RUNSPEC\n"
+    "DIMENS\n"
+    " 10 10 10 /\n"
+    "SOLUTION\n"
+    "RESTART\n"
+    "BASE 5\n"
+    "/\n"
+    "GRID\n"
+    "START             -- 0 \n"
+    "19 JUN 2007 / \n"
+    "SCHEDULE\n"
+    "SKIPREST \n";
+
 
 const std::string& deckStr2 =
-                            "RUNSPEC\n"
-                            "DIMENS\n"
-                            " 10 10 10 /\n"
-                            "SOLUTION\n"
-                            "/\n"
-                            "GRID\n"
-                            "START             -- 0 \n"
-                            "19 JUN 2007 / \n"
-                            "SCHEDULE\n"
-                            "/\n";
+    "RUNSPEC\n"
+    "DIMENS\n"
+    " 10 10 10 /\n"
+    "SOLUTION\n"
+    "GRID\n"
+    "START             -- 0 \n"
+    "19 JUN 2007 / \n"
+    "SCHEDULE\n";
+
 
 const std::string& deckStr3 =
-                            "RUNSPEC\n"
-                            "DIMENS\n"
-                            " 10 10 10 /\n"
-                            "SOLUTION\n"
-                            "RESTART\n"
-                            "BASE 5 SAVE UNFORMATTED\n"
-                            "/\n"
-                            "GRID\n"
-                            "START             -- 0 \n"
-                            "19 JUN 2007 / \n"
-                            "SCHEDULE\n"
-                            "SKIPREST \n"
-                            "/\n";
+    "RUNSPEC\n"
+    "DIMENS\n"
+    " 10 10 10 /\n"
+    "SOLUTION\n"
+    "RESTART\n"
+    "BASE 5 SAVE UNFORMATTED /\n"
+    "GRID\n"
+    "START             -- 0 \n"
+    "19 JUN 2007 / \n"
+    "SCHEDULE\n"
+    "SKIPREST \n";
 
 const std::string& deckStr4 =
-                            "RUNSPEC\n"
-                            "DIMENS\n"
-                            " 10 10 10 /\n"
-                            "SOLUTION\n"
-                            "RESTART\n"
-                            "BASE 5\n"
-                            "/\n"
-                            "GRID\n"
-                            "START             -- 0 \n"
-                            "19 JUN 2007 / \n"
-                            "SCHEDULE\n"
-                            "/\n";
+    "RUNSPEC\n"
+    "DIMENS\n"
+    " 10 10 10 /\n"
+    "SOLUTION\n"
+    "RESTART\n"
+    "BASE 5 /\n"
+    "GRID\n"
+    "START             -- 0 \n"
+    "19 JUN 2007 / \n"
+    "SCHEDULE\n";
 
 static DeckPtr createDeck(const std::string& input) {
     Opm::Parser parser;

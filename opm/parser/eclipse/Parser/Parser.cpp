@@ -98,6 +98,25 @@ namespace Opm {
                 rootPath = boost::filesystem::current_path() / inputFile.parent_path();
 
         }
+
+        /*
+          We have encountered 'random' characters in the input file which
+          are not correctly formatted as a keyword heading, and not part
+          of the data section of any keyword.
+        */
+
+        void handleRandomText(const std::string& keywordString ) const {
+            std::stringstream msg;
+            InputError::Action action = parseMode.randomText;
+            msg << "String \'" << keywordString << "\' not formatted/recognized as valid keyword at: " << dataFile << ":" << lineNR;
+            if (action == InputError::THROW_EXCEPTION)
+                throw std::invalid_argument( msg.str() );
+            else {
+                if (action == InputError::WARN)
+                    OpmLog::addMessage(Log::MessageType::Warning , msg.str());
+            }
+        }
+
     };
 
     Parser::Parser(bool addDefault) {
@@ -385,16 +404,23 @@ namespace Opm {
                 return RawKeywordPtr(new RawKeyword(keywordString, parserState->dataFile.string() , parserState->lineNR , targetSize , parserKeyword->isTableCollection()));
             }
         } else {
-            InputError::Action action = parserState->parseMode.unknownKeyword;
-            if (action == InputError::THROW_EXCEPTION)
-                throw std::invalid_argument("Keyword " + keywordString + " not recognized ");
-            else {
-                if (action == InputError::WARN)
-                    OpmLog::addMessage(Log::MessageType::Warning , "Keyword " + keywordString + " not recognized");
+            if (ParserKeyword::validDeckName(keywordString)) {
+                InputError::Action action = parserState->parseMode.unknownKeyword;
+                if (action == InputError::THROW_EXCEPTION)
+                    throw std::invalid_argument("Keyword " + keywordString + " not recognized ");
+                else {
+                    if (action == InputError::WARN)
+                        OpmLog::addMessage(Log::MessageType::Warning , "Keyword " + keywordString + " not recognized");
+                    return std::shared_ptr<RawKeyword>(  );
+                }
+            } else {
+                parserState->handleRandomText( keywordString );
                 return std::shared_ptr<RawKeyword>(  );
             }
         }
     }
+
+
 
 
     std::string Parser::doSpecialHandlingForTitleKeyword(std::string line, std::shared_ptr<ParserState> parserState) const {
@@ -432,7 +458,9 @@ namespace Opm {
             if (parserState->rawKeyword == NULL) {
                 if (RawKeyword::isKeywordPrefix(line, keywordString)) {
                     parserState->rawKeyword = createRawKeyword(keywordString, parserState);
-                }
+                } else
+                    /* We are looking at some random gibberish?! */
+                    parserState->handleRandomText( line );
             } else {
                 if (parserState->rawKeyword->getSizeType() == Raw::UNKNOWN) {
                     if (isRecognizedKeyword(line)) {

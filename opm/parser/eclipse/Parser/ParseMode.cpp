@@ -25,6 +25,7 @@ namespace Opm {
 
     ParseMode::ParseMode() {
         unknownKeyword = InputError::THROW_EXCEPTION;
+        randomText = InputError::THROW_EXCEPTION;
     }
 }
 

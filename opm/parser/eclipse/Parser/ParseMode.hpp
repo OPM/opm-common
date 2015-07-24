@@ -48,7 +48,38 @@ namespace Opm {
 
     struct ParseMode {
         ParseMode();
+
+        /*
+          The unknownKeyword field regulates how the parser should
+          react when it encounters an unknwon keyword. Observe that
+          'keyword' in this context means:
+
+             o A string of 8 characters or less - starting in column
+               0.
+
+             o A string consisiting of UPPERCASE characters and
+               numerals, staring with an UPPERCASE character [Hmmm -
+               actually lowercase is also accepted?!]
+
+           Observe that unknownKeyword does *not* consult any global
+           collection of keywords to see if a particular string
+           corresponds to a known valid keyword which we just happen
+           to ignore for this particualar parse operation.
+
+           The 'unknownkeyword' and 'randomText' error situations are
+           not fully orthogonal, and in particualar if a unknown
+           keyword has been encountered - without halting the parser, a
+           subsequent piece of 'random text' might not be identified
+           correctly as such.
+        */
         InputError::Action unknownKeyword;
+
+
+        /*
+          With random text we mean a string in the input deck is not
+          correctly formatted as a keyword heading.
+        */
+        InputError::Action randomText;
     };
 }
 

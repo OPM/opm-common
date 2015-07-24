@@ -63,7 +63,6 @@ static DeckPtr createDeckTOP() {
         "PERMX \n"
         "100*0.25 /\n"
         "EDIT\n"
-        "/\n"
         "OIL\n"
         "\n"
         "GAS\n"
@@ -429,14 +428,12 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreation) {
                           " 10  OKT 2008 / \n"
                           "/\n"
                           "RPTRST\n"
-                          "BASIC=3 FREQ=2\n"
-                          "/\n"
+                          "BASIC=3 FREQ=2 /\n"
                           "DATES             -- 2\n"
                           " 20  JAN 2010 / \n"
                           "/\n"
                           "DATES             -- 3\n"
                           " 20  JAN 2011 / \n"
-                          "/\n"
                           "/\n";
 
 
@@ -463,11 +460,9 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTRST) {
                           " 10 10 10 /\n"
                           "SOLUTION\n"
                           "RPTRST\n"
-                          "BASIC=1\n"
-                          "/\n"
+                          "BASIC=1/\n"
                           "RPTRST\n"
-                          "BASIC=3 FREQ=5\n"
-                          "/\n"
+                          "BASIC=3 FREQ=5 /\n"
                           "GRID\n"
                           "START             -- 0 \n"
                           "19 JUN 2007 / \n"
@@ -479,11 +474,9 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTRST) {
                           " 20  JAN 2010 / \n"
                           "/\n"
                           "RPTRST\n"
-                          "BASIC=3 FREQ=2\n"
-                          "/\n"
+                          "BASIC=3 FREQ=2 /\n"
                           "DATES             -- 3\n"
                           " 20  JAN 2011 / \n"
-                          "/\n"
                           "/\n";
 
 

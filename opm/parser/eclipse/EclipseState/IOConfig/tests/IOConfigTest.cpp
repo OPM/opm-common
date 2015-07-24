@@ -44,7 +44,6 @@ const std::string& deckStr =  "RUNSPEC\n"
                               "\n"
                               "TSTEP\n"
                               " 1 2 3 4 5 /\n"
-                              "\n"
                               "DATES\n"
                               " 1 JAN 1982 /\n"
                               " 1 JAN 1982 13:55:44 /\n"
@@ -52,8 +51,7 @@ const std::string& deckStr =  "RUNSPEC\n"
                               "/\n"
                               "TSTEP\n"
                               " 9 10 /\n"
-                              "\n"
-                              "/\n";
+                              "\n";
 
 
 const std::string& deckStr3 =  "RUNSPEC\n"
