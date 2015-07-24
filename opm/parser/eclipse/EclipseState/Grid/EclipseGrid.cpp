@@ -20,6 +20,7 @@
 
 #include <iostream>
 #include <tuple>
+#include <cmath>
 
 #include <boost/lexical_cast.hpp>
 
@@ -413,9 +414,41 @@ namespace Opm {
     }
 
 
+    /*
+      The body of the for loop in this method looks slightly
+      peculiar. The situation is as follows:
 
+        1. The EclipseGrid class will assemble the necessary keywords
+           and create an ert ecl_grid instance.
+
+        2. The ecl_grid instance will export ZCORN, COORD and ACTNUM
+           data which will be used by the UnstructureGrid constructor
+           in opm-core. If the ecl_grid is created with ZCORN as an
+           input keyword that data is retained in the ecl_grid
+           structure, otherwise the ZCORN data is created based on the
+           internal cell geometries.
+
+        3. When constructing the UnstructuredGrid structure strict
+           numerical comparisons of ZCORN values are used to detect
+           cells in contact, if all the elements the elements in the
+           TOPS vector are specified[1] we will typically not get
+           bitwise equality between the bottom of one cell and the top
+           of the next.
+
+       To remedy this we enforce bitwise equality with the
+       construction:
+
+          if (std::abs(nextValue - TOPS[targetIndex]) < z_tolerance)
+             TOPS[targetIndex] = nextValue;
+
+       [1]: This is of course assuming the intention is to construct a
+            fully connected space covering grid - if that is indeed
+            not the case the barriers must be thicker than 1e-6m to be
+            retained.
+    */
 
     std::vector<double> EclipseGrid::createTOPSVector(const std::vector<int>& dims , const std::vector<double>& DZ , DeckConstPtr deck) {
+        double z_tolerance = 1e-6;
         size_t volume = dims[0] * dims[1] * dims[2];
         size_t area = dims[0] * dims[1];
         DeckKeywordConstPtr TOPSKeyWord = deck->getKeyword<ParserKeywords::TOPS>();
@@ -424,9 +457,18 @@ namespace Opm {
         if (TOPS.size() >= area) {
             size_t initialTOPSize = TOPS.size();
             TOPS.resize( volume );
-            for (size_t targetIndex = initialTOPSize; targetIndex < volume; targetIndex++) {
+
+            for (size_t targetIndex = area; targetIndex < volume; targetIndex++) {
                 size_t sourceIndex = targetIndex - area;
-                TOPS[targetIndex] = TOPS[sourceIndex] + DZ[sourceIndex];
+                double nextValue = TOPS[sourceIndex] + DZ[sourceIndex];
+
+                if (targetIndex >= initialTOPSize)
+                    TOPS[targetIndex] = nextValue;
+                else {
+                    if (std::abs(nextValue - TOPS[targetIndex]) < z_tolerance)
+                        TOPS[targetIndex] = nextValue;
+                }
+
             }
         }
 
