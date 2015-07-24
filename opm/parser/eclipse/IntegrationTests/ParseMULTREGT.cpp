@@ -24,6 +24,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
@@ -39,7 +40,7 @@ using namespace Opm;
 
 BOOST_AUTO_TEST_CASE( parse_MULTREGT_OK ) {
     ParserPtr parser(new Parser());
-    DeckPtr deck =  parser->parseFile("testdata/integration_tests/MULTREGT/MULTREGT");
+    DeckPtr deck =  parser->parseFile("testdata/integration_tests/MULTREGT/MULTREGT", ParseMode());
     BOOST_CHECK_NO_THROW( deck->getKeyword("MULTREGT" , 0); );
 }
 
@@ -47,7 +48,7 @@ BOOST_AUTO_TEST_CASE( parse_MULTREGT_OK ) {
 
 BOOST_AUTO_TEST_CASE( MULTREGT_ECLIPSE_STATE ) {
     ParserPtr parser(new Parser());
-    DeckPtr deck =  parser->parseFile("testdata/integration_tests/MULTREGT/MULTREGT.DATA");
+    DeckPtr deck =  parser->parseFile("testdata/integration_tests/MULTREGT/MULTREGT.DATA", ParseMode());
     EclipseState state(deck);
     auto transMult = state.getTransMult();
 

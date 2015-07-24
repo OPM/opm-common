@@ -22,6 +22,7 @@
 #include <boost/test/test_tools.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/checkDeck.hpp>
@@ -49,7 +50,7 @@ BOOST_AUTO_TEST_CASE( KeywordInCorrectSection ) {
             "SOLUTION\n"
             "SCHEDULE\n";
 
-        auto deck = parser->parseString(correctDeckString);
+        auto deck = parser->parseString(correctDeckString, Opm::ParseMode());
         BOOST_CHECK(Opm::checkDeck(deck));
     }
 
@@ -62,7 +63,7 @@ BOOST_AUTO_TEST_CASE( KeywordInCorrectSection ) {
             "SOLUTION\n"
             "SCHEDULE\n";
 
-        auto deck = parser->parseString(correctDeckString);
+        auto deck = parser->parseString(correctDeckString, Opm::ParseMode());
         BOOST_CHECK(!Opm::checkDeck(deck));
         BOOST_CHECK(Opm::checkDeck(deck, ~Opm::SectionTopology));
     }
@@ -88,7 +89,7 @@ BOOST_AUTO_TEST_CASE( KeywordInCorrectSection ) {
             "SOLUTION\n"
             "SCHEDULE\n";
 
-        auto deck = parser->parseString(incorrectDeckString);
+        auto deck = parser->parseString(incorrectDeckString, Opm::ParseMode());
         BOOST_CHECK(!Opm::checkDeck(deck));
 
         // this is supposed to succeed as we don't ensure that all keywords are in the

@@ -19,6 +19,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -38,7 +39,7 @@ BOOST_AUTO_TEST_CASE(noNNC)
 {
     const std::string filename = "testdata/integration_tests/NNC/noNNC.DATA";
     Opm::ParserPtr parser(new Opm::Parser());
-    Opm::DeckConstPtr deck(parser->parseFile(filename));
+    Opm::DeckConstPtr deck(parser->parseFile(filename, ParseMode()));
     Opm::EclipseStateConstPtr eclipseState(new EclipseState(deck));
     auto eclGrid = eclipseState->getEclipseGrid();
     Opm::NNC nnc(deck, eclGrid);
@@ -49,7 +50,7 @@ BOOST_AUTO_TEST_CASE(readDeck)
 {
     const std::string filename = "testdata/integration_tests/NNC/NNC.DATA";
     Opm::ParserPtr parser(new Opm::Parser());
-    Opm::DeckConstPtr deck(parser->parseFile(filename));
+    Opm::DeckConstPtr deck(parser->parseFile(filename, ParseMode()));
     Opm::EclipseStateConstPtr eclipseState(new EclipseState(deck));
     auto eclGrid = eclipseState->getEclipseGrid();
     Opm::NNC nnc(deck, eclGrid);
@@ -72,7 +73,7 @@ BOOST_AUTO_TEST_CASE(addNNC)
 {
     const std::string filename = "testdata/integration_tests/NNC/NNC.DATA";
     Opm::ParserPtr parser(new Opm::Parser());
-    Opm::DeckConstPtr deck(parser->parseFile(filename));
+    Opm::DeckConstPtr deck(parser->parseFile(filename, ParseMode()));
     Opm::EclipseStateConstPtr eclipseState(new EclipseState(deck));
     auto eclGrid = eclipseState->getEclipseGrid();
     Opm::NNC nnc(deck, eclGrid);

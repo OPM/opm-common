@@ -28,6 +28,7 @@
 
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -51,7 +52,7 @@ static Opm::DeckPtr createDeckInvalidArray() {
         "\n";
 
     Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData) ;
+    return parser->parseString(deckData, Opm::ParseMode()) ;
 }
 
 
@@ -69,7 +70,7 @@ static Opm::DeckPtr createDeckInvalidRegion() {
         "\n";
 
     Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData) ;
+    return parser->parseString(deckData, Opm::ParseMode()) ;
 }
 
 
@@ -87,7 +88,7 @@ static Opm::DeckPtr createDeckInvalidValue() {
         "\n";
 
     Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData) ;
+    return parser->parseString(deckData, Opm::ParseMode()) ;
 }
 
 
@@ -106,7 +107,7 @@ static Opm::DeckPtr createDeckUnInitialized() {
         "\n";
 
     Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData) ;
+    return parser->parseString(deckData, Opm::ParseMode()) ;
 }
 
 
@@ -141,7 +142,7 @@ static Opm::DeckPtr createValidIntDeck() {
         "\n";
 
     Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData) ;
+    return parser->parseString(deckData, Opm::ParseMode()) ;
 }
 
 
@@ -183,7 +184,7 @@ static Opm::DeckPtr createValidPERMXDeck() {
         "\n";
 
     Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData) ;
+    return parser->parseString(deckData, Opm::ParseMode()) ;
 }
 
 

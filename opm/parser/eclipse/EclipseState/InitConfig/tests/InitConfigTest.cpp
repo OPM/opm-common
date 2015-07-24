@@ -88,7 +88,7 @@ const std::string& deckStr4 =
 
 static DeckPtr createDeck(const std::string& input) {
     Opm::Parser parser;
-    return parser.parseString(input);
+    return parser.parseString(input, Opm::ParseMode());
 }
 
 BOOST_AUTO_TEST_CASE(InitConfigTest) {

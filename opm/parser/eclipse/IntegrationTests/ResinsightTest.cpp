@@ -23,6 +23,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
@@ -31,10 +32,13 @@ using namespace Opm;
 
 BOOST_AUTO_TEST_CASE( test_parse ) {
     Parser parser(false);
+    ParseMode parseMode;
+    parseMode.unknownKeyword = InputError::IGNORE;
 
     parser.addKeyword<ParserKeywords::SPECGRID>();
     parser.addKeyword<ParserKeywords::FAULTS>();
-    auto deck = parser.parseFile("testdata/integration_tests/Resinsight/DECK1.DATA" , false);
+
+    auto deck = parser.parseFile("testdata/integration_tests/Resinsight/DECK1.DATA" , parseMode);
 
     BOOST_CHECK( deck->hasKeyword<ParserKeywords::SPECGRID>() );
     BOOST_CHECK( deck->hasKeyword<ParserKeywords::FAULTS>() );
@@ -43,10 +47,12 @@ BOOST_AUTO_TEST_CASE( test_parse ) {
 
 BOOST_AUTO_TEST_CASE( test_state ) {
     Parser parser(false);
+    ParseMode parseMode;
+    parseMode.unknownKeyword = InputError::IGNORE;
 
     parser.addKeyword<ParserKeywords::SPECGRID>();
     parser.addKeyword<ParserKeywords::FAULTS>();
-    auto deck = parser.parseFile("testdata/integration_tests/Resinsight/DECK1.DATA" , false);
+    auto deck = parser.parseFile("testdata/integration_tests/Resinsight/DECK1.DATA" , parseMode);
     auto grid = std::make_shared<EclipseGrid>( deck );
     auto faults = std::make_shared<FaultCollection>( deck , grid );
 }

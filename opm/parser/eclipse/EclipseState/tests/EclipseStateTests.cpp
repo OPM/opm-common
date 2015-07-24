@@ -35,6 +35,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/Units/ConversionFactors.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -82,7 +83,7 @@ static DeckPtr createDeckTOP() {
         "\n";
 
     ParserPtr parser(new Parser());
-    return parser->parseString(deckData) ;
+    return parser->parseString(deckData, ParseMode()) ;
 }
 
 
@@ -142,7 +143,7 @@ static DeckPtr createDeck() {
         "\n";
 
     ParserPtr parser(new Parser());
-    return parser->parseString(deckData) ;
+    return parser->parseString(deckData, ParseMode()) ;
 }
 
 
@@ -170,7 +171,7 @@ static DeckPtr createDeckNoFaults() {
         "\n";
 
     ParserPtr parser(new Parser());
-    return parser->parseString(deckData) ;
+    return parser->parseString(deckData, ParseMode()) ;
 }
 
 
@@ -208,7 +209,7 @@ static DeckPtr createDeckSimConfig() {
 
 
     ParserPtr parser(new Parser());
-    return parser->parseString(inputStr) ;
+    return parser->parseString(inputStr, ParseMode()) ;
 }
 
 
@@ -367,7 +368,7 @@ static DeckPtr createDeckNoGridOpts() {
         "  1000*1 /\n";
 
     ParserPtr parser(new Parser());
-    return parser->parseString(deckData) ;
+    return parser->parseString(deckData, ParseMode()) ;
 }
 
 
@@ -386,7 +387,7 @@ static DeckPtr createDeckWithGridOpts() {
         "  1000*1 /\n";
 
     ParserPtr parser(new Parser());
-    return parser->parseString(deckData) ;
+    return parser->parseString(deckData, ParseMode()) ;
 }
 
 
@@ -440,7 +441,7 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreation) {
 
 
     ParserPtr parser(new Parser());
-    DeckPtr deck = parser->parseString(deckData) ;
+    DeckPtr deck = parser->parseString(deckData, ParseMode()) ;
     EclipseState state(deck);
 
     IOConfigConstPtr ioConfig = state.getIOConfigConst();
@@ -487,7 +488,7 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTRST) {
 
 
     ParserPtr parser(new Parser());
-    DeckPtr deck = parser->parseString(deckData) ;
+    DeckPtr deck = parser->parseString(deckData, ParseMode()) ;
     EclipseState state(deck);
 
     IOConfigConstPtr ioConfig = state.getIOConfigConst();

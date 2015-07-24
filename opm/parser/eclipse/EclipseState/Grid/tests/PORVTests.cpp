@@ -27,6 +27,7 @@
 
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -55,7 +56,7 @@ static Opm::DeckPtr createCARTDeck() {
         "\n";
 
     Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData) ;
+    return parser->parseString(deckData, Opm::ParseMode()) ;
 }
 
 
@@ -83,7 +84,7 @@ static Opm::DeckPtr createDeckWithPORO() {
         "\n";
 
     Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData) ;
+    return parser->parseString(deckData, Opm::ParseMode()) ;
 }
 
 
@@ -114,7 +115,7 @@ static Opm::DeckPtr createDeckWithPORVPORO() {
         "\n";
 
     Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData) ;
+    return parser->parseString(deckData, Opm::ParseMode()) ;
 }
 
 
@@ -154,7 +155,7 @@ static Opm::DeckPtr createDeckWithMULTPV() {
         "\n";
 
     Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData) ;
+    return parser->parseString(deckData, Opm::ParseMode()) ;
 }
 
 
@@ -186,7 +187,7 @@ static Opm::DeckPtr createDeckWithBOXPORV() {
         "\n";
 
     Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData) ;
+    return parser->parseString(deckData, Opm::ParseMode()) ;
 }
 
 
@@ -221,7 +222,7 @@ static Opm::DeckPtr createDeckWithNTG() {
 
 
     Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData) ;
+    return parser->parseString(deckData, Opm::ParseMode()) ;
 }
 
 BOOST_AUTO_TEST_CASE(PORV_cartesianDeck) {
@@ -335,7 +336,7 @@ static Opm::DeckPtr createDeckNakedGRID() {
         "\n";
 
     Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData) ;
+    return parser->parseString(deckData, Opm::ParseMode()) ;
 }
 
 

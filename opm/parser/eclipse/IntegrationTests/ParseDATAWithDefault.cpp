@@ -29,6 +29,7 @@
 #include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
@@ -52,7 +53,7 @@ ENKRVD\n\
 
 BOOST_AUTO_TEST_CASE( ParseMissingRECORD_THrows) {
     ParserPtr parser(new Parser());
-    BOOST_CHECK_THROW( parser->parseString( dataMissingRecord ) , std::invalid_argument);
+    BOOST_CHECK_THROW( parser->parseString( dataMissingRecord , ParseMode()) , std::invalid_argument);
 }
 
 
@@ -72,7 +73,7 @@ ENKRVD\n\
 
 BOOST_AUTO_TEST_CASE( parse_DATAWithDefult_OK ) {
     ParserPtr parser(new Parser());
-    DeckConstPtr deck = parser->parseString( data );
+    DeckConstPtr deck = parser->parseString( data , ParseMode());
     DeckKeywordConstPtr keyword = deck->getKeyword( "ENKRVD" );
     DeckRecordConstPtr rec0 = keyword->getRecord(0);
     DeckRecordConstPtr rec1 = keyword->getRecord(1);

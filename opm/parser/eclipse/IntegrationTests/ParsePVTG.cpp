@@ -29,6 +29,7 @@
 #include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
@@ -62,7 +63,7 @@ PVTG\n\
 
 
 static void check_parser(ParserPtr parser) {
-    DeckPtr deck =  parser->parseString(pvtgData);
+    DeckPtr deck =  parser->parseString(pvtgData, ParseMode());
     DeckKeywordConstPtr kw1 = deck->getKeyword("PVTG" , 0);
     BOOST_CHECK_EQUAL(5U , kw1->size());
 

@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(TimeStepsCorrect) {
         " 6 7 /\n";
 
     Opm::ParserPtr parser(new Opm::Parser(/*addDefault=*/true));
-    Opm::DeckPtr deck = parser->parseString(deckData);
+    Opm::DeckPtr deck = parser->parseString(deckData, Opm::ParseMode());
     Opm::TimeMap tmap(deck);
 
     BOOST_CHECK_EQUAL(tmap.getStartTime(/*timeLevelIdx=*/0),

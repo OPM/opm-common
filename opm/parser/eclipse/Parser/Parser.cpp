@@ -21,6 +21,7 @@
 
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
@@ -32,7 +33,7 @@
 namespace Opm {
 
     struct ParserState {
-        bool m_strict;
+        const ParseMode& parseMode;
         DeckPtr deck;
         boost::filesystem::path dataFile;
         boost::filesystem::path rootPath;
@@ -43,15 +44,17 @@ namespace Opm {
         std::string nextKeyword;
 
 
-        ParserState(const ParserState& parent) {
-            m_strict = parent.m_strict;
+        ParserState(const ParserState& parent)
+            : parseMode( parent.parseMode )
+        {
             deck = parent.deck;
             pathMap = parent.pathMap;
             rootPath = parent.rootPath;
         }
 
-        ParserState(bool strict) {
-            m_strict = strict;
+        ParserState(const ParseMode& __parseMode)
+            : parseMode( __parseMode )
+        {
             deck = std::make_shared<Deck>();
             lineNR = 0;
         }
@@ -110,8 +113,8 @@ namespace Opm {
      is retained in the current implementation.
      */
 
-    DeckPtr Parser::parseFile(const std::string &dataFileName, bool strict) const {
-        std::shared_ptr<ParserState> parserState = std::make_shared<ParserState>(strict);
+    DeckPtr Parser::parseFile(const std::string &dataFileName, const ParseMode& parseMode) const {
+        std::shared_ptr<ParserState> parserState = std::make_shared<ParserState>(parseMode);
         parserState->openFile( dataFileName );
 
         parseState(parserState);
@@ -120,8 +123,8 @@ namespace Opm {
         return parserState->deck;
     }
 
-    DeckPtr Parser::parseString(const std::string &data, bool strict) const {
-        std::shared_ptr<ParserState> parserState = std::make_shared<ParserState>(strict);
+    DeckPtr Parser::parseString(const std::string &data, const ParseMode& parseMode) const {
+        std::shared_ptr<ParserState> parserState = std::make_shared<ParserState>(parseMode);
         parserState->openString( data );
 
         parseState(parserState);
@@ -130,8 +133,8 @@ namespace Opm {
         return parserState->deck;
     }
 
-    DeckPtr Parser::parseStream(std::shared_ptr<std::istream> inputStream, bool strict) const {
-        std::shared_ptr<ParserState> parserState = std::make_shared<ParserState>(strict);
+    DeckPtr Parser::parseStream(std::shared_ptr<std::istream> inputStream, const ParseMode& parseMode) const {
+        std::shared_ptr<ParserState> parserState = std::make_shared<ParserState>(parseMode);
         parserState->openStream( inputStream );
 
         parseState(parserState);
@@ -382,10 +385,14 @@ namespace Opm {
                 return RawKeywordPtr(new RawKeyword(keywordString, parserState->dataFile.string() , parserState->lineNR , targetSize , parserKeyword->isTableCollection()));
             }
         } else {
-            if (parserState->m_strict)
+            InputError::Action action = parserState->parseMode.unknownKeyword;
+            if (action == InputError::THROW_EXCEPTION)
                 throw std::invalid_argument("Keyword " + keywordString + " not recognized ");
-            else
+            else {
+                if (action == InputError::WARN)
+                    OpmLog::addMessage(Log::MessageType::Warning , "Keyword " + keywordString + " not recognized");
                 return std::shared_ptr<RawKeyword>(  );
+            }
         }
     }
 

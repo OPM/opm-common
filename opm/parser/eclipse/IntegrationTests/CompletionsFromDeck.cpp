@@ -30,6 +30,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
 
@@ -41,7 +42,7 @@ BOOST_AUTO_TEST_CASE( CreateCompletionsFromRecord ) {
 
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_COMPDAT1");
-    DeckPtr deck =  parser->parseFile(scheduleFile.string());
+    DeckPtr deck =  parser->parseFile(scheduleFile.string(), ParseMode());
     DeckKeywordConstPtr COMPDAT1 = deck->getKeyword("COMPDAT" , 0);
     DeckRecordConstPtr line0 = COMPDAT1->getRecord(0);
     DeckRecordConstPtr line1 = COMPDAT1->getRecord(1);
@@ -87,7 +88,7 @@ BOOST_AUTO_TEST_CASE( CreateCompletionsFromKeyword ) {
 
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_COMPDAT1");
-    DeckPtr deck =  parser->parseFile(scheduleFile.string());
+    DeckPtr deck =  parser->parseFile(scheduleFile.string(), ParseMode());
     DeckKeywordConstPtr COMPDAT1 = deck->getKeyword("COMPDAT" , 1);
 
     std::map< std::string , std::vector<CompletionPtr> > completions = Completion::completionsFromCOMPDATKeyword( COMPDAT1 );

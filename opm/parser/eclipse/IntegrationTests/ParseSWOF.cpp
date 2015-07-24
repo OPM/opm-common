@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>
 
@@ -55,7 +56,7 @@ const char *parserData =
     "    1.0  1* 0.1 9.0 /\n";
 
 static void check_parser(ParserPtr parser) {
-    DeckPtr deck =  parser->parseString(parserData);
+    DeckPtr deck =  parser->parseString(parserData, ParseMode());
     DeckKeywordConstPtr kw1 = deck->getKeyword("SWOF");
     BOOST_CHECK_EQUAL(1U , kw1->size());
 
@@ -67,7 +68,7 @@ static void check_parser(ParserPtr parser) {
 }
 
 static void check_SwofTable(ParserPtr parser) {
-    DeckPtr deck =  parser->parseString(parserData);
+    DeckPtr deck =  parser->parseString(parserData, ParseMode());
     Opm::SwofTable swofTable;
     swofTable.initFORUNITTESTONLY(deck->getKeyword("SWOF"), /*recordIdx=*/0);
 

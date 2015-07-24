@@ -25,6 +25,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 using namespace Opm;
@@ -34,7 +35,7 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE( PARSE_PLYVISC_OK) {
     ParserPtr parser(new Parser());
     boost::filesystem::path deckFile("testdata/integration_tests/POLYMER/plyvisc.data");
-    DeckPtr deck =  parser->parseFile(deckFile.string());
+    DeckPtr deck =  parser->parseFile(deckFile.string(), ParseMode());
     DeckKeywordConstPtr kw = deck->getKeyword("PLYVISC");
     DeckRecordConstPtr rec = kw->getRecord(0);
     DeckItemPtr item = rec->getItem(0);

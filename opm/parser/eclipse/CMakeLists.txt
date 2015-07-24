@@ -47,7 +47,8 @@ Deck/DeckStringItem.cpp
 Deck/Section.cpp
 )
 
-set( parser_source 
+set( parser_source
+Parser/ParseMode.cpp
 Parser/ParserEnums.cpp
 Parser/ParserKeyword.cpp 
 Parser/Parser.cpp 
@@ -155,6 +156,8 @@ Parser/ParserIntItem.hpp
 Parser/ParserFloatItem.hpp
 Parser/ParserDoubleItem.hpp
 Parser/ParserStringItem.hpp
+Parser/InputErrorAction.hpp
+Parser/ParseMode.hpp
 #
 Generator/KeywordLoader.hpp
 Generator/KeywordGenerator.hpp

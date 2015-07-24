@@ -25,6 +25,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
@@ -52,7 +53,7 @@ BOOST_AUTO_TEST_CASE(ParseWellProbe) {
     BOOST_CHECK_THROW(parser->parseString(invalidDeckString), std::invalid_argument);
 */
 
-    DeckPtr deck = parser->parseString(validDeckString);
+    DeckPtr deck = parser->parseString(validDeckString, ParseMode());
     BOOST_CHECK( !deck->hasKeyword("WELL_PROBE"));
     BOOST_CHECK( deck->hasKeyword("WBHP"));
     BOOST_CHECK( deck->hasKeyword("WOPR"));

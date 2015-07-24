@@ -24,6 +24,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 
@@ -85,7 +86,7 @@ namespace {
         Opm::WellProductionProperties properties(const std::string& input) {
             Opm::Parser parser;
 
-            Opm::DeckPtr deck = parser.parseString(input);
+            Opm::DeckPtr deck = parser.parseString(input, Opm::ParseMode());
             Opm::DeckRecordConstPtr record = deck->getKeyword("WCONHIST")->getRecord(0);
 
             return Opm::WellProductionProperties::history(record);
@@ -109,7 +110,7 @@ namespace {
         {
             Opm::Parser parser;
 
-            Opm::DeckPtr             deck   = parser.parseString(input);
+            Opm::DeckPtr             deck   = parser.parseString(input, Opm::ParseMode());
             Opm::DeckKeywordConstPtr kwd    = deck->getKeyword("WCONHIST");
             Opm::DeckRecordConstPtr  record = kwd->getRecord(0);
 

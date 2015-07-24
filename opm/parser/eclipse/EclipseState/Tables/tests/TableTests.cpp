@@ -20,6 +20,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 // generic table classes
@@ -53,7 +54,7 @@ BOOST_AUTO_TEST_CASE(CreateSingleRecordTable) {
         " 9 10 11 12 /\n";
 
     Opm::ParserPtr parser(new Opm::Parser);
-    Opm::DeckConstPtr deck(parser->parseString(deckData));
+    Opm::DeckConstPtr deck(parser->parseString(deckData, Opm::ParseMode()));
 
     std::vector<std::string> tooFewColumnNames{"A", "B", "C"};
     std::vector<std::string> justRightColumnNames{"A", "B", "C", "D"};
@@ -94,7 +95,7 @@ BOOST_AUTO_TEST_CASE(CreateMultiTable) {
         "/\n";
 
     Opm::ParserPtr parser(new Opm::Parser);
-    Opm::DeckConstPtr deck(parser->parseString(deckData));
+    Opm::DeckConstPtr deck(parser->parseString(deckData, Opm::ParseMode()));
 
     std::vector<std::string> tooFewColumnNames{"A", "B", "C"};
     std::vector<std::string> justRightColumnNames{"A", "B", "C", "D"};
@@ -135,7 +136,7 @@ BOOST_AUTO_TEST_CASE(SwofTable_Tests) {
         " 17 18 19 20/\n";
 
     Opm::ParserPtr parser(new Opm::Parser);
-    Opm::DeckConstPtr deck(parser->parseString(deckData));
+    Opm::DeckConstPtr deck(parser->parseString(deckData, Opm::ParseMode()));
     Opm::DeckKeywordConstPtr swofKeyword = deck->getKeyword("SWOF");
 
     BOOST_CHECK_EQUAL(Opm::SwofTable::numTables(swofKeyword), 2);
@@ -183,7 +184,7 @@ BOOST_AUTO_TEST_CASE(SgofTable_Tests) {
         " 17 18 19 20/\n";
 
     Opm::ParserPtr parser(new Opm::Parser);
-    Opm::DeckConstPtr deck(parser->parseString(deckData));
+    Opm::DeckConstPtr deck(parser->parseString(deckData, Opm::ParseMode()));
     Opm::DeckKeywordConstPtr sgofKeyword = deck->getKeyword("SGOF");
 
     BOOST_CHECK_EQUAL(Opm::SgofTable::numTables(sgofKeyword), 2);
@@ -235,7 +236,7 @@ BOOST_AUTO_TEST_CASE(PlyadsTable_Tests) {
             "2.00    0.000030\n"
             "3.00    0.000030 /\n";
         Opm::ParserPtr parser(new Opm::Parser);
-        Opm::DeckConstPtr deck(parser->parseString(correctDeckData));
+        Opm::DeckConstPtr deck(parser->parseString(correctDeckData, Opm::ParseMode()));
         Opm::DeckKeywordConstPtr plyadsKeyword = deck->getKeyword("PLYADS");
 
         BOOST_CHECK_EQUAL(Opm::PlyadsTable::numTables(plyadsKeyword), 1);
@@ -267,7 +268,7 @@ BOOST_AUTO_TEST_CASE(PlyadsTable_Tests) {
             "2.00    0.000030\n"
             "3.00    0.000030 /\n";
         Opm::ParserPtr parser(new Opm::Parser);
-        Opm::DeckConstPtr deck(parser->parseString(incorrectDeckData));
+        Opm::DeckConstPtr deck(parser->parseString(incorrectDeckData, Opm::ParseMode()));
         Opm::DeckKeywordConstPtr plyadsKeyword = deck->getKeyword("PLYADS");
 
         BOOST_CHECK_EQUAL(Opm::PlyadsTable::numTables(plyadsKeyword), 1);
@@ -293,7 +294,7 @@ BOOST_AUTO_TEST_CASE(PlyadsTable_Tests) {
             "2.00    0.000030\n"
             "3.00    0.000029 /\n";
         Opm::ParserPtr parser(new Opm::Parser);
-        Opm::DeckConstPtr deck(parser->parseString(incorrectDeckData));
+        Opm::DeckConstPtr deck(parser->parseString(incorrectDeckData, Opm::ParseMode()));
         Opm::DeckKeywordConstPtr plyadsKeyword = deck->getKeyword("PLYADS");
 
         BOOST_CHECK_EQUAL(Opm::PlyadsTable::numTables(plyadsKeyword), 1);
@@ -320,7 +321,7 @@ BOOST_AUTO_TEST_CASE(PvtoTable_Tests) {
         "/\n";
 
     Opm::ParserPtr parser(new Opm::Parser);
-    Opm::DeckConstPtr deck(parser->parseString(deckData));
+    Opm::DeckConstPtr deck(parser->parseString(deckData, Opm::ParseMode()));
     Opm::DeckKeywordConstPtr pvtoKeyword = deck->getKeyword("PVTO");
 
     BOOST_CHECK_EQUAL(Opm::PvtoTable::numTables(pvtoKeyword), 2);
@@ -397,7 +398,7 @@ VFPPROD \n\
 2 2 2 2 46.5 47.5 48.5 / \n";
 
     Opm::ParserPtr parser(new Opm::Parser);
-    Opm::DeckConstPtr deck(parser->parseString(deckData));
+    Opm::DeckConstPtr deck(parser->parseString(deckData, Opm::ParseMode()));
     Opm::DeckKeywordConstPtr vfpprodKeyword = deck->getKeyword("VFPPROD");
     std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
 
@@ -524,7 +525,7 @@ VFPPROD \n\
 1 1 1 1 1.5 /    \n";
 
     Opm::ParserPtr parser(new Opm::Parser);
-    Opm::DeckConstPtr deck(parser->parseString(deckData));
+    Opm::DeckConstPtr deck(parser->parseString(deckData, Opm::ParseMode()));
     Opm::DeckKeywordConstPtr vfpprodKeyword = deck->getKeyword("VFPPROD");
     std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
 
@@ -636,7 +637,7 @@ VFPPROD \n\
 1 1 1 1 1.5 /    \n";
 
         Opm::ParserPtr parser(new Opm::Parser);
-        Opm::DeckConstPtr deck(parser->parseString(missing_values));
+        Opm::DeckConstPtr deck(parser->parseString(missing_values, Opm::ParseMode()));
         Opm::DeckKeywordConstPtr vfpprodKeyword = deck->getKeyword("VFPPROD");
         std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
         BOOST_CHECK_EQUAL(deck->numKeywords("VFPPROD"), 1);
@@ -673,7 +674,7 @@ VFPPROD \n\
 1 1 1 1 1.5 /    \n";
 
         Opm::ParserPtr parser(new Opm::Parser);
-        Opm::DeckConstPtr deck(parser->parseString(missing_values));
+        Opm::DeckConstPtr deck(parser->parseString(missing_values, Opm::ParseMode()));
         Opm::DeckKeywordConstPtr vfpprodKeyword = deck->getKeyword("VFPPROD");
         std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
         BOOST_CHECK_EQUAL(deck->numKeywords("VFPPROD"), 1);
@@ -708,7 +709,7 @@ VFPPROD \n\
 1 1 1 1 1.5 2.5 /    \n";
 
         Opm::ParserPtr parser(new Opm::Parser);
-        Opm::DeckConstPtr deck(parser->parseString(missing_metadata));
+        Opm::DeckConstPtr deck(parser->parseString(missing_metadata, Opm::ParseMode()));
         Opm::DeckKeywordConstPtr vfpprodKeyword = deck->getKeyword("VFPPROD");
         std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
         BOOST_CHECK_EQUAL(deck->numKeywords("VFPPROD"), 1);
@@ -744,7 +745,7 @@ VFPPROD \n\
 1 1 1 1 1.5 2.5 /    \n";
 
         Opm::ParserPtr parser(new Opm::Parser);
-        Opm::DeckConstPtr deck(parser->parseString(wrong_metadata));
+        Opm::DeckConstPtr deck(parser->parseString(wrong_metadata, Opm::ParseMode()));
         Opm::DeckKeywordConstPtr vfpprodKeyword = deck->getKeyword("VFPPROD");
         std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
         BOOST_CHECK_EQUAL(deck->numKeywords("VFPPROD"), 1);
@@ -779,7 +780,7 @@ VFPPROD \n\
 1 1 1 1 1.5 2.5 /    \n";
 
         Opm::ParserPtr parser(new Opm::Parser);
-        Opm::DeckConstPtr deck(parser->parseString(missing_axes));
+        Opm::DeckConstPtr deck(parser->parseString(missing_axes, Opm::ParseMode()));
         Opm::DeckKeywordConstPtr vfpprodKeyword = deck->getKeyword("VFPPROD");
         std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
         BOOST_CHECK_EQUAL(deck->numKeywords("VFPPROD"), 1);
@@ -812,7 +813,7 @@ VFPINJ \n\
 2 4.5 5.5 6.5 /    \n";
 
     Opm::ParserPtr parser(new Opm::Parser);
-    Opm::DeckConstPtr deck(parser->parseString(deckData));
+    Opm::DeckConstPtr deck(parser->parseString(deckData, Opm::ParseMode()));
     Opm::DeckKeywordConstPtr vfpprodKeyword = deck->getKeyword("VFPINJ");
     std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
 
@@ -906,7 +907,7 @@ VFPINJ \n\
 2 4.5 5.5 /    \n";
 
         Opm::ParserPtr parser(new Opm::Parser);
-        Opm::DeckConstPtr deck(parser->parseString(missing_values));
+        Opm::DeckConstPtr deck(parser->parseString(missing_values, Opm::ParseMode()));
         Opm::DeckKeywordConstPtr vfpinjKeyword = deck->getKeyword("VFPINJ");
         std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
         BOOST_CHECK_EQUAL(deck->numKeywords("VFPINJ"), 1);
@@ -937,7 +938,7 @@ VFPINJ \n\
 1 1.5 2.5 3.5 /    \n";
 
         Opm::ParserPtr parser(new Opm::Parser);
-        Opm::DeckConstPtr deck(parser->parseString(missing_values));
+        Opm::DeckConstPtr deck(parser->parseString(missing_values, Opm::ParseMode()));
         Opm::DeckKeywordConstPtr vfpinjKeyword = deck->getKeyword("VFPINJ");
         std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
         BOOST_CHECK_EQUAL(deck->numKeywords("VFPINJ"), 1);
@@ -967,7 +968,7 @@ VFPINJ \n\
 2 4.5 5.5 6.5 /    \n";
 
         Opm::ParserPtr parser(new Opm::Parser);
-        Opm::DeckConstPtr deck(parser->parseString(missing_metadata));
+        Opm::DeckConstPtr deck(parser->parseString(missing_metadata, Opm::ParseMode()));
         Opm::DeckKeywordConstPtr vfpinjKeyword = deck->getKeyword("VFPINJ");
         std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
         BOOST_CHECK_EQUAL(deck->numKeywords("VFPINJ"), 1);
@@ -998,7 +999,7 @@ VFPINJ \n\
 2 4.5 5.5 6.5 /    \n";
 
         Opm::ParserPtr parser(new Opm::Parser);
-        Opm::DeckConstPtr deck(parser->parseString(wrong_metadata));
+        Opm::DeckConstPtr deck(parser->parseString(wrong_metadata, Opm::ParseMode()));
         Opm::DeckKeywordConstPtr vfpinjKeyword = deck->getKeyword("VFPINJ");
         std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
         BOOST_CHECK_EQUAL(deck->numKeywords("VFPINJ"), 1);
@@ -1028,7 +1029,7 @@ VFPINJ \n\
 2 4.5 5.5 6.5 /    \n";
 
         Opm::ParserPtr parser(new Opm::Parser);
-        Opm::DeckConstPtr deck(parser->parseString(missing_axes));
+        Opm::DeckConstPtr deck(parser->parseString(missing_axes, Opm::ParseMode()));
         Opm::DeckKeywordConstPtr vfpinjKeyword = deck->getKeyword("VFPINJ");
         std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
         BOOST_CHECK_EQUAL(deck->numKeywords("VFPINJ"), 1);

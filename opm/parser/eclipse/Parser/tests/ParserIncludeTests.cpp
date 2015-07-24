@@ -23,12 +23,13 @@
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 
 BOOST_AUTO_TEST_CASE(ParserKeyword_includeValid) {
     boost::filesystem::path inputFilePath("testdata/parser/includeValid.data");
 
     Opm::ParserPtr parser(new Opm::Parser());
-    Opm::DeckConstPtr deck = parser->parseFile(inputFilePath.string());
+    Opm::DeckConstPtr deck = parser->parseFile(inputFilePath.string() , Opm::ParseMode());
 
     BOOST_CHECK_EQUAL(true , deck->hasKeyword("OIL"));
     BOOST_CHECK_EQUAL(false , deck->hasKeyword("WATER"));
@@ -38,7 +39,7 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_includeInvalid) {
     boost::filesystem::path inputFilePath("testdata/parser/includeInvalid.data");
 
     Opm::ParserPtr parser(new Opm::Parser());
-    BOOST_CHECK_THROW(parser->parseFile(inputFilePath.string()), std::runtime_error);
+    BOOST_CHECK_THROW(parser->parseFile(inputFilePath.string() , Opm::ParseMode()), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(ParserKeyword_includeWrongCase) {
@@ -53,9 +54,9 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_includeWrongCase) {
     // exactly the same spelling as their names on disk. Eclipse seems
     // to be a bit more relaxed when it comes to this, so we might
     // have to change the current behavior one not-so-fine day...
-    BOOST_CHECK_THROW(parser->parseFile(inputFile1Path.string()), std::runtime_error);
-    BOOST_CHECK_THROW(parser->parseFile(inputFile2Path.string()), std::runtime_error);
-    BOOST_CHECK_THROW(parser->parseFile(inputFile3Path.string()), std::runtime_error);
+    BOOST_CHECK_THROW(parser->parseFile(inputFile1Path.string(), Opm::ParseMode()), std::runtime_error);
+    BOOST_CHECK_THROW(parser->parseFile(inputFile2Path.string(), Opm::ParseMode()), std::runtime_error);
+    BOOST_CHECK_THROW(parser->parseFile(inputFile3Path.string(), Opm::ParseMode()), std::runtime_error);
 #else
     // for case-insensitive filesystems, the include statement will
     // always work regardless of how the capitalization of the

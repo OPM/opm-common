@@ -25,6 +25,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
@@ -40,7 +41,7 @@ BOOST_AUTO_TEST_CASE( parse_VFPPROD_OK ) {
     boost::filesystem::path file("testdata/integration_tests/VFPPROD/VFPPROD1");
     BOOST_CHECK( parser->isRecognizedKeyword("VFPPROD"));
 
-    DeckPtr deck =  parser->parseFile(file.string());
+    DeckPtr deck =  parser->parseFile(file.string(), ParseMode());
 
     DeckKeywordConstPtr VFPPROD1 = deck->getKeyword("VFPPROD" , 0);
     DeckKeywordConstPtr BPR = deck->getKeyword("BPR" , 0);

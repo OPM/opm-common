@@ -24,6 +24,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
@@ -39,7 +40,7 @@ BOOST_AUTO_TEST_CASE( parse_END_OK ) {
     ParserPtr parser(new Parser());
     boost::filesystem::path fileWithTitleKeyword("testdata/integration_tests/END/END1.txt");
 
-    DeckPtr deck = parser->parseFile(fileWithTitleKeyword.string());
+    DeckPtr deck = parser->parseFile(fileWithTitleKeyword.string(), ParseMode());
 
     BOOST_CHECK_EQUAL(size_t(1), deck->size());
     BOOST_CHECK_EQUAL (true, deck->hasKeyword("OIL"));
@@ -51,7 +52,7 @@ BOOST_AUTO_TEST_CASE( parse_ENDINC_OK ) {
     ParserPtr parser(new Parser());
     boost::filesystem::path fileWithTitleKeyword("testdata/integration_tests/END/ENDINC1.txt");
 
-    DeckPtr deck = parser->parseFile(fileWithTitleKeyword.string());
+    DeckPtr deck = parser->parseFile(fileWithTitleKeyword.string(), ParseMode());
 
     BOOST_CHECK_EQUAL(size_t(1), deck->size());
     BOOST_CHECK_EQUAL (true, deck->hasKeyword("OIL"));
