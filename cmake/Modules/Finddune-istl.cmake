@@ -17,6 +17,7 @@ find_opm_package (
 
   # required dependencies
   "dune-common REQUIRED;
+  ParMETIS;
   SuperLU;
   SuiteSparse COMPONENTS umfpack
   "
