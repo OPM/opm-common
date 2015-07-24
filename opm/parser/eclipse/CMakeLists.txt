@@ -95,6 +95,7 @@ EclipseState/Schedule/ScheduleEnums.cpp
 EclipseState/Schedule/GroupTreeNode.cpp
 EclipseState/Schedule/GroupTree.cpp
 EclipseState/Schedule/Tuning.cpp
+EclipseState/Schedule/Events.cpp
 #
 EclipseState/Tables/SingleRecordTable.cpp
 EclipseState/Tables/MultiRecordTable.cpp
@@ -181,6 +182,7 @@ EclipseState/Schedule/ScheduleEnums.hpp
 EclipseState/Schedule/GroupTreeNode.hpp 
 EclipseState/Schedule/GroupTree.hpp
 EclipseState/Schedule/Tuning.hpp
+EclipseState/Schedule/Events.hpp
 #
 EclipseState/Util/ElasticVector.hpp 
 EclipseState/Util/OrderedMap.hpp 

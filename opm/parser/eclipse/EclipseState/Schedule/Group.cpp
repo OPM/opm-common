@@ -115,7 +115,7 @@ namespace Opm {
     }
 
     void Group::setProductionGroup(size_t timeStep, bool isProductionGroup_) {
-        m_isProductionGroup->add(timeStep, isProductionGroup_);
+        m_isProductionGroup->update(timeStep, isProductionGroup_);
     }
 
 
@@ -146,7 +146,7 @@ namespace Opm {
             if (phase != currentPhase)
                 throw std::invalid_argument("Sorry - we currently do not support injecting multiple phases at the same time.");
         }
-        m_injection->phase->add( time_step , phase );
+        m_injection->phase->update( time_step , phase );
     }
 
     Phase::PhaseEnum Group::getInjectionPhase( size_t time_step ) const {
@@ -154,7 +154,7 @@ namespace Opm {
     }
 
     void Group::setInjectionRate( size_t time_step , double rate) {
-        return m_injection->rate->add( time_step , rate);
+        m_injection->rate->update( time_step , rate);
     }
 
     double Group::getInjectionRate( size_t time_step ) const {
@@ -162,7 +162,7 @@ namespace Opm {
     }
 
     void Group::setInjectionControlMode(size_t time_step , GroupInjection::ControlEnum controlMode) {
-        m_injection->controlMode->add( time_step , controlMode );
+        m_injection->controlMode->update( time_step , controlMode );
     }
 
     GroupInjection::ControlEnum Group::getInjectionControlMode( size_t time_step) const {
@@ -170,7 +170,7 @@ namespace Opm {
     }
 
     void Group::setSurfaceMaxRate( size_t time_step , double rate) {
-        return m_injection->surfaceFlowMaxRate->add( time_step , rate);
+        m_injection->surfaceFlowMaxRate->update( time_step , rate);
     }
 
     double Group::getSurfaceMaxRate( size_t time_step ) const {
@@ -178,7 +178,7 @@ namespace Opm {
     }
 
     void Group::setReservoirMaxRate( size_t time_step , double rate) {
-        return m_injection->reservoirFlowMaxRate->add( time_step , rate);
+        m_injection->reservoirFlowMaxRate->update( time_step , rate);
     }
 
     double Group::getReservoirMaxRate( size_t time_step ) const {
@@ -186,7 +186,7 @@ namespace Opm {
     }
 
     void Group::setTargetReinjectFraction( size_t time_step , double rate) {
-        return m_injection->targetReinjectFraction->add( time_step , rate);
+        m_injection->targetReinjectFraction->update( time_step , rate);
     }
 
     double Group::getTargetReinjectFraction( size_t time_step ) const {
@@ -194,7 +194,7 @@ namespace Opm {
     }
 
     void Group::setTargetVoidReplacementFraction( size_t time_step , double rate) {
-        return m_injection->targetVoidReplacementFraction->add( time_step , rate);
+        m_injection->targetVoidReplacementFraction->update( time_step , rate);
     }
 
     double Group::getTargetVoidReplacementFraction( size_t time_step ) const {
@@ -204,7 +204,7 @@ namespace Opm {
     /*****************************************************************/
 
     void Group::setProductionControlMode( size_t time_step , GroupProduction::ControlEnum controlMode) {
-        m_production->controlMode->add(time_step , controlMode );
+        m_production->controlMode->update(time_step , controlMode );
     }
 
     GroupProduction::ControlEnum Group::getProductionControlMode( size_t time_step ) const {
@@ -218,12 +218,12 @@ namespace Opm {
 
 
     void Group::setProductionExceedLimitAction( size_t time_step , GroupProductionExceedLimit::ActionEnum action) {
-        m_production->exceedAction->add(time_step , action);
+        m_production->exceedAction->update(time_step , action);
     }
 
 
     void Group::setOilTargetRate(size_t time_step , double oilTargetRate) {
-        m_production->oilTarget->add(time_step , oilTargetRate);
+        m_production->oilTarget->update(time_step , oilTargetRate);
     }
 
 
@@ -233,7 +233,7 @@ namespace Opm {
 
 
     void Group::setGasTargetRate(size_t time_step , double gasTargetRate) {
-        m_production->gasTarget->add(time_step , gasTargetRate);
+        m_production->gasTarget->update(time_step , gasTargetRate);
     }
 
 
@@ -243,7 +243,7 @@ namespace Opm {
 
 
     void Group::setWaterTargetRate(size_t time_step , double waterTargetRate) {
-        m_production->waterTarget->add(time_step , waterTargetRate);
+        m_production->waterTarget->update(time_step , waterTargetRate);
     }
 
 
@@ -253,7 +253,7 @@ namespace Opm {
 
 
     void Group::setLiquidTargetRate(size_t time_step , double liquidTargetRate) {
-        m_production->liquidTarget->add(time_step , liquidTargetRate);
+        m_production->liquidTarget->update(time_step , liquidTargetRate);
     }
 
 
@@ -291,7 +291,7 @@ namespace Opm {
         WellSetPtr newWellSet = WellSetPtr( wellSet->shallowCopy() );
 
         newWellSet->addWell(well);
-        m_wells->add(time_step , newWellSet);
+        m_wells->update(time_step , newWellSet);
     }
 
 
@@ -300,7 +300,7 @@ namespace Opm {
         WellSetPtr newWellSet = WellSetPtr( wellSet->shallowCopy() );
 
         newWellSet->delWell(wellName);
-        m_wells->add(time_step , newWellSet);
+        m_wells->update(time_step , newWellSet);
     }
 
 }

@@ -29,6 +29,29 @@
 
 namespace Opm {
 
+    /**
+       The DynamicState<T> class is designed to hold information about
+       properties with the following semantics:
+
+         1. The property can be updated repeatedly at different
+            timesteps; observe that the class does not support
+            operator[] - only updates with weakly increasing timesteps
+            are supported.
+
+         2. At any point in the time the previous last set value
+            applies.
+
+       The class is very much tailored to support the Schedule file of
+       Eclipse where a control applied at time T will apply
+       indefinitely, or until explicitly set to a different value.
+
+       The update() method returns true if the updated value is
+       different from the current value, this implies that the
+       class<T> must support operator!=
+    */
+
+
+
     template <class T>
     class DynamicState {
     public:
@@ -88,27 +111,34 @@ namespace Opm {
         }
 
 
-        void add(size_t index , T value) {
+        /**
+           If the current value has been changed the method will
+           return true, otherwise it will return false.
+        */
+        bool update(size_t index , T value) {
+            bool change = (value != m_currentValue);
             if (index >= (m_timeMap->size()))
                 throw std::range_error("Index value is out range.");
 
-           if (m_data.size() > 0) {
+            if (m_data.size() > 0) {
                 if (index < (m_data.size() - 1))
                     throw std::invalid_argument("Elements must be added in weakly increasing order");
             }
 
-           {
-               size_t currentSize = m_data.size();
-               if (currentSize <= index) {
-                   for (size_t i = currentSize; i <= index; i++)
-                       m_data.push_back( m_currentValue );
-               }
-           }
+            {
+                size_t currentSize = m_data.size();
+                if (currentSize <= index) {
+                    for (size_t i = currentSize; i <= index; i++)
+                        m_data.push_back( m_currentValue );
+                }
+            }
 
-           m_data[index] = value;
-           m_currentValue = value;
-           if (m_initialRange == 0)
-               m_initialRange = index;
+            m_data[index] = value;
+            m_currentValue = value;
+            if (m_initialRange == 0)
+                m_initialRange = index;
+
+            return change;
         }
 
 

@@ -143,7 +143,7 @@ namespace Opm {
             m_restart_output_config->globalReset(rs);
         }
         else {
-            m_restart_output_config->add(timestep, rs);
+            m_restart_output_config->update(timestep, rs);
         }
     }
 
@@ -169,7 +169,7 @@ namespace Opm {
         rs.timestep  = timestep;
         rs.basic     = (restart == 0) ? 0 : 1;
 
-        m_restart_output_config->add(timestep, rs);
+        m_restart_output_config->update(timestep, rs);
     }
 
 

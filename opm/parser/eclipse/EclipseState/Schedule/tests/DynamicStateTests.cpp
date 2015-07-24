@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(DynamicStateSetOutOfRangeThrows) {
     for (size_t i = 0; i < 2; i++)
         timeMap->addTStep( boost::posix_time::hours( (i+1) * 24 ));
 
-    BOOST_CHECK_THROW( state.add(3 , 100) , std::range_error);
+    BOOST_CHECK_THROW( state.update(3 , 100) , std::range_error);
 }
 
 
@@ -74,19 +74,19 @@ BOOST_AUTO_TEST_CASE(DynamicStateSetOK) {
     for (size_t i = 0; i < 10; i++)
         timeMap->addTStep( boost::posix_time::hours( (i+1) * 24 ));
 
-    state.add(2 , 23 );
+    state.update(2 , 23 );
     BOOST_CHECK_EQUAL( 137 , state.get(0));
     BOOST_CHECK_EQUAL( 137 , state.get(1));
     BOOST_CHECK_EQUAL( 23 , state.get(2));
     BOOST_CHECK_EQUAL( 23 , state.get(5));
 
-    state.add(2 , 17);
+    state.update(2 , 17);
     BOOST_CHECK_EQUAL( 137 , state.get(0));
     BOOST_CHECK_EQUAL( 137 , state.get(1));
     BOOST_CHECK_EQUAL( 17 , state.get(2));
     BOOST_CHECK_EQUAL( 17 , state.get(5));
 
-    state.add(6 , 60);
+    state.update(6 , 60);
     BOOST_CHECK_EQUAL( 17 , state.get(2));
     BOOST_CHECK_EQUAL( 17 , state.get(5));
     BOOST_CHECK_EQUAL( 60 , state.get(6));
@@ -103,8 +103,8 @@ BOOST_AUTO_TEST_CASE(DynamicStateAddIndexAlreadySetThrows) {
     for (size_t i = 0; i < 10; i++)
         timeMap->addTStep( boost::posix_time::hours( (i+1) * 24 ));
 
-    state.add( 5 , 60);
-    BOOST_CHECK_THROW( state.add(3 , 78) , std::invalid_argument);
+    state.update( 5 , 60);
+    BOOST_CHECK_THROW( state.update(3 , 78) , std::invalid_argument);
 }
 
 
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(DynamicStateAddAt) {
     for (size_t i = 0; i < 10; i++)
         timeMap->addTStep( boost::posix_time::hours( (i+1) * 24 ));
 
-    state.add( 10 , 77 );
+    state.update( 10 , 77 );
     {
         const int& v1 = state.at(10);
         int v2 = state.get(10);
@@ -135,15 +135,15 @@ BOOST_AUTO_TEST_CASE(DynamicStateCheckSize) {
 
     BOOST_CHECK_EQUAL( 0U , state.size() );
 
-    state.add( 0 , 10 );
+    state.update( 0 , 10 );
     BOOST_CHECK_EQUAL( 1U , state.size() );
 
-    state.add( 2 , 10 );
+    state.update( 2 , 10 );
     BOOST_CHECK_EQUAL( 3U , state.size() );
-    state.add( 2 , 10 );
+    state.update( 2 , 10 );
     BOOST_CHECK_EQUAL( 3U , state.size() );
 
-    state.add( 6 , 10 );
+    state.update( 6 , 10 );
     BOOST_CHECK_EQUAL( 7U , state.size() );
 }
 
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(DynamicStateOperatorSubscript) {
     for (size_t i = 0; i < 10; i++)
         timeMap->addTStep( boost::posix_time::hours( (i+1) * 24 ));
 
-    state.add( 10 , 200 );
+    state.update( 10 , 200 );
     BOOST_CHECK_EQUAL( state[9] , 137 );
     BOOST_CHECK_EQUAL( state[0] , 137 );
 
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(DynamicStateInitial) {
         timeMap->addTStep( boost::posix_time::hours( (i+1) * 24 ));
 
 
-    state.add( 10 , 200 );
+    state.update( 10 , 200 );
     BOOST_CHECK_EQUAL( state[9] , 137 );
     BOOST_CHECK_EQUAL( state[0] , 137 );
     BOOST_CHECK_EQUAL( state[10] , 200 );
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(DynamicStateInitial) {
     BOOST_CHECK_EQUAL( state[10] , 200 );
 
 
-    state2.add( 10 , 200 );
+    state2.update( 10 , 200 );
     BOOST_CHECK_EQUAL( state2[9] , 137 );
     BOOST_CHECK_EQUAL( state2[0] , 137 );
     BOOST_CHECK_EQUAL( state2[10] , 200 );
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE( ResetGlobal ) {
     for (size_t i = 0; i < 10; i++)
         timeMap->addTStep( boost::posix_time::hours( (i+1) * 24 ));
 
-    state.add(5 , 100);
+    state.update(5 , 100);
     BOOST_CHECK_EQUAL( state[0] , 137 );
     BOOST_CHECK_EQUAL( state[4] , 137 );
     BOOST_CHECK_EQUAL( state[5] , 100 );
@@ -221,4 +221,17 @@ BOOST_AUTO_TEST_CASE( ResetGlobal ) {
     BOOST_CHECK_EQUAL( state[4] , 88 );
     BOOST_CHECK_EQUAL( state[5] , 88 );
     BOOST_CHECK_EQUAL( state[9] , 88 );
+}
+
+
+BOOST_AUTO_TEST_CASE( CheckReturn ) {
+    boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
+    Opm::TimeMapPtr timeMap(new Opm::TimeMap(boost::posix_time::ptime(startDate)));
+    Opm::DynamicState<int> state(timeMap , 137);
+    for (size_t i = 0; i < 10; i++)
+        timeMap->addTStep( boost::posix_time::hours( (i+1) * 24 ));
+
+    BOOST_CHECK_EQUAL( false , state.update( 0 , 137 ));
+    BOOST_CHECK_EQUAL( false , state.update( 3 , 137 ));
+    BOOST_CHECK_EQUAL( true , state.update( 5 , 200 ));
 }

@@ -192,27 +192,28 @@ namespace Opm {
             const std::string& wellName = record->getItem("WELL")->getTrimmedString(0);
             const std::string& groupName = record->getItem("GROUP")->getTrimmedString(0);
 
-            if (!hasGroup(groupName)) {
+            if (!hasGroup(groupName))
                 addGroup(groupName , currentStep);
-            }
 
-            if (!hasWell(wellName)) {
+            if (!hasWell(wellName))
                 addWell(wellName, record, currentStep);
-            }
 
             WellConstPtr currentWell = getWell(wellName);
             checkWELSPECSConsistency(currentWell, keyword, recordNr);
 
             addWellToGroup( getGroup(groupName) , getWell(wellName) , currentStep);
-            bool treeChanged = handleGroupFromWELSPECS(groupName, newTree);
-            needNewTree = needNewTree || treeChanged;
+            if (handleGroupFromWELSPECS(groupName, newTree))
+                needNewTree = true;
         }
+
         if (needNewTree) {
-            m_rootGroupTree->add(currentStep, newTree);
+            m_rootGroupTree->update(currentStep, newTree);
+            m_events.addEvent( ScheduleEvents::GROUP_CHANGE , currentStep);
         }
     }
 
-    
+
+
     void Schedule::checkWELSPECSConsistency(WellConstPtr well, DeckKeywordConstPtr keyword, size_t recordIdx) const {
         DeckRecordConstPtr record = keyword->getRecord(recordIdx);
         if (well->getHeadI() != record->getItem("HEAD_I")->getInt(0) - 1) {
@@ -274,12 +275,18 @@ namespace Opm {
                         throw std::invalid_argument(msg);
                     }
                 }
-
-                well->setStatus( currentStep , status );
-                well->setProductionProperties(currentStep, properties);
+                updateWellStatus( well , currentStep , status );
+                if (well->setProductionProperties(currentStep, properties))
+                    m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);
             }
         }
     }
+
+    void Schedule::updateWellStatus(std::shared_ptr<Well> well, size_t reportStep , WellCommon::StatusEnum status) {
+        if (well->setStatus( reportStep , status ))
+            m_events.addEvent( ScheduleEvents::WELL_STATUS_CHANGE , reportStep );
+    }
+
 
     void Schedule::handleWCONHIST(DeckKeywordConstPtr keyword, size_t currentStep) {
         handleWCONProducer(keyword, currentStep, false);
@@ -381,7 +388,7 @@ namespace Opm {
                 WellInjector::TypeEnum injectorType = WellInjector::TypeFromString( record->getItem("TYPE")->getTrimmedString(0) );
                 WellCommon::StatusEnum status = WellCommon::StatusFromString( record->getItem("STATUS")->getTrimmedString(0));
 
-                well->setStatus( currentStep , status );
+                updateWellStatus( well , currentStep , status );
                 WellInjectionProperties properties(well->getInjectionPropertiesCopy(currentStep));
 
                 properties.injectorType = injectorType;
@@ -433,7 +440,8 @@ namespace Opm {
                         throw std::invalid_argument("Tried to set invalid control: " + cmodeString + " for well: " + wellNamePattern);
                     }
                 }
-                well->setInjectionProperties(currentStep, properties);
+                if (well->setInjectionProperties(currentStep, properties))
+                    m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
             }
         }
     }
@@ -481,7 +489,7 @@ namespace Opm {
 
             WellCommon::StatusEnum status = WellCommon::StatusFromString( record->getItem("STATUS")->getTrimmedString(0));
 
-            well->setStatus( currentStep , status );
+            updateWellStatus(well ,  currentStep , status );
             WellInjectionProperties properties(well->getInjectionPropertiesCopy(currentStep));
 
             properties.injectorType = injectorType;
@@ -495,7 +503,8 @@ namespace Opm {
             }
             properties.predictionMode = false;
 
-            well->setInjectionProperties(currentStep, properties);
+            if (well->setInjectionProperties(currentStep, properties))
+                m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
         }
     }
 
@@ -507,7 +516,8 @@ namespace Opm {
 
             bool haveCompletionData = false;
             for (size_t i=2; i<7; i++) {
-                if (record->getItem(i)->hasValue(0)) {
+                auto item = record->getItem(i);
+                if (!item->defaultApplied(0)) {
                     haveCompletionData = true;
                     break;
                 }
@@ -576,15 +586,16 @@ namespace Opm {
                         CompletionPtr newCompletion = std::make_shared<Completion>(currentCompletion, completionStatus);
                         newCompletionSet->add(newCompletion);
                     }
-                    well->addCompletionSet(currentStep, newCompletionSet);
 
-                    if (newCompletionSet->allCompletionsShut()) {
-                      well->setStatus(currentStep, WellCommon::StatusEnum::SHUT);
-                    }
+                    well->addCompletionSet(currentStep, newCompletionSet);
+                    m_events.addEvent(ScheduleEvents::COMPLETION_CHANGE, currentStep);
+                    if (newCompletionSet->allCompletionsShut())
+                        updateWellStatus( well , currentStep , WellCommon::StatusEnum::SHUT);
+
                 }
                 else if(!haveCompletionData) {
                     WellCommon::StatusEnum status = WellCommon::StatusFromString( record->getItem("STATUS")->getTrimmedString(0));
-                    well->setStatus(currentStep, status);
+                    updateWellStatus( well , currentStep , status );
                 }
             }
         }
@@ -924,6 +935,7 @@ namespace Opm {
             WellPtr well = getWell(wellName);
             well->addCompletions(currentStep, iter->second);
         }
+        m_events.addEvent(ScheduleEvents::COMPLETION_CHANGE, currentStep);
     }
 
     void Schedule::handleWGRUPCON(DeckKeywordConstPtr keyword, size_t currentStep) {
@@ -962,7 +974,7 @@ namespace Opm {
             if (!hasGroup(childName))
                 addGroup( childName , currentStep );
         }
-        m_rootGroupTree->add(currentStep, newTree);
+        m_rootGroupTree->update(currentStep, newTree);
     }
 
     void Schedule::handleWRFT(DeckKeywordConstPtr keyword, size_t currentStep) {
@@ -1065,6 +1077,7 @@ namespace Opm {
 
         well = std::make_shared<Well>(wellName, m_grid , headI, headJ, refDepth, preferredPhase, m_timeMap , timeStep);
         m_wells.insert( wellName  , well);
+        m_events.addEvent( ScheduleEvents::NEW_WELL , timeStep );
     }
 
     size_t Schedule::numWells() const {
@@ -1144,6 +1157,7 @@ namespace Opm {
         }
         GroupPtr group(new Group(groupName, m_timeMap , timeStep));
         m_groups[ groupName ] = group;
+        m_events.addEvent( ScheduleEvents::NEW_GROUP , timeStep );
     }
 
     size_t Schedule::numGroups() const {
@@ -1252,4 +1266,9 @@ namespace Opm {
     TuningPtr Schedule::getTuning() const {
       return m_tuning;
     }
+
+    const Events& Schedule::getEvents() const {
+        return m_events;
+    }
+
 }

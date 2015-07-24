@@ -27,6 +27,8 @@ namespace Opm {
         double m_polymerConcentration;
         double m_saltConcentration;
 
+        bool operator==(const WellPolymerProperties& other) const;
+        bool operator!=(const WellPolymerProperties& other) const;
         WellPolymerProperties();
     };
 }
