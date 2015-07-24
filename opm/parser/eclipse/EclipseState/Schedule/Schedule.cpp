@@ -516,7 +516,8 @@ namespace Opm {
 
             bool haveCompletionData = false;
             for (size_t i=2; i<7; i++) {
-                if (record->getItem(i)->hasValue(0)) {
+                auto item = record->getItem(i);
+                if (!item->defaultApplied(0)) {
                     haveCompletionData = true;
                     break;
                 }
