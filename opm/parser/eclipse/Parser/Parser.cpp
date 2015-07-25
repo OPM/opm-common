@@ -394,11 +394,18 @@ namespace Opm {
                         }
                         targetSize = sizeDefinitionItem->getInt(0);
                     } else {
-                        auto keyword = getKeyword( sizeKeyword.first );
-                        auto record = keyword->getRecord(0);
-                        auto int_item = std::dynamic_pointer_cast<const ParserIntItem>( record->get( sizeKeyword.second ) );
+                        InputError::Action action = parserState->parseMode.missingDIMSKeyword;
+                        if (action == InputError::THROW_EXCEPTION)
+                            throw std::invalid_argument("Excpeted the kewyord: " + sizeKeyword.first + " to infer the number of records in: " + keywordString);
+                        else {
+                            auto keyword = getKeyword( sizeKeyword.first );
+                            auto record = keyword->getRecord(0);
+                            auto int_item = std::dynamic_pointer_cast<const ParserIntItem>( record->get( sizeKeyword.second ) );
 
-                        targetSize = int_item->getDefault( );
+                            targetSize = int_item->getDefault( );
+                            if (action == InputError::WARN)
+                                OpmLog::addMessage(Log::MessageType::Warning , "Excpeted the kewyord: " + sizeKeyword.first + " to infer the number of records in: " + keywordString + " using default");
+                        }
                     }
                 }
                 return RawKeywordPtr(new RawKeyword(keywordString, parserState->dataFile.string() , parserState->lineNR , targetSize , parserKeyword->isTableCollection()));

@@ -80,6 +80,22 @@ namespace Opm {
           correctly formatted as a keyword heading.
         */
         InputError::Action randomText;
+
+
+        /*
+          For some keywords the number of records (i.e. size) is given
+          as an item in another keyword. A typical example is the
+          EQUIL keyword where the number of records is given by the
+          NTEQUL item of the EQLDIMS keyword. If the size defining
+          XXXDIMS keyword is not in the deck, we can use the default
+          values of the XXXDIMS keyword; this is regulated by the
+          'missingDIMskeyword' field.
+
+          Observe that a fully defaulted XXXDIMS keyword does not
+          trigger this behavior.
+        */
+        InputError::Action missingDIMSKeyword;
+
     };
 }
 

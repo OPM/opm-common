@@ -74,3 +74,26 @@ BOOST_AUTO_TEST_CASE(TestUnkownKeyword) {
     parseMode.unknownKeyword = InputError::IGNORE;
     BOOST_CHECK_NO_THROW( parser.parseString( deck2 , parseMode ) );
 }
+
+
+BOOST_AUTO_TEST_CASE( CheckMissingSizeKeyword) {
+    const char * deck =
+        "SOLUTION\n"
+        "EQUIL\n"
+        "  10 10 10 10 / \n"
+        "\n";
+
+
+    ParseMode parseMode;
+    Parser parser(false);
+
+    parser.addKeyword<ParserKeywords::EQUIL>();
+    parser.addKeyword<ParserKeywords::EQLDIMS>();
+    parser.addKeyword<ParserKeywords::SOLUTION>();
+
+    parseMode.missingDIMSKeyword = InputError::THROW_EXCEPTION;
+    BOOST_CHECK_THROW( parser.parseString( deck , parseMode ) , std::invalid_argument);
+
+    parseMode.missingDIMSKeyword = InputError::IGNORE;
+    BOOST_CHECK_NO_THROW( parser.parseString( deck , parseMode ) );
+}

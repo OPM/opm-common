@@ -38,9 +38,11 @@ using namespace Opm;
 
 BOOST_AUTO_TEST_CASE( parse_EQUIL_MISSING_DIMS ) {
     Parser parser;
+    ParseMode parseMode;
+    parseMode.missingDIMSKeyword = InputError::IGNORE;
     const std::string equil = "EQUIL\n"
         "2469   382.4   1705.0  0.0    500    0.0     1     1      20 /";
-    std::shared_ptr<const Deck> deck = parser.parseString(equil, ParseMode());
+    std::shared_ptr<const Deck> deck = parser.parseString(equil, parseMode);
     DeckKeywordConstPtr kw1 = deck->getKeyword("EQUIL" , 0);
     BOOST_CHECK_EQUAL( 1U , kw1->size() );
 
