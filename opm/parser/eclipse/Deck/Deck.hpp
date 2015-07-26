@@ -71,11 +71,11 @@ namespace Opm {
             return getKeywordList( Keyword::keywordName );
         }
 
-
-    private:
+    protected:
         std::shared_ptr<UnitSystem> m_defaultUnits;
         std::shared_ptr<UnitSystem> m_activeUnits;
 
+    private:
         std::vector<DeckKeywordConstPtr> m_emptyList;
         std::vector<DeckKeywordConstPtr> m_keywordList;
         std::map<std::string, std::vector<DeckKeywordConstPtr> > m_keywordMap;

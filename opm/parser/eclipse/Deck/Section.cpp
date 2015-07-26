@@ -35,6 +35,9 @@ namespace Opm {
     Section::Section(DeckConstPtr deck, const std::string& startKeywordName)
         : m_name(startKeywordName)
     {
+        m_defaultUnits = deck->getDefaultUnitSystem();
+        m_activeUnits = deck->getActiveUnitSystem();
+
         populateSection(deck, startKeywordName);
     }
 
