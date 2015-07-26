@@ -35,6 +35,7 @@ using namespace Opm;
 const std::string& deckStr =  "START\n"
                               " 21 MAY 1981 /\n"
                               "\n"
+                              "SCHEDULE\n"
                               "TSTEP\n"
                               " 1 2 3 4 5 /\n"
                               "\n"
@@ -69,7 +70,7 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
   DeckPtr deck = createDeck(deckStr);
   std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
   IOConfigPtr ioConfig;
-  Schedule schedule(grid , deck, ioConfig);
+  Schedule schedule(ParseMode() , grid , deck, ioConfig);
   TuningPtr tuning = schedule.getTuning();
 
 
@@ -321,7 +322,7 @@ BOOST_AUTO_TEST_CASE(TuningInitTest) {
   DeckPtr deck = createDeck(deckStr);
   std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
   IOConfigPtr ioConfig;
-  Schedule schedule(grid , deck, ioConfig);
+  Schedule schedule(ParseMode() , grid , deck, ioConfig);
   TuningPtr tuning = schedule.getTuning();
 
 
@@ -350,7 +351,7 @@ BOOST_AUTO_TEST_CASE(TuningResetTest) {
   DeckPtr deck = createDeck(deckStr);
   std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
   IOConfigPtr ioConfig;
-  Schedule schedule(grid , deck, ioConfig);
+  Schedule schedule(ParseMode() , grid , deck, ioConfig);
   TuningPtr tuning = schedule.getTuning();
 
 

@@ -65,6 +65,8 @@
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+
 #include <set>
 #include <memory>
 #include <iostream>
@@ -81,7 +83,7 @@ namespace Opm {
             AllProperties = IntProperties | DoubleProperties
         };
 
-        EclipseState(DeckConstPtr deck);
+        EclipseState(DeckConstPtr deck , const ParseMode& parseMode);
 
         ScheduleConstPtr getSchedule() const;
         IOConfigConstPtr getIOConfigConst() const;
@@ -152,7 +154,7 @@ namespace Opm {
         void initTabdims(DeckConstPtr deck);
         void initTables(DeckConstPtr deck);
         void initIOConfig(DeckConstPtr deck);
-        void initSchedule(DeckConstPtr deck);
+        void initSchedule(DeckConstPtr deck , const ParseMode& parseMode);
         void initIOConfigPostSchedule(DeckConstPtr deck);
         void initInitConfig(DeckConstPtr deck);
         void initSimulationConfig(DeckConstPtr deck);

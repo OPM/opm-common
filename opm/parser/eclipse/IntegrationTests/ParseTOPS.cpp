@@ -35,8 +35,9 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE( PARSE_TOPS_OK) {
     ParserPtr parser(new Parser());
     boost::filesystem::path deckFile("testdata/integration_tests/GRID/TOPS.DATA");
-    DeckPtr deck =  parser->parseFile(deckFile.string(), ParseMode());
-    EclipseState state(deck);
+    ParseMode parseMode;
+    DeckPtr deck =  parser->parseFile(deckFile.string(), parseMode);
+    EclipseState state(deck , parseMode);
     EclipseGridConstPtr grid = state.getEclipseGrid();
 
     BOOST_CHECK_EQUAL( grid->getNX() , 9 );

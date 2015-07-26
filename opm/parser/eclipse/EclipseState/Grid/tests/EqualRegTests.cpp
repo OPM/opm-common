@@ -192,31 +192,31 @@ static Opm::DeckPtr createValidPERMXDeck() {
 
 BOOST_AUTO_TEST_CASE(InvalidArrayThrows) {
     Opm::DeckPtr deck = createDeckInvalidArray();
-    BOOST_CHECK_THROW( new Opm::EclipseState(deck) , std::invalid_argument );
+    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseMode()) , std::invalid_argument );
 }
 
 
 BOOST_AUTO_TEST_CASE(InvalidRegionThrows) {
     Opm::DeckPtr deck = createDeckInvalidRegion();
-    BOOST_CHECK_THROW( new Opm::EclipseState(deck) , std::invalid_argument );
+    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseMode()) , std::invalid_argument );
 }
 
 
 BOOST_AUTO_TEST_CASE(ExpectedIntThrows) {
     Opm::DeckPtr deck = createDeckInvalidValue();
-    BOOST_CHECK_THROW( new Opm::EclipseState(deck) , std::invalid_argument );
+    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseMode()) , std::invalid_argument );
 }
 
 
 BOOST_AUTO_TEST_CASE(UnInitializedVectorThrows) {
     Opm::DeckPtr deck = createDeckUnInitialized();
-    BOOST_CHECK_THROW( new Opm::EclipseState(deck) , std::invalid_argument );
+    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseMode()) , std::invalid_argument );
 }
 
 
 BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
     Opm::DeckPtr deck = createValidIntDeck();
-    Opm::EclipseState state(deck);
+    Opm::EclipseState state(deck , Opm::ParseMode());
     std::shared_ptr<Opm::GridProperty<int> > property = state.getIntGridProperty( "SATNUM");
     for (size_t j=0; j< 5; j++)
         for (size_t i = 0; i < 5; i++) {
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
 
 BOOST_AUTO_TEST_CASE(UnitAppliedCorrectly) {
     Opm::DeckPtr deck = createValidPERMXDeck();
-    Opm::EclipseState state(deck);
+    Opm::EclipseState state(deck , Opm::ParseMode());
     std::shared_ptr<Opm::GridProperty<double> > permx = state.getDoubleGridProperty( "PERMX");
     std::shared_ptr<Opm::GridProperty<double> > permy = state.getDoubleGridProperty( "PERMY");
     std::shared_ptr<Opm::GridProperty<double> > permz = state.getDoubleGridProperty( "PERMZ");

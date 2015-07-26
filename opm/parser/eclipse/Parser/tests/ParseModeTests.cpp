@@ -29,6 +29,10 @@
 #include <opm/parser/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/parser/eclipse/Parser/ParseMode.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
+
 using namespace Opm;
 
 
@@ -96,4 +100,32 @@ BOOST_AUTO_TEST_CASE( CheckMissingSizeKeyword) {
 
     parseMode.missingDIMSKeyword = InputError::IGNORE;
     BOOST_CHECK_NO_THROW( parser.parseString( deck , parseMode ) );
+}
+
+
+BOOST_AUTO_TEST_CASE( CheckUnsoppertedInSCHEDULE ) {
+    const char * deckString =
+        "START\n"
+        " 10 'JAN' 2000 /\n"
+        "RUNSPEC\n"
+        "DIMENS\n"
+        "  10 10 10 / \n"
+        "SCHEDULE\n"
+        "MULTFLT\n"
+        "   'F1' 100 /\n"
+        "/\n"
+        "\n";
+
+    ParseMode parseMode;
+    Parser parser(true);
+
+    auto deck = parser.parseString( deckString , parseMode );
+    std::shared_ptr<EclipseGrid> grid = std::make_shared<EclipseGrid>( deck );
+    std::shared_ptr<IOConfig> ioconfig = std::make_shared<IOConfig>( "path" );
+
+    parseMode.unsupportedScheduleGeoModifiers = InputError::IGNORE;
+    BOOST_CHECK_NO_THROW( Schedule( parseMode , grid , deck , ioconfig ));
+
+    parseMode.unsupportedScheduleGeoModifiers = InputError::THROW_EXCEPTION;
+    BOOST_CHECK_THROW( Schedule( parseMode , grid , deck , ioconfig ), std::invalid_argument );
 }

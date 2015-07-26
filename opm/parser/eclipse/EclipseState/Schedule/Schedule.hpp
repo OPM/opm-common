@@ -30,6 +30,7 @@
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 
 #include <memory>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -43,7 +44,7 @@ namespace Opm
 
     class Schedule {
     public:
-        Schedule(std::shared_ptr<const EclipseGrid> grid , DeckConstPtr deck, IOConfigPtr ioConfig);
+        Schedule(const ParseMode& parseMode , std::shared_ptr<const EclipseGrid> grid , DeckConstPtr deck, IOConfigPtr ioConfig);
         boost::posix_time::ptime getStartTime() const
         { return m_timeMap->getStartTime(/*timeStepIdx=*/0); }
         TimeMapConstPtr getTimeMap() const;
@@ -79,11 +80,11 @@ namespace Opm
 
         void updateWellStatus(std::shared_ptr<Well> well, size_t reportStep , WellCommon::StatusEnum status);
         void addWellToGroup( GroupPtr newGroup , WellPtr well , size_t timeStep);
-        void initFromDeck(DeckConstPtr deck, IOConfigPtr ioConfig);
+        void initFromDeck(const ParseMode& parseMode , DeckConstPtr deck, IOConfigPtr ioConfig);
         void initializeNOSIM(DeckConstPtr deck);
         void createTimeMap(DeckConstPtr deck);
         void initRootGroupTreeNode(TimeMapConstPtr timeMap);
-        void iterateScheduleSection(DeckConstPtr deck, IOConfigPtr ioConfig);
+        void iterateScheduleSection(const ParseMode& parseMode , std::shared_ptr<const SCHEDULESection> section, IOConfigPtr ioConfig);
         bool handleGroupFromWELSPECS(const std::string& groupName, GroupTreePtr newTree) const;
         void addGroup(const std::string& groupName , size_t timeStep);
         void addWell(const std::string& wellName, DeckRecordConstPtr record, size_t timeStep);
@@ -94,13 +95,13 @@ namespace Opm
         void handleWCONPROD(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleWGRUPCON(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleCOMPDAT(DeckKeywordConstPtr keyword,  size_t currentStep);
-        void handleWCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep);
+        void handleWCONINJE(std::shared_ptr<const SCHEDULESection> section, DeckKeywordConstPtr keyword, size_t currentStep);
         void handleWPOLYMER(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleWSOLVENT(DeckKeywordConstPtr keyword, size_t currentStep);
-        void handleWCONINJH(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep);
+        void handleWCONINJH(std::shared_ptr<const SCHEDULESection> section, DeckKeywordConstPtr keyword, size_t currentStep);
         void handleWELOPEN(DeckKeywordConstPtr keyword, size_t currentStep, bool hascomplump);
-        void handleWELTARG(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep);
-        void handleGCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep);
+        void handleWELTARG(std::shared_ptr<const SCHEDULESection> section, DeckKeywordConstPtr keyword, size_t currentStep);
+        void handleGCONINJE(std::shared_ptr<const SCHEDULESection> section, DeckKeywordConstPtr keyword, size_t currentStep);
         void handleGCONPROD(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleTUNING(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleNOSIM();
@@ -113,7 +114,7 @@ namespace Opm
         void handleWRFTPLT(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleWPIMULT(DeckKeywordConstPtr keyword, size_t currentStep);
 
-        void checkUnhandledKeywords(DeckConstPtr deck) const;
+        void checkUnhandledKeywords(std::shared_ptr<const SCHEDULESection> section) const;
 
         static double convertInjectionRateToSI(double rawRate, WellInjector::TypeEnum wellType, const Opm::UnitSystem &unitSystem);
         static double convertInjectionRateToSI(double rawRate, Phase::PhaseEnum wellPhase, const Opm::UnitSystem &unitSystem);

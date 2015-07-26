@@ -350,11 +350,12 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
         "\n"
         "SCHEDULE\n";
 
+    Opm::ParseMode parseMode;
     Opm::ParserPtr parser(new Opm::Parser);
 
-    auto deck = parser->parseString(deckString, Opm::ParseMode());
+    auto deck = parser->parseString(deckString, parseMode);
 
-    auto eclipseState = std::make_shared<Opm::EclipseState>(deck);
+    auto eclipseState = std::make_shared<Opm::EclipseState>(deck , parseMode);
 
     // make sure that EclipseState throws if it is bugged about an _unsupported_ keyword
     BOOST_CHECK_THROW(eclipseState->hasIntGridProperty("ISWU"), std::logic_error);

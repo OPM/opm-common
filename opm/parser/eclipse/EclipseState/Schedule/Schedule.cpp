@@ -33,19 +33,23 @@
 
 namespace Opm {
 
-    Schedule::Schedule(std::shared_ptr<const EclipseGrid> grid , DeckConstPtr deck, IOConfigPtr ioConfig)
+    Schedule::Schedule(const ParseMode& parseMode , std::shared_ptr<const EclipseGrid> grid , DeckConstPtr deck, IOConfigPtr ioConfig)
         : m_grid(grid)
     {
-        initFromDeck(deck, ioConfig);
+        initFromDeck(parseMode , deck, ioConfig);
     }
 
-    void Schedule::initFromDeck(DeckConstPtr deck, IOConfigPtr ioConfig) {
+    void Schedule::initFromDeck(const ParseMode& parseMode , DeckConstPtr deck, IOConfigPtr ioConfig) {
         initializeNOSIM(deck);
         createTimeMap(deck);
         m_tuning.reset(new Tuning(m_timeMap));
         addGroup( "FIELD", 0 );
         initRootGroupTreeNode(getTimeMap());
-        iterateScheduleSection(deck, ioConfig);
+
+        if (Section::hasSCHEDULE( deck )) {
+            std::shared_ptr<SCHEDULESection> scheduleSection = std::make_shared<SCHEDULESection>( deck );
+            iterateScheduleSection(parseMode , scheduleSection , ioConfig);
+        }
     }
 
     void Schedule::initRootGroupTreeNode(TimeMapConstPtr timeMap) {
@@ -70,13 +74,29 @@ namespace Opm {
         m_timeMap.reset(new TimeMap(startTime));
     }
 
-    void Schedule::iterateScheduleSection(DeckConstPtr deck, IOConfigPtr ioConfig) {
+    void Schedule::iterateScheduleSection(const ParseMode& parseMode , std::shared_ptr<const SCHEDULESection> section, IOConfigPtr ioConfig) {
+        const std::map<std::string,bool> unsupportedModifiers = {{"MULTFLT"  , true},
+                                                                 {"MULTPV"   , true},
+                                                                 {"MULTX"    , true},
+                                                                 {"MULTX-"   , true},
+                                                                 {"MULTY"    , true},
+                                                                 {"MULTY-"   , true},
+                                                                 {"MULTZ"    , true},
+                                                                 {"MULTZ-"   , true},
+                                                                 {"MULTREGT" , true},
+                                                                 {"MULTR"    , true},
+                                                                 {"MULTR-"   , true},
+                                                                 {"MULTSIG"  , true},
+                                                                 {"MULTSIGV" , true},
+                                                                 {"MULTTHT"  , true},
+                                                                 {"MULTTHT-" , true}};
+
         size_t currentStep = 0;
         std::vector<std::pair<DeckKeywordConstPtr , size_t> > rftProperties;
         std::vector<std::pair<DeckKeywordConstPtr , size_t> > IOConfigSettings;
 
-        for (size_t keywordIdx = 0; keywordIdx < deck->size(); ++keywordIdx) {
-            DeckKeywordConstPtr keyword = deck->getKeyword(keywordIdx);
+        for (size_t keywordIdx = 0; keywordIdx < section->size(); ++keywordIdx) {
+            DeckKeywordConstPtr keyword = section->getKeyword(keywordIdx);
 
             if (keyword->name() == "DATES") {
                 handleDATES(keyword);
@@ -99,7 +119,7 @@ namespace Opm {
                 handleWCONPROD(keyword, currentStep);
 
             if (keyword->name() == "WCONINJE")
-                handleWCONINJE(deck, keyword, currentStep);
+                handleWCONINJE(section, keyword, currentStep);
 
             if (keyword->name() == "WPOLYMER")
                 handleWPOLYMER(keyword, currentStep);
@@ -108,7 +128,7 @@ namespace Opm {
                 handleWSOLVENT(keyword, currentStep);
 
             if (keyword->name() == "WCONINJH")
-                handleWCONINJH(deck, keyword, currentStep);
+                handleWCONINJH(section, keyword, currentStep);
 
             if (keyword->name() == "WGRUPCON")
                 handleWGRUPCON(keyword, currentStep);
@@ -117,16 +137,16 @@ namespace Opm {
                 handleCOMPDAT(keyword, currentStep);
 
             if (keyword->name() == "WELOPEN")
-                handleWELOPEN(keyword, currentStep , deck->hasKeyword("COMPLUMP"));
+                handleWELOPEN(keyword, currentStep , section->hasKeyword("COMPLUMP"));
 
             if (keyword->name() == "WELTARG")
-                handleWELTARG(deck, keyword, currentStep);
+                handleWELTARG(section, keyword, currentStep);
 
             if (keyword->name() == "GRUPTREE")
                 handleGRUPTREE(keyword, currentStep);
 
             if (keyword->name() == "GCONINJE")
-                handleGCONINJE(deck, keyword, currentStep);
+                handleGCONINJE(section, keyword, currentStep);
 
             if (keyword->name() == "GCONPROD")
                 handleGCONPROD(keyword, currentStep);
@@ -152,7 +172,17 @@ namespace Opm {
             if (keyword->name() == "WPIMULT")
                 handleWPIMULT(keyword, currentStep);
 
+            if (unsupportedModifiers.find( keyword->name() ) != unsupportedModifiers.end()) {
+                auto action = parseMode.unsupportedScheduleGeoModifiers;
 
+                if (action != InputError::IGNORE) {
+                    std::string msg = "OPM does not support grid property modifiers in the Schedule section";
+                    if (action == InputError::THROW_EXCEPTION)
+                        throw std::invalid_argument( msg );
+                    else if (action == InputError::WARN)
+                        OpmLog::addMessage(Log::MessageType::Warning , msg );
+                }
+            }
         }
 
         for (auto rftPair = rftProperties.begin(); rftPair != rftProperties.end(); ++rftPair) {
@@ -167,7 +197,6 @@ namespace Opm {
             }
         }
 
-
         for (auto restartPair = IOConfigSettings.begin(); restartPair != IOConfigSettings.end(); ++restartPair) {
             DeckKeywordConstPtr keyword = restartPair->first;
             size_t timeStep = restartPair->second;
@@ -178,7 +207,7 @@ namespace Opm {
             }
         }
 
-        checkUnhandledKeywords(deck);
+        checkUnhandledKeywords(section);
     }
 
     void Schedule::handleDATES(DeckKeywordConstPtr keyword) {
@@ -392,7 +421,7 @@ namespace Opm {
     }
 
 
-    void Schedule::handleWCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep) {
+    void Schedule::handleWCONINJE(std::shared_ptr<const SCHEDULESection> section, DeckKeywordConstPtr keyword, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
@@ -410,7 +439,7 @@ namespace Opm {
                 properties.predictionMode = true;
 
                 if (!record->getItem("RATE")->defaultApplied(0)) {
-                    properties.surfaceInjectionRate = convertInjectionRateToSI(record->getItem("RATE")->getRawDouble(0) , injectorType, *deck->getActiveUnitSystem());
+                    properties.surfaceInjectionRate = convertInjectionRateToSI(record->getItem("RATE")->getRawDouble(0) , injectorType, *section->getActiveUnitSystem());
                     properties.addInjectionControl(WellInjector::RATE);
                 } else
                     properties.dropInjectionControl(WellInjector::RATE);
@@ -511,7 +540,7 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleWCONINJH(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep) {
+    void Schedule::handleWCONINJH(std::shared_ptr<const SCHEDULESection> section, DeckKeywordConstPtr keyword, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellName = record->getItem("WELL")->getTrimmedString(0);
@@ -520,7 +549,7 @@ namespace Opm {
             // convert injection rates to SI
             WellInjector::TypeEnum injectorType = WellInjector::TypeFromString( record->getItem("TYPE")->getTrimmedString(0));
             double injectionRate = record->getItem("RATE")->getRawDouble(0);
-            injectionRate = convertInjectionRateToSI(injectionRate, injectorType, *deck->getActiveUnitSystem());
+            injectionRate = convertInjectionRateToSI(injectionRate, injectorType, *section->getActiveUnitSystem());
 
             WellCommon::StatusEnum status = WellCommon::StatusFromString( record->getItem("STATUS")->getTrimmedString(0));
 
@@ -637,12 +666,19 @@ namespace Opm {
     }
 
     /*
-    The documentation for the WELTARG keyword says that the well must have been fully specified and initialized using one of the WCONxxxx keywords prior to
-    modifying the well using the WELTARG keyword. The following implementation of handling the WELTARG keyword does not check or enforce in any way that
-    this is done (i.e. it is not checked or verified that the well is initialized with any WCONxxxx keyword).
+      The documentation for the WELTARG keyword says that the well
+      must have been fully specified and initialized using one of the
+      WCONxxxx keywords prior to modifying the well using the WELTARG
+      keyword.
+
+      The following implementation of handling the WELTARG keyword
+      does not check or enforce in any way that this is done (i.e. it
+      is not checked or verified that the well is initialized with any
+      WCONxxxx keyword).
     */
-    void Schedule::handleWELTARG(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep) {
-        Opm::UnitSystem unitSystem = *deck->getActiveUnitSystem();
+
+    void Schedule::handleWELTARG(std::shared_ptr<const SCHEDULESection> section , DeckKeywordConstPtr keyword, size_t currentStep) {
+        Opm::UnitSystem unitSystem = *section->getActiveUnitSystem();
         double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time")->getSIScaling();
         double siFactorG = unitSystem.parse("GasSurfaceVolume/Time")->getSIScaling();
         double siFactorP = unitSystem.parse("Pressure")->getSIScaling();
@@ -695,7 +731,7 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleGCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep) {
+    void Schedule::handleGCONINJE(std::shared_ptr<const SCHEDULESection> section, DeckKeywordConstPtr keyword, size_t currentStep) {
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& groupName = record->getItem("GROUP")->getTrimmedString(0);
@@ -714,7 +750,7 @@ namespace Opm {
 
             // calculate SI injection rates for the group
             double surfaceInjectionRate = record->getItem("SURFACE_TARGET")->getRawDouble(0);
-            surfaceInjectionRate = convertInjectionRateToSI(surfaceInjectionRate, wellPhase, *deck->getActiveUnitSystem());
+            surfaceInjectionRate = convertInjectionRateToSI(surfaceInjectionRate, wellPhase, *section->getActiveUnitSystem());
             double reservoirInjectionRate = record->getItem("RESV_TARGET")->getSIDouble(0);
 
             group->setSurfaceMaxRate( currentStep , surfaceInjectionRate);
@@ -1262,9 +1298,9 @@ namespace Opm {
         newGroup->addWell(timeStep , well);
     }
 
-    void Schedule::checkUnhandledKeywords(DeckConstPtr deck) const {
-        if (deck->hasKeyword("COMPORD")) {
-            auto compordKeyword = deck->getKeyword("COMPORD");
+    void Schedule::checkUnhandledKeywords(std::shared_ptr<const SCHEDULESection> section) const {
+        if (section->hasKeyword("COMPORD")) {
+            auto compordKeyword = section->getKeyword("COMPORD");
             for (auto record = compordKeyword->begin(); record != compordKeyword->end(); ++record) {
                 auto methodItem = (*record)->getItem(1);
                 if (methodItem->getString(0) != "TRACK")

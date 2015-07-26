@@ -42,6 +42,7 @@ const std::string& deckStr =  "RUNSPEC\n"
                               "START\n"
                               " 21 MAY 1981 /\n"
                               "\n"
+                              "SCHEDULE\n"
                               "TSTEP\n"
                               " 1 2 3 4 5 /\n"
                               "DATES\n"
@@ -99,7 +100,7 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     ioConfigPtr->handleGridSection(gridSection);
     ioConfigPtr->handleRunspecSection(runspecSection);
 
-    Schedule schedule(grid , deck, ioConfigPtr);
+    Schedule schedule(ParseMode() , grid , deck, ioConfigPtr);
 
     //If no BASIC keyord has been handled, no restart files should be written
     TimeMapConstPtr timemap = schedule.getTimeMap();

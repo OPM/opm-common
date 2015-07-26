@@ -172,19 +172,19 @@ static Opm::DeckPtr createValidIntDeck() {
 
 BOOST_AUTO_TEST_CASE(InvalidArrayThrows1) {
     Opm::DeckPtr deck = createDeckInvalidArray1();
-    BOOST_CHECK_THROW( new Opm::EclipseState(deck) , std::invalid_argument );
+    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseMode()) , std::invalid_argument );
 }
 
 BOOST_AUTO_TEST_CASE(InvalidArrayThrows2) {
     Opm::DeckPtr deck = createDeckInvalidArray2();
-    BOOST_CHECK_THROW( new Opm::EclipseState(deck) , std::invalid_argument );
+    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseMode()) , std::invalid_argument );
 }
 
 
 
 BOOST_AUTO_TEST_CASE(InvalidRegionThrows) {
     Opm::DeckPtr deck = createDeckInvalidRegion();
-    BOOST_CHECK_THROW( new Opm::EclipseState(deck) , std::invalid_argument );
+    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseMode()) , std::invalid_argument );
 }
 
 
@@ -192,20 +192,20 @@ BOOST_AUTO_TEST_CASE(InvalidRegionThrows) {
 
 BOOST_AUTO_TEST_CASE(UnInitializedVectorThrows) {
     Opm::DeckPtr deck = createDeckUnInitialized();
-    BOOST_CHECK_THROW( new Opm::EclipseState(deck) , std::invalid_argument );
+    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseMode()) , std::invalid_argument );
 }
 
 
 BOOST_AUTO_TEST_CASE(TypeMismatchThrows) {
     Opm::DeckPtr deck = createDeckInvalidTypeMismatch();
-    BOOST_CHECK_THROW( new Opm::EclipseState(deck) , std::invalid_argument );
+    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseMode()) , std::invalid_argument );
 }
 
 
 
 BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
     Opm::DeckPtr deck = createValidIntDeck();
-    Opm::EclipseState state(deck);
+    Opm::EclipseState state(deck , Opm::ParseMode() );
     std::shared_ptr<Opm::GridProperty<int> > property = state.getIntGridProperty( "FLUXNUM");
     for (size_t j=0; j< 5; j++)
         for (size_t i = 0; i < 5; i++) {

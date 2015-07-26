@@ -125,7 +125,7 @@ namespace Opm {
     }
 
 
-    EclipseState::EclipseState(DeckConstPtr deck)
+    EclipseState::EclipseState(DeckConstPtr deck , const ParseMode& parseMode)
         : m_defaultRegion("FLUXNUM")
     {
         m_deckUnitSystem = deck->getActiveUnitSystem();
@@ -134,7 +134,7 @@ namespace Opm {
         initEclipseGrid(deck);
         initGridopts(deck);
         initIOConfig(deck);
-        initSchedule(deck);
+        initSchedule(deck , parseMode);
         initIOConfigPostSchedule(deck);
         initTitle(deck);
         initProperties(deck);
@@ -420,9 +420,9 @@ namespace Opm {
     }
 
 
-    void EclipseState::initSchedule(DeckConstPtr deck) {
+    void EclipseState::initSchedule(DeckConstPtr deck, const ParseMode& parseMode) {
         EclipseGridConstPtr grid = getEclipseGrid();
-        schedule = ScheduleConstPtr( new Schedule(grid , deck, m_ioConfig) );
+        schedule = ScheduleConstPtr( new Schedule(parseMode , grid , deck, m_ioConfig) );
     }
 
     void EclipseState::initNNC(DeckConstPtr deck) {

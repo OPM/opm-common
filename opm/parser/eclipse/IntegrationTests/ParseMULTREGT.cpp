@@ -47,9 +47,10 @@ BOOST_AUTO_TEST_CASE( parse_MULTREGT_OK ) {
 
 
 BOOST_AUTO_TEST_CASE( MULTREGT_ECLIPSE_STATE ) {
+    ParseMode parseMode;
     ParserPtr parser(new Parser());
-    DeckPtr deck =  parser->parseFile("testdata/integration_tests/MULTREGT/MULTREGT.DATA", ParseMode());
-    EclipseState state(deck);
+    DeckPtr deck =  parser->parseFile("testdata/integration_tests/MULTREGT/MULTREGT.DATA", parseMode);
+    EclipseState state(deck , parseMode);
     auto transMult = state.getTransMult();
 
     // Test NONNC

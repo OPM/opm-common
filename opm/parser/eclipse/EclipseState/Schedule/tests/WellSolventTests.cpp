@@ -26,6 +26,7 @@
 #include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 
 using namespace Opm;
 
@@ -42,7 +43,7 @@ static DeckPtr createDeckWithOutSolvent() {
             "WCONINJE\n"
             "     'W_1' 'WATER' 'OPEN' 'BHP' 1 2 3/\n/\n";
 
-    return parser.parseString(input);
+    return parser.parseString(input, ParseMode());
 }
 
 static DeckPtr createDeckWithGasInjector() {
@@ -61,7 +62,7 @@ static DeckPtr createDeckWithGasInjector() {
             "     'W_1'        1 / \n "
             "/\n";
 
-    return parser.parseString(input);
+    return parser.parseString(input, ParseMode());
 }
 
 static DeckPtr createDeckWithDynamicWSOLVENT() {
@@ -92,7 +93,7 @@ static DeckPtr createDeckWithDynamicWSOLVENT() {
             "     'W_1'        0 / \n "
             "/\n";
 
-    return parser.parseString(input);
+    return parser.parseString(input, ParseMode());
 }
 
 static DeckPtr createDeckWithOilInjector() {
@@ -111,7 +112,7 @@ static DeckPtr createDeckWithOilInjector() {
             "     'W_1'        1 / \n "
             "/\n";
 
-    return parser.parseString(input);
+    return parser.parseString(input, ParseMode());
 }
 
 static DeckPtr createDeckWithWaterInjector() {
@@ -130,13 +131,13 @@ static DeckPtr createDeckWithWaterInjector() {
             "     'W_1'        1 / \n "
             "/\n";
 
-    return parser.parseString(input);
+    return parser.parseString(input, ParseMode());
 }
 BOOST_AUTO_TEST_CASE(TestNoSolvent) {
     DeckPtr deck = createDeckWithOutSolvent();
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,10);
     IOConfigPtr ioConfig;
-    Schedule schedule(grid , deck, ioConfig);
+    Schedule schedule(ParseMode() , grid , deck, ioConfig);
     BOOST_CHECK(!deck->hasKeyword("WSOLVENT"));
 }
 
@@ -144,7 +145,7 @@ BOOST_AUTO_TEST_CASE(TestGasInjector) {
     DeckPtr deck = createDeckWithGasInjector();
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,10);
     IOConfigPtr ioConfig;
-    Schedule schedule(grid , deck, ioConfig);
+    Schedule schedule(ParseMode(), grid , deck, ioConfig );
     BOOST_CHECK(deck->hasKeyword("WSOLVENT"));
 
 }
@@ -153,7 +154,7 @@ BOOST_AUTO_TEST_CASE(TestDynamicWSOLVENT) {
     DeckPtr deck = createDeckWithDynamicWSOLVENT();
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,10);
     IOConfigPtr ioConfig;
-    Schedule schedule(grid , deck, ioConfig);
+    Schedule schedule(ParseMode() , grid , deck, ioConfig);
     BOOST_CHECK(deck->hasKeyword("WSOLVENT"));
     Opm::DeckKeywordConstPtr keyword = deck->getKeyword("WSOLVENT");
     BOOST_CHECK_EQUAL(keyword->size(),1);
@@ -171,12 +172,12 @@ BOOST_AUTO_TEST_CASE(TestOilInjector) {
     DeckPtr deck = createDeckWithOilInjector();
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,10);
     IOConfigPtr ioConfig;
-    BOOST_CHECK_THROW (Schedule schedule(grid , deck, ioConfig), std::invalid_argument);
+    BOOST_CHECK_THROW (Schedule(ParseMode() , grid , deck, ioConfig), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(TestWaterInjector) {
     DeckPtr deck = createDeckWithWaterInjector();
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,10);
     IOConfigPtr ioConfig;
-    BOOST_CHECK_THROW (Schedule schedule(grid , deck, ioConfig), std::invalid_argument);
+    BOOST_CHECK_THROW (Schedule(ParseMode(), grid , deck, ioConfig), std::invalid_argument);
 }

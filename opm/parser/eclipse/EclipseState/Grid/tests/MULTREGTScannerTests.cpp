@@ -234,5 +234,5 @@ static Opm::DeckPtr createCopyMULTNUMDeck() {
 
 BOOST_AUTO_TEST_CASE(MULTREGT_COPY_MULTNUM) {
     Opm::DeckPtr deck = createCopyMULTNUMDeck();
-    Opm::EclipseState state(deck);
+    Opm::EclipseState state(deck , Opm::ParseMode());
 }
