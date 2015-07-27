@@ -226,40 +226,40 @@ namespace Opm {
     }
 
 
-    void TimeMap::initFirstTimestepsMonths(std::vector<size_t>& timesteps, size_t start_timestep) const {
-        boost::gregorian::date prev_date;
+     void TimeMap::initFirstTimestepsMonths(std::vector<size_t>& timesteps, size_t start_timestep) const {
+        timesteps.clear();
+        const boost::posix_time::ptime& ptime_start = getStartTime(start_timestep);
+        boost::gregorian::date prev_date = ptime_start.date();
+
         for (size_t timestepIndex = start_timestep; timestepIndex < m_timeList.size(); ++timestepIndex) {
-            const boost::posix_time::ptime& ptime = getStartTime(timestepIndex);
-            if (start_timestep == timestepIndex) {
-                prev_date = ptime.date();
+            const boost::posix_time::ptime& ptime_cur = getStartTime(timestepIndex);
+            boost::gregorian::date cur_date = ptime_cur.date();
+
+            if (cur_date.month() != prev_date.month()) {
                 timesteps.push_back(timestepIndex);
-            } else {
-                boost::gregorian::date cur_date = ptime.date();
-                if (cur_date.month() != prev_date.month()) {
-                    timesteps.push_back(timestepIndex);
-                }
                 prev_date = cur_date;
             }
         }
     }
 
 
+
     void TimeMap::initFirstTimestepsYears(std::vector<size_t>& timesteps, size_t start_timestep) const {
-        boost::gregorian::date prev_date;
+        timesteps.clear();
+        const boost::posix_time::ptime& ptime_start = getStartTime(start_timestep);
+        boost::gregorian::date prev_date = ptime_start.date();
+
         for (size_t timestepIndex = start_timestep; timestepIndex < m_timeList.size(); ++timestepIndex) {
-            const boost::posix_time::ptime& ptime = getStartTime(timestepIndex);
-            if (start_timestep == timestepIndex) {
-                prev_date = ptime.date();
+            const boost::posix_time::ptime& ptime_cur = getStartTime(timestepIndex);
+            boost::gregorian::date cur_date = ptime_cur.date();
+
+            if (cur_date.year() != prev_date.year()) {
                 timesteps.push_back(timestepIndex);
-            } else {
-                boost::gregorian::date cur_date = ptime.date();
-                if (cur_date.year() != prev_date.year()) {
-                    timesteps.push_back(timestepIndex);
-                }
                 prev_date = cur_date;
             }
         }
-  }
+    }
+
 
 }
 
