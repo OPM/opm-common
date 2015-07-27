@@ -92,6 +92,8 @@ namespace Opm {
         std::tuple<double,double,double> getCellCenter(size_t globalIndex) const;
         double getCellVolume(size_t globalIndex) const;
         double getCellVolume(size_t i , size_t j , size_t k) const;
+        double getCellThicknes(size_t globalIndex) const;
+        double getCellThicknes(size_t i , size_t j , size_t k) const;
         bool cellActive( size_t globalIndex ) const;
         bool cellActive( size_t i , size_t , size_t k ) const;
         double getCellDepth(size_t i,size_t j, size_t k) const;
