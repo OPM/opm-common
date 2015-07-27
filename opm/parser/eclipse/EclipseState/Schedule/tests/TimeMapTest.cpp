@@ -269,29 +269,78 @@ BOOST_AUTO_TEST_CASE(TimeStepsCorrect) {
                                                boost::posix_time::milliseconds(123)));
     BOOST_CHECK_EQUAL(tmap.getTimeStepLength(/*index=*/8), 6*24*60*60);
     BOOST_CHECK_EQUAL(tmap.getTimeStepLength(/*index=*/9), 7*24*60*60);
+}
+
+
+BOOST_AUTO_TEST_CASE(initTimestepsYearsAndMonths) {
+    const char *deckData =
+        "START\n"
+        " 21 MAY 1981 /\n"
+        "\n"
+        "TSTEP\n"
+        " 1 2 3 4 5 /\n"
+        "\n"
+        "DATES\n"
+        " 5 JUL 1981 /\n"
+        " 6 JUL 1981 /\n"
+        " 5 AUG 1981 /\n"
+        " 5 SEP 1981 /\n"
+        " 1 OCT 1981 /\n"
+        " 1 NOV 1981 /\n"
+        " 1 DEC 1981 /\n"
+        " 1 JAN 1982 /\n"
+        " 1 JAN 1982 13:55:44 /\n"
+        " 3 JAN 1982 14:56:45.123 /\n"
+        "/\n"
+        "\n"
+        "TSTEP\n"
+        " 6 7 /\n";
+
+    Opm::ParserPtr parser(new Opm::Parser(/*addDefault=*/true));
+    Opm::DeckPtr deck = parser->parseString(deckData);
+    Opm::TimeMap tmap(deck);
+
+    /*deckData timesteps:
+    0   21 may  1981 START
+    1   22 may  1981
+    2   24 may  1981
+    3   27 may  1981
+    4   31 may  1981
+    5   5  jun 1981
+    6   5  jul 1981
+    7   6  jul 1981
+    8   5  aug 1981
+    9   5  sep 1981
+    10  1  oct 1981
+    11  1  nov 1981
+    12  1  dec 1981
+    13  1  jan  1982
+    14  1  jan  1982
+    15  3  jan  1982
+    16  9  jan  1982
+    17  16 jan  1982
+   */
 
     std::vector<size_t> first_timestep_of_each_month;
     tmap.initFirstTimestepsMonths(first_timestep_of_each_month);
-    BOOST_CHECK_EQUAL(3, first_timestep_of_each_month.size());
-    int expected_results[3] = {0,5,6};
-    BOOST_CHECK_EQUAL_COLLECTIONS(expected_results, expected_results+3, first_timestep_of_each_month.begin(), first_timestep_of_each_month.end());
+    BOOST_CHECK_EQUAL(8, first_timestep_of_each_month.size());
+    int expected_results[8] = {5,6,8,9,10,11,12,13};
+    BOOST_CHECK_EQUAL_COLLECTIONS(expected_results, expected_results+8, first_timestep_of_each_month.begin(), first_timestep_of_each_month.end());
 
     first_timestep_of_each_month.clear();
-    tmap.initFirstTimestepsMonths(first_timestep_of_each_month, 5);
-    BOOST_CHECK_EQUAL(2, first_timestep_of_each_month.size());
-    int expected_results2[2] = {5,6};
-    BOOST_CHECK_EQUAL_COLLECTIONS(expected_results2, expected_results2+2, first_timestep_of_each_month.begin(), first_timestep_of_each_month.end());
+    tmap.initFirstTimestepsMonths(first_timestep_of_each_month, 6);
+    BOOST_CHECK_EQUAL(6, first_timestep_of_each_month.size());
+    int expected_results3[6] = {8,9,10,11,12,13};
+    BOOST_CHECK_EQUAL_COLLECTIONS(expected_results3, expected_results3+6, first_timestep_of_each_month.begin(), first_timestep_of_each_month.end());
 
     std::vector<size_t> first_timestep_of_each_year;
     tmap.initFirstTimestepsYears(first_timestep_of_each_year);
-    BOOST_CHECK_EQUAL(2, first_timestep_of_each_year.size());
-    int expected_results_years[2] = {0,6};
-    BOOST_CHECK_EQUAL_COLLECTIONS(expected_results_years, expected_results_years+2, first_timestep_of_each_year.begin(), first_timestep_of_each_year.end());
+    BOOST_CHECK_EQUAL(1, first_timestep_of_each_year.size());
+    int expected_results_years[1] = {13};
+    BOOST_CHECK_EQUAL_COLLECTIONS(expected_results_years, expected_results_years+1, first_timestep_of_each_year.begin(), first_timestep_of_each_year.end());
 
     first_timestep_of_each_year.clear();
-    tmap.initFirstTimestepsYears(first_timestep_of_each_year, 6);
-    BOOST_CHECK_EQUAL(1, first_timestep_of_each_year.size());
-    BOOST_CHECK_EQUAL(6, first_timestep_of_each_year[0]);
-
-
+    tmap.initFirstTimestepsYears(first_timestep_of_each_year, 13);
+    BOOST_CHECK_EQUAL(0, first_timestep_of_each_year.size());
 }
+

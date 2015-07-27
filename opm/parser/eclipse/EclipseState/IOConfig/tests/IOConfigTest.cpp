@@ -172,10 +172,10 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     frequency     = 0;
     ioConfigPtr->handleRPTRSTBasic(schedule.getTimeMap(),timestep, basic, frequency);
 
-    /*Expected results: Write timestep for timestep 17, 20, 22, 23, 26*/
+    /*Expected results: Write timestep for timestep 20, 22, 23, 26*/
 
     for (size_t ts = 17; ts <= 26; ++ts) {
-        if ((17 == ts) || (20 == ts) || (22 == ts) || (23 == ts) || (26 == ts)) {
+        if ((20 == ts) || (22 == ts) || (23 == ts) || (26 == ts)) {
             BOOST_CHECK_EQUAL(true, ioConfigPtr->getWriteRestartFile(ts));
         } else {
             BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(ts));
@@ -202,10 +202,10 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     frequency     = 2;
     ioConfigPtr->handleRPTRSTBasic(schedule.getTimeMap(), timestep, basic, frequency);
 
-    /*Expected results: Write timestep for timestep 27, 32, 36 */
+    //Expected results: Write timestep for 30 and 33 (30, 32, 33, 36 with frequency 2)
 
     for (size_t ts = 27; ts <= 36; ++ts) {
-        if ((27 == ts) || (32 == ts) || (36 == ts)) {
+        if ((30 == ts) || (33 == ts)) {
             BOOST_CHECK_EQUAL(true, ioConfigPtr->getWriteRestartFile(ts));
         } else {
             BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(ts));
@@ -233,10 +233,10 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     frequency     = 2;
     ioConfigPtr->handleRPTRSTBasic(schedule.getTimeMap(), timestep, basic, frequency);
 
-    /*Expected results: Write timestep for timestep 37, 42 */
+    //Expected results: Write timestep for timestep  38, 44 (38, 42, 44 with frequency 2)
 
     for (size_t ts = 37; ts <= 46; ++ts) {
-        if ((37 == ts) || (42 == ts)) {
+        if ((38 == ts) || (44 == ts)) {
             BOOST_CHECK_EQUAL(true, ioConfigPtr->getWriteRestartFile(ts));
         } else {
             BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(ts));
