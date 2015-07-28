@@ -53,6 +53,12 @@ namespace Opm {
         DeckPtr parseString(const std::string &data, const ParseMode& parseMode) const;
         DeckPtr parseStream(std::shared_ptr<std::istream> inputStream , const ParseMode& parseMode) const;
 
+        Deck * newDeckFromFile(const std::string &dataFileName, const ParseMode& parseMode) const;
+        Deck * newDeckFromString(const std::string &dataFileName, const ParseMode& parseMode) const;
+
+        DeckPtr parseFile(const std::string &dataFile, bool strict = true) const;
+        DeckPtr parseString(const std::string &data, bool strict = true) const;
+        DeckPtr parseStream(std::shared_ptr<std::istream> inputStream , bool strict = true) const;
 
         /// Method to add ParserKeyword instances, these holding type and size information about the keywords and their data.
         void addParserKeyword(ParserKeywordConstPtr parserKeyword);
@@ -67,7 +73,7 @@ namespace Opm {
         bool loadKeywordFromFile(const boost::filesystem::path& configFile);
 
         void loadKeywordsFromDirectory(const boost::filesystem::path& directory , bool recursive = true);
-        void applyUnitsToDeck(DeckPtr deck) const;
+        void applyUnitsToDeck(Deck& deck) const;
 
         /*!
          * \brief Returns the approximate number of recognized keywords in decks

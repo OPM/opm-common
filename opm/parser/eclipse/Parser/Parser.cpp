@@ -34,7 +34,7 @@ namespace Opm {
 
     struct ParserState {
         const ParseMode& parseMode;
-        DeckPtr deck;
+        Deck * deck;
         boost::filesystem::path dataFile;
         boost::filesystem::path rootPath;
         std::map<std::string, std::string> pathMap;
@@ -55,7 +55,7 @@ namespace Opm {
         ParserState(const ParseMode& __parseMode)
             : parseMode( __parseMode )
         {
-            deck = std::make_shared<Deck>();
+            deck = new Deck();
             lineNR = 0;
         }
 
@@ -180,24 +180,32 @@ namespace Opm {
      is retained in the current implementation.
      */
 
-    DeckPtr Parser::parseFile(const std::string &dataFileName, const ParseMode& parseMode) const {
+    Deck * Parser::newDeckFromFile(const std::string &dataFileName, const ParseMode& parseMode) const {
         std::shared_ptr<ParserState> parserState = std::make_shared<ParserState>(parseMode);
         parserState->openRootFile( dataFileName );
-
         parseState(parserState);
-        applyUnitsToDeck(parserState->deck);
+        applyUnitsToDeck(*parserState->deck);
 
         return parserState->deck;
     }
 
-    DeckPtr Parser::parseString(const std::string &data, const ParseMode& parseMode) const {
+    Deck * Parser::newDeckFromString(const std::string &data, const ParseMode& parseMode) const {
         std::shared_ptr<ParserState> parserState = std::make_shared<ParserState>(parseMode);
         parserState->openString( data );
 
         parseState(parserState);
-        applyUnitsToDeck(parserState->deck);
+        applyUnitsToDeck(*parserState->deck);
 
         return parserState->deck;
+    }
+
+
+    DeckPtr Parser::parseFile(const std::string &dataFileName, const ParseMode& parseMode) const {
+        return std::shared_ptr<Deck>( newDeckFromFile( dataFileName , parseMode));
+    }
+
+    DeckPtr Parser::parseString(const std::string &data, const ParseMode& parseMode) const {
+        return std::shared_ptr<Deck>( newDeckFromString( data , parseMode));
     }
 
     DeckPtr Parser::parseStream(std::shared_ptr<std::istream> inputStream, const ParseMode& parseMode) const {
@@ -205,9 +213,9 @@ namespace Opm {
         parserState->openStream( inputStream );
 
         parseState(parserState);
-        applyUnitsToDeck(parserState->deck);
+        applyUnitsToDeck(*parserState->deck);
 
-        return parserState->deck;
+        return std::shared_ptr<Deck>( parserState->deck );
     }
 
     size_t Parser::size() const {
@@ -432,7 +440,7 @@ namespace Opm {
                     targetSize = parserKeyword->getFixedSize();
                 else {
                     const std::pair<std::string, std::string> sizeKeyword = parserKeyword->getSizeDefinitionPair();
-                    DeckConstPtr deck = parserState->deck;
+                    const Deck * deck = parserState->deck;
                     if (deck->hasKeyword(sizeKeyword.first)) {
                         DeckKeywordConstPtr sizeDefinitionKeyword = deck->getKeyword(sizeKeyword.first);
                         DeckItemPtr sizeDefinitionItem;
@@ -569,10 +577,10 @@ namespace Opm {
     }
 
 
-    void Parser::applyUnitsToDeck(DeckPtr deck) const {
-        deck->initUnitSystem();
-        for (size_t index=0; index < deck->size(); ++index) {
-            DeckKeywordConstPtr deckKeyword = deck->getKeyword( index );
+    void Parser::applyUnitsToDeck(Deck& deck) const {
+        deck.initUnitSystem();
+        for (size_t index=0; index < deck.size(); ++index) {
+            DeckKeywordConstPtr deckKeyword = deck.getKeyword( index );
             if (isRecognizedKeyword( deckKeyword->name())) {
                 ParserKeywordConstPtr parserKeyword = getParserKeywordFromDeckName( deckKeyword->name() );
                 if (parserKeyword->hasDimension()) {
