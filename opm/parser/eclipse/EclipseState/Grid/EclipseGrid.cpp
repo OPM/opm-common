@@ -587,12 +587,12 @@ namespace Opm {
         return ecl_grid_get_cell_volume3( c_ptr() , static_cast<int>(i),static_cast<int>(j),static_cast<int>(k));
     }
 
-    double EcliposeGrid::getCellThicknes(size_t i , size_t j , size_t k) const {
+    double EclipseGrid::getCellThicknes(size_t i , size_t j , size_t k) const {
         assertIJK(i,j,k);
         return ecl_grid_get_cell_thickness3( c_ptr() , static_cast<int>(i),static_cast<int>(j),static_cast<int>(k));
     }
 
-    double EcliposeGrid::getCellThicknes(size_t globalIndex) const {
+    double EclipseGrid::getCellThicknes(size_t globalIndex) const {
         assertGlobalIndex( globalIndex );
         return ecl_grid_get_cell_thickness1( c_ptr() , static_cast<int>(globalIndex));
     }
