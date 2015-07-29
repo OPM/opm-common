@@ -4,6 +4,7 @@
 # defines that must be present in config.h for our headers
 set (opm-material_CONFIG_VAR
 	HAVE_MPI
+	HAVE_TYPE_TRAITS
 	HAVE_VALGRIND
 	HAVE_FINAL
 	)
