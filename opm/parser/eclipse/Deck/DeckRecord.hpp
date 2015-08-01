@@ -37,7 +37,7 @@ namespace Opm {
         DeckItemPtr getItem(size_t index) const;
         DeckItemPtr getItem(const std::string& name) const;
         DeckItemPtr getDataItem() const;
-
+        bool        hasItem(const std::string& name) const;
         
     template <class Item>
     DeckItemPtr getItem() const {

@@ -49,11 +49,20 @@ namespace Opm {
             throw std::range_error("Index out of range.");
     }
 
-    DeckItemPtr DeckRecord::getItem(const std::string& name) const {
+
+    bool DeckRecord::hasItem(const std::string& name) const {
         if (m_itemMap.find(name) == m_itemMap.end())
-            throw std::invalid_argument("Itemname: " + name + " does not exist.");
+            return false;
         else
+            return true;
+    }
+
+    
+    DeckItemPtr DeckRecord::getItem(const std::string& name) const {
+        if (hasItem(name))
             return m_itemMap.find(name)->second;
+        else
+            throw std::invalid_argument("Itemname: " + name + " does not exist.");
     }
 
 
