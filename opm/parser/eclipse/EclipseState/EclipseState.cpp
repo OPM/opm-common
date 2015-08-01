@@ -883,6 +883,7 @@ namespace Opm {
 
         // initialisation
         supportedDoubleKeywords->emplace_back( "SWATINIT" , 0.0, "1");
+        supportedDoubleKeywords->emplace_back( "THCONR" , 0.0, "1");
 
         // register the grid properties
         m_intGridProperties = std::make_shared<GridProperties<int> >(m_eclipseGrid , supportedIntKeywords);
