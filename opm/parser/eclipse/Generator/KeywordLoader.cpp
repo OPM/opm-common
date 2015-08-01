@@ -79,10 +79,12 @@ namespace Opm {
                 } else {
                     std::string internalName = iter_path.filename().string();
                     if (ParserKeyword::validInternalName(internalName)) {
-                        loadKeyword( iter_path );
-                        loadCount += 1;
                         if (m_verbose)
-                            std::cout << "Loading keyword " << internalName << " from file: " << iter_path << std::endl;
+                            std::cout << "Loading keyword " << internalName << " from file: " << iter_path << "....";
+                        loadKeyword( iter_path );
+                        if (m_verbose)
+                            std::cout << std::endl;
+                        loadCount += 1;
                     } else {
                         if (m_verbose)
                             std::cout << "Ignoring file " << iter_path << "  - incorrectly formatted name." << std::endl;

@@ -9,9 +9,11 @@ int main(int argc , char ** argv) {
         const char * source_file_name = argv[2];
         const char * header_file_name = argv[3];
         const char * test_file_name = argv[4];
+        bool verboseLoader = false;
+        bool verboseGenerator = true;
 
-        Opm::KeywordLoader loader(false);
-        Opm::KeywordGenerator generator(true);
+        Opm::KeywordLoader loader(verboseLoader);
+        Opm::KeywordGenerator generator(verboseGenerator);
         loader.loadMultipleKeywordDirectories( config_root );
 
         generator.updateSource(loader , source_file_name );
