@@ -26,7 +26,7 @@
 
 namespace Opm {
 
-    std::string DeckStringItem::getString(size_t index) const {
+    const std::string& DeckStringItem::getString(size_t index) const {
         assertSize(index);
 
         return m_data[index];

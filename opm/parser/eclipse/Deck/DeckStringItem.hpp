@@ -33,7 +33,7 @@ namespace Opm {
 
         DeckStringItem(std::string name_, bool scalar = true) : DeckItem(name_, scalar) {
         }
-        std::string getString(size_t index) const;
+        const std::string& getString(size_t index) const;
         const std::vector<std::string>& getStringData() const;
 
         std::string getTrimmedString(size_t index) const;

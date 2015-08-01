@@ -73,7 +73,7 @@ namespace Opm {
     }
 
 
-    std::string DeckKeyword::name() const {
+    const std::string& DeckKeyword::name() const {
         return m_keywordName;
     }
 

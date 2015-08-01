@@ -72,7 +72,7 @@ namespace Opm {
             throw std::logic_error("This implementation of DeckItem does not support bool");
         }
 
-        virtual std::string getString(size_t /* index */) const {
+        virtual const std::string& getString(size_t /* index */) const {
             throw std::logic_error("This implementation of DeckItem does not support string");
         }
 

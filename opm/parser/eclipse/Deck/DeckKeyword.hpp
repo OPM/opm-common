@@ -22,7 +22,7 @@ namespace Opm {
         DeckKeyword(const std::string& keywordName);
         DeckKeyword(const std::string& keywordName, bool knownKeyword);
 
-        std::string name() const;
+        const std::string& name() const;
         void setLocation(const std::string& fileName, int lineNumber);
         const std::string& getFileName() const;
         int getLineNumber() const;
