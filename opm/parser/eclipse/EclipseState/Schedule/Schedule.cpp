@@ -73,6 +73,7 @@ namespace Opm {
     void Schedule::iterateScheduleSection(DeckConstPtr deck, IOConfigPtr ioConfig) {
         size_t currentStep = 0;
         std::vector<std::pair<DeckKeywordConstPtr , size_t> > rftProperties;
+        std::vector<std::pair<DeckKeywordConstPtr , size_t> > IOConfigSettings;
 
         for (size_t keywordIdx = 0; keywordIdx < deck->size(); ++keywordIdx) {
             DeckKeywordConstPtr keyword = deck->getKeyword(keywordIdx);
@@ -134,10 +135,10 @@ namespace Opm {
                 handleNOSIM();
 
             if (keyword->name() == "RPTRST")
-                handleRPTRST(keyword, currentStep, ioConfig);
+                IOConfigSettings.push_back( std::make_pair( keyword , currentStep ));
 
             if (keyword->name() == "RPTSCHED")
-                handleRPTSCHED(keyword, currentStep, ioConfig);
+                IOConfigSettings.push_back( std::make_pair( keyword , currentStep ));
 
             if (keyword->name() == "WRFT")
                 rftProperties.push_back( std::make_pair( keyword , currentStep ));
@@ -160,6 +161,17 @@ namespace Opm {
 
             if (keyword->name() == "WRFTPLT"){
                 handleWRFTPLT(keyword, timeStep);
+            }
+        }
+
+
+        for (auto restartPair = IOConfigSettings.begin(); restartPair != IOConfigSettings.end(); ++restartPair) {
+            DeckKeywordConstPtr keyword = restartPair->first;
+            size_t timeStep = restartPair->second;
+            if ((keyword->name() == "RPTRST") && (m_timeMap->size() > timeStep+1 )) {
+                handleRPTRST(keyword, timeStep + 1, ioConfig);
+              } else if ((keyword->name() == "RPTSCHED") && (m_timeMap->size() > timeStep+1 )){
+                handleRPTSCHED(keyword, timeStep + 1, ioConfig);
             }
         }
 
@@ -850,14 +862,16 @@ namespace Opm {
 
         size_t basic = 1;
         size_t freq  = 0;
+        size_t found_basic = 0;
         bool handle_RPTRST_BASIC = false;
 
         DeckItemConstPtr item = record->getItem(0);
 
+
         for (size_t index = 0; index < item->size(); ++index) {
             const std::string& mnemonic = item->getString(index);
 
-            size_t found_basic = mnemonic.find("BASIC=");
+            found_basic = mnemonic.find("BASIC=");
             if (found_basic != std::string::npos) {
                 std::string basic_no = mnemonic.substr(found_basic+6, mnemonic.size());
                 basic = boost::lexical_cast<size_t>(basic_no);
@@ -871,13 +885,48 @@ namespace Opm {
             }
         }
 
+
+        /* If no BASIC mnemonic is found, either it is not present or we might
+           have an old data set containing integer controls instead of mnemonics.
+           BASIC integer switch is integer control nr 1, FREQUENCY is integer
+           control nr 6 */
+
+
+        if (found_basic == std::string::npos) {
+            if (item->size() >= 1)  {
+                const std::string& integer_control_basic = item->getString(0);
+                try {
+                    basic = boost::lexical_cast<size_t>(integer_control_basic);
+                    if (0 != basic ) // Peculiar special case in eclipse, - not documented
+                                     // This ignore of basic = 0 for the integer mnemonics case
+                                     // is done to make flow write restart file at the same intervals
+                                     // as eclipse for the Norne data set. There might be some rules
+                                     // we are missing here.
+                    {
+                        handle_RPTRST_BASIC = true;
+                    }
+                } catch (boost::bad_lexical_cast &) {
+                    //do nothing
+                }
+            }
+
+            if (item->size() >= 6) { //if frequency is set
+                const std::string& integer_control_frequency = item->getString(5);
+                try {
+                    freq = boost::lexical_cast<size_t>(integer_control_frequency);
+                } catch (boost::bad_lexical_cast &) {
+                    //do nothing
+                }
+            }
+        }
+
         if (handle_RPTRST_BASIC) {
             ioConfig->handleRPTRSTBasic(m_timeMap, currentStep, basic, freq);
         }
     }
 
 
-    void Schedule::handleRPTSCHED(DeckKeywordConstPtr keyword, size_t currentStep, IOConfigPtr ioConfig) {
+    void Schedule::handleRPTSCHED(DeckKeywordConstPtr keyword, size_t step, IOConfigPtr ioConfig) {
         DeckRecordConstPtr record = keyword->getRecord(0);
 
         size_t restart = 0;
@@ -921,7 +970,7 @@ namespace Opm {
 
 
         if (handle_RPTSCHED_RESTART) {
-            ioConfig->handleRPTSCHEDRestart(m_timeMap, currentStep, restart);
+            ioConfig->handleRPTSCHEDRestart(m_timeMap, step, restart);
         }
 
     }

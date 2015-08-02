@@ -87,6 +87,8 @@ namespace Opm {
             size_t timestep;
             size_t basic;
             size_t frequency;
+            bool   rptsched_restart_set;
+            size_t rptsched_restart;
 
             bool operator!=(const restartConfig& rhs) {
                 bool ret = true;
