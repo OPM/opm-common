@@ -49,9 +49,9 @@ namespace Opm {
         /// Return the length of a given time step in seconds.
         double getTimeStepLength(size_t tStepIdx) const;
         /// Return a list of the first timesteps of each month
-        void initFirstTimestepsMonths(std::vector<size_t>& timesteps, size_t timestep=0) const;
+        void initFirstTimestepsMonths(std::vector<size_t>& timesteps, size_t from_timestep=1) const;
         /// Return a list of the first timesteps of each year
-        void initFirstTimestepsYears(std::vector<size_t>& timesteps, size_t start_timestep=0) const;
+        void initFirstTimestepsYears(std::vector<size_t>& timesteps, size_t from_timestep=1) const;
         static boost::posix_time::ptime timeFromEclipse(DeckRecordConstPtr dateRecord);
         static boost::posix_time::ptime timeFromEclipse(int day , const std::string& month, int year, const std::string& eclipseTimeString = "00:00:00.000");
         static boost::posix_time::time_duration dayTimeFromEclipse(const std::string& eclipseTimeString);
