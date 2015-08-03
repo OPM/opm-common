@@ -547,7 +547,7 @@ elif test "$c_compiler$c_opts$cxx_compiler$cxx_opts$fort_compiler$fort_opts" != 
 fi
 
 # pass everything on to CMake
-CMDLINE="${ENVVARS}${CMAKE_COMMAND} \"${srcdir}\" ${use_ninja}\"-DCMAKE_INSTALL_PREFIX=$prefix\"${buildtype}${pch_use}${silent_rules}${debug_loc}${use_openmp}${use_mpi}${use_lto}${strip_debug}${use_runpath}${use_tests}${use_samples}${use_underscoring}${c_compiler}${c_opts}${cxx_compiler}${cxx_opts}${fort_compiler}${fort_opts}${boost_opts}${buildname}${site} ${FEATURES}"
+CMDLINE="${ENVVARS}${CMAKE_COMMAND} \"${srcdir}\" ${use_ninja}\"-DCMAKE_INSTALL_PREFIX=$prefix\" -DSIBLING_SEARCH=OFF${buildtype}${pch_use}${silent_rules}${debug_loc}${use_openmp}${use_mpi}${use_lto}${strip_debug}${use_runpath}${use_tests}${use_samples}${use_underscoring}${c_compiler}${c_opts}${cxx_compiler}${cxx_opts}${fort_compiler}${fort_opts}${boost_opts}${buildname}${site} ${FEATURES}"
 echo --- calling CMake ---
 echo "${CMDLINE}"
 eval exec "${CMDLINE}"
