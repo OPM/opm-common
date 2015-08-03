@@ -37,7 +37,6 @@ endif(PARMETIS_SUFFIX)
 include(CMakePushCheckState)
 cmake_push_check_state() # Save variables
 
-message("PARMETIS_ROOT=${PARMETIS_ROOT} PATH_SUFFIXES=${PATH_SUFFIXES}")
 find_path(PARMETIS_INCLUDE_DIR parmetis.h
   PATHS ${PARMETIS_ROOT}
   PATH_SUFFIXES parmetis${PATH_SUFFIXES}
@@ -52,7 +51,6 @@ find_package(METIS)
 set(CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES} ${MPI_C_INCLUDE_PATH} ${PARMETIS_INCLUDE_DIR} ${METIS_INCLUDE_DIR} )
 set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} ${MPI_C_COMPILE_FLAGS}")
 
-message("CMAKE_REQUIRED_INCLUDES=${CMAKE_REQUIRED_INCLUDES}")
 check_include_file(parmetis.h PARMETIS_FOUND)
 _search_parmetis_lib(PARMETIS_LIBRARY parmetis "The main ParMETIS library.")
 
