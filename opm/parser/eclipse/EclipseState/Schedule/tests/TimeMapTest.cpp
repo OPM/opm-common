@@ -34,6 +34,7 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 
 BOOST_AUTO_TEST_CASE(CreateTimeMap_InvalidThrow) {
     boost::gregorian::date startDate;
@@ -301,7 +302,7 @@ BOOST_AUTO_TEST_CASE(initTimestepsYearsAndMonths) {
         " 6 7 /\n";
 
     Opm::ParserPtr parser(new Opm::Parser(/*addDefault=*/true));
-    Opm::DeckPtr deck = parser->parseString(deckData);
+    Opm::DeckPtr deck = parser->parseString(deckData, Opm::ParseMode());
     Opm::TimeMap tmap(deck);
 
     /*deckData timesteps:
