@@ -87,11 +87,15 @@ BOOST_AUTO_TEST_CASE(AddDateNegativeStepThrows) {
 
 BOOST_AUTO_TEST_CASE(AddStepSizeCorrect) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMapPtr timeMap( new Opm::TimeMap(boost::posix_time::ptime(boost::posix_time::ptime(startDate))) );
+    std::shared_ptr<Opm::TimeMap> timeMap = std::make_shared<Opm::TimeMap>(boost::posix_time::ptime(boost::posix_time::ptime(startDate)));
 
     timeMap->addTStep( boost::posix_time::hours(1));
-    timeMap->addTStep( boost::posix_time::hours(24));
+    timeMap->addTStep( boost::posix_time::hours(23));
     BOOST_CHECK_EQUAL( 3U , timeMap->size());
+
+    BOOST_CHECK_THROW( (*timeMap)[3] , std::invalid_argument );
+    BOOST_CHECK_EQUAL( (*timeMap)[0] , boost::posix_time::ptime(boost::posix_time::ptime(startDate)));
+    BOOST_CHECK_EQUAL( (*timeMap)[2] , boost::posix_time::ptime(boost::posix_time::ptime( boost::gregorian::date( 2010 , boost::gregorian::Jan , 2 ))));
 }
 
 

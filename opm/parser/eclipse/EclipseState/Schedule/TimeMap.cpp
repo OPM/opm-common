@@ -263,6 +263,14 @@ namespace Opm {
     }
 
 
+    const boost::posix_time::ptime& TimeMap::operator[] (size_t index) const {
+        if (index < m_timeList.size())
+            return m_timeList[index];
+        else
+            throw std::invalid_argument("Index out of range");
+    }
+
+
 }
 
 
