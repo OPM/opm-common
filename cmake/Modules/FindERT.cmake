@@ -72,24 +72,6 @@ find_path (ERT_GEN_INCLUDE_DIR
   ${_no_default_path}
   )
 
-find_package(PythonInterp)
-if(PYTHONINTERP_FOUND)
-  execute_process ( COMMAND ${PYTHON_EXECUTABLE} -c
-                            "from distutils.sysconfig import get_python_lib; print get_python_lib()" 
-                    OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
-  find_path (ERT_PYTHON_PATH
-    NAMES "ert/__ert_lib_path.py"
-    HINTS "${ERT_ROOT}"
-    PATHS "${PYTHON_SITE_PACKAGES}"
-          "${PROJECT_SOURCE_DIR}/../ert/build/lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/dist-packages"
-          "${PROJECT_SOURCE_DIR}/../ert/devel/build/lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/dist-packages"
-          "${PROJECT_BINARY_DIR}/../ert-build/lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/dist-packages"
-          "${PROJECT_BINARY_DIR}/../ert/devel/lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/dist-packages")
-    if(ERT_PYTHON_PATH MATCHES "NOTFOUND")
-      set(ERT_PYTHON_PATH "")
-    endif()
-endif()
-
 
 # need all of these libraries
 if (CMAKE_SIZEOF_VOID_P)
@@ -300,3 +282,7 @@ find_package_handle_standard_args (ERT
   DEFAULT_MSG
   ERT_INCLUDE_DIR ERT_LIBRARY HAVE_ERT
   )
+
+
+
+
