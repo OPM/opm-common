@@ -83,6 +83,14 @@ namespace Opm {
 
 
         struct restartConfig {
+            /*
+              The content of this struct is logically divided in two; either the
+              restart behaviour is governed by { timestep , basic , frequency }, or
+              alternatively by { rptshec_restart_set , rptsched_restart }.
+
+              The former triplet is mainly governed by the RPTRST keyword and the
+              latter pair by the RPTSCHED keyword.
+            */
             size_t timestep;
             size_t basic;
             size_t frequency;
