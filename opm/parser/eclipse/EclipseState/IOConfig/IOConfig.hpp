@@ -63,7 +63,7 @@ namespace Opm {
 
 
 
-        void initRestartOutputConfig(TimeMapConstPtr timemap);
+        void assertTimeMap(TimeMapConstPtr timemap);
         bool getWriteRestartFileFrequency(size_t timestep,
                                           size_t start_index,
                                           size_t frequency,

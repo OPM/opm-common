@@ -134,25 +134,24 @@ namespace Opm {
         }
 
 
-        if (!m_timemap) {
-            initRestartOutputConfig(timemap);
-        }
+        assertTimeMap( timemap );
+        {
+            restartConfig rs;
+            rs.timestep  = timestep;
+            rs.basic     = basic;
+            rs.frequency = frequency;
+            rs.rptsched_restart_set = false;
+            rs.rptsched_restart     = 0;
 
-        restartConfig rs;
-        rs.timestep  = timestep;
-        rs.basic     = basic;
-        rs.frequency = frequency;
-        rs.rptsched_restart_set = false;
-        rs.rptsched_restart     = 0;
-
-        if (update_default) {
-            m_restart_output_config->updateInitial(rs);
-        }
-        else if (reset_global) {
-            m_restart_output_config->globalReset(rs);
-        }
-        else {
-            m_restart_output_config->update(timestep, rs);
+            if (update_default) {
+                m_restart_output_config->updateInitial(rs);
+            }
+            else if (reset_global) {
+                m_restart_output_config->globalReset(rs);
+            }
+            else {
+                m_restart_output_config->update(timestep, rs);
+            }
         }
     }
 
@@ -167,38 +166,35 @@ namespace Opm {
             return;
         }
 
-        if (!m_timemap) {
-            initRestartOutputConfig(timemap);
+        assertTimeMap( timemap );
+        {
+            restartConfig rs;
+            rs.timestep             = 0;
+            rs.basic                = 0;
+            rs.frequency            = 0;
+            rs.rptsched_restart     = restart;
+            rs.rptsched_restart_set = true;
+
+            m_restart_output_config->update(timestep, rs);
         }
-
-        restartConfig rs;
-        rs.timestep             = 0;
-        rs.basic                = 0;
-        rs.frequency            = 0;
-        rs.rptsched_restart     = restart;
-        rs.rptsched_restart_set = true;
-
-        m_restart_output_config->update(timestep, rs);
     }
 
 
-    void IOConfig::initRestartOutputConfig(TimeMapConstPtr timemap) {
-        restartConfig rs;
-        rs.timestep  = 0;
-        rs.basic     = 0;
-        rs.frequency = 1;
-        rs.rptsched_restart_set = false;
-        rs.rptsched_restart     = 0;
+    void IOConfig::assertTimeMap(TimeMapConstPtr timemap) {
+        if (!m_timemap) {
+            restartConfig rs;
+            rs.timestep  = 0;
+            rs.basic     = 0;
+            rs.frequency = 1;
+            rs.rptsched_restart_set = false;
+            rs.rptsched_restart     = 0;
 
-        m_timemap = timemap;
-        m_restart_output_config = std::make_shared<DynamicState<restartConfig>>(timemap, rs);
+            m_timemap = timemap;
+            m_restart_output_config = std::make_shared<DynamicState<restartConfig>>(timemap, rs);
+        }
     }
 
     void IOConfig::handleSolutionSection(TimeMapConstPtr timemap, std::shared_ptr<const SOLUTIONSection> solutionSection) {
-        if (!m_timemap) {
-            m_timemap = timemap;
-        }
-
         if (solutionSection->hasKeyword("RPTRST")) {
             auto rptrstkeyword = solutionSection->getKeyword("RPTRST");
             size_t currentStep = 0;
