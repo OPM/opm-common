@@ -55,8 +55,7 @@ namespace Opm {
         void handleSolutionSection(TimeMapConstPtr timemap, std::shared_ptr<const SOLUTIONSection> solutionSection);
         void handleGridSection(std::shared_ptr<const GRIDSection> gridSection);
         void handleRunspecSection(std::shared_ptr<const RUNSPECSection> runspecSection);
-
-
+        void dumpRestartConfig() const;
     private:
 
 

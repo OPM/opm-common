@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
 #include <iterator>
 
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
@@ -297,7 +298,14 @@ namespace Opm {
         return m_eclipse_input_path;
     }
 
-
-
+    void IOConfig::dumpRestartConfig() const {
+        for (size_t reportStep = 0; reportStep < m_timemap->size(); reportStep++) {
+            if (getWriteRestartFile(reportStep)) {
+                auto time = (*m_timemap)[reportStep];
+                boost::gregorian::date date = time.date();
+                printf("%04d : %02d/%02d/%d \n" , reportStep , date.day() , date.month() , date.year());
+            }
+        }
+    }
 
 } //namespace Opm
