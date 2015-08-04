@@ -226,12 +226,13 @@ namespace Opm {
     }
 
 
-     void TimeMap::initFirstTimestepsMonths(std::vector<size_t>& timesteps, size_t start_timestep) const {
+     void TimeMap::initFirstTimestepsMonths(std::vector<size_t>& timesteps, size_t from_timestep) const {
         timesteps.clear();
-        const boost::posix_time::ptime& ptime_start = getStartTime(start_timestep);
-        boost::gregorian::date prev_date = ptime_start.date();
 
-        for (size_t timestepIndex = start_timestep; timestepIndex < m_timeList.size(); ++timestepIndex) {
+        const boost::posix_time::ptime& ptime_prev = getStartTime(from_timestep-1);
+        boost::gregorian::date prev_date = ptime_prev.date();
+
+        for (size_t timestepIndex = from_timestep; timestepIndex < m_timeList.size(); ++timestepIndex) {
             const boost::posix_time::ptime& ptime_cur = getStartTime(timestepIndex);
             boost::gregorian::date cur_date = ptime_cur.date();
 
@@ -244,12 +245,13 @@ namespace Opm {
 
 
 
-    void TimeMap::initFirstTimestepsYears(std::vector<size_t>& timesteps, size_t start_timestep) const {
+    void TimeMap::initFirstTimestepsYears(std::vector<size_t>& timesteps, size_t from_timestep) const {
         timesteps.clear();
-        const boost::posix_time::ptime& ptime_start = getStartTime(start_timestep);
-        boost::gregorian::date prev_date = ptime_start.date();
 
-        for (size_t timestepIndex = start_timestep; timestepIndex < m_timeList.size(); ++timestepIndex) {
+        const boost::posix_time::ptime& ptime_prev = getStartTime(from_timestep-1);
+        boost::gregorian::date prev_date = ptime_prev.date();
+
+        for (size_t timestepIndex = from_timestep; timestepIndex < m_timeList.size(); ++timestepIndex) {
             const boost::posix_time::ptime& ptime_cur = getStartTime(timestepIndex);
             boost::gregorian::date cur_date = ptime_cur.date();
 

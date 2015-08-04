@@ -329,9 +329,9 @@ BOOST_AUTO_TEST_CASE(initTimestepsYearsAndMonths) {
 
     first_timestep_of_each_month.clear();
     tmap.initFirstTimestepsMonths(first_timestep_of_each_month, 6);
-    BOOST_CHECK_EQUAL(6, first_timestep_of_each_month.size());
-    int expected_results3[6] = {8,9,10,11,12,13};
-    BOOST_CHECK_EQUAL_COLLECTIONS(expected_results3, expected_results3+6, first_timestep_of_each_month.begin(), first_timestep_of_each_month.end());
+    BOOST_CHECK_EQUAL(7, first_timestep_of_each_month.size());
+    int expected_results3[7] = {6,8,9,10,11,12,13};
+    BOOST_CHECK_EQUAL_COLLECTIONS(expected_results3, expected_results3+7, first_timestep_of_each_month.begin(), first_timestep_of_each_month.end());
 
     std::vector<size_t> first_timestep_of_each_year;
     tmap.initFirstTimestepsYears(first_timestep_of_each_year);
@@ -341,6 +341,6 @@ BOOST_AUTO_TEST_CASE(initTimestepsYearsAndMonths) {
 
     first_timestep_of_each_year.clear();
     tmap.initFirstTimestepsYears(first_timestep_of_each_year, 13);
-    BOOST_CHECK_EQUAL(0, first_timestep_of_each_year.size());
+    BOOST_CHECK_EQUAL(1, first_timestep_of_each_year.size());
 }
 
