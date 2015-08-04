@@ -29,6 +29,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellSolventProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 namespace Opm {
@@ -102,6 +103,9 @@ namespace Opm {
 
             if (keyword->name() == "WPOLYMER")
                 handleWPOLYMER(keyword, currentStep);
+
+            if (keyword->name() == "WSOLVENT")
+                handleWSOLVENT(keyword, currentStep);
 
             if (keyword->name() == "WCONINJH")
                 handleWCONINJH(deck, keyword, currentStep);
@@ -472,6 +476,24 @@ namespace Opm {
                     throw std::logic_error("Sorry explicit setting of \'GROUP_SALT_CONCENTRATION\' is not supported!");
                 }
                 well->setPolymerProperties(currentStep, properties);
+            }
+        }
+    }
+
+    void Schedule::handleWSOLVENT(DeckKeywordConstPtr keyword, size_t currentStep) {
+        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
+            DeckRecordConstPtr record = keyword->getRecord(recordNr);
+            const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
+            std::vector<WellPtr> wells = getWells(wellNamePattern);
+
+            for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
+                WellPtr well = *wellIter;
+
+                WellSolventProperties properties(well->getSolventPropertiesCopy(currentStep));
+
+                properties.m_solventConcentration = record->getItem("SOLVENT_FRACTION")->getSIDouble(0);
+
+                well->setSolventProperties(currentStep, properties);
             }
         }
     }
