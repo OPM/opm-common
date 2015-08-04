@@ -107,8 +107,16 @@ namespace Opm {
 
         void handleRandomText(const std::string& keywordString ) const {
             std::stringstream msg;
-            InputError::Action action = parseMode.randomText;
-            msg << "String \'" << keywordString << "\' not formatted/recognized as valid keyword at: " << dataFile << ":" << lineNR;
+            InputError::Action action;
+
+            if (keywordString == "/") {
+                action = parseMode.randomSlash;
+                msg << "Extra '/' detected at: " << dataFile << ":" << lineNR;
+            } else {
+                action = parseMode.randomText;
+                msg << "String \'" << keywordString << "\' not formatted/recognized as valid keyword at: " << dataFile << ":" << lineNR;
+            }
+
             if (action == InputError::THROW_EXCEPTION)
                 throw std::invalid_argument( msg.str() );
             else {

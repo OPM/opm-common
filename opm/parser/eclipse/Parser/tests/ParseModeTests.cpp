@@ -129,3 +129,27 @@ BOOST_AUTO_TEST_CASE( CheckUnsoppertedInSCHEDULE ) {
     parseMode.unsupportedScheduleGeoModifiers = InputError::THROW_EXCEPTION;
     BOOST_CHECK_THROW( Schedule( parseMode , grid , deck , ioconfig ), std::invalid_argument );
 }
+
+
+
+BOOST_AUTO_TEST_CASE(TestRandomSlash) {
+    const char * deck =
+        "SCHEDULE\n"
+        "TSTEP\n"
+        "  10 10 10 /\n"
+        "/\n";
+
+
+    ParseMode parseMode;
+    Parser parser(false);
+
+
+    parser.addKeyword<ParserKeywords::TSTEP>();
+    parser.addKeyword<ParserKeywords::SCHEDULE>();
+    parseMode.randomSlash = InputError::THROW_EXCEPTION;
+    BOOST_CHECK_THROW( parser.parseString( deck , parseMode ) , std::invalid_argument);
+
+    parseMode.randomSlash = InputError::IGNORE;
+    BOOST_CHECK_NO_THROW( parser.parseString( deck , parseMode ) );
+}
+

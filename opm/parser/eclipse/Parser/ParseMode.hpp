@@ -81,7 +81,14 @@ namespace Opm {
         */
         InputError::Action randomText;
 
+        /*
+          It turns out that random '/' - i.e. typically an extra slash
+          which is not needed - is quite common. This is therefor a
+          special case treatment of the 'randomText' behaviour.
+        */
+        InputError::Action randomSlash;
 
+        
         /*
           For some keywords the number of records (i.e. size) is given
           as an item in another keyword. A typical example is the
