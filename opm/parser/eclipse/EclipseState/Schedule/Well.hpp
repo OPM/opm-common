@@ -28,7 +28,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/WellSolventProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 #include <boost/optional.hpp>
@@ -87,9 +86,9 @@ namespace Opm {
         WellPolymerProperties          getPolymerPropertiesCopy(size_t timeStep) const;
         const WellPolymerProperties&   getPolymerProperties(size_t timeStep) const;
 
-        bool                           setSolventProperties(size_t timeStep , const WellSolventProperties properties);
-        WellSolventProperties          getSolventPropertiesCopy(size_t timeStep) const;
-        const WellSolventProperties&   getSolventProperties(size_t timeStep) const;
+        bool                           setSolventFraction(size_t timeStep , const double fraction);
+        double                         getSolventFractionCopy(size_t timeStep) const;
+        const double&                  getSolventFraction(size_t timeStep) const;
 
         bool getRFTActive(size_t time_step) const;
         void setRFTActive(size_t time_step, bool value);
@@ -117,7 +116,7 @@ namespace Opm {
         std::shared_ptr<DynamicState<WellProductionProperties> > m_productionProperties;
         std::shared_ptr<DynamicState<WellInjectionProperties> > m_injectionProperties;
         std::shared_ptr<DynamicState<WellPolymerProperties> > m_polymerProperties;
-        std::shared_ptr<DynamicState<WellSolventProperties> > m_solventProperties;
+        std::shared_ptr<DynamicState<double> > m_solventFraction;
         std::shared_ptr<DynamicState<std::string> > m_groupName;
         std::shared_ptr<DynamicState<bool> > m_rft;
         std::shared_ptr<DynamicState<bool> > m_plt;

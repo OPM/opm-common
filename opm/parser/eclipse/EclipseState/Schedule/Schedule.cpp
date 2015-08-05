@@ -29,7 +29,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/WellSolventProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 namespace Opm {
@@ -488,12 +487,8 @@ namespace Opm {
 
             for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
                 WellPtr well = *wellIter;
-
-                WellSolventProperties properties(well->getSolventPropertiesCopy(currentStep));
-
-                properties.m_solventConcentration = record->getItem("SOLVENT_FRACTION")->getSIDouble(0);
-
-                well->setSolventProperties(currentStep, properties);
+                double fraction = record->getItem("SOLVENT_FRACTION")->getRawDouble(0);
+                well->setSolventFraction(currentStep, fraction);
             }
         }
     }
