@@ -899,9 +899,9 @@ BOOST_AUTO_TEST_CASE(createDeckWithRPTRST) {
     BOOST_CHECK_EQUAL(false, ioConfig2->getWriteRestartFile(3));
 
 
-    DeckPtr deck3 = parser.parseString(deckData3) ;
+    DeckPtr deck3 = parser.parseString(deckData3 , parseMode) ;
     IOConfigPtr ioConfig3 = std::make_shared<IOConfig>();
-    Schedule schedule3(grid , deck3, ioConfig3);
+    Schedule schedule3(parseMode , grid , deck3, ioConfig3);
 
     BOOST_CHECK_EQUAL(false, ioConfig3->getWriteRestartFile(0));
     BOOST_CHECK_EQUAL(false, ioConfig3->getWriteRestartFile(1));

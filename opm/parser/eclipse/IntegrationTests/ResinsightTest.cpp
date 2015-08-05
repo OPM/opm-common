@@ -35,6 +35,7 @@ BOOST_AUTO_TEST_CASE( test_parse ) {
     ParseMode parseMode;
     parseMode.unknownKeyword = InputError::IGNORE;
     parseMode.randomText = InputError::IGNORE;
+    parseMode.randomSlash = InputError::IGNORE;
 
     parser.addKeyword<ParserKeywords::SPECGRID>();
     parser.addKeyword<ParserKeywords::FAULTS>();
@@ -51,6 +52,7 @@ BOOST_AUTO_TEST_CASE( test_state ) {
     ParseMode parseMode;
     parseMode.unknownKeyword = InputError::IGNORE;
     parseMode.randomText = InputError::IGNORE;
+    parseMode.randomSlash = InputError::IGNORE;
 
     parser.addKeyword<ParserKeywords::SPECGRID>();
     parser.addKeyword<ParserKeywords::FAULTS>();
