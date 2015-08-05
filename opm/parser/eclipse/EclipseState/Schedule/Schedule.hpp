@@ -96,6 +96,7 @@ namespace Opm
         void handleCOMPDAT(DeckKeywordConstPtr keyword,  size_t currentStep);
         void handleWCONINJE(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep);
         void handleWPOLYMER(DeckKeywordConstPtr keyword, size_t currentStep);
+        void handleWSOLVENT(DeckKeywordConstPtr keyword, size_t currentStep);
         void handleWCONINJH(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep);
         void handleWELOPEN(DeckKeywordConstPtr keyword, size_t currentStep, bool hascomplump);
         void handleWELTARG(DeckConstPtr deck, DeckKeywordConstPtr keyword, size_t currentStep);

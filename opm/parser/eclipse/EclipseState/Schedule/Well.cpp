@@ -42,6 +42,7 @@ namespace Opm {
           m_productionProperties( new DynamicState<WellProductionProperties>(timeMap, WellProductionProperties() )),
           m_injectionProperties( new DynamicState<WellInjectionProperties>(timeMap, WellInjectionProperties() )),
           m_polymerProperties( new DynamicState<WellPolymerProperties>(timeMap, WellPolymerProperties() )),
+          m_solventFraction( new DynamicState<double>(timeMap, 0.0 )),
           m_groupName( new DynamicState<std::string>( timeMap , "" )),
           m_rft( new DynamicState<bool>(timeMap,false)),
           m_plt( new DynamicState<bool>(timeMap,false)),
@@ -100,6 +101,15 @@ namespace Opm {
 
     const WellPolymerProperties& Well::getPolymerProperties(size_t timeStep) const {
         return m_polymerProperties->at(timeStep);
+    }
+
+    bool Well::setSolventFraction(size_t timeStep , const double fraction) {
+        m_isProducer->update(timeStep , false);
+        return m_solventFraction->update(timeStep, fraction);
+    }
+
+    const double& Well::getSolventFraction(size_t timeStep) const {
+        return m_solventFraction->at(timeStep);
     }
 
     bool Well::hasBeenDefined(size_t timeStep) const {

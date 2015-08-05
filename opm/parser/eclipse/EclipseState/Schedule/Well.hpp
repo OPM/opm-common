@@ -86,6 +86,9 @@ namespace Opm {
         WellPolymerProperties          getPolymerPropertiesCopy(size_t timeStep) const;
         const WellPolymerProperties&   getPolymerProperties(size_t timeStep) const;
 
+        bool                           setSolventFraction(size_t timeStep , const double fraction);
+        const double&                  getSolventFraction(size_t timeStep) const;
+
         bool getRFTActive(size_t time_step) const;
         void setRFTActive(size_t time_step, bool value);
         bool getPLTActive(size_t time_step) const;
@@ -112,6 +115,7 @@ namespace Opm {
         std::shared_ptr<DynamicState<WellProductionProperties> > m_productionProperties;
         std::shared_ptr<DynamicState<WellInjectionProperties> > m_injectionProperties;
         std::shared_ptr<DynamicState<WellPolymerProperties> > m_polymerProperties;
+        std::shared_ptr<DynamicState<double> > m_solventFraction;
         std::shared_ptr<DynamicState<std::string> > m_groupName;
         std::shared_ptr<DynamicState<bool> > m_rft;
         std::shared_ptr<DynamicState<bool> > m_plt;
