@@ -42,6 +42,7 @@ namespace Opm {
         size_t size() const;
         size_t numTimesteps() const;
         double getTotalTime() const;
+        const boost::posix_time::ptime& operator[] (size_t index) const;
         /// Return the date and time where a given time step starts.
         boost::posix_time::ptime getStartTime(size_t tStepIdx) const;
         /// Return the period of time in seconds which passed between the start of the simulation and a given point in time.
@@ -49,9 +50,9 @@ namespace Opm {
         /// Return the length of a given time step in seconds.
         double getTimeStepLength(size_t tStepIdx) const;
         /// Return a list of the first timesteps of each month
-        void initFirstTimestepsMonths(std::vector<size_t>& timesteps, size_t timestep=0) const;
+        void initFirstTimestepsMonths(std::vector<size_t>& timesteps, size_t from_timestep=1) const;
         /// Return a list of the first timesteps of each year
-        void initFirstTimestepsYears(std::vector<size_t>& timesteps, size_t start_timestep=0) const;
+        void initFirstTimestepsYears(std::vector<size_t>& timesteps, size_t from_timestep=1) const;
         static boost::posix_time::ptime timeFromEclipse(DeckRecordConstPtr dateRecord);
         static boost::posix_time::ptime timeFromEclipse(int day , const std::string& month, int year, const std::string& eclipseTimeString = "00:00:00.000");
         static boost::posix_time::time_duration dayTimeFromEclipse(const std::string& eclipseTimeString);

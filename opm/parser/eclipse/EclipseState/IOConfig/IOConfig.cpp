@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
 #include <iterator>
 
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
@@ -50,31 +51,37 @@ namespace Opm {
         if (m_restart_output_config) {
             restartConfig ts_restart_config = m_restart_output_config->get(timestep);
 
-            switch (ts_restart_config.basic) {
-                case 0: //Do not write restart files
-                    write_restart_ts = false;
-                    break;
-                case 1: //Write restart file every report time
+            //Look at rptsched restart setting
+            if (ts_restart_config.rptsched_restart_set) {
+                if (ts_restart_config.rptsched_restart > 0) {
                     write_restart_ts = true;
-                    break;
-                case 2: //Write restart file every report time
-                    write_restart_ts = true;
-                    break;
-                case 3: //Every n'th report time
-                    write_restart_ts = getWriteRestartFileFrequency(timestep, ts_restart_config.timestep, ts_restart_config.frequency);
-                    break;
-                case 4: //First reportstep of every year, or if n > 1, n'th years
-                    write_restart_ts = getWriteRestartFileFrequency(timestep, ts_restart_config.timestep, ts_restart_config.frequency, true);
-                    break;
-                case 5: //First reportstep of every month, or if n > 1, n'th months
-                    write_restart_ts = getWriteRestartFileFrequency(timestep, ts_restart_config.timestep, ts_restart_config.frequency, false, true);
-                    break;
-                default:
-                    // do nothing
-                    break;
+                }
+            } else { //Look at rptrst basic setting
+                switch (ts_restart_config.basic) {
+                    case 0: //Do not write restart files
+                        write_restart_ts = false;
+                        break;
+                    case 1: //Write restart file every report time
+                        write_restart_ts = true;
+                        break;
+                    case 2: //Write restart file every report time
+                        write_restart_ts = true;
+                        break;
+                    case 3: //Every n'th report time
+                        write_restart_ts = getWriteRestartFileFrequency(timestep, ts_restart_config.timestep, ts_restart_config.frequency);
+                        break;
+                    case 4: //First reportstep of every year, or if n > 1, n'th years
+                        write_restart_ts = getWriteRestartFileFrequency(timestep, ts_restart_config.timestep, ts_restart_config.frequency, true);
+                        break;
+                    case 5: //First reportstep of every month, or if n > 1, n'th months
+                        write_restart_ts = getWriteRestartFileFrequency(timestep, ts_restart_config.timestep, ts_restart_config.frequency, false, true);
+                        break;
+                    default:
+                        // do nothing
+                        break;
+                }
             }
         }
-
 
         return write_restart_ts;
     }
@@ -127,23 +134,24 @@ namespace Opm {
         }
 
 
-        if (!m_timemap) {
-            initRestartOutputConfig(timemap);
-        }
+        assertTimeMap( timemap );
+        {
+            restartConfig rs;
+            rs.timestep  = timestep;
+            rs.basic     = basic;
+            rs.frequency = frequency;
+            rs.rptsched_restart_set = false;
+            rs.rptsched_restart     = 0;
 
-        restartConfig rs;
-        rs.timestep  = timestep;
-        rs.basic     = basic;
-        rs.frequency = frequency;
-
-        if (update_default) {
-            m_restart_output_config->updateInitial(rs);
-        }
-        else if (reset_global) {
-            m_restart_output_config->globalReset(rs);
-        }
-        else {
-            m_restart_output_config->update(timestep, rs);
+            if (update_default) {
+                m_restart_output_config->updateInitial(rs);
+            }
+            else if (reset_global) {
+                m_restart_output_config->globalReset(rs);
+            }
+            else {
+                m_restart_output_config->update(timestep, rs);
+            }
         }
     }
 
@@ -158,36 +166,35 @@ namespace Opm {
             return;
         }
 
-        if (!m_timemap) {
-            initRestartOutputConfig(timemap);
+        assertTimeMap( timemap );
+        {
+            restartConfig rs;
+            rs.timestep             = 0;
+            rs.basic                = 0;
+            rs.frequency            = 0;
+            rs.rptsched_restart     = restart;
+            rs.rptsched_restart_set = true;
+
+            m_restart_output_config->update(timestep, rs);
         }
-
-        //RPTSCHED Restart mnemonic == 0: same logic as RPTRST Basic mnemonic = 0
-        //RPTSCHED Restart mnemonic >= 1; same logic as RPTRST Basic mnemonic = 1
-
-        restartConfig rs;
-        rs.timestep  = timestep;
-        rs.basic     = (restart == 0) ? 0 : 1;
-
-        m_restart_output_config->update(timestep, rs);
     }
 
 
-    void IOConfig::initRestartOutputConfig(TimeMapConstPtr timemap) {
-        restartConfig rs;
-        rs.timestep  = 0;
-        rs.basic     = 0;
-        rs.frequency = 1;
+    void IOConfig::assertTimeMap(TimeMapConstPtr timemap) {
+        if (!m_timemap) {
+            restartConfig rs;
+            rs.timestep  = 0;
+            rs.basic     = 0;
+            rs.frequency = 1;
+            rs.rptsched_restart_set = false;
+            rs.rptsched_restart     = 0;
 
-        m_timemap = timemap;
-        m_restart_output_config = std::make_shared<DynamicState<restartConfig>>(timemap, rs);
+            m_timemap = timemap;
+            m_restart_output_config = std::make_shared<DynamicState<restartConfig>>(timemap, rs);
+        }
     }
 
     void IOConfig::handleSolutionSection(TimeMapConstPtr timemap, std::shared_ptr<const SOLUTIONSection> solutionSection) {
-        if (!m_timemap) {
-            m_timemap = timemap;
-        }
-
         if (solutionSection->hasKeyword("RPTRST")) {
             auto rptrstkeyword = solutionSection->getKeyword("RPTRST");
             size_t currentStep = 0;
@@ -287,7 +294,14 @@ namespace Opm {
         return m_eclipse_input_path;
     }
 
-
-
+    void IOConfig::dumpRestartConfig() const {
+        for (size_t reportStep = 0; reportStep < m_timemap->size(); reportStep++) {
+            if (getWriteRestartFile(reportStep)) {
+                auto time = (*m_timemap)[reportStep];
+                boost::gregorian::date date = time.date();
+                printf("%04d : %02d/%02d/%d \n" , reportStep , date.day() , date.month() , date.year());
+            }
+        }
+    }
 
 } //namespace Opm

@@ -55,8 +55,7 @@ namespace Opm {
         void handleSolutionSection(TimeMapConstPtr timemap, std::shared_ptr<const SOLUTIONSection> solutionSection);
         void handleGridSection(std::shared_ptr<const GRIDSection> gridSection);
         void handleRunspecSection(std::shared_ptr<const RUNSPECSection> runspecSection);
-
-
+        void dumpRestartConfig() const;
     private:
 
 
@@ -64,7 +63,7 @@ namespace Opm {
 
 
 
-        void initRestartOutputConfig(TimeMapConstPtr timemap);
+        void assertTimeMap(TimeMapConstPtr timemap);
         bool getWriteRestartFileFrequency(size_t timestep,
                                           size_t start_index,
                                           size_t frequency,
@@ -84,9 +83,19 @@ namespace Opm {
 
 
         struct restartConfig {
+            /*
+              The content of this struct is logically divided in two; either the
+              restart behaviour is governed by { timestep , basic , frequency }, or
+              alternatively by { rptshec_restart_set , rptsched_restart }.
+
+              The former triplet is mainly governed by the RPTRST keyword and the
+              latter pair by the RPTSCHED keyword.
+            */
             size_t timestep;
             size_t basic;
             size_t frequency;
+            bool   rptsched_restart_set;
+            size_t rptsched_restart;
 
             bool operator!=(const restartConfig& rhs) {
                 bool ret = true;
