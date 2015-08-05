@@ -108,10 +108,6 @@ namespace Opm {
         return m_solventFraction->update(timeStep, fraction);
     }
 
-    double Well::getSolventFractionCopy(size_t timeStep) const {
-        return m_solventFraction->get(timeStep);
-    }
-
     const double& Well::getSolventFraction(size_t timeStep) const {
         return m_solventFraction->at(timeStep);
     }

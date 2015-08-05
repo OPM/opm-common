@@ -87,7 +87,6 @@ namespace Opm {
         const WellPolymerProperties&   getPolymerProperties(size_t timeStep) const;
 
         bool                           setSolventFraction(size_t timeStep , const double fraction);
-        double                         getSolventFractionCopy(size_t timeStep) const;
         const double&                  getSolventFraction(size_t timeStep) const;
 
         bool getRFTActive(size_t time_step) const;
