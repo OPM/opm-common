@@ -24,8 +24,9 @@ set (ewoms_DEPS
 	"dune-istl REQUIRED"
 	"opm-material REQUIRED"
 	"dune-alugrid"
+	"dune-fem"
 	"dune-cornerpoint"
-	# librt (on some systems necessary for clock_gettime()) 
+	# librt (on some systems necessary for clock_gettime())
 	"librt REQUIRED"
 	# valgrind client requests
 	"Valgrind"
