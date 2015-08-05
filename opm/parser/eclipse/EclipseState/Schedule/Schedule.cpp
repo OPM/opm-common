@@ -480,6 +480,7 @@ namespace Opm {
     }
 
     void Schedule::handleWSOLVENT(DeckKeywordConstPtr keyword, size_t currentStep) {
+
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
             const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
@@ -487,8 +488,13 @@ namespace Opm {
 
             for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
                 WellPtr well = *wellIter;
-                double fraction = record->getItem("SOLVENT_FRACTION")->getRawDouble(0);
-                well->setSolventFraction(currentStep, fraction);
+                WellInjectionProperties injectionProperties = well->getInjectionProperties( currentStep );
+                if (well->isInjector( currentStep ) && injectionProperties.injectorType == WellInjector::GAS) {
+                    double fraction = record->getItem("SOLVENT_FRACTION")->getRawDouble(0);
+                    well->setSolventFraction(currentStep, fraction);
+                } else {
+                    throw std::invalid_argument("WSOLVENT keyword can only be applied to Gas injectors");
+                }
             }
         }
     }
