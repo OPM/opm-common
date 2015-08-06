@@ -100,8 +100,11 @@ namespace Opm {
             if (m_initialValue != initialValue) {
                 size_t index;
                 m_initialValue = initialValue;
-                for (index = 0; index < m_initialRange; index++)
-                    m_data[index] = m_initialValue;
+                if (m_initialRange > 0) {
+                    for (index = 0; index < m_initialRange; index++)
+                        m_data[index] = m_initialValue;
+                } else
+                    m_currentValue = initialValue;
             }
         }
 
