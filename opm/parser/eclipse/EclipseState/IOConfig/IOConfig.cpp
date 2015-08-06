@@ -223,7 +223,7 @@ namespace Opm {
                     }
                 }
             }
-            handleRPTRSTBasic(m_timemap, currentStep, basic, freq, true);
+            handleRPTRSTBasic(timemap, currentStep, basic, freq, true);
         }
     }
 
