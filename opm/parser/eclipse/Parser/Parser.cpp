@@ -108,8 +108,9 @@ namespace Opm {
         void handleRandomText(const std::string& keywordString ) const {
             std::stringstream msg;
             InputError::Action action;
+            std::string trimmedCopy = boost::algorithm::trim_copy( keywordString );
 
-            if (keywordString == "/") {
+            if (trimmedCopy == "/") {
                 action = parseMode.randomSlash;
                 msg << "Extra '/' detected at: " << dataFile << ":" << lineNR;
             } else {

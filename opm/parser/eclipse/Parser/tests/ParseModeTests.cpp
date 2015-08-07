@@ -133,11 +133,18 @@ BOOST_AUTO_TEST_CASE( CheckUnsoppertedInSCHEDULE ) {
 
 
 BOOST_AUTO_TEST_CASE(TestRandomSlash) {
-    const char * deck =
+    const char * deck1 =
         "SCHEDULE\n"
         "TSTEP\n"
         "  10 10 10 /\n"
         "/\n";
+
+    const char * deck2 =
+        "SCHEDULE\n"
+        "TSTEP\n"
+        "  10 10 10 /\n"
+        "   /\n";
+
 
 
     ParseMode parseMode;
@@ -147,9 +154,14 @@ BOOST_AUTO_TEST_CASE(TestRandomSlash) {
     parser.addKeyword<ParserKeywords::TSTEP>();
     parser.addKeyword<ParserKeywords::SCHEDULE>();
     parseMode.randomSlash = InputError::THROW_EXCEPTION;
-    BOOST_CHECK_THROW( parser.parseString( deck , parseMode ) , std::invalid_argument);
+    parseMode.randomText = InputError::IGNORE;
+    BOOST_CHECK_THROW( parser.parseString( deck1 , parseMode ) , std::invalid_argument);
+    BOOST_CHECK_THROW( parser.parseString( deck2 , parseMode ) , std::invalid_argument);
 
     parseMode.randomSlash = InputError::IGNORE;
-    BOOST_CHECK_NO_THROW( parser.parseString( deck , parseMode ) );
+    parseMode.randomText = InputError::THROW_EXCEPTION;
+
+    BOOST_CHECK_NO_THROW( parser.parseString( deck1 , parseMode ) );
+    BOOST_CHECK_NO_THROW( parser.parseString( deck2 , parseMode ) );
 }
 
