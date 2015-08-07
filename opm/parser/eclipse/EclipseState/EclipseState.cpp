@@ -223,6 +223,10 @@ namespace Opm {
         return m_pvtgTables;
     }
 
+    const std::vector<PvdsTable>& EclipseState::getPvdsTables() const {
+        return m_pvdsTables;
+    }
+
     const std::vector<PvtoTable>& EclipseState::getPvtoTables() const {
         return m_pvtoTables;
     }
@@ -362,6 +366,7 @@ namespace Opm {
         initSimpleTables(deck, "SWOF", m_swofTables);
         initSimpleTables(deck, "SWFN", m_swfnTables);
         initSimpleTables(deck, "WATVISCT", m_watvisctTables);
+        initSimpleTables(deck, "PVDS", m_pvdsTables);
 
         // the number of columns of the GASVSISCT tables depends on the value of the
         // COMPS keyword...
