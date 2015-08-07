@@ -61,12 +61,12 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_includeWrongCase) {
     // for case-insensitive filesystems, the include statement will
     // always work regardless of how the capitalization of the
     // included files is wrong...
-    BOOST_CHECK_EQUAL(true, parser->parseFile(inputFile1Path.string())->hasKeyword("OIL"));
-    BOOST_CHECK_EQUAL(false, parser->parseFile(inputFile1Path.string())->hasKeyword("WATER"));
-    BOOST_CHECK_EQUAL(true, parser->parseFile(inputFile2Path.string())->hasKeyword("OIL"));
-    BOOST_CHECK_EQUAL(false, parser->parseFile(inputFile2Path.string())->hasKeyword("WATER"));
-    BOOST_CHECK_EQUAL(true, parser->parseFile(inputFile3Path.string())->hasKeyword("OIL"));
-    BOOST_CHECK_EQUAL(false, parser->parseFile(inputFile3Path.string())->hasKeyword("WATER"));
+    BOOST_CHECK_EQUAL(true, parser->parseFile(inputFile1Path.string(), Opm::ParseMode())->hasKeyword("OIL"));
+    BOOST_CHECK_EQUAL(false, parser->parseFile(inputFile1Path.string(), Opm::ParseMode())->hasKeyword("WATER"));
+    BOOST_CHECK_EQUAL(true, parser->parseFile(inputFile2Path.string(), Opm::ParseMode())->hasKeyword("OIL"));
+    BOOST_CHECK_EQUAL(false, parser->parseFile(inputFile2Path.string(), Opm::ParseMode())->hasKeyword("WATER"));
+    BOOST_CHECK_EQUAL(true, parser->parseFile(inputFile3Path.string(), Opm::ParseMode())->hasKeyword("OIL"));
+    BOOST_CHECK_EQUAL(false, parser->parseFile(inputFile3Path.string(), Opm::ParseMode())->hasKeyword("WATER"));
 #endif
 }
 
