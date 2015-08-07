@@ -28,7 +28,9 @@ namespace Opm {
         randomText = InputError::THROW_EXCEPTION;
         randomSlash = InputError::THROW_EXCEPTION;
         missingDIMSKeyword = InputError::THROW_EXCEPTION;
+
         unsupportedScheduleGeoModifiers = InputError::THROW_EXCEPTION;
+        unsupportedCOMPORDType = InputError::THROW_EXCEPTION;
     }
 }
 

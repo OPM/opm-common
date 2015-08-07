@@ -23,6 +23,7 @@
 #include <boost/algorithm/string.hpp>
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
@@ -172,6 +173,10 @@ namespace Opm {
             if (keyword->name() == "WPIMULT")
                 handleWPIMULT(keyword, currentStep);
 
+            if (keyword->name() == "COMPORD")
+                handleCOMPORD(parseMode , keyword, currentStep);
+
+
             if (unsupportedModifiers.find( keyword->name() ) != unsupportedModifiers.end()) {
                 auto action = parseMode.unsupportedScheduleGeoModifiers;
 
@@ -210,6 +215,11 @@ namespace Opm {
         checkUnhandledKeywords(section);
     }
 
+    void Schedule::checkUnhandledKeywords(std::shared_ptr<const SCHEDULESection> section) const
+    {
+    }
+
+
     void Schedule::handleDATES(DeckKeywordConstPtr keyword) {
         m_timeMap->addFromDATESKeyword(keyword);
     }
@@ -226,6 +236,27 @@ namespace Opm {
         }
         return treeUpdated;
     }
+
+
+    void Schedule::handleCOMPORD(const ParseMode& parseMode, std::shared_ptr<const DeckKeyword> compordKeyword, size_t currentStep) {
+        for (const auto record : (*compordKeyword)) {
+            auto methodItem = record->getItem<ParserKeywords::COMPORD::ORDER_TYPE>();
+            if (methodItem->getString(0) != "TRACK") {
+                auto action = parseMode.unsupportedCOMPORDType;
+                if (action != InputError::IGNORE) {
+                    std::string msg = "The COMPORD keyword only handles 'TRACK' order. [ParseMode::unsupportedCOMPORDType]";
+
+                    if (action == InputError::THROW_EXCEPTION)
+                        throw std::invalid_argument(msg);
+                    else
+                        OpmLog::addMessage(Log::MessageType::Warning , msg );
+
+                }
+            }
+        }
+    }
+
+
 
     void Schedule::handleWELSPECS(DeckKeywordConstPtr keyword, size_t currentStep) {
         bool needNewTree = false;
@@ -1298,16 +1329,6 @@ namespace Opm {
         newGroup->addWell(timeStep , well);
     }
 
-    void Schedule::checkUnhandledKeywords(std::shared_ptr<const SCHEDULESection> section) const {
-        if (section->hasKeyword("COMPORD")) {
-            auto compordKeyword = section->getKeyword("COMPORD");
-            for (auto record = compordKeyword->begin(); record != compordKeyword->end(); ++record) {
-                auto methodItem = (*record)->getItem(1);
-                if (methodItem->getString(0) != "TRACK")
-                    throw std::invalid_argument("Can only handle TRACK in well order");
-            }
-        }
-    }
 
     double Schedule::convertInjectionRateToSI(double rawRate, WellInjector::TypeEnum wellType, const Opm::UnitSystem &unitSystem) {
         switch (wellType) {

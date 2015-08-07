@@ -88,7 +88,7 @@ namespace Opm {
         */
         InputError::Action randomSlash;
 
-        
+
         /*
           For some keywords the number of records (i.e. size) is given
           as an item in another keyword. A typical example is the
@@ -113,6 +113,12 @@ namespace Opm {
           regulated by this setting.
         */
         InputError::Action unsupportedScheduleGeoModifiers;
+
+
+        /*
+          In the COMPORD implementation only the 'TRACK' input mode is supported.
+        */
+        InputError::Action unsupportedCOMPORDType;
     };
 }
 
