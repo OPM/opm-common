@@ -252,10 +252,10 @@ private:
      */
     void check();
 
-    static FLO_TYPE getFloType(std::string flo_string);
-    static WFR_TYPE getWFRType(std::string wfr_string);
-    static GFR_TYPE getGFRType(std::string gfr_string);
-    static ALQ_TYPE getALQType(std::string alq_string);
+    static FLO_TYPE getFloType(std::shared_ptr<const DeckItem> item);
+    static WFR_TYPE getWFRType(std::shared_ptr<const DeckItem> item);
+    static GFR_TYPE getGFRType(std::shared_ptr<const DeckItem> item);
+    static ALQ_TYPE getALQType(std::shared_ptr<const DeckItem> item);
 
     static void scaleValues(std::vector<double>& values,
                             const double& scaling_factor);
