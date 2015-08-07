@@ -221,6 +221,7 @@ EclipseState/Tables/PvtgInnerTable.hpp
 EclipseState/Tables/PvdoTable.hpp
 EclipseState/Tables/MultiRecordTable.hpp
 EclipseState/Tables/PvdgTable.hpp
+EclipseState/Tables/PvdsTable.hpp
 EclipseState/Tables/SingleRecordTable.hpp
 EclipseState/Tables/PlymaxTable.hpp
 EclipseState/Tables/PvtgTable.hpp
