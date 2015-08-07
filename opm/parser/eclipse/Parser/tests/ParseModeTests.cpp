@@ -165,3 +165,30 @@ BOOST_AUTO_TEST_CASE(TestRandomSlash) {
     BOOST_CHECK_NO_THROW( parser.parseString( deck2 , parseMode ) );
 }
 
+
+
+BOOST_AUTO_TEST_CASE(TestCOMPORD) {
+    const char * deckString =
+        "START\n"
+        " 10 'JAN' 2000 /\n"
+        "RUNSPEC\n"
+        "DIMENS\n"
+        "  10 10 10 / \n"
+        "SCHEDULE\n"
+        "COMPORD\n"
+        "  '*'  'INPUT' /\n"
+        "/\n";
+
+    ParseMode parseMode;
+    Parser parser(true);
+    auto deck = parser.parseString( deckString , parseMode );
+
+    std::shared_ptr<EclipseGrid> grid = std::make_shared<EclipseGrid>( deck );
+    std::shared_ptr<IOConfig> ioconfig = std::make_shared<IOConfig>( "path" );
+
+    parseMode.unsupportedCOMPORDType = InputError::IGNORE;
+    BOOST_CHECK_NO_THROW( Schedule( parseMode , grid , deck , ioconfig ));
+
+    parseMode.unsupportedCOMPORDType = InputError::THROW_EXCEPTION;
+    BOOST_CHECK_THROW( Schedule( parseMode , grid , deck , ioconfig ), std::invalid_argument );
+}
