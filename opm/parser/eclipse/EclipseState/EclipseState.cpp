@@ -139,7 +139,7 @@ namespace Opm {
         initTitle(deck);
         initProperties(deck);
         initInitConfig(deck);
-        initSimulationConfig(deck);
+        initSimulationConfig(deck, parseMode);
         initTransMult();
         initFaults(deck);
         initMULTREGT(deck);
@@ -420,8 +420,8 @@ namespace Opm {
         m_initConfig = std::make_shared<const InitConfig>(deck);
     }
 
-    void EclipseState::initSimulationConfig(DeckConstPtr deck) {
-        m_simulationConfig = std::make_shared<const SimulationConfig>(deck , m_intGridProperties);
+    void EclipseState::initSimulationConfig(DeckConstPtr deck , const ParseMode& parseMode) {
+        m_simulationConfig = std::make_shared<const SimulationConfig>(parseMode , deck , m_intGridProperties);
     }
 
 

@@ -22,15 +22,16 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 
+
 namespace Opm {
 
-    SimulationConfig::SimulationConfig(DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties) {
-        initThresholdPressure(deck, gridProperties);
+    SimulationConfig::SimulationConfig(const ParseMode& parseMode , DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties) {
+        initThresholdPressure(parseMode , deck, gridProperties);
     }
 
 
-    void SimulationConfig::initThresholdPressure(DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties) {
-        mThresholdPressure = std::make_shared<const ThresholdPressure>(deck, gridProperties);
+    void SimulationConfig::initThresholdPressure(const ParseMode& parseMode, DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties) {
+        mThresholdPressure = std::make_shared<const ThresholdPressure>(parseMode , deck, gridProperties);
     }
 
 

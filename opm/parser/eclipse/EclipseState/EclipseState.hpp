@@ -159,7 +159,7 @@ namespace Opm {
         void initSchedule(DeckConstPtr deck , const ParseMode& parseMode);
         void initIOConfigPostSchedule(DeckConstPtr deck);
         void initInitConfig(DeckConstPtr deck);
-        void initSimulationConfig(DeckConstPtr deck);
+        void initSimulationConfig(DeckConstPtr deck, const ParseMode& parseMode);
         void initEclipseGrid(DeckConstPtr deck);
         void initGridopts(DeckConstPtr deck);
         void initPhases(DeckConstPtr deck);

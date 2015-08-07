@@ -21,20 +21,22 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
+#include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 
 namespace Opm {
 
-    ThresholdPressure::ThresholdPressure(DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties) {
+    ThresholdPressure::ThresholdPressure(const ParseMode& parseMode , DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties) {
 
         if (Section::hasRUNSPEC(deck) && Section::hasSOLUTION(deck)) {
             std::shared_ptr<const RUNSPECSection> runspecSection = std::make_shared<const RUNSPECSection>(deck);
             std::shared_ptr<const SOLUTIONSection> solutionSection = std::make_shared<const SOLUTIONSection>(deck);
-            initThresholdPressure(runspecSection, solutionSection, gridProperties);
+            initThresholdPressure(parseMode , runspecSection, solutionSection, gridProperties);
         }
     }
 
 
-    void ThresholdPressure::initThresholdPressure(std::shared_ptr<const RUNSPECSection> runspecSection,
+    void ThresholdPressure::initThresholdPressure(const ParseMode& parseMode,
+                                                  std::shared_ptr<const RUNSPECSection> runspecSection,
                                                   std::shared_ptr<const SOLUTIONSection> solutionSection,
                                                   std::shared_ptr<GridProperties<int>> gridProperties) {
 
@@ -90,19 +92,30 @@ namespace Opm {
                 auto region2Item = rec->getItem<ParserKeywords::THPRES::REGION2>();
                 auto thpressItem = rec->getItem<ParserKeywords::THPRES::VALUE>();
 
-                if (region1Item->hasValue(0) && region2Item->hasValue(0) && thpressItem->hasValue(0)) {
-                    const int r1 = region1Item->getInt(0) - 1;
-                    const int r2 = region2Item->getInt(0) - 1;
-                    const double p = thpressItem->getSIDouble(0);
+                if (region1Item->hasValue(0) && region2Item->hasValue(0)) {
+                    if (thpressItem->hasValue(0)) {
+                        const int r1 = region1Item->getInt(0) - 1;
+                        const int r2 = region2Item->getInt(0) - 1;
+                        const double p = thpressItem->getSIDouble(0);
 
-                    if (r1 >= maxEqlnum || r2 >= maxEqlnum) {
-                        throw std::runtime_error("Too high region numbers in THPRES keyword");
+                        if (r1 >= maxEqlnum || r2 >= maxEqlnum) {
+                            throw std::runtime_error("Too high region numbers in THPRES keyword");
+                        }
+                        m_thresholdPressureTable[r1 + maxEqlnum*r2] = p;
+                        m_thresholdPressureTable[r2 + maxEqlnum*r1] = p;
+                    } else {
+                        auto action = parseMode.unsupportedInitialTHPRES;
+                        if (action != InputError::IGNORE) {
+                            std::string msg = "Inferring threshold pressure from the initial state is not supported. [ParseMode::unsupportedInitialTHPRES]";
+                            if (action == InputError::THROW_EXCEPTION)
+                                throw std::invalid_argument( msg );
+                            else
+                                OpmLog::addMessage(Log::MessageType::Warning , msg );
+                        }
                     }
-                    m_thresholdPressureTable[r1 + maxEqlnum*r2] = p;
-                    m_thresholdPressureTable[r2 + maxEqlnum*r1] = p;
-                } else {
-                    throw std::runtime_error("Missing data for use of the THPRES keyword");
-                }
+                } else
+                    throw std::runtime_error("Missing region data for use of the THPRES keyword");
+
             }
         } else if (thpresOption && !thpresKeyword) {
             throw std::runtime_error("Invalid solution section; the EQLOPTS THPRES option is set in RUNSPEC, but no THPRES keyword is found in SOLUTION");
