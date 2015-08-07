@@ -176,7 +176,7 @@ namespace Opm {
                 auto action = parseMode.unsupportedScheduleGeoModifiers;
 
                 if (action != InputError::IGNORE) {
-                    std::string msg = "OPM does not support grid property modifiers in the Schedule section";
+                    std::string msg = "OPM does not support grid property modifier " + keyword->name() + " in the Schedule section. Error at report: " + std::to_string( currentStep );
                     if (action == InputError::THROW_EXCEPTION)
                         throw std::invalid_argument( msg );
                     else if (action == InputError::WARN)
