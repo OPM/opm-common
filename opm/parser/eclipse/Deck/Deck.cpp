@@ -53,7 +53,7 @@ namespace Opm {
     size_t Deck::getKeywordIndex(DeckKeywordConstPtr keyword) const {
         auto iter = m_keywordIndex.find( const_cast<DeckKeyword *>(keyword.get()));
         if (iter == m_keywordIndex.end())
-            throw std::invalid_argument("Keyword not in deck.");
+            throw std::invalid_argument("Keyword " + keyword->name() + " not in deck.");
 
         return (*iter).second;
     }
@@ -65,9 +65,9 @@ namespace Opm {
             if (index < keywordList.size())
                 return keywordList[index];
             else
-                throw std::out_of_range("Keyword index is out of range.");
+                throw std::out_of_range("Keyword " + keyword + ":" + std::to_string( index ) + " not in deck.");
         } else
-            throw std::invalid_argument("Keyword not in deck.");
+            throw std::invalid_argument("Keyword " + keyword + " not in deck.");
     }
 
     DeckKeywordConstPtr Deck::getKeyword(const std::string& keyword) const {
@@ -75,14 +75,14 @@ namespace Opm {
             const std::vector<DeckKeywordConstPtr>& keywordList = getKeywordList( keyword );
             return keywordList.back();
         } else
-            throw std::invalid_argument("Keyword not in deck.");
+            throw std::invalid_argument("Keyword " + keyword + " not in deck.");
     }
 
     DeckKeywordConstPtr Deck::getKeyword(size_t index) const {
         if (index < m_keywordList.size())
             return m_keywordList[index];
         else
-            throw std::out_of_range("Keyword index is out of range.");
+            throw std::out_of_range("Keyword index " + std::to_string( index ) + " is out of range.");
     }
 
     size_t Deck::numKeywords(const std::string& keyword) const {
