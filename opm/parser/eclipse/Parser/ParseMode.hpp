@@ -119,8 +119,16 @@ namespace Opm {
           In the COMPORD implementation only the 'TRACK' input mode is supported.
         */
         InputError::Action unsupportedCOMPORDType;
-    };
-}
+
+
+        /*
+          If the third item in the THPRES keyword is defaulted the
+          threshold pressure is inferred from the initial pressure;
+          this currently not supported.
+        */
+        InputError::Action unsupportedInitialTHPRES;
+
+}; }
 
 
 #endif

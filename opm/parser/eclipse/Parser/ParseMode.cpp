@@ -31,6 +31,7 @@ namespace Opm {
 
         unsupportedScheduleGeoModifiers = InputError::THROW_EXCEPTION;
         unsupportedCOMPORDType = InputError::THROW_EXCEPTION;
+        unsupportedInitialTHPRES = InputError::THROW_EXCEPTION;
     }
 }
 

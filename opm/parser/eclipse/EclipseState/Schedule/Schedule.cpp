@@ -21,6 +21,7 @@
 #include <vector>
 
 #include <boost/algorithm/string.hpp>
+
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords.hpp>

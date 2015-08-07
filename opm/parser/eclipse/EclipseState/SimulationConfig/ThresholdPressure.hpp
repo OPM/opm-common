@@ -25,7 +25,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
-
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 
 
 namespace Opm {
@@ -34,14 +34,15 @@ namespace Opm {
 
     public:
 
-        ThresholdPressure(DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties);
+        ThresholdPressure(const ParseMode& parseMode , DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties);
 
         const std::vector<double>& getThresholdPressureTable() const;
 
 
     private:
 
-        void initThresholdPressure(std::shared_ptr<const RUNSPECSection> runspecSection,
+        void initThresholdPressure(const ParseMode& parseMode,
+                                   std::shared_ptr<const RUNSPECSection> runspecSection,
                                    std::shared_ptr<const SOLUTIONSection> solutionSection,
                                    std::shared_ptr<GridProperties<int>> gridProperties);
 

@@ -22,7 +22,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
-
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 
 namespace Opm {
 
@@ -30,14 +30,14 @@ namespace Opm {
 
     public:
 
-        SimulationConfig(DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties);
+        SimulationConfig(const ParseMode& parseMode , DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties);
 
         const std::vector<double>& getThresholdPressureTable() const;
 
 
     private:
 
-        void initThresholdPressure(DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties);
+        void initThresholdPressure(const ParseMode& parseMode , DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties);
 
         ThresholdPressureConstPtr mThresholdPressure;
     };
