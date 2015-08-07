@@ -91,12 +91,14 @@ namespace Opm {
 
             inputstream.reset( ifs );
             dataFile = inputFile;
+        }
 
+        void openRootFile( const boost::filesystem::path& inputFile) {
+            openFile( inputFile );
             if (inputFile.is_absolute())
                 rootPath = inputFile.parent_path();
             else
                 rootPath = boost::filesystem::current_path() / inputFile.parent_path();
-
         }
 
         /*
@@ -143,7 +145,7 @@ namespace Opm {
 
     DeckPtr Parser::parseFile(const std::string &dataFileName, const ParseMode& parseMode) const {
         std::shared_ptr<ParserState> parserState = std::make_shared<ParserState>(parseMode);
-        parserState->openFile( dataFileName );
+        parserState->openRootFile( dataFileName );
 
         parseState(parserState);
         applyUnitsToDeck(parserState->deck);
