@@ -108,24 +108,19 @@ namespace Opm {
         */
 
         void handleRandomText(const std::string& keywordString ) const {
+            std::string errorKey;
             std::stringstream msg;
-            InputError::Action action;
             std::string trimmedCopy = boost::algorithm::trim_copy( keywordString );
 
             if (trimmedCopy == "/") {
-                action = parseMode.randomSlash;
+                errorKey = ParseMode::PARSE_RANDOM_SLASH;
                 msg << "Extra '/' detected at: " << dataFile << ":" << lineNR;
             } else {
-                action = parseMode.randomText;
+                errorKey = ParseMode::PARSE_RANDOM_TEXT;
                 msg << "String \'" << keywordString << "\' not formatted/recognized as valid keyword at: " << dataFile << ":" << lineNR;
             }
 
-            if (action == InputError::THROW_EXCEPTION)
-                throw std::invalid_argument( msg.str() );
-            else {
-                if (action == InputError::WARN)
-                    OpmLog::addMessage(Log::MessageType::Warning , msg.str());
-            }
+            parseMode.handleError( errorKey , msg.str() );
         }
 
     };
@@ -405,17 +400,15 @@ namespace Opm {
                         }
                         targetSize = sizeDefinitionItem->getInt(0);
                     } else {
-                        InputError::Action action = parserState->parseMode.missingDIMSKeyword;
-                        if (action == InputError::THROW_EXCEPTION)
-                            throw std::invalid_argument("Excpeted the kewyord: " + sizeKeyword.first + " to infer the number of records in: " + keywordString);
-                        else {
+                        std::string msg = "Expected the kewyord: " + sizeKeyword.first + " to infer the number of records in: " + keywordString;
+                        parserState->parseMode.handleError(ParseMode::PARSE_MISSING_DIMS_KEYWORD , msg );
+
+                        {
                             auto keyword = getKeyword( sizeKeyword.first );
                             auto record = keyword->getRecord(0);
                             auto int_item = std::dynamic_pointer_cast<const ParserIntItem>( record->get( sizeKeyword.second ) );
 
                             targetSize = int_item->getDefault( );
-                            if (action == InputError::WARN)
-                                OpmLog::addMessage(Log::MessageType::Warning , "Excpeted the kewyord: " + sizeKeyword.first + " to infer the number of records in: " + keywordString + " using default");
                         }
                     }
                 }
@@ -423,14 +416,9 @@ namespace Opm {
             }
         } else {
             if (ParserKeyword::validDeckName(keywordString)) {
-                InputError::Action action = parserState->parseMode.unknownKeyword;
-                if (action == InputError::THROW_EXCEPTION)
-                    throw std::invalid_argument("Keyword " + keywordString + " not recognized ");
-                else {
-                    if (action == InputError::WARN)
-                        OpmLog::addMessage(Log::MessageType::Warning , "Keyword " + keywordString + " not recognized");
-                    return std::shared_ptr<RawKeyword>(  );
-                }
+                std::string msg = "Keyword " + keywordString + " not recognized ";
+                parserState->parseMode.handleError( ParseMode::PARSE_UNKNOWN_KEYWORD  , msg );
+                return std::shared_ptr<RawKeyword>(  );
             } else {
                 parserState->handleRandomText( keywordString );
                 return std::shared_ptr<RawKeyword>(  );

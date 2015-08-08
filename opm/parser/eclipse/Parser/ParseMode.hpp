@@ -21,21 +21,19 @@
 #ifndef OPM_PARSE_MODE_HPP
 #define OPM_PARSE_MODE_HPP
 
+#include <string>
+#include <map>
+#include <vector>
+
 #include <opm/parser/eclipse/Parser/InputErrorAction.hpp>
 
 namespace Opm {
 
 
     /*
-       The ParseMode struct is meant to control the behavior of the
+       The ParseMode class is meant to control the behavior of the
        parsing and EclipseState construction phase when
        errors/inconsistencies/... are encountered in the input.
-
-       The ParseMode struct should be used as a simple value object,
-       i.e. apart from the constructor there are no methods - the
-       object can not 'do anything'. It is perfectly legitimate for
-       calling scope to manipulate the fields of a parsemode instance
-       directly.
 
        For each of the possible problems encountered the possible
        actions are goverened by the InputError::Action enum:
@@ -44,11 +42,59 @@ namespace Opm {
           InputError::WARN
           InputError::IGNORE
 
+       The internal datastructure is a map between string keys and
+       enum InputError::Action values. The string keys are meant to be
+       descriptive like:
+
+          "PARSE_RANDOMTEXT"
+
+
+       The constructor will consult the env variable
+       OPM_ERRORS_IGNORE, OPM_ERRORS_WARN and OPM_ERRORS_EXCEPTION
+       when initializing. The variables should be set as strings of
+       update syntax.
+
+       update_syntax: The main function for updating the policy of a
+       parseMode instance is the update() method. That takes a string
+       as input, and updates the matching flags. The string can
+       contain wildcards ('* and '?' mathced with fnmatch()) and is
+       split on ':' or '|' to allow multiple settings to be applied in
+       one go:
+
+       Just set one variable:
+          update("PARSE_RANDOM_SLASH" , InputError::IGNORE)
+
+       Ignore all unsupported features:
+         update("UNSUPPORTED_*" , InputError::IGNORE)
+
+       Set two variables:
+        update("UNSUPPORTED_INIITIAL_THPRES:PARSE_RANDOM_SLASH" , InputError::IGNORE)
+
+       The update function itself is quite tolerant, and will silently
+       ignore unknown keys. If you use the updateKey() function only
+       recognizd keys will be allowed.
     */
 
-    struct ParseMode {
+    class ParseMode {
+    public:
         ParseMode();
+        ParseMode(const std::vector<std::pair<std::string , InputError::Action>> initial);
+        void handleError( const std::string& errorKey , const std::string& msg) const;
+        bool hasKey(const std::string& key) const;
+        void updateKey(const std::string& key , InputError::Action action);
+        void update(InputError::Action action);
+        void update(const std::string& keyString , InputError::Action action);
+        InputError::Action get(const std::string& key) const;
+        std::map<std::string,InputError::Action>::const_iterator begin() const;
+        std::map<std::string,InputError::Action>::const_iterator end() const;
 
+        /*
+          When the key is added it is inserted in 'strict mode',
+          i.e. with the value 'InputError::THROW_EXCEPTION. If you
+          want a different value you must subsequently call the update
+          method.
+        */
+        void addKey(const std::string& key);
         /*
           The unknownKeyword field regulates how the parser should
           react when it encounters an unknwon keyword. Observe that
@@ -72,21 +118,20 @@ namespace Opm {
            subsequent piece of 'random text' might not be identified
            correctly as such.
         */
-        InputError::Action unknownKeyword;
-
+        const static std::string PARSE_UNKNOWN_KEYWORD;
 
         /*
           With random text we mean a string in the input deck is not
           correctly formatted as a keyword heading.
         */
-        InputError::Action randomText;
+        const static std::string PARSE_RANDOM_TEXT;
 
         /*
           It turns out that random '/' - i.e. typically an extra slash
           which is not needed - is quite common. This is therefor a
           special case treatment of the 'randomText' behaviour.
         */
-        InputError::Action randomSlash;
+        const static std::string PARSE_RANDOM_SLASH;
 
 
         /*
@@ -101,7 +146,7 @@ namespace Opm {
           Observe that a fully defaulted XXXDIMS keyword does not
           trigger this behavior.
         */
-        InputError::Action missingDIMSKeyword;
+        const static std::string PARSE_MISSING_DIMS_KEYWORD;
 
         /*
           Some property modfiers can be modified in the Schedule
@@ -112,22 +157,26 @@ namespace Opm {
           encountered in the Schedule section the behavior is
           regulated by this setting.
         */
-        InputError::Action unsupportedScheduleGeoModifiers;
-
+        const static std::string UNSUPPORTED_SCHEDULE_GEO_MODIFIER;
 
         /*
           In the COMPORD implementation only the 'TRACK' input mode is supported.
         */
-        InputError::Action unsupportedCOMPORDType;
-
+        const static std::string UNSUPPORTED_COMPORD_TYPE;
 
         /*
           If the third item in the THPRES keyword is defaulted the
           threshold pressure is inferred from the initial pressure;
           this currently not supported.
         */
-        InputError::Action unsupportedInitialTHPRES;
+        const static std::string UNSUPPORTED_INITIAL_THPRES;
 
+    private:
+        void initDefault();
+        void initEnv();
+        void envUpdate( const std::string& envVariable , InputError::Action action );
+        void patternUpdate( const std::string& pattern , InputError::Action action);
+        std::map<std::string , InputError::Action> m_errorModes;
 }; }
 
 

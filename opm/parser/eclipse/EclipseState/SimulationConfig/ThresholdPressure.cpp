@@ -104,14 +104,8 @@ namespace Opm {
                         m_thresholdPressureTable[r1 + maxEqlnum*r2] = p;
                         m_thresholdPressureTable[r2 + maxEqlnum*r1] = p;
                     } else {
-                        auto action = parseMode.unsupportedInitialTHPRES;
-                        if (action != InputError::IGNORE) {
-                            std::string msg = "Inferring threshold pressure from the initial state is not supported. [ParseMode::unsupportedInitialTHPRES]";
-                            if (action == InputError::THROW_EXCEPTION)
-                                throw std::invalid_argument( msg );
-                            else
-                                OpmLog::addMessage(Log::MessageType::Warning , msg );
-                        }
+                        std::string msg = "Inferring threshold pressure from the initial state is not supported.";
+                        parseMode.handleError( ParseMode::UNSUPPORTED_INITIAL_THPRES , msg );
                     }
                 } else
                     throw std::runtime_error("Missing region data for use of the THPRES keyword");

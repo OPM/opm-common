@@ -179,15 +179,8 @@ namespace Opm {
 
 
             if (unsupportedModifiers.find( keyword->name() ) != unsupportedModifiers.end()) {
-                auto action = parseMode.unsupportedScheduleGeoModifiers;
-
-                if (action != InputError::IGNORE) {
-                    std::string msg = "OPM does not support grid property modifier " + keyword->name() + " in the Schedule section. Error at report: " + std::to_string( currentStep );
-                    if (action == InputError::THROW_EXCEPTION)
-                        throw std::invalid_argument( msg );
-                    else if (action == InputError::WARN)
-                        OpmLog::addMessage(Log::MessageType::Warning , msg );
-                }
+                std::string msg = "OPM does not support grid property modifier " + keyword->name() + " in the Schedule section. Error at report: " + std::to_string( currentStep );
+                parseMode.handleError( ParseMode::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , msg );
             }
         }
 
@@ -243,16 +236,8 @@ namespace Opm {
         for (const auto record : (*compordKeyword)) {
             auto methodItem = record->getItem<ParserKeywords::COMPORD::ORDER_TYPE>();
             if (methodItem->getString(0) != "TRACK") {
-                auto action = parseMode.unsupportedCOMPORDType;
-                if (action != InputError::IGNORE) {
-                    std::string msg = "The COMPORD keyword only handles 'TRACK' order. [ParseMode::unsupportedCOMPORDType]";
-
-                    if (action == InputError::THROW_EXCEPTION)
-                        throw std::invalid_argument(msg);
-                    else
-                        OpmLog::addMessage(Log::MessageType::Warning , msg );
-
-                }
+                std::string msg = "The COMPORD keyword only handles 'TRACK' order.";
+                parseMode.handleError( ParseMode::UNSUPPORTED_COMPORD_TYPE , msg );
             }
         }
     }

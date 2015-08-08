@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(ThresholdPressureThrowTest) {
         BOOST_CHECK_THROW(std::make_shared<ThresholdPressure>(parseMode , deck, gridPropertiesEQLNUMall0), std::runtime_error);
     }
 
-    parseMode.unsupportedInitialTHPRES = InputError::IGNORE;
+    parseMode.update( ParseMode::UNSUPPORTED_INITIAL_THPRES , InputError::IGNORE );
     BOOST_CHECK_NO_THROW(ThresholdPressure(parseMode,deck_missingPressure, gridProperties));
 }
 

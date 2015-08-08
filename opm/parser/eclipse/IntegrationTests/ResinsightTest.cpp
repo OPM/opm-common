@@ -33,9 +33,10 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE( test_parse ) {
     Parser parser(false);
     ParseMode parseMode;
-    parseMode.unknownKeyword = InputError::IGNORE;
-    parseMode.randomText = InputError::IGNORE;
-    parseMode.randomSlash = InputError::IGNORE;
+
+    parseMode.update( ParseMode::PARSE_UNKNOWN_KEYWORD , InputError::IGNORE );
+    parseMode.update( ParseMode::PARSE_RANDOM_TEXT , InputError::IGNORE );
+    parseMode.update( ParseMode::PARSE_RANDOM_SLASH , InputError::IGNORE );
 
     parser.addKeyword<ParserKeywords::SPECGRID>();
     parser.addKeyword<ParserKeywords::FAULTS>();
@@ -50,9 +51,10 @@ BOOST_AUTO_TEST_CASE( test_parse ) {
 BOOST_AUTO_TEST_CASE( test_state ) {
     Parser parser(false);
     ParseMode parseMode;
-    parseMode.unknownKeyword = InputError::IGNORE;
-    parseMode.randomText = InputError::IGNORE;
-    parseMode.randomSlash = InputError::IGNORE;
+
+    parseMode.update( ParseMode::PARSE_UNKNOWN_KEYWORD , InputError::IGNORE );
+    parseMode.update( ParseMode::PARSE_RANDOM_TEXT , InputError::IGNORE );
+    parseMode.update( ParseMode::PARSE_RANDOM_SLASH , InputError::IGNORE );
 
     parser.addKeyword<ParserKeywords::SPECGRID>();
     parser.addKeyword<ParserKeywords::FAULTS>();
