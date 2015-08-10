@@ -70,6 +70,7 @@
 #pragma GCC diagnostic ignored "-Wunneeded-internal-declaration"
 #pragma GCC diagnostic ignored "-Wunused-private-field"
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+#pragma GCC diagnostic ignored "-Wunused-variable"
 #endif // COMPATIBLE_COMPILER
 
 #endif // SILENCE_EXTERNAL_WARNINGS
