@@ -17,9 +17,12 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <boost/filesystem.hpp>
 #define BOOST_TEST_MODULE WellSolventTests
+
+#include <opm/core/utility/platform_dependent/disable_warnings.h>
+#include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
+#include <opm/core/utility/platform_dependent/reenable_warnings.h>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/Deck/DeckIntItem.hpp>

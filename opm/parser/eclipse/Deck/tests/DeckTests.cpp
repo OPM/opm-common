@@ -18,11 +18,13 @@
  */
 
 
-#define BOOST_TEST_MODULE DeckTests
-
 #include <stdexcept>
 
+#define BOOST_TEST_MODULE DeckTests
+
+#include <opm/core/utility/platform_dependent/disable_warnings.h>
 #include <boost/test/unit_test.hpp>
+#include <opm/core/utility/platform_dependent/reenable_warnings.h>
 
 #include <opm/parser/eclipse/OpmLog/CounterLog.hpp>
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>

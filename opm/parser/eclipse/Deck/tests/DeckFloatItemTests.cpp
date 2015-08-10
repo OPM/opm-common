@@ -20,8 +20,11 @@
 
 #define BOOST_TEST_MODULE DeckItemTests
 
-#include <stdexcept>
+#include <opm/core/utility/platform_dependent/disable_warnings.h>
 #include <boost/test/unit_test.hpp>
+#include <opm/core/utility/platform_dependent/reenable_warnings.h>
+
+#include <stdexcept>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckFloatItem.hpp>

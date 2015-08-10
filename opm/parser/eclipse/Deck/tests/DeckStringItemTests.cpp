@@ -17,11 +17,14 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdexcept>
 
 #define BOOST_TEST_MODULE DeckStringItemTests
 
-#include <stdexcept>
+#include <opm/core/utility/platform_dependent/disable_warnings.h>
 #include <boost/test/unit_test.hpp>
+#include <opm/core/utility/platform_dependent/reenable_warnings.h>
+
 #include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
 
 using namespace Opm;
