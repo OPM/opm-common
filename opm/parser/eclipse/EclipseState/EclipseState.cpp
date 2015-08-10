@@ -275,6 +275,10 @@ namespace Opm {
         return m_swfnTables;
     }
 
+    const std::vector<SsfnTable>& EclipseState::getSsfnTables() const {
+        return m_ssfnTables;
+    }
+
     ScheduleConstPtr EclipseState::getSchedule() const {
         return schedule;
     }
@@ -365,6 +369,7 @@ namespace Opm {
         initSimpleTables(deck, "SOF2", m_sof2Tables);
         initSimpleTables(deck, "SWOF", m_swofTables);
         initSimpleTables(deck, "SWFN", m_swfnTables);
+        initSimpleTables(deck, "SSFN", m_ssfnTables);
         initSimpleTables(deck, "WATVISCT", m_watvisctTables);
         initSimpleTables(deck, "PVDS", m_pvdsTables);
 
