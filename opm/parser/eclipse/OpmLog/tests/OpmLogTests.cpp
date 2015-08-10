@@ -20,11 +20,14 @@
 
 #define BOOST_TEST_MODULE LogTests
 
+#include <opm/core/utility/platform_dependent/disable_warnings.h>
+#include <boost/test/unit_test.hpp>
+#include <opm/core/utility/platform_dependent/reenable_warnings.h>
+
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
 
-#include <boost/test/unit_test.hpp>
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/OpmLog/LogBackend.hpp>
 #include <opm/parser/eclipse/OpmLog/CounterLog.hpp>

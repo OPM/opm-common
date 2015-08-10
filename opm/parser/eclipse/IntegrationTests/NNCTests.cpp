@@ -31,7 +31,10 @@
 #define NVERBOSE // to suppress our messages when throwing
 
 #define BOOST_TEST_MODULE NNCTests
+
+#include <opm/core/utility/platform_dependent/disable_warnings.h>
 #include <boost/test/unit_test.hpp>
+#include <opm/core/utility/platform_dependent/reenable_warnings.h>
 
 using namespace Opm;
 
