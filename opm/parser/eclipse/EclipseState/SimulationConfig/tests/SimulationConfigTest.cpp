@@ -55,7 +55,7 @@ const std::string& inputStr = "RUNSPEC\n"
 
 static DeckPtr createDeck(const ParseMode& parseMode , const std::string& input) {
     Opm::Parser parser;
-    return parser.parseString(input, ParseMode());
+    return parser.parseString(input, parseMode);
 }
 
 
