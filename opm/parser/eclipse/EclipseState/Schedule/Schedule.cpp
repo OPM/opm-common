@@ -216,7 +216,7 @@ namespace Opm {
         checkUnhandledKeywords(section);
     }
 
-    void Schedule::checkUnhandledKeywords(std::shared_ptr<const SCHEDULESection> section) const
+    void Schedule::checkUnhandledKeywords(std::shared_ptr<const SCHEDULESection> /*section*/) const
     {
     }
 
@@ -239,7 +239,7 @@ namespace Opm {
     }
 
 
-    void Schedule::handleCOMPORD(const ParseMode& parseMode, std::shared_ptr<const DeckKeyword> compordKeyword, size_t currentStep) {
+    void Schedule::handleCOMPORD(const ParseMode& parseMode, std::shared_ptr<const DeckKeyword> compordKeyword, size_t /* currentStep */) {
         for (const auto record : (*compordKeyword)) {
             auto methodItem = record->getItem<ParserKeywords::COMPORD::ORDER_TYPE>();
             if (methodItem->getString(0) != "TRACK") {
