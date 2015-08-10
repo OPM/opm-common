@@ -299,7 +299,8 @@ namespace Opm {
             if (getWriteRestartFile(reportStep)) {
                 auto time = (*m_timemap)[reportStep];
                 boost::gregorian::date date = time.date();
-                printf("%04d : %02d/%02d/%d \n" , reportStep , date.day() , date.month() , date.year());
+                printf("%04zu : %02hu/%02hu/%hu \n" , reportStep ,
+		       date.day().as_number() , date.month().as_number() , static_cast<unsigned short>(date.year()));
             }
         }
     }
