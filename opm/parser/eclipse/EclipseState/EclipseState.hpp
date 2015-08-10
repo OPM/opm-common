@@ -60,6 +60,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/Sof2Table.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwfnTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SsfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/VFPInjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
@@ -142,6 +143,7 @@ namespace Opm {
         const std::vector<Sof2Table>& getSof2Tables() const;
         const std::vector<SwofTable>& getSwofTables() const;
         const std::vector<SwfnTable>& getSwfnTables() const;
+        const std::vector<SsfnTable>& getSsfnTables() const;
         const std::vector<WatvisctTable>& getWatvisctTables() const;
         const std::map<int, VFPProdTable>& getVFPProdTables() const;
         const std::map<int, VFPInjTable>& getVFPInjTables() const;
@@ -296,6 +298,7 @@ namespace Opm {
         std::vector<Sof2Table> m_sof2Tables;
         std::vector<SwofTable> m_swofTables;
         std::vector<SwfnTable> m_swfnTables;
+        std::vector<SsfnTable> m_ssfnTables;
         std::vector<WatvisctTable> m_watvisctTables;
         std::map<int, VFPProdTable> m_vfpprodTables;
         std::map<int, VFPInjTable> m_vfpinjTables;
