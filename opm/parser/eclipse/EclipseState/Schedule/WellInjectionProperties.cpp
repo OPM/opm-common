@@ -10,6 +10,7 @@ namespace Opm {
         reservoirInjectionRate=0.0;
         BHPLimit=0.0;
         THPLimit=0.0;
+        VFPTableNumber=0;
         predictionMode=true;
         injectionControls=0;
         injectorType = WellInjector::WATER;
@@ -22,6 +23,7 @@ namespace Opm {
             (reservoirInjectionRate == other.reservoirInjectionRate) &&
             (BHPLimit == other.BHPLimit) &&
             (THPLimit == other.THPLimit) &&
+            (VFPTableNumber == other.VFPTableNumber) &&
             (predictionMode == other.predictionMode) &&
             (injectionControls == other.injectionControls) &&
             (injectorType == other.injectorType) &&

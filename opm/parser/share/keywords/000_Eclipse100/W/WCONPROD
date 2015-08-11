@@ -9,7 +9,7 @@
        {"name" : "RESV"         , "value_type" : "DOUBLE" , "default" : 0.0 , "dimension" : "LiquidSurfaceVolume/Time"},
        {"name" : "BHP"          , "value_type" : "DOUBLE" , "default" : 0.0 , "dimension" : "Pressure"},
        {"name" : "THP"          , "value_type" : "DOUBLE" , "default" : 0.0 , "dimension" : "Pressure"},
-       {"name" : "VFPTable"     , "value_type" : "INT"   , "default" : 0.0 , "comment":"The default is a state variable"},
+       {"name" : "VFP_TABLE"    , "value_type" : "INT"    , "default" : 0.0 , "comment":"The default is a state variable"},
        {"name" : "ALQ"          , "value_type" : "DOUBLE" , "default" : 0.0 , "comment":"The default is a state variable"},
        {"name" : "E300_ITEM13"  , "value_type" : "DOUBLE"},
        {"name" : "E300_ITEM14"  , "value_type" : "DOUBLE"},
