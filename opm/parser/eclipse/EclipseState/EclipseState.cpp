@@ -267,12 +267,20 @@ namespace Opm {
         return m_sof2Tables;
     }
 
+    const std::vector<Sof3Table>& EclipseState::getSof3Tables() const {
+        return m_sof3Tables;
+    }
+
     const std::vector<SwofTable>& EclipseState::getSwofTables() const {
         return m_swofTables;
     }
 
     const std::vector<SwfnTable>& EclipseState::getSwfnTables() const {
         return m_swfnTables;
+    }
+
+    const std::vector<SgfnTable>& EclipseState::getSgfnTables() const {
+        return m_sgfnTables;
     }
 
     const std::vector<SsfnTable>& EclipseState::getSsfnTables() const {
@@ -367,8 +375,10 @@ namespace Opm {
         initSimpleTables(deck, "RVVD", m_rvvdTables);
         initSimpleTables(deck, "SGOF", m_sgofTables);
         initSimpleTables(deck, "SOF2", m_sof2Tables);
+        initSimpleTables(deck, "SOF3", m_sof3Tables);
         initSimpleTables(deck, "SWOF", m_swofTables);
         initSimpleTables(deck, "SWFN", m_swfnTables);
+        initSimpleTables(deck, "SGFN", m_sgfnTables);
         initSimpleTables(deck, "SSFN", m_ssfnTables);
         initSimpleTables(deck, "WATVISCT", m_watvisctTables);
         initSimpleTables(deck, "PVDS", m_pvdsTables);
