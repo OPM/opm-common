@@ -22,6 +22,8 @@
 #include <boost/date_time.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 
+#define INVALID_GROUP_RATE -999e100
+
 
 namespace Opm {
     namespace GroupProduction {
@@ -40,10 +42,10 @@ namespace Opm {
         ProductionData::ProductionData(TimeMapConstPtr timeMap) :
             controlMode( new DynamicState<GroupProduction::ControlEnum>(timeMap , GroupProduction::NONE)),
             exceedAction( new DynamicState<GroupProductionExceedLimit::ActionEnum>(timeMap , GroupProductionExceedLimit::NONE)),
-            oilTarget( new DynamicState<double>(timeMap , 0)),
-            waterTarget( new DynamicState<double>(timeMap , 0)),
-            gasTarget( new DynamicState<double>(timeMap , 0)),
-            liquidTarget( new DynamicState<double>(timeMap , 0))
+            oilTarget( new DynamicState<double>(timeMap , INVALID_GROUP_RATE)),
+            waterTarget( new DynamicState<double>(timeMap , INVALID_GROUP_RATE)),
+            gasTarget( new DynamicState<double>(timeMap , INVALID_GROUP_RATE)),
+            liquidTarget( new DynamicState<double>(timeMap , INVALID_GROUP_RATE))
         {
 
         }
