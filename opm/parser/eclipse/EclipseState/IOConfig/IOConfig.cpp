@@ -114,8 +114,8 @@ namespace Opm {
                     write_restart_file = true;
                 } else {
                     std::vector<size_t>::const_iterator ci_start = timesteps.begin();
-                    int index = std::distance( ci_start, ci_timestep );
-                    if( (index % frequency) == 0) {
+                    int dist = std::distance( ci_start, ci_timestep ) + 1;
+                    if( ( (dist > 0) && ((dist % frequency) == 0) ) ) {
                         write_restart_file = true;
                     }
                  }

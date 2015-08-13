@@ -229,7 +229,7 @@ namespace Opm {
      void TimeMap::initFirstTimestepsMonths(std::vector<size_t>& timesteps, size_t from_timestep) const {
         timesteps.clear();
 
-        const boost::posix_time::ptime& ptime_prev = getStartTime(from_timestep-1);
+        const boost::posix_time::ptime& ptime_prev = getStartTime(from_timestep);
         boost::gregorian::date prev_date = ptime_prev.date();
 
         for (size_t timestepIndex = from_timestep; timestepIndex < m_timeList.size(); ++timestepIndex) {
@@ -248,7 +248,7 @@ namespace Opm {
     void TimeMap::initFirstTimestepsYears(std::vector<size_t>& timesteps, size_t from_timestep) const {
         timesteps.clear();
 
-        const boost::posix_time::ptime& ptime_prev = getStartTime(from_timestep-1);
+        const boost::posix_time::ptime& ptime_prev = getStartTime(from_timestep);
         boost::gregorian::date prev_date = ptime_prev.date();
 
         for (size_t timestepIndex = from_timestep; timestepIndex < m_timeList.size(); ++timestepIndex) {
