@@ -288,10 +288,73 @@ BOOST_AUTO_TEST_CASE( NorneResttartConfig ) {
 
     std::shared_ptr<const IOConfig> ioconfig = state.getIOConfigConst();
     for (auto rptrst : rptConfig) {
-        int report_step = std::get<0>(rptrst);
-        bool save =  std::get<1>(rptrst);
+        int report_step                    = std::get<0>(rptrst);
+        bool save                          = std::get<1>(rptrst);
+        boost::gregorian::date report_date = std::get<2>(rptrst);
+
         BOOST_CHECK_EQUAL( save , ioconfig->getWriteRestartFile( report_step ));
-        std::cout << "step: " << report_step << " : " << save << std::endl;
+        if (save) {
+          BOOST_CHECK_EQUAL( report_date, ioconfig->getTimestepDate( report_step ));
+        }
+        std::cout << "step: " << report_step << " date: " << report_date << " : " << save << std::endl;
+    }
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE( RestartConfig2 ) {
+    std::vector<std::tuple<int, bool, boost::gregorian::date>> rptConfig;
+
+    for (size_t report_step = 0; report_step <= 251; ++report_step) {
+        if (0 == report_step)        rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2000,1,1)));
+        else if (8   == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2000,7,1)));
+        else if (27  == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2001,1,1)));
+        else if (45  == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2001,7,1)));
+        else if (61  == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2002,1,1)));
+        else if (79  == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2002,7,1)));
+        else if (89  == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2003,1,1)));
+        else if (99  == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2003,7,1)));
+        else if (109 == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2004,1,1)));
+        else if (128 == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2004,7,1)));
+        else if (136 == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2005,1,1)));
+        else if (146 == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2005,7,1)));
+        else if (158 == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2006,1,1)));
+        else if (164 == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2006,7,1)));
+        else if (170 == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2007,1,1)));
+        else if (178 == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2007,7,1)));
+        else if (184 == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2008,1,1)));
+        else if (192 == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2008,7,1)));
+        else if (198 == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2009,1,1)));
+        else if (204 == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2009,7,1)));
+        else if (210 == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2010,1,1)));
+        else if (216 == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2010,7,1)));
+        else if (222 == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2011,1,1)));
+        else if (228 == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2011,7,1)));
+        else if (234 == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2012,1,1)));
+        else if (240 == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2012,7,1)));
+        else if (246 == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2013,1,1)));
+        else    rptConfig.push_back( std::make_tuple(report_step, false, boost::gregorian::date(2000,1,1)));
     }
 
+    ParseMode parseMode;
+    ParserPtr parser(new Parser());
+    DeckConstPtr deck = parser->parseFile("testdata/integration_tests/IOConfig/RPT_TEST2.DATA", parseMode);
+    EclipseState state( deck , parseMode );
+
+    std::shared_ptr<const IOConfig> ioconfig = state.getIOConfigConst();
+    for (auto rptrst : rptConfig) {
+        int report_step                    = std::get<0>(rptrst);
+        bool save                          = std::get<1>(rptrst);
+        boost::gregorian::date report_date = std::get<2>(rptrst);
+
+        BOOST_CHECK_EQUAL( save , ioconfig->getWriteRestartFile( report_step ));
+        if (save) {
+          BOOST_CHECK_EQUAL( report_date, ioconfig->getTimestepDate( report_step ));
+        }
+        std::cout << "step: " << report_step << " date: " << report_date << " : " << save << std::endl;
+    }
 }
+
+
+
