@@ -36,6 +36,7 @@ namespace Opm {
             std::shared_ptr<DynamicState<double> > waterTarget;
             std::shared_ptr<DynamicState<double> > gasTarget;
             std::shared_ptr<DynamicState<double> > liquidTarget;
+            std::shared_ptr<DynamicState<double> > reservoirVolumeTarget;
 
         };
 
@@ -45,7 +46,8 @@ namespace Opm {
             oilTarget( new DynamicState<double>(timeMap , INVALID_GROUP_RATE)),
             waterTarget( new DynamicState<double>(timeMap , INVALID_GROUP_RATE)),
             gasTarget( new DynamicState<double>(timeMap , INVALID_GROUP_RATE)),
-            liquidTarget( new DynamicState<double>(timeMap , INVALID_GROUP_RATE))
+            liquidTarget( new DynamicState<double>(timeMap , INVALID_GROUP_RATE)),
+            reservoirVolumeTarget( new DynamicState<double>(timeMap , INVALID_GROUP_RATE))
         {
 
         }
@@ -261,6 +263,16 @@ namespace Opm {
 
     double Group::getLiquidTargetRate(size_t time_step) const {
         return m_production->liquidTarget->get(time_step);
+    }
+
+
+    void Group::setReservoirVolumeTargetRate(size_t time_step , double reservoirVolumeTargetRate) {
+        m_production->reservoirVolumeTarget->update(time_step , reservoirVolumeTargetRate);
+    }
+
+
+    double Group::getReservoirVolumeTargetRate(size_t time_step) const {
+        return m_production->reservoirVolumeTarget->get(time_step);
     }
 
 
