@@ -35,6 +35,7 @@ namespace Opm {
 
 
         bool getWriteRestartFile(size_t timestep) const;
+        bool getWriteInitialRestartFile() const;
         bool getWriteEGRIDFile() const;
         bool getWriteINITFile() const;
         bool getUNIFOUT() const;
@@ -55,13 +56,14 @@ namespace Opm {
         void handleSolutionSection(TimeMapConstPtr timemap, std::shared_ptr<const SOLUTIONSection> solutionSection);
         void handleGridSection(std::shared_ptr<const GRIDSection> gridSection);
         void handleRunspecSection(std::shared_ptr<const RUNSPECSection> runspecSection);
+        void setWriteInitialRestartFile(bool writeInitialRestartFile);
+        boost::gregorian::date getTimestepDate(size_t timestep) const;
         void dumpRestartConfig() const;
+
+
+
+
     private:
-
-
-
-
-
 
         void assertTimeMap(TimeMapConstPtr timemap);
         bool getWriteRestartFileFrequency(size_t timestep,
@@ -69,17 +71,20 @@ namespace Opm {
                                           size_t frequency,
                                           bool first_timesteps_years  = false,
                                           bool first_timesteps_months = false) const;
+        void handleRPTSOL(DeckKeywordConstPtr keyword);
 
 
         TimeMapConstPtr m_timemap;
         bool            m_write_INIT_file;
         bool            m_write_EGRID_file;
+        bool            m_write_initial_RST_file;
         bool            m_UNIFIN;
         bool            m_UNIFOUT;
         bool            m_FMTIN;
         bool            m_FMTOUT;
         std::string     m_eclipse_input_path;
         bool            m_ignore_RPTSCHED_RESTART;
+
 
 
         struct restartConfig {

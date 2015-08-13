@@ -496,3 +496,83 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTRST) {
 }
 
 
+
+BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTSOL) {
+  const char *deckData =
+                        "RUNSPEC\n"
+                        "DIMENS\n"
+                        " 10 10 10 /\n"
+                        "GRID\n"
+                        "SOLUTION\n"
+                        "RPTSOL\n"
+                        "RESTART=2\n"
+                        "/\n"
+                        "START             -- 0 \n"
+                        "19 JUN 2007 / \n"
+                         "SCHEDULE\n"
+                        "DATES             -- 1\n"
+                        " 10  OKT 2008 / \n"
+                        "/\n"
+                        "RPTRST\n"
+                        "BASIC=3 FREQ=3\n"
+                        "/\n"
+                        "DATES             -- 2\n"
+                        " 20  JAN 2010 / \n"
+                        "/\n"
+                        "DATES             -- 3\n"
+                        " 20  FEB 2010 / \n"
+                        "/\n"
+                        "RPTSCHED\n"
+                        "RESTART=1\n"
+                        "/\n";
+
+    const char *deckData2 =
+                          "RUNSPEC\n"
+                          "DIMENS\n"
+                          " 10 10 10 /\n"
+                          "GRID\n"
+                          "SOLUTION\n"
+                          "RPTSOL\n"
+                          "0 0 0 0 0 0 2\n"
+                          "/\n"
+                          "START             -- 0 \n"
+                          "19 JUN 2007 / \n"
+                           "SCHEDULE\n"
+                          "DATES             -- 1\n"
+                          " 10  OKT 2008 / \n"
+                          "/\n"
+                          "RPTRST\n"
+                          "BASIC=3 FREQ=3\n"
+                          "/\n"
+                          "DATES             -- 2\n"
+                          " 20  JAN 2010 / \n"
+                          "/\n"
+                          "DATES             -- 3\n"
+                          " 20  FEB 2010 / \n"
+                          "/\n"
+                          "RPTSCHED\n"
+                          "RESTART=1\n"
+                          "/\n";
+
+
+    ParseMode parseMode;
+    ParserPtr parser(new Parser());
+
+    {   //mnemnonics
+        DeckPtr deck = parser->parseString(deckData, parseMode) ;
+        EclipseState state(deck, parseMode);
+
+        IOConfigConstPtr ioConfig = state.getIOConfigConst();
+
+        BOOST_CHECK_EQUAL(true, ioConfig->getWriteInitialRestartFile());
+    }
+
+    {   //old fashion integer mnemonics
+        DeckPtr deck = parser->parseString(deckData2, parseMode) ;
+        EclipseState state(deck, parseMode);
+
+        IOConfigConstPtr ioConfig = state.getIOConfigConst();
+
+        BOOST_CHECK_EQUAL(true, ioConfig->getWriteInitialRestartFile());
+    }
+}

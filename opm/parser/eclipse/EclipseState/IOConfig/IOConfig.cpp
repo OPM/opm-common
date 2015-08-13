@@ -29,12 +29,17 @@ namespace Opm {
     IOConfig::IOConfig(const std::string& input_path):
         m_write_INIT_file(false),
         m_write_EGRID_file(true),
+        m_write_initial_RST_file(false),
         m_UNIFIN(false),
         m_UNIFOUT(false),
         m_FMTIN(false),
         m_FMTOUT(false),
         m_eclipse_input_path(input_path),
         m_ignore_RPTSCHED_RESTART(false){
+    }
+
+    bool IOConfig::getWriteInitialRestartFile() const {
+      return m_write_initial_RST_file;
     }
 
     bool IOConfig::getWriteEGRIDFile() const {
@@ -224,6 +229,20 @@ namespace Opm {
                 }
             }
             handleRPTRSTBasic(timemap, currentStep, basic, freq, true);
+            if ((1 == basic) || (2 == basic)) {
+                setWriteInitialRestartFile(true); // Guessing on eclipse rules for write of initial RESTART file (at time 0):
+                                                  // Write of initial restart file is (due to the eclipse reference manual)
+                                                  // governed by RPTSOL RESTART in solution section,
+                                                  // if RPTSOL RESTART > 1 initial restart file is written.
+                                                  // but - due to initial restart file written from Eclipse
+                                                  // for Norne data when RPTSOL RESTART not set - guessing that
+                                                  // when RPTRST BASIC is set to 1 or 2 in the SOLUTION section that this
+                                                  // means that initial file is to be written
+            }
+        }
+
+        if (solutionSection->hasKeyword("RPTSOL") && (timemap->size() > 0)) {
+            handleRPTSOL(solutionSection->getKeyword("RPTSOL"));
         }
     }
 
@@ -294,6 +313,65 @@ namespace Opm {
         return m_eclipse_input_path;
     }
 
+    void IOConfig::setWriteInitialRestartFile(bool writeInitialRestartFile) {
+        m_write_initial_RST_file = writeInitialRestartFile;
+    }
+
+
+    void IOConfig::handleRPTSOL(DeckKeywordConstPtr keyword) {
+        DeckRecordConstPtr record = keyword->getRecord(0);
+
+        size_t restart = 0;
+        size_t found_mnemonic_RESTART = 0;
+        bool handle_RPTSOL_RESTART = false;
+
+        DeckItemConstPtr item = record->getItem(0);
+
+
+        for (size_t index = 0; index < item->size(); ++index) {
+            const std::string& mnemonic = item->getString(index);
+
+            found_mnemonic_RESTART = mnemonic.find("RESTART=");
+            if (found_mnemonic_RESTART != std::string::npos) {
+                std::string restart_no = mnemonic.substr(found_mnemonic_RESTART+8, mnemonic.size());
+                restart = boost::lexical_cast<size_t>(restart_no);
+                handle_RPTSOL_RESTART = true;
+            }
+        }
+
+
+        /* If no RESTART mnemonic is found, either it is not present or we might
+           have an old data set containing integer controls instead of mnemonics.
+           Restart integer switch is integer control nr 7 */
+
+        if (found_mnemonic_RESTART == std::string::npos) {
+            if (item->size() >= 7)  {
+                const std::string& integer_control = item->getString(6);
+                try {
+                    restart = boost::lexical_cast<size_t>(integer_control);
+                    handle_RPTSOL_RESTART = true;
+                } catch (boost::bad_lexical_cast &) {
+                    //do nothing
+                }
+            }
+        }
+
+        if (handle_RPTSOL_RESTART) {
+            if (restart > 1) {
+                setWriteInitialRestartFile(true);
+            } else {
+                setWriteInitialRestartFile(false);
+            }
+        }
+    }
+
+
+    boost::gregorian::date IOConfig::getTimestepDate(size_t reportStep) const {
+        auto time = (*m_timemap)[reportStep];
+        return time.date();
+    }
+
+
     void IOConfig::dumpRestartConfig() const {
         for (size_t reportStep = 0; reportStep < m_timemap->size(); reportStep++) {
             if (getWriteRestartFile(reportStep)) {
@@ -304,5 +382,6 @@ namespace Opm {
             }
         }
     }
+
 
 } //namespace Opm
