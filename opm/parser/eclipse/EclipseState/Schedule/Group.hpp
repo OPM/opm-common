@@ -86,8 +86,10 @@ namespace Opm {
         double getGasTargetRate(size_t time_step) const;
         void   setWaterTargetRate(size_t time_step , double waterTargetRate);
         double getWaterTargetRate(size_t time_step) const;
-        void   setLiquidTargetRate(size_t time_step , double LiquidTargetRate);
+        void   setLiquidTargetRate(size_t time_step , double liquidTargetRate);
         double getLiquidTargetRate(size_t time_step) const;
+        void   setReservoirVolumeTargetRate(size_t time_step , double reservoirVolumeTargetRate);
+        double getReservoirVolumeTargetRate(size_t time_step) const;
 
         /*****************************************************************/
 

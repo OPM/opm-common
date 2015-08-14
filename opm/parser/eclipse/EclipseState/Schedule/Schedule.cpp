@@ -793,6 +793,7 @@ namespace Opm {
             group->setGasTargetRate( currentStep , record->getItem("GAS_TARGET")->getSIDouble(0));
             group->setWaterTargetRate( currentStep , record->getItem("WATER_TARGET")->getSIDouble(0));
             group->setLiquidTargetRate( currentStep , record->getItem("LIQUID_TARGET")->getSIDouble(0));
+            group->setReservoirVolumeTargetRate( currentStep , record->getItem("RESERVOIR_FLUID_TARGET")->getSIDouble(0));
             {
                 GroupProductionExceedLimit::ActionEnum exceedAction = GroupProductionExceedLimit::ActionEnumFromString(record->getItem("EXCEED_PROC")->getTrimmedString(0) );
                 group->setProductionExceedLimitAction( currentStep , exceedAction );
