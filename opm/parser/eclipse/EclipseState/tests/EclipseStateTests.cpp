@@ -495,4 +495,75 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTRST) {
     BOOST_CHECK_EQUAL(true  , ioConfig->getWriteRestartFile(3));
 }
 
+BOOST_AUTO_TEST_CASE(SaturationFunctionFamilyTests) {
+    const char * deckdefault =
+            "RUNSPEC\n"
+    "DIMENS\n"
+    " 10 10 10 /\n"
+            "TABDIMS\n"
+            "1 /\n"
+            "\n"
+    "GRID\n";
+
+    const char *family1 =
+        "SWOF\n"
+        " .2  .0 1.0 .0\n"
+        " .3  .0  .8 .0\n"
+        " .5  .5  .5 .0\n"
+        " .8  .8  .0 .0\n"
+        " 1.0 1.0 .0 .0 /\n"
+        "SGOF\n"
+        " .0  .0 1.0 .0\n"
+        " .1  .0  .3 .0\n"
+        " .5  .5  .1 .0\n"
+        " .7  .8  .0 .0\n"
+        " .8 1.0  .0 .0/\n";
+
+    const char *family2 =
+        "SWFN\n"
+        " .2  .0  .0\n"
+        " .3  .0  .0\n"
+        " .5  .5  .0\n"
+        " .8  .8  .0\n"
+        " 1.0 1.0 .0 /\n"
+        "SGFN\n"
+        " .0  .0  .0\n"
+        " .1  .0  .0\n"
+        " .5  .5  .0\n"
+        " .7  .8  .0\n"
+        " .8 1.0  .0/\n"
+        "SOF3\n"
+        " .0  .0  .0\n"
+        " .2  .0  .0\n"
+        " .4  1*  .1\n"
+        " .5  .5   1*\n"
+        " .7  .8  .3\n"
+        " .8 1.0  1.0/\n";
+
+    ParseMode parseMode;
+    ParserPtr parser(new Parser());
+
+    char family1Deck[200] = " ";
+    strcat(family1Deck , deckdefault);
+    strcat(family1Deck , family1);
+    DeckPtr deck1 = parser->parseString(family1Deck, parseMode) ;
+    EclipseState state1(deck1, parseMode);
+    BOOST_CHECK_EQUAL( state1.getSaturationFunctionFamily() , 1);
+
+    char family2Deck[300] = " ";
+    strcat(family2Deck , deckdefault);
+    strcat(family2Deck , family2);
+    DeckPtr deck2 = parser->parseString(family2Deck, parseMode) ;
+    EclipseState state2(deck2, parseMode);
+    BOOST_CHECK_EQUAL( state2.getSaturationFunctionFamily() , 2);
+
+    char familyMixDeck[400] = " ";
+    strcat(familyMixDeck , deckdefault);
+    strcat(familyMixDeck , family1);
+    strcat(familyMixDeck , family2);
+    DeckPtr deckMix = parser->parseString(familyMixDeck, parseMode) ;
+    EclipseState stateMix(deckMix, parseMode);
+    BOOST_CHECK_THROW(stateMix.getSaturationFunctionFamily() , std::invalid_argument);
+
+}
 

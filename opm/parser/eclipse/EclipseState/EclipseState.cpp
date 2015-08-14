@@ -412,6 +412,29 @@ namespace Opm {
         initFullTables(deck, "PVTO", m_pvtoTables);
    }
 
+    const size_t EclipseState::getSaturationFunctionFamily() const{
+
+        bool family1 = !m_sgofTables.empty() && !m_swofTables.empty();
+        bool family2 = !m_swfnTables.empty() && !m_sgfnTables.empty() && !m_swfnTables.empty();
+
+        if (family1 && family2) {
+            throw std::invalid_argument("Saturation families should not be mixed \n"
+                                        "Use either SGOF and SWOF or SGFN, SWFN and SOF3");
+        }
+
+        if (!family1 && !family2) {
+            throw std::invalid_argument("Saturations function must be specified using either "
+                                        "family 1 or family 2 keywords \n"
+                                        "Use either SGOF and SWOF or SGFN, SWFN and SOF3" );
+        }
+
+        if (family1 && !family2)
+            return 1;
+        else if (family2 && !family1)
+            return 2;
+        return 0; // no family or two families
+    }
+
     void EclipseState::initIOConfig(DeckConstPtr deck) {
         m_ioConfig = std::make_shared<IOConfig>();
         if (Section::hasGRID(deck)) {

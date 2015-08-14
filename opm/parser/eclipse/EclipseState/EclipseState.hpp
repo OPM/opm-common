@@ -153,6 +153,12 @@ namespace Opm {
         const std::map<int, VFPInjTable>& getVFPInjTables() const;
         size_t getNumPhases() const;
 
+        // The saturation function family.
+        // If SWOF and SGOF are specified in the deck it return 1
+        // If SWFN, SGFN and SOF3 are specified in the deck it return 2
+        // If keywords are missing or mixed, an error is given.
+        const size_t getSaturationFunctionFamily() const;
+
         // the unit system used by the deck. note that it is rarely needed to convert
         // units because internally to opm-parser everything is represented by SI
         // units...
