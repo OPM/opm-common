@@ -29,6 +29,7 @@ namespace Opm {
         double  reservoirInjectionRate;
         double  BHPLimit;
         double  THPLimit;
+        int     VFPTableNumber;
         bool    predictionMode;
         int     injectionControls;
         WellInjector::TypeEnum injectorType;

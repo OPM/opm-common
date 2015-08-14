@@ -76,12 +76,12 @@ namespace Opm {
 
         p.predictionMode = true;
 
-        p.LiquidRate     = record->getItem("LRAT"  )->getSIDouble(0);
-        p.ResVRate       = record->getItem("RESV"  )->getSIDouble(0);
-        p.BHPLimit       = record->getItem("BHP"   )->getSIDouble(0);
-        p.THPLimit       = record->getItem("THP"   )->getSIDouble(0);
-        p.ALQValue       = record->getItem("ALQ"   )->getRawDouble(0); //NOTE: Unit of ALQ is never touched
-        p.VFPTableNumber = record->getItem("VFPTable" )->getInt(0);
+        p.LiquidRate     = record->getItem("LRAT"     )->getSIDouble(0);
+        p.ResVRate       = record->getItem("RESV"     )->getSIDouble(0);
+        p.BHPLimit       = record->getItem("BHP"      )->getSIDouble(0);
+        p.THPLimit       = record->getItem("THP"      )->getSIDouble(0);
+        p.ALQValue       = record->getItem("ALQ"      )->getRawDouble(0); //NOTE: Unit of ALQ is never touched
+        p.VFPTableNumber = record->getItem("VFP_TABLE")->getInt(0);
 
         const std::vector<std::string> controlModes{
             "ORAT", "WRAT", "GRAT", "LRAT",

@@ -470,7 +470,8 @@ namespace Opm {
 
 
                 if (!record->getItem("THP")->defaultApplied(0)) {
-                    properties.THPLimit = record->getItem("THP")->getSIDouble(0);
+                    properties.THPLimit       = record->getItem("THP")->getSIDouble(0);
+                    properties.VFPTableNumber = record->getItem("VFP_TABLE")->getInt(0);
                     properties.addInjectionControl(WellInjector::THP);
                 } else
                     properties.dropInjectionControl(WellInjector::THP);
