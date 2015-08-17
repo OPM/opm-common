@@ -873,7 +873,7 @@ public:
 
     void apply(std::vector<double>& values) const
     {
-        this->imbnumApply(values , "SWCRIT" , this->m_criticalOilOWSat , false);
+        this->imbnumApply(values , "SWCRIT" , this->m_criticalWaterSat , false);
     }
 };
 
