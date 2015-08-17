@@ -31,6 +31,11 @@
 
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SwfnTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SgfnTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/Sof3Table.hpp>
+
+
 
 #include <opm/parser/eclipse/EclipseState/Grid/GridPropertyInitializers.hpp>
 
@@ -53,6 +58,8 @@ public:
         : m_deck(deck)
         , m_eclipseState(eclipseState)
     { }
+
+    enum SaturationFunctionFamily { noFamily = 0, FamilyI = 1, FamilyII = 2};
 
     void print() const
     {
@@ -113,9 +120,8 @@ protected:
         m_minGasSat.resize( numSatTables , 0 );
         m_maxGasSat.resize( numSatTables , 0 );
 
-        size_t saturationFunctionFamily = m_eclipseState.getSaturationFunctionFamily();
-        switch (saturationFunctionFamily) {
-        case 1:
+        switch (getSaturationFunctionFamily()) {
+        case SaturationFunctionFamily::FamilyI:
         {
             const std::vector<SwofTable>& swofTables = m_eclipseState.getSwofTables();
             const std::vector<SgofTable>& sgofTables = m_eclipseState.getSgofTables();
@@ -131,7 +137,7 @@ protected:
             break;
 
         }
-        case 2:
+        case SaturationFunctionFamily::FamilyII:
         {
             const std::vector<SwfnTable>& swfnTables = m_eclipseState.getSwfnTables();
             const std::vector<SgfnTable>& sgfnTables = m_eclipseState.getSgfnTables();
@@ -162,9 +168,8 @@ protected:
         m_criticalOilOGSat.resize( numSatTables , 0 );
         m_criticalOilOWSat.resize( numSatTables , 0 );
 
-        size_t saturationFunctionFamily = m_eclipseState.getSaturationFunctionFamily();
-        switch (saturationFunctionFamily) {
-        case 1:
+        switch (getSaturationFunctionFamily()) {
+        case SaturationFunctionFamily::FamilyI:
         {
             const std::vector<SwofTable>& swofTables = m_eclipseState.getSwofTables();
             const std::vector<SgofTable>& sgofTables = m_eclipseState.getSgofTables();
@@ -221,11 +226,10 @@ protected:
             break;
 
         }
-        case 2: {
+        case SaturationFunctionFamily::FamilyII: {
             const std::vector<SwfnTable>& swfnTables = m_eclipseState.getSwfnTables();
             const std::vector<SgfnTable>& sgfnTables = m_eclipseState.getSgfnTables();
             const std::vector<Sof3Table>& sof3Tables = m_eclipseState.getSof3Tables();
-
 
             for (int tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
                 // find the critical water saturation
@@ -257,9 +261,9 @@ protected:
                 // find the critical oil saturation of the oil-gas system
                 numRows = sof3Tables[tableIdx].numRows();
                 const auto &kroOGCol = sof3Tables[tableIdx].getKrogColumn();
-                for (int rowIdx = numRows - 1; rowIdx >= 0; --rowIdx) {
+                for (int rowIdx = 0; rowIdx < numRows; ++rowIdx) {
                     if (kroOGCol[rowIdx] > 0.0) {
-                        double So = sof3Tables[tableIdx].getSoColumn()[rowIdx + 1];
+                        double So = sof3Tables[tableIdx].getSoColumn()[rowIdx - 1];
                         m_criticalOilOGSat[tableIdx] = So;
                         break;
                     }
@@ -268,10 +272,10 @@ protected:
                 // find the critical oil saturation of the water-oil system
                 numRows = sof3Tables[tableIdx].numRows();
                 const auto &kroOWCol = sof3Tables[tableIdx].getKrowColumn();
-                for (int rowIdx = numRows - 1; rowIdx >= 0; --rowIdx) {
+                for (int rowIdx = 0; rowIdx < numRows; ++rowIdx) {
                     if (kroOWCol[rowIdx] > 0.0) {
-                        double So = sof3Tables[tableIdx].getSoColumn()[rowIdx + 1];
-                        m_criticalOilOWSat[tableIdx] = 1 - So;
+                        double So = sof3Tables[tableIdx].getSoColumn()[rowIdx - 1];
+                        m_criticalOilOWSat[tableIdx] = So;
                         break;
                     }
                 }
@@ -301,9 +305,8 @@ protected:
         m_maxKrw.resize( numSatTables , 0 );
         m_krwr.resize( numSatTables , 0 );
 
-        size_t saturationFunctionFamily = m_eclipseState.getSaturationFunctionFamily();
-        switch (saturationFunctionFamily) {
-        case 1:
+        switch (getSaturationFunctionFamily()) {
+        case SaturationFunctionFamily::FamilyI:
         {
             const std::vector<SwofTable>& swofTables = m_eclipseState.getSwofTables();
             const std::vector<SgofTable>& sgofTables = m_eclipseState.getSgofTables();
@@ -350,7 +353,7 @@ protected:
             }
             break;
         }
-        case 2: {
+        case SaturationFunctionFamily::FamilyII: {
             const std::vector<SwfnTable>& swfnTables = m_eclipseState.getSwfnTables();
             const std::vector<SgfnTable>& sgfnTables = m_eclipseState.getSgfnTables();
             const std::vector<Sof3Table>& sof3Tables = m_eclipseState.getSof3Tables();
@@ -391,6 +394,38 @@ protected:
             throw std::domain_error("No valid saturation keyword family specified");
         }
 
+    }
+    // The saturation function family.
+    // If SWOF and SGOF are specified in the deck it return FamilyI
+    // If SWFN, SGFN and SOF3 are specified in the deck it return FamilyII
+    // If keywords are missing or mixed, an error is given.
+    const SaturationFunctionFamily getSaturationFunctionFamily() const{
+
+        const std::vector<SwofTable>& swofTables = m_eclipseState.getSwofTables();
+        const std::vector<SgofTable>& sgofTables = m_eclipseState.getSgofTables();
+        const std::vector<SwfnTable>& swfnTables = m_eclipseState.getSwfnTables();
+        const std::vector<SgfnTable>& sgfnTables = m_eclipseState.getSgfnTables();
+        const std::vector<Sof3Table>& sof3Tables = m_eclipseState.getSof3Tables();
+
+        bool family1 = !sgofTables.empty() && !swofTables.empty();
+        bool family2 = !swfnTables.empty() && !sgfnTables.empty() && !sof3Tables.empty();
+
+        if (family1 && family2) {
+            throw std::invalid_argument("Saturation families should not be mixed \n"
+                                        "Use either SGOF and SWOF or SGFN, SWFN and SOF3");
+        }
+
+        if (!family1 && !family2) {
+            throw std::invalid_argument("Saturations function must be specified using either "
+                                        "family 1 or family 2 keywords \n"
+                                        "Use either SGOF and SWOF or SGFN, SWFN and SOF3" );
+        }
+
+        if (family1 && !family2)
+            return SaturationFunctionFamily::FamilyI;
+        else if (family2 && !family1)
+            return SaturationFunctionFamily::FamilyII;
+        return SaturationFunctionFamily::noFamily; // no family or two families
     }
 
 
@@ -472,6 +507,10 @@ public:
 
 
         satnum->checkLimits(1 , numSatTables);
+
+        // All table lookup assumes three-phase model
+        assert( m_eclipseState.getNumPhases() == 3 );
+
         this->findSaturationEndpoints( );
         this->findCriticalPoints( );
         this->findVerticalPoints( );
@@ -816,7 +855,7 @@ public:
 
     void apply(std::vector<double>& values) const
     {
-        this->satnumApply(values , "SWCRIT" , this->m_criticalOilOWSat , false);
+        this->satnumApply(values , "SWCRIT" , this->m_criticalWaterSat , false);
     }
 };
 
@@ -834,7 +873,7 @@ public:
 
     void apply(std::vector<double>& values) const
     {
-        this->imbnumApply(values , "SWCRIT" , this->m_criticalWaterSat , false);
+        this->imbnumApply(values , "SWCRIT" , this->m_criticalOilOWSat , false);
     }
 };
 
