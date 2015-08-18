@@ -35,8 +35,6 @@
 #include <opm/parser/eclipse/EclipseState/Tables/SgfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Sof3Table.hpp>
 
-
-
 #include <opm/parser/eclipse/EclipseState/Grid/GridPropertyInitializers.hpp>
 
 namespace Opm {
@@ -60,35 +58,6 @@ public:
     { }
 
     enum SaturationFunctionFamily { noFamily = 0, FamilyI = 1, FamilyII = 2};
-
-    void print() const
-    {
-        auto tabdims = this->m_eclipseState.getTabdims();
-        int numSatTables = tabdims->getNumSatTables();
-        for (int tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
-            std::cout << "sgc " << this->m_criticalGasSat[tableIdx] << "\n"
-                      << "swc " << this->m_criticalWaterSat[tableIdx] << "\n"
-                      << "sowc " << this->m_criticalOilOWSat[tableIdx] << "\n"
-                      << "sogc " << this->m_criticalOilOGSat[tableIdx] << "\n"
-
-                      << "sg_min " << this->m_minGasSat[tableIdx] << "\n"
-                      << "sg_max " << this->m_maxGasSat[tableIdx] << "\n"
-                      << "sw_min " << this->m_minWaterSat[tableIdx] << "\n"
-                      << "sw_max " << this->m_maxWaterSat[tableIdx] << "\n"
-
-                      << "Pcow_max " << this->m_maxPcow[tableIdx] << "\n"
-                      << "Pcog_max " << this->m_maxPcog[tableIdx] << "\n"
-
-                      << "Krw_max " << this->m_maxKrw[tableIdx] << "\n"
-                      << "Krw_r " << this->m_krwr[tableIdx] << "\n"
-                      << "Kro_max " << this->m_maxKro[tableIdx] << "\n"
-                      << "Krorw " << this->m_krorw[tableIdx] << "\n"
-                      << "Krorg " << this->m_krorg[tableIdx] << "\n"
-                      << "Krg_max " << this->m_maxKrg[tableIdx] << "\n"
-                      << "Krg_r " << this->m_krgr[tableIdx] << "\n";
-        }
-
-    }
 
     /*
       See the "Saturation Functions" chapter in the Eclipse Technical
