@@ -478,7 +478,7 @@ public:
         satnum->checkLimits(1 , numSatTables);
 
         // All table lookup assumes three-phase model
-        assert( m_eclipseState.getNumPhases() == 3 );
+        assert( this->m_eclipseState.getNumPhases() == 3 );
 
         this->findSaturationEndpoints( );
         this->findCriticalPoints( );
