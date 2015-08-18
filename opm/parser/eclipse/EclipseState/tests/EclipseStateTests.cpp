@@ -564,7 +564,7 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTSOL) {
 
         IOConfigConstPtr ioConfig = state.getIOConfigConst();
 
-        BOOST_CHECK_EQUAL(true, ioConfig->getWriteInitialRestartFile());
+        BOOST_CHECK_EQUAL(true, ioConfig->getWriteRestartFile(0));
     }
 
     {   //old fashion integer mnemonics
@@ -573,6 +573,6 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTSOL) {
 
         IOConfigConstPtr ioConfig = state.getIOConfigConst();
 
-        BOOST_CHECK_EQUAL(true, ioConfig->getWriteInitialRestartFile());
+        BOOST_CHECK_EQUAL(true, ioConfig->getWriteRestartFile(0));
     }
 }

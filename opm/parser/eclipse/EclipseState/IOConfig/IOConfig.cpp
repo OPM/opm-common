@@ -38,10 +38,6 @@ namespace Opm {
         m_ignore_RPTSCHED_RESTART(false){
     }
 
-    bool IOConfig::getWriteInitialRestartFile() const {
-      return m_write_initial_RST_file;
-    }
-
     bool IOConfig::getWriteEGRIDFile() const {
         return m_write_EGRID_file;
     }
@@ -53,7 +49,9 @@ namespace Opm {
     bool IOConfig::getWriteRestartFile(size_t timestep) const {
         bool write_restart_ts = false;
 
-        if (m_restart_output_config) {
+        if (0 == timestep) {
+            write_restart_ts = m_write_initial_RST_file;
+        } else if (m_restart_output_config) {
             restartConfig ts_restart_config = m_restart_output_config->get(timestep);
 
             //Look at rptsched restart setting
@@ -201,24 +199,22 @@ namespace Opm {
 
     void IOConfig::handleSolutionSection(TimeMapConstPtr timemap, std::shared_ptr<const SOLUTIONSection> solutionSection) {
         if (solutionSection->hasKeyword("RPTRST")) {
-            auto rptrstkeyword = solutionSection->getKeyword("RPTRST");
-            size_t currentStep = 0;
-
+            auto rptrstkeyword        = solutionSection->getKeyword("RPTRST");
             DeckRecordConstPtr record = rptrstkeyword->getRecord(0);
+            DeckItemConstPtr item     = record->getItem(0);
 
-            size_t basic = 1;
+            bool handleRptrstBasic = false;
+            size_t basic = 0;
             size_t freq  = 0;
 
-            DeckItemConstPtr item = record->getItem(0);
-
             for (size_t index = 0; index < item->size(); ++index) {
-
                 if (item->hasValue(index)) {
                     std::string mnemonics = item->getString(index);
                     std::size_t found_basic = mnemonics.find("BASIC=");
                     if (found_basic != std::string::npos) {
                         std::string basic_no = mnemonics.substr(found_basic+6, found_basic+7);
                         basic = atoi(basic_no.c_str());
+                        handleRptrstBasic = true;
                     }
 
                     std::size_t found_freq = mnemonics.find("FREQ=");
@@ -228,22 +224,27 @@ namespace Opm {
                     }
                 }
             }
-            handleRPTRSTBasic(timemap, currentStep, basic, freq, true);
-            if ((1 == basic) || (2 == basic)) {
-                setWriteInitialRestartFile(true); // Guessing on eclipse rules for write of initial RESTART file (at time 0):
-                                                  // Write of initial restart file is (due to the eclipse reference manual)
-                                                  // governed by RPTSOL RESTART in solution section,
-                                                  // if RPTSOL RESTART > 1 initial restart file is written.
-                                                  // but - due to initial restart file written from Eclipse
-                                                  // for Norne data when RPTSOL RESTART not set - guessing that
-                                                  // when RPTRST BASIC is set to 1 or 2 in the SOLUTION section that this
-                                                  // means that initial file is to be written
+
+            if (handleRptrstBasic) {
+                size_t currentStep = 0;
+                handleRPTRSTBasic(timemap, currentStep, basic, freq, true);
             }
-        }
+
+
+            setWriteInitialRestartFile(true); // Guessing on eclipse rules for write of initial RESTART file (at time 0):
+                                              // Write of initial restart file is (due to the eclipse reference manual)
+                                              // governed by RPTSOL RESTART in solution section,
+                                              // if RPTSOL RESTART > 1 initial restart file is written.
+                                              // but - due to initial restart file written from Eclipse
+                                              // for data where RPTSOL RESTART not set - guessing that
+                                              // when RPTRST is set in SOLUTION (no basic though...) -> write inital restart.
+
+        } //RPTRST
+
 
         if (solutionSection->hasKeyword("RPTSOL") && (timemap->size() > 0)) {
             handleRPTSOL(solutionSection->getKeyword("RPTSOL"));
-        }
+        } //RPTSOL
     }
 
 
@@ -286,10 +287,12 @@ namespace Opm {
             size_t basic = 3;
             size_t timestep = 0;
             handleRPTRSTBasic(m_timemap, timestep, basic, interval, false, true);
+            setWriteInitialRestartFile(true);
         } else {
             size_t basic = 0;
             size_t timestep = 0;
             handleRPTRSTBasic(m_timemap, timestep, basic, interval, false, true);
+            setWriteInitialRestartFile(false);
         }
     }
 

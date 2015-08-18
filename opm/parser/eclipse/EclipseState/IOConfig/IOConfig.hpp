@@ -35,7 +35,6 @@ namespace Opm {
 
 
         bool getWriteRestartFile(size_t timestep) const;
-        bool getWriteInitialRestartFile() const;
         bool getWriteEGRIDFile() const;
         bool getWriteINITFile() const;
         bool getUNIFOUT() const;
