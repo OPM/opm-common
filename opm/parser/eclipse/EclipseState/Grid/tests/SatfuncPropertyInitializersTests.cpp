@@ -42,6 +42,9 @@ void check_property(EclipseState eclState1, EclipseState eclState2,  const std::
 BOOST_AUTO_TEST_CASE(SaturationFunctionFamilyTests) {
     const char * deckdefault =
             "RUNSPEC\n"
+            "OIL\n"
+            "GAS\n"
+            "WATER\n"
             "DIMENS\n"
             " 1 1 1 /\n"
             "TABDIMS\n"

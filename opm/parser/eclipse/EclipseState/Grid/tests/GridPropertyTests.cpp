@@ -258,6 +258,9 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
     const char *deckString =
         "RUNSPEC\n"
         "\n"
+        "OIL\n"
+        "GAS\n"
+        "WATER\n"
         "TABDIMS\n"
         "3 /\n"
         "\n"
