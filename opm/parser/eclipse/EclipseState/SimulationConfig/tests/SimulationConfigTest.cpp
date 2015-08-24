@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(SimulationConfigGetThresholdPressureTableTest) {
     DeckPtr deck = createDeck(parseMode , inputStr);
     SimulationConfigConstPtr simulationConfigPtr;
     BOOST_CHECK_NO_THROW(simulationConfigPtr = std::make_shared<const SimulationConfig>(parseMode , deck, getGridProperties()));
-    const std::vector<double>& thresholdPressureTable = simulationConfigPtr->getThresholdPressureTable();
+    const std::vector<std::pair<bool,double>>& thresholdPressureTable = simulationConfigPtr->getThresholdPressureTable();
     BOOST_CHECK(thresholdPressureTable.size() > 0);
 }
 

@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(CreateSimulationConfig) {
     DeckPtr deck = createDeckSimConfig();
     EclipseState state(deck, ParseMode());
     SimulationConfigConstPtr simulationConfig = state.getSimulationConfig();
-    const std::vector<double> thresholdPressureTable = simulationConfig->getThresholdPressureTable();
+    std::vector<std::pair<bool,double>> thresholdPressureTable = simulationConfig->getThresholdPressureTable();
     BOOST_CHECK_EQUAL(thresholdPressureTable.size(), 9);
 }
 
