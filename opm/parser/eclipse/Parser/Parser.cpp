@@ -130,6 +130,48 @@ namespace Opm {
             addDefaultKeywords();
     }
 
+
+    /**
+       This function will remove return a copy of the input string
+       where all characters following '--' are removed. The function
+       handles quoting with single quotes and double quotes:
+
+         ABC --Comment                =>  ABC
+         ABC '--Comment1' --Comment2  =>  ABC '--Comment1'
+         ABC "-- Not balanced quote?  =>  ABC "-- Not balanced quote?
+
+    */
+    std::string Parser::stripComments(const std::string& inputString) {
+        std::string uncommentedString;
+        size_t offset = 0;
+
+        while (true) {
+            size_t commentPos = inputString.find("--" , offset);
+            if (commentPos == std::string::npos) {
+                uncommentedString = inputString;
+                break;
+            } else {
+                size_t quoteStart = inputString.find_first_of("'\"" , offset);
+                if (quoteStart == std::string::npos || quoteStart > commentPos) {
+                    uncommentedString = inputString.substr(0 , commentPos );
+                    break;
+                } else {
+                    char quoteChar = inputString[quoteStart];
+                    size_t quoteEnd = inputString.find( quoteChar , quoteStart + 1);
+                    if (quoteEnd == std::string::npos) {
+                        // Quotes are not balanced - probably an error?!
+                        uncommentedString = inputString;
+                        break;
+                    } else
+                        offset = quoteEnd + 1;
+                }
+            }
+        }
+
+        return uncommentedString;
+    }
+
+
     /*
      About INCLUDE: Observe that the ECLIPSE parser is slightly unlogical
      when it comes to nested includes; the path to an included file is always
@@ -447,10 +489,8 @@ namespace Opm {
             return true;
 
         while (std::getline(*parserState->inputstream, line)) {
-            // remove comments. note that this is a bit too simplistic as it fails when
-            //  having '--' in strings. _nobody_ does this, though ;)...
-            int commentPos = line.find("--");
-            line = line.substr(0, commentPos);
+            if (line.find("--") != std::string::npos)
+                line = stripComments( line );
 
             boost::algorithm::trim_right(line); // Removing garbage (eg. \r)
             line = doSpecialHandlingForTitleKeyword(line, parserState);

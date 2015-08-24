@@ -312,7 +312,18 @@ static ParserKeywordPtr __attribute__((unused)) setupParserKeywordInt(std::strin
 }
 
 
-
+BOOST_AUTO_TEST_CASE( quoted_comments ) {
+    BOOST_CHECK_EQUAL( Parser::stripComments( "ABC" ) , "ABC");
+    BOOST_CHECK_EQUAL( Parser::stripComments( "--ABC") , "");
+    BOOST_CHECK_EQUAL( Parser::stripComments( "ABC--DEF") , "ABC");
+    BOOST_CHECK_EQUAL( Parser::stripComments( "'ABC'--DEF") , "'ABC'");
+    BOOST_CHECK_EQUAL( Parser::stripComments( "\"ABC\"--DEF") , "\"ABC\"");
+    BOOST_CHECK_EQUAL( Parser::stripComments( "ABC--'DEF'") , "ABC");
+    BOOST_CHECK_EQUAL( Parser::stripComments("ABC'--'DEF") , "ABC'--'DEF");
+    BOOST_CHECK_EQUAL( Parser::stripComments("ABC'--'DEF\"--\"GHI") , "ABC'--'DEF\"--\"GHI");
+    BOOST_CHECK_EQUAL( Parser::stripComments("ABC'--'DEF'GHI") , "ABC'--'DEF'GHI");
+    BOOST_CHECK_EQUAL( Parser::stripComments("ABC'--'DEF'--GHI") , "ABC'--'DEF'--GHI");
+}
 
 
 
