@@ -45,7 +45,6 @@ namespace Opm {
         const bool hasEqlnumKeyword = gridProperties->hasKeyword<ParserKeywords::EQLNUM>( );
         int        maxEqlnum        = 0;
 
-
         //Is THPRES option set?
         if (runspecSection->hasKeyword<ParserKeywords::EQLOPTS>( )) {
             auto eqlopts = runspecSection->getKeyword<ParserKeywords::EQLOPTS>( );
@@ -61,7 +60,6 @@ namespace Opm {
                 }
             }
         }
-
 
         //Option is set and keyword is found
         if (thpresOption && thpresKeyword)
@@ -83,7 +81,7 @@ namespace Opm {
             // Fill threshold pressure table.
             auto thpres = solutionSection->getKeyword<ParserKeywords::THPRES>( );
 
-            m_thresholdPressureTable.resize(maxEqlnum * maxEqlnum, 0.0);
+            m_thresholdPressureTable.resize(maxEqlnum * maxEqlnum, std::pair<bool, double>(false,0));
 
             const int numRecords = thpres->size();
             for (int rec_ix = 0; rec_ix < numRecords; ++rec_ix) {
@@ -93,19 +91,18 @@ namespace Opm {
                 auto thpressItem = rec->getItem<ParserKeywords::THPRES::VALUE>();
 
                 if (region1Item->hasValue(0) && region2Item->hasValue(0)) {
+                    const int r1 = region1Item->getInt(0) - 1;
+                    const int r2 = region2Item->getInt(0) - 1;
+                    if (r1 >= maxEqlnum || r2 >= maxEqlnum) {
+                        throw std::runtime_error("Too high region numbers in THPRES keyword");
+                    }
                     if (thpressItem->hasValue(0)) {
-                        const int r1 = region1Item->getInt(0) - 1;
-                        const int r2 = region2Item->getInt(0) - 1;
                         const double p = thpressItem->getSIDouble(0);
-
-                        if (r1 >= maxEqlnum || r2 >= maxEqlnum) {
-                            throw std::runtime_error("Too high region numbers in THPRES keyword");
-                        }
-                        m_thresholdPressureTable[r1 + maxEqlnum*r2] = p;
-                        m_thresholdPressureTable[r2 + maxEqlnum*r1] = p;
+                        m_thresholdPressureTable[r1 + maxEqlnum*r2] = std::pair<bool, double>(true,p);
+                        m_thresholdPressureTable[r2 + maxEqlnum*r1] = std::pair<bool, double>(true,p);
                     } else {
-                        std::string msg = "Inferring threshold pressure from the initial state is not supported.";
-                        parseMode.handleError( ParseMode::UNSUPPORTED_INITIAL_THPRES , msg );
+                        m_thresholdPressureTable[r1 + maxEqlnum*r2] = std::pair<bool, double>(false,0);
+                        m_thresholdPressureTable[r2 + maxEqlnum*r1] = std::pair<bool, double>(false,0);
                     }
                 } else
                     throw std::runtime_error("Missing region data for use of the THPRES keyword");
@@ -119,7 +116,7 @@ namespace Opm {
 
 
 
-    const std::vector<double>& ThresholdPressure::getThresholdPressureTable() const {
+    const std::vector<std::pair<bool,double>>& ThresholdPressure::getThresholdPressureTable() const {
         return m_thresholdPressureTable;
     }
 

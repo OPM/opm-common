@@ -36,7 +36,7 @@ namespace Opm {
 
         ThresholdPressure(const ParseMode& parseMode , DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties);
 
-        const std::vector<double>& getThresholdPressureTable() const;
+        const std::vector<std::pair<bool,double>>& getThresholdPressureTable() const;
 
 
     private:
@@ -47,7 +47,8 @@ namespace Opm {
                                    std::shared_ptr<GridProperties<int>> gridProperties);
 
 
-        std::vector<double> m_thresholdPressureTable;
+
+        std::vector<std::pair<bool,double>> m_thresholdPressureTable;
     };
 
 
