@@ -163,7 +163,11 @@ BOOST_AUTO_TEST_CASE(ThresholdPressureTest) {
     std::vector<double> wantedResultVec(pressureList, pressureList + sizeof(pressureList) / sizeof(double));
 
     BOOST_CHECK_EQUAL(thresholdPressureTable.size(), wantedResultVec.size());
-    //BOOST_CHECK(std::equal(thresholdPressureTable.begin(), thresholdPressureTable.end(), wantedResultVec.begin()));
+
+    for (unsigned i=0; i < thresholdPressureTable.size(); i++) {
+        std::pair<bool, double> item = thresholdPressureTable[i];
+        BOOST_CHECK_EQUAL(item.second, pressureList[i]);
+    }
 }
 
 
@@ -224,4 +228,5 @@ BOOST_AUTO_TEST_CASE(ThresholdPressureThrowTest) {
     parseMode.update( ParseMode::UNSUPPORTED_INITIAL_THPRES , InputError::IGNORE );
     BOOST_CHECK_NO_THROW(ThresholdPressure(parseMode,deck_missingPressure, gridProperties));
 }
+
 
