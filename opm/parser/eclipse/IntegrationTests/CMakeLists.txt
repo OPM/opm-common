@@ -6,7 +6,7 @@ foreach(tapp CheckDeckValidity IntegrationTests ParseWellProbe
              ParseTVDP ParseDENSITY ParseVFPPROD ScheduleCreateFromDeck
              CompletionsFromDeck ParseEND IncludeTest ParseEQUIL
              ParseRSVD ParsePVTG ParsePVTO ParseSWOF BoxTest
-             ParseMULTREGT ParseSGOF EclipseGridCreateFromDeck NNCTests
+             ParseMULTREGT ParseSGOF ParseSLGOF EclipseGridCreateFromDeck NNCTests
              ResinsightTest IOConfigIntegrationTest )
   opm_add_test(run${tapp} SOURCES ${tapp}.cpp
                           LIBRARIES opmparser ${Boost_LIBRARIES})

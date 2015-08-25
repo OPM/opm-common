@@ -59,6 +59,12 @@ namespace Opm {
     public:
         SlgofTable() = default;
 
+#ifdef BOOST_TEST_MODULE
+        // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
+        void initFORUNITTESTONLY(Opm::DeckKeywordConstPtr keyword, size_t tableIdx)
+        { init(keyword, tableIdx); }
+#endif
+
         using ParentType::numTables;
         using ParentType::numRows;
         using ParentType::numColumns;
