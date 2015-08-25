@@ -75,11 +75,6 @@ if(PTSCOTCH_FOUND)
     "Determing location of PT-Scotch succeded:\n"
     "Include directory: ${PTSCOTCH_INCLUDE_DIRS}\n"
     "Library directory: ${PTSCOTCH_LIBRARIES}\n\n")
-
-  foreach(dir ${PTSCOCTH_INCLUDE_DIRS})
-    set_property(GLOBAL APPEND PROPERTY ALL_PKG_FLAGS "-I${dir}")
-  endforeach()
-  set_property(GLOBAL APPEND PROPERTY ALL_PKG_LIBS "${PTSCOTCH_LIBRARIES}")
 endif(PTSCOTCH_FOUND)
 
 mark_as_advanced(PTSCOTCH_INCLUDE_DIRS PTSCOTCH_LIBRARIES HAVE_PTSCOTCH)
