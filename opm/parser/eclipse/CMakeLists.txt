@@ -240,6 +240,7 @@ EclipseState/Tables/PlyshlogTable.hpp
 EclipseState/Tables/EnkrvdTable.hpp
 EclipseState/Tables/ImkrvdTable.hpp
 EclipseState/Tables/SgofTable.hpp
+EclipseState/Tables/SlgofTable.hpp
 EclipseState/Tables/PvtoTable.hpp
 EclipseState/Tables/ImptvdTable.hpp
 EclipseState/Tables/RsvdTable.hpp
