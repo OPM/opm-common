@@ -54,6 +54,20 @@ const std::string& inputStr = "RUNSPEC\n"
                               "/\n"
                               "\n";
 
+const std::string& inputStr_noTHPRES = "RUNSPEC\n"
+                                       "EQLOPTS\n"
+                                       "DIMENS\n"
+                                       "10 3 4 /\n"
+                                       "\n"
+                                       "GRID\n"
+                                       "REGIONS\n"
+                                       "EQLNUM\n"
+                                       "10*1 10*2 100*3 /\n "
+                                       "\n"
+                                       "SOLUTION\n"
+                                       "\n";
+
+
 
 static DeckPtr createDeck(const ParseMode& parseMode , const std::string& input) {
     Opm::Parser parser;
@@ -77,7 +91,15 @@ BOOST_AUTO_TEST_CASE(SimulationConfigGetThresholdPressureTableTest) {
     DeckPtr deck = createDeck(parseMode , inputStr);
     SimulationConfigConstPtr simulationConfigPtr;
     BOOST_CHECK_NO_THROW(simulationConfigPtr = std::make_shared<const SimulationConfig>(parseMode , deck, getGridProperties()));
+    BOOST_CHECK_EQUAL( true , simulationConfigPtr->hasThresholdPressure());
 }
 
+
+BOOST_AUTO_TEST_CASE(SimulationConfigNOTHPRES) {
+    ParseMode parseMode;
+    DeckPtr deck = createDeck(parseMode , inputStr_noTHPRES);
+    SimulationConfig simulationConfig(parseMode , deck, getGridProperties());
+    BOOST_CHECK_EQUAL( false , simulationConfig.hasThresholdPressure());
+}
 
 
