@@ -44,9 +44,16 @@ namespace Opm {
 
             ParentType::checkNonDefaultable("SL");
             ParentType::checkMonotonic("SL", /*isAscending=*/true);
+            ParentType::checkMonotonic("KRG", /*isAscending=*/false, /*strictlyMonotonic=*/false);
+            ParentType::checkMonotonic("KROG", /*isAscending=*/true, /*strictlyMonotonic=*/false);
+            ParentType::checkMonotonic("PCOG", /*isAscending=*/false, /*strictlyMonotonic=*/false);
             ParentType::applyDefaultsLinear("KRG");
             ParentType::applyDefaultsLinear("KROG");
             ParentType::applyDefaultsLinear("PCOG");
+
+            if (getSlColumn().back() != 1.0) {
+                throw std::invalid_argument("The last saturation of the SLGOF keyword must be 1!");
+            }
         }
 
     public:
