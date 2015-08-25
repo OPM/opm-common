@@ -420,22 +420,23 @@ protected:
 
         const std::vector<SwofTable>& swofTables = m_eclipseState.getSwofTables();
         const std::vector<SgofTable>& sgofTables = m_eclipseState.getSgofTables();
+        const std::vector<SlgofTable>& slgofTables = m_eclipseState.getSlgofTables();
         const std::vector<SwfnTable>& swfnTables = m_eclipseState.getSwfnTables();
         const std::vector<SgfnTable>& sgfnTables = m_eclipseState.getSgfnTables();
         const std::vector<Sof3Table>& sof3Tables = m_eclipseState.getSof3Tables();
 
-        bool family1 = !sgofTables.empty() && !swofTables.empty();
+        bool family1 = (!sgofTables.empty() || !slgofTables.empty()) && !swofTables.empty();
         bool family2 = !swfnTables.empty() && !sgfnTables.empty() && !sof3Tables.empty();
 
         if (family1 && family2) {
             throw std::invalid_argument("Saturation families should not be mixed \n"
-                                        "Use either SGOF and SWOF or SGFN, SWFN and SOF3");
+                                        "Use either SGOF (or SLGOF) and SWOF or SGFN, SWFN and SOF3");
         }
 
         if (!family1 && !family2) {
             throw std::invalid_argument("Saturations function must be specified using either "
                                         "family 1 or family 2 keywords \n"
-                                        "Use either SGOF and SWOF or SGFN, SWFN and SOF3" );
+                                        "Use either SGOF (or SLGOF) and SWOF or SGFN, SWFN and SOF3" );
         }
 
         if (family1 && !family2)
