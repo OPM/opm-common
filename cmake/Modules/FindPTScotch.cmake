@@ -21,7 +21,7 @@
 find_package(MPI)
 macro(_search_pt_lib libvar libname doc)
   find_library(${libvar} ${libname}
-    PATHS${PTSCOTCH_ROOT} PATH_SUFFIXES ${PATH_SUFFIXES}
+    PATHS ${PTSCOTCH_ROOT} ${PTSCOTCH_ROOT}/lib PATH_SUFFIXES ${PATH_SUFFIXES}
     NO_DEFAULT_PATH
     DOC "${doc}")
   find_library(${libvar} ${libname})
@@ -39,7 +39,7 @@ set(CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES} ${MPI_DUNE_INCLUDE_PATH})
 set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} ${MPI_DUNE_COMPILE_FLAGS}")
 
 find_path(PTSCOTCH_INCLUDE_DIR ptscotch.h
-  PATHS ${PTSCOTCH_ROOT}
+  PATHS ${PTSCOTCH_ROOT} ${PTSCOTCH_ROOT}/include
   PATH_SUFFIXES ${PATH_SUFFIXES}
   NO_DEFAULT_PATH
   DOC "Include directory of PT-Scotch")

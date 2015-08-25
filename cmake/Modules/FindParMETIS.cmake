@@ -22,7 +22,7 @@
 find_package(MPI)
 macro(_search_parmetis_lib libvar libname doc)
   find_library(${libvar} ${libname}
-    PATHS${PARMETIS_ROOT} PATH_SUFFIXES ${PATH_SUFFIXES}
+    PATHS ${PARMETIS_ROOT} ${PARMETIS_ROOT}/lib PATH_SUFFIXES ${PATH_SUFFIXES}
     NO_DEFAULT_PATH
     DOC "${doc}")
   find_library(${libvar} ${libname})
@@ -38,7 +38,7 @@ include(CMakePushCheckState)
 cmake_push_check_state() # Save variables
 
 find_path(PARMETIS_INCLUDE_DIR parmetis.h
-  PATHS ${PARMETIS_ROOT}
+  PATHS ${PARMETIS_ROOT}   ${PARMETIS_ROOT}/include
   PATH_SUFFIXES parmetis${PATH_SUFFIXES}
   NO_DEFAULT_PATH
   DOC "Include directory of ParMETIS")
