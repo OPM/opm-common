@@ -171,6 +171,16 @@ namespace Opm {
         */
         const static std::string UNSUPPORTED_INITIAL_THPRES;
 
+
+        /*
+          If the third item in the THPRES keyword is defaulted the
+          threshold pressure is inferred from the initial pressure -
+          if you still ask the ThresholdPressure instance for a
+          pressure value this error will be signalled.  this currently
+          not supported.
+        */
+        const static std::string INTERNAL_ERROR_UNINITIALIZED_THPRES;
+
     private:
         void initDefault();
         void initEnv();
