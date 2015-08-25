@@ -16,7 +16,6 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
@@ -25,13 +24,38 @@
 
 namespace Opm {
 
-    ThresholdPressure::ThresholdPressure(const ParseMode& parseMode , DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties) {
+    ThresholdPressure::ThresholdPressure(const ParseMode& parseMode , DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties)
+        : m_parseMode( parseMode )
+    {
 
         if (Section::hasRUNSPEC(deck) && Section::hasSOLUTION(deck)) {
             std::shared_ptr<const RUNSPECSection> runspecSection = std::make_shared<const RUNSPECSection>(deck);
             std::shared_ptr<const SOLUTIONSection> solutionSection = std::make_shared<const SOLUTIONSection>(deck);
             initThresholdPressure(parseMode , runspecSection, solutionSection, gridProperties);
         }
+    }
+
+
+    std::pair<int,int> ThresholdPressure::makeIndex(int r1 , int r2) {
+        if (r1 < r2)
+            return std::make_pair(r1,r2);
+        else
+            return std::make_pair(r2,r1);
+    }
+
+    void ThresholdPressure::addPair(int r1 , int r2 , const std::pair<bool , double>& valuePair) {
+        std::pair<int,int> indexPair = makeIndex(r1,r2);
+        m_pressureTable[indexPair] = valuePair;
+    }
+
+    void ThresholdPressure::addBarrier(int r1 , int r2 , double p) {
+        std::pair<bool,double> valuePair = std::make_pair(true , p);
+        addPair( r1,r2, valuePair );
+    }
+
+    void ThresholdPressure::addBarrier(int r1 , int r2) {
+        std::pair<bool,double> valuePair = std::make_pair(false , 0);
+        addPair( r1,r2, valuePair );
     }
 
 
@@ -81,8 +105,6 @@ namespace Opm {
             // Fill threshold pressure table.
             auto thpres = solutionSection->getKeyword<ParserKeywords::THPRES>( );
 
-            m_thresholdPressureTable.resize(maxEqlnum * maxEqlnum, std::pair<bool, double>(false,0));
-
             const int numRecords = thpres->size();
             for (int rec_ix = 0; rec_ix < numRecords; ++rec_ix) {
                 auto rec = thpres->getRecord(rec_ix);
@@ -91,19 +113,17 @@ namespace Opm {
                 auto thpressItem = rec->getItem<ParserKeywords::THPRES::VALUE>();
 
                 if (region1Item->hasValue(0) && region2Item->hasValue(0)) {
-                    const int r1 = region1Item->getInt(0) - 1;
-                    const int r2 = region2Item->getInt(0) - 1;
-                    if (r1 >= maxEqlnum || r2 >= maxEqlnum) {
+                    const int r1 = region1Item->getInt(0);
+                    const int r2 = region2Item->getInt(0);
+                    if (r1 > maxEqlnum || r2 > maxEqlnum) {
                         throw std::runtime_error("Too high region numbers in THPRES keyword");
                     }
+
                     if (thpressItem->hasValue(0)) {
                         const double p = thpressItem->getSIDouble(0);
-                        m_thresholdPressureTable[r1 + maxEqlnum*r2] = std::pair<bool, double>(true,p);
-                        m_thresholdPressureTable[r2 + maxEqlnum*r1] = std::pair<bool, double>(true,p);
-                    } else {
-                        m_thresholdPressureTable[r1 + maxEqlnum*r2] = std::pair<bool, double>(false,0);
-                        m_thresholdPressureTable[r2 + maxEqlnum*r1] = std::pair<bool, double>(false,0);
-                    }
+                        addBarrier( r1 , r2 , p );
+                    } else
+                        addBarrier( r1 , r2 );
                 } else
                     throw std::runtime_error("Missing region data for use of the THPRES keyword");
 
@@ -115,9 +135,52 @@ namespace Opm {
     }
 
 
+    bool ThresholdPressure::hasRegionBarrier(int r1 , int r2) const {
+        std::pair<int,int> indexPair = makeIndex(r1,r2);
+        if (m_pressureTable.find( indexPair ) == m_pressureTable.end())
+            return false;
+        else
+            return true;
+    }
 
-    const std::vector<std::pair<bool,double>>& ThresholdPressure::getThresholdPressureTable() const {
-        return m_thresholdPressureTable;
+
+    double ThresholdPressure::getThresholdPressure(int r1 , int r2) const {
+        std::pair<int,int> indexPair = makeIndex(r1,r2);
+        auto iter = m_pressureTable.find( indexPair );
+        if (iter == m_pressureTable.end())
+            return 0.0;
+        else {
+            auto pair_pair = *iter;
+            auto value_pair = pair_pair.second;
+            bool   valid = value_pair.first;
+            double value = value_pair.second;
+            if (valid)
+                return value;
+            else {
+                std::string msg = "The THPRES value for regions " + std::to_string(r1) + " and " + std::to_string(r2) + " has not been initialized. Using 0.0";
+                m_parseMode.handleError(ParseMode::INTERNAL_ERROR_UNINITIALIZED_THPRES, msg);
+                return 0;
+            }
+        }
+
+    }
+
+
+    size_t ThresholdPressure::size() const {
+        return m_pressureTable.size();
+    }
+
+
+    bool ThresholdPressure::hasThresholdPressure(int r1 , int r2) const {
+        std::pair<int,int> indexPair = makeIndex(r1,r2);
+        auto iter = m_pressureTable.find( indexPair );
+        if (iter == m_pressureTable.end())
+            return false;
+        else {
+            auto pair_pair = *iter;
+            auto value_pair = pair_pair.second;
+            return value_pair.first;
+        }
     }
 
 

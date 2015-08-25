@@ -46,6 +46,7 @@ const std::string& inputStr = "RUNSPEC\n"
                               "THPRES\n"
                               "1 2 12.0/\n"
                               "1 3 5.0/\n"
+                              "2 3 33.0 /\n"
                               "2 3 7.0/\n"
                               "/\n"
                               "\n";
@@ -155,19 +156,16 @@ BOOST_AUTO_TEST_CASE(ThresholdPressureTest) {
     ParseMode parseMode;
     DeckPtr deck = createDeck(parseMode , inputStr);
     static std::shared_ptr<GridProperties<int>> gridProperties = getGridProperties();
-    ThresholdPressureConstPtr tresholdPressurePtr = std::make_shared<ThresholdPressure>(parseMode , deck, gridProperties);
+    ThresholdPressureConstPtr thp = std::make_shared<ThresholdPressure>(parseMode , deck, gridProperties);
 
-    const std::vector<std::pair<bool,double>>& thresholdPressureTable = tresholdPressurePtr->getThresholdPressureTable();
 
-    double pressureList[] = {0.0, 1200000.0, 500000.0, 1200000.0, 0.0, 700000.0, 500000.0, 700000.0, 0.0};
-    std::vector<double> wantedResultVec(pressureList, pressureList + sizeof(pressureList) / sizeof(double));
+    BOOST_CHECK_EQUAL( thp->getThresholdPressure(1,2) , 1200000.0 );
+    BOOST_CHECK_EQUAL( thp->getThresholdPressure(2,1) , 1200000.0 );
+    BOOST_CHECK_EQUAL( thp->getThresholdPressure(1,3) , 500000.0 );
+    BOOST_CHECK_EQUAL( thp->getThresholdPressure(3,1) , 500000.0 );
+    BOOST_CHECK_EQUAL( thp->getThresholdPressure(2,3) , 700000.0 );
+    BOOST_CHECK_EQUAL( thp->getThresholdPressure(3,2) , 700000.0 );
 
-    BOOST_CHECK_EQUAL(thresholdPressureTable.size(), wantedResultVec.size());
-
-    for (unsigned i=0; i < thresholdPressureTable.size(); i++) {
-        std::pair<bool, double> item = thresholdPressureTable[i];
-        BOOST_CHECK_EQUAL(item.second, pressureList[i]);
-    }
 }
 
 
@@ -175,10 +173,8 @@ BOOST_AUTO_TEST_CASE(ThresholdPressureEmptyTest) {
     ParseMode parseMode;
     DeckPtr deck = createDeck(parseMode , inputStrNoSolutionSection);
     static std::shared_ptr<GridProperties<int>> gridProperties = getGridProperties();
-    ThresholdPressureConstPtr tresholdPressurePtr = std::make_shared<ThresholdPressure>(parseMode , deck, gridProperties);
-    const std::vector<std::pair<bool,double>>& thresholdPressureTable = tresholdPressurePtr->getThresholdPressureTable();
-
-    BOOST_CHECK_EQUAL(0, thresholdPressureTable.size());
+    ThresholdPressureConstPtr thresholdPressurePtr = std::make_shared<ThresholdPressure>(parseMode , deck, gridProperties);
+    BOOST_CHECK_EQUAL(0, thresholdPressurePtr->size());
 }
 
 
@@ -188,16 +184,13 @@ BOOST_AUTO_TEST_CASE(ThresholdPressureNoTHPREStest) {
     DeckPtr deck_no_thpres2 = createDeck(parseMode , inputStrTHPRESinRUNSPECnotSoultion);
     static std::shared_ptr<GridProperties<int>> gridProperties = getGridProperties();
 
-    ThresholdPressureConstPtr tresholdPressurePtr;
-    BOOST_CHECK_NO_THROW(tresholdPressurePtr = std::make_shared<ThresholdPressure>(parseMode , deck_no_thpres, gridProperties));
-    ThresholdPressureConstPtr tresholdPressurePtr2;
-    BOOST_CHECK_NO_THROW(tresholdPressurePtr2 = std::make_shared<ThresholdPressure>(parseMode , deck_no_thpres2, gridProperties));
+    ThresholdPressureConstPtr thresholdPressurePtr;
+    BOOST_CHECK_NO_THROW(thresholdPressurePtr = std::make_shared<ThresholdPressure>(parseMode , deck_no_thpres, gridProperties));
+    ThresholdPressureConstPtr thresholdPressurePtr2;
+    BOOST_CHECK_NO_THROW(thresholdPressurePtr2 = std::make_shared<ThresholdPressure>(parseMode , deck_no_thpres2, gridProperties));
 
-    const std::vector<std::pair<bool,double>>& thresholdPressureTable = tresholdPressurePtr->getThresholdPressureTable();
-    BOOST_CHECK_EQUAL(0, thresholdPressureTable.size());
-
-    const std::vector<std::pair<bool,double>>& thresholdPressureTable2 = tresholdPressurePtr2->getThresholdPressureTable();
-    BOOST_CHECK_EQUAL(0, thresholdPressureTable2.size());
+    BOOST_CHECK_EQUAL(0, thresholdPressurePtr->size());
+    BOOST_CHECK_EQUAL(0, thresholdPressurePtr2->size());
 }
 
 
@@ -227,6 +220,34 @@ BOOST_AUTO_TEST_CASE(ThresholdPressureThrowTest) {
 
     parseMode.update( ParseMode::UNSUPPORTED_INITIAL_THPRES , InputError::IGNORE );
     BOOST_CHECK_NO_THROW(ThresholdPressure(parseMode,deck_missingPressure, gridProperties));
+
+
+    {
+        ThresholdPressure thp(parseMode , deck_missingPressure , gridProperties );
+
+        BOOST_CHECK_EQUAL( true  , thp.hasRegionBarrier(2,3));
+        BOOST_CHECK_EQUAL( false , thp.hasThresholdPressure(2,3));
+
+        parseMode.update( ParseMode::INTERNAL_ERROR_UNINITIALIZED_THPRES , InputError::THROW_EXCEPTION );
+        BOOST_CHECK_THROW( thp.getThresholdPressure(2, 3) , std::invalid_argument);
+
+        parseMode.update( ParseMode::INTERNAL_ERROR_UNINITIALIZED_THPRES , InputError::IGNORE );
+        BOOST_CHECK_EQUAL( 0.0 , thp.getThresholdPressure(2, 3));
+    }
 }
 
+
+BOOST_AUTO_TEST_CASE(HasPair) {
+    ParseMode parseMode;
+    DeckPtr deck                 = createDeck(parseMode , inputStr);
+    static std::shared_ptr<GridProperties<int>> gridProperties = getGridProperties();
+    ThresholdPressure thp(parseMode , deck , gridProperties);
+
+    BOOST_CHECK_EQUAL( true , thp.hasRegionBarrier( 1 , 2 ));
+    BOOST_CHECK_EQUAL( false , thp.hasRegionBarrier( 1 , 7 ));
+    BOOST_CHECK_EQUAL( true , thp.hasThresholdPressure( 1, 2 ));
+    BOOST_CHECK_EQUAL( false , thp.hasThresholdPressure( 1, 7 ));
+    BOOST_CHECK_EQUAL( 1200000.0 , thp.getThresholdPressure( 1,2 ));
+
+}
 
