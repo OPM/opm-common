@@ -81,8 +81,8 @@ protected:
 
 
     void findSaturationEndpoints( ) const {
-
-        auto tabdims = m_eclipseState.getTabdims();
+        auto tables = m_eclipseState.getTables();
+        auto tabdims = tables->getTabdims();
         size_t numSatTables = tabdims->getNumSatTables();
         m_minWaterSat.resize( numSatTables , 0 );
         m_maxWaterSat.resize( numSatTables , 0 );
@@ -142,8 +142,8 @@ protected:
 
 
     void findCriticalPoints( ) const {
-
-        auto tabdims = m_eclipseState.getTabdims();
+        auto tables = m_eclipseState.getTables();
+        auto tabdims = tables->getTabdims();
         size_t numSatTables = tabdims->getNumSatTables();
 
         m_criticalWaterSat.resize( numSatTables , 0 );
@@ -308,8 +308,8 @@ protected:
     }
 
     void findVerticalPoints( ) const {
-
-        auto tabdims = m_eclipseState.getTabdims();
+        auto tables = m_eclipseState.getTables();
+        auto tabdims = tables->getTabdims();
         size_t numSatTables = tabdims->getNumSatTables();
 
         m_maxPcog.resize( numSatTables , 0 );
@@ -518,7 +518,8 @@ public:
                       bool useOneMinusTableValue) const
     {
         auto eclipseGrid = this->m_eclipseState.getEclipseGrid();
-        auto tabdims = this->m_eclipseState.getTabdims();
+        auto tables = this->m_eclipseState.getTables();
+        auto tabdims = tables->getTabdims();
         auto satnum = this->m_eclipseState.getIntGridProperty("SATNUM");
         auto endnum = this->m_eclipseState.getIntGridProperty("ENDNUM");
         int numSatTables = tabdims->getNumSatTables();
@@ -576,9 +577,11 @@ public:
                       bool useOneMinusTableValue) const
     {
         auto eclipseGrid = this->m_eclipseState.getEclipseGrid();
-        auto tabdims = this->m_eclipseState.getTabdims();
+        auto tables = this->m_eclipseState.getTables();
         auto imbnum = this->m_eclipseState.getIntGridProperty("IMBNUM");
         auto endnum = this->m_eclipseState.getIntGridProperty("ENDNUM");
+
+        auto tabdims = tables->getTabdims();
         int numSatTables = tabdims->getNumSatTables();
 
         imbnum->checkLimits(1 , numSatTables);

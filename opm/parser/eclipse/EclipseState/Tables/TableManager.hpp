@@ -20,6 +20,7 @@
 #ifndef OPM_TABLES_HPP
 #define OPM_TABLES_HPP
 
+#include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
 
 namespace Opm {
 
@@ -27,8 +28,13 @@ namespace Opm {
     public:
         Tables( const Deck& deck );
 
+
+        std::shared_ptr<const Tabdims> getTabdims() const;
     private:
-        
+        void initTabdims(const Deck& deck);
+
+
+        std::shared_ptr<Tabdims> m_tabdims;
     };
 }
 

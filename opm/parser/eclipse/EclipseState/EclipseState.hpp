@@ -33,7 +33,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/Tables.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/EnkrvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/EnptvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/GasvisctTable.hpp>
@@ -117,10 +117,10 @@ namespace Opm {
         std::shared_ptr<const NNC> getNNC() const;
         bool hasNNC() const;
 
+        std::shared_ptr<const Tables> getTables() const;
         // the tables used by the deck. If the tables had some defaulted data in the
         // deck, the objects returned here exhibit the correct values. If the table is
         // not present in the deck, the corresponding vector is of size zero.
-        std::shared_ptr<const Tabdims> getTabdims() const;
         const std::vector<EnkrvdTable>& getEnkrvdTables() const;
         const std::vector<EnptvdTable>& getEnptvdTables() const;
         const std::vector<GasvisctTable>& getGasvisctTables() const;
@@ -277,8 +277,7 @@ namespace Opm {
         ScheduleConstPtr         schedule;
         SimulationConfigConstPtr m_simulationConfig;
 
-
-        std::shared_ptr<const Tabdims> m_tabdims;
+        std::shared_ptr<const Tables> m_tables;
         std::vector<EnkrvdTable> m_enkrvdTables;
         std::vector<EnptvdTable> m_enptvdTables;
         std::vector<GasvisctTable> m_gasvisctTables;
