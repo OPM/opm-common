@@ -23,12 +23,12 @@
 
 namespace Opm {
     // forward declaration
-    class EclipseState;
+    class Tables;
 
     class SwofTable : protected SingleRecordTable {
         typedef SingleRecordTable ParentType;
 
-        friend class EclipseState;
+        friend class Tables;
 
         /*!
          * \brief Read the SWOF keyword and provide some convenience

@@ -26,6 +26,7 @@ namespace Opm {
 
     Tables::Tables( const Deck& deck ) {
         initTabdims( deck );
+        initSimpleTables(deck, "SWOF", m_swofTables);
     }
 
 
@@ -64,6 +65,20 @@ namespace Opm {
         return m_tabdims;
     }
 
+
+    const std::vector<SwofTable>& Tables::getSwofTables() const {
+        return m_swofTables;
+    }
+
+
+    void Tables::complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) const {
+        OpmLog::addMessage(Log::MessageType::Error, "The " + keywordName + " keyword must be unique in the deck. Ignoring all!");
+        auto keywords = deck.getKeywordList(keywordName);
+        for (size_t i = 0; i < keywords.size(); ++i) {
+            std::string msg = "Ambiguous keyword "+keywordName+" defined here";
+            OpmLog::addMessage(Log::MessageType::Error , Log::fileMessage( keywords[i]->getFileName(), keywords[i]->getLineNumber(),msg));
+        }
+    }
 }
 
 

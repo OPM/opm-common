@@ -92,7 +92,7 @@ protected:
         switch (getSaturationFunctionFamily()) {
         case SaturationFunctionFamily::FamilyI:
         {
-            const std::vector<SwofTable>& swofTables = m_eclipseState.getSwofTables();
+            const std::vector<SwofTable>& swofTables = tables->getSwofTables();
             assert(swofTables.size() == numSatTables);
             for (size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
                 m_minWaterSat[tableIdx] = swofTables[tableIdx].getSwColumn().front();
@@ -154,7 +154,7 @@ protected:
         switch (getSaturationFunctionFamily()) {
         case SaturationFunctionFamily::FamilyI:
         {
-            const std::vector<SwofTable>& swofTables = m_eclipseState.getSwofTables();
+            const std::vector<SwofTable>& swofTables = tables->getSwofTables();
 
             for (size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
                 // find the critical water saturation
@@ -325,7 +325,7 @@ protected:
         switch (getSaturationFunctionFamily()) {
         case SaturationFunctionFamily::FamilyI:
         {
-            const std::vector<SwofTable>& swofTables = m_eclipseState.getSwofTables();
+            const std::vector<SwofTable>& swofTables = tables->getSwofTables();
             const std::vector<SgofTable>& sgofTables = m_eclipseState.getSgofTables();
 
             for (size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
@@ -417,8 +417,8 @@ protected:
     // If SWFN, SGFN and SOF3 are specified in the deck it return FamilyII
     // If keywords are missing or mixed, an error is given.
     const SaturationFunctionFamily getSaturationFunctionFamily() const{
-
-        const std::vector<SwofTable>& swofTables = m_eclipseState.getSwofTables();
+        auto tables = m_eclipseState.getTables( );
+        const std::vector<SwofTable>& swofTables = tables->getSwofTables();
         const std::vector<SgofTable>& sgofTables = m_eclipseState.getSgofTables();
         const std::vector<SlgofTable>& slgofTables = m_eclipseState.getSlgofTables();
         const std::vector<SwfnTable>& swfnTables = m_eclipseState.getSwfnTables();
