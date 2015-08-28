@@ -47,7 +47,7 @@ namespace Opm {
     class Well {
     public:
         Well(const std::string& name, std::shared_ptr<const EclipseGrid> grid , int headI, int headJ, Value<double> refDepth , Phase::PhaseEnum preferredPhase,
-             TimeMapConstPtr timeMap, size_t creationTimeStep);
+             TimeMapConstPtr timeMap, size_t creationTimeStep, WellCompletion::CompletionOrderEnum completionOrdering = WellCompletion::TRACK);
         const std::string& name() const;
 
         bool hasBeenDefined(size_t timeStep) const;
@@ -100,6 +100,11 @@ namespace Opm {
         int  findWellFirstOpen(int startTimeStep) const;
         void setRFTForWellWhenFirstOpen(int numSteps,size_t currentStep);
 
+        static bool wellNameInWellNamePattern(const std::string& wellName, const std::string& wellNamePattern);
+
+        WellCompletion::CompletionOrderEnum getWellCompletionOrdering() const;
+
+
 
 
     private:
@@ -133,6 +138,8 @@ namespace Opm {
         mutable Value<double> m_refDepth;
         Phase::PhaseEnum m_preferredPhase;
         std::shared_ptr<const EclipseGrid> m_grid;
+
+        WellCompletion::CompletionOrderEnum m_comporder;
     };
     typedef std::shared_ptr<Well> WellPtr;
     typedef std::shared_ptr<const Well> WellConstPtr;

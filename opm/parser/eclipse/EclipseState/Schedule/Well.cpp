@@ -31,7 +31,7 @@
 namespace Opm {
 
     Well::Well(const std::string& name_, std::shared_ptr<const EclipseGrid> grid , int headI, int headJ, Value<double> refDepth , Phase::PhaseEnum preferredPhase,
-               TimeMapConstPtr timeMap, size_t creationTimeStep)
+               TimeMapConstPtr timeMap, size_t creationTimeStep, WellCompletion::CompletionOrderEnum completionOrdering)
         : m_status(new DynamicState<WellCommon::StatusEnum>(timeMap, WellCommon::SHUT)),
           m_isAvailableForGroupControl(new DynamicState<bool>(timeMap, true)),
           m_guideRate(new DynamicState<double>(timeMap, -1.0)),
@@ -51,7 +51,8 @@ namespace Opm {
           m_headJ(headJ),
           m_refDepth(refDepth),
           m_preferredPhase(preferredPhase),
-          m_grid( grid )
+          m_grid( grid ),
+          m_comporder(completionOrdering)
     {
         m_name = name_;
         m_creationTimeStep = creationTimeStep;
@@ -232,7 +233,9 @@ namespace Opm {
 
     void Well::addCompletionSet(size_t time_step, const CompletionSetConstPtr newCompletionSet){
         CompletionSetPtr mutable_copy(newCompletionSet->shallowCopy());
-        mutable_copy->orderCompletions(m_headI, m_headJ, m_grid);
+        if (getWellCompletionOrdering() == WellCompletion::TRACK) {
+            mutable_copy->orderCompletions(m_headI, m_headJ, m_grid);
+        }
         m_completions->update(time_step, mutable_copy);
     }
 
@@ -285,6 +288,19 @@ namespace Opm {
                 setRFTActive(time+1, false);
             }
         }
+    }
+
+    WellCompletion::CompletionOrderEnum Well::getWellCompletionOrdering() const {
+        return m_comporder;
+    }
+
+
+    bool Well::wellNameInWellNamePattern(const std::string& wellName, const std::string& wellNamePattern) {
+        bool wellNameInPattern = false;
+        if (util_fnmatch( wellNamePattern.c_str() , wellName.c_str()) == 0) {
+            wellNameInPattern = true;
+        }
+        return wellNameInPattern;
     }
 
 }
