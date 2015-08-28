@@ -101,7 +101,7 @@ protected:
 
             {
                 const std::vector<SgofTable>& sgofTables = tables->getSgofTables();
-                const std::vector<SlgofTable>& slgofTables = m_eclipseState.getSlgofTables();
+                const std::vector<SlgofTable>& slgofTables = tables->getSlgofTables();
 
                 if (!sgofTables.empty()) {
                     assert(sgofTables.size() == numSatTables);
@@ -185,7 +185,7 @@ protected:
 
             {
                 const std::vector<SgofTable>& sgofTables = tables->getSgofTables();
-                const std::vector<SlgofTable>& slgofTables = m_eclipseState.getSlgofTables();
+                const std::vector<SlgofTable>& slgofTables = tables->getSlgofTables();
 
                 if (!sgofTables.empty()) {
                     for (size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
@@ -422,7 +422,7 @@ protected:
         auto tables = m_eclipseState.getTables( );
         const std::vector<SwofTable>& swofTables = tables->getSwofTables();
         const std::vector<SgofTable>& sgofTables = tables->getSgofTables();
-        const std::vector<SlgofTable>& slgofTables = m_eclipseState.getSlgofTables();
+        const std::vector<SlgofTable>& slgofTables = tables->getSlgofTables();
         const std::vector<SwfnTable>& swfnTables = m_eclipseState.getSwfnTables();
         const std::vector<SgfnTable>& sgfnTables = m_eclipseState.getSgfnTables();
         const std::vector<Sof3Table>& sof3Tables = m_eclipseState.getSof3Tables();

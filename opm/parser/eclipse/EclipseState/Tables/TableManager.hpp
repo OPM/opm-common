@@ -25,6 +25,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SlgofTable.hpp>
 
 
 namespace Opm {
@@ -37,6 +38,7 @@ namespace Opm {
         std::shared_ptr<const Tabdims> getTabdims() const;
         const std::vector<SwofTable>& getSwofTables() const;
         const std::vector<SgofTable>& getSgofTables() const;
+        const std::vector<SlgofTable>& getSlgofTables() const;
     private:
         void complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) const;
 
@@ -76,6 +78,7 @@ namespace Opm {
 
         std::vector<SgofTable> m_sgofTables;
         std::vector<SwofTable> m_swofTables;
+        std::vector<SlgofTable> m_slgofTables;
         std::shared_ptr<Tabdims> m_tabdims;
     };
 }
