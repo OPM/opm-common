@@ -27,8 +27,8 @@ namespace Opm {
     Tables::Tables( const Deck& deck ) {
         initTabdims( deck );
         initSimpleTables(deck, "SWOF", m_swofTables);
+        initSimpleTables(deck, "SGOF", m_sgofTables);
     }
-
 
 
     void Tables::initTabdims(const Deck& deck) {
@@ -68,6 +68,11 @@ namespace Opm {
 
     const std::vector<SwofTable>& Tables::getSwofTables() const {
         return m_swofTables;
+    }
+
+
+    const std::vector<SgofTable>& Tables::getSgofTables() const {
+        return m_sgofTables;
     }
 
 

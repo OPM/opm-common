@@ -99,22 +99,24 @@ protected:
                 m_maxWaterSat[tableIdx] = swofTables[tableIdx].getSwColumn().back();
             }
 
-            if (!m_eclipseState.getSgofTables().empty()) {
-                const std::vector<SgofTable>& sgofTables = m_eclipseState.getSgofTables();
-                assert(sgofTables.size() == numSatTables);
-                for (size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
-                    m_minGasSat[tableIdx] = sgofTables[tableIdx].getSgColumn().front();
-                    m_maxGasSat[tableIdx] = sgofTables[tableIdx].getSgColumn().back();
-                }
-            }
-            else {
-                assert(!m_eclipseState.getSlgofTables().empty());
-
+            {
+                const std::vector<SgofTable>& sgofTables = tables->getSgofTables();
                 const std::vector<SlgofTable>& slgofTables = m_eclipseState.getSlgofTables();
-                assert(slgofTables.size() == numSatTables);
-                for (size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
-                    m_minGasSat[tableIdx] = 1.0 - slgofTables[tableIdx].getSlColumn().back();
-                    m_maxGasSat[tableIdx] = 1.0 - slgofTables[tableIdx].getSlColumn().front();
+
+                if (!sgofTables.empty()) {
+                    assert(sgofTables.size() == numSatTables);
+                    for (size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
+                        m_minGasSat[tableIdx] = sgofTables[tableIdx].getSgColumn().front();
+                        m_maxGasSat[tableIdx] = sgofTables[tableIdx].getSgColumn().back();
+                    }
+                }
+                else {
+                    assert(!slgofTables.empty());
+                    assert(slgofTables.size() == numSatTables);
+                    for (size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
+                        m_minGasSat[tableIdx] = 1.0 - slgofTables[tableIdx].getSlColumn().back();
+                        m_maxGasSat[tableIdx] = 1.0 - slgofTables[tableIdx].getSlColumn().front();
+                    }
                 }
             }
 
@@ -181,68 +183,68 @@ protected:
                 }
             }
 
-            if (!m_eclipseState.getSgofTables().empty()) {
-                const std::vector<SgofTable>& sgofTables = m_eclipseState.getSgofTables();
-
-                for (size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
-                    // find the critical gas saturation
-                    int numRows = sgofTables[tableIdx].numRows();
-                    const auto &krgCol = sgofTables[tableIdx].getKrgColumn();
-                    for (int rowIdx = 0; rowIdx < numRows; ++rowIdx) {
-                        if (krgCol[rowIdx] > 0.0) {
-                            double Sg = 0.0;
-                            if (rowIdx > 0)
-                                Sg = sgofTables[tableIdx].getSgColumn()[rowIdx - 1];
-                            m_criticalGasSat[tableIdx] = Sg;
-                            break;
-                        }
-                    }
-
-                    // find the critical oil saturation of the oil-gas system
-                    const auto &kroOGCol = sgofTables[tableIdx].getKrogColumn();
-                    for (int rowIdx = numRows - 1; rowIdx >= 0; --rowIdx) {
-                        if (kroOGCol[rowIdx] > 0.0) {
-                            double Sg = sgofTables[tableIdx].getSgColumn()[rowIdx + 1];
-                            m_criticalOilOGSat[tableIdx] = 1 - Sg;
-                            break;
-                        }
-                    }
-                }
-            }
-            else {
-                assert(!m_eclipseState.getSlgofTables().empty());
-
+            {
+                const std::vector<SgofTable>& sgofTables = tables->getSgofTables();
                 const std::vector<SlgofTable>& slgofTables = m_eclipseState.getSlgofTables();
-                assert(slgofTables.size() == numSatTables);
-                for (size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
-                    // find the critical gas saturation
-                    int numRows = slgofTables[tableIdx].numRows();
-                    const auto &krgCol = slgofTables[tableIdx].getKrgColumn();
-                    for (int rowIdx = numRows - 1; rowIdx >= 0; -- rowIdx) {
-                        if (krgCol[rowIdx] > 0.0) {
-                            assert(rowIdx < numRows - 1);
 
-                            m_criticalGasSat[tableIdx] =
-                                1.0 - slgofTables[tableIdx].getSlColumn()[rowIdx + 1];
-                            break;
+                if (!sgofTables.empty()) {
+                    for (size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
+                        // find the critical gas saturation
+                        int numRows = sgofTables[tableIdx].numRows();
+                        const auto &krgCol = sgofTables[tableIdx].getKrgColumn();
+                        for (int rowIdx = 0; rowIdx < numRows; ++rowIdx) {
+                            if (krgCol[rowIdx] > 0.0) {
+                                double Sg = 0.0;
+                                if (rowIdx > 0)
+                                    Sg = sgofTables[tableIdx].getSgColumn()[rowIdx - 1];
+                                m_criticalGasSat[tableIdx] = Sg;
+                                break;
+                            }
                         }
-                    }
 
-                    // find the critical oil saturation of the oil-gas system
-                    const auto &kroOGCol = slgofTables[tableIdx].getKrogColumn();
-                    for (int rowIdx = 0; rowIdx < numRows; ++rowIdx) {
-                        if (kroOGCol[rowIdx] > 0.0) {
-                            m_criticalOilOGSat[tableIdx] =
-                                slgofTables[tableIdx].getSlColumn()[rowIdx + 1];
-                            break;
+                        // find the critical oil saturation of the oil-gas system
+                        const auto &kroOGCol = sgofTables[tableIdx].getKrogColumn();
+                        for (int rowIdx = numRows - 1; rowIdx >= 0; --rowIdx) {
+                            if (kroOGCol[rowIdx] > 0.0) {
+                                double Sg = sgofTables[tableIdx].getSgColumn()[rowIdx + 1];
+                                m_criticalOilOGSat[tableIdx] = 1 - Sg;
+                                break;
+                            }
                         }
                     }
                 }
+                else {
+                    assert(!slgofTables.empty());
+                    assert(slgofTables.size() == numSatTables);
+                    for (size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
+                        // find the critical gas saturation
+                        int numRows = slgofTables[tableIdx].numRows();
+                        const auto &krgCol = slgofTables[tableIdx].getKrgColumn();
+                        for (int rowIdx = numRows - 1; rowIdx >= 0; -- rowIdx) {
+                            if (krgCol[rowIdx] > 0.0) {
+                                assert(rowIdx < numRows - 1);
+                                m_criticalGasSat[tableIdx] =
+                                    1.0 - slgofTables[tableIdx].getSlColumn()[rowIdx + 1];
+                                break;
+                            }
+                        }
+
+                        // find the critical oil saturation of the oil-gas system
+                        const auto &kroOGCol = slgofTables[tableIdx].getKrogColumn();
+                        for (int rowIdx = 0; rowIdx < numRows; ++rowIdx) {
+                            if (kroOGCol[rowIdx] > 0.0) {
+                                m_criticalOilOGSat[tableIdx] =
+                                    slgofTables[tableIdx].getSlColumn()[rowIdx + 1];
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                break;
             }
-
-            break;
-
         }
+
         case SaturationFunctionFamily::FamilyII: {
             const std::vector<SwfnTable>& swfnTables = m_eclipseState.getSwfnTables();
             const std::vector<SgfnTable>& sgfnTables = m_eclipseState.getSgfnTables();
@@ -326,7 +328,7 @@ protected:
         case SaturationFunctionFamily::FamilyI:
         {
             const std::vector<SwofTable>& swofTables = tables->getSwofTables();
-            const std::vector<SgofTable>& sgofTables = m_eclipseState.getSgofTables();
+            const std::vector<SgofTable>& sgofTables = tables->getSgofTables();
 
             for (size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
                 // find the maximum output values of the oil-gas system
@@ -419,7 +421,7 @@ protected:
     const SaturationFunctionFamily getSaturationFunctionFamily() const{
         auto tables = m_eclipseState.getTables( );
         const std::vector<SwofTable>& swofTables = tables->getSwofTables();
-        const std::vector<SgofTable>& sgofTables = m_eclipseState.getSgofTables();
+        const std::vector<SgofTable>& sgofTables = tables->getSgofTables();
         const std::vector<SlgofTable>& slgofTables = m_eclipseState.getSlgofTables();
         const std::vector<SwfnTable>& swfnTables = m_eclipseState.getSwfnTables();
         const std::vector<SgfnTable>& sgfnTables = m_eclipseState.getSgfnTables();

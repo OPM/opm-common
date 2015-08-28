@@ -260,10 +260,6 @@ namespace Opm {
         return m_vfpinjTables;
     }
 
-    const std::vector<SgofTable>& EclipseState::getSgofTables() const {
-        return m_sgofTables;
-    }
-
     const std::vector<SlgofTable>& EclipseState::getSlgofTables() const {
         return m_slgofTables;
     }
@@ -346,7 +342,6 @@ namespace Opm {
         initSimpleTables(deck, "PVDO", m_pvdoTables);
         initSimpleTables(deck, "RSVD", m_rsvdTables);
         initSimpleTables(deck, "RVVD", m_rvvdTables);
-        initSimpleTables(deck, "SGOF", m_sgofTables);
         initSimpleTables(deck, "SLGOF", m_slgofTables);
         initSimpleTables(deck, "SOF2", m_sof2Tables);
         initSimpleTables(deck, "SOF3", m_sof3Tables);

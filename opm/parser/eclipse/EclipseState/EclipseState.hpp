@@ -56,7 +56,6 @@
 #include <opm/parser/eclipse/EclipseState/Tables/RvvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RtempvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/WatvisctTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SlgofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Sof2Table.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Sof3Table.hpp>
@@ -141,7 +140,6 @@ namespace Opm {
         const std::vector<RsvdTable>& getRsvdTables() const;
         const std::vector<RvvdTable>& getRvvdTables() const;
         const std::vector<RtempvdTable>& getRtempvdTables() const;
-        const std::vector<SgofTable>& getSgofTables() const;
         const std::vector<SlgofTable>& getSlgofTables() const;
         const std::vector<Sof2Table>& getSof2Tables() const;
         const std::vector<Sof3Table>& getSof3Tables() const;
@@ -297,7 +295,6 @@ namespace Opm {
         std::vector<RsvdTable> m_rsvdTables;
         std::vector<RvvdTable> m_rvvdTables;
         std::vector<RtempvdTable> m_rtempvdTables;
-        std::vector<SgofTable> m_sgofTables;
         std::vector<SlgofTable> m_slgofTables;
         std::vector<Sof2Table> m_sof2Tables;
         std::vector<Sof3Table> m_sof3Tables;
