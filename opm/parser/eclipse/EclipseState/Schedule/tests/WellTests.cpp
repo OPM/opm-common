@@ -31,6 +31,8 @@
 #include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
@@ -167,6 +169,159 @@ BOOST_AUTO_TEST_CASE(setpredictionModeInjection_ModeSetCorrect) {
 }
 
 
+BOOST_AUTO_TEST_CASE(WellCOMPDATtestTRACK) {
+    Opm::Parser parser;
+    std::string input =
+                "START             -- 0 \n"
+                "19 JUN 2007 / \n"
+                "SCHEDULE\n"
+                "DATES             -- 1\n"
+                " 10  OKT 2008 / \n"
+                "/\n"
+                "WELSPECS\n"
+                "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+                "/\n"
+                "COMPORD\n"
+                " OP_1 TRACK / \n"
+                "/\n"
+                "COMPDAT\n"
+                " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+                " 'OP_1'  9  9   3   9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+                " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
+                "/\n"
+                "DATES             -- 2\n"
+                " 20  JAN 2010 / \n"
+                "/\n";
+
+
+    Opm::ParseMode parseMode;
+    Opm::DeckPtr deck = parser.parseString(input, parseMode);
+    std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>( 10 , 10 , 10 );
+    Opm::IOConfigPtr ioConfig;
+    Opm::Schedule schedule(Opm::ParseMode() , grid , deck, ioConfig);
+    Opm::WellPtr op_1 = schedule.getWell("OP_1");
+
+    size_t timestep = 2;
+    Opm::CompletionSetConstPtr completions = op_1->getCompletions( timestep );
+    BOOST_CHECK_EQUAL((size_t)9 , completions->size());
+
+    //Verify TRACK completion ordering
+    Opm::CompletionConstPtr completion;
+    for (size_t k = 0; k<completions->size(); ++k) {
+        completion = completions->get(k);
+        BOOST_CHECK_EQUAL((size_t)completion->getK(), k);
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE(WellCOMPDATtestDefaultTRACK) {
+    Opm::Parser parser;
+    std::string input =
+                "START             -- 0 \n"
+                "19 JUN 2007 / \n"
+                "SCHEDULE\n"
+                "DATES             -- 1\n"
+                " 10  OKT 2008 / \n"
+                "/\n"
+                "WELSPECS\n"
+                "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+                "/\n"
+                "COMPDAT\n"
+                " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+                " 'OP_1'  9  9   3   9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+                " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
+                "/\n"
+                "DATES             -- 2\n"
+                " 20  JAN 2010 / \n"
+                "/\n";
+
+
+    Opm::ParseMode parseMode;
+    Opm::DeckPtr deck = parser.parseString(input, parseMode);
+    std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>( 10 , 10 , 10 );
+    Opm::IOConfigPtr ioConfig;
+    Opm::Schedule schedule(Opm::ParseMode() , grid , deck, ioConfig);
+    Opm::WellPtr op_1 = schedule.getWell("OP_1");
+
+    size_t timestep = 2;
+    Opm::CompletionSetConstPtr completions = op_1->getCompletions( timestep );
+    BOOST_CHECK_EQUAL((size_t)9 , completions->size());
+
+    //Verify TRACK completion ordering
+    Opm::CompletionConstPtr completion;
+    for (size_t k = 0; k<completions->size(); ++k) {
+        completion = completions->get(k);
+        BOOST_CHECK_EQUAL((size_t)completion->getK(), k);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(WellCOMPDATtestINPUT) {
+    Opm::Parser parser;
+    std::string input =
+                "START             -- 0 \n"
+                "19 JUN 2007 / \n"
+                "SCHEDULE\n"
+                "DATES             -- 1\n"
+                " 10  OKT 2008 / \n"
+                "/\n"
+                "WELSPECS\n"
+                "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+                "/\n"
+                "COMPORD\n"
+                " OP_1 INPUT / \n"
+                "/\n"
+                "COMPDAT\n"
+                " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+                " 'OP_1'  9  9   3   9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+                " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
+                "/\n"
+                "DATES             -- 2\n"
+                " 20  JAN 2010 / \n"
+                "/\n";
+
+
+    Opm::ParseMode parseMode;
+    Opm::DeckPtr deck = parser.parseString(input, parseMode);
+    std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>( 10 , 10 , 10 );
+    Opm::IOConfigPtr ioConfig;
+    Opm::Schedule schedule(Opm::ParseMode() , grid , deck, ioConfig);
+    Opm::WellPtr op_1 = schedule.getWell("OP_1");
+
+    size_t timestep = 2;
+    Opm::CompletionSetConstPtr completions = op_1->getCompletions( timestep );
+    BOOST_CHECK_EQUAL((size_t)9 , completions->size());
+
+    //Verify INPUT completion ordering
+    Opm::CompletionConstPtr completion;
+    {
+        completion = completions->get(0);
+        BOOST_CHECK_EQUAL(completion->getK(), 0);
+
+        completion = completions->get(1);
+        BOOST_CHECK_EQUAL(completion->getK(), 2);
+
+        completion = completions->get(2);
+        BOOST_CHECK_EQUAL(completion->getK(), 3);
+
+        completion = completions->get(3);
+        BOOST_CHECK_EQUAL(completion->getK(), 4);
+
+        completion = completions->get(4);
+        BOOST_CHECK_EQUAL(completion->getK(), 5);
+
+        completion = completions->get(5);
+        BOOST_CHECK_EQUAL(completion->getK(), 6);
+
+        completion = completions->get(6);
+        BOOST_CHECK_EQUAL(completion->getK(), 7);
+
+        completion = completions->get(7);
+        BOOST_CHECK_EQUAL(completion->getK(), 8);
+
+        completion = completions->get(8);
+        BOOST_CHECK_EQUAL(completion->getK(), 1);
+    }
+}
 
 BOOST_AUTO_TEST_CASE(NewWellZeroCompletions) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
@@ -634,4 +789,15 @@ BOOST_AUTO_TEST_CASE(WellSetScalingFactor_ScalingFactorSetSet) {
     well.setGuideRateScalingFactor(4, 0.6);
     BOOST_CHECK_EQUAL(1.0, well.getGuideRateScalingFactor(3));
     BOOST_CHECK_EQUAL(0.6, well.getGuideRateScalingFactor(4));
+}
+
+
+BOOST_AUTO_TEST_CASE(testWellNameInWellNamePattern) {
+    const std::string& wellnamePattern1 = "OP_*";
+    const std::string& wellname1 = "OP_1";
+
+    BOOST_CHECK_EQUAL(Opm::Well::wellNameInWellNamePattern(wellname1, wellnamePattern1), true);
+
+    const std::string& wellnamePattern2 = "NONE";
+    BOOST_CHECK_EQUAL(Opm::Well::wellNameInWellNamePattern(wellname1, wellnamePattern2), false);
 }

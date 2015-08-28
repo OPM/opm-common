@@ -25,6 +25,7 @@
 #include <typeinfo>
 #include <boost/test/unit_test.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
+#include <opm/parser/eclipse/Deck/SCHEDULESection.hpp>
 
 using namespace Opm;
 
