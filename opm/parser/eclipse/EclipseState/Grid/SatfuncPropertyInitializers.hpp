@@ -124,8 +124,8 @@ protected:
         }
         case SaturationFunctionFamily::FamilyII:
         {
-            const std::vector<SwfnTable>& swfnTables = m_eclipseState.getSwfnTables();
-            const std::vector<SgfnTable>& sgfnTables = m_eclipseState.getSgfnTables();
+            const std::vector<SwfnTable>& swfnTables = tables->getSwfnTables();
+            const std::vector<SgfnTable>& sgfnTables = tables->getSgfnTables();
             assert(swfnTables.size() == numSatTables);
             assert(sgfnTables.size() == numSatTables);
             for (size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
@@ -247,8 +247,8 @@ protected:
 
         case SaturationFunctionFamily::FamilyII: {
             auto tables = m_eclipseState.getTables();
-            const std::vector<SwfnTable>& swfnTables = m_eclipseState.getSwfnTables();
-            const std::vector<SgfnTable>& sgfnTables = m_eclipseState.getSgfnTables();
+            const std::vector<SwfnTable>& swfnTables = tables->getSwfnTables();
+            const std::vector<SgfnTable>& sgfnTables = tables->getSgfnTables();
             const std::vector<Sof3Table>& sof3Tables = tables->getSof3Tables();
 
             for (size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
@@ -375,8 +375,8 @@ protected:
         }
         case SaturationFunctionFamily::FamilyII: {
             auto tables = m_eclipseState.getTables();
-            const std::vector<SwfnTable>& swfnTables = m_eclipseState.getSwfnTables();
-            const std::vector<SgfnTable>& sgfnTables = m_eclipseState.getSgfnTables();
+            const std::vector<SwfnTable>& swfnTables = tables->getSwfnTables();
+            const std::vector<SgfnTable>& sgfnTables = tables->getSgfnTables();
             const std::vector<Sof3Table>& sof3Tables = tables->getSof3Tables();
 
             for (size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
@@ -425,8 +425,8 @@ protected:
         const std::vector<SwofTable>& swofTables = tables->getSwofTables();
         const std::vector<SgofTable>& sgofTables = tables->getSgofTables();
         const std::vector<SlgofTable>& slgofTables = tables->getSlgofTables();
-        const std::vector<SwfnTable>& swfnTables = m_eclipseState.getSwfnTables();
-        const std::vector<SgfnTable>& sgfnTables = m_eclipseState.getSgfnTables();
+        const std::vector<SwfnTable>& swfnTables = tables->getSwfnTables();
+        const std::vector<SgfnTable>& sgfnTables = tables->getSgfnTables();
         const std::vector<Sof3Table>& sof3Tables = tables->getSof3Tables();
 
         bool family1 = (!sgofTables.empty() || !slgofTables.empty()) && !swofTables.empty();

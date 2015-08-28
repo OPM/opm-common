@@ -33,6 +33,9 @@ namespace Opm {
         initSimpleTables(deck, "SOF3", m_sof3Tables);
         initSimpleTables(deck, "PVDG", m_pvdgTables);
         initSimpleTables(deck, "PVDO", m_pvdoTables);
+        initSimpleTables(deck, "SWFN", m_swfnTables);
+        initSimpleTables(deck, "SGFN", m_sgfnTables);
+        initSimpleTables(deck, "SSFN", m_ssfnTables);
     }
 
 
@@ -99,6 +102,18 @@ namespace Opm {
 
     const std::vector<PvdoTable>& Tables::getPvdoTables() const {
         return m_pvdoTables;
+    }
+
+    const std::vector<SwfnTable>& Tables::getSwfnTables() const {
+        return m_swfnTables;
+    }
+
+    const std::vector<SgfnTable>& Tables::getSgfnTables() const {
+        return m_sgfnTables;
+    }
+
+    const std::vector<SsfnTable>& Tables::getSsfnTables() const {
+        return m_ssfnTables;
     }
 
     void Tables::complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) const {

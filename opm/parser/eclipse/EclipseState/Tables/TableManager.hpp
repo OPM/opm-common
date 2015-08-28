@@ -30,6 +30,9 @@
 #include <opm/parser/eclipse/EclipseState/Tables/Sof3Table.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvdgTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvdoTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SwfnTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SgfnTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SsfnTable.hpp>
 
 
 namespace Opm {
@@ -47,6 +50,10 @@ namespace Opm {
         const std::vector<SlgofTable>& getSlgofTables() const;
         const std::vector<PvdgTable>& getPvdgTables() const;
         const std::vector<PvdoTable>& getPvdoTables() const;
+        const std::vector<SwfnTable>& getSwfnTables() const;
+        const std::vector<SgfnTable>& getSgfnTables() const;
+        const std::vector<SsfnTable>& getSsfnTables() const;
+
     private:
         void complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) const;
 
@@ -84,6 +91,9 @@ namespace Opm {
             }
         }
 
+        std::vector<SwfnTable> m_swfnTables;
+        std::vector<SgfnTable> m_sgfnTables;
+        std::vector<SsfnTable> m_ssfnTables;
         std::vector<PvdgTable> m_pvdgTables;
         std::vector<PvdoTable> m_pvdoTables;
         std::vector<Sof2Table> m_sof2Tables;
