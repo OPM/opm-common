@@ -246,9 +246,10 @@ protected:
         }
 
         case SaturationFunctionFamily::FamilyII: {
+            auto tables = m_eclipseState.getTables();
             const std::vector<SwfnTable>& swfnTables = m_eclipseState.getSwfnTables();
             const std::vector<SgfnTable>& sgfnTables = m_eclipseState.getSgfnTables();
-            const std::vector<Sof3Table>& sof3Tables = m_eclipseState.getSof3Tables();
+            const std::vector<Sof3Table>& sof3Tables = tables->getSof3Tables();
 
             for (size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
                 // find the critical water saturation
@@ -373,9 +374,10 @@ protected:
             break;
         }
         case SaturationFunctionFamily::FamilyII: {
+            auto tables = m_eclipseState.getTables();
             const std::vector<SwfnTable>& swfnTables = m_eclipseState.getSwfnTables();
             const std::vector<SgfnTable>& sgfnTables = m_eclipseState.getSgfnTables();
-            const std::vector<Sof3Table>& sof3Tables = m_eclipseState.getSof3Tables();
+            const std::vector<Sof3Table>& sof3Tables = tables->getSof3Tables();
 
             for (size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
                 // find the maximum output values of the oil-gas system
@@ -425,7 +427,7 @@ protected:
         const std::vector<SlgofTable>& slgofTables = tables->getSlgofTables();
         const std::vector<SwfnTable>& swfnTables = m_eclipseState.getSwfnTables();
         const std::vector<SgfnTable>& sgfnTables = m_eclipseState.getSgfnTables();
-        const std::vector<Sof3Table>& sof3Tables = m_eclipseState.getSof3Tables();
+        const std::vector<Sof3Table>& sof3Tables = tables->getSof3Tables();
 
         bool family1 = (!sgofTables.empty() || !slgofTables.empty()) && !swofTables.empty();
         bool family2 = !swfnTables.empty() && !sgfnTables.empty() && !sof3Tables.empty();

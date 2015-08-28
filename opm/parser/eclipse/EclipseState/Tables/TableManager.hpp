@@ -26,6 +26,8 @@
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SlgofTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/Sof2Table.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/Sof3Table.hpp>
 
 
 namespace Opm {
@@ -36,6 +38,8 @@ namespace Opm {
 
 
         std::shared_ptr<const Tabdims> getTabdims() const;
+        const std::vector<Sof2Table>& getSof2Tables() const;
+        const std::vector<Sof3Table>& getSof3Tables() const;
         const std::vector<SwofTable>& getSwofTables() const;
         const std::vector<SgofTable>& getSgofTables() const;
         const std::vector<SlgofTable>& getSlgofTables() const;
@@ -76,6 +80,8 @@ namespace Opm {
             }
         }
 
+        std::vector<Sof2Table> m_sof2Tables;
+        std::vector<Sof3Table> m_sof3Tables;
         std::vector<SgofTable> m_sgofTables;
         std::vector<SwofTable> m_swofTables;
         std::vector<SlgofTable> m_slgofTables;
