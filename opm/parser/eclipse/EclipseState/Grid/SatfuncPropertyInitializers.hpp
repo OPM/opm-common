@@ -144,7 +144,7 @@ protected:
     void findCriticalPoints( ) const {
 
         auto tabdims = m_eclipseState.getTabdims();
-        int numSatTables = tabdims->getNumSatTables();
+        size_t numSatTables = tabdims->getNumSatTables();
 
         m_criticalWaterSat.resize( numSatTables , 0 );
         m_criticalGasSat.resize( numSatTables , 0 );
@@ -156,7 +156,7 @@ protected:
         {
             const std::vector<SwofTable>& swofTables = m_eclipseState.getSwofTables();
 
-            for (int tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
+            for (size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
                 // find the critical water saturation
                 int numRows = swofTables[tableIdx].numRows();
                 const auto &krwCol = swofTables[tableIdx].getKrwColumn();
@@ -184,7 +184,7 @@ protected:
             if (!m_eclipseState.getSgofTables().empty()) {
                 const std::vector<SgofTable>& sgofTables = m_eclipseState.getSgofTables();
 
-                for (int tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
+                for (size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
                     // find the critical gas saturation
                     int numRows = sgofTables[tableIdx].numRows();
                     const auto &krgCol = sgofTables[tableIdx].getKrgColumn();
@@ -248,7 +248,7 @@ protected:
             const std::vector<SgfnTable>& sgfnTables = m_eclipseState.getSgfnTables();
             const std::vector<Sof3Table>& sof3Tables = m_eclipseState.getSof3Tables();
 
-            for (int tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
+            for (size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
                 // find the critical water saturation
                 int numRows = swfnTables[tableIdx].numRows();
                 const auto &krwCol = swfnTables[tableIdx].getKrwColumn();
