@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(TestCOMPORD) {
         "  10 10 10 / \n"
         "SCHEDULE\n"
         "COMPORD\n"
-        "  '*'  'INPUT' /\n"
+        "  '*'  'DEPTH' /\n"
         "/\n";
 
     ParseMode parseMode;
