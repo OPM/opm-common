@@ -40,15 +40,21 @@ namespace Opm {
         DeckTimeStepPtr currentTimeStep = std::make_shared<DeckTimeStep>();
 
         for (auto iter = begin(); iter != end(); ++iter) {  //Loop keywords in schedule section
-           auto keyword = *iter;
-           if ((keyword->name() == "TSTEP") || (keyword->name() == "DATES")) {
-               for (auto key_iter = keyword->begin(); key_iter != keyword->end(); ++key_iter) {
+            auto keyword = *iter;
+            if (keyword->name() == "TSTEP") {
+                DeckItemPtr items = keyword->getDataRecord()->getDataItem();
+                for (size_t item_iter = 0; item_iter < items->size(); ++item_iter) {
                    m_decktimesteps.push_back(currentTimeStep);
                    currentTimeStep = std::make_shared<DeckTimeStep>();
-               }
-           } else {
-                 currentTimeStep->addKeyword(keyword);
-           }
+                }
+            } else if (keyword->name() == "DATES") {
+                for (auto record_iter = keyword->begin(); record_iter != keyword->end(); ++record_iter ) {
+                    m_decktimesteps.push_back(currentTimeStep);
+                    currentTimeStep = std::make_shared<DeckTimeStep>();
+                }
+            } else {
+                currentTimeStep->addKeyword(keyword);
+            }
         }
         //push last step
         m_decktimesteps.push_back(currentTimeStep);

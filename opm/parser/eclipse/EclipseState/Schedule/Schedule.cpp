@@ -24,9 +24,11 @@
 
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
+#include <opm/parser/eclipse/Deck/SCHEDULESection.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
@@ -111,7 +113,7 @@ namespace Opm {
             }
 
             if (keyword->name() == "WELSPECS") {
-                handleWELSPECS(keyword, currentStep);
+                handleWELSPECS(section, keyword, currentStep);
             }
 
             if (keyword->name() == "WCONHIST")
@@ -235,8 +237,8 @@ namespace Opm {
     void Schedule::handleCOMPORD(const ParseMode& parseMode, std::shared_ptr<const DeckKeyword> compordKeyword, size_t /* currentStep */) {
         for (const auto record : (*compordKeyword)) {
             auto methodItem = record->getItem<ParserKeywords::COMPORD::ORDER_TYPE>();
-            if (methodItem->getString(0) != "TRACK") {
-                std::string msg = "The COMPORD keyword only handles 'TRACK' order.";
+            if ((methodItem->getString(0) != "TRACK")  && (methodItem->getString(0) != "INPUT")) {
+                std::string msg = "The COMPORD keyword only handles 'TRACK' or 'INPUT' order.";
                 parseMode.handleError( ParseMode::UNSUPPORTED_COMPORD_TYPE , msg );
             }
         }
@@ -244,7 +246,7 @@ namespace Opm {
 
 
 
-    void Schedule::handleWELSPECS(DeckKeywordConstPtr keyword, size_t currentStep) {
+    void Schedule::handleWELSPECS(std::shared_ptr<const SCHEDULESection> section, DeckKeywordConstPtr keyword, size_t currentStep) {
         bool needNewTree = false;
         GroupTreePtr newTree = m_rootGroupTree->get(currentStep)->deepCopy();
 
@@ -256,8 +258,25 @@ namespace Opm {
             if (!hasGroup(groupName))
                 addGroup(groupName , currentStep);
 
-            if (!hasWell(wellName))
-                addWell(wellName, record, currentStep);
+            if (!hasWell(wellName)) {
+                WellCompletion::CompletionOrderEnum wellCompletionOrder = WellCompletion::TRACK;
+
+                DeckTimeStepConstPtr deckTimeStep = section->getDeckTimeStep(currentStep);
+                if (deckTimeStep->hasKeyword("COMPORD")) {
+                    DeckKeywordConstPtr keyword = deckTimeStep->getKeyword("COMPORD");
+
+                    for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
+                        DeckRecordConstPtr record = keyword->getRecord(recordNr);
+
+                        const std::string& wellNamePattern = record->getItem(0)->getTrimmedString(0);
+                        if (Well::wellNameInWellNamePattern(wellName, wellNamePattern)) {
+                            const std::string& compordString = record->getItem(1)->getTrimmedString(0);
+                            wellCompletionOrder = WellCompletion::CompletionOrderEnumFromString(compordString);
+                        }
+                    }
+                }
+                addWell(wellName, record, currentStep, wellCompletionOrder);
+            }
 
             WellConstPtr currentWell = getWell(wellName);
             checkWELSPECSConsistency(currentWell, keyword, recordNr);
@@ -1190,7 +1209,7 @@ namespace Opm {
         return m_rootGroupTree->get(timeStep);
     }
 
-    void Schedule::addWell(const std::string& wellName, DeckRecordConstPtr record, size_t timeStep) {
+    void Schedule::addWell(const std::string& wellName, DeckRecordConstPtr record, size_t timeStep, WellCompletion::CompletionOrderEnum wellCompletionOrder) {
         // We change from eclipse's 1 - n, to a 0 - n-1 solution
         int headI = record->getItem("HEAD_I")->getInt(0) - 1;
         int headJ = record->getItem("HEAD_J")->getInt(0) - 1;
@@ -1202,7 +1221,7 @@ namespace Opm {
         if (refDepthItem->hasValue(0))
             refDepth.setValue( refDepthItem->getSIDouble(0));
 
-        well = std::make_shared<Well>(wellName, m_grid , headI, headJ, refDepth, preferredPhase, m_timeMap , timeStep);
+        well = std::make_shared<Well>(wellName, m_grid , headI, headJ, refDepth, preferredPhase, m_timeMap , timeStep, wellCompletionOrder);
         m_wells.insert( wellName  , well);
         m_events.addEvent( ScheduleEvents::NEW_WELL , timeStep );
     }
