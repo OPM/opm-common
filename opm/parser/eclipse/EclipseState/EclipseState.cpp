@@ -212,14 +212,6 @@ namespace Opm {
         return m_plydhflfTables;
     }
 
-    const std::vector<PvdgTable>& EclipseState::getPvdgTables() const {
-        return m_pvdgTables;
-    }
-
-    const std::vector<PvdoTable>& EclipseState::getPvdoTables() const {
-        return m_pvdoTables;
-    }
-
     const std::vector<PvtgTable>& EclipseState::getPvtgTables() const {
         return m_pvtgTables;
     }
@@ -327,8 +319,6 @@ namespace Opm {
         initSimpleTables(deck, "PLYROCK", m_plyrockTables);
         initSimpleTables(deck, "PLYVISC", m_plyviscTables);
         initSimpleTables(deck, "PLYDHFLF", m_plydhflfTables);
-        initSimpleTables(deck, "PVDG", m_pvdgTables);
-        initSimpleTables(deck, "PVDO", m_pvdoTables);
         initSimpleTables(deck, "RSVD", m_rsvdTables);
         initSimpleTables(deck, "RVVD", m_rvvdTables);
         initSimpleTables(deck, "SWFN", m_swfnTables);

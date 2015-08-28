@@ -46,8 +46,6 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PlyviscTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyshlogTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlydhflfTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/PvdgTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/PvdoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvdsTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
@@ -128,8 +126,6 @@ namespace Opm {
         const std::vector<PlyviscTable>& getPlyviscTables() const;
         const std::vector<PlydhflfTable>& getPlydhflfTables() const;
         const std::vector<PlyshlogTable>& getPlyshlogTables() const;
-        const std::vector<PvdgTable>& getPvdgTables() const;
-        const std::vector<PvdoTable>& getPvdoTables() const;
         const std::vector<PvtgTable>& getPvtgTables() const;
         const std::vector<PvdsTable>& getPvdsTables() const;
         const std::vector<PvtoTable>& getPvtoTables() const;
@@ -280,8 +276,6 @@ namespace Opm {
         std::vector<PlyviscTable> m_plyviscTables;
         std::vector<PlydhflfTable> m_plydhflfTables;
         std::vector<PlyshlogTable> m_plyshlogTables;
-        std::vector<PvdgTable> m_pvdgTables;
-        std::vector<PvdoTable> m_pvdoTables;
         std::vector<PvtgTable> m_pvtgTables;
         std::vector<PvdsTable> m_pvdsTables;
         std::vector<PvtoTable> m_pvtoTables;
