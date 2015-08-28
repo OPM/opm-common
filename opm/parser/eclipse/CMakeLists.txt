@@ -45,6 +45,8 @@ Deck/DeckDoubleItem.cpp
 Deck/DeckFloatItem.cpp
 Deck/DeckStringItem.cpp
 Deck/Section.cpp
+Deck/SCHEDULESection.cpp
+Deck/DeckTimeStep.cpp
 )
 
 set( parser_source
@@ -118,9 +120,8 @@ EclipseState/Grid/NNC.cpp
 EclipseState/InitConfig/InitConfig.cpp
 EclipseState/SimulationConfig/SimulationConfig.cpp
 EclipseState/SimulationConfig/ThresholdPressure.cpp
-#
 EclipseState/IOConfig/IOConfig.cpp)
-
+#
 
 set( HEADER_FILES
 OpmLog/LogBackend.hpp
@@ -146,6 +147,8 @@ Deck/DeckDoubleItem.hpp
 Deck/DeckFloatItem.hpp
 Deck/DeckStringItem.hpp
 Deck/Section.hpp
+Deck/SCHEDULESection.hpp
+Deck/DeckTimeStep.hpp
 #
 Parser/ParserEnums.hpp
 Parser/ParserKeyword.hpp 
@@ -210,7 +213,6 @@ EclipseState/Grid/NNC.hpp
 EclipseState/InitConfig/InitConfig.hpp
 EclipseState/SimulationConfig/SimulationConfig.hpp
 EclipseState/SimulationConfig/ThresholdPressure.hpp
-#
 EclipseState/IOConfig/IOConfig.hpp
 #
 EclipseState/Tables/Tabdims.hpp

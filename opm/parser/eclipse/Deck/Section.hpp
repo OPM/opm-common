@@ -30,6 +30,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
+
 namespace Opm {
 
 class Section : public Deck
@@ -90,11 +91,6 @@ class Section : public Deck
     class SOLUTIONSection : public Section {
     public:
         SOLUTIONSection(DeckConstPtr deck) : Section(deck, "SOLUTION") {}
-    };
-
-    class SCHEDULESection : public Section {
-    public:
-        SCHEDULESection(DeckConstPtr deck) : Section(deck, "SCHEDULE") {}
     };
 }
 
