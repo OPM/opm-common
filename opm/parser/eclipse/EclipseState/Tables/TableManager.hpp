@@ -33,7 +33,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/SwfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SsfnTable.hpp>
-
+#include <opm/parser/eclipse/EclipseState/Tables/PvdsTable.hpp>
 
 namespace Opm {
 
@@ -53,6 +53,7 @@ namespace Opm {
         const std::vector<SwfnTable>& getSwfnTables() const;
         const std::vector<SgfnTable>& getSgfnTables() const;
         const std::vector<SsfnTable>& getSsfnTables() const;
+        const std::vector<PvdsTable>& getPvdsTables() const;
 
     private:
         void complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) const;
@@ -91,6 +92,7 @@ namespace Opm {
             }
         }
 
+        std::vector<PvdsTable> m_pvdsTables;
         std::vector<SwfnTable> m_swfnTables;
         std::vector<SgfnTable> m_sgfnTables;
         std::vector<SsfnTable> m_ssfnTables;

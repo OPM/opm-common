@@ -36,6 +36,7 @@ namespace Opm {
         initSimpleTables(deck, "SWFN", m_swfnTables);
         initSimpleTables(deck, "SGFN", m_sgfnTables);
         initSimpleTables(deck, "SSFN", m_ssfnTables);
+        initSimpleTables(deck, "PVDS", m_pvdsTables);
     }
 
 
@@ -115,6 +116,11 @@ namespace Opm {
     const std::vector<SsfnTable>& Tables::getSsfnTables() const {
         return m_ssfnTables;
     }
+
+    const std::vector<PvdsTable>& Tables::getPvdsTables() const {
+        return m_pvdsTables;
+    }
+
 
     void Tables::complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) const {
         OpmLog::addMessage(Log::MessageType::Error, "The " + keywordName + " keyword must be unique in the deck. Ignoring all!");
