@@ -164,24 +164,6 @@ namespace Opm {
         return m_tables;
     }
 
-    const std::vector<EnkrvdTable>& EclipseState::getEnkrvdTables() const {
-        return m_enkrvdTables;
-    }
-
-    const std::vector<EnptvdTable>& EclipseState::getEnptvdTables() const {
-        return m_enptvdTables;
-    }
-
-
-    const std::vector<ImkrvdTable>& EclipseState::getImkrvdTables() const {
-        return m_imkrvdTables;
-    }
-
-    const std::vector<ImptvdTable>& EclipseState::getImptvdTables() const {
-        return m_imptvdTables;
-    }
-
-
 
     const std::vector<PvtgTable>& EclipseState::getPvtgTables() const {
         return m_pvtgTables;
@@ -190,14 +172,6 @@ namespace Opm {
 
     const std::vector<PvtoTable>& EclipseState::getPvtoTables() const {
         return m_pvtoTables;
-    }
-
-    const std::vector<RsvdTable>& EclipseState::getRsvdTables() const {
-        return m_rsvdTables;
-    }
-
-    const std::vector<RvvdTable>& EclipseState::getRvvdTables() const {
-        return m_rvvdTables;
     }
 
 
@@ -255,13 +229,6 @@ namespace Opm {
 
     void EclipseState::initTables(DeckConstPtr deck) {
         m_tables = std::make_shared<const Tables>( *deck );
-        initSimpleTables(deck, "ENKRVD", m_enkrvdTables);
-        initSimpleTables(deck, "ENPTVD", m_enptvdTables);
-        initSimpleTables(deck, "IMKRVD", m_imkrvdTables);
-        initSimpleTables(deck, "IMPTVD", m_imptvdTables);
-        initSimpleTables(deck, "RSVD", m_rsvdTables);
-        initSimpleTables(deck, "RVVD", m_rvvdTables);
-
         initVFPProdTables(deck, m_vfpprodTables);
         initVFPInjTables(deck,  m_vfpinjTables);
 

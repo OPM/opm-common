@@ -45,6 +45,12 @@
 #include <opm/parser/eclipse/EclipseState/Tables/GasvisctTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RtempvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RocktabTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/RsvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/RvvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/EnkrvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/EnptvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/ImkrvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/ImptvdTable.hpp>
 
 
 namespace Opm {
@@ -77,6 +83,12 @@ namespace Opm {
         const std::vector<OilvisctTable>& getOilvisctTables() const;
         const std::vector<GasvisctTable>& getGasvisctTables() const;
         const std::vector<RtempvdTable>& getRtempvdTables() const;
+        const std::vector<EnkrvdTable>& getEnkrvdTables() const;
+        const std::vector<EnptvdTable>& getEnptvdTables() const;
+        const std::vector<ImkrvdTable>& getImkrvdTables() const;
+        const std::vector<ImptvdTable>& getImptvdTables() const;
+        const std::vector<RsvdTable>& getRsvdTables() const;
+        const std::vector<RvvdTable>& getRvvdTables() const;
     private:
         void complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) const;
 
@@ -145,6 +157,12 @@ namespace Opm {
         std::vector<OilvisctTable> m_oilvisctTables;
         std::vector<GasvisctTable> m_gasvisctTables;
         std::vector<RtempvdTable> m_rtempvdTables;
+        std::vector<EnkrvdTable> m_enkrvdTables;
+        std::vector<EnptvdTable> m_enptvdTables;
+        std::vector<ImkrvdTable> m_imkrvdTables;
+        std::vector<ImptvdTable> m_imptvdTables;
+        std::vector<RsvdTable> m_rsvdTables;
+        std::vector<RvvdTable> m_rvvdTables;
         std::shared_ptr<Tabdims> m_tabdims;
     };
 }

@@ -44,6 +44,13 @@ namespace Opm {
         initSimpleTables(deck, "PLYDHFLF", m_plydhflfTables);
         initSimpleTables(deck, "OILVISCT", m_oilvisctTables);
         initSimpleTables(deck, "WATVISCT", m_watvisctTables);
+        initSimpleTables(deck, "ENKRVD", m_enkrvdTables);
+        initSimpleTables(deck, "ENPTVD", m_enptvdTables);
+        initSimpleTables(deck, "IMKRVD", m_imkrvdTables);
+        initSimpleTables(deck, "IMPTVD", m_imptvdTables);
+        initSimpleTables(deck, "RSVD", m_rsvdTables);
+        initSimpleTables(deck, "RVVD", m_rvvdTables);
+
 
         initPlyshlogTables(deck, "PLYSHLOG", m_plyshlogTables);
         initRocktabTables(deck);
@@ -282,6 +289,33 @@ namespace Opm {
 
     const std::vector<RtempvdTable>& Tables::getRtempvdTables() const {
         return m_rtempvdTables;
+    }
+
+
+    const std::vector<EnkrvdTable>& Tables::getEnkrvdTables() const {
+        return m_enkrvdTables;
+    }
+
+    const std::vector<EnptvdTable>& Tables::getEnptvdTables() const {
+        return m_enptvdTables;
+    }
+
+
+    const std::vector<ImkrvdTable>& Tables::getImkrvdTables() const {
+        return m_imkrvdTables;
+    }
+
+    const std::vector<ImptvdTable>& Tables::getImptvdTables() const {
+        return m_imptvdTables;
+    }
+
+
+    const std::vector<RsvdTable>& Tables::getRsvdTables() const {
+        return m_rsvdTables;
+    }
+
+    const std::vector<RvvdTable>& Tables::getRvvdTables() const {
+        return m_rvvdTables;
     }
 
 

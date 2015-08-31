@@ -34,14 +34,8 @@
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Tables/Tables.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/EnkrvdTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/EnptvdTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/ImkrvdTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/ImptvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/RsvdTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/RvvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/VFPInjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
@@ -99,14 +93,8 @@ namespace Opm {
         // the tables used by the deck. If the tables had some defaulted data in the
         // deck, the objects returned here exhibit the correct values. If the table is
         // not present in the deck, the corresponding vector is of size zero.
-        const std::vector<EnkrvdTable>& getEnkrvdTables() const;
-        const std::vector<EnptvdTable>& getEnptvdTables() const;
-        const std::vector<ImkrvdTable>& getImkrvdTables() const;
-        const std::vector<ImptvdTable>& getImptvdTables() const;
         const std::vector<PvtgTable>& getPvtgTables() const;
         const std::vector<PvtoTable>& getPvtoTables() const;
-        const std::vector<RsvdTable>& getRsvdTables() const;
-        const std::vector<RvvdTable>& getRvvdTables() const;
         const std::map<int, VFPProdTable>& getVFPProdTables() const;
         const std::map<int, VFPInjTable>& getVFPInjTables() const;
         size_t getNumPhases() const;
@@ -225,14 +213,8 @@ namespace Opm {
         SimulationConfigConstPtr m_simulationConfig;
 
         std::shared_ptr<const Tables> m_tables;
-        std::vector<EnkrvdTable> m_enkrvdTables;
-        std::vector<EnptvdTable> m_enptvdTables;
-        std::vector<ImkrvdTable> m_imkrvdTables;
-        std::vector<ImptvdTable> m_imptvdTables;
         std::vector<PvtgTable> m_pvtgTables;
         std::vector<PvtoTable> m_pvtoTables;
-        std::vector<RsvdTable> m_rsvdTables;
-        std::vector<RvvdTable> m_rvvdTables;
         std::map<int, VFPProdTable> m_vfpprodTables;
         std::map<int, VFPInjTable> m_vfpinjTables;
 

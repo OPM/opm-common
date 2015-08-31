@@ -544,7 +544,7 @@ public:
         // sampling points. Both of these are outside the scope of opm-parser, so we just
         // assign a NaN in this case...
         bool useEnptvd = this->m_deck.hasKeyword("ENPTVD");
-        const auto& enptvdTables = this->m_eclipseState.getEnptvdTables();
+        const auto& enptvdTables = tables->getEnptvdTables();
         for (size_t cellIdx = 0; cellIdx < eclipseGrid->getCartesianSize(); cellIdx++) {
             int satTableIdx = satnum->iget( cellIdx ) - 1;
             int endNum = endnum->iget( cellIdx ) - 1;
@@ -599,7 +599,7 @@ public:
         // sampling points. Both of these are outside the scope of opm-parser, so we just
         // assign a NaN in this case...
         bool useImptvd = this->m_deck.hasKeyword("IMPTVD");
-        const auto& imptvdTables = this->m_eclipseState.getImptvdTables();
+        const auto& imptvdTables = tables->getImptvdTables();
         for (size_t cellIdx = 0; cellIdx < eclipseGrid->getCartesianSize(); cellIdx++) {
             int imbTableIdx = imbnum->iget( cellIdx ) - 1;
             int endNum = endnum->iget( cellIdx ) - 1;
