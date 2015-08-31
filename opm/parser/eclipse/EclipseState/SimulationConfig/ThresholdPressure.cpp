@@ -59,7 +59,7 @@ namespace Opm {
     }
 
 
-    void ThresholdPressure::initThresholdPressure(const ParseMode& parseMode,
+    void ThresholdPressure::initThresholdPressure(const ParseMode& /* parseMode */,
                                                   std::shared_ptr<const RUNSPECSection> runspecSection,
                                                   std::shared_ptr<const SOLUTIONSection> solutionSection,
                                                   std::shared_ptr<GridProperties<int>> gridProperties) {
