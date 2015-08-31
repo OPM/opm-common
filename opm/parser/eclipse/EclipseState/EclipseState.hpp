@@ -36,8 +36,6 @@
 #include <opm/parser/eclipse/EclipseState/Tables/Tables.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/VFPInjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
@@ -95,8 +93,6 @@ namespace Opm {
         // not present in the deck, the corresponding vector is of size zero.
         const std::vector<PvtgTable>& getPvtgTables() const;
         const std::vector<PvtoTable>& getPvtoTables() const;
-        const std::map<int, VFPProdTable>& getVFPProdTables() const;
-        const std::map<int, VFPInjTable>& getVFPInjTables() const;
         size_t getNumPhases() const;
 
         // the unit system used by the deck. note that it is rarely needed to convert
@@ -174,11 +170,6 @@ namespace Opm {
             }
         }
 
-        void initVFPProdTables(DeckConstPtr deck,
-                               std::map<int, VFPProdTable>& tableMap);
-
-        void initVFPInjTables(DeckConstPtr deck,
-                              std::map<int, VFPInjTable>& tableMap);
 
         void setMULTFLT(std::shared_ptr<const Section> section) const;
         void initMULTREGT(DeckConstPtr deck);
@@ -215,8 +206,6 @@ namespace Opm {
         std::shared_ptr<const Tables> m_tables;
         std::vector<PvtgTable> m_pvtgTables;
         std::vector<PvtoTable> m_pvtoTables;
-        std::map<int, VFPProdTable> m_vfpprodTables;
-        std::map<int, VFPInjTable> m_vfpinjTables;
 
         std::set<enum Phase::PhaseEnum> phases;
         std::string m_title;

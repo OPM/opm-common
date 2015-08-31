@@ -51,11 +51,13 @@ namespace Opm {
         initSimpleTables(deck, "RSVD", m_rsvdTables);
         initSimpleTables(deck, "RVVD", m_rvvdTables);
 
-
         initPlyshlogTables(deck, "PLYSHLOG", m_plyshlogTables);
         initRocktabTables(deck);
         initRTempTables(deck);
         initGasvisctTables(deck, "GASVISCT", m_gasvisctTables);
+
+        initVFPProdTables(deck, m_vfpprodTables);
+        initVFPInjTables(deck,  m_vfpinjTables);
     }
 
 
@@ -195,6 +197,59 @@ namespace Opm {
         }
     }
 
+
+
+    void Tables::initVFPProdTables(const Deck& deck,
+                                          std::map<int, VFPProdTable>& tableMap) {
+        if (!deck.hasKeyword(ParserKeywords::VFPPROD::keywordName)) {
+            return;
+        }
+
+        int num_tables = deck.numKeywords(ParserKeywords::VFPPROD::keywordName);
+        const auto& keywords = deck.getKeywordList<ParserKeywords::VFPPROD>();
+        const auto unit_system = deck.getActiveUnitSystem();
+        for (int i=0; i<num_tables; ++i) {
+            const auto& keyword = keywords[i];
+
+            VFPProdTable table;
+            table.init(keyword, unit_system);
+
+            //Check that the table in question has a unique ID
+            int table_id = table.getTableNum();
+            if (tableMap.find(table_id) == tableMap.end()) {
+                tableMap.insert(std::make_pair(table_id, std::move(table)));
+            }
+            else {
+                throw std::invalid_argument("Duplicate table numbers for VFPPROD found");
+            }
+        }
+    }
+
+    void Tables::initVFPInjTables(const Deck& deck,
+                                        std::map<int, VFPInjTable>& tableMap) {
+        if (!deck.hasKeyword(ParserKeywords::VFPINJ::keywordName)) {
+            return;
+        }
+
+        int num_tables = deck.numKeywords(ParserKeywords::VFPINJ::keywordName);
+        const auto& keywords = deck.getKeywordList<ParserKeywords::VFPINJ>();
+        const auto unit_system = deck.getActiveUnitSystem();
+        for (int i=0; i<num_tables; ++i) {
+            const auto& keyword = keywords[i];
+
+            VFPInjTable table;
+            table.init(keyword, unit_system);
+
+            //Check that the table in question has a unique ID
+            int table_id = table.getTableNum();
+            if (tableMap.find(table_id) == tableMap.end()) {
+                tableMap.insert(std::make_pair(table_id, std::move(table)));
+            }
+            else {
+                throw std::invalid_argument("Duplicate table numbers for VFPINJ found");
+            }
+        }
+    }
 
     std::shared_ptr<const Tabdims> Tables::getTabdims() const {
         return m_tabdims;

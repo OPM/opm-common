@@ -175,16 +175,6 @@ namespace Opm {
     }
 
 
-    const std::map<int, VFPProdTable>& EclipseState::getVFPProdTables() const {
-        return m_vfpprodTables;
-    }
-
-    const std::map<int, VFPInjTable>& EclipseState::getVFPInjTables() const {
-        return m_vfpinjTables;
-    }
-
-
-
     ScheduleConstPtr EclipseState::getSchedule() const {
         return schedule;
     }
@@ -229,10 +219,6 @@ namespace Opm {
 
     void EclipseState::initTables(DeckConstPtr deck) {
         m_tables = std::make_shared<const Tables>( *deck );
-        initVFPProdTables(deck, m_vfpprodTables);
-        initVFPInjTables(deck,  m_vfpinjTables);
-
-
         initFullTables(deck, "PVTG", m_pvtgTables);
         initFullTables(deck, "PVTO", m_pvtoTables);
    }
@@ -428,57 +414,6 @@ namespace Opm {
 
 
 
-    void EclipseState::initVFPProdTables(DeckConstPtr deck,
-                                          std::map<int, VFPProdTable>& tableMap) {
-        if (!deck->hasKeyword(ParserKeywords::VFPPROD::keywordName)) {
-            return;
-        }
-
-        int num_tables = deck->numKeywords(ParserKeywords::VFPPROD::keywordName);
-        const auto& keywords = deck->getKeywordList<ParserKeywords::VFPPROD>();
-        const auto unit_system = deck->getActiveUnitSystem();
-        for (int i=0; i<num_tables; ++i) {
-            const auto& keyword = keywords[i];
-
-            VFPProdTable table;
-            table.init(keyword, unit_system);
-
-            //Check that the table in question has a unique ID
-            int table_id = table.getTableNum();
-            if (tableMap.find(table_id) == tableMap.end()) {
-                tableMap.insert(std::make_pair(table_id, std::move(table)));
-            }
-            else {
-                throw std::invalid_argument("Duplicate table numbers for VFPPROD found");
-            }
-        }
-    }
-
-    void EclipseState::initVFPInjTables(DeckConstPtr deck,
-                                        std::map<int, VFPInjTable>& tableMap) {
-        if (!deck->hasKeyword(ParserKeywords::VFPINJ::keywordName)) {
-            return;
-        }
-
-        int num_tables = deck->numKeywords(ParserKeywords::VFPINJ::keywordName);
-        const auto& keywords = deck->getKeywordList<ParserKeywords::VFPINJ>();
-        const auto unit_system = deck->getActiveUnitSystem();
-        for (int i=0; i<num_tables; ++i) {
-            const auto& keyword = keywords[i];
-
-            VFPInjTable table;
-            table.init(keyword, unit_system);
-
-            //Check that the table in question has a unique ID
-            int table_id = table.getTableNum();
-            if (tableMap.find(table_id) == tableMap.end()) {
-                tableMap.insert(std::make_pair(table_id, std::move(table)));
-            }
-            else {
-                throw std::invalid_argument("Duplicate table numbers for VFPINJ found");
-            }
-        }
-    }
 
     bool EclipseState::supportsGridProperty(const std::string& keyword, int enabledTypes) const {
         bool result = false;

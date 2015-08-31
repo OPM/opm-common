@@ -51,6 +51,8 @@
 #include <opm/parser/eclipse/EclipseState/Tables/EnptvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/ImkrvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/ImptvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/VFPInjTable.hpp>
 
 
 namespace Opm {
@@ -89,6 +91,8 @@ namespace Opm {
         const std::vector<ImptvdTable>& getImptvdTables() const;
         const std::vector<RsvdTable>& getRsvdTables() const;
         const std::vector<RvvdTable>& getRvvdTables() const;
+        const std::map<int, VFPProdTable>& getVFPProdTables() const;
+        const std::map<int, VFPInjTable>& getVFPInjTables() const;
     private:
         void complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) const;
 
@@ -102,6 +106,13 @@ namespace Opm {
         void initPlyshlogTables(const Deck& deck,
                                 const std::string& keywordName,
                                 std::vector<PlyshlogTable>& tableVector);
+
+
+        void initVFPProdTables(const Deck& deck,
+                               std::map<int, VFPProdTable>& tableMap);
+
+        void initVFPInjTables(const Deck& deck,
+                              std::map<int, VFPInjTable>& tableMap);
 
 
         template <class TableType>
@@ -135,6 +146,8 @@ namespace Opm {
             }
         }
 
+        std::map<int, VFPProdTable> m_vfpprodTables;
+        std::map<int, VFPInjTable> m_vfpinjTables;
         std::vector<PvdsTable> m_pvdsTables;
         std::vector<SwfnTable> m_swfnTables;
         std::vector<SgfnTable> m_sgfnTables;
