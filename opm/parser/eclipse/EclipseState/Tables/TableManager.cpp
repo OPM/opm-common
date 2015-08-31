@@ -46,6 +46,7 @@ namespace Opm {
         initSimpleTables(deck, "WATVISCT", m_watvisctTables);
 
         initRocktabTables(deck);
+        initRTempTables(deck);
         initGasvisctTables(deck, "GASVISCT", m_gasvisctTables);
     }
 
@@ -77,6 +78,21 @@ namespace Opm {
             nrpvt  = record->getItem("NRPVT")->getInt(0);
         }
         m_tabdims = std::make_shared<Tabdims>(ntsfun , ntpvt , nssfun , nppvt , ntfip , nrpvt);
+    }
+
+
+    void Tables::initRTempTables(const Deck& deck) {
+        // the temperature vs depth table. the problem here is that
+        // the TEMPVD (E300) and RTEMPVD (E300 + E100) keywords are
+        // synonymous, but we want to provide only a single cannonical
+        // API here, so we jump through some small hoops...
+        if (deck.hasKeyword("TEMPVD") && deck.hasKeyword("RTEMPVD"))
+            throw std::invalid_argument("The TEMPVD and RTEMPVD tables are mutually exclusive!");
+        else if (deck.hasKeyword("TEMPVD"))
+            initSimpleTables(deck, "TEMPVD", m_rtempvdTables);
+        else if (deck.hasKeyword("RTEMPVD"))
+            initSimpleTables(deck, "RTEMPVD", m_rtempvdTables);
+
     }
 
 
@@ -234,6 +250,10 @@ namespace Opm {
 
     const std::vector<RocktabTable>& Tables::getRocktabTables() const {
         return m_rocktabTables;
+    }
+
+    const std::vector<RtempvdTable>& Tables::getRtempvdTables() const {
+        return m_rtempvdTables;
     }
 
 

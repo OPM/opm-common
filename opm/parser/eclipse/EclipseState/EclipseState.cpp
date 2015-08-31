@@ -204,9 +204,6 @@ namespace Opm {
         return m_rvvdTables;
     }
 
-    const std::vector<RtempvdTable>& EclipseState::getRtempvdTables() const {
-        return m_rtempvdTables;
-    }
 
     const std::map<int, VFPProdTable>& EclipseState::getVFPProdTables() const {
         return m_vfpprodTables;
@@ -274,16 +271,6 @@ namespace Opm {
         initVFPProdTables(deck, m_vfpprodTables);
         initVFPInjTables(deck,  m_vfpinjTables);
 
-        // the temperature vs depth table. the problem here is that
-        // the TEMPVD (E300) and RTEMPVD (E300 + E100) keywords are
-        // synonymous, but we want to provide only a single cannonical
-        // API here, so we jump through some small hoops...
-        if (deck->hasKeyword("TEMPVD") && deck->hasKeyword("RTEMPVD"))
-            throw std::invalid_argument("The TEMPVD and RTEMPVD tables are mutually exclusive!");
-        else if (deck->hasKeyword("TEMPVD"))
-            initSimpleTables(deck, "TEMPVD", m_rtempvdTables);
-        else if (deck->hasKeyword("RTEMPVD"))
-            initSimpleTables(deck, "RTEMPVD", m_rtempvdTables);
 
         initFullTables(deck, "PVTG", m_pvtgTables);
         initFullTables(deck, "PVTO", m_pvtoTables);

@@ -102,8 +102,9 @@ public:
             return;
         }
 
+        auto tables = m_eclipseState.getTables();
         auto eclipseGrid = m_eclipseState.getEclipseGrid();
-        const std::vector<RtempvdTable>& rtempvdTables = m_eclipseState.getRtempvdTables();
+        const std::vector<RtempvdTable>& rtempvdTables = tables->getRtempvdTables();
         const std::vector<int>& eqlNum = m_eclipseState.getIntGridProperty("EQLNUM")->getData();
 
         for (size_t cellIdx = 0; cellIdx < eqlNum.size(); ++ cellIdx) {
