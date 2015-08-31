@@ -1286,7 +1286,7 @@ namespace Opm {
         if (wildcard_pos == wellNamePattern.length()-1) {
             for (auto wellIter = m_wells.begin(); wellIter != m_wells.end(); ++wellIter) {
                 WellPtr well = *wellIter;
-                if (wellNamePattern.compare (0, wildcard_pos, well->name(), 0, wildcard_pos) == 0) {
+                if (Well::wellNameInWellNamePattern(well->name(), wellNamePattern)) {
                     wells.push_back (well);
                 }
             }
