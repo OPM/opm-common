@@ -172,9 +172,6 @@ namespace Opm {
         return m_enptvdTables;
     }
 
-    const std::vector<GasvisctTable>& EclipseState::getGasvisctTables() const {
-        return m_gasvisctTables;
-    }
 
     const std::vector<ImkrvdTable>& EclipseState::getImkrvdTables() const {
         return m_imkrvdTables;
@@ -271,11 +268,6 @@ namespace Opm {
         initSimpleTables(deck, "IMPTVD", m_imptvdTables);
         initSimpleTables(deck, "RSVD", m_rsvdTables);
         initSimpleTables(deck, "RVVD", m_rvvdTables);
-
-        // the number of columns of the GASVSISCT tables depends on the value of the
-        // COMPS keyword...
-
-        initGasvisctTables(deck, "GASVISCT", m_gasvisctTables);
 
         initPlyshlogTables(deck, "PLYSHLOG", m_plyshlogTables);
 
@@ -486,35 +478,6 @@ namespace Opm {
     }
 
 
-    void EclipseState::initGasvisctTables(DeckConstPtr deck,
-                                          const std::string& keywordName,
-                                          std::vector<GasvisctTable>& tableVector) {
-        if (!deck->hasKeyword(keywordName))
-            return; // the table is not featured by the deck...
-
-        if (deck->numKeywords(keywordName) > 1) {
-            complainAboutAmbiguousKeyword(deck, keywordName);
-            return;
-        }
-
-        const auto& tableKeyword = deck->getKeyword(keywordName);
-        for (size_t tableIdx = 0; tableIdx < tableKeyword->size(); ++tableIdx) {
-            if (tableKeyword->getRecord(tableIdx)->getItem(0)->size() == 0) {
-                // for simple tables, an empty record indicates that the previous table
-                // should be copied...
-                if (tableIdx == 0) {
-                    std::string msg = "The first table for keyword " + keywordName + " must be explicitly defined! Ignoring keyword";
-                    OpmLog::addMessage(Log::MessageType::Error , Log::fileMessage(tableKeyword->getFileName(),tableKeyword->getLineNumber(),msg));
-                    return;
-                }
-                tableVector.push_back(tableVector.back());
-                continue;
-            }
-
-            tableVector.push_back(GasvisctTable());
-            tableVector[tableIdx].init(deck, tableKeyword, tableIdx);
-        }
-    }
 
     void EclipseState::initPlyshlogTables(DeckConstPtr deck,
                                           const std::string& keywordName,

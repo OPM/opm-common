@@ -37,7 +37,6 @@
 #include <opm/parser/eclipse/EclipseState/Tables/EnkrvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/EnptvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyshlogTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/GasvisctTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/ImkrvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/ImptvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
@@ -104,7 +103,6 @@ namespace Opm {
         // not present in the deck, the corresponding vector is of size zero.
         const std::vector<EnkrvdTable>& getEnkrvdTables() const;
         const std::vector<EnptvdTable>& getEnptvdTables() const;
-        const std::vector<GasvisctTable>& getGasvisctTables() const;
         const std::vector<ImkrvdTable>& getImkrvdTables() const;
         const std::vector<ImptvdTable>& getImptvdTables() const;
         const std::vector<PlyshlogTable>& getPlyshlogTables() const;
@@ -192,10 +190,6 @@ namespace Opm {
             }
         }
 
-        void initGasvisctTables(DeckConstPtr deck,
-                                const std::string& keywordName,
-                                std::vector<GasvisctTable>& tableVector);
-
         void initPlyshlogTables(DeckConstPtr deck,
                                 const std::string& keywordName,
                                 std::vector<PlyshlogTable>& tableVector);
@@ -241,7 +235,6 @@ namespace Opm {
         std::shared_ptr<const Tables> m_tables;
         std::vector<EnkrvdTable> m_enkrvdTables;
         std::vector<EnptvdTable> m_enptvdTables;
-        std::vector<GasvisctTable> m_gasvisctTables;
         std::vector<ImkrvdTable> m_imkrvdTables;
         std::vector<ImptvdTable> m_imptvdTables;
         std::vector<PlyshlogTable> m_plyshlogTables;

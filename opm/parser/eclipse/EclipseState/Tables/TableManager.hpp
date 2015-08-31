@@ -41,6 +41,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PlydhflfTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/OilvisctTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/WatvisctTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/GasvisctTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RocktabTable.hpp>
 
 
@@ -71,12 +72,15 @@ namespace Opm {
         const std::vector<RocktabTable>& getRocktabTables() const;
         const std::vector<WatvisctTable>& getWatvisctTables() const;
         const std::vector<OilvisctTable>& getOilvisctTables() const;
-
+        const std::vector<GasvisctTable>& getGasvisctTables() const;
     private:
         void complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) const;
 
         void initTabdims(const Deck& deck);
         void initRocktabTables(const Deck& deck);
+        void initGasvisctTables(const Deck& deck,
+                                const std::string& keywordName,
+                                std::vector<GasvisctTable>& tableVector);
 
 
         template <class TableType>
@@ -129,6 +133,7 @@ namespace Opm {
         std::vector<RocktabTable> m_rocktabTables;
         std::vector<WatvisctTable> m_watvisctTables;
         std::vector<OilvisctTable> m_oilvisctTables;
+        std::vector<GasvisctTable> m_gasvisctTables;
         std::shared_ptr<Tabdims> m_tabdims;
     };
 }

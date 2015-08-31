@@ -23,24 +23,24 @@
 
 namespace Opm {
     // forward declaration
-    class EclipseState;
+    class Tables;
 
     class GasvisctTable : protected SingleRecordTable {
         typedef SingleRecordTable ParentType;
 
-        friend class EclipseState;
+        friend class Tables;
         GasvisctTable() = default;
 
         /*!
          * \brief Read the GASVISCT keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckConstPtr deck, Opm::DeckKeywordConstPtr keyword, int recordIdx)
+        void init(const Deck& deck, Opm::DeckKeywordConstPtr keyword, int recordIdx)
         {
-            int numComponents = deck->getKeyword("COMPS")->getRecord(0)->getItem(0)->getInt(0);
+            int numComponents = deck.getKeyword("COMPS")->getRecord(0)->getItem(0)->getInt(0);
 
-            auto temperatureDimension = deck->getActiveUnitSystem()->getDimension("Temperature");
-            auto viscosityDimension = deck->getActiveUnitSystem()->getDimension("Viscosity");
+            auto temperatureDimension = deck.getActiveUnitSystem()->getDimension("Temperature");
+            auto viscosityDimension = deck.getActiveUnitSystem()->getDimension("Viscosity");
 
             // create the columns: temperature plus one viscosity column per component
             std::vector<std::string> columnNames;
