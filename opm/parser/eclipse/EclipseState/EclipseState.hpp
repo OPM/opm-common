@@ -39,7 +39,6 @@
 #include <opm/parser/eclipse/EclipseState/Tables/GasvisctTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/ImkrvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/ImptvdTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/OilvisctTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyadsTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlymaxTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyrockTable.hpp>
@@ -52,7 +51,6 @@
 #include <opm/parser/eclipse/EclipseState/Tables/RsvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RvvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RtempvdTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/WatvisctTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/VFPInjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
@@ -115,7 +113,6 @@ namespace Opm {
         const std::vector<GasvisctTable>& getGasvisctTables() const;
         const std::vector<ImkrvdTable>& getImkrvdTables() const;
         const std::vector<ImptvdTable>& getImptvdTables() const;
-        const std::vector<OilvisctTable>& getOilvisctTables() const;
         const std::vector<PlyadsTable>& getPlyadsTables() const;
         const std::vector<PlymaxTable>& getPlymaxTables() const;
         const std::vector<PlyrockTable>& getPlyrockTables() const;
@@ -128,7 +125,6 @@ namespace Opm {
         const std::vector<RsvdTable>& getRsvdTables() const;
         const std::vector<RvvdTable>& getRvvdTables() const;
         const std::vector<RtempvdTable>& getRtempvdTables() const;
-        const std::vector<WatvisctTable>& getWatvisctTables() const;
         const std::map<int, VFPProdTable>& getVFPProdTables() const;
         const std::map<int, VFPInjTable>& getVFPInjTables() const;
         size_t getNumPhases() const;
@@ -261,7 +257,6 @@ namespace Opm {
         std::vector<GasvisctTable> m_gasvisctTables;
         std::vector<ImkrvdTable> m_imkrvdTables;
         std::vector<ImptvdTable> m_imptvdTables;
-        std::vector<OilvisctTable> m_oilvisctTables;
         std::vector<PlyadsTable> m_plyadsTables;
         std::vector<PlymaxTable> m_plymaxTables;
         std::vector<PlyrockTable> m_plyrockTables;
@@ -274,7 +269,6 @@ namespace Opm {
         std::vector<RsvdTable> m_rsvdTables;
         std::vector<RvvdTable> m_rvvdTables;
         std::vector<RtempvdTable> m_rtempvdTables;
-        std::vector<WatvisctTable> m_watvisctTables;
         std::map<int, VFPProdTable> m_vfpprodTables;
         std::map<int, VFPInjTable> m_vfpinjTables;
 

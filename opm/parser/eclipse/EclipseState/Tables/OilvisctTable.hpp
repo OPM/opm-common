@@ -23,12 +23,12 @@
 
 namespace Opm {
     // forward declaration
-    class EclipseState;
+    class Tables;
 
     class OilvisctTable : protected SingleRecordTable {
         typedef SingleRecordTable ParentType;
 
-        friend class EclipseState;
+        friend class Tables;
         OilvisctTable() = default;
 
         /*!

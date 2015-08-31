@@ -184,10 +184,6 @@ namespace Opm {
         return m_imptvdTables;
     }
 
-    const std::vector<OilvisctTable>& EclipseState::getOilvisctTables() const {
-        return m_oilvisctTables;
-    }
-
     const std::vector<PlyadsTable>& EclipseState::getPlyadsTables() const {
         return m_plyadsTables;
     }
@@ -235,10 +231,6 @@ namespace Opm {
 
     const std::vector<RtempvdTable>& EclipseState::getRtempvdTables() const {
         return m_rtempvdTables;
-    }
-
-    const std::vector<WatvisctTable>& EclipseState::getWatvisctTables() const {
-        return m_watvisctTables;
     }
 
     const std::map<int, VFPProdTable>& EclipseState::getVFPProdTables() const {
@@ -299,7 +291,6 @@ namespace Opm {
         initSimpleTables(deck, "ENPTVD", m_enptvdTables);
         initSimpleTables(deck, "IMKRVD", m_imkrvdTables);
         initSimpleTables(deck, "IMPTVD", m_imptvdTables);
-        initSimpleTables(deck, "OILVISCT", m_oilvisctTables);
         initSimpleTables(deck, "PLYADS", m_plyadsTables);
         initSimpleTables(deck, "PLYMAX", m_plymaxTables);
         initSimpleTables(deck, "PLYROCK", m_plyrockTables);
@@ -307,7 +298,6 @@ namespace Opm {
         initSimpleTables(deck, "PLYDHFLF", m_plydhflfTables);
         initSimpleTables(deck, "RSVD", m_rsvdTables);
         initSimpleTables(deck, "RVVD", m_rvvdTables);
-        initSimpleTables(deck, "WATVISCT", m_watvisctTables);
 
         // the number of columns of the GASVSISCT tables depends on the value of the
         // COMPS keyword...

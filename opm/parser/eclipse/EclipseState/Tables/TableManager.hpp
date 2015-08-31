@@ -34,6 +34,9 @@
 #include <opm/parser/eclipse/EclipseState/Tables/SgfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SsfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvdsTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/OilvisctTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/WatvisctTable.hpp>
+
 
 namespace Opm {
 
@@ -54,6 +57,8 @@ namespace Opm {
         const std::vector<SgfnTable>& getSgfnTables() const;
         const std::vector<SsfnTable>& getSsfnTables() const;
         const std::vector<PvdsTable>& getPvdsTables() const;
+        const std::vector<WatvisctTable>& getWatvisctTables() const;
+        const std::vector<OilvisctTable>& getOilvisctTables() const;
 
     private:
         void complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) const;
@@ -103,6 +108,8 @@ namespace Opm {
         std::vector<SgofTable> m_sgofTables;
         std::vector<SwofTable> m_swofTables;
         std::vector<SlgofTable> m_slgofTables;
+        std::vector<WatvisctTable> m_watvisctTables;
+        std::vector<OilvisctTable> m_oilvisctTables;
         std::shared_ptr<Tabdims> m_tabdims;
     };
 }
