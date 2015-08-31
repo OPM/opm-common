@@ -23,11 +23,11 @@
 
 namespace Opm {
     // forward declaration
-    class EclipseState;
+    class Tables;
 
     class PlyshlogTable {
 
-        friend class EclipseState;
+        friend class Tables;
         PlyshlogTable() = default;
 
         /*!

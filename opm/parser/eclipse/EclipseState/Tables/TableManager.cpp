@@ -45,6 +45,7 @@ namespace Opm {
         initSimpleTables(deck, "OILVISCT", m_oilvisctTables);
         initSimpleTables(deck, "WATVISCT", m_watvisctTables);
 
+        initPlyshlogTables(deck, "PLYSHLOG", m_plyshlogTables);
         initRocktabTables(deck);
         initRTempTables(deck);
         initGasvisctTables(deck, "GASVISCT", m_gasvisctTables);
@@ -125,6 +126,29 @@ namespace Opm {
             tableVector[tableIdx].init(deck, tableKeyword, tableIdx);
         }
     }
+
+    void Tables::initPlyshlogTables(const Deck& deck,
+                                    const std::string& keywordName,
+                                    std::vector<PlyshlogTable>& tableVector){
+
+        if (!deck.hasKeyword(keywordName)) {
+            return;
+        }
+
+        if (!deck.numKeywords(keywordName)) {
+            complainAboutAmbiguousKeyword(deck, keywordName);
+            return;
+        }
+
+        const auto& keyword = deck.getKeyword(keywordName);
+
+        tableVector.push_back(PlyshlogTable());
+
+        tableVector[0].init(keyword);
+
+    }
+
+
 
 
     void Tables::initRocktabTables(const Deck& deck) {
@@ -246,6 +270,10 @@ namespace Opm {
 
     const std::vector<PlydhflfTable>& Tables::getPlydhflfTables() const {
         return m_plydhflfTables;
+    }
+
+    const std::vector<PlyshlogTable>& Tables::getPlyshlogTables() const {
+        return m_plyshlogTables;
     }
 
     const std::vector<RocktabTable>& Tables::getRocktabTables() const {

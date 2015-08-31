@@ -36,7 +36,6 @@
 #include <opm/parser/eclipse/EclipseState/Tables/Tables.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/EnkrvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/EnptvdTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/PlyshlogTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/ImkrvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/ImptvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
@@ -104,7 +103,6 @@ namespace Opm {
         const std::vector<EnptvdTable>& getEnptvdTables() const;
         const std::vector<ImkrvdTable>& getImkrvdTables() const;
         const std::vector<ImptvdTable>& getImptvdTables() const;
-        const std::vector<PlyshlogTable>& getPlyshlogTables() const;
         const std::vector<PvtgTable>& getPvtgTables() const;
         const std::vector<PvtoTable>& getPvtoTables() const;
         const std::vector<RsvdTable>& getRsvdTables() const;
@@ -188,10 +186,6 @@ namespace Opm {
             }
         }
 
-        void initPlyshlogTables(DeckConstPtr deck,
-                                const std::string& keywordName,
-                                std::vector<PlyshlogTable>& tableVector);
-
         void initVFPProdTables(DeckConstPtr deck,
                                std::map<int, VFPProdTable>& tableMap);
 
@@ -235,7 +229,6 @@ namespace Opm {
         std::vector<EnptvdTable> m_enptvdTables;
         std::vector<ImkrvdTable> m_imkrvdTables;
         std::vector<ImptvdTable> m_imptvdTables;
-        std::vector<PlyshlogTable> m_plyshlogTables;
         std::vector<PvtgTable> m_pvtgTables;
         std::vector<PvtoTable> m_pvtoTables;
         std::vector<RsvdTable> m_rsvdTables;

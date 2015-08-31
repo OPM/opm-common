@@ -182,10 +182,6 @@ namespace Opm {
     }
 
 
-    const std::vector<PlyshlogTable>& EclipseState::getPlyshlogTables() const {
-        return m_plyshlogTables;
-    }
-
 
     const std::vector<PvtgTable>& EclipseState::getPvtgTables() const {
         return m_pvtgTables;
@@ -265,8 +261,6 @@ namespace Opm {
         initSimpleTables(deck, "IMPTVD", m_imptvdTables);
         initSimpleTables(deck, "RSVD", m_rsvdTables);
         initSimpleTables(deck, "RVVD", m_rvvdTables);
-
-        initPlyshlogTables(deck, "PLYSHLOG", m_plyshlogTables);
 
         initVFPProdTables(deck, m_vfpprodTables);
         initVFPInjTables(deck,  m_vfpinjTables);
@@ -466,26 +460,6 @@ namespace Opm {
 
 
 
-    void EclipseState::initPlyshlogTables(DeckConstPtr deck,
-                                          const std::string& keywordName,
-                                          std::vector<PlyshlogTable>& tableVector){
-
-        if (!deck->hasKeyword(keywordName)) {
-            return;
-        }
-
-        if (!deck->numKeywords(keywordName)) {
-            complainAboutAmbiguousKeyword(deck, keywordName);
-            return;
-        }
-
-        const auto& keyword = deck->getKeyword(keywordName);
-
-        tableVector.push_back(PlyshlogTable());
-
-        tableVector[0].init(keyword);
-
-    }
 
     void EclipseState::initVFPProdTables(DeckConstPtr deck,
                                           std::map<int, VFPProdTable>& tableMap) {

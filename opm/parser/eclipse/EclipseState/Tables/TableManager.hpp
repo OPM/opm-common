@@ -39,6 +39,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PlyrockTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyviscTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlydhflfTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PlyshlogTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/OilvisctTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/WatvisctTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/GasvisctTable.hpp>
@@ -65,6 +66,7 @@ namespace Opm {
         const std::vector<SgfnTable>& getSgfnTables() const;
         const std::vector<SsfnTable>& getSsfnTables() const;
         const std::vector<PvdsTable>& getPvdsTables() const;
+        const std::vector<PlyshlogTable>& getPlyshlogTables() const;
         const std::vector<PlyadsTable>& getPlyadsTables() const;
         const std::vector<PlymaxTable>& getPlymaxTables() const;
         const std::vector<PlyrockTable>& getPlyrockTables() const;
@@ -84,6 +86,10 @@ namespace Opm {
         void initGasvisctTables(const Deck& deck,
                                 const std::string& keywordName,
                                 std::vector<GasvisctTable>& tableVector);
+
+        void initPlyshlogTables(const Deck& deck,
+                                const std::string& keywordName,
+                                std::vector<PlyshlogTable>& tableVector);
 
 
         template <class TableType>
@@ -133,6 +139,7 @@ namespace Opm {
         std::vector<PlyrockTable> m_plyrockTables;
         std::vector<PlyviscTable> m_plyviscTables;
         std::vector<PlydhflfTable> m_plydhflfTables;
+        std::vector<PlyshlogTable> m_plyshlogTables;
         std::vector<RocktabTable> m_rocktabTables;
         std::vector<WatvisctTable> m_watvisctTables;
         std::vector<OilvisctTable> m_oilvisctTables;
