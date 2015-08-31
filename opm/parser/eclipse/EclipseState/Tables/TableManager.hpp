@@ -51,6 +51,8 @@
 #include <opm/parser/eclipse/EclipseState/Tables/EnptvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/ImkrvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/ImptvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/VFPInjTable.hpp>
 
@@ -63,6 +65,12 @@ namespace Opm {
 
 
         std::shared_ptr<const Tabdims> getTabdims() const;
+
+        // the tables used by the deck. If the tables had some defaulted data in the
+        // deck, the objects returned here exhibit the correct values. If the table is
+        // not present in the deck, the corresponding vector is of size zero.
+        const std::vector<PvtgTable>& getPvtgTables() const;
+        const std::vector<PvtoTable>& getPvtoTables() const;
         const std::vector<Sof2Table>& getSof2Tables() const;
         const std::vector<Sof3Table>& getSof3Tables() const;
         const std::vector<SwofTable>& getSwofTables() const;
@@ -146,8 +154,33 @@ namespace Opm {
             }
         }
 
+
+        template <class TableType>
+        void initFullTables(const Deck& deck,
+                            const std::string& keywordName,
+                            std::vector<TableType>& tableVector) {
+            if (!deck.hasKeyword(keywordName))
+                return; // the table is not featured by the deck...
+
+            if (deck.numKeywords(keywordName) > 1) {
+                complainAboutAmbiguousKeyword(deck, keywordName);
+                return;
+            }
+
+            const auto& tableKeyword = deck.getKeyword(keywordName);
+
+            int numTables = TableType::numTables(tableKeyword);
+            for (int tableIdx = 0; tableIdx < numTables; ++tableIdx) {
+                tableVector.push_back(TableType());
+                tableVector[tableIdx].init(tableKeyword, tableIdx);
+            }
+        }
+
+
         std::map<int, VFPProdTable> m_vfpprodTables;
         std::map<int, VFPInjTable> m_vfpinjTables;
+        std::vector<PvtgTable> m_pvtgTables;
+        std::vector<PvtoTable> m_pvtoTables;
         std::vector<PvdsTable> m_pvdsTables;
         std::vector<SwfnTable> m_swfnTables;
         std::vector<SgfnTable> m_sgfnTables;

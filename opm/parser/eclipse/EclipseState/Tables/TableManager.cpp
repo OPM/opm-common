@@ -55,6 +55,8 @@ namespace Opm {
         initRocktabTables(deck);
         initRTempTables(deck);
         initGasvisctTables(deck, "GASVISCT", m_gasvisctTables);
+        initFullTables(deck, "PVTG", m_pvtgTables);
+        initFullTables(deck, "PVTO", m_pvtoTables);
 
         initVFPProdTables(deck, m_vfpprodTables);
         initVFPInjTables(deck,  m_vfpinjTables);
@@ -373,6 +375,14 @@ namespace Opm {
         return m_rvvdTables;
     }
 
+    const std::vector<PvtgTable>& Tables::getPvtgTables() const {
+        return m_pvtgTables;
+    }
+
+
+    const std::vector<PvtoTable>& Tables::getPvtoTables() const {
+        return m_pvtoTables;
+    }
 
     void Tables::complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) const {
         OpmLog::addMessage(Log::MessageType::Error, "The " + keywordName + " keyword must be unique in the deck. Ignoring all!");

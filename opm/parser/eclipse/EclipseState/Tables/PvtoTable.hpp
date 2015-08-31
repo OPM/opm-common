@@ -25,7 +25,7 @@
 
 namespace Opm {
     // forward declaration
-    class EclipseState;
+    class Tables;
 
     /*!
      * \brief Read the table for the PVTO and provide convenient access to it.
@@ -33,7 +33,7 @@ namespace Opm {
     class PvtoTable : public Opm::FullTable<Opm::PvtoOuterTable, Opm::PvtoInnerTable>
     {
         typedef Opm::FullTable<Opm::PvtoOuterTable, Opm::PvtoInnerTable> ParentType;
-        friend class EclipseState;
+        friend class Tables;
         using ParentType::init;
 
     public:

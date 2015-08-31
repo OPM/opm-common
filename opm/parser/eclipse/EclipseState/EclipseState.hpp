@@ -34,8 +34,6 @@
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Tables/Tables.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
@@ -88,11 +86,6 @@ namespace Opm {
         bool hasNNC() const;
 
         std::shared_ptr<const Tables> getTables() const;
-        // the tables used by the deck. If the tables had some defaulted data in the
-        // deck, the objects returned here exhibit the correct values. If the table is
-        // not present in the deck, the corresponding vector is of size zero.
-        const std::vector<PvtgTable>& getPvtgTables() const;
-        const std::vector<PvtoTable>& getPvtoTables() const;
         size_t getNumPhases() const;
 
         // the unit system used by the deck. note that it is rarely needed to convert
@@ -149,27 +142,6 @@ namespace Opm {
             }
         }
 
-        template <class TableType>
-        void initFullTables(DeckConstPtr deck,
-                            const std::string& keywordName,
-                            std::vector<TableType>& tableVector) {
-            if (!deck->hasKeyword(keywordName))
-                return; // the table is not featured by the deck...
-
-            if (deck->numKeywords(keywordName) > 1) {
-                complainAboutAmbiguousKeyword(deck, keywordName);
-                return;
-            }
-
-            const auto& tableKeyword = deck->getKeyword(keywordName);
-
-            int numTables = TableType::numTables(tableKeyword);
-            for (int tableIdx = 0; tableIdx < numTables; ++tableIdx) {
-                tableVector.push_back(TableType());
-                tableVector[tableIdx].init(tableKeyword, tableIdx);
-            }
-        }
-
 
         void setMULTFLT(std::shared_ptr<const Section> section) const;
         void initMULTREGT(DeckConstPtr deck);
@@ -204,8 +176,6 @@ namespace Opm {
         SimulationConfigConstPtr m_simulationConfig;
 
         std::shared_ptr<const Tables> m_tables;
-        std::vector<PvtgTable> m_pvtgTables;
-        std::vector<PvtoTable> m_pvtoTables;
 
         std::set<enum Phase::PhaseEnum> phases;
         std::string m_title;

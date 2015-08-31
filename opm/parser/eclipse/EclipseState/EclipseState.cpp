@@ -165,15 +165,6 @@ namespace Opm {
     }
 
 
-    const std::vector<PvtgTable>& EclipseState::getPvtgTables() const {
-        return m_pvtgTables;
-    }
-
-
-    const std::vector<PvtoTable>& EclipseState::getPvtoTables() const {
-        return m_pvtoTables;
-    }
-
 
     ScheduleConstPtr EclipseState::getSchedule() const {
         return schedule;
@@ -219,8 +210,6 @@ namespace Opm {
 
     void EclipseState::initTables(DeckConstPtr deck) {
         m_tables = std::make_shared<const Tables>( *deck );
-        initFullTables(deck, "PVTG", m_pvtgTables);
-        initFullTables(deck, "PVTO", m_pvtoTables);
    }
 
     void EclipseState::initIOConfig(DeckConstPtr deck) {
