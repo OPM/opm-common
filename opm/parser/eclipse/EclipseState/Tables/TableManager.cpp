@@ -37,6 +37,11 @@ namespace Opm {
         initSimpleTables(deck, "SGFN", m_sgfnTables);
         initSimpleTables(deck, "SSFN", m_ssfnTables);
         initSimpleTables(deck, "PVDS", m_pvdsTables);
+        initSimpleTables(deck, "PLYADS", m_plyadsTables);
+        initSimpleTables(deck, "PLYMAX", m_plymaxTables);
+        initSimpleTables(deck, "PLYROCK", m_plyrockTables);
+        initSimpleTables(deck, "PLYVISC", m_plyviscTables);
+        initSimpleTables(deck, "PLYDHFLF", m_plydhflfTables);
         initSimpleTables(deck, "OILVISCT", m_oilvisctTables);
         initSimpleTables(deck, "WATVISCT", m_watvisctTables);
     }
@@ -129,6 +134,26 @@ namespace Opm {
 
     const std::vector<WatvisctTable>& Tables::getWatvisctTables() const {
         return m_watvisctTables;
+    }
+
+    const std::vector<PlyadsTable>& Tables::getPlyadsTables() const {
+        return m_plyadsTables;
+    }
+
+    const std::vector<PlymaxTable>& Tables::getPlymaxTables() const {
+        return m_plymaxTables;
+    }
+
+    const std::vector<PlyrockTable>& Tables::getPlyrockTables() const {
+        return m_plyrockTables;
+    }
+
+    const std::vector<PlyviscTable>& Tables::getPlyviscTables() const {
+        return m_plyviscTables;
+    }
+
+    const std::vector<PlydhflfTable>& Tables::getPlydhflfTables() const {
+        return m_plydhflfTables;
     }
 
     void Tables::complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) const {

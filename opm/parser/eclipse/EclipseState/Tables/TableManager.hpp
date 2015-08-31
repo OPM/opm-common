@@ -34,6 +34,11 @@
 #include <opm/parser/eclipse/EclipseState/Tables/SgfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SsfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvdsTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PlyadsTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PlymaxTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PlyrockTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PlyviscTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PlydhflfTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/OilvisctTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/WatvisctTable.hpp>
 
@@ -57,6 +62,11 @@ namespace Opm {
         const std::vector<SgfnTable>& getSgfnTables() const;
         const std::vector<SsfnTable>& getSsfnTables() const;
         const std::vector<PvdsTable>& getPvdsTables() const;
+        const std::vector<PlyadsTable>& getPlyadsTables() const;
+        const std::vector<PlymaxTable>& getPlymaxTables() const;
+        const std::vector<PlyrockTable>& getPlyrockTables() const;
+        const std::vector<PlyviscTable>& getPlyviscTables() const;
+        const std::vector<PlydhflfTable>& getPlydhflfTables() const;
         const std::vector<WatvisctTable>& getWatvisctTables() const;
         const std::vector<OilvisctTable>& getOilvisctTables() const;
 
@@ -108,6 +118,12 @@ namespace Opm {
         std::vector<SgofTable> m_sgofTables;
         std::vector<SwofTable> m_swofTables;
         std::vector<SlgofTable> m_slgofTables;
+        std::vector<PlyadsTable> m_plyadsTables;
+        std::vector<PlymaxTable> m_plymaxTables;
+        std::vector<PlyrockTable> m_plyrockTables;
+        std::vector<PlyviscTable> m_plyviscTables;
+        std::vector<PlydhflfTable> m_plydhflfTables;
+
         std::vector<WatvisctTable> m_watvisctTables;
         std::vector<OilvisctTable> m_oilvisctTables;
         std::shared_ptr<Tabdims> m_tabdims;

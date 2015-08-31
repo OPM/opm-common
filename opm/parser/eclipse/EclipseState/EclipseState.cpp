@@ -184,29 +184,11 @@ namespace Opm {
         return m_imptvdTables;
     }
 
-    const std::vector<PlyadsTable>& EclipseState::getPlyadsTables() const {
-        return m_plyadsTables;
-    }
-
-    const std::vector<PlymaxTable>& EclipseState::getPlymaxTables() const {
-        return m_plymaxTables;
-    }
-
-    const std::vector<PlyrockTable>& EclipseState::getPlyrockTables() const {
-        return m_plyrockTables;
-    }
-
-    const std::vector<PlyviscTable>& EclipseState::getPlyviscTables() const {
-        return m_plyviscTables;
-    }
 
     const std::vector<PlyshlogTable>& EclipseState::getPlyshlogTables() const {
         return m_plyshlogTables;
     }
 
-    const std::vector<PlydhflfTable>& EclipseState::getPlydhflfTables() const {
-        return m_plydhflfTables;
-    }
 
     const std::vector<PvtgTable>& EclipseState::getPvtgTables() const {
         return m_pvtgTables;
@@ -291,11 +273,6 @@ namespace Opm {
         initSimpleTables(deck, "ENPTVD", m_enptvdTables);
         initSimpleTables(deck, "IMKRVD", m_imkrvdTables);
         initSimpleTables(deck, "IMPTVD", m_imptvdTables);
-        initSimpleTables(deck, "PLYADS", m_plyadsTables);
-        initSimpleTables(deck, "PLYMAX", m_plymaxTables);
-        initSimpleTables(deck, "PLYROCK", m_plyrockTables);
-        initSimpleTables(deck, "PLYVISC", m_plyviscTables);
-        initSimpleTables(deck, "PLYDHFLF", m_plydhflfTables);
         initSimpleTables(deck, "RSVD", m_rsvdTables);
         initSimpleTables(deck, "RVVD", m_rvvdTables);
 

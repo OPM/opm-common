@@ -36,15 +36,10 @@
 #include <opm/parser/eclipse/EclipseState/Tables/Tables.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/EnkrvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/EnptvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PlyshlogTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/GasvisctTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/ImkrvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/ImptvdTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/PlyadsTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/PlymaxTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/PlyrockTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/PlyviscTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/PlyshlogTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/PlydhflfTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RocktabTable.hpp>
@@ -113,11 +108,6 @@ namespace Opm {
         const std::vector<GasvisctTable>& getGasvisctTables() const;
         const std::vector<ImkrvdTable>& getImkrvdTables() const;
         const std::vector<ImptvdTable>& getImptvdTables() const;
-        const std::vector<PlyadsTable>& getPlyadsTables() const;
-        const std::vector<PlymaxTable>& getPlymaxTables() const;
-        const std::vector<PlyrockTable>& getPlyrockTables() const;
-        const std::vector<PlyviscTable>& getPlyviscTables() const;
-        const std::vector<PlydhflfTable>& getPlydhflfTables() const;
         const std::vector<PlyshlogTable>& getPlyshlogTables() const;
         const std::vector<PvtgTable>& getPvtgTables() const;
         const std::vector<PvtoTable>& getPvtoTables() const;
@@ -257,11 +247,6 @@ namespace Opm {
         std::vector<GasvisctTable> m_gasvisctTables;
         std::vector<ImkrvdTable> m_imkrvdTables;
         std::vector<ImptvdTable> m_imptvdTables;
-        std::vector<PlyadsTable> m_plyadsTables;
-        std::vector<PlymaxTable> m_plymaxTables;
-        std::vector<PlyrockTable> m_plyrockTables;
-        std::vector<PlyviscTable> m_plyviscTables;
-        std::vector<PlydhflfTable> m_plydhflfTables;
         std::vector<PlyshlogTable> m_plyshlogTables;
         std::vector<PvtgTable> m_pvtgTables;
         std::vector<PvtoTable> m_pvtoTables;
