@@ -42,7 +42,6 @@
 #include <opm/parser/eclipse/EclipseState/Tables/ImptvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/RocktabTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RsvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RvvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RtempvdTable.hpp>
@@ -111,7 +110,6 @@ namespace Opm {
         const std::vector<PlyshlogTable>& getPlyshlogTables() const;
         const std::vector<PvtgTable>& getPvtgTables() const;
         const std::vector<PvtoTable>& getPvtoTables() const;
-        const std::vector<RocktabTable>& getRocktabTables() const;
         const std::vector<RsvdTable>& getRsvdTables() const;
         const std::vector<RvvdTable>& getRvvdTables() const;
         const std::vector<RtempvdTable>& getRtempvdTables() const;
@@ -194,7 +192,6 @@ namespace Opm {
             }
         }
 
-        void initRocktabTables(DeckConstPtr deck);
         void initGasvisctTables(DeckConstPtr deck,
                                 const std::string& keywordName,
                                 std::vector<GasvisctTable>& tableVector);
@@ -250,7 +247,6 @@ namespace Opm {
         std::vector<PlyshlogTable> m_plyshlogTables;
         std::vector<PvtgTable> m_pvtgTables;
         std::vector<PvtoTable> m_pvtoTables;
-        std::vector<RocktabTable> m_rocktabTables;
         std::vector<RsvdTable> m_rsvdTables;
         std::vector<RvvdTable> m_rvvdTables;
         std::vector<RtempvdTable> m_rtempvdTables;

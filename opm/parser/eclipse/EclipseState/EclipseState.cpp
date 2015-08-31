@@ -199,10 +199,6 @@ namespace Opm {
         return m_pvtoTables;
     }
 
-    const std::vector<RocktabTable>& EclipseState::getRocktabTables() const {
-        return m_rocktabTables;
-    }
-
     const std::vector<RsvdTable>& EclipseState::getRsvdTables() const {
         return m_rsvdTables;
     }
@@ -285,10 +281,6 @@ namespace Opm {
 
         initVFPProdTables(deck, m_vfpprodTables);
         initVFPInjTables(deck,  m_vfpinjTables);
-
-        // the ROCKTAB table comes with additional fun because the number of columns
-        //depends on the presence of the RKTRMDIR keyword...
-        initRocktabTables(deck);
 
         // the temperature vs depth table. the problem here is that
         // the TEMPVD (E300) and RTEMPVD (E300 + E100) keywords are
@@ -493,42 +485,6 @@ namespace Opm {
         }
     }
 
-    void EclipseState::initRocktabTables(DeckConstPtr deck) {
-        if (!deck->hasKeyword("ROCKTAB"))
-            return; // ROCKTAB is not featured by the deck...
-
-        if (deck->numKeywords("ROCKTAB") > 1) {
-            complainAboutAmbiguousKeyword(deck, "ROCKTAB");
-            return;
-        }
-
-        const auto rocktabKeyword = deck->getKeyword("ROCKTAB");
-
-        bool isDirectional = deck->hasKeyword("RKTRMDIR");
-        bool useStressOption = false;
-        if (deck->hasKeyword("ROCKOPTS")) {
-            const auto rockoptsKeyword = deck->getKeyword("ROCKOPTS");
-            useStressOption = (rockoptsKeyword->getRecord(0)->getItem("METHOD")->getTrimmedString(0) == "STRESS");
-        }
-
-        for (size_t tableIdx = 0; tableIdx < rocktabKeyword->size(); ++tableIdx) {
-            if (rocktabKeyword->getRecord(tableIdx)->getItem(0)->size() == 0) {
-                // for ROCKTAB tables, an empty record indicates that the previous table
-                // should be copied...
-                if (tableIdx == 0)
-                    throw std::invalid_argument("The first table for keyword ROCKTAB"
-                                                " must be explicitly defined!");
-                m_rocktabTables[tableIdx] = m_rocktabTables[tableIdx - 1];
-                continue;
-            }
-
-            m_rocktabTables.push_back(RocktabTable());
-            m_rocktabTables[tableIdx].init(rocktabKeyword,
-                                           isDirectional,
-                                           useStressOption,
-                                           tableIdx);
-        }
-    }
 
     void EclipseState::initGasvisctTables(DeckConstPtr deck,
                                           const std::string& keywordName,

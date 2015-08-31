@@ -44,6 +44,8 @@ namespace Opm {
         initSimpleTables(deck, "PLYDHFLF", m_plydhflfTables);
         initSimpleTables(deck, "OILVISCT", m_oilvisctTables);
         initSimpleTables(deck, "WATVISCT", m_watvisctTables);
+
+        initRocktabTables(deck);
     }
 
 
@@ -74,6 +76,44 @@ namespace Opm {
             nrpvt  = record->getItem("NRPVT")->getInt(0);
         }
         m_tabdims = std::make_shared<Tabdims>(ntsfun , ntpvt , nssfun , nppvt , ntfip , nrpvt);
+    }
+
+
+    void Tables::initRocktabTables(const Deck& deck) {
+        if (!deck.hasKeyword("ROCKTAB"))
+            return; // ROCKTAB is not featured by the deck...
+
+        if (deck.numKeywords("ROCKTAB") > 1) {
+            complainAboutAmbiguousKeyword(deck, "ROCKTAB");
+            return;
+        }
+
+        const auto rocktabKeyword = deck.getKeyword("ROCKTAB");
+
+        bool isDirectional = deck.hasKeyword("RKTRMDIR");
+        bool useStressOption = false;
+        if (deck.hasKeyword("ROCKOPTS")) {
+            const auto rockoptsKeyword = deck.getKeyword("ROCKOPTS");
+            useStressOption = (rockoptsKeyword->getRecord(0)->getItem("METHOD")->getTrimmedString(0) == "STRESS");
+        }
+
+        for (size_t tableIdx = 0; tableIdx < rocktabKeyword->size(); ++tableIdx) {
+            if (rocktabKeyword->getRecord(tableIdx)->getItem(0)->size() == 0) {
+                // for ROCKTAB tables, an empty record indicates that the previous table
+                // should be copied...
+                if (tableIdx == 0)
+                    throw std::invalid_argument("The first table for keyword ROCKTAB"
+                                                " must be explicitly defined!");
+                m_rocktabTables[tableIdx] = m_rocktabTables[tableIdx - 1];
+                continue;
+            }
+
+            m_rocktabTables.push_back(RocktabTable());
+            m_rocktabTables[tableIdx].init(rocktabKeyword,
+                                           isDirectional,
+                                           useStressOption,
+                                           tableIdx);
+        }
     }
 
 
@@ -155,6 +195,11 @@ namespace Opm {
     const std::vector<PlydhflfTable>& Tables::getPlydhflfTables() const {
         return m_plydhflfTables;
     }
+
+    const std::vector<RocktabTable>& Tables::getRocktabTables() const {
+        return m_rocktabTables;
+    }
+
 
     void Tables::complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) const {
         OpmLog::addMessage(Log::MessageType::Error, "The " + keywordName + " keyword must be unique in the deck. Ignoring all!");
