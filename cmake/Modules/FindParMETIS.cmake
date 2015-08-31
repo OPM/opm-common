@@ -22,7 +22,7 @@
 find_package(MPI)
 macro(_search_parmetis_lib libvar libname doc)
   find_library(${libvar} ${libname}
-    PATHS${PARMETIS_ROOT} PATH_SUFFIXES ${PATH_SUFFIXES}
+    PATHS ${PARMETIS_ROOT} ${PARMETIS_ROOT}/lib PATH_SUFFIXES ${PATH_SUFFIXES}
     NO_DEFAULT_PATH
     DOC "${doc}")
   find_library(${libvar} ${libname})
@@ -37,9 +37,8 @@ endif(PARMETIS_SUFFIX)
 include(CMakePushCheckState)
 cmake_push_check_state() # Save variables
 
-message("PARMETIS_ROOT=${PARMETIS_ROOT} PATH_SUFFIXES=${PATH_SUFFIXES}")
 find_path(PARMETIS_INCLUDE_DIR parmetis.h
-  PATHS ${PARMETIS_ROOT}
+  PATHS ${PARMETIS_ROOT}   ${PARMETIS_ROOT}/include
   PATH_SUFFIXES parmetis${PATH_SUFFIXES}
   NO_DEFAULT_PATH
   DOC "Include directory of ParMETIS")
@@ -48,11 +47,15 @@ find_path(PARMETIS_INCLUDE_DIR parmetis.h
 
 # find the serial version of METIS
 find_package(METIS)
-
-set(CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES} ${MPI_C_INCLUDE_PATH} ${PARMETIS_INCLUDE_DIR} ${METIS_INCLUDE_DIR} )
+set(CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES} ${MPI_C_INCLUDE_PATH} )
+if(PARMETIS_INCLUDE_DIR)
+  set(CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES} ${PARMETIS_INCLUDE_DIR})
+  if(METIS_INCLUDE_DIR)
+    set(CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES} ${METIS_INCLUDE_DIR})
+  endif()
+endif()
 set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} ${MPI_C_COMPILE_FLAGS}")
 
-message("CMAKE_REQUIRED_INCLUDES=${CMAKE_REQUIRED_INCLUDES}")
 check_include_file(parmetis.h PARMETIS_FOUND)
 _search_parmetis_lib(PARMETIS_LIBRARY parmetis "The main ParMETIS library.")
 

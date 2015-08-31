@@ -21,7 +21,7 @@
 find_package(MPI)
 macro(_search_pt_lib libvar libname doc)
   find_library(${libvar} ${libname}
-    PATHS${PTSCOTCH_ROOT} PATH_SUFFIXES ${PATH_SUFFIXES}
+    PATHS ${PTSCOTCH_ROOT} ${PTSCOTCH_ROOT}/lib PATH_SUFFIXES ${PATH_SUFFIXES}
     NO_DEFAULT_PATH
     DOC "${doc}")
   find_library(${libvar} ${libname})
@@ -39,13 +39,14 @@ set(CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES} ${MPI_DUNE_INCLUDE_PATH})
 set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} ${MPI_DUNE_COMPILE_FLAGS}")
 
 find_path(PTSCOTCH_INCLUDE_DIR ptscotch.h
-  PATHS ${PTSCOTCH_ROOT}
+  PATHS ${PTSCOTCH_ROOT} ${PTSCOTCH_ROOT}/include
   PATH_SUFFIXES ${PATH_SUFFIXES}
   NO_DEFAULT_PATH
   DOC "Include directory of PT-Scotch")
 find_path(PTSCOTCH_INCLUDE_DIR ptscotch.h
   PATH_SUFFIXES ${PATH_SUFFIXES})
 
+_search_pt_lib(SCOTCH_LIBRARY scotch "The main Scotch library.")
 _search_pt_lib(PTSCOTCH_LIBRARY ptscotch "The main PT-Scotch library.")
 _search_pt_lib(PTSCOTCHERR_LIBRARY ptscotcherr "The PT-Scotch error library.")
 
@@ -55,6 +56,7 @@ find_package_handle_standard_args(
   "PTScotch"
   DEFAULT_MSG
   PTSCOTCH_INCLUDE_DIR
+  SCOTCH_LIBRARY
   PTSCOTCH_LIBRARY
   PTSCOTCHERR_LIBRARY
 )
@@ -63,7 +65,7 @@ cmake_pop_check_state()
 
 if(PTSCOTCH_FOUND)
   set(PTSCOTCH_INCLUDE_DIRS ${PTSCOTCH_INCLUDE_DIR})
-  set(PTSCOTCH_LIBRARIES ${PTSCOTCH_LIBRARY} ${PTSCOTCHERR_LIBRARY} ${MPI_DUNE_LIBRARIES}
+  set(PTSCOTCH_LIBRARIES ${SCOTCH_LIBRARY} ${PTSCOTCH_LIBRARY} ${PTSCOTCHERR_LIBRARY} ${MPI_DUNE_LIBRARIES}
     CACHE FILEPATH "All libraries needed to link programs using PT-Scotch")
   set(PTSCOCH_LINK_FLAGS "${DUNE_MPI_LINK_FLAGS}"
     CACHE STRING "PT-Scotch link flags")
@@ -73,11 +75,6 @@ if(PTSCOTCH_FOUND)
     "Determing location of PT-Scotch succeded:\n"
     "Include directory: ${PTSCOTCH_INCLUDE_DIRS}\n"
     "Library directory: ${PTSCOTCH_LIBRARIES}\n\n")
-
-  foreach(dir ${PTSCOCTH_INCLUDE_DIRS})
-    set_property(GLOBAL APPEND PROPERTY ALL_PKG_FLAGS "-I${dir}")
-  endforeach()
-  set_property(GLOBAL APPEND PROPERTY ALL_PKG_LIBS "${PTSCOTCH_LIBRARIES}")
 endif(PTSCOTCH_FOUND)
 
 mark_as_advanced(PTSCOTCH_INCLUDE_DIRS PTSCOTCH_LIBRARIES HAVE_PTSCOTCH)
