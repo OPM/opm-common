@@ -52,11 +52,22 @@ namespace Opm {
             Z = 3
         };
 
+
+        enum CompletionOrderEnum{
+            DEPTH,
+            INPUT,
+            TRACK
+        };
+
         std::string   DirectionEnum2String(const DirectionEnum enumValue);
         DirectionEnum DirectionEnumFromString(const std::string& stringValue);
 
         const std::string StateEnum2String( StateEnum enumValue );
         StateEnum StateEnumFromString( const std::string& stringValue );
+
+        const std::string CompletionOrderEnum2String( CompletionOrderEnum enumValue );
+        CompletionOrderEnum CompletionOrderEnumFromString(const std::string& comporderStringValue);
+
     }
 
 

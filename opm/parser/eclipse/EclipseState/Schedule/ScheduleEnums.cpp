@@ -98,7 +98,36 @@ namespace Opm {
             else
                 throw std::invalid_argument("Unknown enum state string: " + stringValue );
         }
+
+
+        const std::string CompletionOrderEnum2String( CompletionOrderEnum enumValue ) {
+            switch( enumValue ) {
+            case OPEN:
+                return "DEPTH";
+            case AUTO:
+                return "INPUT";
+            case SHUT:
+                return "TRACK";
+            default:
+                throw std::invalid_argument("Unhandled enum value");
+            }
+
+        }
+
+        CompletionOrderEnum CompletionOrderEnumFromString(const std::string& comporderStringValue) {
+            std::string stringValue(comporderStringValue);
+            boost::algorithm::trim(stringValue);
+            if (stringValue == "DEPTH")
+                return DEPTH;
+            else if (stringValue == "INPUT")
+                return INPUT;
+            else if (stringValue == "TRACK")
+                return TRACK;
+            else
+                throw std::invalid_argument("Unknown enum state string: " + stringValue );
+        }
     }
+
 
     /*****************************************************************/
 
