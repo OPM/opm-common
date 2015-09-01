@@ -23,12 +23,12 @@
 
 namespace Opm {
     // forward declaration
-    class Tables;
+    class TableManager;
 
     class Sof3Table : protected SingleRecordTable {
         typedef SingleRecordTable ParentType;
 
-        friend class Tables;
+        friend class TableManager;
 
         /*!
          * \brief Read the SOF3 keyword and provide some convenience

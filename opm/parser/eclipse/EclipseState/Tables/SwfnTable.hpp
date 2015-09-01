@@ -23,12 +23,12 @@
 
 namespace Opm {
     // forward declaration
-    class Tables;
+    class TableManager;
 
     class SwfnTable : protected SingleRecordTable {
         typedef SingleRecordTable ParentType;
 
-        friend class Tables;
+        friend class TableManager;
 
         /*!
          * \brief Read the SWFN keyword and provide some convenience

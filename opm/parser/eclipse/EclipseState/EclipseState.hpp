@@ -85,7 +85,7 @@ namespace Opm {
         std::shared_ptr<const NNC> getNNC() const;
         bool hasNNC() const;
 
-        std::shared_ptr<const Tables> getTables() const;
+        std::shared_ptr<const TableManager> getTables() const;
         size_t getNumPhases() const;
 
         // the unit system used by the deck. note that it is rarely needed to convert
@@ -175,7 +175,7 @@ namespace Opm {
         ScheduleConstPtr         schedule;
         SimulationConfigConstPtr m_simulationConfig;
 
-        std::shared_ptr<const Tables> m_tables;
+        std::shared_ptr<const TableManager> m_tables;
 
         std::set<enum Phase::PhaseEnum> phases;
         std::string m_title;

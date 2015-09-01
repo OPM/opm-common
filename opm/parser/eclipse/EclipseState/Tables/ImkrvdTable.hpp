@@ -23,12 +23,12 @@
 
 namespace Opm {
     // forward declaration
-    class Tables;
+    class TableManager;
 
     class ImkrvdTable : protected SingleRecordTable {
         typedef SingleRecordTable ParentType;
 
-        friend class Tables;
+        friend class TableManager;
         ImkrvdTable() = default;
 
         /*!

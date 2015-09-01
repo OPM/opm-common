@@ -68,7 +68,7 @@ std::shared_ptr<const Opm::Deck> createSingleRecordDeck() {
 
 BOOST_AUTO_TEST_CASE( CreateTables ) {
     std::shared_ptr<const Opm::Deck> deck = createSingleRecordDeck();
-    Opm::Tables tables(*deck);
+    Opm::TableManager tables(*deck);
     auto tabdims = tables.getTabdims();
     BOOST_CHECK_EQUAL( tabdims->getNumSatTables() , 2 );
 }

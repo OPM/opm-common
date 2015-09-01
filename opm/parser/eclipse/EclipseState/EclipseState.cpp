@@ -160,7 +160,7 @@ namespace Opm {
     }
 
 
-    std::shared_ptr<const Tables> EclipseState::getTables() const {
+    std::shared_ptr<const TableManager> EclipseState::getTables() const {
         return m_tables;
     }
 
@@ -209,7 +209,7 @@ namespace Opm {
 
 
     void EclipseState::initTables(DeckConstPtr deck) {
-        m_tables = std::make_shared<const Tables>( *deck );
+        m_tables = std::make_shared<const TableManager>( *deck );
    }
 
     void EclipseState::initIOConfig(DeckConstPtr deck) {

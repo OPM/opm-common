@@ -23,11 +23,11 @@
 
 namespace Opm {
     // forward declaration
-    class Tables;
+    class TableManager;
 
     class PlyshlogTable {
 
-        friend class Tables;
+        friend class TableManager;
         PlyshlogTable() = default;
 
         /*!

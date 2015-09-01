@@ -25,7 +25,7 @@
 
 namespace Opm {
     // forward declaration
-    class Tables;
+    class TableManager;
 
     /*!
      * \brief Read the table for the PVTG and provide convenient access to it.
@@ -34,7 +34,7 @@ namespace Opm {
     {
         typedef Opm::FullTable<Opm::PvtgOuterTable, Opm::PvtgInnerTable> ParentType;
 
-        friend class Tables;
+        friend class TableManager;
 
         using ParentType::init;
 

@@ -24,7 +24,7 @@
 
 namespace Opm {
 
-    Tables::Tables( const Deck& deck ) {
+    TableManager::TableManager( const Deck& deck ) {
         initTabdims( deck );
         initSimpleTables(deck, "SWOF", m_swofTables);
         initSimpleTables(deck, "SGOF", m_sgofTables);
@@ -63,7 +63,7 @@ namespace Opm {
     }
 
 
-    void Tables::initTabdims(const Deck& deck) {
+    void TableManager::initTabdims(const Deck& deck) {
         /*
           The default values for the various number of tables is
           embedded in the ParserKeyword("TABDIMS") instance; however
@@ -93,7 +93,7 @@ namespace Opm {
     }
 
 
-    void Tables::initRTempTables(const Deck& deck) {
+    void TableManager::initRTempTables(const Deck& deck) {
         // the temperature vs depth table. the problem here is that
         // the TEMPVD (E300) and RTEMPVD (E300 + E100) keywords are
         // synonymous, but we want to provide only a single cannonical
@@ -108,7 +108,7 @@ namespace Opm {
     }
 
 
-    void Tables::initGasvisctTables(const Deck& deck,
+    void TableManager::initGasvisctTables(const Deck& deck,
                                     const std::string& keywordName,
                                     std::vector<GasvisctTable>& tableVector) {
         if (!deck.hasKeyword(keywordName))
@@ -138,7 +138,7 @@ namespace Opm {
         }
     }
 
-    void Tables::initPlyshlogTables(const Deck& deck,
+    void TableManager::initPlyshlogTables(const Deck& deck,
                                     const std::string& keywordName,
                                     std::vector<PlyshlogTable>& tableVector){
 
@@ -162,7 +162,7 @@ namespace Opm {
 
 
 
-    void Tables::initRocktabTables(const Deck& deck) {
+    void TableManager::initRocktabTables(const Deck& deck) {
         if (!deck.hasKeyword("ROCKTAB"))
             return; // ROCKTAB is not featured by the deck...
 
@@ -201,7 +201,7 @@ namespace Opm {
 
 
 
-    void Tables::initVFPProdTables(const Deck& deck,
+    void TableManager::initVFPProdTables(const Deck& deck,
                                           std::map<int, VFPProdTable>& tableMap) {
         if (!deck.hasKeyword(ParserKeywords::VFPPROD::keywordName)) {
             return;
@@ -227,7 +227,7 @@ namespace Opm {
         }
     }
 
-    void Tables::initVFPInjTables(const Deck& deck,
+    void TableManager::initVFPInjTables(const Deck& deck,
                                         std::map<int, VFPInjTable>& tableMap) {
         if (!deck.hasKeyword(ParserKeywords::VFPINJ::keywordName)) {
             return;
@@ -253,138 +253,138 @@ namespace Opm {
         }
     }
 
-    std::shared_ptr<const Tabdims> Tables::getTabdims() const {
+    std::shared_ptr<const Tabdims> TableManager::getTabdims() const {
         return m_tabdims;
     }
 
 
-    const std::vector<SwofTable>& Tables::getSwofTables() const {
+    const std::vector<SwofTable>& TableManager::getSwofTables() const {
         return m_swofTables;
     }
 
 
-    const std::vector<SlgofTable>& Tables::getSlgofTables() const {
+    const std::vector<SlgofTable>& TableManager::getSlgofTables() const {
         return m_slgofTables;
     }
 
 
-    const std::vector<SgofTable>& Tables::getSgofTables() const {
+    const std::vector<SgofTable>& TableManager::getSgofTables() const {
         return m_sgofTables;
     }
 
-    const std::vector<Sof2Table>& Tables::getSof2Tables() const {
+    const std::vector<Sof2Table>& TableManager::getSof2Tables() const {
         return m_sof2Tables;
     }
 
-    const std::vector<Sof3Table>& Tables::getSof3Tables() const {
+    const std::vector<Sof3Table>& TableManager::getSof3Tables() const {
         return m_sof3Tables;
     }
 
-    const std::vector<PvdgTable>& Tables::getPvdgTables() const {
+    const std::vector<PvdgTable>& TableManager::getPvdgTables() const {
         return m_pvdgTables;
     }
 
-    const std::vector<PvdoTable>& Tables::getPvdoTables() const {
+    const std::vector<PvdoTable>& TableManager::getPvdoTables() const {
         return m_pvdoTables;
     }
 
-    const std::vector<SwfnTable>& Tables::getSwfnTables() const {
+    const std::vector<SwfnTable>& TableManager::getSwfnTables() const {
         return m_swfnTables;
     }
 
-    const std::vector<SgfnTable>& Tables::getSgfnTables() const {
+    const std::vector<SgfnTable>& TableManager::getSgfnTables() const {
         return m_sgfnTables;
     }
 
-    const std::vector<SsfnTable>& Tables::getSsfnTables() const {
+    const std::vector<SsfnTable>& TableManager::getSsfnTables() const {
         return m_ssfnTables;
     }
 
-    const std::vector<PvdsTable>& Tables::getPvdsTables() const {
+    const std::vector<PvdsTable>& TableManager::getPvdsTables() const {
         return m_pvdsTables;
     }
 
-    const std::vector<OilvisctTable>& Tables::getOilvisctTables() const {
+    const std::vector<OilvisctTable>& TableManager::getOilvisctTables() const {
         return m_oilvisctTables;
     }
 
-    const std::vector<WatvisctTable>& Tables::getWatvisctTables() const {
+    const std::vector<WatvisctTable>& TableManager::getWatvisctTables() const {
         return m_watvisctTables;
     }
 
-    const std::vector<GasvisctTable>& Tables::getGasvisctTables() const {
+    const std::vector<GasvisctTable>& TableManager::getGasvisctTables() const {
         return m_gasvisctTables;
     }
 
-    const std::vector<PlyadsTable>& Tables::getPlyadsTables() const {
+    const std::vector<PlyadsTable>& TableManager::getPlyadsTables() const {
         return m_plyadsTables;
     }
 
-    const std::vector<PlymaxTable>& Tables::getPlymaxTables() const {
+    const std::vector<PlymaxTable>& TableManager::getPlymaxTables() const {
         return m_plymaxTables;
     }
 
-    const std::vector<PlyrockTable>& Tables::getPlyrockTables() const {
+    const std::vector<PlyrockTable>& TableManager::getPlyrockTables() const {
         return m_plyrockTables;
     }
 
-    const std::vector<PlyviscTable>& Tables::getPlyviscTables() const {
+    const std::vector<PlyviscTable>& TableManager::getPlyviscTables() const {
         return m_plyviscTables;
     }
 
-    const std::vector<PlydhflfTable>& Tables::getPlydhflfTables() const {
+    const std::vector<PlydhflfTable>& TableManager::getPlydhflfTables() const {
         return m_plydhflfTables;
     }
 
-    const std::vector<PlyshlogTable>& Tables::getPlyshlogTables() const {
+    const std::vector<PlyshlogTable>& TableManager::getPlyshlogTables() const {
         return m_plyshlogTables;
     }
 
-    const std::vector<RocktabTable>& Tables::getRocktabTables() const {
+    const std::vector<RocktabTable>& TableManager::getRocktabTables() const {
         return m_rocktabTables;
     }
 
-    const std::vector<RtempvdTable>& Tables::getRtempvdTables() const {
+    const std::vector<RtempvdTable>& TableManager::getRtempvdTables() const {
         return m_rtempvdTables;
     }
 
 
-    const std::vector<EnkrvdTable>& Tables::getEnkrvdTables() const {
+    const std::vector<EnkrvdTable>& TableManager::getEnkrvdTables() const {
         return m_enkrvdTables;
     }
 
-    const std::vector<EnptvdTable>& Tables::getEnptvdTables() const {
+    const std::vector<EnptvdTable>& TableManager::getEnptvdTables() const {
         return m_enptvdTables;
     }
 
 
-    const std::vector<ImkrvdTable>& Tables::getImkrvdTables() const {
+    const std::vector<ImkrvdTable>& TableManager::getImkrvdTables() const {
         return m_imkrvdTables;
     }
 
-    const std::vector<ImptvdTable>& Tables::getImptvdTables() const {
+    const std::vector<ImptvdTable>& TableManager::getImptvdTables() const {
         return m_imptvdTables;
     }
 
 
-    const std::vector<RsvdTable>& Tables::getRsvdTables() const {
+    const std::vector<RsvdTable>& TableManager::getRsvdTables() const {
         return m_rsvdTables;
     }
 
-    const std::vector<RvvdTable>& Tables::getRvvdTables() const {
+    const std::vector<RvvdTable>& TableManager::getRvvdTables() const {
         return m_rvvdTables;
     }
 
-    const std::vector<PvtgTable>& Tables::getPvtgTables() const {
+    const std::vector<PvtgTable>& TableManager::getPvtgTables() const {
         return m_pvtgTables;
     }
 
 
-    const std::vector<PvtoTable>& Tables::getPvtoTables() const {
+    const std::vector<PvtoTable>& TableManager::getPvtoTables() const {
         return m_pvtoTables;
     }
 
-    void Tables::complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) const {
+    void TableManager::complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) const {
         OpmLog::addMessage(Log::MessageType::Error, "The " + keywordName + " keyword must be unique in the deck. Ignoring all!");
         auto keywords = deck.getKeywordList(keywordName);
         for (size_t i = 0; i < keywords.size(); ++i) {

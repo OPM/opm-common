@@ -59,9 +59,9 @@
 
 namespace Opm {
 
-    class Tables {
+    class TableManager {
     public:
-        Tables( const Deck& deck );
+        TableManager( const Deck& deck );
 
 
         std::shared_ptr<const Tabdims> getTabdims() const;
