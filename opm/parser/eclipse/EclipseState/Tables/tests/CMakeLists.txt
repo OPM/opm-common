@@ -1,4 +1,4 @@
-foreach(tapp TableTests TableManagerTests TabdimsTests)
+foreach(tapp TableTests TablesTests TabdimsTests)
   opm_add_test(run${tapp} SOURCES ${tapp}.cpp
                           LIBRARIES opmparser ${Boost_LIBRARIES})
 endforeach()
