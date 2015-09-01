@@ -160,7 +160,7 @@ namespace Opm {
     }
 
 
-    std::shared_ptr<const TableManager> EclipseState::getTables() const {
+    std::shared_ptr<const TableManager> EclipseState::getTableManager() const {
         return m_tables;
     }
 

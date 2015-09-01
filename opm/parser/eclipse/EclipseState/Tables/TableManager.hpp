@@ -17,8 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef OPM_TABLES_HPP
-#define OPM_TABLES_HPP
+#ifndef OPM_TABLE_MANAGER_HPP
+#define OPM_TABLE_MANAGER_HPP
 
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 

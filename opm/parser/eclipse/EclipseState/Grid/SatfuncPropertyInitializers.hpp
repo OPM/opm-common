@@ -81,7 +81,7 @@ protected:
 
 
     void findSaturationEndpoints( ) const {
-        auto tables = m_eclipseState.getTables();
+        auto tables = m_eclipseState.getTableManager();
         auto tabdims = tables->getTabdims();
         size_t numSatTables = tabdims->getNumSatTables();
         m_minWaterSat.resize( numSatTables , 0 );
@@ -144,7 +144,7 @@ protected:
 
 
     void findCriticalPoints( ) const {
-        auto tables = m_eclipseState.getTables();
+        auto tables = m_eclipseState.getTableManager();
         auto tabdims = tables->getTabdims();
         size_t numSatTables = tabdims->getNumSatTables();
 
@@ -246,7 +246,7 @@ protected:
         }
 
         case SaturationFunctionFamily::FamilyII: {
-            auto tables = m_eclipseState.getTables();
+            auto tables = m_eclipseState.getTableManager();
             const std::vector<SwfnTable>& swfnTables = tables->getSwfnTables();
             const std::vector<SgfnTable>& sgfnTables = tables->getSgfnTables();
             const std::vector<Sof3Table>& sof3Tables = tables->getSof3Tables();
@@ -311,7 +311,7 @@ protected:
     }
 
     void findVerticalPoints( ) const {
-        auto tables = m_eclipseState.getTables();
+        auto tables = m_eclipseState.getTableManager();
         auto tabdims = tables->getTabdims();
         size_t numSatTables = tabdims->getNumSatTables();
 
@@ -374,7 +374,7 @@ protected:
             break;
         }
         case SaturationFunctionFamily::FamilyII: {
-            auto tables = m_eclipseState.getTables();
+            auto tables = m_eclipseState.getTableManager();
             const std::vector<SwfnTable>& swfnTables = tables->getSwfnTables();
             const std::vector<SgfnTable>& sgfnTables = tables->getSgfnTables();
             const std::vector<Sof3Table>& sof3Tables = tables->getSof3Tables();
@@ -421,7 +421,7 @@ protected:
     // If SWFN, SGFN and SOF3 are specified in the deck it return FamilyII
     // If keywords are missing or mixed, an error is given.
     const SaturationFunctionFamily getSaturationFunctionFamily() const{
-        auto tables = m_eclipseState.getTables( );
+        auto tables = m_eclipseState.getTableManager( );
         const std::vector<SwofTable>& swofTables = tables->getSwofTables();
         const std::vector<SgofTable>& sgofTables = tables->getSgofTables();
         const std::vector<SlgofTable>& slgofTables = tables->getSlgofTables();
@@ -522,7 +522,7 @@ public:
                       bool useOneMinusTableValue) const
     {
         auto eclipseGrid = this->m_eclipseState.getEclipseGrid();
-        auto tables = this->m_eclipseState.getTables();
+        auto tables = this->m_eclipseState.getTableManager();
         auto tabdims = tables->getTabdims();
         auto satnum = this->m_eclipseState.getIntGridProperty("SATNUM");
         auto endnum = this->m_eclipseState.getIntGridProperty("ENDNUM");
@@ -581,7 +581,7 @@ public:
                       bool useOneMinusTableValue) const
     {
         auto eclipseGrid = this->m_eclipseState.getEclipseGrid();
-        auto tables = this->m_eclipseState.getTables();
+        auto tables = this->m_eclipseState.getTableManager();
         auto imbnum = this->m_eclipseState.getIntGridProperty("IMBNUM");
         auto endnum = this->m_eclipseState.getIntGridProperty("ENDNUM");
 

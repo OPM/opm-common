@@ -33,7 +33,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Tables/Tables.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
@@ -85,7 +85,7 @@ namespace Opm {
         std::shared_ptr<const NNC> getNNC() const;
         bool hasNNC() const;
 
-        std::shared_ptr<const TableManager> getTables() const;
+        std::shared_ptr<const TableManager> getTableManager() const;
         size_t getNumPhases() const;
 
         // the unit system used by the deck. note that it is rarely needed to convert

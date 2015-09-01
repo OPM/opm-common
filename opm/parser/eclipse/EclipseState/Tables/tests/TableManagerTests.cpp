@@ -31,7 +31,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/SingleRecordTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/MultiRecordTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/FullTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/Tables.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
 // keyword specific table classes
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
