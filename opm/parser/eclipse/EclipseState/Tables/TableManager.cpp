@@ -384,6 +384,16 @@ namespace Opm {
         return m_pvtoTables;
     }
 
+
+    const std::map<int, VFPProdTable>& TableManager::getVFPProdTables() const {
+        return m_vfpprodTables;
+    }
+
+    const std::map<int, VFPInjTable>& TableManager::getVFPInjTables() const {
+        return m_vfpinjTables;
+    }
+
+
     void TableManager::complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) const {
         OpmLog::addMessage(Log::MessageType::Error, "The " + keywordName + " keyword must be unique in the deck. Ignoring all!");
         auto keywords = deck.getKeywordList(keywordName);
