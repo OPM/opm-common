@@ -111,38 +111,6 @@ namespace Opm {
         void initNNC(DeckConstPtr deck);
 
 
-        template <class TableType>
-        void initSimpleTables(DeckConstPtr deck,
-                              const std::string& keywordName,
-                              std::vector<TableType>& tableVector) {
-            if (!deck->hasKeyword(keywordName))
-                return; // the table is not featured by the deck...
-
-            if (deck->numKeywords(keywordName) > 1) {
-                complainAboutAmbiguousKeyword(deck, keywordName);
-                return;
-            }
-
-            const auto& tableKeyword = deck->getKeyword(keywordName);
-            for (size_t tableIdx = 0; tableIdx < tableKeyword->size(); ++tableIdx) {
-                if (tableKeyword->getRecord(tableIdx)->getItem(0)->size() == 0) {
-                    // for simple tables, an empty record indicates that the previous table
-                    // should be copied...
-                    if (tableIdx == 0) {
-                        std::string msg = "The first table for keyword "+keywordName+" must be explicitly defined! Ignoring keyword";
-                        OpmLog::addMessage(Log::MessageType::Warning , Log::fileMessage( tableKeyword->getFileName(), tableKeyword->getLineNumber(), msg));
-                        return;
-                    }
-                    tableVector.push_back(tableVector.back());
-                    continue;
-                }
-
-                tableVector.push_back(TableType());
-                tableVector[tableIdx].init(tableKeyword, tableIdx);
-            }
-        }
-
-
         void setMULTFLT(std::shared_ptr<const Section> section) const;
         void initMULTREGT(DeckConstPtr deck);
 
