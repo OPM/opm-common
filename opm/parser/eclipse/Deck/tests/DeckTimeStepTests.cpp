@@ -33,7 +33,7 @@ using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(testDeckTimeStepInitialize) {
 
-  BOOST_CHECK_NO_THROW(DeckTimeStep deckTimeStep());
+  BOOST_CHECK_NO_THROW(DeckTimeStep deckTimeStep);
 }
 
 BOOST_AUTO_TEST_CASE(testDeckTimeStepTSTEP) {
