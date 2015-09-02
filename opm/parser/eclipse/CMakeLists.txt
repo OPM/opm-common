@@ -350,3 +350,7 @@ include( ${PROJECT_SOURCE_DIR}/cmake/Modules/install_headers.cmake )
 install_headers( "${HEADER_FILES}" "${CMAKE_INSTALL_PREFIX}" )
 install( TARGETS opmparser DESTINATION ${CMAKE_INSTALL_LIBDIR} )
 install( FILES ${PROJECT_BINARY_DIR}/generated-source/include/opm/parser/eclipse/Parser/ParserKeywords.hpp DESTINATION "include/opm/parser/eclipse/Parser")
+
+if (ENABLE_PYTHON)
+   add_subdirectory( python )
+endif()
