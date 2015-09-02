@@ -98,10 +98,10 @@ void VFPProdTable::init(DeckKeywordConstPtr table, std::shared_ptr<Opm::UnitSyst
 
     //Check units used for this table
     std::string units_string = "";
-    try {
+    if (header->getItem<VFPPROD::UNITS>()->hasValue(0)) {
         units_string = header->getItem<VFPPROD::UNITS>()->getString(0);
     }
-    catch (...) {
+    else {
         //If units does not exist in record, the default value is the
         //unit system of the deck itself: do nothing...
     }

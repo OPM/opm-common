@@ -98,10 +98,10 @@ void VFPInjTable::init(DeckKeywordConstPtr table, std::shared_ptr<Opm::UnitSyste
 
     //Check units used for this table
     std::string units_string = "";
-    try {
-        units_string = getNonEmptyItem<VFPINJ::UNITS>(header)->getString(0);
+    if (header->getItem<VFPINJ::UNITS>()->hasValue(0)) {
+        units_string = header->getItem<VFPINJ::UNITS>()->getString(0);
     }
-    catch (...) {
+    else {
         //If units does not exist in record, the default value is the
         //unit system of the deck itself: do nothing...
     }
