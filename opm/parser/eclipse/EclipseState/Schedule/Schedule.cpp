@@ -263,14 +263,14 @@ namespace Opm {
 
                 DeckTimeStepConstPtr deckTimeStep = section->getDeckTimeStep(currentStep);
                 if (deckTimeStep->hasKeyword("COMPORD")) {
-                    DeckKeywordConstPtr keyword = deckTimeStep->getKeyword("COMPORD");
+                    DeckKeywordConstPtr compord = deckTimeStep->getKeyword("COMPORD");
 
-                    for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
-                        DeckRecordConstPtr record = keyword->getRecord(recordNr);
+                    for (size_t compordRecordNr = 0; compordRecordNr < compord->size(); compordRecordNr++) {
+                        DeckRecordConstPtr compordRecord = compord->getRecord(compordRecordNr);
 
-                        const std::string& wellNamePattern = record->getItem(0)->getTrimmedString(0);
+                        const std::string& wellNamePattern = compordRecord->getItem(0)->getTrimmedString(0);
                         if (Well::wellNameInWellNamePattern(wellName, wellNamePattern)) {
-                            const std::string& compordString = record->getItem(1)->getTrimmedString(0);
+                            const std::string& compordString = compordRecord->getItem(1)->getTrimmedString(0);
                             wellCompletionOrder = WellCompletion::CompletionOrderEnumFromString(compordString);
                         }
                     }

@@ -246,7 +246,6 @@ protected:
         }
 
         case SaturationFunctionFamily::FamilyII: {
-            auto tables = m_eclipseState.getTableManager();
             const std::vector<SwfnTable>& swfnTables = tables->getSwfnTables();
             const std::vector<SgfnTable>& sgfnTables = tables->getSgfnTables();
             const std::vector<Sof3Table>& sof3Tables = tables->getSof3Tables();
@@ -374,7 +373,6 @@ protected:
             break;
         }
         case SaturationFunctionFamily::FamilyII: {
-            auto tables = m_eclipseState.getTableManager();
             const std::vector<SwfnTable>& swfnTables = tables->getSwfnTables();
             const std::vector<SgfnTable>& sgfnTables = tables->getSgfnTables();
             const std::vector<Sof3Table>& sof3Tables = tables->getSof3Tables();
