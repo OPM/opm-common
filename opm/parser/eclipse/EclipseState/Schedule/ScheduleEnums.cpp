@@ -102,11 +102,11 @@ namespace Opm {
 
         const std::string CompletionOrderEnum2String( CompletionOrderEnum enumValue ) {
             switch( enumValue ) {
-            case OPEN:
+            case DEPTH:
                 return "DEPTH";
-            case AUTO:
+            case INPUT:
                 return "INPUT";
-            case SHUT:
+            case TRACK:
                 return "TRACK";
             default:
                 throw std::invalid_argument("Unhandled enum value");
