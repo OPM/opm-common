@@ -26,7 +26,6 @@ namespace Opm {
     class TableManager;
 
     class SsfnTable : protected SingleRecordTable {
-        
 
         friend class TableManager;
         SsfnTable() = default;
@@ -35,15 +34,13 @@ namespace Opm {
          * \brief Read the SSFN keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckKeywordConstPtr keyword,
-                  int recordIdx)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            SingleRecordTable::init(keyword,
+            SingleRecordTable::init(record,
                              std::vector<std::string>{
                                  "SolventFraction",
                                  "GasRelPermMultiplier",
                                  "SolventRelPermMultiplier"},
-                             recordIdx,
                              /*firstEntityOffset=*/0);
 
             SingleRecordTable::checkNonDefaultable("SolventFraction");

@@ -35,14 +35,13 @@ namespace Opm {
          * \brief Read the OILVISCT keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            SingleRecordTable::init(keyword,
-                             std::vector<std::string>{
-                                 "Temperature",
-                                 "Viscosity"
-                             },
-                             recordIdx,
+            SingleRecordTable::init(record ,
+                                    std::vector<std::string>{
+                                        "Temperature",
+                                        "Viscosity"
+                                            },
                              /*firstEntityOffset=*/0);
 
             SingleRecordTable::checkNonDefaultable("Temperature");

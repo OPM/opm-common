@@ -35,10 +35,9 @@ namespace Opm {
          *        methods for it.
          */
         void init(Opm::DeckKeywordConstPtr keyword) {
-
-            // the reference conditions
-            DeckRecordConstPtr record1 = keyword->getRecord(0);
-
+            Opm::DeckRecordConstPtr record1 = keyword->getRecord(0);
+            Opm::DeckRecordConstPtr dataRecord = keyword->getRecord(1);
+            
             const auto itemRefPolymerConcentration = record1->getItem("REF_POLYMER_CONCENTRATION");
             const auto itemRefSalinity = record1->getItem("REF_SALINITY");
             const auto itemRefTemperature = record1->getItem("REF_TEMPERATURE");
@@ -67,12 +66,11 @@ namespace Opm {
 
             m_data = new SingleRecordTable();
 
-            m_data->init(keyword,
+            m_data->init(dataRecord,
                          std::vector<std::string>{
                                 "WaterVelocity",
                                 "ShearMultiplier"
                              },
-                             /*recordIdx*/ 1,
                              /*firstEntityOffset=*/0);
 
             m_data->checkNonDefaultable("WaterVelocity");

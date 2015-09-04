@@ -26,7 +26,6 @@ namespace Opm {
     class TableManager;
 
     class RocktabTable : protected SingleRecordTable {
-        
 
         friend class TableManager;
         RocktabTable() = default;
@@ -35,16 +34,14 @@ namespace Opm {
          * \brief Read the ROCKTAB keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckKeywordConstPtr keyword,
+        void init(Opm::DeckRecordConstPtr record,
                   bool isDirectional,
-                  bool hasStressOption,
-                  int recordIdx)
+                  bool hasStressOption)
         {
-            SingleRecordTable::init(keyword,
+            SingleRecordTable::init(record,
                              isDirectional
                              ? std::vector<std::string>{"PO", "PV_MULT", "TRANSMIS_MULT_X", "TRANSMIS_MULT_Y", "TRANSMIS_MULT_Z"}
                              : std::vector<std::string>{"PO", "PV_MULT", "TRANSMIS_MULT"},
-                             recordIdx,
                              /*firstEntityOffset=*/0);
             m_isDirectional = isDirectional;
 

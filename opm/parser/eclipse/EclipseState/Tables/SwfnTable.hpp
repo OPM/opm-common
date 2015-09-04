@@ -26,7 +26,7 @@ namespace Opm {
     class TableManager;
 
     class SwfnTable : protected SingleRecordTable {
-        
+
 
         friend class TableManager;
 
@@ -34,12 +34,10 @@ namespace Opm {
          * \brief Read the SWFN keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckKeywordConstPtr keyword,
-                  int recordIdx)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            SingleRecordTable::init(keyword,
+            SingleRecordTable::init(record,
                              std::vector<std::string>{"SW", "KRW", "PCOW"},
-                             recordIdx,
                              /*firstEntityOffset=*/0);
 
             SingleRecordTable::checkNonDefaultable("SW");
@@ -55,8 +53,8 @@ namespace Opm {
 
 #ifdef BOOST_TEST_MODULE
         // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
-        void initFORUNITTESTONLY(Opm::DeckKeywordConstPtr keyword, size_t tableIdx)
-        { init(keyword, tableIdx); }
+        void initFORUNITTESTONLY(Opm::DeckRecordConstPtr record)
+        { init(record); }
 #endif
 
         using SingleRecordTable::numTables;

@@ -35,12 +35,10 @@ namespace Opm {
          * \brief Read the PVDO keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckKeywordConstPtr keyword,
-                  int recordIdx)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            SingleRecordTable::init(keyword,
+            SingleRecordTable::init(record,
                              std::vector<std::string>{"P", "BO", "MUO"},
-                             recordIdx,
                              /*firstEntityOffset=*/0);
 
             SingleRecordTable::checkNonDefaultable("P");

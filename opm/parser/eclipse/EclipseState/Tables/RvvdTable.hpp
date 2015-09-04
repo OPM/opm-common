@@ -26,7 +26,6 @@ namespace Opm {
     class TableManager;
 
     class RvvdTable : protected SingleRecordTable {
-        
 
         friend class TableManager;
 
@@ -36,11 +35,10 @@ namespace Opm {
          * \brief Read the RSVD keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            SingleRecordTable::init(keyword,
+            SingleRecordTable::init(record,
                              std::vector<std::string>{"DEPTH", "RV"},
-                             recordIdx,
                              /*firstEntityOffset=*/0);
 
             SingleRecordTable::checkNonDefaultable("DEPTH");

@@ -94,20 +94,17 @@ BOOST_AUTO_TEST_CASE(CreateSingleRecordTable) {
 
     BOOST_CHECK_EQUAL(Opm::SingleRecordTable::numTables(deck->getKeyword("SWOF")), 2);
     Opm::SingleRecordTable tmpTable;
-    BOOST_CHECK_THROW(tmpTable.initFORUNITTESTONLY(deck->getKeyword("SWOF"),
+    BOOST_CHECK_THROW(tmpTable.initFORUNITTESTONLY(deck->getKeyword("SWOF")->getRecord(0),
                                                    tooFewColumnNames,
-                                                   /*recordIdx=*/0,
                                                    /*firstEntryOffset=*/0),
                       std::runtime_error);
-    BOOST_CHECK_THROW(tmpTable.initFORUNITTESTONLY(deck->getKeyword("SWOF"),
+    BOOST_CHECK_THROW(tmpTable.initFORUNITTESTONLY(deck->getKeyword("SWOF")->getRecord(0),
                                                    tooManyColumnNames,
-                                                   /*recordIdx=*/0,
                                                    /*firstEntryOffset=*/0),
                       std::runtime_error);
 
-    tmpTable.initFORUNITTESTONLY(deck->getKeyword("SWOF"),
+    tmpTable.initFORUNITTESTONLY(deck->getKeyword("SWOF")->getRecord(0),
                                  justRightColumnNames,
-                                 /*recordIdx=*/0,
                                  /*firstEntryOffset=*/0);
 }
 
@@ -176,8 +173,8 @@ BOOST_AUTO_TEST_CASE(SwofTable_Tests) {
     Opm::SwofTable swof1Table;
     Opm::SwofTable swof2Table;
 
-    swof1Table.initFORUNITTESTONLY(deck->getKeyword("SWOF"), /*tableIdx=*/0);
-    swof2Table.initFORUNITTESTONLY(deck->getKeyword("SWOF"), /*tableIdx=*/1);
+    swof1Table.initFORUNITTESTONLY(deck->getKeyword("SWOF")->getRecord(0));
+    swof2Table.initFORUNITTESTONLY(deck->getKeyword("SWOF")->getRecord(1));
 
     BOOST_CHECK_EQUAL(swof1Table.numRows(), 2);
     BOOST_CHECK_EQUAL(swof2Table.numRows(), 3);
@@ -224,8 +221,8 @@ BOOST_AUTO_TEST_CASE(SgofTable_Tests) {
     Opm::SgofTable sgof1Table;
     Opm::SgofTable sgof2Table;
 
-    sgof1Table.initFORUNITTESTONLY(deck->getKeyword("SGOF"), /*tableIdx=*/0);
-    sgof2Table.initFORUNITTESTONLY(deck->getKeyword("SGOF"), /*tableIdx=*/1);
+    sgof1Table.initFORUNITTESTONLY(deck->getKeyword("SGOF")->getRecord(0));
+    sgof2Table.initFORUNITTESTONLY(deck->getKeyword("SGOF")->getRecord(1));
 
     BOOST_CHECK_EQUAL(sgof1Table.numRows(), 2);
     BOOST_CHECK_EQUAL(sgof2Table.numRows(), 3);
@@ -274,7 +271,7 @@ BOOST_AUTO_TEST_CASE(PlyadsTable_Tests) {
         BOOST_CHECK_EQUAL(Opm::PlyadsTable::numTables(plyadsKeyword), 1);
 
         Opm::PlyadsTable plyadsTable;
-        plyadsTable.initFORUNITTESTONLY(plyadsKeyword, /*tableIdx=*/0);
+        plyadsTable.initFORUNITTESTONLY(plyadsKeyword->getRecord(0));
 
         BOOST_CHECK_CLOSE(plyadsTable.getPolymerConcentrationColumn().front(), 0.0, 1e-6);
         BOOST_CHECK_CLOSE(plyadsTable.getPolymerConcentrationColumn().back(), 3.0, 1e-6);
@@ -306,7 +303,7 @@ BOOST_AUTO_TEST_CASE(PlyadsTable_Tests) {
         BOOST_CHECK_EQUAL(Opm::PlyadsTable::numTables(plyadsKeyword), 1);
 
         Opm::PlyadsTable plyadsTable;
-        BOOST_CHECK_THROW(plyadsTable.initFORUNITTESTONLY(plyadsKeyword, /*tableIdx=*/0), std::invalid_argument);
+        BOOST_CHECK_THROW(plyadsTable.initFORUNITTESTONLY(plyadsKeyword->getRecord(0)), std::invalid_argument);
     }
 
     {
@@ -332,7 +329,7 @@ BOOST_AUTO_TEST_CASE(PlyadsTable_Tests) {
         BOOST_CHECK_EQUAL(Opm::PlyadsTable::numTables(plyadsKeyword), 1);
 
         Opm::PlyadsTable plyadsTable;
-        BOOST_CHECK_THROW(plyadsTable.initFORUNITTESTONLY(plyadsKeyword, /*tableIdx=*/0), std::invalid_argument);
+        BOOST_CHECK_THROW(plyadsTable.initFORUNITTESTONLY(plyadsKeyword->getRecord(0)), std::invalid_argument);
     }
 }
 

@@ -34,14 +34,13 @@ namespace Opm {
          * \brief Read the WATVISCT keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            SingleRecordTable::init(keyword,
+            SingleRecordTable::init(record,
                              std::vector<std::string>{
                                  "Temperature",
                                  "Viscosity"
                              },
-                             recordIdx,
                              /*firstEntityOffset=*/0);
 
             SingleRecordTable::checkNonDefaultable("Temperature");

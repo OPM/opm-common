@@ -26,7 +26,6 @@ namespace Opm {
     class TableManager;
 
     class PlyrockTable : protected SingleRecordTable {
-        
 
         friend class TableManager;
         PlyrockTable() = default;
@@ -35,9 +34,9 @@ namespace Opm {
          * \brief Read the PLYROCK keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            SingleRecordTable::init(keyword,
+            SingleRecordTable::init(record,
                              std::vector<std::string>{
                                  "DeadPoreVolume",
                                  "ResidualResistanceFactor",
@@ -45,7 +44,6 @@ namespace Opm {
                                  "AdsorbtionIndex",
                                  "MaxAdsorbtion"
                              },
-                             recordIdx,
                              /*firstEntityOffset=*/0);
 
             // the entries of this keyword cannot be defaulted except for the

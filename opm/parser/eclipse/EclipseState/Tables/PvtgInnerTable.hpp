@@ -30,7 +30,7 @@ namespace Opm {
     class PvtgInnerTable;
 
     class PvtgInnerTable : protected MultiRecordTable {
-        
+
 
         friend class PvtgTable;
         friend class FullTable<PvtgOuterTable, PvtgInnerTable>;
@@ -42,11 +42,11 @@ namespace Opm {
          *
          * The first value of the record (-> Rv) is skipped.
          */
-        void init(Opm::DeckKeywordConstPtr keyword, size_t recordIdx)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            SingleRecordTable::init(keyword,
+            SingleRecordTable::init(record,
                              std::vector<std::string>{"RV", "BG", "MUG"},
-                             recordIdx, 1U);
+                             1U);
 
             SingleRecordTable::checkNonDefaultable("RV");
             SingleRecordTable::checkMonotonic("RV", /*isAscending=*/false);

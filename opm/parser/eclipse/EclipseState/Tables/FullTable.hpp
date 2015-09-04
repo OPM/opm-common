@@ -61,8 +61,8 @@ namespace Opm {
 
             for (size_t rowIdx = 0; rowIdx < m_outerTable->numRecords(); ++rowIdx) {
                 InnerTable *curRow = new InnerTable;
-                curRow->init(keyword,
-                             /*recordIdx=*/m_outerTable->firstRecordIndex() + rowIdx);
+                auto record = keyword->getRecord( m_outerTable->firstRecordIndex() + rowIdx );
+                curRow->init(record);
                 m_innerTables.push_back(std::shared_ptr<const InnerTable>(curRow));
             }
         }

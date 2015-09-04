@@ -134,7 +134,7 @@ namespace Opm {
             }
 
             tableVector.push_back(GasvisctTable());
-            tableVector[tableIdx].init(deck, tableKeyword, tableIdx);
+            tableVector[tableIdx].init(deck, tableKeyword->getRecord(tableIdx));
         }
     }
 
@@ -192,10 +192,9 @@ namespace Opm {
             }
 
             m_rocktabTables.push_back(RocktabTable());
-            m_rocktabTables[tableIdx].init(rocktabKeyword,
+            m_rocktabTables[tableIdx].init(rocktabKeyword->getRecord( tableIdx ),
                                            isDirectional,
-                                           useStressOption,
-                                           tableIdx);
+                                           useStressOption);
         }
     }
 

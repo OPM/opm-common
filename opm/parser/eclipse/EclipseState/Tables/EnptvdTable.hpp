@@ -26,7 +26,7 @@ namespace Opm {
     class TableManager;
 
     class EnptvdTable : protected SingleRecordTable {
-        
+
 
         friend class TableManager;
         EnptvdTable() = default;
@@ -35,10 +35,9 @@ namespace Opm {
          * \brief Read the ENPTVD keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckKeywordConstPtr keyword,
-                  int recordIdx)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            SingleRecordTable::init(keyword,
+            SingleRecordTable::init(record,
                              std::vector<std::string>{"DEPTH",
                                      "SWCO",
                                      "SWCRIT",
@@ -48,7 +47,6 @@ namespace Opm {
                                      "SGMAX",
                                      "SOWCRIT",
                                      "SOGCRIT"},
-                             recordIdx,
                              /*firstEntityOffset=*/0);
 
             SingleRecordTable::checkNonDefaultable("DEPTH");

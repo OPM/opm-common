@@ -30,7 +30,6 @@ namespace Opm {
     class PvtoInnerTable;
 
     class PvtoInnerTable : protected MultiRecordTable {
-        
 
         friend class PvtoTable;
         friend class FullTable<PvtoOuterTable, PvtoInnerTable>;
@@ -42,11 +41,10 @@ namespace Opm {
          *
          * The first value of the record (-> Rs) is skipped.
          */
-        void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            SingleRecordTable::init(keyword,
+            SingleRecordTable::init(record,
                              std::vector<std::string>{"P", "BO", "MU"},
-                             recordIdx,
                              /*firstEntityOffset=*/1);
 
             SingleRecordTable::checkNonDefaultable("P");

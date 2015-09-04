@@ -26,7 +26,7 @@ namespace Opm {
     class TableManager;
 
     class ImptvdTable : protected SingleRecordTable {
-        
+
 
         friend class TableManager;
         ImptvdTable() = default;
@@ -35,10 +35,9 @@ namespace Opm {
          * \brief Read the IMPTVD keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckKeywordConstPtr keyword,
-                  int recordIdx)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            SingleRecordTable::init(keyword,
+            SingleRecordTable::init(record,
                              std::vector<std::string>{"DEPTH",
                                      "SWCO",
                                      "SWCRIT",
@@ -48,8 +47,7 @@ namespace Opm {
                                      "SGMAX",
                                      "SOWCRIT",
                                      "SOGCRIT"},
-                             recordIdx,
-                             /*firstEntityOffset=*/0);
+                                    /*firstEntityOffset=*/0);
             SingleRecordTable::checkNonDefaultable("DEPTH");
             SingleRecordTable::checkMonotonic("DEPTH", /*isAscending=*/true);
             SingleRecordTable::applyDefaultsLinear("SWCO");

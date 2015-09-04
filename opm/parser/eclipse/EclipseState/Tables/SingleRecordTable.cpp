@@ -25,16 +25,11 @@ size_t SingleRecordTable::numTables(Opm::DeckKeywordConstPtr keyword)
 }
 
 // create table from single record
-void SingleRecordTable::init(Opm::DeckKeywordConstPtr keyword,
+void SingleRecordTable::init(Opm::DeckRecordConstPtr deckRecord,
                              const std::vector<std::string> &columnNames,
-                             size_t recordIdx,
                              size_t firstEntityOffset)
 {
     createColumns(columnNames);
-
-    // extract the actual data from the deck
-    Opm::DeckRecordConstPtr deckRecord =
-        keyword->getRecord(recordIdx);
 
     size_t numFlatItems = getNumFlatItems(deckRecord);
     if ( (numFlatItems - firstEntityOffset) % numColumns() != 0)

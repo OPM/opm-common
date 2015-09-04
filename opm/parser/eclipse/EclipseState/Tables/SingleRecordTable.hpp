@@ -40,9 +40,8 @@ namespace Opm {
          * This requires all data to be a list of doubles in the first
          * item of a given record index.
          */
-        void init(Opm::DeckKeywordConstPtr keyword,
+        void init(Opm::DeckRecordConstPtr record,
                   const std::vector<std::string> &columnNames,
-                  size_t recordIdx,
                   size_t firstEntityOffset);
 
     public:
@@ -58,11 +57,10 @@ namespace Opm {
 
 #ifdef BOOST_TEST_MODULE
         // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
-        void initFORUNITTESTONLY(Opm::DeckKeywordConstPtr keyword,
+        void initFORUNITTESTONLY(Opm::DeckRecordConstPtr record,
                   const std::vector<std::string> &columnNames,
-                  size_t recordIdx,
                   size_t firstEntityOffset)
-        { init(keyword, columnNames, recordIdx, firstEntityOffset); }
+        { init(record , columnNames, firstEntityOffset); }
 #endif
 
         size_t numColumns() const;

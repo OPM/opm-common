@@ -26,7 +26,6 @@ namespace Opm {
     class TableManager;
 
     class GasvisctTable : protected SingleRecordTable {
-        
 
         friend class TableManager;
         GasvisctTable() = default;
@@ -35,7 +34,7 @@ namespace Opm {
          * \brief Read the GASVISCT keyword and provide some convenience
          *        methods for it.
          */
-        void init(const Deck& deck, Opm::DeckKeywordConstPtr keyword, int recordIdx)
+        void init(const Deck& deck, Opm::DeckRecordConstPtr deckRecord)
         {
             int numComponents = deck.getKeyword("COMPS")->getRecord(0)->getItem(0)->getInt(0);
 
@@ -52,9 +51,6 @@ namespace Opm {
             SingleRecordTable::createColumns(columnNames);
 
             // extract the actual data from the deck
-            Opm::DeckRecordConstPtr deckRecord =
-                keyword->getRecord(recordIdx);
-
             size_t numFlatItems = getNumFlatItems(deckRecord);
             if ( numFlatItems % numColumns() != 0)
                 throw std::runtime_error("Number of columns in the data file is inconsistent "

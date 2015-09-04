@@ -26,7 +26,6 @@ namespace Opm {
     class TableManager;
 
     class PlymaxTable : protected SingleRecordTable {
-        
 
         friend class TableManager;
         PlymaxTable() = default;
@@ -35,11 +34,10 @@ namespace Opm {
          * \brief Read the PLYMAX keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            SingleRecordTable::init(keyword,
+            SingleRecordTable::init(record,
                              std::vector<std::string>{"C_POLYMER", "C_POLYMER_MAX"},
-                             recordIdx,
                              /*firstEntityOffset=*/0);
 
             SingleRecordTable::checkNonDefaultable("C_POLYMER");
