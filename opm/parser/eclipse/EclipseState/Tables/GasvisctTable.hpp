@@ -26,7 +26,7 @@ namespace Opm {
     class TableManager;
 
     class GasvisctTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+        
 
         friend class TableManager;
         GasvisctTable() = default;
@@ -49,7 +49,7 @@ namespace Opm {
             for (int compIdx = 0; compIdx < numComponents; ++ compIdx)
                 columnNames.push_back("Viscosity" + std::to_string(static_cast<long long>(compIdx)));
 
-            ParentType::createColumns(columnNames);
+            SingleRecordTable::createColumns(columnNames);
 
             // extract the actual data from the deck
             Opm::DeckRecordConstPtr deckRecord =
@@ -91,29 +91,29 @@ namespace Opm {
             // reference manual. (actually, the documentation does not say anyting about
             // whether items of these columns are defaultable or not, so we assume here
             // that they are not.)
-            ParentType::checkNonDefaultable("Temperature");
-            ParentType::checkMonotonic("Temperature", /*isAscending=*/true);
+            SingleRecordTable::checkNonDefaultable("Temperature");
+            SingleRecordTable::checkMonotonic("Temperature", /*isAscending=*/true);
 
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                 std::string columnName = "Viscosity" + std::to_string(static_cast<long long>(compIdx));
-                ParentType::checkNonDefaultable(columnName);
-                ParentType::checkMonotonic(columnName,
+                SingleRecordTable::checkNonDefaultable(columnName);
+                SingleRecordTable::checkMonotonic(columnName,
                                            /*isAscending=*/true,
                                            /*strictlyMonotonic=*/false);
             }
         }
 
     public:
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SingleRecordTable::numTables;
+        using SingleRecordTable::numRows;
+        using SingleRecordTable::numColumns;
+        using SingleRecordTable::evaluate;
 
         const std::vector<double> &getTemperatureColumn() const
-        { return ParentType::getColumn(0); }
+        { return SingleRecordTable::getColumn(0); }
 
         const std::vector<double> &getGasViscosityColumn(size_t compIdx) const
-        { return ParentType::getColumn(1 + compIdx); }
+        { return SingleRecordTable::getColumn(1 + compIdx); }
     };
 }
 

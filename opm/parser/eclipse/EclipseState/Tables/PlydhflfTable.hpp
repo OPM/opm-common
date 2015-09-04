@@ -26,7 +26,7 @@ namespace Opm {
     class TableManager;
 
     class PlydhflfTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+        
 
         friend class TableManager;
         PlydhflfTable() = default;
@@ -37,7 +37,7 @@ namespace Opm {
          */
         void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
         {
-            ParentType::init(keyword,
+            SingleRecordTable::init(keyword,
                              std::vector<std::string>{
                                  "Temperature",
                                  "PolymerHalflife"
@@ -45,23 +45,23 @@ namespace Opm {
                              recordIdx,
                              /*firstEntityOffset=*/0);
 
-            ParentType::checkNonDefaultable("Temperetura");
-            ParentType::checkMonotonic("Temperature", /*isAscending=*/true);
-            ParentType::checkNonDefaultable("PolymerHalflife");
-            ParentType::checkMonotonic("PolymerHalflife", /*isAscending=*/false);
+            SingleRecordTable::checkNonDefaultable("Temperetura");
+            SingleRecordTable::checkMonotonic("Temperature", /*isAscending=*/true);
+            SingleRecordTable::checkNonDefaultable("PolymerHalflife");
+            SingleRecordTable::checkMonotonic("PolymerHalflife", /*isAscending=*/false);
         }
 
     public:
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SingleRecordTable::numTables;
+        using SingleRecordTable::numRows;
+        using SingleRecordTable::numColumns;
+        using SingleRecordTable::evaluate;
 
         const std::vector<double> &getTemperatureColumn() const
-        { return ParentType::getColumn(0); }
+        { return SingleRecordTable::getColumn(0); }
 
         const std::vector<double> &getPolymerHalflifeColumn() const
-        { return ParentType::getColumn(1); }
+        { return SingleRecordTable::getColumn(1); }
     };
 }
 

@@ -26,7 +26,7 @@ namespace Opm {
     class TableManager;
 
     class RvvdTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+        
 
         friend class TableManager;
 
@@ -38,27 +38,27 @@ namespace Opm {
          */
         void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
         {
-            ParentType::init(keyword,
+            SingleRecordTable::init(keyword,
                              std::vector<std::string>{"DEPTH", "RV"},
                              recordIdx,
                              /*firstEntityOffset=*/0);
 
-            ParentType::checkNonDefaultable("DEPTH");
-            ParentType::checkMonotonic("DEPTH", /*isAscending=*/true);
-            ParentType::checkNonDefaultable("RV");
+            SingleRecordTable::checkNonDefaultable("DEPTH");
+            SingleRecordTable::checkMonotonic("DEPTH", /*isAscending=*/true);
+            SingleRecordTable::checkNonDefaultable("RV");
         }
 
     public:
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SingleRecordTable::numTables;
+        using SingleRecordTable::numRows;
+        using SingleRecordTable::numColumns;
+        using SingleRecordTable::evaluate;
 
         const std::vector<double> &getDepthColumn() const
-        { return ParentType::getColumn(0); }
+        { return SingleRecordTable::getColumn(0); }
 
         const std::vector<double> &getRvColumn() const
-        { return ParentType::getColumn(1); }
+        { return SingleRecordTable::getColumn(1); }
     };
 }
 

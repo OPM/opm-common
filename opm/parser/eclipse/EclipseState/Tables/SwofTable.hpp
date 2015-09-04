@@ -26,7 +26,7 @@ namespace Opm {
     class TableManager;
 
     class SwofTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+        
 
         friend class TableManager;
 
@@ -37,16 +37,16 @@ namespace Opm {
         void init(Opm::DeckKeywordConstPtr keyword,
                   int recordIdx)
         {
-            ParentType::init(keyword,
+            SingleRecordTable::init(keyword,
                              std::vector<std::string>{"SW", "KRW", "KROW", "PCOW"},
                              recordIdx,
                              /*firstEntityOffset=*/0);
 
-            ParentType::checkNonDefaultable("SW");
-            ParentType::checkMonotonic("SW", /*isAscending=*/true);
-            ParentType::applyDefaultsLinear("KRW");
-            ParentType::applyDefaultsLinear("KROW");
-            ParentType::applyDefaultsLinear("PCOW");
+            SingleRecordTable::checkNonDefaultable("SW");
+            SingleRecordTable::checkMonotonic("SW", /*isAscending=*/true);
+            SingleRecordTable::applyDefaultsLinear("KRW");
+            SingleRecordTable::applyDefaultsLinear("KROW");
+            SingleRecordTable::applyDefaultsLinear("PCOW");
         }
 
     public:
@@ -58,24 +58,24 @@ namespace Opm {
         { init(keyword, tableIdx); }
 #endif
 
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SingleRecordTable::numTables;
+        using SingleRecordTable::numRows;
+        using SingleRecordTable::numColumns;
+        using SingleRecordTable::evaluate;
 
         const std::vector<double> &getSwColumn() const
-        { return ParentType::getColumn(0); }
+        { return SingleRecordTable::getColumn(0); }
 
         const std::vector<double> &getKrwColumn() const
-        { return ParentType::getColumn(1); }
+        { return SingleRecordTable::getColumn(1); }
 
         const std::vector<double> &getKrowColumn() const
-        { return ParentType::getColumn(2); }
+        { return SingleRecordTable::getColumn(2); }
 
         // this column is p_o - p_w (non-wetting phase pressure minus
         // wetting phase pressure for a given water saturation)
         const std::vector<double> &getPcowColumn() const
-        { return ParentType::getColumn(3); }
+        { return SingleRecordTable::getColumn(3); }
     };
 }
 

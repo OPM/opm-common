@@ -26,7 +26,7 @@ namespace Opm {
     class TableManager;
 
     class PvdgTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+        
 
         friend class TableManager;
 
@@ -39,35 +39,35 @@ namespace Opm {
         void init(Opm::DeckKeywordConstPtr keyword,
                   int recordIdx)
         {
-            ParentType::init(keyword,
+            SingleRecordTable::init(keyword,
                              std::vector<std::string>{"P", "BG", "MUG"},
                              recordIdx,
                              /*firstEntityOffset=*/0);
 
-            ParentType::checkNonDefaultable("P");
-            ParentType::checkMonotonic("P", /*isAscending=*/true);
+            SingleRecordTable::checkNonDefaultable("P");
+            SingleRecordTable::checkMonotonic("P", /*isAscending=*/true);
 
-            ParentType::applyDefaultsLinear("BG");
-            ParentType::checkMonotonic("BG", /*isAscending=*/false);
+            SingleRecordTable::applyDefaultsLinear("BG");
+            SingleRecordTable::checkMonotonic("BG", /*isAscending=*/false);
 
-            ParentType::applyDefaultsLinear("MUG");
-            ParentType::checkMonotonic("MUG", /*isAscending=*/true, /*strictlyMonotonic=*/false);
+            SingleRecordTable::applyDefaultsLinear("MUG");
+            SingleRecordTable::checkMonotonic("MUG", /*isAscending=*/true, /*strictlyMonotonic=*/false);
         }
 
     public:
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SingleRecordTable::numTables;
+        using SingleRecordTable::numRows;
+        using SingleRecordTable::numColumns;
+        using SingleRecordTable::evaluate;
 
         const std::vector<double> &getPressureColumn() const
-        { return ParentType::getColumn(0); }
+        { return SingleRecordTable::getColumn(0); }
 
         const std::vector<double> &getFormationFactorColumn() const
-        { return ParentType::getColumn(1); }
+        { return SingleRecordTable::getColumn(1); }
 
         const std::vector<double> &getViscosityColumn() const
-        { return ParentType::getColumn(2); }
+        { return SingleRecordTable::getColumn(2); }
     };
 }
 

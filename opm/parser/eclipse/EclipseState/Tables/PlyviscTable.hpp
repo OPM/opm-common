@@ -26,7 +26,7 @@ namespace Opm {
     class TableManager;
 
     class PlyviscTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+        
 
         friend class TableManager;
         PlyviscTable() = default;
@@ -37,7 +37,7 @@ namespace Opm {
          */
         void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
         {
-            ParentType::init(keyword,
+            SingleRecordTable::init(keyword,
                              std::vector<std::string>{
                                  "PolymerConcentration",
                                  "ViscosityMultiplier"
@@ -45,23 +45,23 @@ namespace Opm {
                              recordIdx,
                              /*firstEntityOffset=*/0);
 
-            ParentType::checkNonDefaultable("PolymerConcentration");
-            ParentType::checkMonotonic("PolymerConcentration", /*isAscending=*/true);
-            ParentType::checkNonDefaultable("ViscosityMultiplier");
-            ParentType::checkMonotonic("ViscosityMultiplier", /*isAscending=*/true);
+            SingleRecordTable::checkNonDefaultable("PolymerConcentration");
+            SingleRecordTable::checkMonotonic("PolymerConcentration", /*isAscending=*/true);
+            SingleRecordTable::checkNonDefaultable("ViscosityMultiplier");
+            SingleRecordTable::checkMonotonic("ViscosityMultiplier", /*isAscending=*/true);
         }
 
     public:
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SingleRecordTable::numTables;
+        using SingleRecordTable::numRows;
+        using SingleRecordTable::numColumns;
+        using SingleRecordTable::evaluate;
 
         const std::vector<double> &getPolymerConcentrationColumn() const
-        { return ParentType::getColumn(0); }
+        { return SingleRecordTable::getColumn(0); }
 
         const std::vector<double> &getViscosityMultiplierColumn() const
-        { return ParentType::getColumn(1); }
+        { return SingleRecordTable::getColumn(1); }
     };
 }
 

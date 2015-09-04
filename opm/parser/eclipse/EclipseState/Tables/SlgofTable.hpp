@@ -26,7 +26,7 @@ namespace Opm {
     class TableManager;
 
     class SlgofTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+        
 
         friend class TableManager;
 
@@ -37,19 +37,19 @@ namespace Opm {
         void init(Opm::DeckKeywordConstPtr keyword,
                   int recordIdx)
         {
-            ParentType::init(keyword,
+            SingleRecordTable::init(keyword,
                              std::vector<std::string>{"SL", "KRG", "KROG", "PCOG"},
                              recordIdx,
                              /*firstEntityOffset=*/0);
 
-            ParentType::checkNonDefaultable("SL");
-            ParentType::checkMonotonic("SL", /*isAscending=*/true);
-            ParentType::checkMonotonic("KRG", /*isAscending=*/false, /*strictlyMonotonic=*/false);
-            ParentType::checkMonotonic("KROG", /*isAscending=*/true, /*strictlyMonotonic=*/false);
-            ParentType::checkMonotonic("PCOG", /*isAscending=*/false, /*strictlyMonotonic=*/false);
-            ParentType::applyDefaultsLinear("KRG");
-            ParentType::applyDefaultsLinear("KROG");
-            ParentType::applyDefaultsLinear("PCOG");
+            SingleRecordTable::checkNonDefaultable("SL");
+            SingleRecordTable::checkMonotonic("SL", /*isAscending=*/true);
+            SingleRecordTable::checkMonotonic("KRG", /*isAscending=*/false, /*strictlyMonotonic=*/false);
+            SingleRecordTable::checkMonotonic("KROG", /*isAscending=*/true, /*strictlyMonotonic=*/false);
+            SingleRecordTable::checkMonotonic("PCOG", /*isAscending=*/false, /*strictlyMonotonic=*/false);
+            SingleRecordTable::applyDefaultsLinear("KRG");
+            SingleRecordTable::applyDefaultsLinear("KROG");
+            SingleRecordTable::applyDefaultsLinear("PCOG");
 
             if (getSlColumn().back() != 1.0) {
                 throw std::invalid_argument("The last saturation of the SLGOF keyword must be 1!");
@@ -65,26 +65,26 @@ namespace Opm {
         { init(keyword, tableIdx); }
 #endif
 
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SingleRecordTable::numTables;
+        using SingleRecordTable::numRows;
+        using SingleRecordTable::numColumns;
+        using SingleRecordTable::evaluate;
 
         const std::vector<double> &getSlColumn() const
-        { return ParentType::getColumn(0); }
+        { return SingleRecordTable::getColumn(0); }
 
         const std::vector<double> &getKrgColumn() const
-        { return ParentType::getColumn(1); }
+        { return SingleRecordTable::getColumn(1); }
 
         const std::vector<double> &getKrogColumn() const
-        { return ParentType::getColumn(2); }
+        { return SingleRecordTable::getColumn(2); }
 
         // this column is p_g - p_o (non-wetting phase pressure minus
         // wetting phase pressure for a given gas saturation. the name
         // is inconsistent, but it is the one used in the Eclipse
         // manual...)
         const std::vector<double> &getPcogColumn() const
-        { return ParentType::getColumn(3); }
+        { return SingleRecordTable::getColumn(3); }
     };
 }
 

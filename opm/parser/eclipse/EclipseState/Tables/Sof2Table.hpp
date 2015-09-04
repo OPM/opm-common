@@ -26,7 +26,7 @@ namespace Opm {
     class TableManager;
 
     class Sof2Table : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+        
 
         friend class TableManager;
 
@@ -37,15 +37,15 @@ namespace Opm {
         void init(Opm::DeckKeywordConstPtr keyword,
                   int recordIdx)
         {
-            ParentType::init(keyword,
+            SingleRecordTable::init(keyword,
                              std::vector<std::string>{"SO", "KRO" },
                              recordIdx,
                              /*firstEntityOffset=*/0);
 
-            ParentType::checkNonDefaultable("SO");
-            ParentType::checkNonDefaultable("KRO");
-            ParentType::checkMonotonic("SO", /*isAscending=*/true);
-            ParentType::checkMonotonic("KRO", /*isAscending=*/true, /*strict*/false);
+            SingleRecordTable::checkNonDefaultable("SO");
+            SingleRecordTable::checkNonDefaultable("KRO");
+            SingleRecordTable::checkMonotonic("SO", /*isAscending=*/true);
+            SingleRecordTable::checkMonotonic("KRO", /*isAscending=*/true, /*strict*/false);
         }
 
     public:
@@ -57,16 +57,16 @@ namespace Opm {
         { init(keyword, tableIdx); }
 #endif
 
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SingleRecordTable::numTables;
+        using SingleRecordTable::numRows;
+        using SingleRecordTable::numColumns;
+        using SingleRecordTable::evaluate;
 
         const std::vector<double> &getSoColumn() const
-        { return ParentType::getColumn(0); }
+        { return SingleRecordTable::getColumn(0); }
 
         const std::vector<double> &getKroColumn() const
-        { return ParentType::getColumn(1); }
+        { return SingleRecordTable::getColumn(1); }
     };
 }
 

@@ -26,7 +26,7 @@ namespace Opm {
     class TableManager;
 
     class PlyadsTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+        
 
         friend class TableManager;
 
@@ -36,7 +36,7 @@ namespace Opm {
          */
         void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
         {
-            ParentType::init(keyword,
+            SingleRecordTable::init(keyword,
                              std::vector<std::string>{
                                  "PolymerConcentration",
                                  "AdsorbedPolymer"
@@ -44,10 +44,10 @@ namespace Opm {
                              recordIdx,
                              /*firstEntityOffset=*/0);
 
-            ParentType::checkNonDefaultable("PolymerConcentration");
-            ParentType::checkMonotonic("PolymerConcentration", /*isAscending=*/true);
-            ParentType::checkNonDefaultable("AdsorbedPolymer");
-            ParentType::checkMonotonic("AdsorbedPolymer", /*isAscending=*/true, /*strictlyMonotonic=*/false);
+            SingleRecordTable::checkNonDefaultable("PolymerConcentration");
+            SingleRecordTable::checkMonotonic("PolymerConcentration", /*isAscending=*/true);
+            SingleRecordTable::checkNonDefaultable("AdsorbedPolymer");
+            SingleRecordTable::checkMonotonic("AdsorbedPolymer", /*isAscending=*/true, /*strictlyMonotonic=*/false);
         }
 
     public:
@@ -59,16 +59,16 @@ namespace Opm {
         { init(keyword, tableIdx); }
 #endif
 
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SingleRecordTable::numTables;
+        using SingleRecordTable::numRows;
+        using SingleRecordTable::numColumns;
+        using SingleRecordTable::evaluate;
 
         const std::vector<double> &getPolymerConcentrationColumn() const
-        { return ParentType::getColumn(0); }
+        { return SingleRecordTable::getColumn(0); }
 
         const std::vector<double> &getAdsorbedPolymerColumn() const
-        { return ParentType::getColumn(1); }
+        { return SingleRecordTable::getColumn(1); }
     };
 }
 

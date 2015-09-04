@@ -26,7 +26,7 @@ namespace Opm {
     class TableManager;
 
     class EnkrvdTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+        
 
         friend class TableManager;
         EnkrvdTable() = default;
@@ -38,7 +38,7 @@ namespace Opm {
         void init(Opm::DeckKeywordConstPtr keyword,
                   int recordIdx)
         {
-            ParentType::init(keyword,
+            SingleRecordTable::init(keyword,
                              std::vector<std::string>{"DEPTH",
                                      "KRWMAX",
                                      "KRGMAX",
@@ -50,74 +50,74 @@ namespace Opm {
                              recordIdx,
                              /*firstEntityOffset=*/0);
 
-            ParentType::checkNonDefaultable("DEPTH");
-            ParentType::checkMonotonic("DEPTH", /*isAscending=*/true);
-            ParentType::applyDefaultsLinear("KRWMAX");
-            ParentType::applyDefaultsLinear("KRGMAX");
-            ParentType::applyDefaultsLinear("KROMAX");
-            ParentType::applyDefaultsLinear("KRWCRIT");
-            ParentType::applyDefaultsLinear("KRGCRIT");
-            ParentType::applyDefaultsLinear("KROCRITG");
-            ParentType::applyDefaultsLinear("KROCRITW");
+            SingleRecordTable::checkNonDefaultable("DEPTH");
+            SingleRecordTable::checkMonotonic("DEPTH", /*isAscending=*/true);
+            SingleRecordTable::applyDefaultsLinear("KRWMAX");
+            SingleRecordTable::applyDefaultsLinear("KRGMAX");
+            SingleRecordTable::applyDefaultsLinear("KROMAX");
+            SingleRecordTable::applyDefaultsLinear("KRWCRIT");
+            SingleRecordTable::applyDefaultsLinear("KRGCRIT");
+            SingleRecordTable::applyDefaultsLinear("KROCRITG");
+            SingleRecordTable::applyDefaultsLinear("KROCRITW");
         }
 
     public:
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SingleRecordTable::numTables;
+        using SingleRecordTable::numRows;
+        using SingleRecordTable::numColumns;
+        using SingleRecordTable::evaluate;
 
         // using this method is strongly discouraged but the current endpoint scaling
         // code makes it hard to avoid
-        using ParentType::getColumn;
+        using SingleRecordTable::getColumn;
 
         /*!
          * \brief The datum depth for the remaining columns
          */
         const std::vector<double> &getDepthColumn() const
-        { return ParentType::getColumn(0); }
+        { return SingleRecordTable::getColumn(0); }
 
         /*!
          * \brief Maximum relative permeability of water
          */
         const std::vector<double> &getKrwmaxColumn() const
-        { return ParentType::getColumn(1); }
+        { return SingleRecordTable::getColumn(1); }
 
         /*!
          * \brief Maximum relative permeability of gas
          */
         const std::vector<double> &getKrgmaxColumn() const
-        { return ParentType::getColumn(2); }
+        { return SingleRecordTable::getColumn(2); }
 
         /*!
          * \brief Maximum relative permeability of oil
          */
         const std::vector<double> &getKromaxColumn() const
-        { return ParentType::getColumn(3); }
+        { return SingleRecordTable::getColumn(3); }
 
         /*!
          * \brief Relative permeability of water at the critical oil (or gas) saturation
          */
         const std::vector<double> &getKrwcritColumn() const
-        { return ParentType::getColumn(4); }
+        { return SingleRecordTable::getColumn(4); }
 
         /*!
          * \brief Relative permeability of gas at the critical oil (or water) saturation
          */
         const std::vector<double> &getKrgcritColumn() const
-        { return ParentType::getColumn(5); }
+        { return SingleRecordTable::getColumn(5); }
 
         /*!
          * \brief Oil relative permeability of oil at the critical gas saturation
          */
         const std::vector<double> &getKrocritgColumn() const
-        { return ParentType::getColumn(6); }
+        { return SingleRecordTable::getColumn(6); }
 
         /*!
          * \brief Oil relative permeability of oil at the critical water saturation
          */
         const std::vector<double> &getKrocritwColumn() const
-        { return ParentType::getColumn(7); }
+        { return SingleRecordTable::getColumn(7); }
     };
 }
 

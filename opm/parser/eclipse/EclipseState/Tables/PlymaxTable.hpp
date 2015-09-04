@@ -26,7 +26,7 @@ namespace Opm {
     class TableManager;
 
     class PlymaxTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+        
 
         friend class TableManager;
         PlymaxTable() = default;
@@ -37,28 +37,28 @@ namespace Opm {
          */
         void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
         {
-            ParentType::init(keyword,
+            SingleRecordTable::init(keyword,
                              std::vector<std::string>{"C_POLYMER", "C_POLYMER_MAX"},
                              recordIdx,
                              /*firstEntityOffset=*/0);
 
-            ParentType::checkNonDefaultable("C_POLYMER");
-            ParentType::checkMonotonic("C_POLYMER", /*isAscending=*/false);
-            ParentType::checkNonDefaultable("C_POLYMER_MAX");
-            ParentType::checkMonotonic("C_POLYMER_MAX", /*isAscending=*/false);
+            SingleRecordTable::checkNonDefaultable("C_POLYMER");
+            SingleRecordTable::checkMonotonic("C_POLYMER", /*isAscending=*/false);
+            SingleRecordTable::checkNonDefaultable("C_POLYMER_MAX");
+            SingleRecordTable::checkMonotonic("C_POLYMER_MAX", /*isAscending=*/false);
         }
 
     public:
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SingleRecordTable::numTables;
+        using SingleRecordTable::numRows;
+        using SingleRecordTable::numColumns;
+        using SingleRecordTable::evaluate;
 
         const std::vector<double> &getPolymerConcentrationColumn() const
-        { return ParentType::getColumn(0); }
+        { return SingleRecordTable::getColumn(0); }
 
         const std::vector<double> &getMaxPolymerConcentrationColumn() const
-        { return ParentType::getColumn(1); }
+        { return SingleRecordTable::getColumn(1); }
     };
 }
 

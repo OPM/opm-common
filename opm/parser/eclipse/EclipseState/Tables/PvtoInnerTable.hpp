@@ -30,7 +30,7 @@ namespace Opm {
     class PvtoInnerTable;
 
     class PvtoInnerTable : protected MultiRecordTable {
-        typedef SingleRecordTable ParentType;
+        
 
         friend class PvtoTable;
         friend class FullTable<PvtoOuterTable, PvtoInnerTable>;
@@ -44,31 +44,31 @@ namespace Opm {
          */
         void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
         {
-            ParentType::init(keyword,
+            SingleRecordTable::init(keyword,
                              std::vector<std::string>{"P", "BO", "MU"},
                              recordIdx,
                              /*firstEntityOffset=*/1);
 
-            ParentType::checkNonDefaultable("P");
-            ParentType::checkMonotonic("P", /*isAscending=*/true);
-            ParentType::applyDefaultsLinear("BO");
-            ParentType::applyDefaultsLinear("MU");
+            SingleRecordTable::checkNonDefaultable("P");
+            SingleRecordTable::checkMonotonic("P", /*isAscending=*/true);
+            SingleRecordTable::applyDefaultsLinear("BO");
+            SingleRecordTable::applyDefaultsLinear("MU");
         }
 
     public:
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SingleRecordTable::numTables;
+        using SingleRecordTable::numRows;
+        using SingleRecordTable::numColumns;
+        using SingleRecordTable::evaluate;
 
         const std::vector<double> &getPressureColumn() const
-        { return ParentType::getColumn(0); }
+        { return SingleRecordTable::getColumn(0); }
 
         const std::vector<double> &getOilFormationFactorColumn() const
-        { return ParentType::getColumn(1); }
+        { return SingleRecordTable::getColumn(1); }
 
         const std::vector<double> &getOilViscosityColumn() const
-        { return ParentType::getColumn(2); }
+        { return SingleRecordTable::getColumn(2); }
     };
 }
 

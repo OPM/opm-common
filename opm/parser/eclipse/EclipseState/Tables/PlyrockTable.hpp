@@ -26,7 +26,7 @@ namespace Opm {
     class TableManager;
 
     class PlyrockTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+        
 
         friend class TableManager;
         PlyrockTable() = default;
@@ -37,7 +37,7 @@ namespace Opm {
          */
         void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
         {
-            ParentType::init(keyword,
+            SingleRecordTable::init(keyword,
                              std::vector<std::string>{
                                  "DeadPoreVolume",
                                  "ResidualResistanceFactor",
@@ -67,21 +67,21 @@ namespace Opm {
         }
 
     public:
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
+        using SingleRecordTable::numTables;
+        using SingleRecordTable::numRows;
+        using SingleRecordTable::numColumns;
 
         // since this keyword is not necessarily monotonic, it cannot be evaluated!
-        //using ParentType::evaluate;
+        //using SingleRecordTable::evaluate;
 
         const std::vector<double> &getDeadPoreVolumeColumn() const
-        { return ParentType::getColumn(0); }
+        { return SingleRecordTable::getColumn(0); }
 
         const std::vector<double> &getResidualResistanceFactorColumn() const
-        { return ParentType::getColumn(1); }
+        { return SingleRecordTable::getColumn(1); }
 
         const std::vector<double> &getRockDensityFactorColumn() const
-        { return ParentType::getColumn(2); }
+        { return SingleRecordTable::getColumn(2); }
 
         // is column is actually an integer, but this is not yet
         // supported by opm-parser (yet?) as it would require quite a
@@ -92,10 +92,10 @@ namespace Opm {
         // calling code. (Make sure, that you don't interpolate
         // indices, though!)
         const std::vector<double> &getAdsorbtionIndexColumn() const
-        { return ParentType::getColumn(3); }
+        { return SingleRecordTable::getColumn(3); }
 
         const std::vector<double> &getMaxAdsorbtionColumn() const
-        { return ParentType::getColumn(4); }
+        { return SingleRecordTable::getColumn(4); }
     };
 }
 

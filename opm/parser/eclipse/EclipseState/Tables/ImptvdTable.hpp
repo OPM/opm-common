@@ -26,7 +26,7 @@ namespace Opm {
     class TableManager;
 
     class ImptvdTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+        
 
         friend class TableManager;
         ImptvdTable() = default;
@@ -38,7 +38,7 @@ namespace Opm {
         void init(Opm::DeckKeywordConstPtr keyword,
                   int recordIdx)
         {
-            ParentType::init(keyword,
+            SingleRecordTable::init(keyword,
                              std::vector<std::string>{"DEPTH",
                                      "SWCO",
                                      "SWCRIT",
@@ -50,74 +50,74 @@ namespace Opm {
                                      "SOGCRIT"},
                              recordIdx,
                              /*firstEntityOffset=*/0);
-            ParentType::checkNonDefaultable("DEPTH");
-            ParentType::checkMonotonic("DEPTH", /*isAscending=*/true);
-            ParentType::applyDefaultsLinear("SWCO");
-            ParentType::applyDefaultsLinear("SWCRIT");
-            ParentType::applyDefaultsLinear("SWMAX");
-            ParentType::applyDefaultsLinear("SGCO");
-            ParentType::applyDefaultsLinear("SGCRIT");
-            ParentType::applyDefaultsLinear("SGMAX");
-            ParentType::applyDefaultsLinear("SOWCRIT");
-            ParentType::applyDefaultsLinear("SOGCRIT");
+            SingleRecordTable::checkNonDefaultable("DEPTH");
+            SingleRecordTable::checkMonotonic("DEPTH", /*isAscending=*/true);
+            SingleRecordTable::applyDefaultsLinear("SWCO");
+            SingleRecordTable::applyDefaultsLinear("SWCRIT");
+            SingleRecordTable::applyDefaultsLinear("SWMAX");
+            SingleRecordTable::applyDefaultsLinear("SGCO");
+            SingleRecordTable::applyDefaultsLinear("SGCRIT");
+            SingleRecordTable::applyDefaultsLinear("SGMAX");
+            SingleRecordTable::applyDefaultsLinear("SOWCRIT");
+            SingleRecordTable::applyDefaultsLinear("SOGCRIT");
         }
 
     public:
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SingleRecordTable::numTables;
+        using SingleRecordTable::numRows;
+        using SingleRecordTable::numColumns;
+        using SingleRecordTable::evaluate;
 
         const std::vector<double> &getDepthColumn() const
-        { return ParentType::getColumn(0); }
+        { return SingleRecordTable::getColumn(0); }
 
         /*!
          * \brief Connate water saturation
          */
         const std::vector<double> &getSwcoColumn() const
-        { return ParentType::getColumn(1); }
+        { return SingleRecordTable::getColumn(1); }
 
         /*!
          * \brief Critical water saturation
          */
         const std::vector<double> &getSwcritColumn() const
-        { return ParentType::getColumn(2); }
+        { return SingleRecordTable::getColumn(2); }
 
         /*!
          * \brief Maximum water saturation
          */
         const std::vector<double> &getSwmaxColumn() const
-        { return ParentType::getColumn(3); }
+        { return SingleRecordTable::getColumn(3); }
 
         /*!
          * \brief Connate gas saturation
          */
         const std::vector<double> &getSgcoColumn() const
-        { return ParentType::getColumn(4); }
+        { return SingleRecordTable::getColumn(4); }
 
         /*!
          * \brief Critical gas saturation
          */
         const std::vector<double> &getSgcritColumn() const
-        { return ParentType::getColumn(5); }
+        { return SingleRecordTable::getColumn(5); }
 
         /*!
          * \brief Maximum gas saturation
          */
         const std::vector<double> &getSgmaxColumn() const
-        { return ParentType::getColumn(6); }
+        { return SingleRecordTable::getColumn(6); }
 
         /*!
          * \brief Critical oil-in-water saturation
          */
         const std::vector<double> &getSowcritColumn() const
-        { return ParentType::getColumn(7); }
+        { return SingleRecordTable::getColumn(7); }
 
         /*!
          * \brief Critical oil-in-gas saturation
          */
         const std::vector<double> &getSogcritColumn() const
-        { return ParentType::getColumn(8); }
+        { return SingleRecordTable::getColumn(8); }
     };
 }
 

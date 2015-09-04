@@ -26,7 +26,7 @@ namespace Opm {
     class TableManager;
 
     class SsfnTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+        
 
         friend class TableManager;
         SsfnTable() = default;
@@ -38,7 +38,7 @@ namespace Opm {
         void init(Opm::DeckKeywordConstPtr keyword,
                   int recordIdx)
         {
-            ParentType::init(keyword,
+            SingleRecordTable::init(keyword,
                              std::vector<std::string>{
                                  "SolventFraction",
                                  "GasRelPermMultiplier",
@@ -46,28 +46,28 @@ namespace Opm {
                              recordIdx,
                              /*firstEntityOffset=*/0);
 
-            ParentType::checkNonDefaultable("SolventFraction");
-            ParentType::checkMonotonic("SolventFraction",   /*isAscending=*/true);
-            ParentType::checkNonDefaultable("GasRelPermMultiplier");
-            ParentType::checkMonotonic("GasRelPermMultiplier",  /*isAscending=*/true);
-            ParentType::checkNonDefaultable("SolventRelPermMultiplier");
-            ParentType::checkMonotonic("SolventRelPermMultiplier", /*isAscending=*/true);
+            SingleRecordTable::checkNonDefaultable("SolventFraction");
+            SingleRecordTable::checkMonotonic("SolventFraction",   /*isAscending=*/true);
+            SingleRecordTable::checkNonDefaultable("GasRelPermMultiplier");
+            SingleRecordTable::checkMonotonic("GasRelPermMultiplier",  /*isAscending=*/true);
+            SingleRecordTable::checkNonDefaultable("SolventRelPermMultiplier");
+            SingleRecordTable::checkMonotonic("SolventRelPermMultiplier", /*isAscending=*/true);
         }
 
     public:
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SingleRecordTable::numTables;
+        using SingleRecordTable::numRows;
+        using SingleRecordTable::numColumns;
+        using SingleRecordTable::evaluate;
 
         const std::vector<double> &getSolventFractionColumn() const
-        { return ParentType::getColumn(0); }
+        { return SingleRecordTable::getColumn(0); }
 
         const std::vector<double> &getGasRelPermMultiplierColumn() const
-        { return ParentType::getColumn(1); }
+        { return SingleRecordTable::getColumn(1); }
 
         const std::vector<double> &getSolventRelPermMultiplierColumn() const
-        { return ParentType::getColumn(2); }
+        { return SingleRecordTable::getColumn(2); }
     };
 }
 
