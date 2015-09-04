@@ -787,7 +787,7 @@ namespace Opm {
                     }
                     else if (cMode == "GRAT"){
                         if(prop.injectorType == WellInjector::TypeEnum::GAS){
-                            prop.surfaceInjectionRate = newValue * siFactorL;
+                            prop.surfaceInjectionRate = newValue * siFactorG;
                         }else{
                             std::invalid_argument("Well type must be GAS to set the surface injector rate");
                         }
