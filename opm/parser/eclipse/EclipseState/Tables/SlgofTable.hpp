@@ -19,13 +19,13 @@
 #ifndef OPM_PARSER_SLGOF_TABLE_HPP
 #define	OPM_PARSER_SLGOF_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class SlgofTable : protected SingleRecordTable {
+    class SlgofTable : protected SimpleTable {
         friend class TableManager;
 
         /*!
@@ -34,18 +34,18 @@ namespace Opm {
          */
         void init(Opm::DeckRecordConstPtr record)
         {
-            SingleRecordTable::init(record,
+            SimpleTable::init(record,
                              std::vector<std::string>{"SL", "KRG", "KROG", "PCOG"},
                              /*firstEntityOffset=*/0);
 
-            SingleRecordTable::checkNonDefaultable("SL");
-            SingleRecordTable::checkMonotonic("SL", /*isAscending=*/true);
-            SingleRecordTable::checkMonotonic("KRG", /*isAscending=*/false, /*strictlyMonotonic=*/false);
-            SingleRecordTable::checkMonotonic("KROG", /*isAscending=*/true, /*strictlyMonotonic=*/false);
-            SingleRecordTable::checkMonotonic("PCOG", /*isAscending=*/false, /*strictlyMonotonic=*/false);
-            SingleRecordTable::applyDefaultsLinear("KRG");
-            SingleRecordTable::applyDefaultsLinear("KROG");
-            SingleRecordTable::applyDefaultsLinear("PCOG");
+            SimpleTable::checkNonDefaultable("SL");
+            SimpleTable::checkMonotonic("SL", /*isAscending=*/true);
+            SimpleTable::checkMonotonic("KRG", /*isAscending=*/false, /*strictlyMonotonic=*/false);
+            SimpleTable::checkMonotonic("KROG", /*isAscending=*/true, /*strictlyMonotonic=*/false);
+            SimpleTable::checkMonotonic("PCOG", /*isAscending=*/false, /*strictlyMonotonic=*/false);
+            SimpleTable::applyDefaultsLinear("KRG");
+            SimpleTable::applyDefaultsLinear("KROG");
+            SimpleTable::applyDefaultsLinear("PCOG");
 
             if (getSlColumn().back() != 1.0) {
                 throw std::invalid_argument("The last saturation of the SLGOF keyword must be 1!");
@@ -61,26 +61,26 @@ namespace Opm {
         { init(record); }
 #endif
 
-        using SingleRecordTable::numTables;
-        using SingleRecordTable::numRows;
-        using SingleRecordTable::numColumns;
-        using SingleRecordTable::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getSlColumn() const
-        { return SingleRecordTable::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getKrgColumn() const
-        { return SingleRecordTable::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
 
         const std::vector<double> &getKrogColumn() const
-        { return SingleRecordTable::getColumn(2); }
+        { return SimpleTable::getColumn(2); }
 
         // this column is p_g - p_o (non-wetting phase pressure minus
         // wetting phase pressure for a given gas saturation. the name
         // is inconsistent, but it is the one used in the Eclipse
         // manual...)
         const std::vector<double> &getPcogColumn() const
-        { return SingleRecordTable::getColumn(3); }
+        { return SimpleTable::getColumn(3); }
     };
 }
 

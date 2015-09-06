@@ -16,8 +16,8 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPM_PARSER_SINGLE_RECORD_TABLE_HPP
-#define	OPM_PARSER_SINGLE_RECORD_TABLE_HPP
+#ifndef OPM_PARSER_SIMPLE_TABLE_HPP
+#define	OPM_PARSER_SIMPLE_TABLE_HPP
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
@@ -29,10 +29,10 @@
 
 namespace Opm {
     class PlyshlogTable;
-    class SingleRecordTable {
+    class SimpleTable {
         friend class PlyshlogTable;
     protected:
-        SingleRecordTable(const SingleRecordTable&) = default;
+        SimpleTable(const SimpleTable&) = default;
 
         /*!
          * \brief Read simple tables from keywords like SWOF
@@ -45,7 +45,7 @@ namespace Opm {
                   size_t firstEntityOffset);
 
     public:
-        SingleRecordTable() = default;
+        SimpleTable() = default;
 
         /*!
          * \brief Returns the number of tables in a keyword.
@@ -94,8 +94,8 @@ namespace Opm {
         std::vector<std::vector<bool> > m_valueDefaulted;
     };
 
-    typedef std::shared_ptr<SingleRecordTable> SingleRecordTablePtr;
-    typedef std::shared_ptr<const SingleRecordTable> SingleRecordTableConstPtr;
+    typedef std::shared_ptr<SimpleTable> SimpleTablePtr;
+    typedef std::shared_ptr<const SimpleTable> SimpleTableConstPtr;
 }
 
 #endif

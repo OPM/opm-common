@@ -19,13 +19,13 @@
 #ifndef OPM_PARSER_WATVISCT_TABLE_HPP
 #define	OPM_PARSER_WATVISCT_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class WatvisctTable : protected SingleRecordTable {
+    class WatvisctTable : protected SimpleTable {
 
         friend class TableManager;
         WatvisctTable() = default;
@@ -36,31 +36,31 @@ namespace Opm {
          */
         void init(Opm::DeckRecordConstPtr record)
         {
-            SingleRecordTable::init(record,
+            SimpleTable::init(record,
                              std::vector<std::string>{
                                  "Temperature",
                                  "Viscosity"
                              },
                              /*firstEntityOffset=*/0);
 
-            SingleRecordTable::checkNonDefaultable("Temperature");
-            SingleRecordTable::checkMonotonic("Temperature", /*isAscending=*/true);
+            SimpleTable::checkNonDefaultable("Temperature");
+            SimpleTable::checkMonotonic("Temperature", /*isAscending=*/true);
 
-            SingleRecordTable::checkNonDefaultable("Viscosity");
-            SingleRecordTable::checkMonotonic("Viscosity", /*isAscending=*/false, /*strictlyMonotonic=*/false);
+            SimpleTable::checkNonDefaultable("Viscosity");
+            SimpleTable::checkMonotonic("Viscosity", /*isAscending=*/false, /*strictlyMonotonic=*/false);
         }
 
     public:
-        using SingleRecordTable::numTables;
-        using SingleRecordTable::numRows;
-        using SingleRecordTable::numColumns;
-        using SingleRecordTable::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getTemperatureColumn() const
-        { return SingleRecordTable::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getWaterViscosityColumn() const
-        { return SingleRecordTable::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
     };
 }
 

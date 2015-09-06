@@ -19,13 +19,13 @@
 #ifndef OPM_PARSER_PLYADS_TABLE_HPP
 #define	OPM_PARSER_PLYADS_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class PlyadsTable : protected SingleRecordTable {
+    class PlyadsTable : protected SimpleTable {
 
 
         friend class TableManager;
@@ -36,17 +36,17 @@ namespace Opm {
          */
         void init(Opm::DeckRecordConstPtr record)
         {
-            SingleRecordTable::init(record,
+            SimpleTable::init(record,
                              std::vector<std::string>{
                                  "PolymerConcentration",
                                  "AdsorbedPolymer"
                              },
                              /*firstEntityOffset=*/0);
 
-            SingleRecordTable::checkNonDefaultable("PolymerConcentration");
-            SingleRecordTable::checkMonotonic("PolymerConcentration", /*isAscending=*/true);
-            SingleRecordTable::checkNonDefaultable("AdsorbedPolymer");
-            SingleRecordTable::checkMonotonic("AdsorbedPolymer", /*isAscending=*/true, /*strictlyMonotonic=*/false);
+            SimpleTable::checkNonDefaultable("PolymerConcentration");
+            SimpleTable::checkMonotonic("PolymerConcentration", /*isAscending=*/true);
+            SimpleTable::checkNonDefaultable("AdsorbedPolymer");
+            SimpleTable::checkMonotonic("AdsorbedPolymer", /*isAscending=*/true, /*strictlyMonotonic=*/false);
         }
 
     public:
@@ -58,16 +58,16 @@ namespace Opm {
         { init(record); }
 #endif
 
-        using SingleRecordTable::numTables;
-        using SingleRecordTable::numRows;
-        using SingleRecordTable::numColumns;
-        using SingleRecordTable::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getPolymerConcentrationColumn() const
-        { return SingleRecordTable::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getAdsorbedPolymerColumn() const
-        { return SingleRecordTable::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
     };
 }
 

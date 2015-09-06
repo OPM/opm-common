@@ -19,13 +19,13 @@
 #ifndef OPM_PARSER_SGFN_TABLE_HPP
 #define OPM_PARSER_SGFN_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class SgfnTable : protected SingleRecordTable {
+    class SgfnTable : protected SimpleTable {
 
         friend class TableManager;
 
@@ -35,16 +35,16 @@ namespace Opm {
          */
         void init(Opm::DeckRecordConstPtr record)
         {
-            SingleRecordTable::init(record,
+            SimpleTable::init(record,
                              std::vector<std::string>{"SG", "KRG", "PCOG"},
                              /*firstEntityOffset=*/0);
 
-            SingleRecordTable::checkNonDefaultable("SG");
-            SingleRecordTable::checkMonotonic("SG",   /*isAscending=*/true);
-            SingleRecordTable::applyDefaultsLinear("KRG");
-            SingleRecordTable::applyDefaultsLinear("PCOG");
-            SingleRecordTable::checkMonotonic("KRG",  /*isAscending=*/true,  /*strict=*/false);
-            SingleRecordTable::checkMonotonic("PCOG", /*isAscending=*/true, /*strict=*/false);
+            SimpleTable::checkNonDefaultable("SG");
+            SimpleTable::checkMonotonic("SG",   /*isAscending=*/true);
+            SimpleTable::applyDefaultsLinear("KRG");
+            SimpleTable::applyDefaultsLinear("PCOG");
+            SimpleTable::checkMonotonic("KRG",  /*isAscending=*/true,  /*strict=*/false);
+            SimpleTable::checkMonotonic("PCOG", /*isAscending=*/true, /*strict=*/false);
         }
 
     public:
@@ -56,21 +56,21 @@ namespace Opm {
         { init(record); }
 #endif
 
-        using SingleRecordTable::numTables;
-        using SingleRecordTable::numRows;
-        using SingleRecordTable::numColumns;
-        using SingleRecordTable::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getSgColumn() const
-        { return SingleRecordTable::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getKrgColumn() const
-        { return SingleRecordTable::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
 
         // this column is p_g - p_o (non-wetting phase pressure minus
         // wetting phase pressure for a given gas saturation)
         const std::vector<double> &getPcogColumn() const
-        { return SingleRecordTable::getColumn(2); }
+        { return SimpleTable::getColumn(2); }
     };
 }
 

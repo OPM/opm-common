@@ -17,7 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define BOOST_TEST_MODULE SingleRecordTableTests
+#define BOOST_TEST_MODULE SimpleTableTests
 
 #include <opm/core/utility/platform_dependent/disable_warnings.h>
 #include <boost/test/unit_test.hpp>
@@ -28,7 +28,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 // generic table classes
-#include <opm/parser/eclipse/EclipseState/Tables/SingleRecordTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/MultiRecordTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/FullTable.hpp>
 
@@ -47,7 +47,7 @@
 #include <stdexcept>
 #include <iostream>
 
-BOOST_AUTO_TEST_CASE(CreateSingleRecordTable) {
+BOOST_AUTO_TEST_CASE(CreateSimpleTable) {
     const char *deckData =
         "TABDIMS\n"
         " 2 /\n"
@@ -64,8 +64,8 @@ BOOST_AUTO_TEST_CASE(CreateSingleRecordTable) {
     std::vector<std::string> justRightColumnNames{"A", "B", "C", "D"};
     std::vector<std::string> tooManyColumnNames{"A", "B", "C", "D", "E"};
 
-    BOOST_CHECK_EQUAL(Opm::SingleRecordTable::numTables(deck->getKeyword("SWOF")), 2);
-    Opm::SingleRecordTable tmpTable;
+    BOOST_CHECK_EQUAL(Opm::SimpleTable::numTables(deck->getKeyword("SWOF")), 2);
+    Opm::SimpleTable tmpTable;
     BOOST_CHECK_THROW(tmpTable.initFORUNITTESTONLY(deck->getKeyword("SWOF")->getRecord(0),
                                                    tooFewColumnNames,
                                                    /*firstEntryOffset=*/0),

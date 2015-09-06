@@ -19,13 +19,13 @@
 #ifndef OPM_PARSER_PLYROCK_TABLE_HPP
 #define	OPM_PARSER_PLYROCK_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class PlyrockTable : protected SingleRecordTable {
+    class PlyrockTable : protected SimpleTable {
 
         friend class TableManager;
         PlyrockTable() = default;
@@ -36,7 +36,7 @@ namespace Opm {
          */
         void init(Opm::DeckRecordConstPtr record)
         {
-            SingleRecordTable::init(record,
+            SimpleTable::init(record,
                              std::vector<std::string>{
                                  "DeadPoreVolume",
                                  "ResidualResistanceFactor",
@@ -65,21 +65,21 @@ namespace Opm {
         }
 
     public:
-        using SingleRecordTable::numTables;
-        using SingleRecordTable::numRows;
-        using SingleRecordTable::numColumns;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
 
         // since this keyword is not necessarily monotonic, it cannot be evaluated!
-        //using SingleRecordTable::evaluate;
+        //using SimpleTable::evaluate;
 
         const std::vector<double> &getDeadPoreVolumeColumn() const
-        { return SingleRecordTable::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getResidualResistanceFactorColumn() const
-        { return SingleRecordTable::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
 
         const std::vector<double> &getRockDensityFactorColumn() const
-        { return SingleRecordTable::getColumn(2); }
+        { return SimpleTable::getColumn(2); }
 
         // is column is actually an integer, but this is not yet
         // supported by opm-parser (yet?) as it would require quite a
@@ -90,10 +90,10 @@ namespace Opm {
         // calling code. (Make sure, that you don't interpolate
         // indices, though!)
         const std::vector<double> &getAdsorbtionIndexColumn() const
-        { return SingleRecordTable::getColumn(3); }
+        { return SimpleTable::getColumn(3); }
 
         const std::vector<double> &getMaxAdsorbtionColumn() const
-        { return SingleRecordTable::getColumn(4); }
+        { return SimpleTable::getColumn(4); }
     };
 }
 

@@ -19,13 +19,13 @@
 #ifndef OPM_PARSER_ROCKTAB_TABLE_HPP
 #define	OPM_PARSER_ROCKTAB_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class RocktabTable : protected SingleRecordTable {
+    class RocktabTable : protected SimpleTable {
 
         friend class TableManager;
         RocktabTable() = default;
@@ -38,55 +38,55 @@ namespace Opm {
                   bool isDirectional,
                   bool hasStressOption)
         {
-            SingleRecordTable::init(record,
+            SimpleTable::init(record,
                              isDirectional
                              ? std::vector<std::string>{"PO", "PV_MULT", "TRANSMIS_MULT_X", "TRANSMIS_MULT_Y", "TRANSMIS_MULT_Z"}
                              : std::vector<std::string>{"PO", "PV_MULT", "TRANSMIS_MULT"},
                              /*firstEntityOffset=*/0);
             m_isDirectional = isDirectional;
 
-            SingleRecordTable::checkNonDefaultable("PO");
-            SingleRecordTable::checkMonotonic("PO", /*isAscending=*/hasStressOption);
-            SingleRecordTable::applyDefaultsLinear("PV_MULT");
+            SimpleTable::checkNonDefaultable("PO");
+            SimpleTable::checkMonotonic("PO", /*isAscending=*/hasStressOption);
+            SimpleTable::applyDefaultsLinear("PV_MULT");
             if (isDirectional) {
-                SingleRecordTable::applyDefaultsLinear("TRANSMIS_MULT");
+                SimpleTable::applyDefaultsLinear("TRANSMIS_MULT");
             } else {
-                SingleRecordTable::applyDefaultsLinear("TRANSMIS_MULT_X");
-                SingleRecordTable::applyDefaultsLinear("TRANSMIS_MULT_Y");
-                SingleRecordTable::applyDefaultsLinear("TRANSMIS_MULT_Z");
+                SimpleTable::applyDefaultsLinear("TRANSMIS_MULT_X");
+                SimpleTable::applyDefaultsLinear("TRANSMIS_MULT_Y");
+                SimpleTable::applyDefaultsLinear("TRANSMIS_MULT_Z");
             }
         }
 
     public:
-        using SingleRecordTable::numTables;
-        using SingleRecordTable::numRows;
-        using SingleRecordTable::numColumns;
-        using SingleRecordTable::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getPressureColumn() const
-        { return SingleRecordTable::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getPoreVolumeMultiplierColumn() const
-        { return SingleRecordTable::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
 
         const std::vector<double> &getTransmissibilityMultiplierColumn() const
-        { return SingleRecordTable::getColumn(2); }
+        { return SimpleTable::getColumn(2); }
 
         const std::vector<double> &getTransmissibilityMultiplierXColumn() const
-        { return SingleRecordTable::getColumn(2); }
+        { return SimpleTable::getColumn(2); }
 
         const std::vector<double> &getTransmissibilityMultiplierYColumn() const
         {
             if (!m_isDirectional)
-                return SingleRecordTable::getColumn(2);
-            return SingleRecordTable::getColumn(3);
+                return SimpleTable::getColumn(2);
+            return SimpleTable::getColumn(3);
         }
 
         const std::vector<double> &getTransmissibilityMultiplierZColumn() const
         {
             if (!m_isDirectional)
-                return SingleRecordTable::getColumn(2);
-            return SingleRecordTable::getColumn(4);
+                return SimpleTable::getColumn(2);
+            return SimpleTable::getColumn(4);
         }
 
     private:

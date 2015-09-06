@@ -20,13 +20,13 @@
 #ifndef OPM_PARSER_PVDS_TABLE_HPP
 #define OPM_PARSER_PVDS_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class PvdsTable : protected SingleRecordTable {
+    class PvdsTable : protected SimpleTable {
         
 
         friend class TableManager;
@@ -39,34 +39,34 @@ namespace Opm {
          */
         void init(Opm::DeckRecordConstPtr record)
         {
-            SingleRecordTable::init(record,
+            SimpleTable::init(record,
                              std::vector<std::string>{"P", "BG", "MUG"},
                              /*firstEntityOffset=*/0);
 
-            SingleRecordTable::checkNonDefaultable("P");
-            SingleRecordTable::checkMonotonic("P", /*isAscending=*/true);
+            SimpleTable::checkNonDefaultable("P");
+            SimpleTable::checkMonotonic("P", /*isAscending=*/true);
 
-            SingleRecordTable::applyDefaultsLinear("BG");
-            SingleRecordTable::checkMonotonic("BG", /*isAscending=*/false);
+            SimpleTable::applyDefaultsLinear("BG");
+            SimpleTable::checkMonotonic("BG", /*isAscending=*/false);
 
-            SingleRecordTable::applyDefaultsLinear("MUG");
-            SingleRecordTable::checkMonotonic("MUG", /*isAscending=*/true, /*strictlyMonotonic=*/false);
+            SimpleTable::applyDefaultsLinear("MUG");
+            SimpleTable::checkMonotonic("MUG", /*isAscending=*/true, /*strictlyMonotonic=*/false);
         }
 
     public:
-        using SingleRecordTable::numTables;
-        using SingleRecordTable::numRows;
-        using SingleRecordTable::numColumns;
-        using SingleRecordTable::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getPressureColumn() const
-        { return SingleRecordTable::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getFormationFactorColumn() const
-        { return SingleRecordTable::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
 
         const std::vector<double> &getViscosityColumn() const
-        { return SingleRecordTable::getColumn(2); }
+        { return SimpleTable::getColumn(2); }
     };
 }
 

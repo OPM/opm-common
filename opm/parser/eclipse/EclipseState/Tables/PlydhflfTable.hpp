@@ -19,13 +19,13 @@
 #ifndef OPM_PARSER_PLYDHFLF_TABLE_HPP
 #define	OPM_PARSER_PLYDHFLF_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class PlydhflfTable : protected SingleRecordTable {
+    class PlydhflfTable : protected SimpleTable {
         
 
         friend class TableManager;
@@ -37,30 +37,30 @@ namespace Opm {
          */
         void init(Opm::DeckRecordConstPtr record)
         {
-            SingleRecordTable::init(record,
+            SimpleTable::init(record,
                              std::vector<std::string>{
                                  "Temperature",
                                  "PolymerHalflife"
                              },
                              /*firstEntityOffset=*/0);
 
-            SingleRecordTable::checkNonDefaultable("Temperetura");
-            SingleRecordTable::checkMonotonic("Temperature", /*isAscending=*/true);
-            SingleRecordTable::checkNonDefaultable("PolymerHalflife");
-            SingleRecordTable::checkMonotonic("PolymerHalflife", /*isAscending=*/false);
+            SimpleTable::checkNonDefaultable("Temperetura");
+            SimpleTable::checkMonotonic("Temperature", /*isAscending=*/true);
+            SimpleTable::checkNonDefaultable("PolymerHalflife");
+            SimpleTable::checkMonotonic("PolymerHalflife", /*isAscending=*/false);
         }
 
     public:
-        using SingleRecordTable::numTables;
-        using SingleRecordTable::numRows;
-        using SingleRecordTable::numColumns;
-        using SingleRecordTable::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getTemperatureColumn() const
-        { return SingleRecordTable::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getPolymerHalflifeColumn() const
-        { return SingleRecordTable::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
     };
 }
 

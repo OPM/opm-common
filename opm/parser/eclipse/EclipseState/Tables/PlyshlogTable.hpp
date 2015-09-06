@@ -19,7 +19,7 @@
 #ifndef OPM_PARSER_PLYSHLOG_TABLE_HPP
 #define	OPM_PARSER_PLYSHLOG_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
@@ -64,7 +64,7 @@ namespace Opm {
                 setHasRefTemperature(false);
             }
 
-            m_data = new SingleRecordTable();
+            m_data = new SimpleTable();
 
             m_data->init(dataRecord,
                          std::vector<std::string>{
@@ -135,7 +135,7 @@ namespace Opm {
         bool m_hasRefSalinity;
         bool m_hasRefTemperature;
 
-        SingleRecordTable *m_data;
+        SimpleTable *m_data;
 
     };
 

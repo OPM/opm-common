@@ -100,7 +100,7 @@ EclipseState/Schedule/GroupTree.cpp
 EclipseState/Schedule/Tuning.cpp
 EclipseState/Schedule/Events.cpp
 #
-EclipseState/Tables/SingleRecordTable.cpp
+EclipseState/Tables/SimpleTable.cpp
 EclipseState/Tables/MultiRecordTable.cpp
 EclipseState/Tables/VFPProdTable.cpp
 EclipseState/Tables/VFPInjTable.cpp
@@ -225,7 +225,7 @@ EclipseState/Tables/PvdoTable.hpp
 EclipseState/Tables/MultiRecordTable.hpp
 EclipseState/Tables/PvdgTable.hpp
 EclipseState/Tables/PvdsTable.hpp
-EclipseState/Tables/SingleRecordTable.hpp
+EclipseState/Tables/SimpleTable.hpp
 EclipseState/Tables/PlymaxTable.hpp
 EclipseState/Tables/PvtgTable.hpp
 EclipseState/Tables/PlyrockTable.hpp

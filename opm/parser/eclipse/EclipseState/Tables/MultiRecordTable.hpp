@@ -19,7 +19,7 @@
 #ifndef OPM_PARSER_MULTI_RECORD_TABLE_HPP
 #define	OPM_PARSER_MULTI_RECORD_TABLE_HPP
 
-#include <opm/parser/eclipse/EclipseState/Tables/SingleRecordTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
@@ -34,7 +34,7 @@ namespace Opm {
     class EclipseState;
 
     // create table from first few items of multiple records (i.e. getSIDoubleData() throws an exception)
-    class MultiRecordTable : public SingleRecordTable {
+    class MultiRecordTable : public SimpleTable {
     protected:
         /*!
          * \brief Read simple tables from multi-item keywords like PVTW

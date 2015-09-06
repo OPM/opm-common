@@ -19,13 +19,13 @@
 #ifndef OPM_PARSER_RVVD_TABLE_HPP
 #define OPM_PARSER_RVVD_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class RvvdTable : protected SingleRecordTable {
+    class RvvdTable : protected SimpleTable {
 
         friend class TableManager;
 
@@ -37,26 +37,26 @@ namespace Opm {
          */
         void init(Opm::DeckRecordConstPtr record)
         {
-            SingleRecordTable::init(record,
+            SimpleTable::init(record,
                              std::vector<std::string>{"DEPTH", "RV"},
                              /*firstEntityOffset=*/0);
 
-            SingleRecordTable::checkNonDefaultable("DEPTH");
-            SingleRecordTable::checkMonotonic("DEPTH", /*isAscending=*/true);
-            SingleRecordTable::checkNonDefaultable("RV");
+            SimpleTable::checkNonDefaultable("DEPTH");
+            SimpleTable::checkMonotonic("DEPTH", /*isAscending=*/true);
+            SimpleTable::checkNonDefaultable("RV");
         }
 
     public:
-        using SingleRecordTable::numTables;
-        using SingleRecordTable::numRows;
-        using SingleRecordTable::numColumns;
-        using SingleRecordTable::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getDepthColumn() const
-        { return SingleRecordTable::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getRvColumn() const
-        { return SingleRecordTable::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
     };
 }
 

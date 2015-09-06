@@ -16,16 +16,16 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <opm/parser/eclipse/EclipseState/Tables/SingleRecordTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp>
 
 namespace Opm {
-size_t SingleRecordTable::numTables(Opm::DeckKeywordConstPtr keyword)
+size_t SimpleTable::numTables(Opm::DeckKeywordConstPtr keyword)
 {
     return keyword->size();
 }
 
 // create table from single record
-void SingleRecordTable::init(Opm::DeckRecordConstPtr deckRecord,
+void SimpleTable::init(Opm::DeckRecordConstPtr deckRecord,
                              const std::vector<std::string> &columnNames,
                              size_t firstEntityOffset)
 {
@@ -48,13 +48,13 @@ void SingleRecordTable::init(Opm::DeckRecordConstPtr deckRecord,
     }
 }
 
-size_t SingleRecordTable::numColumns() const
+size_t SimpleTable::numColumns() const
 { return m_columns.size(); }
 
-size_t SingleRecordTable::numRows() const
+size_t SimpleTable::numRows() const
 { return m_columns[0].size(); }
 
-const std::vector<double> &SingleRecordTable::getColumn(const std::string &name) const
+const std::vector<double> &SimpleTable::getColumn(const std::string &name) const
 {
     const auto &colIt = m_columnNames.find(name);
     if (colIt == m_columnNames.end())
@@ -64,13 +64,13 @@ const std::vector<double> &SingleRecordTable::getColumn(const std::string &name)
     assert(colIdx < static_cast<size_t>(m_columns.size()));
     return m_columns[colIdx];
 }
-const std::vector<double> &SingleRecordTable::getColumn(size_t colIdx) const
+const std::vector<double> &SimpleTable::getColumn(size_t colIdx) const
 {
     assert(colIdx < static_cast<size_t>(m_columns.size()));
     return m_columns[colIdx];
 }
 
-double SingleRecordTable::evaluate(const std::string& columnName, double xPos) const
+double SimpleTable::evaluate(const std::string& columnName, double xPos) const
 {
     const std::vector<double>& xColumn = getColumn(0);
     const std::vector<double>& yColumn = getColumn(columnName);
@@ -120,7 +120,7 @@ double SingleRecordTable::evaluate(const std::string& columnName, double xPos) c
     return yColumn[intervalIdx]*(1-alpha) + yColumn[intervalIdx + 1]*alpha;
 }
 
-void SingleRecordTable::checkNonDefaultable(const std::string& columnName)
+void SimpleTable::checkNonDefaultable(const std::string& columnName)
 {
     int columnIdx = m_columnNames.at(columnName);
 
@@ -133,7 +133,7 @@ void SingleRecordTable::checkNonDefaultable(const std::string& columnName)
 }
 
 
-void SingleRecordTable::checkMonotonic(const std::string& columnName,
+void SimpleTable::checkMonotonic(const std::string& columnName,
                                         bool isAscending,
                                         bool isStrictlyMonotonic)
 {
@@ -156,7 +156,7 @@ void SingleRecordTable::checkMonotonic(const std::string& columnName,
     }
 }
 
-void SingleRecordTable::applyDefaultsConstant(const std::string& columnName, double value)
+void SimpleTable::applyDefaultsConstant(const std::string& columnName, double value)
 {
     int columnIdx = m_columnNames.at(columnName);
     int nRows = numRows();
@@ -169,7 +169,7 @@ void SingleRecordTable::applyDefaultsConstant(const std::string& columnName, dou
     }
 }
 
-void SingleRecordTable::applyDefaultsLinear(const std::string& columnName)
+void SimpleTable::applyDefaultsLinear(const std::string& columnName)
 {
     int columnIdx = m_columnNames.at(columnName);
     const std::vector<double>& xColumn = m_columns[0];
@@ -214,7 +214,7 @@ void SingleRecordTable::applyDefaultsLinear(const std::string& columnName)
     }
 }
 
-void SingleRecordTable::createColumns(const std::vector<std::string> &columnNames)
+void SimpleTable::createColumns(const std::vector<std::string> &columnNames)
 {
     // Allocate column names. TODO (?): move the column names into
     // the json description of the keyword.
@@ -228,7 +228,7 @@ void SingleRecordTable::createColumns(const std::vector<std::string> &columnName
     m_valueDefaulted.resize(columnIdx);
 }
 
-size_t SingleRecordTable::getNumFlatItems(Opm::DeckRecordConstPtr deckRecord) const
+size_t SimpleTable::getNumFlatItems(Opm::DeckRecordConstPtr deckRecord) const
 {
     size_t result = 0;
     for (size_t i = 0; i < deckRecord->size(); ++ i) {
@@ -238,7 +238,7 @@ size_t SingleRecordTable::getNumFlatItems(Opm::DeckRecordConstPtr deckRecord) co
     return result;
 }
 
-double SingleRecordTable::getFlatRawDoubleData(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const
+double SimpleTable::getFlatRawDoubleData(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const
 {
     size_t itemFirstFlatIdx = 0;
     for (unsigned i = 0; i < deckRecord->size(); ++ i) {
@@ -252,7 +252,7 @@ double SingleRecordTable::getFlatRawDoubleData(Opm::DeckRecordConstPtr deckRecor
     throw std::range_error("Tried to access out-of-range flat item");
 }
 
-double SingleRecordTable::getFlatSiDoubleData(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const
+double SimpleTable::getFlatSiDoubleData(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const
 {
     size_t itemFirstFlatIdx = 0;
     for (unsigned i = 0; i < deckRecord->size(); ++ i) {
@@ -266,7 +266,7 @@ double SingleRecordTable::getFlatSiDoubleData(Opm::DeckRecordConstPtr deckRecord
     throw std::range_error("Tried to access out-of-range flat item");
 }
 
-bool SingleRecordTable::getFlatIsDefaulted(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const
+bool SimpleTable::getFlatIsDefaulted(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const
 {
     size_t itemFirstFlatIdx = 0;
     for (unsigned i = 0; i < deckRecord->size(); ++ i) {

@@ -19,13 +19,13 @@
 #ifndef OPM_PARSER_GASVISCT_TABLE_HPP
 #define	OPM_PARSER_GASVISCT_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class GasvisctTable : protected SingleRecordTable {
+    class GasvisctTable : protected SimpleTable {
 
         friend class TableManager;
         GasvisctTable() = default;
@@ -48,7 +48,7 @@ namespace Opm {
             for (int compIdx = 0; compIdx < numComponents; ++ compIdx)
                 columnNames.push_back("Viscosity" + std::to_string(static_cast<long long>(compIdx)));
 
-            SingleRecordTable::createColumns(columnNames);
+            SimpleTable::createColumns(columnNames);
 
             // extract the actual data from the deck
             size_t numFlatItems = getNumFlatItems(deckRecord);
@@ -87,29 +87,29 @@ namespace Opm {
             // reference manual. (actually, the documentation does not say anyting about
             // whether items of these columns are defaultable or not, so we assume here
             // that they are not.)
-            SingleRecordTable::checkNonDefaultable("Temperature");
-            SingleRecordTable::checkMonotonic("Temperature", /*isAscending=*/true);
+            SimpleTable::checkNonDefaultable("Temperature");
+            SimpleTable::checkMonotonic("Temperature", /*isAscending=*/true);
 
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                 std::string columnName = "Viscosity" + std::to_string(static_cast<long long>(compIdx));
-                SingleRecordTable::checkNonDefaultable(columnName);
-                SingleRecordTable::checkMonotonic(columnName,
+                SimpleTable::checkNonDefaultable(columnName);
+                SimpleTable::checkMonotonic(columnName,
                                            /*isAscending=*/true,
                                            /*strictlyMonotonic=*/false);
             }
         }
 
     public:
-        using SingleRecordTable::numTables;
-        using SingleRecordTable::numRows;
-        using SingleRecordTable::numColumns;
-        using SingleRecordTable::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getTemperatureColumn() const
-        { return SingleRecordTable::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getGasViscosityColumn(size_t compIdx) const
-        { return SingleRecordTable::getColumn(1 + compIdx); }
+        { return SimpleTable::getColumn(1 + compIdx); }
     };
 }
 

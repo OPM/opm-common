@@ -19,7 +19,7 @@
 #ifndef OPM_PARSER_PVTG_INNER_TABLE_HPP
 #define	OPM_PARSER_PVTG_INNER_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declarations
@@ -44,30 +44,30 @@ namespace Opm {
          */
         void init(Opm::DeckRecordConstPtr record)
         {
-            SingleRecordTable::init(record,
+            SimpleTable::init(record,
                              std::vector<std::string>{"RV", "BG", "MUG"},
                              1U);
 
-            SingleRecordTable::checkNonDefaultable("RV");
-            SingleRecordTable::checkMonotonic("RV", /*isAscending=*/false);
-            SingleRecordTable::applyDefaultsLinear("BG");
-            SingleRecordTable::applyDefaultsLinear("MUG");
+            SimpleTable::checkNonDefaultable("RV");
+            SimpleTable::checkMonotonic("RV", /*isAscending=*/false);
+            SimpleTable::applyDefaultsLinear("BG");
+            SimpleTable::applyDefaultsLinear("MUG");
         }
 
     public:
-        using SingleRecordTable::numTables;
-        using SingleRecordTable::numRows;
-        using SingleRecordTable::numColumns;
-        using SingleRecordTable::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getOilSolubilityColumn() const
-        { return SingleRecordTable::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getGasFormationFactorColumn() const
-        { return SingleRecordTable::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
 
         const std::vector<double> &getGasViscosityColumn() const
-        { return SingleRecordTable::getColumn(2); }
+        { return SimpleTable::getColumn(2); }
     };
 }
 

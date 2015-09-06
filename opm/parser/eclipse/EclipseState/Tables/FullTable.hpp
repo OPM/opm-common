@@ -20,7 +20,7 @@
 #define	OPM_PARSER_FULL_TABLE_HPP
 
 #include <opm/parser/eclipse/EclipseState/Tables/MultiRecordTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/SingleRecordTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 #include <map>
@@ -91,8 +91,8 @@ namespace Opm {
 
     };
 
-    typedef FullTable<Opm::MultiRecordTable, Opm::SingleRecordTable>::Pointer FullTablePtr;
-    typedef FullTable<Opm::MultiRecordTable, Opm::SingleRecordTable>::ConstPointer FullTableConstPtr;
+    typedef FullTable<Opm::MultiRecordTable, Opm::SimpleTable>::Pointer FullTablePtr;
+    typedef FullTable<Opm::MultiRecordTable, Opm::SimpleTable>::ConstPointer FullTableConstPtr;
 }
 
 #endif

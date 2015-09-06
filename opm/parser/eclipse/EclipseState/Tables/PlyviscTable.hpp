@@ -19,13 +19,13 @@
 #ifndef OPM_PARSER_PLYVISC_TABLE_HPP
 #define	OPM_PARSER_PLYVISC_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class PlyviscTable : protected SingleRecordTable {
+    class PlyviscTable : protected SimpleTable {
         
 
         friend class TableManager;
@@ -37,30 +37,30 @@ namespace Opm {
          */
         void init(Opm::DeckRecordConstPtr record)
         {
-            SingleRecordTable::init(record,
+            SimpleTable::init(record,
                              std::vector<std::string>{
                                  "PolymerConcentration",
                                  "ViscosityMultiplier"
                              },
                              /*firstEntityOffset=*/0);
 
-            SingleRecordTable::checkNonDefaultable("PolymerConcentration");
-            SingleRecordTable::checkMonotonic("PolymerConcentration", /*isAscending=*/true);
-            SingleRecordTable::checkNonDefaultable("ViscosityMultiplier");
-            SingleRecordTable::checkMonotonic("ViscosityMultiplier", /*isAscending=*/true);
+            SimpleTable::checkNonDefaultable("PolymerConcentration");
+            SimpleTable::checkMonotonic("PolymerConcentration", /*isAscending=*/true);
+            SimpleTable::checkNonDefaultable("ViscosityMultiplier");
+            SimpleTable::checkMonotonic("ViscosityMultiplier", /*isAscending=*/true);
         }
 
     public:
-        using SingleRecordTable::numTables;
-        using SingleRecordTable::numRows;
-        using SingleRecordTable::numColumns;
-        using SingleRecordTable::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getPolymerConcentrationColumn() const
-        { return SingleRecordTable::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getViscosityMultiplierColumn() const
-        { return SingleRecordTable::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
     };
 }
 

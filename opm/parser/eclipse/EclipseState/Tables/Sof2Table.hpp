@@ -19,13 +19,13 @@
 #ifndef OPM_PARSER_SOF2_TABLE_HPP
 #define OPM_PARSER_SOF2_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class Sof2Table : protected SingleRecordTable {
+    class Sof2Table : protected SimpleTable {
         friend class TableManager;
 
         /*!
@@ -34,14 +34,14 @@ namespace Opm {
          */
         void init(Opm::DeckRecordConstPtr record)
         {
-            SingleRecordTable::init(record,
+            SimpleTable::init(record,
                                     std::vector<std::string>{"SO", "KRO" },
                                     /*firstEntityOffset=*/0);
 
-            SingleRecordTable::checkNonDefaultable("SO");
-            SingleRecordTable::checkNonDefaultable("KRO");
-            SingleRecordTable::checkMonotonic("SO", /*isAscending=*/true);
-            SingleRecordTable::checkMonotonic("KRO", /*isAscending=*/true, /*strict*/false);
+            SimpleTable::checkNonDefaultable("SO");
+            SimpleTable::checkNonDefaultable("KRO");
+            SimpleTable::checkMonotonic("SO", /*isAscending=*/true);
+            SimpleTable::checkMonotonic("KRO", /*isAscending=*/true, /*strict*/false);
         }
 
     public:
@@ -53,16 +53,16 @@ namespace Opm {
         { init(record); }
 #endif
 
-        using SingleRecordTable::numTables;
-        using SingleRecordTable::numRows;
-        using SingleRecordTable::numColumns;
-        using SingleRecordTable::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getSoColumn() const
-        { return SingleRecordTable::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getKroColumn() const
-        { return SingleRecordTable::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
     };
 }
 
