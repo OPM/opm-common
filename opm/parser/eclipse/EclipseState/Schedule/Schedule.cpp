@@ -19,6 +19,7 @@
 
 #include <string>
 #include <vector>
+#include <stdexcept>
 
 #include <boost/algorithm/string.hpp>
 
@@ -730,40 +731,87 @@ namespace Opm {
 
             for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
                 WellPtr well = *wellIter;
-                WellProductionProperties prop = well->getProductionPropertiesCopy(currentStep);
+                if(well->isProducer(currentStep)){
+                    WellProductionProperties prop = well->getProductionPropertiesCopy(currentStep);
 
-                if (cMode == "ORAT"){
-                    prop.OilRate = newValue * siFactorL;
-                }
-                else if (cMode == "WRAT"){
-                    prop.WaterRate = newValue * siFactorL;
-                }
-                else if (cMode == "GRAT"){
-                    prop.GasRate = newValue * siFactorG;
-                }
-                else if (cMode == "LRAT"){
-                    prop.LiquidRate = newValue * siFactorL;
-                }
-                else if (cMode == "RESV"){
-                    prop.ResVRate = newValue * siFactorL;
-                }
-                else if (cMode == "BHP"){
-                    prop.BHPLimit = newValue * siFactorP;
-                }
-                else if (cMode == "THP"){
-                    prop.THPLimit = newValue * siFactorP;
-                }
-                else if (cMode == "VFP"){
-                    prop.VFPTableNumber = static_cast<int> (newValue);
-                }
-                else if (cMode == "GUID"){
-                    well->setGuideRate(currentStep, newValue);
-                }
-                else{
-                    throw std::invalid_argument("Invalid keyword (MODE) supplied");
+                    if (cMode == "ORAT"){
+                        prop.OilRate = newValue * siFactorL;
+                    }
+                    else if (cMode == "WRAT"){
+                        prop.WaterRate = newValue * siFactorL;
+                    }
+                    else if (cMode == "GRAT"){
+                        prop.GasRate = newValue * siFactorG;
+                    }
+                    else if (cMode == "LRAT"){
+                        prop.LiquidRate = newValue * siFactorL;
+                    }
+                    else if (cMode == "RESV"){
+                        prop.ResVRate = newValue * siFactorL;
+                    }
+                    else if (cMode == "BHP"){
+                        prop.BHPLimit = newValue * siFactorP;
+                    }
+                    else if (cMode == "THP"){
+                        prop.THPLimit = newValue * siFactorP;
+                    }
+                    else if (cMode == "VFP"){
+                        prop.VFPTableNumber = static_cast<int> (newValue);
+                    }
+                    else if (cMode == "GUID"){
+                        well->setGuideRate(currentStep, newValue);
+                    }
+                    else{
+                        throw std::invalid_argument("Invalid keyword (MODE) supplied");
+                    }
+
+                    well->setProductionProperties(currentStep, prop);
+                }else{
+                    WellInjectionProperties prop = well->getInjectionPropertiesCopy(currentStep);
+                    if (cMode == "BHP"){
+                        prop.BHPLimit = newValue * siFactorP;
+                    }
+                    else if (cMode == "ORAT"){
+                        if(prop.injectorType == WellInjector::TypeEnum::OIL){
+                            prop.surfaceInjectionRate = newValue * siFactorL;
+                        }else{
+                             std::invalid_argument("Well type must be OIL to set the oil rate");
+                        }
+                    }
+                    else if (cMode == "WRAT"){
+                        if(prop.injectorType == WellInjector::TypeEnum::WATER){
+                            prop.surfaceInjectionRate = newValue * siFactorL;
+                        }else{
+                             std::invalid_argument("Well type must be WATER to set the water rate");
+                        }
+                    }
+                    else if (cMode == "GRAT"){
+                        if(prop.injectorType == WellInjector::TypeEnum::GAS){
+                            prop.surfaceInjectionRate = newValue * siFactorG;
+                        }else{
+                            std::invalid_argument("Well type must be GAS to set the gas rate");
+                        }
+                    }
+                    else if (cMode == "THP"){
+                        prop.THPLimit = newValue * siFactorP;
+                    }
+                    else if (cMode == "VFP"){
+                        prop.VFPTableNumber = static_cast<int> (newValue);
+                    }
+                    else if (cMode == "GUID"){
+                        well->setGuideRate(currentStep, newValue);
+                    }
+                    else if (cMode == "RESV"){
+                        prop.reservoirInjectionRate = newValue * siFactorL;
+                    }
+                    else{
+                        throw std::invalid_argument("Invalid keyword (MODE) supplied");
+                    }
+
+                    well->setInjectionProperties(currentStep, prop);
                 }
 
-                well->setProductionProperties(currentStep, prop);
+
             }
         }
     }
