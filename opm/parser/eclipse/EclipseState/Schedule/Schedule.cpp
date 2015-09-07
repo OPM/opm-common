@@ -775,21 +775,21 @@ namespace Opm {
                         if(prop.injectorType == WellInjector::TypeEnum::OIL){
                             prop.surfaceInjectionRate = newValue * siFactorL;
                         }else{
-                             std::invalid_argument("Well type must be OIL to set the surface injector rate");
+                             std::invalid_argument("Well type must be OIL to set the oil rate");
                         }
                     }
                     else if (cMode == "WRAT"){
                         if(prop.injectorType == WellInjector::TypeEnum::WATER){
                             prop.surfaceInjectionRate = newValue * siFactorL;
                         }else{
-                             std::invalid_argument("Well type must be WATER to set the surface injector rate");
+                             std::invalid_argument("Well type must be WATER to set the water rate");
                         }
                     }
                     else if (cMode == "GRAT"){
                         if(prop.injectorType == WellInjector::TypeEnum::GAS){
                             prop.surfaceInjectionRate = newValue * siFactorG;
                         }else{
-                            std::invalid_argument("Well type must be GAS to set the surface injector rate");
+                            std::invalid_argument("Well type must be GAS to set the gas rate");
                         }
                     }
                     else if (cMode == "THP"){
