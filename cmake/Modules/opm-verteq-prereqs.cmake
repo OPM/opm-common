@@ -15,5 +15,6 @@ set (opm-verteq_DEPS
 	"Boost 1.44.0
 		COMPONENTS date_time filesystem system iostreams unit_test_framework REQUIRED"
 	# OPM dependency
-	"opm-core"
+	"opm-common REQUIRED;
+	opm-core REQUIRED"
 	)
