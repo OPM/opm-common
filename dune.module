@@ -1,4 +1,4 @@
-Module: opm-cmake
-Description: Open Porous Media Initiative build system
+Module: opm-common
+Description: Open Porous Media Initiative common module
 Version: 2015.10
 Maintainer: opm@opm-project.org

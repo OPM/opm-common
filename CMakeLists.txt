@@ -10,8 +10,8 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 include(OpmInit)
 
 file (READ ${PROJECT_SOURCE_DIR}/dune.module DUNE_MODULE)
-OpmGetDuneModuleDirective ("Version" opm-cmake_VERSION "${DUNE_MODULE}")
+OpmGetDuneModuleDirective ("Version" opm-common_VERSION "${DUNE_MODULE}")
 
-configure_file(opm-cmake-config.cmake.in opm-cmake-config.cmake @ONLY)
-install(FILES ${PROJECT_BINARY_DIR}/opm-cmake-config.cmake
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/opm-cmake)
+configure_file(opm-common-config.cmake.in opm-common-config.cmake @ONLY)
+install(FILES ${PROJECT_BINARY_DIR}/opm-common-config.cmake
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/opm-common)

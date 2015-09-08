@@ -1,5 +1,5 @@
 #!/bin/sh
 
-# for the opm-cmake module, the configuration is a no-op since it does
+# for the opm-common module, the configuration is a no-op since it does
 # not provide any C/C++ source files
 exit 0
