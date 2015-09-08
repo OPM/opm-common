@@ -17,6 +17,13 @@ for OPT in "$@"; do
     esac
 done
 
+# special work around the fact that dunecontrol does not specify
+# --with-$MODULE for the module it attempts to build
+ADDITIONAL_PARAMS=""
+if test -z "$mod_dir"; then
+    ADDITIONAL_PARAMS="--with-opm-common=\"$(pwd)\""
+fi
+
 # if it isn't specified, the look around in other known places
 conf_file=cmake/Scripts/configure
 if [ -z "$mod_dir" ]; then
@@ -32,4 +39,4 @@ if [ ! -r "$mod_dir/$conf_file" ]; then
 fi
 
 # forward to the corresponding script in the cmake/Scripts/ directory
-exec "$mod_dir/$conf_file" --src-dir="$src_dir" "$@"
+exec "$mod_dir/$conf_file" --src-dir="$src_dir" "$@" $ADDITIONAL_PARAMS
