@@ -19,14 +19,13 @@
 #ifndef OPM_PARSER_IMKRVD_TABLE_HPP
 #define	OPM_PARSER_IMKRVD_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class ImkrvdTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+    class ImkrvdTable : protected SimpleTable {
 
         friend class TableManager;
         ImkrvdTable() = default;
@@ -35,10 +34,9 @@ namespace Opm {
          * \brief Read the IMKRVD keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckKeywordConstPtr keyword,
-                  int recordIdx)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            ParentType::init(keyword,
+            SimpleTable::init(record,
                              std::vector<std::string>{"DEPTH",
                                      "KRWMAX",
                                      "KRGMAX",
@@ -47,73 +45,72 @@ namespace Opm {
                                      "KRGCRIT",
                                      "KROCRITG",
                                      "KROCRITW" },
-                             recordIdx,
                              /*firstEntityOffset=*/0);
 
-            ParentType::checkNonDefaultable("DEPTH");
-            ParentType::checkMonotonic("DEPTH", /*isAscending=*/true);
-            ParentType::applyDefaultsLinear("KRWMAX");
-            ParentType::applyDefaultsLinear("KRGMAX");
-            ParentType::applyDefaultsLinear("KROMAX");
-            ParentType::applyDefaultsLinear("KRWCRIT");
-            ParentType::applyDefaultsLinear("KRGCRIT");
-            ParentType::applyDefaultsLinear("KROCRITG");
-            ParentType::applyDefaultsLinear("KROCRITW");
+            SimpleTable::checkNonDefaultable("DEPTH");
+            SimpleTable::checkMonotonic("DEPTH", /*isAscending=*/true);
+            SimpleTable::applyDefaultsLinear("KRWMAX");
+            SimpleTable::applyDefaultsLinear("KRGMAX");
+            SimpleTable::applyDefaultsLinear("KROMAX");
+            SimpleTable::applyDefaultsLinear("KRWCRIT");
+            SimpleTable::applyDefaultsLinear("KRGCRIT");
+            SimpleTable::applyDefaultsLinear("KROCRITG");
+            SimpleTable::applyDefaultsLinear("KROCRITW");
         }
 
     public:
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         /*!
          * \brief The datum depth for the remaining columns
          */
         const std::vector<double> &getDepthColumn() const
-        { return ParentType::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         /*!
          * \brief Maximum relative permeability of water
          */
         const std::vector<double> &getKrwmaxColumn() const
-        { return ParentType::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
 
         /*!
          * \brief Maximum relative permeability of gas
          */
         const std::vector<double> &getKrgmaxColumn() const
-        { return ParentType::getColumn(2); }
+        { return SimpleTable::getColumn(2); }
 
         /*!
          * \brief Maximum relative permeability of oil
          */
         const std::vector<double> &getKromaxColumn() const
-        { return ParentType::getColumn(3); }
+        { return SimpleTable::getColumn(3); }
 
         /*!
          * \brief Relative permeability of water at the critical oil (or gas) saturation
          */
         const std::vector<double> &getKrwcritColumn() const
-        { return ParentType::getColumn(4); }
+        { return SimpleTable::getColumn(4); }
 
         /*!
          * \brief Relative permeability of gas at the critical oil (or water) saturation
          */
         const std::vector<double> &getKrgcritColumn() const
-        { return ParentType::getColumn(5); }
+        { return SimpleTable::getColumn(5); }
 
         /*!
          * \brief Oil relative permeability of oil at the critical gas saturation
          */
         const std::vector<double> &getKrocritgColumn() const
-        { return ParentType::getColumn(6); }
+        { return SimpleTable::getColumn(6); }
 
         /*!
          * \brief Oil relative permeability of oil at the critical water saturation
          */
         const std::vector<double> &getKrocritwColumn() const
-        { return ParentType::getColumn(7); }
+        { return SimpleTable::getColumn(7); }
     };
 }
 

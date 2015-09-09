@@ -19,14 +19,14 @@
 #ifndef OPM_PARSER_PLYADS_TABLE_HPP
 #define	OPM_PARSER_PLYADS_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class PlyadsTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+    class PlyadsTable : protected SimpleTable {
+
 
         friend class TableManager;
 
@@ -34,20 +34,19 @@ namespace Opm {
          * \brief Read the PLYADS keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            ParentType::init(keyword,
+            SimpleTable::init(record,
                              std::vector<std::string>{
                                  "PolymerConcentration",
                                  "AdsorbedPolymer"
                              },
-                             recordIdx,
                              /*firstEntityOffset=*/0);
 
-            ParentType::checkNonDefaultable("PolymerConcentration");
-            ParentType::checkMonotonic("PolymerConcentration", /*isAscending=*/true);
-            ParentType::checkNonDefaultable("AdsorbedPolymer");
-            ParentType::checkMonotonic("AdsorbedPolymer", /*isAscending=*/true, /*strictlyMonotonic=*/false);
+            SimpleTable::checkNonDefaultable("PolymerConcentration");
+            SimpleTable::checkMonotonic("PolymerConcentration", /*isAscending=*/true);
+            SimpleTable::checkNonDefaultable("AdsorbedPolymer");
+            SimpleTable::checkMonotonic("AdsorbedPolymer", /*isAscending=*/true, /*strictlyMonotonic=*/false);
         }
 
     public:
@@ -55,20 +54,20 @@ namespace Opm {
 
 #ifdef BOOST_TEST_MODULE
         // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
-        void initFORUNITTESTONLY(Opm::DeckKeywordConstPtr keyword, size_t tableIdx)
-        { init(keyword, tableIdx); }
+        void initFORUNITTESTONLY(Opm::DeckRecordConstPtr record)
+        { init(record); }
 #endif
 
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getPolymerConcentrationColumn() const
-        { return ParentType::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getAdsorbedPolymerColumn() const
-        { return ParentType::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
     };
 }
 

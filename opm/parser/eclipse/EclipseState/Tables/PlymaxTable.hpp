@@ -19,14 +19,13 @@
 #ifndef OPM_PARSER_PLYMAX_TABLE_HPP
 #define	OPM_PARSER_PLYMAX_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class PlymaxTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+    class PlymaxTable : protected SimpleTable {
 
         friend class TableManager;
         PlymaxTable() = default;
@@ -35,30 +34,29 @@ namespace Opm {
          * \brief Read the PLYMAX keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            ParentType::init(keyword,
+            SimpleTable::init(record,
                              std::vector<std::string>{"C_POLYMER", "C_POLYMER_MAX"},
-                             recordIdx,
                              /*firstEntityOffset=*/0);
 
-            ParentType::checkNonDefaultable("C_POLYMER");
-            ParentType::checkMonotonic("C_POLYMER", /*isAscending=*/false);
-            ParentType::checkNonDefaultable("C_POLYMER_MAX");
-            ParentType::checkMonotonic("C_POLYMER_MAX", /*isAscending=*/false);
+            SimpleTable::checkNonDefaultable("C_POLYMER");
+            SimpleTable::checkMonotonic("C_POLYMER", /*isAscending=*/false);
+            SimpleTable::checkNonDefaultable("C_POLYMER_MAX");
+            SimpleTable::checkMonotonic("C_POLYMER_MAX", /*isAscending=*/false);
         }
 
     public:
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getPolymerConcentrationColumn() const
-        { return ParentType::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getMaxPolymerConcentrationColumn() const
-        { return ParentType::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
     };
 }
 

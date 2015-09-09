@@ -19,14 +19,13 @@
 #ifndef OPM_PARSER_RTEMPVD_TABLE_HPP
 #define	OPM_PARSER_RTEMPVD_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class RtempvdTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+    class RtempvdTable : protected SimpleTable {
 
         friend class TableManager;
         RtempvdTable() = default;
@@ -35,33 +34,32 @@ namespace Opm {
          * \brief Read the RTEMPVD keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            ParentType::init(keyword,
+            SimpleTable::init(record,
                              std::vector<std::string>{
                                  "Depth",
                                  "Temperature"
                              },
-                             recordIdx,
                              /*firstEntityOffset=*/0);
 
-            ParentType::checkNonDefaultable("Depth");
-            ParentType::checkMonotonic("Depth", /*isAscending=*/true);
+            SimpleTable::checkNonDefaultable("Depth");
+            SimpleTable::checkMonotonic("Depth", /*isAscending=*/true);
 
-            ParentType::checkNonDefaultable("Temperature");
+            SimpleTable::checkNonDefaultable("Temperature");
         }
 
     public:
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getDepthColumn() const
-        { return ParentType::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getTemperatureColumn() const
-        { return ParentType::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
     };
 }
 

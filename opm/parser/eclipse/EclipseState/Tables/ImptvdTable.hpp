@@ -19,14 +19,14 @@
 #ifndef OPM_PARSER_IMPTVD_TABLE_HPP
 #define	OPM_PARSER_IMPTVD_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class ImptvdTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+    class ImptvdTable : protected SimpleTable {
+
 
         friend class TableManager;
         ImptvdTable() = default;
@@ -35,10 +35,9 @@ namespace Opm {
          * \brief Read the IMPTVD keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckKeywordConstPtr keyword,
-                  int recordIdx)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            ParentType::init(keyword,
+            SimpleTable::init(record,
                              std::vector<std::string>{"DEPTH",
                                      "SWCO",
                                      "SWCRIT",
@@ -48,76 +47,75 @@ namespace Opm {
                                      "SGMAX",
                                      "SOWCRIT",
                                      "SOGCRIT"},
-                             recordIdx,
-                             /*firstEntityOffset=*/0);
-            ParentType::checkNonDefaultable("DEPTH");
-            ParentType::checkMonotonic("DEPTH", /*isAscending=*/true);
-            ParentType::applyDefaultsLinear("SWCO");
-            ParentType::applyDefaultsLinear("SWCRIT");
-            ParentType::applyDefaultsLinear("SWMAX");
-            ParentType::applyDefaultsLinear("SGCO");
-            ParentType::applyDefaultsLinear("SGCRIT");
-            ParentType::applyDefaultsLinear("SGMAX");
-            ParentType::applyDefaultsLinear("SOWCRIT");
-            ParentType::applyDefaultsLinear("SOGCRIT");
+                                    /*firstEntityOffset=*/0);
+            SimpleTable::checkNonDefaultable("DEPTH");
+            SimpleTable::checkMonotonic("DEPTH", /*isAscending=*/true);
+            SimpleTable::applyDefaultsLinear("SWCO");
+            SimpleTable::applyDefaultsLinear("SWCRIT");
+            SimpleTable::applyDefaultsLinear("SWMAX");
+            SimpleTable::applyDefaultsLinear("SGCO");
+            SimpleTable::applyDefaultsLinear("SGCRIT");
+            SimpleTable::applyDefaultsLinear("SGMAX");
+            SimpleTable::applyDefaultsLinear("SOWCRIT");
+            SimpleTable::applyDefaultsLinear("SOGCRIT");
         }
 
     public:
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getDepthColumn() const
-        { return ParentType::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         /*!
          * \brief Connate water saturation
          */
         const std::vector<double> &getSwcoColumn() const
-        { return ParentType::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
 
         /*!
          * \brief Critical water saturation
          */
         const std::vector<double> &getSwcritColumn() const
-        { return ParentType::getColumn(2); }
+        { return SimpleTable::getColumn(2); }
 
         /*!
          * \brief Maximum water saturation
          */
         const std::vector<double> &getSwmaxColumn() const
-        { return ParentType::getColumn(3); }
+        { return SimpleTable::getColumn(3); }
 
         /*!
          * \brief Connate gas saturation
          */
         const std::vector<double> &getSgcoColumn() const
-        { return ParentType::getColumn(4); }
+        { return SimpleTable::getColumn(4); }
 
         /*!
          * \brief Critical gas saturation
          */
         const std::vector<double> &getSgcritColumn() const
-        { return ParentType::getColumn(5); }
+        { return SimpleTable::getColumn(5); }
 
         /*!
          * \brief Maximum gas saturation
          */
         const std::vector<double> &getSgmaxColumn() const
-        { return ParentType::getColumn(6); }
+        { return SimpleTable::getColumn(6); }
 
         /*!
          * \brief Critical oil-in-water saturation
          */
         const std::vector<double> &getSowcritColumn() const
-        { return ParentType::getColumn(7); }
+        { return SimpleTable::getColumn(7); }
 
         /*!
          * \brief Critical oil-in-gas saturation
          */
         const std::vector<double> &getSogcritColumn() const
-        { return ParentType::getColumn(8); }
+        { return SimpleTable::getColumn(8); }
     };
 }
 

@@ -19,7 +19,7 @@
 #ifndef OPM_PARSER_PVTG_INNER_TABLE_HPP
 #define	OPM_PARSER_PVTG_INNER_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declarations
@@ -30,7 +30,7 @@ namespace Opm {
     class PvtgInnerTable;
 
     class PvtgInnerTable : protected MultiRecordTable {
-        typedef SingleRecordTable ParentType;
+
 
         friend class PvtgTable;
         friend class FullTable<PvtgOuterTable, PvtgInnerTable>;
@@ -42,32 +42,32 @@ namespace Opm {
          *
          * The first value of the record (-> Rv) is skipped.
          */
-        void init(Opm::DeckKeywordConstPtr keyword, size_t recordIdx)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            ParentType::init(keyword,
+            SimpleTable::init(record,
                              std::vector<std::string>{"RV", "BG", "MUG"},
-                             recordIdx, 1U);
+                             1U);
 
-            ParentType::checkNonDefaultable("RV");
-            ParentType::checkMonotonic("RV", /*isAscending=*/false);
-            ParentType::applyDefaultsLinear("BG");
-            ParentType::applyDefaultsLinear("MUG");
+            SimpleTable::checkNonDefaultable("RV");
+            SimpleTable::checkMonotonic("RV", /*isAscending=*/false);
+            SimpleTable::applyDefaultsLinear("BG");
+            SimpleTable::applyDefaultsLinear("MUG");
         }
 
     public:
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getOilSolubilityColumn() const
-        { return ParentType::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getGasFormationFactorColumn() const
-        { return ParentType::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
 
         const std::vector<double> &getGasViscosityColumn() const
-        { return ParentType::getColumn(2); }
+        { return SimpleTable::getColumn(2); }
     };
 }
 

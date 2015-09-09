@@ -19,14 +19,13 @@
 #ifndef OPM_PARSER_SGFN_TABLE_HPP
 #define OPM_PARSER_SGFN_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class SgfnTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+    class SgfnTable : protected SimpleTable {
 
         friend class TableManager;
 
@@ -34,20 +33,18 @@ namespace Opm {
          * \brief Read the SGFN keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckKeywordConstPtr keyword,
-                  int recordIdx)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            ParentType::init(keyword,
+            SimpleTable::init(record,
                              std::vector<std::string>{"SG", "KRG", "PCOG"},
-                             recordIdx,
                              /*firstEntityOffset=*/0);
 
-            ParentType::checkNonDefaultable("SG");
-            ParentType::checkMonotonic("SG",   /*isAscending=*/true);
-            ParentType::applyDefaultsLinear("KRG");
-            ParentType::applyDefaultsLinear("PCOG");
-            ParentType::checkMonotonic("KRG",  /*isAscending=*/true,  /*strict=*/false);
-            ParentType::checkMonotonic("PCOG", /*isAscending=*/true, /*strict=*/false);
+            SimpleTable::checkNonDefaultable("SG");
+            SimpleTable::checkMonotonic("SG",   /*isAscending=*/true);
+            SimpleTable::applyDefaultsLinear("KRG");
+            SimpleTable::applyDefaultsLinear("PCOG");
+            SimpleTable::checkMonotonic("KRG",  /*isAscending=*/true,  /*strict=*/false);
+            SimpleTable::checkMonotonic("PCOG", /*isAscending=*/true, /*strict=*/false);
         }
 
     public:
@@ -55,25 +52,25 @@ namespace Opm {
 
 #ifdef BOOST_TEST_MODULE
         // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
-        void initFORUNITTESTONLY(Opm::DeckKeywordConstPtr keyword, size_t tableIdx)
-        { init(keyword, tableIdx); }
+        void initFORUNITTESTONLY(Opm::DeckRecordConstPtr record)
+        { init(record); }
 #endif
 
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getSgColumn() const
-        { return ParentType::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getKrgColumn() const
-        { return ParentType::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
 
         // this column is p_g - p_o (non-wetting phase pressure minus
         // wetting phase pressure for a given gas saturation)
         const std::vector<double> &getPcogColumn() const
-        { return ParentType::getColumn(2); }
+        { return SimpleTable::getColumn(2); }
     };
 }
 

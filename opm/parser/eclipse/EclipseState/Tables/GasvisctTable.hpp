@@ -19,14 +19,13 @@
 #ifndef OPM_PARSER_GASVISCT_TABLE_HPP
 #define	OPM_PARSER_GASVISCT_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class GasvisctTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+    class GasvisctTable : protected SimpleTable {
 
         friend class TableManager;
         GasvisctTable() = default;
@@ -35,7 +34,7 @@ namespace Opm {
          * \brief Read the GASVISCT keyword and provide some convenience
          *        methods for it.
          */
-        void init(const Deck& deck, Opm::DeckKeywordConstPtr keyword, int recordIdx)
+        void init(const Deck& deck, Opm::DeckRecordConstPtr deckRecord)
         {
             int numComponents = deck.getKeyword("COMPS")->getRecord(0)->getItem(0)->getInt(0);
 
@@ -49,12 +48,9 @@ namespace Opm {
             for (int compIdx = 0; compIdx < numComponents; ++ compIdx)
                 columnNames.push_back("Viscosity" + std::to_string(static_cast<long long>(compIdx)));
 
-            ParentType::createColumns(columnNames);
+            SimpleTable::createColumns(columnNames);
 
             // extract the actual data from the deck
-            Opm::DeckRecordConstPtr deckRecord =
-                keyword->getRecord(recordIdx);
-
             size_t numFlatItems = getNumFlatItems(deckRecord);
             if ( numFlatItems % numColumns() != 0)
                 throw std::runtime_error("Number of columns in the data file is inconsistent "
@@ -91,29 +87,29 @@ namespace Opm {
             // reference manual. (actually, the documentation does not say anyting about
             // whether items of these columns are defaultable or not, so we assume here
             // that they are not.)
-            ParentType::checkNonDefaultable("Temperature");
-            ParentType::checkMonotonic("Temperature", /*isAscending=*/true);
+            SimpleTable::checkNonDefaultable("Temperature");
+            SimpleTable::checkMonotonic("Temperature", /*isAscending=*/true);
 
             for (int compIdx = 0; compIdx < numComponents; ++compIdx) {
                 std::string columnName = "Viscosity" + std::to_string(static_cast<long long>(compIdx));
-                ParentType::checkNonDefaultable(columnName);
-                ParentType::checkMonotonic(columnName,
+                SimpleTable::checkNonDefaultable(columnName);
+                SimpleTable::checkMonotonic(columnName,
                                            /*isAscending=*/true,
                                            /*strictlyMonotonic=*/false);
             }
         }
 
     public:
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getTemperatureColumn() const
-        { return ParentType::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getGasViscosityColumn(size_t compIdx) const
-        { return ParentType::getColumn(1 + compIdx); }
+        { return SimpleTable::getColumn(1 + compIdx); }
     };
 }
 

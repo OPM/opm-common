@@ -19,14 +19,14 @@
 #ifndef OPM_PARSER_PVDG_TABLE_HPP
 #define	OPM_PARSER_PVDG_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class PvdgTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+    class PvdgTable : protected SimpleTable {
+        
 
         friend class TableManager;
 
@@ -36,38 +36,36 @@ namespace Opm {
          * \brief Read the PVDG keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckKeywordConstPtr keyword,
-                  int recordIdx)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            ParentType::init(keyword,
+            SimpleTable::init(record,
                              std::vector<std::string>{"P", "BG", "MUG"},
-                             recordIdx,
                              /*firstEntityOffset=*/0);
 
-            ParentType::checkNonDefaultable("P");
-            ParentType::checkMonotonic("P", /*isAscending=*/true);
+            SimpleTable::checkNonDefaultable("P");
+            SimpleTable::checkMonotonic("P", /*isAscending=*/true);
 
-            ParentType::applyDefaultsLinear("BG");
-            ParentType::checkMonotonic("BG", /*isAscending=*/false);
+            SimpleTable::applyDefaultsLinear("BG");
+            SimpleTable::checkMonotonic("BG", /*isAscending=*/false);
 
-            ParentType::applyDefaultsLinear("MUG");
-            ParentType::checkMonotonic("MUG", /*isAscending=*/true, /*strictlyMonotonic=*/false);
+            SimpleTable::applyDefaultsLinear("MUG");
+            SimpleTable::checkMonotonic("MUG", /*isAscending=*/true, /*strictlyMonotonic=*/false);
         }
 
     public:
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getPressureColumn() const
-        { return ParentType::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getFormationFactorColumn() const
-        { return ParentType::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
 
         const std::vector<double> &getViscosityColumn() const
-        { return ParentType::getColumn(2); }
+        { return SimpleTable::getColumn(2); }
     };
 }
 

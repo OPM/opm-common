@@ -19,14 +19,14 @@
 #ifndef OPM_PARSER_OILVISCT_TABLE_HPP
 #define	OPM_PARSER_OILVISCT_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class OilvisctTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+    class OilvisctTable : protected SimpleTable {
+        
 
         friend class TableManager;
         OilvisctTable() = default;
@@ -35,34 +35,33 @@ namespace Opm {
          * \brief Read the OILVISCT keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            ParentType::init(keyword,
-                             std::vector<std::string>{
-                                 "Temperature",
-                                 "Viscosity"
-                             },
-                             recordIdx,
+            SimpleTable::init(record ,
+                                    std::vector<std::string>{
+                                        "Temperature",
+                                        "Viscosity"
+                                            },
                              /*firstEntityOffset=*/0);
 
-            ParentType::checkNonDefaultable("Temperature");
-            ParentType::checkMonotonic("Temperature", /*isAscending=*/true);
+            SimpleTable::checkNonDefaultable("Temperature");
+            SimpleTable::checkMonotonic("Temperature", /*isAscending=*/true);
 
-            ParentType::checkNonDefaultable("Viscosity");
-            ParentType::checkMonotonic("Viscosity", /*isAscending=*/false, /*strictlyMonotonic=*/false);
+            SimpleTable::checkNonDefaultable("Viscosity");
+            SimpleTable::checkMonotonic("Viscosity", /*isAscending=*/false, /*strictlyMonotonic=*/false);
         }
 
     public:
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getTemperatureColumn() const
-        { return ParentType::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getOilViscosityColumn() const
-        { return ParentType::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
     };
 }
 

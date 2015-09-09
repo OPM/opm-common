@@ -19,35 +19,31 @@
 #ifndef OPM_PARSER_SOF3_TABLE_HPP
 #define OPM_PARSER_SOF3_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class Sof3Table : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
-
+    class Sof3Table : protected SimpleTable {
         friend class TableManager;
 
         /*!
          * \brief Read the SOF3 keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckKeywordConstPtr keyword,
-                  int recordIdx)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            ParentType::init(keyword,
+            SimpleTable::init(record,
                              std::vector<std::string>{"SO", "KROW", "KROG"},
-                             recordIdx,
                              /*firstEntityOffset=*/0);
 
-            ParentType::checkNonDefaultable("SO");
-            ParentType::applyDefaultsLinear("KROW");
-            ParentType::applyDefaultsLinear("KROG");
-            ParentType::checkMonotonic("SO", /*isAscending=*/true);
-            ParentType::checkMonotonic("KROW", /*isAscending=*/true, /*strict*/false);
-            ParentType::checkMonotonic("KROG", /*isAscending=*/true, /*strict*/false);
+            SimpleTable::checkNonDefaultable("SO");
+            SimpleTable::applyDefaultsLinear("KROW");
+            SimpleTable::applyDefaultsLinear("KROG");
+            SimpleTable::checkMonotonic("SO", /*isAscending=*/true);
+            SimpleTable::checkMonotonic("KROW", /*isAscending=*/true, /*strict*/false);
+            SimpleTable::checkMonotonic("KROG", /*isAscending=*/true, /*strict*/false);
         }
 
     public:
@@ -55,23 +51,23 @@ namespace Opm {
 
 #ifdef BOOST_TEST_MODULE
         // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
-        void initFORUNITTESTONLY(Opm::DeckKeywordConstPtr keyword, size_t tableIdx)
-        { init(keyword, tableIdx); }
+        void initFORUNITTESTONLY(Opm::DeckRecordConstPtr record)
+        { init(record); }
 #endif
 
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getSoColumn() const
-        { return ParentType::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getKrowColumn() const
-        { return ParentType::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
 
         const std::vector<double> &getKrogColumn() const
-        { return ParentType::getColumn(2); }
+        { return SimpleTable::getColumn(2); }
     };
 }
 

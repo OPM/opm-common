@@ -19,7 +19,7 @@
 #ifndef OPM_PARSER_PLYSHLOG_TABLE_HPP
 #define	OPM_PARSER_PLYSHLOG_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
@@ -35,10 +35,9 @@ namespace Opm {
          *        methods for it.
          */
         void init(Opm::DeckKeywordConstPtr keyword) {
-
-            // the reference conditions
-            DeckRecordConstPtr record1 = keyword->getRecord(0);
-
+            Opm::DeckRecordConstPtr record1 = keyword->getRecord(0);
+            Opm::DeckRecordConstPtr dataRecord = keyword->getRecord(1);
+            
             const auto itemRefPolymerConcentration = record1->getItem("REF_POLYMER_CONCENTRATION");
             const auto itemRefSalinity = record1->getItem("REF_SALINITY");
             const auto itemRefTemperature = record1->getItem("REF_TEMPERATURE");
@@ -65,14 +64,13 @@ namespace Opm {
                 setHasRefTemperature(false);
             }
 
-            m_data = new SingleRecordTable();
+            m_data = new SimpleTable();
 
-            m_data->init(keyword,
+            m_data->init(dataRecord,
                          std::vector<std::string>{
                                 "WaterVelocity",
                                 "ShearMultiplier"
                              },
-                             /*recordIdx*/ 1,
                              /*firstEntityOffset=*/0);
 
             m_data->checkNonDefaultable("WaterVelocity");
@@ -137,7 +135,7 @@ namespace Opm {
         bool m_hasRefSalinity;
         bool m_hasRefTemperature;
 
-        SingleRecordTable *m_data;
+        SimpleTable *m_data;
 
     };
 

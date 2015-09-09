@@ -19,14 +19,13 @@
 #ifndef OPM_PARSER_SWOF_TABLE_HPP
 #define	OPM_PARSER_SWOF_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class SwofTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+    class SwofTable : protected SimpleTable {
 
         friend class TableManager;
 
@@ -34,19 +33,17 @@ namespace Opm {
          * \brief Read the SWOF keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckKeywordConstPtr keyword,
-                  int recordIdx)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            ParentType::init(keyword,
-                             std::vector<std::string>{"SW", "KRW", "KROW", "PCOW"},
-                             recordIdx,
-                             /*firstEntityOffset=*/0);
+            SimpleTable::init(record,
+                                    std::vector<std::string>{"SW", "KRW", "KROW", "PCOW"},
+                                    /*firstEntityOffset=*/0);
 
-            ParentType::checkNonDefaultable("SW");
-            ParentType::checkMonotonic("SW", /*isAscending=*/true);
-            ParentType::applyDefaultsLinear("KRW");
-            ParentType::applyDefaultsLinear("KROW");
-            ParentType::applyDefaultsLinear("PCOW");
+            SimpleTable::checkNonDefaultable("SW");
+            SimpleTable::checkMonotonic("SW", /*isAscending=*/true);
+            SimpleTable::applyDefaultsLinear("KRW");
+            SimpleTable::applyDefaultsLinear("KROW");
+            SimpleTable::applyDefaultsLinear("PCOW");
         }
 
     public:
@@ -54,28 +51,28 @@ namespace Opm {
 
 #ifdef BOOST_TEST_MODULE
         // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
-        void initFORUNITTESTONLY(Opm::DeckKeywordConstPtr keyword, size_t tableIdx)
-        { init(keyword, tableIdx); }
+        void initFORUNITTESTONLY(Opm::DeckRecordConstPtr record)
+        { init(record); }
 #endif
 
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getSwColumn() const
-        { return ParentType::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getKrwColumn() const
-        { return ParentType::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
 
         const std::vector<double> &getKrowColumn() const
-        { return ParentType::getColumn(2); }
+        { return SimpleTable::getColumn(2); }
 
         // this column is p_o - p_w (non-wetting phase pressure minus
         // wetting phase pressure for a given water saturation)
         const std::vector<double> &getPcowColumn() const
-        { return ParentType::getColumn(3); }
+        { return SimpleTable::getColumn(3); }
     };
 }
 

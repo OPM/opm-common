@@ -19,14 +19,14 @@
 #ifndef OPM_PARSER_PLYDHFLF_TABLE_HPP
 #define	OPM_PARSER_PLYDHFLF_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class PlydhflfTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+    class PlydhflfTable : protected SimpleTable {
+        
 
         friend class TableManager;
         PlydhflfTable() = default;
@@ -35,33 +35,32 @@ namespace Opm {
          * \brief Read the PLYDHFLF keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            ParentType::init(keyword,
+            SimpleTable::init(record,
                              std::vector<std::string>{
                                  "Temperature",
                                  "PolymerHalflife"
                              },
-                             recordIdx,
                              /*firstEntityOffset=*/0);
 
-            ParentType::checkNonDefaultable("Temperetura");
-            ParentType::checkMonotonic("Temperature", /*isAscending=*/true);
-            ParentType::checkNonDefaultable("PolymerHalflife");
-            ParentType::checkMonotonic("PolymerHalflife", /*isAscending=*/false);
+            SimpleTable::checkNonDefaultable("Temperetura");
+            SimpleTable::checkMonotonic("Temperature", /*isAscending=*/true);
+            SimpleTable::checkNonDefaultable("PolymerHalflife");
+            SimpleTable::checkMonotonic("PolymerHalflife", /*isAscending=*/false);
         }
 
     public:
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getTemperatureColumn() const
-        { return ParentType::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getPolymerHalflifeColumn() const
-        { return ParentType::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
     };
 }
 

@@ -19,14 +19,14 @@
 #ifndef OPM_PARSER_PLYVISC_TABLE_HPP
 #define	OPM_PARSER_PLYVISC_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class PlyviscTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+    class PlyviscTable : protected SimpleTable {
+        
 
         friend class TableManager;
         PlyviscTable() = default;
@@ -35,33 +35,32 @@ namespace Opm {
          * \brief Read the PLYVISC keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            ParentType::init(keyword,
+            SimpleTable::init(record,
                              std::vector<std::string>{
                                  "PolymerConcentration",
                                  "ViscosityMultiplier"
                              },
-                             recordIdx,
                              /*firstEntityOffset=*/0);
 
-            ParentType::checkNonDefaultable("PolymerConcentration");
-            ParentType::checkMonotonic("PolymerConcentration", /*isAscending=*/true);
-            ParentType::checkNonDefaultable("ViscosityMultiplier");
-            ParentType::checkMonotonic("ViscosityMultiplier", /*isAscending=*/true);
+            SimpleTable::checkNonDefaultable("PolymerConcentration");
+            SimpleTable::checkMonotonic("PolymerConcentration", /*isAscending=*/true);
+            SimpleTable::checkNonDefaultable("ViscosityMultiplier");
+            SimpleTable::checkMonotonic("ViscosityMultiplier", /*isAscending=*/true);
         }
 
     public:
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getPolymerConcentrationColumn() const
-        { return ParentType::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getViscosityMultiplierColumn() const
-        { return ParentType::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
     };
 }
 

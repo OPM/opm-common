@@ -19,14 +19,13 @@
 #ifndef OPM_PARSER_SSFN_TABLE_HPP
 #define OPM_PARSER_SSFN_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class SsfnTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+    class SsfnTable : protected SimpleTable {
 
         friend class TableManager;
         SsfnTable() = default;
@@ -35,39 +34,37 @@ namespace Opm {
          * \brief Read the SSFN keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckKeywordConstPtr keyword,
-                  int recordIdx)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            ParentType::init(keyword,
+            SimpleTable::init(record,
                              std::vector<std::string>{
                                  "SolventFraction",
                                  "GasRelPermMultiplier",
                                  "SolventRelPermMultiplier"},
-                             recordIdx,
                              /*firstEntityOffset=*/0);
 
-            ParentType::checkNonDefaultable("SolventFraction");
-            ParentType::checkMonotonic("SolventFraction",   /*isAscending=*/true);
-            ParentType::checkNonDefaultable("GasRelPermMultiplier");
-            ParentType::checkMonotonic("GasRelPermMultiplier",  /*isAscending=*/true);
-            ParentType::checkNonDefaultable("SolventRelPermMultiplier");
-            ParentType::checkMonotonic("SolventRelPermMultiplier", /*isAscending=*/true);
+            SimpleTable::checkNonDefaultable("SolventFraction");
+            SimpleTable::checkMonotonic("SolventFraction",   /*isAscending=*/true);
+            SimpleTable::checkNonDefaultable("GasRelPermMultiplier");
+            SimpleTable::checkMonotonic("GasRelPermMultiplier",  /*isAscending=*/true);
+            SimpleTable::checkNonDefaultable("SolventRelPermMultiplier");
+            SimpleTable::checkMonotonic("SolventRelPermMultiplier", /*isAscending=*/true);
         }
 
     public:
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getSolventFractionColumn() const
-        { return ParentType::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getGasRelPermMultiplierColumn() const
-        { return ParentType::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
 
         const std::vector<double> &getSolventRelPermMultiplierColumn() const
-        { return ParentType::getColumn(2); }
+        { return SimpleTable::getColumn(2); }
     };
 }
 

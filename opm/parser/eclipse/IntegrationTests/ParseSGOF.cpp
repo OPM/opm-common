@@ -50,7 +50,7 @@ static void check_parser(ParserPtr parser) {
 static void check_SgofTable(ParserPtr parser) {
     DeckPtr deck =  parser->parseString(parserData, ParseMode());
     Opm::SgofTable sgofTable;
-    sgofTable.initFORUNITTESTONLY(deck->getKeyword("SGOF"), /*recordIdx=*/0);
+    sgofTable.initFORUNITTESTONLY(deck->getKeyword("SGOF")->getRecord(0));
 
     BOOST_CHECK_EQUAL(10U, sgofTable.getSgColumn().size());
     BOOST_CHECK_EQUAL(0.1, sgofTable.getSgColumn()[0]);

@@ -19,14 +19,13 @@
 #ifndef OPM_PARSER_RSVD_TABLE_HPP
 #define OPM_PARSER_RSVD_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class RsvdTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+    class RsvdTable : protected SimpleTable {
 
         friend class TableManager;
         RsvdTable() = default;
@@ -35,29 +34,28 @@ namespace Opm {
          * \brief Read the RSVD keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckKeywordConstPtr keyword, int recordIdx)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            ParentType::init(keyword,
+            SimpleTable::init(record,
                              std::vector<std::string>{"DEPTH", "RS"},
-                             recordIdx,
-                             /*firstEntityOffset=*/0);
+                                    /*firstEntityOffset=*/0);
 
-            ParentType::checkNonDefaultable("DEPTH");
-            ParentType::checkMonotonic("DEPTH", /*isAscending=*/true);
-            ParentType::checkNonDefaultable("RS");
+            SimpleTable::checkNonDefaultable("DEPTH");
+            SimpleTable::checkMonotonic("DEPTH", /*isAscending=*/true);
+            SimpleTable::checkNonDefaultable("RS");
         }
 
     public:
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getDepthColumn() const
-        { return ParentType::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getRsColumn() const
-        { return ParentType::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
     };
 }
 

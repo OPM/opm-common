@@ -19,14 +19,13 @@
 #ifndef OPM_PARSER_ROCKTAB_TABLE_HPP
 #define	OPM_PARSER_ROCKTAB_TABLE_HPP
 
-#include "SingleRecordTable.hpp"
+#include "SimpleTable.hpp"
 
 namespace Opm {
     // forward declaration
     class TableManager;
 
-    class RocktabTable : protected SingleRecordTable {
-        typedef SingleRecordTable ParentType;
+    class RocktabTable : protected SimpleTable {
 
         friend class TableManager;
         RocktabTable() = default;
@@ -35,61 +34,59 @@ namespace Opm {
          * \brief Read the ROCKTAB keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckKeywordConstPtr keyword,
+        void init(Opm::DeckRecordConstPtr record,
                   bool isDirectional,
-                  bool hasStressOption,
-                  int recordIdx)
+                  bool hasStressOption)
         {
-            ParentType::init(keyword,
+            SimpleTable::init(record,
                              isDirectional
                              ? std::vector<std::string>{"PO", "PV_MULT", "TRANSMIS_MULT_X", "TRANSMIS_MULT_Y", "TRANSMIS_MULT_Z"}
                              : std::vector<std::string>{"PO", "PV_MULT", "TRANSMIS_MULT"},
-                             recordIdx,
                              /*firstEntityOffset=*/0);
             m_isDirectional = isDirectional;
 
-            ParentType::checkNonDefaultable("PO");
-            ParentType::checkMonotonic("PO", /*isAscending=*/hasStressOption);
-            ParentType::applyDefaultsLinear("PV_MULT");
+            SimpleTable::checkNonDefaultable("PO");
+            SimpleTable::checkMonotonic("PO", /*isAscending=*/hasStressOption);
+            SimpleTable::applyDefaultsLinear("PV_MULT");
             if (isDirectional) {
-                ParentType::applyDefaultsLinear("TRANSMIS_MULT");
+                SimpleTable::applyDefaultsLinear("TRANSMIS_MULT");
             } else {
-                ParentType::applyDefaultsLinear("TRANSMIS_MULT_X");
-                ParentType::applyDefaultsLinear("TRANSMIS_MULT_Y");
-                ParentType::applyDefaultsLinear("TRANSMIS_MULT_Z");
+                SimpleTable::applyDefaultsLinear("TRANSMIS_MULT_X");
+                SimpleTable::applyDefaultsLinear("TRANSMIS_MULT_Y");
+                SimpleTable::applyDefaultsLinear("TRANSMIS_MULT_Z");
             }
         }
 
     public:
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
+        using SimpleTable::numTables;
+        using SimpleTable::numRows;
+        using SimpleTable::numColumns;
+        using SimpleTable::evaluate;
 
         const std::vector<double> &getPressureColumn() const
-        { return ParentType::getColumn(0); }
+        { return SimpleTable::getColumn(0); }
 
         const std::vector<double> &getPoreVolumeMultiplierColumn() const
-        { return ParentType::getColumn(1); }
+        { return SimpleTable::getColumn(1); }
 
         const std::vector<double> &getTransmissibilityMultiplierColumn() const
-        { return ParentType::getColumn(2); }
+        { return SimpleTable::getColumn(2); }
 
         const std::vector<double> &getTransmissibilityMultiplierXColumn() const
-        { return ParentType::getColumn(2); }
+        { return SimpleTable::getColumn(2); }
 
         const std::vector<double> &getTransmissibilityMultiplierYColumn() const
         {
             if (!m_isDirectional)
-                return ParentType::getColumn(2);
-            return ParentType::getColumn(3);
+                return SimpleTable::getColumn(2);
+            return SimpleTable::getColumn(3);
         }
 
         const std::vector<double> &getTransmissibilityMultiplierZColumn() const
         {
             if (!m_isDirectional)
-                return ParentType::getColumn(2);
-            return ParentType::getColumn(4);
+                return SimpleTable::getColumn(2);
+            return SimpleTable::getColumn(4);
         }
 
     private:
