@@ -46,3 +46,6 @@ endmacro (tests_hook)
 
 # all setup common to the OPM library modules is done here
 include (OpmLibMain)
+
+# Install build system files
+install(DIRECTORY cmake DESTINATION share/opm)
