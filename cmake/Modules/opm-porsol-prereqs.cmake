@@ -18,6 +18,7 @@ set (opm-porsol_DEPS
 	"dune-common REQUIRED;
 	dune-istl REQUIRED;
 	dune-grid REQUIRED;
+	opm-common;
 	opm-core REQUIRED;
 	opm-material REQUIRED;
 	dune-cornerpoint REQUIRED"

@@ -37,6 +37,7 @@ set (opm-core_DEPS
 	# DUNE dependency
 	"dune-common"
 	"dune-istl"
+	"opm-common"
 	# Parser library for ECL-type simulation models
 	"opm-parser REQUIRED"
 	# the code which implements the material laws
