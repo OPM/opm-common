@@ -4,10 +4,10 @@
 #
 # Once done, this will define:
 #
-#  METIS_FOUND        - system has the libMETIS graph partioning library
-#  HAVE_METIS         - like METIS_FOUND, but for the inclusion in config.h
-#  METIS_INCLUDE_DIR  - incude paths to use libMETIS
-#  METIS_LIBRARIES    - Link these to use libMETIS
+#  METIS_FOUND         - system has the libMETIS graph partioning library
+#  HAVE_METIS          - like METIS_FOUND, but for the inclusion in config.h
+#  METIS_INCLUDE_DIRS  - incude paths to use libMETIS
+#  METIS_LIBRARIES     - Link these to use libMETIS
 
 set(METIS_SEARCH_PATH "/usr" "/usr/local" "/opt" "/opt/local")
 set(METIS_NO_DEFAULT_PATH "")
