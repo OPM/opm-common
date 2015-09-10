@@ -1,4 +1,4 @@
-include_directories(${PROJECT_BINARY_DIR}/generated-source/include)
+include_directories(BEFORE ${PROJECT_BINARY_DIR}/generated-source/include)
 
 add_subdirectory(OpmLog/tests)
 add_subdirectory(Parser/tests)
