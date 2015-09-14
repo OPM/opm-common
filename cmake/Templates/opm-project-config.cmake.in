@@ -64,3 +64,6 @@ if (NOT "@OpenMP_CXX_FLAGS@" STREQUAL "")
 endif (NOT "@OpenMP_CXX_FLAGS@" STREQUAL "")
 
 # this is the contents of config.h as far as our probes can tell:
+
+# extra code
+@OPM_PROJECT_EXTRA_CODE@
