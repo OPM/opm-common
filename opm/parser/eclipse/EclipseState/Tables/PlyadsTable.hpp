@@ -34,14 +34,13 @@ namespace Opm {
          * \brief Read the PLYADS keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckRecordConstPtr record)
+        void init(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(record,
-                             std::vector<std::string>{
+            SimpleTable::init(item,
+                              std::vector<std::string>{
                                  "PolymerConcentration",
-                                 "AdsorbedPolymer"
-                             },
-                             /*firstEntityOffset=*/0);
+                                  "AdsorbedPolymer"
+                                     });
 
             SimpleTable::checkNonDefaultable("PolymerConcentration");
             SimpleTable::checkMonotonic("PolymerConcentration", /*isAscending=*/true);
@@ -49,15 +48,15 @@ namespace Opm {
             SimpleTable::checkMonotonic("AdsorbedPolymer", /*isAscending=*/true, /*strictlyMonotonic=*/false);
         }
 
+
     public:
         PlyadsTable() = default;
 
 #ifdef BOOST_TEST_MODULE
         // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
-        void initFORUNITTESTONLY(Opm::DeckRecordConstPtr record)
-        { init(record); }
+        void initFORUNITTESTONLY(Opm::DeckItemConstPtr item)
+        { init(item); }
 #endif
-
         using SimpleTable::numTables;
         using SimpleTable::numRows;
         using SimpleTable::numColumns;

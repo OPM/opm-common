@@ -34,15 +34,14 @@ namespace Opm {
          * \brief Read the ROCKTAB keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckRecordConstPtr record,
+        void init(Opm::DeckItemConstPtr item,
                   bool isDirectional,
                   bool hasStressOption)
         {
-            SimpleTable::init(record,
-                             isDirectional
-                             ? std::vector<std::string>{"PO", "PV_MULT", "TRANSMIS_MULT_X", "TRANSMIS_MULT_Y", "TRANSMIS_MULT_Z"}
-                             : std::vector<std::string>{"PO", "PV_MULT", "TRANSMIS_MULT"},
-                             /*firstEntityOffset=*/0);
+            SimpleTable::init(item,
+                              isDirectional
+                              ? std::vector<std::string>{"PO", "PV_MULT", "TRANSMIS_MULT_X", "TRANSMIS_MULT_Y", "TRANSMIS_MULT_Z"}
+                              : std::vector<std::string>{"PO", "PV_MULT", "TRANSMIS_MULT"});
             m_isDirectional = isDirectional;
 
             SimpleTable::checkNonDefaultable("PO");

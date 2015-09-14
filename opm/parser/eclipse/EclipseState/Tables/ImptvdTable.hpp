@@ -35,19 +35,19 @@ namespace Opm {
          * \brief Read the IMPTVD keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckRecordConstPtr record)
+        void init(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(record,
-                             std::vector<std::string>{"DEPTH",
-                                     "SWCO",
-                                     "SWCRIT",
-                                     "SWMAX",
-                                     "SGCO",
-                                     "SGCRIT",
-                                     "SGMAX",
-                                     "SOWCRIT",
-                                     "SOGCRIT"},
-                                    /*firstEntityOffset=*/0);
+            SimpleTable::init(item,
+                              std::vector<std::string>{"DEPTH",
+                                      "SWCO",
+                                      "SWCRIT",
+                                      "SWMAX",
+                                      "SGCO",
+                                      "SGCRIT",
+                                      "SGMAX",
+                                      "SOWCRIT",
+                                      "SOGCRIT"});
+
             SimpleTable::checkNonDefaultable("DEPTH");
             SimpleTable::checkMonotonic("DEPTH", /*isAscending=*/true);
             SimpleTable::applyDefaultsLinear("SWCO");

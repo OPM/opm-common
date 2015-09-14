@@ -34,14 +34,13 @@ namespace Opm {
          * \brief Read the WATVISCT keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckRecordConstPtr record)
+        void init(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(record,
+            SimpleTable::init(item,
                              std::vector<std::string>{
                                  "Temperature",
                                  "Viscosity"
-                             },
-                             /*firstEntityOffset=*/0);
+                                     });
 
             SimpleTable::checkNonDefaultable("Temperature");
             SimpleTable::checkMonotonic("Temperature", /*isAscending=*/true);

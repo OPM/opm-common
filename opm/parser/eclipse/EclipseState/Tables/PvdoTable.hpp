@@ -35,11 +35,10 @@ namespace Opm {
          * \brief Read the PVDO keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckRecordConstPtr record)
+        void init(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(record,
-                             std::vector<std::string>{"P", "BO", "MUO"},
-                             /*firstEntityOffset=*/0);
+            SimpleTable::init(item,
+                              std::vector<std::string>{"P", "BO", "MUO"});
 
             SimpleTable::checkNonDefaultable("P");
             SimpleTable::checkMonotonic("P", /*isAscending=*/true);

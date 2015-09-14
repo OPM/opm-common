@@ -32,11 +32,10 @@ namespace Opm {
          * \brief Read the SGOF keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckRecordConstPtr record)
+        void init(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(record,
-                             std::vector<std::string>{"SG", "KRG", "KROG", "PCOG"},
-                             /*firstEntityOffset=*/0);
+            SimpleTable::init(item,
+                              std::vector<std::string>{"SG", "KRG", "KROG", "PCOG"});
 
             SimpleTable::checkNonDefaultable("SG");
             SimpleTable::checkMonotonic("SG", /*isAscending=*/true);
@@ -50,8 +49,8 @@ namespace Opm {
 
 #ifdef BOOST_TEST_MODULE
         // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
-        void initFORUNITTESTONLY(Opm::DeckRecordConstPtr record)
-        { init(record); }
+        void initFORUNITTESTONLY(Opm::DeckItemConstPtr item)
+        { init(item); }
 #endif
 
         using SimpleTable::numTables;

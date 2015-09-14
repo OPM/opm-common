@@ -138,7 +138,8 @@ namespace Opm {
             const auto& tableKeyword = deck.getKeyword(keywordName);
             for (size_t tableIdx = 0; tableIdx < tableKeyword->size(); ++tableIdx) {
                 const auto tableRecord = tableKeyword->getRecord( tableIdx );
-                if (tableRecord->getItem(0)->size() == 0) {
+                const auto dataItem = tableRecord->getItem( 0 );
+                if (dataItem->size() == 0) {
                     // for simple tables, an empty record indicates that the previous table
                     // should be copied...
                     if (tableIdx == 0) {
@@ -151,7 +152,7 @@ namespace Opm {
                 }
 
                 tableVector.push_back(TableType());
-                tableVector[tableIdx].init(tableRecord);
+                tableVector[tableIdx].init(dataItem);
             }
         }
 

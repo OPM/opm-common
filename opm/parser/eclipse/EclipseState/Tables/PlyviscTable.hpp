@@ -35,14 +35,13 @@ namespace Opm {
          * \brief Read the PLYVISC keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckRecordConstPtr record)
+        void init(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(record,
+            SimpleTable::init(item,
                              std::vector<std::string>{
                                  "PolymerConcentration",
                                  "ViscosityMultiplier"
-                             },
-                             /*firstEntityOffset=*/0);
+                                     });
 
             SimpleTable::checkNonDefaultable("PolymerConcentration");
             SimpleTable::checkMonotonic("PolymerConcentration", /*isAscending=*/true);

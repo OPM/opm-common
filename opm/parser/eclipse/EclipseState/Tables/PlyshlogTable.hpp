@@ -65,13 +65,11 @@ namespace Opm {
             }
 
             m_data = new SimpleTable();
-
-            m_data->init(dataRecord,
+            m_data->init(dataRecord->getItem<ParserKeywords::PLYSHLOG::DATA>(),
                          std::vector<std::string>{
                                 "WaterVelocity",
                                 "ShearMultiplier"
-                             },
-                             /*firstEntityOffset=*/0);
+                                    });
 
             m_data->checkNonDefaultable("WaterVelocity");
             m_data->checkMonotonic("WaterVelocity", /*isAscending=*/true);

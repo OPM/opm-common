@@ -25,25 +25,22 @@ size_t SimpleTable::numTables(Opm::DeckKeywordConstPtr keyword)
 }
 
 // create table from single record
-void SimpleTable::init(Opm::DeckRecordConstPtr deckRecord,
-                             const std::vector<std::string> &columnNames,
-                             size_t firstEntityOffset)
+void SimpleTable::init(Opm::DeckItemConstPtr deckItem,
+                       const std::vector<std::string> &columnNames)
 {
     createColumns(columnNames);
 
-    size_t numFlatItems = getNumFlatItems(deckRecord);
-    if ( (numFlatItems - firstEntityOffset) % numColumns() != 0)
+    if ( (deckItem->size() % numColumns()) != 0)
         throw std::runtime_error("Number of columns in the data file is"
                                  "inconsistent with the ones specified");
-
-    for (size_t rowIdx = 0;
-         rowIdx*numColumns() < numFlatItems - firstEntityOffset;
-         ++rowIdx)
     {
-        for (size_t colIdx = 0; colIdx < numColumns(); ++colIdx) {
-            size_t deckItemIdx = rowIdx*numColumns() + firstEntityOffset + colIdx;
-            m_columns[colIdx].push_back(getFlatSiDoubleData(deckRecord, deckItemIdx));
-            m_valueDefaulted[colIdx].push_back(getFlatIsDefaulted(deckRecord, deckItemIdx));
+        size_t rows = deckItem->size() / numColumns();
+        for (size_t rowIdx = 0; rowIdx < rows; rowIdx++) {
+            for (size_t colIdx = 0; colIdx < numColumns(); ++colIdx) {
+                size_t deckItemIdx = rowIdx*numColumns() + colIdx;
+                m_columns[colIdx].push_back( deckItem->getSIDouble(deckItemIdx) );
+                m_valueDefaulted[colIdx].push_back( deckItem->defaultApplied(deckItemIdx) );
+            }
         }
     }
 }
@@ -228,55 +225,4 @@ void SimpleTable::createColumns(const std::vector<std::string> &columnNames)
     m_valueDefaulted.resize(columnIdx);
 }
 
-size_t SimpleTable::getNumFlatItems(Opm::DeckRecordConstPtr deckRecord) const
-{
-    size_t result = 0;
-    for (size_t i = 0; i < deckRecord->size(); ++ i) {
-        result += deckRecord->getItem(i)->size();
-    }
-
-    return result;
-}
-
-double SimpleTable::getFlatRawDoubleData(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const
-{
-    size_t itemFirstFlatIdx = 0;
-    for (unsigned i = 0; i < deckRecord->size(); ++ i) {
-        Opm::DeckItemConstPtr item = deckRecord->getItem(i);
-        if (itemFirstFlatIdx + item->size() > flatItemIdx)
-            return item->getRawDouble(flatItemIdx - itemFirstFlatIdx);
-        else
-            itemFirstFlatIdx += item->size();
-    }
-
-    throw std::range_error("Tried to access out-of-range flat item");
-}
-
-double SimpleTable::getFlatSiDoubleData(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const
-{
-    size_t itemFirstFlatIdx = 0;
-    for (unsigned i = 0; i < deckRecord->size(); ++ i) {
-        Opm::DeckItemConstPtr item = deckRecord->getItem(i);
-        if (itemFirstFlatIdx + item->size() > flatItemIdx)
-            return item->getSIDouble(flatItemIdx - itemFirstFlatIdx);
-        else
-            itemFirstFlatIdx += item->size();
-    }
-
-    throw std::range_error("Tried to access out-of-range flat item");
-}
-
-bool SimpleTable::getFlatIsDefaulted(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const
-{
-    size_t itemFirstFlatIdx = 0;
-    for (unsigned i = 0; i < deckRecord->size(); ++ i) {
-        Opm::DeckItemConstPtr item = deckRecord->getItem(i);
-        if (itemFirstFlatIdx + item->size() > flatItemIdx)
-            return item->defaultApplied(flatItemIdx - itemFirstFlatIdx);
-        else
-            itemFirstFlatIdx += item->size();
-    }
-
-    throw std::range_error("Tried to access out-of-range flat item");
-}
 }

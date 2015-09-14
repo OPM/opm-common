@@ -34,11 +34,11 @@ namespace Opm {
          * \brief Read the RSVD keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckRecordConstPtr record)
+        void init(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(record,
-                             std::vector<std::string>{"DEPTH", "RS"},
-                                    /*firstEntityOffset=*/0);
+            SimpleTable::init(item,
+                              std::vector<std::string>{"DEPTH", "RS"});
+
 
             SimpleTable::checkNonDefaultable("DEPTH");
             SimpleTable::checkMonotonic("DEPTH", /*isAscending=*/true);

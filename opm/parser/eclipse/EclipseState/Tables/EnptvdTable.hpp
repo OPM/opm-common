@@ -35,19 +35,18 @@ namespace Opm {
          * \brief Read the ENPTVD keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckRecordConstPtr record)
+        void init(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(record,
+            SimpleTable::init(item,
                              std::vector<std::string>{"DEPTH",
-                                     "SWCO",
-                                     "SWCRIT",
-                                     "SWMAX",
-                                     "SGCO",
-                                     "SGCRIT",
-                                     "SGMAX",
-                                     "SOWCRIT",
-                                     "SOGCRIT"},
-                             /*firstEntityOffset=*/0);
+                                      "SWCO",
+                                      "SWCRIT",
+                                      "SWMAX",
+                                      "SGCO",
+                                      "SGCRIT",
+                                      "SGMAX",
+                                      "SOWCRIT",
+                                      "SOGCRIT"});
 
             SimpleTable::checkNonDefaultable("DEPTH");
             SimpleTable::checkMonotonic("DEPTH", /*isAscending=*/true);

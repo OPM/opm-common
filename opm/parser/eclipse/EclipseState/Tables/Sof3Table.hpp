@@ -32,11 +32,11 @@ namespace Opm {
          * \brief Read the SOF3 keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckRecordConstPtr record)
+        void init(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(record,
-                             std::vector<std::string>{"SO", "KROW", "KROG"},
-                             /*firstEntityOffset=*/0);
+            SimpleTable::init(item,
+                              std::vector<std::string>{"SO", "KROW", "KROG"});
+
 
             SimpleTable::checkNonDefaultable("SO");
             SimpleTable::applyDefaultsLinear("KROW");
@@ -51,8 +51,8 @@ namespace Opm {
 
 #ifdef BOOST_TEST_MODULE
         // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
-        void initFORUNITTESTONLY(Opm::DeckRecordConstPtr record)
-        { init(record); }
+        void initFORUNITTESTONLY(Opm::DeckItemConstPtr item)
+        { init(item); }
 #endif
 
         using SimpleTable::numTables;

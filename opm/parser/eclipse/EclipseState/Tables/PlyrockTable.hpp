@@ -34,17 +34,16 @@ namespace Opm {
          * \brief Read the PLYROCK keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckRecordConstPtr record)
+        void init(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(record,
-                             std::vector<std::string>{
+            SimpleTable::init(item,
+                              std::vector<std::string>{
                                  "DeadPoreVolume",
-                                 "ResidualResistanceFactor",
-                                 "RockDensityFactor",
-                                 "AdsorbtionIndex",
-                                 "MaxAdsorbtion"
-                             },
-                             /*firstEntityOffset=*/0);
+                                     "ResidualResistanceFactor",
+                                     "RockDensityFactor",
+                                     "AdsorbtionIndex",
+                                     "MaxAdsorbtion"
+                                     });
 
             // the entries of this keyword cannot be defaulted except for the
             // forth. ensure this.

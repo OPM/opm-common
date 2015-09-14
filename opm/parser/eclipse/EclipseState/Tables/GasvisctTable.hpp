@@ -34,7 +34,7 @@ namespace Opm {
          * \brief Read the GASVISCT keyword and provide some convenience
          *        methods for it.
          */
-        void init(const Deck& deck, Opm::DeckRecordConstPtr deckRecord)
+        void init(const Deck& deck, Opm::DeckItemConstPtr deckItem)
         {
             int numComponents = deck.getKeyword("COMPS")->getRecord(0)->getItem(0)->getInt(0);
 
@@ -51,7 +51,7 @@ namespace Opm {
             SimpleTable::createColumns(columnNames);
 
             // extract the actual data from the deck
-            size_t numFlatItems = getNumFlatItems(deckRecord);
+            size_t numFlatItems = deckItem->size( );
             if ( numFlatItems % numColumns() != 0)
                 throw std::runtime_error("Number of columns in the data file is inconsistent "
                                          "with the expected number for keyword GASVISCT");
@@ -60,11 +60,11 @@ namespace Opm {
                 // add the current temperature
                 int deckItemIdx = rowIdx*numColumns();
 
-                bool isDefaulted = this->getFlatIsDefaulted(deckRecord, deckItemIdx);
+                bool isDefaulted = deckItem->defaultApplied( deckItemIdx );
                 this->m_valueDefaulted[0].push_back(isDefaulted);
 
                 if (!isDefaulted) {
-                    double T = this->getFlatRawDoubleData(deckRecord, deckItemIdx);
+                    double T = deckItem->getRawDouble( deckItemIdx );
                     this->m_columns[0].push_back(temperatureDimension->convertRawToSi(T));
                 }
 
@@ -73,11 +73,11 @@ namespace Opm {
                     deckItemIdx = rowIdx*numColumns() + compIdx + 1;
                     size_t columnIdx = compIdx + 1;
 
-                    isDefaulted = this->getFlatIsDefaulted(deckRecord, deckItemIdx);
+                    isDefaulted = deckItem->defaultApplied( deckItemIdx );
                     this->m_valueDefaulted[columnIdx].push_back(isDefaulted);
 
                     if (!isDefaulted) {
-                        double mu = this->getFlatRawDoubleData(deckRecord, deckItemIdx);
+                        double mu = deckItem->getRawDouble( deckItemIdx );
                         this->m_columns[columnIdx].push_back(viscosityDimension->convertRawToSi(mu));
                     }
                 }

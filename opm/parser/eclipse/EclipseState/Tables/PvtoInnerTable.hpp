@@ -41,11 +41,10 @@ namespace Opm {
          *
          * The first value of the record (-> Rs) is skipped.
          */
-        void init(Opm::DeckRecordConstPtr record)
+        void init(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(record,
-                             std::vector<std::string>{"P", "BO", "MU"},
-                             /*firstEntityOffset=*/1);
+            SimpleTable::init(item,
+                              std::vector<std::string>{"P", "BO", "MU"});
 
             SimpleTable::checkNonDefaultable("P");
             SimpleTable::checkMonotonic("P", /*isAscending=*/true);

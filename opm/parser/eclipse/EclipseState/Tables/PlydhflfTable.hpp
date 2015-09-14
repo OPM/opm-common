@@ -35,15 +35,14 @@ namespace Opm {
          * \brief Read the PLYDHFLF keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckRecordConstPtr record)
+        void init(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(record,
+            SimpleTable::init(item,
                              std::vector<std::string>{
                                  "Temperature",
                                  "PolymerHalflife"
-                             },
-                             /*firstEntityOffset=*/0);
-
+                                     });
+            
             SimpleTable::checkNonDefaultable("Temperetura");
             SimpleTable::checkMonotonic("Temperature", /*isAscending=*/true);
             SimpleTable::checkNonDefaultable("PolymerHalflife");

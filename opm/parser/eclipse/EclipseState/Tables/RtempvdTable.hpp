@@ -34,14 +34,13 @@ namespace Opm {
          * \brief Read the RTEMPVD keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckRecordConstPtr record)
+        void init(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(record,
-                             std::vector<std::string>{
-                                 "Depth",
-                                 "Temperature"
-                             },
-                             /*firstEntityOffset=*/0);
+            SimpleTable::init(item,
+                              std::vector<std::string>{
+                                  "Depth",
+                                      "Temperature"});
+
 
             SimpleTable::checkNonDefaultable("Depth");
             SimpleTable::checkMonotonic("Depth", /*isAscending=*/true);

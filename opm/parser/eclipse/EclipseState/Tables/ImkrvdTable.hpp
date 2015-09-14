@@ -34,9 +34,9 @@ namespace Opm {
          * \brief Read the IMKRVD keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckRecordConstPtr record)
+        void init(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(record,
+            SimpleTable::init(item,
                              std::vector<std::string>{"DEPTH",
                                      "KRWMAX",
                                      "KRGMAX",
@@ -44,8 +44,8 @@ namespace Opm {
                                      "KRWCRIT",
                                      "KRGCRIT",
                                      "KROCRITG",
-                                     "KROCRITW" },
-                             /*firstEntityOffset=*/0);
+                                      "KROCRITW" });
+
 
             SimpleTable::checkNonDefaultable("DEPTH");
             SimpleTable::checkMonotonic("DEPTH", /*isAscending=*/true);

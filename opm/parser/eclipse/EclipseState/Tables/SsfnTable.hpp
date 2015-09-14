@@ -34,14 +34,13 @@ namespace Opm {
          * \brief Read the SSFN keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckRecordConstPtr record)
+        void init(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(record,
-                             std::vector<std::string>{
-                                 "SolventFraction",
-                                 "GasRelPermMultiplier",
-                                 "SolventRelPermMultiplier"},
-                             /*firstEntityOffset=*/0);
+            SimpleTable::init(item,
+                              std::vector<std::string>{
+                                  "SolventFraction",
+                                      "GasRelPermMultiplier",
+                                      "SolventRelPermMultiplier"});
 
             SimpleTable::checkNonDefaultable("SolventFraction");
             SimpleTable::checkMonotonic("SolventFraction",   /*isAscending=*/true);

@@ -40,9 +40,8 @@ namespace Opm {
          * This requires all data to be a list of doubles in the first
          * item of a given record index.
          */
-        void init(Opm::DeckRecordConstPtr record,
-                  const std::vector<std::string> &columnNames,
-                  size_t firstEntityOffset);
+        void init(Opm::DeckItemConstPtr deckItem,
+                  const std::vector<std::string> &columnNames);
 
     public:
         SimpleTable() = default;
@@ -57,10 +56,9 @@ namespace Opm {
 
 #ifdef BOOST_TEST_MODULE
         // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
-        void initFORUNITTESTONLY(Opm::DeckRecordConstPtr record,
-                  const std::vector<std::string> &columnNames,
-                  size_t firstEntityOffset)
-        { init(record , columnNames, firstEntityOffset); }
+        void initFORUNITTESTONLY(Opm::DeckItemConstPtr item,
+                                 const std::vector<std::string> &columnNames)
+        { init(item , columnNames ); }
 #endif
 
         size_t numColumns() const;
@@ -84,10 +82,6 @@ namespace Opm {
         void applyDefaultsConstant(const std::string& columnName, double value);
         void applyDefaultsLinear(const std::string& columnName);
         void createColumns(const std::vector<std::string> &columnNames);
-        size_t getNumFlatItems(Opm::DeckRecordConstPtr deckRecord) const;
-        double getFlatRawDoubleData(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const;
-        double getFlatSiDoubleData(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const;
-        bool getFlatIsDefaulted(Opm::DeckRecordConstPtr deckRecord, size_t flatItemIdx) const;
 
         std::map<std::string, size_t> m_columnNames;
         std::vector<std::vector<double> > m_columns;
