@@ -30,8 +30,6 @@ namespace Opm {
     class PvtoInnerTable;
 
     class PvtoOuterTable : protected MultiRecordTable {
-        typedef MultiRecordTable ParentType;
-
         friend class PvtoTable;
         friend class FullTable<PvtoOuterTable, PvtoInnerTable>;
         PvtoOuterTable() = default;
@@ -49,32 +47,32 @@ namespace Opm {
                              tableIdx,
                              /*firstEntryOffset=*/0);
 
-            ParentType::checkNonDefaultable("RS");
-            ParentType::checkMonotonic("RS", /*isAscending=*/true);
-            ParentType::applyDefaultsLinear("P");
-            ParentType::applyDefaultsLinear("BO");
-            ParentType::applyDefaultsLinear("MU");
+            MultiRecordTable::checkNonDefaultable("RS");
+            MultiRecordTable::checkMonotonic("RS", /*isAscending=*/true);
+            MultiRecordTable::applyDefaultsLinear("P");
+            MultiRecordTable::applyDefaultsLinear("BO");
+            MultiRecordTable::applyDefaultsLinear("MU");
         }
 
     public:
-        using ParentType::numTables;
-        using ParentType::numRows;
-        using ParentType::numColumns;
-        using ParentType::evaluate;
-        using ParentType::firstRecordIndex;
-        using ParentType::numRecords;
+        using MultiRecordTable::numTables;
+        using MultiRecordTable::numRows;
+        using MultiRecordTable::numColumns;
+        using MultiRecordTable::evaluate;
+        using MultiRecordTable::firstRecordIndex;
+        using MultiRecordTable::numRecords;
 
         const std::vector<double> &getGasSolubilityColumn() const
-        { return ParentType::getColumn(0); }
+        { return MultiRecordTable::getColumn(0); }
 
         const std::vector<double> &getPressureColumn() const
-        { return ParentType::getColumn(1); }
+        { return MultiRecordTable::getColumn(1); }
 
         const std::vector<double> &getOilFormationFactorColumn() const
-        { return ParentType::getColumn(2); }
+        { return MultiRecordTable::getColumn(2); }
 
         const std::vector<double> &getOilViscosityColumn() const
-        { return ParentType::getColumn(3); }
+        { return MultiRecordTable::getColumn(3); }
     };
 }
 

@@ -30,8 +30,6 @@ namespace Opm {
     class PvtgInnerTable;
 
     class PvtgOuterTable : protected MultiRecordTable {
-        typedef MultiRecordTable ParentType;
-
         friend class PvtgTable;
         friend class FullTable<PvtgOuterTable, PvtgInnerTable>;
         PvtgOuterTable() = default;
@@ -47,11 +45,11 @@ namespace Opm {
                              tableIdx,
                              /*firstEntryOffset=*/0);
 
-            ParentType::checkNonDefaultable("P");
-            ParentType::checkMonotonic("P", /*isAscending=*/true);
-            ParentType::applyDefaultsLinear("RV");
-            ParentType::applyDefaultsLinear("BG");
-            ParentType::applyDefaultsLinear("MUG");
+            MultiRecordTable::checkNonDefaultable("P");
+            MultiRecordTable::checkMonotonic("P", /*isAscending=*/true);
+            MultiRecordTable::applyDefaultsLinear("RV");
+            MultiRecordTable::applyDefaultsLinear("BG");
+            MultiRecordTable::applyDefaultsLinear("MUG");
         }
 
     public:
