@@ -16,6 +16,7 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include <iostream>
 #include <opm/parser/eclipse/EclipseState/Tables/MultiRecordTable.hpp>
 
 namespace Opm {
@@ -23,112 +24,65 @@ namespace Opm {
  * \brief Returns the number of tables which can be found in a
  *        given keyword.
  */
+
 size_t MultiRecordTable::numTables(Opm::DeckKeywordConstPtr keyword)
 {
-    size_t result = 0;
-
-    // first, go to the first record of the specified table. For this,
-    // we need to skip the right number of empty records...
-    for (size_t recordIdx = 0;
-         recordIdx < keyword->size();
-         ++ recordIdx)
-    {
-        if (getNumFlatItems(keyword->getRecord(recordIdx)) == 0)
-            // each table ends with an empty record
-            ++ result;
-    }
-
-    // the last empty record of a keyword seems to go MIA for some
-    // strange reason...
-    ++result;
-
-    return result;
+    auto ranges = recordRanges(keyword);
+    return ranges.size();
 }
+
+
+std::vector<std::pair<size_t , size_t> > MultiRecordTable::recordRanges(Opm::DeckKeywordConstPtr keyword) {
+    std::vector<std::pair<size_t,size_t> > ranges;
+    size_t startRecord = 0;
+    size_t recordIndex = 0;
+    while (recordIndex < keyword->size()) {
+        auto item = keyword->getRecord(recordIndex)->getItem(0);
+        if (item->size( ) == 0) {
+            ranges.push_back( std::make_pair( startRecord , recordIndex ) );
+            startRecord = recordIndex + 1;
+        }
+        recordIndex++;
+    }
+    ranges.push_back( std::make_pair( startRecord , recordIndex ) );
+    return ranges;
+}
+
 
 // create table from first few items of multiple records
 void MultiRecordTable::init(Opm::DeckKeywordConstPtr keyword,
                             const std::vector<std::string> &columnNames,
-                            size_t tableIdx,
-                            size_t firstEntityOffset)
+                            size_t tableIdx)
 {
+    auto ranges = recordRanges(keyword);
+    if (tableIdx >= ranges.size())
+        throw std::invalid_argument("Asked for table: " + std::to_string( tableIdx ) + " in keyword + " + keyword->name() + " which only has " + std::to_string( ranges.size() ) + " tables");
+
     createColumns(columnNames);
+    m_recordRange = ranges[ tableIdx ];
+    for (size_t  rowIdx = m_recordRange.first; rowIdx < m_recordRange.second; rowIdx++) {
+        Opm::DeckRecordConstPtr deckRecord = keyword->getRecord(rowIdx);
+        Opm::DeckItemConstPtr indexItem = deckRecord->getItem(0);
+        Opm::DeckItemConstPtr dataItem = deckRecord->getItem(1);
 
-    // first, go to the first record of the specified table. For this,
-    // we need to skip the right number of empty records...
-    size_t curTableIdx = 0;
-    for (m_firstRecordIdx = 0;
-         curTableIdx < tableIdx;
-         ++ m_firstRecordIdx)
-    {
-        if (getNumFlatItems(keyword->getRecord(m_firstRecordIdx)) == 0)
-            // next table starts with an empty record
-            ++ curTableIdx;
-    }
-
-    if (curTableIdx != tableIdx) {
-        throw std::runtime_error("keyword does not specify enough tables");
-    }
-
-    // find the number of records in the table
-    for (m_numRecords = 0;
-         m_firstRecordIdx + m_numRecords < keyword->size()
-             && getNumFlatItems(keyword->getRecord(m_firstRecordIdx + m_numRecords)) != 0;
-         ++ m_numRecords)
-    {
-    }
-
-    for (size_t  rowIdx = m_firstRecordIdx; rowIdx < m_firstRecordIdx + m_numRecords; ++ rowIdx) {
-        // extract the actual data from the records of the keyword of
-        // the deck
-        Opm::DeckRecordConstPtr deckRecord =
-            keyword->getRecord(rowIdx);
-
-        if ( (getNumFlatItems(deckRecord) - firstEntityOffset) < numColumns())
-            throw std::runtime_error("Number of columns in the data file is"
-                                     "inconsistent with the ones specified");
-
-        for (size_t colIdx = 0; colIdx < numColumns(); ++colIdx) {
-            size_t deckItemIdx = colIdx + firstEntityOffset;
-            m_columns[colIdx].push_back(getFlatSiDoubleData(deckRecord, deckItemIdx));
-            m_valueDefaulted[colIdx].push_back(getFlatIsDefaulted(deckRecord, deckItemIdx));
+        m_columns[0].push_back(indexItem->getSIDouble(0));
+        m_valueDefaulted[0].push_back(indexItem->defaultApplied(0));
+        for (size_t colIdx = 1; colIdx < numColumns(); ++colIdx) {
+            m_columns[colIdx].push_back(dataItem->getSIDouble(colIdx - 1));
+            m_valueDefaulted[colIdx].push_back(dataItem->defaultApplied(colIdx - 1));
         }
     }
 }
 
 size_t MultiRecordTable::firstRecordIndex() const
 {
-    return m_firstRecordIdx;
+    return m_recordRange.first;
 }
 
 size_t MultiRecordTable::numRecords() const
 {
-    return m_numRecords;
+    return m_recordRange.second - m_recordRange.first;
 }
 
-size_t MultiRecordTable::getNumFlatItems(Opm::DeckRecordConstPtr deckRecord)
-{
-    int result = 0;
-    for (unsigned i = 0; i < deckRecord->size(); ++ i) {
-        Opm::DeckItemConstPtr item(deckRecord->getItem(i));
-        if (item->size() == 0 || item->defaultApplied(0))
-            return result;
-        result += item->size();
-    }
 
-    return result;
-}
-
-double MultiRecordTable::getFlatSiDoubleData(Opm::DeckRecordConstPtr deckRecord, unsigned flatItemIdx) const
-{
-    unsigned itemFirstFlatIdx = 0;
-    for (unsigned i = 0; i < deckRecord->size(); ++ i) {
-        Opm::DeckItemConstPtr item = deckRecord->getItem(i);
-        if (itemFirstFlatIdx + item->size() > flatItemIdx)
-            return item->getSIDouble(flatItemIdx - itemFirstFlatIdx);
-        else
-            itemFirstFlatIdx += item->size();
-    }
-
-    throw std::range_error("Tried to access out-of-range flat item");
-}
 }

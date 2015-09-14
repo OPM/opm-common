@@ -37,15 +37,13 @@ namespace Opm {
         /*!
          * \brief Read the per record table of the PVTO keyword and
          *        provide some convenience methods for it.
-         *
-         * The first value of the record (-> Rs) is skipped.
          */
         void init(Opm::DeckKeywordConstPtr keyword, int tableIdx)
         {
-            ParentType::init(keyword,
-                             std::vector<std::string>{"RS", "P", "BO", "MU"},
-                             tableIdx,
-                             /*firstEntryOffset=*/0);
+            MultiRecordTable::init(keyword,
+                                   std::vector<std::string>{"RS", "P", "BO", "MU"},
+                                   tableIdx);
+
 
             MultiRecordTable::checkNonDefaultable("RS");
             MultiRecordTable::checkMonotonic("RS", /*isAscending=*/true);
