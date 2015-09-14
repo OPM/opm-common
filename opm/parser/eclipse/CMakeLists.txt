@@ -107,6 +107,7 @@ EclipseState/Tables/MultiRecordTable.cpp
 EclipseState/Tables/VFPProdTable.cpp
 EclipseState/Tables/VFPInjTable.cpp
 EclipseState/Tables/TableManager.cpp
+EclipseState/Tables/TableContainer.cpp
 #
 EclipseState/Grid/GridProperty.cpp
 EclipseState/Grid/Box.cpp
@@ -259,6 +260,7 @@ EclipseState/Tables/PvtgOuterTable.hpp
 EclipseState/Tables/VFPProdTable.hpp
 EclipseState/Tables/VFPInjTable.hpp
 EclipseState/Tables/TableManager.hpp
+EclipseState/Tables/TableContainer.hpp
 #
 Utility/WconinjeWrapper.hpp
 Utility/CompdatWrapper.hpp
