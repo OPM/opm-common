@@ -19,6 +19,8 @@
 #ifndef OPM_PARSER_PLYSHLOG_TABLE_HPP
 #define	OPM_PARSER_PLYSHLOG_TABLE_HPP
 
+#include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
+
 #include "SimpleTable.hpp"
 
 namespace Opm {
@@ -35,33 +37,30 @@ namespace Opm {
          *        methods for it.
          */
         void init(Opm::DeckKeywordConstPtr keyword) {
-            Opm::DeckRecordConstPtr record1 = keyword->getRecord(0);
+            Opm::DeckRecordConstPtr indexRecord = keyword->getRecord(0);
             Opm::DeckRecordConstPtr dataRecord = keyword->getRecord(1);
-            
-            const auto itemRefPolymerConcentration = record1->getItem("REF_POLYMER_CONCENTRATION");
-            const auto itemRefSalinity = record1->getItem("REF_SALINITY");
-            const auto itemRefTemperature = record1->getItem("REF_TEMPERATURE");
 
-            assert(itemRefPolymerConcentration->hasValue(0));
-
-            const double refPolymerConcentration = itemRefPolymerConcentration->getRawDouble(0);
-
-            setRefPolymerConcentration(refPolymerConcentration);
-
-            if (itemRefSalinity->hasValue(0)) {
-                setHasRefSalinity(true);
-                const double refSalinity = itemRefSalinity->getRawDouble(0);
-                setRefSalinity(refSalinity);
-            } else {
-                setHasRefSalinity(false);
+            {
+                const auto item = indexRecord->getItem<ParserKeywords::PLYSHLOG::REF_POLYMER_CONCENTRATION>();
+                setRefPolymerConcentration(item->getRawDouble(0));
             }
 
-            if (itemRefTemperature->hasValue(0)) {
-                setHasRefTemperature(true);
-                const double refTemperature = itemRefTemperature->getRawDouble(0);
-                setRefTemperature(refTemperature);
-            } else {
-                setHasRefTemperature(false);
+            {
+                const auto item = indexRecord->getItem<ParserKeywords::PLYSHLOG::REF_SALINITY>();
+                if (item->hasValue(0)) {
+                    setHasRefSalinity(true);
+                    setRefSalinity(item->getRawDouble(0));
+                } else
+                    setHasRefSalinity(false);
+            }
+
+            {
+                const auto item = indexRecord->getItem<ParserKeywords::PLYSHLOG::REF_TEMPERATURE>();
+                if (item->hasValue(0)) {
+                    setHasRefTemperature(true);
+                    setRefTemperature(item->getRawDouble(0));
+                } else
+                    setHasRefTemperature(false);
             }
 
             m_data = new SimpleTable();
