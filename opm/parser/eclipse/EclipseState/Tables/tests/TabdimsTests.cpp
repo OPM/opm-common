@@ -22,5 +22,9 @@
 #include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
 
 BOOST_AUTO_TEST_CASE(TEST_CREATE) {
-    Opm::Tabdims tabdims(1,2,3,4,5,6);
+    Opm::Tabdims tabdims1(1,2,3,4,5,6);
+    Opm::Tabdims tabdims2;
+
+    BOOST_CHECK_EQUAL( tabdims1.getNumSatNodes() ,  3U );
+    BOOST_CHECK_EQUAL( tabdims2.getNumSatNodes() , 20U );
 }

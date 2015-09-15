@@ -36,30 +36,20 @@ namespace Opm {
 
 
     void TableManager::initTabdims(const Deck& deck) {
-        /*
-          The default values for the various number of tables is
-          embedded in the ParserKeyword("TABDIMS") instance; however
-          the EclipseState object does not have a dependency on the
-          Parser classes, have therefor decided not to add an explicit
-          dependency here, and instead duplicated all the default
-          values.
-        */
-        size_t ntsfun = 1;
-        size_t ntpvt = 1;
-        size_t nssfun = 1;
-        size_t nppvt = 1;
-        size_t ntfip = 1;
-        size_t nrpvt = 1;
-
         if (deck.hasKeyword("TABDIMS")) {
             auto keyword = deck.getKeyword("TABDIMS");
             auto record = keyword->getRecord(0);
-            ntsfun = record->getItem("NTSFUN")->getInt(0);
-            ntpvt  = record->getItem("NTPVT")->getInt(0);
-            nssfun = record->getItem("NSSFUN")->getInt(0);
-            nppvt  = record->getItem("NPPVT")->getInt(0);
-            ntfip  = record->getItem("NTFIP")->getInt(0);
-            nrpvt  = record->getItem("NRPVT")->getInt(0);
+            int ntsfun = record->getItem("NTSFUN")->getInt(0);
+            int ntpvt  = record->getItem("NTPVT")->getInt(0);
+            int nssfun = record->getItem("NSSFUN")->getInt(0);
+            int nppvt  = record->getItem("NPPVT")->getInt(0);
+            int ntfip  = record->getItem("NTFIP")->getInt(0);
+            int nrpvt  = record->getItem("NRPVT")->getInt(0);
+
+            m_tabdims = std::make_shared<Tabdims>(ntsfun , ntpvt , nssfun , nppvt , ntfip , nrpvt);
+        } else
+            m_tabdims = std::make_shared<Tabdims>();
+    }
         }
         m_tabdims = std::make_shared<Tabdims>(ntsfun , ntpvt , nssfun , nppvt , ntfip , nrpvt);
     }

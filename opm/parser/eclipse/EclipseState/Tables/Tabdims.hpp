@@ -25,6 +25,7 @@
   the values from the TABDIMS keyword.
 */
 
+#include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
 
 namespace Opm {
     class Tabdims {
@@ -35,6 +36,16 @@ namespace Opm {
           are ECLIPSE300 only and quite exotic. Here we only
           internalize the most common items.
         */
+        Tabdims() :
+            m_ntsfun( ParserKeywords::TABDIMS::NTSFUN::defaultValue ),
+            m_ntpvt( ParserKeywords::TABDIMS::NTPVT::defaultValue ),
+            m_nssfun( ParserKeywords::TABDIMS::NSSFUN::defaultValue ),
+            m_nppvt(  ParserKeywords::TABDIMS::NPPVT::defaultValue ),
+            m_ntfip(  ParserKeywords::TABDIMS::NTFIP::defaultValue ),
+            m_nrpvt(  ParserKeywords::TABDIMS::NRPVT::defaultValue )
+        { }
+
+
         Tabdims(size_t ntsfun, size_t ntpvt, size_t nssfun , size_t nppvt, size_t ntfip , size_t nrpvt) :
             m_ntsfun( ntsfun ),
             m_ntpvt( ntpvt ),
@@ -67,7 +78,6 @@ namespace Opm {
         size_t getNumRSNodes() const {
             return m_nrpvt;
         }
-
 
     private:
         size_t m_ntsfun,m_ntpvt,m_nssfun,m_nppvt,m_ntfip,m_nrpvt;
