@@ -152,7 +152,6 @@ BOOST_AUTO_TEST_CASE(AddDataKeyword_correctlyConfigured) {
 
     BOOST_CHECK_EQUAL(true , parserKeyword->hasFixedSize( ));
     BOOST_CHECK_EQUAL(1U , parserKeyword->getFixedSize() );
-    BOOST_CHECK_EQUAL(1U , parserKeyword->numItems() );
 }
 
 BOOST_AUTO_TEST_CASE(WrongConstructor_addDataItem_throws) {
@@ -211,14 +210,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withSize) {
     BOOST_CHECK_EQUAL( true , parserKeyword->hasFixedSize() );
     BOOST_CHECK_EQUAL( 100U , parserKeyword->getFixedSize() );
 
-    BOOST_CHECK_EQUAL( 1U , parserKeyword->numItems());
 }
-
-BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_missingItemThrows) {
-    Json::JsonObject jsonObject("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : 100}");
-    BOOST_CHECK_THROW( std::make_shared<const ParserKeyword>(jsonObject) , std::invalid_argument);
-}
-
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_nosize_notItems_OK) {
     Json::JsonObject jsonObject("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"]}");
@@ -305,7 +297,6 @@ BOOST_AUTO_TEST_CASE(AddDataKeywordFromJson_correctlyConfigured) {
     BOOST_CHECK_EQUAL( true , parserKeyword->isDataKeyword());
     BOOST_CHECK_EQUAL(true , parserKeyword->hasFixedSize( ));
     BOOST_CHECK_EQUAL(1U , parserKeyword->getFixedSize() );
-    BOOST_CHECK_EQUAL(1U , parserKeyword->numItems() );
 
     BOOST_CHECK_EQUAL( item->name() , ParserKeywords::ACTNUM::data::itemName );
     BOOST_CHECK_EQUAL( ALL , item->sizeType() );
@@ -451,7 +442,6 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withDimension) {
     BOOST_CHECK_EQUAL( true , parserKeyword->hasFixedSize() );
     BOOST_CHECK_EQUAL( 100U , parserKeyword->getFixedSize() );
 
-    BOOST_CHECK_EQUAL( 1U , parserKeyword->numItems());
     BOOST_CHECK( parserKeyword->hasDimension() );
     BOOST_CHECK( item->hasDimension() );
     BOOST_CHECK_EQUAL( 1U , item->numDimensions() );
@@ -467,7 +457,6 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withDimensionList) {
     BOOST_CHECK_EQUAL( true , parserKeyword->hasFixedSize() );
     BOOST_CHECK_EQUAL( 100U , parserKeyword->getFixedSize() );
 
-    BOOST_CHECK_EQUAL( 1U , parserKeyword->numItems());
     BOOST_CHECK( parserKeyword->hasDimension() );
     BOOST_CHECK( item->hasDimension() );
     BOOST_CHECK_EQUAL( 3U , item->numDimensions() );

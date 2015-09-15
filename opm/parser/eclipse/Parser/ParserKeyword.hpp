@@ -87,8 +87,6 @@ namespace Opm {
         std::string getDescription() const;
         void setDescription(const std::string &description);
 
-        size_t numItems() const;
-
         bool hasMultipleDeckNames() const;
         void clearDeckNames();
         void addDeckName( const std::string& deckName );

@@ -33,7 +33,6 @@ static void printKeyword(Opm::ParserKeywordConstPtr keyword)
     if (keyword->getDescription().length() > 0) {
         std::cout << indent << "Description: " << keyword->getDescription() << std::endl;
     }
-    std::cout << indent << "Number of items: " << keyword->numItems() << std::endl;
     std::cout << indent << "Has dimension information: " << keyword->hasDimension() << std::endl;
     std::cout << indent << "Size type: " << ParserKeywordSizeEnum2String(keyword->getSizeType()) << std::endl;
     switch (keyword->getSizeType()) {

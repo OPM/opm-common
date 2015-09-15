@@ -178,12 +178,6 @@ namespace Opm {
             m_Description = jsonConfig.get_string("description");
         }
 
-        if (m_keywordSizeType == FIXED && m_fixedSize == 0)
-            return;
-        else {
-            if (numItems() == 0)
-                throw std::invalid_argument("Json object for keyword "+getName()+" is missing the 'items' property");
-        }
     }
 
 
@@ -502,11 +496,6 @@ namespace Opm {
         return m_name;
     }
 
-    size_t ParserKeyword::numItems() const {
-        auto record = getRecord(0);
-        return record->size();
-    }
-
     void ParserKeyword::clearValidSectionNames() {
         m_validSectionNames.clear();
     }
@@ -542,9 +531,17 @@ namespace Opm {
             keyword->setDataKeyword( isDataKeyword() );
 
             for (size_t i = 0; i < rawKeyword->size(); i++) {
-                std::shared_ptr<ParserRecord> record = getRecord(i);
-                DeckRecordConstPtr deckRecord = record->parse(rawKeyword->getRecord(i));
-                keyword->addRecord(deckRecord);
+                auto rawRecord = rawKeyword->getRecord(i);
+                if(m_records.size() > 0) {
+                    std::shared_ptr <ParserRecord> record = getRecord(i);
+                    DeckRecordConstPtr deckRecord = record->parse(rawRecord);
+                    keyword->addRecord(deckRecord);
+                }
+                else {
+                    if(rawRecord->size() > 0) {
+                        throw std::invalid_argument("Missing item information " + rawKeyword->getKeywordName());
+                    }
+                }
             }
             return keyword;
         } else

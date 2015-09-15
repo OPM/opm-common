@@ -267,12 +267,12 @@ BOOST_AUTO_TEST_CASE(ReplaceKeyword) {
     ParserPtr parser(new Parser());
     ParserKeywordConstPtr eqldims = parser->getParserKeywordFromDeckName("EQLDIMS");
 
-    BOOST_CHECK_EQUAL( 5U , eqldims->numItems());
     BOOST_CHECK( parser->loadKeywordFromFile( "testdata/parser/EQLDIMS2" ) );
 
 
     eqldims = parser->getParserKeywordFromDeckName("EQLDIMS");
-    BOOST_CHECK_EQUAL( 1U , eqldims->numItems());
+    auto record = eqldims->getRecord(0);
+    BOOST_CHECK(record->hasItem("NEW"));
 }
 
 
