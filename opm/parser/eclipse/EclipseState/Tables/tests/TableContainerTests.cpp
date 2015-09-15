@@ -62,10 +62,10 @@ BOOST_AUTO_TEST_CASE( CreateContainer ) {
     container.addTable( 6 , table );
     BOOST_CHECK_EQUAL( 1 , container.size() );
 
-    BOOST_CHECK_EQUAL( table.get() , &(container.getTable(6)));
-    BOOST_CHECK_EQUAL( table.get() , &(container.getTable(9)));
+    BOOST_CHECK_EQUAL( table.get() , &(container[6]));
+    BOOST_CHECK_EQUAL( table.get() , &(container[9]));
 
-    BOOST_CHECK_THROW( container.getTable(5) , std::invalid_argument );
-    BOOST_CHECK_THROW( container.getTable(10) , std::invalid_argument );
+    BOOST_CHECK_THROW( container[5] , std::invalid_argument );
+    BOOST_CHECK_THROW( container[10] , std::invalid_argument );
 }
 

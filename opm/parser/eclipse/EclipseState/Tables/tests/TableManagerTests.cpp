@@ -908,7 +908,12 @@ VFPINJ \n\
 
 
 
-
+BOOST_AUTO_TEST_CASE(TableContainer) {
+    std::shared_ptr<const Opm::Deck> deck = createSingleRecordDeck();
+    Opm::TableManager tables( *deck );
+    BOOST_CHECK_EQUAL( false , tables.hasTables("SGOF") );
+    BOOST_CHECK_EQUAL( false , tables.hasTables("STUPID") );
+}
 
 /**
  * Spot checks that the VFPPROD table will fail nicely when given invalid data

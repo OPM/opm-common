@@ -50,12 +50,27 @@ namespace Opm {
         } else
             m_tabdims = std::make_shared<Tabdims>();
     }
+
+
+    void TableManager::addTables( const std::string& tableName , size_t numTables) {
+        m_simpleTables.emplace(std::make_pair(tableName , TableContainer( numTables )));
+    }
+
+
+    bool TableManager::hasTables( const std::string& tableName ) const {
+        auto pair = m_simpleTables.find( tableName );
+        if (pair == m_simpleTables.end())
+            return false;
+        else {
+            const auto& tables = pair->second;
+            return tables.empty();
         }
-        m_tabdims = std::make_shared<Tabdims>(ntsfun , ntpvt , nssfun , nppvt , ntfip , nrpvt);
     }
 
 
     void TableManager::initSimpleTables(const Deck& deck) {
+        addTables( "SWOF" , m_tabdims->getNumSatTables() );
+
         initSimpleTable(deck, "SWOF", m_swofTables);
         initSimpleTable(deck, "SGOF", m_sgofTables);
         initSimpleTable(deck, "SLGOF", m_slgofTables);

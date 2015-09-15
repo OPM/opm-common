@@ -47,7 +47,7 @@ namespace Opm {
     }
 
 
-    const SimpleTable& TableContainer::getTable(size_t tableNumber) const {
+    const SimpleTable& TableContainer::operator[](size_t tableNumber) const {
         if (tableNumber >= m_maxTables)
             throw std::invalid_argument("TableContainer - invalid tableNumber");
 
@@ -56,7 +56,7 @@ namespace Opm {
             return *(pair->second.get());
         } else {
             if (tableNumber > 0)
-                return getTable( tableNumber - 1);
+                return (*this)[tableNumber - 1];
             else
                 throw std::invalid_argument("TableContainer does not have any table in the range 0..." + std::to_string( tableNumber ));
         }

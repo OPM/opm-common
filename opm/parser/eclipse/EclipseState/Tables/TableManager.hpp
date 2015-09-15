@@ -63,7 +63,7 @@ namespace Opm {
     public:
         TableManager( const Deck& deck );
 
-
+        bool hasTables( const std::string& tableName ) const;
         std::shared_ptr<const Tabdims> getTabdims() const;
 
         // the tables used by the deck. If the tables had some defaulted data in the
@@ -104,6 +104,7 @@ namespace Opm {
     private:
         void complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) const;
 
+        void addTables( const std::string& tableName , size_t numTables);
         void initSimpleTables(const Deck& deck);
         void initRTempTables(const Deck& deck);
         void initTabdims(const Deck& deck);
