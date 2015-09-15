@@ -55,7 +55,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/VFPInjTable.hpp>
-
+#include <opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp>
 
 namespace Opm {
 
@@ -104,6 +104,7 @@ namespace Opm {
     private:
         void complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) const;
 
+        void initSimpleTables(const Deck& deck);
         void initRTempTables(const Deck& deck);
         void initTabdims(const Deck& deck);
         void initRocktabTables(const Deck& deck);
@@ -133,7 +134,7 @@ namespace Opm {
                                 std::vector<PlyshlogTable>& tableVector);
 
         template <class TableType>
-        void initSimpleTables(const Deck& deck,
+        void initSimpleTable(const Deck& deck,
                               const std::string& keywordName,
                               std::vector<TableType>& tableVector) {
             if (!deck.hasKeyword(keywordName))
@@ -187,7 +188,7 @@ namespace Opm {
             }
         }
 
-
+        std::map<std::string , TableContainer> m_simpleTables;
         std::map<int, VFPProdTable> m_vfpprodTables;
         std::map<int, VFPInjTable> m_vfpinjTables;
         std::vector<PvtgTable> m_pvtgTables;

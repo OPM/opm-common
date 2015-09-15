@@ -26,35 +26,7 @@ namespace Opm {
 
     TableManager::TableManager( const Deck& deck ) {
         initTabdims( deck );
-        initSimpleTables(deck, "SWOF", m_swofTables);
-        initSimpleTables(deck, "SGOF", m_sgofTables);
-        initSimpleTables(deck, "SLGOF", m_slgofTables);
-        initSimpleTables(deck, "SOF2", m_sof2Tables);
-        initSimpleTables(deck, "SOF3", m_sof3Tables);
-        initSimpleTables(deck, "PVDG", m_pvdgTables);
-        initSimpleTables(deck, "PVDO", m_pvdoTables);
-        initSimpleTables(deck, "SWFN", m_swfnTables);
-        initSimpleTables(deck, "SGFN", m_sgfnTables);
-        initSimpleTables(deck, "SSFN", m_ssfnTables);
-        initSimpleTables(deck, "PVDS", m_pvdsTables);
-        initSimpleTables(deck, "PLYADS", m_plyadsTables);
-        initSimpleTables(deck, "PLYVISC", m_plyviscTables);
-        initSimpleTables(deck, "PLYDHFLF", m_plydhflfTables);
-        initSimpleTables(deck, "OILVISCT", m_oilvisctTables);
-        initSimpleTables(deck, "WATVISCT", m_watvisctTables);
-        initSimpleTables(deck, "ENKRVD", m_enkrvdTables);
-        initSimpleTables(deck, "ENPTVD", m_enptvdTables);
-        initSimpleTables(deck, "IMKRVD", m_imkrvdTables);
-        initSimpleTables(deck, "IMPTVD", m_imptvdTables);
-        initSimpleTables(deck, "RSVD", m_rsvdTables);
-        initSimpleTables(deck, "RVVD", m_rvvdTables);
-
-        initPlymaxTables(deck , "PLYMAX" , m_plymaxTables);
-        initPlyrockTables(deck, "PLYROCK", m_plyrockTables);
-        initPlyshlogTables(deck, "PLYSHLOG", m_plyshlogTables);
-        initRocktabTables(deck);
-        initRTempTables(deck);
-        initGasvisctTables(deck, "GASVISCT", m_gasvisctTables);
+        initSimpleTables( deck );
         initFullTables(deck, "PVTG", m_pvtgTables);
         initFullTables(deck, "PVTO", m_pvtoTables);
 
@@ -93,6 +65,39 @@ namespace Opm {
     }
 
 
+    void TableManager::initSimpleTables(const Deck& deck) {
+        initSimpleTable(deck, "SWOF", m_swofTables);
+        initSimpleTable(deck, "SGOF", m_sgofTables);
+        initSimpleTable(deck, "SLGOF", m_slgofTables);
+        initSimpleTable(deck, "SOF2", m_sof2Tables);
+        initSimpleTable(deck, "SOF3", m_sof3Tables);
+        initSimpleTable(deck, "PVDG", m_pvdgTables);
+        initSimpleTable(deck, "PVDO", m_pvdoTables);
+        initSimpleTable(deck, "SWFN", m_swfnTables);
+        initSimpleTable(deck, "SGFN", m_sgfnTables);
+        initSimpleTable(deck, "SSFN", m_ssfnTables);
+        initSimpleTable(deck, "PVDS", m_pvdsTables);
+        initSimpleTable(deck, "PLYADS", m_plyadsTables);
+        initSimpleTable(deck, "PLYVISC", m_plyviscTables);
+        initSimpleTable(deck, "PLYDHFLF", m_plydhflfTables);
+        initSimpleTable(deck, "OILVISCT", m_oilvisctTables);
+        initSimpleTable(deck, "WATVISCT", m_watvisctTables);
+        initSimpleTable(deck, "ENKRVD", m_enkrvdTables);
+        initSimpleTable(deck, "ENPTVD", m_enptvdTables);
+        initSimpleTable(deck, "IMKRVD", m_imkrvdTables);
+        initSimpleTable(deck, "IMPTVD", m_imptvdTables);
+        initSimpleTable(deck, "RSVD", m_rsvdTables);
+        initSimpleTable(deck, "RVVD", m_rvvdTables);
+
+        initPlyrockTables(deck , "PLYROCK" , m_plyrockTables);
+        initPlymaxTables(deck , "PLYMAX" , m_plymaxTables);
+        initPlyshlogTables(deck, "PLYSHLOG", m_plyshlogTables);
+        initRocktabTables(deck);
+        initRTempTables(deck);
+        initGasvisctTables(deck, "GASVISCT", m_gasvisctTables);
+    }
+
+
     void TableManager::initRTempTables(const Deck& deck) {
         // the temperature vs depth table. the problem here is that
         // the TEMPVD (E300) and RTEMPVD (E300 + E100) keywords are
@@ -101,9 +106,9 @@ namespace Opm {
         if (deck.hasKeyword("TEMPVD") && deck.hasKeyword("RTEMPVD"))
             throw std::invalid_argument("The TEMPVD and RTEMPVD tables are mutually exclusive!");
         else if (deck.hasKeyword("TEMPVD"))
-            initSimpleTables(deck, "TEMPVD", m_rtempvdTables);
+            initSimpleTable(deck, "TEMPVD", m_rtempvdTables);
         else if (deck.hasKeyword("RTEMPVD"))
-            initSimpleTables(deck, "RTEMPVD", m_rtempvdTables);
+            initSimpleTable(deck, "RTEMPVD", m_rtempvdTables);
 
     }
 
@@ -122,7 +127,7 @@ namespace Opm {
         const auto& tableKeyword = deck.getKeyword(keywordName);
         for (size_t tableIdx = 0; tableIdx < tableKeyword->size(); ++tableIdx) {
             if (tableKeyword->getRecord(tableIdx)->getItem(0)->size() == 0) {
-                // for simple tables, an empty record indicates that the previous table
+                // for simple tables, an empty record indicates that the< previous table
                 // should be copied...
                 if (tableIdx == 0) {
                     std::string msg = "The first table for keyword " + keywordName + " must be explicitly defined! Ignoring keyword";
