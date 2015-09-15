@@ -34,12 +34,14 @@ namespace Opm {
 
         std::shared_ptr<const ThresholdPressure> getThresholdPressure() const;
         bool hasThresholdPressure() const;
+        bool useCPR() const;
 
     private:
 
         void initThresholdPressure(const ParseMode& parseMode , DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties);
 
         ThresholdPressureConstPtr m_ThresholdPressure;
+        bool m_useCPR;
     };
 
 

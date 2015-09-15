@@ -67,7 +67,13 @@ const std::string& inputStr_noTHPRES = "RUNSPEC\n"
                                        "SOLUTION\n"
                                        "\n";
 
+const std::string& inputStr_cpr = "RUNSPEC\n"
+        "CPR\n"
+        "/\n";
 
+const std::string& inputStr_cprWithData = "RUNSPEC\n"
+        "CPR\n"
+        "data/\n";
 
 static DeckPtr createDeck(const ParseMode& parseMode , const std::string& input) {
     Opm::Parser parser;
@@ -101,5 +107,25 @@ BOOST_AUTO_TEST_CASE(SimulationConfigNOTHPRES) {
     SimulationConfig simulationConfig(parseMode , deck, getGridProperties());
     BOOST_CHECK_EQUAL( false , simulationConfig.hasThresholdPressure());
 }
+
+BOOST_AUTO_TEST_CASE(SimulationConfigCPRNotUsed) {
+        ParseMode parseMode;
+        DeckPtr deck = createDeck(parseMode , inputStr_noTHPRES);
+        SimulationConfig simulationConfig(parseMode , deck, getGridProperties());
+        BOOST_CHECK_EQUAL( false , simulationConfig.useCPR());
+}
+
+BOOST_AUTO_TEST_CASE(SimulationConfigCPRUsed) {
+        ParseMode parseMode;
+        DeckPtr deck = createDeck(parseMode , inputStr_cpr);
+        SimulationConfig simulationConfig(parseMode , deck, getGridProperties());
+        BOOST_CHECK_EQUAL( true , simulationConfig.useCPR());
+}
+
+BOOST_AUTO_TEST_CASE(SimulationConfigCPRUsedWithData) {
+        ParseMode parseMode;
+        BOOST_CHECK_THROW(createDeck(parseMode , inputStr_cprWithData), std::invalid_argument);
+}
+
 
 

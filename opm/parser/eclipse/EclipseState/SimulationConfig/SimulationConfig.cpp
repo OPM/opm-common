@@ -20,6 +20,7 @@
 
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
 
 
 
@@ -27,6 +28,11 @@ namespace Opm {
 
     SimulationConfig::SimulationConfig(const ParseMode& parseMode , DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties) {
         initThresholdPressure(parseMode , deck, gridProperties);
+
+        m_useCPR = false;
+        if(deck->hasKeyword<ParserKeywords::CPR>()){
+            m_useCPR = true;
+        }
     }
 
 
@@ -42,6 +48,10 @@ namespace Opm {
 
     bool SimulationConfig::hasThresholdPressure() const {
         return m_ThresholdPressure->size() > 0;
+    }
+
+    bool SimulationConfig::useCPR() const {
+        return m_useCPR;
     }
 
 } //namespace Opm
