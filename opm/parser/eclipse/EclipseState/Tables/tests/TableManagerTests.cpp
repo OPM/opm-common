@@ -913,6 +913,9 @@ BOOST_AUTO_TEST_CASE(TableContainer) {
     Opm::TableManager tables( *deck );
     BOOST_CHECK_EQUAL( false , tables.hasTables("SGOF") );
     BOOST_CHECK_EQUAL( false , tables.hasTables("STUPID") );
+
+    BOOST_CHECK_THROW( tables.getTables("STUPID") , std::invalid_argument);
+    BOOST_CHECK_THROW( tables["STUPID"] , std::invalid_argument);
 }
 
 /**

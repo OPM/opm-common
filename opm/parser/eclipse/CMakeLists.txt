@@ -221,6 +221,7 @@ EclipseState/IOConfig/IOConfig.hpp
 #
 EclipseState/Tables/Tabdims.hpp
 EclipseState/Tables/Eqldims.hpp
+EclipseState/Tables/Regdims.hpp
 EclipseState/Tables/PlyadsTable.hpp
 EclipseState/Tables/PvtoOuterTable.hpp
 EclipseState/Tables/RocktabTable.hpp

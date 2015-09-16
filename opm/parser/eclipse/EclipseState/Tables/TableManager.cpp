@@ -89,14 +89,76 @@ namespace Opm {
             return false;
         else {
             const auto& tables = pair->second;
-            return tables.empty();
+            return !tables.empty();
         }
     }
 
 
+    const TableContainer& TableManager::getTables( const std::string& tableName ) const {
+        auto pair = m_simpleTables.find( tableName );
+        if (pair == m_simpleTables.end())
+            throw std::invalid_argument("No such table collection: " + tableName);
+        else
+            return pair->second;
+    }
+
+    const TableContainer& TableManager::operator[](const std::string& tableName) const {
+        return getTables(tableName);
+    }
 
     void TableManager::initSimpleTables(const Deck& deck) {
         addTables( "SWOF" , m_tabdims->getNumSatTables() );
+        addTables( "SWOF",  m_tabdims->getNumSatTables() );
+        addTables( "SGOF",  m_tabdims->getNumSatTables() );
+        addTables( "SLGOF", m_tabdims->getNumSatTables() );
+        addTables( "SOF2",  m_tabdims->getNumSatTables() );
+        addTables( "SOF3",  m_tabdims->getNumSatTables() );
+        addTables( "SWFN",  m_tabdims->getNumSatTables() );
+        addTables( "SGFN",  m_tabdims->getNumSatTables() );
+        addTables( "SSFN",  m_tabdims->getNumSatTables() );
+
+        addTables( "PLYADS", m_tabdims->getNumSatTables() );
+        addTables( "PLYROCK", m_tabdims->getNumSatTables());
+        addTables( "PLYVISC", m_tabdims->getNumPVTTables());
+        addTables( "PLYDHFLF", m_tabdims->getNumPVTTables());
+
+        addTables( "PVDG", m_tabdims->getNumPVTTables());
+        addTables( "PVDO", m_tabdims->getNumPVTTables());
+        addTables( "PVDS", m_tabdims->getNumPVTTables());
+
+        addTables( "OILVISCT", m_tabdims->getNumPVTTables());
+        addTables( "WATVISCT", m_tabdims->getNumPVTTables());
+
+
+        addTables( "PLYMAX", m_regdims->getNPLMIX());
+        addTables( "RSVD", m_eqldims->getNumEquilRegions());
+        addTables( "RVVD", m_eqldims->getNumEquilRegions());
+
+        {
+            size_t numEndScaleTables = ParserKeywords::ENDSCALE::NUM_TABLES::defaultValue;
+
+            if (deck.hasKeyword<ParserKeywords::ENDSCALE>()) {
+                auto keyword = deck.getKeyword<ParserKeywords::ENDSCALE>();
+                auto record = keyword->getRecord(0);
+                numEndScaleTables = static_cast<size_t>(record->getItem<ParserKeywords::ENDSCALE::NUM_TABLES>()->getInt(0));
+            }
+
+            addTables( "ENKRVD", numEndScaleTables);
+            addTables( "ENPTVD", numEndScaleTables);
+            addTables( "IMKRVD", numEndScaleTables);
+            addTables( "IMPTVD", numEndScaleTables);
+        }
+        // Unhandled:
+
+        /*
+          initPlyshlogTables(deck, "PLYSHLOG", m_plyshlogTables);
+          initRocktabTables(deck);
+          initRTempTables(deck);
+          initGasvisctTables(deck, "GASVISCT", m_gasvisctTables);
+        */
+
+
+        /*****************************************************************/
 
         initSimpleTable(deck, "SWOF", m_swofTables);
         initSimpleTable(deck, "SGOF", m_sgofTables);
@@ -176,8 +238,8 @@ namespace Opm {
     }
 
     void TableManager::initPlyshlogTables(const Deck& deck,
-                                    const std::string& keywordName,
-                                    std::vector<PlyshlogTable>& tableVector){
+                                          const std::string& keywordName,
+                                          std::vector<PlyshlogTable>& tableVector){
 
         if (!deck.hasKeyword(keywordName)) {
             return;

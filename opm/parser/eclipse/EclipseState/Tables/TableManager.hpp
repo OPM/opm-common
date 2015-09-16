@@ -24,6 +24,8 @@
 
 #include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/Regdims.hpp>
+
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SlgofTable.hpp>
@@ -64,7 +66,11 @@ namespace Opm {
     public:
         TableManager( const Deck& deck );
 
+        const TableContainer& getTables( const std::string& tableName ) const;
+        const TableContainer& operator[](const std::string& tableName) const;
         bool hasTables( const std::string& tableName ) const;
+
+
         std::shared_ptr<const Tabdims> getTabdims() const;
 
         // the tables used by the deck. If the tables had some defaulted data in the
@@ -100,6 +106,7 @@ namespace Opm {
         const std::vector<ImptvdTable>& getImptvdTables() const;
         const std::vector<RsvdTable>& getRsvdTables() const;
         const std::vector<RvvdTable>& getRvvdTables() const;
+
         const std::map<int, VFPProdTable>& getVFPProdTables() const;
         const std::map<int, VFPInjTable>& getVFPInjTables() const;
     private:
@@ -224,6 +231,7 @@ namespace Opm {
         std::vector<RsvdTable> m_rsvdTables;
         std::vector<RvvdTable> m_rvvdTables;
 
+        std::shared_ptr<Regdims> m_regdims;
         std::shared_ptr<Tabdims> m_tabdims;
         std::shared_ptr<Eqldims> m_eqldims;
     };
