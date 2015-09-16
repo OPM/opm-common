@@ -25,7 +25,7 @@ set (opm-upscaling_DEPS
 	dune-istl REQUIRED;
 	dune-geometry REQUIRED;
 	dune-grid REQUIRED;
-	opm-common REQUIRED;
+	opm-common;
 	opm-core REQUIRED;
 	dune-cornerpoint REQUIRED;
 	opm-porsol REQUIRED"
