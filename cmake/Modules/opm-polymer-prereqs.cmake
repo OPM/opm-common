@@ -18,7 +18,7 @@ set (opm-polymer_DEPS
 	"ERT"
 	# OPM dependency
 	"opm-autodiff REQUIRED;
-	opm-common REQUIRED;
+	opm-common;
 	opm-core REQUIRED"
 	# Eigen
 	"Eigen3 3.1 REQUIRED"
