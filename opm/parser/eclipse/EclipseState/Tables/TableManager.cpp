@@ -25,7 +25,7 @@
 namespace Opm {
 
     TableManager::TableManager( const Deck& deck ) {
-        initTabdims( deck );
+        initDims( deck );
         initSimpleTables( deck );
         initFullTables(deck, "PVTG", m_pvtgTables);
         initFullTables(deck, "PVTO", m_pvtoTables);
@@ -35,20 +35,46 @@ namespace Opm {
     }
 
 
-    void TableManager::initTabdims(const Deck& deck) {
-        if (deck.hasKeyword("TABDIMS")) {
-            auto keyword = deck.getKeyword("TABDIMS");
+    void TableManager::initDims(const Deck& deck) {
+        using namespace Opm::ParserKeywords;
+        if (deck.hasKeyword<TABDIMS>()) {
+            auto keyword = deck.getKeyword<TABDIMS>();
             auto record = keyword->getRecord(0);
-            int ntsfun = record->getItem("NTSFUN")->getInt(0);
-            int ntpvt  = record->getItem("NTPVT")->getInt(0);
-            int nssfun = record->getItem("NSSFUN")->getInt(0);
-            int nppvt  = record->getItem("NPPVT")->getInt(0);
-            int ntfip  = record->getItem("NTFIP")->getInt(0);
-            int nrpvt  = record->getItem("NRPVT")->getInt(0);
+            int ntsfun = record->getItem<TABDIMS::NTSFUN>()->getInt(0);
+            int ntpvt  = record->getItem<TABDIMS::NTPVT>()->getInt(0);
+            int nssfun = record->getItem<TABDIMS::NSSFUN>()->getInt(0);
+            int nppvt  = record->getItem<TABDIMS::NPPVT>()->getInt(0);
+            int ntfip  = record->getItem<TABDIMS::NTFIP>()->getInt(0);
+            int nrpvt  = record->getItem<TABDIMS::NRPVT>()->getInt(0);
 
             m_tabdims = std::make_shared<Tabdims>(ntsfun , ntpvt , nssfun , nppvt , ntfip , nrpvt);
         } else
             m_tabdims = std::make_shared<Tabdims>();
+
+        if (deck.hasKeyword<EQLDIMS>()) {
+            auto keyword = deck.getKeyword<EQLDIMS>();
+            auto record = keyword->getRecord(0);
+            int ntsequl   = record->getItem<EQLDIMS::NTEQUL>()->getInt(0);
+            int nodes_p   = record->getItem<EQLDIMS::DEPTH_NODES_P>()->getInt(0);
+            int nodes_tab = record->getItem<EQLDIMS::DEPTH_NODES_TAB>()->getInt(0);
+            int nttrvd    = record->getItem<EQLDIMS::NTTRVD>()->getInt(0);
+            int ntsrvd    = record->getItem<EQLDIMS::NSTRVD>()->getInt(0);
+
+            m_eqldims = std::make_shared<Eqldims>(ntsequl , nodes_p , nodes_tab , nttrvd , ntsrvd );
+        } else
+            m_eqldims = std::make_shared<Eqldims>();
+
+        if (deck.hasKeyword<REGDIMS>()) {
+            auto keyword = deck.getKeyword<REGDIMS>();
+            auto record = keyword->getRecord(0);
+            int ntfip  = record->getItem<REGDIMS::NTFIP>()->getInt(0);
+            int nmfipr = record->getItem<REGDIMS::NMFIPR>()->getInt(0);
+            int nrfreg = record->getItem<REGDIMS::NRFREG>()->getInt(0);
+            int ntfreg = record->getItem<REGDIMS::NTFREG>()->getInt(0);
+            int nplmix = record->getItem<REGDIMS::NPLMIX>()->getInt(0);
+            m_regdims = std::make_shared<Regdims>( ntfip , nmfipr , nrfreg , ntfreg , nplmix );
+        } else
+            m_regdims = std::make_shared<Regdims>();
     }
 
 
@@ -66,6 +92,7 @@ namespace Opm {
             return tables.empty();
         }
     }
+
 
 
     void TableManager::initSimpleTables(const Deck& deck) {

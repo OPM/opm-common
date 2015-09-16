@@ -3,4 +3,4 @@
   {"name" : "DEPTH_NODES_P"   , "value_type" : "INT", "default" : 100},
   {"name" : "DEPTH_NODES_TAB" , "value_type" : "INT" , "default" : 20},
   {"name" : "NTTRVD"      , "value_type" : "INT" , "default" : 1},
-  {"name" : "TRACER_VD"       , "value_type" : "INT" , "default" : 20}]}
+  {"name" : "NSTRVD"       , "value_type" : "INT" , "default" : 20}]}

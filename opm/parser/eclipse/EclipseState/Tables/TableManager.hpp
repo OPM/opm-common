@@ -23,6 +23,7 @@
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SlgofTable.hpp>
@@ -107,7 +108,7 @@ namespace Opm {
         void addTables( const std::string& tableName , size_t numTables);
         void initSimpleTables(const Deck& deck);
         void initRTempTables(const Deck& deck);
-        void initTabdims(const Deck& deck);
+        void initDims(const Deck& deck);
         void initRocktabTables(const Deck& deck);
         void initGasvisctTables(const Deck& deck,
                                 const std::string& keywordName,
@@ -222,7 +223,9 @@ namespace Opm {
         std::vector<ImptvdTable> m_imptvdTables;
         std::vector<RsvdTable> m_rsvdTables;
         std::vector<RvvdTable> m_rvvdTables;
+
         std::shared_ptr<Tabdims> m_tabdims;
+        std::shared_ptr<Eqldims> m_eqldims;
     };
 }
 
