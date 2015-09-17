@@ -111,10 +111,6 @@ namespace Opm {
                                 const std::string& keywordName,
                                 std::vector<GasvisctTable>& tableVector);
 
-        void initPlyshlogTables(const Deck& deck,
-                                const std::string& keywordName,
-                                std::vector<PlyshlogTable>& tableVector);
-
 
         void initVFPProdTables(const Deck& deck,
                                std::map<int, VFPProdTable>& tableMap);
@@ -122,6 +118,15 @@ namespace Opm {
         void initVFPInjTables(const Deck& deck,
                               std::map<int, VFPInjTable>& tableMap);
 
+
+        void initPlyrockTables(const Deck& deck,
+                               const std::string& keywordName,
+                               std::vector<PlyrockTable>& tableVector);
+
+
+        void initPlyshlogTables(const Deck& deck,
+                                const std::string& keywordName,
+                                std::vector<PlyshlogTable>& tableVector);
 
         template <class TableType>
         void initSimpleTables(const Deck& deck,

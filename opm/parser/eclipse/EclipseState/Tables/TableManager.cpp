@@ -39,7 +39,6 @@ namespace Opm {
         initSimpleTables(deck, "PVDS", m_pvdsTables);
         initSimpleTables(deck, "PLYADS", m_plyadsTables);
         initSimpleTables(deck, "PLYMAX", m_plymaxTables);
-        initSimpleTables(deck, "PLYROCK", m_plyrockTables);
         initSimpleTables(deck, "PLYVISC", m_plyviscTables);
         initSimpleTables(deck, "PLYDHFLF", m_plydhflfTables);
         initSimpleTables(deck, "OILVISCT", m_oilvisctTables);
@@ -51,6 +50,7 @@ namespace Opm {
         initSimpleTables(deck, "RSVD", m_rsvdTables);
         initSimpleTables(deck, "RVVD", m_rvvdTables);
 
+        initPlyrockTables(deck, "PLYROCK", m_plyrockTables);
         initPlyshlogTables(deck, "PLYSHLOG", m_plyshlogTables);
         initRocktabTables(deck);
         initRTempTables(deck);
@@ -159,6 +159,27 @@ namespace Opm {
 
     }
 
+
+    void TableManager::initPlyrockTables(const Deck& deck,
+                                         const std::string& keywordName,
+                                         std::vector<PlyrockTable>& tableVector){
+
+        if (!deck.hasKeyword(keywordName)) {
+            return;
+        }
+
+        if (!deck.numKeywords(keywordName)) {
+            complainAboutAmbiguousKeyword(deck, keywordName);
+            return;
+        }
+
+        const auto& keyword = deck.getKeyword(keywordName);
+        for( auto iter = keyword->begin(); iter != keyword->end(); ++iter) {
+            auto record = *iter;
+            tableVector.push_back( PlyrockTable() );
+            tableVector.back().init( record );
+        }
+    }
 
 
 

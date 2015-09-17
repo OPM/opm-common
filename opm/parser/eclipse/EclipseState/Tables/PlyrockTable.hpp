@@ -30,36 +30,21 @@ namespace Opm {
         friend class TableManager;
         PlyrockTable() = default;
 
-        /*!
-         * \brief Read the PLYROCK keyword and provide some convenience
-         *        methods for it.
-         */
-        void init(Opm::DeckItemConstPtr item)
-        {
-            SimpleTable::init(item,
-                              std::vector<std::string>{
-                                 "DeadPoreVolume",
-                                     "ResidualResistanceFactor",
-                                     "RockDensityFactor",
-                                     "AdsorbtionIndex",
-                                     "MaxAdsorbtion"
-                                     });
 
-            // the entries of this keyword cannot be defaulted except for the
-            // forth. ensure this.
-            int nRows = numRows();
-            int nCols = numColumns();
-            for (int rowIdx = 0; rowIdx < nRows; ++rowIdx) {
-                for (int colIdx = 0; colIdx < nCols; ++colIdx) {
-                    if (m_valueDefaulted[colIdx][rowIdx]) {
-                        if (colIdx == 3) {
-                            m_valueDefaulted[colIdx][rowIdx] = false;
-                            m_columns[colIdx][rowIdx] = 1.0;
-                        }
-                        else
-                            throw std::invalid_argument("The values of the PLYROCK table cannot be defaulted");
-                    }
-                }
+        void init(Opm::DeckRecordConstPtr record)
+        {
+            createColumns(std::vector<std::string>{
+                    "DeadPoreVolume",
+                        "ResidualResistanceFactor",
+                        "RockDensityFactor",
+                        "AdsorbtionIndex",
+                        "MaxAdsorbtion"
+                        });
+
+            for (size_t colIdx = 0; colIdx < record->size(); colIdx++) {
+                auto item = record->getItem( colIdx );
+                m_columns[colIdx].push_back( item->getSIDouble(0) );
+                m_valueDefaulted[colIdx].push_back( item->defaultApplied(0) );
             }
         }
 
