@@ -119,6 +119,10 @@ namespace Opm {
                               std::map<int, VFPInjTable>& tableMap);
 
 
+        void initPlymaxTables(const Deck& deck,
+                              const std::string& keywordName,
+                              std::vector<PlymaxTable>& tableVector);
+
         void initPlyrockTables(const Deck& deck,
                                const std::string& keywordName,
                                std::vector<PlyrockTable>& tableVector);

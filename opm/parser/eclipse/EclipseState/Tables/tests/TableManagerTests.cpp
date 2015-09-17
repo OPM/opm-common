@@ -1095,4 +1095,32 @@ BOOST_AUTO_TEST_CASE( TestPLYROCK ) {
 }
 
 
+BOOST_AUTO_TEST_CASE( TestPLYMAX ) {
+    const char *data =
+        "REGDIMS\n"
+        "  9* 2 /\n"
+        "\n"
+        "PLYMAX\n"
+        " 1 2 /\n"
+        " 10 20 /\n";
+
+    Opm::ParserPtr parser(new Opm::Parser);
+    Opm::DeckConstPtr deck(parser->parseString(data, Opm::ParseMode()));
+    Opm::TableManager tables( *deck );
+    const std::vector<Opm::PlymaxTable>& plymax = tables.getPlymaxTables();
+
+    BOOST_CHECK_EQUAL( plymax.size() , 2 ) ;
+    const Opm::PlymaxTable& table0 = plymax[0];
+    const Opm::PlymaxTable& table1 = plymax[1];
+
+    BOOST_CHECK_EQUAL( table0.numColumns() , 2 );
+    BOOST_CHECK_EQUAL( table0.getPolymerConcentrationColumn()[0] , 1.0 );
+    BOOST_CHECK_EQUAL( table0.getMaxPolymerConcentrationColumn()[0] , 2.0 );
+
+    BOOST_CHECK_EQUAL( table1.numColumns() , 2 );
+    BOOST_CHECK_EQUAL( table1.getPolymerConcentrationColumn()[0] , 10.0 );
+    BOOST_CHECK_EQUAL( table1.getMaxPolymerConcentrationColumn()[0] , 20.0 );
+}
+
+
 

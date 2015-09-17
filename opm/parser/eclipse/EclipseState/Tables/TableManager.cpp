@@ -38,7 +38,6 @@ namespace Opm {
         initSimpleTables(deck, "SSFN", m_ssfnTables);
         initSimpleTables(deck, "PVDS", m_pvdsTables);
         initSimpleTables(deck, "PLYADS", m_plyadsTables);
-        initSimpleTables(deck, "PLYMAX", m_plymaxTables);
         initSimpleTables(deck, "PLYVISC", m_plyviscTables);
         initSimpleTables(deck, "PLYDHFLF", m_plydhflfTables);
         initSimpleTables(deck, "OILVISCT", m_oilvisctTables);
@@ -50,6 +49,7 @@ namespace Opm {
         initSimpleTables(deck, "RSVD", m_rsvdTables);
         initSimpleTables(deck, "RVVD", m_rvvdTables);
 
+        initPlymaxTables(deck , "PLYMAX" , m_plymaxTables);
         initPlyrockTables(deck, "PLYROCK", m_plyrockTables);
         initPlyshlogTables(deck, "PLYSHLOG", m_plyshlogTables);
         initRocktabTables(deck);
@@ -177,6 +177,28 @@ namespace Opm {
         for( auto iter = keyword->begin(); iter != keyword->end(); ++iter) {
             auto record = *iter;
             tableVector.push_back( PlyrockTable() );
+            tableVector.back().init( record );
+        }
+    }
+
+
+    void TableManager::initPlymaxTables(const Deck& deck,
+                                        const std::string& keywordName,
+                                        std::vector<PlymaxTable>& tableVector){
+
+        if (!deck.hasKeyword(keywordName)) {
+            return;
+        }
+
+        if (!deck.numKeywords(keywordName)) {
+            complainAboutAmbiguousKeyword(deck, keywordName);
+            return;
+        }
+
+        const auto& keyword = deck.getKeyword(keywordName);
+        for( auto iter = keyword->begin(); iter != keyword->end(); ++iter) {
+            auto record = *iter;
+            tableVector.push_back( PlymaxTable() );
             tableVector.back().init( record );
         }
     }

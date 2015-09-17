@@ -34,11 +34,14 @@ namespace Opm {
          * \brief Read the PLYMAX keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckItemConstPtr item)
+        void init(Opm::DeckRecordConstPtr record)
         {
-            SimpleTable::init(item,
-                              std::vector<std::string>{"C_POLYMER", "C_POLYMER_MAX"});
-
+            createColumns(std::vector<std::string>{"C_POLYMER", "C_POLYMER_MAX"});
+            for (size_t colIdx = 0; colIdx < record->size(); colIdx++) {
+                auto item = record->getItem( colIdx );
+                m_columns[colIdx].push_back( item->getSIDouble(0) );
+                m_valueDefaulted[colIdx].push_back( item->defaultApplied(0) );
+            }
             SimpleTable::checkNonDefaultable("C_POLYMER");
             SimpleTable::checkMonotonic("C_POLYMER", /*isAscending=*/false);
             SimpleTable::checkNonDefaultable("C_POLYMER_MAX");
