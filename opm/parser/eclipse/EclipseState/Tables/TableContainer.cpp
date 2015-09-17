@@ -18,6 +18,7 @@
  */
 
 #include <string>
+#include <iostream>
 
 #include <opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp>
 
@@ -30,6 +31,7 @@ namespace Opm {
 
 
     bool TableContainer::empty() const {
+        std::cout << "Size: " << m_tables.size() << " empty: " << m_tables.empty() << std::endl;
         return m_tables.empty();
     }
 
@@ -47,7 +49,7 @@ namespace Opm {
     }
 
 
-    const SimpleTable& TableContainer::operator[](size_t tableNumber) const {
+    const SimpleTable& TableContainer::getTable(size_t tableNumber) const {
         if (tableNumber >= m_maxTables)
             throw std::invalid_argument("TableContainer - invalid tableNumber");
 
@@ -56,12 +58,16 @@ namespace Opm {
             return *(pair->second.get());
         } else {
             if (tableNumber > 0)
-                return (*this)[tableNumber - 1];
+                return getTable(tableNumber -1);
             else
                 throw std::invalid_argument("TableContainer does not have any table in the range 0..." + std::to_string( tableNumber ));
         }
     }
 
+
+    const SimpleTable& TableContainer::operator[](size_t tableNumber) const {
+        return getTable(tableNumber);
+    }
 
     void TableContainer::addTable(size_t tableNumber , std::shared_ptr<const SimpleTable> table) {
         if (tableNumber >= m_maxTables)

@@ -102,6 +102,16 @@ namespace Opm {
             return pair->second;
     }
 
+    TableContainer& TableManager::forceGetTables( const std::string& tableName , size_t numTables )  {
+        auto pair = m_simpleTables.find( tableName );
+        if (pair == m_simpleTables.end()) {
+            addTables( tableName , numTables );
+            pair = m_simpleTables.find( tableName );
+        }
+        return pair->second;
+    }
+
+
     const TableContainer& TableManager::operator[](const std::string& tableName) const {
         return getTables(tableName);
     }
@@ -156,15 +166,21 @@ namespace Opm {
           initRTempTables(deck);
           initGasvisctTables(deck, "GASVISCT", m_gasvisctTables);
         */
+        initSimpleTableContainer<SwofTable>(deck, "SWOF" , m_tabdims->getNumSatTables());
+        initSimpleTableContainer<SgofTable>(deck, "SGOF" , m_tabdims->getNumSatTables());
+        initSimpleTableContainer<SlgofTable>(deck, "SLGOF" , m_tabdims->getNumSatTables());
+        initSimpleTableContainer<Sof2Table>(deck, "SOF2" , m_tabdims->getNumSatTables());
+        initSimpleTableContainer<Sof3Table>(deck, "SOF3" , m_tabdims->getNumSatTables());
 
 
         /*****************************************************************/
 
-        initSimpleTable(deck, "SWOF", m_swofTables);
-        initSimpleTable(deck, "SGOF", m_sgofTables);
-        initSimpleTable(deck, "SLGOF", m_slgofTables);
-        initSimpleTable(deck, "SOF2", m_sof2Tables);
-        initSimpleTable(deck, "SOF3", m_sof3Tables);
+        //initSimpleTable(deck, "SWOF", m_swofTables);
+        //initSimpleTable(deck, "SGOF", m_sgofTables);
+        //initSimpleTable(deck, "SLGOF", m_slgofTables);
+        //initSimpleTable(deck, "SOF2", m_sof2Tables);
+        //initSimpleTable(deck, "SOF3", m_sof3Tables);
+
         initSimpleTable(deck, "PVDG", m_pvdgTables);
         initSimpleTable(deck, "PVDO", m_pvdoTables);
         initSimpleTable(deck, "SWFN", m_swfnTables);
@@ -399,26 +415,31 @@ namespace Opm {
     }
 
 
-    const std::vector<SwofTable>& TableManager::getSwofTables() const {
+    /*
+      const std::vector<SwofTable>& TableManager::getSwofTables() const {
         return m_swofTables;
+        }
+    */
+
+    const TableContainer& TableManager::getSwofTables() const {
+        return getTables("SWOF");
+    }
+
+    const TableContainer& TableManager::getSlgofTables() const {
+        return getTables("SLGOF");
     }
 
 
-    const std::vector<SlgofTable>& TableManager::getSlgofTables() const {
-        return m_slgofTables;
+    const TableContainer& TableManager::getSgofTables() const {
+        return getTables("SGOF");
     }
 
-
-    const std::vector<SgofTable>& TableManager::getSgofTables() const {
-        return m_sgofTables;
+    const TableContainer& TableManager::getSof2Tables() const {
+        return getTables("SOF2");
     }
 
-    const std::vector<Sof2Table>& TableManager::getSof2Tables() const {
-        return m_sof2Tables;
-    }
-
-    const std::vector<Sof3Table>& TableManager::getSof3Tables() const {
-        return m_sof3Tables;
+    const TableContainer& TableManager::getSof3Tables() const {
+        return getTables("SOF3");
     }
 
     const std::vector<PvdgTable>& TableManager::getPvdgTables() const {

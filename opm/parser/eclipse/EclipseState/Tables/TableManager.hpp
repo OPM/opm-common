@@ -73,16 +73,18 @@ namespace Opm {
 
         std::shared_ptr<const Tabdims> getTabdims() const;
 
+        const TableContainer& getSwofTables() const;
+        const TableContainer& getSof2Tables() const;
+        const TableContainer& getSof3Tables() const;
+        const TableContainer& getSgofTables() const;
+        const TableContainer& getSlgofTables() const;
+
+
         // the tables used by the deck. If the tables had some defaulted data in the
         // deck, the objects returned here exhibit the correct values. If the table is
         // not present in the deck, the corresponding vector is of size zero.
         const std::vector<PvtgTable>& getPvtgTables() const;
         const std::vector<PvtoTable>& getPvtoTables() const;
-        const std::vector<Sof2Table>& getSof2Tables() const;
-        const std::vector<Sof3Table>& getSof3Tables() const;
-        const std::vector<SwofTable>& getSwofTables() const;
-        const std::vector<SgofTable>& getSgofTables() const;
-        const std::vector<SlgofTable>& getSlgofTables() const;
         const std::vector<PvdgTable>& getPvdgTables() const;
         const std::vector<PvdoTable>& getPvdoTables() const;
         const std::vector<SwfnTable>& getSwfnTables() const;
@@ -110,6 +112,8 @@ namespace Opm {
         const std::map<int, VFPProdTable>& getVFPProdTables() const;
         const std::map<int, VFPInjTable>& getVFPInjTables() const;
     private:
+        TableContainer& forceGetTables( const std::string& tableName , size_t numTables);
+
         void complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) const;
 
         void addTables( const std::string& tableName , size_t numTables);
@@ -141,6 +145,33 @@ namespace Opm {
         void initPlyshlogTables(const Deck& deck,
                                 const std::string& keywordName,
                                 std::vector<PlyshlogTable>& tableVector);
+
+        template <class TableType>
+        void initSimpleTableContainer(const Deck& deck,
+                                      const std::string& keywordName,
+                                      size_t numTables) {
+            if (!deck.hasKeyword(keywordName))
+                return; // the table is not featured by the deck...
+
+            auto& container = forceGetTables(keywordName , numTables);
+
+            if (deck.numKeywords(keywordName) > 1) {
+                complainAboutAmbiguousKeyword(deck, keywordName);
+                return;
+            }
+
+            const auto& tableKeyword = deck.getKeyword(keywordName);
+            for (size_t tableIdx = 0; tableIdx < tableKeyword->size(); ++tableIdx) {
+                const auto tableRecord = tableKeyword->getRecord( tableIdx );
+                const auto dataItem = tableRecord->getItem( 0 );
+                if (dataItem->size() > 0) {
+                    std::shared_ptr<TableType> table = std::make_shared<TableType>();
+                    table->init(dataItem);
+                    container.addTable( tableIdx , table );
+                }
+            }
+        }
+
 
         template <class TableType>
         void initSimpleTable(const Deck& deck,
@@ -208,11 +239,6 @@ namespace Opm {
         std::vector<SsfnTable> m_ssfnTables;
         std::vector<PvdgTable> m_pvdgTables;
         std::vector<PvdoTable> m_pvdoTables;
-        std::vector<Sof2Table> m_sof2Tables;
-        std::vector<Sof3Table> m_sof3Tables;
-        std::vector<SgofTable> m_sgofTables;
-        std::vector<SwofTable> m_swofTables;
-        std::vector<SlgofTable> m_slgofTables;
         std::vector<PlyadsTable> m_plyadsTables;
         std::vector<PlymaxTable> m_plymaxTables;
         std::vector<PlyrockTable> m_plyrockTables;

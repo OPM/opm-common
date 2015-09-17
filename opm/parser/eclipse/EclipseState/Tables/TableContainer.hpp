@@ -74,7 +74,6 @@ namespace Opm {
           table N is not implemented use table N - 1 behavior.
         */
         size_t hasTable(size_t tableNumber) const;
-
         const SimpleTable& getTable(size_t tableNumber) const;
         const SimpleTable& operator[](size_t tableNumber) const;
 

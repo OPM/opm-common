@@ -10,6 +10,9 @@ RUNSPEC
 TABDIMS
  1  1 /
 
+EQLDIMS
+ /
+ 
 
 REGDIMS
  9* 1 /
