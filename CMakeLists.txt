@@ -9,8 +9,10 @@ macro (dir_hook)
 endmacro (dir_hook)
 
 # We need to define this variable in the cmake config file.
-set(OPM_PROJECT_EXTRA_CODE  "set(OPM_MACROS_ROOT ${CMAKE_INSTALL_PREFIX}/share/opm)
-                             list(APPEND CMAKE_MODULE_PATH \${OPM_MACROS_ROOT}/cmake/Modules)")
+set(OPM_PROJECT_EXTRA_CODE  "if(NOT OPM_MACROS_ROOT)  
+                               set(OPM_MACROS_ROOT ${CMAKE_INSTALL_PREFIX}/share/opm)
+                               list(APPEND CMAKE_MODULE_PATH \${OPM_MACROS_ROOT}/cmake/Modules)
+                             endif(NOT OPM_MACROS_ROOT)")
 
 # project information is in dune.module. Read this file and set variables.
 # we cannot generate dune.module since it is read by dunecontrol before
