@@ -73,6 +73,7 @@ function (opm_cmake_config name)
   set (template_dir "${OPM_MACROS_ROOT}/cmake/Templates")
 
   # write configuration file to locate library
+  set(OPM_PROJECT_EXTRA_CODE ${OPM_PROJECT_EXTRA_CODE_INTREE})
   configure_cmake_file (${name} "config" "")
   configure_cmake_file (${name} "config" "-version")
   configure_vars (
@@ -109,6 +110,7 @@ function (opm_cmake_config name)
 	)
   # create a config mode file which targets the install directory instead
   # of the build directory (using the same input template)
+  set(OPM_PROJECT_EXTRA_CODE ${OPM_PROJECT_EXTRA_CODE_INSTALLED})
   configure_cmake_file (${name} "install" "")
   configure_vars (
 	FILE CMAKE "${PROJECT_BINARY_DIR}/${${name}_NAME}-install.cmake"
