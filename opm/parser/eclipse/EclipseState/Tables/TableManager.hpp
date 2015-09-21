@@ -81,6 +81,8 @@ namespace Opm {
         const TableContainer& getSwfnTables() const;
         const TableContainer& getSgfnTables() const;
         const TableContainer& getSsfnTables() const;
+        const TableContainer& getRsvdTables() const;
+        const TableContainer& getRvvdTables() const;
 
 
         // the tables used by the deck. If the tables had some defaulted data in the
@@ -106,8 +108,6 @@ namespace Opm {
         const std::vector<EnptvdTable>& getEnptvdTables() const;
         const std::vector<ImkrvdTable>& getImkrvdTables() const;
         const std::vector<ImptvdTable>& getImptvdTables() const;
-        const std::vector<RsvdTable>& getRsvdTables() const;
-        const std::vector<RvvdTable>& getRvvdTables() const;
 
         const std::map<int, VFPProdTable>& getVFPProdTables() const;
         const std::map<int, VFPInjTable>& getVFPInjTables() const;
@@ -251,8 +251,6 @@ namespace Opm {
         std::vector<EnptvdTable> m_enptvdTables;
         std::vector<ImkrvdTable> m_imkrvdTables;
         std::vector<ImptvdTable> m_imptvdTables;
-        std::vector<RsvdTable> m_rsvdTables;
-        std::vector<RvvdTable> m_rvvdTables;
 
         std::shared_ptr<Regdims> m_regdims;
         std::shared_ptr<Tabdims> m_tabdims;

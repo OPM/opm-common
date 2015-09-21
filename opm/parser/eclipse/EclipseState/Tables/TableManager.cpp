@@ -118,7 +118,6 @@ namespace Opm {
 
     void TableManager::initSimpleTables(const Deck& deck) {
         addTables( "SWOF" , m_tabdims->getNumSatTables() );
-        addTables( "SWOF",  m_tabdims->getNumSatTables() );
         addTables( "SGOF",  m_tabdims->getNumSatTables() );
         addTables( "SLGOF", m_tabdims->getNumSatTables() );
         addTables( "SOF2",  m_tabdims->getNumSatTables() );
@@ -175,6 +174,8 @@ namespace Opm {
         initSimpleTableContainer<SgfnTable>(deck, "SGFN" , m_tabdims->getNumSatTables());
         initSimpleTableContainer<SsfnTable>(deck, "SSFN" , m_tabdims->getNumSatTables());
 
+        initSimpleTableContainer<RsvdTable>(deck, "RSVD" , m_eqldims->getNumEquilRegions());
+        initSimpleTableContainer<RvvdTable>(deck, "RVVD" , m_eqldims->getNumEquilRegions());
         /*****************************************************************/
 
 
@@ -190,8 +191,6 @@ namespace Opm {
         initSimpleTable(deck, "ENPTVD", m_enptvdTables);
         initSimpleTable(deck, "IMKRVD", m_imkrvdTables);
         initSimpleTable(deck, "IMPTVD", m_imptvdTables);
-        initSimpleTable(deck, "RSVD", m_rsvdTables);
-        initSimpleTable(deck, "RVVD", m_rvvdTables);
 
         initPlyrockTables(deck , "PLYROCK" , m_plyrockTables);
         initPlymaxTables(deck , "PLYMAX" , m_plymaxTables);
@@ -448,6 +447,14 @@ namespace Opm {
         return getTables("SSFN");
     }
 
+    const TableContainer& TableManager::getRsvdTables() const {
+        return getTables("RSVD");
+    }
+
+    const TableContainer& TableManager::getRvvdTables() const {
+        return getTables("RVVD");
+    }
+
 
     const std::vector<PvdgTable>& TableManager::getPvdgTables() const {
         return m_pvdgTables;
@@ -523,14 +530,6 @@ namespace Opm {
         return m_imptvdTables;
     }
 
-
-    const std::vector<RsvdTable>& TableManager::getRsvdTables() const {
-        return m_rsvdTables;
-    }
-
-    const std::vector<RvvdTable>& TableManager::getRvvdTables() const {
-        return m_rvvdTables;
-    }
 
     const std::vector<PvtgTable>& TableManager::getPvtgTables() const {
         return m_pvtgTables;
