@@ -83,6 +83,10 @@ namespace Opm {
         const TableContainer& getSsfnTables() const;
         const TableContainer& getRsvdTables() const;
         const TableContainer& getRvvdTables() const;
+        const TableContainer& getEnkrvdTables() const;
+        const TableContainer& getEnptvdTables() const;
+        const TableContainer& getImkrvdTables() const;
+        const TableContainer& getImptvdTables() const;
 
 
         // the tables used by the deck. If the tables had some defaulted data in the
@@ -104,10 +108,6 @@ namespace Opm {
         const std::vector<OilvisctTable>& getOilvisctTables() const;
         const std::vector<GasvisctTable>& getGasvisctTables() const;
         const std::vector<RtempvdTable>& getRtempvdTables() const;
-        const std::vector<EnkrvdTable>& getEnkrvdTables() const;
-        const std::vector<EnptvdTable>& getEnptvdTables() const;
-        const std::vector<ImkrvdTable>& getImkrvdTables() const;
-        const std::vector<ImptvdTable>& getImptvdTables() const;
 
         const std::map<int, VFPProdTable>& getVFPProdTables() const;
         const std::map<int, VFPInjTable>& getVFPInjTables() const;
@@ -247,10 +247,6 @@ namespace Opm {
         std::vector<OilvisctTable> m_oilvisctTables;
         std::vector<GasvisctTable> m_gasvisctTables;
         std::vector<RtempvdTable> m_rtempvdTables;
-        std::vector<EnkrvdTable> m_enkrvdTables;
-        std::vector<EnptvdTable> m_enptvdTables;
-        std::vector<ImkrvdTable> m_imkrvdTables;
-        std::vector<ImptvdTable> m_imptvdTables;
 
         std::shared_ptr<Regdims> m_regdims;
         std::shared_ptr<Tabdims> m_tabdims;

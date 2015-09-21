@@ -25,8 +25,8 @@ namespace Opm {
     // forward declaration
     class TableManager;
 
-    class ImptvdTable : protected SimpleTable {
-
+    class ImptvdTable : public SimpleTable {
+    public:
 
         friend class TableManager;
         ImptvdTable() = default;
@@ -60,7 +60,6 @@ namespace Opm {
             SimpleTable::applyDefaultsLinear("SOGCRIT");
         }
 
-    public:
         using SimpleTable::numTables;
         using SimpleTable::numRows;
         using SimpleTable::numColumns;

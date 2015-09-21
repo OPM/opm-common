@@ -468,8 +468,8 @@ protected:
     }
 
 
-    template <class TableType>
-    double selectValue(const std::vector<TableType>& depthTables,
+
+    double selectValue(const TableContainer& depthTables,
                        int tableIdx,
                        const std::string& columnName,
                        double cellDepth,
@@ -478,11 +478,12 @@ protected:
         double value = fallbackValue;
 
         if (tableIdx >= 0) {
+            const SimpleTable& table = depthTables.getTable( tableIdx );
             if (tableIdx >= static_cast<int>(depthTables.size()))
                 throw std::invalid_argument("Not enough tables!");
 
             // evaluate the table at the cell depth
-            value = depthTables[tableIdx].evaluate(columnName, cellDepth);
+            value = table.evaluate(columnName, cellDepth);
 
             if (!std::isfinite(value))
                 // a column can be fully defaulted. In this case, eval() returns a NaN
@@ -616,7 +617,7 @@ public:
         // sampling points. Both of these are outside the scope of opm-parser, so we just
         // assign a NaN in this case...
         bool useImptvd = this->m_deck.hasKeyword("IMPTVD");
-        const auto& imptvdTables = tables->getImptvdTables();
+        const TableContainer& imptvdTables = tables->getImptvdTables();
         for (size_t cellIdx = 0; cellIdx < eclipseGrid->getCartesianSize(); cellIdx++) {
             int imbTableIdx = imbnum->iget( cellIdx ) - 1;
             int endNum = endnum->iget( cellIdx ) - 1;

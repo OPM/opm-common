@@ -25,8 +25,8 @@ namespace Opm {
     // forward declaration
     class TableManager;
 
-    class ImkrvdTable : protected SimpleTable {
-
+    class ImkrvdTable : public SimpleTable {
+    public:
         friend class TableManager;
         ImkrvdTable() = default;
 
@@ -58,7 +58,6 @@ namespace Opm {
             SimpleTable::applyDefaultsLinear("KROCRITW");
         }
 
-    public:
         using SimpleTable::numTables;
         using SimpleTable::numRows;
         using SimpleTable::numColumns;

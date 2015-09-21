@@ -176,6 +176,21 @@ namespace Opm {
 
         initSimpleTableContainer<RsvdTable>(deck, "RSVD" , m_eqldims->getNumEquilRegions());
         initSimpleTableContainer<RvvdTable>(deck, "RVVD" , m_eqldims->getNumEquilRegions());
+        {
+            size_t numEndScaleTables = ParserKeywords::ENDSCALE::NUM_TABLES::defaultValue;
+
+            if (deck.hasKeyword<ParserKeywords::ENDSCALE>()) {
+                auto keyword = deck.getKeyword<ParserKeywords::ENDSCALE>();
+                auto record = keyword->getRecord(0);
+                numEndScaleTables = static_cast<size_t>(record->getItem<ParserKeywords::ENDSCALE::NUM_TABLES>()->getInt(0));
+            }
+
+            initSimpleTableContainer<EnkrvdTable>( deck , "ENKRVD", numEndScaleTables);
+            initSimpleTableContainer<EnptvdTable>( deck , "ENPTVD", numEndScaleTables);
+            initSimpleTableContainer<ImkrvdTable>( deck , "IMKRVD", numEndScaleTables);
+            initSimpleTableContainer<ImptvdTable>( deck , "IMPTVD", numEndScaleTables);
+        }
+
         /*****************************************************************/
 
 
@@ -187,10 +202,6 @@ namespace Opm {
         initSimpleTable(deck, "PLYDHFLF", m_plydhflfTables);
         initSimpleTable(deck, "OILVISCT", m_oilvisctTables);
         initSimpleTable(deck, "WATVISCT", m_watvisctTables);
-        initSimpleTable(deck, "ENKRVD", m_enkrvdTables);
-        initSimpleTable(deck, "ENPTVD", m_enptvdTables);
-        initSimpleTable(deck, "IMKRVD", m_imkrvdTables);
-        initSimpleTable(deck, "IMPTVD", m_imptvdTables);
 
         initPlyrockTables(deck , "PLYROCK" , m_plyrockTables);
         initPlymaxTables(deck , "PLYMAX" , m_plymaxTables);
@@ -455,6 +466,23 @@ namespace Opm {
         return getTables("RVVD");
     }
 
+    const TableContainer& TableManager::getEnkrvdTables() const {
+        return getTables("ENKRVD");
+    }
+
+    const TableContainer& TableManager::getEnptvdTables() const {
+        return getTables("ENPTVD");
+    }
+
+
+    const TableContainer& TableManager::getImkrvdTables() const {
+        return getTables("IMKRVD");
+    }
+
+    const TableContainer& TableManager::getImptvdTables() const {
+        return getTables("IMPTVD");
+    }
+
 
     const std::vector<PvdgTable>& TableManager::getPvdgTables() const {
         return m_pvdgTables;
@@ -510,24 +538,6 @@ namespace Opm {
 
     const std::vector<RtempvdTable>& TableManager::getRtempvdTables() const {
         return m_rtempvdTables;
-    }
-
-
-    const std::vector<EnkrvdTable>& TableManager::getEnkrvdTables() const {
-        return m_enkrvdTables;
-    }
-
-    const std::vector<EnptvdTable>& TableManager::getEnptvdTables() const {
-        return m_enptvdTables;
-    }
-
-
-    const std::vector<ImkrvdTable>& TableManager::getImkrvdTables() const {
-        return m_imkrvdTables;
-    }
-
-    const std::vector<ImptvdTable>& TableManager::getImptvdTables() const {
-        return m_imptvdTables;
     }
 
 
