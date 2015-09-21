@@ -25,9 +25,8 @@ namespace Opm {
     // forward declaration
     class TableManager;
 
-    class PvdoTable : protected SimpleTable {
-        
-
+    class PvdoTable : public SimpleTable {
+    public:
         friend class TableManager;
         PvdoTable() = default;
 
@@ -50,7 +49,6 @@ namespace Opm {
             SimpleTable::checkMonotonic("MUO", /*isAscending=*/true, /*strictlyMonotonic=*/false);
         }
 
-    public:
         using SimpleTable::numTables;
         using SimpleTable::numRows;
         using SimpleTable::numColumns;

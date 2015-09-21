@@ -87,6 +87,9 @@ namespace Opm {
         const TableContainer& getEnptvdTables() const;
         const TableContainer& getImkrvdTables() const;
         const TableContainer& getImptvdTables() const;
+        const TableContainer& getPvdgTables() const;
+        const TableContainer& getPvdoTables() const;
+        const TableContainer& getPvdsTables() const;
 
 
         // the tables used by the deck. If the tables had some defaulted data in the
@@ -94,9 +97,6 @@ namespace Opm {
         // not present in the deck, the corresponding vector is of size zero.
         const std::vector<PvtgTable>& getPvtgTables() const;
         const std::vector<PvtoTable>& getPvtoTables() const;
-        const std::vector<PvdgTable>& getPvdgTables() const;
-        const std::vector<PvdoTable>& getPvdoTables() const;
-        const std::vector<PvdsTable>& getPvdsTables() const;
         const std::vector<PlyshlogTable>& getPlyshlogTables() const;
         const std::vector<PlyadsTable>& getPlyadsTables() const;
         const std::vector<PlymaxTable>& getPlymaxTables() const;
@@ -233,9 +233,6 @@ namespace Opm {
         std::map<int, VFPInjTable> m_vfpinjTables;
         std::vector<PvtgTable> m_pvtgTables;
         std::vector<PvtoTable> m_pvtoTables;
-        std::vector<PvdsTable> m_pvdsTables;
-        std::vector<PvdgTable> m_pvdgTables;
-        std::vector<PvdoTable> m_pvdoTables;
         std::vector<PlyadsTable> m_plyadsTables;
         std::vector<PlymaxTable> m_plymaxTables;
         std::vector<PlyrockTable> m_plyrockTables;

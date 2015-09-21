@@ -25,9 +25,8 @@ namespace Opm {
     // forward declaration
     class TableManager;
 
-    class PvdgTable : protected SimpleTable {
-        
-
+    class PvdgTable : public SimpleTable {
+    public:
         friend class TableManager;
 
         PvdgTable() = default;
@@ -51,7 +50,6 @@ namespace Opm {
             SimpleTable::checkMonotonic("MUG", /*isAscending=*/true, /*strictlyMonotonic=*/false);
         }
 
-    public:
         using SimpleTable::numTables;
         using SimpleTable::numRows;
         using SimpleTable::numColumns;

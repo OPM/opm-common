@@ -190,13 +190,13 @@ namespace Opm {
             initSimpleTableContainer<ImkrvdTable>( deck , "IMKRVD", numEndScaleTables);
             initSimpleTableContainer<ImptvdTable>( deck , "IMPTVD", numEndScaleTables);
         }
+        initSimpleTableContainer<PvdgTable>(deck, "PVDG", m_tabdims->getNumPVTTables());
+        initSimpleTableContainer<PvdoTable>(deck, "PVDO", m_tabdims->getNumPVTTables());
+        initSimpleTableContainer<PvdsTable>(deck, "PVDS", m_tabdims->getNumPVTTables());
 
         /*****************************************************************/
 
 
-        initSimpleTable(deck, "PVDG", m_pvdgTables);
-        initSimpleTable(deck, "PVDO", m_pvdoTables);
-        initSimpleTable(deck, "PVDS", m_pvdsTables);
         initSimpleTable(deck, "PLYADS", m_plyadsTables);
         initSimpleTable(deck, "PLYVISC", m_plyviscTables);
         initSimpleTable(deck, "PLYDHFLF", m_plydhflfTables);
@@ -483,17 +483,16 @@ namespace Opm {
         return getTables("IMPTVD");
     }
 
-
-    const std::vector<PvdgTable>& TableManager::getPvdgTables() const {
-        return m_pvdgTables;
+    const TableContainer& TableManager::getPvdgTables() const {
+        return getTables("PVDG");
     }
 
-    const std::vector<PvdoTable>& TableManager::getPvdoTables() const {
-        return m_pvdoTables;
+    const TableContainer& TableManager::getPvdoTables() const {
+        return getTables("PVDO");
     }
 
-    const std::vector<PvdsTable>& TableManager::getPvdsTables() const {
-        return m_pvdsTables;
+    const TableContainer& TableManager::getPvdsTables() const {
+        return getTables("PVDS");
     }
 
     const std::vector<OilvisctTable>& TableManager::getOilvisctTables() const {
