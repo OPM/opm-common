@@ -39,6 +39,8 @@ namespace Opm {
         void addTStep(boost::posix_time::time_duration step);
         void addFromDATESKeyword( DeckKeywordConstPtr DATESKeyword );
         void addFromTSTEPKeyword( DeckKeywordConstPtr TSTEPKeyword );
+        void initFirstTimestepsMonths();
+        void initFirstTimestepsYears();
         size_t size() const;
         size_t numTimesteps() const;
         double getTotalTime() const;
@@ -49,10 +51,12 @@ namespace Opm {
         double getTimePassedUntil(size_t tLevelIdx) const;
         /// Return the length of a given time step in seconds.
         double getTimeStepLength(size_t tStepIdx) const;
-        /// Return a list of the first timesteps of each month
-        void initFirstTimestepsMonths(std::vector<size_t>& timesteps, size_t from_timestep=1) const;
-        /// Return a list of the first timesteps of each year
-        void initFirstTimestepsYears(std::vector<size_t>& timesteps, size_t from_timestep=1) const;
+
+        /// Return true if the given timestep is the first one of a new month or year, or if frequency > 1,
+        /// return true for every n'th timestep of every first new month or first new year timesteps,
+        /// starting from start_timestep-1.
+        bool isTimestepInFirstOfMonthsYearsSequence(size_t timestep, bool years = true, size_t start_timestep = 1, size_t frequency = 1) const;
+
         static boost::posix_time::ptime timeFromEclipse(DeckRecordConstPtr dateRecord);
         static boost::posix_time::ptime timeFromEclipse(int day , const std::string& month, int year, const std::string& eclipseTimeString = "00:00:00.000");
         static boost::posix_time::time_duration dayTimeFromEclipse(const std::string& eclipseTimeString);
@@ -60,6 +64,14 @@ namespace Opm {
         static const std::map<std::string , boost::gregorian::greg_month>& eclipseMonthNames();
 
         std::vector<boost::posix_time::ptime> m_timeList;
+
+        const std::vector<size_t>& getFirstTimestepMonths() const;
+        const std::vector<size_t>& getFirstTimestepYears() const;
+        bool isTimestepInFreqSequence (size_t timestep, size_t start_timestep, size_t frequency, bool years) const;
+        size_t closest(const std::vector<size_t> & vec, size_t value) const;
+
+        std::vector<size_t> m_first_timestep_years;   // A list of the first timestep of every year
+        std::vector<size_t> m_first_timestep_months;  // A list of the first timestep of every month
     };
     typedef std::shared_ptr<TimeMap> TimeMapPtr;
     typedef std::shared_ptr<const TimeMap> TimeMapConstPtr;
