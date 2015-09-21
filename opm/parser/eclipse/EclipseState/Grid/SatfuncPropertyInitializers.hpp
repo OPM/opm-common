@@ -124,16 +124,17 @@ protected:
         }
         case SaturationFunctionFamily::FamilyII:
         {
-            const std::vector<SwfnTable>& swfnTables = tables->getSwfnTables();
-            const std::vector<SgfnTable>& sgfnTables = tables->getSgfnTables();
-            assert(swfnTables.size() == numSatTables);
-            assert(sgfnTables.size() == numSatTables);
+            const TableContainer& swfnTables = tables->getSwfnTables();
+            const TableContainer& sgfnTables = tables->getSgfnTables();
             for (size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
-                m_minWaterSat[tableIdx] = swfnTables[tableIdx].getSwColumn().front();
-                m_maxWaterSat[tableIdx] = swfnTables[tableIdx].getSwColumn().back();
+                const SwfnTable& swfnTable = swfnTables.getTable<SwfnTable>(tableIdx);
+                const SgfnTable& sgfnTable = sgfnTables.getTable<SgfnTable>(tableIdx);
 
-                m_minGasSat[tableIdx] = sgfnTables[tableIdx].getSgColumn().front();
-                m_maxGasSat[tableIdx] = sgfnTables[tableIdx].getSgColumn().back();
+                m_minWaterSat[tableIdx] = swfnTable.getSwColumn().front();
+                m_maxWaterSat[tableIdx] = swfnTable.getSwColumn().back();
+
+                m_minGasSat[tableIdx] = sgfnTable.getSgColumn().front();
+                m_maxGasSat[tableIdx] = sgfnTable.getSgColumn().back();
             }
             break;
         }
@@ -248,34 +249,40 @@ protected:
         }
 
         case SaturationFunctionFamily::FamilyII: {
-            const std::vector<SwfnTable>& swfnTables = tables->getSwfnTables();
-            const std::vector<SgfnTable>& sgfnTables = tables->getSgfnTables();
+            const TableContainer& swfnTables = tables->getSwfnTables();
+            const TableContainer& sgfnTables = tables->getSgfnTables();
             const TableContainer& sof3Tables = tables->getSof3Tables();
 
             for (size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
-                // find the critical water saturation
-                int numRows = swfnTables[tableIdx].numRows();
-                const auto &krwCol = swfnTables[tableIdx].getKrwColumn();
-                for (int rowIdx = 0; rowIdx < numRows; ++rowIdx) {
-                    if (krwCol[rowIdx] > 0.0) {
-                        double Sw = 0.0;
-                        if (rowIdx > 0)
-                            Sw = swfnTables[tableIdx].getSwColumn()[rowIdx - 1];
-                        m_criticalWaterSat[tableIdx] = Sw;
-                        break;
+                {
+                    const SwfnTable& swfnTable = swfnTables.getTable<SwfnTable>( tableIdx );
+                    // find the critical water saturation
+                    size_t numRows = swfnTable.numRows();
+                    const auto &krwCol = swfnTable.getKrwColumn();
+                    for (size_t rowIdx = 0; rowIdx < numRows; ++rowIdx) {
+                        if (krwCol[rowIdx] > 0.0) {
+                            double Sw = 0.0;
+                            if (rowIdx > 0)
+                                Sw = swfnTable.getSwColumn()[rowIdx - 1];
+                            m_criticalWaterSat[tableIdx] = Sw;
+                            break;
+                        }
                     }
                 }
 
-                // find the critical gas saturation
-                numRows = sgfnTables[tableIdx].numRows();
-                const auto &krgCol = sgfnTables[tableIdx].getKrgColumn();
-                for (int rowIdx = 0; rowIdx < numRows; ++rowIdx) {
-                    if (krgCol[rowIdx] > 0.0) {
-                        double Sg = 0.0;
-                        if (rowIdx > 0)
-                            Sg = sgfnTables[tableIdx].getSgColumn()[rowIdx - 1];
-                        m_criticalGasSat[tableIdx] = Sg;
-                        break;
+                {
+                    const SgfnTable& sgfnTable = sgfnTables.getTable<SgfnTable>( tableIdx );
+                    // find the critical gas saturation
+                    size_t numRows = sgfnTable.numRows();
+                    const auto &krgCol = sgfnTable.getKrgColumn();
+                    for (size_t rowIdx = 0; rowIdx < numRows; ++rowIdx) {
+                        if (krgCol[rowIdx] > 0.0) {
+                            double Sg = 0.0;
+                            if (rowIdx > 0)
+                                Sg = sgfnTable.getSgColumn()[rowIdx - 1];
+                            m_criticalGasSat[tableIdx] = Sg;
+                            break;
+                        }
                     }
                 }
 
@@ -379,20 +386,22 @@ protected:
             break;
         }
         case SaturationFunctionFamily::FamilyII: {
-            const std::vector<SwfnTable>& swfnTables = tables->getSwfnTables();
-            const std::vector<SgfnTable>& sgfnTables = tables->getSgfnTables();
+            const TableContainer& swfnTables = tables->getSwfnTables();
+            const TableContainer& sgfnTables = tables->getSgfnTables();
             const TableContainer& sof3Tables = tables->getSof3Tables();
 
             for (size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
                 const Sof3Table& sof3Table = sof3Tables.getTable<Sof3Table>( tableIdx );
+                const SgfnTable& sgfnTable = sgfnTables.getTable<SgfnTable>( tableIdx );
+                const SwfnTable& swfnTable = swfnTables.getTable<SwfnTable>( tableIdx );
 
                 // find the maximum output values of the oil-gas system
-                m_maxPcog[tableIdx] = sgfnTables[tableIdx].getPcogColumn().back();
-                m_maxKrg[tableIdx] = sgfnTables[tableIdx].getKrgColumn().back();
+                m_maxPcog[tableIdx] = sgfnTable.getPcogColumn().back();
+                m_maxKrg[tableIdx] = sgfnTable.getKrgColumn().back();
 
                 // find the minimum output values of the relperm
-                m_krgr[tableIdx] = sgfnTables[tableIdx].getKrgColumn().front();
-                m_krwr[tableIdx] = swfnTables[tableIdx].getKrwColumn().front();
+                m_krgr[tableIdx] = sgfnTable.getKrgColumn().front();
+                m_krwr[tableIdx] = swfnTable.getKrwColumn().front();
 
                 // find the oil relperm which corresponds to the critical water saturation
                 const double OilSatAtcritialWaterSat = 1.0 - m_criticalWaterSat[tableIdx] - m_minGasSat[tableIdx];
@@ -410,9 +419,9 @@ protected:
                 // scaling the resultant threephase oil relperm, but then the gas saturation
                 // is not taken into account which means that some twophase quantity must be
                 // scaled.
-                m_maxPcow[tableIdx] = swfnTables[tableIdx].getPcowColumn().front();
+                m_maxPcow[tableIdx] = swfnTable.getPcowColumn().front();
                 m_maxKro[tableIdx] = sof3Table.getKrowColumn().back();
-                m_maxKrw[tableIdx] = swfnTables[tableIdx].getKrwColumn().back();
+                m_maxKrw[tableIdx] = swfnTable.getKrwColumn().back();
             }
             break;
         }
@@ -432,8 +441,8 @@ protected:
         const TableContainer& sgofTables = tables->getSgofTables();
         const TableContainer& slgofTables = tables->getSlgofTables();
         const TableContainer& sof3Tables = tables->getSof3Tables();
-        const std::vector<SwfnTable>& swfnTables = tables->getSwfnTables();
-        const std::vector<SgfnTable>& sgfnTables = tables->getSgfnTables();
+        const TableContainer& swfnTables = tables->getSwfnTables();
+        const TableContainer& sgfnTables = tables->getSgfnTables();
 
 
         std::cout << "SGOF.empty() " << sgofTables.empty() << " SWOF.empty() " << swofTables.empty() << std::endl;

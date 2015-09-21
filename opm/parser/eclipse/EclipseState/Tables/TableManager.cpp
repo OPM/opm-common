@@ -171,21 +171,15 @@ namespace Opm {
         initSimpleTableContainer<SlgofTable>(deck, "SLGOF" , m_tabdims->getNumSatTables());
         initSimpleTableContainer<Sof2Table>(deck, "SOF2" , m_tabdims->getNumSatTables());
         initSimpleTableContainer<Sof3Table>(deck, "SOF3" , m_tabdims->getNumSatTables());
-
+        initSimpleTableContainer<SwfnTable>(deck, "SWFN" , m_tabdims->getNumSatTables());
+        initSimpleTableContainer<SgfnTable>(deck, "SGFN" , m_tabdims->getNumSatTables());
+        initSimpleTableContainer<SsfnTable>(deck, "SSFN" , m_tabdims->getNumSatTables());
 
         /*****************************************************************/
 
-        //initSimpleTable(deck, "SWOF", m_swofTables);
-        //initSimpleTable(deck, "SGOF", m_sgofTables);
-        //initSimpleTable(deck, "SLGOF", m_slgofTables);
-        //initSimpleTable(deck, "SOF2", m_sof2Tables);
-        //initSimpleTable(deck, "SOF3", m_sof3Tables);
 
         initSimpleTable(deck, "PVDG", m_pvdgTables);
         initSimpleTable(deck, "PVDO", m_pvdoTables);
-        initSimpleTable(deck, "SWFN", m_swfnTables);
-        initSimpleTable(deck, "SGFN", m_sgfnTables);
-        initSimpleTable(deck, "SSFN", m_ssfnTables);
         initSimpleTable(deck, "PVDS", m_pvdsTables);
         initSimpleTable(deck, "PLYADS", m_plyadsTables);
         initSimpleTable(deck, "PLYVISC", m_plyviscTables);
@@ -442,24 +436,25 @@ namespace Opm {
         return getTables("SOF3");
     }
 
+    const TableContainer& TableManager::getSwfnTables() const {
+        return getTables("SWFN");
+    }
+
+    const TableContainer& TableManager::getSgfnTables() const {
+        return getTables("SGFN");
+    }
+
+    const TableContainer& TableManager::getSsfnTables() const {
+        return getTables("SSFN");
+    }
+
+
     const std::vector<PvdgTable>& TableManager::getPvdgTables() const {
         return m_pvdgTables;
     }
 
     const std::vector<PvdoTable>& TableManager::getPvdoTables() const {
         return m_pvdoTables;
-    }
-
-    const std::vector<SwfnTable>& TableManager::getSwfnTables() const {
-        return m_swfnTables;
-    }
-
-    const std::vector<SgfnTable>& TableManager::getSgfnTables() const {
-        return m_sgfnTables;
-    }
-
-    const std::vector<SsfnTable>& TableManager::getSsfnTables() const {
-        return m_ssfnTables;
     }
 
     const std::vector<PvdsTable>& TableManager::getPvdsTables() const {

@@ -25,8 +25,8 @@ namespace Opm {
     // forward declaration
     class TableManager;
 
-    class SsfnTable : protected SimpleTable {
-
+    class SsfnTable : public SimpleTable {
+    public:
         friend class TableManager;
         SsfnTable() = default;
 
@@ -50,7 +50,6 @@ namespace Opm {
             SimpleTable::checkMonotonic("SolventRelPermMultiplier", /*isAscending=*/true);
         }
 
-    public:
         using SimpleTable::numTables;
         using SimpleTable::numRows;
         using SimpleTable::numColumns;

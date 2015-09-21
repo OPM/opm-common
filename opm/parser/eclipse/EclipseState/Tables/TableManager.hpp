@@ -78,6 +78,9 @@ namespace Opm {
         const TableContainer& getSof3Tables() const;
         const TableContainer& getSgofTables() const;
         const TableContainer& getSlgofTables() const;
+        const TableContainer& getSwfnTables() const;
+        const TableContainer& getSgfnTables() const;
+        const TableContainer& getSsfnTables() const;
 
 
         // the tables used by the deck. If the tables had some defaulted data in the
@@ -87,9 +90,6 @@ namespace Opm {
         const std::vector<PvtoTable>& getPvtoTables() const;
         const std::vector<PvdgTable>& getPvdgTables() const;
         const std::vector<PvdoTable>& getPvdoTables() const;
-        const std::vector<SwfnTable>& getSwfnTables() const;
-        const std::vector<SgfnTable>& getSgfnTables() const;
-        const std::vector<SsfnTable>& getSsfnTables() const;
         const std::vector<PvdsTable>& getPvdsTables() const;
         const std::vector<PlyshlogTable>& getPlyshlogTables() const;
         const std::vector<PlyadsTable>& getPlyadsTables() const;
@@ -234,9 +234,6 @@ namespace Opm {
         std::vector<PvtgTable> m_pvtgTables;
         std::vector<PvtoTable> m_pvtoTables;
         std::vector<PvdsTable> m_pvdsTables;
-        std::vector<SwfnTable> m_swfnTables;
-        std::vector<SgfnTable> m_sgfnTables;
-        std::vector<SsfnTable> m_ssfnTables;
         std::vector<PvdgTable> m_pvdgTables;
         std::vector<PvdoTable> m_pvdoTables;
         std::vector<PlyadsTable> m_plyadsTables;
