@@ -5,7 +5,6 @@ add_subdirectory(Parser/tests)
 add_subdirectory(Generator/tests)
 add_subdirectory(RawDeck/tests)
 add_subdirectory(Deck/tests)
-add_subdirectory(IntegrationTests)
 add_subdirectory(EclipseState/tests)
 add_subdirectory(EclipseState/Schedule/tests)
 add_subdirectory(EclipseState/SimulationConfig/tests)
@@ -15,7 +14,8 @@ add_subdirectory(EclipseState/Util/tests)
 add_subdirectory(EclipseState/IOConfig/tests)
 add_subdirectory(EclipseState/InitConfig/tests)
 
-add_subdirectory( Applications )
+add_subdirectory(Applications)
+add_subdirectory(IntegrationTests)
 
 set( log_source
 OpmLog/TimerLog.cpp 
