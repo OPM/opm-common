@@ -43,39 +43,93 @@ const std::string& deckStr =  "RUNSPEC\n"
                               " 21 MAY 1981 /\n"
                               "\n"
                               "SCHEDULE\n"
-                              "TSTEP\n"
-                              " 1 2 3 4 5 /\n"
                               "DATES\n"
-                              " 1 JAN 1982 /\n"
-                              " 1 JAN 1982 13:55:44 /\n"
-                              " 3 JAN 1982 14:56:45.123 /\n"
-                              "/\n"
-                              "TSTEP\n"
-                              " 9 10 /\n"
-                              "\n";
+                              " 22 MAY 1981 /\n"              // timestep 1
+                              " 23 MAY 1981 /\n"              // timestep 2
+                              " 24 MAY 1981 /\n"              // timestep 3
+                              " 25 MAY 1981 /\n"              // timestep 4
+                              " 26 MAY 1981 /\n"              // timestep 5
+                              " 1 JAN 1982 /\n"               // timestep 6
+                              " 1 JAN 1982 13:55:44 /\n"      // timestep 7
+                              " 3 JAN 1982 14:56:45.123 /\n"  // timestep 8
+                              " 4 JAN 1982 14:56:45.123 /\n"  // timestep 9
+                              " 5 JAN 1982 14:56:45.123 /\n"  // timestep 10
+                              " 6 JAN 1982 14:56:45.123 /\n"  // timestep 11
+                              " 7 JAN 1982 14:56:45.123 /\n"  // timestep 12
+                              " 8 JAN 1982 14:56:45.123 /\n"  // timestep 13
+                              " 9 JAN 1982 14:56:45.123 /\n"  // timestep 14
+                              " 10 JAN 1982 14:56:45.123 /\n" // timestep 15
+                              " 11 JAN 1982 14:56:45.123 /\n" // timestep 16
+                              " 1 JAN 1983 /\n"               // timestep 17
+                              " 2 JAN 1983 /\n"               // timestep 18
+                              " 3 JAN 1983 /\n"               // timestep 19
+                              " 1 JAN 1984 /\n"               // timestep 20
+                              " 2 JAN 1984 /\n"               // timestep 21
+                              " 1 JAN 1985 /\n"               // timestep 22
+                              " 3 JAN 1986 14:56:45.123 /\n"  // timestep 23
+                              " 4 JAN 1986 14:56:45.123 /\n"  // timestep 24
+                              " 5 JAN 1986 14:56:45.123 /\n"  // timestep 25
+                              " 1 JAN 1987 /\n"               // timestep 26
+                              " 1 JAN 1988 /\n"               // timestep 27
+                              " 2 JAN 1988 /\n"               // timestep 28
+                              " 3 JAN 1988 /\n"               // timestep 29
+                              " 1 JAN 1989 /\n"               // timestep 30
+                              " 2 JAN 1989 /\n"               // timestep 31
+                              " 2 JAN 1990 /\n"               // timestep 32
+                              " 2 JAN 1991 /\n"               // timestep 33
+                              " 3 JAN 1991 /\n"               // timestep 34
+                              " 4 JAN 1991 /\n"               // timestep 35
+                              " 1 JAN 1992 /\n"               // timestep 36
+                              " 1 FEB 1992 /\n"               // timestep 37
+                              " 1 MAR 1992 /\n"               // timestep 38
+                              " 2 MAR 1992 /\n"               // timestep 39
+                              " 3 MAR 1992 /\n"               // timestep 40
+                              " 4 MAR 1992 /\n"               // timestep 41
+                              " 1 APR 1992 /\n"               // timestep 42
+                              " 2 APR 1992 /\n"               // timestep 43
+                              " 1 MAY 1992 /\n"               // timestep 44
+                              " 2 MAY 1992 /\n"               // timestep 45
+                              " 3 MAY 1992 /\n"               // timestep 46
+                              " 3 JUN 1992 /\n"               // timestep 47
+                              " 3 JUL 1992 /\n"               // timestep 48
+                              " 3 AUG 1992 /\n"               // timestep 49
+                              " 4 AUG 1992 /\n"               // timestep 50
+                              " 5 AUG 1992 /\n"               // timestep 51
+                              " 6 AUG 1992 /\n"               // timestep 52
+                              " 7 AUG 1992 /\n"               // timestep 53
+                              " 8 AUG 1992 /\n"               // timestep 54
+                              " 9 AUG 1992 /\n"               // timestep 55
+                              " 10 AUG 1992 /\n"              // timestep 56
+                              " 11 AUG 1992 /\n"              // timestep 57
+                              " 12 AUG 1992 /\n"              // timestep 58
+                              " 13 AUG 1992 /\n"              // timestep 59
+                              " 14 AUG 1992 /\n"              // timestep 60
+                              " 15 AUG 1992 /\n"              // timestep 61
+                                                        "/\n"
+                                                        "\n";
 
 
-const std::string& deckStr3 =  "RUNSPEC\n"
-                               "UNIFIN\n"
-                               "UNIFOUT\n"
-                               "FMTIN\n"
-                               "FMTOUT\n"
-                               "\n"
-                               "DIMENS\n"
-                               "10 10 10 /\n"
-                               "GRID\n"
-                               "INIT\n"
-                               "NOGGF\n"
-                               "\n";
+const std::string& deckStr_NOGGF = "RUNSPEC\n"
+                                   "UNIFIN\n"
+                                   "UNIFOUT\n"
+                                   "FMTIN\n"
+                                   "FMTOUT\n"
+                                   "\n"
+                                   "DIMENS\n"
+                                   "10 10 10 /\n"
+                                   "GRID\n"
+                                   "INIT\n"
+                                   "NOGGF\n"
+                                   "\n";
 
-const std::string& deckStr4 =  "RUNSPEC\n"
-                               "\n"
-                               "DIMENS\n"
-                              " 10 10 10 /\n"
-                               "GRID\n"
-                               "GRIDFILE\n"
-                               " 0 0 /\n"
-                               "\n";
+const std::string& deckStr_NO_GRIDFILE = "RUNSPEC\n"
+                                         "\n"
+                                         "DIMENS\n"
+                                        " 10 10 10 /\n"
+                                         "GRID\n"
+                                         "GRIDFILE\n"
+                                         " 0 0 /\n"
+                                         "\n";
 
 
 
@@ -102,8 +156,15 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
 
     Schedule schedule(ParseMode() , grid , deck, ioConfigPtr);
 
+    TimeMapConstPtr timemap   = schedule.getTimeMap();
+    const TimeMap* const_tmap = timemap.get();
+    TimeMap* writableTimemap  = const_cast<TimeMap*>(const_tmap);
+
+    writableTimemap->initFirstTimestepsYears();
+    writableTimemap->initFirstTimestepsMonths();
+
+
     //If no BASIC keyord has been handled, no restart files should be written
-    TimeMapConstPtr timemap = schedule.getTimeMap();
     for (size_t ts = 0; ts < timemap->numTimesteps(); ++ts) {
         BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(ts));
     }
@@ -120,24 +181,6 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
         }
     }
 
-    //Add timestep 11, 12, 13, 14, 15, 16
-    const TimeMap* const_tmap = timemap.get();
-    TimeMap* writableTimemap = const_cast<TimeMap*>(const_tmap);
-    writableTimemap->addTStep(boost::posix_time::hours(24));
-    writableTimemap->addTStep(boost::posix_time::hours(24));
-    writableTimemap->addTStep(boost::posix_time::hours(24));
-    writableTimemap->addTStep(boost::posix_time::hours(24));
-    writableTimemap->addTStep(boost::posix_time::hours(24));
-    writableTimemap->addTStep(boost::posix_time::hours(24));
-
-
-    BOOST_CHECK_EQUAL(true, ioConfigPtr->getWriteRestartFile(11));
-    BOOST_CHECK_EQUAL(true, ioConfigPtr->getWriteRestartFile(12));
-    BOOST_CHECK_EQUAL(true, ioConfigPtr->getWriteRestartFile(13));
-    BOOST_CHECK_EQUAL(true, ioConfigPtr->getWriteRestartFile(14));
-    BOOST_CHECK_EQUAL(true, ioConfigPtr->getWriteRestartFile(15));
-    BOOST_CHECK_EQUAL(true, ioConfigPtr->getWriteRestartFile(16));
-
 
     /* BASIC=3, restart files are created every nth report time, n=3 */
     timestep      = 11;
@@ -146,24 +189,13 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     ioConfigPtr->handleRPTRSTBasic(schedule.getTimeMap(),timestep, basic, frequency);
 
     for (size_t ts = timestep ; ts < timemap->numTimesteps(); ++ts) {
-        if (((ts-timestep) % frequency) == 0) {
+        if ((ts >= timestep) && ((ts % frequency) == 0)) {
             BOOST_CHECK_EQUAL(true, ioConfigPtr->getWriteRestartFile(ts));
         } else {
             BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(ts));
         }
     }
 
-    //Add timestep 17, 18, 19, 20, 21, 22, 23, 24, 25, 26
-    writableTimemap->addTStep(boost::posix_time::hours(8760)); //1983
-    writableTimemap->addTStep(boost::posix_time::hours(24));
-    writableTimemap->addTStep(boost::posix_time::hours(24));
-    writableTimemap->addTStep(boost::posix_time::hours(8760)); //1984
-    writableTimemap->addTStep(boost::posix_time::hours(24));
-    writableTimemap->addTStep(boost::posix_time::hours(8760)); //1985
-    writableTimemap->addTStep(boost::posix_time::hours(8760)); //1986
-    writableTimemap->addTStep(boost::posix_time::hours(24));
-    writableTimemap->addTStep(boost::posix_time::hours(24));
-    writableTimemap->addTStep(boost::posix_time::hours(8760)); //1987
 
     /* BASIC=4, restart file is written at the first report step of each year.
        Optionally, if the mnemonic FREQ is set >1 the restart is written only every n'th year*/
@@ -172,10 +204,11 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     frequency     = 0;
     ioConfigPtr->handleRPTRSTBasic(schedule.getTimeMap(),timestep, basic, frequency);
 
-    /*Expected results: Write timestep for timestep 20, 22, 23, 26*/
 
-    for (size_t ts = 17; ts <= 26; ++ts) {
-        if ((20 == ts) || (22 == ts) || (23 == ts) || (26 == ts)) {
+    for (size_t ts = timestep; ts < timemap->numTimesteps(); ++ts) {
+        ioConfigPtr->getWriteRestartFile(ts);
+        if ((17 == ts) || (20 == ts) || (22 == ts) || (23 == ts) || (26 == ts) ||
+            (27 == ts) || (30 == ts) || (32 == ts) || (33 == ts) || (36 == ts)) {
             BOOST_CHECK_EQUAL(true, ioConfigPtr->getWriteRestartFile(ts));
         } else {
             BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(ts));
@@ -183,17 +216,23 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     }
 
 
-    //Add timestep 27, 28, 29, 30, 31, 32, 33, 34, 35, 36
-    writableTimemap->addTStep(boost::posix_time::hours(8760)); //1988
-    writableTimemap->addTStep(boost::posix_time::hours(24));
-    writableTimemap->addTStep(boost::posix_time::hours(24));
-    writableTimemap->addTStep(boost::posix_time::hours(8760)); //1989
-    writableTimemap->addTStep(boost::posix_time::hours(24));
-    writableTimemap->addTStep(boost::posix_time::hours(8760)); //1990
-    writableTimemap->addTStep(boost::posix_time::hours(8760)); //1991
-    writableTimemap->addTStep(boost::posix_time::hours(24));
-    writableTimemap->addTStep(boost::posix_time::hours(24));
-    writableTimemap->addTStep(boost::posix_time::hours(8760)); //1992
+    /* BASIC=4, restart file is written at the first report step of each year.
+       Optionally, if the mnemonic FREQ is set >1 the restart is written only every n'th year*/
+    timestep      = 18;
+    basic         = 4;
+    frequency     = 0;
+    ioConfigPtr->handleRPTRSTBasic(schedule.getTimeMap(),timestep, basic, frequency);
+
+    for (size_t ts = timestep; ts < timemap->numTimesteps(); ++ts) {
+        ioConfigPtr->getWriteRestartFile(ts);
+        if ((20 == ts) || (22 == ts) || (23 == ts) || (26 == ts) ||
+            (27 == ts) || (30 == ts) || (32 == ts) || (33 == ts) || (36 == ts)) {
+            BOOST_CHECK_EQUAL(true, ioConfigPtr->getWriteRestartFile(ts));
+        } else {
+            BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(ts));
+        }
+    }
+
 
     /* BASIC=4, FREQ = 2 restart file is written at the first report step of each year.
        Optionally, if the mnemonic FREQ is set >1 the restart is written only every n'th year*/
@@ -202,10 +241,8 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     frequency     = 2;
     ioConfigPtr->handleRPTRSTBasic(schedule.getTimeMap(), timestep, basic, frequency);
 
-    //Expected results: Write timestep for 32 and 36 (30, 32, 33, 36 with frequency 2)
-
-    for (size_t ts = 27; ts <= 36; ++ts) {
-        if ((32 == ts) || (36 == ts)) {
+    for (size_t ts = timestep; ts < timemap->numTimesteps(); ++ts) {
+        if ((30 == ts) || (33 == ts)) {
             BOOST_CHECK_EQUAL(true, ioConfigPtr->getWriteRestartFile(ts));
         } else {
             BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(ts));
@@ -213,18 +250,6 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     }
 
 
-
-    //Add timestep 37, 38, 39, 40, 41, 42, 43, 44, 45, 46
-    writableTimemap->addTStep(boost::posix_time::hours(24));  //february
-    writableTimemap->addTStep(boost::posix_time::hours(650)); //march
-    writableTimemap->addTStep(boost::posix_time::hours(24));  //march
-    writableTimemap->addTStep(boost::posix_time::hours(24));  //march
-    writableTimemap->addTStep(boost::posix_time::hours(24));  //march
-    writableTimemap->addTStep(boost::posix_time::hours(650)); //april
-    writableTimemap->addTStep(boost::posix_time::hours(24));  //april
-    writableTimemap->addTStep(boost::posix_time::hours(650)); //may
-    writableTimemap->addTStep(boost::posix_time::hours(24));  //may
-    writableTimemap->addTStep(boost::posix_time::hours(24));  //may
 
     /* BASIC=5, restart file is written at the first report step of each month.
        Optionally, if the mnemonic FREQ is set >1 the restart is written only every n'th month*/
@@ -233,20 +258,14 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     frequency     = 2;
     ioConfigPtr->handleRPTRSTBasic(schedule.getTimeMap(), timestep, basic, frequency);
 
-    //Expected results: Write timestep for timestep  38, 44 (38, 42, 44 with frequency 2)
-
-    for (size_t ts = 37; ts <= 46; ++ts) {
-        if (42 == ts) {
+    for (size_t ts = timestep; ts < timemap->numTimesteps(); ++ts) {
+        if ((38 == ts) || (44 == ts) || (48 == ts)) {
             BOOST_CHECK_EQUAL(true, ioConfigPtr->getWriteRestartFile(ts));
         } else {
             BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(ts));
         }
     }
 
-    //Add timestep 47, 48, 49
-    writableTimemap->addTStep(boost::posix_time::hours(750)); //june
-    writableTimemap->addTStep(boost::posix_time::hours(750)); //july
-    writableTimemap->addTStep(boost::posix_time::hours(750)); //august
 
     /* BASIC=0, no restart files are written*/
     timestep      = 47;
@@ -254,16 +273,14 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     frequency     = 0;
     ioConfigPtr->handleRPTRSTBasic(schedule.getTimeMap(), timestep, basic, frequency);
 
-    BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(47));
-    BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(48));
-    BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(49));
+    for (size_t ts = timestep; ts < timemap->numTimesteps(); ++ts) {
+        BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(ts));
+    }
+
+
 
 
     /************************* Test RPTSCHED RESTART *************************/
-
-    //Add timestep 50, 51
-    writableTimemap->addTStep(boost::posix_time::hours(24));
-    writableTimemap->addTStep(boost::posix_time::hours(24));
 
     /* RPTSCHED RESTART=1, restart files are written*/
     timestep       = 50;
@@ -273,10 +290,6 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     BOOST_CHECK_EQUAL(true, ioConfigPtr->getWriteRestartFile(50));
     BOOST_CHECK_EQUAL(true, ioConfigPtr->getWriteRestartFile(51));
 
-    //Add timestep 52, 53
-    writableTimemap->addTStep(boost::posix_time::hours(24));
-    writableTimemap->addTStep(boost::posix_time::hours(24));
-
     /* RPTSCHED RESTART=0, no restart files are written*/
     timestep      = 52;
     restart       = 0;
@@ -285,19 +298,12 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(52));
     BOOST_CHECK_EQUAL(false, ioConfigPtr->getWriteRestartFile(53));
 
-    //Add timestep 54, 55
-    writableTimemap->addTStep(boost::posix_time::hours(24));
-    writableTimemap->addTStep(boost::posix_time::hours(24));
     timestep      = 54;
     basic         = 0;
     ioConfigPtr->handleRPTSCHEDRestart(schedule.getTimeMap(), timestep, restart);
 
 
     /* RPTSCHED RESTART IGNORED IF RPTRST BASIC > 2 */
-
-    //Add timestep 56, 57, 58, 59
-    writableTimemap->addTStep(boost::posix_time::hours(24));
-    writableTimemap->addTStep(boost::posix_time::hours(24));
     timestep      = 56;
     basic         = 3;
     frequency     = 1;
@@ -313,11 +319,7 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     ioConfigPtr->handleRPTSCHEDRestart(schedule.getTimeMap(), timestep, restart);
     BOOST_CHECK_EQUAL(true, ioConfigPtr->getWriteRestartFile(timestep));
 
-
     /* RPTSCHED RESTART NOT IGNORED IF RPTRST BASIC <= 2 */
-    //Add timestep 60, 61
-    writableTimemap->addTStep(boost::posix_time::hours(24));
-    writableTimemap->addTStep(boost::posix_time::hours(24));
     timestep      = 60;
     basic         = 1;
     frequency     = 0;
@@ -367,7 +369,7 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     BOOST_CHECK_EQUAL(false, ioConfigPtr->getFMTOUT());
 
     /*If NOGGF keyword is present, no EGRID file is written*/
-    DeckPtr deck3 = createDeck(deckStr3);
+    DeckPtr deck3 = createDeck(deckStr_NOGGF);
     IOConfigPtr ioConfigPtr3;
     BOOST_CHECK_NO_THROW(ioConfigPtr3 = std::make_shared<IOConfig>());
 
@@ -388,7 +390,7 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     BOOST_CHECK_EQUAL(true, ioConfigPtr3->getFMTOUT());
 
     /*If GRIDFILE 0 0 is specified, no EGRID file is written */
-    DeckPtr deck4 = createDeck(deckStr4);
+    DeckPtr deck4 = createDeck(deckStr_NO_GRIDFILE);
     IOConfigPtr ioConfigPtr4;
     BOOST_CHECK_NO_THROW(ioConfigPtr4 = std::make_shared<IOConfig>());
 
