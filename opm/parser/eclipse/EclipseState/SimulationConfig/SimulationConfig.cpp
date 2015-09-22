@@ -43,7 +43,7 @@ namespace Opm {
     SimulationConfig::SimulationConfig(const ParseMode& parseMode , DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties) {
         initThresholdPressure(parseMode , deck, gridProperties);
 
-        m_useCPR = false;
+        m_useCPR = true;
         /*
           if(deck->hasKeyword<ParserKeywords::CPR>()){
           m_useCPR = true;
