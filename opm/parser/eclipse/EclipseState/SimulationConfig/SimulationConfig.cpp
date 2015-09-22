@@ -24,15 +24,31 @@
 
 
 
+/*
+  The internalization of the CPR keyword has been temporarily
+  disabled, suddenly decks with 'CPR' in the summary section turned
+  up. Keywords with section aware keyword semantics is currently not
+  handled by the parser.
+
+  When the CPR is added again the following keyword configuration must
+  be added:
+
+    {"name" : "CPR" , "sections" : ["RUNSPEC"], "size": 1 }
+
+*/
+
+
 namespace Opm {
 
     SimulationConfig::SimulationConfig(const ParseMode& parseMode , DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties) {
         initThresholdPressure(parseMode , deck, gridProperties);
 
         m_useCPR = false;
-        if(deck->hasKeyword<ParserKeywords::CPR>()){
-            m_useCPR = true;
-        }
+        /*
+          if(deck->hasKeyword<ParserKeywords::CPR>()){
+          m_useCPR = true;
+          }
+        */
     }
 
 
