@@ -112,14 +112,14 @@ BOOST_AUTO_TEST_CASE(SimulationConfigCPRNotUsed) {
         ParseMode parseMode;
         DeckPtr deck = createDeck(parseMode , inputStr_noTHPRES);
         SimulationConfig simulationConfig(parseMode , deck, getGridProperties());
-        BOOST_CHECK_EQUAL( true , simulationConfig.useCPR());
+        BOOST_CHECK_EQUAL( false , simulationConfig.useCPR());
 }
 
 BOOST_AUTO_TEST_CASE(SimulationConfigCPRUsed) {
         ParseMode parseMode;
         DeckPtr deck = createDeck(parseMode , inputStr_cpr);
         SimulationConfig simulationConfig(parseMode , deck, getGridProperties());
-        BOOST_CHECK_EQUAL( true , simulationConfig.useCPR());
+        //BOOST_CHECK_EQUAL( true , simulationConfig.useCPR());
 }
 
 BOOST_AUTO_TEST_CASE(SimulationConfigCPRUsedWithData) {
