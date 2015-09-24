@@ -40,13 +40,15 @@ class Section : public Deck
         const std::string& name() const;
         size_t count(const std::string& keyword) const;
 
-        static bool hasSCHEDULE(DeckConstPtr deck) { return hasSection( deck , "SCHEDULE" ); }
-        static bool hasSOLUTION(DeckConstPtr deck) { return hasSection( deck , "SOLUTION" ); }
-        static bool hasREGIONS(DeckConstPtr deck) { return hasSection( deck , "REGIONS" ); }
-        static bool hasPROPS(DeckConstPtr deck) { return hasSection( deck , "PROPS" ); }
-        static bool hasEDIT(DeckConstPtr deck) { return hasSection( deck , "EDIT" ); }
-        static bool hasGRID(DeckConstPtr deck) { return hasSection( deck , "GRID" ); }
         static bool hasRUNSPEC(DeckConstPtr deck) { return hasSection( deck , "RUNSPEC" ); }
+        static bool hasGRID(DeckConstPtr deck) { return hasSection( deck , "GRID" ); }
+        static bool hasEDIT(DeckConstPtr deck) { return hasSection( deck , "EDIT" ); }
+        static bool hasPROPS(DeckConstPtr deck) { return hasSection( deck , "PROPS" ); }
+        static bool hasREGIONS(DeckConstPtr deck) { return hasSection( deck , "REGIONS" ); }
+        static bool hasSOLUTION(DeckConstPtr deck) { return hasSection( deck , "SOLUTION" ); }
+        static bool hasSUMMARY(DeckConstPtr deck) { return hasSection( deck , "SUMMARY" ); }
+        static bool hasSCHEDULE(DeckConstPtr deck) { return hasSection( deck , "SCHEDULE" ); }
+
 
         // returns whether the deck has all mandatory sections and if all sections are in
         // the right order
@@ -91,6 +93,11 @@ class Section : public Deck
     class SOLUTIONSection : public Section {
     public:
         SOLUTIONSection(DeckConstPtr deck) : Section(deck, "SOLUTION") {}
+    };
+
+    class SUMMARYSection : public Section {
+    public:
+        SUMMARYSection(DeckConstPtr deck) : Section(deck, "SUMMARY") {}
     };
 }
 
