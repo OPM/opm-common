@@ -40,15 +40,21 @@
 
 namespace Opm {
 
-    SimulationConfig::SimulationConfig(const ParseMode& parseMode , DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties) {
-        initThresholdPressure(parseMode , deck, gridProperties);
+    SimulationConfig::SimulationConfig(const ParseMode& parseMode , DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties) :
+        m_useCPR( false )
+    {
+        if (Section::hasRUNSPEC(deck)) {
+            const RUNSPECSection runspec(deck);
+            if (runspec.hasKeyword<ParserKeywords::CPR>()) {
+                std::shared_ptr<const DeckKeyword> cpr = runspec.getKeyword<ParserKeywords::CPR>();
+                if (cpr->size() > 0)
+                    throw std::invalid_argument("ERROR: In the RUNSPEC section the CPR keyword should EXACTLY one empty record.");
 
-        m_useCPR = false;
-        /*
-          if(deck->hasKeyword<ParserKeywords::CPR>()){
-          m_useCPR = true;
-          }
-        */
+                m_useCPR = true;
+            }
+        }
+
+        initThresholdPressure(parseMode , deck, gridProperties);
     }
 
 

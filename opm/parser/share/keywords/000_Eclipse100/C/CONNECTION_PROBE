@@ -1,9 +1,9 @@
 {
  "name" : "CONNECTION_PROBE",
  "sections" : ["SUMMARY"],
-
  "comment": "E100 only",
- "deck_names" : [
+ "comment" : "See comment in CPR keyword file - there is some serious special casing involved here",
+"deck_names" : [
   "COFR",
   "COFRF",
   "COFRS",
@@ -72,7 +72,6 @@
   "CWGRL",
   "CGLR",
   "CGLRL",
-  "CPR",
   "CPI",
   "CTFAC",
   "CDBF",
@@ -127,7 +126,11 @@
  "comment":"Some keywords need to be suffixed by a tracer name...",
  "deck_name_regex":"CU.+|CTFR.+|CTPR.+|CTPT.+|CTPC.+|CTIR.+|CTIT.+|CTIC.+|CTFR.+|CTPR.+|CTPT.+|CTPC.+|CTIR.+|CTIT.+|CTIC.+|CTIRF.+|CTIRS.+|CTPRF.+|CTPRS.+|CTITF.+|CTITS.+|CTPTF.+|CTPTS.+|CTICF.+|CTICS.+|CTPCF.+|CTPCS",
 
- "items" : [{
-  "name" : "MNEMONIC_LIST" , "size_type" : "ALL" , "value_type" : "STRING"
- }]
+ "items" : [
+  {"name" : "WELL" , "value_type" : "STRING"},
+  {"name" : "I" , "value_type" : "INT"},
+  {"name" : "J" , "value_type" : "INT"},
+  {"name" : "K" , "value_type" : "INT"}
+ ]
+
 }
