@@ -193,6 +193,9 @@ namespace Opm {
         initSimpleTableContainer<PvdgTable>(deck, "PVDG", m_tabdims->getNumPVTTables());
         initSimpleTableContainer<PvdoTable>(deck, "PVDO", m_tabdims->getNumPVTTables());
         initSimpleTableContainer<PvdsTable>(deck, "PVDS", m_tabdims->getNumPVTTables());
+        initSimpleTableContainer<OilvisctTable>(deck, "OILVISCT", m_tabdims->getNumPVTTables());
+        initSimpleTableContainer<WatvisctTable>(deck, "WATVISCT", m_tabdims->getNumPVTTables());
+
 
         /*****************************************************************/
 
@@ -200,8 +203,6 @@ namespace Opm {
         initSimpleTable(deck, "PLYADS", m_plyadsTables);
         initSimpleTable(deck, "PLYVISC", m_plyviscTables);
         initSimpleTable(deck, "PLYDHFLF", m_plydhflfTables);
-        initSimpleTable(deck, "OILVISCT", m_oilvisctTables);
-        initSimpleTable(deck, "WATVISCT", m_watvisctTables);
 
         initPlyrockTables(deck , "PLYROCK" , m_plyrockTables);
         initPlymaxTables(deck , "PLYMAX" , m_plymaxTables);
@@ -495,12 +496,12 @@ namespace Opm {
         return getTables("PVDS");
     }
 
-    const std::vector<OilvisctTable>& TableManager::getOilvisctTables() const {
-        return m_oilvisctTables;
+    const TableContainer& TableManager::getOilvisctTables() const {
+        return getTables("OILVISCT");
     }
 
-    const std::vector<WatvisctTable>& TableManager::getWatvisctTables() const {
-        return m_watvisctTables;
+    const TableContainer& TableManager::getWatvisctTables() const {
+        return getTables("WATVISCT");
     }
 
     const std::vector<GasvisctTable>& TableManager::getGasvisctTables() const {

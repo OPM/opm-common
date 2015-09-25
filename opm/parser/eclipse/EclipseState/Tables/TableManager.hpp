@@ -90,6 +90,9 @@ namespace Opm {
         const TableContainer& getPvdgTables() const;
         const TableContainer& getPvdoTables() const;
         const TableContainer& getPvdsTables() const;
+        const TableContainer& getWatvisctTables() const;
+        const TableContainer& getOilvisctTables() const;
+
 
 
         // the tables used by the deck. If the tables had some defaulted data in the
@@ -104,10 +107,9 @@ namespace Opm {
         const std::vector<PlyviscTable>& getPlyviscTables() const;
         const std::vector<PlydhflfTable>& getPlydhflfTables() const;
         const std::vector<RocktabTable>& getRocktabTables() const;
-        const std::vector<WatvisctTable>& getWatvisctTables() const;
-        const std::vector<OilvisctTable>& getOilvisctTables() const;
-        const std::vector<GasvisctTable>& getGasvisctTables() const;
         const std::vector<RtempvdTable>& getRtempvdTables() const;
+        const std::vector<GasvisctTable>& getGasvisctTables() const;
+
 
         const std::map<int, VFPProdTable>& getVFPProdTables() const;
         const std::map<int, VFPInjTable>& getVFPInjTables() const;
@@ -240,10 +242,8 @@ namespace Opm {
         std::vector<PlydhflfTable> m_plydhflfTables;
         std::vector<PlyshlogTable> m_plyshlogTables;
         std::vector<RocktabTable> m_rocktabTables;
-        std::vector<WatvisctTable> m_watvisctTables;
-        std::vector<OilvisctTable> m_oilvisctTables;
-        std::vector<GasvisctTable> m_gasvisctTables;
         std::vector<RtempvdTable> m_rtempvdTables;
+        std::vector<GasvisctTable> m_gasvisctTables;
 
         std::shared_ptr<Regdims> m_regdims;
         std::shared_ptr<Tabdims> m_tabdims;

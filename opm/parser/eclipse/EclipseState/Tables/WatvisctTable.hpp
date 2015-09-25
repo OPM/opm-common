@@ -25,8 +25,8 @@ namespace Opm {
     // forward declaration
     class TableManager;
 
-    class WatvisctTable : protected SimpleTable {
-
+    class WatvisctTable : public SimpleTable {
+    public:
         friend class TableManager;
         WatvisctTable() = default;
 
@@ -49,7 +49,6 @@ namespace Opm {
             SimpleTable::checkMonotonic("Viscosity", /*isAscending=*/false, /*strictlyMonotonic=*/false);
         }
 
-    public:
         using SimpleTable::numTables;
         using SimpleTable::numRows;
         using SimpleTable::numColumns;
