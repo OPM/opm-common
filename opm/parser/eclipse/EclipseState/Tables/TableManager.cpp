@@ -137,7 +137,7 @@ namespace Opm {
 
         addTables( "OILVISCT", m_tabdims->getNumPVTTables());
         addTables( "WATVISCT", m_tabdims->getNumPVTTables());
-
+        addTables( "GASVISCT", m_tabdims->getNumPVTTables());
 
         addTables( "PLYMAX", m_regdims->getNPLMIX());
         addTables( "RSVD", m_eqldims->getNumEquilRegions());
@@ -163,7 +163,6 @@ namespace Opm {
           initPlyshlogTables(deck, "PLYSHLOG", m_plyshlogTables);
           initRocktabTables(deck);
           initRTempTables(deck);
-          initGasvisctTables(deck, "GASVISCT", m_gasvisctTables);
         */
         initSimpleTableContainer<SwofTable>(deck, "SWOF" , m_tabdims->getNumSatTables());
         initSimpleTableContainer<SgofTable>(deck, "SGOF" , m_tabdims->getNumSatTables());
@@ -195,7 +194,7 @@ namespace Opm {
         initSimpleTableContainer<PvdsTable>(deck, "PVDS", m_tabdims->getNumPVTTables());
         initSimpleTableContainer<OilvisctTable>(deck, "OILVISCT", m_tabdims->getNumPVTTables());
         initSimpleTableContainer<WatvisctTable>(deck, "WATVISCT", m_tabdims->getNumPVTTables());
-
+        initGasvisctTables(deck);
 
         /*****************************************************************/
 
@@ -209,7 +208,6 @@ namespace Opm {
         initPlyshlogTables(deck, "PLYSHLOG", m_plyshlogTables);
         initRocktabTables(deck);
         initRTempTables(deck);
-        initGasvisctTables(deck, "GASVISCT", m_gasvisctTables);
     }
 
 
@@ -228,11 +226,15 @@ namespace Opm {
     }
 
 
-    void TableManager::initGasvisctTables(const Deck& deck,
-                                    const std::string& keywordName,
-                                    std::vector<GasvisctTable>& tableVector) {
+    void TableManager::initGasvisctTables(const Deck& deck) {
+
+        const std::string keywordName = "GASVISCT";
+        size_t numTables = m_tabdims->getNumPVTTables();
+
         if (!deck.hasKeyword(keywordName))
             return; // the table is not featured by the deck...
+
+        auto& container = forceGetTables(keywordName , numTables);
 
         if (deck.numKeywords(keywordName) > 1) {
             complainAboutAmbiguousKeyword(deck, keywordName);
@@ -241,22 +243,16 @@ namespace Opm {
 
         const auto& tableKeyword = deck.getKeyword(keywordName);
         for (size_t tableIdx = 0; tableIdx < tableKeyword->size(); ++tableIdx) {
-            if (tableKeyword->getRecord(tableIdx)->getItem(0)->size() == 0) {
-                // for simple tables, an empty record indicates that the< previous table
-                // should be copied...
-                if (tableIdx == 0) {
-                    std::string msg = "The first table for keyword " + keywordName + " must be explicitly defined! Ignoring keyword";
-                    OpmLog::addMessage(Log::MessageType::Error , Log::fileMessage(tableKeyword->getFileName(),tableKeyword->getLineNumber(),msg));
-                    return;
-                }
-                tableVector.push_back(tableVector.back());
-                continue;
+            const auto tableRecord = tableKeyword->getRecord( tableIdx );
+            const auto dataItem = tableRecord->getItem( 0 );
+            if (dataItem->size() > 0) {
+                std::shared_ptr<GasvisctTable> table = std::make_shared<GasvisctTable>();
+                table->init(deck , dataItem );
+                container.addTable( tableIdx , table );
             }
-
-            tableVector.push_back(GasvisctTable());
-            tableVector[tableIdx].init(deck, tableKeyword->getRecord(tableIdx)->getItem(0));
         }
     }
+
 
     void TableManager::initPlyshlogTables(const Deck& deck,
                                           const std::string& keywordName,
@@ -504,8 +500,8 @@ namespace Opm {
         return getTables("WATVISCT");
     }
 
-    const std::vector<GasvisctTable>& TableManager::getGasvisctTables() const {
-        return m_gasvisctTables;
+    const TableContainer& TableManager::getGasvisctTables() const {
+        return getTables("GASVISCT");
     }
 
     const std::vector<PlyadsTable>& TableManager::getPlyadsTables() const {
