@@ -1061,8 +1061,8 @@ BOOST_AUTO_TEST_CASE(createDeckWithRPTSCHEDandRPTRST) {
 
     BOOST_CHECK_EQUAL(false, ioConfig->getWriteRestartFile(0));
     BOOST_CHECK_EQUAL(false, ioConfig->getWriteRestartFile(1));
-    BOOST_CHECK_EQUAL(true, ioConfig->getWriteRestartFile(2));
-    BOOST_CHECK_EQUAL(false, ioConfig->getWriteRestartFile(3));
+    BOOST_CHECK_EQUAL(false, ioConfig->getWriteRestartFile(2));
+    BOOST_CHECK_EQUAL(true, ioConfig->getWriteRestartFile(3));
 }
 
 

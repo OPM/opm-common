@@ -187,6 +187,9 @@ namespace Opm {
             }
         }
 
+        m_timeMap->initFirstTimestepsYears();
+        m_timeMap->initFirstTimestepsMonths();
+
         for (auto rftPair = rftProperties.begin(); rftPair != rftProperties.end(); ++rftPair) {
             DeckKeywordConstPtr keyword = rftPair->first;
             size_t timeStep = rftPair->second;

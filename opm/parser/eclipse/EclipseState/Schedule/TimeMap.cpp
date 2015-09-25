@@ -226,40 +226,127 @@ namespace Opm {
     }
 
 
-     void TimeMap::initFirstTimestepsMonths(std::vector<size_t>& timesteps, size_t from_timestep) const {
-        timesteps.clear();
 
-        const boost::posix_time::ptime& ptime_prev = getStartTime(from_timestep);
+
+    bool TimeMap::isTimestepInFirstOfMonthsYearsSequence(size_t timestep, bool years, size_t start_timestep, size_t frequency) const {
+        bool timestep_first_of_month_year = false;
+        const std::vector<size_t>& timesteps = (years) ? getFirstTimestepYears() : getFirstTimestepMonths();
+
+        std::vector<size_t>::const_iterator ci_timestep = std::find(timesteps.begin(), timesteps.end(), timestep);
+        if (ci_timestep != timesteps.end()) {
+            if (1 >= frequency) {
+                timestep_first_of_month_year = true;
+            } else { //Frequency given
+                timestep_first_of_month_year = isTimestepInFreqSequence(timestep, start_timestep, frequency, years);
+            }
+        }
+        return timestep_first_of_month_year;
+    }
+
+
+    // This method returns true for every n'th timestep in the vector of timesteps m_first_timestep_years or m_first_timestep_months,
+    // starting from one before the position of start_timestep. If the given start_timestep is not a value in the month or year vector,
+    // set the first timestep that are both within the vector and higher than the initial start_timestep as new start_timestep.
+
+    bool TimeMap::isTimestepInFreqSequence (size_t timestep, size_t start_timestep, size_t frequency, bool years) const {
+        bool timestep_right_frequency = false;
+        const std::vector<size_t>& timesteps = (years) ? getFirstTimestepYears() : getFirstTimestepMonths();
+
+        std::vector<size_t>::const_iterator ci_timestep = std::find(timesteps.begin(), timesteps.end(), timestep);
+        std::vector<size_t>::const_iterator ci_start_timestep = std::find(timesteps.begin(), timesteps.end(), start_timestep);
+
+        //Find new start_timestep if the given one is not a value in the timesteps vector
+        bool start_ts_in_timesteps = false;
+        if (ci_start_timestep != timesteps.end()) {
+            start_ts_in_timesteps = true;
+        } else if (ci_start_timestep == timesteps.end()) {
+            size_t new_start = closest(timesteps, start_timestep);
+            if (0 != new_start) {
+                ci_start_timestep = std::find(timesteps.begin(), timesteps.end(), new_start);
+                start_ts_in_timesteps = true;
+            }
+        }
+
+
+        if (start_ts_in_timesteps) {
+            //Pick every n'th element, starting on start_timestep + (n-1), that is, every n'th element from ci_start_timestep - 1 for freq n > 1
+            if (ci_timestep >= ci_start_timestep) {
+                int dist = std::distance( ci_start_timestep - 1, ci_timestep );
+                if ((dist % frequency) == 0) {
+                    timestep_right_frequency = true;
+                }
+            }
+        }
+
+        return timestep_right_frequency;
+    }
+
+
+
+    void TimeMap::initFirstTimestepsMonths() {
+        m_first_timestep_months.clear();
+
+        const boost::posix_time::ptime& ptime_prev = getStartTime(0);
         boost::gregorian::date prev_date = ptime_prev.date();
 
-        for (size_t timestepIndex = from_timestep; timestepIndex < m_timeList.size(); ++timestepIndex) {
-            const boost::posix_time::ptime& ptime_cur = getStartTime(timestepIndex);
+        for (size_t rstep = 0; rstep < m_timeList.size(); ++rstep) {
+            const boost::posix_time::ptime& ptime_cur = getStartTime(rstep);
             boost::gregorian::date cur_date = ptime_cur.date();
 
             if (cur_date.month() != prev_date.month()) {
-                timesteps.push_back(timestepIndex);
+                m_first_timestep_months.push_back(rstep);
+                prev_date = cur_date;
+            } else if (cur_date.year() != prev_date.year()) { //Same month but different year
+                m_first_timestep_months.push_back(rstep);
                 prev_date = cur_date;
             }
         }
     }
 
 
+    void TimeMap::initFirstTimestepsYears()  {
 
-    void TimeMap::initFirstTimestepsYears(std::vector<size_t>& timesteps, size_t from_timestep) const {
-        timesteps.clear();
+        m_first_timestep_years.clear();
 
-        const boost::posix_time::ptime& ptime_prev = getStartTime(from_timestep);
+        const boost::posix_time::ptime& ptime_prev = getStartTime(0);
         boost::gregorian::date prev_date = ptime_prev.date();
 
-        for (size_t timestepIndex = from_timestep; timestepIndex < m_timeList.size(); ++timestepIndex) {
-            const boost::posix_time::ptime& ptime_cur = getStartTime(timestepIndex);
+        for (size_t rstep = 0; rstep < m_timeList.size(); ++rstep) {
+            const boost::posix_time::ptime& ptime_cur = getStartTime(rstep);
             boost::gregorian::date cur_date = ptime_cur.date();
 
             if (cur_date.year() != prev_date.year()) {
-                timesteps.push_back(timestepIndex);
+                m_first_timestep_years.push_back(rstep);
                 prev_date = cur_date;
             }
         }
+    }
+
+
+    const std::vector<size_t>& TimeMap::getFirstTimestepMonths() const {
+        if (m_first_timestep_months.size() == 0) {
+            throw std::runtime_error("TimeMap vector m_first_timestep_months not initialized");
+        }
+        return m_first_timestep_months;
+    }
+
+
+    const std::vector<size_t>& TimeMap::getFirstTimestepYears() const {
+        if (m_first_timestep_years.size() == 0) {
+            throw std::runtime_error("TimeMap vector m_first_timestep_years not initialized");
+        }
+        return m_first_timestep_years;
+    }
+
+    // vec is assumed to be sorted
+    size_t TimeMap::closest(const std::vector<size_t> & vec, size_t value) const
+    {
+        std::vector<size_t>::const_iterator ci =
+            std::lower_bound(vec.begin(), vec.end(), value);
+        if (ci != vec.end()) {
+            return *ci;
+        }
+        return 0;
     }
 
 
