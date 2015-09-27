@@ -162,7 +162,6 @@ namespace Opm {
         /*
           initPlyshlogTables(deck, "PLYSHLOG", m_plyshlogTables);
           initRocktabTables(deck);
-          initRTempTables(deck);
         */
         initSimpleTableContainer<SwofTable>(deck, "SWOF" , m_tabdims->getNumSatTables());
         initSimpleTableContainer<SgofTable>(deck, "SGOF" , m_tabdims->getNumSatTables());
@@ -195,7 +194,7 @@ namespace Opm {
         initSimpleTableContainer<OilvisctTable>(deck, "OILVISCT", m_tabdims->getNumPVTTables());
         initSimpleTableContainer<WatvisctTable>(deck, "WATVISCT", m_tabdims->getNumPVTTables());
         initGasvisctTables(deck);
-
+        initRTempTables(deck);
         /*****************************************************************/
 
 
@@ -207,7 +206,6 @@ namespace Opm {
         initPlymaxTables(deck , "PLYMAX" , m_plymaxTables);
         initPlyshlogTables(deck, "PLYSHLOG", m_plyshlogTables);
         initRocktabTables(deck);
-        initRTempTables(deck);
     }
 
 
@@ -219,10 +217,9 @@ namespace Opm {
         if (deck.hasKeyword("TEMPVD") && deck.hasKeyword("RTEMPVD"))
             throw std::invalid_argument("The TEMPVD and RTEMPVD tables are mutually exclusive!");
         else if (deck.hasKeyword("TEMPVD"))
-            initSimpleTable(deck, "TEMPVD", m_rtempvdTables);
+            initSimpleTableContainer<RtempvdTable>(deck, "TEMPVD", "RTEMPVD", m_eqldims->getNumEquilRegions());
         else if (deck.hasKeyword("RTEMPVD"))
-            initSimpleTable(deck, "RTEMPVD", m_rtempvdTables);
-
+            initSimpleTableContainer<RtempvdTable>(deck, "RTEMPVD", "RTEMPVD" , m_eqldims->getNumEquilRegions());
     }
 
 
@@ -504,6 +501,11 @@ namespace Opm {
         return getTables("GASVISCT");
     }
 
+    const TableContainer& TableManager::getRtempvdTables() const {
+        return getTables("RTEMPVD");
+    }
+
+
     const std::vector<PlyadsTable>& TableManager::getPlyadsTables() const {
         return m_plyadsTables;
     }
@@ -531,11 +533,6 @@ namespace Opm {
     const std::vector<RocktabTable>& TableManager::getRocktabTables() const {
         return m_rocktabTables;
     }
-
-    const std::vector<RtempvdTable>& TableManager::getRtempvdTables() const {
-        return m_rtempvdTables;
-    }
-
 
     const std::vector<PvtgTable>& TableManager::getPvtgTables() const {
         return m_pvtgTables;

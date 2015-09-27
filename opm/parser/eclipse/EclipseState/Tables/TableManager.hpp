@@ -93,6 +93,7 @@ namespace Opm {
         const TableContainer& getWatvisctTables() const;
         const TableContainer& getOilvisctTables() const;
         const TableContainer& getGasvisctTables() const;
+        const TableContainer& getRtempvdTables() const;
 
 
         // the tables used by the deck. If the tables had some defaulted data in the
@@ -107,7 +108,6 @@ namespace Opm {
         const std::vector<PlyviscTable>& getPlyviscTables() const;
         const std::vector<PlydhflfTable>& getPlydhflfTables() const;
         const std::vector<RocktabTable>& getRocktabTables() const;
-        const std::vector<RtempvdTable>& getRtempvdTables() const;
 
 
         const std::map<int, VFPProdTable>& getVFPProdTables() const;
@@ -147,11 +147,12 @@ namespace Opm {
         template <class TableType>
         void initSimpleTableContainer(const Deck& deck,
                                       const std::string& keywordName,
+                                      const std::string& tableName,
                                       size_t numTables) {
             if (!deck.hasKeyword(keywordName))
                 return; // the table is not featured by the deck...
 
-            auto& container = forceGetTables(keywordName , numTables);
+            auto& container = forceGetTables(tableName , numTables);
 
             if (deck.numKeywords(keywordName) > 1) {
                 complainAboutAmbiguousKeyword(deck, keywordName);
@@ -168,6 +169,13 @@ namespace Opm {
                     container.addTable( tableIdx , table );
                 }
             }
+        }
+
+        template <class TableType>
+        void initSimpleTableContainer(const Deck& deck,
+                                      const std::string& keywordName,
+                                      size_t numTables) {
+            initSimpleTableContainer<TableType>(deck , keywordName , keywordName , numTables);
         }
 
 
@@ -238,7 +246,6 @@ namespace Opm {
         std::vector<PlydhflfTable> m_plydhflfTables;
         std::vector<PlyshlogTable> m_plyshlogTables;
         std::vector<RocktabTable> m_rocktabTables;
-        std::vector<RtempvdTable> m_rtempvdTables;
 
         std::shared_ptr<Regdims> m_regdims;
         std::shared_ptr<Tabdims> m_tabdims;

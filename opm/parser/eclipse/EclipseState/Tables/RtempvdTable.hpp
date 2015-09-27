@@ -25,8 +25,8 @@ namespace Opm {
     // forward declaration
     class TableManager;
 
-    class RtempvdTable : protected SimpleTable {
-
+    class RtempvdTable : public SimpleTable {
+    public:
         friend class TableManager;
         RtempvdTable() = default;
 
@@ -48,7 +48,6 @@ namespace Opm {
             SimpleTable::checkNonDefaultable("Temperature");
         }
 
-    public:
         using SimpleTable::numTables;
         using SimpleTable::numRows;
         using SimpleTable::numColumns;
