@@ -94,22 +94,21 @@ namespace Opm {
         const TableContainer& getOilvisctTables() const;
         const TableContainer& getGasvisctTables() const;
         const TableContainer& getRtempvdTables() const;
+        const TableContainer& getRocktabTables() const;
 
 
         // the tables used by the deck. If the tables had some defaulted data in the
         // deck, the objects returned here exhibit the correct values. If the table is
         // not present in the deck, the corresponding vector is of size zero.
-        const std::vector<PvtgTable>& getPvtgTables() const;
-        const std::vector<PvtoTable>& getPvtoTables() const;
         const std::vector<PlyshlogTable>& getPlyshlogTables() const;
         const std::vector<PlyadsTable>& getPlyadsTables() const;
         const std::vector<PlymaxTable>& getPlymaxTables() const;
         const std::vector<PlyrockTable>& getPlyrockTables() const;
         const std::vector<PlyviscTable>& getPlyviscTables() const;
         const std::vector<PlydhflfTable>& getPlydhflfTables() const;
-        const std::vector<RocktabTable>& getRocktabTables() const;
 
-
+        const std::vector<PvtgTable>& getPvtgTables() const;
+        const std::vector<PvtoTable>& getPvtoTables() const;
         const std::map<int, VFPProdTable>& getVFPProdTables() const;
         const std::map<int, VFPInjTable>& getVFPInjTables() const;
     private:
@@ -245,7 +244,6 @@ namespace Opm {
         std::vector<PlyviscTable> m_plyviscTables;
         std::vector<PlydhflfTable> m_plydhflfTables;
         std::vector<PlyshlogTable> m_plyshlogTables;
-        std::vector<RocktabTable> m_rocktabTables;
 
         std::shared_ptr<Regdims> m_regdims;
         std::shared_ptr<Tabdims> m_tabdims;

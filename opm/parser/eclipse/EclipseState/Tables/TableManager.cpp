@@ -157,11 +157,19 @@ namespace Opm {
             addTables( "IMKRVD", numEndScaleTables);
             addTables( "IMPTVD", numEndScaleTables);
         }
-        // Unhandled:
+        {
+            size_t numRocktabTables = ParserKeywords::ROCKCOMP::NTROCC::defaultValue;
+
+            if (deck.hasKeyword<ParserKeywords::ROCKCOMP>()) {
+                auto keyword = deck.getKeyword<ParserKeywords::ROCKCOMP>();
+                auto record = keyword->getRecord(0);
+                numRocktabTables = static_cast<size_t>(record->getItem<ParserKeywords::ROCKCOMP::NTROCC>()->getInt(0));
+            }
+            addTables( "ROCKTAB", numRocktabTables);
+        }
 
         /*
           initPlyshlogTables(deck, "PLYSHLOG", m_plyshlogTables);
-          initRocktabTables(deck);
         */
         initSimpleTableContainer<SwofTable>(deck, "SWOF" , m_tabdims->getNumSatTables());
         initSimpleTableContainer<SgofTable>(deck, "SGOF" , m_tabdims->getNumSatTables());
@@ -195,6 +203,7 @@ namespace Opm {
         initSimpleTableContainer<WatvisctTable>(deck, "WATVISCT", m_tabdims->getNumPVTTables());
         initGasvisctTables(deck);
         initRTempTables(deck);
+        initRocktabTables(deck);
         /*****************************************************************/
 
 
@@ -205,7 +214,6 @@ namespace Opm {
         initPlyrockTables(deck , "PLYROCK" , m_plyrockTables);
         initPlymaxTables(deck , "PLYMAX" , m_plymaxTables);
         initPlyshlogTables(deck, "PLYSHLOG", m_plyshlogTables);
-        initRocktabTables(deck);
     }
 
 
@@ -326,31 +334,29 @@ namespace Opm {
             complainAboutAmbiguousKeyword(deck, "ROCKTAB");
             return;
         }
-
+        const auto& rockcompKeyword = deck.getKeyword<ParserKeywords::ROCKCOMP>();
+        const auto& record = rockcompKeyword->getRecord( 0 );
+        size_t numTables = record->getItem<ParserKeywords::ROCKCOMP::NTROCC>()->getInt(0);
+        auto& container = forceGetTables("ROCKTAB" , numTables);
         const auto rocktabKeyword = deck.getKeyword("ROCKTAB");
 
-        bool isDirectional = deck.hasKeyword("RKTRMDIR");
+        bool isDirectional = deck.hasKeyword<ParserKeywords::RKTRMDIR>();
         bool useStressOption = false;
-        if (deck.hasKeyword("ROCKOPTS")) {
-            const auto rockoptsKeyword = deck.getKeyword("ROCKOPTS");
-            useStressOption = (rockoptsKeyword->getRecord(0)->getItem("METHOD")->getTrimmedString(0) == "STRESS");
+        if (deck.hasKeyword<ParserKeywords::ROCKOPTS>()) {
+            const auto rockoptsKeyword = deck.getKeyword<ParserKeywords::ROCKOPTS>();
+            const auto record = rockoptsKeyword->getRecord(0);
+            const auto item = record->getItem<ParserKeywords::ROCKOPTS::METHOD>();
+            useStressOption = (item->getTrimmedString(0) == "STRESS");
         }
 
         for (size_t tableIdx = 0; tableIdx < rocktabKeyword->size(); ++tableIdx) {
-            if (rocktabKeyword->getRecord(tableIdx)->getItem(0)->size() == 0) {
-                // for ROCKTAB tables, an empty record indicates that the previous table
-                // should be copied...
-                if (tableIdx == 0)
-                    throw std::invalid_argument("The first table for keyword ROCKTAB"
-                                                " must be explicitly defined!");
-                m_rocktabTables[tableIdx] = m_rocktabTables[tableIdx - 1];
-                continue;
+            const auto tableRecord = rocktabKeyword->getRecord( tableIdx );
+            const auto dataItem = tableRecord->getItem( 0 );
+            if (dataItem->size() > 0) {
+                std::shared_ptr<RocktabTable> table = std::make_shared<RocktabTable>();
+                table->init(dataItem , isDirectional, useStressOption);
+                container.addTable( tableIdx , table );
             }
-
-            m_rocktabTables.push_back(RocktabTable());
-            m_rocktabTables[tableIdx].init(rocktabKeyword->getRecord( tableIdx )->getItem(0),
-                                           isDirectional,
-                                           useStressOption);
         }
     }
 
@@ -505,6 +511,10 @@ namespace Opm {
         return getTables("RTEMPVD");
     }
 
+    const TableContainer& TableManager::getRocktabTables() const {
+        return getTables("ROCKTAB");
+    }
+
 
     const std::vector<PlyadsTable>& TableManager::getPlyadsTables() const {
         return m_plyadsTables;
@@ -528,10 +538,6 @@ namespace Opm {
 
     const std::vector<PlyshlogTable>& TableManager::getPlyshlogTables() const {
         return m_plyshlogTables;
-    }
-
-    const std::vector<RocktabTable>& TableManager::getRocktabTables() const {
-        return m_rocktabTables;
     }
 
     const std::vector<PvtgTable>& TableManager::getPvtgTables() const {
