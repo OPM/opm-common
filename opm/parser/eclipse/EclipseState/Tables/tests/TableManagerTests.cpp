@@ -1087,11 +1087,11 @@ BOOST_AUTO_TEST_CASE( TestPLYROCK ) {
     Opm::ParserPtr parser(new Opm::Parser);
     Opm::DeckConstPtr deck(parser->parseString(data, Opm::ParseMode()));
     Opm::TableManager tables( *deck );
-    const std::vector<Opm::PlyrockTable>& plyrock = tables.getPlyrockTables();
+    const Opm::TableContainer& plyrock = tables.getPlyrockTables();
 
     BOOST_CHECK_EQUAL( plyrock.size() , 2 ) ;
-    const Opm::PlyrockTable& table0 = plyrock[0];
-    const Opm::PlyrockTable& table1 = plyrock[1];
+    const Opm::PlyrockTable& table0 = plyrock.getTable<Opm::PlyrockTable>(0);
+    const Opm::PlyrockTable& table1 = plyrock.getTable<Opm::PlyrockTable>(1);
 
     BOOST_CHECK_EQUAL( table0.numColumns() , 5 );
     BOOST_CHECK_EQUAL( table0.getDeadPoreVolumeColumn()[0] , 1.0 );
@@ -1115,11 +1115,11 @@ BOOST_AUTO_TEST_CASE( TestPLYMAX ) {
     Opm::ParserPtr parser(new Opm::Parser);
     Opm::DeckConstPtr deck(parser->parseString(data, Opm::ParseMode()));
     Opm::TableManager tables( *deck );
-    const std::vector<Opm::PlymaxTable>& plymax = tables.getPlymaxTables();
+    const Opm::TableContainer& plymax = tables.getPlymaxTables();
 
     BOOST_CHECK_EQUAL( plymax.size() , 2 ) ;
-    const Opm::PlymaxTable& table0 = plymax[0];
-    const Opm::PlymaxTable& table1 = plymax[1];
+    const Opm::PlymaxTable& table0 = plymax.getTable<Opm::PlymaxTable>(0);
+    const Opm::PlymaxTable& table1 = plymax.getTable<Opm::PlymaxTable>(1);
 
     BOOST_CHECK_EQUAL( table0.numColumns() , 2 );
     BOOST_CHECK_EQUAL( table0.getPolymerConcentrationColumn()[0] , 1.0 );

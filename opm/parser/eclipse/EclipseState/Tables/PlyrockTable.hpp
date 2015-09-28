@@ -25,8 +25,8 @@ namespace Opm {
     // forward declaration
     class TableManager;
 
-    class PlyrockTable : protected SimpleTable {
-
+    class PlyrockTable : public SimpleTable {
+    public:
         friend class TableManager;
         PlyrockTable() = default;
 
@@ -48,7 +48,6 @@ namespace Opm {
             }
         }
 
-    public:
         using SimpleTable::numTables;
         using SimpleTable::numRows;
         using SimpleTable::numColumns;

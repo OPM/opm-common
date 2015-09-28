@@ -205,17 +205,13 @@ namespace Opm {
         initSimpleTableContainer<PlyadsTable>(deck, "PLYADS", m_tabdims->getNumSatTables());
         initSimpleTableContainer<PlyviscTable>(deck, "PLYVISC", m_tabdims->getNumPVTTables());
         initSimpleTableContainer<PlydhflfTable>(deck, "PLYDHFLF", m_tabdims->getNumPVTTables());
-
+        initPlyrockTables(deck);
+        initPlymaxTables(deck);
         initGasvisctTables(deck);
         initRTempTables(deck);
         initRocktabTables(deck);
-        /*****************************************************************/
 
-
-
-        initPlyrockTables(deck , "PLYROCK" , m_plyrockTables);
-        initPlymaxTables(deck , "PLYMAX" , m_plymaxTables);
-        initPlyshlogTables(deck, "PLYSHLOG", m_plyshlogTables);
+        initPlyshlogTables(deck, "PLYSHLOG" , m_plyshlogTables);
     }
 
 
@@ -283,10 +279,9 @@ namespace Opm {
     }
 
 
-    void TableManager::initPlyrockTables(const Deck& deck,
-                                         const std::string& keywordName,
-                                         std::vector<PlyrockTable>& tableVector){
-
+    void TableManager::initPlyrockTables(const Deck& deck) {
+        size_t numTables = m_tabdims->getNumSatTables();
+        const std::string keywordName = "PLYROCK";
         if (!deck.hasKeyword(keywordName)) {
             return;
         }
@@ -296,19 +291,20 @@ namespace Opm {
             return;
         }
 
-        const auto& keyword = deck.getKeyword(keywordName);
-        for( auto iter = keyword->begin(); iter != keyword->end(); ++iter) {
-            auto record = *iter;
-            tableVector.push_back( PlyrockTable() );
-            tableVector.back().init( record );
+        const auto& keyword = deck.getKeyword<ParserKeywords::PLYROCK>();
+        auto& container = forceGetTables(keywordName , numTables);
+        for (size_t tableIdx = 0; tableIdx < keyword->size(); ++tableIdx) {
+            const auto tableRecord = keyword->getRecord( tableIdx );
+            std::shared_ptr<PlyrockTable> table = std::make_shared<PlyrockTable>();
+            table->init( tableRecord );
+            container.addTable( tableIdx , table );
         }
     }
 
 
-    void TableManager::initPlymaxTables(const Deck& deck,
-                                        const std::string& keywordName,
-                                        std::vector<PlymaxTable>& tableVector){
-
+    void TableManager::initPlymaxTables(const Deck& deck) {
+        size_t numTables = m_regdims->getNPLMIX();
+        const std::string keywordName = "PLYMAX";
         if (!deck.hasKeyword(keywordName)) {
             return;
         }
@@ -318,11 +314,13 @@ namespace Opm {
             return;
         }
 
-        const auto& keyword = deck.getKeyword(keywordName);
-        for( auto iter = keyword->begin(); iter != keyword->end(); ++iter) {
-            auto record = *iter;
-            tableVector.push_back( PlymaxTable() );
-            tableVector.back().init( record );
+        const auto& keyword = deck.getKeyword<ParserKeywords::PLYMAX>();
+        auto& container = forceGetTables(keywordName , numTables);
+        for (size_t tableIdx = 0; tableIdx < keyword->size(); ++tableIdx) {
+            const auto tableRecord = keyword->getRecord( tableIdx );
+            std::shared_ptr<PlymaxTable> table = std::make_shared<PlymaxTable>();
+            table->init( tableRecord );
+            container.addTable( tableIdx , table );
         }
     }
 
@@ -530,12 +528,12 @@ namespace Opm {
         return getTables("PLYDHFL");
     }
 
-    const std::vector<PlymaxTable>& TableManager::getPlymaxTables() const {
-        return m_plymaxTables;
+    const TableContainer& TableManager::getPlymaxTables() const {
+        return getTables("PLYMAX");
     }
 
-    const std::vector<PlyrockTable>& TableManager::getPlyrockTables() const {
-        return m_plyrockTables;
+    const TableContainer& TableManager::getPlyrockTables() const {
+        return getTables("PLYROCK");
     }
 
 

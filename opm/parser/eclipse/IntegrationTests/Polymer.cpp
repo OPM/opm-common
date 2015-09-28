@@ -35,8 +35,8 @@ BOOST_AUTO_TEST_CASE( parse_polymer_tables ) {
     ParserPtr parser(new Parser());
     DeckPtr deck = parser->parseFile("testdata/integration_tests/POLYMER/POLY.inc", ParseMode());
     Opm::TableManager tables( *deck );
-    const std::vector<PlymaxTable>& plymax = tables.getPlymaxTables();
-    const std::vector<PlyrockTable> plyrock = tables.getPlyrockTables();
+    const TableContainer& plymax = tables.getPlymaxTables();
+    const TableContainer& plyrock = tables.getPlyrockTables();
     const TableContainer& plyads = tables.getPlyadsTables();
     const TableContainer& plyvis = tables.getPlyviscTables();
 
@@ -46,28 +46,28 @@ BOOST_AUTO_TEST_CASE( parse_polymer_tables ) {
     BOOST_CHECK_EQUAL( plyads.size() , 1U );
 
     {
-        const Opm::PlymaxTable& table0 = plymax[0];
+        const Opm::PlymaxTable& table0 = plymax.getTable<Opm::PlymaxTable>(0);
         BOOST_CHECK_EQUAL( table0.numColumns() , 2U );
         BOOST_CHECK_EQUAL( table0.getPolymerConcentrationColumn()[0] , 3.0 );
         BOOST_CHECK_EQUAL( table0.getMaxPolymerConcentrationColumn()[0] , 0.0 );
     }
 
     {
-        const Opm::PlyviscTable& table0 = plyvis.getTable<PlyviscTable>(0);
+        const Opm::PlyviscTable& table0 = plyvis.getTable<Opm::PlyviscTable>(0);
         BOOST_CHECK_EQUAL( table0.numColumns() , 2U );
         BOOST_CHECK_EQUAL( table0.getPolymerConcentrationColumn()[5] , 3.0 );
         BOOST_CHECK_EQUAL( table0.getViscosityMultiplierColumn()[5] , 48.0 );
     }
 
     {
-        const Opm::PlyrockTable& table0 = plyrock[0];
+        const Opm::PlyrockTable& table0 = plyrock.getTable<Opm::PlyrockTable>(0);
         BOOST_CHECK_EQUAL( table0.numColumns() , 5U );
         BOOST_CHECK_EQUAL( table0.getDeadPoreVolumeColumn()[0] , 0.05 );
         BOOST_CHECK_EQUAL( table0.getMaxAdsorbtionColumn()[0] , 0.000025 );
     }
 
     {
-        const Opm::PlyadsTable& table0 = plyads.getTable<PlyadsTable>(0);
+        const Opm::PlyadsTable& table0 = plyads.getTable<Opm::PlyadsTable>(0);
         BOOST_CHECK_EQUAL( table0.numColumns() , 2U );
         BOOST_CHECK_EQUAL( table0.getPolymerConcentrationColumn()[8] , 3.0 );
         BOOST_CHECK_EQUAL( table0.getAdsorbedPolymerColumn()[8] , 0.000025 );
