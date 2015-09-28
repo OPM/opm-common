@@ -249,3 +249,23 @@ BOOST_AUTO_TEST_CASE( test_constructor_with_values) {
     BOOST_CHECK_EQUAL( parseMode.get(ParseMode::UNSUPPORTED_INITIAL_THPRES) , InputError::WARN );
     BOOST_CHECK_EQUAL( parseMode.get(ParseMode::UNSUPPORTED_COMPORD_TYPE) , InputError::WARN );
 }
+
+
+
+BOOST_AUTO_TEST_CASE( test_too_much_data ) {
+    const char * deckString =
+        "RUNSPEC\n"
+        "DIMENS\n"
+        "  10 10 10 10 /n"
+        "\n";
+
+    ParseMode parseMode;
+    Parser parser;
+
+
+    parseMode.update(ParseMode::PARSE_EXTRA_DATA , InputError::THROW_EXCEPTION );
+    BOOST_CHECK_THROW( parser.parseString( deckString , parseMode ) , std::invalid_argument);
+
+    parseMode.update(ParseMode::PARSE_EXTRA_DATA , InputError::IGNORE );
+    auto deck = parser.parseString( deckString , parseMode );
+}

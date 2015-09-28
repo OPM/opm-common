@@ -118,10 +118,11 @@ BOOST_AUTO_TEST_CASE(StringsWithSpaceOK) {
     ParserStringItemPtr itemString(new ParserStringItem(std::string("STRINGITEM1")));
     ParserRecordPtr record1(new ParserRecord());
     RawRecordPtr rawRecord(new Opm::RawRecord(" ' VALUE ' /"));
+    ParseMode parseMode;
     record1->addItem( itemString );
 
 
-    DeckRecordConstPtr deckRecord = record1->parse( rawRecord );
+    DeckRecordConstPtr deckRecord = record1->parse( parseMode , rawRecord );
     BOOST_CHECK_EQUAL(" VALUE " , deckRecord->getItem(0)->getString(0));
 }
 

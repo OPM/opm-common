@@ -376,7 +376,7 @@ namespace Opm {
 
                         if (isRecognizedKeyword(parserState->rawKeyword->getKeywordName())) {
                             ParserKeywordConstPtr parserKeyword = getParserKeywordFromDeckName(parserState->rawKeyword->getKeywordName());
-                            DeckKeywordPtr deckKeyword = parserKeyword->parse(parserState->rawKeyword);
+                            DeckKeywordPtr deckKeyword = parserKeyword->parse(parserState->parseMode , parserState->rawKeyword);
                             deckKeyword->setParserKeyword(parserKeyword);
                             parserState->deck->addKeyword(deckKeyword);
                         } else {

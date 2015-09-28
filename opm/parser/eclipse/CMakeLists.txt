@@ -68,6 +68,7 @@ Generator/KeywordGenerator.cpp
 Generator/KeywordLoader.cpp )
 
 set( build_parser_source 
+Parser/ParseMode.cpp
 Parser/ParserEnums.cpp
 Parser/ParserKeyword.cpp 
 Parser/ParserRecord.cpp
@@ -77,6 +78,7 @@ Parser/ParserFloatItem.cpp
 Parser/ParserDoubleItem.cpp
 Parser/ParserStringItem.cpp  
 ${generator_source}
+${log_source}
 )
 
 set (state_source
@@ -276,7 +278,7 @@ Utility/EndscaleWrapper.hpp
 Utility/ScalecrsWrapper.hpp)
 
 add_library(buildParser STATIC ${rawdeck_source} ${build_parser_source} ${deck_source} ${unit_source} ${generator_source})
-target_link_libraries(buildParser opmjson ${Boost_LIBRARIES})
+target_link_libraries(buildParser opmjson ${Boost_LIBRARIES}  ${ERT_LIBRARIES})
 
 #-----------------------------------------------------------------
 # This section manages the generation of C++ code for the default keywords.
