@@ -37,8 +37,8 @@ BOOST_AUTO_TEST_CASE( parse_polymer_tables ) {
     Opm::TableManager tables( *deck );
     const std::vector<PlymaxTable>& plymax = tables.getPlymaxTables();
     const std::vector<PlyrockTable> plyrock = tables.getPlyrockTables();
-    const std::vector<PlyviscTable> plyvis = tables.getPlyviscTables();
-    const std::vector<PlyadsTable> plyads = tables.getPlyadsTables();
+    const TableContainer& plyads = tables.getPlyadsTables();
+    const TableContainer& plyvis = tables.getPlyviscTables();
 
     BOOST_CHECK_EQUAL( plymax.size() , 1U );
     BOOST_CHECK_EQUAL( plyrock.size() , 1U );
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE( parse_polymer_tables ) {
     }
 
     {
-        const Opm::PlyviscTable& table0 = plyvis[0];
+        const Opm::PlyviscTable& table0 = plyvis.getTable<PlyviscTable>(0);
         BOOST_CHECK_EQUAL( table0.numColumns() , 2U );
         BOOST_CHECK_EQUAL( table0.getPolymerConcentrationColumn()[5] , 3.0 );
         BOOST_CHECK_EQUAL( table0.getViscosityMultiplierColumn()[5] , 48.0 );
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE( parse_polymer_tables ) {
     }
 
     {
-        const Opm::PlyadsTable& table0 = plyads[0];
+        const Opm::PlyadsTable& table0 = plyads.getTable<PlyadsTable>(0);
         BOOST_CHECK_EQUAL( table0.numColumns() , 2U );
         BOOST_CHECK_EQUAL( table0.getPolymerConcentrationColumn()[8] , 3.0 );
         BOOST_CHECK_EQUAL( table0.getAdsorbedPolymerColumn()[8] , 0.000025 );

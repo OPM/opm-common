@@ -25,8 +25,8 @@ namespace Opm {
     // forward declaration
     class TableManager;
 
-    class PlydhflfTable : protected SimpleTable {
-        
+    class PlydhflfTable : public SimpleTable {
+    public:
 
         friend class TableManager;
         PlydhflfTable() = default;
@@ -42,14 +42,13 @@ namespace Opm {
                                  "Temperature",
                                  "PolymerHalflife"
                                      });
-            
+
             SimpleTable::checkNonDefaultable("Temperetura");
             SimpleTable::checkMonotonic("Temperature", /*isAscending=*/true);
             SimpleTable::checkNonDefaultable("PolymerHalflife");
             SimpleTable::checkMonotonic("PolymerHalflife", /*isAscending=*/false);
         }
 
-    public:
         using SimpleTable::numTables;
         using SimpleTable::numRows;
         using SimpleTable::numColumns;

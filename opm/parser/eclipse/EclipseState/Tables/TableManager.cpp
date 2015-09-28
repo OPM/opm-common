@@ -201,15 +201,17 @@ namespace Opm {
         initSimpleTableContainer<PvdsTable>(deck, "PVDS", m_tabdims->getNumPVTTables());
         initSimpleTableContainer<OilvisctTable>(deck, "OILVISCT", m_tabdims->getNumPVTTables());
         initSimpleTableContainer<WatvisctTable>(deck, "WATVISCT", m_tabdims->getNumPVTTables());
+
+        initSimpleTableContainer<PlyadsTable>(deck, "PLYADS", m_tabdims->getNumSatTables());
+        initSimpleTableContainer<PlyviscTable>(deck, "PLYVISC", m_tabdims->getNumPVTTables());
+        initSimpleTableContainer<PlydhflfTable>(deck, "PLYDHFLF", m_tabdims->getNumPVTTables());
+
         initGasvisctTables(deck);
         initRTempTables(deck);
         initRocktabTables(deck);
         /*****************************************************************/
 
 
-        initSimpleTable(deck, "PLYADS", m_plyadsTables);
-        initSimpleTable(deck, "PLYVISC", m_plyviscTables);
-        initSimpleTable(deck, "PLYDHFLF", m_plydhflfTables);
 
         initPlyrockTables(deck , "PLYROCK" , m_plyrockTables);
         initPlymaxTables(deck , "PLYMAX" , m_plymaxTables);
@@ -516,8 +518,16 @@ namespace Opm {
     }
 
 
-    const std::vector<PlyadsTable>& TableManager::getPlyadsTables() const {
-        return m_plyadsTables;
+    const TableContainer& TableManager::getPlyadsTables() const {
+        return getTables("PLYADS");
+    }
+
+    const TableContainer& TableManager::getPlyviscTables() const {
+        return getTables("PLYVISC");
+    }
+
+    const TableContainer& TableManager::getPlydhflfTables() const {
+        return getTables("PLYDHFL");
     }
 
     const std::vector<PlymaxTable>& TableManager::getPlymaxTables() const {
@@ -528,13 +538,6 @@ namespace Opm {
         return m_plyrockTables;
     }
 
-    const std::vector<PlyviscTable>& TableManager::getPlyviscTables() const {
-        return m_plyviscTables;
-    }
-
-    const std::vector<PlydhflfTable>& TableManager::getPlydhflfTables() const {
-        return m_plydhflfTables;
-    }
 
     const std::vector<PlyshlogTable>& TableManager::getPlyshlogTables() const {
         return m_plyshlogTables;

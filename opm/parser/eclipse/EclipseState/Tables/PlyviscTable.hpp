@@ -25,8 +25,8 @@ namespace Opm {
     // forward declaration
     class TableManager;
 
-    class PlyviscTable : protected SimpleTable {
-        
+    class PlyviscTable : public SimpleTable {
+    public:
 
         friend class TableManager;
         PlyviscTable() = default;
