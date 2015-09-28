@@ -29,6 +29,12 @@
 namespace Opm {
     class Tabdims {
     public:
+
+        /*
+          The TABDIMS keyword has a total of 25 items; most of them
+          are ECLIPSE300 only and quite exotic. Here we only
+          internalize the most common items.
+        */
         Tabdims(size_t ntsfun, size_t ntpvt, size_t nssfun , size_t nppvt, size_t ntfip , size_t nrpvt) :
             m_ntsfun( ntsfun ),
             m_ntpvt( ntpvt ),
@@ -61,8 +67,8 @@ namespace Opm {
         size_t getNumRSNodes() const {
             return m_nrpvt;
         }
-        
-        
+
+
     private:
         size_t m_ntsfun,m_ntpvt,m_nssfun,m_nppvt,m_ntfip,m_nrpvt;
     };
