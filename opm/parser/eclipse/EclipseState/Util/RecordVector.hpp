@@ -18,8 +18,8 @@
  */
 
 
-#ifndef _ELASTIC_VECTOR_
-#define _ELASTIC_VECTOR_
+#ifndef _RECORD_VECTOR_
+#define _RECORD_VECTOR_
 
 #include <vector>
 #include <stdexcept>
@@ -32,7 +32,7 @@
 namespace Opm {
 
 template <typename T>
-class ElasticVector {
+class RecordVector {
 private:
     std::vector<T> m_data;
 public:
@@ -47,7 +47,7 @@ public:
             else
                 return m_data[index];
         } else
-            throw std::invalid_argument("Trying to get from empty ElasticVector");
+            throw std::invalid_argument("Trying to get from empty RecordVector");
     }
 
 

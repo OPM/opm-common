@@ -191,7 +191,7 @@ EclipseState/Schedule/GroupTree.hpp
 EclipseState/Schedule/Tuning.hpp
 EclipseState/Schedule/Events.hpp
 #
-EclipseState/Util/ElasticVector.hpp 
+EclipseState/Util/RecordVector.hpp 
 EclipseState/Util/OrderedMap.hpp 
 EclipseState/Util/Value.hpp 
 #
