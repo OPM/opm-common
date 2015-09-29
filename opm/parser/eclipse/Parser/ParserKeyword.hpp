@@ -41,7 +41,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Util/ElasticVector.hpp>
+#include <opm/parser/eclipse/EclipseState/Util/RecordVector.hpp>
 
 
 namespace Opm {
@@ -121,7 +121,7 @@ namespace Opm {
 #else
         boost::regex m_matchRegex;
 #endif
-        ElasticVector<ParserRecordPtr> m_records;
+        RecordVector<ParserRecordPtr> m_records;
         enum ParserKeywordSizeEnum m_keywordSizeType;
         size_t m_fixedSize;
         bool m_isTableCollection;

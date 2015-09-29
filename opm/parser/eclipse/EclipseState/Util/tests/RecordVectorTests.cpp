@@ -25,17 +25,17 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Util/ElasticVector.hpp>
+#include <opm/parser/eclipse/EclipseState/Util/RecordVector.hpp>
 
 BOOST_AUTO_TEST_CASE( check_empty) {
-    Opm::ElasticVector<int> vector;
+    Opm::RecordVector<int> vector;
     BOOST_CHECK_EQUAL( 0U , vector.size());
     BOOST_CHECK_THROW( vector.get(0) , std::invalid_argument );
 }
 
 
 BOOST_AUTO_TEST_CASE( check_add ) {
-    Opm::ElasticVector<int> vector;
+    Opm::RecordVector<int> vector;
     vector.push_back(10);
     BOOST_CHECK_EQUAL( 1U , vector.size());
     BOOST_CHECK_EQUAL( 10 , vector.get(0));
