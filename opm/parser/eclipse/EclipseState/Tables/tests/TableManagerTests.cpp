@@ -1124,3 +1124,10 @@ BOOST_AUTO_TEST_CASE( TestPLYMAX ) {
 
 
 
+BOOST_AUTO_TEST_CASE( TestParseTABDIMS ) {
+    const char *data =
+      "TABDIMS\n"
+      "  1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 /\n";
+    Opm::ParserPtr parser(new Opm::Parser);
+    BOOST_CHECK_NO_THROW( parser->parseString(data, Opm::ParseMode()));
+}
