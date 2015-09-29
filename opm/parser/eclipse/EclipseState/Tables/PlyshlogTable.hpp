@@ -27,19 +27,17 @@ namespace Opm {
     // forward declaration
     class TableManager;
 
-    class PlyshlogTable {
-
+    class PlyshlogTable : public SimpleTable {
+    public:
         friend class TableManager;
         PlyshlogTable() = default;
+
 
         /*!
          * \brief Read the PLYSHLOG keyword and provide some convenience
          *        methods for it.
          */
-        void init(Opm::DeckKeywordConstPtr keyword) {
-            Opm::DeckRecordConstPtr indexRecord = keyword->getRecord(0);
-            Opm::DeckRecordConstPtr dataRecord = keyword->getRecord(1);
-
+        void init(Opm::DeckRecordConstPtr indexRecord, Opm::DeckRecordConstPtr dataRecord) {
             {
                 const auto item = indexRecord->getItem<ParserKeywords::PLYSHLOG::REF_POLYMER_CONCENTRATION>();
                 setRefPolymerConcentration(item->getRawDouble(0));
@@ -63,16 +61,11 @@ namespace Opm {
                     setHasRefTemperature(false);
             }
 
-            m_data = new SimpleTable();
-            m_data->init(dataRecord->getItem<ParserKeywords::PLYSHLOG::DATA>(),
-                         std::vector<std::string>{
-                                "WaterVelocity",
-                                "ShearMultiplier"
-                                    });
-
-            m_data->checkNonDefaultable("WaterVelocity");
-            m_data->checkMonotonic("WaterVelocity", /*isAscending=*/true);
-            m_data->checkNonDefaultable("ShearMultiplier");
+            SimpleTable::init( dataRecord->getItem<ParserKeywords::PLYSHLOG::DATA>(),
+                               std::vector<std::string>{ "WaterVelocity", "ShearMultiplier" } );
+            SimpleTable::checkNonDefaultable("WaterVelocity");
+            SimpleTable::checkMonotonic("WaterVelocity", /*isAscending=*/true);
+            SimpleTable::checkNonDefaultable("ShearMultiplier");
 
         }
 
@@ -118,10 +111,10 @@ namespace Opm {
         }
 
         const std::vector<double> &getWaterVelocityColumn() const
-        { return m_data->getColumn(0); }
+        { return getColumn(0); }
 
         const std::vector<double> &getShearMultiplierColumn() const
-        { return m_data->getColumn(1); }
+        { return getColumn(1); }
 
 
     private:
@@ -131,9 +124,6 @@ namespace Opm {
 
         bool m_hasRefSalinity;
         bool m_hasRefTemperature;
-
-        SimpleTable *m_data;
-
     };
 
 }

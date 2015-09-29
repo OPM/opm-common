@@ -100,12 +100,7 @@ namespace Opm {
         const TableContainer& getPlydhflfTables() const;
         const TableContainer& getPlymaxTables() const;
         const TableContainer& getPlyrockTables() const;
-
-
-        // the tables used by the deck. If the tables had some defaulted data in the
-        // deck, the objects returned here exhibit the correct values. If the table is
-        // not present in the deck, the corresponding vector is of size zero.
-        const std::vector<PlyshlogTable>& getPlyshlogTables() const;
+        const TableContainer& getPlyshlogTables() const;
 
         const std::vector<PvtgTable>& getPvtgTables() const;
         const std::vector<PvtoTable>& getPvtoTables() const;
@@ -132,11 +127,7 @@ namespace Opm {
 
         void initPlymaxTables(const Deck& deck);
         void initPlyrockTables(const Deck& deck);
-
-
-        void initPlyshlogTables(const Deck& deck,
-                                const std::string& keywordName,
-                                std::vector<PlyshlogTable>& tableVector);
+        void initPlyshlogTables(const Deck& deck);
 
         template <class TableType>
         void initSimpleTableContainer(const Deck& deck,
@@ -233,7 +224,6 @@ namespace Opm {
         std::map<int, VFPInjTable> m_vfpinjTables;
         std::vector<PvtgTable> m_pvtgTables;
         std::vector<PvtoTable> m_pvtoTables;
-        std::vector<PlyshlogTable> m_plyshlogTables;
 
         std::shared_ptr<Regdims> m_regdims;
         std::shared_ptr<Tabdims> m_tabdims;

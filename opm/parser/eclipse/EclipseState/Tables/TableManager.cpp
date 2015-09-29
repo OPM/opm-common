@@ -168,9 +168,6 @@ namespace Opm {
             addTables( "ROCKTAB", numRocktabTables);
         }
 
-        /*
-          initPlyshlogTables(deck, "PLYSHLOG", m_plyshlogTables);
-        */
         initSimpleTableContainer<SwofTable>(deck, "SWOF" , m_tabdims->getNumSatTables());
         initSimpleTableContainer<SgofTable>(deck, "SGOF" , m_tabdims->getNumSatTables());
         initSimpleTableContainer<SlgofTable>(deck, "SLGOF" , m_tabdims->getNumSatTables());
@@ -210,8 +207,7 @@ namespace Opm {
         initGasvisctTables(deck);
         initRTempTables(deck);
         initRocktabTables(deck);
-
-        initPlyshlogTables(deck, "PLYSHLOG" , m_plyshlogTables);
+        initPlyshlogTables(deck);
     }
 
 
@@ -257,9 +253,8 @@ namespace Opm {
     }
 
 
-    void TableManager::initPlyshlogTables(const Deck& deck,
-                                          const std::string& keywordName,
-                                          std::vector<PlyshlogTable>& tableVector){
+    void TableManager::initPlyshlogTables(const Deck& deck) {
+        const std::string keywordName = "PLYSHLOG";
 
         if (!deck.hasKeyword(keywordName)) {
             return;
@@ -269,13 +264,25 @@ namespace Opm {
             complainAboutAmbiguousKeyword(deck, keywordName);
             return;
         }
+        size_t numTables = m_tabdims->getNumPVTTables();
+        auto& container = forceGetTables(keywordName , numTables);
+        const auto& tableKeyword = deck.getKeyword(keywordName);
 
-        const auto& keyword = deck.getKeyword(keywordName);
+        if (tableKeyword->size() > 2) {
+            std::string msg = "The Parser does currently NOT support the alternating record schema used in PLYSHLOG";
+            throw std::invalid_argument( msg );
+        }
 
-        tableVector.push_back(PlyshlogTable());
-
-        tableVector[0].init(keyword);
-
+        for (size_t tableIdx = 0; tableIdx < tableKeyword->size(); tableIdx += 2) {
+            const auto indexRecord = tableKeyword->getRecord( tableIdx );
+            const auto dataRecord = tableKeyword->getRecord( tableIdx + 1);
+            const auto dataItem = dataRecord->getItem( 0 );
+            if (dataItem->size() > 0) {
+                std::shared_ptr<PlyshlogTable> table = std::make_shared<PlyshlogTable>();
+                table->init(indexRecord , dataRecord);
+                container.addTable( tableIdx , table );
+            }
+        }
     }
 
 
@@ -536,9 +543,8 @@ namespace Opm {
         return getTables("PLYROCK");
     }
 
-
-    const std::vector<PlyshlogTable>& TableManager::getPlyshlogTables() const {
-        return m_plyshlogTables;
+    const TableContainer& TableManager::getPlyshlogTables() const {
+        return getTables("PLYSHLOG");
     }
 
     const std::vector<PvtgTable>& TableManager::getPvtgTables() const {
