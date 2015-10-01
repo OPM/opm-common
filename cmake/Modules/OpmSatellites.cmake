@@ -210,12 +210,13 @@ macro(opm_add_test TestName)
   # explicitly specified.
   if (NOT CURTEST_SOURCES)
     set(CURTEST_SOURCES "")
+    set(_SDir "${CMAKE_PROJECT_SOURCE_DIR}")
     foreach(CURTEST_CANDIDATE "${CURTEST_EXE_NAME}.cpp"
                               "${CURTEST_EXE_NAME}.cc"
                               "tests/${CURTEST_EXE_NAME}.cpp"
                               "tests/${CURTEST_EXE_NAME}.cc")
-      if (EXISTS "${CURTEST_CANDIDATE}")
-        set(CURTEST_SOURCES "${CURTEST_CANDIDATE}")
+      if (EXISTS "${_SDir}/${CURTEST_CANDIDATE}")
+        set(CURTEST_SOURCES "${_SDir}/${CURTEST_CANDIDATE}")
       endif()
     endforeach()
   endif()
