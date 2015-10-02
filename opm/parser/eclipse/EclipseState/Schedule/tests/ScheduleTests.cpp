@@ -1153,4 +1153,113 @@ BOOST_AUTO_TEST_CASE(createDeckWithWPIMULT) {
 
 }
 
+BOOST_AUTO_TEST_CASE(createDeckWithDRSDT) {
+    Opm::Parser parser;
+    std::string input =
+            "START             -- 0 \n"
+            "19 JUN 2007 / \n"
+            "SCHEDULE\n"
+            "DATES             -- 1\n"
+            " 10  OKT 2008 / \n"
+            "/\n"
+            "DRSDT\n"
+            "0.0003\n"
+            "/\n";
 
+    ParseMode parseMode;
+    DeckPtr deck = parser.parseString(input, parseMode);
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10, 10, 10);
+    IOConfigPtr ioConfig;
+    Schedule schedule(parseMode , grid, deck, ioConfig);
+    size_t currentStep = 1;
+    BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
+    OilVaporizationPropertiesConstPtr ovap = schedule.getOilVaporizationProperties(currentStep);
+    std::string value =  ovap->getOption();
+    BOOST_CHECK_EQUAL("ALL", value);
+    BOOST_CHECK_EQUAL(ovap->getType(), Opm::OilVaporizationEnum::DRSDT);
+}
+
+
+BOOST_AUTO_TEST_CASE(createDeckWithDRSDTthenDRVDT) {
+    Opm::Parser parser;
+    std::string input =
+            "START             -- 0 \n"
+            "19 JUN 2007 / \n"
+            "SCHEDULE\n"
+            "DATES             -- 1\n"
+            " 10  OKT 2008 / \n"
+            "/\n"
+            "DRSDT\n"
+            "0.0003\n"
+            "/\n"
+            "DATES             -- 1\n"
+            " 10  OKT 2009 / \n"
+            "/\n"
+            "DRVDT\n"
+            "0.100\n"
+            "/\n";
+
+    ParseMode parseMode;
+    DeckPtr deck = parser.parseString(input, parseMode);
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10, 10, 10);
+    IOConfigPtr ioConfig;
+    Schedule schedule(parseMode , grid, deck, ioConfig);
+    size_t currentStep = 2;
+    BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
+    OilVaporizationPropertiesConstPtr ovap = schedule.getOilVaporizationProperties(currentStep);
+    double value =  ovap->getMaximum();
+    BOOST_CHECK_EQUAL(0.100, value);
+    BOOST_CHECK_EQUAL(ovap->getType(), Opm::OilVaporizationEnum::DRVDT);
+}
+
+BOOST_AUTO_TEST_CASE(createDeckWithVAPPARS) {
+    Opm::Parser parser;
+    std::string input =
+            "START             -- 0 \n"
+            "19 JUN 2007 / \n"
+            "SCHEDULE\n"
+            "DATES             -- 1\n"
+            " 10  OKT 2008 / \n"
+            "/\n"
+            "VAPPARS\n"
+            "2 0.100\n"
+            "/\n";
+
+    ParseMode parseMode;
+    DeckPtr deck = parser.parseString(input, parseMode);
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10, 10, 10);
+    IOConfigPtr ioConfig;
+    Schedule schedule(parseMode , grid, deck, ioConfig);
+    size_t currentStep = 1;
+    BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
+    OilVaporizationPropertiesConstPtr ovap = schedule.getOilVaporizationProperties(currentStep);
+    BOOST_CHECK_EQUAL(ovap->getType(), Opm::OilVaporizationEnum::VAPPARS);
+    double vap1 =  ovap->getVap1();
+    BOOST_CHECK_EQUAL(2, vap1);
+    double vap2 =  ovap->getVap2();
+    BOOST_CHECK_EQUAL(0.100, vap2);
+
+}
+
+
+BOOST_AUTO_TEST_CASE(createDeckWithOutOilVaporizationProperties) {
+    Opm::Parser parser;
+    std::string input =
+            "START             -- 0 \n"
+            "19 JUN 2007 / \n"
+            "SCHEDULE\n"
+            "DATES             -- 1\n"
+            " 10  OKT 2008 / \n"
+            "/\n";
+
+
+    ParseMode parseMode;
+    DeckPtr deck = parser.parseString(input, parseMode);
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10, 10, 10);
+    IOConfigPtr ioConfig;
+    Schedule schedule(parseMode , grid, deck, ioConfig);
+
+    BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), false);
+
+
+}
