@@ -50,11 +50,16 @@ namespace Opm {
         m_tuning.reset(new Tuning(m_timeMap));
         addGroup( "FIELD", 0 );
         initRootGroupTreeNode(getTimeMap());
+        initOilVaporization(getTimeMap());
 
         if (Section::hasSCHEDULE( deck )) {
             std::shared_ptr<SCHEDULESection> scheduleSection = std::make_shared<SCHEDULESection>( deck );
             iterateScheduleSection(parseMode , scheduleSection , ioConfig);
         }
+    }
+
+    void Schedule::initOilVaporization(TimeMapConstPtr timeMap) {
+        m_oilvaporizationproperties.reset(new DynamicState<OilVaporizationPropertiesPtr>(timeMap, OilVaporizationPropertiesPtr(new OilVaporizationProperties())));
     }
 
     void Schedule::initRootGroupTreeNode(TimeMapConstPtr timeMap) {
@@ -179,6 +184,15 @@ namespace Opm {
 
             if (keyword->name() == "COMPORD")
                 handleCOMPORD(parseMode , keyword, currentStep);
+            
+            if (keyword->name() == "DRSDT")
+                handleDRSDT(keyword, currentStep);
+
+            if (keyword->name() == "DRVDT")
+                handleDRVDT(keyword, currentStep);
+
+            if (keyword->name() == "VAPPARS")
+                handleVAPPARS(keyword, currentStep);
 
 
             if (unsupportedModifiers.find( keyword->name() ) != unsupportedModifiers.end()) {
@@ -290,6 +304,38 @@ namespace Opm {
         if (needNewTree) {
             m_rootGroupTree->update(currentStep, newTree);
             m_events.addEvent( ScheduleEvents::GROUP_CHANGE , currentStep);
+        }
+    }
+    
+    void Schedule::handleVAPPARS(DeckKeywordConstPtr keyword, size_t currentStep){
+        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
+            DeckRecordConstPtr record = keyword->getRecord(recordNr);
+            double vap = record->getItem("OIL_VAP_PROPENSITY")->getRawDouble(0);
+            double density = record->getItem("OIL_DENSITY_PROPENSITY")->getRawDouble(0);
+            OilVaporizationPropertiesPtr vappars = OilVaporizationProperties::createOilVaporizationPropertiesVAPPARS(vap, density);
+            setOilVaporizationProperties(vappars, currentStep);
+
+        }
+    }
+
+    void Schedule::handleDRVDT(DeckKeywordConstPtr keyword, size_t currentStep){
+        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
+            DeckRecordConstPtr record = keyword->getRecord(recordNr);
+            double max = record->getItem("DRVDT_MAX")->getRawDouble(0);
+            OilVaporizationPropertiesPtr drvdt = OilVaporizationProperties::createOilVaporizationPropertiesDRVDT(max);
+            setOilVaporizationProperties(drvdt, currentStep);
+
+        }
+    }
+
+
+    void Schedule::handleDRSDT(DeckKeywordConstPtr keyword, size_t currentStep){
+        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
+            DeckRecordConstPtr record = keyword->getRecord(recordNr);
+            double max = record->getItem("DRSDT_MAX")->getRawDouble(0);
+            std::string option = record->getItem("Option")->getString(0);
+            OilVaporizationPropertiesPtr drsdt = OilVaporizationProperties::createOilVaporizationPropertiesDRSDT(max, option);
+            setOilVaporizationProperties(drsdt, currentStep);
         }
     }
 
@@ -1453,6 +1499,18 @@ namespace Opm {
 
     const Events& Schedule::getEvents() const {
         return m_events;
+    }
+
+    OilVaporizationPropertiesConstPtr Schedule::getOilVaporizationProperties(size_t timestep){
+        return m_oilvaporizationproperties->get(timestep);
+    }
+
+    void Schedule::setOilVaporizationProperties(const OilVaporizationPropertiesPtr vapor, size_t timestep){
+        m_oilvaporizationproperties->update(timestep, vapor);
+    }
+
+    bool Schedule::hasOilVaporizationProperties(){
+        return m_oilvaporizationproperties->size() > 0;
     }
 
 }
