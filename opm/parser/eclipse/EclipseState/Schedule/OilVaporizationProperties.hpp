@@ -11,9 +11,10 @@ namespace Opm
     {
     public:
         OilVaporizationProperties();
-        OilVaporizationProperties(Opm::OilVaporizationEnum type, double maximum, std::string option);
-        OilVaporizationProperties(Opm::OilVaporizationEnum type, double maximum);
-        OilVaporizationProperties(Opm::OilVaporizationEnum type, double vap1, double vap2);
+
+        static std::shared_ptr<OilVaporizationProperties> createOilVaporizationPropertiesDRSDT(double maximum, std::string option);
+        static std::shared_ptr<OilVaporizationProperties> createOilVaporizationPropertiesDRVDT(double maximum);
+        static std::shared_ptr<OilVaporizationProperties> createOilVaporizationPropertiesVAPPARS(double vap1, double vap2);
         Opm::OilVaporizationEnum getType() const;
         double getVap1() const;
         double getVap2() const;
@@ -26,6 +27,10 @@ namespace Opm
         double m_vap1;
         double m_vap2;
         std::string m_option;
+
+        OilVaporizationProperties(Opm::OilVaporizationEnum type, double maximum, std::string option);
+        OilVaporizationProperties(Opm::OilVaporizationEnum type, double maximum);
+        OilVaporizationProperties(Opm::OilVaporizationEnum type, double vap1, double vap2);
 
     };
     typedef std::shared_ptr<OilVaporizationProperties> OilVaporizationPropertiesPtr;
