@@ -26,6 +26,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 
@@ -39,7 +40,7 @@ namespace Opm {
         void addDataItem(ParserItemConstPtr item);
         ParserItemConstPtr get(size_t index) const;
         ParserItemConstPtr get(const std::string& itemName) const;
-        DeckRecordConstPtr parse(RawRecordPtr rawRecord) const;
+        DeckRecordConstPtr parse(const ParseMode& parseMode , RawRecordPtr rawRecord) const;
         bool isDataRecord() const;
         bool equal(const ParserRecord& other) const;
         bool hasDimension() const;

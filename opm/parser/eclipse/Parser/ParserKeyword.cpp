@@ -524,7 +524,7 @@ namespace Opm {
         return m_deckNames.end();
     }
 
-    DeckKeywordPtr ParserKeyword::parse(RawKeywordConstPtr rawKeyword) const {
+    DeckKeywordPtr ParserKeyword::parse(const ParseMode& parseMode , RawKeywordConstPtr rawKeyword) const {
         if (rawKeyword->isFinished()) {
             DeckKeywordPtr keyword(new DeckKeyword(rawKeyword->getKeywordName()));
             keyword->setLocation(rawKeyword->getFilename(), rawKeyword->getLineNR());
@@ -534,7 +534,7 @@ namespace Opm {
                 auto rawRecord = rawKeyword->getRecord(i);
                 if(m_records.size() > 0) {
                     std::shared_ptr <ParserRecord> record = getRecord(i);
-                    DeckRecordConstPtr deckRecord = record->parse(rawRecord);
+                    DeckRecordConstPtr deckRecord = record->parse(parseMode , rawRecord);
                     keyword->addRecord(deckRecord);
                 }
                 else {

@@ -18,6 +18,7 @@
  */
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 
@@ -113,7 +114,7 @@ namespace Opm {
         }
     }
 
-    DeckRecordConstPtr ParserRecord::parse(RawRecordPtr rawRecord) const {
+    DeckRecordConstPtr ParserRecord::parse(const ParseMode& parseMode , RawRecordPtr rawRecord) const {
         std::string recordBeforeParsing = rawRecord->getRecordString();
         DeckRecordPtr deckRecord(new DeckRecord());
         for (size_t i = 0; i < size(); i++) {
@@ -121,11 +122,13 @@ namespace Opm {
             DeckItemPtr deckItem = parserItem->scan(rawRecord);
             deckRecord->addItem(deckItem);
         }
-        const size_t recordSize = rawRecord->size();
-        if (recordSize > 0)
-            throw std::invalid_argument("The RawRecord for keyword \""  + rawRecord->getKeywordName() + "\" in file\"" + rawRecord->getFileName() + "\" contained " +
-                                        boost::lexical_cast<std::string>(recordSize) +
-                                        " too many items according to the spec. RawRecord was: " + recordBeforeParsing);
+
+        if (rawRecord->size() > 0) {
+            std::string msg = "The RawRecord for keyword \""  + rawRecord->getKeywordName() + "\" in file\"" + rawRecord->getFileName() + "\" contained " +
+                std::to_string(rawRecord->size()) +
+                " too many items according to the spec. RawRecord was: " + recordBeforeParsing;
+            parseMode.handleError(ParseMode::PARSE_EXTRA_DATA , msg);
+        }
 
         return deckRecord;
     }

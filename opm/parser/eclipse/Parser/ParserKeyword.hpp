@@ -36,11 +36,12 @@
 #include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserFloatItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Util/ElasticVector.hpp>
+#include <opm/parser/eclipse/EclipseState/Util/RecordVector.hpp>
 
 
 namespace Opm {
@@ -99,7 +100,7 @@ namespace Opm {
         SectionNameSet::const_iterator validSectionNamesBegin() const;
         SectionNameSet::const_iterator validSectionNamesEnd() const;
 
-        DeckKeywordPtr parse(RawKeywordConstPtr rawKeyword) const;
+        DeckKeywordPtr parse(const ParseMode& parseMode , RawKeywordConstPtr rawKeyword) const;
         enum ParserKeywordSizeEnum getSizeType() const;
         const std::pair<std::string,std::string>& getSizeDefinitionPair() const;
         bool isDataKeyword() const;
@@ -120,7 +121,7 @@ namespace Opm {
 #else
         boost::regex m_matchRegex;
 #endif
-        ElasticVector<ParserRecordPtr> m_records;
+        RecordVector<ParserRecordPtr> m_records;
         enum ParserKeywordSizeEnum m_keywordSizeType;
         size_t m_fixedSize;
         bool m_isTableCollection;

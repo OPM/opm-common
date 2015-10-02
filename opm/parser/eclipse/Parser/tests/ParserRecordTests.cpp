@@ -21,6 +21,7 @@
 #define BOOST_TEST_MODULE ParserTests
 #include <boost/test/unit_test.hpp>
 
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
@@ -126,14 +127,16 @@ static ParserRecordPtr createSimpleParserRecord() {
 BOOST_AUTO_TEST_CASE(parse_validRecord_noThrow) {
     ParserRecordPtr record = createSimpleParserRecord();
     RawRecordPtr rawRecord(new RawRecord("100 443 /"));
+    ParseMode parseMode;
     rawRecord->dump();
-    BOOST_CHECK_NO_THROW(record->parse(rawRecord));
+    BOOST_CHECK_NO_THROW(record->parse(parseMode , rawRecord));
 }
 
 BOOST_AUTO_TEST_CASE(parse_validRecord_deckRecordCreated) {
     ParserRecordPtr record = createSimpleParserRecord();
     RawRecordPtr rawRecord(new RawRecord("100 443 /"));
-    DeckRecordConstPtr deckRecord = record->parse(rawRecord);
+    ParseMode parseMode;
+    DeckRecordConstPtr deckRecord = record->parse(parseMode , rawRecord);
     BOOST_CHECK_EQUAL(2U, deckRecord->size());
 }
 
@@ -165,7 +168,8 @@ static ParserRecordPtr createMixedParserRecord() {
 BOOST_AUTO_TEST_CASE(parse_validMixedRecord_noThrow) {
     ParserRecordPtr record = createMixedParserRecord();
     RawRecordPtr rawRecord(new RawRecord("1 2 10.0 20.0 4 90.0 /"));
-    BOOST_CHECK_NO_THROW(record->parse(rawRecord));
+    ParseMode parseMode;
+    BOOST_CHECK_NO_THROW(record->parse(parseMode , rawRecord));
 }
 
 BOOST_AUTO_TEST_CASE(Equal_Equal_ReturnsTrue) {
@@ -297,6 +301,7 @@ BOOST_AUTO_TEST_CASE(Parse_RawRecordTooManyItems_Throws) {
     ParserIntItemConstPtr itemI(new ParserIntItem("I", SINGLE));
     ParserIntItemConstPtr itemJ(new ParserIntItem("J", SINGLE));
     ParserIntItemConstPtr itemK(new ParserIntItem("K", SINGLE));
+    ParseMode parseMode;
 
     parserRecord->addItem(itemI);
     parserRecord->addItem(itemJ);
@@ -304,13 +309,13 @@ BOOST_AUTO_TEST_CASE(Parse_RawRecordTooManyItems_Throws) {
 
 
     RawRecordPtr rawRecord(new RawRecord("3 3 3 /"));
-    BOOST_CHECK_NO_THROW(parserRecord->parse(rawRecord));
+    BOOST_CHECK_NO_THROW(parserRecord->parse(parseMode , rawRecord));
 
     RawRecordPtr rawRecordOneExtra(new RawRecord("3 3 3 4 /"));
-    BOOST_CHECK_THROW(parserRecord->parse(rawRecordOneExtra), std::invalid_argument);
+    BOOST_CHECK_THROW(parserRecord->parse(parseMode , rawRecordOneExtra), std::invalid_argument);
 
     RawRecordPtr rawRecordForgotRecordTerminator(new RawRecord("3 3 3 \n 4 4 4 /"));
-    BOOST_CHECK_THROW(parserRecord->parse(rawRecordForgotRecordTerminator), std::invalid_argument);
+    BOOST_CHECK_THROW(parserRecord->parse(parseMode , rawRecordForgotRecordTerminator), std::invalid_argument);
 
 }
 
@@ -325,11 +330,13 @@ BOOST_AUTO_TEST_CASE(Parse_RawRecordTooFewItems) {
     parserRecord->addItem(itemJ);
     parserRecord->addItem(itemK);
 
+    ParseMode parseMode;
     RawRecordPtr rawRecord(new RawRecord("3 3  /"));
     // no default specified for the third item, record can be parsed just fine but trying
     // to access the data will raise an exception...
     DeckRecordConstPtr record;
-    BOOST_CHECK_NO_THROW(record = parserRecord->parse(rawRecord));
+
+    BOOST_CHECK_NO_THROW(record = parserRecord->parse(parseMode , rawRecord));
     BOOST_CHECK_NO_THROW(record->getItem(2));
     BOOST_CHECK_THROW(record->getItem(2)->getInt(0), std::out_of_range);
 }

@@ -149,6 +149,16 @@ namespace Opm {
         const static std::string PARSE_MISSING_DIMS_KEYWORD;
 
         /*
+          If the number of elements in the input record exceeds the
+          number of items in the keyword configuration this error
+          situation will be triggered. Many keywords end with several
+          ECLIPSE300 only items - in some cases we have omitted those
+          items in the Json configuration; that will typically trigger
+          this error situation when encountering an ECLIPSE300 deck.
+        */
+        const static std::string PARSE_EXTRA_DATA;
+
+        /*
           Some property modfiers can be modified in the Schedule
           section; this effectively means that Eclipse supports time
           dependent geology. This is marked as an exocit special

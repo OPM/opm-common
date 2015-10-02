@@ -9,3 +9,7 @@ install(TARGETS opm-eclkw DESTINATION "bin")
 add_executable(schedule Schedule.cpp)
 target_link_libraries(schedule opmparser)
 
+add_executable(OpmLoadDeck OpmLoadDeck)
+target_link_libraries(OpmLoadDeck opmparser)
+install(TARGETS OpmLoadDeck DESTINATION "bin")
+

@@ -91,33 +91,16 @@ namespace Opm {
 
 
     bool IOConfig::getWriteRestartFileFrequency(size_t timestep,
-                                                size_t start_index,
+                                                size_t start_timestep,
                                                 size_t frequency,
-                                                bool   first_timesteps_years,
-                                                bool   first_timesteps_months) const {
+                                                bool   years,
+                                                bool   months) const {
         bool write_restart_file = false;
-        if (!first_timesteps_years && !first_timesteps_months) {
-            write_restart_file = (((timestep-start_index) % frequency) == 0) ? true : false;
+        if ((!years && !months) && (timestep >= start_timestep)) {
+            write_restart_file = ((timestep % frequency) == 0) ? true : false;
         } else {
-            std::vector<size_t> timesteps;
-            if (first_timesteps_years) {
-                m_timemap->initFirstTimestepsYears(timesteps, start_index);
-            } else {
-                m_timemap->initFirstTimestepsMonths(timesteps, start_index);
-            }
-            std::vector<size_t>::const_iterator ci_timestep = std::find(timesteps.begin(), timesteps.end(), timestep);
+              write_restart_file = m_timemap->isTimestepInFirstOfMonthsYearsSequence(timestep, years, start_timestep, frequency);
 
-            if (ci_timestep != timesteps.end()) {
-                if (1 >= frequency) {
-                    write_restart_file = true;
-                } else {
-                    std::vector<size_t>::const_iterator ci_start = timesteps.begin();
-                    int dist = std::distance( ci_start, ci_timestep ) + 1;
-                    if( ( (dist > 0) && ((dist % frequency) == 0) ) ) {
-                        write_restart_file = true;
-                    }
-                 }
-            }
         }
         return write_restart_file;
     }

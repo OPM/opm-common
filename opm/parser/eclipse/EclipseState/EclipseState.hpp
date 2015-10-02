@@ -58,6 +58,7 @@ namespace Opm {
 
         EclipseState(DeckConstPtr deck , const ParseMode& parseMode);
 
+        const ParseMode& getParseMode() const;
         ScheduleConstPtr getSchedule() const;
         IOConfigConstPtr getIOConfigConst() const;
         IOConfigPtr getIOConfig() const;
@@ -97,10 +98,10 @@ namespace Opm {
         void initTabdims(DeckConstPtr deck);
         void initTables(DeckConstPtr deck);
         void initIOConfig(DeckConstPtr deck);
-        void initSchedule(DeckConstPtr deck , const ParseMode& parseMode);
+        void initSchedule(DeckConstPtr deck);
         void initIOConfigPostSchedule(DeckConstPtr deck);
         void initInitConfig(DeckConstPtr deck);
-        void initSimulationConfig(DeckConstPtr deck, const ParseMode& parseMode);
+        void initSimulationConfig(DeckConstPtr deck);
         void initEclipseGrid(DeckConstPtr deck);
         void initGridopts(DeckConstPtr deck);
         void initPhases(DeckConstPtr deck);
@@ -154,6 +155,7 @@ namespace Opm {
         std::shared_ptr<FaultCollection> m_faults;
         std::shared_ptr<NNC> m_nnc;
         std::string m_defaultRegion;
+        const ParseMode& m_parseMode;
     };
 
     typedef std::shared_ptr<EclipseState> EclipseStatePtr;

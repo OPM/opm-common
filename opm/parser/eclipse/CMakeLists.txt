@@ -5,7 +5,6 @@ add_subdirectory(Parser/tests)
 add_subdirectory(Generator/tests)
 add_subdirectory(RawDeck/tests)
 add_subdirectory(Deck/tests)
-add_subdirectory(IntegrationTests)
 add_subdirectory(EclipseState/tests)
 add_subdirectory(EclipseState/Schedule/tests)
 add_subdirectory(EclipseState/SimulationConfig/tests)
@@ -15,7 +14,8 @@ add_subdirectory(EclipseState/Util/tests)
 add_subdirectory(EclipseState/IOConfig/tests)
 add_subdirectory(EclipseState/InitConfig/tests)
 
-add_subdirectory( Applications )
+add_subdirectory(Applications)
+add_subdirectory(IntegrationTests)
 
 set( log_source
 OpmLog/TimerLog.cpp 
@@ -68,6 +68,7 @@ Generator/KeywordGenerator.cpp
 Generator/KeywordLoader.cpp )
 
 set( build_parser_source 
+Parser/ParseMode.cpp
 Parser/ParserEnums.cpp
 Parser/ParserKeyword.cpp 
 Parser/ParserRecord.cpp
@@ -77,6 +78,7 @@ Parser/ParserFloatItem.cpp
 Parser/ParserDoubleItem.cpp
 Parser/ParserStringItem.cpp  
 ${generator_source}
+${log_source}
 )
 
 set (state_source
@@ -193,7 +195,7 @@ EclipseState/Schedule/GroupTree.hpp
 EclipseState/Schedule/Tuning.hpp
 EclipseState/Schedule/Events.hpp
 #
-EclipseState/Util/ElasticVector.hpp 
+EclipseState/Util/RecordVector.hpp 
 EclipseState/Util/OrderedMap.hpp 
 EclipseState/Util/Value.hpp 
 #
@@ -278,7 +280,7 @@ Utility/EndscaleWrapper.hpp
 Utility/ScalecrsWrapper.hpp)
 
 add_library(buildParser STATIC ${rawdeck_source} ${build_parser_source} ${deck_source} ${unit_source} ${generator_source})
-target_link_libraries(buildParser opmjson ${Boost_LIBRARIES})
+target_link_libraries(buildParser opmjson ${Boost_LIBRARIES}  ${ERT_LIBRARIES})
 
 #-----------------------------------------------------------------
 # This section manages the generation of C++ code for the default keywords.

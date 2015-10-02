@@ -27,6 +27,7 @@
 #include <opm/core/utility/platform_dependent/reenable_warnings.h>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
@@ -68,12 +69,29 @@ const std::string& inputStr_noTHPRES = "RUNSPEC\n"
                                        "\n";
 
 const std::string& inputStr_cpr = "RUNSPEC\n"
-        "CPR\n"
-        "/\n";
+    "CPR\n"
+    "/\n"
+    "SUMMARY\n";
 
-const std::string& inputStr_cprWithData = "RUNSPEC\n"
+
+const std::string& inputStr_INVALID = "RUNSPEC\n"
+    "CPR\n"
+    "WEll 10 10 17/"
+    "/\n"
+    "SUMMARY\n";
+
+
+
+const std::string& inputStr_cpr_in_SUMMARY = "SUMMARY\n"
         "CPR\n"
-        "data/\n";
+        "well1 10 27 10/\n/\n";
+
+const std::string& inputStr_cpr_BOTH = "RUNSPEC\n"
+    "CPR\n"
+    "/\n"
+    "SUMMARY\n"
+    "CPR\n"
+    "well1 10 20 30/\n/\n";
 
 static DeckPtr createDeck(const ParseMode& parseMode , const std::string& input) {
     Opm::Parser parser;
@@ -116,16 +134,46 @@ BOOST_AUTO_TEST_CASE(SimulationConfigCPRNotUsed) {
 }
 
 BOOST_AUTO_TEST_CASE(SimulationConfigCPRUsed) {
-        ParseMode parseMode;
-        DeckPtr deck = createDeck(parseMode , inputStr_cpr);
-        SimulationConfig simulationConfig(parseMode , deck, getGridProperties());
-        BOOST_CHECK_EQUAL( true , simulationConfig.useCPR());
-}
-
-BOOST_AUTO_TEST_CASE(SimulationConfigCPRUsedWithData) {
-        ParseMode parseMode;
-        BOOST_CHECK_THROW(createDeck(parseMode , inputStr_cprWithData), std::invalid_argument);
+    ParseMode parseMode;
+    DeckPtr deck = createDeck(parseMode , inputStr_cpr);
+    SUMMARYSection summary(deck);
+    SimulationConfig simulationConfig(parseMode , deck, getGridProperties());
+    BOOST_CHECK_EQUAL( true , simulationConfig.useCPR());
+    BOOST_CHECK_EQUAL( false , summary.hasKeyword("CPR"));
 }
 
 
+BOOST_AUTO_TEST_CASE(SimulationConfigCPRInSUMMARYSection) {
+    ParseMode parseMode;
+    DeckPtr deck = createDeck(parseMode , inputStr_cpr_in_SUMMARY);
+    SUMMARYSection summary(deck);
+    SimulationConfig simulationConfig(parseMode , deck, getGridProperties());
+    BOOST_CHECK_EQUAL( false , simulationConfig.useCPR());
+    BOOST_CHECK_EQUAL( true , summary.hasKeyword("CPR"));
+}
 
+
+BOOST_AUTO_TEST_CASE(SimulationConfigCPRBoth) {
+    ParseMode parseMode;
+    DeckPtr deck = createDeck(parseMode , inputStr_cpr_BOTH);
+    SUMMARYSection summary(deck);
+    SimulationConfig simulationConfig(parseMode , deck, getGridProperties());
+    BOOST_CHECK_EQUAL( true , simulationConfig.useCPR());
+    BOOST_CHECK_EQUAL( true , summary.hasKeyword("CPR"));
+
+    std::shared_ptr<const DeckKeyword> cpr = summary.getKeyword<ParserKeywords::CPR>();
+    std::shared_ptr<const DeckRecord> record = cpr->getRecord(0);
+    BOOST_CHECK_EQUAL( 1 , cpr->size());
+    BOOST_CHECK_EQUAL( record->getItem<ParserKeywords::CPR::WELL>()->getString(0) , "well1");
+    BOOST_CHECK_EQUAL( record->getItem<ParserKeywords::CPR::I>()->getInt(0) , 10);
+    BOOST_CHECK_EQUAL( record->getItem<ParserKeywords::CPR::J>()->getInt(0) , 20);
+    BOOST_CHECK_EQUAL( record->getItem<ParserKeywords::CPR::K>()->getInt(0) , 30);
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(SimulationConfigCPRRUnspecWithData) {
+    ParseMode parseMode;
+    BOOST_CHECK_THROW( createDeck(parseMode , inputStr_INVALID) , std::invalid_argument );
+}
