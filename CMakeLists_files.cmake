@@ -44,3 +44,8 @@ list (APPEND EXAMPLE_SOURCE_FILES
 # installation
 list (APPEND PROGRAM_SOURCE_FILES
 	)
+
+
+list( APPEND PUBLIC_HEADER_FILES
+      opm/common/utility/platform_dependent/disable_warnings.h
+      opm/common/utility/platform_dependent/reenable_warnings.h )
