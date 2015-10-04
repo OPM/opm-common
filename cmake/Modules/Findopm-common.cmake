@@ -21,7 +21,7 @@ find_opm_package (
   "${opm-common_DEPS}"
 
   # header to search for
-  ""
+  "opm/common/utility/platform_dependent/disable_warnings.h"
 
   # library to search for
   ""
@@ -30,7 +30,11 @@ find_opm_package (
   ""
 
   # test program
-  ""
+  "#include <opm/common/utility/platform_dependent/disable_warnings.h>
+int main (void) {
+  return 0;  
+}
+"
 
   # config variables
   "${opm-common_CONFIG_VAR}"
