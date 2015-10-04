@@ -31,7 +31,6 @@ namespace Opm {
 
 
     bool TableContainer::empty() const {
-        std::cout << "Size: " << m_tables.size() << " empty: " << m_tables.empty() << std::endl;
         return m_tables.empty();
     }
 

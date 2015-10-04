@@ -445,7 +445,6 @@ protected:
         const TableContainer& sgfnTables = tables->getSgfnTables();
 
 
-        std::cout << "SGOF.empty() " << sgofTables.empty() << " SWOF.empty() " << swofTables.empty() << std::endl;
         bool family1 = (!sgofTables.empty() || !slgofTables.empty()) && !swofTables.empty();
         bool family2 = !swfnTables.empty() && !sgfnTables.empty() && !sof3Tables.empty();
 
