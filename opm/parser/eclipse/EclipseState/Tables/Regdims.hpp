@@ -47,10 +47,31 @@ namespace Opm {
             m_NPLMIX( nplmix )
         {}
 
+        size_t getNTFIP() const {
+            return m_NTFIP;
+        }
+
+
+        size_t getNMFIPR() const {
+            return m_NMFIPR;
+        }
+
+
+        size_t getNRFREG() const {
+            return m_NRFREG;
+        }
+
+
+        size_t getNTFREG() const {
+            return m_NTFREG;
+        }
+
 
         size_t getNPLMIX() const {
             return m_NPLMIX;
         }
+
+
 
 
     private:
