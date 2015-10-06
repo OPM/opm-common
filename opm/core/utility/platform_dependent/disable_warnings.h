@@ -53,6 +53,8 @@
 // Note that both clang and (newer) gcc accept the
 // "#pragma GCC diagnostic" syntax.
 #if COMPATIBLE_COMPILER
+#warning "The disable/enable warnings header files have moved to opm-common"
+
 #pragma GCC diagnostic push
 // Suppress warnings: "unknown option after ‘#pragma GCC diagnostic’ kind [-Wpragmas]".
 // This is necessary because not all the compilers have the same warning options.
