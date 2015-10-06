@@ -26,6 +26,7 @@ set (dune-cornerpoint_DEPS
 	dune-grid REQUIRED;
 	dune-geometry REQUIRED"
 	# OPM dependency
-	"opm-core REQUIRED"
+        "opm-common REQUIRED;
+        opm-core REQUIRED"
 	"ZOLTAN"
 	)
