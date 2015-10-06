@@ -1272,7 +1272,12 @@ namespace Opm {
         if (refDepthItem->hasValue(0))
             refDepth.setValue( refDepthItem->getSIDouble(0));
 
-        well = std::make_shared<Well>(wellName, m_grid , headI, headJ, refDepth, preferredPhase, m_timeMap , timeStep, wellCompletionOrder);
+        bool allowCrossFlow = true;
+        const std::string& allowCrossFlowStr = record->getItem("CROSSFLOW")->getTrimmedString(0);
+        if (allowCrossFlowStr == "NO")
+            allowCrossFlow = false;
+
+        well = std::make_shared<Well>(wellName, m_grid , headI, headJ, refDepth, preferredPhase, m_timeMap , timeStep, wellCompletionOrder, allowCrossFlow);
         m_wells.insert( wellName  , well);
         m_events.addEvent( ScheduleEvents::NEW_WELL , timeStep );
     }
