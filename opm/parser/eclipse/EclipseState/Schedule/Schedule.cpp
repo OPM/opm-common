@@ -1273,7 +1273,7 @@ namespace Opm {
             refDepth.setValue( refDepthItem->getSIDouble(0));
 
         bool allowCrossFlow = true;
-        const std::string& allowCrossFlowStr = record->getItem("CROSSFLOW")->getTrimmedString(0);
+        const std::string& allowCrossFlowStr = record->getItem<ParserKeywords::WELSPECS::CROSSFLOW>()->getTrimmedString(0);
         if (allowCrossFlowStr == "NO")
             allowCrossFlow = false;
 
