@@ -25,8 +25,8 @@ namespace Opm {
     // forward declaration
     class TableManager;
 
-    class PlymaxTable : protected SimpleTable {
-
+    class PlymaxTable : public SimpleTable {
+    public:
         friend class TableManager;
         PlymaxTable() = default;
 
@@ -48,7 +48,6 @@ namespace Opm {
             SimpleTable::checkMonotonic("C_POLYMER_MAX", /*isAscending=*/false);
         }
 
-    public:
         using SimpleTable::numTables;
         using SimpleTable::numRows;
         using SimpleTable::numColumns;

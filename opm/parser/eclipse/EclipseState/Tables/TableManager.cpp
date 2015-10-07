@@ -25,36 +25,8 @@
 namespace Opm {
 
     TableManager::TableManager( const Deck& deck ) {
-        initTabdims( deck );
-        initSimpleTables(deck, "SWOF", m_swofTables);
-        initSimpleTables(deck, "SGOF", m_sgofTables);
-        initSimpleTables(deck, "SLGOF", m_slgofTables);
-        initSimpleTables(deck, "SOF2", m_sof2Tables);
-        initSimpleTables(deck, "SOF3", m_sof3Tables);
-        initSimpleTables(deck, "PVDG", m_pvdgTables);
-        initSimpleTables(deck, "PVDO", m_pvdoTables);
-        initSimpleTables(deck, "SWFN", m_swfnTables);
-        initSimpleTables(deck, "SGFN", m_sgfnTables);
-        initSimpleTables(deck, "SSFN", m_ssfnTables);
-        initSimpleTables(deck, "PVDS", m_pvdsTables);
-        initSimpleTables(deck, "PLYADS", m_plyadsTables);
-        initSimpleTables(deck, "PLYVISC", m_plyviscTables);
-        initSimpleTables(deck, "PLYDHFLF", m_plydhflfTables);
-        initSimpleTables(deck, "OILVISCT", m_oilvisctTables);
-        initSimpleTables(deck, "WATVISCT", m_watvisctTables);
-        initSimpleTables(deck, "ENKRVD", m_enkrvdTables);
-        initSimpleTables(deck, "ENPTVD", m_enptvdTables);
-        initSimpleTables(deck, "IMKRVD", m_imkrvdTables);
-        initSimpleTables(deck, "IMPTVD", m_imptvdTables);
-        initSimpleTables(deck, "RSVD", m_rsvdTables);
-        initSimpleTables(deck, "RVVD", m_rvvdTables);
-
-        initPlymaxTables(deck , "PLYMAX" , m_plymaxTables);
-        initPlyrockTables(deck, "PLYROCK", m_plyrockTables);
-        initPlyshlogTables(deck, "PLYSHLOG", m_plyshlogTables);
-        initRocktabTables(deck);
-        initRTempTables(deck);
-        initGasvisctTables(deck, "GASVISCT", m_gasvisctTables);
+        initDims( deck );
+        initSimpleTables( deck );
         initFullTables(deck, "PVTG", m_pvtgTables);
         initFullTables(deck, "PVTO", m_pvtoTables);
 
@@ -63,33 +35,179 @@ namespace Opm {
     }
 
 
-    void TableManager::initTabdims(const Deck& deck) {
-        /*
-          The default values for the various number of tables is
-          embedded in the ParserKeyword("TABDIMS") instance; however
-          the EclipseState object does not have a dependency on the
-          Parser classes, have therefor decided not to add an explicit
-          dependency here, and instead duplicated all the default
-          values.
-        */
-        size_t ntsfun = 1;
-        size_t ntpvt = 1;
-        size_t nssfun = 1;
-        size_t nppvt = 1;
-        size_t ntfip = 1;
-        size_t nrpvt = 1;
-
-        if (deck.hasKeyword("TABDIMS")) {
-            auto keyword = deck.getKeyword("TABDIMS");
+    void TableManager::initDims(const Deck& deck) {
+        using namespace Opm::ParserKeywords;
+        if (deck.hasKeyword<TABDIMS>()) {
+            auto keyword = deck.getKeyword<TABDIMS>();
             auto record = keyword->getRecord(0);
-            ntsfun = record->getItem("NTSFUN")->getInt(0);
-            ntpvt  = record->getItem("NTPVT")->getInt(0);
-            nssfun = record->getItem("NSSFUN")->getInt(0);
-            nppvt  = record->getItem("NPPVT")->getInt(0);
-            ntfip  = record->getItem("NTFIP")->getInt(0);
-            nrpvt  = record->getItem("NRPVT")->getInt(0);
+            int ntsfun = record->getItem<TABDIMS::NTSFUN>()->getInt(0);
+            int ntpvt  = record->getItem<TABDIMS::NTPVT>()->getInt(0);
+            int nssfun = record->getItem<TABDIMS::NSSFUN>()->getInt(0);
+            int nppvt  = record->getItem<TABDIMS::NPPVT>()->getInt(0);
+            int ntfip  = record->getItem<TABDIMS::NTFIP>()->getInt(0);
+            int nrpvt  = record->getItem<TABDIMS::NRPVT>()->getInt(0);
+
+            m_tabdims = std::make_shared<Tabdims>(ntsfun , ntpvt , nssfun , nppvt , ntfip , nrpvt);
+        } else
+            m_tabdims = std::make_shared<Tabdims>();
+
+        if (deck.hasKeyword<EQLDIMS>()) {
+            auto keyword = deck.getKeyword<EQLDIMS>();
+            auto record = keyword->getRecord(0);
+            int ntsequl   = record->getItem<EQLDIMS::NTEQUL>()->getInt(0);
+            int nodes_p   = record->getItem<EQLDIMS::DEPTH_NODES_P>()->getInt(0);
+            int nodes_tab = record->getItem<EQLDIMS::DEPTH_NODES_TAB>()->getInt(0);
+            int nttrvd    = record->getItem<EQLDIMS::NTTRVD>()->getInt(0);
+            int ntsrvd    = record->getItem<EQLDIMS::NSTRVD>()->getInt(0);
+
+            m_eqldims = std::make_shared<Eqldims>(ntsequl , nodes_p , nodes_tab , nttrvd , ntsrvd );
+        } else
+            m_eqldims = std::make_shared<Eqldims>();
+
+        if (deck.hasKeyword<REGDIMS>()) {
+            auto keyword = deck.getKeyword<REGDIMS>();
+            auto record = keyword->getRecord(0);
+            int ntfip  = record->getItem<REGDIMS::NTFIP>()->getInt(0);
+            int nmfipr = record->getItem<REGDIMS::NMFIPR>()->getInt(0);
+            int nrfreg = record->getItem<REGDIMS::NRFREG>()->getInt(0);
+            int ntfreg = record->getItem<REGDIMS::NTFREG>()->getInt(0);
+            int nplmix = record->getItem<REGDIMS::NPLMIX>()->getInt(0);
+            m_regdims = std::make_shared<Regdims>( ntfip , nmfipr , nrfreg , ntfreg , nplmix );
+        } else
+            m_regdims = std::make_shared<Regdims>();
+    }
+
+
+    void TableManager::addTables( const std::string& tableName , size_t numTables) {
+        m_simpleTables.emplace(std::make_pair(tableName , TableContainer( numTables )));
+    }
+
+
+    bool TableManager::hasTables( const std::string& tableName ) const {
+        auto pair = m_simpleTables.find( tableName );
+        if (pair == m_simpleTables.end())
+            return false;
+        else {
+            const auto& tables = pair->second;
+            return !tables.empty();
         }
-        m_tabdims = std::make_shared<Tabdims>(ntsfun , ntpvt , nssfun , nppvt , ntfip , nrpvt);
+    }
+
+
+    const TableContainer& TableManager::getTables( const std::string& tableName ) const {
+        auto pair = m_simpleTables.find( tableName );
+        if (pair == m_simpleTables.end())
+            throw std::invalid_argument("No such table collection: " + tableName);
+        else
+            return pair->second;
+    }
+
+    TableContainer& TableManager::forceGetTables( const std::string& tableName , size_t numTables )  {
+        auto pair = m_simpleTables.find( tableName );
+        if (pair == m_simpleTables.end()) {
+            addTables( tableName , numTables );
+            pair = m_simpleTables.find( tableName );
+        }
+        return pair->second;
+    }
+
+
+    const TableContainer& TableManager::operator[](const std::string& tableName) const {
+        return getTables(tableName);
+    }
+
+    void TableManager::initSimpleTables(const Deck& deck) {
+        addTables( "SWOF" , m_tabdims->getNumSatTables() );
+        addTables( "SGOF",  m_tabdims->getNumSatTables() );
+        addTables( "SLGOF", m_tabdims->getNumSatTables() );
+        addTables( "SOF2",  m_tabdims->getNumSatTables() );
+        addTables( "SOF3",  m_tabdims->getNumSatTables() );
+        addTables( "SWFN",  m_tabdims->getNumSatTables() );
+        addTables( "SGFN",  m_tabdims->getNumSatTables() );
+        addTables( "SSFN",  m_tabdims->getNumSatTables() );
+
+        addTables( "PLYADS", m_tabdims->getNumSatTables() );
+        addTables( "PLYROCK", m_tabdims->getNumSatTables());
+        addTables( "PLYVISC", m_tabdims->getNumPVTTables());
+        addTables( "PLYDHFLF", m_tabdims->getNumPVTTables());
+
+        addTables( "PVDG", m_tabdims->getNumPVTTables());
+        addTables( "PVDO", m_tabdims->getNumPVTTables());
+        addTables( "PVDS", m_tabdims->getNumPVTTables());
+
+        addTables( "OILVISCT", m_tabdims->getNumPVTTables());
+        addTables( "WATVISCT", m_tabdims->getNumPVTTables());
+        addTables( "GASVISCT", m_tabdims->getNumPVTTables());
+
+        addTables( "PLYMAX", m_regdims->getNPLMIX());
+        addTables( "RSVD", m_eqldims->getNumEquilRegions());
+        addTables( "RVVD", m_eqldims->getNumEquilRegions());
+
+        {
+            size_t numEndScaleTables = ParserKeywords::ENDSCALE::NUM_TABLES::defaultValue;
+
+            if (deck.hasKeyword<ParserKeywords::ENDSCALE>()) {
+                auto keyword = deck.getKeyword<ParserKeywords::ENDSCALE>();
+                auto record = keyword->getRecord(0);
+                numEndScaleTables = static_cast<size_t>(record->getItem<ParserKeywords::ENDSCALE::NUM_TABLES>()->getInt(0));
+            }
+
+            addTables( "ENKRVD", numEndScaleTables);
+            addTables( "ENPTVD", numEndScaleTables);
+            addTables( "IMKRVD", numEndScaleTables);
+            addTables( "IMPTVD", numEndScaleTables);
+        }
+        {
+            size_t numRocktabTables = ParserKeywords::ROCKCOMP::NTROCC::defaultValue;
+
+            if (deck.hasKeyword<ParserKeywords::ROCKCOMP>()) {
+                auto keyword = deck.getKeyword<ParserKeywords::ROCKCOMP>();
+                auto record = keyword->getRecord(0);
+                numRocktabTables = static_cast<size_t>(record->getItem<ParserKeywords::ROCKCOMP::NTROCC>()->getInt(0));
+            }
+            addTables( "ROCKTAB", numRocktabTables);
+        }
+
+        initSimpleTableContainer<SwofTable>(deck, "SWOF" , m_tabdims->getNumSatTables());
+        initSimpleTableContainer<SgofTable>(deck, "SGOF" , m_tabdims->getNumSatTables());
+        initSimpleTableContainer<SlgofTable>(deck, "SLGOF" , m_tabdims->getNumSatTables());
+        initSimpleTableContainer<Sof2Table>(deck, "SOF2" , m_tabdims->getNumSatTables());
+        initSimpleTableContainer<Sof3Table>(deck, "SOF3" , m_tabdims->getNumSatTables());
+        initSimpleTableContainer<SwfnTable>(deck, "SWFN" , m_tabdims->getNumSatTables());
+        initSimpleTableContainer<SgfnTable>(deck, "SGFN" , m_tabdims->getNumSatTables());
+        initSimpleTableContainer<SsfnTable>(deck, "SSFN" , m_tabdims->getNumSatTables());
+
+        initSimpleTableContainer<RsvdTable>(deck, "RSVD" , m_eqldims->getNumEquilRegions());
+        initSimpleTableContainer<RvvdTable>(deck, "RVVD" , m_eqldims->getNumEquilRegions());
+        {
+            size_t numEndScaleTables = ParserKeywords::ENDSCALE::NUM_TABLES::defaultValue;
+
+            if (deck.hasKeyword<ParserKeywords::ENDSCALE>()) {
+                auto keyword = deck.getKeyword<ParserKeywords::ENDSCALE>();
+                auto record = keyword->getRecord(0);
+                numEndScaleTables = static_cast<size_t>(record->getItem<ParserKeywords::ENDSCALE::NUM_TABLES>()->getInt(0));
+            }
+
+            initSimpleTableContainer<EnkrvdTable>( deck , "ENKRVD", numEndScaleTables);
+            initSimpleTableContainer<EnptvdTable>( deck , "ENPTVD", numEndScaleTables);
+            initSimpleTableContainer<ImkrvdTable>( deck , "IMKRVD", numEndScaleTables);
+            initSimpleTableContainer<ImptvdTable>( deck , "IMPTVD", numEndScaleTables);
+        }
+        initSimpleTableContainer<PvdgTable>(deck, "PVDG", m_tabdims->getNumPVTTables());
+        initSimpleTableContainer<PvdoTable>(deck, "PVDO", m_tabdims->getNumPVTTables());
+        initSimpleTableContainer<PvdsTable>(deck, "PVDS", m_tabdims->getNumPVTTables());
+        initSimpleTableContainer<OilvisctTable>(deck, "OILVISCT", m_tabdims->getNumPVTTables());
+        initSimpleTableContainer<WatvisctTable>(deck, "WATVISCT", m_tabdims->getNumPVTTables());
+
+        initSimpleTableContainer<PlyadsTable>(deck, "PLYADS", m_tabdims->getNumSatTables());
+        initSimpleTableContainer<PlyviscTable>(deck, "PLYVISC", m_tabdims->getNumPVTTables());
+        initSimpleTableContainer<PlydhflfTable>(deck, "PLYDHFLF", m_tabdims->getNumPVTTables());
+        initPlyrockTables(deck);
+        initPlymaxTables(deck);
+        initGasvisctTables(deck);
+        initRTempTables(deck);
+        initRocktabTables(deck);
+        initPlyshlogTables(deck);
     }
 
 
@@ -101,18 +219,21 @@ namespace Opm {
         if (deck.hasKeyword("TEMPVD") && deck.hasKeyword("RTEMPVD"))
             throw std::invalid_argument("The TEMPVD and RTEMPVD tables are mutually exclusive!");
         else if (deck.hasKeyword("TEMPVD"))
-            initSimpleTables(deck, "TEMPVD", m_rtempvdTables);
+            initSimpleTableContainer<RtempvdTable>(deck, "TEMPVD", "RTEMPVD", m_eqldims->getNumEquilRegions());
         else if (deck.hasKeyword("RTEMPVD"))
-            initSimpleTables(deck, "RTEMPVD", m_rtempvdTables);
-
+            initSimpleTableContainer<RtempvdTable>(deck, "RTEMPVD", "RTEMPVD" , m_eqldims->getNumEquilRegions());
     }
 
 
-    void TableManager::initGasvisctTables(const Deck& deck,
-                                    const std::string& keywordName,
-                                    std::vector<GasvisctTable>& tableVector) {
+    void TableManager::initGasvisctTables(const Deck& deck) {
+
+        const std::string keywordName = "GASVISCT";
+        size_t numTables = m_tabdims->getNumPVTTables();
+
         if (!deck.hasKeyword(keywordName))
             return; // the table is not featured by the deck...
+
+        auto& container = forceGetTables(keywordName , numTables);
 
         if (deck.numKeywords(keywordName) > 1) {
             complainAboutAmbiguousKeyword(deck, keywordName);
@@ -121,26 +242,19 @@ namespace Opm {
 
         const auto& tableKeyword = deck.getKeyword(keywordName);
         for (size_t tableIdx = 0; tableIdx < tableKeyword->size(); ++tableIdx) {
-            if (tableKeyword->getRecord(tableIdx)->getItem(0)->size() == 0) {
-                // for simple tables, an empty record indicates that the previous table
-                // should be copied...
-                if (tableIdx == 0) {
-                    std::string msg = "The first table for keyword " + keywordName + " must be explicitly defined! Ignoring keyword";
-                    OpmLog::addMessage(Log::MessageType::Error , Log::fileMessage(tableKeyword->getFileName(),tableKeyword->getLineNumber(),msg));
-                    return;
-                }
-                tableVector.push_back(tableVector.back());
-                continue;
+            const auto tableRecord = tableKeyword->getRecord( tableIdx );
+            const auto dataItem = tableRecord->getItem( 0 );
+            if (dataItem->size() > 0) {
+                std::shared_ptr<GasvisctTable> table = std::make_shared<GasvisctTable>();
+                table->init(deck , dataItem );
+                container.addTable( tableIdx , table );
             }
-
-            tableVector.push_back(GasvisctTable());
-            tableVector[tableIdx].init(deck, tableKeyword->getRecord(tableIdx)->getItem(0));
         }
     }
 
-    void TableManager::initPlyshlogTables(const Deck& deck,
-                                    const std::string& keywordName,
-                                    std::vector<PlyshlogTable>& tableVector){
+
+    void TableManager::initPlyshlogTables(const Deck& deck) {
+        const std::string keywordName = "PLYSHLOG";
 
         if (!deck.hasKeyword(keywordName)) {
             return;
@@ -150,20 +264,31 @@ namespace Opm {
             complainAboutAmbiguousKeyword(deck, keywordName);
             return;
         }
+        size_t numTables = m_tabdims->getNumPVTTables();
+        auto& container = forceGetTables(keywordName , numTables);
+        const auto& tableKeyword = deck.getKeyword(keywordName);
 
-        const auto& keyword = deck.getKeyword(keywordName);
+        if (tableKeyword->size() > 2) {
+            std::string msg = "The Parser does currently NOT support the alternating record schema used in PLYSHLOG";
+            throw std::invalid_argument( msg );
+        }
 
-        tableVector.push_back(PlyshlogTable());
-
-        tableVector[0].init(keyword);
-
+        for (size_t tableIdx = 0; tableIdx < tableKeyword->size(); tableIdx += 2) {
+            const auto indexRecord = tableKeyword->getRecord( tableIdx );
+            const auto dataRecord = tableKeyword->getRecord( tableIdx + 1);
+            const auto dataItem = dataRecord->getItem( 0 );
+            if (dataItem->size() > 0) {
+                std::shared_ptr<PlyshlogTable> table = std::make_shared<PlyshlogTable>();
+                table->init(indexRecord , dataRecord);
+                container.addTable( tableIdx , table );
+            }
+        }
     }
 
 
-    void TableManager::initPlyrockTables(const Deck& deck,
-                                         const std::string& keywordName,
-                                         std::vector<PlyrockTable>& tableVector){
-
+    void TableManager::initPlyrockTables(const Deck& deck) {
+        size_t numTables = m_tabdims->getNumSatTables();
+        const std::string keywordName = "PLYROCK";
         if (!deck.hasKeyword(keywordName)) {
             return;
         }
@@ -173,19 +298,20 @@ namespace Opm {
             return;
         }
 
-        const auto& keyword = deck.getKeyword(keywordName);
-        for( auto iter = keyword->begin(); iter != keyword->end(); ++iter) {
-            auto record = *iter;
-            tableVector.push_back( PlyrockTable() );
-            tableVector.back().init( record );
+        const auto& keyword = deck.getKeyword<ParserKeywords::PLYROCK>();
+        auto& container = forceGetTables(keywordName , numTables);
+        for (size_t tableIdx = 0; tableIdx < keyword->size(); ++tableIdx) {
+            const auto tableRecord = keyword->getRecord( tableIdx );
+            std::shared_ptr<PlyrockTable> table = std::make_shared<PlyrockTable>();
+            table->init( tableRecord );
+            container.addTable( tableIdx , table );
         }
     }
 
 
-    void TableManager::initPlymaxTables(const Deck& deck,
-                                        const std::string& keywordName,
-                                        std::vector<PlymaxTable>& tableVector){
-
+    void TableManager::initPlymaxTables(const Deck& deck) {
+        size_t numTables = m_regdims->getNPLMIX();
+        const std::string keywordName = "PLYMAX";
         if (!deck.hasKeyword(keywordName)) {
             return;
         }
@@ -195,11 +321,13 @@ namespace Opm {
             return;
         }
 
-        const auto& keyword = deck.getKeyword(keywordName);
-        for( auto iter = keyword->begin(); iter != keyword->end(); ++iter) {
-            auto record = *iter;
-            tableVector.push_back( PlymaxTable() );
-            tableVector.back().init( record );
+        const auto& keyword = deck.getKeyword<ParserKeywords::PLYMAX>();
+        auto& container = forceGetTables(keywordName , numTables);
+        for (size_t tableIdx = 0; tableIdx < keyword->size(); ++tableIdx) {
+            const auto tableRecord = keyword->getRecord( tableIdx );
+            std::shared_ptr<PlymaxTable> table = std::make_shared<PlymaxTable>();
+            table->init( tableRecord );
+            container.addTable( tableIdx , table );
         }
     }
 
@@ -213,31 +341,29 @@ namespace Opm {
             complainAboutAmbiguousKeyword(deck, "ROCKTAB");
             return;
         }
-
+        const auto& rockcompKeyword = deck.getKeyword<ParserKeywords::ROCKCOMP>();
+        const auto& record = rockcompKeyword->getRecord( 0 );
+        size_t numTables = record->getItem<ParserKeywords::ROCKCOMP::NTROCC>()->getInt(0);
+        auto& container = forceGetTables("ROCKTAB" , numTables);
         const auto rocktabKeyword = deck.getKeyword("ROCKTAB");
 
-        bool isDirectional = deck.hasKeyword("RKTRMDIR");
+        bool isDirectional = deck.hasKeyword<ParserKeywords::RKTRMDIR>();
         bool useStressOption = false;
-        if (deck.hasKeyword("ROCKOPTS")) {
-            const auto rockoptsKeyword = deck.getKeyword("ROCKOPTS");
-            useStressOption = (rockoptsKeyword->getRecord(0)->getItem("METHOD")->getTrimmedString(0) == "STRESS");
+        if (deck.hasKeyword<ParserKeywords::ROCKOPTS>()) {
+            const auto rockoptsKeyword = deck.getKeyword<ParserKeywords::ROCKOPTS>();
+            const auto record = rockoptsKeyword->getRecord(0);
+            const auto item = record->getItem<ParserKeywords::ROCKOPTS::METHOD>();
+            useStressOption = (item->getTrimmedString(0) == "STRESS");
         }
 
         for (size_t tableIdx = 0; tableIdx < rocktabKeyword->size(); ++tableIdx) {
-            if (rocktabKeyword->getRecord(tableIdx)->getItem(0)->size() == 0) {
-                // for ROCKTAB tables, an empty record indicates that the previous table
-                // should be copied...
-                if (tableIdx == 0)
-                    throw std::invalid_argument("The first table for keyword ROCKTAB"
-                                                " must be explicitly defined!");
-                m_rocktabTables[tableIdx] = m_rocktabTables[tableIdx - 1];
-                continue;
+            const auto tableRecord = rocktabKeyword->getRecord( tableIdx );
+            const auto dataItem = tableRecord->getItem( 0 );
+            if (dataItem->size() > 0) {
+                std::shared_ptr<RocktabTable> table = std::make_shared<RocktabTable>();
+                table->init(dataItem , isDirectional, useStressOption);
+                container.addTable( tableIdx , table );
             }
-
-            m_rocktabTables.push_back(RocktabTable());
-            m_rocktabTables[tableIdx].init(rocktabKeyword->getRecord( tableIdx )->getItem(0),
-                                           isDirectional,
-                                           useStressOption);
         }
     }
 
@@ -300,121 +426,125 @@ namespace Opm {
     }
 
 
-    const std::vector<SwofTable>& TableManager::getSwofTables() const {
+    /*
+      const std::vector<SwofTable>& TableManager::getSwofTables() const {
         return m_swofTables;
+        }
+    */
+
+    const TableContainer& TableManager::getSwofTables() const {
+        return getTables("SWOF");
+    }
+
+    const TableContainer& TableManager::getSlgofTables() const {
+        return getTables("SLGOF");
     }
 
 
-    const std::vector<SlgofTable>& TableManager::getSlgofTables() const {
-        return m_slgofTables;
+    const TableContainer& TableManager::getSgofTables() const {
+        return getTables("SGOF");
+    }
+
+    const TableContainer& TableManager::getSof2Tables() const {
+        return getTables("SOF2");
+    }
+
+    const TableContainer& TableManager::getSof3Tables() const {
+        return getTables("SOF3");
+    }
+
+    const TableContainer& TableManager::getSwfnTables() const {
+        return getTables("SWFN");
+    }
+
+    const TableContainer& TableManager::getSgfnTables() const {
+        return getTables("SGFN");
+    }
+
+    const TableContainer& TableManager::getSsfnTables() const {
+        return getTables("SSFN");
+    }
+
+    const TableContainer& TableManager::getRsvdTables() const {
+        return getTables("RSVD");
+    }
+
+    const TableContainer& TableManager::getRvvdTables() const {
+        return getTables("RVVD");
+    }
+
+    const TableContainer& TableManager::getEnkrvdTables() const {
+        return getTables("ENKRVD");
+    }
+
+    const TableContainer& TableManager::getEnptvdTables() const {
+        return getTables("ENPTVD");
     }
 
 
-    const std::vector<SgofTable>& TableManager::getSgofTables() const {
-        return m_sgofTables;
+    const TableContainer& TableManager::getImkrvdTables() const {
+        return getTables("IMKRVD");
     }
 
-    const std::vector<Sof2Table>& TableManager::getSof2Tables() const {
-        return m_sof2Tables;
+    const TableContainer& TableManager::getImptvdTables() const {
+        return getTables("IMPTVD");
     }
 
-    const std::vector<Sof3Table>& TableManager::getSof3Tables() const {
-        return m_sof3Tables;
+    const TableContainer& TableManager::getPvdgTables() const {
+        return getTables("PVDG");
     }
 
-    const std::vector<PvdgTable>& TableManager::getPvdgTables() const {
-        return m_pvdgTables;
+    const TableContainer& TableManager::getPvdoTables() const {
+        return getTables("PVDO");
     }
 
-    const std::vector<PvdoTable>& TableManager::getPvdoTables() const {
-        return m_pvdoTables;
+    const TableContainer& TableManager::getPvdsTables() const {
+        return getTables("PVDS");
     }
 
-    const std::vector<SwfnTable>& TableManager::getSwfnTables() const {
-        return m_swfnTables;
+    const TableContainer& TableManager::getOilvisctTables() const {
+        return getTables("OILVISCT");
     }
 
-    const std::vector<SgfnTable>& TableManager::getSgfnTables() const {
-        return m_sgfnTables;
+    const TableContainer& TableManager::getWatvisctTables() const {
+        return getTables("WATVISCT");
     }
 
-    const std::vector<SsfnTable>& TableManager::getSsfnTables() const {
-        return m_ssfnTables;
+    const TableContainer& TableManager::getGasvisctTables() const {
+        return getTables("GASVISCT");
     }
 
-    const std::vector<PvdsTable>& TableManager::getPvdsTables() const {
-        return m_pvdsTables;
+    const TableContainer& TableManager::getRtempvdTables() const {
+        return getTables("RTEMPVD");
     }
 
-    const std::vector<OilvisctTable>& TableManager::getOilvisctTables() const {
-        return m_oilvisctTables;
-    }
-
-    const std::vector<WatvisctTable>& TableManager::getWatvisctTables() const {
-        return m_watvisctTables;
-    }
-
-    const std::vector<GasvisctTable>& TableManager::getGasvisctTables() const {
-        return m_gasvisctTables;
-    }
-
-    const std::vector<PlyadsTable>& TableManager::getPlyadsTables() const {
-        return m_plyadsTables;
-    }
-
-    const std::vector<PlymaxTable>& TableManager::getPlymaxTables() const {
-        return m_plymaxTables;
-    }
-
-    const std::vector<PlyrockTable>& TableManager::getPlyrockTables() const {
-        return m_plyrockTables;
-    }
-
-    const std::vector<PlyviscTable>& TableManager::getPlyviscTables() const {
-        return m_plyviscTables;
-    }
-
-    const std::vector<PlydhflfTable>& TableManager::getPlydhflfTables() const {
-        return m_plydhflfTables;
-    }
-
-    const std::vector<PlyshlogTable>& TableManager::getPlyshlogTables() const {
-        return m_plyshlogTables;
-    }
-
-    const std::vector<RocktabTable>& TableManager::getRocktabTables() const {
-        return m_rocktabTables;
-    }
-
-    const std::vector<RtempvdTable>& TableManager::getRtempvdTables() const {
-        return m_rtempvdTables;
+    const TableContainer& TableManager::getRocktabTables() const {
+        return getTables("ROCKTAB");
     }
 
 
-    const std::vector<EnkrvdTable>& TableManager::getEnkrvdTables() const {
-        return m_enkrvdTables;
+    const TableContainer& TableManager::getPlyadsTables() const {
+        return getTables("PLYADS");
     }
 
-    const std::vector<EnptvdTable>& TableManager::getEnptvdTables() const {
-        return m_enptvdTables;
+    const TableContainer& TableManager::getPlyviscTables() const {
+        return getTables("PLYVISC");
     }
 
-
-    const std::vector<ImkrvdTable>& TableManager::getImkrvdTables() const {
-        return m_imkrvdTables;
+    const TableContainer& TableManager::getPlydhflfTables() const {
+        return getTables("PLYDHFL");
     }
 
-    const std::vector<ImptvdTable>& TableManager::getImptvdTables() const {
-        return m_imptvdTables;
+    const TableContainer& TableManager::getPlymaxTables() const {
+        return getTables("PLYMAX");
     }
 
-
-    const std::vector<RsvdTable>& TableManager::getRsvdTables() const {
-        return m_rsvdTables;
+    const TableContainer& TableManager::getPlyrockTables() const {
+        return getTables("PLYROCK");
     }
 
-    const std::vector<RvvdTable>& TableManager::getRvvdTables() const {
-        return m_rvvdTables;
+    const TableContainer& TableManager::getPlyshlogTables() const {
+        return getTables("PLYSHLOG");
     }
 
     const std::vector<PvtgTable>& TableManager::getPvtgTables() const {

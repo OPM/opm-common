@@ -25,8 +25,8 @@ namespace Opm {
     // forward declaration
     class TableManager;
 
-    class OilvisctTable : protected SimpleTable {
-        
+    class OilvisctTable : public SimpleTable {
+    public:
 
         friend class TableManager;
         OilvisctTable() = default;
@@ -50,7 +50,6 @@ namespace Opm {
             SimpleTable::checkMonotonic("Viscosity", /*isAscending=*/false, /*strictlyMonotonic=*/false);
         }
 
-    public:
         using SimpleTable::numTables;
         using SimpleTable::numRows;
         using SimpleTable::numColumns;

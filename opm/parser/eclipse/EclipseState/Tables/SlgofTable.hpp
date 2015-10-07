@@ -25,7 +25,7 @@ namespace Opm {
     // forward declaration
     class TableManager;
 
-    class SlgofTable : protected SimpleTable {
+    class SlgofTable : public SimpleTable {
         friend class TableManager;
 
         /*!

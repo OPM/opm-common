@@ -23,6 +23,9 @@
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/Regdims.hpp>
+
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SlgofTable.hpp>
@@ -55,7 +58,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/VFPInjTable.hpp>
-
+#include <opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp>
 
 namespace Opm {
 
@@ -63,54 +66,57 @@ namespace Opm {
     public:
         TableManager( const Deck& deck );
 
+        const TableContainer& getTables( const std::string& tableName ) const;
+        const TableContainer& operator[](const std::string& tableName) const;
+        bool hasTables( const std::string& tableName ) const;
+
 
         std::shared_ptr<const Tabdims> getTabdims() const;
 
-        // the tables used by the deck. If the tables had some defaulted data in the
-        // deck, the objects returned here exhibit the correct values. If the table is
-        // not present in the deck, the corresponding vector is of size zero.
+        const TableContainer& getSwofTables() const;
+        const TableContainer& getSof2Tables() const;
+        const TableContainer& getSof3Tables() const;
+        const TableContainer& getSgofTables() const;
+        const TableContainer& getSlgofTables() const;
+        const TableContainer& getSwfnTables() const;
+        const TableContainer& getSgfnTables() const;
+        const TableContainer& getSsfnTables() const;
+        const TableContainer& getRsvdTables() const;
+        const TableContainer& getRvvdTables() const;
+        const TableContainer& getEnkrvdTables() const;
+        const TableContainer& getEnptvdTables() const;
+        const TableContainer& getImkrvdTables() const;
+        const TableContainer& getImptvdTables() const;
+        const TableContainer& getPvdgTables() const;
+        const TableContainer& getPvdoTables() const;
+        const TableContainer& getPvdsTables() const;
+        const TableContainer& getWatvisctTables() const;
+        const TableContainer& getOilvisctTables() const;
+        const TableContainer& getGasvisctTables() const;
+        const TableContainer& getRtempvdTables() const;
+        const TableContainer& getRocktabTables() const;
+        const TableContainer& getPlyadsTables() const;
+        const TableContainer& getPlyviscTables() const;
+        const TableContainer& getPlydhflfTables() const;
+        const TableContainer& getPlymaxTables() const;
+        const TableContainer& getPlyrockTables() const;
+        const TableContainer& getPlyshlogTables() const;
+
         const std::vector<PvtgTable>& getPvtgTables() const;
         const std::vector<PvtoTable>& getPvtoTables() const;
-        const std::vector<Sof2Table>& getSof2Tables() const;
-        const std::vector<Sof3Table>& getSof3Tables() const;
-        const std::vector<SwofTable>& getSwofTables() const;
-        const std::vector<SgofTable>& getSgofTables() const;
-        const std::vector<SlgofTable>& getSlgofTables() const;
-        const std::vector<PvdgTable>& getPvdgTables() const;
-        const std::vector<PvdoTable>& getPvdoTables() const;
-        const std::vector<SwfnTable>& getSwfnTables() const;
-        const std::vector<SgfnTable>& getSgfnTables() const;
-        const std::vector<SsfnTable>& getSsfnTables() const;
-        const std::vector<PvdsTable>& getPvdsTables() const;
-        const std::vector<PlyshlogTable>& getPlyshlogTables() const;
-        const std::vector<PlyadsTable>& getPlyadsTables() const;
-        const std::vector<PlymaxTable>& getPlymaxTables() const;
-        const std::vector<PlyrockTable>& getPlyrockTables() const;
-        const std::vector<PlyviscTable>& getPlyviscTables() const;
-        const std::vector<PlydhflfTable>& getPlydhflfTables() const;
-        const std::vector<RocktabTable>& getRocktabTables() const;
-        const std::vector<WatvisctTable>& getWatvisctTables() const;
-        const std::vector<OilvisctTable>& getOilvisctTables() const;
-        const std::vector<GasvisctTable>& getGasvisctTables() const;
-        const std::vector<RtempvdTable>& getRtempvdTables() const;
-        const std::vector<EnkrvdTable>& getEnkrvdTables() const;
-        const std::vector<EnptvdTable>& getEnptvdTables() const;
-        const std::vector<ImkrvdTable>& getImkrvdTables() const;
-        const std::vector<ImptvdTable>& getImptvdTables() const;
-        const std::vector<RsvdTable>& getRsvdTables() const;
-        const std::vector<RvvdTable>& getRvvdTables() const;
         const std::map<int, VFPProdTable>& getVFPProdTables() const;
         const std::map<int, VFPInjTable>& getVFPInjTables() const;
     private:
+        TableContainer& forceGetTables( const std::string& tableName , size_t numTables);
+
         void complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) const;
 
+        void addTables( const std::string& tableName , size_t numTables);
+        void initSimpleTables(const Deck& deck);
         void initRTempTables(const Deck& deck);
-        void initTabdims(const Deck& deck);
+        void initDims(const Deck& deck);
         void initRocktabTables(const Deck& deck);
-        void initGasvisctTables(const Deck& deck,
-                                const std::string& keywordName,
-                                std::vector<GasvisctTable>& tableVector);
-
+        void initGasvisctTables(const Deck& deck);
 
         void initVFPProdTables(const Deck& deck,
                                std::map<int, VFPProdTable>& tableMap);
@@ -119,21 +125,47 @@ namespace Opm {
                               std::map<int, VFPInjTable>& tableMap);
 
 
-        void initPlymaxTables(const Deck& deck,
-                              const std::string& keywordName,
-                              std::vector<PlymaxTable>& tableVector);
-
-        void initPlyrockTables(const Deck& deck,
-                               const std::string& keywordName,
-                               std::vector<PlyrockTable>& tableVector);
-
-
-        void initPlyshlogTables(const Deck& deck,
-                                const std::string& keywordName,
-                                std::vector<PlyshlogTable>& tableVector);
+        void initPlymaxTables(const Deck& deck);
+        void initPlyrockTables(const Deck& deck);
+        void initPlyshlogTables(const Deck& deck);
 
         template <class TableType>
-        void initSimpleTables(const Deck& deck,
+        void initSimpleTableContainer(const Deck& deck,
+                                      const std::string& keywordName,
+                                      const std::string& tableName,
+                                      size_t numTables) {
+            if (!deck.hasKeyword(keywordName))
+                return; // the table is not featured by the deck...
+
+            auto& container = forceGetTables(tableName , numTables);
+
+            if (deck.numKeywords(keywordName) > 1) {
+                complainAboutAmbiguousKeyword(deck, keywordName);
+                return;
+            }
+
+            const auto& tableKeyword = deck.getKeyword(keywordName);
+            for (size_t tableIdx = 0; tableIdx < tableKeyword->size(); ++tableIdx) {
+                const auto tableRecord = tableKeyword->getRecord( tableIdx );
+                const auto dataItem = tableRecord->getItem( 0 );
+                if (dataItem->size() > 0) {
+                    std::shared_ptr<TableType> table = std::make_shared<TableType>();
+                    table->init(dataItem);
+                    container.addTable( tableIdx , table );
+                }
+            }
+        }
+
+        template <class TableType>
+        void initSimpleTableContainer(const Deck& deck,
+                                      const std::string& keywordName,
+                                      size_t numTables) {
+            initSimpleTableContainer<TableType>(deck , keywordName , keywordName , numTables);
+        }
+
+
+        template <class TableType>
+        void initSimpleTable(const Deck& deck,
                               const std::string& keywordName,
                               std::vector<TableType>& tableVector) {
             if (!deck.hasKeyword(keywordName))
@@ -187,40 +219,15 @@ namespace Opm {
             }
         }
 
-
+        std::map<std::string , TableContainer> m_simpleTables;
         std::map<int, VFPProdTable> m_vfpprodTables;
         std::map<int, VFPInjTable> m_vfpinjTables;
         std::vector<PvtgTable> m_pvtgTables;
         std::vector<PvtoTable> m_pvtoTables;
-        std::vector<PvdsTable> m_pvdsTables;
-        std::vector<SwfnTable> m_swfnTables;
-        std::vector<SgfnTable> m_sgfnTables;
-        std::vector<SsfnTable> m_ssfnTables;
-        std::vector<PvdgTable> m_pvdgTables;
-        std::vector<PvdoTable> m_pvdoTables;
-        std::vector<Sof2Table> m_sof2Tables;
-        std::vector<Sof3Table> m_sof3Tables;
-        std::vector<SgofTable> m_sgofTables;
-        std::vector<SwofTable> m_swofTables;
-        std::vector<SlgofTable> m_slgofTables;
-        std::vector<PlyadsTable> m_plyadsTables;
-        std::vector<PlymaxTable> m_plymaxTables;
-        std::vector<PlyrockTable> m_plyrockTables;
-        std::vector<PlyviscTable> m_plyviscTables;
-        std::vector<PlydhflfTable> m_plydhflfTables;
-        std::vector<PlyshlogTable> m_plyshlogTables;
-        std::vector<RocktabTable> m_rocktabTables;
-        std::vector<WatvisctTable> m_watvisctTables;
-        std::vector<OilvisctTable> m_oilvisctTables;
-        std::vector<GasvisctTable> m_gasvisctTables;
-        std::vector<RtempvdTable> m_rtempvdTables;
-        std::vector<EnkrvdTable> m_enkrvdTables;
-        std::vector<EnptvdTable> m_enptvdTables;
-        std::vector<ImkrvdTable> m_imkrvdTables;
-        std::vector<ImptvdTable> m_imptvdTables;
-        std::vector<RsvdTable> m_rsvdTables;
-        std::vector<RvvdTable> m_rvvdTables;
+
+        std::shared_ptr<Regdims> m_regdims;
         std::shared_ptr<Tabdims> m_tabdims;
+        std::shared_ptr<Eqldims> m_eqldims;
     };
 }
 

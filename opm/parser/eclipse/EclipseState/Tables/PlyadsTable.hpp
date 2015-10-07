@@ -25,8 +25,8 @@ namespace Opm {
     // forward declaration
     class TableManager;
 
-    class PlyadsTable : protected SimpleTable {
-
+    class PlyadsTable : public SimpleTable {
+    public:
 
         friend class TableManager;
 
@@ -49,7 +49,6 @@ namespace Opm {
         }
 
 
-    public:
         PlyadsTable() = default;
 
 #ifdef BOOST_TEST_MODULE

@@ -25,8 +25,8 @@ namespace Opm {
     // forward declaration
     class TableManager;
 
-    class GasvisctTable : protected SimpleTable {
-
+    class GasvisctTable : public SimpleTable {
+    public:
         friend class TableManager;
         GasvisctTable() = default;
 
@@ -99,7 +99,6 @@ namespace Opm {
             }
         }
 
-    public:
         using SimpleTable::numTables;
         using SimpleTable::numRows;
         using SimpleTable::numColumns;

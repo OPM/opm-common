@@ -30,6 +30,8 @@
 #include <cassert>
 
 #include <opm/parser/eclipse/EclipseState/Tables/RtempvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
 
 
@@ -104,12 +106,12 @@ public:
 
         auto tables = m_eclipseState.getTableManager();
         auto eclipseGrid = m_eclipseState.getEclipseGrid();
-        const std::vector<RtempvdTable>& rtempvdTables = tables->getRtempvdTables();
+        const TableContainer& rtempvdTables = tables->getRtempvdTables();
         const std::vector<int>& eqlNum = m_eclipseState.getIntGridProperty("EQLNUM")->getData();
 
         for (size_t cellIdx = 0; cellIdx < eqlNum.size(); ++ cellIdx) {
             int cellEquilNum = eqlNum[cellIdx];
-            const RtempvdTable& rtempvdTable = rtempvdTables[cellEquilNum];
+            const RtempvdTable& rtempvdTable = rtempvdTables.getTable<RtempvdTable>(cellEquilNum);
             double cellDepth = std::get<2>(eclipseGrid->getCellCenter(cellIdx));
             values[cellIdx] = rtempvdTable.evaluate("Temperature", cellDepth);
         }

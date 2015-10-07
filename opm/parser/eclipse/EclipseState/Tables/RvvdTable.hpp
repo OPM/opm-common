@@ -25,8 +25,8 @@ namespace Opm {
     // forward declaration
     class TableManager;
 
-    class RvvdTable : protected SimpleTable {
-
+    class RvvdTable : public SimpleTable {
+    public:
         friend class TableManager;
 
         RvvdTable() = default;
@@ -46,7 +46,6 @@ namespace Opm {
             SimpleTable::checkNonDefaultable("RV");
         }
 
-    public:
         using SimpleTable::numTables;
         using SimpleTable::numRows;
         using SimpleTable::numColumns;

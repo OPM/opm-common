@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2015 Statoil ASA
+  Copyright 2013 Statoil ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -16,15 +16,27 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#define BOOST_TEST_MODULE TABDIMS_TESTS
+
+#define BOOST_TEST_MODULE ParsePLYVISC
+#include <math.h>
+
 #include <boost/test/unit_test.hpp>
+#include <boost/test/test_tools.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
-BOOST_AUTO_TEST_CASE(TEST_CREATE) {
-    Opm::Tabdims tabdims1(1,2,3,4,5,6);
-    Opm::Tabdims tabdims2;
+using namespace Opm;
 
-    BOOST_CHECK_EQUAL( tabdims1.getNumSatNodes() ,  3U );
-    BOOST_CHECK_EQUAL( tabdims2.getNumSatNodes() , 20U );
+
+
+BOOST_AUTO_TEST_CASE( PARSE_PLYADSS_OK) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path deckFile("testdata/integration_tests/POLYMER/plyadss.data");
+    DeckPtr deck =  parser->parseFile(deckFile.string() , ParseMode());
+    DeckKeywordConstPtr kw = deck->getKeyword("PLYADSS");
+
+    BOOST_CHECK_EQUAL( kw->size() , 11U );
 }

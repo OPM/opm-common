@@ -25,8 +25,8 @@ namespace Opm {
     // forward declaration
     class TableManager;
 
-    class RocktabTable : protected SimpleTable {
-
+    class RocktabTable : public  SimpleTable {
+    public:
         friend class TableManager;
         RocktabTable() = default;
 
@@ -56,7 +56,6 @@ namespace Opm {
             }
         }
 
-    public:
         using SimpleTable::numTables;
         using SimpleTable::numRows;
         using SimpleTable::numColumns;

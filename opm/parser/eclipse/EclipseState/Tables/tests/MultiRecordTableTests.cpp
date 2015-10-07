@@ -19,9 +19,9 @@
 
 #define BOOST_TEST_MODULE MultiRecordTableTests
 
-#include <opm/core/utility/platform_dependent/disable_warnings.h>
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
 #include <boost/test/unit_test.hpp>
-#include <opm/core/utility/platform_dependent/reenable_warnings.h>
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 #include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
