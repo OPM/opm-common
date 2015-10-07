@@ -351,8 +351,8 @@ namespace Opm {
         bool useStressOption = false;
         if (deck.hasKeyword<ParserKeywords::ROCKOPTS>()) {
             const auto rockoptsKeyword = deck.getKeyword<ParserKeywords::ROCKOPTS>();
-            const auto record = rockoptsKeyword->getRecord(0);
-            const auto item = record->getItem<ParserKeywords::ROCKOPTS::METHOD>();
+            const auto rockoptsRecord = rockoptsKeyword->getRecord(0);
+            const auto item = rockoptsRecord->getItem<ParserKeywords::ROCKOPTS::METHOD>();
             useStressOption = (item->getTrimmedString(0) == "STRESS");
         }
 
