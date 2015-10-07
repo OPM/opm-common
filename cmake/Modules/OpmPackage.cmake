@@ -57,9 +57,9 @@ macro (find_opm_package module deps header lib defs prog conf)
   string (REPLACE "-" "_" MODULE "${MODULE_UPPER}")
 
   # if someone else has included this test, don't do it again
-  if (${${MODULE}_FOUND})
+  if (${MODULE}_FOUND OR ${module}_FOUND)
 	return ()
-  endif (${${MODULE}_FOUND})
+  endif ()
 
   # variables to pass on to other packages
   if (${module}_FIND_QUIETLY)
