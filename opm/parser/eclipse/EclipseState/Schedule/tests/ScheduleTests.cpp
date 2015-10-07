@@ -73,6 +73,21 @@ static DeckPtr createDeckWithWells() {
     return parser.parseString(input, ParseMode());
 }
 
+static DeckPtr createDeckForTestingCrossFlow() {
+    Opm::Parser parser;
+    std::string input =
+            "START             -- 0 \n"
+            "10 MAI 2007 / \n"
+            "SCHEDULE\n"
+            "WELSPECS\n"
+            "     \'DEFAULT\'    \'OP\'   30   37  3.33       \'OIL\'  7*/   \n"
+            "     \'ALLOW\'      \'OP\'   30   37  3.33       \'OIL\'  3*  YES / \n"
+            "     \'BAN\'        \'OP\'   20   51  3.92       \'OIL\'  3*  NO /  \n"
+            "/\n";
+
+    return parser.parseString(input, ParseMode());
+}
+
 static DeckPtr createDeckWithWellsOrdered() {
     Opm::Parser parser;
     std::string input =
@@ -283,6 +298,21 @@ BOOST_AUTO_TEST_CASE(ReturnMaxNumCompletionsForWellsInTimestep) {
 
     BOOST_CHECK_EQUAL(schedule.getMaxNumCompletionsForWells(1), 7);
     BOOST_CHECK_EQUAL(schedule.getMaxNumCompletionsForWells(3), 9);
+}
+
+BOOST_AUTO_TEST_CASE(TestCrossFlowHandling) {
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,10);
+    DeckPtr deck = createDeckForTestingCrossFlow();
+    IOConfigPtr ioConfig;
+    Schedule schedule(ParseMode() , grid , deck, ioConfig);
+
+    std::vector<WellPtr> well_default = schedule.getWells("DEFAULT");
+    BOOST_CHECK_EQUAL(well_default[0]->getAllowCrossFlow(), true);
+    std::vector<WellPtr> well_allow = schedule.getWells("ALLOW");
+    BOOST_CHECK_EQUAL(well_allow[0]->getAllowCrossFlow(), true);
+    std::vector<WellPtr> well_ban = schedule.getWells("BAN");
+    BOOST_CHECK_EQUAL(well_ban[0]->getAllowCrossFlow(), false);
+
 }
 
 static DeckPtr createDeckWithWellsAndCompletionDataWithWELOPEN() {

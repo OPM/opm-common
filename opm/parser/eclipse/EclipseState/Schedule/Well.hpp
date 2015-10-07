@@ -47,7 +47,7 @@ namespace Opm {
     class Well {
     public:
         Well(const std::string& name, std::shared_ptr<const EclipseGrid> grid , int headI, int headJ, Value<double> refDepth , Phase::PhaseEnum preferredPhase,
-             TimeMapConstPtr timeMap, size_t creationTimeStep, WellCompletion::CompletionOrderEnum completionOrdering = WellCompletion::TRACK);
+             TimeMapConstPtr timeMap, size_t creationTimeStep, WellCompletion::CompletionOrderEnum completionOrdering = WellCompletion::TRACK, bool allowCrossFlow = true);
         const std::string& name() const;
 
         bool hasBeenDefined(size_t timeStep) const;
@@ -104,6 +104,9 @@ namespace Opm {
 
         WellCompletion::CompletionOrderEnum getWellCompletionOrdering() const;
 
+        bool getAllowCrossFlow() const;
+
+
 
 
 
@@ -129,7 +132,6 @@ namespace Opm {
         std::shared_ptr<DynamicState<bool> > m_rft;
         std::shared_ptr<DynamicState<bool> > m_plt;
 
-
         // WELSPECS data - assumes this is not dynamic
 
         TimeMapConstPtr m_timeMap;
@@ -140,6 +142,8 @@ namespace Opm {
         std::shared_ptr<const EclipseGrid> m_grid;
 
         WellCompletion::CompletionOrderEnum m_comporder;
+        bool m_allowCrossFlow;
+
     };
     typedef std::shared_ptr<Well> WellPtr;
     typedef std::shared_ptr<const Well> WellConstPtr;
