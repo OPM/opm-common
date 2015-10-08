@@ -83,7 +83,49 @@ static DeckPtr createDeckForTestingCrossFlow() {
             "     \'DEFAULT\'    \'OP\'   30   37  3.33       \'OIL\'  7*/   \n"
             "     \'ALLOW\'      \'OP\'   30   37  3.33       \'OIL\'  3*  YES / \n"
             "     \'BAN\'        \'OP\'   20   51  3.92       \'OIL\'  3*  NO /  \n"
+            "/\n"
+
+            "COMPDAT\n"
+            " \'BAN\'  1  1   1   1 \'OPEN\' 1*    1.168   0.311   107.872 1*  1*  \'Z\'  21.925 / \n"
+            "/\n"
+
+            "WCONHIST\n"
+            "     'BAN'      'OPEN'      'RESV'      0.000      0.000      0.000  5* / \n"
+            "/\n"
+
+            "DATES             -- 1\n"
+            " 10  JUN 2007 / \n"
+            "/\n"
+
+            "WCONHIST\n"
+            "     'BAN'      'OPEN'      'RESV'      1.000      0.000      0.000  5* / \n"
+            "/\n"
+
+            "DATES             -- 2\n"
+            " 10  JUL 2007 / \n"
+            "/\n"
+
+            "WCONPROD\n"
+            "     'BAN'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* / \n"
+            "/\n"
+
+
+            "DATES             -- 3\n"
+            " 10  AUG 2007 / \n"
+            "/\n"
+
+            "WCONINJH\n"
+            "     'BAN'      'WATER'      1*      0 / \n"
+            "/\n"
+
+            "DATES             -- 4\n"
+            " 10  SEP 2007 / \n"
+            "/\n"
+
+            "WCONINJH\n"
+            "     'BAN'      'WATER'      1*      1.0 / \n"
             "/\n";
+
 
     return parser.parseString(input, ParseMode());
 }
@@ -312,6 +354,18 @@ BOOST_AUTO_TEST_CASE(TestCrossFlowHandling) {
     BOOST_CHECK_EQUAL(well_allow[0]->getAllowCrossFlow(), true);
     std::vector<WellPtr> well_ban = schedule.getWells("BAN");
     BOOST_CHECK_EQUAL(well_ban[0]->getAllowCrossFlow(), false);
+
+    size_t currentStep = 0;
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well_ban[0]->getStatus(currentStep));
+    currentStep = 1;
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well_ban[0]->getStatus(currentStep));
+    currentStep = 2;
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well_ban[0]->getStatus(currentStep));
+    currentStep = 3;
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well_ban[0]->getStatus(currentStep));
+    currentStep = 4;
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well_ban[0]->getStatus(currentStep));
+
 
 }
 
