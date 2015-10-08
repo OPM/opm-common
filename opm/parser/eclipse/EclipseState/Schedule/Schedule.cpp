@@ -59,7 +59,7 @@ namespace Opm {
     }
 
     void Schedule::initOilVaporization(TimeMapConstPtr timeMap) {
-        m_oilvaporizationproperties.reset(new DynamicState<OilVaporizationPropertiesPtr>(timeMap, OilVaporizationPropertiesPtr(new OilVaporizationProperties())));
+        m_oilvaporizationproperties.reset(new DynamicState<OilVaporizationPropertiesPtr>(timeMap, OilVaporizationPropertiesPtr()));
     }
 
     void Schedule::initRootGroupTreeNode(TimeMapConstPtr timeMap) {
@@ -324,7 +324,7 @@ namespace Opm {
     void Schedule::handleDRVDT(DeckKeywordConstPtr keyword, size_t currentStep){
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            double max = record->getItem("DRVDT_MAX")->getRawDouble(0);
+            double max = record->getItem("DRVDT_MAX")->getSIDouble(0);
             OilVaporizationPropertiesPtr drvdt = OilVaporizationProperties::createOilVaporizationPropertiesDRVDT(max);
             setOilVaporizationProperties(drvdt, currentStep);
 
@@ -335,7 +335,7 @@ namespace Opm {
     void Schedule::handleDRSDT(DeckKeywordConstPtr keyword, size_t currentStep){
         for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
             DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            double max = record->getItem("DRSDT_MAX")->getRawDouble(0);
+            double max = record->getItem("DRSDT_MAX")->getSIDouble(0);
             std::string option = record->getItem("Option")->getString(0);
             OilVaporizationPropertiesPtr drsdt = OilVaporizationProperties::createOilVaporizationPropertiesDRSDT(max, option);
             setOilVaporizationProperties(drsdt, currentStep);

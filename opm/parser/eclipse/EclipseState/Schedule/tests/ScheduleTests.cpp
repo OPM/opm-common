@@ -1207,8 +1207,8 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDTthenDRVDT) {
     size_t currentStep = 2;
     BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
     OilVaporizationPropertiesConstPtr ovap = schedule.getOilVaporizationProperties(currentStep);
-    double value =  ovap->getMaximum();
-    BOOST_CHECK_EQUAL(0.100, value);
+    double value =  ovap->getMaxDRVDT();
+    BOOST_CHECK_EQUAL(1.1574074074074074e-06, value);
     BOOST_CHECK_EQUAL(ovap->getType(), Opm::OilVaporizationEnum::DRVDT);
 }
 
