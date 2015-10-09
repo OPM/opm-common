@@ -120,6 +120,7 @@ EclipseState/Grid/FaultFace.cpp
 EclipseState/Grid/Fault.cpp
 EclipseState/Grid/FaultCollection.cpp
 EclipseState/Grid/NNC.cpp
+EclipseState/Grid/PinchMode.cpp
 #
 EclipseState/InitConfig/InitConfig.cpp
 EclipseState/SimulationConfig/SimulationConfig.cpp

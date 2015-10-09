@@ -172,12 +172,12 @@ namespace Opm {
             auto record = deck->getKeyword<ParserKeywords::PINCH>( )->getRecord(0);
             auto item = record->getItem<ParserKeywords::PINCH::THRESHOLD_THICKNESS>( );
             m_pinch.setValue( item->getSIDouble(0) );
-            if (record->getItem<ParserKeywords::PINCH::PINCHOUT_OPTION>()->getString(0) != "TOPBOT") {
-                m_pinchoutMode = PinchMode::ModeEnum::ALL;
-            }
-            if (record->getItem<ParserKeywords::PINCH::MULTZ_OPTION>()->getString(0) != "TOP") {
-                m_multzMode = PinchMode::ModeEnum::ALL;
-            }
+
+            auto pinchoutString = record->getItem<ParserKeywords::PINCH::PINCHOUT_OPTION>()->getString(0);
+            m_pinchoutMode = PinchMode::PinchModeFromString(pinchoutString);
+            
+            auto multzString = record->getItem<ParserKeywords::PINCH::MULTZ_OPTION>()->getString(0);
+            m_multzMode = PinchMode::PinchModeFromString(multzString);
         }
 
         if (deck->hasKeyword<ParserKeywords::MINPV>() && deck->hasKeyword<ParserKeywords::MINPVFIL>()) {

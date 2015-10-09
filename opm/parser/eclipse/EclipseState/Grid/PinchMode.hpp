@@ -20,6 +20,8 @@
 #ifndef _PINCHMODE_
 #define _PINCHMODE_
 
+#include <string>
+
 namespace Opm {
     
     namespace PinchMode {
@@ -28,6 +30,9 @@ namespace Opm {
             TOPBOT = 2,
             TOP = 3
         };
+
+        const std::string PinchMode2String(ModeEnum enumValue);
+        ModeEnum PinchModeFromString(const std::string& stringValue);
     }
 }
 
