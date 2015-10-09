@@ -27,6 +27,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/MinpvMode.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/PinchMode.hpp>
 #include <ert/ecl/ecl_grid.h>
 
 #include <memory>
@@ -79,8 +80,8 @@ namespace Opm {
         size_t  getCartesianSize( ) const;
         bool isPinchActive( ) const;
         double getPinchThresholdThickness( ) const;
-        std::string getPinchoutOption( ) const;
-        std::string getMultzOption( ) const;
+        PinchMode::ModeEnum getPinchOption( ) const;
+        PinchMode::ModeEnum getMultzOption( ) const;
 
         MinpvMode::ModeEnum getMinpvMode() const;
         double getMinpvValue( ) const;
@@ -115,8 +116,8 @@ namespace Opm {
         double m_minpvValue;
         MinpvMode::ModeEnum m_minpvMode;
         Value<double> m_pinch;
-        std::string m_pinchoutMode;
-        std::string m_multzMode;
+        PinchMode::ModeEnum m_pinchoutMode;
+        PinchMode::ModeEnum m_multzMode;
         size_t m_nx;
         size_t m_ny;
         size_t m_nz;

@@ -42,8 +42,8 @@ namespace Opm {
         : m_minpvValue(0),
           m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH"),
-          m_pinchoutMode("TOPBOT"),
-          m_multzMode("TOP")
+          m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
+          m_multzMode(PinchMode::ModeEnum::TOP)
     {
         ecl_grid_type * new_ptr = ecl_grid_load_case( filename.c_str() );
         if (new_ptr)
@@ -60,8 +60,8 @@ namespace Opm {
         : m_minpvValue(0),
           m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH"),
-          m_pinchoutMode("TOPBOT"),
-          m_multzMode("TOP")
+          m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
+          m_multzMode(PinchMode::ModeEnum::TOP)
     {
         m_grid.reset( ecl_grid_alloc_copy( src_ptr ) , ecl_grid_free );
 
@@ -82,8 +82,8 @@ namespace Opm {
         : m_minpvValue(0),
           m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH"),
-          m_pinchoutMode("TOPBOT"),
-          m_multzMode("TOP")
+          m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
+          m_multzMode(PinchMode::ModeEnum::TOP)
     {
         m_nx = nx;
         m_ny = ny;
@@ -109,8 +109,8 @@ namespace Opm {
         : m_minpvValue(0),
           m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH"),
-          m_pinchoutMode("TOPBOT"),
-          m_multzMode("TOP")
+          m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
+          m_multzMode(PinchMode::ModeEnum::TOP)
     {
         const bool hasRUNSPEC = Section::hasRUNSPEC(deck);
         const bool hasGRID = Section::hasGRID(deck);
@@ -172,8 +172,12 @@ namespace Opm {
             auto record = deck->getKeyword<ParserKeywords::PINCH>( )->getRecord(0);
             auto item = record->getItem<ParserKeywords::PINCH::THRESHOLD_THICKNESS>( );
             m_pinch.setValue( item->getSIDouble(0) );
-            m_pinchoutMode = record->getItem<ParserKeywords::PINCH::PINCHOUT_OPTION>()->getString(0);
-            m_multzMode = record->getItem<ParserKeywords::PINCH::MULTZ_OPTION>()->getString(0);
+            if (record->getItem<ParserKeywords::PINCH::PINCHOUT_OPTION>()->getString(0) != "TOPBOT") {
+                m_pinchoutMode = PinchMode::ModeEnum::ALL;
+            }
+            if (record->getItem<ParserKeywords::PINCH::MULTZ_OPTION>()->getString(0) != "TOP") {
+                m_multzMode = PinchMode::ModeEnum::ALL;
+            }
         }
 
         if (deck->hasKeyword<ParserKeywords::MINPV>() && deck->hasKeyword<ParserKeywords::MINPVFIL>()) {
@@ -222,11 +226,11 @@ namespace Opm {
         return m_pinch.getValue();
     }
 
-    std::string EclipseGrid::getPinchoutOption( ) const {
+    PinchMode::ModeEnum EclipseGrid::getPinchOption( ) const {
         return m_pinchoutMode;
     }
 
-    std::string EclipseGrid::getMultzOption( ) const {
+    PinchMode::ModeEnum EclipseGrid::getMultzOption( ) const {
         return m_multzMode;
     }
 
