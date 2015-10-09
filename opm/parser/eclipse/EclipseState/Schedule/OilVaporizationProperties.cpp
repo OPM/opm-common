@@ -23,13 +23,9 @@ namespace Opm {
         }
     }
 
-    const std::string OilVaporizationProperties::getOption() const{
+    const bool OilVaporizationProperties::getOption() const{
         if (m_type == Opm::OilVaporizationEnum::DRSDT){
-            if (m_maxDRSDT_allCells){
-                return std::string("ALL");
-            }else{
-                return std::string("FREE");
-            }
+            return m_maxDRSDT_allCells;
         }else{
             throw std::logic_error("Only valid if type is DRSDT");
         }

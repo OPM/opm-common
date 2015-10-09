@@ -1174,8 +1174,8 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDT) {
     size_t currentStep = 1;
     BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
     OilVaporizationPropertiesConstPtr ovap = schedule.getOilVaporizationProperties(currentStep);
-    std::string value =  ovap->getOption();
-    BOOST_CHECK_EQUAL("ALL", value);
+
+    BOOST_CHECK_EQUAL(true,   ovap->getOption());
     BOOST_CHECK_EQUAL(ovap->getType(), Opm::OilVaporizationEnum::DRSDT);
 }
 
