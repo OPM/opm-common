@@ -31,7 +31,7 @@ namespace Opm {
             TOP = 3
         };
 
-        const std::string PinchMode2String(ModeEnum enumValue);
+        const std::string PinchMode2String(const ModeEnum enumValue);
         ModeEnum PinchModeFromString(const std::string& stringValue);
     }
 }
