@@ -19,13 +19,20 @@
 #
 #   - CMP0026 to allow access to the LOCATION target property
 #   - CMP0048 to indicate that we want to deal with the *VERSION*
-#     variables ourselves
+#							variables ourselves
+#   - CMP0054 3.1 and later no longer implicitly dereference variables or
+#							interpret keywords in an ``if()`` command argument when
+#							it is a :ref:`Quoted Argument` or a :ref:`Bracket Argument`
 if (POLICY CMP0026)
 	cmake_policy(SET CMP0026 OLD)
 endif()
 
 if (POLICY CMP0048)
 	cmake_policy(SET CMP0048 OLD)
+endif()
+
+if (POLICY CMP0054)
+	cmake_policy(SET CMP0054 NEW)
 endif()
 
 # include special
@@ -37,7 +44,7 @@ endif (CMAKE_VERSION VERSION_LESS "2.8.3")
 if (CMAKE_VERSION VERSION_LESS "2.8.5")
 	message (STATUS "Enabling compatibility modules for CMake 2.8.5")
 	list (APPEND CMAKE_MODULE_PATH "${OPM_MACROS_ROOT}/cmake/Modules/compat-2.8.5")
-endif (CMAKE_VERSION VERSION_LESS "2.8.5")	
+endif (CMAKE_VERSION VERSION_LESS "2.8.5")
 
 if (CMAKE_VERSION VERSION_LESS "2.8.7")
 	message (STATUS "Enabling compatibility modules for CMake 2.8.7")
