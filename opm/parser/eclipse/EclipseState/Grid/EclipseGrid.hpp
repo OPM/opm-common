@@ -79,6 +79,8 @@ namespace Opm {
         size_t  getCartesianSize( ) const;
         bool isPinchActive( ) const;
         double getPinchThresholdThickness( ) const;
+        std::string getPinchoutOption( ) const;
+        std::string getMultzOption( ) const;
 
         MinpvMode::ModeEnum getMinpvMode() const;
         double getMinpvValue( ) const;
@@ -113,6 +115,8 @@ namespace Opm {
         double m_minpvValue;
         MinpvMode::ModeEnum m_minpvMode;
         Value<double> m_pinch;
+        std::string m_pinchoutMode;
+        std::string m_multzMode;
         size_t m_nx;
         size_t m_ny;
         size_t m_nz;
