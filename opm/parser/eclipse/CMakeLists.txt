@@ -237,6 +237,7 @@ EclipseState/Tables/PlymaxTable.hpp
 EclipseState/Tables/PvtgTable.hpp
 EclipseState/Tables/PlyrockTable.hpp
 EclipseState/Tables/SwofTable.hpp
+EclipseState/Tables/SgwfnTable.hpp
 EclipseState/Tables/SwfnTable.hpp
 EclipseState/Tables/SgfnTable.hpp
 EclipseState/Tables/SsfnTable.hpp

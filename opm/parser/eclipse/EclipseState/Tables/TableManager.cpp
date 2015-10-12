@@ -118,6 +118,7 @@ namespace Opm {
 
     void TableManager::initSimpleTables(const Deck& deck) {
         addTables( "SWOF" , m_tabdims->getNumSatTables() );
+        addTables( "SGWFN", m_tabdims->getNumSatTables() );
         addTables( "SGOF",  m_tabdims->getNumSatTables() );
         addTables( "SLGOF", m_tabdims->getNumSatTables() );
         addTables( "SOF2",  m_tabdims->getNumSatTables() );
@@ -169,6 +170,7 @@ namespace Opm {
         }
 
         initSimpleTableContainer<SwofTable>(deck, "SWOF" , m_tabdims->getNumSatTables());
+        initSimpleTableContainer<SgwfnTable>(deck, "SGWFN", m_tabdims->getNumSatTables());
         initSimpleTableContainer<SgofTable>(deck, "SGOF" , m_tabdims->getNumSatTables());
         initSimpleTableContainer<SlgofTable>(deck, "SLGOF" , m_tabdims->getNumSatTables());
         initSimpleTableContainer<Sof2Table>(deck, "SOF2" , m_tabdims->getNumSatTables());
@@ -436,6 +438,10 @@ namespace Opm {
         return getTables("SWOF");
     }
 
+    const TableContainer& TableManager::getSgwfnTables() const {
+        return getTables("SGWFN");
+    }
+    
     const TableContainer& TableManager::getSlgofTables() const {
         return getTables("SLGOF");
     }

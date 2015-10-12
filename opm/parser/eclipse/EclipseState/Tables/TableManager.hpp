@@ -27,6 +27,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/Regdims.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SgwfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SlgofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Sof2Table.hpp>
@@ -74,6 +75,7 @@ namespace Opm {
         std::shared_ptr<const Tabdims> getTabdims() const;
 
         const TableContainer& getSwofTables() const;
+        const TableContainer& getSgwfnTables() const;
         const TableContainer& getSof2Tables() const;
         const TableContainer& getSof3Tables() const;
         const TableContainer& getSgofTables() const;
