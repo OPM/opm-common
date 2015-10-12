@@ -26,7 +26,7 @@ namespace Opm
         double getVap2() const;
         double getMaxDRSDT() const;
         double getMaxDRVDT() const;
-        const bool getOption() const;
+        bool getOption() const;
 
     private:
         OilVaporizationProperties();

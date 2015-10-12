@@ -23,7 +23,7 @@ namespace Opm {
         }
     }
 
-    const bool OilVaporizationProperties::getOption() const{
+    bool OilVaporizationProperties::getOption() const{
         if (m_type == Opm::OilVaporizationEnum::DRSDT){
             return m_maxDRSDT_allCells;
         }else{
