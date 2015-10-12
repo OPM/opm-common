@@ -37,6 +37,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyrockTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SgwfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyadsTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp>
@@ -195,6 +196,55 @@ BOOST_AUTO_TEST_CASE(SwofTable_Tests) {
     // that everything else is fine...
     BOOST_CHECK_EQUAL(swof2Table.getSwColumn().front(), 9.0);
     BOOST_CHECK_EQUAL(swof2Table.getSwColumn().back(), 17.0);
+}
+
+
+BOOST_AUTO_TEST_CASE(SgwfnTable_Tests) {
+    const char *deckData =
+        "TABDIMS\n"
+        "2 /\n"
+        "\n"
+        "SGWFN\n"
+        " 1 2 3 4\n"
+        " 5 6 7 8/\n"
+        "  9 10 11 12\n"
+        " 13 14 15 16\n"
+        " 17 18 19 20/\n";
+
+    Opm::ParserPtr parser(new Opm::Parser);
+    Opm::DeckConstPtr deck(parser->parseString(deckData, Opm::ParseMode()));
+    Opm::DeckKeywordConstPtr sgwfnKeyword = deck->getKeyword("SGWFN");
+
+    BOOST_CHECK_EQUAL(Opm::SgwfnTable::numTables(sgwfnKeyword), 2);
+
+    Opm::SgwfnTable sgwfn1Table;
+    Opm::SgwfnTable sgwfn2Table;
+
+    sgwfn1Table.initFORUNITTESTONLY(deck->getKeyword("SGWFN")->getRecord(0)->getItem(0));
+    sgwfn2Table.initFORUNITTESTONLY(deck->getKeyword("SGWFN")->getRecord(1)->getItem(0));
+
+    BOOST_CHECK_EQUAL(sgwfn1Table.numRows(), 2);
+    BOOST_CHECK_EQUAL(sgwfn2Table.numRows(), 3);
+
+    BOOST_CHECK_EQUAL(sgwfn1Table.numColumns(), 4);
+    BOOST_CHECK_EQUAL(sgwfn2Table.numColumns(), 4);
+
+    BOOST_CHECK_EQUAL(sgwfn1Table.getSgColumn().front(), 1.0);
+    BOOST_CHECK_EQUAL(sgwfn1Table.getSgColumn().back(), 5.0);
+
+    BOOST_CHECK_EQUAL(sgwfn1Table.getKrgColumn().front(), 2.0);
+    BOOST_CHECK_EQUAL(sgwfn1Table.getKrgColumn().back(), 6.0);
+
+    BOOST_CHECK_EQUAL(sgwfn1Table.getKrgwColumn().front(), 3.0);
+    BOOST_CHECK_EQUAL(sgwfn1Table.getKrgwColumn().back(), 7.0);
+
+    BOOST_CHECK_EQUAL(sgwfn1Table.getPcgwColumn().front(), 4.0e5);
+    BOOST_CHECK_EQUAL(sgwfn1Table.getPcgwColumn().back(), 8.0e5);
+
+    // for the second table, we only check the first column and trust
+    // that everything else is fine...
+    BOOST_CHECK_EQUAL(sgwfn2Table.getSgColumn().front(), 9.0);
+    BOOST_CHECK_EQUAL(sgwfn2Table.getSgColumn().back(), 17.0);
 }
 
 BOOST_AUTO_TEST_CASE(SgofTable_Tests) {
