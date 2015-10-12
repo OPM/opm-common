@@ -239,6 +239,12 @@ namespace Opm {
         PLTEnum PLTEnumFromString( const std::string& stringValue);
     }
 
+    enum OilVaporizationEnum{
+        VAPPARS = 1,
+        DRSDT = 2,
+        DRVDT = 3
+    };
+
 
 }
 

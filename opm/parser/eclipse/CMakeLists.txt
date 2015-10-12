@@ -86,6 +86,7 @@ EclipseState/EclipseState.cpp
 #
 EclipseState/checkDeck.cpp
 #
+EclipseState/Schedule/OilVaporizationProperties.cpp
 EclipseState/Schedule/TimeMap.cpp 
 EclipseState/Schedule/Schedule.cpp 
 EclipseState/Schedule/Well.cpp
@@ -178,6 +179,7 @@ EclipseState/EclipseState.hpp
 #
 EclipseState/checkDeck.hpp
 #
+EclipseState/Schedule/OilVaporizationProperties.hpp
 EclipseState/Schedule/TimeMap.hpp
 EclipseState/Schedule/Schedule.hpp
 EclipseState/Schedule/Well.hpp
