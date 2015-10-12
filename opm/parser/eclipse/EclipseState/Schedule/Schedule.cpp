@@ -539,7 +539,7 @@ namespace Opm {
                 if (well->setInjectionProperties(currentStep, properties))
                     m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
 
-                if ( ! well->getAllowCrossFlow() && properties.surfaceInjectionRate == 0 ) {
+                if ( ! well->getAllowCrossFlow() && (properties.surfaceInjectionRate == 0) ) {
                     std::string msg =
                             "Well " + well->name() + " is an injector with zero rate where crossflow is banned. " +
                             "This well will be closed at " + std::to_string ( m_timeMap->getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
@@ -630,7 +630,7 @@ namespace Opm {
             if (well->setInjectionProperties(currentStep, properties))
                 m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
 
-            if ( ! well->getAllowCrossFlow() && injectionRate == 0 ) {
+            if ( ! well->getAllowCrossFlow() && (injectionRate == 0) ) {
                 std::string msg =
                         "Well " + well->name() + " is an injector with zero rate where crossflow is banned. " +
                         "This well will be closed at " + std::to_string ( m_timeMap->getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
