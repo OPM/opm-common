@@ -41,3 +41,5 @@ BOOST_AUTO_TEST_CASE( parse_WCHONHIST_OK ) {
     DeckPtr deck =  parser->parseFile(wconhistFile.string());
     DeckKeywordConstPtr kw1 = deck->getKeyword("WCONHIST" , 0);
     BOOST_CHECK_EQUAL( 3U , kw1->size() );
+}
+
