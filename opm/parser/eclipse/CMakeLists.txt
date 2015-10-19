@@ -326,6 +326,8 @@ opm_add_test( runInlineKeywordTest SOURCES ${PROJECT_BINARY_DIR}/generated-sourc
 add_library(opmparser ${rawdeck_source} ${parser_source} ${deck_source} ${state_source} ${unit_source} ${log_source} ${generator_source})
 add_dependencies( opmparser generatedCode )
 target_link_libraries(opmparser opmjson ${Boost_LIBRARIES}  ${ERT_LIBRARIES})
+set_target_properties(opmparser PROPERTIES VERSION ${opm-parser_VERSION_MAJOR}.${opm-parser_VERSION_MINOR}
+                                           SOVERSION ${opm-parser_VERSION_MAJOR})
 
 include( ${PROJECT_SOURCE_DIR}/cmake/Modules/install_headers.cmake )   
 install_headers( "${HEADER_FILES}" "${CMAKE_INSTALL_PREFIX}" )
