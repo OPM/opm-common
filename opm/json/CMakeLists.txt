@@ -7,7 +7,8 @@ if (NOT HAVE_CJSON)
 endif()
 add_library(opmjson ${json_source})
 target_link_libraries( opmjson ${CJSON_LIBRARY} ${Boost_LIBRARIES} )
-
+set_target_properties(opmjson PROPERTIES VERSION ${opm-parser_VERSION_MAJOR}.${opm-parser_VERSION_MINOR}
+                                         SOVERSION ${opm-parser_VERSION_MAJOR})
 
 install( TARGETS opmjson DESTINATION ${CMAKE_INSTALL_LIBDIR} )
 foreach ( header ${json_headers} ) 
