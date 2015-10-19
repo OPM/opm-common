@@ -271,7 +271,7 @@ namespace Opm {
         if (start_ts_in_timesteps) {
             //Pick every n'th element, starting on start_timestep + (n-1), that is, every n'th element from ci_start_timestep - 1 for freq n > 1
             if (ci_timestep >= ci_start_timestep) {
-                int dist = std::distance( ci_start_timestep - 1, ci_timestep );
+                int dist = std::distance( ci_start_timestep, ci_timestep ) + 1;
                 if ((dist % frequency) == 0) {
                     timestep_right_frequency = true;
                 }
