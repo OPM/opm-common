@@ -16,7 +16,7 @@ endif()
 
 if (EXISTS "${_opm_data_root}/norne/NORNE_ATW2013.DATA")
    set( HAVE_OPM_DATA True )
-   get_filename_component( OPM_DATA_ROOT ${_opm_data_root} REALPATH )
+   set( OPM_DATA_ROOT ${_opm_data_root} )
    message( "-- Setting OPM_DATA_ROOT: ${OPM_DATA_ROOT}")
 else()
    set( HAVE_OPM_DATA False )
