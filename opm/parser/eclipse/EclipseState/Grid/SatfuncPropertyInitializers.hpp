@@ -435,7 +435,7 @@ protected:
     // If SWOF and SGOF are specified in the deck it return FamilyI
     // If SWFN, SGFN and SOF3 are specified in the deck it return FamilyII
     // If keywords are missing or mixed, an error is given.
-    const SaturationFunctionFamily getSaturationFunctionFamily() const{
+    SaturationFunctionFamily getSaturationFunctionFamily() const{
         auto tables = m_eclipseState.getTableManager( );
         const TableContainer& swofTables = tables->getSwofTables();
         const TableContainer& sgofTables = tables->getSgofTables();
