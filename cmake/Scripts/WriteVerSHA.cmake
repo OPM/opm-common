@@ -45,15 +45,17 @@ if (sha1)
   if (dirty OR staged)
 	set (sha1 "${sha1}*")
   endif ()
-
-  # make a formatted version that can be appended to the label
-  set (sha1 " (${sha1})")
 endif ()
 
 # write the content to a temporary file in a C compatible format
 file (WRITE "${PROJECT_BINARY_DIR}/project-version.tmp"
-  "#define PROJECT_VERSION \"${PROJECT_LABEL}${sha1}\"\n"
-  )
+      "#ifndef OPM_GENERATED_OPM_VERSION_HEADER_INCLUDED\n"
+      "#define OPM_GENERATED_OPM_VERSION_HEADER_INCLUDED\n"
+      "#define PROJECT_VERSION_NAME \"${PROJECT_LABEL}\"\n"
+      "#define PROJECT_VERSION_HASH \"${sha1}\"\n"
+      "#define PROJECT_VERSION \"${PROJECT_LABEL} (${sha1})\"\n"
+      "#endif // OPM_GENERATED_OPM_VERSION_HEADER_INCLUDED\n"
+      )
 
 # only commit this to source code if it actually changed. here
 # we use execute_process instead of exec_program to avoid having
