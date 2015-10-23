@@ -595,4 +595,89 @@ namespace Opm {
         }
     }
 
+    namespace WellSegment{
+
+        const std::string LengthDepthEnumToString(LengthDepthEnum enumValue) {
+            switch (enumValue) {
+                case INC:
+                    return "INC";
+                case ABS:
+                    return "ABS";
+                default:
+                    throw std::invalid_argument("unhandled LengthDepthEnum value");
+            }
+        }
+
+        LengthDepthEnum LengthDepthEnumFromString(const std::string& stringValue) {
+
+            std::string trimmedString(stringValue);
+            boost::algorithm::trim(trimmedString);
+
+            if (trimmedString == "INC") {
+                return INC;
+            } else if (trimmedString == "ABS") {
+                return ABS;
+            } else {
+                throw std::invalid_argument("Unknown enum string: " + trimmedString + " for LengthDepthEnum");
+            }
+        }
+
+        const std::string CompPresureDropEnumToString(CompPresureDropEnum enumValue) {
+            switch (enumValue) {
+                case HFA:
+                    return "HFA";
+                case HF_:
+                    return "HF-";
+                case H__:
+                    return "H--";
+                default:
+                    throw std::invalid_argument("unhandled CompPresureDropEnum value");
+            }
+        }
+
+        CompPresureDropEnum CompPressureDropEnumFromString(const std::string& stringValue) {
+
+            std::string trimmedString(stringValue);
+            boost::algorithm::trim(trimmedString);
+
+            if (trimmedString == "HFA") {
+                return HFA;
+            } else if (trimmedString == "HF-") {
+                return HF_;
+            } else if (trimmedString == "H--") {
+                return H__;
+            } else {
+                throw std::invalid_argument("Unknown enum string: " + trimmedString + " for CompPresureDropEnum");
+            }
+        }
+
+        const std::string MultiPhaseModelEnumToString(MultiPhaseModelEnum enumValue) {
+            switch (enumValue) {
+                case HO:
+                    return "HO";
+                case DF:
+                    return "DF";
+                default:
+                    throw std::invalid_argument("unhandled MultiPhaseModelEnum value");
+            }
+        }
+
+        MultiPhaseModelEnum MultiPhaseModelEnumFromString(const std::string& stringValue) {
+
+            std::string trimmedString(stringValue);
+            boost::algorithm::trim(trimmedString);
+
+            if (trimmedString == "HO") {
+                return HO;
+            } else if (trimmedString == "DF") {
+                return DF;
+            } else {
+                throw std::invalid_argument("Unknown enum string: " + trimmedString + " for MultiPhaseModelEnum");
+            }
+
+        }
+
+    }
+
+
 }

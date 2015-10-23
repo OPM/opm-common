@@ -246,6 +246,33 @@ namespace Opm {
     };
 
 
+    namespace WellSegment{
+
+        enum LengthDepthEnum {
+            INC = 0,
+            ABS = 1
+        };
+        const std::string LengthDepthEnumToString(LengthDepthEnum enumValue);
+        LengthDepthEnum LengthDepthEnumFromString(const std::string& stringValue);
+
+        enum CompPresureDropEnum {
+            HFA = 0,
+            HF_ = 1,
+            H__ = 2
+        };
+        const std::string CompPresureDropEnumToString(CompPresureDropEnum enumValue);
+        CompPresureDropEnum CompPressureDropEnumFromString(const std::string& stringValue);
+
+        enum MultiPhaseModelEnum {
+            HO = 0,
+            DF = 1
+        };
+        const std::string MultiPhaseModelEnumToString(MultiPhaseModelEnum enumValue);
+        MultiPhaseModelEnum MultiPhaseModelEnumFromString(const std::string& stringValue);
+
+    }
+
+
 }
 
 #endif
