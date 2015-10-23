@@ -2,7 +2,7 @@
 # spec file for package opm-common
 #
 
-%define tag rc4
+%define tag rc1
 
 Name:           opm-common
 Version:        2015.10
