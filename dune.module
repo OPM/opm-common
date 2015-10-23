@@ -1,4 +1,12 @@
+####################################################################
+# Dune module information file: This file gets parsed by dunecontrol
+# and by the CMake build scripts.
+####################################################################
+
 Module: opm-common
 Description: Open Porous Media Initiative shared infrastructure
-Version: 2015.10
+Version: 2016.04-pre
+Label: 2016.04-pre
 Maintainer: opm@opm-project.org
+MaintainerName: OPM community
+Url: http://opm-project.org
