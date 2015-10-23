@@ -13,10 +13,17 @@
 # information as it gets tiresome to rebuild the project everytime one
 # makes changes to any of the unit tests.
 
+message("-- Writing version information to local header project-version.h")
+
 string (TOUPPER "${CMAKE_BUILD_TYPE}" cmake_build_type_upper_)
 if (cmake_build_type_upper_ MATCHES DEBUG)
   file (WRITE "${PROJECT_BINARY_DIR}/project-version.h"
-	"#define PROJECT_VERSION \"${${project}_LABEL} (debug)\"\n"
+        "#ifndef OPM_GENERATED_OPM_VERSION_HEADER_INCLUDED\n"
+        "#define OPM_GENERATED_OPM_VERSION_HEADER_INCLUDED\n"
+        "#define PROJECT_VERSION_NAME \"${${project}_LABEL}\"\n"
+        "#define PROJECT_VERSION_HASH \"debug\"\n"
+        "#define PROJECT_VERSION \"${${project}_LABEL} (debug)\"\n"
+        "#endif // OPM_GENERATED_OPM_VERSION_HEADER_INCLUDED\n"
 	)
 else ()
   if (NOT GIT_FOUND)
@@ -29,8 +36,13 @@ else ()
   # above.
   if (NOT GIT_FOUND)
 	file (WRITE "${PROJECT_BINARY_DIR}/project-version.h"
-	  "#define PROJECT_VERSION \"${${project}_LABEL}\"\n"
-	  )
+              "#ifndef OPM_GENERATED_OPM_VERSION_HEADER_INCLUDED\n"
+              "#define OPM_GENERATED_OPM_VERSION_HEADER_INCLUDED\n"
+              "#define PROJECT_VERSION_NAME \"${${project}_LABEL}\"\n"
+              "#define PROJECT_VERSION_HASH \"unknown git version\"\n"
+              "#define PROJECT_VERSION \"${${project}_LABEL} (unknown git version)\"\n"
+              "#endif // OPM_GENERATED_OPM_VERSION_HEADER_INCLUDED\n"
+              )
   else ()
 	add_custom_target (update-version ALL
 	  COMMAND ${CMAKE_COMMAND}
