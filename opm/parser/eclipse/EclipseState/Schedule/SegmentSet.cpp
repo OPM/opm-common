@@ -109,24 +109,14 @@ namespace Opm {
         return copy;
     }
 
-    void SegmentSet::segmentsFromWELSEGSKeyword(DeckKeywordConstPtr welsegsKeyword, DeckKeywordConstPtr nsegmxKeyword) {
-        // get the required information for multi-segment wells
-        const int nsegmx = nsegmxKeyword->getRecord(0)->getItem("NSEGMX")->getInt(0);
-        const int nlbrmx = nsegmxKeyword->getRecord(0)->getItem("NLBRMX")->getInt(0);
+    void SegmentSet::segmentsFromWELSEGSKeyword(DeckKeywordConstPtr welsegsKeyword) {
 
         // for the first record, which provides the information for the top segment
         // and information for the whole segment set
         DeckRecordConstPtr record1 = welsegsKeyword->getRecord(0);
         m_well_name = record1->getItem("WELL")->getTrimmedString(0);
 
-        // create a temporary vector to store all the segments information in a sparse way
-        // then compress the vector in a orderly way to m_segments
-        std::vector<SegmentPtr> new_segments;
-        new_segments.resize(nsegmx);
-
-        for (int i = 0; i < int(new_segments.size()); ++i) {
-            new_segments[i] = NULL;
-        }
+        m_segments.clear();
 
         const double meaningless_value = -1.e100; // meaningless value to indicate unspecified values
 
@@ -139,30 +129,31 @@ namespace Opm {
         m_x_top = record1->getItem("TOP_X")->getRawDouble(0);
         m_y_top = record1->getItem("TOP_Y")->getRawDouble(0);
 
-        // the main branch is 1 instead of 0.
+        // the main branch is 1 instead of 0
+        // the segment number for top segment is also 1
         if (m_length_depth_type == WellSegment::INC) {
             SegmentPtr top_segment(new Segment(1, 1, 0, 0., 0., meaningless_value, meaningless_value, meaningless_value,
                                                m_volume_top, 0., 0., false));
-            new_segments[0] = top_segment;
+            m_segments.push_back(top_segment);
         } else if (m_length_depth_type == WellSegment::ABS) {
             SegmentPtr top_segment(new Segment(1, 1, 0, m_length_top, m_depth_top, meaningless_value, meaningless_value,
                                                meaningless_value, m_volume_top, m_x_top, m_y_top, true));
-            new_segments[0] = top_segment;
+            m_segments.push_back(top_segment);
         }
 
         // read all the information out from the DECK first then process to get all the required information
-        for (int recordIndex = 1; recordIndex < int(welsegsKeyword->size()); ++recordIndex) {
+        for (size_t recordIndex = 1; recordIndex < welsegsKeyword->size(); ++recordIndex) {
             DeckRecordConstPtr record = welsegsKeyword->getRecord(recordIndex);
-            int K1 = record->getItem("SEGMENT1")->getInt(0);
-            int K2 = record->getItem("SEGMENT2")->getInt(0);
-            if ((K1 < 2) || (K2 < K1) || (K2 > nsegmx)) {
+            const int segment1 = record->getItem("SEGMENT1")->getInt(0);
+            int segment2 = record->getItem("SEGMENT2")->getInt(0);
+            if ((segment1 < 2) || (segment2 < segment1)) {
                 throw std::logic_error("illegal segment number input is found in WELSEGS!\n");
             }
 
             // how to handle the logical relations between lateral branches and parent branches.
             // so far, the branch number has not been used.
-            int branch = record->getItem("BRANCH")->getInt(0);
-            if ((branch < 1) || (branch > nlbrmx)) {
+            const int branch = record->getItem("BRANCH")->getInt(0);
+            if ((branch < 1)) {
                 throw std::logic_error("illegal branch number input is found in WELSEGS!\n");
             }
             int outlet_segment = record->getItem("JOIN_SEGMENT")->getInt(0);
@@ -201,53 +192,35 @@ namespace Opm {
             length_x = record->getItem("LENGTH_X")->getRawDouble(0);
             length_y = record->getItem("LENGTH_Y")->getRawDouble(0);
 
-            for (int i = K1; i <= K2; ++i) {
+            for (int i = segment1; i <= segment2; ++i) {
                 // from the second segment in the range, the outlet segment is the previous segment in the segment
-                if (i != K1) {
+                if (i != segment1) {
                     outlet_segment = i - 1;
                 }
 
-                // if a segment with same segment number is already there.
-                if (new_segments[i - 1] != NULL) {
-                    throw std::logic_error("Segments with same segment number are found!\n");
-                }
-
                 if (m_length_depth_type == WellSegment::INC) {
-                    new_segments[i - 1].reset(new Segment(i, branch, outlet_segment, segment_length, depth_change,
-                                                        diameter, roughness, area, volume, length_x, length_y, false));
-                } else if (i == K2) {
-                    new_segments[i - 1].reset(new Segment(i, branch, outlet_segment, segment_length, depth_change,
-                                                        diameter, roughness, area, volume, length_x, length_y, true));
+                    m_segments.push_back(std::make_shared<Segment>(i, branch, outlet_segment, segment_length, depth_change,
+                                                                   diameter, roughness, area, volume, length_x, length_y, false));
+                } else if (i == segment2) {
+                    m_segments.push_back(std::make_shared<Segment>(i, branch, outlet_segment, segment_length, depth_change,
+                                                                   diameter, roughness, area, volume, length_x, length_y, true));
                 } else {
-                    new_segments[i - 1].reset(new Segment(i, branch, outlet_segment, meaningless_value, meaningless_value,
-                                                        diameter, roughness, area, volume, meaningless_value, meaningless_value, false));
+                    m_segments.push_back(std::make_shared<Segment>(i, branch, outlet_segment, meaningless_value, meaningless_value,
+                                                                   diameter, roughness, area, volume, meaningless_value, meaningless_value, false));
                 }
             }
         }
 
-        // compress new_segments to m_segments in an orderly way and generate the mapping.
-        // counting the number of the segments
-        int number_segments = 1;
-        for (int recordIndex = 1; recordIndex < int(welsegsKeyword->size()); ++recordIndex) {
-            DeckRecordConstPtr record = welsegsKeyword->getRecord(recordIndex);
-            int K1 = record->getItem("SEGMENT1")->getInt(0);
-            int K2 = record->getItem("SEGMENT2")->getInt(0);
-            number_segments += K2 - K1 + 1;
-        }
-        m_segments.resize(number_segments);
+        m_number_segment = m_segments.size();
 
-        int i_segment = 0;
-        int num_new_segments = new_segments.size();
-        for (int i = 0; i < num_new_segments; ++i){
-            if (new_segments[i] != NULL) {
-                m_segments[i_segment] = new_segments[i];
-                m_number_to_location[m_segments[i_segment]->segmentNumber()] = i_segment;
-                ++i_segment;
+        for (int i_segment = 0; i_segment < m_number_segment; ++i_segment){
+            const int segment_number = m_segments[i_segment]->segmentNumber();
+            const int location = numberToLocation(segment_number);
+            if (location >= 0) { // found in the existing m_segments already
+                throw std::logic_error("Segments with same segment number are found!\n");
             }
+            m_number_to_location[segment_number] = i_segment;
         }
 
-        assert(i_segment == number_segments);
-
-        m_number_segment = number_segments;
     }
 }

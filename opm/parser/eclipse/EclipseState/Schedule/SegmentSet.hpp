@@ -50,7 +50,7 @@ namespace Opm {
 
         int numberToLocation(const int segment_number) const;
 
-        void segmentsFromWELSEGSKeyword(DeckKeywordConstPtr welsegsKeyword, DeckKeywordConstPtr nsegmxKeyword);
+        void segmentsFromWELSEGSKeyword(DeckKeywordConstPtr welsegsKeyword);
 
         SegmentSet* shallowCopy() const;
 
