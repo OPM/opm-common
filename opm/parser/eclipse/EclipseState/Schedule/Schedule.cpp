@@ -157,6 +157,9 @@ namespace Opm {
             if (keyword->name() == "COMPDAT")
                 handleCOMPDAT(keyword, currentStep);
 
+            if (keyword->name() == "WELSEGS")
+                handleWELSEGS(keyword, currentStep);
+
             if (keyword->name() == "WELOPEN")
                 handleWELOPEN(keyword, currentStep , section->hasKeyword("COMPLUMP"));
 
@@ -1258,6 +1261,16 @@ namespace Opm {
             well->addCompletions(currentStep, iter->second);
         }
         m_events->addEvent(ScheduleEvents::COMPLETION_CHANGE, currentStep);
+    }
+
+    void Schedule::handleWELSEGS(DeckKeywordConstPtr keyword, size_t currentStep) {
+        SegmentSetPtr newSegmentset= std::make_shared<SegmentSet>();
+        newSegmentset->segmentsFromWELSEGSKeyword(keyword);
+
+        std::string well_name = newSegmentset->wellName();
+        WellPtr well = getWell(well_name);
+
+        // update multi-segment related information for the well
     }
 
     void Schedule::handleWGRUPCON(DeckKeywordConstPtr keyword, size_t currentStep) {
