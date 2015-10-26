@@ -53,7 +53,9 @@ namespace Opm {
           m_preferredPhase(preferredPhase),
           m_grid( grid ),
           m_comporder(completionOrdering),
-          m_allowCrossFlow(allowCrossFlow)
+          m_allowCrossFlow(allowCrossFlow),
+          m_is_multi_segment(false),
+          m_segmentset(new DynamicState<SegmentSetPtr>(timeMap, SegmentSetPtr(new SegmentSet())))
     {
         m_name = name_;
         m_creationTimeStep = creationTimeStep;
@@ -349,6 +351,19 @@ namespace Opm {
         }
         return canOpen;
     }
+
+    bool Well::isMultiSegment() const {
+        return m_is_multi_segment;
+    }
+
+    void Well::setMultiSegment(const bool is_multi_segment) {
+        m_is_multi_segment = is_multi_segment;
+    }
+
+    SegmentSetConstPtr Well::getSegmentSet(size_t time_step) const {
+        return m_segmentset->get(time_step);
+    }
+
 
 }
 
