@@ -1271,6 +1271,7 @@ namespace Opm {
         WellPtr well = getWell(well_name);
 
         // update multi-segment related information for the well
+        well->addSegmentSet(currentStep, newSegmentset);
     }
 
     void Schedule::handleWGRUPCON(DeckKeywordConstPtr keyword, size_t currentStep) {

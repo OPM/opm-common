@@ -118,7 +118,9 @@ namespace Opm {
         void setMultiSegment(const bool is_multi_segment);
         SegmentSetConstPtr getSegmentSet(size_t time_step) const;
 
-
+        void addSegmentSet(size_t time_step, const SegmentSetPtr new_segmentset);
+        void addSegmentSetABS(size_t time_step, const SegmentSetPtr new_segmentset, const bool first_time);
+        void addSegmentSetINC(size_t time_step, const SegmentSetPtr new_segmentset, const bool first_time);
 
     private:
         void setRefDepthFromCompletions() const;

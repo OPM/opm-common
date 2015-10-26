@@ -364,6 +364,212 @@ namespace Opm {
         return m_segmentset->get(time_step);
     }
 
+    void Well::addSegmentSet(size_t time_step, const SegmentSetPtr new_segmentset) {
+        // to see if it is the first time entering WELSEGS input to this well.
+        // if the well is not multi-segment well, it will be the first time
+        // not sure if a well can switch between mutli-segment well and other
+        // type of well
+        // Here, we assume not
+        const bool first_time = !isMultiSegment();
+
+        if (first_time) {
+            // overwrite the BHP reference depth with the one from WELSEGS keyword
+            const double ref_depth = new_segmentset->depthTopSegment();
+            m_refDepth.setValue(ref_depth);
+            // set the well to be a multi-segment well
+            m_is_multi_segment = true;
+        } else {
+            // checking the consistency of the input WELSEGS information
+            throw std::logic_error("re-entering WELSEGS for a well is not supported yet!!.");
+        }
+
+        if (new_segmentset->lengthDepthType() == WellSegment::ABS) {
+            addSegmentSetABS(time_step, new_segmentset, first_time);
+        } else if (new_segmentset->lengthDepthType() == WellSegment::INC) {
+            addSegmentSetINC(time_step, new_segmentset, first_time);
+        } else {
+            throw std::logic_error(" unknown length_depth_type in the new_segmentset");
+        }
+    }
+
+    void Well::addSegmentSetABS(size_t time_step, const SegmentSetPtr new_segmentset, const bool first_time) {
+        const double meaningless_value = -1.e100; // meaningless value to indicate unspecified values
+        if (first_time) {
+            // only need to update the volume and the length and depth values specified in the middle of the range
+            // top segment is always ready
+            // then looking for range that the information of the first segment whose outlet segment information are ready.
+            bool all_ready;
+            do {
+                all_ready = true;
+                for (int i = 1; i < new_segmentset->numberSegment(); ++i) {
+                    if ((*new_segmentset)[i]->dataReady() == false) {
+                        all_ready = false;
+                        // then looking for unready segment with a ready outlet segment
+                        // and looking for the continous unready segments
+                        // int index_begin = i;
+                        int location_begin = i;
+
+                        int outlet_segment = (*new_segmentset)[i]->outletSegment();
+                        int outlet_location = new_segmentset->numberToLocation(outlet_segment);
+
+                        // assuming no loop
+                        while ((*new_segmentset)[outlet_location]->dataReady() == false) {
+                            location_begin = outlet_location;
+                            assert(location_begin > 0);
+                            outlet_segment = (*new_segmentset)[location_begin]->outletSegment();
+                            outlet_location = new_segmentset->numberToLocation(outlet_segment);
+                        }
+
+                        // begin from location_begin to look for the unready segments continous
+                        int location_end = -1;
+
+                        for (int j = location_begin + 1; j < new_segmentset->numberSegment(); ++j) {
+                            if ((*new_segmentset)[j]->dataReady() == true) {
+                                location_end = j;
+                                break;
+                            }
+                        }
+                        if (location_end == -1) {
+                            throw std::logic_error("One of the range records in WELSEGS is wrong.");
+                        }
+
+                        // set the value for the segments in the range
+                        int number_segments = location_end - location_begin + 1;
+                        assert(number_segments > 1);
+
+                        double length_outlet = (*new_segmentset)[outlet_location]->length();
+                        double depth_outlet = (*new_segmentset)[outlet_location]->depth();
+                        double length_x_outlet = (*new_segmentset)[outlet_location]->lengthX();
+                        double length_y_outlet = (*new_segmentset)[outlet_location]->lengthY();
+
+                        double length_last = (*new_segmentset)[location_end]->length();
+                        double depth_last = (*new_segmentset)[location_end]->depth();
+                        double length_x_last = (*new_segmentset)[location_end]->lengthX();
+                        double length_y_last = (*new_segmentset)[location_end]->lengthY();
+
+                        double length_segment = (length_last - length_outlet) / number_segments;
+                        double depth_segment = (depth_last - depth_outlet) / number_segments;
+                        double length_x_segment = (length_x_last - length_x_outlet) / number_segments;
+                        double length_y_segment = (length_y_last - length_y_outlet) / number_segments;
+
+                        // the segments in the same range should share the same properties
+                        double volume_segment = (*new_segmentset)[location_end]->crossArea() * length_segment;
+
+                        if ((*new_segmentset)[location_end]->volume() < 0.5 * meaningless_value) {
+                            (*new_segmentset)[location_end]->setVolume(volume_segment);
+                        }
+
+                        for (int k = location_begin; k < location_end; ++k) {
+                            const double temp_length = length_outlet + (k - location_begin + 1) * length_segment;
+                            (*new_segmentset)[k]->setLength(temp_length);
+                            const double temp_depth = depth_outlet + (k - location_begin + 1) * depth_segment;
+                            (*new_segmentset)[k]->setDepth(temp_depth);
+                            const double temp_length_x = length_x_outlet + (k - location_begin + 1) * length_x_segment;
+                            (*new_segmentset)[k]->setLengthX(temp_length_x);
+                            const double temp_length_y = length_y_outlet + (k - location_begin + 1) * length_y_segment;
+                            (*new_segmentset)[k]->setLengthY(temp_length_y);
+                            (*new_segmentset)[k]->setDataReady(true);
+
+                            if ((*new_segmentset)[k]->volume() < 0.5 * meaningless_value) {
+                                (*new_segmentset)[k]->setVolume(volume_segment);
+                            }
+                        }
+                        break;
+                    }
+                }
+            } while (!all_ready);
+
+            // then update the volume for all the segments except the top segment
+            for (int i = 1; i < new_segmentset->numberSegment(); ++i) {
+               int outlet_segment = (*new_segmentset)[i]->outletSegment();
+               int outlet_location = new_segmentset->numberToLocation(outlet_segment);
+               double segment_length = (*new_segmentset)[i]->length() - (*new_segmentset)[outlet_location]->length();
+               if ((*new_segmentset)[i]->volume() < 0.5 * meaningless_value) {
+                   (*new_segmentset)[i]->setVolume((*new_segmentset)[i]->crossArea() * segment_length);
+               }
+            }
+
+            m_segmentset->update(time_step, new_segmentset);
+        } else {
+            throw std::logic_error("re-entering WELSEGS for a well is not supported yet!!.");
+        }
+    }
+
+    void Well::addSegmentSetINC(size_t time_step, const SegmentSetPtr new_segmentset, const bool first_time) {
+        // The following code only applies when no loop exist.
+        if (first_time) {
+            // update the information inside new_segmentset to be in ABS way
+            (*new_segmentset)[0]->setLength(new_segmentset->lengthTopSegment());
+            (*new_segmentset)[0]->setDepth(new_segmentset->depthTopSegment());
+            (*new_segmentset)[0]->setLengthX(new_segmentset->xTop());
+            (*new_segmentset)[0]->setLengthY(new_segmentset->yTop());
+            (*new_segmentset)[0]->setDataReady(true);
+
+            bool all_ready;
+
+            do {
+                all_ready = true;
+                for (int i = 1; i < new_segmentset->numberSegment(); ++i) {
+                    if ((*new_segmentset)[i]->dataReady() == false) {
+                        all_ready = false;
+                        // check the information about the outlet segment
+                        // find the outlet segment with true dataReady()
+                        int outlet_segment = (*new_segmentset)[i]->outletSegment();
+                        int outlet_location = new_segmentset->numberToLocation(outlet_segment);
+
+                        if ((*new_segmentset)[outlet_location]->dataReady() == true) {
+                            const double temp_length = (*new_segmentset)[i]->length() + (*new_segmentset)[outlet_location]->length();
+                            (*new_segmentset)[i]->setLength(temp_length);
+                            const double temp_depth = (*new_segmentset)[i]->depth() + (*new_segmentset)[outlet_location]->depth();
+                            (*new_segmentset)[i]->setDepth(temp_depth);
+                            const double temp_length_x = (*new_segmentset)[i]->lengthX() + (*new_segmentset)[outlet_location]->lengthX();
+                            (*new_segmentset)[i]->setLengthX(temp_length_x);
+                            const double temp_length_y = (*new_segmentset)[i]->lengthY() + (*new_segmentset)[outlet_location]->lengthY();
+                            (*new_segmentset)[i]->setLengthY(temp_length_y);
+                            (*new_segmentset)[i]->setDataReady(true);
+                            break;
+                        }
+
+                        int current_location;
+                        int i_depth = 0;
+                        while ((*new_segmentset)[outlet_location]->dataReady() == false) {
+                            current_location = outlet_location;
+                            outlet_segment = (*new_segmentset)[outlet_location]->outletSegment();
+                            outlet_location = new_segmentset->numberToLocation(outlet_segment);
+
+                            assert((outlet_location >= 0) && (outlet_location < new_segmentset->numberSegment()));
+
+                            ++i_depth;
+                            // when it enters dead loop, should throw an exception
+                            // 10000 is a temporary manual here.
+                            if (i_depth > 10000) {
+                                throw std::runtime_error("loop exist or something wrong with the segment structure ");
+                            }
+                        }
+
+                        if ((*new_segmentset)[outlet_location]->dataReady() == true) {
+                            const double temp_length = (*new_segmentset)[current_location]->length() + (*new_segmentset)[outlet_location]->length();
+                            (*new_segmentset)[current_location]->setLength(temp_length);
+                            const double temp_depth = (*new_segmentset)[current_location]->depth() + (*new_segmentset)[outlet_location]->depth();
+                            (*new_segmentset)[current_location]->setDepth(temp_depth);
+                            const double temp_length_x = (*new_segmentset)[current_location]->lengthX() + (*new_segmentset)[outlet_location]->lengthX();
+                            (*new_segmentset)[current_location]->setLengthX(temp_length_x);
+                            const double temp_length_y = (*new_segmentset)[current_location]->lengthY() + (*new_segmentset)[outlet_location]->lengthY();
+                            (*new_segmentset)[current_location]->setLengthY(temp_length_y);
+                            (*new_segmentset)[current_location]->setDataReady(true);
+                            break;
+                        }
+                    }
+                }
+
+            } while (!all_ready);
+
+            m_segmentset->update(time_step, new_segmentset);
+        } else {
+            throw std::logic_error("re-entering WELSEGS for a well is not supported yet!!.");
+        }
+    }
+
 
 }
 
