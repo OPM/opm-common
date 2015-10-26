@@ -120,14 +120,14 @@ namespace Opm {
 
         const double meaningless_value = -1.e100; // meaningless value to indicate unspecified values
 
-        m_depth_top = record1->getItem("DEPTH")->getRawDouble(0);
-        m_length_top = record1->getItem("LENGTH")->getRawDouble(0);
+        m_depth_top = record1->getItem("DEPTH")->getSIDouble(0);
+        m_length_top = record1->getItem("LENGTH")->getSIDouble(0);
         m_length_depth_type = WellSegment::LengthDepthEnumFromString(record1->getItem("INFO_TYPE")->getTrimmedString(0));
-        m_volume_top = record1->getItem("WELLBORE_VOLUME")->getRawDouble(0);
+        m_volume_top = record1->getItem("WELLBORE_VOLUME")->getSIDouble(0);
         m_comp_pressure_drop = WellSegment::CompPressureDropEnumFromString(record1->getItem("PRESSURE_COMPONENTS")->getTrimmedString(0));
         m_multiphase_model = WellSegment::MultiPhaseModelEnumFromString(record1->getItem("FLOW_MODEL")->getTrimmedString(0));
-        m_x_top = record1->getItem("TOP_X")->getRawDouble(0);
-        m_y_top = record1->getItem("TOP_Y")->getRawDouble(0);
+        m_x_top = record1->getItem("TOP_X")->getSIDouble(0);
+        m_y_top = record1->getItem("TOP_Y")->getSIDouble(0);
 
         // the main branch is 1 instead of 0
         // the segment number for top segment is also 1
@@ -157,11 +157,11 @@ namespace Opm {
                 throw std::logic_error("illegal branch number input is found in WELSEGS!\n");
             }
             int outlet_segment = record->getItem("JOIN_SEGMENT")->getInt(0);
-            double diameter = record->getItem("DIAMETER")->getRawDouble(0);
+            double diameter = record->getItem("DIAMETER")->getSIDouble(0);
             DeckItemConstPtr itemArea = record->getItem("AREA");
             double area;
             if (itemArea->hasValue(0)) {
-                area = itemArea->getRawDouble(0);
+                area = itemArea->getSIDouble(0);
             } else {
                 area = M_PI * diameter * diameter / 4.0;
             }
@@ -171,26 +171,26 @@ namespace Opm {
             // if the values are incremental values, then we can just use the values
             // if the values are absolute values, then we need to calculate them during the next process
             // only the value for the last segment in the range is recorded
-            segment_length = record->getItem("SEGMENT_LENGTH")->getRawDouble(0);
-            depth_change = record->getItem("DEPTH_CHANGE")->getRawDouble(0);
+            segment_length = record->getItem("SEGMENT_LENGTH")->getSIDouble(0);
+            depth_change = record->getItem("DEPTH_CHANGE")->getSIDouble(0);
 
             DeckItemConstPtr itemVolume = record->getItem("VOLUME");
             double volume;
             if (itemVolume->hasValue(0)) {
-                volume = itemVolume->getRawDouble(0);
+                volume = itemVolume->getSIDouble(0);
             } else if (m_length_depth_type == WellSegment::INC) {
                 volume = area * segment_length;
             } else {
                 volume = meaningless_value; // A * L, while L is not determined yet
             }
 
-            double roughness = record->getItem("ROUGHNESS")->getRawDouble(0);
+            double roughness = record->getItem("ROUGHNESS")->getSIDouble(0);
 
             double length_x;
             double length_y;
 
-            length_x = record->getItem("LENGTH_X")->getRawDouble(0);
-            length_y = record->getItem("LENGTH_Y")->getRawDouble(0);
+            length_x = record->getItem("LENGTH_X")->getSIDouble(0);
+            length_y = record->getItem("LENGTH_Y")->getSIDouble(0);
 
             for (int i = segment1; i <= segment2; ++i) {
                 // from the second segment in the range, the outlet segment is the previous segment in the segment
