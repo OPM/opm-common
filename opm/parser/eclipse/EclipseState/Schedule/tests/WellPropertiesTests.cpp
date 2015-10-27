@@ -88,8 +88,9 @@ namespace {
 
             Opm::DeckPtr deck = parser.parseString(input, Opm::ParseMode());
             Opm::DeckRecordConstPtr record = deck->getKeyword("WCONHIST")->getRecord(0);
+            Opm::WellProductionProperties hist = Opm::WellProductionProperties::history( 100 , record);;
 
-            return Opm::WellProductionProperties::history(record);
+            return hist;
         }
     } // namespace WCONHIST
 
@@ -113,8 +114,9 @@ namespace {
             Opm::DeckPtr             deck   = parser.parseString(input, Opm::ParseMode());
             Opm::DeckKeywordConstPtr kwd    = deck->getKeyword("WCONHIST");
             Opm::DeckRecordConstPtr  record = kwd->getRecord(0);
+            Opm::WellProductionProperties pred = Opm::WellProductionProperties::prediction( record);
 
-            return Opm::WellProductionProperties::prediction(record);
+            return pred;
         }
     }
 
@@ -207,8 +209,12 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Specified)
     BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::RESV));
 
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::RESV);
-    // BHP must be explicitly provided/specified
-    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::BHP));
+
+    /*
+      BHP in WCONHIST is not an available control; just information
+      about the historical BHP.
+    */
+    BOOST_CHECK_EQUAL(false , p.hasProductionControl(Opm::WellProducer::BHP));
 }
 
 
