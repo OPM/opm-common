@@ -50,6 +50,11 @@ namespace Opm
         }
     }
 
+    // default constructor
+    NNC::NNC() {
+    }
+
+
     void NNC::addNNC(const size_t NNC1, const size_t NNC2, const double trans) {
         m_nnc1.push_back(NNC1);
         m_nnc2.push_back(NNC2);

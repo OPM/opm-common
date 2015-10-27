@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(readDeck)
 
 }
 
-BOOST_AUTO_TEST_CASE(addNNC)
+BOOST_AUTO_TEST_CASE(addNNCfromDeck)
 {
     Opm::ParseMode parseMode;
     const std::string filename = "testdata/integration_tests/NNC/NNC.DATA";
@@ -96,4 +96,19 @@ BOOST_AUTO_TEST_CASE(addNNC)
     BOOST_CHECK_EQUAL(trans[4], 2.0);
 }
 
+BOOST_AUTO_TEST_CASE(addNNC)
+{
+    Opm::NNC nnc;
+    // add NNC
+    nnc.addNNC(2,2,2.0);
+
+    const std::vector<size_t>& NNC1 = nnc.nnc1();
+    const std::vector<size_t>& NNC2 = nnc.nnc2();
+    const std::vector<double>& trans = nnc.trans();
+
+    BOOST_CHECK_EQUAL(nnc.numNNC(), 1);
+    BOOST_CHECK_EQUAL(NNC1[0], 2);
+    BOOST_CHECK_EQUAL(NNC2[0], 2);
+    BOOST_CHECK_EQUAL(trans[0], 2.0);
+}
 

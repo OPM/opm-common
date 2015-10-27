@@ -30,11 +30,16 @@ class NNC
 {
 public:
     /// Construct from input deck.
+    NNC();
     NNC(Opm::DeckConstPtr deck, EclipseGridConstPtr eclipseGrid);
     void addNNC(const size_t NNC1, const size_t NNC2, const double trans);
     const std::vector<size_t>& nnc1() const { return m_nnc1; }
     const std::vector<size_t>& nnc2() const { return m_nnc2; }
     const std::vector<double>& trans() const { return m_trans; }
+    std::vector<size_t>& nnc1() { return m_nnc1; }
+    std::vector<size_t>& nnc2() { return m_nnc2; }
+    std::vector<double>& trans() { return m_trans; }
+
     size_t numNNC() const;
     bool hasNNC() const;
 
