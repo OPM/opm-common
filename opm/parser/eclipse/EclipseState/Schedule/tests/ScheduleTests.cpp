@@ -348,25 +348,23 @@ BOOST_AUTO_TEST_CASE(TestCrossFlowHandling) {
     IOConfigPtr ioConfig;
     Schedule schedule(ParseMode() , grid , deck, ioConfig);
 
-    std::vector<WellPtr> well_default = schedule.getWells("DEFAULT");
-    BOOST_CHECK_EQUAL(well_default[0]->getAllowCrossFlow(), true);
-    std::vector<WellPtr> well_allow = schedule.getWells("ALLOW");
-    BOOST_CHECK_EQUAL(well_allow[0]->getAllowCrossFlow(), true);
-    std::vector<WellPtr> well_ban = schedule.getWells("BAN");
-    BOOST_CHECK_EQUAL(well_ban[0]->getAllowCrossFlow(), false);
-
-    size_t currentStep = 0;
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well_ban[0]->getStatus(currentStep));
-    currentStep = 1;
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well_ban[0]->getStatus(currentStep));
-    currentStep = 2;
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well_ban[0]->getStatus(currentStep));
-    currentStep = 3;
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well_ban[0]->getStatus(currentStep));
-    currentStep = 4;
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well_ban[0]->getStatus(currentStep));
+    WellPtr well_ban = schedule.getWell("BAN");
+    BOOST_CHECK_EQUAL(well_ban->getAllowCrossFlow(), false);
 
 
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well_ban->getStatus(0));
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well_ban->getStatus(1));
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well_ban->getStatus(2));
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well_ban->getStatus(3));
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well_ban->getStatus(4));
+
+    {
+        WellPtr well_allow = schedule.getWell("ALLOW");
+        WellPtr well_default = schedule.getWell("DEFAULT");
+
+        BOOST_CHECK_EQUAL(well_default->getAllowCrossFlow(), true);
+        BOOST_CHECK_EQUAL(well_allow->getAllowCrossFlow(), true);
+    }
 }
 
 static DeckPtr createDeckWithWellsAndCompletionDataWithWELOPEN() {
