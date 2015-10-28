@@ -71,6 +71,9 @@ namespace Opm {
         double getGuideRateScalingFactor(size_t timeStep) const;
         void setGuideRateScalingFactor(size_t timeStep, double scalingFactor);
 
+        void switchToInjector( size_t timeStep);
+        void switchToProducer( size_t timeStep);
+
         bool isProducer(size_t timeStep) const;
         bool isInjector(size_t timeStep) const;
         void addWELSPECS(DeckRecordConstPtr deckRecord);

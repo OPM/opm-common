@@ -66,7 +66,25 @@ namespace Opm {
     }
 
 
+    void Well::switchToProducer( size_t timeStep) {
+        WellInjectionProperties p = getInjectionPropertiesCopy(timeStep);
+        p.BHPLimit = 0;
+        setInjectionProperties( timeStep , p );
+    }
+
+
+    void Well::switchToInjector( size_t timeStep) {
+        WellProductionProperties p = getProductionPropertiesCopy(timeStep);
+        p.BHPLimit = 0;
+        setProductionProperties( timeStep , p );
+    }
+
+
+
     bool Well::setProductionProperties(size_t timeStep , const WellProductionProperties newProperties) {
+        if (isInjector(timeStep))
+            switchToProducer( timeStep );
+
         m_isProducer->update(timeStep , true);
         return m_productionProperties->update(timeStep, newProperties);
     }
@@ -80,6 +98,9 @@ namespace Opm {
     }
 
     bool Well::setInjectionProperties(size_t timeStep , const WellInjectionProperties newProperties) {
+        if (isProducer(timeStep))
+            switchToInjector( timeStep );
+
         m_isProducer->update(timeStep , false);
         return m_injectionProperties->update(timeStep, newProperties);
     }

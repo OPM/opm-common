@@ -1413,6 +1413,9 @@ BOOST_AUTO_TEST_CASE(changeBhpLimitInHistoryModeWithWeltarg) {
     BOOST_CHECK_EQUAL(well_i->getInjectionProperties(1).BHPLimit, 600 * 1e5); // 1
     BOOST_CHECK_EQUAL(well_i->getInjectionProperties(2).BHPLimit, 600 * 1e5); // 2
 
+    // Check that the BHP limit is reset when changing between injector and producer.
+    BOOST_CHECK_EQUAL(well_i->getInjectionProperties(3).BHPLimit, 0); // 3
+    BOOST_CHECK_EQUAL(well_i->getInjectionProperties(4).BHPLimit, 0); // 4
 }
 
 
