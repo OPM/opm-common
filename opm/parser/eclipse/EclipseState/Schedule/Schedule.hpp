@@ -82,7 +82,7 @@ namespace Opm
         std::map<std::string , GroupPtr> m_groups;
         std::shared_ptr<DynamicState<GroupTreePtr> > m_rootGroupTree;
         std::shared_ptr<DynamicState<OilVaporizationPropertiesPtr> > m_oilvaporizationproperties;
-        Events m_events;
+        std::shared_ptr<Events> m_events;
         TuningPtr m_tuning;
         bool nosim;
 
