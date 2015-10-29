@@ -68,14 +68,18 @@ namespace Opm {
 
     void Well::switchToProducer( size_t timeStep) {
         WellInjectionProperties p = getInjectionPropertiesCopy(timeStep);
+
         p.BHPLimit = 0;
+        p.dropInjectionControl( Opm::WellInjector::BHP );
         setInjectionProperties( timeStep , p );
     }
 
 
     void Well::switchToInjector( size_t timeStep) {
         WellProductionProperties p = getProductionPropertiesCopy(timeStep);
+
         p.BHPLimit = 0;
+        p.dropProductionControl( Opm::WellProducer::BHP );
         setProductionProperties( timeStep , p );
     }
 
