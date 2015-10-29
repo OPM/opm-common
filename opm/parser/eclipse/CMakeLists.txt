@@ -189,6 +189,7 @@ EclipseState/Schedule/WellPolymerProperties.hpp
 EclipseState/Schedule/WellSet.hpp
 EclipseState/Schedule/Group.hpp
 EclipseState/Schedule/DynamicState.hpp
+EclipseState/Schedule/DynamicVector.hpp
 EclipseState/Schedule/Completion.hpp
 EclipseState/Schedule/CompletionSet.hpp
 EclipseState/Schedule/ScheduleEnums.hpp
