@@ -31,6 +31,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/DynamicVector.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
@@ -49,6 +50,7 @@ namespace Opm {
         createTimeMap(deck);
         m_tuning.reset(new Tuning(m_timeMap));
         m_events.reset(new Events(m_timeMap));
+        m_modifierDeck.reset( new DynamicVector<std::shared_ptr<Deck> >( m_timeMap , std::shared_ptr<Deck>( 0 ) ));
         addGroup( "FIELD", 0 );
         initRootGroupTreeNode(getTimeMap());
         initOilVaporization(getTimeMap());
@@ -86,21 +88,29 @@ namespace Opm {
     }
 
     void Schedule::iterateScheduleSection(const ParseMode& parseMode , std::shared_ptr<const SCHEDULESection> section, IOConfigPtr ioConfig) {
+        /*
+          geoModifiers is a list of geo modifiers which can be found in the schedule
+          section. This is only partly supported, support is indicated by the bool
+          value. The keywords which are supported will be assembled in a per-timestep
+          'minideck', whereas ParseMode::UNSUPPORTED_SCHEDULE_GEO_MODIFIER will be
+          consulted for the others.
+        */
+
         const std::map<std::string,bool> geoModifiers = {{"MULTFLT"  , true},
-                                                         {"MULTPV"   , true},
-                                                         {"MULTX"    , true},
-                                                         {"MULTX-"   , true},
-                                                         {"MULTY"    , true},
-                                                         {"MULTY-"   , true},
-                                                         {"MULTZ"    , true},
-                                                         {"MULTZ-"   , true},
-                                                         {"MULTREGT" , true},
-                                                         {"MULTR"    , true},
-                                                         {"MULTR-"   , true},
-                                                         {"MULTSIG"  , true},
-                                                         {"MULTSIGV" , true},
-                                                         {"MULTTHT"  , true},
-                                                         {"MULTTHT-" , true}};
+                                                         {"MULTPV"   , false},
+                                                         {"MULTX"    , false},
+                                                         {"MULTX-"   , false},
+                                                         {"MULTY"    , false},
+                                                         {"MULTY-"   , false},
+                                                         {"MULTZ"    , false},
+                                                         {"MULTZ-"   , false},
+                                                         {"MULTREGT" , false},
+                                                         {"MULTR"    , false},
+                                                         {"MULTR-"   , false},
+                                                         {"MULTSIG"  , false},
+                                                         {"MULTSIGV" , false},
+                                                         {"MULTTHT"  , false},
+                                                         {"MULTTHT-" , false}};
 
         size_t currentStep = 0;
         std::vector<std::pair<DeckKeywordConstPtr , size_t> > rftProperties;
@@ -197,12 +207,24 @@ namespace Opm {
 
 
             if (geoModifiers.find( keyword->name() ) != geoModifiers.end()) {
-                {
+                bool supported = geoModifiers.at( keyword->name() );
+                if (supported) {
+                    /*
+                      If the deck stored at currentStep is a null pointer (i.e. evaluates
+                      to false) we must first create a new deck and install that under
+                      index currentstep; then we fetch the deck (newly created - or old)
+                      from the container and add the keyword.
+                    */
+                    if (!m_modifierDeck->iget(currentStep))
+                        m_modifierDeck->iset( currentStep , std::make_shared<Deck>( ));
+                    {
+                        const std::shared_ptr<Deck> deck = m_modifierDeck->iget( currentStep );
+                        deck->addKeyword( keyword );
+                    }
+                    m_events->addEvent( ScheduleEvents::GEO_MODIFIER , currentStep);
+                } else {
                     std::string msg = "OPM does not support grid property modifier " + keyword->name() + " in the Schedule section. Error at report: " + std::to_string( currentStep );
                     parseMode.handleError( ParseMode::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , msg );
-                }
-                {
-                    m_events->addEvent( ScheduleEvents::GEO_MODIFIER , currentStep);
                 }
             }
         }
@@ -1561,6 +1583,11 @@ namespace Opm {
     TuningPtr Schedule::getTuning() const {
       return m_tuning;
     }
+
+    std::shared_ptr<const Deck> Schedule::getModifierDeck(size_t timeStep) const {
+        return m_modifierDeck->iget( timeStep );
+    }
+
 
     const Events& Schedule::getEvents() const {
         return *m_events;

@@ -104,7 +104,18 @@ BOOST_AUTO_TEST_CASE( CheckMissingSizeKeyword) {
 
 
 BOOST_AUTO_TEST_CASE( CheckUnsoppertedInSCHEDULE ) {
-    const char * deckString =
+    const char * deckStringUnSupported =
+        "START\n"
+        " 10 'JAN' 2000 /\n"
+        "RUNSPEC\n"
+        "DIMENS\n"
+        "  10 10 10 / \n"
+        "SCHEDULE\n"
+        "MULTZ\n"
+        "   1000*0.10 /\n"
+        "\n";
+
+    const char * deckStringSupported =
         "START\n"
         " 10 'JAN' 2000 /\n"
         "RUNSPEC\n"
@@ -112,22 +123,26 @@ BOOST_AUTO_TEST_CASE( CheckUnsoppertedInSCHEDULE ) {
         "  10 10 10 / \n"
         "SCHEDULE\n"
         "MULTFLT\n"
-        "   'F1' 100 /\n"
+        "   'F1' 0.10 /\n"
         "/\n"
         "\n";
+
 
     ParseMode parseMode;
     Parser parser(true);
 
-    auto deck = parser.parseString( deckString , parseMode );
-    std::shared_ptr<EclipseGrid> grid = std::make_shared<EclipseGrid>( deck );
+    auto deckSupported = parser.parseString( deckStringSupported , parseMode );
+    auto deckUnSupported = parser.parseString( deckStringUnSupported , parseMode );
+    std::shared_ptr<EclipseGrid> grid = std::make_shared<EclipseGrid>( deckSupported );
     std::shared_ptr<IOConfig> ioconfig = std::make_shared<IOConfig>( "path" );
 
     parseMode.update( ParseMode::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , InputError::IGNORE );
-    BOOST_CHECK_NO_THROW( Schedule( parseMode , grid , deck , ioconfig ));
+    BOOST_CHECK_NO_THROW( Schedule( parseMode , grid , deckSupported , ioconfig ));
+    BOOST_CHECK_NO_THROW( Schedule( parseMode , grid , deckUnSupported , ioconfig ));
 
     parseMode.update( ParseMode::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW( Schedule( parseMode , grid , deck , ioconfig ), std::invalid_argument );
+    BOOST_CHECK_THROW( Schedule( parseMode , grid , deckUnSupported , ioconfig ), std::invalid_argument );
+    BOOST_CHECK_NO_THROW( Schedule( parseMode , grid , deckSupported , ioconfig ));
 }
 
 

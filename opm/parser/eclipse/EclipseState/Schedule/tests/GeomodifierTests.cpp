@@ -49,6 +49,9 @@ BOOST_AUTO_TEST_CASE( CheckUnsoppertedInSCHEDULE ) {
         "MULTFLT\n"
         "   'F1' 100 /\n"
         "/\n"
+        "MULTFLT\n"
+        "   'F2' 77 /\n"
+        "/\n"
         "TSTEP  -- 3,4\n"
         "   10 10/\n"
         "\n";
@@ -67,5 +70,27 @@ BOOST_AUTO_TEST_CASE( CheckUnsoppertedInSCHEDULE ) {
         BOOST_CHECK_EQUAL( false , events.hasEvent( ScheduleEvents::GEO_MODIFIER , 1 ));
         BOOST_CHECK_EQUAL( true  , events.hasEvent( ScheduleEvents::GEO_MODIFIER , 2 ));
         BOOST_CHECK_EQUAL( false , events.hasEvent( ScheduleEvents::GEO_MODIFIER , 3 ));
+
+
+        BOOST_CHECK( !schedule.getModifierDeck(1) );
+        BOOST_CHECK( !schedule.getModifierDeck(3) );
+
+        std::shared_ptr<const Deck> multflt_deck = schedule.getModifierDeck(2);
+        BOOST_CHECK_EQUAL( 2U , multflt_deck->size());
+        BOOST_CHECK( multflt_deck->hasKeyword<ParserKeywords::MULTFLT>() );
+
+        auto multflt1 = multflt_deck->getKeyword(0);
+        BOOST_CHECK_EQUAL( 1U , multflt1->size( ) );
+
+        auto record0 = multflt1->getRecord( 0 );
+        BOOST_CHECK_EQUAL( 100.0  , record0->getItem<ParserKeywords::MULTFLT::factor>()->getRawDouble(0));
+        BOOST_CHECK_EQUAL( "F1" , record0->getItem<ParserKeywords::MULTFLT::fault>()->getString(0));
+
+        auto multflt2 = multflt_deck->getKeyword(1);
+        BOOST_CHECK_EQUAL( 1U , multflt2->size( ) );
+
+        auto record1 = multflt2->getRecord( 0 );
+        BOOST_CHECK_EQUAL( 77.0  , record1->getItem<ParserKeywords::MULTFLT::factor>()->getRawDouble(0));
+        BOOST_CHECK_EQUAL( "F2" , record1->getItem<ParserKeywords::MULTFLT::fault>()->getString(0));
     }
 }

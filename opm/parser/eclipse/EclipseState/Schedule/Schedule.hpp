@@ -71,7 +71,7 @@ namespace Opm
         bool initOnly() const;
         const Events& getEvents() const;
         bool hasOilVaporizationProperties();
-
+        std::shared_ptr<const Deck> getModifierDeck(size_t timeStep) const;
 
 
 
@@ -83,6 +83,7 @@ namespace Opm
         std::shared_ptr<DynamicState<GroupTreePtr> > m_rootGroupTree;
         std::shared_ptr<DynamicState<OilVaporizationPropertiesPtr> > m_oilvaporizationproperties;
         std::shared_ptr<Events> m_events;
+        std::shared_ptr<DynamicVector<std::shared_ptr<Deck> > > m_modifierDeck;
         TuningPtr m_tuning;
         bool nosim;
 
