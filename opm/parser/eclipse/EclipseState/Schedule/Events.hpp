@@ -65,7 +65,13 @@ namespace Opm
             /*
               The well group topolyg has changed.
             */
-            GROUP_CHANGE = 128
+            GROUP_CHANGE = 128,
+
+
+            /*
+              Geology modifier.
+            */
+            GEO_MODIFIER = 256
         };
     }
 

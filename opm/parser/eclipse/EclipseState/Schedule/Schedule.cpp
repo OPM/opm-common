@@ -86,21 +86,21 @@ namespace Opm {
     }
 
     void Schedule::iterateScheduleSection(const ParseMode& parseMode , std::shared_ptr<const SCHEDULESection> section, IOConfigPtr ioConfig) {
-        const std::map<std::string,bool> unsupportedModifiers = {{"MULTFLT"  , true},
-                                                                 {"MULTPV"   , true},
-                                                                 {"MULTX"    , true},
-                                                                 {"MULTX-"   , true},
-                                                                 {"MULTY"    , true},
-                                                                 {"MULTY-"   , true},
-                                                                 {"MULTZ"    , true},
-                                                                 {"MULTZ-"   , true},
-                                                                 {"MULTREGT" , true},
-                                                                 {"MULTR"    , true},
-                                                                 {"MULTR-"   , true},
-                                                                 {"MULTSIG"  , true},
-                                                                 {"MULTSIGV" , true},
-                                                                 {"MULTTHT"  , true},
-                                                                 {"MULTTHT-" , true}};
+        const std::map<std::string,bool> geoModifiers = {{"MULTFLT"  , true},
+                                                         {"MULTPV"   , true},
+                                                         {"MULTX"    , true},
+                                                         {"MULTX-"   , true},
+                                                         {"MULTY"    , true},
+                                                         {"MULTY-"   , true},
+                                                         {"MULTZ"    , true},
+                                                         {"MULTZ-"   , true},
+                                                         {"MULTREGT" , true},
+                                                         {"MULTR"    , true},
+                                                         {"MULTR-"   , true},
+                                                         {"MULTSIG"  , true},
+                                                         {"MULTSIGV" , true},
+                                                         {"MULTTHT"  , true},
+                                                         {"MULTTHT-" , true}};
 
         size_t currentStep = 0;
         std::vector<std::pair<DeckKeywordConstPtr , size_t> > rftProperties;
@@ -185,7 +185,7 @@ namespace Opm {
 
             if (keyword->name() == "COMPORD")
                 handleCOMPORD(parseMode , keyword, currentStep);
-            
+
             if (keyword->name() == "DRSDT")
                 handleDRSDT(keyword, currentStep);
 
@@ -196,9 +196,14 @@ namespace Opm {
                 handleVAPPARS(keyword, currentStep);
 
 
-            if (unsupportedModifiers.find( keyword->name() ) != unsupportedModifiers.end()) {
-                std::string msg = "OPM does not support grid property modifier " + keyword->name() + " in the Schedule section. Error at report: " + std::to_string( currentStep );
-                parseMode.handleError( ParseMode::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , msg );
+            if (geoModifiers.find( keyword->name() ) != geoModifiers.end()) {
+                {
+                    std::string msg = "OPM does not support grid property modifier " + keyword->name() + " in the Schedule section. Error at report: " + std::to_string( currentStep );
+                    parseMode.handleError( ParseMode::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , msg );
+                }
+                {
+                    m_events->addEvent( ScheduleEvents::GEO_MODIFIER , currentStep);
+                }
             }
         }
 
