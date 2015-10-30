@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(getKeyword_outOfRange_throws) {
     Deck deck;
     DeckKeywordPtr keyword = DeckKeywordPtr(new DeckKeyword("TRULS"));
     deck.addKeyword(keyword);
-    BOOST_CHECK_THROW( deck.getKeyword("TRULS" , 3) , std::out_of_range)
+    BOOST_CHECK_THROW( deck.getKeyword("TRULS" , 3) , std::out_of_range);
 }
 
 
