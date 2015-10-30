@@ -68,6 +68,12 @@ namespace Opm {
         }
 
 
+        const T& iget(size_t index) const {
+            return (*this)[index];
+        }
+
+
+
         T& operator[](size_t index) {
             if (index >= m_timeMap->size())
                 throw std::range_error("Index value is out range.");
@@ -78,6 +84,9 @@ namespace Opm {
             return m_data[index];
         }
 
+        void iset(size_t index, T value) {
+            (*this)[index] = value;
+        }
 
 
     private:
