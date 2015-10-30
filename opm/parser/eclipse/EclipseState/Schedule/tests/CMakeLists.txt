@@ -4,7 +4,7 @@ foreach(tapp TimeMapTest ScheduleTests WellTests
              CompletionTests CompletionSetTests
              DynamicStateTests GroupTreeNodeTests
              GroupTreeTests TuningTests EventTests
-             WellSolventTests)
+             WellSolventTests DynamicVectorTests)
   opm_add_test(run${tapp} SOURCES ${tapp}.cpp
                           LIBRARIES opmparser ${Boost_LIBRARIES})
 endforeach()

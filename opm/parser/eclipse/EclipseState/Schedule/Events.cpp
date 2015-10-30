@@ -22,26 +22,22 @@
 
 namespace Opm {
 
-    Events::Events() {
+    Events::Events(std::shared_ptr<const TimeMap> timeMap)
+        : m_events( DynamicVector<uint64_t>( timeMap , 0 ) )
+    {
     }
 
 
     bool Events::hasEvent(ScheduleEvents::Events event, size_t reportStep) const {
-        if (reportStep < m_events.size()) {
-            uint64_t eventSum = m_events[reportStep];
-            if (eventSum & event)
-                return true;
-            else
-                return false;
-        } else
+        uint64_t eventSum = m_events[reportStep];
+        if (eventSum & event)
+            return true;
+        else
             return false;
     }
 
 
     void Events::addEvent(ScheduleEvents::Events event, size_t reportStep) {
-        if (m_events.size() <= reportStep)
-            m_events.resize( 2 * reportStep + 1 );
-
         m_events[reportStep] |= event;
     }
 

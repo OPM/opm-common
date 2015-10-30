@@ -21,14 +21,21 @@
 #include <iostream>
 #include <boost/filesystem.hpp>
 
-#define BOOST_TEST_MODULE CompletionSetTests
+#define BOOST_TEST_MODULE EventTests
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
 
 BOOST_AUTO_TEST_CASE(CreateEmpty) {
-    Opm::Events events;
+    boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
+    Opm::TimeMapPtr timeMap(new Opm::TimeMap(boost::posix_time::ptime(startDate)));
+    Opm::DynamicVector<double> vector(timeMap , 9.99);
+    Opm::Events events( timeMap );
+
+    for (size_t i = 0; i < 11; i++)
+        timeMap->addTStep( boost::posix_time::hours( (i+1) * 24 ));
 
     BOOST_CHECK_EQUAL( false , events.hasEvent(Opm::ScheduleEvents::NEW_WELL , 10));
 

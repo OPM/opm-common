@@ -22,6 +22,8 @@
 #include <cstdint>
 #include <vector>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/DynamicVector.hpp>
+
 namespace Opm
 {
     namespace ScheduleEvents {
@@ -84,11 +86,11 @@ namespace Opm
 
     class Events {
     public:
-        Events();
+        Events(std::shared_ptr<const TimeMap> timeMap);
         void addEvent(ScheduleEvents::Events event, size_t reportStep);
         bool hasEvent(ScheduleEvents::Events event, size_t reportStep) const;
     private:
-        std::vector<uint64_t> m_events;
+        DynamicVector<uint64_t> m_events;
     };
 }
 
