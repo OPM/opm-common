@@ -145,7 +145,7 @@ namespace Opm {
         for (size_t recordIndex = 1; recordIndex < welsegsKeyword->size(); ++recordIndex) {
             DeckRecordConstPtr record = welsegsKeyword->getRecord(recordIndex);
             const int segment1 = record->getItem("SEGMENT1")->getInt(0);
-            int segment2 = record->getItem("SEGMENT2")->getInt(0);
+            const int segment2 = record->getItem("SEGMENT2")->getInt(0);
             if ((segment1 < 2) || (segment2 < segment1)) {
                 throw std::logic_error("illegal segment number input is found in WELSEGS!\n");
             }
@@ -156,7 +156,7 @@ namespace Opm {
             if ((branch < 1)) {
                 throw std::logic_error("illegal branch number input is found in WELSEGS!\n");
             }
-            int outlet_segment = record->getItem("JOIN_SEGMENT")->getInt(0);
+            const int outlet_segment_readin = record->getItem("JOIN_SEGMENT")->getInt(0);
             double diameter = record->getItem("DIAMETER")->getSIDouble(0);
             DeckItemConstPtr itemArea = record->getItem("AREA");
             double area;
@@ -166,13 +166,13 @@ namespace Opm {
                 area = M_PI * diameter * diameter / 4.0;
             }
 
-            double segment_length;
-            double depth_change;
             // if the values are incremental values, then we can just use the values
             // if the values are absolute values, then we need to calculate them during the next process
             // only the value for the last segment in the range is recorded
-            segment_length = record->getItem("SEGMENT_LENGTH")->getSIDouble(0);
-            depth_change = record->getItem("DEPTH_CHANGE")->getSIDouble(0);
+            const double segment_length = record->getItem("SEGMENT_LENGTH")->getSIDouble(0);
+            // the naming is a little confusing here.
+            // naming following the definition from the current keyword for the moment
+            const double depth_change = record->getItem("DEPTH_CHANGE")->getSIDouble(0);
 
             DeckItemConstPtr itemVolume = record->getItem("VOLUME");
             double volume;
@@ -184,17 +184,17 @@ namespace Opm {
                 volume = meaningless_value; // A * L, while L is not determined yet
             }
 
-            double roughness = record->getItem("ROUGHNESS")->getSIDouble(0);
-
-            double length_x;
-            double length_y;
-
-            length_x = record->getItem("LENGTH_X")->getSIDouble(0);
-            length_y = record->getItem("LENGTH_Y")->getSIDouble(0);
+            const double roughness = record->getItem("ROUGHNESS")->getSIDouble(0);
+            const double length_x = record->getItem("LENGTH_X")->getSIDouble(0);
+            const double length_y = record->getItem("LENGTH_Y")->getSIDouble(0);
 
             for (int i = segment1; i <= segment2; ++i) {
-                // from the second segment in the range, the outlet segment is the previous segment in the segment
-                if (i != segment1) {
+                // for the first or the only segment in the range is the one specified in the WELSEGS
+                // from the second segment in the range, the outlet segment is the previous segment in the range
+                int outlet_segment = -1;
+                if (i == segment1) {
+                    outlet_segment = outlet_segment_readin;
+                } else {
                     outlet_segment = i - 1;
                 }
 
