@@ -53,6 +53,7 @@ namespace Opm {
         std::shared_ptr<GridProperty<double> > getDirectionProperty(FaceDir::DirEnum faceDir);
         void applyMULT(std::shared_ptr<const GridProperty<double> > srcMultProp, FaceDir::DirEnum faceDir);
         void applyMULTFLT( std::shared_ptr<const FaultCollection> faults);
+        void applyMULTFLT( std::shared_ptr<const Fault> fault);
         void setMultregtScanner(std::shared_ptr<const MULTREGTScanner> multregtScanner);
 
     private:
