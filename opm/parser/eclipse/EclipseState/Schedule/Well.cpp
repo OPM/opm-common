@@ -536,20 +536,11 @@ namespace Opm {
                         }
 
                         int current_location;
-                        int i_depth = 0;
                         while ((*new_segmentset)[outlet_location]->dataReady() == false) {
                             current_location = outlet_location;
                             outlet_segment = (*new_segmentset)[outlet_location]->outletSegment();
                             outlet_location = new_segmentset->numberToLocation(outlet_segment);
-
                             assert((outlet_location >= 0) && (outlet_location < new_segmentset->numberSegment()));
-
-                            ++i_depth;
-                            // when it enters dead loop, should throw an exception
-                            // 10000 is a temporary manual here.
-                            if (i_depth > 10000) {
-                                throw std::runtime_error("loop exist or something wrong with the segment structure ");
-                            }
                         }
 
                         if ((*new_segmentset)[outlet_location]->dataReady() == true) {
