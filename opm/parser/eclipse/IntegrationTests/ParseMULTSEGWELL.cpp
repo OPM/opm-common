@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE( PARSE_MULTISEGMENT_ABS ) {
     const double length_top = rec1->getItem("LENGTH")->getRawDouble(0);
     const double volume_top = rec1->getItem("WELLBORE_VOLUME")->getRawDouble(0);
     const WellSegment::LengthDepthEnum length_depth_type = WellSegment::LengthDepthEnumFromString(rec1->getItem("INFO_TYPE")->getTrimmedString(0));
-    const WellSegment::CompPresureDropEnum comp_pressure_drop = WellSegment::CompPressureDropEnumFromString(rec1->getItem("PRESSURE_COMPONENTS")->getTrimmedString(0));
+    const WellSegment::CompPressureDropEnum comp_pressure_drop = WellSegment::CompPressureDropEnumFromString(rec1->getItem("PRESSURE_COMPONENTS")->getTrimmedString(0));
     const WellSegment::MultiPhaseModelEnum multiphase_model = WellSegment::MultiPhaseModelEnumFromString(rec1->getItem("FLOW_MODEL")->getTrimmedString(0));
 
     BOOST_CHECK_EQUAL( "PROD01", well_name );
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE( PARSE_MULTISEGMENT_ABS ) {
     BOOST_CHECK_EQUAL( 1.0e-5, volume_top );
     const std::string length_depth_type_string = WellSegment::LengthDepthEnumToString(length_depth_type);
     BOOST_CHECK_EQUAL( length_depth_type_string, "ABS" );
-    const std::string comp_pressure_drop_string = WellSegment::CompPresureDropEnumToString(comp_pressure_drop);
+    const std::string comp_pressure_drop_string = WellSegment::CompPressureDropEnumToString(comp_pressure_drop);
     BOOST_CHECK_EQUAL( comp_pressure_drop_string, "H--" );
     const std::string multiphase_model_string = WellSegment::MultiPhaseModelEnumToString(multiphase_model);
     BOOST_CHECK_EQUAL( multiphase_model_string, "HO" );

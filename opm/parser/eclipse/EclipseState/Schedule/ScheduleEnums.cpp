@@ -622,7 +622,7 @@ namespace Opm {
             }
         }
 
-        const std::string CompPresureDropEnumToString(CompPresureDropEnum enumValue) {
+        const std::string CompPressureDropEnumToString(CompPressureDropEnum enumValue) {
             switch (enumValue) {
                 case HFA:
                     return "HFA";
@@ -631,11 +631,11 @@ namespace Opm {
                 case H__:
                     return "H--";
                 default:
-                    throw std::invalid_argument("unhandled CompPresureDropEnum value");
+                    throw std::invalid_argument("unhandled CompPressureDropEnum value");
             }
         }
 
-        CompPresureDropEnum CompPressureDropEnumFromString(const std::string& stringValue) {
+        CompPressureDropEnum CompPressureDropEnumFromString(const std::string& stringValue) {
 
             std::string trimmedString(stringValue);
             boost::algorithm::trim(trimmedString);
@@ -647,7 +647,7 @@ namespace Opm {
             } else if (trimmedString == "H--") {
                 return H__;
             } else {
-                throw std::invalid_argument("Unknown enum string: " + trimmedString + " for CompPresureDropEnum");
+                throw std::invalid_argument("Unknown enum string: " + trimmedString + " for CompPressureDropEnum");
             }
         }
 

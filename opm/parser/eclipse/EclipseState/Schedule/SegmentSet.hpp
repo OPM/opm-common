@@ -42,7 +42,7 @@ namespace Opm {
         double yTop() const;
 
         WellSegment::LengthDepthEnum lengthDepthType() const;
-        WellSegment::CompPresureDropEnum compPressureDrop() const;
+        WellSegment::CompPressureDropEnum compPressureDrop() const;
         WellSegment::MultiPhaseModelEnum multiPhaseModel() const;
 
         bool numberToLocation(const int segment_number, int& location) const;
@@ -76,7 +76,7 @@ namespace Opm {
         // type of the tubing length and depth information
         WellSegment::LengthDepthEnum m_length_depth_type;
         // components of the pressure drop to be included
-        WellSegment::CompPresureDropEnum m_comp_pressure_drop;
+        WellSegment::CompPressureDropEnum m_comp_pressure_drop;
         // multi-phase flow model
         WellSegment::MultiPhaseModelEnum m_multiphase_model;
         // X and Y cooridnate of the nodal point of the top segment

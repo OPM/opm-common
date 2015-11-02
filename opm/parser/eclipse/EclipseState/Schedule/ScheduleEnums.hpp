@@ -255,13 +255,13 @@ namespace Opm {
         const std::string LengthDepthEnumToString(LengthDepthEnum enumValue);
         LengthDepthEnum LengthDepthEnumFromString(const std::string& stringValue);
 
-        enum CompPresureDropEnum {
+        enum CompPressureDropEnum {
             HFA = 0,
             HF_ = 1,
             H__ = 2
         };
-        const std::string CompPresureDropEnumToString(CompPresureDropEnum enumValue);
-        CompPresureDropEnum CompPressureDropEnumFromString(const std::string& stringValue);
+        const std::string CompPressureDropEnumToString(CompPressureDropEnum enumValue);
+        CompPressureDropEnum CompPressureDropEnumFromString(const std::string& stringValue);
 
         enum MultiPhaseModelEnum {
             HO = 0,

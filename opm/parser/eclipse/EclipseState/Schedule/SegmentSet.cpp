@@ -48,7 +48,7 @@ namespace Opm {
         return m_length_depth_type;
     }
 
-    WellSegment::CompPresureDropEnum SegmentSet::compPressureDrop() const {
+    WellSegment::CompPressureDropEnum SegmentSet::compPressureDrop() const {
         return m_comp_pressure_drop;
     }
 
