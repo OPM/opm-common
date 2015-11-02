@@ -93,6 +93,7 @@ namespace Opm {
         // units because internally to opm-parser everything is represented by SI
         // units...
         std::shared_ptr<const UnitSystem> getDeckUnitSystem()  const;
+        void applyModifierDeck( std::shared_ptr<const Deck> deck);
 
     private:
         void initTabdims(DeckConstPtr deck);

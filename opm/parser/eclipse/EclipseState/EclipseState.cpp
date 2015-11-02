@@ -1361,4 +1361,46 @@ namespace Opm {
         }
     }
 
+
+
+
+    void EclipseState::applyModifierDeck( std::shared_ptr<const Deck> deck) {
+        using namespace ParserKeywords;
+        for (const auto& keyword : *deck) {
+
+            if (keyword->isKeyword<MULTFLT>()) {
+                for (const auto& record : *keyword) {
+                    const std::string& faultName = record->getItem<MULTFLT::fault>()->getString(0);
+                    auto fault = m_faults->getFault( faultName );
+                    double tmpMultFlt = record->getItem<MULTFLT::factor>()->getRawDouble(0);
+                    double oldMultFlt = fault->getTransMult( );
+                    double newMultFlt = oldMultFlt * tmpMultFlt;
+
+                    /*
+                      This extremely contrived way of doing it is because of difference in
+                      behavior and section awareness between the Fault object and the
+                      Transmult object:
+
+                      1. MULTFLT keywords found in the SCHEDULE section should apply the
+                         transmissibility modifiers cumulatively - i.e. the current
+                         transmissibility across the fault should be *multiplied* with the
+                         newly entered MULTFLT value, and the resulting transmissibility
+                         multplier for this fault should be the product of the newly
+                         entered value and the current value.
+
+                      2. The TransMult::applyMULTFLT() implementation will *multiply* the
+                         transmissibility across a face with the value in the fault
+                         object. Hence the current value has already been multiplied in;
+                         we therefor first *set* the MULTFLT value to the new value, then
+                         apply it to the TransMult object and then eventually update the
+                         MULTFLT value in the fault instance.
+
+                    */
+                    fault->setTransMult( tmpMultFlt );
+                    m_transMult->applyMULTFLT( fault );
+                    fault->setTransMult( newMultFlt );
+                }
+            }
+        }
+    }
 }
