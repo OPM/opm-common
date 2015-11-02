@@ -55,6 +55,14 @@ namespace Opm {
         const std::vector<std::string>& getStringData() const;
         size_t getDataSize() const;
 
+        template <class Keyword>
+        bool isKeyword() const {
+            if (Keyword::keywordName == m_keywordName)
+                return true;
+            else
+                return false;
+        }
+
         std::vector<DeckRecordConstPtr>::const_iterator begin() const;
         std::vector<DeckRecordConstPtr>::const_iterator end() const;
     private:
