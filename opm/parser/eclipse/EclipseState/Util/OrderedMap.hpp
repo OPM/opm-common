@@ -60,7 +60,7 @@ public:
     T get(const std::string& key) const {
         auto iter = m_map.find( key );
         if (iter == m_map.end())
-            throw std::invalid_argument("Key not found");
+            throw std::invalid_argument("Key not found:" + key);
         else {
             size_t index = iter->second;
             return get(index);
