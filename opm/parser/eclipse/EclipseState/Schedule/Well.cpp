@@ -393,11 +393,14 @@ namespace Opm {
     }
 
     void Well::addSegmentSetABS(size_t time_step, const SegmentSetPtr new_segmentset, const bool first_time) {
-        const double meaningless_value = -1.e100; // meaningless value to indicate unspecified values
+        const double meaningless_value = -1.e100; // meaningless value to indicate unspecified/uncompleted values
         if (first_time) {
-            // only need to update the volume and the length and depth values specified in the middle of the range
-            // top segment is always ready
-            // then looking for range that the information of the first segment whose outlet segment information are ready.
+            // the information of top segment is always complete/ready.
+            // the information for segments spcified one by one is also complete/ready
+            // for segments specified with ranges, only the information of the last segment in the range is complete/ready.
+            // need to update the volume and the length and depth values specified with ranges
+            // to do this, look for ranges that the information of outlet segment of the first segment are complete/ready.
+            // then update the information for the whole range accordingly.
             bool all_ready;
             do {
                 all_ready = true;
@@ -437,23 +440,23 @@ namespace Opm {
                         int number_segments = location_end - location_begin + 1;
                         assert(number_segments > 1);
 
-                        double length_outlet = (*new_segmentset)[outlet_location]->length();
-                        double depth_outlet = (*new_segmentset)[outlet_location]->depth();
-                        double length_x_outlet = (*new_segmentset)[outlet_location]->lengthX();
-                        double length_y_outlet = (*new_segmentset)[outlet_location]->lengthY();
+                        const double length_outlet = (*new_segmentset)[outlet_location]->length();
+                        const double depth_outlet = (*new_segmentset)[outlet_location]->depth();
+                        const double length_x_outlet = (*new_segmentset)[outlet_location]->lengthX();
+                        const double length_y_outlet = (*new_segmentset)[outlet_location]->lengthY();
 
-                        double length_last = (*new_segmentset)[location_end]->length();
-                        double depth_last = (*new_segmentset)[location_end]->depth();
-                        double length_x_last = (*new_segmentset)[location_end]->lengthX();
-                        double length_y_last = (*new_segmentset)[location_end]->lengthY();
+                        const double length_last = (*new_segmentset)[location_end]->length();
+                        const double depth_last = (*new_segmentset)[location_end]->depth();
+                        const double length_x_last = (*new_segmentset)[location_end]->lengthX();
+                        const double length_y_last = (*new_segmentset)[location_end]->lengthY();
 
-                        double length_segment = (length_last - length_outlet) / number_segments;
-                        double depth_segment = (depth_last - depth_outlet) / number_segments;
-                        double length_x_segment = (length_x_last - length_x_outlet) / number_segments;
-                        double length_y_segment = (length_y_last - length_y_outlet) / number_segments;
+                        const double length_segment = (length_last - length_outlet) / number_segments;
+                        const double depth_segment = (depth_last - depth_outlet) / number_segments;
+                        const double length_x_segment = (length_x_last - length_x_outlet) / number_segments;
+                        const double length_y_segment = (length_y_last - length_y_outlet) / number_segments;
 
                         // the segments in the same range should share the same properties
-                        double volume_segment = (*new_segmentset)[location_end]->crossArea() * length_segment;
+                        const double volume_segment = (*new_segmentset)[location_end]->crossArea() * length_segment;
 
                         if ((*new_segmentset)[location_end]->volume() < 0.5 * meaningless_value) {
                             (*new_segmentset)[location_end]->setVolume(volume_segment);
@@ -480,12 +483,14 @@ namespace Opm {
             } while (!all_ready);
 
             // then update the volume for all the segments except the top segment
+            // this is for the segments specified individually while the volume is not specified.
             for (int i = 1; i < new_segmentset->numberSegment(); ++i) {
-               int outlet_segment = (*new_segmentset)[i]->outletSegment();
-               int outlet_location = new_segmentset->numberToLocation(outlet_segment);
-               double segment_length = (*new_segmentset)[i]->length() - (*new_segmentset)[outlet_location]->length();
                if ((*new_segmentset)[i]->volume() < 0.5 * meaningless_value) {
-                   (*new_segmentset)[i]->setVolume((*new_segmentset)[i]->crossArea() * segment_length);
+                   const int outlet_segment = (*new_segmentset)[i]->outletSegment();
+                   const int outlet_location = new_segmentset->numberToLocation(outlet_segment);
+                   const double segment_length = (*new_segmentset)[i]->length() - (*new_segmentset)[outlet_location]->length();
+                   const double segment_volume = (*new_segmentset)[i]->crossArea() * segment_length;
+                   (*new_segmentset)[i]->setVolume(segment_volume);
                }
             }
 
