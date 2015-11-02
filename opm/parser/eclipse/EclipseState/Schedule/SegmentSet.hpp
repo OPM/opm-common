@@ -44,7 +44,6 @@ namespace Opm {
         WellSegment::LengthDepthEnum lengthDepthType() const;
         WellSegment::CompPresureDropEnum compPressureDrop() const;
         WellSegment::MultiPhaseModelEnum multiPhaseModel() const;
-        std::vector<SegmentPtr>& Segments();
 
         bool numberToLocation(const int segment_number, int& location) const;
 

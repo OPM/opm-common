@@ -56,10 +56,6 @@ namespace Opm {
         return m_multiphase_model;
     }
 
-    std::vector<SegmentPtr>& SegmentSet::Segments() {
-        return m_segments;
-    }
-
     SegmentPtr& SegmentSet::operator[](size_t idx) {
         return m_segments[idx];
     }
