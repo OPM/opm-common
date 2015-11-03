@@ -21,7 +21,7 @@ namespace Opm {
     }
 
     int SegmentSet::numberSegment() const {
-        return m_number_segment;
+        return m_segments.size();
     }
 
     double SegmentSet::depthTopSegment() const {
@@ -88,7 +88,6 @@ namespace Opm {
         SegmentSet* copy = new SegmentSet();
         copy->m_well_name = m_well_name;
         copy->m_number_branch = m_number_branch;
-        copy->m_number_segment = m_number_segment;
         copy->m_depth_top = m_depth_top;
         copy->m_length_top = m_length_top;
         copy->m_volume_top = m_volume_top;
@@ -207,9 +206,7 @@ namespace Opm {
             }
         }
 
-        m_number_segment = m_segments.size();
-
-        for (int i_segment = 0; i_segment < m_number_segment; ++i_segment){
+        for (size_t i_segment = 0; i_segment < m_segments.size(); ++i_segment){
             const int segment_number = m_segments[i_segment]->segmentNumber();
             const int location = numberToLocation(segment_number);
             if (location >= 0) { // found in the existing m_segments already

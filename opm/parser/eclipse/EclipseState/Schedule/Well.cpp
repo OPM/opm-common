@@ -352,16 +352,13 @@ namespace Opm {
         return canOpen;
     }
 
-    bool Well::isMultiSegment() const {
-        return m_is_multi_segment;
-    }
-
-    void Well::setMultiSegment(const bool is_multi_segment) {
-        m_is_multi_segment = is_multi_segment;
-    }
 
     SegmentSetConstPtr Well::getSegmentSet(size_t time_step) const {
         return m_segmentset->get(time_step);
+    }
+
+    bool Well::isMultiSegment(size_t time_step) const {
+        return (getSegmentSet(time_step)->numberSegment() > 0);
     }
 
     void Well::addSegmentSet(size_t time_step, const SegmentSetPtr new_segmentset) {
@@ -370,14 +367,12 @@ namespace Opm {
         // not sure if a well can switch between mutli-segment well and other
         // type of well
         // Here, we assume not
-        const bool first_time = !isMultiSegment();
+        const bool first_time = !isMultiSegment(time_step);
 
         if (first_time) {
             // overwrite the BHP reference depth with the one from WELSEGS keyword
             const double ref_depth = new_segmentset->depthTopSegment();
             m_refDepth.setValue(ref_depth);
-            // set the well to be a multi-segment well
-            m_is_multi_segment = true;
         } else {
             // checking the consistency of the input WELSEGS information
             throw std::logic_error("re-entering WELSEGS for a well is not supported yet!!.");

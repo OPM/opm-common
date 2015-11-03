@@ -114,8 +114,7 @@ namespace Opm {
 
 
         // for multi-segment wells
-        bool isMultiSegment() const;
-        void setMultiSegment(const bool is_multi_segment);
+        bool isMultiSegment(size_t time_step) const;
         SegmentSetConstPtr getSegmentSet(size_t time_step) const;
 
         void addSegmentSet(size_t time_step, const SegmentSetPtr new_segmentset);
