@@ -60,3 +60,14 @@ BOOST_AUTO_TEST_CASE(CreateEmpty) {
     BOOST_CHECK_EQUAL( true  , events.hasEvent(Opm::ScheduleEvents::WELL_STATUS_CHANGE , 9));
     BOOST_CHECK_EQUAL( true  , events.hasEvent(Opm::ScheduleEvents::WELL_STATUS_CHANGE , 10));
 }
+
+
+BOOST_AUTO_TEST_CASE(TestMultiple) {
+    boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
+    Opm::TimeMapPtr timeMap(new Opm::TimeMap(boost::posix_time::ptime(startDate)));
+    Opm::DynamicVector<double> vector(timeMap , 9.99);
+    Opm::Events events( timeMap );
+
+    events.addEvent( Opm::ScheduleEvents::NEW_WELL , 0 );
+    BOOST_CHECK( events.hasEvent( Opm::ScheduleEvents::NEW_WELL | Opm::ScheduleEvents::NEW_GROUP , 0 ));
+}

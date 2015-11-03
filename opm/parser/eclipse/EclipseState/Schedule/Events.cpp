@@ -28,9 +28,9 @@ namespace Opm {
     }
 
 
-    bool Events::hasEvent(ScheduleEvents::Events event, size_t reportStep) const {
+    bool Events::hasEvent(uint64_t eventMask , size_t reportStep) const {
         uint64_t eventSum = m_events[reportStep];
-        if (eventSum & event)
+        if (eventSum & eventMask)
             return true;
         else
             return false;

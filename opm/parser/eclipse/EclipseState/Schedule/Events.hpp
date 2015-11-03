@@ -94,7 +94,7 @@ namespace Opm
     public:
         Events(std::shared_ptr<const TimeMap> timeMap);
         void addEvent(ScheduleEvents::Events event, size_t reportStep);
-        bool hasEvent(ScheduleEvents::Events event, size_t reportStep) const;
+        bool hasEvent(uint64_t eventMask, size_t reportStep) const;
     private:
         DynamicVector<uint64_t> m_events;
     };
