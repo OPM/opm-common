@@ -96,6 +96,7 @@ EclipseState/Schedule/WellInjectionProperties.cpp
 EclipseState/Schedule/WellPolymerProperties.cpp
 EclipseState/Schedule/Segment.cpp
 EclipseState/Schedule/SegmentSet.cpp
+EclipseState/Schedule/Compsegs.cpp
 EclipseState/Schedule/WellSet.cpp
 EclipseState/Schedule/Group.cpp
 EclipseState/Schedule/Completion.cpp
@@ -191,6 +192,7 @@ EclipseState/Schedule/WellInjectionProperties.hpp
 EclipseState/Schedule/WellPolymerProperties.hpp
 EclipseState/Schedule/Segment.hpp
 EclipseState/Schedule/SegmentSet.hpp
+EclipseState/Schedule/Compsegs.hpp
 EclipseState/Schedule/WellSet.hpp
 EclipseState/Schedule/Group.hpp
 EclipseState/Schedule/DynamicState.hpp
