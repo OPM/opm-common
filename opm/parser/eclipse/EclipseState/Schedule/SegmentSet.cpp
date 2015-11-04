@@ -36,14 +36,6 @@ namespace Opm {
         return m_volume_top;
     }
 
-    double SegmentSet::xTop() const {
-        return m_x_top;
-    }
-
-    double SegmentSet::yTop() const {
-        return m_y_top;
-    }
-
     WellSegment::LengthDepthEnum SegmentSet::lengthDepthType() const {
         return m_length_depth_type;
     }
@@ -94,8 +86,6 @@ namespace Opm {
         copy->m_length_depth_type = m_length_depth_type;
         copy->m_comp_pressure_drop = m_comp_pressure_drop;
         copy->m_multiphase_model = m_multiphase_model;
-        copy->m_x_top = m_x_top;
-        copy->m_y_top = m_y_top;
         copy->m_number_to_location = m_number_to_location;
         copy->m_segments.resize(m_segments.size());
         for (int i = 0; i < int(m_segments.size()); ++i) {
@@ -121,18 +111,16 @@ namespace Opm {
         m_volume_top = record1->getItem("WELLBORE_VOLUME")->getSIDouble(0);
         m_comp_pressure_drop = WellSegment::CompPressureDropEnumFromString(record1->getItem("PRESSURE_COMPONENTS")->getTrimmedString(0));
         m_multiphase_model = WellSegment::MultiPhaseModelEnumFromString(record1->getItem("FLOW_MODEL")->getTrimmedString(0));
-        m_x_top = record1->getItem("TOP_X")->getSIDouble(0);
-        m_y_top = record1->getItem("TOP_Y")->getSIDouble(0);
 
         // the main branch is 1 instead of 0
         // the segment number for top segment is also 1
         if (m_length_depth_type == WellSegment::INC) {
             SegmentPtr top_segment(new Segment(1, 1, 0, 0., 0., meaningless_value, meaningless_value, meaningless_value,
-                                               m_volume_top, 0., 0., false));
+                                               m_volume_top, false));
             m_segments.push_back(top_segment);
         } else if (m_length_depth_type == WellSegment::ABS) {
             SegmentPtr top_segment(new Segment(1, 1, 0, m_length_top, m_depth_top, meaningless_value, meaningless_value,
-                                               meaningless_value, m_volume_top, m_x_top, m_y_top, true));
+                                               meaningless_value, m_volume_top, true));
             m_segments.push_back(top_segment);
         }
 
@@ -180,8 +168,6 @@ namespace Opm {
             }
 
             const double roughness = record->getItem("ROUGHNESS")->getSIDouble(0);
-            const double length_x = record->getItem("LENGTH_X")->getSIDouble(0);
-            const double length_y = record->getItem("LENGTH_Y")->getSIDouble(0);
 
             for (int i = segment1; i <= segment2; ++i) {
                 // for the first or the only segment in the range is the one specified in the WELSEGS
@@ -195,13 +181,13 @@ namespace Opm {
 
                 if (m_length_depth_type == WellSegment::INC) {
                     m_segments.push_back(std::make_shared<Segment>(i, branch, outlet_segment, segment_length, depth_change,
-                                                                   diameter, roughness, area, volume, length_x, length_y, false));
+                                                                   diameter, roughness, area, volume, false));
                 } else if (i == segment2) {
                     m_segments.push_back(std::make_shared<Segment>(i, branch, outlet_segment, segment_length, depth_change,
-                                                                   diameter, roughness, area, volume, length_x, length_y, true));
+                                                                   diameter, roughness, area, volume, true));
                 } else {
                     m_segments.push_back(std::make_shared<Segment>(i, branch, outlet_segment, meaningless_value, meaningless_value,
-                                                                   diameter, roughness, area, volume, meaningless_value, meaningless_value, false));
+                                                                   diameter, roughness, area, volume, false));
                 }
             }
         }

@@ -437,18 +437,12 @@ namespace Opm {
 
                         const double length_outlet = (*new_segmentset)[outlet_location]->length();
                         const double depth_outlet = (*new_segmentset)[outlet_location]->depth();
-                        const double length_x_outlet = (*new_segmentset)[outlet_location]->lengthX();
-                        const double length_y_outlet = (*new_segmentset)[outlet_location]->lengthY();
 
                         const double length_last = (*new_segmentset)[location_end]->length();
                         const double depth_last = (*new_segmentset)[location_end]->depth();
-                        const double length_x_last = (*new_segmentset)[location_end]->lengthX();
-                        const double length_y_last = (*new_segmentset)[location_end]->lengthY();
 
                         const double length_segment = (length_last - length_outlet) / number_segments;
                         const double depth_segment = (depth_last - depth_outlet) / number_segments;
-                        const double length_x_segment = (length_x_last - length_x_outlet) / number_segments;
-                        const double length_y_segment = (length_y_last - length_y_outlet) / number_segments;
 
                         // the segments in the same range should share the same properties
                         const double volume_segment = (*new_segmentset)[location_end]->crossArea() * length_segment;
@@ -462,10 +456,6 @@ namespace Opm {
                             (*new_segmentset)[k]->setLength(temp_length);
                             const double temp_depth = depth_outlet + (k - location_begin + 1) * depth_segment;
                             (*new_segmentset)[k]->setDepth(temp_depth);
-                            const double temp_length_x = length_x_outlet + (k - location_begin + 1) * length_x_segment;
-                            (*new_segmentset)[k]->setLengthX(temp_length_x);
-                            const double temp_length_y = length_y_outlet + (k - location_begin + 1) * length_y_segment;
-                            (*new_segmentset)[k]->setLengthY(temp_length_y);
                             (*new_segmentset)[k]->setDataReady(true);
 
                             if ((*new_segmentset)[k]->volume() < 0.5 * meaningless_value) {
@@ -501,8 +491,6 @@ namespace Opm {
             // update the information inside new_segmentset to be in ABS way
             (*new_segmentset)[0]->setLength(new_segmentset->lengthTopSegment());
             (*new_segmentset)[0]->setDepth(new_segmentset->depthTopSegment());
-            (*new_segmentset)[0]->setLengthX(new_segmentset->xTop());
-            (*new_segmentset)[0]->setLengthY(new_segmentset->yTop());
             (*new_segmentset)[0]->setDataReady(true);
 
             bool all_ready;
@@ -522,10 +510,6 @@ namespace Opm {
                             (*new_segmentset)[i]->setLength(temp_length);
                             const double temp_depth = (*new_segmentset)[i]->depth() + (*new_segmentset)[outlet_location]->depth();
                             (*new_segmentset)[i]->setDepth(temp_depth);
-                            const double temp_length_x = (*new_segmentset)[i]->lengthX() + (*new_segmentset)[outlet_location]->lengthX();
-                            (*new_segmentset)[i]->setLengthX(temp_length_x);
-                            const double temp_length_y = (*new_segmentset)[i]->lengthY() + (*new_segmentset)[outlet_location]->lengthY();
-                            (*new_segmentset)[i]->setLengthY(temp_length_y);
                             (*new_segmentset)[i]->setDataReady(true);
                             break;
                         }
@@ -543,10 +527,6 @@ namespace Opm {
                             (*new_segmentset)[current_location]->setLength(temp_length);
                             const double temp_depth = (*new_segmentset)[current_location]->depth() + (*new_segmentset)[outlet_location]->depth();
                             (*new_segmentset)[current_location]->setDepth(temp_depth);
-                            const double temp_length_x = (*new_segmentset)[current_location]->lengthX() + (*new_segmentset)[outlet_location]->lengthX();
-                            (*new_segmentset)[current_location]->setLengthX(temp_length_x);
-                            const double temp_length_y = (*new_segmentset)[current_location]->lengthY() + (*new_segmentset)[outlet_location]->lengthY();
-                            (*new_segmentset)[current_location]->setLengthY(temp_length_y);
                             (*new_segmentset)[current_location]->setDataReady(true);
                             break;
                         }

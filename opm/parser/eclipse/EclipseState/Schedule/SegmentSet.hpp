@@ -38,8 +38,6 @@ namespace Opm {
         double depthTopSegment() const;
         double lengthTopSegment() const;
         double volumeTopSegment() const;
-        double xTop() const;
-        double yTop() const;
 
         WellSegment::LengthDepthEnum lengthDepthType() const;
         WellSegment::CompPressureDropEnum compPressureDrop() const;
@@ -77,9 +75,9 @@ namespace Opm {
         WellSegment::CompPressureDropEnum m_comp_pressure_drop;
         // multi-phase flow model
         WellSegment::MultiPhaseModelEnum m_multiphase_model;
-        // X and Y cooridnate of the nodal point of the top segment
-        double m_x_top;
-        double m_y_top;
+        // There are X and Y cooridnate of the nodal point of the top segment
+        // Since they are not used for simulations and we are not supporting plotting,
+        // we are not handling them at the moment.
         // There are other three properties for segment related to thermal conduction,
         // while they are not supported by the keyword at the moment.
 

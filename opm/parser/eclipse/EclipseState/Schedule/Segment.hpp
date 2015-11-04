@@ -33,8 +33,7 @@ namespace Opm {
         Segment();
 
         Segment(int segment_number_in, int branch_in, int outlet_segment_in, double length_in, double depth_in,
-                double internal_diameter_in, double roughness_in, double cross_area_in,
-                double volume_in, double length_x_in, double length_y_in, bool data_ready_in);
+                double internal_diameter_in, double roughness_in, double cross_area_in, double volume_in, bool data_ready_in);
 
         int segmentNumber() const;
         int branchNumber() const;
@@ -45,15 +44,11 @@ namespace Opm {
         double roughness() const;
         double crossArea() const;
         double volume() const;
-        double lengthX() const;
-        double lengthY() const;
         bool dataReady() const;
 
         void setLength(const double length_in);
         void setDepth(const double depth_in);
         void setVolume(const double volume_in);
-        void setLengthX(const int length_x_in);
-        void setLengthY(const int length_y_in);
         void setDataReady(const bool data_ready_in);
 
 
@@ -100,17 +95,12 @@ namespace Opm {
         // it is defined for top segment.
         // TODO: to check if the definition is the same with other segments.
         double m_volume;
-        // length of segment projected onto the X-axis and Y-axis
-        // depending on item 5 in the record 1
-        // 'INC' or 'ABS'
-        // they are only used for plotting purpose
-        // it is is 'INC', for top segment, they will be 0
-        // in the class Well, it always stores the 'ABS' value.
-        double m_length_x;
-        double m_length_y;
         // indicate if the data related to 'INC' or 'ABS' is ready
         // the volume will be updated at a final step.
         bool m_data_ready;
+
+        // We are not handling the length of segment projected onto the X-axis and Y-axis.
+        // They are not used in the simulations and we are not supporting the plotting.
         // There are other three properties for segment related to thermal conduction,
         // while they are not supported by the keyword at the moment.
 

@@ -13,8 +13,6 @@ namespace Opm {
       m_roughness(-1.e100),
       m_cross_area(-1.e100),
       m_volume(-1.e100),
-      m_length_x(0.0),
-      m_length_y(0.0),
       m_data_ready(false)
     {
     }
@@ -22,7 +20,7 @@ namespace Opm {
 
     Segment::Segment(int segment_number_in, int branch_in, int outlet_segment_in, double length_in, double depth_in,
                      double internal_diameter_in, double roughness_in, double cross_area_in,
-                     double volume_in, double length_x_in, double length_y_in, bool data_ready_in)
+                     double volume_in, bool data_ready_in)
     : m_segment_number(segment_number_in),
       m_branch(branch_in),
       m_outlet_segment(outlet_segment_in),
@@ -32,8 +30,6 @@ namespace Opm {
       m_roughness(roughness_in),
       m_cross_area(cross_area_in),
       m_volume(volume_in),
-      m_length_x(length_x_in),
-      m_length_y(length_y_in),
       m_data_ready(data_ready_in)
     {
     }
@@ -78,21 +74,9 @@ namespace Opm {
         return m_cross_area;
     }
 
-
     double Segment::volume() const {
         return m_volume;
     }
-
-
-    double Segment::lengthX() const {
-        return m_length_x;
-    }
-
-
-    double Segment::lengthY() const {
-        return m_length_y;
-    }
-
 
     bool Segment::dataReady() const {
         return m_data_ready;
@@ -108,14 +92,6 @@ namespace Opm {
 
     void Segment::setVolume(const double volume_in) {
         m_volume = volume_in;
-    }
-
-    void Segment::setLengthX(const int length_x_in) {
-        m_length_x = length_x_in;
-    }
-
-    void Segment::setLengthY(const int length_y_in) {
-        m_length_y = length_y_in;
     }
 
     void Segment::setDataReady(const bool data_ready_in) {
