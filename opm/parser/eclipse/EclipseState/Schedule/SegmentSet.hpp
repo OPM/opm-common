@@ -44,14 +44,13 @@ namespace Opm {
         WellSegment::MultiPhaseModelEnum multiPhaseModel() const;
 
         int numberToLocation(const int segment_number) const;
+        void addSegment(SegmentPtr new_segment);
 
         void segmentsFromWELSEGSKeyword(DeckKeywordConstPtr welsegsKeyword);
 
         SegmentSet* shallowCopy() const;
 
-        SegmentPtr& operator[](size_t idx);
-
-        SegmentPtr operator[](size_t idx) const;
+        SegmentConstPtr operator[](size_t idx) const;
 
     private:
 
@@ -80,7 +79,7 @@ namespace Opm {
         // while they are not supported by the keyword at the moment.
 
         // std::vector<SegmentConstPtr> m_segments;
-        std::vector<SegmentPtr> m_segments;
+        std::vector<SegmentConstPtr> m_segments;
         // the mapping from the segment number to the
         // storage location in the vector
         std::map<int, int> m_number_to_location;

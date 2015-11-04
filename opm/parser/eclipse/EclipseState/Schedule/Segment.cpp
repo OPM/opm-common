@@ -34,6 +34,20 @@ namespace Opm {
     {
     }
 
+    Segment::Segment(std::shared_ptr<const Segment> segment_in)
+    : m_segment_number(segment_in->segmentNumber()),
+      m_branch(segment_in->branchNumber()),
+      m_outlet_segment(segment_in->outletSegment()),
+      m_length(segment_in->length()),
+      m_depth(segment_in->depth()),
+      m_internal_diameter(segment_in->internalDiameter()),
+      m_roughness(segment_in->roughness()),
+      m_cross_area(segment_in->crossArea()),
+      m_volume(segment_in->volume()),
+      m_data_ready(segment_in->dataReady())
+    {
+    }
+
 
     int Segment::segmentNumber() const {
         return m_segment_number;

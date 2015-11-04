@@ -54,7 +54,7 @@ namespace Opm {
           m_grid( grid ),
           m_comporder(completionOrdering),
           m_allowCrossFlow(allowCrossFlow),
-          m_segmentset(new DynamicState<SegmentSetPtr>(timeMap, SegmentSetPtr(new SegmentSet())))
+          m_segmentset(new DynamicState<SegmentSetConstPtr>(timeMap, SegmentSetPtr(new SegmentSet())))
     {
         m_name = name_;
         m_creationTimeStep = creationTimeStep;
@@ -446,20 +446,22 @@ namespace Opm {
                         // the segments in the same range should share the same properties
                         const double volume_segment = (*new_segmentset)[location_end]->crossArea() * length_segment;
 
-                        if ((*new_segmentset)[location_end]->volume() < 0.5 * meaningless_value) {
-                            (*new_segmentset)[location_end]->setVolume(volume_segment);
-                        }
+                        // if ((*new_segmentset)[location_end]->volume() < 0.5 * meaningless_value) {
+                        //     (*new_segmentset)[location_end]->setVolume(volume_segment);
+                        // }
 
                         for (int k = location_begin; k < location_end; ++k) {
+                            SegmentPtr new_segment = std::make_shared<Segment>((*new_segmentset)[k]);
                             const double temp_length = length_outlet + (k - location_begin + 1) * length_segment;
-                            (*new_segmentset)[k]->setLength(temp_length);
+                            new_segment->setLength(temp_length);
                             const double temp_depth = depth_outlet + (k - location_begin + 1) * depth_segment;
-                            (*new_segmentset)[k]->setDepth(temp_depth);
-                            (*new_segmentset)[k]->setDataReady(true);
+                            new_segment->setDepth(temp_depth);
+                            new_segment->setDataReady(true);
 
-                            if ((*new_segmentset)[k]->volume() < 0.5 * meaningless_value) {
-                                (*new_segmentset)[k]->setVolume(volume_segment);
+                            if (new_segment->volume() < 0.5 * meaningless_value) {
+                                new_segment->setVolume(volume_segment);
                             }
+                            new_segmentset->addSegment(new_segment);
                         }
                         break;
                     }
@@ -470,11 +472,13 @@ namespace Opm {
             // this is for the segments specified individually while the volume is not specified.
             for (int i = 1; i < new_segmentset->numberSegment(); ++i) {
                if ((*new_segmentset)[i]->volume() < 0.5 * meaningless_value) {
+                   SegmentPtr new_segment = std::make_shared<Segment>((*new_segmentset)[i]);
                    const int outlet_segment = (*new_segmentset)[i]->outletSegment();
                    const int outlet_location = new_segmentset->numberToLocation(outlet_segment);
                    const double segment_length = (*new_segmentset)[i]->length() - (*new_segmentset)[outlet_location]->length();
                    const double segment_volume = (*new_segmentset)[i]->crossArea() * segment_length;
-                   (*new_segmentset)[i]->setVolume(segment_volume);
+                   new_segment->setVolume(segment_volume);
+                   new_segmentset->addSegment(new_segment);
                }
             }
 
@@ -482,18 +486,21 @@ namespace Opm {
         } else {
             throw std::logic_error("re-entering WELSEGS for a well is not supported yet!!.");
         }
-    }
+   }
 
     void Well::addSegmentSetINC(size_t time_step, const SegmentSetPtr new_segmentset, const bool first_time) {
         // The following code only applies when no loop exist.
         if (first_time) {
             // update the information inside new_segmentset to be in ABS way
-            (*new_segmentset)[0]->setLength(new_segmentset->lengthTopSegment());
-            (*new_segmentset)[0]->setDepth(new_segmentset->depthTopSegment());
-            (*new_segmentset)[0]->setDataReady(true);
+            {
+                SegmentPtr new_top_segment = std::make_shared<Segment>((*new_segmentset)[0]);
+                new_top_segment->setLength(new_segmentset->lengthTopSegment());
+                new_top_segment->setDepth(new_segmentset->depthTopSegment());
+                new_top_segment->setDataReady(true);
+                new_segmentset->addSegment(new_top_segment);
+            }
 
             bool all_ready;
-
             do {
                 all_ready = true;
                 for (int i = 1; i < new_segmentset->numberSegment(); ++i) {
@@ -505,11 +512,13 @@ namespace Opm {
                         int outlet_location = new_segmentset->numberToLocation(outlet_segment);
 
                         if ((*new_segmentset)[outlet_location]->dataReady() == true) {
+                            SegmentPtr new_segment = std::make_shared<Segment>((*new_segmentset)[i]);
                             const double temp_length = (*new_segmentset)[i]->length() + (*new_segmentset)[outlet_location]->length();
-                            (*new_segmentset)[i]->setLength(temp_length);
+                            new_segment->setLength(temp_length);
                             const double temp_depth = (*new_segmentset)[i]->depth() + (*new_segmentset)[outlet_location]->depth();
-                            (*new_segmentset)[i]->setDepth(temp_depth);
-                            (*new_segmentset)[i]->setDataReady(true);
+                            new_segment->setDepth(temp_depth);
+                            new_segment->setDataReady(true);
+                            new_segmentset->addSegment(new_segment);
                             break;
                         }
 
@@ -522,11 +531,13 @@ namespace Opm {
                         }
 
                         if ((*new_segmentset)[outlet_location]->dataReady() == true) {
+                            SegmentPtr new_segment = std::make_shared<Segment>((*new_segmentset)[current_location]);
                             const double temp_length = (*new_segmentset)[current_location]->length() + (*new_segmentset)[outlet_location]->length();
-                            (*new_segmentset)[current_location]->setLength(temp_length);
+                            new_segment->setLength(temp_length);
                             const double temp_depth = (*new_segmentset)[current_location]->depth() + (*new_segmentset)[outlet_location]->depth();
-                            (*new_segmentset)[current_location]->setDepth(temp_depth);
-                            (*new_segmentset)[current_location]->setDataReady(true);
+                            new_segment->setDepth(temp_depth);
+                            new_segment->setDataReady(true);
+                            new_segmentset->addSegment(new_segment);
                             break;
                         }
                     }

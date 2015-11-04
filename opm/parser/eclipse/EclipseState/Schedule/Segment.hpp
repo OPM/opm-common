@@ -34,6 +34,7 @@ namespace Opm {
 
         Segment(int segment_number_in, int branch_in, int outlet_segment_in, double length_in, double depth_in,
                 double internal_diameter_in, double roughness_in, double cross_area_in, double volume_in, bool data_ready_in);
+        Segment(std::shared_ptr<const Segment> segment_in);
 
         int segmentNumber() const;
         int branchNumber() const;

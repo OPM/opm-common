@@ -48,11 +48,7 @@ namespace Opm {
         return m_multiphase_model;
     }
 
-    SegmentPtr& SegmentSet::operator[](size_t idx) {
-        return m_segments[idx];
-    }
-
-    SegmentPtr SegmentSet::operator[](size_t idx) const {
+    SegmentConstPtr SegmentSet::operator[](size_t idx) const {
         return m_segments[idx];
     }
 
@@ -64,6 +60,20 @@ namespace Opm {
             return -1;
         }
     }
+
+    void SegmentSet::addSegment(SegmentPtr new_segment) {
+       // decide whether to push_back or insert
+       int segment_number = new_segment->segmentNumber();
+
+       const int segment_location = numberToLocation(segment_number);
+
+       if (segment_location < 0) { // it is a new segment
+           m_number_to_location[segment_number] = numberSegment();
+           m_segments.push_back(new_segment);
+       } else { // the segment already exists
+           m_segments[segment_location] = new_segment;
+       }
+   }
 
     SegmentSet* SegmentSet::shallowCopy() const {
         SegmentSet* copy = new SegmentSet();
@@ -104,12 +114,12 @@ namespace Opm {
         // the main branch is 1 instead of 0
         // the segment number for top segment is also 1
         if (m_length_depth_type == WellSegment::INC) {
-            SegmentPtr top_segment(new Segment(1, 1, 0, 0., 0., meaningless_value, meaningless_value, meaningless_value,
-                                               m_volume_top, false));
+            SegmentConstPtr top_segment(new Segment(1, 1, 0, 0., 0., meaningless_value, meaningless_value, meaningless_value,
+                                                    m_volume_top, false));
             m_segments.push_back(top_segment);
         } else if (m_length_depth_type == WellSegment::ABS) {
-            SegmentPtr top_segment(new Segment(1, 1, 0, m_length_top, m_depth_top, meaningless_value, meaningless_value,
-                                               meaningless_value, m_volume_top, true));
+            SegmentConstPtr top_segment(new Segment(1, 1, 0, m_length_top, m_depth_top, meaningless_value, meaningless_value,
+                                                    meaningless_value, m_volume_top, true));
             m_segments.push_back(top_segment);
         }
 
@@ -169,13 +179,13 @@ namespace Opm {
                 }
 
                 if (m_length_depth_type == WellSegment::INC) {
-                    m_segments.push_back(std::make_shared<Segment>(i, branch, outlet_segment, segment_length, depth_change,
+                    m_segments.push_back(std::make_shared<const Segment>(i, branch, outlet_segment, segment_length, depth_change,
                                                                    diameter, roughness, area, volume, false));
                 } else if (i == segment2) {
-                    m_segments.push_back(std::make_shared<Segment>(i, branch, outlet_segment, segment_length, depth_change,
+                    m_segments.push_back(std::make_shared<const Segment>(i, branch, outlet_segment, segment_length, depth_change,
                                                                    diameter, roughness, area, volume, true));
                 } else {
-                    m_segments.push_back(std::make_shared<Segment>(i, branch, outlet_segment, meaningless_value, meaningless_value,
+                    m_segments.push_back(std::make_shared<const Segment>(i, branch, outlet_segment, meaningless_value, meaningless_value,
                                                                    diameter, roughness, area, volume, false));
                 }
             }
