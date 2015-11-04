@@ -44,13 +44,15 @@ namespace Opm {
         WellSegment::MultiPhaseModelEnum multiPhaseModel() const;
 
         int numberToLocation(const int segment_number) const;
-        void addSegment(SegmentPtr new_segment);
+        void addSegment(SegmentConstPtr new_segment);
 
         void segmentsFromWELSEGSKeyword(DeckKeywordConstPtr welsegsKeyword);
 
         SegmentSet* shallowCopy() const;
 
         SegmentConstPtr operator[](size_t idx) const;
+        void processABS();
+        void processINC(const bool first_time);
 
     private:
 

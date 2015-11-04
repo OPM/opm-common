@@ -61,7 +61,7 @@ namespace Opm {
         }
     }
 
-    void SegmentSet::addSegment(SegmentPtr new_segment) {
+    void SegmentSet::addSegment(SegmentConstPtr new_segment) {
        // decide whether to push_back or insert
        int segment_number = new_segment->segmentNumber();
 
@@ -201,4 +201,148 @@ namespace Opm {
         }
 
     }
+
+    void SegmentSet::processABS() {
+        const double meaningless_value = -1.e100; // meaningless value to indicate unspecified/uncompleted values
+
+        bool all_ready;
+        do {
+            all_ready = true;
+            for (int i = 1; i < this->numberSegment(); ++i) {
+                if ((*this)[i]->dataReady() == false) {
+                    all_ready = false;
+                    // then looking for unready segment with a ready outlet segment
+                    // and looking for the continous unready segments
+                    // int index_begin = i;
+                    int location_begin = i;
+
+                    int outlet_segment = (*this)[i]->outletSegment();
+                    int outlet_location = this->numberToLocation(outlet_segment);
+
+                    while ((*this)[outlet_location]->dataReady() == false) {
+                        location_begin = outlet_location;
+                        assert(location_begin > 0);
+                        outlet_segment = (*this)[location_begin]->outletSegment();
+                        outlet_location = this->numberToLocation(outlet_segment);
+                    }
+
+                    // begin from location_begin to look for the unready segments continous
+                    int location_end = -1;
+
+                    for (int j = location_begin + 1; j < this->numberSegment(); ++j) {
+                        if ((*this)[j]->dataReady() == true) {
+                            location_end = j;
+                            break;
+                        }
+                    }
+                    if (location_end == -1) {
+                        throw std::logic_error("One of the range records in WELSEGS is wrong.");
+                    }
+
+                    // set the value for the segments in the range
+                    int number_segments = location_end - location_begin + 1;
+                    assert(number_segments > 1);
+
+                    const double length_outlet = (*this)[outlet_location]->length();
+                    const double depth_outlet = (*this)[outlet_location]->depth();
+
+                    const double length_last = (*this)[location_end]->length();
+                    const double depth_last = (*this)[location_end]->depth();
+
+                    const double length_segment = (length_last - length_outlet) / number_segments;
+                    const double depth_segment = (depth_last - depth_outlet) / number_segments;
+
+                    // the segments in the same range should share the same properties
+                    const double volume_segment = (*this)[location_end]->crossArea() * length_segment;
+
+                    for (int k = location_begin; k < location_end; ++k) {
+                        SegmentPtr new_segment = std::make_shared<Segment>((*this)[k]);
+                        const double temp_length = length_outlet + (k - location_begin + 1) * length_segment;
+                        new_segment->setLength(temp_length);
+                        const double temp_depth = depth_outlet + (k - location_begin + 1) * depth_segment;
+                        new_segment->setDepth(temp_depth);
+                        new_segment->setDataReady(true);
+
+                        if (new_segment->volume() < 0.5 * meaningless_value) {
+                            new_segment->setVolume(volume_segment);
+                        }
+                        this->addSegment(new_segment);
+                    }
+                    break;
+                }
+            }
+       } while (!all_ready);
+
+       // then update the volume for all the segments except the top segment
+       // this is for the segments specified individually while the volume is not specified.
+       // and also the last segment specified with range
+       for (int i = 1; i < this->numberSegment(); ++i) {
+           if ((*this)[i]->volume() < 0.5 * meaningless_value) {
+               SegmentPtr new_segment = std::make_shared<Segment>((*this)[i]);
+               const int outlet_segment = (*this)[i]->outletSegment();
+               const int outlet_location = this->numberToLocation(outlet_segment);
+               const double segment_length = (*this)[i]->length() - (*this)[outlet_location]->length();
+               const double segment_volume = (*this)[i]->crossArea() * segment_length;
+               new_segment->setVolume(segment_volume);
+               this->addSegment(new_segment);
+           }
+       }
+    }
+
+    void SegmentSet::processINC(const bool first_time) {
+
+        // update the information inside the SegmentSet to be in ABS way
+        if (first_time) {
+            SegmentPtr new_top_segment = std::make_shared<Segment>((*this)[0]);
+            new_top_segment->setLength(this->lengthTopSegment());
+            new_top_segment->setDepth(this->depthTopSegment());
+            new_top_segment->setDataReady(true);
+            this->addSegment(new_top_segment);
+        }
+
+        bool all_ready;
+        do {
+            all_ready = true;
+            for (int i = 1; i < this->numberSegment(); ++i) {
+                if ((*this)[i]->dataReady() == false) {
+                    all_ready = false;
+                    // check the information about the outlet segment
+                    // find the outlet segment with true dataReady()
+                    int outlet_segment = (*this)[i]->outletSegment();
+                    int outlet_location = this->numberToLocation(outlet_segment);
+
+                    if ((*this)[outlet_location]->dataReady() == true) {
+                        SegmentPtr new_segment = std::make_shared<Segment>((*this)[i]);
+                        const double temp_length = (*this)[i]->length() + (*this)[outlet_location]->length();
+                        new_segment->setLength(temp_length);
+                        const double temp_depth = (*this)[i]->depth() + (*this)[outlet_location]->depth();
+                        new_segment->setDepth(temp_depth);
+                        new_segment->setDataReady(true);
+                        this->addSegment(new_segment);
+                        break;
+                    }
+
+                    int current_location;
+                    while ((*this)[outlet_location]->dataReady() == false) {
+                        current_location = outlet_location;
+                        outlet_segment = (*this)[outlet_location]->outletSegment();
+                        outlet_location = this->numberToLocation(outlet_segment);
+                        assert((outlet_location >= 0) && (outlet_location < this->numberSegment()));
+                    }
+
+                    if ((*this)[outlet_location]->dataReady() == true) {
+                        SegmentPtr new_segment = std::make_shared<Segment>((*this)[current_location]);
+                        const double temp_length = (*this)[current_location]->length() + (*this)[outlet_location]->length();
+                        new_segment->setLength(temp_length);
+                        const double temp_depth = (*this)[current_location]->depth() + (*this)[outlet_location]->depth();
+                        new_segment->setDepth(temp_depth);
+                        new_segment->setDataReady(true);
+                        this->addSegment(new_segment);
+                        break;
+                    }
+                }
+            }
+        } while (!all_ready);
+    }
+
 }
