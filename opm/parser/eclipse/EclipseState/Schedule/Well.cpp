@@ -54,7 +54,6 @@ namespace Opm {
           m_grid( grid ),
           m_comporder(completionOrdering),
           m_allowCrossFlow(allowCrossFlow),
-          m_is_multi_segment(false),
           m_segmentset(new DynamicState<SegmentSetPtr>(timeMap, SegmentSetPtr(new SegmentSet())))
     {
         m_name = name_;
