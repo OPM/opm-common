@@ -98,36 +98,12 @@ namespace Opm {
         return m_data_ready;
     }
 
-    void Segment::setSegmentNumber(const int segment_number_in) {
-        m_segment_number = segment_number_in;
-    }
-
-    void Segment::setBrachNumber(const int branch_number_in) {
-        m_branch = branch_number_in;
-    }
-
-    void Segment::setOutletSegment(const int outlet_segment_in) {
-        m_outlet_segment = outlet_segment_in;
-    }
-
     void Segment::setLength(const double length_in) {
         m_length = length_in;
     }
 
     void Segment::setDepth(const double depth_in) {
         m_depth = depth_in;
-    }
-
-    void Segment::setInternalDiameter(const double internal_diameter_in) {
-        m_internal_diameter = internal_diameter_in;
-    }
-
-    void Segment::setRoughness(const double roughness_in) {
-        m_roughness = roughness_in;
-    }
-
-    void Segment::setCrossArea(const double cross_area_in) {
-        m_cross_area = cross_area_in;
     }
 
     void Segment::setVolume(const double volume_in) {

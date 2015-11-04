@@ -49,14 +49,8 @@ namespace Opm {
         double lengthY() const;
         bool dataReady() const;
 
-        void setSegmentNumber(const int segment_number_in);
-        void setBrachNumber(const int branch_number_in);
-        void setOutletSegment(const int outlet_segment_in);
         void setLength(const double length_in);
         void setDepth(const double depth_in);
-        void setInternalDiameter(const double internal_diameter_in);
-        void setRoughness(const double roughness_in);
-        void setCrossArea(const double cross_area_in);
         void setVolume(const double volume_in);
         void setLengthX(const int length_x_in);
         void setLengthY(const int length_y_in);
