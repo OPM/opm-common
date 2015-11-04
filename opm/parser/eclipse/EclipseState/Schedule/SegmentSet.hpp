@@ -43,8 +43,6 @@ namespace Opm {
         WellSegment::CompPressureDropEnum compPressureDrop() const;
         WellSegment::MultiPhaseModelEnum multiPhaseModel() const;
 
-        bool numberToLocation(const int segment_number, int& location) const;
-
         int numberToLocation(const int segment_number) const;
 
         void segmentsFromWELSEGSKeyword(DeckKeywordConstPtr welsegsKeyword);

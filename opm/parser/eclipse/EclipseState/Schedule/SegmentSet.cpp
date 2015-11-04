@@ -56,17 +56,6 @@ namespace Opm {
         return m_segments[idx];
     }
 
-    bool SegmentSet::numberToLocation(const int segment_number, int& location) const {
-         // std::map<int, int>::iterator it;
-         auto it = m_number_to_location.find(segment_number);
-         if (it != m_number_to_location.end()) {
-             location = it->second;
-             return true;
-         } else {
-             return false;
-         }
-    }
-
     int SegmentSet::numberToLocation(const int segment_number) const {
         auto it = m_number_to_location.find(segment_number);
         if (it != m_number_to_location.end()) {
