@@ -7,12 +7,12 @@ namespace Opm {
     : m_segment_number(-1),
       m_branch(-1),
       m_outlet_segment(-1),
-      m_length(-1.e100),
-      m_depth(-1.e100),
-      m_internal_diameter(-1.e100),
-      m_roughness(-1.e100),
-      m_cross_area(-1.e100),
-      m_volume(-1.e100),
+      m_length(invalid_value),
+      m_depth(invalid_value),
+      m_internal_diameter(invalid_value),
+      m_roughness(invalid_value),
+      m_cross_area(invalid_value),
+      m_volume(invalid_value),
       m_data_ready(false)
     {
     }
@@ -110,6 +110,10 @@ namespace Opm {
 
     void Segment::setDataReady(const bool data_ready_in) {
         m_data_ready = data_ready_in;
+    }
+
+    double Segment::invalidValue() {
+        return invalid_value;
     }
 
 }

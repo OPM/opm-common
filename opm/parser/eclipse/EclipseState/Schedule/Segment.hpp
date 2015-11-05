@@ -52,6 +52,8 @@ namespace Opm {
         void setVolume(const double volume_in);
         void setDataReady(const bool data_ready_in);
 
+        static double invalidValue();
+
 
     private:
         // segment number
@@ -81,16 +83,16 @@ namespace Opm {
         // tubing internal diameter
         // or the equivalent diameter for annular cross-sections
         // for top segment, it is UNDEFINED
-        // we use -1e100 for the top segment
+        // we use invalid_value for the top segment
         double m_internal_diameter;
         // effective roughness of the tubing
         // used to calculate the Fanning friction factor
         // for top segment, it is UNDEFINED
-        // we use -1e100 for the top segment
+        // we use invalid_value for the top segment
         double m_roughness;
         // cross-sectional area for fluid flow
         // not defined for the top segment,
-        // we use -1e100 for the top segment.
+        // we use invalid_value for the top segment.
         double m_cross_area;
         // valume of the segment;
         // it is defined for top segment.
@@ -100,6 +102,7 @@ namespace Opm {
         // the volume will be updated at a final step.
         bool m_data_ready;
 
+        static constexpr double invalid_value = -1.e100;
         // We are not handling the length of segment projected onto the X-axis and Y-axis.
         // They are not used in the simulations and we are not supporting the plotting.
         // There are other three properties for segment related to thermal conduction,

@@ -102,7 +102,7 @@ namespace Opm {
 
         m_segments.clear();
 
-        const double meaningless_value = -1.e100; // meaningless value to indicate unspecified values
+        const double invalid_value = Segment::invalidValue(); // meaningless value to indicate unspecified values
 
         m_depth_top = record1->getItem("DEPTH")->getSIDouble(0);
         m_length_top = record1->getItem("LENGTH")->getSIDouble(0);
@@ -114,12 +114,12 @@ namespace Opm {
         // the main branch is 1 instead of 0
         // the segment number for top segment is also 1
         if (m_length_depth_type == WellSegment::INC) {
-            SegmentConstPtr top_segment(new Segment(1, 1, 0, 0., 0., meaningless_value, meaningless_value, meaningless_value,
+            SegmentConstPtr top_segment(new Segment(1, 1, 0, 0., 0., invalid_value, invalid_value, invalid_value,
                                                     m_volume_top, false));
             m_segments.push_back(top_segment);
         } else if (m_length_depth_type == WellSegment::ABS) {
-            SegmentConstPtr top_segment(new Segment(1, 1, 0, m_length_top, m_depth_top, meaningless_value, meaningless_value,
-                                                    meaningless_value, m_volume_top, true));
+            SegmentConstPtr top_segment(new Segment(1, 1, 0, m_length_top, m_depth_top, invalid_value, invalid_value,
+                                                    invalid_value, m_volume_top, true));
             m_segments.push_back(top_segment);
         }
 
@@ -163,7 +163,7 @@ namespace Opm {
             } else if (m_length_depth_type == WellSegment::INC) {
                 volume = area * segment_length;
             } else {
-                volume = meaningless_value; // A * L, while L is not determined yet
+                volume = invalid_value; // A * L, while L is not determined yet
             }
 
             const double roughness = record->getItem("ROUGHNESS")->getSIDouble(0);
@@ -185,7 +185,7 @@ namespace Opm {
                     m_segments.push_back(std::make_shared<const Segment>(i, branch, outlet_segment, segment_length, depth_change,
                                                                    diameter, roughness, area, volume, true));
                 } else {
-                    m_segments.push_back(std::make_shared<const Segment>(i, branch, outlet_segment, meaningless_value, meaningless_value,
+                    m_segments.push_back(std::make_shared<const Segment>(i, branch, outlet_segment, invalid_value, invalid_value,
                                                                    diameter, roughness, area, volume, false));
                 }
             }
@@ -203,7 +203,7 @@ namespace Opm {
     }
 
     void SegmentSet::processABS() {
-        const double meaningless_value = -1.e100; // meaningless value to indicate unspecified/uncompleted values
+        const double invalid_value = Segment::invalidValue(); // meaningless value to indicate unspecified/uncompleted values
 
         bool all_ready;
         do {
@@ -263,7 +263,7 @@ namespace Opm {
                         new_segment->setDepth(temp_depth);
                         new_segment->setDataReady(true);
 
-                        if (new_segment->volume() < 0.5 * meaningless_value) {
+                        if (new_segment->volume() < 0.5 * invalid_value) {
                             new_segment->setVolume(volume_segment);
                         }
                         this->addSegment(new_segment);
@@ -277,7 +277,7 @@ namespace Opm {
        // this is for the segments specified individually while the volume is not specified.
        // and also the last segment specified with range
        for (int i = 1; i < this->numberSegment(); ++i) {
-           if ((*this)[i]->volume() < 0.5 * meaningless_value) {
+           if ((*this)[i]->volume() == invalid_value) {
                SegmentPtr new_segment = std::make_shared<Segment>((*this)[i]);
                const int outlet_segment = (*this)[i]->outletSegment();
                const int outlet_location = this->numberToLocation(outlet_segment);
