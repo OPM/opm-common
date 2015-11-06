@@ -47,10 +47,8 @@ namespace Opm {
         double volume() const;
         bool dataReady() const;
 
-        void setLength(const double length_in);
-        void setDepth(const double depth_in);
         void setVolume(const double volume_in);
-        void setDataReady(const bool data_ready_in);
+        void setDepthAndLength(const double depth_in, const double length_in);
 
         static double invalidValue();
 

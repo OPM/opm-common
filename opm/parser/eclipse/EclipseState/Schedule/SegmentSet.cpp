@@ -251,9 +251,7 @@ namespace Opm {
                 const double temp_length = length_outlet + (k - range_begin + 1) * length_inc;
                 const double temp_depth = depth_outlet + (k - range_end + 1) * depth_inc;
                 if (k != range_end) {
-                    new_segment->setDepth(temp_depth);
-                    new_segment->setLength(temp_length);
-                    new_segment->setDataReady(true);
+                    new_segment->setDepthAndLength(temp_depth, temp_length);
                 }
 
                 if (new_segment->volume() < 0.5 * invalid_value) {
@@ -285,9 +283,7 @@ namespace Opm {
         // update the information inside the SegmentSet to be in ABS way
         if (first_time) {
             SegmentPtr new_top_segment = std::make_shared<Segment>((*this)[0]);
-            new_top_segment->setLength(lengthTopSegment());
-            new_top_segment->setDepth(depthTopSegment());
-            new_top_segment->setDataReady(true);
+            new_top_segment->setDepthAndLength(depthTopSegment(), lengthTopSegment());
             this->addSegment(new_top_segment);
         }
 
@@ -311,9 +307,7 @@ namespace Opm {
 
                 // applying the calculated length and depth to the current segment
                 SegmentPtr new_segment = std::make_shared<Segment>(m_segments[i_loc]);
-                new_segment->setDepth(temp_depth);
-                new_segment->setLength(temp_length);
-                new_segment->setDataReady(true);
+                new_segment->setDepthAndLength(temp_depth, temp_length);
                 addSegment(new_segment);
             }
         }

@@ -96,20 +96,14 @@ namespace Opm {
         return m_data_ready;
     }
 
-    void Segment::setLength(const double length_in) {
+    void Segment::setDepthAndLength(const double depth_in,  const double length_in) {
         m_length = length_in;
-    }
-
-    void Segment::setDepth(const double depth_in) {
         m_depth = depth_in;
+        m_data_ready = true;
     }
 
     void Segment::setVolume(const double volume_in) {
         m_volume = volume_in;
-    }
-
-    void Segment::setDataReady(const bool data_ready_in) {
-        m_data_ready = data_ready_in;
     }
 
     double Segment::invalidValue() {
