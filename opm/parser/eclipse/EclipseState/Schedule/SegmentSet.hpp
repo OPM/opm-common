@@ -51,6 +51,7 @@ namespace Opm {
         SegmentSet* shallowCopy() const;
 
         SegmentConstPtr operator[](size_t idx) const;
+        void orderSegments();
         void processABS();
         void processINC(const bool first_time);
 

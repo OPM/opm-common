@@ -205,6 +205,8 @@ namespace Opm {
     void SegmentSet::processABS() {
         const double invalid_value = Segment::invalidValue(); // meaningless value to indicate unspecified/uncompleted values
 
+        orderSegments();
+
         bool all_ready;
         do {
             all_ready = true;
@@ -300,6 +302,8 @@ namespace Opm {
             this->addSegment(new_top_segment);
         }
 
+        orderSegments();
+
         bool all_ready;
         do {
             all_ready = true;
@@ -343,6 +347,62 @@ namespace Opm {
                 }
             }
         } while (!all_ready);
+    }
+
+    void SegmentSet::orderSegments() {
+        // re-ordering the segments to make later use easier.
+        // two principles
+        // 1. the location of the outlet segment will be stored in the lower location than the segment.
+        // 2. the segments belong to the same branch will be continuously stored.
+
+        // top segment will always be the first one
+        // before this location, the reordering is done.
+        int current_loc = 1;
+
+        // clear the mapping from segment number to store location
+        m_number_to_location.clear();
+        // for the top segment
+        m_number_to_location[1] = 0;
+
+        while (current_loc < numberSegment()) {
+            // the branch number of the last segment that is done re-ordering
+            const int last_branch_number = m_segments[current_loc-1]->branchNumber();
+            // the one need to be swapped to the current_loc.
+            int target_segment_loc = -1;
+
+            // looking for target_segment_loc
+            for (int i_loc = current_loc; i_loc < numberSegment(); ++i_loc) {
+                const int outlet_segment_number = m_segments[i_loc]->outletSegment();
+                const int outlet_segment_location = numberToLocation(outlet_segment_number);
+                if (outlet_segment_location < 0) { // not found the outlet_segment in the done re-ordering segments
+                    continue;
+                }
+                if (target_segment_loc < 0) { // first time found a candidate
+                    target_segment_loc = i_loc;
+                } else { // there is already a candidate, chosing the one with the same branch number with last_branch_number
+                    const int old_target_segment_loc_branch = m_segments[target_segment_loc]->branchNumber();
+                    const int new_target_segment_loc_branch = m_segments[i_loc]->branchNumber();
+                    if (new_target_segment_loc_branch == last_branch_number) {
+                        if (old_target_segment_loc_branch != last_branch_number) {
+                            target_segment_loc = i_loc;
+                        } else {
+                            throw std::logic_error("two segments in the same branch share the same outlet segment !!\n");
+                        }
+                    }
+                }
+            }
+
+            if (target_segment_loc < 0) {
+                throw std::logic_error("could not find candidate segment to swap in before the re-odering process get done !!\n");
+            }
+            assert(target_segment_loc >= current_loc);
+            if (target_segment_loc > current_loc) {
+                std::swap(m_segments[current_loc], m_segments[target_segment_loc]);
+            }
+            const int segment_number = m_segments[current_loc]->segmentNumber();
+            m_number_to_location[segment_number] = current_loc;
+            current_loc++;
+        }
     }
 
 }
