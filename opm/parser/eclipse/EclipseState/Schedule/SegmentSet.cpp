@@ -285,57 +285,38 @@ namespace Opm {
         // update the information inside the SegmentSet to be in ABS way
         if (first_time) {
             SegmentPtr new_top_segment = std::make_shared<Segment>((*this)[0]);
-            new_top_segment->setLength(this->lengthTopSegment());
-            new_top_segment->setDepth(this->depthTopSegment());
+            new_top_segment->setLength(lengthTopSegment());
+            new_top_segment->setDepth(depthTopSegment());
             new_top_segment->setDataReady(true);
             this->addSegment(new_top_segment);
         }
 
         orderSegments();
 
-        bool all_ready;
-        do {
-            all_ready = true;
-            for (int i = 1; i < this->numberSegment(); ++i) {
-                if ((*this)[i]->dataReady() == false) {
-                    all_ready = false;
-                    // check the information about the outlet segment
-                    // find the outlet segment with true dataReady()
-                    int outlet_segment = (*this)[i]->outletSegment();
-                    int outlet_location = this->numberToLocation(outlet_segment);
+        // begin with the second segment
+        for (int i_loc = 0; i_loc < numberSegment(); ++i_loc) {
+            if (m_segments[i_loc]->dataReady() == false) {
+                // find its outlet segment
+                const int outlet_segment = m_segments[i_loc]->outletSegment();
+                const int outlet_loc = numberToLocation(outlet_segment);
 
-                    if ((*this)[outlet_location]->dataReady() == true) {
-                        SegmentPtr new_segment = std::make_shared<Segment>((*this)[i]);
-                        const double temp_length = (*this)[i]->length() + (*this)[outlet_location]->length();
-                        new_segment->setLength(temp_length);
-                        const double temp_depth = (*this)[i]->depth() + (*this)[outlet_location]->depth();
-                        new_segment->setDepth(temp_depth);
-                        new_segment->setDataReady(true);
-                        this->addSegment(new_segment);
-                        break;
-                    }
+                // assert some information of the outlet_segment
+                assert(outlet_loc >= 0);
+                assert(m_segments[outlet_loc]->dataReady());
 
-                    int current_location;
-                    while ((*this)[outlet_location]->dataReady() == false) {
-                        current_location = outlet_location;
-                        outlet_segment = (*this)[outlet_location]->outletSegment();
-                        outlet_location = this->numberToLocation(outlet_segment);
-                        assert((outlet_location >= 0) && (outlet_location < this->numberSegment()));
-                    }
+                const double outlet_depth = m_segments[outlet_loc]->depth();
+                const double outlet_length = m_segments[outlet_loc]->length();
+                const double temp_depth = outlet_depth + m_segments[i_loc]->depth();
+                const double temp_length = outlet_length + m_segments[i_loc]->length();
 
-                    if ((*this)[outlet_location]->dataReady() == true) {
-                        SegmentPtr new_segment = std::make_shared<Segment>((*this)[current_location]);
-                        const double temp_length = (*this)[current_location]->length() + (*this)[outlet_location]->length();
-                        new_segment->setLength(temp_length);
-                        const double temp_depth = (*this)[current_location]->depth() + (*this)[outlet_location]->depth();
-                        new_segment->setDepth(temp_depth);
-                        new_segment->setDataReady(true);
-                        this->addSegment(new_segment);
-                        break;
-                    }
-                }
+                // applying the calculated length and depth to the current segment
+                SegmentPtr new_segment = std::make_shared<Segment>(m_segments[i_loc]);
+                new_segment->setDepth(temp_depth);
+                new_segment->setLength(temp_length);
+                new_segment->setDataReady(true);
+                addSegment(new_segment);
             }
-        } while (!all_ready);
+        }
     }
 
     void SegmentSet::orderSegments() {
