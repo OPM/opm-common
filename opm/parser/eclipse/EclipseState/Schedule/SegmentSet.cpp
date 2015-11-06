@@ -207,88 +207,77 @@ namespace Opm {
 
         orderSegments();
 
-        bool all_ready;
-        do {
-            all_ready = true;
-            for (int i = 1; i < this->numberSegment(); ++i) {
-                if ((*this)[i]->dataReady() == false) {
-                    all_ready = false;
-                    // then looking for unready segment with a ready outlet segment
-                    // and looking for the continous unready segments
-                    // int index_begin = i;
-                    int location_begin = i;
+        int current_loc = 1;
+        while (current_loc < numberSegment()) {
+            if (m_segments[current_loc]->dataReady()) {
+                current_loc ++;
+                continue;
+            }
 
-                    int outlet_segment = (*this)[i]->outletSegment();
-                    int outlet_location = this->numberToLocation(outlet_segment);
+            const int range_begin = current_loc;
+            const int outlet_segment = m_segments[range_begin]->outletSegment();
+            const int outlet_loc = numberToLocation(outlet_segment);
 
-                    while ((*this)[outlet_location]->dataReady() == false) {
-                        location_begin = outlet_location;
-                        assert(location_begin > 0);
-                        outlet_segment = (*this)[location_begin]->outletSegment();
-                        outlet_location = this->numberToLocation(outlet_segment);
-                    }
+            assert(m_segments[outlet_loc]->dataReady() == true);
 
-                    // begin from location_begin to look for the unready segments continous
-                    int location_end = -1;
-
-                    for (int j = location_begin + 1; j < this->numberSegment(); ++j) {
-                        if ((*this)[j]->dataReady() == true) {
-                            location_end = j;
-                            break;
-                        }
-                    }
-                    if (location_end == -1) {
-                        throw std::logic_error("One of the range records in WELSEGS is wrong.");
-                    }
-
-                    // set the value for the segments in the range
-                    int number_segments = location_end - location_begin + 1;
-                    assert(number_segments > 1);
-
-                    const double length_outlet = (*this)[outlet_location]->length();
-                    const double depth_outlet = (*this)[outlet_location]->depth();
-
-                    const double length_last = (*this)[location_end]->length();
-                    const double depth_last = (*this)[location_end]->depth();
-
-                    const double length_segment = (length_last - length_outlet) / number_segments;
-                    const double depth_segment = (depth_last - depth_outlet) / number_segments;
-
-                    // the segments in the same range should share the same properties
-                    const double volume_segment = (*this)[location_end]->crossArea() * length_segment;
-
-                    for (int k = location_begin; k < location_end; ++k) {
-                        SegmentPtr new_segment = std::make_shared<Segment>((*this)[k]);
-                        const double temp_length = length_outlet + (k - location_begin + 1) * length_segment;
-                        new_segment->setLength(temp_length);
-                        const double temp_depth = depth_outlet + (k - location_begin + 1) * depth_segment;
-                        new_segment->setDepth(temp_depth);
-                        new_segment->setDataReady(true);
-
-                        if (new_segment->volume() < 0.5 * invalid_value) {
-                            new_segment->setVolume(volume_segment);
-                        }
-                        this->addSegment(new_segment);
-                    }
+            int range_end = range_begin + 1;
+            for (; range_end < numberSegment(); ++range_end) {
+                if (m_segments[range_end]->dataReady() == true) {
                     break;
                 }
             }
-       } while (!all_ready);
 
-       // then update the volume for all the segments except the top segment
-       // this is for the segments specified individually while the volume is not specified.
-       // and also the last segment specified with range
-       for (int i = 1; i < this->numberSegment(); ++i) {
-           if ((*this)[i]->volume() == invalid_value) {
-               SegmentPtr new_segment = std::make_shared<Segment>((*this)[i]);
-               const int outlet_segment = (*this)[i]->outletSegment();
-               const int outlet_location = this->numberToLocation(outlet_segment);
-               const double segment_length = (*this)[i]->length() - (*this)[outlet_location]->length();
-               const double segment_volume = (*this)[i]->crossArea() * segment_length;
-               new_segment->setVolume(segment_volume);
-               this->addSegment(new_segment);
-           }
-       }
+            if (range_end >= numberSegment()) {
+                throw std::logic_error(" One range records in WELSEGS is wrong. ");
+            }
+
+            // set the length and depth values in the range.
+            int number_segments = range_end - range_begin + 1;
+            assert(number_segments > 1); //if only 1, the information should be complete
+
+            const double length_outlet = m_segments[outlet_loc]->length();
+            const double depth_outlet = m_segments[outlet_loc]->depth();
+
+            const double length_last = m_segments[range_end]->length();
+            const double depth_last = m_segments[range_end]->depth();
+
+            // incremental length and depth for the segments within the range
+            const double length_inc = (length_last - length_outlet) / number_segments;
+            const double depth_inc = (depth_last - depth_outlet) / number_segments;
+            const double volume_segment = m_segments[range_end]->crossArea() * length_inc;
+
+            for (int k = range_begin; k <= range_end; ++k) {
+                SegmentPtr new_segment = std::make_shared<Segment>(m_segments[k]);
+                const double temp_length = length_outlet + (k - range_begin + 1) * length_inc;
+                const double temp_depth = depth_outlet + (k - range_end + 1) * depth_inc;
+                if (k != range_end) {
+                    new_segment->setDepth(temp_depth);
+                    new_segment->setLength(temp_length);
+                    new_segment->setDataReady(true);
+                }
+
+                if (new_segment->volume() < 0.5 * invalid_value) {
+                    new_segment->setVolume(volume_segment);
+                }
+                addSegment(new_segment);
+            }
+            current_loc = range_end + 1;
+        }
+
+        // then update the volume for all the segments except the top segment
+        // this is for the segments specified individually while the volume is not specified.
+        for (int i = 1; i < numberSegment(); ++i) {
+            assert(m_segments[i]->dataReady());
+            if (m_segments[i]->volume() == invalid_value) {
+                SegmentPtr new_segment = std::make_shared<Segment>(m_segments[i]);
+                const int outlet_segment = m_segments[i]->outletSegment();
+                const int outlet_location = numberToLocation(outlet_segment);
+                const double segment_length = m_segments[i]->length() - m_segments[outlet_location]->length();
+                const double segment_volume = m_segments[i]->crossArea() * segment_length;
+                new_segment->setVolume(segment_volume);
+                addSegment(new_segment);
+            }
+        }
     }
 
     void SegmentSet::processINC(const bool first_time) {
