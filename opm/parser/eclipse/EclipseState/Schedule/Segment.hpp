@@ -39,7 +39,7 @@ namespace Opm {
         int segmentNumber() const;
         int branchNumber() const;
         int outletSegment() const;
-        double length() const;
+        double totalLength() const;
         double depth() const;
         double internalDiameter() const;
         double roughness() const;
@@ -63,20 +63,17 @@ namespace Opm {
         // the outlet junction segment
         // for top segment, it should be -1
         int m_outlet_segment;
-        // length of the nodes
-        // depending on item 5 in the record 1
-        // 'INC' or 'ABS'
-        // if it is 'INC', for top segment, it will be 0
+        // length of the segment node to the bhp reference point.
+        // when reading in from deck, with 'INC',
+        // it will be incremental length before processing.
+        // After processing and in the class Well, it always stores the 'ABS' value.
+        // which means the total_length
+        double m_total_length;
+        // depth of the nodes to the bhp reference point
+        // when reading in from deck, with 'INC',
+        // it will be the incremental depth before processing.
         // in the class Well, it always stores the 'ABS' value.
-        double m_length;
-        // depth of the nodes
-        // depending on item 5 in the record 1
-        // 'INC' or 'ABS'
-        // if it is 'INC', for top segment, it will be 0
         // TODO: to check if it is good to use 'ABS' always.
-        // since it is easy to compute the 'INC' value with the 'ABS' value
-        // while not easy the other way.
-        // in the class Well, it always stores the 'ABS' value.
         double m_depth;
         // tubing internal diameter
         // or the equivalent diameter for annular cross-sections

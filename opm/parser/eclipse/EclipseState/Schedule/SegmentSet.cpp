@@ -235,10 +235,10 @@ namespace Opm {
             int number_segments = range_end - range_begin + 1;
             assert(number_segments > 1); //if only 1, the information should be complete
 
-            const double length_outlet = m_segments[outlet_loc]->length();
+            const double length_outlet = m_segments[outlet_loc]->totalLength();
             const double depth_outlet = m_segments[outlet_loc]->depth();
 
-            const double length_last = m_segments[range_end]->length();
+            const double length_last = m_segments[range_end]->totalLength();
             const double depth_last = m_segments[range_end]->depth();
 
             // incremental length and depth for the segments within the range
@@ -270,7 +270,7 @@ namespace Opm {
                 SegmentPtr new_segment = std::make_shared<Segment>(m_segments[i]);
                 const int outlet_segment = m_segments[i]->outletSegment();
                 const int outlet_location = numberToLocation(outlet_segment);
-                const double segment_length = m_segments[i]->length() - m_segments[outlet_location]->length();
+                const double segment_length = m_segments[i]->totalLength() - m_segments[outlet_location]->totalLength();
                 const double segment_volume = m_segments[i]->crossArea() * segment_length;
                 new_segment->setVolume(segment_volume);
                 addSegment(new_segment);
@@ -301,9 +301,9 @@ namespace Opm {
                 assert(m_segments[outlet_loc]->dataReady());
 
                 const double outlet_depth = m_segments[outlet_loc]->depth();
-                const double outlet_length = m_segments[outlet_loc]->length();
+                const double outlet_length = m_segments[outlet_loc]->totalLength();
                 const double temp_depth = outlet_depth + m_segments[i_loc]->depth();
-                const double temp_length = outlet_length + m_segments[i_loc]->length();
+                const double temp_length = outlet_length + m_segments[i_loc]->totalLength();
 
                 // applying the calculated length and depth to the current segment
                 SegmentPtr new_segment = std::make_shared<Segment>(m_segments[i_loc]);

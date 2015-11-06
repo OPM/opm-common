@@ -7,7 +7,7 @@ namespace Opm {
     : m_segment_number(-1),
       m_branch(-1),
       m_outlet_segment(-1),
-      m_length(invalid_value),
+      m_total_length(invalid_value),
       m_depth(invalid_value),
       m_internal_diameter(invalid_value),
       m_roughness(invalid_value),
@@ -24,7 +24,7 @@ namespace Opm {
     : m_segment_number(segment_number_in),
       m_branch(branch_in),
       m_outlet_segment(outlet_segment_in),
-      m_length(length_in),
+      m_total_length(length_in),
       m_depth(depth_in),
       m_internal_diameter(internal_diameter_in),
       m_roughness(roughness_in),
@@ -38,7 +38,7 @@ namespace Opm {
     : m_segment_number(segment_in->segmentNumber()),
       m_branch(segment_in->branchNumber()),
       m_outlet_segment(segment_in->outletSegment()),
-      m_length(segment_in->length()),
+      m_total_length(segment_in->totalLength()),
       m_depth(segment_in->depth()),
       m_internal_diameter(segment_in->internalDiameter()),
       m_roughness(segment_in->roughness()),
@@ -64,8 +64,8 @@ namespace Opm {
     }
 
 
-    double Segment::length() const {
-        return m_length;
+    double Segment::totalLength() const {
+        return m_total_length;
     }
 
 
@@ -97,7 +97,7 @@ namespace Opm {
     }
 
     void Segment::setDepthAndLength(const double depth_in,  const double length_in) {
-        m_length = length_in;
+        m_total_length = length_in;
         m_depth = depth_in;
         m_data_ready = true;
     }
