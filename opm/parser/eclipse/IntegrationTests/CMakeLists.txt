@@ -10,7 +10,6 @@ foreach(tapp TransMultIntegrationTests CheckDeckValidity IntegrationTests ParseW
              ResinsightTest IOConfigIntegrationTest
              Polymer ParsePLYADSS ParseMULTSEGWELL)
   opm_add_test(run${tapp} SOURCES ${tapp}.cpp LIBRARIES opmparser ${Boost_LIBRARIES})
-                          LIBRARIES opmparser ${Boost_LIBRARIES})
 endforeach()
 
 

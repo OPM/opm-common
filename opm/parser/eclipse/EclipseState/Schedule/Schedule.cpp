@@ -1267,7 +1267,7 @@ namespace Opm {
         SegmentSetPtr newSegmentset= std::make_shared<SegmentSet>();
         newSegmentset->segmentsFromWELSEGSKeyword(keyword);
 
-        std::string well_name = newSegmentset->wellName();
+        const std::string& well_name = newSegmentset->wellName();
         WellPtr well = getWell(well_name);
 
         // update multi-segment related information for the well
