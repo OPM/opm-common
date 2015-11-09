@@ -108,6 +108,7 @@ namespace Opm {
         WellCompletion::CompletionOrderEnum getWellCompletionOrdering() const;
 
         bool getAllowCrossFlow() const;
+        bool canOpen(size_t time_step) const;
 
 
 

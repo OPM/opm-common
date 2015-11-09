@@ -333,6 +333,23 @@ namespace Opm {
         return m_allowCrossFlow;
     }
 
+    bool Well::canOpen(size_t currentStep) const {
+        bool canOpen = true;
+        if (!getAllowCrossFlow()) {
+            if ( isInjector(currentStep) ) {
+                if (getInjectionProperties(currentStep).surfaceInjectionRate == 0) {;
+                    canOpen = false;
+                }
+            } else {
+                if ( (getProductionProperties(currentStep).WaterRate + getProductionProperties(currentStep).OilRate +
+                      getProductionProperties(currentStep).GasRate) == 0) {
+                    canOpen = false;
+                }
+            }
+        }
+        return canOpen;
+    }
+
 }
 
 
