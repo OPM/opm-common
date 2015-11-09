@@ -29,6 +29,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SegmentSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 
 namespace Opm {
 
@@ -53,6 +54,10 @@ namespace Opm {
 
         // get the segment number information and depth information based on the information from SegmentSet
         static void processCOMPSEGS(std::vector<std::shared_ptr<Compsegs>>& compsegs, SegmentSetConstPtr segment_set);
+
+        // update the segment related information for Completions
+        static void updateCompletionsWithSegment(std::vector<std::shared_ptr<const Compsegs>>& compsegs,
+                                                 CompletionSetPtr completion_set);
 
     };
 

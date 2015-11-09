@@ -176,8 +176,39 @@ namespace Opm {
                 }
             }
         }
+    }
 
 
+    void Compsegs::updateCompletionsWithSegment(std::vector<CompsegsConstPtr>& compsegs,
+                                                CompletionSetPtr completion_set) {
+
+        for (size_t i_comp = 0; i_comp < compsegs.size(); ++i_comp) {
+            const int i = compsegs[i_comp]->m_i;
+            const int j = compsegs[i_comp]->m_j;
+            const int k = compsegs[i_comp]->m_k;
+
+            size_t ic;
+            for (ic = 0; ic < completion_set->size(); ++ic) {
+                if (completion_set->get(ic)->sameCoordinate(i, j, k)) {
+                    break; // the completion is found
+                }
+            }
+
+            if (ic == completion_set->size()) { // the completion is not found
+                throw std::runtime_error(" the completion specified in COMPSEGS is not found in the completionSet \n");
+            }
+
+            CompletionPtr new_completion = std::make_shared<Completion>(completion_set->get(ic));
+            new_completion->setSegmentNumber(compsegs[i_comp]->m_segment_number);
+            new_completion->setCenterDepth(compsegs[i_comp]->m_center_depth);
+            completion_set->add(new_completion);
+        }
+
+        for (size_t ic = 0; ic < completion_set->size(); ++ic) {
+            if (completion_set->get(ic)->getSegmentNumber() == -1) {
+                throw std::runtime_error(" not all the completions are specified with a segment,\n the information from COMPSEGS are not complete");
+            }
+        }
     }
 
 }
