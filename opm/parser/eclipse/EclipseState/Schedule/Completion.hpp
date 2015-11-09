@@ -43,8 +43,11 @@ namespace Opm {
 
         Completion(std::shared_ptr<const Completion> oldCompletion, WellCompletion::StateEnum newStatus);
         Completion(std::shared_ptr<const Completion> oldCompletion, double wellPi);
+        Completion(std::shared_ptr<const Completion> oldCompletion);
 
         bool sameCoordinate(const Completion& other) const;
+        bool sameCoordinate(const int i, const int j, const int k) const;
+
         int getI() const;
         int getJ() const;
         int getK() const;
@@ -55,6 +58,10 @@ namespace Opm {
         double getDiameter() const;
         double getSkinFactor() const;
         void   fixDefaultIJ(int wellHeadI , int wellHeadJ);
+        int getSegmentNumber() const;
+        void setSegmentNumber(const int segment_number);
+        double getCenterDepth() const;
+        void setCenterDepth(const double center_depth);
 
         WellCompletion::DirectionEnum getDirection() const;
 
@@ -71,6 +78,10 @@ namespace Opm {
         WellCompletion::DirectionEnum m_direction;
         Value<double> getDiameterAsValueObject() const;
         Value<double> getSkinFactorAsValueObject() const;
+	// related segment number
+	// -1 means the completion is not related to segment
+        int m_segment_number;
+        double m_center_depth;
 
     };
 
