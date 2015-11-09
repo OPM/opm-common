@@ -290,7 +290,7 @@ namespace Opm {
         orderSegments();
 
         // begin with the second segment
-        for (int i_loc = 0; i_loc < numberSegment(); ++i_loc) {
+        for (int i_loc = 1; i_loc < numberSegment(); ++i_loc) {
             if (m_segments[i_loc]->dataReady() == false) {
                 // find its outlet segment
                 const int outlet_segment = m_segments[i_loc]->outletSegment();
