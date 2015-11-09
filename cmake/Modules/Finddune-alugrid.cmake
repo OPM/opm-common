@@ -29,13 +29,13 @@ find_opm_package (
   "dune/alugrid/grid.hh"
 
   # library to search for
-  "dunealugrid;alugrid_2d;alugrid_parallel;alugrid_serial"
+  "dunealugrid;alugrid_parallel;alugrid_serial"
 
   # defines to be added to compilations
   ""
 
   # test program
-"#include <dune/alugrid/2d/indexsets.hh>
+"#include <dune/alugrid/common/interfaces.hh>
 int main (void) {
    return 0;
 }
