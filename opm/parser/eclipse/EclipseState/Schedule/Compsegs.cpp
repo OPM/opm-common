@@ -20,6 +20,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Compsegs.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <cmath>
 
 namespace Opm {
 
@@ -39,15 +40,15 @@ namespace Opm {
     {
     }
 
-    std::vector<std::shared_ptr<Compsegs>> Compsegs::compsegsFromCOMPSEGSKeyword(DeckKeywordConstPtr compsegsKeyword,
-                                                                                 EclipseGridConstPtr grid) {
+    std::vector<CompsegsConstPtr> Compsegs::compsegsFromCOMPSEGSKeyword(DeckKeywordConstPtr compsegsKeyword,
+                                                                        EclipseGridConstPtr grid) {
         // the thickness of grid cells will be required in the future for more complete support.
         // Silence warning about unused argument
         static_cast<void>(grid);
 
         // only handle the second record here
         // The first record here only contains the well name
-        std::vector<std::shared_ptr<Compsegs>> compsegs;
+        std::vector<CompsegsConstPtr> compsegs;
 
         for (size_t recordIndex = 1; recordIndex < compsegsKeyword->size(); ++recordIndex) {
             DeckRecordConstPtr record = compsegsKeyword->getRecord(recordIndex);
@@ -126,7 +127,7 @@ namespace Opm {
             }
 
             if (end_IJK < 0) { // only one compsegs
-                CompsegsPtr new_compsegs = std::make_shared<Compsegs>(I, J, K, branch, distance_start, distance_end,
+                CompsegsConstPtr new_compsegs = std::make_shared<Compsegs>(I, J, K, branch, distance_start, distance_end,
                                                                       direction, center_depth, thermal_length, segment_number);
                 compsegs.push_back(new_compsegs);
             } else { // a range is defined. genrate a range of Compsegs
@@ -135,6 +136,48 @@ namespace Opm {
         }
 
         return compsegs;
+    }
+
+    void Compsegs::processCOMPSEGS(std::vector<CompsegsPtr>& compsegs, SegmentSetConstPtr segment_set) {
+        // for the current cases we have at the moment, the distance information is specified explicitly,
+        // while the depth information is defaulted though, which need to be obtained from the related segment
+        for (size_t i_comp = 0; i_comp < compsegs.size(); ++i_comp) {
+            if (compsegs[i_comp]->m_segment_number == 0) { // need to determine the related segment number first
+                const double center_distance = (compsegs[i_comp]->m_distance_start + compsegs[i_comp]->m_distance_end) / 2.0;
+                const int branch_number = compsegs[i_comp]->m_branch_number;
+
+                int segment_number = 0;
+                double min_distance_difference = 1.e100; // begin with a big value
+                for (int i_segment = 0; i_segment < segment_set->numberSegment(); ++i_segment) {
+                    SegmentConstPtr current_segment = (*segment_set)[i_segment];
+                    if (branch_number == current_segment->branchNumber()) {
+                        const double distance = current_segment->totalLength();
+                        const double distance_difference = std::abs(center_distance - distance);
+                        if (distance_difference < min_distance_difference) {
+                            min_distance_difference = distance_difference;
+                            segment_number = current_segment->segmentNumber();
+                        }
+                    }
+                }
+
+                if (segment_number != 0) {
+                    compsegs[i_comp]->m_segment_number = segment_number;
+                    if (compsegs[i_comp]->m_center_depth == 0.) {
+                        // using the depth of the segment node as the depth of the completion
+                        // TODO: now only one completion for one segment is hanlded,
+                        // TODO: later we will try to handle more than one completion for each segment,
+                        // TODO: which will be a linear interpolation based on the segment node depth
+                        // TODO: in the same branch, while the actually way is not clear yet
+                        const int segment_location = segment_set->numberToLocation(segment_number);
+                        compsegs[i_comp]->m_center_depth = (*segment_set)[segment_location]->depth();
+                    }
+                } else {
+                   throw std::runtime_error(" the perforation failed in finding a related segment \n");
+                }
+            }
+        }
+
+
     }
 
 }
