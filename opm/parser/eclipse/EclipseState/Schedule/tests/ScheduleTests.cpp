@@ -122,6 +122,14 @@ static DeckPtr createDeckForTestingCrossFlow() {
             " 10  SEP 2007 / \n"
             "/\n"
 
+            "WELOPEN\n"
+            " 'BAN' OPEN / \n"
+            "/\n"
+
+            "DATES             -- 4\n"
+            " 10  NOV 2007 / \n"
+            "/\n"
+
             "WCONINJH\n"
             "     'BAN'      'WATER'      1*      1.0 / \n"
             "/\n";
@@ -356,7 +364,9 @@ BOOST_AUTO_TEST_CASE(TestCrossFlowHandling) {
     BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well_ban->getStatus(1));
     BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well_ban->getStatus(2));
     BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well_ban->getStatus(3));
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well_ban->getStatus(4));
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well_ban->getStatus(4)); // not allow to open
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well_ban->getStatus(5));
+
 
     {
         WellPtr well_allow = schedule.getWell("ALLOW");
