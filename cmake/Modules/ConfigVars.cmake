@@ -27,11 +27,10 @@
 
 function (configure_vars obj syntax filename verb)
   # this is just to make the syntax look like the build-in commands
-  if (NOT ("${obj}" STREQUAL "FILE" AND
+  if (NOT ("X Y Z ${obj}" STREQUAL "X Y Z FILE" AND
 		(("${verb}" STREQUAL "WRITE") OR ("${verb}" STREQUAL "APPEND"))))
 	message (FATAL_ERROR "Syntax error in argument list")
-  endif (NOT ("${obj}" STREQUAL "FILE" AND
-	  (("${verb}" STREQUAL "WRITE") OR ("${verb}" STREQUAL "APPEND"))))
+  endif ()
   if (NOT (("${syntax}" STREQUAL "CXX") OR ("${syntax}" STREQUAL "CMAKE")))
 	message (FATAL_ERROR "Invalid target syntax \"${syntax}\"")
   endif (NOT (("${syntax}" STREQUAL "CXX") OR ("${syntax}" STREQUAL "CMAKE")))
@@ -67,14 +66,14 @@ function (configure_vars obj syntax filename verb)
 	
 	# if the name of a variable has the syntax of a comments, write it
 	# verbatim to the file; this can be used to create headings
-	if ("${_var}" MATCHES "^/[/*]")
+	if ("X Y Z ${_var}" MATCHES "^X Y Z /[/*]")
 	  if (NOT _prev_verbatim)
 		file (APPEND "${filename}" "\n")
 	  endif (NOT _prev_verbatim)
 	  file (APPEND "${filename}" "${_var}\n")
 	  set (_prev_verbatim TRUE)
 	  
-	else ("${_var}" MATCHES "^/[/*]")
+	else ()
 
 	  # write a CMake statements that warns if the value has changed
 	  if ("${syntax}" STREQUAL "CMAKE")
@@ -106,6 +105,6 @@ function (configure_vars obj syntax filename verb)
 		
 	  endif ((NOT DEFINED ${_var}) OR ("${${_var}}" STREQUAL ""))
 	  set (_prev_verbatim FALSE)
-	endif ("${_var}" MATCHES "^/[/*]")
+	endif ()
   endforeach(_var)
 endfunction (configure_vars obj syntax filename verb)
