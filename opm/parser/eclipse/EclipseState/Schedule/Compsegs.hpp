@@ -49,14 +49,14 @@ namespace Opm {
         Compsegs(int i_in, int j_in, int k_in, int branch_number_in, double distance_start_in, double distance_end_in,
                  WellCompletion::DirectionEnum dir_in, double center_depth_in, double thermal_length_in, int segment_number_in);
 
-        static std::vector<std::shared_ptr<const Compsegs>> compsegsFromCOMPSEGSKeyword(DeckKeywordConstPtr compsegsKeyword,
+        static std::vector<std::shared_ptr<Compsegs>> compsegsFromCOMPSEGSKeyword(DeckKeywordConstPtr compsegsKeyword,
                                                                                         EclipseGridConstPtr grid);
 
         // get the segment number information and depth information based on the information from SegmentSet
         static void processCOMPSEGS(std::vector<std::shared_ptr<Compsegs>>& compsegs, SegmentSetConstPtr segment_set);
 
         // update the segment related information for Completions
-        static void updateCompletionsWithSegment(std::vector<std::shared_ptr<const Compsegs>>& compsegs,
+        static void updateCompletionsWithSegment(const std::vector<std::shared_ptr<Compsegs>>& compsegs,
                                                  CompletionSetPtr completion_set);
 
     };

@@ -35,6 +35,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Compsegs.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 namespace Opm {
@@ -156,6 +157,9 @@ namespace Opm {
 
             if (keyword->name() == "COMPDAT")
                 handleCOMPDAT(keyword, currentStep);
+
+            if (keyword->name() == "WELSEGS")
+                handleWELSEGS(keyword, currentStep);
 
             if (keyword->name() == "WELSEGS")
                 handleWELSEGS(keyword, currentStep);
@@ -1272,6 +1276,24 @@ namespace Opm {
 
         // update multi-segment related information for the well
         well->addSegmentSet(currentStep, newSegmentset);
+    }
+
+    void Schedule::handleCOMPSEGS(DeckKeywordConstPtr keyword, size_t currentStep) {
+        DeckRecordConstPtr record1 = keyword->getRecord(0);
+        const std::string& well_name = record1->getItem("WELL")->getTrimmedString(0);
+        WellPtr well = getWell(well_name);
+
+        std::vector<CompsegsPtr> compsegs_vector = Compsegs::compsegsFromCOMPSEGSKeyword(keyword, m_grid);
+
+        SegmentSetConstPtr current_segmentSet = well->getSegmentSet(currentStep);
+        Compsegs::processCOMPSEGS(compsegs_vector, current_segmentSet);
+
+        CompletionSetConstPtr current_completionSet = well->getCompletions(currentStep);
+        // it is necessary to update the segment related information for some completions.
+        CompletionSetPtr new_completionSet = CompletionSetPtr(current_completionSet->shallowCopy());
+        Compsegs::updateCompletionsWithSegment(compsegs_vector, new_completionSet);
+
+        well->addCompletionSet(currentStep, new_completionSet);
     }
 
     void Schedule::handleWGRUPCON(DeckKeywordConstPtr keyword, size_t currentStep) {

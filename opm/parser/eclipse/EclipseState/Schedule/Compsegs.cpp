@@ -40,15 +40,15 @@ namespace Opm {
     {
     }
 
-    std::vector<CompsegsConstPtr> Compsegs::compsegsFromCOMPSEGSKeyword(DeckKeywordConstPtr compsegsKeyword,
-                                                                        EclipseGridConstPtr grid) {
+    std::vector<CompsegsPtr> Compsegs::compsegsFromCOMPSEGSKeyword(DeckKeywordConstPtr compsegsKeyword,
+                                                                   EclipseGridConstPtr grid) {
         // the thickness of grid cells will be required in the future for more complete support.
         // Silence warning about unused argument
         static_cast<void>(grid);
 
         // only handle the second record here
         // The first record here only contains the well name
-        std::vector<CompsegsConstPtr> compsegs;
+        std::vector<CompsegsPtr> compsegs;
 
         for (size_t recordIndex = 1; recordIndex < compsegsKeyword->size(); ++recordIndex) {
             DeckRecordConstPtr record = compsegsKeyword->getRecord(recordIndex);
@@ -127,7 +127,7 @@ namespace Opm {
             }
 
             if (end_IJK < 0) { // only one compsegs
-                CompsegsConstPtr new_compsegs = std::make_shared<Compsegs>(I, J, K, branch, distance_start, distance_end,
+                CompsegsPtr new_compsegs = std::make_shared<Compsegs>(I, J, K, branch, distance_start, distance_end,
                                                                       direction, center_depth, thermal_length, segment_number);
                 compsegs.push_back(new_compsegs);
             } else { // a range is defined. genrate a range of Compsegs
@@ -179,7 +179,7 @@ namespace Opm {
     }
 
 
-    void Compsegs::updateCompletionsWithSegment(std::vector<CompsegsConstPtr>& compsegs,
+    void Compsegs::updateCompletionsWithSegment(const std::vector<CompsegsPtr>& compsegs,
                                                 CompletionSetPtr completion_set) {
 
         for (size_t i_comp = 0; i_comp < compsegs.size(); ++i_comp) {
