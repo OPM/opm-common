@@ -170,6 +170,8 @@ namespace Opm {
                         // TODO: in the same branch, while the actually way is not clear yet
                         const int segment_location = segment_set->numberToLocation(segment_number);
                         compsegs[i_comp]->m_center_depth = (*segment_set)[segment_location]->depth();
+                    } else if (compsegs[i_comp]->m_center_depth < 0.) {
+                        throw std::runtime_error(" obtaining perforation depth from COMPDAT data is not supported yet \n");
                     }
                 } else {
                    throw std::runtime_error(" the perforation failed in finding a related segment \n");
