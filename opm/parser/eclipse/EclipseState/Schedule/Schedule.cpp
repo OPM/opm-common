@@ -161,8 +161,8 @@ namespace Opm {
             if (keyword->name() == "WELSEGS")
                 handleWELSEGS(keyword, currentStep);
 
-            if (keyword->name() == "WELSEGS")
-                handleWELSEGS(keyword, currentStep);
+            if (keyword->name() == "COMPSEGS")
+                handleCOMPSEGS(keyword, currentStep);
 
             if (keyword->name() == "WELOPEN")
                 handleWELOPEN(keyword, currentStep , section->hasKeyword("COMPLUMP"));
