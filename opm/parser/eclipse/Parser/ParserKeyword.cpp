@@ -78,8 +78,12 @@ namespace Opm {
 
     bool ParserKeyword::hasDimension() const {
         if (m_records.size() > 0) {
-            std::shared_ptr<ParserRecord> record = getRecord(0);
-            return record->hasDimension();
+            bool hasDim = false;
+            for (auto& record : m_records) {
+                if (record->hasDimension())
+                    hasDim = true;
+            }
+            return hasDim;
         } else
             return false;
     }

@@ -41,11 +41,6 @@ BOOST_AUTO_TEST_CASE(makeComposite) {
     BOOST_CHECK_EQUAL(100 , composite->getSIScaling());
 }
 
-BOOST_AUTO_TEST_CASE(MakeCompositeInvalid) {
-    // conversion to SI temperatures requires an offset, but such
-    // composite units are (currently?) invalid
-    BOOST_CHECK_THROW(Dimension::newComposite("Length*Temperature", 100), std::logic_error);
-}
 
 BOOST_AUTO_TEST_CASE(CreateDimensionInvalidNameThrows) {
     BOOST_CHECK_THROW(Dimension(" " , 1) , std::invalid_argument);
@@ -58,13 +53,13 @@ BOOST_AUTO_TEST_CASE(CreateDimensionInvalidNameThrows) {
 
 
 BOOST_AUTO_TEST_CASE(CreateUnitSystem) {
-    UnitSystem system("Metric");
+    UnitSystem system(UnitSystem::UNIT_TYPE_METRIC);
     BOOST_CHECK_EQUAL("Metric" , system.getName());
 }
 
 
 BOOST_AUTO_TEST_CASE(UnitSystemEmptyHasNone) {
-    UnitSystem system("Metric");
+    UnitSystem system(UnitSystem::UNIT_TYPE_METRIC);
     BOOST_CHECK_EQUAL( false , system.hasDimension("Length"));
     BOOST_CHECK_EQUAL( false , system.hasDimension("LXY"));
 }
@@ -72,12 +67,12 @@ BOOST_AUTO_TEST_CASE(UnitSystemEmptyHasNone) {
 
 
 BOOST_AUTO_TEST_CASE(UnitSystemGetMissingDimensionThrows) {
-    UnitSystem system("Metric");
+    UnitSystem system(UnitSystem::UNIT_TYPE_METRIC);
     BOOST_CHECK_THROW( system.getDimension("Length") , std::invalid_argument );
 }
 
 BOOST_AUTO_TEST_CASE(UnitSystemGetNewOK) {
-    UnitSystem system("Metric");
+    UnitSystem system(UnitSystem::UNIT_TYPE_METRIC);
     system.addDimension("Length" , 10 );
     system.addDimension("Time" , 100);
 
@@ -91,7 +86,7 @@ BOOST_AUTO_TEST_CASE(UnitSystemGetNewOK) {
 
 
 BOOST_AUTO_TEST_CASE(UnitSystemAddDimensions) {
-    UnitSystem system("Metric");
+    UnitSystem system(UnitSystem::UNIT_TYPE_METRIC);
     system.addDimension("Length" , 1 );
     system.addDimension("Time" , 86400 );
     system.addDimension("Temperature", 1.0, 273.15);
@@ -111,7 +106,7 @@ BOOST_AUTO_TEST_CASE(UnitSystemAddDimensions) {
 
 
 BOOST_AUTO_TEST_CASE(UnitSystemParseInvalidThrows) {
-    UnitSystem system("Metric");
+    UnitSystem system(UnitSystem::UNIT_TYPE_METRIC);
     BOOST_CHECK_THROW( system.parse("//") , std::invalid_argument);
     BOOST_CHECK_THROW( system.parse("Length * Length / Time") , std::invalid_argument);
 
