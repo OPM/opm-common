@@ -41,8 +41,8 @@ namespace Opm {
         m_fixedSize = keywordSize;
     }
 
-    void ParserKeyword::setTableCollection(bool isTableCollection) {
-        m_isTableCollection = isTableCollection;
+    void ParserKeyword::setTableCollection(bool _isTableCollection) {
+        m_isTableCollection = _isTableCollection;
     }
 
 

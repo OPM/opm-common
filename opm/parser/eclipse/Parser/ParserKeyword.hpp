@@ -54,13 +54,13 @@ namespace Opm {
         ParserKeyword(const std::string& name ,
                       const std::string& sizeKeyword ,
                       const std::string& sizeItem,
-                      bool isTableCollection = false);
+                      bool _isTableCollection = false);
         explicit ParserKeyword(const std::string& name);
         explicit ParserKeyword(const Json::JsonObject& jsonConfig);
 
         void setFixedSize( size_t keywordSize);
         void setSizeType( ParserKeywordSizeEnum sizeType );
-        void setTableCollection(bool isTableCollection);
+        void setTableCollection(bool _isTableCollection);
         void initSizeKeyword( const std::string& sizeKeyword, const std::string& sizeItem);
 
 
