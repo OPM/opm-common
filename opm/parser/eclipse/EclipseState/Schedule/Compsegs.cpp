@@ -192,8 +192,7 @@ namespace Opm {
             }
 
             CompletionPtr new_completion = std::make_shared<Completion>(completion_set->get(ic));
-            new_completion->setSegmentNumber(compsegs[i_comp]->m_segment_number);
-            new_completion->setCenterDepth(compsegs[i_comp]->m_center_depth);
+            new_completion->attachSegment(compsegs[i_comp]->m_segment_number, compsegs[i_comp]->m_center_depth);
             completion_set->add(new_completion);
         }
 

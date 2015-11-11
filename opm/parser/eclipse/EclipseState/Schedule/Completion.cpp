@@ -246,16 +246,15 @@ namespace Opm {
         return m_segment_number;
     }
 
-    void Completion::setSegmentNumber(const int segment_number){
-        m_segment_number = segment_number;
-    }
-
     double Completion::getCenterDepth() const {
         return m_center_depth;
     }
 
-    void Completion::setCenterDepth(const double center_depth){
-        m_center_depth = center_depth;
+    void Completion::attachSegment(int segmentNumber , double centerDepth) {
+        assert(segmentNumber > 0);
+
+        m_segment_number = segmentNumber;
+        m_center_depth = centerDepth;
     }
 
 

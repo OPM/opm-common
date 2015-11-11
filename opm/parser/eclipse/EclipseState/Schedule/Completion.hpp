@@ -59,9 +59,8 @@ namespace Opm {
         double getSkinFactor() const;
         void   fixDefaultIJ(int wellHeadI , int wellHeadJ);
         int getSegmentNumber() const;
-        void setSegmentNumber(const int segment_number);
         double getCenterDepth() const;
-        void setCenterDepth(const double center_depth);
+        void attachSegment(const int segmentNumber , const double centerDepth);
 
         WellCompletion::DirectionEnum getDirection() const;
 
