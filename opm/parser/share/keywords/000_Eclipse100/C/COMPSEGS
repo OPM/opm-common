@@ -9,6 +9,6 @@
  {"name" : "DIRECTION" , "value_type" : "STRING"},
  {"name" : "END_IJK" , "value_type" : "INT"},
  {"name" : "CENTER_DEPTH" , "value_type" : "DOUBLE" , "dimension" : "Length" , "default" : 0},
- {"name" : "THERMAL_LENGTH" , "value_type" : "DOUBLE" , "dimension" : "Length" , "default" : 0},
+ {"name" : "THERMAL_LENGTH" , "value_type" : "DOUBLE" , "dimension" : "Length"},
  {"name" : "SEGMENT_NUMBER" , "value_type" : "INT"}
  ]]}

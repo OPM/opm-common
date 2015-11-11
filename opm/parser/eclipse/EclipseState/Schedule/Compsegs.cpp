@@ -26,7 +26,7 @@ namespace Opm {
 
 
     Compsegs::Compsegs(int i_in, int j_in, int k_in, int branch_number_in, double distance_start_in, double distance_end_in,
-                       WellCompletion::DirectionEnum dir_in, double center_depth_in, double thermal_length_in, int segment_number_in)
+                       WellCompletion::DirectionEnum dir_in, double center_depth_in, int segment_number_in)
     : m_i(i_in),
       m_j(j_in),
       m_k(k_in),
@@ -35,7 +35,6 @@ namespace Opm {
       m_distance_end(distance_end_in),
       m_dir(dir_in),
       m_center_depth(center_depth_in),
-      m_thermal_length(thermal_length_in),
       m_segment_number(segment_number_in)
     {
     }
@@ -110,14 +109,6 @@ namespace Opm {
                 throw std::runtime_error("this way to obtain CENTER_DISTANCE not implemented yet either!");
             }
 
-            double thermal_length;
-            if (!record->getItem("THERMAL_LENGTH")->defaultApplied(0)) {
-                thermal_length = record->getItem("THERMAL_LENGTH")->getSIDouble(0);
-            } else {
-                //TODO: get the thickness of the grid block in the direction of penetration
-                throw std::runtime_error("this way to obtain THERMAL_LENGTH not implemented yet!");
-            }
-
             int segment_number;
             if (record->getItem("SEGMENT_NUMBER")->hasValue(0)) {
                 segment_number = record->getItem("SEGMENT_NUMBER")->getInt(0);
@@ -128,7 +119,7 @@ namespace Opm {
 
             if (end_IJK < 0) { // only one compsegs
                 CompsegsPtr new_compsegs = std::make_shared<Compsegs>(I, J, K, branch, distance_start, distance_end,
-                                                                      direction, center_depth, thermal_length, segment_number);
+                                                                      direction, center_depth, segment_number);
                 compsegs.push_back(new_compsegs);
             } else { // a range is defined. genrate a range of Compsegs
                 throw std::runtime_error("entering COMPSEGS entries with a range is not supported yet!");
