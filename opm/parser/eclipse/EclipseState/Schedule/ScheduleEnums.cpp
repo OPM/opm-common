@@ -653,8 +653,8 @@ namespace Opm {
 
         const std::string MultiPhaseModelEnumToString(MultiPhaseModelEnum enumValue) {
             switch (enumValue) {
-                case H0:
-                    return "H0";
+                case HO:
+                    return "HO";
                 case DF:
                     return "DF";
                 default:
@@ -667,8 +667,8 @@ namespace Opm {
             std::string trimmedString(stringValue);
             boost::algorithm::trim(trimmedString);
 
-            if (trimmedString == "H0") {
-                return H0;
+            if ((trimmedString == "HO") || (trimmedString == "H0")) {
+                return HO;
             } else if (trimmedString == "DF") {
                 return DF;
             } else {

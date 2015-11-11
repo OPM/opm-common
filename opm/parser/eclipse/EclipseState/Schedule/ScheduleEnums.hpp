@@ -264,7 +264,7 @@ namespace Opm {
         CompPressureDropEnum CompPressureDropEnumFromString(const std::string& stringValue);
 
         enum MultiPhaseModelEnum {
-            H0 = 0,
+            HO = 0,
             DF = 1
         };
         const std::string MultiPhaseModelEnumToString(MultiPhaseModelEnum enumValue);
