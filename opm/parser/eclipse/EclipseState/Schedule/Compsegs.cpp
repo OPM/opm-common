@@ -197,8 +197,8 @@ namespace Opm {
         }
 
         for (size_t ic = 0; ic < completion_set->size(); ++ic) {
-            if (completion_set->get(ic)->getSegmentNumber() == -1) {
-                throw std::runtime_error(" not all the completions are specified with a segment,\n the information from COMPSEGS are not complete");
+            if ( !(completion_set->get(ic)->attachedToSegment()) ) {
+                throw std::runtime_error(" not all the completions are attached with a segment,\n the information from COMPSEGS are not complete");
             }
         }
     }

@@ -61,6 +61,7 @@ namespace Opm {
         int getSegmentNumber() const;
         double getCenterDepth() const;
         void attachSegment(const int segmentNumber , const double centerDepth);
+        bool attachedToSegment() const;
 
         WellCompletion::DirectionEnum getDirection() const;
 

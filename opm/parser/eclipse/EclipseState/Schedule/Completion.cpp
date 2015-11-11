@@ -50,9 +50,14 @@ namespace Opm {
         m_skinFactor(oldCompletion->getSkinFactorAsValueObject()),
         m_state(newStatus),
         m_direction(oldCompletion->getDirection()),
-        m_segment_number(oldCompletion->getSegmentNumber()),
         m_center_depth(oldCompletion->getCenterDepth())
-    {}
+    {
+        if (oldCompletion->attachedToSegment()) {
+            m_segment_number = oldCompletion->getSegmentNumber();
+        } else {
+            m_segment_number = -1;
+        }
+    }
 
     Completion::Completion(std::shared_ptr<const Completion> oldCompletion, double wellPi)
             :
@@ -65,9 +70,14 @@ namespace Opm {
             m_skinFactor(oldCompletion->getSkinFactorAsValueObject()),
             m_state(oldCompletion->getState()),
             m_direction(oldCompletion->getDirection()),
-            m_segment_number(oldCompletion->getSegmentNumber()),
             m_center_depth(oldCompletion->getCenterDepth())
     {
+        if (oldCompletion->attachedToSegment()) {
+            m_segment_number = oldCompletion->getSegmentNumber();
+        } else {
+            m_segment_number = -1;
+        }
+
         if(m_wellPi!=0){
             m_wellPi*=wellPi;
         }else{
@@ -86,9 +96,13 @@ namespace Opm {
             m_skinFactor(oldCompletion->getSkinFactorAsValueObject()),
             m_state(oldCompletion->getState()),
             m_direction(oldCompletion->getDirection()),
-            m_segment_number(oldCompletion->getSegmentNumber()),
             m_center_depth(oldCompletion->getCenterDepth())
     {
+        if (oldCompletion->attachedToSegment()) {
+            m_segment_number = oldCompletion->getSegmentNumber();
+        } else {
+            m_segment_number = -1;
+        }
     }
 
     bool Completion::sameCoordinate(const Completion& other) const {
@@ -243,6 +257,9 @@ namespace Opm {
     }
 
     int Completion::getSegmentNumber() const {
+        if (!attachedToSegment()) {
+            throw std::runtime_error(" the completion is not attached to a segment!\n ");
+        }
         return m_segment_number;
     }
 
@@ -255,6 +272,10 @@ namespace Opm {
 
         m_segment_number = segmentNumber;
         m_center_depth = centerDepth;
+    }
+
+    bool Completion::attachedToSegment() const {
+        return (m_segment_number > 0);
     }
 
 
