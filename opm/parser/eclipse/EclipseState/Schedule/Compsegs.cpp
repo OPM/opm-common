@@ -175,18 +175,7 @@ namespace Opm {
             const int j = compsegs[i_comp]->m_j;
             const int k = compsegs[i_comp]->m_k;
 
-            size_t ic;
-            for (ic = 0; ic < completion_set->size(); ++ic) {
-                if (completion_set->get(ic)->sameCoordinate(i, j, k)) {
-                    break; // the completion is found
-                }
-            }
-
-            if (ic == completion_set->size()) { // the completion is not found
-                throw std::runtime_error(" the completion specified in COMPSEGS is not found in the completionSet \n");
-            }
-
-            CompletionPtr new_completion = std::make_shared<Completion>(completion_set->get(ic));
+            CompletionPtr new_completion = std::make_shared<Completion>(completion_set->getFromIJK(i, j, k));
             new_completion->attachSegment(compsegs[i_comp]->m_segment_number, compsegs[i_comp]->m_center_depth);
             completion_set->add(new_completion);
         }

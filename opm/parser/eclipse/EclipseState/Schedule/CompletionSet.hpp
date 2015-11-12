@@ -40,6 +40,7 @@ namespace Opm {
         size_t size() const;
         CompletionSet * shallowCopy() const;
         CompletionConstPtr get(size_t index) const;
+        CompletionConstPtr getFromIJK(size_t i, size_t j, size_t k) const;
         bool allCompletionsShut() const;
         /// Order completions irrespective of input order.
         /// The algorithm used is the following:
