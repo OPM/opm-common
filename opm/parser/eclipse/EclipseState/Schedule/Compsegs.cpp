@@ -83,16 +83,10 @@ namespace Opm {
                 throw std::runtime_error("the direction has to be specified when DISTANCE_END in the record is not specified");
             }
 
-            int end_IJK;
             if (record->getItem("END_IJK")->hasValue(0)) {
-                // following the coordinate rule for completions
-                end_IJK = record->getItem("END_IJK")->getInt(0) - 1;
                 if (!record->getItem("DIRECTION")->hasValue(0)) {
                     throw std::runtime_error("the direction has to be specified when END_IJK in the record is specified");
                 }
-            } else {
-                // only one completion is specified here
-                end_IJK = -1;
             }
 
             double center_depth;
@@ -117,7 +111,7 @@ namespace Opm {
                 // will decide the segment number based on the distance in a process later.
             }
 
-            if (end_IJK < 0) { // only one compsegs
+            if (!record->getItem("END_IJK")->hasValue(0)) { // only one compsegs
                 CompsegsPtr new_compsegs = std::make_shared<Compsegs>(I, J, K, branch, distance_start, distance_end,
                                                                       direction, center_depth, segment_number);
                 compsegs.push_back(new_compsegs);
