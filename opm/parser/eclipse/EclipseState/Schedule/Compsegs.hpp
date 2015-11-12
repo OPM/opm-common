@@ -37,6 +37,9 @@ namespace Opm {
         int m_i;
         int m_j;
         int m_k;
+        // the branch number on the main stem is always 1.
+        // lateral branches should be numbered bigger than 1.
+        // a suboridnate branch must have a higher branch number than parent branch.
         int m_branch_number;
         double m_distance_start;
         double m_distance_end;
