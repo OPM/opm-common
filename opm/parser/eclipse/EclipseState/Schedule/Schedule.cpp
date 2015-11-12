@@ -35,7 +35,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Compsegs.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/Compsegs.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 namespace Opm {

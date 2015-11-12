@@ -40,7 +40,7 @@ namespace Opm {
     }
 
 
-    CompletionConstPtr CompletionSet::getFromIJK(size_t i, size_t j, size_t k) const {
+    CompletionConstPtr CompletionSet::getFromIJK(const int i, const int j, const int k) const {
         for (size_t ic = 0; ic < size(); ++ic) {
             if (get(ic)->sameCoordinate(i, j, k)) {
                 return get(ic);

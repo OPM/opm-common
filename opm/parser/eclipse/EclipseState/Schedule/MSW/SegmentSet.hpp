@@ -24,7 +24,7 @@
 #include <map>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Segment.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp>
 
 namespace Opm {
 

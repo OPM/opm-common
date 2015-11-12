@@ -3,8 +3,8 @@
 #include <cmath>
 #include <map>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/Segment.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/SegmentSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp>
 
 
 namespace Opm {
