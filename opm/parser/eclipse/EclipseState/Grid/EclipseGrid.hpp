@@ -91,8 +91,8 @@ namespace Opm {
         size_t getGlobalIndex(size_t i, size_t j, size_t k) const;
         void assertGlobalIndex(size_t globalIndex) const;
         void assertIJK(size_t i , size_t j , size_t k) const;
-        std::tuple<double,double,double> getCellCenter(size_t i,size_t j, size_t k) const;
-        std::tuple<double,double,double> getCellCenter(size_t globalIndex) const;
+        std::array<double, 3> getCellCenter(size_t i,size_t j, size_t k) const;
+        std::array<double, 3> getCellCenter(size_t globalIndex) const;
         double getCellVolume(size_t globalIndex) const;
         double getCellVolume(size_t i , size_t j , size_t k) const;
         double getCellThicknes(size_t globalIndex) const;

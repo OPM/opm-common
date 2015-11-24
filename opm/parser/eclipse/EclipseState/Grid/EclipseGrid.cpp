@@ -619,22 +619,22 @@ namespace Opm {
         return ecl_grid_get_cell_thickness1( c_ptr() , static_cast<int>(globalIndex));
     }
 
-    std::tuple<double,double,double> EclipseGrid::getCellCenter(size_t globalIndex) const {
+    std::array<double, 3> EclipseGrid::getCellCenter(size_t globalIndex) const {
         assertGlobalIndex( globalIndex );
         {
             double x,y,z;
             ecl_grid_get_xyz1( c_ptr() , static_cast<int>(globalIndex) , &x , &y , &z);
-            return std::tuple<double,double,double> {x,y,z};
+            return std::array<double, 3>{{x,y,z}};
         }
     }
 
 
-    std::tuple<double,double,double> EclipseGrid::getCellCenter(size_t i,size_t j, size_t k) const {
+    std::array<double, 3> EclipseGrid::getCellCenter(size_t i,size_t j, size_t k) const {
         assertIJK(i,j,k);
         {
             double x,y,z;
             ecl_grid_get_xyz3( c_ptr() , static_cast<int>(i),static_cast<int>(j),static_cast<int>(k), &x , &y , &z);
-            return std::tuple<double,double,double> {x,y,z};
+            return std::array<double, 3>{{x,y,z}};
         }
     }
 
