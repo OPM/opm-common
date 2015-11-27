@@ -231,6 +231,7 @@ BOOST_AUTO_TEST_CASE(TestPhaseEnumFromString) {
     BOOST_CHECK_THROW( Phase::PhaseEnumFromString("XXX") , std::invalid_argument );
     BOOST_CHECK_EQUAL( Phase::OIL   , Phase::PhaseEnumFromString("OIL"));
     BOOST_CHECK_EQUAL( Phase::WATER , Phase::PhaseEnumFromString("WATER"));
+    BOOST_CHECK_EQUAL( Phase::WATER , Phase::PhaseEnumFromString("WAT"));
     BOOST_CHECK_EQUAL( Phase::GAS   , Phase::PhaseEnumFromString("GAS"));
 }
 
