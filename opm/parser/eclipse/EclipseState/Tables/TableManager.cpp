@@ -152,6 +152,7 @@ namespace Opm {
                 numMiscibleTables =  static_cast<size_t>(record->getItem<ParserKeywords::MISCIBLE::NTMISC>()->getInt(0));
             }
             addTables( "SORWMIS", numMiscibleTables);
+            addTables( "SGCWMIS", numMiscibleTables);
         }
 
         {
@@ -215,6 +216,8 @@ namespace Opm {
             }
             initSimpleTableContainer<SorwmisTable>(deck, "SORWMIS", numMiscibleTables);
             addTables( "SORWMIS", numMiscibleTables);
+            addTables( "SGCWMIS", numMiscibleTables);
+
         }
 
         initSimpleTableContainer<PvdgTable>(deck, "PVDG", m_tabdims->getNumPVTTables());

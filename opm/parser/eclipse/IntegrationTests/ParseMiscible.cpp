@@ -34,12 +34,12 @@ using namespace Opm;
 
 const char *miscibleData = "\n\
 MISCIBLE\n\
- 2  3 /\n\
+2  3 /\n\
 \n";
 
 const char *miscibleTightData = "\n\
 MISCIBLE\n\
- 1  2 /\n\
+1  2 /\n\
 \n";
 
 const char *sorwmisData = "\n\
@@ -52,48 +52,97 @@ SORWMIS\n\
 1.0 .80 /\n\
 \n";
 
-BOOST_AUTO_TEST_CASE( PARSE_SORWMIS) {
+const char *sgcwmisData = "\n\
+SGCWMIS\n\
+.00 .00 \n\
+.20 .00 \n\
+1.0 .00 /\n\
+.00 .00 \n\
+.80 .20 \n\
+1.0 .70 /\n\
+\n";
+
+BOOST_AUTO_TEST_CASE( PARSE_SORWMIS)
+{
+ParserPtr parser(new Parser());
+char tooFewTables[10000];
+std::strcpy(tooFewTables,miscibleTightData);
+std::strcat(tooFewTables,sorwmisData);
+
+// missing miscible keyword
+BOOST_CHECK_THROW (parser->parseString(sorwmisData, ParseMode()), std::invalid_argument );
+
+//too many tables
+BOOST_CHECK_THROW( parser->parseString(tooFewTables, ParseMode()), std::invalid_argument);
+
+char data[10000];
+std::strcpy(data,miscibleData);
+std::strcat(data,sorwmisData);
+DeckPtr deck1 =  parser->parseString(data, ParseMode());
+
+DeckKeywordConstPtr sorwmis = deck1->getKeyword("SORWMIS");
+DeckKeywordConstPtr miscible = deck1->getKeyword("MISCIBLE");
+
+DeckRecordConstPtr miscible0 = miscible->getRecord(0);
+DeckRecordConstPtr sorwmis0 = sorwmis->getRecord(0);
+DeckRecordConstPtr sorwmis1 = sorwmis->getRecord(1);
+
+
+// test number of columns
+int ntmisc = miscible0->getItem(0)->getInt(0);
+Opm::SorwmisTable sorwmisTable0;
+sorwmisTable0.initFORUNITTESTONLY(sorwmis0->getItem(0));
+BOOST_CHECK_EQUAL(sorwmisTable0.numColumns(),ntmisc);
+
+// test table input 1
+BOOST_CHECK_EQUAL(3U, sorwmisTable0.getWaterSaturationColumn().size());
+BOOST_CHECK_EQUAL(1.0, sorwmisTable0.getWaterSaturationColumn()[2]);
+BOOST_CHECK_EQUAL(0.0, sorwmisTable0.getMiscibleResidualOilColumn()[2]);
+
+// test table input 2
+Opm::SorwmisTable sorwmisTable1;
+sorwmisTable1.initFORUNITTESTONLY(sorwmis1->getItem(0));
+BOOST_CHECK_EQUAL(sorwmisTable1.numColumns(),ntmisc);
+
+BOOST_CHECK_EQUAL(3U, sorwmisTable1.getWaterSaturationColumn().size());
+BOOST_CHECK_EQUAL(0.3, sorwmisTable1.getWaterSaturationColumn()[1]);
+BOOST_CHECK_EQUAL(0.8, sorwmisTable1.getMiscibleResidualOilColumn()[2]);
+}
+
+BOOST_AUTO_TEST_CASE( PARSE_SGCWMIS)
+{
     ParserPtr parser(new Parser());
-    char tooFewTables[10000];
-    std::strcpy(tooFewTables,miscibleTightData);
-    std::strcat(tooFewTables,sorwmisData);
-
-    // missing miscible keyword
-    BOOST_CHECK_THROW (parser->parseString(sorwmisData, ParseMode()), std::invalid_argument );
-
-    //too many tables
-    BOOST_CHECK_THROW( parser->parseString(tooFewTables, ParseMode()), std::invalid_argument)
 
     char data[10000];
     std::strcpy(data,miscibleData);
-    std::strcat(data,sorwmisData);
+    std::strcat(data,sgcwmisData);
     DeckPtr deck1 =  parser->parseString(data, ParseMode());
 
-    DeckKeywordConstPtr sorwmis = deck1->getKeyword("SORWMIS");
+    DeckKeywordConstPtr sgcwmis = deck1->getKeyword("SGCWMIS");
     DeckKeywordConstPtr miscible = deck1->getKeyword("MISCIBLE");
 
     DeckRecordConstPtr miscible0 = miscible->getRecord(0);
-    DeckRecordConstPtr sorwmis0 = sorwmis->getRecord(0);
-    DeckRecordConstPtr sorwmis1 = sorwmis->getRecord(1);
+    DeckRecordConstPtr sgcwmis0 = sgcwmis->getRecord(0);
+    DeckRecordConstPtr sgcwmis1 = sgcwmis->getRecord(1);
 
 
     // test number of columns
     int ntmisc = miscible0->getItem(0)->getInt(0);
-    Opm::SorwmisTable sorwmisTable0;
-    sorwmisTable0.initFORUNITTESTONLY(sorwmis0->getItem(0));
-    BOOST_CHECK_EQUAL(sorwmisTable0.numColumns(),ntmisc);
+    Opm::SgcwmisTable sgcwmisTable0;
+    sgcwmisTable0.initFORUNITTESTONLY(sgcwmis0->getItem(0));
+    BOOST_CHECK_EQUAL(sgcwmisTable0.numColumns(),ntmisc);
 
     // test table input 1
-    BOOST_CHECK_EQUAL(3U, sorwmisTable0.getWaterSaturationColumn().size());
-    BOOST_CHECK_EQUAL(1.0, sorwmisTable0.getWaterSaturationColumn()[2]);
-    BOOST_CHECK_EQUAL(0.0, sorwmisTable0.getMiscibleResidualOilColumn()[2]);
+    BOOST_CHECK_EQUAL(3U, sgcwmisTable0.getWaterSaturationColumn().size());
+    BOOST_CHECK_EQUAL(0.2, sgcwmisTable0.getWaterSaturationColumn()[1]);
+    BOOST_CHECK_EQUAL(0.0, sgcwmisTable0.getMiscibleResidualGasColumn()[1]);
 
     // test table input 2
-    Opm::SorwmisTable sorwmisTable1;
-    sorwmisTable1.initFORUNITTESTONLY(sorwmis1->getItem(0));
-    BOOST_CHECK_EQUAL(sorwmisTable1.numColumns(),ntmisc);
+    Opm::SgcwmisTable sgcwmisTable1;
+    sgcwmisTable1.initFORUNITTESTONLY(sgcwmis1->getItem(0));
+    BOOST_CHECK_EQUAL(sgcwmisTable1.numColumns(),ntmisc);
 
-    BOOST_CHECK_EQUAL(3U, sorwmisTable1.getWaterSaturationColumn().size());
-    BOOST_CHECK_EQUAL(0.3, sorwmisTable1.getWaterSaturationColumn()[1]);
-    BOOST_CHECK_EQUAL(0.8, sorwmisTable1.getMiscibleResidualOilColumn()[2]);
+    BOOST_CHECK_EQUAL(3U, sgcwmisTable1.getWaterSaturationColumn().size());
+    BOOST_CHECK_EQUAL(0.8, sgcwmisTable1.getWaterSaturationColumn()[1]);
+    BOOST_CHECK_EQUAL(0.2, sgcwmisTable1.getMiscibleResidualGasColumn()[1]);
 }

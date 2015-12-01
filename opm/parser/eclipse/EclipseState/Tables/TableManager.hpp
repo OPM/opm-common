@@ -61,6 +61,8 @@
 #include <opm/parser/eclipse/EclipseState/Tables/VFPInjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SorwmisTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SgcwmisTable.hpp>
+
 
 namespace Opm {
 
@@ -106,6 +108,7 @@ namespace Opm {
         const TableContainer& getPlyshlogTables() const;
 
         const TableContainer& getSorwmisTables() const;
+        const TableContainer& getSgcwmisTables() const;
 
         const std::vector<PvtgTable>& getPvtgTables() const;
         const std::vector<PvtoTable>& getPvtoTables() const;
