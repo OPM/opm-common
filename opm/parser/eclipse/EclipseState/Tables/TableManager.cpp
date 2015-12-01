@@ -154,6 +154,8 @@ namespace Opm {
             addTables( "SORWMIS", numMiscibleTables);
             addTables( "SGCWMIS", numMiscibleTables);
             addTables( "MISC", numMiscibleTables);
+            addTables( "PMISC", numMiscibleTables);
+
 
         }
 
@@ -219,6 +221,8 @@ namespace Opm {
             initSimpleTableContainer<SorwmisTable>(deck, "SORWMIS", numMiscibleTables);
             initSimpleTableContainer<SgcwmisTable>(deck, "SGCWMIS", numMiscibleTables);
             initSimpleTableContainer<MiscTable>(deck, "MISC", numMiscibleTables);
+            initSimpleTableContainer<PmiscTable>(deck, "PMISC", numMiscibleTables);
+
         }
 
         initSimpleTableContainer<PvdgTable>(deck, "PVDG", m_tabdims->getNumPVTTables());

@@ -279,6 +279,7 @@ EclipseState/Tables/TableContainer.hpp
 EclipseState/Tables/SorwmisTable.hpp
 EclipseState/Tables/SgcwmisTable.hpp
 EclipseState/Tables/MiscTable.hpp
+EclipseState/Tables/PmiscTable.hpp
 #
 Utility/WconinjeWrapper.hpp
 Utility/CompdatWrapper.hpp

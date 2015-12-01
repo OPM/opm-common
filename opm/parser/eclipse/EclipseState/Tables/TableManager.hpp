@@ -63,6 +63,8 @@
 #include <opm/parser/eclipse/EclipseState/Tables/SorwmisTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgcwmisTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/MiscTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PmiscTable.hpp>
+
 
 
 

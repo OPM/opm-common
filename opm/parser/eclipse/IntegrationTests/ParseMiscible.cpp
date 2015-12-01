@@ -198,3 +198,26 @@ BOOST_AUTO_TEST_CASE(PARSE_MISC)
     BOOST_CHECK_EQUAL(0.1, miscTable3.getSolventFractionColumn()[1]);
     BOOST_CHECK_EQUAL(0.5, miscTable3.getMiscibilityColumn()[1]);
 }
+
+const char *pmiscData = "\n\
+MISCIBLE\n\
+1  3 /\n\
+\n\
+PMISC\n\
+100 0.0 \n\
+200 0.5 \n\
+500 1.0 /\n\
+\n";
+
+BOOST_AUTO_TEST_CASE(PARSE_PMISC)
+{
+ParserPtr parser(new Parser());
+
+// test table input
+DeckPtr deck =  parser->parseString(pmiscData, ParseMode());
+Opm::PmiscTable pmiscTable;
+pmiscTable.initFORUNITTESTONLY(deck->getKeyword("PMISC")->getRecord(0)->getItem(0));
+BOOST_CHECK_EQUAL(3U, pmiscTable.getOilPhasePressureColumn().size());
+BOOST_CHECK_EQUAL(200*1e5, pmiscTable.getOilPhasePressureColumn()[1]);
+BOOST_CHECK_EQUAL(0.5, pmiscTable.getMiscibilityColumn()[1]);
+}
