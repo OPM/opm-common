@@ -48,7 +48,7 @@ namespace Opm {
             SimpleTable::checkMonotonic("OilPhasePressure", /*isAscending=*/true);
             SimpleTable::checkNonDefaultable("Miscibility");
             SimpleTable::checkMonotonic("Miscibility", /*isAscending=*/true, /*isStriclyMonotonic=*/false);
-            SimpleTable::checkRange("Miscibility");
+            SimpleTable::assertUnitRange("Miscibility");
         }
 
 #ifdef BOOST_TEST_MODULE

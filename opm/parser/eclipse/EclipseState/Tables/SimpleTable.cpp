@@ -153,7 +153,7 @@ void SimpleTable::checkMonotonic(const std::string& columnName,
     }
 }
 
-void SimpleTable::checkRange(const std::string& columnName)
+void SimpleTable::assertUnitRange(const std::string& columnName)
 {
     int columnIdx = m_columnNames.at(columnName);
     int nRows = numRows();

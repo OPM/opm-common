@@ -48,8 +48,8 @@ namespace Opm {
             SimpleTable::checkMonotonic("SolventFraction", /*isAscending=*/true);
             SimpleTable::checkNonDefaultable("Miscibility");
             SimpleTable::checkMonotonic("Miscibility", /*isAscending=*/true, /*isStriclyMonotonic=*/false);
-            SimpleTable::checkRange("SolventFraction");
-            SimpleTable::checkRange("Miscibility");
+            SimpleTable::assertUnitRange("SolventFraction");
+            SimpleTable::assertUnitRange("Miscibility");
         }
 
 #ifdef BOOST_TEST_MODULE

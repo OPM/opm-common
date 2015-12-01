@@ -18,7 +18,6 @@
 
 #define BOOST_TEST_MODULE ParseMiscible
 #include <math.h>
-
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
 
@@ -31,17 +30,17 @@
 
 using namespace Opm;
 
-const char *miscibleData = "\n\
+const std::string miscibleData = "\n\
 MISCIBLE\n\
 2  3 /\n\
 \n";
 
-const char *miscibleTightData = "\n\
+const std::string miscibleTightData = "\n\
 MISCIBLE\n\
 1  2 /\n\
 \n";
 
-const char *sorwmisData = "\n\
+const std::string sorwmisData = "\n\
 SORWMIS\n\
 .00 .00 \n\
 .50 .00 \n\
@@ -51,7 +50,7 @@ SORWMIS\n\
 1.0 .80 /\n\
 \n";
 
-const char *sgcwmisData = "\n\
+const std::string sgcwmisData = "\n\
 SGCWMIS\n\
 .00 .00 \n\
 .20 .00 \n\
@@ -64,20 +63,14 @@ SGCWMIS\n\
 BOOST_AUTO_TEST_CASE( PARSE_SORWMIS)
 {
 ParserPtr parser(new Parser());
-char tooFewTables[10000];
-std::strcpy(tooFewTables,miscibleTightData);
-std::strcat(tooFewTables,sorwmisData);
 
 // missing miscible keyword
 BOOST_CHECK_THROW (parser->parseString(sorwmisData, ParseMode()), std::invalid_argument );
 
 //too many tables
-BOOST_CHECK_THROW( parser->parseString(tooFewTables, ParseMode()), std::invalid_argument);
+BOOST_CHECK_THROW( parser->parseString(miscibleTightData + sorwmisData, ParseMode()), std::invalid_argument);
 
-char data[10000];
-std::strcpy(data,miscibleData);
-std::strcat(data,sorwmisData);
-DeckPtr deck1 =  parser->parseString(data, ParseMode());
+DeckPtr deck1 =  parser->parseString(miscibleData + sorwmisData, ParseMode());
 
 DeckKeywordConstPtr sorwmis = deck1->getKeyword("SORWMIS");
 DeckKeywordConstPtr miscible = deck1->getKeyword("MISCIBLE");
@@ -112,10 +105,7 @@ BOOST_AUTO_TEST_CASE( PARSE_SGCWMIS)
 {
     ParserPtr parser(new Parser());
 
-    char data[10000];
-    std::strcpy(data,miscibleData);
-    std::strcat(data,sgcwmisData);
-    DeckPtr deck1 =  parser->parseString(data, ParseMode());
+    DeckPtr deck1 =  parser->parseString(miscibleData + sgcwmisData, ParseMode());
 
     DeckKeywordConstPtr sgcwmis = deck1->getKeyword("SGCWMIS");
     DeckKeywordConstPtr miscible = deck1->getKeyword("MISCIBLE");
@@ -254,9 +244,5 @@ BOOST_CHECK_EQUAL(3U, msfnTable2.getGasPhaseFractionColumn().size());
 BOOST_CHECK_EQUAL(0.5, msfnTable2.getGasPhaseFractionColumn()[1]);
 BOOST_CHECK_EQUAL(0.3, msfnTable2.getGasSolventRelpermMultiplierColumn()[1]);
 BOOST_CHECK_EQUAL(0.7, msfnTable2.getOilRelpermMultiplierColumn()[1]);
-
-
-
-
 }
 

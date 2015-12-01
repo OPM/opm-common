@@ -47,7 +47,7 @@ namespace Opm {
 
             SimpleTable::checkNonDefaultable("GasPhaseFraction");
             SimpleTable::checkMonotonic("GasPhaseFraction", /*isAscending=*/true);
-            SimpleTable::checkRange("GasPhaseFraction");
+            SimpleTable::assertUnitRange("GasPhaseFraction");
 
             SimpleTable::checkNonDefaultable("GasSolventRelpermMultiplier");
             SimpleTable::checkMonotonic("GasSolventRelpermMultiplier", /*isAscending=*/true, /*isStriclyMonotonic=*/false);
