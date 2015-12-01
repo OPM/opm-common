@@ -64,6 +64,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/SgcwmisTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/MiscTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PmiscTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/MsfnTable.hpp>
 
 
 
@@ -114,6 +115,9 @@ namespace Opm {
         const TableContainer& getSorwmisTables() const;
         const TableContainer& getSgcwmisTables() const;
         const TableContainer& getMiscTables() const;
+        const TableContainer& getPmiscTables() const;
+        const TableContainer& getMsfnTables() const;
+
 
         const std::vector<PvtgTable>& getPvtgTables() const;
         const std::vector<PvtoTable>& getPvtoTables() const;

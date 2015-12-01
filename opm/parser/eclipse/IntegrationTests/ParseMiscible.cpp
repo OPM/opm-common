@@ -221,3 +221,42 @@ BOOST_CHECK_EQUAL(3U, pmiscTable.getOilPhasePressureColumn().size());
 BOOST_CHECK_EQUAL(200*1e5, pmiscTable.getOilPhasePressureColumn()[1]);
 BOOST_CHECK_EQUAL(0.5, pmiscTable.getMiscibilityColumn()[1]);
 }
+
+const char *msfnData = "\n\
+TABDIMS\n\
+2 /\n\
+\n\
+MSFN\n\
+0.0 0.0 1.0 \n\
+1.0 1.0 0.0 /\n\
+0.0 0.0 1.0 \n\
+0.5 0.3 0.7 \n\
+1.0 1.0 0.0 /\n\
+\n";
+
+BOOST_AUTO_TEST_CASE(PARSE_MSFN)
+{
+ParserPtr parser(new Parser());
+DeckPtr deck =  parser->parseString(msfnData, ParseMode());
+
+// test table input 1
+Opm::MsfnTable msfnTable1;
+msfnTable1.initFORUNITTESTONLY(deck->getKeyword("MSFN")->getRecord(0)->getItem(0));
+BOOST_CHECK_EQUAL(2U, msfnTable1.getGasPhaseFractionColumn().size());
+BOOST_CHECK_EQUAL(1.0, msfnTable1.getGasPhaseFractionColumn()[1]);
+BOOST_CHECK_EQUAL(1.0, msfnTable1.getGasSolventRelpermMultiplierColumn()[1]);
+BOOST_CHECK_EQUAL(0.0, msfnTable1.getOilRelpermMultiplierColumn()[1]);
+
+// test table input 2
+Opm::MsfnTable msfnTable2;
+msfnTable2.initFORUNITTESTONLY(deck->getKeyword("MSFN")->getRecord(1)->getItem(0));
+BOOST_CHECK_EQUAL(3U, msfnTable2.getGasPhaseFractionColumn().size());
+BOOST_CHECK_EQUAL(0.5, msfnTable2.getGasPhaseFractionColumn()[1]);
+BOOST_CHECK_EQUAL(0.3, msfnTable2.getGasSolventRelpermMultiplierColumn()[1]);
+BOOST_CHECK_EQUAL(0.7, msfnTable2.getOilRelpermMultiplierColumn()[1]);
+
+
+
+
+}
+

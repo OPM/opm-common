@@ -126,6 +126,7 @@ namespace Opm {
         addTables( "SWFN",  m_tabdims->getNumSatTables() );
         addTables( "SGFN",  m_tabdims->getNumSatTables() );
         addTables( "SSFN",  m_tabdims->getNumSatTables() );
+        addTables( "MSFN",  m_tabdims->getNumSatTables() );
 
         addTables( "PLYADS", m_tabdims->getNumSatTables() );
         addTables( "PLYROCK", m_tabdims->getNumSatTables());
@@ -193,6 +194,8 @@ namespace Opm {
         initSimpleTableContainer<SwfnTable>(deck, "SWFN" , m_tabdims->getNumSatTables());
         initSimpleTableContainer<SgfnTable>(deck, "SGFN" , m_tabdims->getNumSatTables());
         initSimpleTableContainer<SsfnTable>(deck, "SSFN" , m_tabdims->getNumSatTables());
+        initSimpleTableContainer<MsfnTable>(deck, "MSFN" , m_tabdims->getNumSatTables());
+
 
         initSimpleTableContainer<RsvdTable>(deck, "RSVD" , m_eqldims->getNumEquilRegions());
         initSimpleTableContainer<RvvdTable>(deck, "RVVD" , m_eqldims->getNumEquilRegions());
