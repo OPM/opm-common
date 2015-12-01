@@ -153,6 +153,16 @@ void SimpleTable::checkMonotonic(const std::string& columnName,
     }
 }
 
+void SimpleTable::checkRange(const std::string& columnName)
+{
+    int columnIdx = m_columnNames.at(columnName);
+    int nRows = numRows();
+    if (m_columns[columnIdx][0] != 0.0 || m_columns[columnIdx][nRows-1] != 1.0) {
+        throw std::invalid_argument("Column " + columnName + " must span range [0 1]");
+    }
+
+}
+
 void SimpleTable::applyDefaultsConstant(const std::string& columnName, double value)
 {
     int columnIdx = m_columnNames.at(columnName);

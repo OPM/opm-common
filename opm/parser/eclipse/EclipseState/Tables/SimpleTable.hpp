@@ -79,6 +79,7 @@ namespace Opm {
         void checkMonotonic(const std::string& columnName,
                              bool isAscending,
                              bool isStrictlyMonotonic = true);
+        void checkRange(const std::string& columnName);
         void applyDefaultsConstant(const std::string& columnName, double value);
         void applyDefaultsLinear(const std::string& columnName);
         void createColumns(const std::vector<std::string> &columnNames);
