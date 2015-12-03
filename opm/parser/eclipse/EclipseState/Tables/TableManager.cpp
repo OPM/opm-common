@@ -595,6 +595,21 @@ namespace Opm {
         return m_pvtoTables;
     }
 
+    const TableContainer& TableManager::getMsfnTables() const {
+        return getTables("MSFN");
+    }
+    const TableContainer& TableManager::getPmiscTables() const {
+        return getTables("PMISC");
+    }
+    const TableContainer& TableManager::getMiscTables() const {
+        return getTables("MISC");
+    }
+    const TableContainer& TableManager::getSgcwmisTables() const {
+        return getTables("SGCWMIS");
+    }
+    const TableContainer& TableManager::getSorwmisTables() const {
+        return getTables("SORWMIS");
+    }
 
     const std::map<int, VFPProdTable>& TableManager::getVFPProdTables() const {
         return m_vfpprodTables;
