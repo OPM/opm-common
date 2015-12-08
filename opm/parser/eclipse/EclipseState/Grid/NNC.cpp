@@ -55,18 +55,20 @@ namespace Opm
     }
 
 
-    void NNC::addNNC(const size_t NNC1, const size_t NNC2, const double trans) {
-        m_nnc1.push_back(NNC1);
-        m_nnc2.push_back(NNC2);
-        m_trans.push_back(trans);
+    void NNC::addNNC(const size_t cell1, const size_t cell2, const double trans) {
+        NNCdata nncdata;
+        nncdata.cell1 = cell1;
+        nncdata.cell2 = cell2;
+        nncdata.trans = trans;
+        m_nnc.push_back(nncdata);
     }
 
     size_t NNC::numNNC() const {
-        return(m_nnc1.size());
+        return(m_nnc.size());
     }
 
     bool NNC::hasNNC() const {
-        return m_nnc1.size()>0;
+        return m_nnc.size()>0;
     }
 
 } // namespace Opm
