@@ -140,7 +140,7 @@ namespace Opm {
         boost::gregorian::date getTimestepDate(size_t timestep) const;
         void dumpRestartConfig() const;
 
-
+        std::string getRestartFileName(const std::string& restart_base, int report_step, bool output) const;
 
 
     private:
