@@ -60,22 +60,20 @@ BOOST_AUTO_TEST_CASE(readDeck)
     auto eclGrid = eclipseState->getEclipseGrid();
     Opm::NNC nnc(deck, eclGrid);
     BOOST_CHECK(nnc.hasNNC());
-    const std::vector<size_t>& NNC1 = nnc.nnc1();
-    const std::vector<size_t>& NNC2 = nnc.nnc2();
-    const std::vector<double>& trans = nnc.trans();
+    const std::vector<NNCdata>& nncdata = nnc.nncdata();
 
     // test the NNCs in nnc.DATA
     BOOST_CHECK_EQUAL(nnc.numNNC(), 4);
-    BOOST_CHECK_EQUAL(NNC1[0], 0);
-    BOOST_CHECK_EQUAL(NNC2[0], 1);
-    BOOST_CHECK_EQUAL(trans[0], 0.5 * Opm::Metric::Transmissibility);
-    BOOST_CHECK_EQUAL(NNC1[1], 0);
-    BOOST_CHECK_EQUAL(NNC2[1], 10);
-    BOOST_CHECK_EQUAL(trans[1], 1.0 * Opm::Metric::Transmissibility);
+    BOOST_CHECK_EQUAL(nncdata[0].cell1, 0);
+    BOOST_CHECK_EQUAL(nncdata[0].cell2, 1);
+    BOOST_CHECK_EQUAL(nncdata[0].trans, 0.5 * Opm::Metric::Transmissibility);
+    BOOST_CHECK_EQUAL(nncdata[1].cell1, 0);
+    BOOST_CHECK_EQUAL(nncdata[1].cell2, 10);
+    BOOST_CHECK_EQUAL(nncdata[1].trans, 1.0 * Opm::Metric::Transmissibility);
 
 }
 
-BOOST_AUTO_TEST_CASE(addNNC)
+BOOST_AUTO_TEST_CASE(addNNCfromDeck)
 {
     Opm::ParseMode parseMode;
     const std::string filename = "testdata/integration_tests/NNC/NNC.DATA";
@@ -84,16 +82,25 @@ BOOST_AUTO_TEST_CASE(addNNC)
     Opm::EclipseStateConstPtr eclipseState(new EclipseState(deck , parseMode));
     auto eclGrid = eclipseState->getEclipseGrid();
     Opm::NNC nnc(deck, eclGrid);
-    const std::vector<size_t>& NNC1 = nnc.nnc1();
-    const std::vector<size_t>& NNC2 = nnc.nnc2();
-    const std::vector<double>& trans = nnc.trans();
+    const std::vector<NNCdata>& nncdata = nnc.nncdata();
 
     // test add NNC
     nnc.addNNC(2,2,2.0);
     BOOST_CHECK_EQUAL(nnc.numNNC(), 5);
-    BOOST_CHECK_EQUAL(NNC1[4], 2);
-    BOOST_CHECK_EQUAL(NNC2[4], 2);
-    BOOST_CHECK_EQUAL(trans[4], 2.0);
+    BOOST_CHECK_EQUAL(nncdata[4].cell1, 2);
+    BOOST_CHECK_EQUAL(nncdata[4].cell2, 2);
+    BOOST_CHECK_EQUAL(nncdata[4].trans, 2.0);
 }
 
+BOOST_AUTO_TEST_CASE(addNNC)
+{
+    Opm::NNC nnc;
+    // add NNC
+    nnc.addNNC(2,2,2.0);
+    const std::vector<NNCdata>& nncdata = nnc.nncdata();
+    BOOST_CHECK_EQUAL(nnc.numNNC(), 1);
+    BOOST_CHECK_EQUAL(nncdata[0].cell1, 2);
+    BOOST_CHECK_EQUAL(nncdata[0].cell1, 2);
+    BOOST_CHECK_EQUAL(nncdata[0].trans, 2.0);
+}
 

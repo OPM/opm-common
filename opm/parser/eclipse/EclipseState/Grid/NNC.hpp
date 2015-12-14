@@ -26,22 +26,27 @@
 
 namespace Opm
 {
+
+struct NNCdata {
+    size_t cell1;
+    size_t cell2;
+    double trans;
+};
+
 class NNC
 {
 public:
     /// Construct from input deck.
+    NNC();
     NNC(Opm::DeckConstPtr deck, EclipseGridConstPtr eclipseGrid);
-    void addNNC(const size_t NNC1, const size_t NNC2, const double trans);
-    const std::vector<size_t>& nnc1() const { return m_nnc1; }
-    const std::vector<size_t>& nnc2() const { return m_nnc2; }
-    const std::vector<double>& trans() const { return m_trans; }
+    void addNNC(const size_t cell1, const size_t cell2, const double trans);
+    const std::vector<NNCdata>& nncdata() const { return m_nnc; }
     size_t numNNC() const;
     bool hasNNC() const;
 
 private:
-    std::vector<size_t> m_nnc1;
-    std::vector<size_t> m_nnc2;
-    std::vector<double> m_trans;
+
+    std::vector<NNCdata> m_nnc;
 };
 
 
