@@ -35,6 +35,8 @@ namespace Opm {
         std::shared_ptr<const ThresholdPressure> getThresholdPressure() const;
         bool hasThresholdPressure() const;
         bool useCPR() const;
+        bool hasDISGAS() const;
+        bool hasVAPOIL() const;
 
     private:
 
@@ -42,6 +44,8 @@ namespace Opm {
 
         ThresholdPressureConstPtr m_ThresholdPressure;
         bool m_useCPR;
+        bool m_DISGAS;
+        bool m_VAPOIL;
     };
 
 

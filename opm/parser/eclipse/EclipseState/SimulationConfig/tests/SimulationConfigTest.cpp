@@ -37,7 +37,7 @@ using namespace Opm;
 
 const std::string& inputStr = "RUNSPEC\n"
                               "EQLOPTS\n"
-                              "THPRES /\n "
+                              "THPRES /\n"
                               "DIMENS\n"
                               "10 3 4 /\n"
                               "\n"
@@ -93,6 +93,16 @@ const std::string& inputStr_cpr_BOTH = "RUNSPEC\n"
     "CPR\n"
     "well1 10 20 30/\n/\n";
 
+const std::string& inputStr_vap_dis = "RUNSPEC\n"
+                                      "VAPOIL\n"
+                                      "DISGAS\n"
+                                      "DIMENS\n"
+                                      "10 3 4 /\n"
+                                      "\n"
+                                      "GRID\n"
+                                      "REGIONS\n"
+                                      "\n";
+
 static DeckPtr createDeck(const ParseMode& parseMode , const std::string& input) {
     Opm::Parser parser;
     return parser.parseString(input, parseMode);
@@ -115,7 +125,6 @@ BOOST_AUTO_TEST_CASE(SimulationConfigGetThresholdPressureTableTest) {
     DeckPtr deck = createDeck(parseMode , inputStr);
     SimulationConfigConstPtr simulationConfigPtr;
     BOOST_CHECK_NO_THROW(simulationConfigPtr = std::make_shared<const SimulationConfig>(parseMode , deck, getGridProperties()));
-    BOOST_CHECK_EQUAL( true , simulationConfigPtr->hasThresholdPressure());
 }
 
 
@@ -171,9 +180,21 @@ BOOST_AUTO_TEST_CASE(SimulationConfigCPRBoth) {
 }
 
 
-
-
 BOOST_AUTO_TEST_CASE(SimulationConfigCPRRUnspecWithData) {
     ParseMode parseMode;
     BOOST_CHECK_THROW( createDeck(parseMode , inputStr_INVALID) , std::invalid_argument );
+}
+
+
+BOOST_AUTO_TEST_CASE(SimulationConfig_VAPOIL_DISGAS) {
+    ParseMode parseMode;
+    DeckPtr deck = createDeck(parseMode , inputStr);
+    SimulationConfig simulationConfig(parseMode , deck, getGridProperties());
+    BOOST_CHECK_EQUAL( false , simulationConfig.hasDISGAS());
+    BOOST_CHECK_EQUAL( false , simulationConfig.hasVAPOIL());
+
+    DeckPtr deck_vd = createDeck(parseMode, inputStr_vap_dis);
+    SimulationConfig simulationConfig_vd(parseMode , deck_vd, getGridProperties());
+    BOOST_CHECK_EQUAL( true , simulationConfig_vd.hasDISGAS());
+    BOOST_CHECK_EQUAL( true , simulationConfig_vd.hasVAPOIL());
 }

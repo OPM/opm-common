@@ -41,7 +41,9 @@
 namespace Opm {
 
     SimulationConfig::SimulationConfig(const ParseMode& parseMode , DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties) :
-        m_useCPR( false )
+        m_useCPR(false),
+        m_DISGAS(false),
+        m_VAPOIL(false)
     {
         if (Section::hasRUNSPEC(deck)) {
             const RUNSPECSection runspec(deck);
@@ -51,6 +53,12 @@ namespace Opm {
                     throw std::invalid_argument("ERROR: In the RUNSPEC section the CPR keyword should EXACTLY one empty record.");
 
                 m_useCPR = true;
+            }
+            if (runspec.hasKeyword<ParserKeywords::DISGAS>()) {
+                m_DISGAS = true;
+            }
+            if (runspec.hasKeyword<ParserKeywords::VAPOIL>()) {
+                m_VAPOIL = true;
             }
         }
 
@@ -74,6 +82,14 @@ namespace Opm {
 
     bool SimulationConfig::useCPR() const {
         return m_useCPR;
+    }
+
+    bool SimulationConfig::hasDISGAS() const {
+        return m_DISGAS;
+    }
+
+    bool SimulationConfig::hasVAPOIL() const {
+        return m_VAPOIL;
     }
 
 } //namespace Opm
