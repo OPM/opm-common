@@ -1,0 +1,45 @@
+language: cpp
+
+compiler:
+  - gcc
+
+addons:
+  apt:
+    sources:
+      - boost-latest
+      - ubuntu-toolchain-r-test
+    packages:
+      - libboost1.55-all-dev
+      - gcc-4.8
+      - g++-4.8
+      - liblapack-dev
+
+install:
+    - cd ..
+    - git clone https://github.com/OPM/opm-data.git
+    - git clone https://github.com/OPM/opm-common.git
+    - git clone https://github.com/Ensembles/ert.git
+
+    - cd opm-common
+    - mkdir build
+    - cd build
+    - cmake ../
+    - make
+    - cd ../../
+
+    - cd ert
+    - mkdir build
+    - cd build
+    - cmake ../devel/
+    - make
+    - cd ../../
+
+    - cd opm-parser
+    - export CXX="g++-4.8" CC="gcc-4.8"
+
+before_script:
+    - mkdir build
+    - cd build
+    - cmake ../
+
+script: make && ctest --output-on-failure
