@@ -16,223 +16,95 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include <utility>
+#include <iostream>
+
 #include <opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp>
 
 namespace Opm {
-size_t SimpleTable::numTables(Opm::DeckKeywordConstPtr keyword)
-{
-    return keyword->size();
-}
+
+    SimpleTable::SimpleTable()
+    {
+
+    }
+
+
+    SimpleTable::SimpleTable(std::shared_ptr<TableSchema> schema , Opm::DeckItemConstPtr deckItem)
+     : m_schema( schema )
+    {
+        init(deckItem);
+    }
+
+
+    void SimpleTable::addColumns() {
+        for (size_t colIdx = 0; colIdx < m_schema->size(); ++colIdx) {
+            const auto& schemaColumn = m_schema->getColumn( colIdx );
+            TableColumn column(schemaColumn); // Some move trickery here ...
+            m_columns.insert( schemaColumn.name() , column );
+        }
+    }
+
 
 // create table from single record
-void SimpleTable::init(Opm::DeckItemConstPtr deckItem,
-                       const std::vector<std::string> &columnNames)
+void SimpleTable::init(Opm::DeckItemConstPtr deckItem)
 {
-    createColumns(columnNames);
-
+    addColumns();
     if ( (deckItem->size() % numColumns()) != 0)
         throw std::runtime_error("Number of columns in the data file is"
                                  "inconsistent with the ones specified");
     {
         size_t rows = deckItem->size() / numColumns();
-        for (size_t rowIdx = 0; rowIdx < rows; rowIdx++) {
-            for (size_t colIdx = 0; colIdx < numColumns(); ++colIdx) {
+        for (size_t colIdx = 0; colIdx < numColumns(); ++colIdx) {
+            auto& column = getColumn( colIdx );
+            for (size_t rowIdx = 0; rowIdx < rows; rowIdx++) {
                 size_t deckItemIdx = rowIdx*numColumns() + colIdx;
-                m_columns[colIdx].push_back( deckItem->getSIDouble(deckItemIdx) );
-                m_valueDefaulted[colIdx].push_back( deckItem->defaultApplied(deckItemIdx) );
+                if (deckItem->defaultApplied(deckItemIdx))
+                    column.addDefault( );
+                else
+                    column.addValue( deckItem->getSIDouble(deckItemIdx) );
             }
+            if (colIdx > 0)
+                column.applyDefaults(getColumn( 0 ));
         }
     }
 }
 
-size_t SimpleTable::numColumns() const
-{ return m_columns.size(); }
-
-size_t SimpleTable::numRows() const
-{ return m_columns[0].size(); }
-
-const std::vector<double> &SimpleTable::getColumn(const std::string &name) const
-{
-    const auto &colIt = m_columnNames.find(name);
-    if (colIt == m_columnNames.end())
-        throw std::runtime_error("Unknown column name \""+name+"\"");
-
-    size_t colIdx = colIt->second;
-    assert(colIdx < static_cast<size_t>(m_columns.size()));
-    return m_columns[colIdx];
-}
-const std::vector<double> &SimpleTable::getColumn(size_t colIdx) const
-{
-    assert(colIdx < static_cast<size_t>(m_columns.size()));
-    return m_columns[colIdx];
+size_t SimpleTable::numColumns() const {
+    return m_schema->size();
 }
 
-double SimpleTable::evaluate(const std::string& columnName, double xPos) const
-{
-    const std::vector<double>& xColumn = getColumn(0);
-    const std::vector<double>& yColumn = getColumn(columnName);
-
-    bool isDescending = false;
-    if (xColumn.front() > xColumn.back())
-        isDescending = true;
-
-    // handle the constant interpolation cases
-    if (isDescending) {
-        if (xColumn.front() < xPos)
-            return yColumn.front();
-        else if (xPos < xColumn.back())
-            return yColumn.back();
-    }
-    else {
-        if (xPos < xColumn.front())
-            return yColumn.front();
-        else if (xColumn.back() < xPos)
-            return yColumn.back();
-    }
-
-    // find the interval which contains the x position using interval halfing
-    size_t lowIntervalIdx = 0;
-    size_t intervalIdx = (xColumn.size() - 1)/2;
-    size_t highIntervalIdx = xColumn.size()-1;
-    while (lowIntervalIdx + 1 < highIntervalIdx) {
-        if (isDescending) {
-            if (xColumn[intervalIdx] < xPos)
-                highIntervalIdx = intervalIdx;
-            else
-                lowIntervalIdx = intervalIdx;
-        }
-        else {
-            if (xColumn[intervalIdx] < xPos)
-                lowIntervalIdx = intervalIdx;
-            else
-                highIntervalIdx = intervalIdx;
-        }
-
-        intervalIdx = (highIntervalIdx + lowIntervalIdx)/2;
-    }
-
-    // use linear interpolation if the x position is in between two non-defaulted
-    // values, else use the non-defaulted value
-    double alpha = (xPos - xColumn[intervalIdx])/(xColumn[intervalIdx + 1] - xColumn[intervalIdx]);
-    return yColumn[intervalIdx]*(1-alpha) + yColumn[intervalIdx + 1]*alpha;
-}
-
-void SimpleTable::checkNonDefaultable(const std::string& columnName)
-{
-    int columnIdx = m_columnNames.at(columnName);
-
-    int nRows = numRows();
-
-    for (int rowIdx = 0; rowIdx < nRows; ++rowIdx) {
-        if (m_valueDefaulted[columnIdx][rowIdx])
-            throw std::invalid_argument("Column " + columnName + " is not defaultable");
-    }
+size_t SimpleTable::numRows() const {
+    const auto column0 = getColumn(0);
+    return column0.size();
 }
 
 
-void SimpleTable::checkMonotonic(const std::string& columnName,
-                                        bool isAscending,
-                                        bool isStrictlyMonotonic)
-{
-    int columnIdx = m_columnNames.at(columnName);
-
-    int nRows = numRows();
-
-    for (int rowIdx = 0; rowIdx < nRows; ++rowIdx) {
-        if (rowIdx > 0) {
-            if (isAscending && m_columns[columnIdx][rowIdx] < m_columns[columnIdx][rowIdx - 1])
-                throw std::invalid_argument("Column " + columnName + " must be monotonically increasing");
-            else if (!isAscending && m_columns[columnIdx][rowIdx] > m_columns[columnIdx][rowIdx - 1])
-                throw std::invalid_argument("Column " + columnName + " must be monotonically decreasing");
-
-            if (isStrictlyMonotonic) {
-                if (m_columns[columnIdx][rowIdx] == m_columns[columnIdx][rowIdx - 1])
-                    throw std::invalid_argument("Column " + columnName + " must be strictly monotonic");
-            }
-        }
-    }
-}
-
-void SimpleTable::assertUnitRange(const std::string& columnName)
-{
-    int columnIdx = m_columnNames.at(columnName);
-    int nRows = numRows();
-    if (m_columns[columnIdx][0] != 0.0 || m_columns[columnIdx][nRows-1] != 1.0) {
-        throw std::invalid_argument("Column " + columnName + " must span range [0 1]");
+    const TableColumn& SimpleTable::getColumn( const std::string& name) const {
+        return std::forward<const TableColumn &>(m_columns.get( name ));
     }
 
-}
-
-void SimpleTable::applyDefaultsConstant(const std::string& columnName, double value)
-{
-    int columnIdx = m_columnNames.at(columnName);
-    int nRows = numRows();
-
-    for (int rowIdx = 0; rowIdx < nRows; ++rowIdx) {
-        if (m_valueDefaulted[columnIdx][rowIdx]) {
-            m_columns[columnIdx][rowIdx] = value;
-            m_valueDefaulted[columnIdx][rowIdx] = false;
-        }
+    const TableColumn& SimpleTable::getColumn( size_t columnIndex )  const {
+        return std::forward<const TableColumn &>(m_columns.get( columnIndex ));
     }
-}
 
-void SimpleTable::applyDefaultsLinear(const std::string& columnName)
-{
-    int columnIdx = m_columnNames.at(columnName);
-    const std::vector<double>& xColumn = m_columns[0];
-    std::vector<double>& yColumn = m_columns[columnIdx];
-    int nRows = numRows();
 
-    for (int rowIdx = 0; rowIdx < nRows; ++rowIdx) {
-        if (m_valueDefaulted[columnIdx][rowIdx]) {
-            // find first row which was not defaulted before the current one
-            int rowBeforeIdx = rowIdx;
-            for (; rowBeforeIdx >= 0; -- rowBeforeIdx)
-                if (!m_valueDefaulted[columnIdx][rowBeforeIdx])
-                    break;
-
-            // find first row which was not defaulted after the current one
-            int rowAfterIdx = rowIdx;
-            for (; rowAfterIdx < static_cast<int>(yColumn.size()); ++ rowAfterIdx)
-                if (!m_valueDefaulted[columnIdx][rowAfterIdx])
-                    break;
-
-            // switch to extrapolation by a constant at the fringes
-            if (rowBeforeIdx < 0 && rowAfterIdx >= static_cast<int>(yColumn.size()))
-                throw std::invalid_argument("Column " + columnName + " can't be fully defaulted");
-            else if (rowBeforeIdx < 0)
-                rowBeforeIdx = rowAfterIdx;
-            else if (rowAfterIdx >= static_cast<int>(yColumn.size()))
-                rowAfterIdx = rowBeforeIdx;
-
-            // linear interpolation
-            double alpha = 0.0;
-            if (rowBeforeIdx != rowAfterIdx) {
-                alpha = xColumn[rowIdx] - xColumn[rowBeforeIdx];
-                alpha /= (xColumn[rowAfterIdx] - xColumn[rowBeforeIdx]);
-            }
-
-            double value =
-                yColumn[rowBeforeIdx]*(1-alpha) + yColumn[rowAfterIdx]*alpha;
-
-            m_columns[columnIdx][rowIdx] = value;
-            m_valueDefaulted[columnIdx][rowIdx] = false;
-        }
+    TableColumn& SimpleTable::getColumn( const std::string& name) {
+        return std::forward<TableColumn &>(m_columns.get( name ));
     }
-}
 
-void SimpleTable::createColumns(const std::vector<std::string> &columnNames)
-{
-    // Allocate column names. TODO (?): move the column names into
-    // the json description of the keyword.
-    auto columnNameIt = columnNames.begin();
-    const auto &columnNameEndIt = columnNames.end();
-    size_t columnIdx = 0;
-    for (; columnNameIt != columnNameEndIt; ++columnNameIt, ++columnIdx) {
-        m_columnNames[*columnNameIt] = columnIdx;
+    TableColumn& SimpleTable::getColumn( size_t columnIndex ) {
+        return std::forward<TableColumn &>(m_columns.get( columnIndex ));
     }
-    m_columns.resize(columnIdx);
-    m_valueDefaulted.resize(columnIdx);
-}
+
+
+
+    double SimpleTable::evaluate(const std::string& columnName, double xPos) const
+    {
+        const auto& argColumn = getColumn( 0 );
+        const auto& valueColumn = getColumn( columnName );
+
+        const auto index = argColumn.lookup( xPos );
+        return valueColumn.eval( index );
+    }
 
 }

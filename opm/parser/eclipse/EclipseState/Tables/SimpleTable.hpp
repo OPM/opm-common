@@ -20,6 +20,10 @@
 #define	OPM_PARSER_SIMPLE_TABLE_HPP
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableColumn.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/ColumnSchema.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableSchema.hpp>
+
 
 #include <map>
 #include <memory>
@@ -28,43 +32,21 @@
 #include <cassert>
 
 namespace Opm {
-    class PlyshlogTable;
     class SimpleTable {
-        friend class PlyshlogTable;
-    protected:
-        SimpleTable(const SimpleTable&) = default;
-
-        /*!
-         * \brief Read simple tables from keywords like SWOF
-         *
-         * This requires all data to be a list of doubles in the first
-         * item of a given record index.
-         */
-        void init(Opm::DeckItemConstPtr deckItem,
-                  const std::vector<std::string> &columnNames);
 
     public:
-        SimpleTable() = default;
-
-        /*!
-         * \brief Returns the number of tables in a keyword.
-         *
-         * For simple tables, that is identical to the number of
-         * records.
-         */
-        static size_t numTables(Opm::DeckKeywordConstPtr keyword);
-
-#ifdef BOOST_TEST_MODULE
-        // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
-        void initFORUNITTESTONLY(Opm::DeckItemConstPtr item,
-                                 const std::vector<std::string> &columnNames)
-        { init(item , columnNames ); }
-#endif
-
+        SimpleTable(const SimpleTable&) = default;
+        SimpleTable();
+        SimpleTable(std::shared_ptr<TableSchema> schema , Opm::DeckItemConstPtr deckItem);
+        void addColumns();
+        void init(Opm::DeckItemConstPtr deckItem);
         size_t numColumns() const;
         size_t numRows() const;
-        const std::vector<double> &getColumn(const std::string &name) const;
-        const std::vector<double> &getColumn(size_t colIdx) const;
+        const TableColumn& getColumn(const std::string &name) const;
+        const TableColumn& getColumn(size_t colIdx) const;
+
+        TableColumn& getColumn(const std::string &name);
+        TableColumn& getColumn(size_t colIdx);
 
         /*!
          * \brief Evaluate a column of the table at a given position.
@@ -75,18 +57,10 @@ namespace Opm {
         double evaluate(const std::string& columnName, double xPos) const;
 
     protected:
-        void checkNonDefaultable(const std::string& columnName);
-        void checkMonotonic(const std::string& columnName,
-                             bool isAscending,
-                             bool isStrictlyMonotonic = true);
-        void assertUnitRange(const std::string& columnName);
-        void applyDefaultsConstant(const std::string& columnName, double value);
-        void applyDefaultsLinear(const std::string& columnName);
-        void createColumns(const std::vector<std::string> &columnNames);
-
         std::map<std::string, size_t> m_columnNames;
-        std::vector<std::vector<double> > m_columns;
         std::vector<std::vector<bool> > m_valueDefaulted;
+        std::shared_ptr<TableSchema> m_schema;
+        OrderedMap<TableColumn> m_columns;
     };
 
     typedef std::shared_ptr<SimpleTable> SimpleTablePtr;
