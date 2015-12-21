@@ -20,45 +20,26 @@
 #define	OPM_PARSER_PLYVISC_TABLE_HPP
 
 #include "SimpleTable.hpp"
+#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
+
 
 namespace Opm {
-    // forward declaration
-    class TableManager;
-
     class PlyviscTable : public SimpleTable {
     public:
-
-        friend class TableManager;
-        PlyviscTable() = default;
-
-        /*!
-         * \brief Read the PLYVISC keyword and provide some convenience
-         *        methods for it.
-         */
-        void init(Opm::DeckItemConstPtr item)
+        PlyviscTable(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(item,
-                             std::vector<std::string>{
-                                 "PolymerConcentration",
-                                 "ViscosityMultiplier"
-                                     });
-
-            SimpleTable::checkNonDefaultable("PolymerConcentration");
-            SimpleTable::checkMonotonic("PolymerConcentration", /*isAscending=*/true);
-            SimpleTable::checkNonDefaultable("ViscosityMultiplier");
-            SimpleTable::checkMonotonic("ViscosityMultiplier", /*isAscending=*/true);
+            m_schema = std::make_shared<TableSchema>();
+            m_schema->addColumn( ColumnSchema( "PolymerConcentration" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
+            m_schema->addColumn( ColumnSchema( "ViscosityMultiplier" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
+            SimpleTable::init(item);
         }
 
     public:
-        using SimpleTable::numTables;
-        using SimpleTable::numRows;
-        using SimpleTable::numColumns;
-        using SimpleTable::evaluate;
 
-        const std::vector<double> &getPolymerConcentrationColumn() const
+        const TableColumn& getPolymerConcentrationColumn() const
         { return SimpleTable::getColumn(0); }
 
-        const std::vector<double> &getViscosityMultiplierColumn() const
+        const TableColumn& getViscosityMultiplierColumn() const
         { return SimpleTable::getColumn(1); }
     };
 }

@@ -21,58 +21,48 @@
 
 #include "SimpleTable.hpp"
 
+#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
+
 namespace Opm {
     // forward declaration
-    class TableManager;
-
     class SgofTable : public SimpleTable {
-        friend class TableManager;
-
-        /*!
-         * \brief Read the SGOF keyword and provide some convenience
-         *        methods for it.
-         */
-        void init(Opm::DeckItemConstPtr item)
-        {
-            SimpleTable::init(item,
-                              std::vector<std::string>{"SG", "KRG", "KROG", "PCOG"});
-
-            SimpleTable::checkNonDefaultable("SG");
-            SimpleTable::checkMonotonic("SG", /*isAscending=*/true);
-            SimpleTable::applyDefaultsLinear("KRG");
-            SimpleTable::applyDefaultsLinear("KROG");
-            SimpleTable::applyDefaultsLinear("PCOG");
-        }
 
     public:
-        SgofTable() = default;
+        SgofTable(Opm::DeckItemConstPtr item)
+        {
+            m_schema = std::make_shared<TableSchema>();
+            m_schema->addColumn( ColumnSchema("SG"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
+            m_schema->addColumn( ColumnSchema("KRG"  , Table::RANDOM              , Table::DEFAULT_LINEAR ));
+            m_schema->addColumn( ColumnSchema("KROG" , Table::RANDOM              , Table::DEFAULT_LINEAR ));
+            m_schema->addColumn( ColumnSchema("PCOG" , Table::RANDOM              , Table::DEFAULT_LINEAR ));
 
-#ifdef BOOST_TEST_MODULE
-        // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
-        void initFORUNITTESTONLY(Opm::DeckItemConstPtr item)
-        { init(item); }
-#endif
+            SimpleTable::init( item );
+        }
 
-        using SimpleTable::numTables;
-        using SimpleTable::numRows;
-        using SimpleTable::numColumns;
-        using SimpleTable::evaluate;
+        const TableColumn& getSgColumn() const
+        {
+            return SimpleTable::getColumn(0);
+        }
 
-        const std::vector<double> &getSgColumn() const
-        { return SimpleTable::getColumn(0); }
+        const TableColumn& getKrgColumn() const
+        {
+            return SimpleTable::getColumn(1);
+        }
 
-        const std::vector<double> &getKrgColumn() const
-        { return SimpleTable::getColumn(1); }
+        const TableColumn& getKrogColumn() const
+        {
+            return SimpleTable::getColumn(2);
+        }
 
-        const std::vector<double> &getKrogColumn() const
-        { return SimpleTable::getColumn(2); }
-
+        
         // this column is p_g - p_o (non-wetting phase pressure minus
         // wetting phase pressure for a given gas saturation. the name
         // is inconsistent, but it is the one used in the Eclipse
         // manual...)
-        const std::vector<double> &getPcogColumn() const
-        { return SimpleTable::getColumn(3); }
+        const TableColumn& getPcogColumn() const
+        {
+            return SimpleTable::getColumn(3);
+        }
     };
 }
 

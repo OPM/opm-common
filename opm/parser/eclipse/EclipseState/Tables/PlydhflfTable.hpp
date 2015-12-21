@@ -20,44 +20,26 @@
 #define	OPM_PARSER_PLYDHFLF_TABLE_HPP
 
 #include "SimpleTable.hpp"
+#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
+
 
 namespace Opm {
-    // forward declaration
-    class TableManager;
-
     class PlydhflfTable : public SimpleTable {
     public:
 
-        friend class TableManager;
-        PlydhflfTable() = default;
-
-        /*!
-         * \brief Read the PLYDHFLF keyword and provide some convenience
-         *        methods for it.
-         */
-        void init(Opm::DeckItemConstPtr item)
+        PlydhflfTable(DeckItemConstPtr item)
         {
-            SimpleTable::init(item,
-                             std::vector<std::string>{
-                                 "Temperature",
-                                 "PolymerHalflife"
-                                     });
+            m_schema = std::make_shared<TableSchema>( );
+            m_schema->addColumn( ColumnSchema("Temperature" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
+            m_schema->addColumn( ColumnSchema("PolymerHalflife" , Table::STRICTLY_DECREASING , Table::DEFAULT_NONE ) );
 
-            SimpleTable::checkNonDefaultable("Temperetura");
-            SimpleTable::checkMonotonic("Temperature", /*isAscending=*/true);
-            SimpleTable::checkNonDefaultable("PolymerHalflife");
-            SimpleTable::checkMonotonic("PolymerHalflife", /*isAscending=*/false);
+            SimpleTable::init(item);
         }
 
-        using SimpleTable::numTables;
-        using SimpleTable::numRows;
-        using SimpleTable::numColumns;
-        using SimpleTable::evaluate;
-
-        const std::vector<double> &getTemperatureColumn() const
+        const TableColumn& getTemperatureColumn() const
         { return SimpleTable::getColumn(0); }
 
-        const std::vector<double> &getPolymerHalflifeColumn() const
+        const TableColumn& getPolymerHalflifeColumn() const
         { return SimpleTable::getColumn(1); }
     };
 }

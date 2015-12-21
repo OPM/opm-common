@@ -20,45 +20,24 @@
 #define	OPM_PARSER_OILVISCT_TABLE_HPP
 
 #include "SimpleTable.hpp"
+#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
-    // forward declaration
-    class TableManager;
-
     class OilvisctTable : public SimpleTable {
     public:
 
-        friend class TableManager;
-        OilvisctTable() = default;
-
-        /*!
-         * \brief Read the OILVISCT keyword and provide some convenience
-         *        methods for it.
-         */
-        void init(Opm::DeckItemConstPtr item)
+        OilvisctTable(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(item,
-                                    std::vector<std::string>{
-                                        "Temperature",
-                                            "Viscosity"
-                                            });
-
-            SimpleTable::checkNonDefaultable("Temperature");
-            SimpleTable::checkMonotonic("Temperature", /*isAscending=*/true);
-
-            SimpleTable::checkNonDefaultable("Viscosity");
-            SimpleTable::checkMonotonic("Viscosity", /*isAscending=*/false, /*strictlyMonotonic=*/false);
+            m_schema = std::make_shared<TableSchema>( );
+            m_schema->addColumn( ColumnSchema("Temperature" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
+            m_schema->addColumn( ColumnSchema("Viscosity" , Table::DECREASING , Table::DEFAULT_NONE) );
+            SimpleTable::init(item);
         }
 
-        using SimpleTable::numTables;
-        using SimpleTable::numRows;
-        using SimpleTable::numColumns;
-        using SimpleTable::evaluate;
-
-        const std::vector<double> &getTemperatureColumn() const
+        const TableColumn& getTemperatureColumn() const
         { return SimpleTable::getColumn(0); }
 
-        const std::vector<double> &getOilViscosityColumn() const
+        const TableColumn& getOilViscosityColumn() const
         { return SimpleTable::getColumn(1); }
     };
 }

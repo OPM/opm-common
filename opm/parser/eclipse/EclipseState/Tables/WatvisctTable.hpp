@@ -20,44 +20,25 @@
 #define	OPM_PARSER_WATVISCT_TABLE_HPP
 
 #include "SimpleTable.hpp"
+#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
-    // forward declaration
-    class TableManager;
-
     class WatvisctTable : public SimpleTable {
     public:
-        friend class TableManager;
-        WatvisctTable() = default;
-
-        /*!
-         * \brief Read the WATVISCT keyword and provide some convenience
-         *        methods for it.
-         */
-        void init(Opm::DeckItemConstPtr item)
+        WatvisctTable(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(item,
-                             std::vector<std::string>{
-                                 "Temperature",
-                                 "Viscosity"
-                                     });
+            m_schema = std::make_shared<TableSchema>( );
 
-            SimpleTable::checkNonDefaultable("Temperature");
-            SimpleTable::checkMonotonic("Temperature", /*isAscending=*/true);
+            m_schema->addColumn(ColumnSchema("Temperature" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
+            m_schema->addColumn(ColumnSchema("Viscosity"   , Table::DECREASING , Table::DEFAULT_NONE));
 
-            SimpleTable::checkNonDefaultable("Viscosity");
-            SimpleTable::checkMonotonic("Viscosity", /*isAscending=*/false, /*strictlyMonotonic=*/false);
+            SimpleTable::init(item);
         }
 
-        using SimpleTable::numTables;
-        using SimpleTable::numRows;
-        using SimpleTable::numColumns;
-        using SimpleTable::evaluate;
-
-        const std::vector<double> &getTemperatureColumn() const
+        const TableColumn& getTemperatureColumn() const
         { return SimpleTable::getColumn(0); }
 
-        const std::vector<double> &getWaterViscosityColumn() const
+        const TableColumn& getWaterViscosityColumn() const
         { return SimpleTable::getColumn(1); }
     };
 }

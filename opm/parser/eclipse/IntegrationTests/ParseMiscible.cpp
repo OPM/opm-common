@@ -84,9 +84,8 @@ DeckRecordConstPtr sorwmis1 = sorwmis->getRecord(1);
 
 
 // test number of columns
-int ntmisc = miscible0->getItem(0)->getInt(0);
-Opm::SorwmisTable sorwmisTable0;
-sorwmisTable0.initFORUNITTESTONLY(sorwmis0->getItem(0));
+size_t ntmisc = miscible0->getItem(0)->getInt(0);
+Opm::SorwmisTable sorwmisTable0(sorwmis0->getItem(0));
 BOOST_CHECK_EQUAL(sorwmisTable0.numColumns(),ntmisc);
 
 // test table input 1
@@ -95,8 +94,7 @@ BOOST_CHECK_EQUAL(1.0, sorwmisTable0.getWaterSaturationColumn()[2]);
 BOOST_CHECK_EQUAL(0.0, sorwmisTable0.getMiscibleResidualOilColumn()[2]);
 
 // test table input 2
-Opm::SorwmisTable sorwmisTable1;
-sorwmisTable1.initFORUNITTESTONLY(sorwmis1->getItem(0));
+ Opm::SorwmisTable sorwmisTable1(sorwmis1->getItem(0));
 BOOST_CHECK_EQUAL(sorwmisTable1.numColumns(),ntmisc);
 
 BOOST_CHECK_EQUAL(3U, sorwmisTable1.getWaterSaturationColumn().size());
@@ -119,9 +117,8 @@ BOOST_AUTO_TEST_CASE( PARSE_SGCWMIS)
 
 
     // test number of columns
-    int ntmisc = miscible0->getItem(0)->getInt(0);
-    Opm::SgcwmisTable sgcwmisTable0;
-    sgcwmisTable0.initFORUNITTESTONLY(sgcwmis0->getItem(0));
+    size_t ntmisc = miscible0->getItem(0)->getInt(0);
+    Opm::SgcwmisTable sgcwmisTable0(sgcwmis0->getItem(0));
     BOOST_CHECK_EQUAL(sgcwmisTable0.numColumns(),ntmisc);
 
     // test table input 1
@@ -130,8 +127,7 @@ BOOST_AUTO_TEST_CASE( PARSE_SGCWMIS)
     BOOST_CHECK_EQUAL(0.0, sgcwmisTable0.getMiscibleResidualGasColumn()[1]);
 
     // test table input 2
-    Opm::SgcwmisTable sgcwmisTable1;
-    sgcwmisTable1.initFORUNITTESTONLY(sgcwmis1->getItem(0));
+    Opm::SgcwmisTable sgcwmisTable1(sgcwmis1->getItem(0));
     BOOST_CHECK_EQUAL(sgcwmisTable1.numColumns(),ntmisc);
 
     BOOST_CHECK_EQUAL(3U, sgcwmisTable1.getWaterSaturationColumn().size());
@@ -174,19 +170,19 @@ BOOST_AUTO_TEST_CASE(PARSE_MISC)
 
     // out of range MISC keyword
     DeckPtr deck1 = parser->parseString(miscOutOfRangeData, ParseMode());
-    Opm::MiscTable miscTable1;
-    BOOST_CHECK_THROW (miscTable1.initFORUNITTESTONLY(deck1->getKeyword("MISC")->getRecord(0)->getItem(0));, std::invalid_argument );
+    auto item = deck1->getKeyword("MISC")->getRecord(0)->getItem(0);
+    Opm::MiscTable miscTable1(item);
 
 
     // too litle range of MISC keyword
     DeckPtr deck2 = parser->parseString(miscTooSmallRangeData, ParseMode());
-    Opm::MiscTable miscTable2;
-    BOOST_CHECK_THROW (miscTable2.initFORUNITTESTONLY(deck2->getKeyword("MISC")->getRecord(0)->getItem(0));, std::invalid_argument );
+    auto item2 = deck2->getKeyword("MISC")->getRecord(0)->getItem(0);
+    Opm::MiscTable miscTable2(item2);
 
     // test table input
     DeckPtr deck3 =  parser->parseString(miscData, ParseMode());
-    Opm::MiscTable miscTable3;
-    miscTable3.initFORUNITTESTONLY(deck3->getKeyword("MISC")->getRecord(0)->getItem(0));
+    auto item3 = deck3->getKeyword("MISC")->getRecord(0)->getItem(0);
+    Opm::MiscTable miscTable3(item3);
     BOOST_CHECK_EQUAL(3U, miscTable3.getSolventFractionColumn().size());
     BOOST_CHECK_EQUAL(0.1, miscTable3.getSolventFractionColumn()[1]);
     BOOST_CHECK_EQUAL(0.5, miscTable3.getMiscibilityColumn()[1]);
@@ -204,15 +200,14 @@ PMISC\n\
 
 BOOST_AUTO_TEST_CASE(PARSE_PMISC)
 {
-ParserPtr parser(new Parser());
+    ParserPtr parser(new Parser());
 
-// test table input
-DeckPtr deck =  parser->parseString(pmiscData, ParseMode());
-Opm::PmiscTable pmiscTable;
-pmiscTable.initFORUNITTESTONLY(deck->getKeyword("PMISC")->getRecord(0)->getItem(0));
-BOOST_CHECK_EQUAL(3U, pmiscTable.getOilPhasePressureColumn().size());
-BOOST_CHECK_EQUAL(200*1e5, pmiscTable.getOilPhasePressureColumn()[1]);
-BOOST_CHECK_EQUAL(0.5, pmiscTable.getMiscibilityColumn()[1]);
+    // test table input
+    DeckPtr deck =  parser->parseString(pmiscData, ParseMode());
+    Opm::PmiscTable pmiscTable(deck->getKeyword("PMISC")->getRecord(0)->getItem(0));
+    BOOST_CHECK_EQUAL(3U, pmiscTable.getOilPhasePressureColumn().size());
+    BOOST_CHECK_EQUAL(200*1e5, pmiscTable.getOilPhasePressureColumn()[1]);
+    BOOST_CHECK_EQUAL(0.5, pmiscTable.getMiscibilityColumn()[1]);
 }
 
 const char *msfnData = "\n\
@@ -233,16 +228,14 @@ ParserPtr parser(new Parser());
 DeckPtr deck =  parser->parseString(msfnData, ParseMode());
 
 // test table input 1
-Opm::MsfnTable msfnTable1;
-msfnTable1.initFORUNITTESTONLY(deck->getKeyword("MSFN")->getRecord(0)->getItem(0));
-BOOST_CHECK_EQUAL(2U, msfnTable1.getGasPhaseFractionColumn().size());
-BOOST_CHECK_EQUAL(1.0, msfnTable1.getGasPhaseFractionColumn()[1]);
-BOOST_CHECK_EQUAL(1.0, msfnTable1.getGasSolventRelpermMultiplierColumn()[1]);
-BOOST_CHECK_EQUAL(0.0, msfnTable1.getOilRelpermMultiplierColumn()[1]);
+ Opm::MsfnTable msfnTable1(deck->getKeyword("MSFN")->getRecord(0)->getItem(0));
+ BOOST_CHECK_EQUAL(2U, msfnTable1.getGasPhaseFractionColumn().size());
+ BOOST_CHECK_EQUAL(1.0, msfnTable1.getGasPhaseFractionColumn()[1]);
+ BOOST_CHECK_EQUAL(1.0, msfnTable1.getGasSolventRelpermMultiplierColumn()[1]);
+ BOOST_CHECK_EQUAL(0.0, msfnTable1.getOilRelpermMultiplierColumn()[1]);
 
 // test table input 2
-Opm::MsfnTable msfnTable2;
-msfnTable2.initFORUNITTESTONLY(deck->getKeyword("MSFN")->getRecord(1)->getItem(0));
+Opm::MsfnTable msfnTable2(deck->getKeyword("MSFN")->getRecord(1)->getItem(0));
 BOOST_CHECK_EQUAL(3U, msfnTable2.getGasPhaseFractionColumn().size());
 BOOST_CHECK_EQUAL(0.5, msfnTable2.getGasPhaseFractionColumn()[1]);
 BOOST_CHECK_EQUAL(0.3, msfnTable2.getGasSolventRelpermMultiplierColumn()[1]);

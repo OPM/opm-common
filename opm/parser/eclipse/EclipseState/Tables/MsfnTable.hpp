@@ -21,60 +21,33 @@
 #define	OPM_PARSER_MSFN_TABLE_HPP
 
 #include "SimpleTable.hpp"
+#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
-    // forward declaration
-    class TableManager;
-
     class MsfnTable : public SimpleTable {
     public:
-
-        friend class TableManager;
-        MsfnTable() = default;
-
-        /*!
-         * \brief Read the PMISC keyword and provide some convenience
-         *        methods for it.
-         */
-        void init(Opm::DeckItemConstPtr item)
+        MsfnTable(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(item,
-                             std::vector<std::string>{
-                                 "GasPhaseFraction",
-                                 "GasSolventRelpermMultiplier",
-                                 "OilRelpermMultiplier"
-                                     });
+            m_schema = std::make_shared<TableSchema>( );
+            m_schema->addColumn( ColumnSchema( "GasPhaseFraction", Table::STRICTLY_INCREASING  , Table::DEFAULT_NONE));
+            m_schema->addColumn( ColumnSchema( "GasSolventRelpermMultiplier", Table::INCREASING  , Table::DEFAULT_NONE));
+            m_schema->addColumn( ColumnSchema( "OilRelpermMultiplier", Table::DECREASING  , Table::DEFAULT_NONE));
 
-            SimpleTable::checkNonDefaultable("GasPhaseFraction");
-            SimpleTable::checkMonotonic("GasPhaseFraction", /*isAscending=*/true);
-            SimpleTable::assertUnitRange("GasPhaseFraction");
-
-            SimpleTable::checkNonDefaultable("GasSolventRelpermMultiplier");
-            SimpleTable::checkMonotonic("GasSolventRelpermMultiplier", /*isAscending=*/true, /*isStriclyMonotonic=*/false);
-
-            SimpleTable::checkNonDefaultable("OilRelpermMultiplier");
-            SimpleTable::checkMonotonic("OilRelpermMultiplier", /*isAscending=*/false, /*isStriclyMonotonic=*/false);
-
+            SimpleTable::init( item );
+            {
+                auto& column = getColumn("GasPhaseFraction");
+                column.assertUnitRange();
+            }
         }
 
-#ifdef BOOST_TEST_MODULE
-        // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
-        void initFORUNITTESTONLY(Opm::DeckItemConstPtr item)
-        { init(item); }
-#endif
 
-        using SimpleTable::numTables;
-        using SimpleTable::numRows;
-        using SimpleTable::numColumns;
-        using SimpleTable::evaluate;
-
-        const std::vector<double> &getGasPhaseFractionColumn() const
+        const TableColumn& getGasPhaseFractionColumn() const
         { return SimpleTable::getColumn(0); }
 
-        const std::vector<double> &getGasSolventRelpermMultiplierColumn() const
+        const TableColumn& getGasSolventRelpermMultiplierColumn() const
         { return SimpleTable::getColumn(1); }
 
-        const std::vector<double> &getOilRelpermMultiplierColumn() const
+        const TableColumn& getOilRelpermMultiplierColumn() const
         { return SimpleTable::getColumn(2); }
     };
 }

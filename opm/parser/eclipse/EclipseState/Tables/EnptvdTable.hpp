@@ -20,104 +20,80 @@
 #define	OPM_PARSER_ENPTVD_TABLE_HPP
 
 #include "SimpleTable.hpp"
+#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
-    // forward declaration
-    class TableManager;
-
     class EnptvdTable : public SimpleTable {
     public:
-
-        friend class TableManager;
-        EnptvdTable() = default;
-
-        /*!
-         * \brief Read the ENPTVD keyword and provide some convenience
-         *        methods for it.
-         */
-        void init(Opm::DeckItemConstPtr item)
+        EnptvdTable(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(item,
-                             std::vector<std::string>{"DEPTH",
-                                      "SWCO",
-                                      "SWCRIT",
-                                      "SWMAX",
-                                      "SGCO",
-                                      "SGCRIT",
-                                      "SGMAX",
-                                      "SOWCRIT",
-                                      "SOGCRIT"});
+            m_schema = std::make_shared<TableSchema>( );
+            m_schema->addColumn( ColumnSchema( "DEPTH" ,  Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
+            m_schema->addColumn( ColumnSchema( "SWCO",    Table::RANDOM , Table::DEFAULT_LINEAR ) );
+            m_schema->addColumn( ColumnSchema( "SWCRIT",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
+            m_schema->addColumn( ColumnSchema( "SWMAX",   Table::RANDOM , Table::DEFAULT_LINEAR ) );
+            m_schema->addColumn( ColumnSchema( "SGCO",    Table::RANDOM , Table::DEFAULT_LINEAR ) );
+            m_schema->addColumn( ColumnSchema( "SGCRIT",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
+            m_schema->addColumn( ColumnSchema( "SGMAX",   Table::RANDOM , Table::DEFAULT_LINEAR ) );
+            m_schema->addColumn( ColumnSchema( "SOWCRIT", Table::RANDOM , Table::DEFAULT_LINEAR ) );
+            m_schema->addColumn( ColumnSchema( "SOGCRIT", Table::RANDOM , Table::DEFAULT_LINEAR ) );
 
-            SimpleTable::checkNonDefaultable("DEPTH");
-            SimpleTable::checkMonotonic("DEPTH", /*isAscending=*/true);
-            SimpleTable::applyDefaultsLinear("SWCO");
-            SimpleTable::applyDefaultsLinear("SWCRIT");
-            SimpleTable::applyDefaultsLinear("SWMAX");
-            SimpleTable::applyDefaultsLinear("SGCO");
-            SimpleTable::applyDefaultsLinear("SGCRIT");
-            SimpleTable::applyDefaultsLinear("SGMAX");
-            SimpleTable::applyDefaultsLinear("SOWCRIT");
-            SimpleTable::applyDefaultsLinear("SOGCRIT");
+            SimpleTable::init(item);
         }
-
-        using SimpleTable::numTables;
-        using SimpleTable::numRows;
-        using SimpleTable::numColumns;
-        using SimpleTable::evaluate;
 
         // using this method is strongly discouraged but the current endpoint scaling
         // code makes it hard to avoid
         using SimpleTable::getColumn;
 
-        const std::vector<double> &getDepthColumn() const
+        const TableColumn& getDepthColumn() const
         { return SimpleTable::getColumn(0); }
 
         /*!
          * \brief Connate water saturation
          */
-        const std::vector<double> &getSwcoColumn() const
+        const TableColumn& getSwcoColumn() const
         { return SimpleTable::getColumn(1); }
 
         /*!
          * \brief Critical water saturation
          */
-        const std::vector<double> &getSwcritColumn() const
+        const TableColumn& getSwcritColumn() const
         { return SimpleTable::getColumn(2); }
 
         /*!
          * \brief Maximum water saturation
          */
-        const std::vector<double> &getSwmaxColumn() const
+        const TableColumn& getSwmaxColumn() const
         { return SimpleTable::getColumn(3); }
 
         /*!
          * \brief Connate gas saturation
          */
-        const std::vector<double> &getSgcoColumn() const
+        const TableColumn& getSgcoColumn() const
         { return SimpleTable::getColumn(4); }
 
         /*!
          * \brief Critical gas saturation
          */
-        const std::vector<double> &getSgcritColumn() const
+        const TableColumn& getSgcritColumn() const
         { return SimpleTable::getColumn(5); }
 
         /*!
          * \brief Maximum gas saturation
          */
-        const std::vector<double> &getSgmaxColumn() const
+        const TableColumn& getSgmaxColumn() const
         { return SimpleTable::getColumn(6); }
 
         /*!
          * \brief Critical oil-in-water saturation
          */
-        const std::vector<double> &getSowcritColumn() const
+        const TableColumn& getSowcritColumn() const
         { return SimpleTable::getColumn(7); }
 
         /*!
          * \brief Critical oil-in-gas saturation
          */
-        const std::vector<double> &getSogcritColumn() const
+        const TableColumn& getSogcritColumn() const
         { return SimpleTable::getColumn(8); }
     };
 }

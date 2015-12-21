@@ -20,40 +20,24 @@
 #define OPM_PARSER_RSVD_TABLE_HPP
 
 #include "SimpleTable.hpp"
+#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
-    // forward declaration
-    class TableManager;
-
     class RsvdTable : public SimpleTable {
     public:
-        friend class TableManager;
-        RsvdTable() = default;
-
-        /*!
-         * \brief Read the RSVD keyword and provide some convenience
-         *        methods for it.
-         */
-        void init(Opm::DeckItemConstPtr item)
+        RsvdTable(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(item,
-                              std::vector<std::string>{"DEPTH", "RS"});
+            m_schema = std::make_shared<TableSchema>( );
+            m_schema->addColumn( ColumnSchema( "DEPTH" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
+            m_schema->addColumn( ColumnSchema( "RS" , Table::RANDOM , Table::DEFAULT_NONE ));
 
-
-            SimpleTable::checkNonDefaultable("DEPTH");
-            SimpleTable::checkMonotonic("DEPTH", /*isAscending=*/true);
-            SimpleTable::checkNonDefaultable("RS");
+            SimpleTable::init(item);
         }
 
-        using SimpleTable::numTables;
-        using SimpleTable::numRows;
-        using SimpleTable::numColumns;
-        using SimpleTable::evaluate;
-
-        const std::vector<double> &getDepthColumn() const
+        const TableColumn& getDepthColumn() const
         { return SimpleTable::getColumn(0); }
 
-        const std::vector<double> &getRsColumn() const
+        const TableColumn& getRsColumn() const
         { return SimpleTable::getColumn(1); }
     };
 }

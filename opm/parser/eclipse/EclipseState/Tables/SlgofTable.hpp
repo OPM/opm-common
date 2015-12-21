@@ -21,64 +21,44 @@
 
 #include "SimpleTable.hpp"
 
+#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
+
 namespace Opm {
-    // forward declaration
-    class TableManager;
 
     class SlgofTable : public SimpleTable {
-        friend class TableManager;
 
-        /*!
-         * \brief Read the SGOF keyword and provide some convenience
-         *        methods for it.
-         */
-        void init(Opm::DeckItemConstPtr item)
+    public:
+
+        SlgofTable(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(item,
-                              std::vector<std::string>{"SL", "KRG", "KROG", "PCOG"});
+            m_schema = std::make_shared<TableSchema>();
+            m_schema->addColumn( ColumnSchema("SL"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
+            m_schema->addColumn( ColumnSchema("KRG"  , Table::DECREASING , Table::DEFAULT_LINEAR ));
+            m_schema->addColumn( ColumnSchema("KROG" , Table::INCREASING , Table::DEFAULT_LINEAR ));
+            m_schema->addColumn( ColumnSchema("PCOG" , Table::DECREASING , Table::DEFAULT_LINEAR ));
 
-            SimpleTable::checkNonDefaultable("SL");
-            SimpleTable::checkMonotonic("SL", /*isAscending=*/true);
-            SimpleTable::checkMonotonic("KRG", /*isAscending=*/false, /*strictlyMonotonic=*/false);
-            SimpleTable::checkMonotonic("KROG", /*isAscending=*/true, /*strictlyMonotonic=*/false);
-            SimpleTable::checkMonotonic("PCOG", /*isAscending=*/false, /*strictlyMonotonic=*/false);
-            SimpleTable::applyDefaultsLinear("KRG");
-            SimpleTable::applyDefaultsLinear("KROG");
-            SimpleTable::applyDefaultsLinear("PCOG");
+            SimpleTable::init( item );
 
             if (getSlColumn().back() != 1.0) {
                 throw std::invalid_argument("The last saturation of the SLGOF keyword must be 1!");
             }
         }
 
-    public:
-        SlgofTable() = default;
 
-#ifdef BOOST_TEST_MODULE
-        // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
-        void initFORUNITTESTONLY(Opm::DeckItemConstPtr item)
-        { init(item); }
-#endif
-
-        using SimpleTable::numTables;
-        using SimpleTable::numRows;
-        using SimpleTable::numColumns;
-        using SimpleTable::evaluate;
-
-        const std::vector<double> &getSlColumn() const
+        const TableColumn& getSlColumn() const
         { return SimpleTable::getColumn(0); }
 
-        const std::vector<double> &getKrgColumn() const
+        const TableColumn& getKrgColumn() const
         { return SimpleTable::getColumn(1); }
 
-        const std::vector<double> &getKrogColumn() const
+        const TableColumn& getKrogColumn() const
         { return SimpleTable::getColumn(2); }
 
         // this column is p_g - p_o (non-wetting phase pressure minus
         // wetting phase pressure for a given gas saturation. the name
         // is inconsistent, but it is the one used in the Eclipse
         // manual...)
-        const std::vector<double> &getPcogColumn() const
+        const TableColumn& getPcogColumn() const
         { return SimpleTable::getColumn(3); }
     };
 }

@@ -20,44 +20,31 @@
 #define	OPM_PARSER_RTEMPVD_TABLE_HPP
 
 #include "SimpleTable.hpp"
+#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
-    // forward declaration
-    class TableManager;
 
     class RtempvdTable : public SimpleTable {
     public:
-        friend class TableManager;
-        RtempvdTable() = default;
-
-        /*!
-         * \brief Read the RTEMPVD keyword and provide some convenience
-         *        methods for it.
-         */
-        void init(Opm::DeckItemConstPtr item)
+        RtempvdTable(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(item,
-                              std::vector<std::string>{
-                                  "Depth",
-                                      "Temperature"});
+            m_schema = std::make_shared<TableSchema>();
+            m_schema->addColumn( ColumnSchema( "Depth"       , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
+            m_schema->addColumn( ColumnSchema( "Temperature" , Table::RANDOM , Table::DEFAULT_NONE) );
 
-
-            SimpleTable::checkNonDefaultable("Depth");
-            SimpleTable::checkMonotonic("Depth", /*isAscending=*/true);
-
-            SimpleTable::checkNonDefaultable("Temperature");
+            SimpleTable::init( item );
         }
 
-        using SimpleTable::numTables;
-        using SimpleTable::numRows;
-        using SimpleTable::numColumns;
-        using SimpleTable::evaluate;
+        const TableColumn& getDepthColumn() const
+        {
+            return SimpleTable::getColumn(0);
+        }
 
-        const std::vector<double> &getDepthColumn() const
-        { return SimpleTable::getColumn(0); }
 
-        const std::vector<double> &getTemperatureColumn() const
-        { return SimpleTable::getColumn(1); }
+        const TableColumn& getTemperatureColumn() const
+        {
+            return SimpleTable::getColumn(1);
+        }
     };
 }
 

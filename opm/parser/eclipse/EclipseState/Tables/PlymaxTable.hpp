@@ -20,43 +20,31 @@
 #define	OPM_PARSER_PLYMAX_TABLE_HPP
 
 #include "SimpleTable.hpp"
+#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
-    // forward declaration
-    class TableManager;
-
     class PlymaxTable : public SimpleTable {
     public:
-        friend class TableManager;
-        PlymaxTable() = default;
-
-        /*!
-         * \brief Read the PLYMAX keyword and provide some convenience
-         *        methods for it.
-         */
-        void init(Opm::DeckRecordConstPtr record)
+        PlymaxTable(Opm::DeckRecordConstPtr record)
         {
-            createColumns(std::vector<std::string>{"C_POLYMER", "C_POLYMER_MAX"});
+            m_schema = std::make_shared<TableSchema>( );
+
+            m_schema->addColumn( ColumnSchema("C_POLYMER",     Table::RANDOM , Table::DEFAULT_NONE) );
+            m_schema->addColumn( ColumnSchema("C_POLYMER_MAX", Table::RANDOM , Table::DEFAULT_NONE) );
+
+            addColumns();
             for (size_t colIdx = 0; colIdx < record->size(); colIdx++) {
                 auto item = record->getItem( colIdx );
-                m_columns[colIdx].push_back( item->getSIDouble(0) );
-                m_valueDefaulted[colIdx].push_back( item->defaultApplied(0) );
+                auto& column = getColumn( colIdx );
+
+                column.addValue( item->getSIDouble(0) );
             }
-            SimpleTable::checkNonDefaultable("C_POLYMER");
-            SimpleTable::checkMonotonic("C_POLYMER", /*isAscending=*/false);
-            SimpleTable::checkNonDefaultable("C_POLYMER_MAX");
-            SimpleTable::checkMonotonic("C_POLYMER_MAX", /*isAscending=*/false);
         }
 
-        using SimpleTable::numTables;
-        using SimpleTable::numRows;
-        using SimpleTable::numColumns;
-        using SimpleTable::evaluate;
-
-        const std::vector<double> &getPolymerConcentrationColumn() const
+        const TableColumn& getPolymerConcentrationColumn() const
         { return SimpleTable::getColumn(0); }
 
-        const std::vector<double> &getMaxPolymerConcentrationColumn() const
+        const TableColumn& getMaxPolymerConcentrationColumn() const
         { return SimpleTable::getColumn(1); }
     };
 }

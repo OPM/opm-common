@@ -23,48 +23,20 @@
 #include "SimpleTable.hpp"
 
 namespace Opm {
-    // forward declaration
-    class TableManager;
-
     class SgcwmisTable : public SimpleTable {
     public:
-
-        friend class TableManager;
-        SgcwmisTable() = default;
-
-        /*!
-         * \brief Read the SGCWMIS keyword and provide some convenience
-         *        methods for it.
-         */
-        void init(Opm::DeckItemConstPtr item)
+        SgcwmisTable(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(item,
-                             std::vector<std::string>{
-                                 "WaterSaturation",
-                                 "MiscibleResidualGasSaturation"
-                                     });
-
-            SimpleTable::checkNonDefaultable("WaterSaturation");
-            SimpleTable::checkMonotonic("WaterSaturation", /*isAscending=*/true);
-            SimpleTable::checkNonDefaultable("MiscibleResidualGasSaturation");
-            SimpleTable::checkMonotonic("MiscibleResidualGasSaturation", /*isAscending=*/true, /*isStriclyMonotonic=*/false);
+            m_schema = std::make_shared<TableSchema>();
+            m_schema->addColumn( ColumnSchema( "WaterSaturation" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
+            m_schema->addColumn( ColumnSchema( "MiscibleResidualGasSaturation" , Table::INCREASING , Table::DEFAULT_NONE) );
+            SimpleTable::init(item);
         }
 
-#ifdef BOOST_TEST_MODULE
-        // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
-        void initFORUNITTESTONLY(Opm::DeckItemConstPtr item)
-        { init(item); }
-#endif
-
-        using SimpleTable::numTables;
-        using SimpleTable::numRows;
-        using SimpleTable::numColumns;
-        using SimpleTable::evaluate;
-
-        const std::vector<double> &getWaterSaturationColumn() const
+        const TableColumn& getWaterSaturationColumn() const
         { return SimpleTable::getColumn(0); }
 
-        const std::vector<double> &getMiscibleResidualGasColumn() const
+        const TableColumn& getMiscibleResidualGasColumn() const
         { return SimpleTable::getColumn(1); }
     };
 }

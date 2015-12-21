@@ -20,48 +20,30 @@
 #define OPM_PARSER_SSFN_TABLE_HPP
 
 #include "SimpleTable.hpp"
+#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
-    // forward declaration
-    class TableManager;
-
     class SsfnTable : public SimpleTable {
     public:
         friend class TableManager;
-        SsfnTable() = default;
-
-        /*!
-         * \brief Read the SSFN keyword and provide some convenience
-         *        methods for it.
-         */
-        void init(Opm::DeckItemConstPtr item)
+        SsfnTable(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(item,
-                              std::vector<std::string>{
-                                  "SolventFraction",
-                                      "GasRelPermMultiplier",
-                                      "SolventRelPermMultiplier"});
+            m_schema = std::make_shared<TableSchema>();
 
-            SimpleTable::checkNonDefaultable("SolventFraction");
-            SimpleTable::checkMonotonic("SolventFraction",   /*isAscending=*/true);
-            SimpleTable::checkNonDefaultable("GasRelPermMultiplier");
-            SimpleTable::checkMonotonic("GasRelPermMultiplier",  /*isAscending=*/true);
-            SimpleTable::checkNonDefaultable("SolventRelPermMultiplier");
-            SimpleTable::checkMonotonic("SolventRelPermMultiplier", /*isAscending=*/true);
+            m_schema->addColumn( ColumnSchema("SolventFraction" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
+            m_schema->addColumn( ColumnSchema("GasRelPermMultiplier" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
+            m_schema->addColumn( ColumnSchema("SolventRelPermMultiplier" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
+
+            SimpleTable::init(item);
         }
 
-        using SimpleTable::numTables;
-        using SimpleTable::numRows;
-        using SimpleTable::numColumns;
-        using SimpleTable::evaluate;
-
-        const std::vector<double> &getSolventFractionColumn() const
+        const TableColumn& getSolventFractionColumn() const
         { return SimpleTable::getColumn(0); }
 
-        const std::vector<double> &getGasRelPermMultiplierColumn() const
+        const TableColumn& getGasRelPermMultiplierColumn() const
         { return SimpleTable::getColumn(1); }
 
-        const std::vector<double> &getSolventRelPermMultiplierColumn() const
+        const TableColumn& getSolventRelPermMultiplierColumn() const
         { return SimpleTable::getColumn(2); }
     };
 }

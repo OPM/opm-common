@@ -20,95 +20,73 @@
 #define	OPM_PARSER_IMKRVD_TABLE_HPP
 
 #include "SimpleTable.hpp"
+#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
+
 
 namespace Opm {
-    // forward declaration
-    class TableManager;
-
     class ImkrvdTable : public SimpleTable {
     public:
-        friend class TableManager;
-        ImkrvdTable() = default;
-
-        /*!
-         * \brief Read the IMKRVD keyword and provide some convenience
-         *        methods for it.
-         */
-        void init(Opm::DeckItemConstPtr item)
+        ImkrvdTable(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(item,
-                             std::vector<std::string>{"DEPTH",
-                                     "KRWMAX",
-                                     "KRGMAX",
-                                     "KROMAX",
-                                     "KRWCRIT",
-                                     "KRGCRIT",
-                                     "KROCRITG",
-                                      "KROCRITW" });
+            m_schema = std::make_shared<TableSchema>( );
+            m_schema->addColumn( ColumnSchema( "DEPTH" ,  Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
+            m_schema->addColumn( ColumnSchema( "KRWMAX",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
+            m_schema->addColumn( ColumnSchema( "KRGMAX",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
+            m_schema->addColumn( ColumnSchema( "KROMAX",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
+            m_schema->addColumn( ColumnSchema( "KRWCRIT", Table::RANDOM , Table::DEFAULT_LINEAR ) );
+            m_schema->addColumn( ColumnSchema( "KRGCRIT", Table::RANDOM , Table::DEFAULT_LINEAR ) );
+            m_schema->addColumn( ColumnSchema( "KROCRITG",Table::RANDOM , Table::DEFAULT_LINEAR ) );
+            m_schema->addColumn( ColumnSchema( "KROCRITW", Table::RANDOM , Table::DEFAULT_LINEAR ) );
 
-
-            SimpleTable::checkNonDefaultable("DEPTH");
-            SimpleTable::checkMonotonic("DEPTH", /*isAscending=*/true);
-            SimpleTable::applyDefaultsLinear("KRWMAX");
-            SimpleTable::applyDefaultsLinear("KRGMAX");
-            SimpleTable::applyDefaultsLinear("KROMAX");
-            SimpleTable::applyDefaultsLinear("KRWCRIT");
-            SimpleTable::applyDefaultsLinear("KRGCRIT");
-            SimpleTable::applyDefaultsLinear("KROCRITG");
-            SimpleTable::applyDefaultsLinear("KROCRITW");
+            SimpleTable::init(item);
         }
-
-        using SimpleTable::numTables;
-        using SimpleTable::numRows;
-        using SimpleTable::numColumns;
-        using SimpleTable::evaluate;
 
         /*!
          * \brief The datum depth for the remaining columns
          */
-        const std::vector<double> &getDepthColumn() const
+        const TableColumn& getDepthColumn() const
         { return SimpleTable::getColumn(0); }
 
         /*!
          * \brief Maximum relative permeability of water
          */
-        const std::vector<double> &getKrwmaxColumn() const
+        const TableColumn& getKrwmaxColumn() const
         { return SimpleTable::getColumn(1); }
 
         /*!
          * \brief Maximum relative permeability of gas
          */
-        const std::vector<double> &getKrgmaxColumn() const
+        const TableColumn& getKrgmaxColumn() const
         { return SimpleTable::getColumn(2); }
 
         /*!
          * \brief Maximum relative permeability of oil
          */
-        const std::vector<double> &getKromaxColumn() const
+        const TableColumn& getKromaxColumn() const
         { return SimpleTable::getColumn(3); }
 
         /*!
          * \brief Relative permeability of water at the critical oil (or gas) saturation
          */
-        const std::vector<double> &getKrwcritColumn() const
+        const TableColumn& getKrwcritColumn() const
         { return SimpleTable::getColumn(4); }
 
         /*!
          * \brief Relative permeability of gas at the critical oil (or water) saturation
          */
-        const std::vector<double> &getKrgcritColumn() const
+        const TableColumn& getKrgcritColumn() const
         { return SimpleTable::getColumn(5); }
 
         /*!
          * \brief Oil relative permeability of oil at the critical gas saturation
          */
-        const std::vector<double> &getKrocritgColumn() const
+        const TableColumn& getKrocritgColumn() const
         { return SimpleTable::getColumn(6); }
 
         /*!
          * \brief Oil relative permeability of oil at the critical water saturation
          */
-        const std::vector<double> &getKrocritwColumn() const
+        const TableColumn& getKrocritwColumn() const
         { return SimpleTable::getColumn(7); }
     };
 }

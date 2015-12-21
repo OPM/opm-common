@@ -23,10 +23,12 @@
 #include <boost/test/unit_test.hpp>
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
+#include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
 
 #include <string>
 #include <memory>
@@ -54,10 +56,7 @@ BOOST_AUTO_TEST_CASE( CreateContainer ) {
     BOOST_CHECK_EQUAL( 0 , container.size() );
     BOOST_CHECK_EQUAL( false , container.hasTable( 1 ));
 
-    std::shared_ptr<Opm::SimpleTable> table = std::shared_ptr<Opm::SimpleTable>( new Opm::SimpleTable() );
-    table->initFORUNITTESTONLY(deck->getKeyword("SWOF")->getRecord(0)->getItem(0),
-                              columnNames);
-
+    std::shared_ptr<Opm::SimpleTable> table = std::make_shared<Opm::SwofTable>( deck->getKeyword("SWOF")->getRecord(0)->getItem(0) );
     BOOST_CHECK_THROW( container.addTable( 10 , table ), std::invalid_argument );
     container.addTable( 6 , table );
     BOOST_CHECK_EQUAL( 1 , container.size() );

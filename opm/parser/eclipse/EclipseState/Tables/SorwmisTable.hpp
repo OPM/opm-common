@@ -21,50 +21,26 @@
 #define	OPM_PARSER_SORWMIS_TABLE_HPP
 
 #include "SimpleTable.hpp"
+#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
-    // forward declaration
-    class TableManager;
-
     class SorwmisTable : public SimpleTable {
     public:
 
-        friend class TableManager;
-        SorwmisTable() = default;
-
-        /*!
-         * \brief Read the SORWMIS keyword and provide some convenience
-         *        methods for it.
-         */
-        void init(Opm::DeckItemConstPtr item)
+        SorwmisTable(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(item,
-                             std::vector<std::string>{
-                                 "WaterSaturation",
-                                 "MiscibleResidualOilSaturation"
-                                     });
 
-            SimpleTable::checkNonDefaultable("WaterSaturation");
-            SimpleTable::checkMonotonic("WaterSaturation", /*isAscending=*/true);
-            SimpleTable::checkNonDefaultable("MiscibleResidualOilSaturation");
-            SimpleTable::checkMonotonic("MiscibleResidualOilSaturation", /*isAscending=*/true, /*isStriclyMonotonic=*/false);
+            m_schema = std::make_shared<TableSchema>();
+            m_schema->addColumn( ColumnSchema( "WaterSaturation" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
+            m_schema->addColumn( ColumnSchema( "MiscibleResidualOilSaturation" , Table::INCREASING , Table::DEFAULT_NONE) );
+
+            SimpleTable::init(item);
         }
 
-#ifdef BOOST_TEST_MODULE
-        // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
-        void initFORUNITTESTONLY(Opm::DeckItemConstPtr item)
-        { init(item); }
-#endif
-
-        using SimpleTable::numTables;
-        using SimpleTable::numRows;
-        using SimpleTable::numColumns;
-        using SimpleTable::evaluate;
-
-        const std::vector<double> &getWaterSaturationColumn() const
+        const TableColumn& getWaterSaturationColumn() const
         { return SimpleTable::getColumn(0); }
 
-        const std::vector<double> &getMiscibleResidualOilColumn() const
+        const TableColumn& getMiscibleResidualOilColumn() const
         { return SimpleTable::getColumn(1); }
     };
 }

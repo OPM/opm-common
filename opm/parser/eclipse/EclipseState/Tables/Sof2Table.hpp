@@ -20,50 +20,27 @@
 #define OPM_PARSER_SOF2_TABLE_HPP
 
 #include "SimpleTable.hpp"
+#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
-    // forward declaration
-    class TableManager;
-
     class Sof2Table : public SimpleTable {
-        friend class TableManager;
+    public:
 
-        /*!
-         * \brief Read the SOF2 keyword and provide some convenience
-         *        methods for it.
-         */
-        void init(Opm::DeckItemConstPtr item)
+        Sof2Table(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(item,
-                              std::vector<std::string>{"SO", "KRO" });
+            m_schema = std::make_shared<TableSchema>( );
+            m_schema->addColumn( ColumnSchema( "SO"  , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
+            m_schema->addColumn( ColumnSchema( "KRO" , Table::INCREASING , Table::DEFAULT_NONE ));
 
-            SimpleTable::checkNonDefaultable("SO");
-            SimpleTable::checkNonDefaultable("KRO");
-            SimpleTable::checkMonotonic("SO", /*isAscending=*/true);
-            SimpleTable::checkMonotonic("KRO", /*isAscending=*/true, /*strict*/false);
+            SimpleTable::init(item);
         }
 
-    public:
-        Sof2Table() = default;
-
-#ifdef BOOST_TEST_MODULE
-        // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
-        void initFORUNITTESTONLY(Opm::DeckItemConstPtr item)
-        { init(item); }
-#endif
-
-        using SimpleTable::numTables;
-        using SimpleTable::numRows;
-        using SimpleTable::numColumns;
-        using SimpleTable::evaluate;
-
-        const std::vector<double> &getSoColumn() const
+        const TableColumn& getSoColumn() const
         { return SimpleTable::getColumn(0); }
 
-        const std::vector<double> &getKroColumn() const
+        const TableColumn& getKroColumn() const
         { return SimpleTable::getColumn(1); }
     };
 }
-
 #endif
 

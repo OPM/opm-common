@@ -20,8 +20,9 @@
 #define	OPM_PARSER_PLYSHLOG_TABLE_HPP
 
 #include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
-
 #include "SimpleTable.hpp"
+#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
+
 
 namespace Opm {
     // forward declaration
@@ -30,14 +31,8 @@ namespace Opm {
     class PlyshlogTable : public SimpleTable {
     public:
         friend class TableManager;
-        PlyshlogTable() = default;
 
-
-        /*!
-         * \brief Read the PLYSHLOG keyword and provide some convenience
-         *        methods for it.
-         */
-        void init(Opm::DeckRecordConstPtr indexRecord, Opm::DeckRecordConstPtr dataRecord) {
+        PlyshlogTable(Opm::DeckRecordConstPtr indexRecord, Opm::DeckRecordConstPtr dataRecord) {
             {
                 const auto item = indexRecord->getItem<ParserKeywords::PLYSHLOG::REF_POLYMER_CONCENTRATION>();
                 setRefPolymerConcentration(item->getRawDouble(0));
@@ -61,12 +56,11 @@ namespace Opm {
                     setHasRefTemperature(false);
             }
 
-            SimpleTable::init( dataRecord->getItem<ParserKeywords::PLYSHLOG::DATA>(),
-                               std::vector<std::string>{ "WaterVelocity", "ShearMultiplier" } );
-            SimpleTable::checkNonDefaultable("WaterVelocity");
-            SimpleTable::checkMonotonic("WaterVelocity", /*isAscending=*/true);
-            SimpleTable::checkNonDefaultable("ShearMultiplier");
+            m_schema = std::make_shared<TableSchema>();
+            m_schema->addColumn( ColumnSchema("WaterVelocity"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
+            m_schema->addColumn( ColumnSchema("ShearMultiplier" , Table::RANDOM , Table::DEFAULT_NONE));
 
+            SimpleTable::init( dataRecord->getItem<ParserKeywords::PLYSHLOG::DATA>() );
         }
 
     public:
@@ -102,19 +96,21 @@ namespace Opm {
             return m_hasRefTemperature;
         }
 
-        void setHasRefSalinity(const bool has){
+        void setHasRefSalinity(const bool has) {
             m_hasRefSalinity = has;
         }
 
-        void setHasRefTemperature(const bool has){
+        void setHasRefTemperature(const bool has) {
             m_refTemperature = has;
         }
 
-        const std::vector<double> &getWaterVelocityColumn() const
-        { return getColumn(0); }
+        const TableColumn& getWaterVelocityColumn() const {
+            return getColumn(0);
+        }
 
-        const std::vector<double> &getShearMultiplierColumn() const
-        { return getColumn(1); }
+        const TableColumn& getShearMultiplierColumn() const {
+            return getColumn(1);
+        }
 
 
     private:

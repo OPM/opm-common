@@ -20,67 +20,58 @@
 #define	OPM_PARSER_ROCKTAB_TABLE_HPP
 
 #include "SimpleTable.hpp"
+#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
-    // forward declaration
-    class TableManager;
-
     class RocktabTable : public  SimpleTable {
     public:
-        friend class TableManager;
-        RocktabTable() = default;
-
-        /*!
-         * \brief Read the ROCKTAB keyword and provide some convenience
-         *        methods for it.
-         */
-        void init(Opm::DeckItemConstPtr item,
-                  bool isDirectional,
-                  bool hasStressOption)
+        RocktabTable(Opm::DeckItemConstPtr item,
+                     bool isDirectional,
+                     bool hasStressOption)
         {
-            SimpleTable::init(item,
-                              isDirectional
-                              ? std::vector<std::string>{"PO", "PV_MULT", "TRANSMIS_MULT_X", "TRANSMIS_MULT_Y", "TRANSMIS_MULT_Z"}
-                              : std::vector<std::string>{"PO", "PV_MULT", "TRANSMIS_MULT"});
-            m_isDirectional = isDirectional;
+            Table::ColumnOrderEnum POOrder;
 
-            SimpleTable::checkNonDefaultable("PO");
-            SimpleTable::checkMonotonic("PO", /*isAscending=*/hasStressOption);
-            SimpleTable::applyDefaultsLinear("PV_MULT");
+            m_isDirectional = isDirectional;
+            m_schema = std::make_shared<TableSchema>( );
+            if (hasStressOption)
+                POOrder = Table::STRICTLY_INCREASING;
+            else
+                POOrder = Table::STRICTLY_DECREASING;
+
+            m_schema->addColumn( ColumnSchema("PO"      , POOrder      , Table::DEFAULT_NONE ) );
+            m_schema->addColumn( ColumnSchema("PV_MULT" , Table::RANDOM , Table::DEFAULT_LINEAR ) );
+
             if (isDirectional) {
-                SimpleTable::applyDefaultsLinear("TRANSMIS_MULT");
-            } else {
-                SimpleTable::applyDefaultsLinear("TRANSMIS_MULT_X");
-                SimpleTable::applyDefaultsLinear("TRANSMIS_MULT_Y");
-                SimpleTable::applyDefaultsLinear("TRANSMIS_MULT_Z");
-            }
+                m_schema->addColumn( ColumnSchema("PV_MULT_TRANX" , Table::RANDOM , Table::DEFAULT_LINEAR ) );
+                m_schema->addColumn( ColumnSchema("PV_MULT_TRANY" , Table::RANDOM , Table::DEFAULT_LINEAR ) );
+                m_schema->addColumn( ColumnSchema("PV_MULT_TRANZ" , Table::RANDOM , Table::DEFAULT_LINEAR ) );
+            } else
+                m_schema->addColumn( ColumnSchema("PV_MULT_TRAN" , Table::RANDOM , Table::DEFAULT_LINEAR ) );
+
+            SimpleTable::init(item);
         }
 
-        using SimpleTable::numTables;
-        using SimpleTable::numRows;
-        using SimpleTable::numColumns;
-        using SimpleTable::evaluate;
 
-        const std::vector<double> &getPressureColumn() const
+        const TableColumn& getPressureColumn() const
         { return SimpleTable::getColumn(0); }
 
-        const std::vector<double> &getPoreVolumeMultiplierColumn() const
+        const TableColumn& getPoreVolumeMultiplierColumn() const
         { return SimpleTable::getColumn(1); }
 
-        const std::vector<double> &getTransmissibilityMultiplierColumn() const
+        const TableColumn& getTransmissibilityMultiplierColumn() const
         { return SimpleTable::getColumn(2); }
 
-        const std::vector<double> &getTransmissibilityMultiplierXColumn() const
+        const TableColumn& getTransmissibilityMultiplierXColumn() const
         { return SimpleTable::getColumn(2); }
 
-        const std::vector<double> &getTransmissibilityMultiplierYColumn() const
+        const TableColumn& getTransmissibilityMultiplierYColumn() const
         {
             if (!m_isDirectional)
                 return SimpleTable::getColumn(2);
             return SimpleTable::getColumn(3);
         }
 
-        const std::vector<double> &getTransmissibilityMultiplierZColumn() const
+        const TableColumn& getTransmissibilityMultiplierZColumn() const
         {
             if (!m_isDirectional)
                 return SimpleTable::getColumn(2);

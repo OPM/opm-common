@@ -21,51 +21,24 @@
 #define	OPM_PARSER_PMISC_TABLE_HPP
 
 #include "SimpleTable.hpp"
+#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
-    // forward declaration
-    class TableManager;
-
     class PmiscTable : public SimpleTable {
     public:
 
-        friend class TableManager;
-        PmiscTable() = default;
-
-        /*!
-         * \brief Read the PMISC keyword and provide some convenience
-         *        methods for it.
-         */
-        void init(Opm::DeckItemConstPtr item)
+        PmiscTable(Opm::DeckItemConstPtr item)
         {
-            SimpleTable::init(item,
-                             std::vector<std::string>{
-                                 "OilPhasePressure",
-                                 "Miscibility"
-                                     });
-
-            SimpleTable::checkNonDefaultable("OilPhasePressure");
-            SimpleTable::checkMonotonic("OilPhasePressure", /*isAscending=*/true);
-            SimpleTable::checkNonDefaultable("Miscibility");
-            SimpleTable::checkMonotonic("Miscibility", /*isAscending=*/true, /*isStriclyMonotonic=*/false);
-            SimpleTable::assertUnitRange("Miscibility");
+            m_schema = std::make_shared<TableSchema>();
+            m_schema->addColumn( ColumnSchema( "OilPhasePressure" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
+            m_schema->addColumn( ColumnSchema( "Miscibility" , Table::INCREASING , Table::DEFAULT_NONE) );
+            SimpleTable::init( item );
         }
 
-#ifdef BOOST_TEST_MODULE
-        // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
-        void initFORUNITTESTONLY(Opm::DeckItemConstPtr item)
-        { init(item); }
-#endif
-
-        using SimpleTable::numTables;
-        using SimpleTable::numRows;
-        using SimpleTable::numColumns;
-        using SimpleTable::evaluate;
-
-        const std::vector<double> &getOilPhasePressureColumn() const
+        const TableColumn& getOilPhasePressureColumn() const
         { return SimpleTable::getColumn(0); }
 
-        const std::vector<double> &getMiscibilityColumn() const
+        const TableColumn& getMiscibilityColumn() const
         { return SimpleTable::getColumn(1); }
     };
 }

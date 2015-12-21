@@ -20,57 +20,35 @@
 #define	OPM_PARSER_SGWFN_TABLE_HPP
 
 #include "SimpleTable.hpp"
+#include <opm/parser/eclipse/EclipseState/Tables/TableSchema.hpp>
 
 namespace Opm {
-    // forward declaration
-    class TableManager;
-
     class SgwfnTable : public SimpleTable {
 
-        friend class TableManager;
+    public:
+        SgwfnTable(Opm::DeckItemConstPtr item) {
+            m_schema = std::make_shared<TableSchema>();
 
-        /*!
-         * \brief Read the SGWFN keyword and provide some convenience
-         *        methods for it.
-         */
-        void init(Opm::DeckItemConstPtr item)
-        {
-            SimpleTable::init(item,
-                              std::vector<std::string>{"SG", "KRG", "KRGW", "PCGW"});
+            m_schema->addColumn( ColumnSchema( "SG"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
+            m_schema->addColumn( ColumnSchema( "KRG"  , Table::RANDOM ,              Table::DEFAULT_LINEAR ) );
+            m_schema->addColumn( ColumnSchema( "KRGW" , Table::RANDOM ,              Table::DEFAULT_LINEAR ) );
+            m_schema->addColumn( ColumnSchema( "PCGW" , Table::RANDOM ,              Table::DEFAULT_LINEAR ) );
 
-            SimpleTable::checkNonDefaultable("SG");
-            SimpleTable::checkMonotonic("SG", /*isAscending=*/true);
-            SimpleTable::applyDefaultsLinear("KRG");
-            SimpleTable::applyDefaultsLinear("KRGW");
-            SimpleTable::applyDefaultsLinear("PCGW");
+            SimpleTable::init( item );
         }
 
-    public:
-        SgwfnTable() = default;
-
-#ifdef BOOST_TEST_MODULE
-        // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
-        void initFORUNITTESTONLY(Opm::DeckItemConstPtr item)
-        { init(item); }
-#endif
-
-        using SimpleTable::numTables;
-        using SimpleTable::numRows;
-        using SimpleTable::numColumns;
-        using SimpleTable::evaluate;
-
-        const std::vector<double> &getSgColumn() const
+        const TableColumn& getSgColumn() const
         { return SimpleTable::getColumn(0); }
 
-        const std::vector<double> &getKrgColumn() const
+        const TableColumn& getKrgColumn() const
         { return SimpleTable::getColumn(1); }
 
-        const std::vector<double> &getKrgwColumn() const
+        const TableColumn& getKrgwColumn() const
         { return SimpleTable::getColumn(2); }
 
         // this column is p_g - p_w (non-wetting phase pressure minus
         // wetting phase pressure for a given water saturation)
-        const std::vector<double> &getPcgwColumn() const
+        const TableColumn& getPcgwColumn() const
         { return SimpleTable::getColumn(3); }
     };
 }

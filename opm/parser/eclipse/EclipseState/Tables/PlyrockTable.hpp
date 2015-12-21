@@ -20,48 +20,41 @@
 #define	OPM_PARSER_PLYROCK_TABLE_HPP
 
 #include "SimpleTable.hpp"
+#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/ColumnSchema.hpp>
 
 namespace Opm {
-    // forward declaration
-    class TableManager;
-
     class PlyrockTable : public SimpleTable {
     public:
-        friend class TableManager;
-        PlyrockTable() = default;
 
-
-        void init(Opm::DeckRecordConstPtr record)
+        // This is not really a table; every column has only one element.
+        PlyrockTable(DeckRecordConstPtr record)
         {
-            createColumns(std::vector<std::string>{
-                    "DeadPoreVolume",
-                        "ResidualResistanceFactor",
-                        "RockDensityFactor",
-                        "AdsorbtionIndex",
-                        "MaxAdsorbtion"
-                        });
-
+            m_schema = std::make_shared<TableSchema>( );
+            m_schema->addColumn( ColumnSchema("DeadPoreVolume",            Table::RANDOM , Table::DEFAULT_NONE) );
+            m_schema->addColumn( ColumnSchema("ResidualResistanceFactor",  Table::RANDOM , Table::DEFAULT_NONE) );
+            m_schema->addColumn( ColumnSchema("RockDensityFactor",         Table::RANDOM , Table::DEFAULT_NONE) );
+            m_schema->addColumn( ColumnSchema("AdsorbtionIndex",           Table::RANDOM , Table::DEFAULT_NONE) );
+            m_schema->addColumn( ColumnSchema("MaxAdsorbtion",             Table::RANDOM , Table::DEFAULT_NONE) );
+            addColumns();
             for (size_t colIdx = 0; colIdx < record->size(); colIdx++) {
                 auto item = record->getItem( colIdx );
-                m_columns[colIdx].push_back( item->getSIDouble(0) );
-                m_valueDefaulted[colIdx].push_back( item->defaultApplied(0) );
+                auto& column = getColumn( colIdx );
+
+                column.addValue( item->getSIDouble(0) );
             }
         }
-
-        using SimpleTable::numTables;
-        using SimpleTable::numRows;
-        using SimpleTable::numColumns;
 
         // since this keyword is not necessarily monotonic, it cannot be evaluated!
         //using SimpleTable::evaluate;
 
-        const std::vector<double> &getDeadPoreVolumeColumn() const
+        const TableColumn& getDeadPoreVolumeColumn() const
         { return SimpleTable::getColumn(0); }
 
-        const std::vector<double> &getResidualResistanceFactorColumn() const
+        const TableColumn& getResidualResistanceFactorColumn() const
         { return SimpleTable::getColumn(1); }
 
-        const std::vector<double> &getRockDensityFactorColumn() const
+        const TableColumn& getRockDensityFactorColumn() const
         { return SimpleTable::getColumn(2); }
 
         // is column is actually an integer, but this is not yet
@@ -72,10 +65,10 @@ namespace Opm {
         // just a double which can be converted to an integer in the
         // calling code. (Make sure, that you don't interpolate
         // indices, though!)
-        const std::vector<double> &getAdsorbtionIndexColumn() const
+        const TableColumn& getAdsorbtionIndexColumn() const
         { return SimpleTable::getColumn(3); }
 
-        const std::vector<double> &getMaxAdsorbtionColumn() const
+        const TableColumn& getMaxAdsorbtionColumn() const
         { return SimpleTable::getColumn(4); }
     };
 }
