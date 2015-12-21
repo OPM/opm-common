@@ -23,8 +23,6 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
-
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
 

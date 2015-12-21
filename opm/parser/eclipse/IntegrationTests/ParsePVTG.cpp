@@ -23,7 +23,6 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
@@ -111,7 +110,7 @@ static void check_parser(ParserPtr parser) {
     BOOST_CHECK_EQUAL(9U , item4_1->size());
     BOOST_CHECK_EQUAL(2U , record4->size());
 
-
+    /*
     {
         Opm::PvtgTable pvtgTable;
         pvtgTable.initFORUNITTESTONLY(kw1, 0);
@@ -132,6 +131,7 @@ static void check_parser(ParserPtr parser) {
         BOOST_CHECK_EQUAL(1.299e-5, outerTable.getGasViscosityColumn()[0]);
         BOOST_CHECK_EQUAL(outerTable.getGasViscosityColumn()[0], innerTable0.getGasViscosityColumn()[0]);
     }
+    */
 }
 
 

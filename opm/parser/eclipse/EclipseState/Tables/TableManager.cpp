@@ -156,8 +156,6 @@ namespace Opm {
             addTables( "SGCWMIS", numMiscibleTables);
             addTables( "MISC", numMiscibleTables);
             addTables( "PMISC", numMiscibleTables);
-
-
         }
 
         {
@@ -280,8 +278,7 @@ namespace Opm {
             const auto tableRecord = tableKeyword->getRecord( tableIdx );
             const auto dataItem = tableRecord->getItem( 0 );
             if (dataItem->size() > 0) {
-                std::shared_ptr<GasvisctTable> table = std::make_shared<GasvisctTable>();
-                table->init(deck , dataItem );
+                std::shared_ptr<GasvisctTable> table = std::make_shared<GasvisctTable>( deck , dataItem );
                 container.addTable( tableIdx , table );
             }
         }
@@ -313,8 +310,7 @@ namespace Opm {
             const auto dataRecord = tableKeyword->getRecord( tableIdx + 1);
             const auto dataItem = dataRecord->getItem( 0 );
             if (dataItem->size() > 0) {
-                std::shared_ptr<PlyshlogTable> table = std::make_shared<PlyshlogTable>();
-                table->init(indexRecord , dataRecord);
+                std::shared_ptr<PlyshlogTable> table = std::make_shared<PlyshlogTable>(indexRecord , dataRecord);
                 container.addTable( tableIdx , table );
             }
         }
@@ -337,8 +333,7 @@ namespace Opm {
         auto& container = forceGetTables(keywordName , numTables);
         for (size_t tableIdx = 0; tableIdx < keyword->size(); ++tableIdx) {
             const auto tableRecord = keyword->getRecord( tableIdx );
-            std::shared_ptr<PlyrockTable> table = std::make_shared<PlyrockTable>();
-            table->init( tableRecord );
+            std::shared_ptr<PlyrockTable> table = std::make_shared<PlyrockTable>(tableRecord);
             container.addTable( tableIdx , table );
         }
     }
@@ -360,8 +355,7 @@ namespace Opm {
         auto& container = forceGetTables(keywordName , numTables);
         for (size_t tableIdx = 0; tableIdx < keyword->size(); ++tableIdx) {
             const auto tableRecord = keyword->getRecord( tableIdx );
-            std::shared_ptr<PlymaxTable> table = std::make_shared<PlymaxTable>();
-            table->init( tableRecord );
+            std::shared_ptr<PlymaxTable> table = std::make_shared<PlymaxTable>( tableRecord );
             container.addTable( tableIdx , table );
         }
     }
@@ -395,8 +389,7 @@ namespace Opm {
             const auto tableRecord = rocktabKeyword->getRecord( tableIdx );
             const auto dataItem = tableRecord->getItem( 0 );
             if (dataItem->size() > 0) {
-                std::shared_ptr<RocktabTable> table = std::make_shared<RocktabTable>();
-                table->init(dataItem , isDirectional, useStressOption);
+                std::shared_ptr<RocktabTable> table = std::make_shared<RocktabTable>( dataItem , isDirectional, useStressOption );
                 container.addTable( tableIdx , table );
             }
         }
@@ -474,7 +467,7 @@ namespace Opm {
     const TableContainer& TableManager::getSgwfnTables() const {
         return getTables("SGWFN");
     }
-    
+
     const TableContainer& TableManager::getSlgofTables() const {
         return getTables("SLGOF");
     }
@@ -589,7 +582,6 @@ namespace Opm {
     const std::vector<PvtgTable>& TableManager::getPvtgTables() const {
         return m_pvtgTables;
     }
-
 
     const std::vector<PvtoTable>& TableManager::getPvtoTables() const {
         return m_pvtoTables;

@@ -17,7 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define BOOST_TEST_MODULE MultiRecordTableTests
+#define BOOST_TEST_MODULE PvtxTableTests
 
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
 #include <boost/test/unit_test.hpp>
@@ -30,12 +30,11 @@
 
 // generic table classes
 #include <opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/MultiRecordTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/FullTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PvtxTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
 // keyword specific table classes
-#include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
+//#include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyadsTable.hpp>
@@ -51,28 +50,28 @@
 using namespace Opm;
 
 
-BOOST_AUTO_TEST_CASE( MultiRecordNumTables1 ) {
+BOOST_AUTO_TEST_CASE( PvtxNumTables1 ) {
     ParserPtr parser(new Parser());
-    boost::filesystem::path deckFile("testdata/integration_tests/TABLES/PVTO1.DATA");
+    boost::filesystem::path deckFile("testdata/integration_tests/TABLES/PVTX1.DATA");
     ParseMode parseMode;
     DeckPtr deck =  parser->parseFile(deckFile.string(), parseMode);
-    BOOST_CHECK_EQUAL( MultiRecordTable::numTables( deck->getKeyword<ParserKeywords::PVTO>()) , 1);
+    BOOST_CHECK_EQUAL( PvtxTable::numTables( deck->getKeyword<ParserKeywords::PVTO>()) , 1);
 
-    auto ranges = MultiRecordTable::recordRanges( deck->getKeyword<ParserKeywords::PVTO>() );
+    auto ranges = PvtxTable::recordRanges( deck->getKeyword<ParserKeywords::PVTO>() );
     auto range = ranges[0];
     BOOST_CHECK_EQUAL( range.first , 0 );
     BOOST_CHECK_EQUAL( range.second , 2 );
 }
 
 
-BOOST_AUTO_TEST_CASE( MultiRecordNumTables2 ) {
+BOOST_AUTO_TEST_CASE( PvtxNumTables2 ) {
     ParserPtr parser(new Parser());
     boost::filesystem::path deckFile("testdata/integration_tests/TABLES/PVTO2.DATA");
     ParseMode parseMode;
     DeckPtr deck =  parser->parseFile(deckFile.string(), parseMode);
-    BOOST_CHECK_EQUAL( MultiRecordTable::numTables( deck->getKeyword<ParserKeywords::PVTO>()) , 3);
+    BOOST_CHECK_EQUAL( PvtxTable::numTables( deck->getKeyword<ParserKeywords::PVTO>()) , 3);
 
-    auto ranges = MultiRecordTable::recordRanges( deck->getKeyword<ParserKeywords::PVTO>() );
+    auto ranges = PvtxTable::recordRanges( deck->getKeyword<ParserKeywords::PVTO>() );
     auto range1 = ranges[0];
     BOOST_CHECK_EQUAL( range1.first , 0 );
     BOOST_CHECK_EQUAL( range1.second , 41 );
@@ -86,7 +85,7 @@ BOOST_AUTO_TEST_CASE( MultiRecordNumTables2 ) {
     BOOST_CHECK_EQUAL( range3.second , 46 );
 }
 
-BOOST_AUTO_TEST_CASE( MultiRecordNumTables3 ) {
+BOOST_AUTO_TEST_CASE( PvtxNumTables3 ) {
     const char *deckData =
         "TABDIMS\n"
         "1 2 /\n"
@@ -104,7 +103,7 @@ BOOST_AUTO_TEST_CASE( MultiRecordNumTables3 ) {
     Opm::ParserPtr parser(new Opm::Parser);
     Opm::DeckConstPtr deck(parser->parseString(deckData, Opm::ParseMode()));
 
-    auto ranges = MultiRecordTable::recordRanges( deck->getKeyword<ParserKeywords::PVTO>() );
+    auto ranges = PvtxTable::recordRanges( deck->getKeyword<ParserKeywords::PVTO>() );
     BOOST_CHECK_EQUAL( 2 ,ranges.size() );
 
     auto range1 = ranges[0];
@@ -115,3 +114,41 @@ BOOST_AUTO_TEST_CASE( MultiRecordNumTables3 ) {
     BOOST_CHECK_EQUAL( range2.first , 3 );
     BOOST_CHECK_EQUAL( range2.second , 5 );
 }
+
+
+
+BOOST_AUTO_TEST_CASE( PVTOSaturatedTable ) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path deckFile("testdata/integration_tests/TABLES/PVTX1.DATA");
+    ParseMode parseMode;
+    DeckPtr deck =  parser->parseFile(deckFile.string(), parseMode);
+    Opm::TableManager tables(*deck);
+    const auto& pvtoTables = tables.getPvtoTables( );
+    const auto& pvtoTable = pvtoTables[0];
+
+    const auto& saturatedTable = pvtoTable.getSaturatedTable( );
+    BOOST_CHECK_EQUAL( saturatedTable.numColumns( ) , 4 );
+    BOOST_CHECK_EQUAL( saturatedTable.numRows( ) , 2 );
+
+    BOOST_CHECK_EQUAL( saturatedTable.get(0 , 0) , 20.59 );
+    BOOST_CHECK_EQUAL( saturatedTable.get(0 , 1) , 28.19 );
+}
+
+
+BOOST_AUTO_TEST_CASE( PVTGSaturatedTable ) {
+    ParserPtr parser(new Parser());
+    boost::filesystem::path deckFile("testdata/integration_tests/TABLES/PVTX1.DATA");
+    ParseMode parseMode;
+    DeckPtr deck =  parser->parseFile(deckFile.string(), parseMode);
+    Opm::TableManager tables(*deck);
+    const auto& pvtgTables = tables.getPvtgTables( );
+    const auto& pvtgTable = pvtgTables[0];
+
+    const auto& saturatedTable = pvtgTable.getSaturatedTable( );
+    BOOST_CHECK_EQUAL( saturatedTable.numColumns( ) , 4 );
+    BOOST_CHECK_EQUAL( saturatedTable.numRows( ) , 2 );
+
+    BOOST_CHECK_EQUAL( saturatedTable.get(1 , 0) , 0.00002448 );
+    BOOST_CHECK_EQUAL( saturatedTable.get(1 , 1) , 0.00000628 );
+}
+

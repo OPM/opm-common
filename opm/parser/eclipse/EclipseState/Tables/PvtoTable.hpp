@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2013 by Andreas Lauser
+  Copyright (C) 2014 by Andreas Lauser
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -19,36 +19,32 @@
 #ifndef OPM_PARSER_PVTO_TABLE_HPP
 #define	OPM_PARSER_PVTO_TABLE_HPP
 
-#include "FullTable.hpp"
-#include "PvtoInnerTable.hpp"
-#include "PvtoOuterTable.hpp"
+#include <opm/parser/eclipse/EclipseState/Tables/PvtxTable.hpp>
 
 namespace Opm {
-    // forward declaration
-    class TableManager;
-
-    /*!
-     * \brief Read the table for the PVTO and provide convenient access to it.
-     */
-    class PvtoTable : public Opm::FullTable<Opm::PvtoOuterTable, Opm::PvtoInnerTable>
-    {
-        typedef Opm::FullTable<Opm::PvtoOuterTable, Opm::PvtoInnerTable> ParentType;
-        friend class TableManager;
-        using ParentType::init;
-
+    class PvtoTable : public PvtxTable {
     public:
-        PvtoTable() = default;
 
-#ifdef BOOST_TEST_MODULE
-        // DO NOT TRY TO CALL THIS METHOD! it is only for the unit tests!
-        void initFORUNITTESTONLY(Opm::DeckKeywordConstPtr keyword, size_t tableIdx)
-        { init(keyword, tableIdx); }
-#endif
+        PvtoTable(Opm::DeckKeywordConstPtr keyword , size_t tableIdx) : PvtxTable("RS")
+        {
+            m_underSaturatedSchema = std::make_shared<TableSchema>( );
+
+            m_underSaturatedSchema->addColumn( ColumnSchema( "P"  , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
+            m_underSaturatedSchema->addColumn( ColumnSchema( "BO" , Table::RANDOM , Table::DEFAULT_LINEAR ));
+            m_underSaturatedSchema->addColumn( ColumnSchema( "MU" , Table::RANDOM , Table::DEFAULT_LINEAR ));
+
+
+
+            m_saturatedSchema = std::make_shared<TableSchema>( );
+            m_saturatedSchema->addColumn( ColumnSchema( "RS" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
+            m_saturatedSchema->addColumn( ColumnSchema( "P"  , Table::RANDOM , Table::DEFAULT_NONE ));
+            m_saturatedSchema->addColumn( ColumnSchema( "BO" , Table::RANDOM , Table::DEFAULT_LINEAR ));
+            m_saturatedSchema->addColumn( ColumnSchema( "MU" , Table::RANDOM , Table::DEFAULT_LINEAR ));
+
+            PvtxTable::init(keyword , tableIdx);
+        }
 
     };
-
-    typedef std::shared_ptr<PvtoTable> PvtoTablePtr;
-    typedef std::shared_ptr<const PvtoTable> PvtoConstTablePtr;
 }
 
 #endif

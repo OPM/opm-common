@@ -4,7 +4,8 @@ foreach(tapp TableManagerTests
              SimpleTableTests
              ColumnSchemaTests
              TableSchemaTests
-             TableColumnTests)
+             TableColumnTests
+             PvtxTableTests)
 
   opm_add_test(run${tapp} SOURCES ${tapp}.cpp
                           LIBRARIES opmparser ${Boost_LIBRARIES})

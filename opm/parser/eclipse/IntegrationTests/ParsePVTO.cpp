@@ -105,23 +105,23 @@ static void check_parser(ParserPtr parser) {
     BOOST_CHECK_EQUAL(9U , item4_1->size());
     BOOST_CHECK_EQUAL(2U , record4->size());
 
-    Opm::PvtoTable pvtoTable;
-    pvtoTable.initFORUNITTESTONLY(kw1, /*tableIdx=*/0);
-    const auto &outerTable = *pvtoTable.getOuterTable();
-    const auto &innerTable0 = *pvtoTable.getInnerTable(0);
 
-    BOOST_CHECK_EQUAL(2, outerTable.numRows());
-    BOOST_CHECK_EQUAL(4, outerTable.numColumns());
-    BOOST_CHECK_EQUAL(3, innerTable0.numRows());
-    BOOST_CHECK_EQUAL(3, innerTable0.numColumns());
+    Opm::PvtoTable pvtoTable(kw1 , 0);
+    BOOST_CHECK_EQUAL(2, pvtoTable.size());
+    {
+        const auto &table0 = pvtoTable.getUnderSaturatedTable(0);
+        const auto& BO = table0.getColumn( "BO" );
 
-    BOOST_CHECK_EQUAL(1e-3, outerTable.getGasSolubilityColumn()[0]);
-    BOOST_CHECK_EQUAL(1.0e5, outerTable.getPressureColumn()[0]);
-    BOOST_CHECK_EQUAL(outerTable.getPressureColumn()[0], innerTable0.getPressureColumn()[0]);
-    BOOST_CHECK_EQUAL(1.01, outerTable.getOilFormationFactorColumn()[0]);
-    BOOST_CHECK_EQUAL(outerTable.getOilFormationFactorColumn()[0], innerTable0.getOilFormationFactorColumn()[0]);
-    BOOST_CHECK_EQUAL(1.02e-3, outerTable.getOilViscosityColumn()[0]);
-    BOOST_CHECK_EQUAL(outerTable.getOilViscosityColumn()[0], innerTable0.getOilViscosityColumn()[0]);
+        BOOST_CHECK_EQUAL( 3, table0.numRows());
+        BOOST_CHECK_EQUAL( 3, table0.numColumns());
+        BOOST_CHECK_EQUAL( BO.front( ) , 1.01 );
+        BOOST_CHECK_EQUAL( BO.back( ) , 1.20 );
+
+        BOOST_CHECK_CLOSE(1.15 , table0.evaluate( "BO" , 250*1e5 ) , 1e-6);
+    }
+
+    BOOST_CHECK_CLOSE( 1.15 , pvtoTable.evaluate( "BO" , 1e-3 , 250*1e5 ) , 1e-6 );
+    BOOST_CHECK_CLOSE( 1.15 , pvtoTable.evaluate( "BO" , 0.0 , 250*1e5 ) , 1e-6 );
 }
 
 
