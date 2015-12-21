@@ -114,6 +114,7 @@ EclipseState/Tables/VFPInjTable.cpp
 EclipseState/Tables/TableManager.cpp
 EclipseState/Tables/TableContainer.cpp
 EclipseState/Tables/ColumnSchema.cpp
+EclipseState/Tables/TableSchema.cpp
 EclipseState/Tables/TableIndex.cpp
 #
 EclipseState/Grid/GridProperty.cpp
