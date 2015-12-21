@@ -113,6 +113,7 @@ EclipseState/Tables/VFPProdTable.cpp
 EclipseState/Tables/VFPInjTable.cpp
 EclipseState/Tables/TableManager.cpp
 EclipseState/Tables/TableContainer.cpp
+EclipseState/Tables/TableColumn.cpp
 EclipseState/Tables/ColumnSchema.cpp
 EclipseState/Tables/TableSchema.cpp
 EclipseState/Tables/TableIndex.cpp
@@ -284,6 +285,7 @@ EclipseState/Tables/SgcwmisTable.hpp
 EclipseState/Tables/MiscTable.hpp
 EclipseState/Tables/PmiscTable.hpp
 EclipseState/Tables/MsfnTable.hpp
+EclipseState/Tables/TableColumn.hpp
 EclipseState/Tables/ColumnSchema.hpp
 EclipseState/Tables/TableEnums.hpp
 EclipseState/Tables/TableSchema.hpp
