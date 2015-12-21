@@ -284,10 +284,10 @@ BOOST_AUTO_TEST_CASE(WellsIterator_Empty_EmptyVectorReturned) {
     DeckPtr deck = createDeck();
     IOConfigPtr ioConfig;
     Schedule schedule(ParseMode() , grid , deck, ioConfig);
-
+    size_t timeStep = 0;
     std::vector<WellConstPtr> wells_alltimesteps = schedule.getWells();
     BOOST_CHECK_EQUAL(0U, wells_alltimesteps.size());
-    std::vector<WellConstPtr> wells_t0 = schedule.getWells(0);
+    std::vector<WellConstPtr> wells_t0 = schedule.getWells(timeStep);
     BOOST_CHECK_EQUAL(0U, wells_t0.size());
 
     BOOST_CHECK_THROW(schedule.getWells(1), std::invalid_argument);
@@ -298,10 +298,11 @@ BOOST_AUTO_TEST_CASE(WellsIterator_HasWells_WellsReturned) {
     DeckPtr deck = createDeckWithWells();
     IOConfigPtr ioConfig;
     Schedule schedule(ParseMode() , grid , deck, ioConfig);
+    size_t timeStep = 0;
 
     std::vector<WellConstPtr> wells_alltimesteps = schedule.getWells();
     BOOST_CHECK_EQUAL(3U, wells_alltimesteps.size());
-    std::vector<WellConstPtr> wells_t0 = schedule.getWells(0);
+    std::vector<WellConstPtr> wells_t0 = schedule.getWells(timeStep);
     BOOST_CHECK_EQUAL(1U, wells_t0.size());
     std::vector<WellConstPtr> wells_t3 = schedule.getWells(3);
     BOOST_CHECK_EQUAL(3U, wells_t3.size());

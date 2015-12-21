@@ -1475,7 +1475,7 @@ namespace Opm {
         return wells;
     }
 
-    WellPtr Schedule::getWell(const std::string& wellName) const {
+    WellPtr Schedule::getWell(const std::string& wellName) {
         return m_wells.get( wellName );
     }
 
@@ -1486,7 +1486,7 @@ namespace Opm {
       been opened by the simulator.
     */
 
-    std::vector<WellPtr> Schedule::getOpenWells(size_t timeStep) const {
+    std::vector<WellPtr> Schedule::getOpenWells(size_t timeStep) {
         std::vector<WellPtr> wells;
         for (auto well_iter = m_wells.begin(); well_iter != m_wells.end(); ++well_iter) {
             auto well = *well_iter;
@@ -1497,7 +1497,7 @@ namespace Opm {
     }
 
 
-    std::vector<WellPtr> Schedule::getWells(const std::string& wellNamePattern) const {
+    std::vector<WellPtr> Schedule::getWells(const std::string& wellNamePattern) {
         std::vector<WellPtr> wells;
         size_t wildcard_pos = wellNamePattern.find("*");
         if (wildcard_pos == wellNamePattern.length()-1) {

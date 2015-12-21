@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule) {
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), parseMode);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,3);
     IOConfigPtr ioConfig;
-    ScheduleConstPtr sched(new Schedule(parseMode , grid , deck, ioConfig));
+    SchedulePtr sched(new Schedule(parseMode , grid , deck, ioConfig));
     TimeMapConstPtr timeMap = sched->getTimeMap();
     BOOST_CHECK_EQUAL(boost::posix_time::ptime(boost::gregorian::date(2007, boost::gregorian::May, 10)), sched->getStartTime());
     BOOST_CHECK_EQUAL(9U, timeMap->size());
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_Comments_After_Keywords) {
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), parseMode);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,3);
     IOConfigPtr ioConfig;
-    ScheduleConstPtr sched(new Schedule(parseMode , grid , deck, ioConfig));
+    SchedulePtr sched(new Schedule(parseMode , grid , deck, ioConfig));
     TimeMapConstPtr timeMap = sched->getTimeMap();
     BOOST_CHECK_EQUAL(boost::posix_time::ptime(boost::gregorian::date(2007, boost::gregorian::May, 10)), sched->getStartTime());
     BOOST_CHECK_EQUAL(9U, timeMap->size());
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(WellTestRefDepth) {
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(40,60,30);
     BOOST_CHECK_EQUAL(3, 3);
     IOConfigPtr ioConfig;
-    ScheduleConstPtr sched(new Schedule(parseMode , grid , deck, ioConfig));
+    SchedulePtr sched(new Schedule(parseMode , grid , deck, ioConfig));
     BOOST_CHECK_EQUAL(4, 4);
 
     WellPtr well1 = sched->getWell("W_1");
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(WellTestOpen) {
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), parseMode);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(40,60,30);
     IOConfigPtr ioConfig;
-    ScheduleConstPtr sched(new Schedule(parseMode , grid , deck, ioConfig));
+    SchedulePtr sched(new Schedule(parseMode , grid , deck, ioConfig));
 
     auto well1 = sched->getWell( "W_1" );
     auto well2 = sched->getWell( "W_2" );
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), parseMode);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(40,60,30);
     IOConfigPtr ioConfig;
-    ScheduleConstPtr sched(new Schedule(parseMode , grid , deck, ioConfig));
+    SchedulePtr sched(new Schedule(parseMode , grid , deck, ioConfig));
 
     BOOST_CHECK_EQUAL(4U, sched->numWells());
     BOOST_CHECK(sched->hasWell("W_1"));
@@ -273,7 +273,7 @@ BOOST_AUTO_TEST_CASE(WellTestCOMPDAT_DEFAULTED_ITEMS) {
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), parseMode);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(40,60,30);
     IOConfigPtr ioConfig;
-    ScheduleConstPtr sched(new Schedule(parseMode , grid, deck, ioConfig));
+    SchedulePtr sched(new Schedule(parseMode , grid, deck, ioConfig));
 }
 
 
@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(WellTestCOMPDAT) {
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), parseMode);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(40,60,30);
     IOConfigPtr ioConfig;
-    ScheduleConstPtr sched(new Schedule(parseMode , grid , deck, ioConfig));
+    SchedulePtr sched(new Schedule(parseMode , grid , deck, ioConfig));
 
     BOOST_CHECK_EQUAL(4U, sched->numWells());
     BOOST_CHECK(sched->hasWell("W_1"));
@@ -317,7 +317,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_with_explicit_L0_parenting) {
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), parseMode);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,3);
     IOConfigPtr ioConfig;
-    ScheduleConstPtr sched(new Schedule(parseMode , grid , deck, ioConfig));
+    SchedulePtr sched(new Schedule(parseMode , grid , deck, ioConfig));
 
     GroupTreeNodePtr rootNode = sched->getGroupTree(0)->getNode("FIELD");
 
@@ -347,7 +347,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_correct) {
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), parseMode);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,3);
     IOConfigPtr ioConfig;
-    ScheduleConstPtr schedule(new Schedule(parseMode , grid , deck, ioConfig));
+    SchedulePtr schedule(new Schedule(parseMode , grid , deck, ioConfig));
 
     BOOST_CHECK( schedule->hasGroup( "FIELD" ));
     BOOST_CHECK( schedule->hasGroup( "PROD" ));
@@ -367,7 +367,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_iter_function) 
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), parseMode);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,3);
     IOConfigPtr ioConfig;
-    ScheduleConstPtr schedule(new Schedule(parseMode , grid , deck, ioConfig));
+    SchedulePtr schedule(new Schedule(parseMode , grid , deck, ioConfig));
 
     // Time 0, only from WELSPECS
     GroupTreeNodeConstPtr root = schedule->getGroupTree(0)->getNode("FIELD");
@@ -395,7 +395,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_tree) {
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), parseMode);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,3);
     IOConfigPtr ioConfig;
-    ScheduleConstPtr schedule(new Schedule(parseMode , grid , deck, ioConfig));
+    SchedulePtr schedule(new Schedule(parseMode , grid , deck, ioConfig));
 
     // Time 0, only from WELSPECS
     GroupTreeNodePtr root0 = schedule->getGroupTree(0)->getNode("FIELD");
@@ -441,7 +441,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_WITH_REPARENT_correct_tree) {
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), parseMode);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,3);
     IOConfigPtr ioConfig;
-    ScheduleConstPtr schedule(new Schedule(parseMode , grid , deck, ioConfig));
+    SchedulePtr schedule(new Schedule(parseMode , grid , deck, ioConfig));
 
 
     // Time , from  first GRUPTREE
@@ -475,7 +475,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_PrintGrouptree) {
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), parseMode);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,3);
     IOConfigPtr ioConfig;
-    ScheduleConstPtr sched(new Schedule(parseMode , grid , deck, ioConfig));
+    SchedulePtr sched(new Schedule(parseMode , grid , deck, ioConfig));
 
     GroupTreePtr rootNode = sched->getGroupTree(0);
     rootNode->printTree(std::cout);
@@ -490,7 +490,7 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), parseMode);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,3);
     IOConfigPtr ioConfig;
-    ScheduleConstPtr sched( new Schedule(parseMode , grid , deck, ioConfig));
+    SchedulePtr sched( new Schedule(parseMode , grid , deck, ioConfig));
 
     BOOST_CHECK_EQUAL( 3U , sched->numGroups() );
     BOOST_CHECK( sched->hasGroup( "INJ" ));
@@ -533,7 +533,7 @@ BOOST_AUTO_TEST_CASE( WellTestGroupAndWellRelation ) {
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), parseMode);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,3);
     IOConfigPtr ioConfig;
-    ScheduleConstPtr sched( new Schedule(parseMode , grid , deck, ioConfig));
+    SchedulePtr sched( new Schedule(parseMode , grid , deck, ioConfig));
 
     GroupPtr group1 = sched->getGroup("GROUP1");
     GroupPtr group2 = sched->getGroup("GROUP2");
@@ -563,7 +563,7 @@ BOOST_AUTO_TEST_CASE(WellTestWELSPECSDataLoaded) {
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), parseMode);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(40,60,30);
     IOConfigPtr ioConfig;
-    ScheduleConstPtr sched(new Schedule(parseMode , grid , deck, ioConfig));
+    SchedulePtr sched(new Schedule(parseMode , grid , deck, ioConfig));
 
     BOOST_CHECK_EQUAL(4U, sched->numWells());
     BOOST_CHECK(sched->hasWell("W_1"));
@@ -616,7 +616,7 @@ BOOST_AUTO_TEST_CASE(WellTestWELOPENControlsSet) {
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELOPEN");
     DeckPtr deck =  parser->parseFile(scheduleFile.string());
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10,10,10 );
-    ScheduleConstPtr sched(new Schedule(grid , deck));
+    SchedulePtr sched(new Schedule(grid , deck));
 
     WellConstPtr well1 = sched->getWell("W_1");
     BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, sched->getWell("W_1")->getStatus(0));
@@ -637,7 +637,7 @@ BOOST_AUTO_TEST_CASE(WellTestWGRUPCONWellPropertiesSet) {
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), parseMode);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10,10,10 );
     IOConfigPtr ioConfig;
-    ScheduleConstPtr sched(new Schedule(parseMode , grid , deck, ioConfig));
+    SchedulePtr sched(new Schedule(parseMode , grid , deck, ioConfig));
 
     WellConstPtr well1 = sched->getWell("W_1");
     BOOST_CHECK(well1->isAvailableForGroupControl(0));
@@ -677,7 +677,7 @@ COMPDAT \n\
     DeckPtr deck =  parser->parseString(deckString, parseMode);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 30,30,10 );
     IOConfigPtr ioConfig;
-    ScheduleConstPtr sched(new Schedule(parseMode , grid , deck, ioConfig));
+    SchedulePtr sched(new Schedule(parseMode , grid , deck, ioConfig));
     WellConstPtr well = sched->getWell("W1");
     CompletionSetConstPtr completions = well->getCompletions(0);
     BOOST_CHECK_EQUAL( 10 , completions->get(0)->getI() );
@@ -708,7 +708,7 @@ BOOST_AUTO_TEST_CASE(WELLS_SHUT) {
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), parseMode);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 20,40,1 );
     IOConfigPtr ioConfig;
-    ScheduleConstPtr sched(new Schedule(parseMode , grid , deck, ioConfig));
+    SchedulePtr sched(new Schedule(parseMode , grid , deck, ioConfig));
 
 
     WellConstPtr well1 = sched->getWell("W1");
@@ -733,7 +733,7 @@ BOOST_AUTO_TEST_CASE(WellTestWPOLYMER) {
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), parseMode);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 30,30,30);
     IOConfigPtr ioConfig;
-    ScheduleConstPtr sched(new Schedule(parseMode , grid , deck, ioConfig));
+    SchedulePtr sched(new Schedule(parseMode , grid , deck, ioConfig));
 
 
     BOOST_CHECK_EQUAL(4U, sched->numWells());
@@ -783,7 +783,7 @@ BOOST_AUTO_TEST_CASE(TestEvents) {
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), parseMode);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(40,40,30);
     IOConfigPtr ioConfig;
-    ScheduleConstPtr sched(new Schedule(parseMode , grid , deck, ioConfig));
+    SchedulePtr sched(new Schedule(parseMode , grid , deck, ioConfig));
     const Events& events = sched->getEvents();
 
     BOOST_CHECK_EQUAL( true  , events.hasEvent(ScheduleEvents::NEW_WELL , 0 ) );

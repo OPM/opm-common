@@ -55,11 +55,11 @@ namespace Opm
         size_t numWells(size_t timestep) const;
         size_t getMaxNumCompletionsForWells(size_t timestep) const;
         bool hasWell(const std::string& wellName) const;
-        WellPtr getWell(const std::string& wellName) const;
-        std::vector<WellPtr> getOpenWells(size_t timeStep) const;
+        WellPtr getWell(const std::string& wellName);
+        std::vector<WellPtr> getOpenWells(size_t timeStep);
         std::vector<WellConstPtr> getWells() const;
         std::vector<WellConstPtr> getWells(size_t timeStep) const;
-        std::vector<WellPtr> getWells(const std::string& wellNamePattern) const;
+        std::vector<WellPtr> getWells(const std::string& wellNamePattern);
         OilVaporizationPropertiesConstPtr getOilVaporizationProperties(size_t timestep);
 
         GroupTreePtr getGroupTree(size_t t) const;

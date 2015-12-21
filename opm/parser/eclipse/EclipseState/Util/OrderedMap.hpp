@@ -57,7 +57,7 @@ public:
     }
 
 
-    T get(const std::string& key) const {
+    T& get(const std::string& key) {
         auto iter = m_map.find( key );
         if (iter == m_map.end())
             throw std::invalid_argument("Key not found:" + key);
@@ -68,10 +68,44 @@ public:
     }
 
 
-    T get(size_t index) const {
+    T& get(size_t index) {
         if (index >= m_vector.size())
             throw std::invalid_argument("Invalid index");
         return m_vector[index];
+    }
+
+    const T& get(const std::string& key) const {
+        auto iter = m_map.find( key );
+        if (iter == m_map.end())
+            throw std::invalid_argument("Key not found:" + key);
+        else {
+            size_t index = iter->second;
+            return get(index);
+        }
+    }
+
+
+    const T& get(size_t index) const {
+        if (index >= m_vector.size())
+            throw std::invalid_argument("Invalid index");
+        return m_vector[index];
+    }
+
+
+    T* getPtr(const std::string& key) const {
+        auto iter = m_map.find( key );
+        if (iter == m_map.end())
+            throw std::invalid_argument("Key not found:" + key);
+        else {
+            size_t index = iter->second;
+            return getPtr(index);
+        }
+    }
+
+    T* getPtr(size_t index) const {
+        if (index >= m_vector.size())
+            throw std::invalid_argument("Invalid index");
+        return &m_vector[index];
     }
 
 

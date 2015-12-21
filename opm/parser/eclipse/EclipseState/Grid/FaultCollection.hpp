@@ -44,8 +44,10 @@ public:
 
     size_t size() const;
     bool hasFault(const std::string& faultName) const;
-    std::shared_ptr<Fault>  getFault(const std::string& faultName) const;
-    std::shared_ptr<Fault>  getFault(size_t faultIndex) const;
+    std::shared_ptr<Fault>  getFault(const std::string& faultName);
+    std::shared_ptr<const Fault>  getFault(const std::string& faultName) const;
+    std::shared_ptr<Fault>  getFault(size_t faultIndex);
+    std::shared_ptr<const Fault>  getFault(size_t faultIndex) const;
     void addFault(std::shared_ptr<Fault> fault);
     void setTransMult(const std::string& faultName , double transMult);
 

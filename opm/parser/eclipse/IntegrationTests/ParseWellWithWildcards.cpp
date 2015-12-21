@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE( parse_WCONPROD_OK ) {
     DeckPtr deck =  parser->parseFile(wconprodFile.string(), ParseMode());
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 30,30,30);
     IOConfigPtr ioConfig;
-    ScheduleConstPtr sched(new Schedule(ParseMode() , grid , deck, ioConfig));
+    SchedulePtr sched(new Schedule(ParseMode() , grid , deck, ioConfig));
 
     BOOST_CHECK_EQUAL(5U, sched->numWells());
     BOOST_CHECK(sched->hasWell("INJE1"));
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE( parse_WCONINJE_OK ) {
     DeckPtr deck =  parser->parseFile(wconprodFile.string(), parseMode);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 30,30,30 );
     IOConfigPtr ioConfig;
-    ScheduleConstPtr sched(new Schedule(parseMode , grid , deck, ioConfig));
+    SchedulePtr sched(new Schedule(parseMode , grid , deck, ioConfig));
 
     BOOST_CHECK_EQUAL(5U, sched->numWells());
     BOOST_CHECK(sched->hasWell("PROD1"));

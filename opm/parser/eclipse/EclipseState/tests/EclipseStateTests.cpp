@@ -301,8 +301,8 @@ BOOST_AUTO_TEST_CASE(GetFaults) {
     BOOST_CHECK( faults->hasFault("F1") );
     BOOST_CHECK( faults->hasFault("F2") );
 
-    std::shared_ptr<Fault> F1 = faults->getFault("F1");
-    std::shared_ptr<Fault> F2 = faults->getFault("F2");
+    std::shared_ptr<const Fault> F1 = faults->getFault("F1");
+    std::shared_ptr<const Fault> F2 = faults->getFault("F2");
 
     BOOST_CHECK_EQUAL( 0.50 , F1->getTransMult());
     BOOST_CHECK_EQUAL( 0.25 , F2->getTransMult());
