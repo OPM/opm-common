@@ -217,6 +217,14 @@ namespace Opm {
         }
     }
 
+    std::vector<double>::const_iterator TableColumn::begin() const {
+        return m_values.begin();
+    }
+
+    std::vector<double>::const_iterator TableColumn::end() const {
+        return m_values.end();
+    }
+
 
     bool TableColumn::hasDefault( ) const {
         if (m_defaultCount > 0)
@@ -302,6 +310,10 @@ namespace Opm {
             throw std::invalid_argument("Column " + m_schema->name() + " must span range [0 1]");
     }
 
+
+    std::vector<double> TableColumn::vectorCopy() const {
+        return std::vector<double>( begin() , end());
+    }
 
 }
 

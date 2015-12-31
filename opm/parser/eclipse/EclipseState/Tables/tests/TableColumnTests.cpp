@@ -47,6 +47,14 @@ BOOST_AUTO_TEST_CASE( CreateTest ) {
     BOOST_CHECK_EQUAL( column[2] , 2 );
 
     BOOST_CHECK_THROW( column[3] , std::invalid_argument );
+
+    {
+        std::vector<double> cp(column.size());
+        std::copy( column.begin() , column.end() , cp.begin());
+
+        for (size_t i = 0; i < column.size(); i++)
+            BOOST_CHECK_EQUAL( column[i] , cp[i] );
+    }
 }
 
 

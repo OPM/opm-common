@@ -58,6 +58,9 @@ namespace Opm {
         void assertUnitRange() const;
         TableColumn& operator= (const TableColumn& other);
 
+        std::vector<double> vectorCopy() const;
+        std::vector<double>::const_iterator begin() const;
+        std::vector<double>::const_iterator end() const;
     private:
         void assertUpdate(size_t index, double value) const;
         void assertPrevious(size_t index , double value) const;
@@ -69,6 +72,8 @@ namespace Opm {
         std::vector<bool> m_default;
         size_t m_defaultCount;
     };
+
+
 }
 
 

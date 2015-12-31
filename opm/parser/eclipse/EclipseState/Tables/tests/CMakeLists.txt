@@ -1,4 +1,7 @@
-foreach(tapp TableManagerTests TabdimsTests TableContainerTests
+foreach(tapp TableManagerTests
+             TabdimsTests
+             TableContainerTests
+             SimpleTableTests
              ColumnSchemaTests
              TableSchemaTests
              TableColumnTests)

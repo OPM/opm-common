@@ -36,6 +36,24 @@ namespace Opm {
     }
 
 
+    SimpleTable::SimpleTable(std::shared_ptr<TableSchema> schema )
+        : m_schema( schema )
+    {
+        addColumns();
+    }
+
+
+    void SimpleTable::addRow( const std::vector<double>& row) {
+        if (row.size() == numColumns()) {
+            for (size_t colIndex  = 0; colIndex < numColumns(); colIndex++) {
+                auto& col = getColumn( colIndex );
+                col.addValue( row[colIndex] );
+            }
+        } else
+            throw std::invalid_argument("Size mismatch");
+    }
+
+
     void SimpleTable::addColumns() {
         for (size_t colIdx = 0; colIdx < m_schema->size(); ++colIdx) {
             const auto& schemaColumn = m_schema->getColumn( colIdx );
@@ -43,6 +61,19 @@ namespace Opm {
             m_columns.insert( schemaColumn.name() , column );
         }
     }
+
+
+    double SimpleTable::get(const std::string& column  , size_t row) const {
+        const auto& col = getColumn( column );
+        return col[row];
+    }
+
+
+    double SimpleTable::get(size_t column  , size_t row) const {
+        const auto& col = getColumn( column );
+        return col[row];
+    }
+
 
 
 // create table from single record
@@ -77,6 +108,7 @@ size_t SimpleTable::numRows() const {
     const auto column0 = getColumn(0);
     return column0.size();
 }
+
 
 
     const TableColumn& SimpleTable::getColumn( const std::string& name) const {

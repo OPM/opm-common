@@ -38,16 +38,20 @@ namespace Opm {
         SimpleTable(const SimpleTable&) = default;
         SimpleTable();
         SimpleTable(std::shared_ptr<TableSchema> schema , Opm::DeckItemConstPtr deckItem);
+        explicit SimpleTable(std::shared_ptr<TableSchema> schema);
         void addColumns();
         void init(Opm::DeckItemConstPtr deckItem);
         size_t numColumns() const;
         size_t numRows() const;
+        void addRow( const std::vector<double>& row);
         const TableColumn& getColumn(const std::string &name) const;
         const TableColumn& getColumn(size_t colIdx) const;
 
         TableColumn& getColumn(const std::string &name);
         TableColumn& getColumn(size_t colIdx);
 
+        double get(const std::string& column  , size_t row) const;
+        double get(size_t column  , size_t row) const;
         /*!
          * \brief Evaluate a column of the table at a given position.
          *
