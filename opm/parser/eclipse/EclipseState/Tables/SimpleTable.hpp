@@ -46,6 +46,7 @@ namespace Opm {
         void addRow( const std::vector<double>& row);
         const TableColumn& getColumn(const std::string &name) const;
         const TableColumn& getColumn(size_t colIdx) const;
+        bool hasColumn(const std::string& name) const;
 
         TableColumn& getColumn(const std::string &name);
         TableColumn& getColumn(size_t colIdx);

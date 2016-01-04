@@ -129,6 +129,9 @@ size_t SimpleTable::numRows() const {
     }
 
 
+    bool SimpleTable::hasColumn(const std::string& name) const {
+        return m_schema->hasColumn( name );
+    }
 
     double SimpleTable::evaluate(const std::string& columnName, double xPos) const
     {

@@ -36,6 +36,7 @@ namespace Opm {
         void addColumn(const ColumnSchema& column);
         const ColumnSchema&& getColumn( const std::string& name ) const;
         const ColumnSchema&& getColumn( size_t columnIndex ) const;
+        bool hasColumn(const std::string&) const;
 
         /* Number of columns */
         size_t size() const;

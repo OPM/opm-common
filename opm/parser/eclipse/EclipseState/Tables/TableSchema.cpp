@@ -44,6 +44,10 @@ namespace Opm {
         return m_columns.size();
     }
 
+    bool TableSchema::hasColumn(const std::string& name) const {
+        return m_columns.hasKey( name );
+    }
+
 }
 
 
