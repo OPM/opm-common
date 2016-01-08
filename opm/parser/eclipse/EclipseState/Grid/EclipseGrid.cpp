@@ -619,6 +619,30 @@ namespace Opm {
         return ecl_grid_get_cell_thickness1( c_ptr() , static_cast<int>(globalIndex));
     }
 
+
+    std::array<double, 3> EclipseGrid::getCellDims(size_t globalIndex) const {
+        assertGlobalIndex( globalIndex );
+        {
+            double dx = ecl_grid_get_cell_dx1( c_ptr() , globalIndex);
+            double dy = ecl_grid_get_cell_dy1( c_ptr() , globalIndex);
+            double dz = ecl_grid_get_cell_thickness1( c_ptr() , globalIndex);
+
+            return std::array<double,3>{ {dx , dy , dz }};
+        }
+    }
+
+    std::array<double, 3> EclipseGrid::getCellDims(size_t i , size_t j , size_t k) const {
+        assertIJK(i,j,k);
+        {
+            size_t globalIndex = getGlobalIndex( i,j,k );
+            double dx = ecl_grid_get_cell_dx1( c_ptr() , globalIndex);
+            double dy = ecl_grid_get_cell_dy1( c_ptr() , globalIndex);
+            double dz = ecl_grid_get_cell_thickness1( c_ptr() , globalIndex);
+
+            return std::array<double,3>{ {dx , dy , dz }};
+        }
+    }
+
     std::array<double, 3> EclipseGrid::getCellCenter(size_t globalIndex) const {
         assertGlobalIndex( globalIndex );
         {

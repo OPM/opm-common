@@ -97,6 +97,8 @@ namespace Opm {
         double getCellVolume(size_t i , size_t j , size_t k) const;
         double getCellThicknes(size_t globalIndex) const;
         double getCellThicknes(size_t i , size_t j , size_t k) const;
+        std::array<double, 3> getCellDims(size_t i,size_t j, size_t k) const;
+        std::array<double, 3> getCellDims(size_t globalIndex) const;
         bool cellActive( size_t globalIndex ) const;
         bool cellActive( size_t i , size_t , size_t k ) const;
         double getCellDepth(size_t i,size_t j, size_t k) const;
