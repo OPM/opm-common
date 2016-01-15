@@ -17,10 +17,14 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <cassert>
+#include <cmath>
+#include <limits>
+
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
-#include <limits>
 
 namespace Opm {
 

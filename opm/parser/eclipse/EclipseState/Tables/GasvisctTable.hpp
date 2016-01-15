@@ -23,11 +23,15 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
 #include "SimpleTable.hpp"
 #include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm {
+
+    class DeckItem;
+
     class GasvisctTable : public SimpleTable {
     public:
-        GasvisctTable(const Deck& deck, Opm::DeckItemConstPtr deckItem)
+        GasvisctTable(const Deck& deck, std::shared_ptr< const DeckItem > deckItem)
         {
             int numComponents = deck.getKeyword<ParserKeywords::COMPS>()->getRecord(0)->getItem(0)->getInt(0);
 

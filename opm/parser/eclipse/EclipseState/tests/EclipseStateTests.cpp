@@ -33,9 +33,15 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
+#include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/checkDeck.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/Fault.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
+#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/Units/ConversionFactors.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseMode.hpp>

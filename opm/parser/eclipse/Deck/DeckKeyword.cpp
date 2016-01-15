@@ -18,6 +18,8 @@
  */
 
 #include "DeckKeyword.hpp"
+#include "DeckRecord.hpp"
+#include "DeckItem.hpp"
 
 namespace Opm {
 

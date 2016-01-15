@@ -24,10 +24,13 @@
 
 
 namespace Opm {
+
+    class DeckItem;
+
     class PlydhflfTable : public SimpleTable {
     public:
 
-        PlydhflfTable(DeckItemConstPtr item)
+        PlydhflfTable(std::shared_ptr< const DeckItem > item)
         {
             m_schema = std::make_shared<TableSchema>( );
             m_schema->addColumn( ColumnSchema("Temperature" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );

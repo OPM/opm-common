@@ -22,27 +22,12 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PvtxTable.hpp>
 
 namespace Opm {
+
+    class DeckKeyword;
+
     class PvtgTable : public PvtxTable {
-
     public:
-
-        PvtgTable(Opm::DeckKeywordConstPtr keyword , size_t tableIdx) : PvtxTable("P")
-        {
-            m_underSaturatedSchema = std::make_shared<TableSchema>( );
-            m_underSaturatedSchema->addColumn( ColumnSchema( "RV"  , Table::STRICTLY_DECREASING , Table::DEFAULT_NONE ));
-            m_underSaturatedSchema->addColumn( ColumnSchema( "BG"  , Table::RANDOM , Table::DEFAULT_LINEAR ));
-            m_underSaturatedSchema->addColumn( ColumnSchema( "MUG" , Table::RANDOM , Table::DEFAULT_LINEAR ));
-
-
-            m_saturatedSchema = std::make_shared<TableSchema>( );
-            m_saturatedSchema->addColumn( ColumnSchema( "PG"  , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
-            m_saturatedSchema->addColumn( ColumnSchema( "RV"  , Table::RANDOM , Table::DEFAULT_NONE ));
-            m_saturatedSchema->addColumn( ColumnSchema( "BG"  , Table::RANDOM , Table::DEFAULT_LINEAR ));
-            m_saturatedSchema->addColumn( ColumnSchema( "MUG" , Table::RANDOM , Table::DEFAULT_LINEAR ));
-
-            PvtxTable::init(keyword , tableIdx);
-        }
-
+        PvtgTable(std::shared_ptr< const DeckKeyword > keyword, size_t tableIdx);
     };
 }
 

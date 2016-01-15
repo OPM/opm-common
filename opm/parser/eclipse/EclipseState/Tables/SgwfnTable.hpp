@@ -23,10 +23,13 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableSchema.hpp>
 
 namespace Opm {
+
+    class DeckItem;
+
     class SgwfnTable : public SimpleTable {
 
     public:
-        SgwfnTable(Opm::DeckItemConstPtr item) {
+        SgwfnTable(std::shared_ptr< const DeckItem > item) {
             m_schema = std::make_shared<TableSchema>();
 
             m_schema->addColumn( ColumnSchema( "SG"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );

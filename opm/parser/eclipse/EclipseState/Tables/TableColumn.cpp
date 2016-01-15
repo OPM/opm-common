@@ -19,6 +19,7 @@
 #include <stdexcept>
 #include <algorithm>
 
+#include <opm/parser/eclipse/EclipseState/Tables/ColumnSchema.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableColumn.hpp>
 
 namespace Opm {

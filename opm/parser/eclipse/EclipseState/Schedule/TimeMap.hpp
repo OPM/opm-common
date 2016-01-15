@@ -23,7 +23,7 @@
 
 #include <vector>
 
-#include <boost/date_time.hpp>
+#include <boost/date_time/posix_time/posix_time_types.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>

@@ -23,10 +23,13 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
+
+    class DeckItem;
+
     class SsfnTable : public SimpleTable {
     public:
         friend class TableManager;
-        SsfnTable(Opm::DeckItemConstPtr item)
+        SsfnTable(std::shared_ptr< const DeckItem > item)
         {
             m_schema = std::make_shared<TableSchema>();
 

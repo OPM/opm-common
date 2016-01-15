@@ -24,9 +24,12 @@
 
 
 namespace Opm {
+
+    class DeckItem;
+
     class PlyviscTable : public SimpleTable {
     public:
-        PlyviscTable(Opm::DeckItemConstPtr item)
+        PlyviscTable(std::shared_ptr< const DeckItem > item)
         {
             m_schema = std::make_shared<TableSchema>();
             m_schema->addColumn( ColumnSchema( "PolymerConcentration" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));

@@ -20,11 +20,7 @@
 #ifndef OPM_TABLE_MANAGER_HPP
 #define OPM_TABLE_MANAGER_HPP
 
-#include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
-
-#include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/Regdims.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
@@ -67,11 +63,17 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PmiscTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/MsfnTable.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/VFPInjTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp>
 
-
-
+#include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 
 namespace Opm {
+
+    class Tabdims;
+    class Eqldims;
+    class Regdims;
 
     class TableManager {
     public:

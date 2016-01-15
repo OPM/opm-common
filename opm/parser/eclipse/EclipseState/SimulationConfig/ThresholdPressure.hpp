@@ -24,11 +24,13 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 
 
 namespace Opm {
+
+    template< typename > class GridProperties;
+
+    class ParseMode;
 
     class ThresholdPressure {
 

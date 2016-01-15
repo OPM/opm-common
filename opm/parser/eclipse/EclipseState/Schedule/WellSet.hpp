@@ -19,14 +19,11 @@
 #ifndef WELLSET_HPP
 #define WELLSET_HPP
 
-#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
-
-#include <memory>
-
-#include <string>
 #include <map>
+#include <memory>
+#include <string>
+
+#include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 
 namespace Opm {
 
@@ -35,12 +32,12 @@ namespace Opm {
         WellSet();
         size_t size() const;
         bool hasWell(const std::string& wellName) const;
-        WellConstPtr getWell(const std::string& wellName) const;
-        void addWell(WellPtr well);
+        std::shared_ptr< const Well > getWell(const std::string& wellName) const;
+        void addWell(std::shared_ptr< Well > well);
         void delWell(const std::string& wellName);
         WellSet * shallowCopy() const;
     private:
-        std::map<std::string , WellPtr> m_wells;
+        std::map<std::string , std::shared_ptr< Well >> m_wells;
     };
 
     typedef std::shared_ptr<WellSet> WellSetPtr;

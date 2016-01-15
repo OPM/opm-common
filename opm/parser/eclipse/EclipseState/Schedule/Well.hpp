@@ -21,35 +21,29 @@
 #ifndef WELL_HPP_
 #define WELL_HPP_
 
-#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-
-#include <opm/common/utility/platform_dependent/disable_warnings.h>
-
-#include <boost/optional.hpp>
-
-#include <opm/common/utility/platform_dependent/reenable_warnings.h>
+#include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 
 #include <memory>
 #include <string>
-#include <limits>
 
 namespace Opm {
 
+    template< typename > class DynamicState;
 
+    class Completion;
+    class CompletionSet;
+    class EclipseGrid;
+    class Segment;
+    class SegmentSet;
+    class TimeMap;
 
     class Well {
     public:
         Well(const std::string& name, std::shared_ptr<const EclipseGrid> grid , int headI, int headJ, Value<double> refDepth , Phase::PhaseEnum preferredPhase,
-             TimeMapConstPtr timeMap, size_t creationTimeStep, WellCompletion::CompletionOrderEnum completionOrdering = WellCompletion::TRACK, bool allowCrossFlow = true);
+             std::shared_ptr< const TimeMap > timeMap, size_t creationTimeStep, WellCompletion::CompletionOrderEnum completionOrdering = WellCompletion::TRACK, bool allowCrossFlow = true);
         const std::string& name() const;
 
         bool hasBeenDefined(size_t timeStep) const;
@@ -78,10 +72,10 @@ namespace Opm {
 
         bool isProducer(size_t timeStep) const;
         bool isInjector(size_t timeStep) const;
-        void addWELSPECS(DeckRecordConstPtr deckRecord);
-        void addCompletions(size_t time_step , const std::vector<CompletionPtr>& newCompletions);
-        void addCompletionSet(size_t time_step, const CompletionSetConstPtr newCompletionSet);
-        CompletionSetConstPtr getCompletions(size_t timeStep) const;
+        void addWELSPECS(std::shared_ptr< const DeckRecord > deckRecord);
+        void addCompletions(size_t time_step , const std::vector<std::shared_ptr< Completion >>& newCompletions);
+        void addCompletionSet(size_t time_step, const std::shared_ptr< const CompletionSet > newCompletionSet);
+        std::shared_ptr< const CompletionSet > getCompletions(size_t timeStep) const;
 
         bool                            setProductionProperties(size_t timeStep , const WellProductionProperties properties);
         WellProductionProperties        getProductionPropertiesCopy(size_t timeStep) const;
@@ -115,9 +109,9 @@ namespace Opm {
 
         // for multi-segment wells
         bool isMultiSegment(size_t time_step) const;
-        SegmentSetConstPtr getSegmentSet(size_t time_step) const;
+        std::shared_ptr< const SegmentSet > getSegmentSet(size_t time_step) const;
 
-        void addSegmentSet(size_t time_step, SegmentSetConstPtr new_segmentset);
+        void addSegmentSet(size_t time_step, std::shared_ptr< const SegmentSet > new_segmentset);
 
     private:
         void setRefDepthFromCompletions() const;
@@ -132,7 +126,7 @@ namespace Opm {
         std::shared_ptr<DynamicState<double> > m_guideRateScalingFactor;
 
         std::shared_ptr<DynamicState<bool> > m_isProducer;
-        std::shared_ptr<DynamicState<CompletionSetConstPtr> > m_completions;
+        std::shared_ptr<DynamicState<std::shared_ptr< const CompletionSet >> > m_completions;
         std::shared_ptr<DynamicState<WellProductionProperties> > m_productionProperties;
         std::shared_ptr<DynamicState<WellInjectionProperties> > m_injectionProperties;
         std::shared_ptr<DynamicState<WellPolymerProperties> > m_polymerProperties;
@@ -143,7 +137,7 @@ namespace Opm {
 
         // WELSPECS data - assumes this is not dynamic
 
-        TimeMapConstPtr m_timeMap;
+        std::shared_ptr< const TimeMap > m_timeMap;
         int m_headI;
         int m_headJ;
         mutable Value<double> m_refDepth;
@@ -155,7 +149,7 @@ namespace Opm {
 
         // WELSEGS DATA - for mutli-segment wells
         // flag indicating if the well is a multi-segment well
-        std::shared_ptr<DynamicState<SegmentSetConstPtr>> m_segmentset;
+        std::shared_ptr<DynamicState<std::shared_ptr< const SegmentSet >>> m_segmentset;
     };
     typedef std::shared_ptr<Well> WellPtr;
     typedef std::shared_ptr<const Well> WellConstPtr;

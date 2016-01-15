@@ -17,10 +17,11 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 
 
 namespace Opm {

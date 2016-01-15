@@ -22,9 +22,12 @@
 #include "SimpleTable.hpp"
 
 namespace Opm {
+
+    class DeckItem;
+
     class RvvdTable : public SimpleTable {
     public:
-        RvvdTable(Opm::DeckItemConstPtr item)
+        RvvdTable(std::shared_ptr< const DeckItem > item)
         {
             m_schema = std::make_shared<TableSchema>( );
             m_schema->addColumn( ColumnSchema( "DEPTH" ,  Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );

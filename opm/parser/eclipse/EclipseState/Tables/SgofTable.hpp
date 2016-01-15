@@ -25,10 +25,13 @@
 
 namespace Opm {
     // forward declaration
+
+    class DeckItem;
+
     class SgofTable : public SimpleTable {
 
     public:
-        SgofTable(Opm::DeckItemConstPtr item)
+        SgofTable(std::shared_ptr< const DeckItem > item)
         {
             m_schema = std::make_shared<TableSchema>();
             m_schema->addColumn( ColumnSchema("SG"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));

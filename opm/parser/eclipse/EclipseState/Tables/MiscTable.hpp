@@ -25,9 +25,11 @@
 
 namespace Opm {
 
+    class DeckItem;
+
     class MiscTable : public SimpleTable {
     public:
-        MiscTable(Opm::DeckItemConstPtr item)
+        MiscTable(std::shared_ptr< const DeckItem > item)
         {
             m_schema = std::make_shared<TableSchema>();
             m_schema->addColumn( ColumnSchema( "SolventFraction" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );

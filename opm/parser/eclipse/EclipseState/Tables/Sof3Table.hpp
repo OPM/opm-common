@@ -22,10 +22,13 @@
 #include "SimpleTable.hpp"
 
 namespace Opm {
+
+    class DeckItem;
+
     class Sof3Table : public SimpleTable {
 
     public:
-        Sof3Table(Opm::DeckItemConstPtr item)
+        Sof3Table(std::shared_ptr< const DeckItem > item)
         {
             m_schema = std::make_shared<TableSchema>();
 

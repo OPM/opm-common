@@ -23,10 +23,13 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
+
+    class DeckItem;
+
     class OilvisctTable : public SimpleTable {
     public:
 
-        OilvisctTable(Opm::DeckItemConstPtr item)
+        OilvisctTable(std::shared_ptr< const DeckItem > item)
         {
             m_schema = std::make_shared<TableSchema>( );
             m_schema->addColumn( ColumnSchema("Temperature" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );

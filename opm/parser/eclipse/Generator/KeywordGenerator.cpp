@@ -39,6 +39,7 @@ namespace Opm {
 
     std::string testHeader() {
         std::string header = "#define BOOST_TEST_MODULE\n"
+            "#include <boost/filesystem.hpp>\n"
             "#include <boost/test/unit_test.hpp>\n"
             "#include <memory>\n"
             "#include <opm/json/JsonObject.hpp>\n"

@@ -21,10 +21,13 @@
 #define OPM_SIMULATION_CONFIG_HPP
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 
 namespace Opm {
+
+    template< typename > class GridProperties;
+
+    class ThresholdPressure;
+    class ParseMode;
 
     class SimulationConfig {
 
@@ -42,7 +45,7 @@ namespace Opm {
 
         void initThresholdPressure(const ParseMode& parseMode , DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties);
 
-        ThresholdPressureConstPtr m_ThresholdPressure;
+        std::shared_ptr< const ThresholdPressure > m_ThresholdPressure;
         bool m_useCPR;
         bool m_DISGAS;
         bool m_VAPOIL;

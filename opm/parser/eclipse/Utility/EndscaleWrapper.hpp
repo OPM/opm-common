@@ -20,6 +20,8 @@
 #define	OPM_PARSER_ENDSCALE_WRAPPER_HPP
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 #include <vector>
 #include <algorithm>
@@ -31,7 +33,7 @@ namespace Opm {
          * \brief A wrapper class to provide convenient access to the
          *        data of the 'ENDSCALE' keyword.
          */
-        EndscaleWrapper(Opm::DeckKeywordConstPtr keyword)
+        EndscaleWrapper(std::shared_ptr< const DeckKeyword > keyword)
             : m_keyword(keyword)
         {
         }
@@ -71,7 +73,7 @@ namespace Opm {
         { return m_keyword->getRecord(0)->getItem(4)->getInt(0); }
 
     private:
-        Opm::DeckKeywordConstPtr m_keyword;
+        std::shared_ptr< const DeckKeyword > m_keyword;
     };
 }
 

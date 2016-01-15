@@ -20,7 +20,6 @@
 #define SCHEDULE_EVENTS_HPP
 
 #include <cstdint>
-#include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicVector.hpp>
 

@@ -20,13 +20,14 @@
 #define OPM_PARSER_SGFN_TABLE_HPP
 
 #include "SimpleTable.hpp"
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
     class SgfnTable : public SimpleTable {
 
     public:
-        SgfnTable(Opm::DeckItemConstPtr item)
+        SgfnTable(std::shared_ptr< const DeckItem > item)
         {
             m_schema = std::make_shared<TableSchema>();
 

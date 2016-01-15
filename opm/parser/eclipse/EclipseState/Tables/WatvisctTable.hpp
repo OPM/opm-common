@@ -20,12 +20,14 @@
 #define	OPM_PARSER_WATVISCT_TABLE_HPP
 
 #include "SimpleTable.hpp"
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
+
     class WatvisctTable : public SimpleTable {
     public:
-        WatvisctTable(Opm::DeckItemConstPtr item)
+        WatvisctTable(std::shared_ptr< const DeckItem > item)
         {
             m_schema = std::make_shared<TableSchema>( );
 

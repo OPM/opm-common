@@ -25,17 +25,15 @@
 #include <memory>
 #include <limits>
 #include <algorithm>
-#include <cmath>
-
 #include <cassert>
+
+#include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Sof3Table.hpp>
-
-#include <opm/parser/eclipse/EclipseState/Grid/GridPropertyInitializers.hpp>
 
 namespace Opm {
 

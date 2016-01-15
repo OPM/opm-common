@@ -23,10 +23,13 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
+
+    class DeckItem;
+
     class Sof2Table : public SimpleTable {
     public:
 
-        Sof2Table(Opm::DeckItemConstPtr item)
+        Sof2Table(std::shared_ptr< const DeckItem > item)
         {
             m_schema = std::make_shared<TableSchema>( );
             m_schema->addColumn( ColumnSchema( "SO"  , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));

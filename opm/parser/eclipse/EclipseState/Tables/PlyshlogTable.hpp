@@ -19,20 +19,21 @@
 #ifndef OPM_PARSER_PLYSHLOG_TABLE_HPP
 #define	OPM_PARSER_PLYSHLOG_TABLE_HPP
 
-#include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
 #include "SimpleTable.hpp"
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 
 namespace Opm {
-    // forward declaration
+
     class TableManager;
 
     class PlyshlogTable : public SimpleTable {
     public:
         friend class TableManager;
 
-        PlyshlogTable(Opm::DeckRecordConstPtr indexRecord, Opm::DeckRecordConstPtr dataRecord) {
+        PlyshlogTable(std::shared_ptr< const DeckRecord > indexRecord, std::shared_ptr< const DeckRecord > dataRecord) {
             {
                 const auto item = indexRecord->getItem<ParserKeywords::PLYSHLOG::REF_POLYMER_CONCENTRATION>();
                 setRefPolymerConcentration(item->getRawDouble(0));

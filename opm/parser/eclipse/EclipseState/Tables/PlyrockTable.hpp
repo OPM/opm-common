@@ -24,11 +24,14 @@
 #include <opm/parser/eclipse/EclipseState/Tables/ColumnSchema.hpp>
 
 namespace Opm {
+
+    class DeckItem;
+
     class PlyrockTable : public SimpleTable {
     public:
 
         // This is not really a table; every column has only one element.
-        PlyrockTable(DeckRecordConstPtr record)
+        PlyrockTable(std::shared_ptr< const DeckRecord > record)
         {
             m_schema = std::make_shared<TableSchema>( );
             m_schema->addColumn( ColumnSchema("DeadPoreVolume",            Table::RANDOM , Table::DEFAULT_NONE) );

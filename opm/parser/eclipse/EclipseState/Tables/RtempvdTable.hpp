@@ -24,9 +24,11 @@
 
 namespace Opm {
 
+    class DeckItem;
+
     class RtempvdTable : public SimpleTable {
     public:
-        RtempvdTable(Opm::DeckItemConstPtr item)
+        RtempvdTable(std::shared_ptr< const DeckItem > item)
         {
             m_schema = std::make_shared<TableSchema>();
             m_schema->addColumn( ColumnSchema( "Depth"       , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );

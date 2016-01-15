@@ -23,9 +23,12 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
+
+    class DeckItem;
+
     class RocktabTable : public  SimpleTable {
     public:
-        RocktabTable(Opm::DeckItemConstPtr item,
+        RocktabTable(std::shared_ptr< const DeckItem > item,
                      bool isDirectional,
                      bool hasStressOption)
         {

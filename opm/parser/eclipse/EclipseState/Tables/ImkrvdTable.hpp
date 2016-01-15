@@ -24,9 +24,12 @@
 
 
 namespace Opm {
+
+    class DeckItem;
+
     class ImkrvdTable : public SimpleTable {
     public:
-        ImkrvdTable(Opm::DeckItemConstPtr item)
+        ImkrvdTable(std::shared_ptr< const DeckItem > item)
         {
             m_schema = std::make_shared<TableSchema>( );
             m_schema->addColumn( ColumnSchema( "DEPTH" ,  Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );

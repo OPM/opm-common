@@ -25,10 +25,13 @@
 
 
 namespace Opm {
+
+    class DeckItem;
+
     class EnkrvdTable : public SimpleTable {
     public:
 
-        EnkrvdTable(Opm::DeckItemConstPtr item)
+        EnkrvdTable(std::shared_ptr< const DeckItem > item)
         {
             m_schema = std::make_shared<TableSchema>( );
 

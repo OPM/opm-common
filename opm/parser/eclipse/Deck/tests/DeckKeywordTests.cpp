@@ -28,6 +28,7 @@
 
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 using namespace Opm;
 

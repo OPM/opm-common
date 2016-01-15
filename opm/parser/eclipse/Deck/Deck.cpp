@@ -21,6 +21,7 @@
 #include <iostream>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm {
 

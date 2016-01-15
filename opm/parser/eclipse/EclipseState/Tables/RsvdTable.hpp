@@ -23,9 +23,12 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
+
+    class DeckItem;
+
     class RsvdTable : public SimpleTable {
     public:
-        RsvdTable(Opm::DeckItemConstPtr item)
+        RsvdTable(std::shared_ptr< const DeckItem > item)
         {
             m_schema = std::make_shared<TableSchema>( );
             m_schema->addColumn( ColumnSchema( "DEPTH" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));

@@ -24,9 +24,12 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
+
+    class DeckItem;
+
     class MsfnTable : public SimpleTable {
     public:
-        MsfnTable(Opm::DeckItemConstPtr item)
+        MsfnTable(std::shared_ptr< const DeckItem > item)
         {
             m_schema = std::make_shared<TableSchema>( );
             m_schema->addColumn( ColumnSchema( "GasPhaseFraction", Table::STRICTLY_INCREASING  , Table::DEFAULT_NONE));

@@ -23,10 +23,13 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
+
+    class DeckItem;
+
     class PvdgTable : public SimpleTable {
     public:
 
-        PvdgTable(Opm::DeckItemConstPtr item)
+        PvdgTable(std::shared_ptr< const DeckItem > item)
         {
             m_schema = std::make_shared<TableSchema>();
             m_schema->addColumn( ColumnSchema( "P"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));

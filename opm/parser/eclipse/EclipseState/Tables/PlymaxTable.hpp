@@ -21,11 +21,13 @@
 
 #include "SimpleTable.hpp"
 #include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 namespace Opm {
+
     class PlymaxTable : public SimpleTable {
     public:
-        PlymaxTable(Opm::DeckRecordConstPtr record)
+        PlymaxTable(std::shared_ptr< const DeckRecord > record)
         {
             m_schema = std::make_shared<TableSchema>( );
 

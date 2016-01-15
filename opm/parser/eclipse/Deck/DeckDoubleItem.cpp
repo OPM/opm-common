@@ -19,8 +19,6 @@
 
 #include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
 
-#include <boost/lexical_cast.hpp>
-
 #include <algorithm>
 #include <iostream>
 #include <cmath>

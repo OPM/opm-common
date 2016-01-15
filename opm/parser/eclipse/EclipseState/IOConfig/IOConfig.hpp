@@ -21,11 +21,13 @@
 #define OPM_IO_CONFIG_HPP
 
 #include <opm/parser/eclipse/Deck/Section.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
-
+#include <boost/date_time/gregorian/gregorian_types.hpp>
 
 namespace Opm {
+
+    template< typename > class DynamicState;
+
+    class TimeMap;
 
     /*The IOConfig class holds data about input / ouput configurations
 
@@ -126,14 +128,14 @@ namespace Opm {
 
         void overrideRestartWriteInterval(size_t interval);
 
-        void handleRPTRSTBasic(TimeMapConstPtr timemap,
+        void handleRPTRSTBasic(std::shared_ptr< const TimeMap > timemap,
                                size_t timestep,
                                size_t basic,
                                size_t frequency = 1,
                                bool update_default = false,
                                bool reset_global = false);
-        void handleRPTSCHEDRestart(TimeMapConstPtr timemap, size_t timestep, size_t restart);
-        void handleSolutionSection(TimeMapConstPtr timemap, std::shared_ptr<const SOLUTIONSection> solutionSection);
+        void handleRPTSCHEDRestart(std::shared_ptr< const TimeMap > timemap, size_t timestep, size_t restart);
+        void handleSolutionSection(std::shared_ptr< const TimeMap > timemap, std::shared_ptr<const SOLUTIONSection> solutionSection);
         void handleGridSection(std::shared_ptr<const GRIDSection> gridSection);
         void handleRunspecSection(std::shared_ptr<const RUNSPECSection> runspecSection);
         void setWriteInitialRestartFile(bool writeInitialRestartFile);
@@ -145,16 +147,16 @@ namespace Opm {
 
     private:
 
-        void assertTimeMap(TimeMapConstPtr timemap);
+        void assertTimeMap(std::shared_ptr< const TimeMap > timemap);
         bool getWriteRestartFileFrequency(size_t timestep,
                                           size_t start_timestep,
                                           size_t frequency,
                                           bool years  = false,
                                           bool months = false) const;
-        void handleRPTSOL(DeckKeywordConstPtr keyword);
+        void handleRPTSOL(std::shared_ptr< const DeckKeyword > keyword);
 
 
-        TimeMapConstPtr m_timemap;
+        std::shared_ptr< const TimeMap > m_timemap;
         bool            m_write_INIT_file;
         bool            m_write_EGRID_file;
         bool            m_write_initial_RST_file;

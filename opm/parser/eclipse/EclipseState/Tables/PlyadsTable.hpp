@@ -23,10 +23,13 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
+
+    class DeckItem;
+
     class PlyadsTable : public SimpleTable {
     public:
 
-        PlyadsTable(Opm::DeckItemConstPtr item)
+        PlyadsTable(std::shared_ptr< const DeckItem > item)
         {
             m_schema = std::make_shared<TableSchema>();
             m_schema->addColumn( ColumnSchema("PolymerConcentration" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));

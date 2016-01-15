@@ -23,9 +23,12 @@
 #include "SimpleTable.hpp"
 
 namespace Opm {
+
+    class DeckItem;
+
     class SgcwmisTable : public SimpleTable {
     public:
-        SgcwmisTable(Opm::DeckItemConstPtr item)
+        SgcwmisTable(std::shared_ptr< const DeckItem > item)
         {
             m_schema = std::make_shared<TableSchema>();
             m_schema->addColumn( ColumnSchema( "WaterSaturation" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );

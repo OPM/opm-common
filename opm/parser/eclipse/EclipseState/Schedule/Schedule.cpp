@@ -22,21 +22,32 @@
 #include <stdexcept>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Deck/SCHEDULESection.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicVector.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/Compsegs.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/MSW/Compsegs.hpp>
-#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellSet.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm {
 
@@ -44,6 +55,10 @@ namespace Opm {
         : m_grid(grid)
     {
         initFromDeck(parseMode , deck, ioConfig);
+    }
+
+    boost::posix_time::ptime Schedule::getStartTime() const {
+        return m_timeMap->getStartTime(/*timeStepIdx=*/0);
     }
 
     void Schedule::initFromDeck(const ParseMode& parseMode , DeckConstPtr deck, IOConfigPtr ioConfig) {

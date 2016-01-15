@@ -26,7 +26,7 @@ namespace Opm {
     class SwfnTable : public SimpleTable {
 
     public:
-        SwfnTable(Opm::DeckItemConstPtr item)
+        SwfnTable(std::shared_ptr< const DeckItem > item)
         {
             m_schema = std::make_shared<TableSchema>();
 

@@ -19,7 +19,12 @@
 #include <stdexcept>
 #include <iostream>
 
+#include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/Fault.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FaultFace.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
 
 namespace Opm {
 

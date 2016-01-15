@@ -27,7 +27,12 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>

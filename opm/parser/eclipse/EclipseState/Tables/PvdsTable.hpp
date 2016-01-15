@@ -24,9 +24,12 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
+
+    class DeckItem;
+
     class PvdsTable : public SimpleTable {
     public:
-        PvdsTable(Opm::DeckItemConstPtr item)
+        PvdsTable(std::shared_ptr< const DeckItem > item)
         {
             m_schema = std::make_shared<TableSchema>();
 

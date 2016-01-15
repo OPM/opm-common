@@ -22,12 +22,13 @@
 #define MULTREGTSCANNER_HPP
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 
 
 namespace Opm {
+
+    template< typename > class GridProperties;
 
     namespace MULTREGT {
 

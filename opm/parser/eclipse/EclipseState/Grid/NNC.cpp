@@ -18,6 +18,7 @@
 */
 #include <array>
 
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
 

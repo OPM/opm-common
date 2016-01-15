@@ -25,11 +25,13 @@
 
 namespace Opm {
 
+    class DeckItem;
+
     class SlgofTable : public SimpleTable {
 
     public:
 
-        SlgofTable(Opm::DeckItemConstPtr item)
+        SlgofTable(std::shared_ptr< const DeckItem > item)
         {
             m_schema = std::make_shared<TableSchema>();
             m_schema->addColumn( ColumnSchema("SL"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));

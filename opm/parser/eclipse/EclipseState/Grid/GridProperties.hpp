@@ -22,10 +22,8 @@
 
 #include <string>
 #include <vector>
-#include <tuple>
 #include <unordered_map>
 
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 
 /*
@@ -46,6 +44,8 @@
 
 
 namespace Opm {
+
+    class EclipseGrid;
 
 template <typename T>
 class GridProperties {
