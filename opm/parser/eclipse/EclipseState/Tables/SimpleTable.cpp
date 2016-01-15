@@ -20,6 +20,7 @@
 #include <iostream>
 
 #include <opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableSchema.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 
 namespace Opm {

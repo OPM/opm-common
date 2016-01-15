@@ -40,6 +40,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PlyadsTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/VFPInjTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PlymaxTable.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 

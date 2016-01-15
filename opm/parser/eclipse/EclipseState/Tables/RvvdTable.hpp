@@ -27,19 +27,10 @@ namespace Opm {
 
     class RvvdTable : public SimpleTable {
     public:
-        RvvdTable(std::shared_ptr< const DeckItem > item)
-        {
-            m_schema = std::make_shared<TableSchema>( );
-            m_schema->addColumn( ColumnSchema( "DEPTH" ,  Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
-            m_schema->addColumn( ColumnSchema( "RV"    ,  Table::RANDOM , Table::DEFAULT_LINEAR ) );
-            SimpleTable::init(item);
-        }
+        RvvdTable( std::shared_ptr< const DeckItem > item );
 
-        const TableColumn& getDepthColumn() const
-        { return SimpleTable::getColumn(0); }
-
-        const TableColumn& getRvColumn() const
-        { return SimpleTable::getColumn(1); }
+        const TableColumn& getDepthColumn() const;
+        const TableColumn& getRvColumn() const;
     };
 }
 

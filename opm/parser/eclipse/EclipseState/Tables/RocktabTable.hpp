@@ -20,7 +20,6 @@
 #define	OPM_PARSER_ROCKTAB_TABLE_HPP
 
 #include "SimpleTable.hpp"
-#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
 
@@ -30,56 +29,14 @@ namespace Opm {
     public:
         RocktabTable(std::shared_ptr< const DeckItem > item,
                      bool isDirectional,
-                     bool hasStressOption)
-        {
-            Table::ColumnOrderEnum POOrder;
+                     bool hasStressOption);
 
-            m_isDirectional = isDirectional;
-            m_schema = std::make_shared<TableSchema>( );
-            if (hasStressOption)
-                POOrder = Table::STRICTLY_INCREASING;
-            else
-                POOrder = Table::STRICTLY_DECREASING;
-
-            m_schema->addColumn( ColumnSchema("PO"      , POOrder      , Table::DEFAULT_NONE ) );
-            m_schema->addColumn( ColumnSchema("PV_MULT" , Table::RANDOM , Table::DEFAULT_LINEAR ) );
-
-            if (isDirectional) {
-                m_schema->addColumn( ColumnSchema("PV_MULT_TRANX" , Table::RANDOM , Table::DEFAULT_LINEAR ) );
-                m_schema->addColumn( ColumnSchema("PV_MULT_TRANY" , Table::RANDOM , Table::DEFAULT_LINEAR ) );
-                m_schema->addColumn( ColumnSchema("PV_MULT_TRANZ" , Table::RANDOM , Table::DEFAULT_LINEAR ) );
-            } else
-                m_schema->addColumn( ColumnSchema("PV_MULT_TRAN" , Table::RANDOM , Table::DEFAULT_LINEAR ) );
-
-            SimpleTable::init(item);
-        }
-
-
-        const TableColumn& getPressureColumn() const
-        { return SimpleTable::getColumn(0); }
-
-        const TableColumn& getPoreVolumeMultiplierColumn() const
-        { return SimpleTable::getColumn(1); }
-
-        const TableColumn& getTransmissibilityMultiplierColumn() const
-        { return SimpleTable::getColumn(2); }
-
-        const TableColumn& getTransmissibilityMultiplierXColumn() const
-        { return SimpleTable::getColumn(2); }
-
-        const TableColumn& getTransmissibilityMultiplierYColumn() const
-        {
-            if (!m_isDirectional)
-                return SimpleTable::getColumn(2);
-            return SimpleTable::getColumn(3);
-        }
-
-        const TableColumn& getTransmissibilityMultiplierZColumn() const
-        {
-            if (!m_isDirectional)
-                return SimpleTable::getColumn(2);
-            return SimpleTable::getColumn(4);
-        }
+        const TableColumn& getPressureColumn() const;
+        const TableColumn& getPoreVolumeMultiplierColumn() const;
+        const TableColumn& getTransmissibilityMultiplierColumn() const;
+        const TableColumn& getTransmissibilityMultiplierXColumn() const;
+        const TableColumn& getTransmissibilityMultiplierYColumn() const;
+        const TableColumn& getTransmissibilityMultiplierZColumn() const;
 
     private:
         bool m_isDirectional;

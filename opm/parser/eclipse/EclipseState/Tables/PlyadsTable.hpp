@@ -20,30 +20,17 @@
 #define	OPM_PARSER_PLYADS_TABLE_HPP
 
 #include "SimpleTable.hpp"
-#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
 
     class DeckItem;
 
     class PlyadsTable : public SimpleTable {
-    public:
+        public:
+            PlyadsTable( std::shared_ptr< const DeckItem > item );
 
-        PlyadsTable(std::shared_ptr< const DeckItem > item)
-        {
-            m_schema = std::make_shared<TableSchema>();
-            m_schema->addColumn( ColumnSchema("PolymerConcentration" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
-            m_schema->addColumn( ColumnSchema("AdsorbedPolymer" , Table::INCREASING , Table::DEFAULT_NONE ));
-
-            SimpleTable::init(item);
-        }
-
-
-        const TableColumn& getPolymerConcentrationColumn() const
-        { return SimpleTable::getColumn(0); }
-
-        const TableColumn& getAdsorbedPolymerColumn() const
-        { return SimpleTable::getColumn(1); }
+            const TableColumn& getPolymerConcentrationColumn() const;
+            const TableColumn& getAdsorbedPolymerColumn() const;
     };
 }
 

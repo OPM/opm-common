@@ -20,69 +20,19 @@
 #ifndef OPM_PARSER_GASVISCT_TABLE_HPP
 #define OPM_PARSER_GASVISCT_TABLE_HPP
 
-#include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
 #include "SimpleTable.hpp"
-#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm {
 
+    class Deck;
     class DeckItem;
 
     class GasvisctTable : public SimpleTable {
     public:
-        GasvisctTable(const Deck& deck, std::shared_ptr< const DeckItem > deckItem)
-        {
-            int numComponents = deck.getKeyword<ParserKeywords::COMPS>()->getRecord(0)->getItem(0)->getInt(0);
+        GasvisctTable( const Deck& deck, std::shared_ptr< const DeckItem > deckItem );
 
-            auto temperatureDimension = deck.getActiveUnitSystem()->getDimension("Temperature");
-            auto viscosityDimension = deck.getActiveUnitSystem()->getDimension("Viscosity");
-
-            m_schema = std::make_shared<TableSchema>( );
-            m_schema->addColumn( ColumnSchema( "Temperature" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
-            for (int compIdx = 0; compIdx < numComponents; ++ compIdx) {
-                std::string columnName = "Viscosity" + std::to_string(compIdx);
-                m_schema->addColumn( ColumnSchema( columnName, Table::INCREASING , Table::DEFAULT_NONE ) );
-            }
-            SimpleTable::addColumns( );
-
-            {
-                size_t numFlatItems = deckItem->size( );
-                if ( numFlatItems % numColumns() != 0)
-                    throw std::runtime_error("Number of columns in the data file is inconsistent "
-                                             "with the expected number for keyword GASVISCT");
-            }
-
-            {
-                size_t numRows = deckItem->size() / m_schema->size();
-                for (size_t columnIndex=0; columnIndex < m_schema->size(); columnIndex++) {
-                    auto& column = getColumn( columnIndex );
-                    for (size_t rowIdx = 0; rowIdx < numRows; rowIdx++) {
-                        size_t deckIndex = rowIdx * m_schema->size() + columnIndex;
-
-                        if (deckItem->defaultApplied( deckIndex ))
-                            column.addDefault();
-                        else {
-                            double rawValue = deckItem->getRawDouble( deckIndex );
-                            double SIValue;
-
-                            if (columnIndex == 0)
-                                SIValue = temperatureDimension->convertRawToSi(rawValue);
-                            else
-                                SIValue = viscosityDimension->convertRawToSi(rawValue);
-
-                            column.addValue( SIValue );
-                        }
-                    }
-                }
-            }
-        }
-
-        const TableColumn& getTemperatureColumn() const
-        { return SimpleTable::getColumn(0); }
-
-        const TableColumn& getGasViscosityColumn(size_t compIdx) const
-        { return SimpleTable::getColumn(1 + compIdx); }
+        const TableColumn& getTemperatureColumn() const;
+        const TableColumn& getGasViscosityColumn(size_t compIdx) const;
     };
 }
 

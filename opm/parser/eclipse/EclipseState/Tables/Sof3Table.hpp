@@ -26,28 +26,12 @@ namespace Opm {
     class DeckItem;
 
     class Sof3Table : public SimpleTable {
+        public:
+            Sof3Table( std::shared_ptr< const DeckItem > item );
 
-    public:
-        Sof3Table(std::shared_ptr< const DeckItem > item)
-        {
-            m_schema = std::make_shared<TableSchema>();
-
-            m_schema->addColumn( ColumnSchema("SO" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
-            m_schema->addColumn( ColumnSchema("KROW" , Table::INCREASING , Table::DEFAULT_LINEAR ));
-            m_schema->addColumn( ColumnSchema("KROG" , Table::INCREASING , Table::DEFAULT_LINEAR ));
-
-            SimpleTable::init( item );
-        }
-
-
-        const TableColumn& getSoColumn() const
-        { return SimpleTable::getColumn(0); }
-
-        const TableColumn& getKrowColumn() const
-        { return SimpleTable::getColumn(1); }
-
-        const TableColumn& getKrogColumn() const
-        { return SimpleTable::getColumn(2); }
+            const TableColumn& getSoColumn() const;
+            const TableColumn& getKrowColumn() const;
+            const TableColumn& getKrogColumn() const;
     };
 }
 

@@ -20,7 +20,7 @@
 #define	OPM_PARSER_SIMPLE_TABLE_HPP
 
 #include <opm/parser/eclipse/EclipseState/Tables/TableColumn.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/TableSchema.hpp>
+#include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 
 #include <map>
 #include <memory>

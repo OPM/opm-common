@@ -20,99 +20,31 @@
 #define	OPM_PARSER_PLYSHLOG_TABLE_HPP
 
 #include "SimpleTable.hpp"
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 
 namespace Opm {
 
+    class DeckRecord;
     class TableManager;
 
     class PlyshlogTable : public SimpleTable {
     public:
         friend class TableManager;
 
-        PlyshlogTable(std::shared_ptr< const DeckRecord > indexRecord, std::shared_ptr< const DeckRecord > dataRecord) {
-            {
-                const auto item = indexRecord->getItem<ParserKeywords::PLYSHLOG::REF_POLYMER_CONCENTRATION>();
-                setRefPolymerConcentration(item->getRawDouble(0));
-            }
+        PlyshlogTable(std::shared_ptr< const DeckRecord > indexRecord, std::shared_ptr< const DeckRecord > dataRecord);
 
-            {
-                const auto item = indexRecord->getItem<ParserKeywords::PLYSHLOG::REF_SALINITY>();
-                if (item->hasValue(0)) {
-                    setHasRefSalinity(true);
-                    setRefSalinity(item->getRawDouble(0));
-                } else
-                    setHasRefSalinity(false);
-            }
-
-            {
-                const auto item = indexRecord->getItem<ParserKeywords::PLYSHLOG::REF_TEMPERATURE>();
-                if (item->hasValue(0)) {
-                    setHasRefTemperature(true);
-                    setRefTemperature(item->getRawDouble(0));
-                } else
-                    setHasRefTemperature(false);
-            }
-
-            m_schema = std::make_shared<TableSchema>();
-            m_schema->addColumn( ColumnSchema("WaterVelocity"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
-            m_schema->addColumn( ColumnSchema("ShearMultiplier" , Table::RANDOM , Table::DEFAULT_NONE));
-
-            SimpleTable::init( dataRecord->getItem<ParserKeywords::PLYSHLOG::DATA>() );
-        }
-
-    public:
-
-        double getRefPolymerConcentration() const {
-            return m_refPolymerConcentration;
-        }
-        double getRefSalinity() const {
-            return m_refSalinity;
-        }
-
-        double getRefTemperature() const{
-            return m_refTemperature;
-        }
-
-        void setRefPolymerConcentration(const double refPlymerConcentration) {
-            m_refPolymerConcentration = refPlymerConcentration;
-        }
-
-        void setRefSalinity(const double refSalinity) {
-            m_refSalinity = refSalinity;
-        }
-
-        void setRefTemperature(const double refTemperature) {
-            m_refTemperature = refTemperature;
-        }
-
-        bool hasRefSalinity() const {
-            return m_hasRefSalinity;
-        }
-
-        bool hasRefTemperature() const {
-            return m_hasRefTemperature;
-        }
-
-        void setHasRefSalinity(const bool has) {
-            m_hasRefSalinity = has;
-        }
-
-        void setHasRefTemperature(const bool has) {
-            m_refTemperature = has;
-        }
-
-        const TableColumn& getWaterVelocityColumn() const {
-            return getColumn(0);
-        }
-
-        const TableColumn& getShearMultiplierColumn() const {
-            return getColumn(1);
-        }
-
+        double getRefPolymerConcentration() const;
+        double getRefSalinity() const;
+        double getRefTemperature() const;
+        void setRefPolymerConcentration(const double refPlymerConcentration);
+        void setRefSalinity(const double refSalinity);
+        void setRefTemperature(const double refTemperature);
+        bool hasRefSalinity() const;
+        bool hasRefTemperature() const;
+        void setHasRefSalinity(const bool has);
+        void setHasRefTemperature(const bool has);
+        const TableColumn& getWaterVelocityColumn() const;
+        const TableColumn& getShearMultiplierColumn() const;
 
     private:
         double m_refPolymerConcentration;
@@ -122,7 +54,6 @@ namespace Opm {
         bool m_hasRefSalinity;
         bool m_hasRefTemperature;
     };
-
 }
 
 #endif

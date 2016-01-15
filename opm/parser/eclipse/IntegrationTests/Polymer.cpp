@@ -25,6 +25,10 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PlyviscTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PlymaxTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PlyrockTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PlyadsTable.hpp>
 
 using namespace Opm;
 

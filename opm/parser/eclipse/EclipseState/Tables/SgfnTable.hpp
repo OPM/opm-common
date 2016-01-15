@@ -20,35 +20,19 @@
 #define OPM_PARSER_SGFN_TABLE_HPP
 
 #include "SimpleTable.hpp"
-#include <opm/parser/eclipse/Deck/DeckItem.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
+
+    class DeckItem;
+
     class SgfnTable : public SimpleTable {
 
     public:
-        SgfnTable(std::shared_ptr< const DeckItem > item)
-        {
-            m_schema = std::make_shared<TableSchema>();
+        SgfnTable( std::shared_ptr< const DeckItem > item );
 
-            m_schema->addColumn( ColumnSchema("SG"  , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
-            m_schema->addColumn( ColumnSchema("KRG" , Table::INCREASING , Table::DEFAULT_LINEAR));
-            m_schema->addColumn( ColumnSchema("PCOG" , Table::INCREASING , Table::DEFAULT_LINEAR));
-
-            SimpleTable::init(item);
-        }
-
-
-        const TableColumn& getSgColumn() const
-        { return SimpleTable::getColumn(0); }
-
-        const TableColumn& getKrgColumn() const
-        { return SimpleTable::getColumn(1); }
-
-        // this column is p_g - p_o (non-wetting phase pressure minus
-        // wetting phase pressure for a given gas saturation)
-        const TableColumn& getPcogColumn() const
-        { return SimpleTable::getColumn(2); }
+        const TableColumn& getSgColumn() const;
+        const TableColumn& getKrgColumn() const;
+        const TableColumn& getPcogColumn() const;
     };
 }
 

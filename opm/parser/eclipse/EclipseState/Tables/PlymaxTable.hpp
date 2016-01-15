@@ -20,34 +20,16 @@
 #define	OPM_PARSER_PLYMAX_TABLE_HPP
 
 #include "SimpleTable.hpp"
-#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 namespace Opm {
 
     class PlymaxTable : public SimpleTable {
-    public:
-        PlymaxTable(std::shared_ptr< const DeckRecord > record)
-        {
-            m_schema = std::make_shared<TableSchema>( );
+        public:
 
-            m_schema->addColumn( ColumnSchema("C_POLYMER",     Table::RANDOM , Table::DEFAULT_NONE) );
-            m_schema->addColumn( ColumnSchema("C_POLYMER_MAX", Table::RANDOM , Table::DEFAULT_NONE) );
+        PlymaxTable( std::shared_ptr< const DeckRecord > record );
 
-            addColumns();
-            for (size_t colIdx = 0; colIdx < record->size(); colIdx++) {
-                auto item = record->getItem( colIdx );
-                auto& column = getColumn( colIdx );
-
-                column.addValue( item->getSIDouble(0) );
-            }
-        }
-
-        const TableColumn& getPolymerConcentrationColumn() const
-        { return SimpleTable::getColumn(0); }
-
-        const TableColumn& getMaxPolymerConcentrationColumn() const
-        { return SimpleTable::getColumn(1); }
+        const TableColumn& getPolymerConcentrationColumn() const;
+        const TableColumn& getMaxPolymerConcentrationColumn() const;
     };
 }
 

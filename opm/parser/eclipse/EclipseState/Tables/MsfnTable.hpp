@@ -21,7 +21,6 @@
 #define	OPM_PARSER_MSFN_TABLE_HPP
 
 #include "SimpleTable.hpp"
-#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
 
@@ -29,29 +28,12 @@ namespace Opm {
 
     class MsfnTable : public SimpleTable {
     public:
-        MsfnTable(std::shared_ptr< const DeckItem > item)
-        {
-            m_schema = std::make_shared<TableSchema>( );
-            m_schema->addColumn( ColumnSchema( "GasPhaseFraction", Table::STRICTLY_INCREASING  , Table::DEFAULT_NONE));
-            m_schema->addColumn( ColumnSchema( "GasSolventRelpermMultiplier", Table::INCREASING  , Table::DEFAULT_NONE));
-            m_schema->addColumn( ColumnSchema( "OilRelpermMultiplier", Table::DECREASING  , Table::DEFAULT_NONE));
+        MsfnTable( std::shared_ptr< const DeckItem > item );
 
-            SimpleTable::init( item );
-            {
-                auto& column = getColumn("GasPhaseFraction");
-                column.assertUnitRange();
-            }
-        }
+        const TableColumn& getGasPhaseFractionColumn() const;
+        const TableColumn& getGasSolventRelpermMultiplierColumn() const;
+        const TableColumn& getOilRelpermMultiplierColumn() const;
 
-
-        const TableColumn& getGasPhaseFractionColumn() const
-        { return SimpleTable::getColumn(0); }
-
-        const TableColumn& getGasSolventRelpermMultiplierColumn() const
-        { return SimpleTable::getColumn(1); }
-
-        const TableColumn& getOilRelpermMultiplierColumn() const
-        { return SimpleTable::getColumn(2); }
     };
 }
 

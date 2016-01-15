@@ -115,9 +115,8 @@ EclipseState/Tables/TableColumn.cpp
 EclipseState/Tables/ColumnSchema.cpp
 EclipseState/Tables/TableSchema.cpp
 EclipseState/Tables/TableIndex.cpp
-EclipseState/Tables/PvtgTable.cpp
-EclipseState/Tables/PvtoTable.cpp
 EclipseState/Tables/PvtxTable.cpp
+EclipseState/Tables/Tables.cpp
 #
 EclipseState/Grid/GridProperty.cpp
 EclipseState/Grid/Box.cpp

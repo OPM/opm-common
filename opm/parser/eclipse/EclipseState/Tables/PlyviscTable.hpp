@@ -20,8 +20,6 @@
 #define	OPM_PARSER_PLYVISC_TABLE_HPP
 
 #include "SimpleTable.hpp"
-#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
-
 
 namespace Opm {
 
@@ -29,21 +27,10 @@ namespace Opm {
 
     class PlyviscTable : public SimpleTable {
     public:
-        PlyviscTable(std::shared_ptr< const DeckItem > item)
-        {
-            m_schema = std::make_shared<TableSchema>();
-            m_schema->addColumn( ColumnSchema( "PolymerConcentration" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
-            m_schema->addColumn( ColumnSchema( "ViscosityMultiplier" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
-            SimpleTable::init(item);
-        }
+        PlyviscTable( std::shared_ptr< const DeckItem > item );
 
-    public:
-
-        const TableColumn& getPolymerConcentrationColumn() const
-        { return SimpleTable::getColumn(0); }
-
-        const TableColumn& getViscosityMultiplierColumn() const
-        { return SimpleTable::getColumn(1); }
+        const TableColumn& getPolymerConcentrationColumn() const;
+        const TableColumn& getViscosityMultiplierColumn() const;
     };
 }
 

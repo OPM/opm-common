@@ -34,6 +34,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/SwfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Sof3Table.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SlgofTable.hpp>
 
 namespace Opm {
 
