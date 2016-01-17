@@ -36,6 +36,7 @@ namespace Opm {
     class TableIndex {
     public:
         TableIndex( size_t index1 , double weight1);
+        TableIndex( const TableIndex& tableIndex);
         size_t getIndex1( ) const;
         size_t getIndex2( ) const;
         double getWeight1( ) const;
