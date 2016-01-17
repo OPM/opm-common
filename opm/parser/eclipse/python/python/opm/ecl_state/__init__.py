@@ -1,2 +1,1 @@
-from .table_manager import TableManager
-
+# Empty package init
