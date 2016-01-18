@@ -73,3 +73,7 @@ SWOF
             self.assertEqual( table.getValue("SW" , 1 ) , 5)
 
             self.assertEqual( table.evaluate("KRW" , 1) , 2)
+
+            index = table.lookup( 1 )
+            self.assertEqual( table.evaluate("KRW" , index) , 2)
+            

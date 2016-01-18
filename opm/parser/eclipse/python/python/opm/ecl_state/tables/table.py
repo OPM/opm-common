@@ -3,13 +3,17 @@ import os.path
 from ert.cwrap import BaseCClass
 from opm import OPMPrototype
 
+from .table_index import TableIndex
+
 
 class Table(BaseCClass):
     TYPE_NAME   = "table"
-    _has_column = OPMPrototype("bool   table_has_column( table , char* )")
-    _num_rows   = OPMPrototype("int    table_get_num_rows( table )")
-    _get_value  = OPMPrototype("double table_get_value( table , char* , int)")
-    _evaluate   = OPMPrototype("double table_evaluate( table , char* , int)")
+    _has_column          = OPMPrototype("bool            table_has_column( table , char* )")
+    _num_rows            = OPMPrototype("int             table_get_num_rows( table )")
+    _get_value           = OPMPrototype("double          table_get_value( table , char* , int)")
+    _evaluate            = OPMPrototype("double          table_evaluate( table , char* , int)")
+    _evaluate_with_index = OPMPrototype("double          table_evaluate_from_index( table , char* , table_index)")
+    _lookup              = OPMPrototype("table_index_obj table_lookup( table , double)")
     
     def __init__(self , *args, **kwargs):
         raise NotImplementedError("Can not create instantiate tables directly")
@@ -58,10 +62,28 @@ class Table(BaseCClass):
         This will use linear interpolation of the value 0.50 in the
         first column, and find that the answer should be just between
         the two first elements in the "COL1" column - i.e. 5.00.
+
+        Alternatively the @arg_value can be a TableIndex instance
+        which is an intermediate result from a previous linear
+        interpolation - typically inferred from another table.
         """
 
 
         if not column in self:
             raise KeyError("No such column: %s" % column)
 
-        return self._evaluate( self , column , arg_value  )
+        if isinstance(arg_value , TableIndex):
+            return self._evaluate_with_index( self , column , arg_value  )
+        else:
+            return self._evaluate( self , column , arg_value  )
+
+
+    def lookup(self , arg_value):
+        """
+        Will do linear interpolation of the @arg_value in the argument
+        column of the table. The return value is a TableIndex instance
+        which can be used as arg_value argument in the
+        Table.evaluate() method.
+        """
+        
+        return self._lookup(self ,arg_value)
