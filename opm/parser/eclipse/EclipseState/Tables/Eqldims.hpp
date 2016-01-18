@@ -25,7 +25,7 @@
   the values from the EQLDIMS keyword.
 */
 
-#include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
 
 namespace Opm {
     class Eqldims {
