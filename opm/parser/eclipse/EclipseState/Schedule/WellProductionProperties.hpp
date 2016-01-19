@@ -43,8 +43,8 @@ namespace Opm {
         bool operator!=(const WellProductionProperties& other) const;
         WellProductionProperties();
 
-        static WellProductionProperties history(double BHPLimit , DeckRecordConstPtr record);
-        static WellProductionProperties prediction(DeckRecordConstPtr record);
+        static WellProductionProperties history(double BHPLimit , DeckRecordConstPtr record, bool addGroupProductionControl = false);
+        static WellProductionProperties prediction(DeckRecordConstPtr record, bool addGroupProductionControl = false);
 
         bool hasProductionControl(WellProducer::ControlModeEnum controlModeArg) const {
             return (m_productionControls & controlModeArg) != 0;
