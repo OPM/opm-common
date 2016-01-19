@@ -1,3 +1,5 @@
+#include <opm/json/JsonObject.hpp>
+
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseMode.hpp>
@@ -22,6 +24,12 @@ extern "C" {
 
     void parser_free(Opm::Parser * parser) {
         delete parser;
+    }
+
+
+    void parser_add_json_keyword(Opm::Parser * parser, const char * json_string) {
+        Json::JsonObject json_object(json_string);
+        parser->addParserKeyword( json_object );
     }
 
 }
