@@ -61,6 +61,7 @@ namespace Opm {
         DeckPtr parseStream(std::shared_ptr<std::istream> inputStream , bool strict = true) const;
 
         /// Method to add ParserKeyword instances, these holding type and size information about the keywords and their data.
+        void addParserKeyword(const Json::JsonObject& jsonKeyword);
         void addParserKeyword(ParserKeywordConstPtr parserKeyword);
         bool dropParserKeyword(const std::string& parserKeywordName);
         ParserKeywordConstPtr getKeyword(const std::string& name) const;

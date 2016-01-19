@@ -269,6 +269,12 @@ namespace Opm {
     }
 
 
+    void Parser::addParserKeyword(const Json::JsonObject& jsonKeyword) {
+        ParserKeywordConstPtr parserKeyword = std::make_shared<const ParserKeyword>(jsonKeyword);
+        addParserKeyword(parserKeyword);
+    }
+
+
     ParserKeywordConstPtr Parser::getKeyword(const std::string& name ) const {
         auto iter = m_deckParserKeywords.find( name );
         if (iter == m_deckParserKeywords.end())
