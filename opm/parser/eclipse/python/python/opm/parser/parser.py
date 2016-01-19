@@ -62,7 +62,6 @@ class Parser(BaseCClass):
         As illustrated the main purpose of the instance based method
         is the ability to add additional keywords before actually
         parsing.
-
         Using the classmethod:
 
             deck = Parser.parseFile("FILE.DATA")
@@ -81,7 +80,6 @@ class Parser(BaseCClass):
         else:
             raise IOError("No such file:%s" % filename)
 
-        
 
     def addKeyword(self , schema):
         """
@@ -90,5 +88,3 @@ class Parser(BaseCClass):
         """
         json_string = json.dumps( schema )
         self._add_json_keyword( self , json_string )
-
-

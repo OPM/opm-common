@@ -31,6 +31,7 @@ class ParserTest(TestCase):
         p.addKeyword( schema )
         self.assertTrue("KEYWORD" in p)
 
+
         with TestAreaContext("parse-test2"):
             with open("test.DATA", "w") as fileH:
                 fileH.write("KEYWORD\n")
@@ -40,5 +41,4 @@ class ParserTest(TestCase):
             deck = p.parseFile( "test.DATA" )
             self.assertTrue( "KEYWORD" in deck )
         
-            
             
