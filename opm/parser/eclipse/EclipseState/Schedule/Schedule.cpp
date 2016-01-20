@@ -195,6 +195,9 @@ namespace Opm {
             if (keyword->name() == "GCONPROD")
                 handleGCONPROD(keyword, currentStep);
 
+            if (keyword->name() == "GEFAC")
+                handleGEFAC(keyword, currentStep);
+
             if (keyword->name() == "TUNING")
                 handleTUNING(keyword, currentStep);
 
@@ -1015,6 +1018,22 @@ namespace Opm {
             group->setProductionGroup(currentStep, true);
         }
     }
+
+
+    void Schedule::handleGEFAC(std::shared_ptr<const DeckKeyword> keyword, size_t currentStep) {
+        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
+            DeckRecordConstPtr record = keyword->getRecord(recordNr);
+            const std::string& groupName = record->getItem("GROUP")->getTrimmedString(0);
+            GroupPtr group = getGroup(groupName);
+
+            group->setGroupEfficiencyFactor(currentStep, record->getItem("EFFICIENCY_FACTOR")->getRawDouble(0));
+
+            const std::string& transfer_str = record->getItem("TRANSFER_EXT_NET")->getTrimmedString(0);
+            bool transfer = (transfer_str == "YES") ? true : false;
+            group->setTransferGroupEfficiencyFactor(currentStep, transfer);
+        }
+    }
+
 
     void Schedule::handleTUNING(DeckKeywordConstPtr keyword, size_t currentStep) {
 
