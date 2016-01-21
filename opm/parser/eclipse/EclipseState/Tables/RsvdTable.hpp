@@ -20,25 +20,17 @@
 #define OPM_PARSER_RSVD_TABLE_HPP
 
 #include "SimpleTable.hpp"
-#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
+
+    class DeckItem;
+
     class RsvdTable : public SimpleTable {
     public:
-        RsvdTable(Opm::DeckItemConstPtr item)
-        {
-            m_schema = std::make_shared<TableSchema>( );
-            m_schema->addColumn( ColumnSchema( "DEPTH" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
-            m_schema->addColumn( ColumnSchema( "RS" , Table::RANDOM , Table::DEFAULT_NONE ));
+        RsvdTable( std::shared_ptr< const DeckItem > item );
 
-            SimpleTable::init(item);
-        }
-
-        const TableColumn& getDepthColumn() const
-        { return SimpleTable::getColumn(0); }
-
-        const TableColumn& getRsColumn() const
-        { return SimpleTable::getColumn(1); }
+        const TableColumn& getDepthColumn() const;
+        const TableColumn& getRsColumn() const;
     };
 }
 

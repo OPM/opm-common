@@ -20,9 +20,8 @@
 #define	OPM_PARSER_GRUPTREE_WRAPPER_HPP
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-
-#include <vector>
-#include <algorithm>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 namespace Opm {
     class GruptreeWrapper {
@@ -31,7 +30,7 @@ namespace Opm {
          * \brief A wrapper class to provide convenient access to the
          *        data of the 'GRUPTREE' keyword.
          */
-        GruptreeWrapper(Opm::DeckKeywordConstPtr keyword)
+        GruptreeWrapper(std::shared_ptr< const DeckKeyword > keyword)
             : m_keyword(keyword)
         {
         }
@@ -57,7 +56,7 @@ namespace Opm {
         { return m_keyword->getRecord(wellIdx)->getItem(1)->getString(0); }
 
     private:
-        Opm::DeckKeywordConstPtr m_keyword;
+        std::shared_ptr< const DeckKeyword > m_keyword;
     };
 }
 

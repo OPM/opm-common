@@ -20,7 +20,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/Compsegs.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 #include <cmath>
 
 namespace Opm {

@@ -19,54 +19,58 @@
 #ifndef SCHEDULE_HPP
 #define SCHEDULE_HPP
 
-#include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
-#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Deck/SCHEDULESection.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
-
-#include <memory>
-#include <boost/date_time/posix_time/posix_time.hpp>
-
 #include <map>
+#include <memory>
+
+#include <boost/date_time/posix_time/posix_time_types.hpp>
+
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
+
 
 namespace Opm
 {
+
+    template< typename > class DynamicState;
+    template< typename > class DynamicVector;
+
+    class EclipseGrid;
+    class Events;
+    class Group;
+    class GroupTree;
+    class IOConfig;
+    class OilVaporizationProperties;
+    class ParseMode;
+    class SCHEDULESection;
+    class TimeMap;
+    class Tuning;
+    class Well;
 
     const boost::gregorian::date defaultStartDate( 1983 , boost::gregorian::Jan , 1);
 
     class Schedule {
     public:
-        Schedule(const ParseMode& parseMode , std::shared_ptr<const EclipseGrid> grid , DeckConstPtr deck, IOConfigPtr ioConfig);
-        boost::posix_time::ptime getStartTime() const
-        { return m_timeMap->getStartTime(/*timeStepIdx=*/0); }
-        TimeMapConstPtr getTimeMap() const;
+        Schedule(const ParseMode& parseMode , std::shared_ptr<const EclipseGrid> grid , std::shared_ptr< const Deck > deck, std::shared_ptr< IOConfig > ioConfig);
+        boost::posix_time::ptime getStartTime() const;
+        std::shared_ptr< const TimeMap > getTimeMap() const;
 
         size_t numWells() const;
         size_t numWells(size_t timestep) const;
         size_t getMaxNumCompletionsForWells(size_t timestep) const;
         bool hasWell(const std::string& wellName) const;
-        WellPtr getWell(const std::string& wellName);
-        std::vector<WellPtr> getOpenWells(size_t timeStep);
-        std::vector<WellConstPtr> getWells() const;
-        std::vector<WellConstPtr> getWells(size_t timeStep) const;
-        std::vector<WellPtr> getWells(const std::string& wellNamePattern);
-        OilVaporizationPropertiesConstPtr getOilVaporizationProperties(size_t timestep);
+        std::shared_ptr< Well > getWell(const std::string& wellName);
+        std::vector<std::shared_ptr< Well >> getOpenWells(size_t timeStep);
+        std::vector<std::shared_ptr< const Well >> getWells() const;
+        std::vector<std::shared_ptr< const Well >> getWells(size_t timeStep) const;
+        std::vector<std::shared_ptr< Well >> getWells(const std::string& wellNamePattern);
+        std::shared_ptr< const OilVaporizationProperties > getOilVaporizationProperties(size_t timestep);
 
-        GroupTreePtr getGroupTree(size_t t) const;
+        std::shared_ptr< GroupTree > getGroupTree(size_t t) const;
         size_t numGroups() const;
         bool hasGroup(const std::string& groupName) const;
-        GroupPtr getGroup(const std::string& groupName) const;
-        TuningPtr getTuning() const;
+        std::shared_ptr< Group > getGroup(const std::string& groupName) const;
+        std::shared_ptr< Tuning > getTuning() const;
 
         bool initOnly() const;
         const Events& getEvents() const;
@@ -76,60 +80,60 @@ namespace Opm
 
 
     private:
-        TimeMapPtr m_timeMap;
-        OrderedMap<WellPtr> m_wells;
+        std::shared_ptr< TimeMap > m_timeMap;
+        OrderedMap<std::shared_ptr< Well >> m_wells;
         std::shared_ptr<const EclipseGrid> m_grid;
-        std::map<std::string , GroupPtr> m_groups;
-        std::shared_ptr<DynamicState<GroupTreePtr> > m_rootGroupTree;
-        std::shared_ptr<DynamicState<OilVaporizationPropertiesPtr> > m_oilvaporizationproperties;
+        std::map<std::string , std::shared_ptr< Group >> m_groups;
+        std::shared_ptr<DynamicState<std::shared_ptr< GroupTree >> > m_rootGroupTree;
+        std::shared_ptr<DynamicState<std::shared_ptr< OilVaporizationProperties > > > m_oilvaporizationproperties;
         std::shared_ptr<Events> m_events;
         std::shared_ptr<DynamicVector<std::shared_ptr<Deck> > > m_modifierDeck;
-        TuningPtr m_tuning;
+        std::shared_ptr< Tuning > m_tuning;
         bool nosim;
 
 
         void updateWellStatus(std::shared_ptr<Well> well, size_t reportStep , WellCommon::StatusEnum status);
-        void addWellToGroup( GroupPtr newGroup , WellPtr well , size_t timeStep);
-        void initFromDeck(const ParseMode& parseMode , DeckConstPtr deck, IOConfigPtr ioConfig);
-        void initializeNOSIM(DeckConstPtr deck);
-        void createTimeMap(DeckConstPtr deck);
-        void initRootGroupTreeNode(TimeMapConstPtr timeMap);
-        void initOilVaporization(TimeMapConstPtr timeMap);
-        void iterateScheduleSection(const ParseMode& parseMode , std::shared_ptr<const SCHEDULESection> section, IOConfigPtr ioConfig);
-        bool handleGroupFromWELSPECS(const std::string& groupName, GroupTreePtr newTree) const;
+        void addWellToGroup( std::shared_ptr< Group > newGroup , std::shared_ptr< Well > well , size_t timeStep);
+        void initFromDeck(const ParseMode& parseMode , std::shared_ptr< const Deck > deck, std::shared_ptr< IOConfig > ioConfig);
+        void initializeNOSIM(std::shared_ptr< const Deck > deck);
+        void createTimeMap(std::shared_ptr< const Deck > deck);
+        void initRootGroupTreeNode(std::shared_ptr< const TimeMap > timeMap);
+        void initOilVaporization(std::shared_ptr< const TimeMap > timeMap);
+        void iterateScheduleSection(const ParseMode& parseMode , std::shared_ptr<const SCHEDULESection> section, std::shared_ptr< IOConfig > ioConfig);
+        bool handleGroupFromWELSPECS(const std::string& groupName, std::shared_ptr< GroupTree > newTree) const;
         void addGroup(const std::string& groupName , size_t timeStep);
-        void addWell(const std::string& wellName, DeckRecordConstPtr record, size_t timeStep, WellCompletion::CompletionOrderEnum wellCompletionOrder);
+        void addWell(const std::string& wellName, std::shared_ptr< const DeckRecord > record, size_t timeStep, WellCompletion::CompletionOrderEnum wellCompletionOrder);
         void handleCOMPORD(const ParseMode& parseMode, std::shared_ptr<const DeckKeyword> compordKeyword, size_t currentStep);
-        void checkWELSPECSConsistency(WellConstPtr well, DeckKeywordConstPtr keyword, size_t recordIdx) const;
-        void handleWELSPECS(std::shared_ptr<const SCHEDULESection> section, DeckKeywordConstPtr keyword, size_t currentStep);
-        void handleWCONProducer(DeckKeywordConstPtr keyword, size_t currentStep, bool isPredictionMode);
-        void handleWCONHIST(DeckKeywordConstPtr keyword, size_t currentStep);
-        void handleWCONPROD(DeckKeywordConstPtr keyword, size_t currentStep);
-        void handleWGRUPCON(DeckKeywordConstPtr keyword, size_t currentStep);
-        void handleCOMPDAT(DeckKeywordConstPtr keyword,  size_t currentStep);
-        void handleWELSEGS(DeckKeywordConstPtr keyword, size_t currentStep);
-        void handleCOMPSEGS(DeckKeywordConstPtr keyword, size_t currentStep);
-        void handleWCONINJE(std::shared_ptr<const SCHEDULESection> section, DeckKeywordConstPtr keyword, size_t currentStep);
-        void handleWPOLYMER(DeckKeywordConstPtr keyword, size_t currentStep);
-        void handleWSOLVENT(DeckKeywordConstPtr keyword, size_t currentStep);
-        void handleWCONINJH(std::shared_ptr<const SCHEDULESection> section, DeckKeywordConstPtr keyword, size_t currentStep);
-        void handleWELOPEN(DeckKeywordConstPtr keyword, size_t currentStep, bool hascomplump);
-        void handleWELTARG(std::shared_ptr<const SCHEDULESection> section, DeckKeywordConstPtr keyword, size_t currentStep);
-        void handleGCONINJE(std::shared_ptr<const SCHEDULESection> section, DeckKeywordConstPtr keyword, size_t currentStep);
-        void handleGCONPROD(DeckKeywordConstPtr keyword, size_t currentStep);
-        void handleTUNING(DeckKeywordConstPtr keyword, size_t currentStep);
+        void checkWELSPECSConsistency(std::shared_ptr< const Well > well, std::shared_ptr< const DeckKeyword > keyword, size_t recordIdx) const;
+        void handleWELSPECS(std::shared_ptr<const SCHEDULESection> section, std::shared_ptr< const DeckKeyword > keyword, size_t currentStep);
+        void handleWCONProducer(std::shared_ptr< const DeckKeyword > keyword, size_t currentStep, bool isPredictionMode);
+        void handleWCONHIST(std::shared_ptr< const DeckKeyword > keyword, size_t currentStep);
+        void handleWCONPROD(std::shared_ptr< const DeckKeyword > keyword, size_t currentStep);
+        void handleWGRUPCON(std::shared_ptr< const DeckKeyword > keyword, size_t currentStep);
+        void handleCOMPDAT(std::shared_ptr< const DeckKeyword > keyword,  size_t currentStep);
+        void handleWELSEGS(std::shared_ptr< const DeckKeyword > keyword, size_t currentStep);
+        void handleCOMPSEGS(std::shared_ptr< const DeckKeyword > keyword, size_t currentStep);
+        void handleWCONINJE(std::shared_ptr<const SCHEDULESection> section, std::shared_ptr< const DeckKeyword > keyword, size_t currentStep);
+        void handleWPOLYMER(std::shared_ptr< const DeckKeyword > keyword, size_t currentStep);
+        void handleWSOLVENT(std::shared_ptr< const DeckKeyword > keyword, size_t currentStep);
+        void handleWCONINJH(std::shared_ptr<const SCHEDULESection> section, std::shared_ptr< const DeckKeyword > keyword, size_t currentStep);
+        void handleWELOPEN(std::shared_ptr< const DeckKeyword > keyword, size_t currentStep, bool hascomplump);
+        void handleWELTARG(std::shared_ptr<const SCHEDULESection> section, std::shared_ptr< const DeckKeyword > keyword, size_t currentStep);
+        void handleGCONINJE(std::shared_ptr<const SCHEDULESection> section, std::shared_ptr< const DeckKeyword > keyword, size_t currentStep);
+        void handleGCONPROD(std::shared_ptr< const DeckKeyword > keyword, size_t currentStep);
+        void handleTUNING(std::shared_ptr< const DeckKeyword > keyword, size_t currentStep);
         void handleNOSIM();
-        void handleRPTRST(DeckKeywordConstPtr keyword, size_t currentStep, IOConfigPtr ioConfig);
-        void handleRPTSCHED(DeckKeywordConstPtr keyword, size_t currentStep, IOConfigPtr ioConfig);
-        void handleDATES(DeckKeywordConstPtr keyword);
-        void handleTSTEP(DeckKeywordConstPtr keyword);
-        void handleGRUPTREE(DeckKeywordConstPtr keyword, size_t currentStep);
-        void handleWRFT(DeckKeywordConstPtr keyword, size_t currentStep);
-        void handleWRFTPLT(DeckKeywordConstPtr keyword, size_t currentStep);
-        void handleWPIMULT(DeckKeywordConstPtr keyword, size_t currentStep);
-        void handleDRSDT(DeckKeywordConstPtr keyword, size_t currentStep);
-        void handleDRVDT(DeckKeywordConstPtr keyword, size_t currentStep);
-        void handleVAPPARS(DeckKeywordConstPtr keyword, size_t currentStep);
+        void handleRPTRST(std::shared_ptr< const DeckKeyword > keyword, size_t currentStep, std::shared_ptr< IOConfig > ioConfig);
+        void handleRPTSCHED(std::shared_ptr< const DeckKeyword > keyword, size_t currentStep, std::shared_ptr< IOConfig > ioConfig);
+        void handleDATES(std::shared_ptr< const DeckKeyword > keyword);
+        void handleTSTEP(std::shared_ptr< const DeckKeyword > keyword);
+        void handleGRUPTREE(std::shared_ptr< const DeckKeyword > keyword, size_t currentStep);
+        void handleWRFT(std::shared_ptr< const DeckKeyword > keyword, size_t currentStep);
+        void handleWRFTPLT(std::shared_ptr< const DeckKeyword > keyword, size_t currentStep);
+        void handleWPIMULT(std::shared_ptr< const DeckKeyword > keyword, size_t currentStep);
+        void handleDRSDT(std::shared_ptr< const DeckKeyword > keyword, size_t currentStep);
+        void handleDRVDT(std::shared_ptr< const DeckKeyword > keyword, size_t currentStep);
+        void handleVAPPARS(std::shared_ptr< const DeckKeyword > keyword, size_t currentStep);
 
         void checkUnhandledKeywords(std::shared_ptr<const SCHEDULESection> section) const;
 
@@ -138,7 +142,7 @@ namespace Opm
         static bool convertEclipseStringToBool(const std::string& eclipseString);
 
 
-        void setOilVaporizationProperties(const OilVaporizationPropertiesPtr vapor, size_t timestep);
+        void setOilVaporizationProperties(const std::shared_ptr< OilVaporizationProperties > vapor, size_t timestep);
 
     };
     typedef std::shared_ptr<Schedule> SchedulePtr;

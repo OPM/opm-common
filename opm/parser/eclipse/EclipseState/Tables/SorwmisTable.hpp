@@ -21,27 +21,19 @@
 #define	OPM_PARSER_SORWMIS_TABLE_HPP
 
 #include "SimpleTable.hpp"
-#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
+
+    class DeckItem;
+
     class SorwmisTable : public SimpleTable {
     public:
 
-        SorwmisTable(Opm::DeckItemConstPtr item)
-        {
+        SorwmisTable( std::shared_ptr< const DeckItem > item );
 
-            m_schema = std::make_shared<TableSchema>();
-            m_schema->addColumn( ColumnSchema( "WaterSaturation" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
-            m_schema->addColumn( ColumnSchema( "MiscibleResidualOilSaturation" , Table::INCREASING , Table::DEFAULT_NONE) );
+        const TableColumn& getWaterSaturationColumn() const;
+        const TableColumn& getMiscibleResidualOilColumn() const;
 
-            SimpleTable::init(item);
-        }
-
-        const TableColumn& getWaterSaturationColumn() const
-        { return SimpleTable::getColumn(0); }
-
-        const TableColumn& getMiscibleResidualOilColumn() const
-        { return SimpleTable::getColumn(1); }
     };
 }
 

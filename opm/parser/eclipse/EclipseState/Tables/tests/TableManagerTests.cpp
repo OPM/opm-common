@@ -36,13 +36,13 @@
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgwfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyadsTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/VFPInjTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PlymaxTable.hpp>
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-
-#include <boost/filesystem.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <stdexcept>
 #include <iostream>

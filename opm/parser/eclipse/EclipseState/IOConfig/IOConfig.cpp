@@ -18,10 +18,14 @@
  */
 
 #include <stdio.h>
+#include <iostream>
 #include <iterator>
 
-#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
+#include <boost/lexical_cast.hpp>
+
 #include <opm/parser/eclipse/Deck/Section.hpp>
+#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <ert/ecl/ecl_util.h>
 
 

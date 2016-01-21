@@ -20,33 +20,19 @@
 #define OPM_PARSER_SWFN_TABLE_HPP
 
 #include "SimpleTable.hpp"
-#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
     class SwfnTable : public SimpleTable {
 
     public:
-        SwfnTable(Opm::DeckItemConstPtr item)
-        {
-            m_schema = std::make_shared<TableSchema>();
+        SwfnTable( std::shared_ptr< const DeckItem > item );
 
-            m_schema->addColumn( ColumnSchema("SW"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
-            m_schema->addColumn( ColumnSchema("KRW"  , Table::INCREASING , Table::DEFAULT_LINEAR ));
-            m_schema->addColumn( ColumnSchema("PCOW" , Table::DECREASING , Table::DEFAULT_LINEAR ));
-
-            SimpleTable::init(item);
-        }
-
-        const TableColumn& getSwColumn() const
-        { return SimpleTable::getColumn(0); }
-
-        const TableColumn& getKrwColumn() const
-        { return SimpleTable::getColumn(1); }
+        const TableColumn& getSwColumn() const;
+        const TableColumn& getKrwColumn() const;
 
         // this column is p_o - p_w (non-wetting phase pressure minus
         // wetting phase pressure for a given water saturation)
-        const TableColumn& getPcowColumn() const
-        { return SimpleTable::getColumn(2); }
+        const TableColumn& getPcowColumn() const;
     };
 }
 

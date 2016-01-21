@@ -60,8 +60,7 @@ Parser/ParserItem.cpp
 Parser/ParserIntItem.cpp  
 Parser/ParserFloatItem.cpp
 Parser/ParserDoubleItem.cpp
-Parser/ParserStringItem.cpp  
-${PROJECT_BINARY_DIR}/generated-source/ParserKeywords.cpp
+Parser/ParserStringItem.cpp
 )
 
 set( generator_source
@@ -117,6 +116,7 @@ EclipseState/Tables/ColumnSchema.cpp
 EclipseState/Tables/TableSchema.cpp
 EclipseState/Tables/TableIndex.cpp
 EclipseState/Tables/PvtxTable.cpp
+EclipseState/Tables/Tables.cpp
 #
 EclipseState/Grid/GridProperty.cpp
 EclipseState/Grid/Box.cpp
@@ -303,7 +303,7 @@ Utility/EquilWrapper.hpp
 Utility/EndscaleWrapper.hpp
 Utility/ScalecrsWrapper.hpp)
 
-add_library(buildParser STATIC ${rawdeck_source} ${build_parser_source} ${deck_source} ${unit_source} ${generator_source})
+add_library(buildParser ${rawdeck_source} ${build_parser_source} ${deck_source} ${unit_source} ${generator_source})
 target_link_libraries(buildParser opmjson ${Boost_LIBRARIES}  ${ERT_LIBRARIES})
 
 #-----------------------------------------------------------------
@@ -324,15 +324,29 @@ target_link_libraries( createDefaultKeywordList buildParser opmjson ${Boost_LIBR
 #    This target will always run - the dependency "management" is
 #    implicitly handled in the createDefaultKeywordList application.
 
-add_custom_target( generatedCode ALL COMMAND createDefaultKeywordList 
-                   ${PROJECT_SOURCE_DIR}/opm/parser/share/keywords 
-                   ${PROJECT_BINARY_DIR}/generated-source/ParserKeywords.cpp 
-                   ${PROJECT_BINARY_DIR}/generated-source/include/opm/parser/eclipse/Parser/ParserKeywords.hpp
-                   ${PROJECT_BINARY_DIR}/generated-source/inlineKeywordTest.cpp )
+set( generated_source ${PROJECT_BINARY_DIR}/generated-source/ParserKeywords.cpp)
+# to tune the number of files addDefaultKeywords is split into, change
+# generated_num_files. 4 is a very reasonable estimate.
+# TODO: support from command line options?
+set( generated_num_files 4 )
+math( EXPR generated_num_files_end "${generated_num_files} - 1" )
+foreach( n RANGE ${generated_num_files_end} )
+    list(APPEND generated_source ${PROJECT_BINARY_DIR}/generated-source/ParserKeywords${n}.cpp)
+    set_source_files_properties(${PROJECT_BINARY_DIR}/generated-source/ParserKeywords${n}.cpp PROPERTIES GENERATED TRUE)
+endforeach( n )
 
 set_source_files_properties(${PROJECT_BINARY_DIR}/generated-source/ParserKeywords.cpp PROPERTIES GENERATED TRUE)
 set_source_files_properties(${PROJECT_BINARY_DIR}/generated-source/inlcude/opm/parser/eclipse/Parser/ParserKeywords.hpp PROPERTIES GENERATED TRUE)
 set_source_files_properties(${PROJECT_BINARY_DIR}/generated-source/inlineKeywordTest.cpp PROPERTIES GENERATED TRUE)
+
+add_custom_target( generatedCode ALL COMMAND createDefaultKeywordList
+                   ${PROJECT_SOURCE_DIR}/opm/parser/share/keywords
+                   ${PROJECT_BINARY_DIR}/generated-source/ParserKeywords.cpp
+                   ${PROJECT_BINARY_DIR}/generated-source/include/
+                   opm/parser/eclipse/Parser/ParserKeywords
+                   ${PROJECT_BINARY_DIR}/generated-source/inlineKeywordTest.cpp
+                   ${generated_num_files}
+                )
 
 opm_add_test( runInlineKeywordTest SOURCES ${PROJECT_BINARY_DIR}/generated-source/inlineKeywordTest.cpp
               LIBRARIES opmparser ${Boost_LIBRARIES}
@@ -340,7 +354,7 @@ opm_add_test( runInlineKeywordTest SOURCES ${PROJECT_BINARY_DIR}/generated-sourc
 
 #-----------------------------------------------------------------
 
-add_library(opmparser ${rawdeck_source} ${parser_source} ${deck_source} ${state_source} ${unit_source} ${log_source} ${generator_source})
+add_library(opmparser ${generated_source} ${state_source} ${rawdeck_source} ${parser_source} ${deck_source} ${unit_source} ${log_source} ${generator_source})
 add_dependencies( opmparser generatedCode )
 target_link_libraries(opmparser opmjson ${Boost_LIBRARIES}  ${ERT_LIBRARIES})
 set_target_properties(opmparser PROPERTIES VERSION ${opm-parser_VERSION_MAJOR}.${opm-parser_VERSION_MINOR}
@@ -349,8 +363,13 @@ set_target_properties(opmparser PROPERTIES VERSION ${opm-parser_VERSION_MAJOR}.$
 include( ${PROJECT_SOURCE_DIR}/cmake/Modules/install_headers.cmake )   
 install_headers( "${HEADER_FILES}" "${CMAKE_INSTALL_PREFIX}" )
 install( TARGETS opmparser DESTINATION ${CMAKE_INSTALL_LIBDIR} )
-install( FILES ${PROJECT_BINARY_DIR}/generated-source/include/opm/parser/eclipse/Parser/ParserKeywords.hpp DESTINATION "include/opm/parser/eclipse/Parser")
 
+
+FILE( GLOB generated_header
+        ${PROJECT_BINARY_DIR}/generated-source/include/opm/parser/eclipse/Parser/ParserKeywords.hpp
+        ${PROJECT_BINARY_DIR}/generated-source/include/opm/parser/eclipse/Parser/ParserKeywords/*.hpp
+    )
+install(FILES ${generated_header} DESTINATION include/opm/parser/eclipse/Parser)
 if (ENABLE_PYTHON)
    add_subdirectory( python )
 endif()

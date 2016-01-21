@@ -22,19 +22,14 @@
 #include <cstddef>
 #include <string>
 #include <memory>
-#include <map>
-
 
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/Fault.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/FaultFace.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
-
 namespace Opm {
+
+    class Deck;
+    class EclipseGrid;
+    class Fault;
 
 
 class FaultCollection {

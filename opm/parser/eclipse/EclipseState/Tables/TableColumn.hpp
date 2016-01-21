@@ -25,10 +25,11 @@
 #include <vector>
 #include <memory>
 
-#include <opm/parser/eclipse/EclipseState/Tables/ColumnSchema.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableIndex.hpp>
 
 namespace Opm {
+
+    class ColumnSchema;
 
     class TableColumn {
     public:

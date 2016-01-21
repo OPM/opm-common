@@ -25,7 +25,6 @@
 #include <memory>
 
 #include <boost/filesystem.hpp>
-#include <boost/algorithm/string.hpp>
 
 #include <opm/json/JsonObject.hpp>
 

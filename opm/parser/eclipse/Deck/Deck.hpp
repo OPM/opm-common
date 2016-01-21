@@ -20,13 +20,15 @@
 #ifndef DECK_HPP
 #define DECK_HPP
 
-#include <vector>
+#include <map>
 #include <memory>
+#include <vector>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm {
+
+    class UnitSystem;
 
     class Deck {
     public:

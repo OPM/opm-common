@@ -20,33 +20,30 @@
 #ifndef OPM_ECLIPSE_STATE_HPP
 #define OPM_ECLIPSE_STATE_HPP
 
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
-
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/BoxManager.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
-
-#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
-
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 
 #include <set>
-#include <memory>
-#include <iostream>
-#include <map>
-#include <vector>
 
 namespace Opm {
+
+    template< typename > class GridProperty;
+    template< typename > class GridProperties;
+
+    class Deck;
+    class DeckItem;
+    class Fault;
+    class FaultCollection;
+    class InitConfig;
+    class IOConfig;
+    class ParseMode;
+    class Schedule;
+    class Section;
+    class SimulationConfig;
+    class TableManager;
+
     class EclipseState {
     public:
         enum EnabledTypes {
@@ -56,21 +53,21 @@ namespace Opm {
             AllProperties = IntProperties | DoubleProperties
         };
 
-        EclipseState(DeckConstPtr deck , const ParseMode& parseMode);
+        EclipseState(std::shared_ptr< const Deck > deck , const ParseMode& parseMode);
 
         const ParseMode& getParseMode() const;
-        ScheduleConstPtr getSchedule() const;
-        IOConfigConstPtr getIOConfigConst() const;
-        IOConfigPtr getIOConfig() const;
-        InitConfigConstPtr getInitConfig() const;
-        SimulationConfigConstPtr getSimulationConfig() const;
-        EclipseGridConstPtr getEclipseGrid() const;
-        EclipseGridPtr getEclipseGridCopy() const;
+        std::shared_ptr< const Schedule > getSchedule() const;
+        std::shared_ptr< const IOConfig > getIOConfigConst() const;
+        std::shared_ptr< IOConfig > getIOConfig() const;
+        std::shared_ptr< const InitConfig > getInitConfig() const;
+        std::shared_ptr< const SimulationConfig > getSimulationConfig() const;
+        std::shared_ptr< const EclipseGrid > getEclipseGrid() const;
+        std::shared_ptr< EclipseGrid > getEclipseGridCopy() const;
         bool hasPhase(enum Phase::PhaseEnum phase) const;
         std::string getTitle() const;
         bool supportsGridProperty(const std::string& keyword, int enabledTypes=AllProperties) const;
 
-        std::shared_ptr<GridProperty<int> > getRegion(DeckItemConstPtr regionItem) const;
+        std::shared_ptr<GridProperty<int> > getRegion(std::shared_ptr< const DeckItem > regionItem) const;
         std::shared_ptr<GridProperty<int> > getDefaultRegion() const;
         std::shared_ptr<GridProperty<int> > getIntGridProperty( const std::string& keyword ) const;
         std::shared_ptr<GridProperty<double> > getDoubleGridProperty( const std::string& keyword ) const;
@@ -78,7 +75,7 @@ namespace Opm {
         bool hasDoubleGridProperty(const std::string& keyword) const;
 
         void loadGridPropertyFromDeckKeyword(std::shared_ptr<const Box> inputBox,
-                                             DeckKeywordConstPtr deckKeyword,
+                                             std::shared_ptr< const DeckKeyword > deckKeyword,
                                              int enabledTypes = AllProperties);
 
         std::shared_ptr<const FaultCollection> getFaults() const;
@@ -96,54 +93,54 @@ namespace Opm {
         void applyModifierDeck( std::shared_ptr<const Deck> deck);
 
     private:
-        void initTabdims(DeckConstPtr deck);
-        void initTables(DeckConstPtr deck);
-        void initIOConfig(DeckConstPtr deck);
-        void initSchedule(DeckConstPtr deck);
-        void initIOConfigPostSchedule(DeckConstPtr deck);
-        void initInitConfig(DeckConstPtr deck);
-        void initSimulationConfig(DeckConstPtr deck);
-        void initEclipseGrid(DeckConstPtr deck);
-        void initGridopts(DeckConstPtr deck);
-        void initPhases(DeckConstPtr deck);
-        void initTitle(DeckConstPtr deck);
-        void initProperties(DeckConstPtr deck);
+        void initTabdims(std::shared_ptr< const Deck > deck);
+        void initTables(std::shared_ptr< const Deck > deck);
+        void initIOConfig(std::shared_ptr< const Deck > deck);
+        void initSchedule(std::shared_ptr< const Deck > deck);
+        void initIOConfigPostSchedule(std::shared_ptr< const Deck > deck);
+        void initInitConfig(std::shared_ptr< const Deck > deck);
+        void initSimulationConfig(std::shared_ptr< const Deck > deck);
+        void initEclipseGrid(std::shared_ptr< const Deck > deck);
+        void initGridopts(std::shared_ptr< const Deck > deck);
+        void initPhases(std::shared_ptr< const Deck > deck);
+        void initTitle(std::shared_ptr< const Deck > deck);
+        void initProperties(std::shared_ptr< const Deck > deck);
         void initTransMult();
-        void initFaults(DeckConstPtr deck);
-        void initNNC(DeckConstPtr deck);
+        void initFaults(std::shared_ptr< const Deck > deck);
+        void initNNC(std::shared_ptr< const Deck > deck);
 
 
-        void setMULTFLT(std::shared_ptr<const Section> section) const;
-        void initMULTREGT(DeckConstPtr deck);
+        void setMULTFLT(std::shared_ptr<const Opm::Section> section) const;
+        void initMULTREGT(std::shared_ptr< const Deck > deck);
 
         double getSIScaling(const std::string &dimensionString) const;
 
-        void processGridProperties(Opm::DeckConstPtr deck, int enabledTypes);
+        void processGridProperties(std::shared_ptr< const Deck > deck, int enabledTypes);
         void scanSection(std::shared_ptr<Opm::Section> section , int enabledTypes);
-        void handleADDKeyword(DeckKeywordConstPtr deckKeyword  , BoxManager& boxManager, int enabledTypes);
-        void handleBOXKeyword(DeckKeywordConstPtr deckKeyword  , BoxManager& boxManager);
-        void handleCOPYKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager, int enabledTypes);
+        void handleADDKeyword(std::shared_ptr< const DeckKeyword > deckKeyword  , BoxManager& boxManager, int enabledTypes);
+        void handleBOXKeyword(std::shared_ptr< const DeckKeyword > deckKeyword  , BoxManager& boxManager);
+        void handleCOPYKeyword(std::shared_ptr< const DeckKeyword > deckKeyword , BoxManager& boxManager, int enabledTypes);
         void handleENDBOXKeyword(BoxManager& boxManager);
-        void handleEQUALSKeyword(DeckKeywordConstPtr deckKeyword   , BoxManager& boxManager, int enabledTypes);
-        void handleMULTIPLYKeyword(DeckKeywordConstPtr deckKeyword , BoxManager& boxManager, int enabledTypes);
+        void handleEQUALSKeyword(std::shared_ptr< const DeckKeyword > deckKeyword   , BoxManager& boxManager, int enabledTypes);
+        void handleMULTIPLYKeyword(std::shared_ptr< const DeckKeyword > deckKeyword , BoxManager& boxManager, int enabledTypes);
 
-        void handleEQUALREGKeyword(DeckKeywordConstPtr deckKeyword, int enabledTypes);
-        void handleMULTIREGKeyword(DeckKeywordConstPtr deckKeyword, int enabledTypes);
-        void handleADDREGKeyword(DeckKeywordConstPtr deckKeyword  , int enabledTypes);
-        void handleCOPYREGKeyword(DeckKeywordConstPtr deckKeyword , int enabledTypes);
+        void handleEQUALREGKeyword(std::shared_ptr< const DeckKeyword > deckKeyword, int enabledTypes);
+        void handleMULTIREGKeyword(std::shared_ptr< const DeckKeyword > deckKeyword, int enabledTypes);
+        void handleADDREGKeyword(std::shared_ptr< const DeckKeyword > deckKeyword  , int enabledTypes);
+        void handleCOPYREGKeyword(std::shared_ptr< const DeckKeyword > deckKeyword , int enabledTypes);
 
-        void setKeywordBox(DeckKeywordConstPtr deckKeyword, size_t recordIdx, BoxManager& boxManager);
+        void setKeywordBox(std::shared_ptr< const DeckKeyword > deckKeyword, size_t recordIdx, BoxManager& boxManager);
 
         void copyIntKeyword(const std::string& srcField , const std::string& targetField , std::shared_ptr<const Box> inputBox);
         void copyDoubleKeyword(const std::string& srcField , const std::string& targetField , std::shared_ptr<const Box> inputBox);
 
-        void complainAboutAmbiguousKeyword(DeckConstPtr deck, const std::string& keywordName) const;
+        void complainAboutAmbiguousKeyword(std::shared_ptr< const Deck > deck, const std::string& keywordName) const;
 
-        EclipseGridConstPtr      m_eclipseGrid;
-        IOConfigPtr              m_ioConfig;
-        InitConfigConstPtr       m_initConfig;
-        ScheduleConstPtr         schedule;
-        SimulationConfigConstPtr m_simulationConfig;
+        std::shared_ptr< const EclipseGrid >      m_eclipseGrid;
+        std::shared_ptr< IOConfig >              m_ioConfig;
+        std::shared_ptr< const InitConfig >       m_initConfig;
+        std::shared_ptr< const Schedule >         schedule;
+        std::shared_ptr< const SimulationConfig > m_simulationConfig;
 
         std::shared_ptr<const TableManager> m_tables;
 

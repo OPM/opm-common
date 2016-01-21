@@ -19,9 +19,13 @@
 
 #include <stdexcept>
 
-#include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/F.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FaultFace.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/Fault.hpp>
 
 namespace Opm {
 

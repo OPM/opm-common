@@ -21,7 +21,6 @@
 #define SCHEDULE_ENUMS_H
 
 #include <string>
-#include <stdexcept>
 
 namespace Opm {
     namespace WellCommon {

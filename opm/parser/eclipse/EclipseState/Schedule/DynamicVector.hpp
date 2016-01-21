@@ -25,7 +25,6 @@
 #include <stdexcept>
 
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
-#include <boost/date_time.hpp>
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
@@ -53,7 +52,7 @@ namespace Opm {
     public:
 
 
-        DynamicVector(const TimeMapConstPtr timeMap, T defaultValue) {
+        DynamicVector(const std::shared_ptr< const TimeMap > timeMap, T defaultValue) {
             m_timeMap = timeMap;
             m_defaultValue = defaultValue;
         }
@@ -97,7 +96,7 @@ namespace Opm {
 
 
         std::vector<T> m_data;
-        TimeMapConstPtr m_timeMap;
+        std::shared_ptr< const TimeMap > m_timeMap;
         T m_defaultValue;
     };
 }

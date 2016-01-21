@@ -21,7 +21,6 @@
 #define SCHEDULESECTION_HPP
 
 
-#include <iostream>
 #include <string>
 #include <memory>
 

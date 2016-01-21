@@ -31,6 +31,8 @@
 
 namespace Opm {
 
+    class DeckKeyword;
+
 /**
  * Class for reading data from a VFPINJ (vertical flow performance injection) table
  */
@@ -77,7 +79,7 @@ public:
          * Constructor which parses a deck keyword and retrieves the relevant parts for a
          * VFP table.
          */
-        void init(DeckKeywordConstPtr table, std::shared_ptr<Opm::UnitSystem> deck_unit_system);
+        void init(std::shared_ptr< const DeckKeyword > table, std::shared_ptr<Opm::UnitSystem> deck_unit_system);
 
         /**
          * Returns the table number

@@ -23,9 +23,9 @@
 #include <memory>
 #include <vector>
 
-#include <opm/parser/eclipse/EclipseState/Grid/FaultFace.hpp>
-
 namespace Opm {
+
+    class FaultFace;
 
 
 class Fault {

@@ -20,9 +20,8 @@
 #define	OPM_PARSER_EQUIL_WRAPPER_HPP
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-
-#include <vector>
-#include <algorithm>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 namespace Opm {
     class EquilWrapper {
@@ -31,7 +30,7 @@ namespace Opm {
          * \brief A wrapper class to provide convenient access to the
          *        data of the 'EQUIL' keyword.
          */
-        EquilWrapper(Opm::DeckKeywordConstPtr keyword)
+        EquilWrapper(std::shared_ptr< const DeckKeyword > keyword)
             : m_keyword(keyword)
         {
         }
@@ -117,7 +116,7 @@ namespace Opm {
         { return m_keyword->getRecord(regionIdx)->getItem(10)->getInt(0) == 0; }
 
     private:
-        Opm::DeckKeywordConstPtr m_keyword;
+        std::shared_ptr< const DeckKeyword > m_keyword;
     };
 }
 

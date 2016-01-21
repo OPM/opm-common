@@ -19,28 +19,28 @@
 #ifndef OPM_PARSER_SIMPLE_TABLE_HPP
 #define	OPM_PARSER_SIMPLE_TABLE_HPP
 
-#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableColumn.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/ColumnSchema.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/TableSchema.hpp>
-
+#include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
-#include <cassert>
 
 namespace Opm {
+
+    class DeckItem;
+    class TableSchema;
+
     class SimpleTable {
 
     public:
         SimpleTable(const SimpleTable&) = default;
         SimpleTable();
-        SimpleTable(std::shared_ptr<TableSchema> schema , Opm::DeckItemConstPtr deckItem);
+        SimpleTable(std::shared_ptr<TableSchema> schema , std::shared_ptr< const DeckItem > deckItem);
         explicit SimpleTable(std::shared_ptr<TableSchema> schema);
         void addColumns();
-        void init(Opm::DeckItemConstPtr deckItem);
+        void init(std::shared_ptr< const DeckItem > deckItem);
         size_t numColumns() const;
         size_t numRows() const;
         void addRow( const std::vector<double>& row);

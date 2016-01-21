@@ -20,76 +20,55 @@
 #define	OPM_PARSER_IMKRVD_TABLE_HPP
 
 #include "SimpleTable.hpp"
-#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
-
 
 namespace Opm {
+
+    class DeckItem;
+
     class ImkrvdTable : public SimpleTable {
     public:
-        ImkrvdTable(Opm::DeckItemConstPtr item)
-        {
-            m_schema = std::make_shared<TableSchema>( );
-            m_schema->addColumn( ColumnSchema( "DEPTH" ,  Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
-            m_schema->addColumn( ColumnSchema( "KRWMAX",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
-            m_schema->addColumn( ColumnSchema( "KRGMAX",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
-            m_schema->addColumn( ColumnSchema( "KROMAX",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
-            m_schema->addColumn( ColumnSchema( "KRWCRIT", Table::RANDOM , Table::DEFAULT_LINEAR ) );
-            m_schema->addColumn( ColumnSchema( "KRGCRIT", Table::RANDOM , Table::DEFAULT_LINEAR ) );
-            m_schema->addColumn( ColumnSchema( "KROCRITG",Table::RANDOM , Table::DEFAULT_LINEAR ) );
-            m_schema->addColumn( ColumnSchema( "KROCRITW", Table::RANDOM , Table::DEFAULT_LINEAR ) );
-
-            SimpleTable::init(item);
-        }
+        ImkrvdTable( std::shared_ptr< const DeckItem > item );
 
         /*!
          * \brief The datum depth for the remaining columns
          */
-        const TableColumn& getDepthColumn() const
-        { return SimpleTable::getColumn(0); }
+        const TableColumn& getDepthColumn() const;
 
         /*!
          * \brief Maximum relative permeability of water
          */
-        const TableColumn& getKrwmaxColumn() const
-        { return SimpleTable::getColumn(1); }
+        const TableColumn& getKrwmaxColumn() const;
 
         /*!
          * \brief Maximum relative permeability of gas
          */
-        const TableColumn& getKrgmaxColumn() const
-        { return SimpleTable::getColumn(2); }
+        const TableColumn& getKrgmaxColumn() const;
 
         /*!
          * \brief Maximum relative permeability of oil
          */
-        const TableColumn& getKromaxColumn() const
-        { return SimpleTable::getColumn(3); }
+        const TableColumn& getKromaxColumn() const;
 
         /*!
          * \brief Relative permeability of water at the critical oil (or gas) saturation
          */
-        const TableColumn& getKrwcritColumn() const
-        { return SimpleTable::getColumn(4); }
+        const TableColumn& getKrwcritColumn() const;
 
         /*!
          * \brief Relative permeability of gas at the critical oil (or water) saturation
          */
-        const TableColumn& getKrgcritColumn() const
-        { return SimpleTable::getColumn(5); }
+        const TableColumn& getKrgcritColumn() const;
 
         /*!
          * \brief Oil relative permeability of oil at the critical gas saturation
          */
-        const TableColumn& getKrocritgColumn() const
-        { return SimpleTable::getColumn(6); }
+        const TableColumn& getKrocritgColumn() const;
 
         /*!
          * \brief Oil relative permeability of oil at the critical water saturation
          */
-        const TableColumn& getKrocritwColumn() const
-        { return SimpleTable::getColumn(7); }
+        const TableColumn& getKrocritwColumn() const;
     };
 }
 
 #endif
-

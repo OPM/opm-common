@@ -21,11 +21,9 @@
 #ifndef DYNAMICSTATE_HPP_
 #define DYNAMICSTATE_HPP_
 
-#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/date_time.hpp>
 #include <stdexcept>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 
 namespace Opm {
 
@@ -57,7 +55,7 @@ namespace Opm {
     public:
 
 
-        DynamicState(const TimeMapConstPtr timeMap, T initialValue) {
+        DynamicState(const std::shared_ptr< const TimeMap > timeMap, T initialValue) {
             m_timeMap = timeMap;
             init( initialValue );
         }
@@ -157,7 +155,7 @@ namespace Opm {
 
 
         std::vector<T> m_data;
-        TimeMapConstPtr m_timeMap;
+        std::shared_ptr< const TimeMap > m_timeMap;
         T m_currentValue;
         T m_initialValue;
         size_t m_initialRange;

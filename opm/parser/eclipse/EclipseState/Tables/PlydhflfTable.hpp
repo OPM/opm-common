@@ -20,27 +20,18 @@
 #define	OPM_PARSER_PLYDHFLF_TABLE_HPP
 
 #include "SimpleTable.hpp"
-#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
-
 
 namespace Opm {
+
+    class DeckItem;
+
     class PlydhflfTable : public SimpleTable {
     public:
 
-        PlydhflfTable(DeckItemConstPtr item)
-        {
-            m_schema = std::make_shared<TableSchema>( );
-            m_schema->addColumn( ColumnSchema("Temperature" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
-            m_schema->addColumn( ColumnSchema("PolymerHalflife" , Table::STRICTLY_DECREASING , Table::DEFAULT_NONE ) );
+        PlydhflfTable( std::shared_ptr< const DeckItem > item );
 
-            SimpleTable::init(item);
-        }
-
-        const TableColumn& getTemperatureColumn() const
-        { return SimpleTable::getColumn(0); }
-
-        const TableColumn& getPolymerHalflifeColumn() const
-        { return SimpleTable::getColumn(1); }
+        const TableColumn& getTemperatureColumn() const;
+        const TableColumn& getPolymerHalflifeColumn() const;
     };
 }
 

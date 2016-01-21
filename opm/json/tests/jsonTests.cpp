@@ -24,6 +24,8 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
 
+#include <boost/filesystem/path.hpp>
+
 #include <opm/json/JsonObject.hpp>
 
 

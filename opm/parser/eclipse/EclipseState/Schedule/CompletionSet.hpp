@@ -23,24 +23,20 @@
 
 #include <memory>
 
-#include <boost/date_time.hpp>
-
-#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
 
 namespace Opm {
 
+    class EclipseGrid;
+
     class CompletionSet {
     public:
         CompletionSet();
-        void add(CompletionConstPtr completion);
+        void add(std::shared_ptr< const Completion > completion);
         size_t size() const;
         CompletionSet * shallowCopy() const;
-        CompletionConstPtr get(size_t index) const;
-        CompletionConstPtr getFromIJK(const int i, const int j, const int k) const;
+        std::shared_ptr< const Completion > get(size_t index) const;
+        std::shared_ptr< const Completion > getFromIJK(const int i, const int j, const int k) const;
         bool allCompletionsShut() const;
         /// Order completions irrespective of input order.
         /// The algorithm used is the following:
@@ -54,10 +50,10 @@ namespace Opm {
         /// \param[in] well_i  logical cartesian i-coordinate of well head
         /// \param[in] well_j  logical cartesian j-coordinate of well head
         /// \param[in] grid    EclipseGrid object, used for cell depths
-        void orderCompletions(size_t well_i, size_t well_j, EclipseGridConstPtr grid);
+        void orderCompletions(size_t well_i, size_t well_j, std::shared_ptr< const EclipseGrid > grid);
     private:
-        std::vector<CompletionConstPtr> m_completions;
-        size_t findClosestCompletion(int oi, int oj, EclipseGridConstPtr grid,
+        std::vector<std::shared_ptr< const Completion >> m_completions;
+        size_t findClosestCompletion(int oi, int oj, std::shared_ptr< const EclipseGrid > grid,
                                      double oz, size_t start_pos);
     };
 

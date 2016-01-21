@@ -21,17 +21,19 @@
 #ifndef COMPLETION_HPP_
 #define COMPLETION_HPP_
 
+#include <map>
 #include <memory>
 #include <string>
-#include <boost/date_time.hpp>
+#include <vector>
 
-#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 
 
 namespace Opm {
+
+    class DeckKeyword;
+    class DeckRecord;
 
     class Completion {
     public:
@@ -65,8 +67,8 @@ namespace Opm {
 
         WellCompletion::DirectionEnum getDirection() const;
 
-        static std::map<std::string , std::vector<std::shared_ptr<Completion> > >  completionsFromCOMPDATKeyword( DeckKeywordConstPtr compdatKeyword );
-        static std::pair<std::string , std::vector<std::shared_ptr<Completion> > > completionsFromCOMPDATRecord( DeckRecordConstPtr compdatRecord );
+        static std::map<std::string , std::vector<std::shared_ptr<Completion> > >  completionsFromCOMPDATKeyword( std::shared_ptr< const DeckKeyword > compdatKeyword );
+        static std::pair<std::string , std::vector<std::shared_ptr<Completion> > > completionsFromCOMPDATRecord( std::shared_ptr< const DeckRecord > compdatRecord );
 
     private:
         int m_i, m_j, m_k;

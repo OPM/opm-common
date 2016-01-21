@@ -25,7 +25,7 @@
   the values from the REGDIMS keyword.
 */
 
-#include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/R.hpp>
 
 namespace Opm {
     class Regdims {

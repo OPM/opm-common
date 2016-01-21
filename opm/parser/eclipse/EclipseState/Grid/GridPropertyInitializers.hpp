@@ -30,7 +30,6 @@
 #include <cassert>
 
 #include <opm/parser/eclipse/EclipseState/Tables/RtempvdTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
 
@@ -47,6 +46,7 @@ class Deck;
 class EclipseState;
 class EnptvdTable;
 class ImptvdTable;
+class TableContainer;
 
 template <class ValueType>
 class GridPropertyBaseInitializer

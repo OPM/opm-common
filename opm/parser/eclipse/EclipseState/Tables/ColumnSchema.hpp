@@ -25,8 +25,6 @@
 #include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
-#include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
-
 
 namespace Opm {
 

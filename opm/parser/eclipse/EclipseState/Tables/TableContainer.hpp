@@ -21,12 +21,12 @@
 #define OPM_TABLE_CONTAINER_HPP
 
 #include <cstddef>
+#include <map>
 #include <memory>
 
-#include <opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp>
-
-
 namespace Opm {
+
+    class SimpleTable;
 
     class TableContainer {
         /*

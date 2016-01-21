@@ -24,10 +24,11 @@
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 
-#include <opm/parser/eclipse/EclipseState/Tables/TableIndex.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/TableColumn.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/ColumnSchema.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableColumn.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableIndex.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableSchema.hpp>
 
 using namespace Opm;
 

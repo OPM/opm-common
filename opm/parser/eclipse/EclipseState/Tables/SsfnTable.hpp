@@ -20,31 +20,19 @@
 #define OPM_PARSER_SSFN_TABLE_HPP
 
 #include "SimpleTable.hpp"
-#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
+
+    class DeckItem;
+
     class SsfnTable : public SimpleTable {
-    public:
-        friend class TableManager;
-        SsfnTable(Opm::DeckItemConstPtr item)
-        {
-            m_schema = std::make_shared<TableSchema>();
+        public:
+            friend class TableManager;
+            SsfnTable( std::shared_ptr< const DeckItem > item );
 
-            m_schema->addColumn( ColumnSchema("SolventFraction" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
-            m_schema->addColumn( ColumnSchema("GasRelPermMultiplier" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
-            m_schema->addColumn( ColumnSchema("SolventRelPermMultiplier" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
-
-            SimpleTable::init(item);
-        }
-
-        const TableColumn& getSolventFractionColumn() const
-        { return SimpleTable::getColumn(0); }
-
-        const TableColumn& getGasRelPermMultiplierColumn() const
-        { return SimpleTable::getColumn(1); }
-
-        const TableColumn& getSolventRelPermMultiplierColumn() const
-        { return SimpleTable::getColumn(2); }
+            const TableColumn& getSolventFractionColumn() const;
+            const TableColumn& getGasRelPermMultiplierColumn() const;
+            const TableColumn& getSolventRelPermMultiplierColumn() const;
     };
 }
 

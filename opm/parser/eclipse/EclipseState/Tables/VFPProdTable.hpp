@@ -20,8 +20,6 @@
 #ifndef OPM_PARSER_ECLIPSE_ECLIPSESTATE_TABLES_VFPPRODTABLE_HPP_
 #define OPM_PARSER_ECLIPSE_ECLIPSESTATE_TABLES_VFPPRODTABLE_HPP_
 
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
 
 #include <boost/multi_array.hpp>
@@ -30,6 +28,10 @@
 
 
 namespace Opm {
+
+    class DeckItem;
+    class DeckKeyword;
+    class UnitSystem;
 
 /**
  * Class for reading data from a VFPPROD (vertical flow performance production) table
@@ -120,7 +122,7 @@ public:
      * Constructor which parses a deck keyword and retrieves the relevant parts for a
      * VFP table.
      */
-    void init(DeckKeywordConstPtr table, std::shared_ptr<Opm::UnitSystem> deck_unit_system);
+    void init(std::shared_ptr< const DeckKeyword > table, std::shared_ptr<Opm::UnitSystem> deck_unit_system);
 
     /**
      * Returns the table number

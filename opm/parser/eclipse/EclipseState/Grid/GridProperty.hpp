@@ -19,11 +19,9 @@
 #ifndef ECLIPSE_GRIDPROPERTY_HPP_
 #define ECLIPSE_GRIDPROPERTY_HPP_
 
-#include <iostream>
 #include <string>
 #include <vector>
 #include <algorithm>
-#include <unordered_map>
 #include <boost/lexical_cast.hpp>
 
 #include <ert/ecl/EclKW.hpp>

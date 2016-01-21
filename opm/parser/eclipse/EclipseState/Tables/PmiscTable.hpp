@@ -21,25 +21,19 @@
 #define	OPM_PARSER_PMISC_TABLE_HPP
 
 #include "SimpleTable.hpp"
-#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
+
+    class DeckItem;
+
     class PmiscTable : public SimpleTable {
     public:
 
-        PmiscTable(Opm::DeckItemConstPtr item)
-        {
-            m_schema = std::make_shared<TableSchema>();
-            m_schema->addColumn( ColumnSchema( "OilPhasePressure" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
-            m_schema->addColumn( ColumnSchema( "Miscibility" , Table::INCREASING , Table::DEFAULT_NONE) );
-            SimpleTable::init( item );
-        }
+        PmiscTable( std::shared_ptr< const DeckItem > item );
 
-        const TableColumn& getOilPhasePressureColumn() const
-        { return SimpleTable::getColumn(0); }
+        const TableColumn& getOilPhasePressureColumn() const;
+        const TableColumn& getMiscibilityColumn() const;
 
-        const TableColumn& getMiscibilityColumn() const
-        { return SimpleTable::getColumn(1); }
     };
 }
 

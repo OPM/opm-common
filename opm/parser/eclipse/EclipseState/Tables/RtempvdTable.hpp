@@ -20,31 +20,17 @@
 #define	OPM_PARSER_RTEMPVD_TABLE_HPP
 
 #include "SimpleTable.hpp"
-#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
 
+    class DeckItem;
+
     class RtempvdTable : public SimpleTable {
     public:
-        RtempvdTable(Opm::DeckItemConstPtr item)
-        {
-            m_schema = std::make_shared<TableSchema>();
-            m_schema->addColumn( ColumnSchema( "Depth"       , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
-            m_schema->addColumn( ColumnSchema( "Temperature" , Table::RANDOM , Table::DEFAULT_NONE) );
+        RtempvdTable( std::shared_ptr< const DeckItem > item );
 
-            SimpleTable::init( item );
-        }
-
-        const TableColumn& getDepthColumn() const
-        {
-            return SimpleTable::getColumn(0);
-        }
-
-
-        const TableColumn& getTemperatureColumn() const
-        {
-            return SimpleTable::getColumn(1);
-        }
+        const TableColumn& getDepthColumn() const;
+        const TableColumn& getTemperatureColumn() const;
     };
 }
 

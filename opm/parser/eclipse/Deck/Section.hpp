@@ -22,14 +22,10 @@
 
 
 
-#include <iostream>
 #include <string>
 #include <memory>
 
-#include <boost/iterator/iterator_facade.hpp>
-
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-
 
 namespace Opm {
 

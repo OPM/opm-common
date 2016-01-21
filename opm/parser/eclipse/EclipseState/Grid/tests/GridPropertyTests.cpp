@@ -38,7 +38,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
 
 // forward declarations to avoid some pedantic warnings
 Opm::DeckKeywordConstPtr createSATNUMKeyword( );

@@ -35,13 +35,14 @@
 #include <memory>
 
 #include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
 
 
 namespace Opm {
+    template< typename > class GridProperty;
+    class Fault;
+    class FaultCollection;
+    class MULTREGTScanner;
+
     class TransMult {
 
     public:

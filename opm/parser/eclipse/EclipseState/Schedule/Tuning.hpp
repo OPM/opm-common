@@ -20,11 +20,11 @@
 #ifndef OPM_TUNING_HPP
 #define OPM_TUNING_HPP
 
-#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
-
-
 namespace Opm {
+
+    template< typename > class DynamicState;
+
+    class TimeMap;
 
     class Tuning {
 
@@ -44,7 +44,7 @@ namespace Opm {
     */
 
     public:
-        Tuning(TimeMapConstPtr timemap);
+        Tuning(std::shared_ptr< const TimeMap > timemap);
 
         void setTuningInitialValue(const std::string tuningItem, double value,bool resetVector);
         void setTuningInitialValue(const std::string tuningItem, int value, bool resetVector);

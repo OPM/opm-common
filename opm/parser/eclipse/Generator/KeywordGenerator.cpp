@@ -39,6 +39,7 @@ namespace Opm {
 
     std::string testHeader() {
         std::string header = "#define BOOST_TEST_MODULE\n"
+            "#include <boost/filesystem.hpp>\n"
             "#include <boost/test/unit_test.hpp>\n"
             "#include <memory>\n"
             "#include <opm/json/JsonObject.hpp>\n"
@@ -73,9 +74,9 @@ namespace Opm {
         return header;
     }
 
-    std::string KeywordGenerator::headerHeader() {
-        std::string header = "#ifndef PARSER_KEYWORDS_HPP\n"
-            "#define PARSER_KEYWORDS_HPP\n"
+    std::string KeywordGenerator::headerHeader(const std::string& suffix) {
+        std::string header = "#ifndef PARSER_KEYWORDS_" + suffix + "_HPP\n"
+            "#define PARSER_KEYWORDS_" + suffix + "_HPP\n"
             "#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>\n"
             "namespace Opm {\n"
             "namespace ParserKeywords {\n\n";
@@ -112,60 +113,100 @@ namespace Opm {
         return update;
     }
 
+    static bool write_file( const std::stringstream& stream, const std::string& file, bool verbose, std::string desc = "source" ) {
+        auto update = KeywordGenerator::updateFile( stream, file );
+        if( !verbose ) return update;
 
-    bool KeywordGenerator::updateSource(const KeywordLoader& loader , const std::string& sourceFile) const {
+        if( update )
+            std::cout << "Updated " << desc << " file written to: " << file << std::endl;
+        else
+            std::cout << "No changes to " << desc << " file: " << file << std::endl;
+
+        return update;
+    }
+
+
+    bool KeywordGenerator::updateSource(const KeywordLoader& loader , const std::string& sourceFile, int blocks ) const {
         std::stringstream newSource;
+
+        const int keywords = loader.size();
+        const int blocksize = (keywords / blocks) + 1;
+
+        std::vector< std::stringstream > streams( blocks );
+        for( unsigned int i = 0; i < streams.size(); ++i )
+            streams[ i ] << sourceHeader() << std::endl
+                << "void addDefaultKeywords" << i << "(Parser& p) {" << std::endl;
+
+        int bi = 0;
+        for( auto iter = loader.keyword_begin(); iter != loader.keyword_end(); ++iter ) {
+            auto block = bi++ / blocksize;
+            streams[ block ] << "p.addKeyword< ParserKeywords::"
+                << iter->second->className() << " >();" << std::endl;
+        }
+
+        for( auto& stream : streams ) stream << "}}}" << std::endl;
+
+        for( unsigned int i = 0; i < streams.size(); ++i ) {
+            auto srcfile = sourceFile;
+            updateFile( streams[i], srcfile.insert( srcfile.size() - 4, std::to_string( i ) ) );
+        }
 
         newSource << sourceHeader();
         for (auto iter = loader.keyword_begin(); iter != loader.keyword_end(); ++iter) {
             std::shared_ptr<ParserKeyword> keyword = (*iter).second;
             newSource << keyword->createCode() << std::endl;
         }
-        newSource << "}" << std::endl;
-        {
-            newSource << "void Parser::addDefaultKeywords() {" << std::endl;
-            for (auto iter = loader.keyword_begin(); iter != loader.keyword_end(); ++iter) {
-                std::shared_ptr<ParserKeyword> keyword = (*iter).second;
-                newSource << "   addKeyword<ParserKeywords::" << keyword->className() << ">();" << std::endl;
-            }
-            newSource << "}" << std::endl;
-        }
+
+        for( auto i = 0; i < blocks; ++i )
+            newSource << "void addDefaultKeywords" << i << "(Parser& p);" << std::endl;
+
         newSource << "}" << std::endl;
 
-        {
-            bool update = updateFile( newSource , sourceFile );
-            if (m_verbose) {
-                if (update)
-                    std::cout << "Updated source file written to: " << sourceFile << std::endl;
-                else
-                    std::cout << "No changes to source file: " << sourceFile << std::endl;
-            }
-            return update;
-        }
+        newSource << "void Parser::addDefaultKeywords() {" << std::endl;
+        for( auto i = 0; i < blocks; ++i )
+            newSource << "Opm::ParserKeywords::addDefaultKeywords" << i << "(*this);" << std::endl;
+
+        newSource << "}}" << std::endl;
+
+        return write_file( newSource, sourceFile, m_verbose, "source" );
     }
 
+    bool KeywordGenerator::updateHeader(const KeywordLoader& loader, const std::string& headerBuildPath, const std::string& headerFile) const {
+        bool update = false;
 
-    bool KeywordGenerator::updateHeader(const KeywordLoader& loader , const std::string& headerFile) const {
-        std::stringstream stream;
+        std::map< char, std::vector< const ParserKeyword* > > keywords;
+        for( auto iter = loader.keyword_begin(); iter != loader.keyword_end(); ++iter )
+            keywords[ std::toupper( iter->second->className().at(0) ) ].push_back( iter->second.get() );
 
-        stream << headerHeader();
-        for (auto iter = loader.keyword_begin(); iter != loader.keyword_end(); ++iter) {
-            std::shared_ptr<ParserKeyword> keyword = (*iter).second;
-            stream << keyword->createDeclaration("   ") << std::endl;
+        for( const auto& iter : keywords ) {
+            std::stringstream stream;
+
+            stream << headerHeader( std::string( 1, std::toupper( iter.first ) ) );
+            for( auto& kw : iter.second )
+                stream << kw->createDeclaration("   ") << std::endl;
+
+            stream << "}" << std::endl << "}" << std::endl;
+            stream << "#endif" << std::endl;
+
+            const auto final_path = headerBuildPath + headerFile + "/" + std::string( 1, iter.first ) + ".hpp";
+            if( write_file( stream, final_path, m_verbose, "header" ) )
+                update = true;
         }
-        stream << "}" << std::endl << "}" << std::endl;
+
+        std::stringstream stream;
+        stream << headerHeader("");
+        stream << "}}" << std::endl;
+
+        for( const auto& iter : keywords )
+            stream << "#include <"
+                << headerFile + "/"
+                << std::string( 1, std::toupper( iter.first ) ) + ".hpp>"
+                << std::endl;
+
         stream << "#endif" << std::endl;
 
-        {
-            bool update = updateFile( stream , headerFile );
-            if (m_verbose) {
-                if (update)
-                    std::cout << "Updated header file written to: " << headerFile << std::endl;
-                else
-                    std::cout << "No changes to header file: " << headerFile << std::endl;
-            }
-            return update;
-        }
+        const auto final_path = headerBuildPath + headerFile + ".hpp";
+        return write_file( stream, final_path, m_verbose, "header" ) || update;
     }
 
 

@@ -20,25 +20,17 @@
 #define	OPM_PARSER_OILVISCT_TABLE_HPP
 
 #include "SimpleTable.hpp"
-#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
+
+    class DeckItem;
+
     class OilvisctTable : public SimpleTable {
-    public:
+        public:
+            OilvisctTable( std::shared_ptr< const DeckItem > item );
 
-        OilvisctTable(Opm::DeckItemConstPtr item)
-        {
-            m_schema = std::make_shared<TableSchema>( );
-            m_schema->addColumn( ColumnSchema("Temperature" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
-            m_schema->addColumn( ColumnSchema("Viscosity" , Table::DECREASING , Table::DEFAULT_NONE) );
-            SimpleTable::init(item);
-        }
-
-        const TableColumn& getTemperatureColumn() const
-        { return SimpleTable::getColumn(0); }
-
-        const TableColumn& getOilViscosityColumn() const
-        { return SimpleTable::getColumn(1); }
+            const TableColumn& getTemperatureColumn() const;
+            const TableColumn& getOilViscosityColumn() const;
     };
 }
 

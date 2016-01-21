@@ -20,31 +20,18 @@
 #define	OPM_PARSER_PVDG_TABLE_HPP
 
 #include "SimpleTable.hpp"
-#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
+
+    class DeckItem;
+
     class PvdgTable : public SimpleTable {
-    public:
+        public:
+            PvdgTable( std::shared_ptr< const DeckItem > item );
 
-        PvdgTable(Opm::DeckItemConstPtr item)
-        {
-            m_schema = std::make_shared<TableSchema>();
-            m_schema->addColumn( ColumnSchema( "P"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
-            m_schema->addColumn( ColumnSchema( "BG"  , Table::STRICTLY_DECREASING , Table::DEFAULT_LINEAR));
-            m_schema->addColumn( ColumnSchema( "MUG" , Table::INCREASING          , Table::DEFAULT_LINEAR ));
-
-            SimpleTable::init( item );
-        }
-
-
-        const TableColumn& getPressureColumn() const
-        { return SimpleTable::getColumn(0); }
-
-        const TableColumn& getFormationFactorColumn() const
-        { return SimpleTable::getColumn(1); }
-
-        const TableColumn& getViscosityColumn() const
-        { return SimpleTable::getColumn(2); }
+            const TableColumn& getPressureColumn() const;
+            const TableColumn& getFormationFactorColumn() const;
+            const TableColumn& getViscosityColumn() const;
     };
 }
 

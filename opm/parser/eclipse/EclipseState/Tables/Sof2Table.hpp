@@ -20,26 +20,17 @@
 #define OPM_PARSER_SOF2_TABLE_HPP
 
 #include "SimpleTable.hpp"
-#include <opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp>
 
 namespace Opm {
+
+    class DeckItem;
+
     class Sof2Table : public SimpleTable {
-    public:
+        public:
+            Sof2Table( std::shared_ptr< const DeckItem > item );
 
-        Sof2Table(Opm::DeckItemConstPtr item)
-        {
-            m_schema = std::make_shared<TableSchema>( );
-            m_schema->addColumn( ColumnSchema( "SO"  , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
-            m_schema->addColumn( ColumnSchema( "KRO" , Table::INCREASING , Table::DEFAULT_NONE ));
-
-            SimpleTable::init(item);
-        }
-
-        const TableColumn& getSoColumn() const
-        { return SimpleTable::getColumn(0); }
-
-        const TableColumn& getKroColumn() const
-        { return SimpleTable::getColumn(1); }
+            const TableColumn& getSoColumn() const;
+            const TableColumn& getKroColumn() const;
     };
 }
 #endif

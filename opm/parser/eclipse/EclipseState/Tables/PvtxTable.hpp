@@ -20,11 +20,8 @@
 #define	OPM_PARSER_PVTX_TABLE_HPP
 
 #include <vector>
-#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableColumn.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/TableSchema.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/ColumnSchema.hpp>
 
 /*
@@ -105,16 +102,21 @@ The first row actually corresponds to saturated values.
 
 
  namespace Opm {
+
+     class DeckKeyword;
+     class SimpleTable;
+     class TableSchema;
+
     class PvtxTable
     {
 
     public:
-        static size_t numTables(Opm::DeckKeywordConstPtr keyword);
-        static std::vector<std::pair<size_t , size_t> > recordRanges(Opm::DeckKeywordConstPtr keyword);
+        static size_t numTables(std::shared_ptr< const DeckKeyword > keyword);
+        static std::vector<std::pair<size_t , size_t> > recordRanges(std::shared_ptr< const DeckKeyword > keyword);
 
         PvtxTable(const std::string& columnName);
         const SimpleTable& getUnderSaturatedTable(size_t tableNumber) const;
-        void init(Opm::DeckKeywordConstPtr keyword , size_t tableIdx);
+        void init(std::shared_ptr< const DeckKeyword > keyword , size_t tableIdx);
         size_t size() const;
         double evaluate(const std::string& column, double outerArg, double innerArg) const;
         double getArgValue(size_t index) const;

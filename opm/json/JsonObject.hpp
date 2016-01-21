@@ -22,9 +22,13 @@
 
 #include <string>
 
-#include <boost/filesystem/path.hpp>
-
 struct cJSON;
+
+namespace boost {
+    namespace filesystem {
+        class path;
+    }
+}
 
 namespace Json {
 
