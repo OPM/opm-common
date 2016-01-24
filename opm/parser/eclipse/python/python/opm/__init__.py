@@ -14,6 +14,13 @@ except ImportError:
     pass
 
 
+try:
+    import opm_site_init
+except ImportError:
+    pass
+
+
+
 class OPMPrototype(Prototype):
     lib_file = lib_name( "libcopmparser" , path = lib_path , so_version = so_version)
     lib = ctypes.CDLL( lib_file , ctypes.RTLD_GLOBAL )
