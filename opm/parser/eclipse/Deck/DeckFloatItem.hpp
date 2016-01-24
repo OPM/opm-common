@@ -26,7 +26,6 @@
 #include <memory>
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
-#include <opm/parser/eclipse/Units/Dimension.hpp>
 
 namespace Opm {
 

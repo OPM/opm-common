@@ -22,6 +22,7 @@
 #include <boost/test/test_tools.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseMode.hpp>
@@ -38,9 +39,9 @@ using namespace Opm;
 
 BOOST_AUTO_TEST_CASE( parse_END_OK ) {
     ParserPtr parser(new Parser());
-    boost::filesystem::path fileWithTitleKeyword("testdata/integration_tests/END/END1.txt");
+    std::string fileWithTitleKeyword("testdata/integration_tests/END/END1.txt");
 
-    DeckPtr deck = parser->parseFile(fileWithTitleKeyword.string(), ParseMode());
+    DeckPtr deck = parser->parseFile(fileWithTitleKeyword, ParseMode());
 
     BOOST_CHECK_EQUAL(size_t(1), deck->size());
     BOOST_CHECK_EQUAL (true, deck->hasKeyword("OIL"));
@@ -50,9 +51,9 @@ BOOST_AUTO_TEST_CASE( parse_END_OK ) {
 
 BOOST_AUTO_TEST_CASE( parse_ENDINC_OK ) {
     ParserPtr parser(new Parser());
-    boost::filesystem::path fileWithTitleKeyword("testdata/integration_tests/END/ENDINC1.txt");
+    std::string fileWithTitleKeyword("testdata/integration_tests/END/ENDINC1.txt");
 
-    DeckPtr deck = parser->parseFile(fileWithTitleKeyword.string(), ParseMode());
+    DeckPtr deck = parser->parseFile(fileWithTitleKeyword, ParseMode());
 
     BOOST_CHECK_EQUAL(size_t(1), deck->size());
     BOOST_CHECK_EQUAL (true, deck->hasKeyword("OIL"));

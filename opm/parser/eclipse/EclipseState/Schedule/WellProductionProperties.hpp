@@ -20,10 +20,14 @@
 #ifndef WELLPRODUCTIONPROPERTIES_HPP_HEADER_INCLUDED
 #define WELLPRODUCTIONPROPERTIES_HPP_HEADER_INCLUDED
 
+#include <memory>
+
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 namespace Opm {
+
+    class DeckRecord;
+
     class WellProductionProperties {
     public:
         double  OilRate;
@@ -43,8 +47,8 @@ namespace Opm {
         bool operator!=(const WellProductionProperties& other) const;
         WellProductionProperties();
 
-        static WellProductionProperties history(double BHPLimit , DeckRecordConstPtr record, bool addGroupProductionControl = false);
-        static WellProductionProperties prediction(DeckRecordConstPtr record, bool addGroupProductionControl = false);
+        static WellProductionProperties history(double BHPLimit , std::shared_ptr< const DeckRecord > record, bool addGroupProductionControl = false);
+        static WellProductionProperties prediction(std::shared_ptr< const DeckRecord > record, bool addGroupProductionControl = false);
 
         bool hasProductionControl(WellProducer::ControlModeEnum controlModeArg) const {
             return (m_productionControls & controlModeArg) != 0;
@@ -63,7 +67,7 @@ namespace Opm {
     private:
         int m_productionControls;
 
-        WellProductionProperties(DeckRecordConstPtr record);
+        WellProductionProperties(std::shared_ptr< const DeckRecord > record);
 
         void init();
     };

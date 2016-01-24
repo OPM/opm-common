@@ -24,6 +24,8 @@
 #include <boost/test/test_tools.hpp>
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
+#include <boost/filesystem/path.hpp>
+
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseMode.hpp>

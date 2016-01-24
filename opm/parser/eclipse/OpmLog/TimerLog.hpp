@@ -21,15 +21,11 @@
 
 #include <time.h>
 
+#include <memory>
 #include <sstream>
 #include <string>
-#include <vector>
-#include <tuple>
-#include <memory>
-#include <map>
 
 #include <opm/parser/eclipse/OpmLog/StreamLog.hpp>
-#include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
 
 /*
   This class is a simple demonstration of how the logging framework

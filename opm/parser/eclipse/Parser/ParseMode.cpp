@@ -20,12 +20,12 @@
 #include <ert/util/util.h>
 #include <cstdlib>
 
-#include <iostream>
 #include <boost/algorithm/string.hpp>
 
+#include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Parser/InputErrorAction.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 
 namespace Opm {
 

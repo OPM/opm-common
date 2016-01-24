@@ -21,7 +21,6 @@
 #define STAR_TOKEN_HPP
 
 #include <string>
-#include <iostream>
 #include <algorithm>
 
 #include <boost/lexical_cast.hpp>

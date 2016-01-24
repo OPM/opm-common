@@ -20,9 +20,6 @@
 #ifndef RAW_ENUMS_H
 #define RAW_ENUMS_H
 
-#include <string>
-#include <stdexcept>
-
 namespace Opm {
 
     namespace Raw {

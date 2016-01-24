@@ -18,6 +18,7 @@
  */
 
 #include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
+#include <opm/parser/eclipse/Units/Dimension.hpp>
 
 #include <algorithm>
 #include <iostream>

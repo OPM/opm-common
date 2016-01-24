@@ -23,10 +23,12 @@
 
 #include <memory>
 
-#include <opm/json/JsonObject.hpp>
-
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
+
+namespace Json {
+    class JsonObject;
+}
 
 namespace Opm {
 

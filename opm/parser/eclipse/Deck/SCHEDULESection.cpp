@@ -19,7 +19,9 @@
 
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/Deck/DeckTimeStep.hpp>
 #include <opm/parser/eclipse/Deck/SCHEDULESection.hpp>
 
 namespace Opm {

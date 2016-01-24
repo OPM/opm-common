@@ -20,34 +20,34 @@
 #ifndef DECKRECORD_HPP
 #define DECKRECORD_HPP
 
-#include <stdexcept>
 #include <string>
 #include <vector>
 #include <map>
 #include <memory>
-#include <opm/parser/eclipse/Deck/DeckItem.hpp>
 
 namespace Opm {
+
+    class DeckItem;
 
     class DeckRecord {
     public:
         DeckRecord();
         size_t size() const;
-        void addItem(DeckItemPtr deckItem);
-        DeckItemPtr getItem(size_t index) const;
-        DeckItemPtr getItem(const std::string& name) const;
-        DeckItemPtr getDataItem() const;
+        void addItem(std::shared_ptr< DeckItem > deckItem);
+        std::shared_ptr< DeckItem > getItem(size_t index) const;
+        std::shared_ptr< DeckItem > getItem(const std::string& name) const;
+        std::shared_ptr< DeckItem > getDataItem() const;
         bool        hasItem(const std::string& name) const;
         
     template <class Item>
-    DeckItemPtr getItem() const {
+    std::shared_ptr< DeckItem > getItem() const {
         return getItem( Item::itemName );
     }
 
 
     private:
-        std::vector<DeckItemPtr> m_items;
-        std::map<std::string, DeckItemPtr> m_itemMap;
+        std::vector<std::shared_ptr< DeckItem >> m_items;
+        std::map<std::string, std::shared_ptr< DeckItem >> m_itemMap;
 
     };
     typedef std::shared_ptr<DeckRecord> DeckRecordPtr;

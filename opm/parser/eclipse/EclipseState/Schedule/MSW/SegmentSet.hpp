@@ -28,6 +28,8 @@
 
 namespace Opm {
 
+    class DeckKeyword;
+
     class SegmentSet {
     public:
         SegmentSet();
@@ -44,13 +46,13 @@ namespace Opm {
         WellSegment::MultiPhaseModelEnum multiPhaseModel() const;
 
         int numberToLocation(const int segment_number) const;
-        void addSegment(SegmentConstPtr new_segment);
+        void addSegment(std::shared_ptr< const Segment > new_segment);
 
-        void segmentsFromWELSEGSKeyword(DeckKeywordConstPtr welsegsKeyword);
+        void segmentsFromWELSEGSKeyword(std::shared_ptr< const DeckKeyword > welsegsKeyword);
 
         SegmentSet* shallowCopy() const;
 
-        SegmentConstPtr operator[](size_t idx) const;
+        std::shared_ptr< const Segment > operator[](size_t idx) const;
         void orderSegments();
         void processABS();
         void processINC(const bool first_time);
@@ -81,8 +83,7 @@ namespace Opm {
         // There are other three properties for segment related to thermal conduction,
         // while they are not supported by the keyword at the moment.
 
-        // std::vector<SegmentConstPtr> m_segments;
-        std::vector<SegmentConstPtr> m_segments;
+        std::vector<std::shared_ptr< const Segment >> m_segments;
         // the mapping from the segment number to the
         // storage location in the vector
         std::map<int, int> m_number_to_location;

@@ -20,7 +20,6 @@
 #define PARSER_KEYWORD_H
 
 #include <string>
-#include <iostream>
 #include <memory>
 #include <set>
 
@@ -30,24 +29,21 @@
 #include <boost/regex.hpp>
 #endif
 
-#include <opm/json/JsonObject.hpp>
-
-#include <opm/parser/eclipse/Parser/ParserRecord.hpp>
-#include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>
-#include <opm/parser/eclipse/Parser/ParserFloatItem.hpp>
-#include <opm/parser/eclipse/Parser/ParserEnums.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
-#include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
-#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-
 #include <opm/parser/eclipse/EclipseState/Util/RecordVector.hpp>
+#include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 
+namespace Json {
+    class JsonObject;
+}
 
 namespace Opm {
-    class ParserKeyword;
-    typedef std::shared_ptr<ParserKeyword> ParserKeywordPtr;
-    typedef std::shared_ptr<const ParserKeyword> ParserKeywordConstPtr;
+    class Deck;
+    class DeckKeyword;
+    class ParseMode;
+    class ParserDoubleItem;
+    class ParserFloatItem;
+    class ParserRecord;
+    class RawKeyword;
 
     class ParserKeyword {
     public:
@@ -77,9 +73,9 @@ namespace Opm {
         bool hasDimension() const;
         void addRecord(std::shared_ptr<ParserRecord> record);
         void addDataRecord(std::shared_ptr<ParserRecord> record);
-        ParserRecordPtr getRecord(size_t recordIndex) const;
-        std::vector<ParserRecordPtr>::const_iterator recordBegin() const;
-        std::vector<ParserRecordPtr>::const_iterator recordEnd() const;
+        std::shared_ptr< ParserRecord > getRecord(size_t recordIndex) const;
+        std::vector<std::shared_ptr< ParserRecord >>::const_iterator recordBegin() const;
+        std::vector<std::shared_ptr< ParserRecord >>::const_iterator recordEnd() const;
         const std::string className() const;
         const std::string& getName() const;
         size_t getFixedSize() const;
@@ -100,7 +96,7 @@ namespace Opm {
         SectionNameSet::const_iterator validSectionNamesBegin() const;
         SectionNameSet::const_iterator validSectionNamesEnd() const;
 
-        DeckKeywordPtr parse(const ParseMode& parseMode , RawKeywordConstPtr rawKeyword) const;
+        std::shared_ptr< DeckKeyword > parse(const ParseMode& parseMode , std::shared_ptr< const RawKeyword > rawKeyword) const;
         enum ParserKeywordSizeEnum getSizeType() const;
         const std::pair<std::string,std::string>& getSizeDefinitionPair() const;
         bool isDataKeyword() const;
@@ -121,7 +117,7 @@ namespace Opm {
 #else
         boost::regex m_matchRegex;
 #endif
-        RecordVector<ParserRecordPtr> m_records;
+        RecordVector<std::shared_ptr< ParserRecord >> m_records;
         enum ParserKeywordSizeEnum m_keywordSizeType;
         size_t m_fixedSize;
         bool m_isTableCollection;
@@ -136,9 +132,13 @@ namespace Opm {
         void initSizeKeyword(const Json::JsonObject& sizeObject);
         void commonInit(const std::string& name, ParserKeywordSizeEnum sizeType);
         void addItems( const Json::JsonObject& jsonConfig);
-        void initDoubleItemDimension( ParserDoubleItemPtr item, const Json::JsonObject itemConfig);
-        void initFloatItemDimension( ParserFloatItemPtr item, const Json::JsonObject itemConfig);
+        void initDoubleItemDimension( std::shared_ptr< ParserDoubleItem > item, const Json::JsonObject itemConfig);
+        void initFloatItemDimension( std::shared_ptr< ParserFloatItem > item, const Json::JsonObject itemConfig);
     };
+
+    typedef std::shared_ptr<ParserKeyword> ParserKeywordPtr;
+    typedef std::shared_ptr<const ParserKeyword> ParserKeywordConstPtr;
+
 }
 
 #endif

@@ -24,14 +24,14 @@
 #include <memory>
 #include <string>
 
-#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 
 namespace Opm {
+
+    class CompletionSet;
+    class DeckKeyword;
+    class EclipseGrid;
+    class SegmentSet;
 
     struct Compsegs {
         int m_i;
@@ -53,15 +53,15 @@ namespace Opm {
         Compsegs(int i_in, int j_in, int k_in, int branch_number_in, double distance_start_in, double distance_end_in,
                  WellCompletion::DirectionEnum dir_in, double center_depth_in, int segment_number_in);
 
-        static std::vector<std::shared_ptr<Compsegs>> compsegsFromCOMPSEGSKeyword(DeckKeywordConstPtr compsegsKeyword,
-                                                                                        EclipseGridConstPtr grid);
+        static std::vector<std::shared_ptr<Compsegs>> compsegsFromCOMPSEGSKeyword(std::shared_ptr< const DeckKeyword > compsegsKeyword,
+                                                                                        std::shared_ptr< const EclipseGrid > grid);
 
         // get the segment number information and depth information based on the information from SegmentSet
-        static void processCOMPSEGS(std::vector<std::shared_ptr<Compsegs>>& compsegs, SegmentSetConstPtr segment_set);
+        static void processCOMPSEGS(std::vector<std::shared_ptr<Compsegs>>& compsegs, std::shared_ptr< const SegmentSet > segment_set);
 
         // update the segment related information for Completions
         static void updateCompletionsWithSegment(const std::vector<std::shared_ptr<Compsegs>>& compsegs,
-                                                 CompletionSetPtr completion_set);
+                                                 std::shared_ptr< CompletionSet > completion_set);
 
     };
 

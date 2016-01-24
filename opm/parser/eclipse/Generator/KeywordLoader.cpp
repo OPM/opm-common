@@ -26,6 +26,7 @@
 
 #include <opm/json/JsonObject.hpp>
 #include <opm/parser/eclipse/Generator/KeywordLoader.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 
 namespace Opm {
 

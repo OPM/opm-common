@@ -29,6 +29,7 @@
 #include <opm/parser/eclipse/OpmLog/CounterLog.hpp>
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 using namespace Opm;
 

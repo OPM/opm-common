@@ -22,6 +22,9 @@
 #include <boost/test/test_tools.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseMode.hpp>
@@ -38,8 +41,8 @@ using namespace Opm;
 
 BOOST_AUTO_TEST_CASE( parse_WCHONHIST_OK ) {
     ParserPtr parser(new Parser());
-    boost::filesystem::path wconhistFile("testdata/integration_tests/WCONHIST/WCONHIST1");
-    DeckPtr deck =  parser->parseFile(wconhistFile.string(), ParseMode());
+    std::string wconhistFile("testdata/integration_tests/WCONHIST/WCONHIST1");
+    DeckPtr deck =  parser->parseFile(wconhistFile, ParseMode());
     DeckKeywordConstPtr kw1 = deck->getKeyword("WCONHIST" , 0);
     BOOST_CHECK_EQUAL( 3U , kw1->size() );
 

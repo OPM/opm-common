@@ -22,10 +22,6 @@
 
 #include <memory>
 
-#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-
-
 namespace Opm {
 
     class Segment {

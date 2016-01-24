@@ -21,13 +21,14 @@
 #ifndef WELL_HPP_
 #define WELL_HPP_
 
-#include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
-
 #include <memory>
 #include <string>
+#include <vector>
+
+#include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 
 namespace Opm {
 

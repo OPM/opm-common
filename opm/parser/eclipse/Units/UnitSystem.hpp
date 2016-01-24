@@ -24,9 +24,9 @@
 #include <map>
 #include <memory>
 
-#include <opm/parser/eclipse/Units/Dimension.hpp>
-
 namespace Opm {
+
+    class Dimension;
 
     class UnitSystem {
     public:

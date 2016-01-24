@@ -22,8 +22,10 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
+#include <boost/filesystem/path.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
@@ -33,8 +35,8 @@ using namespace Opm;
 
 BOOST_AUTO_TEST_CASE( PARSE_PLYADS_OK) {
     ParserPtr parser(new Parser());
-    boost::filesystem::path deckFile("testdata/integration_tests/POLYMER/plyads.data");
-    DeckPtr deck =  parser->parseFile(deckFile.string());
+    std::string deckFile("testdata/integration_tests/POLYMER/plyads.data");
+    DeckPtr deck =  parser->parseFile(deckFile);
     DeckKeywordConstPtr kw = deck->getKeyword("PLYADS");
     DeckRecordConstPtr rec = kw->getRecord(0);
     DeckItemPtr item = rec->getItem(0);

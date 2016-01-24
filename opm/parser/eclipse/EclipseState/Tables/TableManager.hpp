@@ -20,6 +20,8 @@
 #ifndef OPM_TABLE_MANAGER_HPP
 #define OPM_TABLE_MANAGER_HPP
 
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
@@ -38,7 +40,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp>
 
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
-
+#include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
 
 namespace Opm {
 

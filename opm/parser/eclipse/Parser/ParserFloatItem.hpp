@@ -22,15 +22,17 @@
 
 #include <memory>
 
-#include <opm/json/JsonObject.hpp>
-
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 
-#include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
+namespace Json {
+    class JsonObject;
+}
 
 
 namespace Opm {
+
+    class RawRecord;
 
     class ParserFloatItem : public ParserItem
     {
@@ -47,7 +49,7 @@ namespace Opm {
         const std::string& getDimension(size_t index) const;
         bool equalDimensions(const ParserItem& other) const;
 
-        DeckItemPtr scan(RawRecordPtr rawRecord) const;
+        DeckItemPtr scan(std::shared_ptr< RawRecord > rawRecord) const;
         bool equal(const ParserItem& other) const;
 
         std::string createCode() const;

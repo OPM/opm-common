@@ -24,6 +24,7 @@
 #include <boost/test/test_tools.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
@@ -38,8 +39,8 @@ using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(ParsePOROandPERMX) {
     ParserPtr parser(new Parser());
-    boost::filesystem::path poroFile("testdata/integration_tests/PORO/PORO1");
-    DeckPtr deck =  parser->parseFile(poroFile.string(), ParseMode());
+    std::string poroFile("testdata/integration_tests/PORO/PORO1");
+    DeckPtr deck =  parser->parseFile(poroFile, ParseMode());
     DeckKeywordConstPtr kw1 = deck->getKeyword("PORO" , 0);
     DeckKeywordConstPtr kw2 = deck->getKeyword("PERMX" , 0);
 

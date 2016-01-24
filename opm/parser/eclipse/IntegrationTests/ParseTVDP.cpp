@@ -37,8 +37,8 @@ using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(ParseTVDP) {
     ParserPtr parser(new Parser());
-    boost::filesystem::path poroFile("testdata/integration_tests/TVDP/TVDP1");
-    DeckPtr deck =  parser->parseFile(poroFile.string(), ParseMode());
+    std::string poroFile("testdata/integration_tests/TVDP/TVDP1");
+    DeckPtr deck =  parser->parseFile(poroFile, ParseMode());
 
     BOOST_CHECK_EQUAL( false , deck->hasKeyword("TVDP*"));
     BOOST_CHECK( deck->hasKeyword("TVDPA"));

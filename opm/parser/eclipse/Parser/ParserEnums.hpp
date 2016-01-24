@@ -21,7 +21,6 @@
 #define PARSER_ENUMS_H
 
 #include <string>
-#include <stdexcept>
 
 namespace Opm {
 

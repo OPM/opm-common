@@ -31,6 +31,8 @@
 
 
 #include <opm/parser/eclipse/Generator/KeywordLoader.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
+#include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 
 BOOST_AUTO_TEST_CASE(EmptyKeywordLoader) {
     Opm::KeywordLoader loader(false);

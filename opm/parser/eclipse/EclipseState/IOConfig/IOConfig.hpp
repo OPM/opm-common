@@ -20,13 +20,16 @@
 #ifndef OPM_IO_CONFIG_HPP
 #define OPM_IO_CONFIG_HPP
 
-#include <opm/parser/eclipse/Deck/Section.hpp>
 #include <boost/date_time/gregorian/gregorian_types.hpp>
 
 namespace Opm {
 
     template< typename > class DynamicState;
 
+    class DeckKeyword;
+    class GRIDSection;
+    class RUNSPECSection;
+    class SOLUTIONSection;
     class TimeMap;
 
     /*The IOConfig class holds data about input / ouput configurations

@@ -20,14 +20,11 @@
 #include <stdexcept>
 #include <iostream>
 
+#include <opm/parser/eclipse/OpmLog/LogBackend.hpp>
 #include <opm/parser/eclipse/OpmLog/Logger.hpp>
 #include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
 
-
-
-
 namespace Opm {
-
 
     Logger::Logger()
         : m_globalMask(0),

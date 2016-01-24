@@ -24,33 +24,32 @@
 #include <memory>
 #include <vector>
 
-#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-
 namespace Opm {
 
+    class DeckKeyword;
     class UnitSystem;
 
     class Deck {
     public:
         Deck();
-        bool hasKeyword(DeckKeywordConstPtr keyword) const;
+        bool hasKeyword(std::shared_ptr< const DeckKeyword > keyword) const;
         bool hasKeyword( const std::string& keyword ) const;
-        void addKeyword( DeckKeywordConstPtr keyword);
-        DeckKeywordConstPtr getKeyword(const std::string& keyword , size_t index) const;
-        DeckKeywordConstPtr getKeyword(const std::string& keyword) const;
-        DeckKeywordConstPtr getKeyword(size_t index) const;
+        void addKeyword( std::shared_ptr< const DeckKeyword > keyword);
+        std::shared_ptr< const DeckKeyword > getKeyword(const std::string& keyword , size_t index) const;
+        std::shared_ptr< const DeckKeyword > getKeyword(const std::string& keyword) const;
+        std::shared_ptr< const DeckKeyword > getKeyword(size_t index) const;
 
-        size_t getKeywordIndex(DeckKeywordConstPtr keyword) const;
+        size_t getKeywordIndex(std::shared_ptr< const DeckKeyword > keyword) const;
 
 
         size_t numKeywords(const std::string& keyword) const;
-        const std::vector<DeckKeywordConstPtr>& getKeywordList(const std::string& keyword) const;
+        const std::vector<std::shared_ptr< const DeckKeyword >>& getKeywordList(const std::string& keyword) const;
         size_t size() const;
         void initUnitSystem();
         std::shared_ptr<UnitSystem> getDefaultUnitSystem() const;
         std::shared_ptr<UnitSystem> getActiveUnitSystem()  const;
-        std::vector<DeckKeywordConstPtr>::const_iterator begin() const;
-        std::vector<DeckKeywordConstPtr>::const_iterator end() const;
+        std::vector<std::shared_ptr< const DeckKeyword >>::const_iterator begin() const;
+        std::vector<std::shared_ptr< const DeckKeyword >>::const_iterator end() const;
 
 
         template <class Keyword>
@@ -59,17 +58,17 @@ namespace Opm {
         }
 
         template <class Keyword>
-        DeckKeywordConstPtr getKeyword(size_t index) const {
+        std::shared_ptr< const DeckKeyword > getKeyword(size_t index) const {
             return getkeyword( Keyword::keywordName , index );
         }
 
         template <class Keyword>
-        DeckKeywordConstPtr getKeyword() const {
+        std::shared_ptr< const DeckKeyword > getKeyword() const {
             return getKeyword( Keyword::keywordName );
         }
 
         template <class Keyword>
-        const std::vector<DeckKeywordConstPtr>& getKeywordList() const {
+        const std::vector<std::shared_ptr< const DeckKeyword >>& getKeywordList() const {
             return getKeywordList( Keyword::keywordName );
         }
 
@@ -78,9 +77,9 @@ namespace Opm {
         std::shared_ptr<UnitSystem> m_activeUnits;
 
     private:
-        std::vector<DeckKeywordConstPtr> m_emptyList;
-        std::vector<DeckKeywordConstPtr> m_keywordList;
-        std::map<std::string, std::vector<DeckKeywordConstPtr> > m_keywordMap;
+        std::vector<std::shared_ptr< const DeckKeyword >> m_emptyList;
+        std::vector<std::shared_ptr< const DeckKeyword >> m_keywordList;
+        std::map<std::string, std::vector<std::shared_ptr< const DeckKeyword >> > m_keywordMap;
         std::map<const DeckKeyword *, size_t> m_keywordIndex;
     };
 

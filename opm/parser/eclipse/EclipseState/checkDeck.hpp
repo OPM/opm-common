@@ -20,9 +20,12 @@
 #ifndef OPM_CHECK_DECK_HPP
 #define OPM_CHECK_DECK_HPP
 
-#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <memory>
 
 namespace Opm {
+
+    class Deck;
+
 enum DeckChecks {
     SectionTopology = 0x0001,
 
@@ -36,7 +39,7 @@ enum DeckChecks {
 
 // some semantical correctness checks of the deck. this method adds a warning to
 // the deck object if any issue is found ...
-bool checkDeck(DeckConstPtr deck, size_t enabledChecks = AllChecks);
+bool checkDeck(std::shared_ptr< const Deck > deck, size_t enabledChecks = AllChecks);
 
 }
 

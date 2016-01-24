@@ -20,21 +20,21 @@
 #ifndef OPM_INIT_CONFIG_HPP
 #define OPM_INIT_CONFIG_HPP
 
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-
 namespace Opm {
+
+    class Deck;
 
     class InitConfig {
 
     public:
-        InitConfig(DeckConstPtr deck);
+        InitConfig(std::shared_ptr< const Deck > deck);
 
         bool getRestartInitiated() const;
         int getRestartStep() const;
         const std::string& getRestartRootName() const;
 
     private:
-        void initRestartKW(DeckConstPtr deck);
+        void initRestartKW(std::shared_ptr< const Deck > deck);
 
         bool m_restartInitiated;
         int m_restartStep;

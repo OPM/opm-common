@@ -20,15 +20,13 @@
 
 #ifndef KEYWORD_GENERATOR_HPP
 #define KEYWORD_GENERATOR_HPP
-#include <memory>
-#include <string>
-#include <map>
 
-#include <opm/json/JsonObject.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
-#include <opm/parser/eclipse/Generator/KeywordLoader.hpp>
+#include <string>
 
 namespace Opm {
+
+    class KeywordLoader;
+
     class KeywordGenerator {
 
     public:

@@ -20,12 +20,13 @@
 #ifndef NNC_HPP
 #define NNC_HPP
 
+#include <cstddef>
+#include <memory>
 #include <vector>
-
-#include <opm/parser/eclipse/Deck/Deck.hpp>
 
 namespace Opm
 {
+    class Deck;
     class EclipseGrid;
 
 struct NNCdata {
@@ -39,7 +40,7 @@ class NNC
 public:
     /// Construct from input deck.
     NNC();
-    NNC(Opm::DeckConstPtr deck, std::shared_ptr< const EclipseGrid > eclipseGrid);
+    NNC(std::shared_ptr< const Deck > deck, std::shared_ptr< const EclipseGrid > eclipseGrid);
     void addNNC(const size_t cell1, const size_t cell2, const double trans);
     const std::vector<NNCdata>& nncdata() const { return m_nnc; }
     size_t numNNC() const;

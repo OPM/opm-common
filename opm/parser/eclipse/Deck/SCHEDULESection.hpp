@@ -21,24 +21,24 @@
 #define SCHEDULESECTION_HPP
 
 
-#include <string>
 #include <memory>
 
 #include <opm/parser/eclipse/Deck/Section.hpp>
-#include <opm/parser/eclipse/Deck/DeckTimeStep.hpp>
 
 namespace Opm {
+
+    class DeckTimeStep;
 
     class SCHEDULESection : public Section {
 
     public:
         SCHEDULESection(DeckConstPtr deck);
-        DeckTimeStepConstPtr getDeckTimeStep(size_t timestep) const;
+        std::shared_ptr< const DeckTimeStep > getDeckTimeStep(size_t timestep) const;
 
 
     private:
         void populateDeckTimeSteps();
-        std::vector<DeckTimeStepPtr> m_decktimesteps;
+        std::vector< std::shared_ptr< DeckTimeStep > > m_decktimesteps;
 
     };
 }

@@ -17,12 +17,12 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <stdexcept>
-#include <regex.h>
 #include <boost/algorithm/string.hpp>
-#include "RawKeyword.hpp"
-#include "RawConsts.hpp"
+
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
-#include <iostream>
+#include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
+#include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
+#include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
 
 namespace Opm {
 

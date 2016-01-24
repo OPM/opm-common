@@ -19,6 +19,7 @@
 
 #include <boost/algorithm/string/join.hpp>
 
+#include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/BoxManager.hpp>
@@ -29,14 +30,16 @@
 #include <opm/parser/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
+#include <opm/parser/eclipse/Units/Dimension.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 
 namespace Opm {

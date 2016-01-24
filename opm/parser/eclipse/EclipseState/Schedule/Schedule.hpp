@@ -24,7 +24,6 @@
 
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
-#include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 
@@ -35,6 +34,9 @@ namespace Opm
     template< typename > class DynamicState;
     template< typename > class DynamicVector;
 
+    class Deck;
+    class DeckKeyword;
+    class DeckRecord;
     class EclipseGrid;
     class Events;
     class Group;
@@ -45,6 +47,7 @@ namespace Opm
     class SCHEDULESection;
     class TimeMap;
     class Tuning;
+    class UnitSystem;
     class Well;
 
     const boost::gregorian::date defaultStartDate( 1983 , boost::gregorian::Jan , 1);

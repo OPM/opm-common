@@ -20,15 +20,15 @@
 #ifndef RAWKEYWORD_HPP
 #define RAWKEYWORD_HPP
 
-#include <string>
-#include <utility>
-#include <vector>
 #include <memory>
+#include <string>
+#include <vector>
 
-#include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
 #include <opm/parser/eclipse/RawDeck/RawEnums.hpp>
 
 namespace Opm {
+
+    class RawRecord;
 
     /// Class representing a RawKeyword, meaning both the actual keyword phrase, and the records,
     /// represented as a list of RawRecord objects.
@@ -44,7 +44,7 @@ namespace Opm {
         void addRawRecordString(const std::string& partialRecordString);
         size_t size() const;
         Raw::KeywordSizeEnum getSizeType() const;
-        RawRecordPtr getRecord(size_t index) const;
+        std::shared_ptr< RawRecord > getRecord(size_t index) const;
 
         static bool isKeywordPrefix(const std::string& line, std::string& keywordName);
         static bool isTerminator(std::string line);
@@ -66,7 +66,7 @@ namespace Opm {
         size_t m_numTables;
         size_t m_currentNumTables;
         std::string m_name;
-        std::vector<RawRecordPtr> m_records;
+        std::vector<std::shared_ptr< RawRecord >> m_records;
         std::string m_partialRecordString;
 
         size_t m_lineNR;

@@ -26,6 +26,9 @@
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -35,8 +38,8 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE( PARSE_MULTISEGMENT_ABS ) {
 
     ParserPtr parser(new Parser());
-    boost::filesystem::path deckFile("testdata/integration_tests/SCHEDULE/SCHEDULE_MULTISEGMENT_WELL");
-    DeckPtr deck =  parser->parseFile(deckFile.string(), ParseMode());
+    std::string deckFile("testdata/integration_tests/SCHEDULE/SCHEDULE_MULTISEGMENT_WELL");
+    DeckPtr deck =  parser->parseFile(deckFile, ParseMode());
     // for WELSEGS keyword
     DeckKeywordConstPtr kw = deck->getKeyword("WELSEGS");
 

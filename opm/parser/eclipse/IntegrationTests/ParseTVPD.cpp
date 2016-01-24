@@ -36,8 +36,8 @@ using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(AddDataKeywordFromJson_correctlyConfigured) {
     ParserPtr parser(new Parser());
-    boost::filesystem::path poroFile("testdata/integration_tests/TVPD/TVPD1");
-    DeckPtr deck =  parser->parseFile(poroFile.string());
+    std::string poroFile("testdata/integration_tests/TVPD/TVPD1");
+    DeckPtr deck =  parser->parseFile(poroFile);
 
     BOOST_CHECK( deck->hasKeyword("TVDPA"));
     BOOST_CHECK( deck->hasKeyword("TVDP1"));

@@ -23,15 +23,17 @@
 
 #include <memory>
 
-#include <opm/json/JsonObject.hpp>
-
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 
-#include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
+namespace Json {
+    class JsonObject;
+}
 
 
 namespace Opm {
+
+    class RawRecord;
 
     class ParserIntItem : public ParserItem {
     public:
@@ -41,7 +43,7 @@ namespace Opm {
         ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType, int defaultValue);
         explicit ParserIntItem(const Json::JsonObject& jsonConfig);
 
-        DeckItemPtr scan(RawRecordPtr rawRecord) const;
+        std::shared_ptr< DeckItem > scan(std::shared_ptr< RawRecord > rawRecord) const;
         bool equal(const ParserItem& other) const;
 
         std::string createCode() const;
@@ -55,8 +57,8 @@ namespace Opm {
         int  m_default;
     };
 
-    typedef std::shared_ptr<const ParserIntItem> ParserIntItemConstPtr;
-    typedef std::shared_ptr<ParserIntItem> ParserIntItemPtr;
+    typedef std::shared_ptr< ParserIntItem > ParserIntItemPtr;
+    typedef std::shared_ptr< const ParserIntItem > ParserIntItemConstPtr;
 }
 
 #endif  /* PARSERINTITEM_HPP */

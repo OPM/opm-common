@@ -21,6 +21,7 @@
 #include <stdexcept>
 #include <string>
 
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 

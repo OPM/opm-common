@@ -26,6 +26,8 @@
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
@@ -40,10 +42,10 @@ using namespace Opm;
 
 BOOST_AUTO_TEST_CASE( parse_VFPPROD_OK ) {
     ParserPtr parser(new Parser());
-    boost::filesystem::path file("testdata/integration_tests/VFPPROD/VFPPROD1");
+    std::string file("testdata/integration_tests/VFPPROD/VFPPROD1");
     BOOST_CHECK( parser->isRecognizedKeyword("VFPPROD"));
 
-    DeckPtr deck =  parser->parseFile(file.string(), ParseMode());
+    DeckPtr deck =  parser->parseFile(file, ParseMode());
 
     DeckKeywordConstPtr VFPPROD1 = deck->getKeyword("VFPPROD" , 0);
     DeckKeywordConstPtr BPR = deck->getKeyword("BPR" , 0);

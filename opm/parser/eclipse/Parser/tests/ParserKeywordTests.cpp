@@ -25,13 +25,18 @@
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 #include <opm/json/JsonObject.hpp>
+
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>
+#include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
+#include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
-#include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
-#include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>
-#include <opm/parser/eclipse/Parser/ParserItem.hpp>
-
+#include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/RawDeck/RawEnums.hpp>
+#include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
 
 using namespace Opm;
 

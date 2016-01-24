@@ -17,22 +17,32 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <fstream>
 #include <memory>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 
+#include <opm/json/JsonObject.hpp>
+
+#include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
-#include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
-#include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
-#include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
-#include <opm/parser/eclipse/RawDeck/RawEnums.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
+#include <opm/parser/eclipse/Parser/ParserRecord.hpp>
+#include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
+#include <opm/parser/eclipse/RawDeck/RawEnums.hpp>
+#include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
 
 namespace Opm {
+
 
     struct ParserState {
         const ParseMode& parseMode;
@@ -126,6 +136,30 @@ namespace Opm {
         }
 
     };
+
+    static boost::filesystem::path getIncludeFilePath(ParserState& parserState, std::string path)
+    {
+        const std::string pathKeywordPrefix("$");
+        const std::string validPathNameCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_");
+
+        size_t positionOfPathName = path.find(pathKeywordPrefix);
+
+        if ( positionOfPathName != std::string::npos) {
+            std::string stringStartingAtPathName = path.substr(positionOfPathName+1);
+            size_t cutOffPosition = stringStartingAtPathName.find_first_not_of(validPathNameCharacters);
+            std::string stringToFind = stringStartingAtPathName.substr(0, cutOffPosition);
+            std::string stringToReplace = parserState.pathMap[stringToFind];
+            boost::replace_all(path, pathKeywordPrefix + stringToFind, stringToReplace);
+        }
+
+        boost::filesystem::path includeFilePath(path);
+
+        if (includeFilePath.is_relative())
+            includeFilePath = parserState.rootPath / includeFilePath;
+
+        return includeFilePath;
+    }
+
 
     Parser::Parser(bool addDefault) {
         if (addDefault)
@@ -333,30 +367,6 @@ namespace Opm {
         return keywords;
     }
 
-
-    boost::filesystem::path Parser::getIncludeFilePath(std::shared_ptr<ParserState> parserState, std::string path) const
-    {
-        const std::string pathKeywordPrefix("$");
-        const std::string validPathNameCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_");
-
-        size_t positionOfPathName = path.find(pathKeywordPrefix);
-
-        if ( positionOfPathName != std::string::npos) {
-            std::string stringStartingAtPathName = path.substr(positionOfPathName+1);
-            size_t cutOffPosition = stringStartingAtPathName.find_first_not_of(validPathNameCharacters);
-            std::string stringToFind = stringStartingAtPathName.substr(0, cutOffPosition);
-            std::string stringToReplace = parserState->pathMap[stringToFind];
-            boost::replace_all(path, pathKeywordPrefix + stringToFind, stringToReplace);
-        }
-
-        boost::filesystem::path includeFilePath(path);
-
-        if (includeFilePath.is_relative())
-            includeFilePath = parserState->rootPath / includeFilePath;
-
-        return includeFilePath;
-    }
-
     bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
         bool stopParsing = false;
 
@@ -382,7 +392,7 @@ namespace Opm {
                     else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::include) {
                         RawRecordConstPtr firstRecord = parserState->rawKeyword->getRecord(0);
                         std::string includeFileAsString = readValueToken<std::string>(firstRecord->getItem(0));
-                        boost::filesystem::path includeFile = getIncludeFilePath(parserState, includeFileAsString);
+                        boost::filesystem::path includeFile = getIncludeFilePath(*parserState, includeFileAsString);
                         std::shared_ptr<ParserState> newParserState = parserState->includeState( includeFile );
 
 

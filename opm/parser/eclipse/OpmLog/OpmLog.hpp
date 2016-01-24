@@ -24,9 +24,10 @@
 #include <cstdint>
 
 #include <opm/parser/eclipse/OpmLog/Logger.hpp>
-#include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
+
 namespace Opm {
 
+    class LogBackend;
 
 /*
   The OpmLog class is a fully static class which manages a proper
@@ -35,6 +36,7 @@ namespace Opm {
 
 
 class OpmLog {
+
 public:
     static void addMessage(int64_t messageFlag , const std::string& message);
 

@@ -19,22 +19,29 @@
 
 #ifndef OPM_PARSER_HPP
 #define OPM_PARSER_HPP
-#include <string>
+
+#include <iosfwd>
 #include <map>
-#include <fstream>
 #include <memory>
+#include <string>
+#include <vector>
 
-#include <boost/filesystem.hpp>
+namespace boost {
+    namespace filesystem {
+        class path;
+    }
+}
 
-#include <opm/json/JsonObject.hpp>
-
-#include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
+namespace Json {
+    class JsonObject;
+}
 
 namespace Opm {
 
+    class Deck;
+    class ParseMode;
+    class ParserKeyword;
+    class RawKeyword;
     struct ParserState;
 
     /// The hub of the parsing process.
@@ -48,25 +55,25 @@ namespace Opm {
         static std::string stripComments(const std::string& inputString);
 
         /// The starting point of the parsing process. The supplied file is parsed, and the resulting Deck is returned.
-        DeckPtr parseFile(const std::string &dataFile, const ParseMode& parseMode) const;
-        DeckPtr parseString(const std::string &data, const ParseMode& parseMode) const;
-        DeckPtr parseStream(std::shared_ptr<std::istream> inputStream , const ParseMode& parseMode) const;
+        std::shared_ptr< Deck > parseFile(const std::string &dataFile, const ParseMode& parseMode) const;
+        std::shared_ptr< Deck > parseString(const std::string &data, const ParseMode& parseMode) const;
+        std::shared_ptr< Deck > parseStream(std::shared_ptr<std::istream> inputStream , const ParseMode& parseMode) const;
 
         Deck * newDeckFromFile(const std::string &dataFileName, const ParseMode& parseMode) const;
         Deck * newDeckFromString(const std::string &dataFileName, const ParseMode& parseMode) const;
 
-        DeckPtr parseFile(const std::string &dataFile, bool strict = true) const;
-        DeckPtr parseString(const std::string &data, bool strict = true) const;
-        DeckPtr parseStream(std::shared_ptr<std::istream> inputStream , bool strict = true) const;
+        std::shared_ptr< Deck > parseFile(const std::string &dataFile, bool strict = true) const;
+        std::shared_ptr< Deck > parseString(const std::string &data, bool strict = true) const;
+        std::shared_ptr< Deck > parseStream(std::shared_ptr<std::istream> inputStream , bool strict = true) const;
 
         /// Method to add ParserKeyword instances, these holding type and size information about the keywords and their data.
         void addParserKeyword(const Json::JsonObject& jsonKeyword);
-        void addParserKeyword(ParserKeywordConstPtr parserKeyword);
+        void addParserKeyword(std::shared_ptr< const ParserKeyword > parserKeyword);
         bool dropParserKeyword(const std::string& parserKeywordName);
-        ParserKeywordConstPtr getKeyword(const std::string& name) const;
+        std::shared_ptr< const ParserKeyword > getKeyword(const std::string& name) const;
 
         bool isRecognizedKeyword( const std::string& deckKeywordName) const;
-        ParserKeywordConstPtr getParserKeywordFromDeckName(const std::string& deckKeywordName) const;
+        std::shared_ptr< const ParserKeyword > getParserKeywordFromDeckName(const std::string& deckKeywordName) const;
         std::vector<std::string> getAllDeckNames () const;
 
         void loadKeywords(const Json::JsonObject& jsonKeywords);
@@ -91,7 +98,7 @@ namespace Opm {
         /*!
          * \brief Retrieve a ParserKeyword object given an internal keyword name.
          */
-        ParserKeywordConstPtr getParserKeywordFromInternalName(const std::string& internalKeywordName) const;
+        std::shared_ptr< const ParserKeyword > getParserKeywordFromInternalName(const std::string& internalKeywordName) const;
 
 
         template <class T>
@@ -102,22 +109,21 @@ namespace Opm {
 
     private:
         // associative map of the parser internal name and the corresponding ParserKeyword object
-        std::map<std::string, ParserKeywordConstPtr> m_internalParserKeywords;
+        std::map<std::string, std::shared_ptr< const ParserKeyword >> m_internalParserKeywords;
         // associative map of deck names and the corresponding ParserKeyword object
-        std::map<std::string, ParserKeywordConstPtr> m_deckParserKeywords;
+        std::map<std::string, std::shared_ptr< const ParserKeyword >> m_deckParserKeywords;
         // associative map of the parser internal names and the corresponding
         // ParserKeyword object for keywords which match a regular expression
-        std::map<std::string, ParserKeywordConstPtr> m_wildCardKeywords;
+        std::map<std::string, std::shared_ptr< const ParserKeyword >> m_wildCardKeywords;
 
         bool hasWildCardKeyword(const std::string& keyword) const;
-        ParserKeywordConstPtr matchingKeyword(const std::string& keyword) const;
+        std::shared_ptr< const ParserKeyword > matchingKeyword(const std::string& keyword) const;
 
         bool tryParseKeyword(std::shared_ptr<ParserState> parserState) const;
         bool parseState(std::shared_ptr<ParserState> parserState) const;
-        RawKeywordPtr createRawKeyword(const std::string& keywordString, std::shared_ptr<ParserState> parserState) const;
+        std::shared_ptr< RawKeyword > createRawKeyword(const std::string& keywordString, std::shared_ptr<ParserState> parserState) const;
         void addDefaultKeywords();
 
-        boost::filesystem::path getIncludeFilePath(std::shared_ptr<ParserState> parserState, std::string path) const;
         std::string doSpecialHandlingForTitleKeyword(std::string line, std::shared_ptr<ParserState> parserState) const;
     };
 

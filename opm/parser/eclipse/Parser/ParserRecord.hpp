@@ -24,34 +24,34 @@
 #include <map>
 #include <memory>
 
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Parser/ParserItem.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-
-
 namespace Opm {
+
+    class Deck;
+    class DeckRecord;
+    class ParseMode;
+    class ParserItem;
+    class RawRecord;
 
     class ParserRecord {
     public:
         ParserRecord();
         size_t size() const;
-        void addItem( ParserItemConstPtr item );
-        void addDataItem(ParserItemConstPtr item);
-        ParserItemConstPtr get(size_t index) const;
-        ParserItemConstPtr get(const std::string& itemName) const;
-        DeckRecordConstPtr parse(const ParseMode& parseMode , RawRecordPtr rawRecord) const;
+        void addItem( std::shared_ptr< const ParserItem > item );
+        void addDataItem(std::shared_ptr< const ParserItem > item);
+        std::shared_ptr< const ParserItem > get(size_t index) const;
+        std::shared_ptr< const ParserItem > get(const std::string& itemName) const;
+        std::shared_ptr< const DeckRecord > parse(const ParseMode& parseMode , std::shared_ptr< RawRecord > rawRecord) const;
         bool isDataRecord() const;
         bool equal(const ParserRecord& other) const;
         bool hasDimension() const;
         bool hasItem(const std::string& itemName) const;
         void applyUnitsToDeck(const Deck& deck , std::shared_ptr<const DeckRecord> deckRecord) const;
-        std::vector<ParserItemConstPtr>::const_iterator begin() const;
-        std::vector<ParserItemConstPtr>::const_iterator end() const;
+        std::vector<std::shared_ptr< const ParserItem >>::const_iterator begin() const;
+        std::vector<std::shared_ptr< const ParserItem >>::const_iterator end() const;
     private:
         bool m_dataRecord;
-        std::vector<ParserItemConstPtr> m_items;
-        std::map<std::string , ParserItemConstPtr> m_itemMap;
+        std::vector<std::shared_ptr< const ParserItem >> m_items;
+        std::map<std::string , std::shared_ptr< const ParserItem >> m_itemMap;
     };
 
     typedef std::shared_ptr<const ParserRecord> ParserRecordConstPtr;

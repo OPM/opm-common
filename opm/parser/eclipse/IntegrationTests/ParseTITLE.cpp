@@ -23,6 +23,8 @@
 #include <boost/algorithm/string/join.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseMode.hpp>
@@ -39,9 +41,9 @@ using namespace Opm;
 
 BOOST_AUTO_TEST_CASE( parse_TITLE_OK ) {
     ParserPtr parser(new Parser());
-    boost::filesystem::path fileWithTitleKeyword("testdata/integration_tests/TITLE/TITLE1.txt");
+    std::string fileWithTitleKeyword("testdata/integration_tests/TITLE/TITLE1.txt");
 
-    DeckPtr deck = parser->parseFile(fileWithTitleKeyword.string(), ParseMode());
+    DeckPtr deck = parser->parseFile(fileWithTitleKeyword, ParseMode());
 
     BOOST_CHECK_EQUAL(size_t(2), deck->size());
     BOOST_CHECK_EQUAL (true, deck->hasKeyword("TITLE"));

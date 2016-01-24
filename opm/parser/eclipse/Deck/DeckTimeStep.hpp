@@ -22,15 +22,11 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
-
 namespace Opm {
 
     class DeckTimeStep : public Deck {
     public:
         DeckTimeStep();
-
-    private:
-
     };
 
     typedef std::shared_ptr<DeckTimeStep> DeckTimeStepPtr;

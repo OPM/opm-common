@@ -24,6 +24,7 @@
 #include <vector>
 #include <deque>
 #include <memory>
+
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 
 namespace Opm {

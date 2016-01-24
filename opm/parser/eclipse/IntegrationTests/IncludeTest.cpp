@@ -22,6 +22,7 @@
 #include <boost/test/test_tools.hpp>
 #include <boost/filesystem.hpp>
 #include <ostream>
+#include <fstream>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 

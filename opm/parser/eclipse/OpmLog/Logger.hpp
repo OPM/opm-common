@@ -24,12 +24,13 @@
 #include <cstdint>
 #include <map>
 #include <memory>
-#include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
-#include <opm/parser/eclipse/OpmLog/LogBackend.hpp>
 
 namespace Opm {
 
+    class LogBackend;
+
 class Logger {
+
 public:
     Logger();
     void addMessage(int64_t messageType , const std::string& message) const;

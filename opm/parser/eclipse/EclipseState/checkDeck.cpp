@@ -19,7 +19,9 @@
 #include "checkDeck.hpp"
 
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
+#include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
 
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 
 namespace Opm {

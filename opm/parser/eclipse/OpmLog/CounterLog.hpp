@@ -20,13 +20,10 @@
 #define OPM_COUNTERLOG_HPP
 
 #include <string>
-#include <vector>
-#include <tuple>
 #include <memory>
 #include <map>
 
 #include <opm/parser/eclipse/OpmLog/LogBackend.hpp>
-#include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
 
 namespace Opm {
 /*!

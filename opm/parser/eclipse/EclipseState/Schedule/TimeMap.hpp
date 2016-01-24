@@ -25,20 +25,20 @@
 
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-
 namespace Opm {
+
+    class Deck;
+    class DeckKeyword;
+    class DeckRecord;
 
     class TimeMap {
     public:
         TimeMap(boost::posix_time::ptime startDate);
-        TimeMap(Opm::DeckConstPtr deck);
+        TimeMap(std::shared_ptr< const Deck > deck);
         void addTime(boost::posix_time::ptime newTime);
         void addTStep(boost::posix_time::time_duration step);
-        void addFromDATESKeyword( DeckKeywordConstPtr DATESKeyword );
-        void addFromTSTEPKeyword( DeckKeywordConstPtr TSTEPKeyword );
+        void addFromDATESKeyword( std::shared_ptr< const DeckKeyword > DATESKeyword );
+        void addFromTSTEPKeyword( std::shared_ptr< const DeckKeyword > TSTEPKeyword );
         void initFirstTimestepsMonths();
         void initFirstTimestepsYears();
         size_t size() const;
@@ -57,7 +57,7 @@ namespace Opm {
         /// starting from start_timestep-1.
         bool isTimestepInFirstOfMonthsYearsSequence(size_t timestep, bool years = true, size_t start_timestep = 1, size_t frequency = 1) const;
 
-        static boost::posix_time::ptime timeFromEclipse(DeckRecordConstPtr dateRecord);
+        static boost::posix_time::ptime timeFromEclipse(std::shared_ptr< const DeckRecord > dateRecord);
         static boost::posix_time::ptime timeFromEclipse(int day , const std::string& month, int year, const std::string& eclipseTimeString = "00:00:00.000");
         static boost::posix_time::time_duration dayTimeFromEclipse(const std::string& eclipseTimeString);
     private:

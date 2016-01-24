@@ -20,29 +20,34 @@
 #ifndef OPM_ECLIPSE_STATE_HPP
 #define OPM_ECLIPSE_STATE_HPP
 
-#include <opm/parser/eclipse/EclipseState/Grid/BoxManager.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
-
+#include <memory>
 #include <set>
+
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 
 namespace Opm {
 
     template< typename > class GridProperty;
     template< typename > class GridProperties;
 
+    class Box;
+    class BoxManager;
     class Deck;
     class DeckItem;
+    class DeckKeyword;
+    class EclipseGrid;
     class Fault;
     class FaultCollection;
     class InitConfig;
     class IOConfig;
+    class NNC;
     class ParseMode;
     class Schedule;
     class Section;
     class SimulationConfig;
     class TableManager;
+    class TransMult;
+    class UnitSystem;
 
     class EclipseState {
     public:

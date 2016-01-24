@@ -22,6 +22,7 @@
 #include <stdexcept>
 #include <boost/algorithm/string.hpp>
 
+#include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/ConversionFactors.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 

@@ -20,8 +20,6 @@
 #ifndef STREAMLOG_H
 #define STREAMLOG_H
 
-
-#include <stdexcept>
 #include <fstream>
 #include <iostream>
 #include <cstdint>

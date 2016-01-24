@@ -20,14 +20,22 @@
 
 #ifndef KEYWORD_LOADER_HPP
 #define KEYWORD_LOADER_HPP
+
+#include <map>
 #include <memory>
 #include <string>
-#include <map>
+#include <vector>
 
-#include <opm/json/JsonObject.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
+namespace boost {
+    namespace filesystem {
+        class path;
+    }
+}
 
 namespace Opm {
+
+    class ParserKeyword;
+
     class KeywordLoader {
 
     public:

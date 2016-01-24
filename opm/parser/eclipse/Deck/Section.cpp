@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 

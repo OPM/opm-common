@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include <opm/parser/eclipse/Generator/KeywordGenerator.hpp>
 #include <opm/parser/eclipse/Generator/KeywordLoader.hpp>
 

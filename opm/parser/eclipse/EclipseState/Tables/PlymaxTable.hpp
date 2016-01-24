@@ -23,6 +23,8 @@
 
 namespace Opm {
 
+    class DeckRecord;
+
     class PlymaxTable : public SimpleTable {
         public:
 

@@ -19,6 +19,7 @@
 
 
 #define BOOST_TEST_MODULE ParserTests
+#include <boost/filesystem/path.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>

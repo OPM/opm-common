@@ -26,12 +26,14 @@
 
 #include <memory>
 
-#include <opm/json/JsonObject.hpp>
-
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 #include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/RawDeck/StarToken.hpp>
+
+namespace Json {
+    class JsonObject;
+}
 
 namespace Opm {
 
@@ -43,7 +45,7 @@ namespace Opm {
 
         virtual void push_backDimension(const std::string& dimension);
         virtual const std::string& getDimension(size_t index) const;
-        virtual DeckItemPtr scan(RawRecordPtr rawRecord) const = 0;
+        virtual std::shared_ptr< DeckItem > scan(std::shared_ptr< RawRecord > rawRecord) const = 0;
         virtual bool hasDimension() const;
         virtual size_t numDimensions() const;
         const std::string className() const;
@@ -98,8 +100,8 @@ namespace Opm {
         std::string m_description;
     };
 
-    typedef std::shared_ptr<const ParserItem> ParserItemConstPtr;
     typedef std::shared_ptr<ParserItem> ParserItemPtr;
+    typedef std::shared_ptr<const ParserItem> ParserItemConstPtr;
 
 
 
@@ -144,7 +146,7 @@ namespace Opm {
     /// returns a DeckItem object.
     /// NOTE: data are popped from the rawRecords deque!
     template<typename ParserItemType , typename DeckItemType , typename ValueType>
-    DeckItemPtr ParserItemScan(const ParserItemType * self , RawRecordPtr rawRecord) {
+    std::shared_ptr< DeckItem > ParserItemScan(const ParserItemType * self , std::shared_ptr< RawRecord > rawRecord) {
         std::shared_ptr<DeckItemType> deckItem = std::make_shared<DeckItemType>( self->name() , self->scalar() );
 
         if (self->sizeType() == ALL) {

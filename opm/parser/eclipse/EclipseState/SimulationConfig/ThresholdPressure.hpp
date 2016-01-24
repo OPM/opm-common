@@ -20,23 +20,23 @@
 #ifndef OPM_TRESHOLD_PRESSURES_HPP
 #define OPM_TRESHOLD_PRESSURES_HPP
 
+#include <map>
 #include <vector>
-
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Deck/Section.hpp>
-
 
 namespace Opm {
 
     template< typename > class GridProperties;
 
+    class Deck;
     class ParseMode;
+    class RUNSPECSection;
+    class SOLUTIONSection;
 
     class ThresholdPressure {
 
     public:
 
-        ThresholdPressure(const ParseMode& parseMode , DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties);
+        ThresholdPressure(const ParseMode& parseMode , std::shared_ptr< const Deck > deck, std::shared_ptr<GridProperties<int>> gridProperties);
 
 
         /*

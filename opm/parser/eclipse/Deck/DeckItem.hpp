@@ -20,14 +20,15 @@
 #ifndef DECKITEM_HPP
 #define DECKITEM_HPP
 
-#include <opm/parser/eclipse/Units/Dimension.hpp>
-
 #include <stdexcept>
 #include <string>
 #include <vector>
 #include <memory>
 
 namespace Opm {
+
+    class Dimension;
+
     class DeckItem {
     public:
         DeckItem(const std::string& name , bool m_scalar = true);

@@ -24,6 +24,8 @@
 #include <boost/test/test_tools.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
@@ -38,8 +40,8 @@ using namespace Opm;
 
 BOOST_AUTO_TEST_CASE( parse_EQUIL_OK ) {
     ParserPtr parser(new Parser());
-    boost::filesystem::path pvtgFile("testdata/integration_tests/RSVD/RSVD.txt");
-    DeckPtr deck =  parser->parseFile(pvtgFile.string(), ParseMode());
+    std::string pvtgFile("testdata/integration_tests/RSVD/RSVD.txt");
+    DeckPtr deck =  parser->parseFile(pvtgFile, ParseMode());
     DeckKeywordConstPtr kw1 = deck->getKeyword("RSVD" , 0);
     BOOST_CHECK_EQUAL( 6U , kw1->size() );
 

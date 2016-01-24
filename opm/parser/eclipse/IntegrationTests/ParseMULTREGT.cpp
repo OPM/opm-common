@@ -32,6 +32,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 using namespace Opm;
 

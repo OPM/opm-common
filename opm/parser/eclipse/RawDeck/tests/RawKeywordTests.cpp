@@ -20,8 +20,10 @@
 #define BOOST_TEST_MODULE RawKeywordTests
 #include <stdexcept>
 #include <boost/test/unit_test.hpp>
-#include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
+
 #include <opm/parser/eclipse/RawDeck/RawEnums.hpp>
+#include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
+#include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
 
 
 using namespace Opm;
