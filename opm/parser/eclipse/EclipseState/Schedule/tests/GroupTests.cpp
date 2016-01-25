@@ -27,11 +27,15 @@
 
 
 
+#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
+#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 
 static Opm::TimeMapPtr createXDaysTimeMap(size_t numDays) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
@@ -220,4 +224,92 @@ BOOST_AUTO_TEST_CASE(GroupAddAndDelWell) {
 
     BOOST_CHECK_THROW( group.delWell( 8 , "WeLLDOESNOT" ) , std::invalid_argument);
     BOOST_CHECK_THROW( group.delWell( 8 , "WELL1" ) , std::invalid_argument);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(createDeckWithGEFAC) {
+    Opm::Parser parser;
+    std::string input =
+            "START             -- 0 \n"
+            "19 JUN 2007 / \n"
+            "SCHEDULE\n"
+
+	    "WELSPECS\n"
+     	     " 'B-37T2' 'PRODUC'  9  9   1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+	     " 'B-43A'  'PRODUC'  8  8   1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+	     "/\n"
+
+	     "COMPDAT\n"
+	     " 'B-37T2'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+             " 'B-43A'   8  8   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
+	     "/\n"
+
+            "GEFAC\n"
+            " 'PRODUC' 0.85   / \n"
+            "/\n";
+
+    Opm::ParseMode parseMode;
+    Opm::DeckPtr deck = parser.parseString(input, parseMode);
+    std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>(10, 10, 10);
+    Opm::IOConfigPtr ioConfig;
+    Opm::Schedule schedule(parseMode , grid, deck, ioConfig);
+
+    Opm::GroupConstPtr group1 = schedule.getGroup("PRODUC");
+    BOOST_CHECK_EQUAL(group1->getGroupEfficiencyFactor(0), 0.85);
+    BOOST_CHECK_EQUAL(group1->getTransferGroupEfficiencyFactor(0), true);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) { 
+ 
+    /* Test deck with well guide rates for group control: 
+       GRUPCON (well guide rates for group control)
+       WCONPROD (conrol data for production wells) with GRUP control mode */
+
+    Opm::Parser parser;
+    std::string input =
+            "START             -- 0 \n"
+            "19 JUN 2007 / \n"
+            "SCHEDULE\n"
+
+	    "WELSPECS\n"
+     	     " 'B-37T2' 'PRODUC'  9  9   1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+	     " 'B-43A'  'PRODUC'  8  8   1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+	     "/\n"
+
+	     "COMPDAT\n"
+	     " 'B-37T2'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+             " 'B-43A'   8  8   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
+	     "/\n"
+
+                       
+             "WGRUPCON\n"
+             " 'B-37T2'  YES 30 OIL / \n"
+             " 'B-43A'   YES 30 OIL / \n"
+             "/\n"
+
+             "WCONPROD\n"
+             " 'B-37T2'    'OPEN'     'GRUP'  1000  2*   2000.000  2* 1*   10 200000.000  5* /  / \n"
+             " 'B-43A'     'OPEN'     'GRUP'  1200  2*   3000.000  2* 1*   11  0.000      5* /  / \n"
+             "/\n";
+
+           
+
+    Opm::ParseMode parseMode;
+    Opm::DeckPtr deck = parser.parseString(input, parseMode);
+    std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>(10, 10, 10);
+    Opm::IOConfigPtr ioConfig;
+    Opm::Schedule schedule(parseMode , grid, deck, ioConfig);
+    Opm::WellConstPtr currentWell = schedule.getWell("B-37T2"); 
+    const Opm::WellProductionProperties& wellProductionProperties = currentWell->getProductionProperties(0);
+    BOOST_CHECK_EQUAL(wellProductionProperties.controlMode, Opm::WellProducer::ControlModeEnum::GRUP);
+
+    BOOST_CHECK_EQUAL(currentWell->isAvailableForGroupControl(0), true);
+    BOOST_CHECK_EQUAL(currentWell->getGuideRate(0), 30);
+    BOOST_CHECK_EQUAL(currentWell->getGuideRatePhase(0), Opm::GuideRate::OIL);
+    BOOST_CHECK_EQUAL(currentWell->getGuideRateScalingFactor(0), 1.0);
+
+    
 }

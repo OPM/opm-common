@@ -22,7 +22,7 @@ namespace Opm {
     }
 
 
-    WellProductionProperties WellProductionProperties::history(double BHPLimit , DeckRecordConstPtr record)
+    WellProductionProperties WellProductionProperties::history(double BHPLimit , DeckRecordConstPtr record, bool addGroupProductionControl)
     {
         // Modes supported in WCONHIST just from {O,W,G}RAT values
         //
@@ -30,15 +30,11 @@ namespace Opm {
         // (numerically) whence the following control modes are
         // unconditionally supported.
         WellProductionProperties p(record);
-        const std::vector<std::string> controlModes{
-            "ORAT", "WRAT", "GRAT", "LRAT", "RESV"
-        };
-
         p.predictionMode = false;
-        for (std::vector<std::string>::const_iterator mode = controlModes.begin(), end = controlModes.end(); mode != end; ++mode)
-        {
-            const WellProducer::ControlModeEnum cmode = WellProducer::ControlModeFromString(*mode);
-            p.addProductionControl(cmode);
+
+        for (auto const& modeKey : {"ORAT", "WRAT", "GRAT", "LRAT", "RESV", "GRUP"}) {
+            auto cmode = WellProducer::ControlModeFromString( modeKey );
+            p.addProductionControl( cmode );
         }
 
         /*
@@ -67,7 +63,7 @@ namespace Opm {
 
 
 
-    WellProductionProperties WellProductionProperties::prediction(DeckRecordConstPtr record)
+    WellProductionProperties WellProductionProperties::prediction(DeckRecordConstPtr record, bool addGroupProductionControl)
     {
         WellProductionProperties p(record);
         p.predictionMode = true;
@@ -79,20 +75,17 @@ namespace Opm {
         p.ALQValue       = record->getItem("ALQ"      )->getRawDouble(0); //NOTE: Unit of ALQ is never touched
         p.VFPTableNumber = record->getItem("VFP_TABLE")->getInt(0);
 
-        const std::vector<std::string> controlModes{
-            "ORAT", "WRAT", "GRAT", "LRAT",
-            "RESV", "BHP" , "THP"
-        };
-
-        for (std::vector<std::string>::const_iterator
-                 mode = controlModes.begin(), end = controlModes.end();
-             mode != end; ++mode)
-        {
-            if (!record->getItem(*mode)->defaultApplied(0)) {
-                const WellProducer::ControlModeEnum cmode = WellProducer::ControlModeFromString(*mode);
-                p.addProductionControl(cmode);
+        for (auto const& modeKey : {"ORAT", "WRAT", "GRAT", "LRAT","RESV", "BHP" , "THP"}) {
+             if (!record->getItem(modeKey)->defaultApplied(0)) {
+                 auto cmode = WellProducer::ControlModeFromString( modeKey );
+                 p.addProductionControl( cmode );
             }
         }
+
+        if (addGroupProductionControl) {
+            p.addProductionControl(WellProducer::GRUP);
+        }
+
 
         {
             const auto cmodeItem = record->getItem("CMODE");

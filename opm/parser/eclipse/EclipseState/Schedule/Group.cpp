@@ -24,6 +24,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/WellSet.hpp>
 
 #define INVALID_GROUP_RATE -999e100
+#define INVALID_EFFICIENCY_FACTOR 0.0
 
 
 namespace Opm {
@@ -38,6 +39,8 @@ namespace Opm {
             std::shared_ptr<DynamicState<double> > gasTarget;
             std::shared_ptr<DynamicState<double> > liquidTarget;
             std::shared_ptr<DynamicState<double> > reservoirVolumeTarget;
+            std::shared_ptr<DynamicState<double> > efficiencyFactor;
+            std::shared_ptr<DynamicState<bool> >   transferEfficiencyFactor;
 
         };
 
@@ -48,7 +51,9 @@ namespace Opm {
             waterTarget( new DynamicState<double>(timeMap , INVALID_GROUP_RATE)),
             gasTarget( new DynamicState<double>(timeMap , INVALID_GROUP_RATE)),
             liquidTarget( new DynamicState<double>(timeMap , INVALID_GROUP_RATE)),
-            reservoirVolumeTarget( new DynamicState<double>(timeMap , INVALID_GROUP_RATE))
+            reservoirVolumeTarget( new DynamicState<double>(timeMap , INVALID_GROUP_RATE)),
+            efficiencyFactor( new DynamicState<double>(timeMap, INVALID_EFFICIENCY_FACTOR)),
+            transferEfficiencyFactor( new DynamicState<bool>(timeMap, false))
         {
 
         }
@@ -206,6 +211,7 @@ namespace Opm {
         return m_injection->targetVoidReplacementFraction->get( time_step );
     }
 
+
     /*****************************************************************/
 
     void Group::setProductionControlMode( size_t time_step , GroupProduction::ControlEnum controlMode) {
@@ -276,6 +282,23 @@ namespace Opm {
         return m_production->reservoirVolumeTarget->get(time_step);
     }
 
+
+    void Group::setGroupEfficiencyFactor(size_t time_step, double factor) {
+        m_production->efficiencyFactor->update(time_step , factor);
+    }
+
+    double Group::getGroupEfficiencyFactor(size_t time_step) const {
+        return m_production->efficiencyFactor->get(time_step);
+    }
+
+    void  Group::setTransferGroupEfficiencyFactor(size_t time_step, bool transfer) {
+        m_production->transferEfficiencyFactor->update(time_step , transfer);
+    }
+
+
+    bool  Group::getTransferGroupEfficiencyFactor(size_t time_step) const {
+        return m_production->transferEfficiencyFactor->get(time_step);
+    }
 
     /*****************************************************************/
 

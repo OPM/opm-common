@@ -92,6 +92,10 @@ namespace Opm {
         double getLiquidTargetRate(size_t time_step) const;
         void   setReservoirVolumeTargetRate(size_t time_step , double reservoirVolumeTargetRate);
         double getReservoirVolumeTargetRate(size_t time_step) const;
+        void   setGroupEfficiencyFactor(size_t time_step, double factor);
+        double getGroupEfficiencyFactor(size_t time_step) const;
+        void   setTransferGroupEfficiencyFactor(size_t time_step, bool transfer);
+        bool   getTransferGroupEfficiencyFactor(size_t time_step) const;
 
         /*****************************************************************/
 

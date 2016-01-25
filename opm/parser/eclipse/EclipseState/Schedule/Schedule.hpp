@@ -121,6 +121,7 @@ namespace Opm
         void handleWELTARG(std::shared_ptr<const SCHEDULESection> section, std::shared_ptr< const DeckKeyword > keyword, size_t currentStep);
         void handleGCONINJE(std::shared_ptr<const SCHEDULESection> section, std::shared_ptr< const DeckKeyword > keyword, size_t currentStep);
         void handleGCONPROD(std::shared_ptr< const DeckKeyword > keyword, size_t currentStep);
+        void handleGEFAC(std::shared_ptr< const DeckKeyword > keyword, size_t currentStep);
         void handleTUNING(std::shared_ptr< const DeckKeyword > keyword, size_t currentStep);
         void handleNOSIM();
         void handleRPTRST(std::shared_ptr< const DeckKeyword > keyword, size_t currentStep, std::shared_ptr< IOConfig > ioConfig);
