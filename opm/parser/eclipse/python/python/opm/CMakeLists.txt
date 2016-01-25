@@ -30,5 +30,5 @@ install(FILES ${PROJECT_BINARY_DIR}/${PYTHON_INSTALL_PREFIX}/opm_lib_info_instal
 set( OPM_SITE_INIT  ""  CACHE FILE "Name of optional external site init module for top level opm package")
 if (EXISTS ${OPM_SITE_INIT})
    message(STATUS "Using opm site init module: ${OPM_SITE_INIT}")
-   install(FILES ${OPM_SITE_INIT} DESTINATION ${PROJECT_BINARY_DIR}/${PYTHON_INSTALL_PREFIX}/opm RENAME opm_site_init.py)
+   install(FILES ${OPM_SITE_INIT} DESTINATION ${PYTHON_INSTALL_PREFIX}/opm RENAME opm_site_init.py)
 endif()
