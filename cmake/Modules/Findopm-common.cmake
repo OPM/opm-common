@@ -24,7 +24,7 @@ find_opm_package (
   "opm/common/utility/platform_dependent/disable_warnings.h"
 
   # library to search for
-  ""
+  "opmcommon"
 
   # defines to be added to compilations
   ""
