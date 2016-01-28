@@ -11,6 +11,7 @@
 # This code is licensed under The GNU General Public License v3.0
 
 include (OpmPackage)
+# find dune-alugrid when build with cmake
 find_opm_package (
   # module name
   "dune-alugrid"
@@ -21,7 +22,41 @@ find_opm_package (
   # we just include them to forward here in case anyone else does
   "CXX11Features REQUIRED;
    dune-grid REQUIRED;
-   ZLIB REQUIRED;
+   ZLIB;
+   ZOLTAN;
+   METIS
+  "
+  # header to search for
+  "dune/alugrid/grid.hh"
+
+  # library to search for
+  "dunealugrid"
+
+  # defines to be added to compilations
+  ""
+
+  # test program
+"#include <dune/alugrid/common/interfaces.hh>
+int main (void) {
+   return 0;
+}
+"
+  # config variables
+  "HAVE_DUNE_ALUGRID
+  ")
+
+# find dune-alugrid when build with autotools (deprecated in dune 2.4 and removed after dune 3.0
+find_opm_package (
+  # module name
+  "dune-alugrid"
+
+  # dependencies
+  # TODO: we should probe for all the HAVE_* values listed below;
+  # however, we don't actually use them in our implementation, so
+  # we just include them to forward here in case anyone else does
+  "CXX11Features REQUIRED;
+   dune-grid REQUIRED;
+   ZLIB;
    ZOLTAN;
    METIS
   "
