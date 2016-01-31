@@ -41,3 +41,6 @@ install_manifest.txt
 CTestTestfile.cmake
 DartConfiguration.tcl
 Testing/
+
+# Build directory in source.
+build/
