@@ -73,6 +73,7 @@ namespace Opm
         size_t numGroups() const;
         bool hasGroup(const std::string& groupName) const;
         std::shared_ptr< Group > getGroup(const std::string& groupName) const;
+        std::vector< const Group* > getGroups() const;
         std::shared_ptr< Tuning > getTuning() const;
 
         bool initOnly() const;

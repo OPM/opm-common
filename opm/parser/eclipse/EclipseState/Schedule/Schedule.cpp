@@ -1581,6 +1581,14 @@ namespace Opm {
             throw std::invalid_argument("Group: " + groupName + " does not exist");
     }
 
+    std::vector< const Group* > Schedule::getGroups() const {
+        std::vector< const Group* > groups;
+
+        for( const auto& itr : m_groups )
+            groups.push_back( itr.second.get() );
+
+        return groups;
+    }
 
     void Schedule::addWellToGroup( GroupPtr newGroup , WellPtr well , size_t timeStep) {
         const std::string currentGroupName = well->getGroupName(timeStep);

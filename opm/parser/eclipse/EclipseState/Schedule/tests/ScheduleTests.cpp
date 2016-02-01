@@ -30,6 +30,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
@@ -255,8 +256,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithoutGRUPTREE_HasRootGroupTreeNodeForT
     BOOST_CHECK_EQUAL("FIELD", schedule.getGroupTree(0)->getNode("FIELD")->name());
 }
 
-BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithGRUPTREE_HasRootGroupTreeNodeForTimeStepZero) {
-    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,10);
+static std::shared_ptr< Deck > deckWithGRUPTREE() {
     DeckPtr deck = createDeck();
     DeckKeywordPtr gruptreeKeyword(new DeckKeyword("GRUPTREE"));
 
@@ -270,12 +270,38 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithGRUPTREE_HasRootGroupTreeNodeForTime
     recordChildOfField->addItem(itemParent1);
     gruptreeKeyword->addRecord(recordChildOfField);
     deck->addKeyword(gruptreeKeyword);
+
+    return deck;
+}
+
+BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithGRUPTREE_HasRootGroupTreeNodeForTimeStepZero) {
+    auto grid = std::make_shared<const EclipseGrid>(10,10,10);
+    auto deck = deckWithGRUPTREE();
     IOConfigPtr ioConfig;
     Schedule schedule(ParseMode() , grid , deck, ioConfig);
     GroupTreeNodePtr fieldNode = schedule.getGroupTree(0)->getNode("FIELD");
     BOOST_CHECK_EQUAL("FIELD", fieldNode->name());
     GroupTreeNodePtr FAREN = fieldNode->getChildGroup("FAREN");
     BOOST_CHECK(FAREN->hasChildGroup("BARNET"));
+}
+
+BOOST_AUTO_TEST_CASE(GetGroups) {
+    auto deck = deckWithGRUPTREE();
+    auto grid = std::make_shared<const EclipseGrid>(10,10,10);
+    IOConfigPtr ioConfig;
+    Schedule schedule(ParseMode() , grid , deck, ioConfig);
+
+    auto groups = schedule.getGroups();
+
+    BOOST_CHECK_EQUAL( 3, groups.size() );
+
+    std::vector< std::string > names;
+    for( const auto group : groups ) names.push_back( group->name() );
+    std::sort( names.begin(), names.end() );
+
+    BOOST_CHECK_EQUAL( "BARNET", names[ 0 ] );
+    BOOST_CHECK_EQUAL( "FAREN",  names[ 1 ] );
+    BOOST_CHECK_EQUAL( "FIELD",  names[ 2 ] );
 }
 
 BOOST_AUTO_TEST_CASE(EmptyScheduleHasFIELDGroup) {
