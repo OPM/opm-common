@@ -18,6 +18,7 @@
  */
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
+#include <opm/parser/eclipse/Units/Dimension.hpp>
 
 #include <boost/lexical_cast.hpp>
 
@@ -61,5 +62,123 @@ namespace Opm {
             return false;
     }
 
+    template< typename T >
+    void DeckTypeItem< T >::push_back( std::deque< T > data, size_t items ) {
+        if( m_dataPointDefaulted.size() != this->data.size() )
+            throw std::logic_error("To add a value to an item, no \"pseudo defaults\" can be added before");
 
+        for( size_t i = 0; i < items; i++ ) {
+            this->data.push_back( data[ i ] );
+            m_dataPointDefaulted.push_back( false );
+        }
+    }
+
+    template< typename T >
+    void DeckTypeItem< T >::push_back( std::deque< T > data ) {
+        if( m_dataPointDefaulted.size() != this->data.size() )
+            throw std::logic_error("To add a value to an item, no \"pseudo defaults\" can be added before");
+
+        this->push_back( data, data.size() );
+        this->m_dataPointDefaulted.push_back( false );
+    }
+
+    template< typename T >
+    void DeckTypeItem< T >::push_back( T data ) {
+        if( m_dataPointDefaulted.size() != this->data.size() )
+            throw std::logic_error("To add a value to an item, no \"pseudo defaults\" can be added before");
+
+        this->data.push_back( data );
+        this->m_dataPointDefaulted.push_back( false );
+    }
+
+    template< typename T >
+    void DeckTypeItem< T >::push_backDefault( T data ) {
+        if( m_dataPointDefaulted.size() != this->data.size() )
+            throw std::logic_error("To add a value to an item, no \"pseudo defaults\" can be added before");
+
+        this->data.push_back( data );
+        this->m_dataPointDefaulted.push_back(true);
+    }
+
+    template< typename T >
+    void DeckTypeItem< T >::push_backDummyDefault() {
+        if( m_dataPointDefaulted.size() != 0 )
+            throw std::logic_error("Pseudo defaults can only be specified for empty items");
+
+        this->m_dataPointDefaulted.push_back( true );
+    }
+
+    template< typename T >
+    void DeckTypeItem< T >::push_backMultiple( T value, size_t numValues ) {
+        if( m_dataPointDefaulted.size() != this->data.size() )
+            throw std::logic_error("To add a value to an item, no \"pseudo defaults\" can be added before");
+
+        for( size_t i = 0; i < numValues; i++ ) {
+            this->data.push_back( value );
+            this->m_dataPointDefaulted.push_back(false);
+        }
+    }
+
+    template< typename T >
+    size_t DeckTypeItem< T >::size() const {
+        return this->data.size();
+    }
+
+    template< typename T >
+    const T& DeckTypeItem< T >::get( size_t index ) const {
+        return this->data.at( index );
+    }
+
+    template< typename T >
+    const std::vector< T >& DeckTypeItem< T >::getData() const {
+        return this->data;
+    }
+
+    template< typename T >
+    const T& DeckSIItem< T >::getSI( size_t index ) const {
+        this->assertSIData();
+        return this->SIdata.at( index );
+    }
+
+    template< typename T >
+    const std::vector< T >& DeckSIItem< T >::getSIData() const {
+        this->assertSIData();
+        return this->SIdata;
+    }
+
+    template< typename T >
+    void DeckSIItem< T >::push_backDimension(
+                std::shared_ptr< const Dimension > activeDimension,
+                std::shared_ptr< const Dimension > defaultDimension ) {
+
+        if( this->m_dataPointDefaulted.empty() || this->m_dataPointDefaulted.back() )
+            this->dimensions.push_back( defaultDimension );
+        else
+            this->dimensions.push_back( activeDimension );
+    }
+
+    template< typename T >
+    void DeckSIItem< T >::assertSIData() const {
+        if( this->dimensions.size() <= 0 )
+            throw std::invalid_argument("No dimension has been set for item:" + this->name() + " can not ask for SI data");
+
+        // we already converted this item to SI?
+        if( this->SIdata.size() > 0 ) return;
+
+        this->SIdata.resize( this->size() );
+
+        for( size_t index = 0; index < this->size(); index++ ) {
+            const auto dimIndex = ( index % dimensions.size() );
+            this->SIdata[ index ] = this->dimensions[ dimIndex ]
+                                          ->convertRawToSi( this->get( index ) );
+        }
+    }
+
+    template class DeckTypeItem< double >;
+    template class DeckTypeItem< float >;
+    template class DeckTypeItem< int >;
+    template class DeckTypeItem< std::string >;
+
+    template class DeckSIItem< double >;
+    template class DeckSIItem< float >;
 }

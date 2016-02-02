@@ -22,38 +22,24 @@
 
 #include <string>
 #include <vector>
-#include <deque>
 #include <memory>
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 
 namespace Opm {
 
-    class DeckStringItem : public DeckItem {
-    public:
+    class DeckStringItem : public DeckTypeItem< std::string > {
+        public:
+            using DeckTypeItem< std::string >::DeckTypeItem;
 
-        DeckStringItem(std::string name_, bool scalar = true) : DeckItem(name_, scalar) {
-        }
-        const std::string& getString(size_t index) const;
-        const std::vector<std::string>& getStringData() const;
+            const std::string& getString( size_t index ) const override;
+            const std::vector< std::string >& getStringData() const override;
 
-        std::string getTrimmedString(size_t index) const;
-
-        void push_back(std::deque<std::string> data, size_t items);
-        void push_back(std::deque<std::string> data);
-        void push_back(const std::string& value);
-        void push_backDefault(std::string value);
-        // trying to access the data of a "dummy default item" will raise an exception
-        void push_backDummyDefault();
-        void push_backMultiple(std::string value, size_t numItems);
-
-        size_t size() const;
-    private:
-        std::vector<std::string> m_data;
+            std::string getTrimmedString( size_t index ) const;
     };
 
-    typedef std::shared_ptr<DeckStringItem> DeckStringItemPtr;
-    typedef std::shared_ptr<const DeckStringItem> DeckStringItemConstPtr;
+    typedef std::shared_ptr< DeckStringItem > DeckStringItemPtr;
+    typedef std::shared_ptr< const DeckStringItem > DeckStringItemConstPtr;
 }
 #endif
 

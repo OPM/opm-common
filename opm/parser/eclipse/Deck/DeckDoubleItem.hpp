@@ -21,8 +21,6 @@
 #define DECKDOUBLEITEM_HPP
 
 #include <vector>
-#include <string>
-#include <deque>
 #include <memory>
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
@@ -31,37 +29,19 @@ namespace Opm {
 
     class Dimension;
 
-    class DeckDoubleItem : public DeckItem {
+    class DeckDoubleItem : public DeckSIItem< double > {
     public:
-        DeckDoubleItem(std::string name_, bool scalar = true) : DeckItem(name_, scalar) {}
-        double getRawDouble(size_t index) const;
-        const std::vector<double>& getRawDoubleData() const;
-        double getSIDouble(size_t index) const;
-        const std::vector<double>& getSIDoubleData() const;
+        using DeckSIItem< double >::DeckSIItem;
 
-        void push_back(std::deque<double> data , size_t items);
-        void push_back(std::deque<double> data);
-        void push_back(double value);
-        void push_backDefault(double value);
-        // trying to access the data of a "dummy default item" will raise an exception
-        void push_backDummyDefault();
-        void push_backMultiple(double value, size_t numValues);
-        void push_backDimension(std::shared_ptr<const Dimension> activeDimension , std::shared_ptr<const Dimension> defaultDimension);
+        double getRawDouble( size_t index ) const override;
+        const std::vector< double >& getRawDoubleData() const override;
 
-        size_t size() const;
-    private:
-        void assertSIData() const;
-
-        std::vector<double> m_data;
-        // mutable is required because the data is "lazily" converted
-        // to SI units in asserSIData() which needs to be callable by
-        // 'const'-decorated methods
-        mutable std::vector<double> m_SIdata;
-        std::vector<std::shared_ptr<const Dimension> > m_dimensions;
+        double getSIDouble( size_t index ) const override;
+        const std::vector< double >& getSIDoubleData() const override;
     };
 
-    typedef std::shared_ptr<DeckDoubleItem> DeckDoubleItemPtr;
-    typedef std::shared_ptr< const DeckDoubleItem> DeckDoubleItemConstPtr;
+    typedef std::shared_ptr< DeckDoubleItem > DeckDoubleItemPtr;
+    typedef std::shared_ptr< const DeckDoubleItem > DeckDoubleItemConstPtr;
 }
 #endif  /* DECKDOUBLEITEM_HPP */
 

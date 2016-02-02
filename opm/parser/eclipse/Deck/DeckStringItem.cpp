@@ -19,89 +19,22 @@
 
 #include <vector>
 
-#include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
 
 namespace Opm {
 
-    const std::string& DeckStringItem::getString(size_t index) const {
-        assertSize(index);
-
-        return m_data[index];
+    const std::string& DeckStringItem::getString( size_t index ) const {
+        return this->get( index );
     }
 
-    std::string DeckStringItem::getTrimmedString(size_t index) const {
-        assertSize(index);
-
-        return boost::algorithm::trim_copy(m_data[index]);
+    std::string DeckStringItem::getTrimmedString( size_t index ) const {
+        return boost::algorithm::trim_copy( this->get( index ));
     }
 
-    const std::vector<std::string>& DeckStringItem::getStringData() const {
-        return m_data;
-    }
-
-
-
-    void DeckStringItem::push_back(std::deque<std::string> data, size_t items) {
-        if (m_dataPointDefaulted.size() != m_data.size())
-            throw std::logic_error("To add a value to an item, no \"pseudo defaults\" can be added before");
-
-        for (size_t i=0; i<items; i++) {
-            m_data.push_back(data[i]);
-            m_dataPointDefaulted.push_back(false);
-        }
-    }
-
-
-    void DeckStringItem::push_back(std::deque<std::string> data) {
-        if (m_dataPointDefaulted.size() != m_data.size())
-            throw std::logic_error("To add a value to an item, no \"pseudo defaults\" can be added before");
-
-        push_back(data, data.size());
-        m_dataPointDefaulted.push_back(false);
-    }
-
-
-    void DeckStringItem::push_back(const std::string& data ) {
-        if (m_dataPointDefaulted.size() != m_data.size())
-            throw std::logic_error("To add a value to an item, no \"pseudo defaults\" can be added before");
-
-        m_data.push_back( data );
-        m_dataPointDefaulted.push_back(false);
-    }
-
-
-
-    void DeckStringItem::push_backMultiple(std::string value, size_t numValues) {
-        if (m_dataPointDefaulted.size() != m_data.size())
-            throw std::logic_error("To add a value to an item, no \"pseudo defaults\" can be added before");
-
-        for (size_t i = 0; i < numValues; i++) {
-            m_data.push_back( value );
-            m_dataPointDefaulted.push_back(false);
-        }
-    }
-
-
-    void DeckStringItem::push_backDefault(std::string data) {
-        if (m_dataPointDefaulted.size() != m_data.size())
-            throw std::logic_error("To add a value to an item, no \"pseudo defaults\" can be added before");
-
-        m_data.push_back( data );
-        m_dataPointDefaulted.push_back(true);
-    }
-
-    void DeckStringItem::push_backDummyDefault() {
-        if (m_dataPointDefaulted.size() != 0)
-            throw std::logic_error("Pseudo defaults can only be specified for empty items");
-
-        m_dataPointDefaulted.push_back(true);
-    }
-
-    size_t DeckStringItem::size() const {
-        return m_data.size();
+    const std::vector< std::string >& DeckStringItem::getStringData() const {
+        return this->getData();
     }
 
 }
