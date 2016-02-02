@@ -41,6 +41,6 @@ install:
 before_script:
     - mkdir build
     - cd build
-    - cmake ../
+    - cmake -DENABLE_PYTHON=ON ../
 
 script: make && ctest --output-on-failure
