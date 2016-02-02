@@ -20,6 +20,8 @@ install:
     - git clone https://github.com/OPM/opm-common.git
     - git clone https://github.com/Ensembles/ert.git
 
+    - export CXX="g++-4.8" CC="gcc-4.8"
+
     - cd opm-common
     - mkdir build
     - cd build
@@ -35,7 +37,6 @@ install:
     - cd ../../
 
     - cd opm-parser
-    - export CXX="g++-4.8" CC="gcc-4.8"
 
 before_script:
     - mkdir build
