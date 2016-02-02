@@ -20,23 +20,17 @@
 #	                      you should only add to this list if the *user* of
 #	                      the library needs it.
 
-# originally generated with the command:
-# find opm -name '*.c*' -printf '\t%p\n' | sort
 list (APPEND MAIN_SOURCE_FILES
+      opm/common/data/DataContainer.cpp
 )
 
-# originally generated with the command:
-# find tests -name '*.cpp' -a ! -wholename '*/not-unit/*' -printf '\t%p\n' | sort
 list (APPEND TEST_SOURCE_FILES
-	)
+      tests/test_DataContainer.cpp
+      )
 
-# originally generated with the command:
-# find tests -name '*.xml' -a ! -wholename '*/not-unit/*' -printf '\t%p\n' | sort
 list (APPEND TEST_DATA_FILES
 	)
 
-# originally generated with the command:
-# find tutorials examples -name '*.c*' -printf '\t%p\n' | sort
 list (APPEND EXAMPLE_SOURCE_FILES
 	)
 
@@ -47,6 +41,7 @@ list (APPEND PROGRAM_SOURCE_FILES
 
 
 list( APPEND PUBLIC_HEADER_FILES
+      opm/common/data/DataContainer.hpp
       opm/common/ErrorMacros.hpp
       opm/common/Exceptions.hpp
       opm/common/utility/platform_dependent/disable_warnings.h
