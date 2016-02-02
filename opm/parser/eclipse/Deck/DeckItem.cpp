@@ -17,9 +17,14 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckFloatItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <stdexcept>
@@ -181,4 +186,53 @@ namespace Opm {
 
     template class DeckSIItem< double >;
     template class DeckSIItem< float >;
+
+    int DeckIntItem::getInt( size_t index ) const {
+        return this->get( index );
+    }
+
+    const std::vector< int >& DeckIntItem::getIntData() const {
+        return this->getData();
+    }
+
+    const std::string& DeckStringItem::getString( size_t index ) const {
+        return this->get( index );
+    }
+
+    std::string DeckStringItem::getTrimmedString( size_t index ) const {
+        return boost::algorithm::trim_copy( this->get( index ));
+    }
+
+    const std::vector< std::string >& DeckStringItem::getStringData() const {
+        return this->getData();
+    }
+
+    double DeckDoubleItem::getRawDouble( size_t index ) const {
+        return this->get( index );
+    }
+
+    const std::vector< double >& DeckDoubleItem::getRawDoubleData() const {
+        return this->getData();
+    }
+
+    double DeckDoubleItem::getSIDouble( size_t index ) const {
+        return this->getSI( index );
+    }
+
+    const std::vector< double >& DeckDoubleItem::getSIDoubleData() const {
+        return this->getSIData();
+    }
+
+    float DeckFloatItem::getRawFloat( size_t index ) const {
+        return this->get( index );
+    }
+
+    float DeckFloatItem::getSIFloat( size_t index ) const {
+        return this->getSI( index );
+    }
+
+    const std::vector< float >& DeckFloatItem::getSIFloatData() const {
+        return this->getSIData();
+    }
+
 }

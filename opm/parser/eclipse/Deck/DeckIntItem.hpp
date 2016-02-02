@@ -31,13 +31,8 @@ namespace Opm {
         public:
             using DeckTypeItem< int >::DeckTypeItem;
 
-            int getInt( size_t index ) const override {
-                return this->get( index );
-            }
-
-            const std::vector< int >& getIntData() const override {
-                return this->getData();
-            }
+            int getInt( size_t index ) const override;
+            const std::vector< int >& getIntData() const override;
     };
 
     typedef std::shared_ptr< DeckIntItem > DeckIntItemPtr;
