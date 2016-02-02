@@ -170,36 +170,6 @@ if (ERT_INCLUDE_DIR MATCHES "-NOTFOUND" OR ERT_LIBRARIES MATCHES "-NOTFOUND")
   return ()
 endif (ERT_INCLUDE_DIR MATCHES "-NOTFOUND" OR ERT_LIBRARIES MATCHES "-NOTFOUND")
 
-# these system variables are probed for, and used in HEADER files (sic)
-list (APPEND ERT_CONFIG_VARS
-  HAVE_ISFINITE
-  HAVE_GLOB
-  HAVE_FORK
-  HAVE_GETUID
-  HAVE_LOCKF
-  HAVE_OPENDIR
-  HAVE_PROC
-  HAVE_READLINKAT
-  HAVE_SYMLINK
-  HAVE_VA_COPY
-  )
-include (CheckSymbolExists)
-include (CheckFunctionExists)
-check_symbol_exists (isfinite math.h HAVE_ISFINITE)
-check_function_exists (glob HAVE_GLOB)
-check_function_exists (fork HAVE_FORK)
-check_function_exists (getuid HAVE_GETUID)
-check_function_exists (lockf HAVE_LOCKF)
-check_function_exists (opendir HAVE_OPENDIR)
-check_function_exists (readlinkat HAVE_READLINKAT)
-check_function_exists (symlink HAVE_SYMLINK)
-check_symbol_exists (va_copy stdarg.h HAVE_VA_COPY)
-
-if (UNIX)
-  set (HAVE_PROC 1)
-else (UNIX)
-  set (HAVE_PROC)
-endif (UNIX)
 
 # dependencies
 
@@ -221,6 +191,7 @@ if (BLAS_FOUND)
   list (APPEND ERT_LIBRARIES ${BLAS_LIBRARIES})
   list (APPEND ERT_LINKER_FLAGS ${BLAS_LINKER_FLAGS})
 endif (BLAS_FOUND)
+
 find_package (LAPACK ${ERT_QUIET})
 if (LAPACK_FOUND)
   list (APPEND ERT_INCLUDE_DIRS ${LAPACK_INCLUDE_DIRS})
