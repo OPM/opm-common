@@ -1,0 +1,28 @@
+language: cpp
+
+compiler:
+  - gcc
+
+addons:
+  apt:
+    sources:
+      - boost-latest
+      - ubuntu-toolchain-r-test
+    packages:
+      - libboost1.55-all-dev
+      - gcc-4.8
+      - g++-4.8
+
+install:
+    - cd ..
+    - git clone https://github.com/OPM/opm-common.git
+    - export CXX="g++-4.8" CC="gcc-4.8"
+
+    - cd opm-common
+
+before_script:
+    - mkdir build
+    - cd build
+    - cmake -DENABLE_PYTHON=ON ../
+
+script: make && ctest --output-on-failure
