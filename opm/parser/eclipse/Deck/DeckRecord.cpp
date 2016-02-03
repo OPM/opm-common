@@ -20,6 +20,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <algorithm>
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
@@ -36,11 +37,18 @@ namespace Opm {
     }
 
     void DeckRecord::addItem(DeckItemPtr deckItem) {
-        if (m_itemMap.find(deckItem->name()) == m_itemMap.end()) {
-            m_itemMap[deckItem->name()] = deckItem;
-            m_items.push_back(deckItem);
-        } else
-            throw std::invalid_argument("Item with name: " + deckItem->name() + " already exists in DeckRecord");
+        const auto& name = deckItem->name();
+        const auto eq = [&name]( const std::shared_ptr< DeckItem >& e ) {
+            return e->name() == name;
+        };
+
+        if( std::any_of( m_items.begin(), m_items.end(), eq ) )
+            throw std::invalid_argument(
+                    "Item with name: "
+                    + name
+                    + " already exists in DeckRecord");
+
+        m_items.push_back(deckItem);
     }
 
     DeckItemPtr DeckRecord::getItem(size_t index) const {
@@ -52,18 +60,24 @@ namespace Opm {
 
 
     bool DeckRecord::hasItem(const std::string& name) const {
-        if (m_itemMap.find(name) == m_itemMap.end())
-            return false;
-        else
-            return true;
+        const auto eq = [&name]( const std::shared_ptr< DeckItem >& e ) {
+            return e->name() == name;
+        };
+
+        return std::any_of( m_items.begin(), m_items.end(), eq );
     }
 
     
     DeckItemPtr DeckRecord::getItem(const std::string& name) const {
-        if (hasItem(name))
-            return m_itemMap.find(name)->second;
-        else
+        const auto eq = [&name]( const std::shared_ptr< DeckItem >& e ) {
+            return e->name() == name;
+        };
+
+        auto item = std::find_if( m_items.begin(), m_items.end(), eq );
+        if( item == m_items.end() )
             throw std::invalid_argument("Itemname: " + name + " does not exist.");
+
+        return *item;
     }
 
 

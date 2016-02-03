@@ -22,7 +22,6 @@
 
 #include <string>
 #include <vector>
-#include <map>
 #include <memory>
 
 namespace Opm {
@@ -47,7 +46,6 @@ namespace Opm {
 
     private:
         std::vector<std::shared_ptr< DeckItem >> m_items;
-        std::map<std::string, std::shared_ptr< DeckItem >> m_itemMap;
 
     };
     typedef std::shared_ptr<DeckRecord> DeckRecordPtr;
