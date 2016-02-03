@@ -62,6 +62,14 @@ find_path (ERT_UTIL_INCLUDE_DIR
   DOC "Path to ERT Eclipse library header files"
   ${_no_default_path}
   )
+find_path (ERT_UTILXX_INCLUDE_DIR
+  NAMES "ert/util/ert_unique_ptr.hpp"
+  HINTS "${ERT_ROOT}"
+  PATHS "${PROJECT_SOURCE_DIR}/../ert"
+  PATH_SUFFIXES "devel/libert_utilxx/include/" "include"
+  DOC "Path to ERT Eclipse C++ library header files"
+  ${_no_default_path}
+  )  
 find_path (ERT_GEN_INCLUDE_DIR
   NAMES "ert/util/int_vector.h"
   HINTS "${ERT_ROOT}"
@@ -143,6 +151,7 @@ list (APPEND ERT_INCLUDE_DIR
   ${ERT_ECL_WELL_INCLUDE_DIR}
   ${ERT_ECLXX_INCLUDE_DIR}
   ${ERT_UTIL_INCLUDE_DIR}
+  ${ERT_UTILXX_INCLUDE_DIR}
   ${ERT_GEN_INCLUDE_DIR}
   )
 list (APPEND ERT_LIBRARY
