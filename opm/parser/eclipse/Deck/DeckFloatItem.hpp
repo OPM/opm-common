@@ -22,42 +22,24 @@
 
 #include <vector>
 #include <string>
-#include <deque>
 #include <memory>
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 
 namespace Opm {
 
-    class DeckFloatItem : public DeckItem {
+    class DeckFloatItem : public DeckSIItem< float > {
     public:
-        DeckFloatItem(std::string name_, bool scalar = true) : DeckItem(name_, scalar) {}
-        float getRawFloat(size_t index) const;
-        float getSIFloat(size_t index) const;
-        const std::vector<float>& getSIFloatData() const;
 
-        void push_back(std::deque<float> data , size_t items);
-        void push_back(std::deque<float> data);
-        void push_back(float value);
-        void push_backDefault(float value);
-        // trying to access the data of a "dummy default item" will raise an exception
-        void push_backDummyDefault();
-        void push_backMultiple(float value, size_t numValues);
-        void push_backDimension(std::shared_ptr<const Dimension> activeDimension , std::shared_ptr<const Dimension> defaultDimension);
+        using DeckSIItem< float >::DeckSIItem;
 
-        size_t size() const;
-    private:
-        void assertSIData() const;
-
-        std::vector<float> m_data;
-        // mutable is required because the data is "lazily" converted
-        // to SI units in asserSIData() which needs to be callable by
-        // 'const'-decorated methods
-        mutable std::vector<float> m_SIdata;
-        std::vector<std::shared_ptr<const Dimension> > m_dimensions;
+        float getRawFloat( size_t index ) const override;
+        float getSIFloat( size_t index ) const override;
+        const std::vector< float >& getSIFloatData() const override;
     };
-    typedef std::shared_ptr<DeckFloatItem> DeckFloatItemPtr;
-    typedef std::shared_ptr< const DeckFloatItem> DeckFloatItemConstPtr;
+
+    typedef std::shared_ptr< DeckFloatItem > DeckFloatItemPtr;
+    typedef std::shared_ptr< const DeckFloatItem > DeckFloatItemConstPtr;
 }
 
 #endif // DECKFLOATITEM_HPP

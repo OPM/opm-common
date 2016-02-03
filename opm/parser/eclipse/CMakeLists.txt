@@ -41,10 +41,6 @@ Deck/Deck.cpp
 Deck/DeckKeyword.cpp
 Deck/DeckRecord.cpp
 Deck/DeckItem.cpp
-Deck/DeckIntItem.cpp
-Deck/DeckDoubleItem.cpp
-Deck/DeckFloatItem.cpp
-Deck/DeckStringItem.cpp
 Deck/Section.cpp
 Deck/SCHEDULESection.cpp
 Deck/DeckTimeStep.cpp

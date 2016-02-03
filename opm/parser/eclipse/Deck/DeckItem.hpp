@@ -20,6 +20,7 @@
 #ifndef DECKITEM_HPP
 #define DECKITEM_HPP
 
+#include <deque>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -124,8 +125,53 @@ namespace Opm {
         bool m_scalar;
     };
 
-    typedef std::shared_ptr<DeckItem> DeckItemPtr;
-    typedef std::shared_ptr<const DeckItem> DeckItemConstPtr;
+    typedef std::shared_ptr< DeckItem > DeckItemPtr;
+    typedef std::shared_ptr< const DeckItem > DeckItemConstPtr;
+
+    template< typename T >
+    class DeckTypeItem : public DeckItem {
+        public:
+            using DeckItem::DeckItem;
+
+            void push_back( std::deque< T > data, size_t items );
+            void push_back( std::deque< T > data );
+            void push_back( T value );
+            // trying to access the data of a "dummy default item" will raise an exception
+            void push_backDummyDefault();
+            void push_backMultiple( T value, size_t numValues );
+            void push_backDefault( T value);
+
+            size_t size() const;
+
+            const T& get( size_t ) const;
+            const std::vector< T >& getData() const;
+
+        private:
+            std::vector< T > data;
+    };
+
+    template< typename T >
+    class DeckSIItem : public DeckTypeItem< T > {
+        public:
+            using DeckTypeItem< T >::DeckTypeItem;
+
+        const T& getSI( size_t ) const;
+        const std::vector< T >& getSIData() const;
+
+        void push_backDimension(
+                std::shared_ptr< const Dimension > activeDimension,
+                std::shared_ptr< const Dimension > defaultDimension ) override;
+
+        private:
+            void assertSIData() const;
+
+            // mutable is required because the data is "lazily" converted
+            // to SI units in asserSIData() which needs to be callable by
+            // 'const'-decorated methods
+            mutable std::vector< T > SIdata;
+            std::vector< std::shared_ptr< const Dimension > > dimensions;
+    };
+
 }
 #endif  /* DECKITEM_HPP */
 

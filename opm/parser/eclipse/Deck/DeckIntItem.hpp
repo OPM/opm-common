@@ -20,37 +20,23 @@
 #ifndef DECKINTITEM_HPP
 #define DECKINTITEM_HPP
 
-#include <string>
 #include <vector>
-#include <deque>
 #include <memory>
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 
 namespace Opm {
 
-    class DeckIntItem : public DeckItem {
-    public:
-        DeckIntItem(std::string name_, bool scalar = true) : DeckItem(name_, scalar) {}
-        int getInt(size_t index) const;
-        const std::vector<int>& getIntData() const;
+    class DeckIntItem : public DeckTypeItem< int > {
+        public:
+            using DeckTypeItem< int >::DeckTypeItem;
 
-
-        void push_back(std::deque<int> data , size_t items);
-        void push_back(std::deque<int> data);
-        void push_back(int value);
-        // trying to access the data of a "dummy default item" will raise an exception
-        void push_backDummyDefault();
-        void push_backMultiple(int value , size_t numValues);
-        void push_backDefault(int value);
-
-        size_t size() const;
-    private:
-        std::vector<int> m_data;
+            int getInt( size_t index ) const override;
+            const std::vector< int >& getIntData() const override;
     };
 
-    typedef std::shared_ptr<DeckIntItem> DeckIntItemPtr;
-    typedef std::shared_ptr<const DeckIntItem> DeckIntItemConstPtr;
+    typedef std::shared_ptr< DeckIntItem > DeckIntItemPtr;
+    typedef std::shared_ptr< const DeckIntItem > DeckIntItemConstPtr;
 }
 #endif  /* DECKINTITEM_HPP */
 
