@@ -21,6 +21,9 @@
 #define SIMULATION_DATA_CONTAINER_HPP
 
 #include <cstddef>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 namespace Opm {
 
@@ -28,10 +31,36 @@ namespace Opm {
     public:
         SimulationDataContainer(size_t num_cells, size_t num_faces , size_t num_phases);
 
+        size_t numPhases() const;
+        size_t numFaces() const;
+        size_t numCells() const;
+
+        bool hasCellData( const std::string& name ) const;
+        void registerCellData( const std::string& name , size_t components , double initialValue = 0.0 );
+        std::vector<double>& getCellData( const std::string& name );
+
+        bool hasFaceData( const std::string& name ) const;
+        void registerFaceData( const std::string& name , size_t components , double initialValue = 0.0 );
+        std::vector<double>& getFaceData( const std::string& name );
+
+
+        /* Old deprecated */
+        std::vector<double>& pressure    ();
+        std::vector<double>& temperature ();
+        std::vector<double>& saturation  ();
+
+        std::vector<double>& facepressure();
+        std::vector<double>& faceflux    ();
+
     private:
+        void  addDefaultFields();
+
         size_t m_num_cells;
         size_t m_num_faces;
         size_t m_num_phases;
+
+        std::unordered_map< std::string , std::vector<double> > m_cell_data;
+        std::unordered_map< std::string , std::vector<double> > m_face_data;
     };
 }
 
