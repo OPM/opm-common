@@ -27,7 +27,6 @@
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>
-#include <opm/parser/eclipse/Parser/ParserFloatItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
 
 #include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
@@ -43,7 +42,6 @@ BOOST_AUTO_TEST_CASE(Initialize) {
     BOOST_CHECK_NO_THROW(ParserIntItem item1("ITEM1", sizeType));
     BOOST_CHECK_NO_THROW(ParserStringItem item1("ITEM1", sizeType));
     BOOST_CHECK_NO_THROW(ParserDoubleItem item1("ITEM1", sizeType));
-    BOOST_CHECK_NO_THROW(ParserFloatItem item1("ITEM1", sizeType));
 }
 
 BOOST_AUTO_TEST_CASE(ScalarCheck) {
@@ -58,12 +56,10 @@ BOOST_AUTO_TEST_CASE(Initialize_DefaultSizeType) {
     ParserIntItem item1(std::string("ITEM1"));
     ParserStringItem item2(std::string("ITEM1"));
     ParserDoubleItem item3(std::string("ITEM1"));
-    ParserFloatItem item4(std::string("ITEM1"));
 
     BOOST_CHECK_EQUAL( SINGLE , item1.sizeType());
     BOOST_CHECK_EQUAL( SINGLE , item2.sizeType());
     BOOST_CHECK_EQUAL( SINGLE , item3.sizeType());
-    BOOST_CHECK_EQUAL( SINGLE , item4.sizeType());
 }
 
 
@@ -85,18 +81,6 @@ BOOST_AUTO_TEST_CASE(Initialize_Default_Double) {
     BOOST_CHECK_THROW(item1.getDefault(), std::invalid_argument);
     BOOST_CHECK_EQUAL( 88.91 , item2.getDefault());
 }
-
-BOOST_AUTO_TEST_CASE(Initialize_Default_Float) {
-    ParserFloatItem item1(std::string("ITEM1"));
-    ParserFloatItem item2("ITEM1",  88.91F);
-
-    BOOST_CHECK(!item1.hasDefault());
-    BOOST_CHECK_THROW(item1.getDefault(), std::invalid_argument);
-
-    BOOST_CHECK(item2.hasDefault());
-    BOOST_CHECK_EQUAL( 88.91F , item2.getDefault());
-}
-
 
 BOOST_AUTO_TEST_CASE(Initialize_Default_String) {
     ParserStringItem item1(std::string("ITEM1"));
@@ -230,33 +214,10 @@ BOOST_AUTO_TEST_CASE(DoubleItem_Equal_ReturnsTrue) {
 }
 
 
-BOOST_AUTO_TEST_CASE(FloatItem_Equal_ReturnsTrue) {
-    ParserItemSizeEnum sizeType = ALL;
-    ParserFloatItem item1("ITEM1", sizeType);
-    ParserFloatItem item2("ITEM1", sizeType);
-    ParserFloatItem item3 = item1;
-
-    BOOST_CHECK( item1.equal( item2 ));
-    BOOST_CHECK( item1.equal( item3 ));
-}
-
-
 BOOST_AUTO_TEST_CASE(DoubleItem_DimEqual_ReturnsTrue) {
     ParserItemSizeEnum sizeType = ALL;
     ParserDoubleItem item1("ITEM1", sizeType);
     ParserDoubleItem item2("ITEM1", sizeType);
-
-    item1.push_backDimension("Length*Length");
-    item2.push_backDimension("Length*Length");
-
-    BOOST_CHECK( item1.equal( item2 ));
-}
-
-
-BOOST_AUTO_TEST_CASE(FloatItem_DimEqual_ReturnsTrue) {
-    ParserItemSizeEnum sizeType = ALL;
-    ParserFloatItem item1("ITEM1", sizeType);
-    ParserFloatItem item2("ITEM1", sizeType);
 
     item1.push_backDimension("Length*Length");
     item2.push_backDimension("Length*Length");
@@ -289,49 +250,11 @@ BOOST_AUTO_TEST_CASE(DoubleItem_DimDifferent_ReturnsFalse) {
 }
 
 
-BOOST_AUTO_TEST_CASE(FloatItem_DimDifferent_ReturnsFalse) {
-    ParserItemSizeEnum sizeType = ALL;
-    ParserFloatItem item1("ITEM1", sizeType);    // Dim: []
-    ParserFloatItem item2("ITEM1", sizeType);    // Dim: [Length]
-    ParserFloatItem item3("ITEM1", sizeType);    // Dim: [Length ,Length]
-    ParserFloatItem item4("ITEM1", sizeType);    // Dim: [t]
-
-    item2.push_backDimension("Length");
-
-    item3.push_backDimension("Length");
-    item3.push_backDimension("Length");
-
-    item4.push_backDimension("Time");
-
-    BOOST_CHECK_EQUAL(false , item1.equal( item2 ));
-    BOOST_CHECK_EQUAL(false , item2.equal( item3 ));
-    BOOST_CHECK_EQUAL(false , item2.equal( item1 ));
-    BOOST_CHECK_EQUAL(false , item2.equal( item4 ));
-    BOOST_CHECK_EQUAL(false , item1.equal( item3 ));
-    BOOST_CHECK_EQUAL(false , item3.equal( item1 ));
-    BOOST_CHECK_EQUAL(false , item4.equal( item2 ));
-
-}
-
-
 BOOST_AUTO_TEST_CASE(DoubleItem_Different_ReturnsFalse) {
     ParserDoubleItem item1("ITEM1", ALL);
     ParserDoubleItem item2("ITEM2", ALL);
     ParserDoubleItem item3(std::string("ITEM1") );
     ParserDoubleItem item4("ITEM1" , 42.89);
-
-    BOOST_CHECK( !item1.equal( item2 ));
-    BOOST_CHECK( !item1.equal( item3 ));
-    BOOST_CHECK( !item2.equal( item3 ));
-    BOOST_CHECK( !item4.equal( item3 ));
-}
-
-
-BOOST_AUTO_TEST_CASE(FloatItem_Different_ReturnsFalse) {
-    ParserFloatItem item1("ITEM1", ALL);
-    ParserFloatItem item2("ITEM2", ALL);
-    ParserFloatItem item3(std::string("ITEM1") );
-    ParserFloatItem item4("ITEM1" , 42.89);
 
     BOOST_CHECK( !item1.equal( item2 ));
     BOOST_CHECK( !item1.equal( item3 ));
@@ -693,12 +616,10 @@ BOOST_AUTO_TEST_CASE(ParserDefaultHasDimensionReturnsFalse) {
     ParserIntItem intItem(std::string("SOMEINTS"));
     ParserStringItem stringItem(std::string("SOMESTRING"));
     ParserDoubleItem doubleItem(std::string("SOMEDOUBLE"));
-    ParserFloatItem floatItem(std::string("SOMEFLOAT"));
 
     BOOST_CHECK_EQUAL( false, intItem.hasDimension());
     BOOST_CHECK_EQUAL( false, stringItem.hasDimension());
     BOOST_CHECK_EQUAL( false, doubleItem.hasDimension());
-    BOOST_CHECK_EQUAL( false, floatItem.hasDimension());
 }
 
 BOOST_AUTO_TEST_CASE(ParserIntItemGetDimensionThrows) {
@@ -718,14 +639,6 @@ BOOST_AUTO_TEST_CASE(ParserDoubleItemAddMultipleDimensionToSIngleSizeThrows) {
 }
 
 
-BOOST_AUTO_TEST_CASE(ParserFloatItemAddMultipleDimensionToSIngleSizeThrows) {
-    ParserFloatItem floatItem(std::string("SOMEFLOAT"));
-
-    floatItem.push_backDimension("Length*Length");
-    BOOST_CHECK_THROW( floatItem.push_backDimension("Length*Length"), std::invalid_argument);
-}
-
-
 BOOST_AUTO_TEST_CASE(ParserDoubleItemWithDimensionHasReturnsCorrect) {
     ParserDoubleItem doubleItem(std::string("SOMEDOUBLE"));
 
@@ -733,16 +646,6 @@ BOOST_AUTO_TEST_CASE(ParserDoubleItemWithDimensionHasReturnsCorrect) {
     doubleItem.push_backDimension("Length*Length");
     BOOST_CHECK_EQUAL( true , doubleItem.hasDimension() );
 }
-
-
-BOOST_AUTO_TEST_CASE(ParserFloatItemWithDimensionHasReturnsCorrect) {
-    ParserFloatItem floatItem(std::string("SOMEFLOAT"));
-
-    BOOST_CHECK_EQUAL( false , floatItem.hasDimension() );
-    floatItem.push_backDimension("Length*Length");
-    BOOST_CHECK_EQUAL( true , floatItem.hasDimension() );
-}
-
 
 BOOST_AUTO_TEST_CASE(ParserDoubleItemGetDimension) {
     ParserDoubleItem doubleItem(std::string("SOMEDOUBLE") , ALL);
@@ -759,20 +662,3 @@ BOOST_AUTO_TEST_CASE(ParserDoubleItemGetDimension) {
     BOOST_CHECK_EQUAL( "Length*Length*Length" , doubleItem.getDimension(2));
     BOOST_CHECK_THROW( doubleItem.getDimension( 3 ) , std::invalid_argument );
 }
-
-BOOST_AUTO_TEST_CASE(ParserFloatItemGetDimension) {
-    ParserFloatItem floatItem(std::string("SOMEFLOAT") , ALL);
-
-    BOOST_CHECK_THROW( floatItem.getDimension( 10 ) , std::invalid_argument );
-    BOOST_CHECK_THROW( floatItem.getDimension(  0 ) , std::invalid_argument );
-
-    floatItem.push_backDimension("Length");
-    floatItem.push_backDimension("Length*Length");
-    floatItem.push_backDimension("Length*Length*Length");
-
-    BOOST_CHECK_EQUAL( "Length" , floatItem.getDimension(0));
-    BOOST_CHECK_EQUAL( "Length*Length" , floatItem.getDimension(1));
-    BOOST_CHECK_EQUAL( "Length*Length*Length" , floatItem.getDimension(2));
-    BOOST_CHECK_THROW( floatItem.getDimension( 3 ) , std::invalid_argument );
-}
-

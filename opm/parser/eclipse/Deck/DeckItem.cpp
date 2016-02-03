@@ -18,7 +18,6 @@
  */
 
 #include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
-#include <opm/parser/eclipse/Deck/DeckFloatItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
@@ -180,12 +179,10 @@ namespace Opm {
     }
 
     template class DeckTypeItem< double >;
-    template class DeckTypeItem< float >;
     template class DeckTypeItem< int >;
     template class DeckTypeItem< std::string >;
 
     template class DeckSIItem< double >;
-    template class DeckSIItem< float >;
 
     int DeckIntItem::getInt( size_t index ) const {
         return this->get( index );
@@ -220,18 +217,6 @@ namespace Opm {
     }
 
     const std::vector< double >& DeckDoubleItem::getSIDoubleData() const {
-        return this->getSIData();
-    }
-
-    float DeckFloatItem::getRawFloat( size_t index ) const {
-        return this->get( index );
-    }
-
-    float DeckFloatItem::getSIFloat( size_t index ) const {
-        return this->getSI( index );
-    }
-
-    const std::vector< float >& DeckFloatItem::getSIFloatData() const {
         return this->getSIData();
     }
 

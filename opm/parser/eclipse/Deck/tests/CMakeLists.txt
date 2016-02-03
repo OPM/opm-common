@@ -1,6 +1,6 @@
 foreach(tapp DeckRecordTests DeckIntItemTests DeckDoubleItemTests
-             DeckFloatItemTests DeckStringItemTests
-			 DeckTests DeckKeywordTests SectionTests DeckTimeStepTests)
+             DeckStringItemTests DeckTests DeckKeywordTests SectionTests
+             DeckTimeStepTests)
   opm_add_test(run${tapp} SOURCES ${tapp}.cpp
                           LIBRARIES opmparser ${Boost_LIBRARIES})
 endforeach()

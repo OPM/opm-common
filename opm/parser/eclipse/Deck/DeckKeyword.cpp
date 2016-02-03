@@ -148,18 +148,5 @@ namespace Opm {
         return item->getSIDoubleData();
     }
 
-
-    const std::vector<float>& DeckKeyword::getSIFloatData() const {
-        DeckRecordConstPtr record = getDataRecord();
-        DeckItemPtr item = record->getDataItem();
-        return item->getSIFloatData();
-    }
-
-    const std::vector<float>& DeckKeyword::getRawFloatData() const {
-        DeckRecordConstPtr record = getDataRecord();
-        DeckItemConstPtr item = record->getDataItem();
-        return item->getRawFloatData();
-    }
-
 }
 

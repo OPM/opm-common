@@ -54,7 +54,6 @@ Parser/Parser.cpp
 Parser/ParserRecord.cpp
 Parser/ParserItem.cpp
 Parser/ParserIntItem.cpp  
-Parser/ParserFloatItem.cpp
 Parser/ParserDoubleItem.cpp
 Parser/ParserStringItem.cpp
 )
@@ -70,7 +69,6 @@ Parser/ParserKeyword.cpp
 Parser/ParserRecord.cpp
 Parser/ParserItem.cpp
 Parser/ParserIntItem.cpp  
-Parser/ParserFloatItem.cpp
 Parser/ParserDoubleItem.cpp
 Parser/ParserStringItem.cpp  
 ${generator_source}
@@ -154,7 +152,6 @@ Deck/DeckRecord.hpp
 Deck/DeckItem.hpp
 Deck/DeckIntItem.hpp
 Deck/DeckDoubleItem.hpp
-Deck/DeckFloatItem.hpp
 Deck/DeckStringItem.hpp
 Deck/Section.hpp
 Deck/SCHEDULESection.hpp
@@ -166,7 +163,6 @@ Parser/Parser.hpp
 Parser/ParserRecord.hpp
 Parser/ParserItem.hpp
 Parser/ParserIntItem.hpp  
-Parser/ParserFloatItem.hpp
 Parser/ParserDoubleItem.hpp
 Parser/ParserStringItem.hpp
 Parser/InputErrorAction.hpp

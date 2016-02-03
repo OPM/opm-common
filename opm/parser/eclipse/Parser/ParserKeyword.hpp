@@ -41,7 +41,6 @@ namespace Opm {
     class DeckKeyword;
     class ParseMode;
     class ParserDoubleItem;
-    class ParserFloatItem;
     class ParserRecord;
     class RawKeyword;
 
@@ -133,7 +132,6 @@ namespace Opm {
         void commonInit(const std::string& name, ParserKeywordSizeEnum sizeType);
         void addItems( const Json::JsonObject& jsonConfig);
         void initDoubleItemDimension( std::shared_ptr< ParserDoubleItem > item, const Json::JsonObject itemConfig);
-        void initFloatItemDimension( std::shared_ptr< ParserFloatItem > item, const Json::JsonObject itemConfig);
     };
 
     typedef std::shared_ptr<ParserKeyword> ParserKeywordPtr;

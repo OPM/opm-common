@@ -25,7 +25,6 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserConst.hpp>
 #include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>
-#include <opm/parser/eclipse/Parser/ParserFloatItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
@@ -354,13 +353,6 @@ namespace Opm {
                             record->addItem(item);
                         }
                         break;
-                    case FLOAT:
-                        {
-                            ParserFloatItemPtr item = ParserFloatItemPtr(new ParserFloatItem(itemConfig));
-                            initFloatItemDimension( item , itemConfig );
-                            record->addItem(item);
-                        }
-                        break;
                     default:
                         throw std::invalid_argument("While parsing "+getName()+": Values of type "+itemConfig.get_string("value_type")+" are not implemented.");
                     }
@@ -371,23 +363,6 @@ namespace Opm {
         } else
             throw std::invalid_argument("The 'items' JSON item missing must be an array in keyword "+getName()+".");
     }
-
-
-    void ParserKeyword::initFloatItemDimension( ParserFloatItemPtr item, const Json::JsonObject itemConfig) {
-        if (itemConfig.has_item("dimension")) {
-            const Json::JsonObject dimensionConfig = itemConfig.get_item("dimension");
-            if (dimensionConfig.is_string())
-                item->push_backDimension( dimensionConfig.as_string() );
-            else if (dimensionConfig.is_array()) {
-                for (size_t idim = 0; idim < dimensionConfig.size(); idim++) {
-                    Json::JsonObject dimObject = dimensionConfig.get_array_item( idim );
-                    item->push_backDimension( dimObject.as_string());
-                }
-            } else
-                throw std::invalid_argument("The 'dimension' attribute of keyword "+getName()+" must be a string or a list of strings");
-        }
-    }
-
 
     void ParserKeyword::initDoubleItemDimension( ParserDoubleItemPtr item, const Json::JsonObject itemConfig) {
         if (itemConfig.has_item("dimension")) {
@@ -446,17 +421,6 @@ namespace Opm {
                         item->setDefault(defaultValue);
                     }
                     initDoubleItemDimension( item , dataConfig );
-                    record->addDataItem( item );
-                }
-                break;
-                case FLOAT:
-                {
-                    ParserFloatItemPtr item = ParserFloatItemPtr(new ParserFloatItem(itemName, ALL));
-                    if (hasDefault) {
-                        double defaultValue = dataConfig.get_double("default");
-                        item->setDefault((float) defaultValue);
-                    }
-                    initFloatItemDimension( item , dataConfig );
                     record->addDataItem( item );
                 }
                 break;

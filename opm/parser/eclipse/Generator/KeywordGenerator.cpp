@@ -52,7 +52,6 @@ namespace Opm {
             "#include <opm/parser/eclipse/Parser/ParserIntItem.hpp>\n"
             "#include <opm/parser/eclipse/Parser/ParserStringItem.hpp>\n"
             "#include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>\n"
-            "#include <opm/parser/eclipse/Parser/ParserFloatItem.hpp>\n"
             "#include <opm/parser/eclipse/Parser/ParserRecord.hpp>\n"
             "#include <opm/parser/eclipse/Units/UnitSystem.hpp>\n"
             "using namespace Opm;\n"
