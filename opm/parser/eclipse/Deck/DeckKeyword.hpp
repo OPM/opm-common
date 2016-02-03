@@ -32,11 +32,11 @@ namespace Opm {
          * If no parser keyword is available, this method throws
          * std::invalid_exception. Use hasParserKeyword() to test if one is available..
          */
-        std::shared_ptr<const ParserKeyword> getParserKeyword() const;
+        const ParserKeyword* getParserKeyword() const;
 
         bool hasParserKeyword() const;
 
-        void setParserKeyword(std::shared_ptr<const ParserKeyword> &parserKeyword);
+        void setParserKeyword(const ParserKeyword* parserKeyword);
 
         size_t size() const;
         void addRecord(std::shared_ptr< const DeckRecord > record);
@@ -67,7 +67,7 @@ namespace Opm {
         std::string m_fileName;
         int m_lineNumber;
 
-        std::shared_ptr<const ParserKeyword> m_parserKeyword;
+        const ParserKeyword* m_parserKeyword;
         std::vector<std::shared_ptr< const DeckRecord >> m_recordList;
         bool m_knownKeyword;
         bool m_isDataKeyword;

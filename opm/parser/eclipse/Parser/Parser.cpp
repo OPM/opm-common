@@ -403,7 +403,7 @@ namespace Opm {
                         if (isRecognizedKeyword(parserState->rawKeyword->getKeywordName())) {
                             ParserKeywordConstPtr parserKeyword = getParserKeywordFromDeckName(parserState->rawKeyword->getKeywordName());
                             DeckKeywordPtr deckKeyword = parserKeyword->parse(parserState->parseMode , parserState->rawKeyword);
-                            deckKeyword->setParserKeyword(parserKeyword);
+                            deckKeyword->setParserKeyword(parserKeyword.get());
                             parserState->deck->addKeyword(deckKeyword);
                         } else {
                             DeckKeywordPtr deckKeyword(new DeckKeyword(parserState->rawKeyword->getKeywordName(), false));
