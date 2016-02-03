@@ -58,7 +58,7 @@ namespace Opm {
     {
         ecl_grid_type * new_ptr = ecl_grid_load_case( filename.c_str() );
         if (new_ptr)
-            m_grid.reset( new_ptr , ecl_grid_free );
+            m_grid.reset( new_ptr );
         else
             throw std::invalid_argument("Could not load grid from binary file: " + filename);
 
@@ -74,7 +74,7 @@ namespace Opm {
           m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
           m_multzMode(PinchMode::ModeEnum::TOP)
     {
-        m_grid.reset( ecl_grid_alloc_copy( src_ptr ) , ecl_grid_free );
+        m_grid.reset( ecl_grid_alloc_copy( src_ptr ) );
 
         m_nx = static_cast<size_t>( ecl_grid_get_nx( c_ptr() ));
         m_ny = static_cast<size_t>( ecl_grid_get_ny( c_ptr() ));
@@ -99,7 +99,7 @@ namespace Opm {
         m_nx = nx;
         m_ny = ny;
         m_nz = nz;
-        m_grid.reset(ecl_grid_alloc_rectangular(nx, ny, nz, dx, dy, dz, NULL), ecl_grid_free);
+        m_grid.reset(ecl_grid_alloc_rectangular(nx, ny, nz, dx, dy, dz, NULL));
     }
 
 
@@ -291,7 +291,7 @@ namespace Opm {
         assertVectorSize( DYV    , static_cast<size_t>( dims[1] ) , "DYV");
         assertVectorSize( DZV    , static_cast<size_t>( dims[2] ) , "DZV");
 
-        m_grid.reset( ecl_grid_alloc_dxv_dyv_dzv_depthz( dims[0] , dims[1] , dims[2] , DXV.data() , DYV.data() , DZV.data() , DEPTHZ.data() , NULL ) , ecl_grid_free);
+        m_grid.reset( ecl_grid_alloc_dxv_dyv_dzv_depthz( dims[0] , dims[1] , dims[2] , DXV.data() , DYV.data() , DZV.data() , DEPTHZ.data() , NULL ) );
     }
 
 
@@ -301,7 +301,7 @@ namespace Opm {
         std::vector<double> DZ = createDVector( dims , 2 , "DZ" , "DZV" , deck);
         std::vector<double> TOPS = createTOPSVector( dims , DZ , deck );
 
-        m_grid.reset( ecl_grid_alloc_dx_dy_dz_tops( dims[0] , dims[1] , dims[2] , DX.data() , DY.data() , DZ.data() , TOPS.data() , NULL ) , ecl_grid_free);
+        m_grid.reset( ecl_grid_alloc_dx_dy_dz_tops( dims[0] , dims[1] , dims[2] , DX.data() , DY.data() , DZ.data() , TOPS.data() , NULL ) );
     }
 
 
@@ -343,9 +343,7 @@ namespace Opm {
                     for (size_t i=0; i < 6; i++)
                         mapaxes_float[i] = mapaxes[i];
                 }
-
-                ecl_grid_type * ecl_grid = ecl_grid_alloc_GRDECL_data(dims[0] , dims[1] , dims[2] , zcorn_float.data() , coord_float.data() , actnum , mapaxes_float);
-                m_grid.reset( ecl_grid , ecl_grid_free);
+                m_grid.reset( ecl_grid_alloc_GRDECL_data(dims[0] , dims[1] , dims[2] , zcorn_float.data() , coord_float.data() , actnum , mapaxes_float) );
 
                 if (mapaxes) {
                     delete[] mapaxes_float;
