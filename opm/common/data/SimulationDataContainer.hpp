@@ -17,16 +17,16 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DATA_CONTAINER_HPP
-#define DATA_CONTAINER_HPP
+#ifndef SIMULATION_DATA_CONTAINER_HPP
+#define SIMULATION_DATA_CONTAINER_HPP
 
 #include <cstddef>
 
 namespace Opm {
 
-    class DataContainer {
+    class SimulationDataContainer {
     public:
-        DataContainer(size_t num_cells, size_t num_faces , size_t num_phases);
+        SimulationDataContainer(size_t num_cells, size_t num_faces , size_t num_phases);
 
     private:
         size_t m_num_cells;

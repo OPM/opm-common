@@ -18,11 +18,11 @@
  */
 
 
-#include <opm/common/data/DataContainer.hpp>
+#include <opm/common/data/SimulationDataContainer.hpp>
 
 namespace Opm {
 
-    DataContainer:: DataContainer(size_t num_cells, size_t num_faces , size_t num_phases) :
+    SimulationDataContainer::SimulationDataContainer(size_t num_cells, size_t num_faces , size_t num_phases) :
         m_num_cells( num_cells),
         m_num_faces( num_faces),
         m_num_phases( num_phases )

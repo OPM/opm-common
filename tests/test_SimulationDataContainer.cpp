@@ -19,15 +19,15 @@
 
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE DATA_CONTAINER_TESTS
+#define BOOST_TEST_MODULE SIMULATION_DATA_CONTAINER_TESTS
 #include <boost/test/unit_test.hpp>
 
 
-#include <opm/common/data/DataContainer.hpp>
+#include <opm/common/data/SimulationDataContainer.hpp>
 
 using namespace Opm;
 
 
 BOOST_AUTO_TEST_CASE(TestCreate) {
-    DataContainer container(1000 , 10 , 2);
+    SimulationDataContainer container(1000 , 10 , 2);
 }
