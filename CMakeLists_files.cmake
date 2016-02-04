@@ -21,11 +21,11 @@
 #	                      the library needs it.
 
 list (APPEND MAIN_SOURCE_FILES
-      opm/common/data/DataContainer.cpp
+      opm/common/data/SimulationDataContainer.cpp
 )
 
 list (APPEND TEST_SOURCE_FILES
-      tests/test_DataContainer.cpp
+      tests/test_SimulationDataContainer.cpp
       )
 
 list (APPEND TEST_DATA_FILES
