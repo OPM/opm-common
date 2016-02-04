@@ -31,6 +31,91 @@
 
 namespace Opm {
 
+static VFPProdTable::FLO_TYPE getFloType( std::shared_ptr< const DeckItem > item) {
+    const std::string& flo_string = item->getTrimmedString(0);
+    if (flo_string == "OIL") {
+        return VFPProdTable::FLO_OIL;
+    }
+    else if (flo_string == "LIQ") {
+        return VFPProdTable::FLO_LIQ;
+    }
+    else if (flo_string == "GAS") {
+        return VFPProdTable::FLO_GAS;
+    }
+    else {
+        throw std::invalid_argument("Invalid RATE_TYPE string");
+    }
+    return VFPProdTable::FLO_INVALID;
+}
+
+VFPProdTable::WFR_TYPE getWFRType( std::shared_ptr< const DeckItem > item) {
+    const std::string& wfr_string = item->getTrimmedString(0);
+    if (wfr_string == "WOR") {
+        return VFPProdTable::WFR_WOR;
+    }
+    else if (wfr_string == "WCT") {
+        return VFPProdTable::WFR_WCT;
+    }
+    else if (wfr_string == "WGR") {
+        return VFPProdTable::WFR_WGR;
+    }
+    else {
+        throw std::invalid_argument("Invalid WFR string");
+    }
+    return VFPProdTable::WFR_INVALID;
+}
+
+VFPProdTable::GFR_TYPE getGFRType( std::shared_ptr< const DeckItem > item) {;
+    const std::string& gfr_string = item->getTrimmedString(0);
+    if (gfr_string == "GOR") {
+        return VFPProdTable::GFR_GOR;
+    }
+    else if (gfr_string == "GLR") {
+        return VFPProdTable::GFR_GLR;
+    }
+    else if (gfr_string == "OGR") {
+        return VFPProdTable::GFR_OGR;
+    }
+    else {
+        throw std::invalid_argument("Invalid GFR string");
+    }
+    return VFPProdTable::GFR_INVALID;
+}
+
+VFPProdTable::ALQ_TYPE getALQType( std::shared_ptr< const DeckItem > item) {
+    if (item.defaultApplied(0)) {
+        return VFPProdTable::ALQ_UNDEF;
+    } else {
+        const std::string& alq_string = item->getTrimmedString(0);
+
+        if (alq_string == "GRAT") {
+            return VFPProdTable::ALQ_GRAT;
+        }
+        else if (alq_string == "IGLR") {
+            return VFPProdTable::ALQ_IGLR;
+        }
+        else if (alq_string == "TGLR") {
+            return VFPProdTable::ALQ_TGLR;
+        }
+        else if (alq_string == "PUMP") {
+            return VFPProdTable::ALQ_PUMP;
+        }
+        else if (alq_string == "COMP") {
+            return VFPProdTable::ALQ_COMP;
+        }
+        else if (alq_string == "BEAN") {
+            return VFPProdTable::ALQ_BEAN;
+        }
+        else if (alq_string == "") {
+            return VFPProdTable::ALQ_UNDEF;
+        }
+        else {
+            throw std::invalid_argument("Invalid ALQ_DEF string: " + alq_string);
+        }
+
+        return VFPProdTable::ALQ_INVALID;
+    }
+}
 void VFPProdTable::init(int table_num,
         double datum_depth,
         FLO_TYPE flo_type,
@@ -66,12 +151,6 @@ void VFPProdTable::init(int table_num,
 
     check();
 }
-
-
-
-
-
-
 
 void VFPProdTable::init(DeckKeywordConstPtr table, std::shared_ptr<Opm::UnitSystem> deck_unit_system) {
     using ParserKeywords::VFPPROD;
@@ -314,115 +393,6 @@ void VFPProdTable::check() {
     }
 }
 
-
-
-
-
-
-
-VFPProdTable::FLO_TYPE VFPProdTable::getFloType(std::shared_ptr<const DeckItem> item) {
-    const std::string& flo_string = item->getTrimmedString(0);
-    if (flo_string == "OIL") {
-        return FLO_OIL;
-    }
-    else if (flo_string == "LIQ") {
-        return FLO_LIQ;
-    }
-    else if (flo_string == "GAS") {
-        return FLO_GAS;
-    }
-    else {
-        throw std::invalid_argument("Invalid RATE_TYPE string");
-    }
-    return FLO_INVALID;
-}
-
-
-
-
-
-
-
-VFPProdTable::WFR_TYPE VFPProdTable::getWFRType(std::shared_ptr<const DeckItem> item) {
-    const std::string& wfr_string = item->getTrimmedString(0);
-    if (wfr_string == "WOR") {
-        return WFR_WOR;
-    }
-    else if (wfr_string == "WCT") {
-        return WFR_WCT;
-    }
-    else if (wfr_string == "WGR") {
-        return WFR_WGR;
-    }
-    else {
-        throw std::invalid_argument("Invalid WFR string");
-    }
-    return WFR_INVALID;
-}
-
-
-
-
-
-
-
-VFPProdTable::GFR_TYPE VFPProdTable::getGFRType(std::shared_ptr<const DeckItem> item) {;
-    const std::string& gfr_string = item->getTrimmedString(0);
-    if (gfr_string == "GOR") {
-        return GFR_GOR;
-    }
-    else if (gfr_string == "GLR") {
-        return GFR_GLR;
-    }
-    else if (gfr_string == "OGR") {
-        return GFR_OGR;
-    }
-    else {
-        throw std::invalid_argument("Invalid GFR string");
-    }
-    return GFR_INVALID;
-}
-
-
-
-
-
-
-
-VFPProdTable::ALQ_TYPE VFPProdTable::getALQType(std::shared_ptr<const DeckItem> item) {
-    if (item->defaultApplied(0)) {
-        return ALQ_UNDEF;
-    } else {
-        const std::string& alq_string = item->getTrimmedString(0);
-
-        if (alq_string == "GRAT") {
-            return ALQ_GRAT;
-        }
-        else if (alq_string == "IGLR") {
-            return ALQ_IGLR;
-        }
-        else if (alq_string == "TGLR") {
-            return ALQ_TGLR;
-        }
-        else if (alq_string == "PUMP") {
-            return ALQ_PUMP;
-        }
-        else if (alq_string == "COMP") {
-            return ALQ_COMP;
-        }
-        else if (alq_string == "BEAN") {
-            return ALQ_BEAN;
-        }
-        else if (alq_string == "") {
-            return ALQ_UNDEF;
-        }
-        else {
-            throw std::invalid_argument("Invalid ALQ_DEF string: " + alq_string);
-        }
-
-        return ALQ_INVALID;
-    }
-}
 
 
 
