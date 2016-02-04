@@ -77,6 +77,7 @@ ${log_source}
 
 set (state_source
 EclipseState/EclipseState.cpp
+EclipseState/Messages.cpp
 #
 EclipseState/checkDeck.cpp
 #
@@ -176,6 +177,7 @@ Units/Dimension.hpp
 Units/ConversionFactors.hpp
 #
 EclipseState/EclipseState.hpp
+EclipseState/Messages.hpp
 #
 EclipseState/checkDeck.hpp
 #
