@@ -26,6 +26,14 @@ namespace Opm {
 
     class Messages {
     public:
+
+        /*
+           This constructor will create a new Messages object which is
+           a copy of the input argument, and then all items explicitly
+           set in the record are modified.
+        */
+        Messages(const Messages& message , const DeckRecord& record);
+        
         Messages(const DeckRecord& record);
 
     private:
