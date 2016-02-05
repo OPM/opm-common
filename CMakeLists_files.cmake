@@ -22,10 +22,12 @@
 
 list (APPEND MAIN_SOURCE_FILES
       opm/common/data/SimulationDataContainer.cpp
+      opm/common/util/numeric/cmp.cpp
 )
 
 list (APPEND TEST_SOURCE_FILES
       tests/test_SimulationDataContainer.cpp
+      tests/test_cmp.cpp
       )
 
 list (APPEND TEST_DATA_FILES
@@ -42,6 +44,7 @@ list (APPEND PROGRAM_SOURCE_FILES
 
 list( APPEND PUBLIC_HEADER_FILES
       opm/common/data/SimulationDataContainer.hpp
+      opm/common/util/numeric/cmp.hpp
       opm/common/ErrorMacros.hpp
       opm/common/Exceptions.hpp
       opm/common/utility/platform_dependent/disable_warnings.h

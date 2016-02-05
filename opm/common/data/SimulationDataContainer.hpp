@@ -36,6 +36,8 @@ namespace Opm {
         size_t numCells() const;
 
         bool hasCellData( const std::string& name ) const;
+        /// Will register a data vector of size numCells() *
+        /// components.
         void registerCellData( const std::string& name , size_t components , double initialValue = 0.0 );
         std::vector<double>& getCellData( const std::string& name );
 

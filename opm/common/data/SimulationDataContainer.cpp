@@ -52,15 +52,26 @@ namespace Opm {
 
     std::vector<double>& SimulationDataContainer::getCellData( const std::string& name ) {
         auto iter = m_cell_data.find( name );
-        if (iter == m_cell_data.end())
+        if (iter == m_cell_data.end()) {
             throw std::invalid_argument("The cell data with name: " + name + " does not exist");
-        else
+        } else
             return iter->second;
     }
 
+
+    const std::vector<double>& SimulationDataContainer::getCellData( const std::string& name ) const {
+        auto iter = m_cell_data.find( name );
+        if (iter == m_cell_data.end()) {
+            throw std::invalid_argument("The cell data with name: " + name + " does not exist");
+        } else
+            return iter->second;
+    }
+
+
     void SimulationDataContainer::registerCellData( const std::string& name , size_t components , double initialValue) {
-        if (!hasCellData( name ))
+        if (!hasCellData( name )) {
             m_cell_data.insert( std::pair<std::string , std::vector<double>>( name , std::vector<double>(components * m_num_cells , initialValue )));
+        }
     }
 
 
@@ -71,15 +82,24 @@ namespace Opm {
 
     std::vector<double>& SimulationDataContainer::getFaceData( const std::string& name ) {
         auto iter = m_face_data.find( name );
-        if (iter == m_face_data.end())
+        if (iter == m_face_data.end()) {
+            throw std::invalid_argument("The face data with name: " + name + " does not exist");
+        } else
+            return iter->second;
+    }
+
+    const std::vector<double>& SimulationDataContainer::getFaceData( const std::string& name ) const {
+        auto iter = m_face_data.find( name );
+        if (iter == m_face_data.end()) {
             throw std::invalid_argument("The Face data with name: " + name + " does not exist");
-        else
+        } else
             return iter->second;
     }
 
     void SimulationDataContainer::registerFaceData( const std::string& name , size_t components , double initialValue) {
-        if (!hasFaceData( name ))
+        if (!hasFaceData( name )) {
             m_face_data.insert( std::pair<std::string , std::vector<double>>( name , std::vector<double>(components * m_num_faces , initialValue )));
+        }
     }
 
 
