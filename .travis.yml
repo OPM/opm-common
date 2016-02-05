@@ -12,35 +12,17 @@ addons:
       - libboost1.55-all-dev
       - gcc-4.8
       - g++-4.8
+      - gfortran-4.8
       - liblapack-dev
 
 install:
+    - export CXX="g++-4.8" CC="gcc-4.8" FC="gfortran-4.8"
     - cd ..
-    - git clone https://github.com/OPM/opm-data.git
+
     - git clone https://github.com/OPM/opm-common.git
-    - git clone https://github.com/Ensembles/ert.git
+    - git clone https://github.com/OPM/opm-data.git
 
-    - export CXX="g++-4.8" CC="gcc-4.8"
+    - opm-common/travis/build-opm-common.sh
+    - opm-parser/travis/clone-and-build-ert.sh
 
-    - cd opm-common
-    - mkdir build
-    - cd build
-    - cmake ../
-    - make
-    - cd ../../
-
-    - cd ert
-    - mkdir build
-    - cd build
-    - cmake ../devel/
-    - make
-    - cd ../../
-
-    - cd opm-parser
-
-before_script:
-    - mkdir build
-    - cd build
-    - cmake -DENABLE_PYTHON=ON ../
-
-script: make && ctest --output-on-failure
+script: opm-parser/travis/build-and-test-opm-parser.sh
