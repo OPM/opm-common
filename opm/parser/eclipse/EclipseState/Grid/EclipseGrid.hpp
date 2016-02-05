@@ -25,7 +25,9 @@
 #include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/MinpvMode.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/PinchMode.hpp>
+
 #include <ert/ecl/ecl_grid.h>
+#include <ert/util/ert_unique_ptr.hpp>
 
 #include <memory>
 #include <vector>
@@ -114,7 +116,7 @@ namespace Opm {
         void fwriteEGRID( const std::string& filename, bool output_metric ) const;
         const ecl_grid_type * c_ptr() const;
     private:
-        std::shared_ptr<ecl_grid_type> m_grid;
+        ERT::ert_unique_ptr<ecl_grid_type , ecl_grid_free> m_grid;
         double m_minpvValue;
         MinpvMode::ModeEnum m_minpvMode;
         Value<double> m_pinch;
