@@ -1,2 +1,6 @@
-opm_add_test(runEclipseStateTests SOURCES EclipseStateTests.cpp
-                                  LIBRARIES opmparser ${Boost_LIBRARIES})
+foreach(tapp EclipseStateTests )
+
+    opm_add_test(run${tapp}  SOURCES ${tapp}.cpp
+                             LIBRARIES opmparser ${Boost_LIBRARIES})
+
+endforeach()
