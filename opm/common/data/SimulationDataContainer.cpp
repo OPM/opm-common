@@ -17,7 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
+#include <opm/common/util/numeric/cmp.hpp>
 #include <opm/common/data/SimulationDataContainer.hpp>
 
 namespace Opm {
@@ -96,11 +96,50 @@ namespace Opm {
             return iter->second;
     }
 
+
     void SimulationDataContainer::registerFaceData( const std::string& name , size_t components , double initialValue) {
         if (!hasFaceData( name )) {
             m_face_data.insert( std::pair<std::string , std::vector<double>>( name , std::vector<double>(components * m_num_faces , initialValue )));
         }
     }
+
+    bool SimulationDataContainer::equal( const SimulationDataContainer& other ) const {
+        if ((m_num_cells != other.m_num_cells) ||
+            (m_num_phases != other.m_num_phases) ||
+            (m_num_faces != other.m_num_faces))
+            return false;
+
+        if ((m_face_data.size() != other.m_face_data.size()) ||
+            (m_cell_data.size() != other.m_cell_data.size()))
+            return false;
+
+        for (const auto& cell_data : m_cell_data) {
+            const auto key = cell_data.first;
+            const auto data = cell_data.second;
+
+            if (other.hasCellData( key )) {
+                const auto& other_data = other.getCellData( key );
+                if (!cmp::double_vector_equal( data , other_data ))
+                    return false;
+            } else
+                return false;
+        }
+
+        for (const auto& face_data : m_face_data) {
+            const auto key = face_data.first;
+            const auto data = face_data.second;
+
+            if (other.hasFaceData( key )) {
+                const auto& other_data = other.getFaceData( key );
+                if (!cmp::double_vector_equal( data , other_data ))
+                    return false;
+            } else
+                return false;
+        }
+
+        return true;
+    }
+
 
 
     /* This is very deprecated. */
