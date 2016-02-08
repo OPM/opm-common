@@ -98,7 +98,17 @@ macro (find_opm_package module deps header lib defs prog conf)
   # to put the build-directories as siblings to the source trees,
   # but with a -build suffix, DUNE likes to have the the build tree
   # in a "build-cmake" sub-directory of each module
-  if (NOT (${module}_DIR OR ${module}_ROOT OR ${MODULE}_ROOT))
+  set(workaround_cmake_bug 0)
+  if(${module}_DIR})
+    set(workaround_cmake_bug 1)
+  endif()
+  if(${module}_ROOT})
+    set(workaround_cmake_bug 1)
+  endif()
+  if(${MODULE}_ROOT})
+    set(workaround_cmake_bug 1)
+  endif()
+  if (NOT workaround_cmake_bug)
 	string (TOLOWER "${module}" _module_lower)
 	set (_guess
 	  "../${module}"
@@ -123,7 +133,7 @@ macro (find_opm_package module deps header lib defs prog conf)
 	  list (APPEND _guess_bin "${PROJECT_BINARY_DIR}/${_item}")
 	endforeach (_item)
 	set (_no_system "")
-  else (NOT (${module}_DIR OR ${module}_ROOT OR ${MODULE}_ROOT))
+  else ()
 	# start looking at the paths in this order
 	set (_guess_bin
 	  ${${module}_DIR}
@@ -165,7 +175,7 @@ macro (find_opm_package module deps header lib defs prog conf)
 	# is a problem in our own specified directory, we don't necessarily
 	# want an old version that is left in one of the system paths!
 	set (_no_system "NO_DEFAULT_PATH")
-  endif (NOT (${module}_DIR OR ${module}_ROOT OR ${MODULE}_ROOT))
+  endif ()
 
   # by specifying _guess in the HINTS section, it gets searched before
   # the system locations as well. the CMake documentation has a cloudy
