@@ -31,8 +31,8 @@
 
 namespace Opm {
 
-static VFPProdTable::FLO_TYPE getFloType( std::shared_ptr< const DeckItem > item) {
-    const std::string& flo_string = item->getTrimmedString(0);
+static VFPProdTable::FLO_TYPE getFloType( const DeckItem& item) {
+    const std::string& flo_string = item.getTrimmedString(0);
     if (flo_string == "OIL") {
         return VFPProdTable::FLO_OIL;
     }
@@ -48,8 +48,8 @@ static VFPProdTable::FLO_TYPE getFloType( std::shared_ptr< const DeckItem > item
     return VFPProdTable::FLO_INVALID;
 }
 
-VFPProdTable::WFR_TYPE getWFRType( std::shared_ptr< const DeckItem > item) {
-    const std::string& wfr_string = item->getTrimmedString(0);
+VFPProdTable::WFR_TYPE getWFRType( const DeckItem& item) {
+    const std::string& wfr_string = item.getTrimmedString(0);
     if (wfr_string == "WOR") {
         return VFPProdTable::WFR_WOR;
     }
@@ -65,8 +65,8 @@ VFPProdTable::WFR_TYPE getWFRType( std::shared_ptr< const DeckItem > item) {
     return VFPProdTable::WFR_INVALID;
 }
 
-VFPProdTable::GFR_TYPE getGFRType( std::shared_ptr< const DeckItem > item) {;
-    const std::string& gfr_string = item->getTrimmedString(0);
+VFPProdTable::GFR_TYPE getGFRType( const DeckItem& item) {;
+    const std::string& gfr_string = item.getTrimmedString(0);
     if (gfr_string == "GOR") {
         return VFPProdTable::GFR_GOR;
     }
@@ -82,11 +82,11 @@ VFPProdTable::GFR_TYPE getGFRType( std::shared_ptr< const DeckItem > item) {;
     return VFPProdTable::GFR_INVALID;
 }
 
-VFPProdTable::ALQ_TYPE getALQType( std::shared_ptr< const DeckItem > item) {
+VFPProdTable::ALQ_TYPE getALQType( const DeckItem& item) {
     if (item.defaultApplied(0)) {
         return VFPProdTable::ALQ_UNDEF;
     } else {
-        const std::string& alq_string = item->getTrimmedString(0);
+        const std::string& alq_string = item.getTrimmedString(0);
 
         if (alq_string == "GRAT") {
             return VFPProdTable::ALQ_GRAT;
@@ -152,37 +152,37 @@ void VFPProdTable::init(int table_num,
     check();
 }
 
-void VFPProdTable::init(DeckKeywordConstPtr table, std::shared_ptr<Opm::UnitSystem> deck_unit_system) {
+void VFPProdTable::init( const DeckKeyword& table, UnitSystem& deck_unit_system) {
     using ParserKeywords::VFPPROD;
 
     //Check that the table has enough records
-    if (table->size() < 7) {
+    if (table.size() < 7) {
         throw std::invalid_argument("VFPPROD table does not appear to have enough records to be valid");
     }
 
     //Get record 1, the metadata for the table
-    auto header = table->getRecord(0);
+    const auto& header = table.getRecord(0);
 
     //Get the different header items
-    m_table_num   = header->getItem<VFPPROD::TABLE>()->getInt(0);
-    m_datum_depth = header->getItem<VFPPROD::DATUM_DEPTH>()->getSIDouble(0);
+    m_table_num   = header.getItem<VFPPROD::TABLE>().get< int >(0);
+    m_datum_depth = header.getItem<VFPPROD::DATUM_DEPTH>().getSIDouble(0);
 
-    m_flo_type = getFloType(header->getItem<VFPPROD::RATE_TYPE>());
-    m_wfr_type = getWFRType(header->getItem<VFPPROD::WFR>());
-    m_gfr_type = getGFRType(header->getItem<VFPPROD::GFR>());
+    m_flo_type = Opm::getFloType(header.getItem<VFPPROD::RATE_TYPE>());
+    m_wfr_type = Opm::getWFRType(header.getItem<VFPPROD::WFR>());
+    m_gfr_type = Opm::getGFRType(header.getItem<VFPPROD::GFR>());
 
     //Not used, but check that PRESSURE_DEF is indeed THP
-    std::string quantity_string = header->getItem<VFPPROD::PRESSURE_DEF>()->getString(0);
+    std::string quantity_string = header.getItem<VFPPROD::PRESSURE_DEF>().get< std::string >(0);
     if (quantity_string != "THP") {
         throw std::invalid_argument("PRESSURE_DEF is required to be THP");
     }
 
-    m_alq_type = getALQType(header->getItem<VFPPROD::ALQ_DEF>());
+    m_alq_type = Opm::getALQType(header.getItem<VFPPROD::ALQ_DEF>());
 
     //Check units used for this table
     std::string units_string = "";
-    if (header->getItem<VFPPROD::UNITS>()->hasValue(0)) {
-        units_string = header->getItem<VFPPROD::UNITS>()->getString(0);
+    if (header.getItem<VFPPROD::UNITS>().hasValue(0)) {
+        units_string = header.getItem<VFPPROD::UNITS>().get< std::string >(0);
     }
     else {
         //If units does not exist in record, the default value is the
@@ -212,13 +212,13 @@ void VFPProdTable::init(DeckKeywordConstPtr table, std::shared_ptr<Opm::UnitSyst
         }
 
         //Sanity check
-        if(table_unit_type != deck_unit_system->getType()) {
+        if(table_unit_type != deck_unit_system.getType()) {
             throw std::invalid_argument("Deck units are not equal VFPPROD table units.");
         }
     }
 
     //Quantity in the body of the table
-    std::string body_string = header->getItem<VFPPROD::BODY_DEF>()->getString(0);
+    std::string body_string = header.getItem<VFPPROD::BODY_DEF>().get< std::string >(0);
     if (body_string == "TEMP") {
         throw std::invalid_argument("Invalid BODY_DEF string: TEMP not supported");
     }
@@ -231,23 +231,23 @@ void VFPProdTable::init(DeckKeywordConstPtr table, std::shared_ptr<Opm::UnitSyst
 
 
     //Get actual rate / flow values
-    m_flo_data = table->getRecord(1)->getItem<VFPPROD::FLOW_VALUES>()->getRawDoubleData();
+    m_flo_data = table.getRecord(1).getItem<VFPPROD::FLOW_VALUES>().getData< double >();
     convertFloToSI(m_flo_type, m_flo_data, deck_unit_system);
 
     //Get actual tubing head pressure values
-    m_thp_data = table->getRecord(2)->getItem<VFPPROD::THP_VALUES>()->getRawDoubleData();
+    m_thp_data = table.getRecord(2).getItem<VFPPROD::THP_VALUES>().getData< double >();
     convertTHPToSI(m_thp_data, deck_unit_system);
 
     //Get actual water fraction values
-    m_wfr_data = table->getRecord(3)->getItem<VFPPROD::WFR_VALUES>()->getRawDoubleData();
+    m_wfr_data = table.getRecord(3).getItem<VFPPROD::WFR_VALUES>().getData< double >();
     convertWFRToSI(m_wfr_type, m_wfr_data, deck_unit_system);
 
     //Get actual gas fraction values
-    m_gfr_data = table->getRecord(4)->getItem<VFPPROD::GFR_VALUES>()->getRawDoubleData();
+    m_gfr_data = table.getRecord(4).getItem<VFPPROD::GFR_VALUES>().getData< double >();
     convertGFRToSI(m_gfr_type, m_gfr_data, deck_unit_system);
 
     //Get actual gas fraction values
-    m_alq_data = table->getRecord(5)->getItem<VFPPROD::ALQ_VALUES>()->getRawDoubleData();
+    m_alq_data = table.getRecord(5).getItem<VFPPROD::ALQ_VALUES>().getData< double >();
     convertALQToSI(m_alq_type, m_alq_data, deck_unit_system);
 
     //Finally, read the actual table itself.
@@ -266,22 +266,22 @@ void VFPProdTable::init(DeckKeywordConstPtr table, std::shared_ptr<Opm::UnitSyst
     std::fill_n(m_data.data(), m_data.num_elements(), std::nan("0"));
 
     //Check that size of table matches size of axis:
-    if (table->size() != nt*nw*ng*na + 6) {
+    if (table.size() != nt*nw*ng*na + 6) {
         throw std::invalid_argument("VFPPROD table does not contain enough records.");
     }
 
     //FIXME: Unit for TEMP=Tubing head temperature is not Pressure, see BODY_DEF
-    const double table_scaling_factor = deck_unit_system->parse("Pressure")->getSIScaling();
-    for (size_t i=6; i<table->size(); ++i) {
-        const auto& record = table->getRecord(i);
+    const double table_scaling_factor = deck_unit_system.parse("Pressure")->getSIScaling();
+    for (size_t i=6; i<table.size(); ++i) {
+        const auto& record = table.getRecord(i);
         //Get indices (subtract 1 to get 0-based index)
-        int t = record->getItem<VFPPROD::THP_INDEX>()->getInt(0) - 1;
-        int w = record->getItem<VFPPROD::WFR_INDEX>()->getInt(0) - 1;
-        int g = record->getItem<VFPPROD::GFR_INDEX>()->getInt(0) - 1;
-        int a = record->getItem<VFPPROD::ALQ_INDEX>()->getInt(0) - 1;
+        int t = record.getItem<VFPPROD::THP_INDEX>().get< int >(0) - 1;
+        int w = record.getItem<VFPPROD::WFR_INDEX>().get< int >(0) - 1;
+        int g = record.getItem<VFPPROD::GFR_INDEX>().get< int >(0) - 1;
+        int a = record.getItem<VFPPROD::ALQ_INDEX>().get< int >(0) - 1;
 
         //Rest of values (bottom hole pressure or tubing head temperature) have index of flo value
-        const std::vector<double>& bhp_tht = record->getItem<VFPPROD::VALUES>()->getRawDoubleData();
+        const std::vector<double>& bhp_tht = record.getItem<VFPPROD::VALUES>().getData< double >();
 
         if (bhp_tht.size() != nf) {
             throw std::invalid_argument("VFPPROD table does not contain enough FLO values.");
@@ -420,15 +420,15 @@ void VFPProdTable::scaleValues(std::vector<double>& values,
 
 void VFPProdTable::convertFloToSI(const FLO_TYPE& type,
                                   std::vector<double>& values,
-                                  std::shared_ptr<Opm::UnitSystem> unit_system) {
+                                  UnitSystem& unit_system) {
     double scaling_factor = 1.0;
     switch (type) {
         case FLO_OIL:
         case FLO_LIQ:
-            scaling_factor = unit_system->parse("LiquidSurfaceVolume/Time")->getSIScaling();
+            scaling_factor = unit_system.parse("LiquidSurfaceVolume/Time")->getSIScaling();
             break;
         case FLO_GAS:
-            scaling_factor = unit_system->parse("GasSurfaceVolume/Time")->getSIScaling();
+            scaling_factor = unit_system.parse("GasSurfaceVolume/Time")->getSIScaling();
             break;
         default:
             throw std::logic_error("Invalid FLO type");
@@ -443,8 +443,8 @@ void VFPProdTable::convertFloToSI(const FLO_TYPE& type,
 
 
 void VFPProdTable::convertTHPToSI(std::vector<double>& values,
-                                  std::shared_ptr<Opm::UnitSystem> unit_system) {
-    double scaling_factor = unit_system->parse("Pressure")->getSIScaling();
+                                  UnitSystem& unit_system) {
+    double scaling_factor = unit_system.parse("Pressure")->getSIScaling();
     scaleValues(values, scaling_factor);
 }
 
@@ -456,15 +456,15 @@ void VFPProdTable::convertTHPToSI(std::vector<double>& values,
 
 void VFPProdTable::convertWFRToSI(const WFR_TYPE& type,
                                   std::vector<double>& values,
-                                  std::shared_ptr<Opm::UnitSystem> unit_system) {
+                                  UnitSystem& unit_system) {
     double scaling_factor = 1.0;
     switch (type) {
         case WFR_WOR:
         case WFR_WCT:
-            scaling_factor = unit_system->parse("LiquidSurfaceVolume/LiquidSurfaceVolume")->getSIScaling();
+            scaling_factor = unit_system.parse("LiquidSurfaceVolume/LiquidSurfaceVolume")->getSIScaling();
             break;
         case WFR_WGR:
-            scaling_factor = unit_system->parse("LiquidSurfaceVolume/GasSurfaceVolume")->getSIScaling();
+            scaling_factor = unit_system.parse("LiquidSurfaceVolume/GasSurfaceVolume")->getSIScaling();
             break;
         default:
             throw std::logic_error("Invalid FLO type");
@@ -480,15 +480,15 @@ void VFPProdTable::convertWFRToSI(const WFR_TYPE& type,
 
 void VFPProdTable::convertGFRToSI(const GFR_TYPE& type,
                                   std::vector<double>& values,
-                                  std::shared_ptr<Opm::UnitSystem> unit_system) {
+                                  UnitSystem& unit_system) {
     double scaling_factor = 1.0;
     switch (type) {
         case GFR_GOR:
         case GFR_GLR:
-            scaling_factor = unit_system->parse("GasSurfaceVolume/LiquidSurfaceVolume")->getSIScaling();
+            scaling_factor = unit_system.parse("GasSurfaceVolume/LiquidSurfaceVolume")->getSIScaling();
             break;
         case GFR_OGR:
-            scaling_factor = unit_system->parse("LiquidSurfaceVolume/GasSurfaceVolume")->getSIScaling();
+            scaling_factor = unit_system.parse("LiquidSurfaceVolume/GasSurfaceVolume")->getSIScaling();
             break;
         default:
             throw std::logic_error("Invalid FLO type");
@@ -504,15 +504,15 @@ void VFPProdTable::convertGFRToSI(const GFR_TYPE& type,
 
 void VFPProdTable::convertALQToSI(const ALQ_TYPE& type,
                                   std::vector<double>& values,
-                                  std::shared_ptr<Opm::UnitSystem> unit_system) {
+                                  UnitSystem& unit_system) {
     double scaling_factor = 1.0;
     switch (type) {
         case ALQ_GRAT:
-            scaling_factor = unit_system->parse("GasSurfaceVolume/Time")->getSIScaling();
+            scaling_factor = unit_system.parse("GasSurfaceVolume/Time")->getSIScaling();
             break;
         case ALQ_IGLR:
         case ALQ_TGLR:
-            scaling_factor = unit_system->parse("GasSurfaceVolume/LiquidSurfaceVolume")->getSIScaling();
+            scaling_factor = unit_system.parse("GasSurfaceVolume/LiquidSurfaceVolume")->getSIScaling();
             break;
         case ALQ_PUMP:
         case ALQ_COMP:

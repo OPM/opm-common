@@ -122,7 +122,7 @@ public:
      * Constructor which parses a deck keyword and retrieves the relevant parts for a
      * VFP table.
      */
-    void init(std::shared_ptr< const DeckKeyword > table, std::shared_ptr<Opm::UnitSystem> deck_unit_system);
+    void init( const DeckKeyword& table, UnitSystem& deck_unit_system);
 
     /**
      * Returns the table number
@@ -263,18 +263,18 @@ private:
 
     static void convertFloToSI(const FLO_TYPE& type,
                             std::vector<double>& values,
-                            std::shared_ptr<Opm::UnitSystem> unit_system);
+                            UnitSystem& unit_system);
     static void convertTHPToSI(std::vector<double>& values,
-                               std::shared_ptr<Opm::UnitSystem> unit_system);
+                               UnitSystem& unit_system);
     static void convertWFRToSI(const WFR_TYPE& type,
                                std::vector<double>& values,
-                               std::shared_ptr<Opm::UnitSystem> unit_system);
+                               UnitSystem& unit_system);
     static void convertGFRToSI(const GFR_TYPE& type,
                                std::vector<double>& values,
-                               std::shared_ptr<Opm::UnitSystem> unit_system);
+                               UnitSystem& unit_system);
     static void convertALQToSI(const ALQ_TYPE& type,
                                std::vector<double>& values,
-                               std::shared_ptr<Opm::UnitSystem> unit_system);
+                               UnitSystem& unit_system);
 };
 
 

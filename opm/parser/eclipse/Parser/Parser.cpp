@@ -29,7 +29,7 @@
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParseMode.hpp>
@@ -402,15 +402,15 @@ namespace Opm {
 
                         if (isRecognizedKeyword(parserState->rawKeyword->getKeywordName())) {
                             ParserKeywordConstPtr parserKeyword = getParserKeywordFromDeckName(parserState->rawKeyword->getKeywordName());
-                            DeckKeywordPtr deckKeyword = parserKeyword->parse(parserState->parseMode , parserState->rawKeyword);
-                            deckKeyword->setParserKeyword(parserKeyword.get());
-                            parserState->deck->addKeyword(deckKeyword);
+                            auto deckKeyword = parserKeyword->parse(parserState->parseMode , parserState->rawKeyword);
+                            deckKeyword.setParserKeyword(parserKeyword.get());
+                            parserState->deck->addKeyword( std::move( deckKeyword ) );
                         } else {
-                            DeckKeywordPtr deckKeyword(new DeckKeyword(parserState->rawKeyword->getKeywordName(), false));
+                            DeckKeyword deckKeyword(parserState->rawKeyword->getKeywordName(), false);
                             const std::string msg = "The keyword " + parserState->rawKeyword->getKeywordName() + " is not recognized";
-                            deckKeyword->setLocation(parserState->rawKeyword->getFilename(),
+                            deckKeyword.setLocation(parserState->rawKeyword->getFilename(),
                                                      parserState->rawKeyword->getLineNR());
-                            parserState->deck->addKeyword(deckKeyword);
+                            parserState->deck->addKeyword( std::move( deckKeyword ) );
                             OpmLog::addMessage(Log::MessageType::Warning , Log::fileMessage(parserState->dataFile.string() , parserState->lineNR , msg));
                         }
                     }
@@ -460,24 +460,18 @@ namespace Opm {
                     const std::pair<std::string, std::string> sizeKeyword = parserKeyword->getSizeDefinitionPair();
                     const Deck * deck = parserState->deck;
                     if (deck->hasKeyword(sizeKeyword.first)) {
-                        DeckKeywordConstPtr sizeDefinitionKeyword = deck->getKeyword(sizeKeyword.first);
-                        DeckItemPtr sizeDefinitionItem;
-                        {
-                            DeckRecordConstPtr record = sizeDefinitionKeyword->getRecord(0);
-                            sizeDefinitionItem = record->getItem(sizeKeyword.second);
-                        }
-                        targetSize = sizeDefinitionItem->getInt(0);
+                        const auto& sizeDefinitionKeyword = deck->getKeyword(sizeKeyword.first);
+                        const auto& record = sizeDefinitionKeyword.getRecord(0);
+                        targetSize = record.getItem( sizeKeyword.second ).get< int >( 0 );
                     } else {
                         std::string msg = "Expected the kewyord: " + sizeKeyword.first + " to infer the number of records in: " + keywordString;
                         parserState->parseMode.handleError(ParseMode::PARSE_MISSING_DIMS_KEYWORD , msg );
 
-                        {
-                            auto keyword = getKeyword( sizeKeyword.first );
-                            auto record = keyword->getRecord(0);
-                            auto int_item = std::dynamic_pointer_cast<const ParserIntItem>( record->get( sizeKeyword.second ) );
+                        auto keyword = getKeyword( sizeKeyword.first );
+                        auto record = keyword->getRecord(0);
+                        auto int_item = std::dynamic_pointer_cast<const ParserIntItem>( record->get( sizeKeyword.second ) );
 
-                            targetSize = int_item->getDefault( );
-                        }
+                        targetSize = int_item->getDefault( );
                     }
                 }
                 return RawKeywordPtr(new RawKeyword(keywordString, parserState->dataFile.string() , parserState->lineNR , targetSize , parserKeyword->isTableCollection()));
@@ -598,9 +592,9 @@ namespace Opm {
     void Parser::applyUnitsToDeck(Deck& deck) const {
         deck.initUnitSystem();
         for (size_t index=0; index < deck.size(); ++index) {
-            DeckKeywordConstPtr deckKeyword = deck.getKeyword( index );
-            if (isRecognizedKeyword( deckKeyword->name())) {
-                ParserKeywordConstPtr parserKeyword = getParserKeywordFromDeckName( deckKeyword->name() );
+            auto& deckKeyword = deck.getKeyword( index );
+            if (isRecognizedKeyword( deckKeyword.name())) {
+                ParserKeywordConstPtr parserKeyword = getParserKeywordFromDeckName( deckKeyword.name() );
                 if (parserKeyword->hasDimension()) {
                     parserKeyword->applyUnitsToDeck(deck , deckKeyword);
                 }

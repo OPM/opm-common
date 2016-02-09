@@ -88,7 +88,7 @@ namespace {
             Opm::Parser parser;
 
             Opm::DeckPtr deck = parser.parseString(input, Opm::ParseMode());
-            Opm::DeckRecordConstPtr record = deck->getKeyword("WCONHIST")->getRecord(0);
+            const auto& record = deck->getKeyword("WCONHIST").getRecord(0);
             Opm::WellProductionProperties hist = Opm::WellProductionProperties::history( 100 , record);;
 
             return hist;
@@ -113,8 +113,8 @@ namespace {
             Opm::Parser parser;
 
             Opm::DeckPtr             deck   = parser.parseString(input, Opm::ParseMode());
-            Opm::DeckKeywordConstPtr kwd    = deck->getKeyword("WCONHIST");
-            Opm::DeckRecordConstPtr  record = kwd->getRecord(0);
+            const auto& kwd     = deck->getKeyword("WCONHIST");
+            const auto&  record = kwd.getRecord(0);
             Opm::WellProductionProperties pred = Opm::WellProductionProperties::prediction( record, false );
 
             return pred;

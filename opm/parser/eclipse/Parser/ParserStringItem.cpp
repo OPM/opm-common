@@ -20,7 +20,6 @@
 #include <opm/json/JsonObject.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
-#include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
 #include <opm/parser/eclipse/RawDeck/StarToken.hpp>
 namespace Opm {
 
@@ -77,8 +76,8 @@ namespace Opm {
         return m_defaultSet;
     }
 
-    DeckItemPtr ParserStringItem::scan(RawRecordPtr rawRecord) const {
-        return ParserItemScan<ParserStringItem,DeckStringItem,std::string>(this , rawRecord);
+    DeckItem ParserStringItem::scan(RawRecordPtr rawRecord) const {
+        return ParserItemScan<ParserStringItem,std::string>(this , rawRecord);
     }
 
 

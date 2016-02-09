@@ -32,7 +32,7 @@ namespace Opm {
     public:
         friend class TableManager;
 
-        PlyshlogTable(std::shared_ptr< const DeckRecord > indexRecord, std::shared_ptr< const DeckRecord > dataRecord);
+        PlyshlogTable(const DeckRecord& indexRecord, const DeckRecord& dataRecord);
 
         double getRefPolymerConcentration() const;
         double getRefSalinity() const;

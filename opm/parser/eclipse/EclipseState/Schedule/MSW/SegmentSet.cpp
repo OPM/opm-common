@@ -96,23 +96,23 @@ namespace Opm {
         return copy;
     }
 
-    void SegmentSet::segmentsFromWELSEGSKeyword(DeckKeywordConstPtr welsegsKeyword) {
+    void SegmentSet::segmentsFromWELSEGSKeyword( const DeckKeyword& welsegsKeyword ) {
 
         // for the first record, which provides the information for the top segment
         // and information for the whole segment set
-        DeckRecordConstPtr record1 = welsegsKeyword->getRecord(0);
-        m_well_name = record1->getItem("WELL")->getTrimmedString(0);
+        const auto& record1 = welsegsKeyword.getRecord(0);
+        m_well_name = record1.getItem("WELL").getTrimmedString(0);
 
         m_segments.clear();
 
         const double invalid_value = Segment::invalidValue(); // meaningless value to indicate unspecified values
 
-        m_depth_top = record1->getItem("DEPTH")->getSIDouble(0);
-        m_length_top = record1->getItem("LENGTH")->getSIDouble(0);
-        m_length_depth_type = WellSegment::LengthDepthEnumFromString(record1->getItem("INFO_TYPE")->getTrimmedString(0));
-        m_volume_top = record1->getItem("WELLBORE_VOLUME")->getSIDouble(0);
-        m_comp_pressure_drop = WellSegment::CompPressureDropEnumFromString(record1->getItem("PRESSURE_COMPONENTS")->getTrimmedString(0));
-        m_multiphase_model = WellSegment::MultiPhaseModelEnumFromString(record1->getItem("FLOW_MODEL")->getTrimmedString(0));
+        m_depth_top = record1.getItem("DEPTH").getSIDouble(0);
+        m_length_top = record1.getItem("LENGTH").getSIDouble(0);
+        m_length_depth_type = WellSegment::LengthDepthEnumFromString(record1.getItem("INFO_TYPE").getTrimmedString(0));
+        m_volume_top = record1.getItem("WELLBORE_VOLUME").getSIDouble(0);
+        m_comp_pressure_drop = WellSegment::CompPressureDropEnumFromString(record1.getItem("PRESSURE_COMPONENTS").getTrimmedString(0));
+        m_multiphase_model = WellSegment::MultiPhaseModelEnumFromString(record1.getItem("FLOW_MODEL").getTrimmedString(0));
 
         // the main branch is 1 instead of 0
         // the segment number for top segment is also 1
@@ -127,26 +127,26 @@ namespace Opm {
         }
 
         // read all the information out from the DECK first then process to get all the required information
-        for (size_t recordIndex = 1; recordIndex < welsegsKeyword->size(); ++recordIndex) {
-            DeckRecordConstPtr record = welsegsKeyword->getRecord(recordIndex);
-            const int segment1 = record->getItem("SEGMENT1")->getInt(0);
-            const int segment2 = record->getItem("SEGMENT2")->getInt(0);
+        for (size_t recordIndex = 1; recordIndex < welsegsKeyword.size(); ++recordIndex) {
+            const auto& record = welsegsKeyword.getRecord(recordIndex);
+            const int segment1 = record.getItem("SEGMENT1").get< int >(0);
+            const int segment2 = record.getItem("SEGMENT2").get< int >(0);
             if ((segment1 < 2) || (segment2 < segment1)) {
                 throw std::logic_error("illegal segment number input is found in WELSEGS!\n");
             }
 
             // how to handle the logical relations between lateral branches and parent branches.
             // so far, the branch number has not been used.
-            const int branch = record->getItem("BRANCH")->getInt(0);
+            const int branch = record.getItem("BRANCH").get< int >(0);
             if ((branch < 1)) {
                 throw std::logic_error("illegal branch number input is found in WELSEGS!\n");
             }
-            const int outlet_segment_readin = record->getItem("JOIN_SEGMENT")->getInt(0);
-            double diameter = record->getItem("DIAMETER")->getSIDouble(0);
-            DeckItemConstPtr itemArea = record->getItem("AREA");
+            const int outlet_segment_readin = record.getItem("JOIN_SEGMENT").get< int >(0);
+            double diameter = record.getItem("DIAMETER").getSIDouble(0);
+            const auto& itemArea = record.getItem("AREA");
             double area;
-            if (itemArea->hasValue(0)) {
-                area = itemArea->getSIDouble(0);
+            if (itemArea.hasValue(0)) {
+                area = itemArea.getSIDouble(0);
             } else {
                 area = M_PI * diameter * diameter / 4.0;
             }
@@ -154,22 +154,22 @@ namespace Opm {
             // if the values are incremental values, then we can just use the values
             // if the values are absolute values, then we need to calculate them during the next process
             // only the value for the last segment in the range is recorded
-            const double segment_length = record->getItem("SEGMENT_LENGTH")->getSIDouble(0);
+            const double segment_length = record.getItem("SEGMENT_LENGTH").getSIDouble(0);
             // the naming is a little confusing here.
             // naming following the definition from the current keyword for the moment
-            const double depth_change = record->getItem("DEPTH_CHANGE")->getSIDouble(0);
+            const double depth_change = record.getItem("DEPTH_CHANGE").getSIDouble(0);
 
-            DeckItemConstPtr itemVolume = record->getItem("VOLUME");
+            const auto& itemVolume = record.getItem("VOLUME");
             double volume;
-            if (itemVolume->hasValue(0)) {
-                volume = itemVolume->getSIDouble(0);
+            if (itemVolume.hasValue(0)) {
+                volume = itemVolume.getSIDouble(0);
             } else if (m_length_depth_type == WellSegment::INC) {
                 volume = area * segment_length;
             } else {
                 volume = invalid_value; // A * L, while L is not determined yet
             }
 
-            const double roughness = record->getItem("ROUGHNESS")->getSIDouble(0);
+            const double roughness = record.getItem("ROUGHNESS").getSIDouble(0);
 
             for (int i = segment1; i <= segment2; ++i) {
                 // for the first or the only segment in the range is the one specified in the WELSEGS

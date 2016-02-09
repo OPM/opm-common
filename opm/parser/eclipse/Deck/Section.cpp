@@ -85,37 +85,37 @@ namespace Opm {
     {
         if( deck.size() == 0 ) {
             std::string msg = "empty decks are invalid\n";
-            OpmLog::addMessage(Log::MessageType::Warning , msg);
+            OpmLog::addMessage( Log::MessageType::Warning, msg );
             return false;
         }
 
         bool deckValid = true;
 
-        if (deck->getKeyword(0)->name() != "RUNSPEC") {
+        if( deck.getKeyword(0).name() != "RUNSPEC" ) {
             std::string msg = "The first keyword of a valid deck must be RUNSPEC\n";
-            auto curKeyword = deck->getKeyword(0);
-            OpmLog::addMessage(Log::MessageType::Warning , Log::fileMessage(curKeyword->getFileName() , curKeyword->getLineNumber() , msg));
+            auto curKeyword = deck.getKeyword(0);
+            OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
             deckValid = false;
         }
 
-        std::string curSectionName = deck->getKeyword(0)->name();
+        std::string curSectionName = deck.getKeyword(0).name();
         size_t curKwIdx = 1;
-        for (; curKwIdx < deck->size(); ++curKwIdx) {
-            const auto& curKeyword = deck->getKeyword(curKwIdx);
-            const std::string& curKeywordName = curKeyword->name();
+        for (; curKwIdx < deck.size(); ++curKwIdx) {
+            const auto& curKeyword = deck.getKeyword(curKwIdx);
+            const std::string& curKeywordName = curKeyword.name();
 
-            if (!isSectionDelimiter(curKeywordName)) {
-                if (!curKeyword->hasParserKeyword())
+            if (!isSectionDelimiter( curKeyword )) {
+                if (!curKeyword.hasParserKeyword())
                     // ignore unknown keywords for now (i.e. they can appear in any section)
                     continue;
 
-                const auto &parserKeyword = curKeyword->getParserKeyword();
+                const auto &parserKeyword = curKeyword.getParserKeyword();
                 if (ensureKeywordSectionAffiliation && !parserKeyword->isValidSection(curSectionName)) {
                     std::string msg =
                         "The keyword '"+curKeywordName+"' is located in the '"+curSectionName
                         +"' section where it is invalid";
 
-                    OpmLog::addMessage(Log::MessageType::Warning , Log::fileMessage(curKeyword->getFileName() , curKeyword->getLineNumber() , msg));
+                    OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
                     deckValid = false;
                 }
 
@@ -126,7 +126,7 @@ namespace Opm {
                 if (curKeywordName != "GRID") {
                     std::string msg =
                         "The RUNSPEC section must be followed by GRID instead of "+curKeywordName;
-                    OpmLog::addMessage(Log::MessageType::Warning , Log::fileMessage(curKeyword->getFileName() , curKeyword->getLineNumber() , msg));
+                    OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
                     deckValid = false;
                 }
 
@@ -136,7 +136,7 @@ namespace Opm {
                 if (curKeywordName != "EDIT" && curKeywordName != "PROPS") {
                     std::string msg =
                         "The GRID section must be followed by EDIT or PROPS instead of "+curKeywordName;
-                    OpmLog::addMessage(Log::MessageType::Warning , Log::fileMessage(curKeyword->getFileName() , curKeyword->getLineNumber() , msg));
+                    OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
                     deckValid = false;
                 }
 
@@ -146,7 +146,7 @@ namespace Opm {
                 if (curKeywordName != "PROPS") {
                     std::string msg =
                         "The EDIT section must be followed by PROPS instead of "+curKeywordName;
-                    OpmLog::addMessage(Log::MessageType::Warning , Log::fileMessage(curKeyword->getFileName() , curKeyword->getLineNumber() , msg));
+                    OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
                     deckValid = false;
                 }
 
@@ -156,7 +156,7 @@ namespace Opm {
                 if (curKeywordName != "REGIONS" && curKeywordName != "SOLUTION") {
                     std::string msg =
                         "The PROPS section must be followed by REGIONS or SOLUTION instead of "+curKeywordName;
-                    OpmLog::addMessage(Log::MessageType::Warning , Log::fileMessage(curKeyword->getFileName() , curKeyword->getLineNumber() , msg));
+                    OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
                     deckValid = false;
                 }
 
@@ -166,7 +166,7 @@ namespace Opm {
                 if (curKeywordName != "SOLUTION") {
                     std::string msg =
                         "The REGIONS section must be followed by SOLUTION instead of "+curKeywordName;
-                    OpmLog::addMessage(Log::MessageType::Warning , Log::fileMessage(curKeyword->getFileName() , curKeyword->getLineNumber() , msg));
+                    OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
                     deckValid = false;
                 }
 
@@ -176,7 +176,7 @@ namespace Opm {
                 if (curKeywordName != "SUMMARY" && curKeywordName != "SCHEDULE") {
                     std::string msg =
                         "The SOLUTION section must be followed by SUMMARY or SCHEDULE instead of "+curKeywordName;
-                    OpmLog::addMessage(Log::MessageType::Warning , Log::fileMessage(curKeyword->getFileName() , curKeyword->getLineNumber() , msg));
+                    OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
                     deckValid = false;
                 }
 
@@ -186,7 +186,7 @@ namespace Opm {
                 if (curKeywordName != "SCHEDULE") {
                     std::string msg =
                         "The SUMMARY section must be followed by SCHEDULE instead of "+curKeywordName;
-                    OpmLog::addMessage(Log::MessageType::Warning , Log::fileMessage(curKeyword->getFileName() , curKeyword->getLineNumber() , msg));
+                    OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
                     deckValid = false;
                 }
 
@@ -197,17 +197,17 @@ namespace Opm {
                 std::string msg =
                     "The SCHEDULE section must be the last one ("
                     +curKeywordName+" specified after SCHEDULE)";
-                OpmLog::addMessage(Log::MessageType::Warning , Log::fileMessage(curKeyword->getFileName() , curKeyword->getLineNumber() , msg));
+                OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
                 deckValid = false;
             }
         }
 
         // SCHEDULE is the last section and it is mandatory, so make sure it is there
         if (curSectionName != "SCHEDULE") {
-            const auto& curKeyword = deck->getKeyword(deck->size() - 1);
+            const auto& curKeyword = deck.getKeyword(deck.size() - 1);
             std::string msg =
                 "The last section of a valid deck must be SCHEDULE (is "+curSectionName+")";
-            OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword->getFileName(), curKeyword->getLineNumber(), msg));
+            OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
             deckValid = false;
         }
 

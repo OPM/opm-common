@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE( CheckMissingSizeKeyword) {
 }
 
 
-BOOST_AUTO_TEST_CASE( CheckUnsoppertedInSCHEDULE ) {
+BOOST_AUTO_TEST_CASE( CheckUnsupportedInSCHEDULE ) {
     const char * deckStringUnSupported =
         "START\n"
         " 10 'JAN' 2000 /\n"

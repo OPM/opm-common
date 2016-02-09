@@ -27,8 +27,8 @@
 
 #include <opm/parser/eclipse/Units/ConversionFactors.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>

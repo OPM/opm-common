@@ -37,8 +37,8 @@ namespace Opm {
         TimeMap(std::shared_ptr< const Deck > deck);
         void addTime(boost::posix_time::ptime newTime);
         void addTStep(boost::posix_time::time_duration step);
-        void addFromDATESKeyword( std::shared_ptr< const DeckKeyword > DATESKeyword );
-        void addFromTSTEPKeyword( std::shared_ptr< const DeckKeyword > TSTEPKeyword );
+        void addFromDATESKeyword( const DeckKeyword& DATESKeyword );
+        void addFromTSTEPKeyword( const DeckKeyword& TSTEPKeyword );
         void initFirstTimestepsMonths();
         void initFirstTimestepsYears();
         size_t size() const;
@@ -57,7 +57,7 @@ namespace Opm {
         /// starting from start_timestep-1.
         bool isTimestepInFirstOfMonthsYearsSequence(size_t timestep, bool years = true, size_t start_timestep = 1, size_t frequency = 1) const;
 
-        static boost::posix_time::ptime timeFromEclipse(std::shared_ptr< const DeckRecord > dateRecord);
+        static boost::posix_time::ptime timeFromEclipse( const DeckRecord& dateRecord);
         static boost::posix_time::ptime timeFromEclipse(int day , const std::string& month, int year, const std::string& eclipseTimeString = "00:00:00.000");
         static boost::posix_time::time_duration dayTimeFromEclipse(const std::string& eclipseTimeString);
     private:

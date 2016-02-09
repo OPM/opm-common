@@ -27,7 +27,7 @@ namespace Opm {
 
     class PlyadsTable : public SimpleTable {
         public:
-            PlyadsTable( std::shared_ptr< const DeckItem > item );
+            PlyadsTable( const DeckItem& item );
 
             const TableColumn& getPolymerConcentrationColumn() const;
             const TableColumn& getAdsorbedPolymerColumn() const;

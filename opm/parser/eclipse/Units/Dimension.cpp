@@ -43,7 +43,7 @@ namespace Opm {
     double Dimension::getSIScaling() const {
         if (!std::isfinite(m_SIfactor))
             throw std::logic_error("The DeckItem contains a field with a context dependent unit. "
-                                   "Use getRawDoubleData() and convert the returned value manually!");
+                                   "Use getData< double >() and convert the returned value manually!");
         return m_SIfactor;
     }
 
@@ -54,7 +54,7 @@ namespace Opm {
     double Dimension::convertRawToSi(double rawValue) const {
         if (!std::isfinite(m_SIfactor))
             throw std::logic_error("The DeckItem contains a field with a context dependent unit. "
-                                   "Use getRawDoubleData() and convert the returned value manually!");
+                                   "Use getData< double >() and convert the returned value manually!");
 
         return rawValue*m_SIfactor + m_SIoffset;
     }
@@ -62,7 +62,7 @@ namespace Opm {
     double Dimension::convertSiToRaw(double siValue) const {
         if (!std::isfinite(m_SIfactor))
             throw std::logic_error("The DeckItem contains a field with a context dependent unit. "
-                                   "Use getRawDoubleData() and convert the returned value manually!");
+                                   "Use getData< double >() and convert the returned value manually!");
 
         return (siValue - m_SIoffset)/m_SIfactor;
     }

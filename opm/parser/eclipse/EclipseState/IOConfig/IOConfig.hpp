@@ -156,7 +156,7 @@ namespace Opm {
                                           size_t frequency,
                                           bool years  = false,
                                           bool months = false) const;
-        void handleRPTSOL(std::shared_ptr< const DeckKeyword > keyword);
+        void handleRPTSOL( const DeckKeyword& keyword);
 
 
         std::shared_ptr< const TimeMap > m_timemap;

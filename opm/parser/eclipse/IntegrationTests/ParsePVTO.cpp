@@ -29,9 +29,9 @@
 #include <opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseMode.hpp>
@@ -69,59 +69,58 @@ PVTO\n\
 
 static void check_parser(ParserPtr parser) {
     DeckPtr deck =  parser->parseString(pvtoData, ParseMode());
-    DeckKeywordConstPtr kw1 = deck->getKeyword("PVTO" , 0);
-    BOOST_CHECK_EQUAL(5U , kw1->size());
+    const auto& kw1 = deck->getKeyword("PVTO" , 0);
+    BOOST_CHECK_EQUAL(5U , kw1.size());
 
-    DeckRecordConstPtr record0 = kw1->getRecord(0);
-    DeckRecordConstPtr record1 = kw1->getRecord(1);
-    DeckRecordConstPtr record2 = kw1->getRecord(2);
-    DeckRecordConstPtr record3 = kw1->getRecord(3);
-    DeckRecordConstPtr record4 = kw1->getRecord(4);
+    const auto& record0 = kw1.getRecord(0);
+    const auto& record1 = kw1.getRecord(1);
+    const auto& record2 = kw1.getRecord(2);
+    const auto& record3 = kw1.getRecord(3);
+    const auto& record4 = kw1.getRecord(4);
 
-    DeckItemConstPtr item0_0 = record0->getItem("RS");
-    DeckItemConstPtr item0_1 = record0->getItem("DATA");
-    BOOST_CHECK_EQUAL(1U , item0_0->size());
-    BOOST_CHECK_EQUAL(9U , item0_1->size());
-    BOOST_CHECK_EQUAL(2U , record0->size());
+    const auto& item0_0 = record0.getItem("RS");
+    const auto& item0_1 = record0.getItem("DATA");
+    BOOST_CHECK_EQUAL(1U , item0_0.size());
+    BOOST_CHECK_EQUAL(9U , item0_1.size());
+    BOOST_CHECK_EQUAL(2U , record0.size());
 
-    DeckItemConstPtr item1_0 = record1->getItem("RS");
-    DeckItemConstPtr item1_1 = record1->getItem("DATA");
-    BOOST_CHECK_EQUAL(1U , item1_0->size());
-    BOOST_CHECK_EQUAL(9U , item1_1->size());
-    BOOST_CHECK_EQUAL(2U , record1->size());
+    const auto& item1_0 = record1.getItem("RS");
+    const auto& item1_1 = record1.getItem("DATA");
+    BOOST_CHECK_EQUAL(1U , item1_0.size());
+    BOOST_CHECK_EQUAL(9U , item1_1.size());
+    BOOST_CHECK_EQUAL(2U , record1.size());
 
-    DeckItemConstPtr item2_0 = record2->getItem("RS");
-    DeckItemConstPtr item2_1 = record2->getItem("DATA");
-    BOOST_CHECK(item2_0->defaultApplied(0));
-    BOOST_CHECK_EQUAL(0U , item2_1->size());
-    BOOST_CHECK_EQUAL(2U , record2->size());
+    const auto& item2_0 = record2.getItem("RS");
+    const auto& item2_1 = record2.getItem("DATA");
+    BOOST_CHECK(item2_0.defaultApplied(0));
+    BOOST_CHECK_EQUAL(0U , item2_1.size());
+    BOOST_CHECK_EQUAL(2U , record2.size());
 
-    DeckItemConstPtr item3_0 = record3->getItem("RS");
-    DeckItemConstPtr item3_1 = record3->getItem("DATA");
-    BOOST_CHECK_EQUAL(1U , item3_0->size());
-    BOOST_CHECK_EQUAL(9U , item3_1->size());
-    BOOST_CHECK_EQUAL(2U , record3->size());
+    const auto& item3_0 = record3.getItem("RS");
+    const auto& item3_1 = record3.getItem("DATA");
+    BOOST_CHECK_EQUAL(1U , item3_0.size());
+    BOOST_CHECK_EQUAL(9U , item3_1.size());
+    BOOST_CHECK_EQUAL(2U , record3.size());
 
-    DeckItemConstPtr item4_0 = record4->getItem("RS");
-    DeckItemConstPtr item4_1 = record4->getItem("DATA");
-    BOOST_CHECK_EQUAL(1U , item4_0->size());
-    BOOST_CHECK_EQUAL(9U , item4_1->size());
-    BOOST_CHECK_EQUAL(2U , record4->size());
+    const auto& item4_0 = record4.getItem("RS");
+    const auto& item4_1 = record4.getItem("DATA");
+    BOOST_CHECK_EQUAL(1U , item4_0.size());
+    BOOST_CHECK_EQUAL(9U , item4_1.size());
+    BOOST_CHECK_EQUAL(2U , record4.size());
 
 
     Opm::PvtoTable pvtoTable(kw1 , 0);
     BOOST_CHECK_EQUAL(2, pvtoTable.size());
-    {
-        const auto &table0 = pvtoTable.getUnderSaturatedTable(0);
-        const auto& BO = table0.getColumn( "BO" );
 
-        BOOST_CHECK_EQUAL( 3, table0.numRows());
-        BOOST_CHECK_EQUAL( 3, table0.numColumns());
-        BOOST_CHECK_EQUAL( BO.front( ) , 1.01 );
-        BOOST_CHECK_EQUAL( BO.back( ) , 1.20 );
+    const auto &table0 = pvtoTable.getUnderSaturatedTable(0);
+    const auto& BO = table0.getColumn( "BO" );
 
-        BOOST_CHECK_CLOSE(1.15 , table0.evaluate( "BO" , 250*1e5 ) , 1e-6);
-    }
+    BOOST_CHECK_EQUAL( 3, table0.numRows());
+    BOOST_CHECK_EQUAL( 3, table0.numColumns());
+    BOOST_CHECK_EQUAL( BO.front( ) , 1.01 );
+    BOOST_CHECK_EQUAL( BO.back( ) , 1.20 );
+
+    BOOST_CHECK_CLOSE(1.15 , table0.evaluate( "BO" , 250*1e5 ) , 1e-6);
 
     BOOST_CHECK_CLOSE( 1.15 , pvtoTable.evaluate( "BO" , 1e-3 , 250*1e5 ) , 1e-6 );
     BOOST_CHECK_CLOSE( 1.15 , pvtoTable.evaluate( "BO" , 0.0 , 250*1e5 ) , 1e-6 );

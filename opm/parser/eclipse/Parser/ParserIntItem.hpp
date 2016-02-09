@@ -23,13 +23,13 @@
 
 #include <memory>
 
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 
 namespace Json {
     class JsonObject;
 }
-
 
 namespace Opm {
 
@@ -43,7 +43,7 @@ namespace Opm {
         ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType, int defaultValue);
         explicit ParserIntItem(const Json::JsonObject& jsonConfig);
 
-        std::shared_ptr< DeckItem > scan(std::shared_ptr< RawRecord > rawRecord) const;
+        DeckItem scan(std::shared_ptr< RawRecord > rawRecord) const override;
         bool equal(const ParserItem& other) const;
 
         std::string createCode() const;

@@ -40,12 +40,27 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
 
-// forward declarations to avoid some pedantic warnings
-Opm::DeckKeywordConstPtr createSATNUMKeyword( );
-Opm::DeckKeywordConstPtr createTABDIMSKeyword( );
+static const Opm::DeckKeyword createSATNUMKeyword( ) {
+    const char *deckData =
+    "SATNUM \n"
+    "  0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 / \n"
+    "\n";
 
+    Opm::ParserPtr parser(new Opm::Parser());
+    Opm::DeckPtr deck = parser->parseString(deckData, Opm::ParseMode());
+    return deck->getKeyword("SATNUM");
+}
 
+static const Opm::DeckKeyword createTABDIMSKeyword( ) {
+    const char *deckData =
+    "TABDIMS\n"
+    "  0 1 2 3 4 5 / \n"
+    "\n";
 
+    Opm::ParserPtr parser(new Opm::Parser());
+    Opm::DeckPtr deck = parser->parseString(deckData, Opm::ParseMode());
+    return deck->getKeyword("TABDIMS");
+}
 
 BOOST_AUTO_TEST_CASE(Empty) {
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
@@ -98,32 +113,8 @@ BOOST_AUTO_TEST_CASE(EmptyDefault) {
         BOOST_CHECK_EQUAL( 0 , data[i] );
 }
 
-Opm::DeckKeywordConstPtr createSATNUMKeyword( ) {
-    const char *deckData =
-    "SATNUM \n"
-    "  0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 / \n"
-    "\n";
-
-    Opm::ParserPtr parser(new Opm::Parser());
-    Opm::DeckPtr deck = parser->parseString(deckData, Opm::ParseMode());
-    return deck->getKeyword("SATNUM");
-}
-
-Opm::DeckKeywordConstPtr createTABDIMSKeyword( ) {
-    const char *deckData =
-    "TABDIMS\n"
-    "  0 1 2 3 4 5 / \n"
-    "\n";
-
-    Opm::ParserPtr parser(new Opm::Parser());
-    Opm::DeckPtr deck = parser->parseString(deckData, Opm::ParseMode());
-    return deck->getKeyword("TABDIMS");
-}
-
-
-
 BOOST_AUTO_TEST_CASE(SetFromDeckKeyword_notData_Throws) {
-    Opm::DeckKeywordConstPtr tabdimsKw = createTABDIMSKeyword();
+    const auto& tabdimsKw = createTABDIMSKeyword();
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
     SupportedKeywordInfo keywordInfo("TABDIMS" , 100, "1");
     Opm::GridProperty<int> gridProperty( 6 ,1,1 , keywordInfo);
@@ -132,7 +123,7 @@ BOOST_AUTO_TEST_CASE(SetFromDeckKeyword_notData_Throws) {
 
 
 BOOST_AUTO_TEST_CASE(SetFromDeckKeyword_wrong_size_throws) {
-    Opm::DeckKeywordConstPtr satnumKw = createSATNUMKeyword();
+    const auto& satnumKw = createSATNUMKeyword();
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
     SupportedKeywordInfo keywordInfo("SATNUM" , 66, "1");
     Opm::GridProperty<int> gridProperty( 15 ,1,1, keywordInfo);
@@ -142,7 +133,7 @@ BOOST_AUTO_TEST_CASE(SetFromDeckKeyword_wrong_size_throws) {
 
 
 BOOST_AUTO_TEST_CASE(SetFromDeckKeyword) {
-    Opm::DeckKeywordConstPtr satnumKw = createSATNUMKeyword();
+    const auto& satnumKw = createSATNUMKeyword();
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
     SupportedKeywordInfo keywordInfo("SATNUM" , 99, "1");
     Opm::GridProperty<int> gridProperty( 4 , 4 , 2 , keywordInfo);

@@ -39,11 +39,11 @@ BOOST_AUTO_TEST_CASE( PARSE_PLYDHFLF_OK) {
     ParserPtr parser(new Parser());
     std::string deckFile("testdata/integration_tests/POLYMER/plydhflf.data");
     DeckPtr deck =  parser->parseFile(deckFile, ParseMode());
-    DeckKeywordConstPtr kw = deck->getKeyword("PLYDHFLF");
-    DeckRecordConstPtr rec = kw->getRecord(0);
-    DeckItemPtr item = rec->getItem(0);
+    const auto& kw = deck->getKeyword("PLYDHFLF");
+    const auto& rec = kw.getRecord(0);
+    const auto& item = rec.getItem(0);
 
-    BOOST_CHECK_EQUAL( 0.0 , item->getRawDouble(0) );
-    BOOST_CHECK_EQUAL( 365.0,  item->getRawDouble(1) );
-    BOOST_CHECK_EQUAL( 200.0 , item->getRawDouble(5) );
+    BOOST_CHECK_EQUAL( 0.0 , item.get< double >(0) );
+    BOOST_CHECK_EQUAL( 365.0,  item.get< double >(1) );
+    BOOST_CHECK_EQUAL( 200.0 , item.get< double >(5) );
 }

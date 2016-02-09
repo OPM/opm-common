@@ -27,7 +27,7 @@ namespace Opm {
 
     class PvtoTable : public PvtxTable {
     public:
-        PvtoTable(std::shared_ptr< const DeckKeyword > keyword, size_t tableIdx);
+        PvtoTable(const DeckKeyword& keyword, size_t tableIdx);
     };
 }
 

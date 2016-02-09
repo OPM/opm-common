@@ -53,7 +53,7 @@ namespace Opm {
         Compsegs(int i_in, int j_in, int k_in, int branch_number_in, double distance_start_in, double distance_end_in,
                  WellCompletion::DirectionEnum dir_in, double center_depth_in, int segment_number_in);
 
-        static std::vector<std::shared_ptr<Compsegs>> compsegsFromCOMPSEGSKeyword(std::shared_ptr< const DeckKeyword > compsegsKeyword,
+        static std::vector<std::shared_ptr<Compsegs>> compsegsFromCOMPSEGSKeyword( const DeckKeyword& compsegsKeyword,
                                                                                         std::shared_ptr< const EclipseGrid > grid);
 
         // get the segment number information and depth information based on the information from SegmentSet

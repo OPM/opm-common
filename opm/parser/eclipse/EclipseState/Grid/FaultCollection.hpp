@@ -28,14 +28,16 @@
 namespace Opm {
 
     class Deck;
+    class GRIDSection;
     class EclipseGrid;
     class Fault;
+    class GRIDSection;
 
 
 class FaultCollection {
 public:
     FaultCollection();
-    FaultCollection( std::shared_ptr<const Deck> deck, std::shared_ptr<const EclipseGrid> grid);
+    FaultCollection( std::shared_ptr<const GRIDSection> deck, std::shared_ptr<const EclipseGrid> grid);
 
     size_t size() const;
     bool hasFault(const std::string& faultName) const;

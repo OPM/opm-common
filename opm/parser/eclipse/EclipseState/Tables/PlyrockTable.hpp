@@ -29,7 +29,7 @@ namespace Opm {
     public:
 
         // This is not really a table; every column has only one element.
-        PlyrockTable( std::shared_ptr< const DeckRecord > record );
+        PlyrockTable( const DeckRecord& record );
 
         // since this keyword is not necessarily monotonic, it cannot be evaluated!
         //using SimpleTable::evaluate;

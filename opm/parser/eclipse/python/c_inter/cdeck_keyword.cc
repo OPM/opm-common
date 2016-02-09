@@ -26,8 +26,7 @@ extern "C" {
 
 
     const Opm::DeckRecord* deck_keyword_iget_record( const Opm::DeckKeyword * keyword , int index) {
-        auto shared = keyword->getRecord( static_cast<int>(index) );
-        return shared.get();
+        return &keyword->getRecord( static_cast<int>(index) );
     }
 
 }

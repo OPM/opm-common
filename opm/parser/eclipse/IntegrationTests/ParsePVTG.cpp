@@ -24,8 +24,8 @@
 #include <boost/test/test_tools.hpp>
 
 
-#include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
@@ -65,52 +65,52 @@ PVTG\n\
 
 static void check_parser(ParserPtr parser) {
     DeckPtr deck =  parser->parseString(pvtgData, ParseMode());
-    DeckKeywordConstPtr kw1 = deck->getKeyword("PVTG" , 0);
-    BOOST_CHECK_EQUAL(5U , kw1->size());
+    const auto& kw1 = deck->getKeyword("PVTG" , 0);
+    BOOST_CHECK_EQUAL(5U , kw1.size());
 
-    DeckRecordConstPtr record0 = kw1->getRecord(0);
-    DeckRecordConstPtr record1 = kw1->getRecord(1);
-    DeckRecordConstPtr record2 = kw1->getRecord(2);
-    DeckRecordConstPtr record3 = kw1->getRecord(3);
-    DeckRecordConstPtr record4 = kw1->getRecord(4);
+    const auto& record0 = kw1.getRecord(0);
+    const auto& record1 = kw1.getRecord(1);
+    const auto& record2 = kw1.getRecord(2);
+    const auto& record3 = kw1.getRecord(3);
+    const auto& record4 = kw1.getRecord(4);
 
-    DeckItemConstPtr item0_0 = record0->getItem("GAS_PRESSURE");
-    DeckItemConstPtr item0_1 = record0->getItem("DATA");
-    BOOST_CHECK_EQUAL(1U , item0_0->size());
-    BOOST_CHECK_EQUAL(9U , item0_1->size());
-    BOOST_CHECK_EQUAL(2U , record0->size());
+    const auto& item0_0 = record0.getItem("GAS_PRESSURE");
+    const auto& item0_1 = record0.getItem("DATA");
+    BOOST_CHECK_EQUAL(1U , item0_0.size());
+    BOOST_CHECK_EQUAL(9U , item0_1.size());
+    BOOST_CHECK_EQUAL(2U , record0.size());
 
-    DeckItemConstPtr item1_0 = record1->getItem("GAS_PRESSURE");
-    DeckItemConstPtr item1_1 = record1->getItem("DATA");
-    BOOST_CHECK_EQUAL(1U , item1_0->size());
-    BOOST_CHECK_EQUAL(9U , item1_1->size());
-    BOOST_CHECK_EQUAL(2U , record1->size());
+    const auto& item1_0 = record1.getItem("GAS_PRESSURE");
+    const auto& item1_1 = record1.getItem("DATA");
+    BOOST_CHECK_EQUAL(1U , item1_0.size());
+    BOOST_CHECK_EQUAL(9U , item1_1.size());
+    BOOST_CHECK_EQUAL(2U , record1.size());
 
-    DeckItemConstPtr item2_0 = record2->getItem("GAS_PRESSURE");
-    DeckItemConstPtr item2_1 = record2->getItem("DATA");
-    BOOST_CHECK( item2_0->defaultApplied(0));
-    BOOST_CHECK_EQUAL(0U , item2_1->size());
-    BOOST_CHECK_EQUAL(2U , record2->size());
-
-
-    DeckItemConstPtr item3_0 = record3->getItem("GAS_PRESSURE");
-    DeckItemConstPtr item3_1 = record3->getItem("DATA");
-    BOOST_CHECK( !item3_1->defaultApplied(0));
-    BOOST_CHECK( item3_1->defaultApplied(1));
-    BOOST_CHECK( !item3_1->defaultApplied(2));
-    BOOST_CHECK( !item3_1->defaultApplied(3));
-    BOOST_CHECK( item3_1->defaultApplied(4));
-    BOOST_CHECK( !item3_1->defaultApplied(5));
-    BOOST_CHECK_EQUAL(1U , item3_0->size());
-    BOOST_CHECK_EQUAL(9U , item3_1->size());
-    BOOST_CHECK_EQUAL(2U , record3->size());
+    const auto& item2_0 = record2.getItem("GAS_PRESSURE");
+    const auto& item2_1 = record2.getItem("DATA");
+    BOOST_CHECK( item2_0.defaultApplied(0));
+    BOOST_CHECK_EQUAL(0U , item2_1.size());
+    BOOST_CHECK_EQUAL(2U , record2.size());
 
 
-    DeckItemConstPtr item4_0 = record4->getItem("GAS_PRESSURE");
-    DeckItemConstPtr item4_1 = record4->getItem("DATA");
-    BOOST_CHECK_EQUAL(1U , item4_0->size());
-    BOOST_CHECK_EQUAL(9U , item4_1->size());
-    BOOST_CHECK_EQUAL(2U , record4->size());
+    const auto& item3_0 = record3.getItem("GAS_PRESSURE");
+    const auto& item3_1 = record3.getItem("DATA");
+    BOOST_CHECK( !item3_1.defaultApplied(0));
+    BOOST_CHECK( item3_1.defaultApplied(1));
+    BOOST_CHECK( !item3_1.defaultApplied(2));
+    BOOST_CHECK( !item3_1.defaultApplied(3));
+    BOOST_CHECK( item3_1.defaultApplied(4));
+    BOOST_CHECK( !item3_1.defaultApplied(5));
+    BOOST_CHECK_EQUAL(1U , item3_0.size());
+    BOOST_CHECK_EQUAL(9U , item3_1.size());
+    BOOST_CHECK_EQUAL(2U , record3.size());
+
+
+    const auto& item4_0 = record4.getItem("GAS_PRESSURE");
+    const auto& item4_1 = record4.getItem("DATA");
+    BOOST_CHECK_EQUAL(1U , item4_0.size());
+    BOOST_CHECK_EQUAL(9U , item4_1.size());
+    BOOST_CHECK_EQUAL(2U , record4.size());
 
     /*
     {

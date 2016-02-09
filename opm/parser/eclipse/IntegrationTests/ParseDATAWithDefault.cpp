@@ -24,7 +24,7 @@
 #include <boost/test/test_tools.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
@@ -74,36 +74,36 @@ ENKRVD\n\
 BOOST_AUTO_TEST_CASE( parse_DATAWithDefult_OK ) {
     ParserPtr parser(new Parser());
     DeckConstPtr deck = parser->parseString( data , ParseMode());
-    DeckKeywordConstPtr keyword = deck->getKeyword( "ENKRVD" );
-    DeckRecordConstPtr rec0 = keyword->getRecord(0);
-    DeckRecordConstPtr rec1 = keyword->getRecord(1);
-    DeckRecordConstPtr rec2 = keyword->getRecord(2);
+    const auto& keyword = deck->getKeyword( "ENKRVD" );
+    const auto& rec0 = keyword.getRecord(0);
+    const auto& rec1 = keyword.getRecord(1);
+    const auto& rec2 = keyword.getRecord(2);
 
-    DeckItemConstPtr item0 = rec0->getItem(0);
-    DeckItemConstPtr item1 = rec1->getItem(0);
-    DeckItemConstPtr item2 = rec2->getItem(0);
+    const auto& item0 = rec0.getItem(0);
+    const auto& item1 = rec1.getItem(0);
+    const auto& item2 = rec2.getItem(0);
 
-    BOOST_CHECK_EQUAL( 3U , keyword->size());
-    BOOST_CHECK( !item0->defaultApplied(0) );
-    BOOST_CHECK( item0->defaultApplied(1) );
+    BOOST_CHECK_EQUAL( 3U , keyword.size());
+    BOOST_CHECK( !item0.defaultApplied(0) );
+    BOOST_CHECK( item0.defaultApplied(1) );
 
-    BOOST_CHECK_EQUAL( 100 , item0->getRawDouble(0));
-    BOOST_CHECK_EQUAL(  -1 , item0->getRawDouble(1));
-    BOOST_CHECK_EQUAL(  2  , item0->getRawDouble(2));
-    BOOST_CHECK_EQUAL( -1 , item0->getRawDouble(3));
-    BOOST_CHECK_EQUAL( -1 , item0->getRawDouble(4));
-    BOOST_CHECK_EQUAL( -1 , item0->getRawDouble(5));
-    BOOST_CHECK_EQUAL( 6  , item0->getRawDouble(6));
-    BOOST_CHECK_EQUAL( 55 , item0->getRawDouble(12));
-    BOOST_CHECK_EQUAL( 55 , item0->getRawDouble(13));
-    BOOST_CHECK_EQUAL( 55 , item0->getRawDouble(14));
-    BOOST_CHECK_EQUAL( 10 , item0->getRawDouble(15));
+    BOOST_CHECK_EQUAL( 100 , item0.get< double >(0));
+    BOOST_CHECK_EQUAL(  -1 , item0.get< double >(1));
+    BOOST_CHECK_EQUAL(  2  , item0.get< double >(2));
+    BOOST_CHECK_EQUAL( -1 , item0.get< double >(3));
+    BOOST_CHECK_EQUAL( -1 , item0.get< double >(4));
+    BOOST_CHECK_EQUAL( -1 , item0.get< double >(5));
+    BOOST_CHECK_EQUAL( 6  , item0.get< double >(6));
+    BOOST_CHECK_EQUAL( 55 , item0.get< double >(12));
+    BOOST_CHECK_EQUAL( 55 , item0.get< double >(13));
+    BOOST_CHECK_EQUAL( 55 , item0.get< double >(14));
+    BOOST_CHECK_EQUAL( 10 , item0.get< double >(15));
 
-    BOOST_CHECK_EQUAL( 100 , item1->getRawDouble(0));
-    BOOST_CHECK_EQUAL(  -1  , item1->getRawDouble(1));
+    BOOST_CHECK_EQUAL( 100 , item1.get< double >(0));
+    BOOST_CHECK_EQUAL(  -1  , item1.get< double >(1));
 
-    BOOST_CHECK( !item2->defaultApplied(0) );
-    BOOST_CHECK( item2->defaultApplied(1) );
+    BOOST_CHECK( !item2.defaultApplied(0) );
+    BOOST_CHECK( item2.defaultApplied(1) );
 }
 
 

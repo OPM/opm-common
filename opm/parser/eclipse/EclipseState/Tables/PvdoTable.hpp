@@ -28,7 +28,7 @@ namespace Opm {
     class PvdoTable : public SimpleTable {
     public:
 
-        PvdoTable( std::shared_ptr< const DeckItem > item );
+        PvdoTable( const DeckItem& item );
 
         const TableColumn& getPressureColumn() const;
         const TableColumn& getFormationFactorColumn() const;

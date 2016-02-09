@@ -25,7 +25,7 @@ namespace Opm {
     class SwfnTable : public SimpleTable {
 
     public:
-        SwfnTable( std::shared_ptr< const DeckItem > item );
+        SwfnTable( const DeckItem& item );
 
         const TableColumn& getSwColumn() const;
         const TableColumn& getKrwColumn() const;

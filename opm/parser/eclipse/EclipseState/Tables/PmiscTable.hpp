@@ -29,7 +29,7 @@ namespace Opm {
     class PmiscTable : public SimpleTable {
     public:
 
-        PmiscTable( std::shared_ptr< const DeckItem > item );
+        PmiscTable( const DeckItem& item );
 
         const TableColumn& getOilPhasePressureColumn() const;
         const TableColumn& getMiscibilityColumn() const;

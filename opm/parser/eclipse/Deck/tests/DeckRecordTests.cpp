@@ -23,13 +23,17 @@
 #include <stdexcept>
 #include <boost/test/unit_test.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
 #include <boost/test/test_tools.hpp>
 
 using namespace Opm;
+
+static DeckItem mkIntItem( std::string name ) {
+    return DeckItem::make< int >( name );
+}
 
 BOOST_AUTO_TEST_CASE(Initialize) {
     BOOST_CHECK_NO_THROW(DeckRecord deckRecord);
@@ -42,78 +46,56 @@ BOOST_AUTO_TEST_CASE(size_defaultConstructor_sizezero) {
 
 BOOST_AUTO_TEST_CASE(addItem_singleItem_sizeone) {
     DeckRecord deckRecord;
-    DeckIntItemPtr intItem(new DeckIntItem("TEST"));
-    deckRecord.addItem(intItem);
+    deckRecord.addItem( mkIntItem( "TEST" ) );
     BOOST_CHECK_EQUAL(1U, deckRecord.size());
 }
 
 BOOST_AUTO_TEST_CASE(addItem_multipleItems_sizecorrect) {
-    DeckRecord deckRecord;
-    DeckIntItemPtr intItem1(new DeckIntItem("TEST"));
-    DeckIntItemPtr intItem2(new DeckIntItem("TEST2"));
-    DeckIntItemPtr intItem3(new DeckIntItem("TEST3"));
 
-    deckRecord.addItem(intItem1);
-    deckRecord.addItem(intItem2);
-    deckRecord.addItem(intItem3);
+    DeckRecord deckRecord;
+    deckRecord.addItem( mkIntItem( "TEST" ) );
+    deckRecord.addItem( mkIntItem( "TEST2" ) );
+    deckRecord.addItem( mkIntItem( "TEST3" ) );
 
     BOOST_CHECK_EQUAL(3U, deckRecord.size());
 }
 
 BOOST_AUTO_TEST_CASE(addItem_sameItemTwoTimes_throws) {
     DeckRecord deckRecord;
-    DeckIntItemPtr intItem1(new DeckIntItem("TEST"));
-
-    deckRecord.addItem(intItem1);
-    BOOST_CHECK_THROW(deckRecord.addItem(intItem1), std::invalid_argument);
+    auto intItem1 = mkIntItem( "TEST" );
+    deckRecord.addItem( std::move( intItem1 ) );
+    BOOST_CHECK_THROW(deckRecord.addItem( std::move( intItem1 ) ), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(addItem_differentItemsSameName_throws) {
     DeckRecord deckRecord;
-    DeckIntItemPtr intItem1(new DeckIntItem("TEST"));
-    DeckIntItemPtr intItem2(new DeckIntItem("TEST"));
-    deckRecord.addItem(intItem1);
-    BOOST_CHECK_THROW(deckRecord.addItem(intItem2), std::invalid_argument);
+    deckRecord.addItem( mkIntItem( "TEST" ) );
+    BOOST_CHECK_THROW( deckRecord.addItem( mkIntItem( "TEST" ) ), std::invalid_argument );
 }
 
 BOOST_AUTO_TEST_CASE(get_byIndex_returnsItem) {
     DeckRecord deckRecord;
-    DeckIntItemPtr intItem1(new DeckIntItem("TEST"));
-    deckRecord.addItem(intItem1);
+    deckRecord.addItem( mkIntItem( "TEST" ) );
     BOOST_CHECK_NO_THROW(deckRecord.getItem(0U));
 }
 
 BOOST_AUTO_TEST_CASE(get_indexoutofbounds_throws) {
     DeckRecord deckRecord;
-    DeckIntItemPtr intItem1(new DeckIntItem("TEST"));
-    deckRecord.addItem(intItem1);
-    BOOST_CHECK_THROW(deckRecord.getItem(1), std::range_error);
+    deckRecord.addItem( mkIntItem( "TEST" ) );
+    BOOST_CHECK_THROW(deckRecord.getItem(1), std::out_of_range);
 }
 
 BOOST_AUTO_TEST_CASE(get_byName_returnsItem) {
     DeckRecord deckRecord;
-    DeckIntItemPtr intItem1(new DeckIntItem("TEST"));
-    deckRecord.addItem(intItem1);
+    deckRecord.addItem( mkIntItem( "TEST" ) );
     deckRecord.getItem("TEST");
 }
 
 BOOST_AUTO_TEST_CASE(get_byNameNonExisting_throws) {
     DeckRecord deckRecord;
-    DeckIntItemPtr intItem1(new DeckIntItem("TEST"));
-    deckRecord.addItem(intItem1);
+    deckRecord.addItem( mkIntItem( "TEST" ) );
     BOOST_CHECK_THROW(deckRecord.getItem("INVALID"), std::invalid_argument);
 }
-
-BOOST_AUTO_TEST_CASE(get_oneoftwo_returnscorrectitem) {
-    DeckRecord deckRecord;
-    DeckIntItemPtr intItem1(new DeckIntItem("TEST"));
-    DeckIntItemPtr intItem2(new DeckIntItem("TEST2"));
-    deckRecord.addItem(intItem1);
-    deckRecord.addItem(intItem2);
-    BOOST_CHECK_EQUAL(intItem2, deckRecord.getItem(1));
-    BOOST_CHECK_EQUAL(intItem1, deckRecord.getItem("TEST"));
-}
-
 
 BOOST_AUTO_TEST_CASE(StringsWithSpaceOK) {
     ParserStringItemPtr itemString(new ParserStringItem(std::string("STRINGITEM1")));
@@ -123,7 +105,7 @@ BOOST_AUTO_TEST_CASE(StringsWithSpaceOK) {
     record1->addItem( itemString );
 
 
-    DeckRecordConstPtr deckRecord = record1->parse( parseMode , rawRecord );
-    BOOST_CHECK_EQUAL(" VALUE " , deckRecord->getItem(0)->getString(0));
+    const auto deckRecord = record1->parse( parseMode , rawRecord );
+    BOOST_CHECK_EQUAL(" VALUE " , deckRecord.getItem(0).get< std::string >(0));
 }
 

@@ -28,7 +28,7 @@ namespace Opm {
     class EnkrvdTable : public SimpleTable {
     public:
 
-        EnkrvdTable( std::shared_ptr< const DeckItem > item );
+        EnkrvdTable( const DeckItem& item );
 
 
         // using this method is strongly discouraged but the current endpoint scaling

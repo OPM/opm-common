@@ -28,7 +28,7 @@ namespace Opm {
 
     class SgcwmisTable : public SimpleTable {
     public:
-        SgcwmisTable( std::shared_ptr< const DeckItem > item );
+        SgcwmisTable( const DeckItem& item );
 
         const TableColumn& getWaterSaturationColumn() const;
         const TableColumn& getMiscibleResidualGasColumn() const;

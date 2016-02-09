@@ -42,16 +42,16 @@ BOOST_AUTO_TEST_CASE( parse_EQUIL_OK ) {
     ParserPtr parser(new Parser());
     std::string pvtgFile("testdata/integration_tests/RSVD/RSVD.txt");
     DeckPtr deck =  parser->parseFile(pvtgFile, ParseMode());
-    DeckKeywordConstPtr kw1 = deck->getKeyword("RSVD" , 0);
-    BOOST_CHECK_EQUAL( 6U , kw1->size() );
+    const auto& kw1 = deck->getKeyword("RSVD" , 0);
+    BOOST_CHECK_EQUAL( 6U , kw1.size() );
 
 
-    DeckRecordConstPtr rec1 = kw1->getRecord(0);
-    DeckRecordConstPtr rec3 = kw1->getRecord(2);
+    const auto& rec1 = kw1.getRecord(0);
+    const auto& rec3 = kw1.getRecord(2);
 
-    DeckItemPtr item1       = rec1->getItem("table");
-    BOOST_CHECK( fabs(item1->getSIDouble(0) - 2382) < 0.001);
+    const auto& item1       = rec1.getItem("table");
+    BOOST_CHECK( fabs(item1.getSIDouble(0) - 2382) < 0.001);
 
-    DeckItemPtr item3       = rec3->getItem("table");
-    BOOST_CHECK( fabs(item3->getSIDouble(7) - 106.77) < 0.001);
+    const auto& item3       = rec3.getItem("table");
+    BOOST_CHECK( fabs(item3.getSIDouble(7) - 106.77) < 0.001);
 }

@@ -103,33 +103,29 @@ namespace Opm {
     }
 
 
-    namespace
-    {
-        // keyword must be DIMENS or SPECGRID
-        std::vector<int> getDims(DeckKeywordConstPtr keyword)
-        {
-            DeckRecordConstPtr record = keyword->getRecord(0);
-            std::vector<int> dims = {record->getItem("NX")->getInt(0) ,
-                                     record->getItem("NY")->getInt(0) ,
-                                     record->getItem("NZ")->getInt(0) };
-            return dims;
-        }
-    } // anonymous namespace
+    // keyword must be DIMENS or SPECGRID
+    static std::vector<int> getDims( const DeckKeyword& keyword ) {
+        const auto& record = keyword.getRecord(0);
+        std::vector<int> dims = {record.getItem("NX").get< int >(0) ,
+            record.getItem("NY").get< int >(0) ,
+            record.getItem("NZ").get< int >(0) };
+        return dims;
+    }
 
-    EclipseGrid::EclipseGrid(std::shared_ptr<const Deck> deck)
+    EclipseGrid::EclipseGrid(const std::shared_ptr<const Deck>& deck)
         : m_minpvValue(0),
           m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH"),
           m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
           m_multzMode(PinchMode::ModeEnum::TOP)
     {
-        const bool hasRUNSPEC = Section::hasRUNSPEC(deck);
-        const bool hasGRID = Section::hasGRID(deck);
+        const bool hasRUNSPEC = Section::hasRUNSPEC(*deck);
+        const bool hasGRID = Section::hasGRID(*deck);
         if (hasRUNSPEC && hasGRID) {
             // Equivalent to first constructor.
-            auto runspecSection = std::make_shared<const RUNSPECSection>(deck);
-            if (runspecSection->hasKeyword<ParserKeywords::DIMENS>()) {
-                DeckKeywordConstPtr dimens = runspecSection->getKeyword<ParserKeywords::DIMENS>();
+            RUNSPECSection runspecSection( *deck );
+            if( runspecSection.hasKeyword<ParserKeywords::DIMENS>() ) {
+                const auto& dimens = runspecSection.getKeyword<ParserKeywords::DIMENS>();
                 std::vector<int> dims = getDims(dimens);
                 initGrid(dims, deck);
             } else {
@@ -140,7 +136,7 @@ namespace Opm {
         } else if (hasGRID) {
             // Look for SPECGRID instead of DIMENS.
             if (deck->hasKeyword<ParserKeywords::SPECGRID>()) {
-                DeckKeywordConstPtr specgrid = deck->getKeyword<ParserKeywords::SPECGRID>();
+                const auto& specgrid = deck->getKeyword<ParserKeywords::SPECGRID>();
                 std::vector<int> dims = getDims(specgrid);
                 initGrid(dims, deck);
             } else {
@@ -152,11 +148,11 @@ namespace Opm {
             // The deck contains no relevant section, so it is probably a sectionless GRDECL file.
             // Either SPECGRID or DIMENS is OK.
             if (deck->hasKeyword("SPECGRID")) {
-                DeckKeywordConstPtr specgrid = deck->getKeyword<ParserKeywords::SPECGRID>();
+                const auto& specgrid = deck->getKeyword<ParserKeywords::SPECGRID>();
                 std::vector<int> dims = getDims(specgrid);
                 initGrid(dims, deck);
             } else if (deck->hasKeyword<ParserKeywords::DIMENS>()) {
-                DeckKeywordConstPtr dimens = deck->getKeyword<ParserKeywords::DIMENS>();
+                const auto& dimens = deck->getKeyword<ParserKeywords::DIMENS>();
                 std::vector<int> dims = getDims(dimens);
                 initGrid(dims, deck);
             } else {
@@ -180,14 +176,14 @@ namespace Opm {
         }
 
         if (deck->hasKeyword<ParserKeywords::PINCH>()) {
-            auto record = deck->getKeyword<ParserKeywords::PINCH>( )->getRecord(0);
-            auto item = record->getItem<ParserKeywords::PINCH::THRESHOLD_THICKNESS>( );
-            m_pinch.setValue( item->getSIDouble(0) );
+            const auto& record = deck->getKeyword<ParserKeywords::PINCH>( ).getRecord(0);
+            const auto& item = record.getItem<ParserKeywords::PINCH::THRESHOLD_THICKNESS>( );
+            m_pinch.setValue( item.getSIDouble(0) );
 
-            auto pinchoutString = record->getItem<ParserKeywords::PINCH::PINCHOUT_OPTION>()->getString(0);
+            auto pinchoutString = record.getItem<ParserKeywords::PINCH::PINCHOUT_OPTION>().get< std::string >(0);
             m_pinchoutMode = PinchMode::PinchModeFromString(pinchoutString);
             
-            auto multzString = record->getItem<ParserKeywords::PINCH::MULTZ_OPTION>()->getString(0);
+            auto multzString = record.getItem<ParserKeywords::PINCH::MULTZ_OPTION>().get< std::string >(0);
             m_multzMode = PinchMode::PinchModeFromString(multzString);
         }
 
@@ -196,17 +192,17 @@ namespace Opm {
         }
 
         if (deck->hasKeyword<ParserKeywords::MINPV>()) {
-            auto record = deck->getKeyword<ParserKeywords::MINPV>( )->getRecord(0);
-            auto item = record->getItem<ParserKeywords::MINPV::VALUE>( );
-            m_minpvValue = item->getSIDouble(0);
+            const auto& record = deck->getKeyword<ParserKeywords::MINPV>( ).getRecord(0);
+            const auto& item = record.getItem<ParserKeywords::MINPV::VALUE>( );
+            m_minpvValue = item.getSIDouble(0);
             m_minpvMode = MinpvMode::ModeEnum::EclSTD;
         }
 
 
         if (deck->hasKeyword<ParserKeywords::MINPVFIL>()) {
-            auto record = deck->getKeyword<ParserKeywords::MINPVFIL>( )->getRecord(0);
-            auto item = record->getItem<ParserKeywords::MINPVFIL::VALUE>( );
-            m_minpvValue = item->getSIDouble(0);
+            const auto& record = deck->getKeyword<ParserKeywords::MINPVFIL>( ).getRecord(0);
+            const auto& item = record.getItem<ParserKeywords::MINPVFIL::VALUE>( );
+            m_minpvValue = item.getSIDouble(0);
             m_minpvMode = MinpvMode::ModeEnum::OpmFIL;
         }
     }
@@ -281,10 +277,10 @@ namespace Opm {
 
 
     void EclipseGrid::initDVDEPTHZGrid(const std::vector<int>& dims , DeckConstPtr deck) {
-        const std::vector<double>& DXV = deck->getKeyword<ParserKeywords::DXV>()->getSIDoubleData();
-        const std::vector<double>& DYV = deck->getKeyword<ParserKeywords::DYV>()->getSIDoubleData();
-        const std::vector<double>& DZV = deck->getKeyword<ParserKeywords::DZV>()->getSIDoubleData();
-        const std::vector<double>& DEPTHZ = deck->getKeyword<ParserKeywords::DEPTHZ>()->getSIDoubleData();
+        const std::vector<double>& DXV = deck->getKeyword<ParserKeywords::DXV>().getSIDoubleData();
+        const std::vector<double>& DYV = deck->getKeyword<ParserKeywords::DYV>().getSIDoubleData();
+        const std::vector<double>& DZV = deck->getKeyword<ParserKeywords::DZV>().getSIDoubleData();
+        const std::vector<double>& DEPTHZ = deck->getKeyword<ParserKeywords::DEPTHZ>().getSIDoubleData();
 
         assertVectorSize( DEPTHZ , static_cast<size_t>( (dims[0] + 1)*(dims[1] +1 )) , "DEPTHZ");
         assertVectorSize( DXV    , static_cast<size_t>( dims[0] ) , "DXV");
@@ -309,27 +305,26 @@ namespace Opm {
     void EclipseGrid::initCornerPointGrid(const std::vector<int>& dims , DeckConstPtr deck) {
         assertCornerPointKeywords( dims , deck);
         {
-            DeckKeywordConstPtr ZCORNKeyWord = deck->getKeyword<ParserKeywords::ZCORN>();
-            DeckKeywordConstPtr COORDKeyWord = deck->getKeyword<ParserKeywords::COORD>();
-            const std::vector<double>& zcorn = ZCORNKeyWord->getSIDoubleData();
-            const std::vector<double>& coord = COORDKeyWord->getSIDoubleData();
+            const auto& ZCORNKeyWord = deck->getKeyword<ParserKeywords::ZCORN>();
+            const auto& COORDKeyWord = deck->getKeyword<ParserKeywords::COORD>();
+            const std::vector<double>& zcorn = ZCORNKeyWord.getSIDoubleData();
+            const std::vector<double>& coord = COORDKeyWord.getSIDoubleData();
             const int * actnum = NULL;
             double    * mapaxes = NULL;
 
             if (deck->hasKeyword<ParserKeywords::ACTNUM>()) {
-                DeckKeywordConstPtr actnumKeyword = deck->getKeyword<ParserKeywords::ACTNUM>();
-                const std::vector<int>& actnumVector = actnumKeyword->getIntData();
+                const auto& actnumKeyword = deck->getKeyword<ParserKeywords::ACTNUM>();
+                const std::vector<int>& actnumVector = actnumKeyword.getIntData();
                 actnum = actnumVector.data();
 
             }
 
             if (deck->hasKeyword<ParserKeywords::MAPAXES>()) {
-                DeckKeywordConstPtr mapaxesKeyword = deck->getKeyword<ParserKeywords::MAPAXES>();
-                DeckRecordConstPtr record = mapaxesKeyword->getRecord(0);
+                const auto& mapaxesKeyword = deck->getKeyword<ParserKeywords::MAPAXES>();
+                const auto& record = mapaxesKeyword.getRecord(0);
                 mapaxes = new double[6];
                 for (size_t i = 0; i < 6; i++) {
-                    DeckItemConstPtr item = record->getItem(i);
-                    mapaxes[i] = item->getSIDouble(0);
+                    mapaxes[i] = record.getItem( i ).getSIDouble( 0 );
                 }
             }
 
@@ -369,13 +364,13 @@ namespace Opm {
         const int ny = dims[1];
         const int nz = dims[2];
         {
-            DeckKeywordConstPtr ZCORNKeyWord = deck->getKeyword<ParserKeywords::ZCORN>();
+            const auto& ZCORNKeyWord = deck->getKeyword<ParserKeywords::ZCORN>();
 
-            if (ZCORNKeyWord->getDataSize() != static_cast<size_t>(8*nx*ny*nz)) {
+            if (ZCORNKeyWord.getDataSize() != static_cast<size_t>(8*nx*ny*nz)) {
                 const std::string msg =
                     "Wrong size of the ZCORN keyword: Expected 8*x*ny*nz = "
                     + std::to_string(static_cast<long long>(8*nx*ny*nz)) + " is "
-                    + std::to_string(static_cast<long long>(ZCORNKeyWord->getDataSize()));
+                    + std::to_string(static_cast<long long>(ZCORNKeyWord.getDataSize()));
 
                 OpmLog::addMessage(Log::MessageType::Error , msg);
                 throw std::invalid_argument(msg);
@@ -383,24 +378,24 @@ namespace Opm {
         }
 
         {
-            DeckKeywordConstPtr COORDKeyWord = deck->getKeyword<ParserKeywords::COORD>();
-            if (COORDKeyWord->getDataSize() != static_cast<size_t>(6*(nx + 1)*(ny + 1))) {
+            const auto& COORDKeyWord = deck->getKeyword<ParserKeywords::COORD>();
+            if (COORDKeyWord.getDataSize() != static_cast<size_t>(6*(nx + 1)*(ny + 1))) {
                 const std::string msg =
                     "Wrong size of the COORD keyword: Expected 8*(nx + 1)*(ny + 1) = "
                     + std::to_string(static_cast<long long>(8*(nx + 1)*(ny + 1))) + " is "
-                    + std::to_string(static_cast<long long>(COORDKeyWord->getDataSize()));
+                    + std::to_string(static_cast<long long>(COORDKeyWord.getDataSize()));
                 OpmLog::addMessage(Log::MessageType::Error , msg);
                 throw std::invalid_argument(msg);
             }
         }
 
         if (deck->hasKeyword<ParserKeywords::ACTNUM>()) {
-            DeckKeywordConstPtr ACTNUMKeyWord = deck->getKeyword<ParserKeywords::ACTNUM>();
-            if (ACTNUMKeyWord->getDataSize() != static_cast<size_t>(nx*ny*nz)) {
+            const auto& ACTNUMKeyWord = deck->getKeyword<ParserKeywords::ACTNUM>();
+            if (ACTNUMKeyWord.getDataSize() != static_cast<size_t>(nx*ny*nz)) {
                 const std::string msg =
                     "Wrong size of the ACTNUM keyword: Expected nx*ny*nz = "
                     + std::to_string(static_cast<long long>(nx*ny*nz)) + " is "
-                    + std::to_string(static_cast<long long>(ACTNUMKeyWord->getDataSize()));
+                    + std::to_string(static_cast<long long>(ACTNUMKeyWord.getDataSize()));
                 OpmLog::addMessage(Log::MessageType::Error , msg);
                 throw std::invalid_argument(msg);
             }
@@ -482,8 +477,8 @@ namespace Opm {
         double z_tolerance = 1e-6;
         size_t volume = dims[0] * dims[1] * dims[2];
         size_t area = dims[0] * dims[1];
-        DeckKeywordConstPtr TOPSKeyWord = deck->getKeyword<ParserKeywords::TOPS>();
-        std::vector<double> TOPS = TOPSKeyWord->getSIDoubleData();
+        const auto& TOPSKeyWord = deck->getKeyword<ParserKeywords::TOPS>();
+        std::vector<double> TOPS = TOPSKeyWord.getSIDoubleData();
 
         if (TOPS.size() >= area) {
             size_t initialTOPSize = TOPS.size();
@@ -516,8 +511,7 @@ namespace Opm {
         size_t area = dims[0] * dims[1];
         std::vector<double> D;
         if (deck->hasKeyword(DKey)) {
-            DeckKeywordConstPtr DKeyWord = deck->getKeyword(DKey);
-            D = DKeyWord->getSIDoubleData();
+            D = deck->getKeyword( DKey ).getSIDoubleData();
 
 
             if (D.size() >= area && D.size() < volume) {
@@ -536,8 +530,8 @@ namespace Opm {
             if (D.size() != volume)
                 throw std::invalid_argument(DKey + " size mismatch");
         } else {
-            DeckKeywordConstPtr DVKeyWord = deck->getKeyword(DVKey);
-            const std::vector<double>& DV = DVKeyWord->getSIDoubleData();
+            const auto& DVKeyWord = deck->getKeyword(DVKey);
+            const std::vector<double>& DV = DVKeyWord.getSIDoubleData();
             if (DV.size() != (size_t) dims[dim])
                 throw std::invalid_argument(DVKey + " size mismatch");
             D.resize( volume );

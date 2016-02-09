@@ -496,18 +496,16 @@ namespace Opm {
         return m_deckNames.end();
     }
 
-    DeckKeywordPtr ParserKeyword::parse(const ParseMode& parseMode , RawKeywordConstPtr rawKeyword) const {
+    DeckKeyword ParserKeyword::parse(const ParseMode& parseMode , RawKeywordConstPtr rawKeyword) const {
         if (rawKeyword->isFinished()) {
-            DeckKeywordPtr keyword(new DeckKeyword(rawKeyword->getKeywordName()));
-            keyword->setLocation(rawKeyword->getFilename(), rawKeyword->getLineNR());
-            keyword->setDataKeyword( isDataKeyword() );
+            DeckKeyword keyword( rawKeyword->getKeywordName() );
+            keyword.setLocation(rawKeyword->getFilename(), rawKeyword->getLineNR());
+            keyword.setDataKeyword( isDataKeyword() );
 
             for (size_t i = 0; i < rawKeyword->size(); i++) {
                 auto rawRecord = rawKeyword->getRecord(i);
                 if(m_records.size() > 0) {
-                    std::shared_ptr <ParserRecord> record = getRecord(i);
-                    DeckRecordConstPtr deckRecord = record->parse(parseMode , rawRecord);
-                    keyword->addRecord(deckRecord);
+                    keyword.addRecord( getRecord( i )->parse( parseMode, rawRecord ) );
                 }
                 else {
                     if(rawRecord->size() > 0) {
@@ -758,11 +756,11 @@ namespace Opm {
     }
 
 
-    void ParserKeyword::applyUnitsToDeck(const Deck& deck, std::shared_ptr<const DeckKeyword> deckKeyword) const {
-        for (size_t index = 0; index < deckKeyword->size(); index++) {
+    void ParserKeyword::applyUnitsToDeck(const Deck& deck, DeckKeyword& deckKeyword) const {
+        for (size_t index = 0; index < deckKeyword.size(); index++) {
             std::shared_ptr<const ParserRecord> parserRecord = getRecord(index);
-            std::shared_ptr<const DeckRecord> deckRecord = deckKeyword->getRecord(index);
-            parserRecord->applyUnitsToDeck( deck , deckRecord);
+            auto& deckRecord = deckKeyword.getRecord(index);
+            parserRecord->applyUnitsToDeck( deck , deckRecord );
         }
     }
 }

@@ -68,31 +68,31 @@ namespace Opm {
 
 
 
-    MULTREGTRecord::MULTREGTRecord(DeckRecordConstPtr deckRecord , const std::string& defaultRegion) :
+    MULTREGTRecord::MULTREGTRecord( const DeckRecord& deckRecord, const std::string& defaultRegion) :
         m_srcRegion("SRC_REGION"),
         m_targetRegion("TARGET_REGION"),
         m_region("REGION" , defaultRegion)
     {
-        DeckItemConstPtr srcItem = deckRecord->getItem("SRC_REGION");
-        DeckItemConstPtr targetItem = deckRecord->getItem("TARGET_REGION");
-        DeckItemConstPtr tranItem = deckRecord->getItem("TRAN_MULT");
-        DeckItemConstPtr dirItem = deckRecord->getItem("DIRECTIONS");
-        DeckItemConstPtr nncItem = deckRecord->getItem("NNC_MULT");
-        DeckItemConstPtr defItem = deckRecord->getItem("REGION_DEF");
+        const auto& srcItem = deckRecord.getItem("SRC_REGION");
+        const auto& targetItem = deckRecord.getItem("TARGET_REGION");
+        const auto& tranItem = deckRecord.getItem("TRAN_MULT");
+        const auto& dirItem = deckRecord.getItem("DIRECTIONS");
+        const auto& nncItem = deckRecord.getItem("NNC_MULT");
+        const auto& defItem = deckRecord.getItem("REGION_DEF");
 
 
-        if (!srcItem->defaultApplied(0))
-            m_srcRegion.setValue( srcItem->getInt(0) );
+        if (!srcItem.defaultApplied(0))
+            m_srcRegion.setValue( srcItem.get< int >(0) );
 
-        if (!targetItem->defaultApplied(0))
-            m_targetRegion.setValue( targetItem->getInt(0) );
+        if (!targetItem.defaultApplied(0))
+            m_targetRegion.setValue( targetItem.get< int >(0) );
 
-        m_transMultiplier = tranItem->getRawDouble(0);
-        m_directions = FaceDir::FromMULTREGTString( dirItem->getString(0) );
-        m_nncBehaviour = MULTREGT::NNCBehaviourFromString( nncItem->getString(0));
+        m_transMultiplier = tranItem.get< double >(0);
+        m_directions = FaceDir::FromMULTREGTString( dirItem.get< std::string >(0) );
+        m_nncBehaviour = MULTREGT::NNCBehaviourFromString( nncItem.get< std::string >(0));
 
-        if (!defItem->defaultApplied(0))
-            m_region.setValue( MULTREGT::RegionNameFromDeckValue ( defItem->getString(0) ));
+        if (!defItem.defaultApplied(0))
+            m_region.setValue( MULTREGT::RegionNameFromDeckValue ( defItem.get< std::string >(0) ));
     }
 
 
@@ -125,11 +125,11 @@ namespace Opm {
       Then it will go through the different regions and looking for
       interface with the wanted region values.
     */
-    MULTREGTScanner::MULTREGTScanner(std::shared_ptr<GridProperties<int> > cellRegionNumbers, const std::vector<DeckKeywordConstPtr>& keywords , const std::string& defaultRegion ) :
+    MULTREGTScanner::MULTREGTScanner(std::shared_ptr<GridProperties<int> > cellRegionNumbers, const std::vector< const DeckKeyword* >& keywords , const std::string& defaultRegion ) :
         m_cellRegionNumbers(cellRegionNumbers) {
 
         for (size_t idx = 0; idx < keywords.size(); idx++)
-            addKeyword(keywords[idx] , defaultRegion);
+            this->addKeyword(*keywords[idx] , defaultRegion);
 
         MULTREGTSearchMap searchPairs;
         for (std::vector<MULTREGTRecord>::const_iterator record = m_records.begin(); record != m_records.end(); ++record) {
@@ -162,8 +162,8 @@ namespace Opm {
     }
 
 
-    void MULTREGTScanner::assertKeywordSupported(DeckKeywordConstPtr deckKeyword, const std::string& defaultRegion) {
-        for (auto iter = deckKeyword->begin(); iter != deckKeyword->end(); ++iter) {
+    void MULTREGTScanner::assertKeywordSupported( const DeckKeyword& deckKeyword, const std::string& defaultRegion) {
+        for (auto iter = deckKeyword.begin(); iter != deckKeyword.end(); ++iter) {
             MULTREGTRecord record( *iter , defaultRegion);
 
             if (record.m_nncBehaviour == MULTREGT::NOAQUNNC)
@@ -183,10 +183,10 @@ namespace Opm {
 
 
 
-    void MULTREGTScanner::addKeyword(DeckKeywordConstPtr deckKeyword , const std::string& defaultRegion) {
+    void MULTREGTScanner::addKeyword( const DeckKeyword& deckKeyword , const std::string& defaultRegion) {
         assertKeywordSupported( deckKeyword , defaultRegion );
 
-        for (auto iter = deckKeyword->begin(); iter != deckKeyword->end(); ++iter) {
+        for (auto iter = deckKeyword.begin(); iter != deckKeyword.end(); ++iter) {
             MULTREGTRecord record( *iter , defaultRegion );
             /*
               The default value for the region item is to use the

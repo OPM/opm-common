@@ -49,9 +49,9 @@ std::shared_ptr<const Deck> createCOMPSEGSDeck() {
 
 BOOST_AUTO_TEST_CASE(CreateDimension) {
     DeckConstPtr deck = createCOMPSEGSDeck();
-    std::shared_ptr<const DeckKeyword> keyword = deck->getKeyword<ParserKeywords::COMPSEGS>();
-    std::shared_ptr<const DeckRecord> record = keyword->getRecord(1);
-    BOOST_CHECK_NO_THROW( record->getItem<ParserKeywords::COMPSEGS::DISTANCE_START>()->getSIDouble(0) );
+    const auto& keyword = deck->getKeyword<ParserKeywords::COMPSEGS>();
+    const auto& record = keyword.getRecord(1);
+    BOOST_CHECK_NO_THROW( record.getItem<ParserKeywords::COMPSEGS::DISTANCE_START>().getSIDouble(0) );
 }
 
 

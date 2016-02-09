@@ -27,7 +27,7 @@ namespace Opm {
 
     class OilvisctTable : public SimpleTable {
         public:
-            OilvisctTable( std::shared_ptr< const DeckItem > item );
+            OilvisctTable( const DeckItem& item );
 
             const TableColumn& getTemperatureColumn() const;
             const TableColumn& getOilViscosityColumn() const;

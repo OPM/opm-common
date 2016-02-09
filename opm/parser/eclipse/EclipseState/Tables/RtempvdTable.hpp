@@ -27,7 +27,7 @@ namespace Opm {
 
     class RtempvdTable : public SimpleTable {
     public:
-        RtempvdTable( std::shared_ptr< const DeckItem > item );
+        RtempvdTable( const DeckItem& item );
 
         const TableColumn& getDepthColumn() const;
         const TableColumn& getTemperatureColumn() const;

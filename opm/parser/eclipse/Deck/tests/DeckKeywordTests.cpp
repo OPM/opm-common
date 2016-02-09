@@ -29,13 +29,12 @@
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
 
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(Initialize) {
     DeckKeyword deckKeyword1("KW");
-    DeckKeywordPtr deckKeyword2(new DeckKeyword("KW"));
-    DeckKeywordConstPtr deckKeyword3(new DeckKeyword("KW"));
 }
 
 BOOST_AUTO_TEST_CASE(DataKeyword) {
@@ -52,53 +51,34 @@ BOOST_AUTO_TEST_CASE(DataKeyword) {
 
 
 BOOST_AUTO_TEST_CASE(name_nameSetInConstructor_nameReturned) {
-    DeckKeywordPtr deckKeyword(new DeckKeyword("KW"));
-    BOOST_CHECK_EQUAL("KW", deckKeyword->name());
+    DeckKeyword deckKeyword( "KW" );
+    BOOST_CHECK_EQUAL("KW", deckKeyword.name());
 }
 
 BOOST_AUTO_TEST_CASE(size_noRecords_returnszero) {
-    DeckKeywordPtr deckKeyword(new DeckKeyword("KW"));
-    BOOST_CHECK_EQUAL(0U, deckKeyword->size());
+    DeckKeyword deckKeyword( "KW" );
+    BOOST_CHECK_EQUAL(0U, deckKeyword.size());
 }
 
 
 BOOST_AUTO_TEST_CASE(addRecord_onerecord_recordadded) {
-    DeckKeywordPtr deckKeyword(new DeckKeyword("KW"));
-    deckKeyword->addRecord(DeckRecordConstPtr(new DeckRecord()));
-    BOOST_CHECK_EQUAL(1U, deckKeyword->size());
-    for (auto iter = deckKeyword->begin(); iter != deckKeyword->end(); ++iter) {
+    DeckKeyword deckKeyword( "KW" );
+    deckKeyword.addRecord( DeckRecord() );
+    BOOST_CHECK_EQUAL(1U, deckKeyword.size());
+    for (auto iter = deckKeyword.begin(); iter != deckKeyword.end(); ++iter) {
         //
     }
 
 }
 
-BOOST_AUTO_TEST_CASE(getRecord_onerecord_recordretured) {
-    DeckKeywordPtr deckKeyword(new DeckKeyword("KW"));
-    DeckRecordConstPtr deckRecord(new DeckRecord());
-    deckKeyword->addRecord(deckRecord);
-    BOOST_CHECK_EQUAL(deckRecord, deckKeyword->getRecord(0));
-}
-
-
 BOOST_AUTO_TEST_CASE(getRecord_outofrange_exceptionthrown) {
-    DeckKeywordPtr deckKeyword(new DeckKeyword("KW"));
-    DeckRecordConstPtr deckRecord(new DeckRecord());
-    deckKeyword->addRecord(deckRecord);
-    BOOST_CHECK_THROW(deckKeyword->getRecord(1), std::range_error);
+    DeckKeyword deckKeyword( "KW" );
+    deckKeyword.addRecord(DeckRecord());
+    BOOST_CHECK_THROW(deckKeyword.getRecord(1), std::out_of_range);
 }
 
 BOOST_AUTO_TEST_CASE(setUnknown_wasknown_nowunknown) {
-    DeckKeywordPtr deckKeyword(new DeckKeyword("KW", false));
-    BOOST_CHECK(!deckKeyword->isKnown());
+    DeckKeyword deckKeyword( "KW", false );
+    BOOST_CHECK(!deckKeyword.isKnown());
 }
-
-
-
-
-
-
-
-
-
-
 

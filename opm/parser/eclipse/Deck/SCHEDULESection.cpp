@@ -52,8 +52,8 @@ namespace Opm {
                    m_decktimesteps.push_back(currentTimeStep);
                    currentTimeStep = std::make_shared<DeckTimeStep>();
                 }
-            } else if (keyword->name() == "DATES") {
-                for (auto record_iter = keyword->begin(); record_iter != keyword->end(); ++record_iter ) {
+            } else if (keyword.name() == "DATES") {
+                for (auto record_iter = keyword.begin(); record_iter != keyword.end(); ++record_iter ) {
                     m_decktimesteps.push_back(currentTimeStep);
                     currentTimeStep = std::make_shared<DeckTimeStep>();
                 }

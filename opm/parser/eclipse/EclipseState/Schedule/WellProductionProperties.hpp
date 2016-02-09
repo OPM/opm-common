@@ -30,25 +30,25 @@ namespace Opm {
 
     class WellProductionProperties {
     public:
-        double  OilRate;
-        double  WaterRate;
-        double  GasRate;
-        double  LiquidRate;
-        double  ResVRate;
-        double  BHPLimit;
-        double  THPLimit;
-        int     VFPTableNumber;
-        double  ALQValue;
-        bool    predictionMode;
+        double  OilRate     = 0.0;
+        double  WaterRate   = 0.0;
+        double  GasRate     = 0.0;
+        double  LiquidRate  = 0.0;
+        double  ResVRate    = 0.0;
+        double  BHPLimit    = 0.0;
+        double  THPLimit    = 0.0;
+        int     VFPTableNumber = 0;
+        double  ALQValue    = 0.0;
+        bool    predictionMode = false;
 
-        WellProducer::ControlModeEnum controlMode;
+        WellProducer::ControlModeEnum controlMode = WellProducer::CMODE_UNDEFINED;
 
         bool operator==(const WellProductionProperties& other) const;
         bool operator!=(const WellProductionProperties& other) const;
         WellProductionProperties();
 
-        static WellProductionProperties history(double BHPLimit , std::shared_ptr< const DeckRecord > record);
-        static WellProductionProperties prediction(std::shared_ptr< const DeckRecord > record, bool addGroupProductionControl);
+        static WellProductionProperties history(double BHPLimit, const DeckRecord& record );
+        static WellProductionProperties prediction( const DeckRecord& record, bool addGroupProductionControl );
 
         bool hasProductionControl(WellProducer::ControlModeEnum controlModeArg) const {
             return (m_productionControls & controlModeArg) != 0;
@@ -65,11 +65,9 @@ namespace Opm {
         }
 
     private:
-        int m_productionControls;
+        int m_productionControls = 0;
 
-        WellProductionProperties(std::shared_ptr< const DeckRecord > record);
-
-        void init();
+        WellProductionProperties(const DeckRecord& record);
     };
 } // namespace Opm
 

@@ -25,7 +25,6 @@
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
-#include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
 #include <opm/parser/eclipse/RawDeck/StarToken.hpp>
 
 namespace Opm {
@@ -87,8 +86,8 @@ namespace Opm {
         return m_defaultSet;
     }
 
-    DeckItemPtr ParserIntItem::scan(RawRecordPtr rawRecord) const {
-        return ParserItemScan<ParserIntItem,DeckIntItem,int>(this , rawRecord);
+    DeckItem ParserIntItem::scan(RawRecordPtr rawRecord) const {
+        return ParserItemScan<ParserIntItem,int>(this , rawRecord);
     }
 
 

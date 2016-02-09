@@ -46,7 +46,7 @@ namespace Opm {
     {
     }
 
-    std::vector<CompsegsPtr> Compsegs::compsegsFromCOMPSEGSKeyword(DeckKeywordConstPtr compsegsKeyword,
+    std::vector<CompsegsPtr> Compsegs::compsegsFromCOMPSEGSKeyword( const DeckKeyword& compsegsKeyword,
                                                                    EclipseGridConstPtr grid) {
         // the thickness of grid cells will be required in the future for more complete support.
         // Silence warning about unused argument
@@ -56,18 +56,18 @@ namespace Opm {
         // The first record here only contains the well name
         std::vector<CompsegsPtr> compsegs;
 
-        for (size_t recordIndex = 1; recordIndex < compsegsKeyword->size(); ++recordIndex) {
-            DeckRecordConstPtr record = compsegsKeyword->getRecord(recordIndex);
+        for (size_t recordIndex = 1; recordIndex < compsegsKeyword.size(); ++recordIndex) {
+            const auto& record = compsegsKeyword.getRecord(recordIndex);
             // following the coordinate rule for completions
-            const int I = record->getItem<ParserKeywords::COMPSEGS::I>()->getInt(0) - 1;
-            const int J = record->getItem<ParserKeywords::COMPSEGS::J>()->getInt(0) - 1;
-            const int K = record->getItem<ParserKeywords::COMPSEGS::K>()->getInt(0) - 1;
-            const int branch = record->getItem<ParserKeywords::COMPSEGS::BRANCH>()->getInt(0);
+            const int I = record.getItem<ParserKeywords::COMPSEGS::I>().get< int >(0) - 1;
+            const int J = record.getItem<ParserKeywords::COMPSEGS::J>().get< int >(0) - 1;
+            const int K = record.getItem<ParserKeywords::COMPSEGS::K>().get< int >(0) - 1;
+            const int branch = record.getItem<ParserKeywords::COMPSEGS::BRANCH>().get< int >(0);
 
             double distance_start;
             double distance_end;
-            if (record->getItem<ParserKeywords::COMPSEGS::DISTANCE_START>()->hasValue(0)) {
-                distance_start = record->getItem<ParserKeywords::COMPSEGS::DISTANCE_START>()->getSIDouble(0);
+            if (record.getItem<ParserKeywords::COMPSEGS::DISTANCE_START>().hasValue(0)) {
+                distance_start = record.getItem<ParserKeywords::COMPSEGS::DISTANCE_START>().getSIDouble(0);
             } else if (recordIndex == 1) {
                 distance_start = 0.;
             } else {
@@ -76,29 +76,29 @@ namespace Opm {
                 // since basically no specific order for the completions
                 throw std::runtime_error("this way to obtain DISTANCE_START not implemented yet!");
             }
-            if (record->getItem<ParserKeywords::COMPSEGS::DISTANCE_END>()->hasValue(0)) {
-                distance_end = record->getItem<ParserKeywords::COMPSEGS::DISTANCE_END>()->getSIDouble(0);
+            if (record.getItem<ParserKeywords::COMPSEGS::DISTANCE_END>().hasValue(0)) {
+                distance_end = record.getItem<ParserKeywords::COMPSEGS::DISTANCE_END>().getSIDouble(0);
             } else {
                 // TODO: the distance_start plus the thickness of the grid block
                 throw std::runtime_error("this way to obtain DISTANCE_END not implemented yet!");
             }
 
             WellCompletion::DirectionEnum direction;
-            if (record->getItem<ParserKeywords::COMPSEGS::DIRECTION>()->hasValue(0)) {
-                direction = WellCompletion::DirectionEnumFromString(record->getItem<ParserKeywords::COMPSEGS::DIRECTION>()->getString(0));
-            } else if (!record->getItem<ParserKeywords::COMPSEGS::DISTANCE_END>()->hasValue(0)) {
+            if (record.getItem<ParserKeywords::COMPSEGS::DIRECTION>().hasValue(0)) {
+                direction = WellCompletion::DirectionEnumFromString(record.getItem<ParserKeywords::COMPSEGS::DIRECTION>().get< std::string >(0));
+            } else if (!record.getItem<ParserKeywords::COMPSEGS::DISTANCE_END>().hasValue(0)) {
                 throw std::runtime_error("the direction has to be specified when DISTANCE_END in the record is not specified");
             }
 
-            if (record->getItem<ParserKeywords::COMPSEGS::END_IJK>()->hasValue(0)) {
-                if (!record->getItem<ParserKeywords::COMPSEGS::DIRECTION>()->hasValue(0)) {
+            if (record.getItem<ParserKeywords::COMPSEGS::END_IJK>().hasValue(0)) {
+                if (!record.getItem<ParserKeywords::COMPSEGS::DIRECTION>().hasValue(0)) {
                     throw std::runtime_error("the direction has to be specified when END_IJK in the record is specified");
                 }
             }
 
             double center_depth;
-            if (!record->getItem<ParserKeywords::COMPSEGS::CENTER_DEPTH>()->defaultApplied(0)) {
-                center_depth = record->getItem<ParserKeywords::COMPSEGS::CENTER_DEPTH>()->getSIDouble(0);
+            if (!record.getItem<ParserKeywords::COMPSEGS::CENTER_DEPTH>().defaultApplied(0)) {
+                center_depth = record.getItem<ParserKeywords::COMPSEGS::CENTER_DEPTH>().getSIDouble(0);
             } else {
                 // 0.0 is also the defaulted value
                 // which is used to indicate to obtain the final value through related segment
@@ -111,14 +111,14 @@ namespace Opm {
             }
 
             int segment_number;
-            if (record->getItem<ParserKeywords::COMPSEGS::SEGMENT_NUMBER>()->hasValue(0)) {
-                segment_number = record->getItem<ParserKeywords::COMPSEGS::SEGMENT_NUMBER>()->getInt(0);
+            if (record.getItem<ParserKeywords::COMPSEGS::SEGMENT_NUMBER>().hasValue(0)) {
+                segment_number = record.getItem<ParserKeywords::COMPSEGS::SEGMENT_NUMBER>().get< int >(0);
             } else {
                 segment_number = 0;
                 // will decide the segment number based on the distance in a process later.
             }
 
-            if (!record->getItem<ParserKeywords::COMPSEGS::END_IJK>()->hasValue(0)) { // only one compsegs
+            if (!record.getItem<ParserKeywords::COMPSEGS::END_IJK>().hasValue(0)) { // only one compsegs
                 CompsegsPtr new_compsegs = std::make_shared<Compsegs>(I, J, K, branch, distance_start, distance_end,
                                                                       direction, center_depth, segment_number);
                 compsegs.push_back(new_compsegs);

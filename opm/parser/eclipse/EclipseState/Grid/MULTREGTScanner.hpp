@@ -50,7 +50,7 @@ namespace Opm {
 
     class MULTREGTRecord {
     public:
-        MULTREGTRecord(std::shared_ptr< const DeckRecord > deckRecord , const std::string& defaultRegion);
+        MULTREGTRecord(const DeckRecord& deckRecord , const std::string& defaultRegion);
 
         Value<int> m_srcRegion;
         Value<int> m_targetRegion;
@@ -68,12 +68,12 @@ namespace Opm {
     class MULTREGTScanner {
 
     public:
-        MULTREGTScanner(std::shared_ptr<GridProperties<int> > cellRegionNumbers, const std::vector<std::shared_ptr< const DeckKeyword >>& keywords, const std::string& defaultRegion);
+        MULTREGTScanner(std::shared_ptr<GridProperties<int> > cellRegionNumbers, const std::vector< const DeckKeyword* >& keywords, const std::string& defaultRegion);
         double getRegionMultiplier(size_t globalCellIdx1, size_t globalCellIdx2, FaceDir::DirEnum faceDir) const;
 
     private:
-        void addKeyword(std::shared_ptr< const DeckKeyword > deckKeyword , const std::string& defaultRegion);
-        void assertKeywordSupported(std::shared_ptr< const DeckKeyword > deckKeyword , const std::string& defaultRegion);
+        void addKeyword( const DeckKeyword& deckKeyword, const std::string& defaultRegion);
+        void assertKeywordSupported(const DeckKeyword& deckKeyword, const std::string& defaultRegion);
         std::vector< MULTREGTRecord > m_records;
         std::map<std::string , MULTREGTSearchMap> m_searchMap;
         std::shared_ptr<GridProperties<int> > m_cellRegionNumbers;

@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(SimulationConfigCPRNotUsed) {
 BOOST_AUTO_TEST_CASE(SimulationConfigCPRUsed) {
     ParseMode parseMode;
     DeckPtr deck = createDeck(parseMode , inputStr_cpr);
-    SUMMARYSection summary(deck);
+    SUMMARYSection summary(*deck);
     SimulationConfig simulationConfig(parseMode , deck, getGridProperties());
     BOOST_CHECK_EQUAL( true , simulationConfig.useCPR());
     BOOST_CHECK_EQUAL( false , summary.hasKeyword("CPR"));
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(SimulationConfigCPRUsed) {
 BOOST_AUTO_TEST_CASE(SimulationConfigCPRInSUMMARYSection) {
     ParseMode parseMode;
     DeckPtr deck = createDeck(parseMode , inputStr_cpr_in_SUMMARY);
-    SUMMARYSection summary(deck);
+    SUMMARYSection summary(*deck);
     SimulationConfig simulationConfig(parseMode , deck, getGridProperties());
     BOOST_CHECK_EQUAL( false , simulationConfig.useCPR());
     BOOST_CHECK_EQUAL( true , summary.hasKeyword("CPR"));
@@ -167,18 +167,18 @@ BOOST_AUTO_TEST_CASE(SimulationConfigCPRInSUMMARYSection) {
 BOOST_AUTO_TEST_CASE(SimulationConfigCPRBoth) {
     ParseMode parseMode;
     DeckPtr deck = createDeck(parseMode , inputStr_cpr_BOTH);
-    SUMMARYSection summary(deck);
+    SUMMARYSection summary(*deck);
     SimulationConfig simulationConfig(parseMode , deck, getGridProperties());
     BOOST_CHECK_EQUAL( true , simulationConfig.useCPR());
     BOOST_CHECK_EQUAL( true , summary.hasKeyword("CPR"));
 
-    std::shared_ptr<const DeckKeyword> cpr = summary.getKeyword<ParserKeywords::CPR>();
-    std::shared_ptr<const DeckRecord> record = cpr->getRecord(0);
-    BOOST_CHECK_EQUAL( 1 , cpr->size());
-    BOOST_CHECK_EQUAL( record->getItem<ParserKeywords::CPR::WELL>()->getString(0) , "well1");
-    BOOST_CHECK_EQUAL( record->getItem<ParserKeywords::CPR::I>()->getInt(0) , 10);
-    BOOST_CHECK_EQUAL( record->getItem<ParserKeywords::CPR::J>()->getInt(0) , 20);
-    BOOST_CHECK_EQUAL( record->getItem<ParserKeywords::CPR::K>()->getInt(0) , 30);
+    const auto& cpr = summary.getKeyword<ParserKeywords::CPR>();
+    const auto& record = cpr.getRecord(0);
+    BOOST_CHECK_EQUAL( 1 , cpr.size());
+    BOOST_CHECK_EQUAL( record.getItem<ParserKeywords::CPR::WELL>().get< std::string >(0) , "well1");
+    BOOST_CHECK_EQUAL( record.getItem<ParserKeywords::CPR::I>().get< int >(0) , 10);
+    BOOST_CHECK_EQUAL( record.getItem<ParserKeywords::CPR::J>().get< int >(0) , 20);
+    BOOST_CHECK_EQUAL( record.getItem<ParserKeywords::CPR::K>().get< int >(0) , 30);
 }
 
 

@@ -137,8 +137,8 @@ BOOST_AUTO_TEST_CASE(parse_validRecord_deckRecordCreated) {
     ParserRecordPtr record = createSimpleParserRecord();
     RawRecordPtr rawRecord(new RawRecord("100 443 /"));
     ParseMode parseMode;
-    DeckRecordConstPtr deckRecord = record->parse(parseMode , rawRecord);
-    BOOST_CHECK_EQUAL(2U, deckRecord->size());
+    const auto deckRecord = record->parse(parseMode , rawRecord);
+    BOOST_CHECK_EQUAL(2U, deckRecord.size());
 }
 
 
@@ -218,32 +218,32 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
     // but it seems to appear in the wild. Thus, we interpret this as "1*"...
     {
         RawRecordPtr rawRecord(new RawRecord("* /"));
-        DeckItemConstPtr deckStringItem = itemString->scan(rawRecord);
-        DeckItemConstPtr deckIntItem = itemInt->scan(rawRecord);
-        DeckItemConstPtr deckDoubleItem = itemDouble->scan(rawRecord);
+        const auto deckStringItem = itemString->scan(rawRecord);
+        const auto deckIntItem = itemInt->scan(rawRecord);
+        const auto deckDoubleItem = itemDouble->scan(rawRecord);
 
-        BOOST_CHECK(deckStringItem->size() == 1);
-        BOOST_CHECK(deckIntItem->size() == 1);
-        BOOST_CHECK(deckDoubleItem->size() == 1);
+        BOOST_CHECK(deckStringItem.size() == 1);
+        BOOST_CHECK(deckIntItem.size() == 1);
+        BOOST_CHECK(deckDoubleItem.size() == 1);
 
-        BOOST_CHECK(deckStringItem->defaultApplied(0));
-        BOOST_CHECK(deckIntItem->defaultApplied(0));
-        BOOST_CHECK(deckDoubleItem->defaultApplied(0));
+        BOOST_CHECK(deckStringItem.defaultApplied(0));
+        BOOST_CHECK(deckIntItem.defaultApplied(0));
+        BOOST_CHECK(deckDoubleItem.defaultApplied(0));
     }
 
     {
         RawRecordPtr rawRecord(new RawRecord("/"));
-        DeckItemConstPtr deckStringItem = itemString->scan(rawRecord);
-        DeckItemConstPtr deckIntItem = itemInt->scan(rawRecord);
-        DeckItemConstPtr deckDoubleItem = itemDouble->scan(rawRecord);
+        const auto deckStringItem = itemString->scan(rawRecord);
+        const auto deckIntItem = itemInt->scan(rawRecord);
+        const auto deckDoubleItem = itemDouble->scan(rawRecord);
 
-        BOOST_CHECK(deckStringItem->size() == 1);
-        BOOST_CHECK(deckIntItem->size() == 1);
-        BOOST_CHECK(deckDoubleItem->size() == 1);
+        BOOST_CHECK(deckStringItem.size() == 1);
+        BOOST_CHECK(deckIntItem.size() == 1);
+        BOOST_CHECK(deckDoubleItem.size() == 1);
 
-        BOOST_CHECK(deckStringItem->defaultApplied(0));
-        BOOST_CHECK(deckIntItem->defaultApplied(0));
-        BOOST_CHECK(deckDoubleItem->defaultApplied(0));
+        BOOST_CHECK(deckStringItem.defaultApplied(0));
+        BOOST_CHECK(deckIntItem.defaultApplied(0));
+        BOOST_CHECK(deckDoubleItem.defaultApplied(0));
     }
 
 
@@ -252,48 +252,48 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
 
         // let the raw record be "consumed" by the items. Note that the scan() method
         // modifies the rawRecord object!
-        DeckItemConstPtr deckStringItem = itemString->scan(rawRecord);
-        DeckItemConstPtr deckIntItem = itemInt->scan(rawRecord);
-        DeckItemConstPtr deckDoubleItem = itemDouble->scan(rawRecord);
+        const auto deckStringItem = itemString->scan(rawRecord);
+        const auto deckIntItem = itemInt->scan(rawRecord);
+        const auto deckDoubleItem = itemDouble->scan(rawRecord);
 
-        BOOST_CHECK(deckStringItem->size() == 1);
-        BOOST_CHECK(deckIntItem->size() == 1);
-        BOOST_CHECK(deckDoubleItem->size() == 1);
+        BOOST_CHECK(deckStringItem.size() == 1);
+        BOOST_CHECK(deckIntItem.size() == 1);
+        BOOST_CHECK(deckDoubleItem.size() == 1);
 
-        BOOST_CHECK(!deckStringItem->defaultApplied(0));
-        BOOST_CHECK(!deckIntItem->defaultApplied(0));
-        BOOST_CHECK(!deckDoubleItem->defaultApplied(0));
+        BOOST_CHECK(!deckStringItem.defaultApplied(0));
+        BOOST_CHECK(!deckIntItem.defaultApplied(0));
+        BOOST_CHECK(!deckDoubleItem.defaultApplied(0));
     }
 
     // again this is invalid according to the RM, but it is used anyway in the wild...
     {
         RawRecordPtr rawRecord(new RawRecord("* * * /"));
-        DeckItemConstPtr deckStringItem = itemString->scan(rawRecord);
-        DeckItemConstPtr deckIntItem = itemInt->scan(rawRecord);
-        DeckItemConstPtr deckDoubleItem = itemDouble->scan(rawRecord);
+        const auto deckStringItem = itemString->scan(rawRecord);
+        const auto deckIntItem = itemInt->scan(rawRecord);
+        const auto deckDoubleItem = itemDouble->scan(rawRecord);
 
-        BOOST_CHECK(deckStringItem->size() == 1);
-        BOOST_CHECK(deckIntItem->size() == 1);
-        BOOST_CHECK(deckDoubleItem->size() == 1);
+        BOOST_CHECK(deckStringItem.size() == 1);
+        BOOST_CHECK(deckIntItem.size() == 1);
+        BOOST_CHECK(deckDoubleItem.size() == 1);
 
-        BOOST_CHECK(deckStringItem->defaultApplied(0));
-        BOOST_CHECK(deckIntItem->defaultApplied(0));
-        BOOST_CHECK(deckDoubleItem->defaultApplied(0));
+        BOOST_CHECK(deckStringItem.defaultApplied(0));
+        BOOST_CHECK(deckIntItem.defaultApplied(0));
+        BOOST_CHECK(deckDoubleItem.defaultApplied(0));
     }
 
     {
         RawRecordPtr rawRecord(new RawRecord("3* /"));
-        DeckItemConstPtr deckStringItem = itemString->scan(rawRecord);
-        DeckItemConstPtr deckIntItem = itemInt->scan(rawRecord);
-        DeckItemConstPtr deckDoubleItem = itemDouble->scan(rawRecord);
+        const auto deckStringItem = itemString->scan(rawRecord);
+        const auto deckIntItem = itemInt->scan(rawRecord);
+        const auto deckDoubleItem = itemDouble->scan(rawRecord);
 
-        BOOST_CHECK(deckStringItem->size() == 1);
-        BOOST_CHECK(deckIntItem->size() == 1);
-        BOOST_CHECK(deckDoubleItem->size() == 1);
+        BOOST_CHECK(deckStringItem.size() == 1);
+        BOOST_CHECK(deckIntItem.size() == 1);
+        BOOST_CHECK(deckDoubleItem.size() == 1);
 
-        BOOST_CHECK(deckStringItem->defaultApplied(0));
-        BOOST_CHECK(deckIntItem->defaultApplied(0));
-        BOOST_CHECK(deckDoubleItem->defaultApplied(0));
+        BOOST_CHECK(deckStringItem.defaultApplied(0));
+        BOOST_CHECK(deckIntItem.defaultApplied(0));
+        BOOST_CHECK(deckDoubleItem.defaultApplied(0));
     }
 }
 
@@ -335,11 +335,10 @@ BOOST_AUTO_TEST_CASE(Parse_RawRecordTooFewItems) {
     RawRecordPtr rawRecord(new RawRecord("3 3  /"));
     // no default specified for the third item, record can be parsed just fine but trying
     // to access the data will raise an exception...
-    DeckRecordConstPtr record;
-
-    BOOST_CHECK_NO_THROW(record = parserRecord->parse(parseMode , rawRecord));
-    BOOST_CHECK_NO_THROW(record->getItem(2));
-    BOOST_CHECK_THROW(record->getItem(2)->getInt(0), std::out_of_range);
+    BOOST_CHECK_NO_THROW(parserRecord->parse(parseMode , rawRecord));
+    auto record = parserRecord->parse(parseMode , rawRecord);
+    BOOST_CHECK_NO_THROW(record.getItem(2));
+    BOOST_CHECK_THROW(record.getItem(2).get< int >(0), std::out_of_range);
 }
 
 

@@ -131,10 +131,10 @@ namespace Opm {
 
 
     EclipseState::EclipseState(DeckConstPtr deck , const ParseMode& parseMode)
-        : m_defaultRegion("FLUXNUM"),
+        : m_deckUnitSystem( deck->getActiveUnitSystem() ),
+          m_defaultRegion("FLUXNUM"),
           m_parseMode( parseMode )
     {
-        m_deckUnitSystem = deck->getActiveUnitSystem();
         initPhases(deck);
         initTables(deck);
         initEclipseGrid(deck);
@@ -152,7 +152,7 @@ namespace Opm {
         initNNC(deck);
     }
 
-    std::shared_ptr<const UnitSystem> EclipseState::getDeckUnitSystem() const {
+    const UnitSystem& EclipseState::getDeckUnitSystem() const {
         return m_deckUnitSystem;
     }
 
@@ -224,19 +224,19 @@ namespace Opm {
 
     void EclipseState::initIOConfig(DeckConstPtr deck) {
         m_ioConfig = std::make_shared<IOConfig>();
-        if (Section::hasGRID(deck)) {
-            std::shared_ptr<const GRIDSection> gridSection = std::make_shared<const GRIDSection>(deck);
+        if (Section::hasGRID(*deck)) {
+            std::shared_ptr<const GRIDSection> gridSection = std::make_shared<const GRIDSection>(*deck);
             m_ioConfig->handleGridSection(gridSection);
         }
-        if (Section::hasRUNSPEC(deck)) {
-            std::shared_ptr<const RUNSPECSection> runspecSection = std::make_shared<const RUNSPECSection>(deck);
+        if (Section::hasRUNSPEC(*deck)) {
+            std::shared_ptr<const RUNSPECSection> runspecSection = std::make_shared<const RUNSPECSection>(*deck);
             m_ioConfig->handleRunspecSection(runspecSection);
         }
     }
 
     void EclipseState::initIOConfigPostSchedule(DeckConstPtr deck) {
-        if (Section::hasSOLUTION(deck)) {
-            std::shared_ptr<const SOLUTIONSection> solutionSection = std::make_shared<const SOLUTIONSection>(deck);
+        if (Section::hasSOLUTION(*deck)) {
+            std::shared_ptr<const SOLUTIONSection> solutionSection = std::make_shared<const SOLUTIONSection>(*deck);
             m_ioConfig->handleSolutionSection(schedule->getTimeMap(), solutionSection);
         }
     }
@@ -282,13 +282,13 @@ namespace Opm {
 
     void EclipseState::initFaults(DeckConstPtr deck) {
         EclipseGridConstPtr grid = getEclipseGrid();
-        std::shared_ptr<GRIDSection> gridSection = std::make_shared<GRIDSection>( deck );
+        std::shared_ptr<GRIDSection> gridSection = std::make_shared<GRIDSection>( *deck );
 
         m_faults = std::make_shared<FaultCollection>(gridSection , grid);
         setMULTFLT(gridSection);
 
-        if (Section::hasEDIT(deck)) {
-            std::shared_ptr<EDITSection> editSection = std::make_shared<EDITSection>( deck );
+        if (Section::hasEDIT(*deck)) {
+            std::shared_ptr<EDITSection> editSection = std::make_shared<EDITSection>( *deck );
             setMULTFLT(editSection);
         }
 
@@ -299,12 +299,12 @@ namespace Opm {
 
     void EclipseState::setMULTFLT(std::shared_ptr<const Section> section) const {
         for (size_t index=0; index < section->count("MULTFLT"); index++) {
-            DeckKeywordConstPtr faultsKeyword = section->getKeyword("MULTFLT" , index);
-            for (auto iter = faultsKeyword->begin(); iter != faultsKeyword->end(); ++iter) {
+            const auto& faultsKeyword = section->getKeyword("MULTFLT" , index);
+            for (auto iter = faultsKeyword.begin(); iter != faultsKeyword.end(); ++iter) {
 
-                DeckRecordConstPtr faultRecord = *iter;
-                const std::string& faultName = faultRecord->getItem(0)->getString(0);
-                double multFlt = faultRecord->getItem(1)->getRawDouble(0);
+                const auto& faultRecord = *iter;
+                const std::string& faultName = faultRecord.getItem(0).get< std::string >(0);
+                double multFlt = faultRecord.getItem(1).get< double >(0);
 
                 m_faults->setTransMult( faultName , multFlt );
             }
@@ -316,7 +316,7 @@ namespace Opm {
     void EclipseState::initMULTREGT(DeckConstPtr deck) {
         EclipseGridConstPtr grid = getEclipseGrid();
 
-        std::vector<Opm::DeckKeywordConstPtr> multregtKeywords;
+        std::vector< const DeckKeyword* > multregtKeywords;
         if (deck->hasKeyword("MULTREGT"))
             multregtKeywords = deck->getKeywordList("MULTREGT");
 
@@ -369,10 +369,10 @@ namespace Opm {
             */
 
             auto gridOpts = deck->getKeyword("GRIDOPTS");
-            auto record = gridOpts->getRecord(0);
-            auto nrmult_item = record->getItem("NRMULT");
+            const auto& record = gridOpts.getRecord(0);
+            const auto& nrmult_item = record.getItem("NRMULT");
 
-            if (nrmult_item->getInt(0) > 0)
+            if (nrmult_item.get< int >(0) > 0)
                 m_defaultRegion = "MULTNUM";
         }
     }
@@ -402,10 +402,9 @@ namespace Opm {
 
     void EclipseState::initTitle(DeckConstPtr deck){
         if (deck->hasKeyword("TITLE")) {
-            DeckKeywordConstPtr titleKeyword = deck->getKeyword("TITLE");
-            DeckRecordConstPtr record = titleKeyword->getRecord(0);
-            DeckItemPtr item = record->getItem(0);
-            std::vector<std::string> itemValue = item->getStringData();
+            const auto& titleKeyword = deck->getKeyword("TITLE");
+            const auto& item = titleKeyword.getRecord( 0 ).getItem( 0 );
+            std::vector<std::string> itemValue = item.getData< std::string >();
             m_title = boost::algorithm::join(itemValue, " ");
         }
     }
@@ -469,11 +468,11 @@ namespace Opm {
         return m_intGridProperties->getInitializedKeyword( m_defaultRegion );
     }
 
-    std::shared_ptr<GridProperty<int> > EclipseState::getRegion(DeckItemConstPtr regionItem) const {
-        if (regionItem->defaultApplied(0))
+    std::shared_ptr<GridProperty<int> > EclipseState::getRegion( const DeckItem& regionItem ) const {
+        if (regionItem.defaultApplied(0))
             return getDefaultRegion();
         else {
-            const std::string regionArray = MULTREGT::RegionNameFromDeckValue( regionItem->getString(0) );
+            const std::string regionArray = MULTREGT::RegionNameFromDeckValue( regionItem.get< std::string >(0) );
             return m_intGridProperties->getInitializedKeyword( regionArray );
         }
     }
@@ -484,14 +483,14 @@ namespace Opm {
        Due to the post processor which might be applied to the
        GridProperty objects it is essential that this method use the
        m_intGridProperties / m_doubleGridProperties fields directly
-       and *NOT* use the public methods getIntGridProperty /
+       and *NOT* use the public methods get< int >GridProperty /
        getDoubleGridProperty.
     */
 
     void EclipseState::loadGridPropertyFromDeckKeyword(std::shared_ptr<const Box> inputBox,
-                                                       DeckKeywordConstPtr deckKeyword,
+                                                       const DeckKeyword& deckKeyword,
                                                        int enabledTypes) {
-        const std::string& keyword = deckKeyword->name();
+        const std::string& keyword = deckKeyword.name();
         if (m_intGridProperties->supportsKeyword( keyword )) {
             if (enabledTypes & IntProperties) {
                 auto gridProperty = m_intGridProperties->getKeyword( keyword );
@@ -503,9 +502,9 @@ namespace Opm {
                 gridProperty->loadFromDeckKeyword( inputBox , deckKeyword );
             }
         } else {
-            std::string msg = Log::fileMessage(deckKeyword->getFileName(),
-                                               deckKeyword->getLineNumber(),
-                                               "Tried to load unsupported grid property from keyword: " + deckKeyword->name());
+            std::string msg = Log::fileMessage(deckKeyword.getFileName(),
+                                               deckKeyword.getLineNumber(),
+                                               "Tried to load unsupported grid property from keyword: " + deckKeyword.name());
             OpmLog::addMessage(Log::MessageType::Error , msg);
         }
     }
@@ -910,34 +909,34 @@ namespace Opm {
 
     double EclipseState::getSIScaling(const std::string &dimensionString) const
     {
-        return m_deckUnitSystem->getDimension(dimensionString)->getSIScaling();
+        return m_deckUnitSystem.getDimension(dimensionString)->getSIScaling();
     }
 
     void EclipseState::processGridProperties(Opm::DeckConstPtr deck, int enabledTypes) {
 
-        if (Section::hasGRID(deck)) {
-            std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(deck) );
+        if (Section::hasGRID(*deck)) {
+            std::shared_ptr<Opm::GRIDSection> gridSection(new Opm::GRIDSection(*deck) );
             scanSection(gridSection, enabledTypes);
         }
 
 
-        if (Section::hasEDIT(deck)) {
-            std::shared_ptr<Opm::EDITSection> editSection(new Opm::EDITSection(deck) );
+        if (Section::hasEDIT(*deck)) {
+            std::shared_ptr<Opm::EDITSection> editSection(new Opm::EDITSection(*deck) );
             scanSection(editSection, enabledTypes);
         }
 
-        if (Section::hasPROPS(deck)) {
-            std::shared_ptr<Opm::PROPSSection> propsSection(new Opm::PROPSSection(deck) );
+        if (Section::hasPROPS(*deck)) {
+            std::shared_ptr<Opm::PROPSSection> propsSection(new Opm::PROPSSection(*deck) );
             scanSection(propsSection, enabledTypes);
         }
 
-        if (Section::hasREGIONS(deck)) {
-            std::shared_ptr<Opm::REGIONSSection> regionsSection(new Opm::REGIONSSection(deck) );
+        if (Section::hasREGIONS(*deck)) {
+            std::shared_ptr<Opm::REGIONSSection> regionsSection(new Opm::REGIONSSection(*deck) );
             scanSection(regionsSection, enabledTypes);
         }
 
-        if (Section::hasSOLUTION(deck)) {
-            std::shared_ptr<Opm::SOLUTIONSection> solutionSection(new Opm::SOLUTIONSection(deck) );
+        if (Section::hasSOLUTION(*deck)) {
+            std::shared_ptr<Opm::SOLUTIONSection> solutionSection(new Opm::SOLUTIONSection(*deck) );
             scanSection(solutionSection,  enabledTypes);
         }
     }
@@ -945,40 +944,39 @@ namespace Opm {
     void EclipseState::scanSection(std::shared_ptr<Opm::Section> section,
                                    int enabledTypes) {
         BoxManager boxManager(m_eclipseGrid->getNX( ) , m_eclipseGrid->getNY() , m_eclipseGrid->getNZ());
-        for (auto iter = section->begin(); iter != section->end(); ++iter) {
-            DeckKeywordConstPtr deckKeyword = *iter;
+        for( const auto& deckKeyword : *section ) {
 
-            if (supportsGridProperty(deckKeyword->name(), enabledTypes) )
+            if (supportsGridProperty(deckKeyword.name(), enabledTypes) )
                 loadGridPropertyFromDeckKeyword(boxManager.getActiveBox(), deckKeyword,  enabledTypes);
             else {
-                if (deckKeyword->name() == "ADD")
+                if (deckKeyword.name() == "ADD")
                     handleADDKeyword(deckKeyword, boxManager, enabledTypes);
 
-                if (deckKeyword->name() == "BOX")
+                if (deckKeyword.name() == "BOX")
                     handleBOXKeyword(deckKeyword, boxManager);
 
-                if (deckKeyword->name() == "COPY")
+                if (deckKeyword.name() == "COPY")
                     handleCOPYKeyword(deckKeyword, boxManager, enabledTypes);
 
-                if (deckKeyword->name() == "EQUALS")
+                if (deckKeyword.name() == "EQUALS")
                     handleEQUALSKeyword(deckKeyword, boxManager, enabledTypes);
 
-                if (deckKeyword->name() == "ENDBOX")
+                if (deckKeyword.name() == "ENDBOX")
                     handleENDBOXKeyword(boxManager);
 
-                if (deckKeyword->name() == "EQUALREG")
+                if (deckKeyword.name() == "EQUALREG")
                     handleEQUALREGKeyword(deckKeyword ,  enabledTypes);
 
-                if (deckKeyword->name() == "ADDREG")
+                if (deckKeyword.name() == "ADDREG")
                     handleADDREGKeyword(deckKeyword , enabledTypes);
 
-                if (deckKeyword->name() == "MULTIREG")
+                if (deckKeyword.name() == "MULTIREG")
                     handleMULTIREGKeyword(deckKeyword , enabledTypes);
 
-                if (deckKeyword->name() == "COPYREG")
+                if (deckKeyword.name() == "COPYREG")
                     handleCOPYREGKeyword(deckKeyword , enabledTypes);
 
-                if (deckKeyword->name() == "MULTIPLY")
+                if (deckKeyword.name() == "MULTIPLY")
                     handleMULTIPLYKeyword(deckKeyword, boxManager, enabledTypes);
 
                 boxManager.endKeyword();
@@ -990,14 +988,14 @@ namespace Opm {
 
 
 
-    void EclipseState::handleBOXKeyword(DeckKeywordConstPtr deckKeyword,  BoxManager& boxManager) {
-        DeckRecordConstPtr record = deckKeyword->getRecord(0);
-        int I1 = record->getItem("I1")->getInt(0) - 1;
-        int I2 = record->getItem("I2")->getInt(0) - 1;
-        int J1 = record->getItem("J1")->getInt(0) - 1;
-        int J2 = record->getItem("J2")->getInt(0) - 1;
-        int K1 = record->getItem("K1")->getInt(0) - 1;
-        int K2 = record->getItem("K2")->getInt(0) - 1;
+    void EclipseState::handleBOXKeyword( const DeckKeyword& deckKeyword,  BoxManager& boxManager) {
+        const auto& record = deckKeyword.getRecord(0);
+        int I1 = record.getItem("I1").get< int >(0) - 1;
+        int I2 = record.getItem("I2").get< int >(0) - 1;
+        int J1 = record.getItem("J1").get< int >(0) - 1;
+        int J2 = record.getItem("J2").get< int >(0) - 1;
+        int K1 = record.getItem("K1").get< int >(0) - 1;
+        int K2 = record.getItem("K2").get< int >(0) - 1;
 
         boxManager.setInputBox( I1 , I2 , J1 , J2 , K1 , K2 );
     }
@@ -1008,19 +1006,18 @@ namespace Opm {
     }
 
 
-    void EclipseState::handleEQUALREGKeyword(DeckKeywordConstPtr deckKeyword, int enabledTypes) {
+    void EclipseState::handleEQUALREGKeyword( const DeckKeyword& deckKeyword, int enabledTypes) {
         EclipseGridConstPtr grid = getEclipseGrid();
-        for (size_t recordIdx = 0; recordIdx < deckKeyword->size(); ++recordIdx) {
-            DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
-            const std::string& targetArray = record->getItem("ARRAY")->getString(0);
+        for( const auto& record : deckKeyword ) {
+            const std::string& targetArray = record.getItem("ARRAY").get< std::string >(0);
 
             if (!supportsGridProperty( targetArray , IntProperties + DoubleProperties))
                 throw std::invalid_argument("Fatal error processing EQUALREG keyword - invalid/undefined keyword: " + targetArray);
 
             if (supportsGridProperty( targetArray , enabledTypes)) {
-                double doubleValue = record->getItem("VALUE")->getRawDouble(0);
-                int regionValue = record->getItem("REGION_NUMBER")->getInt(0);
-                std::shared_ptr<Opm::GridProperty<int> > regionProperty = getRegion( record->getItem("REGION_NAME") );
+                double doubleValue = record.getItem("VALUE").get< double >(0);
+                int regionValue = record.getItem("REGION_NUMBER").get< int >(0);
+                std::shared_ptr<Opm::GridProperty<int> > regionProperty = getRegion( record.getItem("REGION_NAME") );
                 std::vector<bool> mask;
 
                 regionProperty->initMask( regionValue , mask);
@@ -1051,19 +1048,18 @@ namespace Opm {
     }
 
 
-    void EclipseState::handleADDREGKeyword(DeckKeywordConstPtr deckKeyword, int enabledTypes) {
+    void EclipseState::handleADDREGKeyword( const DeckKeyword& deckKeyword, int enabledTypes) {
         EclipseGridConstPtr grid = getEclipseGrid();
-        for (size_t recordIdx = 0; recordIdx < deckKeyword->size(); ++recordIdx) {
-            DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
-            const std::string& targetArray = record->getItem("ARRAY")->getString(0);
+        for( const auto& record : deckKeyword ) {
+            const std::string& targetArray = record.getItem("ARRAY").get< std::string >(0);
 
             if (!supportsGridProperty( targetArray , IntProperties + DoubleProperties))
                 throw std::invalid_argument("Fatal error processing ADDREG keyword - invalid/undefined keyword: " + targetArray);
 
             if (supportsGridProperty( targetArray , enabledTypes)) {
-                double doubleValue = record->getItem("SHIFT")->getRawDouble(0);
-                int regionValue = record->getItem("REGION_NUMBER")->getInt(0);
-                std::shared_ptr<Opm::GridProperty<int> > regionProperty = getRegion( record->getItem("REGION_NAME") );
+                double doubleValue = record.getItem("SHIFT").get< double >(0);
+                int regionValue = record.getItem("REGION_NUMBER").get< int >(0);
+                std::shared_ptr<Opm::GridProperty<int> > regionProperty = getRegion( record.getItem("REGION_NAME") );
                 std::vector<bool> mask;
 
                 regionProperty->initMask( regionValue , mask);
@@ -1096,19 +1092,18 @@ namespace Opm {
 
 
 
-    void EclipseState::handleMULTIREGKeyword(DeckKeywordConstPtr deckKeyword, int enabledTypes) {
+    void EclipseState::handleMULTIREGKeyword( const DeckKeyword& deckKeyword, int enabledTypes) {
         EclipseGridConstPtr grid = getEclipseGrid();
-        for (size_t recordIdx = 0; recordIdx < deckKeyword->size(); ++recordIdx) {
-            DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
-            const std::string& targetArray = record->getItem("ARRAY")->getString(0);
+        for( const auto& record : deckKeyword ) {
+            const std::string& targetArray = record.getItem("ARRAY").get< std::string >(0);
 
             if (!supportsGridProperty( targetArray , IntProperties + DoubleProperties))
                 throw std::invalid_argument("Fatal error processing MULTIREG keyword - invalid/undefined keyword: " + targetArray);
 
             if (supportsGridProperty( targetArray , enabledTypes)) {
-                double doubleValue = record->getItem("FACTOR")->getRawDouble(0);
-                int regionValue = record->getItem("REGION_NUMBER")->getInt(0);
-                std::shared_ptr<Opm::GridProperty<int> > regionProperty = getRegion( record->getItem("REGION_NAME") );
+                double doubleValue = record.getItem("FACTOR").get< double >(0);
+                int regionValue = record.getItem("REGION_NUMBER").get< int >(0);
+                std::shared_ptr<Opm::GridProperty<int> > regionProperty = getRegion( record.getItem("REGION_NAME") );
                 std::vector<bool> mask;
 
                 regionProperty->initMask( regionValue , mask);
@@ -1137,12 +1132,11 @@ namespace Opm {
     }
 
 
-    void EclipseState::handleCOPYREGKeyword(DeckKeywordConstPtr deckKeyword, int enabledTypes) {
+    void EclipseState::handleCOPYREGKeyword( const DeckKeyword& deckKeyword, int enabledTypes) {
         EclipseGridConstPtr grid = getEclipseGrid();
-        for (size_t recordIdx = 0; recordIdx < deckKeyword->size(); ++recordIdx) {
-            DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
-            const std::string& srcArray    = record->getItem("ARRAY")->getString(0);
-            const std::string& targetArray = record->getItem("TARGET_ARRAY")->getString(0);
+        for( const auto& record : deckKeyword ) {
+            const std::string& srcArray    = record.getItem("ARRAY").get< std::string >(0);
+            const std::string& targetArray = record.getItem("TARGET_ARRAY").get< std::string >(0);
 
             if (!supportsGridProperty( targetArray , IntProperties + DoubleProperties))
                 throw std::invalid_argument("Fatal error processing MULTIREG keyword - invalid/undefined keyword: " + targetArray);
@@ -1151,8 +1145,8 @@ namespace Opm {
                 throw std::invalid_argument("Fatal error processing MULTIREG keyword - invalid/undefined keyword: " + srcArray);
 
             if (supportsGridProperty( srcArray , enabledTypes)) {
-                int regionValue = record->getItem("REGION_NUMBER")->getInt(0);
-                std::shared_ptr<Opm::GridProperty<int> > regionProperty = getRegion( record->getItem("REGION_NAME") );
+                int regionValue = record.getItem("REGION_NUMBER").get< int >(0);
+                std::shared_ptr<Opm::GridProperty<int> > regionProperty = getRegion( record.getItem("REGION_NAME") );
                 std::vector<bool> mask;
 
                 regionProperty->initMask( regionValue , mask );
@@ -1181,13 +1175,12 @@ namespace Opm {
 
 
 
-    void EclipseState::handleMULTIPLYKeyword(DeckKeywordConstPtr deckKeyword, BoxManager& boxManager, int enabledTypes) {
-        for (size_t recordIdx = 0; recordIdx < deckKeyword->size(); ++recordIdx) {
-            DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
-            const std::string& field = record->getItem("field")->getString(0);
-            double      scaleFactor  = record->getItem("factor")->getRawDouble(0);
+    void EclipseState::handleMULTIPLYKeyword( const DeckKeyword& deckKeyword, BoxManager& boxManager, int enabledTypes) {
+        for( const auto& record : deckKeyword ) {
+            const std::string& field = record.getItem("field").get< std::string >(0);
+            double      scaleFactor  = record.getItem("factor").get< double >(0);
 
-            setKeywordBox(deckKeyword, recordIdx, boxManager);
+            setKeywordBox(deckKeyword, record, boxManager);
 
             if (m_intGridProperties->hasKeyword( field )) {
                 if (enabledTypes & IntProperties) {
@@ -1213,13 +1206,12 @@ namespace Opm {
       some state dependent semantics regarding endpoint scaling arrays
       in the PROPS section. That is not supported.
     */
-    void EclipseState::handleADDKeyword(DeckKeywordConstPtr deckKeyword, BoxManager& boxManager, int enabledTypes) {
-        for (size_t recordIdx = 0; recordIdx < deckKeyword->size(); ++recordIdx) {
-            DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
-            const std::string& field = record->getItem("field")->getString(0);
-            double      shiftValue  = record->getItem("shift")->getRawDouble(0);
+    void EclipseState::handleADDKeyword( const DeckKeyword& deckKeyword, BoxManager& boxManager, int enabledTypes) {
+        for( const auto& record : deckKeyword ) {
+            const std::string& field = record.getItem("field").get< std::string >(0);
+            double      shiftValue  = record.getItem("shift").get< double >(0);
 
-            setKeywordBox(deckKeyword, recordIdx, boxManager);
+            setKeywordBox(deckKeyword, record, boxManager);
 
             if (m_intGridProperties->hasKeyword( field )) {
                 if (enabledTypes & IntProperties) {
@@ -1243,13 +1235,12 @@ namespace Opm {
     }
 
 
-    void EclipseState::handleEQUALSKeyword(DeckKeywordConstPtr deckKeyword, BoxManager& boxManager, int enabledTypes) {
-        for (size_t recordIdx = 0; recordIdx < deckKeyword->size(); ++recordIdx) {
-            DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
-            const std::string& field = record->getItem("field")->getString(0);
-            double      value  = record->getItem("value")->getRawDouble(0);
+    void EclipseState::handleEQUALSKeyword( const DeckKeyword& deckKeyword, BoxManager& boxManager, int enabledTypes) {
+        for( const auto& record : deckKeyword ) {
+            const std::string& field = record.getItem("field").get< std::string >(0);
+            double      value  = record.getItem("value").get< double >(0);
 
-            setKeywordBox(deckKeyword, recordIdx, boxManager);
+            setKeywordBox(deckKeyword, record, boxManager);
 
             if (m_intGridProperties->supportsKeyword( field )) {
                 if (enabledTypes & IntProperties) {
@@ -1274,13 +1265,12 @@ namespace Opm {
 
 
 
-    void EclipseState::handleCOPYKeyword(DeckKeywordConstPtr deckKeyword, BoxManager& boxManager, int enabledTypes) {
-        for (size_t recordIdx = 0; recordIdx < deckKeyword->size(); ++recordIdx) {
-            DeckRecordConstPtr record = deckKeyword->getRecord(recordIdx);
-            const std::string& srcField = record->getItem("src")->getString(0);
-            const std::string& targetField = record->getItem("target")->getString(0);
+    void EclipseState::handleCOPYKeyword( const DeckKeyword& deckKeyword, BoxManager& boxManager, int enabledTypes) {
+        for( const auto& record : deckKeyword ) {
+            const std::string& srcField = record.getItem("src").get< std::string >(0);
+            const std::string& targetField = record.getItem("target").get< std::string >(0);
 
-            setKeywordBox(deckKeyword, recordIdx, boxManager);
+            setKeywordBox(deckKeyword, record, boxManager);
 
             if (m_intGridProperties->hasKeyword( srcField )) {
                 if (enabledTypes & IntProperties)
@@ -1314,46 +1304,44 @@ namespace Opm {
 
 
 
-    void EclipseState::setKeywordBox(DeckKeywordConstPtr deckKeyword, size_t recordIdx, BoxManager& boxManager) {
-        auto deckRecord = deckKeyword->getRecord(recordIdx);
-
-        DeckItemConstPtr I1Item = deckRecord->getItem("I1");
-        DeckItemConstPtr I2Item = deckRecord->getItem("I2");
-        DeckItemConstPtr J1Item = deckRecord->getItem("J1");
-        DeckItemConstPtr J2Item = deckRecord->getItem("J2");
-        DeckItemConstPtr K1Item = deckRecord->getItem("K1");
-        DeckItemConstPtr K2Item = deckRecord->getItem("K2");
+    void EclipseState::setKeywordBox( const DeckKeyword& deckKeyword, const DeckRecord& deckRecord, BoxManager& boxManager) {
+        const auto& I1Item = deckRecord.getItem("I1");
+        const auto& I2Item = deckRecord.getItem("I2");
+        const auto& J1Item = deckRecord.getItem("J1");
+        const auto& J2Item = deckRecord.getItem("J2");
+        const auto& K1Item = deckRecord.getItem("K1");
+        const auto& K2Item = deckRecord.getItem("K2");
 
         size_t setCount = 0;
 
-        if (!I1Item->defaultApplied(0))
+        if (!I1Item.defaultApplied(0))
             setCount++;
 
-        if (!I2Item->defaultApplied(0))
+        if (!I2Item.defaultApplied(0))
             setCount++;
 
-        if (!J1Item->defaultApplied(0))
+        if (!J1Item.defaultApplied(0))
             setCount++;
 
-        if (!J2Item->defaultApplied(0))
+        if (!J2Item.defaultApplied(0))
             setCount++;
 
-        if (!K1Item->defaultApplied(0))
+        if (!K1Item.defaultApplied(0))
             setCount++;
 
-        if (!K2Item->defaultApplied(0))
+        if (!K2Item.defaultApplied(0))
             setCount++;
 
         if (setCount == 6) {
-            boxManager.setKeywordBox( I1Item->getInt(0) - 1,
-                                      I2Item->getInt(0) - 1,
-                                      J1Item->getInt(0) - 1,
-                                      J2Item->getInt(0) - 1,
-                                      K1Item->getInt(0) - 1,
-                                      K2Item->getInt(0) - 1);
+            boxManager.setKeywordBox( I1Item.get< int >(0) - 1,
+                                      I2Item.get< int >(0) - 1,
+                                      J1Item.get< int >(0) - 1,
+                                      J2Item.get< int >(0) - 1,
+                                      K1Item.get< int >(0) - 1,
+                                      K2Item.get< int >(0) - 1);
         } else if (setCount != 0) {
             std::string msg = "BOX modifiers on keywords must be either specified completely or not at all. Ignoring.";
-            OpmLog::addMessage(Log::MessageType::Error , Log::fileMessage(deckKeyword->getFileName() , deckKeyword->getLineNumber() , msg));
+            OpmLog::addMessage(Log::MessageType::Error , Log::fileMessage(deckKeyword.getFileName() , deckKeyword.getLineNumber() , msg));
         }
     }
 
@@ -1374,11 +1362,11 @@ namespace Opm {
         using namespace ParserKeywords;
         for (const auto& keyword : *deck) {
 
-            if (keyword->isKeyword<MULTFLT>()) {
-                for (const auto& record : *keyword) {
-                    const std::string& faultName = record->getItem<MULTFLT::fault>()->getString(0);
+            if (keyword.isKeyword<MULTFLT>()) {
+                for (const auto& record : keyword) {
+                    const std::string& faultName = record.getItem<MULTFLT::fault>().get< std::string >(0);
                     auto fault = m_faults->getFault( faultName );
-                    double tmpMultFlt = record->getItem<MULTFLT::factor>()->getRawDouble(0);
+                    double tmpMultFlt = record.getItem<MULTFLT::factor>().get< double >(0);
                     double oldMultFlt = fault->getTransMult( );
                     double newMultFlt = oldMultFlt * tmpMultFlt;
 

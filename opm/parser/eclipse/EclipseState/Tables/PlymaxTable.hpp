@@ -28,7 +28,7 @@ namespace Opm {
     class PlymaxTable : public SimpleTable {
         public:
 
-        PlymaxTable( std::shared_ptr< const DeckRecord > record );
+        PlymaxTable( const DeckRecord& record );
 
         const TableColumn& getPolymerConcentrationColumn() const;
         const TableColumn& getMaxPolymerConcentrationColumn() const;

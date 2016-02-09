@@ -31,7 +31,7 @@ namespace Opm {
          * \brief A wrapper class to provide convenient access to the
          *        data of the 'EQUIL' keyword.
          */
-        EquilWrapper(std::shared_ptr< const DeckKeyword > keyword)
+        EquilWrapper(const DeckKeyword& keyword)
             : m_keyword(keyword)
         {
         }
@@ -40,43 +40,43 @@ namespace Opm {
          * \brief Return the number of regions used for initialization
          */
         int numRegions() const
-        { return m_keyword->size(); }
+        { return m_keyword.size(); }
 
         /*!
          * \brief The reference depth
          */
         double datumDepth(int regionIdx) const
-        { return m_keyword->getRecord(regionIdx)->getItem(0)->getSIDouble(0); }
+        { return m_keyword.getRecord(regionIdx).getItem(0).getSIDouble(0); }
 
         /*!
          * \brief The pressure at reference depth
          */
         double datumDepthPressure(int regionIdx) const
-        { return m_keyword->getRecord(regionIdx)->getItem(1)->getSIDouble(0); }
+        { return m_keyword.getRecord(regionIdx).getItem(1).getSIDouble(0); }
 
         /*!
          * \brief The depth of the water-oil contact
          */
         double waterOilContactDepth(int regionIdx) const
-        { return m_keyword->getRecord(regionIdx)->getItem(2)->getSIDouble(0); }
+        { return m_keyword.getRecord(regionIdx).getItem(2).getSIDouble(0); }
 
         /*!
          * \brief The capillary pressure at the water-oil contact
          */
         double waterOilContactCapillaryPressure(int regionIdx) const
-        { return m_keyword->getRecord(regionIdx)->getItem(3)->getSIDouble(0); }
+        { return m_keyword.getRecord(regionIdx).getItem(3).getSIDouble(0); }
 
         /*!
          * \brief The depth of the gas-oil contact
          */
         double gasOilContactDepth(int regionIdx) const
-        { return m_keyword->getRecord(regionIdx)->getItem(4)->getSIDouble(0); }
+        { return m_keyword.getRecord(regionIdx).getItem(4).getSIDouble(0); }
 
         /*!
          * \brief The capillary pressure at the gas-oil contact
          */
         double gasOilContactCapillaryPressure(int regionIdx) const
-        { return m_keyword->getRecord(regionIdx)->getItem(5)->getSIDouble(0); }
+        { return m_keyword.getRecord(regionIdx).getItem(5).getSIDouble(0); }
 
         /*!
          * \brief Integer number specifying the initialization proceedure for live oil
@@ -84,19 +84,19 @@ namespace Opm {
          * Much fun with eclipse...
          */
         int liveOilInitProceedure(int regionIdx) const
-        { return m_keyword->getRecord(regionIdx)->getItem(6)->getInt(0); }
+        { return m_keyword.getRecord(regionIdx).getItem(6).get< int >(0); }
 
         /*!
          * \brief Integer number specifying the initialization proceedure for wet gas
          */
         int wetGasInitProceedure(int regionIdx) const
-        { return m_keyword->getRecord(regionIdx)->getItem(7)->getInt(0); }
+        { return m_keyword.getRecord(regionIdx).getItem(7).get< int >(0); }
 
         /*!
          * \brief Integer number specifying the desired accuracy of the initialization
          */
         int initializationTargetAccuracy(int regionIdx) const
-        { return m_keyword->getRecord(regionIdx)->getItem(8)->getInt(0); }
+        { return m_keyword.getRecord(regionIdx).getItem(8).get< int >(0); }
 
         /*!
          * \brief Integer number specifying the type of the initialization
@@ -104,7 +104,7 @@ namespace Opm {
          * This is only relevant for fully-compositional models
          */
         int compositionalInitializationProceedure(int regionIdx) const
-        { return m_keyword->getRecord(regionIdx)->getItem(9)->getInt(0); }
+        { return m_keyword.getRecord(regionIdx).getItem(9).get< int >(0); }
 
         /*!
          * \brief Use the saturation pressure at the of the gas for
@@ -114,10 +114,10 @@ namespace Opm {
          * the initialization proceedure is either '2' or '3'.
          */
         bool useSaturationPressure(int regionIdx) const
-        { return m_keyword->getRecord(regionIdx)->getItem(10)->getInt(0) == 0; }
+        { return m_keyword.getRecord(regionIdx).getItem(10).get< int >(0) == 0; }
 
     private:
-        std::shared_ptr< const DeckKeyword > m_keyword;
+        const DeckKeyword& m_keyword;
     };
 }
 

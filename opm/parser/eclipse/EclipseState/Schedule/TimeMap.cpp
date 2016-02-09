@@ -19,9 +19,8 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
@@ -45,8 +44,8 @@ namespace Opm {
         // use the 'START' keyword to find out the start date (if the
         // keyword was specified)
         if (deck->hasKeyword("START")) {
-            Opm::DeckKeywordConstPtr keyword = deck->getKeyword("START");
-            startTime = timeFromEclipse(keyword->getRecord(/*index=*/0));
+            const auto& keyword = deck->getKeyword("START");
+            startTime = timeFromEclipse(keyword.getRecord(/*index=*/0));
         }
 
         m_timeList.push_back( startTime );
@@ -55,19 +54,19 @@ namespace Opm {
         // with them one after another
         size_t numKeywords = deck->size();
         for (size_t keywordIdx = 0; keywordIdx < numKeywords; ++keywordIdx) {
-            Opm::DeckKeywordConstPtr keyword = deck->getKeyword(keywordIdx);
+            const auto& keyword = deck->getKeyword(keywordIdx);
 
             // We're only interested in "TSTEP" and "DATES" keywords,
             // so we ignore everything else here...
-            if (keyword->name() != "TSTEP" &&
-                keyword->name() != "DATES")
+            if (keyword.name() != "TSTEP" &&
+                keyword.name() != "DATES")
             {
                 continue;
             }
 
-            if (keyword->name() == "TSTEP")
+            if (keyword.name() == "TSTEP")
                 addFromTSTEPKeyword(keyword);
-            else if (keyword->name() == "DATES")
+            else if (keyword.name() == "DATES")
                 addFromDATESKeyword(keyword);
         }
     }
@@ -151,23 +150,23 @@ namespace Opm {
         return boost::posix_time::duration_from_string(eclipseTimeString);
     }
 
-    boost::posix_time::ptime TimeMap::timeFromEclipse(DeckRecordConstPtr dateRecord) {
+    boost::posix_time::ptime TimeMap::timeFromEclipse( const DeckRecord& dateRecord ) {
         static const std::string errorMsg("The datarecord must consist of the for values "
                                           "\"DAY(int), MONTH(string), YEAR(int), TIME(string)\".\n");
-        if (dateRecord->size() != 4) {
+        if (dateRecord.size() != 4) {
             throw std::invalid_argument( errorMsg);
         }
 
-        DeckItemConstPtr dayItem = dateRecord->getItem( 0 );
-        DeckItemConstPtr monthItem = dateRecord->getItem( 1 );
-        DeckItemConstPtr yearItem = dateRecord->getItem( 2 );
-        DeckItemConstPtr timeItem = dateRecord->getItem( 3 );
+        const auto& dayItem = dateRecord.getItem( 0 );
+        const auto& monthItem = dateRecord.getItem( 1 );
+        const auto& yearItem = dateRecord.getItem( 2 );
+        const auto& timeItem = dateRecord.getItem( 3 );
 
         try {
-            int day = dayItem->getInt(0);
-            const std::string& month = monthItem->getString(0);
-            int year = yearItem->getInt(0);
-            std::string eclipseTimeString = timeItem->getString(0);
+            int day = dayItem.get< int >(0);
+            const std::string& month = monthItem.get< std::string >(0);
+            int year = yearItem.get< int >(0);
+            std::string eclipseTimeString = timeItem.get< std::string >(0);
 
             return TimeMap::timeFromEclipse(day, month, year, eclipseTimeString);
         } catch (...) {
@@ -175,26 +174,25 @@ namespace Opm {
         }
     }
 
-    void TimeMap::addFromDATESKeyword( DeckKeywordConstPtr DATESKeyword ) {
-        if (DATESKeyword->name() != "DATES")
+    void TimeMap::addFromDATESKeyword( const DeckKeyword& DATESKeyword ) {
+        if (DATESKeyword.name() != "DATES")
             throw std::invalid_argument("Method requires DATES keyword input.");
 
-        for (size_t recordIndex = 0; recordIndex < DATESKeyword->size(); recordIndex++) {
-            DeckRecordConstPtr record = DATESKeyword->getRecord( recordIndex );
+        for (size_t recordIndex = 0; recordIndex < DATESKeyword.size(); recordIndex++) {
+            const auto& record = DATESKeyword.getRecord( recordIndex );
             boost::posix_time::ptime nextTime = TimeMap::timeFromEclipse( record );
             addTime( nextTime );
         }
     }
 
-    void TimeMap::addFromTSTEPKeyword( DeckKeywordConstPtr TSTEPKeyword ) {
-        if (TSTEPKeyword->name() != "TSTEP")
+    void TimeMap::addFromTSTEPKeyword( const DeckKeyword& TSTEPKeyword ) {
+        if (TSTEPKeyword.name() != "TSTEP")
             throw std::invalid_argument("Method requires TSTEP keyword input.");
         {
-            DeckRecordConstPtr record = TSTEPKeyword->getRecord( 0 );
-            DeckItemConstPtr item = record->getItem( 0 );
+            const auto& item = TSTEPKeyword.getRecord( 0 ).getItem( 0 );
 
-            for (size_t itemIndex = 0; itemIndex < item->size(); itemIndex++) {
-                double days = item->getRawDouble( itemIndex );
+            for (size_t itemIndex = 0; itemIndex < item.size(); itemIndex++) {
+                double days = item.get< double >( itemIndex );
                 long int wholeSeconds = static_cast<long int>(days * 24*60*60);
                 long int milliSeconds = static_cast<long int>((days * 24*60*60 - wholeSeconds)*1000);
                 boost::posix_time::time_duration step =

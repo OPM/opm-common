@@ -29,7 +29,7 @@ namespace Opm {
     class ImptvdTable : public SimpleTable {
     public:
 
-        ImptvdTable( std::shared_ptr< const DeckItem > item );
+        ImptvdTable( const DeckItem& item );
 
         const TableColumn& getDepthColumn() const;
 

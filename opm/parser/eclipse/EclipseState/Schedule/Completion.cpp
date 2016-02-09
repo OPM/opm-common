@@ -136,35 +136,35 @@ namespace Opm {
        disentangled, and each completion is returned separately.
     */
 
-    std::pair<std::string , std::vector<CompletionPtr> > Completion::completionsFromCOMPDATRecord( DeckRecordConstPtr compdatRecord ) {
+    std::pair<std::string , std::vector<CompletionPtr> > Completion::completionsFromCOMPDATRecord( const DeckRecord& compdatRecord ) {
         std::vector<CompletionPtr> completions;
-        std::string well = compdatRecord->getItem("WELL")->getTrimmedString(0);
+        std::string well = compdatRecord.getItem("WELL").getTrimmedString(0);
         // We change from eclipse's 1 - n, to a 0 - n-1 solution
-        int I = compdatRecord->getItem("I")->getInt(0) - 1;
-        int J = compdatRecord->getItem("J")->getInt(0) - 1;
-        int K1 = compdatRecord->getItem("K1")->getInt(0) - 1;
-        int K2 = compdatRecord->getItem("K2")->getInt(0) - 1;
-        WellCompletion::StateEnum state = WellCompletion::StateEnumFromString( compdatRecord->getItem("STATE")->getTrimmedString(0) );
+        int I = compdatRecord.getItem("I").get< int >(0) - 1;
+        int J = compdatRecord.getItem("J").get< int >(0) - 1;
+        int K1 = compdatRecord.getItem("K1").get< int >(0) - 1;
+        int K2 = compdatRecord.getItem("K2").get< int >(0) - 1;
+        WellCompletion::StateEnum state = WellCompletion::StateEnumFromString( compdatRecord.getItem("STATE").getTrimmedString(0) );
         Value<double> connectionTransmissibilityFactor("ConnectionTransmissibilityFactor");
         Value<double> diameter("Diameter");
         Value<double> skinFactor("SkinFactor");
 
         {
-            DeckItemConstPtr connectionTransmissibilityFactorItem = compdatRecord->getItem("CONNECTION_TRANSMISSIBILITY_FACTOR");
-            DeckItemConstPtr diameterItem = compdatRecord->getItem("DIAMETER");
-            DeckItemConstPtr skinFactorItem = compdatRecord->getItem("SKIN");
+            const auto& connectionTransmissibilityFactorItem = compdatRecord.getItem("CONNECTION_TRANSMISSIBILITY_FACTOR");
+            const auto& diameterItem = compdatRecord.getItem("DIAMETER");
+            const auto& skinFactorItem = compdatRecord.getItem("SKIN");
 
-            if (connectionTransmissibilityFactorItem->hasValue(0) && connectionTransmissibilityFactorItem->getSIDouble(0) > 0)
-                connectionTransmissibilityFactor.setValue(connectionTransmissibilityFactorItem->getSIDouble(0));
+            if (connectionTransmissibilityFactorItem.hasValue(0) && connectionTransmissibilityFactorItem.getSIDouble(0) > 0)
+                connectionTransmissibilityFactor.setValue(connectionTransmissibilityFactorItem.getSIDouble(0));
 
-            if (diameterItem->hasValue(0))
-                diameter.setValue( diameterItem->getSIDouble(0));
+            if (diameterItem.hasValue(0))
+                diameter.setValue( diameterItem.getSIDouble(0));
 
-            if (skinFactorItem->hasValue(0))
-                skinFactor.setValue( skinFactorItem->getRawDouble(0));
+            if (skinFactorItem.hasValue(0))
+                skinFactor.setValue( skinFactorItem.get< double >(0));
         }
 
-        const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnumFromString(compdatRecord->getItem("DIR")->getTrimmedString(0));
+        const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnumFromString(compdatRecord.getItem("DIR").getTrimmedString(0));
 
         for (int k = K1; k <= K2; k++) {
             CompletionPtr completion(new Completion(I , J , k , state , connectionTransmissibilityFactor, diameter, skinFactor, direction ));
@@ -185,10 +185,10 @@ namespace Opm {
     */
 
 
-    std::map<std::string , std::vector< CompletionPtr> > Completion::completionsFromCOMPDATKeyword( DeckKeywordConstPtr compdatKeyword ) {
+    std::map<std::string , std::vector< CompletionPtr> > Completion::completionsFromCOMPDATKeyword( const DeckKeyword& compdatKeyword ) {
         std::map<std::string , std::vector< CompletionPtr> > completionMapList;
-        for (size_t recordIndex = 0; recordIndex < compdatKeyword->size(); recordIndex++) {
-            std::pair<std::string , std::vector< CompletionPtr> > wellCompletionsPair = completionsFromCOMPDATRecord( compdatKeyword->getRecord( recordIndex ));
+        for (size_t recordIndex = 0; recordIndex < compdatKeyword.size(); recordIndex++) {
+            std::pair<std::string , std::vector< CompletionPtr> > wellCompletionsPair = completionsFromCOMPDATRecord( compdatKeyword.getRecord( recordIndex ));
             std::string well = wellCompletionsPair.first;
             std::vector<CompletionPtr>& newCompletions = wellCompletionsPair.second;
 

@@ -39,10 +39,10 @@ BOOST_AUTO_TEST_CASE( PARSE_PLYVISC_OK) {
     ParserPtr parser(new Parser());
     std::string deckFile("testdata/integration_tests/POLYMER/plyvisc.data");
     DeckPtr deck =  parser->parseFile(deckFile, ParseMode());
-    DeckKeywordConstPtr kw = deck->getKeyword("PLYVISC");
-    DeckRecordConstPtr rec = kw->getRecord(0);
-    DeckItemPtr item = rec->getItem(0);
+    const auto& kw = deck->getKeyword("PLYVISC");
+    const auto& rec = kw.getRecord(0);
+    const auto& item = rec.getItem(0);
 
-    BOOST_CHECK_EQUAL( 0.0 , item->getRawDouble(0) );
-    BOOST_CHECK_EQUAL( 1.25 , item->getRawDouble(2) );
+    BOOST_CHECK_EQUAL( 0.0 , item.get< double >(0) );
+    BOOST_CHECK_EQUAL( 1.25 , item.get< double >(2) );
 }

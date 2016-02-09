@@ -31,7 +31,7 @@ namespace Opm {
     }
 
 
-    SimpleTable::SimpleTable(std::shared_ptr<TableSchema> schema , Opm::DeckItemConstPtr deckItem)
+    SimpleTable::SimpleTable(std::shared_ptr<TableSchema> schema , const DeckItem& deckItem)
      : m_schema( schema )
     {
         init(deckItem);
@@ -79,22 +79,22 @@ namespace Opm {
 
 
 // create table from single record
-void SimpleTable::init(Opm::DeckItemConstPtr deckItem)
+void SimpleTable::init( const DeckItem& deckItem)
 {
     addColumns();
-    if ( (deckItem->size() % numColumns()) != 0)
+    if ( (deckItem.size() % numColumns()) != 0)
         throw std::runtime_error("Number of columns in the data file is"
                                  "inconsistent with the ones specified");
     {
-        size_t rows = deckItem->size() / numColumns();
+        size_t rows = deckItem.size() / numColumns();
         for (size_t colIdx = 0; colIdx < numColumns(); ++colIdx) {
             auto& column = getColumn( colIdx );
             for (size_t rowIdx = 0; rowIdx < rows; rowIdx++) {
                 size_t deckItemIdx = rowIdx*numColumns() + colIdx;
-                if (deckItem->defaultApplied(deckItemIdx))
+                if (deckItem.defaultApplied(deckItemIdx))
                     column.addDefault( );
                 else
-                    column.addValue( deckItem->getSIDouble(deckItemIdx) );
+                    column.addValue( deckItem.getSIDouble(deckItemIdx) );
             }
             if (colIdx > 0)
                 column.applyDefaults(getColumn( 0 ));

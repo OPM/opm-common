@@ -73,7 +73,7 @@ namespace Opm {
 
         bool isProducer(size_t timeStep) const;
         bool isInjector(size_t timeStep) const;
-        void addWELSPECS(std::shared_ptr< const DeckRecord > deckRecord);
+        void addWELSPECS(const DeckRecord& deckRecord);
         void addCompletions(size_t time_step , const std::vector<std::shared_ptr< Completion >>& newCompletions);
         void addCompletionSet(size_t time_step, const std::shared_ptr< const CompletionSet > newCompletionSet);
         std::shared_ptr< const CompletionSet > getCompletions(size_t timeStep) const;

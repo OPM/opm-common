@@ -27,7 +27,7 @@ namespace Opm {
 
     class RsvdTable : public SimpleTable {
     public:
-        RsvdTable( std::shared_ptr< const DeckItem > item );
+        RsvdTable( const DeckItem& item );
 
         const TableColumn& getDepthColumn() const;
         const TableColumn& getRsColumn() const;

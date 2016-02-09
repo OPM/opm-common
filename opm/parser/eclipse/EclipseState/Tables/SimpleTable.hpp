@@ -37,10 +37,10 @@ namespace Opm {
     public:
         SimpleTable(const SimpleTable&) = default;
         SimpleTable();
-        SimpleTable(std::shared_ptr<TableSchema> schema , std::shared_ptr< const DeckItem > deckItem);
+        SimpleTable(std::shared_ptr<TableSchema> schema, const DeckItem& deckItem);
         explicit SimpleTable(std::shared_ptr<TableSchema> schema);
         void addColumns();
-        void init(std::shared_ptr< const DeckItem > deckItem);
+        void init(const DeckItem& deckItem);
         size_t numColumns() const;
         size_t numRows() const;
         void addRow( const std::vector<double>& row);
