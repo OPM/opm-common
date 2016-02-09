@@ -20,80 +20,73 @@
 #ifndef SECTION_HPP
 #define SECTION_HPP
 
-
-
 #include <string>
-#include <memory>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 namespace Opm {
 
-class Section : public Deck
-    {
+    class UnitSystem;
+
+class Section : public DeckView {
     public:
-        Section(DeckConstPtr deck, const std::string& startKeyword);
+        using DeckView::const_iterator;
+
+        Section( std::shared_ptr< const Deck > deck, const std::string& startKeyword );
         const std::string& name() const;
-        size_t count(const std::string& keyword) const;
 
-        static bool hasRUNSPEC(DeckConstPtr deck) { return hasSection( deck , "RUNSPEC" ); }
-        static bool hasGRID(DeckConstPtr deck) { return hasSection( deck , "GRID" ); }
-        static bool hasEDIT(DeckConstPtr deck) { return hasSection( deck , "EDIT" ); }
-        static bool hasPROPS(DeckConstPtr deck) { return hasSection( deck , "PROPS" ); }
-        static bool hasREGIONS(DeckConstPtr deck) { return hasSection( deck , "REGIONS" ); }
-        static bool hasSOLUTION(DeckConstPtr deck) { return hasSection( deck , "SOLUTION" ); }
-        static bool hasSUMMARY(DeckConstPtr deck) { return hasSection( deck , "SUMMARY" ); }
-        static bool hasSCHEDULE(DeckConstPtr deck) { return hasSection( deck , "SCHEDULE" ); }
-
+        static bool hasRUNSPEC( std::shared_ptr< const Deck > );
+        static bool hasGRID( std::shared_ptr< const Deck > );
+        static bool hasEDIT( std::shared_ptr< const Deck > );
+        static bool hasPROPS( std::shared_ptr< const Deck > );
+        static bool hasREGIONS( std::shared_ptr< const Deck > );
+        static bool hasSOLUTION( std::shared_ptr< const Deck > );
+        static bool hasSUMMARY( std::shared_ptr< const Deck > );
+        static bool hasSCHEDULE( std::shared_ptr< const Deck > );
 
         // returns whether the deck has all mandatory sections and if all sections are in
         // the right order
-        static bool checkSectionTopology(DeckConstPtr deck,
+        static bool checkSectionTopology(std::shared_ptr< const Deck > deck,
                                          bool ensureKeywordSectionAffiliation = false);
 
     private:
-        std::string m_name;
-        static bool isSectionDelimiter(const std::string& keywordName);
-        static bool hasSection(DeckConstPtr deck, const std::string& startKeyword);
-        void populateSection(DeckConstPtr deck, const std::string& startKeyword);
-    };
+        std::string section_name;
 
-    typedef std::shared_ptr<Section> SectionPtr;
-    typedef std::shared_ptr<const Section> SectionConstPtr;
+    };
 
     class RUNSPECSection : public Section {
     public:
-        RUNSPECSection(DeckConstPtr deck) : Section(deck, "RUNSPEC") {}
+        RUNSPECSection(std::shared_ptr< const Deck > deck) : Section(deck, "RUNSPEC") {}
     };
 
     class GRIDSection : public Section {
     public:
-        GRIDSection(DeckConstPtr deck) : Section(deck, "GRID") {}
+        GRIDSection(std::shared_ptr< const Deck > deck) : Section(deck, "GRID") {}
     };
 
     class EDITSection : public Section {
     public:
-        EDITSection(DeckConstPtr deck) : Section(deck, "EDIT") {}
+        EDITSection(std::shared_ptr< const Deck > deck) : Section(deck, "EDIT") {}
     };
 
     class PROPSSection : public Section {
     public:
-        PROPSSection(DeckConstPtr deck) : Section(deck, "PROPS") {}
+        PROPSSection(std::shared_ptr< const Deck > deck) : Section(deck, "PROPS") {}
     };
 
     class REGIONSSection : public Section {
     public:
-        REGIONSSection(DeckConstPtr deck) : Section(deck, "REGIONS") {}
+        REGIONSSection(std::shared_ptr< const Deck > deck) : Section(deck, "REGIONS") {}
     };
 
     class SOLUTIONSection : public Section {
     public:
-        SOLUTIONSection(DeckConstPtr deck) : Section(deck, "SOLUTION") {}
+        SOLUTIONSection(std::shared_ptr< const Deck > deck) : Section(deck, "SOLUTION") {}
     };
 
     class SUMMARYSection : public Section {
     public:
-        SUMMARYSection(DeckConstPtr deck) : Section(deck, "SUMMARY") {}
+        SUMMARYSection(std::shared_ptr< const Deck > deck) : Section(deck, "SUMMARY") {}
     };
 }
 

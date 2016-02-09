@@ -33,50 +33,58 @@
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 
 namespace Opm {
-    Section::Section(DeckConstPtr deck, const std::string& startKeywordName)
-        : m_name(startKeywordName)
-    {
-        m_defaultUnits = deck->getDefaultUnitSystem();
-        m_activeUnits = deck->getActiveUnitSystem();
 
-        populateSection(deck, startKeywordName);
+    static bool isSectionDelimiter( const DeckKeyword& keyword ) {
+        const auto& name = keyword.name();
+        for( const auto& x : { "RUNSPEC", "GRID", "EDIT", "PROPS",
+                               "REGIONS", "SOLUTION", "SUMMARY", "SCHEDULE" } )
+            if( name == x ) return true;
+
+        return false;
     }
 
-    void Section::populateSection(DeckConstPtr deck, const std::string& startKeywordName)
-    {
-        bool inSection = false;
-        for (auto iter = deck->begin(); iter != deck->end(); ++iter) {
-            auto keyword = *iter;
-            if (!inSection) {
-                if (keyword->name() == startKeywordName) {
-                    inSection = true;
-                    addKeyword(keyword);
-                }
-            } else {
-                if (keyword->name() == startKeywordName)
-                    throw std::invalid_argument(std::string("Deck contains the '")+startKeywordName+"' section multiple times");
-
-                if (isSectionDelimiter(keyword->name()))
-                    break;
-
-                addKeyword(keyword);
-            }
-        }
-        if (!inSection)
-            throw std::invalid_argument(std::string("Deck requires a '")+startKeywordName+"' section");
+    static bool isDelim( const std::shared_ptr< const DeckKeyword >& x ) {
+        return isSectionDelimiter( *x );
     }
 
+    static std::pair< DeckView::const_iterator, DeckView::const_iterator >
+    find_section( const Deck& deck, const std::string& keyword ) {
 
-    size_t Section::count(const std::string& keyword) const {
-        return numKeywords( keyword );
+        const auto fn = [&keyword]( const Deck::const_iterator::reference kw ) {
+            return kw->name() == keyword;
+        };
+
+        auto first = std::find_if( deck.begin(), deck.end(), fn );
+        if( first == deck.end() )
+            throw std::invalid_argument( std::string( "Deck requires a '" ) + keyword + "' section" );
+
+        auto last = std::find_if( first + 1, deck.end(), &isDelim );
+
+        if( last != deck.end() && (*last)->name() == keyword )
+            throw std::invalid_argument( std::string( "Deck contains the '" ) + keyword + "' section multiple times" );
+
+        return { first, last };
     }
+
+    Section::Section( std::shared_ptr< const Deck > deck, const std::string& section )
+        : DeckView( find_section( *deck, section ) ),
+          section_name( section )
+    {}
 
     const std::string& Section::name() const {
-        return m_name;
+        return this->section_name;
     }
 
+    bool Section::hasRUNSPEC(std::shared_ptr< const Deck > deck) { return deck->hasKeyword( "RUNSPEC" ); }
+    bool Section::hasGRID(std::shared_ptr< const Deck > deck) { return deck->hasKeyword( "GRID" ); }
+    bool Section::hasEDIT(std::shared_ptr< const Deck > deck) { return deck->hasKeyword( "EDIT" ); }
+    bool Section::hasPROPS(std::shared_ptr< const Deck > deck) { return deck->hasKeyword( "PROPS" ); }
+    bool Section::hasREGIONS(std::shared_ptr< const Deck > deck) { return deck->hasKeyword( "REGIONS" ); }
+    bool Section::hasSOLUTION(std::shared_ptr< const Deck > deck) { return deck->hasKeyword( "SOLUTION" ); }
+    bool Section::hasSUMMARY(std::shared_ptr< const Deck > deck) { return deck->hasKeyword( "SUMMARY" ); }
+    bool Section::hasSCHEDULE(std::shared_ptr< const Deck > deck) { return deck->hasKeyword( "SCHEDULE" ); }
 
-    bool Section::checkSectionTopology(DeckConstPtr deck,
+    bool Section::checkSectionTopology(std::shared_ptr< const Deck > deck,
                                        bool ensureKeywordSectionAffiliation)
     {
         if (deck->size() == 0) {
@@ -203,30 +211,10 @@ namespace Opm {
             const auto& curKeyword = deck->getKeyword(deck->size() - 1);
             std::string msg =
                 "The last section of a valid deck must be SCHEDULE (is "+curSectionName+")";
-            OpmLog::addMessage(Log::MessageType::Warning , Log::fileMessage(curKeyword->getFileName() , curKeyword->getLineNumber() , msg));
+            OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword->getFileName(), curKeyword->getLineNumber(), msg));
             deckValid = false;
         }
 
         return deckValid;
-    }
-
-    bool Section::isSectionDelimiter(const std::string& keywordName) {
-        static std::set<std::string> sectionDelimiters;
-        if (sectionDelimiters.size() == 0) {
-            sectionDelimiters.insert("RUNSPEC");
-            sectionDelimiters.insert("GRID");
-            sectionDelimiters.insert("EDIT");
-            sectionDelimiters.insert("PROPS");
-            sectionDelimiters.insert("REGIONS");
-            sectionDelimiters.insert("SOLUTION");
-            sectionDelimiters.insert("SUMMARY");
-            sectionDelimiters.insert("SCHEDULE");
-        }
-
-        return sectionDelimiters.count(keywordName) > 0;
-    }
-
-    bool Section::hasSection(DeckConstPtr deck, const std::string& startKeywordName) {
-        return deck->hasKeyword(startKeywordName);
     }
 }

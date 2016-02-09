@@ -26,7 +26,9 @@
 
 namespace Opm {
 
-    SCHEDULESection::SCHEDULESection(DeckConstPtr deck) : Section(deck, "SCHEDULE") {
+    SCHEDULESection::SCHEDULESection( std::shared_ptr< const Deck > deck) :
+        Section(deck, "SCHEDULE"), unit_system( deck->getActiveUnitSystem() )
+    {
         populateDeckTimeSteps();
     }
 
@@ -62,5 +64,9 @@ namespace Opm {
         }
         //push last step
         m_decktimesteps.push_back(currentTimeStep);
+    }
+
+    std::shared_ptr< UnitSystem > SCHEDULESection::getActiveUnitSystem() const {
+        return this->unit_system;
     }
 }
