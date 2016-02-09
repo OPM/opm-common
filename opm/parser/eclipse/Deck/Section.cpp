@@ -43,31 +43,27 @@ namespace Opm {
         return false;
     }
 
-    static bool isDelim( const std::shared_ptr< const DeckKeyword >& x ) {
-        return isSectionDelimiter( *x );
-    }
-
     static std::pair< DeckView::const_iterator, DeckView::const_iterator >
     find_section( const Deck& deck, const std::string& keyword ) {
 
-        const auto fn = [&keyword]( const Deck::const_iterator::reference kw ) {
-            return kw->name() == keyword;
+        const auto fn = [&keyword]( const DeckKeyword& kw ) {
+            return kw.name() == keyword;
         };
 
         auto first = std::find_if( deck.begin(), deck.end(), fn );
         if( first == deck.end() )
             throw std::invalid_argument( std::string( "Deck requires a '" ) + keyword + "' section" );
 
-        auto last = std::find_if( first + 1, deck.end(), &isDelim );
+        auto last = std::find_if( first + 1, deck.end(), &isSectionDelimiter );
 
-        if( last != deck.end() && (*last)->name() == keyword )
+        if( last != deck.end() && last->name() == keyword )
             throw std::invalid_argument( std::string( "Deck contains the '" ) + keyword + "' section multiple times" );
 
         return { first, last };
     }
 
-    Section::Section( std::shared_ptr< const Deck > deck, const std::string& section )
-        : DeckView( find_section( *deck, section ) ),
+    Section::Section( const Deck& deck, const std::string& section )
+        : DeckView( find_section( deck, section ) ),
           section_name( section )
     {}
 
@@ -75,19 +71,19 @@ namespace Opm {
         return this->section_name;
     }
 
-    bool Section::hasRUNSPEC(std::shared_ptr< const Deck > deck) { return deck->hasKeyword( "RUNSPEC" ); }
-    bool Section::hasGRID(std::shared_ptr< const Deck > deck) { return deck->hasKeyword( "GRID" ); }
-    bool Section::hasEDIT(std::shared_ptr< const Deck > deck) { return deck->hasKeyword( "EDIT" ); }
-    bool Section::hasPROPS(std::shared_ptr< const Deck > deck) { return deck->hasKeyword( "PROPS" ); }
-    bool Section::hasREGIONS(std::shared_ptr< const Deck > deck) { return deck->hasKeyword( "REGIONS" ); }
-    bool Section::hasSOLUTION(std::shared_ptr< const Deck > deck) { return deck->hasKeyword( "SOLUTION" ); }
-    bool Section::hasSUMMARY(std::shared_ptr< const Deck > deck) { return deck->hasKeyword( "SUMMARY" ); }
-    bool Section::hasSCHEDULE(std::shared_ptr< const Deck > deck) { return deck->hasKeyword( "SCHEDULE" ); }
+    bool Section::hasRUNSPEC(const Deck& deck) { return deck.hasKeyword( "RUNSPEC" ); }
+    bool Section::hasGRID(const Deck& deck) { return deck.hasKeyword( "GRID" ); }
+    bool Section::hasEDIT(const Deck& deck) { return deck.hasKeyword( "EDIT" ); }
+    bool Section::hasPROPS(const Deck& deck) { return deck.hasKeyword( "PROPS" ); }
+    bool Section::hasREGIONS(const Deck& deck) { return deck.hasKeyword( "REGIONS" ); }
+    bool Section::hasSOLUTION(const Deck& deck) { return deck.hasKeyword( "SOLUTION" ); }
+    bool Section::hasSUMMARY(const Deck& deck) { return deck.hasKeyword( "SUMMARY" ); }
+    bool Section::hasSCHEDULE(const Deck& deck) { return deck.hasKeyword( "SCHEDULE" ); }
 
-    bool Section::checkSectionTopology(std::shared_ptr< const Deck > deck,
+    bool Section::checkSectionTopology(const Deck& deck,
                                        bool ensureKeywordSectionAffiliation)
     {
-        if (deck->size() == 0) {
+        if( deck.size() == 0 ) {
             std::string msg = "empty decks are invalid\n";
             OpmLog::addMessage(Log::MessageType::Warning , msg);
             return false;

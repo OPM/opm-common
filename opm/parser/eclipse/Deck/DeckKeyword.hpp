@@ -77,8 +77,6 @@ namespace Opm {
         bool m_knownKeyword;
         bool m_isDataKeyword;
     };
-    typedef std::shared_ptr<DeckKeyword> DeckKeywordPtr;
-    typedef std::shared_ptr<const DeckKeyword> DeckKeywordConstPtr;
 }
 
 #endif  /* DECKKEYWORD_HPP */

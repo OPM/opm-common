@@ -32,16 +32,16 @@ namespace Opm {
     class SCHEDULESection : public Section {
 
     public:
-        SCHEDULESection( std::shared_ptr< const Deck > deck);
+        SCHEDULESection( const Deck& deck);
         std::shared_ptr< const DeckTimeStep > getDeckTimeStep(size_t timestep) const;
 
-        std::shared_ptr< UnitSystem > getActiveUnitSystem() const;
+        const UnitSystem& getActiveUnitSystem() const;
 
 
     private:
         void populateDeckTimeSteps();
         std::vector< std::shared_ptr< DeckTimeStep > > m_decktimesteps;
-        std::shared_ptr< UnitSystem > unit_system;
+        const UnitSystem& unit_system;
 
     };
 }

@@ -32,8 +32,8 @@ namespace Opm {
 
         if( key == this->keywordMap.end() ) return false;
 
-        for( auto& ptr : key->second )
-            if( ptr.get() == &keyword ) return true;
+        for( auto index : key->second )
+            if( &this->getKeyword( index ) == &keyword ) return true;
 
         return false;
     }
@@ -42,21 +42,21 @@ namespace Opm {
         return this->keywordMap.find( keyword ) != this->keywordMap.end();
     }
 
-    std::shared_ptr< const DeckKeyword > DeckView::getKeyword( const std::string& keyword, size_t index ) const {
+    const DeckKeyword& DeckView::getKeyword( const std::string& keyword, size_t index ) const {
         if( !this->hasKeyword( keyword ) )
             throw std::invalid_argument("Keyword " + keyword + " not in deck.");
 
-        return this->getKeywordList( keyword ).at( index );
+        return this->getKeyword( this->offsets( keyword ).at( index ) );
     }
 
-    std::shared_ptr< const DeckKeyword > DeckView::getKeyword( const std::string& keyword ) const {
+    const DeckKeyword& DeckView::getKeyword( const std::string& keyword ) const {
         if( !this->hasKeyword( keyword ) )
             throw std::invalid_argument("Keyword " + keyword + " not in deck.");
 
-        return this->getKeywordList( keyword ).back();
+        return this->getKeyword( this->offsets( keyword ).back() );
     }
 
-    std::shared_ptr< const DeckKeyword > DeckView::getKeyword( size_t index ) const {
+    const DeckKeyword& DeckView::getKeyword( size_t index ) const {
         if( index >= this->size() )
             throw std::out_of_range("Keyword index " + std::to_string( index ) + " is out of range.");
 
@@ -66,15 +66,21 @@ namespace Opm {
     size_t DeckView::count( const std::string& keyword ) const {
         if( !this->hasKeyword( keyword ) ) return 0;
 
-        return this->getKeywordList( keyword ).size();
+        return this->offsets( keyword ).size();
    }
 
-    static std::vector< std::shared_ptr< const DeckKeyword > > empty_kw_list;
+    const std::vector< const DeckKeyword* > DeckView::getKeywordList( const std::string& keyword ) const {
+        if( !hasKeyword( keyword ) ) {};
 
-    const std::vector< std::shared_ptr< const DeckKeyword > >& DeckView::getKeywordList( const std::string& keyword ) const {
-        if( !hasKeyword( keyword ) ) return empty_kw_list;
+        const auto& indices = this->offsets( keyword );
 
-        return this->keywordMap.find( keyword )->second;
+        std::vector< const DeckKeyword* > ret;
+        ret.reserve( indices.size() );
+
+        for( size_t i : indices )
+            ret.push_back( &this->getKeyword( i ) );
+
+        return ret;
     }
 
     size_t DeckView::size() const {
@@ -89,45 +95,63 @@ namespace Opm {
         return this->last;
     }
 
+    void DeckView::add( const DeckKeyword* kw, const_iterator f, const_iterator l ) {
+        this->keywordMap[ kw->name() ].push_back( std::distance( f, l ) - 1 );
+        this->first = f;
+        this->last = l;
+    }
+
+    static const std::vector< size_t > empty_indices = {};
+    const std::vector< size_t >& DeckView::offsets( const std::string& keyword ) const {
+        if( !hasKeyword( keyword ) ) return empty_indices;
+
+        return this->keywordMap.find( keyword )->second;
+    }
+
     DeckView::DeckView( const_iterator first, const_iterator last ) :
         first( first ), last( last )
     {
-        for( auto itr = this->first; itr != this->last; ++itr )
-            this->keywordMap[ (*itr)->name() ].push_back( *itr );
+        size_t index = 0;
+        for( const auto& kw : *this )
+            this->keywordMap[ kw.name() ].push_back( index++ );
     }
 
     DeckView::DeckView( std::pair< const_iterator, const_iterator > limits ) :
         DeckView( limits.first, limits.second )
     {}
 
-    void DeckView::add( std::shared_ptr< const DeckKeyword > kw, const_iterator f, const_iterator l ) {
-        this->keywordMap[ kw->name() ].push_back( kw );
-        this->first = f;
-        this->last = l;
-    }
-
-    void Deck::addKeyword( std::shared_ptr< const DeckKeyword > keyword ) {
-        this->keywordList.push_back( keyword );
+    void Deck::addKeyword( DeckKeyword&& keyword ) {
+        this->keywordList.push_back( std::move( keyword ) );
 
         auto first = this->keywordList.begin();
         auto last = this->keywordList.end();
 
-        this->add( this->keywordList.back(), first, last );
+        this->add( &this->keywordList.back(), first, last );
+    }
+
+    void Deck::addKeyword( const DeckKeyword& keyword ) {
+        DeckKeyword kw = keyword;
+        this->addKeyword( std::move( kw ) );
     }
 
     void Deck::initUnitSystem() {
+        this->defaultUnits = std::unique_ptr< UnitSystem >( UnitSystem::newMETRIC() );
         if (hasKeyword("FIELD"))
-            m_activeUnits = std::shared_ptr<UnitSystem>( UnitSystem::newFIELD() );
+            this->activeUnits = std::unique_ptr< UnitSystem >( UnitSystem::newFIELD() );
         else
-            m_activeUnits = this->getDefaultUnitSystem();
+            this->activeUnits = std::unique_ptr< UnitSystem >( UnitSystem::newMETRIC() );
     }
 
-    std::shared_ptr< UnitSystem > Deck::getDefaultUnitSystem() const {
-        return std::shared_ptr<UnitSystem>( UnitSystem::newMETRIC() );
+    DeckKeyword& Deck::getKeyword( size_t index ) {
+        return this->keywordList.at( index );
     }
 
-    std::shared_ptr< UnitSystem > Deck::getActiveUnitSystem() const {
-        return this->m_activeUnits;
+    UnitSystem& Deck::getDefaultUnitSystem() const {
+        return *this->defaultUnits;
+    }
+
+    UnitSystem& Deck::getActiveUnitSystem() const {
+        return *this->activeUnits;
     }
 
 

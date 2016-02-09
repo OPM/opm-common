@@ -25,14 +25,21 @@
 #include <vector>
 #include <string>
 
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+
 namespace Opm {
 
-    class DeckKeyword;
-    class UnitSystem;
+    /*
+     * The Deck (container) class owns all memory given to it via .addX(), as
+     * do all inner objects. This means that the Deck object itself must stay
+     * alive as long as DeckItem (and friends) are needed, to avoid
+     * use-after-free.
+     */
 
     class DeckView {
         public:
-            typedef std::vector<std::shared_ptr< const DeckKeyword >>::const_iterator const_iterator;
+            typedef std::vector< DeckKeyword >::const_iterator const_iterator;
 
             bool hasKeyword( const DeckKeyword& keyword ) const;
             bool hasKeyword( const std::string& keyword ) const;
@@ -41,21 +48,22 @@ namespace Opm {
                 return hasKeyword( Keyword::keywordName );
             }
 
-            std::shared_ptr< const DeckKeyword > getKeyword( const std::string& keyword, size_t index ) const;
-            std::shared_ptr< const DeckKeyword > getKeyword( const std::string& keyword ) const;
-            std::shared_ptr< const DeckKeyword > getKeyword( size_t index ) const;
+            const DeckKeyword& getKeyword( const std::string& keyword, size_t index ) const;
+            const DeckKeyword& getKeyword( const std::string& keyword ) const;
+            const DeckKeyword& getKeyword( size_t index ) const;
+            DeckKeyword& getKeyword( size_t index );
             template< class Keyword >
-            std::shared_ptr< const DeckKeyword > getKeyword() const {
+            const DeckKeyword& getKeyword() const {
                 return getKeyword( Keyword::keywordName );
             }
             template< class Keyword >
-            std::shared_ptr< const DeckKeyword > getKeyword( size_t index ) const {
+            const DeckKeyword& getKeyword( size_t index ) const {
                 return getKeyword( Keyword::keywordName, index );
             }
 
-            const std::vector< std::shared_ptr< const DeckKeyword > >& getKeywordList( const std::string& keyword ) const;
+            const std::vector< const DeckKeyword* > getKeywordList( const std::string& keyword ) const;
             template< class Keyword >
-            const std::vector< std::shared_ptr< const DeckKeyword > >& getKeywordList() const {
+            const std::vector< const DeckKeyword* > getKeywordList() const {
                 return getKeywordList( Keyword::keywordName );
             }
 
@@ -66,7 +74,9 @@ namespace Opm {
             const_iterator end() const;
 
         protected:
-            void add( std::shared_ptr< const DeckKeyword >, const_iterator, const_iterator );
+            void add( const DeckKeyword*, const_iterator, const_iterator );
+
+            const std::vector< size_t >& offsets( const std::string& ) const;
 
             DeckView() = default;
             DeckView( const_iterator first, const_iterator last );
@@ -75,7 +85,7 @@ namespace Opm {
         private:
             const_iterator first;
             const_iterator last;
-            std::map< std::string, std::vector< std::shared_ptr< const DeckKeyword > > > keywordMap;
+            std::map< std::string, std::vector< size_t > > keywordMap;
 
     };
 
@@ -90,15 +100,19 @@ namespace Opm {
             using DeckView::begin;
             using DeckView::end;
 
-            void addKeyword( std::shared_ptr< const DeckKeyword > keyword );
+            void addKeyword( DeckKeyword&& keyword );
+            void addKeyword( const DeckKeyword& keyword );
+
+            DeckKeyword& getKeyword( size_t );
 
             void initUnitSystem();
-            std::shared_ptr< UnitSystem > getDefaultUnitSystem() const;
-            std::shared_ptr< UnitSystem > getActiveUnitSystem()  const;
+            UnitSystem& getDefaultUnitSystem() const;
+            UnitSystem& getActiveUnitSystem()  const;
 
         private:
-            std::vector< std::shared_ptr< const DeckKeyword > > keywordList;
-            std::shared_ptr<UnitSystem> m_activeUnits;
+            std::vector< DeckKeyword > keywordList;
+            std::unique_ptr< UnitSystem > activeUnits;
+            std::unique_ptr< UnitSystem > defaultUnits;
     };
 
     typedef std::shared_ptr<Deck> DeckPtr;
