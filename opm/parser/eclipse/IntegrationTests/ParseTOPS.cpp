@@ -31,6 +31,8 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
+#include <array>
+
 using namespace Opm;
 
 
