@@ -25,7 +25,7 @@ namespace Opm {
     }
 
 
-    WellProductionProperties WellProductionProperties::history(double BHPLimit , DeckRecordConstPtr record, bool addGroupProductionControl)
+    WellProductionProperties WellProductionProperties::history(double BHPLimit , DeckRecordConstPtr record)
     {
         // Modes supported in WCONHIST just from {O,W,G}RAT values
         //

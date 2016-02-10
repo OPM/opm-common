@@ -115,7 +115,7 @@ namespace {
             Opm::DeckPtr             deck   = parser.parseString(input, Opm::ParseMode());
             Opm::DeckKeywordConstPtr kwd    = deck->getKeyword("WCONHIST");
             Opm::DeckRecordConstPtr  record = kwd->getRecord(0);
-            Opm::WellProductionProperties pred = Opm::WellProductionProperties::prediction( record);
+            Opm::WellProductionProperties pred = Opm::WellProductionProperties::prediction( record, false );
 
             return pred;
         }

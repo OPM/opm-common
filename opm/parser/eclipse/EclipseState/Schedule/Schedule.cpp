@@ -439,14 +439,14 @@ namespace Opm {
                 WellPtr well = *wellIter;
                 WellProductionProperties properties;
 
-                bool addGrupProductionControl = well->isAvailableForGroupControl(currentStep);
 
-                if (isPredictionMode)
+                if (isPredictionMode) {
+                    auto addGrupProductionControl = well->isAvailableForGroupControl(currentStep);
                     properties = WellProductionProperties::prediction( record, addGrupProductionControl );
-                else {
+ 		} else {
                     const WellProductionProperties& prev_properties = well->getProductionProperties(currentStep);
                     double BHPLimit = prev_properties.BHPLimit;
-                    properties = WellProductionProperties::history( BHPLimit , record, addGrupProductionControl);
+                    properties = WellProductionProperties::history( BHPLimit , record);
                 }
 
                 if (status != WellCommon::SHUT) {
