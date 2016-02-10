@@ -35,7 +35,7 @@ namespace Opm {
             const std::string& getString( size_t index ) const override;
             const std::vector< std::string >& getStringData() const override;
 
-            std::string getTrimmedString( size_t index ) const;
+            std::string getTrimmedString( size_t index ) const override;
     };
 
     typedef std::shared_ptr< DeckStringItem > DeckStringItemPtr;
