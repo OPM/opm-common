@@ -124,8 +124,6 @@ namespace Opm {
         public:
             using DeckItem::DeckItem;
 
-            void push_back( std::deque< T > data, size_t items );
-            void push_back( std::deque< T > data );
             void push_back( T value );
             // trying to access the data of a "dummy default item" will raise an exception
             void push_backDummyDefault();

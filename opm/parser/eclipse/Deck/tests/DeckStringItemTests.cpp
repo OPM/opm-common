@@ -51,28 +51,6 @@ BOOST_AUTO_TEST_CASE(GetStringAtIndex_NoData_ExceptionThrown) {
     BOOST_CHECK_THROW(deckStringItem.getString(1), std::out_of_range);
 }
 
-BOOST_AUTO_TEST_CASE(PushBack_VectorPushed_ElementsCorrect) {
-    DeckStringItem deckStringItem("TEST");
-    std::deque<std::string> pushThese;
-    pushThese.push_back("hei");
-    pushThese.push_back("trygve-hei");
-    deckStringItem.push_back(pushThese);
-    BOOST_CHECK_EQUAL("hei", deckStringItem.getString(0));
-    BOOST_CHECK_EQUAL("trygve-hei", deckStringItem.getString(1));
-}
-
-BOOST_AUTO_TEST_CASE(PushBack_subVectorPushed_ElementsCorrect) {
-    DeckStringItem deckStringItem("TEST");
-    std::deque<std::string> pushThese;
-    pushThese.push_back("Well-1");
-    pushThese.push_back("Well-2");
-    pushThese.push_back("Well-3");
-    deckStringItem.push_back(pushThese, 2);
-    BOOST_CHECK_EQUAL("Well-1", deckStringItem.getString(0));
-    BOOST_CHECK_EQUAL("Well-2", deckStringItem.getString(1));
-    BOOST_CHECK_EQUAL(2U, deckStringItem.size());
-}
-
 BOOST_AUTO_TEST_CASE(size_variouspushes_sizecorrect) {
     DeckStringItem deckStringItem("TEST");
 

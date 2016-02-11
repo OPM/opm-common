@@ -72,31 +72,6 @@ BOOST_AUTO_TEST_CASE(InitializeDefaultApplied) {
     BOOST_CHECK( deckIntItem.size() == 0 );
 }
 
-
-
-BOOST_AUTO_TEST_CASE(PushBack_VectorPushed_ElementsCorrect) {
-    DeckIntItem deckIntItem("TEST");
-    std::deque<int> pushThese;
-    pushThese.push_back(13);
-    pushThese.push_back(33);
-    deckIntItem.push_back(pushThese);
-    BOOST_CHECK_EQUAL(13, deckIntItem.getInt(0));
-    BOOST_CHECK_EQUAL(33, deckIntItem.getInt(1));
-}
-
-BOOST_AUTO_TEST_CASE(PushBack_subVectorPushed_ElementsCorrect) {
-    DeckIntItem deckIntItem("TEST");
-    std::deque<int> pushThese;
-    pushThese.push_back(13);
-    pushThese.push_back(33);
-    pushThese.push_back(47);
-    deckIntItem.push_back(pushThese , 2);
-    BOOST_CHECK_EQUAL(13 , deckIntItem.getInt(0));
-    BOOST_CHECK_EQUAL(33 , deckIntItem.getInt(1));
-    BOOST_CHECK_EQUAL( 2U , deckIntItem.size());
-}
-
-
 BOOST_AUTO_TEST_CASE(size_correct) {
     DeckIntItem deckIntItem("TEST");
 

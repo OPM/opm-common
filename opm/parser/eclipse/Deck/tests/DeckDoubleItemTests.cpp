@@ -46,32 +46,6 @@ BOOST_AUTO_TEST_CASE(GetDoubleAtIndex_NoData_ExceptionThrown) {
 }
 
 
-
-BOOST_AUTO_TEST_CASE(PushBackDouble_VectorPushed_ElementsCorrect) {
-    DeckDoubleItem deckDoubleItem("TEST");
-    std::deque<double> pushThese;
-    pushThese.push_back(13);
-    pushThese.push_back(33);
-    deckDoubleItem.push_back(pushThese);
-    BOOST_CHECK_EQUAL(13, deckDoubleItem.getRawDouble(0));
-    BOOST_CHECK_EQUAL(33, deckDoubleItem.getRawDouble(1));
-}
-
-
-BOOST_AUTO_TEST_CASE(PushBackDouble_subVectorPushed_ElementsCorrect) {
-    DeckDoubleItem deckDoubleItem("TEST");
-    std::deque<double> pushThese;
-    pushThese.push_back(13);
-    pushThese.push_back(33);
-    pushThese.push_back(47);
-    deckDoubleItem.push_back(pushThese , 2);
-    BOOST_CHECK_EQUAL(13 , deckDoubleItem.getRawDouble(0));
-    BOOST_CHECK_EQUAL(33 , deckDoubleItem.getRawDouble(1));
-    BOOST_CHECK_EQUAL( 2U , deckDoubleItem.size());
-}
-
-
-
 BOOST_AUTO_TEST_CASE(sizeDouble_correct) {
     DeckDoubleItem deckDoubleItem("TEST");
 

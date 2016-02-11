@@ -67,26 +67,6 @@ namespace Opm {
     }
 
     template< typename T >
-    void DeckTypeItem< T >::push_back( std::deque< T > data, size_t items ) {
-        if( m_dataPointDefaulted.size() != this->data.size() )
-            throw std::logic_error("To add a value to an item, no \"pseudo defaults\" can be added before");
-
-        for( size_t i = 0; i < items; i++ ) {
-            this->data.push_back( data[ i ] );
-            m_dataPointDefaulted.push_back( false );
-        }
-    }
-
-    template< typename T >
-    void DeckTypeItem< T >::push_back( std::deque< T > data ) {
-        if( m_dataPointDefaulted.size() != this->data.size() )
-            throw std::logic_error("To add a value to an item, no \"pseudo defaults\" can be added before");
-
-        this->push_back( data, data.size() );
-        this->m_dataPointDefaulted.push_back( false );
-    }
-
-    template< typename T >
     void DeckTypeItem< T >::push_back( T data ) {
         if( m_dataPointDefaulted.size() != this->data.size() )
             throw std::logic_error("To add a value to an item, no \"pseudo defaults\" can be added before");
