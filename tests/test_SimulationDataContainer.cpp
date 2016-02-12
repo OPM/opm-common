@@ -113,3 +113,63 @@ BOOST_AUTO_TEST_CASE(TestRegisterCellData) {
 }
 
 
+BOOST_AUTO_TEST_CASE(Test_Equal) {
+    {
+        SimulationDataContainer container1(100 , 10 , 2);
+        SimulationDataContainer container2(100 , 10 , 2);
+        BOOST_CHECK( container1.equal( container2 ));
+    }
+
+    {
+        SimulationDataContainer container1(100 , 10 , 2);
+        SimulationDataContainer container2(100 , 10 , 1);
+        BOOST_CHECK( !container1.equal( container2 ));
+    }
+
+    {
+        SimulationDataContainer container1(100 , 10 , 2);
+        SimulationDataContainer container2(100 , 10 , 2);
+
+        container1.registerCellData( "FIELDX" , 1 , 123 );
+        BOOST_CHECK( !container1.equal( container2 ));
+        container2.registerCellData( "FIELDX" , 1 , 123 );
+        BOOST_CHECK( container1.equal( container2 ));
+
+        container1.registerFaceData( "FACEX" , 1 , 123 );
+        BOOST_CHECK( !container1.equal( container2 ));
+        container2.registerFaceData( "FACEX" , 1 , 123 );
+        BOOST_CHECK( container1.equal( container2 ));
+    }
+
+    {
+        SimulationDataContainer container1(100 , 10 , 2);
+        SimulationDataContainer container2(100 , 10 , 2);
+
+        container1.registerCellData( "FIELD1" , 1 , 123 );
+        container2.registerCellData( "FIELD2" , 1 , 123 );
+        BOOST_CHECK( !container1.equal( container2 ));
+    }
+
+    {
+        SimulationDataContainer container1(100 , 10 , 2);
+        SimulationDataContainer container2(100 , 10 , 2);
+
+        container1.registerFaceData( "FIELD1" , 1 , 123 );
+        container2.registerFaceData( "FIELD2" , 1 , 123 );
+        BOOST_CHECK( !container1.equal( container2 ));
+    }
+
+    {
+        SimulationDataContainer container1(100 , 10 , 2);
+        SimulationDataContainer container2(100 , 10 , 2);
+
+        container1.registerFaceData( "FIELD1" , 1 , 123 );
+        container2.registerFaceData( "FIELD1" , 1 , 123 );
+        BOOST_CHECK( container1.equal( container2 ));
+
+        std::vector<double>& f = container1.getFaceData( "FIELD1" );
+        f[0] *= 1.1;
+        BOOST_CHECK( !container1.equal( container2 ));
+    }
+}
+

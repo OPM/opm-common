@@ -27,6 +27,21 @@
 
 namespace Opm {
 
+
+    /// The SimulationDataContainer is a simple container to manage
+    /// simulation data. The container is instantiated with information
+    /// of how many cells, faces and phases are present in the
+    /// reservoirmodel. You can then add data to the container by using the
+    ///
+    ///   registerCellData()
+    ///   registerFaceData()
+    ///
+    /// functions. The container owns and manages the data, but
+    /// mutable references are returned with the getCellData() and
+    /// getFaceData() methods, and the content will typically be
+    /// modified by external scope.
+
+
     class SimulationDataContainer {
     public:
         SimulationDataContainer(size_t num_cells, size_t num_faces , size_t num_phases);
@@ -36,12 +51,19 @@ namespace Opm {
         size_t numCells() const;
 
         bool hasCellData( const std::string& name ) const;
+
+        /// Will register a data vector of size numCells() *
+        /// components.
         void registerCellData( const std::string& name , size_t components , double initialValue = 0.0 );
         std::vector<double>& getCellData( const std::string& name );
+        const std::vector<double>& getCellData( const std::string& name ) const;
 
         bool hasFaceData( const std::string& name ) const;
         void registerFaceData( const std::string& name , size_t components , double initialValue = 0.0 );
         std::vector<double>& getFaceData( const std::string& name );
+        const std::vector<double>& getFaceData( const std::string& name ) const;
+
+        bool equal(const SimulationDataContainer& other) const;
 
 
         /* Old deprecated */
