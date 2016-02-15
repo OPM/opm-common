@@ -29,6 +29,8 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Deck/SCHEDULESection.hpp>
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/Parser.hpp>
 
 using namespace Opm;
 
@@ -205,245 +207,186 @@ BOOST_AUTO_TEST_CASE(SCHEDULESection_NotTerminated) {
 }
 
 BOOST_AUTO_TEST_CASE(Section_ValidDecks) {
-    // minimal deck
-    DeckPtr deck(new Deck());
-    deck->addKeyword( DeckKeyword( "RUNSPEC" ) );
-    deck->addKeyword( DeckKeyword( "TEST1" ) );
 
-    deck->addKeyword( DeckKeyword( "GRID" ) );
-    deck->addKeyword( DeckKeyword( "TEST2" ) );
+    ParseMode mode = { { { ParseMode::PARSE_UNKNOWN_KEYWORD, InputError::IGNORE } } };
+    Parser parser;
 
-    deck->addKeyword( DeckKeyword( "PROPS" ) );
-    deck->addKeyword( DeckKeyword( "TEST3" ) );
+    const std::string minimal = "RUNSPEC\n"
+                                "TEST1\n"
+                                "GRID\n"
+                                "TEST2\n"
+                                "PROPS\n"
+                                "TEST3\n"
+                                "SOLUTION\n"
+                                "TEST4\n"
+                                "SCHEDULE\n"
+                                "TEST5\n";
 
-    deck->addKeyword( DeckKeyword( "SOLUTION" ) );
-    deck->addKeyword( DeckKeyword( "TEST4" ) );
+    std::unique_ptr< Deck > deck( parser.newDeckFromString( minimal, mode ) );
+    BOOST_CHECK( Opm::Section::checkSectionTopology(*deck, parser) );
 
-    deck->addKeyword( DeckKeyword( "SCHEDULE" ) );
-    deck->addKeyword( DeckKeyword( "TEST5" ) );
+    const std::string with_opt = "RUNSPEC\n"
+                                "TEST1\n"
+                                "GRID\n"
+                                "TEST2\n"
+                                "EDIT\n"
+                                "TEST3\n"
+                                "PROPS\n"
+                                "TEST4\n"
+                                "REGIONS\n"
+                                "TEST5\n"
+                                "SOLUTION\n"
+                                "TEST6\n"
+                                "SUMMARY\n"
+                                "TEST7\n"
+                                "SCHEDULE\n"
+                                "TEST8\n";
 
-    BOOST_CHECK(Opm::Section::checkSectionTopology(*deck));
-
-    // deck with all optional sections
-    deck.reset(new Deck());
-    deck->addKeyword( DeckKeyword( "RUNSPEC" ) );
-    deck->addKeyword( DeckKeyword( "TEST1" ) );
-
-    deck->addKeyword( DeckKeyword( "GRID" ) );
-    deck->addKeyword( DeckKeyword( "TEST2" ) );
-
-    deck->addKeyword( DeckKeyword( "EDIT" ) );
-    deck->addKeyword( DeckKeyword( "TEST3" ) );
-
-    deck->addKeyword( DeckKeyword( "PROPS" ) );
-    deck->addKeyword( DeckKeyword( "TEST4" ) );
-
-    deck->addKeyword( DeckKeyword( "REGIONS" ) );
-    deck->addKeyword( DeckKeyword( "TEST5" ) );
-
-    deck->addKeyword( DeckKeyword( "SOLUTION" ) );
-    deck->addKeyword( DeckKeyword( "TEST6" ) );
-
-    deck->addKeyword( DeckKeyword( "SUMMARY" ) );
-    deck->addKeyword( DeckKeyword( "TEST7" ) );
-
-    deck->addKeyword( DeckKeyword( "SCHEDULE" ) );
-    deck->addKeyword( DeckKeyword( "TEST8" ) );
-
-    BOOST_CHECK(Opm::Section::checkSectionTopology(*deck));
+    deck.reset( parser.newDeckFromString( with_opt, mode ) );
+    BOOST_CHECK(Opm::Section::checkSectionTopology(*deck, parser));
 }
 
 BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
-    // keyword before RUNSPEC
-    DeckPtr deck(new Deck());
 
-    deck->addKeyword( DeckKeyword( "TEST0" ) );
-    deck->addKeyword( DeckKeyword( "RUNSPEC" ) );
-    deck->addKeyword( DeckKeyword( "TEST1" ) );
-
-    deck->addKeyword( DeckKeyword( "GRID" ) );
-    deck->addKeyword( DeckKeyword( "TEST2" ) );
-
-    deck->addKeyword( DeckKeyword( "PROPS" ) );
-    deck->addKeyword( DeckKeyword( "TEST3" ) );
-
-    deck->addKeyword( DeckKeyword( "SOLUTION" ) );
-    deck->addKeyword( DeckKeyword( "TEST4" ) );
-
-    deck->addKeyword( DeckKeyword( "SCHEDULE" ) );
-    deck->addKeyword( DeckKeyword( "TEST5" ) );
-
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(*deck));
-
-    // wrong section order
-    deck.reset(new Deck());
-    deck->addKeyword( DeckKeyword( "RUNSPEC" ) );
-    deck->addKeyword( DeckKeyword( "TEST1" ) );
-
-    deck->addKeyword( DeckKeyword( "EDIT" ) );
-    deck->addKeyword( DeckKeyword( "TEST3" ) );
-
-    deck->addKeyword( DeckKeyword( "GRID" ) );
-    deck->addKeyword( DeckKeyword( "TEST2" ) );
-
-    deck->addKeyword( DeckKeyword( "PROPS" ) );
-    deck->addKeyword( DeckKeyword( "TEST4" ) );
-
-    deck->addKeyword( DeckKeyword( "REGIONS" ) );
-    deck->addKeyword( DeckKeyword( "TEST5" ) );
-
-    deck->addKeyword( DeckKeyword( "SOLUTION" ) );
-    deck->addKeyword( DeckKeyword( "TEST6" ) );
-
-    deck->addKeyword( DeckKeyword( "SUMMARY" ) );
-    deck->addKeyword( DeckKeyword( "TEST7" ) );
-
-    deck->addKeyword( DeckKeyword( "SCHEDULE" ) );
-    deck->addKeyword( DeckKeyword( "TEST8" ) );
-
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(*deck));
-
-    // duplicate section
-    deck.reset(new Deck());
-    deck->addKeyword( DeckKeyword( "RUNSPEC" ) );
-    deck->addKeyword( DeckKeyword( "TEST1" ) );
-
-    deck->addKeyword( DeckKeyword( "GRID" ) );
-    deck->addKeyword( DeckKeyword( "TEST2" ) );
-
-    deck->addKeyword( DeckKeyword( "GRID" ) );
-    deck->addKeyword( DeckKeyword( "TEST21" ) );
-
-    deck->addKeyword( DeckKeyword( "EDIT" ) );
-    deck->addKeyword( DeckKeyword( "TEST3" ) );
-
-    deck->addKeyword( DeckKeyword( "PROPS" ) );
-    deck->addKeyword( DeckKeyword( "TEST4" ) );
-
-    deck->addKeyword( DeckKeyword( "REGIONS" ) );
-    deck->addKeyword( DeckKeyword( "TEST5" ) );
-
-    deck->addKeyword( DeckKeyword( "SOLUTION" ) );
-    deck->addKeyword( DeckKeyword( "TEST6" ) );
-
-    deck->addKeyword( DeckKeyword( "SUMMARY" ) );
-    deck->addKeyword( DeckKeyword( "TEST7" ) );
-
-    deck->addKeyword( DeckKeyword( "SCHEDULE" ) );
-    deck->addKeyword( DeckKeyword( "TEST8" ) );
-
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(*deck));
-
-    // section after SCHEDULE
-    deck.reset(new Deck());
-    deck->addKeyword( DeckKeyword( "RUNSPEC" ) );
-    deck->addKeyword( DeckKeyword( "TEST1" ) );
-
-    deck->addKeyword( DeckKeyword( "GRID" ) );
-    deck->addKeyword( DeckKeyword( "TEST2" ) );
-
-    deck->addKeyword( DeckKeyword( "PROPS" ) );
-    deck->addKeyword( DeckKeyword( "TEST4" ) );
-
-    deck->addKeyword( DeckKeyword( "REGIONS" ) );
-    deck->addKeyword( DeckKeyword( "TEST5" ) );
-
-    deck->addKeyword( DeckKeyword( "SOLUTION" ) );
-    deck->addKeyword( DeckKeyword( "TEST6" ) );
-
-    deck->addKeyword( DeckKeyword( "SUMMARY" ) );
-    deck->addKeyword( DeckKeyword( "TEST7" ) );
-
-    deck->addKeyword( DeckKeyword( "SCHEDULE" ) );
-    deck->addKeyword( DeckKeyword( "TEST8" ) );
-
-    deck->addKeyword( DeckKeyword( "EDIT" ) );
-    deck->addKeyword( DeckKeyword( "TEST3" ) );
-
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(*deck));
-
-    // missing RUNSPEC
-    deck.reset(new Deck());
-
-    deck->addKeyword( DeckKeyword( "GRID" ) );
-    deck->addKeyword( DeckKeyword( "TEST2" ) );
-
-    deck->addKeyword( DeckKeyword( "PROPS" ) );
-    deck->addKeyword( DeckKeyword( "TEST3" ) );
-
-    deck->addKeyword( DeckKeyword( "SOLUTION" ) );
-    deck->addKeyword( DeckKeyword( "TEST4" ) );
-
-    deck->addKeyword( DeckKeyword( "SCHEDULE" ) );
-    deck->addKeyword( DeckKeyword( "TEST5" ) );
-
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(*deck));
-
-    // missing GRID
-    deck.reset(new Deck());
-
-    deck->addKeyword( DeckKeyword( "RUNSPEC" ) );
-    deck->addKeyword( DeckKeyword( "TEST1" ) );
-
-    deck->addKeyword( DeckKeyword( "PROPS" ) );
-    deck->addKeyword( DeckKeyword( "TEST3" ) );
-
-    deck->addKeyword( DeckKeyword( "SOLUTION" ) );
-    deck->addKeyword( DeckKeyword( "TEST4" ) );
-
-    deck->addKeyword( DeckKeyword( "SCHEDULE" ) );
-    deck->addKeyword( DeckKeyword( "TEST5" ) );
-
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(*deck));
-
-    // missing PROPS
-    deck.reset(new Deck());
-
-    deck->addKeyword( DeckKeyword( "RUNSPEC" ) );
-    deck->addKeyword( DeckKeyword( "TEST1" ) );
-
-    deck->addKeyword( DeckKeyword( "GRID" ) );
-    deck->addKeyword( DeckKeyword( "TEST2" ) );
-
-    deck->addKeyword( DeckKeyword( "SOLUTION" ) );
-    deck->addKeyword( DeckKeyword( "TEST4" ) );
-
-    deck->addKeyword( DeckKeyword( "SCHEDULE" ) );
-    deck->addKeyword( DeckKeyword( "TEST5" ) );
-
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(*deck));
-
-    // missing SOLUTION
-    deck.reset(new Deck());
-
-    deck->addKeyword( DeckKeyword( "RUNSPEC" ) );
-    deck->addKeyword( DeckKeyword( "TEST1" ) );
-
-    deck->addKeyword( DeckKeyword( "GRID" ) );
-    deck->addKeyword( DeckKeyword( "TEST2" ) );
-
-    deck->addKeyword( DeckKeyword( "PROPS" ) );
-    deck->addKeyword( DeckKeyword( "TEST3" ) );
-
-    deck->addKeyword( DeckKeyword( "SCHEDULE" ) );
-    deck->addKeyword( DeckKeyword( "TEST5" ) );
-
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(*deck));
-
-    // missing SCHEDULE
-    deck.reset(new Deck());
-
-    deck->addKeyword( DeckKeyword( "RUNSPEC" ) );
-    deck->addKeyword( DeckKeyword( "TEST1" ) );
-
-    deck->addKeyword( DeckKeyword( "GRID" ) );
-    deck->addKeyword( DeckKeyword( "TEST2" ) );
-
-    deck->addKeyword( DeckKeyword( "PROPS" ) );
-    deck->addKeyword( DeckKeyword( "TEST3" ) );
-
-    deck->addKeyword( DeckKeyword( "SOLUTION" ) );
-    deck->addKeyword( DeckKeyword( "TEST4" ) );
-
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(*deck));
+    Parser parser;
+    ParseMode mode = { { { ParseMode::PARSE_UNKNOWN_KEYWORD, InputError::IGNORE } } };
+
+    const std::string keyword_before_RUNSPEC =
+                                "WWCT \n /\n"
+                                "RUNSPEC\n"
+                                "TEST1\n"
+                                "GRID\n"
+                                "TEST2\n"
+                                "PROPS\n"
+                                "TEST3\n"
+                                "SOLUTION\n"
+                                "TEST4\n"
+                                "SCHEDULE\n"
+                                "TEST5\n";
+
+    std::unique_ptr< Deck > deck( parser.newDeckFromString( keyword_before_RUNSPEC, mode ) );
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(*deck, parser));
+
+    const std::string wrong_order = "RUNSPEC\n"
+                                    "TEST1\n"
+                                    "EDIT\n"
+                                    "TEST3\n"
+                                    "GRID\n"
+                                    "TEST2\n"
+                                    "PROPS\n"
+                                    "TEST4\n"
+                                    "REGIONS\n"
+                                    "TEST5\n"
+                                    "SOLUTION\n"
+                                    "TEST6\n"
+                                    "SUMMARY\n"
+                                    "TEST7\n"
+                                    "SCHEDULE\n"
+                                    "TEST8\n";
+
+    deck.reset( parser.newDeckFromString( wrong_order, mode ) );
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(*deck, parser));
+
+    const std::string duplicate = "RUNSPEC\n"
+                                  "TEST1\n"
+                                  "GRID\n"
+                                  "TEST2\n"
+                                  "GRID\n"
+                                  "TEST21\n"
+                                  "EDIT\n"
+                                  "TEST3\n"
+                                  "PROPS\n"
+                                  "TEST4\n"
+                                  "REGIONS\n"
+                                  "TEST5\n"
+                                  "SOLUTION\n"
+                                  "TEST6\n"
+                                  "SUMMARY\n"
+                                  "TEST7\n"
+                                  "SCHEDULE\n"
+                                  "TEST8\n";
+
+    deck.reset( parser.newDeckFromString( duplicate, mode ) );
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(*deck, parser));
+
+    const std::string section_after_SCHEDULE = "RUNSPEC\n"
+                                               "TEST1\n"
+                                               "GRID\n"
+                                               "TEST2\n"
+                                               "PROPS\n"
+                                               "TEST4\n"
+                                               "REGIONS\n"
+                                               "TEST5\n"
+                                               "SOLUTION\n"
+                                               "TEST6\n"
+                                               "SUMMARY\n"
+                                               "TEST7\n"
+                                               "SCHEDULE\n"
+                                               "TEST8\n"
+                                               "EDIT\n"
+                                               "TEST3\n";
+
+    deck.reset( parser.newDeckFromString( section_after_SCHEDULE, mode ) );
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(*deck, parser));
+
+    const std::string missing_runspec = "GRID\n"
+                                        "TEST2\n"
+                                        "PROPS\n"
+                                        "TEST3\n"
+                                        "SOLUTION\n"
+                                        "TEST4\n"
+                                        "SCHEDULE\n"
+                                        "TEST5\n";
+
+    deck.reset( parser.newDeckFromString( missing_runspec, mode ) );
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(*deck, parser));
+
+
+    const std::string missing_GRID = "RUNSPEC\n"
+                                     "TEST1\n"
+                                     "PROPS\n"
+                                     "TEST3\n"
+                                     "SOLUTION\n"
+                                     "TEST4\n"
+                                     "SCHEDULE\n"
+                                     "TEST5\n";
+
+    deck.reset( parser.newDeckFromString( missing_GRID, mode ) );
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(*deck, parser));
+
+   const std::string missing_PROPS = "RUNSPEC\n"
+                                     "TEST1\n"
+                                     "GRID\n"
+                                     "TEST2\n"
+                                     "SOLUTION\n"
+                                     "TEST4\n"
+                                     "SCHEDULE\n"
+                                     "TEST5\n";
+
+    deck.reset( parser.newDeckFromString( missing_PROPS, mode ) );
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(*deck, parser));
+
+    const std::string missing_SOLUTION = "RUNSPEC\n"
+                                         "TEST1\n"
+                                         "GRID\n"
+                                         "TEST2\n"
+                                         "PROPS\n"
+                                         "TEST3\n"
+                                         "SCHEDULE\n"
+                                         "TEST5\n";
+
+    deck.reset( parser.newDeckFromString( missing_SOLUTION, mode ) );
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(*deck, parser));
+
+    const std::string missing_SCHEDULE = "RUNSPEC\n"
+                                         "TEST1\n"
+                                         "GRID\n"
+                                         "TEST2\n"
+                                         "PROPS\n"
+                                         "TEST3\n"
+                                         "SOLUTION\n"
+                                         "TEST4\n";
+
+    deck.reset( parser.newDeckFromString( missing_SCHEDULE, mode ) );
+    BOOST_CHECK(!Opm::Section::checkSectionTopology(*deck, parser));
 }

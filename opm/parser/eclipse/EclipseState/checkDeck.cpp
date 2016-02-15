@@ -23,9 +23,10 @@
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
+#include <opm/parser/eclipse/Parser/Parser.hpp>
 
 namespace Opm {
-bool checkDeck(DeckConstPtr deck, size_t enabledChecks) {
+bool checkDeck(DeckConstPtr deck, ParserConstPtr parser, size_t enabledChecks) {
     bool deckValid = true;
 
     // make sure that the deck does not contain unknown keywords
@@ -33,7 +34,7 @@ bool checkDeck(DeckConstPtr deck, size_t enabledChecks) {
         size_t keywordIdx = 0;
         for (; keywordIdx < deck->size(); keywordIdx++) {
             const auto& keyword = deck->getKeyword(keywordIdx);
-            if (!keyword.hasParserKeyword()) {
+            if (!parser->isRecognizedKeyword( keyword.name() ) ) {
                 std::string msg("Keyword '" + keyword.name() + "' is unknown.");
                 OpmLog::addMessage(Log::MessageType::Warning , Log::fileMessage( keyword.getFileName(), keyword.getLineNumber(), msg));
                 deckValid = false;
@@ -44,7 +45,7 @@ bool checkDeck(DeckConstPtr deck, size_t enabledChecks) {
     // make sure all mandatory sections are present and that their order is correct
     if (enabledChecks & SectionTopology) {
         bool ensureKeywordSection = enabledChecks & KeywordSection;
-        deckValid = deckValid && Section::checkSectionTopology(*deck, ensureKeywordSection);
+        deckValid = deckValid && Section::checkSectionTopology(*deck, *parser, ensureKeywordSection);
     }
 
     return deckValid;

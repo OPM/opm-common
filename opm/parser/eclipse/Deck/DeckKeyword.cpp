@@ -44,26 +44,12 @@ namespace Opm {
         m_lineNumber = lineNumber;
     }
 
-    const ParserKeyword* DeckKeyword::getParserKeyword() const {
-        if (!this->m_parserKeyword)
-            throw std::invalid_argument("No ParserKeyword object available");
-        return this->m_parserKeyword;
-    }
-
-    bool DeckKeyword::hasParserKeyword() const {
-        return static_cast< bool >( m_parserKeyword );
-    }
-
     const std::string& DeckKeyword::getFileName() const {
         return m_fileName;
     }
 
     int DeckKeyword::getLineNumber() const {
         return m_lineNumber;
-    }
-
-    void DeckKeyword::setParserKeyword( const ParserKeyword* parserKeyword ) {
-        this->m_parserKeyword = parserKeyword;
     }
 
     void DeckKeyword::setDataKeyword(bool isDataKeyword_) {

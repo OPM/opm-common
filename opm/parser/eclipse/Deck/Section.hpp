@@ -27,6 +27,7 @@
 namespace Opm {
 
     class UnitSystem;
+    class Parser;
 
 class Section : public DeckView {
     public:
@@ -47,6 +48,7 @@ class Section : public DeckView {
         // returns whether the deck has all mandatory sections and if all sections are in
         // the right order
         static bool checkSectionTopology(const Deck& deck,
+                                         const Parser&,
                                          bool ensureKeywordSectionAffiliation = false);
 
     private:

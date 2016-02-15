@@ -29,18 +29,6 @@ namespace Opm {
         const std::string& getFileName() const;
         int getLineNumber() const;
 
-        /*!
-         * \brief Returns the Parser keyword from which the current deck keyword was created from.
-         *
-         * If no parser keyword is available, this method throws
-         * std::invalid_exception. Use hasParserKeyword() to test if one is available..
-         */
-        const ParserKeyword* getParserKeyword() const;
-
-        bool hasParserKeyword() const;
-
-        void setParserKeyword(const ParserKeyword* parserKeyword);
-
         size_t size() const;
         void addRecord(DeckRecord&& record);
         const DeckRecord& getRecord(size_t index) const;
@@ -72,7 +60,6 @@ namespace Opm {
         std::string m_fileName;
         int m_lineNumber;
 
-        const ParserKeyword* m_parserKeyword;
         std::vector< DeckRecord > m_recordList;
         bool m_knownKeyword;
         bool m_isDataKeyword;

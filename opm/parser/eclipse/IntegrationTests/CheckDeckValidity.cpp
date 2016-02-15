@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE( KeywordInCorrectSection ) {
             "SCHEDULE\n";
 
         auto deck = parser->parseString(correctDeckString, Opm::ParseMode());
-        BOOST_CHECK(Opm::checkDeck(deck));
+        BOOST_CHECK(Opm::checkDeck(deck, parser));
     }
 
     {
@@ -64,8 +64,8 @@ BOOST_AUTO_TEST_CASE( KeywordInCorrectSection ) {
             "SCHEDULE\n";
 
         auto deck = parser->parseString(correctDeckString, Opm::ParseMode());
-        BOOST_CHECK(!Opm::checkDeck(deck));
-        BOOST_CHECK(Opm::checkDeck(deck, ~Opm::SectionTopology));
+        BOOST_CHECK(!Opm::checkDeck(deck, parser));
+        BOOST_CHECK(Opm::checkDeck(deck, parser, ~Opm::SectionTopology));
     }
 
     {
@@ -90,13 +90,13 @@ BOOST_AUTO_TEST_CASE( KeywordInCorrectSection ) {
             "SCHEDULE\n";
 
         auto deck = parser->parseString(incorrectDeckString, Opm::ParseMode());
-        BOOST_CHECK(!Opm::checkDeck(deck));
+        BOOST_CHECK(!Opm::checkDeck(deck, parser));
 
         // this is supposed to succeed as we don't ensure that all keywords are in the
         // correct section
-        BOOST_CHECK(Opm::checkDeck(deck, Opm::SectionTopology));
+        BOOST_CHECK(Opm::checkDeck(deck, parser, Opm::SectionTopology));
 
         // this fails because of the incorrect BOX keyword
-        BOOST_CHECK(!Opm::checkDeck(deck, Opm::SectionTopology | Opm::KeywordSection));
+        BOOST_CHECK(!Opm::checkDeck(deck, parser, Opm::SectionTopology | Opm::KeywordSection));
     }
 }

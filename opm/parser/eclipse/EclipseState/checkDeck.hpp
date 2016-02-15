@@ -25,6 +25,7 @@
 namespace Opm {
 
     class Deck;
+    class Parser;
 
 enum DeckChecks {
     SectionTopology = 0x0001,
@@ -39,7 +40,7 @@ enum DeckChecks {
 
 // some semantical correctness checks of the deck. this method adds a warning to
 // the deck object if any issue is found ...
-bool checkDeck(std::shared_ptr< const Deck > deck, size_t enabledChecks = AllChecks);
+bool checkDeck(std::shared_ptr< const Deck > deck, std::shared_ptr< const Parser >, size_t enabledChecks = AllChecks);
 
 }
 
