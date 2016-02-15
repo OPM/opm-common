@@ -521,7 +521,8 @@ namespace Opm {
             SupportedIntKeywordInfo( "ENDNUM" , 1, "1" ),
             SupportedIntKeywordInfo( "FLUXNUM" , 1 , "1" ),
             SupportedIntKeywordInfo( "MULTNUM", 1 , "1" ),
-            SupportedIntKeywordInfo( "FIPNUM" , 1, "1" )
+            SupportedIntKeywordInfo( "FIPNUM" , 1, "1" ),
+            SupportedIntKeywordInfo( "MISCNUM", 1, "1" )
             });
 
         double nan = std::numeric_limits<double>::quiet_NaN();
