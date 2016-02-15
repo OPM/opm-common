@@ -51,9 +51,9 @@ EclipseState makeState(const std::string& fileName) {
 
 BOOST_AUTO_TEST_CASE( PERMX ) {
     EclipseState state = makeState("testdata/integration_tests/BOX/BOXTEST1" );
-    std::shared_ptr<GridProperty<double> > permx = state.getDoubleGridProperty("PERMX");
-    std::shared_ptr<GridProperty<double> > permy = state.getDoubleGridProperty("PERMY");
-    std::shared_ptr<GridProperty<double> > permz = state.getDoubleGridProperty("PERMZ");
+    std::shared_ptr<const GridProperty<double> > permx = state.getDoubleGridProperty("PERMX");
+    std::shared_ptr<const GridProperty<double> > permy = state.getDoubleGridProperty("PERMY");
+    std::shared_ptr<const GridProperty<double> > permz = state.getDoubleGridProperty("PERMZ");
     size_t i,j,k;
     std::shared_ptr<const EclipseGrid> grid = state.getEclipseGrid();
 
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE( PERMX ) {
 
 BOOST_AUTO_TEST_CASE( PARSE_BOX_OK ) {
     EclipseState state = makeState("testdata/integration_tests/BOX/BOXTEST1");
-    std::shared_ptr<GridProperty<int> > satnum = state.getIntGridProperty("SATNUM");
+    std::shared_ptr<const GridProperty<int> > satnum = state.getIntGridProperty("SATNUM");
     {
         size_t i,j,k;
         std::shared_ptr<const EclipseGrid> grid = state.getEclipseGrid();
@@ -97,8 +97,8 @@ BOOST_AUTO_TEST_CASE( PARSE_BOX_OK ) {
 
 BOOST_AUTO_TEST_CASE( PARSE_MULTIPLY_COPY ) {
     EclipseState state = makeState("testdata/integration_tests/BOX/BOXTEST1");
-    std::shared_ptr<GridProperty<int> > satnum = state.getIntGridProperty("SATNUM");
-    std::shared_ptr<GridProperty<int> > fipnum = state.getIntGridProperty("FIPNUM");
+    std::shared_ptr<const GridProperty<int> > satnum = state.getIntGridProperty("SATNUM");
+    std::shared_ptr<const GridProperty<int> > fipnum = state.getIntGridProperty("FIPNUM");
     size_t i,j,k;
     std::shared_ptr<const EclipseGrid> grid = state.getEclipseGrid();
 
@@ -128,9 +128,9 @@ BOOST_AUTO_TEST_CASE( KEYWORD_BOX_TOO_SMALL) {
 
 BOOST_AUTO_TEST_CASE( EQUAL ) {
     EclipseState state = makeState("testdata/integration_tests/BOX/BOXTEST1");
-    std::shared_ptr<GridProperty<int> > pvtnum = state.getIntGridProperty("PVTNUM");
-    std::shared_ptr<GridProperty<int> > eqlnum = state.getIntGridProperty("EQLNUM");
-    std::shared_ptr<GridProperty<double> > poro = state.getDoubleGridProperty("PORO");
+    std::shared_ptr<const GridProperty<int> > pvtnum = state.getIntGridProperty("PVTNUM");
+    std::shared_ptr<const GridProperty<int> > eqlnum = state.getIntGridProperty("EQLNUM");
+    std::shared_ptr<const GridProperty<double> > poro = state.getDoubleGridProperty("PORO");
     size_t i,j,k;
     std::shared_ptr<const EclipseGrid> grid = state.getEclipseGrid();
 

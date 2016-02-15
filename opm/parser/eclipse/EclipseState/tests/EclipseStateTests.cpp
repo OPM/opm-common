@@ -100,8 +100,8 @@ BOOST_AUTO_TEST_CASE(GetPOROTOPBased) {
     DeckPtr deck = createDeckTOP();
     EclipseState state(deck , ParseMode());
 
-    std::shared_ptr<GridProperty<double> > poro = state.getDoubleGridProperty( "PORO" );
-    std::shared_ptr<GridProperty<double> > permx = state.getDoubleGridProperty( "PERMX" );
+    std::shared_ptr<const GridProperty<double> > poro = state.getDoubleGridProperty( "PORO" );
+    std::shared_ptr<const GridProperty<double> > permx = state.getDoubleGridProperty( "PERMX" );
 
     BOOST_CHECK_EQUAL(1000U , poro->getCartesianSize() );
     BOOST_CHECK_EQUAL(1000U , permx->getCartesianSize() );
@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_CASE(GetProperty) {
     DeckPtr deck = createDeck();
     EclipseState state(deck, ParseMode());
 
-    std::shared_ptr<GridProperty<int> > satNUM = state.getIntGridProperty( "SATNUM" );
+    std::shared_ptr<const GridProperty<int> > satNUM = state.getIntGridProperty( "SATNUM" );
 
     BOOST_CHECK_EQUAL(1000U , satNUM->getCartesianSize() );
     for (size_t i=0; i < satNUM->getCartesianSize(); i++)

@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(UnInitializedVectorThrows) {
 BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
     Opm::DeckPtr deck = createValidIntDeck();
     Opm::EclipseState state(deck , Opm::ParseMode());
-    std::shared_ptr<Opm::GridProperty<int> > property = state.getIntGridProperty( "SATNUM");
+    std::shared_ptr<const Opm::GridProperty<int> > property = state.getIntGridProperty( "SATNUM");
     for (size_t j=0; j< 5; j++)
         for (size_t i = 0; i < 5; i++) {
             if (i < 2)
@@ -233,9 +233,9 @@ BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
 BOOST_AUTO_TEST_CASE(UnitAppliedCorrectly) {
     Opm::DeckPtr deck = createValidPERMXDeck();
     Opm::EclipseState state(deck , Opm::ParseMode());
-    std::shared_ptr<Opm::GridProperty<double> > permx = state.getDoubleGridProperty( "PERMX");
-    std::shared_ptr<Opm::GridProperty<double> > permy = state.getDoubleGridProperty( "PERMY");
-    std::shared_ptr<Opm::GridProperty<double> > permz = state.getDoubleGridProperty( "PERMZ");
+    std::shared_ptr<const Opm::GridProperty<double> > permx = state.getDoubleGridProperty( "PERMX");
+    std::shared_ptr<const Opm::GridProperty<double> > permy = state.getDoubleGridProperty( "PERMY");
+    std::shared_ptr<const Opm::GridProperty<double> > permz = state.getDoubleGridProperty( "PERMZ");
     for (size_t g=0; g< 25; g++) {
         BOOST_CHECK_EQUAL( permz->iget(g), permx->iget(g));
         BOOST_CHECK_EQUAL( permy->iget(g), permx->iget(g));

@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(TypeMismatchThrows) {
 BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
     Opm::DeckPtr deck = createValidIntDeck();
     Opm::EclipseState state(deck , Opm::ParseMode() );
-    std::shared_ptr<Opm::GridProperty<int> > property = state.getIntGridProperty( "FLUXNUM");
+    std::shared_ptr<const Opm::GridProperty<int> > property = state.getIntGridProperty( "FLUXNUM");
     for (size_t j=0; j< 5; j++)
         for (size_t i = 0; i < 5; i++) {
             if (i < 2)

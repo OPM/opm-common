@@ -231,7 +231,7 @@ namespace Opm {
     double MULTREGTScanner::getRegionMultiplier(size_t globalIndex1 , size_t globalIndex2, FaceDir::DirEnum faceDir) const {
 
         for (auto iter = m_searchMap.begin(); iter != m_searchMap.end(); iter++) {
-            std::shared_ptr<Opm::GridProperty<int> > region = m_cellRegionNumbers->getKeyword( (*iter).first );
+            std::shared_ptr<const Opm::GridProperty<int> > region = m_cellRegionNumbers->getKeyword( (*iter).first );
             MULTREGTSearchMap map = (*iter).second;
 
             int regionId1 = region->iget(globalIndex1);

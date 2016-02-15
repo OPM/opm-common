@@ -262,7 +262,7 @@ public:
 
 
 
-    void initMask(T value, std::vector<bool>& mask) {
+    void initMask(T value, std::vector<bool>& mask) const {
         mask.resize(getCartesianSize());
         for (size_t g = 0; g < getCartesianSize(); g++) {
             if (m_data[g] == value)

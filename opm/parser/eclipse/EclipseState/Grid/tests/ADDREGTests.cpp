@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE(UnInitializedVectorThrows) {
 BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
     Opm::DeckPtr deck = createValidIntDeck();
     Opm::EclipseState state(deck , Opm::ParseMode());
-    std::shared_ptr<Opm::GridProperty<int> > property = state.getIntGridProperty( "SATNUM");
+    std::shared_ptr<const Opm::GridProperty<int> > property = state.getIntGridProperty( "SATNUM");
     for (size_t j=0; j< 5; j++)
         for (size_t i = 0; i < 5; i++) {
             if (i < 2)
@@ -264,7 +264,7 @@ BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
 BOOST_AUTO_TEST_CASE(UnitAppliedCorrectly) {
     Opm::DeckPtr deck = createValidPERMXDeck();
     Opm::EclipseState state(deck , Opm::ParseMode());
-    std::shared_ptr<Opm::GridProperty<double> > permx = state.getDoubleGridProperty( "PERMX");
+    std::shared_ptr<const Opm::GridProperty<double> > permx = state.getDoubleGridProperty( "PERMX");
 
     for (size_t j=0; j< 5; j++)
         for (size_t i = 0; i < 5; i++) {
