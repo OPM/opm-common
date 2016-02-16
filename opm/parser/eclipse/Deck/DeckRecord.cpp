@@ -28,18 +28,16 @@
 
 namespace Opm {
 
-    DeckRecord::DeckRecord() {
-
-    }
 
     size_t DeckRecord::size() const {
         return m_items.size();
     }
 
-    void DeckRecord::addItem(DeckItemPtr deckItem) {
-        const auto& name = deckItem->name();
-        const auto eq = [&name]( const std::shared_ptr< DeckItem >& e ) {
-            return e->name() == name;
+    void DeckRecord::addItem( DeckItem&& deckItem ) {
+        const auto& name = deckItem.name();
+        const auto eq = [&name]( const DeckItem& e ) {
+            return e.name() == name;
+            throw std::invalid_argument( "Unable to insert empty item" );
         };
 
         if( std::any_of( m_items.begin(), m_items.end(), eq ) )
@@ -48,46 +46,71 @@ namespace Opm {
                     + name
                     + " already exists in DeckRecord");
 
-        m_items.push_back(deckItem);
+        m_items.push_back( std::move( deckItem ) );
     }
 
-    DeckItemPtr DeckRecord::getItem(size_t index) const {
-        if (index < m_items.size())
-            return m_items[index];
-        else
-            throw std::range_error("Index out of range.");
+    DeckItem& DeckRecord::getItem( size_t index ) {
+        return this->m_items.at( index );
     }
 
-
-    bool DeckRecord::hasItem(const std::string& name) const {
-        const auto eq = [&name]( const std::shared_ptr< DeckItem >& e ) {
-            return e->name() == name;
-        };
-
-        return std::any_of( m_items.begin(), m_items.end(), eq );
-    }
-
-    
-    DeckItemPtr DeckRecord::getItem(const std::string& name) const {
-        const auto eq = [&name]( const std::shared_ptr< DeckItem >& e ) {
-            return e->name() == name;
+    DeckItem& DeckRecord::getItem(const std::string& name) {
+        const auto eq = [&name]( const DeckItem& e ) {
+            return e.name() == name;
         };
 
         auto item = std::find_if( m_items.begin(), m_items.end(), eq );
+
         if( item == m_items.end() )
-            throw std::invalid_argument("Itemname: " + name + " does not exist.");
+            throw std::invalid_argument("Item: " + name + " does not exist.");
 
         return *item;
     }
 
-
-    DeckItemPtr DeckRecord::getDataItem() const {
+    DeckItem& DeckRecord::getDataItem() {
         if (m_items.size() == 1)
             return getItem(0);
         else
             throw std::range_error("Not a data keyword ?");
     }
 
+    const DeckItem& DeckRecord::getItem( size_t index ) const {
+        return this->m_items.at( index );
+    }
+
+    const DeckItem& DeckRecord::getItem(const std::string& name) const {
+        const auto eq = [&name]( const DeckItem& e ) {
+            return e.name() == name;
+        };
+
+        auto item = std::find_if( this->begin(), this->end(), eq );
+
+        if( item == m_items.end() )
+            throw std::invalid_argument("Item: " + name + " does not exist.");
+
+        return *item;
+    }
+
+    const DeckItem& DeckRecord::getDataItem() const {
+        if (m_items.size() == 1)
+            return getItem(0);
+        else
+            throw std::range_error("Not a data keyword ?");
+    }
+
+    bool DeckRecord::hasItem(const std::string& name) const {
+        const auto eq = [&name]( const DeckItem& e ) {
+            return e.name() == name;
+        };
+
+        return std::any_of( this->begin(), this->end(), eq );
+    }
+
+    DeckRecord::const_iterator DeckRecord::begin() const {
+        return this->m_items.begin();
+    }
+
+    DeckRecord::const_iterator DeckRecord::end() const {
+        return this->m_items.end();
+    }
+
 }
-
-
