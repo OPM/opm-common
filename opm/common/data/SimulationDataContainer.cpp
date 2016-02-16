@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <opm/common/ErrorMacros.hpp>
 #include <opm/common/util/numeric/cmp.hpp>
 #include <opm/common/data/SimulationDataContainer.hpp>
 
@@ -71,6 +72,39 @@ namespace Opm {
     void SimulationDataContainer::registerCellData( const std::string& name , size_t components , double initialValue) {
         if (!hasCellData( name )) {
             m_cell_data.insert( std::pair<std::string , std::vector<double>>( name , std::vector<double>(components * m_num_cells , initialValue )));
+        }
+    }
+
+
+    void SimulationDataContainer::setCellDataComponent( const std::string& key ,
+                                                        size_t component ,
+                                                        const std::vector<int>& cells ,
+                                                        const std::vector<double>& values) {
+        auto& data = getCellData( key );
+        if (component >= m_num_phases)
+            OPM_THROW(std::invalid_argument, "The component number: " << component << " is invalid");
+
+
+        if (cells.size() != values.size())
+            OPM_THROW(std::invalid_argument, "size mismatch between cells and values");
+
+        // This is currently quite broken; the setCellDataComponent
+        // method assumes that the number of components in the field
+        // we are currently focusing on has num_phases components in
+        // total. This restriction should be lifted by allowing a per
+        // field number of components.
+
+        if (data.size() != m_num_phases * m_num_cells)
+            OPM_THROW(std::invalid_argument , "Can currently only be used on fields with num_components == num_phases (i.e. saturation...) ");
+
+
+        for (size_t i = 0; i < cells.size(); i++) {
+            if (cells[i] < m_num_cells) {
+                auto field_index = cells[i] * m_num_phases + component;
+                data[field_index] = values[i];
+            } else {
+                OPM_THROW(std::invalid_argument , "The cell number: " << cells[i] << " is invalid.");
+            }
         }
     }
 

@@ -66,6 +66,11 @@ namespace Opm {
         bool equal(const SimulationDataContainer& other) const;
 
 
+        /// Will set the values of component nr @component in the
+        /// field @key. All the cells in @cells will be set to the
+        /// values in @values.
+        void setCellDataComponent( const std::string& key , size_t component , const std::vector<int>& cells , const std::vector<double>& values);
+
         /* Old deprecated */
         std::vector<double>& pressure    ();
         std::vector<double>& temperature ();
