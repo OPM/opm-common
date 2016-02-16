@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE(IntProperties) {
 
     BOOST_CHECK_EQUAL( false , state.supportsGridProperty("NONO"));
     BOOST_CHECK_EQUAL( true  , state.supportsGridProperty("SATNUM"));
-    BOOST_CHECK_EQUAL( true  , state.hasIntGridProperty("SATNUM"));
+    BOOST_CHECK_EQUAL( true  , state.hasDeckIntGridProperty("SATNUM"));
 }
 
 

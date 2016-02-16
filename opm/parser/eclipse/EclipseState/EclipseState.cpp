@@ -106,7 +106,7 @@ namespace Opm {
                     }
                 }
 
-                if (m_eclipseState.hasDoubleGridProperty("MULTPV")) {
+                if (m_eclipseState.hasDeckDoubleGridProperty("MULTPV")) {
                     auto multpvData = m_eclipseState.getDoubleGridProperty("MULTPV")->getData();
                     for (size_t globalIndex = 0; globalIndex < porv->getCartesianSize(); globalIndex++) {
                         values[globalIndex] *= multpvData[globalIndex];
@@ -267,19 +267,19 @@ namespace Opm {
         EclipseGridConstPtr grid = getEclipseGrid();
         m_transMult = std::make_shared<TransMult>( grid->getNX() , grid->getNY() , grid->getNZ());
 
-        if (hasDoubleGridProperty("MULTX"))
+        if (hasDeckDoubleGridProperty("MULTX"))
             m_transMult->applyMULT(m_doubleGridProperties->getKeyword("MULTX"), FaceDir::XPlus);
-        if (hasDoubleGridProperty("MULTX-"))
+        if (hasDeckDoubleGridProperty("MULTX-"))
             m_transMult->applyMULT(m_doubleGridProperties->getKeyword("MULTX-"), FaceDir::XMinus);
 
-        if (hasDoubleGridProperty("MULTY"))
+        if (hasDeckDoubleGridProperty("MULTY"))
             m_transMult->applyMULT(m_doubleGridProperties->getKeyword("MULTY"), FaceDir::YPlus);
-        if (hasDoubleGridProperty("MULTY-"))
+        if (hasDeckDoubleGridProperty("MULTY-"))
             m_transMult->applyMULT(m_doubleGridProperties->getKeyword("MULTY-"), FaceDir::YMinus);
 
-        if (hasDoubleGridProperty("MULTZ"))
+        if (hasDeckDoubleGridProperty("MULTZ"))
             m_transMult->applyMULT(m_doubleGridProperties->getKeyword("MULTZ"), FaceDir::ZPlus);
-        if (hasDoubleGridProperty("MULTZ-"))
+        if (hasDeckDoubleGridProperty("MULTZ-"))
             m_transMult->applyMULT(m_doubleGridProperties->getKeyword("MULTZ-"), FaceDir::ZMinus);
     }
 
@@ -425,14 +425,14 @@ namespace Opm {
         return result;
     }
 
-    bool EclipseState::hasIntGridProperty(const std::string& keyword) const {
+    bool EclipseState::hasDeckIntGridProperty(const std::string& keyword) const {
         if (!m_intGridProperties->supportsKeyword( keyword ))
             throw std::logic_error("Integer grid property " + keyword + " is unsupported!");
 
          return m_intGridProperties->hasKeyword( keyword );
     }
 
-    bool EclipseState::hasDoubleGridProperty(const std::string& keyword) const {
+    bool EclipseState::hasDeckDoubleGridProperty(const std::string& keyword) const {
         if (!m_doubleGridProperties->supportsKeyword( keyword ))
             throw std::logic_error("Double grid property " + keyword + " is unsupported!");
 

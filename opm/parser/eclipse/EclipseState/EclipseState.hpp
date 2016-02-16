@@ -78,8 +78,13 @@ namespace Opm {
         std::shared_ptr<const GridProperty<int> > getDefaultRegion() const;
         std::shared_ptr<const GridProperty<int> > getIntGridProperty( const std::string& keyword ) const;
         std::shared_ptr<const GridProperty<double> > getDoubleGridProperty( const std::string& keyword ) const;
-        bool hasIntGridProperty(const std::string& keyword) const;
-        bool hasDoubleGridProperty(const std::string& keyword) const;
+        bool hasDeckIntGridProperty(const std::string& keyword) const;
+        bool hasDeckDoubleGridProperty(const std::string& keyword) const;
+
+        bool hasIntGridProperty(const std::string& keyword) const __attribute__((deprecated("use hasDeckIntGridProperty() instead")))
+        { return hasDeckIntGridProperty(keyword); }
+        bool hasDoubleGridProperty(const std::string& keyword) const __attribute__((deprecated("use hasDeckDoubleGridProperty() instead")))
+        { return hasDeckDoubleGridProperty(keyword); }
 
         void loadGridPropertyFromDeckKeyword(std::shared_ptr<const Box> inputBox,
                                              const DeckKeyword& deckKeyword,

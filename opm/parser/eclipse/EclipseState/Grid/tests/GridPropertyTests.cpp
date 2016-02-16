@@ -355,21 +355,21 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
     auto eclipseState = std::make_shared<Opm::EclipseState>(deck , parseMode);
 
     // make sure that EclipseState throws if it is bugged about an _unsupported_ keyword
-    BOOST_CHECK_THROW(eclipseState->hasIntGridProperty("ISWU"), std::logic_error);
-    BOOST_CHECK_THROW(eclipseState->hasDoubleGridProperty("FLUXNUM"), std::logic_error);
+    BOOST_CHECK_THROW(eclipseState->hasDeckIntGridProperty("ISWU"), std::logic_error);
+    BOOST_CHECK_THROW(eclipseState->hasDeckDoubleGridProperty("FLUXNUM"), std::logic_error);
 
     // make sure that EclipseState does not throw if it is asked for a supported grid
     // property that is not contained  in the deck
-    BOOST_CHECK(!eclipseState->hasDoubleGridProperty("ISWU"));
-    BOOST_CHECK(!eclipseState->hasIntGridProperty("FLUXNUM"));
+    BOOST_CHECK(!eclipseState->hasDeckDoubleGridProperty("ISWU"));
+    BOOST_CHECK(!eclipseState->hasDeckIntGridProperty("FLUXNUM"));
 
-    BOOST_CHECK(eclipseState->hasIntGridProperty("SATNUM"));
-    BOOST_CHECK(eclipseState->hasIntGridProperty("IMBNUM"));
+    BOOST_CHECK(eclipseState->hasDeckIntGridProperty("SATNUM"));
+    BOOST_CHECK(eclipseState->hasDeckIntGridProperty("IMBNUM"));
 
-    BOOST_CHECK(eclipseState->hasDoubleGridProperty("SWU"));
-    BOOST_CHECK(eclipseState->hasDoubleGridProperty("ISGU"));
-    BOOST_CHECK(eclipseState->hasDoubleGridProperty("SGCR"));
-    BOOST_CHECK(eclipseState->hasDoubleGridProperty("ISGCR"));
+    BOOST_CHECK(eclipseState->hasDeckDoubleGridProperty("SWU"));
+    BOOST_CHECK(eclipseState->hasDeckDoubleGridProperty("ISGU"));
+    BOOST_CHECK(eclipseState->hasDeckDoubleGridProperty("SGCR"));
+    BOOST_CHECK(eclipseState->hasDeckDoubleGridProperty("ISGCR"));
 
     const auto& swuPropData = eclipseState->getDoubleGridProperty("SWU")->getData();
     BOOST_CHECK_EQUAL(swuPropData[0 * 3*3], 0.93);
