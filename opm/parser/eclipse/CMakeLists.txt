@@ -151,9 +151,6 @@ Deck/Deck.hpp
 Deck/DeckKeyword.hpp
 Deck/DeckRecord.hpp
 Deck/DeckItem.hpp
-Deck/DeckIntItem.hpp
-Deck/DeckDoubleItem.hpp
-Deck/DeckStringItem.hpp
 Deck/Section.hpp
 Deck/SCHEDULESection.hpp
 Deck/DeckTimeStep.hpp
