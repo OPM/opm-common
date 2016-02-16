@@ -62,8 +62,6 @@ namespace Opm {
         std::vector< DeckItem > m_items;
 
     };
-    typedef std::shared_ptr< DeckRecord > DeckRecordPtr;
-    typedef std::shared_ptr< const DeckRecord > DeckRecordConstPtr;
 
 }
 #endif  /* DECKRECORD_HPP */

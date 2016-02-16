@@ -12,12 +12,15 @@
 #include <vector>
 #include <memory>
 
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+
 namespace Opm {
     class ParserKeyword;
-    class DeckRecord;
 
     class DeckKeyword {
     public:
+        typedef std::vector< DeckRecord >::const_iterator const_iterator;
+
         DeckKeyword(const std::string& keywordName);
         DeckKeyword(const std::string& keywordName, bool knownKeyword);
 
@@ -39,9 +42,10 @@ namespace Opm {
         void setParserKeyword(const ParserKeyword* parserKeyword);
 
         size_t size() const;
-        void addRecord(std::shared_ptr< const DeckRecord > record);
-        std::shared_ptr< const DeckRecord > getRecord(size_t index) const;
-        std::shared_ptr< const DeckRecord > getDataRecord() const;
+        void addRecord(DeckRecord&& record);
+        const DeckRecord& getRecord(size_t index) const;
+        DeckRecord& getRecord(size_t index);
+        const DeckRecord& getDataRecord() const;
         void setDataKeyword(bool isDataKeyword = true);
         bool isKnown() const;
         bool isDataKeyword() const;
@@ -60,15 +64,16 @@ namespace Opm {
                 return false;
         }
 
-        std::vector<std::shared_ptr< const DeckRecord >>::const_iterator begin() const;
-        std::vector<std::shared_ptr< const DeckRecord >>::const_iterator end() const;
+        const_iterator begin() const;
+        const_iterator end() const;
+
     private:
         std::string m_keywordName;
         std::string m_fileName;
         int m_lineNumber;
 
         const ParserKeyword* m_parserKeyword;
-        std::vector<std::shared_ptr< const DeckRecord >> m_recordList;
+        std::vector< DeckRecord > m_recordList;
         bool m_knownKeyword;
         bool m_isDataKeyword;
     };
