@@ -2,7 +2,10 @@
 set -e
 
 pushd . > /dev/null
-opm-parser/travis/build-opm-parser.sh
-cd opm-parser/build
+cd opm-parser
+mkdir build
+cd build
+cmake -DENABLE_PYTHON=ON -DBUILD_TESTING=ON ../
+make
 ctest --output-on-failure
 popd > /dev/null
