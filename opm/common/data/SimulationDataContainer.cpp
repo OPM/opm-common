@@ -119,7 +119,7 @@ namespace Opm {
 
             if (other.hasCellData( key )) {
                 const auto& other_data = other.getCellData( key );
-                if (!cmp::double_vector_equal( data , other_data ))
+                if (!cmp::vector_equal<double>( data , other_data ))
                     return false;
             } else
                 return false;
@@ -131,7 +131,7 @@ namespace Opm {
 
             if (other.hasFaceData( key )) {
                 const auto& other_data = other.getFaceData( key );
-                if (!cmp::double_vector_equal( data , other_data ))
+                if (!cmp::vector_equal<double>( data , other_data ))
                     return false;
             } else
                 return false;

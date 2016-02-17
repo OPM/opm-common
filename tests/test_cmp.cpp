@@ -38,10 +38,10 @@ BOOST_AUTO_TEST_CASE(TestSCalarcmp) {
     const double abs_epsilon = cmp::default_abs_epsilon;
     const double rel_epsilon = cmp::default_rel_epsilon;
 
-    BOOST_CHECK( cmp::double_equal(1,1));
-    BOOST_CHECK_EQUAL( false , cmp::double_equal(1,0));
-    BOOST_CHECK_EQUAL( false , cmp::double_equal(0,1));
-    BOOST_CHECK_EQUAL( false , cmp::double_equal(-1,1));
+    BOOST_CHECK( cmp::scalar_equal<double>(1,1));
+    BOOST_CHECK_EQUAL( false , cmp::scalar_equal<double>(1,0));
+    BOOST_CHECK_EQUAL( false , cmp::scalar_equal<double>(0,1));
+    BOOST_CHECK_EQUAL( false , cmp::scalar_equal<double>(-1,1));
 
 
 
@@ -50,60 +50,74 @@ BOOST_AUTO_TEST_CASE(TestSCalarcmp) {
     {
         v1 = 0.0;
         v2 = 0.0;
-        BOOST_CHECK( cmp::double_equal( v1 , v2));
+        BOOST_CHECK( cmp::scalar_equal<double>( v1 , v2));
 
         v1 = 1e-12;
         v2 = v1 + 0.5*abs_epsilon;
-        BOOST_CHECK( cmp::double_equal( v1 , v2));
+        BOOST_CHECK( cmp::scalar_equal<double>( v1 , v2));
 
         v1 = 7.0;
         v2 = 7.0;
-        BOOST_CHECK( cmp::double_equal( v1 , v2));
+        BOOST_CHECK( cmp::scalar_equal<double>( v1 , v2));
 
         v1 = -7.0;
         v2 = -7.0;
-        BOOST_CHECK( cmp::double_equal( v1 , v2));
+        BOOST_CHECK( cmp::scalar_equal<double>( v1 , v2));
 
         v1 = 0;
         v2 = 0.5 * abs_epsilon;
-        BOOST_CHECK( cmp::double_equal( v1 , v2));
+        BOOST_CHECK( cmp::scalar_equal<double>( v1 , v2));
 
 
         v1 = 1e7;
         v2 = 1e7 + 2*abs_epsilon;
-        BOOST_CHECK( cmp::double_equal( v1 , v2 ));
+        BOOST_CHECK( cmp::scalar_equal<double>( v1 , v2 ));
 
         v1 = 1e7*(1 - abs_epsilon);
         v2 = 1e7*(1 + rel_epsilon);
-        BOOST_CHECK( !cmp::double_equal( v1 , v2 ));
+        BOOST_CHECK( !cmp::scalar_equal<double>( v1 , v2 ));
 
         v1 = 1e7*(1 + abs_epsilon);
         v2 = 1e7*(1 + rel_epsilon);
-        BOOST_CHECK( cmp::double_equal( v1 , v2 ));
+        BOOST_CHECK( cmp::scalar_equal<double>( v1 , v2 ));
     }
 
     /* Should be different: */
     {
         v1 = 0;
         v2 = 1.5 * abs_epsilon;
-        BOOST_CHECK( !cmp::double_equal( v1 , v2 ));
+        BOOST_CHECK( !cmp::scalar_equal<double>( v1 , v2 ));
 
         v1 = 1e-8;
         v2 = v1 + 1.5*abs_epsilon;
-        BOOST_CHECK( !cmp::double_equal( v1 , v2 ));
+        BOOST_CHECK( !cmp::scalar_equal<double>( v1 , v2 ));
 
         v1 = 1;
         v2 = v1*(1 + 2*rel_epsilon + abs_epsilon);
-        BOOST_CHECK( !cmp::double_equal( v1 , v2 ));
+        BOOST_CHECK( !cmp::scalar_equal<double>( v1 , v2 ));
 
         v1 = 10;
         v2 = v1*(1 + 2*rel_epsilon + abs_epsilon);
-        BOOST_CHECK( !cmp::double_equal( v1 , v2 ));
+        BOOST_CHECK( !cmp::scalar_equal<double>( v1 , v2 ));
 
         v1 = 1e7;
         v2 = 1e7*(1 + 2*rel_epsilon + abs_epsilon);
-        BOOST_CHECK( !cmp::double_equal( v1 , v2 ));
+        BOOST_CHECK( !cmp::scalar_equal<double>( v1 , v2 ));
     }
 }
 
+/* Ensure that float instantiation works. */
+BOOST_AUTO_TEST_CASE(TestFloatcmp) {
+    std::vector<float> v1;
+    std::vector<float> v2;
+    for (size_t i =0; i < 10; i++) {
+        v1.push_back( i * 1.0 );
+        v2.push_back( i * 1.0 );
+    }
+    BOOST_CHECK( cmp::vector_equal<float>(v1 , v2 ));
+    v1.push_back( 27 );
+    BOOST_CHECK( !cmp::vector_equal<float>(v1 , v2 ));
+    v2.push_back( 27 );
+    BOOST_CHECK( cmp::vector_equal(v1 , v2 ));
+}
 
