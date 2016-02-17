@@ -280,22 +280,7 @@ EclipseState/Tables/TableEnums.hpp
 EclipseState/Tables/TableSchema.hpp
 EclipseState/Tables/TableIndex.hpp
 #
-Utility/WconinjeWrapper.hpp
-Utility/CompdatWrapper.hpp
-Utility/WconinjWrapper.hpp
-Utility/WgrupconWrapper.hpp
-Utility/GconprodWrapper.hpp
-Utility/TstepWrapper.hpp
-Utility/StartWrapper.hpp
-Utility/SpecgridWrapper.hpp
-Utility/WconprodWrapper.hpp
-Utility/GconinjeWrapper.hpp
-Utility/WelopenWrapper.hpp
-Utility/GruptreeWrapper.hpp
-Utility/WelspecsWrapper.hpp
-Utility/EquilWrapper.hpp
-Utility/EndscaleWrapper.hpp
-Utility/ScalecrsWrapper.hpp)
+Utility/EquilWrapper.hpp)
 
 add_library(buildParser ${rawdeck_source} ${build_parser_source} ${deck_source} ${unit_source} ${generator_source})
 target_link_libraries(buildParser opmjson ${Boost_LIBRARIES}  ${ERT_LIBRARIES})
