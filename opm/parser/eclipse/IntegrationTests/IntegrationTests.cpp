@@ -37,32 +37,30 @@
 
 using namespace Opm;
 
-std::shared_ptr<ParserKeyword> createFixedSized(const std::string& kw , size_t size) {
-    std::shared_ptr<ParserKeyword> pkw = std::make_shared<ParserKeyword>(kw);
+std::unique_ptr< ParserKeyword > createFixedSized(const std::string& kw , size_t size) {
+    std::unique_ptr< ParserKeyword > pkw( new ParserKeyword( kw ) );
     pkw->setFixedSize( size );
     return pkw;
 }
 
-std::shared_ptr<ParserKeyword> createDynamicSized(const std::string& kw) {
-    std::shared_ptr<ParserKeyword> pkw = std::make_shared<ParserKeyword>(kw);
+std::unique_ptr< ParserKeyword > createDynamicSized(const std::string& kw) {
+    std::unique_ptr< ParserKeyword > pkw( new ParserKeyword( kw ) );
     pkw->setSizeType(SLASH_TERMINATED);
     return pkw;
 }
 
-
-
 static ParserPtr createWWCTParser() {
-    ParserKeywordPtr parserKeyword = createDynamicSized("WWCT");
+    auto parserKeyword = createDynamicSized("WWCT");
     {
         std::shared_ptr<ParserRecord> record = std::make_shared<ParserRecord>();
         record->addItem( ParserStringItemConstPtr(new ParserStringItem("WELL", ALL)) );
         parserKeyword->addRecord( record );
     }
-    ParserKeywordPtr summaryKeyword = createFixedSized("SUMMARY" , (size_t) 0);
+    auto summaryKeyword = createFixedSized("SUMMARY" , (size_t) 0);
 
     ParserPtr parser(new Parser());
-    parser->addParserKeyword(parserKeyword);
-    parser->addParserKeyword(summaryKeyword);
+    parser->addParserKeyword( std::move( parserKeyword ) );
+    parser->addParserKeyword( std::move( summaryKeyword ) );
     return parser;
 }
 
@@ -143,7 +141,7 @@ BOOST_AUTO_TEST_CASE(parser_internal_name_vs_deck_name) {
 }
 
 static ParserPtr createBPRParser() {
-    ParserKeywordPtr parserKeyword = createDynamicSized("BPR");
+    auto parserKeyword = createDynamicSized("BPR");
     {
         std::shared_ptr<ParserRecord> bprRecord = std::make_shared<ParserRecord>();
         bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("I", SINGLE)));
@@ -151,10 +149,10 @@ static ParserPtr createBPRParser() {
         bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("K", SINGLE)));
         parserKeyword->addRecord( bprRecord );
     }
-    ParserKeywordPtr summaryKeyword = createFixedSized("SUMMARY" , (size_t) 0);
+    auto summaryKeyword = createFixedSized("SUMMARY" , (size_t) 0);
     ParserPtr parser(new Parser());
-    parser->addParserKeyword(parserKeyword);
-    parser->addParserKeyword(summaryKeyword);
+    parser->addParserKeyword( std::move( parserKeyword ) );
+    parser->addParserKeyword( std::move( summaryKeyword ) );
     return parser;
 }
 
@@ -233,7 +231,7 @@ BOOST_AUTO_TEST_CASE(parse_truncatedrecords_deckFilledWithDefaults) {
     BOOST_CHECK(lastItem_1.defaultApplied(0));
     BOOST_CHECK_EQUAL(lastItem_1.get< int >(0), 1);
 
-    ParserKeywordConstPtr parserKeyword = parser->getParserKeywordFromDeckName("RADFIN4");
+    auto* parserKeyword = parser->getParserKeywordFromDeckName("RADFIN4");
     ParserRecordConstPtr parserRecord = parserKeyword->getRecord(0);
     ParserItemConstPtr nwmaxItem = parserRecord->get("NWMAX");
     ParserIntItemConstPtr intItem = std::static_pointer_cast<const ParserIntItem>(nwmaxItem);

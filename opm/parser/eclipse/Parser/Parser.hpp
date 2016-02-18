@@ -26,6 +26,8 @@
 #include <string>
 #include <vector>
 
+#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
+
 namespace boost {
     namespace filesystem {
         class path;
@@ -40,7 +42,6 @@ namespace Opm {
 
     class Deck;
     class ParseMode;
-    class ParserKeyword;
     class RawKeyword;
     struct ParserState;
 
@@ -68,12 +69,12 @@ namespace Opm {
 
         /// Method to add ParserKeyword instances, these holding type and size information about the keywords and their data.
         void addParserKeyword(const Json::JsonObject& jsonKeyword);
-        void addParserKeyword(std::shared_ptr< const ParserKeyword > parserKeyword);
+        void addParserKeyword(std::unique_ptr< const ParserKeyword >&& parserKeyword);
         bool dropParserKeyword(const std::string& parserKeywordName);
-        std::shared_ptr< const ParserKeyword > getKeyword(const std::string& name) const;
+        const ParserKeyword* getKeyword(const std::string& name) const;
 
         bool isRecognizedKeyword( const std::string& deckKeywordName) const;
-        std::shared_ptr< const ParserKeyword > getParserKeywordFromDeckName(const std::string& deckKeywordName) const;
+        const ParserKeyword* getParserKeywordFromDeckName(const std::string& deckKeywordName) const;
         std::vector<std::string> getAllDeckNames () const;
 
         void loadKeywords(const Json::JsonObject& jsonKeywords);
@@ -98,26 +99,26 @@ namespace Opm {
         /*!
          * \brief Retrieve a ParserKeyword object given an internal keyword name.
          */
-        std::shared_ptr< const ParserKeyword > getParserKeywordFromInternalName(const std::string& internalKeywordName) const;
+        const ParserKeyword* getParserKeywordFromInternalName(const std::string& internalKeywordName) const;
 
 
         template <class T>
         void addKeyword() {
-            addParserKeyword( std::make_shared<T>());
+            addParserKeyword( std::unique_ptr< ParserKeyword >( new T ) );
         }
 
 
     private:
         // associative map of the parser internal name and the corresponding ParserKeyword object
-        std::map<std::string, std::shared_ptr< const ParserKeyword >> m_internalParserKeywords;
+        std::map<std::string, std::unique_ptr< const ParserKeyword > > m_internalParserKeywords;
         // associative map of deck names and the corresponding ParserKeyword object
-        std::map<std::string, std::shared_ptr< const ParserKeyword >> m_deckParserKeywords;
+        std::map<std::string, const ParserKeyword* > m_deckParserKeywords;
         // associative map of the parser internal names and the corresponding
         // ParserKeyword object for keywords which match a regular expression
-        std::map<std::string, std::shared_ptr< const ParserKeyword >> m_wildCardKeywords;
+        std::map<std::string, const ParserKeyword* > m_wildCardKeywords;
 
         bool hasWildCardKeyword(const std::string& keyword) const;
-        std::shared_ptr< const ParserKeyword > matchingKeyword(const std::string& keyword) const;
+        const ParserKeyword* matchingKeyword(const std::string& keyword) const;
 
         bool tryParseKeyword(std::shared_ptr<ParserState> parserState) const;
         bool parseState(std::shared_ptr<ParserState> parserState) const;
