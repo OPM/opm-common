@@ -296,23 +296,6 @@ BOOST_AUTO_TEST_CASE(WildCardTest) {
 }
 
 
-
-/***************** Simple Int parsing ********************************/
-
-static ParserKeywordPtr __attribute__((unused)) setupParserKeywordInt(std::string name, int numberOfItems) {
-    ParserKeywordPtr parserKeyword = createDynamicSized(name);
-    ParserRecordPtr parserRecord = parserKeyword->getRecord(0);
-
-    for (int i = 0; i < numberOfItems; i++) {
-        std::string another_name = "ITEM_" + boost::lexical_cast<std::string>(i);
-        ParserItemPtr intItem(new ParserIntItem(another_name, SINGLE));
-        parserRecord->addItem(intItem);
-    }
-
-    return parserKeyword;
-}
-
-
 BOOST_AUTO_TEST_CASE( quoted_comments ) {
     BOOST_CHECK_EQUAL( Parser::stripComments( "ABC" ) , "ABC");
     BOOST_CHECK_EQUAL( Parser::stripComments( "--ABC") , "");
