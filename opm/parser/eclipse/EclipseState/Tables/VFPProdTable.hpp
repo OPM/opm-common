@@ -122,7 +122,7 @@ public:
      * Constructor which parses a deck keyword and retrieves the relevant parts for a
      * VFP table.
      */
-    void init(std::shared_ptr< const DeckKeyword > table, std::shared_ptr<Opm::UnitSystem> deck_unit_system);
+    void init( const DeckKeyword& table, UnitSystem& deck_unit_system);
 
     /**
      * Returns the table number
@@ -258,28 +258,23 @@ private:
      */
     void check();
 
-    static FLO_TYPE getFloType(std::shared_ptr<const DeckItem> item);
-    static WFR_TYPE getWFRType(std::shared_ptr<const DeckItem> item);
-    static GFR_TYPE getGFRType(std::shared_ptr<const DeckItem> item);
-    static ALQ_TYPE getALQType(std::shared_ptr<const DeckItem> item);
-
     static void scaleValues(std::vector<double>& values,
                             const double& scaling_factor);
 
     static void convertFloToSI(const FLO_TYPE& type,
                             std::vector<double>& values,
-                            std::shared_ptr<Opm::UnitSystem> unit_system);
+                            UnitSystem& unit_system);
     static void convertTHPToSI(std::vector<double>& values,
-                               std::shared_ptr<Opm::UnitSystem> unit_system);
+                               UnitSystem& unit_system);
     static void convertWFRToSI(const WFR_TYPE& type,
                                std::vector<double>& values,
-                               std::shared_ptr<Opm::UnitSystem> unit_system);
+                               UnitSystem& unit_system);
     static void convertGFRToSI(const GFR_TYPE& type,
                                std::vector<double>& values,
-                               std::shared_ptr<Opm::UnitSystem> unit_system);
+                               UnitSystem& unit_system);
     static void convertALQToSI(const ALQ_TYPE& type,
                                std::vector<double>& values,
-                               std::shared_ptr<Opm::UnitSystem> unit_system);
+                               UnitSystem& unit_system);
 };
 
 

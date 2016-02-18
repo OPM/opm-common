@@ -405,14 +405,13 @@ BOOST_AUTO_TEST_CASE(ParseEmptyRecord) {
     record->addItem(item);
     tabdimsKeyword->addRecord( record );
 
-    DeckKeywordConstPtr deckKeyword = tabdimsKeyword->parse( parseMode , rawkeyword );
-    BOOST_REQUIRE_EQUAL( 1U , deckKeyword->size());
+    const auto deckKeyword = tabdimsKeyword->parse( parseMode , rawkeyword );
+    BOOST_REQUIRE_EQUAL( 1U , deckKeyword.size());
 
-    DeckRecordConstPtr deckRecord = deckKeyword->getRecord(0);
-    BOOST_REQUIRE_EQUAL( 1U , deckRecord->size());
+    const auto& deckRecord = deckKeyword.getRecord(0);
+    BOOST_REQUIRE_EQUAL( 1U , deckRecord.size());
 
-    DeckItemConstPtr deckItem = deckRecord->getItem(0);
-    BOOST_CHECK_EQUAL(0U , deckItem->size());
+    BOOST_CHECK_EQUAL(0U , deckRecord.getItem( 0 ).size());
 }
 
 

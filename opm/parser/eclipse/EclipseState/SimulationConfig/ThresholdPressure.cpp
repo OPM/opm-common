@@ -33,9 +33,9 @@ namespace Opm {
         : m_parseMode( parseMode )
     {
 
-        if (Section::hasRUNSPEC(deck) && Section::hasSOLUTION(deck)) {
-            std::shared_ptr<const RUNSPECSection> runspecSection = std::make_shared<const RUNSPECSection>(deck);
-            std::shared_ptr<const SOLUTIONSection> solutionSection = std::make_shared<const SOLUTIONSection>(deck);
+        if (Section::hasRUNSPEC(*deck) && Section::hasSOLUTION(*deck)) {
+            std::shared_ptr<const RUNSPECSection> runspecSection = std::make_shared<const RUNSPECSection>(*deck);
+            std::shared_ptr<const SOLUTIONSection> solutionSection = std::make_shared<const SOLUTIONSection>(*deck);
             initThresholdPressure(parseMode , runspecSection, solutionSection, gridProperties);
         }
     }
@@ -76,14 +76,14 @@ namespace Opm {
 
         //Is THPRES option set?
         if (runspecSection->hasKeyword<ParserKeywords::EQLOPTS>( )) {
-            auto eqlopts = runspecSection->getKeyword<ParserKeywords::EQLOPTS>( );
-            auto rec = eqlopts->getRecord(0);
-            for (size_t i = 0; i < rec->size(); ++i) {
-                auto item = rec->getItem(i);
-                if (item->hasValue(0)) {
-                    if (item->getString(0) == "THPRES") {
+            const auto& eqlopts = runspecSection->getKeyword<ParserKeywords::EQLOPTS>( );
+            const auto& rec = eqlopts.getRecord(0);
+            for (size_t i = 0; i < rec.size(); ++i) {
+                const auto& item = rec.getItem(i);
+                if (item.hasValue(0)) {
+                    if (item.get< std::string >(0) == "THPRES") {
                         thpresOption = true;
-                    } else if (item->getString(0) == "IRREVERS") {
+                    } else if (item.get< std::string >(0) == "IRREVERS") {
                         throw std::runtime_error("Cannot use IRREVERS version of THPRES option, not implemented");
                     }
                 }
@@ -95,8 +95,8 @@ namespace Opm {
         {
             //Find max of eqlnum
             if (hasEqlnumKeyword) {
-                auto eqlnumKeyword = gridProperties->getKeyword<ParserKeywords::EQLNUM>( );
-                auto eqlnum = eqlnumKeyword->getData();
+                const auto& eqlnumKeyword = gridProperties->getKeyword<ParserKeywords::EQLNUM>( );
+                const auto& eqlnum = eqlnumKeyword->getData();
                 maxEqlnum = *std::max_element(eqlnum.begin(), eqlnum.end());
 
                 if (0 == maxEqlnum) {
@@ -108,25 +108,24 @@ namespace Opm {
 
 
             // Fill threshold pressure table.
-            auto thpres = solutionSection->getKeyword<ParserKeywords::THPRES>( );
+            const auto& thpres = solutionSection->getKeyword<ParserKeywords::THPRES>( );
 
-            const int numRecords = thpres->size();
+            const int numRecords = thpres.size();
             for (int rec_ix = 0; rec_ix < numRecords; ++rec_ix) {
-                auto rec = thpres->getRecord(rec_ix);
-                auto region1Item = rec->getItem<ParserKeywords::THPRES::REGION1>();
-                auto region2Item = rec->getItem<ParserKeywords::THPRES::REGION2>();
-                auto thpressItem = rec->getItem<ParserKeywords::THPRES::VALUE>();
+                const auto& rec = thpres.getRecord(rec_ix);
+                const auto& region1Item = rec.getItem<ParserKeywords::THPRES::REGION1>();
+                const auto& region2Item = rec.getItem<ParserKeywords::THPRES::REGION2>();
+                const auto& thpressItem = rec.getItem<ParserKeywords::THPRES::VALUE>();
 
-                if (region1Item->hasValue(0) && region2Item->hasValue(0)) {
-                    const int r1 = region1Item->getInt(0);
-                    const int r2 = region2Item->getInt(0);
+                if (region1Item.hasValue(0) && region2Item.hasValue(0)) {
+                    const int r1 = region1Item.get< int >(0);
+                    const int r2 = region2Item.get< int >(0);
                     if (r1 > maxEqlnum || r2 > maxEqlnum) {
                         throw std::runtime_error("Too high region numbers in THPRES keyword");
                     }
 
-                    if (thpressItem->hasValue(0)) {
-                        const double p = thpressItem->getSIDouble(0);
-                        addBarrier( r1 , r2 , p );
+                    if (thpressItem.hasValue(0)) {
+                        addBarrier( r1 , r2 , thpressItem.getSIDouble( 0 ) );
                     } else
                         addBarrier( r1 , r2 );
                 } else

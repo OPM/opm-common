@@ -37,10 +37,10 @@ BOOST_AUTO_TEST_CASE( PARSE_PLYADS_OK) {
     ParserPtr parser(new Parser());
     std::string deckFile("testdata/integration_tests/POLYMER/plyads.data");
     DeckPtr deck =  parser->parseFile(deckFile);
-    DeckKeywordConstPtr kw = deck->getKeyword("PLYADS");
-    DeckRecordConstPtr rec = kw->getRecord(0);
-    DeckItemPtr item = rec->getItem(0);
+    const auto& = deck->getKeyword("PLYADS");
+    const auto& rec = kw.getRecord(0);
+    auto* item = rec.getItem(0);
 
-    BOOST_CHECK_EQUAL( 0.0 , item->getRawDouble(0) );
-    BOOST_CHECK_EQUAL( 0.25 , item->getRawDouble(2) );
+    BOOST_CHECK_EQUAL( 0.0 , item.get< double >(0) );
+    BOOST_CHECK_EQUAL( 0.25 , item.get< double >(2) );
 }

@@ -29,7 +29,7 @@ namespace Opm {
     class SorwmisTable : public SimpleTable {
     public:
 
-        SorwmisTable( std::shared_ptr< const DeckItem > item );
+        SorwmisTable( const DeckItem& item );
 
         const TableColumn& getWaterSaturationColumn() const;
         const TableColumn& getMiscibleResidualOilColumn() const;

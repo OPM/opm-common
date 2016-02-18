@@ -133,16 +133,15 @@ namespace Opm {
 
             auto& container = forceGetTables(tableName , numTables);
 
-            if (deck.numKeywords(keywordName) > 1) {
+            if (deck.count(keywordName) > 1) {
                 complainAboutAmbiguousKeyword(deck, keywordName);
                 return;
             }
 
             const auto& tableKeyword = deck.getKeyword(keywordName);
-            for (size_t tableIdx = 0; tableIdx < tableKeyword->size(); ++tableIdx) {
-                const auto tableRecord = tableKeyword->getRecord( tableIdx );
-                const auto dataItem = tableRecord->getItem( 0 );
-                if (dataItem->size() > 0) {
+            for (size_t tableIdx = 0; tableIdx < tableKeyword.size(); ++tableIdx) {
+                const auto& dataItem = tableKeyword.getRecord( tableIdx ).getItem( 0 );
+                if (dataItem.size() > 0) {
                     std::shared_ptr<TableType> table = std::make_shared<TableType>( dataItem );
                     container.addTable( tableIdx , table );
                 }
@@ -164,21 +163,20 @@ namespace Opm {
             if (!deck.hasKeyword(keywordName))
                 return; // the table is not featured by the deck...
 
-            if (deck.numKeywords(keywordName) > 1) {
+            if (deck.count(keywordName) > 1) {
                 complainAboutAmbiguousKeyword(deck, keywordName);
                 return;
             }
 
             const auto& tableKeyword = deck.getKeyword(keywordName);
-            for (size_t tableIdx = 0; tableIdx < tableKeyword->size(); ++tableIdx) {
-                const auto tableRecord = tableKeyword->getRecord( tableIdx );
-                const auto dataItem = tableRecord->getItem( 0 );
-                if (dataItem->size() == 0) {
+            for (size_t tableIdx = 0; tableIdx < tableKeyword.size(); ++tableIdx) {
+                const auto& dataItem = tableKeyword.getRecord( tableIdx ).getItem( 0 );
+                if (dataItem.size() == 0) {
                     // for simple tables, an empty record indicates that the previous table
                     // should be copied...
                     if (tableIdx == 0) {
                         std::string msg = "The first table for keyword "+keywordName+" must be explicitly defined! Ignoring keyword";
-                        OpmLog::addMessage(Log::MessageType::Warning , Log::fileMessage( tableKeyword->getFileName(), tableKeyword->getLineNumber(), msg));
+                        OpmLog::addMessage(Log::MessageType::Warning , Log::fileMessage( tableKeyword.getFileName(), tableKeyword.getLineNumber(), msg));
                         return;
                     }
                     tableVector.push_back(tableVector.back());
@@ -198,7 +196,7 @@ namespace Opm {
             if (!deck.hasKeyword(keywordName))
                 return; // the table is not featured by the deck...
 
-            if (deck.numKeywords(keywordName) > 1) {
+            if (deck.count(keywordName) > 1) {
                 complainAboutAmbiguousKeyword(deck, keywordName);
                 return;
             }

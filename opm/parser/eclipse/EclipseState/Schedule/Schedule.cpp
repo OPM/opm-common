@@ -81,9 +81,9 @@ namespace Opm {
         initRootGroupTreeNode(getTimeMap());
         initOilVaporization(getTimeMap());
 
-        if (Section::hasSCHEDULE( deck )) {
-            std::shared_ptr<SCHEDULESection> scheduleSection = std::make_shared<SCHEDULESection>( deck );
-            iterateScheduleSection(parseMode , scheduleSection , ioConfig);
+        if (Section::hasSCHEDULE( *deck )) {
+            std::shared_ptr<SCHEDULESection> scheduleSection = std::make_shared<SCHEDULESection>( *deck );
+            iterateScheduleSection(parseMode , *scheduleSection , ioConfig);
         }
     }
 
@@ -106,14 +106,14 @@ namespace Opm {
     void Schedule::createTimeMap(DeckConstPtr deck) {
         boost::posix_time::ptime startTime(defaultStartDate);
         if (deck->hasKeyword("START")) {
-            DeckKeywordConstPtr startKeyword = deck->getKeyword("START");
-            startTime = TimeMap::timeFromEclipse(startKeyword->getRecord(0));
+             const auto& startKeyword = deck->getKeyword("START");
+            startTime = TimeMap::timeFromEclipse(startKeyword.getRecord(0));
         }
 
         m_timeMap.reset(new TimeMap(startTime));
     }
 
-    void Schedule::iterateScheduleSection(const ParseMode& parseMode , std::shared_ptr<const SCHEDULESection> section, IOConfigPtr ioConfig) {
+    void Schedule::iterateScheduleSection(const ParseMode& parseMode , const SCHEDULESection& section, IOConfigPtr ioConfig) {
         /*
           geoModifiers is a list of geo modifiers which can be found in the schedule
           section. This is only partly supported, support is indicated by the bool
@@ -139,110 +139,110 @@ namespace Opm {
                                                          {"MULTTHT-" , false}};
 
         size_t currentStep = 0;
-        std::vector<std::pair<DeckKeywordConstPtr , size_t> > rftProperties;
-        std::vector<std::pair<DeckKeywordConstPtr , size_t> > IOConfigSettings;
+        std::vector<std::pair< const DeckKeyword* , size_t> > rftProperties;
+        std::vector<std::pair< const DeckKeyword* , size_t> > IOConfigSettings;
 
-        for (size_t keywordIdx = 0; keywordIdx < section->size(); ++keywordIdx) {
-            DeckKeywordConstPtr keyword = section->getKeyword(keywordIdx);
+        for (size_t keywordIdx = 0; keywordIdx < section.size(); ++keywordIdx) {
+            const auto& keyword = section.getKeyword(keywordIdx);
 
-            if (keyword->name() == "DATES") {
+            if (keyword.name() == "DATES") {
                 handleDATES(keyword);
-                currentStep += keyword->size();
+                currentStep += keyword.size();
             }
 
-            if (keyword->name() == "TSTEP") {
+            if (keyword.name() == "TSTEP") {
                 handleTSTEP(keyword);
-                currentStep += keyword->getRecord(0)->getItem(0)->size(); // This is a bit weird API.
+                currentStep += keyword.getRecord(0).getItem(0).size(); // This is a bit weird API.
             }
 
-            if (keyword->name() == "WELSPECS") {
+            if (keyword.name() == "WELSPECS") {
                 handleWELSPECS(section, keyword, currentStep);
             }
 
-            if (keyword->name() == "WCONHIST")
+            if (keyword.name() == "WCONHIST")
                 handleWCONHIST(keyword, currentStep);
 
-            if (keyword->name() == "WCONPROD")
+            if (keyword.name() == "WCONPROD")
                 handleWCONPROD(keyword, currentStep);
 
-            if (keyword->name() == "WCONINJE")
+            if (keyword.name() == "WCONINJE")
                 handleWCONINJE(section, keyword, currentStep);
 
-            if (keyword->name() == "WPOLYMER")
+            if (keyword.name() == "WPOLYMER")
                 handleWPOLYMER(keyword, currentStep);
 
-            if (keyword->name() == "WSOLVENT")
+            if (keyword.name() == "WSOLVENT")
                 handleWSOLVENT(keyword, currentStep);
 
-            if (keyword->name() == "WCONINJH")
+            if (keyword.name() == "WCONINJH")
                 handleWCONINJH(section, keyword, currentStep);
 
-            if (keyword->name() == "WGRUPCON")
+            if (keyword.name() == "WGRUPCON")
                 handleWGRUPCON(keyword, currentStep);
 
-            if (keyword->name() == "COMPDAT")
+            if (keyword.name() == "COMPDAT")
                 handleCOMPDAT(keyword, currentStep);
 
-            if (keyword->name() == "WELSEGS")
+            if (keyword.name() == "WELSEGS")
                 handleWELSEGS(keyword, currentStep);
 
-            if (keyword->name() == "COMPSEGS")
+            if (keyword.name() == "COMPSEGS")
                 handleCOMPSEGS(keyword, currentStep);
 
-            if (keyword->name() == "WELOPEN")
-                handleWELOPEN(keyword, currentStep , section->hasKeyword("COMPLUMP"));
+            if (keyword.name() == "WELOPEN")
+                handleWELOPEN(keyword, currentStep , section.hasKeyword("COMPLUMP"));
 
-            if (keyword->name() == "WELTARG")
+            if (keyword.name() == "WELTARG")
                 handleWELTARG(section, keyword, currentStep);
 
-            if (keyword->name() == "GRUPTREE")
+            if (keyword.name() == "GRUPTREE")
                 handleGRUPTREE(keyword, currentStep);
 
-            if (keyword->name() == "GCONINJE")
+            if (keyword.name() == "GCONINJE")
                 handleGCONINJE(section, keyword, currentStep);
 
-            if (keyword->name() == "GCONPROD")
+            if (keyword.name() == "GCONPROD")
                 handleGCONPROD(keyword, currentStep);
 
-            if (keyword->name() == "GEFAC")
+            if (keyword.name() == "GEFAC")
                 handleGEFAC(keyword, currentStep);
 
-            if (keyword->name() == "TUNING")
+            if (keyword.name() == "TUNING")
                 handleTUNING(keyword, currentStep);
 
-            if (keyword->name() == "NOSIM")
+            if (keyword.name() == "NOSIM")
                 handleNOSIM();
 
-            if (keyword->name() == "RPTRST")
-                IOConfigSettings.push_back( std::make_pair( keyword , currentStep ));
+            if (keyword.name() == "RPTRST")
+                IOConfigSettings.push_back( std::make_pair( &keyword , currentStep ));
 
-            if (keyword->name() == "RPTSCHED")
-                IOConfigSettings.push_back( std::make_pair( keyword , currentStep ));
+            if (keyword.name() == "RPTSCHED")
+                IOConfigSettings.push_back( std::make_pair( &keyword , currentStep ));
 
-            if (keyword->name() == "WRFT")
-                rftProperties.push_back( std::make_pair( keyword , currentStep ));
+            if (keyword.name() == "WRFT")
+                rftProperties.push_back( std::make_pair( &keyword , currentStep ));
 
-            if (keyword->name() == "WRFTPLT")
-                rftProperties.push_back( std::make_pair( keyword , currentStep ));
+            if (keyword.name() == "WRFTPLT")
+                rftProperties.push_back( std::make_pair( &keyword , currentStep ));
 
-            if (keyword->name() == "WPIMULT")
+            if (keyword.name() == "WPIMULT")
                 handleWPIMULT(keyword, currentStep);
 
-            if (keyword->name() == "COMPORD")
+            if (keyword.name() == "COMPORD")
                 handleCOMPORD(parseMode , keyword, currentStep);
 
-            if (keyword->name() == "DRSDT")
+            if (keyword.name() == "DRSDT")
                 handleDRSDT(keyword, currentStep);
 
-            if (keyword->name() == "DRVDT")
+            if (keyword.name() == "DRVDT")
                 handleDRVDT(keyword, currentStep);
 
-            if (keyword->name() == "VAPPARS")
+            if (keyword.name() == "VAPPARS")
                 handleVAPPARS(keyword, currentStep);
 
 
-            if (geoModifiers.find( keyword->name() ) != geoModifiers.end()) {
-                bool supported = geoModifiers.at( keyword->name() );
+            if (geoModifiers.find( keyword.name() ) != geoModifiers.end()) {
+                bool supported = geoModifiers.at( keyword.name() );
                 if (supported) {
                     /*
                       If the deck stored at currentStep is a null pointer (i.e. evaluates
@@ -252,13 +252,12 @@ namespace Opm {
                     */
                     if (!m_modifierDeck->iget(currentStep))
                         m_modifierDeck->iset( currentStep , std::make_shared<Deck>( ));
-                    {
-                        const std::shared_ptr<Deck> deck = m_modifierDeck->iget( currentStep );
-                        deck->addKeyword( keyword );
-                    }
+
+                    m_modifierDeck->iget( currentStep )->addKeyword( keyword );
                     m_events->addEvent( ScheduleEvents::GEO_MODIFIER , currentStep);
+
                 } else {
-                    std::string msg = "OPM does not support grid property modifier " + keyword->name() + " in the Schedule section. Error at report: " + std::to_string( currentStep );
+                    std::string msg = "OPM does not support grid property modifier " + keyword.name() + " in the Schedule section. Error at report: " + std::to_string( currentStep );
                     parseMode.handleError( ParseMode::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , msg );
                 }
             }
@@ -268,23 +267,23 @@ namespace Opm {
         m_timeMap->initFirstTimestepsMonths();
 
         for (auto rftPair = rftProperties.begin(); rftPair != rftProperties.end(); ++rftPair) {
-            DeckKeywordConstPtr keyword = rftPair->first;
+            const DeckKeyword& keyword = *rftPair->first;
             size_t timeStep = rftPair->second;
-            if (keyword->name() == "WRFT") {
+            if (keyword.name() == "WRFT") {
                 handleWRFT(keyword,  timeStep);
             }
 
-            if (keyword->name() == "WRFTPLT"){
+            if (keyword.name() == "WRFTPLT"){
                 handleWRFTPLT(keyword, timeStep);
             }
         }
 
         for (auto restartPair = IOConfigSettings.begin(); restartPair != IOConfigSettings.end(); ++restartPair) {
-            DeckKeywordConstPtr keyword = restartPair->first;
+            const DeckKeyword& keyword = *restartPair->first;
             size_t timeStep = restartPair->second;
-            if ((keyword->name() == "RPTRST") && (m_timeMap->size() > timeStep+1 )) {
+            if ((keyword.name() == "RPTRST") && (m_timeMap->size() > timeStep+1 )) {
                 handleRPTRST(keyword, timeStep + 1, ioConfig);
-              } else if ((keyword->name() == "RPTSCHED") && (m_timeMap->size() > timeStep+1 )){
+              } else if ((keyword.name() == "RPTSCHED") && (m_timeMap->size() > timeStep+1 )){
                 handleRPTSCHED(keyword, timeStep + 1, ioConfig);
             }
         }
@@ -292,16 +291,16 @@ namespace Opm {
         checkUnhandledKeywords(section);
     }
 
-    void Schedule::checkUnhandledKeywords(std::shared_ptr<const SCHEDULESection> /*section*/) const
+    void Schedule::checkUnhandledKeywords(const SCHEDULESection& /*section*/) const
     {
     }
 
 
-    void Schedule::handleDATES(DeckKeywordConstPtr keyword) {
+    void Schedule::handleDATES( const DeckKeyword& keyword) {
         m_timeMap->addFromDATESKeyword(keyword);
     }
 
-    void Schedule::handleTSTEP(DeckKeywordConstPtr keyword) {
+    void Schedule::handleTSTEP( const DeckKeyword& keyword) {
         m_timeMap->addFromTSTEPKeyword(keyword);
     }
 
@@ -315,10 +314,10 @@ namespace Opm {
     }
 
 
-    void Schedule::handleCOMPORD(const ParseMode& parseMode, std::shared_ptr<const DeckKeyword> compordKeyword, size_t /* currentStep */) {
-        for (const auto record : (*compordKeyword)) {
-            auto methodItem = record->getItem<ParserKeywords::COMPORD::ORDER_TYPE>();
-            if ((methodItem->getString(0) != "TRACK")  && (methodItem->getString(0) != "INPUT")) {
+    void Schedule::handleCOMPORD(const ParseMode& parseMode, const DeckKeyword& compordKeyword, size_t /* currentStep */) {
+        for (const auto& record : compordKeyword) {
+            const auto& methodItem = record.getItem<ParserKeywords::COMPORD::ORDER_TYPE>();
+            if ((methodItem.get< std::string >(0) != "TRACK")  && (methodItem.get< std::string >(0) != "INPUT")) {
                 std::string msg = "The COMPORD keyword only handles 'TRACK' or 'INPUT' order.";
                 parseMode.handleError( ParseMode::UNSUPPORTED_COMPORD_TYPE , msg );
             }
@@ -327,14 +326,14 @@ namespace Opm {
 
 
 
-    void Schedule::handleWELSPECS(std::shared_ptr<const SCHEDULESection> section, DeckKeywordConstPtr keyword, size_t currentStep) {
+    void Schedule::handleWELSPECS( const SCHEDULESection& section, const DeckKeyword& keyword, size_t currentStep) {
         bool needNewTree = false;
         GroupTreePtr newTree = m_rootGroupTree->get(currentStep)->deepCopy();
 
-        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
-            DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            const std::string& wellName = record->getItem("WELL")->getTrimmedString(0);
-            const std::string& groupName = record->getItem("GROUP")->getTrimmedString(0);
+        for (size_t recordNr = 0; recordNr < keyword.size(); recordNr++) {
+            const auto& record = keyword.getRecord(recordNr);
+            const std::string& wellName = record.getItem("WELL").getTrimmedString(0);
+            const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
 
             if (!hasGroup(groupName))
                 addGroup(groupName , currentStep);
@@ -342,16 +341,16 @@ namespace Opm {
             if (!hasWell(wellName)) {
                 WellCompletion::CompletionOrderEnum wellCompletionOrder = WellCompletion::TRACK;
 
-                DeckTimeStepConstPtr deckTimeStep = section->getDeckTimeStep(currentStep);
+                DeckTimeStepConstPtr deckTimeStep = section.getDeckTimeStep(currentStep);
                 if (deckTimeStep->hasKeyword("COMPORD")) {
-                    DeckKeywordConstPtr compord = deckTimeStep->getKeyword("COMPORD");
+                     const auto& compord = deckTimeStep->getKeyword("COMPORD");
 
-                    for (size_t compordRecordNr = 0; compordRecordNr < compord->size(); compordRecordNr++) {
-                        DeckRecordConstPtr compordRecord = compord->getRecord(compordRecordNr);
+                    for (size_t compordRecordNr = 0; compordRecordNr < compord.size(); compordRecordNr++) {
+                        const auto& compordRecord = compord.getRecord(compordRecordNr);
 
-                        const std::string& wellNamePattern = compordRecord->getItem(0)->getTrimmedString(0);
+                        const std::string& wellNamePattern = compordRecord.getItem(0).getTrimmedString(0);
                         if (Well::wellNameInWellNamePattern(wellName, wellNamePattern)) {
-                            const std::string& compordString = compordRecord->getItem(1)->getTrimmedString(0);
+                            const std::string& compordString = compordRecord.getItem(1).getTrimmedString(0);
                             wellCompletionOrder = WellCompletion::CompletionOrderEnumFromString(compordString);
                         }
                     }
@@ -373,21 +372,19 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleVAPPARS(DeckKeywordConstPtr keyword, size_t currentStep){
-        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
-            DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            double vap = record->getItem("OIL_VAP_PROPENSITY")->getRawDouble(0);
-            double density = record->getItem("OIL_DENSITY_PROPENSITY")->getRawDouble(0);
+    void Schedule::handleVAPPARS( const DeckKeyword& keyword, size_t currentStep){
+        for( const auto& record : keyword ) {
+            double vap = record.getItem("OIL_VAP_PROPENSITY").get< double >(0);
+            double density = record.getItem("OIL_DENSITY_PROPENSITY").get< double >(0);
             OilVaporizationPropertiesPtr vappars = OilVaporizationProperties::createOilVaporizationPropertiesVAPPARS(vap, density);
             setOilVaporizationProperties(vappars, currentStep);
 
         }
     }
 
-    void Schedule::handleDRVDT(DeckKeywordConstPtr keyword, size_t currentStep){
-        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
-            DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            double max = record->getItem("DRVDT_MAX")->getSIDouble(0);
+    void Schedule::handleDRVDT( const DeckKeyword& keyword, size_t currentStep){
+        for( const auto& record : keyword ) {
+            double max = record.getItem("DRVDT_MAX").getSIDouble(0);
             OilVaporizationPropertiesPtr drvdt = OilVaporizationProperties::createOilVaporizationPropertiesDRVDT(max);
             setOilVaporizationProperties(drvdt, currentStep);
 
@@ -395,11 +392,10 @@ namespace Opm {
     }
 
 
-    void Schedule::handleDRSDT(DeckKeywordConstPtr keyword, size_t currentStep){
-        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
-            DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            double max = record->getItem("DRSDT_MAX")->getSIDouble(0);
-            std::string option = record->getItem("Option")->getString(0);
+    void Schedule::handleDRSDT( const DeckKeyword& keyword, size_t currentStep){
+        for( const auto& record : keyword ) {
+            double max = record.getItem("DRSDT_MAX").getSIDouble(0);
+            std::string option = record.getItem("Option").get< std::string >(0);
             OilVaporizationPropertiesPtr drsdt = OilVaporizationProperties::createOilVaporizationPropertiesDRSDT(max, option);
             setOilVaporizationProperties(drsdt, currentStep);
         }
@@ -407,31 +403,29 @@ namespace Opm {
 
 
 
-    void Schedule::checkWELSPECSConsistency(WellConstPtr well, DeckKeywordConstPtr keyword, size_t recordIdx) const {
-        DeckRecordConstPtr record = keyword->getRecord(recordIdx);
-        if (well->getHeadI() != record->getItem("HEAD_I")->getInt(0) - 1) {
+    void Schedule::checkWELSPECSConsistency(WellConstPtr well, const DeckKeyword& keyword, size_t recordIdx) const {
+        const auto& record = keyword.getRecord(recordIdx);
+        if (well->getHeadI() != record.getItem("HEAD_I").get< int >(0) - 1) {
             std::string msg =
                 "Unable process WELSPECS for well " + well->name() + ", HEAD_I deviates from existing value";
-            OpmLog::addMessage(Log::MessageType::Error , Log::fileMessage( keyword->getFileName(), keyword->getLineNumber(), msg));
+            OpmLog::addMessage(Log::MessageType::Error , Log::fileMessage( keyword.getFileName(), keyword.getLineNumber(), msg));
             throw std::invalid_argument(msg);
         }
-        if (well->getHeadJ() != record->getItem("HEAD_J")->getInt(0) - 1) {
+        if (well->getHeadJ() != record.getItem("HEAD_J").get< int >(0) - 1) {
             std::string msg =
                 "Unable process WELSPECS for well " + well->name() + ", HEAD_J deviates from existing value";
-            OpmLog::addMessage(Log::MessageType::Error , Log::fileMessage( keyword->getFileName(), keyword->getLineNumber(), msg));
+            OpmLog::addMessage(Log::MessageType::Error , Log::fileMessage( keyword.getFileName(), keyword.getLineNumber(), msg));
             throw std::invalid_argument(msg);
         }
     }
 
-    void Schedule::handleWCONProducer(DeckKeywordConstPtr keyword, size_t currentStep, bool isPredictionMode) {
-        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
-            DeckRecordConstPtr record = keyword->getRecord(recordNr);
-
+    void Schedule::handleWCONProducer( const DeckKeyword& keyword, size_t currentStep, bool isPredictionMode) {
+        for( const auto& record : keyword ) {
             const std::string& wellNamePattern =
-                record->getItem("WELL")->getTrimmedString(0);
+                record.getItem("WELL").getTrimmedString(0);
 
             const WellCommon::StatusEnum status =
-                WellCommon::StatusFromString(record->getItem("STATUS")->getTrimmedString(0));
+                WellCommon::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
 
             const std::vector<WellPtr> wells = getWells(wellNamePattern);
 
@@ -451,7 +445,7 @@ namespace Opm {
 
                 if (status != WellCommon::SHUT) {
                     const std::string& cmodeString =
-                        record->getItem("CMODE")->getTrimmedString(0);
+                        record.getItem("CMODE").getTrimmedString(0);
 
                     WellProducer::ControlModeEnum control =
                         WellProducer::ControlModeFromString(cmodeString);
@@ -463,7 +457,7 @@ namespace Opm {
                         std::string msg =
                             "Tried to set invalid control: " +
                             cmodeString + " for well: " + well->name();
-                        OpmLog::addMessage(Log::MessageType::Error , Log::fileMessage( keyword->getFileName(), keyword->getLineNumber(), msg));
+                        OpmLog::addMessage(Log::MessageType::Error , Log::fileMessage( keyword.getFileName(), keyword.getLineNumber(), msg));
                         throw std::invalid_argument(msg);
                     }
                 }
@@ -489,18 +483,18 @@ namespace Opm {
     }
 
 
-    void Schedule::handleWCONHIST(DeckKeywordConstPtr keyword, size_t currentStep) {
+    void Schedule::handleWCONHIST(const DeckKeyword& keyword, size_t currentStep) {
         handleWCONProducer(keyword, currentStep, false);
     }
 
-    void Schedule::handleWCONPROD(DeckKeywordConstPtr keyword, size_t currentStep) {
+    void Schedule::handleWCONPROD( const DeckKeyword& keyword, size_t currentStep) {
         handleWCONProducer(keyword, currentStep, true);
     }
 
-    static Opm::Value<int> getValueItem(DeckItemPtr item){
-        Opm::Value<int> data(item->name());
-        if(item->hasValue(0)) {
-            int tempValue = item->getInt(0);
+    static Opm::Value<int> getValueItem( const DeckItem& item ){
+        Opm::Value<int> data(item.name());
+        if(item.hasValue(0)) {
+            int tempValue = item.get< int >(0);
             if( tempValue >0){
                 data.setValue(tempValue-1);
             }
@@ -509,11 +503,10 @@ namespace Opm {
     }
 
 
-    void Schedule::handleWPIMULT(DeckKeywordConstPtr keyword, size_t currentStep) {
-        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
-            DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
-            double wellPi = record->getItem("WELLPI")->getRawDouble(0);
+    void Schedule::handleWPIMULT( const DeckKeyword& keyword, size_t currentStep) {
+        for( const auto& record : keyword ) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            double wellPi = record.getItem("WELLPI").get< double >(0);
             std::vector<WellPtr> wells = getWells(wellNamePattern);
 
             for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
@@ -522,11 +515,11 @@ namespace Opm {
 
                 CompletionSetPtr newCompletionSet(new CompletionSet( ));
 
-                Opm::Value<int> I  = getValueItem(record->getItem("I"));
-                Opm::Value<int> J  = getValueItem(record->getItem("J"));
-                Opm::Value<int> K  = getValueItem(record->getItem("K"));
-                Opm::Value<int> FIRST = getValueItem(record->getItem("FIRST"));
-                Opm::Value<int> LAST = getValueItem(record->getItem("LAST"));
+                Opm::Value<int> I  = getValueItem(record.getItem("I"));
+                Opm::Value<int> J  = getValueItem(record.getItem("J"));
+                Opm::Value<int> K  = getValueItem(record.getItem("K"));
+                Opm::Value<int> FIRST = getValueItem(record.getItem("FIRST"));
+                Opm::Value<int> LAST = getValueItem(record.getItem("LAST"));
 
                 size_t completionSize = currentCompletionSet->size();
 
@@ -578,16 +571,15 @@ namespace Opm {
     }
 
 
-    void Schedule::handleWCONINJE(std::shared_ptr<const SCHEDULESection> section, DeckKeywordConstPtr keyword, size_t currentStep) {
-        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
-            DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
+    void Schedule::handleWCONINJE( const SCHEDULESection& section, const DeckKeyword& keyword, size_t currentStep) {
+        for( const auto& record : keyword ) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             std::vector<WellPtr> wells = getWells(wellNamePattern);
 
             for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
                 WellPtr well = *wellIter;
-                WellInjector::TypeEnum injectorType = WellInjector::TypeFromString( record->getItem("TYPE")->getTrimmedString(0) );
-                WellCommon::StatusEnum status = WellCommon::StatusFromString( record->getItem("STATUS")->getTrimmedString(0));
+                WellInjector::TypeEnum injectorType = WellInjector::TypeFromString( record.getItem("TYPE").getTrimmedString(0) );
+                WellCommon::StatusEnum status = WellCommon::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
 
                 updateWellStatus( well , currentStep , status );
                 WellInjectionProperties properties(well->getInjectionPropertiesCopy(currentStep));
@@ -595,23 +587,23 @@ namespace Opm {
                 properties.injectorType = injectorType;
                 properties.predictionMode = true;
 
-                if (!record->getItem("RATE")->defaultApplied(0)) {
-                    properties.surfaceInjectionRate = convertInjectionRateToSI(record->getItem("RATE")->getRawDouble(0) , injectorType, *section->getActiveUnitSystem());
+                if (!record.getItem("RATE").defaultApplied(0)) {
+                    properties.surfaceInjectionRate = convertInjectionRateToSI(record.getItem("RATE").get< double >(0) , injectorType, section.getActiveUnitSystem());
                     properties.addInjectionControl(WellInjector::RATE);
                 } else
                     properties.dropInjectionControl(WellInjector::RATE);
 
 
-                if (!record->getItem("RESV")->defaultApplied(0)) {
-                    properties.reservoirInjectionRate = record->getItem("RESV")->getSIDouble(0);
+                if (!record.getItem("RESV").defaultApplied(0)) {
+                    properties.reservoirInjectionRate = record.getItem("RESV").getSIDouble(0);
                     properties.addInjectionControl(WellInjector::RESV);
                 } else
                     properties.dropInjectionControl(WellInjector::RESV);
 
 
-                if (!record->getItem("THP")->defaultApplied(0)) {
-                    properties.THPLimit       = record->getItem("THP")->getSIDouble(0);
-                    properties.VFPTableNumber = record->getItem("VFP_TABLE")->getInt(0);
+                if (!record.getItem("THP").defaultApplied(0)) {
+                    properties.THPLimit       = record.getItem("THP").getSIDouble(0);
+                    properties.VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
                     properties.addInjectionControl(WellInjector::THP);
                 } else
                     properties.dropInjectionControl(WellInjector::THP);
@@ -623,8 +615,8 @@ namespace Opm {
                   available based on that default value - currently we
                   do not do that.
                 */
-                properties.BHPLimit = record->getItem("BHP")->getSIDouble(0);
-                if (!record->getItem("BHP")->defaultApplied(0)) {
+                properties.BHPLimit = record.getItem("BHP").getSIDouble(0);
+                if (!record.getItem("BHP").defaultApplied(0)) {
                     properties.addInjectionControl(WellInjector::BHP);
                 } else
                     properties.dropInjectionControl(WellInjector::BHP);
@@ -634,7 +626,7 @@ namespace Opm {
                 else
                     properties.dropInjectionControl(WellInjector::GRUP);
                 {
-                    const std::string& cmodeString = record->getItem("CMODE")->getTrimmedString(0);
+                    const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
                     WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( cmodeString );
                     if (properties.hasInjectionControl( controlMode))
                         properties.controlMode = controlMode;
@@ -658,10 +650,9 @@ namespace Opm {
     }
 
 
-    void Schedule::handleWPOLYMER(DeckKeywordConstPtr keyword, size_t currentStep) {
-        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
-            DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
+    void Schedule::handleWPOLYMER( const DeckKeyword& keyword, size_t currentStep) {
+        for( const auto& record : keyword ) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             std::vector<WellPtr> wells = getWells(wellNamePattern);
 
             for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
@@ -669,17 +660,17 @@ namespace Opm {
 
                 WellPolymerProperties properties(well->getPolymerPropertiesCopy(currentStep));
 
-                properties.m_polymerConcentration = record->getItem("POLYMER_CONCENTRATION")->getSIDouble(0);
-                properties.m_saltConcentration = record->getItem("SALT_CONCENTRATION")->getSIDouble(0);
+                properties.m_polymerConcentration = record.getItem("POLYMER_CONCENTRATION").getSIDouble(0);
+                properties.m_saltConcentration = record.getItem("SALT_CONCENTRATION").getSIDouble(0);
 
-                auto group_polymer_item = record->getItem("GROUP_POLYMER_CONCENTRATION");
-                auto group_salt_item = record->getItem("GROUP_SALT_CONCENTRATION");
+                const auto& group_polymer_item = record.getItem("GROUP_POLYMER_CONCENTRATION");
+                const auto& group_salt_item = record.getItem("GROUP_SALT_CONCENTRATION");
 
-                if (!group_polymer_item->defaultApplied(0)) {
+                if (!group_polymer_item.defaultApplied(0)) {
                     throw std::logic_error("Sorry explicit setting of \'GROUP_POLYMER_CONCENTRATION\' is not supported!");
                 }
 
-                if (!group_salt_item->defaultApplied(0)) {
+                if (!group_salt_item.defaultApplied(0)) {
                     throw std::logic_error("Sorry explicit setting of \'GROUP_SALT_CONCENTRATION\' is not supported!");
                 }
                 well->setPolymerProperties(currentStep, properties);
@@ -687,18 +678,17 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleWSOLVENT(DeckKeywordConstPtr keyword, size_t currentStep) {
+    void Schedule::handleWSOLVENT( const DeckKeyword& keyword, size_t currentStep) {
 
-        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
-            DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
+        for( const auto& record : keyword ) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             std::vector<WellPtr> wells = getWells(wellNamePattern);
 
             for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
                 WellPtr well = *wellIter;
                 WellInjectionProperties injectionProperties = well->getInjectionProperties( currentStep );
                 if (well->isInjector( currentStep ) && injectionProperties.injectorType == WellInjector::GAS) {
-                    double fraction = record->getItem("SOLVENT_FRACTION")->getRawDouble(0);
+                    double fraction = record.getItem("SOLVENT_FRACTION").get< double >(0);
                     well->setSolventFraction(currentStep, fraction);
                 } else {
                     throw std::invalid_argument("WSOLVENT keyword can only be applied to Gas injectors");
@@ -707,27 +697,26 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleWCONINJH(std::shared_ptr<const SCHEDULESection> section, DeckKeywordConstPtr keyword, size_t currentStep) {
-        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
-            DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            const std::string& wellName = record->getItem("WELL")->getTrimmedString(0);
+    void Schedule::handleWCONINJH( const SCHEDULESection& section,  const DeckKeyword& keyword, size_t currentStep) {
+        for( const auto& record : keyword ) {
+            const std::string& wellName = record.getItem("WELL").getTrimmedString(0);
             WellPtr well = getWell(wellName);
 
             // convert injection rates to SI
-            WellInjector::TypeEnum injectorType = WellInjector::TypeFromString( record->getItem("TYPE")->getTrimmedString(0));
-            double injectionRate = record->getItem("RATE")->getRawDouble(0);
-            injectionRate = convertInjectionRateToSI(injectionRate, injectorType, *section->getActiveUnitSystem());
+            WellInjector::TypeEnum injectorType = WellInjector::TypeFromString( record.getItem("TYPE").getTrimmedString(0));
+            double injectionRate = record.getItem("RATE").get< double >(0);
+            injectionRate = convertInjectionRateToSI(injectionRate, injectorType, section.getActiveUnitSystem());
 
-            WellCommon::StatusEnum status = WellCommon::StatusFromString( record->getItem("STATUS")->getTrimmedString(0));
+            WellCommon::StatusEnum status = WellCommon::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
 
             updateWellStatus(well ,  currentStep , status );
             WellInjectionProperties properties(well->getInjectionPropertiesCopy(currentStep));
 
             properties.injectorType = injectorType;
 
-            const std::string& cmodeString = record->getItem("CMODE")->getTrimmedString(0);
+            const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
             WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( cmodeString );
-            if (!record->getItem("RATE")->defaultApplied(0)) {
+            if (!record.getItem("RATE").defaultApplied(0)) {
                 properties.surfaceInjectionRate = injectionRate;
                 properties.addInjectionControl(controlMode);
                 properties.controlMode = controlMode;
@@ -749,20 +738,19 @@ namespace Opm {
 
 
 
-    void Schedule::handleWELOPEN(DeckKeywordConstPtr keyword, size_t currentStep , bool hascomplump) {
-        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
-            DeckRecordConstPtr record = keyword->getRecord(recordNr);
+    void Schedule::handleWELOPEN( const DeckKeyword& keyword, size_t currentStep , bool hascomplump) {
 
+        for( const auto& record : keyword ) {
             bool haveCompletionData = false;
             for (size_t i=2; i<7; i++) {
-                auto item = record->getItem(i);
-                if (!item->defaultApplied(0)) {
+                const auto& item = record.getItem(i);
+                if (!item.defaultApplied(0)) {
                     haveCompletionData = true;
                     break;
                 }
             }
 
-            const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const std::vector<WellPtr>& wells = getWells(wellNamePattern);
 
             for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
@@ -773,11 +761,11 @@ namespace Opm {
 
                     CompletionSetPtr newCompletionSet(new CompletionSet( ));
 
-                    Opm::Value<int> I  = getValueItem(record->getItem("I"));
-                    Opm::Value<int> J  = getValueItem(record->getItem("J"));
-                    Opm::Value<int> K  = getValueItem(record->getItem("K"));
-                    Opm::Value<int> C1 = getValueItem(record->getItem("C1"));
-                    Opm::Value<int> C2 = getValueItem(record->getItem("C2"));
+                    Opm::Value<int> I  = getValueItem(record.getItem("I"));
+                    Opm::Value<int> J  = getValueItem(record.getItem("J"));
+                    Opm::Value<int> K  = getValueItem(record.getItem("K"));
+                    Opm::Value<int> C1 = getValueItem(record.getItem("C1"));
+                    Opm::Value<int> C2 = getValueItem(record.getItem("C2"));
 
                     if(hascomplump && (C2.hasValue() || C1.hasValue())){
                         std::cerr << "ERROR the keyword COMPLUMP is not supported used when C1 or C2 in WELOPEN have values" << std::endl;
@@ -821,7 +809,7 @@ namespace Opm {
                             newCompletionSet->add(currentCompletion);
                             continue;
                         }
-                        WellCompletion::StateEnum completionStatus = WellCompletion::StateEnumFromString(record->getItem("STATUS")->getTrimmedString(0));
+                        WellCompletion::StateEnum completionStatus = WellCompletion::StateEnumFromString(record.getItem("STATUS").getTrimmedString(0));
                         CompletionPtr newCompletion = std::make_shared<Completion>(currentCompletion, completionStatus);
                         newCompletionSet->add(newCompletion);
                     }
@@ -833,7 +821,7 @@ namespace Opm {
 
                 }
                 else if(!haveCompletionData) {
-                    WellCommon::StatusEnum status = WellCommon::StatusFromString( record->getItem("STATUS")->getTrimmedString(0));
+                    WellCommon::StatusEnum status = WellCommon::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
                     if (status == WellCommon::StatusEnum::OPEN && !well->canOpen(currentStep)) {
                         std::string msg =
                                 "Well " + well->name() + " where crossflow is banned has zero total rate. " +
@@ -859,18 +847,17 @@ namespace Opm {
       WCONxxxx keyword).
     */
 
-    void Schedule::handleWELTARG(std::shared_ptr<const SCHEDULESection> section , DeckKeywordConstPtr keyword, size_t currentStep) {
-        Opm::UnitSystem unitSystem = *section->getActiveUnitSystem();
+    void Schedule::handleWELTARG( const SCHEDULESection& section ,  const DeckKeyword& keyword, size_t currentStep) {
+        Opm::UnitSystem unitSystem = section.getActiveUnitSystem();
         double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time")->getSIScaling();
         double siFactorG = unitSystem.parse("GasSurfaceVolume/Time")->getSIScaling();
         double siFactorP = unitSystem.parse("Pressure")->getSIScaling();
 
-        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
-            DeckRecordConstPtr record = keyword->getRecord(recordNr);
+        for( const auto& record : keyword ) {
 
-            const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
-            const std::string& cMode = record->getItem("CMODE")->getTrimmedString(0);
-            double newValue = record->getItem("NEW_VALUE")->getRawDouble(0);
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            const std::string& cMode = record.getItem("CMODE").getTrimmedString(0);
+            double newValue = record.getItem("NEW_VALUE").get< double >(0);
             const std::vector<WellPtr>& wells = getWells(wellNamePattern);
 
             for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
@@ -974,53 +961,51 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleGCONINJE(std::shared_ptr<const SCHEDULESection> section, DeckKeywordConstPtr keyword, size_t currentStep) {
-        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
-            DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            const std::string& groupName = record->getItem("GROUP")->getTrimmedString(0);
+    void Schedule::handleGCONINJE( const SCHEDULESection& section,  const DeckKeyword& keyword, size_t currentStep) {
+        for( const auto& record : keyword ) {
+            const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
             GroupPtr group = getGroup(groupName);
 
             {
-                Phase::PhaseEnum phase = Phase::PhaseEnumFromString( record->getItem("PHASE")->getTrimmedString(0) );
+                Phase::PhaseEnum phase = Phase::PhaseEnumFromString( record.getItem("PHASE").getTrimmedString(0) );
                 group->setInjectionPhase( currentStep , phase );
             }
             {
-                GroupInjection::ControlEnum controlMode = GroupInjection::ControlEnumFromString( record->getItem("CONTROL_MODE")->getTrimmedString(0) );
+                GroupInjection::ControlEnum controlMode = GroupInjection::ControlEnumFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
                 group->setInjectionControlMode( currentStep , controlMode );
             }
 
-            Phase::PhaseEnum wellPhase = Phase::PhaseEnumFromString( record->getItem("PHASE")->getTrimmedString(0));
+            Phase::PhaseEnum wellPhase = Phase::PhaseEnumFromString( record.getItem("PHASE").getTrimmedString(0));
 
             // calculate SI injection rates for the group
-            double surfaceInjectionRate = record->getItem("SURFACE_TARGET")->getRawDouble(0);
-            surfaceInjectionRate = convertInjectionRateToSI(surfaceInjectionRate, wellPhase, *section->getActiveUnitSystem());
-            double reservoirInjectionRate = record->getItem("RESV_TARGET")->getSIDouble(0);
+            double surfaceInjectionRate = record.getItem("SURFACE_TARGET").get< double >(0);
+            surfaceInjectionRate = convertInjectionRateToSI(surfaceInjectionRate, wellPhase, section.getActiveUnitSystem());
+            double reservoirInjectionRate = record.getItem("RESV_TARGET").getSIDouble(0);
 
             group->setSurfaceMaxRate( currentStep , surfaceInjectionRate);
             group->setReservoirMaxRate( currentStep , reservoirInjectionRate);
-            group->setTargetReinjectFraction( currentStep , record->getItem("REINJ_TARGET")->getSIDouble(0));
-            group->setTargetVoidReplacementFraction( currentStep , record->getItem("VOIDAGE_TARGET")->getSIDouble(0));
+            group->setTargetReinjectFraction( currentStep , record.getItem("REINJ_TARGET").getSIDouble(0));
+            group->setTargetVoidReplacementFraction( currentStep , record.getItem("VOIDAGE_TARGET").getSIDouble(0));
 
             group->setProductionGroup(currentStep, false);
         }
     }
 
-    void Schedule::handleGCONPROD(DeckKeywordConstPtr keyword, size_t currentStep) {
-        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
-            DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            const std::string& groupName = record->getItem("GROUP")->getTrimmedString(0);
+    void Schedule::handleGCONPROD( const DeckKeyword& keyword, size_t currentStep) {
+        for( const auto& record : keyword ) {
+            const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
             GroupPtr group = getGroup(groupName);
             {
-                GroupProduction::ControlEnum controlMode = GroupProduction::ControlEnumFromString( record->getItem("CONTROL_MODE")->getTrimmedString(0) );
+                GroupProduction::ControlEnum controlMode = GroupProduction::ControlEnumFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
                 group->setProductionControlMode( currentStep , controlMode );
             }
-            group->setOilTargetRate( currentStep , record->getItem("OIL_TARGET")->getSIDouble(0));
-            group->setGasTargetRate( currentStep , record->getItem("GAS_TARGET")->getSIDouble(0));
-            group->setWaterTargetRate( currentStep , record->getItem("WATER_TARGET")->getSIDouble(0));
-            group->setLiquidTargetRate( currentStep , record->getItem("LIQUID_TARGET")->getSIDouble(0));
-            group->setReservoirVolumeTargetRate( currentStep , record->getItem("RESERVOIR_FLUID_TARGET")->getSIDouble(0));
+            group->setOilTargetRate( currentStep , record.getItem("OIL_TARGET").getSIDouble(0));
+            group->setGasTargetRate( currentStep , record.getItem("GAS_TARGET").getSIDouble(0));
+            group->setWaterTargetRate( currentStep , record.getItem("WATER_TARGET").getSIDouble(0));
+            group->setLiquidTargetRate( currentStep , record.getItem("LIQUID_TARGET").getSIDouble(0));
+            group->setReservoirVolumeTargetRate( currentStep , record.getItem("RESERVOIR_FLUID_TARGET").getSIDouble(0));
             {
-                GroupProductionExceedLimit::ActionEnum exceedAction = GroupProductionExceedLimit::ActionEnumFromString(record->getItem("EXCEED_PROC")->getTrimmedString(0) );
+                GroupProductionExceedLimit::ActionEnum exceedAction = GroupProductionExceedLimit::ActionEnumFromString(record.getItem("EXCEED_PROC").getTrimmedString(0) );
                 group->setProductionExceedLimitAction( currentStep , exceedAction );
             }
 
@@ -1029,143 +1014,142 @@ namespace Opm {
     }
 
 
-    void Schedule::handleGEFAC(std::shared_ptr<const DeckKeyword> keyword, size_t currentStep) {
-        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
-            DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            const std::string& groupName = record->getItem("GROUP")->getTrimmedString(0);
+    void Schedule::handleGEFAC( const DeckKeyword& keyword, size_t currentStep) {
+        for( const auto& record : keyword ) {
+            const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
             GroupPtr group = getGroup(groupName);
 
-            group->setGroupEfficiencyFactor(currentStep, record->getItem("EFFICIENCY_FACTOR")->getRawDouble(0));
+            group->setGroupEfficiencyFactor(currentStep, record.getItem("EFFICIENCY_FACTOR").get< double >(0));
 
-            const std::string& transfer_str = record->getItem("TRANSFER_EXT_NET")->getTrimmedString(0);
+            const std::string& transfer_str = record.getItem("TRANSFER_EXT_NET").getTrimmedString(0);
             bool transfer = (transfer_str == "YES") ? true : false;
             group->setTransferGroupEfficiencyFactor(currentStep, transfer);
         }
     }
 
 
-    void Schedule::handleTUNING(DeckKeywordConstPtr keyword, size_t currentStep) {
+    void Schedule::handleTUNING( const DeckKeyword& keyword, size_t currentStep) {
 
-        int numrecords = keyword->size();
+        int numrecords = keyword.size();
 
         if (numrecords > 0) {
-            DeckRecordConstPtr record1 = keyword->getRecord(0);
+            const auto& record1 = keyword.getRecord(0);
 
-            double TSINIT = record1->getItem("TSINIT")->getSIDouble(0);
+            double TSINIT = record1.getItem("TSINIT").getSIDouble(0);
             m_tuning->setTSINIT(currentStep, TSINIT);
 
-            double TSMAXZ = record1->getItem("TSMAXZ")->getSIDouble(0);
+            double TSMAXZ = record1.getItem("TSMAXZ").getSIDouble(0);
             m_tuning->setTSMAXZ(currentStep, TSMAXZ);
 
-            double TSMINZ = record1->getItem("TSMINZ")->getSIDouble(0);
+            double TSMINZ = record1.getItem("TSMINZ").getSIDouble(0);
             m_tuning->setTSMINZ(currentStep, TSMINZ);
 
-            double TSMCHP = record1->getItem("TSMCHP")->getSIDouble(0);
+            double TSMCHP = record1.getItem("TSMCHP").getSIDouble(0);
             m_tuning->setTSMCHP(currentStep, TSMCHP);
 
-            double TSFMAX = record1->getItem("TSFMAX")->getRawDouble(0);
+            double TSFMAX = record1.getItem("TSFMAX").get< double >(0);
             m_tuning->setTSFMAX(currentStep, TSFMAX);
 
-            double TSFMIN = record1->getItem("TSFMIN")->getRawDouble(0);
+            double TSFMIN = record1.getItem("TSFMIN").get< double >(0);
             m_tuning->setTSFMIN(currentStep, TSFMIN);
 
-            double TSFCNV = record1->getItem("TSFCNV")->getRawDouble(0);
+            double TSFCNV = record1.getItem("TSFCNV").get< double >(0);
             m_tuning->setTSFCNV(currentStep, TSFCNV);
 
-            double TFDIFF = record1->getItem("TFDIFF")->getRawDouble(0);
+            double TFDIFF = record1.getItem("TFDIFF").get< double >(0);
             m_tuning->setTFDIFF(currentStep, TFDIFF);
 
-            double THRUPT = record1->getItem("THRUPT")->getRawDouble(0);
+            double THRUPT = record1.getItem("THRUPT").get< double >(0);
             m_tuning->setTHRUPT(currentStep, THRUPT);
 
-            DeckItemConstPtr TMAXWCdeckItem = record1->getItem("TMAXWC");
-            if (TMAXWCdeckItem->hasValue(0)) {
-                double TMAXWC = TMAXWCdeckItem->getSIDouble(0);
+            const auto& TMAXWCdeckItem = record1.getItem("TMAXWC");
+            if (TMAXWCdeckItem.hasValue(0)) {
+                double TMAXWC = TMAXWCdeckItem.getSIDouble(0);
                 m_tuning->setTMAXWC(currentStep, TMAXWC);
             }
         }
 
 
         if (numrecords > 1) {
-            DeckRecordConstPtr record2 = keyword->getRecord(1);
+            const auto& record2 = keyword.getRecord(1);
 
-            double TRGTTE = record2->getItem("TRGTTE")->getRawDouble(0);
+            double TRGTTE = record2.getItem("TRGTTE").get< double >(0);
             m_tuning->setTRGTTE(currentStep, TRGTTE);
 
-            double TRGCNV = record2->getItem("TRGCNV")->getRawDouble(0);
+            double TRGCNV = record2.getItem("TRGCNV").get< double >(0);
             m_tuning->setTRGCNV(currentStep, TRGCNV);
 
-            double TRGMBE = record2->getItem("TRGMBE")->getRawDouble(0);
+            double TRGMBE = record2.getItem("TRGMBE").get< double >(0);
             m_tuning->setTRGMBE(currentStep, TRGMBE);
 
-            double TRGLCV = record2->getItem("TRGLCV")->getRawDouble(0);
+            double TRGLCV = record2.getItem("TRGLCV").get< double >(0);
             m_tuning->setTRGLCV(currentStep, TRGLCV);
 
-            double XXXTTE = record2->getItem("XXXTTE")->getRawDouble(0);
+            double XXXTTE = record2.getItem("XXXTTE").get< double >(0);
             m_tuning->setXXXTTE(currentStep, XXXTTE);
 
-            double XXXCNV = record2->getItem("XXXCNV")->getRawDouble(0);
+            double XXXCNV = record2.getItem("XXXCNV").get< double >(0);
             m_tuning->setXXXCNV(currentStep, XXXCNV);
 
-            double XXXMBE = record2->getItem("XXXMBE")->getRawDouble(0);
+            double XXXMBE = record2.getItem("XXXMBE").get< double >(0);
             m_tuning->setXXXMBE(currentStep, XXXMBE);
 
-            double XXXLCV = record2->getItem("XXXLCV")->getRawDouble(0);
+            double XXXLCV = record2.getItem("XXXLCV").get< double >(0);
             m_tuning->setXXXLCV(currentStep, XXXLCV);
 
-            double XXXWFL = record2->getItem("XXXWFL")->getRawDouble(0);
+            double XXXWFL = record2.getItem("XXXWFL").get< double >(0);
             m_tuning->setXXXWFL(currentStep, XXXWFL);
 
-            double TRGFIP = record2->getItem("TRGFIP")->getRawDouble(0);
+            double TRGFIP = record2.getItem("TRGFIP").get< double >(0);
             m_tuning->setTRGFIP(currentStep, TRGFIP);
 
-            DeckItemConstPtr TRGSFTdeckItem = record2->getItem("TRGSFT");
-            if (TRGSFTdeckItem->hasValue(0)) {
-                double TRGSFT = TRGSFTdeckItem->getRawDouble(0);
+            const auto& TRGSFTdeckItem = record2.getItem("TRGSFT");
+            if (TRGSFTdeckItem.hasValue(0)) {
+                double TRGSFT = TRGSFTdeckItem.get< double >(0);
                 m_tuning->setTRGSFT(currentStep, TRGSFT);
             }
 
-            double THIONX = record2->getItem("THIONX")->getRawDouble(0);
+            double THIONX = record2.getItem("THIONX").get< double >(0);
             m_tuning->setTHIONX(currentStep, THIONX);
 
-            int TRWGHT = record2->getItem("TRWGHT")->getInt(0);
+            int TRWGHT = record2.getItem("TRWGHT").get< int >(0);
             m_tuning->setTRWGHT(currentStep, TRWGHT);
         }
 
 
         if (numrecords > 2) {
-            DeckRecordConstPtr record3 = keyword->getRecord(2);
+            const auto& record3 = keyword.getRecord(2);
 
-            int NEWTMX = record3->getItem("NEWTMX")->getInt(0);
+            int NEWTMX = record3.getItem("NEWTMX").get< int >(0);
             m_tuning->setNEWTMX(currentStep, NEWTMX);
 
-            int NEWTMN = record3->getItem("NEWTMN")->getInt(0);
+            int NEWTMN = record3.getItem("NEWTMN").get< int >(0);
             m_tuning->setNEWTMN(currentStep, NEWTMN);
 
-            int LITMAX = record3->getItem("LITMAX")->getInt(0);
+            int LITMAX = record3.getItem("LITMAX").get< int >(0);
             m_tuning->setLITMAX(currentStep, LITMAX);
 
-            int LITMIN = record3->getItem("LITMIN")->getInt(0);
+            int LITMIN = record3.getItem("LITMIN").get< int >(0);
             m_tuning->setLITMIN(currentStep, LITMIN);
 
-            int MXWSIT = record3->getItem("MXWSIT")->getInt(0);
+            int MXWSIT = record3.getItem("MXWSIT").get< int >(0);
             m_tuning->setMXWSIT(currentStep, MXWSIT);
 
-            int MXWPIT = record3->getItem("MXWPIT")->getInt(0);
+            int MXWPIT = record3.getItem("MXWPIT").get< int >(0);
             m_tuning->setMXWPIT(currentStep, MXWPIT);
 
-            double DDPLIM = record3->getItem("DDPLIM")->getSIDouble(0);
+            double DDPLIM = record3.getItem("DDPLIM").getSIDouble(0);
             m_tuning->setDDPLIM(currentStep, DDPLIM);
 
-            double DDSLIM = record3->getItem("DDSLIM")->getRawDouble(0);
+            double DDSLIM = record3.getItem("DDSLIM").get< double >(0);
             m_tuning->setDDSLIM(currentStep, DDSLIM);
 
-            double TRGDPR = record3->getItem("TRGDPR")->getSIDouble(0);
+            double TRGDPR = record3.getItem("TRGDPR").getSIDouble(0);
             m_tuning->setTRGDPR(currentStep, TRGDPR);
 
-            DeckItemConstPtr XXXDPRdeckItem = record3->getItem("XXXDPR");
-            if (XXXDPRdeckItem->hasValue(0)) {
-                double XXXDPR = XXXDPRdeckItem->getSIDouble(0);
+            const auto& XXXDPRdeckItem = record3.getItem("XXXDPR");
+            if (XXXDPRdeckItem.hasValue(0)) {
+                double XXXDPR = XXXDPRdeckItem.getSIDouble(0);
                 m_tuning->setXXXDPR(currentStep, XXXDPR);
             }
         }
@@ -1176,19 +1160,18 @@ namespace Opm {
         nosim = true;
     }
 
-    void Schedule::handleRPTRST(DeckKeywordConstPtr keyword, size_t currentStep, IOConfigPtr ioConfig) {
-        DeckRecordConstPtr record = keyword->getRecord(0);
+    void Schedule::handleRPTRST( const DeckKeyword& keyword, size_t currentStep, IOConfigPtr ioConfig) {
+        const auto& record = keyword.getRecord(0);
 
         size_t basic = 1;
         size_t freq  = 0;
         size_t found_basic = 0;
         bool handle_RPTRST_BASIC = false;
 
-        DeckItemConstPtr item = record->getItem(0);
+        const auto& item = record.getItem(0);
 
-
-        for (size_t index = 0; index < item->size(); ++index) {
-            const std::string& mnemonic = item->getString(index);
+        for (size_t index = 0; index < item.size(); ++index) {
+            const std::string& mnemonic = item.get< std::string >(index);
 
             found_basic = mnemonic.find("BASIC=");
             if (found_basic != std::string::npos) {
@@ -1212,8 +1195,8 @@ namespace Opm {
 
 
         if (found_basic == std::string::npos) {
-            if (item->size() >= 1)  {
-                const std::string& integer_control_basic = item->getString(0);
+            if (item.size() >= 1)  {
+                const std::string& integer_control_basic = item.get< std::string >(0);
                 try {
                     basic = boost::lexical_cast<size_t>(integer_control_basic);
                     if (0 != basic ) // Peculiar special case in eclipse, - not documented
@@ -1229,8 +1212,8 @@ namespace Opm {
                 }
             }
 
-            if (item->size() >= 6) { //if frequency is set
-                const std::string& integer_control_frequency = item->getString(5);
+            if (item.size() >= 6) { //if frequency is set
+                const std::string& integer_control_frequency = item.get< std::string >(5);
                 try {
                     freq = boost::lexical_cast<size_t>(integer_control_frequency);
                 } catch (boost::bad_lexical_cast &) {
@@ -1245,17 +1228,17 @@ namespace Opm {
     }
 
 
-    void Schedule::handleRPTSCHED(DeckKeywordConstPtr keyword, size_t step, IOConfigPtr ioConfig) {
-        DeckRecordConstPtr record = keyword->getRecord(0);
+    void Schedule::handleRPTSCHED( const DeckKeyword& keyword, size_t step, IOConfigPtr ioConfig) {
+        const auto& record = keyword.getRecord(0);
 
         size_t restart = 0;
         size_t found_mnemonic_RESTART = 0;
         size_t found_mnemonic_NOTHING = 0;
-        DeckItemConstPtr item = record->getItem(0);
+        const auto& item = record.getItem(0);
         bool handle_RPTSCHED_RESTART = false;
 
-        for (size_t index = 0; index < item->size(); ++index) {
-            const std::string& mnemonic = item->getString(index);
+        for (size_t index = 0; index < item.size(); ++index) {
+            const std::string& mnemonic = item.get< std::string >(index);
 
             found_mnemonic_RESTART = mnemonic.find("RESTART=");
             if (found_mnemonic_RESTART != std::string::npos) {
@@ -1276,8 +1259,8 @@ namespace Opm {
            Restart integer switch is integer control nr 7 */
 
         if (found_mnemonic_RESTART == std::string::npos) {
-            if (item->size() >= 7)  {
-                const std::string& integer_control = item->getString(6);
+            if (item.size() >= 7)  {
+                const std::string& integer_control = item.get< std::string >(6);
                 try {
                     restart = boost::lexical_cast<size_t>(integer_control);
                     handle_RPTSCHED_RESTART = true;
@@ -1294,7 +1277,7 @@ namespace Opm {
 
     }
 
-    void Schedule::handleCOMPDAT(DeckKeywordConstPtr keyword, size_t currentStep) {
+    void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep) {
         std::map<std::string , std::vector< CompletionPtr> > completionMapList = Completion::completionsFromCOMPDATKeyword( keyword );
         std::map<std::string , std::vector< CompletionPtr> >::iterator iter;
 
@@ -1306,7 +1289,7 @@ namespace Opm {
         m_events->addEvent(ScheduleEvents::COMPLETION_CHANGE, currentStep);
     }
 
-    void Schedule::handleWELSEGS(DeckKeywordConstPtr keyword, size_t currentStep) {
+    void Schedule::handleWELSEGS( const DeckKeyword& keyword, size_t currentStep) {
         SegmentSetPtr newSegmentset= std::make_shared<SegmentSet>();
         newSegmentset->segmentsFromWELSEGSKeyword(keyword);
 
@@ -1317,9 +1300,9 @@ namespace Opm {
         well->addSegmentSet(currentStep, newSegmentset);
     }
 
-    void Schedule::handleCOMPSEGS(DeckKeywordConstPtr keyword, size_t currentStep) {
-        DeckRecordConstPtr record1 = keyword->getRecord(0);
-        const std::string& well_name = record1->getItem("WELL")->getTrimmedString(0);
+    void Schedule::handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep) {
+        const auto& record1 = keyword.getRecord(0);
+        const std::string& well_name = record1.getItem("WELL").getTrimmedString(0);
         WellPtr well = getWell(well_name);
 
         std::vector<CompsegsPtr> compsegs_vector = Compsegs::compsegsFromCOMPSEGSKeyword(keyword, m_grid);
@@ -1335,34 +1318,32 @@ namespace Opm {
         well->addCompletionSet(currentStep, new_completionSet);
     }
 
-    void Schedule::handleWGRUPCON(DeckKeywordConstPtr keyword, size_t currentStep) {
-        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
-            DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            const std::string& wellName = record->getItem("WELL")->getTrimmedString(0);
+    void Schedule::handleWGRUPCON( const DeckKeyword& keyword, size_t currentStep) {
+        for( const auto& record : keyword ) {
+            const std::string& wellName = record.getItem("WELL").getTrimmedString(0);
             WellPtr well = getWell(wellName);
 
-            bool availableForGroupControl = convertEclipseStringToBool(record->getItem("GROUP_CONTROLLED")->getTrimmedString(0));
+            bool availableForGroupControl = convertEclipseStringToBool(record.getItem("GROUP_CONTROLLED").getTrimmedString(0));
             well->setAvailableForGroupControl(currentStep, availableForGroupControl);
 
-            well->setGuideRate(currentStep, record->getItem("GUIDE_RATE")->getRawDouble(0));
+            well->setGuideRate(currentStep, record.getItem("GUIDE_RATE").get< double >(0));
 
-            if (!record->getItem("PHASE")->defaultApplied(0)) {
-                std::string guideRatePhase = record->getItem("PHASE")->getTrimmedString(0);
+            if (!record.getItem("PHASE").defaultApplied(0)) {
+                std::string guideRatePhase = record.getItem("PHASE").getTrimmedString(0);
                 well->setGuideRatePhase(currentStep, GuideRate::GuideRatePhaseEnumFromString(guideRatePhase));
             } else
                 well->setGuideRatePhase(currentStep, GuideRate::UNDEFINED);
 
-            well->setGuideRateScalingFactor(currentStep, record->getItem("SCALING_FACTOR")->getRawDouble(0));
+            well->setGuideRateScalingFactor(currentStep, record.getItem("SCALING_FACTOR").get< double >(0));
         }
     }
 
-    void Schedule::handleGRUPTREE(DeckKeywordConstPtr keyword, size_t currentStep) {
+    void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep) {
         GroupTreePtr currentTree = m_rootGroupTree->get(currentStep);
         GroupTreePtr newTree = currentTree->deepCopy();
-        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
-            DeckRecordConstPtr record = keyword->getRecord(recordNr);
-            const std::string& childName = record->getItem("CHILD_GROUP")->getTrimmedString(0);
-            const std::string& parentName = record->getItem("PARENT_GROUP")->getTrimmedString(0);
+        for( const auto& record : keyword ) {
+            const std::string& childName = record.getItem("CHILD_GROUP").getTrimmedString(0);
+            const std::string& parentName = record.getItem("PARENT_GROUP").getTrimmedString(0);
             newTree->updateTree(childName, parentName);
 
             if (!hasGroup(parentName))
@@ -1374,16 +1355,15 @@ namespace Opm {
         m_rootGroupTree->update(currentStep, newTree);
     }
 
-    void Schedule::handleWRFT(DeckKeywordConstPtr keyword, size_t currentStep) {
+    void Schedule::handleWRFT( const DeckKeyword& keyword, size_t currentStep) {
 
         /* Rule for handling RFT: Request current RFT data output for specified wells, plus output when
          * any well is subsequently opened
          */
 
-        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
-            DeckRecordConstPtr record = keyword->getRecord(recordNr);
+        for( const auto& record : keyword ) {
 
-            const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const std::vector<WellPtr> wells = getWells(wellNamePattern);
 
             for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
@@ -1402,17 +1382,16 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleWRFTPLT(DeckKeywordConstPtr keyword,  size_t currentStep) {
+    void Schedule::handleWRFTPLT( const DeckKeyword& keyword,  size_t currentStep) {
 
-        for (size_t recordNr = 0; recordNr < keyword->size(); recordNr++) {
-            DeckRecordConstPtr record = keyword->getRecord(recordNr);
+        for( const auto& record : keyword ) {
 
-            const std::string& wellNamePattern = record->getItem("WELL")->getTrimmedString(0);
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const std::vector<WellPtr> wells = getWells(wellNamePattern);
 
-            RFTConnections::RFTEnum RFTKey = RFTConnections::RFTEnumFromString(record->getItem("OUTPUT_RFT")->getTrimmedString(0));
+            RFTConnections::RFTEnum RFTKey = RFTConnections::RFTEnumFromString(record.getItem("OUTPUT_RFT").getTrimmedString(0));
 
-            PLTConnections::PLTEnum PLTKey = PLTConnections::PLTEnumFromString(record->getItem("OUTPUT_PLT")->getTrimmedString(0));
+            PLTConnections::PLTEnum PLTKey = PLTConnections::PLTEnumFromString(record.getItem("OUTPUT_PLT").getTrimmedString(0));
 
             for (auto wellIter=wells.begin(); wellIter != wells.end(); ++wellIter) {
                 WellPtr well = *wellIter;
@@ -1460,20 +1439,20 @@ namespace Opm {
         return m_rootGroupTree->get(timeStep);
     }
 
-    void Schedule::addWell(const std::string& wellName, DeckRecordConstPtr record, size_t timeStep, WellCompletion::CompletionOrderEnum wellCompletionOrder) {
+    void Schedule::addWell(const std::string& wellName, const DeckRecord& record, size_t timeStep, WellCompletion::CompletionOrderEnum wellCompletionOrder) {
         // We change from eclipse's 1 - n, to a 0 - n-1 solution
-        int headI = record->getItem("HEAD_I")->getInt(0) - 1;
-        int headJ = record->getItem("HEAD_J")->getInt(0) - 1;
-        Phase::PhaseEnum preferredPhase = Phase::PhaseEnumFromString(record->getItem("PHASE")->getTrimmedString(0));
+        int headI = record.getItem("HEAD_I").get< int >(0) - 1;
+        int headJ = record.getItem("HEAD_J").get< int >(0) - 1;
+        Phase::PhaseEnum preferredPhase = Phase::PhaseEnumFromString(record.getItem("PHASE").getTrimmedString(0));
         Value<double> refDepth("REF_DEPTH");
         WellPtr well;
-        auto refDepthItem = record->getItem("REF_DEPTH");
+        const auto& refDepthItem = record.getItem("REF_DEPTH");
 
-        if (refDepthItem->hasValue(0))
-            refDepth.setValue( refDepthItem->getSIDouble(0));
+        if (refDepthItem.hasValue(0))
+            refDepth.setValue( refDepthItem.getSIDouble(0));
 
         bool allowCrossFlow = true;
-        const std::string& allowCrossFlowStr = record->getItem<ParserKeywords::WELSPECS::CROSSFLOW>()->getTrimmedString(0);
+        const std::string& allowCrossFlowStr = record.getItem<ParserKeywords::WELSPECS::CROSSFLOW>().getTrimmedString(0);
         if (allowCrossFlowStr == "NO")
             allowCrossFlow = false;
 
@@ -1622,7 +1601,7 @@ namespace Opm {
         }
     }
 
-    double Schedule::convertInjectionRateToSI(double rawRate, Phase::PhaseEnum wellPhase, const Opm::UnitSystem &unitSystem) {
+    double Schedule::convertInjectionRateToSI(double rawRate, Phase::PhaseEnum wellPhase, const Opm::UnitSystem& unitSystem) {
         switch (wellPhase) {
         case Phase::OIL:
         case Phase::WATER:

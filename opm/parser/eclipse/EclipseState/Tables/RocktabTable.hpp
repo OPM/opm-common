@@ -27,7 +27,7 @@ namespace Opm {
 
     class RocktabTable : public  SimpleTable {
     public:
-        RocktabTable(std::shared_ptr< const DeckItem > item,
+        RocktabTable(const DeckItem& item,
                      bool isDirectional,
                      bool hasStressOption);
 

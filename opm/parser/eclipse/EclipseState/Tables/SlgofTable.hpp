@@ -28,7 +28,7 @@ namespace Opm {
     class SlgofTable : public SimpleTable {
 
     public:
-        SlgofTable( std::shared_ptr< const DeckItem > item );
+        SlgofTable( const DeckItem& item );
         const TableColumn& getSlColumn() const;
         const TableColumn& getKrgColumn() const;
         const TableColumn& getKrogColumn() const;

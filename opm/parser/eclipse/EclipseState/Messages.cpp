@@ -39,58 +39,58 @@ namespace Opm {
         m_bug_stop_limit( messages.m_bug_stop_limit )
 
     {
-        if (!record.getItem<ParserKeywords::MESSAGES::MESSAGE_PRINT_LIMIT>()->defaultApplied(0))
-            m_message_print_limit = record.getItem<ParserKeywords::MESSAGES::MESSAGE_PRINT_LIMIT>()->getInt( 0 );
+        if (!record.getItem<ParserKeywords::MESSAGES::MESSAGE_PRINT_LIMIT>().defaultApplied(0))
+            m_message_print_limit = record.getItem<ParserKeywords::MESSAGES::MESSAGE_PRINT_LIMIT>().get< int >( 0 );
 
-        if (!record.getItem<ParserKeywords::MESSAGES::COMMENT_PRINT_LIMIT>()->defaultApplied(0))
-            m_comment_print_limit = record.getItem<ParserKeywords::MESSAGES::COMMENT_PRINT_LIMIT>()->getInt( 0 );
+        if (!record.getItem<ParserKeywords::MESSAGES::COMMENT_PRINT_LIMIT>().defaultApplied(0))
+            m_comment_print_limit = record.getItem<ParserKeywords::MESSAGES::COMMENT_PRINT_LIMIT>().get< int >( 0 );
 
-        if (!record.getItem<ParserKeywords::MESSAGES::WARNING_PRINT_LIMIT>()->defaultApplied(0))
-            m_warning_print_limit = record.getItem<ParserKeywords::MESSAGES::WARNING_PRINT_LIMIT>()->getInt( 0 );
+        if (!record.getItem<ParserKeywords::MESSAGES::WARNING_PRINT_LIMIT>().defaultApplied(0))
+            m_warning_print_limit = record.getItem<ParserKeywords::MESSAGES::WARNING_PRINT_LIMIT>().get< int >( 0 );
 
-        if (!record.getItem<ParserKeywords::MESSAGES::PROBLEM_PRINT_LIMIT>()->defaultApplied(0))
-            m_problem_print_limit = record.getItem<ParserKeywords::MESSAGES::PROBLEM_PRINT_LIMIT>()->getInt( 0 );
+        if (!record.getItem<ParserKeywords::MESSAGES::PROBLEM_PRINT_LIMIT>().defaultApplied(0))
+            m_problem_print_limit = record.getItem<ParserKeywords::MESSAGES::PROBLEM_PRINT_LIMIT>().get< int >( 0 );
 
-        if (!record.getItem<ParserKeywords::MESSAGES::ERROR_PRINT_LIMIT>()->defaultApplied(0))
-            m_error_print_limit = record.getItem<ParserKeywords::MESSAGES::ERROR_PRINT_LIMIT>()->getInt( 0 );
+        if (!record.getItem<ParserKeywords::MESSAGES::ERROR_PRINT_LIMIT>().defaultApplied(0))
+            m_error_print_limit = record.getItem<ParserKeywords::MESSAGES::ERROR_PRINT_LIMIT>().get< int >( 0 );
 
-        if (!record.getItem<ParserKeywords::MESSAGES::BUG_PRINT_LIMIT>()->defaultApplied(0))
-            m_bug_print_limit = record.getItem<ParserKeywords::MESSAGES::BUG_PRINT_LIMIT>()->getInt( 0 );
+        if (!record.getItem<ParserKeywords::MESSAGES::BUG_PRINT_LIMIT>().defaultApplied(0))
+            m_bug_print_limit = record.getItem<ParserKeywords::MESSAGES::BUG_PRINT_LIMIT>().get< int >( 0 );
 
         /*****************************************************************/
 
-        if (!record.getItem<ParserKeywords::MESSAGES::MESSAGE_STOP_LIMIT>()->defaultApplied(0))
-            m_message_stop_limit = record.getItem<ParserKeywords::MESSAGES::MESSAGE_STOP_LIMIT>()->getInt( 0 );
+        if (!record.getItem<ParserKeywords::MESSAGES::MESSAGE_STOP_LIMIT>().defaultApplied(0))
+            m_message_stop_limit = record.getItem<ParserKeywords::MESSAGES::MESSAGE_STOP_LIMIT>().get< int >( 0 );
 
-        if (!record.getItem<ParserKeywords::MESSAGES::COMMENT_STOP_LIMIT>()->defaultApplied(0))
-            m_comment_stop_limit = record.getItem<ParserKeywords::MESSAGES::COMMENT_STOP_LIMIT>()->getInt( 0 );
+        if (!record.getItem<ParserKeywords::MESSAGES::COMMENT_STOP_LIMIT>().defaultApplied(0))
+            m_comment_stop_limit = record.getItem<ParserKeywords::MESSAGES::COMMENT_STOP_LIMIT>().get< int >( 0 );
 
-        if (!record.getItem<ParserKeywords::MESSAGES::WARNING_STOP_LIMIT>()->defaultApplied(0))
-            m_warning_stop_limit = record.getItem<ParserKeywords::MESSAGES::WARNING_STOP_LIMIT>()->getInt( 0 );
+        if (!record.getItem<ParserKeywords::MESSAGES::WARNING_STOP_LIMIT>().defaultApplied(0))
+            m_warning_stop_limit = record.getItem<ParserKeywords::MESSAGES::WARNING_STOP_LIMIT>().get< int >( 0 );
 
-        if (!record.getItem<ParserKeywords::MESSAGES::PROBLEM_STOP_LIMIT>()->defaultApplied(0))
-            m_problem_stop_limit = record.getItem<ParserKeywords::MESSAGES::PROBLEM_STOP_LIMIT>()->getInt( 0 );
+        if (!record.getItem<ParserKeywords::MESSAGES::PROBLEM_STOP_LIMIT>().defaultApplied(0))
+            m_problem_stop_limit = record.getItem<ParserKeywords::MESSAGES::PROBLEM_STOP_LIMIT>().get< int >( 0 );
 
-        if (!record.getItem<ParserKeywords::MESSAGES::ERROR_STOP_LIMIT>()->defaultApplied(0))
-            m_error_stop_limit = record.getItem<ParserKeywords::MESSAGES::ERROR_STOP_LIMIT>()->getInt( 0 );
+        if (!record.getItem<ParserKeywords::MESSAGES::ERROR_STOP_LIMIT>().defaultApplied(0))
+            m_error_stop_limit = record.getItem<ParserKeywords::MESSAGES::ERROR_STOP_LIMIT>().get< int >( 0 );
 
-        if (!record.getItem<ParserKeywords::MESSAGES::BUG_STOP_LIMIT>()->defaultApplied(0))
-            m_bug_stop_limit = record.getItem<ParserKeywords::MESSAGES::BUG_STOP_LIMIT>()->getInt( 0 );
+        if (!record.getItem<ParserKeywords::MESSAGES::BUG_STOP_LIMIT>().defaultApplied(0))
+            m_bug_stop_limit = record.getItem<ParserKeywords::MESSAGES::BUG_STOP_LIMIT>().get< int >( 0 );
     }
 
     Messages::Messages(const DeckRecord& record) :
-        m_message_print_limit( record.getItem<ParserKeywords::MESSAGES::MESSAGE_PRINT_LIMIT>()->getInt( 0 )),
-        m_comment_print_limit( record.getItem<ParserKeywords::MESSAGES::COMMENT_PRINT_LIMIT>()->getInt( 0 )),
-        m_warning_print_limit( record.getItem<ParserKeywords::MESSAGES::WARNING_PRINT_LIMIT>()->getInt(0)),
-        m_problem_print_limit( record.getItem<ParserKeywords::MESSAGES::PROBLEM_PRINT_LIMIT>()->getInt(0)),
-        m_error_print_limit( record.getItem<ParserKeywords::MESSAGES::ERROR_PRINT_LIMIT>()->getInt(0)),
-        m_bug_print_limit( record.getItem<ParserKeywords::MESSAGES::BUG_PRINT_LIMIT>()->getInt(0)),
-        m_message_stop_limit( record.getItem<ParserKeywords::MESSAGES::MESSAGE_STOP_LIMIT>()->getInt(0)),
-        m_comment_stop_limit( record.getItem<ParserKeywords::MESSAGES::COMMENT_STOP_LIMIT>()->getInt(0)),
-        m_warning_stop_limit( record.getItem<ParserKeywords::MESSAGES::WARNING_STOP_LIMIT>()->getInt(0)),
-        m_problem_stop_limit( record.getItem<ParserKeywords::MESSAGES::PROBLEM_STOP_LIMIT>()->getInt(0)),
-        m_error_stop_limit( record.getItem<ParserKeywords::MESSAGES::ERROR_STOP_LIMIT>()->getInt(0)),
-        m_bug_stop_limit( record.getItem<ParserKeywords::MESSAGES::BUG_STOP_LIMIT>()->getInt(0))
+        m_message_print_limit( record.getItem<ParserKeywords::MESSAGES::MESSAGE_PRINT_LIMIT>().get< int >( 0 )),
+        m_comment_print_limit( record.getItem<ParserKeywords::MESSAGES::COMMENT_PRINT_LIMIT>().get< int >( 0 )),
+        m_warning_print_limit( record.getItem<ParserKeywords::MESSAGES::WARNING_PRINT_LIMIT>().get< int >(0)),
+        m_problem_print_limit( record.getItem<ParserKeywords::MESSAGES::PROBLEM_PRINT_LIMIT>().get< int >(0)),
+        m_error_print_limit( record.getItem<ParserKeywords::MESSAGES::ERROR_PRINT_LIMIT>().get< int >(0)),
+        m_bug_print_limit( record.getItem<ParserKeywords::MESSAGES::BUG_PRINT_LIMIT>().get< int >(0)),
+        m_message_stop_limit( record.getItem<ParserKeywords::MESSAGES::MESSAGE_STOP_LIMIT>().get< int >(0)),
+        m_comment_stop_limit( record.getItem<ParserKeywords::MESSAGES::COMMENT_STOP_LIMIT>().get< int >(0)),
+        m_warning_stop_limit( record.getItem<ParserKeywords::MESSAGES::WARNING_STOP_LIMIT>().get< int >(0)),
+        m_problem_stop_limit( record.getItem<ParserKeywords::MESSAGES::PROBLEM_STOP_LIMIT>().get< int >(0)),
+        m_error_stop_limit( record.getItem<ParserKeywords::MESSAGES::ERROR_STOP_LIMIT>().get< int >(0)),
+        m_bug_stop_limit( record.getItem<ParserKeywords::MESSAGES::BUG_STOP_LIMIT>().get< int >(0))
     { }
 
 }

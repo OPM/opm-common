@@ -22,9 +22,11 @@
 #include <boost/test/test_tools.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/F.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -61,7 +63,10 @@ BOOST_AUTO_TEST_CASE( test_state ) {
 
     parser.addKeyword<ParserKeywords::SPECGRID>();
     parser.addKeyword<ParserKeywords::FAULTS>();
+    parser.addKeyword<ParserKeywords::GRID>();
     auto deck = parser.parseFile("testdata/integration_tests/Resinsight/DECK1.DATA" , parseMode);
+
     auto grid = std::make_shared<EclipseGrid>( deck );
-    auto faults = std::make_shared<FaultCollection>( deck , grid );
+    auto gsec = std::make_shared< GRIDSection >( *deck );
+    auto faults = std::make_shared<FaultCollection>( gsec, grid );
 }

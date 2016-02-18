@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE( PARSE_PLYADSS_OK) {
     ParserPtr parser(new Parser());
     std::string deckFile("testdata/integration_tests/POLYMER/plyadss.data");
     DeckPtr deck =  parser->parseFile(deckFile, ParseMode());
-    DeckKeywordConstPtr kw = deck->getKeyword("PLYADSS");
+    const auto& kw = deck->getKeyword("PLYADSS");
 
-    BOOST_CHECK_EQUAL( kw->size() , 11U );
+    BOOST_CHECK_EQUAL( kw.size() , 11U );
 }

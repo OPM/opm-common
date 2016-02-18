@@ -69,7 +69,7 @@
 
 namespace Opm {
 
-PvtgTable::PvtgTable(Opm::DeckKeywordConstPtr keyword, size_t tableIdx ) :
+PvtgTable::PvtgTable( const DeckKeyword& keyword, size_t tableIdx ) :
     PvtxTable("P") {
 
         m_saturatedSchema = std::make_shared< TableSchema >();
@@ -88,7 +88,7 @@ PvtgTable::PvtgTable(Opm::DeckKeywordConstPtr keyword, size_t tableIdx ) :
         PvtxTable::init(keyword, tableIdx);
     }
 
-PvtoTable::PvtoTable(Opm::DeckKeywordConstPtr keyword, size_t tableIdx) :
+PvtoTable::PvtoTable( const DeckKeyword& keyword, size_t tableIdx) :
     PvtxTable("P") {
 
         m_saturatedSchema = std::make_shared< TableSchema >();
@@ -106,7 +106,7 @@ PvtoTable::PvtoTable(Opm::DeckKeywordConstPtr keyword, size_t tableIdx) :
         PvtxTable::init(keyword , tableIdx);
     }
 
-SwofTable::SwofTable( std::shared_ptr< const DeckItem > item ) {
+SwofTable::SwofTable( const DeckItem& item ) {
 
     m_schema = std::make_shared< TableSchema >();
 
@@ -134,7 +134,7 @@ const TableColumn& SwofTable::getPcowColumn() const {
     return SimpleTable::getColumn(3);
 }
 
-SgwfnTable::SgwfnTable( std::shared_ptr< const DeckItem > item ) {
+SgwfnTable::SgwfnTable( const DeckItem& item ) {
 
     m_schema = std::make_shared< TableSchema >();
 
@@ -162,7 +162,7 @@ const TableColumn& SgwfnTable::getPcgwColumn() const {
     return SimpleTable::getColumn(3); 
 }
 
-SgofTable::SgofTable( std::shared_ptr< const DeckItem > item ) {
+SgofTable::SgofTable( const DeckItem& item ) {
     m_schema = std::make_shared< TableSchema >();
     m_schema->addColumn( ColumnSchema("SG"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
     m_schema->addColumn( ColumnSchema("KRG"  , Table::RANDOM              , Table::DEFAULT_LINEAR ));
@@ -189,7 +189,7 @@ const TableColumn& SgofTable::getPcogColumn() const {
 
 }
 
-SlgofTable::SlgofTable( std::shared_ptr< const DeckItem > item ) {
+SlgofTable::SlgofTable( const DeckItem& item ) {
     m_schema = std::make_shared< TableSchema >();
 
     m_schema->addColumn( ColumnSchema("SL"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
@@ -220,7 +220,7 @@ const TableColumn& SlgofTable::getPcogColumn() const {
     return SimpleTable::getColumn(3);
 }
 
-Sof2Table::Sof2Table( std::shared_ptr< const DeckItem > item ) {
+Sof2Table::Sof2Table( const DeckItem& item ) {
     m_schema = std::make_shared< TableSchema >();
 
     m_schema->addColumn( ColumnSchema( "SO"  , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
@@ -237,7 +237,7 @@ const TableColumn& Sof2Table::getKroColumn() const {
     return SimpleTable::getColumn(1);
 }
 
-Sof3Table::Sof3Table( std::shared_ptr< const DeckItem > item ) {
+Sof3Table::Sof3Table( const DeckItem& item ) {
     m_schema = std::make_shared< TableSchema >();
 
     m_schema->addColumn( ColumnSchema("SO" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
@@ -260,7 +260,7 @@ const TableColumn& Sof3Table::getKrogColumn() const {
     return SimpleTable::getColumn(2);
 }
 
-PvdgTable::PvdgTable( std::shared_ptr< const DeckItem > item ) {
+PvdgTable::PvdgTable( const DeckItem& item ) {
     m_schema = std::make_shared< TableSchema >();
     m_schema->addColumn( ColumnSchema( "P"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
     m_schema->addColumn( ColumnSchema( "BG"  , Table::STRICTLY_DECREASING , Table::DEFAULT_LINEAR));
@@ -282,7 +282,7 @@ const TableColumn& PvdgTable::getViscosityColumn() const {
     return SimpleTable::getColumn(2);
 }
 
-PvdoTable::PvdoTable( std::shared_ptr< const DeckItem > item ) {
+PvdoTable::PvdoTable( const DeckItem& item ) {
     m_schema = std::make_shared< TableSchema >();
     m_schema->addColumn( ColumnSchema( "P"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
     m_schema->addColumn( ColumnSchema( "BO"  , Table::STRICTLY_DECREASING , Table::DEFAULT_LINEAR));
@@ -304,7 +304,7 @@ const TableColumn& PvdoTable::getViscosityColumn() const {
     return SimpleTable::getColumn(2);
 }
 
-SwfnTable::SwfnTable( std::shared_ptr< const DeckItem > item ) {
+SwfnTable::SwfnTable( const DeckItem& item ) {
     m_schema = std::make_shared< TableSchema >();
 
     m_schema->addColumn( ColumnSchema("SW"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
@@ -326,7 +326,7 @@ const TableColumn& SwfnTable::getPcowColumn() const {
     return SimpleTable::getColumn(2);
 }
 
-SgfnTable::SgfnTable( std::shared_ptr< const DeckItem > item ) {
+SgfnTable::SgfnTable( const DeckItem& item ) {
     m_schema = std::make_shared< TableSchema >();
 
     m_schema->addColumn( ColumnSchema("SG"  , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
@@ -349,7 +349,7 @@ const TableColumn& SgfnTable::getPcogColumn() const {
     return SimpleTable::getColumn(2);
 }
 
-SsfnTable::SsfnTable( std::shared_ptr< const DeckItem > item ) {
+SsfnTable::SsfnTable( const DeckItem& item ) {
     m_schema = std::make_shared< TableSchema >();
 
     m_schema->addColumn( ColumnSchema("SolventFraction" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
@@ -372,7 +372,7 @@ const TableColumn& SsfnTable::getSolventRelPermMultiplierColumn() const {
 
 }
 
-PvdsTable::PvdsTable( std::shared_ptr< const DeckItem > item ) {
+PvdsTable::PvdsTable( const DeckItem& item ) {
     m_schema = std::make_shared< TableSchema >();
 
     m_schema->addColumn( ColumnSchema( "P"   , Table::STRICTLY_INCREASING  , Table::DEFAULT_NONE ));
@@ -394,7 +394,7 @@ const TableColumn& PvdsTable::getViscosityColumn() const {
     return SimpleTable::getColumn(2);
 }
 
-PlyadsTable::PlyadsTable( std::shared_ptr< const DeckItem > item ) {
+PlyadsTable::PlyadsTable( const DeckItem& item ) {
     m_schema = std::make_shared< TableSchema >();
 
     m_schema->addColumn( ColumnSchema("PolymerConcentration" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
@@ -412,18 +412,17 @@ const TableColumn& PlyadsTable::getAdsorbedPolymerColumn() const {
     return SimpleTable::getColumn(1);
 }
 
-PlymaxTable::PlymaxTable( std::shared_ptr< const DeckRecord > record ) {
+PlymaxTable::PlymaxTable( const DeckRecord& record ) {
     m_schema = std::make_shared< TableSchema >();
 
     m_schema->addColumn( ColumnSchema("C_POLYMER",     Table::RANDOM , Table::DEFAULT_NONE) );
     m_schema->addColumn( ColumnSchema("C_POLYMER_MAX", Table::RANDOM , Table::DEFAULT_NONE) );
 
     addColumns();
-    for (size_t colIdx = 0; colIdx < record->size(); colIdx++) {
-        auto item = record->getItem( colIdx );
+    for (size_t colIdx = 0; colIdx < record.size(); colIdx++) {
         auto& column = getColumn( colIdx );
 
-        column.addValue( item->getSIDouble(0) );
+        column.addValue( record.getItem( colIdx ).getSIDouble(0) );
     }
 }
 
@@ -435,7 +434,7 @@ const TableColumn& PlymaxTable::getMaxPolymerConcentrationColumn() const {
     return SimpleTable::getColumn(1);
 }
 
-PlyrockTable::PlyrockTable( std::shared_ptr< const DeckRecord > record ) {
+PlyrockTable::PlyrockTable( const DeckRecord& record ) {
     m_schema = std::make_shared< TableSchema >();
     m_schema->addColumn( ColumnSchema("DeadPoreVolume",            Table::RANDOM , Table::DEFAULT_NONE) );
     m_schema->addColumn( ColumnSchema("ResidualResistanceFactor",  Table::RANDOM , Table::DEFAULT_NONE) );
@@ -444,11 +443,10 @@ PlyrockTable::PlyrockTable( std::shared_ptr< const DeckRecord > record ) {
     m_schema->addColumn( ColumnSchema("MaxAdsorbtion",             Table::RANDOM , Table::DEFAULT_NONE) );
 
     addColumns();
-    for (size_t colIdx = 0; colIdx < record->size(); colIdx++) {
-        auto item = record->getItem( colIdx );
+    for (size_t colIdx = 0; colIdx < record.size(); colIdx++) {
         auto& column = getColumn( colIdx );
 
-        column.addValue( item->getSIDouble(0) );
+        column.addValue( record.getItem( colIdx ).getSIDouble(0) );
     }
 }
 
@@ -472,7 +470,7 @@ const TableColumn& PlyrockTable::getMaxAdsorbtionColumn() const {
     return SimpleTable::getColumn(4);
 }
 
-PlyviscTable::PlyviscTable( std::shared_ptr< const DeckItem > item ) {
+PlyviscTable::PlyviscTable( const DeckItem& item ) {
     m_schema = std::make_shared< TableSchema >();
 
     m_schema->addColumn( ColumnSchema( "PolymerConcentration" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
@@ -488,7 +486,7 @@ const TableColumn& PlyviscTable::getViscosityMultiplierColumn() const {
     return SimpleTable::getColumn(1);
 }
 
-PlydhflfTable::PlydhflfTable( std::shared_ptr< const DeckItem > item ) {
+PlydhflfTable::PlydhflfTable( const DeckItem& item ) {
     m_schema = std::make_shared< TableSchema >();
 
     m_schema->addColumn( ColumnSchema("Temperature" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
@@ -506,29 +504,29 @@ const TableColumn& PlydhflfTable::getPolymerHalflifeColumn() const {
 }
 
 PlyshlogTable::PlyshlogTable(
-        std::shared_ptr< const DeckRecord > indexRecord,
-        std::shared_ptr< const DeckRecord > dataRecord ) {
+        const DeckRecord& indexRecord,
+        const DeckRecord& dataRecord ) {
     m_schema = std::make_shared< TableSchema >();
 
     {
-        const auto item = indexRecord->getItem<ParserKeywords::PLYSHLOG::REF_POLYMER_CONCENTRATION>();
-        setRefPolymerConcentration(item->getRawDouble(0));
+        const auto& item = indexRecord.getItem<ParserKeywords::PLYSHLOG::REF_POLYMER_CONCENTRATION>();
+        setRefPolymerConcentration(item.get< double >(0));
     }
 
     {
-        const auto item = indexRecord->getItem<ParserKeywords::PLYSHLOG::REF_SALINITY>();
-        if (item->hasValue(0)) {
+        const auto& item = indexRecord.getItem<ParserKeywords::PLYSHLOG::REF_SALINITY>();
+        if (item.hasValue(0)) {
             setHasRefSalinity(true);
-            setRefSalinity(item->getRawDouble(0));
+            setRefSalinity(item.get< double >(0));
         } else
             setHasRefSalinity(false);
     }
 
     {
-        const auto item = indexRecord->getItem<ParserKeywords::PLYSHLOG::REF_TEMPERATURE>();
-        if (item->hasValue(0)) {
+        const auto& item = indexRecord.getItem<ParserKeywords::PLYSHLOG::REF_TEMPERATURE>();
+        if (item.hasValue(0)) {
             setHasRefTemperature(true);
-            setRefTemperature(item->getRawDouble(0));
+            setRefTemperature(item.get< double >(0));
         } else
             setHasRefTemperature(false);
     }
@@ -536,7 +534,7 @@ PlyshlogTable::PlyshlogTable(
     m_schema->addColumn( ColumnSchema("WaterVelocity"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
     m_schema->addColumn( ColumnSchema("ShearMultiplier" , Table::RANDOM , Table::DEFAULT_NONE));
 
-    SimpleTable::init( dataRecord->getItem<ParserKeywords::PLYSHLOG::DATA>() );
+    SimpleTable::init( dataRecord.getItem<ParserKeywords::PLYSHLOG::DATA>() );
 }
 
 double PlyshlogTable::getRefPolymerConcentration() const {
@@ -586,7 +584,7 @@ const TableColumn& PlyshlogTable::getShearMultiplierColumn() const {
     return getColumn(1);
 }
 
-OilvisctTable::OilvisctTable( std::shared_ptr< const DeckItem > item ) {
+OilvisctTable::OilvisctTable( const DeckItem& item ) {
 
     m_schema = std::make_shared< TableSchema >();
 
@@ -603,7 +601,7 @@ const TableColumn& OilvisctTable::getOilViscosityColumn() const {
     return SimpleTable::getColumn(1);
 }
 
-WatvisctTable::WatvisctTable( std::shared_ptr< const DeckItem > item ) {
+WatvisctTable::WatvisctTable( const DeckItem& item ) {
     m_schema = std::make_shared< TableSchema >();
 
     m_schema->addColumn(ColumnSchema("Temperature" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
@@ -620,13 +618,13 @@ const TableColumn& WatvisctTable::getWaterViscosityColumn() const {
     return SimpleTable::getColumn(1);
 } 
 
-GasvisctTable::GasvisctTable( const Deck& deck, std::shared_ptr< const DeckItem > deckItem ) {
+GasvisctTable::GasvisctTable( const Deck& deck, const DeckItem& deckItem ) {
     m_schema = std::make_shared< TableSchema >();
 
-    int numComponents = deck.getKeyword<ParserKeywords::COMPS>()->getRecord(0)->getItem(0)->getInt(0);
+    int numComponents = deck.getKeyword<ParserKeywords::COMPS>().getRecord(0).getItem(0).get< int >(0);
 
-    auto temperatureDimension = deck.getActiveUnitSystem()->getDimension("Temperature");
-    auto viscosityDimension = deck.getActiveUnitSystem()->getDimension("Viscosity");
+    auto temperatureDimension = deck.getActiveUnitSystem().getDimension("Temperature");
+    auto viscosityDimension = deck.getActiveUnitSystem().getDimension("Viscosity");
 
     m_schema->addColumn( ColumnSchema( "Temperature" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
     for (int compIdx = 0; compIdx < numComponents; ++ compIdx) {
@@ -636,24 +634,20 @@ GasvisctTable::GasvisctTable( const Deck& deck, std::shared_ptr< const DeckItem 
 
     SimpleTable::addColumns();
 
-    {
-        size_t numFlatItems = deckItem->size( );
-        if ( numFlatItems % numColumns() != 0)
-            throw std::runtime_error("Number of columns in the data file is inconsistent "
-                    "with the expected number for keyword GASVISCT");
-    }
+    if ( deckItem.size() % numColumns() != 0)
+        throw std::runtime_error("Number of columns in the data file is inconsistent "
+                "with the expected number for keyword GASVISCT");
 
-    {
-        size_t numRows = deckItem->size() / m_schema->size();
+        size_t numRows = deckItem.size() / m_schema->size();
         for (size_t columnIndex=0; columnIndex < m_schema->size(); columnIndex++) {
             auto& column = getColumn( columnIndex );
             for (size_t rowIdx = 0; rowIdx < numRows; rowIdx++) {
                 size_t deckIndex = rowIdx * m_schema->size() + columnIndex;
 
-                if (deckItem->defaultApplied( deckIndex ))
+                if (deckItem.defaultApplied( deckIndex ))
                     column.addDefault();
                 else {
-                    double rawValue = deckItem->getRawDouble( deckIndex );
+                    double rawValue = deckItem.get< double >( deckIndex );
                     double SIValue;
 
                     if (columnIndex == 0)
@@ -665,7 +659,6 @@ GasvisctTable::GasvisctTable( const Deck& deck, std::shared_ptr< const DeckItem 
                 }
             }
         }
-    }
 }
 
 const TableColumn& GasvisctTable::getTemperatureColumn() const {
@@ -676,7 +669,7 @@ const TableColumn& GasvisctTable::getGasViscosityColumn(size_t compIdx) const {
     return SimpleTable::getColumn(1 + compIdx);
 }
 
-RtempvdTable::RtempvdTable(std::shared_ptr< const DeckItem > item) {
+RtempvdTable::RtempvdTable(const DeckItem& item) {
     m_schema = std::make_shared< TableSchema >();
 
     m_schema->addColumn( ColumnSchema( "Depth"       , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
@@ -695,7 +688,7 @@ const TableColumn& RtempvdTable::getTemperatureColumn() const {
 }
 
 RocktabTable::RocktabTable(
-        std::shared_ptr< const DeckItem > item,
+        const DeckItem& item,
         bool isDirectional,
         bool hasStressOption ) :
     m_isDirectional( isDirectional )
@@ -752,7 +745,7 @@ const TableColumn& RocktabTable::getTransmissibilityMultiplierZColumn() const {
     return SimpleTable::getColumn(4);
 }
 
-RsvdTable::RsvdTable( std::shared_ptr< const DeckItem > item ) {
+RsvdTable::RsvdTable( const DeckItem& item ) {
     m_schema = std::make_shared< TableSchema >();
 
     m_schema->addColumn( ColumnSchema( "DEPTH" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
@@ -769,7 +762,7 @@ const TableColumn& RsvdTable::getRsColumn() const {
     return SimpleTable::getColumn(1); 
 }
 
-RvvdTable::RvvdTable( std::shared_ptr< const DeckItem > item ) {
+RvvdTable::RvvdTable( const DeckItem& item ) {
     m_schema = std::make_shared< TableSchema >();
 
     m_schema->addColumn( ColumnSchema( "DEPTH" ,  Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
@@ -785,7 +778,7 @@ const TableColumn& RvvdTable::getRvColumn() const {
     return SimpleTable::getColumn(1);
 }
 
-EnkrvdTable::EnkrvdTable( std::shared_ptr< const DeckItem > item ) {
+EnkrvdTable::EnkrvdTable( const DeckItem& item ) {
     m_schema = std::make_shared< TableSchema >();
 
     m_schema->addColumn( ColumnSchema( "DEPTH" ,  Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
@@ -832,7 +825,7 @@ const TableColumn& EnkrvdTable::getKrocritwColumn() const {
     return SimpleTable::getColumn(7);
 }
 
-EnptvdTable::EnptvdTable( std::shared_ptr< const DeckItem > item ) {
+EnptvdTable::EnptvdTable( const DeckItem& item ) {
     m_schema = std::make_shared< TableSchema >();
 
     m_schema->addColumn( ColumnSchema( "DEPTH" ,  Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
@@ -884,7 +877,7 @@ const TableColumn& EnptvdTable::getSogcritColumn() const {
     return SimpleTable::getColumn(8); 
 }
 
-ImkrvdTable::ImkrvdTable( std::shared_ptr< const DeckItem > item ) {
+ImkrvdTable::ImkrvdTable( const DeckItem& item ) {
     m_schema = std::make_shared< TableSchema >();
 
     m_schema->addColumn( ColumnSchema( "DEPTH" ,  Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
@@ -932,7 +925,7 @@ const TableColumn& ImkrvdTable::getKrocritwColumn() const {
 }
 
 
-ImptvdTable::ImptvdTable( std::shared_ptr< const DeckItem > item ) {
+ImptvdTable::ImptvdTable( const DeckItem& item ) {
     m_schema = std::make_shared< TableSchema >();
 
     m_schema->addColumn( ColumnSchema( "DEPTH" ,  Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
@@ -984,7 +977,7 @@ const TableColumn& ImptvdTable::getSogcritColumn() const {
     return SimpleTable::getColumn(8); 
 }
 
-SorwmisTable::SorwmisTable( std::shared_ptr< const DeckItem > item ) {
+SorwmisTable::SorwmisTable( const DeckItem& item ) {
     m_schema = std::make_shared< TableSchema >();
 
     m_schema->addColumn( ColumnSchema( "WaterSaturation" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
@@ -1001,7 +994,7 @@ const TableColumn& SorwmisTable::getMiscibleResidualOilColumn() const {
     return SimpleTable::getColumn(1);
 }
 
-SgcwmisTable::SgcwmisTable( std::shared_ptr< const DeckItem > item ) {
+SgcwmisTable::SgcwmisTable( const DeckItem& item ) {
     m_schema = std::make_shared< TableSchema >();
 
     m_schema->addColumn( ColumnSchema( "WaterSaturation" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
@@ -1017,7 +1010,7 @@ const TableColumn& SgcwmisTable::getMiscibleResidualGasColumn() const {
     return SimpleTable::getColumn(1);
 }
 
-MiscTable::MiscTable( std::shared_ptr< const DeckItem > item ) {
+MiscTable::MiscTable( const DeckItem& item ) {
     m_schema = std::make_shared< TableSchema >();
 
     m_schema->addColumn( ColumnSchema( "SolventFraction" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
@@ -1034,7 +1027,7 @@ const TableColumn& MiscTable::getMiscibilityColumn() const {
 }
 
 
-PmiscTable::PmiscTable( std::shared_ptr< const DeckItem > item ) {
+PmiscTable::PmiscTable( const DeckItem& item ) {
     m_schema = std::make_shared< TableSchema >();
 
     m_schema->addColumn( ColumnSchema( "OilPhasePressure" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
@@ -1050,7 +1043,7 @@ const TableColumn& PmiscTable::getMiscibilityColumn() const {
     return SimpleTable::getColumn(1);
 }
 
-MsfnTable::MsfnTable( std::shared_ptr< const DeckItem > item ) {
+MsfnTable::MsfnTable( const DeckItem& item ) {
     m_schema = std::make_shared< TableSchema >();
 
     m_schema->addColumn( ColumnSchema( "GasPhaseFraction", Table::STRICTLY_INCREASING  , Table::DEFAULT_NONE));

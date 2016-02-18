@@ -20,80 +20,75 @@
 #ifndef SECTION_HPP
 #define SECTION_HPP
 
-
-
 #include <string>
-#include <memory>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 namespace Opm {
 
-class Section : public Deck
-    {
+    class UnitSystem;
+    class Parser;
+
+class Section : public DeckView {
     public:
-        Section(DeckConstPtr deck, const std::string& startKeyword);
+        using DeckView::const_iterator;
+
+        Section( const Deck& deck, const std::string& startKeyword );
         const std::string& name() const;
-        size_t count(const std::string& keyword) const;
 
-        static bool hasRUNSPEC(DeckConstPtr deck) { return hasSection( deck , "RUNSPEC" ); }
-        static bool hasGRID(DeckConstPtr deck) { return hasSection( deck , "GRID" ); }
-        static bool hasEDIT(DeckConstPtr deck) { return hasSection( deck , "EDIT" ); }
-        static bool hasPROPS(DeckConstPtr deck) { return hasSection( deck , "PROPS" ); }
-        static bool hasREGIONS(DeckConstPtr deck) { return hasSection( deck , "REGIONS" ); }
-        static bool hasSOLUTION(DeckConstPtr deck) { return hasSection( deck , "SOLUTION" ); }
-        static bool hasSUMMARY(DeckConstPtr deck) { return hasSection( deck , "SUMMARY" ); }
-        static bool hasSCHEDULE(DeckConstPtr deck) { return hasSection( deck , "SCHEDULE" ); }
-
+        static bool hasRUNSPEC( const Deck& );
+        static bool hasGRID( const Deck& );
+        static bool hasEDIT( const Deck& );
+        static bool hasPROPS( const Deck& );
+        static bool hasREGIONS( const Deck& );
+        static bool hasSOLUTION( const Deck& );
+        static bool hasSUMMARY( const Deck& );
+        static bool hasSCHEDULE( const Deck& );
 
         // returns whether the deck has all mandatory sections and if all sections are in
         // the right order
-        static bool checkSectionTopology(DeckConstPtr deck,
+        static bool checkSectionTopology(const Deck& deck,
+                                         const Parser&,
                                          bool ensureKeywordSectionAffiliation = false);
 
     private:
-        std::string m_name;
-        static bool isSectionDelimiter(const std::string& keywordName);
-        static bool hasSection(DeckConstPtr deck, const std::string& startKeyword);
-        void populateSection(DeckConstPtr deck, const std::string& startKeyword);
-    };
+        std::string section_name;
 
-    typedef std::shared_ptr<Section> SectionPtr;
-    typedef std::shared_ptr<const Section> SectionConstPtr;
+    };
 
     class RUNSPECSection : public Section {
     public:
-        RUNSPECSection(DeckConstPtr deck) : Section(deck, "RUNSPEC") {}
+        RUNSPECSection(const Deck& deck) : Section(deck, "RUNSPEC") {}
     };
 
     class GRIDSection : public Section {
     public:
-        GRIDSection(DeckConstPtr deck) : Section(deck, "GRID") {}
+        GRIDSection(const Deck& deck) : Section(deck, "GRID") {}
     };
 
     class EDITSection : public Section {
     public:
-        EDITSection(DeckConstPtr deck) : Section(deck, "EDIT") {}
+        EDITSection(const Deck& deck) : Section(deck, "EDIT") {}
     };
 
     class PROPSSection : public Section {
     public:
-        PROPSSection(DeckConstPtr deck) : Section(deck, "PROPS") {}
+        PROPSSection(const Deck& deck) : Section(deck, "PROPS") {}
     };
 
     class REGIONSSection : public Section {
     public:
-        REGIONSSection(DeckConstPtr deck) : Section(deck, "REGIONS") {}
+        REGIONSSection(const Deck& deck) : Section(deck, "REGIONS") {}
     };
 
     class SOLUTIONSection : public Section {
     public:
-        SOLUTIONSection(DeckConstPtr deck) : Section(deck, "SOLUTION") {}
+        SOLUTIONSection(const Deck& deck) : Section(deck, "SOLUTION") {}
     };
 
     class SUMMARYSection : public Section {
     public:
-        SUMMARYSection(DeckConstPtr deck) : Section(deck, "SUMMARY") {}
+        SUMMARYSection(const Deck& deck) : Section(deck, "SUMMARY") {}
     };
 }
 

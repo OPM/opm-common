@@ -29,10 +29,9 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseMode.hpp>
 
@@ -164,10 +163,10 @@ BOOST_AUTO_TEST_CASE(TestDynamicWSOLVENT) {
     IOConfigPtr ioConfig;
     Schedule schedule(ParseMode() , grid , deck, ioConfig);
     BOOST_CHECK(deck->hasKeyword("WSOLVENT"));
-    Opm::DeckKeywordConstPtr keyword = deck->getKeyword("WSOLVENT");
-    BOOST_CHECK_EQUAL(keyword->size(),1);
-    DeckRecordConstPtr record = keyword->getRecord(0);
-    const std::string& wellNamesPattern = record->getItem("WELL")->getTrimmedString(0);
+    const auto& keyword = deck->getKeyword("WSOLVENT");
+    BOOST_CHECK_EQUAL(keyword.size(),1);
+    const auto& record = keyword.getRecord(0);
+    const std::string& wellNamesPattern = record.getItem("WELL").getTrimmedString(0);
     std::vector<WellPtr> wells_solvent = schedule.getWells(wellNamesPattern);
     BOOST_CHECK_EQUAL(wellNamesPattern, "W_1");
     BOOST_CHECK_EQUAL(wells_solvent[0]->getSolventFraction(0),0); //default 0

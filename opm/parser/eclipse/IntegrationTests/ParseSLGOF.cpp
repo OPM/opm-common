@@ -7,9 +7,9 @@
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseMode.hpp>
@@ -41,19 +41,19 @@ const char *parserData =
 
 static void check_parser(ParserPtr parser) {
     DeckPtr deck =  parser->parseString(parserData, ParseMode());
-    DeckKeywordConstPtr kw1 = deck->getKeyword("SLGOF");
-    BOOST_CHECK_EQUAL(1U , kw1->size());
+    const auto& kw1 = deck->getKeyword("SLGOF");
+    BOOST_CHECK_EQUAL(1U , kw1.size());
 
-    DeckRecordConstPtr record0 = kw1->getRecord(0);
-    BOOST_CHECK_EQUAL(1U , record0->size());
+    const auto& record0 = kw1.getRecord(0);
+    BOOST_CHECK_EQUAL(1U , record0.size());
 
-    DeckItemConstPtr item0 = record0->getItem(0);
-    BOOST_CHECK_EQUAL(10U * 4, item0->size());
+    const auto& item0 = record0.getItem(0);
+    BOOST_CHECK_EQUAL(10U * 4, item0.size());
 }
 
 static void check_SlgofTable(ParserPtr parser) {
     DeckPtr deck =  parser->parseString(parserData, ParseMode());
-    Opm::SlgofTable slgofTable(deck->getKeyword("SLGOF")->getRecord(0)->getItem(0));
+    Opm::SlgofTable slgofTable(deck->getKeyword("SLGOF").getRecord(0).getItem(0));
 
     BOOST_CHECK_EQUAL(10U, slgofTable.getSlColumn().size());
     BOOST_CHECK_EQUAL(0.1, slgofTable.getSlColumn()[0]);

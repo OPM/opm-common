@@ -25,7 +25,7 @@ namespace Opm {
 
     class WatvisctTable : public SimpleTable {
     public:
-        WatvisctTable( std::shared_ptr< const DeckItem > item );
+        WatvisctTable( const DeckItem& item );
 
         const TableColumn& getTemperatureColumn() const;
         const TableColumn& getWaterViscosityColumn() const;

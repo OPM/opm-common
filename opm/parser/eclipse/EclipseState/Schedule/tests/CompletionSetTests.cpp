@@ -28,8 +28,7 @@
 
 
 
-#include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
-#include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 

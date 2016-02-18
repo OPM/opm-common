@@ -37,16 +37,16 @@ namespace Opm {
 
     void InitConfig::initRestartKW(DeckConstPtr deck) {
         if (deck->hasKeyword("RESTART") && deck->hasKeyword("SKIPREST")) {
-            DeckKeywordConstPtr restart_kw = deck->getKeyword("RESTART");
-            DeckRecordConstPtr restart_dataRecord = restart_kw->getRecord(0);
-            DeckItemPtr restart_rootname_item = restart_dataRecord->getItem(0);
-            const std::string restart_rootname_string = restart_rootname_item->getString(0);
+            const auto& restart_kw = deck->getKeyword("RESTART");
+            const auto& restart_dataRecord = restart_kw.getRecord(0);
+            const auto& restart_rootname_item = restart_dataRecord.getItem(0);
+            const std::string restart_rootname_string = restart_rootname_item.get< std::string >(0);
 
-            DeckItemPtr restart_report_step_item = restart_dataRecord->getItem(1);
-            int restart_report_step_int = restart_report_step_item->getInt(0);
+            const auto& restart_report_step_item = restart_dataRecord.getItem(1);
+            int restart_report_step_int = restart_report_step_item.get< int >(0);
 
-            DeckItemPtr save_item = restart_dataRecord->getItem(2);
-            if (save_item->hasValue(0)) {
+            const auto& save_item = restart_dataRecord.getItem(2);
+            if (save_item.hasValue(0)) {
                 throw std::runtime_error("OPM does not support RESTART from a SAVE file, only from RESTART files");
             }
 

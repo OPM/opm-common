@@ -40,12 +40,12 @@ namespace Opm {
         void addDataItem(std::shared_ptr< const ParserItem > item);
         std::shared_ptr< const ParserItem > get(size_t index) const;
         std::shared_ptr< const ParserItem > get(const std::string& itemName) const;
-        std::shared_ptr< const DeckRecord > parse(const ParseMode& parseMode , std::shared_ptr< RawRecord > rawRecord) const;
+        DeckRecord parse(const ParseMode& parseMode , std::shared_ptr< RawRecord > rawRecord) const;
         bool isDataRecord() const;
         bool equal(const ParserRecord& other) const;
         bool hasDimension() const;
         bool hasItem(const std::string& itemName) const;
-        void applyUnitsToDeck(const Deck& deck , std::shared_ptr<const DeckRecord> deckRecord) const;
+        void applyUnitsToDeck(const Deck& deck, DeckRecord& deckRecord) const;
         std::vector<std::shared_ptr< const ParserItem >>::const_iterator begin() const;
         std::vector<std::shared_ptr< const ParserItem >>::const_iterator end() const;
     private:

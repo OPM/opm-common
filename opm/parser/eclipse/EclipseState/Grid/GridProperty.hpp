@@ -281,34 +281,34 @@ public:
        deckkeyword equals nx*ny*nz.
     */
 
-    void loadFromDeckKeyword(DeckKeywordConstPtr deckKeyword) {
-        const auto deckItem = getDeckItem(deckKeyword);
-        for (size_t dataPointIdx = 0; dataPointIdx < deckItem->size(); ++dataPointIdx) {
-            if (!deckItem->defaultApplied(dataPointIdx))
+    void loadFromDeckKeyword( const DeckKeyword& deckKeyword) {
+        const auto& deckItem = getDeckItem(deckKeyword);
+        for (size_t dataPointIdx = 0; dataPointIdx < deckItem.size(); ++dataPointIdx) {
+            if (!deckItem.defaultApplied(dataPointIdx))
                 setDataPoint(dataPointIdx, dataPointIdx, deckItem);
         }
     }
 
 
 
-    void loadFromDeckKeyword(std::shared_ptr<const Box> inputBox, DeckKeywordConstPtr deckKeyword) {
+    void loadFromDeckKeyword(std::shared_ptr<const Box> inputBox, const DeckKeyword& deckKeyword) {
         if (inputBox->isGlobal())
             loadFromDeckKeyword( deckKeyword );
         else {
-            const auto deckItem = getDeckItem(deckKeyword);
+            const auto& deckItem = getDeckItem(deckKeyword);
             const std::vector<size_t>& indexList = inputBox->getIndexList();
-            if (indexList.size() == deckItem->size()) {
+            if (indexList.size() == deckItem.size()) {
                 for (size_t sourceIdx = 0; sourceIdx < indexList.size(); sourceIdx++) {
                     size_t targetIdx = indexList[sourceIdx];
-                    if (sourceIdx < deckItem->size()
-                        && !deckItem->defaultApplied(sourceIdx))
+                    if (sourceIdx < deckItem.size()
+                        && !deckItem.defaultApplied(sourceIdx))
                         {
                             setDataPoint(sourceIdx, targetIdx, deckItem);
                         }
                 }
             } else {
                 std::string boxSize = std::to_string(static_cast<long long>(indexList.size()));
-                std::string keywordSize = std::to_string(static_cast<long long>(deckItem->size()));
+                std::string keywordSize = std::to_string(static_cast<long long>(deckItem.size()));
 
                 throw std::invalid_argument("Size mismatch: Box:" + boxSize + "  DecKeyword:" + keywordSize);
             }
@@ -439,27 +439,27 @@ public:
 
 
 private:
-    Opm::DeckItemConstPtr getDeckItem(Opm::DeckKeywordConstPtr deckKeyword) {
-        if (deckKeyword->size() != 1)
+    const DeckItem& getDeckItem( const DeckKeyword& deckKeyword) {
+        if (deckKeyword.size() != 1)
             throw std::invalid_argument("Grid properties can only have a single record (keyword "
-                                        + deckKeyword->name() + ")");
-        if (deckKeyword->getRecord(0)->size() != 1)
+                                        + deckKeyword.name() + ")");
+        if (deckKeyword.getRecord(0).size() != 1)
             // this is an error of the definition of the ParserKeyword (most likely in
             // the corresponding JSON file)
             throw std::invalid_argument("Grid properties may only exhibit a single item  (keyword "
-                                        + deckKeyword->name() + ")");
+                                        + deckKeyword.name() + ")");
 
-        const auto deckItem = deckKeyword->getRecord(0)->getItem(0);
+        const auto& deckItem = deckKeyword.getRecord(0).getItem(0);
 
-        if (deckItem->size() > m_data.size())
+        if (deckItem.size() > m_data.size())
             throw std::invalid_argument("Size mismatch when setting data for:" + getKeywordName() +
-                                        " keyword size: " + boost::lexical_cast<std::string>(deckItem->size())
+                                        " keyword size: " + boost::lexical_cast<std::string>(deckItem.size())
                                         + " input size: " + boost::lexical_cast<std::string>(m_data.size()));
 
         return deckItem;
     }
 
-    void setDataPoint(size_t sourceIdx, size_t targetIdx, Opm::DeckItemConstPtr deckItem);
+    void setDataPoint(size_t sourceIdx, size_t targetIdx, const DeckItem& deckItem);
 
     size_t      m_nx,m_ny,m_nz;
     SupportedKeywordInfo m_kwInfo;

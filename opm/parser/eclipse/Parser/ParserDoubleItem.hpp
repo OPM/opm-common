@@ -47,7 +47,7 @@ namespace Opm {
         const std::string& getDimension(size_t index) const;
         bool equalDimensions(const ParserItem& other) const;
 
-        DeckItemPtr scan(std::shared_ptr< RawRecord > rawRecord) const;
+        DeckItem scan(std::shared_ptr< RawRecord > rawRecord) const override;
         bool equal(const ParserItem& other) const;
 
         std::string createCode() const;

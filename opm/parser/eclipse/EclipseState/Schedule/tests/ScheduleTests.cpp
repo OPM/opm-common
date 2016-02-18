@@ -35,9 +35,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
-#include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
-#include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
@@ -200,8 +199,7 @@ static DeckPtr createDeckWithWellsAndCompletionData() {
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingReturnsDefaults) {
     DeckPtr deck(new Deck());
-    DeckKeywordPtr keyword(new DeckKeyword("SCHEDULE"));
-    deck->addKeyword( keyword );
+    deck->addKeyword( DeckKeyword( "SCHEDULE" ) );
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,10);
     IOConfigPtr ioConfig;
     Schedule schedule(ParseMode() , grid , deck, ioConfig);
@@ -230,9 +228,8 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithStart) {
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithSCHEDULENoThrow) {
     DeckPtr deck(new Deck());
-    DeckKeywordPtr keyword(new DeckKeyword("SCHEDULE"));
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,10);
-    deck->addKeyword( keyword );
+    deck->addKeyword( DeckKeyword( "SCHEDULE" ) );
 
     IOConfigPtr ioConfig;
     BOOST_CHECK_NO_THROW(Schedule schedule(ParseMode() , grid , deck, ioConfig));
@@ -258,18 +255,18 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithoutGRUPTREE_HasRootGroupTreeNodeForT
 
 static std::shared_ptr< Deck > deckWithGRUPTREE() {
     DeckPtr deck = createDeck();
-    DeckKeywordPtr gruptreeKeyword(new DeckKeyword("GRUPTREE"));
+    DeckKeyword gruptreeKeyword("GRUPTREE");
 
-    DeckRecordPtr recordChildOfField(new DeckRecord());
-    DeckStringItemPtr itemChild1(new DeckStringItem("CHILD_GROUP"));
-    itemChild1->push_back("BARNET");
-    DeckStringItemPtr itemParent1(new DeckStringItem("PARENT_GROUP"));
-    itemParent1->push_back("FAREN");
+    DeckRecord recordChildOfField;
+    auto itemChild1 = DeckItem::make< std::string >( "CHILD_GROUP" );
+    itemChild1.push_back(std::string("BARNET"));
+    auto itemParent1 = DeckItem::make< std::string >( "PARENT_GROUP" );
+    itemParent1.push_back(std::string("FAREN"));
 
-    recordChildOfField->addItem(itemChild1);
-    recordChildOfField->addItem(itemParent1);
-    gruptreeKeyword->addRecord(recordChildOfField);
-    deck->addKeyword(gruptreeKeyword);
+    recordChildOfField.addItem( std::move( itemChild1 ) );
+    recordChildOfField.addItem( std::move( itemParent1 ) );
+    gruptreeKeyword.addRecord( std::move( recordChildOfField ) );
+    deck->addKeyword( std::move( gruptreeKeyword ) );
 
     return deck;
 }
@@ -891,7 +888,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArg) {
     WellProductionProperties wpp = well->getProductionProperties(currentStep);
     BOOST_CHECK_EQUAL(wpp.WaterRate,0);
 
-    Opm::UnitSystem unitSystem = *deck->getActiveUnitSystem();
+    Opm::UnitSystem unitSystem = deck->getActiveUnitSystem();
     double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time")->getSIScaling();
     double siFactorG = unitSystem.parse("GasSurfaceVolume/Time")->getSIScaling();
     double siFactorP = unitSystem.parse("Pressure")->getSIScaling();

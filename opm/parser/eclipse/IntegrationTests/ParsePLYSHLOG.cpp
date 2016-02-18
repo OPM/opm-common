@@ -39,27 +39,27 @@ BOOST_AUTO_TEST_CASE( PARSE_PLYSHLOG_OK) {
     ParserPtr parser(new Parser());
     std::string deckFile("testdata/integration_tests/POLYMER/plyshlog.data");
     DeckPtr deck =  parser->parseFile(deckFile, ParseMode());
-    DeckKeywordConstPtr kw = deck->getKeyword("PLYSHLOG");
-    DeckRecordConstPtr rec1 = kw->getRecord(0); // reference conditions
+    const auto& kw = deck->getKeyword("PLYSHLOG");
+    const auto& rec1 = kw.getRecord(0); // reference conditions
 
-    const auto itemRefPolyConc = rec1->getItem("REF_POLYMER_CONCENTRATION");
-    const auto itemRefSali = rec1->getItem("REF_SALINITY");
-    const auto itemRefTemp = rec1->getItem("REF_TEMPERATURE");
+    const auto& itemRefPolyConc = rec1.getItem("REF_POLYMER_CONCENTRATION");
+    const auto& itemRefSali = rec1.getItem("REF_SALINITY");
+    const auto& itemRefTemp = rec1.getItem("REF_TEMPERATURE");
 
-    BOOST_CHECK_EQUAL( true, itemRefPolyConc->hasValue(0) );
-    BOOST_CHECK_EQUAL( true, itemRefSali->hasValue(0) );
-    BOOST_CHECK_EQUAL( false, itemRefTemp->hasValue(0) );
+    BOOST_CHECK_EQUAL( true, itemRefPolyConc.hasValue(0) );
+    BOOST_CHECK_EQUAL( true, itemRefSali.hasValue(0) );
+    BOOST_CHECK_EQUAL( false, itemRefTemp.hasValue(0) );
 
-    BOOST_CHECK_EQUAL( 1.0, itemRefPolyConc->getRawDouble(0) );
-    BOOST_CHECK_EQUAL( 3.0, itemRefSali->getRawDouble(0) );
+    BOOST_CHECK_EQUAL( 1.0, itemRefPolyConc.get< double >(0) );
+    BOOST_CHECK_EQUAL( 3.0, itemRefSali.get< double >(0) );
 
-    DeckRecordConstPtr rec2 = kw->getRecord(1);
-    DeckItemPtr itemData = rec2->getItem(0);
+    const auto& rec2 = kw.getRecord(1);
+    const auto& itemData = rec2.getItem(0);
 
-    BOOST_CHECK_EQUAL( 1.e-7 , itemData->getRawDouble(0) );
-    BOOST_CHECK_EQUAL( 1.0 , itemData->getRawDouble(1) );
-    BOOST_CHECK_EQUAL( 1.0 , itemData->getRawDouble(2) );
-    BOOST_CHECK_EQUAL( 1.2 , itemData->getRawDouble(3) );
-    BOOST_CHECK_EQUAL( 1.e3 , itemData->getRawDouble(4) );
-    BOOST_CHECK_EQUAL( 2.4 , itemData->getRawDouble(5) );
+    BOOST_CHECK_EQUAL( 1.e-7 , itemData.get< double >(0) );
+    BOOST_CHECK_EQUAL( 1.0 , itemData.get< double >(1) );
+    BOOST_CHECK_EQUAL( 1.0 , itemData.get< double >(2) );
+    BOOST_CHECK_EQUAL( 1.2 , itemData.get< double >(3) );
+    BOOST_CHECK_EQUAL( 1.e3 , itemData.get< double >(4) );
+    BOOST_CHECK_EQUAL( 2.4 , itemData.get< double >(5) );
 }

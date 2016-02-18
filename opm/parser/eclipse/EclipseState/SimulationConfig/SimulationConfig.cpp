@@ -50,11 +50,11 @@ namespace Opm {
         m_DISGAS(false),
         m_VAPOIL(false)
     {
-        if (Section::hasRUNSPEC(deck)) {
-            const RUNSPECSection runspec(deck);
+        if (Section::hasRUNSPEC(*deck)) {
+            const RUNSPECSection runspec(*deck);
             if (runspec.hasKeyword<ParserKeywords::CPR>()) {
-                std::shared_ptr<const DeckKeyword> cpr = runspec.getKeyword<ParserKeywords::CPR>();
-                if (cpr->size() > 0)
+                const auto& cpr = runspec.getKeyword<ParserKeywords::CPR>();
+                if (cpr.size() > 0)
                     throw std::invalid_argument("ERROR: In the RUNSPEC section the CPR keyword should EXACTLY one empty record.");
 
                 m_useCPR = true;

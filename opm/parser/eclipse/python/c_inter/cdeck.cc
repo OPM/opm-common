@@ -19,14 +19,12 @@ extern "C" {
 
 
     const Opm::DeckKeyword * deck_iget_keyword( const Opm::Deck * deck , int index) {
-        auto shared = deck->getKeyword( index );
-        return shared.get();
+        return &deck->getKeyword( index );
     }
 
 
     const Opm::DeckKeyword * deck_iget_named_keyword( const Opm::Deck * deck , const char * keyword , int index) {
-        auto shared = deck->getKeyword( keyword , index );
-        return shared.get();
+        return &deck->getKeyword( keyword , index );
     }
 
 
@@ -35,7 +33,7 @@ extern "C" {
     }
 
     int deck_num_keywords( const Opm::Deck * deck , const char * keyword) {
-        return static_cast<int>( deck->numKeywords(keyword) );
+        return static_cast<int>( deck->count(keyword) );
     }
 
 

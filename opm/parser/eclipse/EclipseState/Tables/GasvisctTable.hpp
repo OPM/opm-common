@@ -29,7 +29,7 @@ namespace Opm {
 
     class GasvisctTable : public SimpleTable {
     public:
-        GasvisctTable( const Deck& deck, std::shared_ptr< const DeckItem > deckItem );
+        GasvisctTable( const Deck& deck, const DeckItem& deckItem );
 
         const TableColumn& getTemperatureColumn() const;
         const TableColumn& getGasViscosityColumn(size_t compIdx) const;

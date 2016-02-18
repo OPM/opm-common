@@ -22,36 +22,46 @@
 
 #include <string>
 #include <vector>
-#include <map>
 #include <memory>
+
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
 
 namespace Opm {
 
-    class DeckItem;
-
     class DeckRecord {
     public:
-        DeckRecord();
-        size_t size() const;
-        void addItem(std::shared_ptr< DeckItem > deckItem);
-        std::shared_ptr< DeckItem > getItem(size_t index) const;
-        std::shared_ptr< DeckItem > getItem(const std::string& name) const;
-        std::shared_ptr< DeckItem > getDataItem() const;
-        bool        hasItem(const std::string& name) const;
-        
-    template <class Item>
-    std::shared_ptr< DeckItem > getItem() const {
-        return getItem( Item::itemName );
-    }
+        typedef std::vector< DeckItem >::const_iterator const_iterator;
 
+        size_t size() const;
+        void addItem( DeckItem&& deckItem );
+
+        DeckItem& getItem( size_t index );
+        DeckItem& getItem( const std::string& name );
+        DeckItem& getDataItem();
+
+        const DeckItem& getItem( size_t index ) const;
+        const DeckItem& getItem( const std::string& name ) const;
+        const DeckItem& getDataItem() const;
+
+        bool hasItem(const std::string& name) const;
+        
+        template <class Item>
+        DeckItem& getItem() {
+            return getItem( Item::itemName );
+        }
+
+        template <class Item>
+        const DeckItem& getItem() const {
+            return getItem( Item::itemName );
+        }
+
+        const_iterator begin() const;
+        const_iterator end() const;
 
     private:
-        std::vector<std::shared_ptr< DeckItem >> m_items;
-        std::map<std::string, std::shared_ptr< DeckItem >> m_itemMap;
+        std::vector< DeckItem > m_items;
 
     };
-    typedef std::shared_ptr<DeckRecord> DeckRecordPtr;
-    typedef std::shared_ptr<const DeckRecord> DeckRecordConstPtr;
 
 }
 #endif  /* DECKRECORD_HPP */

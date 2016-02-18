@@ -86,40 +86,40 @@ namespace Opm {
     void TableManager::initDims(const Deck& deck) {
         using namespace Opm::ParserKeywords;
         if (deck.hasKeyword<TABDIMS>()) {
-            auto keyword = deck.getKeyword<TABDIMS>();
-            auto record = keyword->getRecord(0);
-            int ntsfun = record->getItem<TABDIMS::NTSFUN>()->getInt(0);
-            int ntpvt  = record->getItem<TABDIMS::NTPVT>()->getInt(0);
-            int nssfun = record->getItem<TABDIMS::NSSFUN>()->getInt(0);
-            int nppvt  = record->getItem<TABDIMS::NPPVT>()->getInt(0);
-            int ntfip  = record->getItem<TABDIMS::NTFIP>()->getInt(0);
-            int nrpvt  = record->getItem<TABDIMS::NRPVT>()->getInt(0);
+            const auto& keyword = deck.getKeyword<TABDIMS>();
+            const auto& record = keyword.getRecord(0);
+            int ntsfun = record.getItem<TABDIMS::NTSFUN>().get< int >(0);
+            int ntpvt  = record.getItem<TABDIMS::NTPVT>().get< int >(0);
+            int nssfun = record.getItem<TABDIMS::NSSFUN>().get< int >(0);
+            int nppvt  = record.getItem<TABDIMS::NPPVT>().get< int >(0);
+            int ntfip  = record.getItem<TABDIMS::NTFIP>().get< int >(0);
+            int nrpvt  = record.getItem<TABDIMS::NRPVT>().get< int >(0);
 
             m_tabdims = std::make_shared<Tabdims>(ntsfun , ntpvt , nssfun , nppvt , ntfip , nrpvt);
         } else
             m_tabdims = std::make_shared<Tabdims>();
 
         if (deck.hasKeyword<EQLDIMS>()) {
-            auto keyword = deck.getKeyword<EQLDIMS>();
-            auto record = keyword->getRecord(0);
-            int ntsequl   = record->getItem<EQLDIMS::NTEQUL>()->getInt(0);
-            int nodes_p   = record->getItem<EQLDIMS::DEPTH_NODES_P>()->getInt(0);
-            int nodes_tab = record->getItem<EQLDIMS::DEPTH_NODES_TAB>()->getInt(0);
-            int nttrvd    = record->getItem<EQLDIMS::NTTRVD>()->getInt(0);
-            int ntsrvd    = record->getItem<EQLDIMS::NSTRVD>()->getInt(0);
+            const auto& keyword = deck.getKeyword<EQLDIMS>();
+            const auto& record = keyword.getRecord(0);
+            int ntsequl   = record.getItem<EQLDIMS::NTEQUL>().get< int >(0);
+            int nodes_p   = record.getItem<EQLDIMS::DEPTH_NODES_P>().get< int >(0);
+            int nodes_tab = record.getItem<EQLDIMS::DEPTH_NODES_TAB>().get< int >(0);
+            int nttrvd    = record.getItem<EQLDIMS::NTTRVD>().get< int >(0);
+            int ntsrvd    = record.getItem<EQLDIMS::NSTRVD>().get< int >(0);
 
             m_eqldims = std::make_shared<Eqldims>(ntsequl , nodes_p , nodes_tab , nttrvd , ntsrvd );
         } else
             m_eqldims = std::make_shared<Eqldims>();
 
         if (deck.hasKeyword<REGDIMS>()) {
-            auto keyword = deck.getKeyword<REGDIMS>();
-            auto record = keyword->getRecord(0);
-            int ntfip  = record->getItem<REGDIMS::NTFIP>()->getInt(0);
-            int nmfipr = record->getItem<REGDIMS::NMFIPR>()->getInt(0);
-            int nrfreg = record->getItem<REGDIMS::NRFREG>()->getInt(0);
-            int ntfreg = record->getItem<REGDIMS::NTFREG>()->getInt(0);
-            int nplmix = record->getItem<REGDIMS::NPLMIX>()->getInt(0);
+            const auto& keyword = deck.getKeyword<REGDIMS>();
+            const auto& record = keyword.getRecord(0);
+            int ntfip  = record.getItem<REGDIMS::NTFIP>().get< int >(0);
+            int nmfipr = record.getItem<REGDIMS::NMFIPR>().get< int >(0);
+            int nrfreg = record.getItem<REGDIMS::NRFREG>().get< int >(0);
+            int ntfreg = record.getItem<REGDIMS::NTFREG>().get< int >(0);
+            int nplmix = record.getItem<REGDIMS::NPLMIX>().get< int >(0);
             m_regdims = std::make_shared<Regdims>( ntfip , nmfipr , nrfreg , ntfreg , nplmix );
         } else
             m_regdims = std::make_shared<Regdims>();
@@ -196,9 +196,9 @@ namespace Opm {
         {
             size_t numMiscibleTables = ParserKeywords::MISCIBLE::NTMISC::defaultValue;
             if (deck.hasKeyword<ParserKeywords::MISCIBLE>()) {
-                auto keyword = deck.getKeyword<ParserKeywords::MISCIBLE>();
-                auto record = keyword->getRecord(0);
-                numMiscibleTables =  static_cast<size_t>(record->getItem<ParserKeywords::MISCIBLE::NTMISC>()->getInt(0));
+                const auto& keyword = deck.getKeyword<ParserKeywords::MISCIBLE>();
+                const auto& record = keyword.getRecord(0);
+                numMiscibleTables =  static_cast<size_t>(record.getItem<ParserKeywords::MISCIBLE::NTMISC>().get< int >(0));
             }
             addTables( "SORWMIS", numMiscibleTables);
             addTables( "SGCWMIS", numMiscibleTables);
@@ -210,9 +210,9 @@ namespace Opm {
             size_t numEndScaleTables = ParserKeywords::ENDSCALE::NUM_TABLES::defaultValue;
 
             if (deck.hasKeyword<ParserKeywords::ENDSCALE>()) {
-                auto keyword = deck.getKeyword<ParserKeywords::ENDSCALE>();
-                auto record = keyword->getRecord(0);
-                numEndScaleTables = static_cast<size_t>(record->getItem<ParserKeywords::ENDSCALE::NUM_TABLES>()->getInt(0));
+                const auto& keyword = deck.getKeyword<ParserKeywords::ENDSCALE>();
+                const auto& record = keyword.getRecord(0);
+                numEndScaleTables = static_cast<size_t>(record.getItem<ParserKeywords::ENDSCALE::NUM_TABLES>().get< int >(0));
             }
 
             addTables( "ENKRVD", numEndScaleTables);
@@ -224,9 +224,9 @@ namespace Opm {
             size_t numRocktabTables = ParserKeywords::ROCKCOMP::NTROCC::defaultValue;
 
             if (deck.hasKeyword<ParserKeywords::ROCKCOMP>()) {
-                auto keyword = deck.getKeyword<ParserKeywords::ROCKCOMP>();
-                auto record = keyword->getRecord(0);
-                numRocktabTables = static_cast<size_t>(record->getItem<ParserKeywords::ROCKCOMP::NTROCC>()->getInt(0));
+                const auto& keyword = deck.getKeyword<ParserKeywords::ROCKCOMP>();
+                const auto& record = keyword.getRecord(0);
+                numRocktabTables = static_cast<size_t>(record.getItem<ParserKeywords::ROCKCOMP::NTROCC>().get< int >(0));
             }
             addTables( "ROCKTAB", numRocktabTables);
         }
@@ -249,9 +249,9 @@ namespace Opm {
             size_t numEndScaleTables = ParserKeywords::ENDSCALE::NUM_TABLES::defaultValue;
 
             if (deck.hasKeyword<ParserKeywords::ENDSCALE>()) {
-                auto keyword = deck.getKeyword<ParserKeywords::ENDSCALE>();
-                auto record = keyword->getRecord(0);
-                numEndScaleTables = static_cast<size_t>(record->getItem<ParserKeywords::ENDSCALE::NUM_TABLES>()->getInt(0));
+                const auto& keyword = deck.getKeyword<ParserKeywords::ENDSCALE>();
+                const auto& record = keyword.getRecord(0);
+                numEndScaleTables = static_cast<size_t>(record.getItem<ParserKeywords::ENDSCALE::NUM_TABLES>().get< int >(0));
             }
 
             initSimpleTableContainer<EnkrvdTable>( deck , "ENKRVD", numEndScaleTables);
@@ -263,9 +263,9 @@ namespace Opm {
         {
             size_t numMiscibleTables = ParserKeywords::MISCIBLE::NTMISC::defaultValue;
             if (deck.hasKeyword<ParserKeywords::MISCIBLE>()) {
-                auto keyword = deck.getKeyword<ParserKeywords::MISCIBLE>();
-                auto record = keyword->getRecord(0);
-                numMiscibleTables =  static_cast<size_t>(record->getItem<ParserKeywords::MISCIBLE::NTMISC>()->getInt(0));
+                const auto& keyword = deck.getKeyword<ParserKeywords::MISCIBLE>();
+                const auto& record = keyword.getRecord(0);
+                numMiscibleTables =  static_cast<size_t>(record.getItem<ParserKeywords::MISCIBLE::NTMISC>().get< int >(0));
             }
             initSimpleTableContainer<SorwmisTable>(deck, "SORWMIS", numMiscibleTables);
             initSimpleTableContainer<SgcwmisTable>(deck, "SGCWMIS", numMiscibleTables);
@@ -316,16 +316,16 @@ namespace Opm {
 
         auto& container = forceGetTables(keywordName , numTables);
 
-        if (deck.numKeywords(keywordName) > 1) {
+        if (deck.count(keywordName) > 1) {
             complainAboutAmbiguousKeyword(deck, keywordName);
             return;
         }
 
         const auto& tableKeyword = deck.getKeyword(keywordName);
-        for (size_t tableIdx = 0; tableIdx < tableKeyword->size(); ++tableIdx) {
-            const auto tableRecord = tableKeyword->getRecord( tableIdx );
-            const auto dataItem = tableRecord->getItem( 0 );
-            if (dataItem->size() > 0) {
+        for (size_t tableIdx = 0; tableIdx < tableKeyword.size(); ++tableIdx) {
+            const auto& tableRecord = tableKeyword.getRecord( tableIdx );
+            const auto& dataItem = tableRecord.getItem( 0 );
+            if (dataItem.size() > 0) {
                 std::shared_ptr<GasvisctTable> table = std::make_shared<GasvisctTable>( deck , dataItem );
                 container.addTable( tableIdx , table );
             }
@@ -340,7 +340,7 @@ namespace Opm {
             return;
         }
 
-        if (!deck.numKeywords(keywordName)) {
+        if (!deck.count(keywordName)) {
             complainAboutAmbiguousKeyword(deck, keywordName);
             return;
         }
@@ -348,16 +348,16 @@ namespace Opm {
         auto& container = forceGetTables(keywordName , numTables);
         const auto& tableKeyword = deck.getKeyword(keywordName);
 
-        if (tableKeyword->size() > 2) {
+        if (tableKeyword.size() > 2) {
             std::string msg = "The Parser does currently NOT support the alternating record schema used in PLYSHLOG";
             throw std::invalid_argument( msg );
         }
 
-        for (size_t tableIdx = 0; tableIdx < tableKeyword->size(); tableIdx += 2) {
-            const auto indexRecord = tableKeyword->getRecord( tableIdx );
-            const auto dataRecord = tableKeyword->getRecord( tableIdx + 1);
-            const auto dataItem = dataRecord->getItem( 0 );
-            if (dataItem->size() > 0) {
+        for (size_t tableIdx = 0; tableIdx < tableKeyword.size(); tableIdx += 2) {
+            const auto& indexRecord = tableKeyword.getRecord( tableIdx );
+            const auto& dataRecord = tableKeyword.getRecord( tableIdx + 1);
+            const auto& dataItem = dataRecord.getItem( 0 );
+            if (dataItem.size() > 0) {
                 std::shared_ptr<PlyshlogTable> table = std::make_shared<PlyshlogTable>(indexRecord , dataRecord);
                 container.addTable( tableIdx , table );
             }
@@ -372,15 +372,15 @@ namespace Opm {
             return;
         }
 
-        if (!deck.numKeywords(keywordName)) {
+        if (!deck.count(keywordName)) {
             complainAboutAmbiguousKeyword(deck, keywordName);
             return;
         }
 
         const auto& keyword = deck.getKeyword<ParserKeywords::PLYROCK>();
         auto& container = forceGetTables(keywordName , numTables);
-        for (size_t tableIdx = 0; tableIdx < keyword->size(); ++tableIdx) {
-            const auto tableRecord = keyword->getRecord( tableIdx );
+        for (size_t tableIdx = 0; tableIdx < keyword.size(); ++tableIdx) {
+            const auto& tableRecord = keyword.getRecord( tableIdx );
             std::shared_ptr<PlyrockTable> table = std::make_shared<PlyrockTable>(tableRecord);
             container.addTable( tableIdx , table );
         }
@@ -394,15 +394,15 @@ namespace Opm {
             return;
         }
 
-        if (!deck.numKeywords(keywordName)) {
+        if (!deck.count(keywordName)) {
             complainAboutAmbiguousKeyword(deck, keywordName);
             return;
         }
 
         const auto& keyword = deck.getKeyword<ParserKeywords::PLYMAX>();
         auto& container = forceGetTables(keywordName , numTables);
-        for (size_t tableIdx = 0; tableIdx < keyword->size(); ++tableIdx) {
-            const auto tableRecord = keyword->getRecord( tableIdx );
+        for (size_t tableIdx = 0; tableIdx < keyword.size(); ++tableIdx) {
+            const auto& tableRecord = keyword.getRecord( tableIdx );
             std::shared_ptr<PlymaxTable> table = std::make_shared<PlymaxTable>( tableRecord );
             container.addTable( tableIdx , table );
         }
@@ -414,13 +414,13 @@ namespace Opm {
         if (!deck.hasKeyword("ROCKTAB"))
             return; // ROCKTAB is not featured by the deck...
 
-        if (deck.numKeywords("ROCKTAB") > 1) {
+        if (deck.count("ROCKTAB") > 1) {
             complainAboutAmbiguousKeyword(deck, "ROCKTAB");
             return;
         }
         const auto& rockcompKeyword = deck.getKeyword<ParserKeywords::ROCKCOMP>();
-        const auto& record = rockcompKeyword->getRecord( 0 );
-        size_t numTables = record->getItem<ParserKeywords::ROCKCOMP::NTROCC>()->getInt(0);
+        const auto& record = rockcompKeyword.getRecord( 0 );
+        size_t numTables = record.getItem<ParserKeywords::ROCKCOMP::NTROCC>().get< int >(0);
         auto& container = forceGetTables("ROCKTAB" , numTables);
         const auto rocktabKeyword = deck.getKeyword("ROCKTAB");
 
@@ -428,15 +428,15 @@ namespace Opm {
         bool useStressOption = false;
         if (deck.hasKeyword<ParserKeywords::ROCKOPTS>()) {
             const auto rockoptsKeyword = deck.getKeyword<ParserKeywords::ROCKOPTS>();
-            const auto rockoptsRecord = rockoptsKeyword->getRecord(0);
-            const auto item = rockoptsRecord->getItem<ParserKeywords::ROCKOPTS::METHOD>();
-            useStressOption = (item->getTrimmedString(0) == "STRESS");
+            const auto& rockoptsRecord = rockoptsKeyword.getRecord(0);
+            const auto& item = rockoptsRecord.getItem<ParserKeywords::ROCKOPTS::METHOD>();
+            useStressOption = (item.getTrimmedString(0) == "STRESS");
         }
 
-        for (size_t tableIdx = 0; tableIdx < rocktabKeyword->size(); ++tableIdx) {
-            const auto tableRecord = rocktabKeyword->getRecord( tableIdx );
-            const auto dataItem = tableRecord->getItem( 0 );
-            if (dataItem->size() > 0) {
+        for (size_t tableIdx = 0; tableIdx < rocktabKeyword.size(); ++tableIdx) {
+            const auto& tableRecord = rocktabKeyword.getRecord( tableIdx );
+            const auto& dataItem = tableRecord.getItem( 0 );
+            if (dataItem.size() > 0) {
                 std::shared_ptr<RocktabTable> table = std::make_shared<RocktabTable>( dataItem , isDirectional, useStressOption );
                 container.addTable( tableIdx , table );
             }
@@ -451,11 +451,11 @@ namespace Opm {
             return;
         }
 
-        int num_tables = deck.numKeywords(ParserKeywords::VFPPROD::keywordName);
+        int num_tables = deck.count(ParserKeywords::VFPPROD::keywordName);
         const auto& keywords = deck.getKeywordList<ParserKeywords::VFPPROD>();
-        const auto unit_system = deck.getActiveUnitSystem();
+        auto& unit_system = deck.getActiveUnitSystem();
         for (int i=0; i<num_tables; ++i) {
-            const auto& keyword = keywords[i];
+            const auto& keyword = *keywords[i];
 
             VFPProdTable table;
             table.init(keyword, unit_system);
@@ -477,11 +477,11 @@ namespace Opm {
             return;
         }
 
-        int num_tables = deck.numKeywords(ParserKeywords::VFPINJ::keywordName);
+        int num_tables = deck.count(ParserKeywords::VFPINJ::keywordName);
         const auto& keywords = deck.getKeywordList<ParserKeywords::VFPINJ>();
-        const auto unit_system = deck.getActiveUnitSystem();
+        auto& unit_system = deck.getActiveUnitSystem();
         for (int i=0; i<num_tables; ++i) {
-            const auto& keyword = keywords[i];
+            const auto& keyword = *keywords[i];
 
             VFPInjTable table;
             table.init(keyword, unit_system);
@@ -662,7 +662,7 @@ namespace Opm {
 
     void TableManager::complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) const {
         OpmLog::addMessage(Log::MessageType::Error, "The " + keywordName + " keyword must be unique in the deck. Ignoring all!");
-        auto keywords = deck.getKeywordList(keywordName);
+        const auto& keywords = deck.getKeywordList(keywordName);
         for (size_t i = 0; i < keywords.size(); ++i) {
             std::string msg = "Ambiguous keyword "+keywordName+" defined here";
             OpmLog::addMessage(Log::MessageType::Error , Log::fileMessage( keywords[i]->getFileName(), keywords[i]->getLineNumber(),msg));

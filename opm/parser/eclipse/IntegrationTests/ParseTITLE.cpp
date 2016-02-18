@@ -47,10 +47,10 @@ BOOST_AUTO_TEST_CASE( parse_TITLE_OK ) {
 
     BOOST_CHECK_EQUAL(size_t(2), deck->size());
     BOOST_CHECK_EQUAL (true, deck->hasKeyword("TITLE"));
-    DeckKeywordConstPtr titleKeyword = deck->getKeyword("TITLE");
-    DeckRecordConstPtr record = titleKeyword->getRecord(0);
-    DeckItemPtr item = record->getItem(0);
-    std::vector<std::string> itemValue = item->getStringData();
+    const auto& titleKeyword = deck->getKeyword("TITLE");
+    const auto& record = titleKeyword.getRecord(0);
+    const auto& item = record.getItem(0);
+    std::vector<std::string> itemValue = item.getData< std::string >();
     std::string itemValueString = boost::algorithm::join(itemValue, " ");
 
     BOOST_CHECK_EQUAL (0, itemValueString.compare("This is the title of the model."));

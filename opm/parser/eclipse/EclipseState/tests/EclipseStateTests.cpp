@@ -46,8 +46,7 @@
 #include <opm/parser/eclipse/Units/ConversionFactors.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseMode.hpp>
-#include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
-#include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 using namespace Opm;
@@ -267,7 +266,7 @@ BOOST_AUTO_TEST_CASE(PropertiesNotSupportedThrows) {
     OpmLog::addBackend("COUNTER" , counter);
     DeckPtr deck = createDeck();
     EclipseState state(deck , ParseMode());
-    DeckKeywordConstPtr swat = deck->getKeyword("SWAT");
+    const auto& swat = deck->getKeyword("SWAT");
     BOOST_CHECK_EQUAL( false , state.supportsGridProperty("SWAT"));
     state.loadGridPropertyFromDeckKeyword(std::make_shared<const Box>(10,10,10), swat);
     BOOST_CHECK_EQUAL( 1 , counter->numMessages(Log::MessageType::Error) );

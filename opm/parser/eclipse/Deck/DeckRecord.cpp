@@ -20,6 +20,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <algorithm>
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
@@ -27,53 +28,89 @@
 
 namespace Opm {
 
-    DeckRecord::DeckRecord() {
-
-    }
 
     size_t DeckRecord::size() const {
         return m_items.size();
     }
 
-    void DeckRecord::addItem(DeckItemPtr deckItem) {
-        if (m_itemMap.find(deckItem->name()) == m_itemMap.end()) {
-            m_itemMap[deckItem->name()] = deckItem;
-            m_items.push_back(deckItem);
-        } else
-            throw std::invalid_argument("Item with name: " + deckItem->name() + " already exists in DeckRecord");
+    void DeckRecord::addItem( DeckItem&& deckItem ) {
+        const auto& name = deckItem.name();
+        const auto eq = [&name]( const DeckItem& e ) {
+            return e.name() == name;
+            throw std::invalid_argument( "Unable to insert empty item" );
+        };
+
+        if( std::any_of( m_items.begin(), m_items.end(), eq ) )
+            throw std::invalid_argument(
+                    "Item with name: "
+                    + name
+                    + " already exists in DeckRecord");
+
+        m_items.push_back( std::move( deckItem ) );
     }
 
-    DeckItemPtr DeckRecord::getItem(size_t index) const {
-        if (index < m_items.size())
-            return m_items[index];
-        else
-            throw std::range_error("Index out of range.");
+    DeckItem& DeckRecord::getItem( size_t index ) {
+        return this->m_items.at( index );
     }
 
+    DeckItem& DeckRecord::getItem(const std::string& name) {
+        const auto eq = [&name]( const DeckItem& e ) {
+            return e.name() == name;
+        };
 
-    bool DeckRecord::hasItem(const std::string& name) const {
-        if (m_itemMap.find(name) == m_itemMap.end())
-            return false;
-        else
-            return true;
+        auto item = std::find_if( m_items.begin(), m_items.end(), eq );
+
+        if( item == m_items.end() )
+            throw std::invalid_argument("Item: " + name + " does not exist.");
+
+        return *item;
     }
 
-    
-    DeckItemPtr DeckRecord::getItem(const std::string& name) const {
-        if (hasItem(name))
-            return m_itemMap.find(name)->second;
-        else
-            throw std::invalid_argument("Itemname: " + name + " does not exist.");
-    }
-
-
-    DeckItemPtr DeckRecord::getDataItem() const {
+    DeckItem& DeckRecord::getDataItem() {
         if (m_items.size() == 1)
             return getItem(0);
         else
             throw std::range_error("Not a data keyword ?");
     }
 
+    const DeckItem& DeckRecord::getItem( size_t index ) const {
+        return this->m_items.at( index );
+    }
+
+    const DeckItem& DeckRecord::getItem(const std::string& name) const {
+        const auto eq = [&name]( const DeckItem& e ) {
+            return e.name() == name;
+        };
+
+        auto item = std::find_if( this->begin(), this->end(), eq );
+
+        if( item == m_items.end() )
+            throw std::invalid_argument("Item: " + name + " does not exist.");
+
+        return *item;
+    }
+
+    const DeckItem& DeckRecord::getDataItem() const {
+        if (m_items.size() == 1)
+            return getItem(0);
+        else
+            throw std::range_error("Not a data keyword ?");
+    }
+
+    bool DeckRecord::hasItem(const std::string& name) const {
+        const auto eq = [&name]( const DeckItem& e ) {
+            return e.name() == name;
+        };
+
+        return std::any_of( this->begin(), this->end(), eq );
+    }
+
+    DeckRecord::const_iterator DeckRecord::begin() const {
+        return this->m_items.begin();
+    }
+
+    DeckRecord::const_iterator DeckRecord::end() const {
+        return this->m_items.end();
+    }
+
 }
-
-

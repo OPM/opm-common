@@ -77,16 +77,16 @@ namespace Opm {
 
 
 
-    void ParserRecord::applyUnitsToDeck(const Deck& deck , std::shared_ptr<const DeckRecord> deckRecord) const {
+    void ParserRecord::applyUnitsToDeck(const Deck& deck, DeckRecord& deckRecord ) const {
         for (auto iter=begin(); iter != end(); ++iter) {
             if ((*iter)->hasDimension()) {
-                std::shared_ptr<DeckItem> deckItem = deckRecord->getItem( (*iter)->name() );
+                auto& deckItem = deckRecord.getItem( (*iter)->name() );
                 std::shared_ptr<const ParserItem> parserItem = get( (*iter)->name() );
 
                 for (size_t idim=0; idim < (*iter)->numDimensions(); idim++) {
-                    std::shared_ptr<const Dimension> activeDimension  = deck.getActiveUnitSystem()->getNewDimension( parserItem->getDimension(idim) );
-                    std::shared_ptr<const Dimension> defaultDimension = deck.getDefaultUnitSystem()->getNewDimension( parserItem->getDimension(idim) );
-                    deckItem->push_backDimension( activeDimension , defaultDimension );
+                    std::shared_ptr<const Dimension> activeDimension  = deck.getActiveUnitSystem().getNewDimension( parserItem->getDimension(idim) );
+                    std::shared_ptr<const Dimension> defaultDimension = deck.getDefaultUnitSystem().getNewDimension( parserItem->getDimension(idim) );
+                    deckItem.push_backDimension( activeDimension , defaultDimension );
                 }
             }
         }
@@ -116,13 +116,12 @@ namespace Opm {
         }
     }
 
-    DeckRecordConstPtr ParserRecord::parse(const ParseMode& parseMode , RawRecordPtr rawRecord) const {
+    DeckRecord ParserRecord::parse(const ParseMode& parseMode , RawRecordPtr rawRecord) const {
         std::string recordBeforeParsing = rawRecord->getRecordString();
-        DeckRecordPtr deckRecord(new DeckRecord());
+        DeckRecord deckRecord;
         for (size_t i = 0; i < size(); i++) {
-            ParserItemConstPtr parserItem = get(i);
-            DeckItemPtr deckItem = parserItem->scan(rawRecord);
-            deckRecord->addItem(deckItem);
+            auto parserItem = get(i);
+            deckRecord.addItem( parserItem->scan( rawRecord ) );
         }
 
         if (rawRecord->size() > 0) {

@@ -25,34 +25,34 @@
 #include <boost/test/unit_test.hpp>
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
-#include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
 
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(InitializeString) {
-    DeckStringItem stringItem("TEST");
+    auto stringItem = DeckItem::make< std::string >("TEST");
     BOOST_CHECK_EQUAL("TEST", stringItem.name());
 }
 
 BOOST_AUTO_TEST_CASE(DummyDefaults) {
-    DeckStringItem deckStringItem("TEST");
+    auto deckStringItem = DeckItem::make< std::string >("TEST");
     BOOST_CHECK_EQUAL(deckStringItem.size(), 0);
 
     deckStringItem.push_backDummyDefault();
     BOOST_CHECK_EQUAL(deckStringItem.size(), 0);
     BOOST_CHECK_EQUAL(true, deckStringItem.defaultApplied(0));
-    BOOST_CHECK_THROW(deckStringItem.getString(0), std::out_of_range);
+    BOOST_CHECK_THROW(deckStringItem.get< std::string >(0), std::out_of_range);
 }
 
 BOOST_AUTO_TEST_CASE(GetStringAtIndex_NoData_ExceptionThrown) {
-    DeckStringItem deckStringItem("TEST");
-    BOOST_CHECK_THROW(deckStringItem.getString(0), std::out_of_range);
+    auto deckStringItem = DeckItem::make< std::string >("TEST");
+    BOOST_CHECK_THROW(deckStringItem.get< std::string >(0), std::out_of_range);
     deckStringItem.push_back("SA");
-    BOOST_CHECK_THROW(deckStringItem.getString(1), std::out_of_range);
+    BOOST_CHECK_THROW(deckStringItem.get< std::string >(1), std::out_of_range);
 }
 
 BOOST_AUTO_TEST_CASE(size_variouspushes_sizecorrect) {
-    DeckStringItem deckStringItem("TEST");
+    auto deckStringItem = DeckItem::make< std::string >("TEST");
 
     BOOST_CHECK_EQUAL(0U, deckStringItem.size());
     deckStringItem.push_back("WELL-3");
@@ -64,30 +64,30 @@ BOOST_AUTO_TEST_CASE(size_variouspushes_sizecorrect) {
 }
 
 BOOST_AUTO_TEST_CASE(DefaultNotApplied) {
-    DeckStringItem deckStringItem("TEST");
+    auto deckStringItem = DeckItem::make< std::string >("TEST");
     BOOST_CHECK( deckStringItem.size() == 0 );
 
-    deckStringItem.push_back( "FOO" );
+    deckStringItem.push_back( "FOO") ;
     BOOST_CHECK( deckStringItem.size() == 1 );
-    BOOST_CHECK( deckStringItem.getString(0) == "FOO" );
+    BOOST_CHECK( deckStringItem.get< std::string >(0) == "FOO" );
     BOOST_CHECK( !deckStringItem.defaultApplied(0) );
 }
 
 BOOST_AUTO_TEST_CASE(DefaultApplied) {
-    DeckStringItem deckStringItem("TEST");
+    auto deckStringItem = DeckItem::make< std::string >("TEST");
     BOOST_CHECK( deckStringItem.size() == 0 );
 
     deckStringItem.push_backDefault( "FOO" );
     BOOST_CHECK( deckStringItem.size() == 1 );
-    BOOST_CHECK( deckStringItem.getString(0) == "FOO" );
+    BOOST_CHECK( deckStringItem.get< std::string >(0) == "FOO" );
     BOOST_CHECK( deckStringItem.defaultApplied(0) );
 }
 
 
 BOOST_AUTO_TEST_CASE(PushBackMultiple) {
-    DeckStringItem item("HEI");
-    item.push_backMultiple("Heisann ", 100U );
-    BOOST_CHECK_EQUAL( 100U , item.size() );
+    auto stringItem = DeckItem::make< std::string >("HEI");
+    stringItem.push_back("Heisann ", 100U );
+    BOOST_CHECK_EQUAL( 100U , stringItem.size() );
     for (size_t i=0; i < 100; i++)
-        BOOST_CHECK_EQUAL("Heisann " , item.getString(i));
+        BOOST_CHECK_EQUAL("Heisann " , stringItem.get< std::string >(i));
 }

@@ -27,7 +27,7 @@ namespace Opm {
 
     class ImkrvdTable : public SimpleTable {
     public:
-        ImkrvdTable( std::shared_ptr< const DeckItem > item );
+        ImkrvdTable( const DeckItem& item );
 
         /*!
          * \brief The datum depth for the remaining columns

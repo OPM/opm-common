@@ -26,7 +26,9 @@
 
 namespace Opm {
 
-    SCHEDULESection::SCHEDULESection(DeckConstPtr deck) : Section(deck, "SCHEDULE") {
+    SCHEDULESection::SCHEDULESection( const Deck& deck ) :
+        Section(deck, "SCHEDULE"), unit_system( deck.getActiveUnitSystem() )
+    {
         populateDeckTimeSteps();
     }
 
@@ -43,16 +45,15 @@ namespace Opm {
     void SCHEDULESection::populateDeckTimeSteps() {
         DeckTimeStepPtr currentTimeStep = std::make_shared<DeckTimeStep>();
 
-        for (auto iter = begin(); iter != end(); ++iter) {  //Loop keywords in schedule section
-            auto keyword = *iter;
-            if (keyword->name() == "TSTEP") {
-                DeckItemPtr items = keyword->getDataRecord()->getDataItem();
-                for (size_t item_iter = 0; item_iter < items->size(); ++item_iter) {
+        for( const auto& keyword : *this ) {
+            if (keyword.name() == "TSTEP") {
+                const auto& items = keyword.getDataRecord().getDataItem();
+                for (size_t item_iter = 0; item_iter < items.size(); ++item_iter) {
                    m_decktimesteps.push_back(currentTimeStep);
                    currentTimeStep = std::make_shared<DeckTimeStep>();
                 }
-            } else if (keyword->name() == "DATES") {
-                for (auto record_iter = keyword->begin(); record_iter != keyword->end(); ++record_iter ) {
+            } else if (keyword.name() == "DATES") {
+                for (auto record_iter = keyword.begin(); record_iter != keyword.end(); ++record_iter ) {
                     m_decktimesteps.push_back(currentTimeStep);
                     currentTimeStep = std::make_shared<DeckTimeStep>();
                 }
@@ -62,5 +63,9 @@ namespace Opm {
         }
         //push last step
         m_decktimesteps.push_back(currentTimeStep);
+    }
+
+    const UnitSystem& SCHEDULESection::getActiveUnitSystem() const {
+        return this->unit_system;
     }
 }

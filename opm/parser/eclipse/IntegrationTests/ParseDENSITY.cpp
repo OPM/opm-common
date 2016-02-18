@@ -24,7 +24,7 @@
 #include <boost/test/test_tools.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -43,21 +43,20 @@ BOOST_AUTO_TEST_CASE(ParseDENSITY) {
     ParserPtr parser(new Parser());
     std::string file("testdata/integration_tests/DENSITY/DENSITY1");
     DeckPtr deck =  parser->parseFile(file, ParseMode());
-    DeckKeywordConstPtr densityKw = deck->getKeyword("DENSITY" , 0);
+    const auto& densityKw = deck->getKeyword("DENSITY" , 0);
 
 
-    BOOST_CHECK_EQUAL( 2U , densityKw->size());
-    DeckRecordConstPtr rec1 = densityKw->getRecord(0);
-    DeckRecordConstPtr rec2 = densityKw->getRecord(1);
+    BOOST_CHECK_EQUAL( 2U , densityKw.size());
+    const auto& rec1 = densityKw.getRecord(0);
 
     {
-        DeckItemPtr oilDensity = rec1->getItem("OIL");
-        DeckItemPtr waterDensity = rec1->getItem("WATER");
-        DeckItemPtr gasDensity = rec1->getItem("GAS");
+        const auto& oilDensity = rec1.getItem("OIL");
+        const auto& waterDensity = rec1.getItem("WATER");
+        const auto& gasDensity = rec1.getItem("GAS");
 
-        BOOST_CHECK_CLOSE(  500 * Field::Density , oilDensity->getSIDouble(0) , 0.001);
-        BOOST_CHECK_CLOSE( 1000 * Field::Density , waterDensity->getSIDouble(0) , 0.001);
-        BOOST_CHECK_CLOSE(    1 * Field::Density , gasDensity->getSIDouble(0) , 0.001);
+        BOOST_CHECK_CLOSE(  500 * Field::Density , oilDensity.getSIDouble(0) , 0.001);
+        BOOST_CHECK_CLOSE( 1000 * Field::Density , waterDensity.getSIDouble(0) , 0.001);
+        BOOST_CHECK_CLOSE(    1 * Field::Density , gasDensity.getSIDouble(0) , 0.001);
     }
 
 }

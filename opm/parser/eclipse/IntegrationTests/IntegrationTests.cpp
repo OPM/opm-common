@@ -115,8 +115,8 @@ BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_dataIsCorrect) {
     boost::filesystem::path singleKeywordFile("testdata/integration_tests/wwct.data");
     ParserPtr parser = createWWCTParser();
     DeckPtr deck =  parser->parseFile(singleKeywordFile.string(), ParseMode());
-    BOOST_CHECK_EQUAL("WELL-1", deck->getKeyword("WWCT" , 0)->getRecord(0)->getItem(0)->getString(0));
-    BOOST_CHECK_EQUAL("WELL-2", deck->getKeyword("WWCT" , 0)->getRecord(0)->getItem(0)->getString(1));
+    BOOST_CHECK_EQUAL("WELL-1", deck->getKeyword("WWCT" , 0).getRecord(0).getItem(0).get< std::string >(0));
+    BOOST_CHECK_EQUAL("WELL-2", deck->getKeyword("WWCT" , 0).getRecord(0).getItem(0).get< std::string >(1));
 }
 
 BOOST_AUTO_TEST_CASE(parser_internal_name_vs_deck_name) {
@@ -180,45 +180,20 @@ BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_dataiscorrect) {
     ParserPtr parser = createBPRParser();
     DeckPtr deck =  parser->parseFile(singleKeywordFile.string(), ParseMode());
 
-    DeckKeywordConstPtr keyword = deck->getKeyword("BPR" , 0);
-    BOOST_CHECK_EQUAL(2U, keyword->size());
+    const auto& keyword = deck->getKeyword("BPR" , 0);
+    BOOST_CHECK_EQUAL(2U, keyword.size());
 
-    DeckRecordConstPtr record1 = keyword->getRecord(0);
-    BOOST_CHECK_EQUAL(3U, record1->size());
+    const auto& record1 = keyword.getRecord(0);
+    BOOST_CHECK_EQUAL(3U, record1.size());
 
-    DeckItemConstPtr I1 = record1->getItem(0);
-    BOOST_CHECK_EQUAL(1, I1->getInt(0));
-    I1 = record1->getItem("I");
-    BOOST_CHECK_EQUAL(1, I1->getInt(0));
+    BOOST_CHECK_EQUAL(1, record1.getItem(0).get< int >(0));
+    BOOST_CHECK_EQUAL(1, record1.getItem("I").get< int >(0));
 
-    DeckItemConstPtr J1 = record1->getItem(1);
-    BOOST_CHECK_EQUAL(2, J1->getInt(0));
-    J1 = record1->getItem("J");
-    BOOST_CHECK_EQUAL(2, J1->getInt(0));
+    BOOST_CHECK_EQUAL(2, record1.getItem(1).get< int >(0));
+    BOOST_CHECK_EQUAL(2, record1.getItem("J").get< int >(0));
 
-    DeckItemConstPtr K1 = record1->getItem(2);
-    BOOST_CHECK_EQUAL(3, K1->getInt(0));
-    K1 = record1->getItem("K");
-    BOOST_CHECK_EQUAL(3, K1->getInt(0));
-
-
-    DeckRecordConstPtr record2 = keyword->getRecord(0);
-    BOOST_CHECK_EQUAL(3U, record2->size());
-
-    I1 = record2->getItem(0);
-    BOOST_CHECK_EQUAL(1, I1->getInt(0));
-    I1 = record2->getItem("I");
-    BOOST_CHECK_EQUAL(1, I1->getInt(0));
-
-    J1 = record2->getItem(1);
-    BOOST_CHECK_EQUAL(2, J1->getInt(0));
-    J1 = record2->getItem("J");
-    BOOST_CHECK_EQUAL(2, J1->getInt(0));
-
-    K1 = record2->getItem(2);
-    BOOST_CHECK_EQUAL(3, K1->getInt(0));
-    K1 = record2->getItem("K");
-    BOOST_CHECK_EQUAL(3, K1->getInt(0));
+    BOOST_CHECK_EQUAL(3, record1.getItem(2).get< int >(0));
+    BOOST_CHECK_EQUAL(3, record1.getItem("K").get< int >(0));
 }
 
 
@@ -236,33 +211,33 @@ BOOST_AUTO_TEST_CASE(parse_truncatedrecords_deckFilledWithDefaults) {
     ParserPtr parser(new Parser());
     DeckPtr deck =  parser->parseFile("testdata/integration_tests/truncated_records.data", ParseMode());
     BOOST_CHECK_EQUAL(3U, deck->size());
-    DeckKeywordConstPtr radfin4_0_full= deck->getKeyword("RADFIN4", 0);
-    DeckKeywordConstPtr radfin4_1_partial= deck->getKeyword("RADFIN4", 1);
+    const auto& radfin4_0_full= deck->getKeyword("RADFIN4", 0);
+    const auto& radfin4_1_partial= deck->getKeyword("RADFIN4", 1);
 
     // Specified in datafile
-    BOOST_CHECK_EQUAL("NAME", radfin4_0_full->getRecord(0)->getItem(0)->getString(0));
-    BOOST_CHECK_EQUAL("NAME", radfin4_1_partial->getRecord(0)->getItem(0)->getString(0));
+    BOOST_CHECK_EQUAL("NAME", radfin4_0_full.getRecord(0).getItem(0).get< std::string >(0));
+    BOOST_CHECK_EQUAL("NAME", radfin4_1_partial.getRecord(0).getItem(0).get< std::string >(0));
 
     // Specified in datafile
-    BOOST_CHECK_EQUAL(213, radfin4_0_full->getRecord(0)->getItem(1)->getInt(0));
-    BOOST_CHECK_EQUAL(213, radfin4_1_partial->getRecord(0)->getItem(1)->getInt(0));
+    BOOST_CHECK_EQUAL(213, radfin4_0_full.getRecord(0).getItem(1).get< int >(0));
+    BOOST_CHECK_EQUAL(213, radfin4_1_partial.getRecord(0).getItem(1).get< int >(0));
 
-    const auto record_0 = radfin4_0_full->getRecord(0);
-    const auto lastItem_0 = record_0->getItem(record_0->size() - 1);
-    BOOST_CHECK(!lastItem_0->defaultApplied(0));
-    BOOST_CHECK_EQUAL(lastItem_0->getInt(0), 18);
+    const auto& record_0 = radfin4_0_full.getRecord(0);
+    const auto& lastItem_0 = record_0.getItem(record_0.size() - 1);
+    BOOST_CHECK(!lastItem_0.defaultApplied(0));
+    BOOST_CHECK_EQUAL(lastItem_0.get< int >(0), 18);
 
-    const auto record_1 = radfin4_1_partial->getRecord(0);
-    const auto lastItem_1 = record_1->getItem(record_1->size() - 1);
-    BOOST_CHECK_EQUAL(213, radfin4_1_partial->getRecord(0)->getItem(1)->getInt(0));
-    BOOST_CHECK(lastItem_1->defaultApplied(0));
-    BOOST_CHECK_EQUAL(lastItem_1->getInt(0), 1);
+    const auto& record_1 = radfin4_1_partial.getRecord(0);
+    const auto& lastItem_1 = record_1.getItem(record_1.size() - 1);
+    BOOST_CHECK_EQUAL(213, radfin4_1_partial.getRecord(0).getItem(1).get< int >(0));
+    BOOST_CHECK(lastItem_1.defaultApplied(0));
+    BOOST_CHECK_EQUAL(lastItem_1.get< int >(0), 1);
 
     ParserKeywordConstPtr parserKeyword = parser->getParserKeywordFromDeckName("RADFIN4");
     ParserRecordConstPtr parserRecord = parserKeyword->getRecord(0);
     ParserItemConstPtr nwmaxItem = parserRecord->get("NWMAX");
     ParserIntItemConstPtr intItem = std::static_pointer_cast<const ParserIntItem>(nwmaxItem);
 
-    BOOST_CHECK_EQUAL(18, radfin4_0_full->getRecord(0)->getItem(10)->getInt(0));
-    BOOST_CHECK_EQUAL(intItem->getDefault(), radfin4_1_partial->getRecord(0)->getItem(10)->getInt(0));
+    BOOST_CHECK_EQUAL(18, radfin4_0_full.getRecord(0).getItem(10).get< int >(0));
+    BOOST_CHECK_EQUAL(intItem->getDefault(), radfin4_1_partial.getRecord(0).getItem(10).get< int >(0));
 }

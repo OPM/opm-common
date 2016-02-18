@@ -192,17 +192,17 @@ namespace Opm {
 
     void IOConfig::handleSolutionSection(TimeMapConstPtr timemap, std::shared_ptr<const SOLUTIONSection> solutionSection) {
         if (solutionSection->hasKeyword("RPTRST")) {
-            auto rptrstkeyword        = solutionSection->getKeyword("RPTRST");
-            DeckRecordConstPtr record = rptrstkeyword->getRecord(0);
-            DeckItemConstPtr item     = record->getItem(0);
+            const auto& rptrstkeyword        = solutionSection->getKeyword("RPTRST");
+            const auto& record = rptrstkeyword.getRecord(0);
+            const auto& item     = record.getItem(0);
 
             bool handleRptrstBasic = false;
             size_t basic = 0;
             size_t freq  = 0;
 
-            for (size_t index = 0; index < item->size(); ++index) {
-                if (item->hasValue(index)) {
-                    std::string mnemonics = item->getString(index);
+            for (size_t index = 0; index < item.size(); ++index) {
+                if (item.hasValue(index)) {
+                    std::string mnemonics = item.get< std::string >(index);
                     std::size_t found_basic = mnemonics.find("BASIC=");
                     if (found_basic != std::string::npos) {
                         std::string basic_no = mnemonics.substr(found_basic+6, found_basic+7);
@@ -246,16 +246,16 @@ namespace Opm {
         m_write_INIT_file = gridSection->hasKeyword("INIT");
 
         if (gridSection->hasKeyword("GRIDFILE")) {
-            auto gridfilekeyword = gridSection->getKeyword("GRIDFILE");
-            if (gridfilekeyword->size() > 0) {
-                auto rec = gridfilekeyword->getRecord(0);
-                auto item1 = rec->getItem(0);
-                if ((item1->hasValue(0)) && (item1->getInt(0) !=  0)) {
+            const auto& gridfilekeyword = gridSection->getKeyword("GRIDFILE");
+            if (gridfilekeyword.size() > 0) {
+                const auto& rec = gridfilekeyword.getRecord(0);
+                const auto& item1 = rec.getItem(0);
+                if ((item1.hasValue(0)) && (item1.get< int >(0) !=  0)) {
                     std::cerr << "IOConfig: Reading GRIDFILE keyword from GRID section: Output of GRID file is not supported" << std::endl;
                 }
-                if (rec->size() > 1) {
-                    auto item2 = rec->getItem(1);
-                    if ((item2->hasValue(0)) && (item2->getInt(0) ==  0)) {
+                if (rec.size() > 1) {
+                    const auto& item2 = rec.getItem(1);
+                    if ((item2.hasValue(0)) && (item2.get< int >(0) ==  0)) {
                         m_write_EGRID_file = false;
                     }
                 }
@@ -316,18 +316,18 @@ namespace Opm {
     }
 
 
-    void IOConfig::handleRPTSOL(DeckKeywordConstPtr keyword) {
-        DeckRecordConstPtr record = keyword->getRecord(0);
+    void IOConfig::handleRPTSOL( const DeckKeyword& keyword) {
+        const auto& record = keyword.getRecord(0);
 
         size_t restart = 0;
         size_t found_mnemonic_RESTART = 0;
         bool handle_RPTSOL_RESTART = false;
 
-        DeckItemConstPtr item = record->getItem(0);
+        const auto& item = record.getItem(0);
 
 
-        for (size_t index = 0; index < item->size(); ++index) {
-            const std::string& mnemonic = item->getString(index);
+        for (size_t index = 0; index < item.size(); ++index) {
+            const std::string& mnemonic = item.get< std::string >(index);
 
             found_mnemonic_RESTART = mnemonic.find("RESTART=");
             if (found_mnemonic_RESTART != std::string::npos) {
@@ -343,8 +343,8 @@ namespace Opm {
            Restart integer switch is integer control nr 7 */
 
         if (found_mnemonic_RESTART == std::string::npos) {
-            if (item->size() >= 7)  {
-                const std::string& integer_control = item->getString(6);
+            if (item.size() >= 7)  {
+                const std::string& integer_control = item.get< std::string >(6);
                 try {
                     restart = boost::lexical_cast<size_t>(integer_control);
                     handle_RPTSOL_RESTART = true;

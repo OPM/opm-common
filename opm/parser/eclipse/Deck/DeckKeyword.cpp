@@ -44,26 +44,12 @@ namespace Opm {
         m_lineNumber = lineNumber;
     }
 
-    std::shared_ptr<const ParserKeyword> DeckKeyword::getParserKeyword() const {
-        if (!m_parserKeyword)
-            throw std::invalid_argument("No ParserKeyword object available");
-        return m_parserKeyword;
-    }
-
-    bool DeckKeyword::hasParserKeyword() const {
-        return static_cast<bool>(m_parserKeyword);
-    }
-
     const std::string& DeckKeyword::getFileName() const {
         return m_fileName;
     }
 
     int DeckKeyword::getLineNumber() const {
         return m_lineNumber;
-    }
-
-    void DeckKeyword::setParserKeyword(std::shared_ptr<const ParserKeyword> &parserKeyword) {
-        m_parserKeyword = parserKeyword;
     }
 
     void DeckKeyword::setDataKeyword(bool isDataKeyword_) {
@@ -87,27 +73,27 @@ namespace Opm {
         return m_knownKeyword;
     }
 
-    void DeckKeyword::addRecord(DeckRecordConstPtr record) {
-        m_recordList.push_back(record);
+    void DeckKeyword::addRecord(DeckRecord&& record) {
+        this->m_recordList.push_back( std::move( record ) );
     }
 
-    std::vector<DeckRecordConstPtr>::const_iterator DeckKeyword::begin() const {
+    DeckKeyword::const_iterator DeckKeyword::begin() const {
         return m_recordList.begin();
     }
 
-    std::vector<DeckRecordConstPtr>::const_iterator DeckKeyword::end() const {
+    DeckKeyword::const_iterator DeckKeyword::end() const {
         return m_recordList.end();
     }
 
-    DeckRecordConstPtr DeckKeyword::getRecord(size_t index) const {
-        if (index < m_recordList.size()) {
-            return m_recordList[index];
-        } else
-            throw std::range_error("Index out of range");
+    const DeckRecord& DeckKeyword::getRecord(size_t index) const {
+        return this->m_recordList.at( index );
     }
 
+    DeckRecord& DeckKeyword::getRecord(size_t index) {
+        return this->m_recordList.at( index );
+    }
 
-    DeckRecordConstPtr DeckKeyword::getDataRecord() const {
+    const DeckRecord& DeckKeyword::getDataRecord() const {
         if (m_recordList.size() == 1)
             return getRecord(0);
         else
@@ -116,36 +102,26 @@ namespace Opm {
 
 
     size_t DeckKeyword::getDataSize() const {
-        DeckRecordConstPtr record = getDataRecord();
-        DeckItemConstPtr item = record->getDataItem();
-        return item->size();
+        return this->getDataRecord().getDataItem().size();
     }
 
 
     const std::vector<int>& DeckKeyword::getIntData() const {
-        DeckRecordConstPtr record = getDataRecord();
-        DeckItemConstPtr item = record->getDataItem();
-        return item->getIntData();
+        return this->getDataRecord().getDataItem().getData< int >();
     }
 
 
     const std::vector<std::string>& DeckKeyword::getStringData() const {
-        DeckRecordConstPtr record = getDataRecord();
-        DeckItemConstPtr item = record->getDataItem();
-        return item->getStringData();
+        return this->getDataRecord().getDataItem().getData< std::string >();
     }
 
 
     const std::vector<double>& DeckKeyword::getRawDoubleData() const {
-        DeckRecordConstPtr record = getDataRecord();
-        DeckItemConstPtr item = record->getDataItem();
-        return item->getRawDoubleData();
+        return this->getDataRecord().getDataItem().getData< double >();
     }
 
     const std::vector<double>& DeckKeyword::getSIDoubleData() const {
-        DeckRecordConstPtr record = getDataRecord();
-        DeckItemPtr item = record->getDataItem();
-        return item->getSIDoubleData();
+        return this->getDataRecord().getDataItem().getSIDoubleData();
     }
 
 }

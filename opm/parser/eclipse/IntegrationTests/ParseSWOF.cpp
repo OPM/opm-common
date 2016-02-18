@@ -25,9 +25,9 @@
 #include <boost/test/test_tools.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseMode.hpp>
@@ -59,19 +59,19 @@ const char *parserData =
 
 static void check_parser(ParserPtr parser) {
     DeckPtr deck =  parser->parseString(parserData, ParseMode());
-    DeckKeywordConstPtr kw1 = deck->getKeyword("SWOF");
-    BOOST_CHECK_EQUAL(1U , kw1->size());
+    const auto& kw1 = deck->getKeyword("SWOF");
+    BOOST_CHECK_EQUAL(1U , kw1.size());
 
-    DeckRecordConstPtr record0 = kw1->getRecord(0);
-    BOOST_CHECK_EQUAL(1U , record0->size());
+    const auto& record0 = kw1.getRecord(0);
+    BOOST_CHECK_EQUAL(1U , record0.size());
 
-    DeckItemConstPtr item0 = record0->getItem(0);
-    BOOST_CHECK_EQUAL(10U * 4, item0->size());
+    const auto& item0 = record0.getItem(0);
+    BOOST_CHECK_EQUAL(10U * 4, item0.size());
 }
 
 static void check_SwofTable(ParserPtr parser) {
     DeckPtr deck =  parser->parseString(parserData, ParseMode());
-    Opm::SwofTable swofTable(deck->getKeyword("SWOF")->getRecord(0)->getItem(0));
+    Opm::SwofTable swofTable(deck->getKeyword("SWOF").getRecord(0).getItem(0));
 
     BOOST_CHECK_EQUAL(10U, swofTable.getSwColumn().size());
     BOOST_CHECK_CLOSE(0.1, swofTable.getSwColumn()[0], 1e-8);

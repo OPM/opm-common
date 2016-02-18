@@ -23,13 +23,13 @@
 namespace Opm {
 
 template<>
-void GridProperty<int>::setDataPoint(size_t sourceIdx, size_t targetIdx, Opm::DeckItemConstPtr deckItem) {
-    m_data[targetIdx] = deckItem->getInt(sourceIdx);
+void GridProperty<int>::setDataPoint(size_t sourceIdx, size_t targetIdx, const DeckItem& deckItem) {
+    m_data[targetIdx] = deckItem.get< int >(sourceIdx);
 }
 
 template<>
-void GridProperty<double>::setDataPoint(size_t sourceIdx, size_t targetIdx, Opm::DeckItemConstPtr deckItem) {
-    m_data[targetIdx] = deckItem->getSIDouble(sourceIdx);
+void GridProperty<double>::setDataPoint(size_t sourceIdx, size_t targetIdx, const DeckItem& deckItem) {
+    m_data[targetIdx] = deckItem.getSIDouble(sourceIdx);
 }
 
 template<>

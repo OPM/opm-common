@@ -29,9 +29,10 @@
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
@@ -402,15 +403,13 @@ namespace Opm {
 
                         if (isRecognizedKeyword(parserState->rawKeyword->getKeywordName())) {
                             ParserKeywordConstPtr parserKeyword = getParserKeywordFromDeckName(parserState->rawKeyword->getKeywordName());
-                            DeckKeywordPtr deckKeyword = parserKeyword->parse(parserState->parseMode , parserState->rawKeyword);
-                            deckKeyword->setParserKeyword(parserKeyword);
-                            parserState->deck->addKeyword(deckKeyword);
+                            parserState->deck->addKeyword( parserKeyword->parse(parserState->parseMode , parserState->rawKeyword ) );
                         } else {
-                            DeckKeywordPtr deckKeyword(new DeckKeyword(parserState->rawKeyword->getKeywordName(), false));
+                            DeckKeyword deckKeyword(parserState->rawKeyword->getKeywordName(), false);
                             const std::string msg = "The keyword " + parserState->rawKeyword->getKeywordName() + " is not recognized";
-                            deckKeyword->setLocation(parserState->rawKeyword->getFilename(),
+                            deckKeyword.setLocation(parserState->rawKeyword->getFilename(),
                                                      parserState->rawKeyword->getLineNR());
-                            parserState->deck->addKeyword(deckKeyword);
+                            parserState->deck->addKeyword( std::move( deckKeyword ) );
                             OpmLog::addMessage(Log::MessageType::Warning , Log::fileMessage(parserState->dataFile.string() , parserState->lineNR , msg));
                         }
                     }
@@ -460,24 +459,18 @@ namespace Opm {
                     const std::pair<std::string, std::string> sizeKeyword = parserKeyword->getSizeDefinitionPair();
                     const Deck * deck = parserState->deck;
                     if (deck->hasKeyword(sizeKeyword.first)) {
-                        DeckKeywordConstPtr sizeDefinitionKeyword = deck->getKeyword(sizeKeyword.first);
-                        DeckItemPtr sizeDefinitionItem;
-                        {
-                            DeckRecordConstPtr record = sizeDefinitionKeyword->getRecord(0);
-                            sizeDefinitionItem = record->getItem(sizeKeyword.second);
-                        }
-                        targetSize = sizeDefinitionItem->getInt(0);
+                        const auto& sizeDefinitionKeyword = deck->getKeyword(sizeKeyword.first);
+                        const auto& record = sizeDefinitionKeyword.getRecord(0);
+                        targetSize = record.getItem( sizeKeyword.second ).get< int >( 0 );
                     } else {
                         std::string msg = "Expected the kewyord: " + sizeKeyword.first + " to infer the number of records in: " + keywordString;
                         parserState->parseMode.handleError(ParseMode::PARSE_MISSING_DIMS_KEYWORD , msg );
 
-                        {
-                            auto keyword = getKeyword( sizeKeyword.first );
-                            auto record = keyword->getRecord(0);
-                            auto int_item = std::dynamic_pointer_cast<const ParserIntItem>( record->get( sizeKeyword.second ) );
+                        auto keyword = getKeyword( sizeKeyword.first );
+                        auto record = keyword->getRecord(0);
+                        auto int_item = std::dynamic_pointer_cast<const ParserIntItem>( record->get( sizeKeyword.second ) );
 
-                            targetSize = int_item->getDefault( );
-                        }
+                        targetSize = int_item->getDefault( );
                     }
                 }
                 return RawKeywordPtr(new RawKeyword(keywordString, parserState->dataFile.string() , parserState->lineNR , targetSize , parserKeyword->isTableCollection()));
@@ -598,9 +591,9 @@ namespace Opm {
     void Parser::applyUnitsToDeck(Deck& deck) const {
         deck.initUnitSystem();
         for (size_t index=0; index < deck.size(); ++index) {
-            DeckKeywordConstPtr deckKeyword = deck.getKeyword( index );
-            if (isRecognizedKeyword( deckKeyword->name())) {
-                ParserKeywordConstPtr parserKeyword = getParserKeywordFromDeckName( deckKeyword->name() );
+            auto& deckKeyword = deck.getKeyword( index );
+            if (isRecognizedKeyword( deckKeyword.name())) {
+                ParserKeywordConstPtr parserKeyword = getParserKeywordFromDeckName( deckKeyword.name() );
                 if (parserKeyword->hasDimension()) {
                     parserKeyword->applyUnitsToDeck(deck , deckKeyword);
                 }
@@ -608,5 +601,148 @@ namespace Opm {
         }
     }
 
+    static bool isSectionDelimiter( const DeckKeyword& keyword ) {
+        const auto& name = keyword.name();
+        for( const auto& x : { "RUNSPEC", "GRID", "EDIT", "PROPS",
+                               "REGIONS", "SOLUTION", "SUMMARY", "SCHEDULE" } )
+            if( name == x ) return true;
+
+        return false;
+    }
+
+    bool Section::checkSectionTopology(const Deck& deck,
+                                       const Parser& parser,
+                                       bool ensureKeywordSectionAffiliation)
+    {
+        if( deck.size() == 0 ) {
+            std::string msg = "empty decks are invalid\n";
+            OpmLog::addMessage( Log::MessageType::Warning, msg );
+            return false;
+        }
+
+        bool deckValid = true;
+
+        if( deck.getKeyword(0).name() != "RUNSPEC" ) {
+            std::string msg = "The first keyword of a valid deck must be RUNSPEC\n";
+            auto curKeyword = deck.getKeyword(0);
+            OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
+            deckValid = false;
+        }
+
+        std::string curSectionName = deck.getKeyword(0).name();
+        size_t curKwIdx = 1;
+        for (; curKwIdx < deck.size(); ++curKwIdx) {
+            const auto& curKeyword = deck.getKeyword(curKwIdx);
+            const std::string& curKeywordName = curKeyword.name();
+
+            if (!isSectionDelimiter( curKeyword )) {
+                if( !parser.isRecognizedKeyword( curKeywordName ) )
+                    // ignore unknown keywords for now (i.e. they can appear in any section)
+                    continue;
+
+                const auto& parserKeyword = parser.getParserKeywordFromDeckName( curKeywordName );
+                if (ensureKeywordSectionAffiliation && !parserKeyword->isValidSection(curSectionName)) {
+                    std::string msg =
+                        "The keyword '"+curKeywordName+"' is located in the '"+curSectionName
+                        +"' section where it is invalid";
+
+                    OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
+                    deckValid = false;
+                }
+
+                continue;
+            }
+
+            if (curSectionName == "RUNSPEC") {
+                if (curKeywordName != "GRID") {
+                    std::string msg =
+                        "The RUNSPEC section must be followed by GRID instead of "+curKeywordName;
+                    OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
+                    deckValid = false;
+                }
+
+                curSectionName = curKeywordName;
+            }
+            else if (curSectionName == "GRID") {
+                if (curKeywordName != "EDIT" && curKeywordName != "PROPS") {
+                    std::string msg =
+                        "The GRID section must be followed by EDIT or PROPS instead of "+curKeywordName;
+                    OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
+                    deckValid = false;
+                }
+
+                curSectionName = curKeywordName;
+            }
+            else if (curSectionName == "EDIT") {
+                if (curKeywordName != "PROPS") {
+                    std::string msg =
+                        "The EDIT section must be followed by PROPS instead of "+curKeywordName;
+                    OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
+                    deckValid = false;
+                }
+
+                curSectionName = curKeywordName;
+            }
+            else if (curSectionName == "PROPS") {
+                if (curKeywordName != "REGIONS" && curKeywordName != "SOLUTION") {
+                    std::string msg =
+                        "The PROPS section must be followed by REGIONS or SOLUTION instead of "+curKeywordName;
+                    OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
+                    deckValid = false;
+                }
+
+                curSectionName = curKeywordName;
+            }
+            else if (curSectionName == "REGIONS") {
+                if (curKeywordName != "SOLUTION") {
+                    std::string msg =
+                        "The REGIONS section must be followed by SOLUTION instead of "+curKeywordName;
+                    OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
+                    deckValid = false;
+                }
+
+                curSectionName = curKeywordName;
+            }
+            else if (curSectionName == "SOLUTION") {
+                if (curKeywordName != "SUMMARY" && curKeywordName != "SCHEDULE") {
+                    std::string msg =
+                        "The SOLUTION section must be followed by SUMMARY or SCHEDULE instead of "+curKeywordName;
+                    OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
+                    deckValid = false;
+                }
+
+                curSectionName = curKeywordName;
+            }
+            else if (curSectionName == "SUMMARY") {
+                if (curKeywordName != "SCHEDULE") {
+                    std::string msg =
+                        "The SUMMARY section must be followed by SCHEDULE instead of "+curKeywordName;
+                    OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
+                    deckValid = false;
+                }
+
+                curSectionName = curKeywordName;
+            }
+            else if (curSectionName == "SCHEDULE") {
+                // schedule is the last section, so every section delimiter after it is wrong...
+                std::string msg =
+                    "The SCHEDULE section must be the last one ("
+                    +curKeywordName+" specified after SCHEDULE)";
+                OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
+                deckValid = false;
+            }
+        }
+
+        // SCHEDULE is the last section and it is mandatory, so make sure it is there
+        if (curSectionName != "SCHEDULE") {
+            const auto& curKeyword = deck.getKeyword(deck.size() - 1);
+            std::string msg =
+                "The last section of a valid deck must be SCHEDULE (is "+curSectionName+")";
+            OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
+            deckValid = false;
+        }
+
+        return deckValid;
+    }
 
 } // namespace Opm

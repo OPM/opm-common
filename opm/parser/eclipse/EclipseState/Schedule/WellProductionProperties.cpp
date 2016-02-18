@@ -8,24 +8,20 @@
 
 
 namespace Opm {
-    WellProductionProperties::
-    WellProductionProperties()
-    {
-        init( );
-        predictionMode = true;
-    }
 
     WellProductionProperties::
-    WellProductionProperties(DeckRecordConstPtr record)
-    {
-        init( );
-        WaterRate = record->getItem("WRAT")->getSIDouble(0);
-        OilRate   = record->getItem("ORAT")->getSIDouble(0);
-        GasRate   = record->getItem("GRAT")->getSIDouble(0);
-    }
+    WellProductionProperties() : predictionMode( true )
+    {}
+
+    WellProductionProperties::
+    WellProductionProperties( const DeckRecord& record ) :
+        OilRate( record.getItem( "ORAT" ).getSIDouble( 0 ) ),
+        WaterRate( record.getItem( "WRAT" ).getSIDouble( 0 ) ),
+        GasRate( record.getItem( "GRAT" ).getSIDouble( 0 ) )
+    {}
 
 
-    WellProductionProperties WellProductionProperties::history(double BHPLimit , DeckRecordConstPtr record)
+    WellProductionProperties WellProductionProperties::history(double BHPLimit, const DeckRecord& record)
     {
         // Modes supported in WCONHIST just from {O,W,G}RAT values
         //
@@ -50,36 +46,36 @@ namespace Opm {
           use the WELTARG keyword.
         */
         p.BHPLimit = BHPLimit;
-        {
-            const auto cmodeItem = record->getItem("CMODE");
-            if (!cmodeItem->defaultApplied(0)) {
-                const WellProducer::ControlModeEnum cmode = WellProducer::ControlModeFromString( cmodeItem->getString(0) );
 
-                if (p.hasProductionControl( cmode ))
-                    p.controlMode = cmode;
-                else
-                    throw std::invalid_argument("Setting CMODE to unspecified control");
-            }
+        const auto& cmodeItem = record.getItem("CMODE");
+        if (!cmodeItem.defaultApplied(0)) {
+            const WellProducer::ControlModeEnum cmode = WellProducer::ControlModeFromString( cmodeItem.get< std::string >(0) );
+
+            if (p.hasProductionControl( cmode ))
+                p.controlMode = cmode;
+            else
+                throw std::invalid_argument("Setting CMODE to unspecified control");
         }
+
         return p;
     }
 
 
 
-    WellProductionProperties WellProductionProperties::prediction(DeckRecordConstPtr record, bool addGroupProductionControl)
+    WellProductionProperties WellProductionProperties::prediction( const DeckRecord& record, bool addGroupProductionControl)
     {
         WellProductionProperties p(record);
         p.predictionMode = true;
 
-        p.LiquidRate     = record->getItem("LRAT"     )->getSIDouble(0);
-        p.ResVRate       = record->getItem("RESV"     )->getSIDouble(0);
-        p.BHPLimit       = record->getItem("BHP"      )->getSIDouble(0);
-        p.THPLimit       = record->getItem("THP"      )->getSIDouble(0);
-        p.ALQValue       = record->getItem("ALQ"      )->getRawDouble(0); //NOTE: Unit of ALQ is never touched
-        p.VFPTableNumber = record->getItem("VFP_TABLE")->getInt(0);
+        p.LiquidRate     = record.getItem("LRAT"     ).getSIDouble(0);
+        p.ResVRate       = record.getItem("RESV"     ).getSIDouble(0);
+        p.BHPLimit       = record.getItem("BHP"      ).getSIDouble(0);
+        p.THPLimit       = record.getItem("THP"      ).getSIDouble(0);
+        p.ALQValue       = record.getItem("ALQ"      ).get< double >(0); //NOTE: Unit of ALQ is never touched
+        p.VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
 
         for (auto const& modeKey : {"ORAT", "WRAT", "GRAT", "LRAT","RESV", "BHP" , "THP"}) {
-             if (!record->getItem(modeKey)->defaultApplied(0)) {
+             if (!record.getItem(modeKey).defaultApplied(0)) {
                  auto cmode = WellProducer::ControlModeFromString( modeKey );
                  p.addProductionControl( cmode );
             }
@@ -91,9 +87,9 @@ namespace Opm {
 
 
         {
-            const auto cmodeItem = record->getItem("CMODE");
-            if (cmodeItem->hasValue(0)) {
-                const WellProducer::ControlModeEnum cmode = WellProducer::ControlModeFromString( cmodeItem->getString(0) );
+            const auto& cmodeItem = record.getItem("CMODE");
+            if (cmodeItem.hasValue(0)) {
+                const WellProducer::ControlModeEnum cmode = WellProducer::ControlModeFromString( cmodeItem.get< std::string >(0) );
 
                 if (p.hasProductionControl( cmode ))
                     p.controlMode = cmode;
@@ -104,21 +100,6 @@ namespace Opm {
         return p;
     }
 
-
-    void WellProductionProperties::init() {
-        OilRate = 0.0;
-        WaterRate = 0.0;
-        GasRate = 0.0;
-        LiquidRate = 0.0;
-        ResVRate = 0.0;
-        THPLimit = 0.0;
-        BHPLimit = 0.0;
-        VFPTableNumber = 0;
-        ALQValue = 0.0;
-        controlMode = WellProducer::CMODE_UNDEFINED;
-
-        m_productionControls = 0;
-    }
 
     bool WellProductionProperties::operator==(const WellProductionProperties& other) const {
         if ((OilRate == other.OilRate) &&

@@ -45,7 +45,7 @@ namespace Opm {
 
         virtual void push_backDimension(const std::string& dimension);
         virtual const std::string& getDimension(size_t index) const;
-        virtual std::shared_ptr< DeckItem > scan(std::shared_ptr< RawRecord > rawRecord) const = 0;
+        virtual DeckItem scan(std::shared_ptr< RawRecord > rawRecord) const = 0;
         virtual bool hasDimension() const;
         virtual size_t numDimensions() const;
         const std::string className() const;
@@ -145,9 +145,9 @@ namespace Opm {
     /// Scans the rawRecords data according to the ParserItems definition.
     /// returns a DeckItem object.
     /// NOTE: data are popped from the rawRecords deque!
-    template<typename ParserItemType , typename DeckItemType , typename ValueType>
-    std::shared_ptr< DeckItem > ParserItemScan(const ParserItemType * self , std::shared_ptr< RawRecord > rawRecord) {
-        std::shared_ptr<DeckItemType> deckItem = std::make_shared<DeckItemType>( self->name() , self->scalar() );
+    template<typename ParserItemType, typename ValueType>
+    DeckItem ParserItemScan(const ParserItemType * self , std::shared_ptr< RawRecord > rawRecord) {
+        auto deckItem = DeckItem::make< ValueType >( self->name() );
 
         if (self->sizeType() == ALL) {
             while (rawRecord->size() > 0) {
@@ -161,15 +161,15 @@ namespace Opm {
 
                     if (st.hasValue()) {
                         value = readValueToken<ValueType>(st.valueString());
-                        deckItem->push_backMultiple( value , st.count());
+                        deckItem.push_back( value , st.count());
                     } else {
                         value = self->getDefault();
                         for (size_t i=0; i < st.count(); i++)
-                            deckItem->push_backDefault( value );
+                            deckItem.push_backDefault( value );
                     }
                 } else {
                     ValueType value = readValueToken<ValueType>(token);
-                    deckItem->push_back(value);
+                    deckItem.push_back(value);
                 }
             }
         } else {
@@ -177,11 +177,11 @@ namespace Opm {
                 // if the record was ended prematurely,
                 if (self->hasDefault()) {
                     // use the default value for the item, if there is one...
-                    deckItem->push_backDefault( self->getDefault() );
+                    deckItem.push_backDefault( self->getDefault() );
                 } else {
                     // ... otherwise indicate that the deck item should throw once the
                     // item's data is accessed.
-                    deckItem->push_backDummyDefault();
+                    deckItem.push_backDummyDefault();
                 }
             } else {
                 // The '*' should be interpreted as a repetition indicator, but it must
@@ -194,11 +194,11 @@ namespace Opm {
 
                     if (!st.hasValue()) {
                         if (self->hasDefault())
-                            deckItem->push_backDefault( self->getDefault() );
+                            deckItem.push_backDefault( self->getDefault() );
                         else
-                            deckItem->push_backDummyDefault();
+                            deckItem.push_backDummyDefault();
                     } else
-                        deckItem->push_back(readValueToken<ValueType>(st.valueString()));
+                        deckItem.push_back(readValueToken<ValueType>(st.valueString()));
 
                     // replace the first occurence of "N*FOO" by a sequence of N-1 times
                     // "1*FOO". this is slightly hacky, but it makes it work if the
@@ -213,11 +213,11 @@ namespace Opm {
                         rawRecord->push_front(singleRepetition);
                 } else {
                     ValueType value = readValueToken<ValueType>(token);
-                    deckItem->push_back(value);
+                    deckItem.push_back(value);
                 }
             }
         }
-        return deckItem;
+        return std::move( deckItem );
     }
 
 

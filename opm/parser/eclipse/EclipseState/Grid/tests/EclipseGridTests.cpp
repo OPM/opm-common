@@ -42,12 +42,9 @@
 
 BOOST_AUTO_TEST_CASE(CreateMissingDIMENS_throws) {
     Opm::DeckPtr deck(new Opm::Deck());
-    Opm::DeckKeywordPtr test0(new Opm::DeckKeyword("RUNSPEC"));
-    Opm::DeckKeywordPtr test1(new Opm::DeckKeyword("GRID"));
-    Opm::DeckKeywordPtr test2(new Opm::DeckKeyword("EDIT"));
-    deck->addKeyword(test0);
-    deck->addKeyword(test1);
-    deck->addKeyword(test2);
+    deck->addKeyword( Opm::DeckKeyword( "RUNSPEC" ) );
+    deck->addKeyword( Opm::DeckKeyword( "GRID" ) );
+    deck->addKeyword( Opm::DeckKeyword( "EDIT" ) );
 
     BOOST_CHECK_THROW(new Opm::EclipseGrid( deck ) , std::invalid_argument);
 }
@@ -566,8 +563,8 @@ BOOST_AUTO_TEST_CASE(CornerPointSizeMismatchCOORD) {
 
     Opm::ParserPtr parser(new Opm::Parser());
     Opm::DeckConstPtr deck = parser->parseString(deckData, Opm::ParseMode()) ;
-    Opm::DeckKeywordConstPtr zcorn = deck->getKeyword("ZCORN");
-    BOOST_CHECK_EQUAL( 8000U , zcorn->getDataSize( ));
+    const auto& zcorn = deck->getKeyword("ZCORN");
+    BOOST_CHECK_EQUAL( 8000U , zcorn.getDataSize( ));
 
     BOOST_CHECK_THROW(Opm::EclipseGrid( std::move(deck) ) , std::invalid_argument);
 }
@@ -591,7 +588,6 @@ BOOST_AUTO_TEST_CASE(CornerPointSizeMismatchZCORN) {
 
     Opm::ParserPtr parser(new Opm::Parser());
     Opm::DeckConstPtr deck = parser->parseString(deckData, Opm::ParseMode()) ;
-    Opm::DeckKeywordConstPtr zcorn = deck->getKeyword("ZCORN");
     BOOST_CHECK_THROW((void)Opm::EclipseGrid(deck), std::invalid_argument);
 }
 

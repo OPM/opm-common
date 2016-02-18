@@ -35,6 +35,7 @@ namespace Opm {
     class Deck;
     class DeckItem;
     class DeckKeyword;
+    class DeckRecord;
     class EclipseGrid;
     class Fault;
     class FaultCollection;
@@ -72,7 +73,7 @@ namespace Opm {
         std::string getTitle() const;
         bool supportsGridProperty(const std::string& keyword, int enabledTypes=AllProperties) const;
 
-        std::shared_ptr<GridProperty<int> > getRegion(std::shared_ptr< const DeckItem > regionItem) const;
+        std::shared_ptr<GridProperty<int> > getRegion( const DeckItem& regionItem ) const;
         std::shared_ptr<GridProperty<int> > getDefaultRegion() const;
         std::shared_ptr<GridProperty<int> > getIntGridProperty( const std::string& keyword ) const;
         std::shared_ptr<GridProperty<double> > getDoubleGridProperty( const std::string& keyword ) const;
@@ -80,7 +81,7 @@ namespace Opm {
         bool hasDoubleGridProperty(const std::string& keyword) const;
 
         void loadGridPropertyFromDeckKeyword(std::shared_ptr<const Box> inputBox,
-                                             std::shared_ptr< const DeckKeyword > deckKeyword,
+                                             const DeckKeyword& deckKeyword,
                                              int enabledTypes = AllProperties);
 
         std::shared_ptr<const FaultCollection> getFaults() const;
@@ -94,7 +95,7 @@ namespace Opm {
         // the unit system used by the deck. note that it is rarely needed to convert
         // units because internally to opm-parser everything is represented by SI
         // units...
-        std::shared_ptr<const UnitSystem> getDeckUnitSystem()  const;
+        const UnitSystem& getDeckUnitSystem()  const;
         void applyModifierDeck( std::shared_ptr<const Deck> deck);
 
     private:
@@ -122,19 +123,19 @@ namespace Opm {
 
         void processGridProperties(std::shared_ptr< const Deck > deck, int enabledTypes);
         void scanSection(std::shared_ptr<Opm::Section> section , int enabledTypes);
-        void handleADDKeyword(std::shared_ptr< const DeckKeyword > deckKeyword  , BoxManager& boxManager, int enabledTypes);
-        void handleBOXKeyword(std::shared_ptr< const DeckKeyword > deckKeyword  , BoxManager& boxManager);
-        void handleCOPYKeyword(std::shared_ptr< const DeckKeyword > deckKeyword , BoxManager& boxManager, int enabledTypes);
+        void handleADDKeyword(const DeckKeyword& deckKeyword  , BoxManager& boxManager, int enabledTypes);
+        void handleBOXKeyword(const DeckKeyword& deckKeyword  , BoxManager& boxManager);
+        void handleCOPYKeyword(const DeckKeyword& deckKeyword , BoxManager& boxManager, int enabledTypes);
         void handleENDBOXKeyword(BoxManager& boxManager);
-        void handleEQUALSKeyword(std::shared_ptr< const DeckKeyword > deckKeyword   , BoxManager& boxManager, int enabledTypes);
-        void handleMULTIPLYKeyword(std::shared_ptr< const DeckKeyword > deckKeyword , BoxManager& boxManager, int enabledTypes);
+        void handleEQUALSKeyword(const DeckKeyword& deckKeyword   , BoxManager& boxManager, int enabledTypes);
+        void handleMULTIPLYKeyword(const DeckKeyword& deckKeyword , BoxManager& boxManager, int enabledTypes);
 
-        void handleEQUALREGKeyword(std::shared_ptr< const DeckKeyword > deckKeyword, int enabledTypes);
-        void handleMULTIREGKeyword(std::shared_ptr< const DeckKeyword > deckKeyword, int enabledTypes);
-        void handleADDREGKeyword(std::shared_ptr< const DeckKeyword > deckKeyword  , int enabledTypes);
-        void handleCOPYREGKeyword(std::shared_ptr< const DeckKeyword > deckKeyword , int enabledTypes);
+        void handleEQUALREGKeyword(const DeckKeyword& deckKeyword, int enabledTypes);
+        void handleMULTIREGKeyword(const DeckKeyword& deckKeyword, int enabledTypes);
+        void handleADDREGKeyword(const DeckKeyword& deckKeyword  , int enabledTypes);
+        void handleCOPYREGKeyword(const DeckKeyword& deckKeyword , int enabledTypes);
 
-        void setKeywordBox(std::shared_ptr< const DeckKeyword > deckKeyword, size_t recordIdx, BoxManager& boxManager);
+        void setKeywordBox( const DeckKeyword& deckKeyword, const DeckRecord&, BoxManager& boxManager);
 
         void copyIntKeyword(const std::string& srcField , const std::string& targetField , std::shared_ptr<const Box> inputBox);
         void copyDoubleKeyword(const std::string& srcField , const std::string& targetField , std::shared_ptr<const Box> inputBox);
@@ -151,7 +152,7 @@ namespace Opm {
 
         std::set<enum Phase::PhaseEnum> phases;
         std::string m_title;
-        std::shared_ptr<const UnitSystem> m_deckUnitSystem;
+        const UnitSystem& m_deckUnitSystem;
         std::shared_ptr<GridProperties<int> > m_intGridProperties;
         std::shared_ptr<GridProperties<double> > m_doubleGridProperties;
         std::shared_ptr<TransMult> m_transMult;

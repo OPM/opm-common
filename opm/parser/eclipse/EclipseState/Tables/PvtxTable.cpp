@@ -40,24 +40,20 @@ namespace Opm {
       have been explicitly set before calling this method.
     */
 
-    void PvtxTable::init(Opm::DeckKeywordConstPtr keyword , size_t tableIdx) {
+    void PvtxTable::init( const DeckKeyword& keyword, size_t tableIdx) {
         auto ranges = recordRanges( keyword );
         if (tableIdx >= ranges.size())
-            throw std::invalid_argument("Asked for table: " + std::to_string( tableIdx ) + " in keyword + " + keyword->name() + " which only has " + std::to_string( ranges.size() ) + " tables");
+            throw std::invalid_argument("Asked for table: " + std::to_string( tableIdx ) + " in keyword + " + keyword.name() + " which only has " + std::to_string( ranges.size() ) + " tables");
 
         {
             auto range = ranges[ tableIdx ];
             for (size_t  rowIdx = range.first; rowIdx < range.second; rowIdx++) {
-                Opm::DeckRecordConstPtr deckRecord = keyword->getRecord(rowIdx);
-                {
-                    Opm::DeckItemConstPtr indexItem = deckRecord->getItem(0);
-                    m_outerColumn.addValue( indexItem->getSIDouble( 0 ));
-                }
-                {
-                    Opm::DeckItemConstPtr dataItem = deckRecord->getItem(1);
-                    std::shared_ptr<SimpleTable> underSaturatedTable = std::make_shared<SimpleTable>(m_underSaturatedSchema , dataItem);
-                    m_underSaturatedTables.push_back( underSaturatedTable );
-                }
+                const auto& deckRecord = keyword.getRecord(rowIdx);
+                m_outerColumn.addValue( deckRecord.getItem( 0 ).getSIDouble( 0 ));
+
+                const auto& dataItem = deckRecord.getItem(1);
+                std::shared_ptr<SimpleTable> underSaturatedTable = std::make_shared<SimpleTable>(m_underSaturatedSchema , dataItem);
+                m_underSaturatedTables.push_back( underSaturatedTable );
             }
 
 
@@ -112,20 +108,20 @@ namespace Opm {
     }
 
 
-    size_t PvtxTable::numTables(Opm::DeckKeywordConstPtr keyword)
+    size_t PvtxTable::numTables( const DeckKeyword& keyword )
     {
         auto ranges = recordRanges(keyword);
         return ranges.size();
     }
 
 
-    std::vector<std::pair<size_t , size_t> > PvtxTable::recordRanges(Opm::DeckKeywordConstPtr keyword) {
+    std::vector<std::pair<size_t , size_t> > PvtxTable::recordRanges( const DeckKeyword& keyword ) {
         std::vector<std::pair<size_t,size_t> > ranges;
         size_t startRecord = 0;
         size_t recordIndex = 0;
-        while (recordIndex < keyword->size()) {
-            auto item = keyword->getRecord(recordIndex)->getItem(0);
-            if (item->size( ) == 0) {
+        while (recordIndex < keyword.size()) {
+            const auto& item = keyword.getRecord(recordIndex).getItem(0);
+            if (item.size( ) == 0) {
                 ranges.push_back( std::make_pair( startRecord , recordIndex ) );
                 startRecord = recordIndex + 1;
             }

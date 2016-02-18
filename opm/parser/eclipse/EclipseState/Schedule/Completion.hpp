@@ -67,8 +67,8 @@ namespace Opm {
 
         WellCompletion::DirectionEnum getDirection() const;
 
-        static std::map<std::string , std::vector<std::shared_ptr<Completion> > >  completionsFromCOMPDATKeyword( std::shared_ptr< const DeckKeyword > compdatKeyword );
-        static std::pair<std::string , std::vector<std::shared_ptr<Completion> > > completionsFromCOMPDATRecord( std::shared_ptr< const DeckRecord > compdatRecord );
+        static std::map<std::string , std::vector<std::shared_ptr<Completion> > >  completionsFromCOMPDATKeyword( const DeckKeyword& compdatKeyword );
+        static std::pair<std::string , std::vector<std::shared_ptr<Completion> > > completionsFromCOMPDATRecord( const DeckRecord&  compdatRecord );
 
     private:
         int m_i, m_j, m_k;

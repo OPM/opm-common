@@ -27,7 +27,7 @@ namespace Opm {
 
     class PlyviscTable : public SimpleTable {
     public:
-        PlyviscTable( std::shared_ptr< const DeckItem > item );
+        PlyviscTable( const DeckItem& item );
 
         const TableColumn& getPolymerConcentrationColumn() const;
         const TableColumn& getViscosityMultiplierColumn() const;

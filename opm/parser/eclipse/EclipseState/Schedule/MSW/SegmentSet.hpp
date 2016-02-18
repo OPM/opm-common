@@ -48,7 +48,7 @@ namespace Opm {
         int numberToLocation(const int segment_number) const;
         void addSegment(std::shared_ptr< const Segment > new_segment);
 
-        void segmentsFromWELSEGSKeyword(std::shared_ptr< const DeckKeyword > welsegsKeyword);
+        void segmentsFromWELSEGSKeyword( const DeckKeyword& welsegsKeyword);
 
         SegmentSet* shallowCopy() const;
 

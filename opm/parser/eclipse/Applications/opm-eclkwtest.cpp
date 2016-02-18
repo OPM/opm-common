@@ -36,13 +36,13 @@ static void printDeckDiagnostics(Opm::DeckConstPtr deck, bool printAllKeywords) 
     int unrecognizedKeywords = 0;
 
     for (size_t i = 0; i < deck->size(); i++) {
-        if (!deck->getKeyword(i)->isKnown())
+        if (!deck->getKeyword(i).isKnown())
             unrecognizedKeywords++;
         else
             recognizedKeywords++;
 
         if (printAllKeywords) {
-            std::cout << "Keyword (" << i << "): " << deck->getKeyword(i)->name() << " " << std::endl;
+            std::cout << "Keyword (" << i << "): " << deck->getKeyword(i).name() << " " << std::endl;
         }
     }
 

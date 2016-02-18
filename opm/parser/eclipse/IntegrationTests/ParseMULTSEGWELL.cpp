@@ -41,22 +41,22 @@ BOOST_AUTO_TEST_CASE( PARSE_MULTISEGMENT_ABS ) {
     std::string deckFile("testdata/integration_tests/SCHEDULE/SCHEDULE_MULTISEGMENT_WELL");
     DeckPtr deck =  parser->parseFile(deckFile, ParseMode());
     // for WELSEGS keyword
-    DeckKeywordConstPtr kw = deck->getKeyword("WELSEGS");
+    const auto& kw = deck->getKeyword("WELSEGS");
 
     // check the size of the keywords
-    BOOST_CHECK_EQUAL( 6, kw->size() );
+    BOOST_CHECK_EQUAL( 6, kw.size() );
 
     // check the information for the top segment and the segment set
     {
-        DeckRecordConstPtr rec1 = kw->getRecord(0); // top segment
+        const auto& rec1 = kw.getRecord(0); // top segment
 
-        const std::string well_name = rec1->getItem("WELL")->getTrimmedString(0);
-        const double depth_top = rec1->getItem("DEPTH")->getRawDouble(0);
-        const double length_top = rec1->getItem("LENGTH")->getRawDouble(0);
-        const double volume_top = rec1->getItem("WELLBORE_VOLUME")->getRawDouble(0);
-        const WellSegment::LengthDepthEnum length_depth_type = WellSegment::LengthDepthEnumFromString(rec1->getItem("INFO_TYPE")->getTrimmedString(0));
-        const WellSegment::CompPressureDropEnum comp_pressure_drop = WellSegment::CompPressureDropEnumFromString(rec1->getItem("PRESSURE_COMPONENTS")->getTrimmedString(0));
-        const WellSegment::MultiPhaseModelEnum multiphase_model = WellSegment::MultiPhaseModelEnumFromString(rec1->getItem("FLOW_MODEL")->getTrimmedString(0));
+        const std::string well_name = rec1.getItem("WELL").getTrimmedString(0);
+        const double depth_top = rec1.getItem("DEPTH").get< double >(0);
+        const double length_top = rec1.getItem("LENGTH").get< double >(0);
+        const double volume_top = rec1.getItem("WELLBORE_VOLUME").get< double >(0);
+        const WellSegment::LengthDepthEnum length_depth_type = WellSegment::LengthDepthEnumFromString(rec1.getItem("INFO_TYPE").getTrimmedString(0));
+        const WellSegment::CompPressureDropEnum comp_pressure_drop = WellSegment::CompPressureDropEnumFromString(rec1.getItem("PRESSURE_COMPONENTS").getTrimmedString(0));
+        const WellSegment::MultiPhaseModelEnum multiphase_model = WellSegment::MultiPhaseModelEnumFromString(rec1.getItem("FLOW_MODEL").getTrimmedString(0));
 
         BOOST_CHECK_EQUAL( "PROD01", well_name );
         BOOST_CHECK_EQUAL( 2512.5, depth_top );
@@ -73,17 +73,17 @@ BOOST_AUTO_TEST_CASE( PARSE_MULTISEGMENT_ABS ) {
     // check the information for the other segments
     // Here, we check the information for the segment 2 and 6 as samples.
     {
-        DeckRecordConstPtr rec2 = kw->getRecord(1);
-        const int segment1 = rec2->getItem("SEGMENT2")->getInt(0);
-        const int segment2 = rec2->getItem("SEGMENT2")->getInt(0);
+        const auto& rec2 = kw.getRecord(1);
+        const int segment1 = rec2.getItem("SEGMENT2").get< int >(0);
+        const int segment2 = rec2.getItem("SEGMENT2").get< int >(0);
         BOOST_CHECK_EQUAL( 2, segment1 );
         BOOST_CHECK_EQUAL( 2, segment2 );
-        const int branch = rec2->getItem("BRANCH")->getInt(0);
-        const int outlet_segment = rec2->getItem("JOIN_SEGMENT")->getInt(0);
-        const double segment_length = rec2->getItem("SEGMENT_LENGTH")->getRawDouble(0);
-        const double depth_change = rec2->getItem("DEPTH_CHANGE")->getRawDouble(0);
-        const double diameter = rec2->getItem("DIAMETER")->getRawDouble(0);
-        const double roughness = rec2->getItem("ROUGHNESS")->getRawDouble(0);
+        const int branch = rec2.getItem("BRANCH").get< int >(0);
+        const int outlet_segment = rec2.getItem("JOIN_SEGMENT").get< int >(0);
+        const double segment_length = rec2.getItem("SEGMENT_LENGTH").get< double >(0);
+        const double depth_change = rec2.getItem("DEPTH_CHANGE").get< double >(0);
+        const double diameter = rec2.getItem("DIAMETER").get< double >(0);
+        const double roughness = rec2.getItem("ROUGHNESS").get< double >(0);
         BOOST_CHECK_EQUAL( 1, branch );
         BOOST_CHECK_EQUAL( 1, outlet_segment );
         BOOST_CHECK_EQUAL( 2537.5, segment_length );
@@ -93,17 +93,17 @@ BOOST_AUTO_TEST_CASE( PARSE_MULTISEGMENT_ABS ) {
     }
 
     {
-        DeckRecordConstPtr rec6 = kw->getRecord(5);
-        const int segment1 = rec6->getItem("SEGMENT2")->getInt(0);
-        const int segment2 = rec6->getItem("SEGMENT2")->getInt(0);
+        const auto& rec6 = kw.getRecord(5);
+        const int segment1 = rec6.getItem("SEGMENT2").get< int >(0);
+        const int segment2 = rec6.getItem("SEGMENT2").get< int >(0);
         BOOST_CHECK_EQUAL( 6, segment1 );
         BOOST_CHECK_EQUAL( 6, segment2 );
-        const int branch = rec6->getItem("BRANCH")->getInt(0);
-        const int outlet_segment = rec6->getItem("JOIN_SEGMENT")->getInt(0);
-        const double segment_length = rec6->getItem("SEGMENT_LENGTH")->getRawDouble(0);
-        const double depth_change = rec6->getItem("DEPTH_CHANGE")->getRawDouble(0);
-        const double diameter = rec6->getItem("DIAMETER")->getRawDouble(0);
-        const double roughness = rec6->getItem("ROUGHNESS")->getRawDouble(0);
+        const int branch = rec6.getItem("BRANCH").get< int >(0);
+        const int outlet_segment = rec6.getItem("JOIN_SEGMENT").get< int >(0);
+        const double segment_length = rec6.getItem("SEGMENT_LENGTH").get< double >(0);
+        const double depth_change = rec6.getItem("DEPTH_CHANGE").get< double >(0);
+        const double diameter = rec6.getItem("DIAMETER").get< double >(0);
+        const double roughness = rec6.getItem("ROUGHNESS").get< double >(0);
         BOOST_CHECK_EQUAL( 2, branch );
         BOOST_CHECK_EQUAL( 5, outlet_segment );
         BOOST_CHECK_EQUAL( 3137.5, segment_length );
@@ -113,25 +113,25 @@ BOOST_AUTO_TEST_CASE( PARSE_MULTISEGMENT_ABS ) {
     }
 
     // for COMPSEG keyword
-    DeckKeywordConstPtr kw1 = deck->getKeyword("COMPSEGS");
+    const auto& kw1 = deck->getKeyword("COMPSEGS");
     // check the size of the keywords
-    BOOST_CHECK_EQUAL( 7, kw1->size() );
+    BOOST_CHECK_EQUAL( 7, kw1.size() );
     // first record only contains the well name
     {
-        DeckRecordConstPtr rec1 = kw1->getRecord(0);
-        const std::string well_name = rec1->getItem("WELL")->getTrimmedString(0);
+        const auto& rec1 = kw1.getRecord(0);
+        const std::string well_name = rec1.getItem("WELL").getTrimmedString(0);
         BOOST_CHECK_EQUAL( "PROD01", well_name );
     }
 
     // check the third record and the seventh record
     {
-        DeckRecordConstPtr rec3 = kw1->getRecord(2);
-        const int i = rec3->getItem("I")->getInt(0);
-        const int j = rec3->getItem("J")->getInt(0);
-        const int k = rec3->getItem("K")->getInt(0);
-        const int branch = rec3->getItem("BRANCH")->getInt(0);
-        const double distance_start = rec3->getItem("DISTANCE_START")->getRawDouble(0);
-        const double distance_end = rec3->getItem("DISTANCE_END")->getRawDouble(0);
+        const auto& rec3 = kw1.getRecord(2);
+        const int i = rec3.getItem("I").get< int >(0);
+        const int j = rec3.getItem("J").get< int >(0);
+        const int k = rec3.getItem("K").get< int >(0);
+        const int branch = rec3.getItem("BRANCH").get< int >(0);
+        const double distance_start = rec3.getItem("DISTANCE_START").get< double >(0);
+        const double distance_end = rec3.getItem("DISTANCE_END").get< double >(0);
 
         BOOST_CHECK_EQUAL( 20, i );
         BOOST_CHECK_EQUAL(  1, j );
@@ -142,13 +142,13 @@ BOOST_AUTO_TEST_CASE( PARSE_MULTISEGMENT_ABS ) {
     }
 
     {
-        DeckRecordConstPtr rec7 = kw1->getRecord(6);
-        const int i = rec7->getItem("I")->getInt(0);
-        const int j = rec7->getItem("J")->getInt(0);
-        const int k = rec7->getItem("K")->getInt(0);
-        const int branch = rec7->getItem("BRANCH")->getInt(0);
-        const double distance_start = rec7->getItem("DISTANCE_START")->getRawDouble(0);
-        const double distance_end = rec7->getItem("DISTANCE_END")->getRawDouble(0);
+        const auto& rec7 = kw1.getRecord(6);
+        const int i = rec7.getItem("I").get< int >(0);
+        const int j = rec7.getItem("J").get< int >(0);
+        const int k = rec7.getItem("K").get< int >(0);
+        const int branch = rec7.getItem("BRANCH").get< int >(0);
+        const double distance_start = rec7.getItem("DISTANCE_START").get< double >(0);
+        const double distance_end = rec7.getItem("DISTANCE_END").get< double >(0);
 
         BOOST_CHECK_EQUAL( 17, i );
         BOOST_CHECK_EQUAL(  1, j );

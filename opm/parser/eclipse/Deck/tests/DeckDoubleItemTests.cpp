@@ -25,80 +25,76 @@
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 #include <stdexcept>
-#include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
-#include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
-#include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
 
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(InitializeDouble) {
-    BOOST_REQUIRE_NO_THROW(DeckDoubleItem deckDoubleItem("TEST"));
+    BOOST_REQUIRE_NO_THROW( DeckItem::make< double >("HEI") );
 }
 
 BOOST_AUTO_TEST_CASE(GetDoubleAtIndex_NoData_ExceptionThrown) {
-    DeckDoubleItem deckDoubleItem("TEST");
+    auto deckDoubleItem = DeckItem::make< double >("TEST");
 
-    BOOST_CHECK_THROW(deckDoubleItem.getRawDouble(0), std::out_of_range);
+    BOOST_CHECK_THROW(deckDoubleItem.get< double >(0), std::out_of_range);
     deckDoubleItem.push_back(1.89);
-    BOOST_CHECK_THROW(deckDoubleItem.getRawDouble(1), std::out_of_range);
+    BOOST_CHECK_THROW(deckDoubleItem.get< double >(1), std::out_of_range);
 }
 
 
 BOOST_AUTO_TEST_CASE(sizeDouble_correct) {
-    DeckDoubleItem deckDoubleItem("TEST");
+    auto deckDoubleItem = DeckItem::make< double >("TEST");
 
     BOOST_CHECK_EQUAL( 0U , deckDoubleItem.size());
-    deckDoubleItem.push_back( 100 );
+    deckDoubleItem.push_back( 100.0 );
     BOOST_CHECK_EQUAL( 1U , deckDoubleItem.size());
 
-    deckDoubleItem.push_back( 100 );
-    deckDoubleItem.push_back( 100 );
+    deckDoubleItem.push_back( 100.0 );
+    deckDoubleItem.push_back( 100.0 );
     BOOST_CHECK_EQUAL( 3U , deckDoubleItem.size());
 }
 
 
 
 BOOST_AUTO_TEST_CASE(SetInDeck) {
-    DeckDoubleItem deckDoubleItem("TEST");
+    auto deckDoubleItem = DeckItem::make< double >("TEST");
     BOOST_CHECK( deckDoubleItem.size() == 0 );
 
-    deckDoubleItem.push_backDefault( 1 );
+    deckDoubleItem.push_backDefault( 1.0 );
     BOOST_CHECK( deckDoubleItem.size() == 1 );
     BOOST_CHECK_EQUAL( true , deckDoubleItem.defaultApplied(0) );
 
-    deckDoubleItem.push_back( 10 );
+    deckDoubleItem.push_back( 10.0 );
     BOOST_CHECK( deckDoubleItem.size() == 2 );
     BOOST_CHECK_EQUAL( false , deckDoubleItem.defaultApplied(1) );
 
-    deckDoubleItem.push_backDefault( 1 );
+    deckDoubleItem.push_backDefault( 1.0 );
     BOOST_CHECK( deckDoubleItem.size() == 3 );
     BOOST_CHECK_EQUAL( true , deckDoubleItem.defaultApplied(2) );
 }
 
 BOOST_AUTO_TEST_CASE(DummyDefaults) {
-    DeckDoubleItem deckDoubleItem("TEST");
+    auto deckDoubleItem = DeckItem::make< double >("TEST");
     BOOST_CHECK_EQUAL(deckDoubleItem.size(), 0);
 
     deckDoubleItem.push_backDummyDefault();
     BOOST_CHECK_EQUAL(deckDoubleItem.size(), 0);
     BOOST_CHECK_EQUAL(true, deckDoubleItem.defaultApplied(0));
-    BOOST_CHECK_THROW(deckDoubleItem.getRawDouble(0), std::out_of_range);
+    BOOST_CHECK_THROW(deckDoubleItem.get< double >(0), std::out_of_range);
 }
 
 BOOST_AUTO_TEST_CASE(PushBackMultiple) {
-    DeckDoubleItem item("HEI");
-    item.push_backMultiple(10.22 , 100 );
+    auto item = DeckItem::make< double >("HEI");
+    item.push_back(10.22 , 100 );
     BOOST_CHECK_EQUAL( 100U , item.size() );
     for (size_t i=0; i < 100; i++)
-        BOOST_CHECK_EQUAL(10.22 , item.getRawDouble(i));
+        BOOST_CHECK_EQUAL(10.22 , item.get< double >(i));
 }
 
-
-
 BOOST_AUTO_TEST_CASE(PushBackDimension) {
-    DeckDoubleItem item("HEI");
+    auto item = DeckItem::make< double >("HEI");
     std::shared_ptr<Dimension> activeDimension(new Dimension("Length" , 100));
     std::shared_ptr<Dimension> defaultDimension(new Dimension("Length" , 10));
 
@@ -110,57 +106,51 @@ BOOST_AUTO_TEST_CASE(PushBackDimension) {
 }
 
 BOOST_AUTO_TEST_CASE(PushBackDimensionInvalidType) {
-    DeckIntItem item("HEI");
+    auto item = DeckItem::make< int >("HEI");
     std::shared_ptr<Dimension> dim(new Dimension("Length" , 100));
-    BOOST_CHECK_THROW( item.push_backDimension( dim , dim ) , std::invalid_argument );
+    BOOST_CHECK_THROW( item.push_backDimension( dim , dim ) , std::logic_error );
 }
-
-
 
 BOOST_AUTO_TEST_CASE(GetSIWithoutDimensionThrows) {
-    DeckDoubleItem item("HEI");
-    item.push_backMultiple(10.22 , 100 );
+    auto item = DeckItem::make< double >("HEI");
+    item.push_back(10.22 , 100 );
 
     BOOST_CHECK_THROW( item.getSIDouble(0) , std::invalid_argument );
-    BOOST_CHECK_THROW( item.getSIDoubleData( ) , std::invalid_argument );
+    BOOST_CHECK_THROW( item.getSIDoubleData() , std::invalid_argument );
 }
 
-
-
 BOOST_AUTO_TEST_CASE(GetSISingleDimensionCorrect) {
-    DeckDoubleItem item("HEI");
+    auto item = DeckItem::make< double >("HEI");
     std::shared_ptr<Dimension> dim(new Dimension("Length" , 100));
 
-    item.push_backMultiple(1 , 100 );
+    item.push_back(1.0 , 100 );
     item.push_backDimension( dim , dim );
 
-    BOOST_CHECK_EQUAL( 1   , item.getRawDouble(0) );
+    BOOST_CHECK_EQUAL( 1.0   , item.get< double >(0) );
     BOOST_CHECK_EQUAL( 100 , item.getSIDouble(0) );
 }
 
-
 BOOST_AUTO_TEST_CASE(GetSISingleDefault) {
-    DeckDoubleItem item("HEI");
+    auto item = DeckItem::make< double >("HEI");
     std::shared_ptr<Dimension> dim(new Dimension("Length" , 1));
     std::shared_ptr<Dimension> defaultDim(new Dimension("Length" , 100));
 
-    item.push_backDefault(1 );
+    item.push_backDefault( 1.0 );
     item.push_backDimension( dim , defaultDim );
 
-    BOOST_CHECK_EQUAL( 1   , item.getRawDouble(0) );
+    BOOST_CHECK_EQUAL( 1   , item.get< double >(0) );
     BOOST_CHECK_EQUAL( 100 , item.getSIDouble(0) );
 }
 
-
 BOOST_AUTO_TEST_CASE(GetSIMultipleDim) {
-    DeckDoubleItem item("HEI");
+    auto item = DeckItem::make< double >("HEI");
     std::shared_ptr<Dimension> dim1(new Dimension("Length" , 2));
     std::shared_ptr<Dimension> dim2(new Dimension("Length" , 4));
     std::shared_ptr<Dimension> dim3(new Dimension("Length" , 8));
     std::shared_ptr<Dimension> dim4(new Dimension("Length" ,16));
     std::shared_ptr<Dimension> defaultDim(new Dimension("Length" , 100));
 
-    item.push_backMultiple( 1 , 16 );
+    item.push_back( 1.0, 16 );
     item.push_backDimension( dim1 , defaultDim );
     item.push_backDimension( dim2 , defaultDim );
     item.push_backDimension( dim3 , defaultDim );
@@ -173,6 +163,4 @@ BOOST_AUTO_TEST_CASE(GetSIMultipleDim) {
         BOOST_CHECK_EQUAL(16   , item.getSIDouble(i+3) );
     }
 }
-
-
 

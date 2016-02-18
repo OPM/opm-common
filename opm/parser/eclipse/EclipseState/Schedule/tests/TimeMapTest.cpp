@@ -33,8 +33,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Deck/DeckIntItem.hpp>
-#include <opm/parser/eclipse/Deck/DeckStringItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -105,51 +104,51 @@ BOOST_AUTO_TEST_CASE(AddStepSizeCorrect) {
 
 
 BOOST_AUTO_TEST_CASE( dateFromEclipseThrowsInvalidRecord ) {
-    Opm::DeckRecordPtr  startRecord(new  Opm::DeckRecord());
-    Opm::DeckIntItemPtr    dayItem( new  Opm::DeckIntItem("DAY") );
-    Opm::DeckStringItemPtr monthItem(new Opm::DeckStringItem("MONTH") );
-    Opm::DeckIntItemPtr    yearItem(new  Opm::DeckIntItem("YEAR"));
-    Opm::DeckStringItemPtr timeItem(new Opm::DeckStringItem("TIME") );
-    Opm::DeckIntItemPtr    extraItem(new  Opm::DeckIntItem("EXTRA"));
+    Opm::DeckRecord startRecord;
+    auto dayItem = Opm::DeckItem::make< int >("DAY");
+    auto monthItem = Opm::DeckItem::make< std::string >("MONTH");
+    auto yearItem = Opm::DeckItem::make< int >("YEAR");
+    auto timeItem = Opm::DeckItem::make< std::string >("TIME");
+    auto extraItem = Opm::DeckItem::make< int >("EXTRA");
 
-    dayItem->push_back( 10 );
-    yearItem->push_back(1987 );
-    monthItem->push_back("FEB");
-    timeItem->push_back("00:00:00.000");
+    dayItem.push_back( 10 );
+    yearItem.push_back(1987 );
+    monthItem.push_back("FEB");
+    timeItem.push_back("00:00:00.000");
 
     BOOST_CHECK_THROW( Opm::TimeMap::timeFromEclipse( startRecord ) , std::invalid_argument );
 
-    startRecord->addItem( dayItem );
+    startRecord.addItem( std::move( dayItem ) );
     BOOST_CHECK_THROW( Opm::TimeMap::timeFromEclipse( startRecord ) , std::invalid_argument );
 
-    startRecord->addItem( monthItem );
+    startRecord.addItem( std::move( monthItem ) );
     BOOST_CHECK_THROW( Opm::TimeMap::timeFromEclipse( startRecord ) , std::invalid_argument );
 
-    startRecord->addItem( yearItem );
+    startRecord.addItem( std::move( yearItem ) );
     BOOST_CHECK_THROW(Opm::TimeMap::timeFromEclipse( startRecord ) , std::invalid_argument );
 
-    startRecord->addItem( timeItem );
+    startRecord.addItem( std::move( timeItem ) );
     BOOST_CHECK_NO_THROW(Opm::TimeMap::timeFromEclipse( startRecord ));
 
-    startRecord->addItem( extraItem );
+    startRecord.addItem( std::move( extraItem ) );
     BOOST_CHECK_THROW( Opm::TimeMap::timeFromEclipse( startRecord ) , std::invalid_argument );
 }
 
 
 
 BOOST_AUTO_TEST_CASE( dateFromEclipseInvalidMonthThrows ) {
-    Opm::DeckRecordPtr  startRecord(new  Opm::DeckRecord());
-    Opm::DeckIntItemPtr    dayItem( new  Opm::DeckIntItem("DAY") );
-    Opm::DeckStringItemPtr monthItem(new Opm::DeckStringItem("MONTH") );
-    Opm::DeckIntItemPtr    yearItem(new  Opm::DeckIntItem("YEAR"));
+    Opm::DeckRecord startRecord;
+    auto dayItem = Opm::DeckItem::make< int >("DAY");
+    auto monthItem = Opm::DeckItem::make< std::string >("MONTH");
+    auto yearItem = Opm::DeckItem::make< int >("YEAR");
 
-    dayItem->push_back( 10 );
-    yearItem->push_back(1987 );
-    monthItem->push_back("XXX");
+    dayItem.push_back( 10 );
+    yearItem.push_back(1987 );
+    monthItem.push_back("XXX");
 
-    startRecord->addItem( dayItem );
-    startRecord->addItem( monthItem );
-    startRecord->addItem( yearItem );
+    startRecord.addItem( std::move( dayItem ) );
+    startRecord.addItem( std::move( monthItem ) );
+    startRecord.addItem( std::move( yearItem ) );
 
     BOOST_CHECK_THROW( Opm::TimeMap::timeFromEclipse( startRecord ) , std::invalid_argument );
 }
@@ -179,21 +178,21 @@ BOOST_AUTO_TEST_CASE( timeFromEclipseCheckMonthNames ) {
 
 
 BOOST_AUTO_TEST_CASE( timeFromEclipseInputRecord ) {
-    Opm::DeckRecordPtr  startRecord(new  Opm::DeckRecord());
-    Opm::DeckIntItemPtr    dayItem( new  Opm::DeckIntItem("DAY") );
-    Opm::DeckStringItemPtr monthItem(new Opm::DeckStringItem("MONTH") );
-    Opm::DeckIntItemPtr    yearItem(new  Opm::DeckIntItem("YEAR"));
-    Opm::DeckStringItemPtr timeItem(new Opm::DeckStringItem("TIME") );
+    Opm::DeckRecord  startRecord;
+    auto dayItem = Opm::DeckItem::make< int >("DAY");
+    auto monthItem = Opm::DeckItem::make< std::string >("MONTH");
+    auto yearItem = Opm::DeckItem::make< int >("YEAR");
+    auto timeItem = Opm::DeckItem::make< std::string >("TIME");
 
-    dayItem->push_back( 10 );
-    yearItem->push_back( 1987 );
-    monthItem->push_back("JAN");
-    timeItem->push_back("00:00:00.000");
+    dayItem.push_back( 10 );
+    yearItem.push_back( 1987 );
+    monthItem.push_back("JAN");
+    timeItem.push_back("00:00:00.000");
 
-    startRecord->addItem( dayItem );
-    startRecord->addItem( monthItem );
-    startRecord->addItem( yearItem );
-    startRecord->addItem( timeItem );
+    startRecord.addItem( std::move( dayItem ) );
+    startRecord.addItem( std::move( monthItem ) );
+    startRecord.addItem( std::move( yearItem ) );
+    startRecord.addItem( std::move( timeItem ) );
 
     BOOST_CHECK_EQUAL( boost::posix_time::ptime(boost::gregorian::date( 1987 , boost::gregorian::Jan , 10 )) , Opm::TimeMap::timeFromEclipse( startRecord ));
 }
@@ -203,7 +202,7 @@ BOOST_AUTO_TEST_CASE( timeFromEclipseInputRecord ) {
 BOOST_AUTO_TEST_CASE( addDATESFromWrongKeywordThrows ) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
     Opm::TimeMap timeMap((boost::posix_time::ptime(startDate)));
-    Opm::DeckKeywordConstPtr deckKeyword(new Opm::DeckKeyword("NOTDATES"));
+    Opm::DeckKeyword deckKeyword("NOTDATES");
     BOOST_CHECK_THROW( timeMap.addFromDATESKeyword( deckKeyword ) , std::invalid_argument );
 }
 
@@ -213,7 +212,7 @@ BOOST_AUTO_TEST_CASE( addTSTEPFromWrongKeywordThrows ) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
     boost::posix_time::ptime ptime(startDate);
     Opm::TimeMap timeMap(ptime);
-    Opm::DeckKeywordConstPtr deckKeyword(new Opm::DeckKeyword("NOTTSTEP"));
+    Opm::DeckKeyword deckKeyword("NOTTSTEP");
     BOOST_CHECK_THROW( timeMap.addFromTSTEPKeyword( deckKeyword ) , std::invalid_argument );
 }
 

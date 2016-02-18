@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(testDeckTimeStepTSTEP) {
     ParseMode parseMode;
     DeckPtr deck = parser.parseString(input, parseMode);
 
-    SCHEDULESection scheduleSection = SCHEDULESection(deck);
+    SCHEDULESection scheduleSection = SCHEDULESection(*deck);
     DeckTimeStepConstPtr step1 = scheduleSection.getDeckTimeStep(0);
     DeckTimeStepConstPtr step2 = scheduleSection.getDeckTimeStep(1);
     DeckTimeStepConstPtr step3 = scheduleSection.getDeckTimeStep(2);
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(testDeckTimeStepDATES) {
     ParseMode parseMode;
     DeckPtr deck = parser.parseString(input, parseMode);
 
-    SCHEDULESection scheduleSection = SCHEDULESection(deck);
+    SCHEDULESection scheduleSection = SCHEDULESection(*deck);
     DeckTimeStepConstPtr step1 = scheduleSection.getDeckTimeStep(0);
     DeckTimeStepConstPtr step2 = scheduleSection.getDeckTimeStep(1);
     DeckTimeStepConstPtr step3 = scheduleSection.getDeckTimeStep(2);

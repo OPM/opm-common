@@ -25,7 +25,6 @@
 
 #include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
 #include <opm/parser/eclipse/RawDeck/StarToken.hpp>
-#include <opm/parser/eclipse/Deck/DeckDoubleItem.hpp>
 
 namespace Opm
 {
@@ -129,8 +128,8 @@ namespace Opm
     }
 
 
-    DeckItemPtr ParserDoubleItem::scan(RawRecordPtr rawRecord) const {
-        return ParserItemScan<ParserDoubleItem,DeckDoubleItem,double>(this , rawRecord);
+    DeckItem ParserDoubleItem::scan(RawRecordPtr rawRecord) const {
+        return ParserItemScan<ParserDoubleItem,double>(this , rawRecord);
     }
 
     std::string ParserDoubleItem::createCode() const {

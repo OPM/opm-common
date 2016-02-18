@@ -45,9 +45,9 @@ BOOST_AUTO_TEST_CASE( CreateCompletionsFromRecord ) {
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_COMPDAT1");
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), ParseMode());
-    DeckKeywordConstPtr COMPDAT1 = deck->getKeyword("COMPDAT" , 0);
-    DeckRecordConstPtr line0 = COMPDAT1->getRecord(0);
-    DeckRecordConstPtr line1 = COMPDAT1->getRecord(1);
+    const auto& COMPDAT1 = deck->getKeyword("COMPDAT" , 0);
+    const auto& line0 = COMPDAT1.getRecord(0);
+    const auto& line1 = COMPDAT1.getRecord(1);
 
     std::pair< std::string , std::vector<CompletionPtr> > completionsList = Completion::completionsFromCOMPDATRecord( line0 );
     BOOST_CHECK_EQUAL( "W_1" , completionsList.first );
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE( CreateCompletionsFromKeyword ) {
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_COMPDAT1");
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), ParseMode());
-    DeckKeywordConstPtr COMPDAT1 = deck->getKeyword("COMPDAT" , 1);
+    const auto& COMPDAT1 = deck->getKeyword("COMPDAT" , 1);
 
     std::map< std::string , std::vector<CompletionPtr> > completions = Completion::completionsFromCOMPDATKeyword( COMPDAT1 );
     BOOST_CHECK_EQUAL( 3U , completions.size() );

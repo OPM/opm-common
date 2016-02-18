@@ -45,15 +45,15 @@ BOOST_AUTO_TEST_CASE( parse_EQUIL_MISSING_DIMS ) {
     const std::string equil = "EQUIL\n"
         "2469   382.4   1705.0  0.0    500    0.0     1     1      20 /";
     std::shared_ptr<const Deck> deck = parser.parseString(equil, parseMode);
-    DeckKeywordConstPtr kw1 = deck->getKeyword("EQUIL" , 0);
-    BOOST_CHECK_EQUAL( 1U , kw1->size() );
+    const auto& kw1 = deck->getKeyword("EQUIL" , 0);
+    BOOST_CHECK_EQUAL( 1U , kw1.size() );
 
-    DeckRecordConstPtr rec1 = kw1->getRecord(0);
-    DeckItemPtr item1       = rec1->getItem("OWC");
-    DeckItemPtr item1_index = rec1->getItem(2);
+    const auto& rec1 = kw1.getRecord(0);
+    const auto& item1       = rec1.getItem("OWC");
+    const auto& item1_index = rec1.getItem(2);
 
-    BOOST_CHECK_EQUAL( item1  , item1_index );
-    BOOST_CHECK( fabs(item1->getSIDouble(0) - 1705) < 0.001);
+    BOOST_CHECK_EQUAL( &item1  , &item1_index );
+    BOOST_CHECK( fabs(item1.getSIDouble(0) - 1705) < 0.001);
 
 }
 
@@ -62,29 +62,28 @@ BOOST_AUTO_TEST_CASE( parse_EQUIL_OK ) {
     ParserPtr parser(new Parser());
     std::string pvtgFile("testdata/integration_tests/EQUIL/EQUIL1");
     DeckPtr deck =  parser->parseFile(pvtgFile, ParseMode());
-    DeckKeywordConstPtr kw0 = deck->getKeyword("EQLDIMS" , 0);
-    DeckKeywordConstPtr kw1 = deck->getKeyword("EQUIL" , 0);
-    BOOST_CHECK_EQUAL( 3U , kw1->size() );
+    const auto& kw1 = deck->getKeyword("EQUIL" , 0);
+    BOOST_CHECK_EQUAL( 3U , kw1.size() );
 
-    DeckRecordConstPtr rec1 = kw1->getRecord(0);
-    BOOST_CHECK_EQUAL( 9U , rec1->size() );
+    const auto& rec1 = kw1.getRecord(0);
+    BOOST_CHECK_EQUAL( 9U , rec1.size() );
 
-    DeckRecordConstPtr rec2 = kw1->getRecord(1);
-    BOOST_CHECK_EQUAL( 9U , rec2->size() );
+    const auto& rec2 = kw1.getRecord(1);
+    BOOST_CHECK_EQUAL( 9U , rec2.size() );
 
-    DeckRecordConstPtr rec3 = kw1->getRecord(2);
-    BOOST_CHECK_EQUAL( 9U , rec3->size() );
+    const auto& rec3 = kw1.getRecord(2);
+    BOOST_CHECK_EQUAL( 9U , rec3.size() );
 
-    DeckItemPtr item1       = rec1->getItem("OWC");
-    DeckItemPtr item1_index = rec1->getItem(2);
+    const auto& item1       = rec1.getItem("OWC");
+    const auto& item1_index = rec1.getItem(2);
 
-    BOOST_CHECK_EQUAL( item1  , item1_index );
-    BOOST_CHECK( fabs(item1->getSIDouble(0) - 1705) < 0.001);
+    BOOST_CHECK_EQUAL( &item1  , &item1_index );
+    BOOST_CHECK( fabs(item1.getSIDouble(0) - 1705) < 0.001);
 
-    DeckItemPtr item3       = rec3->getItem("OWC");
-    DeckItemPtr item3_index = rec3->getItem(2);
+    const auto& item3       = rec3.getItem("OWC");
+    const auto& item3_index = rec3.getItem(2);
 
-    BOOST_CHECK_EQUAL( item3  , item3_index );
-    BOOST_CHECK( fabs(item3->getSIDouble(0) - 3000) < 0.001);
+    BOOST_CHECK_EQUAL( &item3  , &item3_index );
+    BOOST_CHECK( fabs(item3.getSIDouble(0) - 3000) < 0.001);
 
 }
