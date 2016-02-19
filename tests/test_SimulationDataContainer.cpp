@@ -23,7 +23,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <stdexcept>
-
+#include <iostream>
 #include <opm/common/data/SimulationDataContainer.hpp>
 
 using namespace Opm;
@@ -173,3 +173,33 @@ BOOST_AUTO_TEST_CASE(Test_Equal) {
     }
 }
 
+
+
+BOOST_AUTO_TEST_CASE(TestSetComponent) {
+
+    SimulationDataContainer container(100 , 10 , 2);
+    container.registerCellData("FIELDX" , 2 , 123 );
+    std::vector<int> cells = { 1,2,3};
+    std::vector<int> cells2 = { 1,2,3,4};
+    std::vector<int> cells3 = { 1,2,100};
+    std::vector<double> values0 = {20,30,40};
+    std::vector<double> values1 = {2,3,4};
+
+    BOOST_CHECK_THROW( container.setCellDataComponent( "FIELDY" , 0 , cells , values0 ) , std::invalid_argument );
+    BOOST_CHECK_THROW( container.setCellDataComponent( "FIELDX" , 2 , cells , values0 ) , std::invalid_argument );
+    BOOST_CHECK_THROW( container.setCellDataComponent( "FIELDX" , 0 , cells2 , values0 ) , std::invalid_argument );
+    BOOST_CHECK_THROW( container.setCellDataComponent( "FIELDX" , 0 , cells3 , values0 ) , std::invalid_argument );
+
+    container.setCellDataComponent( "FIELDX" , 0 , cells , values0 );
+    container.setCellDataComponent( "FIELDX" , 1 , cells , values1 );
+    const auto& data = container.getCellData( "FIELDX" );
+
+    BOOST_CHECK_EQUAL( data[1*2 + 1] , 2 );
+    BOOST_CHECK_EQUAL( data[2*2 + 1] , 3 );
+    BOOST_CHECK_EQUAL( data[3*2 + 1] , 4 );
+
+    BOOST_CHECK_EQUAL( data[1*2] , 20 );
+    BOOST_CHECK_EQUAL( data[2*2] , 30 );
+    BOOST_CHECK_EQUAL( data[3*2] , 40 );
+
+}
