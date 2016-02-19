@@ -107,7 +107,7 @@ namespace Opm {
 
 
         template<typename T>
-        bool ptr_equal(const T* p1, const T* p2, size_t num_elements, T abs_eps, T rel_eps) {
+        bool array_equal(const T* p1, const T* p2, size_t num_elements, T abs_eps, T rel_eps) {
             if (memcmp(p1 , p2 , num_elements * sizeof * p1) == 0)
                 return true;
             else {
@@ -123,8 +123,8 @@ namespace Opm {
 
 
         template<typename T>
-        bool ptr_equal(const T* p1, const T* p2, size_t num_elements) {
-             return ptr_equal<T>(p1, p2, num_elements , default_abs_epsilon, default_rel_epsilon);
+        bool array_equal(const T* p1, const T* p2, size_t num_elements) {
+             return array_equal<T>(p1, p2, num_elements , default_abs_epsilon, default_rel_epsilon);
         }
     }
 }
