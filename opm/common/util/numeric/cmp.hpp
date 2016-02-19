@@ -23,7 +23,7 @@
 #include <cstddef>
 #include <vector>
 #include <type_traits>
-#include <math.h>
+#include <cmath>
 
 namespace Opm {
 
@@ -69,9 +69,9 @@ namespace Opm {
             static_assert(std::is_floating_point<T>::value, "Function scalar_equal() A can only be instantiated with floating point types");
 
 	    bool equal = true;
-            T diff = fabs(value1 - value2);
+            T diff = std::fabs(value1 - value2);
             if (diff > abs_eps) {
-                T scale = std::max(fabs(value1), fabs(value2));
+                T scale = std::max(std::fabs(value1), std::fabs(value2));
 
                 if (diff > scale * rel_eps) {
                     equal = false;
