@@ -93,7 +93,7 @@ namespace Opm {
             }
 
             for (size_t i = 0; i < v1.size(); i++) {
-                if (!scalar_equal<T>( v1[i] , v2[i]))
+                if (!scalar_equal<T>( v1[i], v2[i], abs_eps, rel_eps ))
                     return false;
             }
 

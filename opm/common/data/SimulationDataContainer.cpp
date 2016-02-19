@@ -99,7 +99,7 @@ namespace Opm {
 
 
         for (size_t i = 0; i < cells.size(); i++) {
-            if (cells[i] < m_num_cells) {
+            if (size_t(cells[i]) < m_num_cells) {
                 auto field_index = cells[i] * m_num_phases + component;
                 data[field_index] = values[i];
             } else {
