@@ -22,7 +22,6 @@
 
 list (APPEND MAIN_SOURCE_FILES
       opm/common/data/SimulationDataContainer.cpp
-      opm/common/util/numeric/cmp.cpp
 )
 
 list (APPEND TEST_SOURCE_FILES
