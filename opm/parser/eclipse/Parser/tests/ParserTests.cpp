@@ -25,6 +25,7 @@
 
 #include <opm/json/JsonObject.hpp>
 
+#include <opm/parser/eclipse/Parser/ParseMode.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
@@ -302,3 +303,8 @@ BOOST_AUTO_TEST_CASE( quoted_comments ) {
     BOOST_CHECK_EQUAL( Parser::stripComments("ABC'--'DEF'--GHI") , "ABC'--'DEF'--GHI");
 }
 
+BOOST_AUTO_TEST_CASE( PATHS_has_global_scope ) {
+    Parser parser;
+    parser.newDeckFromFile( "testdata/parser/PATHSInInclude.data", ParseMode() );
+    BOOST_CHECK_THROW( parser.newDeckFromFile( "testdata/parser/PATHSInIncludeInvalid.data", ParseMode() ), std::runtime_error );
+}

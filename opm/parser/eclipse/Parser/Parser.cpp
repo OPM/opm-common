@@ -50,7 +50,11 @@ namespace Opm {
         Deck * deck;
         boost::filesystem::path dataFile;
         boost::filesystem::path rootPath;
-        std::map<std::string, std::string> pathMap;
+        /* the path map is shared between all state instances, as it has global
+         * resolution, i.e. PATHS specified in an included file can be used
+         * from the file that included it.
+         */
+        std::shared_ptr< std::map<std::string, std::string> > pathMap;
         size_t lineNR;
         std::shared_ptr<std::istream> inputstream;
         RawKeywordPtr rawKeyword;
@@ -66,11 +70,11 @@ namespace Opm {
         }
 
         ParserState(const ParseMode& __parseMode)
-            : parseMode( __parseMode )
-        {
-            deck = new Deck();
-            lineNR = 0;
-        }
+            : parseMode( __parseMode ),
+              deck( new Deck() ),
+              pathMap( std::make_shared< std::map< std::string, std::string > >() ),
+              lineNR( 0 )
+        {}
 
         std::shared_ptr<ParserState> includeState(boost::filesystem::path& filename) {
             std::shared_ptr<ParserState> childState = std::make_shared<ParserState>( *this );
@@ -149,7 +153,7 @@ namespace Opm {
             std::string stringStartingAtPathName = path.substr(positionOfPathName+1);
             size_t cutOffPosition = stringStartingAtPathName.find_first_not_of(validPathNameCharacters);
             std::string stringToFind = stringStartingAtPathName.substr(0, cutOffPosition);
-            std::string stringToReplace = parserState.pathMap[stringToFind];
+            std::string stringToReplace = parserState.pathMap->at(stringToFind);
             boost::replace_all(path, pathKeywordPrefix + stringToFind, stringToReplace);
         }
 
@@ -386,7 +390,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
                             RawRecordConstPtr record = parserState->rawKeyword->getRecord(i);
                             std::string pathName = readValueToken<std::string>(record->getItem(0));
                             std::string pathValue = readValueToken<std::string>(record->getItem(1));
-                            parserState->pathMap.insert(std::pair<std::string, std::string>(pathName, pathValue));
+                            parserState->pathMap->insert(std::pair<std::string, std::string>(pathName, pathValue));
                     }
                 }
                 else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::include) {
