@@ -26,7 +26,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 
 
-static void printKeyword(Opm::ParserKeywordConstPtr keyword)
+static void printKeyword( const Opm::ParserKeyword* keyword)
 {
     std::string indent = " ";
     std::cout << keyword->getName() << std::endl;
@@ -65,7 +65,7 @@ static void printItem(Opm::ParserItemConstPtr item, std::string indent)
     std::cout << std::endl;
 }
 
-static void printItems(Opm::ParserKeywordConstPtr keyword)
+static void printItems( const Opm::ParserKeyword* keyword)
 {
     std::string indent = "  ";
     std::cout << std::endl;
@@ -80,7 +80,7 @@ static void printItems(Opm::ParserKeywordConstPtr keyword)
 static void printKeywords (Opm::ParserPtr parser, std::vector<std::string>& keywords)
 {
     for (auto iterator = keywords.begin(); iterator != keywords.end(); ++iterator) {
-        Opm::ParserKeywordConstPtr keyword = parser->getParserKeywordFromDeckName(*iterator);
+        const auto* keyword = parser->getParserKeywordFromDeckName(*iterator);
         printKeyword(keyword);
         printItems(keyword);
     }

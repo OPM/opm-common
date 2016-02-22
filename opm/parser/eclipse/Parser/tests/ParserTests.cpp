@@ -35,8 +35,8 @@
 
 using namespace Opm;
 
-std::shared_ptr<ParserKeyword> createDynamicSized(const std::string& kw) {
-    std::shared_ptr<ParserKeyword> pkw = std::make_shared<ParserKeyword>(kw);
+std::unique_ptr< ParserKeyword > createDynamicSized(const std::string& kw) {
+    std::unique_ptr< ParserKeyword > pkw( new ParserKeyword( kw ) );
     pkw->setSizeType(SLASH_TERMINATED);
     return pkw;
 }
@@ -53,10 +53,7 @@ BOOST_AUTO_TEST_CASE(Initializing) {
 
 BOOST_AUTO_TEST_CASE(addKeyword_keyword_doesntfail) {
     Parser parser;
-    {
-        ParserKeywordPtr equilKeyword = createDynamicSized("EQUIL");
-        parser.addParserKeyword(equilKeyword);
-    }
+    parser.addParserKeyword( createDynamicSized( "EQUIL" ) );
 }
 
 
@@ -69,25 +66,21 @@ BOOST_AUTO_TEST_CASE(canParseDeckKeyword_returnstrue) {
 
 BOOST_AUTO_TEST_CASE(getKeyword_haskeyword_returnskeyword) {
     ParserPtr parser(new Parser());
-    ParserKeywordConstPtr parserKeyword = createDynamicSized("FJAS");
-    parser->addParserKeyword(parserKeyword);
-    BOOST_CHECK_EQUAL(parserKeyword, parser->getParserKeywordFromDeckName("FJAS"));
+    parser->addParserKeyword( createDynamicSized( "FJAS" ) );
+    BOOST_CHECK_EQUAL("FJAS", parser->getParserKeywordFromDeckName("FJAS")->getName());
 }
 
 BOOST_AUTO_TEST_CASE(getKeyword_hasnotkeyword_getKeywordThrowsException) {
     ParserPtr parser(new Parser());
-    ParserKeywordConstPtr parserKeyword = createDynamicSized("FJAS");
-    parser->addParserKeyword(parserKeyword);
+    parser->addParserKeyword( createDynamicSized( "FJAS" ) );
     BOOST_CHECK_THROW(parser->getParserKeywordFromDeckName("FJASS"), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(getAllDeckNames_hasTwoKeywords_returnsCompleteList) {
     ParserPtr parser(new Parser(false));
     std::cout << parser->getAllDeckNames().size() << std::endl;
-    ParserKeywordConstPtr firstParserKeyword = createDynamicSized("FJAS");
-    parser->addParserKeyword(firstParserKeyword);
-    ParserKeywordConstPtr secondParserKeyword = createDynamicSized("SAJF");
-    parser->addParserKeyword(secondParserKeyword);
+    parser->addParserKeyword( createDynamicSized( "FJAS" ) );
+    parser->addParserKeyword( createDynamicSized( "SAJF" ) );
     BOOST_CHECK_EQUAL(2U, parser->getAllDeckNames().size());
 }
 
@@ -104,7 +97,7 @@ BOOST_AUTO_TEST_CASE(getAllDeckNames_hasNoKeywords_returnsEmptyList) {
 BOOST_AUTO_TEST_CASE(addParserKeywordJSON_isRecognizedKeyword_returnstrue) {
     ParserPtr parser(new Parser());
     Json::JsonObject jsonConfig("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : 100 ,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}");
-    parser->addParserKeyword(std::make_shared<const ParserKeyword>( jsonConfig ));
+    parser->addParserKeyword( jsonConfig );
     BOOST_CHECK(parser->isRecognizedKeyword("BPR"));
 }
 
@@ -112,7 +105,7 @@ BOOST_AUTO_TEST_CASE(addParserKeywordJSON_isRecognizedKeyword_returnstrue) {
 BOOST_AUTO_TEST_CASE(addParserKeywordJSON_size_isObject_allGood) {
     ParserPtr parser(new Parser());
     Json::JsonObject jsonConfig("{\"name\": \"EQUIXL\", \"sections\":[], \"size\" : {\"keyword\":\"EQLDIMS\" , \"item\" : \"NTEQUL\"},  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}");
-    parser->addParserKeyword(std::make_shared<const ParserKeyword>( jsonConfig ));
+    parser->addParserKeyword( jsonConfig );
     BOOST_CHECK(parser->isRecognizedKeyword("EQUIXL"));
 }
 
@@ -266,7 +259,7 @@ BOOST_AUTO_TEST_CASE(DropKeyword) {
 
 BOOST_AUTO_TEST_CASE(ReplaceKeyword) {
     ParserPtr parser(new Parser());
-    ParserKeywordConstPtr eqldims = parser->getParserKeywordFromDeckName("EQLDIMS");
+    const auto* eqldims = parser->getParserKeywordFromDeckName("EQLDIMS");
 
     BOOST_CHECK( parser->loadKeywordFromFile( "testdata/parser/EQLDIMS2" ) );
 
@@ -287,29 +280,12 @@ BOOST_AUTO_TEST_CASE(WildCardTest) {
 
     BOOST_CHECK(!parser->isRecognizedKeyword("TVDP"));
 
-    ParserKeywordConstPtr keyword1 = parser->getParserKeywordFromDeckName("TVDPA");
-    ParserKeywordConstPtr keyword2 = parser->getParserKeywordFromDeckName("TVDPBC");
-    ParserKeywordConstPtr keyword3 = parser->getParserKeywordFromDeckName("TVDPXXX");
+    const auto* keyword1 = parser->getParserKeywordFromDeckName("TVDPA");
+    const auto* keyword2 = parser->getParserKeywordFromDeckName("TVDPBC");
+    const auto* keyword3 = parser->getParserKeywordFromDeckName("TVDPXXX");
 
     BOOST_CHECK_EQUAL( keyword1 , keyword2 );
     BOOST_CHECK_EQUAL( keyword1 , keyword3 );
-}
-
-
-
-/***************** Simple Int parsing ********************************/
-
-static ParserKeywordPtr __attribute__((unused)) setupParserKeywordInt(std::string name, int numberOfItems) {
-    ParserKeywordPtr parserKeyword = createDynamicSized(name);
-    ParserRecordPtr parserRecord = parserKeyword->getRecord(0);
-
-    for (int i = 0; i < numberOfItems; i++) {
-        std::string another_name = "ITEM_" + boost::lexical_cast<std::string>(i);
-        ParserItemPtr intItem(new ParserIntItem(another_name, SINGLE));
-        parserRecord->addItem(intItem);
-    }
-
-    return parserKeyword;
 }
 
 
@@ -325,10 +301,4 @@ BOOST_AUTO_TEST_CASE( quoted_comments ) {
     BOOST_CHECK_EQUAL( Parser::stripComments("ABC'--'DEF'GHI") , "ABC'--'DEF'GHI");
     BOOST_CHECK_EQUAL( Parser::stripComments("ABC'--'DEF'--GHI") , "ABC'--'DEF'--GHI");
 }
-
-
-
-
-
-
 

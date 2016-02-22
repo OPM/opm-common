@@ -263,16 +263,16 @@ namespace Opm {
         return (m_internalParserKeywords.count(internalKeywordName) > 0);
     }
 
-    ParserKeywordConstPtr Parser::getParserKeywordFromInternalName(const std::string& internalKeywordName) const {
-        return m_internalParserKeywords.at(internalKeywordName);
+    const ParserKeyword* Parser::getParserKeywordFromInternalName(const std::string& internalKeywordName) const {
+        return m_internalParserKeywords.at(internalKeywordName).get();
     }
 
-    ParserKeywordConstPtr Parser::matchingKeyword(const std::string& name) const {
+    const ParserKeyword* Parser::matchingKeyword(const std::string& name) const {
         for (auto iter = m_wildCardKeywords.begin(); iter != m_wildCardKeywords.end(); ++iter) {
             if (iter->second->matches(name))
                 return iter->second;
         }
-        return ParserKeywordConstPtr();
+        return nullptr;
     }
 
     bool Parser::hasWildCardKeyword(const std::string& internalKeywordName) const {
@@ -282,127 +282,126 @@ namespace Opm {
     bool Parser::isRecognizedKeyword(const std::string& deckKeywordName) const {
         if (!ParserKeyword::validDeckName(deckKeywordName)) {
             return false;
-        }
-
-        if (m_deckParserKeywords.count(deckKeywordName) > 0)
-            return true;
-
-        ParserKeywordConstPtr wildCardKeyword = matchingKeyword( deckKeywordName );
-        return wildCardKeyword?true:false;
     }
 
-    void Parser::addParserKeyword(ParserKeywordConstPtr parserKeyword) {
-        m_internalParserKeywords[parserKeyword->getName()] = parserKeyword;
+    if (m_deckParserKeywords.count(deckKeywordName) > 0)
+        return true;
 
-        for (auto nameIt = parserKeyword->deckNamesBegin();
-             nameIt != parserKeyword->deckNamesEnd();
-             ++nameIt)
-        {
-            m_deckParserKeywords[*nameIt] = parserKeyword;
-        }
+    return matchingKeyword( deckKeywordName );
+}
 
-        if (parserKeyword->hasMatchRegex())
-            m_wildCardKeywords[parserKeyword->getName()] = parserKeyword;
+void Parser::addParserKeyword( std::unique_ptr< const ParserKeyword >&& parserKeyword) {
+    for (auto nameIt = parserKeyword->deckNamesBegin();
+            nameIt != parserKeyword->deckNamesEnd();
+            ++nameIt)
+    {
+        m_deckParserKeywords[*nameIt] = parserKeyword.get();
     }
 
+    if (parserKeyword->hasMatchRegex())
+        m_wildCardKeywords[parserKeyword->getName()] = parserKeyword.get();
 
-    void Parser::addParserKeyword(const Json::JsonObject& jsonKeyword) {
-        ParserKeywordConstPtr parserKeyword = std::make_shared<const ParserKeyword>(jsonKeyword);
-        addParserKeyword(parserKeyword);
-    }
+    m_internalParserKeywords[parserKeyword->getName()] = std::move( parserKeyword );
+
+}
 
 
-    ParserKeywordConstPtr Parser::getKeyword(const std::string& name ) const {
-        auto iter = m_deckParserKeywords.find( name );
-        if (iter == m_deckParserKeywords.end())
-            throw std::invalid_argument("Keyword not found");
+void Parser::addParserKeyword(const Json::JsonObject& jsonKeyword) {
+    addParserKeyword( std::unique_ptr< ParserKeyword >( new ParserKeyword( jsonKeyword ) ) );
+}
+
+
+const ParserKeyword* Parser::getKeyword(const std::string& name ) const {
+    auto iter = m_deckParserKeywords.find( name );
+    if (iter == m_deckParserKeywords.end())
+        throw std::invalid_argument("Keyword not found");
+    else
+        return iter->second;
+}
+
+
+bool Parser::dropParserKeyword(const std::string& parserKeywordName) {
+    // remove from the internal from the internal names
+    bool erase = (m_internalParserKeywords.erase( parserKeywordName ) > 0);
+
+    // remove keyword from the deck names map
+    auto deckParserKeywordIt = m_deckParserKeywords.begin();
+    while (deckParserKeywordIt != m_deckParserKeywords.end()) {
+        if (deckParserKeywordIt->second->getName() == parserKeywordName)
+            // note the post-increment of the iterator. this is required to keep the
+            // iterator valid for while at the same time erasing it...
+            m_deckParserKeywords.erase(deckParserKeywordIt++);
         else
-            return iter->second;
+            ++ deckParserKeywordIt;
     }
 
+    // remove the keyword from the wildcard list
+    m_wildCardKeywords.erase( parserKeywordName );
 
-    bool Parser::dropParserKeyword(const std::string& parserKeywordName) {
-        // remove from the internal from the internal names
-        bool erase = (m_internalParserKeywords.erase( parserKeywordName ) > 0);
+    return erase;
+}
 
-        // remove keyword from the deck names map
-        auto deckParserKeywordIt = m_deckParserKeywords.begin();
-        while (deckParserKeywordIt != m_deckParserKeywords.end()) {
-            if (deckParserKeywordIt->second->getName() == parserKeywordName)
-                // note the post-increment of the iterator. this is required to keep the
-                // iterator valid for while at the same time erasing it...
-                m_deckParserKeywords.erase(deckParserKeywordIt++);
-            else
-                ++ deckParserKeywordIt;
-        }
 
-        // remove the keyword from the wildcard list
-        m_wildCardKeywords.erase( parserKeywordName );
 
-        return erase;
+const ParserKeyword* Parser::getParserKeywordFromDeckName(const std::string& deckKeywordName) const {
+    if (m_deckParserKeywords.count(deckKeywordName)) {
+        return m_deckParserKeywords.at(deckKeywordName);
+    } else {
+        const auto* wildCardKeyword = matchingKeyword( deckKeywordName );
+
+        if (wildCardKeyword)
+            return wildCardKeyword;
+        else
+            throw std::invalid_argument("Do not have parser keyword for parsing: " + deckKeywordName);
     }
+}
 
-
-
-    ParserKeywordConstPtr Parser::getParserKeywordFromDeckName(const std::string& deckKeywordName) const {
-        if (m_deckParserKeywords.count(deckKeywordName)) {
-            return m_deckParserKeywords.at(deckKeywordName);
-        } else {
-            ParserKeywordConstPtr wildCardKeyword = matchingKeyword( deckKeywordName );
-
-            if (wildCardKeyword)
-                return wildCardKeyword;
-            else
-                throw std::invalid_argument("Do not have parser keyword for parsing: " + deckKeywordName);
-        }
+std::vector<std::string> Parser::getAllDeckNames () const {
+    std::vector<std::string> keywords;
+    for (auto iterator = m_deckParserKeywords.begin(); iterator != m_deckParserKeywords.end(); iterator++) {
+        keywords.push_back(iterator->first);
     }
-
-    std::vector<std::string> Parser::getAllDeckNames () const {
-        std::vector<std::string> keywords;
-        for (auto iterator = m_deckParserKeywords.begin(); iterator != m_deckParserKeywords.end(); iterator++) {
-            keywords.push_back(iterator->first);
-        }
-        for (auto iterator = m_wildCardKeywords.begin(); iterator != m_wildCardKeywords.end(); iterator++) {
-            keywords.push_back(iterator->first);
-        }
-        return keywords;
+    for (auto iterator = m_wildCardKeywords.begin(); iterator != m_wildCardKeywords.end(); iterator++) {
+        keywords.push_back(iterator->first);
     }
+    return keywords;
+}
 
-    bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
-        bool stopParsing = false;
+bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
+    bool stopParsing = false;
 
-        if (parserState->inputstream) {
-            while (true) {
-                bool streamOK = tryParseKeyword(parserState);
-                if (parserState->rawKeyword) {
-                    if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::end) {
-                        stopParsing = true;
-                        break;
+    if (parserState->inputstream) {
+        while (true) {
+            bool streamOK = tryParseKeyword(parserState);
+            if (parserState->rawKeyword) {
+                if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::end) {
+                    stopParsing = true;
+                    break;
+                }
+                else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::endinclude) {
+                    break;
+                }
+                else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::paths) {
+                    for (size_t i = 0; i < parserState->rawKeyword->size(); i++) {
+                            RawRecordConstPtr record = parserState->rawKeyword->getRecord(i);
+                            std::string pathName = readValueToken<std::string>(record->getItem(0));
+                            std::string pathValue = readValueToken<std::string>(record->getItem(1));
+                            parserState->pathMap.insert(std::pair<std::string, std::string>(pathName, pathValue));
                     }
-                    else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::endinclude) {
-                        break;
-                    }
-                    else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::paths) {
-                        for (size_t i = 0; i < parserState->rawKeyword->size(); i++) {
-                             RawRecordConstPtr record = parserState->rawKeyword->getRecord(i);
-                             std::string pathName = readValueToken<std::string>(record->getItem(0));
-                             std::string pathValue = readValueToken<std::string>(record->getItem(1));
-                             parserState->pathMap.insert(std::pair<std::string, std::string>(pathName, pathValue));
-                        }
-                    }
-                    else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::include) {
-                        RawRecordConstPtr firstRecord = parserState->rawKeyword->getRecord(0);
-                        std::string includeFileAsString = readValueToken<std::string>(firstRecord->getItem(0));
-                        boost::filesystem::path includeFile = getIncludeFilePath(*parserState, includeFileAsString);
-                        std::shared_ptr<ParserState> newParserState = parserState->includeState( includeFile );
+                }
+                else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::include) {
+                    RawRecordConstPtr firstRecord = parserState->rawKeyword->getRecord(0);
+                    std::string includeFileAsString = readValueToken<std::string>(firstRecord->getItem(0));
+                    boost::filesystem::path includeFile = getIncludeFilePath(*parserState, includeFileAsString);
+                    std::shared_ptr<ParserState> newParserState = parserState->includeState( includeFile );
 
 
-                        stopParsing = parseState(newParserState);
-                        if (stopParsing) break;
-                    } else {
+                    stopParsing = parseState(newParserState);
+                    if (stopParsing) break;
+                } else {
 
-                        if (isRecognizedKeyword(parserState->rawKeyword->getKeywordName())) {
-                            ParserKeywordConstPtr parserKeyword = getParserKeywordFromDeckName(parserState->rawKeyword->getKeywordName());
+                    if (isRecognizedKeyword(parserState->rawKeyword->getKeywordName())) {
+                            const auto* parserKeyword = getParserKeywordFromDeckName(parserState->rawKeyword->getKeywordName());
                             parserState->deck->addKeyword( parserKeyword->parse(parserState->parseMode , parserState->rawKeyword ) );
                         } else {
                             DeckKeyword deckKeyword(parserState->rawKeyword->getKeywordName(), false);
@@ -428,9 +427,7 @@ namespace Opm {
         if (jsonKeywords.is_array()) {
             for (size_t index = 0; index < jsonKeywords.size(); index++) {
                 Json::JsonObject jsonKeyword = jsonKeywords.get_array_item(index);
-                ParserKeywordConstPtr parserKeyword = std::make_shared<const ParserKeyword>(jsonKeyword);
-
-                addParserKeyword(parserKeyword);
+                addParserKeyword( std::unique_ptr< ParserKeyword >( new ParserKeyword( jsonKeyword ) ) );
             }
         } else
             throw std::invalid_argument("Input JSON object is not an array");
@@ -440,7 +437,7 @@ namespace Opm {
         std::string keywordString = ParserKeyword::getDeckName(initialLine);
 
         if (isRecognizedKeyword(keywordString)) {
-            ParserKeywordConstPtr parserKeyword = getParserKeywordFromDeckName( keywordString );
+            const auto* parserKeyword = getParserKeywordFromDeckName( keywordString );
 
             if (parserKeyword->getSizeType() == SLASH_TERMINATED || parserKeyword->getSizeType() == UNKNOWN) {
                 Raw::KeywordSizeEnum rawSizeType;
@@ -559,7 +556,7 @@ namespace Opm {
         try {
             Json::JsonObject jsonKeyword(configFile);
             ParserKeywordConstPtr parserKeyword = std::make_shared<const ParserKeyword>(jsonKeyword);
-            addParserKeyword(parserKeyword);
+            addParserKeyword( std::unique_ptr< ParserKeyword >( new ParserKeyword( jsonKeyword ) ) );
             return true;
         }
         catch (...) {
@@ -593,7 +590,7 @@ namespace Opm {
         for (size_t index=0; index < deck.size(); ++index) {
             auto& deckKeyword = deck.getKeyword( index );
             if (isRecognizedKeyword( deckKeyword.name())) {
-                ParserKeywordConstPtr parserKeyword = getParserKeywordFromDeckName( deckKeyword.name() );
+                const auto* parserKeyword = getParserKeywordFromDeckName( deckKeyword.name() );
                 if (parserKeyword->hasDimension()) {
                     parserKeyword->applyUnitsToDeck(deck , deckKeyword);
                 }
