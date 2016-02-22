@@ -14,6 +14,7 @@ add_subdirectory(EclipseState/Grid/tests)
 add_subdirectory(EclipseState/Util/tests)
 add_subdirectory(EclipseState/IOConfig/tests)
 add_subdirectory(EclipseState/InitConfig/tests)
+add_subdirectory(EclipseState/Summary/tests)
 
 add_subdirectory(Applications)
 add_subdirectory(IntegrationTests)
@@ -129,6 +130,7 @@ EclipseState/Grid/PinchMode.cpp
 EclipseState/InitConfig/InitConfig.cpp
 EclipseState/SimulationConfig/SimulationConfig.cpp
 EclipseState/SimulationConfig/ThresholdPressure.cpp
+EclipseState/Summary/Summary.cpp
 EclipseState/IOConfig/IOConfig.cpp)
 #
 
@@ -224,6 +226,7 @@ EclipseState/Grid/NNC.hpp
 EclipseState/InitConfig/InitConfig.hpp
 EclipseState/SimulationConfig/SimulationConfig.hpp
 EclipseState/SimulationConfig/ThresholdPressure.hpp
+EclipseState/Summary/Summary.hpp
 EclipseState/IOConfig/IOConfig.hpp
 #
 EclipseState/Tables/Tabdims.hpp
