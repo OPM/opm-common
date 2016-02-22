@@ -1,0 +1,33 @@
+language: cpp
+
+compiler:
+  - gcc
+
+addons:
+  apt:
+    sources:
+      - boost-latest
+      - ubuntu-toolchain-r-test
+    packages:
+      - libboost1.55-all-dev
+      - gcc-4.8
+      - g++-4.8
+      - gfortran-4.8
+      - liblapack-dev
+      - libgmp3-dev
+      - libsuitesparse-dev
+      - libeigen3-dev
+
+install:
+    - export CXX="g++-4.8" CC="gcc-4.8" FC="gfortran-4.8"
+    - cd ..
+
+    - git clone https://github.com/OPM/opm-common.git
+    - git clone https://github.com/OPM/opm-parser.git
+
+    - opm-parser/travis/clone-and-build-ert.sh
+
+    - opm-common/travis/build-opm-common.sh
+    - opm-parser/travis/build-opm-parser.sh
+
+script: opm-output/travis/build-and-test-opm-core.sh
