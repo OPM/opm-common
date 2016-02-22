@@ -34,16 +34,10 @@ namespace Opm {
     }
 
     void DeckRecord::addItem( DeckItem&& deckItem ) {
-        const auto& name = deckItem.name();
-        const auto eq = [&name]( const DeckItem& e ) {
-            return e.name() == name;
-            throw std::invalid_argument( "Unable to insert empty item" );
-        };
-
-        if( std::any_of( m_items.begin(), m_items.end(), eq ) )
+        if( this->hasItem( deckItem.name() ) )
             throw std::invalid_argument(
                     "Item with name: "
-                    + name
+                    + deckItem.name()
                     + " already exists in DeckRecord");
 
         m_items.push_back( std::move( deckItem ) );
