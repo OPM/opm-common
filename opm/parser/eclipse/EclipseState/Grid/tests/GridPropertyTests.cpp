@@ -421,12 +421,16 @@ static Opm::DeckPtr createDeck() {
 
 BOOST_AUTO_TEST_CASE(GridPropertyPostProcessors) {
     typedef Opm::GridPropertySupportedKeywordInfo<double> SupportedKeywordInfo;
+
+    Opm::DeckPtr deck = createDeck();
+    Opm::EclipseState st( deck, Opm::ParseMode() ) ;
+    std::shared_ptr<Opm::EclipseGrid> grid = std::make_shared<Opm::EclipseGrid>(deck);
+
     SupportedKeywordInfo kwInfo1("MULTPV" , 1.0 , "1");
-    Opm::GridPropertyFunction< double > gfunc( &TestPostProcessorMul, nullptr, nullptr );
+    Opm::GridPropertyFunction< double > gfunc( &TestPostProcessorMul, *deck, st );
     SupportedKeywordInfo kwInfo2("PORO", 1.0, gfunc, "1");
     std::vector<SupportedKeywordInfo > supportedKeywords = { kwInfo1, kwInfo2 };
-    Opm::DeckPtr deck = createDeck();
-    std::shared_ptr<Opm::EclipseGrid> grid = std::make_shared<Opm::EclipseGrid>(deck);
+
     Opm::GridProperties<double> properties(grid, std::move( supportedKeywords ) );
 
     {

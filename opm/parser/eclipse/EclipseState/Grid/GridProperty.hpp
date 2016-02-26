@@ -78,7 +78,7 @@ class GridPropertySupportedKeywordInfo {
     private:
         std::string m_keywordName;
         GridPropertyFunction< T > m_initializer;
-        GridPropertyFunction< T > m_postProcessor = GridPropertyFunction< T >( id, nullptr, nullptr );
+        GridPropertyFunction< T > m_postProcessor = GridPropertyFunction< T >::identity();
         std::string m_dimensionString;
 };
 

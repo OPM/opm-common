@@ -34,28 +34,36 @@ class EclipseState;
 template< typename T >
 class GridPropertyFunction {
     public:
-        GridPropertyFunction() = default;
+        using signature = std::vector< T >&(*)(
+                                std::vector< T >&,
+                                const Deck&,
+                                const EclipseState&
+                            );
 
-        GridPropertyFunction( std::vector< T >& (*)( std::vector< T >&, const Deck&, const EclipseState& ),
-                              const Deck*,
-                              const EclipseState* );
+        GridPropertyFunction( signature,
+                              const Deck&,
+                              const EclipseState& );
 
         GridPropertyFunction( T );
+
+        static GridPropertyFunction identity();
 
         std::vector< T >& operator()( std::vector< T >& ) const;
 
     private:
-        std::vector< T >& (*f)( std::vector< T >&, const Deck&, const EclipseState& ) = nullptr;
+        GridPropertyFunction();
+
+        signature f = nullptr;
         T constant;
         const Deck* deck = nullptr;
         const EclipseState* es = nullptr;
 };
 
-// initialize the TEMPI grid property using the temperature vs depth
-// table (stemming from the TEMPVD or the RTEMPVD keyword)
-std::vector< double >& id( std::vector< double >&, const Deck&, const EclipseState& );
-std::vector< int >& id( std::vector< int >&, const Deck&, const EclipseState& );
-std::vector< double >& temperature_lookup( std::vector< double >&, const Deck&, const EclipseState& );
+    // initialize the TEMPI grid property using the temperature vs depth
+    // table (stemming from the TEMPVD or the RTEMPVD keyword)
+    std::vector< double >& temperature_lookup( std::vector< double >&,
+                                               const Deck&,
+                                               const EclipseState& );
 
 }
 

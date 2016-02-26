@@ -27,19 +27,35 @@ namespace Opm {
     template< typename T >
     GridPropertyFunction< T >::GridPropertyFunction(
             std::vector< T >& (*fn)( std::vector< T >&, const Deck&, const EclipseState& ),
-            const Deck* d,
-            const EclipseState* state ) :
-        f( fn ), deck( d ), es( state )
+            const Deck& d,
+            const EclipseState& state ) :
+        f( fn ), deck( &d ), es( &state )
     {}
-
 
     template< typename T >
     std::vector< T >& GridPropertyFunction< T >::operator()( std::vector< T >& values ) const {
         if( !this->f ) return constf( values, this->constant );
 
-        (*this->f)( values, *this->deck, *this->es );
+        return (*this->f)( values, *this->deck, *this->es );
+    }
+
+    static std::vector< double >& id( std::vector< double >& values, const Deck&, const EclipseState& ) {
         return values;
     }
+
+    static std::vector< int >& id( std::vector< int >& values, const Deck&, const EclipseState& ) {
+        return values;
+    }
+
+    template< typename T >
+    GridPropertyFunction< T > GridPropertyFunction< T >::identity() {
+        return GridPropertyFunction< T >();
+    }
+
+    template< typename T >
+    GridPropertyFunction< T >::GridPropertyFunction() :
+        f( &id )
+    {}
 
     std::vector< double >& temperature_lookup(
             std::vector< double >& values,
@@ -65,20 +81,6 @@ namespace Opm {
             values[cellIdx] = rtempvdTable.evaluate("Temperature", cellDepth);
         }
 
-        return values;
-    }
-
-    std::vector< double >& id(
-            std::vector< double >& values,
-            const Deck&,
-            const EclipseState& ) {
-        return values;
-    }
-
-    std::vector< int >& id(
-            std::vector< int >& values,
-            const Deck&,
-            const EclipseState& ) {
         return values;
     }
 }
