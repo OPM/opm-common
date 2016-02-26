@@ -24,7 +24,11 @@
 #include <vector>
 #include <unordered_map>
 
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
+
+#include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
+#include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
 
 /*
   This class implements a container (std::unordered_map<std::string ,
@@ -52,8 +56,8 @@ class GridProperties {
 public:
     typedef typename GridProperty<T>::SupportedKeywordInfo SupportedKeywordInfo;
 
-    GridProperties(std::shared_ptr<const EclipseGrid> eclipseGrid, std::vector< SupportedKeywordInfo >&& supportedKeywords) {
-        m_eclipseGrid = eclipseGrid;
+    GridProperties(std::shared_ptr<const EclipseGrid> eclipseGrid, std::vector< SupportedKeywordInfo >&& supportedKeywords) :
+        m_eclipseGrid( eclipseGrid ) {
 
         for (auto iter = supportedKeywords.begin(); iter != supportedKeywords.end(); ++iter)
             m_supportedKeywords[iter->getKeywordName()] = std::move( *iter );

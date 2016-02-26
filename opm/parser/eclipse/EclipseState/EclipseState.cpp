@@ -564,7 +564,7 @@ namespace Opm {
         const auto KRGRLookup = std::make_shared<KRGREndpointInitializer<>>(deck, es);
         const auto IKRGRLookup = std::make_shared<IKRGREndpointInitializer<>>(deck, es);
 
-        const auto tempLookup = std::make_shared<GridPropertyTemperatureLookupInitializer<>>(deck, es);
+        const auto tempLookup = std::make_shared<GridPropertyTemperatureLookupInitializer>(deck, es);
         const auto distributeTopLayer = std::make_shared<GridPropertyPostProcessor::DistributeTopLayer>(es);
         const auto initPORV = std::make_shared<GridPropertyPostProcessor::InitPORV>(es);
 
@@ -726,8 +726,8 @@ namespace Opm {
         // are not supported. (and hopefully never will be)
 
         // register the grid properties
-        m_intGridProperties = std::make_shared< GridProperties< int > >(m_eclipseGrid , makeSupportedIntKeywords() );
-        m_doubleGridProperties = std::make_shared< GridProperties< double > >( m_eclipseGrid, makeSupportedDoubleKeywords(*deck, *this) );
+        m_intGridProperties.reset( new GridProperties< int >( m_eclipseGrid , makeSupportedIntKeywords() ) );
+        m_doubleGridProperties.reset( new GridProperties< double >( m_eclipseGrid, makeSupportedDoubleKeywords(*deck, *this) ) );
 
         // actually create the grid property objects. we need to first
         // process all integer grid properties before the double ones

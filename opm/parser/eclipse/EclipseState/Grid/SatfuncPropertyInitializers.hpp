@@ -28,6 +28,8 @@
 #include <cassert>
 
 #include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>

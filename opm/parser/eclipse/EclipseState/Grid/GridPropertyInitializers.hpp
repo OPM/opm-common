@@ -20,19 +20,6 @@
 #define ECLIPSE_GRIDPROPERTY_INITIALIZERS_HPP
 
 #include <vector>
-#include <string>
-#include <exception>
-#include <memory>
-#include <limits>
-#include <algorithm>
-#include <cmath>
-
-#include <cassert>
-
-#include <opm/parser/eclipse/EclipseState/Tables/RtempvdTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
-
-
 
 /*
   This classes initialize GridProperty objects. Most commonly, they just get a constant
@@ -44,9 +31,6 @@ namespace Opm {
 // forward definitions
 class Deck;
 class EclipseState;
-class EnptvdTable;
-class ImptvdTable;
-class TableContainer;
 
 template <class ValueType>
 class GridPropertyBaseInitializer
@@ -60,6 +44,17 @@ public:
 };
 
 template <class ValueType>
+class GridPropertyBasePostProcessor
+{
+protected:
+    GridPropertyBasePostProcessor() { }
+
+public:
+    virtual void apply(std::vector<ValueType>& values) const = 0;
+};
+
+
+template <class ValueType>
 class GridPropertyConstantInitializer
     : public GridPropertyBaseInitializer<ValueType>
 {
@@ -68,23 +63,14 @@ public:
         : m_value(value)
     { }
 
-    void apply(std::vector<ValueType>& values) const
-    {
-        std::fill(values.begin(), values.end(), m_value);
-    }
+    void apply(std::vector<ValueType>& values) const;
 
 private:
     ValueType m_value;
 };
 
-
-
-
-
 // initialize the TEMPI grid property using the temperature vs depth
 // table (stemming from the TEMPVD or the RTEMPVD keyword)
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
 class GridPropertyTemperatureLookupInitializer
     : public GridPropertyBaseInitializer<double>
 {
@@ -94,28 +80,7 @@ public:
         , m_eclipseState(eclipseState)
     { }
 
-    void apply(std::vector<double>& values) const
-    {
-        if (!m_deck.hasKeyword("EQLNUM")) {
-            // if values are defaulted in the TEMPI keyword, but no
-            // EQLNUM is specified, you will get NaNs...
-            double nan = std::numeric_limits<double>::quiet_NaN();
-            std::fill(values.begin(), values.end(), nan);
-            return;
-        }
-
-        auto tables = m_eclipseState.getTableManager();
-        auto eclipseGrid = m_eclipseState.getEclipseGrid();
-        const TableContainer& rtempvdTables = tables->getRtempvdTables();
-        const std::vector<int>& eqlNum = m_eclipseState.getIntGridProperty("EQLNUM")->getData();
-
-        for (size_t cellIdx = 0; cellIdx < eqlNum.size(); ++ cellIdx) {
-            int cellEquilNum = eqlNum[cellIdx];
-            const RtempvdTable& rtempvdTable = rtempvdTables.getTable<RtempvdTable>(cellEquilNum);
-            double cellDepth = std::get<2>(eclipseGrid->getCellCenter(cellIdx));
-            values[cellIdx] = rtempvdTable.evaluate("Temperature", cellDepth);
-        }
-    }
+    void apply(std::vector<double>& values) const;
 
 private:
     const Deck& m_deck;
