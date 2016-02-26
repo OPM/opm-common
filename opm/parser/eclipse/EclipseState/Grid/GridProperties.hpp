@@ -62,7 +62,7 @@ public:
         m_eclipseGrid( eclipseGrid ) {
 
         for (auto iter = supportedKeywords.begin(); iter != supportedKeywords.end(); ++iter)
-            m_supportedKeywords[iter->getKeywordName()] = std::move( *iter );
+            m_supportedKeywords.emplace( iter->getKeywordName(), std::move( *iter ) );
     }
 
 

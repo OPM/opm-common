@@ -47,62 +47,55 @@ namespace Opm {
 
     namespace GridPropertyPostProcessor {
 
-        class DistributeTopLayer : public GridPropertyBaseInitializer<double>
-        {
-        public:
+        std::vector< double >& distTopLayer( std::vector<double>& values, const Deck& m_deck, const EclipseState& m_eclipseState ) {
+            EclipseGridConstPtr grid = m_eclipseState.getEclipseGrid();
+            size_t layerSize = grid->getNX() * grid->getNY();
+            size_t gridSize  = grid->getCartesianSize();
 
-            void apply(std::vector<double>& values, const Deck& m_deck, const EclipseState& m_eclipseState ) const {
-                EclipseGridConstPtr grid = m_eclipseState.getEclipseGrid();
-                size_t layerSize = grid->getNX() * grid->getNY();
-                size_t gridSize  = grid->getCartesianSize();
-
-                for (size_t globalIndex = layerSize; globalIndex < gridSize; globalIndex++) {
-                    if (std::isnan( values[ globalIndex ] ))
-                        values[globalIndex] = values[globalIndex - layerSize];
-                }
+            for( size_t globalIndex = layerSize; globalIndex < gridSize; globalIndex++ ) {
+                if( std::isnan( values[ globalIndex ] ) )
+                    values[globalIndex] = values[globalIndex - layerSize];
             }
-        };
 
-        /*-----------------------------------------------------------------*/
+            return values;
+        }
 
-        class InitPORV : public GridPropertyBaseInitializer<double>
-        {
-        public:
-
-            void apply(std::vector<double>& values, const Deck& m_deck, const EclipseState& m_eclipseState ) const {
-                EclipseGridConstPtr grid = m_eclipseState.getEclipseGrid();
-                /*
-                  Observe that this apply method does not alter the
-                  values input vector, instead it fetches the PORV
-                  property one more time, and then manipulates that.
-                */
-                auto porv = m_eclipseState.getDoubleGridProperty("PORV");
-                if (porv->containsNaN()) {
-                    auto poro = m_eclipseState.getDoubleGridProperty("PORO");
-                    auto ntg = m_eclipseState.getDoubleGridProperty("NTG");
-                    if (poro->containsNaN())
-                        throw std::logic_error("Do not have information for the PORV keyword - some defaulted values in PORO");
-                    else {
-                        const auto& poroData = poro->getData();
-                        for (size_t globalIndex = 0; globalIndex < porv->getCartesianSize(); globalIndex++) {
-                            if (std::isnan(values[globalIndex])) {
-                                double cell_poro = poroData[globalIndex];
-                                double cell_ntg = ntg->iget(globalIndex);
-                                double cell_volume = grid->getCellVolume(globalIndex);
-                                values[globalIndex] = cell_poro * cell_volume * cell_ntg;
-                            }
+        std::vector< double >& initPORV( std::vector<double>& values, const Deck& m_deck, const EclipseState& m_eclipseState ) {
+            EclipseGridConstPtr grid = m_eclipseState.getEclipseGrid();
+            /*
+               Observe that this apply method does not alter the
+               values input vector, instead it fetches the PORV
+               property one more time, and then manipulates that.
+               */
+            auto porv = m_eclipseState.getDoubleGridProperty("PORV");
+            if (porv->containsNaN()) {
+                auto poro = m_eclipseState.getDoubleGridProperty("PORO");
+                auto ntg = m_eclipseState.getDoubleGridProperty("NTG");
+                if (poro->containsNaN())
+                    throw std::logic_error("Do not have information for the PORV keyword - some defaulted values in PORO");
+                else {
+                    const auto& poroData = poro->getData();
+                    for (size_t globalIndex = 0; globalIndex < porv->getCartesianSize(); globalIndex++) {
+                        if (std::isnan(values[globalIndex])) {
+                            double cell_poro = poroData[globalIndex];
+                            double cell_ntg = ntg->iget(globalIndex);
+                            double cell_volume = grid->getCellVolume(globalIndex);
+                            values[globalIndex] = cell_poro * cell_volume * cell_ntg;
                         }
                     }
                 }
+            }
 
-                if (m_eclipseState.hasDeckDoubleGridProperty("MULTPV")) {
-                    auto multpvData = m_eclipseState.getDoubleGridProperty("MULTPV")->getData();
-                    for (size_t globalIndex = 0; globalIndex < porv->getCartesianSize(); globalIndex++) {
-                        values[globalIndex] *= multpvData[globalIndex];
-                    }
+            if (m_eclipseState.hasDeckDoubleGridProperty("MULTPV")) {
+                auto multpvData = m_eclipseState.getDoubleGridProperty("MULTPV")->getData();
+                for (size_t globalIndex = 0; globalIndex < porv->getCartesianSize(); globalIndex++) {
+                    values[globalIndex] *= multpvData[globalIndex];
                 }
             }
-        };
+
+            return values;
+
+        }
     }
 
 
@@ -511,45 +504,45 @@ namespace Opm {
 
     static std::vector< GridProperties< double >::SupportedKeywordInfo >
     makeSupportedDoubleKeywords(const Deck& deck, const EclipseState& es) {
-        GridPropertyFunction< double > SGLLookup    ( std::make_shared<SGLEndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > ISGLLookup   ( std::make_shared<ISGLEndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > SWLLookup    ( std::make_shared<SWLEndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > ISWLLookup   ( std::make_shared<ISWLEndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > SGULookup    ( std::make_shared<SGUEndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > ISGULookup   ( std::make_shared<ISGUEndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > SWULookup    ( std::make_shared<SWUEndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > ISWULookup   ( std::make_shared<ISWUEndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > SGCRLookup   ( std::make_shared<SGCREndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > ISGCRLookup  ( std::make_shared<ISGCREndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > SOWCRLookup  ( std::make_shared<SOWCREndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > ISOWCRLookup ( std::make_shared<ISOWCREndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > SOGCRLookup  ( std::make_shared<SOGCREndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > ISOGCRLookup ( std::make_shared<ISOGCREndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > SWCRLookup   ( std::make_shared<SWCREndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > ISWCRLookup  ( std::make_shared<ISWCREndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > SGLLookup    ( &SGLEndpoint, &deck, &es );
+        GridPropertyFunction< double > ISGLLookup   ( &ISGLEndpoint, &deck, &es );
+        GridPropertyFunction< double > SWLLookup    ( &SWLEndpoint, &deck, &es );
+        GridPropertyFunction< double > ISWLLookup   ( &ISWLEndpoint, &deck, &es );
+        GridPropertyFunction< double > SGULookup    ( &SGUEndpoint, &deck, &es );
+        GridPropertyFunction< double > ISGULookup   ( &ISGUEndpoint, &deck, &es );
+        GridPropertyFunction< double > SWULookup    ( &SWUEndpoint, &deck, &es );
+        GridPropertyFunction< double > ISWULookup   ( &ISWUEndpoint, &deck, &es );
+        GridPropertyFunction< double > SGCRLookup   ( &SGCREndpoint, &deck, &es );
+        GridPropertyFunction< double > ISGCRLookup  ( &ISGCREndpoint, &deck, &es );
+        GridPropertyFunction< double > SOWCRLookup  ( &SOWCREndpoint, &deck, &es );
+        GridPropertyFunction< double > ISOWCRLookup ( &ISOWCREndpoint, &deck, &es );
+        GridPropertyFunction< double > SOGCRLookup  ( &SOGCREndpoint, &deck, &es );
+        GridPropertyFunction< double > ISOGCRLookup ( &ISOGCREndpoint, &deck, &es );
+        GridPropertyFunction< double > SWCRLookup   ( &SWCREndpoint, &deck, &es );
+        GridPropertyFunction< double > ISWCRLookup  ( &ISWCREndpoint, &deck, &es );
 
-        GridPropertyFunction< double > PCWLookup    ( std::make_shared<PCWEndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > IPCWLookup   ( std::make_shared<IPCWEndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > PCGLookup    ( std::make_shared<PCGEndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > IPCGLookup   ( std::make_shared<IPCGEndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > KRWLookup    ( std::make_shared<KRWEndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > IKRWLookup   ( std::make_shared<IKRWEndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > KRWRLookup   ( std::make_shared<KRWREndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > IKRWRLookup  ( std::make_shared<IKRWREndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > KROLookup    ( std::make_shared<KROEndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > IKROLookup   ( std::make_shared<IKROEndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > KRORWLookup  ( std::make_shared<KRORWEndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > IKRORWLookup ( std::make_shared<IKRORWEndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > KRORGLookup  ( std::make_shared<KRORGEndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > IKRORGLookup ( std::make_shared<IKRORGEndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > KRGLookup    ( std::make_shared<KRGEndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > IKRGLookup   ( std::make_shared<IKRGEndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > KRGRLookup   ( std::make_shared<KRGREndpointInitializer>(), &deck, &es );
-        GridPropertyFunction< double > IKRGRLookup  ( std::make_shared<IKRGREndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > PCWLookup    ( &PCWEndpoint, &deck, &es );
+        GridPropertyFunction< double > IPCWLookup   ( &IPCWEndpoint, &deck, &es );
+        GridPropertyFunction< double > PCGLookup    ( &PCGEndpoint, &deck, &es );
+        GridPropertyFunction< double > IPCGLookup   ( &IPCGEndpoint, &deck, &es );
+        GridPropertyFunction< double > KRWLookup    ( &KRWEndpoint, &deck, &es );
+        GridPropertyFunction< double > IKRWLookup   ( &IKRWEndpoint, &deck, &es );
+        GridPropertyFunction< double > KRWRLookup   ( &KRWREndpoint, &deck, &es );
+        GridPropertyFunction< double > IKRWRLookup  ( &IKRWREndpoint, &deck, &es );
+        GridPropertyFunction< double > KROLookup    ( &KROEndpoint, &deck, &es );
+        GridPropertyFunction< double > IKROLookup   ( &IKROEndpoint, &deck, &es );
+        GridPropertyFunction< double > KRORWLookup  ( &KRORWEndpoint, &deck, &es );
+        GridPropertyFunction< double > IKRORWLookup ( &IKRORWEndpoint, &deck, &es );
+        GridPropertyFunction< double > KRORGLookup  ( &KRORGEndpoint, &deck, &es );
+        GridPropertyFunction< double > IKRORGLookup ( &IKRORGEndpoint, &deck, &es );
+        GridPropertyFunction< double > KRGLookup    ( &KRGEndpoint, &deck, &es );
+        GridPropertyFunction< double > IKRGLookup   ( &IKRGEndpoint, &deck, &es );
+        GridPropertyFunction< double > KRGRLookup   ( &KRGREndpoint, &deck, &es );
+        GridPropertyFunction< double > IKRGRLookup  ( &IKRGREndpoint, &deck, &es );
 
-        GridPropertyFunction< double > tempLookup   ( std::make_shared<GridPropertyTemperatureLookupInitializer>(), &deck, &es );
-        GridPropertyFunction< double > initPORV     ( std::make_shared<GridPropertyPostProcessor::InitPORV>(), &deck, &es );
-        GridPropertyFunction< double > distributeTopLayer ( std::make_shared<GridPropertyPostProcessor::DistributeTopLayer>(), &deck, &es );
+        GridPropertyFunction< double > tempLookup   ( &temperature_lookup, &deck, &es );
+        GridPropertyFunction< double > initPORV     ( &GridPropertyPostProcessor::initPORV, &deck, &es );
+        GridPropertyFunction< double > distributeTopLayer( &GridPropertyPostProcessor::distTopLayer, &deck, &es );
 
         std::vector< GridProperties< double >::SupportedKeywordInfo > supportedDoubleKeywords;
 

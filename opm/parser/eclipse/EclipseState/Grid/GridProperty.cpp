@@ -59,9 +59,7 @@ namespace Opm {
             const T defaultValue,
             const std::string& dimString ) :
         m_keywordName( name ),
-        m_initializer( GridPropertyFunction< T >(
-                    std::make_shared< GridPropertyConstantInitializer< T > >( defaultValue ),
-                    nullptr, nullptr ) ),
+        m_initializer( defaultValue ),
         m_dimensionString( dimString )
     {}
 
@@ -72,9 +70,7 @@ namespace Opm {
             GridPropertyFunction< T > postProcessor,
             const std::string& dimString ) :
         m_keywordName( name ),
-        m_initializer( GridPropertyFunction< T >(
-                    std::make_shared< GridPropertyConstantInitializer< T > >( defaultValue ),
-                    nullptr, nullptr ) ),
+        m_initializer( defaultValue ),
         m_postProcessor( postProcessor ),
         m_dimensionString( dimString )
     {}

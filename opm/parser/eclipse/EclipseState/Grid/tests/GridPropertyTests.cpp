@@ -383,23 +383,13 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
     BOOST_CHECK_EQUAL(sguPropData[2 * 3*3], 0.80);
 }
 
-template <class ValueType>
-class TestPostProcessorMul : public Opm::GridPropertyBaseInitializer<ValueType>
-{
-public:
-    TestPostProcessorMul(ValueType factor) {
-        m_factor = factor;
-    }
 
-    void apply(std::vector<ValueType>& values, const Opm::Deck&, const Opm::EclipseState& ) const {
-        for (size_t g = 0; g < values.size(); g++)
-            values[g] *= m_factor;
-    };
+std::vector< double >& TestPostProcessorMul(std::vector< double >& values, const Opm::Deck&, const Opm::EclipseState& ) {
+    for( size_t g = 0; g < values.size(); g++ )
+        values[g] *= 2.0;
 
-private:
-    ValueType m_factor;
-};
-
+    return values;
+}
 
 
 
@@ -429,13 +419,11 @@ static Opm::DeckPtr createDeck() {
     return parser->parseString(deckData, Opm::ParseMode()) ;
 }
 
-
 BOOST_AUTO_TEST_CASE(GridPropertyPostProcessors) {
-    std::shared_ptr<TestPostProcessorMul<double> > testPostP = std::make_shared<TestPostProcessorMul<double> >(2.0);
-
     typedef Opm::GridPropertySupportedKeywordInfo<double> SupportedKeywordInfo;
     SupportedKeywordInfo kwInfo1("MULTPV" , 1.0 , "1");
-    SupportedKeywordInfo kwInfo2("PORO"   , 1.0 , Opm::GridPropertyFunction< double >( testPostP, nullptr, nullptr ), "1");
+    Opm::GridPropertyFunction< double > gfunc( &TestPostProcessorMul, nullptr, nullptr );
+    SupportedKeywordInfo kwInfo2("PORO", 1.0, gfunc, "1");
     std::vector<SupportedKeywordInfo > supportedKeywords = { kwInfo1, kwInfo2 };
     Opm::DeckPtr deck = createDeck();
     std::shared_ptr<Opm::EclipseGrid> grid = std::make_shared<Opm::EclipseGrid>(deck);

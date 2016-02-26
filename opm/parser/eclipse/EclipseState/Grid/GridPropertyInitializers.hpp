@@ -31,57 +31,31 @@ namespace Opm {
 class Deck;
 class EclipseState;
 
-template <class ValueType>
-class GridPropertyBaseInitializer
-{
-protected:
-    GridPropertyBaseInitializer()
-    { }
-
-public:
-    virtual void apply(std::vector<ValueType>& values, const Deck&, const EclipseState& ) const = 0;
-};
-
-template <class ValueType>
-class GridPropertyConstantInitializer
-    : public GridPropertyBaseInitializer<ValueType>
-{
-public:
-    GridPropertyConstantInitializer(const ValueType& value)
-        : m_value(value)
-    { }
-
-    void apply(std::vector<ValueType>& values, const Deck&, const EclipseState& ) const;
-
-private:
-    ValueType m_value;
-};
-
-// initialize the TEMPI grid property using the temperature vs depth
-// table (stemming from the TEMPVD or the RTEMPVD keyword)
-class GridPropertyTemperatureLookupInitializer
-    : public GridPropertyBaseInitializer<double>
-{
-public:
-    void apply(std::vector<double>& values, const Deck&, const EclipseState& ) const;
-};
-
 template< typename T >
 class GridPropertyFunction {
     public:
         GridPropertyFunction() = default;
 
-        GridPropertyFunction( std::shared_ptr< GridPropertyBaseInitializer< T > >,
+        GridPropertyFunction( std::vector< T >& (*)( std::vector< T >&, const Deck&, const EclipseState& ),
                               const Deck*,
                               const EclipseState* );
+
+        GridPropertyFunction( T );
 
         std::vector< T >& operator()( std::vector< T >& ) const;
 
     private:
-        std::shared_ptr< GridPropertyBaseInitializer< T > > f;
+        std::vector< T >& (*f)( std::vector< T >&, const Deck&, const EclipseState& ) = nullptr;
+        T constant;
         const Deck* deck = nullptr;
         const EclipseState* es = nullptr;
 };
+
+// initialize the TEMPI grid property using the temperature vs depth
+// table (stemming from the TEMPVD or the RTEMPVD keyword)
+std::vector< double >& id( std::vector< double >&, const Deck&, const EclipseState& );
+std::vector< int >& id( std::vector< int >&, const Deck&, const EclipseState& );
+std::vector< double >& temperature_lookup( std::vector< double >&, const Deck&, const EclipseState& );
 
 }
 
