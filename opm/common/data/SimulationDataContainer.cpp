@@ -206,4 +206,24 @@ namespace Opm {
         return getFaceData("FACEFLUX");
     }
 
+    const std::vector<double>& SimulationDataContainer::pressure( ) const {
+        return getCellData("PRESSURE");
+    }
+
+    const std::vector<double>& SimulationDataContainer::temperature() const {
+        return getCellData("TEMPERATURE");
+    }
+
+    const std::vector<double>& SimulationDataContainer::saturation() const {
+        return getCellData("SATURATION");
+    }
+
+    const std::vector<double>& SimulationDataContainer::facepressure() const {
+        return getFaceData("FACEPRESSURE");
+    }
+
+    const std::vector<double>& SimulationDataContainer::faceflux() const {
+        return getFaceData("FACEFLUX");
+    }
+
 }

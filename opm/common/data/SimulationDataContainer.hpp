@@ -79,6 +79,13 @@ namespace Opm {
         std::vector<double>& facepressure();
         std::vector<double>& faceflux    ();
 
+        const std::vector<double>& pressure    () const;
+        const std::vector<double>& temperature () const;
+        const std::vector<double>& saturation  () const;
+
+        const std::vector<double>& facepressure() const;
+        const std::vector<double>& faceflux    () const;
+
     private:
         void  addDefaultFields();
 
