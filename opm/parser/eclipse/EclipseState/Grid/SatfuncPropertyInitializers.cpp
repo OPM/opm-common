@@ -176,18 +176,6 @@ namespace Opm {
         }
     }
 
-
-    struct CriticalSat {
-        CriticalSat( size_t sz ) : water( sz, 0 ), gas( sz, 0 ),
-                                   oil_water( sz, 0 ), oil_gas( sz, 0 )
-        {}
-
-        std::vector< double > water;
-        std::vector< double > gas;
-        std::vector< double > oil_water;
-        std::vector< double > oil_gas;
-    };
-
     /*
      * These functions have been ported from an older implementation to instead
      * use std::upper_bound and more from <algorithm> to make code -intent-
@@ -218,29 +206,25 @@ namespace Opm {
         return table.getSwColumn()[ index - 1 ];
     }
 
-    static inline double critical_oil_water( const SwofTable& swofTable ) {
-        const auto& col = swofTable.getKrowColumn();
+    static std::vector< double > findCriticalWater( const TableManager& tm ) {
 
-        using reverse = std::reverse_iterator< decltype( col.begin() ) >;
-        auto rbegin = reverse( col.begin() + swofTable.numRows() + 1 );
-        auto rend = reverse( col.begin() );
-        const auto critical = std::upper_bound( rbegin, rend, 0.0 );
-        const auto index = std::distance( col.begin(), critical.base() - 1 );
+        const auto num_tables = tm.getTabdims()->getNumSatTables();
+        const auto& swofTables = tm.getSwofTables();
+        const auto& swfnTables = tm.getSwfnTables();
 
-        if( critical == rend ) return 0.0;
+        const auto famI = [&swofTables]( int i ) {
+            return critical_water( swofTables.getTable< SwofTable >( i ) );
+        };
 
-        return 1 - swofTable.getSwColumn()[ index + 1 ];
-    }
+        const auto famII = [&swfnTables]( int i ) {
+            return critical_water( swfnTables.getTable< SwfnTable >( i ) );
+        };
 
-    static inline double critical_oil_water( const Sof3Table& sof3Table ) {
-
-        const auto& col = sof3Table.getKrowColumn();
-        const auto critical = std::upper_bound( col.begin(), col.end(), 0.0 );
-        const auto index = std::distance( col.begin(), critical );
-
-        if( index == 0 || critical == col.end() ) return 0.0;
-
-        return sof3Table.getSoColumn()[ index - 1 ];
+        switch( getSaturationFunctionFamily( tm ) ) {
+            case SatfuncFamily::I: return fun::map( famI, fun::iota( num_tables ) );
+            case SatfuncFamily::II: return fun::map( famII, fun::iota( num_tables ) );
+            default: throw std::domain_error("No valid saturation keyword family specified");
+        }
     }
 
     template< typename T >
@@ -255,74 +239,65 @@ namespace Opm {
         return table.getSgColumn()[ index - 1 ];
     }
 
-    static inline double critical_oil_gas( const SgofTable& sgofTable ) {
-        const auto& col = sgofTable.getKrogColumn();
-
-        using reverse = std::reverse_iterator< decltype( col.begin() ) >;
-        auto rbegin = reverse( col.begin() + sgofTable.numRows() + 1 );
-        auto rend = reverse( col.begin() );
-        const auto critical = std::upper_bound( rbegin, rend, 0.0 );
-        const auto index = std::distance( col.begin(), critical.base() - 1 );
-
-        if( critical == rend ) return 0.0;
-
-        return 1 - sgofTable.getSgColumn()[ index + 1 ];
-    }
-
-    static inline double critical_gas( const SlgofTable& sgofTable ) {
-        const auto& col = sgofTable.getKrgColumn();
+    static inline double critical_gas( const SlgofTable& slgofTable ) {
+        const auto& col = slgofTable.getKrgColumn();
         const auto critical = std::upper_bound( col.begin(), col.end(), 0.0 );
         const auto index = std::distance( col.begin(), critical );
 
         if( index == 0 || critical == col.end() ) return 0.0;
 
-        return sgofTable.getSlColumn()[ index - 1 ];
+        return slgofTable.getSlColumn()[ index - 1 ];
     }
 
-    static inline double critical_oil_gas( const SlgofTable& sgofTable ) {
+    static std::vector< double > findCriticalGas( const TableManager& tm ) {
 
-        const auto& col = sgofTable.getKrogColumn();
+        const auto num_tables = tm.getTabdims()->getNumSatTables();
+        const auto& sgfnTables = tm.getSgfnTables();
+        const auto& sgofTables = tm.getSgofTables();
+        const auto& slgofTables = tm.getSlgofTables();
+
+        const auto famI_sgof = [&sgofTables]( int i ) {
+            return critical_gas( sgofTables.getTable< SgofTable >( i ) );
+        };
+
+        const auto famI_slgof = [&slgofTables]( int i ) {
+            return critical_gas( slgofTables.getTable< SlgofTable >( i ) );
+        };
+
+        const auto famII = [&sgfnTables]( int i ) {
+            return critical_gas( sgfnTables.getTable< SgfnTable >( i ) );
+        };
+
+        switch( getSaturationFunctionFamily( tm ) ) {
+            case SatfuncFamily::I:
+                if( sgofTables.empty() && slgofTables.empty() )
+                    throw std::runtime_error( "Saturation keyword family I requires either sgof or slgof non-empty" );
+
+                if( !sgofTables.empty() )
+                    return fun::map( famI_sgof, fun::iota( num_tables ) );
+                else
+                    return fun::map( famI_slgof, fun::iota( num_tables ) );
+
+            case SatfuncFamily::II:
+                return fun::map( famII, fun::iota( num_tables ) );
+
+            default:
+                throw std::domain_error("No valid saturation keyword family specified");
+        }
+    }
+
+    static inline double critical_oil_water( const SwofTable& swofTable ) {
+        const auto& col = swofTable.getKrowColumn();
+
         using reverse = std::reverse_iterator< decltype( col.begin() ) >;
-        auto rbegin = reverse( col.begin() + sgofTable.numRows() + 1 );
+        auto rbegin = reverse( col.begin() + swofTable.numRows() );
         auto rend = reverse( col.begin() );
         const auto critical = std::upper_bound( rbegin, rend, 0.0 );
         const auto index = std::distance( col.begin(), critical.base() - 1 );
 
         if( critical == rend ) return 0.0;
 
-        return 1 - sgofTable.getSlColumn()[ index + 1 ];
-    }
-
-    static CriticalSat findCriticalPointsI( const TableManager& tm ) {
-        const auto numSatTables = tm.getTabdims()->getNumSatTables();
-
-        CriticalSat critical( numSatTables );
-
-        const auto& swofTables = tm.getSwofTables();
-        const auto& sgofTables = tm.getSgofTables();
-        const auto& slgofTables = tm.getSlgofTables();
-
-        if( sgofTables.empty() && slgofTables.empty() )
-            throw std::runtime_error( "Saturation keyword family I requires either sgof or slgof non-empty" );
-
-        for( size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx ) {
-            const auto& swofTable = swofTables.getTable< SwofTable >( tableIdx );
-            critical.water[ tableIdx ] = critical_water( swofTable );
-            critical.oil_water[ tableIdx ] = critical_oil_water( swofTable );
-
-            if( !sgofTables.empty() ) {
-                const SgofTable& sgofTable = sgofTables.getTable<SgofTable>( tableIdx );
-                critical.gas[ tableIdx ] = critical_gas( sgofTable );
-                critical.oil_gas[ tableIdx ] = critical_oil_gas( sgofTable );
-            }
-            else {
-                const SlgofTable& slgofTable = slgofTables.getTable<SlgofTable>( tableIdx );
-                critical.gas[ tableIdx ] = critical_gas( slgofTable );
-                critical.oil_gas[ tableIdx ] = critical_oil_gas( slgofTable );
-            }
-        }
-
-        return critical;
+        return 1 - swofTable.getSwColumn()[ index + 1 ];
     }
 
     static inline double critical_oil( const Sof3Table& sof3Table, const TableColumn& col ) {
@@ -334,37 +309,91 @@ namespace Opm {
         return sof3Table.getSoColumn()[ index - 1 ];
     }
 
-    static CriticalSat findCriticalPointsII( const TableManager& tm ) {
-        const auto numSatTables = tm.getTabdims()->getNumSatTables();
-        CriticalSat critical( numSatTables );
+    static std::vector< double > findCriticalOilWater( const TableManager& tm ) {
+        const auto num_tables = tm.getTabdims()->getNumSatTables();
+        const auto& swofTables = tm.getSwofTables();
+        const auto& sof3Tables= tm.getSof3Tables();
 
-        const TableContainer& swfnTables = tm.getSwfnTables();
-        const TableContainer& sgfnTables = tm.getSgfnTables();
-        const TableContainer& sof3Tables = tm.getSof3Tables();
+        const auto famI = [&swofTables]( int i ) {
+            return critical_oil_water( swofTables.getTable< SwofTable >( i ) );
+        };
 
-        for (size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx) {
+        const auto famII = [&sof3Tables]( int i ) {
+            const auto& tb = sof3Tables.getTable< Sof3Table >( i );
+            return critical_oil( tb, tb.getKrowColumn() );
+        };
 
-            const auto& swfnTable = swfnTables.getTable<SwfnTable>( tableIdx );
-            const auto& sgfnTable = sgfnTables.getTable<SgfnTable>( tableIdx );
-
-            critical.water[ tableIdx ] = critical_water( swfnTable );
-            critical.gas[ tableIdx ] = critical_gas( sgfnTable );
-
-            const auto& sof3Table = sof3Tables.getTable<Sof3Table>( tableIdx );
-            critical.oil_gas[ tableIdx ] = critical_oil( sof3Table, sof3Table.getKrogColumn() );
-            critical.oil_water[ tableIdx ] = critical_oil( sof3Table, sof3Table.getKrowColumn() );
+        switch( getSaturationFunctionFamily( tm ) ) {
+            case SatfuncFamily::I: return fun::map( famI, fun::iota( num_tables ) );
+            case SatfuncFamily::II: return fun::map( famII, fun::iota( num_tables ) );
+            default: throw std::domain_error("No valid saturation keyword family specified");
         }
-
-        return critical;
     }
 
-    static CriticalSat findCriticalPoints( const EclipseState& m_eclipseState ) {
-        const auto& tables = *m_eclipseState.getTableManager();
+    static inline double critical_oil_gas( const SgofTable& sgofTable ) {
+        const auto& col = sgofTable.getKrogColumn();
 
-        switch( getSaturationFunctionFamily( tables ) ) {
-            case SatfuncFamily::I: return findCriticalPointsI( tables );
-            case SatfuncFamily::II: return findCriticalPointsII( tables );
-            default: throw std::domain_error("No valid saturation keyword family specified");
+        using reverse = std::reverse_iterator< decltype( col.begin() ) >;
+        auto rbegin = reverse( col.begin() + sgofTable.numRows() );
+        auto rend = reverse( col.begin() );
+        const auto critical = std::upper_bound( rbegin, rend, 0.0 );
+        const auto index = std::distance( col.begin(), critical.base() - 1 );
+
+        if( critical == rend ) return 0.0;
+
+        return 1 - sgofTable.getSgColumn()[ index + 1 ];
+    }
+
+    static inline double critical_oil_gas( const SlgofTable& sgofTable ) {
+
+        const auto& col = sgofTable.getKrogColumn();
+        using reverse = std::reverse_iterator< decltype( col.begin() ) >;
+        auto rbegin = reverse( col.begin() + sgofTable.numRows() );
+        auto rend = reverse( col.begin() );
+        const auto critical = std::upper_bound( rbegin, rend, 0.0 );
+        const auto index = std::distance( col.begin(), critical.base() - 1 );
+
+        if( critical == rend ) return 0.0;
+
+        return 1 - sgofTable.getSlColumn()[ index + 1 ];
+    }
+
+
+    static std::vector< double > findCriticalOilGas( const TableManager& tm ) {
+
+        const auto num_tables = tm.getTabdims()->getNumSatTables();
+        const auto& sgofTables = tm.getSgofTables();
+        const auto& slgofTables = tm.getSlgofTables();
+        const auto& sof3Tables = tm.getSof3Tables();
+
+        const auto famI_sgof = [&sgofTables]( int i ) {
+            return critical_oil_gas( sgofTables.getTable< SgofTable >( i ) );
+        };
+
+        const auto famI_slgof = [&slgofTables]( int i ) {
+            return critical_oil_gas( slgofTables.getTable< SlgofTable >( i ) );
+        };
+
+        const auto famII = [&sof3Tables]( int i ) {
+            const auto& tb = sof3Tables.getTable< Sof3Table >( i );
+            return critical_oil( tb, tb.getKrogColumn() );
+        };
+
+        switch( getSaturationFunctionFamily( tm ) ) {
+            case SatfuncFamily::I:
+                if( sgofTables.empty() && slgofTables.empty() )
+                    throw std::runtime_error( "Saturation keyword family I requires either sgof or slgof non-empty" );
+
+                if( !sgofTables.empty() )
+                    return fun::map( famI_sgof, fun::iota( num_tables ) );
+                else
+                    return fun::map( famI_slgof, fun::iota( num_tables ) );
+
+            case SatfuncFamily::II:
+                return fun::map( famII, fun::iota( num_tables ) );
+
+            default:
+                throw std::domain_error("No valid saturation keyword family specified");
         }
     }
 
@@ -433,8 +462,7 @@ namespace Opm {
         return vps;
     }
 
-    static inline VerticalPts findVerticalPointsII( const TableManager& tm,
-                                            const CriticalSat& crit ) {
+    static inline VerticalPts findVerticalPointsII( const TableManager& tm ) {
 
         const auto& swfnTables = tm.getSwfnTables();
         const auto& sgfnTables = tm.getSgfnTables();
@@ -445,6 +473,8 @@ namespace Opm {
 
         const auto min_water = findMinWaterSaturation( tm );
         const auto min_gas = findMinGasSaturation( tm );
+        const auto crit_water = findCriticalWater( tm );
+        const auto crit_gas = findCriticalGas( tm );
 
         for( size_t tableIdx = 0; tableIdx < numSatTables; ++tableIdx ) {
             const auto& sof3Table = sof3Tables.getTable<Sof3Table>( tableIdx );
@@ -460,11 +490,11 @@ namespace Opm {
             vps.krwr[tableIdx] = swfnTable.getKrwColumn().front();
 
             // find the oil relperm which corresponds to the critical water saturation
-            const double OilSatAtcritialWaterSat = 1.0 - crit.water[tableIdx] - min_gas[tableIdx];
+            const double OilSatAtcritialWaterSat = 1.0 - crit_water[tableIdx] - min_gas[tableIdx];
             vps.krorw[tableIdx] = sof3Table.evaluate("KROW", OilSatAtcritialWaterSat);
 
             // find the oil relperm which corresponds to the critical gas saturation
-            const double OilSatAtCritialGasSat = 1.0 - crit.gas[tableIdx] - min_water[tableIdx];
+            const double OilSatAtCritialGasSat = 1.0 - crit_gas[tableIdx] - min_water[tableIdx];
             vps.krorg[tableIdx] = sof3Table.evaluate("KROG", OilSatAtCritialGasSat);
 
             // find the maximum output values of the water-oil system. the maximum oil
@@ -483,14 +513,13 @@ namespace Opm {
         return vps;
     }
 
-    static VerticalPts findVerticalPoints( const EclipseState& m_eclipseState,
-                                   const CriticalSat& crit ) {
+    static VerticalPts findVerticalPoints( const EclipseState& m_eclipseState ) {
 
         const auto& tables = *m_eclipseState.getTableManager();
 
         switch( getSaturationFunctionFamily( tables ) ) {
             case SatfuncFamily::I: return findVerticalPointsI( tables );
-            case SatfuncFamily::II: return findVerticalPointsII( tables, crit );
+            case SatfuncFamily::II: return findVerticalPointsII( tables );
             default: throw std::domain_error("No valid saturation keyword family specified");
         }
     }
@@ -538,8 +567,7 @@ namespace Opm {
         // All table lookup assumes three-phase model
         assert( m_eclipseState.getNumPhases() == 3 );
 
-        const auto crit = findCriticalPoints( m_eclipseState );
-        const auto vps = findVerticalPoints( m_eclipseState, crit );
+        const auto vps = findVerticalPoints( m_eclipseState );
 
         // acctually assign the defaults. if the ENPVD keyword was specified in the deck,
         // this currently cannot be done because we would need the Z-coordinate of the
@@ -646,168 +674,132 @@ namespace Opm {
     }
 
     std::vector< double >& SGCREndpoint( std::vector< double >& values, const Deck& deck, const EclipseState& es ) {
-        const auto crit = findCriticalPoints( es );
-        return satnumApply( values, "SGCRIT", crit.gas, deck, es, false );
+        const auto crit_gas = findCriticalGas( *es.getTableManager() );
+        return satnumApply( values, "SGCRIT", crit_gas, deck, es, false );
     }
 
     std::vector< double >& ISGCREndpoint( std::vector< double >& values, const Deck& deck, const EclipseState& es ) {
-        const auto crit = findCriticalPoints( es );
-        return imbnumApply( values, "SGCRIT", crit.gas, deck, es, false );
+        const auto crit_gas = findCriticalGas( *es.getTableManager() );
+        return imbnumApply( values, "SGCRIT", crit_gas, deck, es, false );
     }
 
     std::vector< double >& SOWCREndpoint( std::vector< double >& values, const Deck& deck, const EclipseState& es ) {
-        const auto crit = findCriticalPoints( es );
-        return satnumApply( values, "SOWCRIT", crit.oil_water, deck, es, false );
+        const auto oil_water = findCriticalOilWater( *es.getTableManager() );
+        return satnumApply( values, "SOWCRIT", oil_water, deck, es, false );
     }
 
     std::vector< double >& ISOWCREndpoint( std::vector< double >& values, const Deck& deck, const EclipseState& es ) {
-        const auto crit = findCriticalPoints( es );
-        return imbnumApply( values, "SOWCRIT", crit.oil_water, deck, es, false );
+        const auto oil_water = findCriticalOilWater( *es.getTableManager() );
+        return imbnumApply( values, "SOWCRIT", oil_water, deck, es, false );
     }
 
     std::vector< double >& SOGCREndpoint( std::vector< double >& values, const Deck& deck, const EclipseState& es ) {
-        const auto crit = findCriticalPoints( es );
-        return satnumApply( values, "SOGCRIT", crit.oil_gas, deck, es, false );
+        const auto crit_oil_gas = findCriticalOilGas( *es.getTableManager() );
+        return satnumApply( values, "SOGCRIT", crit_oil_gas, deck, es, false );
     }
 
     std::vector< double >& ISOGCREndpoint( std::vector< double >& values, const Deck& deck, const EclipseState& es ) {
-        const auto crit = findCriticalPoints( es );
-        return imbnumApply( values, "SOGCRIT", crit.oil_gas, deck, es, false );
+        const auto crit_oil_gas = findCriticalOilGas( *es.getTableManager() );
+        return imbnumApply( values, "SOGCRIT", crit_oil_gas, deck, es, false );
     }
 
     std::vector< double >& SWCREndpoint( std::vector< double >& values, const Deck& deck, const EclipseState& es ) {
-        const auto crit = findCriticalPoints( es );
-        return satnumApply( values, "SWCRIT", crit.water, deck, es, false );
+        const auto crit_water = findCriticalWater( *es.getTableManager() );
+        return satnumApply( values, "SWCRIT", crit_water, deck, es, false );
     }
 
     std::vector< double >& ISWCREndpoint( std::vector< double >& values, const Deck& deck, const EclipseState& es ) {
-        const auto crit = findCriticalPoints( es );
-        return imbnumApply( values, "SWCRIT", crit.water, deck, es, false );
+        const auto crit_water = findCriticalWater( *es.getTableManager() );
+        return imbnumApply( values, "SWCRIT", crit_water, deck, es, false );
     }
 
     std::vector< double >& PCWEndpoint( std::vector< double >& values, const Deck& deck, const EclipseState& es ) {
-        const auto crit = findCriticalPoints( es );
-        const auto vps = findVerticalPoints( es, crit );
-
+        const auto vps = findVerticalPoints( es );
         return satnumApply( values, "PCW", vps.maxPcow, deck, es, false );
     }
 
     std::vector< double >& IPCWEndpoint( std::vector< double >& values, const Deck& deck, const EclipseState& es ) {
-        const auto crit = findCriticalPoints( es );
-        const auto vps = findVerticalPoints( es, crit );
-
+        const auto vps = findVerticalPoints( es );
         return imbnumApply( values, "IPCW", vps.maxPcow, deck, es, false );
     }
 
     std::vector< double >& PCGEndpoint( std::vector< double >& values, const Deck& deck, const EclipseState& es ) {
-        const auto crit = findCriticalPoints( es );
-        const auto vps = findVerticalPoints( es, crit );
-
+        const auto vps = findVerticalPoints( es );
         return satnumApply( values, "PCG", vps.maxPcog, deck, es, false );
     }
 
     std::vector< double >& IPCGEndpoint( std::vector< double >& values, const Deck& deck, const EclipseState& es ) {
-        const auto crit = findCriticalPoints( es );
-        const auto vps = findVerticalPoints( es, crit );
-
+        const auto vps = findVerticalPoints( es );
         return imbnumApply( values, "IPCG", vps.maxPcog, deck, es, false );
     }
 
     std::vector< double >& KRWEndpoint( std::vector< double >& values, const Deck& deck, const EclipseState& es ) {
-        const auto crit = findCriticalPoints( es );
-        const auto vps = findVerticalPoints( es, crit );
-
+        const auto vps = findVerticalPoints( es );
         return satnumApply( values, "KRW", vps.maxKrw, deck, es, false );
     }
 
     std::vector< double >& IKRWEndpoint( std::vector< double >& values, const Deck& deck, const EclipseState& es ) {
-        const auto crit = findCriticalPoints( es );
-        const auto vps = findVerticalPoints( es, crit );
-
+        const auto vps = findVerticalPoints( es );
         return imbnumApply( values, "IKRW", vps.krwr, deck, es, false );
     }
 
     std::vector< double >& KRWREndpoint( std::vector< double >& values, const Deck& deck, const EclipseState& es ) {
-        const auto crit = findCriticalPoints( es );
-        const auto vps = findVerticalPoints( es, crit );
-
+        const auto vps = findVerticalPoints( es );
         return satnumApply( values, "KRWR", vps.krwr, deck, es, false );
     }
 
     std::vector< double >& IKRWREndpoint( std::vector< double >& values, const Deck& deck, const EclipseState& es ) {
-        const auto crit = findCriticalPoints( es );
-        const auto vps = findVerticalPoints( es, crit );
-
+        const auto vps = findVerticalPoints( es );
         return imbnumApply( values, "IKRWR", vps.krwr, deck, es, false );
     }
 
     std::vector< double >& KROEndpoint( std::vector< double >& values, const Deck& deck, const EclipseState& es ) {
-        const auto crit = findCriticalPoints( es );
-        const auto vps = findVerticalPoints( es, crit );
-
+        const auto vps = findVerticalPoints( es );
         return satnumApply( values, "KRO", vps.maxKro, deck, es, false );
     }
 
     std::vector< double >& IKROEndpoint( std::vector< double >& values, const Deck& deck, const EclipseState& es ) {
-        const auto crit = findCriticalPoints( es );
-        const auto vps = findVerticalPoints( es, crit );
-
+        const auto vps = findVerticalPoints( es);
         return imbnumApply( values, "IKRO", vps.maxKro, deck, es, false );
     }
 
     std::vector< double >& KRORWEndpoint( std::vector< double >& values, const Deck& deck, const EclipseState& es ) {
-        const auto crit = findCriticalPoints( es );
-        const auto vps = findVerticalPoints( es, crit );
-
+        const auto vps = findVerticalPoints( es );
         return satnumApply( values, "KRORW", vps.krorw, deck, es, false );
     }
 
     std::vector< double >& IKRORWEndpoint( std::vector< double >& values, const Deck& deck, const EclipseState& es ) {
-        const auto crit = findCriticalPoints( es );
-        const auto vps = findVerticalPoints( es, crit );
-
+        const auto vps = findVerticalPoints( es );
         return imbnumApply( values, "IKRORW", vps.krorw, deck, es, false );
     }
 
     std::vector< double >& KRORGEndpoint( std::vector< double >& values, const Deck& deck, const EclipseState& es ) {
-        const auto crit = findCriticalPoints( es );
-        const auto vps = findVerticalPoints( es, crit );
-
+        const auto vps = findVerticalPoints( es );
         return satnumApply( values, "KRORG", vps.krorg, deck, es, false );
     }
 
     std::vector< double >& IKRORGEndpoint( std::vector< double >& values, const Deck& deck, const EclipseState& es ) {
-        const auto crit = findCriticalPoints( es );
-        const auto vps = findVerticalPoints( es, crit );
-
+        const auto vps = findVerticalPoints( es );
         return imbnumApply( values, "IKRORG", vps.krorg, deck, es, false );
     }
 
     std::vector< double >& KRGEndpoint( std::vector< double >& values, const Deck& deck, const EclipseState& es ) {
-        const auto crit = findCriticalPoints( es );
-        const auto vps = findVerticalPoints( es, crit );
-
+        const auto vps = findVerticalPoints( es );
         return satnumApply( values, "KRG", vps.maxKrg, deck, es, false );
     }
 
     std::vector< double >& IKRGEndpoint( std::vector< double >& values, const Deck& deck, const EclipseState& es ) {
-        const auto crit = findCriticalPoints( es );
-        const auto vps = findVerticalPoints( es, crit );
-
+        const auto vps = findVerticalPoints( es );
         return imbnumApply( values, "IKRG", vps.maxKrg, deck, es, false );
     }
 
     std::vector< double >& KRGREndpoint( std::vector< double >& values, const Deck& deck, const EclipseState& es ) {
-        const auto crit = findCriticalPoints( es );
-        const auto vps = findVerticalPoints( es, crit );
-
+        const auto vps = findVerticalPoints( es );
         return satnumApply( values, "KRGR", vps.krgr, deck, es, false );
     }
 
     std::vector< double >& IKRGREndpoint( std::vector< double >& values, const Deck& deck, const EclipseState& es ) {
-        const auto crit = findCriticalPoints( es );
-        const auto vps = findVerticalPoints( es, crit );
-
+        const auto vps = findVerticalPoints( es );
         return imbnumApply( values, "IKRGR", vps.krgr, deck, es, false );
     }
 
