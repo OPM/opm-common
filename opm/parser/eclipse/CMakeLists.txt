@@ -116,6 +116,7 @@ EclipseState/Tables/PvtxTable.cpp
 EclipseState/Tables/Tables.cpp
 #
 EclipseState/Grid/GridPropertyInitializers.cpp
+EclipseState/Grid/SatfuncPropertyInitializers.cpp
 EclipseState/Grid/GridProperty.cpp
 EclipseState/Grid/Box.cpp
 EclipseState/Grid/BoxManager.cpp
