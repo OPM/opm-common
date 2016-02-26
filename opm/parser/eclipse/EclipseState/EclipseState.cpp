@@ -46,15 +46,11 @@ namespace Opm {
 
     namespace GridPropertyPostProcessor {
 
-        class DistributeTopLayer : public GridPropertyBasePostProcessor<double>
+        class DistributeTopLayer : public GridPropertyBaseInitializer<double>
         {
         public:
-            DistributeTopLayer(const EclipseState& eclipseState) :
-                m_eclipseState( eclipseState )
-            { }
 
-
-            void apply(std::vector<double>& values) const {
+            void apply(std::vector<double>& values, const Deck& m_deck, const EclipseState& m_eclipseState ) const {
                 EclipseGridConstPtr grid = m_eclipseState.getEclipseGrid();
                 size_t layerSize = grid->getNX() * grid->getNY();
                 size_t gridSize  = grid->getCartesianSize();
@@ -64,23 +60,15 @@ namespace Opm {
                         values[globalIndex] = values[globalIndex - layerSize];
                 }
             }
-
-
-        private:
-            const EclipseState& m_eclipseState;
         };
 
         /*-----------------------------------------------------------------*/
 
-        class InitPORV : public GridPropertyBasePostProcessor<double>
+        class InitPORV : public GridPropertyBaseInitializer<double>
         {
         public:
-            InitPORV(const EclipseState& eclipseState) :
-                m_eclipseState( eclipseState )
-            { }
 
-
-            void apply(std::vector<double>& values) const {
+            void apply(std::vector<double>& values, const Deck& m_deck, const EclipseState& m_eclipseState ) const {
                 EclipseGridConstPtr grid = m_eclipseState.getEclipseGrid();
                 /*
                   Observe that this apply method does not alter the
@@ -113,13 +101,7 @@ namespace Opm {
                     }
                 }
             }
-
-
-        private:
-            const EclipseState& m_eclipseState;
         };
-
-
     }
 
 
@@ -461,8 +443,8 @@ namespace Opm {
 
     std::shared_ptr<const GridProperty<double> > EclipseState::getDoubleGridProperty( const std::string& keyword ) const {
         auto gridProperty = m_doubleGridProperties->getKeyword( keyword );
-        if (gridProperty->postProcessorRunRequired())
-            gridProperty->runPostProcessor();
+
+        gridProperty->runPostProcessor();
 
         return gridProperty;
     }
@@ -528,45 +510,45 @@ namespace Opm {
 
     static std::vector< GridProperties< double >::SupportedKeywordInfo >
     makeSupportedDoubleKeywords(const Deck& deck, const EclipseState& es) {
-        const auto SGLLookup = std::make_shared<SGLEndpointInitializer<>>(deck, es);
-        const auto ISGLLookup = std::make_shared<ISGLEndpointInitializer<>>(deck, es);
-        const auto SWLLookup = std::make_shared<SWLEndpointInitializer<>>(deck, es);
-        const auto ISWLLookup = std::make_shared<ISWLEndpointInitializer<>>(deck, es);
-        const auto SGULookup = std::make_shared<SGUEndpointInitializer<>>(deck, es);
-        const auto ISGULookup = std::make_shared<ISGUEndpointInitializer<>>(deck, es);
-        const auto SWULookup = std::make_shared<SWUEndpointInitializer<>>(deck, es);
-        const auto ISWULookup = std::make_shared<ISWUEndpointInitializer<>>(deck, es);
-        const auto SGCRLookup = std::make_shared<SGCREndpointInitializer<>>(deck, es);
-        const auto ISGCRLookup = std::make_shared<ISGCREndpointInitializer<>>(deck, es);
-        const auto SOWCRLookup = std::make_shared<SOWCREndpointInitializer<>>(deck, es);
-        const auto ISOWCRLookup = std::make_shared<ISOWCREndpointInitializer<>>(deck, es);
-        const auto SOGCRLookup = std::make_shared<SOGCREndpointInitializer<>>(deck, es);
-        const auto ISOGCRLookup = std::make_shared<ISOGCREndpointInitializer<>>(deck, es);
-        const auto SWCRLookup = std::make_shared<SWCREndpointInitializer<>>(deck, es);
-        const auto ISWCRLookup = std::make_shared<ISWCREndpointInitializer<>>(deck, es);
+        GridPropertyFunction< double > SGLLookup    ( std::make_shared<SGLEndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > ISGLLookup   ( std::make_shared<ISGLEndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > SWLLookup    ( std::make_shared<SWLEndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > ISWLLookup   ( std::make_shared<ISWLEndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > SGULookup    ( std::make_shared<SGUEndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > ISGULookup   ( std::make_shared<ISGUEndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > SWULookup    ( std::make_shared<SWUEndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > ISWULookup   ( std::make_shared<ISWUEndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > SGCRLookup   ( std::make_shared<SGCREndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > ISGCRLookup  ( std::make_shared<ISGCREndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > SOWCRLookup  ( std::make_shared<SOWCREndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > ISOWCRLookup ( std::make_shared<ISOWCREndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > SOGCRLookup  ( std::make_shared<SOGCREndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > ISOGCRLookup ( std::make_shared<ISOGCREndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > SWCRLookup   ( std::make_shared<SWCREndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > ISWCRLookup  ( std::make_shared<ISWCREndpointInitializer>(), &deck, &es );
 
-        const auto PCWLookup = std::make_shared<PCWEndpointInitializer<>>(deck, es);
-        const auto IPCWLookup = std::make_shared<IPCWEndpointInitializer<>>(deck, es);
-        const auto PCGLookup = std::make_shared<PCGEndpointInitializer<>>(deck, es);
-        const auto IPCGLookup = std::make_shared<IPCGEndpointInitializer<>>(deck, es);
-        const auto KRWLookup = std::make_shared<KRWEndpointInitializer<>>(deck, es);
-        const auto IKRWLookup = std::make_shared<IKRWEndpointInitializer<>>(deck, es);
-        const auto KRWRLookup = std::make_shared<KRWREndpointInitializer<>>(deck, es);
-        const auto IKRWRLookup = std::make_shared<IKRWREndpointInitializer<>>(deck, es);
-        const auto KROLookup = std::make_shared<KROEndpointInitializer<>>(deck, es);
-        const auto IKROLookup = std::make_shared<IKROEndpointInitializer<>>(deck, es);
-        const auto KRORWLookup = std::make_shared<KRORWEndpointInitializer<>>(deck, es);
-        const auto IKRORWLookup = std::make_shared<IKRORWEndpointInitializer<>>(deck, es);
-        const auto KRORGLookup = std::make_shared<KRORGEndpointInitializer<>>(deck, es);
-        const auto IKRORGLookup = std::make_shared<IKRORGEndpointInitializer<>>(deck, es);
-        const auto KRGLookup = std::make_shared<KRGEndpointInitializer<>>(deck, es);
-        const auto IKRGLookup = std::make_shared<IKRGEndpointInitializer<>>(deck, es);
-        const auto KRGRLookup = std::make_shared<KRGREndpointInitializer<>>(deck, es);
-        const auto IKRGRLookup = std::make_shared<IKRGREndpointInitializer<>>(deck, es);
+        GridPropertyFunction< double > PCWLookup    ( std::make_shared<PCWEndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > IPCWLookup   ( std::make_shared<IPCWEndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > PCGLookup    ( std::make_shared<PCGEndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > IPCGLookup   ( std::make_shared<IPCGEndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > KRWLookup    ( std::make_shared<KRWEndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > IKRWLookup   ( std::make_shared<IKRWEndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > KRWRLookup   ( std::make_shared<KRWREndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > IKRWRLookup  ( std::make_shared<IKRWREndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > KROLookup    ( std::make_shared<KROEndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > IKROLookup   ( std::make_shared<IKROEndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > KRORWLookup  ( std::make_shared<KRORWEndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > IKRORWLookup ( std::make_shared<IKRORWEndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > KRORGLookup  ( std::make_shared<KRORGEndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > IKRORGLookup ( std::make_shared<IKRORGEndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > KRGLookup    ( std::make_shared<KRGEndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > IKRGLookup   ( std::make_shared<IKRGEndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > KRGRLookup   ( std::make_shared<KRGREndpointInitializer>(), &deck, &es );
+        GridPropertyFunction< double > IKRGRLookup  ( std::make_shared<IKRGREndpointInitializer>(), &deck, &es );
 
-        const auto tempLookup = std::make_shared<GridPropertyTemperatureLookupInitializer>(deck, es);
-        const auto distributeTopLayer = std::make_shared<GridPropertyPostProcessor::DistributeTopLayer>(es);
-        const auto initPORV = std::make_shared<GridPropertyPostProcessor::InitPORV>(es);
+        GridPropertyFunction< double > tempLookup   ( std::make_shared<GridPropertyTemperatureLookupInitializer>(), &deck, &es );
+        GridPropertyFunction< double > initPORV     ( std::make_shared<GridPropertyPostProcessor::InitPORV>(), &deck, &es );
+        GridPropertyFunction< double > distributeTopLayer ( std::make_shared<GridPropertyPostProcessor::DistributeTopLayer>(), &deck, &es );
 
         std::vector< GridProperties< double >::SupportedKeywordInfo > supportedDoubleKeywords;
 

@@ -384,14 +384,14 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
 }
 
 template <class ValueType>
-class TestPostProcessorMul : public Opm::GridPropertyBasePostProcessor<ValueType>
+class TestPostProcessorMul : public Opm::GridPropertyBaseInitializer<ValueType>
 {
 public:
     TestPostProcessorMul(ValueType factor) {
         m_factor = factor;
     }
 
-    void apply(std::vector<ValueType>& values) const {
+    void apply(std::vector<ValueType>& values, const Opm::Deck&, const Opm::EclipseState& ) const {
         for (size_t g = 0; g < values.size(); g++)
             values[g] *= m_factor;
     };
@@ -435,7 +435,7 @@ BOOST_AUTO_TEST_CASE(GridPropertyPostProcessors) {
 
     typedef Opm::GridPropertySupportedKeywordInfo<double> SupportedKeywordInfo;
     SupportedKeywordInfo kwInfo1("MULTPV" , 1.0 , "1");
-    SupportedKeywordInfo kwInfo2("PORO"   , 1.0 , testPostP , "1");
+    SupportedKeywordInfo kwInfo2("PORO"   , 1.0 , Opm::GridPropertyFunction< double >( testPostP, nullptr, nullptr ), "1");
     std::vector<SupportedKeywordInfo > supportedKeywords = { kwInfo1, kwInfo2 };
     Opm::DeckPtr deck = createDeck();
     std::shared_ptr<Opm::EclipseGrid> grid = std::make_shared<Opm::EclipseGrid>(deck);
@@ -448,22 +448,16 @@ BOOST_AUTO_TEST_CASE(GridPropertyPostProcessors) {
         poro->loadFromDeckKeyword( deck->getKeyword("PORO" , 0));
         multpv->loadFromDeckKeyword( deck->getKeyword("MULTPV" , 0));
 
-        if (poro->postProcessorRunRequired())
-            poro->runPostProcessor();
-
-        if (multpv->postProcessorRunRequired())
-            multpv->runPostProcessor();
+        poro->runPostProcessor();
+        multpv->runPostProcessor();
 
         for (size_t g = 0; g < 1000; g++) {
             BOOST_CHECK_EQUAL( multpv->iget(g) , 0.10 );
             BOOST_CHECK_EQUAL( poro->iget(g)  , 0.20 );
         }
 
-        if (poro->postProcessorRunRequired())
-            poro->runPostProcessor();
-
-        if (multpv->postProcessorRunRequired())
-            multpv->runPostProcessor();
+        poro->runPostProcessor();
+        multpv->runPostProcessor();
 
         for (size_t g = 0; g < 1000; g++) {
             BOOST_CHECK_EQUAL( multpv->iget(g) , 0.10 );
@@ -471,10 +465,6 @@ BOOST_AUTO_TEST_CASE(GridPropertyPostProcessors) {
         }
 
     }
-
-
-    BOOST_CHECK( !kwInfo1.hasPostProcessor() );
-    BOOST_CHECK( kwInfo2.hasPostProcessor() );
 }
 
 

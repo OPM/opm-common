@@ -28,7 +28,6 @@
 */
 namespace Opm {
 
-// forward definitions
 class Deck;
 class EclipseState;
 
@@ -40,19 +39,8 @@ protected:
     { }
 
 public:
-    virtual void apply(std::vector<ValueType>& values) const = 0;
+    virtual void apply(std::vector<ValueType>& values, const Deck&, const EclipseState& ) const = 0;
 };
-
-template <class ValueType>
-class GridPropertyBasePostProcessor
-{
-protected:
-    GridPropertyBasePostProcessor() { }
-
-public:
-    virtual void apply(std::vector<ValueType>& values) const = 0;
-};
-
 
 template <class ValueType>
 class GridPropertyConstantInitializer
@@ -63,7 +51,7 @@ public:
         : m_value(value)
     { }
 
-    void apply(std::vector<ValueType>& values) const;
+    void apply(std::vector<ValueType>& values, const Deck&, const EclipseState& ) const;
 
 private:
     ValueType m_value;
@@ -75,16 +63,24 @@ class GridPropertyTemperatureLookupInitializer
     : public GridPropertyBaseInitializer<double>
 {
 public:
-    GridPropertyTemperatureLookupInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : m_deck(deck)
-        , m_eclipseState(eclipseState)
-    { }
+    void apply(std::vector<double>& values, const Deck&, const EclipseState& ) const;
+};
 
-    void apply(std::vector<double>& values) const;
+template< typename T >
+class GridPropertyFunction {
+    public:
+        GridPropertyFunction() = default;
 
-private:
-    const Deck& m_deck;
-    const EclipseState& m_eclipseState;
+        GridPropertyFunction( std::shared_ptr< GridPropertyBaseInitializer< T > >,
+                              const Deck*,
+                              const EclipseState* );
+
+        std::vector< T >& operator()( std::vector< T >& ) const;
+
+    private:
+        std::shared_ptr< GridPropertyBaseInitializer< T > > f;
+        const Deck* deck = nullptr;
+        const EclipseState* es = nullptr;
 };
 
 }

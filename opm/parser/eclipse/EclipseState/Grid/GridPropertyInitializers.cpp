@@ -13,11 +13,17 @@
 namespace Opm {
 
     template< typename T >
-    void GridPropertyConstantInitializer< T >::apply(std::vector< T >& values) const {
+    void GridPropertyConstantInitializer< T >::apply(
+            std::vector< T >& values,
+            const Deck&,
+            const EclipseState& ) const {
         std::fill(values.begin(), values.end(), m_value);
     }
 
-    void GridPropertyTemperatureLookupInitializer::apply(std::vector<double>& values) const
+    void GridPropertyTemperatureLookupInitializer::apply(
+            std::vector<double>& values,
+            const Deck& m_deck,
+            const EclipseState& m_eclipseState ) const
     {
         if (!m_deck.hasKeyword("EQLNUM")) {
             // if values are defaulted in the TEMPI keyword, but no
@@ -39,6 +45,23 @@ namespace Opm {
             values[cellIdx] = rtempvdTable.evaluate("Temperature", cellDepth);
         }
     }
+
+    template< typename T >
+    GridPropertyFunction< T >::GridPropertyFunction(
+            std::shared_ptr< GridPropertyBaseInitializer< T > > fn,
+            const Deck* d,
+            const EclipseState* state ) :
+        f( fn ), deck( d ), es( state )
+    {}
+
+
+    template< typename T >
+    std::vector< T >& GridPropertyFunction< T >::operator()( std::vector< T >& values ) const {
+        if( !this->f ) return values;
+
+        this->f->apply( values, *this->deck, *this->es );
+        return values;
+    }
 }
 
 template class Opm::GridPropertyConstantInitializer< int >;
@@ -46,5 +69,6 @@ template class Opm::GridPropertyConstantInitializer< double >;
 
 template class Opm::GridPropertyBaseInitializer< int >;
 template class Opm::GridPropertyBaseInitializer< double >;
-template class Opm::GridPropertyBasePostProcessor< int >;
-template class Opm::GridPropertyBasePostProcessor< double >;
+
+template class Opm::GridPropertyFunction< int >;
+template class Opm::GridPropertyFunction< double >;

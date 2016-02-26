@@ -42,21 +42,18 @@ namespace Opm {
 template< typename T >
 class GridPropertySupportedKeywordInfo {
 
-    typedef GridPropertyBaseInitializer< T > Initializer;
-    typedef GridPropertyBasePostProcessor< T > PostProcessor;
-
     public:
         GridPropertySupportedKeywordInfo() = default;
 
         GridPropertySupportedKeywordInfo(
             const std::string& name,
-            std::shared_ptr< Initializer > initializer,
-            std::shared_ptr< PostProcessor > postProcessor,
+            GridPropertyFunction< T > initializer,
+            GridPropertyFunction< T > postProcessor,
             const std::string& dimString );
 
         GridPropertySupportedKeywordInfo(
                 const std::string& name,
-                std::shared_ptr< Initializer > initializer,
+                GridPropertyFunction< T > initializer,
                 const std::string& dimString);
 
         /* this is a convenience constructor which can be used if the default
@@ -70,19 +67,18 @@ class GridPropertySupportedKeywordInfo {
         GridPropertySupportedKeywordInfo(
                 const std::string& name,
                 const T defaultValue,
-                std::shared_ptr< PostProcessor > postProcessor,
+                GridPropertyFunction< T > postProcessor,
                 const std::string& dimString );
 
         const std::string& getKeywordName() const;
         const std::string& getDimensionString() const;
-        Initializer* getInitializer();
-        PostProcessor* getPostProcessor();
-        bool hasPostProcessor() const;
+        const GridPropertyFunction< T >& initializer() const;
+        const GridPropertyFunction< T >& postProcessor() const;
 
     private:
         std::string m_keywordName;
-        std::shared_ptr< Initializer > m_initializer;
-        std::shared_ptr< PostProcessor > m_postProcessor;
+        GridPropertyFunction< T > m_initializer;
+        GridPropertyFunction< T > m_postProcessor;
         std::string m_dimensionString;
 };
 
@@ -135,7 +131,6 @@ public:
     const std::string& getKeywordName() const;
     const SupportedKeywordInfo& getKeywordInfo() const;
 
-    bool postProcessorRunRequired();
     void runPostProcessor();
 
     ERT::EclKW<T> getEclKW() const;
@@ -155,7 +150,7 @@ private:
     size_t      m_nx,m_ny,m_nz;
     SupportedKeywordInfo m_kwInfo;
     std::vector<T> m_data;
-    bool m_hasRunPostProcessor;
+    bool m_hasRunPostProcessor = false;
 };
 
 }

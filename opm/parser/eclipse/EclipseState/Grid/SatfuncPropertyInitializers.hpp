@@ -47,17 +47,10 @@ class EnptvdTable;
 class ImptvdTable;
 
 
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
 class EndpointInitializer
     : public GridPropertyBaseInitializer<double>
 {
 public:
-    EndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : m_deck(deck)
-        , m_eclipseState(eclipseState)
-    { }
-
     enum SaturationFunctionFamily { noFamily = 0, FamilyI = 1, FamilyII = 2};
 
     /*
@@ -81,7 +74,7 @@ protected:
       */
 
 
-    void findSaturationEndpoints( ) const {
+    void findSaturationEndpoints( const EclipseState& m_eclipseState ) const {
         auto tables = m_eclipseState.getTableManager();
         auto tabdims = tables->getTabdims();
         size_t numSatTables = tabdims->getNumSatTables();
@@ -90,7 +83,7 @@ protected:
         m_minGasSat.resize( numSatTables , 0 );
         m_maxGasSat.resize( numSatTables , 0 );
 
-        switch (getSaturationFunctionFamily()) {
+        switch (getSaturationFunctionFamily( m_eclipseState )) {
         case SaturationFunctionFamily::FamilyI:
         {
             const TableContainer& swofTables = tables->getSwofTables();
@@ -145,7 +138,7 @@ protected:
     }
 
 
-    void findCriticalPoints( ) const {
+    void findCriticalPoints( const EclipseState& m_eclipseState ) const {
         auto tables = m_eclipseState.getTableManager();
         auto tabdims = tables->getTabdims();
         size_t numSatTables = tabdims->getNumSatTables();
@@ -155,7 +148,7 @@ protected:
         m_criticalOilOGSat.resize( numSatTables , 0 );
         m_criticalOilOWSat.resize( numSatTables , 0 );
 
-        switch (getSaturationFunctionFamily()) {
+        switch (getSaturationFunctionFamily( m_eclipseState )) {
         case SaturationFunctionFamily::FamilyI:
         {
             const TableContainer& swofTables = tables->getSwofTables();
@@ -321,7 +314,7 @@ protected:
 
     }
 
-    void findVerticalPoints( ) const {
+    void findVerticalPoints( const EclipseState& m_eclipseState ) const {
         auto tables = m_eclipseState.getTableManager();
         auto tabdims = tables->getTabdims();
         size_t numSatTables = tabdims->getNumSatTables();
@@ -336,7 +329,7 @@ protected:
         m_maxKrw.resize( numSatTables , 0 );
         m_krwr.resize( numSatTables , 0 );
 
-        switch (getSaturationFunctionFamily()) {
+        switch (getSaturationFunctionFamily( m_eclipseState )) {
         case SaturationFunctionFamily::FamilyI:
         {
             const TableContainer& swofTables = tables->getSwofTables();
@@ -436,8 +429,8 @@ protected:
     // If SWOF and SGOF are specified in the deck it return FamilyI
     // If SWFN, SGFN and SOF3 are specified in the deck it return FamilyII
     // If keywords are missing or mixed, an error is given.
-    SaturationFunctionFamily getSaturationFunctionFamily() const{
-        auto tables = m_eclipseState.getTableManager( );
+    SaturationFunctionFamily getSaturationFunctionFamily( const EclipseState& m_eclipseState ) const{
+        auto tables = m_eclipseState.getTableManager();
         const TableContainer& swofTables = tables->getSwofTables();
         const TableContainer& sgofTables = tables->getSgofTables();
         const TableContainer& slgofTables = tables->getSlgofTables();
@@ -496,9 +489,6 @@ protected:
         return value;
     }
 
-    const Deck& m_deck;
-    const EclipseState& m_eclipseState;
-
     mutable std::vector<double> m_criticalGasSat;
     mutable std::vector<double> m_criticalWaterSat;
     mutable std::vector<double> m_criticalOilOWSat;
@@ -521,47 +511,42 @@ protected:
 };
 
 
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class SatnumEndpointInitializer
-    : public EndpointInitializer<EclipseState,Deck>
-{
+class SatnumEndpointInitializer : public EndpointInitializer {
 public:
-    SatnumEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : EndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
-
-    void apply(std::vector<double>& ) const = 0;
+    void apply(std::vector<double>&, const Deck&, const EclipseState& ) const = 0;
 
 
     void satnumApply( std::vector<double>& values,
                       const std::string& columnName,
                       const std::vector<double>& fallbackValues,
-                      bool useOneMinusTableValue) const
+                      const Deck& m_deck,
+                      const EclipseState& m_eclipseState,
+                      bool useOneMinusTableValue
+                      ) const
     {
-        auto eclipseGrid = this->m_eclipseState.getEclipseGrid();
-        auto tables = this->m_eclipseState.getTableManager();
+        auto eclipseGrid = m_eclipseState.getEclipseGrid();
+        auto tables = m_eclipseState.getTableManager();
         auto tabdims = tables->getTabdims();
-        auto satnum = this->m_eclipseState.getIntGridProperty("SATNUM");
-        auto endnum = this->m_eclipseState.getIntGridProperty("ENDNUM");
+        auto satnum = m_eclipseState.getIntGridProperty("SATNUM");
+        auto endnum = m_eclipseState.getIntGridProperty("ENDNUM");
         int numSatTables = tabdims->getNumSatTables();
 
 
         satnum->checkLimits(1 , numSatTables);
 
         // All table lookup assumes three-phase model
-        assert( this->m_eclipseState.getNumPhases() == 3 );
+        assert( m_eclipseState.getNumPhases() == 3 );
 
-        this->findSaturationEndpoints( );
-        this->findCriticalPoints( );
-        this->findVerticalPoints( );
+        this->findSaturationEndpoints( m_eclipseState );
+        this->findCriticalPoints( m_eclipseState );
+        this->findVerticalPoints( m_eclipseState );
 
         // acctually assign the defaults. if the ENPVD keyword was specified in the deck,
         // this currently cannot be done because we would need the Z-coordinate of the
         // cell and we would need to know how the simulator wants to interpolate between
         // sampling points. Both of these are outside the scope of opm-parser, so we just
         // assign a NaN in this case...
-        bool useEnptvd = this->m_deck.hasKeyword("ENPTVD");
+        bool useEnptvd = m_deck.hasKeyword("ENPTVD");
         const auto& enptvdTables = tables->getEnptvdTables();
         for (size_t cellIdx = 0; cellIdx < eclipseGrid->getCartesianSize(); cellIdx++) {
             int satTableIdx = satnum->iget( cellIdx ) - 1;
@@ -581,42 +566,38 @@ public:
 
 
 
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class ImbnumEndpointInitializer
-    : public EndpointInitializer<EclipseState,Deck>
-{
+class ImbnumEndpointInitializer : public EndpointInitializer {
 public:
-    ImbnumEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : EndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& ) const = 0;
+    void apply(std::vector<double>&, const Deck&, const EclipseState& ) const = 0;
 
     void imbnumApply( std::vector<double>& values,
                       const std::string& columnName,
                       const std::vector<double>& fallBackValues ,
-                      bool useOneMinusTableValue) const
+                      const Deck& m_deck,
+                      const EclipseState& m_eclipseState,
+                      bool useOneMinusTableValue
+                      ) const
     {
-        auto eclipseGrid = this->m_eclipseState.getEclipseGrid();
-        auto tables = this->m_eclipseState.getTableManager();
-        auto imbnum = this->m_eclipseState.getIntGridProperty("IMBNUM");
-        auto endnum = this->m_eclipseState.getIntGridProperty("ENDNUM");
+        auto eclipseGrid = m_eclipseState.getEclipseGrid();
+        auto tables = m_eclipseState.getTableManager();
+        auto imbnum = m_eclipseState.getIntGridProperty("IMBNUM");
+        auto endnum = m_eclipseState.getIntGridProperty("ENDNUM");
 
         auto tabdims = tables->getTabdims();
         int numSatTables = tabdims->getNumSatTables();
 
         imbnum->checkLimits(1 , numSatTables);
-        this->findSaturationEndpoints( );
-        this->findCriticalPoints( );
-        this->findVerticalPoints( );
+        this->findSaturationEndpoints( m_eclipseState );
+        this->findCriticalPoints( m_eclipseState );
+        this->findVerticalPoints( m_eclipseState );
 
         // acctually assign the defaults. if the ENPVD keyword was specified in the deck,
         // this currently cannot be done because we would need the Z-coordinate of the
         // cell and we would need to know how the simulator wants to interpolate between
         // sampling points. Both of these are outside the scope of opm-parser, so we just
         // assign a NaN in this case...
-        bool useImptvd = this->m_deck.hasKeyword("IMPTVD");
+        bool useImptvd = m_deck.hasKeyword("IMPTVD");
         const TableContainer& imptvdTables = tables->getImptvdTables();
         for (size_t cellIdx = 0; cellIdx < eclipseGrid->getCartesianSize(); cellIdx++) {
             int imbTableIdx = imbnum->iget( cellIdx ) - 1;
@@ -636,614 +617,346 @@ public:
 
 /*****************************************************************/
 
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class SGLEndpointInitializer
-    : public SatnumEndpointInitializer<EclipseState,Deck>
-{
+class SGLEndpointInitializer : public SatnumEndpointInitializer {
 public:
-    SGLEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : SatnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->satnumApply(values , "SGCO" , this->m_minGasSat , false);
+        this->satnumApply(values , "SGCO" , this->m_minGasSat , deck, es, false);
     }
 };
 
 
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class ISGLEndpointInitializer
-    : public ImbnumEndpointInitializer<EclipseState,Deck>
-{
+class ISGLEndpointInitializer : public ImbnumEndpointInitializer {
 public:
-    ISGLEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : ImbnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->imbnumApply(values , "SGCO" , this->m_minGasSat , false);
+        this->imbnumApply(values , "SGCO" , this->m_minGasSat , deck, es, false);
     }
 };
 
 /*****************************************************************/
 
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class SGUEndpointInitializer
-    : public SatnumEndpointInitializer<EclipseState,Deck>
-{
+class SGUEndpointInitializer : public SatnumEndpointInitializer {
 public:
-    SGUEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : SatnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
-
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->satnumApply(values , "SGMAX" , this->m_maxGasSat, false);
+        this->satnumApply(values , "SGMAX" , this->m_maxGasSat, deck, es, false);
     }
 };
 
 
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class ISGUEndpointInitializer
-    : public ImbnumEndpointInitializer<EclipseState,Deck>
-{
+class ISGUEndpointInitializer : public ImbnumEndpointInitializer {
 public:
-    ISGUEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : ImbnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
-
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->imbnumApply(values , "SGMAX" , this->m_maxGasSat , false);
+        this->imbnumApply(values , "SGMAX" , this->m_maxGasSat , deck, es, false);
     }
 };
 
 /*****************************************************************/
 
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class SWLEndpointInitializer
-    : public SatnumEndpointInitializer<EclipseState,Deck>
-{
+class SWLEndpointInitializer : public SatnumEndpointInitializer {
 public:
-    SWLEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : SatnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->satnumApply(values , "SWCO" , this->m_minWaterSat , false);
+        this->satnumApply(values , "SWCO" , this->m_minWaterSat , deck, es, false);
     }
 };
 
-
-
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class ISWLEndpointInitializer
-    : public ImbnumEndpointInitializer<EclipseState,Deck>
-{
+class ISWLEndpointInitializer : public ImbnumEndpointInitializer {
 public:
-    ISWLEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : ImbnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->imbnumApply(values , "SWCO" , this->m_minWaterSat , false);
+        this->imbnumApply(values , "SWCO" , this->m_minWaterSat , deck, es, false);
     }
 };
 
 /*****************************************************************/
 
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class SWUEndpointInitializer
-    : public SatnumEndpointInitializer<EclipseState,Deck>
-{
+class SWUEndpointInitializer : public SatnumEndpointInitializer {
 public:
-    SWUEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : SatnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->satnumApply(values , "SWMAX" , this->m_maxWaterSat , true);
+        this->satnumApply(values , "SWMAX" , this->m_maxWaterSat , deck, es, true);
     }
 };
 
-
-
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class ISWUEndpointInitializer
-    : public ImbnumEndpointInitializer<EclipseState,Deck>
-{
+class ISWUEndpointInitializer : public ImbnumEndpointInitializer {
 public:
-    ISWUEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : ImbnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->imbnumApply(values , "SWMAX" , this->m_maxWaterSat , true);
+        this->imbnumApply(values , "SWMAX" , this->m_maxWaterSat , deck, es, true);
     }
 };
 
 /*****************************************************************/
 
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class SGCREndpointInitializer
-    : public SatnumEndpointInitializer<EclipseState,Deck>
-{
+class SGCREndpointInitializer : public SatnumEndpointInitializer {
 public:
-    SGCREndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : SatnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->satnumApply(values , "SGCRIT" , this->m_criticalGasSat , false);
+        this->satnumApply(values , "SGCRIT" , this->m_criticalGasSat , deck, es, false);
     }
 };
 
-
-
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class ISGCREndpointInitializer
-    : public ImbnumEndpointInitializer<EclipseState,Deck>
-{
+class ISGCREndpointInitializer : public ImbnumEndpointInitializer {
 public:
-    ISGCREndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : ImbnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->imbnumApply(values , "SGCRIT" , this->m_criticalGasSat , false);
+        this->imbnumApply(values , "SGCRIT" , this->m_criticalGasSat , deck, es, false);
     }
 };
 
 /*****************************************************************/
 
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class SOWCREndpointInitializer
-    : public SatnumEndpointInitializer<EclipseState,Deck>
-{
+class SOWCREndpointInitializer : public SatnumEndpointInitializer {
 public:
-    SOWCREndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : SatnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->satnumApply(values , "SOWCRIT", this->m_criticalOilOWSat , false);
+        this->satnumApply(values , "SOWCRIT", this->m_criticalOilOWSat , deck, es, false);
     }
 };
 
-
-
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class ISOWCREndpointInitializer
-    : public ImbnumEndpointInitializer<EclipseState,Deck>
+class ISOWCREndpointInitializer : public ImbnumEndpointInitializer
 {
 public:
-    ISOWCREndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : ImbnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
-
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->imbnumApply(values , "SOWCRIT" , this->m_criticalOilOWSat , false);
+        this->imbnumApply(values , "SOWCRIT" , this->m_criticalOilOWSat , deck, es, false);
     }
 };
 
 /*****************************************************************/
 
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class SOGCREndpointInitializer
-    : public SatnumEndpointInitializer<EclipseState,Deck>
-{
+class SOGCREndpointInitializer : public SatnumEndpointInitializer {
 public:
-    SOGCREndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : SatnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->satnumApply(values , "SOGCRIT" , this->m_criticalOilOGSat , false);
+        this->satnumApply(values , "SOGCRIT" , this->m_criticalOilOGSat , deck, es, false);
     }
 };
 
-
-
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class ISOGCREndpointInitializer
-    : public ImbnumEndpointInitializer<EclipseState,Deck>
-{
+class ISOGCREndpointInitializer : public ImbnumEndpointInitializer {
 public:
-    ISOGCREndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : ImbnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->imbnumApply(values , "SOGCRIT" , this->m_criticalOilOGSat , false);
+        this->imbnumApply(values , "SOGCRIT" , this->m_criticalOilOGSat , deck, es, false);
     }
 };
 
 /*****************************************************************/
 
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class SWCREndpointInitializer
-    : public SatnumEndpointInitializer<EclipseState,Deck>
-{
+class SWCREndpointInitializer : public SatnumEndpointInitializer {
 public:
-    SWCREndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : SatnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->satnumApply(values , "SWCRIT" , this->m_criticalWaterSat , false);
+        this->satnumApply(values , "SWCRIT" , this->m_criticalWaterSat , deck, es, false);
     }
 };
 
-
-
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class ISWCREndpointInitializer
-    : public ImbnumEndpointInitializer<EclipseState,Deck>
-{
+class ISWCREndpointInitializer : public ImbnumEndpointInitializer {
 public:
-    ISWCREndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : ImbnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->imbnumApply(values , "SWCRIT" , this->m_criticalWaterSat , false);
+        this->imbnumApply(values , "SWCRIT" , this->m_criticalWaterSat , deck, es, false);
     }
 };
 
 /*****************************************************************/
 
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class PCWEndpointInitializer
-    : public SatnumEndpointInitializer<EclipseState,Deck>
-{
+class PCWEndpointInitializer : public SatnumEndpointInitializer {
 public:
-    PCWEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : SatnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->satnumApply(values , "PCW" , this->m_maxPcow , false);
+        this->satnumApply(values , "PCW" , this->m_maxPcow , deck, es, false);
     }
 };
 
-
-
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class IPCWEndpointInitializer
-    : public ImbnumEndpointInitializer<EclipseState,Deck>
-{
+class IPCWEndpointInitializer : public ImbnumEndpointInitializer {
 public:
-    IPCWEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : ImbnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->imbnumApply(values , "IPCW" , this->m_maxPcow , false);
+        this->imbnumApply(values , "IPCW" , this->m_maxPcow , deck, es, false);
     }
 };
 
 
 /*****************************************************************/
 
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class PCGEndpointInitializer
-    : public SatnumEndpointInitializer<EclipseState,Deck>
-{
+class PCGEndpointInitializer : public SatnumEndpointInitializer {
 public:
-    PCGEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : SatnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->satnumApply(values , "PCG" , this->m_maxPcog , false);
+        this->satnumApply(values , "PCG" , this->m_maxPcog , deck, es, false);
     }
 };
 
-
-
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class IPCGEndpointInitializer
-    : public ImbnumEndpointInitializer<EclipseState,Deck>
-{
+class IPCGEndpointInitializer : public ImbnumEndpointInitializer {
 public:
-    IPCGEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : ImbnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->imbnumApply(values , "IPCG" , this->m_maxPcog , false);
+        this->imbnumApply(values , "IPCG" , this->m_maxPcog , deck, es, false);
     }
 };
 
 /*****************************************************************/
 
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class KRWEndpointInitializer
-    : public SatnumEndpointInitializer<EclipseState,Deck>
-{
+class KRWEndpointInitializer : public SatnumEndpointInitializer {
 public:
-    KRWEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : SatnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->satnumApply(values , "KRW" , this->m_maxKrw , false);
+        this->satnumApply(values , "KRW" , this->m_maxKrw , deck, es, false);
     }
 };
 
-
-
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class IKRWEndpointInitializer
-    : public ImbnumEndpointInitializer<EclipseState,Deck>
-{
+class IKRWEndpointInitializer : public ImbnumEndpointInitializer {
 public:
-    IKRWEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : ImbnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->imbnumApply(values , "IKRW" , this->m_maxKrw , false);
+        this->imbnumApply(values , "IKRW" , this->m_maxKrw , deck, es, false);
     }
 };
 
 
 /*****************************************************************/
 
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class KRWREndpointInitializer
-    : public SatnumEndpointInitializer<EclipseState,Deck>
-{
+class KRWREndpointInitializer : public SatnumEndpointInitializer {
 public:
-    KRWREndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : SatnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->satnumApply(values , "KRWR" , this->m_krwr , false);
+        this->satnumApply(values , "KRWR" , this->m_krwr , deck, es, false);
     }
 };
 
-
-
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class IKRWREndpointInitializer
-    : public ImbnumEndpointInitializer<EclipseState,Deck>
-{
+class IKRWREndpointInitializer : public ImbnumEndpointInitializer {
 public:
-    IKRWREndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : ImbnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->imbnumApply(values , "IKRWR" , this->m_krwr , false);
+        this->imbnumApply(values , "IKRWR" , this->m_krwr , deck, es, false);
     }
 };
 
 /*****************************************************************/
 
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class KROEndpointInitializer
-    : public SatnumEndpointInitializer<EclipseState,Deck>
-{
+class KROEndpointInitializer : public SatnumEndpointInitializer {
 public:
-    KROEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : SatnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->satnumApply(values , "KRO" , this->m_maxKro , false);
+        this->satnumApply(values , "KRO" , this->m_maxKro , deck, es, false);
     }
 };
 
-
-
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class IKROEndpointInitializer
-    : public ImbnumEndpointInitializer<EclipseState,Deck>
-{
+class IKROEndpointInitializer : public ImbnumEndpointInitializer {
 public:
-    IKROEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : ImbnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->imbnumApply(values , "IKRO" , this->m_maxKro , false);
+        this->imbnumApply(values , "IKRO" , this->m_maxKro , deck, es, false);
     }
 };
 
 
 /*****************************************************************/
 
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class KRORWEndpointInitializer
-    : public SatnumEndpointInitializer<EclipseState,Deck>
-{
+class KRORWEndpointInitializer : public SatnumEndpointInitializer {
 public:
-    KRORWEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : SatnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->satnumApply(values , "KRORW" , this->m_krorw , false);
+        this->satnumApply(values , "KRORW" , this->m_krorw , deck, es, false);
     }
 };
 
-
-
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class IKRORWEndpointInitializer
-    : public ImbnumEndpointInitializer<EclipseState,Deck>
-{
+class IKRORWEndpointInitializer : public ImbnumEndpointInitializer {
 public:
-    IKRORWEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : ImbnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->imbnumApply(values , "IKRORW" , this->m_krorw , false);
+        this->imbnumApply(values , "IKRORW" , this->m_krorw , deck, es, false);
     }
 };
 
 /*****************************************************************/
 
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class KRORGEndpointInitializer
-    : public SatnumEndpointInitializer<EclipseState,Deck>
-{
+class KRORGEndpointInitializer : public SatnumEndpointInitializer {
 public:
-    KRORGEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : SatnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->satnumApply(values , "KRORG" , this->m_krorg , false);
+        this->satnumApply(values , "KRORG" , this->m_krorg , deck, es, false);
     }
 };
 
-
-
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class IKRORGEndpointInitializer
-    : public ImbnumEndpointInitializer<EclipseState,Deck>
-{
+class IKRORGEndpointInitializer : public ImbnumEndpointInitializer {
 public:
-    IKRORGEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : ImbnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->imbnumApply(values , "IKRORG" , this->m_krorg , false);
+        this->imbnumApply(values , "IKRORG" , this->m_krorg , deck, es, false);
     }
 };
 
 /*****************************************************************/
 
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class KRGEndpointInitializer
-    : public SatnumEndpointInitializer<EclipseState,Deck>
-{
+class KRGEndpointInitializer : public SatnumEndpointInitializer {
 public:
-    KRGEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : SatnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->satnumApply(values , "KRG" , this->m_maxKrg , false);
+        this->satnumApply(values , "KRG" , this->m_maxKrg , deck, es, false);
     }
 };
 
-
-
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class IKRGEndpointInitializer
-    : public ImbnumEndpointInitializer<EclipseState,Deck>
-{
+class IKRGEndpointInitializer : public ImbnumEndpointInitializer {
 public:
-    IKRGEndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : ImbnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->imbnumApply(values , "IKRG" , this->m_maxKrg , false);
+        this->imbnumApply(values , "IKRG" , this->m_maxKrg , deck, es, false);
     }
 };
 
 /*****************************************************************/
 
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class KRGREndpointInitializer
-    : public SatnumEndpointInitializer<EclipseState,Deck>
-{
+class KRGREndpointInitializer : public SatnumEndpointInitializer {
 public:
-    KRGREndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : SatnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->satnumApply(values , "KRGR" , this->m_krgr , false);
+        this->satnumApply(values , "KRGR" , this->m_krgr , deck, es, false);
     }
 };
 
 
 
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class IKRGREndpointInitializer
-    : public ImbnumEndpointInitializer<EclipseState,Deck>
-{
+class IKRGREndpointInitializer : public ImbnumEndpointInitializer {
 public:
-    IKRGREndpointInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : ImbnumEndpointInitializer<EclipseState,Deck>( deck , eclipseState )
-    { }
 
-    void apply(std::vector<double>& values) const
+    void apply(std::vector<double>& values, const Deck& deck, const EclipseState& es ) const
     {
-        this->imbnumApply(values , "IKRGR" , this->m_krgr , false);
+        this->imbnumApply(values , "IKRGR" , this->m_krgr , deck, es, false);
     }
 };
 

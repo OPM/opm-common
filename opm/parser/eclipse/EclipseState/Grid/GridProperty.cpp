@@ -34,8 +34,8 @@ namespace Opm {
     template< typename T >
     GridPropertySupportedKeywordInfo< T >::GridPropertySupportedKeywordInfo(
             const std::string& name,
-            std::shared_ptr< Initializer > initializer,
-            std::shared_ptr< PostProcessor > postProcessor,
+            GridPropertyFunction< T > initializer,
+            GridPropertyFunction< T > postProcessor,
             const std::string& dimString ) :
         m_keywordName( name ),
         m_initializer( initializer ),
@@ -46,7 +46,7 @@ namespace Opm {
     template< typename T >
     GridPropertySupportedKeywordInfo< T >::GridPropertySupportedKeywordInfo(
             const std::string& name,
-            std::shared_ptr< Initializer > initializer,
+            GridPropertyFunction< T > initializer,
             const std::string& dimString ) :
         m_keywordName(name),
         m_initializer(initializer),
@@ -59,7 +59,9 @@ namespace Opm {
             const T defaultValue,
             const std::string& dimString ) :
         m_keywordName( name ),
-        m_initializer( new Opm::GridPropertyConstantInitializer< T >(defaultValue) ),
+        m_initializer( GridPropertyFunction< T >(
+                    std::make_shared< GridPropertyConstantInitializer< T > >( defaultValue ),
+                    nullptr, nullptr ) ),
         m_dimensionString( dimString )
     {}
 
@@ -67,10 +69,12 @@ namespace Opm {
     GridPropertySupportedKeywordInfo< T >::GridPropertySupportedKeywordInfo(
             const std::string& name,
             const T defaultValue,
-            std::shared_ptr< PostProcessor > postProcessor,
+            GridPropertyFunction< T > postProcessor,
             const std::string& dimString ) :
         m_keywordName( name ),
-        m_initializer( new Opm::GridPropertyConstantInitializer< T >(defaultValue)),
+        m_initializer( GridPropertyFunction< T >(
+                    std::make_shared< GridPropertyConstantInitializer< T > >( defaultValue ),
+                    nullptr, nullptr ) ),
         m_postProcessor( postProcessor ),
         m_dimensionString( dimString )
     {}
@@ -86,20 +90,13 @@ namespace Opm {
     }
 
     template< typename T >
-    typename GridPropertySupportedKeywordInfo< T >::Initializer*
-    GridPropertySupportedKeywordInfo< T >::getInitializer() {
-        return this->m_initializer.get();
+    const GridPropertyFunction< T >& GridPropertySupportedKeywordInfo< T >::initializer() const {
+        return this->m_initializer;
     }
 
     template< typename T >
-    typename GridPropertySupportedKeywordInfo< T >::PostProcessor*
-    GridPropertySupportedKeywordInfo< T >::getPostProcessor() {
-        return this->m_postProcessor.get();
-    }
-
-    template< typename T >
-    bool GridPropertySupportedKeywordInfo< T >::hasPostProcessor() const {
-        return bool( this->m_postProcessor );
+    const GridPropertyFunction< T >& GridPropertySupportedKeywordInfo< T >::postProcessor() const {
+        return this->m_postProcessor;
     }
 
     template< typename T >
@@ -110,7 +107,7 @@ namespace Opm {
         m_kwInfo( kwInfo ),
         m_data( nx * ny * nz )
     {
-        m_kwInfo.getInitializer()->apply(m_data);
+        m_kwInfo.initializer()(m_data);
         m_hasRunPostProcessor = false;
     }
 
@@ -326,23 +323,12 @@ namespace Opm {
         return m_kwInfo;
     }
 
-
-    template< typename T >
-    bool GridProperty< T >::postProcessorRunRequired() {
-        return m_kwInfo.hasPostProcessor() && !m_hasRunPostProcessor;
-    }
-
     template< typename T >
     void GridProperty< T >::runPostProcessor() {
-        if (postProcessorRunRequired()) {
-            // This is set here before the post processor has actually
-            // completed; this is to protect against circular loops if
-            // the post processor itself calls for the same grid
-            // property.
-            m_hasRunPostProcessor = true;
-            auto postProcessor = m_kwInfo.getPostProcessor();
-            postProcessor->apply( m_data );
-        }
+        if( this->m_hasRunPostProcessor ) return;
+
+        this->m_hasRunPostProcessor = true;
+        this->m_kwInfo.postProcessor()( m_data );
     }
 
     template< typename T >
