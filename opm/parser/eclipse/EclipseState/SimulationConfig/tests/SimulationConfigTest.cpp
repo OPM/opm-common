@@ -113,10 +113,10 @@ static DeckPtr createDeck(const ParseMode& parseMode , const std::string& input)
 
 static std::shared_ptr<GridProperties<int>> getGridProperties() {
     GridPropertySupportedKeywordInfo<int> kwInfo = GridPropertySupportedKeywordInfo<int>("EQLNUM", 3, "");
-    std::shared_ptr<std::vector<GridPropertySupportedKeywordInfo<int>>> supportedKeywordsVec = std::make_shared<std::vector<GridPropertySupportedKeywordInfo<int>>>();
-    supportedKeywordsVec->push_back(kwInfo);
+    std::vector<GridPropertySupportedKeywordInfo<int>> supportedKeywordsVec;
+    supportedKeywordsVec.push_back(kwInfo);
     EclipseGridConstPtr eclipseGrid = std::make_shared<const EclipseGrid>(3, 3, 3);
-    std::shared_ptr<GridProperties<int>> gridProperties = std::make_shared<GridProperties<int>>(eclipseGrid, supportedKeywordsVec);
+    std::shared_ptr<GridProperties<int>> gridProperties = std::make_shared<GridProperties<int>>(eclipseGrid, std::move(supportedKeywordsVec));
     gridProperties->addKeyword("EQLNUM");
     return gridProperties;
 }

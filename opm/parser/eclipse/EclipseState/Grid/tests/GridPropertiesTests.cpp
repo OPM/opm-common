@@ -40,13 +40,13 @@
 
 BOOST_AUTO_TEST_CASE(Empty) {
     typedef Opm::GridProperties<int>::SupportedKeywordInfo SupportedKeywordInfo;
-    std::shared_ptr<std::vector<SupportedKeywordInfo> > supportedKeywords(new std::vector<SupportedKeywordInfo>{
-            SupportedKeywordInfo("SATNUM" , 0, "1"),
-            SupportedKeywordInfo("FIPNUM" , 2, "1")
-        });
+    std::vector<SupportedKeywordInfo> supportedKeywords = {
+        SupportedKeywordInfo("SATNUM" , 0, "1"),
+        SupportedKeywordInfo("FIPNUM" , 2, "1")
+    };
 
     std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>(10,7,9);
-    Opm::GridProperties<int> gridProperties( grid , supportedKeywords);
+    Opm::GridProperties<int> gridProperties( grid, std::move( supportedKeywords ) );
 
     BOOST_CHECK( gridProperties.supportsKeyword("SATNUM") );
     BOOST_CHECK( gridProperties.supportsKeyword("FIPNUM") );
@@ -62,11 +62,11 @@ BOOST_AUTO_TEST_CASE(Empty) {
 
 BOOST_AUTO_TEST_CASE(addKeyword) {
     typedef Opm::GridProperties<int>::SupportedKeywordInfo SupportedKeywordInfo;
-    std::shared_ptr<std::vector<SupportedKeywordInfo> > supportedKeywords(new std::vector<SupportedKeywordInfo>{
+    std::vector<SupportedKeywordInfo> supportedKeywords = {
         SupportedKeywordInfo("SATNUM" , 0, "1")
-    });
+    };
     std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>(10,7,9);
-    Opm::GridProperties<int> gridProperties( grid , supportedKeywords);
+    Opm::GridProperties<int> gridProperties( grid , std::move( supportedKeywords ) );
 
     BOOST_CHECK_THROW( gridProperties.addKeyword("NOT-SUPPORTED") , std::invalid_argument);
 
@@ -78,11 +78,11 @@ BOOST_AUTO_TEST_CASE(addKeyword) {
 
 BOOST_AUTO_TEST_CASE(hasKeyword) {
     typedef Opm::GridProperties<int>::SupportedKeywordInfo SupportedKeywordInfo;
-    std::shared_ptr<std::vector<SupportedKeywordInfo> > supportedKeywords(new std::vector<SupportedKeywordInfo>{
+    std::vector<SupportedKeywordInfo> supportedKeywords = {
         SupportedKeywordInfo("SATNUM" , 0, "1")
-    });
+    };
     std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>(10,7,9);
-    Opm::GridProperties<int> gridProperties( grid , supportedKeywords);
+    Opm::GridProperties<int> gridProperties( grid, std::move( supportedKeywords ) );
 
     // calling getKeyword() should not change the semantics of hasKeyword()!
     BOOST_CHECK(!gridProperties.hasKeyword("SATNUM"));
@@ -93,11 +93,11 @@ BOOST_AUTO_TEST_CASE(hasKeyword) {
 
 BOOST_AUTO_TEST_CASE(getKeyword) {
     typedef Opm::GridProperties<int>::SupportedKeywordInfo SupportedKeywordInfo;
-    std::shared_ptr<std::vector<SupportedKeywordInfo> > supportedKeywords(new std::vector<SupportedKeywordInfo>{
+    std::vector<SupportedKeywordInfo> supportedKeywords = {
         SupportedKeywordInfo("SATNUM" , 0, "1")
-    });
+    };
     std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>(10,7,9);
-    Opm::GridProperties<int> gridProperties( grid , supportedKeywords);
+    Opm::GridProperties<int> gridProperties( grid, std::move( supportedKeywords ) );
     std::shared_ptr<Opm::GridProperty<int> > satnum1 = gridProperties.getKeyword("SATNUM");
     std::shared_ptr<Opm::GridProperty<int> > satnum2 = gridProperties.getKeyword("SATNUM");
     std::shared_ptr<Opm::GridProperty<int> > satnum3 = gridProperties.getKeyword(0);

@@ -101,15 +101,16 @@ static Opm::DeckPtr createInvalidMULTREGTDeck() {
 
 BOOST_AUTO_TEST_CASE(InvalidInput) {
     typedef Opm::GridProperties<int>::SupportedKeywordInfo SupportedKeywordInfo;
-    std::shared_ptr<std::vector<SupportedKeywordInfo> > supportedKeywords(new std::vector<SupportedKeywordInfo>{
+    std::vector<SupportedKeywordInfo> supportedKeywords = { 
             SupportedKeywordInfo("FLUXNUM" , 1 , "1") ,
             SupportedKeywordInfo("OPERNUM" , 1 , "1") ,
-            SupportedKeywordInfo("MULTNUM" , 1 , "1") });
+            SupportedKeywordInfo("MULTNUM" , 1 , "1")
+    };
 
 
     Opm::DeckPtr deck = createInvalidMULTREGTDeck();
     std::shared_ptr<Opm::EclipseGrid> grid = std::make_shared<Opm::EclipseGrid>( deck );
-    std::shared_ptr<Opm::GridProperties<int> > gridProperties = std::make_shared<Opm::GridProperties<int> >(grid, supportedKeywords);
+    std::shared_ptr<Opm::GridProperties<int> > gridProperties = std::make_shared<Opm::GridProperties<int> >(grid, std::move( supportedKeywords ) );
 
     // Invalid direction
     std::vector< const Opm::DeckKeyword* > keywords0;
@@ -168,14 +169,15 @@ static Opm::DeckPtr createNotSupportedMULTREGTDeck() {
 
 BOOST_AUTO_TEST_CASE(NotSupported) {
     typedef Opm::GridProperties<int>::SupportedKeywordInfo SupportedKeywordInfo;
-    std::shared_ptr<std::vector<SupportedKeywordInfo> > supportedKeywords(new std::vector<SupportedKeywordInfo>{
+   std::vector<SupportedKeywordInfo> supportedKeywords = {
             SupportedKeywordInfo("FLUXNUM" , 1 , "1") ,
             SupportedKeywordInfo("OPERNUM" , 1 , "1") ,
-            SupportedKeywordInfo("MULTNUM" , 1 , "1") });
+            SupportedKeywordInfo("MULTNUM" , 1 , "1")
+    };
     Opm::DeckPtr deck = createNotSupportedMULTREGTDeck();
 
     std::shared_ptr<Opm::EclipseGrid> grid = std::make_shared<Opm::EclipseGrid>( deck );
-    std::shared_ptr<Opm::GridProperties<int> > gridProperties = std::make_shared<Opm::GridProperties<int> >(grid, supportedKeywords);
+    std::shared_ptr<Opm::GridProperties<int> > gridProperties = std::make_shared<Opm::GridProperties<int> >(grid, std::move( supportedKeywords ) );
 
     // Not support NOAQUNNC behaviour
     std::vector< const Opm::DeckKeyword* > keywords0;
