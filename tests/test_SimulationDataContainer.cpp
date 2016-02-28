@@ -55,9 +55,11 @@ BOOST_AUTO_TEST_CASE(TestRegisterDefaults) {
     {
         auto pressure = container.getCellData("PRESSURE");
         BOOST_CHECK_EQUAL( pressure.size() , 1000U );
+        BOOST_CHECK_EQUAL( container.numCellDataComponents( "PRESSURE") , 1U);
 
         auto sat = container.getCellData("SATURATION");
         BOOST_CHECK_EQUAL( sat.size() , 1000U*2 );
+        BOOST_CHECK_EQUAL( container.numCellDataComponents( "SATURATION") , 2U);
     }
 
     {

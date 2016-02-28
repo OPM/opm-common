@@ -174,6 +174,11 @@ namespace Opm {
         return true;
     }
 
+    size_t SimulationDataContainer::numCellDataComponents( const std::string& name ) const {
+        const auto& data = getCellData( name );
+        return data.size() / m_num_cells;
+    }
+
 
 
     /* This is very deprecated. */
