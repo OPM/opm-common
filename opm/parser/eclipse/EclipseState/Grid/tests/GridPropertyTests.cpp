@@ -384,11 +384,9 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
 }
 
 
-std::vector< double >& TestPostProcessorMul(std::vector< double >& values, const Opm::Deck&, const Opm::EclipseState& ) {
+void TestPostProcessorMul(std::vector< double >& values, const Opm::Deck&, const Opm::EclipseState& ) {
     for( size_t g = 0; g < values.size(); g++ )
         values[g] *= 2.0;
-
-    return values;
 }
 
 
@@ -427,7 +425,7 @@ BOOST_AUTO_TEST_CASE(GridPropertyPostProcessors) {
     std::shared_ptr<Opm::EclipseGrid> grid = std::make_shared<Opm::EclipseGrid>(deck);
 
     SupportedKeywordInfo kwInfo1("MULTPV" , 1.0 , "1");
-    Opm::GridPropertyFunction< double > gfunc( &TestPostProcessorMul, *deck, st );
+    Opm::GridPropertyPostFunction< double > gfunc( &TestPostProcessorMul, *deck, st );
     SupportedKeywordInfo kwInfo2("PORO", 1.0, gfunc, "1");
     std::vector<SupportedKeywordInfo > supportedKeywords = { kwInfo1, kwInfo2 };
 

@@ -47,13 +47,13 @@ class GridPropertySupportedKeywordInfo {
 
         GridPropertySupportedKeywordInfo(
             const std::string& name,
-            GridPropertyFunction< T > initializer,
-            GridPropertyFunction< T > postProcessor,
+            GridPropertyInitFunction< T > initializer,
+            GridPropertyPostFunction< T > postProcessor,
             const std::string& dimString );
 
         GridPropertySupportedKeywordInfo(
                 const std::string& name,
-                GridPropertyFunction< T > initializer,
+                GridPropertyInitFunction< T > initializer,
                 const std::string& dimString);
 
         /* this is a convenience constructor which can be used if the default
@@ -67,18 +67,18 @@ class GridPropertySupportedKeywordInfo {
         GridPropertySupportedKeywordInfo(
                 const std::string& name,
                 const T defaultValue,
-                GridPropertyFunction< T > postProcessor,
+                GridPropertyPostFunction< T > postProcessor,
                 const std::string& dimString );
 
         const std::string& getKeywordName() const;
         const std::string& getDimensionString() const;
-        const GridPropertyFunction< T >& initializer() const;
-        const GridPropertyFunction< T >& postProcessor() const;
+        const GridPropertyInitFunction< T >& initializer() const;
+        const GridPropertyPostFunction< T >& postProcessor() const;
 
     private:
         std::string m_keywordName;
-        GridPropertyFunction< T > m_initializer;
-        GridPropertyFunction< T > m_postProcessor = GridPropertyFunction< T >::identity();
+        GridPropertyInitFunction< T > m_initializer;
+        GridPropertyPostFunction< T > m_postProcessor;
         std::string m_dimensionString;
 };
 

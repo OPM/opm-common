@@ -13,52 +13,42 @@
 namespace Opm {
 
     template< typename T >
-    static std::vector< T >& constf( std::vector< T >& values, T x ) {
-        std::fill( values.begin(), values.end(), x );
-        return values;
-    }
-
-    template< typename T >
-    GridPropertyFunction< T >::GridPropertyFunction( T x ) :
-        f( nullptr ),
+    GridPropertyInitFunction< T >::GridPropertyInitFunction( T x ) :
         constant( x )
     {}
 
     template< typename T >
-    GridPropertyFunction< T >::GridPropertyFunction(
-            std::vector< T >& (*fn)( std::vector< T >&, const Deck&, const EclipseState& ),
+    GridPropertyInitFunction< T >::GridPropertyInitFunction(
+            signature fn,
             const Deck& d,
             const EclipseState& state ) :
         f( fn ), deck( &d ), es( &state )
     {}
 
     template< typename T >
-    std::vector< T >& GridPropertyFunction< T >::operator()( std::vector< T >& values ) const {
-        if( !this->f ) return constf( values, this->constant );
+    std::vector< T > GridPropertyInitFunction< T >::operator()( size_t size ) const {
+        if( !this->f ) return std::vector< T >( size, this->constant );
+
+        return (*this->f)( size, *this->deck, *this->es );
+    }
+
+    template< typename T >
+    GridPropertyPostFunction< T >::GridPropertyPostFunction(
+            signature fn,
+            const Deck& d,
+            const EclipseState& state ) :
+        f( fn ), deck( &d ), es( &state )
+    {}
+
+    template< typename T >
+    void GridPropertyPostFunction< T >::operator()( std::vector< T >& values ) const {
+        if( !this->f ) return;
 
         return (*this->f)( values, *this->deck, *this->es );
     }
 
-    static std::vector< double >& id( std::vector< double >& values, const Deck&, const EclipseState& ) {
-        return values;
-    }
-
-    static std::vector< int >& id( std::vector< int >& values, const Deck&, const EclipseState& ) {
-        return values;
-    }
-
-    template< typename T >
-    GridPropertyFunction< T > GridPropertyFunction< T >::identity() {
-        return GridPropertyFunction< T >();
-    }
-
-    template< typename T >
-    GridPropertyFunction< T >::GridPropertyFunction() :
-        f( &id )
-    {}
-
-    std::vector< double >& temperature_lookup(
-            std::vector< double >& values,
+    std::vector< double > temperature_lookup(
+            size_t size,
             const Deck& deck,
             const EclipseState& eclipseState ) {
 
@@ -66,8 +56,10 @@ namespace Opm {
             /* if values are defaulted in the TEMPI keyword, but no
              * EQLNUM is specified, you will get NaNs
              */
-            return constf( values, std::numeric_limits< double >::quiet_NaN() );
+            return std::vector< double >( size, std::numeric_limits< double >::quiet_NaN() );
         }
+
+        std::vector< double > values( size, 0 );
 
         auto tables = eclipseState.getTableManager();
         auto eclipseGrid = eclipseState.getEclipseGrid();
@@ -85,5 +77,7 @@ namespace Opm {
     }
 }
 
-template class Opm::GridPropertyFunction< int >;
-template class Opm::GridPropertyFunction< double >;
+template class Opm::GridPropertyInitFunction< int >;
+template class Opm::GridPropertyInitFunction< double >;
+template class Opm::GridPropertyPostFunction< int >;
+template class Opm::GridPropertyPostFunction< double >;

@@ -47,7 +47,7 @@ namespace Opm {
 
     namespace GridPropertyPostProcessor {
 
-        std::vector< double >& distTopLayer( std::vector<double>& values, const Deck& m_deck, const EclipseState& m_eclipseState ) {
+        void distTopLayer( std::vector<double>& values, const Deck& m_deck, const EclipseState& m_eclipseState ) {
             EclipseGridConstPtr grid = m_eclipseState.getEclipseGrid();
             size_t layerSize = grid->getNX() * grid->getNY();
             size_t gridSize  = grid->getCartesianSize();
@@ -56,11 +56,9 @@ namespace Opm {
                 if( std::isnan( values[ globalIndex ] ) )
                     values[globalIndex] = values[globalIndex - layerSize];
             }
-
-            return values;
         }
 
-        std::vector< double >& initPORV( std::vector<double>& values, const Deck& m_deck, const EclipseState& m_eclipseState ) {
+        void initPORV( std::vector<double>& values, const Deck& m_deck, const EclipseState& m_eclipseState ) {
             EclipseGridConstPtr grid = m_eclipseState.getEclipseGrid();
             /*
                Observe that this apply method does not alter the
@@ -92,9 +90,6 @@ namespace Opm {
                     values[globalIndex] *= multpvData[globalIndex];
                 }
             }
-
-            return values;
-
         }
     }
 
@@ -504,45 +499,45 @@ namespace Opm {
 
     static std::vector< GridProperties< double >::SupportedKeywordInfo >
     makeSupportedDoubleKeywords(const Deck& deck, const EclipseState& es) {
-        GridPropertyFunction< double > SGLLookup    ( &SGLEndpoint, deck, es );
-        GridPropertyFunction< double > ISGLLookup   ( &ISGLEndpoint, deck, es );
-        GridPropertyFunction< double > SWLLookup    ( &SWLEndpoint, deck, es );
-        GridPropertyFunction< double > ISWLLookup   ( &ISWLEndpoint, deck, es );
-        GridPropertyFunction< double > SGULookup    ( &SGUEndpoint, deck, es );
-        GridPropertyFunction< double > ISGULookup   ( &ISGUEndpoint, deck, es );
-        GridPropertyFunction< double > SWULookup    ( &SWUEndpoint, deck, es );
-        GridPropertyFunction< double > ISWULookup   ( &ISWUEndpoint, deck, es );
-        GridPropertyFunction< double > SGCRLookup   ( &SGCREndpoint, deck, es );
-        GridPropertyFunction< double > ISGCRLookup  ( &ISGCREndpoint, deck, es );
-        GridPropertyFunction< double > SOWCRLookup  ( &SOWCREndpoint, deck, es );
-        GridPropertyFunction< double > ISOWCRLookup ( &ISOWCREndpoint, deck, es );
-        GridPropertyFunction< double > SOGCRLookup  ( &SOGCREndpoint, deck, es );
-        GridPropertyFunction< double > ISOGCRLookup ( &ISOGCREndpoint, deck, es );
-        GridPropertyFunction< double > SWCRLookup   ( &SWCREndpoint, deck, es );
-        GridPropertyFunction< double > ISWCRLookup  ( &ISWCREndpoint, deck, es );
+        GridPropertyInitFunction< double > SGLLookup    ( &SGLEndpoint, deck, es );
+        GridPropertyInitFunction< double > ISGLLookup   ( &ISGLEndpoint, deck, es );
+        GridPropertyInitFunction< double > SWLLookup    ( &SWLEndpoint, deck, es );
+        GridPropertyInitFunction< double > ISWLLookup   ( &ISWLEndpoint, deck, es );
+        GridPropertyInitFunction< double > SGULookup    ( &SGUEndpoint, deck, es );
+        GridPropertyInitFunction< double > ISGULookup   ( &ISGUEndpoint, deck, es );
+        GridPropertyInitFunction< double > SWULookup    ( &SWUEndpoint, deck, es );
+        GridPropertyInitFunction< double > ISWULookup   ( &ISWUEndpoint, deck, es );
+        GridPropertyInitFunction< double > SGCRLookup   ( &SGCREndpoint, deck, es );
+        GridPropertyInitFunction< double > ISGCRLookup  ( &ISGCREndpoint, deck, es );
+        GridPropertyInitFunction< double > SOWCRLookup  ( &SOWCREndpoint, deck, es );
+        GridPropertyInitFunction< double > ISOWCRLookup ( &ISOWCREndpoint, deck, es );
+        GridPropertyInitFunction< double > SOGCRLookup  ( &SOGCREndpoint, deck, es );
+        GridPropertyInitFunction< double > ISOGCRLookup ( &ISOGCREndpoint, deck, es );
+        GridPropertyInitFunction< double > SWCRLookup   ( &SWCREndpoint, deck, es );
+        GridPropertyInitFunction< double > ISWCRLookup  ( &ISWCREndpoint, deck, es );
 
-        GridPropertyFunction< double > PCWLookup    ( &PCWEndpoint, deck, es );
-        GridPropertyFunction< double > IPCWLookup   ( &IPCWEndpoint, deck, es );
-        GridPropertyFunction< double > PCGLookup    ( &PCGEndpoint, deck, es );
-        GridPropertyFunction< double > IPCGLookup   ( &IPCGEndpoint, deck, es );
-        GridPropertyFunction< double > KRWLookup    ( &KRWEndpoint, deck, es );
-        GridPropertyFunction< double > IKRWLookup   ( &IKRWEndpoint, deck, es );
-        GridPropertyFunction< double > KRWRLookup   ( &KRWREndpoint, deck, es );
-        GridPropertyFunction< double > IKRWRLookup  ( &IKRWREndpoint, deck, es );
-        GridPropertyFunction< double > KROLookup    ( &KROEndpoint, deck, es );
-        GridPropertyFunction< double > IKROLookup   ( &IKROEndpoint, deck, es );
-        GridPropertyFunction< double > KRORWLookup  ( &KRORWEndpoint, deck, es );
-        GridPropertyFunction< double > IKRORWLookup ( &IKRORWEndpoint, deck, es );
-        GridPropertyFunction< double > KRORGLookup  ( &KRORGEndpoint, deck, es );
-        GridPropertyFunction< double > IKRORGLookup ( &IKRORGEndpoint, deck, es );
-        GridPropertyFunction< double > KRGLookup    ( &KRGEndpoint, deck, es );
-        GridPropertyFunction< double > IKRGLookup   ( &IKRGEndpoint, deck, es );
-        GridPropertyFunction< double > KRGRLookup   ( &KRGREndpoint, deck, es );
-        GridPropertyFunction< double > IKRGRLookup  ( &IKRGREndpoint, deck, es );
+        GridPropertyInitFunction< double > PCWLookup    ( &PCWEndpoint, deck, es );
+        GridPropertyInitFunction< double > IPCWLookup   ( &IPCWEndpoint, deck, es );
+        GridPropertyInitFunction< double > PCGLookup    ( &PCGEndpoint, deck, es );
+        GridPropertyInitFunction< double > IPCGLookup   ( &IPCGEndpoint, deck, es );
+        GridPropertyInitFunction< double > KRWLookup    ( &KRWEndpoint, deck, es );
+        GridPropertyInitFunction< double > IKRWLookup   ( &IKRWEndpoint, deck, es );
+        GridPropertyInitFunction< double > KRWRLookup   ( &KRWREndpoint, deck, es );
+        GridPropertyInitFunction< double > IKRWRLookup  ( &IKRWREndpoint, deck, es );
+        GridPropertyInitFunction< double > KROLookup    ( &KROEndpoint, deck, es );
+        GridPropertyInitFunction< double > IKROLookup   ( &IKROEndpoint, deck, es );
+        GridPropertyInitFunction< double > KRORWLookup  ( &KRORWEndpoint, deck, es );
+        GridPropertyInitFunction< double > IKRORWLookup ( &IKRORWEndpoint, deck, es );
+        GridPropertyInitFunction< double > KRORGLookup  ( &KRORGEndpoint, deck, es );
+        GridPropertyInitFunction< double > IKRORGLookup ( &IKRORGEndpoint, deck, es );
+        GridPropertyInitFunction< double > KRGLookup    ( &KRGEndpoint, deck, es );
+        GridPropertyInitFunction< double > IKRGLookup   ( &IKRGEndpoint, deck, es );
+        GridPropertyInitFunction< double > KRGRLookup   ( &KRGREndpoint, deck, es );
+        GridPropertyInitFunction< double > IKRGRLookup  ( &IKRGREndpoint, deck, es );
 
-        GridPropertyFunction< double > tempLookup   ( &temperature_lookup, deck, es );
-        GridPropertyFunction< double > initPORV     ( &GridPropertyPostProcessor::initPORV, deck, es );
-        GridPropertyFunction< double > distributeTopLayer( &GridPropertyPostProcessor::distTopLayer, deck, es );
+        GridPropertyInitFunction< double > tempLookup   ( &temperature_lookup, deck, es );
+        GridPropertyPostFunction< double > initPORV     ( &GridPropertyPostProcessor::initPORV, deck, es );
+        GridPropertyPostFunction< double > distributeTopLayer( &GridPropertyPostProcessor::distTopLayer, deck, es );
 
         std::vector< GridProperties< double >::SupportedKeywordInfo > supportedDoubleKeywords;
 

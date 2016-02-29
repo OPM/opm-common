@@ -34,8 +34,8 @@ namespace Opm {
     template< typename T >
     GridPropertySupportedKeywordInfo< T >::GridPropertySupportedKeywordInfo(
             const std::string& name,
-            GridPropertyFunction< T > initializer,
-            GridPropertyFunction< T > postProcessor,
+            GridPropertyInitFunction< T > initializer,
+            GridPropertyPostFunction< T > postProcessor,
             const std::string& dimString ) :
         m_keywordName( name ),
         m_initializer( initializer ),
@@ -46,7 +46,7 @@ namespace Opm {
     template< typename T >
     GridPropertySupportedKeywordInfo< T >::GridPropertySupportedKeywordInfo(
             const std::string& name,
-            GridPropertyFunction< T > initializer,
+            GridPropertyInitFunction< T > initializer,
             const std::string& dimString ) :
         m_keywordName(name),
         m_initializer(initializer),
@@ -67,7 +67,7 @@ namespace Opm {
     GridPropertySupportedKeywordInfo< T >::GridPropertySupportedKeywordInfo(
             const std::string& name,
             const T defaultValue,
-            GridPropertyFunction< T > postProcessor,
+            GridPropertyPostFunction< T > postProcessor,
             const std::string& dimString ) :
         m_keywordName( name ),
         m_initializer( defaultValue ),
@@ -86,12 +86,12 @@ namespace Opm {
     }
 
     template< typename T >
-    const GridPropertyFunction< T >& GridPropertySupportedKeywordInfo< T >::initializer() const {
+    const GridPropertyInitFunction< T >& GridPropertySupportedKeywordInfo< T >::initializer() const {
         return this->m_initializer;
     }
 
     template< typename T >
-    const GridPropertyFunction< T >& GridPropertySupportedKeywordInfo< T >::postProcessor() const {
+    const GridPropertyPostFunction< T >& GridPropertySupportedKeywordInfo< T >::postProcessor() const {
         return this->m_postProcessor;
     }
 
@@ -101,11 +101,9 @@ namespace Opm {
         m_ny( ny ),
         m_nz( nz ),
         m_kwInfo( kwInfo ),
-        m_data( nx * ny * nz )
-    {
-        m_kwInfo.initializer()(m_data);
-        m_hasRunPostProcessor = false;
-    }
+        m_data( kwInfo.initializer()( nx * ny * nz ) ),
+        m_hasRunPostProcessor( false )
+    {}
 
     template< typename T >
     size_t GridProperty< T >::getCartesianSize() const {
