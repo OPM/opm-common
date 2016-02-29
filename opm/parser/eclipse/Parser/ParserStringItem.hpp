@@ -40,12 +40,12 @@ namespace Opm {
         ParserStringItem(const std::string& itemName, const std::string& defaultValue);
         explicit ParserStringItem( const Json::JsonObject& jsonConfig);
 
-        bool equal(const ParserItem& other) const;
+        bool equal(const ParserItem& other) const override;
         DeckItem scan(RawRecordPtr rawRecord) const override;
 
-        std::string createCode() const;
-      	void inlineClass(std::ostream& os, const std::string& indent) const;
-        std::string inlineClassInit(const std::string& parentClass) const;
+        std::string createCode() const override;
+        void inlineClass(std::ostream& os, const std::string& indent) const override;
+        std::string inlineClassInit(const std::string& parentClass) const override;
         void setDefault(const std::string& defaultValue);
         std::string getDefault() const;
         bool hasDefault() const;

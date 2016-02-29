@@ -44,11 +44,11 @@ namespace Opm {
         explicit ParserIntItem(const Json::JsonObject& jsonConfig);
 
         DeckItem scan(std::shared_ptr< RawRecord > rawRecord) const override;
-        bool equal(const ParserItem& other) const;
+        bool equal(const ParserItem& other) const override;
 
-        std::string createCode() const;
-	void inlineClass(std::ostream& os, const std::string& indent) const;
-        std::string inlineClassInit(const std::string& parentClass) const;
+        std::string createCode() const override;
+        void inlineClass(std::ostream& os, const std::string& indent) const override;
+        std::string inlineClassInit(const std::string& parentClass) const override;
 
         int  getDefault() const;
         bool hasDefault() const;

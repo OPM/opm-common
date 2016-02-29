@@ -41,18 +41,18 @@ namespace Opm {
         ParserDoubleItem(const std::string& itemName, ParserItemSizeEnum sizeType, double defaultValue);
         explicit ParserDoubleItem( const Json::JsonObject& jsonConfig);
 
-        size_t numDimensions() const;
-        bool hasDimension() const;
-        void push_backDimension(const std::string& dimension);
-        const std::string& getDimension(size_t index) const;
+        size_t numDimensions() const override;
+        bool hasDimension() const override;
+        void push_backDimension(const std::string& dimension) override;
+        const std::string& getDimension(size_t index) const override;
         bool equalDimensions(const ParserItem& other) const;
 
         DeckItem scan(std::shared_ptr< RawRecord > rawRecord) const override;
-        bool equal(const ParserItem& other) const;
+        bool equal(const ParserItem& other) const override;
 
-        std::string createCode() const;
-	void inlineClass(std::ostream& os, const std::string& indent) const;
-        std::string inlineClassInit(const std::string& parentClass) const;
+        std::string createCode() const override;
+        void inlineClass(std::ostream& os, const std::string& indent) const override;
+        std::string inlineClassInit(const std::string& parentClass) const override;
         void setDefault(double defaultValue);
         double getDefault() const;
         bool hasDefault() const;
