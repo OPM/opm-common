@@ -180,7 +180,7 @@ namespace Opm {
     }
 
 
-    const std::unordered_map<std::string, std::vector<double>> SimulationDataContainer::cellData() const {
+    const std::unordered_map<std::string, std::vector<double>>& SimulationDataContainer::cellData() const {
         return m_cell_data;
     }
 
