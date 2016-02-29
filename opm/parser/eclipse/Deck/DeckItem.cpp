@@ -117,11 +117,11 @@ namespace Opm {
     }
 
     template< typename T >
-    void DeckTypeItem< T >::push_backDefault( T data ) {
+    void DeckTypeItem< T >::push_backDefault( T data_arg ) {
         if( this->dataPointDefaulted.size() != this->data.size() )
             throw std::logic_error("To add a value to an item, no \"pseudo defaults\" can be added before");
 
-        this->data.push_back( data );
+        this->data.push_back( data_arg );
         this->dataPointDefaulted.push_back(true);
     }
 

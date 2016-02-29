@@ -108,8 +108,8 @@ namespace Opm {
         return this->keywordMap.find( keyword )->second;
     }
 
-    DeckView::DeckView( const_iterator first, const_iterator last ) :
-        first( first ), last( last )
+    DeckView::DeckView( const_iterator first_arg, const_iterator last_arg ) :
+        first( first_arg ), last( last_arg )
     {
         size_t index = 0;
         for( const auto& kw : *this )
