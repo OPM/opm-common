@@ -129,6 +129,7 @@ EclipseState/Grid/NNC.cpp
 EclipseState/Grid/PinchMode.cpp
 #
 EclipseState/InitConfig/InitConfig.cpp
+EclipseState/InitConfig/Equil.cpp
 EclipseState/SimulationConfig/SimulationConfig.cpp
 EclipseState/SimulationConfig/ThresholdPressure.cpp
 EclipseState/Summary/Summary.cpp
@@ -229,6 +230,7 @@ EclipseState/Grid/FaultCollection.hpp
 EclipseState/Grid/NNC.hpp
 #
 EclipseState/InitConfig/InitConfig.hpp
+EclipseState/InitConfig/Equil.hpp
 EclipseState/SimulationConfig/SimulationConfig.hpp
 EclipseState/SimulationConfig/ThresholdPressure.hpp
 EclipseState/Summary/Summary.hpp
