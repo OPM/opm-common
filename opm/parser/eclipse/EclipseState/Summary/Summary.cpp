@@ -91,7 +91,7 @@ namespace Opm {
 
     static inline std::vector< ERT::smspec_node > keywordF(
             const DeckKeyword& keyword,
-            const EclipseState& es ) {
+            const EclipseState& /* es */ ) {
 
         std::vector< ERT::smspec_node > res;
         res.push_back( ERT::smspec_node( keyword.name() ) );
