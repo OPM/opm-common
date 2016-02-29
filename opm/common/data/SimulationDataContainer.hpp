@@ -63,6 +63,14 @@ namespace Opm {
         std::vector<double>& getFaceData( const std::string& name );
         const std::vector<double>& getFaceData( const std::string& name ) const;
 
+        /// Will return the number of components of the celldata with
+        /// name @name:
+        ///
+        ///    numCellDataComponents( "PRESSURE" )   -> 1
+        ///    numCellDataComponents( "SATURATION" ) -> 3
+        ///
+        /// for a three phase model.
+        size_t numCellDataComponents( const std::string& name ) const;
         bool equal(const SimulationDataContainer& other) const;
 
 
@@ -86,6 +94,7 @@ namespace Opm {
         const std::vector<double>& facepressure() const;
         const std::vector<double>& faceflux    () const;
 
+        const std::unordered_map<std::string, std::vector<double>> cellData() const;
     private:
         void  addDefaultFields();
 
