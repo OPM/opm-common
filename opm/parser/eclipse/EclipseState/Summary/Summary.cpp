@@ -102,19 +102,19 @@ namespace Opm {
             const DeckKeyword& keyword,
             const EclipseState& es ) {
 
-        std::array< int, 3 > dims = {
+        std::array< int, 3 > dims = {{
             int( es.getEclipseGrid()->getNX() ),
             int( es.getEclipseGrid()->getNY() ),
             int( es.getEclipseGrid()->getNZ() )
-        };
+        }};
 
         const auto mkrecord = [&dims,&keyword]( const DeckRecord& record ) {
 
-            std::array< int , 3 > ijk = {
+            std::array< int , 3 > ijk = {{
                 record.getItem( 0 ).get< int >( 0 ) - 1,
                 record.getItem( 1 ).get< int >( 0 ) - 1,
                 record.getItem( 2 ).get< int >( 0 ) - 1
-            };
+            }};
 
             return ERT::smspec_node( keyword.name(), dims.data(), ijk.data() );
         };
