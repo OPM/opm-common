@@ -12,6 +12,9 @@
 
 #include <ert/ecl/ecl_smspec.h>
 
+#include <numeric>
+#include <array>
+
 namespace Opm {
 
     namespace fun {
