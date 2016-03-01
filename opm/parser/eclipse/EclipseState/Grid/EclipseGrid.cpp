@@ -287,7 +287,12 @@ namespace Opm {
         assertVectorSize( DYV    , static_cast<size_t>( dims[1] ) , "DYV");
         assertVectorSize( DZV    , static_cast<size_t>( dims[2] ) , "DZV");
 
-        m_grid.reset( ecl_grid_alloc_dxv_dyv_dzv_depthz( dims[0] , dims[1] , dims[2] , DXV.data() , DYV.data() , DZV.data() , DEPTHZ.data() , NULL ) );
+        const int* actnum = nullptr;
+        if (deck->hasKeyword<ParserKeywords::ACTNUM>()) {
+            actnum = deck->getKeyword<ParserKeywords::ACTNUM>().getIntData().data();
+        }
+
+        m_grid.reset( ecl_grid_alloc_dxv_dyv_dzv_depthz( dims[0] , dims[1] , dims[2] , DXV.data() , DYV.data() , DZV.data() , DEPTHZ.data() , actnum ) );
     }
 
 
@@ -296,8 +301,12 @@ namespace Opm {
         std::vector<double> DY = createDVector( dims , 1 , "DY" , "DYV" , deck);
         std::vector<double> DZ = createDVector( dims , 2 , "DZ" , "DZV" , deck);
         std::vector<double> TOPS = createTOPSVector( dims , DZ , deck );
+        const int* actnum = nullptr;
+        if (deck->hasKeyword<ParserKeywords::ACTNUM>()) {
+            actnum = deck->getKeyword<ParserKeywords::ACTNUM>().getIntData().data();
+        }
 
-        m_grid.reset( ecl_grid_alloc_dx_dy_dz_tops( dims[0] , dims[1] , dims[2] , DX.data() , DY.data() , DZ.data() , TOPS.data() , NULL ) );
+        m_grid.reset( ecl_grid_alloc_dx_dy_dz_tops( dims[0] , dims[1] , dims[2] , DX.data() , DY.data() , DZ.data() , TOPS.data() , actnum ) );
     }
 
 
