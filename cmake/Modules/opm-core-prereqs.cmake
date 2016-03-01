@@ -18,7 +18,7 @@ set (opm-core_DEPS
 	"CXX11Features REQUIRED"
 	# various runtime library enhancements
 	"Boost 1.44.0
-		COMPONENTS date_time filesystem system iostreams unit_test_framework REQUIRED"
+		COMPONENTS date_time filesystem system unit_test_framework REQUIRED"
 	# matrix library
 	"BLAS REQUIRED"
 	"LAPACK REQUIRED"
