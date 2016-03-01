@@ -15,6 +15,7 @@ add_subdirectory(EclipseState/Util/tests)
 add_subdirectory(EclipseState/IOConfig/tests)
 add_subdirectory(EclipseState/InitConfig/tests)
 add_subdirectory(EclipseState/Summary/tests)
+add_subdirectory(Utility/tests)
 
 add_subdirectory(Applications)
 add_subdirectory(IntegrationTests)
@@ -133,6 +134,10 @@ EclipseState/SimulationConfig/ThresholdPressure.cpp
 EclipseState/Summary/Summary.cpp
 EclipseState/IOConfig/IOConfig.cpp)
 #
+
+set( utility_source
+Utility/Functional.cpp
+)
 
 set( HEADER_FILES
 OpmLog/LogBackend.hpp
@@ -280,6 +285,7 @@ EclipseState/Tables/TableEnums.hpp
 EclipseState/Tables/TableSchema.hpp
 EclipseState/Tables/TableIndex.hpp
 #
+Utility/Functional.hpp
 Utility/EquilWrapper.hpp)
 
 add_library(buildParser ${rawdeck_source} ${build_parser_source} ${deck_source} ${unit_source} ${generator_source})
@@ -333,7 +339,7 @@ opm_add_test( runInlineKeywordTest SOURCES ${PROJECT_BINARY_DIR}/generated-sourc
 
 #-----------------------------------------------------------------
 
-add_library(opmparser ${generated_source} ${state_source} ${rawdeck_source} ${parser_source} ${deck_source} ${unit_source} ${log_source} ${generator_source})
+add_library(opmparser ${generated_source} ${state_source} ${rawdeck_source} ${parser_source} ${deck_source} ${unit_source} ${log_source} ${generator_source} ${utility_source})
 add_dependencies( opmparser generatedCode )
 target_link_libraries(opmparser opmjson ${Boost_LIBRARIES}  ${ERT_LIBRARIES})
 set_target_properties(opmparser PROPERTIES VERSION ${opm-parser_VERSION_MAJOR}.${opm-parser_VERSION_MINOR}

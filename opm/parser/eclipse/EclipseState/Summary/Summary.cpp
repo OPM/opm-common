@@ -9,6 +9,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Summary/Summary.hpp>
+#include <opm/parser/eclipse/Utility/Functional.hpp>
 
 #include <ert/ecl/ecl_smspec.h>
 
@@ -16,46 +17,6 @@
 #include <array>
 
 namespace Opm {
-
-    namespace fun {
-
-        /*
-         * map :: (a -> b) -> [a] -> [b]
-         *
-         * C can be any foreach-compatible container (that supports .begin,
-         * .end), but will always return a vector.
-         */
-        template< typename F, typename C >
-        std::vector< typename std::result_of< F( typename C::const_iterator::value_type& ) >::type >
-        map( F&& f, const C& src ) {
-            using A = typename C::const_iterator::value_type;
-            using B = typename std::result_of< F( A& ) >::type;
-            std::vector< B > ret;
-            ret.reserve( src.size() );
-
-            std::transform( src.begin(), src.end(), std::back_inserter( ret ), f );
-            return ret;
-        }
-
-        template< typename A >
-        std::vector< A > concat( std::vector< std::vector< A > >&& src ) {
-
-            const auto size = std::accumulate( src.begin(), src.end(), 0,
-                []( std::size_t acc, const std::vector< A >& x ) {
-                    return acc + x.size();
-                }
-            );
-
-            std::vector< A > dst;
-            dst.reserve( size );
-
-            for( auto& x : src )
-                std::move( x.begin(), x.end(), std::back_inserter( dst ) );
-
-            return dst;
-        }
-
-    }
 
     static std::string wellName( const std::shared_ptr< const Well >& well ) {
         return well->name();
