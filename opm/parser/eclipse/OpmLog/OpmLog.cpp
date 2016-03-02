@@ -96,8 +96,8 @@ namespace Opm {
             std::string("\nWarnings          " + std::to_string(m_warning)) +
             std::string("\nProblems          " + std::to_string(m_problem)) +
             std::string("\nErrors            " + std::to_string(m_error)) + 
-            std::string("\nBugs              " + std::to_string(m_bug))+ "\n";
-            std::string("\nInfo              " + std::to_string(m_info))+ "\n";
+            std::string("\nBugs              " + std::to_string(m_bug)) +
+            std::string("\nInfo              " + std::to_string(m_info)) + "\n";
 
         m_streamLog->addMessage(Log::MessageType::Info, summary_msg);
     }
