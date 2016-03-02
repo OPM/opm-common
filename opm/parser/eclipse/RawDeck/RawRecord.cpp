@@ -126,8 +126,8 @@ namespace Opm {
         std::cout << "RecordDump: ";
         for (size_t i = 0; i < m_recordItems.size(); i++) {
             std::cout
-                << this->m_recordItems[i].string() << "/"
-                << getItem( i ).string() << " ";
+                << this->m_recordItems[i] << "/"
+                << getItem( i ) << " ";
         }
         std::cout << std::endl;
     }

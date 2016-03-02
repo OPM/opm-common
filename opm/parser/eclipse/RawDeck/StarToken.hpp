@@ -47,7 +47,7 @@ public:
     StarToken(const string_view& token)
     {
         if (!isStarToken(token, m_countString, m_valueString))
-            throw std::invalid_argument("Token \""+ token.string() +"\" is not a repetition specifier");
+            throw std::invalid_argument("Token \""+ token +"\" is not a repetition specifier");
         init_(token);
     }
 
