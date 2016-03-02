@@ -138,6 +138,7 @@ EclipseState/IOConfig/IOConfig.cpp)
 
 set( utility_source
 Utility/Functional.cpp
+Utility/Stringview.cpp
 )
 
 set( HEADER_FILES
@@ -287,9 +288,11 @@ EclipseState/Tables/ColumnSchema.hpp
 EclipseState/Tables/TableEnums.hpp
 EclipseState/Tables/TableSchema.hpp
 EclipseState/Tables/TableIndex.hpp
-Utility/Functional.hpp)
+#
+Utility/Functional.hpp
+Utility/Stringview.hpp)
 
-add_library(buildParser ${rawdeck_source} ${build_parser_source} ${deck_source} ${unit_source} ${generator_source})
+add_library(buildParser ${rawdeck_source} ${build_parser_source} ${deck_source} ${unit_source} ${generator_source} ${utility_source})
 target_link_libraries(buildParser opmjson ${Boost_LIBRARIES}  ${ERT_LIBRARIES})
 
 #-----------------------------------------------------------------
