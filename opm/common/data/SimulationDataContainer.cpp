@@ -184,6 +184,10 @@ namespace Opm {
         return m_cell_data;
     }
 
+    std::unordered_map<std::string, std::vector<double>>& SimulationDataContainer::cellData() {
+        return m_cell_data;
+    }
+
 
     /* This is very deprecated. */
     void SimulationDataContainer::addDefaultFields() {
