@@ -20,13 +20,21 @@
 #include <string>
 #include <stdexcept>
 #include <boost/lexical_cast.hpp>
+
 #include <opm/parser/eclipse/RawDeck/StarToken.hpp>
+#include <opm/parser/eclipse/Utility/Stringview.hpp>
 
 
 
 namespace Opm {
 
     bool isStarToken(const std::string& token,
+                           std::string& countString,
+                           std::string& valueString) {
+        return isStarToken( string_view( token.begin(), token.end() ), countString, valueString );
+    }
+
+    bool isStarToken(const string_view& token,
                            std::string& countString,
                            std::string& valueString) {
         // find first character which is not a digit
@@ -113,7 +121,7 @@ namespace Opm {
             return valueString;
     }
 
-    void StarToken::init_( const std::string& token ) {
+    void StarToken::init_( const string_view& token ) {
         // special-case the interpretation of a lone star as "1*" but do not
         // allow constructs like "*123"...
         if (m_countString == "") {

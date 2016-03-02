@@ -22,7 +22,15 @@
 
 #include <string>
 
+#include <opm/parser/eclipse/Utility/Stringview.hpp>
+
+#include <boost/lexical_cast.hpp>
+
 namespace Opm {
+    bool isStarToken(const string_view& token,
+                           std::string& countString,
+                           std::string& valueString);
+
     bool isStarToken(const std::string& token,
                            std::string& countString,
                            std::string& valueString);
@@ -32,14 +40,18 @@ namespace Opm {
 
 class StarToken {
 public:
-    StarToken(const std::string& token)
+    StarToken(const std::string& token) :
+        StarToken( string_view( token.begin(), token.end() ) )
+    {}
+
+    StarToken(const string_view& token)
     {
         if (!isStarToken(token, m_countString, m_valueString))
-            throw std::invalid_argument("Token \""+token+"\" is not a repetition specifier");
+            throw std::invalid_argument("Token \""+ token.string() +"\" is not a repetition specifier");
         init_(token);
     }
 
-    StarToken(const std::string& token, const std::string& countStr, const std::string& valueStr)
+    StarToken(const string_view& token, const std::string& countStr, const std::string& valueStr)
         : m_countString(countStr)
         , m_valueString(valueStr)
     {
@@ -73,7 +85,7 @@ public:
 private:
     // internal initialization method. the m_countString and m_valueString attributes
     // must be set before calling this method.
-    void init_(const std::string& token);
+    void init_(const string_view& token);
 
     ssize_t m_count;
     std::string m_countString;

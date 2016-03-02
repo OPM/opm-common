@@ -151,7 +151,7 @@ namespace Opm {
 
         if (self->sizeType() == ALL) {
             while (rawRecord->size() > 0) {
-                std::string token = rawRecord->pop_front();
+                auto token = rawRecord->pop_front();
 
                 std::string countString;
                 std::string valueString;
@@ -168,7 +168,7 @@ namespace Opm {
                             deckItem.push_backDefault( value );
                     }
                 } else {
-                    ValueType value = readValueToken<ValueType>(token);
+                    ValueType value = readValueToken<ValueType>(token.string());
                     deckItem.push_back(value);
                 }
             }
@@ -186,7 +186,7 @@ namespace Opm {
             } else {
                 // The '*' should be interpreted as a repetition indicator, but it must
                 // be preceeded by an integer...
-                std::string token = rawRecord->pop_front();
+                auto token = rawRecord->pop_front();
                 std::string countString;
                 std::string valueString;
                 if (isStarToken(token, countString, valueString)) {
@@ -212,7 +212,7 @@ namespace Opm {
                     for (size_t i=0; i < st.count() - 1; i++)
                         rawRecord->push_front(singleRepetition);
                 } else {
-                    ValueType value = readValueToken<ValueType>(token);
+                    ValueType value = readValueToken<ValueType>(token.string() );
                     deckItem.push_back(value);
                 }
             }

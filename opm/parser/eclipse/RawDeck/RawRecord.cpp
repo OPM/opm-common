@@ -18,15 +18,65 @@
  */
 #include <iostream>
 #include <stdexcept>
+#include <vector>
+#include <deque>
+
 #include <boost/algorithm/string.hpp>
 
 #include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
 #include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
 
+#include <opm/parser/eclipse/Utility/Stringview.hpp>
+
 using namespace Opm;
 using namespace std;
 
 namespace Opm {
+
+    static inline unsigned int findTerminatingSlash( const std::string& singleRecordString ) {
+        unsigned int terminatingSlash = singleRecordString.find_first_of(RawConsts::slash);
+        unsigned int lastQuotePosition = singleRecordString.find_last_of(RawConsts::quote);
+
+        // Checks lastQuotePosition vs terminatingSlashPosition,
+        // since specifications of WELLS, FILENAMES etc can include slash, but
+        // these are always in quotes (and there are no quotes after record-end).
+        if (terminatingSlash < lastQuotePosition && lastQuotePosition < singleRecordString.size()) {
+            terminatingSlash = singleRecordString.find_first_of(RawConsts::slash, lastQuotePosition);
+        }
+        return terminatingSlash;
+    }
+
+    static inline bool is_whitespace( char ch ) {
+        return ch == '\t' || ch == ' ';
+    }
+
+    static inline std::string::const_iterator first_nonspace (
+            std::string::const_iterator begin,
+            std::string::const_iterator end ) {
+        return std::find_if_not( begin, end, is_whitespace );
+    }
+
+    static std::deque< string_view > splitSingleRecordString( const std::string& record ) {
+
+        std::deque< string_view > dst;
+
+        for( auto current = first_nonspace( record.begin(), record.end() );
+                current != record.end();
+                current = first_nonspace( current, record.end() ) )
+        {
+            if( *current == RawConsts::quote ) {
+                auto quote_end = std::find( current + 1, record.end(), RawConsts::quote ) + 1;
+                dst.push_back( { current, quote_end } );
+                current = quote_end;
+            } else {
+                auto token_end = std::find_if( current, record.end(), is_whitespace );
+                dst.push_back( { current, token_end } );
+                current = token_end;
+            }
+        }
+
+        return dst;
+    }
 
     /*
      * It is assumed that after a record is terminated, there is no quote marks
@@ -40,7 +90,7 @@ namespace Opm {
     RawRecord::RawRecord(const std::string& singleRecordString, const std::string& fileName, const std::string& keywordName) : m_fileName(fileName), m_keywordName(keywordName){
         if (isTerminatedRecordString(singleRecordString)) {
             setRecordString(singleRecordString);
-            splitSingleRecordString();
+            this->m_recordItems = splitSingleRecordString( this->m_sanitizedRecordString );
         } else {
             throw std::invalid_argument("Input string is not a complete record string,"
                     " offending string: " + singleRecordString);
@@ -55,18 +105,18 @@ namespace Opm {
         return m_keywordName;
     }
 
+    string_view RawRecord::pop_front() {
+        auto front = m_recordItems.front();
 
-    std::string RawRecord::pop_front() {
-        std::string front = m_recordItems.front();
-        m_recordItems.pop_front();
+        this->m_recordItems.pop_front();
         return front;
     }
 
-
-    void RawRecord::push_front(std::string token) {
-        m_recordItems.push_front( token );
+    void RawRecord::push_front(std::string tok ) {
+        this->expanded_items.push_back( tok );
+        string_view record { this->expanded_items.back().begin(), this->expanded_items.back().end() };
+        this->m_recordItems.push_front( record );
     }
-
 
     size_t RawRecord::size() const {
         return m_recordItems.size();
@@ -74,17 +124,17 @@ namespace Opm {
 
     void RawRecord::dump() const {
         std::cout << "RecordDump: ";
-        for (size_t i = 0; i < m_recordItems.size(); i++)
-            std::cout << m_recordItems[i] << "/" << getItem(i) << " ";
+        for (size_t i = 0; i < m_recordItems.size(); i++) {
+            std::cout
+                << this->m_recordItems[i].string() << "/"
+                << getItem( i ).string() << " ";
+        }
         std::cout << std::endl;
     }
 
 
-    const std::string& RawRecord::getItem(size_t index) const {
-        if (index < m_recordItems.size())
-            return m_recordItems[index];
-        else
-            throw std::out_of_range("Lookup index out of range");
+    string_view RawRecord::getItem(size_t index) const {
+        return this->m_recordItems.at( index );
     }
 
     const std::string& RawRecord::getRecordString() const {
@@ -99,69 +149,9 @@ namespace Opm {
         return hasTerminatingSlash && hasEvenNumberOfQuotes;
     }
 
-    void RawRecord::splitSingleRecordString() {
-        char currentChar;
-        char tokenStartCharacter=' ';
-        std::string currentToken = "";
-        bool inQuote = false;
-        for (unsigned i = 0; i < m_sanitizedRecordString.size(); i++) {
-            currentChar = m_sanitizedRecordString[i];
-            if (!inQuote && charIsSeparator(currentChar)) {
-                processSeparatorCharacter(currentToken, currentChar, tokenStartCharacter);
-            } else if (currentChar == RawConsts::quote) {
-                inQuote = !inQuote;
-                processNonSpecialCharacters(currentToken, currentChar);
-            } else {
-                processNonSpecialCharacters(currentToken, currentChar);
-            }
-        }
-        if (currentToken.size() > 0) {
-            m_recordItems.push_back(currentToken);
-            currentToken.clear();
-        }
-    }
-
-    void RawRecord::processSeparatorCharacter(std::string& currentToken, const char& currentChar, char& tokenStartCharacter) {
-        if (tokenStartCharacter == RawConsts::quote) {
-            currentToken += currentChar;
-        } else {
-            if (currentToken.size() > 0) {
-                m_recordItems.push_back(currentToken);
-                currentToken.clear();
-            }
-            tokenStartCharacter = currentChar;
-        }
-    }
-
-    void RawRecord::processNonSpecialCharacters(std::string& currentToken, const char& currentChar) {
-        currentToken += currentChar;
-    }
-
-    bool RawRecord::charIsSeparator(char candidate) {
-        return std::string::npos != RawConsts::separators.find(candidate);
-    }
-
     void RawRecord::setRecordString(const std::string& singleRecordString) {
         unsigned terminatingSlash = findTerminatingSlash(singleRecordString);
         m_sanitizedRecordString = singleRecordString.substr(0, terminatingSlash);
         boost::trim(m_sanitizedRecordString);
     }
-
-    unsigned int RawRecord::findTerminatingSlash(const std::string& singleRecordString) {
-        unsigned int terminatingSlash = singleRecordString.find_first_of(RawConsts::slash);
-        unsigned int lastQuotePosition = singleRecordString.find_last_of(RawConsts::quote);
-
-        // Checks lastQuotePosition vs terminatingSlashPosition,
-        // since specifications of WELLS, FILENAMES etc can include slash, but
-        // these are always in quotes (and there are no quotes after record-end).
-        if (terminatingSlash < lastQuotePosition && lastQuotePosition < singleRecordString.size()) {
-            terminatingSlash = singleRecordString.find_first_of(RawConsts::slash, lastQuotePosition);
-        }
-        return terminatingSlash;
-    }
-
-    RawRecord::~RawRecord() {
-    }
-
-
 }

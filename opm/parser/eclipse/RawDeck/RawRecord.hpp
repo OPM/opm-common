@@ -20,9 +20,12 @@
 #ifndef RECORD_HPP
 #define RECORD_HPP
 
-#include <string>
 #include <deque>
 #include <memory>
+#include <string>
+#include <vector>
+
+#include <opm/parser/eclipse/Utility/Stringview.hpp>
 
 namespace Opm {
 
@@ -34,32 +37,27 @@ namespace Opm {
     public:
         RawRecord(const std::string& singleRecordString, const std::string& fileName = "", const std::string& keywordName = "");
 
-        std::string pop_front();
+        string_view pop_front();
         void push_front(std::string token);
         size_t size() const;
 
         const std::string& getRecordString() const;
-        const std::string& getItem(size_t index) const;
+        string_view getItem(size_t index) const;
         const std::string& getFileName() const;
         const std::string& getKeywordName() const;
 
         static bool isTerminatedRecordString(const std::string& candidateRecordString);
-        virtual ~RawRecord();
-        void dump() const;
+
+       void dump() const;
 
     private:
         std::string m_sanitizedRecordString;
-        std::deque<std::string> m_recordItems;
+        std::deque< string_view > m_recordItems;
+        std::vector< std::string > expanded_items;
         const std::string m_fileName;
         const std::string m_keywordName;
 
         void setRecordString(const std::string& singleRecordString);
-        void splitSingleRecordString();
-        void processSeparatorCharacter(std::string& currentToken, const char& currentChar, char& tokenStarter);
-        void processQuoteCharacters(std::string& currentToken, const char& currentChar, char& tokenStarter);
-        void processNonSpecialCharacters(std::string& currentToken, const char& currentChar);
-        bool charIsSeparator(char candidate);
-        static unsigned int findTerminatingSlash(const std::string& singleRecordString);
     };
     typedef std::shared_ptr<RawRecord> RawRecordPtr;
     typedef std::shared_ptr<const RawRecord> RawRecordConstPtr;
