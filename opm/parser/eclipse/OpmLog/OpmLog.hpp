@@ -24,6 +24,8 @@
 #include <cstdint>
 
 #include <opm/parser/eclipse/OpmLog/Logger.hpp>
+#include <opm/parser/eclipse/OpmLog/StreamLog.hpp>
+#include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
 
 namespace Opm {
 
@@ -40,11 +42,19 @@ class OpmLog {
 public:
     static void addMessage(int64_t messageFlag , const std::string& message);
 
+    static std::shared_ptr<StreamLog> getStreamLog(const std::string& filename);
+    static void info(const std::string& message);
+    static void warning(const std::string& message);
+    static void error(const std::string& message);
+    static void problem(const std::string& message);
+    static void bug(const std::string& message);
+    static void summary();
     static bool hasBackend( const std::string& backendName );
     static void addBackend(const std::string& name , std::shared_ptr<LogBackend> backend);
     static bool removeBackend(const std::string& name);
     static bool enabledMessageType( int64_t messageType );
     static void addMessageType( int64_t messageType , const std::string& prefix);
+
 
     template <class BackendType>
     static std::shared_ptr<BackendType> getBackend(const std::string& name) {
@@ -62,6 +72,12 @@ public:
 private:
     static std::shared_ptr<Logger> getLogger();
     static std::shared_ptr<Logger> m_logger;
+    static std::shared_ptr<StreamLog> m_streamLog;
+    static int m_info;
+    static int m_error;
+    static int m_bug;
+    static int m_problem;
+    static int m_warning;
 };
 
 
