@@ -24,8 +24,6 @@
 
 #include <opm/parser/eclipse/Utility/Stringview.hpp>
 
-#include <boost/lexical_cast.hpp>
-
 namespace Opm {
     bool isStarToken(const string_view& token,
                            std::string& countString,
@@ -36,12 +34,12 @@ namespace Opm {
                            std::string& valueString);
 
     template <class T>
-    T readValueToken(const std::string& valueString);
+    T readValueToken( string_view );
 
 class StarToken {
 public:
     StarToken(const std::string& token) :
-        StarToken( string_view( token.begin(), token.end() ) )
+        StarToken( string_view( token ) )
     {}
 
     StarToken(const string_view& token)

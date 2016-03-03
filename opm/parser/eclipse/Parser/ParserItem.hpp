@@ -168,7 +168,7 @@ namespace Opm {
                             deckItem.push_backDefault( value );
                     }
                 } else {
-                    ValueType value = readValueToken<ValueType>(token.string());
+                    ValueType value = readValueToken<ValueType>( token );
                     deckItem.push_back(value);
                 }
             }
@@ -212,7 +212,7 @@ namespace Opm {
                     for (size_t i=0; i < st.count() - 1; i++)
                         rawRecord->push_front(singleRepetition);
                 } else {
-                    ValueType value = readValueToken<ValueType>(token.string() );
+                    ValueType value = readValueToken<ValueType>( token );
                     deckItem.push_back(value);
                 }
             }

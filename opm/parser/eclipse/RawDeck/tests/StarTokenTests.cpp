@@ -99,15 +99,15 @@ BOOST_AUTO_TEST_CASE( ContainsStar_WithStar_ReturnsTrue ) {
 }
 
 BOOST_AUTO_TEST_CASE( readValueToken_basic_validity_tests ) {
-    BOOST_CHECK_THROW( Opm::readValueToken<int>("3.3"), std::invalid_argument );
-    BOOST_CHECK_THROW( Opm::readValueToken<double>("truls"), std::invalid_argument );
-    BOOST_CHECK_EQUAL( "3.3", Opm::readValueToken<std::string>("3.3") );
-    BOOST_CHECK_CLOSE( 3.3, Opm::readValueToken<double>("3.3e0"), 1e-6 );
-    BOOST_CHECK_CLOSE( 3.3, Opm::readValueToken<double>("3.3d0"), 1e-6 );
-    BOOST_CHECK_CLOSE( 3.3, Opm::readValueToken<double>("3.3E0"), 1e-6 );
-    BOOST_CHECK_CLOSE( 3.3, Opm::readValueToken<double>("3.3D0"), 1e-6 );
-    BOOST_CHECK_EQUAL( "OLGA", Opm::readValueToken<std::string>("OLGA") );
-    BOOST_CHECK_EQUAL( "OLGA", Opm::readValueToken<std::string>("'OLGA'") );
-    BOOST_CHECK_EQUAL( "123*456", Opm::readValueToken<std::string>("123*456") );
-    BOOST_CHECK_EQUAL( "123*456", Opm::readValueToken<std::string>("'123*456'") );
+    BOOST_CHECK_THROW( Opm::readValueToken<int>( std::string( "3.3" ) ), std::invalid_argument );
+    BOOST_CHECK_THROW( Opm::readValueToken<double>( std::string( "truls" ) ), std::invalid_argument );
+    BOOST_CHECK_EQUAL( "3.3", Opm::readValueToken<std::string>( std::string( "3.3" ) ) );
+    BOOST_CHECK_CLOSE( 3.3, Opm::readValueToken<double>( std::string( "3.3e0" ) ), 1e-6 );
+    BOOST_CHECK_CLOSE( 3.3, Opm::readValueToken<double>( std::string( "3.3d0" ) ), 1e-6 );
+    BOOST_CHECK_CLOSE( 3.3, Opm::readValueToken<double>( std::string( "3.3E0" ) ), 1e-6 );
+    BOOST_CHECK_CLOSE( 3.3, Opm::readValueToken<double>( std::string( "3.3D0" ) ), 1e-6 );
+    BOOST_CHECK_EQUAL( "OLGA", Opm::readValueToken<std::string>( std::string( "OLGA" ) ) );
+    BOOST_CHECK_EQUAL( "OLGA", Opm::readValueToken<std::string>( std::string( "'OLGA'" ) ) );
+    BOOST_CHECK_EQUAL( "123*456", Opm::readValueToken<std::string>( std::string( "123*456" ) ) );
+    BOOST_CHECK_EQUAL( "123*456", Opm::readValueToken<std::string>( std::string( "'123*456'" ) ) );
 }
