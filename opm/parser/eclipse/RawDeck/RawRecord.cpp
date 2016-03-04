@@ -16,12 +16,12 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+#include <algorithm>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
 #include <deque>
-
-#include <boost/algorithm/string.hpp>
 
 #include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
 #include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
@@ -108,14 +108,25 @@ namespace Opm {
      * exception is thrown.
      *
      */
-    RawRecord::RawRecord(const std::string& singleRecordString, const std::string& fileName, const std::string& keywordName) : m_fileName(fileName), m_keywordName(keywordName){
-        if (isTerminatedRecordString(singleRecordString)) {
-            setRecordString(singleRecordString);
-            this->m_recordItems = splitSingleRecordString( this->m_sanitizedRecordString );
-        } else {
-            throw std::invalid_argument("Input string is not a complete record string,"
-                    " offending string: " + singleRecordString);
-        }
+
+    static inline bool even_quotes( const std::string& str ) {
+        return std::count( str.begin(), str.end(), RawConsts::quote ) % 2 == 0;
+    }
+
+    RawRecord::RawRecord(const std::string& singleRecordString,
+                         const std::string& fileName,
+                         const std::string& keywordName) :
+        m_sanitizedRecordString( singleRecordString, 0, findTerminatingSlash( singleRecordString ) ),
+        m_recordItems( splitSingleRecordString( m_sanitizedRecordString ) ),
+        m_fileName(fileName),
+        m_keywordName(keywordName)
+    {
+
+        if( !even_quotes( singleRecordString ) )
+            throw std::invalid_argument(
+                "Input string is not a complete record string, "
+                "offending string: " + singleRecordString
+            );
     }
 
     const std::string& RawRecord::getFileName() const {
@@ -163,16 +174,9 @@ namespace Opm {
     }
 
     bool RawRecord::isTerminatedRecordString(const std::string& candidateRecordString) {
-        unsigned int terminatingSlash = findTerminatingSlash(candidateRecordString);
-        bool hasTerminatingSlash = (terminatingSlash < candidateRecordString.size());
-        int numberOfQuotes = std::count(candidateRecordString.begin(), candidateRecordString.end(), RawConsts::quote);
-        bool hasEvenNumberOfQuotes = (numberOfQuotes % 2) == 0;
-        return hasTerminatingSlash && hasEvenNumberOfQuotes;
+        const auto terminatingSlash = findTerminatingSlash(candidateRecordString);
+        bool hasTerminatingSlash = terminatingSlash < candidateRecordString.size();
+        return hasTerminatingSlash && even_quotes( candidateRecordString );
     }
 
-    void RawRecord::setRecordString(const std::string& singleRecordString) {
-        unsigned terminatingSlash = findTerminatingSlash(singleRecordString);
-        m_sanitizedRecordString = singleRecordString.substr(0, terminatingSlash);
-        boost::trim(m_sanitizedRecordString);
-    }
 }
