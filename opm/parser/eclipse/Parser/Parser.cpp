@@ -491,7 +491,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
 
 
 
-    std::string Parser::doSpecialHandlingForTitleKeyword(std::string line, std::shared_ptr<ParserState> parserState) const {
+    static inline std::string& doSpecialHandlingForTitleKeyword(std::string& line, std::shared_ptr<ParserState> parserState) {
         if ((parserState->rawKeyword != NULL) && (parserState->rawKeyword->getKeywordName() == "TITLE"))
                 line = line.append("/");
         return line;
