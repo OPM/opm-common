@@ -22,12 +22,16 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
-
-#include <iostream>
+#include <opm/parser/eclipse/EclipseState/InitConfig/Equil.hpp>
 
 namespace Opm {
 
-    InitConfig::InitConfig(DeckConstPtr deck) {
+    static inline Equil equils( const Deck& deck ) {
+        if( !deck.hasKeyword( "EQUIL" ) ) return {};
+        return Equil( deck.getKeyword( "EQUIL" ) );
+    }
+
+    InitConfig::InitConfig(DeckConstPtr deck) : equil( equils( *deck ) ) {
         m_restartInitiated = false;
         m_restartStep = 0;
         m_restartRootName = "";
@@ -69,4 +73,16 @@ namespace Opm {
     const std::string& InitConfig::getRestartRootName() const {
         return m_restartRootName;
     }
+
+    bool InitConfig::hasEquil() const {
+        return !this->equil.empty();
+    }
+
+    const Equil& InitConfig::getEquil() const {
+        if( !this->hasEquil() )
+            throw std::runtime_error( "Error: No 'EQUIL' present" );
+
+        return this->equil;
+    }
+
 } //namespace Opm

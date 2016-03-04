@@ -20,6 +20,8 @@
 #ifndef OPM_INIT_CONFIG_HPP
 #define OPM_INIT_CONFIG_HPP
 
+#include <opm/parser/eclipse/EclipseState/InitConfig/Equil.hpp>
+
 namespace Opm {
 
     class Deck;
@@ -33,12 +35,17 @@ namespace Opm {
         int getRestartStep() const;
         const std::string& getRestartRootName() const;
 
+        bool hasEquil() const;
+        const Equil& getEquil() const;
+
     private:
         void initRestartKW(std::shared_ptr< const Deck > deck);
 
         bool m_restartInitiated;
         int m_restartStep;
         std::string m_restartRootName;
+
+        Equil equil;
     };
 
     typedef std::shared_ptr<InitConfig> InitConfigPtr;

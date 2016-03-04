@@ -129,6 +129,7 @@ EclipseState/Grid/NNC.cpp
 EclipseState/Grid/PinchMode.cpp
 #
 EclipseState/InitConfig/InitConfig.cpp
+EclipseState/InitConfig/Equil.cpp
 EclipseState/SimulationConfig/SimulationConfig.cpp
 EclipseState/SimulationConfig/ThresholdPressure.cpp
 EclipseState/Summary/Summary.cpp
@@ -229,6 +230,7 @@ EclipseState/Grid/FaultCollection.hpp
 EclipseState/Grid/NNC.hpp
 #
 EclipseState/InitConfig/InitConfig.hpp
+EclipseState/InitConfig/Equil.hpp
 EclipseState/SimulationConfig/SimulationConfig.hpp
 EclipseState/SimulationConfig/ThresholdPressure.hpp
 EclipseState/Summary/Summary.hpp
@@ -284,9 +286,7 @@ EclipseState/Tables/ColumnSchema.hpp
 EclipseState/Tables/TableEnums.hpp
 EclipseState/Tables/TableSchema.hpp
 EclipseState/Tables/TableIndex.hpp
-#
-Utility/Functional.hpp
-Utility/EquilWrapper.hpp)
+Utility/Functional.hpp)
 
 add_library(buildParser ${rawdeck_source} ${build_parser_source} ${deck_source} ${unit_source} ${generator_source})
 target_link_libraries(buildParser opmjson ${Boost_LIBRARIES}  ${ERT_LIBRARIES})
