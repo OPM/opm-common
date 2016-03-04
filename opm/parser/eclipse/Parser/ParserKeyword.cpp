@@ -16,8 +16,10 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string>
+#include <algorithm>
+#include <cctype>
 #include <stdexcept>
+#include <string>
 
 #include <opm/json/JsonObject.hpp>
 
@@ -244,11 +246,19 @@ namespace Opm {
         return result;
     }
 
+    static inline std::string uppercase( std::string str ) {
+        /* the cctype toupper etc. are often implemented as macros, so its
+         * unreliable with std algorithms. Hand-rolling map instead
+         */
+        for( auto& c : str ) c = toupper( c );
+        return str;
+    }
+
     bool ParserKeyword::validDeckName(const std::string& name) {
         // make the keyword string ALL_UPPERCASE because Eclipse seems
         // to be case-insensitive (although this is one of its
         // undocumented features...)
-        std::string upperCaseName = boost::to_upper_copy(name);
+        auto upperCaseName = uppercase( name );
 
         if (!validNameStart(upperCaseName))
             return false;
