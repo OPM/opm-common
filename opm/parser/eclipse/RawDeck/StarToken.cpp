@@ -99,24 +99,47 @@ namespace Opm {
                 || ch == '-' || ch == '+';
     }
 
+    static inline bool slow_check_is_zero( const string_view& view ) {
+        /* zero doubles can be expressed many ways. A simple, but slow check to
+         * verify that a double parsed as zero actually is zero
+         */
+        if( view[ 0 ] != '0' && view[ 0 ] != '.' ) return false;
+
+        const auto zero = []( char ch ) { return ch == '0'; };
+
+        auto itr = std::find_if_not( view.begin(), view.end(), zero );
+
+        if( itr == view.end() ) return true;
+        if( *itr != '.' ) return false;
+        return std::find_if_not( itr++, view.end(), zero ) != view.end();
+    }
+
     template<>
     double readValueToken< double >( string_view view ) {
         std::array< char, 64 > buffer {};
         std::copy( view.begin(), view.end(), buffer.begin() );
 
-        auto fortran = std::find_if( buffer.begin(), buffer.end(), fortran_float );
+        /* fast path - with any non-zero non-fortran-exponent float this will
+         * be sufficient. We only do the extra work when absolutely needed
+         */
+        auto value = std::atof( buffer.data() );
+        if( value != 0.0 ) return value;
 
         // Eclipse supports Fortran syntax for specifying exponents of floating point
         // numbers ('D' and 'E', e.g., 1.234d5) while C++ only supports the 'e' (e.g.,
         // 1.234e5). the quick fix is to replace 'D' by 'E' and 'd' by 'e' before trying
         // to convert the string into a floating point value.
+
+        auto fortran = std::find_if( buffer.begin(), buffer.end(), fortran_float );
         if( fortran != buffer.end() )
             *fortran = 'e';
 
-        if( !std::all_of( buffer.begin(), buffer.begin() + view.size(), is_double_lexeme ) )
-            throw std::invalid_argument( "Error: expected 'double' lexemes, got: '" + view + "'" );
+        value = std::atof( buffer.data() );
+        if( value != 0.0 ) return value;
 
-        return std::atof( buffer.data() );
+        if( slow_check_is_zero( view ) ) return 0.0;
+
+        throw std::invalid_argument( "Error: expected 'double' lexemes, got: '" + view + "'" );
     }
 
     template <>
