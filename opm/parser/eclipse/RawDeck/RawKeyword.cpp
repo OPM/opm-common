@@ -103,14 +103,11 @@ namespace Opm {
         }
     }
 
-    bool RawKeyword::isTerminator(std::string line) {
-        boost::algorithm::trim_left( line );
-        if (line[0] == RawConsts::slash) {
-            return true;
-        } else
-            return false;
+    bool RawKeyword::isTerminator( const std::string& line ) {
+        auto fst = std::find_if_not( line.begin(), line.end(),
+                RawConsts::is_separator );
+        return fst != line.end() && *fst == RawConsts::slash;
     }
-
 
 
     RawRecordPtr RawKeyword::getRecord(size_t index) const {

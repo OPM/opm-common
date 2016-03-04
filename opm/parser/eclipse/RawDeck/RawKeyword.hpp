@@ -47,7 +47,7 @@ namespace Opm {
         std::shared_ptr< RawRecord > getRecord(size_t index) const;
 
         static bool isKeywordPrefix(const std::string& line, std::string& keywordName);
-        static bool isTerminator(std::string line);
+        static bool isTerminator( const std::string& line );
 
 
         bool isPartialRecordStringEmpty() const;
