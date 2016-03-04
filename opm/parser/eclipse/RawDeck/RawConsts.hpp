@@ -34,6 +34,10 @@ namespace Opm {
         const std::string endinclude = "ENDINC";
         const std::string paths = "PATHS";
         const unsigned int maxKeywordLength = 8;
+
+        static inline bool is_separator( char ch ) {
+            return ch == '\t' || ch == ' ';
+        }
     }
 }
 

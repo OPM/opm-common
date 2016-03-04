@@ -46,14 +46,10 @@ namespace Opm {
         return terminatingSlash;
     }
 
-    static inline bool is_whitespace( char ch ) {
-        return ch == '\t' || ch == ' ';
-    }
-
     static inline std::string::const_iterator first_nonspace (
             std::string::const_iterator begin,
             std::string::const_iterator end ) {
-        return std::find_if_not( begin, end, is_whitespace );
+        return std::find_if_not( begin, end, RawConsts::is_separator );
     }
 
     static std::deque< string_view > splitSingleRecordString( const std::string& record ) {
@@ -69,7 +65,7 @@ namespace Opm {
                 dst.push_back( { current, quote_end } );
                 current = quote_end;
             } else {
-                auto token_end = std::find_if( current, record.end(), is_whitespace );
+                auto token_end = std::find_if( current, record.end(), RawConsts::is_separator );
                 dst.push_back( { current, token_end } );
                 current = token_end;
             }
