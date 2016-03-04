@@ -17,6 +17,8 @@
  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <boost/lexical_cast.hpp>
+
 #include <opm/json/JsonObject.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
