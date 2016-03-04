@@ -33,17 +33,35 @@ using namespace std;
 
 namespace Opm {
 
-    static inline unsigned int findTerminatingSlash( const std::string& singleRecordString ) {
-        unsigned int terminatingSlash = singleRecordString.find_first_of(RawConsts::slash);
-        unsigned int lastQuotePosition = singleRecordString.find_last_of(RawConsts::quote);
+    static inline size_t findTerminatingSlash( const std::string& rec ) {
 
-        // Checks lastQuotePosition vs terminatingSlashPosition,
-        // since specifications of WELLS, FILENAMES etc can include slash, but
-        // these are always in quotes (and there are no quotes after record-end).
-        if (terminatingSlash < lastQuotePosition && lastQuotePosition < singleRecordString.size()) {
-            terminatingSlash = singleRecordString.find_first_of(RawConsts::slash, lastQuotePosition);
-        }
-        return terminatingSlash;
+        if( rec.back() == RawConsts::slash ) return rec.size() - 1;
+
+        /* possible fast path: no terminating slash in record */
+        const auto slash = rec.find_last_of( RawConsts::slash );
+        if( slash == std::string::npos ) return std::string::npos;
+
+        /* heuristic: since slash makes everything to the right of it into a
+         * no-op, if there is more than whitespace to its right before newline
+         * we guess that this is in fact not the terminating slash but rather
+         * some comment or description. Most of the time this is not the case,
+         * and it is slower, so avoid doing it if possible.
+         */
+
+        if( std::find_if_not( rec.begin() + slash, rec.end(), RawConsts::is_separator ) == rec.end() )
+            return slash;
+
+        /*
+         * left-to-right search after last closing quote. Like the previous
+         * implementation, assumes there are no quote marks past the
+         * terminating slash (as per the Eclipse manual). Search past last
+         * quote because slashes can appear in quotes in filenames etc, but
+         * will always be quoted.
+         */
+
+        const auto quote = rec.find_last_of( RawConsts::quote );
+        const auto begin = quote == std::string::npos ? 0 : quote;
+        return rec.find_first_of( RawConsts::slash, begin );
     }
 
     static inline std::string::const_iterator first_nonspace (
@@ -64,6 +82,13 @@ namespace Opm {
                 auto quote_end = std::find( current + 1, record.end(), RawConsts::quote ) + 1;
                 dst.push_back( { current, quote_end } );
                 current = quote_end;
+            } else if( *current == RawConsts::slash ) {
+                /* some records are break the optimistic algorithm of
+                 * findTerminatingSlash and contain multiple trailing slashes
+                 * with nothing inbetween. The first occuring one is the actual
+                 * terminator and we simply ignore everything following it.
+                 */
+                break;
             } else {
                 auto token_end = std::find_if( current, record.end(), RawConsts::is_separator );
                 dst.push_back( { current, token_end } );
