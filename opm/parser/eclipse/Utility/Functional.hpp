@@ -16,6 +16,10 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+#ifndef OPM_FUNCTIONAL_HPP
+#define OPM_FUNCTIONAL_HPP
+
 #include <algorithm>
 #include <iterator>
 #include <vector>
@@ -231,3 +235,5 @@ namespace fun {
 
 }
 }
+
+#endif //OPM_FUNCTIONAL_HPP
