@@ -69,8 +69,11 @@ namespace Opm {
         return m_records.size();
     }
 
-
-
+    static inline bool isTerminator( const std::string& line ) {
+        auto fst = std::find_if_not( line.begin(), line.end(),
+                RawConsts::is_separator );
+        return fst != line.end() && *fst == RawConsts::slash;
+    }
 
     /// Important method, being repeatedly called. When a record is terminated,
     /// it is added to the list of records, and a new record is started.
@@ -101,12 +104,6 @@ namespace Opm {
                     m_isFinished = true;
             }
         }
-    }
-
-    bool RawKeyword::isTerminator( const std::string& line ) {
-        auto fst = std::find_if_not( line.begin(), line.end(),
-                RawConsts::is_separator );
-        return fst != line.end() && *fst == RawConsts::slash;
     }
 
 
