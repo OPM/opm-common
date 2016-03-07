@@ -20,12 +20,12 @@
 #ifndef COMMON_UTIL_NUMERIC_CMP
 #define COMMON_UTIL_NUMERIC_CMP
 
+#include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstring>
-#include <vector>
 #include <type_traits>
-#include <cmath>
-#include <algorithm>
+#include <vector>
 
 namespace Opm {
 
