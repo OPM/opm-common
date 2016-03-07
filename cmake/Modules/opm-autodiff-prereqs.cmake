@@ -17,10 +17,11 @@ set (opm-autodiff_DEPS
 		COMPONENTS date_time filesystem system unit_test_framework REQUIRED"
 	# DUNE prerequisites
 	"dune-common REQUIRED;
-	dune-istl REQUIRED;
-	dune-cornerpoint;
-	opm-common REQUIRED;
-	opm-core REQUIRED"
+	dune-istl REQUIRED"
+	# OPM dependency
+	"opm-common REQUIRED;
+	opm-core REQUIRED;
+	dune-cornerpoint"
 	# Eigen
 	"Eigen3 3.2.0"
 	)
