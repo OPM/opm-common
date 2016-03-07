@@ -147,7 +147,7 @@ namespace Opm {
     /// NOTE: data are popped from the rawRecords deque!
     template<typename ParserItemType, typename ValueType>
     DeckItem ParserItemScan(const ParserItemType * self , std::shared_ptr< RawRecord > rawRecord) {
-        auto deckItem = DeckItem::make< ValueType >( self->name() );
+        auto deckItem = DeckItem::make< ValueType >( self->name(), rawRecord->size() );
 
         if (self->sizeType() == ALL) {
             while (rawRecord->size() > 0) {
@@ -215,7 +215,8 @@ namespace Opm {
                 }
             }
         }
-        return std::move( deckItem );
+
+        return deckItem;
     }
 
 

@@ -43,7 +43,7 @@ namespace Opm {
             const std::vector< T >& getData() const;
 
         protected:
-            DeckTypeItem( const std::string&  );
+            DeckTypeItem( const std::string&, size_t );
 
         private:
             std::string item_name;
@@ -83,9 +83,12 @@ namespace Opm {
     };
 
     template< typename T >
-    DeckTypeItem< T >::DeckTypeItem( const std::string& name ) :
+    DeckTypeItem< T >::DeckTypeItem( const std::string& name, size_t size ) :
         item_name( name )
-    {}
+    {
+        this->dataPointDefaulted.reserve( size );
+        this->data.reserve( size );
+    }
 
     template< typename T >
     const std::string& DeckTypeItem< T >::name() const {
@@ -275,8 +278,8 @@ namespace Opm {
     {}
 
     template< typename T >
-    DeckItem DeckItem::make( const std::string& name ) {
-        return DeckItem( std::unique_ptr< DeckItemBase > { new DeckItemT< T >( name ) } );
+    DeckItem DeckItem::make( const std::string& name, size_t size ) {
+        return DeckItem( std::unique_ptr< DeckItemBase > { new DeckItemT< T >( name, size ) } );
     }
 
     const std::string& DeckItem::name() const {
@@ -375,9 +378,9 @@ namespace Opm {
     template class DeckItemT< double >;
     template class DeckItemT< std::string >;
 
-    template DeckItem DeckItem::make< int >( const std::string& );
-    template DeckItem DeckItem::make< double >( const std::string& );
-    template DeckItem DeckItem::make< std::string >( const std::string& );
+    template DeckItem DeckItem::make< int >( const std::string&, size_t );
+    template DeckItem DeckItem::make< double >( const std::string&, size_t );
+    template DeckItem DeckItem::make< std::string >( const std::string&, size_t );
 
     template const int& DeckItem::get< int >( size_t ) const;
     template const double& DeckItem::get< double >( size_t ) const;
