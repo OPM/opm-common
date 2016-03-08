@@ -21,9 +21,6 @@
 #define STAR_TOKEN_HPP
 
 #include <string>
-#include <algorithm>
-
-#include <boost/lexical_cast.hpp>
 
 namespace Opm {
     bool isStarToken(const std::string& token,
@@ -31,53 +28,7 @@ namespace Opm {
                            std::string& valueString);
 
     template <class T>
-    T readValueToken(const std::string& valueString) {
-        try {
-            return boost::lexical_cast<T>(valueString);
-        }
-        catch (boost::bad_lexical_cast&) {
-            throw std::invalid_argument("Unable to convert string '" + valueString + "' to typeid: " + typeid(T).name());
-        }
-    }
-
-    template <>
-    inline double readValueToken<double>(const std::string& valueString) {
-        try {
-            return boost::lexical_cast<double>(valueString);
-        }
-        catch (boost::bad_lexical_cast&) {
-            // Eclipse supports Fortran syntax for specifying exponents of floating point
-            // numbers ('D' and 'E', e.g., 1.234d5) while C++ only supports the 'e' (e.g.,
-            // 1.234e5). the quick fix is to replace 'D' by 'E' and 'd' by 'e' before trying
-            // to convert the string into a floating point value. This may not be the most
-            // performant thing to do, but it is probably fast enough.
-            std::string vs(valueString);
-            std::replace(vs.begin(), vs.end(), 'D', 'E');
-            std::replace(vs.begin(), vs.end(), 'd', 'e');
-
-            try { return boost::lexical_cast<double>(vs); }
-            catch (boost::bad_lexical_cast&) {
-                throw std::invalid_argument("Unable to convert string '" + valueString + "' to double");
-            }
-        }
-    }
-
-    template <>
-    inline float readValueToken<float>(const std::string& valueString) {
-        return readValueToken<double>(valueString);
-    }
-
-    template <>
-    inline std::string readValueToken<std::string>(const std::string& valueString) {
-        if (valueString.size() > 0 && valueString[0] == '\'') {
-            if (valueString.size() < 2 || valueString[valueString.size() - 1] != '\'')
-                throw std::invalid_argument("Unable to parse string '" + valueString + "' as a string token");
-            return valueString.substr(1, valueString.size() - 2);
-        }
-        else
-            return valueString;
-    }
-
+    T readValueToken(const std::string& valueString);
 
 class StarToken {
 public:
@@ -122,26 +73,7 @@ public:
 private:
     // internal initialization method. the m_countString and m_valueString attributes
     // must be set before calling this method.
-    void init_(const std::string& token) {
-        // special-case the interpretation of a lone star as "1*" but do not
-        // allow constructs like "*123"...
-        if (m_countString == "") {
-            if (m_valueString != "")
-                // TODO: decorate the deck with a warning instead?
-                throw std::invalid_argument("Not specifying a count also implies not specifying a value. Token: \'" + token + "\'.");
-
-            // TODO: since this is explicitly forbidden by the documentation it might
-            // be a good idea to decorate the deck with a warning?
-            m_count = 1;
-        }
-        else {
-            m_count = boost::lexical_cast<int>(m_countString);
-
-            if (m_count == 0)
-                // TODO: decorate the deck with a warning instead?
-                throw std::invalid_argument("Specifing zero repetitions is not allowed. Token: \'" + token + "\'.");
-        }
-    }
+    void init_(const std::string& token);
 
     ssize_t m_count;
     std::string m_countString;
