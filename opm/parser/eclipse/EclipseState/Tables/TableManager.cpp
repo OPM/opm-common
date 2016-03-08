@@ -45,6 +45,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PlyshlogTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyviscTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PmiscTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TlpmixpaTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvdgTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvdoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvdsTable.hpp>
@@ -204,6 +205,7 @@ namespace Opm {
             addTables( "SGCWMIS", numMiscibleTables);
             addTables( "MISC", numMiscibleTables);
             addTables( "PMISC", numMiscibleTables);
+            addTables( "TLPMIXPA", numMiscibleTables);
         }
 
         {
@@ -271,6 +273,7 @@ namespace Opm {
             initSimpleTableContainer<SgcwmisTable>(deck, "SGCWMIS", numMiscibleTables);
             initSimpleTableContainer<MiscTable>(deck, "MISC", numMiscibleTables);
             initSimpleTableContainer<PmiscTable>(deck, "PMISC", numMiscibleTables);
+            initSimpleTableContainer<TlpmixpaTable>(deck, "TLPMIXPA", numMiscibleTables);
 
         }
 
@@ -649,6 +652,9 @@ namespace Opm {
     }
     const TableContainer& TableManager::getSorwmisTables() const {
         return getTables("SORWMIS");
+    }
+    const TableContainer& TableManager::getTlpmixpaTables() const {
+        return getTables("TLPMIXPA");
     }
 
     const std::map<int, VFPProdTable>& TableManager::getVFPProdTables() const {

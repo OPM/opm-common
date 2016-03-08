@@ -94,6 +94,7 @@ namespace Opm {
         const TableContainer& getMiscTables() const;
         const TableContainer& getPmiscTables() const;
         const TableContainer& getMsfnTables() const;
+        const TableContainer& getTlpmixpaTables() const;
 
 
         const std::vector<PvtgTable>& getPvtgTables() const;

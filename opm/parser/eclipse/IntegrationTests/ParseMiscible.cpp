@@ -37,6 +37,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/MiscTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PmiscTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/MsfnTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TlpmixpaTable.hpp>
 
 using namespace Opm;
 
@@ -249,3 +250,24 @@ BOOST_CHECK_EQUAL(0.3, msfnTable2.getGasSolventRelpermMultiplierColumn()[1]);
 BOOST_CHECK_EQUAL(0.7, msfnTable2.getOilRelpermMultiplierColumn()[1]);
 }
 
+const char *tlpmixpa = "\n\
+MISCIBLE\n\
+1  3 /\n\
+\n\
+TLPMIXPA\n\
+100 0.0 \n\
+200 0.5 \n\
+500 1.0 /\n\
+\n";
+
+BOOST_AUTO_TEST_CASE(PARSE_TLPMIXPA)
+{
+    ParserPtr parser(new Parser());
+
+    // test table input
+    DeckPtr deck =  parser->parseString(tlpmixpa, ParseMode());
+    Opm::TlpmixpaTable tlpmixpaTable(deck->getKeyword("TLPMIXPA").getRecord(0).getItem(0));
+    BOOST_CHECK_EQUAL(3U, tlpmixpaTable.getOilPhasePressureColumn().size());
+    BOOST_CHECK_EQUAL(200*1e5, tlpmixpaTable.getOilPhasePressureColumn()[1]);
+    BOOST_CHECK_EQUAL(0.5, tlpmixpaTable.getMiscibilityColumn()[1]);
+}

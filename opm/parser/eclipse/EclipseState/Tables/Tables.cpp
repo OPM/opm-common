@@ -44,6 +44,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PlyshlogTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyviscTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PmiscTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TlpmixpaTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvdgTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvdoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvdsTable.hpp>
@@ -1040,6 +1041,22 @@ const TableColumn& PmiscTable::getOilPhasePressureColumn() const {
 }
 
 const TableColumn& PmiscTable::getMiscibilityColumn() const {
+    return SimpleTable::getColumn(1);
+}
+
+TlpmixpaTable::TlpmixpaTable( const DeckItem& item ) {
+    m_schema = std::make_shared< TableSchema >();
+
+    m_schema->addColumn( ColumnSchema( "OilPhasePressure" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
+    m_schema->addColumn( ColumnSchema( "Miscibility" , Table::INCREASING , Table::DEFAULT_NONE) );
+    SimpleTable::init( item );
+}
+
+const TableColumn& TlpmixpaTable::getOilPhasePressureColumn() const {
+    return SimpleTable::getColumn(0);
+}
+
+const TableColumn& TlpmixpaTable::getMiscibilityColumn() const {
     return SimpleTable::getColumn(1);
 }
 
