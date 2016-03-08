@@ -30,4 +30,4 @@ install:
     - opm-common/travis/build-opm-common.sh
     - opm-parser/travis/build-opm-parser.sh
 
-script: opm-output/travis/build-and-test-opm-core.sh
+script: opm-output/travis/build-and-test-opm-output.sh
