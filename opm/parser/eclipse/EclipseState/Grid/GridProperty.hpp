@@ -114,19 +114,19 @@ public:
     void initMask( T value, std::vector<bool>& mask ) const;
 
     /**
-       Due to the convention where it is only neceassary to supply the
+       Due to the convention where it is only necessary to supply the
        top layer of the petrophysical properties we can unfortunately
        not enforce that the number of elements elements in the
-       deckkeyword equals nx*ny*nz.
+       DeckKeyword equals nx*ny*nz.
     */
 
     void loadFromDeckKeyword( const DeckKeyword& );
-    void loadFromDeckKeyword( std::shared_ptr<const Box>, const DeckKeyword& );
+    void loadFromDeckKeyword( const Box&, const DeckKeyword& );
 
-    void copyFrom( const GridProperty< T >&, std::shared_ptr< const Box > );
-    void scale( T scaleFactor, std::shared_ptr< const Box > );
-    void add( T shiftValue, std::shared_ptr< const Box > );
-    void setScalar( T value, std::shared_ptr< const Box > );
+    void copyFrom( const GridProperty< T >&, const Box& );
+    void scale( T scaleFactor, const Box& );
+    void add( T shiftValue, const Box& );
+    void setScalar( T value, const Box& );
 
     const std::string& getKeywordName() const;
     const SupportedKeywordInfo& getKeywordInfo() const;
@@ -134,7 +134,7 @@ public:
     void runPostProcessor();
 
     ERT::EclKW<T> getEclKW() const;
-    ERT::EclKW<T> getEclKW( std::shared_ptr< const EclipseGrid > ) const;
+    ERT::EclKW<T> getEclKW( const EclipseGrid & ) const;
 
     /**
        Will check that all elements in the property are in the closed
@@ -147,7 +147,7 @@ private:
     const DeckItem& getDeckItem( const DeckKeyword& );
     void setDataPoint(size_t sourceIdx, size_t targetIdx, const DeckItem& deckItem);
 
-    size_t      m_nx,m_ny,m_nz;
+    size_t m_nx, m_ny, m_nz;
     SupportedKeywordInfo m_kwInfo;
     std::vector<T> m_data;
     bool m_hasRunPostProcessor = false;

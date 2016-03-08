@@ -37,9 +37,12 @@
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
 static const Opm::DeckKeyword createSATNUMKeyword( ) {
     const char *deckData =
@@ -154,24 +157,23 @@ BOOST_AUTO_TEST_CASE(SetFromDeckKeyword) {
     }
 }
 
-
 BOOST_AUTO_TEST_CASE(copy) {
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
-    SupportedKeywordInfo keywordInfo1("P1" , 0, "1");
-    SupportedKeywordInfo keywordInfo2("P2" , 9, "1");
-    Opm::GridProperty<int> prop1( 4 , 4 , 2 , keywordInfo1);
-    Opm::GridProperty<int> prop2( 4 , 4 , 2 , keywordInfo2);
+    SupportedKeywordInfo keywordInfo1("P1", 0, "1");
+    SupportedKeywordInfo keywordInfo2("P2", 9, "1");
+    Opm::GridProperty<int> prop1(4, 4, 2, keywordInfo1);
+    Opm::GridProperty<int> prop2(4, 4, 2, keywordInfo2);
 
-    Opm::Box global(4,4,2);
-    std::shared_ptr<Opm::Box> layer0 = std::make_shared<Opm::Box>(global , 0,3,0,3,0,0);
+    Opm::Box global(4, 4, 2);
+    Opm::Box layer0(global, 0, 3, 0, 3, 0, 0);
 
-    prop2.copyFrom(prop1 , layer0);
+    prop2.copyFrom(prop1, layer0);
 
-    for (size_t j=0; j < 4; j++) {
-        for (size_t i=0; i < 4; i++) {
+    for (size_t j = 0; j < 4; j++) {
+        for (size_t i = 0; i < 4; i++) {
 
-            BOOST_CHECK_EQUAL( prop2.iget(i,j,0) , 0 );
-            BOOST_CHECK_EQUAL( prop2.iget(i,j,1) , 9 );
+            BOOST_CHECK_EQUAL(prop2.iget(i, j, 0), 0);
+            BOOST_CHECK_EQUAL(prop2.iget(i, j, 1), 9);
         }
     }
 }
@@ -179,69 +181,67 @@ BOOST_AUTO_TEST_CASE(copy) {
 
 BOOST_AUTO_TEST_CASE(SCALE) {
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
-    SupportedKeywordInfo keywordInfo1("P1" , 1, "1");
-    SupportedKeywordInfo keywordInfo2("P2" , 9, "1");
+    SupportedKeywordInfo keywordInfo1( "P1", 1, "1" );
+    SupportedKeywordInfo keywordInfo2( "P2", 9, "1" );
 
-    Opm::GridProperty<int> prop1( 4 , 4 , 2 , keywordInfo1);
-    Opm::GridProperty<int> prop2( 4 , 4 , 2 , keywordInfo2);
+    Opm::GridProperty<int> prop1( 4, 4, 2, keywordInfo1 );
+    Opm::GridProperty<int> prop2( 4, 4, 2, keywordInfo2 );
 
-    std::shared_ptr<Opm::Box> global = std::make_shared<Opm::Box>(4,4,2);
-    std::shared_ptr<Opm::Box> layer0 = std::make_shared<Opm::Box>(*global , 0,3,0,3,0,0);
+    Opm::Box global( 4, 4, 2 );
+    Opm::Box layer0( global, 0, 3, 0, 3, 0, 0 );
 
-    prop2.copyFrom(prop1 , layer0);
-    prop2.scale( 2 , global );
-    prop2.scale( 2 , layer0 );
+    prop2.copyFrom( prop1, layer0 );
+    prop2.scale( 2, global );
+    prop2.scale( 2, layer0 );
 
-    for (size_t j=0; j < 4; j++) {
-        for (size_t i=0; i < 4; i++) {
+    for (size_t j = 0; j < 4; j++) {
+        for (size_t i = 0; i < 4; i++) {
 
-            BOOST_CHECK_EQUAL( prop2.iget(i,j,0) , 4 );
-            BOOST_CHECK_EQUAL( prop2.iget(i,j,1) , 18 );
+            BOOST_CHECK_EQUAL( prop2.iget( i, j, 0 ), 4 );
+            BOOST_CHECK_EQUAL( prop2.iget( i, j, 1 ), 18 );
         }
     }
 }
-
 
 BOOST_AUTO_TEST_CASE(SET) {
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
-    SupportedKeywordInfo keywordInfo("P1" , 1, "1");
-    Opm::GridProperty<int> prop( 4 , 4 , 2 , keywordInfo);
+    SupportedKeywordInfo keywordInfo( "P1", 1, "1" );
+    Opm::GridProperty<int> prop( 4, 4, 2, keywordInfo );
 
-    std::shared_ptr<Opm::Box> global = std::make_shared<Opm::Box>(4,4,2);
-    std::shared_ptr<Opm::Box> layer0 = std::make_shared<Opm::Box>(*global , 0,3,0,3,0,0);
+    Opm::Box global( 4, 4, 2 );
+    Opm::Box layer0( global, 0, 3, 0, 3, 0, 0 );
 
-    prop.setScalar( 2 , global );
-    prop.setScalar( 4 , layer0 );
+    prop.setScalar( 2, global );
+    prop.setScalar( 4, layer0 );
 
-    for (size_t j=0; j < 4; j++) {
-        for (size_t i=0; i < 4; i++) {
+    for (size_t j = 0; j < 4; j++) {
+        for (size_t i = 0; i < 4; i++) {
 
-            BOOST_CHECK_EQUAL( prop.iget(i,j,0) , 4 );
-            BOOST_CHECK_EQUAL( prop.iget(i,j,1) , 2 );
+            BOOST_CHECK_EQUAL( prop.iget( i, j, 0 ), 4 );
+            BOOST_CHECK_EQUAL( prop.iget( i, j, 1 ), 2 );
         }
     }
 }
 
-
 BOOST_AUTO_TEST_CASE(ADD) {
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
-    SupportedKeywordInfo keywordInfo1("P1" , 1, "1");
-    SupportedKeywordInfo keywordInfo2("P2" , 9, "1");
-    Opm::GridProperty<int> prop1( 4 , 4 , 2 , keywordInfo1);
-    Opm::GridProperty<int> prop2( 4 , 4 , 2 , keywordInfo2);
+    SupportedKeywordInfo keywordInfo1( "P1", 1, "1" );
+    SupportedKeywordInfo keywordInfo2( "P2", 9, "1" );
+    Opm::GridProperty<int> prop1( 4, 4, 2, keywordInfo1 );
+    Opm::GridProperty<int> prop2( 4, 4, 2, keywordInfo2 );
 
-    std::shared_ptr<Opm::Box> global = std::make_shared<Opm::Box>(4,4,2);
-    std::shared_ptr<Opm::Box> layer0 = std::make_shared<Opm::Box>(*global , 0,3,0,3,0,0);
+    Opm::Box global( 4, 4, 2 );
+    Opm::Box layer0( global, 0, 3, 0, 3, 0, 0 );
 
-    prop2.copyFrom(prop1 , layer0);
-    prop2.add( 2 , global );
-    prop2.add( 2 , layer0 );
+    prop2.copyFrom( prop1, layer0 );
+    prop2.add( 2, global );
+    prop2.add( 2, layer0 );
 
-    for (size_t j=0; j < 4; j++) {
-        for (size_t i=0; i < 4; i++) {
+    for (size_t j = 0; j < 4; j++) {
+        for (size_t i = 0; i < 4; i++) {
 
-            BOOST_CHECK_EQUAL( prop2.iget(i,j,0) , 5 );
-            BOOST_CHECK_EQUAL( prop2.iget(i,j,1) , 11 );
+            BOOST_CHECK_EQUAL( prop2.iget( i, j, 0 ), 5 );
+            BOOST_CHECK_EQUAL( prop2.iget( i, j, 1 ), 11 );
         }
     }
 }
@@ -353,38 +353,44 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
 
     auto deck = parser->parseString(deckString, parseContext);
 
-    auto eclipseState = std::make_shared<Opm::EclipseState>(deck , parseContext);
+    Opm::EclipseState eclipseState(deck, parseContext);
+    const auto& props = eclipseState.getEclipseProperties();
 
     // make sure that EclipseState throws if it is bugged about an _unsupported_ keyword
-    BOOST_CHECK_THROW(eclipseState->hasDeckIntGridProperty("ISWU"), std::logic_error);
-    BOOST_CHECK_THROW(eclipseState->hasDeckDoubleGridProperty("FLUXNUM"), std::logic_error);
+    BOOST_CHECK_THROW(props.hasDeckIntGridProperty("ISWU"), std::logic_error);
+    BOOST_CHECK_THROW(props.hasDeckDoubleGridProperty("FLUXNUM"), std::logic_error);
 
-    // make sure that EclipseState does not throw if it is asked for a supported grid
-    // property that is not contained  in the deck
-    BOOST_CHECK(!eclipseState->hasDeckDoubleGridProperty("ISWU"));
-    BOOST_CHECK(!eclipseState->hasDeckIntGridProperty("FLUXNUM"));
+    // make sure that EclipseState does not throw if it is asked for a supported
+    // grid property that is not contained in the deck
+    BOOST_CHECK(!props.hasDeckDoubleGridProperty("ISWU"));
+    BOOST_CHECK(!props.hasDeckIntGridProperty("FLUXNUM"));
 
-    BOOST_CHECK(eclipseState->hasDeckIntGridProperty("SATNUM"));
-    BOOST_CHECK(eclipseState->hasDeckIntGridProperty("IMBNUM"));
+    BOOST_CHECK(props.hasDeckIntGridProperty("SATNUM"));
+    BOOST_CHECK(props.hasDeckIntGridProperty("IMBNUM"));
 
-    BOOST_CHECK(eclipseState->hasDeckDoubleGridProperty("SWU"));
-    BOOST_CHECK(eclipseState->hasDeckDoubleGridProperty("ISGU"));
-    BOOST_CHECK(eclipseState->hasDeckDoubleGridProperty("SGCR"));
-    BOOST_CHECK(eclipseState->hasDeckDoubleGridProperty("ISGCR"));
+    BOOST_CHECK(props.hasDeckDoubleGridProperty("SWU"));
+    BOOST_CHECK(props.hasDeckDoubleGridProperty("ISGU"));
+    BOOST_CHECK(props.hasDeckDoubleGridProperty("SGCR"));
+    BOOST_CHECK(props.hasDeckDoubleGridProperty("ISGCR"));
 
-    const auto& swuPropData = eclipseState->getDoubleGridProperty("SWU")->getData();
+    const auto& swuPropData = props.getDoubleGridProperty("SWU").getData();
     BOOST_CHECK_EQUAL(swuPropData[0 * 3*3], 0.93);
     BOOST_CHECK_EQUAL(swuPropData[1 * 3*3], 0.852);
     BOOST_CHECK_EQUAL(swuPropData[2 * 3*3], 0.801);
 
-    const auto& sguPropData = eclipseState->getDoubleGridProperty("ISGU")->getData();
+    const auto& sguPropData = props.getDoubleGridProperty("ISGU").getData();
     BOOST_CHECK_EQUAL(sguPropData[0 * 3*3], 0.9);
     BOOST_CHECK_EQUAL(sguPropData[1 * 3*3], 0.85);
     BOOST_CHECK_EQUAL(sguPropData[2 * 3*3], 0.80);
 }
 
 
-void TestPostProcessorMul(std::vector< double >& values, const Opm::Deck&, const Opm::EclipseState& ) {
+void TestPostProcessorMul(std::vector< double >& values,
+        const Opm::TableManager*,
+        const Opm::EclipseGrid*,
+        Opm::GridProperties<int>*,
+        Opm::GridProperties<double>*)
+{
     for( size_t g = 0; g < values.size(); g++ )
         values[g] *= 2.0;
 }
@@ -421,39 +427,44 @@ BOOST_AUTO_TEST_CASE(GridPropertyPostProcessors) {
     typedef Opm::GridPropertySupportedKeywordInfo<double> SupportedKeywordInfo;
 
     Opm::DeckPtr deck = createDeck();
-    Opm::EclipseState st( deck, Opm::ParseContext() ) ;
-    std::shared_ptr<Opm::EclipseGrid> grid = std::make_shared<Opm::EclipseGrid>(deck);
+    Opm::EclipseGrid grid(deck);
+    std::shared_ptr<Opm::TableManager> tm  = std::make_shared<Opm::TableManager>(*deck);
+    Opm::Eclipse3DProperties props(*deck, tm, grid);
 
     SupportedKeywordInfo kwInfo1("MULTPV" , 1.0 , "1");
-    Opm::GridPropertyPostFunction< double > gfunc( &TestPostProcessorMul, *deck, st );
+    Opm::GridPropertyPostFunction< double > gfunc( &TestPostProcessorMul,
+                                                   tm.get(),
+                                                   &grid,
+                                                   &props.getIntGridProperties(),
+                                                   &props.getDoubleGridProperties() );
+
     SupportedKeywordInfo kwInfo2("PORO", 1.0, gfunc, "1");
     std::vector<SupportedKeywordInfo > supportedKeywords = { kwInfo1, kwInfo2 };
 
     Opm::GridProperties<double> properties(grid, std::move( supportedKeywords ) );
 
     {
-        auto poro = properties.getKeyword("PORO");
-        auto multpv = properties.getKeyword("MULTPV");
+        auto& poro = properties.getKeyword("PORO");
+        auto& multpv = properties.getKeyword("MULTPV");
 
-        poro->loadFromDeckKeyword( deck->getKeyword("PORO" , 0));
-        multpv->loadFromDeckKeyword( deck->getKeyword("MULTPV" , 0));
+        poro.loadFromDeckKeyword( deck->getKeyword("PORO" , 0));
+        multpv.loadFromDeckKeyword( deck->getKeyword("MULTPV" , 0));
 
-        poro->runPostProcessor();
-        multpv->runPostProcessor();
-
-        for (size_t g = 0; g < 1000; g++) {
-            BOOST_CHECK_EQUAL( multpv->iget(g) , 0.10 );
-            BOOST_CHECK_EQUAL( poro->iget(g)  , 0.20 );
-        }
-
-        poro->runPostProcessor();
-        multpv->runPostProcessor();
+        poro.runPostProcessor();
+        multpv.runPostProcessor();
 
         for (size_t g = 0; g < 1000; g++) {
-            BOOST_CHECK_EQUAL( multpv->iget(g) , 0.10 );
-            BOOST_CHECK_EQUAL( poro->iget(g)  , 0.20 );
+            BOOST_CHECK_EQUAL( multpv.iget(g) , 0.10 );
+            BOOST_CHECK_EQUAL( poro.iget(g)  , 0.20 );
         }
 
+        poro.runPostProcessor();
+        multpv.runPostProcessor();
+
+        for (size_t g = 0; g < 1000; g++) {
+            BOOST_CHECK_EQUAL( multpv.iget(g) , 0.10 );
+            BOOST_CHECK_EQUAL( poro.iget(g)  , 0.20 );
+        }
     }
 }
 

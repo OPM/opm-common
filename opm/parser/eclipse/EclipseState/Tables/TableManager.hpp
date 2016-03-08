@@ -20,9 +20,13 @@
 #ifndef OPM_TABLE_MANAGER_HPP
 #define OPM_TABLE_MANAGER_HPP
 
+#include <set>
+
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp> // Phase::PhaseEnum
 
 #include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
@@ -101,6 +105,21 @@ namespace Opm {
         const std::vector<PvtoTable>& getPvtoTables() const;
         const std::map<int, VFPProdTable>& getVFPProdTables() const;
         const std::map<int, VFPInjTable>& getVFPInjTables() const;
+
+        bool hasPhase(enum Phase::PhaseEnum phase) const;
+
+        /// number of phases, [gas, oil, water] = 3
+        size_t getNumPhases() const;
+
+        /// deck has keyword "IMPTVD" --- Imbition end-point versus depth tables
+        const bool useImptvd() const;
+
+        /// deck has keyword "ENPTVD" --- Saturation end-point versus depth tables
+        const bool useEnptvd() const;
+
+        /// deck has keyword "EQLNUM" --- Equilibriation region numbers
+        const bool useEqlnum() const;
+
     private:
         TableContainer& forceGetTables( const std::string& tableName , size_t numTables);
 
@@ -109,6 +128,7 @@ namespace Opm {
         void addTables( const std::string& tableName , size_t numTables);
         void initSimpleTables(const Deck& deck);
         void initRTempTables(const Deck& deck);
+        void initPhases(const Deck& deck);
         void initDims(const Deck& deck);
         void initRocktabTables(const Deck& deck);
         void initGasvisctTables(const Deck& deck);
@@ -118,7 +138,6 @@ namespace Opm {
 
         void initVFPInjTables(const Deck& deck,
                               std::map<int, VFPInjTable>& tableMap);
-
 
         void initPlymaxTables(const Deck& deck);
         void initPlyrockTables(const Deck& deck);
@@ -218,6 +237,12 @@ namespace Opm {
         std::shared_ptr<Regdims> m_regdims;
         std::shared_ptr<Tabdims> m_tabdims;
         std::shared_ptr<Eqldims> m_eqldims;
+
+        std::set<enum Phase::PhaseEnum> phases;
+
+        const bool hasImptvd;// if deck has keyword IMPTVD
+        const bool hasEnptvd;// if deck has keyword ENPTVD
+        const bool hasEqlnum;// if deck has keyword EQLNUM
     };
 }
 

@@ -50,9 +50,7 @@ namespace Opm {
         double getMultiplier(size_t globalIndex, FaceDir::DirEnum faceDir) const;
         double getMultiplier(size_t i , size_t j , size_t k, FaceDir::DirEnum faceDir) const;
         double getRegionMultiplier( size_t globalCellIndex1, size_t globalCellIndex2, FaceDir::DirEnum faceDir) const;
-        bool hasDirectionProperty(FaceDir::DirEnum faceDir) const;
-        std::shared_ptr<GridProperty<double> > getDirectionProperty(FaceDir::DirEnum faceDir);
-        void applyMULT(std::shared_ptr<const GridProperty<double> > srcMultProp, FaceDir::DirEnum faceDir);
+        void applyMULT(const GridProperty<double>& srcMultProp, FaceDir::DirEnum faceDir);
         void applyMULTFLT( std::shared_ptr<const FaultCollection> faults);
         void applyMULTFLT( std::shared_ptr<const Fault> fault);
         void setMultregtScanner(std::shared_ptr<const MULTREGTScanner> multregtScanner);
@@ -62,9 +60,11 @@ namespace Opm {
         void assertIJK(size_t i , size_t j , size_t k) const;
         double getMultiplier__(size_t globalIndex , FaceDir::DirEnum faceDir) const;
         void insertNewProperty(FaceDir::DirEnum faceDir);
+        bool hasDirectionProperty(FaceDir::DirEnum faceDir) const;
+        GridProperty<double>& getDirectionProperty(FaceDir::DirEnum faceDir);
 
         size_t m_nx , m_ny , m_nz;
-        std::map<FaceDir::DirEnum , std::shared_ptr<GridProperty<double> > > m_trans;
+        std::map<FaceDir::DirEnum , GridProperty<double> > m_trans;
         std::map<FaceDir::DirEnum , std::string> m_names;
         std::shared_ptr<const MULTREGTScanner> m_multregtScanner;
     };

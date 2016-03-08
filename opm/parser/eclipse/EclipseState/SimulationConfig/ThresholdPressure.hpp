@@ -36,7 +36,9 @@ namespace Opm {
 
     public:
 
-        ThresholdPressure(const ParseContext& parseContext , std::shared_ptr< const Deck > deck, std::shared_ptr<GridProperties<int>> gridProperties);
+        ThresholdPressure(const ParseContext& parseContext,
+                          std::shared_ptr< const Deck > deck,
+                          GridProperties<int>& gridProperties);
 
 
         /*
@@ -69,7 +71,7 @@ namespace Opm {
         void initThresholdPressure(const ParseContext& parseContext,
                                    std::shared_ptr<const RUNSPECSection> runspecSection,
                                    std::shared_ptr<const SOLUTIONSection> solutionSection,
-                                   std::shared_ptr<GridProperties<int>> gridProperties);
+                                   GridProperties<int>& gridProperties);
 
         static std::pair<int,int> makeIndex(int r1 , int r2);
         void addPair(int r1 , int r2 , const std::pair<bool , double>& valuePair);

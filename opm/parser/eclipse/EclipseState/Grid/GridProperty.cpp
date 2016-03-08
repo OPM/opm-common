@@ -219,7 +219,7 @@ namespace Opm {
 
     template< typename T >
     void GridProperty< T >::loadFromDeckKeyword( const DeckKeyword& deckKeyword ) {
-        const auto& deckItem = getDeckItem(deckKeyword);
+        const DeckItem& deckItem = getDeckItem(deckKeyword);
         for (size_t dataPointIdx = 0; dataPointIdx < deckItem.size(); ++dataPointIdx) {
             if (!deckItem.defaultApplied(dataPointIdx))
                 setDataPoint(dataPointIdx, dataPointIdx, deckItem);
@@ -227,12 +227,12 @@ namespace Opm {
     }
 
     template< typename T >
-    void GridProperty< T >::loadFromDeckKeyword( std::shared_ptr<const Box> inputBox, const DeckKeyword& deckKeyword) {
-        if (inputBox->isGlobal())
+    void GridProperty< T >::loadFromDeckKeyword( const Box& inputBox, const DeckKeyword& deckKeyword) {
+        if (inputBox.isGlobal())
             loadFromDeckKeyword( deckKeyword );
         else {
             const auto& deckItem = getDeckItem(deckKeyword);
-            const std::vector<size_t>& indexList = inputBox->getIndexList();
+            const std::vector<size_t>& indexList = inputBox.getIndexList();
             if (indexList.size() == deckItem.size()) {
                 for (size_t sourceIdx = 0; sourceIdx < indexList.size(); sourceIdx++) {
                     size_t targetIdx = indexList[sourceIdx];
@@ -252,12 +252,12 @@ namespace Opm {
     }
 
     template< typename T >
-    void GridProperty< T >::copyFrom( const GridProperty< T >& src, std::shared_ptr< const Box > inputBox ) {
-        if (inputBox->isGlobal()) {
+    void GridProperty< T >::copyFrom( const GridProperty< T >& src, const Box& inputBox ) {
+        if (inputBox.isGlobal()) {
             for (size_t i = 0; i < src.getCartesianSize(); ++i)
                 m_data[i] = src.m_data[i];
         } else {
-            const std::vector<size_t>& indexList = inputBox->getIndexList();
+            const std::vector<size_t>& indexList = inputBox.getIndexList();
             for (size_t i = 0; i < indexList.size(); i++) {
                 size_t targetIndex = indexList[i];
                 m_data[targetIndex] = src.m_data[targetIndex];
@@ -266,12 +266,12 @@ namespace Opm {
     }
 
     template< typename T >
-    void GridProperty< T >::scale( T scaleFactor, std::shared_ptr< const Box > inputBox ) {
-        if (inputBox->isGlobal()) {
+    void GridProperty< T >::scale( T scaleFactor, const Box& inputBox ) {
+        if (inputBox.isGlobal()) {
             for (size_t i = 0; i < m_data.size(); ++i)
                 m_data[i] *= scaleFactor;
         } else {
-            const std::vector<size_t>& indexList = inputBox->getIndexList();
+            const std::vector<size_t>& indexList = inputBox.getIndexList();
             for (size_t i = 0; i < indexList.size(); i++) {
                 size_t targetIndex = indexList[i];
                 m_data[targetIndex] *= scaleFactor;
@@ -280,12 +280,12 @@ namespace Opm {
     }
 
     template< typename T >
-    void GridProperty< T >::add( T shiftValue, std::shared_ptr<const Box> inputBox ) {
-        if (inputBox->isGlobal()) {
+    void GridProperty< T >::add( T shiftValue, const Box& inputBox ) {
+        if (inputBox.isGlobal()) {
             for (size_t i = 0; i < m_data.size(); ++i)
                 m_data[i] += shiftValue;
         } else {
-            const std::vector<size_t>& indexList = inputBox->getIndexList();
+            const std::vector<size_t>& indexList = inputBox.getIndexList();
             for (size_t i = 0; i < indexList.size(); i++) {
                 size_t targetIndex = indexList[i];
                 m_data[targetIndex] += shiftValue;
@@ -294,11 +294,11 @@ namespace Opm {
     }
 
     template< typename T >
-    void GridProperty< T >::setScalar( T value, std::shared_ptr< const Box > inputBox ) {
-        if (inputBox->isGlobal()) {
+    void GridProperty< T >::setScalar( T value, const Box& inputBox ) {
+        if (inputBox.isGlobal()) {
             std::fill(m_data.begin(), m_data.end(), value);
         } else {
-            const std::vector<size_t>& indexList = inputBox->getIndexList();
+            const std::vector<size_t>& indexList = inputBox.getIndexList();
             for (size_t i = 0; i < indexList.size(); i++) {
                 size_t targetIndex = indexList[i];
                 m_data[targetIndex] = value;
@@ -320,7 +320,6 @@ namespace Opm {
     template< typename T >
     void GridProperty< T >::runPostProcessor() {
         if( this->m_hasRunPostProcessor ) return;
-
         this->m_hasRunPostProcessor = true;
         this->m_kwInfo.postProcessor()( m_data );
     }
@@ -333,11 +332,11 @@ namespace Opm {
     }
 
     template< typename T >
-    ERT::EclKW<T> GridProperty< T >::getEclKW( std::shared_ptr< const EclipseGrid > grid ) const {
-        ERT::EclKW<T> eclKW( getKeywordName(), grid->getNumActive() );
+    ERT::EclKW<T> GridProperty< T >::getEclKW( const EclipseGrid& grid ) const {
+        ERT::EclKW<T> eclKW( getKeywordName(), grid.getNumActive() );
         size_t activeIndex = 0;
         for (size_t g = 0; g < getCartesianSize(); g++) {
-            if (grid->cellActive( g )) {
+            if (grid.cellActive( g )) {
                 eclKW[activeIndex] = iget(g);
                 activeIndex++;
             }

@@ -32,6 +32,7 @@
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
+
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
 
@@ -139,23 +140,21 @@ static DeckPtr createDeck(const ParseContext& parseContext , const std::string& 
     return parser.parseString(input , parseContext);
 }
 
-
-static std::shared_ptr<GridProperties<int>> getGridProperties(int defaultEqlnum = 3, bool addKeyword = true) {
-    GridPropertySupportedKeywordInfo<int> kwInfo = GridPropertySupportedKeywordInfo<int>("EQLNUM", defaultEqlnum, "");
+static GridProperties<int> getGridProperties(int defaultEqlnum = 3, bool addKeyword = true) {
+    GridPropertySupportedKeywordInfo<int> kwInfo = GridPropertySupportedKeywordInfo<int>( "EQLNUM", defaultEqlnum, "" );
     std::vector<GridPropertySupportedKeywordInfo<int>> supportedKeywordsVec( 1, kwInfo );
-    EclipseGridConstPtr eclipseGrid = std::make_shared<const EclipseGrid>(3, 3, 3);
-    std::shared_ptr<GridProperties<int>> gridProperties = std::make_shared<GridProperties<int>>(eclipseGrid, std::move( supportedKeywordsVec ) );
+    const EclipseGrid eclipseGrid( 3, 3, 3 );
+    GridProperties<int> gridProperties( eclipseGrid, std::move( supportedKeywordsVec ) );
     if (addKeyword) {
-        gridProperties->addKeyword("EQLNUM");
+        gridProperties.addKeyword( "EQLNUM" );
     }
     return gridProperties;
 }
 
-
 BOOST_AUTO_TEST_CASE(ThresholdPressureTest) {
     ParseContext parseContext;
     DeckPtr deck = createDeck(parseContext , inputStr);
-    static std::shared_ptr<GridProperties<int>> gridProperties = getGridProperties();
+    auto gridProperties = getGridProperties();
     ThresholdPressureConstPtr thp = std::make_shared<ThresholdPressure>(parseContext , deck, gridProperties);
 
 
@@ -172,7 +171,7 @@ BOOST_AUTO_TEST_CASE(ThresholdPressureTest) {
 BOOST_AUTO_TEST_CASE(ThresholdPressureEmptyTest) {
     ParseContext parseContext;
     DeckPtr deck = createDeck(parseContext , inputStrNoSolutionSection);
-    static std::shared_ptr<GridProperties<int>> gridProperties = getGridProperties();
+    auto gridProperties = getGridProperties();
     ThresholdPressureConstPtr thresholdPressurePtr = std::make_shared<ThresholdPressure>(parseContext , deck, gridProperties);
     BOOST_CHECK_EQUAL(0, thresholdPressurePtr->size());
 }
@@ -182,7 +181,7 @@ BOOST_AUTO_TEST_CASE(ThresholdPressureNoTHPREStest) {
     ParseContext parseContext;
     DeckPtr deck_no_thpres = createDeck(parseContext , inputStrNoTHPRESinSolutionNorRUNSPEC);
     DeckPtr deck_no_thpres2 = createDeck(parseContext , inputStrTHPRESinRUNSPECnotSoultion);
-    static std::shared_ptr<GridProperties<int>> gridProperties = getGridProperties();
+    auto gridProperties = getGridProperties();
 
     ThresholdPressureConstPtr thresholdPressurePtr;
     BOOST_CHECK_NO_THROW(thresholdPressurePtr = std::make_shared<ThresholdPressure>(parseContext , deck_no_thpres, gridProperties));
@@ -202,7 +201,7 @@ BOOST_AUTO_TEST_CASE(ThresholdPressureThrowTest) {
     DeckPtr deck_highRegNum      = createDeck(parseContext , inputStrTooHighRegionNumbers);
     DeckPtr deck_missingData     = createDeck(parseContext , inputStrMissingData);
     DeckPtr deck_missingPressure = createDeck(parseContext , inputStrMissingPressure);
-    static std::shared_ptr<GridProperties<int>> gridProperties = getGridProperties();
+    auto gridProperties = getGridProperties();
 
     BOOST_CHECK_THROW(std::make_shared<ThresholdPressure>(parseContext,deck_irrevers, gridProperties), std::runtime_error);
     BOOST_CHECK_THROW(std::make_shared<ThresholdPressure>(parseContext,deck_inconsistency, gridProperties), std::runtime_error);
@@ -210,11 +209,11 @@ BOOST_AUTO_TEST_CASE(ThresholdPressureThrowTest) {
     BOOST_CHECK_THROW(std::make_shared<ThresholdPressure>(parseContext,deck_missingData, gridProperties), std::runtime_error);
 
     {
-        static std::shared_ptr<GridProperties<int>> gridPropertiesEQLNUMkeywordNotAdded = getGridProperties(3, false);
+        auto gridPropertiesEQLNUMkeywordNotAdded = getGridProperties(3, false);
         BOOST_CHECK_THROW(std::make_shared<ThresholdPressure>(parseContext , deck, gridPropertiesEQLNUMkeywordNotAdded), std::runtime_error);
     }
     {
-        static std::shared_ptr<GridProperties<int>> gridPropertiesEQLNUMall0 = getGridProperties(0);
+        auto gridPropertiesEQLNUMall0 = getGridProperties(0);
         BOOST_CHECK_THROW(std::make_shared<ThresholdPressure>(parseContext , deck, gridPropertiesEQLNUMall0), std::runtime_error);
     }
 
@@ -240,7 +239,7 @@ BOOST_AUTO_TEST_CASE(ThresholdPressureThrowTest) {
 BOOST_AUTO_TEST_CASE(HasPair) {
     ParseContext parseContext;
     DeckPtr deck                 = createDeck(parseContext , inputStr);
-    static std::shared_ptr<GridProperties<int>> gridProperties = getGridProperties();
+    auto gridProperties = getGridProperties();
     ThresholdPressure thp(parseContext , deck , gridProperties);
 
     BOOST_CHECK_EQUAL( true , thp.hasRegionBarrier( 1 , 2 ));

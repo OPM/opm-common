@@ -29,14 +29,15 @@
 
 namespace Opm {
 
-    ThresholdPressure::ThresholdPressure(const ParseContext& parseContext , DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties)
-        : m_parseContext( parseContext )
+    ThresholdPressure::ThresholdPressure(const ParseContext& parseContext, DeckConstPtr deck,
+                                         GridProperties<int>& gridProperties) :
+                                         m_parseContext( parseContext )
     {
 
-        if (Section::hasRUNSPEC(*deck) && Section::hasSOLUTION(*deck)) {
-            std::shared_ptr<const RUNSPECSection> runspecSection = std::make_shared<const RUNSPECSection>(*deck);
-            std::shared_ptr<const SOLUTIONSection> solutionSection = std::make_shared<const SOLUTIONSection>(*deck);
-            initThresholdPressure(parseContext , runspecSection, solutionSection, gridProperties);
+        if (Section::hasRUNSPEC( *deck ) && Section::hasSOLUTION( *deck )) {
+            std::shared_ptr<const RUNSPECSection> runspecSection = std::make_shared<const RUNSPECSection>( *deck );
+            std::shared_ptr<const SOLUTIONSection> solutionSection = std::make_shared<const SOLUTIONSection>( *deck );
+            initThresholdPressure( parseContext, runspecSection, solutionSection, gridProperties );
         }
     }
 
@@ -67,11 +68,11 @@ namespace Opm {
     void ThresholdPressure::initThresholdPressure(const ParseContext& /* parseContext */,
                                                   std::shared_ptr<const RUNSPECSection> runspecSection,
                                                   std::shared_ptr<const SOLUTIONSection> solutionSection,
-                                                  std::shared_ptr<GridProperties<int>> gridProperties) {
+                                                  GridProperties<int>& gridProperties) {
 
         bool       thpresOption     = false;
         const bool thpresKeyword    = solutionSection->hasKeyword<ParserKeywords::THPRES>( );
-        const bool hasEqlnumKeyword = gridProperties->hasKeyword<ParserKeywords::EQLNUM>( );
+        const bool hasEqlnumKeyword = gridProperties.hasKeyword<ParserKeywords::EQLNUM>( );
         int        maxEqlnum        = 0;
 
         //Is THPRES option set?
@@ -95,8 +96,8 @@ namespace Opm {
         {
             //Find max of eqlnum
             if (hasEqlnumKeyword) {
-                const auto& eqlnumKeyword = gridProperties->getKeyword<ParserKeywords::EQLNUM>( );
-                const auto& eqlnum = eqlnumKeyword->getData();
+                const auto& eqlnumKeyword = gridProperties.getKeyword<ParserKeywords::EQLNUM>( );
+                const auto& eqlnum = eqlnumKeyword.getData();
                 maxEqlnum = *std::max_element(eqlnum.begin(), eqlnum.end());
 
                 if (0 == maxEqlnum) {

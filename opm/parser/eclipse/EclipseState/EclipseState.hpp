@@ -25,6 +25,7 @@
 #include <set>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 
 namespace Opm {
@@ -73,105 +74,57 @@ namespace Opm {
         std::shared_ptr< EclipseGrid > getEclipseGridCopy() const;
         const MessageContainer& getMessageContainer() const;
         MessageContainer& getMessageContainer();
-        bool hasPhase(enum Phase::PhaseEnum phase) const;
         std::string getTitle() const;
-        bool supportsGridProperty(const std::string& keyword, int enabledTypes=AllProperties) const;
-
-        std::shared_ptr<const GridProperty<int> > getRegion( const DeckItem& regionItem ) const;
-        std::shared_ptr<const GridProperty<int> > getDefaultRegion() const;
-        std::shared_ptr<const GridProperty<int> > getIntGridProperty( const std::string& keyword ) const;
-        std::shared_ptr<const GridProperty<double> > getDoubleGridProperty( const std::string& keyword ) const;
-        bool hasDeckIntGridProperty(const std::string& keyword) const;
-        bool hasDeckDoubleGridProperty(const std::string& keyword) const;
-
-        bool hasIntGridProperty(const std::string& keyword) const __attribute__((deprecated("use hasDeckIntGridProperty() instead")))
-        { return hasDeckIntGridProperty(keyword); }
-        bool hasDoubleGridProperty(const std::string& keyword) const __attribute__((deprecated("use hasDeckDoubleGridProperty() instead")))
-        { return hasDeckDoubleGridProperty(keyword); }
-
-        void loadGridPropertyFromDeckKeyword(std::shared_ptr<const Box> inputBox,
-                                             const DeckKeyword& deckKeyword,
-                                             int enabledTypes = AllProperties);
 
         std::shared_ptr<const FaultCollection> getFaults() const;
         std::shared_ptr<const TransMult> getTransMult() const;
         std::shared_ptr<const NNC> getNNC() const;
         bool hasNNC() const;
 
-        std::shared_ptr<const TableManager> getTableManager() const;
-        size_t getNumPhases() const;
+        const Eclipse3DProperties& getEclipseProperties() const;
 
-        // the unit system used by the deck. note that it is rarely needed to convert
-        // units because internally to opm-parser everything is represented by SI
-        // units...
+        std::shared_ptr<const TableManager> getTableManager() const;
+
+        // the unit system used by the deck. note that it is rarely needed to
+        // convert units because internally to opm-parser everything is
+        // represented by SI units...
         const UnitSystem& getDeckUnitSystem()  const;
         void applyModifierDeck( std::shared_ptr<const Deck> deck);
 
+        // TODO this used to be private but since eclipseProperties needs to
+        // know SIScaling, we need access to either this or to the UnitSystem.
+        double getSIScaling(const std::string &dimensionString) const;
+
     private:
         void initTabdims(std::shared_ptr< const Deck > deck);
-        void initTables(std::shared_ptr< const Deck > deck);
         void initIOConfig(std::shared_ptr< const Deck > deck);
-        void initSchedule(std::shared_ptr< const Deck > deck);
         void initIOConfigPostSchedule(std::shared_ptr< const Deck > deck);
-        void initInitConfig(std::shared_ptr< const Deck > deck);
-        void initSimulationConfig(std::shared_ptr< const Deck > deck);
-        void initEclipseGrid(std::shared_ptr< const Deck > deck);
-        void initGridopts(std::shared_ptr< const Deck > deck);
-        void initPhases(std::shared_ptr< const Deck > deck);
         void initTitle(std::shared_ptr< const Deck > deck);
-        void initProperties(std::shared_ptr< const Deck > deck);
+
         void initTransMult();
         void initFaults(std::shared_ptr< const Deck > deck);
-        void initNNC(std::shared_ptr< const Deck > deck);
-
 
         void setMULTFLT(std::shared_ptr<const Opm::Section> section) const;
         void initMULTREGT(std::shared_ptr< const Deck > deck);
 
-        double getSIScaling(const std::string &dimensionString) const;
-
-        void processGridProperties(std::shared_ptr< const Deck > deck, int enabledTypes);
-        void scanSection(std::shared_ptr<Opm::Section> section , int enabledTypes);
-        void handleADDKeyword(const DeckKeyword& deckKeyword  , BoxManager& boxManager, int enabledTypes);
-        void handleBOXKeyword(const DeckKeyword& deckKeyword  , BoxManager& boxManager);
-        void handleCOPYKeyword(const DeckKeyword& deckKeyword , BoxManager& boxManager, int enabledTypes);
-        void handleENDBOXKeyword(BoxManager& boxManager);
-        void handleEQUALSKeyword(const DeckKeyword& deckKeyword   , BoxManager& boxManager, int enabledTypes);
-        void handleMULTIPLYKeyword(const DeckKeyword& deckKeyword , BoxManager& boxManager, int enabledTypes);
-
-        void handleEQUALREGKeyword(const DeckKeyword& deckKeyword, int enabledTypes);
-        void handleMULTIREGKeyword(const DeckKeyword& deckKeyword, int enabledTypes);
-        void handleADDREGKeyword(const DeckKeyword& deckKeyword  , int enabledTypes);
-        void handleCOPYREGKeyword(const DeckKeyword& deckKeyword , int enabledTypes);
-
-        void setKeywordBox( const DeckKeyword& deckKeyword, const DeckRecord&, BoxManager& boxManager);
-
-        void copyIntKeyword(const std::string& srcField , const std::string& targetField , std::shared_ptr<const Box> inputBox);
-        void copyDoubleKeyword(const std::string& srcField , const std::string& targetField , std::shared_ptr<const Box> inputBox);
-
         void complainAboutAmbiguousKeyword(std::shared_ptr< const Deck > deck, const std::string& keywordName) const;
 
-        std::shared_ptr<GridProperty<int> > getOrCreateIntProperty_(const std::string name);
-        std::shared_ptr<GridProperty<double> > getOrCreateDoubleProperty_(const std::string name);
-
-        std::shared_ptr< const EclipseGrid >      m_eclipseGrid;
-        std::shared_ptr< IOConfig >              m_ioConfig;
+        std::shared_ptr< IOConfig >               m_ioConfig;
         std::shared_ptr< const InitConfig >       m_initConfig;
-        std::shared_ptr< const Schedule >         schedule;
+        std::shared_ptr< const Schedule >         m_schedule;
         std::shared_ptr< const SimulationConfig > m_simulationConfig;
-
-        std::shared_ptr<const TableManager> m_tables;
 
         std::set<enum Phase::PhaseEnum> phases;
         std::string m_title;
-        const UnitSystem& m_deckUnitSystem;
-        std::shared_ptr<GridProperties<int> > m_intGridProperties;
-        std::shared_ptr<GridProperties<double> > m_doubleGridProperties;
         std::shared_ptr<TransMult> m_transMult;
         std::shared_ptr<FaultCollection> m_faults;
         std::shared_ptr<NNC> m_nnc;
-        std::string m_defaultRegion;
+
+        const UnitSystem& m_deckUnitSystem;
         const ParseContext& m_parseContext;
+        std::shared_ptr<const TableManager> m_tables;
+        std::shared_ptr<const EclipseGrid> m_eclipseGrid;
+        Eclipse3DProperties m_eclipseProperties;
         MessageContainer m_messageContainer;
     };
 
@@ -179,4 +132,4 @@ namespace Opm {
     typedef std::shared_ptr<const EclipseState> EclipseStateConstPtr;
 }
 
-#endif
+#endif // OPM_ECLIPSE_STATE_HPP

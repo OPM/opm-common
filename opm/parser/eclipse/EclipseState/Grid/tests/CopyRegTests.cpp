@@ -34,9 +34,11 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
-#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+
 
 
 static Opm::DeckPtr createDeckInvalidArray1() {
@@ -196,26 +198,20 @@ BOOST_AUTO_TEST_CASE(UnInitializedVectorThrows) {
     BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseContext()) , std::invalid_argument );
 }
 
-
 BOOST_AUTO_TEST_CASE(TypeMismatchThrows) {
     Opm::DeckPtr deck = createDeckInvalidTypeMismatch();
     BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseContext()) , std::invalid_argument );
 }
 
-
-
 BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
     Opm::DeckPtr deck = createValidIntDeck();
     Opm::EclipseState state(deck , Opm::ParseContext() );
-    std::shared_ptr<const Opm::GridProperty<int> > property = state.getIntGridProperty( "FLUXNUM");
-    for (size_t j=0; j< 5; j++)
+    auto& property = state.getEclipseProperties().getIntGridProperty("FLUXNUM");
+    for (size_t j = 0; j < 5; j++)
         for (size_t i = 0; i < 5; i++) {
             if (i < 2)
-                BOOST_CHECK_EQUAL( 10 , property->iget(i,j,0));
+                BOOST_CHECK_EQUAL(10, property.iget(i, j, 0));
             else
-                BOOST_CHECK_EQUAL( 3 , property->iget(i,j,0));
+                BOOST_CHECK_EQUAL(3 , property.iget(i, j, 0));
         }
-
 }
-
-
