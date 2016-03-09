@@ -3,7 +3,7 @@
 
 # defines that must be present in config.h for our headers
 set (opm-autodiff_CONFIG_VAR
-  HAVE_DUNE_CORNERPOINT
+  HAVE_OPM_GRID
 	)
 
 # dependencies
@@ -23,7 +23,7 @@ set (opm-autodiff_DEPS
         opm-parser REQUIRED;
 	opm-core REQUIRED;
 	opm-output REQUIRED;
-	dune-cornerpoint"
+	opm-grid"
 	# Eigen
 	"Eigen3 3.2.0"
 	)

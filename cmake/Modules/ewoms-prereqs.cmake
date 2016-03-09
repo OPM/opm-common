@@ -33,7 +33,7 @@ set (ewoms_DEPS
 	"opm-material REQUIRED"
 	"dune-alugrid"
 	"dune-fem"
-	"dune-cornerpoint"
+	"opm-grid"
 	# librt (on some systems necessary for clock_gettime())
 	"librt REQUIRED"
 	# valgrind client requests
