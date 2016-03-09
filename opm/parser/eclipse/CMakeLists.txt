@@ -280,6 +280,7 @@ EclipseState/Tables/SorwmisTable.hpp
 EclipseState/Tables/SgcwmisTable.hpp
 EclipseState/Tables/MiscTable.hpp
 EclipseState/Tables/PmiscTable.hpp
+EclipseState/Tables/TlpmixpaTable.hpp
 EclipseState/Tables/MsfnTable.hpp
 EclipseState/Tables/TableColumn.hpp
 EclipseState/Tables/ColumnSchema.hpp
