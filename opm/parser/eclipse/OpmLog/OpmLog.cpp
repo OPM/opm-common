@@ -73,6 +73,13 @@ namespace Opm {
     }
 
     
+    void OpmLog::debug(const std::string& message)
+    {
+        const std::string msg = Log::prefixMessage(Log::MessageType::Debug, message);
+        addMessage(Log::MessageType::Debug, msg);
+    }
+
+
     bool OpmLog::enabledMessageType( int64_t messageType ) {
         if (m_logger)
             return m_logger->enabledMessageType( messageType );
