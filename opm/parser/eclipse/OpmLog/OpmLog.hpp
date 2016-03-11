@@ -24,7 +24,6 @@
 #include <cstdint>
 
 #include <opm/parser/eclipse/OpmLog/Logger.hpp>
-#include <opm/parser/eclipse/OpmLog/StreamLog.hpp>
 #include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
 
 namespace Opm {
