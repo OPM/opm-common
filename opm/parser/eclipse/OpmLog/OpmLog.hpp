@@ -42,13 +42,11 @@ class OpmLog {
 public:
     static void addMessage(int64_t messageFlag , const std::string& message);
 
-    static std::shared_ptr<StreamLog> getStreamLog(const std::string& filename);
     static void info(const std::string& message);
     static void warning(const std::string& message);
     static void error(const std::string& message);
     static void problem(const std::string& message);
     static void bug(const std::string& message);
-    static void summary();
     static bool hasBackend( const std::string& backendName );
     static void addBackend(const std::string& name , std::shared_ptr<LogBackend> backend);
     static bool removeBackend(const std::string& name);
@@ -72,12 +70,6 @@ public:
 private:
     static std::shared_ptr<Logger> getLogger();
     static std::shared_ptr<Logger> m_logger;
-    static std::shared_ptr<StreamLog> m_streamLog;
-    static int m_info;
-    static int m_error;
-    static int m_bug;
-    static int m_problem;
-    static int m_warning;
 };
 
 
