@@ -19,7 +19,6 @@
 
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/OpmLog/Logger.hpp>
-#include <opm/parser/eclipse/OpmLog/StreamLog.hpp>
 
 namespace Opm {
 
