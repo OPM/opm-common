@@ -23,7 +23,7 @@
 #include <deque>
 #include <memory>
 #include <string>
-#include <vector>
+#include <list>
 
 #include <opm/parser/eclipse/Utility/Stringview.hpp>
 
@@ -53,7 +53,7 @@ namespace Opm {
     private:
         std::string m_sanitizedRecordString;
         std::deque< string_view > m_recordItems;
-        std::vector< std::string > expanded_items;
+        std::list< std::string > expanded_items;
         const std::string m_fileName;
         const std::string m_keywordName;
 
