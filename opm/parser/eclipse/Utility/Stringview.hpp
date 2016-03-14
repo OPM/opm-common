@@ -76,19 +76,18 @@ namespace Opm {
             const_iterator fst;
             const_iterator lst;
     };
-}
 
-/*
- * The implementation of string_view is inline and therefore the definitions
- * are also in this file. The reason for this is performance; string_view's
- * logic is trivial and function call and indirection overhead is significant
- * compared to the useful work it does. Additionally, string_view is a *very*
- * much used class in the inner loops of the parser - inlining the
- * implementation measured to improve performance by some 10%.
- */
+    /*
+     * The implementation of string_view is inline and therefore the definitions
+     * are also in this file. The reason for this is performance; string_view's
+     * logic is trivial and function call and indirection overhead is significant
+     * compared to the useful work it does. Additionally, string_view is a *very*
+     * much used class in the inner loops of the parser - inlining the
+     * implementation measured to improve performance by some 10%.
+     */
 
-namespace Opm
-{
+
+    // Non-member operators using string_view.
 
     std::ostream& operator<<( std::ostream& stream, const Opm::string_view& view );
 
@@ -133,56 +132,9 @@ namespace Opm
         return !( view == lhs );
     }
 
-} // namespace Opm
 
-namespace boost { namespace test_tools {
-    /* This is an unfortunate consequence of using boost.test.
-     * For reference, see
-     * http://stackoverflow.com/questions/17572583/boost-check-fails-to-compile-operator-for-custom-types
-     *
-     * In short, boost.test is unable to select the correct operator overloads,
-     * even in the global scope, inside its test macros. As a consequence, in
-     * order for boost.test to function we pry open its internals and creates a
-     * specialised instantiaten of string_view, as well as custom
-     * boost-namespace-specific overloads of comparison operators (that simply
-     * forward to the propoer implementations.
-     */
+    // Member functions of string_view.
 
-    template< typename T > struct print_log_value;
-
-    template<>
-    struct print_log_value< Opm::string_view > {
-        void operator()( std::ostream& os, const Opm::string_view& view ) {
-            os << view;
-        }
-
-    };
-
-    namespace tt_detail {
-
-        template< typename T >
-        inline bool operator==( const Opm::string_view& o, const T& x ) {
-            return o == x;
-        }
-
-        template< typename T >
-        inline bool operator==( const T& x, const Opm::string_view& o ) {
-            return o == x;
-        }
-
-        template< typename T >
-        inline bool operator!=( const Opm::string_view& o, const T& x ) {
-            return o != x;
-        }
-
-        template< typename T >
-        inline bool operator!=( const T& x, const Opm::string_view& o ) {
-            return o != x;
-        }
-    }
-}}
-
-namespace Opm {
     inline string_view::string_view( std::string::const_iterator begin,
                               std::string::const_iterator end ) :
         fst( begin ),
