@@ -27,6 +27,7 @@ OpmLog/LogUtil.cpp
 OpmLog/Logger.cpp 
 OpmLog/LogBackend.cpp 
 OpmLog/StreamLog.cpp 
+OpmLog/EclipsePRTLog.cpp 
 OpmLog/OpmLog.cpp )
 
 set( rawdeck_source 
@@ -148,6 +149,7 @@ OpmLog/Logger.hpp
 OpmLog/OpmLog.hpp
 OpmLog/LogUtil.hpp
 OpmLog/StreamLog.hpp
+OpmLog/EclipsePRTLog.hpp
 #
 RawDeck/RawConsts.hpp 
 RawDeck/RawKeyword.hpp 
