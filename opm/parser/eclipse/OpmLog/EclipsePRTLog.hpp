@@ -36,8 +36,6 @@ public:
 
     size_t numMessages(int64_t messageType) const;
 
-    void clear();
-   
     ~EclipsePRTLog();
 
 private:

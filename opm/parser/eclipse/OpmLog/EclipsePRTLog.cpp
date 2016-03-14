@@ -51,12 +51,6 @@ namespace Opm {
     }
 
 
-    void EclipsePRTLog::clear()
-    {
-        m_count.clear();
-    }
-
-
     EclipsePRTLog::~EclipsePRTLog()
     {
         //output summary.
