@@ -55,7 +55,7 @@ namespace Opm {
     {
         //output summary.
         const std::string summary_msg = "\n\nError summary:" + 
-            std::string("\nWarnings          " + std::to_string(numMessages(Log::MessageType::Warning)) +
+            std::string("\nWarnings          " + std::to_string(numMessages(Log::MessageType::Warning))) +
             std::string("\nProblems          " + std::to_string(numMessages(Log::MessageType::Problem))) +
             std::string("\nErrors            " + std::to_string(numMessages(Log::MessageType::Error))) + 
             std::string("\nBugs              " + std::to_string(numMessages(Log::MessageType::Bug))) + 
