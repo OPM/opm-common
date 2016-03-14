@@ -21,6 +21,7 @@ set (opm-autodiff_DEPS
 	# OPM dependency
 	"opm-common REQUIRED;
 	opm-core REQUIRED;
+	opm-output REQUIRED;
 	dune-cornerpoint"
 	# Eigen
 	"Eigen3 3.2.0"
