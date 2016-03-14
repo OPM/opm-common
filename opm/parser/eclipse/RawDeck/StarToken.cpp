@@ -22,6 +22,7 @@
 #include <cctype>
 #include <string>
 #include <stdexcept>
+#include <cstdlib>
 
 #include <opm/parser/eclipse/RawDeck/StarToken.hpp>
 #include <opm/parser/eclipse/Utility/Stringview.hpp>
@@ -92,11 +93,6 @@ namespace Opm {
 
     static inline bool fortran_float( char ch ) {
         return ch == 'd' || ch == 'D' || ch == 'E';
-    }
-
-    static inline bool is_double_lexeme( char ch ) {
-        return isdigit( ch ) || ch == '.' || ch == 'e'
-                || ch == '-' || ch == '+';
     }
 
     static inline bool slow_check_is_zero( const string_view& view ) {
