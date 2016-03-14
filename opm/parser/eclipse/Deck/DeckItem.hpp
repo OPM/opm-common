@@ -59,7 +59,9 @@ namespace Opm {
             fdouble = 3
         };
 
-        template< typename T > static DeckItem make( const std::string& );
+        template< typename T >
+        static DeckItem make( const std::string&, size_t = 1 );
+
         const std::string& name() const;
 
         // return true if the default value was used for a given data point

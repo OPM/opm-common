@@ -32,6 +32,9 @@ namespace Opm {
     public:
         typedef std::vector< DeckItem >::const_iterator const_iterator;
 
+        DeckRecord() = default;
+        DeckRecord( size_t );
+
         size_t size() const;
         void addItem( DeckItem&& deckItem );
 

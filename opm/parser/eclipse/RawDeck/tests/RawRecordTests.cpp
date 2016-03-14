@@ -22,11 +22,6 @@
 #include <boost/test/unit_test.hpp>
 #include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
 
-BOOST_AUTO_TEST_CASE(RawRecordGetRecordStringReturnsTrimmedString) {
-    Opm::RawRecordPtr record(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20                                       /"));
-    const std::string& recordString = record->getRecordString();
-    BOOST_CHECK_EQUAL("'NODIR '  'REVERS'  1  20", recordString);
-}
 
 BOOST_AUTO_TEST_CASE(RawRecordGetRecordsCorrectElementsReturned) {
     Opm::RawRecordPtr record(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20                                       /"));
@@ -91,7 +86,6 @@ BOOST_AUTO_TEST_CASE(Rawrecord_sizeEmpty_OK) {
 
 BOOST_AUTO_TEST_CASE(Rawrecord_spaceOnlyEmpty_OK) {
     Opm::RawRecordPtr record(new Opm::RawRecord("   /"));
-    BOOST_CHECK_EQUAL("", record->getRecordString());
     BOOST_CHECK_EQUAL(0U, record->size());
 }
 

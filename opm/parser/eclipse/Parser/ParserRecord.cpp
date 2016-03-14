@@ -118,7 +118,7 @@ namespace Opm {
 
     DeckRecord ParserRecord::parse(const ParseMode& parseMode , RawRecordPtr rawRecord) const {
         std::string recordBeforeParsing = rawRecord->getRecordString();
-        DeckRecord deckRecord;
+        DeckRecord deckRecord( size() );
         for (size_t i = 0; i < size(); i++) {
             auto parserItem = get(i);
             deckRecord.addItem( parserItem->scan( rawRecord ) );

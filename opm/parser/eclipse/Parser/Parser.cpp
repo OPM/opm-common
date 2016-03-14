@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cctype>
 #include <fstream>
 #include <memory>
 
@@ -491,15 +492,25 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
 
 
 
-    std::string Parser::doSpecialHandlingForTitleKeyword(std::string line, std::shared_ptr<ParserState> parserState) const {
+    static inline std::string& doSpecialHandlingForTitleKeyword(std::string& line, std::shared_ptr<ParserState> parserState) {
         if ((parserState->rawKeyword != NULL) && (parserState->rawKeyword->getKeywordName() == "TITLE"))
                 line = line.append("/");
         return line;
     }
 
-    bool Parser::tryParseKeyword(std::shared_ptr<ParserState> parserState) const {
-        std::string line;
+    static inline std::string& trim_right( std::string& str ) {
+        /* because cctype functions can be macros, manually find the
+         * position to erase from. Written using isspace for performance.
+         */
 
+        size_t i = str.size();
+        for( ; i >= 1; --i )
+            if( !isspace( str[ i - 1 ] ) ) break;
+
+        return str.erase( i );
+    }
+
+    bool Parser::tryParseKeyword(std::shared_ptr<ParserState> parserState) const {
         if (parserState->nextKeyword.length() > 0) {
             parserState->rawKeyword = createRawKeyword(parserState->nextKeyword, parserState);
             parserState->nextKeyword = "";
@@ -508,11 +519,12 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
         if (parserState->rawKeyword && parserState->rawKeyword->isFinished())
             return true;
 
+        std::string line;
         while (std::getline(*parserState->inputstream, line)) {
             if (line.find("--") != std::string::npos)
                 line = stripComments( line );
 
-            boost::algorithm::trim_right(line); // Removing garbage (eg. \r)
+            line = trim_right( line ); // Removing garbage (eg. \r)
             line = doSpecialHandlingForTitleKeyword(line, parserState);
             std::string keywordString;
             parserState->lineNR++;
@@ -536,7 +548,6 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
                     }
                 }
                 parserState->rawKeyword->addRawRecordString(line);
-                line = "";
             }
 
             if (parserState->rawKeyword

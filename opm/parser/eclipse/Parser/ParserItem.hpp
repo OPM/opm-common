@@ -147,11 +147,11 @@ namespace Opm {
     /// NOTE: data are popped from the rawRecords deque!
     template<typename ParserItemType, typename ValueType>
     DeckItem ParserItemScan(const ParserItemType * self , std::shared_ptr< RawRecord > rawRecord) {
-        auto deckItem = DeckItem::make< ValueType >( self->name() );
+        auto deckItem = DeckItem::make< ValueType >( self->name(), rawRecord->size() );
 
         if (self->sizeType() == ALL) {
             while (rawRecord->size() > 0) {
-                std::string token = rawRecord->pop_front();
+                auto token = rawRecord->pop_front();
 
                 std::string countString;
                 std::string valueString;
@@ -168,8 +168,7 @@ namespace Opm {
                             deckItem.push_backDefault( value );
                     }
                 } else {
-                    ValueType value = readValueToken<ValueType>(token);
-                    deckItem.push_back(value);
+                    deckItem.push_back( readValueToken<ValueType>( token ) );
                 }
             }
         } else {
@@ -186,7 +185,7 @@ namespace Opm {
             } else {
                 // The '*' should be interpreted as a repetition indicator, but it must
                 // be preceeded by an integer...
-                std::string token = rawRecord->pop_front();
+                auto token = rawRecord->pop_front();
                 std::string countString;
                 std::string valueString;
                 if (isStarToken(token, countString, valueString)) {
@@ -212,12 +211,12 @@ namespace Opm {
                     for (size_t i=0; i < st.count() - 1; i++)
                         rawRecord->push_front(singleRepetition);
                 } else {
-                    ValueType value = readValueToken<ValueType>(token);
-                    deckItem.push_back(value);
+                    deckItem.push_back( readValueToken<ValueType>( token ) );
                 }
             }
         }
-        return std::move( deckItem );
+
+        return deckItem;
     }
 
 

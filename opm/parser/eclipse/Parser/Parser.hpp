@@ -124,8 +124,6 @@ namespace Opm {
         bool parseState(std::shared_ptr<ParserState> parserState) const;
         std::shared_ptr< RawKeyword > createRawKeyword(const std::string& keywordString, std::shared_ptr<ParserState> parserState) const;
         void addDefaultKeywords();
-
-        std::string doSpecialHandlingForTitleKeyword(std::string line, std::shared_ptr<ParserState> parserState) const;
     };
 
 
