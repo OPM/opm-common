@@ -59,21 +59,14 @@ namespace Opm {
 
     EclipsePRTLog::~EclipsePRTLog()
     {
-        const auto warning = numMessages(Log::MessageType::Warning);
-        const auto debug = numMessages(Log::MessageType::Debug);
-        const auto info = numMessages(Log::MessageType::Info);
-        const auto error = numMessages(Log::MessageType::Error);
-        const auto problem = numMessages(Log::MessageType::Problem);
-        const auto bug = numMessages(Log::MessageType::Bug);
-
         //output summary.
         const std::string summary_msg = "\n\nError summary:" + 
-            std::string("\nWarnings          " + std::to_string(warning)) +
-            std::string("\nProblems          " + std::to_string(problem)) +
-            std::string("\nErrors            " + std::to_string(error)) + 
-            std::string("\nBugs              " + std::to_string(bug)) + 
-            std::string("\nDebug             " + std::to_string(debug)) +
-            std::string("\nProblems          " + std::to_string(problem)) +"\n";
+            std::string("\nWarnings          " + std::to_string(numMessages(Log::MessageType::Warning)) +
+            std::string("\nProblems          " + std::to_string(numMessages(Log::MessageType::Problem))) +
+            std::string("\nErrors            " + std::to_string(numMessages(Log::MessageType::Error))) + 
+            std::string("\nBugs              " + std::to_string(numMessages(Log::MessageType::Bug))) + 
+            std::string("\nDebug             " + std::to_string(numMessages(Log::MessageType::Debug))) +
+            std::string("\nProblems          " + std::to_string(numMessages(Log::MessageType::Problem))) +"\n";
         addMessage(Log::MessageType::Info, summary_msg);
     }
 
