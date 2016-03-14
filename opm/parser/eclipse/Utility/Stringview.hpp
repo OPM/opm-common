@@ -87,49 +87,53 @@ namespace Opm {
  * implementation measured to improve performance by some 10%.
  */
 
-std::ostream& operator<<( std::ostream& stream, const Opm::string_view& view );
+namespace Opm
+{
 
-inline std::string operator+( std::string str, const Opm::string_view& view ) {
-    return str.append( view.begin(), view.end() );
-}
+    std::ostream& operator<<( std::ostream& stream, const Opm::string_view& view );
 
-inline std::string operator+( const Opm::string_view& view, const std::string& str ) {
-    return view.string().append( str.begin(), str.end() );
-}
+    inline std::string operator+( std::string str, const Opm::string_view& view ) {
+        return str.append( view.begin(), view.end() );
+    }
 
-inline bool operator==( const Opm::string_view& view, const std::string& rhs ) {
-    return rhs.size() == view.size() &&
-        std::equal( view.begin(), view.end(), std::begin( rhs ) );
-}
+    inline std::string operator+( const Opm::string_view& view, const std::string& str ) {
+        return view.string().append( str.begin(), str.end() );
+    }
 
-inline bool operator==( const Opm::string_view& view, const char* rhs ) {
-    return std::equal( view.begin(), view.end(), rhs );
-}
+    inline bool operator==( const Opm::string_view& view, const std::string& rhs ) {
+        return rhs.size() == view.size() &&
+            std::equal( view.begin(), view.end(), std::begin( rhs ) );
+    }
 
-inline bool operator==( const std::string& lhs, const Opm::string_view& view ) {
-    return view == lhs;
-}
+    inline bool operator==( const Opm::string_view& view, const char* rhs ) {
+        return std::equal( view.begin(), view.end(), rhs );
+    }
 
-inline bool operator==( const char* lhs, const Opm::string_view& view ) {
-    return view == lhs;
-}
+    inline bool operator==( const std::string& lhs, const Opm::string_view& view ) {
+        return view == lhs;
+    }
 
-inline bool operator!=( const Opm::string_view& view, const std::string& rhs ) {
-    return !( view == rhs );
-}
+    inline bool operator==( const char* lhs, const Opm::string_view& view ) {
+        return view == lhs;
+    }
 
-inline bool operator!=( const std::string& lhs, const Opm::string_view& view ) {
-    return !( view == lhs );
-}
+    inline bool operator!=( const Opm::string_view& view, const std::string& rhs ) {
+        return !( view == rhs );
+    }
 
-inline bool operator!=( const Opm::string_view& view, const char* rhs ) {
-    return !( view == rhs );
-}
+    inline bool operator!=( const std::string& lhs, const Opm::string_view& view ) {
+        return !( view == lhs );
+    }
 
-inline bool operator!=( const char* lhs, const Opm::string_view& view ) {
-    return !( view == lhs );
-}
+    inline bool operator!=( const Opm::string_view& view, const char* rhs ) {
+        return !( view == rhs );
+    }
 
+    inline bool operator!=( const char* lhs, const Opm::string_view& view ) {
+        return !( view == lhs );
+    }
+
+} // namespace Opm
 
 namespace boost { namespace test_tools {
     /* This is an unfortunate consequence of using boost.test.
@@ -149,7 +153,7 @@ namespace boost { namespace test_tools {
     template<>
     struct print_log_value< Opm::string_view > {
         void operator()( std::ostream& os, const Opm::string_view& view ) {
-            ::operator<<( os, view );
+            os << view;
         }
 
     };
@@ -158,22 +162,22 @@ namespace boost { namespace test_tools {
 
         template< typename T >
         inline bool operator==( const Opm::string_view& o, const T& x ) {
-            return ::operator==( o, x );
+            return o == x;
         }
 
         template< typename T >
         inline bool operator==( const T& x, const Opm::string_view& o ) {
-            return ::operator==( o, x );
+            return o == x;
         }
 
         template< typename T >
         inline bool operator!=( const Opm::string_view& o, const T& x ) {
-            return ::operator!=( o, x );
+            return o != x;
         }
 
         template< typename T >
         inline bool operator!=( const T& x, const Opm::string_view& o ) {
-            return ::operator!=( o, x );
+            return o != x;
         }
     }
 }}
