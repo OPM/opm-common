@@ -23,14 +23,6 @@
 namespace Opm {
 
 
-    EclipsePRTLog::EclipsePRTLog(const std::string& logFile, int64_t messageMask) : StreamLog(logFile, messageMask)
-    {}
-
-    
-    EclipsePRTLog::EclipsePRTLog(std::ostream& os, int64_t messageMask) : StreamLog(os, messageMask)
-    {}
-
-    
     void EclipsePRTLog::addMessage(int64_t messageType, const std::string& message) 
     {
         StreamLog::addMessage(messageType, message);
