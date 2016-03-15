@@ -475,7 +475,7 @@ PlyviscTable::PlyviscTable( const DeckItem& item ) {
     m_schema = std::make_shared< TableSchema >();
 
     m_schema->addColumn( ColumnSchema( "PolymerConcentration" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
-    m_schema->addColumn( ColumnSchema( "ViscosityMultiplier" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
+    m_schema->addColumn( ColumnSchema( "ViscosityMultiplier" , Table::INCREASING , Table::DEFAULT_NONE));
     SimpleTable::init(item);
 }
 
