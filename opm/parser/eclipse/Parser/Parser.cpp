@@ -324,30 +324,6 @@ const ParserKeyword* Parser::getKeyword(const std::string& name ) const {
         return iter->second;
 }
 
-
-bool Parser::dropParserKeyword(const std::string& parserKeywordName) {
-    // remove from the internal from the internal names
-    bool erase = (m_internalParserKeywords.erase( parserKeywordName ) > 0);
-
-    // remove keyword from the deck names map
-    auto deckParserKeywordIt = m_deckParserKeywords.begin();
-    while (deckParserKeywordIt != m_deckParserKeywords.end()) {
-        if (deckParserKeywordIt->second->getName() == parserKeywordName)
-            // note the post-increment of the iterator. this is required to keep the
-            // iterator valid for while at the same time erasing it...
-            m_deckParserKeywords.erase(deckParserKeywordIt++);
-        else
-            ++ deckParserKeywordIt;
-    }
-
-    // remove the keyword from the wildcard list
-    m_wildCardKeywords.erase( parserKeywordName );
-
-    return erase;
-}
-
-
-
 const ParserKeyword* Parser::getParserKeywordFromDeckName(const std::string& deckKeywordName) const {
     if (m_deckParserKeywords.count(deckKeywordName)) {
         return m_deckParserKeywords.at(deckKeywordName);
