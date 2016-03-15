@@ -23,8 +23,8 @@ find_opm_package (
   # header to search for
   "opm/output/Output.hpp"
 
-  # library to search for
-  # "opmoutput"
+  # library to search for  
+  ""
 
   # defines to be added to compilations
   ""
