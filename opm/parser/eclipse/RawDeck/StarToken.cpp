@@ -75,7 +75,16 @@ namespace Opm {
 
     template<>
     int readValueToken< int >( string_view view ) {
-        std::array< char, 64 > buffer {};
+
+        if( view.empty() ) throw std::invalid_argument( "Empty input string" );
+
+        const auto width = std::numeric_limits< int >::digits10 + 1;
+        std::array< char, width + 1 > buffer {};
+
+        if( view.size() > width ) throw std::invalid_argument(
+            "Maximum 'int' length is " + std::to_string( width )
+        );
+
         std::copy( view.begin(), view.end(), buffer.begin() );
 
         /*
@@ -85,9 +94,17 @@ namespace Opm {
          */
         const auto is_digit = []( char ch ) { return std::isdigit( ch ); };
 
-        if( !std::all_of( buffer.begin(), buffer.begin() + view.size(), is_digit ) )
-            throw std::invalid_argument( "Error: expected all digits, got: '" + view + "'" );
+        if( !std::isdigit( view[ 0 ] ) && view[ 0 ] != '+' && view[ 0 ] != '-' )
+            throw std::invalid_argument( "Ints must start with +/-/digit" );
 
+        if( !std::all_of( view.begin() + 1, view.end(), is_digit ) )
+            throw std::invalid_argument( "Expected integer, got '" + view + "'" );
+
+        /*
+         * Unlike float, we can't atoi() and check if non-zero, simply because
+         * atoi will parse '3.2' as '3', i.e. it will read to the first
+         * non-digit character and stop.
+         */
         return std::atoi( buffer.data() );
     }
 
@@ -112,7 +129,15 @@ namespace Opm {
 
     template<>
     double readValueToken< double >( string_view view ) {
-        std::array< char, 64 > buffer {};
+        if( view.empty() ) throw std::invalid_argument( "Empty input string" );
+
+        const auto width = 64;
+        std::array< char, width > buffer {};
+
+        if( view.size() > width ) throw std::invalid_argument(
+            "Maximum 'double' length is " + std::to_string( width )
+        );
+
         std::copy( view.begin(), view.end(), buffer.begin() );
 
         /* fast path - with any non-zero non-fortran-exponent float this will
@@ -135,7 +160,7 @@ namespace Opm {
 
         if( slow_check_is_zero( view ) ) return 0.0;
 
-        throw std::invalid_argument( "Error: expected 'double' lexemes, got: '" + view + "'" );
+        throw std::invalid_argument( "Expected double, got: '" + view + "'" );
     }
 
     template <>
