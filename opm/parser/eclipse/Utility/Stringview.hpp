@@ -56,6 +56,7 @@ namespace Opm {
 
             inline char operator[]( size_t ) const;
 
+            inline bool empty() const;
             inline size_t size() const;
             inline size_t length() const;
 
@@ -156,6 +157,10 @@ namespace Opm {
 
     inline char string_view::operator[]( size_t i ) const {
         return *(this->begin() + i);
+    }
+
+    inline bool string_view::empty() const {
+        return std::distance( this->begin(), this->end() ) == 0;
     }
 
     inline size_t string_view::size() const {
