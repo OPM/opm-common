@@ -31,7 +31,7 @@ namespace Opm {
 
 
     /*
-       The ParseMode class is meant to control the behavior of the
+       The ParseContext class is meant to control the behavior of the
        parsing and EclipseState construction phase when
        errors/inconsistencies/... are encountered in the input.
 
@@ -55,7 +55,7 @@ namespace Opm {
        update syntax.
 
        update_syntax: The main function for updating the policy of a
-       parseMode instance is the update() method. That takes a string
+       parseContext instance is the update() method. That takes a string
        as input, and updates the matching flags. The string can
        contain wildcards ('* and '?' mathced with fnmatch()) and is
        split on ':' or '|' to allow multiple settings to be applied in
@@ -75,10 +75,10 @@ namespace Opm {
        recognizd keys will be allowed.
     */
 
-    class ParseMode {
+    class ParseContext {
     public:
-        ParseMode();
-        ParseMode(const std::vector<std::pair<std::string , InputError::Action>> initial);
+        ParseContext();
+        ParseContext(const std::vector<std::pair<std::string , InputError::Action>> initial);
         void handleError( const std::string& errorKey , const std::string& msg) const;
         bool hasKey(const std::string& key) const;
         void updateKey(const std::string& key , InputError::Action action);
@@ -196,7 +196,7 @@ namespace Opm {
         void initEnv();
         void envUpdate( const std::string& envVariable , InputError::Action action );
         void patternUpdate( const std::string& pattern , InputError::Action action);
-        std::map<std::string , InputError::Action> m_errorModes;
+        std::map<std::string , InputError::Action> m_errorContexts;
 }; }
 
 

@@ -25,7 +25,7 @@
 #include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/Parser/InputErrorAction.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
 namespace Opm {
 
@@ -37,7 +37,7 @@ namespace Opm {
       'OPM_ERRORS_IGNORE' are consulted
     */
 
-    ParseMode::ParseMode() {
+    ParseContext::ParseContext() {
         initDefault();
         initEnv();
     }
@@ -48,7 +48,7 @@ namespace Opm {
       after the hawrdwired settings.
     */
 
-    ParseMode::ParseMode(const std::vector<std::pair<std::string , InputError::Action>> initial) {
+    ParseContext::ParseContext(const std::vector<std::pair<std::string , InputError::Action>> initial) {
         initDefault();
 
         for (const auto& pair : initial)
@@ -58,7 +58,7 @@ namespace Opm {
     }
 
 
-    void ParseMode::initDefault() {
+    void ParseContext::initDefault() {
         addKey(PARSE_UNKNOWN_KEYWORD);
         addKey(PARSE_RANDOM_TEXT);
         addKey(PARSE_RANDOM_SLASH);
@@ -70,14 +70,14 @@ namespace Opm {
         addKey(INTERNAL_ERROR_UNINITIALIZED_THPRES);
     }
 
-    void ParseMode::initEnv() {
+    void ParseContext::initEnv() {
         envUpdate( "OPM_ERRORS_EXCEPTION" , InputError::THROW_EXCEPTION );
         envUpdate( "OPM_ERRORS_WARN" , InputError::WARN );
         envUpdate( "OPM_ERRORS_IGNORE" , InputError::IGNORE );
     }
 
 
-    void ParseMode::handleError( const std::string& errorKey , const std::string& msg) const {
+    void ParseContext::handleError( const std::string& errorKey , const std::string& msg) const {
         InputError::Action action = get( errorKey );
 
         if (action == InputError::WARN)
@@ -87,36 +87,36 @@ namespace Opm {
 
     }
 
-    std::map<std::string,InputError::Action>::const_iterator ParseMode::begin() const {
-        return m_errorModes.begin();
+    std::map<std::string,InputError::Action>::const_iterator ParseContext::begin() const {
+        return m_errorContexts.begin();
     }
 
 
-    std::map<std::string,InputError::Action>::const_iterator ParseMode::end() const {
-        return m_errorModes.end();
+    std::map<std::string,InputError::Action>::const_iterator ParseContext::end() const {
+        return m_errorContexts.end();
     }
 
 
-    bool ParseMode::hasKey(const std::string& key) const {
-        if (m_errorModes.find( key ) == m_errorModes.end())
+    bool ParseContext::hasKey(const std::string& key) const {
+        if (m_errorContexts.find( key ) == m_errorContexts.end())
             return false;
         else
             return true;
     }
 
 
-    void ParseMode::addKey(const std::string& key) {
+    void ParseContext::addKey(const std::string& key) {
         if (key.find_first_of("|:*") != std::string::npos)
-            throw std::invalid_argument("The ParseMode keys can not contain '|', '*' or ':'");
+            throw std::invalid_argument("The ParseContext keys can not contain '|', '*' or ':'");
 
         if (!hasKey(key))
-            m_errorModes.insert( std::pair<std::string , InputError::Action>( key , InputError::THROW_EXCEPTION ));
+            m_errorContexts.insert( std::pair<std::string , InputError::Action>( key , InputError::THROW_EXCEPTION ));
     }
 
 
-    InputError::Action ParseMode::get(const std::string& key) const {
+    InputError::Action ParseContext::get(const std::string& key) const {
         if (hasKey( key ))
-            return m_errorModes.find( key )->second;
+            return m_errorContexts.find( key )->second;
         else
             throw std::invalid_argument("The errormode key: " + key + " has not been registered");
     }
@@ -131,36 +131,36 @@ namespace Opm {
       static string constanst for the different error modes should be
       used as arguments:
 
-        parseMode.updateKey( ParseMode::PARSE_RANDOM_SLASH , InputError::IGNORE )
+        parseContext.updateKey( ParseContext::PARSE_RANDOM_SLASH , InputError::IGNORE )
 
     */
 
-    void ParseMode::updateKey(const std::string& key , InputError::Action action) {
+    void ParseContext::updateKey(const std::string& key , InputError::Action action) {
         if (hasKey(key))
-            m_errorModes[key] = action;
+            m_errorContexts[key] = action;
         else
             throw std::invalid_argument("The errormode key: " + key + " has not been registered");
     }
 
 
-    void ParseMode::envUpdate( const std::string& envVariable , InputError::Action action ) {
+    void ParseContext::envUpdate( const std::string& envVariable , InputError::Action action ) {
         const char * userSetting = getenv(envVariable.c_str());
         if (userSetting )
             update( userSetting , action);
     }
 
 
-    void ParseMode::update(InputError::Action action) {
-        for (const auto& pair : m_errorModes) {
+    void ParseContext::update(InputError::Action action) {
+        for (const auto& pair : m_errorContexts) {
             const std::string& key = pair.first;
             updateKey( key , action );
          }
     }
 
 
-    void ParseMode::patternUpdate( const std::string& pattern , InputError::Action action) {
+    void ParseContext::patternUpdate( const std::string& pattern , InputError::Action action) {
         const char * c_pattern = pattern.c_str();
-        for (const auto& pair : m_errorModes) {
+        for (const auto& pair : m_errorContexts) {
             const std::string& key = pair.first;
             if (util_fnmatch( c_pattern , key.c_str()) == 0)
                 updateKey( key , action );
@@ -188,7 +188,7 @@ namespace Opm {
            c) Otherwise - silently ignore.
     */
 
-    void ParseMode::update(const std::string& keyString , InputError::Action action) {
+    void ParseContext::update(const std::string& keyString , InputError::Action action) {
         std::vector<std::string> keys;
         boost::split( keys , keyString , boost::is_any_of(":|"));
         for (const auto& input_key : keys) {
@@ -204,17 +204,17 @@ namespace Opm {
         }
     }
 
-    const std::string ParseMode::PARSE_UNKNOWN_KEYWORD = "PARSE_UNKNOWN_KEYWORD";
-    const std::string ParseMode::PARSE_RANDOM_TEXT = "PARSE_RANDOM_TEXT";
-    const std::string ParseMode::PARSE_RANDOM_SLASH = "PARSE_RANDOM_SLASH";
-    const std::string ParseMode::PARSE_MISSING_DIMS_KEYWORD = "PARSE_MISSING_DIMS_KEYWORD";
-    const std::string ParseMode::PARSE_EXTRA_DATA = "PARSE_EXTRA_DATA";
+    const std::string ParseContext::PARSE_UNKNOWN_KEYWORD = "PARSE_UNKNOWN_KEYWORD";
+    const std::string ParseContext::PARSE_RANDOM_TEXT = "PARSE_RANDOM_TEXT";
+    const std::string ParseContext::PARSE_RANDOM_SLASH = "PARSE_RANDOM_SLASH";
+    const std::string ParseContext::PARSE_MISSING_DIMS_KEYWORD = "PARSE_MISSING_DIMS_KEYWORD";
+    const std::string ParseContext::PARSE_EXTRA_DATA = "PARSE_EXTRA_DATA";
 
-    const std::string ParseMode::UNSUPPORTED_SCHEDULE_GEO_MODIFIER = "UNSUPPORTED_SCHEDULE_GEO_MODIFIER";
-    const std::string ParseMode::UNSUPPORTED_COMPORD_TYPE = "UNSUPPORTED_COMPORD_TYPE";
-    const std::string ParseMode::UNSUPPORTED_INITIAL_THPRES = "UNSUPPORTED_INITIAL_THPRES";
+    const std::string ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER = "UNSUPPORTED_SCHEDULE_GEO_MODIFIER";
+    const std::string ParseContext::UNSUPPORTED_COMPORD_TYPE = "UNSUPPORTED_COMPORD_TYPE";
+    const std::string ParseContext::UNSUPPORTED_INITIAL_THPRES = "UNSUPPORTED_INITIAL_THPRES";
 
-    const std::string ParseMode::INTERNAL_ERROR_UNINITIALIZED_THPRES = "INTERNAL_ERROR_UNINITIALIZED_THPRES";
+    const std::string ParseContext::INTERNAL_ERROR_UNINITIALIZED_THPRES = "INTERNAL_ERROR_UNINITIALIZED_THPRES";
 }
 
 
