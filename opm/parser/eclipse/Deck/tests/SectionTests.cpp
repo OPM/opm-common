@@ -29,7 +29,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Deck/SCHEDULESection.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
 using namespace Opm;
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(SCHEDULESection_NotTerminated) {
 
 BOOST_AUTO_TEST_CASE(Section_ValidDecks) {
 
-    ParseMode mode = { { { ParseMode::PARSE_UNKNOWN_KEYWORD, InputError::IGNORE } } };
+    ParseContext mode = { { { ParseContext::PARSE_UNKNOWN_KEYWORD, InputError::IGNORE } } };
     Parser parser;
 
     const std::string minimal = "RUNSPEC\n"
@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE(Section_ValidDecks) {
 BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
 
     Parser parser;
-    ParseMode mode = { { { ParseMode::PARSE_UNKNOWN_KEYWORD, InputError::IGNORE } } };
+    ParseContext mode = { { { ParseContext::PARSE_UNKNOWN_KEYWORD, InputError::IGNORE } } };
 
     const std::string keyword_before_RUNSPEC =
                                 "WWCT \n /\n"

@@ -24,7 +24,7 @@
 #include <boost/test/unit_test.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
 #include <boost/test/test_tools.hpp>
@@ -101,11 +101,11 @@ BOOST_AUTO_TEST_CASE(StringsWithSpaceOK) {
     ParserStringItemPtr itemString(new ParserStringItem(std::string("STRINGITEM1")));
     ParserRecordPtr record1(new ParserRecord());
     RawRecordPtr rawRecord(new Opm::RawRecord(" ' VALUE ' /"));
-    ParseMode parseMode;
+    ParseContext parseContext;
     record1->addItem( itemString );
 
 
-    const auto deckRecord = record1->parse( parseMode , rawRecord );
+    const auto deckRecord = record1->parse( parseContext , rawRecord );
     BOOST_CHECK_EQUAL(" VALUE " , deckRecord.getItem(0).get< std::string >(0));
 }
 

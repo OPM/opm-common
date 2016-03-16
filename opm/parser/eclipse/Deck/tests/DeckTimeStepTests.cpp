@@ -26,7 +26,7 @@
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Deck/SCHEDULESection.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
 
 using namespace Opm;
@@ -60,8 +60,8 @@ BOOST_AUTO_TEST_CASE(testDeckTimeStepTSTEP) {
                   "/\n";
 
 
-    ParseMode parseMode;
-    DeckPtr deck = parser.parseString(input, parseMode);
+    ParseContext parseContext;
+    DeckPtr deck = parser.parseString(input, parseContext);
 
     SCHEDULESection scheduleSection = SCHEDULESection(*deck);
     DeckTimeStepConstPtr step1 = scheduleSection.getDeckTimeStep(0);
@@ -115,8 +115,8 @@ BOOST_AUTO_TEST_CASE(testDeckTimeStepDATES) {
           "'PROD' 'G' 3 3 1000 'OIL' /\n"
           "/\n";
 
-    ParseMode parseMode;
-    DeckPtr deck = parser.parseString(input, parseMode);
+    ParseContext parseContext;
+    DeckPtr deck = parser.parseString(input, parseContext);
 
     SCHEDULESection scheduleSection = SCHEDULESection(*deck);
     DeckTimeStepConstPtr step1 = scheduleSection.getDeckTimeStep(0);
