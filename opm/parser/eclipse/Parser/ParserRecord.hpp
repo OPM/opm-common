@@ -28,7 +28,7 @@ namespace Opm {
 
     class Deck;
     class DeckRecord;
-    class ParseMode;
+    class ParseContext;
     class ParserItem;
     class RawRecord;
 
@@ -40,7 +40,7 @@ namespace Opm {
         void addDataItem(std::shared_ptr< const ParserItem > item);
         std::shared_ptr< const ParserItem > get(size_t index) const;
         std::shared_ptr< const ParserItem > get(const std::string& itemName) const;
-        DeckRecord parse(const ParseMode& parseMode , std::shared_ptr< RawRecord > rawRecord) const;
+        DeckRecord parse(const ParseContext& parseContext , std::shared_ptr< RawRecord > rawRecord) const;
         bool isDataRecord() const;
         bool equal(const ParserRecord& other) const;
         bool hasDimension() const;

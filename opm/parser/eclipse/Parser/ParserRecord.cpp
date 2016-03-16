@@ -19,7 +19,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
@@ -116,7 +116,7 @@ namespace Opm {
         }
     }
 
-    DeckRecord ParserRecord::parse(const ParseMode& parseMode , RawRecordPtr rawRecord) const {
+    DeckRecord ParserRecord::parse(const ParseContext& parseContext , RawRecordPtr rawRecord) const {
         std::string recordBeforeParsing = rawRecord->getRecordString();
         DeckRecord deckRecord( size() );
         for (size_t i = 0; i < size(); i++) {
@@ -128,7 +128,7 @@ namespace Opm {
             std::string msg = "The RawRecord for keyword \""  + rawRecord->getKeywordName() + "\" in file\"" + rawRecord->getFileName() + "\" contained " +
                 std::to_string(rawRecord->size()) +
                 " too many items according to the spec. RawRecord was: " + recordBeforeParsing;
-            parseMode.handleError(ParseMode::PARSE_EXTRA_DATA , msg);
+            parseContext.handleError(ParseContext::PARSE_EXTRA_DATA , msg);
         }
 
         return deckRecord;

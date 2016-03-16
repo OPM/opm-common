@@ -34,7 +34,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
@@ -47,7 +47,7 @@ namespace Opm {
 
 
     struct ParserState {
-        const ParseMode& parseMode;
+        const ParseContext& parseContext;
         Deck * deck;
         boost::filesystem::path dataFile;
         boost::filesystem::path rootPath;
@@ -63,15 +63,15 @@ namespace Opm {
 
 
         ParserState(const ParserState& parent)
-            : parseMode( parent.parseMode )
+            : parseContext( parent.parseContext )
         {
             deck = parent.deck;
             pathMap = parent.pathMap;
             rootPath = parent.rootPath;
         }
 
-        ParserState(const ParseMode& __parseMode)
-            : parseMode( __parseMode ),
+        ParserState(const ParseContext& __parseContext)
+            : parseContext( __parseContext ),
               deck( new Deck() ),
               pathMap( std::make_shared< std::map< std::string, std::string > >() ),
               lineNR( 0 )
@@ -131,14 +131,14 @@ namespace Opm {
             std::string trimmedCopy = boost::algorithm::trim_copy( keywordString );
 
             if (trimmedCopy == "/") {
-                errorKey = ParseMode::PARSE_RANDOM_SLASH;
+                errorKey = ParseContext::PARSE_RANDOM_SLASH;
                 msg << "Extra '/' detected at: " << dataFile << ":" << lineNR;
             } else {
-                errorKey = ParseMode::PARSE_RANDOM_TEXT;
+                errorKey = ParseContext::PARSE_RANDOM_TEXT;
                 msg << "String \'" << keywordString << "\' not formatted/recognized as valid keyword at: " << dataFile << ":" << lineNR;
             }
 
-            parseMode.handleError( errorKey , msg.str() );
+            parseContext.handleError( errorKey , msg.str() );
         }
 
     };
@@ -222,8 +222,8 @@ namespace Opm {
      is retained in the current implementation.
      */
 
-    Deck * Parser::newDeckFromFile(const std::string &dataFileName, const ParseMode& parseMode) const {
-        std::shared_ptr<ParserState> parserState = std::make_shared<ParserState>(parseMode);
+    Deck * Parser::newDeckFromFile(const std::string &dataFileName, const ParseContext& parseContext) const {
+        std::shared_ptr<ParserState> parserState = std::make_shared<ParserState>(parseContext);
         parserState->openRootFile( dataFileName );
         parseState(parserState);
         applyUnitsToDeck(*parserState->deck);
@@ -231,8 +231,8 @@ namespace Opm {
         return parserState->deck;
     }
 
-    Deck * Parser::newDeckFromString(const std::string &data, const ParseMode& parseMode) const {
-        std::shared_ptr<ParserState> parserState = std::make_shared<ParserState>(parseMode);
+    Deck * Parser::newDeckFromString(const std::string &data, const ParseContext& parseContext) const {
+        std::shared_ptr<ParserState> parserState = std::make_shared<ParserState>(parseContext);
         parserState->openString( data );
 
         parseState(parserState);
@@ -242,16 +242,16 @@ namespace Opm {
     }
 
 
-    DeckPtr Parser::parseFile(const std::string &dataFileName, const ParseMode& parseMode) const {
-        return std::shared_ptr<Deck>( newDeckFromFile( dataFileName , parseMode));
+    DeckPtr Parser::parseFile(const std::string &dataFileName, const ParseContext& parseContext) const {
+        return std::shared_ptr<Deck>( newDeckFromFile( dataFileName , parseContext));
     }
 
-    DeckPtr Parser::parseString(const std::string &data, const ParseMode& parseMode) const {
-        return std::shared_ptr<Deck>( newDeckFromString( data , parseMode));
+    DeckPtr Parser::parseString(const std::string &data, const ParseContext& parseContext) const {
+        return std::shared_ptr<Deck>( newDeckFromString( data , parseContext));
     }
 
-    DeckPtr Parser::parseStream(std::shared_ptr<std::istream> inputStream, const ParseMode& parseMode) const {
-        std::shared_ptr<ParserState> parserState = std::make_shared<ParserState>(parseMode);
+    DeckPtr Parser::parseStream(std::shared_ptr<std::istream> inputStream, const ParseContext& parseContext) const {
+        std::shared_ptr<ParserState> parserState = std::make_shared<ParserState>(parseContext);
         parserState->openStream( inputStream );
 
         parseState(parserState);
@@ -407,7 +407,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
 
                     if (isRecognizedKeyword(parserState->rawKeyword->getKeywordName())) {
                             const auto* parserKeyword = getParserKeywordFromDeckName(parserState->rawKeyword->getKeywordName());
-                            parserState->deck->addKeyword( parserKeyword->parse(parserState->parseMode , parserState->rawKeyword ) );
+                            parserState->deck->addKeyword( parserKeyword->parse(parserState->parseContext , parserState->rawKeyword ) );
                         } else {
                             DeckKeyword deckKeyword(parserState->rawKeyword->getKeywordName(), false);
                             const std::string msg = "The keyword " + parserState->rawKeyword->getKeywordName() + " is not recognized";
@@ -466,7 +466,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
                         targetSize = record.getItem( sizeKeyword.second ).get< int >( 0 );
                     } else {
                         std::string msg = "Expected the kewyord: " + sizeKeyword.first + " to infer the number of records in: " + keywordString;
-                        parserState->parseMode.handleError(ParseMode::PARSE_MISSING_DIMS_KEYWORD , msg );
+                        parserState->parseContext.handleError(ParseContext::PARSE_MISSING_DIMS_KEYWORD , msg );
 
                         auto keyword = getKeyword( sizeKeyword.first );
                         auto record = keyword->getRecord(0);
@@ -480,7 +480,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
         } else {
             if (ParserKeyword::validDeckName(keywordString)) {
                 std::string msg = "Keyword " + keywordString + " not recognized ";
-                parserState->parseMode.handleError( ParseMode::PARSE_UNKNOWN_KEYWORD  , msg );
+                parserState->parseContext.handleError( ParseContext::PARSE_UNKNOWN_KEYWORD  , msg );
                 return std::shared_ptr<RawKeyword>(  );
             } else {
                 parserState->handleRandomText( keywordString );

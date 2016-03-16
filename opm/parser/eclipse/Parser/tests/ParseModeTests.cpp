@@ -54,32 +54,32 @@ BOOST_AUTO_TEST_CASE(TestUnkownKeyword) {
         "\n";
 
 
-    ParseMode parseMode;
+    ParseContext parseContext;
     Parser parser(false);
 
 
     parser.addKeyword<ParserKeywords::DIMENS>();
-    parseMode.update(ParseMode::PARSE_UNKNOWN_KEYWORD , InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW( parser.parseString( deck1 , parseMode ) , std::invalid_argument);
+    parseContext.update(ParseContext::PARSE_UNKNOWN_KEYWORD , InputError::THROW_EXCEPTION );
+    BOOST_CHECK_THROW( parser.parseString( deck1 , parseContext ) , std::invalid_argument);
 
-    parseMode.update(ParseMode::PARSE_UNKNOWN_KEYWORD , InputError::IGNORE );
-    BOOST_CHECK_NO_THROW( parser.parseString( deck1 , parseMode ) );
+    parseContext.update(ParseContext::PARSE_UNKNOWN_KEYWORD , InputError::IGNORE );
+    BOOST_CHECK_NO_THROW( parser.parseString( deck1 , parseContext ) );
 
-    parseMode.update(ParseMode::PARSE_UNKNOWN_KEYWORD , InputError::THROW_EXCEPTION );
-    parseMode.update(ParseMode::PARSE_RANDOM_TEXT , InputError::IGNORE );
-    BOOST_CHECK_THROW( parser.parseString( deck2 , parseMode ) , std::invalid_argument);
+    parseContext.update(ParseContext::PARSE_UNKNOWN_KEYWORD , InputError::THROW_EXCEPTION );
+    parseContext.update(ParseContext::PARSE_RANDOM_TEXT , InputError::IGNORE );
+    BOOST_CHECK_THROW( parser.parseString( deck2 , parseContext ) , std::invalid_argument);
 
-    parseMode.update(ParseMode::PARSE_UNKNOWN_KEYWORD , InputError::IGNORE );
-    parseMode.update(ParseMode::PARSE_RANDOM_TEXT , InputError::IGNORE );
-    BOOST_CHECK_NO_THROW( parser.parseString( deck2 , parseMode ) );
+    parseContext.update(ParseContext::PARSE_UNKNOWN_KEYWORD , InputError::IGNORE );
+    parseContext.update(ParseContext::PARSE_RANDOM_TEXT , InputError::IGNORE );
+    BOOST_CHECK_NO_THROW( parser.parseString( deck2 , parseContext ) );
 
-    parseMode.update(ParseMode::PARSE_UNKNOWN_KEYWORD , InputError::IGNORE );
-    parseMode.update(ParseMode::PARSE_RANDOM_TEXT , InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW( parser.parseString( deck2 , parseMode ) , std::invalid_argument);
+    parseContext.update(ParseContext::PARSE_UNKNOWN_KEYWORD , InputError::IGNORE );
+    parseContext.update(ParseContext::PARSE_RANDOM_TEXT , InputError::THROW_EXCEPTION );
+    BOOST_CHECK_THROW( parser.parseString( deck2 , parseContext ) , std::invalid_argument);
 
-    parseMode.update(ParseMode::PARSE_UNKNOWN_KEYWORD , InputError::IGNORE );
-    parseMode.update(ParseMode::PARSE_RANDOM_TEXT , InputError::IGNORE );
-    BOOST_CHECK_NO_THROW( parser.parseString( deck2 , parseMode ) );
+    parseContext.update(ParseContext::PARSE_UNKNOWN_KEYWORD , InputError::IGNORE );
+    parseContext.update(ParseContext::PARSE_RANDOM_TEXT , InputError::IGNORE );
+    BOOST_CHECK_NO_THROW( parser.parseString( deck2 , parseContext ) );
 }
 
 
@@ -91,18 +91,18 @@ BOOST_AUTO_TEST_CASE( CheckMissingSizeKeyword) {
         "\n";
 
 
-    ParseMode parseMode;
+    ParseContext parseContext;
     Parser parser(false);
 
     parser.addKeyword<ParserKeywords::EQUIL>();
     parser.addKeyword<ParserKeywords::EQLDIMS>();
     parser.addKeyword<ParserKeywords::SOLUTION>();
 
-    parseMode.update( ParseMode::PARSE_MISSING_DIMS_KEYWORD , InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW( parser.parseString( deck , parseMode ) , std::invalid_argument);
+    parseContext.update( ParseContext::PARSE_MISSING_DIMS_KEYWORD , InputError::THROW_EXCEPTION );
+    BOOST_CHECK_THROW( parser.parseString( deck , parseContext ) , std::invalid_argument);
 
-    parseMode.update( ParseMode::PARSE_MISSING_DIMS_KEYWORD , InputError::IGNORE );
-    BOOST_CHECK_NO_THROW( parser.parseString( deck , parseMode ) );
+    parseContext.update( ParseContext::PARSE_MISSING_DIMS_KEYWORD , InputError::IGNORE );
+    BOOST_CHECK_NO_THROW( parser.parseString( deck , parseContext ) );
 }
 
 
@@ -131,21 +131,21 @@ BOOST_AUTO_TEST_CASE( CheckUnsupportedInSCHEDULE ) {
         "\n";
 
 
-    ParseMode parseMode;
+    ParseContext parseContext;
     Parser parser(true);
 
-    auto deckSupported = parser.parseString( deckStringSupported , parseMode );
-    auto deckUnSupported = parser.parseString( deckStringUnSupported , parseMode );
+    auto deckSupported = parser.parseString( deckStringSupported , parseContext );
+    auto deckUnSupported = parser.parseString( deckStringUnSupported , parseContext );
     std::shared_ptr<EclipseGrid> grid = std::make_shared<EclipseGrid>( deckSupported );
     std::shared_ptr<IOConfig> ioconfig = std::make_shared<IOConfig>( "path" );
 
-    parseMode.update( ParseMode::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , InputError::IGNORE );
-    BOOST_CHECK_NO_THROW( Schedule( parseMode , grid , deckSupported , ioconfig ));
-    BOOST_CHECK_NO_THROW( Schedule( parseMode , grid , deckUnSupported , ioconfig ));
+    parseContext.update( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , InputError::IGNORE );
+    BOOST_CHECK_NO_THROW( Schedule( parseContext , grid , deckSupported , ioconfig ));
+    BOOST_CHECK_NO_THROW( Schedule( parseContext , grid , deckUnSupported , ioconfig ));
 
-    parseMode.update( ParseMode::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW( Schedule( parseMode , grid , deckUnSupported , ioconfig ), std::invalid_argument );
-    BOOST_CHECK_NO_THROW( Schedule( parseMode , grid , deckSupported , ioconfig ));
+    parseContext.update( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , InputError::THROW_EXCEPTION );
+    BOOST_CHECK_THROW( Schedule( parseContext , grid , deckUnSupported , ioconfig ), std::invalid_argument );
+    BOOST_CHECK_NO_THROW( Schedule( parseContext , grid , deckSupported , ioconfig ));
 }
 
 
@@ -165,23 +165,23 @@ BOOST_AUTO_TEST_CASE(TestRandomSlash) {
 
 
 
-    ParseMode parseMode;
+    ParseContext parseContext;
     Parser parser(false);
 
 
     parser.addKeyword<ParserKeywords::TSTEP>();
     parser.addKeyword<ParserKeywords::SCHEDULE>();
 
-    parseMode.update(ParseMode::PARSE_RANDOM_SLASH , InputError::THROW_EXCEPTION);
-    parseMode.update(ParseMode::PARSE_RANDOM_TEXT , InputError::IGNORE);
-    BOOST_CHECK_THROW( parser.parseString( deck1 , parseMode ) , std::invalid_argument);
-    BOOST_CHECK_THROW( parser.parseString( deck2 , parseMode ) , std::invalid_argument);
+    parseContext.update(ParseContext::PARSE_RANDOM_SLASH , InputError::THROW_EXCEPTION);
+    parseContext.update(ParseContext::PARSE_RANDOM_TEXT , InputError::IGNORE);
+    BOOST_CHECK_THROW( parser.parseString( deck1 , parseContext ) , std::invalid_argument);
+    BOOST_CHECK_THROW( parser.parseString( deck2 , parseContext ) , std::invalid_argument);
 
 
-    parseMode.update(ParseMode::PARSE_RANDOM_SLASH , InputError::IGNORE);
-    parseMode.update(ParseMode::PARSE_RANDOM_TEXT , InputError::THROW_EXCEPTION);
-    BOOST_CHECK_NO_THROW( parser.parseString( deck1 , parseMode ) );
-    BOOST_CHECK_NO_THROW( parser.parseString( deck2 , parseMode ) );
+    parseContext.update(ParseContext::PARSE_RANDOM_SLASH , InputError::IGNORE);
+    parseContext.update(ParseContext::PARSE_RANDOM_TEXT , InputError::THROW_EXCEPTION);
+    BOOST_CHECK_NO_THROW( parser.parseString( deck1 , parseContext ) );
+    BOOST_CHECK_NO_THROW( parser.parseString( deck2 , parseContext ) );
 }
 
 
@@ -198,74 +198,74 @@ BOOST_AUTO_TEST_CASE(TestCOMPORD) {
         "  '*'  'DEPTH' /\n"
         "/\n";
 
-    ParseMode parseMode;
+    ParseContext parseContext;
     Parser parser(true);
-    auto deck = parser.parseString( deckString , parseMode );
+    auto deck = parser.parseString( deckString , parseContext );
 
     std::shared_ptr<EclipseGrid> grid = std::make_shared<EclipseGrid>( deck );
     std::shared_ptr<IOConfig> ioconfig = std::make_shared<IOConfig>( "path" );
 
-    parseMode.update( ParseMode::UNSUPPORTED_COMPORD_TYPE , InputError::IGNORE);
-    BOOST_CHECK_NO_THROW( Schedule( parseMode , grid , deck , ioconfig ));
+    parseContext.update( ParseContext::UNSUPPORTED_COMPORD_TYPE , InputError::IGNORE);
+    BOOST_CHECK_NO_THROW( Schedule( parseContext , grid , deck , ioconfig ));
 
-    parseMode.update( ParseMode::UNSUPPORTED_COMPORD_TYPE , InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW( Schedule( parseMode , grid , deck , ioconfig ), std::invalid_argument );
+    parseContext.update( ParseContext::UNSUPPORTED_COMPORD_TYPE , InputError::THROW_EXCEPTION);
+    BOOST_CHECK_THROW( Schedule( parseContext , grid , deck , ioconfig ), std::invalid_argument );
 }
 
 
 BOOST_AUTO_TEST_CASE(TestInvalidKey) {
-    ParseMode parseMode;
-    BOOST_CHECK_THROW( parseMode.addKey("KEY*") , std::invalid_argument );
-    BOOST_CHECK_THROW( parseMode.addKey("KEY:") , std::invalid_argument );
+    ParseContext parseContext;
+    BOOST_CHECK_THROW( parseContext.addKey("KEY*") , std::invalid_argument );
+    BOOST_CHECK_THROW( parseContext.addKey("KEY:") , std::invalid_argument );
 }
 
 
 BOOST_AUTO_TEST_CASE(TestNew) {
-    ParseMode parseMode;
+    ParseContext parseContext;
 
-    BOOST_CHECK_EQUAL( false , parseMode.hasKey("NO"));
-    parseMode.addKey("NEW_KEY");
-    BOOST_CHECK_EQUAL( true , parseMode.hasKey("NEW_KEY"));
-    BOOST_CHECK_THROW( parseMode.get("NO") , std::invalid_argument );
-    BOOST_CHECK_EQUAL( parseMode.get("NEW_KEY") , InputError::THROW_EXCEPTION );
-    parseMode.addKey("KEY2");
-    BOOST_CHECK_EQUAL( parseMode.get("NEW_KEY") , InputError::THROW_EXCEPTION );
+    BOOST_CHECK_EQUAL( false , parseContext.hasKey("NO"));
+    parseContext.addKey("NEW_KEY");
+    BOOST_CHECK_EQUAL( true , parseContext.hasKey("NEW_KEY"));
+    BOOST_CHECK_THROW( parseContext.get("NO") , std::invalid_argument );
+    BOOST_CHECK_EQUAL( parseContext.get("NEW_KEY") , InputError::THROW_EXCEPTION );
+    parseContext.addKey("KEY2");
+    BOOST_CHECK_EQUAL( parseContext.get("NEW_KEY") , InputError::THROW_EXCEPTION );
 
-    BOOST_CHECK_THROW( parseMode.updateKey("NO" , InputError::IGNORE) , std::invalid_argument);
+    BOOST_CHECK_THROW( parseContext.updateKey("NO" , InputError::IGNORE) , std::invalid_argument);
 
-    parseMode.updateKey("NEW_KEY" , InputError::WARN);
-    BOOST_CHECK_EQUAL( parseMode.get("NEW_KEY") , InputError::WARN );
+    parseContext.updateKey("NEW_KEY" , InputError::WARN);
+    BOOST_CHECK_EQUAL( parseContext.get("NEW_KEY") , InputError::WARN );
 
-    BOOST_CHECK_NO_THROW( parseMode.update("KEY2:NEW_KEY" , InputError::IGNORE));
-    BOOST_CHECK_NO_THROW( parseMode.update("UnknownKey" , InputError::IGNORE));
-    BOOST_CHECK_EQUAL( parseMode.get("NEW_KEY") , InputError::IGNORE );
-    BOOST_CHECK_EQUAL( parseMode.get("KEY2") , InputError::IGNORE );
+    BOOST_CHECK_NO_THROW( parseContext.update("KEY2:NEW_KEY" , InputError::IGNORE));
+    BOOST_CHECK_NO_THROW( parseContext.update("UnknownKey" , InputError::IGNORE));
+    BOOST_CHECK_EQUAL( parseContext.get("NEW_KEY") , InputError::IGNORE );
+    BOOST_CHECK_EQUAL( parseContext.get("KEY2") , InputError::IGNORE );
 
-    parseMode.addKey("SECRET_KEY");
-    parseMode.addKey("NEW_KEY2");
-    parseMode.addKey("NEW_KEY3");
-    parseMode.update("NEW_KEY*" , InputError::WARN);
-    BOOST_CHECK_EQUAL( parseMode.get("NEW_KEY") , InputError::WARN );
-    BOOST_CHECK_EQUAL( parseMode.get("NEW_KEY2") , InputError::WARN );
-    BOOST_CHECK_EQUAL( parseMode.get("NEW_KEY3") , InputError::WARN );
+    parseContext.addKey("SECRET_KEY");
+    parseContext.addKey("NEW_KEY2");
+    parseContext.addKey("NEW_KEY3");
+    parseContext.update("NEW_KEY*" , InputError::WARN);
+    BOOST_CHECK_EQUAL( parseContext.get("NEW_KEY") , InputError::WARN );
+    BOOST_CHECK_EQUAL( parseContext.get("NEW_KEY2") , InputError::WARN );
+    BOOST_CHECK_EQUAL( parseContext.get("NEW_KEY3") , InputError::WARN );
 
-    parseMode.update( InputError::IGNORE );
-    BOOST_CHECK_EQUAL( parseMode.get("NEW_KEY3")   , InputError::IGNORE );
-    BOOST_CHECK_EQUAL( parseMode.get("SECRET_KEY") , InputError::IGNORE );
+    parseContext.update( InputError::IGNORE );
+    BOOST_CHECK_EQUAL( parseContext.get("NEW_KEY3")   , InputError::IGNORE );
+    BOOST_CHECK_EQUAL( parseContext.get("SECRET_KEY") , InputError::IGNORE );
 
 
 }
 
 
 BOOST_AUTO_TEST_CASE( test_constructor_with_values) {
-    ParseMode parseMode( {{ParseMode::PARSE_RANDOM_SLASH , InputError::IGNORE},
+    ParseContext parseContext( {{ParseContext::PARSE_RANDOM_SLASH , InputError::IGNORE},
                 {"UNSUPPORTED_*" , InputError::WARN},
                     {"UNKNWON-IGNORED" , InputError::WARN}});
 
-    BOOST_CHECK_EQUAL( parseMode.get(ParseMode::PARSE_RANDOM_SLASH) , InputError::IGNORE );
-    BOOST_CHECK_EQUAL( parseMode.get(ParseMode::PARSE_RANDOM_TEXT) , InputError::THROW_EXCEPTION );
-    BOOST_CHECK_EQUAL( parseMode.get(ParseMode::UNSUPPORTED_INITIAL_THPRES) , InputError::WARN );
-    BOOST_CHECK_EQUAL( parseMode.get(ParseMode::UNSUPPORTED_COMPORD_TYPE) , InputError::WARN );
+    BOOST_CHECK_EQUAL( parseContext.get(ParseContext::PARSE_RANDOM_SLASH) , InputError::IGNORE );
+    BOOST_CHECK_EQUAL( parseContext.get(ParseContext::PARSE_RANDOM_TEXT) , InputError::THROW_EXCEPTION );
+    BOOST_CHECK_EQUAL( parseContext.get(ParseContext::UNSUPPORTED_INITIAL_THPRES) , InputError::WARN );
+    BOOST_CHECK_EQUAL( parseContext.get(ParseContext::UNSUPPORTED_COMPORD_TYPE) , InputError::WARN );
 }
 
 
@@ -277,13 +277,13 @@ BOOST_AUTO_TEST_CASE( test_too_much_data ) {
         "  10 10 10 10 /n"
         "\n";
 
-    ParseMode parseMode;
+    ParseContext parseContext;
     Parser parser;
 
 
-    parseMode.update(ParseMode::PARSE_EXTRA_DATA , InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW( parser.parseString( deckString , parseMode ) , std::invalid_argument);
+    parseContext.update(ParseContext::PARSE_EXTRA_DATA , InputError::THROW_EXCEPTION );
+    BOOST_CHECK_THROW( parser.parseString( deckString , parseContext ) , std::invalid_argument);
 
-    parseMode.update(ParseMode::PARSE_EXTRA_DATA , InputError::IGNORE );
-    auto deck = parser.parseString( deckString , parseMode );
+    parseContext.update(ParseContext::PARSE_EXTRA_DATA , InputError::IGNORE );
+    auto deck = parser.parseString( deckString , parseContext );
 }

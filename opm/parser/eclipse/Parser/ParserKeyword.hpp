@@ -39,7 +39,7 @@ namespace Json {
 namespace Opm {
     class Deck;
     class DeckKeyword;
-    class ParseMode;
+    class ParseContext;
     class ParserDoubleItem;
     class ParserRecord;
     class RawKeyword;
@@ -95,7 +95,7 @@ namespace Opm {
         SectionNameSet::const_iterator validSectionNamesBegin() const;
         SectionNameSet::const_iterator validSectionNamesEnd() const;
 
-        DeckKeyword parse(const ParseMode& parseMode , std::shared_ptr< const RawKeyword > rawKeyword) const;
+        DeckKeyword parse(const ParseContext& parseContext , std::shared_ptr< const RawKeyword > rawKeyword) const;
         enum ParserKeywordSizeEnum getSizeType() const;
         const std::pair<std::string,std::string>& getSizeDefinitionPair() const;
         bool isDataKeyword() const;

@@ -506,7 +506,7 @@ namespace Opm {
         return m_deckNames.end();
     }
 
-    DeckKeyword ParserKeyword::parse(const ParseMode& parseMode , RawKeywordConstPtr rawKeyword) const {
+    DeckKeyword ParserKeyword::parse(const ParseContext& parseContext , RawKeywordConstPtr rawKeyword) const {
         if (rawKeyword->isFinished()) {
             DeckKeyword keyword( rawKeyword->getKeywordName() );
             keyword.setLocation(rawKeyword->getFilename(), rawKeyword->getLineNR());
@@ -515,7 +515,7 @@ namespace Opm {
             for (size_t i = 0; i < rawKeyword->size(); i++) {
                 auto rawRecord = rawKeyword->getRecord(i);
                 if(m_records.size() > 0) {
-                    keyword.addRecord( getRecord( i )->parse( parseMode, rawRecord ) );
+                    keyword.addRecord( getRecord( i )->parse( parseContext, rawRecord ) );
                 }
                 else {
                     if(rawRecord->size() > 0) {

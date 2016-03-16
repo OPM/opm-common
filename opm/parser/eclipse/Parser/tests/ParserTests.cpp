@@ -25,7 +25,7 @@
 
 #include <opm/json/JsonObject.hpp>
 
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
@@ -305,6 +305,6 @@ BOOST_AUTO_TEST_CASE( quoted_comments ) {
 
 BOOST_AUTO_TEST_CASE( PATHS_has_global_scope ) {
     Parser parser;
-    parser.newDeckFromFile( "testdata/parser/PATHSInInclude.data", ParseMode() );
-    BOOST_CHECK_THROW( parser.newDeckFromFile( "testdata/parser/PATHSInIncludeInvalid.data", ParseMode() ), std::runtime_error );
+    parser.newDeckFromFile( "testdata/parser/PATHSInInclude.data", ParseContext() );
+    BOOST_CHECK_THROW( parser.newDeckFromFile( "testdata/parser/PATHSInIncludeInvalid.data", ParseContext() ), std::runtime_error );
 }

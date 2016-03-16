@@ -28,7 +28,7 @@
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
@@ -398,14 +398,14 @@ BOOST_AUTO_TEST_CASE(ParseEmptyRecord) {
     std::shared_ptr<ParserRecord> record = std::make_shared<ParserRecord>();
     ParserIntItemConstPtr item(new ParserIntItem(std::string("ITEM") , ALL));
     RawKeywordPtr rawkeyword(new RawKeyword( tabdimsKeyword->getName() , "FILE" , 10U , 1));
-    ParseMode parseMode;
+    ParseContext parseContext;
 
     BOOST_CHECK_EQUAL( Raw::FIXED , rawkeyword->getSizeType());
     rawkeyword->addRawRecordString("/");
     record->addItem(item);
     tabdimsKeyword->addRecord( record );
 
-    const auto deckKeyword = tabdimsKeyword->parse( parseMode , rawkeyword );
+    const auto deckKeyword = tabdimsKeyword->parse( parseContext , rawkeyword );
     BOOST_REQUIRE_EQUAL( 1U , deckKeyword.size());
 
     const auto& deckRecord = deckKeyword.getRecord(0);
