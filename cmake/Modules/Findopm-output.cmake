@@ -21,16 +21,16 @@ find_opm_package (
   "${opm-output_DEPS}"
   
   # header to search for
-  "opm/output/Output.hpp"
+  "opm/output/OutputWriter.hpp"
 
   # library to search for
-  # "opmoutput"
+  "opmoutput"
 
   # defines to be added to compilations
   ""
 
   # test program
-"#include <opm/output/Output.hpp>
+"#include <opm/output/OutputWriter.hpp>
 int main (void) {
   return 0;  
 }
