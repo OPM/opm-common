@@ -32,7 +32,7 @@
 #include <opm/parser/eclipse/Deck/DeckTimeStep.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Deck/SCHEDULESection.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
 
@@ -61,17 +61,17 @@
 
 namespace Opm {
 
-    Schedule::Schedule(const ParseMode& parseMode , std::shared_ptr<const EclipseGrid> grid , DeckConstPtr deck, IOConfigPtr ioConfig)
+    Schedule::Schedule(const ParseContext& parseContext , std::shared_ptr<const EclipseGrid> grid , DeckConstPtr deck, IOConfigPtr ioConfig)
         : m_grid(grid)
     {
-        initFromDeck(parseMode , deck, ioConfig);
+        initFromDeck(parseContext , deck, ioConfig);
     }
 
     boost::posix_time::ptime Schedule::getStartTime() const {
         return m_timeMap->getStartTime(/*timeStepIdx=*/0);
     }
 
-    void Schedule::initFromDeck(const ParseMode& parseMode , DeckConstPtr deck, IOConfigPtr ioConfig) {
+    void Schedule::initFromDeck(const ParseContext& parseContext , DeckConstPtr deck, IOConfigPtr ioConfig) {
         initializeNOSIM(deck);
         createTimeMap(deck);
         m_tuning.reset(new Tuning(m_timeMap));
@@ -83,7 +83,7 @@ namespace Opm {
 
         if (Section::hasSCHEDULE( *deck )) {
             std::shared_ptr<SCHEDULESection> scheduleSection = std::make_shared<SCHEDULESection>( *deck );
-            iterateScheduleSection(parseMode , *scheduleSection , ioConfig);
+            iterateScheduleSection(parseContext , *scheduleSection , ioConfig);
         }
     }
 
@@ -113,12 +113,12 @@ namespace Opm {
         m_timeMap.reset(new TimeMap(startTime));
     }
 
-    void Schedule::iterateScheduleSection(const ParseMode& parseMode , const SCHEDULESection& section, IOConfigPtr ioConfig) {
+    void Schedule::iterateScheduleSection(const ParseContext& parseContext , const SCHEDULESection& section, IOConfigPtr ioConfig) {
         /*
           geoModifiers is a list of geo modifiers which can be found in the schedule
           section. This is only partly supported, support is indicated by the bool
           value. The keywords which are supported will be assembled in a per-timestep
-          'minideck', whereas ParseMode::UNSUPPORTED_SCHEDULE_GEO_MODIFIER will be
+          'minideck', whereas ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER will be
           consulted for the others.
         */
 
@@ -229,7 +229,7 @@ namespace Opm {
                 handleWPIMULT(keyword, currentStep);
 
             if (keyword.name() == "COMPORD")
-                handleCOMPORD(parseMode , keyword, currentStep);
+                handleCOMPORD(parseContext , keyword, currentStep);
 
             if (keyword.name() == "DRSDT")
                 handleDRSDT(keyword, currentStep);
@@ -258,7 +258,7 @@ namespace Opm {
 
                 } else {
                     std::string msg = "OPM does not support grid property modifier " + keyword.name() + " in the Schedule section. Error at report: " + std::to_string( currentStep );
-                    parseMode.handleError( ParseMode::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , msg );
+                    parseContext.handleError( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , msg );
                 }
             }
         }
@@ -314,12 +314,12 @@ namespace Opm {
     }
 
 
-    void Schedule::handleCOMPORD(const ParseMode& parseMode, const DeckKeyword& compordKeyword, size_t /* currentStep */) {
+    void Schedule::handleCOMPORD(const ParseContext& parseContext, const DeckKeyword& compordKeyword, size_t /* currentStep */) {
         for (const auto& record : compordKeyword) {
             const auto& methodItem = record.getItem<ParserKeywords::COMPORD::ORDER_TYPE>();
             if ((methodItem.get< std::string >(0) != "TRACK")  && (methodItem.get< std::string >(0) != "INPUT")) {
                 std::string msg = "The COMPORD keyword only handles 'TRACK' or 'INPUT' order.";
-                parseMode.handleError( ParseMode::UNSUPPORTED_COMPORD_TYPE , msg );
+                parseContext.handleError( ParseContext::UNSUPPORTED_COMPORD_TYPE , msg );
             }
         }
     }

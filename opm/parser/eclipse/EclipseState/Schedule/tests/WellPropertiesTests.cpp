@@ -26,7 +26,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
 #include <string>
@@ -87,7 +87,7 @@ namespace {
         Opm::WellProductionProperties properties(const std::string& input) {
             Opm::Parser parser;
 
-            Opm::DeckPtr deck = parser.parseString(input, Opm::ParseMode());
+            Opm::DeckPtr deck = parser.parseString(input, Opm::ParseContext());
             const auto& record = deck->getKeyword("WCONHIST").getRecord(0);
             Opm::WellProductionProperties hist = Opm::WellProductionProperties::history( 100 , record);;
 
@@ -112,7 +112,7 @@ namespace {
         {
             Opm::Parser parser;
 
-            Opm::DeckPtr             deck   = parser.parseString(input, Opm::ParseMode());
+            Opm::DeckPtr             deck   = parser.parseString(input, Opm::ParseContext());
             const auto& kwd     = deck->getKeyword("WCONHIST");
             const auto&  record = kwd.getRecord(0);
             Opm::WellProductionProperties pred = Opm::WellProductionProperties::prediction( record, false );

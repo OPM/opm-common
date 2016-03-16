@@ -28,7 +28,7 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
 using namespace Opm;
 
@@ -100,21 +100,21 @@ BOOST_AUTO_TEST_CASE(SaturationFunctionFamilyTests) {
         " .7  .8  .3\n"
         " .8 1.0  1.0/\n";
 
-    ParseMode parseMode;
+    ParseContext parseContext;
     ParserPtr parser(new Parser());
 
     char family1Deck[500] = " ";
     strcat(family1Deck , deckdefault);
     strcat(family1Deck , family1);
-    DeckPtr deck1 = parser->parseString(family1Deck, parseMode) ;
-    EclipseState state1(deck1, parseMode);
+    DeckPtr deck1 = parser->parseString(family1Deck, parseContext) ;
+    EclipseState state1(deck1, parseContext);
 
 
     char family2Deck[700] = " ";
     strcat(family2Deck , deckdefault);
     strcat(family2Deck , family2);
-    DeckPtr deck2 = parser->parseString(family2Deck, parseMode) ;
-    EclipseState state2(deck2, parseMode);
+    DeckPtr deck2 = parser->parseString(family2Deck, parseContext) ;
+    EclipseState state2(deck2, parseContext);
 
     check_property(state1, state2, "SWL");
     check_property(state1, state2, "SWU");
@@ -138,8 +138,8 @@ BOOST_AUTO_TEST_CASE(SaturationFunctionFamilyTests) {
     strcat(familyMixDeck , deckdefault);
     strcat(familyMixDeck , family1);
     strcat(familyMixDeck , family2);
-    DeckPtr deckMix = parser->parseString(familyMixDeck, parseMode) ;
-    EclipseState stateMix(deckMix, parseMode);
+    DeckPtr deckMix = parser->parseString(familyMixDeck, parseContext) ;
+    EclipseState stateMix(deckMix, parseContext);
     BOOST_CHECK_THROW(stateMix.getDoubleGridProperty("SGCR") , std::invalid_argument);
 
 }

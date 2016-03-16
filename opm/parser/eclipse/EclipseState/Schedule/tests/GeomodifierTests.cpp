@@ -27,7 +27,7 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/parser/eclipse/Parser/InputErrorAction.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
@@ -61,16 +61,16 @@ BOOST_AUTO_TEST_CASE( CheckUnsoppertedInSCHEDULE ) {
         "   10 10/\n"
         "\n";
 
-    ParseMode parseMode;
+    ParseContext parseContext;
     Parser parser(true);
 
-    auto deck = parser.parseString( deckString , parseMode );
+    auto deck = parser.parseString( deckString , parseContext );
     std::shared_ptr<EclipseGrid> grid = std::make_shared<EclipseGrid>( deck );
     std::shared_ptr<IOConfig> ioconfig = std::make_shared<IOConfig>( "path" );
 
-    parseMode.update( ParseMode::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , InputError::IGNORE );
+    parseContext.update( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , InputError::IGNORE );
     {
-        Schedule schedule( parseMode , grid , deck , ioconfig );
+        Schedule schedule( parseContext , grid , deck , ioconfig );
         auto events = schedule.getEvents( );
         BOOST_CHECK_EQUAL( false , events.hasEvent( ScheduleEvents::GEO_MODIFIER , 1 ));
         BOOST_CHECK_EQUAL( true  , events.hasEvent( ScheduleEvents::GEO_MODIFIER , 2 ));

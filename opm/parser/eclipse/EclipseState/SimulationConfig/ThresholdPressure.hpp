@@ -28,7 +28,7 @@ namespace Opm {
     template< typename > class GridProperties;
 
     class Deck;
-    class ParseMode;
+    class ParseContext;
     class RUNSPECSection;
     class SOLUTIONSection;
 
@@ -36,7 +36,7 @@ namespace Opm {
 
     public:
 
-        ThresholdPressure(const ParseMode& parseMode , std::shared_ptr< const Deck > deck, std::shared_ptr<GridProperties<int>> gridProperties);
+        ThresholdPressure(const ParseContext& parseContext , std::shared_ptr< const Deck > deck, std::shared_ptr<GridProperties<int>> gridProperties);
 
 
         /*
@@ -66,7 +66,7 @@ namespace Opm {
         double getThresholdPressure(int r1 , int r2) const;
         size_t size() const;
     private:
-        void initThresholdPressure(const ParseMode& parseMode,
+        void initThresholdPressure(const ParseContext& parseContext,
                                    std::shared_ptr<const RUNSPECSection> runspecSection,
                                    std::shared_ptr<const SOLUTIONSection> solutionSection,
                                    std::shared_ptr<GridProperties<int>> gridProperties);
@@ -78,7 +78,7 @@ namespace Opm {
 
         std::vector<std::pair<bool,double>> m_thresholdPressureTable;
         std::map<std::pair<int,int> , std::pair<bool , double> > m_pressureTable;
-        const ParseMode& m_parseMode;
+        const ParseContext& m_parseContext;
     };
 
 

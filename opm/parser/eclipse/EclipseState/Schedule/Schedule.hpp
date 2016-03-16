@@ -43,7 +43,7 @@ namespace Opm
     class GroupTree;
     class IOConfig;
     class OilVaporizationProperties;
-    class ParseMode;
+    class ParseContext;
     class SCHEDULESection;
     class TimeMap;
     class Tuning;
@@ -54,7 +54,7 @@ namespace Opm
 
     class Schedule {
     public:
-        Schedule(const ParseMode& parseMode , std::shared_ptr<const EclipseGrid> grid , std::shared_ptr< const Deck > deck, std::shared_ptr< IOConfig > ioConfig);
+        Schedule(const ParseContext& parseContext , std::shared_ptr<const EclipseGrid> grid , std::shared_ptr< const Deck > deck, std::shared_ptr< IOConfig > ioConfig);
         boost::posix_time::ptime getStartTime() const;
         std::shared_ptr< const TimeMap > getTimeMap() const;
 
@@ -98,16 +98,16 @@ namespace Opm
 
         void updateWellStatus(std::shared_ptr<Well> well, size_t reportStep , WellCommon::StatusEnum status);
         void addWellToGroup( std::shared_ptr< Group > newGroup , std::shared_ptr< Well > well , size_t timeStep);
-        void initFromDeck(const ParseMode& parseMode , std::shared_ptr< const Deck > deck, std::shared_ptr< IOConfig > ioConfig);
+        void initFromDeck(const ParseContext& parseContext , std::shared_ptr< const Deck > deck, std::shared_ptr< IOConfig > ioConfig);
         void initializeNOSIM(std::shared_ptr< const Deck > deck);
         void createTimeMap(std::shared_ptr< const Deck > deck);
         void initRootGroupTreeNode(std::shared_ptr< const TimeMap > timeMap);
         void initOilVaporization(std::shared_ptr< const TimeMap > timeMap);
-        void iterateScheduleSection(const ParseMode& parseMode ,  const SCHEDULESection&  section, std::shared_ptr< IOConfig > ioConfig);
+        void iterateScheduleSection(const ParseContext& parseContext ,  const SCHEDULESection&  section, std::shared_ptr< IOConfig > ioConfig);
         bool handleGroupFromWELSPECS(const std::string& groupName, std::shared_ptr< GroupTree > newTree) const;
         void addGroup(const std::string& groupName , size_t timeStep);
         void addWell(const std::string& wellName, const DeckRecord& record, size_t timeStep, WellCompletion::CompletionOrderEnum wellCompletionOrder);
-        void handleCOMPORD(const ParseMode& parseMode, const DeckKeyword& compordKeyword, size_t currentStep);
+        void handleCOMPORD(const ParseContext& parseContext, const DeckKeyword& compordKeyword, size_t currentStep);
         void checkWELSPECSConsistency(std::shared_ptr< const Well > well, const DeckKeyword& keyword, size_t recordIdx) const;
         void handleWELSPECS( const SCHEDULESection&, const DeckKeyword& keyword, size_t currentStep);
         void handleWCONProducer( const DeckKeyword& keyword, size_t currentStep, bool isPredictionMode);

@@ -24,7 +24,7 @@
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
@@ -45,7 +45,7 @@ std::shared_ptr<const Opm::Deck> createSWOFDeck() {
         " 9 10 11 12 /\n";
 
     Opm::Parser parser;
-    Opm::DeckConstPtr deck(parser.parseString(deckData, Opm::ParseMode()));
+    Opm::DeckConstPtr deck(parser.parseString(deckData, Opm::ParseContext()));
     return deck;
 }
 

@@ -28,7 +28,7 @@
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
@@ -105,9 +105,9 @@ const std::string& inputStr_vap_dis = "RUNSPEC\n"
                                       "REGIONS\n"
                                       "\n";
 
-static DeckPtr createDeck(const ParseMode& parseMode , const std::string& input) {
+static DeckPtr createDeck(const ParseContext& parseContext , const std::string& input) {
     Opm::Parser parser;
-    return parser.parseString(input, parseMode);
+    return parser.parseString(input, parseContext);
 }
 
 
@@ -123,52 +123,52 @@ static std::shared_ptr<GridProperties<int>> getGridProperties() {
 
 
 BOOST_AUTO_TEST_CASE(SimulationConfigGetThresholdPressureTableTest) {
-    ParseMode parseMode;
-    DeckPtr deck = createDeck(parseMode , inputStr);
+    ParseContext parseContext;
+    DeckPtr deck = createDeck(parseContext , inputStr);
     SimulationConfigConstPtr simulationConfigPtr;
-    BOOST_CHECK_NO_THROW(simulationConfigPtr = std::make_shared<const SimulationConfig>(parseMode , deck, getGridProperties()));
+    BOOST_CHECK_NO_THROW(simulationConfigPtr = std::make_shared<const SimulationConfig>(parseContext , deck, getGridProperties()));
 }
 
 
 BOOST_AUTO_TEST_CASE(SimulationConfigNOTHPRES) {
-    ParseMode parseMode;
-    DeckPtr deck = createDeck(parseMode , inputStr_noTHPRES);
-    SimulationConfig simulationConfig(parseMode , deck, getGridProperties());
+    ParseContext parseContext;
+    DeckPtr deck = createDeck(parseContext , inputStr_noTHPRES);
+    SimulationConfig simulationConfig(parseContext , deck, getGridProperties());
     BOOST_CHECK_EQUAL( false , simulationConfig.hasThresholdPressure());
 }
 
 BOOST_AUTO_TEST_CASE(SimulationConfigCPRNotUsed) {
-        ParseMode parseMode;
-        DeckPtr deck = createDeck(parseMode , inputStr_noTHPRES);
-        SimulationConfig simulationConfig(parseMode , deck, getGridProperties());
+        ParseContext parseContext;
+        DeckPtr deck = createDeck(parseContext , inputStr_noTHPRES);
+        SimulationConfig simulationConfig(parseContext , deck, getGridProperties());
         BOOST_CHECK_EQUAL( false , simulationConfig.useCPR());
 }
 
 BOOST_AUTO_TEST_CASE(SimulationConfigCPRUsed) {
-    ParseMode parseMode;
-    DeckPtr deck = createDeck(parseMode , inputStr_cpr);
+    ParseContext parseContext;
+    DeckPtr deck = createDeck(parseContext , inputStr_cpr);
     SUMMARYSection summary(*deck);
-    SimulationConfig simulationConfig(parseMode , deck, getGridProperties());
+    SimulationConfig simulationConfig(parseContext , deck, getGridProperties());
     BOOST_CHECK_EQUAL( true , simulationConfig.useCPR());
     BOOST_CHECK_EQUAL( false , summary.hasKeyword("CPR"));
 }
 
 
 BOOST_AUTO_TEST_CASE(SimulationConfigCPRInSUMMARYSection) {
-    ParseMode parseMode;
-    DeckPtr deck = createDeck(parseMode , inputStr_cpr_in_SUMMARY);
+    ParseContext parseContext;
+    DeckPtr deck = createDeck(parseContext , inputStr_cpr_in_SUMMARY);
     SUMMARYSection summary(*deck);
-    SimulationConfig simulationConfig(parseMode , deck, getGridProperties());
+    SimulationConfig simulationConfig(parseContext , deck, getGridProperties());
     BOOST_CHECK_EQUAL( false , simulationConfig.useCPR());
     BOOST_CHECK_EQUAL( true , summary.hasKeyword("CPR"));
 }
 
 
 BOOST_AUTO_TEST_CASE(SimulationConfigCPRBoth) {
-    ParseMode parseMode;
-    DeckPtr deck = createDeck(parseMode , inputStr_cpr_BOTH);
+    ParseContext parseContext;
+    DeckPtr deck = createDeck(parseContext , inputStr_cpr_BOTH);
     SUMMARYSection summary(*deck);
-    SimulationConfig simulationConfig(parseMode , deck, getGridProperties());
+    SimulationConfig simulationConfig(parseContext , deck, getGridProperties());
     BOOST_CHECK_EQUAL( true , simulationConfig.useCPR());
     BOOST_CHECK_EQUAL( true , summary.hasKeyword("CPR"));
 
@@ -183,20 +183,20 @@ BOOST_AUTO_TEST_CASE(SimulationConfigCPRBoth) {
 
 
 BOOST_AUTO_TEST_CASE(SimulationConfigCPRRUnspecWithData) {
-    ParseMode parseMode;
-    BOOST_CHECK_THROW( createDeck(parseMode , inputStr_INVALID) , std::invalid_argument );
+    ParseContext parseContext;
+    BOOST_CHECK_THROW( createDeck(parseContext , inputStr_INVALID) , std::invalid_argument );
 }
 
 
 BOOST_AUTO_TEST_CASE(SimulationConfig_VAPOIL_DISGAS) {
-    ParseMode parseMode;
-    DeckPtr deck = createDeck(parseMode , inputStr);
-    SimulationConfig simulationConfig(parseMode , deck, getGridProperties());
+    ParseContext parseContext;
+    DeckPtr deck = createDeck(parseContext , inputStr);
+    SimulationConfig simulationConfig(parseContext , deck, getGridProperties());
     BOOST_CHECK_EQUAL( false , simulationConfig.hasDISGAS());
     BOOST_CHECK_EQUAL( false , simulationConfig.hasVAPOIL());
 
-    DeckPtr deck_vd = createDeck(parseMode, inputStr_vap_dis);
-    SimulationConfig simulationConfig_vd(parseMode , deck_vd, getGridProperties());
+    DeckPtr deck_vd = createDeck(parseContext, inputStr_vap_dis);
+    SimulationConfig simulationConfig_vd(parseContext , deck_vd, getGridProperties());
     BOOST_CHECK_EQUAL( true , simulationConfig_vd.hasDISGAS());
     BOOST_CHECK_EQUAL( true , simulationConfig_vd.hasVAPOIL());
 }

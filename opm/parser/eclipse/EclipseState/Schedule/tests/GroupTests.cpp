@@ -29,7 +29,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -250,11 +250,11 @@ BOOST_AUTO_TEST_CASE(createDeckWithGEFAC) {
             " 'PRODUC' 0.85   / \n"
             "/\n";
 
-    Opm::ParseMode parseMode;
-    Opm::DeckPtr deck = parser.parseString(input, parseMode);
+    Opm::ParseContext parseContext;
+    Opm::DeckPtr deck = parser.parseString(input, parseContext);
     std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>(10, 10, 10);
     Opm::IOConfigPtr ioConfig;
-    Opm::Schedule schedule(parseMode , grid, deck, ioConfig);
+    Opm::Schedule schedule(parseContext , grid, deck, ioConfig);
 
     Opm::GroupConstPtr group1 = schedule.getGroup("PRODUC");
     BOOST_CHECK_EQUAL(group1->getGroupEfficiencyFactor(0), 0.85);
@@ -298,11 +298,11 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
 
            
 
-    Opm::ParseMode parseMode;
-    Opm::DeckPtr deck = parser.parseString(input, parseMode);
+    Opm::ParseContext parseContext;
+    Opm::DeckPtr deck = parser.parseString(input, parseContext);
     std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>(10, 10, 10);
     Opm::IOConfigPtr ioConfig;
-    Opm::Schedule schedule(parseMode , grid, deck, ioConfig);
+    Opm::Schedule schedule(parseContext , grid, deck, ioConfig);
     Opm::WellConstPtr currentWell = schedule.getWell("B-37T2"); 
     const Opm::WellProductionProperties& wellProductionProperties = currentWell->getProductionProperties(0);
     BOOST_CHECK_EQUAL(wellProductionProperties.controlMode, Opm::WellProducer::ControlModeEnum::GRUP);

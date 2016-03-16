@@ -24,7 +24,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -63,7 +63,7 @@ const std::string& deckStr =  "START\n"
 
 static DeckPtr createDeck(const std::string& input) {
     Opm::Parser parser;
-    return parser.parseString(input, ParseMode());
+    return parser.parseString(input, ParseContext());
 }
 
 
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
   DeckPtr deck = createDeck(deckStr);
   std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
   IOConfigPtr ioConfig;
-  Schedule schedule(ParseMode() , grid , deck, ioConfig);
+  Schedule schedule(ParseContext() , grid , deck, ioConfig);
   TuningPtr tuning = schedule.getTuning();
 
 
@@ -325,7 +325,7 @@ BOOST_AUTO_TEST_CASE(TuningInitTest) {
   DeckPtr deck = createDeck(deckStr);
   std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
   IOConfigPtr ioConfig;
-  Schedule schedule(ParseMode() , grid , deck, ioConfig);
+  Schedule schedule(ParseContext() , grid , deck, ioConfig);
   TuningPtr tuning = schedule.getTuning();
 
 
@@ -354,7 +354,7 @@ BOOST_AUTO_TEST_CASE(TuningResetTest) {
   DeckPtr deck = createDeck(deckStr);
   std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
   IOConfigPtr ioConfig;
-  Schedule schedule(ParseMode() , grid , deck, ioConfig);
+  Schedule schedule(ParseContext() , grid , deck, ioConfig);
   TuningPtr tuning = schedule.getTuning();
 
 

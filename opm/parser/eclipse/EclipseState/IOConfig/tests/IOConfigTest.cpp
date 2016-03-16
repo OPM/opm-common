@@ -26,7 +26,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
@@ -141,7 +141,7 @@ const std::string& deckStr_NO_GRIDFILE = "RUNSPEC\n"
 
 static DeckPtr createDeck(const std::string& input) {
     Opm::Parser parser;
-    return parser.parseString(input, Opm::ParseMode());
+    return parser.parseString(input, Opm::ParseContext());
 }
 
 
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     ioConfigPtr->handleGridSection(gridSection);
     ioConfigPtr->handleRunspecSection(runspecSection);
 
-    Schedule schedule(ParseMode() , grid , deck, ioConfigPtr);
+    Schedule schedule(ParseContext() , grid , deck, ioConfigPtr);
 
     TimeMapConstPtr timemap   = schedule.getTimeMap();
     const TimeMap* const_tmap = timemap.get();

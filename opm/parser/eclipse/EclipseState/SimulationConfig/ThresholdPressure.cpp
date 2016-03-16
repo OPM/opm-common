@@ -21,7 +21,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/R.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/T.hpp>
@@ -29,14 +29,14 @@
 
 namespace Opm {
 
-    ThresholdPressure::ThresholdPressure(const ParseMode& parseMode , DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties)
-        : m_parseMode( parseMode )
+    ThresholdPressure::ThresholdPressure(const ParseContext& parseContext , DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties)
+        : m_parseContext( parseContext )
     {
 
         if (Section::hasRUNSPEC(*deck) && Section::hasSOLUTION(*deck)) {
             std::shared_ptr<const RUNSPECSection> runspecSection = std::make_shared<const RUNSPECSection>(*deck);
             std::shared_ptr<const SOLUTIONSection> solutionSection = std::make_shared<const SOLUTIONSection>(*deck);
-            initThresholdPressure(parseMode , runspecSection, solutionSection, gridProperties);
+            initThresholdPressure(parseContext , runspecSection, solutionSection, gridProperties);
         }
     }
 
@@ -64,7 +64,7 @@ namespace Opm {
     }
 
 
-    void ThresholdPressure::initThresholdPressure(const ParseMode& /* parseMode */,
+    void ThresholdPressure::initThresholdPressure(const ParseContext& /* parseContext */,
                                                   std::shared_ptr<const RUNSPECSection> runspecSection,
                                                   std::shared_ptr<const SOLUTIONSection> solutionSection,
                                                   std::shared_ptr<GridProperties<int>> gridProperties) {
@@ -162,7 +162,7 @@ namespace Opm {
                 return value;
             else {
                 std::string msg = "The THPRES value for regions " + std::to_string(r1) + " and " + std::to_string(r2) + " has not been initialized. Using 0.0";
-                m_parseMode.handleError(ParseMode::INTERNAL_ERROR_UNINITIALIZED_THPRES, msg);
+                m_parseContext.handleError(ParseContext::INTERNAL_ERROR_UNINITIALIZED_THPRES, msg);
                 return 0;
             }
         }

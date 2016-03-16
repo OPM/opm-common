@@ -24,7 +24,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Summary/Summary.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
 using namespace Opm;
@@ -48,7 +48,7 @@ static DeckPtr createDeck( const std::string& summary ) {
             "SUMMARY\n"
             + summary;
 
-    return parser.parseString(input, ParseMode());
+    return parser.parseString(input, ParseContext());
 }
 
 static std::vector< std::string > sorted_names( const Summary& summary ) {
@@ -71,7 +71,7 @@ static std::vector< std::string > sorted_keywords( const Summary& summary ) {
 
 static Summary createSummary( std::string input ) {
     auto deck = createDeck( input );
-    EclipseState state( deck, ParseMode() );
+    EclipseState state( deck, ParseContext() );
     return Summary( *deck, state );
 }
 

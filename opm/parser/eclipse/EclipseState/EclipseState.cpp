@@ -133,10 +133,10 @@ namespace Opm {
     }
 
 
-    EclipseState::EclipseState(DeckConstPtr deck , const ParseMode& parseMode)
+    EclipseState::EclipseState(DeckConstPtr deck , const ParseContext& parseContext)
         : m_deckUnitSystem( deck->getActiveUnitSystem() ),
           m_defaultRegion("FLUXNUM"),
-          m_parseMode( parseMode )
+          m_parseContext( parseContext )
     {
         initPhases(deck);
         initTables(deck);
@@ -174,8 +174,8 @@ namespace Opm {
     }
 
 
-    const ParseMode& EclipseState::getParseMode() const {
-        return m_parseMode;
+    const ParseContext& EclipseState::getParseContext() const {
+        return m_parseContext;
     }
 
 
@@ -249,13 +249,13 @@ namespace Opm {
     }
 
     void EclipseState::initSimulationConfig(DeckConstPtr deck) {
-        m_simulationConfig = std::make_shared<const SimulationConfig>(m_parseMode , deck , m_intGridProperties);
+        m_simulationConfig = std::make_shared<const SimulationConfig>(m_parseContext , deck , m_intGridProperties);
     }
 
 
     void EclipseState::initSchedule(DeckConstPtr deck) {
         EclipseGridConstPtr grid = getEclipseGrid();
-        schedule = ScheduleConstPtr( new Schedule(m_parseMode , grid , deck, m_ioConfig) );
+        schedule = ScheduleConstPtr( new Schedule(m_parseContext , grid , deck, m_ioConfig) );
     }
 
     void EclipseState::initNNC(DeckConstPtr deck) {

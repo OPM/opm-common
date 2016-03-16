@@ -45,7 +45,7 @@
 
 namespace Opm {
 
-    SimulationConfig::SimulationConfig(const ParseMode& parseMode , DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties) :
+    SimulationConfig::SimulationConfig(const ParseContext& parseContext , DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties) :
         m_useCPR(false),
         m_DISGAS(false),
         m_VAPOIL(false)
@@ -67,12 +67,12 @@ namespace Opm {
             }
         }
 
-        initThresholdPressure(parseMode , deck, gridProperties);
+        initThresholdPressure(parseContext , deck, gridProperties);
     }
 
 
-    void SimulationConfig::initThresholdPressure(const ParseMode& parseMode, DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties) {
-        m_ThresholdPressure = std::make_shared<const ThresholdPressure>(parseMode , deck, gridProperties);
+    void SimulationConfig::initThresholdPressure(const ParseContext& parseContext, DeckConstPtr deck, std::shared_ptr<GridProperties<int>> gridProperties) {
+        m_ThresholdPressure = std::make_shared<const ThresholdPressure>(parseContext , deck, gridProperties);
     }
 
 

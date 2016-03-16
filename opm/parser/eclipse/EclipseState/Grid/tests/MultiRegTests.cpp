@@ -28,7 +28,7 @@
 
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -53,7 +53,7 @@ static Opm::DeckPtr createDeckInvalidArray() {
         "\n";
 
     Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseMode()) ;
+    return parser->parseString(deckData, Opm::ParseContext()) ;
 }
 
 
@@ -74,7 +74,7 @@ static Opm::DeckPtr createDeckInvalidRegion() {
         "\n";
 
     Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseMode()) ;
+    return parser->parseString(deckData, Opm::ParseContext()) ;
 }
 
 
@@ -95,7 +95,7 @@ static Opm::DeckPtr createDeckInvalidValue() {
         "\n";
 
     Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseMode()) ;
+    return parser->parseString(deckData, Opm::ParseContext()) ;
 }
 
 
@@ -116,7 +116,7 @@ static Opm::DeckPtr createDeckMissingVector() {
         "\n";
 
     Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseMode()) ;
+    return parser->parseString(deckData, Opm::ParseContext()) ;
 }
 
 
@@ -135,7 +135,7 @@ static Opm::DeckPtr createDeckUnInitialized() {
         "\n";
 
     Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseMode()) ;
+    return parser->parseString(deckData, Opm::ParseContext()) ;
 }
 
 
@@ -171,7 +171,7 @@ static Opm::DeckPtr createValidIntDeck() {
         "\n";
 
     Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseMode()) ;
+    return parser->parseString(deckData, Opm::ParseContext()) ;
 }
 
 
@@ -181,36 +181,36 @@ static Opm::DeckPtr createValidIntDeck() {
 
 BOOST_AUTO_TEST_CASE(InvalidArrayThrows) {
     Opm::DeckPtr deck = createDeckInvalidArray();
-    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseMode()) , std::invalid_argument );
+    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseContext()) , std::invalid_argument );
 }
 
 
 BOOST_AUTO_TEST_CASE(InvalidRegionThrows) {
     Opm::DeckPtr deck = createDeckInvalidRegion();
-    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseMode()) , std::invalid_argument );
+    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseContext()) , std::invalid_argument );
 }
 
 
 BOOST_AUTO_TEST_CASE(ExpectedIntThrows) {
     Opm::DeckPtr deck = createDeckInvalidValue();
-    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseMode()) , std::invalid_argument );
+    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseContext()) , std::invalid_argument );
 }
 
 BOOST_AUTO_TEST_CASE(MissingRegionVectorThrows) {
     Opm::DeckPtr deck = createDeckMissingVector();
-    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseMode()) , std::invalid_argument );
+    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseContext()) , std::invalid_argument );
 }
 
 
 BOOST_AUTO_TEST_CASE(UnInitializedVectorThrows) {
     Opm::DeckPtr deck = createDeckUnInitialized();
-    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseMode()) , std::invalid_argument );
+    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseContext()) , std::invalid_argument );
 }
 
 
 BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
     Opm::DeckPtr deck = createValidIntDeck();
-    Opm::EclipseState state(deck , Opm::ParseMode());
+    Opm::EclipseState state(deck , Opm::ParseContext());
     std::shared_ptr<const Opm::GridProperty<int> > property = state.getIntGridProperty( "SATNUM");
     for (size_t j=0; j< 5; j++)
         for (size_t i = 0; i < 5; i++) {

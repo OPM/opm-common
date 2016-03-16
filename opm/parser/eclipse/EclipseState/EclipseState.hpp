@@ -43,7 +43,7 @@ namespace Opm {
     class InitConfig;
     class IOConfig;
     class NNC;
-    class ParseMode;
+    class ParseContext;
     class Schedule;
     class Section;
     class SimulationConfig;
@@ -60,9 +60,9 @@ namespace Opm {
             AllProperties = IntProperties | DoubleProperties
         };
 
-        EclipseState(std::shared_ptr< const Deck > deck , const ParseMode& parseMode);
+        EclipseState(std::shared_ptr< const Deck > deck , const ParseContext& parseContext);
 
-        const ParseMode& getParseMode() const;
+        const ParseContext& getParseContext() const;
         std::shared_ptr< const Schedule > getSchedule() const;
         std::shared_ptr< const IOConfig > getIOConfigConst() const;
         std::shared_ptr< IOConfig > getIOConfig() const;
@@ -168,7 +168,7 @@ namespace Opm {
         std::shared_ptr<FaultCollection> m_faults;
         std::shared_ptr<NNC> m_nnc;
         std::string m_defaultRegion;
-        const ParseMode& m_parseMode;
+        const ParseContext& m_parseContext;
     };
 
     typedef std::shared_ptr<EclipseState> EclipseStatePtr;

@@ -26,7 +26,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -93,7 +93,7 @@ static Opm::DeckPtr createInvalidMULTREGTDeck() {
         "\n";
 
     Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseMode()) ;
+    return parser->parseString(deckData, Opm::ParseContext()) ;
 }
 
 
@@ -162,7 +162,7 @@ static Opm::DeckPtr createNotSupportedMULTREGTDeck() {
         "\n";
 
     Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseMode()) ;
+    return parser->parseString(deckData, Opm::ParseContext()) ;
 }
 
 
@@ -227,12 +227,12 @@ static Opm::DeckPtr createCopyMULTNUMDeck() {
         "\n";
 
     Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseMode()) ;
+    return parser->parseString(deckData, Opm::ParseContext()) ;
 }
 
 
 
 BOOST_AUTO_TEST_CASE(MULTREGT_COPY_MULTNUM) {
     Opm::DeckPtr deck = createCopyMULTNUMDeck();
-    Opm::EclipseState state(deck , Opm::ParseMode());
+    Opm::EclipseState state(deck , Opm::ParseContext());
 }
