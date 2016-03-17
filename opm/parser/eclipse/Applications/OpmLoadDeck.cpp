@@ -20,10 +20,10 @@
 #include <iostream>
 #include <memory>
 
-#include <opm/parser/eclipse/OpmLog/CounterLog.hpp>
-#include <opm/parser/eclipse/OpmLog/StreamLog.hpp>
-#include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
-#include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/CounterLog.hpp>
+#include <opm/common/OpmLog/StreamLog.hpp>
+#include <opm/common/OpmLog/LogUtil.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>

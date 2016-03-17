@@ -1,5 +1,5 @@
-#include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
-#include <opm/parser/eclipse/OpmLog/StreamLog.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/StreamLog.hpp>
 
 extern "C" {
 

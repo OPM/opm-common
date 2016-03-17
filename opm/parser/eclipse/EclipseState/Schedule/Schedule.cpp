@@ -24,8 +24,8 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
-#include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>

@@ -24,13 +24,10 @@
 #include <vector>
 #include <unordered_map>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
-#include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
-#include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
-
-#include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
-#include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
 
 /*
   This class implements a container (std::unordered_map<std::string ,

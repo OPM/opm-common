@@ -1,6 +1,5 @@
 include_directories(BEFORE ${PROJECT_BINARY_DIR}/generated-source/include)
 
-add_subdirectory(OpmLog/tests)
 add_subdirectory(Parser/tests)
 add_subdirectory(Generator/tests)
 add_subdirectory(RawDeck/tests)
@@ -19,16 +18,6 @@ add_subdirectory(Utility/tests)
 
 add_subdirectory(Applications)
 add_subdirectory(IntegrationTests)
-
-set( log_source
-OpmLog/TimerLog.cpp 
-OpmLog/CounterLog.cpp 
-OpmLog/LogUtil.cpp
-OpmLog/Logger.cpp 
-OpmLog/LogBackend.cpp 
-OpmLog/StreamLog.cpp 
-OpmLog/EclipsePRTLog.cpp 
-OpmLog/OpmLog.cpp )
 
 set( rawdeck_source 
 RawDeck/StarToken.cpp
@@ -75,7 +64,6 @@ Parser/ParserIntItem.cpp
 Parser/ParserDoubleItem.cpp
 Parser/ParserStringItem.cpp  
 ${generator_source}
-${log_source}
 )
 
 set (state_source
@@ -145,15 +133,6 @@ Utility/Stringview.cpp
 )
 
 set( HEADER_FILES
-OpmLog/LogBackend.hpp
-OpmLog/TimerLog.hpp 
-OpmLog/CounterLog.hpp
-OpmLog/Logger.hpp
-OpmLog/OpmLog.hpp
-OpmLog/LogUtil.hpp
-OpmLog/StreamLog.hpp
-OpmLog/EclipsePRTLog.hpp
-#
 RawDeck/RawConsts.hpp 
 RawDeck/RawKeyword.hpp 
 RawDeck/RawRecord.hpp 
@@ -297,7 +276,7 @@ Utility/Functional.hpp
 Utility/Stringview.hpp)
 
 add_library(buildParser ${rawdeck_source} ${build_parser_source} ${deck_source} ${unit_source} ${generator_source} ${utility_source})
-target_link_libraries(buildParser opmjson ${Boost_LIBRARIES}  ${ERT_LIBRARIES})
+target_link_libraries(buildParser opmjson ${opm-common_LIBRARIES} ${Boost_LIBRARIES}  ${ERT_LIBRARIES})
 
 #-----------------------------------------------------------------
 # This section manages the generation of C++ code for the default keywords.
@@ -342,14 +321,14 @@ add_custom_target( generatedCode ALL COMMAND createDefaultKeywordList
                 )
 
 opm_add_test( runInlineKeywordTest SOURCES ${PROJECT_BINARY_DIR}/generated-source/inlineKeywordTest.cpp
-              LIBRARIES opmparser ${Boost_LIBRARIES}
+              LIBRARIES opmparser ${opm-common_LIBRARIES} ${Boost_LIBRARIES}
               DEPENDS generatedCode )
 
 #-----------------------------------------------------------------
 
-add_library(opmparser ${generated_source} ${state_source} ${rawdeck_source} ${parser_source} ${deck_source} ${unit_source} ${log_source} ${generator_source} ${utility_source})
+add_library(opmparser ${generated_source} ${state_source} ${rawdeck_source} ${parser_source} ${deck_source} ${unit_source} ${generator_source} ${utility_source})
 add_dependencies( opmparser generatedCode )
-target_link_libraries(opmparser opmjson ${Boost_LIBRARIES}  ${ERT_LIBRARIES})
+target_link_libraries(opmparser opmjson ${opm-common_LIBRARIES} ${Boost_LIBRARIES}  ${ERT_LIBRARIES})
 set_target_properties(opmparser PROPERTIES VERSION ${opm-parser_VERSION_MAJOR}.${opm-parser_VERSION_MINOR}
                                            SOVERSION ${opm-parser_VERSION_MAJOR})
 

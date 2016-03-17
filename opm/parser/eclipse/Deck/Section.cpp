@@ -24,8 +24,8 @@
 #include <set>
 #include <string>
 
-#include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
-#include <opm/parser/eclipse/OpmLog/LogUtil.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/LogUtil.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>

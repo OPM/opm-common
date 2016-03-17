@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(GridPropertyPostProcessors) {
     typedef Opm::GridPropertySupportedKeywordInfo<double> SupportedKeywordInfo;
 
     Opm::DeckPtr deck = createDeck();
-    Opm::EclipseState st( deck, Opm::ParseMode() ) ;
+    Opm::EclipseState st( deck, Opm::ParseContext() ) ;
     std::shared_ptr<Opm::EclipseGrid> grid = std::make_shared<Opm::EclipseGrid>(deck);
 
     SupportedKeywordInfo kwInfo1("MULTPV" , 1.0 , "1");
