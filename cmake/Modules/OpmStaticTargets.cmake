@@ -93,12 +93,11 @@ opm_static_add_dependencies(dune-grid dune-geometry)
 
 # OPM
 foreach(opm_repo opm-common opm-parser opm-core dune-cornerpoint opm-material
-                 opm-porsol opm-upscaling)
+                 opm-upscaling)
   opm_from_git(https://github.com/OPM/${opm_repo} ${opm_repo} ${OPM_BENCHMARK_VERSION})
 endforeach()
 opm_static_add_dependencies(opm-parser opm-common ert)
 opm_static_add_dependencies(opm-core opm-parser dune-istl)
 opm_static_add_dependencies(dune-cornerpoint opm-core dune-grid)
 opm_static_add_dependencies(opm-material opm-core)
-opm_static_add_dependencies(opm-porsol dune-cornerpoint opm-material)
-opm_static_add_dependencies(opm-upscaling opm-porsol)
+opm_static_add_dependencies(opm-upscaling dune-cornerpoint opm-material)
