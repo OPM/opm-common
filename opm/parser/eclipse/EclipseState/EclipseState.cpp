@@ -17,6 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <set>
+
 #include <boost/algorithm/string/join.hpp>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
@@ -242,6 +244,18 @@ namespace Opm {
 
         m_transMult->setMultregtScanner( scanner );
     }
+
+    std::vector< int > EclipseState::getRegions( const std::string& kw ) const {
+        if( !this->get3DProperties().hasDeckIntGridProperty( kw ) ) return {};
+
+        const auto& property = this->get3DProperties().getIntGridProperty( kw );
+
+        std::set< int > regions( property.getData().begin(),
+                                 property.getData().end() );
+
+        return { regions.begin(), regions.end() };
+    }
+
 
     void EclipseState::complainAboutAmbiguousKeyword(DeckConstPtr deck, const std::string& keywordName) const {
         OpmLog::addMessage(Log::MessageType::Error, "The " + keywordName + " keyword must be unique in the deck. Ignoring all!");

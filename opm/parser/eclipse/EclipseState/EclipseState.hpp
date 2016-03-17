@@ -20,9 +20,10 @@
 #ifndef OPM_ECLIPSE_STATE_HPP
 #define OPM_ECLIPSE_STATE_HPP
 
-#include <utility>
 #include <memory>
 #include <set>
+#include <utility>
+#include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
@@ -88,9 +89,11 @@ namespace Opm {
 
         const TableManager& getTableManager() const;
 
-        // the unit system used by the deck. note that it is rarely needed to
-        // convert units because internally to opm-parser everything is
-        // represented by SI units...
+        std::vector< int > getRegions( const std::string& kw ) const;
+
+        // the unit system used by the deck. note that it is rarely needed to convert
+        // units because internally to opm-parser everything is represented by SI
+        // units...
         const UnitSystem& getDeckUnitSystem()  const;
         void applyModifierDeck( std::shared_ptr<const Deck> deck);
 
