@@ -50,7 +50,7 @@ Deck/DeckTimeStep.cpp
 )
 
 set( parser_source
-Parser/ParseMode.cpp
+Parser/ParseContext.cpp
 Parser/ParserEnums.cpp
 Parser/ParserKeyword.cpp 
 Parser/Parser.cpp 
@@ -66,7 +66,7 @@ Generator/KeywordGenerator.cpp
 Generator/KeywordLoader.cpp )
 
 set( build_parser_source 
-Parser/ParseMode.cpp
+Parser/ParseContext.cpp
 Parser/ParserEnums.cpp
 Parser/ParserKeyword.cpp 
 Parser/ParserRecord.cpp
@@ -175,7 +175,7 @@ Parser/ParserIntItem.hpp
 Parser/ParserDoubleItem.hpp
 Parser/ParserStringItem.hpp
 Parser/InputErrorAction.hpp
-Parser/ParseMode.hpp
+Parser/ParseContext.hpp
 #
 Generator/KeywordLoader.hpp
 Generator/KeywordGenerator.hpp

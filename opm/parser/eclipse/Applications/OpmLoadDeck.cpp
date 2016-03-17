@@ -26,21 +26,21 @@
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 
 void loadDeck( const char * deck_file) {
-    Opm::ParseMode parseMode;
+    Opm::ParseContext parseContext;
     Opm::ParserPtr parser(new Opm::Parser());
     std::shared_ptr<const Opm::Deck> deck;
     std::shared_ptr<Opm::EclipseState> state;
 
     std::cout << "Loading deck: " << deck_file << " ..... "; std::cout.flush();
-    deck = parser->parseFile(deck_file, parseMode);
+    deck = parser->parseFile(deck_file, parseContext);
     std::cout << "parse complete - creating EclipseState .... ";  std::cout.flush();
-    state = std::make_shared<Opm::EclipseState>( deck , parseMode );
+    state = std::make_shared<Opm::EclipseState>( deck , parseContext );
     std::cout << "complete." << std::endl;
 }
 

@@ -20,7 +20,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <boost/filesystem.hpp>
-#define BOOST_TEST_MODULE ParseModeTests
+#define BOOST_TEST_MODULE ParseContextTests
 #include <boost/test/unit_test.hpp>
 
 
@@ -30,7 +30,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/parser/eclipse/Parser/InputErrorAction.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>

@@ -758,9 +758,9 @@ BOOST_AUTO_TEST_CASE(ConstructorMINPV) {
     Opm::EclipseGrid grid4(deck4);
 
     BOOST_CHECK(!grid1.equal( grid3 ));
-    BOOST_CHECK_EQUAL(grid1.getMinpvContext(), Opm::MinpvContext::ContextEnum::Inactive);
-    BOOST_CHECK_EQUAL(grid3.getMinpvContext(), Opm::MinpvContext::ContextEnum::EclSTD);
+    BOOST_CHECK_EQUAL(grid1.getMinpvMode(), Opm::MinpvMode::ModeEnum::Inactive);
+    BOOST_CHECK_EQUAL(grid3.getMinpvMode(), Opm::MinpvMode::ModeEnum::EclSTD);
     BOOST_CHECK_EQUAL(grid3.getMinpvValue(), 10.0);
-    BOOST_CHECK_EQUAL(grid4.getMinpvContext(), Opm::MinpvContext::ContextEnum::OpmFIL);
+    BOOST_CHECK_EQUAL(grid4.getMinpvMode(), Opm::MinpvMode::ModeEnum::OpmFIL);
     BOOST_CHECK_EQUAL(grid4.getMinpvValue(), 20.0);
 }
