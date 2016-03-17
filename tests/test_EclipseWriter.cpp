@@ -34,7 +34,7 @@
 #include <opm/core/simulator/SimulatorTimer.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -59,14 +59,14 @@ std::shared_ptr<Opm::WellState> wellState;
 
 void createEclipseWriter(const char *deckString)
 {
-    Opm::ParseMode parseMode;
+    Opm::ParseContext parseContext;
     Opm::ParserConstPtr parser(new Opm::Parser());
-    deck = parser->parseString(deckString, parseMode);
+    deck = parser->parseString(deckString, parseContext);
 
     Opm::parameter::ParameterGroup params;
     params.insertParameter("deck_filename", "foo.data");
 
-    eclipseState.reset(new Opm::EclipseState(deck , parseMode));
+    eclipseState.reset(new Opm::EclipseState(deck , parseContext));
 
     auto eclGrid = eclipseState->getEclipseGrid();
     BOOST_CHECK(eclGrid->getNX() == 3);
@@ -367,55 +367,55 @@ void checkSummaryFile(int /*timeStepIdx*/)
 }
 
 BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
-{
-    const char *deckString =
-        "RUNSPEC\n"
-        "INIT\n"
-        "UNIFOUT\n"
-        "OIL\n"
-        "GAS\n"
-        "WATER\n"
-        "METRIC\n"
-        "DIMENS\n"
-        "3 3 3/\n"
-        "GRID\n"
-        "DXV\n"
-        "1.0 2.0 3.0 /\n"
-        "DYV\n"
-        "4.0 5.0 6.0 /\n"
-        "DZV\n"
-        "7.0 8.0 9.0 /\n"
-        "TOPS\n"
-        "9*100 /\n"
-        "PROPS\n"
-        "PORO\n"
-        "27*0.3 /\n"
-        "PERMX\n"
-        "27*1 /\n"
-        "SOLUTION\n"
-        "RPTRST\n"
-        "BASIC=2\n"
-        "/\n"
-        "SCHEDULE\n"
-        "TSTEP\n"
-        "1.0 2.0 3.0 4.0 /\n"
-        "WELSPECS\n"
-        "'INJ' 'G' 1 1 2000 'GAS' /\n"
-        "'PROD' 'G' 3 3 1000 'OIL' /\n"
-        "/\n";
+        {
+                const char *deckString =
+                "RUNSPEC\n"
+                "INIT\n"
+                "UNIFOUT\n"
+                "OIL\n"
+                "GAS\n"
+                "WATER\n"
+                "METRIC\n"
+                "DIMENS\n"
+                "3 3 3/\n"
+                "GRID\n"
+                "DXV\n"
+                "1.0 2.0 3.0 /\n"
+                "DYV\n"
+                "4.0 5.0 6.0 /\n"
+                "DZV\n"
+                "7.0 8.0 9.0 /\n"
+                "TOPS\n"
+                "9*100 /\n"
+                "PROPS\n"
+                "PORO\n"
+                "27*0.3 /\n"
+                "PERMX\n"
+                "27*1 /\n"
+                "SOLUTION\n"
+                "RPTRST\n"
+                "BASIC=2\n"
+                "/\n"
+                "SCHEDULE\n"
+                "TSTEP\n"
+                "1.0 2.0 3.0 4.0 /\n"
+                "WELSPECS\n"
+                "'INJ' 'G' 1 1 2000 'GAS' /\n"
+                "'PROD' 'G' 3 3 1000 'OIL' /\n"
+                "/\n";
 
-    createEclipseWriter(deckString);
+                createEclipseWriter(deckString);
 
-    eclWriter->writeInit(*simTimer);
+                eclWriter->writeInit(*simTimer);
 
-    checkEgridFile();
-    checkInitFile();
+                checkEgridFile();
+                checkInitFile();
 
-    for (; simTimer->currentStepNum() < simTimer->numSteps(); ++ (*simTimer)) {
-        createBlackoilState(simTimer->currentStepNum());
-        createWellState(simTimer->currentStepNum());
-        eclWriter->writeTimeStep(*simTimer, *blackoilState, *wellState, false);
-        checkRestartFile(simTimer->currentStepNum());
-        checkSummaryFile(simTimer->currentStepNum());
-    }
-}
+                for (; simTimer->currentStepNum() < simTimer->numSteps(); ++ (*simTimer)) {
+                    createBlackoilState(simTimer->currentStepNum());
+                    createWellState(simTimer->currentStepNum());
+                    eclWriter->writeTimeStep(*simTimer, *blackoilState, *wellState, false);
+                    checkRestartFile(simTimer->currentStepNum());
+                    checkSummaryFile(simTimer->currentStepNum());
+                }
+        }
