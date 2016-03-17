@@ -243,27 +243,11 @@ BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_default) {
         BOOST_CHECK_EQUAL(true , parser->isRecognizedKeyword("DIMENS"));
 }
 
-
-BOOST_AUTO_TEST_CASE(DropKeyword) {
-    ParserPtr parser(new Parser());
-    BOOST_CHECK_EQUAL(false , parser->dropParserKeyword("DoesNotHaveThis"));
-    BOOST_CHECK_EQUAL(true , parser->isRecognizedKeyword("BPR"));
-    BOOST_CHECK_EQUAL(true  , parser->dropParserKeyword("BLOCK_PROBE"));
-    BOOST_CHECK_EQUAL(false  , parser->dropParserKeyword("BLOCK_PROBE"));
-    BOOST_CHECK_EQUAL(false , parser->isRecognizedKeyword("BPR"));
-
-    BOOST_CHECK_EQUAL(true , parser->isRecognizedKeyword("TVDPX"));
-    BOOST_CHECK_EQUAL(true , parser->dropParserKeyword("TVDP"));
-    BOOST_CHECK_EQUAL(false , parser->isRecognizedKeyword("TVDPX"));
-}
-
-
 BOOST_AUTO_TEST_CASE(ReplaceKeyword) {
     ParserPtr parser(new Parser());
     const auto* eqldims = parser->getParserKeywordFromDeckName("EQLDIMS");
 
     BOOST_CHECK( parser->loadKeywordFromFile( "testdata/parser/EQLDIMS2" ) );
-
 
     eqldims = parser->getParserKeywordFromDeckName("EQLDIMS");
     auto record = eqldims->getRecord(0);

@@ -70,7 +70,6 @@ namespace Opm {
         /// Method to add ParserKeyword instances, these holding type and size information about the keywords and their data.
         void addParserKeyword(const Json::JsonObject& jsonKeyword);
         void addParserKeyword(std::unique_ptr< const ParserKeyword >&& parserKeyword);
-        bool dropParserKeyword(const std::string& parserKeywordName);
         const ParserKeyword* getKeyword(const std::string& name) const;
 
         bool isRecognizedKeyword( const std::string& deckKeywordName) const;

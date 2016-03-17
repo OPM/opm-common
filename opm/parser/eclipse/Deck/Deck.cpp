@@ -70,7 +70,7 @@ namespace Opm {
    }
 
     const std::vector< const DeckKeyword* > DeckView::getKeywordList( const std::string& keyword ) const {
-        if( !hasKeyword( keyword ) ) {};
+        if( !hasKeyword( keyword ) ) return {};
 
         const auto& indices = this->offsets( keyword );
 
@@ -120,6 +120,10 @@ namespace Opm {
         DeckView( limits.first, limits.second )
     {}
 
+    Deck::Deck() : Deck( std::vector< DeckKeyword >() ) {}
+    Deck::Deck( std::vector< DeckKeyword >&& x ) : DeckView( x.begin(), x.end() ),
+                                                   keywordList( std::move( x ) ) {}
+
     void Deck::addKeyword( DeckKeyword&& keyword ) {
         this->keywordList.push_back( std::move( keyword ) );
 
@@ -147,10 +151,12 @@ namespace Opm {
     }
 
     UnitSystem& Deck::getDefaultUnitSystem() const {
+        if( !this->defaultUnits ) const_cast< Deck* >( this )->initUnitSystem();
         return *this->defaultUnits;
     }
 
     UnitSystem& Deck::getActiveUnitSystem() const {
+        if( !this->activeUnits ) const_cast< Deck* >( this )->initUnitSystem();
         return *this->activeUnits;
     }
 

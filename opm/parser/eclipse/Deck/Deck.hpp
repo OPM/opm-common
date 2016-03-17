@@ -78,7 +78,6 @@ namespace Opm {
 
             const std::vector< size_t >& offsets( const std::string& ) const;
 
-            DeckView() = default;
             DeckView( const_iterator first, const_iterator last );
             DeckView( std::pair< const_iterator, const_iterator > );
 
@@ -100,6 +99,7 @@ namespace Opm {
             using DeckView::begin;
             using DeckView::end;
 
+            Deck();
             void addKeyword( DeckKeyword&& keyword );
             void addKeyword( const DeckKeyword& keyword );
 
@@ -110,6 +110,8 @@ namespace Opm {
             UnitSystem& getActiveUnitSystem()  const;
 
         private:
+            Deck( std::vector< DeckKeyword >&& );
+
             std::vector< DeckKeyword > keywordList;
             std::unique_ptr< UnitSystem > activeUnits;
             std::unique_ptr< UnitSystem > defaultUnits;
