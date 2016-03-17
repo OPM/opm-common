@@ -1,7 +1,7 @@
 set(PYTHON_SOURCES
     __init__.py
     parser.py
-    parse_mode.py
+    parse_context.py
     error_action.py
 )
 
