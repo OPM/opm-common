@@ -2,12 +2,12 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
 
 extern "C" {
 
-    Opm::Deck * parser_parse_file(const Opm::Parser * parser , const char * file , const Opm::ParseMode * parse_mode) {
+    Opm::Deck * parser_parse_file(const Opm::Parser * parser , const char * file , const Opm::ParseContext * parse_mode) {
         return parser->newDeckFromFile( file , *parse_mode );
     }
 

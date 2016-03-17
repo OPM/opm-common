@@ -6,7 +6,7 @@ from functools import partial
 from ert.cwrap import BaseCClass
 from opm import OPMPrototype
 from opm.deck import Deck
-from opm.parser import ParseMode
+from opm.parser import ParseContext
 
 
 
@@ -75,7 +75,7 @@ class Parser(BaseCClass):
 
         if os.path.isfile( filename ):
             if parse_mode is None:
-                parse_mode = ParseMode( )
+                parse_mode = ParseContext( )
             return parser._parse_file(parser , filename, parse_mode)
         else:
             raise IOError("No such file:%s" % filename)

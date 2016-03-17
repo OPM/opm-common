@@ -2,14 +2,14 @@ from unittest import TestCase
 
 from ert.test import TestAreaContext,ExtendedTestCase
 
-from opm.parser import ParseMode,ErrorAction
+from opm.parser import ParseContext,ErrorAction
 
 
 
-class ParseModeTest(ExtendedTestCase):
+class ParseContextTest(ExtendedTestCase):
 
     def test_parse_mode(self):
-        pm = ParseMode()
+        pm = ParseContext()
 
         pm.update( "PARSE*" , ErrorAction.IGNORE )
 

@@ -2,14 +2,14 @@ from unittest import TestCase
 
 from ert.test import TestAreaContext
 
-from opm.parser import Parser,ParseMode
+from opm.parser import Parser,ParseContext
 
 
 
 class ParserTest(TestCase):
     def test_parse(self):
         p = Parser()
-        pm = ParseMode()
+        pm = ParseContext()
         with self.assertRaises(IOError):
             p.parseFile("does/not/exist" , pm)
 

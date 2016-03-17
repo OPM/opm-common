@@ -4,4 +4,4 @@ set (TEST_SOURCES
 
 add_python_package("python.tests.parse_mode" "${PYTHON_INSTALL_PREFIX}/tests/parse_mode" "${TEST_SOURCES}" False)
 
-addPythontest( python.test_parse_mode tests.parse_mode.test_parse_mode.ParseModeTest )
+addPythontest( python.test_parse_mode tests.parse_mode.test_parse_mode.ParseContextTest )

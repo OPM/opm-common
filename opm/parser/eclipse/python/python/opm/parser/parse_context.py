@@ -1,7 +1,7 @@
 from ert.cwrap import BaseCClass, CWrapper
 from opm import OPMPrototype
 
-class ParseMode(BaseCClass):
+class ParseContext(BaseCClass):
     TYPE_NAME = "parse_mode"
     _alloc    = OPMPrototype("void* parse_mode_alloc()")
     _free     = OPMPrototype("void  parse_mode_free(parse_mode)")
@@ -9,7 +9,7 @@ class ParseMode(BaseCClass):
     
     def __init__(self):
         c_ptr = self._alloc()
-        super(ParseMode, self).__init__(c_ptr)
+        super(ParseContext, self).__init__(c_ptr)
 
         
     def free(self):
