@@ -27,7 +27,7 @@
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 
@@ -41,7 +41,7 @@ std::shared_ptr<const Deck> createCOMPSEGSDeck() {
         "/\n";
 
     Parser parser;
-    DeckConstPtr deck(parser.parseString(deckData, ParseMode()));
+    DeckConstPtr deck(parser.parseString(deckData, ParseContext()));
     return deck;
 }
 
