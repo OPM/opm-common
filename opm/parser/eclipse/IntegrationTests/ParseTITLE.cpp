@@ -27,7 +27,7 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE( parse_TITLE_OK ) {
     ParserPtr parser(new Parser());
     std::string fileWithTitleKeyword("testdata/integration_tests/TITLE/TITLE1.txt");
 
-    DeckPtr deck = parser->parseFile(fileWithTitleKeyword, ParseMode());
+    DeckPtr deck = parser->parseFile(fileWithTitleKeyword, ParseContext());
 
     BOOST_CHECK_EQUAL(size_t(2), deck->size());
     BOOST_CHECK_EQUAL (true, deck->hasKeyword("TITLE"));

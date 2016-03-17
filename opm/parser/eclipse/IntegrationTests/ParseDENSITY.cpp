@@ -28,7 +28,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
@@ -42,7 +42,7 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE(ParseDENSITY) {
     ParserPtr parser(new Parser());
     std::string file("testdata/integration_tests/DENSITY/DENSITY1");
-    DeckPtr deck =  parser->parseFile(file, ParseMode());
+    DeckPtr deck =  parser->parseFile(file, ParseContext());
     const auto& densityKw = deck->getKeyword("DENSITY" , 0);
 
 

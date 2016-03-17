@@ -27,7 +27,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
@@ -41,7 +41,7 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE( parse_EQUIL_OK ) {
     ParserPtr parser(new Parser());
     std::string pvtgFile("testdata/integration_tests/RSVD/RSVD.txt");
-    DeckPtr deck =  parser->parseFile(pvtgFile, ParseMode());
+    DeckPtr deck =  parser->parseFile(pvtgFile, ParseContext());
     const auto& kw1 = deck->getKeyword("RSVD" , 0);
     BOOST_CHECK_EQUAL( 6U , kw1.size() );
 

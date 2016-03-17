@@ -28,7 +28,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 using namespace Opm;
@@ -38,7 +38,7 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE( PARSE_PLYSHLOG_OK) {
     ParserPtr parser(new Parser());
     std::string deckFile("testdata/integration_tests/POLYMER/plyshlog.data");
-    DeckPtr deck =  parser->parseFile(deckFile, ParseMode());
+    DeckPtr deck =  parser->parseFile(deckFile, ParseContext());
     const auto& kw = deck->getKeyword("PLYSHLOG");
     const auto& rec1 = kw.getRecord(0); // reference conditions
 

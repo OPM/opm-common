@@ -26,7 +26,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
@@ -40,7 +40,7 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE(ParsePOROandPERMX) {
     ParserPtr parser(new Parser());
     std::string poroFile("testdata/integration_tests/PORO/PORO1");
-    DeckPtr deck =  parser->parseFile(poroFile, ParseMode());
+    DeckPtr deck =  parser->parseFile(poroFile, ParseContext());
     const auto& kw1 = deck->getKeyword("PORO" , 0);
     const auto& kw2 = deck->getKeyword("PERMX" , 0);
 

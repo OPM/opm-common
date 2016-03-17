@@ -29,7 +29,7 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
@@ -53,7 +53,7 @@ ENKRVD\n\
 
 BOOST_AUTO_TEST_CASE( ParseMissingRECORD_THrows) {
     ParserPtr parser(new Parser());
-    BOOST_CHECK_THROW( parser->parseString( dataMissingRecord , ParseMode()) , std::invalid_argument);
+    BOOST_CHECK_THROW( parser->parseString( dataMissingRecord , ParseContext()) , std::invalid_argument);
 }
 
 
@@ -73,7 +73,7 @@ ENKRVD\n\
 
 BOOST_AUTO_TEST_CASE( parse_DATAWithDefult_OK ) {
     ParserPtr parser(new Parser());
-    DeckConstPtr deck = parser->parseString( data , ParseMode());
+    DeckConstPtr deck = parser->parseString( data , ParseContext());
     const auto& keyword = deck->getKeyword( "ENKRVD" );
     const auto& rec0 = keyword.getRecord(0);
     const auto& rec1 = keyword.getRecord(1);

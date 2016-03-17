@@ -28,7 +28,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 using namespace Opm;
@@ -38,7 +38,7 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE( PARSE_PLYDHFLF_OK) {
     ParserPtr parser(new Parser());
     std::string deckFile("testdata/integration_tests/POLYMER/plydhflf.data");
-    DeckPtr deck =  parser->parseFile(deckFile, ParseMode());
+    DeckPtr deck =  parser->parseFile(deckFile, ParseContext());
     const auto& kw = deck->getKeyword("PLYDHFLF");
     const auto& rec = kw.getRecord(0);
     const auto& item = rec.getItem(0);

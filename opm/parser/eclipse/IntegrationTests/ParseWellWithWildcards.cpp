@@ -24,7 +24,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
@@ -42,10 +42,10 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE( parse_WCONPROD_OK ) {
     ParserPtr parser(new Parser());
     std::string wconprodFile("testdata/integration_tests/WellWithWildcards/WCONPROD1");
-    DeckPtr deck =  parser->parseFile(wconprodFile, ParseMode());
+    DeckPtr deck =  parser->parseFile(wconprodFile, ParseContext());
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 30,30,30);
     IOConfigPtr ioConfig;
-    SchedulePtr sched(new Schedule(ParseMode() , grid , deck, ioConfig));
+    SchedulePtr sched(new Schedule(ParseContext() , grid , deck, ioConfig));
 
     BOOST_CHECK_EQUAL(5U, sched->numWells());
     BOOST_CHECK(sched->hasWell("INJE1"));
@@ -75,13 +75,13 @@ BOOST_AUTO_TEST_CASE( parse_WCONPROD_OK ) {
 
 
 BOOST_AUTO_TEST_CASE( parse_WCONINJE_OK ) {
-    ParseMode parseMode;
+    ParseContext parseContext;
     ParserPtr parser(new Parser());
     std::string wconprodFile("testdata/integration_tests/WellWithWildcards/WCONINJE1");
-    DeckPtr deck =  parser->parseFile(wconprodFile, parseMode);
+    DeckPtr deck =  parser->parseFile(wconprodFile, parseContext);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 30,30,30 );
     IOConfigPtr ioConfig;
-    SchedulePtr sched(new Schedule(parseMode , grid , deck, ioConfig));
+    SchedulePtr sched(new Schedule(parseContext , grid , deck, ioConfig));
 
     BOOST_CHECK_EQUAL(5U, sched->numWells());
     BOOST_CHECK(sched->hasWell("PROD1"));

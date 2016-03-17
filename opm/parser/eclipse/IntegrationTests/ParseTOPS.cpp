@@ -27,7 +27,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
@@ -40,9 +40,9 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE( PARSE_TOPS_OK) {
     ParserPtr parser(new Parser());
     std::string deckFile("testdata/integration_tests/GRID/TOPS.DATA");
-    ParseMode parseMode;
-    DeckPtr deck =  parser->parseFile(deckFile, parseMode);
-    EclipseState state(deck , parseMode);
+    ParseContext parseContext;
+    DeckPtr deck =  parser->parseFile(deckFile, parseContext);
+    EclipseState state(deck , parseContext);
     EclipseGridConstPtr grid = state.getEclipseGrid();
 
     BOOST_CHECK_EQUAL( grid->getNX() , 9 );

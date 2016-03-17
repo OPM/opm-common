@@ -25,7 +25,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -41,9 +41,9 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE(MULTFLT_IN_SCHEDULE) {
     ParserPtr parser(new Parser());
     std::string scheduleFile("testdata/integration_tests/TRANS/Deck1");
-    ParseMode parseMode;
-    DeckPtr deck =  parser->parseFile(scheduleFile, parseMode);
-    std::shared_ptr<EclipseState> eclState = std::make_shared<EclipseState>( deck , parseMode );
+    ParseContext parseContext;
+    DeckPtr deck =  parser->parseFile(scheduleFile, parseContext);
+    std::shared_ptr<EclipseState> eclState = std::make_shared<EclipseState>( deck , parseContext );
     std::shared_ptr<const TransMult> trans = eclState->getTransMult();
     std::shared_ptr<const Schedule> schedule = eclState->getSchedule();
     const Events& events = schedule->getEvents();

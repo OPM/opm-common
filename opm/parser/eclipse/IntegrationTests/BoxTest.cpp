@@ -28,7 +28,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
@@ -42,8 +42,8 @@ EclipseState makeState(const std::string& fileName);
 EclipseState makeState(const std::string& fileName) {
     ParserPtr parser(new Parser( ));
     boost::filesystem::path boxFile(fileName);
-    DeckPtr deck =  parser->parseFile(boxFile.string(), ParseMode());
-    EclipseState state(deck , ParseMode());
+    DeckPtr deck =  parser->parseFile(boxFile.string(), ParseContext());
+    EclipseState state(deck , ParseContext());
     return state;
 }
 

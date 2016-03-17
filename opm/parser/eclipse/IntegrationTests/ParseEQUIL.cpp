@@ -27,7 +27,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
@@ -40,11 +40,11 @@ using namespace Opm;
 
 BOOST_AUTO_TEST_CASE( parse_EQUIL_MISSING_DIMS ) {
     Parser parser;
-    ParseMode parseMode;
-    parseMode.update(ParseMode::PARSE_MISSING_DIMS_KEYWORD, InputError::IGNORE);
+    ParseContext parseContext;
+    parseContext.update(ParseContext::PARSE_MISSING_DIMS_KEYWORD, InputError::IGNORE);
     const std::string equil = "EQUIL\n"
         "2469   382.4   1705.0  0.0    500    0.0     1     1      20 /";
-    std::shared_ptr<const Deck> deck = parser.parseString(equil, parseMode);
+    std::shared_ptr<const Deck> deck = parser.parseString(equil, parseContext);
     const auto& kw1 = deck->getKeyword("EQUIL" , 0);
     BOOST_CHECK_EQUAL( 1U , kw1.size() );
 
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE( parse_EQUIL_MISSING_DIMS ) {
 BOOST_AUTO_TEST_CASE( parse_EQUIL_OK ) {
     ParserPtr parser(new Parser());
     std::string pvtgFile("testdata/integration_tests/EQUIL/EQUIL1");
-    DeckPtr deck =  parser->parseFile(pvtgFile, ParseMode());
+    DeckPtr deck =  parser->parseFile(pvtgFile, ParseContext());
     const auto& kw1 = deck->getKeyword("EQUIL" , 0);
     BOOST_CHECK_EQUAL( 3U , kw1.size() );
 

@@ -27,7 +27,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_deckReturned) {
     path datafile;
     ParserPtr parser(new Parser());
     createDeckWithInclude (datafile, "");
-    DeckConstPtr deck =  parser->parseFile(datafile.string(), ParseMode());
+    DeckConstPtr deck =  parser->parseFile(datafile.string(), ParseContext());
 
     BOOST_CHECK( deck->hasKeyword("START"));
     BOOST_CHECK( deck->hasKeyword("DIMENS"));
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(parse_fileWithENDINCKeyword_deckReturned) {
     path datafile;
     ParserPtr parser(new Parser());
     createDeckWithInclude (datafile, "ENDINC");
-    DeckConstPtr deck =  parser->parseFile(datafile.string(), ParseMode());
+    DeckConstPtr deck =  parser->parseFile(datafile.string(), ParseContext());
 
     BOOST_CHECK( deck->hasKeyword("START"));
     BOOST_CHECK( !deck->hasKeyword("DIMENS"));
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(parse_fileWithENDKeyword_deckReturned) {
     path datafile;
     ParserPtr parser(new Parser());
     createDeckWithInclude (datafile, "END");
-    DeckConstPtr deck =  parser->parseFile(datafile.string(), ParseMode());
+    DeckConstPtr deck =  parser->parseFile(datafile.string(), ParseContext());
 
     BOOST_CHECK( deck->hasKeyword("START"));
     BOOST_CHECK( !deck->hasKeyword("DIMENS"));
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(parse_fileWithPathsKeyword_IncludeExtendsPath) {
     path datafile;
     ParserPtr parser(new Parser());
     createDeckWithInclude (datafile, "");
-    DeckConstPtr deck =  parser->parseFile(datafile.string(), ParseMode());
+    DeckConstPtr deck =  parser->parseFile(datafile.string(), ParseContext());
 
     BOOST_CHECK( deck->hasKeyword("TITLE"));
     BOOST_CHECK( deck->hasKeyword("BOX"));

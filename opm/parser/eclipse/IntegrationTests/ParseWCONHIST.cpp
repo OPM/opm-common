@@ -27,7 +27,7 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
@@ -42,7 +42,7 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE( parse_WCHONHIST_OK ) {
     ParserPtr parser(new Parser());
     std::string wconhistFile("testdata/integration_tests/WCONHIST/WCONHIST1");
-    DeckPtr deck =  parser->parseFile(wconhistFile, ParseMode());
+    DeckPtr deck =  parser->parseFile(wconhistFile, ParseContext());
     const auto& kw1 = deck->getKeyword("WCONHIST" , 0);
     BOOST_CHECK_EQUAL( 3U , kw1.size() );
 

@@ -34,7 +34,7 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
@@ -68,7 +68,7 @@ PVTO\n\
 
 
 static void check_parser(ParserPtr parser) {
-    DeckPtr deck =  parser->parseString(pvtoData, ParseMode());
+    DeckPtr deck =  parser->parseString(pvtoData, ParseContext());
     const auto& kw1 = deck->getKeyword("PVTO" , 0);
     BOOST_CHECK_EQUAL(5U , kw1.size());
 

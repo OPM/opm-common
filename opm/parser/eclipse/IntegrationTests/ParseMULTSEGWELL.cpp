@@ -30,7 +30,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 using namespace Opm;
@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE( PARSE_MULTISEGMENT_ABS ) {
 
     ParserPtr parser(new Parser());
     std::string deckFile("testdata/integration_tests/SCHEDULE/SCHEDULE_MULTISEGMENT_WELL");
-    DeckPtr deck =  parser->parseFile(deckFile, ParseMode());
+    DeckPtr deck =  parser->parseFile(deckFile, ParseContext());
     // for WELSEGS keyword
     const auto& kw = deck->getKeyword("WELSEGS");
 

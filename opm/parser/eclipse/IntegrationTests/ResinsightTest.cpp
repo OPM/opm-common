@@ -24,7 +24,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/F.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
@@ -37,16 +37,16 @@ using namespace Opm;
 
 BOOST_AUTO_TEST_CASE( test_parse ) {
     Parser parser(false);
-    ParseMode parseMode;
+    ParseContext parseContext;
 
-    parseMode.update( ParseMode::PARSE_UNKNOWN_KEYWORD , InputError::IGNORE );
-    parseMode.update( ParseMode::PARSE_RANDOM_TEXT , InputError::IGNORE );
-    parseMode.update( ParseMode::PARSE_RANDOM_SLASH , InputError::IGNORE );
+    parseContext.update( ParseContext::PARSE_UNKNOWN_KEYWORD , InputError::IGNORE );
+    parseContext.update( ParseContext::PARSE_RANDOM_TEXT , InputError::IGNORE );
+    parseContext.update( ParseContext::PARSE_RANDOM_SLASH , InputError::IGNORE );
 
     parser.addKeyword<ParserKeywords::SPECGRID>();
     parser.addKeyword<ParserKeywords::FAULTS>();
 
-    auto deck = parser.parseFile("testdata/integration_tests/Resinsight/DECK1.DATA" , parseMode);
+    auto deck = parser.parseFile("testdata/integration_tests/Resinsight/DECK1.DATA" , parseContext);
 
     BOOST_CHECK( deck->hasKeyword<ParserKeywords::SPECGRID>() );
     BOOST_CHECK( deck->hasKeyword<ParserKeywords::FAULTS>() );
@@ -55,16 +55,16 @@ BOOST_AUTO_TEST_CASE( test_parse ) {
 
 BOOST_AUTO_TEST_CASE( test_state ) {
     Parser parser(false);
-    ParseMode parseMode;
+    ParseContext parseContext;
 
-    parseMode.update( ParseMode::PARSE_UNKNOWN_KEYWORD , InputError::IGNORE );
-    parseMode.update( ParseMode::PARSE_RANDOM_TEXT , InputError::IGNORE );
-    parseMode.update( ParseMode::PARSE_RANDOM_SLASH , InputError::IGNORE );
+    parseContext.update( ParseContext::PARSE_UNKNOWN_KEYWORD , InputError::IGNORE );
+    parseContext.update( ParseContext::PARSE_RANDOM_TEXT , InputError::IGNORE );
+    parseContext.update( ParseContext::PARSE_RANDOM_SLASH , InputError::IGNORE );
 
     parser.addKeyword<ParserKeywords::SPECGRID>();
     parser.addKeyword<ParserKeywords::FAULTS>();
     parser.addKeyword<ParserKeywords::GRID>();
-    auto deck = parser.parseFile("testdata/integration_tests/Resinsight/DECK1.DATA" , parseMode);
+    auto deck = parser.parseFile("testdata/integration_tests/Resinsight/DECK1.DATA" , parseContext);
 
     auto grid = std::make_shared<EclipseGrid>( deck );
     auto gsec = std::make_shared< GRIDSection >( *deck );

@@ -28,7 +28,7 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseMode.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>
 
@@ -56,7 +56,7 @@ const char *parserData =
     "    1.0 1.0 0.1 9.0 /\n";
 
 static void check_parser(ParserPtr parser) {
-    DeckPtr deck =  parser->parseString(parserData, ParseMode());
+    DeckPtr deck =  parser->parseString(parserData, ParseContext());
     const auto& kw1 = deck->getKeyword("SGOF");
     BOOST_CHECK_EQUAL(1U , kw1.size());
 
@@ -68,7 +68,7 @@ static void check_parser(ParserPtr parser) {
 }
 
 static void check_SgofTable(ParserPtr parser) {
-    DeckPtr deck =  parser->parseString(parserData, ParseMode());
+    DeckPtr deck =  parser->parseString(parserData, ParseContext());
     Opm::SgofTable sgofTable(deck->getKeyword("SGOF").getRecord(0).getItem(0));
 
     BOOST_CHECK_EQUAL(10U, sgofTable.getSgColumn().size());
