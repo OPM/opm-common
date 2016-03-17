@@ -22,11 +22,20 @@
 
 list (APPEND MAIN_SOURCE_FILES
       opm/common/data/SimulationDataContainer.cpp
+      opm/common/OpmLog/CounterLog.cpp
+      opm/common/OpmLog/EclipsePRTLog.cpp
+      opm/common/OpmLog/LogBackend.cpp
+      opm/common/OpmLog/Logger.cpp
+      opm/common/OpmLog/LogUtil.cpp
+      opm/common/OpmLog/OpmLog.cpp
+      opm/common/OpmLog/StreamLog.cpp
+      opm/common/OpmLog/TimerLog.cpp
 )
 
 list (APPEND TEST_SOURCE_FILES
       tests/test_SimulationDataContainer.cpp
       tests/test_cmp.cpp
+      tests/test_OpmLog.cpp
       )
 
 list (APPEND TEST_DATA_FILES
@@ -42,9 +51,17 @@ list (APPEND PROGRAM_SOURCE_FILES
 
 
 list( APPEND PUBLIC_HEADER_FILES
-      opm/common/data/SimulationDataContainer.hpp
-      opm/common/util/numeric/cmp.hpp
       opm/common/ErrorMacros.hpp
       opm/common/Exceptions.hpp
+      opm/common/data/SimulationDataContainer.hpp
+      opm/common/OpmLog/CounterLog.hpp
+      opm/common/OpmLog/EclipsePRTLog.hpp
+      opm/common/OpmLog/LogBackend.hpp
+      opm/common/OpmLog/Logger.hpp
+      opm/common/OpmLog/LogUtil.hpp
+      opm/common/OpmLog/OpmLog.hpp
+      opm/common/OpmLog/StreamLog.hpp
+      opm/common/OpmLog/TimerLog.hpp
+      opm/common/util/numeric/cmp.hpp
       opm/common/utility/platform_dependent/disable_warnings.h
-      opm/common/utility/platform_dependent/reenable_warnings.h )
+      opm/common/utility/platform_dependent/reenable_warnings.h)
