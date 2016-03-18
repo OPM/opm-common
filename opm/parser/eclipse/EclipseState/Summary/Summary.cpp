@@ -103,6 +103,28 @@ namespace Opm {
         return fun::map( mkrecord, keyword );
     }
 
+    static inline std::vector< ERT::smspec_node > keywordR(
+            const DeckKeyword& keyword,
+            const EclipseState& es ) {
+
+        std::array< int, 3 > dims = {{
+            int( es.getEclipseGrid()->getNX() ),
+            int( es.getEclipseGrid()->getNY() ),
+            int( es.getEclipseGrid()->getNZ() )
+        }};
+
+        const auto mknode = [&dims,&keyword]( int region ) {
+            return ERT::smspec_node( keyword.name(), dims.data(), region );
+        };
+
+        const auto& item = keyword.getDataRecord().getDataItem();
+        const auto regions = item.size() > 0 && item.hasValue( 0 )
+            ? item.getData< int >()
+            : es.getRegions();
+
+        return fun::map( mknode, regions );
+    }
+
     std::vector< ERT::smspec_node > handleKW( const DeckKeyword& keyword, const EclipseState& es ) {
         const auto var_type = ecl_smspec_identify_var_type( keyword.name().c_str() );
 
@@ -111,6 +133,7 @@ namespace Opm {
             case ECL_SMSPEC_GROUP_VAR: return keywordWG( var_type, keyword, es );
             case ECL_SMSPEC_FIELD_VAR: return keywordF( keyword, es );
             case ECL_SMSPEC_BLOCK_VAR: return keywordB( keyword, es );
+            case ECL_SMSPEC_REGION_VAR: return keywordR( keyword, es );
 
             default: return {};
         }

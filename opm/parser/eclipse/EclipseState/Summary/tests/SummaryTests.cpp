@@ -39,6 +39,9 @@ static DeckPtr createDeck( const std::string& summary ) {
             "DIMENS\n"
             " 10 10 10 /\n"
             "GRID\n"
+            "REGIONS\n"
+            "FIPNUM\n"
+            "200*1 300*2 500*3 /\n"
             "SCHEDULE\n"
             "WELSPECS\n"
             "     \'W_1\'        \'OP\'   30   37  3.33       \'OIL\'  7* /   \n"
@@ -116,6 +119,25 @@ BOOST_AUTO_TEST_CASE(blocks) {
                        "/";
     const auto summary = createSummary( input );
     const auto keywords = { "BPR", "BPR" };
+    const auto names = sorted_keywords( summary );
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+            keywords.begin(), keywords.end(),
+            names.begin(), names.end() );
+}
+
+BOOST_AUTO_TEST_CASE(regions) {
+    const auto input = "ROIP\n"
+                       "1 2 3 /\n"
+                       "RWIP\n"
+                       "/\n"
+                       "RGIP\n"
+                       "1 2 /\n";
+
+    const auto summary = createSummary( input );
+    const auto keywords = { "RGIP", "RGIP",
+                    "ROIP", "ROIP", "ROIP",
+                    "RWIP", "RWIP", "RWIP" };
     const auto names = sorted_keywords( summary );
 
     BOOST_CHECK_EQUAL_COLLECTIONS(
