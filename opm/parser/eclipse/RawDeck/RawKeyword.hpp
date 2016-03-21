@@ -44,7 +44,7 @@ namespace Opm {
         void addRawRecordString(const std::string& partialRecordString);
         size_t size() const;
         Raw::KeywordSizeEnum getSizeType() const;
-        std::shared_ptr< RawRecord > getRecord(size_t index) const;
+        RawRecord& getRecord( size_t index );
 
         static bool isKeywordPrefix(const std::string& line, std::string& keywordName);
 
@@ -64,7 +64,7 @@ namespace Opm {
         size_t m_numTables;
         size_t m_currentNumTables;
         std::string m_name;
-        std::vector<std::shared_ptr< RawRecord >> m_records;
+        std::vector< RawRecord > m_records;
         std::string m_partialRecordString;
 
         size_t m_lineNR;

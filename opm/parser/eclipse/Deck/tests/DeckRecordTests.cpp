@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(get_byNameNonExisting_throws) {
 BOOST_AUTO_TEST_CASE(StringsWithSpaceOK) {
     ParserStringItemPtr itemString(new ParserStringItem(std::string("STRINGITEM1")));
     ParserRecordPtr record1(new ParserRecord());
-    RawRecordPtr rawRecord(new Opm::RawRecord(" ' VALUE ' /"));
+    RawRecord rawRecord( " ' VALUE ' /" );
     ParseContext parseContext;
     record1->addItem( itemString );
 

@@ -86,7 +86,7 @@ namespace Opm {
         return m_defaultSet;
     }
 
-    DeckItem ParserIntItem::scan(RawRecordPtr rawRecord) const {
+    DeckItem ParserIntItem::scan( RawRecord& rawRecord) const {
         return ParserItemScan<ParserIntItem,int>(this , rawRecord);
     }
 

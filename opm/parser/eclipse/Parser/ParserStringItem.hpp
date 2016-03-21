@@ -41,7 +41,7 @@ namespace Opm {
         explicit ParserStringItem( const Json::JsonObject& jsonConfig);
 
         bool equal(const ParserItem& other) const override;
-        DeckItem scan(RawRecordPtr rawRecord) const override;
+        DeckItem scan( RawRecord& rawRecord ) const override;
 
         std::string createCode() const override;
         void inlineClass(std::ostream& os, const std::string& indent) const override;

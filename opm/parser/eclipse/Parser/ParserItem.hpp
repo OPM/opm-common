@@ -45,7 +45,7 @@ namespace Opm {
 
         virtual void push_backDimension(const std::string& dimension);
         virtual const std::string& getDimension(size_t index) const;
-        virtual DeckItem scan(std::shared_ptr< RawRecord > rawRecord) const = 0;
+        virtual DeckItem scan( RawRecord& rawRecord) const = 0;
         virtual bool hasDimension() const;
         virtual size_t numDimensions() const;
         const std::string className() const;
@@ -146,12 +146,12 @@ namespace Opm {
     /// returns a DeckItem object.
     /// NOTE: data are popped from the rawRecords deque!
     template<typename ParserItemType, typename ValueType>
-    DeckItem ParserItemScan(const ParserItemType * self , std::shared_ptr< RawRecord > rawRecord) {
-        auto deckItem = DeckItem::make< ValueType >( self->name(), rawRecord->size() );
+    DeckItem ParserItemScan(const ParserItemType * self, RawRecord& rawRecord ) {
+        auto deckItem = DeckItem::make< ValueType >( self->name(), rawRecord.size() );
 
         if (self->sizeType() == ALL) {
-            while (rawRecord->size() > 0) {
-                auto token = rawRecord->pop_front();
+            while (rawRecord.size() > 0) {
+                auto token = rawRecord.pop_front();
 
                 std::string countString;
                 std::string valueString;
@@ -172,7 +172,7 @@ namespace Opm {
                 }
             }
         } else {
-            if (rawRecord->size() == 0) {
+            if (rawRecord.size() == 0) {
                 // if the record was ended prematurely,
                 if (self->hasDefault()) {
                     // use the default value for the item, if there is one...
@@ -185,7 +185,7 @@ namespace Opm {
             } else {
                 // The '*' should be interpreted as a repetition indicator, but it must
                 // be preceeded by an integer...
-                auto token = rawRecord->pop_front();
+                auto token = rawRecord.pop_front();
                 std::string countString;
                 std::string valueString;
                 if (isStarToken(token, countString, valueString)) {
@@ -209,7 +209,7 @@ namespace Opm {
                         singleRepetition = "1*";
 
                     for (size_t i=0; i < st.count() - 1; i++)
-                        rawRecord->push_front(singleRepetition);
+                        rawRecord.push_front(singleRepetition);
                 } else {
                     deckItem.push_back( readValueToken<ValueType>( token ) );
                 }

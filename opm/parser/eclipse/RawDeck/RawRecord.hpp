@@ -35,7 +35,7 @@ namespace Opm {
 
     class RawRecord {
     public:
-        RawRecord(const std::string& singleRecordString, const std::string& fileName = "", const std::string& keywordName = "");
+        RawRecord(std::string&&, const std::string& fileName = "", const std::string& keywordName = "");
 
         string_view pop_front();
         void push_front(std::string token);

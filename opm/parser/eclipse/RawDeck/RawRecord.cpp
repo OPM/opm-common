@@ -113,10 +113,16 @@ namespace Opm {
         return std::count( str.begin(), str.end(), RawConsts::quote ) % 2 == 0;
     }
 
-    RawRecord::RawRecord(const std::string& singleRecordString,
+    static inline std::string trim_record( std::string&& str ) {
+        std::string local( std::move( str ) );
+        local.resize( findTerminatingSlash( local ) );
+        return local;
+    }
+
+    RawRecord::RawRecord(std::string&& singleRecordString,
                          const std::string& fileName,
                          const std::string& keywordName) :
-        m_sanitizedRecordString( singleRecordString, 0, findTerminatingSlash( singleRecordString ) ),
+        m_sanitizedRecordString( trim_record( std::move( singleRecordString ) ) ),
         m_recordItems( splitSingleRecordString( m_sanitizedRecordString ) ),
         m_fileName(fileName),
         m_keywordName(keywordName)
