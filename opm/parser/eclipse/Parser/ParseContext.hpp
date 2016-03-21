@@ -18,8 +18,8 @@
 */
 
 
-#ifndef OPM_PARSE_MODE_HPP
-#define OPM_PARSE_MODE_HPP
+#ifndef OPM_PARSE_CONTEXT_HPP
+#define OPM_PARSE_CONTEXT_HPP
 
 #include <string>
 #include <map>
