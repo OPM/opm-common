@@ -20,19 +20,6 @@
 #define ECLIPSE_GRIDPROPERTY_INITIALIZERS_HPP
 
 #include <vector>
-#include <string>
-#include <exception>
-#include <memory>
-#include <limits>
-#include <algorithm>
-#include <cmath>
-
-#include <cassert>
-
-#include <opm/parser/eclipse/EclipseState/Tables/RtempvdTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
-
-
 
 /*
   This classes initialize GridProperty objects. Most commonly, they just get a constant
@@ -41,86 +28,58 @@
 */
 namespace Opm {
 
-// forward definitions
 class Deck;
 class EclipseState;
-class EnptvdTable;
-class ImptvdTable;
-class TableContainer;
 
-template <class ValueType>
-class GridPropertyBaseInitializer
-{
-protected:
-    GridPropertyBaseInitializer()
-    { }
+template< typename T >
+    class GridPropertyInitFunction {
+        public:
+            using signature = std::vector< T >(*)(
+                        size_t,
+                        const Deck&,
+                        const EclipseState&
+                    );
 
-public:
-    virtual void apply(std::vector<ValueType>& values) const = 0;
-};
+            GridPropertyInitFunction(
+                    signature,
+                    const Deck&,
+                    const EclipseState& );
 
-template <class ValueType>
-class GridPropertyConstantInitializer
-    : public GridPropertyBaseInitializer<ValueType>
-{
-public:
-    GridPropertyConstantInitializer(const ValueType& value)
-        : m_value(value)
-    { }
+            GridPropertyInitFunction( T );
+            std::vector< T > operator()( size_t ) const;
 
-    void apply(std::vector<ValueType>& values) const
-    {
-        std::fill(values.begin(), values.end(), m_value);
-    }
+        private:
+            signature f = nullptr;
+            T constant;
+            const Deck* deck = nullptr;
+            const EclipseState* es = nullptr;
+    };
 
-private:
-    ValueType m_value;
-};
+template< typename T >
+    class GridPropertyPostFunction {
+        public:
+            using signature = void(*)( std::vector< T >&,
+                                       const Deck&,
+                                       const EclipseState&
+                                     );
 
+            GridPropertyPostFunction() = default;
+            GridPropertyPostFunction(
+                    signature,
+                    const Deck&,
+                    const EclipseState& );
 
+            void operator()( std::vector< T >& ) const;
 
+        private:
+            signature f = nullptr;
+            const Deck* deck = nullptr;
+            const EclipseState* es = nullptr;
+    };
 
-
-// initialize the TEMPI grid property using the temperature vs depth
-// table (stemming from the TEMPVD or the RTEMPVD keyword)
-template <class EclipseState=Opm::EclipseState,
-          class Deck=Opm::Deck>
-class GridPropertyTemperatureLookupInitializer
-    : public GridPropertyBaseInitializer<double>
-{
-public:
-    GridPropertyTemperatureLookupInitializer(const Deck& deck, const EclipseState& eclipseState)
-        : m_deck(deck)
-        , m_eclipseState(eclipseState)
-    { }
-
-    void apply(std::vector<double>& values) const
-    {
-        if (!m_deck.hasKeyword("EQLNUM")) {
-            // if values are defaulted in the TEMPI keyword, but no
-            // EQLNUM is specified, you will get NaNs...
-            double nan = std::numeric_limits<double>::quiet_NaN();
-            std::fill(values.begin(), values.end(), nan);
-            return;
-        }
-
-        auto tables = m_eclipseState.getTableManager();
-        auto eclipseGrid = m_eclipseState.getEclipseGrid();
-        const TableContainer& rtempvdTables = tables->getRtempvdTables();
-        const std::vector<int>& eqlNum = m_eclipseState.getIntGridProperty("EQLNUM")->getData();
-
-        for (size_t cellIdx = 0; cellIdx < eqlNum.size(); ++ cellIdx) {
-            int cellEquilNum = eqlNum[cellIdx];
-            const RtempvdTable& rtempvdTable = rtempvdTables.getTable<RtempvdTable>(cellEquilNum);
-            double cellDepth = std::get<2>(eclipseGrid->getCellCenter(cellIdx));
-            values[cellIdx] = rtempvdTable.evaluate("Temperature", cellDepth);
-        }
-    }
-
-private:
-    const Deck& m_deck;
-    const EclipseState& m_eclipseState;
-};
+    // initialize the TEMPI grid property using the temperature vs depth
+    // table (stemming from the TEMPVD or the RTEMPVD keyword)
+    std::vector< double > temperature_lookup( size_t, const Deck&, const EclipseState& );
 
 }
 

@@ -29,6 +29,7 @@ namespace Opm {
 
     template< typename > class GridProperties;
 
+    class DeckRecord;
     class DeckKeyword;
 
     namespace MULTREGT {

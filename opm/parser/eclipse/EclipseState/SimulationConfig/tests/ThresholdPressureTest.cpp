@@ -28,6 +28,7 @@
 #include <boost/filesystem.hpp>
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -141,10 +142,9 @@ static DeckPtr createDeck(const ParseContext& parseContext , const std::string& 
 
 static std::shared_ptr<GridProperties<int>> getGridProperties(int defaultEqlnum = 3, bool addKeyword = true) {
     GridPropertySupportedKeywordInfo<int> kwInfo = GridPropertySupportedKeywordInfo<int>("EQLNUM", defaultEqlnum, "");
-    std::shared_ptr<std::vector<GridPropertySupportedKeywordInfo<int>>> supportedKeywordsVec = std::make_shared<std::vector<GridPropertySupportedKeywordInfo<int>>>();
-    supportedKeywordsVec->push_back(kwInfo);
+    std::vector<GridPropertySupportedKeywordInfo<int>> supportedKeywordsVec( 1, kwInfo );
     EclipseGridConstPtr eclipseGrid = std::make_shared<const EclipseGrid>(3, 3, 3);
-    std::shared_ptr<GridProperties<int>> gridProperties = std::make_shared<GridProperties<int>>(eclipseGrid, supportedKeywordsVec);
+    std::shared_ptr<GridProperties<int>> gridProperties = std::make_shared<GridProperties<int>>(eclipseGrid, std::move( supportedKeywordsVec ) );
     if (addKeyword) {
         gridProperties->addKeyword("EQLNUM");
     }

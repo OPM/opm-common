@@ -38,6 +38,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
 
 static const Opm::DeckKeyword createSATNUMKeyword( ) {
@@ -382,23 +383,11 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
     BOOST_CHECK_EQUAL(sguPropData[2 * 3*3], 0.80);
 }
 
-template <class ValueType>
-class TestPostProcessorMul : public Opm::GridPropertyBasePostProcessor<ValueType>
-{
-public:
-    TestPostProcessorMul(ValueType factor) {
-        m_factor = factor;
-    }
 
-    void apply(std::vector<ValueType>& values) const {
-        for (size_t g = 0; g < values.size(); g++)
-            values[g] *= m_factor;
-    };
-
-private:
-    ValueType m_factor;
-};
-
+void TestPostProcessorMul(std::vector< double >& values, const Opm::Deck&, const Opm::EclipseState& ) {
+    for( size_t g = 0; g < values.size(); g++ )
+        values[g] *= 2.0;
+}
 
 
 
@@ -428,18 +417,19 @@ static Opm::DeckPtr createDeck() {
     return parser->parseString(deckData, Opm::ParseContext()) ;
 }
 
-
 BOOST_AUTO_TEST_CASE(GridPropertyPostProcessors) {
-    std::shared_ptr<TestPostProcessorMul<double> > testPostP = std::make_shared<TestPostProcessorMul<double> >(2.0);
-
     typedef Opm::GridPropertySupportedKeywordInfo<double> SupportedKeywordInfo;
-    SupportedKeywordInfo kwInfo1("MULTPV" , 1.0 , "1");
-    SupportedKeywordInfo kwInfo2("PORO"   , 1.0 , testPostP , "1");
-    std::shared_ptr<std::vector<SupportedKeywordInfo> > supportedKeywords(new std::vector<SupportedKeywordInfo>{
-        kwInfo1 , kwInfo2 });
+
     Opm::DeckPtr deck = createDeck();
+    Opm::EclipseState st( deck, Opm::ParseMode() ) ;
     std::shared_ptr<Opm::EclipseGrid> grid = std::make_shared<Opm::EclipseGrid>(deck);
-    Opm::GridProperties<double> properties(grid, supportedKeywords);
+
+    SupportedKeywordInfo kwInfo1("MULTPV" , 1.0 , "1");
+    Opm::GridPropertyPostFunction< double > gfunc( &TestPostProcessorMul, *deck, st );
+    SupportedKeywordInfo kwInfo2("PORO", 1.0, gfunc, "1");
+    std::vector<SupportedKeywordInfo > supportedKeywords = { kwInfo1, kwInfo2 };
+
+    Opm::GridProperties<double> properties(grid, std::move( supportedKeywords ) );
 
     {
         auto poro = properties.getKeyword("PORO");
@@ -448,22 +438,16 @@ BOOST_AUTO_TEST_CASE(GridPropertyPostProcessors) {
         poro->loadFromDeckKeyword( deck->getKeyword("PORO" , 0));
         multpv->loadFromDeckKeyword( deck->getKeyword("MULTPV" , 0));
 
-        if (poro->postProcessorRunRequired())
-            poro->runPostProcessor();
-
-        if (multpv->postProcessorRunRequired())
-            multpv->runPostProcessor();
+        poro->runPostProcessor();
+        multpv->runPostProcessor();
 
         for (size_t g = 0; g < 1000; g++) {
             BOOST_CHECK_EQUAL( multpv->iget(g) , 0.10 );
             BOOST_CHECK_EQUAL( poro->iget(g)  , 0.20 );
         }
 
-        if (poro->postProcessorRunRequired())
-            poro->runPostProcessor();
-
-        if (multpv->postProcessorRunRequired())
-            multpv->runPostProcessor();
+        poro->runPostProcessor();
+        multpv->runPostProcessor();
 
         for (size_t g = 0; g < 1000; g++) {
             BOOST_CHECK_EQUAL( multpv->iget(g) , 0.10 );
@@ -471,10 +455,6 @@ BOOST_AUTO_TEST_CASE(GridPropertyPostProcessors) {
         }
 
     }
-
-
-    BOOST_CHECK( !kwInfo1.hasPostProcessor() );
-    BOOST_CHECK( kwInfo2.hasPostProcessor() );
 }
 
 

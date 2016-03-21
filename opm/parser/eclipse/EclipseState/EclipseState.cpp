@@ -36,6 +36,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
@@ -46,80 +47,50 @@ namespace Opm {
 
     namespace GridPropertyPostProcessor {
 
-        class DistributeTopLayer : public GridPropertyBasePostProcessor<double>
-        {
-        public:
-            DistributeTopLayer(const EclipseState& eclipseState) :
-                m_eclipseState( eclipseState )
-            { }
+        void distTopLayer( std::vector<double>& values, const Deck& m_deck, const EclipseState& m_eclipseState ) {
+            EclipseGridConstPtr grid = m_eclipseState.getEclipseGrid();
+            size_t layerSize = grid->getNX() * grid->getNY();
+            size_t gridSize  = grid->getCartesianSize();
 
-
-            void apply(std::vector<double>& values) const {
-                EclipseGridConstPtr grid = m_eclipseState.getEclipseGrid();
-                size_t layerSize = grid->getNX() * grid->getNY();
-                size_t gridSize  = grid->getCartesianSize();
-
-                for (size_t globalIndex = layerSize; globalIndex < gridSize; globalIndex++) {
-                    if (std::isnan( values[ globalIndex ] ))
-                        values[globalIndex] = values[globalIndex - layerSize];
-                }
+            for( size_t globalIndex = layerSize; globalIndex < gridSize; globalIndex++ ) {
+                if( std::isnan( values[ globalIndex ] ) )
+                    values[globalIndex] = values[globalIndex - layerSize];
             }
+        }
 
-
-        private:
-            const EclipseState& m_eclipseState;
-        };
-
-        /*-----------------------------------------------------------------*/
-
-        class InitPORV : public GridPropertyBasePostProcessor<double>
-        {
-        public:
-            InitPORV(const EclipseState& eclipseState) :
-                m_eclipseState( eclipseState )
-            { }
-
-
-            void apply(std::vector<double>& values) const {
-                EclipseGridConstPtr grid = m_eclipseState.getEclipseGrid();
-                /*
-                  Observe that this apply method does not alter the
-                  values input vector, instead it fetches the PORV
-                  property one more time, and then manipulates that.
-                */
-                auto porv = m_eclipseState.getDoubleGridProperty("PORV");
-                if (porv->containsNaN()) {
-                    auto poro = m_eclipseState.getDoubleGridProperty("PORO");
-                    auto ntg = m_eclipseState.getDoubleGridProperty("NTG");
-                    if (poro->containsNaN())
-                        throw std::logic_error("Do not have information for the PORV keyword - some defaulted values in PORO");
-                    else {
-                        const auto& poroData = poro->getData();
-                        for (size_t globalIndex = 0; globalIndex < porv->getCartesianSize(); globalIndex++) {
-                            if (std::isnan(values[globalIndex])) {
-                                double cell_poro = poroData[globalIndex];
-                                double cell_ntg = ntg->iget(globalIndex);
-                                double cell_volume = grid->getCellVolume(globalIndex);
-                                values[globalIndex] = cell_poro * cell_volume * cell_ntg;
-                            }
+        void initPORV( std::vector<double>& values, const Deck& m_deck, const EclipseState& m_eclipseState ) {
+            EclipseGridConstPtr grid = m_eclipseState.getEclipseGrid();
+            /*
+               Observe that this apply method does not alter the
+               values input vector, instead it fetches the PORV
+               property one more time, and then manipulates that.
+               */
+            auto porv = m_eclipseState.getDoubleGridProperty("PORV");
+            if (porv->containsNaN()) {
+                auto poro = m_eclipseState.getDoubleGridProperty("PORO");
+                auto ntg = m_eclipseState.getDoubleGridProperty("NTG");
+                if (poro->containsNaN())
+                    throw std::logic_error("Do not have information for the PORV keyword - some defaulted values in PORO");
+                else {
+                    const auto& poroData = poro->getData();
+                    for (size_t globalIndex = 0; globalIndex < porv->getCartesianSize(); globalIndex++) {
+                        if (std::isnan(values[globalIndex])) {
+                            double cell_poro = poroData[globalIndex];
+                            double cell_ntg = ntg->iget(globalIndex);
+                            double cell_volume = grid->getCellVolume(globalIndex);
+                            values[globalIndex] = cell_poro * cell_volume * cell_ntg;
                         }
                     }
                 }
-
-                if (m_eclipseState.hasDeckDoubleGridProperty("MULTPV")) {
-                    auto multpvData = m_eclipseState.getDoubleGridProperty("MULTPV")->getData();
-                    for (size_t globalIndex = 0; globalIndex < porv->getCartesianSize(); globalIndex++) {
-                        values[globalIndex] *= multpvData[globalIndex];
-                    }
-                }
             }
 
-
-        private:
-            const EclipseState& m_eclipseState;
-        };
-
-
+            if (m_eclipseState.hasDeckDoubleGridProperty("MULTPV")) {
+                auto multpvData = m_eclipseState.getDoubleGridProperty("MULTPV")->getData();
+                for (size_t globalIndex = 0; globalIndex < porv->getCartesianSize(); globalIndex++) {
+                    values[globalIndex] *= multpvData[globalIndex];
+                }
+            }
+        }
     }
 
 
@@ -461,8 +432,8 @@ namespace Opm {
 
     std::shared_ptr<const GridProperty<double> > EclipseState::getDoubleGridProperty( const std::string& keyword ) const {
         auto gridProperty = m_doubleGridProperties->getKeyword( keyword );
-        if (gridProperty->postProcessorRunRequired())
-            gridProperty->runPostProcessor();
+
+        gridProperty->runPostProcessor();
 
         return gridProperty;
     }
@@ -512,395 +483,222 @@ namespace Opm {
         }
     }
 
+    static std::vector< GridProperties< int >::SupportedKeywordInfo >
+    makeSupportedIntKeywords() {
+        return {    GridProperties< int >::SupportedKeywordInfo( "SATNUM" , 1, "1" ),
+                    GridProperties< int >::SupportedKeywordInfo( "IMBNUM" , 1, "1" ),
+                    GridProperties< int >::SupportedKeywordInfo( "PVTNUM" , 1, "1" ),
+                    GridProperties< int >::SupportedKeywordInfo( "EQLNUM" , 1, "1" ),
+                    GridProperties< int >::SupportedKeywordInfo( "ENDNUM" , 1, "1" ),
+                    GridProperties< int >::SupportedKeywordInfo( "FLUXNUM" , 1 , "1" ),
+                    GridProperties< int >::SupportedKeywordInfo( "MULTNUM", 1 , "1" ),
+                    GridProperties< int >::SupportedKeywordInfo( "FIPNUM" , 1, "1" ),
+                    GridProperties< int >::SupportedKeywordInfo( "MISCNUM", 1, "1" )
+        };
+    }
 
-    void EclipseState::initProperties(DeckConstPtr deck) {
-        typedef GridProperties<int>::SupportedKeywordInfo SupportedIntKeywordInfo;
-        std::shared_ptr<std::vector<SupportedIntKeywordInfo> > supportedIntKeywords(new std::vector<SupportedIntKeywordInfo>{
-            SupportedIntKeywordInfo( "SATNUM" , 1, "1" ),
-            SupportedIntKeywordInfo( "IMBNUM" , 1, "1" ),
-            SupportedIntKeywordInfo( "PVTNUM" , 1, "1" ),
-            SupportedIntKeywordInfo( "EQLNUM" , 1, "1" ),
-            SupportedIntKeywordInfo( "ENDNUM" , 1, "1" ),
-            SupportedIntKeywordInfo( "FLUXNUM" , 1 , "1" ),
-            SupportedIntKeywordInfo( "MULTNUM", 1 , "1" ),
-            SupportedIntKeywordInfo( "FIPNUM" , 1, "1" ),
-            SupportedIntKeywordInfo( "MISCNUM", 1, "1" )
-            });
+    static std::vector< GridProperties< double >::SupportedKeywordInfo >
+    makeSupportedDoubleKeywords(const Deck& deck, const EclipseState& es) {
+        GridPropertyInitFunction< double > SGLLookup    ( &SGLEndpoint, deck, es );
+        GridPropertyInitFunction< double > ISGLLookup   ( &ISGLEndpoint, deck, es );
+        GridPropertyInitFunction< double > SWLLookup    ( &SWLEndpoint, deck, es );
+        GridPropertyInitFunction< double > ISWLLookup   ( &ISWLEndpoint, deck, es );
+        GridPropertyInitFunction< double > SGULookup    ( &SGUEndpoint, deck, es );
+        GridPropertyInitFunction< double > ISGULookup   ( &ISGUEndpoint, deck, es );
+        GridPropertyInitFunction< double > SWULookup    ( &SWUEndpoint, deck, es );
+        GridPropertyInitFunction< double > ISWULookup   ( &ISWUEndpoint, deck, es );
+        GridPropertyInitFunction< double > SGCRLookup   ( &SGCREndpoint, deck, es );
+        GridPropertyInitFunction< double > ISGCRLookup  ( &ISGCREndpoint, deck, es );
+        GridPropertyInitFunction< double > SOWCRLookup  ( &SOWCREndpoint, deck, es );
+        GridPropertyInitFunction< double > ISOWCRLookup ( &ISOWCREndpoint, deck, es );
+        GridPropertyInitFunction< double > SOGCRLookup  ( &SOGCREndpoint, deck, es );
+        GridPropertyInitFunction< double > ISOGCRLookup ( &ISOGCREndpoint, deck, es );
+        GridPropertyInitFunction< double > SWCRLookup   ( &SWCREndpoint, deck, es );
+        GridPropertyInitFunction< double > ISWCRLookup  ( &ISWCREndpoint, deck, es );
 
-        double nan = std::numeric_limits<double>::quiet_NaN();
-        const auto SGLLookup = std::make_shared<SGLEndpointInitializer<>>(*deck, *this);
-        const auto ISGLLookup = std::make_shared<ISGLEndpointInitializer<>>(*deck, *this);
-        const auto SWLLookup = std::make_shared<SWLEndpointInitializer<>>(*deck, *this);
-        const auto ISWLLookup = std::make_shared<ISWLEndpointInitializer<>>(*deck, *this);
-        const auto SGULookup = std::make_shared<SGUEndpointInitializer<>>(*deck, *this);
-        const auto ISGULookup = std::make_shared<ISGUEndpointInitializer<>>(*deck, *this);
-        const auto SWULookup = std::make_shared<SWUEndpointInitializer<>>(*deck, *this);
-        const auto ISWULookup = std::make_shared<ISWUEndpointInitializer<>>(*deck, *this);
-        const auto SGCRLookup = std::make_shared<SGCREndpointInitializer<>>(*deck, *this);
-        const auto ISGCRLookup = std::make_shared<ISGCREndpointInitializer<>>(*deck, *this);
-        const auto SOWCRLookup = std::make_shared<SOWCREndpointInitializer<>>(*deck, *this);
-        const auto ISOWCRLookup = std::make_shared<ISOWCREndpointInitializer<>>(*deck, *this);
-        const auto SOGCRLookup = std::make_shared<SOGCREndpointInitializer<>>(*deck, *this);
-        const auto ISOGCRLookup = std::make_shared<ISOGCREndpointInitializer<>>(*deck, *this);
-        const auto SWCRLookup = std::make_shared<SWCREndpointInitializer<>>(*deck, *this);
-        const auto ISWCRLookup = std::make_shared<ISWCREndpointInitializer<>>(*deck, *this);
+        GridPropertyInitFunction< double > PCWLookup    ( &PCWEndpoint, deck, es );
+        GridPropertyInitFunction< double > IPCWLookup   ( &IPCWEndpoint, deck, es );
+        GridPropertyInitFunction< double > PCGLookup    ( &PCGEndpoint, deck, es );
+        GridPropertyInitFunction< double > IPCGLookup   ( &IPCGEndpoint, deck, es );
+        GridPropertyInitFunction< double > KRWLookup    ( &KRWEndpoint, deck, es );
+        GridPropertyInitFunction< double > IKRWLookup   ( &IKRWEndpoint, deck, es );
+        GridPropertyInitFunction< double > KRWRLookup   ( &KRWREndpoint, deck, es );
+        GridPropertyInitFunction< double > IKRWRLookup  ( &IKRWREndpoint, deck, es );
+        GridPropertyInitFunction< double > KROLookup    ( &KROEndpoint, deck, es );
+        GridPropertyInitFunction< double > IKROLookup   ( &IKROEndpoint, deck, es );
+        GridPropertyInitFunction< double > KRORWLookup  ( &KRORWEndpoint, deck, es );
+        GridPropertyInitFunction< double > IKRORWLookup ( &IKRORWEndpoint, deck, es );
+        GridPropertyInitFunction< double > KRORGLookup  ( &KRORGEndpoint, deck, es );
+        GridPropertyInitFunction< double > IKRORGLookup ( &IKRORGEndpoint, deck, es );
+        GridPropertyInitFunction< double > KRGLookup    ( &KRGEndpoint, deck, es );
+        GridPropertyInitFunction< double > IKRGLookup   ( &IKRGEndpoint, deck, es );
+        GridPropertyInitFunction< double > KRGRLookup   ( &KRGREndpoint, deck, es );
+        GridPropertyInitFunction< double > IKRGRLookup  ( &IKRGREndpoint, deck, es );
 
-        const auto PCWLookup = std::make_shared<PCWEndpointInitializer<>>(*deck, *this);
-        const auto IPCWLookup = std::make_shared<IPCWEndpointInitializer<>>(*deck, *this);
-        const auto PCGLookup = std::make_shared<PCGEndpointInitializer<>>(*deck, *this);
-        const auto IPCGLookup = std::make_shared<IPCGEndpointInitializer<>>(*deck, *this);
-        const auto KRWLookup = std::make_shared<KRWEndpointInitializer<>>(*deck, *this);
-        const auto IKRWLookup = std::make_shared<IKRWEndpointInitializer<>>(*deck, *this);
-        const auto KRWRLookup = std::make_shared<KRWREndpointInitializer<>>(*deck, *this);
-        const auto IKRWRLookup = std::make_shared<IKRWREndpointInitializer<>>(*deck, *this);
-        const auto KROLookup = std::make_shared<KROEndpointInitializer<>>(*deck, *this);
-        const auto IKROLookup = std::make_shared<IKROEndpointInitializer<>>(*deck, *this);
-        const auto KRORWLookup = std::make_shared<KRORWEndpointInitializer<>>(*deck, *this);
-        const auto IKRORWLookup = std::make_shared<IKRORWEndpointInitializer<>>(*deck, *this);
-        const auto KRORGLookup = std::make_shared<KRORGEndpointInitializer<>>(*deck, *this);
-        const auto IKRORGLookup = std::make_shared<IKRORGEndpointInitializer<>>(*deck, *this);
-        const auto KRGLookup = std::make_shared<KRGEndpointInitializer<>>(*deck, *this);
-        const auto IKRGLookup = std::make_shared<IKRGEndpointInitializer<>>(*deck, *this);
-        const auto KRGRLookup = std::make_shared<KRGREndpointInitializer<>>(*deck, *this);
-        const auto IKRGRLookup = std::make_shared<IKRGREndpointInitializer<>>(*deck, *this);
+        GridPropertyInitFunction< double > tempLookup   ( &temperature_lookup, deck, es );
+        GridPropertyPostFunction< double > initPORV     ( &GridPropertyPostProcessor::initPORV, deck, es );
+        GridPropertyPostFunction< double > distributeTopLayer( &GridPropertyPostProcessor::distTopLayer, deck, es );
 
-        const auto tempLookup = std::make_shared<GridPropertyTemperatureLookupInitializer<>>(*deck, *this);
-        const auto distributeTopLayer = std::make_shared<const GridPropertyPostProcessor::DistributeTopLayer>(*this);
-        const auto initPORV = std::make_shared<GridPropertyPostProcessor::InitPORV>(*this);
+        std::vector< GridProperties< double >::SupportedKeywordInfo > supportedDoubleKeywords;
 
-
-        // Note that the variants of grid keywords for radial grids
-        // are not supported. (and hopefully never will be)
-        typedef GridProperties<double>::SupportedKeywordInfo SupportedDoubleKeywordInfo;
-        std::shared_ptr<std::vector<SupportedDoubleKeywordInfo> > supportedDoubleKeywords(new std::vector<SupportedDoubleKeywordInfo>);
-
-        // keywords to specify the scaled connate gas
-        // saturations.
-        supportedDoubleKeywords->emplace_back( "SGL"    , SGLLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SGLX"   , SGLLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SGLX-"  , SGLLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SGLY"   , SGLLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SGLY-"  , SGLLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SGLZ"   , SGLLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SGLZ-"  , SGLLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISGL"   , ISGLLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISGLX"  , ISGLLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISGLX-" , ISGLLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISGLY"  , ISGLLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISGLY-" , ISGLLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISGLZ"  , ISGLLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISGLZ-" , ISGLLookup, "1" );
+        // keywords to specify the scaled connate gas saturations.
+        for( const auto& kw : { "SGL", "SGLX", "SGLX-", "SGLY", "SGLY-", "SGLZ", "SGLZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, SGLLookup, "1" );
+        for( const auto& kw : { "ISGL", "ISGLX", "ISGLX-", "ISGLY", "ISGLY-", "ISGLZ", "ISGLZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, ISGLLookup, "1" );
 
         // keywords to specify the connate water saturation.
-        supportedDoubleKeywords->emplace_back( "SWL"    , SWLLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SWLX"   , SWLLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SWLX-"  , SWLLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SWLY"   , SWLLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SWLY-"  , SWLLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SWLZ"   , SWLLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SWLZ-"  , SWLLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISWL"   , ISWLLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISWLX"  , ISWLLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISWLX-" , ISWLLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISWLY"  , ISWLLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISWLY-" , ISWLLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISWLZ"  , ISWLLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISWLZ-" , ISWLLookup, "1" );
+        for( const auto& kw : { "SWL", "SWLX", "SWLX-", "SWLY", "SWLY-", "SWLZ", "SWLZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, SWLLookup, "1" );
+        for( const auto& kw : { "ISWL", "ISWLX", "ISWLX-", "ISWLY", "ISWLY-", "ISWLZ", "ISWLZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, ISWLLookup, "1" );
 
         // keywords to specify the maximum gas saturation.
-        supportedDoubleKeywords->emplace_back( "SGU"    , SGULookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SGUX"   , SGULookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SGUX-"  , SGULookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SGUY"   , SGULookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SGUY-"  , SGULookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SGUZ"   , SGULookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SGUZ-"  , SGULookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISGU"   , ISGULookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISGUX"  , ISGULookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISGUX-" , ISGULookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISGUY"  , ISGULookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISGUY-" , ISGULookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISGUZ"  , ISGULookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISGUZ-" , ISGULookup, "1" );
+        for( const auto& kw : { "SGU", "SGUX", "SGUX-", "SGUY", "SGUY-", "SGUZ", "SGUZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, SGULookup, "1" );
+        for( const auto& kw : { "ISGU", "ISGUX", "ISGUX-", "ISGUY", "ISGUY-", "ISGUZ", "ISGUZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, ISGULookup, "1" );
 
         // keywords to specify the maximum water saturation.
-        supportedDoubleKeywords->emplace_back( "SWU"    , SWULookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SWUX"   , SWULookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SWUX-"  , SWULookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SWUY"   , SWULookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SWUY-"  , SWULookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SWUZ"   , SWULookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SWUZ-"  , SWULookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISWU"   , ISWULookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISWUX"  , ISWULookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISWUX-" , ISWULookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISWUY"  , ISWULookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISWUY-" , ISWULookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISWUZ"  , ISWULookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISWUZ-" , ISWULookup, "1" );
+        for( const auto& kw : { "SWU", "SWUX", "SWUX-", "SWUY", "SWUY-", "SWUZ", "SWUZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, SWULookup, "1" );
+        for( const auto& kw : { "ISWU", "ISWUX", "ISWUX-", "ISWUY", "ISWUY-", "ISWUZ", "ISWUZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, ISWULookup, "1" );
 
-        // keywords to specify the scaled critical gas
-        // saturation.
-        supportedDoubleKeywords->emplace_back( "SGCR"     , SGCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SGCRX"    , SGCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SGCRX-"   , SGCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SGCRY"    , SGCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SGCRY-"   , SGCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SGCRZ"    , SGCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SGCRZ-"   , SGCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISGCR"    , ISGCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISGCRX"   , ISGCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISGCRX-"  , ISGCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISGCRY"   , ISGCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISGCRY-"  , ISGCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISGCRZ"   , ISGCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISGCRZ-"  , ISGCRLookup, "1" );
+        // keywords to specify the scaled critical gas saturation.
+        for( const auto& kw : { "SGCR", "SGCRX", "SGCRX-", "SGCRY", "SGCRY-", "SGCRZ", "SGCRZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, SGCRLookup, "1" );
+        for( const auto& kw : { "ISGCR", "ISGCRX", "ISGCRX-", "ISGCRY", "ISGCRY-", "ISGCRZ", "ISGCRZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, ISGCRLookup, "1" );
 
-        // keywords to specify the scaled critical oil-in-water
-        // saturation.
-        supportedDoubleKeywords->emplace_back( "SOWCR"    , SOWCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SOWCRX"   , SOWCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SOWCRX-"  , SOWCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SOWCRY"   , SOWCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SOWCRY-"  , SOWCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SOWCRZ"   , SOWCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SOWCRZ-"  , SOWCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISOWCR"   , ISOWCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISOWCRX"  , ISOWCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISOWCRX-" , ISOWCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISOWCRY"  , ISOWCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISOWCRY-" , ISOWCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISOWCRZ"  , ISOWCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISOWCRZ-" , ISOWCRLookup, "1" );
+        // keywords to specify the scaled critical oil-in-water saturation.
+        for( const auto& kw : { "SOWCR", "SOWCRX", "SOWCRX-", "SOWCRY", "SOWCRY-", "SOWCRZ", "SOWCRZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, SOWCRLookup, "1" );
+        for( const auto& kw : { "ISOWCR", "ISOWCRX", "ISOWCRX-", "ISOWCRY", "ISOWCRY-", "ISOWCRZ", "ISOWCRZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, ISOWCRLookup, "1" );
 
-        // keywords to specify the scaled critical oil-in-gas
-        // saturation.
-        supportedDoubleKeywords->emplace_back( "SOGCR"    , SOGCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SOGCRX"   , SOGCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SOGCRX-"  , SOGCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SOGCRY"   , SOGCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SOGCRY-"  , SOGCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SOGCRZ"   , SOGCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SOGCRZ-"  , SOGCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISOGCR"   , ISOGCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISOGCRX"  , ISOGCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISOGCRX-" , ISOGCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISOGCRY"  , ISOGCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISOGCRY-" , ISOGCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISOGCRZ"  , ISOGCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISOGCRZ-" , ISOGCRLookup, "1" );
+        // keywords to specify the scaled critical oil-in-gas saturation.
+        for( const auto& kw : { "SOGCR", "SOGCRX", "SOGCRX-", "SOGCRY", "SOGCRY-", "SOGCRZ", "SOGCRZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, SOGCRLookup, "1" );
+        for( const auto& kw : { "ISOGCR", "ISOGCRX", "ISOGCRX-", "ISOGCRY", "ISOGCRY-", "ISOGCRZ", "ISOGCRZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, ISOGCRLookup, "1" );
 
-        // keywords to specify the scaled critical water
-        // saturation.
-        supportedDoubleKeywords->emplace_back( "SWCR"     , SWCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SWCRX"    , SWCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SWCRX-"   , SWCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SWCRY"    , SWCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SWCRY-"   , SWCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SWCRZ"    , SWCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "SWCRZ-"   , SWCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISWCR"    , ISWCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISWCRX"   , ISWCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISWCRX-"  , ISWCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISWCRY"   , ISWCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISWCRY-"  , ISWCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISWCRZ"   , ISWCRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "ISWCRZ-"  , ISWCRLookup, "1" );
+        // keywords to specify the scaled critical water saturation.
+        for( const auto& kw : { "SWCR", "SWCRX", "SWCRX-", "SWCRY", "SWCRY-", "SWCRZ", "SWCRZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, SWCRLookup, "1" );
+        for( const auto& kw : { "ISWCR", "ISWCRX", "ISWCRX-", "ISWCRY", "ISWCRY-", "ISWCRZ", "ISWCRZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, ISWCRLookup, "1" );
 
         // keywords to specify the scaled oil-water capillary pressure
-        supportedDoubleKeywords->emplace_back( "PCW"    , PCWLookup, "Pressure" );
-        supportedDoubleKeywords->emplace_back( "PCWX"   , PCWLookup, "Pressure" );
-        supportedDoubleKeywords->emplace_back( "PCWX-"  , PCWLookup, "Pressure" );
-        supportedDoubleKeywords->emplace_back( "PCWY"   , PCWLookup, "Pressure" );
-        supportedDoubleKeywords->emplace_back( "PCWY-"  , PCWLookup, "Pressure" );
-        supportedDoubleKeywords->emplace_back( "PCWZ"   , PCWLookup, "Pressure" );
-        supportedDoubleKeywords->emplace_back( "PCWZ-"  , PCWLookup, "Pressure" );
-        supportedDoubleKeywords->emplace_back( "IPCW"   , IPCWLookup, "Pressure" );
-        supportedDoubleKeywords->emplace_back( "IPCWX"  , IPCWLookup, "Pressure" );
-        supportedDoubleKeywords->emplace_back( "IPCWX-" , IPCWLookup, "Pressure" );
-        supportedDoubleKeywords->emplace_back( "IPCWY"  , IPCWLookup, "Pressure" );
-        supportedDoubleKeywords->emplace_back( "IPCWY-" , IPCWLookup, "Pressure" );
-        supportedDoubleKeywords->emplace_back( "IPCWZ"  , IPCWLookup, "Pressure" );
-        supportedDoubleKeywords->emplace_back( "IPCWZ-" , IPCWLookup, "Pressure" );
+        for( const auto& kw : { "PCW", "PCWX", "PCWX-", "PCWY", "PCWY-", "PCWZ", "PCWZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, PCWLookup, "1" );
+        for( const auto& kw : { "IPCW", "IPCWX", "IPCWX-", "IPCWY", "IPCWY-", "IPCWZ", "IPCWZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, IPCWLookup, "1" );
 
         // keywords to specify the scaled gas-oil capillary pressure
-        supportedDoubleKeywords->emplace_back( "PCG"    , PCGLookup, "Pressure" );
-        supportedDoubleKeywords->emplace_back( "PCGX"   , PCGLookup, "Pressure" );
-        supportedDoubleKeywords->emplace_back( "PCGX-"  , PCGLookup, "Pressure" );
-        supportedDoubleKeywords->emplace_back( "PCGY"   , PCGLookup, "Pressure" );
-        supportedDoubleKeywords->emplace_back( "PCGY-"  , PCGLookup, "Pressure" );
-        supportedDoubleKeywords->emplace_back( "PCGZ"   , PCGLookup, "Pressure" );
-        supportedDoubleKeywords->emplace_back( "PCGZ-"  , PCGLookup, "Pressure" );
-        supportedDoubleKeywords->emplace_back( "IPCG"   , IPCGLookup, "Pressure" );
-        supportedDoubleKeywords->emplace_back( "IPCGX"  , IPCGLookup, "Pressure" );
-        supportedDoubleKeywords->emplace_back( "IPCGX-" , IPCGLookup, "Pressure" );
-        supportedDoubleKeywords->emplace_back( "IPCGY"  , IPCGLookup, "Pressure" );
-        supportedDoubleKeywords->emplace_back( "IPCGY-" , IPCGLookup, "Pressure" );
-        supportedDoubleKeywords->emplace_back( "IPCGZ"  , IPCGLookup, "Pressure" );
-        supportedDoubleKeywords->emplace_back( "IPCGZ-" , IPCGLookup, "Pressure" );
+        for( const auto& kw : { "PCG", "PCGX", "PCGX-", "PCGY", "PCGY-", "PCGZ", "PCGZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, PCGLookup, "1" );
+        for( const auto& kw : { "IPCG", "IPCGX", "IPCGX-", "IPCGY", "IPCGY-", "IPCGZ", "IPCGZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, IPCGLookup, "1" );
 
         // keywords to specify the scaled water relative permeability
-        supportedDoubleKeywords->emplace_back( "KRW"    , KRWLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRWX"   , KRWLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRWX-"  , KRWLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRWY"   , KRWLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRWY-"  , KRWLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRWZ"   , KRWLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRWZ-"  , KRWLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRW"   , IKRWLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRWX"  , IKRWLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRWX-" , IKRWLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRWY"  , IKRWLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRWY-" , IKRWLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRWZ"  , IKRWLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRWZ-" , IKRWLookup, "1" );
+        for( const auto& kw : { "KRW", "KRWX", "KRWX-", "KRWY", "KRWY-", "KRWZ", "KRWZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, KRWLookup, "1" );
+        for( const auto& kw : { "IKRW", "IKRWX", "IKRWX-", "IKRWY", "IKRWY-", "IKRWZ", "IKRWZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, IKRWLookup, "1" );
 
         // keywords to specify the scaled water relative permeability at the critical
         // saturation
-        supportedDoubleKeywords->emplace_back( "KRWR"    , KRWRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRWRX"   , KRWRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRWRX-"  , KRWRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRWRY"   , KRWRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRWRY-"  , KRWRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRWRZ"   , KRWRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRWRZ-"  , KRWRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRWR"   , IKRWRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRWRX"  , IKRWRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRWRX-" , IKRWRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRWRY"  , IKRWRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRWRY-" , IKRWRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRWRZ"  , IKRWRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRWRZ-" , IKRWRLookup, "1" );
+        for( const auto& kw : { "KRWR" , "KRWRX" , "KRWRX-" , "KRWRY" , "KRWRY-" , "KRWRZ" , "KRWRZ-"  } )
+            supportedDoubleKeywords.emplace_back( kw, KRWRLookup, "1" );
+        for( const auto& kw : { "IKRWR" , "IKRWRX" , "IKRWRX-" , "IKRWRY" , "IKRWRY-" , "IKRWRZ" , "IKRWRZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, IKRWRLookup, "1" );
 
         // keywords to specify the scaled oil relative permeability
-        supportedDoubleKeywords->emplace_back( "KRO"    , KROLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KROX"   , KROLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KROX-"  , KROLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KROY"   , KROLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KROY-"  , KROLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KROZ"   , KROLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KROZ-"  , KROLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRO"   , IKROLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKROX"  , IKROLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKROX-" , IKROLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKROY"  , IKROLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKROY-" , IKROLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKROZ"  , IKROLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKROZ-" , IKROLookup, "1" );
+        for( const auto& kw : { "KRO", "KROX", "KROX-", "KROY", "KROY-", "KROZ", "KROZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, KROLookup, "1" );
+        for( const auto& kw : { "IKRO", "IKROX", "IKROX-", "IKROY", "IKROY-", "IKROZ", "IKROZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, IKROLookup, "1" );
 
         // keywords to specify the scaled water relative permeability at the critical
         // water saturation
-        supportedDoubleKeywords->emplace_back( "KRORW"    , KRORWLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRORWX"   , KRORWLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRORWX-"  , KRORWLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRORWY"   , KRORWLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRORWY-"  , KRORWLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRORWZ"   , KRORWLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRORWZ-"  , KRORWLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRORW"   , IKRORWLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRORWX"  , IKRORWLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRORWX-" , IKRORWLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRORWY"  , IKRORWLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRORWY-" , IKRORWLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRORWZ"  , IKRORWLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRORWZ-" , IKRORWLookup, "1" );
+        for( const auto& kw : { "KRORW", "KRORWX", "KRORWX-", "KRORWY", "KRORWY-", "KRORWZ", "KRORWZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, KRORWLookup, "1" );
+        for( const auto& kw : { "IKRORW", "IKRORWX", "IKRORWX-", "IKRORWY", "IKRORWY-", "IKRORWZ", "IKRORWZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, IKRORWLookup, "1" );
 
         // keywords to specify the scaled water relative permeability at the critical
         // water saturation
-        supportedDoubleKeywords->emplace_back( "KRORG"    , KRORGLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRORGX"   , KRORGLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRORGX-"  , KRORGLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRORGY"   , KRORGLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRORGY-"  , KRORGLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRORGZ"   , KRORGLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRORGZ-"  , KRORGLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRORG"   , IKRORGLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRORGX"  , IKRORGLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRORGX-" , IKRORGLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRORGY"  , IKRORGLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRORGY-" , IKRORGLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRORGZ"  , IKRORGLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRORGZ-" , IKRORGLookup, "1" );
+        for( const auto& kw : { "KRORG", "KRORGX", "KRORGX-", "KRORGY", "KRORGY-", "KRORGZ", "KRORGZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, KRORGLookup, "1" );
+        for( const auto& kw : { "IKRORG", "IKRORGX", "IKRORGX-", "IKRORGY", "IKRORGY-", "IKRORGZ", "IKRORGZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, IKRORGLookup, "1" );
 
         // keywords to specify the scaled gas relative permeability
-        supportedDoubleKeywords->emplace_back( "KRG"    , KRGLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRGX"   , KRGLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRGX-"  , KRGLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRGY"   , KRGLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRGY-"  , KRGLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRGZ"   , KRGLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRGZ-"  , KRGLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRG"   , IKRGLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRGX"  , IKRGLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRGX-" , IKRGLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRGY"  , IKRGLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRGY-" , IKRGLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRGZ"  , IKRGLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRGZ-" , IKRGLookup, "1" );
+        for( const auto& kw : { "KRG", "KRGX", "KRGX-", "KRGY", "KRGY-", "KRGZ", "KRGZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, KRGLookup, "1" );
+        for( const auto& kw : { "IKRG", "IKRGX", "IKRGX-", "IKRGY", "IKRGY-", "IKRGZ", "IKRGZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, IKRGLookup, "1" );
 
         // keywords to specify the scaled gas relative permeability
-        supportedDoubleKeywords->emplace_back( "KRGR"    , KRGRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRGRX"   , KRGRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRGRX-"  , KRGRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRGRY"   , KRGRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRGRY-"  , KRGRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRGRZ"   , KRGRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "KRGRZ-"  , KRGRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRGR"   , IKRGRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRGRX"  , IKRGRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRGRX-" , IKRGRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRGRY"  , IKRGRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRGRY-" , IKRGRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRGRZ"  , IKRGRLookup, "1" );
-        supportedDoubleKeywords->emplace_back( "IKRGRZ-" , IKRGRLookup, "1" );
+        for( const auto& kw : { "KRGR", "KRGRX", "KRGRX-", "KRGRY", "KRGRY-", "KRGRZ", "KRGRZ-" } )
+             supportedDoubleKeywords.emplace_back( kw, KRGRLookup, "1" );
+        for( const auto& kw : { "IKRGR", "IKRGRX", "IKRGRX-", "IKRGRY", "IKRGRY-", "IKRGRZ", "IKRGRZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, IKRGRLookup, "1" );
+
+
 
         // cell temperature (E300 only, but makes a lot of sense for E100, too)
-        supportedDoubleKeywords->emplace_back( "TEMPI"    , tempLookup, "Temperature" );
+        supportedDoubleKeywords.emplace_back( "TEMPI", tempLookup, "Temperature" );
 
+        double nan = std::numeric_limits<double>::quiet_NaN();
         // porosity
-        supportedDoubleKeywords->emplace_back( "PORO"  , nan, distributeTopLayer , "1" );
+        supportedDoubleKeywords.emplace_back( "PORO", nan, distributeTopLayer, "1" );
 
         // pore volume
-        supportedDoubleKeywords->emplace_back( "PORV"  , nan, initPORV , "Volume" );
+        supportedDoubleKeywords.emplace_back( "PORV", nan, initPORV, "Volume" );
 
         // pore volume multipliers
-        supportedDoubleKeywords->emplace_back( "MULTPV", 1.0, "1" );
+        supportedDoubleKeywords.emplace_back( "MULTPV", 1.0, "1" );
 
         // the permeability keywords
-        supportedDoubleKeywords->emplace_back( "PERMX" , nan,  distributeTopLayer , "Permeability" );
-        supportedDoubleKeywords->emplace_back( "PERMY" , nan,  distributeTopLayer , "Permeability" );
-        supportedDoubleKeywords->emplace_back( "PERMZ" , nan,  distributeTopLayer , "Permeability" );
-        supportedDoubleKeywords->emplace_back( "PERMXY", nan,  distributeTopLayer , "Permeability" ); // E300 only
-        supportedDoubleKeywords->emplace_back( "PERMYZ", nan,  distributeTopLayer , "Permeability" ); // E300 only
-        supportedDoubleKeywords->emplace_back( "PERMZX", nan,  distributeTopLayer , "Permeability" ); // E300 only
+        for( const auto& kw : { "PERMX", "PERMY", "PERMZ" } )
+            supportedDoubleKeywords.emplace_back( kw, nan, distributeTopLayer, "Permeability" );
 
-        // the transmissibility keywords for neighboring
-        // conections. note that these keywords don't seem to
-        // require a post-processor...
-        supportedDoubleKeywords->emplace_back( "TRANX", nan, "Transmissibility" );
-        supportedDoubleKeywords->emplace_back( "TRANY", nan, "Transmissibility" );
-        supportedDoubleKeywords->emplace_back( "TRANZ", nan, "Transmissibility" );
+        /* E300 only */
+        for( const auto& kw : { "PERMXY", "PERMYZ", "PERMZX" } )
+            supportedDoubleKeywords.emplace_back( kw, nan, distributeTopLayer, "Permeability" );
 
-        // gross-to-net thickness (acts as a multiplier for PORO
-        // and the permeabilities in the X-Y plane as well as for
-        // the well rates.)
-        supportedDoubleKeywords->emplace_back( "NTG"   , 1.0, "1" );
+        /* the transmissibility keywords for neighboring connections. note that
+         * these keywords don't seem to require a post-processor
+         */
+        for( const auto& kw : { "TRANX", "TRANY", "TRANZ" } )
+            supportedDoubleKeywords.emplace_back( kw, nan, "Transmissibility" );
+
+        /* gross-to-net thickness (acts as a multiplier for PORO and the
+         * permeabilities in the X-Y plane as well as for the well rates.)
+         */
+        supportedDoubleKeywords.emplace_back( "NTG", 1.0, "1" );
 
         // transmissibility multipliers
-        supportedDoubleKeywords->emplace_back( "MULTX" , 1.0, "1" );
-        supportedDoubleKeywords->emplace_back( "MULTY" , 1.0, "1" );
-        supportedDoubleKeywords->emplace_back( "MULTZ" , 1.0, "1" );
-        supportedDoubleKeywords->emplace_back( "MULTX-", 1.0, "1" );
-        supportedDoubleKeywords->emplace_back( "MULTY-", 1.0, "1" );
-        supportedDoubleKeywords->emplace_back( "MULTZ-", 1.0, "1" );
+        for( const auto& kw : { "MULTX", "MULTY", "MULTZ", "MULTX-", "MULTY-", "MULTZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, 1.0, "1" );
 
         // initialisation
-        supportedDoubleKeywords->emplace_back( "SWATINIT" , 0.0, "1");
-        supportedDoubleKeywords->emplace_back( "THCONR" , 0.0, "1");
+        supportedDoubleKeywords.emplace_back( "SWATINIT", 0.0, "1");
+        supportedDoubleKeywords.emplace_back( "THCONR", 0.0, "1");
+
+        return supportedDoubleKeywords;
+    }
+
+    void EclipseState::initProperties(DeckConstPtr deck) {
+
+        // Note that the variants of grid keywords for radial grids
+        // are not supported. (and hopefully never will be)
 
         // register the grid properties
-        m_intGridProperties = std::make_shared<GridProperties<int> >(m_eclipseGrid , supportedIntKeywords);
-        m_doubleGridProperties = std::make_shared<GridProperties<double> >(m_eclipseGrid , supportedDoubleKeywords);
+        m_intGridProperties.reset( new GridProperties< int >( m_eclipseGrid , makeSupportedIntKeywords() ) );
+        m_doubleGridProperties.reset( new GridProperties< double >( m_eclipseGrid, makeSupportedDoubleKeywords(*deck, *this) ) );
 
         // actually create the grid property objects. we need to first
         // process all integer grid properties before the double ones

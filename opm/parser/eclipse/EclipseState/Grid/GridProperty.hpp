@@ -21,258 +21,97 @@
 
 #include <string>
 #include <vector>
-#include <algorithm>
-#include <boost/lexical_cast.hpp>
 
 #include <ert/ecl/EclKW.hpp>
 
-#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridPropertyInitializers.hpp>
 
 /*
   This class implemenents a class representing properties which are
   define over an ECLIPSE grid, i.e. with one value for each logical
   cartesian cell in the grid.
-
-  The class is implemented as a thin wrapper around std::vector<T>;
-  where the most relevant specialisations of T are 'int' and 'float'.
 */
-
-
-
 
 namespace Opm {
 
-template <class ValueType>
-class GridPropertyBasePostProcessor
-{
-protected:
-    GridPropertyBasePostProcessor() { }
+    class Box;
+    class DeckItem;
+    class DeckKeyword;
+    class EclipseGrid;
 
-public:
-    virtual void apply(std::vector<ValueType>& values) const = 0;
+template< typename T >
+class GridPropertySupportedKeywordInfo {
+
+    public:
+        GridPropertySupportedKeywordInfo() = default;
+
+        GridPropertySupportedKeywordInfo(
+            const std::string& name,
+            GridPropertyInitFunction< T > initializer,
+            GridPropertyPostFunction< T > postProcessor,
+            const std::string& dimString );
+
+        GridPropertySupportedKeywordInfo(
+                const std::string& name,
+                GridPropertyInitFunction< T > initializer,
+                const std::string& dimString);
+
+        /* this is a convenience constructor which can be used if the default
+         * value for the grid property is just a constant.
+         */
+        GridPropertySupportedKeywordInfo(
+                const std::string& name,
+                const T defaultValue,
+                const std::string& dimString );
+
+        GridPropertySupportedKeywordInfo(
+                const std::string& name,
+                const T defaultValue,
+                GridPropertyPostFunction< T > postProcessor,
+                const std::string& dimString );
+
+        const std::string& getKeywordName() const;
+        const std::string& getDimensionString() const;
+        const GridPropertyInitFunction< T >& initializer() const;
+        const GridPropertyPostFunction< T >& postProcessor() const;
+
+    private:
+        std::string m_keywordName;
+        GridPropertyInitFunction< T > m_initializer;
+        GridPropertyPostFunction< T > m_postProcessor;
+        std::string m_dimensionString;
 };
 
-
-
-
-template <class DataType>
-class GridPropertySupportedKeywordInfo
-{
-public:
-    typedef GridPropertyBaseInitializer<DataType> Initializer;
-    typedef GridPropertyBasePostProcessor<DataType> PostProcessor;
-
-    GridPropertySupportedKeywordInfo()
-    {}
-
-    GridPropertySupportedKeywordInfo(const std::string& name,
-                                     std::shared_ptr<const Initializer> initializer,
-                                     std::shared_ptr<const PostProcessor> postProcessor,
-                                     const std::string& dimString)
-        : m_keywordName(name),
-          m_initializer(initializer),
-          m_postProcessor(postProcessor),
-          m_dimensionString(dimString)
-    {}
-
-
-    GridPropertySupportedKeywordInfo(const std::string& name,
-                                     std::shared_ptr<const Initializer> initializer,
-                                     const std::string& dimString)
-        : m_keywordName(name),
-          m_initializer(initializer),
-          m_dimensionString(dimString)
-    {}
-
-    // this is a convenience constructor which can be used if the default value for the
-    // grid property is just a constant...
-    GridPropertySupportedKeywordInfo(const std::string& name,
-                                     const DataType defaultValue,
-                                     const std::string& dimString)
-        : m_keywordName(name),
-          m_initializer(new Opm::GridPropertyConstantInitializer<DataType>(defaultValue)),
-          m_dimensionString(dimString)
-    {}
-
-    GridPropertySupportedKeywordInfo(const std::string& name,
-                                     const DataType defaultValue,
-                                     std::shared_ptr<const PostProcessor> postProcessor,
-                                     const std::string& dimString)
-        : m_keywordName(name),
-          m_initializer(new Opm::GridPropertyConstantInitializer<DataType>(defaultValue)),
-          m_postProcessor(postProcessor),
-          m_dimensionString(dimString)
-    {}
-
-
-
-    GridPropertySupportedKeywordInfo(const GridPropertySupportedKeywordInfo&) = default;
-
-
-    const std::string& getKeywordName() const {
-        return m_keywordName;
-    }
-
-
-    const std::string& getDimensionString() const {
-        return m_dimensionString;
-    }
-
-
-    std::shared_ptr<const Initializer> getInitializer() const {
-        return m_initializer;
-    }
-
-
-    std::shared_ptr<const PostProcessor> getPostProcessor() const {
-        return m_postProcessor;
-    }
-
-
-    bool hasPostProcessor() const {
-        return static_cast<bool>(m_postProcessor);
-    }
-
-
-
-private:
-    std::string m_keywordName;
-    std::shared_ptr<const Initializer> m_initializer;
-    std::shared_ptr<const PostProcessor> m_postProcessor;
-    std::string m_dimensionString;
-};
-
-
-
-template <typename T>
+template< typename T >
 class GridProperty {
 public:
     typedef GridPropertySupportedKeywordInfo<T> SupportedKeywordInfo;
 
-    GridProperty(size_t nx , size_t ny , size_t nz , const SupportedKeywordInfo& kwInfo) {
-        m_nx = nx;
-        m_ny = ny;
-        m_nz = nz;
-        m_kwInfo = kwInfo;
-        m_data.resize( nx * ny * nz );
+    GridProperty( size_t nx, size_t ny, size_t nz, const SupportedKeywordInfo& kwInfo );
 
-        m_kwInfo.getInitializer()->apply(m_data);
-        m_hasRunPostProcessor = false;
-    }
-
-    size_t getCartesianSize() const {
-        return m_data.size();
-    }
-
-    size_t getNX() const {
-        return m_nx;
-    }
-
-    size_t getNY() const {
-        return m_ny;
-    }
-
-    size_t getNZ() const {
-        return m_nz;
-    }
+    size_t getCartesianSize() const;
+    size_t getNX() const;
+    size_t getNY() const;
+    size_t getNZ() const;
 
 
-    T iget(size_t index) const {
-        if (index < m_data.size()) {
-            return m_data[index];
-        } else {
-            throw std::invalid_argument("Index out of range \n");
-        }
-    }
+    T iget(size_t index) const;
+    T iget(size_t i , size_t j , size_t k) const;
+    void iset(size_t index, T value);
+    void iset(size_t i , size_t j , size_t k , T value);
 
-
-    T iget(size_t i , size_t j , size_t k) const {
-        size_t g = i + j*m_nx + k*m_nx*m_ny;
-        return iget(g);
-    }
-
-    void iset(size_t index, T value) {
-        if (index < m_data.size())
-            m_data[index] = value;
-        else
-            throw std::invalid_argument("Index out of range \n");
-    }
-
-    void iset(size_t i , size_t j , size_t k , T value) {
-        size_t g = i + j*m_nx + k*m_nx*m_ny;
-        iset(g,value);
-    }
+    const std::vector<T>& getData() const;
 
     bool containsNaN() const;
-
     const std::string& getDimensionString() const;
 
-    void multiplyWith(const GridProperty<T>& other) {
-        if ((m_nx == other.m_nx) && (m_ny == other.m_ny) && (m_nz == other.m_nz)) {
-            for (size_t g=0; g < m_data.size(); g++)
-                m_data[g] *= other.m_data[g];
-        } else
-            throw std::invalid_argument("Size mismatch between properties in mulitplyWith.");
-    }
-
-
-    void multiplyValueAtIndex(size_t index, T factor) {
-        m_data[index] *= factor;
-    }
-
-    const std::vector<T>& getData() const {
-        return m_data;
-    }
-
-    
-
-    void maskedSet(T value, const std::vector<bool>& mask) {
-        for (size_t g = 0; g < getCartesianSize(); g++) {
-            if (mask[g])
-                m_data[g] = value;
-        }
-    }
-
-
-    void maskedMultiply(T value, const std::vector<bool>& mask) {
-        for (size_t g = 0; g < getCartesianSize(); g++) {
-            if (mask[g])
-                m_data[g] *= value;
-        }
-    }
-
-
-    void maskedAdd(T value, const std::vector<bool>& mask) {
-        for (size_t g = 0; g < getCartesianSize(); g++) {
-            if (mask[g])
-                m_data[g] += value;
-        }
-    }
-
-
-    void maskedCopy(const GridProperty<T>& other, const std::vector<bool>& mask) {
-        for (size_t g = 0; g < getCartesianSize(); g++) {
-            if (mask[g])
-                m_data[g] = other.m_data[g];
-        }
-    }
-
-
-
-    void initMask(T value, std::vector<bool>& mask) const {
-        mask.resize(getCartesianSize());
-        for (size_t g = 0; g < getCartesianSize(); g++) {
-            if (m_data[g] == value)
-                mask[g] = true;
-            else
-                mask[g] = false;
-        }
-    }
-
-
+    void multiplyWith( const GridProperty<T>& );
+    void multiplyValueAtIndex( size_t index, T factor );
+    void maskedSet( T value, const std::vector< bool >& mask );
+    void maskedMultiply( T value, const std::vector< bool >& mask );
+    void maskedAdd( T value, const std::vector< bool >& mask );
+    void maskedCopy( const GridProperty< T >& other, const std::vector< bool >& mask );
+    void initMask( T value, std::vector<bool>& mask ) const;
 
     /**
        Due to the convention where it is only neceassary to supply the
@@ -281,192 +120,38 @@ public:
        deckkeyword equals nx*ny*nz.
     */
 
-    void loadFromDeckKeyword( const DeckKeyword& deckKeyword) {
-        const auto& deckItem = getDeckItem(deckKeyword);
-        for (size_t dataPointIdx = 0; dataPointIdx < deckItem.size(); ++dataPointIdx) {
-            if (!deckItem.defaultApplied(dataPointIdx))
-                setDataPoint(dataPointIdx, dataPointIdx, deckItem);
-        }
-    }
+    void loadFromDeckKeyword( const DeckKeyword& );
+    void loadFromDeckKeyword( std::shared_ptr<const Box>, const DeckKeyword& );
 
+    void copyFrom( const GridProperty< T >&, std::shared_ptr< const Box > );
+    void scale( T scaleFactor, std::shared_ptr< const Box > );
+    void add( T shiftValue, std::shared_ptr< const Box > );
+    void setScalar( T value, std::shared_ptr< const Box > );
 
+    const std::string& getKeywordName() const;
+    const SupportedKeywordInfo& getKeywordInfo() const;
 
-    void loadFromDeckKeyword(std::shared_ptr<const Box> inputBox, const DeckKeyword& deckKeyword) {
-        if (inputBox->isGlobal())
-            loadFromDeckKeyword( deckKeyword );
-        else {
-            const auto& deckItem = getDeckItem(deckKeyword);
-            const std::vector<size_t>& indexList = inputBox->getIndexList();
-            if (indexList.size() == deckItem.size()) {
-                for (size_t sourceIdx = 0; sourceIdx < indexList.size(); sourceIdx++) {
-                    size_t targetIdx = indexList[sourceIdx];
-                    if (sourceIdx < deckItem.size()
-                        && !deckItem.defaultApplied(sourceIdx))
-                        {
-                            setDataPoint(sourceIdx, targetIdx, deckItem);
-                        }
-                }
-            } else {
-                std::string boxSize = std::to_string(static_cast<long long>(indexList.size()));
-                std::string keywordSize = std::to_string(static_cast<long long>(deckItem.size()));
+    void runPostProcessor();
 
-                throw std::invalid_argument("Size mismatch: Box:" + boxSize + "  DecKeyword:" + keywordSize);
-            }
-        }
-    }
+    ERT::EclKW<T> getEclKW() const;
+    ERT::EclKW<T> getEclKW( std::shared_ptr< const EclipseGrid > ) const;
 
-
-
-    void copyFrom(const GridProperty<T>& src, std::shared_ptr<const Box> inputBox) {
-        if (inputBox->isGlobal()) {
-            for (size_t i = 0; i < src.getCartesianSize(); ++i)
-                m_data[i] = src.m_data[i];
-        } else {
-            const std::vector<size_t>& indexList = inputBox->getIndexList();
-            for (size_t i = 0; i < indexList.size(); i++) {
-                size_t targetIndex = indexList[i];
-                m_data[targetIndex] = src.m_data[targetIndex];
-            }
-        }
-    }
-
-    void scale(T scaleFactor , std::shared_ptr<const Box> inputBox) {
-        if (inputBox->isGlobal()) {
-            for (size_t i = 0; i < m_data.size(); ++i)
-                m_data[i] *= scaleFactor;
-        } else {
-            const std::vector<size_t>& indexList = inputBox->getIndexList();
-            for (size_t i = 0; i < indexList.size(); i++) {
-                size_t targetIndex = indexList[i];
-                m_data[targetIndex] *= scaleFactor;
-            }
-        }
-    }
-
-
-    void add(T shiftValue , std::shared_ptr<const Box> inputBox) {
-        if (inputBox->isGlobal()) {
-            for (size_t i = 0; i < m_data.size(); ++i)
-                m_data[i] += shiftValue;
-        } else {
-            const std::vector<size_t>& indexList = inputBox->getIndexList();
-            for (size_t i = 0; i < indexList.size(); i++) {
-                size_t targetIndex = indexList[i];
-                m_data[targetIndex] += shiftValue;
-            }
-        }
-    }
-
-
-
-
-    void setScalar(T value , std::shared_ptr<const Box> inputBox) {
-        if (inputBox->isGlobal()) {
-            std::fill(m_data.begin(), m_data.end(), value);
-        } else {
-            const std::vector<size_t>& indexList = inputBox->getIndexList();
-            for (size_t i = 0; i < indexList.size(); i++) {
-                size_t targetIndex = indexList[i];
-                m_data[targetIndex] = value;
-            }
-        }
-    }
-
-    const std::string& getKeywordName() const {
-        return m_kwInfo.getKeywordName();
-    }
-
-    const SupportedKeywordInfo& getKeywordInfo() const {
-        return m_kwInfo;
-    }
-
-
-    bool postProcessorRunRequired() {
-        if (m_kwInfo.hasPostProcessor() && !m_hasRunPostProcessor)
-            return true;
-        else
-            return false;
-    }
-
-
-    void runPostProcessor() {
-        if (postProcessorRunRequired()) {
-            // This is set here before the post processor has actually
-            // completed; this is to protect against circular loops if
-            // the post processor itself calls for the same grid
-            // property.
-            m_hasRunPostProcessor = true;
-            auto postProcessor = m_kwInfo.getPostProcessor();
-            postProcessor->apply( m_data );
-        }
-    }
-
-    
-    ERT::EclKW<T> getEclKW() const {
-        ERT::EclKW<T> eclKW( getKeywordName() , getCartesianSize());
-        eclKW.assignVector( getData() );
-        return eclKW;
-    }
-
-
-    ERT::EclKW<T> getEclKW(std::shared_ptr<const EclipseGrid> grid) const {
-        ERT::EclKW<T> eclKW( getKeywordName() , grid->getNumActive());
-        size_t activeIndex = 0;
-        for (size_t g = 0; g < getCartesianSize(); g++) {
-            if (grid->cellActive( g )) {
-                eclKW[activeIndex] = iget(g);
-                activeIndex++;
-            }
-        }
-        
-        return eclKW;
-    }
-
-
-
-    
     /**
        Will check that all elements in the property are in the closed
        interval [min,max].
     */
-    void checkLimits(T min , T max) const {
-        for (size_t g=0; g < m_data.size(); g++) {
-            T value = m_data[g];
-            if ((value < min) || (value > max))
-                throw std::invalid_argument("Property element outside valid limits");
-        }
-    }
+    void checkLimits( T min, T max ) const;
 
 
 private:
-    const DeckItem& getDeckItem( const DeckKeyword& deckKeyword) {
-        if (deckKeyword.size() != 1)
-            throw std::invalid_argument("Grid properties can only have a single record (keyword "
-                                        + deckKeyword.name() + ")");
-        if (deckKeyword.getRecord(0).size() != 1)
-            // this is an error of the definition of the ParserKeyword (most likely in
-            // the corresponding JSON file)
-            throw std::invalid_argument("Grid properties may only exhibit a single item  (keyword "
-                                        + deckKeyword.name() + ")");
-
-        const auto& deckItem = deckKeyword.getRecord(0).getItem(0);
-
-        if (deckItem.size() > m_data.size())
-            throw std::invalid_argument("Size mismatch when setting data for:" + getKeywordName() +
-                                        " keyword size: " + boost::lexical_cast<std::string>(deckItem.size())
-                                        + " input size: " + boost::lexical_cast<std::string>(m_data.size()));
-
-        return deckItem;
-    }
-
+    const DeckItem& getDeckItem( const DeckKeyword& );
     void setDataPoint(size_t sourceIdx, size_t targetIdx, const DeckItem& deckItem);
 
     size_t      m_nx,m_ny,m_nz;
     SupportedKeywordInfo m_kwInfo;
     std::vector<T> m_data;
-    bool m_hasRunPostProcessor;
+    bool m_hasRunPostProcessor = false;
 };
 
-    
 }
 #endif
