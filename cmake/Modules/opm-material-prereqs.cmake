@@ -17,7 +17,7 @@ set (opm-material_DEPS
 	"CXX11Features REQUIRED"
 	# prerequisite OPM modules
 	"opm-parser"
-	"opm-common"
+	"opm-common REQUIRED"
 	# DUNE dependency
 	"dune-common REQUIRED"
 	)
