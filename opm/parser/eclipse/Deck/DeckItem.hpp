@@ -28,21 +28,7 @@ namespace Opm {
 
     class DeckItem;
     class Dimension;
-
-    class DeckItemBase {
-        public:
-            virtual const std::string& name() const = 0;
-            virtual bool defaultApplied( size_t ) const = 0;
-            virtual bool hasValue( size_t ) const = 0;
-            virtual size_t size() const = 0;
-            virtual void push_backDummyDefault() = 0;
-            virtual ~DeckItemBase() = default;
-
-        private:
-            virtual std::unique_ptr< DeckItemBase > clone() const = 0;
-
-            friend class DeckItem;
-    };
+    class DeckItemBase;
 
     class DeckItem {
     public:
@@ -100,6 +86,24 @@ namespace Opm {
     private:
         DeckItem( std::unique_ptr< DeckItemBase >&& );
         std::unique_ptr< DeckItemBase > ptr;
+    };
+
+    class DeckItemBase {
+        public:
+            virtual const std::string& name() const = 0;
+            virtual bool defaultApplied( size_t ) const = 0;
+            virtual bool hasValue( size_t ) const = 0;
+            virtual size_t size() const = 0;
+            virtual void push_backDummyDefault() = 0;
+            virtual ~DeckItemBase() = default;
+            const DeckItem::type type_tag;
+
+        protected:
+            DeckItemBase( DeckItem::type tag ) : type_tag( tag ) {}
+
+        private:
+            virtual std::unique_ptr< DeckItemBase > clone() const = 0;
+            friend class DeckItem;
     };
 
 }
