@@ -1,0 +1,16 @@
+{"name" : "AQUCON" , "sections" : ["GRID"],                                
+ "items" : [                                                               
+     {"name" : "I1" , "value_type" : "INT"},                               
+     {"name" : "J1" , "value_type" : "INT"},                               
+     {"name" : "K1" , "value_type" : "INT"},                               
+     {"name" : "I2" , "value_type" : "INT"},                               
+     {"name" : "J2" , "value_type" : "INT"},                               
+     {"name" : "K2" , "value_type" : "INT"},                               
+     {"name" : "INITIAL_PRESSURE" , "value_type" : "DOUBLE" , "dimension" : "Transmissibility"},
+     {"name" : "SAT_TABLE_FLOW12" , "value_type" : "INT"},                 
+     {"name" : "SAT_TABLE_FLOW21" , "value_type" : "INT"},                 
+     {"name" : "P_TABLE_FLOW12" , "value_type" : "INT"},                   
+     {"name" : "P_TABLE_FLOW21" , "value_type" : "INT"},                   
+     {"name" : "FACE_FLOW12" , "value_type" : "STRING"},                   
+     {"name" : "FACE_FLOW21" , "value_type" : "STRING"},                   
+     {"name" : "DIFF" , "value_type" : "DOUBLE" , "dimension" : "Length"}]}
