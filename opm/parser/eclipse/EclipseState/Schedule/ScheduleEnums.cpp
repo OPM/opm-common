@@ -385,6 +385,8 @@ namespace Opm {
                 return OIL;
             else if (stringValue == "WATER")
                 return WATER;
+            else if (stringValue == "WAT")
+                return WATER;
             else if (stringValue == "GAS")
                 return GAS;
             else if (stringValue == "MULTI")
