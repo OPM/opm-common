@@ -27,7 +27,8 @@ macro (opm_compile opm)
 	  SOVERSION ${${opm}_VERSION_MAJOR}
 	  VERSION ${${opm}_VERSION}
 	  LINK_FLAGS "${${opm}_LINKER_FLAGS_STR}"
-	  )
+          POSITION_INDEPENDENT_CODE TRUE 
+          )
 	target_link_libraries (${${opm}_TARGET} ${${opm}_LIBRARIES})
 
         if (STRIP_DEBUGGING_SYMBOLS)
