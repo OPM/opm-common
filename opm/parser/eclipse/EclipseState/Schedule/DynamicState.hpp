@@ -143,6 +143,23 @@ namespace Opm {
         }
 
 
+        /// Will return the index of the first occurence of @value, or
+        /// -1 if @value is not found.
+        ssize_t find(const T& value) {
+            auto iter = std::find( m_data.begin() , m_data.end() , value);
+            if (iter != m_data.end()) {
+                // Found normally
+                return std::distance( m_data.begin() , iter );
+            } else {
+                if ((m_data.size() == 0) && (value == m_currentValue))
+                    // Not found explicitly - but the value corresponds to the initial 'current value'
+                    return 0;
+
+                // Not found
+                return -1;
+            }
+        }
+
 
     private:
 
