@@ -22,7 +22,7 @@ install:
     - git clone https://github.com/OPM/opm-common.git
     - git clone https://github.com/OPM/opm-data.git
 
-    - opm-common/travis/build-opm-common.sh
+    - opm-common/travis/build-opm-common-shared.sh
     - opm-parser/travis/clone-and-build-ert.sh
 
 script: opm-parser/travis/build-and-test-opm-parser.sh
