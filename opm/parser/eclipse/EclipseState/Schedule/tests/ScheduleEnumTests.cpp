@@ -271,6 +271,7 @@ BOOST_AUTO_TEST_CASE(TestInjectorEnumFromString) {
     BOOST_CHECK_THROW( WellInjector::TypeFromString("XXX") , std::invalid_argument );
     BOOST_CHECK_EQUAL( WellInjector::OIL   , WellInjector::TypeFromString("OIL"));
     BOOST_CHECK_EQUAL( WellInjector::WATER , WellInjector::TypeFromString("WATER"));
+    BOOST_CHECK_EQUAL( WellInjector::WATER , WellInjector::TypeFromString("WAT"));
     BOOST_CHECK_EQUAL( WellInjector::GAS   , WellInjector::TypeFromString("GAS"));
     BOOST_CHECK_EQUAL( WellInjector::MULTI , WellInjector::TypeFromString("MULTI"));
 }
