@@ -143,21 +143,10 @@ namespace Opm {
         return m_keywordName;
     }
 
-    string_view RawRecord::pop_front() {
-        auto front = m_recordItems.front();
-
-        this->m_recordItems.pop_front();
-        return front;
-    }
-
     void RawRecord::push_front(std::string tok ) {
         this->expanded_items.push_back( tok );
         string_view record { this->expanded_items.back().begin(), this->expanded_items.back().end() };
         this->m_recordItems.push_front( record );
-    }
-
-    size_t RawRecord::size() const {
-        return m_recordItems.size();
     }
 
     void RawRecord::dump() const {
@@ -168,11 +157,6 @@ namespace Opm {
                 << getItem( i ) << " ";
         }
         std::cout << std::endl;
-    }
-
-
-    string_view RawRecord::getItem(size_t index) const {
-        return this->m_recordItems.at( index );
     }
 
     const std::string& RawRecord::getRecordString() const {
