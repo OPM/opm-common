@@ -116,18 +116,17 @@ namespace Opm {
         }
     }
 
-    DeckRecord ParserRecord::parse(const ParseContext& parseContext , RawRecordPtr rawRecord) const {
-        std::string recordBeforeParsing = rawRecord->getRecordString();
-        DeckRecord deckRecord( size() );
+    DeckRecord ParserRecord::parse(const ParseContext& parseContext , RawRecord& rawRecord ) const {
+        DeckRecord deckRecord( size() + 20 );
         for (size_t i = 0; i < size(); i++) {
             auto parserItem = get(i);
             deckRecord.addItem( parserItem->scan( rawRecord ) );
         }
 
-        if (rawRecord->size() > 0) {
-            std::string msg = "The RawRecord for keyword \""  + rawRecord->getKeywordName() + "\" in file\"" + rawRecord->getFileName() + "\" contained " +
-                std::to_string(rawRecord->size()) +
-                " too many items according to the spec. RawRecord was: " + recordBeforeParsing;
+        if (rawRecord.size() > 0) {
+            std::string msg = "The RawRecord for keyword \""  + rawRecord.getKeywordName() + "\" in file\"" + rawRecord.getFileName() + "\" contained " +
+                std::to_string(rawRecord.size()) +
+                " too many items according to the spec. RawRecord was: " + rawRecord.getRecordString();
             parseContext.handleError(ParseContext::PARSE_EXTRA_DATA , msg);
         }
 

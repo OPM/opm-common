@@ -35,14 +35,14 @@ namespace Opm {
 
     class RawRecord {
     public:
-        RawRecord(const std::string& singleRecordString, const std::string& fileName = "", const std::string& keywordName = "");
+        RawRecord(std::string&&, const std::string& fileName = "", const std::string& keywordName = "");
 
-        string_view pop_front();
+        inline string_view pop_front();
         void push_front(std::string token);
-        size_t size() const;
+        inline size_t size() const;
 
         const std::string& getRecordString() const;
-        string_view getItem(size_t index) const;
+        inline string_view getItem(size_t index) const;
         const std::string& getFileName() const;
         const std::string& getKeywordName() const;
 
@@ -62,6 +62,23 @@ namespace Opm {
     typedef std::shared_ptr<RawRecord> RawRecordPtr;
     typedef std::shared_ptr<const RawRecord> RawRecordConstPtr;
 
+    /*
+     * These are frequently called, but fairly trivial in implementation, and
+     * inlining the calls gives a decent low-effort performance benefit.
+     */
+    string_view RawRecord::pop_front() {
+        auto front = m_recordItems.front();
+        this->m_recordItems.pop_front();
+        return front;
+    }
+
+    size_t RawRecord::size() const {
+        return m_recordItems.size();
+    }
+
+    string_view RawRecord::getItem(size_t index) const {
+        return this->m_recordItems.at( index );
+    }
 }
 
 #endif  /* RECORD_HPP */

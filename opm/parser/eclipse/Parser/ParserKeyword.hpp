@@ -95,7 +95,7 @@ namespace Opm {
         SectionNameSet::const_iterator validSectionNamesBegin() const;
         SectionNameSet::const_iterator validSectionNamesEnd() const;
 
-        DeckKeyword parse(const ParseContext& parseContext , std::shared_ptr< const RawKeyword > rawKeyword) const;
+        DeckKeyword parse(const ParseContext& parseContext , std::shared_ptr< RawKeyword > rawKeyword) const;
         enum ParserKeywordSizeEnum getSizeType() const;
         const std::pair<std::string,std::string>& getSizeDefinitionPair() const;
         bool isDataKeyword() const;

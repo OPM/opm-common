@@ -43,7 +43,7 @@ namespace Opm {
         ParserIntItem(const std::string& itemName, ParserItemSizeEnum sizeType, int defaultValue);
         explicit ParserIntItem(const Json::JsonObject& jsonConfig);
 
-        DeckItem scan(std::shared_ptr< RawRecord > rawRecord) const override;
+        DeckItem scan( RawRecord& rawRecord) const override;
         bool equal(const ParserItem& other) const override;
 
         std::string createCode() const override;

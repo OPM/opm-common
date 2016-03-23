@@ -506,19 +506,19 @@ namespace Opm {
         return m_deckNames.end();
     }
 
-    DeckKeyword ParserKeyword::parse(const ParseContext& parseContext , RawKeywordConstPtr rawKeyword) const {
+    DeckKeyword ParserKeyword::parse(const ParseContext& parseContext , RawKeywordPtr rawKeyword) const {
         if (rawKeyword->isFinished()) {
             DeckKeyword keyword( rawKeyword->getKeywordName() );
             keyword.setLocation(rawKeyword->getFilename(), rawKeyword->getLineNR());
             keyword.setDataKeyword( isDataKeyword() );
 
             for (size_t i = 0; i < rawKeyword->size(); i++) {
-                auto rawRecord = rawKeyword->getRecord(i);
+                auto& rawRecord = rawKeyword->getRecord(i);
                 if(m_records.size() > 0) {
                     keyword.addRecord( getRecord( i )->parse( parseContext, rawRecord ) );
                 }
                 else {
-                    if(rawRecord->size() > 0) {
+                    if(rawRecord.size() > 0) {
                         throw std::invalid_argument("Missing item information " + rawKeyword->getKeywordName());
                     }
                 }

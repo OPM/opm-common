@@ -76,7 +76,7 @@ namespace Opm {
         return m_defaultSet;
     }
 
-    DeckItem ParserStringItem::scan(RawRecordPtr rawRecord) const {
+    DeckItem ParserStringItem::scan( RawRecord& rawRecord ) const {
         return ParserItemScan<ParserStringItem,std::string>(this , rawRecord);
     }
 

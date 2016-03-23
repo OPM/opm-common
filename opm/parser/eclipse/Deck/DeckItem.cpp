@@ -82,8 +82,37 @@ namespace Opm {
             friend class DeckItem;
     };
 
+    template< typename T > static inline DeckItem::type type_to_tag();
+    template<>
+    DeckItem::type type_to_tag< int >() {
+        return DeckItem::integer;
+    }
+
+    template<>
+    DeckItem::type type_to_tag< double >() {
+        return DeckItem::fdouble;
+    }
+
+    template<>
+    DeckItem::type type_to_tag< std::string >() {
+        return DeckItem::string;
+    }
+
+    static inline std::string tag_to_string( DeckItem::type x ) {
+        switch( x ) {
+            case DeckItem::type::integer: return "int";
+            case DeckItem::type::string: return "std::string";
+            case DeckItem::type::fdouble: return "double";
+            case DeckItem::type::unknown: return "unknown";
+
+        }
+        return "unknown";
+    }
+
+
     template< typename T >
     DeckTypeItem< T >::DeckTypeItem( const std::string& name, size_t size ) :
+        DeckItemBase( type_to_tag< T >() ),
         item_name( name )
     {
         this->dataPointDefaulted.reserve( size );
@@ -205,68 +234,29 @@ namespace Opm {
         return data;
     }
 
-    template< typename Ptr >
-    static inline DeckItem::type typeof_item( Ptr* item ) {
-        if( dynamic_cast< DeckItemT< int >* >( item ) )
-            return DeckItem::type::integer;
-
-        if( dynamic_cast< DeckItemT< std::string >* >( item ) )
-            return DeckItem::type::string;
-
-        if( dynamic_cast< DeckItemT< double >* >( item ) )
-            return DeckItem::type::fdouble;
-
-        return DeckItem::type::unknown;
-    }
-
-    static inline std::string typetag_to_string( DeckItem::type x ) {
-        switch( x ) {
-            case DeckItem::type::integer: return "int";
-            case DeckItem::type::string: return "std::string";
-            case DeckItem::type::fdouble: return "double";
-            case DeckItem::type::unknown: return "unknown";
-
-        }
-        return "unknown";
-    }
-
-    template< typename T > static std::string typename_string();
-    template<>
-    std::string typename_string< int >() {
-        return "int";
-    }
-    template<>
-    std::string typename_string< double >() {
-        return "double";
-    }
-    template<>
-    std::string typename_string< std::string >() {
-        return "std::string";
-    }
-
     template< typename T >
     static inline DeckItemT< T >* conv( std::unique_ptr< DeckItemBase >& ptr ) {
-        if( auto* d = dynamic_cast< DeckItemT< T >* >( ptr.get() ) )
-            return d;
+        if( ptr->type_tag == type_to_tag< T >() )
+            return static_cast< DeckItemT< T >* >( ptr.get() );
 
         throw std::logic_error(
                 "Treating item " + ptr->name()
-                + " as " + typename_string< T >()
+                + " as " + tag_to_string( type_to_tag< T >() )
                 + ", but is "
-                + typetag_to_string( typeof_item( ptr.get() ) ) );
+                + tag_to_string( ptr->type_tag ) );
     }
 
     template< typename T >
     static inline
     const DeckItemT< T >* conv( const std::unique_ptr< DeckItemBase >& ptr ) {
-        if( auto* d = dynamic_cast< const DeckItemT< T >* >( ptr.get() ) )
-            return d;
+        if( ptr->type_tag == type_to_tag< T >() )
+            return static_cast< const DeckItemT< T >* >( ptr.get() );
 
         throw std::logic_error(
                 "Treating item " + ptr->name()
-                + " as " + typename_string< T >()
+                + " as " + tag_to_string( type_to_tag< T >() )
                 + ", but is "
-                + typetag_to_string( typeof_item( ptr.get() ) ) );
+                + tag_to_string( ptr->type_tag ) );
     }
 
     DeckItem::DeckItem( const DeckItem& rhs ) :
@@ -362,7 +352,7 @@ namespace Opm {
     }
 
     DeckItem::type DeckItem::typeof() const {
-        return typeof_item( this->ptr.get() );
+        return this->ptr->type_tag;
     }
 
     /*

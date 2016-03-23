@@ -96,8 +96,7 @@ namespace Opm {
 
         if (!m_isFinished) {
             if (RawRecord::isTerminatedRecordString(partialRecordString)) {
-                RawRecordPtr record(new RawRecord(m_partialRecordString, m_filename, m_name));
-                m_records.push_back(record);
+                m_records.emplace_back( std::move( m_partialRecordString ), m_filename, m_name );
                 m_partialRecordString.clear();
 
                 if (m_sizeType == Raw::FIXED && (m_records.size() == m_fixedSize))
@@ -107,12 +106,8 @@ namespace Opm {
     }
 
 
-    RawRecordPtr RawKeyword::getRecord(size_t index) const {
-        if (index < m_records.size()) {
-            return m_records[index];
-        }
-        else
-            throw std::range_error("Index out of range");
+    RawRecord& RawKeyword::getRecord(size_t index) {
+        return this->m_records.at( index );
     }
 
     bool RawKeyword::isKeywordPrefix(const std::string& line, std::string& keywordName) {

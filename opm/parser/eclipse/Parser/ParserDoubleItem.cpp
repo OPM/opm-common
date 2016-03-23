@@ -130,7 +130,7 @@ namespace Opm
     }
 
 
-    DeckItem ParserDoubleItem::scan(RawRecordPtr rawRecord) const {
+    DeckItem ParserDoubleItem::scan( RawRecord& rawRecord ) const {
         return ParserItemScan<ParserDoubleItem,double>(this , rawRecord);
     }
 
