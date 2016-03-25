@@ -179,7 +179,6 @@ Parser/ParserStringItem.hpp
 Parser/InputErrorAction.hpp
 Parser/ParseContext.hpp
 Parser/MessageContainer.hpp
-Parser/MessageType.hpp
 #
 Generator/KeywordLoader.hpp
 Generator/KeywordGenerator.hpp
