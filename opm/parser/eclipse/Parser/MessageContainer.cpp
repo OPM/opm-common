@@ -105,4 +105,15 @@ namespace Opm {
 
 
 
+    std::vector<Message>::const_iterator MessageContainer::begin() const
+    {
+        return m_messages.begin();
+    }
+
+
+    std::vector<Message>::const_iterator MessageContainer::end() const
+    {
+        return m_messages.end();
+    }
+
 } // namespace Opm
