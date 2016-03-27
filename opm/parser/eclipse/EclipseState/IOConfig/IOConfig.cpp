@@ -29,6 +29,8 @@
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <ert/ecl/ecl_util.h>
 
 
@@ -189,6 +191,45 @@ namespace Opm {
             m_restart_output_config = std::make_shared<DynamicState<restartConfig>>(timemap, rs);
         }
     }
+
+
+    /*
+      Will initialize the two internal variables holding the first
+      report step when restart and rft output is queried.
+
+      The reason we are interested in this report step is that when we
+      reach this step the output files should be opened with mode 'w'
+      - whereas for subsequent steps they should be opened with mode
+      'a'.
+    */
+
+    void IOConfig::initFirstOutput(const Schedule& schedule) {
+        m_first_restart_step = -1;
+        m_first_rft_step = -1;
+        assertTimeMap( schedule.getTimeMap() );
+        {
+            size_t report_step = 0;
+            while (true) {
+                if (getWriteRestartFile(report_step)) {
+                    m_first_restart_step = report_step;
+                    break;
+                }
+                report_step++;
+                if (report_step == m_timemap->size())
+                    break;
+            }
+        }
+        {
+            for (const auto& well : schedule.getWells( )) {
+                int well_output = well->firstRFTOutput();
+                if (well_output >= 0) {
+                    if ((m_first_rft_step < 0) || (well_output < m_first_rft_step))
+                        m_first_rft_step = well_output;
+                }
+            }
+        }
+    }
+
 
     void IOConfig::handleSolutionSection(TimeMapConstPtr timemap, std::shared_ptr<const SOLUTIONSection> solutionSection) {
         if (solutionSection->hasKeyword("RPTRST")) {
@@ -392,6 +433,16 @@ namespace Opm {
         free( c_str );
 
         return restart_filename;
+    }
+
+
+    int IOConfig::getFirstRestartStep() const {
+        return m_first_restart_step;
+    }
+
+
+    int IOConfig::getFirstRFTStep() const {
+        return m_first_rft_step;
     }
 
 } //namespace Opm

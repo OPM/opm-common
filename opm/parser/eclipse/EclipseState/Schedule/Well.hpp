@@ -93,6 +93,7 @@ namespace Opm {
         bool                           setSolventFraction(size_t timeStep , const double fraction);
         const double&                  getSolventFraction(size_t timeStep) const;
 
+        int  firstRFTOutput( ) const;
         bool getRFTActive(size_t time_step) const;
         void setRFTActive(size_t time_step, bool value);
         bool getPLTActive(size_t time_step) const;

@@ -31,6 +31,7 @@ namespace Opm {
     class RUNSPECSection;
     class SOLUTIONSection;
     class TimeMap;
+    class Schedule;
 
     /*The IOConfig class holds data about input / ouput configurations
 
@@ -120,6 +121,8 @@ namespace Opm {
         explicit IOConfig(const std::string& input_path = "");
 
 
+        int  getFirstRestartStep() const;
+        int  getFirstRFTStep() const;
         bool getWriteRestartFile(size_t timestep) const;
         bool getWriteEGRIDFile() const;
         bool getWriteINITFile() const;
@@ -142,6 +145,14 @@ namespace Opm {
         void handleGridSection(std::shared_ptr<const GRIDSection> gridSection);
         void handleRunspecSection(std::shared_ptr<const RUNSPECSection> runspecSection);
         void setWriteInitialRestartFile(bool writeInitialRestartFile);
+
+        /// This method will internalize variables with information of
+        /// the first report step with restart and rft output
+        /// respectively. This information is important because right
+        /// at the first output step we must reset the files to size
+        /// zero, for subsequent output steps we should append.
+        void initFirstOutput(const Schedule& schedule);
+
         boost::gregorian::date getTimestepDate(size_t timestep) const;
         void dumpRestartConfig() const;
 
@@ -169,7 +180,8 @@ namespace Opm {
         bool            m_FMTOUT;
         std::string     m_eclipse_input_path;
         bool            m_ignore_RPTSCHED_RESTART;
-
+        int             m_first_restart_step;
+        int             m_first_rft_step;
 
 
         struct restartConfig {
