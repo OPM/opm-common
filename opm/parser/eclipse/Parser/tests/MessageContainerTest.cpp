@@ -38,4 +38,17 @@ BOOST_AUTO_TEST_CASE(TestIterator) {
         BOOST_CHECK_EQUAL(20, (msgContainer.end()-1)->location->lineno);
     }
     
+    MessageContainer msgList;
+    msgList.debug("Debug");
+    msgList.info("Info");
+    msgList.warning("Warning");
+    msgList.error("Error");
+    msgList.problem("Problem");
+    msgList.bug("Bug");
+    int i = 0;
+    for (auto it = msgList.begin(); it != msgList.end(); it++) {
+        BOOST_CHECK_EQUAL(MessageType::MessageTypeEnum::DEBUG+i, it->mtype);
+        i++;
+    }
+
 }
