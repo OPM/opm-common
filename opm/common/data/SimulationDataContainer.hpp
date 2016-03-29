@@ -40,11 +40,32 @@ namespace Opm {
     /// mutable references are returned with the getCellData() and
     /// getFaceData() methods, and the content will typically be
     /// modified by external scope.
-
-
-    class SimulationDataContainer {
+    class SimulationDataContainer
+    {
     public:
-        SimulationDataContainer(size_t num_cells, size_t num_faces , size_t num_phases);
+        /// Main constructor setting the sizes for the contained data
+        /// types.
+        /// \param num_cells   number of elements in cell data vectors
+        /// \param num_faces   number of elements in face data vectors
+        /// \param num_phases  number of phases, the number of components
+        ///                    in any data vector must equal 1 or this
+        ///                    number (this behaviour and argument is deprecated).
+        SimulationDataContainer(size_t num_cells, size_t num_faces, size_t num_phases);
+
+        /// Copy constructor.
+        /// Must be defined explicitly because class contains non-value objects
+        /// (the reference pointers pressure_ref_ etc.) that should not simply
+        /// be copied.
+        SimulationDataContainer(const SimulationDataContainer&);
+
+        /// Copy assignment operator.
+        /// Must be defined explicitly because class contains non-value objects
+        /// (the reference pointers pressure_ref_ etc.) that should not simply
+        /// be copied.
+        SimulationDataContainer& operator=(const SimulationDataContainer&);
+
+        /// Efficient O(1) swap.
+        void swap(SimulationDataContainer& other);
 
         size_t numPhases() const;
         size_t numFaces() const;
@@ -79,7 +100,10 @@ namespace Opm {
         /// values in @values.
         void setCellDataComponent( const std::string& key , size_t component , const std::vector<int>& cells , const std::vector<double>& values);
 
-        /* Old deprecated */
+        // Direct explicit field access for certain default fields.
+        // These methods are all deprecated, and will eventually be moved to
+        // concrete subclasses.
+
         std::vector<double>& pressure    ();
         std::vector<double>& temperature ();
         std::vector<double>& saturation  ();
@@ -96,8 +120,10 @@ namespace Opm {
 
         const std::unordered_map<std::string, std::vector<double>>& cellData() const;
         std::unordered_map<std::string, std::vector<double>>& cellData();
+
     private:
-        void  addDefaultFields();
+        void addDefaultFields();
+        void setReferencePointers();
 
         size_t m_num_cells;
         size_t m_num_faces;
@@ -105,7 +131,61 @@ namespace Opm {
 
         std::unordered_map< std::string , std::vector<double> > m_cell_data;
         std::unordered_map< std::string , std::vector<double> > m_face_data;
+
+        std::vector<double>* pressure_ref_;
+        std::vector<double>* temperature_ref_;
+        std::vector<double>* saturation_ref_;
+        std::vector<double>* facepressure_ref_;
+        std::vector<double>* faceflux_ref_;
     };
+
+
+    // Inline implementations of the direct accessors required to guarantee
+    // performance.
+
+
+    inline std::vector<double>& SimulationDataContainer::pressure( ) {
+        return *pressure_ref_;
+    }
+
+    inline std::vector<double>& SimulationDataContainer::temperature() {
+        return *temperature_ref_;
+    }
+
+    inline std::vector<double>& SimulationDataContainer::saturation() {
+        return *saturation_ref_;
+    }
+
+    inline std::vector<double>& SimulationDataContainer::facepressure() {
+        return *facepressure_ref_;
+    }
+
+    inline std::vector<double>& SimulationDataContainer::faceflux() {
+        return *faceflux_ref_;
+    }
+
+    inline const std::vector<double>& SimulationDataContainer::pressure( ) const {
+        return *pressure_ref_;
+    }
+
+    inline const std::vector<double>& SimulationDataContainer::temperature() const {
+        return *temperature_ref_;
+    }
+
+    inline const std::vector<double>& SimulationDataContainer::saturation() const {
+        return *saturation_ref_;
+    }
+
+    inline const std::vector<double>& SimulationDataContainer::facepressure() const {
+        return *facepressure_ref_;
+    }
+
+    inline const std::vector<double>& SimulationDataContainer::faceflux() const {
+        return *faceflux_ref_;
+    }
+
+
+
 }
 
 #endif

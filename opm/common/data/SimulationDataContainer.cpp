@@ -24,11 +24,41 @@
 namespace Opm {
 
     SimulationDataContainer::SimulationDataContainer(size_t num_cells, size_t num_faces , size_t num_phases) :
-        m_num_cells( num_cells),
-        m_num_faces( num_faces),
+        m_num_cells( num_cells ),
+        m_num_faces( num_faces ),
         m_num_phases( num_phases )
     {
         addDefaultFields( );
+    }
+
+    SimulationDataContainer::SimulationDataContainer(const SimulationDataContainer& other)
+        : m_num_cells(other.m_num_cells),
+          m_num_faces(other.m_num_faces),
+          m_num_phases(other.m_num_phases),
+          m_cell_data(other.m_cell_data),
+          m_face_data(other.m_face_data)
+    {
+        setReferencePointers();
+    }
+
+    SimulationDataContainer& SimulationDataContainer::operator=(const SimulationDataContainer& other)
+    {
+        SimulationDataContainer copy(other);
+        copy.swap(*this);
+        return *this;
+    }
+
+
+    void SimulationDataContainer::swap(SimulationDataContainer& other)
+    {
+        using std::swap;
+        swap(m_num_cells, other.m_num_cells);
+        swap(m_num_faces, other.m_num_faces);
+        swap(m_num_phases, other.m_num_phases);
+        swap(m_cell_data, other.m_cell_data);
+        swap(m_face_data, other.m_face_data);
+        setReferencePointers();
+        other.setReferencePointers();
     }
 
 
@@ -188,8 +218,7 @@ namespace Opm {
         return m_cell_data;
     }
 
-
-    /* This is very deprecated. */
+    // This is very deprecated.
     void SimulationDataContainer::addDefaultFields() {
         registerCellData("PRESSURE" , 1 , 0.0);
         registerCellData("SATURATION" , m_num_phases , 0.0);
@@ -197,46 +226,22 @@ namespace Opm {
 
         registerFaceData("FACEPRESSURE" , 1 , 0.0 );
         registerFaceData("FACEFLUX" , 1 , 0.0 );
+
+        setReferencePointers();
     }
 
-    std::vector<double>& SimulationDataContainer::pressure( ) {
-        return getCellData("PRESSURE");
+
+    void SimulationDataContainer::setReferencePointers()
+    {
+        // This sets the reference pointers for the fast
+        // accessors, the fields must be created first
+        // by copying or a call to addDefaultFields().
+        pressure_ref_     = &getCellData("PRESSURE");
+        temperature_ref_  = &getCellData("TEMPERATURE");
+        saturation_ref_   = &getCellData("SATURATION");
+        facepressure_ref_ = &getFaceData("FACEPRESSURE");
+        faceflux_ref_     = &getFaceData("FACEFLUX");
     }
 
-    std::vector<double>& SimulationDataContainer::temperature() {
-        return getCellData("TEMPERATURE");
-    }
 
-    std::vector<double>& SimulationDataContainer::saturation() {
-        return getCellData("SATURATION");
-    }
-
-    std::vector<double>& SimulationDataContainer::facepressure() {
-        return getFaceData("FACEPRESSURE");
-    }
-
-    std::vector<double>& SimulationDataContainer::faceflux() {
-        return getFaceData("FACEFLUX");
-    }
-
-    const std::vector<double>& SimulationDataContainer::pressure( ) const {
-        return getCellData("PRESSURE");
-    }
-
-    const std::vector<double>& SimulationDataContainer::temperature() const {
-        return getCellData("TEMPERATURE");
-    }
-
-    const std::vector<double>& SimulationDataContainer::saturation() const {
-        return getCellData("SATURATION");
-    }
-
-    const std::vector<double>& SimulationDataContainer::facepressure() const {
-        return getFaceData("FACEPRESSURE");
-    }
-
-    const std::vector<double>& SimulationDataContainer::faceflux() const {
-        return getFaceData("FACEFLUX");
-    }
-
-}
+} // namespace Opm
