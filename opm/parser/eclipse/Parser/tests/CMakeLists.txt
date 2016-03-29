@@ -1,5 +1,5 @@
 foreach(tapp ParserTests ParserKeywordTests ParserRecordTests
-             ParserItemTests ParserEnumTests ParserIncludeTests ParseContextTests)
+             ParserItemTests ParserEnumTests ParserIncludeTests ParseContextTests MessageContainerTest)
   opm_add_test(run${tapp} SOURCES ${tapp}.cpp
                           LIBRARIES opmparser ${Boost_LIBRARIES})
 endforeach()
