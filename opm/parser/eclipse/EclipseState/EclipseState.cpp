@@ -48,7 +48,7 @@ namespace Opm {
 
     namespace GridPropertyPostProcessor {
 
-        void distTopLayer( std::vector<double>& values, const Deck& m_deck, const EclipseState& m_eclipseState ) {
+        void distTopLayer( std::vector<double>& values, const Deck&, const EclipseState& m_eclipseState ) {
             EclipseGridConstPtr grid = m_eclipseState.getEclipseGrid();
             size_t layerSize = grid->getNX() * grid->getNY();
             size_t gridSize  = grid->getCartesianSize();
@@ -59,7 +59,7 @@ namespace Opm {
             }
         }
 
-        void initPORV( std::vector<double>& values, const Deck& m_deck, const EclipseState& m_eclipseState ) {
+        void initPORV( std::vector<double>& values, const Deck&, const EclipseState& m_eclipseState ) {
             EclipseGridConstPtr grid = m_eclipseState.getEclipseGrid();
             /*
                Observe that this apply method does not alter the
