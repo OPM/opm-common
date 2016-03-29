@@ -248,3 +248,28 @@ BOOST_AUTO_TEST_CASE( UpdateEmptyInitial ) {
     state.updateInitial( 99 );
     BOOST_CHECK_EQUAL( state[5] , 99 );
 }
+
+
+BOOST_AUTO_TEST_CASE( find ) {
+    boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
+    Opm::TimeMapPtr timeMap(new Opm::TimeMap(boost::posix_time::ptime(startDate)));
+    Opm::DynamicState<int> state(timeMap , 137);
+    for (size_t i = 0; i < 5; i++)
+        timeMap->addTStep( boost::posix_time::hours( (i+1) * 24 ));
+
+    BOOST_CHECK_EQUAL( state.find( 137 ) , 0 );
+    BOOST_CHECK_EQUAL( state.find( 200 ) , -1 );
+    state.update( 0 , 200 );
+    BOOST_CHECK_EQUAL( state.find( 137 ) , -1 );
+    BOOST_CHECK_EQUAL( state.find( 200 ) ,  0 );
+
+    state.update( 2 , 300 );
+    BOOST_CHECK_EQUAL( state.find( 200 ) ,  0 );
+    BOOST_CHECK_EQUAL( state.find( 300 ) ,  2 );
+
+    state.update( 4 , 400 );
+    BOOST_CHECK_EQUAL( state.find( 200 ) ,  0 );
+    BOOST_CHECK_EQUAL( state.find( 300 ) ,  2 );
+    BOOST_CHECK_EQUAL( state.find( 400 ) ,  4 );
+    BOOST_CHECK_EQUAL( state.find( 500 ) ,  -1 );
+}

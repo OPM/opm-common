@@ -48,7 +48,6 @@ void verifyRestartConfig(IOConfigConstPtr ioconfig, std::vector<std::tuple<int ,
         if (save) {
             BOOST_CHECK_EQUAL( report_date, ioconfig->getTimestepDate( report_step ));
         }
-        std::cout << "step: " << report_step << " date: " << report_date << " : " << save << std::endl;
     }
 }
 
@@ -349,8 +348,10 @@ BOOST_AUTO_TEST_CASE( RestartConfig2 ) {
     ParserPtr parser(new Parser());
     DeckConstPtr deck = parser->parseFile("testdata/integration_tests/IOConfig/RPT_TEST2.DATA", parseContext);
     EclipseState state( deck , parseContext );
+    std::shared_ptr<const IOConfig> ioConfig = state.getIOConfigConst();
+    verifyRestartConfig(ioConfig, rptConfig);
 
-    verifyRestartConfig(state.getIOConfigConst(), rptConfig);
+    BOOST_CHECK_EQUAL( ioConfig->getFirstRestartStep() , 0 );
 }
 
 

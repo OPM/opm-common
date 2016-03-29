@@ -209,11 +209,14 @@ namespace Opm {
         }
     }
 
+
+    // Hmmm - would have thought this should iterate through the SCHEDULE section as well?
     void EclipseState::initIOConfigPostSchedule(DeckConstPtr deck) {
         if (Section::hasSOLUTION(*deck)) {
             std::shared_ptr<const SOLUTIONSection> solutionSection = std::make_shared<const SOLUTIONSection>(*deck);
             m_ioConfig->handleSolutionSection(schedule->getTimeMap(), solutionSection);
         }
+        m_ioConfig->initFirstOutput( *this->schedule );
     }
 
     void EclipseState::initInitConfig(DeckConstPtr deck){

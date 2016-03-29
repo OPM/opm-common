@@ -295,6 +295,27 @@ namespace Opm {
         m_plt->update(time_step, value);
     }
 
+    /*
+      The first report step where *either* RFT or PLT output is active.
+    */
+    int Well::firstRFTOutput( ) const {
+        int rft_output = m_rft->find( true );
+        int plt_output = m_plt->find( true );
+
+        if (rft_output < plt_output) {
+            if (rft_output >= 0)
+                return rft_output;
+            else
+                return plt_output;
+        } else {
+            if (plt_output >= 0)
+                return plt_output;
+            else
+                return rft_output;
+        }
+    }
+
+
     int Well::findWellFirstOpen(int startTimeStep) const{
         int numberOfTimeSteps = m_timeMap->numTimesteps();
         for(int i = startTimeStep; i < numberOfTimeSteps;i++){

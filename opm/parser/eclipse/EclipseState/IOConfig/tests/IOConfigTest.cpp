@@ -139,12 +139,67 @@ const std::string& deckStr_NO_GRIDFILE = "RUNSPEC\n"
 
 
 
+const std::string deckStr_RFT = "RUNSPEC\n"
+                                "OIL\n"
+                                "GAS\n"
+                                "WATER\n"
+                                "DIMENS\n"
+                                " 10 10 10 /\n"
+                                "GRID\n"
+                                "DXV\n"
+                                "10*0.25 /\n"
+                                "DYV\n"
+                                "10*0.25 /\n"
+                                "DZV\n"
+                                "10*0.25 /\n"
+                                "TOPS\n"
+                                "100*0.25 /\n"
+                                "\n"
+                                 "START             -- 0 \n"
+                                "1 NOV 1979 / \n"
+                                "SCHEDULE\n"
+                                "DATES             -- 1\n"
+                                " 1 DES 1979/ \n"
+                                "/\n"
+                                "WELSPECS\n"
+                                "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+                                "    'OP_2'       'OP'   4   4 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+                                "/\n"
+                                "COMPDAT\n"
+                                " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+                                " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
+                                " 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+                                " 'OP_2'  4  4   4  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+                                "/\n"
+                                "DATES             -- 2\n"
+                                " 10  OKT 2008 / \n"
+                                "/\n"
+                                "WRFT \n"
+                                "/ \n"
+                                "WELOPEN\n"
+                                " 'OP_1' OPEN / \n"
+                                " 'OP_2' OPEN / \n"
+                                "/\n"
+                                "DATES             -- 3\n"
+                                " 10  NOV 2008 / \n"
+                                "/\n";
+
+
+
 static DeckPtr createDeck(const std::string& input) {
     Opm::Parser parser;
     return parser.parseString(input, Opm::ParseContext());
 }
 
 
+BOOST_AUTO_TEST_CASE( RFT_TIME) {
+    DeckPtr deck = createDeck(deckStr_RFT);
+    EclipseState state( deck , Opm::ParseContext() );
+    std::shared_ptr<const IOConfig> ioConfig = state.getIOConfigConst();
+
+
+    BOOST_CHECK_EQUAL( ioConfig->getFirstRFTStep() , 2 );
+}
 
 
 BOOST_AUTO_TEST_CASE(IOConfigTest) {

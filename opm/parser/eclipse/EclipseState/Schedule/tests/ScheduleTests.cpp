@@ -761,24 +761,37 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFT) {
                     "/ \n"
                     "WELOPEN\n"
                     " 'OP_1' OPEN / \n"
-                    " 'OP_2' OPEN / \n"
                     "/\n"
                     "DATES             -- 3\n"
                     " 10  NOV 2008 / \n"
+                    "/\n"
+                    "WELOPEN\n"
+                    " 'OP_2' OPEN / \n"
+                    "/\n"
+                    "DATES             -- 4\n"
+                    " 30  NOV 2008 / \n"
                     "/\n";
+
 
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
     ParseContext parseContext;
     DeckPtr deck = parser.parseString(input, parseContext);
     IOConfigPtr ioConfig;
     Schedule schedule(parseContext , grid , deck, ioConfig);
-    WellPtr well;
-    size_t currentStep = 2;
-    well = schedule.getWell("OP_1");
-    BOOST_CHECK_EQUAL(well->getRFTActive(currentStep),true);
-    well = schedule.getWell("OP_2");
-    BOOST_CHECK_EQUAL(well->getRFTActive(currentStep),true);
 
+    {
+        WellPtr well;
+        well = schedule.getWell("OP_1");
+        BOOST_CHECK_EQUAL(well->getRFTActive(2),true);
+        BOOST_CHECK_EQUAL(2 , well->firstRFTOutput( ));
+    }
+
+    {
+        WellPtr well;
+        well = schedule.getWell("OP_2");
+        BOOST_CHECK_EQUAL(well->getRFTActive(3),true);
+        BOOST_CHECK_EQUAL(3 , well->firstRFTOutput( ));
+    }
 }
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFTPLT) {
