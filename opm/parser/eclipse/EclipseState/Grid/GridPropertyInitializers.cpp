@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <limits>
 #include <vector>
+#include <array>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
