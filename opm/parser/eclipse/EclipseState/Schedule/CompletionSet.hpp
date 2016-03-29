@@ -31,12 +31,18 @@ namespace Opm {
 
     class CompletionSet {
     public:
+        using const_iterator = std::vector< std::shared_ptr< const Completion > >::const_iterator;
+
         CompletionSet();
         void add(std::shared_ptr< const Completion > completion);
         size_t size() const;
         CompletionSet * shallowCopy() const;
         std::shared_ptr< const Completion > get(size_t index) const;
         std::shared_ptr< const Completion > getFromIJK(const int i, const int j, const int k) const;
+
+        const_iterator begin() const { return this->m_completions.begin(); }
+        const_iterator end() const { return this->m_completions.end(); }
+
         bool allCompletionsShut() const;
         /// Order completions irrespective of input order.
         /// The algorithm used is the following:
