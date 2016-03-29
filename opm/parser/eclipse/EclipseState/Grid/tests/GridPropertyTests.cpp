@@ -157,23 +157,24 @@ BOOST_AUTO_TEST_CASE(SetFromDeckKeyword) {
     }
 }
 
+
 BOOST_AUTO_TEST_CASE(copy) {
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
-    SupportedKeywordInfo keywordInfo1("P1", 0, "1");
-    SupportedKeywordInfo keywordInfo2("P2", 9, "1");
-    Opm::GridProperty<int> prop1(4, 4, 2, keywordInfo1);
-    Opm::GridProperty<int> prop2(4, 4, 2, keywordInfo2);
+    SupportedKeywordInfo keywordInfo1("P1" , 0, "1");
+    SupportedKeywordInfo keywordInfo2("P2" , 9, "1");
+    Opm::GridProperty<int> prop1( 4 , 4 , 2 , keywordInfo1);
+    Opm::GridProperty<int> prop2( 4 , 4 , 2 , keywordInfo2);
 
-    Opm::Box global(4, 4, 2);
-    Opm::Box layer0(global, 0, 3, 0, 3, 0, 0);
+    Opm::Box global(4,4,2);
+    Opm::Box layer0(global , 0,3,0,3,0,0);
 
-    prop2.copyFrom(prop1, layer0);
+    prop2.copyFrom(prop1 , layer0);
 
-    for (size_t j = 0; j < 4; j++) {
-        for (size_t i = 0; i < 4; i++) {
+    for (size_t j=0; j < 4; j++) {
+        for (size_t i=0; i < 4; i++) {
 
-            BOOST_CHECK_EQUAL(prop2.iget(i, j, 0), 0);
-            BOOST_CHECK_EQUAL(prop2.iget(i, j, 1), 9);
+            BOOST_CHECK_EQUAL( prop2.iget(i,j,0), 0 );
+            BOOST_CHECK_EQUAL( prop2.iget(i,j,1), 9 );
         }
     }
 }

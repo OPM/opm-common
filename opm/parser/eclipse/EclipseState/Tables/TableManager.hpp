@@ -27,7 +27,6 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp> // Phase::PhaseEnum
-
 #include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
 
@@ -138,6 +137,7 @@ namespace Opm {
 
         void initVFPInjTables(const Deck& deck,
                               std::map<int, VFPInjTable>& tableMap);
+
 
         void initPlymaxTables(const Deck& deck);
         void initPlyrockTables(const Deck& deck);

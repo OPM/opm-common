@@ -1,5 +1,5 @@
 /*
-  Copyright 2016 Statoil ASA.
+  Copyright 2013 Statoil ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -311,20 +311,24 @@ namespace Opm {
 
 
 
+
+
+
     Eclipse3DProperties::Eclipse3DProperties( const Deck&         deck,
-                                              std::shared_ptr<const TableManager> tableManager,
-                                              const EclipseGrid&  eclipseGrid)
+                                          std::shared_ptr<const TableManager> tableManager,
+                                          const EclipseGrid&  eclipseGrid)
         :
 
           m_defaultRegion("FLUXNUM"),
           m_deckUnitSystem(deck.getActiveUnitSystem()),
-          // Note that the variants of grid keywords for radial grids are not
-          // supported. (and hopefully never will be)
-          // register the grid properties
-          m_intGridProperties(eclipseGrid, makeSupportedIntKeywords()),
-          m_doubleGridProperties(eclipseGrid,
+		  // Note that the variants of grid keywords for radial grids are not
+		  // supported. (and hopefully never will be)
+		  // register the grid properties
+		  m_intGridProperties(eclipseGrid, makeSupportedIntKeywords()),
+		  m_doubleGridProperties(eclipseGrid,
                         makeSupportedDoubleKeywords(tableManager.get(), &eclipseGrid, &m_intGridProperties))
     {
+
         /*
          * The EQUALREG, MULTREG, COPYREG, ... keywords are used to manipulate
          * vectors based on region values; for instance the statement

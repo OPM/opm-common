@@ -97,6 +97,8 @@ static DeckPtr createDeckTOP() {
     return parser->parseString(deckData, ParseContext()) ;
 }
 
+
+
 BOOST_AUTO_TEST_CASE(GetPOROTOPBased) {
     DeckPtr deck = createDeckTOP();
     EclipseState state(deck , ParseContext());
@@ -111,7 +113,9 @@ BOOST_AUTO_TEST_CASE(GetPOROTOPBased) {
         BOOST_CHECK_EQUAL( 0.10 , poro.iget(i) );
         BOOST_CHECK_EQUAL( 0.25 * Metric::Permeability , permx.iget(i) );
     }
+
 }
+
 
 static DeckPtr createDeck() {
     const char *deckData =
@@ -182,11 +186,6 @@ static DeckPtr createDeckNoFaults() {
     return parser->parseString(deckData, ParseContext()) ;
 }
 
-BOOST_AUTO_TEST_CASE(GetProperties) {
-    DeckPtr deck = createDeck();
-    EclipseState state(deck , ParseContext());
-    BOOST_CHECK(state.getEclipseProperties());
-}
 
 BOOST_AUTO_TEST_CASE(CreateSchedule) {
     DeckPtr deck = createDeck();
@@ -230,11 +229,9 @@ BOOST_AUTO_TEST_CASE(CreateSimulationConfig) {
 
     DeckPtr deck = createDeckSimConfig();
     EclipseState state(deck, ParseContext());
-    SimulationConfigConstPtr simConf = state.getSimulationConfig();
-
-    BOOST_CHECK( simConf->hasThresholdPressure() );
-
-    std::shared_ptr<const ThresholdPressure> thresholdPressure = simConf->getThresholdPressure();
+    SimulationConfigConstPtr simulationConfig = state.getSimulationConfig();
+    BOOST_CHECK(simulationConfig->hasThresholdPressure());
+    std::shared_ptr<const ThresholdPressure> thresholdPressure = simulationConfig->getThresholdPressure();
     BOOST_CHECK_EQUAL(thresholdPressure->size(), 3);
 }
 
@@ -242,26 +239,29 @@ BOOST_AUTO_TEST_CASE(CreateSimulationConfig) {
 
 BOOST_AUTO_TEST_CASE(PhasesCorrect) {
     DeckPtr deck = createDeck();
-    EclipseState state( deck, ParseContext() );
-    const TableManager& tm = *state.getTableManager();
-    BOOST_CHECK(   tm.hasPhase( Phase::PhaseEnum::OIL ));
-    BOOST_CHECK(   tm.hasPhase( Phase::PhaseEnum::GAS ));
-    BOOST_CHECK( !(tm.hasPhase( Phase::PhaseEnum::WATER )));
+    EclipseState state(deck, ParseContext());
+    const auto& tm = *state.getTableManager();
+    BOOST_CHECK(  tm.hasPhase( Phase::PhaseEnum::OIL ));
+    BOOST_CHECK(  tm.hasPhase( Phase::PhaseEnum::GAS ));
+    BOOST_CHECK( !tm.hasPhase( Phase::PhaseEnum::WATER ));
 }
+
 
 BOOST_AUTO_TEST_CASE(TitleCorrect) {
     DeckPtr deck = createDeck();
     EclipseState state(deck, ParseContext());
 
-    BOOST_CHECK_EQUAL( state.getTitle(), "The title" );
+    BOOST_CHECK_EQUAL( state.getTitle(), "The title");
 }
+
 
 BOOST_AUTO_TEST_CASE(IntProperties) {
     DeckPtr deck = createDeck();
     EclipseState state(deck, ParseContext());
-    BOOST_CHECK( ! state.getEclipseProperties().supportsGridProperty( "NONO" ) );
-    BOOST_CHECK(   state.getEclipseProperties().supportsGridProperty( "SATNUM" ) );
-    BOOST_CHECK(   state.getEclipseProperties().hasDeckIntGridProperty( "SATNUM" ) );
+
+    BOOST_CHECK( ! state.getEclipseProperties().supportsGridProperty("NONO"));
+    BOOST_CHECK(   state.getEclipseProperties().supportsGridProperty("SATNUM"));
+    BOOST_CHECK(   state.getEclipseProperties().hasDeckIntGridProperty("SATNUM"));
 }
 
 BOOST_AUTO_TEST_CASE(PropertiesNotSupportsFalse) {
@@ -284,33 +284,37 @@ BOOST_AUTO_TEST_CASE(GetProperty) {
     BOOST_CHECK_THROW( satNUM.iget(100000) , std::invalid_argument);
 }
 
+
 BOOST_AUTO_TEST_CASE(GetTransMult) {
     DeckPtr deck = createDeck();
     EclipseState state(deck, ParseContext());
     std::shared_ptr<const TransMult> transMult = state.getTransMult();
 
-    BOOST_CHECK_EQUAL( 1.0, transMult->getMultiplier( 1, 0, 0, FaceDir::XPlus ) );
-    BOOST_CHECK_THROW( transMult->getMultiplier( 1000, FaceDir::XPlus ), std::invalid_argument );
+
+    BOOST_CHECK_EQUAL( 1.0 , transMult->getMultiplier(1,0,0,FaceDir::XPlus));
+    BOOST_CHECK_THROW(transMult->getMultiplier(1000 , FaceDir::XPlus) , std::invalid_argument);
 }
+
+
 
 BOOST_AUTO_TEST_CASE(GetFaults) {
     DeckPtr deck = createDeck();
     EclipseState state(deck , ParseContext());
     std::shared_ptr<const FaultCollection> faults = state.getFaults();
 
-    BOOST_CHECK( faults->hasFault( "F1" ) );
-    BOOST_CHECK( faults->hasFault( "F2" ) );
+    BOOST_CHECK( faults->hasFault("F1") );
+    BOOST_CHECK( faults->hasFault("F2") );
 
-    std::shared_ptr<const Fault> F1 = faults->getFault( "F1" );
-    std::shared_ptr<const Fault> F2 = faults->getFault( "F2" );
+    std::shared_ptr<const Fault> F1 = faults->getFault("F1");
+    std::shared_ptr<const Fault> F2 = faults->getFault("F2");
 
-    BOOST_CHECK_EQUAL( 0.50, F1->getTransMult() );
-    BOOST_CHECK_EQUAL( 0.25, F2->getTransMult() );
+    BOOST_CHECK_EQUAL( 0.50 , F1->getTransMult());
+    BOOST_CHECK_EQUAL( 0.25 , F2->getTransMult());
 
     std::shared_ptr<const TransMult> transMult = state.getTransMult();
-    BOOST_CHECK_EQUAL( transMult->getMultiplier( 0, 0, 0, FaceDir::XPlus ), 0.50 );
-    BOOST_CHECK_EQUAL( transMult->getMultiplier( 4, 3, 0, FaceDir::XMinus ), 0.25 );
-    BOOST_CHECK_EQUAL( transMult->getMultiplier( 4, 3, 0, FaceDir::ZPlus ), 1.00 );
+    BOOST_CHECK_EQUAL( transMult->getMultiplier(0 , 0 , 0 , FaceDir::XPlus) , 0.50 );
+    BOOST_CHECK_EQUAL( transMult->getMultiplier(4 , 3 , 0 , FaceDir::XMinus) , 0.25 );
+    BOOST_CHECK_EQUAL( transMult->getMultiplier(4 , 3 , 0 , FaceDir::ZPlus) , 1.00 );
 }
 
 

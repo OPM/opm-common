@@ -146,7 +146,7 @@ static GridProperties<int> getGridProperties(int defaultEqlnum = 3, bool addKeyw
     const EclipseGrid eclipseGrid( 3, 3, 3 );
     GridProperties<int> gridProperties( eclipseGrid, std::move( supportedKeywordsVec ) );
     if (addKeyword) {
-        gridProperties.addKeyword( "EQLNUM" );
+        gridProperties.addKeyword("EQLNUM");
     }
     return gridProperties;
 }

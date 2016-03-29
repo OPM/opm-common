@@ -76,14 +76,12 @@ namespace Opm {
         return m_deckUnitSystem;
     }
 
-
     EclipseGridConstPtr EclipseState::getEclipseGrid() const {
-        return m_eclipseProperties->getEclipseGrid();
+        return m_eclipseGrid;
     }
 
-    // is only used in EclipseWriter
     EclipseGridPtr EclipseState::getEclipseGridCopy() const {
-        return m_eclipseProperties->getEclipseGridCopy();
+        return std::make_shared<EclipseGrid>( m_eclipseGrid->c_ptr() );
     }
 
     const Eclipse3DProperties& EclipseState::getEclipseProperties() const {
@@ -171,7 +169,7 @@ namespace Opm {
 
 
     void EclipseState::initTransMult() {
-        EclipseGridConstPtr grid = m_eclipseProperties->getEclipseGrid();
+        EclipseGridConstPtr grid = getEclipseGrid();
         m_transMult = std::make_shared<TransMult>( grid->getNX() , grid->getNY() , grid->getNZ());
         // by obtaining doubleGridProperties we're circumventing the runpostprocessor which is called on state.getkeyword
         auto& doubleGp = m_eclipseProperties.getDoubleGridProperties();
@@ -192,7 +190,7 @@ namespace Opm {
     }
 
     void EclipseState::initFaults(DeckConstPtr deck) {
-        EclipseGridConstPtr grid = m_eclipseProperties->getEclipseGrid();
+        EclipseGridConstPtr grid = getEclipseGrid();
         std::shared_ptr<GRIDSection> gridSection = std::make_shared<GRIDSection>( *deck );
 
         m_faults = std::make_shared<FaultCollection>(gridSection , grid);
@@ -225,7 +223,7 @@ namespace Opm {
 
 
     void EclipseState::initMULTREGT(DeckConstPtr deck) {
-        EclipseGridConstPtr grid = m_eclipseProperties->getEclipseGrid();
+        EclipseGridConstPtr grid = getEclipseGrid();
 
         std::vector< const DeckKeyword* > multregtKeywords;
         if (deck->hasKeyword("MULTREGT"))

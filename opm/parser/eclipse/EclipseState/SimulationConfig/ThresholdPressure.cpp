@@ -30,14 +30,14 @@
 namespace Opm {
 
     ThresholdPressure::ThresholdPressure(const ParseContext& parseContext, DeckConstPtr deck,
-                                         GridProperties<int>& gridProperties) :
-                                         m_parseContext( parseContext )
+                                         GridProperties<int>& gridProperties)
+        : m_parseContext( parseContext )
     {
 
-        if (Section::hasRUNSPEC( *deck ) && Section::hasSOLUTION( *deck )) {
-            std::shared_ptr<const RUNSPECSection> runspecSection = std::make_shared<const RUNSPECSection>( *deck );
-            std::shared_ptr<const SOLUTIONSection> solutionSection = std::make_shared<const SOLUTIONSection>( *deck );
-            initThresholdPressure( parseContext, runspecSection, solutionSection, gridProperties );
+        if (Section::hasRUNSPEC(*deck) && Section::hasSOLUTION(*deck)) {
+            std::shared_ptr<const RUNSPECSection> runspecSection = std::make_shared<const RUNSPECSection>(*deck);
+            std::shared_ptr<const SOLUTIONSection> solutionSection = std::make_shared<const SOLUTIONSection>(*deck);
+            initThresholdPressure(parseContext, runspecSection, solutionSection, gridProperties);
         }
     }
 

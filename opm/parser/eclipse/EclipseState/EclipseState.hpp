@@ -82,25 +82,19 @@ namespace Opm {
         bool hasNNC() const;
 
         const Eclipse3DProperties& getEclipseProperties() const;
-
         std::shared_ptr<const TableManager> getTableManager() const;
 
-        // the unit system used by the deck. note that it is rarely needed to
-        // convert units because internally to opm-parser everything is
-        // represented by SI units...
+        // the unit system used by the deck. note that it is rarely needed to convert
+        // units because internally to opm-parser everything is represented by SI
+        // units...
         const UnitSystem& getDeckUnitSystem()  const;
         void applyModifierDeck( std::shared_ptr<const Deck> deck);
-
-        // TODO this used to be private but since eclipseProperties needs to
-        // know SIScaling, we need access to either this or to the UnitSystem.
-        double getSIScaling(const std::string &dimensionString) const;
 
     private:
         void initTabdims(std::shared_ptr< const Deck > deck);
         void initIOConfig(std::shared_ptr< const Deck > deck);
         void initIOConfigPostSchedule(std::shared_ptr< const Deck > deck);
         void initTitle(std::shared_ptr< const Deck > deck);
-
         void initTransMult();
         void initFaults(std::shared_ptr< const Deck > deck);
 
@@ -116,11 +110,10 @@ namespace Opm {
 
         std::set<enum Phase::PhaseEnum> phases;
         std::string m_title;
+        const UnitSystem& m_deckUnitSystem;
         std::shared_ptr<TransMult> m_transMult;
         std::shared_ptr<FaultCollection> m_faults;
         std::shared_ptr<NNC> m_nnc;
-
-        const UnitSystem& m_deckUnitSystem;
         const ParseContext& m_parseContext;
         std::shared_ptr<const TableManager> m_tables;
         std::shared_ptr<const EclipseGrid> m_eclipseGrid;

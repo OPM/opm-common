@@ -31,17 +31,19 @@
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
 
 /**
-   This class implements a container (std::unordered_map<std::string ,
-   Gridproperty<T>>) of Gridproperties. Usage is as follows:
+  This class implements a container (std::unordered_map<std::string ,
+  Gridproperty<T>>) of Gridproperties. Usage is as follows:
 
-    1. Instantiate the class; passing the number of grid cells and the supported
-       keywords as a list of strings to the constructor.
+    1. Instantiate the class; passing the number of grid cells and the
+       supported keywords as a list of strings to the constructor.
 
-    2. Query the container with the supportsKeyword() and hasKeyword() methods.
+    2. Query the container with the supportsKeyword() and hasKeyword()
+       methods.
 
-    3. When you ask the container to get a keyword with the getKeyword() method
-       it will automatically create a new GridProperty object if the container
-       does not have this property.
+    3. When you ask the container to get a keyword with the
+       getKeyword() method it will automatically create a new
+       GridProperty object if the container does not have this
+       property.
 */
 
 
@@ -152,10 +154,10 @@ namespace Opm {
         void copyKeyword(const std::string& srcField ,
                          const std::string& targetField ,
                          const Box& inputBox) {
-            const auto& src = this->getKeyword( srcField );
-            auto& target    = this->getOrCreateProperty( targetField );
+            auto& src    = getKeyword( srcField );
+            auto& target = getOrCreateProperty( targetField );
 
-            target.copyFrom( *src , inputBox );
+            target.copyFrom( src , inputBox );
         }
 
 

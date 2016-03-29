@@ -180,8 +180,8 @@ namespace Opm {
         bool            m_FMTOUT;
         std::string     m_eclipse_input_path;
         bool            m_ignore_RPTSCHED_RESTART;
-        int             m_first_restart_step = 0;
-        int             m_first_rft_step = 0;
+        int             m_first_restart_step;
+        int             m_first_rft_step;
 
 
         struct restartConfig {

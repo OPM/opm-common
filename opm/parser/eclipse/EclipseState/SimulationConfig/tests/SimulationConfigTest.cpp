@@ -105,7 +105,7 @@ const std::string& inputStr_vap_dis = "RUNSPEC\n"
                                       "REGIONS\n"
                                       "\n";
 
-static DeckPtr createDeck(const ParseContext& parseContext, const std::string& input) {
+static DeckPtr createDeck(const ParseContext& parseContext , const std::string& input) {
     Opm::Parser parser;
     return parser.parseString(input, parseContext);
 }

@@ -52,18 +52,19 @@ EclipseState makeState(const std::string& fileName) {
 
 BOOST_AUTO_TEST_CASE( PERMX ) {
     EclipseState state = makeState( "testdata/integration_tests/BOX/BOXTEST1" );
-    const auto& permx = state.getEclipseProperties().getDoubleGridProperty( "PERMX" );
-    const auto& permy = state.getEclipseProperties().getDoubleGridProperty( "PERMY" );
-    const auto& permz = state.getEclipseProperties().getDoubleGridProperty( "PERMZ" );
-    size_t i, j, k;
+    const auto& props = state.getEclipseProperties();
+    const auto& permx = props.getDoubleGridProperty("PERMX");
+    const auto& permy = props.getDoubleGridProperty("PERMY");
+    const auto& permz = props.getDoubleGridProperty("PERMZ");
+    size_t i,j,k;
     std::shared_ptr<const EclipseGrid> grid = state.getEclipseGrid();
 
     for (k = 0; k < grid->getNZ(); k++) {
         for (j = 0; j < grid->getNY(); j++) {
             for (i = 0; i < grid->getNX(); i++) {
 
-                BOOST_CHECK_CLOSE( permx.iget( i, j, k ) * 0.25, permz.iget( i, j, k ), 0.001 );
-                BOOST_CHECK_EQUAL( permx.iget( i, j, k ) * 2, permy.iget( i, j, k ) );
+                BOOST_CHECK_CLOSE( permx.iget(i,j,k) * 0.25 , permz.iget(i,j,k) , 0.001);
+                BOOST_CHECK_EQUAL( permx.iget(i,j,k) * 2 , permy.iget(i,j,k));
 
             }
         }
@@ -73,10 +74,10 @@ BOOST_AUTO_TEST_CASE( PERMX ) {
 
 
 BOOST_AUTO_TEST_CASE( PARSE_BOX_OK ) {
-    EclipseState state = makeState( "testdata/integration_tests/BOX/BOXTEST1" );
-    const auto& satnum = state.getEclipseProperties().getIntGridProperty( "SATNUM" );
+    EclipseState state = makeState("testdata/integration_tests/BOX/BOXTEST1");
+    const auto& satnum = state.getEclipseProperties().getIntGridProperty("SATNUM");
     {
-        size_t i, j, k;
+        size_t i,j,k;
         std::shared_ptr<const EclipseGrid> grid = state.getEclipseGrid();
         for (k = 0; k < grid->getNZ(); k++) {
             for (j = 0; j < grid->getNY(); j++) {
@@ -84,9 +85,9 @@ BOOST_AUTO_TEST_CASE( PARSE_BOX_OK ) {
 
                     size_t g = i + j * grid->getNX() + k * grid->getNX() * grid->getNY();
                     if (i <= 1 && j <= 1 && k <= 1)
-                        BOOST_CHECK_EQUAL( satnum.iget( g ), 10 );
+                        BOOST_CHECK_EQUAL(satnum.iget(g) , 10);
                     else
-                        BOOST_CHECK_EQUAL( satnum.iget( g ), 2 );
+                        BOOST_CHECK_EQUAL(satnum.iget(g) , 2);
 
                 }
             }
@@ -94,11 +95,13 @@ BOOST_AUTO_TEST_CASE( PARSE_BOX_OK ) {
     }
 }
 
+
+
 BOOST_AUTO_TEST_CASE( PARSE_MULTIPLY_COPY ) {
-    EclipseState state = makeState( "testdata/integration_tests/BOX/BOXTEST1" );
-    const auto& satnum = state.getEclipseProperties().getIntGridProperty( "SATNUM" );
-    const auto& fipnum = state.getEclipseProperties().getIntGridProperty( "FIPNUM" );
-    size_t i, j, k;
+    EclipseState state = makeState("testdata/integration_tests/BOX/BOXTEST1");
+    const auto& satnum = state.getEclipseProperties().getIntGridProperty("SATNUM");
+    const auto& fipnum = state.getEclipseProperties().getIntGridProperty("FIPNUM");
+    size_t i,j,k;
     std::shared_ptr<const EclipseGrid> grid = state.getEclipseGrid();
 
     for (k = 0; k < grid->getNZ(); k++) {
@@ -107,9 +110,9 @@ BOOST_AUTO_TEST_CASE( PARSE_MULTIPLY_COPY ) {
 
                 size_t g = i + j * grid->getNX() + k * grid->getNX() * grid->getNY();
                 if (i <= 1 && j <= 1 && k <= 1)
-                    BOOST_CHECK_EQUAL( 4 * satnum.iget( g ), fipnum.iget( g ) );
+                    BOOST_CHECK_EQUAL(4*satnum.iget(g) , fipnum.iget(g));
                 else
-                    BOOST_CHECK_EQUAL( 2 * satnum.iget( i, j, k ), fipnum.iget( i, j, k ) );
+                    BOOST_CHECK_EQUAL(2*satnum.iget(i,j,k) , fipnum.iget(i,j,k));
 
             }
         }
@@ -124,20 +127,20 @@ BOOST_AUTO_TEST_CASE( KEYWORD_BOX_TOO_SMALL) {
 }
 
 BOOST_AUTO_TEST_CASE( EQUAL ) {
-    EclipseState state = makeState( "testdata/integration_tests/BOX/BOXTEST1" );
-    const auto& pvtnum = state.getEclipseProperties().getIntGridProperty( "PVTNUM" );
-    const auto& eqlnum = state.getEclipseProperties().getIntGridProperty( "EQLNUM" );
-    const auto& poro = state.getEclipseProperties().getDoubleGridProperty( "PORO" );
-    size_t i, j, k;
+    EclipseState state = makeState("testdata/integration_tests/BOX/BOXTEST1");
+    const auto& pvtnum = state.getEclipseProperties().getIntGridProperty("PVTNUM");
+    const auto& eqlnum = state.getEclipseProperties().getIntGridProperty("EQLNUM");
+    const auto& poro = state.getEclipseProperties().getDoubleGridProperty("PORO");
+    size_t i,j,k;
     std::shared_ptr<const EclipseGrid> grid = state.getEclipseGrid();
 
     for (k = 0; k < grid->getNZ(); k++) {
         for (j = 0; j < grid->getNY(); j++) {
             for (i = 0; i < grid->getNX(); i++) {
 
-                BOOST_CHECK_EQUAL( pvtnum.iget( i, j, k ), k );
-                BOOST_CHECK_EQUAL( eqlnum.iget( i, j, k ), 77 + 2 * k );
-                BOOST_CHECK_EQUAL( poro.iget( i, j, k ), 0.25 );
+                BOOST_CHECK_EQUAL( pvtnum.iget(i,j,k) , k );
+                BOOST_CHECK_EQUAL( eqlnum.iget(i,j,k) , 77 + 2 * k );
+                BOOST_CHECK_EQUAL( poro.iget(i,j,k) , 0.25 );
 
             }
         }
