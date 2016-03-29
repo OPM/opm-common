@@ -63,6 +63,7 @@ namespace Opm
         size_t getMaxNumCompletionsForWells(size_t timestep) const;
         bool hasWell(const std::string& wellName) const;
         std::shared_ptr< Well > getWell(const std::string& wellName);
+        const Well& getWell(const std::string& wellName) const;
         std::vector<std::shared_ptr< Well >> getOpenWells(size_t timeStep);
         std::vector<std::shared_ptr< const Well >> getWells() const;
         std::vector<std::shared_ptr< const Well >> getWells(size_t timeStep) const;
