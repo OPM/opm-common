@@ -28,39 +28,39 @@ namespace Opm {
     void MessageContainer::error(const std::string& msg, const std::string& filename, const int lineno)
     {
         std::unique_ptr<Location> loc(new Location{filename, lineno});
-        m_messages.emplace_back(Message{MessageType::MessageTypeEnum::ERROR, msg, std::move(loc)});
+        m_messages.emplace_back(Message{MessageType::MessageTypeEnum::Error, msg, std::move(loc)});
     }
 
 
     void MessageContainer::error(const std::string& msg)
     {
-        m_messages.emplace_back(Message{MessageType::MessageTypeEnum::ERROR, msg, nullptr});
+        m_messages.emplace_back(Message{MessageType::MessageTypeEnum::Error, msg, nullptr});
     }
 
 
     void MessageContainer::bug(const std::string& msg, const std::string& filename, const int lineno)
     {
         std::unique_ptr<Location> loc(new Location{filename, lineno});
-        m_messages.emplace_back(Message{MessageType::MessageTypeEnum::BUG, msg, std::move(loc)});
+        m_messages.emplace_back(Message{MessageType::MessageTypeEnum::Bug, msg, std::move(loc)});
     }
 
 
     void MessageContainer::bug(const std::string& msg)
     {
-        m_messages.emplace_back(Message{MessageType::MessageTypeEnum::BUG, msg, nullptr});
+        m_messages.emplace_back(Message{MessageType::MessageTypeEnum::Bug, msg, nullptr});
     }
 
 
     void MessageContainer::warning(const std::string& msg, const std::string& filename, const int lineno)
     {
         std::unique_ptr<Location> loc(new Location{filename, lineno});
-        m_messages.emplace_back(Message{MessageType::MessageTypeEnum::WARNING, msg, std::move(loc)});
+        m_messages.emplace_back(Message{MessageType::MessageTypeEnum::Warning, msg, std::move(loc)});
     }
 
 
     void MessageContainer::warning(const std::string& msg)
     {
-        m_messages.emplace_back(Message{MessageType::MessageTypeEnum::WARNING, msg, nullptr});
+        m_messages.emplace_back(Message{MessageType::MessageTypeEnum::Warning, msg, nullptr});
     }
 
 
@@ -68,39 +68,39 @@ namespace Opm {
     void MessageContainer::info(const std::string& msg, const std::string& filename, const int lineno)
     {
         std::unique_ptr<Location> loc(new Location{filename, lineno});
-        m_messages.emplace_back(Message{MessageType::MessageTypeEnum::INFO, msg, std::move(loc)});
+        m_messages.emplace_back(Message{MessageType::MessageTypeEnum::Info, msg, std::move(loc)});
     }
 
 
     void MessageContainer::info(const std::string& msg)
     {
-        m_messages.emplace_back(Message{MessageType::MessageTypeEnum::INFO, msg, nullptr});
+        m_messages.emplace_back(Message{MessageType::MessageTypeEnum::Info, msg, nullptr});
     }
 
 
     void MessageContainer::debug(const std::string& msg, const std::string& filename, const int lineno)
     {
         std::unique_ptr<Location> loc(new Location{filename, lineno});
-        m_messages.emplace_back(Message{MessageType::MessageTypeEnum::DEBUG, msg, std::move(loc)});
+        m_messages.emplace_back(Message{MessageType::MessageTypeEnum::Debug, msg, std::move(loc)});
     }
 
 
     void MessageContainer::debug(const std::string& msg)
     {
-        m_messages.emplace_back(Message{MessageType::MessageTypeEnum::DEBUG, msg, nullptr});
+        m_messages.emplace_back(Message{MessageType::MessageTypeEnum::Debug, msg, nullptr});
     }
 
 
     void MessageContainer::problem(const std::string& msg, const std::string& filename, const int lineno)
     {
         std::unique_ptr<Location> loc(new Location{filename, lineno});
-        m_messages.emplace_back(Message{MessageType::MessageTypeEnum::PROBLEM, msg, std::move(loc)});
+        m_messages.emplace_back(Message{MessageType::MessageTypeEnum::Problem, msg, std::move(loc)});
     }
 
 
     void MessageContainer::problem(const std::string& msg)
     {
-        m_messages.emplace_back(Message{MessageType::MessageTypeEnum::PROBLEM, msg, nullptr});
+        m_messages.emplace_back(Message{MessageType::MessageTypeEnum::Problem, msg, nullptr});
     }
 
 

@@ -31,12 +31,12 @@ namespace Opm {
     namespace MessageType {
 
         enum MessageTypeEnum {
-            DEBUG     = 1,
-            INFO      = 2,
-            WARNING   = 3,
-            ERROR     = 4,
-            PROBLEM   = 5,
-            BUG       = 6
+            Debug     = 1,
+            Info      = 2,
+            Warning   = 3,
+            Error     = 4,
+            Problem   = 5,
+            Bug       = 6
         };
 
     } // namespace MessageType
@@ -58,7 +58,7 @@ namespace Opm {
     ///Message container is used to replace OpmLog functionalities.
     class MessageContainer {
     public:
-        void error(const std::string& msg, const std::string& filename, const int lineno);        
+        void error(const std::string& msg, const std::string& filename, const int lineno);
         void error(const std::string& msg);
 
         void bug(const std::string& msg, const std::string& filename, const int lineno);
