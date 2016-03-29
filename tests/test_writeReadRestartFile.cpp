@@ -29,6 +29,7 @@
 #include <opm/output/eclipse/EclipseReader.hpp>
 #include <opm/output/eclipse/EclipseIOUtil.hpp>
 #include <opm/core/grid/GridManager.hpp>
+#include <opm/core/grid/GridHelpers.hpp>
 #include <opm/core/props/phaseUsageFromDeck.hpp>
 #include <opm/core/props/BlackoilPhases.hpp>
 #include <opm/core/simulator/BlackoilState.hpp>
@@ -60,155 +61,156 @@
 
 
 std::string input =
-        "RUNSPEC\n"
-                "OIL\n"
-                "GAS\n"
-                "WATER\n"
-                "DISGAS\n"
-                "VAPOIL\n"
-                "UNIFOUT\n"
-                "UNIFIN\n"
-                "DIMENS\n"
-                " 10 10 10 /\n"
+           "RUNSPEC\n"
+           "OIL\n"
+           "GAS\n"
+           "WATER\n"
+           "DISGAS\n"
+           "VAPOIL\n"
+           "UNIFOUT\n"
+           "UNIFIN\n"
+           "DIMENS\n"
+           " 10 10 10 /\n"
 
-                "GRID\n"
-                "DXV\n"
-                "10*0.25 /\n"
-                "DYV\n"
-                "10*0.25 /\n"
-                "DZV\n"
-                "10*0.25 /\n"
-                "TOPS\n"
-                "100*0.25 /\n"
-                "\n"
+           "GRID\n"
+           "DXV\n"
+           "10*0.25 /\n"
+           "DYV\n"
+           "10*0.25 /\n"
+           "DZV\n"
+           "10*0.25 /\n"
+           "TOPS\n"
+           "100*0.25 /\n"
+           "\n"
 
-                "SOLUTION\n"
-                "RESTART\n"
-                "TESTWELLSTATE 1/\n"
-                "\n"
+           "SOLUTION\n"
+           "RESTART\n"
+           "TESTWELLSTATE 1/\n"
+           "\n"
 
-                "START             -- 0 \n"
-                "1 NOV 1979 / \n"
+           "START             -- 0 \n"
+           "1 NOV 1979 / \n"
 
-                "SCHEDULE\n"
-                "SKIPREST\n"
-                "RPTRST\n"
-                "BASIC=1\n"
-                "/\n"
-                "DATES             -- 1\n"
-                " 10  OKT 2008 / \n"
-                "/\n"
-                "WELSPECS\n"
-                "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-                "    'OP_2'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-                "/\n"
-                "COMPDAT\n"
-                " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                " 'OP_2'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-                " 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                "/\n"
-                "WCONPROD\n"
-                "'OP_1' 'OPEN' 'ORAT' 20000  4* 1000 /\n"
-                "/\n"
-                "WCONINJE\n"
-                "'OP_2' 'GAS' 'OPEN' 'RATE' 100 200 400 /\n"
-                "/\n"
+           "SCHEDULE\n"
+           "SKIPREST\n"
+           "RPTRST\n"
+           "BASIC=1\n"
+           "/\n"
+           "DATES             -- 1\n"
+           " 10  OKT 2008 / \n"
+           "/\n"
+           "WELSPECS\n"
+           "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+           "    'OP_2'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+           "/\n"
+           "COMPDAT\n"
+           " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+           " 'OP_2'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
+           " 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+           "/\n"
+           "WCONPROD\n"
+               "'OP_1' 'OPEN' 'ORAT' 20000  4* 1000 /\n"
+           "/\n"
+           "WCONINJE\n"
+               "'OP_2' 'GAS' 'OPEN' 'RATE' 100 200 400 /\n"
+           "/\n"
 
-                "DATES             -- 2\n"
-                " 20  JAN 2011 / \n"
-                "/\n"
-                "WELSPECS\n"
-                "    'OP_3'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-                "/\n"
-                "COMPDAT\n"
-                " 'OP_3'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                "/\n"
-                "WCONPROD\n"
-                "'OP_3' 'OPEN' 'ORAT' 20000  4* 1000 /\n"
-                "/\n"
+           "DATES             -- 2\n"
+           " 20  JAN 2011 / \n"
+           "/\n"
+           "WELSPECS\n"
+           "    'OP_3'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+           "/\n"
+           "COMPDAT\n"
+           " 'OP_3'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+           "/\n"
+           "WCONPROD\n"
+               "'OP_3' 'OPEN' 'ORAT' 20000  4* 1000 /\n"
+           "/\n"
 
-                "DATES             -- 3\n"
-                " 15  JUN 2013 / \n"
-                "/\n"
-                "COMPDAT\n"
-                " 'OP_2'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                " 'OP_1'  9  9   7  7 'SHUT' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                "/\n"
+           "DATES             -- 3\n"
+           " 15  JUN 2013 / \n"
+           "/\n"
+           "COMPDAT\n"
+           " 'OP_2'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+           " 'OP_1'  9  9   7  7 'SHUT' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+           "/\n"
 
-                "DATES             -- 4\n"
-                " 22  APR 2014 / \n"
-                "/\n"
-                "WELSPECS\n"
-                "    'OP_4'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-                "/\n"
-                "COMPDAT\n"
-                " 'OP_4'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                " 'OP_3'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                "/\n"
-                "WCONPROD\n"
-                "'OP_4' 'OPEN' 'ORAT' 20000  4* 1000 /\n"
-                "/\n"
+           "DATES             -- 4\n"
+           " 22  APR 2014 / \n"
+           "/\n"
+           "WELSPECS\n"
+           "    'OP_4'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+           "/\n"
+           "COMPDAT\n"
+           " 'OP_4'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+           " 'OP_3'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+           "/\n"
+           "WCONPROD\n"
+               "'OP_4' 'OPEN' 'ORAT' 20000  4* 1000 /\n"
+           "/\n"
 
-                "DATES             -- 5\n"
-                " 30  AUG 2014 / \n"
-                "/\n"
-                "WELSPECS\n"
-                "    'OP_5'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-                "/\n"
-                "COMPDAT\n"
-                " 'OP_5'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                "/\n"
-                "WCONPROD\n"
-                "'OP_5' 'OPEN' 'ORAT' 20000  4* 1000 /\n"
-                "/\n"
+           "DATES             -- 5\n"
+           " 30  AUG 2014 / \n"
+           "/\n"
+           "WELSPECS\n"
+           "    'OP_5'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+           "/\n"
+           "COMPDAT\n"
+           " 'OP_5'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+           "/\n"
+           "WCONPROD\n"
+               "'OP_5' 'OPEN' 'ORAT' 20000  4* 1000 /\n"
+           "/\n"
 
-                "DATES             -- 6\n"
-                " 15  SEP 2014 / \n"
-                "/\n"
-                "WCONPROD\n"
-                "'OP_3' 'SHUT' 'ORAT' 20000  4* 1000 /\n"
-                "/\n"
+           "DATES             -- 6\n"
+           " 15  SEP 2014 / \n"
+           "/\n"
+           "WCONPROD\n"
+               "'OP_3' 'SHUT' 'ORAT' 20000  4* 1000 /\n"
+           "/\n"
 
-                "DATES             -- 7\n"
-                " 9  OCT 2014 / \n"
-                "/\n"
-                "WELSPECS\n"
-                "    'OP_6'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-                "/\n"
-                "COMPDAT\n"
-                " 'OP_6'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                "/\n"
-                "WCONPROD\n"
-                "'OP_6' 'OPEN' 'ORAT' 20000  4* 1000 /\n"
-                "/\n"
-                "TSTEP            -- 8\n"
-                "10 /"
-                "/\n";
+           "DATES             -- 7\n"
+           " 9  OCT 2014 / \n"
+           "/\n"
+           "WELSPECS\n"
+           "    'OP_6'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+           "/\n"
+           "COMPDAT\n"
+           " 'OP_6'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+           "/\n"
+           "WCONPROD\n"
+               "'OP_6' 'OPEN' 'ORAT' 20000  4* 1000 /\n"
+           "/\n"
+           "TSTEP            -- 8\n"
+           "10 /"
+           "/\n";
 
-std::shared_ptr<Opm::BlackoilState> createBlackOilState(Opm::EclipseGridConstPtr eclGrid) {
 
-    std::shared_ptr<Opm::GridManager> ourFineGridManagerPtr(new Opm::GridManager(eclGrid));
-    std::shared_ptr<Opm::BlackoilState> blackoilState(new Opm::BlackoilState);
-    blackoilState->init(*ourFineGridManagerPtr->c_grid(), 3);
+std::shared_ptr<Opm::BlackoilState> createBlackOilState(Opm::EclipseGridConstPtr eclGrid , const Opm::PhaseUsage& phaseUsage) {
 
-    return blackoilState;
+  std::shared_ptr<Opm::GridManager> grid(new Opm::GridManager(eclGrid));
+  const UnstructuredGrid& ug_grid = *(grid->c_grid());
+  std::shared_ptr<Opm::BlackoilState> blackoilState(new Opm::BlackoilState( Opm::UgGridHelpers::numCells(ug_grid) , Opm::UgGridHelpers::numFaces(ug_grid) , phaseUsage.num_phases) );
+
+  return blackoilState;
 }
 
 Opm::EclipseWriterPtr createEclipseWriter(Opm::DeckConstPtr deck,
                                           Opm::EclipseStatePtr eclipseState,
                                           std::string& eclipse_data_filename) {
 
-    Opm::parameter::ParameterGroup params;
-    params.insertParameter("deck_filename", eclipse_data_filename);
+  Opm::parameter::ParameterGroup params;
+  params.insertParameter("deck_filename", eclipse_data_filename);
 
-    const Opm::PhaseUsage phaseUsage = Opm::phaseUsageFromDeck(deck);
+  const Opm::PhaseUsage phaseUsage = Opm::phaseUsageFromDeck(deck);
 
-    Opm::EclipseWriterPtr eclWriter(new Opm::EclipseWriter(params,
-                                                           eclipseState,
-                                                           phaseUsage,
-                                                           eclipseState->getEclipseGrid()->getCartesianSize(),
-                                                           0));
-    return eclWriter;
+  Opm::EclipseWriterPtr eclWriter(new Opm::EclipseWriter(params,
+                                                         eclipseState,
+                                                         phaseUsage,
+                                                         eclipseState->getEclipseGrid()->getCartesianSize(),
+                                                         0));
+  return eclWriter;
 }
 
 void setValuesInWellState(std::shared_ptr<Opm::WellState> wellState){
@@ -247,102 +249,102 @@ void setValuesInWellState(std::shared_ptr<Opm::WellState> wellState){
 }
 
 BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData)
-        {
-                std::string eclipse_data_filename    = "TestWellState.DATA";
-        test_work_area_type * test_area = test_work_area_alloc("EclipseReadWriteWellStateData");
+{
+    std::string eclipse_data_filename    = "TestWellState.DATA";
+    test_work_area_type * test_area = test_work_area_alloc("EclipseReadWriteWellStateData");
 
-        Opm::Parser parser;
-        Opm::ParseContext parseContext;
-        Opm::DeckConstPtr deck = parser.parseString(input, parseContext);
-        Opm::EclipseStatePtr  eclipseState(new Opm::EclipseState(deck , parseContext));
-        Opm::EclipseWriterPtr eclipseWriter = createEclipseWriter(deck, eclipseState, eclipse_data_filename);
+    Opm::Parser parser;
+    Opm::ParseContext parseContext;
+    Opm::DeckConstPtr deck = parser.parseString(input, parseContext);
+    Opm::EclipseStatePtr  eclipseState(new Opm::EclipseState(deck , parseContext));
+    Opm::EclipseWriterPtr eclipseWriter = createEclipseWriter(deck, eclipseState, eclipse_data_filename);
 
-        std::shared_ptr<Opm::SimulatorTimer> simTimer( new Opm::SimulatorTimer() );
-        simTimer->init(eclipseState->getSchedule()->getTimeMap());
-        eclipseWriter->writeInit(*simTimer);
-        std::shared_ptr<Opm::WellState> wellState(new Opm::WellState());
-        Opm::PhaseUsage phaseUsage = Opm::phaseUsageFromDeck(deck);
+    std::shared_ptr<Opm::SimulatorTimer> simTimer( new Opm::SimulatorTimer() );
+    simTimer->init(eclipseState->getSchedule()->getTimeMap());
+    eclipseWriter->writeInit(*simTimer);
+    std::shared_ptr<Opm::WellState> wellState(new Opm::WellState());
+    Opm::PhaseUsage phaseUsage = Opm::phaseUsageFromDeck(deck);
 
-        Opm::GridManager gridManager(deck);
-        Opm::WellsManager wellsManager(eclipseState, 1, *gridManager.c_grid(), NULL);
-        const Wells* wells = wellsManager.c_wells();
-        std::shared_ptr<Opm::BlackoilState> blackoilState = createBlackOilState(eclipseState->getEclipseGrid());
-        wellState->init(wells, *blackoilState);
+    Opm::GridManager gridManager(deck);
+    Opm::WellsManager wellsManager(eclipseState, 1, *gridManager.c_grid(), NULL);
+    const Wells* wells = wellsManager.c_wells();
+    std::shared_ptr<Opm::BlackoilState> blackoilState = createBlackOilState(eclipseState->getEclipseGrid(), phaseUsage);
+    wellState->init(wells, *blackoilState);
 
-        //Set test data for pressure
-        std::vector<double>& pressure = blackoilState->pressure();
-        for (std::vector<double>::iterator iter = pressure.begin(); iter != pressure.end(); ++iter) {
-            *iter = 6.0;
-        }
+    //Set test data for pressure
+    std::vector<double>& pressure = blackoilState->pressure();
+    for (std::vector<double>::iterator iter = pressure.begin(); iter != pressure.end(); ++iter) {
+        *iter = 6.0;
+    }
 
-        //Set test data for temperature
-        std::vector<double>& temperature = blackoilState->temperature();
-        for (std::vector<double>::iterator iter = temperature.begin(); iter != temperature.end(); ++iter) {
-            *iter = 7.0;
-        }
+    //Set test data for temperature
+    std::vector<double>& temperature = blackoilState->temperature();
+    for (std::vector<double>::iterator iter = temperature.begin(); iter != temperature.end(); ++iter) {
+        *iter = 7.0;
+    }
 
-        //Set test data for saturation water
-        std::vector<double> swatdata(1000, 8);
-        Opm::EclipseIOUtil::addToStripedData(swatdata, blackoilState->saturation(), phaseUsage.phase_pos[Opm::BlackoilPhases::Aqua], phaseUsage.num_phases);
+    //Set test data for saturation water
+    std::vector<double> swatdata(1000, 8);
+    Opm::EclipseIOUtil::addToStripedData(swatdata, blackoilState->saturation(), phaseUsage.phase_pos[Opm::BlackoilPhases::Aqua], phaseUsage.num_phases);
 
-        //Set test data for saturation gas
-        std::vector<double> sgasdata(1000, 9);
-        Opm::EclipseIOUtil::addToStripedData(sgasdata, blackoilState->saturation(), phaseUsage.phase_pos[Opm::BlackoilPhases::Vapour], phaseUsage.num_phases);
+    //Set test data for saturation gas
+    std::vector<double> sgasdata(1000, 9);
+    Opm::EclipseIOUtil::addToStripedData(sgasdata, blackoilState->saturation(), phaseUsage.phase_pos[Opm::BlackoilPhases::Vapour], phaseUsage.num_phases);
 
-        // Set test data for rs
-        double rs = 300.0;
-        std::vector<double>& rs_vec = blackoilState->gasoilratio();
-        for (std::vector<double>::iterator rs_iter = rs_vec.begin(); rs_iter != rs_vec.end(); ++ rs_iter) {
-            *rs_iter = rs;
-            rs = rs + 1.0;
-        }
+    // Set test data for rs
+    double rs = 300.0;
+    std::vector<double>& rs_vec = blackoilState->gasoilratio();
+    for (std::vector<double>::iterator rs_iter = rs_vec.begin(); rs_iter != rs_vec.end(); ++ rs_iter) {
+        *rs_iter = rs;
+        rs = rs + 1.0;
+    }
 
-        // Set testdata for rv
-        double rv = 400.0;
-        std::vector<double>& rv_vec = blackoilState->rv();
-        for (std::vector<double>::iterator rv_iter = rv_vec.begin(); rv_iter != rv_vec.end(); ++rv_iter) {
-            *rv_iter = rv;
-            rv = rv + 1.0;
-        }
+    // Set testdata for rv
+    double rv = 400.0;
+    std::vector<double>& rv_vec = blackoilState->rv();
+    for (std::vector<double>::iterator rv_iter = rv_vec.begin(); rv_iter != rv_vec.end(); ++rv_iter) {
+        *rv_iter = rv;
+        rv = rv + 1.0;
+    }
 
-        setValuesInWellState(wellState);
-        simTimer->setCurrentStepNum(1);
-        eclipseWriter->writeTimeStep(*simTimer, *blackoilState, *wellState , false);
+    setValuesInWellState(wellState);
+    simTimer->setCurrentStepNum(1);
+    eclipseWriter->writeTimeStep(*simTimer, *blackoilState, *wellState , false);
 
-        std::shared_ptr<Opm::WellState> wellStateRestored(new Opm::WellState());
-        wellStateRestored->init(wells, *blackoilState);
+    std::shared_ptr<Opm::WellState> wellStateRestored(new Opm::WellState());
+    wellStateRestored->init(wells, *blackoilState);
 
-        //Read and verify OPM XWEL data, and solution data: pressure, temperature, saturation data, rs and rv
-        std::shared_ptr<Opm::BlackoilState> blackoilStateRestored = createBlackOilState(eclipseState->getEclipseGrid());
-        Opm::init_from_restart_file(eclipseState, Opm::UgGridHelpers::numCells(*gridManager.c_grid()), phaseUsage, *blackoilStateRestored, *wellStateRestored);
+    //Read and verify OPM XWEL data, and solution data: pressure, temperature, saturation data, rs and rv
+    std::shared_ptr<Opm::BlackoilState> blackoilStateRestored = createBlackOilState(eclipseState->getEclipseGrid(), phaseUsage);
+    Opm::init_from_restart_file(eclipseState, Opm::UgGridHelpers::numCells(*gridManager.c_grid()), phaseUsage, *blackoilStateRestored, *wellStateRestored);
+    
+    BOOST_CHECK_EQUAL_COLLECTIONS(wellState->bhp().begin(), wellState->bhp().end(), wellStateRestored->bhp().begin(), wellStateRestored->bhp().end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(wellState->temperature().begin(), wellState->temperature().end(), wellStateRestored->temperature().begin(), wellStateRestored->temperature().end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(wellState->wellRates().begin(), wellState->wellRates().end(), wellStateRestored->wellRates().begin(), wellStateRestored->wellRates().end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(wellState->perfRates().begin(), wellState->perfRates().end(), wellStateRestored->perfRates().begin(), wellStateRestored->perfRates().end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(wellState->perfPress().begin(), wellState->perfPress().end(), wellStateRestored->perfPress().begin(), wellStateRestored->perfPress().end());
 
-        BOOST_CHECK_EQUAL_COLLECTIONS(wellState->bhp().begin(), wellState->bhp().end(), wellStateRestored->bhp().begin(), wellStateRestored->bhp().end());
-        BOOST_CHECK_EQUAL_COLLECTIONS(wellState->temperature().begin(), wellState->temperature().end(), wellStateRestored->temperature().begin(), wellStateRestored->temperature().end());
-        BOOST_CHECK_EQUAL_COLLECTIONS(wellState->wellRates().begin(), wellState->wellRates().end(), wellStateRestored->wellRates().begin(), wellStateRestored->wellRates().end());
-        BOOST_CHECK_EQUAL_COLLECTIONS(wellState->perfRates().begin(), wellState->perfRates().end(), wellStateRestored->perfRates().begin(), wellStateRestored->perfRates().end());
-        BOOST_CHECK_EQUAL_COLLECTIONS(wellState->perfPress().begin(), wellState->perfPress().end(), wellStateRestored->perfPress().begin(), wellStateRestored->perfPress().end());
+    std::vector<double> swat_restored;
+    std::vector<double> swat;
+    std::vector<double> sgas_restored;
+    std::vector<double> sgas;
+    Opm::EclipseIOUtil::extractFromStripedData(blackoilStateRestored->saturation(), swat_restored, phaseUsage.phase_pos[Opm::BlackoilPhases::Aqua], phaseUsage.num_phases);
+    Opm::EclipseIOUtil::extractFromStripedData(blackoilState->saturation(), swat, phaseUsage.phase_pos[Opm::BlackoilPhases::Aqua], phaseUsage.num_phases);
+    Opm::EclipseIOUtil::extractFromStripedData(blackoilStateRestored->saturation(), sgas_restored, phaseUsage.phase_pos[Opm::BlackoilPhases::Vapour], phaseUsage.num_phases);
+    Opm::EclipseIOUtil::extractFromStripedData(blackoilState->saturation(), sgas, phaseUsage.phase_pos[Opm::BlackoilPhases::Vapour], phaseUsage.num_phases);
 
-        std::vector<double> swat_restored;
-        std::vector<double> swat;
-        std::vector<double> sgas_restored;
-        std::vector<double> sgas;
-        Opm::EclipseIOUtil::extractFromStripedData(blackoilStateRestored->saturation(), swat_restored, phaseUsage.phase_pos[Opm::BlackoilPhases::Aqua], phaseUsage.num_phases);
-        Opm::EclipseIOUtil::extractFromStripedData(blackoilState->saturation(), swat, phaseUsage.phase_pos[Opm::BlackoilPhases::Aqua], phaseUsage.num_phases);
-        Opm::EclipseIOUtil::extractFromStripedData(blackoilStateRestored->saturation(), sgas_restored, phaseUsage.phase_pos[Opm::BlackoilPhases::Vapour], phaseUsage.num_phases);
-        Opm::EclipseIOUtil::extractFromStripedData(blackoilState->saturation(), sgas, phaseUsage.phase_pos[Opm::BlackoilPhases::Vapour], phaseUsage.num_phases);
-
-        for (size_t cellindex = 0; cellindex < 1000; ++cellindex) {
-            BOOST_CHECK_CLOSE(blackoilState->pressure()[cellindex], blackoilStateRestored->pressure()[cellindex], 0.00001);
-            BOOST_CHECK_CLOSE(blackoilState->temperature()[cellindex], blackoilStateRestored->temperature()[cellindex], 0.00001);
-            BOOST_CHECK_CLOSE(swat[cellindex], swat_restored[cellindex], 0.00001);
-            BOOST_CHECK_CLOSE(sgas[cellindex], sgas_restored[cellindex], 0.00001);
-        }
+    for (size_t cellindex = 0; cellindex < 10; ++cellindex) {
+        BOOST_CHECK_CLOSE(blackoilState->pressure()[cellindex], blackoilStateRestored->pressure()[cellindex], 0.00001);
+        BOOST_CHECK_CLOSE(blackoilState->temperature()[cellindex], blackoilStateRestored->temperature()[cellindex], 0.00001);
+        BOOST_CHECK_CLOSE(swat[cellindex], swat_restored[cellindex], 0.00001);
+        BOOST_CHECK_CLOSE(sgas[cellindex], sgas_restored[cellindex], 0.00001);
+    }
 
 
-        for (size_t cellindex = 0; cellindex < 1000; ++cellindex) {
-            BOOST_CHECK_CLOSE(blackoilState->gasoilratio()[cellindex], blackoilStateRestored->gasoilratio()[cellindex], 0.0000001);
-            BOOST_CHECK_CLOSE(blackoilState->rv()[cellindex], blackoilStateRestored->rv()[cellindex], 0.0000001);
-        }
+    for (size_t cellindex = 0; cellindex < 10; ++cellindex) {
+        BOOST_CHECK_CLOSE(blackoilState->gasoilratio()[cellindex], blackoilStateRestored->gasoilratio()[cellindex], 0.0000001);
+        BOOST_CHECK_CLOSE(blackoilState->rv()[cellindex], blackoilStateRestored->rv()[cellindex], 0.0000001);
+    }
 
-        test_work_area_free(test_area);
-        }
+    test_work_area_free(test_area);
+}

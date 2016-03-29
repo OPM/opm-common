@@ -28,6 +28,7 @@
 #include <opm/output/eclipse/EclipseWriter.hpp>
 #include <opm/output/eclipse/EclipseWriter.hpp>
 #include <opm/core/grid/GridManager.hpp>
+#include <opm/core/grid/GridHelpers.hpp>
 #include <opm/core/props/phaseUsageFromDeck.hpp>
 #include <opm/core/simulator/BlackoilState.hpp>
 #include <opm/core/simulator/WellState.hpp>
@@ -109,8 +110,7 @@ void createBlackoilState(int timeStepIdx)
 {
     // allocate a new BlackoilState object
     const UnstructuredGrid &ourFinerUnstructuredGrid = *ourFineGridManagerPtr->c_grid();
-    blackoilState.reset(new Opm::BlackoilState);
-    blackoilState->init(ourFinerUnstructuredGrid, 3);
+    blackoilState.reset(new Opm::BlackoilState( Opm::UgGridHelpers::numCells( ourFinerUnstructuredGrid ) , Opm::UgGridHelpers::numFaces( ourFinerUnstructuredGrid ), 3));
 
     size_t numCells = ourFinerUnstructuredGrid.number_of_cells;
     size_t numFaces = ourFinerUnstructuredGrid.number_of_faces;
@@ -367,55 +367,55 @@ void checkSummaryFile(int /*timeStepIdx*/)
 }
 
 BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
-        {
-                const char *deckString =
-                "RUNSPEC\n"
-                "INIT\n"
-                "UNIFOUT\n"
-                "OIL\n"
-                "GAS\n"
-                "WATER\n"
-                "METRIC\n"
-                "DIMENS\n"
-                "3 3 3/\n"
-                "GRID\n"
-                "DXV\n"
-                "1.0 2.0 3.0 /\n"
-                "DYV\n"
-                "4.0 5.0 6.0 /\n"
-                "DZV\n"
-                "7.0 8.0 9.0 /\n"
-                "TOPS\n"
-                "9*100 /\n"
-                "PROPS\n"
-                "PORO\n"
-                "27*0.3 /\n"
-                "PERMX\n"
-                "27*1 /\n"
-                "SOLUTION\n"
-                "RPTRST\n"
-                "BASIC=2\n"
-                "/\n"
-                "SCHEDULE\n"
-                "TSTEP\n"
-                "1.0 2.0 3.0 4.0 /\n"
-                "WELSPECS\n"
-                "'INJ' 'G' 1 1 2000 'GAS' /\n"
-                "'PROD' 'G' 3 3 1000 'OIL' /\n"
-                "/\n";
+{
+    const char *deckString =
+        "RUNSPEC\n"
+        "INIT\n"
+        "UNIFOUT\n"
+        "OIL\n"
+        "GAS\n"
+        "WATER\n"
+        "METRIC\n"
+        "DIMENS\n"
+        "3 3 3/\n"
+        "GRID\n"
+        "DXV\n"
+        "1.0 2.0 3.0 /\n"
+        "DYV\n"
+        "4.0 5.0 6.0 /\n"
+        "DZV\n"
+        "7.0 8.0 9.0 /\n"
+        "TOPS\n"
+        "9*100 /\n"
+        "PROPS\n"
+        "PORO\n"
+        "27*0.3 /\n"
+        "PERMX\n"
+        "27*1 /\n"
+        "SOLUTION\n"
+        "RPTRST\n"
+        "BASIC=2\n"
+        "/\n"
+        "SCHEDULE\n"
+        "TSTEP\n"
+        "1.0 2.0 3.0 4.0 /\n"
+        "WELSPECS\n"
+        "'INJ' 'G' 1 1 2000 'GAS' /\n"
+        "'PROD' 'G' 3 3 1000 'OIL' /\n"
+        "/\n";
 
-                createEclipseWriter(deckString);
+    createEclipseWriter(deckString);
 
-                eclWriter->writeInit(*simTimer);
+    eclWriter->writeInit(*simTimer);
 
-                checkEgridFile();
-                checkInitFile();
+    checkEgridFile();
+    checkInitFile();
 
-                for (; simTimer->currentStepNum() < simTimer->numSteps(); ++ (*simTimer)) {
-                    createBlackoilState(simTimer->currentStepNum());
-                    createWellState(simTimer->currentStepNum());
-                    eclWriter->writeTimeStep(*simTimer, *blackoilState, *wellState, false);
-                    checkRestartFile(simTimer->currentStepNum());
-                    checkSummaryFile(simTimer->currentStepNum());
-                }
-        }
+    for (; simTimer->currentStepNum() < simTimer->numSteps(); ++ (*simTimer)) {
+        createBlackoilState(simTimer->currentStepNum());
+        createWellState(simTimer->currentStepNum());
+        eclWriter->writeTimeStep(*simTimer, *blackoilState, *wellState, false);
+        checkRestartFile(simTimer->currentStepNum());
+        checkSummaryFile(simTimer->currentStepNum());
+    }
+}
