@@ -87,6 +87,16 @@ namespace Opm {
         };
     }
 
+    static inline std::array< int, 3 > getijk( const DeckRecord& record,
+                                               int init = 0 )
+    {
+        return {
+            record.getItem( init + 0 ).get< int >( 0 ) - 1,
+            record.getItem( init + 1 ).get< int >( 0 ) - 1,
+            record.getItem( init + 2 ).get< int >( 0 ) - 1
+        };
+    }
+
     static inline std::vector< ERT::smspec_node > keywordB(
             const DeckKeyword& keyword,
             const EclipseState& es ) {
@@ -94,13 +104,7 @@ namespace Opm {
         auto dims = dimensions( *es.getEclipseGrid() );
 
         const auto mkrecord = [&dims,&keyword]( const DeckRecord& record ) {
-
-            std::array< int , 3 > ijk = {{
-                record.getItem( 0 ).get< int >( 0 ) - 1,
-                record.getItem( 1 ).get< int >( 0 ) - 1,
-                record.getItem( 2 ).get< int >( 0 ) - 1
-            }};
-
+            auto ijk = getijk( record );
             return ERT::smspec_node( keyword.name(), dims.data(), ijk.data() );
         };
 
