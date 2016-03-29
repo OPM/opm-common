@@ -103,6 +103,9 @@ namespace Opm {
         size_t m_num_faces;
         size_t m_num_phases;
 
+        std::vector<double> * m_pressure;
+        std::vector<double> * m_saturation;
+
         std::unordered_map< std::string , std::vector<double> > m_cell_data;
         std::unordered_map< std::string , std::vector<double> > m_face_data;
     };

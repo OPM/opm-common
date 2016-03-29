@@ -197,10 +197,15 @@ namespace Opm {
 
         registerFaceData("FACEPRESSURE" , 1 , 0.0 );
         registerFaceData("FACEFLUX" , 1 , 0.0 );
+
+        m_pressure = &getCellData("PRESSURE");
+        m_saturation = &getCellData("SATURATION");
     }
 
+
     std::vector<double>& SimulationDataContainer::pressure( ) {
-        return getCellData("PRESSURE");
+        return *m_pressure;
+        //return getCellData("PRESSURE");
     }
 
     std::vector<double>& SimulationDataContainer::temperature() {
@@ -208,7 +213,8 @@ namespace Opm {
     }
 
     std::vector<double>& SimulationDataContainer::saturation() {
-        return getCellData("SATURATION");
+        return *m_saturation;
+        //return getCellData("SATURATION");
     }
 
     std::vector<double>& SimulationDataContainer::facepressure() {
