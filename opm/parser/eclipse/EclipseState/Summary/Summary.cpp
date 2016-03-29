@@ -79,15 +79,19 @@ namespace Opm {
         return res;
     }
 
+    static inline std::array< int, 3 > dimensions( const EclipseGrid& grid ) {
+        return {
+            int( grid.getNX() ),
+            int( grid.getNY() ),
+            int( grid.getNZ() )
+        };
+    }
+
     static inline std::vector< ERT::smspec_node > keywordB(
             const DeckKeyword& keyword,
             const EclipseState& es ) {
 
-        std::array< int, 3 > dims = {{
-            int( es.getEclipseGrid()->getNX() ),
-            int( es.getEclipseGrid()->getNY() ),
-            int( es.getEclipseGrid()->getNZ() )
-        }};
+        auto dims = dimensions( *es.getEclipseGrid() );
 
         const auto mkrecord = [&dims,&keyword]( const DeckRecord& record ) {
 
@@ -107,11 +111,7 @@ namespace Opm {
             const DeckKeyword& keyword,
             const EclipseState& es ) {
 
-        std::array< int, 3 > dims = {{
-            int( es.getEclipseGrid()->getNX() ),
-            int( es.getEclipseGrid()->getNY() ),
-            int( es.getEclipseGrid()->getNZ() )
-        }};
+        auto dims = dimensions( *es.getEclipseGrid() );
 
         const auto mknode = [&dims,&keyword]( int region ) {
             return ERT::smspec_node( keyword.name(), dims.data(), region );
