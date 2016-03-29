@@ -97,6 +97,18 @@ namespace Opm {
     }
 
 
+    const MessageContainer& ParseContext::getMessageContainer() const
+    {
+        return m_messageContainer;
+    }
+
+
+    MessageContainer& ParseContext::getMessageContainer()
+    {
+        return m_messageContainer;
+    }
+
+
     bool ParseContext::hasKey(const std::string& key) const {
         if (m_errorContexts.find( key ) == m_errorContexts.end())
             return false;
