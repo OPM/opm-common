@@ -24,7 +24,7 @@ find_package(PTScotch)
 find_path (ZOLTAN_INCLUDE_DIRS
   NAMES "zoltan.h"
   PATHS ${ZOLTAN_SEARCH_PATH}
-  PATH_SUFFIXES "include"
+  PATH_SUFFIXES include trilinos
   ${ZOLTAN_NO_DEFAULT_PATH})
 
 # only search in architecture-relevant directory
@@ -33,7 +33,7 @@ if (CMAKE_SIZEOF_VOID_P)
 endif (CMAKE_SIZEOF_VOID_P)
 
 find_library(ZOLTAN_LIBRARIES
-  NAMES "zoltan"
+  NAMES zoltan trilinos_zoltan
   PATHS ${ZOLTAN_SEARCH_PATH}
   PATH_SUFFIXES "lib/.libs" "lib" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}"
   ${ZOLTAN_NO_DEFAULT_PATH})
