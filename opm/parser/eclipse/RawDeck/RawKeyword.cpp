@@ -107,7 +107,7 @@ namespace Opm {
 
 
     RawRecord& RawKeyword::getRecord(size_t index) {
-        return this->m_records.at( index );
+        return *std::next( this->m_records.begin(), index );
     }
 
     bool RawKeyword::isKeywordPrefix(const std::string& line, std::string& keywordName) {

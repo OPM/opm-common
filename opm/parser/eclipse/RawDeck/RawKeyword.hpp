@@ -23,6 +23,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <list>
 
 #include <opm/parser/eclipse/RawDeck/RawEnums.hpp>
 
@@ -64,7 +65,7 @@ namespace Opm {
         size_t m_numTables;
         size_t m_currentNumTables;
         std::string m_name;
-        std::vector< RawRecord > m_records;
+        std::list< RawRecord > m_records;
         std::string m_partialRecordString;
 
         size_t m_lineNR;
