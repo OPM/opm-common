@@ -363,8 +363,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
                     break;
                 }
                 else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::paths) {
-                    for (size_t i = 0; i < parserState->rawKeyword->size(); i++) {
-                            auto& record = parserState->rawKeyword->getRecord(i);
+                    for( const auto& record : *parserState->rawKeyword ) {
                             std::string pathName = readValueToken<std::string>(record.getItem(0));
                             std::string pathValue = readValueToken<std::string>(record.getItem(1));
                             parserState->pathMap->insert(std::pair<std::string, std::string>(pathName, pathValue));

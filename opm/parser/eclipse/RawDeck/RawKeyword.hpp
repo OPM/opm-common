@@ -23,6 +23,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <list>
 
 #include <opm/parser/eclipse/RawDeck/RawEnums.hpp>
 
@@ -56,6 +57,10 @@ namespace Opm {
         const std::string& getFilename() const;
         size_t getLineNR() const;
 
+        using const_iterator = std::list< RawRecord >::const_iterator;
+
+        const_iterator begin() const;
+        const_iterator end() const;
 
     private:
         Raw::KeywordSizeEnum m_sizeType;
@@ -64,7 +69,7 @@ namespace Opm {
         size_t m_numTables;
         size_t m_currentNumTables;
         std::string m_name;
-        std::vector< RawRecord > m_records;
+        std::list< RawRecord > m_records;
         std::string m_partialRecordString;
 
         size_t m_lineNR;
