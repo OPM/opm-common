@@ -107,6 +107,12 @@ namespace Opm {
 
 
     RawRecord& RawKeyword::getRecord(size_t index) {
+        if( index >= this->m_records.size() )
+            throw std::out_of_range(
+                "Error: looking up record " + std::to_string( index )
+                + ", but RawKeyword has only "
+                + std::to_string( this->m_records.size() ) + " records." );
+
         return *std::next( this->m_records.begin(), index );
     }
 
@@ -158,6 +164,13 @@ namespace Opm {
         return m_lineNR;
     }
 
+    RawKeyword::const_iterator RawKeyword::begin() const {
+        return this->m_records.begin();
+    }
+
+    RawKeyword::const_iterator RawKeyword::end() const {
+        return this->m_records.end();
+    }
 
     Raw::KeywordSizeEnum RawKeyword::getSizeType() const {
         return m_sizeType;

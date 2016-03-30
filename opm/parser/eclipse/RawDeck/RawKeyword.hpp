@@ -57,6 +57,10 @@ namespace Opm {
         const std::string& getFilename() const;
         size_t getLineNR() const;
 
+        using const_iterator = std::list< RawRecord >::const_iterator;
+
+        const_iterator begin() const;
+        const_iterator end() const;
 
     private:
         Raw::KeywordSizeEnum m_sizeType;
