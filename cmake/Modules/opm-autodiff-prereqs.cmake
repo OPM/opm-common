@@ -20,6 +20,7 @@ set (opm-autodiff_DEPS
 	dune-istl REQUIRED"
 	# OPM dependency
 	"opm-common REQUIRED;
+        opm-parser REQUIRED;
 	opm-core REQUIRED;
 	opm-output REQUIRED;
 	dune-cornerpoint"
