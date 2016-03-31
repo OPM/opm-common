@@ -11,13 +11,11 @@ set (opm-material_CONFIG_VAR
 
 # dependencies
 set (opm-material_DEPS
-	# compile with C99 support if available
-	"C99"
-	# compile with C++0x/11 support if available
+	# compile with C++-2011 support
 	"CXX11Features REQUIRED"
-	# prerequisite OPM modules
-	"opm-parser"
-	"opm-common REQUIRED"
 	# DUNE dependency
 	"dune-common REQUIRED"
+	# prerequisite OPM modules
+	"opm-common REQUIRED"
+	"opm-parser"
 	)
