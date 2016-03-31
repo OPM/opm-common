@@ -128,7 +128,6 @@ namespace Opm
 
     static void restoreRSandRV(const ecl_file_type* file_type,
                                SimulationConfigConstPtr sim_config,
-                               int numcells,
                                SimulationDataContainer& simulator_state) {
 
         if (sim_config->hasDISGAS()) {
@@ -181,7 +180,7 @@ namespace Opm
                 restoreSaturation(file_type, phaseUsage, numcells, simulator_state);
                 if (simulator_state.hasCellData( BlackoilState::RV )) {
                     SimulationConfigConstPtr sim_config = eclipseState->getSimulationConfig();
-                    restoreRSandRV(file_type, sim_config, numcells, simulator_state );
+                    restoreRSandRV(file_type, sim_config, simulator_state );
                 } 
             } else {
                 std::string error_str = "Restart file " +  restart_filename + " does not contain data for report step " + std::to_string(reportstep) + "!\n";
