@@ -27,6 +27,38 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
+
+BOOST_AUTO_TEST_CASE(Verify_find_includes_Data_file_is_a_symlink) {
+    boost::filesystem::path inputFilePath("testdata/parser/includeSymlinkTestdata/symlink1/case_symlink.data");
+    Opm::ParserPtr parser(new Opm::Parser());
+    Opm::DeckConstPtr deck = parser->parseFile(inputFilePath.string() , Opm::ParseContext());
+
+    BOOST_CHECK_EQUAL(true , deck->hasKeyword("OIL"));
+    BOOST_CHECK_EQUAL(false , deck->hasKeyword("WATER"));
+}
+
+
+BOOST_AUTO_TEST_CASE(Verify_find_includes_Data_file_has_include_that_is_a_symlink) {
+    boost::filesystem::path inputFilePath("testdata/parser/includeSymlinkTestdata/symlink2/caseWithIncludedSymlink.data");
+    Opm::ParserPtr parser(new Opm::Parser());
+    Opm::DeckConstPtr deck = parser->parseFile(inputFilePath.string() , Opm::ParseContext());
+
+    BOOST_CHECK_EQUAL(true , deck->hasKeyword("OIL"));
+    BOOST_CHECK_EQUAL(false , deck->hasKeyword("WATER"));
+}
+
+
+BOOST_AUTO_TEST_CASE(Verify_find_includes_Data_file_has_include_file_that_again_includes_a_symlink) {
+    boost::filesystem::path inputFilePath("testdata/parser/includeSymlinkTestdata/symlink3/case.data");
+    Opm::ParserPtr parser(new Opm::Parser());
+    Opm::DeckConstPtr deck = parser->parseFile(inputFilePath.string() , Opm::ParseContext());
+
+    BOOST_CHECK_EQUAL(true , deck->hasKeyword("OIL"));
+    BOOST_CHECK_EQUAL(false , deck->hasKeyword("WATER"));
+}
+
+
+
 BOOST_AUTO_TEST_CASE(ParserKeyword_includeValid) {
     boost::filesystem::path inputFilePath("testdata/parser/includeValid.data");
 
@@ -36,6 +68,7 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_includeValid) {
     BOOST_CHECK_EQUAL(true , deck->hasKeyword("OIL"));
     BOOST_CHECK_EQUAL(false , deck->hasKeyword("WATER"));
 }
+
 
 BOOST_AUTO_TEST_CASE(ParserKeyword_includeInvalid) {
     boost::filesystem::path inputFilePath("testdata/parser/includeInvalid.data");

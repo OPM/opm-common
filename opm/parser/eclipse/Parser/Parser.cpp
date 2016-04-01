@@ -97,26 +97,31 @@ namespace Opm {
 
 
         void openFile(const boost::filesystem::path& inputFile) {
-            std::ifstream *ifs = new std::ifstream(inputFile.string().c_str());
 
-            // make sure the file we'd like to parse exists and is
-            // readable
+            boost::filesystem::path inputFileCanonical;
+            try {
+                inputFileCanonical = boost::filesystem::canonical(inputFile);
+            } catch (boost::filesystem::filesystem_error fs_error) {
+                throw std::runtime_error(std::string("Parser::openFile fails: ") + fs_error.what());
+            }
+
+            std::ifstream *ifs = new std::ifstream(inputFileCanonical.string().c_str());
+
+            // make sure the file we'd like to parse is readable
             if (!ifs->is_open()) {
                 throw std::runtime_error(std::string("Input file '") +
-                                         inputFile.string() +
-                                         std::string("' does not exist or is not readable"));
+                                         inputFileCanonical.string() +
+                                         std::string("' is not readable"));
             }
 
             inputstream.reset( ifs );
-            dataFile = inputFile;
+            dataFile = inputFileCanonical;
         }
 
         void openRootFile( const boost::filesystem::path& inputFile) {
             openFile( inputFile );
-            if (inputFile.is_absolute())
-                rootPath = inputFile.parent_path();
-            else
-                rootPath = boost::filesystem::current_path() / inputFile.parent_path();
+            const boost::filesystem::path& inputFileCanonical = boost::filesystem::canonical(inputFile);
+            rootPath = inputFileCanonical.parent_path();
         }
 
         /*
