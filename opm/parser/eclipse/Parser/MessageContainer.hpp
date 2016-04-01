@@ -84,6 +84,9 @@ namespace Opm {
         void problem(const std::string& msg, const std::string& filename, const int lineno);
         void problem(const std::string& msg);
 
+        void add( const Message& );
+        void add( Message&& );
+
         std::vector<Message>::const_iterator begin() const;
         std::vector<Message>::const_iterator end() const;
     private:

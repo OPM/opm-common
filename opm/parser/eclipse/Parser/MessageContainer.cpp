@@ -132,6 +132,15 @@ namespace Opm {
         );
     }
 
+    void MessageContainer::add( const Message& msg ) {
+        this->m_messages.push_back( msg );
+    }
+
+    void MessageContainer::add( Message&& msg ) {
+        this->m_messages.push_back( std::move( msg ) );
+    }
+
+
     std::vector<Message>::const_iterator MessageContainer::begin() const
     {
         return m_messages.begin();
