@@ -20,8 +20,6 @@
 #ifndef MESSAGECONTAINER_H
 #define MESSAGECONTAINER_H
 
-#endif // OPM_MESSAGECONTAINER_HEADER_INCLUDED
-
 #include <string>
 #include <vector>
 #include <memory>
@@ -83,3 +81,5 @@ namespace Opm {
     };
 
 } // namespace Opm
+
+#endif // OPM_MESSAGECONTAINER_HEADER_INCLUDED
