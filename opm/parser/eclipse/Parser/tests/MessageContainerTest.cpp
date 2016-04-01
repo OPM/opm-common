@@ -51,6 +51,13 @@ BOOST_AUTO_TEST_CASE(TestIterator) {
         BOOST_CHECK_EQUAL(msg.message, msgString[i]);
         i++;
     }
+}
 
+BOOST_AUTO_TEST_CASE(LocationImplicitConversion) {
+    MessageContainer mc;
+    mc.warning( "Warning" );
+    mc.info( "Info", "filename", 10 );
 
+    BOOST_CHECK( !mc.begin()->location );
+    BOOST_CHECK( (mc.begin() + 1)->location );
 }

@@ -29,6 +29,9 @@ namespace Opm {
     namespace MessageType {
 
         enum MessageTypeEnum {
+
+    struct Message {
+        enum type {
             Debug     = 1,
             Info      = 2,
             Warning   = 3,
@@ -41,15 +44,22 @@ namespace Opm {
 
 
     struct Location {
+        Location() = default;
+        Location( const std::string& s, int l ) : filename( s ), lineno( l ) {}
+
         std::string filename;
-        int lineno;
+        int lineno = -1;
+
+        explicit operator bool() const {
+            return lineno > 0;
+        }
     };
 
 
     struct Message {
         MessageType::MessageTypeEnum mtype;
         std::string message;
-        std::unique_ptr<Location> location;
+        Location location;
     };
 
 
