@@ -22,5 +22,5 @@ set (opm-output_DEPS
 	# Parser library for ECL-type simulation models
 	"opm-parser REQUIRED"
 	# TODO remove this dependancy
-	"opm-core REQUIRED";
+	"opm-core REQUIRED"
 	)

@@ -27,5 +27,6 @@ set (opm-upscaling_DEPS
 	dune-grid REQUIRED;
 	opm-common REQUIRED;
 	opm-core REQUIRED;
-	dune-cornerpoint REQUIRED"
+        dune-cornerpoint REQUIRED;
+	opm-output REQUIRED"
 	)
