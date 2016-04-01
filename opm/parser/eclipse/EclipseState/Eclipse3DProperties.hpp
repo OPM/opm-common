@@ -56,16 +56,15 @@ namespace Opm {
         };
 
         Eclipse3DProperties(const Deck& deck,
-                            std::shared_ptr<const TableManager> tableManager,
+                            const TableManager& tableManager,
                             const EclipseGrid& eclipseGrid);
+
 
         const GridProperty<int>& getRegion(const DeckItem& regionItem) const;
         std::string getDefaultRegionKeyword() const;
 
         const GridProperty<int>&      getIntGridProperty     ( const std::string& keyword ) const;
         const GridProperty<double>&   getDoubleGridProperty  ( const std::string& keyword ) const;
-              GridProperties<int>&    getIntGridProperties   ();
-              GridProperties<double>& getDoubleGridProperties();
 
         bool hasDeckIntGridProperty(const std::string& keyword) const;
         bool hasDeckDoubleGridProperty(const std::string& keyword) const;
@@ -99,10 +98,6 @@ namespace Opm {
                                              int enabledTypes);
 
         static void setKeywordBox(const DeckKeyword& deckKeyword, const DeckRecord&, BoxManager& boxManager);
-
-        void initProperties( const Deck&         deck,
-                             std::shared_ptr<const TableManager> tableManager,
-                             const EclipseGrid&  eclipseGrid );
 
         std::string            m_defaultRegion;
         const UnitSystem&      m_deckUnitSystem;

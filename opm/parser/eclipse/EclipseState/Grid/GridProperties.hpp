@@ -28,9 +28,8 @@
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
 
-/**
+/*
   This class implements a container (std::unordered_map<std::string ,
   Gridproperty<T>>) of Gridproperties. Usage is as follows:
 
@@ -100,12 +99,14 @@ namespace Opm {
                 throw std::invalid_argument("Invalid index");
         }
 
-        GridProperty<T>& getKeyword(size_t index) {
+        GridProperty<T>& getKeyword(size_t index)  {
             if (index < size())
                 return *m_property_list[index];
             else
-                throw std::invalid_argument("Invalid index");
+                throw std::invalid_argument( "Invalid index" );
         }
+
+
 
 
         const GridProperty<T>& getInitializedKeyword(const std::string& keyword) const {
@@ -154,8 +155,8 @@ namespace Opm {
         void copyKeyword(const std::string& srcField ,
                          const std::string& targetField ,
                          const Box& inputBox) {
-            auto& src    = getKeyword( srcField );
-            auto& target = getOrCreateProperty( targetField );
+            const auto& src = this->getKeyword( srcField );
+            auto& target    = this->getOrCreateProperty( targetField );
 
             target.copyFrom( src , inputBox );
         }

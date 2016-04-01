@@ -40,9 +40,8 @@ template< typename T >
                         size_t,
                         const TableManager*,
                         const EclipseGrid*,
-                        GridProperties<int>* ig_props,
-                        GridProperties<double>* dg_props
-                    );
+                        GridProperties<int>*,
+                        GridProperties<double>*);
 
             GridPropertyInitFunction(
                     signature,
@@ -87,8 +86,8 @@ template< typename T >
 
         private:
             signature f = nullptr;
-            const TableManager*     tm = nullptr;
-            const EclipseGrid*      eg = nullptr;
+            const TableManager*     tm  = nullptr;
+            const EclipseGrid*      eg  = nullptr;
             GridProperties<int>*    igp = nullptr;
             GridProperties<double>* dgp = nullptr;
 

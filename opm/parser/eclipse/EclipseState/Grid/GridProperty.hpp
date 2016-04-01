@@ -131,8 +131,6 @@ public:
     const std::string& getKeywordName() const;
     const SupportedKeywordInfo& getKeywordInfo() const;
 
-    void runPostProcessor();
-
     ERT::EclKW<T> getEclKW() const;
     ERT::EclKW<T> getEclKW( const EclipseGrid & ) const;
 
@@ -146,6 +144,10 @@ public:
 private:
     const DeckItem& getDeckItem( const DeckKeyword& );
     void setDataPoint(size_t sourceIdx, size_t targetIdx, const DeckItem& deckItem);
+
+    void runPostProcessor();
+
+    friend class Eclipse3DProperties; // currently needed for runPostProcessor, see Eclipse3DProperties::getDoubleGridProperty
 
     size_t m_nx, m_ny, m_nz;
     SupportedKeywordInfo m_kwInfo;

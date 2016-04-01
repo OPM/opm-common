@@ -24,6 +24,7 @@
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
@@ -126,7 +127,7 @@ namespace Opm {
       Then it will go through the different regions and looking for
       interface with the wanted region values.
     */
-    MULTREGTScanner::MULTREGTScanner(const GridProperties<int>& cellRegionNumbers,
+    MULTREGTScanner::MULTREGTScanner(const Eclipse3DProperties& cellRegionNumbers,
     		                         const std::vector< const DeckKeyword* >& keywords,
 									 const std::string& defaultRegion ) :
         m_cellRegionNumbers(cellRegionNumbers) {
@@ -136,7 +137,7 @@ namespace Opm {
 
         MULTREGTSearchMap searchPairs;
         for (std::vector<MULTREGTRecord>::const_iterator record = m_records.begin(); record != m_records.end(); ++record) {
-            if (cellRegionNumbers.hasKeyword( record->m_region.getValue())) {
+            if (cellRegionNumbers.hasDeckIntGridProperty( record->m_region.getValue())) {
                 if (record->m_srcRegion.hasValue() && record->m_targetRegion.hasValue()) {
                     int srcRegion    = record->m_srcRegion.getValue();
                     int targetRegion = record->m_targetRegion.getValue();
@@ -234,7 +235,7 @@ namespace Opm {
     double MULTREGTScanner::getRegionMultiplier(size_t globalIndex1 , size_t globalIndex2, FaceDir::DirEnum faceDir) const {
 
         for (auto iter = m_searchMap.begin(); iter != m_searchMap.end(); iter++) {
-            const Opm::GridProperty<int>& region = m_cellRegionNumbers.getKeyword( (*iter).first );
+            const Opm::GridProperty<int>& region = m_cellRegionNumbers.getIntGridProperty( (*iter).first );
             MULTREGTSearchMap map = (*iter).second;
 
             int regionId1 = region.iget(globalIndex1);

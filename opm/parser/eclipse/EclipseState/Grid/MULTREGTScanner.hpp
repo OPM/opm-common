@@ -21,6 +21,7 @@
 #ifndef MULTREGTSCANNER_HPP
 #define MULTREGTSCANNER_HPP
 
+#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 
@@ -69,7 +70,7 @@ namespace Opm {
     class MULTREGTScanner {
 
     public:
-        MULTREGTScanner(const GridProperties<int>& cellRegionNumbers,
+        MULTREGTScanner(const Eclipse3DProperties& cellRegionNumbers,
         		        const std::vector< const DeckKeyword* >& keywords,
 						const std::string& defaultRegion);
         double getRegionMultiplier(size_t globalCellIdx1, size_t globalCellIdx2, FaceDir::DirEnum faceDir) const;
@@ -79,7 +80,7 @@ namespace Opm {
         void assertKeywordSupported(const DeckKeyword& deckKeyword, const std::string& defaultRegion);
         std::vector< MULTREGTRecord > m_records;
         std::map<std::string , MULTREGTSearchMap> m_searchMap;
-        const GridProperties<int>& m_cellRegionNumbers;
+        const Eclipse3DProperties& m_cellRegionNumbers;
     };
 
 }

@@ -109,7 +109,8 @@ namespace Opm {
                 GridProperties< int >::SupportedKeywordInfo( "FLUXNUM", 1, "1" ),
                 GridProperties< int >::SupportedKeywordInfo( "MULTNUM", 1, "1" ),
                 GridProperties< int >::SupportedKeywordInfo( "FIPNUM" , 1, "1" ),
-                GridProperties< int >::SupportedKeywordInfo( "MISCNUM", 1, "1" )
+                GridProperties< int >::SupportedKeywordInfo( "MISCNUM", 1, "1" ),
+                GridProperties< int >::SupportedKeywordInfo( "OPERNUM" , 1, "1" ),
                 };
     }
 
@@ -309,14 +310,9 @@ namespace Opm {
         return supportedDoubleKeywords;
     }
 
-
-
-
-
-
     Eclipse3DProperties::Eclipse3DProperties( const Deck&         deck,
-                                          std::shared_ptr<const TableManager> tableManager,
-                                          const EclipseGrid&  eclipseGrid)
+                                              const TableManager& tableManager,
+                                              const EclipseGrid&  eclipseGrid)
         :
 
           m_defaultRegion("FLUXNUM"),
@@ -326,9 +322,8 @@ namespace Opm {
 		  // register the grid properties
 		  m_intGridProperties(eclipseGrid, makeSupportedIntKeywords()),
 		  m_doubleGridProperties(eclipseGrid,
-                        makeSupportedDoubleKeywords(tableManager.get(), &eclipseGrid, &m_intGridProperties))
+                        makeSupportedDoubleKeywords(&tableManager, &eclipseGrid, &m_intGridProperties))
     {
-
         /*
          * The EQUALREG, MULTREG, COPYREG, ... keywords are used to manipulate
          * vectors based on region values; for instance the statement
@@ -369,7 +364,7 @@ namespace Opm {
 
 
         GridPropertyPostFunction< double > initPORV(&GridPropertyPostProcessor::initPORV,
-                                                    tableManager.get(),
+                                                    &tableManager,
                                                     &eclipseGrid,
                                                     &m_intGridProperties,
                                                     &m_doubleGridProperties);
@@ -415,15 +410,6 @@ namespace Opm {
             throw std::logic_error("Double grid property " + keyword + " is unsupported!");
 
         return m_doubleGridProperties.hasKeyword( keyword );
-    }
-
-    GridProperties<int>& Eclipse3DProperties::getIntGridProperties() {
-        return m_intGridProperties;
-    }
-
-    /// gets properties doubleGridProperties.  This does not run any post processors
-    GridProperties<double>& Eclipse3DProperties::getDoubleGridProperties() {
-        return m_doubleGridProperties;
     }
 
     /*

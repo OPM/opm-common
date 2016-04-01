@@ -23,9 +23,10 @@
 #include <map>
 #include <vector>
 
+#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
+
 namespace Opm {
 
-    template< typename > class GridProperties;
 
     class Deck;
     class ParseContext;
@@ -37,8 +38,8 @@ namespace Opm {
     public:
 
         ThresholdPressure(const ParseContext& parseContext,
-                          std::shared_ptr< const Deck > deck,
-                          GridProperties<int>& gridProperties);
+                          const Deck& deck,
+                          const Eclipse3DProperties& eclipseProperties);
 
 
         /*
@@ -71,7 +72,7 @@ namespace Opm {
         void initThresholdPressure(const ParseContext& parseContext,
                                    std::shared_ptr<const RUNSPECSection> runspecSection,
                                    std::shared_ptr<const SOLUTIONSection> solutionSection,
-                                   GridProperties<int>& gridProperties);
+                                   const Eclipse3DProperties& eclipseProperties);
 
         static std::pair<int,int> makeIndex(int r1 , int r2);
         void addPair(int r1 , int r2 , const std::pair<bool , double>& valuePair);

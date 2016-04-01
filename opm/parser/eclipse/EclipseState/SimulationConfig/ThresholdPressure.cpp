@@ -16,9 +16,10 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -29,15 +30,16 @@
 
 namespace Opm {
 
-    ThresholdPressure::ThresholdPressure(const ParseContext& parseContext, DeckConstPtr deck,
-                                         GridProperties<int>& gridProperties)
-        : m_parseContext( parseContext )
+    ThresholdPressure::ThresholdPressure(const ParseContext& parseContext,
+                                         const Deck& deck,
+                                         const Eclipse3DProperties& eclipseProperties) :
+                                         m_parseContext( parseContext )
     {
 
-        if (Section::hasRUNSPEC(*deck) && Section::hasSOLUTION(*deck)) {
-            std::shared_ptr<const RUNSPECSection> runspecSection = std::make_shared<const RUNSPECSection>(*deck);
-            std::shared_ptr<const SOLUTIONSection> solutionSection = std::make_shared<const SOLUTIONSection>(*deck);
-            initThresholdPressure(parseContext, runspecSection, solutionSection, gridProperties);
+        if (Section::hasRUNSPEC( deck ) && Section::hasSOLUTION( deck )) {
+            std::shared_ptr<const RUNSPECSection> runspecSection = std::make_shared<const RUNSPECSection>( deck );
+            std::shared_ptr<const SOLUTIONSection> solutionSection = std::make_shared<const SOLUTIONSection>( deck );
+            initThresholdPressure( parseContext, runspecSection, solutionSection, eclipseProperties );
         }
     }
 
@@ -68,11 +70,11 @@ namespace Opm {
     void ThresholdPressure::initThresholdPressure(const ParseContext& /* parseContext */,
                                                   std::shared_ptr<const RUNSPECSection> runspecSection,
                                                   std::shared_ptr<const SOLUTIONSection> solutionSection,
-                                                  GridProperties<int>& gridProperties) {
+                                                  const Eclipse3DProperties& eclipseProperties) {
 
         bool       thpresOption     = false;
         const bool thpresKeyword    = solutionSection->hasKeyword<ParserKeywords::THPRES>( );
-        const bool hasEqlnumKeyword = gridProperties.hasKeyword<ParserKeywords::EQLNUM>( );
+        const bool hasEqlnumKeyword = eclipseProperties.hasDeckIntGridProperty( "EQLNUM" );
         int        maxEqlnum        = 0;
 
         //Is THPRES option set?
@@ -96,7 +98,7 @@ namespace Opm {
         {
             //Find max of eqlnum
             if (hasEqlnumKeyword) {
-                const auto& eqlnumKeyword = gridProperties.getKeyword<ParserKeywords::EQLNUM>( );
+                const auto& eqlnumKeyword = eclipseProperties.getIntGridProperty( "EQLNUM" );
                 const auto& eqlnum = eqlnumKeyword.getData();
                 maxEqlnum = *std::max_element(eqlnum.begin(), eqlnum.end());
 
@@ -190,8 +192,3 @@ namespace Opm {
 
 
 } //namespace Opm
-
-
-
-
-

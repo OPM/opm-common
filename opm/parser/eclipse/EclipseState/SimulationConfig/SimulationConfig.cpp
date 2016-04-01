@@ -21,6 +21,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
+#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
@@ -46,14 +47,14 @@
 namespace Opm {
 
     SimulationConfig::SimulationConfig(const ParseContext& parseContext,
-                                       DeckConstPtr deck,
-                                       GridProperties<int>& gridProperties) :
+                                       const Deck& deck,
+                                       const Eclipse3DProperties& eclipseProperties) :
         m_useCPR(false),
         m_DISGAS(false),
         m_VAPOIL(false)
     {
-        if (Section::hasRUNSPEC(*deck)) {
-            const RUNSPECSection runspec(*deck);
+        if (Section::hasRUNSPEC(deck)) {
+            const RUNSPECSection runspec(deck);
             if (runspec.hasKeyword<ParserKeywords::CPR>()) {
                 const auto& cpr = runspec.getKeyword<ParserKeywords::CPR>();
                 if (cpr.size() > 0)
@@ -69,14 +70,14 @@ namespace Opm {
             }
         }
 
-        initThresholdPressure(parseContext , deck, gridProperties);
+        initThresholdPressure(parseContext , deck, eclipseProperties);
     }
 
 
     void SimulationConfig::initThresholdPressure(const ParseContext& parseContext,
-                                                 DeckConstPtr deck,
-                                                 GridProperties<int>& gridProperties) {
-        m_ThresholdPressure = std::make_shared<const ThresholdPressure>(parseContext , deck, gridProperties);
+                                                 const Deck& deck,
+                                                 const Eclipse3DProperties& eclipseProperties) {
+        m_ThresholdPressure = std::make_shared<const ThresholdPressure>(parseContext , deck, eclipseProperties);
     }
 
 

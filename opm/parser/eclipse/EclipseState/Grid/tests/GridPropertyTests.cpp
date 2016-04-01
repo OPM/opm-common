@@ -157,24 +157,23 @@ BOOST_AUTO_TEST_CASE(SetFromDeckKeyword) {
     }
 }
 
-
 BOOST_AUTO_TEST_CASE(copy) {
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
-    SupportedKeywordInfo keywordInfo1("P1" , 0, "1");
-    SupportedKeywordInfo keywordInfo2("P2" , 9, "1");
-    Opm::GridProperty<int> prop1( 4 , 4 , 2 , keywordInfo1);
-    Opm::GridProperty<int> prop2( 4 , 4 , 2 , keywordInfo2);
+    SupportedKeywordInfo keywordInfo1("P1", 0, "1");
+    SupportedKeywordInfo keywordInfo2("P2", 9, "1");
+    Opm::GridProperty<int> prop1(4, 4, 2, keywordInfo1);
+    Opm::GridProperty<int> prop2(4, 4, 2, keywordInfo2);
 
-    Opm::Box global(4,4,2);
-    Opm::Box layer0(global , 0,3,0,3,0,0);
+    Opm::Box global(4, 4, 2);
+    Opm::Box layer0(global, 0, 3, 0, 3, 0, 0);
 
-    prop2.copyFrom(prop1 , layer0);
+    prop2.copyFrom(prop1, layer0);
 
-    for (size_t j=0; j < 4; j++) {
-        for (size_t i=0; i < 4; i++) {
+    for (size_t j = 0; j < 4; j++) {
+        for (size_t i = 0; i < 4; i++) {
 
-            BOOST_CHECK_EQUAL( prop2.iget(i,j,0), 0 );
-            BOOST_CHECK_EQUAL( prop2.iget(i,j,1), 9 );
+            BOOST_CHECK_EQUAL(prop2.iget(i, j, 0), 0);
+            BOOST_CHECK_EQUAL(prop2.iget(i, j, 1), 9);
         }
     }
 }
@@ -363,6 +362,9 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
 
     // make sure that EclipseState does not throw if it is asked for a supported
     // grid property that is not contained in the deck
+    BOOST_CHECK_NO_THROW(props.hasDeckDoubleGridProperty("ISWU"));
+    BOOST_CHECK_NO_THROW(props.hasDeckIntGridProperty("FLUXNUM"));
+
     BOOST_CHECK(!props.hasDeckDoubleGridProperty("ISWU"));
     BOOST_CHECK(!props.hasDeckIntGridProperty("FLUXNUM"));
 
@@ -395,80 +397,6 @@ void TestPostProcessorMul(std::vector< double >& values,
     for( size_t g = 0; g < values.size(); g++ )
         values[g] *= 2.0;
 }
-
-
-
-static Opm::DeckPtr createDeck() {
-    const char *deckData =
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        " 10 10 10 /\n"
-        "GRID\n"
-        "DX\n"
-        "1000*0.25 /\n"
-        "DYV\n"
-        "10*0.25 /\n"
-        "DZ\n"
-        "1000*0.25 /\n"
-        "TOPS\n"
-        "100*0.25 /\n"
-        "MULTPV \n"
-        "1000*0.10 / \n"
-        "PORO \n"
-        "1000*0.10 / \n"
-        "EDIT\n"
-        "\n";
-
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext()) ;
-}
-
-BOOST_AUTO_TEST_CASE(GridPropertyPostProcessors) {
-    typedef Opm::GridPropertySupportedKeywordInfo<double> SupportedKeywordInfo;
-
-    Opm::DeckPtr deck = createDeck();
-    Opm::EclipseGrid grid(deck);
-    std::shared_ptr<Opm::TableManager> tm  = std::make_shared<Opm::TableManager>(*deck);
-    Opm::Eclipse3DProperties props(*deck, tm, grid);
-
-    SupportedKeywordInfo kwInfo1("MULTPV" , 1.0 , "1");
-    Opm::GridPropertyPostFunction< double > gfunc( &TestPostProcessorMul,
-                                                   tm.get(),
-                                                   &grid,
-                                                   &props.getIntGridProperties(),
-                                                   &props.getDoubleGridProperties() );
-
-    SupportedKeywordInfo kwInfo2("PORO", 1.0, gfunc, "1");
-    std::vector<SupportedKeywordInfo > supportedKeywords = { kwInfo1, kwInfo2 };
-
-    Opm::GridProperties<double> properties(grid, std::move( supportedKeywords ) );
-
-    {
-        auto& poro = properties.getKeyword("PORO");
-        auto& multpv = properties.getKeyword("MULTPV");
-
-        poro.loadFromDeckKeyword( deck->getKeyword("PORO" , 0));
-        multpv.loadFromDeckKeyword( deck->getKeyword("MULTPV" , 0));
-
-        poro.runPostProcessor();
-        multpv.runPostProcessor();
-
-        for (size_t g = 0; g < 1000; g++) {
-            BOOST_CHECK_EQUAL( multpv.iget(g) , 0.10 );
-            BOOST_CHECK_EQUAL( poro.iget(g)  , 0.20 );
-        }
-
-        poro.runPostProcessor();
-        multpv.runPostProcessor();
-
-        for (size_t g = 0; g < 1000; g++) {
-            BOOST_CHECK_EQUAL( multpv.iget(g) , 0.10 );
-            BOOST_CHECK_EQUAL( poro.iget(g)  , 0.20 );
-        }
-    }
-}
-
 
 
 BOOST_AUTO_TEST_CASE(multiply) {

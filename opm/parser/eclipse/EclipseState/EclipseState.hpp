@@ -24,8 +24,9 @@
 #include <memory>
 #include <set>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 
 namespace Opm {
@@ -40,6 +41,7 @@ namespace Opm {
     class DeckKeyword;
     class DeckRecord;
     class EclipseGrid;
+    class Eclipse3DProperties;
     class Fault;
     class FaultCollection;
     class InitConfig;
@@ -52,6 +54,7 @@ namespace Opm {
     class TableManager;
     class TransMult;
     class UnitSystem;
+    class MessageContainer;
 
     class EclipseState {
     public:
@@ -82,11 +85,12 @@ namespace Opm {
         bool hasNNC() const;
 
         const Eclipse3DProperties& getEclipseProperties() const;
-        std::shared_ptr<const TableManager> getTableManager() const;
 
-        // the unit system used by the deck. note that it is rarely needed to convert
-        // units because internally to opm-parser everything is represented by SI
-        // units...
+        const TableManager& getTableManager() const;
+
+        // the unit system used by the deck. note that it is rarely needed to
+        // convert units because internally to opm-parser everything is
+        // represented by SI units...
         const UnitSystem& getDeckUnitSystem()  const;
         void applyModifierDeck( std::shared_ptr<const Deck> deck);
 
@@ -94,28 +98,30 @@ namespace Opm {
         void initTabdims(std::shared_ptr< const Deck > deck);
         void initIOConfig(std::shared_ptr< const Deck > deck);
         void initIOConfigPostSchedule(std::shared_ptr< const Deck > deck);
-        void initTitle(std::shared_ptr< const Deck > deck);
         void initTransMult();
         void initFaults(std::shared_ptr< const Deck > deck);
+
 
         void setMULTFLT(std::shared_ptr<const Opm::Section> section) const;
         void initMULTREGT(std::shared_ptr< const Deck > deck);
 
-        void complainAboutAmbiguousKeyword(std::shared_ptr< const Deck > deck, const std::string& keywordName) const;
+        void complainAboutAmbiguousKeyword(std::shared_ptr< const Deck > deck,
+                                           const std::string& keywordName) const;
 
         std::shared_ptr< IOConfig >               m_ioConfig;
         std::shared_ptr< const InitConfig >       m_initConfig;
         std::shared_ptr< const Schedule >         m_schedule;
         std::shared_ptr< const SimulationConfig > m_simulationConfig;
 
-        std::set<enum Phase::PhaseEnum> phases;
         std::string m_title;
-        const UnitSystem& m_deckUnitSystem;
         std::shared_ptr<TransMult> m_transMult;
         std::shared_ptr<FaultCollection> m_faults;
         std::shared_ptr<NNC> m_nnc;
+
+
+        const UnitSystem& m_deckUnitSystem;
         const ParseContext& m_parseContext;
-        std::shared_ptr<const TableManager> m_tables;
+        const TableManager m_tables;
         std::shared_ptr<const EclipseGrid> m_eclipseGrid;
         Eclipse3DProperties m_eclipseProperties;
         MessageContainer m_messageContainer;
