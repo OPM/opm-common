@@ -100,8 +100,21 @@ BOOST_AUTO_TEST_CASE( ContainsStar_WithStar_ReturnsTrue ) {
 
 BOOST_AUTO_TEST_CASE( readValueToken_basic_validity_tests ) {
     BOOST_CHECK_THROW( Opm::readValueToken<int>( std::string( "3.3" ) ), std::invalid_argument );
+    BOOST_CHECK_EQUAL( 3, Opm::readValueToken<int>( std::string( "3" ) ) );
+    BOOST_CHECK_EQUAL( 3, Opm::readValueToken<int>( std::string( "+3" ) ) );
+    BOOST_CHECK_EQUAL( -3, Opm::readValueToken<int>( std::string( "-3" ) ) );
     BOOST_CHECK_THROW( Opm::readValueToken<double>( std::string( "truls" ) ), std::invalid_argument );
-    BOOST_CHECK_EQUAL( "3.3", Opm::readValueToken<std::string>( std::string( "3.3" ) ) );
+    BOOST_CHECK_EQUAL( 0, Opm::readValueToken<double>( std::string( "0" ) ) );
+    BOOST_CHECK_EQUAL( 0, Opm::readValueToken<double>( std::string( "0.0" ) ) );
+    BOOST_CHECK_EQUAL( 0, Opm::readValueToken<double>( std::string( "+0.0" ) ) );
+    BOOST_CHECK_EQUAL( 0, Opm::readValueToken<double>( std::string( "-0.0" ) ) );
+    BOOST_CHECK_EQUAL( 0, Opm::readValueToken<double>( std::string( ".0" ) ) );
+    BOOST_CHECK_THROW( Opm::readValueToken<double>( std::string( "1.0.0" ) ), std::invalid_argument );
+    BOOST_CHECK_THROW( Opm::readValueToken<double>( std::string( "1g0" ) ), std::invalid_argument );
+    BOOST_CHECK_THROW( Opm::readValueToken<double>( std::string( "1.23h" ) ), std::invalid_argument );
+    BOOST_CHECK_THROW( Opm::readValueToken<double>( std::string( "+1.23h" ) ), std::invalid_argument );
+    BOOST_CHECK_THROW( Opm::readValueToken<double>( std::string( "-1.23h" ) ), std::invalid_argument );
+    BOOST_CHECK_EQUAL( 3.3, Opm::readValueToken<double>( std::string( "3.3" ) ) );
     BOOST_CHECK_CLOSE( 3.3, Opm::readValueToken<double>( std::string( "3.3e0" ) ), 1e-6 );
     BOOST_CHECK_CLOSE( 3.3, Opm::readValueToken<double>( std::string( "3.3d0" ) ), 1e-6 );
     BOOST_CHECK_CLOSE( 3.3, Opm::readValueToken<double>( std::string( "3.3E0" ) ), 1e-6 );

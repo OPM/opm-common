@@ -87,44 +87,17 @@ namespace Opm {
 
         std::copy( view.begin(), view.end(), buffer.begin() );
 
-        /*
-         * isdigit can be a macro and is unreliable with std::algorithm. By
-         * wrapping it in a lambda (which will be inlined anyway) this problem
-         * goes away.
-         */
-        const auto is_digit = []( char ch ) { return std::isdigit( ch ); };
+        char* end;
+        auto value = std::strtol( buffer.data(), &end, 10 );
 
-        if( !std::isdigit( view[ 0 ] ) && view[ 0 ] != '+' && view[ 0 ] != '-' )
-            throw std::invalid_argument( "Ints must start with +/-/digit" );
-
-        if( !std::all_of( view.begin() + 1, view.end(), is_digit ) )
+        if( std::distance( buffer.data(), end ) != int( view.size() ) )
             throw std::invalid_argument( "Expected integer, got '" + view + "'" );
 
-        /*
-         * Unlike float, we can't atoi() and check if non-zero, simply because
-         * atoi will parse '3.2' as '3', i.e. it will read to the first
-         * non-digit character and stop.
-         */
-        return std::atoi( buffer.data() );
+        return value;
     }
 
     static inline bool fortran_float( char ch ) {
         return ch == 'd' || ch == 'D' || ch == 'E';
-    }
-
-    static inline bool slow_check_is_zero( const string_view& view ) {
-        /* zero doubles can be expressed many ways. A simple, but slow check to
-         * verify that a double parsed as zero actually is zero
-         */
-        if( view[ 0 ] != '0' && view[ 0 ] != '.' ) return false;
-
-        const auto zero = []( char ch ) { return ch == '0'; };
-
-        auto itr = std::find_if_not( view.begin(), view.end(), zero );
-
-        if( itr == view.end() ) return true;
-        if( *itr != '.' ) return false;
-        return std::find_if_not( itr++, view.end(), zero ) != view.end();
     }
 
     template<>
@@ -140,11 +113,10 @@ namespace Opm {
 
         std::copy( view.begin(), view.end(), buffer.begin() );
 
-        /* fast path - with any non-zero non-fortran-exponent float this will
-         * be sufficient. We only do the extra work when absolutely needed
-         */
-        auto value = std::atof( buffer.data() );
-        if( value != 0.0 ) return value;
+        char* end;
+        auto value = std::strtod( buffer.data(), &end );
+        if( std::distance( buffer.data(), end ) == int( view.size() ) )
+            return value;
 
         // Eclipse supports Fortran syntax for specifying exponents of floating point
         // numbers ('D' and 'E', e.g., 1.234d5) while C++ only supports the 'e' (e.g.,
@@ -155,10 +127,9 @@ namespace Opm {
         if( fortran != buffer.end() )
             *fortran = 'e';
 
-        value = std::atof( buffer.data() );
-        if( value != 0.0 ) return value;
-
-        if( slow_check_is_zero( view ) ) return 0.0;
+        value = std::strtod( buffer.data(), &end );
+        if( std::distance( buffer.data(), end ) == int( view.size() ) )
+            return value;
 
         throw std::invalid_argument( "Expected double, got: '" + view + "'" );
     }
