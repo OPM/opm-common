@@ -26,15 +26,17 @@
 #include <opm/core/utility/miscUtilities.hpp>
 
 
+#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellSet.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
-
+#include <ert/ecl/FortIO.hpp>
+#include <ert/util/ert_unique_ptr.hpp>
 #include <ert/ecl/ecl_rft_node.h>
-#include <ert/ecl/ecl_rft_file.h>
+
 
 
 
@@ -45,7 +47,8 @@ namespace EclipseWriterDetails {
         initGlobalToActiveIndex(compressedToCartesianCellIdx, numCells, cartesianSize);
     }
 
-    void EclipseWriteRFTHandler::writeTimeStep(const std::string& filename,
+    void EclipseWriteRFTHandler::writeTimeStep(const IOConfig& ioConfig,
+                                               const std::string& filename,
                                                const ert_ecl_unit_enum ecl_unit,
                                                const SimulatorTimerInterface& simulatorTimer,
                                                std::vector<WellConstPtr>& wells,
@@ -54,36 +57,31 @@ namespace EclipseWriterDetails {
                                                std::vector<double>& swat,
                                                std::vector<double>& sgas) {
 
+        std::ios_base::openmode mode = std::ios_base::app;
+        if (simulatorTimer.reportStepNum() == ioConfig.getFirstRFTStep())
+            mode = std::ios_base::out;
+        {
+            ERT::FortIO fortio(filename , mode);
 
+            for (const auto& well : wells) {
+                if ((well->getRFTActive(simulatorTimer.reportStepNum())) || (well->getPLTActive(simulatorTimer.reportStepNum()))) {
+                    ERT::ert_unique_ptr<ecl_rft_node_type, ecl_rft_node_free>  ecl_node( createEclRFTNode(well,
+                                                                                                          simulatorTimer,
+                                                                                                          eclipseGrid,
+                                                                                                          pressure,
+                                                                                                          swat,
+                                                                                                          sgas) );
 
-        std::vector<ecl_rft_node_type *> rft_nodes;
-        for (std::vector<WellConstPtr>::const_iterator ci = wells.begin(); ci != wells.end(); ++ci) {
-            WellConstPtr well = *ci;
-            if ((well->getRFTActive(simulatorTimer.reportStepNum())) || (well->getPLTActive(simulatorTimer.reportStepNum()))) {
-                ecl_rft_node_type * ecl_node = createEclRFTNode(well,
-                                                                 simulatorTimer,
-                                                                 eclipseGrid,
-                                                                 pressure,
-                                                                 swat,
-                                                                 sgas);
+                    // TODO: replace this silenced warning with an appropriate
+                    //       use of the OpmLog facilities.
+                    // if (well->getPLTActive(simulatorTimer.reportStepNum())) {
+                    //     std::cerr << "PLT not supported, writing RFT data" << std::endl;
+                    // }
 
-                // TODO: replace this silenced warning with an appropriate
-                //       use of the OpmLog facilities.
-                // if (well->getPLTActive(simulatorTimer.reportStepNum())) {
-                //     std::cerr << "PLT not supported, writing RFT data" << std::endl;
-                // }
-
-                rft_nodes.push_back(ecl_node);
+                    ecl_rft_node_fwrite( ecl_node.get() , fortio.get() , ecl_unit );
+                }
             }
         }
-
-
-        if (rft_nodes.size() > 0) {
-            ecl_rft_file_update(filename.c_str(), rft_nodes.data(), rft_nodes.size(), ecl_unit);
-        }
-
-        //Cleanup: The ecl_rft_file_update method takes care of freeing the ecl_rft_nodes that it receives.
-        //         Each ecl_rft_node is again responsible for freeing it's cells.
     }
 
 
