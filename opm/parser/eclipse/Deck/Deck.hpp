@@ -105,16 +105,21 @@ namespace Opm {
 
             DeckKeyword& getKeyword( size_t );
 
-            void initUnitSystem();
-            UnitSystem& getDefaultUnitSystem() const;
-            UnitSystem& getActiveUnitSystem()  const;
+            UnitSystem& getDefaultUnitSystem();
+            UnitSystem& getActiveUnitSystem();
+
+            const UnitSystem& getDefaultUnitSystem() const;
+            const UnitSystem& getActiveUnitSystem() const;
+
 
         private:
             Deck( std::vector< DeckKeyword >&& );
 
+            void initUnitSystem() const;
+
             std::vector< DeckKeyword > keywordList;
-            std::unique_ptr< UnitSystem > activeUnits;
-            std::unique_ptr< UnitSystem > defaultUnits;
+            mutable std::unique_ptr< UnitSystem > activeUnits;
+            mutable std::unique_ptr< UnitSystem > defaultUnits;
     };
 
     typedef std::shared_ptr<Deck> DeckPtr;

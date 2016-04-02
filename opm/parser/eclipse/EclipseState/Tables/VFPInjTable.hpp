@@ -79,7 +79,7 @@ public:
          * Constructor which parses a deck keyword and retrieves the relevant parts for a
          * VFP table.
          */
-        void init(const DeckKeyword& table, UnitSystem& deck_unit_system);
+        void init(const DeckKeyword& table, const UnitSystem& deck_unit_system);
 
         /**
          * Returns the table number
@@ -165,9 +165,9 @@ private:
 
     static void convertFloToSI(const FLO_TYPE& type,
                             std::vector<double>& values,
-                            UnitSystem& unit_system);
+                            const UnitSystem& unit_system);
     static void convertTHPToSI(std::vector<double>& values,
-                               UnitSystem& unit_system);
+                            const UnitSystem& unit_system);
 };
 
 

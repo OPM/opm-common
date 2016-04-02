@@ -77,7 +77,7 @@ namespace Opm {
 
 
 
-    void ParserRecord::applyUnitsToDeck(const Deck& deck, DeckRecord& deckRecord ) const {
+    void ParserRecord::applyUnitsToDeck( Deck& deck, DeckRecord& deckRecord ) const {
         for (auto iter=begin(); iter != end(); ++iter) {
             if ((*iter)->hasDimension()) {
                 auto& deckItem = deckRecord.getItem( (*iter)->name() );

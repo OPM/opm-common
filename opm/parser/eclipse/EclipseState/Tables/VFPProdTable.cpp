@@ -152,7 +152,7 @@ void VFPProdTable::init(int table_num,
     check();
 }
 
-void VFPProdTable::init( const DeckKeyword& table, UnitSystem& deck_unit_system) {
+void VFPProdTable::init( const DeckKeyword& table, const UnitSystem& deck_unit_system) {
     using ParserKeywords::VFPPROD;
 
     //Check that the table has enough records
@@ -420,7 +420,7 @@ void VFPProdTable::scaleValues(std::vector<double>& values,
 
 void VFPProdTable::convertFloToSI(const FLO_TYPE& type,
                                   std::vector<double>& values,
-                                  UnitSystem& unit_system) {
+                                  const UnitSystem& unit_system) {
     double scaling_factor = 1.0;
     switch (type) {
         case FLO_OIL:
@@ -443,7 +443,7 @@ void VFPProdTable::convertFloToSI(const FLO_TYPE& type,
 
 
 void VFPProdTable::convertTHPToSI(std::vector<double>& values,
-                                  UnitSystem& unit_system) {
+                                  const UnitSystem& unit_system) {
     double scaling_factor = unit_system.parse("Pressure")->getSIScaling();
     scaleValues(values, scaling_factor);
 }
@@ -456,7 +456,7 @@ void VFPProdTable::convertTHPToSI(std::vector<double>& values,
 
 void VFPProdTable::convertWFRToSI(const WFR_TYPE& type,
                                   std::vector<double>& values,
-                                  UnitSystem& unit_system) {
+                                  const UnitSystem& unit_system) {
     double scaling_factor = 1.0;
     switch (type) {
         case WFR_WOR:
@@ -480,7 +480,7 @@ void VFPProdTable::convertWFRToSI(const WFR_TYPE& type,
 
 void VFPProdTable::convertGFRToSI(const GFR_TYPE& type,
                                   std::vector<double>& values,
-                                  UnitSystem& unit_system) {
+                                  const UnitSystem& unit_system) {
     double scaling_factor = 1.0;
     switch (type) {
         case GFR_GOR:
@@ -504,7 +504,7 @@ void VFPProdTable::convertGFRToSI(const GFR_TYPE& type,
 
 void VFPProdTable::convertALQToSI(const ALQ_TYPE& type,
                                   std::vector<double>& values,
-                                  UnitSystem& unit_system) {
+                                  const UnitSystem& unit_system) {
     double scaling_factor = 1.0;
     switch (type) {
         case ALQ_GRAT:

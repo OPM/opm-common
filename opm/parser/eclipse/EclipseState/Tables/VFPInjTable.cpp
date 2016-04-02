@@ -79,7 +79,7 @@ void VFPInjTable::init(int table_num,
 
 
 
-void VFPInjTable::init( const DeckKeyword& table, UnitSystem& deck_unit_system) {
+void VFPInjTable::init( const DeckKeyword& table, const UnitSystem& deck_unit_system) {
     using ParserKeywords::VFPINJ;
 
     //Check that the table has enough records
@@ -286,7 +286,7 @@ void VFPInjTable::scaleValues(std::vector<double>& values,
 
 void VFPInjTable::convertFloToSI(const FLO_TYPE& type,
                                   std::vector<double>& values,
-                                  UnitSystem& unit_system) {
+                                  const UnitSystem& unit_system) {
     double scaling_factor = 1.0;
     switch (type) {
         case FLO_OIL:
@@ -309,7 +309,7 @@ void VFPInjTable::convertFloToSI(const FLO_TYPE& type,
 
 
 void VFPInjTable::convertTHPToSI(std::vector<double>& values,
-                                  UnitSystem& unit_system) {
+                                 const UnitSystem& unit_system) {
     double scaling_factor = unit_system.parse("Pressure")->getSIScaling();
     scaleValues(values, scaling_factor);
 }

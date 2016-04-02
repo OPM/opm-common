@@ -104,7 +104,7 @@ namespace Opm {
         std::string createDeclaration(const std::string& indent) const;
         std::string createDecl() const;
         std::string createCode() const;
-        void applyUnitsToDeck(const Deck& deck, DeckKeyword& deckKeyword) const;
+        void applyUnitsToDeck( Deck& deck, DeckKeyword& deckKeyword) const;
     private:
         std::pair<std::string,std::string> m_sizeDefinitionPair;
         std::string m_name;

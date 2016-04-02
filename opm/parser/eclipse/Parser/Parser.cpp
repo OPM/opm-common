@@ -581,7 +581,6 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
 
 
     void Parser::applyUnitsToDeck(Deck& deck) const {
-        deck.initUnitSystem();
         for (size_t index=0; index < deck.size(); ++index) {
             auto& deckKeyword = deck.getKeyword( index );
             if (isRecognizedKeyword( deckKeyword.name())) {

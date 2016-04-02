@@ -138,27 +138,48 @@ namespace Opm {
         this->addKeyword( std::move( kw ) );
     }
 
-    void Deck::initUnitSystem() {
+
+    DeckKeyword& Deck::getKeyword( size_t index ) {
+        return this->keywordList.at( index );
+    }
+
+    UnitSystem& Deck::getDefaultUnitSystem() {
+        if( !this->defaultUnits ) this->initUnitSystem();
+        return *this->defaultUnits;
+    }
+
+    UnitSystem& Deck::getActiveUnitSystem() {
+        if( !this->activeUnits ) this->initUnitSystem();
+        return *this->activeUnits;
+    }
+
+    const UnitSystem& Deck::getDefaultUnitSystem() const {
+        if( !this->defaultUnits ) this->initUnitSystem();
+        return *this->defaultUnits;
+    }
+
+    const UnitSystem& Deck::getActiveUnitSystem() const {
+        if( !this->activeUnits ) this->initUnitSystem();
+        return *this->activeUnits;
+    }
+
+    void Deck::initUnitSystem() const {
+        /*
+         * The unit systems are lazily created as their exact value depend on
+         * input values of the deck, but in a constructed deck this can be
+         * considered constant (and in fact, if the deck is obtained through
+         * ParseFromString/File, this these values set before the Deck is
+         * available). The unit systems are needed from const contexts though,
+         * but might not have been generated at that time. Generation is done
+         * in this method, but it has to be callable from const'd this, and are
+         * marked mutable.
+         */
+
         this->defaultUnits = std::unique_ptr< UnitSystem >( UnitSystem::newMETRIC() );
         if (hasKeyword("FIELD"))
             this->activeUnits = std::unique_ptr< UnitSystem >( UnitSystem::newFIELD() );
         else
             this->activeUnits = std::unique_ptr< UnitSystem >( UnitSystem::newMETRIC() );
     }
-
-    DeckKeyword& Deck::getKeyword( size_t index ) {
-        return this->keywordList.at( index );
-    }
-
-    UnitSystem& Deck::getDefaultUnitSystem() const {
-        if( !this->defaultUnits ) const_cast< Deck* >( this )->initUnitSystem();
-        return *this->defaultUnits;
-    }
-
-    UnitSystem& Deck::getActiveUnitSystem() const {
-        if( !this->activeUnits ) const_cast< Deck* >( this )->initUnitSystem();
-        return *this->activeUnits;
-    }
-
 
 }
