@@ -47,11 +47,13 @@ namespace Opm {
      */
     class string_view {
         public:
-            using const_iterator = std::string::const_iterator;
+            using const_iterator = const char*;
 
             inline string_view() = default;
+            inline string_view( const_iterator, const_iterator );
+            inline string_view( const_iterator, size_t );
             inline string_view( const std::string& );
-            inline string_view( std::string::const_iterator, std::string::const_iterator );
+            inline string_view( const std::string&, size_t );
 
             inline const_iterator begin() const;
             inline const_iterator end() const;
@@ -81,8 +83,8 @@ namespace Opm {
             inline std::string substr( size_t from, size_t to ) const;
 
         private:
-            const_iterator fst;
-            const_iterator lst;
+            const_iterator fst = nullptr;
+            const_iterator lst = nullptr;
     };
 
     /*
@@ -144,15 +146,24 @@ namespace Opm {
 
     // Member functions of string_view.
 
-    inline string_view::string_view( std::string::const_iterator begin,
-                              std::string::const_iterator end ) :
+    inline string_view::string_view( const_iterator begin,
+                                     const_iterator end ) :
         fst( begin ),
         lst( end )
     {}
 
+    inline string_view::string_view( const_iterator begin,
+                                     size_t count ) :
+        fst( begin ),
+        lst( begin + count )
+    {}
+
     inline string_view::string_view( const std::string& str ) :
-        fst( str.begin() ),
-        lst( str.end() )
+        string_view( str.data(), str.size() )
+    {}
+
+    inline string_view::string_view( const std::string& str, size_t count ) :
+        string_view( str.data(), count )
     {}
 
     inline string_view::const_iterator string_view::begin() const {

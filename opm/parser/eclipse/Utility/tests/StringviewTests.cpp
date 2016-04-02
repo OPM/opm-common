@@ -13,7 +13,7 @@ using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(fullStringView) {
     std::string srcstr = "lorem ipsum";
-    string_view view( srcstr.begin(), srcstr.end() );
+    string_view view( srcstr );
 
     BOOST_CHECK_EQUAL_COLLECTIONS(
             srcstr.begin(), srcstr.end(),
@@ -22,15 +22,18 @@ BOOST_AUTO_TEST_CASE(fullStringView) {
 
 BOOST_AUTO_TEST_CASE(viewCorrectSize) {
     std::string srcstr = "lorem ipsum";
-    string_view view( srcstr.begin(), srcstr.begin() + 5 );
 
+    string_view full( srcstr );
+    BOOST_CHECK_EQUAL( srcstr.size(), full.size() );
+
+    string_view view( srcstr, 5 );
     BOOST_CHECK_EQUAL( 5, view.size() );
     BOOST_CHECK_EQUAL( 5, view.length() );
 }
 
 BOOST_AUTO_TEST_CASE(viewOperatorAt) {
     std::string srcstr = "lorem ipsum";
-    string_view view( srcstr.begin(), srcstr.end() );
+    string_view view( srcstr );
 
     for( size_t i = 0; i < view.size(); ++i )
         BOOST_CHECK_EQUAL( view[ i ], srcstr[ i ] );
@@ -47,7 +50,7 @@ BOOST_AUTO_TEST_CASE(viewFrontBack) {
 
 BOOST_AUTO_TEST_CASE(viewSubstr) {
     std::string srcstr = "lorem ipsum";
-    string_view view( srcstr.begin(), srcstr.end() );
+    string_view view( srcstr );
 
     BOOST_CHECK_NO_THROW( view.string() );
     BOOST_CHECK_EQUAL( srcstr, view.string() );
@@ -64,7 +67,7 @@ BOOST_AUTO_TEST_CASE(viewSubstr) {
 
 BOOST_AUTO_TEST_CASE(viewStream) {
     std::string srcstr = "lorem ipsum";
-    string_view view( srcstr.begin(), srcstr.end() );
+    string_view view( srcstr );
 
     std::stringstream str;
     str << view;
@@ -75,7 +78,7 @@ BOOST_AUTO_TEST_CASE(viewStream) {
 BOOST_AUTO_TEST_CASE(equalityOperators) {
     std::string srcstr = "lorem ipsum";
     std::string diffstr = "lorem";
-    string_view view( srcstr.begin(), srcstr.end() );
+    string_view view( srcstr );
 
     BOOST_CHECK_EQUAL( srcstr, view );
     BOOST_CHECK_NE( diffstr, view );
@@ -96,8 +99,8 @@ BOOST_AUTO_TEST_CASE(plusOperator) {
     std::string ws = " ";
     std::string rhs = "ipsum";
 
-    string_view lhs_view( lhs.begin(), lhs.end() );
-    string_view rhs_view( rhs.begin(), rhs.end() );
+    string_view lhs_view( lhs );
+    string_view rhs_view( rhs );
 
     BOOST_CHECK_EQUAL( total, lhs_view + ws + rhs_view );
     BOOST_CHECK_EQUAL( lhs + ws, lhs_view + ws );

@@ -65,15 +65,16 @@ namespace Opm {
         return std::find( begin, rec.end(), RawConsts::slash );
     }
 
-    static inline std::string::const_iterator first_nonspace (
-            std::string::const_iterator begin,
-            std::string::const_iterator end ) {
+    static inline const char* first_nonspace (
+            const char* begin,
+            const char* end ) {
         return std::find_if_not( begin, end, RawConsts::is_separator );
     }
 
-    static std::deque< string_view > splitSingleRecordString( const std::string& record ) {
+    static std::deque< string_view > splitSingleRecordString( const std::string& rec ) {
 
         std::deque< string_view > dst;
+        string_view record( rec );
 
         for( auto current = first_nonspace( record.begin(), record.end() );
                 current != record.end();
@@ -149,8 +150,7 @@ namespace Opm {
 
     void RawRecord::push_front(std::string tok ) {
         this->expanded_items.push_back( tok );
-        string_view record { this->expanded_items.back().begin(), this->expanded_items.back().end() };
-        this->m_recordItems.push_front( record );
+        this->m_recordItems.emplace_front( this->expanded_items.back() );
     }
 
     void RawRecord::dump() const {
