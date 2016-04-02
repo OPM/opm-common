@@ -20,15 +20,15 @@ class Table(BaseCClass):
 
     
     def __contains__(self , column):
-        return self._has_column( self , column )
+        return self._has_column( column )
     
 
     def hasColumn(self , column):
-        return self._has_column( self , column )
+        return self._has_column( column )
 
 
     def numRows(self):
-        return self._num_rows( self )
+        return self._num_rows( )
     
 
     def getValue(self , column , row):
@@ -43,7 +43,7 @@ class Table(BaseCClass):
         if not 0 <= row < self.numRows( ):
             raise IndexError("Invalid row index:%d Valid range: [0,%d)" % (row , self.numRows()))
 
-        return self._get_value( self , column , row )
+        return self._get_value( column , row )
 
 
     def evaluate(self , column , arg_value):
@@ -73,9 +73,9 @@ class Table(BaseCClass):
             raise KeyError("No such column: %s" % column)
 
         if isinstance(arg_value , TableIndex):
-            return self._evaluate_with_index( self , column , arg_value  )
+            return self._evaluate_with_index(  column , arg_value  )
         else:
-            return self._evaluate( self , column , arg_value  )
+            return self._evaluate( column , arg_value  )
 
 
     def lookup(self , arg_value):
@@ -86,4 +86,4 @@ class Table(BaseCClass):
         Table.evaluate() method.
         """
         
-        return self._lookup(self ,arg_value)
+        return self._lookup(arg_value)

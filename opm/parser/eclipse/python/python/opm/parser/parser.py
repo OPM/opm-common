@@ -26,7 +26,7 @@ class class_and_instance_method(object):
 
 class Parser(BaseCClass):
     TYPE_NAME = "parser"
-    _alloc            = OPMPrototype("void*     parser_alloc()")
+    _alloc            = OPMPrototype("void*     parser_alloc()" , bind = False)
     _free             = OPMPrototype("void      parser_free(parser)")
     _has_keyword      = OPMPrototype("bool      parser_has_keyword(parser, char*)")
     _parse_file       = OPMPrototype("deck_obj  parser_parse_file(parser, char*, parse_mode)")
@@ -39,11 +39,11 @@ class Parser(BaseCClass):
 
         
     def __contains__(self , kw):
-        return self._has_keyword(self , kw)
+        return self._has_keyword(kw)
         
         
     def free(self):
-        self._free( self )
+        self._free( )
 
 
     @class_and_instance_method
@@ -76,7 +76,7 @@ class Parser(BaseCClass):
         if os.path.isfile( filename ):
             if parse_mode is None:
                 parse_mode = ParseContext( )
-            return parser._parse_file(parser , filename, parse_mode)
+            return parser._parse_file( filename, parse_mode)
         else:
             raise IOError("No such file:%s" % filename)
 
@@ -87,4 +87,4 @@ class Parser(BaseCClass):
         keyword structure.
         """
         json_string = json.dumps( schema )
-        self._add_json_keyword( self , json_string )
+        self._add_json_keyword( json_string )
