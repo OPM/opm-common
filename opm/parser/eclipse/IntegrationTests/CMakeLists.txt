@@ -30,7 +30,7 @@ if (HAVE_OPM_DATA)
                       ${OPM_DATA_ROOT}/spe10model1/SPE10_MODEL1.DATA
                       ${OPM_DATA_ROOT}/spe10model2/SPE10_MODEL2.DATA )
       get_filename_component( test_name ${test_deck} NAME_WE )
-      add_test( NAME ${test_name} COMMAND OpmLoadDeck ${test_deck})
+      add_test( NAME ${test_name} COMMAND opmi ${test_deck})
    endforeach()
 
    set_property(TEST NORNE_ATW2013 PROPERTY ENVIRONMENT "OPM_ERRORS_IGNORE=PARSE_RANDOM_SLASH")
