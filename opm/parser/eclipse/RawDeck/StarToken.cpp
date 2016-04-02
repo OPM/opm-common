@@ -78,19 +78,10 @@ namespace Opm {
 
         if( view.empty() ) throw std::invalid_argument( "Empty input string" );
 
-        const auto width = std::numeric_limits< int >::digits10 + 1;
-        std::array< char, width + 1 > buffer {};
-
-        if( view.size() > width ) throw std::invalid_argument(
-            "Maximum 'int' length is " + std::to_string( width )
-        );
-
-        std::copy( view.begin(), view.end(), buffer.begin() );
-
         char* end;
-        auto value = std::strtol( buffer.data(), &end, 10 );
+        auto value = std::strtol( view.begin(), &end, 10 );
 
-        if( std::distance( buffer.data(), end ) != int( view.size() ) )
+        if( std::distance( view.begin(), (const char*)end ) != int( view.size() ) )
             throw std::invalid_argument( "Expected integer, got '" + view + "'" );
 
         return value;
@@ -104,24 +95,25 @@ namespace Opm {
     double readValueToken< double >( string_view view ) {
         if( view.empty() ) throw std::invalid_argument( "Empty input string" );
 
-        const auto width = 64;
-        std::array< char, width > buffer {};
-
-        if( view.size() > width ) throw std::invalid_argument(
-            "Maximum 'double' length is " + std::to_string( width )
-        );
-
-        std::copy( view.begin(), view.end(), buffer.begin() );
-
         char* end;
-        auto value = std::strtod( buffer.data(), &end );
-        if( std::distance( buffer.data(), end ) == int( view.size() ) )
+        auto value = std::strtod( view.begin(), &end );
+        if( std::distance( view.begin(), (const char*) end ) == int( view.size() ) )
             return value;
 
         // Eclipse supports Fortran syntax for specifying exponents of floating point
         // numbers ('D' and 'E', e.g., 1.234d5) while C++ only supports the 'e' (e.g.,
         // 1.234e5). the quick fix is to replace 'D' by 'E' and 'd' by 'e' before trying
         // to convert the string into a floating point value.
+
+        const auto width = 64;
+
+        if( view.size() > width ) throw std::invalid_argument(
+            "Maximum 'double' length is " + std::to_string( width )
+        );
+
+        std::array< char, width > buffer {};
+        std::copy( view.begin(), view.end(), buffer.begin() );
+
 
         auto fortran = std::find_if( buffer.begin(), buffer.end(), fortran_float );
         if( fortran != buffer.end() )
