@@ -511,17 +511,19 @@ namespace Opm {
             DeckKeyword keyword( rawKeyword->getKeywordName() );
             keyword.setLocation(rawKeyword->getFilename(), rawKeyword->getLineNR());
             keyword.setDataKeyword( isDataKeyword() );
-
-            for (size_t i = 0; i < rawKeyword->size(); i++) {
-                auto& rawRecord = rawKeyword->getRecord(i);
-                if(m_records.size() > 0) {
-                    keyword.addRecord( getRecord( i )->parse( parseContext, rawRecord ) );
-                }
-                else {
-                    if(rawRecord.size() > 0) {
-                        throw std::invalid_argument("Missing item information " + rawKeyword->getKeywordName());
-                    }
-                }
+	    {
+		size_t record_nr = 0;
+		for (auto& rawRecord : *rawKeyword) {
+		    if(m_records.size() > 0) {
+			keyword.addRecord( getRecord( record_nr )->parse( parseContext, rawRecord ) );
+		    }
+		    else {
+			if(rawRecord.size() > 0) {
+			    throw std::invalid_argument("Missing item information " + rawKeyword->getKeywordName());
+			}
+		    }
+		    record_nr++;
+		}
             }
             return keyword;
         } else
