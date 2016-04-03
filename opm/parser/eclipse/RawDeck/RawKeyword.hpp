@@ -58,9 +58,13 @@ namespace Opm {
         size_t getLineNR() const;
 
         using const_iterator = std::list< RawRecord >::const_iterator;
+        using iterator = std::list< RawRecord >::iterator;
 
         const_iterator begin() const;
         const_iterator end() const;
+        iterator begin();
+        iterator end();
+
 
     private:
         Raw::KeywordSizeEnum m_sizeType;

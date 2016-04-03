@@ -172,6 +172,15 @@ namespace Opm {
         return this->m_records.end();
     }
 
+    RawKeyword::iterator RawKeyword::begin() {
+        return this->m_records.begin();
+    }
+
+    RawKeyword::iterator RawKeyword::end() {
+        return this->m_records.end();
+    }
+
+
     Raw::KeywordSizeEnum RawKeyword::getSizeType() const {
         return m_sizeType;
     }
