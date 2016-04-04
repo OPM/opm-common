@@ -38,6 +38,10 @@ namespace Opm {
         static inline bool is_separator( char ch ) {
             return ch == '\t' || ch == ' ';
         }
+
+        static inline bool is_quote( char ch ) {
+            return ch == quote || ch == '"';
+        }
     }
 }
 

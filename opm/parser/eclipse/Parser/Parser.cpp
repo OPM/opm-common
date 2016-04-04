@@ -176,6 +176,15 @@ namespace Opm {
             addDefaultKeywords();
     }
 
+    template< typename Itr >
+    static inline Itr find_comment( Itr begin, Itr end ) {
+
+        auto itr = std::find( begin, end, '-' );
+        for( ; itr != end; itr = std::find( itr + 1, end, '-' ) )
+            if( (itr + 1) != end &&  *( itr + 1 ) == '-' ) return itr;
+
+        return end;
+    }
 
     /**
        This function will remove return a copy of the input string
@@ -185,38 +194,39 @@ namespace Opm {
          ABC --Comment                =>  ABC
          ABC '--Comment1' --Comment2  =>  ABC '--Comment1'
          ABC "-- Not balanced quote?  =>  ABC "-- Not balanced quote?
-
     */
-    std::string Parser::stripComments(const std::string& inputString) {
-        std::string uncommentedString;
-        size_t offset = 0;
 
-        while (true) {
-            size_t commentPos = inputString.find("--" , offset);
-            if (commentPos == std::string::npos) {
-                uncommentedString = inputString;
-                break;
-            } else {
-                size_t quoteStart = inputString.find_first_of("'\"" , offset);
-                if (quoteStart == std::string::npos || quoteStart > commentPos) {
-                    uncommentedString = inputString.substr(0 , commentPos );
-                    break;
-                } else {
-                    char quoteChar = inputString[quoteStart];
-                    size_t quoteEnd = inputString.find( quoteChar , quoteStart + 1);
-                    if (quoteEnd == std::string::npos) {
-                        // Quotes are not balanced - probably an error?!
-                        uncommentedString = inputString;
-                        break;
-                    } else
-                        offset = quoteEnd + 1;
-                }
-            }
-        }
+    template< typename Itr >
+    static inline Itr strip_comments( Itr begin, Itr end ) {
 
-        return uncommentedString;
+        auto pos = find_comment( begin, end );
+
+        if( pos == end ) return end;
+
+        auto qbegin = std::find_if( begin, end, RawConsts::is_quote );
+
+        if( qbegin == end || qbegin > pos )
+            return pos;
+
+        auto qend = std::find( qbegin + 1, end, *qbegin );
+
+        // Quotes are not balanced - probably an error?!
+        if( qend == end ) return end;
+
+        return strip_comments( qend + 1, end );
     }
 
+    static inline std::string& strip_comments( std::string& str ) {
+        str.erase( strip_comments( str.begin(), str.end() ), str.end() );
+        return str;
+    }
+
+    /* stripComments only exists so that the unit tests can verify it.
+     * strip_comment is the actual (internal) implementation
+     */
+    std::string Parser::stripComments( const std::string& str ) {
+        return { str.begin(), strip_comments( str.begin(), str.end() ) };
+    }
 
     /*
      About INCLUDE: Observe that the ECLIPSE parser is slightly unlogical
@@ -501,7 +511,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
         std::string line;
         while (std::getline(*parserState->inputstream, line)) {
             if (line.find("--") != std::string::npos)
-                line = stripComments( line );
+                line = strip_comments( line );
 
             line = trim_right( line ); // Removing garbage (eg. \r)
             line = doSpecialHandlingForTitleKeyword(line, parserState);
