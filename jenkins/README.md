@@ -8,4 +8,4 @@ testing and cloning modules.
 This expects to run on a jenkins instance with opm-common as the 'origin' remote.
 
 It will build and test opm-common. It can be used both for post-merge builds
-of the master branch and for a github pull request builder job.
+of the master branch and for a github pull request builder job. hoi hoi
