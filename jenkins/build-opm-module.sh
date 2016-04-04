@@ -27,7 +27,7 @@ function clone_module {
   git remote add origin https://github.com/OPM/$1
   git fetch origin $2:branch_to_build
   git checkout branch_to_build
-  test $? - eq 0 || exit 1
+  test $? -eq 0 || exit 1
   popd
 }
 
