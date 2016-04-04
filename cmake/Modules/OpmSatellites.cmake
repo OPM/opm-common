@@ -160,6 +160,10 @@ macro (opm_data satellite target dirname)
 	DEPENDS ${${satellite}_INPUT_FILES}
 	COMMENT "Making \"${satellite}\" data available in output tree"
 	)
+  if(NOT TARGET test-suite)
+    add_custom_target(test-suite)
+  endif()
+  add_dependencies(test-suite ${${satellite}_DATAFILES})
 endmacro (opm_data satellite target dirname files)
 
 # Add a single unit test (can be orchestrated by the 'ctest' command)
