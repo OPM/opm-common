@@ -66,6 +66,9 @@ namespace Opm {
     ///Message container is used to replace OpmLog functionalities.
     class MessageContainer {
     public:
+
+        using const_iterator = std::vector< Message >::const_iterator;
+
         void error(const std::string& msg, const std::string& filename, const int lineno);
         void error(const std::string& msg);
 
@@ -87,8 +90,8 @@ namespace Opm {
         void add( const Message& );
         void add( Message&& );
 
-        std::vector<Message>::const_iterator begin() const;
-        std::vector<Message>::const_iterator end() const;
+        const_iterator begin() const;
+        const_iterator end() const;
     private:
         std::vector<Message> m_messages;
     };
