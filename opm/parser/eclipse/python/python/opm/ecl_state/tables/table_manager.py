@@ -6,7 +6,7 @@ from opm import OPMPrototype
 
 class TableManager(BaseCClass):
     TYPE_NAME   = "table_manager"
-    _alloc      = OPMPrototype("void*     table_manager_alloc(deck)")
+    _alloc      = OPMPrototype("void*     table_manager_alloc(deck)" , bind = False)
     _free       = OPMPrototype("void*     table_manager_free(table_manager)")
     _has_table  = OPMPrototype("bool      table_manager_has_table(table_manager , char*) ")
     _num_tables = OPMPrototype("int       table_manager_num_tables(table_manager , char*) ")    
@@ -19,7 +19,7 @@ class TableManager(BaseCClass):
 
         
     def __contains__(self,table_name):
-        return self._has_table( self , table_name )
+        return self._has_table( table_name )
 
         
     def free(self):
@@ -34,7 +34,7 @@ class TableManager(BaseCClass):
            print("Have SWOF")
 
         """
-        return self._has_table( self , name )
+        return self._has_table(  name )
 
 
     def numTables(self, name):
@@ -46,7 +46,7 @@ class TableManager(BaseCClass):
         tables explicitly added to the deck, and thoe which are
         implicitly available through default behaviour.
         """
-        return self._num_tables( self , name )
+        return self._num_tables( name )
     
 
     def getTable(self , name , num = 0):
@@ -56,6 +56,6 @@ class TableManager(BaseCClass):
         if num >= self.numTables( name ):
             raise IndexError("For table:%s allocwd num range is [0,%d)" % (name , self.numTables(name) - 1))
 
-        table = self._get_table(self , name , num )
+        table = self._get_table(name , num )
         table.setParent( self )
         return table

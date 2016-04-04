@@ -4,10 +4,10 @@ from opm import OPMPrototype
 from opm.log import MessageType
 
 class OpmLog(BaseCClass):
-    _add_file_log   = OPMPrototype("void add_file_log( char* , int64 )")
-    _add_stderr_log = OPMPrototype("void add_stderr_log( int64 )")
-    _add_stdout_log = OPMPrototype("void add_stdout_log( int64 )")
-    _add_message    = OPMPrototype("void log_add_message( int64 , char* )")
+    _add_file_log   = OPMPrototype("void add_file_log( char* , int64 )", bind = False)
+    _add_stderr_log = OPMPrototype("void add_stderr_log( int64 )" , bind = False)
+    _add_stdout_log = OPMPrototype("void add_stdout_log( int64 )" , bind = False)
+    _add_message    = OPMPrototype("void log_add_message( int64 , char* )" , bind = False)
 
     def __init__(self):
         raise Exception("Can not instantiate - just use class methods")

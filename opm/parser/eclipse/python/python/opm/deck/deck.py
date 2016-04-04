@@ -3,7 +3,7 @@ from opm import OPMPrototype
 
 class Deck(BaseCClass):
     TYPE_NAME = "deck"
-    _alloc              = OPMPrototype("void* deck_alloc()")
+    _alloc              = OPMPrototype("void* deck_alloc()" , bind = False)
     _free               = OPMPrototype("void  deck_free(deck)")
     _size               = OPMPrototype("int   deck_size(deck)")
     _iget_keyword       = OPMPrototype("deck_keyword_ref  deck_iget_keyword(deck , int)")
@@ -21,31 +21,31 @@ class Deck(BaseCClass):
         """
         Will return the number of keywords in the deck.
         """
-        return self._size(self)
+        return self._size()
 
 
     def __contains__(self , keyword):
         """
         Will return True if the deck has at least one occurence of @keword.
         """
-        return self._has_keyword(self , keyword)
+        return self._has_keyword(keyword)
 
 
     def numKeywords(self , keyword):
         """
         Will count the number of occurences of @keyword.
         """
-        return self._num_keywords(self , keyword)
+        return self._num_keywords(keyword)
 
 
     def __igetKeyword(self , index):
-        keyword = self._iget_keyword( self , index )
+        keyword = self._iget_keyword(index )
         keyword.setParent( self )
         return keyword
 
     
     def __igetNamedKeyword(self , name , index):
-        keyword = self._iget_named_keyword( self , name , index )
+        keyword = self._iget_named_keyword( name , index )
         keyword.setParent( self )
         return keyword
         

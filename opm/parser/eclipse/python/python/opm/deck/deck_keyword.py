@@ -4,7 +4,7 @@ from opm import OPMPrototype
 class DeckKeyword(BaseCClass):
     TYPE_NAME = "deck_keyword"
 
-    _alloc       = OPMPrototype("void* deck_keyword_alloc( char* )")
+    _alloc       = OPMPrototype("void* deck_keyword_alloc( char* )" , bind = False)
     _get_name    = OPMPrototype("char* deck_keyword_get_name( deck_keyword )")
     _size        = OPMPrototype("int deck_keyword_get_size( deck_keyword )")
     _free        = OPMPrototype("void deck_keyword_free( deck_keyword )")
@@ -18,7 +18,7 @@ class DeckKeyword(BaseCClass):
         """
         Returns the number of records in the keyword.
         """
-        return self._size( self )
+        return self._size( )
 
     def __getitem__(self , index):
         """
@@ -28,7 +28,7 @@ class DeckKeyword(BaseCClass):
             index += len(self)
             
         if 0 <= index < len(self):
-            record = self._iget_record( self , index )
+            record = self._iget_record( index )
             record.setParent( self )
             return record
         else:
@@ -38,10 +38,10 @@ class DeckKeyword(BaseCClass):
         return self.name()
 
     def name(self):
-        return self._get_name( self )
+        return self._get_name( )
 
     
     def free(self):
-        self._free( self )
+        self._free( )
     
 

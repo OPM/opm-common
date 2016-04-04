@@ -31,11 +31,11 @@ class DeckRecord(BaseCClass):
         The length variable will have the value 4 - because the DATES
         item has an optional fourth item 'TIME' with a default value.
         """
-        return self._size( self )
+        return self._size( )
 
 
     def __contains__(self , item):
-        return self._has_item( self , item )
+        return self._has_item( item )
     
     
     def __getitem__(self , index):
@@ -47,14 +47,14 @@ class DeckRecord(BaseCClass):
                 index += len(self)
 
             if 0 <= index < len(self):
-                item = self._iget_item( self , index )
+                item = self._iget_item( index )
                 item.setParent( self )
                 return item
             else:
                 raise IndexError("Invalid index:%d  -valid range [0,%d)" % (index , len(self)))
         elif isinstance(index,str):
             if index in self:
-                item = self._get_item( self , index )
+                item = self._get_item(  index )
                 item.setParent( self )
                 return item
             else:

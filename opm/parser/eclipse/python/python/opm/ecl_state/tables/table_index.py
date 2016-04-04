@@ -14,4 +14,4 @@ class TableIndex(BaseCClass):
 
 
     def free(self):
-        self._free( self )
+        self._free( )

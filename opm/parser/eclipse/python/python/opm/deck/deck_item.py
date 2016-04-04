@@ -21,12 +21,12 @@ class DeckItem(BaseCClass):
         """
         Returns the number of values in the item.
         """
-        return self._size( self )
+        return self._size( )
     
 
     def assertType(self):
         if not hasattr(self,"value_type"):
-            self.value_type = self._get_type( self )
+            self.value_type = self._get_type( )
 
             if self.value_type == ItemType.INTEGER:
                 self.iget = self._iget_int
@@ -48,7 +48,7 @@ class DeckItem(BaseCClass):
             if index < 0:
                 index += len(self)
             if 0 <= index < len(self):
-                return self.iget( self , index )
+                return self.iget( index )
             else:
                 raise IndexError("Invalid index:%d  -valid range [0,%d)" % (index , len(self)))
         else:
