@@ -80,7 +80,7 @@ namespace Opm {
     public:
         ParseContext();
         ParseContext(const std::vector<std::pair<std::string , InputError::Action>> initial);
-        void handleError( const std::string& errorKey , const std::string& msg) const;
+        Message::type handleError( const std::string& errorKey, const std::string& msg ) const;
         bool hasKey(const std::string& key) const;
         void updateKey(const std::string& key , InputError::Action action);
         void update(InputError::Action action);
@@ -88,8 +88,6 @@ namespace Opm {
         InputError::Action get(const std::string& key) const;
         std::map<std::string,InputError::Action>::const_iterator begin() const;
         std::map<std::string,InputError::Action>::const_iterator end() const;
-        const MessageContainer& getMessageContainer() const;
-        MessageContainer& getMessageContainer();
         /*
           When the key is added it is inserted in 'strict mode',
           i.e. with the value 'InputError::THROW_EXCEPTION. If you
@@ -199,7 +197,6 @@ namespace Opm {
         void envUpdate( const std::string& envVariable , InputError::Action action );
         void patternUpdate( const std::string& pattern , InputError::Action action);
         std::map<std::string , InputError::Action> m_errorContexts;
-        MessageContainer m_messageContainer;
 }; }
 
 

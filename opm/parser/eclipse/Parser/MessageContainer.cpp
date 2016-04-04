@@ -28,35 +28,28 @@ namespace Opm {
     void MessageContainer::error( const std::string& msg,
                                   const std::string& filename,
                                   const int lineno ) {
-        m_messages.emplace_back( Message {
-            MessageType::MessageTypeEnum::Error, msg,
-            { filename, lineno } }
+        m_messages.emplace_back(
+            Message { Message::Error, msg, Location { filename, lineno } }
         );
     }
 
 
     void MessageContainer::error( const std::string& msg ) {
-        m_messages.emplace_back(
-            Message { MessageType::MessageTypeEnum::Error, msg, {} }
-        );
+        m_messages.emplace_back( Message { Message::Error, msg, {} } );
     }
 
 
     void MessageContainer::bug( const std::string& msg,
                                 const std::string& filename,
                                 const int lineno ) {
-        m_messages.emplace_back( Message {
-                MessageType::MessageTypeEnum::Bug, msg,
-                { filename, lineno }
-            }
+        m_messages.emplace_back(
+            Message { Message::Bug, msg, { filename, lineno } }
         );
     }
 
 
     void MessageContainer::bug( const std::string& msg ) {
-        m_messages.emplace_back(
-            Message { MessageType::MessageTypeEnum::Bug, msg,{} }
-        );
+        m_messages.emplace_back( Message { Message::Bug, msg, {} } );
     }
 
 
@@ -64,8 +57,7 @@ namespace Opm {
                                     const std::string& filename,
                                     const int lineno ) {
         m_messages.emplace_back( Message {
-                MessageType::MessageTypeEnum::Warning, msg,
-                { filename, lineno }
+                Message::Warning, msg, { filename, lineno }
             }
         );
     }
@@ -73,7 +65,7 @@ namespace Opm {
 
     void MessageContainer::warning( const std::string& msg ) {
         m_messages.emplace_back(
-            Message { MessageType::MessageTypeEnum::Warning, msg,{} }
+            Message { Message::Warning, msg,{} }
         );
     }
 
@@ -82,54 +74,42 @@ namespace Opm {
     void MessageContainer::info( const std::string& msg,
                                  const std::string& filename,
                                  const int lineno ) {
-        m_messages.emplace_back( Message {
-                MessageType::MessageTypeEnum::Info, msg,
-                { filename, lineno }
-            }
+        m_messages.emplace_back(
+            Message { Message::Info, msg, { filename, lineno } }
         );
     }
 
 
     void MessageContainer::info( const std::string& msg ) {
-        m_messages.emplace_back(
-            Message { MessageType::MessageTypeEnum::Info, msg,{} }
-        );
+        m_messages.emplace_back( Message { Message::Info, msg, {} } );
     }
 
 
     void MessageContainer::debug( const std::string& msg,
                                   const std::string& filename,
                                   const int lineno ) {
-        m_messages.emplace_back( Message {
-                MessageType::MessageTypeEnum::Debug, msg,
-                { filename, lineno }
-            }
+        m_messages.emplace_back(
+            Message { Message::Debug, msg, { filename, lineno } }
         );
     }
 
 
     void MessageContainer::debug( const std::string& msg ) {
-        m_messages.emplace_back(
-            Message { MessageType::MessageTypeEnum::Debug, msg,{} }
-        );
+        m_messages.emplace_back( Message { Message::Debug, msg, {} } );
     }
 
 
     void MessageContainer::problem( const std::string& msg,
                                     const std::string& filename,
                                     const int lineno ) {
-        m_messages.emplace_back( Message {
-                MessageType::MessageTypeEnum::Problem, msg,
-                { filename, lineno }
-            }
+        m_messages.emplace_back(
+            Message { Message::Problem, msg, { filename, lineno } }
         );
     }
 
 
     void MessageContainer::problem( const std::string& msg ) {
-        m_messages.emplace_back(
-            Message { MessageType::MessageTypeEnum::Problem, msg, {} }
-        );
+        m_messages.emplace_back( Message { Message::Problem, msg, {} } );
     }
 
     void MessageContainer::add( const Message& msg ) {

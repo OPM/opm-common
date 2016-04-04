@@ -26,9 +26,18 @@
 
 namespace Opm {
 
-    namespace MessageType {
+    struct Location {
+        Location() = default;
+        Location( const std::string& fn, int ln ) :
+            filename( fn ), lineno( ln ) {}
 
-        enum MessageTypeEnum {
+        std::string filename;
+        int lineno = -1;
+
+        explicit operator bool() const {
+            return lineno > 0;
+        }
+    };
 
     struct Message {
         enum type {
@@ -40,24 +49,14 @@ namespace Opm {
             Bug       = 6
         };
 
-    } // namespace MessageType
+        Message( type mt, const std::string& msg, Location&& loc ) :
+            mtype( mt ), message( msg ), location( std::move( loc ) ) {}
+
+        Message( type mt, const std::string& msg ) :
+            mtype( mt ), message( msg ) {}
 
 
-    struct Location {
-        Location() = default;
-        Location( const std::string& s, int l ) : filename( s ), lineno( l ) {}
-
-        std::string filename;
-        int lineno = -1;
-
-        explicit operator bool() const {
-            return lineno > 0;
-        }
-    };
-
-
-    struct Message {
-        MessageType::MessageTypeEnum mtype;
+        type mtype;
         std::string message;
         Location location;
     };
