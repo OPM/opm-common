@@ -33,13 +33,13 @@ using namespace std;
 
 namespace Opm {
 
-    static inline size_t findTerminatingSlash( const std::string& rec ) {
+    static inline std::string::const_iterator findTerminatingSlash( const std::string& rec ) {
 
-        if( rec.back() == RawConsts::slash ) return rec.size() - 1;
+        if( rec.back() == RawConsts::slash ) return rec.end() - 1;
 
         /* possible fast path: no terminating slash in record */
-        const auto slash = rec.find_last_of( RawConsts::slash );
-        if( slash == std::string::npos ) return std::string::npos;
+        const auto rslash = std::find( rec.rbegin(), rec.rend(), RawConsts::slash );
+        if( rslash == rec.rend() ) return rec.end();
 
         /* heuristic: since slash makes everything to the right of it into a
          * no-op, if there is more than whitespace to its right before newline
@@ -48,7 +48,8 @@ namespace Opm {
          * and it is slower, so avoid doing it if possible.
          */
 
-        if( std::find_if_not( rec.begin() + slash, rec.end(), RawConsts::is_separator ) == rec.end() )
+        auto slash = (rslash + 1).base();
+        if( std::find_if_not( slash, rec.end(), RawConsts::is_separator ) == rec.end() )
             return slash;
 
         /*
@@ -59,9 +60,9 @@ namespace Opm {
          * will always be quoted.
          */
 
-        const auto quote = rec.find_last_of( RawConsts::quote );
-        const auto begin = quote == std::string::npos ? 0 : quote;
-        return rec.find_first_of( RawConsts::slash, begin );
+        const auto quote = std::find( rec.rbegin(), rec.rend(), RawConsts::quote );
+        const auto begin = quote == rec.rend() ? rec.begin() : (quote + 1).base();
+        return std::find( begin, rec.end(), RawConsts::slash );
     }
 
     static inline std::string::const_iterator first_nonspace (
@@ -113,16 +114,19 @@ namespace Opm {
         return std::count( str.begin(), str.end(), RawConsts::quote ) % 2 == 0;
     }
 
-    static inline std::string trim_record( std::string&& str ) {
-        std::string local( std::move( str ) );
-        local.resize( findTerminatingSlash( local ) );
-        return local;
+    static inline std::string&& trim_record( std::string& str ) {
+        auto end = findTerminatingSlash( str );
+        /* type hack to work around findTerminatingSlash returning a const_iterator */
+        std::string::iterator mut_end( str.begin() );
+        std::advance( mut_end, std::distance< decltype( end ) >( mut_end, end ) );
+        str.erase( mut_end, str.end() );
+        return std::move( str );
     }
 
     RawRecord::RawRecord(std::string&& singleRecordString,
                          const std::string& fileName,
                          const std::string& keywordName) :
-        m_sanitizedRecordString( trim_record( std::move( singleRecordString ) ) ),
+        m_sanitizedRecordString( trim_record( singleRecordString ) ),
         m_recordItems( splitSingleRecordString( m_sanitizedRecordString ) ),
         m_fileName(fileName),
         m_keywordName(keywordName)
@@ -165,7 +169,7 @@ namespace Opm {
 
     bool RawRecord::isTerminatedRecordString(const std::string& candidateRecordString) {
         const auto terminatingSlash = findTerminatingSlash(candidateRecordString);
-        bool hasTerminatingSlash = terminatingSlash < candidateRecordString.size();
+        bool hasTerminatingSlash = terminatingSlash != candidateRecordString.end();
         return hasTerminatingSlash && even_quotes( candidateRecordString );
     }
 
