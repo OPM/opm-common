@@ -1378,7 +1378,8 @@ void EclipseWriter::writeTimeStep(const SimulatorTimerInterface& timer,
         auto unit_type = eclipseState_->getDeckUnitSystem().getType();
         ert_ecl_unit_enum ecl_unit = convertUnitTypeErtEclUnitEnum(unit_type);
         std::vector<WellConstPtr> wells = eclipseState_->getSchedule()->getWells(timer.reportStepNum());
-        eclipseWriteRFTHandler->writeTimeStep(rft_filename,
+        eclipseWriteRFTHandler->writeTimeStep(*ioConfig,
+                                              rft_filename,
                                               ecl_unit,
                                               timer,
                                               wells,

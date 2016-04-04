@@ -31,6 +31,7 @@
 namespace Opm {
     class EclipseGrid;
     class Well;
+    class IOConfig;
 
 namespace EclipseWriterDetails {
 
@@ -41,7 +42,8 @@ namespace EclipseWriterDetails {
     EclipseWriteRFTHandler(const int * compressedToCartesianCellIdx, size_t numCells, size_t cartesianSize);
 
 
-    void writeTimeStep(const std::string& filename,
+    void writeTimeStep(const IOConfig& ioConfig,
+                       const std::string& filename,
                        const ert_ecl_unit_enum ecl_unit,
                        const SimulatorTimerInterface& simulatorTimer,
                        std::vector<std::shared_ptr< const Well >>& wells,
