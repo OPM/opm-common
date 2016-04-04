@@ -487,16 +487,28 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
         return line;
     }
 
-    static inline std::string& trim_right( std::string& str ) {
-        /* because cctype functions can be macros, manually find the
-         * position to erase from. Written using isspace for performance.
-         */
+    template< typename Itr >
+    static inline Itr trim_left( Itr begin, Itr end ) {
 
-        size_t i = str.size();
-        for( ; i >= 1; --i )
-            if( !isspace( str[ i - 1 ] ) ) break;
+        const auto ws = []( char ch ) { return std::isspace( ch ); };
+        return std::find_if_not( begin, end, ws );
+    }
 
-        return str.erase( i );
+    template< typename Itr >
+    static inline Itr trim_right( Itr begin, Itr end ) {
+
+        const auto ws = []( char ch ) { return std::isspace( ch ); };
+
+        std::reverse_iterator< Itr > rbegin( end );
+        std::reverse_iterator< Itr > rend( begin );
+
+        return std::find_if_not( rbegin, rend, ws ).base();
+    }
+
+    static inline std::string& trim( std::string& str ) {
+        auto fst = trim_left( str.begin(), str.end() );
+        auto lst = trim_right( fst, str.end() );
+        return str.assign( fst, lst );
     }
 
     bool Parser::tryParseKeyword(std::shared_ptr<ParserState> parserState) const {
@@ -510,11 +522,9 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
 
         std::string line;
         while (std::getline(*parserState->inputstream, line)) {
-            if (line.find("--") != std::string::npos)
-                line = strip_comments( line );
-
-            line = trim_right( line ); // Removing garbage (eg. \r)
-            line = doSpecialHandlingForTitleKeyword(line, parserState);
+            line = strip_comments( line );
+            line = trim( line ); // Removing garbage (eg. \r)
+            doSpecialHandlingForTitleKeyword(line, parserState);
             std::string keywordString;
             parserState->lineNR++;
 
