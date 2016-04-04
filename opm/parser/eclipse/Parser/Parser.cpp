@@ -375,7 +375,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
                     }
                 }
                 else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::include) {
-                    auto& firstRecord = parserState->rawKeyword->getRecord(0);
+                    auto& firstRecord = parserState->rawKeyword->getFirstRecord( );
                     std::string includeFileAsString = readValueToken<std::string>(firstRecord.getItem(0));
                     boost::filesystem::path includeFile = getIncludeFilePath(*parserState, includeFileAsString);
                     std::shared_ptr<ParserState> newParserState = parserState->includeState( includeFile );

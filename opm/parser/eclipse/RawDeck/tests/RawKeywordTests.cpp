@@ -88,11 +88,6 @@ BOOST_AUTO_TEST_CASE(addRecord_singleRecord_recordAdded) {
     BOOST_CHECK_EQUAL(1U, keyword.size());
 }
 
-BOOST_AUTO_TEST_CASE(getRecord_outOfRange_throws) {
-    RawKeyword keyword("TEST", Raw::SLASH_TERMINATED , "FILE" , 10U);
-    keyword.addRawRecordString("test 1 3 4 /");
-    BOOST_CHECK_THROW(keyword.getRecord(1), std::out_of_range);
-}
 
 
 
@@ -141,10 +136,6 @@ BOOST_AUTO_TEST_CASE(isFinished_FixedsizeMulti) {
     BOOST_CHECK(  !keyword.isFinished() );
     keyword.addRawRecordString("1 2 3 3 /");
     BOOST_CHECK(  keyword.isFinished() );
-
-    const auto& record = keyword.getRecord(3);
-    BOOST_CHECK_EQUAL( 4U , record.size() );
-
 }
 
 BOOST_AUTO_TEST_CASE(isTableCollection) {
