@@ -40,7 +40,7 @@ function clone_and_build_module {
   pushd .
   mkdir $4/build-$1
   cd $4/build-$1
-  build_module $2 0 $WORKSPACE/deps/$1
+  build_module "$2" 0 $WORKSPACE/deps/$1
   test $? -eq 0 || exit 1
   popd
 }
