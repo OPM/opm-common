@@ -8,12 +8,12 @@ function build_module {
   test $? -eq 0 || exit 1
   if test $2 -eq 1
   then
-    make test-suite
+    cmake --build . --target test-suite
     test $? -eq 0 || exit 2
     ctest -T Test --no-compress-output
     $WORKSPACE/deps/opm-common/jenkins/convert.py -x $WORKSPACE/deps/opm-common/jenkins/conv.xsl -t . > testoutput.xml
   else
-    make install
+    cmake --build . --target install
   fi
 }
 
