@@ -363,25 +363,28 @@ std::vector<std::string> Parser::getAllDeckNames () const {
 }
 
 bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
-    bool stopParsing = false;
-
     if( !parserState->inputstream )
         throw std::invalid_argument("Failed to open file: " + parserState->dataFile.string());
-
+    /*
+     * Returns true if the parent (calling) parseState should stop parsing and
+     * false otherwise. The stop conditions are:
+     *
+     * * Encountering the END keyword
+     * * A keyword is malformed
+     */
     while (true) {
 
         const bool streamOK = tryParseKeyword(parserState);
         if( !parserState->rawKeyword && !streamOK )
-            break;
+            return false;
 
-        if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::end) {
-            stopParsing = true;
-            break;
-        }
-        else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::endinclude) {
-            break;
-        }
-        else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::paths) {
+        if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::end)
+            return true;
+
+        if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::endinclude)
+            return false;
+
+        if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::paths) {
             for( const auto& record : *parserState->rawKeyword ) {
                 std::string pathName = readValueToken<std::string>(record.getItem(0));
                 std::string pathValue = readValueToken<std::string>(record.getItem(1));
@@ -395,8 +398,9 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
             std::shared_ptr<ParserState> newParserState = parserState->includeState( includeFile );
 
 
-            stopParsing = parseState(newParserState);
-            if (stopParsing) break;
+            const auto stop = parseState(newParserState);
+            if( stop ) return true;
+
         } else {
 
             if (isRecognizedKeyword(parserState->rawKeyword->getKeywordName())) {
@@ -411,10 +415,9 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
                 parserState->deck->getMessageContainer().warning(parserState->dataFile.string(), msg, parserState->lineNR);
             }
         }
+
         parserState->rawKeyword.reset();
     }
-
-    return stopParsing;
 }
 
 
