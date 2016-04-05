@@ -212,22 +212,13 @@ namespace Opm {
         return true;
     }
 
-    bool ParserKeyword::validInternalName(const std::string& name) {
-        if (name.length() < 2)
-            return false;
-        else if (!std::isalpha(name[0]))
-            return false;
+    bool ParserKeyword::validInternalName( const std::string& name ) {
+        if( name.length() < 2 ) return false;
+        if( !std::isalpha( name[0] ) ) return false;
 
-        for (size_t i = 1; i < name.length(); i++) {
-            char c = name[i];
-            if (!isalnum(c) &&
-                c != '_')
-            {
-                return false;
-            }
-        }
+        const auto ok = []( char c ) { return std::isalnum( c ) || c == '_'; };
 
-        return true;
+        return std::all_of( name.begin() + 1, name.end(), ok );
     }
 
     std::string ParserKeyword::getDeckName(const std::string& rawString)
