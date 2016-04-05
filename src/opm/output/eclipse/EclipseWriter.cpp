@@ -1390,19 +1390,21 @@ void EclipseWriter::writeTimeStep(const SimulatorTimerInterface& timer,
         free( rft_filename );
     }
 
-    /* Summary variables (well reporting) */
-    // TODO: instead of writing the header (smspec) every time, it should
-    // only be written when there is a change in the well configuration
-    // (first timestep, in practice), and reused later. but how to do this
-    // without keeping the complete summary in memory (which will then
-    // accumulate all the timesteps)?
-    //
-    // Note: The answer to the question above is still not settled, but now we do keep
-    // the complete summary in memory, as a member variable in the EclipseWriter class,
-    // instead of creating a temporary EclipseWriterDetails::Summary in this function
-    // every time it is called.  This has been changed so that the final summary file
-    // will contain data from the whole simulation, instead of just the last step.
-    summary_->writeTimeStep(writeStepIdx_, timer, wellState);
+    if (!isSubstep) {
+        /* Summary variables (well reporting) */
+        // TODO: instead of writing the header (smspec) every time, it should
+        // only be written when there is a change in the well configuration
+        // (first timestep, in practice), and reused later. but how to do this
+        // without keeping the complete summary in memory (which will then
+        // accumulate all the timesteps)?
+        //
+        // Note: The answer to the question above is still not settled, but now we do keep
+        // the complete summary in memory, as a member variable in the EclipseWriter class,
+        // instead of creating a temporary EclipseWriterDetails::Summary in this function
+        // every time it is called.  This has been changed so that the final summary file
+        // will contain data from the whole simulation, instead of just the last step.
+        summary_->writeTimeStep(writeStepIdx_, timer, wellState);
+    }
 
     ++writeStepIdx_;
     // store current report index
