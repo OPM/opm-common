@@ -82,15 +82,10 @@ namespace Opm {
     }
 
     bool ParserKeyword::hasDimension() const {
-        if (m_records.size() > 0) {
-            bool hasDim = false;
-            for (auto& record : m_records) {
-                if (record->hasDimension())
-                    hasDim = true;
-            }
-            return hasDim;
-        } else
-            return false;
+        for( const auto& record : m_records )
+            if( record->hasDimension() ) return true;
+
+        return false;
     }
 
 
