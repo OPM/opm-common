@@ -614,14 +614,14 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
 
 
     void Parser::applyUnitsToDeck(Deck& deck) const {
-        for (size_t index=0; index < deck.size(); ++index) {
-            auto& deckKeyword = deck.getKeyword( index );
-            if (isRecognizedKeyword( deckKeyword.name())) {
-                const auto* parserKeyword = getParserKeywordFromDeckName( deckKeyword.name() );
-                if (parserKeyword->hasDimension()) {
-                    parserKeyword->applyUnitsToDeck(deck , deckKeyword);
-                }
-            }
+        for( auto& deckKeyword : deck ) {
+
+            if( !isRecognizedKeyword( deckKeyword.name() ) ) continue;
+
+            const auto* parserKeyword = getParserKeywordFromDeckName( deckKeyword.name() );
+            if( !parserKeyword->hasDimension() ) continue;
+
+            parserKeyword->applyUnitsToDeck(deck , deckKeyword);
         }
     }
 
