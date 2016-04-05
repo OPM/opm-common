@@ -117,6 +117,8 @@ namespace Opm {
             using DeckView::begin;
             using DeckView::end;
 
+            using iterator = std::vector< DeckKeyword >::iterator;
+
             Deck();
             void addKeyword( DeckKeyword&& keyword );
             void addKeyword( const DeckKeyword& keyword );
@@ -132,6 +134,9 @@ namespace Opm {
 
             const std::string getDataFile() const;
             void setDataFile(const std::string& dataFile);
+
+            iterator begin();
+            iterator end();
 
         private:
             Deck( std::vector< DeckKeyword >&& );

@@ -203,4 +203,12 @@ namespace Opm {
         m_dataFile = dataFile;
     }
 
+    Deck::iterator Deck::begin() {
+        return this->keywordList.begin();
+    }
+
+    Deck::iterator Deck::end() {
+        return this->keywordList.end();
+    }
+
 }
