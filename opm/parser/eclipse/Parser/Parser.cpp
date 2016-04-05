@@ -365,54 +365,55 @@ std::vector<std::string> Parser::getAllDeckNames () const {
 bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
     bool stopParsing = false;
 
-    if (parserState->inputstream) {
-        while (true) {
-            bool streamOK = tryParseKeyword(parserState);
-            if (parserState->rawKeyword) {
-                if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::end) {
-                    stopParsing = true;
-                    break;
-                }
-                else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::endinclude) {
-                    break;
-                }
-                else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::paths) {
-                    for( const auto& record : *parserState->rawKeyword ) {
-                            std::string pathName = readValueToken<std::string>(record.getItem(0));
-                            std::string pathValue = readValueToken<std::string>(record.getItem(1));
-                            parserState->pathMap->insert(std::pair<std::string, std::string>(pathName, pathValue));
-                    }
-                }
-                else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::include) {
-                    auto& firstRecord = parserState->rawKeyword->getFirstRecord( );
-                    std::string includeFileAsString = readValueToken<std::string>(firstRecord.getItem(0));
-                    boost::filesystem::path includeFile = getIncludeFilePath(*parserState, includeFileAsString);
-                    std::shared_ptr<ParserState> newParserState = parserState->includeState( includeFile );
+    if( !parserState->inputstream )
+        throw std::invalid_argument("Failed to open file: " + parserState->dataFile.string());
 
-
-                    stopParsing = parseState(newParserState);
-                    if (stopParsing) break;
-                } else {
-
-                    if (isRecognizedKeyword(parserState->rawKeyword->getKeywordName())) {
-                            const auto* parserKeyword = getParserKeywordFromDeckName(parserState->rawKeyword->getKeywordName());
-                            parserState->deck->addKeyword( parserKeyword->parse(parserState->parseContext , parserState->rawKeyword ) );
-                        } else {
-                            DeckKeyword deckKeyword(parserState->rawKeyword->getKeywordName(), false);
-                            const std::string msg = "The keyword " + parserState->rawKeyword->getKeywordName() + " is not recognized";
-                            deckKeyword.setLocation(parserState->rawKeyword->getFilename(),
-                                                     parserState->rawKeyword->getLineNR());
-                            parserState->deck->addKeyword( std::move( deckKeyword ) );
-                            parserState->deck->getMessageContainer().warning(parserState->dataFile.string(), msg, parserState->lineNR);
-                        }
-                    }
-                    parserState->rawKeyword.reset();
-                }
-                if (!streamOK)
-                    break;
+    while (true) {
+        bool streamOK = tryParseKeyword(parserState);
+        if (parserState->rawKeyword) {
+            if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::end) {
+                stopParsing = true;
+                break;
             }
-        } else
-            throw std::invalid_argument("Failed to open file: " + parserState->dataFile.string());
+            else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::endinclude) {
+                break;
+            }
+            else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::paths) {
+                for( const auto& record : *parserState->rawKeyword ) {
+                        std::string pathName = readValueToken<std::string>(record.getItem(0));
+                        std::string pathValue = readValueToken<std::string>(record.getItem(1));
+                        parserState->pathMap->insert(std::pair<std::string, std::string>(pathName, pathValue));
+                }
+            }
+            else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::include) {
+                auto& firstRecord = parserState->rawKeyword->getFirstRecord( );
+                std::string includeFileAsString = readValueToken<std::string>(firstRecord.getItem(0));
+                boost::filesystem::path includeFile = getIncludeFilePath(*parserState, includeFileAsString);
+                std::shared_ptr<ParserState> newParserState = parserState->includeState( includeFile );
+
+
+                stopParsing = parseState(newParserState);
+                if (stopParsing) break;
+            } else {
+
+                if (isRecognizedKeyword(parserState->rawKeyword->getKeywordName())) {
+                        const auto* parserKeyword = getParserKeywordFromDeckName(parserState->rawKeyword->getKeywordName());
+                        parserState->deck->addKeyword( parserKeyword->parse(parserState->parseContext , parserState->rawKeyword ) );
+                    } else {
+                        DeckKeyword deckKeyword(parserState->rawKeyword->getKeywordName(), false);
+                        const std::string msg = "The keyword " + parserState->rawKeyword->getKeywordName() + " is not recognized";
+                        deckKeyword.setLocation(parserState->rawKeyword->getFilename(),
+                                                    parserState->rawKeyword->getLineNR());
+                        parserState->deck->addKeyword( std::move( deckKeyword ) );
+                        parserState->deck->getMessageContainer().warning(parserState->dataFile.string(), msg, parserState->lineNR);
+                    }
+                }
+                parserState->rawKeyword.reset();
+            }
+            if (!streamOK)
+                break;
+        }
+
         return stopParsing;
     }
 
