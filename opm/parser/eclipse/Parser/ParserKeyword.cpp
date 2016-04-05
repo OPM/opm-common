@@ -486,27 +486,23 @@ namespace Opm {
     }
 
     DeckKeyword ParserKeyword::parse(const ParseContext& parseContext , RawKeywordPtr rawKeyword) const {
-        if (rawKeyword->isFinished()) {
-            DeckKeyword keyword( rawKeyword->getKeywordName() );
-            keyword.setLocation(rawKeyword->getFilename(), rawKeyword->getLineNR());
-            keyword.setDataKeyword( isDataKeyword() );
-	    {
-		size_t record_nr = 0;
-		for (auto& rawRecord : *rawKeyword) {
-		    if(m_records.size() > 0) {
-			keyword.addRecord( getRecord( record_nr )->parse( parseContext, rawRecord ) );
-		    }
-		    else {
-			if(rawRecord.size() > 0) {
-			    throw std::invalid_argument("Missing item information " + rawKeyword->getKeywordName());
-			}
-		    }
-		    record_nr++;
-		}
-            }
-            return keyword;
-        } else
+        if( !rawKeyword->isFinished() )
             throw std::invalid_argument("Tried to create a deck keyword from an incomplete raw keyword " + rawKeyword->getKeywordName());
+
+        DeckKeyword keyword( rawKeyword->getKeywordName() );
+        keyword.setLocation( rawKeyword->getFilename(), rawKeyword->getLineNR() );
+        keyword.setDataKeyword( isDataKeyword() );
+
+        size_t record_nr = 0;
+        for( auto& rawRecord : *rawKeyword ) {
+            if( m_records.size() == 0 && rawRecord.size() > 0 )
+                throw std::invalid_argument("Missing item information " + rawKeyword->getKeywordName());
+
+            keyword.addRecord( getRecord( record_nr )->parse( parseContext, rawRecord ) );
+            record_nr++;
+        }
+
+        return keyword;
     }
 
     size_t ParserKeyword::getFixedSize() const {
