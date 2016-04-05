@@ -248,17 +248,11 @@ namespace Opm {
         if (!validNameStart(upperCaseName))
             return false;
 
-        for (size_t i = 1; i < upperCaseName.length(); i++) {
-            char c = upperCaseName[i];
-            if (!isalnum(c) &&
-                c != '-' &&
-                c != '_' &&
-                c != '+')
-            {
-                return false;
-            }
-        }
-        return true;
+        const auto valid = []( char c ) {
+            return std::isalnum( c ) || c == '-' || c == '_' || c == '+';
+        };
+
+        return std::all_of( name.begin() + 1, name.end(), valid );
     }
 
     bool ParserKeyword::hasMultipleDeckNames() const {
