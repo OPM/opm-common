@@ -434,51 +434,52 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
     RawKeywordPtr Parser::createRawKeyword(const std::string& initialLine, std::shared_ptr<ParserState> parserState) const {
         std::string keywordString = ParserKeyword::getDeckName(initialLine);
 
-        if (isRecognizedKeyword(keywordString)) {
-            const auto* parserKeyword = getParserKeywordFromDeckName( keywordString );
-
-            if (parserKeyword->getSizeType() == SLASH_TERMINATED || parserKeyword->getSizeType() == UNKNOWN) {
-                Raw::KeywordSizeEnum rawSizeType;
-                if (parserKeyword->getSizeType() == SLASH_TERMINATED)
-                    rawSizeType = Raw::SLASH_TERMINATED;
-                else
-                    rawSizeType = Raw::UNKNOWN;
-
-                return RawKeywordPtr(new RawKeyword(keywordString , rawSizeType , parserState->dataFile.string(), parserState->lineNR));
-            } else {
-                size_t targetSize;
-
-                if (parserKeyword->hasFixedSize())
-                    targetSize = parserKeyword->getFixedSize();
-                else {
-                    const std::pair<std::string, std::string> sizeKeyword = parserKeyword->getSizeDefinitionPair();
-                    const Deck * deck = parserState->deck;
-                    if (deck->hasKeyword(sizeKeyword.first)) {
-                        const auto& sizeDefinitionKeyword = deck->getKeyword(sizeKeyword.first);
-                        const auto& record = sizeDefinitionKeyword.getRecord(0);
-                        targetSize = record.getItem( sizeKeyword.second ).get< int >( 0 );
-                    } else {
-                        std::string msg = "Expected the kewyord: " + sizeKeyword.first + " to infer the number of records in: " + keywordString;
-                        parserState->parseContext.handleError(ParseContext::PARSE_MISSING_DIMS_KEYWORD , msg );
-
-                        auto keyword = getKeyword( sizeKeyword.first );
-                        auto record = keyword->getRecord(0);
-                        auto int_item = std::dynamic_pointer_cast<const ParserIntItem>( record->get( sizeKeyword.second ) );
-
-                        targetSize = int_item->getDefault( );
-                    }
-                }
-                return RawKeywordPtr(new RawKeyword(keywordString, parserState->dataFile.string() , parserState->lineNR , targetSize , parserKeyword->isTableCollection()));
+        if( !isRecognizedKeyword( keywordString ) ) {
+            if( ParserKeyword::validDeckName( keywordString ) ) {
+                std::string msg = "Keyword " + keywordString + " not recognized.";
+                parserState->parseContext.handleError( ParseContext::PARSE_UNKNOWN_KEYWORD, msg );
+                return std::shared_ptr< RawKeyword >();
             }
+
+            parserState->handleRandomText( keywordString );
+            return std::shared_ptr< RawKeyword >();
+
+        }
+
+        const auto* parserKeyword = getParserKeywordFromDeckName( keywordString );
+
+        if (parserKeyword->getSizeType() == SLASH_TERMINATED || parserKeyword->getSizeType() == UNKNOWN) {
+            Raw::KeywordSizeEnum rawSizeType;
+            if (parserKeyword->getSizeType() == SLASH_TERMINATED)
+                rawSizeType = Raw::SLASH_TERMINATED;
+            else
+                rawSizeType = Raw::UNKNOWN;
+
+            return RawKeywordPtr(new RawKeyword(keywordString , rawSizeType , parserState->dataFile.string(), parserState->lineNR));
         } else {
-            if (ParserKeyword::validDeckName(keywordString)) {
-                std::string msg = "Keyword " + keywordString + " not recognized ";
-                parserState->parseContext.handleError( ParseContext::PARSE_UNKNOWN_KEYWORD  , msg );
-                return std::shared_ptr<RawKeyword>(  );
-            } else {
-                parserState->handleRandomText( keywordString );
-                return std::shared_ptr<RawKeyword>(  );
+            size_t targetSize;
+
+            if (parserKeyword->hasFixedSize())
+                targetSize = parserKeyword->getFixedSize();
+            else {
+                const std::pair<std::string, std::string> sizeKeyword = parserKeyword->getSizeDefinitionPair();
+                const Deck * deck = parserState->deck;
+                if (deck->hasKeyword(sizeKeyword.first)) {
+                    const auto& sizeDefinitionKeyword = deck->getKeyword(sizeKeyword.first);
+                    const auto& record = sizeDefinitionKeyword.getRecord(0);
+                    targetSize = record.getItem( sizeKeyword.second ).get< int >( 0 );
+                } else {
+                    std::string msg = "Expected the kewyord: " + sizeKeyword.first + " to infer the number of records in: " + keywordString;
+                    parserState->parseContext.handleError(ParseContext::PARSE_MISSING_DIMS_KEYWORD , msg );
+
+                    auto keyword = getKeyword( sizeKeyword.first );
+                    auto record = keyword->getRecord(0);
+                    auto int_item = std::dynamic_pointer_cast<const ParserIntItem>( record->get( sizeKeyword.second ) );
+
+                    targetSize = int_item->getDefault( );
+                }
             }
+            return RawKeywordPtr(new RawKeyword(keywordString, parserState->dataFile.string() , parserState->lineNR , targetSize , parserKeyword->isTableCollection()));
         }
     }
 
