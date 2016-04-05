@@ -31,9 +31,8 @@
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
+#include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
 #include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
-
-#include <boost/algorithm/string.hpp>
 
 namespace Opm {
 
@@ -221,15 +220,15 @@ namespace Opm {
         return std::all_of( name.begin() + 1, name.end(), ok );
     }
 
-    std::string ParserKeyword::getDeckName(const std::string& rawString)
-    {
+    std::string ParserKeyword::getDeckName(const std::string& str ) {
+
+        auto first_sep = std::find_if( str.begin(), str.end(), RawConsts::is_separator );
+
         // only look at the first 8 characters (at most)
-        std::string result = rawString.substr(0, 8);
+        if( std::distance( str.begin(), first_sep ) < 9 )
+            return { str.begin(), first_sep };
 
-        // remove any white space
-        boost::algorithm::trim(result);
-
-        return result;
+        return { str.begin(), str.begin() + 9 };
     }
 
     static inline std::string uppercase( std::string str ) {
