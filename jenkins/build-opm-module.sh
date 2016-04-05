@@ -4,7 +4,7 @@
 # $2 = 0 to build and install module, 1 to build and test module
 # $3 = Source root of module to build
 function build_module {
-  cmake $3 -DCMAKE_BUILD_TYPE=Release $1
+  cmake $3 -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=$2 $1
   test $? -eq 0 || exit 1
   if test $2 -eq 1
   then
