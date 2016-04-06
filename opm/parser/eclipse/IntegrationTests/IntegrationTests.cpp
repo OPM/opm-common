@@ -94,11 +94,11 @@ BOOST_AUTO_TEST_CASE(parse_streamWithWWCTKeyword_deckReturned) {
         "WWCT\n"
         "  'WELL-1' 'WELL-2' / -- Rumpelstilzchen\n"
         "/\n";
-    std::shared_ptr<std::istream> wwctStream(new std::istringstream(wwctString));
+    std::unique_ptr<std::istream> wwctStream(new std::istringstream(wwctString));
     ParserPtr parser = createWWCTParser();
     BOOST_CHECK( parser->isRecognizedKeyword("WWCT"));
     BOOST_CHECK( parser->isRecognizedKeyword("SUMMARY"));
-    BOOST_CHECK_NO_THROW(DeckPtr deck =  parser->parseStream(wwctStream, ParseContext()));
+    BOOST_CHECK_NO_THROW(DeckPtr deck =  parser->parseStream(std::move(wwctStream), ParseContext()));
 }
 
 BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_deckHasWWCT) {

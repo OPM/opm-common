@@ -53,7 +53,7 @@ namespace Opm {
         /// The starting point of the parsing process. The supplied file is parsed, and the resulting Deck is returned.
         std::shared_ptr< Deck > parseFile(const std::string &dataFile, const ParseContext& parseContext) const;
         std::shared_ptr< Deck > parseString(const std::string &data, const ParseContext& parseContext) const;
-        std::shared_ptr< Deck > parseStream(std::shared_ptr<std::istream> inputStream , const ParseContext& parseContext) const;
+        std::shared_ptr< Deck > parseStream(std::unique_ptr<std::istream>&& inputStream , const ParseContext& parseContext) const;
 
         Deck * newDeckFromFile(const std::string &dataFileName, const ParseContext& parseContext) const;
         Deck * newDeckFromString(const std::string &dataFileName, const ParseContext& parseContext) const;

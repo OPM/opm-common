@@ -44,54 +44,66 @@ namespace Opm {
 
 
     struct ParserState {
+
+        struct file {
+            boost::filesystem::path path;
+            std::unique_ptr< std::istream > input;
+            size_t lineNR;
+        };
+
         const ParseContext& parseContext;
         Deck * deck;
-        boost::filesystem::path dataFile;
+
         boost::filesystem::path rootPath;
-        /* the path map is shared between all state instances, as it has global
-         * resolution, i.e. PATHS specified in an included file can be used
-         * from the file that included it.
-         */
-        std::shared_ptr< std::map<std::string, std::string> > pathMap;
-        size_t lineNR;
-        std::shared_ptr<std::istream> inputstream;
+        std::map< std::string, std::string > pathMap;
+        std::list< file > input_files;
+        std::vector< file* > input_stack;
         RawKeywordPtr rawKeyword;
         std::string nextKeyword;
 
+        boost::filesystem::path& current_path() {
+            return this->input_stack.back()->path;
+        }
 
-        ParserState(const ParserState& parent)
-            : parseContext( parent.parseContext )
-        {
-            deck = parent.deck;
-            pathMap = parent.pathMap;
-            rootPath = parent.rootPath;
+        const boost::filesystem::path& current_path() const {
+            return this->input_stack.back()->path;
+        }
+
+        size_t& line() {
+            return this->input_stack.back()->lineNR;
+        }
+
+        const size_t& line() const {
+            return this->input_stack.back()->lineNR;
+        }
+
+        std::istream& input() {
+            return *this->input_stack.back()->input;
+        }
+
+        void pop() {
+            this->input_stack.pop_back();
         }
 
         ParserState(const ParseContext& __parseContext)
             : parseContext( __parseContext ),
-              deck( new Deck() ),
-              pathMap( std::make_shared< std::map< std::string, std::string > >() ),
-              lineNR( 0 )
+              deck( new Deck() )
         {}
 
-        std::shared_ptr<ParserState> includeState(boost::filesystem::path& filename) {
-            std::shared_ptr<ParserState> childState = std::make_shared<ParserState>( *this );
-            childState->openFile( filename );
-            return childState;
-        }
-
-
         void openString(const std::string& input) {
-            dataFile = "";
-            inputstream.reset(new std::istringstream(input));
+            std::unique_ptr< std::istream > ptr( new std::istringstream( input ) );
+            openStream( std::move( ptr ) );
         }
 
 
-        void openStream(std::shared_ptr<std::istream> istream) {
-            dataFile = "";
-            inputstream = istream;
-        }
+        void openStream( std::unique_ptr< std::istream >&& istream ) {
+            file infile { "",
+                    std::move( istream ),
+                    0 };
 
+            this->input_files.push_back( std::move( infile ) );
+            this->input_stack.push_back( &this->input_files.back() );
+        }
 
         void openFile(const boost::filesystem::path& inputFile) {
 
@@ -102,7 +114,7 @@ namespace Opm {
                 throw std::runtime_error(std::string("Parser::openFile fails: ") + fs_error.what());
             }
 
-            std::ifstream *ifs = new std::ifstream(inputFileCanonical.string().c_str());
+            std::unique_ptr< std::ifstream > ifs( new std::ifstream( inputFileCanonical.string() ) );
 
             // make sure the file we'd like to parse is readable
             if (!ifs->is_open()) {
@@ -111,8 +123,10 @@ namespace Opm {
                                          std::string("' is not readable"));
             }
 
-            inputstream.reset( ifs );
-            dataFile = inputFileCanonical;
+
+            file infile { inputFileCanonical, std::move( ifs ), 0 };
+            this->input_files.push_back( std::move( infile ) );
+            this->input_stack.push_back( &this->input_files.back() );
         }
 
         void openRootFile( const boost::filesystem::path& inputFile) {
@@ -136,10 +150,15 @@ namespace Opm {
 
             if (trimmedCopy == "/") {
                 errorKey = ParseContext::PARSE_RANDOM_SLASH;
-                msg << "Extra '/' detected at: " << dataFile << ":" << lineNR;
+                msg << "Extra '/' detected at: "
+                    << this->current_path()
+                    << ":" << this->line();
             } else {
                 errorKey = ParseContext::PARSE_RANDOM_TEXT;
-                msg << "String \'" << keywordString << "\' not formatted/recognized as valid keyword at: " << dataFile << ":" << lineNR;
+                msg << "String \'" << keywordString
+                    << "\' not formatted/recognized as valid keyword at: "
+                    << this->current_path()
+                    << ":" << this->line();
             }
 
             parseContext.handleError( errorKey , msg.str() );
@@ -158,7 +177,7 @@ namespace Opm {
             std::string stringStartingAtPathName = path.substr(positionOfPathName+1);
             size_t cutOffPosition = stringStartingAtPathName.find_first_not_of(validPathNameCharacters);
             std::string stringToFind = stringStartingAtPathName.substr(0, cutOffPosition);
-            std::string stringToReplace = parserState.pathMap->at(stringToFind);
+            std::string stringToReplace = parserState.pathMap.at(stringToFind);
             boost::replace_all(path, pathKeywordPrefix + stringToFind, stringToReplace);
         }
 
@@ -264,9 +283,9 @@ namespace Opm {
         return std::shared_ptr<Deck>( newDeckFromString( data , parseContext));
     }
 
-    DeckPtr Parser::parseStream(std::shared_ptr<std::istream> inputStream, const ParseContext& parseContext) const {
+    DeckPtr Parser::parseStream( std::unique_ptr< std::istream >&& inputStream, const ParseContext& parseContext) const {
         std::shared_ptr<ParserState> parserState = std::make_shared<ParserState>(parseContext);
-        parserState->openStream( inputStream );
+        parserState->openStream( std::move( inputStream ) );
 
         parseState(parserState);
         applyUnitsToDeck(*parserState->deck);
@@ -363,61 +382,61 @@ std::vector<std::string> Parser::getAllDeckNames () const {
 }
 
 bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
-    if( !parserState->inputstream )
-        throw std::invalid_argument("Failed to open file: " + parserState->dataFile.string());
-    /*
-     * Returns true if the parent (calling) parseState should stop parsing and
-     * false otherwise. The stop conditions are:
-     *
-     * * Encountering the END keyword
-     * * A keyword is malformed
-     */
-    while (true) {
+
+    while( !parserState->input_stack.empty() ) {
+
+        parserState->rawKeyword.reset();
+
+        if( !parserState->input().good() ) {
+            parserState->pop();
+            continue;
+        }
 
         const bool streamOK = tryParseKeyword(parserState);
         if( !parserState->rawKeyword && !streamOK )
-            return false;
+            continue;
 
         if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::end)
             return true;
 
-        if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::endinclude)
-            return false;
+        if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::endinclude) {
+            parserState->pop();
+            continue;
+        }
 
         if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::paths) {
             for( const auto& record : *parserState->rawKeyword ) {
                 std::string pathName = readValueToken<std::string>(record.getItem(0));
                 std::string pathValue = readValueToken<std::string>(record.getItem(1));
-                parserState->pathMap->insert(std::pair<std::string, std::string>(pathName, pathValue));
+                parserState->pathMap.emplace( pathName, pathValue );
             }
+
+            continue;
         }
-        else if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::include) {
+
+        if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::include) {
             auto& firstRecord = parserState->rawKeyword->getFirstRecord( );
             std::string includeFileAsString = readValueToken<std::string>(firstRecord.getItem(0));
             boost::filesystem::path includeFile = getIncludeFilePath(*parserState, includeFileAsString);
-            std::shared_ptr<ParserState> newParserState = parserState->includeState( includeFile );
 
-
-            const auto stop = parseState(newParserState);
-            if( stop ) return true;
-
-        } else {
-
-            if (isRecognizedKeyword(parserState->rawKeyword->getKeywordName())) {
-                const auto* parserKeyword = getParserKeywordFromDeckName(parserState->rawKeyword->getKeywordName());
-                parserState->deck->addKeyword( parserKeyword->parse(parserState->parseContext , parserState->rawKeyword ) );
-            } else {
-                DeckKeyword deckKeyword(parserState->rawKeyword->getKeywordName(), false);
-                const std::string msg = "The keyword " + parserState->rawKeyword->getKeywordName() + " is not recognized";
-                deckKeyword.setLocation(parserState->rawKeyword->getFilename(),
-                        parserState->rawKeyword->getLineNR());
-                parserState->deck->addKeyword( std::move( deckKeyword ) );
-                parserState->deck->getMessageContainer().warning(parserState->dataFile.string(), msg, parserState->lineNR);
-            }
+            parserState->openFile( includeFile );
+            continue;
         }
 
-        parserState->rawKeyword.reset();
+        if (isRecognizedKeyword(parserState->rawKeyword->getKeywordName())) {
+            const auto* parserKeyword = getParserKeywordFromDeckName(parserState->rawKeyword->getKeywordName());
+            parserState->deck->addKeyword( parserKeyword->parse(parserState->parseContext , parserState->rawKeyword ) );
+        } else {
+            DeckKeyword deckKeyword(parserState->rawKeyword->getKeywordName(), false);
+            const std::string msg = "The keyword " + parserState->rawKeyword->getKeywordName() + " is not recognized";
+            deckKeyword.setLocation(parserState->rawKeyword->getFilename(),
+                    parserState->rawKeyword->getLineNR());
+            parserState->deck->addKeyword( std::move( deckKeyword ) );
+            parserState->deck->getMessageContainer().warning( parserState->current_path().string(), msg, parserState->lineNR );
+        }
     }
+
+    return true;
 }
 
 
@@ -455,13 +474,15 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
                                    : Raw::UNKNOWN;
 
             return std::make_shared< RawKeyword >( keywordString, rawSizeType,
-                                                   parserState->dataFile.string(),
-                                                   parserState->lineNR );
+                                                   parserState->current_path().string(),
+                                                   parserState->line() );
         }
 
         if( parserKeyword->hasFixedSize() ) {
-            return std::make_shared< RawKeyword >( keywordString, parserState->dataFile.string(),
-                                                   parserState->lineNR, parserKeyword->getFixedSize(),
+            return std::make_shared< RawKeyword >( keywordString,
+                                                   parserState->current_path().string(),
+                                                   parserState->line(),
+                                                   parserKeyword->getFixedSize(),
                                                    parserKeyword->isTableCollection() );
         }
 
@@ -472,8 +493,10 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
             const auto& sizeDefinitionKeyword = deck->getKeyword(sizeKeyword.first);
             const auto& record = sizeDefinitionKeyword.getRecord(0);
             const auto targetSize = record.getItem( sizeKeyword.second ).get< int >( 0 );
-            return std::make_shared< RawKeyword >( keywordString, parserState->dataFile.string(),
-                                                   parserState->lineNR, targetSize,
+            return std::make_shared< RawKeyword >( keywordString,
+                                                   parserState->current_path().string(),
+                                                   parserState->line(),
+                                                   targetSize,
                                                    parserKeyword->isTableCollection() );
         }
 
@@ -487,8 +510,10 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
         const auto int_item = std::dynamic_pointer_cast<const ParserIntItem>( record->get( sizeKeyword.second ) );
 
         const auto targetSize = int_item->getDefault( );
-        return std::make_shared< RawKeyword >( keywordString, parserState->dataFile.string(),
-                                               parserState->lineNR, targetSize,
+        return std::make_shared< RawKeyword >( keywordString,
+                                               parserState->current_path().string(),
+                                               parserState->line(),
+                                               targetSize,
                                                parserKeyword->isTableCollection() );
     }
 
@@ -535,12 +560,12 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
             return true;
 
         std::string line;
-        while (std::getline(*parserState->inputstream, line)) {
+        while (std::getline(parserState->input(), line)) {
             line = strip_comments( line );
             line = trim( line ); // Removing garbage (eg. \r)
             doSpecialHandlingForTitleKeyword(line, parserState);
             std::string keywordString;
-            parserState->lineNR++;
+            parserState->line()++;
 
             // skip empty lines
             if (line.size() == 0)
