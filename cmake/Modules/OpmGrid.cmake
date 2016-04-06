@@ -69,7 +69,7 @@ function (opm_grid_type)
   
 endfunction (opm_grid_type)
 
-# write the grid type for dune-cornerpoint
+# write the grid type for opm-grid
 function (opm_cornerpoint_grid config_h)
   opm_grid_type (
 	FILENAME ${CONFIG_H}
