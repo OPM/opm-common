@@ -25,7 +25,7 @@ function clone_module {
   cd $WORKSPACE/deps/$1
   git init .
   git remote add origin https://github.com/OPM/$1
-  git fetch origin $2:branch_to_build
+  git fetch --depth 1 origin $2:branch_to_build
   git checkout branch_to_build
   test $? -eq 0 || exit 1
   popd
