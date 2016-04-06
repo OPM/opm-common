@@ -330,25 +330,25 @@ void Parser::addParserKeyword(const Json::JsonObject& jsonKeyword) {
 }
 
 
-const ParserKeyword* Parser::getKeyword(const std::string& name ) const {
+const ParserKeyword* Parser::getKeyword( const std::string& name ) const {
     auto iter = m_deckParserKeywords.find( name );
+
     if (iter == m_deckParserKeywords.end())
-        throw std::invalid_argument("Keyword not found");
-    else
-        return iter->second;
+        throw std::invalid_argument( "Keyword '" + name + "' not found" );
+
+    return iter->second;
 }
 
 const ParserKeyword* Parser::getParserKeywordFromDeckName(const std::string& deckKeywordName) const {
-    if (m_deckParserKeywords.count(deckKeywordName)) {
+    if( m_deckParserKeywords.count( deckKeywordName ) )
         return m_deckParserKeywords.at(deckKeywordName);
-    } else {
-        const auto* wildCardKeyword = matchingKeyword( deckKeywordName );
 
-        if (wildCardKeyword)
-            return wildCardKeyword;
-        else
-            throw std::invalid_argument("Do not have parser keyword for parsing: " + deckKeywordName);
-    }
+    const auto* wildCardKeyword = matchingKeyword( deckKeywordName );
+
+    if ( !wildCardKeyword )
+        throw std::invalid_argument("Do not have parser keyword for parsing: " + deckKeywordName);
+
+    return wildCardKeyword;
 }
 
 std::vector<std::string> Parser::getAllDeckNames () const {
