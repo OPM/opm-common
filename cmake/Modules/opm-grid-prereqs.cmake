@@ -2,7 +2,7 @@
 # vim: set filetype=cmake autoindent tabstop=2 shiftwidth=2 noexpandtab softtabstop=2 nowrap:
 
 # defines that must be present in config.h for our headers
-set (dune-cornerpoint_CONFIG_VAR
+set (opm-grid_CONFIG_VAR
 	DUNE_GRID_VERSION_MAJOR
 	DUNE_GRID_VERSION_MINOR
 	DUNE_GRID_VERSION_REVISION
@@ -13,7 +13,7 @@ set (dune-cornerpoint_CONFIG_VAR
 	)
 
 # dependencies
-set (dune-cornerpoint_DEPS
+set (opm-grid_DEPS
 	# compile with C99 support if available
 	"C99"
 	# compile with C++0x/11 support if available

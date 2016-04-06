@@ -63,7 +63,7 @@ set (_opm_proj_exemptions
   )
 
 # although a DUNE module, it is delivered in the OPM suite
-set (dune-cornerpoint_SUITE "opm")
+set (opm-core_SUITE "opm")
 set (ewoms_SUITE "opm")
 
 # insert this boilerplate whenever we are going to find a new package
@@ -87,7 +87,7 @@ macro (find_and_append_package_to prefix name)
 	# module is part of a suite if it has name with the pattern xxx-yyy
 	if (("${name}" MATCHES "[^-]+-.+") OR ${name}_SUITE)
 	  # allow to override if the module doesn't quite fit the convention
-	  # e.g. dune-cornerpoint
+	  # e.g. dune-cornerpoint (since renamed to opm-grid)
 	  if (NOT DEFINED ${name}_SUITE)
 		# extract suite name from module
 		string (REGEX REPLACE "([^-]+)-.+" "\\1" ${name}_SUITE "${name}")

@@ -26,7 +26,9 @@ set (KNOWN_VARS
 
 set (KNOWN_opm_PKGS
 	autodiff
+        common
 	core
+        grid
 	material
 	parser
 	polymer
@@ -37,7 +39,6 @@ set (KNOWN_opm_PKGS
 
 set (KNOWN_dune_PKGS
 	common
-	cornerpoint
 	geometry
 	grid
 	istl
