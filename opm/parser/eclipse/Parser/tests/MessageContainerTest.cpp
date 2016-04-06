@@ -34,8 +34,8 @@ BOOST_AUTO_TEST_CASE(TestIterator) {
     msgContainer.bug("This is a bug.", "dummy.log", 20);
     {       
         BOOST_CHECK_EQUAL("This is an error.", msgContainer.begin()->message);
-        BOOST_CHECK_EQUAL("dummy.log", (msgContainer.end()-1)->location->filename);
-        BOOST_CHECK_EQUAL(20, (msgContainer.end()-1)->location->lineno);
+        BOOST_CHECK_EQUAL("dummy.log", (msgContainer.end()-1)->location.filename);
+        BOOST_CHECK_EQUAL(20, (msgContainer.end()-1)->location.lineno);
     }
     
     MessageContainer msgList;
@@ -51,6 +51,14 @@ BOOST_AUTO_TEST_CASE(TestIterator) {
         BOOST_CHECK_EQUAL(msg.message, msgString[i]);
         i++;
     }
+}
 
+BOOST_AUTO_TEST_CASE(LocationImplicitConversion) {
+    MessageContainer mc;
+    mc.warning( "Warning" );
+    mc.info( "Info", "filename", 10 );
 
+    BOOST_CHECK( !mc.begin()->location );
+    BOOST_CHECK( (mc.begin() + 1)->location );
+    BOOST_CHECK_THROW( mc.info( "msg", "filename", 0 ), std::invalid_argument );
 }

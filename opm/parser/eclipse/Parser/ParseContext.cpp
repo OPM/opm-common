@@ -77,13 +77,19 @@ namespace Opm {
     }
 
 
-    void ParseContext::handleError( const std::string& errorKey , const std::string& msg) const {
+    Message::type ParseContext::handleError(
+            const std::string& errorKey,
+            const std::string& msg ) const {
+
         InputError::Action action = get( errorKey );
 
         if (action == InputError::WARN)
-            OpmLog::addMessage(Log::MessageType::Warning , msg);
+            return Message::Warning;
+
         else if (action == InputError::THROW_EXCEPTION)
             throw std::invalid_argument(errorKey + ": " + msg);
+
+        return Message::Debug;
 
     }
 
@@ -95,19 +101,6 @@ namespace Opm {
     std::map<std::string,InputError::Action>::const_iterator ParseContext::end() const {
         return m_errorContexts.end();
     }
-
-
-    const MessageContainer& ParseContext::getMessageContainer() const
-    {
-        return m_messageContainer;
-    }
-
-
-    MessageContainer& ParseContext::getMessageContainer()
-    {
-        return m_messageContainer;
-    }
-
 
     bool ParseContext::hasKey(const std::string& key) const {
         if (m_errorContexts.find( key ) == m_errorContexts.end())

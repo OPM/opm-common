@@ -20,17 +20,26 @@
 #ifndef MESSAGECONTAINER_H
 #define MESSAGECONTAINER_H
 
-#endif // OPM_MESSAGECONTAINER_HEADER_INCLUDED
-
 #include <string>
 #include <vector>
 #include <memory>
 
 namespace Opm {
 
-    namespace MessageType {
+    struct Location {
+        Location() = default;
+        Location( const std::string&, size_t );
 
-        enum MessageTypeEnum {
+        std::string filename;
+        size_t lineno = 0;
+
+        explicit operator bool() const {
+            return lineno != 0;
+        }
+    };
+
+    struct Message {
+        enum type {
             Debug     = 1,
             Info      = 2,
             Warning   = 3,
@@ -39,47 +48,52 @@ namespace Opm {
             Bug       = 6
         };
 
-    } // namespace MessageType
+        Message( type mt, const std::string& msg, Location&& loc ) :
+            mtype( mt ), message( msg ), location( std::move( loc ) ) {}
+
+        Message( type mt, const std::string& msg ) :
+            mtype( mt ), message( msg ) {}
 
 
-    struct Location {
-        std::string filename;
-        int lineno;
-    };
-
-
-    struct Message {
-        MessageType::MessageTypeEnum mtype;
+        type mtype;
         std::string message;
-        std::unique_ptr<Location> location;
+        Location location;
     };
 
 
     ///Message container is used to replace OpmLog functionalities.
     class MessageContainer {
     public:
-        void error(const std::string& msg, const std::string& filename, const int lineno);
+
+        using const_iterator = std::vector< Message >::const_iterator;
+
+        void error(const std::string& msg, const std::string& filename, const size_t lineno);
         void error(const std::string& msg);
 
-        void bug(const std::string& msg, const std::string& filename, const int lineno);
+        void bug(const std::string& msg, const std::string& filename, const size_t lineno);
         void bug(const std::string& msg);
 
-        void warning(const std::string& msg, const std::string& filename, const int lineno);
+        void warning(const std::string& msg, const std::string& filename, const size_t lineno);
         void warning(const std::string& msg);
 
-        void info(const std::string& msg, const std::string& filename, const int lineno);
+        void info(const std::string& msg, const std::string& filename, const size_t lineno);
         void info(const std::string& msg);
 
-        void debug(const std::string& msg, const std::string& filename, const int lineno);
+        void debug(const std::string& msg, const std::string& filename, const size_t lineno);
         void debug(const std::string& msg);
 
-        void problem(const std::string& msg, const std::string& filename, const int lineno);
+        void problem(const std::string& msg, const std::string& filename, const size_t lineno);
         void problem(const std::string& msg);
 
-        std::vector<Message>::const_iterator begin() const;
-        std::vector<Message>::const_iterator end() const;
+        void add( const Message& );
+        void add( Message&& );
+
+        const_iterator begin() const;
+        const_iterator end() const;
     private:
         std::vector<Message> m_messages;
     };
 
 } // namespace Opm
+
+#endif // OPM_MESSAGECONTAINER_HEADER_INCLUDED
