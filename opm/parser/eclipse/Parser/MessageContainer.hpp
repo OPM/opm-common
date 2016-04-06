@@ -28,14 +28,13 @@ namespace Opm {
 
     struct Location {
         Location() = default;
-        Location( const std::string& fn, int ln ) :
-            filename( fn ), lineno( ln ) {}
+        Location( const std::string&, size_t );
 
         std::string filename;
-        int lineno = -1;
+        size_t lineno = 0;
 
         explicit operator bool() const {
-            return lineno > 0;
+            return lineno != 0;
         }
     };
 
@@ -68,22 +67,22 @@ namespace Opm {
 
         using const_iterator = std::vector< Message >::const_iterator;
 
-        void error(const std::string& msg, const std::string& filename, const int lineno);
+        void error(const std::string& msg, const std::string& filename, const size_t lineno);
         void error(const std::string& msg);
 
-        void bug(const std::string& msg, const std::string& filename, const int lineno);
+        void bug(const std::string& msg, const std::string& filename, const size_t lineno);
         void bug(const std::string& msg);
 
-        void warning(const std::string& msg, const std::string& filename, const int lineno);
+        void warning(const std::string& msg, const std::string& filename, const size_t lineno);
         void warning(const std::string& msg);
 
-        void info(const std::string& msg, const std::string& filename, const int lineno);
+        void info(const std::string& msg, const std::string& filename, const size_t lineno);
         void info(const std::string& msg);
 
-        void debug(const std::string& msg, const std::string& filename, const int lineno);
+        void debug(const std::string& msg, const std::string& filename, const size_t lineno);
         void debug(const std::string& msg);
 
-        void problem(const std::string& msg, const std::string& filename, const int lineno);
+        void problem(const std::string& msg, const std::string& filename, const size_t lineno);
         void problem(const std::string& msg);
 
         void add( const Message& );

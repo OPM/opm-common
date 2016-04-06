@@ -24,10 +24,17 @@
 
 namespace Opm {
 
+    Location::Location( const std::string& fn, size_t ln ) :
+        filename( fn ), lineno( ln )
+    {
+        if( ln == 0 )
+            throw std::invalid_argument( "Invalid line number 0 for file '"
+                                         + fn + "'" );
+    }
 
     void MessageContainer::error( const std::string& msg,
                                   const std::string& filename,
-                                  const int lineno ) {
+                                  const size_t lineno ) {
         m_messages.emplace_back(
             Message { Message::Error, msg, Location { filename, lineno } }
         );
@@ -41,7 +48,7 @@ namespace Opm {
 
     void MessageContainer::bug( const std::string& msg,
                                 const std::string& filename,
-                                const int lineno ) {
+                                const size_t lineno ) {
         m_messages.emplace_back(
             Message { Message::Bug, msg, { filename, lineno } }
         );
@@ -55,7 +62,7 @@ namespace Opm {
 
     void MessageContainer::warning( const std::string& msg,
                                     const std::string& filename,
-                                    const int lineno ) {
+                                    const size_t lineno ) {
         m_messages.emplace_back( Message {
                 Message::Warning, msg, { filename, lineno }
             }
@@ -73,7 +80,7 @@ namespace Opm {
 
     void MessageContainer::info( const std::string& msg,
                                  const std::string& filename,
-                                 const int lineno ) {
+                                 const size_t lineno ) {
         m_messages.emplace_back(
             Message { Message::Info, msg, { filename, lineno } }
         );
@@ -87,7 +94,7 @@ namespace Opm {
 
     void MessageContainer::debug( const std::string& msg,
                                   const std::string& filename,
-                                  const int lineno ) {
+                                  const size_t lineno ) {
         m_messages.emplace_back(
             Message { Message::Debug, msg, { filename, lineno } }
         );
@@ -101,7 +108,7 @@ namespace Opm {
 
     void MessageContainer::problem( const std::string& msg,
                                     const std::string& filename,
-                                    const int lineno ) {
+                                    const size_t lineno ) {
         m_messages.emplace_back(
             Message { Message::Problem, msg, { filename, lineno } }
         );

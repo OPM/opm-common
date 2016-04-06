@@ -60,4 +60,5 @@ BOOST_AUTO_TEST_CASE(LocationImplicitConversion) {
 
     BOOST_CHECK( !mc.begin()->location );
     BOOST_CHECK( (mc.begin() + 1)->location );
+    BOOST_CHECK_THROW( mc.info( "msg", "filename", 0 ), std::invalid_argument );
 }
