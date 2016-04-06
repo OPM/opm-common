@@ -575,40 +575,36 @@ namespace Opm {
         // compare the deck names. we don't care about the ordering of the strings.
         if (m_deckNames != other.m_deckNames)
             return false;
-        {
-            if ((m_name == other.m_name) &&
-                (m_matchRegexString == other.m_matchRegexString) &&
-                (m_keywordSizeType == other.m_keywordSizeType) &&
-                (isDataKeyword() == other.isDataKeyword()) &&
-                (m_isTableCollection == other.m_isTableCollection)) {
 
-                bool equal_ = false;
-                switch (m_keywordSizeType) {
-                case FIXED:
-                    if (m_fixedSize == other.m_fixedSize)
-                        equal_ = true;
-                    break;
-                case OTHER_KEYWORD_IN_DECK:
-                    if ((m_sizeDefinitionPair.first == other.m_sizeDefinitionPair.first) &&
-                        (m_sizeDefinitionPair.second == other.m_sizeDefinitionPair.second))
-                        equal_ = true;
-                    break;
-                default:
-                    equal_ = true;
-                    break;
-                }
-
-                for (size_t recordIndex = 0; recordIndex < m_records.size(); recordIndex++) {
-                    std::shared_ptr<ParserRecord> record = getRecord(recordIndex);
-                    std::shared_ptr<ParserRecord> other_record = other.getRecord(recordIndex);
-
-                    equal_ = equal_ && record->equal( *other_record );
-                }
-
-                return equal_;
-            } else
+        if(    m_name != other.m_name
+            || m_matchRegexString != other.m_matchRegexString
+            || m_keywordSizeType != other.m_keywordSizeType
+            || isDataKeyword() != other.isDataKeyword()
+            || m_isTableCollection != other.m_isTableCollection )
                 return false;
+
+        switch( m_keywordSizeType ) {
+            case FIXED:
+                if( m_fixedSize != other.m_fixedSize )
+                    return false;
+                break;
+
+            case OTHER_KEYWORD_IN_DECK:
+                if(  m_sizeDefinitionPair.first != other.m_sizeDefinitionPair.first
+                  || m_sizeDefinitionPair.second != other.m_sizeDefinitionPair.second )
+                    return false;
+                break;
+
+            default:
+                break;
         }
+
+        for( size_t i = 0; i < m_records.size(); i++ ) {
+            if( !getRecord( i )->equal( *other.getRecord( i ) ) )
+                    return false;
+        }
+
+        return true;
     }
 
 
