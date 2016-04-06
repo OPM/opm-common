@@ -81,27 +81,30 @@ namespace Opm {
     void RawKeyword::addRawRecordString(const std::string& partialRecordString) {
         m_partialRecordString += " " + partialRecordString;
 
-        if (m_sizeType != Raw::FIXED && isTerminator( m_partialRecordString )) {
+
+        if( m_sizeType != Raw::FIXED && isTerminator( m_partialRecordString ) ) {
             if (m_sizeType == Raw::TABLE_COLLECTION) {
                 m_currentNumTables += 1;
                 if (m_currentNumTables == m_numTables) {
                     m_isFinished = true;
                     m_partialRecordString.clear();
+                    return;
                 }
-            } else if (m_sizeType != Raw::UNKNOWN) {
+            } else if( m_sizeType != Raw::UNKNOWN ) {
                 m_isFinished = true;
                 m_partialRecordString.clear();
+                return;
             }
         }
 
-        if (!m_isFinished) {
-            if (RawRecord::isTerminatedRecordString(partialRecordString)) {
-                m_records.emplace_back( std::move( m_partialRecordString ), m_filename, m_name );
-                m_partialRecordString.clear();
+        if( m_isFinished ) return;
 
-                if (m_sizeType == Raw::FIXED && (m_records.size() == m_fixedSize))
-                    m_isFinished = true;
-            }
+        if( RawRecord::isTerminatedRecordString( partialRecordString ) ) {
+            m_records.emplace_back( std::move( m_partialRecordString ), m_filename, m_name );
+            m_partialRecordString.clear();
+
+            if( m_sizeType == Raw::FIXED && m_records.size() == m_fixedSize )
+                m_isFinished = true;
         }
     }
 
