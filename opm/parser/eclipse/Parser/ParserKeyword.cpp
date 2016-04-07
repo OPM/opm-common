@@ -231,21 +231,9 @@ namespace Opm {
         return { str.begin(), str.begin() + 9 };
     }
 
-    static inline std::string uppercase( std::string str ) {
-        /* the cctype toupper etc. are often implemented as macros, so its
-         * unreliable with std algorithms. Hand-rolling map instead
-         */
-        for( auto& c : str ) c = toupper( c );
-        return str;
-    }
-
     bool ParserKeyword::validDeckName(const std::string& name) {
-        // make the keyword string ALL_UPPERCASE because Eclipse seems
-        // to be case-insensitive (although this is one of its
-        // undocumented features...)
-        auto upperCaseName = uppercase( name );
 
-        if (!validNameStart(upperCaseName))
+        if( !validNameStart( name ) )
             return false;
 
         const auto valid = []( char c ) {
@@ -258,7 +246,6 @@ namespace Opm {
     bool ParserKeyword::hasMultipleDeckNames() const {
         return m_deckNames.size() > 1;
     }
-
 
     void ParserKeyword::initDeckNames(const Json::JsonObject& jsonObject) {
         if (!jsonObject.has_item("deck_names"))
