@@ -456,7 +456,7 @@ namespace Opm {
 
         int num_tables = deck.count(ParserKeywords::VFPPROD::keywordName);
         const auto& keywords = deck.getKeywordList<ParserKeywords::VFPPROD>();
-        auto& unit_system = deck.getActiveUnitSystem();
+        const auto& unit_system = deck.getActiveUnitSystem();
         for (int i=0; i<num_tables; ++i) {
             const auto& keyword = *keywords[i];
 
@@ -482,7 +482,7 @@ namespace Opm {
 
         int num_tables = deck.count(ParserKeywords::VFPINJ::keywordName);
         const auto& keywords = deck.getKeywordList<ParserKeywords::VFPINJ>();
-        auto& unit_system = deck.getActiveUnitSystem();
+        const auto& unit_system = deck.getActiveUnitSystem();
         for (int i=0; i<num_tables; ++i) {
             const auto& keyword = *keywords[i];
 

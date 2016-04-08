@@ -76,7 +76,7 @@ namespace Opm {
             const std::vector< double >& assertSIData() const;
             std::unique_ptr< DeckItemBase > clone() const override;
 
-            std::vector< double > SIdata;
+            mutable std::vector< double > SIdata;
             std::vector< std::shared_ptr< const Dimension > > dimensions;
 
             friend class DeckItem;
@@ -222,16 +222,15 @@ namespace Opm {
          * This is an unobservable state change - SIData is lazily converted to
          * SI units, so externally the object still behaves as const
          */
-        auto& data = const_cast< DeckItemT< double >* >( this )->SIdata;
-        data.resize( this->size() );
+        this->SIdata.resize( this->size() );
 
         for( size_t index = 0; index < this->size(); index++ ) {
             const auto dimIndex = ( index % dimensions.size() );
-            data[ index ] = this->dimensions[ dimIndex ]
+            this->SIdata[ index ] = this->dimensions[ dimIndex ]
                                           ->convertRawToSi( this->get( index ) );
         }
 
-        return data;
+        return this->SIdata;
     }
 
     template< typename T >
