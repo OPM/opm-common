@@ -60,7 +60,6 @@ namespace Opm {
 
         std::shared_ptr< Deck > parseFile(const std::string &dataFile, bool strict = true) const;
         std::shared_ptr< Deck > parseString(const std::string &data, bool strict = true) const;
-        std::shared_ptr< Deck > parseStream(std::shared_ptr<std::istream> inputStream , bool strict = true) const;
 
         /// Method to add ParserKeyword instances, these holding type and size information about the keywords and their data.
         void addParserKeyword(const Json::JsonObject& jsonKeyword);

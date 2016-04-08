@@ -46,9 +46,15 @@ namespace Opm {
     struct ParserState {
 
         struct file {
+            file( boost::filesystem::path p, const std::string& in ) :
+                path( p ), input( in )
+            {}
+
+            file( const std::string& in ) : path( "" ), input( in ) {}
+
             boost::filesystem::path path;
-            std::unique_ptr< std::istream > input;
-            size_t lineNR;
+            std::istringstream input;
+            size_t lineNR = 0;
         };
 
         const ParseContext& parseContext;
@@ -56,6 +62,7 @@ namespace Opm {
 
         boost::filesystem::path rootPath;
         std::map< std::string, std::string > pathMap;
+        std::list< std::string > input_strings;
         std::list< file > input_files;
         std::vector< file* > input_stack;
         RawKeywordPtr rawKeyword;
@@ -77,8 +84,8 @@ namespace Opm {
             return this->input_stack.back()->lineNR;
         }
 
-        std::istream& input() {
-            return *this->input_stack.back()->input;
+        std::istringstream& input() {
+            return this->input_stack.back()->input;
         }
 
         void pop() {
@@ -90,49 +97,56 @@ namespace Opm {
               deck( new Deck() )
         {}
 
-        void openString(const std::string& input) {
-            std::unique_ptr< std::istream > ptr( new std::istringstream( input ) );
-            openStream( std::move( ptr ) );
-        }
-
-
-        void openStream( std::unique_ptr< std::istream >&& istream ) {
-            file infile { "",
-                    std::move( istream ),
-                    0 };
-
-            this->input_files.push_back( std::move( infile ) );
+        void loadString(const std::string& input) {
+            this->input_strings.push_back( input );
+            this->input_files.emplace_back( this->input_strings.back() );
             this->input_stack.push_back( &this->input_files.back() );
         }
 
-        void openFile(const boost::filesystem::path& inputFile) {
+        void loadFile(const boost::filesystem::path& inputFile) {
 
             boost::filesystem::path inputFileCanonical;
             try {
                 inputFileCanonical = boost::filesystem::canonical(inputFile);
             } catch (boost::filesystem::filesystem_error fs_error) {
-                throw std::runtime_error(std::string("Parser::openFile fails: ") + fs_error.what());
+                throw std::runtime_error(std::string("Parser::loadFile fails: ") + fs_error.what());
             }
 
-            std::unique_ptr< std::ifstream > ifs( new std::ifstream( inputFileCanonical.string() ) );
+            const auto closer = []( std::FILE* f ) { std::fclose( f ); };
+            std::unique_ptr< std::FILE, decltype( closer ) > ufp(
+                    std::fopen( inputFileCanonical.string().c_str(), "rb" ),
+                    closer
+                );
 
             // make sure the file we'd like to parse is readable
-            if (!ifs->is_open()) {
+            if( !ufp ) {
                 throw std::runtime_error(std::string("Input file '") +
                                          inputFileCanonical.string() +
                                          std::string("' is not readable"));
             }
 
+            /*
+             * read the input file C-style. This is done for performance
+             * reasons, as streams are slow
+             */
+            auto* fp = ufp.get();
+            std::string buffer;
+            std::fseek( fp, 0, SEEK_END );
+            buffer.resize( std::ftell( fp ) );
+            std::rewind( fp );
+            std::fread( &buffer[ 0 ], 1, buffer.size(), fp );
 
-            file infile { inputFileCanonical, std::move( ifs ), 0 };
-            this->input_files.push_back( std::move( infile ) );
+            this->input_strings.push_back( std::move( buffer ) );
+            this->input_files.emplace_back(
+                                inputFileCanonical,
+                                this->input_strings.back() );
+
             this->input_stack.push_back( &this->input_files.back() );
         }
 
         void openRootFile( const boost::filesystem::path& inputFile) {
-            openFile( inputFile );
-            deck->setDataFile(dataFile.string());
-
+            this->loadFile( inputFile );
+            this->deck->setDataFile( inputFile.string() );
             const boost::filesystem::path& inputFileCanonical = boost::filesystem::canonical(inputFile);
             rootPath = inputFileCanonical.parent_path();
         }
@@ -266,7 +280,7 @@ namespace Opm {
 
     Deck * Parser::newDeckFromString(const std::string &data, const ParseContext& parseContext) const {
         std::shared_ptr<ParserState> parserState = std::make_shared<ParserState>(parseContext);
-        parserState->openString( data );
+        parserState->loadString( data );
 
         parseState(parserState);
         applyUnitsToDeck(*parserState->deck);
@@ -281,16 +295,6 @@ namespace Opm {
 
     DeckPtr Parser::parseString(const std::string &data, const ParseContext& parseContext) const {
         return std::shared_ptr<Deck>( newDeckFromString( data , parseContext));
-    }
-
-    DeckPtr Parser::parseStream( std::unique_ptr< std::istream >&& inputStream, const ParseContext& parseContext) const {
-        std::shared_ptr<ParserState> parserState = std::make_shared<ParserState>(parseContext);
-        parserState->openStream( std::move( inputStream ) );
-
-        parseState(parserState);
-        applyUnitsToDeck(*parserState->deck);
-
-        return std::shared_ptr<Deck>( parserState->deck );
     }
 
     size_t Parser::size() const {
@@ -419,7 +423,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
             std::string includeFileAsString = readValueToken<std::string>(firstRecord.getItem(0));
             boost::filesystem::path includeFile = getIncludeFilePath(*parserState, includeFileAsString);
 
-            parserState->openFile( includeFile );
+            parserState->loadFile( includeFile );
             continue;
         }
 
