@@ -527,12 +527,6 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
 
 
 
-    static inline std::string& doSpecialHandlingForTitleKeyword(std::string& line, std::shared_ptr<ParserState> parserState) {
-        if ((parserState->rawKeyword != NULL) && (parserState->rawKeyword->getKeywordName() == "TITLE"))
-                line = line.append("/");
-        return line;
-    }
-
     template< typename Itr >
     static inline Itr trim_left( Itr begin, Itr end ) {
 
@@ -583,7 +577,6 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
             liner = trim( liner  ); // Removing garbage (eg. \r)
 
             auto line = liner.string();
-            doSpecialHandlingForTitleKeyword(line, parserState);
             std::string keywordString;
             parserState->line()++;
 

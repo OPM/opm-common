@@ -99,7 +99,9 @@ namespace Opm {
 
         if( m_isFinished ) return;
 
-        if( RawRecord::isTerminatedRecordString( partialRecordString ) ) {
+        if( this->getKeywordName() == "TITLE"
+            || RawRecord::isTerminatedRecordString( partialRecordString ) ) {
+
             m_records.emplace_back( std::move( m_partialRecordString ), m_filename, m_name );
             m_partialRecordString.clear();
 
