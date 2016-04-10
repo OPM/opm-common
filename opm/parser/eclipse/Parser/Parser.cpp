@@ -158,10 +158,10 @@ namespace Opm {
           of the data section of any keyword.
         */
 
-        void handleRandomText(const std::string& keywordString ) const {
+        void handleRandomText(const string_view& keywordString ) const {
             std::string errorKey;
             std::stringstream msg;
-            std::string trimmedCopy = boost::algorithm::trim_copy( keywordString );
+            std::string trimmedCopy = keywordString.string();
 
             if (trimmedCopy == "/") {
                 errorKey = ParseContext::PARSE_RANDOM_SLASH;
@@ -250,9 +250,8 @@ namespace Opm {
         return strip_comments( qend + 1, end );
     }
 
-    static inline std::string& strip_comments( std::string& str ) {
-        str.erase( strip_comments( str.begin(), str.end() ), str.end() );
-        return str;
+    static inline string_view strip_comments( const string_view& str ) {
+        return { str.begin(), strip_comments( str.begin(), str.end() ) };
     }
 
     /* stripComments only exists so that the unit tests can verify it.
@@ -310,7 +309,7 @@ namespace Opm {
         return m_internalParserKeywords.at(internalKeywordName).get();
     }
 
-    const ParserKeyword* Parser::matchingKeyword(const std::string& name) const {
+    const ParserKeyword* Parser::matchingKeyword(const string_view& name) const {
         for (auto iter = m_wildCardKeywords.begin(); iter != m_wildCardKeywords.end(); ++iter) {
             if (iter->second->matches(name))
                 return iter->second;
@@ -322,15 +321,18 @@ namespace Opm {
         return (m_wildCardKeywords.count(internalKeywordName) > 0);
     }
 
-    bool Parser::isRecognizedKeyword(const std::string& deckKeywordName) const {
-        if (!ParserKeyword::validDeckName(deckKeywordName)) {
-            return false;
+    bool Parser::isRecognizedKeyword(const std::string& name ) const {
+        return this->isRecognizedKeyword( string_view( name ) );
     }
 
-    if (m_deckParserKeywords.count(deckKeywordName) > 0)
+    bool Parser::isRecognizedKeyword(const string_view& name ) const {
+        if( !ParserKeyword::validDeckName( name ) )
+            return false;
+
+    if( m_deckParserKeywords.count( name.string() ) )
         return true;
 
-    return matchingKeyword( deckKeywordName );
+    return matchingKeyword( name );
 }
 
 void Parser::addParserKeyword( std::unique_ptr< const ParserKeyword >&& parserKeyword) {
@@ -549,19 +551,18 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
         return std::find_if_not( rbegin, rend, ws ).base();
     }
 
-    static inline std::string& trim( std::string& str ) {
+    static inline string_view trim( const string_view& str ) {
         auto fst = trim_left( str.begin(), str.end() );
         auto lst = trim_right( fst, str.end() );
-        return str.assign( fst, lst );
+        return { fst, lst };
     }
 
-    static inline bool getline( string_view& input, std::string& line ) {
+    static inline bool getline( string_view& input, string_view& line ) {
         if( input.empty() ) return false;
 
         auto end = std::find( input.begin(), input.end(), '\n' );
 
-        line.erase();
-        line.assign( input.begin(), end );
+        line = string_view( input.begin(), end );
         const auto mod = end == input.end() ? 0 : 1;
         input = string_view( end + mod, input.end() );
         return true;
@@ -576,10 +577,12 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
         if (parserState->rawKeyword && parserState->rawKeyword->isFinished())
             return true;
 
-        std::string line;
-        while (getline(parserState->input(), line)) {
-            line = strip_comments( line );
-            line = trim( line ); // Removing garbage (eg. \r)
+        string_view liner;
+        while (getline(parserState->input(), liner)) {
+            liner = strip_comments( liner );
+            liner = trim( liner  ); // Removing garbage (eg. \r)
+
+            auto line = liner.string();
             doSpecialHandlingForTitleKeyword(line, parserState);
             std::string keywordString;
             parserState->line()++;
@@ -589,7 +592,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
                 continue;
 
             if (parserState->rawKeyword == NULL) {
-                if (RawKeyword::isKeywordPrefix(line, keywordString)) {
+                if (RawKeyword::isKeywordPrefix(liner, keywordString)) {
                     parserState->rawKeyword = createRawKeyword(keywordString, parserState);
                 } else
                     /* We are looking at some random gibberish?! */

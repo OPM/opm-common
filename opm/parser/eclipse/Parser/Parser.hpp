@@ -38,6 +38,7 @@ namespace Opm {
     class Deck;
     class ParseContext;
     class RawKeyword;
+    class string_view;
     struct ParserState;
 
     /// The hub of the parsing process.
@@ -66,6 +67,7 @@ namespace Opm {
         void addParserKeyword(std::unique_ptr< const ParserKeyword >&& parserKeyword);
         const ParserKeyword* getKeyword(const std::string& name) const;
 
+        bool isRecognizedKeyword( const string_view& deckKeywordName) const;
         bool isRecognizedKeyword( const std::string& deckKeywordName) const;
         const ParserKeyword* getParserKeywordFromDeckName(const std::string& deckKeywordName) const;
         std::vector<std::string> getAllDeckNames () const;
@@ -111,7 +113,7 @@ namespace Opm {
         std::map<std::string, const ParserKeyword* > m_wildCardKeywords;
 
         bool hasWildCardKeyword(const std::string& keyword) const;
-        const ParserKeyword* matchingKeyword(const std::string& keyword) const;
+        const ParserKeyword* matchingKeyword(const string_view& keyword) const;
 
         bool tryParseKeyword(std::shared_ptr<ParserState> parserState) const;
         bool parseState(std::shared_ptr<ParserState> parserState) const;

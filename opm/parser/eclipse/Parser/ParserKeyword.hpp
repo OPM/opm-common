@@ -43,6 +43,7 @@ namespace Opm {
     class ParserDoubleItem;
     class ParserRecord;
     class RawKeyword;
+    class string_view;
 
     class ParserKeyword {
     public:
@@ -63,12 +64,14 @@ namespace Opm {
         typedef std::set<std::string> SectionNameSet;
 
 
-        static std::string getDeckName(const std::string& rawString);
+        static std::string getDeckName(const string_view& rawString);
         static bool validInternalName(const std::string& name);
         static bool validDeckName(const std::string& name);
+        static bool validDeckName(const string_view& name);
         bool hasMatchRegex() const;
         void setMatchRegex(const std::string& deckNameRegexp);
         bool matches(const std::string& deckKeywordName) const;
+        bool matches(const string_view& ) const;
         bool hasDimension() const;
         void addRecord(std::shared_ptr<ParserRecord> record);
         void addDataRecord(std::shared_ptr<ParserRecord> record);
@@ -122,7 +125,7 @@ namespace Opm {
         bool m_isTableCollection;
         std::string m_Description;
 
-        static bool validNameStart(const std::string& name);
+        static bool validNameStart(const string_view& name);
         void initDeckNames( const Json::JsonObject& jsonConfig );
         void initSectionNames( const Json::JsonObject& jsonConfig );
         void initMatchRegex( const Json::JsonObject& jsonObject );

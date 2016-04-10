@@ -30,6 +30,7 @@
 namespace Opm {
 
     class RawRecord;
+    class string_view;
 
     /// Class representing a RawKeyword, meaning both the actual keyword phrase, and the records,
     /// represented as a list of RawRecord objects.
@@ -51,7 +52,7 @@ namespace Opm {
         // iterator interface.
         const RawRecord& getFirstRecord( ) const;
 
-        static bool isKeywordPrefix(const std::string& line, std::string& keywordName);
+        static bool isKeywordPrefix(const string_view& line, std::string& keywordName);
 
         bool isPartialRecordStringEmpty() const;
         bool isFinished() const;

@@ -119,7 +119,7 @@ namespace Opm {
         return str;
     }
 
-    bool RawKeyword::isKeywordPrefix(const std::string& line, std::string& keyword ) {
+    bool RawKeyword::isKeywordPrefix(const string_view& line, std::string& keyword ) {
         // make the keyword string ALL_UPPERCASE because Eclipse seems
         // to be case-insensitive (although this is one of its
         // undocumented features...)
