@@ -25,14 +25,13 @@ set (KNOWN_VARS
 	)
 
 set (KNOWN_opm_PKGS
-	autodiff
         common
+	parser
+	material
 	core
         grid
-	material
-	parser
-	polymer
-	porsol
+        output
+	simulators
 	upscaling
 	verteq
 	)

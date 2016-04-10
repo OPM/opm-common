@@ -2,24 +2,28 @@
 # vim: set filetype=cmake autoindent tabstop=2 shiftwidth=2 noexpandtab softtabstop=2 nowrap:
 
 # defines that must be present in config.h for our headers
-set (opm-polymer_CONFIG_VAR
+set (opm-simulators_CONFIG_VAR
+  HAVE_OPM_GRID
 	)
 
 # dependencies
-set (opm-polymer_DEPS
-	# compile with C99 support if available
+set (opm-simulators_DEPS
+	# Compile with C99 support if available
 	"C99"
-	# compile with C++0x/11 support if available
+	# Compile with C++0x/11 support if available
 	"CXX11Features"
-	# various runtime library enhancements
+	# Various runtime library enhancements
 	"Boost 1.44.0
 		COMPONENTS date_time filesystem system unit_test_framework REQUIRED"
-	# Ensembles-based Reservoir Tools
-	"ERT"
+	# DUNE prerequisites
+	"dune-common REQUIRED;
+	dune-istl REQUIRED"
 	# OPM dependency
-	"opm-autodiff REQUIRED;
-	opm-common;
-	opm-core REQUIRED"
+	"opm-common REQUIRED;
+        opm-parser REQUIRED;
+	opm-core REQUIRED;
+	opm-output REQUIRED;
+	opm-grid"
 	# Eigen
-	"Eigen3 3.1 REQUIRED"
+	"Eigen3 3.2.0"
 	)
