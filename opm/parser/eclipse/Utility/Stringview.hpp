@@ -20,6 +20,7 @@
 #ifndef OPM_UTILITY_SUBSTRING_HPP
 #define OPM_UTILITY_SUBSTRING_HPP
 
+#include <algorithm>
 #include <cstring>
 #include <iosfwd>
 #include <stdexcept>
@@ -56,6 +57,8 @@ namespace Opm {
             inline const_iterator end() const;
 
             inline char operator[]( size_t ) const;
+            inline bool operator<( const string_view& ) const;
+            inline bool operator==( const string_view& ) const;
 
             inline bool empty() const;
             inline size_t size() const;
@@ -159,6 +162,15 @@ namespace Opm {
 
     inline char string_view::operator[]( size_t i ) const {
         return *(this->begin() + i);
+    }
+
+    inline bool string_view::operator<( const string_view& rhs ) const {
+        return std::lexicographical_compare( this->begin(), this->end(),
+                                             rhs.begin(), rhs.end() );
+    }
+
+    inline bool string_view::operator==( const string_view& rhs ) const {
+        return std::equal( this->begin(), this->end(), rhs.begin() );
     }
 
     inline bool string_view::empty() const {
