@@ -39,6 +39,7 @@
 #include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
 #include <opm/parser/eclipse/RawDeck/RawEnums.hpp>
 #include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
+#include <opm/parser/eclipse/Utility/Stringview.hpp>
 
 namespace Opm {
 
@@ -53,7 +54,7 @@ namespace Opm {
             file( const std::string& in ) : path( "" ), input( in ) {}
 
             boost::filesystem::path path;
-            std::istringstream input;
+            string_view input;
             size_t lineNR = 0;
         };
 
@@ -84,7 +85,7 @@ namespace Opm {
             return this->input_stack.back()->lineNR;
         }
 
-        std::istringstream& input() {
+        string_view& input() {
             return this->input_stack.back()->input;
         }
 
@@ -391,7 +392,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
 
         parserState->rawKeyword.reset();
 
-        if( !parserState->input().good() ) {
+        if( parserState->input().empty() ) {
             parserState->pop();
             continue;
         }
@@ -554,6 +555,18 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
         return str.assign( fst, lst );
     }
 
+    static inline bool getline( string_view& input, std::string& line ) {
+        if( input.empty() ) return false;
+
+        auto end = std::find( input.begin(), input.end(), '\n' );
+
+        line.erase();
+        line.assign( input.begin(), end );
+        const auto mod = end == input.end() ? 0 : 1;
+        input = string_view( end + mod, input.end() );
+        return true;
+    }
+
     bool Parser::tryParseKeyword(std::shared_ptr<ParserState> parserState) const {
         if (parserState->nextKeyword.length() > 0) {
             parserState->rawKeyword = createRawKeyword(parserState->nextKeyword, parserState);
@@ -564,7 +577,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
             return true;
 
         std::string line;
-        while (std::getline(parserState->input(), line)) {
+        while (getline(parserState->input(), line)) {
             line = strip_comments( line );
             line = trim( line ); // Removing garbage (eg. \r)
             doSpecialHandlingForTitleKeyword(line, parserState);
