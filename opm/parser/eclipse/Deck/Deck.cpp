@@ -122,7 +122,9 @@ namespace Opm {
 
     Deck::Deck() : Deck( std::vector< DeckKeyword >() ) {}
     Deck::Deck( std::vector< DeckKeyword >&& x ) : DeckView( x.begin(), x.end() ),
-                                                   keywordList( std::move( x ) ) {}
+                                                   keywordList( std::move( x ) ) {
+        m_messageContainer = std::make_shared<MessageContainer>();
+    }
 
     void Deck::addKeyword( DeckKeyword&& keyword ) {
         this->keywordList.push_back( std::move( keyword ) );
@@ -141,6 +143,10 @@ namespace Opm {
 
     DeckKeyword& Deck::getKeyword( size_t index ) {
         return this->keywordList.at( index );
+    }
+
+    std::shared_ptr<MessageContainer> Deck::getMessageContainer() {
+        return m_messageContainer;
     }
 
     UnitSystem& Deck::getDefaultUnitSystem() {
