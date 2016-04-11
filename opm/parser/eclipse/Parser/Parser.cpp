@@ -336,17 +336,31 @@ namespace Opm {
 }
 
 void Parser::addParserKeyword( std::unique_ptr< const ParserKeyword >&& parserKeyword) {
-    for (auto nameIt = parserKeyword->deckNamesBegin();
-            nameIt != parserKeyword->deckNamesEnd();
+    /* since string_view's don't own their memory, to update a value in the map
+     * we must *delete* the previous entry and then re-insert the equivalent
+     * new value. This is because the string_view borrows its memory from the
+     * ParserKeyword, and when the ParserKeyword is replaced it will most
+     * likely be free'd.
+     */
+
+    string_view name( parserKeyword->getName() );
+    m_internalParserKeywords.erase( name );
+    m_internalParserKeywords[ name ].swap( parserKeyword );
+    auto* ptr = m_internalParserKeywords[ name ].get();
+
+    for (auto nameIt = ptr->deckNamesBegin();
+            nameIt != ptr->deckNamesEnd();
             ++nameIt)
     {
-        m_deckParserKeywords[*nameIt] = parserKeyword.get();
+        string_view nm( *nameIt );
+        m_deckParserKeywords.erase( nm );
+        m_deckParserKeywords[ nm ] = ptr;
     }
 
-    if (parserKeyword->hasMatchRegex())
-        m_wildCardKeywords[parserKeyword->getName()] = parserKeyword.get();
-
-    m_internalParserKeywords[parserKeyword->getName()].swap( parserKeyword );
+    if (ptr->hasMatchRegex()) {
+        m_wildCardKeywords.erase( name );
+        m_wildCardKeywords[ name ] = ptr;
+    }
 
 }
 
@@ -380,10 +394,10 @@ const ParserKeyword* Parser::getParserKeywordFromDeckName(const std::string& dec
 std::vector<std::string> Parser::getAllDeckNames () const {
     std::vector<std::string> keywords;
     for (auto iterator = m_deckParserKeywords.begin(); iterator != m_deckParserKeywords.end(); iterator++) {
-        keywords.push_back(iterator->first);
+        keywords.push_back(iterator->first.string());
     }
     for (auto iterator = m_wildCardKeywords.begin(); iterator != m_wildCardKeywords.end(); iterator++) {
-        keywords.push_back(iterator->first);
+        keywords.push_back(iterator->first.string());
     }
     return keywords;
 }

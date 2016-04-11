@@ -28,6 +28,7 @@
 #include <boost/filesystem.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
+#include <opm/parser/eclipse/Utility/Stringview.hpp>
 
 namespace Json {
     class JsonObject;
@@ -38,7 +39,6 @@ namespace Opm {
     class Deck;
     class ParseContext;
     class RawKeyword;
-    class string_view;
     struct ParserState;
 
     /// The hub of the parsing process.
@@ -69,6 +69,7 @@ namespace Opm {
 
         bool isRecognizedKeyword( const string_view& deckKeywordName) const;
         bool isRecognizedKeyword( const std::string& deckKeywordName) const;
+        const ParserKeyword* getParserKeywordFromDeckName(const string_view& deckKeywordName) const;
         const ParserKeyword* getParserKeywordFromDeckName(const std::string& deckKeywordName) const;
         std::vector<std::string> getAllDeckNames () const;
 
@@ -105,12 +106,12 @@ namespace Opm {
 
     private:
         // associative map of the parser internal name and the corresponding ParserKeyword object
-        std::map<std::string, std::unique_ptr< const ParserKeyword > > m_internalParserKeywords;
+        std::map< string_view, std::unique_ptr< const ParserKeyword > > m_internalParserKeywords;
         // associative map of deck names and the corresponding ParserKeyword object
-        std::map<std::string, const ParserKeyword* > m_deckParserKeywords;
+        std::map< string_view, const ParserKeyword* > m_deckParserKeywords;
         // associative map of the parser internal names and the corresponding
         // ParserKeyword object for keywords which match a regular expression
-        std::map<std::string, const ParserKeyword* > m_wildCardKeywords;
+        std::map< string_view, const ParserKeyword* > m_wildCardKeywords;
 
         bool hasWildCardKeyword(const std::string& keyword) const;
         const ParserKeyword* matchingKeyword(const string_view& keyword) const;
