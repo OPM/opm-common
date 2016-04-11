@@ -220,7 +220,7 @@ namespace Opm {
         return std::all_of( name.begin() + 1, name.end(), ok );
     }
 
-    std::string ParserKeyword::getDeckName( const string_view& str ) {
+    string_view ParserKeyword::getDeckName( const string_view& str ) {
 
         auto first_sep = std::find_if( str.begin(), str.end(), RawConsts::is_separator );
 

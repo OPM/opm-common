@@ -43,6 +43,7 @@
 
 namespace Opm {
 
+    const std::string emptystr = "";
 
     struct ParserState {
 
@@ -67,7 +68,7 @@ namespace Opm {
         std::list< file > input_files;
         std::vector< file* > input_stack;
         RawKeywordPtr rawKeyword;
-        std::string nextKeyword;
+        string_view nextKeyword = emptystr;
 
         boost::filesystem::path& current_path() {
             return this->input_stack.back()->path;
@@ -329,11 +330,11 @@ namespace Opm {
         if( !ParserKeyword::validDeckName( name ) )
             return false;
 
-    if( m_deckParserKeywords.count( name.string() ) )
-        return true;
+        if( m_deckParserKeywords.count( name ) )
+            return true;
 
-    return matchingKeyword( name );
-}
+        return matchingKeyword( name );
+    }
 
 void Parser::addParserKeyword( std::unique_ptr< const ParserKeyword >&& parserKeyword) {
     /* since string_view's don't own their memory, to update a value in the map
@@ -371,22 +372,22 @@ void Parser::addParserKeyword(const Json::JsonObject& jsonKeyword) {
 
 
 const ParserKeyword* Parser::getKeyword( const std::string& name ) const {
-    auto iter = m_deckParserKeywords.find( name );
-
-    if (iter == m_deckParserKeywords.end())
-        throw std::invalid_argument( "Keyword '" + name + "' not found" );
-
-    return iter->second;
+    return getParserKeywordFromDeckName( string_view( name ) );
 }
 
-const ParserKeyword* Parser::getParserKeywordFromDeckName(const std::string& deckKeywordName) const {
-    if( m_deckParserKeywords.count( deckKeywordName ) )
-        return m_deckParserKeywords.at(deckKeywordName);
+const ParserKeyword* Parser::getParserKeywordFromDeckName( const std::string& name ) const {
+    return getParserKeywordFromDeckName( string_view( name ) );
+}
 
-    const auto* wildCardKeyword = matchingKeyword( deckKeywordName );
+const ParserKeyword* Parser::getParserKeywordFromDeckName(const string_view& name ) const {
+    auto candidate = m_deckParserKeywords.find( name );
+
+    if( candidate != m_deckParserKeywords.end() ) return candidate->second;
+
+    const auto* wildCardKeyword = matchingKeyword( name );
 
     if ( !wildCardKeyword )
-        throw std::invalid_argument("Do not have parser keyword for parsing: " + deckKeywordName);
+        throw std::invalid_argument( "Do not have parser keyword for parsing: " + name );
 
     return wildCardKeyword;
 }
@@ -471,8 +472,8 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
             throw std::invalid_argument("Input JSON object is not an array");
     }
 
-    RawKeywordPtr Parser::createRawKeyword(const std::string& initialLine, std::shared_ptr<ParserState> parserState) const {
-        std::string keywordString = ParserKeyword::getDeckName(initialLine);
+    RawKeywordPtr Parser::createRawKeyword(const string_view& kw, std::shared_ptr<ParserState> parserState) const {
+        auto keywordString = ParserKeyword::getDeckName( kw );
 
         if( !isRecognizedKeyword( keywordString ) ) {
             if( ParserKeyword::validDeckName( keywordString ) ) {
@@ -579,18 +580,17 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
     bool Parser::tryParseKeyword(std::shared_ptr<ParserState> parserState) const {
         if (parserState->nextKeyword.length() > 0) {
             parserState->rawKeyword = createRawKeyword(parserState->nextKeyword, parserState);
-            parserState->nextKeyword = "";
+            parserState->nextKeyword = emptystr;
         }
 
         if (parserState->rawKeyword && parserState->rawKeyword->isFinished())
             return true;
 
-        string_view liner;
-        while (getline(parserState->input(), liner)) {
-            liner = strip_comments( liner );
-            liner = trim( liner  ); // Removing garbage (eg. \r)
+        string_view line;
+        while (getline(parserState->input(), line)) {
+            line = strip_comments( line );
+            line = trim( line  ); // Removing garbage (eg. \r)
 
-            auto line = liner.string();
             std::string keywordString;
             parserState->line()++;
 
@@ -599,7 +599,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
                 continue;
 
             if (parserState->rawKeyword == NULL) {
-                if (RawKeyword::isKeywordPrefix(liner, keywordString)) {
+                if (RawKeyword::isKeywordPrefix(line, keywordString)) {
                     parserState->rawKeyword = createRawKeyword(keywordString, parserState);
                 } else
                     /* We are looking at some random gibberish?! */
@@ -612,7 +612,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
                         return true;
                     }
                 }
-                parserState->rawKeyword->addRawRecordString(line);
+                parserState->rawKeyword->addRawRecordString(line.string());
             }
 
             if (parserState->rawKeyword

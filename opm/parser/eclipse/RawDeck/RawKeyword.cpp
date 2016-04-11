@@ -27,17 +27,22 @@
 namespace Opm {
 
 
-    RawKeyword::RawKeyword(const std::string& name, Raw::KeywordSizeEnum sizeType , const std::string& filename, size_t lineNR) {
+    RawKeyword::RawKeyword(const string_view& name, Raw::KeywordSizeEnum sizeType , const std::string& filename, size_t lineNR) {
         if (sizeType == Raw::SLASH_TERMINATED || sizeType == Raw::UNKNOWN) {
-            commonInit(name,filename,lineNR);
+            commonInit(name.string(),filename,lineNR);
             m_sizeType = sizeType;
         } else
             throw std::invalid_argument("Error - invalid sizetype on input");
     }
 
 
-    RawKeyword::RawKeyword(const std::string& name , const std::string& filename, size_t lineNR , size_t inputSize, bool isTableCollection ) {
-        commonInit(name,filename,lineNR);
+    RawKeyword::RawKeyword(const std::string& name, Raw::KeywordSizeEnum sizeType , const std::string& filename, size_t lineNR) :
+        RawKeyword( string_view( name ), sizeType, filename, lineNR ) {}
+    RawKeyword::RawKeyword(const std::string& name , const std::string& filename, size_t lineNR , size_t inputSize, bool isTableCollection ) :
+        RawKeyword(string_view( name ), filename, lineNR, inputSize, isTableCollection ) {}
+
+    RawKeyword::RawKeyword(const string_view& name , const std::string& filename, size_t lineNR , size_t inputSize, bool isTableCollection ) {
+        commonInit(name.string(),filename,lineNR);
         if (isTableCollection) {
             m_sizeType = Raw::TABLE_COLLECTION;
             m_numTables = inputSize;
@@ -125,7 +130,7 @@ namespace Opm {
         // make the keyword string ALL_UPPERCASE because Eclipse seems
         // to be case-insensitive (although this is one of its
         // undocumented features...)
-        keyword = uppercase( ParserKeyword::getDeckName( line ) );
+        keyword = uppercase( ParserKeyword::getDeckName( line ).string() );
 
         return isValidKeyword( keyword );
     }

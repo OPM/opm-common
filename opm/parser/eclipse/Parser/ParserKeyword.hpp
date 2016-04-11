@@ -64,7 +64,7 @@ namespace Opm {
         typedef std::set<std::string> SectionNameSet;
 
 
-        static std::string getDeckName(const string_view& rawString);
+        static string_view getDeckName(const string_view& rawString);
         static bool validInternalName(const std::string& name);
         static bool validDeckName(const std::string& name);
         static bool validDeckName(const string_view& name);
