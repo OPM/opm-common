@@ -101,7 +101,7 @@ return parser->parseString(deckData, ParseContext()) ;
 BOOST_AUTO_TEST_CASE(GetPOROTOPBased) {
     DeckPtr deck = createDeckTOP();
     EclipseState state(deck , ParseContext());
-    const Eclipse3DProperties& props = state.getEclipseProperties();
+    const Eclipse3DProperties& props = state.get3DProperties();
 
     const GridProperty<double>& poro  = props.getDoubleGridProperty( "PORO" );
     const GridProperty<double>& permx = props.getDoubleGridProperty( "PERMX" );
@@ -256,15 +256,15 @@ BOOST_AUTO_TEST_CASE(IntProperties) {
     DeckPtr deck = createDeck();
     EclipseState state( deck, ParseContext() );
 
-    BOOST_CHECK_EQUAL( false, state.getEclipseProperties().supportsGridProperty( "NONO" ) );
-    BOOST_CHECK_EQUAL( true,  state.getEclipseProperties().supportsGridProperty( "SATNUM" ) );
-    BOOST_CHECK_EQUAL( true,  state.getEclipseProperties().hasDeckIntGridProperty( "SATNUM" ) );
+    BOOST_CHECK_EQUAL( false, state.get3DProperties().supportsGridProperty( "NONO" ) );
+    BOOST_CHECK_EQUAL( true,  state.get3DProperties().supportsGridProperty( "SATNUM" ) );
+    BOOST_CHECK_EQUAL( true,  state.get3DProperties().hasDeckIntGridProperty( "SATNUM" ) );
 }
 
 BOOST_AUTO_TEST_CASE(PropertiesNotSupportsFalse) {
     DeckPtr deck = createDeck();
     EclipseState state( deck, ParseContext() );
-    const auto& props = state.getEclipseProperties();
+    const auto& props = state.get3DProperties();
     BOOST_CHECK( ! props.supportsGridProperty( "SWAT" ) );
 }
 
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(GetProperty) {
     DeckPtr deck = createDeck();
     EclipseState state(deck, ParseContext());
 
-    const auto& satNUM = state.getEclipseProperties().getIntGridProperty( "SATNUM" );
+    const auto& satNUM = state.get3DProperties().getIntGridProperty( "SATNUM" );
 
     BOOST_CHECK_EQUAL(1000U , satNUM.getCartesianSize() );
     for (size_t i=0; i < satNUM.getCartesianSize(); i++)
@@ -393,7 +393,7 @@ static DeckPtr createDeckWithGridOpts() {
 BOOST_AUTO_TEST_CASE(NoGridOptsDefaultRegion) {
     DeckPtr deck = createDeckNoGridOpts();
     EclipseState state(deck, ParseContext());
-    const auto& props   = state.getEclipseProperties();
+    const auto& props   = state.get3DProperties();
     const auto& multnum = props.getIntGridProperty("MULTNUM");
     const auto& fluxnum = props.getIntGridProperty("FLUXNUM");
     const auto  default_kw = props.getDefaultRegionKeyword();
@@ -407,7 +407,7 @@ BOOST_AUTO_TEST_CASE(NoGridOptsDefaultRegion) {
 BOOST_AUTO_TEST_CASE(WithGridOptsDefaultRegion) {
     DeckPtr deck = createDeckWithGridOpts();
     EclipseState state(deck, ParseContext());
-    const auto& props   = state.getEclipseProperties();
+    const auto& props   = state.get3DProperties();
     const auto& multnum = props.getIntGridProperty("MULTNUM");
     const auto& fluxnum = props.getIntGridProperty("FLUXNUM");
     const auto  default_kw = props.getDefaultRegionKeyword();

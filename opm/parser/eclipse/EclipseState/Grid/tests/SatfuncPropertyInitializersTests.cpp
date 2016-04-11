@@ -35,8 +35,8 @@
 using namespace Opm;
 
 void check_property(EclipseState eclState1, EclipseState eclState2,  const std::string& propertyName) {
-    const std::vector<double> data1 = eclState1.getEclipseProperties().getDoubleGridProperty(propertyName).getData();
-    const std::vector<double> data2 = eclState2.getEclipseProperties().getDoubleGridProperty(propertyName).getData();
+    const std::vector<double> data1 = eclState1.get3DProperties().getDoubleGridProperty(propertyName).getData();
+    const std::vector<double> data2 = eclState2.get3DProperties().getDoubleGridProperty(propertyName).getData();
 
     BOOST_CHECK_CLOSE(data1[0], data2[0],1e-12);
 }
@@ -142,5 +142,5 @@ BOOST_AUTO_TEST_CASE(SaturationFunctionFamilyTests) {
 
     DeckPtr deckMix = parser->parseString(familyMixDeck, parseContext) ;
     EclipseState stateMix(deckMix, parseContext);
-    BOOST_CHECK_THROW(stateMix.getEclipseProperties().getDoubleGridProperty("SGCR") , std::invalid_argument);
+    BOOST_CHECK_THROW(stateMix.get3DProperties().getDoubleGridProperty("SGCR") , std::invalid_argument);
 }

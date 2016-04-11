@@ -38,6 +38,7 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 
 static Opm::DeckPtr createDeckInvalidArray() {
@@ -203,29 +204,26 @@ BOOST_AUTO_TEST_CASE(InvalidRegionThrows) {
     BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseContext()) , std::invalid_argument );
 }
 
-
 BOOST_AUTO_TEST_CASE(ExpectedIntThrows) {
     Opm::DeckPtr deck = createDeckInvalidValue();
     BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseContext()) , std::invalid_argument );
 }
-
 
 BOOST_AUTO_TEST_CASE(UnInitializedVectorThrows) {
     Opm::DeckPtr deck = createDeckUnInitialized();
     BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseContext()) , std::invalid_argument );
 }
 
-
 BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
     Opm::DeckPtr deck = createValidIntDeck();
     Opm::EclipseState state(deck , Opm::ParseContext());
-    auto& property = state.getEclipseProperties().getIntGridProperty("SATNUM");
+    auto& property = state.get3DProperties().getIntGridProperty("SATNUM");
     for (size_t j = 0; j < 5; j++)
         for (size_t i = 0; i < 5; i++) {
             if (i < 2)
-                BOOST_CHECK_EQUAL( 11, property.iget(i,j,0));
+                BOOST_CHECK_EQUAL(11, property.iget(i, j, 0));
             else
-                BOOST_CHECK_EQUAL( 20, property.iget(i,j,0));
+                BOOST_CHECK_EQUAL(20, property.iget(i, j, 0));
         }
 
 }
@@ -233,7 +231,8 @@ BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
 BOOST_AUTO_TEST_CASE(UnitAppliedCorrectly) {
     Opm::DeckPtr deck = createValidPERMXDeck();
     Opm::EclipseState state(deck, Opm::ParseContext());
-    const auto& props = state.getEclipseProperties();
+    const auto& props = state.get3DProperties();
+
     const auto& permx = props.getDoubleGridProperty("PERMX");
     const auto& permy = props.getDoubleGridProperty("PERMY");
     const auto& permz = props.getDoubleGridProperty("PERMZ");

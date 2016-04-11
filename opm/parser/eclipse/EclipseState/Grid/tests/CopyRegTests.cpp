@@ -38,7 +38,7 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
-
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 
 static Opm::DeckPtr createDeckInvalidArray1() {
@@ -209,8 +209,8 @@ BOOST_AUTO_TEST_CASE(TypeMismatchThrows) {
 BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
     Opm::DeckPtr deck = createValidIntDeck();
     Opm::EclipseState state(deck , Opm::ParseContext() );
-    auto& property = state.getEclipseProperties().getIntGridProperty("FLUXNUM");
-    for (size_t j = 0; j < 5; j++)
+    auto& property = state.get3DProperties().getIntGridProperty( "FLUXNUM");
+    for (size_t j=0; j< 5; j++)
         for (size_t i = 0; i < 5; i++) {
             if (i < 2)
                 BOOST_CHECK_EQUAL( 10 , property.iget(i,j,0));

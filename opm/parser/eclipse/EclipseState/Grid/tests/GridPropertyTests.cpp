@@ -354,7 +354,7 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
     auto deck = parser->parseString(deckString, parseContext);
 
     Opm::EclipseState eclipseState(deck, parseContext);
-    const auto& props = eclipseState.getEclipseProperties();
+    const auto& props = eclipseState.get3DProperties();
 
     // make sure that EclipseState throws if it is bugged about an _unsupported_ keyword
     BOOST_CHECK_THROW(props.hasDeckIntGridProperty("ISWU"), std::logic_error);

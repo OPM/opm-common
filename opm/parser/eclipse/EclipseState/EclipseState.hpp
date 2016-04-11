@@ -84,7 +84,7 @@ namespace Opm {
         std::shared_ptr<const NNC> getNNC() const;
         bool hasNNC() const;
 
-        const Eclipse3DProperties& getEclipseProperties() const;
+        const Eclipse3DProperties& get3DProperties() const;
 
         const TableManager& getTableManager() const;
 

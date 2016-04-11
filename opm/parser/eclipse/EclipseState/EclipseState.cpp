@@ -89,7 +89,7 @@ namespace Opm {
         return std::make_shared<EclipseGrid>( m_eclipseGrid->c_ptr() );
     }
 
-    const Eclipse3DProperties& EclipseState::getEclipseProperties() const {
+    const Eclipse3DProperties& EclipseState::get3DProperties() const {
         return m_eclipseProperties;
     }
 
