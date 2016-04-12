@@ -168,7 +168,7 @@ namespace Opm {
     {}
 
     inline string_view::string_view( const char* str ) :
-        string_view( str, str + std::strlen( str ) + 1 )
+        string_view( str, str + std::strlen( str ) )
     {}
 
     inline string_view::const_iterator string_view::begin() const {
