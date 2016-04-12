@@ -27,6 +27,7 @@
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 
 namespace Opm {
 
@@ -104,7 +105,9 @@ namespace Opm {
             void addKeyword( const DeckKeyword& keyword );
 
             DeckKeyword& getKeyword( size_t );
-
+            const MessageContainer& getMessageContainer() const;
+            MessageContainer& getMessageContainer();
+        
             UnitSystem& getDefaultUnitSystem();
             UnitSystem& getActiveUnitSystem();
 
@@ -118,6 +121,8 @@ namespace Opm {
             void initUnitSystem() const;
 
             std::vector< DeckKeyword > keywordList;
+            MessageContainer m_messageContainer;
+
             mutable std::unique_ptr< UnitSystem > activeUnits;
             mutable std::unique_ptr< UnitSystem > defaultUnits;
     };

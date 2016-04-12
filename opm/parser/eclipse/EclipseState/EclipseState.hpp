@@ -50,6 +50,7 @@ namespace Opm {
     class TableManager;
     class TransMult;
     class UnitSystem;
+    class MessageContainer;
 
     class EclipseState {
     public:
@@ -70,6 +71,8 @@ namespace Opm {
         std::shared_ptr< const SimulationConfig > getSimulationConfig() const;
         std::shared_ptr< const EclipseGrid > getEclipseGrid() const;
         std::shared_ptr< EclipseGrid > getEclipseGridCopy() const;
+        const MessageContainer& getMessageContainer() const;
+        MessageContainer& getMessageContainer();
         bool hasPhase(enum Phase::PhaseEnum phase) const;
         std::string getTitle() const;
         bool supportsGridProperty(const std::string& keyword, int enabledTypes=AllProperties) const;
@@ -169,6 +172,7 @@ namespace Opm {
         std::shared_ptr<NNC> m_nnc;
         std::string m_defaultRegion;
         const ParseContext& m_parseContext;
+        MessageContainer m_messageContainer;
     };
 
     typedef std::shared_ptr<EclipseState> EclipseStatePtr;

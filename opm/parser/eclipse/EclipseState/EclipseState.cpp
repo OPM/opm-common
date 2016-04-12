@@ -42,6 +42,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 
 
 namespace Opm {
@@ -141,6 +142,16 @@ namespace Opm {
     }
 
 
+    const MessageContainer& EclipseState::getMessageContainer() const {
+        return m_messageContainer;
+    }
+
+    
+    MessageContainer& EclipseState::getMessageContainer() {
+        return m_messageContainer;
+    }
+
+
     std::shared_ptr<const TableManager> EclipseState::getTableManager() const {
         return m_tables;
     }
@@ -237,6 +248,7 @@ namespace Opm {
         EclipseGridConstPtr grid = getEclipseGrid();
         m_nnc = std::make_shared<NNC>( deck, grid);
     }
+
 
     void EclipseState::initTransMult() {
         EclipseGridConstPtr grid = getEclipseGrid();
