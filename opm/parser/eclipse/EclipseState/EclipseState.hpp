@@ -25,6 +25,7 @@
 #include <set>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
+#include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 
 namespace Opm {
 
@@ -50,7 +51,6 @@ namespace Opm {
     class TableManager;
     class TransMult;
     class UnitSystem;
-    class MessageContainer;
 
     class EclipseState {
     public:
