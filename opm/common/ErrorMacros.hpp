@@ -21,11 +21,12 @@
 #ifndef OPM_ERRORMACROS_HPP
 #define OPM_ERRORMACROS_HPP
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <string>
 #include <sstream>
 #include <exception>
 #include <stdexcept>
-
 #include <cassert>
 
 // macros for reporting to stderr
@@ -52,7 +53,7 @@
     do {                                                                \
         std::ostringstream oss__;                                       \
         oss__ << "[" << __FILE__ << ":" << __LINE__ << "] " << message; \
-        OPM_MESSAGE(message);                                           \
+        Opm::OpmLog::error(oss__.str());                                \
         throw Exception(oss__.str());                                   \
     } while (false)
 
