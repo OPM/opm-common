@@ -123,8 +123,4 @@ namespace Opm {
     bool RawRecord::isTerminatedRecordString( const string_view& str ) {
         return str.back() == RawConsts::slash;
     }
-
-    bool RawRecord::isTerminatedRecordString( const std::string& str ) {
-        return isTerminatedRecordString( string_view( str ) );
-    }
 }

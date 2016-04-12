@@ -47,7 +47,6 @@ namespace Opm {
         const std::string& getKeywordName() const;
 
         static bool isTerminatedRecordString( const string_view& );
-        static bool isTerminatedRecordString( const std::string& );
 
        void dump() const;
 

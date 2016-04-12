@@ -396,10 +396,6 @@ namespace Opm {
         return (m_wildCardKeywords.count(internalKeywordName) > 0);
     }
 
-    bool Parser::isRecognizedKeyword(const std::string& name ) const {
-        return this->isRecognizedKeyword( string_view( name ) );
-    }
-
     bool Parser::isRecognizedKeyword(const string_view& name ) const {
         if( !ParserKeyword::validDeckName( name ) )
             return false;
@@ -446,10 +442,6 @@ void Parser::addParserKeyword(const Json::JsonObject& jsonKeyword) {
 
 
 const ParserKeyword* Parser::getKeyword( const std::string& name ) const {
-    return getParserKeywordFromDeckName( string_view( name ) );
-}
-
-const ParserKeyword* Parser::getParserKeywordFromDeckName( const std::string& name ) const {
     return getParserKeywordFromDeckName( string_view( name ) );
 }
 

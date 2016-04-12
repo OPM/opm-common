@@ -29,19 +29,11 @@ namespace Opm {
                            std::string& countString,
                            std::string& valueString);
 
-    bool isStarToken(const std::string& token,
-                           std::string& countString,
-                           std::string& valueString);
-
     template <class T>
     T readValueToken( string_view );
 
 class StarToken {
 public:
-    StarToken(const std::string& token) :
-        StarToken( string_view( token ) )
-    {}
-
     StarToken(const string_view& token)
     {
         if (!isStarToken(token, m_countString, m_valueString))

@@ -43,13 +43,8 @@ namespace Opm {
         RawKeyword(const string_view& name , Raw::KeywordSizeEnum sizeType , const std::string& filename, size_t lineNR);
         RawKeyword(const string_view& name , const std::string& filename, size_t lineNR , size_t inputSize , bool isTableCollection = false);
 
-        RawKeyword(const std::string& name , Raw::KeywordSizeEnum sizeType , const std::string& filename, size_t lineNR);
-        RawKeyword(const std::string& name , const std::string& filename, size_t lineNR , size_t inputSize , bool isTableCollection = false);
-
         const std::string& getKeywordName() const;
         void addRawRecordString( const string_view& );
-        /* The string overload exists for testing only */
-        void addRawRecordString( const std::string& );
         size_t size() const;
         Raw::KeywordSizeEnum getSizeType() const;
 

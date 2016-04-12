@@ -31,12 +31,6 @@
 
 namespace Opm {
 
-    bool isStarToken(const std::string& token,
-                           std::string& countString,
-                           std::string& valueString) {
-        return isStarToken( string_view( token ), countString, valueString );
-    }
-
     bool isStarToken(const string_view& token,
                            std::string& countString,
                            std::string& valueString) {

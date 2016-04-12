@@ -231,10 +231,6 @@ namespace Opm {
         return { str.begin(), str.begin() + 9 };
     }
 
-    bool ParserKeyword::validDeckName( const std::string& name) {
-        return validDeckName( string_view( name ) );
-    }
-
     bool ParserKeyword::validDeckName( const string_view& name) {
 
         if( !validNameStart( name ) )
@@ -544,22 +540,6 @@ namespace Opm {
                       << "\n"
                       << "Ignoring expression!\n";
         }
-    }
-
-    bool ParserKeyword::matches(const std::string& deckKeywordName) const {
-        if (!validDeckName(deckKeywordName))
-            return false;
-        else if (m_deckNames.count(deckKeywordName) > 0)
-            return true;
-        else if (hasMatchRegex()) {
-#ifdef HAVE_REGEX
-            return std::regex_match(deckKeywordName, m_matchRegex);
-#else
-            return boost::regex_match(deckKeywordName, m_matchRegex);
-#endif
-        }
-
-        return false;
     }
 
     bool ParserKeyword::matches(const string_view& name ) const {

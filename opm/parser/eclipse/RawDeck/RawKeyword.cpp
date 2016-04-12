@@ -37,12 +37,6 @@ namespace Opm {
             throw std::invalid_argument("Error - invalid sizetype on input");
     }
 
-
-    RawKeyword::RawKeyword(const std::string& name, Raw::KeywordSizeEnum sizeType , const std::string& filename, size_t lineNR) :
-        RawKeyword( string_view( name ), sizeType, filename, lineNR ) {}
-    RawKeyword::RawKeyword(const std::string& name , const std::string& filename, size_t lineNR , size_t inputSize, bool isTableCollection ) :
-        RawKeyword(string_view( name ), filename, lineNR, inputSize, isTableCollection ) {}
-
     RawKeyword::RawKeyword(const string_view& name , const std::string& filename, size_t lineNR , size_t inputSize, bool isTableCollection ) {
         commonInit(name.string(),filename,lineNR);
         if (isTableCollection) {
@@ -118,10 +112,6 @@ namespace Opm {
             if( m_sizeType == Raw::FIXED && m_records.size() == m_fixedSize )
                 m_isFinished = true;
         }
-    }
-
-    void RawKeyword::addRawRecordString(const std::string& rec ) {
-        addRawRecordString( string_view( rec ) );
     }
 
     const RawRecord& RawKeyword::getFirstRecord() const {
