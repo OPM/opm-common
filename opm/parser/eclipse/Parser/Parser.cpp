@@ -43,6 +43,132 @@
 
 namespace Opm {
 
+    template< typename Itr >
+    static inline Itr find_comment( Itr begin, Itr end ) {
+
+        auto itr = std::find( begin, end, '-' );
+        for( ; itr != end; itr = std::find( itr + 1, end, '-' ) )
+            if( (itr + 1) != end &&  *( itr + 1 ) == '-' ) return itr;
+
+        return end;
+    }
+
+    template< typename Itr, typename Term >
+    static inline Itr strip_after( Itr begin, Itr end, Term terminator ) {
+
+        auto pos = terminator( begin, end );
+
+        if( pos == end ) return end;
+
+        auto qbegin = std::find_if( begin, end, RawConsts::is_quote );
+
+        if( qbegin == end || qbegin > pos )
+            return pos;
+
+        auto qend = std::find( qbegin + 1, end, *qbegin );
+
+        // Quotes are not balanced - probably an error?!
+        if( qend == end ) return end;
+
+        return strip_after( qend + 1, end, terminator );
+    }
+
+    /**
+       This function will return a copy of the input string where all
+       characters following '--' are removed. The copy is a view and relies on
+       the source string to remain alive. The function handles quoting with
+       single quotes and double quotes:
+
+         ABC --Comment                =>  ABC
+         ABC '--Comment1' --Comment2  =>  ABC '--Comment1'
+         ABC "-- Not balanced quote?  =>  ABC "-- Not balanced quote?
+    */
+    static inline string_view strip_comments( string_view str ) {
+        return { str.begin(), strip_after( str.begin(), str.end(),
+                find_comment< string_view::const_iterator > ) };
+    }
+
+    /* stripComments only exists so that the unit tests can verify it.
+     * strip_comment is the actual (internal) implementation
+     */
+    std::string Parser::stripComments( const std::string& str ) {
+        return { str.begin(), strip_after( str.begin(), str.end(),
+                find_comment< std::string::const_iterator > ) };
+    }
+
+    template< typename Itr >
+    static inline Itr trim_left( Itr begin, Itr end ) {
+
+        const auto ws = []( char ch ) { return std::isspace( ch ); };
+        return std::find_if_not( begin, end, ws );
+    }
+
+    template< typename Itr >
+    static inline Itr trim_right( Itr begin, Itr end ) {
+
+        const auto ws = []( char ch ) { return std::isspace( ch ); };
+
+        std::reverse_iterator< Itr > rbegin( end );
+        std::reverse_iterator< Itr > rend( begin );
+
+        return std::find_if_not( rbegin, rend, ws ).base();
+    }
+
+    static inline string_view trim( string_view str ) {
+        auto fst = trim_left( str.begin(), str.end() );
+        auto lst = trim_right( fst, str.end() );
+        return { fst, lst };
+    }
+
+    static inline string_view strip_slash( string_view view ) {
+        using itr = string_view::const_iterator;
+        const auto term = []( itr begin, itr end ) {
+            return std::find( begin, end, '/' );
+        };
+
+        auto begin = view.begin();
+        auto end = view.end();
+        auto slash = strip_after( begin, end, term );
+
+        /* we want to preserve terminating slashes */
+        if( slash != end ) ++slash;
+
+        return { begin, slash };
+    }
+
+    static inline bool getline( string_view& input, string_view& line ) {
+        if( input.empty() ) return false;
+
+        auto end = std::find( input.begin(), input.end(), '\n' );
+
+        line = string_view( input.begin(), end );
+        const auto mod = end == input.end() ? 0 : 1;
+        input = string_view( end + mod, input.end() );
+        return true;
+    }
+
+    /*
+     * Read the input file and remove everything that isn't interesting data,
+     * including stripping comments, removing leading/trailing whitespaces and
+     * everything after (terminating) slashes
+     */
+    static inline std::string clean( const std::string& str ) {
+        std::string dst;
+        dst.reserve( str.size() );
+
+        string_view input( str ), line;
+        while( getline( input, line ) ) {
+            line = trim( strip_slash( strip_comments( line ) ) );
+
+            //if( line.begin() == line.end() ) continue;
+
+            dst.append( line.begin(), line.end() );
+            dst.append( 1, '\n' );
+        }
+
+        return dst;
+    }
+
     const std::string emptystr = "";
 
     struct ParserState {
@@ -100,7 +226,7 @@ namespace Opm {
         {}
 
         void loadString(const std::string& input) {
-            this->input_strings.push_back( input );
+            this->input_strings.push_back( clean( input ) );
             this->input_files.emplace_back( this->input_strings.back() );
             this->input_stack.push_back( &this->input_files.back() );
         }
@@ -138,12 +264,10 @@ namespace Opm {
             std::rewind( fp );
             std::fread( &buffer[ 0 ], 1, buffer.size(), fp );
 
-            this->input_strings.push_back( std::move( buffer ) );
-            this->input_files.emplace_back(
-                                inputFileCanonical,
-                                this->input_strings.back() );
-
+            this->input_strings.push_back( clean( buffer ) );
+            this->input_files.emplace_back( inputFileCanonical, this->input_strings.back() );
             this->input_stack.push_back( &this->input_files.back() );
+
         }
 
         void openRootFile( const boost::filesystem::path& inputFile) {
@@ -211,56 +335,6 @@ namespace Opm {
             addDefaultKeywords();
     }
 
-    template< typename Itr >
-    static inline Itr find_comment( Itr begin, Itr end ) {
-
-        auto itr = std::find( begin, end, '-' );
-        for( ; itr != end; itr = std::find( itr + 1, end, '-' ) )
-            if( (itr + 1) != end &&  *( itr + 1 ) == '-' ) return itr;
-
-        return end;
-    }
-
-    /**
-       This function will remove return a copy of the input string
-       where all characters following '--' are removed. The function
-       handles quoting with single quotes and double quotes:
-
-         ABC --Comment                =>  ABC
-         ABC '--Comment1' --Comment2  =>  ABC '--Comment1'
-         ABC "-- Not balanced quote?  =>  ABC "-- Not balanced quote?
-    */
-
-    template< typename Itr >
-    static inline Itr strip_comments( Itr begin, Itr end ) {
-
-        auto pos = find_comment( begin, end );
-
-        if( pos == end ) return end;
-
-        auto qbegin = std::find_if( begin, end, RawConsts::is_quote );
-
-        if( qbegin == end || qbegin > pos )
-            return pos;
-
-        auto qend = std::find( qbegin + 1, end, *qbegin );
-
-        // Quotes are not balanced - probably an error?!
-        if( qend == end ) return end;
-
-        return strip_comments( qend + 1, end );
-    }
-
-    static inline string_view strip_comments( const string_view& str ) {
-        return { str.begin(), strip_comments( str.begin(), str.end() ) };
-    }
-
-    /* stripComments only exists so that the unit tests can verify it.
-     * strip_comment is the actual (internal) implementation
-     */
-    std::string Parser::stripComments( const std::string& str ) {
-        return { str.begin(), strip_comments( str.begin(), str.end() ) };
-    }
 
     /*
      About INCLUDE: Observe that the ECLIPSE parser is slightly unlogical
@@ -540,43 +614,6 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
     }
 
 
-
-
-    template< typename Itr >
-    static inline Itr trim_left( Itr begin, Itr end ) {
-
-        const auto ws = []( char ch ) { return std::isspace( ch ); };
-        return std::find_if_not( begin, end, ws );
-    }
-
-    template< typename Itr >
-    static inline Itr trim_right( Itr begin, Itr end ) {
-
-        const auto ws = []( char ch ) { return std::isspace( ch ); };
-
-        std::reverse_iterator< Itr > rbegin( end );
-        std::reverse_iterator< Itr > rend( begin );
-
-        return std::find_if_not( rbegin, rend, ws ).base();
-    }
-
-    static inline string_view trim( const string_view& str ) {
-        auto fst = trim_left( str.begin(), str.end() );
-        auto lst = trim_right( fst, str.end() );
-        return { fst, lst };
-    }
-
-    static inline bool getline( string_view& input, string_view& line ) {
-        if( input.empty() ) return false;
-
-        auto end = std::find( input.begin(), input.end(), '\n' );
-
-        line = string_view( input.begin(), end );
-        const auto mod = end == input.end() ? 0 : 1;
-        input = string_view( end + mod, input.end() );
-        return true;
-    }
-
     bool Parser::tryParseKeyword(std::shared_ptr<ParserState> parserState) const {
         if (parserState->nextKeyword.length() > 0) {
             parserState->rawKeyword = createRawKeyword(parserState->nextKeyword, parserState);
@@ -588,8 +625,6 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
 
         string_view line;
         while (getline(parserState->input(), line)) {
-            line = strip_comments( line );
-            line = trim( line  ); // Removing garbage (eg. \r)
 
             std::string keywordString;
             parserState->line()++;
