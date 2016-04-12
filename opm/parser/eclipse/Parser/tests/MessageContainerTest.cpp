@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(TestIterator) {
     {       
         BOOST_CHECK_EQUAL("This is an error.", msgContainer.begin()->message);
         BOOST_CHECK_EQUAL("dummy.log", (msgContainer.end()-1)->location.filename);
-        BOOST_CHECK_EQUAL(20, (msgContainer.end()-1)->location.lineno);
+        BOOST_CHECK_EQUAL(20U , (msgContainer.end()-1)->location.lineno);
     }
     
     MessageContainer msgList;
