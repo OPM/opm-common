@@ -20,6 +20,7 @@
 #ifndef RAWCONSTS_HPP
 #define	RAWCONSTS_HPP
 
+#include <cctype>
 #include <string>
 
 namespace Opm {
@@ -36,7 +37,7 @@ namespace Opm {
         const unsigned int maxKeywordLength = 8;
 
         static inline bool is_separator( char ch ) {
-            return ch == '\t' || ch == ' ' || ch == '\n';
+            return std::isspace( ch );
         }
 
         static inline bool is_quote( char ch ) {
