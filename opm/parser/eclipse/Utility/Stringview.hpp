@@ -56,6 +56,9 @@ namespace Opm {
             inline const_iterator begin() const;
             inline const_iterator end() const;
 
+            inline char front() const;
+            inline char back() const;
+
             inline char operator[]( size_t ) const;
             inline bool operator<( const string_view& ) const;
             inline bool operator==( const string_view& ) const;
@@ -158,6 +161,14 @@ namespace Opm {
 
     inline string_view::const_iterator string_view::end() const {
         return this->lst;
+    }
+
+    inline char string_view::front() const {
+        return *this->fst;
+    }
+
+    inline char string_view::back() const {
+        return *(this->lst - 1);
     }
 
     inline char string_view::operator[]( size_t i ) const {

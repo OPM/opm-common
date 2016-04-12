@@ -36,6 +36,15 @@ BOOST_AUTO_TEST_CASE(viewOperatorAt) {
         BOOST_CHECK_EQUAL( view[ i ], srcstr[ i ] );
 }
 
+BOOST_AUTO_TEST_CASE(viewFrontBack) {
+    std::string srcstr = "lorem ipsum";
+    string_view view( srcstr );
+
+    BOOST_CHECK_EQUAL( view.front(), 'l' );
+    BOOST_CHECK_EQUAL( view.back(), 'm' );
+}
+
+
 BOOST_AUTO_TEST_CASE(viewSubstr) {
     std::string srcstr = "lorem ipsum";
     string_view view( srcstr.begin(), srcstr.end() );
