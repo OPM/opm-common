@@ -35,23 +35,24 @@ namespace Opm {
 
     class RawRecord {
     public:
-        RawRecord(std::string&&, const std::string& fileName = "", const std::string& keywordName = "");
+        RawRecord( const string_view&, const std::string& fileName = "", const std::string& keywordName = "");
 
         inline string_view pop_front();
         void push_front(std::string token);
         inline size_t size() const;
 
-        const std::string& getRecordString() const;
+        std::string getRecordString() const;
         inline string_view getItem(size_t index) const;
         const std::string& getFileName() const;
         const std::string& getKeywordName() const;
 
-        static bool isTerminatedRecordString(const std::string& candidateRecordString);
+        static bool isTerminatedRecordString( const string_view& );
+        static bool isTerminatedRecordString( const std::string& );
 
        void dump() const;
 
     private:
-        std::string m_sanitizedRecordString;
+        string_view m_sanitizedRecordString;
         std::deque< string_view > m_recordItems;
         std::list< std::string > expanded_items;
         const std::string m_fileName;

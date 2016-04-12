@@ -26,8 +26,10 @@
 
 namespace Opm {
 
+    static const std::string emptystr = "";
 
-    RawKeyword::RawKeyword(const string_view& name, Raw::KeywordSizeEnum sizeType , const std::string& filename, size_t lineNR) {
+    RawKeyword::RawKeyword(const string_view& name, Raw::KeywordSizeEnum sizeType , const std::string& filename, size_t lineNR) :
+    m_partialRecordString( emptystr ) {
         if (sizeType == Raw::SLASH_TERMINATED || sizeType == Raw::UNKNOWN) {
             commonInit(name.string(),filename,lineNR);
             m_sizeType = sizeType;
@@ -74,17 +76,16 @@ namespace Opm {
         return m_records.size();
     }
 
-    static inline bool isTerminator( const std::string& line ) {
-        auto fst = std::find_if_not( line.begin(), line.end(),
-                RawConsts::is_separator );
-        return fst != line.end() && *fst == RawConsts::slash;
+    static inline bool isTerminator( const string_view& line ) {
+        return line.size() == 1 && line.back() == RawConsts::slash;
     }
 
     /// Important method, being repeatedly called. When a record is terminated,
     /// it is added to the list of records, and a new record is started.
 
-    void RawKeyword::addRawRecordString(const std::string& partialRecordString) {
-        m_partialRecordString += " " + partialRecordString;
+    void RawKeyword::addRawRecordString(const string_view& partialRecordString) {
+        if( m_partialRecordString == emptystr ) m_partialRecordString = partialRecordString;
+        else m_partialRecordString = { m_partialRecordString.begin(), partialRecordString.end() };
 
 
         if( m_sizeType != Raw::FIXED && isTerminator( m_partialRecordString ) ) {
@@ -92,12 +93,12 @@ namespace Opm {
                 m_currentNumTables += 1;
                 if (m_currentNumTables == m_numTables) {
                     m_isFinished = true;
-                    m_partialRecordString.clear();
+                    m_partialRecordString = emptystr;
                     return;
                 }
             } else if( m_sizeType != Raw::UNKNOWN ) {
                 m_isFinished = true;
-                m_partialRecordString.clear();
+                m_partialRecordString = emptystr;
                 return;
             }
         }
@@ -107,14 +108,21 @@ namespace Opm {
         if( this->getKeywordName() == "TITLE"
             || RawRecord::isTerminatedRecordString( partialRecordString ) ) {
 
-            m_records.emplace_back( std::move( m_partialRecordString ), m_filename, m_name );
-            m_partialRecordString.clear();
+            auto recstr = partialRecordString.back() == '/'
+                          ? string_view{ m_partialRecordString.begin(), m_partialRecordString.end() - 1 }
+                          : m_partialRecordString;
+
+            m_records.emplace_back( recstr, m_filename, m_name );
+            m_partialRecordString = emptystr;
 
             if( m_sizeType == Raw::FIXED && m_records.size() == m_fixedSize )
                 m_isFinished = true;
         }
     }
 
+    void RawKeyword::addRawRecordString(const std::string& rec ) {
+        addRawRecordString( string_view( rec ) );
+    }
 
     const RawRecord& RawKeyword::getFirstRecord() const {
         return *m_records.begin();

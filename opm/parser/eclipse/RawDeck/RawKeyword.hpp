@@ -26,6 +26,7 @@
 #include <list>
 
 #include <opm/parser/eclipse/RawDeck/RawEnums.hpp>
+#include <opm/parser/eclipse/Utility/Stringview.hpp>
 
 namespace Opm {
 
@@ -46,7 +47,9 @@ namespace Opm {
         RawKeyword(const std::string& name , const std::string& filename, size_t lineNR , size_t inputSize , bool isTableCollection = false);
 
         const std::string& getKeywordName() const;
-        void addRawRecordString(const std::string& partialRecordString);
+        void addRawRecordString( const string_view& );
+        /* The string overload exists for testing only */
+        void addRawRecordString( const std::string& );
         size_t size() const;
         Raw::KeywordSizeEnum getSizeType() const;
 
@@ -82,7 +85,7 @@ namespace Opm {
         size_t m_currentNumTables;
         std::string m_name;
         std::list< RawRecord > m_records;
-        std::string m_partialRecordString;
+        string_view m_partialRecordString;
 
         size_t m_lineNR;
         std::string m_filename;

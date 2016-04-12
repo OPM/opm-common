@@ -127,15 +127,14 @@ static ParserRecordPtr createSimpleParserRecord() {
 
 BOOST_AUTO_TEST_CASE(parse_validRecord_noThrow) {
     ParserRecordPtr record = createSimpleParserRecord();
-    RawRecord rawRecord( "100 443 /" );
     ParseContext parseContext;
-    rawRecord.dump();
-    BOOST_CHECK_NO_THROW(record->parse(parseContext , rawRecord));
+    RawRecord raw( string_view( "100 443" ) );
+    BOOST_CHECK_NO_THROW(record->parse(parseContext, raw ) );
 }
 
 BOOST_AUTO_TEST_CASE(parse_validRecord_deckRecordCreated) {
     ParserRecordPtr record = createSimpleParserRecord();
-    RawRecord rawRecord(  "100 443 /" );
+    RawRecord rawRecord( string_view( "100 443" ) );
     ParseContext parseContext;
     const auto deckRecord = record->parse(parseContext , rawRecord);
     BOOST_CHECK_EQUAL(2U, deckRecord.size());
@@ -168,7 +167,7 @@ static ParserRecordPtr createMixedParserRecord() {
 
 BOOST_AUTO_TEST_CASE(parse_validMixedRecord_noThrow) {
     ParserRecordPtr record = createMixedParserRecord();
-    RawRecord rawRecord(  "1 2 10.0 20.0 4 90.0 /" );
+    RawRecord rawRecord( string_view( "1 2 10.0 20.0 4 90.0") );
     ParseContext parseContext;
     BOOST_CHECK_NO_THROW(record->parse(parseContext , rawRecord));
 }
@@ -217,7 +216,7 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
     // according to the RM, this is invalid ("an asterisk by itself is not sufficient"),
     // but it seems to appear in the wild. Thus, we interpret this as "1*"...
     {
-        RawRecord rawRecord( "* /" );
+        RawRecord rawRecord( "* " );
         const auto deckStringItem = itemString->scan(rawRecord);
         const auto deckIntItem = itemInt->scan(rawRecord);
         const auto deckDoubleItem = itemDouble->scan(rawRecord);
@@ -232,7 +231,7 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
     }
 
     {
-        RawRecord rawRecord( "/" );
+        RawRecord rawRecord( "" );
         const auto deckStringItem = itemString->scan(rawRecord);
         const auto deckIntItem = itemInt->scan(rawRecord);
         const auto deckDoubleItem = itemDouble->scan(rawRecord);
@@ -248,7 +247,7 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
 
 
     {
-        RawRecord rawRecord( "TRYGVE 10 2.9 /" );
+        RawRecord rawRecord( "TRYGVE 10 2.9 " );
 
         // let the raw record be "consumed" by the items. Note that the scan() method
         // modifies the rawRecord object!
@@ -267,7 +266,7 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
 
     // again this is invalid according to the RM, but it is used anyway in the wild...
     {
-        RawRecord rawRecord( "* * * /" );
+        RawRecord rawRecord( "* * *" );
         const auto deckStringItem = itemString->scan(rawRecord);
         const auto deckIntItem = itemInt->scan(rawRecord);
         const auto deckDoubleItem = itemDouble->scan(rawRecord);
@@ -282,7 +281,7 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
     }
 
     {
-        RawRecord rawRecord(  "3* /" );
+        RawRecord rawRecord(  "3*" );
         const auto deckStringItem = itemString->scan(rawRecord);
         const auto deckIntItem = itemInt->scan(rawRecord);
         const auto deckDoubleItem = itemDouble->scan(rawRecord);
@@ -309,13 +308,13 @@ BOOST_AUTO_TEST_CASE(Parse_RawRecordTooManyItems_Throws) {
     parserRecord->addItem(itemK);
 
 
-    RawRecord rawRecord(  "3 3 3 /" );
+    RawRecord rawRecord(  "3 3 3 " );
     BOOST_CHECK_NO_THROW(parserRecord->parse(parseContext , rawRecord));
 
-    RawRecord rawRecordOneExtra(  "3 3 3 4 /" );
+    RawRecord rawRecordOneExtra(  "3 3 3 4 " );
     BOOST_CHECK_THROW(parserRecord->parse(parseContext , rawRecordOneExtra), std::invalid_argument);
 
-    RawRecord rawRecordForgotRecordTerminator(  "3 3 3 \n 4 4 4 /" );
+    RawRecord rawRecordForgotRecordTerminator(  "3 3 3 \n 4 4 4 " );
     BOOST_CHECK_THROW(parserRecord->parse(parseContext , rawRecordForgotRecordTerminator), std::invalid_argument);
 
 }

@@ -54,6 +54,7 @@ namespace Opm {
             inline string_view( const_iterator, size_t );
             inline string_view( const std::string& );
             inline string_view( const std::string&, size_t );
+            inline string_view( const char* );
 
             inline const_iterator begin() const;
             inline const_iterator end() const;
@@ -164,6 +165,10 @@ namespace Opm {
 
     inline string_view::string_view( const std::string& str, size_t count ) :
         string_view( str.data(), count )
+    {}
+
+    inline string_view::string_view( const char* str ) :
+        string_view( str, str + std::strlen( str ) + 1 )
     {}
 
     inline string_view::const_iterator string_view::begin() const {

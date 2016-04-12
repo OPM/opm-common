@@ -647,7 +647,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
                         return true;
                     }
                 }
-                parserState->rawKeyword->addRawRecordString(line.string());
+                parserState->rawKeyword->addRawRecordString(line);
             }
 
             if (parserState->rawKeyword

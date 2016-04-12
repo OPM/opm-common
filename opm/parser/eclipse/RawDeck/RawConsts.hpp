@@ -36,7 +36,7 @@ namespace Opm {
         const unsigned int maxKeywordLength = 8;
 
         static inline bool is_separator( char ch ) {
-            return ch == '\t' || ch == ' ';
+            return ch == '\t' || ch == ' ' || ch == '\n';
         }
 
         static inline bool is_quote( char ch ) {
