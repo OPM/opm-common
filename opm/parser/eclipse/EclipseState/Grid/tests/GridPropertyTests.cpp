@@ -38,7 +38,6 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
@@ -352,15 +351,15 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
     Opm::ParserPtr parser(new Opm::Parser);
 
     auto deck = parser->parseString(deckString, parseContext);
+    Opm::TableManager tm(*deck);
+    Opm::EclipseGrid eg(deck);
+    Opm::Eclipse3DProperties props(*deck, tm, eg);
 
-    Opm::EclipseState eclipseState(deck, parseContext);
-    const auto& props = eclipseState.get3DProperties();
-
-    // make sure that EclipseState throws if it is bugged about an _unsupported_ keyword
+    // make sure that Eclipse3DProperties throws if it is bugged about an _unsupported_ keyword
     BOOST_CHECK_THROW(props.hasDeckIntGridProperty("ISWU"), std::logic_error);
     BOOST_CHECK_THROW(props.hasDeckDoubleGridProperty("FLUXNUM"), std::logic_error);
 
-    // make sure that EclipseState does not throw if it is asked for a supported
+    // make sure that Eclipse3DProperties does not throw if it is asked for a supported
     // grid property that is not contained in the deck
     BOOST_CHECK_NO_THROW(props.hasDeckDoubleGridProperty("ISWU"));
     BOOST_CHECK_NO_THROW(props.hasDeckIntGridProperty("FLUXNUM"));

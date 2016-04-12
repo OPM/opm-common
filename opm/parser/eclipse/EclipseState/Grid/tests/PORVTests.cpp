@@ -33,10 +33,12 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
-
+static Opm::Eclipse3DProperties getProps(Opm::DeckPtr deck) {
+    return Opm::Eclipse3DProperties(*deck, *new Opm::TableManager(*deck), *new Opm::EclipseGrid(deck));
+}
 
 static Opm::DeckPtr createCARTDeck() {
     const char *deckData =
@@ -229,8 +231,7 @@ static Opm::DeckPtr createDeckWithNTG() {
 BOOST_AUTO_TEST_CASE(PORV_cartesianDeck) {
     /* Check that an exception is raised if we try to create a PORV field without PORO. */
     Opm::DeckPtr deck = createCARTDeck();
-    Opm::EclipseState state(deck, Opm::ParseContext());
-    const auto& props = state.get3DProperties();
+    const auto props = getProps(deck);
     const auto& poro = props.getDoubleGridProperty("PORO");
     BOOST_CHECK(poro.containsNaN());
     BOOST_CHECK_THROW(props.getDoubleGridProperty("PORV"), std::logic_error);
@@ -239,8 +240,7 @@ BOOST_AUTO_TEST_CASE(PORV_cartesianDeck) {
 BOOST_AUTO_TEST_CASE(PORV_initFromPoro) {
     /* Check that the PORV field is correctly calculated from PORO. */
     Opm::DeckPtr deck = createDeckWithPORO();
-    Opm::EclipseState state(deck, Opm::ParseContext());
-    const auto& props = state.get3DProperties();
+    const auto props = getProps(deck);
     const auto& poro = props.getDoubleGridProperty("PORO");
     BOOST_CHECK( !poro.containsNaN() );
 
@@ -260,8 +260,7 @@ BOOST_AUTO_TEST_CASE(PORV_initFromPoro) {
 BOOST_AUTO_TEST_CASE(PORV_initFromPoroWithCellVolume) {
     /* Check that explicit PORV and CellVOlume * PORO can be combined. */
     Opm::DeckPtr deck = createDeckWithPORVPORO();
-    Opm::EclipseState state(deck, Opm::ParseContext());
-    const auto& props = state.get3DProperties();
+    const auto props = getProps(deck);
     const auto& porv = props.getDoubleGridProperty("PORV");
     double cell_volume = 0.25 * 0.25 * 0.25;
 
@@ -278,8 +277,7 @@ BOOST_AUTO_TEST_CASE(PORV_initFromPoroWithCellVolume) {
 BOOST_AUTO_TEST_CASE(PORV_multpv) {
     /* Check that MULTPV is correctly accounted for. */
     Opm::DeckPtr deck = createDeckWithMULTPV();
-    Opm::EclipseState state(deck, Opm::ParseContext());
-    const auto& props = state.get3DProperties();
+    const auto props = getProps(deck);
     const auto& porv = props.getDoubleGridProperty("PORV");
     double cell_volume = 0.25 * 0.25 * 0.25;
 
@@ -300,8 +298,7 @@ BOOST_AUTO_TEST_CASE(PORV_multpv) {
 BOOST_AUTO_TEST_CASE(PORV_mutipleBoxAndMultpv) {
     /* Check that MULTIPLE Boxed PORV and MULTPV statements work */
     Opm::DeckPtr deck = createDeckWithBOXPORV();
-    Opm::EclipseState state(deck, Opm::ParseContext());
-    const auto& props = state.get3DProperties();
+    const auto props = getProps(deck);
     const auto& porv = props.getDoubleGridProperty("PORV");
 
     BOOST_CHECK_CLOSE( 1234.56 , porv.iget(0,0,0) , 0.001);
@@ -315,8 +312,7 @@ BOOST_AUTO_TEST_CASE(PORV_mutipleBoxAndMultpv) {
 BOOST_AUTO_TEST_CASE(PORV_multpvAndNtg) {
     /* Check that MULTIPLE Boxed PORV and MULTPV statements work and NTG */
     Opm::DeckPtr deck = createDeckWithNTG();
-    Opm::EclipseState state(deck, Opm::ParseContext());
-    const auto& props = state.get3DProperties();
+    const auto props = getProps(deck);
     const auto& porv = props.getDoubleGridProperty("PORV");
     double cell_volume = 0.25 * 0.25 * 0.25;
     double poro = 0.20;
@@ -350,7 +346,6 @@ static Opm::DeckPtr createDeckNakedGRID() {
 BOOST_AUTO_TEST_CASE(NAKED_GRID_THROWS) {
     /* Check that MULTIPLE Boxed PORV and MULTPV statements work and NTG */
     Opm::DeckPtr deck = createDeckNakedGRID();
-    Opm::EclipseState state(deck, Opm::ParseContext());
-    const auto& props = state.get3DProperties();
+    const auto props = getProps(deck);
     BOOST_CHECK_THROW( props.getDoubleGridProperty("PORV") , std::invalid_argument );
 }

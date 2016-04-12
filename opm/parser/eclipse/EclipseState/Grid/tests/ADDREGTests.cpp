@@ -39,7 +39,7 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
-
+#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
 static Opm::DeckPtr createDeckInvalidArray() {
     const char *deckData =
@@ -249,9 +249,12 @@ BOOST_AUTO_TEST_CASE(UnInitializedVectorThrows) {
 
 BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
     Opm::DeckPtr deck = createValidIntDeck();
-    Opm::EclipseState state(deck , Opm::ParseContext());
-    const auto& property = state.get3DProperties().getIntGridProperty( "SATNUM");
-    for (size_t j=0; j< 5; j++)
+    Opm::TableManager tm(*deck);
+    Opm::EclipseGrid eg(deck);
+    Opm::Eclipse3DProperties props(*deck, tm, eg);
+    const auto& property = props.getIntGridProperty("SATNUM");
+
+    for (size_t j = 0; j < 5; j++)
         for (size_t i = 0; i < 5; i++) {
             if (i < 2)
                 BOOST_CHECK_EQUAL( 12 , property.iget(i,j,0));
@@ -264,9 +267,10 @@ BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
 
 BOOST_AUTO_TEST_CASE(UnitAppliedCorrectly) {
     Opm::DeckPtr deck = createValidPERMXDeck();
-    const Opm::EclipseState state( deck, Opm::ParseContext() );
-    const auto& props = state.get3DProperties();
-    const auto& permx = props.getDoubleGridProperty( "PERMX");
+    Opm::TableManager tm(*deck);
+    Opm::EclipseGrid eg(deck);
+    Opm::Eclipse3DProperties props(*deck, tm, eg);
+    const auto& permx = props.getDoubleGridProperty("PERMX");
 
     for (size_t j=0; j< 5; j++)
         for (size_t i = 0; i < 5; i++) {
