@@ -126,7 +126,6 @@ namespace Opm {
         initFaults(deck);
         initMULTREGT(deck);
         initNNC(deck);
-        initMessageContainer();
     }
 
     const UnitSystem& EclipseState::getDeckUnitSystem() const {
@@ -143,7 +142,12 @@ namespace Opm {
     }
 
 
-    std::shared_ptr<MessageContainer> EclipseState::getMessageContainer() {
+    const MessageContainer& EclipseState::getMessageContainer() const {
+        return m_messageContainer;
+    }
+
+    
+    MessageContainer& EclipseState::getMessageContainer() {
         return m_messageContainer;
     }
 
@@ -245,9 +249,6 @@ namespace Opm {
         m_nnc = std::make_shared<NNC>( deck, grid);
     }
 
-    void EclipseState::initMessageContainer() {
-        m_messageContainer = std::make_shared<MessageContainer>();
-    }
 
     void EclipseState::initTransMult() {
         EclipseGridConstPtr grid = getEclipseGrid();
