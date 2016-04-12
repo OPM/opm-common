@@ -71,7 +71,6 @@ public:
     EclipseWriter(const parameter::ParameterGroup& params,
                   Opm::EclipseStateConstPtr eclipseState,
                   const Opm::PhaseUsage &phaseUsage,
-                  int numCells,
                   const int* compressedToCartesianCellIdx);
 
     /**

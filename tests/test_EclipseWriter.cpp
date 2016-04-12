@@ -93,7 +93,6 @@ void createEclipseWriter(const char *deckString)
     eclWriter.reset(new Opm::EclipseWriter(params,
                                            eclipseState,
                                            phaseUsage,
-                                           ourFinerUnstructuredGrid.number_of_cells,
                                            0));
 
     // this check is disabled so far, because UnstructuredGrid uses some weird definition

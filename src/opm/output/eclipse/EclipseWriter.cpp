@@ -1417,12 +1417,9 @@ void EclipseWriter::writeTimeStep(const SimulatorTimerInterface& timer,
 EclipseWriter::EclipseWriter(const parameter::ParameterGroup& params,
                              Opm::EclipseStateConstPtr eclipseState,
                              const Opm::PhaseUsage &phaseUsage,
-                             int numCells,
                              const int* compressedToCartesianCellIdx)
     : eclipseState_(eclipseState)
-    , numCells_(numCells)
     , compressedToCartesianCellIdx_(compressedToCartesianCellIdx)
-    , gridToEclipseIdx_(numCells, int(-1) )
     , phaseUsage_(phaseUsage)
 {
     const auto eclGrid = eclipseState->getInputGrid();
@@ -1430,11 +1427,14 @@ EclipseWriter::EclipseWriter(const parameter::ParameterGroup& params,
     cartesianSize_[1] = eclGrid->getNY();
     cartesianSize_[2] = eclGrid->getNZ();
 
+    numCells_ = eclGrid->getNumActive();
+    gridToEclipseIdx_ = std::vector<int>(numCells_, int(-1) );
+
     if( compressedToCartesianCellIdx ) {
         // if compressedToCartesianCellIdx available then
         // compute mapping to eclipse order
         std::map< int , int > indexMap;
-        for (int cellIdx = 0; cellIdx < numCells; ++cellIdx) {
+        for (int cellIdx = 0; cellIdx < numCells_; ++cellIdx) {
             int cartesianCellIdx = compressedToCartesianCellIdx[cellIdx];
             indexMap[ cartesianCellIdx ] = cellIdx;
         }
@@ -1446,7 +1446,7 @@ EclipseWriter::EclipseWriter(const parameter::ParameterGroup& params,
     }
     else {
         // if not compressedToCartesianCellIdx was given use identity
-        for (int cellIdx = 0; cellIdx < numCells; ++cellIdx) {
+        for (int cellIdx = 0; cellIdx < numCells_; ++cellIdx) {
             gridToEclipseIdx_[ cellIdx ] = cellIdx;
         }
     }

@@ -137,7 +137,6 @@ std::shared_ptr<Opm::EclipseWriter> createEclipseWriter(std::shared_ptr<const Op
     std::shared_ptr<Opm::EclipseWriter> eclipseWriter = std::make_shared<Opm::EclipseWriter>(params,
                                                                                              eclipseState,
                                                                                              phaseUsage,
-                                                                                             ourFinerUnstructuredGrid.number_of_cells,
                                                                                              compressedToCartesianCellIdx);
 
     return eclipseWriter;

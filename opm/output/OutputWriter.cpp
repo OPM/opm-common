@@ -54,7 +54,6 @@ create (const ParameterGroup& params,
     return unique_ptr <OutputWriter> (new Format (params,
                                                   eclipseState,
                                                   phaseUsage,
-                                                  grid->number_of_cells,
                                                   grid->global_cell));
 }
 
