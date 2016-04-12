@@ -43,6 +43,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
@@ -547,7 +548,7 @@ public:
                      Opm::EclipseStateConstPtr eclipseState,
                      const PhaseUsage uses)
     {
-        auto dataField = eclipseState->getDoubleGridProperty("PORO")->getData();
+        auto dataField = eclipseState->get3DProperties().getDoubleGridProperty("PORO").getData();
         restrictAndReorderToActiveCells(dataField, numCells, compressedToCartesianCellIdx);
 
         auto eclGrid = eclipseState->getEclipseGridCopy();
@@ -1182,22 +1183,23 @@ void EclipseWriter::writeInit(const SimulatorTimerInterface &timer)
                        phaseUsage_);
 
     IOConfigConstPtr ioConfig = eclipseState_->getIOConfigConst();
+    const auto& props = eclipseState_->get3DProperties();
 
     if (ioConfig->getWriteINITFile()) {
-        if (eclipseState_->hasDeckDoubleGridProperty("PERMX")) {
-            auto data = eclipseState_->getDoubleGridProperty("PERMX")->getData();
+        if (props.hasDeckDoubleGridProperty("PERMX")) {
+            auto data = props.getDoubleGridProperty("PERMX").getData();
             EclipseWriterDetails::convertFromSiTo(data, Opm::prefix::milli * Opm::unit::darcy);
             EclipseWriterDetails::restrictAndReorderToActiveCells(data, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
             fortio.writeKeyword("PERMX", data);
         }
-        if (eclipseState_->hasDeckDoubleGridProperty("PERMY")) {
-            auto data = eclipseState_->getDoubleGridProperty("PERMY")->getData();
+        if (props.hasDeckDoubleGridProperty("PERMY")) {
+            auto data = props.getDoubleGridProperty("PERMY").getData();
             EclipseWriterDetails::convertFromSiTo(data, Opm::prefix::milli * Opm::unit::darcy);
             EclipseWriterDetails::restrictAndReorderToActiveCells(data, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
             fortio.writeKeyword("PERMY", data);
         }
-        if (eclipseState_->hasDeckDoubleGridProperty("PERMZ")) {
-            auto data = eclipseState_->getDoubleGridProperty("PERMZ")->getData();
+        if (props.hasDeckDoubleGridProperty("PERMZ")) {
+            auto data = props.getDoubleGridProperty("PERMZ").getData();
             EclipseWriterDetails::convertFromSiTo(data, Opm::prefix::milli * Opm::unit::darcy);
             EclipseWriterDetails::restrictAndReorderToActiveCells(data, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
             fortio.writeKeyword("PERMZ", data);
