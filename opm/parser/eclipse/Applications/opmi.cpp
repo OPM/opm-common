@@ -20,11 +20,6 @@
 #include <iostream>
 #include <memory>
 
-#include <opm/common/OpmLog/CounterLog.hpp>
-#include <opm/common/OpmLog/StreamLog.hpp>
-#include <opm/common/OpmLog/LogUtil.hpp>
-#include <opm/common/OpmLog/OpmLog.hpp>
-
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
