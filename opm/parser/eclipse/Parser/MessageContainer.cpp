@@ -128,10 +128,10 @@ namespace Opm {
     }
 
 
-    void MessageContainer::appendMessages(const MessageContainer& msgContainer)
+    void MessageContainer::appendMessages(const MessageContainer& other)
     {
-        for(auto it = msgContainer.begin(); it != msgContainer.end(); it++) {
-            m_messages.push_back(*it);
+        for(const auto& msg : other) {
+            this->add(msg);
         }
 
     }

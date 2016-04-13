@@ -88,7 +88,7 @@ namespace Opm {
         void add( const Message& );
         void add( Message&& );
         
-        void appendMessages(const MessageContainer& msgContainer);
+        void appendMessages(const MessageContainer& other);
         
         const_iterator begin() const;
         const_iterator end() const;
