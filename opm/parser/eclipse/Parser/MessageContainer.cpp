@@ -128,6 +128,15 @@ namespace Opm {
     }
 
 
+    void MessageContainer::appendMessages(const MessageContainer& msgContainer)
+    {
+        for(auto it = msgContainer.begin(); it != msgContainer.end(); it++) {
+            m_messages.push_back(*it);
+        }
+
+    }
+
+
     MessageContainer::const_iterator MessageContainer::begin() const {
         return m_messages.begin();
     }

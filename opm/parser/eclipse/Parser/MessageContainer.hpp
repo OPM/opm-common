@@ -87,9 +87,12 @@ namespace Opm {
 
         void add( const Message& );
         void add( Message&& );
-
+        
+        void appendMessages(const MessageContainer& msgContainer);
+        
         const_iterator begin() const;
         const_iterator end() const;
+        
     private:
         std::vector<Message> m_messages;
     };
