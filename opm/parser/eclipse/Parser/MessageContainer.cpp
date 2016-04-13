@@ -128,6 +128,14 @@ namespace Opm {
     }
 
 
+    void MessageContainer::appendMessages(const MessageContainer& other)
+    {
+        for(const auto& msg : other) {
+            this->add(msg);
+        }
+    }
+
+
     MessageContainer::const_iterator MessageContainer::begin() const {
         return m_messages.begin();
     }
@@ -135,5 +143,10 @@ namespace Opm {
     MessageContainer::const_iterator MessageContainer::end() const {
         return m_messages.end();
     }
+
+    std::size_t MessageContainer::size() const {
+        return m_messages.size();
+    }
+    
 
 } // namespace Opm
