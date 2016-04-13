@@ -62,3 +62,14 @@ BOOST_AUTO_TEST_CASE(LocationImplicitConversion) {
     BOOST_CHECK( (mc.begin() + 1)->location );
     BOOST_CHECK_THROW( mc.info( "msg", "filename", 0 ), std::invalid_argument );
 }
+
+
+BOOST_AUTO_TEST_CASE(appendMessages) {
+    MessageContainer msgContainer;
+    MessageContainer msgList;
+    msgContainer.error("Error: msgContainer.");
+    msgList.warning("Warning: msgList.");
+    msgContainer.appendMessages(msgList);
+    BOOST_CHECK_EQUAL("Error: msgContainer.", msgContainer.begin()->message);
+    BOOST_CHECK_EQUAL("Warning: msgList.", (msgList.end()-1)->message);
+}
