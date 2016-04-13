@@ -24,7 +24,7 @@
 
 
 BOOST_AUTO_TEST_CASE(RawRecordGetRecordsCorrectElementsReturned) {
-    Opm::RawRecordPtr record(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20                                       /"));
+    Opm::RawRecordPtr record(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20                                       "));
 
     BOOST_CHECK_EQUAL((unsigned) 4, record->size());
 
@@ -42,13 +42,11 @@ BOOST_AUTO_TEST_CASE(RawRecordIsCompleteRecordCompleteRecordReturnsTrue) {
 BOOST_AUTO_TEST_CASE(RawRecordIsCompleteRecordInCompleteRecordReturnsFalse) {
     bool isComplete = Opm::RawRecord::isTerminatedRecordString("'NODIR '  'REVERS'  1  20                                       ");
     BOOST_CHECK_EQUAL(false, isComplete);
-    isComplete = Opm::RawRecord::isTerminatedRecordString("'NODIR '  'REVERS  1  20 /");
-    BOOST_CHECK_EQUAL(false, isComplete);
 }
 
 BOOST_AUTO_TEST_CASE(Rawrecord_OperatorThis_OK) {
-    Opm::RawRecord record(" 'NODIR '  'REVERS'  1  20  /");
-    Opm::RawRecordPtr recordPtr(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20  /"));
+    Opm::RawRecord record(" 'NODIR '  'REVERS'  1  20  ");
+    Opm::RawRecordPtr recordPtr(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20  "));
 
     BOOST_CHECK_EQUAL("'NODIR '", record.getItem(0));
     BOOST_CHECK_EQUAL("'REVERS'", record.getItem(1));
@@ -61,7 +59,7 @@ BOOST_AUTO_TEST_CASE(Rawrecord_OperatorThis_OK) {
 }
 
 BOOST_AUTO_TEST_CASE(Rawrecord_PushFront_OK) {
-    Opm::RawRecordPtr record(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20  /"));
+    Opm::RawRecordPtr record(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20  "));
     record->push_front("String2");
     record->push_front("String1");
 
@@ -71,7 +69,7 @@ BOOST_AUTO_TEST_CASE(Rawrecord_PushFront_OK) {
 }
 
 BOOST_AUTO_TEST_CASE(Rawrecord_size_OK) {
-    Opm::RawRecordPtr record(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20  /"));
+    Opm::RawRecordPtr record(new Opm::RawRecord(" 'NODIR '  'REVERS'  1  20  "));
 
     BOOST_CHECK_EQUAL(4U, record->size());
     record->push_front("String2");
@@ -80,17 +78,17 @@ BOOST_AUTO_TEST_CASE(Rawrecord_size_OK) {
 }
 
 BOOST_AUTO_TEST_CASE(Rawrecord_sizeEmpty_OK) {
-    Opm::RawRecordPtr record(new Opm::RawRecord("/"));
+    Opm::RawRecordPtr record(new Opm::RawRecord(""));
     BOOST_CHECK_EQUAL(0U, record->size());
 }
 
 BOOST_AUTO_TEST_CASE(Rawrecord_spaceOnlyEmpty_OK) {
-    Opm::RawRecordPtr record(new Opm::RawRecord("   /"));
+    Opm::RawRecordPtr record(new Opm::RawRecord("   "));
     BOOST_CHECK_EQUAL(0U, record->size());
 }
 
 BOOST_AUTO_TEST_CASE(Rawrecord_noFileAndKeywordGiven_EmptyStringUsed) {
-    Opm::RawRecordPtr record(new Opm::RawRecord("32 33  /"));
+    Opm::RawRecordPtr record(new Opm::RawRecord("32 33  "));
     BOOST_CHECK_EQUAL("", record->getKeywordName());
     BOOST_CHECK_EQUAL("", record->getFileName());
 }
@@ -98,7 +96,7 @@ BOOST_AUTO_TEST_CASE(Rawrecord_noFileAndKeywordGiven_EmptyStringUsed) {
 BOOST_AUTO_TEST_CASE(Rawrecord_FileAndKeywordGiven_CorrectStringsReturned) {
     const std::string fileName = "/this/is/it";
     const std::string keywordName = "KEYWD";
-    Opm::RawRecordPtr record(new Opm::RawRecord("32 33  /", fileName, keywordName));
+    Opm::RawRecordPtr record(new Opm::RawRecord("32 33  ", fileName, keywordName));
     BOOST_CHECK_EQUAL(keywordName, record->getKeywordName());
     BOOST_CHECK_EQUAL(fileName, record->getFileName());
 }

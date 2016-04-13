@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE(Parse_RawRecordTooFewItems) {
     parserRecord->addItem(itemK);
 
     ParseContext parseContext;
-    RawRecord rawRecord(  "3 3  /" );
+    RawRecord rawRecord(  "3 3  " );
     // no default specified for the third item, record can be parsed just fine but trying
     // to access the data will raise an exception...
     BOOST_CHECK_NO_THROW(parserRecord->parse(parseContext , rawRecord));

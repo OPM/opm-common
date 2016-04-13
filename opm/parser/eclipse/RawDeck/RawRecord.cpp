@@ -33,16 +33,15 @@ using namespace std;
 
 namespace Opm {
 
-    static inline std::string::const_iterator first_nonspace (
-            std::string::const_iterator begin,
-            std::string::const_iterator end ) {
+    template< typename Itr >
+    static inline Itr first_nonspace( Itr begin, Itr end ) {
         return std::find_if_not( begin, end, RawConsts::is_separator );
     }
 
-    static std::deque< string_view > splitSingleRecordString( const string_view& record ) {
+    static std::deque< string_view > splitSingleRecordString( const string_view& line ) {
 
         std::deque< string_view > dst;
-        string_view record( rec );
+        string_view record( line );
 
         for( auto current = first_nonspace( record.begin(), record.end() );
                 current != record.end();
