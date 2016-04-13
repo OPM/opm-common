@@ -246,7 +246,7 @@ namespace Opm {
                 std::string boxSize = std::to_string(static_cast<long long>(indexList.size()));
                 std::string keywordSize = std::to_string(static_cast<long long>(deckItem.size()));
 
-                throw std::invalid_argument("Size mismatch: Box:" + boxSize + "  DecKeyword:" + keywordSize);
+                throw std::invalid_argument("Size mismatch: Box:" + boxSize + "  DeckKeyword:" + keywordSize);
             }
         }
     }

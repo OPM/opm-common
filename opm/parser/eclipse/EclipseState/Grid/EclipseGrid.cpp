@@ -287,12 +287,7 @@ namespace Opm {
         assertVectorSize( DYV    , static_cast<size_t>( dims[1] ) , "DYV");
         assertVectorSize( DZV    , static_cast<size_t>( dims[2] ) , "DZV");
 
-        const int* actnum = nullptr;
-        if (deck->hasKeyword<ParserKeywords::ACTNUM>()) {
-            actnum = deck->getKeyword<ParserKeywords::ACTNUM>().getIntData().data();
-        }
-
-        m_grid.reset( ecl_grid_alloc_dxv_dyv_dzv_depthz( dims[0] , dims[1] , dims[2] , DXV.data() , DYV.data() , DZV.data() , DEPTHZ.data() , actnum ) );
+        m_grid.reset( ecl_grid_alloc_dxv_dyv_dzv_depthz( dims[0] , dims[1] , dims[2] , DXV.data() , DYV.data() , DZV.data() , DEPTHZ.data() , nullptr ) );
     }
 
 
@@ -301,12 +296,7 @@ namespace Opm {
         std::vector<double> DY = createDVector( dims , 1 , "DY" , "DYV" , deck);
         std::vector<double> DZ = createDVector( dims , 2 , "DZ" , "DZV" , deck);
         std::vector<double> TOPS = createTOPSVector( dims , DZ , deck );
-        const int* actnum = nullptr;
-        if (deck->hasKeyword<ParserKeywords::ACTNUM>()) {
-            actnum = deck->getKeyword<ParserKeywords::ACTNUM>().getIntData().data();
-        }
-
-        m_grid.reset( ecl_grid_alloc_dx_dy_dz_tops( dims[0] , dims[1] , dims[2] , DX.data() , DY.data() , DZ.data() , TOPS.data() , actnum ) );
+        m_grid.reset( ecl_grid_alloc_dx_dy_dz_tops( dims[0] , dims[1] , dims[2] , DX.data() , DY.data() , DZ.data() , TOPS.data() , nullptr ) );
     }
 
 
@@ -318,15 +308,7 @@ namespace Opm {
             const auto& COORDKeyWord = deck->getKeyword<ParserKeywords::COORD>();
             const std::vector<double>& zcorn = ZCORNKeyWord.getSIDoubleData();
             const std::vector<double>& coord = COORDKeyWord.getSIDoubleData();
-            const int * actnum = NULL;
             double    * mapaxes = NULL;
-
-            if (deck->hasKeyword<ParserKeywords::ACTNUM>()) {
-                const auto& actnumKeyword = deck->getKeyword<ParserKeywords::ACTNUM>();
-                const std::vector<int>& actnumVector = actnumKeyword.getIntData();
-                actnum = actnumVector.data();
-
-            }
 
             if (deck->hasKeyword<ParserKeywords::MAPAXES>()) {
                 const auto& mapaxesKeyword = deck->getKeyword<ParserKeywords::MAPAXES>();
@@ -347,7 +329,7 @@ namespace Opm {
                     for (size_t i=0; i < 6; i++)
                         mapaxes_float[i] = mapaxes[i];
                 }
-                m_grid.reset( ecl_grid_alloc_GRDECL_data(dims[0] , dims[1] , dims[2] , zcorn_float.data() , coord_float.data() , actnum , mapaxes_float) );
+                m_grid.reset( ecl_grid_alloc_GRDECL_data(dims[0] , dims[1] , dims[2] , zcorn_float.data() , coord_float.data() , nullptr , mapaxes_float) );
 
                 if (mapaxes) {
                     delete[] mapaxes_float;
@@ -390,25 +372,14 @@ namespace Opm {
             const auto& COORDKeyWord = deck->getKeyword<ParserKeywords::COORD>();
             if (COORDKeyWord.getDataSize() != static_cast<size_t>(6*(nx + 1)*(ny + 1))) {
                 const std::string msg =
-                    "Wrong size of the COORD keyword: Expected 8*(nx + 1)*(ny + 1) = "
-                    + std::to_string(static_cast<long long>(8*(nx + 1)*(ny + 1))) + " is "
+                    "Wrong size of the COORD keyword: Expected 6*(nx + 1)*(ny + 1) = "
+                    + std::to_string(static_cast<long long>(6*(nx + 1)*(ny + 1))) + " is "
                     + std::to_string(static_cast<long long>(COORDKeyWord.getDataSize()));
                 OpmLog::addMessage(Log::MessageType::Error , msg);
                 throw std::invalid_argument(msg);
             }
         }
 
-        if (deck->hasKeyword<ParserKeywords::ACTNUM>()) {
-            const auto& ACTNUMKeyWord = deck->getKeyword<ParserKeywords::ACTNUM>();
-            if (ACTNUMKeyWord.getDataSize() != static_cast<size_t>(nx*ny*nz)) {
-                const std::string msg =
-                    "Wrong size of the ACTNUM keyword: Expected nx*ny*nz = "
-                    + std::to_string(static_cast<long long>(nx*ny*nz)) + " is "
-                    + std::to_string(static_cast<long long>(ACTNUMKeyWord.getDataSize()));
-                OpmLog::addMessage(Log::MessageType::Error , msg);
-                throw std::invalid_argument(msg);
-            }
-        }
     }
 
 

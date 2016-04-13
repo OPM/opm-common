@@ -38,6 +38,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 
 BOOST_AUTO_TEST_CASE(CreateMissingDIMENS_throws) {
@@ -592,29 +593,6 @@ BOOST_AUTO_TEST_CASE(CornerPointSizeMismatchZCORN) {
 }
 
 
-BOOST_AUTO_TEST_CASE(CornerPointSizeMismatchACTNUM) {
-    const char *deckData =
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        " 10 10 10 /\n"
-        "GRID\n"
-        "COORD\n"
-        "  726*1 / \n"
-        "ZCORN \n"
-        "  8000*1 / \n"
-        "ACTNUM \n"
-        "  999*1 / \n"
-        "EDIT\n"
-        "\n";
-
-    Opm::ParserPtr parser(new Opm::Parser());
-    Opm::DeckConstPtr deck = parser->parseString(deckData, Opm::ParseContext()) ;
-    BOOST_CHECK_THROW((void)Opm::EclipseGrid( deck ) , std::invalid_argument);
-}
-
-
-
 BOOST_AUTO_TEST_CASE(ResetACTNUM) {
     const char *deckData =
         "RUNSPEC\n"
@@ -763,4 +741,130 @@ BOOST_AUTO_TEST_CASE(ConstructorMINPV) {
     BOOST_CHECK_EQUAL(grid3.getMinpvValue(), 10.0);
     BOOST_CHECK_EQUAL(grid4.getMinpvMode(), Opm::MinpvMode::ModeEnum::OpmFIL);
     BOOST_CHECK_EQUAL(grid4.getMinpvValue(), 20.0);
+}
+
+
+static Opm::DeckPtr createActnumDeck() {
+    const char *deckData = "RUNSPEC\n"
+            "\n"
+            "DIMENS \n"
+            "  2 2 2 / \n"
+            "GRID\n"
+            "DXV\n"
+            "  2*0.25 /\n"
+            "DYV\n"
+            "  2*0.25 /\n"
+            "DZV\n"
+            "  2*0.25 /\n"
+            "DEPTHZ\n"
+            "  9*0.25 /\n"
+            "EQUALS\n"
+            " ACTNUM 0 1 1 1 1 1 1 /\n"
+            "/ \n"
+            "FLUXNUM\n"
+            "8*0 /\n";
+
+    Opm::ParserPtr parser(new Opm::Parser());
+    return parser->parseString(deckData, Opm::ParseContext());
+}
+
+
+/// creates a deck where the top-layer has ACTNUM = 0 and two partially
+/// overlapping 2*2*2 boxes in the center, one [5,7]^3 and one [6,8]^3
+/// have ACTNUM = 0
+static Opm::DeckPtr createActnumBoxDeck() {
+    const char *deckData = "RUNSPEC\n"
+            "\n"
+            "DIMENS \n"
+            "  10 10 10 / \n"
+            "GRID\n"
+            "DXV\n"
+            "  10*0.25 /\n"
+            "DYV\n"
+            "  10*0.25 /\n"
+            "DZV\n"
+            "  10*0.25 /\n"
+            "DEPTHZ\n"
+            "  121*0.25 /\n"
+            "EQUALS\n"
+            " ACTNUM 0 1 10 1 10 1 1 /\n" // disable top layer
+            "/ \n"
+            // start box
+            "BOX\n"
+            "  5 7 5 7 5 7 /\n"
+            "ACTNUM \n"
+            "    0 0 0 0 0 0 0 0 0\n"
+            "    0 0 0 0 0 0 0 0 0\n"
+            "    0 0 0 0 0 0 0 0 0\n"
+            "/\n"
+            "BOX\n" // don't need ENDBOX
+            "  6 8 6 8 6 8 /\n"
+            "ACTNUM \n"
+            "    27*0\n"
+            "/\n"
+            "ENDBOX\n"
+            // end   box
+            "FLUXNUM\n"
+            "1000*0 /\n";
+
+    Opm::ParserPtr parser(new Opm::Parser());
+    return parser->parseString(deckData, Opm::ParseContext());
+}
+
+BOOST_AUTO_TEST_CASE(GridBoxActnum) {
+    Opm::DeckConstPtr deck = createActnumBoxDeck();
+    Opm::EclipseState es(deck, Opm::ParseContext());
+    auto ep = es.get3DProperties();
+    auto grid = es.getEclipseGrid();
+
+    BOOST_CHECK_NO_THROW(ep.getIntGridProperty("ACTNUM"));
+
+    size_t active = 10 * 10 * 10     // 1000
+                    - (10 * 10 * 1)  // - top layer
+                    - ( 3 *  3 * 3)  // - [5,7]^3 box
+                    - ( 3 *  3 * 3)  // - [6,8]^3 box
+                    + ( 2 *  2 * 2); // + inclusion/exclusion
+
+    BOOST_CHECK_NO_THROW(grid->getNumActive());
+    BOOST_CHECK_EQUAL(grid->getNumActive(), active);
+
+    BOOST_CHECK_EQUAL(es.getEclipseGrid()->getNumActive(), active);
+
+    for (size_t x = 0; x < 10; x++) {
+        for (size_t y = 0; y < 10; y++) {
+            for (size_t z = 0; z < 10; z++) {
+                if (z == 0)
+                    BOOST_CHECK(!grid->cellActive(x, y, z));
+                else if (x >= 4 && x <= 6 && y >= 4 && y <= 6 && z >= 4 && z <= 6)
+                    BOOST_CHECK(!grid->cellActive(x, y, z));
+                else if (x >= 5 && x <= 7 && y >= 5 && y <= 7 && z >= 5 && z <= 7)
+                    BOOST_CHECK(!grid->cellActive(x, y, z));
+                else
+                    BOOST_CHECK(grid->cellActive(x, y, z));
+            }
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(GridActnumVia3D) {
+    Opm::DeckConstPtr deck = createActnumDeck();
+
+    Opm::EclipseState es(deck, Opm::ParseContext());
+    auto ep = es.get3DProperties();
+    auto grid = es.getEclipseGrid();
+
+    BOOST_CHECK_NO_THROW(ep.getIntGridProperty("ACTNUM"));
+
+    BOOST_CHECK_NO_THROW(grid->getNumActive());
+    BOOST_CHECK(grid->hasCellInfo());
+    BOOST_CHECK_EQUAL(grid->getNumActive(), 2 * 2 * 2 - 1);
+}
+
+BOOST_AUTO_TEST_CASE(GridActnumViaState) {
+    Opm::DeckConstPtr deck = createActnumDeck();
+
+    BOOST_CHECK_NO_THROW(Opm::EclipseState(deck, Opm::ParseContext()));
+    Opm::EclipseState es(deck, Opm::ParseContext());
+    BOOST_CHECK(es.getEclipseGrid()->hasCellInfo());
+    BOOST_CHECK_EQUAL(es.getEclipseGrid()->getNumActive(), 2 * 2 * 2 - 1);
 }

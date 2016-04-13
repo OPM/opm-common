@@ -57,6 +57,10 @@ namespace Opm {
         m_eclipseGrid(       std::make_shared<EclipseGrid>(deck)),
         m_eclipseProperties( *deck, m_tables, *m_eclipseGrid)
     {
+        // after Eclipse3DProperties has been constructed, we have complete ACTNUM info
+        if (m_eclipseProperties.hasDeckIntGridProperty("ACTNUM"))
+            m_eclipseGrid->resetACTNUM(m_eclipseProperties.getIntGridProperty("ACTNUM").getData().data());
+
         initIOConfig(deck);
 
         m_schedule = ScheduleConstPtr( new Schedule(m_parseContext ,  getEclipseGrid() , deck, m_ioConfig) );

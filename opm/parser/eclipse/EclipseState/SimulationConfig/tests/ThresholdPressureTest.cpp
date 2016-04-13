@@ -183,8 +183,13 @@ static DeckPtr createDeck(const ParseContext& parseContext , const std::string& 
 
 static Eclipse3DProperties getEclipseProperties(const Deck& deck)
 {
-    static const EclipseGrid eclipseGrid( 3, 3, 3 );
-    return Eclipse3DProperties( deck, TableManager( deck ), eclipseGrid );
+    TableManager* tm = new TableManager(deck);
+    EclipseGrid* eg = new EclipseGrid(3, 3, 3);
+
+    // We are intentionally leaking memory here.  To save typing three lines
+    // every time we need an Eclipse3DProperties object, we use this helper
+    // function.  We need pointers so that tm and eg do not go out of scope.
+    return Eclipse3DProperties(deck, *tm, *eg);
 }
 
 
