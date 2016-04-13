@@ -207,8 +207,7 @@ Opm::EclipseWriterPtr createEclipseWriter(Opm::DeckConstPtr deck,
 
   Opm::EclipseWriterPtr eclWriter(new Opm::EclipseWriter(params,
                                                          eclipseState,
-                                                         phaseUsage,
-                                                         0));
+                                                         phaseUsage));
   return eclWriter;
 }
 

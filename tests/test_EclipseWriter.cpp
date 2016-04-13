@@ -92,8 +92,7 @@ void createEclipseWriter(const char *deckString)
     Opm::PhaseUsage phaseUsage = Opm::phaseUsageFromDeck(deck);
     eclWriter.reset(new Opm::EclipseWriter(params,
                                            eclipseState,
-                                           phaseUsage,
-                                           0));
+                                           phaseUsage));
 
     // this check is disabled so far, because UnstructuredGrid uses some weird definition
     // of the term "face". For this grid, "number_of_faces" is 108 which is

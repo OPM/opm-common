@@ -124,8 +124,7 @@ std::shared_ptr<Opm::BlackoilState> createBlackoilState(int timeStepIdx, std::sh
 
 std::shared_ptr<Opm::EclipseWriter> createEclipseWriter(std::shared_ptr<const Opm::Deck> deck,
                                                         std::shared_ptr<Opm::EclipseState> eclipseState,
-                                                        std::shared_ptr<Opm::GridManager> ourFineGridManagerPtr,
-                                                        const int * compressedToCartesianCellIdx)
+                                                        std::shared_ptr<Opm::GridManager> ourFineGridManagerPtr)
 {
     Opm::parameter::ParameterGroup params;
     params.insertParameter("deck_filename", "testcase.data");
@@ -136,8 +135,7 @@ std::shared_ptr<Opm::EclipseWriter> createEclipseWriter(std::shared_ptr<const Op
 
     std::shared_ptr<Opm::EclipseWriter> eclipseWriter = std::make_shared<Opm::EclipseWriter>(params,
                                                                                              eclipseState,
-                                                                                             phaseUsage,
-                                                                                             compressedToCartesianCellIdx);
+                                                                                             phaseUsage);
 
     return eclipseWriter;
 }
@@ -210,8 +208,7 @@ BOOST_AUTO_TEST_CASE(test_EclipseWriterRFTHandler)
 
     std::shared_ptr<Opm::EclipseWriter> eclipseWriter = createEclipseWriter(deck,
                                                                             eclipseState,
-                                                                            ourFineGridManagerPtr,
-                                                                            compressedToCartesianCellIdx);
+                                                                            ourFineGridManagerPtr);
     eclipseWriter->writeInit(*simulatorTimer);
 
 

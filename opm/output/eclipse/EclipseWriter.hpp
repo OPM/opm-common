@@ -70,8 +70,7 @@ public:
      */
     EclipseWriter(const parameter::ParameterGroup& params,
                   Opm::EclipseStateConstPtr eclipseState,
-                  const Opm::PhaseUsage &phaseUsage,
-                  const int* compressedToCartesianCellIdx);
+                  const Opm::PhaseUsage &phaseUsage);
 
     /**
      * We need a destructor in the compilation unit to avoid the

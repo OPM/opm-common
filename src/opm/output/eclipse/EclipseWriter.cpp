@@ -29,6 +29,8 @@
 #include <opm/core/props/BlackoilPhases.hpp>
 #include <opm/core/props/phaseUsageFromDeck.hpp>
 #include <opm/core/grid.h>
+#include <opm/core/grid/GridManager.hpp>
+#include <opm/core/grid/GridHelpers.hpp>
 #include <opm/core/grid/cpgpreprocess/preprocess.h>
 #include <opm/core/simulator/SimulatorTimerInterface.hpp>
 #include <opm/core/simulator/WellState.hpp>
@@ -1416,10 +1418,8 @@ void EclipseWriter::writeTimeStep(const SimulatorTimerInterface& timer,
 
 EclipseWriter::EclipseWriter(const parameter::ParameterGroup& params,
                              Opm::EclipseStateConstPtr eclipseState,
-                             const Opm::PhaseUsage &phaseUsage,
-                             const int* compressedToCartesianCellIdx)
+                             const Opm::PhaseUsage &phaseUsage)
     : eclipseState_(eclipseState)
-    , compressedToCartesianCellIdx_(compressedToCartesianCellIdx)
     , phaseUsage_(phaseUsage)
 {
     const auto eclGrid = eclipseState->getInputGrid();
@@ -1430,12 +1430,18 @@ EclipseWriter::EclipseWriter(const parameter::ParameterGroup& params,
     numCells_ = eclGrid->getNumActive();
     gridToEclipseIdx_ = std::vector<int>(numCells_, int(-1) );
 
-    if( compressedToCartesianCellIdx ) {
+    //TODO
+    //This should be calculated in EclipseGrid
+    std::shared_ptr<Opm::GridManager>  ourFineGridManagerPtr = std::make_shared<Opm::GridManager>(eclipseState->getEclipseGrid());
+    const UnstructuredGrid &ourFinerUnstructuredGrid = *ourFineGridManagerPtr->c_grid();
+    const int* compressedToCartesianCellIdx_ = Opm::UgGridHelpers::globalCell(ourFinerUnstructuredGrid);
+
+    if( compressedToCartesianCellIdx_ ) {
         // if compressedToCartesianCellIdx available then
         // compute mapping to eclipse order
         std::map< int , int > indexMap;
         for (int cellIdx = 0; cellIdx < numCells_; ++cellIdx) {
-            int cartesianCellIdx = compressedToCartesianCellIdx[cellIdx];
+            int cartesianCellIdx = compressedToCartesianCellIdx_[cellIdx];
             indexMap[ cartesianCellIdx ] = cellIdx;
         }
 
@@ -1445,7 +1451,7 @@ EclipseWriter::EclipseWriter(const parameter::ParameterGroup& params,
         }
     }
     else {
-        // if not compressedToCartesianCellIdx was given use identity
+        // if not compressedToCartesianCellIdx_ was given use identity
         for (int cellIdx = 0; cellIdx < numCells_; ++cellIdx) {
             gridToEclipseIdx_[ cellIdx ] = cellIdx;
         }
