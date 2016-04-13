@@ -144,4 +144,9 @@ namespace Opm {
         return m_messages.end();
     }
 
+    std::size_t MessageContainer::size() const {
+        return m_messages.size();
+    }
+    
+
 } // namespace Opm

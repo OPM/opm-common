@@ -67,9 +67,14 @@ BOOST_AUTO_TEST_CASE(LocationImplicitConversion) {
 BOOST_AUTO_TEST_CASE(appendMessages) {
     MessageContainer msgContainer;
     MessageContainer msgList;
+
     msgContainer.error("Error: msgContainer.");
+    BOOST_CHECK_EQUAL(1, msgContainer.size());
+
     msgList.warning("Warning: msgList.");
     msgContainer.appendMessages(msgList);
+    BOOST_CHECK_EQUAL(2, msgContainer.size());
+
     BOOST_CHECK_EQUAL("Error: msgContainer.", msgContainer.begin()->message);
-    BOOST_CHECK_EQUAL("Warning: msgList.", (msgList.end()-1)->message);
+    BOOST_CHECK_EQUAL("Warning: msgList.", (msgContainer.end()-1)->message);
 }

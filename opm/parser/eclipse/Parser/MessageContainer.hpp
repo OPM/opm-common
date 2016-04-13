@@ -92,6 +92,8 @@ namespace Opm {
         
         const_iterator begin() const;
         const_iterator end() const;
+
+        std::size_t size() const;
         
     private:
         std::vector<Message> m_messages;
