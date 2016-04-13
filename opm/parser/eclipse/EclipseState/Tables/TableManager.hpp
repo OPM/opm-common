@@ -111,13 +111,13 @@ namespace Opm {
         size_t getNumPhases() const;
 
         /// deck has keyword "IMPTVD" --- Imbition end-point versus depth tables
-        const bool useImptvd() const;
+        bool useImptvd() const;
 
         /// deck has keyword "ENPTVD" --- Saturation end-point versus depth tables
-        const bool useEnptvd() const;
+        bool useEnptvd() const;
 
         /// deck has keyword "EQLNUM" --- Equilibriation region numbers
-        const bool useEqlnum() const;
+        bool useEqlnum() const;
 
     private:
         TableContainer& forceGetTables( const std::string& tableName , size_t numTables);

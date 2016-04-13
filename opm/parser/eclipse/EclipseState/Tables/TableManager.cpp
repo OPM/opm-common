@@ -694,15 +694,15 @@ namespace Opm {
         return m_vfpinjTables;
     }
 
-    const bool TableManager::useImptvd() const {
+    bool TableManager::useImptvd() const {
         return hasImptvd;
     }
 
-    const bool TableManager::useEnptvd() const {
+    bool TableManager::useEnptvd() const {
         return hasEnptvd;
     }
 
-    const bool TableManager::useEqlnum() const {
+    bool TableManager::useEqlnum() const {
         return hasEqlnum;
     }
 
