@@ -39,10 +39,10 @@ namespace Opm {
     namespace GridPropertyPostProcessor {
 
         void distTopLayer( std::vector<double>&    values,
-                           const TableManager*     tableManager,
+                           const TableManager*     /* tableManager */,
                            const EclipseGrid*      eclipseGrid,
-                           GridProperties<int>*    intGridProperties,
-                           GridProperties<double>* doubleGridProperties)
+                           GridProperties<int>*    /* intGridProperties */,
+                           GridProperties<double>* /* doubleGridProperties */)
         {
             size_t layerSize = eclipseGrid->getNX() * eclipseGrid->getNY();
             size_t gridSize  = eclipseGrid->getCartesianSize();
@@ -55,9 +55,9 @@ namespace Opm {
 
         /// initPORV uses doubleGridProperties: PORV, PORO, NTG, MULTPV
         void initPORV( std::vector<double>&    values,
-                       const TableManager*     tableManager,
+                       const TableManager*     /* tableManager */,
                        const EclipseGrid*      eclipseGrid,
-                       GridProperties<int>*    intGridProperties,
+                       GridProperties<int>*    /* intGridProperties */,
                        GridProperties<double>* doubleGridProperties)
         {
             /*

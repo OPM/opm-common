@@ -84,7 +84,7 @@ namespace Opm {
             const TableManager* tables,
             const EclipseGrid* grid,
             GridProperties<int>* ig_props,
-            GridProperties<double>* dg_props) {
+            GridProperties<double>* /* dg_props */) {
 
         if( !tables->useEqlnum() ) {
             /* if values are defaulted in the TEMPI keyword, but no

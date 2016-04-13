@@ -684,7 +684,7 @@ namespace Opm {
                                               const TableManager* tableManager,
                                               const EclipseGrid* eclipseGrid,
                                               GridProperties<int>* intGridProperties,
-                                              GridProperties<double>* doubleGridProperties,
+                                              GridProperties<double>* /* doubleGridProperties */,
                                               bool useOneMinusTableValue ) {
 
 
@@ -731,7 +731,7 @@ namespace Opm {
                                               const TableManager* tableManager,
                                               const EclipseGrid* eclipseGrid,
                                               GridProperties<int>* intGridProperties,
-                                              GridProperties<double>* doubleGridProperties,
+                                              GridProperties<double>* /* doubleGridProperties */,
                                               bool useOneMinusTableValue ) {
 
         std::vector< double > values( size, 0 );
