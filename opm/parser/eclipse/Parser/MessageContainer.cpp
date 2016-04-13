@@ -133,7 +133,6 @@ namespace Opm {
         for(const auto& msg : other) {
             this->add(msg);
         }
-
     }
 
 
