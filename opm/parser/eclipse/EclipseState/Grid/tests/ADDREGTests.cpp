@@ -35,9 +35,10 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
-#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 
 static Opm::DeckPtr createDeckInvalidArray() {
@@ -249,13 +250,13 @@ BOOST_AUTO_TEST_CASE(UnInitializedVectorThrows) {
 BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
     Opm::DeckPtr deck = createValidIntDeck();
     Opm::EclipseState state(deck , Opm::ParseContext());
-    std::shared_ptr<const Opm::GridProperty<int> > property = state.getIntGridProperty( "SATNUM");
+    const auto& property = state.get3DProperties().getIntGridProperty( "SATNUM");
     for (size_t j=0; j< 5; j++)
         for (size_t i = 0; i < 5; i++) {
             if (i < 2)
-                BOOST_CHECK_EQUAL( 12 , property->iget(i,j,0));
+                BOOST_CHECK_EQUAL( 12 , property.iget(i,j,0));
             else
-                BOOST_CHECK_EQUAL( 21 , property->iget(i,j,0));
+                BOOST_CHECK_EQUAL( 21 , property.iget(i,j,0));
         }
 
 }
@@ -263,14 +264,15 @@ BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
 
 BOOST_AUTO_TEST_CASE(UnitAppliedCorrectly) {
     Opm::DeckPtr deck = createValidPERMXDeck();
-    Opm::EclipseState state(deck , Opm::ParseContext());
-    std::shared_ptr<const Opm::GridProperty<double> > permx = state.getDoubleGridProperty( "PERMX");
+    const Opm::EclipseState state( deck, Opm::ParseContext() );
+    const auto& props = state.get3DProperties();
+    const auto& permx = props.getDoubleGridProperty( "PERMX");
 
     for (size_t j=0; j< 5; j++)
         for (size_t i = 0; i < 5; i++) {
             if (i < 2)
-                BOOST_CHECK_EQUAL( 2 * Opm::Metric::Permeability , permx->iget(i,j,0));
+                BOOST_CHECK_CLOSE( 2 * Opm::Metric::Permeability , permx.iget(i,j,0), 0.0001);
             else
-                BOOST_CHECK_EQUAL( 4 * Opm::Metric::Permeability , permx->iget(i,j,0));
+                BOOST_CHECK_CLOSE( 4 * Opm::Metric::Permeability , permx.iget(i,j,0), 0.0001);
         }
 }

@@ -9,3 +9,4 @@ install
 .project
 /testdata/statoil
 .idea
+/Debug/

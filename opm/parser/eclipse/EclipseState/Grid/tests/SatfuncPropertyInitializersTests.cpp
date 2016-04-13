@@ -26,6 +26,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -34,11 +35,10 @@
 using namespace Opm;
 
 void check_property(EclipseState eclState1, EclipseState eclState2,  const std::string& propertyName) {
-     const std::vector<double> data1 = eclState1.getDoubleGridProperty(propertyName)->getData();
-     const std::vector<double> data2 = eclState2.getDoubleGridProperty(propertyName)->getData();
+    const std::vector<double> data1 = eclState1.get3DProperties().getDoubleGridProperty(propertyName).getData();
+    const std::vector<double> data2 = eclState2.get3DProperties().getDoubleGridProperty(propertyName).getData();
 
-     BOOST_CHECK_CLOSE(data1[0], data2[0],1e-12);
-
+    BOOST_CHECK_CLOSE(data1[0], data2[0],1e-12);
 }
 
 BOOST_AUTO_TEST_CASE(SaturationFunctionFamilyTests) {
@@ -139,10 +139,8 @@ BOOST_AUTO_TEST_CASE(SaturationFunctionFamilyTests) {
     strcat(familyMixDeck , deckdefault);
     strcat(familyMixDeck , family1);
     strcat(familyMixDeck , family2);
+
     DeckPtr deckMix = parser->parseString(familyMixDeck, parseContext) ;
     EclipseState stateMix(deckMix, parseContext);
-    BOOST_CHECK_THROW(stateMix.getDoubleGridProperty("SGCR") , std::invalid_argument);
-
+    BOOST_CHECK_THROW(stateMix.get3DProperties().getDoubleGridProperty("SGCR") , std::invalid_argument);
 }
-
-

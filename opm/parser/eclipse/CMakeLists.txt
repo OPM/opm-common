@@ -70,6 +70,7 @@ ${generator_source}
 
 set (state_source
 EclipseState/EclipseState.cpp
+EclipseState/Eclipse3DProperties.cpp
 EclipseState/Messages.cpp
 #
 EclipseState/checkDeck.cpp
@@ -169,6 +170,7 @@ Units/Dimension.hpp
 Units/ConversionFactors.hpp
 #
 EclipseState/EclipseState.hpp
+EclipseState/Eclipse3DProperties.hpp
 EclipseState/Messages.hpp
 #
 EclipseState/checkDeck.hpp

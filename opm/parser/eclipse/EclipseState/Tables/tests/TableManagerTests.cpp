@@ -64,13 +64,54 @@ std::shared_ptr<const Opm::Deck> createSingleRecordDeck() {
 }
 
 
+std::shared_ptr<const Opm::Deck> createSingleRecordDeckWithVd() {
+    const char *deckData =
+        "RUNSPEC\n"
+        "ENDSCALE\n"
+        "2* 1 2 /\n"
+        "PROPS\n"
+        "TABDIMS\n"
+        " 2 /\n"
+        "\n"
+        "SWFN\n"
+        "0.22 .0   7.0 \n"
+        "0.3  .0   4.0 \n"
+        "0.5  .24  2.5 \n"
+        "0.8  .65  1.0 \n"
+        "0.9  .83  .5  \n"
+        "1.0  1.00 .0 /\n"
+        "/\n"
+        "IMPTVD\n"
+        "3000.0 6*0.1 0.31 1*0.1\n"
+        "9000.0 6*0.1 0.32 1*0.1/\n"
+        "ENPTVD\n"
+        "3000.0 0.20 0.20 1.0 0.0 0.04 1.0 0.18 0.22\n"
+        "9000.0 0.22 0.22 1.0 0.0 0.04 1.0 0.18 0.22 /";
+
+    Opm::ParserPtr parser(new Opm::Parser);
+    Opm::DeckConstPtr deck(parser->parseString(deckData, Opm::ParseContext()));
+    return deck;
+}
+
 
 BOOST_AUTO_TEST_CASE( CreateTables ) {
     std::shared_ptr<const Opm::Deck> deck = createSingleRecordDeck();
     Opm::TableManager tables(*deck);
     auto tabdims = tables.getTabdims();
     BOOST_CHECK_EQUAL( tabdims->getNumSatTables() , 2 );
+    BOOST_CHECK( !tables.useImptvd() );
+    BOOST_CHECK( !tables.useEnptvd() );
 }
+
+BOOST_AUTO_TEST_CASE( CreateTablesWithVd ) {
+    std::shared_ptr<const Opm::Deck> deck = createSingleRecordDeckWithVd();
+    Opm::TableManager tables(*deck);
+    auto tabdims = tables.getTabdims();
+    BOOST_CHECK_EQUAL( tabdims->getNumSatTables() , 2 );
+    BOOST_CHECK( tables.useImptvd() );
+    BOOST_CHECK( tables.useEnptvd() );
+}
+
 
 /*****************************************************************/
 

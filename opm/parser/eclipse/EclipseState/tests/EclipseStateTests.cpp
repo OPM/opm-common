@@ -1,21 +1,21 @@
 /*
-  Copyright 2013 Statoil ASA.
+Copyright 2013 Statoil ASA.
 
-  This file is part of the Open Porous Media project (OPM).
+This file is part of the Open Porous Media project (OPM).
 
-  OPM is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
+OPM is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-  OPM is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
+OPM is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-  You should have received a copy of the GNU General Public License
-  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+You should have received a copy of the GNU General Public License
+along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include <stdexcept>
 #include <iostream>
@@ -35,15 +35,18 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/checkDeck.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Fault.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/Units/ConversionFactors.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -54,270 +57,257 @@ using namespace Opm;
 
 
 static DeckPtr createDeckTOP() {
-    const char *deckData =
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        " 10 10 10 /\n"
-        "GRID\n"
-        "DX\n"
-        "1000*0.25 /\n"
-        "DYV\n"
-        "10*0.25 /\n"
-        "DZ\n"
-        "1000*0.25 /\n"
-        "TOPS\n"
-        "1000*0.25 /\n"
-        "PORO \n"
-        "100*0.10 /\n"
-        "PERMX \n"
-        "100*0.25 /\n"
-        "EDIT\n"
-        "OIL\n"
-        "\n"
-        "GAS\n"
-        "\n"
-        "TITLE\n"
-        "The title\n"
-        "\n"
-        "START\n"
-        "8 MAR 1998 /\n"
-        "\n"
-        "PROPS\n"
-        "REGIONS\n"
-        "SWAT\n"
-        "1000*1 /\n"
-        "SATNUM\n"
-        "1000*2 /\n"
-        "\n";
+const char *deckData =
+"RUNSPEC\n"
+"\n"
+"DIMENS\n"
+" 10 10 10 /\n"
+"GRID\n"
+"DX\n"
+"1000*0.25 /\n"
+"DYV\n"
+"10*0.25 /\n"
+"DZ\n"
+"1000*0.25 /\n"
+"TOPS\n"
+"1000*0.25 /\n"
+"PORO \n"
+"100*0.10 /\n"
+"PERMX \n"
+"100*0.25 /\n"
+"EDIT\n"
+"OIL\n"
+"\n"
+"GAS\n"
+"\n"
+"TITLE\n"
+"The title\n"
+"\n"
+"START\n"
+"8 MAR 1998 /\n"
+"\n"
+"PROPS\n"
+"REGIONS\n"
+"SWAT\n"
+"1000*1 /\n"
+"SATNUM\n"
+"1000*2 /\n"
+"\n";
 
-    ParserPtr parser(new Parser());
-    return parser->parseString(deckData, ParseContext()) ;
+ParserPtr parser(new Parser());
+return parser->parseString(deckData, ParseContext()) ;
 }
-
-
 
 BOOST_AUTO_TEST_CASE(GetPOROTOPBased) {
     DeckPtr deck = createDeckTOP();
     EclipseState state(deck , ParseContext());
+    const Eclipse3DProperties& props = state.get3DProperties();
 
-    std::shared_ptr<const GridProperty<double> > poro = state.getDoubleGridProperty( "PORO" );
-    std::shared_ptr<const GridProperty<double> > permx = state.getDoubleGridProperty( "PERMX" );
+    const GridProperty<double>& poro  = props.getDoubleGridProperty( "PORO" );
+    const GridProperty<double>& permx = props.getDoubleGridProperty( "PERMX" );
 
-    BOOST_CHECK_EQUAL(1000U , poro->getCartesianSize() );
-    BOOST_CHECK_EQUAL(1000U , permx->getCartesianSize() );
-    for (size_t i=0; i < poro->getCartesianSize(); i++) {
-        BOOST_CHECK_EQUAL( 0.10 , poro->iget(i) );
-        BOOST_CHECK_EQUAL( 0.25 * Metric::Permeability , permx->iget(i) );
+    BOOST_CHECK_EQUAL(1000U , poro.getCartesianSize() );
+    BOOST_CHECK_EQUAL(1000U , permx.getCartesianSize() );
+    for (size_t i=0; i < poro.getCartesianSize(); i++) {
+        BOOST_CHECK_EQUAL( 0.10 , poro.iget(i) );
+        BOOST_CHECK_EQUAL( 0.25 * Metric::Permeability , permx.iget(i) );
     }
-
 }
 
-
 static DeckPtr createDeck() {
-    const char *deckData =
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        " 10 10 10 /\n"
-        "GRID\n"
-        "FAULTS \n"
-        "  'F1'  1  1  1  4   1  4  'X' / \n"
-        "  'F2'  5  5  1  4   1  4  'X-' / \n"
-        "/\n"
-        "MULTFLT \n"
-        "  'F1' 0.50 / \n"
-        "  'F2' 0.50 / \n"
-        "/\n"
-        "EDIT\n"
-        "MULTFLT /\n"
-        "  'F2' 0.25 / \n"
-        "/\n"
-        "OIL\n"
-        "\n"
-        "GAS\n"
-        "\n"
-        "TITLE\n"
-        "The title\n"
-        "\n"
-        "START\n"
-        "8 MAR 1998 /\n"
-        "\n"
-        "PROPS\n"
-        "REGIONS\n"
-        "SWAT\n"
-        "1000*1 /\n"
-        "SATNUM\n"
-        "1000*2 /\n"
-        "\n";
+const char *deckData =
+"RUNSPEC\n"
+"\n"
+"DIMENS\n"
+" 10 10 10 /\n"
+"GRID\n"
+"FAULTS \n"
+"  'F1'  1  1  1  4   1  4  'X' / \n"
+"  'F2'  5  5  1  4   1  4  'X-' / \n"
+"/\n"
+"MULTFLT \n"
+"  'F1' 0.50 / \n"
+"  'F2' 0.50 / \n"
+"/\n"
+"EDIT\n"
+"MULTFLT /\n"
+"  'F2' 0.25 / \n"
+"/\n"
+"OIL\n"
+"\n"
+"GAS\n"
+"\n"
+"TITLE\n"
+"The title\n"
+"\n"
+"START\n"
+"8 MAR 1998 /\n"
+"\n"
+"PROPS\n"
+"REGIONS\n"
+"SWAT\n"
+"1000*1 /\n"
+"SATNUM\n"
+"1000*2 /\n"
+"\n";
 
-    ParserPtr parser(new Parser());
-    return parser->parseString(deckData, ParseContext()) ;
+ParserPtr parser(new Parser());
+return parser->parseString(deckData, ParseContext()) ;
 }
 
 
 static DeckPtr createDeckNoFaults() {
-    const char *deckData =
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        " 10 10 10 /\n"
-        "GRID\n"
-        "PROPS\n"
-        "-- multiply one layer for each face\n"
-        "MULTX\n"
-        " 100*1 100*10 800*1 /\n"
-        "MULTX-\n"
-        " 200*1 100*11 700*1 /\n"
-        "MULTY\n"
-        " 300*1 100*12 600*1 /\n"
-        "MULTY-\n"
-        " 400*1 100*13 500*1 /\n"
-        "MULTZ\n"
-        " 500*1 100*14 400*1 /\n"
-        "MULTZ-\n"
-        " 600*1 100*15 300*1 /\n"
-        "\n";
+const char *deckData =
+"RUNSPEC\n"
+"\n"
+"DIMENS\n"
+" 10 10 10 /\n"
+"GRID\n"
+"PROPS\n"
+"-- multiply one layer for each face\n"
+"MULTX\n"
+" 100*1 100*10 800*1 /\n"
+"MULTX-\n"
+" 200*1 100*11 700*1 /\n"
+"MULTY\n"
+" 300*1 100*12 600*1 /\n"
+"MULTY-\n"
+" 400*1 100*13 500*1 /\n"
+"MULTZ\n"
+" 500*1 100*14 400*1 /\n"
+"MULTZ-\n"
+" 600*1 100*15 300*1 /\n"
+"\n";
 
-    ParserPtr parser(new Parser());
-    return parser->parseString(deckData, ParseContext()) ;
+ParserPtr parser(new Parser());
+return parser->parseString(deckData, ParseContext()) ;
 }
 
 
 BOOST_AUTO_TEST_CASE(CreateSchedule) {
-    DeckPtr deck = createDeck();
-    EclipseState state(deck , ParseContext());
-    ScheduleConstPtr schedule = state.getSchedule();
-    EclipseGridConstPtr eclipseGrid = state.getEclipseGrid();
+DeckPtr deck = createDeck();
+EclipseState state(deck , ParseContext());
+ScheduleConstPtr schedule = state.getSchedule();
+EclipseGridConstPtr eclipseGrid = state.getEclipseGrid();
 
-    BOOST_CHECK_EQUAL( schedule->getStartTime() , boost::posix_time::ptime(boost::gregorian::date(1998 , 3 , 8 )));
+BOOST_CHECK_EQUAL( schedule->getStartTime() , boost::posix_time::ptime(boost::gregorian::date(1998 , 3 , 8 )));
 }
 
 
 
 static DeckPtr createDeckSimConfig() {
-    const std::string& inputStr = "RUNSPEC\n"
-                                  "EQLOPTS\n"
-                                  "THPRES /\n "
-                                  "DIMENS\n"
-                                  "10 3 4 /\n"
-                                  "\n"
-                                  "GRID\n"
-                                  "REGIONS\n"
-                                  "EQLNUM\n"
-                                  "10*1 10*2 100*3 /\n "
-                                  "\n"
+const std::string& inputStr = "RUNSPEC\n"
+			  "EQLOPTS\n"
+			  "THPRES /\n "
+			  "DIMENS\n"
+			  "10 3 4 /\n"
+			  "\n"
+			  "GRID\n"
+			  "REGIONS\n"
+			  "EQLNUM\n"
+			  "10*1 10*2 100*3 /\n "
+			  "\n"
 
-                                  "SOLUTION\n"
-                                  "THPRES\n"
-                                  "1 2 12.0/\n"
-                                  "1 3 5.0/\n"
-                                  "2 3 7.0/\n"
-                                  "/\n"
-                                  "\n";
+			  "SOLUTION\n"
+			  "THPRES\n"
+			  "1 2 12.0/\n"
+			  "1 3 5.0/\n"
+			  "2 3 7.0/\n"
+			  "/\n"
+			  "\n";
 
 
-    ParserPtr parser(new Parser());
-    return parser->parseString(inputStr, ParseContext()) ;
+ParserPtr parser(new Parser());
+return parser->parseString(inputStr, ParseContext()) ;
 }
 
 
 BOOST_AUTO_TEST_CASE(CreateSimulationConfig) {
 
-    DeckPtr deck = createDeckSimConfig();
-    EclipseState state(deck, ParseContext());
-    SimulationConfigConstPtr simulationConfig = state.getSimulationConfig();
-    std::shared_ptr<const ThresholdPressure> thresholdPressure = simulationConfig->getThresholdPressure();
-    BOOST_CHECK_EQUAL(thresholdPressure->size(), 3);
+DeckPtr deck = createDeckSimConfig();
+EclipseState state(deck, ParseContext());
+SimulationConfigConstPtr simConf = state.getSimulationConfig();
+
+BOOST_CHECK( simConf->hasThresholdPressure() );
+
+std::shared_ptr<const ThresholdPressure> thresholdPressure = simConf->getThresholdPressure();
+BOOST_CHECK_EQUAL(thresholdPressure->size(), 3);
 }
 
 
 
 BOOST_AUTO_TEST_CASE(PhasesCorrect) {
     DeckPtr deck = createDeck();
-    EclipseState state(deck, ParseContext());
-
-    BOOST_CHECK(  state.hasPhase( Phase::PhaseEnum::OIL ));
-    BOOST_CHECK(  state.hasPhase( Phase::PhaseEnum::GAS ));
-    BOOST_CHECK( !state.hasPhase( Phase::PhaseEnum::WATER ));
+    EclipseState state( deck, ParseContext() );
+    const auto& tm = state.getTableManager();
+    BOOST_CHECK(   tm.hasPhase( Phase::PhaseEnum::OIL ));
+    BOOST_CHECK(   tm.hasPhase( Phase::PhaseEnum::GAS ));
+    BOOST_CHECK( ! tm.hasPhase( Phase::PhaseEnum::WATER ));
 }
-
 
 BOOST_AUTO_TEST_CASE(TitleCorrect) {
     DeckPtr deck = createDeck();
-    EclipseState state(deck, ParseContext());
+    EclipseState state( deck, ParseContext() );
 
-    BOOST_CHECK_EQUAL( state.getTitle(), "The title");
+    BOOST_CHECK_EQUAL( state.getTitle(), "The title" );
 }
-
 
 BOOST_AUTO_TEST_CASE(IntProperties) {
     DeckPtr deck = createDeck();
-    EclipseState state(deck, ParseContext());
+    EclipseState state( deck, ParseContext() );
 
-    BOOST_CHECK_EQUAL( false , state.supportsGridProperty("NONO"));
-    BOOST_CHECK_EQUAL( true  , state.supportsGridProperty("SATNUM"));
-    BOOST_CHECK_EQUAL( true  , state.hasDeckIntGridProperty("SATNUM"));
+    BOOST_CHECK_EQUAL( false, state.get3DProperties().supportsGridProperty( "NONO" ) );
+    BOOST_CHECK_EQUAL( true,  state.get3DProperties().supportsGridProperty( "SATNUM" ) );
+    BOOST_CHECK_EQUAL( true,  state.get3DProperties().hasDeckIntGridProperty( "SATNUM" ) );
 }
 
-
-
-BOOST_AUTO_TEST_CASE(PropertiesNotSupportedThrows) {
-    std::shared_ptr<CounterLog> counter = std::make_shared<CounterLog>(Log::MessageType::Error);
-    OpmLog::addBackend("COUNTER" , counter);
+BOOST_AUTO_TEST_CASE(PropertiesNotSupportsFalse) {
     DeckPtr deck = createDeck();
-    EclipseState state(deck , ParseContext());
-    const auto& swat = deck->getKeyword("SWAT");
-    BOOST_CHECK_EQUAL( false , state.supportsGridProperty("SWAT"));
-    state.loadGridPropertyFromDeckKeyword(std::make_shared<const Box>(10,10,10), swat);
-    BOOST_CHECK_EQUAL( 1 , counter->numMessages(Log::MessageType::Error) );
+    EclipseState state( deck, ParseContext() );
+    const auto& props = state.get3DProperties();
+    BOOST_CHECK( ! props.supportsGridProperty( "SWAT" ) );
 }
-
 
 BOOST_AUTO_TEST_CASE(GetProperty) {
     DeckPtr deck = createDeck();
     EclipseState state(deck, ParseContext());
 
-    std::shared_ptr<const GridProperty<int> > satNUM = state.getIntGridProperty( "SATNUM" );
+    const auto& satNUM = state.get3DProperties().getIntGridProperty( "SATNUM" );
 
-    BOOST_CHECK_EQUAL(1000U , satNUM->getCartesianSize() );
-    for (size_t i=0; i < satNUM->getCartesianSize(); i++)
-        BOOST_CHECK_EQUAL( 2 , satNUM->iget(i) );
+    BOOST_CHECK_EQUAL(1000U , satNUM.getCartesianSize() );
+    for (size_t i=0; i < satNUM.getCartesianSize(); i++)
+        BOOST_CHECK_EQUAL( 2 , satNUM.iget(i) );
 
-    BOOST_CHECK_THROW( satNUM->iget(100000) , std::invalid_argument);
+    BOOST_CHECK_THROW( satNUM.iget(100000) , std::invalid_argument);
 }
-
 
 BOOST_AUTO_TEST_CASE(GetTransMult) {
     DeckPtr deck = createDeck();
-    EclipseState state(deck, ParseContext());
+    EclipseState state( deck, ParseContext() );
     std::shared_ptr<const TransMult> transMult = state.getTransMult();
 
-
-    BOOST_CHECK_EQUAL( 1.0 , transMult->getMultiplier(1,0,0,FaceDir::XPlus));
-    BOOST_CHECK_THROW(transMult->getMultiplier(1000 , FaceDir::XPlus) , std::invalid_argument);
+    BOOST_CHECK_EQUAL( 1.0, transMult->getMultiplier( 1, 0, 0, FaceDir::XPlus ) );
+    BOOST_CHECK_THROW( transMult->getMultiplier( 1000, FaceDir::XPlus ), std::invalid_argument );
 }
-
-
 
 BOOST_AUTO_TEST_CASE(GetFaults) {
     DeckPtr deck = createDeck();
-    EclipseState state(deck , ParseContext());
+    EclipseState state( deck, ParseContext() );
     std::shared_ptr<const FaultCollection> faults = state.getFaults();
 
-    BOOST_CHECK( faults->hasFault("F1") );
-    BOOST_CHECK( faults->hasFault("F2") );
+    BOOST_CHECK( faults->hasFault( "F1" ) );
+    BOOST_CHECK( faults->hasFault( "F2" ) );
 
-    std::shared_ptr<const Fault> F1 = faults->getFault("F1");
-    std::shared_ptr<const Fault> F2 = faults->getFault("F2");
+    std::shared_ptr<const Fault> F1 = faults->getFault( "F1" );
+    std::shared_ptr<const Fault> F2 = faults->getFault( "F2" );
 
-    BOOST_CHECK_EQUAL( 0.50 , F1->getTransMult());
-    BOOST_CHECK_EQUAL( 0.25 , F2->getTransMult());
+    BOOST_CHECK_EQUAL( 0.50, F1->getTransMult() );
+    BOOST_CHECK_EQUAL( 0.25, F2->getTransMult() );
 
     std::shared_ptr<const TransMult> transMult = state.getTransMult();
-    BOOST_CHECK_EQUAL( transMult->getMultiplier(0 , 0 , 0 , FaceDir::XPlus) , 0.50 );
-    BOOST_CHECK_EQUAL( transMult->getMultiplier(4 , 3 , 0 , FaceDir::XMinus) , 0.25 );
-    BOOST_CHECK_EQUAL( transMult->getMultiplier(4 , 3 , 0 , FaceDir::ZPlus) , 1.00 );
+    BOOST_CHECK_EQUAL( transMult->getMultiplier( 0, 0, 0, FaceDir::XPlus ), 0.50 );
+    BOOST_CHECK_EQUAL( transMult->getMultiplier( 4, 3, 0, FaceDir::XMinus ), 0.25 );
+    BOOST_CHECK_EQUAL( transMult->getMultiplier( 4, 3, 0, FaceDir::ZPlus ), 1.00 );
 }
 
 
@@ -403,22 +393,28 @@ static DeckPtr createDeckWithGridOpts() {
 BOOST_AUTO_TEST_CASE(NoGridOptsDefaultRegion) {
     DeckPtr deck = createDeckNoGridOpts();
     EclipseState state(deck, ParseContext());
-    auto multnum = state.getIntGridProperty("MULTNUM");
-    auto fluxnum = state.getIntGridProperty("FLUXNUM");
-    auto def_property = state.getDefaultRegion();
+    const auto& props   = state.get3DProperties();
+    const auto& multnum = props.getIntGridProperty("MULTNUM");
+    const auto& fluxnum = props.getIntGridProperty("FLUXNUM");
+    const auto  default_kw = props.getDefaultRegionKeyword();
+    const auto& def_pro = props.getIntGridProperty(default_kw);
 
-    BOOST_CHECK_EQUAL( fluxnum  , def_property );
+    BOOST_CHECK_EQUAL( &fluxnum  , &def_pro );
+    BOOST_CHECK_NE( &fluxnum  , &multnum );
 }
 
 
 BOOST_AUTO_TEST_CASE(WithGridOptsDefaultRegion) {
     DeckPtr deck = createDeckWithGridOpts();
     EclipseState state(deck, ParseContext());
-    auto multnum = state.getIntGridProperty("MULTNUM");
-    auto fluxnum = state.getIntGridProperty("FLUXNUM");
-    auto def_property = state.getDefaultRegion();
+    const auto& props   = state.get3DProperties();
+    const auto& multnum = props.getIntGridProperty("MULTNUM");
+    const auto& fluxnum = props.getIntGridProperty("FLUXNUM");
+    const auto  default_kw = props.getDefaultRegionKeyword();
+    const auto& def_pro = props.getIntGridProperty(default_kw);
 
-    BOOST_CHECK_EQUAL( multnum , def_property );
+    BOOST_CHECK_EQUAL( &multnum , &def_pro );
+    BOOST_CHECK_NE( &fluxnum  , &multnum );
 }
 
 

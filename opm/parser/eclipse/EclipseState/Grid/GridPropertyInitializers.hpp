@@ -28,22 +28,28 @@
 */
 namespace Opm {
 
-class Deck;
-class EclipseState;
+class EclipseGrid;
+class TableManager;
+template <typename T> class GridProperties;
+
 
 template< typename T >
     class GridPropertyInitFunction {
         public:
             using signature = std::vector< T >(*)(
                         size_t,
-                        const Deck&,
-                        const EclipseState&
-                    );
+                        const TableManager*,
+                        const EclipseGrid*,
+                        GridProperties<int>*,
+                        GridProperties<double>*);
 
             GridPropertyInitFunction(
                     signature,
-                    const Deck&,
-                    const EclipseState& );
+                    const TableManager*,
+                    const EclipseGrid*,
+                    GridProperties<int>*,
+                    GridProperties<double>*
+                    );
 
             GridPropertyInitFunction( T );
             std::vector< T > operator()( size_t ) const;
@@ -51,36 +57,50 @@ template< typename T >
         private:
             signature f = nullptr;
             T constant;
-            const Deck* deck = nullptr;
-            const EclipseState* es = nullptr;
-    };
+            const TableManager*     tm  = nullptr;
+            const EclipseGrid*      eg  = nullptr;
+            GridProperties<int>*    igp = nullptr;
+            GridProperties<double>* dgp = nullptr;
+              };
 
 template< typename T >
     class GridPropertyPostFunction {
         public:
             using signature = void(*)( std::vector< T >&,
-                                       const Deck&,
-                                       const EclipseState&
+                                       const TableManager*,
+                                       const EclipseGrid*,
+                                       GridProperties<int>*,
+                                       GridProperties<double>*
                                      );
 
             GridPropertyPostFunction() = default;
             GridPropertyPostFunction(
                     signature,
-                    const Deck&,
-                    const EclipseState& );
+                    const TableManager*,
+                    const EclipseGrid*,
+                    GridProperties<int>*,
+                    GridProperties<double>*
+                );
 
             void operator()( std::vector< T >& ) const;
 
         private:
             signature f = nullptr;
-            const Deck* deck = nullptr;
-            const EclipseState* es = nullptr;
+            const TableManager*     tm  = nullptr;
+            const EclipseGrid*      eg  = nullptr;
+            GridProperties<int>*    igp = nullptr;
+            GridProperties<double>* dgp = nullptr;
+
     };
 
     // initialize the TEMPI grid property using the temperature vs depth
     // table (stemming from the TEMPVD or the RTEMPVD keyword)
-    std::vector< double > temperature_lookup( size_t, const Deck&, const EclipseState& );
-
+    // std::vector< double > temperature_lookup( size_t, const EclipseState& );
+    std::vector< double > temperature_lookup( size_t,
+                                              const TableManager*,
+                                              const EclipseGrid*,
+                                              GridProperties<int>*,
+                                              GridProperties<double>*);
 }
 
-#endif
+#endif // ECLIPSE_GRIDPROPERTY_INITIALIZERS_HPP
