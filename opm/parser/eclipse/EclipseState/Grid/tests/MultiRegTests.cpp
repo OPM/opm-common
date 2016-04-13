@@ -206,8 +206,11 @@ BOOST_AUTO_TEST_CASE(UnInitializedVectorThrows) {
 
 BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
     Opm::DeckPtr deck = createValidIntDeck();
-    Opm::EclipseState state(deck , Opm::ParseContext());
-    const auto& property = state.get3DProperties().getIntGridProperty("SATNUM");
+    Opm::TableManager tm(*deck);
+    Opm::EclipseGrid eg(deck);
+    Opm::Eclipse3DProperties props(*deck, tm, eg);
+
+    const auto& property = props.getIntGridProperty("SATNUM");
     for (size_t j = 0; j < 5; j++)
         for (size_t i = 0; i < 5; i++) {
             if (i < 2)

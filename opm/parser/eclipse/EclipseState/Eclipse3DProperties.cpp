@@ -110,7 +110,7 @@ namespace Opm {
                 GridProperties< int >::SupportedKeywordInfo( "MULTNUM", 1, "1" ),
                 GridProperties< int >::SupportedKeywordInfo( "FIPNUM" , 1, "1" ),
                 GridProperties< int >::SupportedKeywordInfo( "MISCNUM", 1, "1" ),
-                GridProperties< int >::SupportedKeywordInfo( "OPERNUM" , 1, "1" ),
+                GridProperties< int >::SupportedKeywordInfo( "OPERNUM", 1, "1" ),
                 };
     }
 

@@ -27,18 +27,22 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
 using namespace Opm;
 
-void check_property(EclipseState eclState1, EclipseState eclState2,  const std::string& propertyName) {
-    const std::vector<double> data1 = eclState1.get3DProperties().getDoubleGridProperty(propertyName).getData();
-    const std::vector<double> data2 = eclState2.get3DProperties().getDoubleGridProperty(propertyName).getData();
+void check_property(const Eclipse3DProperties& props1, const Eclipse3DProperties& props2, const std::string& propertyName) {
+    auto& data1 = props1.getDoubleGridProperty(propertyName).getData();
+    auto& data2 = props1.getDoubleGridProperty(propertyName).getData();
 
-    BOOST_CHECK_CLOSE(data1[0], data2[0],1e-12);
+    BOOST_CHECK_CLOSE(data1[0], data2[0], 1e-12);
+}
+
+static Opm::Eclipse3DProperties getProps(Opm::DeckPtr deck) {
+    return Opm::Eclipse3DProperties(*deck, *new Opm::TableManager(*deck), *new Opm::EclipseGrid(deck));
 }
 
 BOOST_AUTO_TEST_CASE(SaturationFunctionFamilyTests) {
@@ -108,32 +112,32 @@ BOOST_AUTO_TEST_CASE(SaturationFunctionFamilyTests) {
     strcat(family1Deck , deckdefault);
     strcat(family1Deck , family1);
     DeckPtr deck1 = parser->parseString(family1Deck, parseContext) ;
-    EclipseState state1(deck1, parseContext);
+    const auto prop1 = getProps(deck1);
 
 
     char family2Deck[700] = " ";
     strcat(family2Deck , deckdefault);
     strcat(family2Deck , family2);
     DeckPtr deck2 = parser->parseString(family2Deck, parseContext) ;
-    EclipseState state2(deck2, parseContext);
+    const auto prop2 = getProps(deck2);
 
-    check_property(state1, state2, "SWL");
-    check_property(state1, state2, "SWU");
-    check_property(state1, state2, "SWCR");
+    check_property(prop1, prop2, "SWL");
+    check_property(prop1, prop2, "SWU");
+    check_property(prop1, prop2, "SWCR");
 
-    check_property(state1, state2, "SGL");
-    check_property(state1, state2, "SGU");
-    check_property(state1, state2, "SGCR");
+    check_property(prop1, prop2, "SGL");
+    check_property(prop1, prop2, "SGU");
+    check_property(prop1, prop2, "SGCR");
 
-    check_property(state1, state2, "SOWCR");
-    check_property(state1, state2, "SOGCR");
+    check_property(prop1, prop2, "SOWCR");
+    check_property(prop1, prop2, "SOGCR");
 
-    check_property(state1, state2, "PCW");
-    check_property(state1, state2, "PCG");
+    check_property(prop1, prop2, "PCW");
+    check_property(prop1, prop2, "PCG");
 
-    check_property(state1, state2, "KRW");
-    check_property(state1, state2, "KRO");
-    check_property(state1, state2, "KRG");
+    check_property(prop1, prop2, "KRW");
+    check_property(prop1, prop2, "KRO");
+    check_property(prop1, prop2, "KRG");
 
     char familyMixDeck[1000] = " ";
     strcat(familyMixDeck , deckdefault);
@@ -141,6 +145,6 @@ BOOST_AUTO_TEST_CASE(SaturationFunctionFamilyTests) {
     strcat(familyMixDeck , family2);
 
     DeckPtr deckMix = parser->parseString(familyMixDeck, parseContext) ;
-    EclipseState stateMix(deckMix, parseContext);
-    BOOST_CHECK_THROW(stateMix.get3DProperties().getDoubleGridProperty("SGCR") , std::invalid_argument);
+    const auto propMix = getProps(deckMix);
+    BOOST_CHECK_THROW(propMix.getDoubleGridProperty("SGCR") , std::invalid_argument);
 }
