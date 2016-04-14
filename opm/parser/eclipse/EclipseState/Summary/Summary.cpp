@@ -83,25 +83,25 @@ namespace Opm {
     }
 
     static inline std::array< int, 3 > dimensions( const EclipseGrid& grid ) {
-        return {
+        return {{
             int( grid.getNX() ),
             int( grid.getNY() ),
             int( grid.getNZ() )
-        };
+        }};
     }
 
     static inline std::array< int, 3 > getijk( const DeckRecord& record,
                                                int offset = 0 )
     {
-        return {
+        return {{
             record.getItem( offset + 0 ).get< int >( 0 ) - 1,
             record.getItem( offset + 1 ).get< int >( 0 ) - 1,
             record.getItem( offset + 2 ).get< int >( 0 ) - 1
-        };
+        }};
     }
 
     static inline std::array< int, 3 > getijk( const Completion& completion ) {
-        return { completion.getI(), completion.getJ(), completion.getK() };
+        return {{ completion.getI(), completion.getJ(), completion.getK() }};
     }
 
     static inline std::vector< ERT::smspec_node > keywordB(
