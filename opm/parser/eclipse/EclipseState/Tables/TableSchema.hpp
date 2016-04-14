@@ -18,8 +18,8 @@
  */
 
 
-#ifndef _TABLE_SCHEMA_HPP_
-#define _TABLE_SCHEMA_HPP_
+#ifndef OPM_TABLE_SCHEMA_HPP
+#define OPM_TABLE_SCHEMA_HPP
 
 #include <string>
 #include <vector>

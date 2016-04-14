@@ -17,8 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _FACEDIR_
-#define _FACEDIR_
+#ifndef OPM_FACEDIR_HPP
+#define OPM_FACEDIR_HPP
 
 #include <string>
 

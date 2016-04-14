@@ -18,8 +18,8 @@
  */
 
 
-#ifndef _RECORD_VECTOR_
-#define _RECORD_VECTOR_
+#ifndef OPM_RECORD_VECTOR_HPP
+#define OPM_RECORD_VECTOR_HPP
 
 #include <vector>
 #include <stdexcept>

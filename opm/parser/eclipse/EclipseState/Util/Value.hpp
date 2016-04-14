@@ -17,8 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _VALUE_
-#define _VALUE_
+#ifndef OPM_VALUE_HPP
+#define OPM_VALUE_HPP
 
 #include <stdexcept>
 #include <string>

@@ -17,8 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _PINCHMODE_
-#define _PINCHMODE_
+#ifndef OPM_PINCHMODE_HPP
+#define OPM_PINCHMODE_HPP
 
 #include <string>
 

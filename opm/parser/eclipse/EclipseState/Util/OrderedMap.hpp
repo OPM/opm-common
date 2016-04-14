@@ -17,8 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _ORDERED_MAP_
-#define _ORDERED_MAP_
+#ifndef OPM_ORDERED_MAP_HPP
+#define OPM_ORDERED_MAP_HPP
 
 #include <unordered_map>
 #include <vector>
