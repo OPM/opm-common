@@ -19,8 +19,6 @@
 
 #include <boost/algorithm/string/join.hpp>
 
-#include <opm/common/OpmLog/OpmLog.hpp>
-
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
@@ -243,12 +241,12 @@ namespace Opm {
         m_transMult->setMultregtScanner( scanner );
     }
 
-    void EclipseState::complainAboutAmbiguousKeyword(DeckConstPtr deck, const std::string& keywordName) const {
-        OpmLog::addMessage(Log::MessageType::Error, "The " + keywordName + " keyword must be unique in the deck. Ignoring all!");
+    void EclipseState::complainAboutAmbiguousKeyword(DeckConstPtr deck, const std::string& keywordName) {
+        m_messageContainer.error("The " + keywordName + " keyword must be unique in the deck. Ignoring all!");
         auto keywords = deck->getKeywordList(keywordName);
         for (size_t i = 0; i < keywords.size(); ++i) {
             std::string msg = "Ambiguous keyword "+keywordName+" defined here";
-            OpmLog::addMessage(Log::MessageType::Error , Log::fileMessage( keywords[i]->getFileName(), keywords[i]->getLineNumber(),msg));
+            m_messageContainer.error(keywords[i]->getFileName() + std::to_string(keywords[i]->getLineNumber()) + msg);
         }
     }
 

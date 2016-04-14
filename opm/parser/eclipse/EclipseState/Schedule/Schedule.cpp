@@ -24,8 +24,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include <opm/common/OpmLog/OpmLog.hpp>
-#include <opm/common/OpmLog/LogUtil.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
@@ -403,18 +401,18 @@ namespace Opm {
 
 
 
-    void Schedule::checkWELSPECSConsistency(WellConstPtr well, const DeckKeyword& keyword, size_t recordIdx) const {
+    void Schedule::checkWELSPECSConsistency(WellConstPtr well, const DeckKeyword& keyword, size_t recordIdx) {
         const auto& record = keyword.getRecord(recordIdx);
         if (well->getHeadI() != record.getItem("HEAD_I").get< int >(0) - 1) {
             std::string msg =
                 "Unable process WELSPECS for well " + well->name() + ", HEAD_I deviates from existing value";
-            OpmLog::addMessage(Log::MessageType::Error , Log::fileMessage( keyword.getFileName(), keyword.getLineNumber(), msg));
+            m_messages.error(keyword.getFileName() + std::to_string(keyword.getLineNumber()) + msg);
             throw std::invalid_argument(msg);
         }
         if (well->getHeadJ() != record.getItem("HEAD_J").get< int >(0) - 1) {
             std::string msg =
                 "Unable process WELSPECS for well " + well->name() + ", HEAD_J deviates from existing value";
-            OpmLog::addMessage(Log::MessageType::Error , Log::fileMessage( keyword.getFileName(), keyword.getLineNumber(), msg));
+            m_messages.error(keyword.getFileName() + std::to_string(keyword.getLineNumber()) + msg);
             throw std::invalid_argument(msg);
         }
     }
@@ -457,7 +455,7 @@ namespace Opm {
                         std::string msg =
                             "Tried to set invalid control: " +
                             cmodeString + " for well: " + well->name();
-                        OpmLog::addMessage(Log::MessageType::Error , Log::fileMessage( keyword.getFileName(), keyword.getLineNumber(), msg));
+                        m_messages.error(keyword.getFileName() + std::to_string(keyword.getLineNumber()) + msg);
                         throw std::invalid_argument(msg);
                     }
                 }
@@ -470,7 +468,7 @@ namespace Opm {
                     std::string msg =
                             "Well " + well->name() + " is a history matched well with zero rate where crossflow is banned. " +
                             "This well will be closed at " + std::to_string ( m_timeMap->getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
-                    OpmLog::addMessage(Log::MessageType::Info , Log::prefixMessage(Log::MessageType::Info, msg));
+                    m_messages.info(msg);
                     updateWellStatus(well, currentStep, WellCommon::StatusEnum::SHUT );
                 }
             }
@@ -642,7 +640,7 @@ namespace Opm {
                     std::string msg =
                             "Well " + well->name() + " is an injector with zero rate where crossflow is banned. " +
                             "This well will be closed at " + std::to_string ( m_timeMap->getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
-                    OpmLog::addMessage(Log::MessageType::Info , Log::prefixMessage(Log::MessageType::Info, msg));
+                    m_messages.info(msg);
                     updateWellStatus(well, currentStep, WellCommon::StatusEnum::SHUT );
                 }
             }
@@ -730,7 +728,7 @@ namespace Opm {
                 std::string msg =
                         "Well " + well->name() + " is an injector with zero rate where crossflow is banned. " +
                         "This well will be closed at " + std::to_string ( m_timeMap->getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
-                OpmLog::addMessage(Log::MessageType::Info , Log::prefixMessage(Log::MessageType::Info, msg));
+                m_messages.info(msg);
                 updateWellStatus(well, currentStep, WellCommon::StatusEnum::SHUT );
             }
         }
@@ -826,7 +824,7 @@ namespace Opm {
                         std::string msg =
                                 "Well " + well->name() + " where crossflow is banned has zero total rate. " +
                                 "This well is prevented from opening at " + std::to_string ( m_timeMap->getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
-                        OpmLog::addMessage(Log::MessageType::Info , Log::prefixMessage(Log::MessageType::Info, msg));
+                        m_messages.info(msg);
                         continue;
                     }
                     updateWellStatus( well , currentStep , status );

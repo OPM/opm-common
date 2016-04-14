@@ -44,9 +44,6 @@
 
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 
-#include <opm/common/OpmLog/OpmLog.hpp>
-#include <opm/common/OpmLog/LogUtil.hpp>
-
 namespace Opm {
 
     class Tabdims;
@@ -127,7 +124,7 @@ namespace Opm {
     private:
         TableContainer& forceGetTables( const std::string& tableName , size_t numTables);
 
-        void complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) const;
+        void complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName);
 
         void addTables( const std::string& tableName , size_t numTables);
         void initSimpleTables(const Deck& deck);
@@ -201,7 +198,7 @@ namespace Opm {
                     // should be copied...
                     if (tableIdx == 0) {
                         std::string msg = "The first table for keyword "+keywordName+" must be explicitly defined! Ignoring keyword";
-                        OpmLog::addMessage(Log::MessageType::Warning , Log::fileMessage( tableKeyword.getFileName(), tableKeyword.getLineNumber(), msg));
+                        m_messages.warning(tableKeyword.getFileName() + std::to_string(tableKeyword.getLineNumber()) + msg);
                         return;
                     }
                     tableVector.push_back(tableVector.back());

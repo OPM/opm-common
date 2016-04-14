@@ -106,7 +106,7 @@ namespace Opm {
         void initMULTREGT(std::shared_ptr< const Deck > deck);
 
         void complainAboutAmbiguousKeyword(std::shared_ptr< const Deck > deck,
-                                           const std::string& keywordName) const;
+                                           const std::string& keywordName);
 
         std::shared_ptr< IOConfig >               m_ioConfig;
         std::shared_ptr< const InitConfig >       m_initConfig;

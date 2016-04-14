@@ -23,7 +23,6 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
@@ -101,7 +100,7 @@ namespace Opm {
             phases.insert(Phase::PhaseEnum::WATER);
 
         if (phases.size() < 3)
-            OpmLog::addMessage(Log::MessageType::Info , "Only " + std::to_string(static_cast<long long>(phases.size())) + " fluid phases are enabled");
+            m_messages.info("Only " + std::to_string(static_cast<long long>(phases.size())) + " fluid phases are enabled");
     }
 
     size_t TableManager::getNumPhases() const{
@@ -717,12 +716,12 @@ namespace Opm {
     }
 
 
-    void TableManager::complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) const {
-        OpmLog::addMessage(Log::MessageType::Error, "The " + keywordName + " keyword must be unique in the deck. Ignoring all!");
+    void TableManager::complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) {
+        m_messages.error("The " + keywordName + " keyword must be unique in the deck. Ignoring all!");
         const auto& keywords = deck.getKeywordList(keywordName);
         for (size_t i = 0; i < keywords.size(); ++i) {
             std::string msg = "Ambiguous keyword "+keywordName+" defined here";
-            OpmLog::addMessage(Log::MessageType::Error , Log::fileMessage( keywords[i]->getFileName(), keywords[i]->getLineNumber(),msg));
+            m_messages.error(keywords[i]->getFileName() + std::to_string(keywords[i]->getLineNumber()) + msg);
         }
     }
 }
