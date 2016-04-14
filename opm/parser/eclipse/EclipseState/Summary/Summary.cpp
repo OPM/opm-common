@@ -131,7 +131,7 @@ namespace Opm {
         const auto& item = keyword.getDataRecord().getDataItem();
         const auto regions = item.size() > 0 && item.hasValue( 0 )
             ? item.getData< int >()
-            : es.getRegions();
+            : es.getRegions( "FIPNUM" );
 
         return fun::map( mknode, regions );
     }
