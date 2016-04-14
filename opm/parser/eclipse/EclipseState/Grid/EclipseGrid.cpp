@@ -586,6 +586,16 @@ namespace Opm {
     }
 
 
+    const MessageContainer& EclipseGrid::getMessageContainer() const {
+        return m_messages;
+    }
+
+
+    MessageContainer& EclipseGrid::getMessageContainer() {
+        return m_messages;
+    }
+
+
     bool EclipseGrid::equal(const EclipseGrid& other) const {
         bool status = (m_pinch.equal( other.m_pinch ) && (ecl_grid_compare( c_ptr() , other.c_ptr() , true , false , false )) && (m_minpvMode == other.getMinpvMode()));
         if(m_minpvMode!=MinpvMode::ModeEnum::Inactive){

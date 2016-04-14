@@ -707,6 +707,16 @@ namespace Opm {
     }
 
 
+    const MessageContainer& TableManager::getMessageContainer() const {
+        return m_messages;
+    }
+
+
+    MessageContainer& TableManager::getMessageContainer() {
+        return m_messages;
+    }
+
+
     void TableManager::complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) const {
         OpmLog::addMessage(Log::MessageType::Error, "The " + keywordName + " keyword must be unique in the deck. Ignoring all!");
         const auto& keywords = deck.getKeywordList(keywordName);

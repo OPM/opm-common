@@ -26,7 +26,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
-
+#include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 
 namespace Opm
 {
@@ -80,7 +80,8 @@ namespace Opm
         const Events& getEvents() const;
         bool hasOilVaporizationProperties();
         std::shared_ptr<const Deck> getModifierDeck(size_t timeStep) const;
-
+        const MessageContainer& getMessageContainer() const;
+        MessageContainer& getMessageContainer();
 
 
     private:
@@ -94,6 +95,7 @@ namespace Opm
         std::shared_ptr<DynamicVector<std::shared_ptr<Deck> > > m_modifierDeck;
         std::shared_ptr< Tuning > m_tuning;
         bool nosim;
+        MessageContainer m_messages;
 
 
         void updateWellStatus(std::shared_ptr<Well> well, size_t reportStep , WellCommon::StatusEnum status);

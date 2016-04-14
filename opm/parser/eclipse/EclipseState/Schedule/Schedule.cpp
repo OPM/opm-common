@@ -1651,6 +1651,16 @@ namespace Opm {
     }
 
 
+    const MessageContainer& Schedule::getMessageContainer() const {
+        return m_messages;
+    }
+
+
+    MessageContainer& Schedule::getMessageContainer() {
+        return m_messages;
+    }
+
+
     const Events& Schedule::getEvents() const {
         return *m_events;
     }
