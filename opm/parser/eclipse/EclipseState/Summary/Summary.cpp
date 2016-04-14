@@ -148,9 +148,7 @@ namespace Opm {
 
        for( const auto& record : keyword ) {
 
-           const auto& wellname = record.getItem( 0 ).get< std::string >( 0 );
-
-           if( wellname == "*" ) {
+           if( record.getItem( 0 ).defaultApplied( 0 ) ) {
                for( const auto& well : schedule->getWells() ) {
 
                    const auto& name = wellName( well );
@@ -159,7 +157,7 @@ namespace Opm {
                        auto cijk = getijk( *completion );
 
                        /* well defaulted, block coordinates defaulted */
-                       if( record.size() != 4 ) {
+                       if( record.getItem( 1 ).defaultApplied( 0 ) ) {
                            nodes.emplace_back( keywordstring, name, dims.data(), cijk.data() );
                        }
                        /* well defaulted, block coordinates specified */
@@ -172,16 +170,17 @@ namespace Opm {
                }
 
            } else {
+                const auto& name = record.getItem( 0 ).get< std::string >( 0 );
                /* all specified */
                if( !record.getItem( 1 ).defaultApplied( 0 ) ) {
                    auto ijk = getijk( record, 1 );
-                   nodes.emplace_back( keywordstring, wellname, dims.data(), ijk.data() );
+                   nodes.emplace_back( keywordstring, name, dims.data(), ijk.data() );
                }
                else {
                    /* well specified, block coordinates defaulted */
-                   for( const auto& completion : *schedule->getWell( wellname ).getCompletions( last_timestep ) ) {
+                   for( const auto& completion : *schedule->getWell( name ).getCompletions( last_timestep ) ) {
                        auto ijk = getijk( *completion );
-                       nodes.emplace_back( keywordstring, wellname, dims.data(), ijk.data() );
+                       nodes.emplace_back( keywordstring, name, dims.data(), ijk.data() );
                    }
                }
            }
