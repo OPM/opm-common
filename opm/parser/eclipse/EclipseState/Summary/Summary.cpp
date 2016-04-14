@@ -91,12 +91,12 @@ namespace Opm {
     }
 
     static inline std::array< int, 3 > getijk( const DeckRecord& record,
-                                               int init = 0 )
+                                               int offset = 0 )
     {
         return {
-            record.getItem( init + 0 ).get< int >( 0 ) - 1,
-            record.getItem( init + 1 ).get< int >( 0 ) - 1,
-            record.getItem( init + 2 ).get< int >( 0 ) - 1
+            record.getItem( offset + 0 ).get< int >( 0 ) - 1,
+            record.getItem( offset + 1 ).get< int >( 0 ) - 1,
+            record.getItem( offset + 2 ).get< int >( 0 ) - 1
         };
     }
 
