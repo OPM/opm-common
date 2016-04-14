@@ -97,6 +97,9 @@ namespace Opm {
 
     
     MessageContainer& EclipseState::getMessageContainer() {
+        m_messageContainer.appendMessages(m_tables.getMessageContainer());
+        m_messageContainer.appendMessages(m_schedule->getMessageContainer());
+        m_messageContainer.appendMessages(m_eclipseGrid->getMessageContainer());
         return m_messageContainer;
     }
 
