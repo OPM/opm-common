@@ -39,11 +39,24 @@ static DeckPtr createDeck( const std::string& summary ) {
             "DIMENS\n"
             " 10 10 10 /\n"
             "GRID\n"
+            "DXV \n 10*400 /\n"
+            "DYV \n 10*400 /\n"
+            "DZV \n 10*400 /\n"
+            "TOPS \n 100*2202 / \n"
+            "REGIONS\n"
+            "FIPNUM\n"
+            "200*1 300*2 500*3 /\n"
             "SCHEDULE\n"
             "WELSPECS\n"
-            "     \'W_1\'        \'OP\'   30   37  3.33       \'OIL\'  7* /   \n"
-            "     \'WX2\'        \'OP\'   30   37  3.33       \'OIL\'  7* /   \n"
-            "     \'W_3\'        \'OP\'   20   51  3.92       \'OIL\'  7* /  \n"
+            "     \'W_1\'        \'OP\'   1   1  3.33       \'OIL\'  7* /   \n"
+            "     \'WX2\'        \'OP\'   2   2  3.33       \'OIL\'  7* /   \n"
+            "     \'W_3\'        \'OP\'   2   5  3.92       \'OIL\'  7* /   \n"
+            "     'PRODUCER' 'G'   5  5 2000 'GAS'     /\n"
+            "/\n"
+            "COMPDAT\n"
+            "'PRODUCER'   5  5  1  1 'OPEN' 1* -1  0.5  / \n"
+            "'W_1'   3    7    1    3      'OPEN'  1*     32.948      0.311   3047.839  2*         'X'     22.100 / \n"
+            "'W_1'   3    7    2    2      'OPEN'  1*          *      0.311   4332.346  2*         'X'     22.123 / \n"
             "/\n"
             "SUMMARY\n"
             + summary;
@@ -79,7 +92,7 @@ BOOST_AUTO_TEST_CASE(wells_all) {
     const auto input = "WWCT\n/\n";
     const auto summary = createSummary( input );
 
-    const auto wells = { "WX2", "W_1", "W_3" };
+    const auto wells = { "PRODUCER", "WX2", "W_1", "W_3" };
     const auto names = sorted_names( summary );
 
     BOOST_CHECK_EQUAL_COLLECTIONS(
@@ -116,6 +129,45 @@ BOOST_AUTO_TEST_CASE(blocks) {
                        "/";
     const auto summary = createSummary( input );
     const auto keywords = { "BPR", "BPR" };
+    const auto names = sorted_keywords( summary );
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+            keywords.begin(), keywords.end(),
+            names.begin(), names.end() );
+}
+
+BOOST_AUTO_TEST_CASE(regions) {
+    const auto input = "ROIP\n"
+                       "1 2 3 /\n"
+                       "RWIP\n"
+                       "/\n"
+                       "RGIP\n"
+                       "1 2 /\n";
+
+    const auto summary = createSummary( input );
+    const auto keywords = { "RGIP", "RGIP",
+                    "ROIP", "ROIP", "ROIP",
+                    "RWIP", "RWIP", "RWIP" };
+    const auto names = sorted_keywords( summary );
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+            keywords.begin(), keywords.end(),
+            names.begin(), names.end() );
+}
+
+BOOST_AUTO_TEST_CASE(completions) {
+    const auto input = "CWIR\n"
+                       "'PRODUCER'  /\n"
+                       "'WX2' 1 1 1 /\n"
+                       "'WX2' 2 2 2 /\n"
+                       "/\n"
+                       "CWIT\n"
+                       "'W_1' /\n"
+                       "/\n";
+
+    const auto summary = createSummary( input );
+    const auto keywords = { "CWIR", "CWIR", "CWIR",
+                            "CWIT", "CWIT", "CWIT" };
     const auto names = sorted_keywords( summary );
 
     BOOST_CHECK_EQUAL_COLLECTIONS(

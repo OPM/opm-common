@@ -111,6 +111,10 @@ namespace Opm {
         return m_timeList.size();
     }
 
+    size_t TimeMap::last() const {
+        return this->numTimesteps();
+    }
+
     const std::map<std::string , boost::gregorian::greg_month>& TimeMap::eclipseMonthNames() {
         static std::map<std::string , boost::gregorian::greg_month> monthNames;
 
