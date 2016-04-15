@@ -65,6 +65,7 @@ namespace Opm {
 
         private:
             double& get_ref( opt );
+            const double& get_ref( opt ) const;
 
             opt mask = static_cast< opt >( 0 );
 
@@ -90,21 +91,21 @@ namespace Opm {
 
     /* IMPLEMENTATIONS */
 
-    inline bool Rates::has( opt m ) {
+    inline bool Rates::has( opt m ) const {
         const auto mand = static_cast< enum_size >( this->mask )
                         & static_cast< enum_size >( m );
 
         return static_cast< opt >( mand ) == m;
     }
 
-    inline double Rates::get( opt m ) {
+    inline double Rates::get( opt m ) const {
         if( !this->has( m ) )
             throw std::invalid_argument( "Uninitialized value." );
 
         return this->get_ref( m );
     }
 
-    inline double Rates::get( opt m, double default_value ) {
+    inline double Rates::get( opt m, double default_value ) const {
         if( !this->has( m ) ) return default_value;
 
         return this->get_ref( m );
@@ -130,7 +131,7 @@ namespace Opm {
      * This is an implementation detail and understanding this has no
      * significant impact on correct use of the class.
      */
-    inline double& Rates::get_ref( opt m ) {
+    inline const double& Rates::get_ref( opt m ) const {
         switch( m ) {
             case opt::wat: return this->wat;
             case opt::oil: return this->oil;
@@ -143,6 +144,12 @@ namespace Opm {
                 + std::to_string( static_cast< enum_size >( m ) )
                 + "'" );
 
+    }
+
+    inline double& Rates::get_ref( opt m ) {
+        return const_cast< double& >(
+                static_cast< const Rates* >( this )->get_ref( m )
+               );
     }
 
     }
