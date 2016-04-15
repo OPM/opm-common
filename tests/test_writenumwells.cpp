@@ -42,6 +42,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 
 // ERT stuff
 #include <ert/ecl/ecl_kw.h>
@@ -145,16 +146,11 @@ Opm::DeckConstPtr createDeck(const std::string& eclipse_data_filename) {
 
 
 Opm::EclipseWriterPtr createEclipseWriter(Opm::DeckConstPtr deck,
-                                          Opm::EclipseStatePtr eclipseState,
-                                          std::string& eclipse_data_filename) {
-
-  Opm::parameter::ParameterGroup params;
-  params.insertParameter("deck_filename", eclipse_data_filename);
+                                          Opm::EclipseStatePtr eclipseState) {
 
   const Opm::PhaseUsage phaseUsage = Opm::phaseUsageFromDeck(deck);
 
-  Opm::EclipseWriterPtr eclWriter(new Opm::EclipseWriter(params,
-                                                         eclipseState,
+  Opm::EclipseWriterPtr eclWriter(new Opm::EclipseWriter(eclipseState,
                                                          phaseUsage));
   return eclWriter;
 }
@@ -172,7 +168,11 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo)
     Opm::ParseContext parseContext;
     Opm::DeckConstPtr     deck = createDeck(eclipse_data_filename);
     Opm::EclipseStatePtr  eclipseState(new Opm::EclipseState(deck , parseContext));
-    Opm::EclipseWriterPtr eclipseWriter = createEclipseWriter(deck, eclipseState, eclipse_data_filename);
+
+    auto ioConfig = eclipseState->getIOConfig();
+    ioConfig->setDeckFileName(eclipse_data_filename);
+
+    Opm::EclipseWriterPtr eclipseWriter = createEclipseWriter(deck, eclipseState);
 
     std::shared_ptr<Opm::SimulatorTimer> simTimer( new Opm::SimulatorTimer() );
     simTimer->init(eclipseState->getSchedule()->getTimeMap());

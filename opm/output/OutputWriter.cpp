@@ -4,7 +4,7 @@
 #include <opm/output/eclipse/EclipseWriter.hpp>
 #include <opm/core/utility/parameters/Parameter.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
-
+#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <forward_list>
 #include <map>
 #include <memory> // unique_ptr
@@ -51,8 +51,7 @@ create (const ParameterGroup& params,
         std::shared_ptr <const EclipseState> eclipseState,
         const Opm::PhaseUsage &phaseUsage,
         std::shared_ptr <const UnstructuredGrid> grid) {
-    return unique_ptr <OutputWriter> (new Format (params,
-                                                  eclipseState,
+    return unique_ptr <OutputWriter> (new Format (eclipseState,
                                                   phaseUsage));
 }
 
@@ -92,6 +91,13 @@ OutputWriter::create (const ParameterGroup& params,
         // invoke the constructor for the type if we found the keyword
         // and put the pointer to this writer onto the list
         if (params.getDefault <bool> (name, false)) {
+            auto ioConfig =  eclipseState->getIOConfig();
+
+            // retrieve the value of the "output" parameter
+            ioConfig->setOutputEnabled(params.getDefault<bool>("output", /*defaultValue=*/true));
+            // store in current directory if not explicitly set
+            ioConfig->setOutputDir(params.getDefault<std::string>("output_dir", "."));
+
             list->push_front (it->second (params, eclipseState, phaseUsage, grid));
         }
     }

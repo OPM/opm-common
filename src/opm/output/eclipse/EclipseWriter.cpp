@@ -37,14 +37,13 @@
 #include <opm/core/simulator/BlackoilState.hpp>
 #include <opm/output/eclipse/EclipseWriteRFTHandler.hpp>
 #include <opm/common/ErrorMacros.hpp>
-#include <opm/core/utility/parameters/Parameter.hpp>
-#include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/core/utility/Units.hpp>
 #include <opm/core/wells.h> // WellType
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
@@ -1179,7 +1178,7 @@ void EclipseWriter::writeInit(const SimulatorTimerInterface &timer)
 
     EclipseWriterDetails::Init fortio(outputDir_, baseName_, /*stepIdx=*/0, eclipseState_->getIOConfigConst());
     fortio.writeHeader(numCells_,
-                       compressedToCartesianCellIdx_,
+                       compressedToCartesianCellIdx_.data(),
                        timer,
                        eclipseState_,
                        phaseUsage_);
@@ -1368,7 +1367,7 @@ void EclipseWriter::writeTimeStep(const SimulatorTimerInterface& timer,
 
     //Write RFT data for current timestep to RFT file
     std::shared_ptr<EclipseWriterDetails::EclipseWriteRFTHandler> eclipseWriteRFTHandler = std::make_shared<EclipseWriterDetails::EclipseWriteRFTHandler>(
-                                                                                                                      compressedToCartesianCellIdx_,
+                                                                                                                      compressedToCartesianCellIdx_.data(),
                                                                                                                       numCells_,
                                                                                                                       eclipseState_->getInputGrid()->getCartesianSize());
 
@@ -1416,8 +1415,7 @@ void EclipseWriter::writeTimeStep(const SimulatorTimerInterface& timer,
 }
 
 
-EclipseWriter::EclipseWriter(const parameter::ParameterGroup& params,
-                             Opm::EclipseStateConstPtr eclipseState,
+EclipseWriter::EclipseWriter(Opm::EclipseStateConstPtr eclipseState,
                              const Opm::PhaseUsage &phaseUsage)
     : eclipseState_(eclipseState)
     , phaseUsage_(phaseUsage)
@@ -1434,9 +1432,13 @@ EclipseWriter::EclipseWriter(const parameter::ParameterGroup& params,
     //This should be calculated in EclipseGrid
     std::shared_ptr<Opm::GridManager>  ourFineGridManagerPtr = std::make_shared<Opm::GridManager>(eclipseState->getEclipseGrid());
     const UnstructuredGrid &ourFinerUnstructuredGrid = *ourFineGridManagerPtr->c_grid();
-    const int* compressedToCartesianCellIdx_ = Opm::UgGridHelpers::globalCell(ourFinerUnstructuredGrid);
+    auto compressedToCartesianCellIdx__ = Opm::UgGridHelpers::globalCell(ourFinerUnstructuredGrid);
 
-    if( compressedToCartesianCellIdx_ ) {
+    for(int i=0;i<numCells_;i++) {
+        compressedToCartesianCellIdx_.push_back(compressedToCartesianCellIdx__[i]);
+    }
+
+    if( compressedToCartesianCellIdx_.size()>0 ) {
         // if compressedToCartesianCellIdx available then
         // compute mapping to eclipse order
         std::map< int , int > indexMap;
@@ -1457,7 +1459,6 @@ EclipseWriter::EclipseWriter(const parameter::ParameterGroup& params,
         }
     }
 
-
     // factor from the pressure values given in the deck to Pascals
     deckToSiPressure_ =
         eclipseState->getDeckUnitSystem().parse("Pressure")->getSIScaling();
@@ -1468,14 +1469,15 @@ EclipseWriter::EclipseWriter(const parameter::ParameterGroup& params,
     deckToSiTemperatureOffset_ =
         eclipseState->getDeckUnitSystem().parse("Temperature")->getSIOffset();
 
-    init(params);
+    init(eclipseState);
 }
 
-void EclipseWriter::init(const parameter::ParameterGroup& params)
+void EclipseWriter::init(Opm::EclipseStateConstPtr eclipseState)
 {
     // get the base name from the name of the deck
     using boost::filesystem::path;
-    path deckPath(params.get <std::string>("deck_filename"));
+    auto ioConfig = eclipseState->getIOConfig();
+    path deckPath(ioConfig->getDeckFileName());
     if (boost::to_upper_copy(path(deckPath.extension()).string()) == ".DATA") {
         baseName_ = path(deckPath.stem()).string();
     }
@@ -1488,10 +1490,10 @@ void EclipseWriter::init(const parameter::ParameterGroup& params)
     baseName_ = boost::to_upper_copy(baseName_);
 
     // retrieve the value of the "output" parameter
-    enableOutput_ = params.getDefault<bool>("output", /*defaultValue=*/true);
+    enableOutput_ = ioConfig->getOutputEnabled();
 
     // store in current directory if not explicitly set
-    outputDir_ = params.getDefault<std::string>("output_dir", ".");
+    outputDir_ = ioConfig->getOutputDir();
 
     // set the index of the first time step written to 0...
     writeStepIdx_  = 0;

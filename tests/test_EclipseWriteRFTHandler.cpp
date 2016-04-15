@@ -41,6 +41,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 
 #include <ert/ecl/ecl_rft_file.h>
 #include <ert/util/test_work_area.h>
@@ -126,15 +127,14 @@ std::shared_ptr<Opm::EclipseWriter> createEclipseWriter(std::shared_ptr<const Op
                                                         std::shared_ptr<Opm::EclipseState> eclipseState,
                                                         std::shared_ptr<Opm::GridManager> ourFineGridManagerPtr)
 {
-    Opm::parameter::ParameterGroup params;
-    params.insertParameter("deck_filename", "testcase.data");
+    auto ioConfig = eclipseState->getIOConfig();
+    ioConfig->setDeckFileName("testcase.data");
 
     Opm::PhaseUsage phaseUsage = Opm::phaseUsageFromDeck(deck);
 
     const UnstructuredGrid &ourFinerUnstructuredGrid = *ourFineGridManagerPtr->c_grid();
 
-    std::shared_ptr<Opm::EclipseWriter> eclipseWriter = std::make_shared<Opm::EclipseWriter>(params,
-                                                                                             eclipseState,
+    std::shared_ptr<Opm::EclipseWriter> eclipseWriter = std::make_shared<Opm::EclipseWriter>(eclipseState,
                                                                                              phaseUsage);
 
     return eclipseWriter;
