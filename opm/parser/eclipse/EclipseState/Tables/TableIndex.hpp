@@ -18,8 +18,8 @@
  */
 
 
-#ifndef _TABLE_INDEX_HPP_
-#define _TABLE_INDEX_HPP_
+#ifndef OPM_TABLE_INDEX_HPP
+#define OPM_TABLE_INDEX_HPP
 
 #include <cstddef>
 

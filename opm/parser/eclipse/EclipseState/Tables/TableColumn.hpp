@@ -18,8 +18,8 @@
  */
 
 
-#ifndef _TABLE_COLUMN_HPP_
-#define _TABLE_COLUMN_HPP_
+#ifndef OPM_TABLE_COLUMN_HPP
+#define OPM_TABLE_COLUMN_HPP
 
 #include <string>
 #include <vector>

@@ -18,8 +18,8 @@
  */
 
 
-#ifndef _COLUMN_SCHEMA_HPP_
-#define _COLUMN_SCHEMA_HPP_
+#ifndef OPM_COLUMN_SCHEMA_HPP
+#define OPM_COLUMN_SCHEMA_HPP
 
 #include <string>
 #include <vector>

@@ -18,8 +18,8 @@
  */
 
 
-#ifndef _TABLE_ENUMS_HPP_
-#define _TABLE_ENUMS_HPP_
+#ifndef OPM_TABLE_ENUMS_HPP
+#define OPM_TABLE_ENUMS_HPP
 
 namespace Opm {
     namespace Table {

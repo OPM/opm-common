@@ -25,15 +25,18 @@
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Summary/Summary.hpp>
 #include <opm/parser/eclipse/Utility/Functional.hpp>
 
 #include <ert/ecl/ecl_smspec.h>
 
-#include <numeric>
+#include <algorithm>
 #include <array>
 
 namespace Opm {
@@ -79,29 +82,112 @@ namespace Opm {
         return res;
     }
 
+    static inline std::array< int, 3 > dimensions( const EclipseGrid& grid ) {
+        return {{
+            int( grid.getNX() ),
+            int( grid.getNY() ),
+            int( grid.getNZ() )
+        }};
+    }
+
+    static inline std::array< int, 3 > getijk( const DeckRecord& record,
+                                               int offset = 0 )
+    {
+        return {{
+            record.getItem( offset + 0 ).get< int >( 0 ) - 1,
+            record.getItem( offset + 1 ).get< int >( 0 ) - 1,
+            record.getItem( offset + 2 ).get< int >( 0 ) - 1
+        }};
+    }
+
+    static inline std::array< int, 3 > getijk( const Completion& completion ) {
+        return {{ completion.getI(), completion.getJ(), completion.getK() }};
+    }
+
     static inline std::vector< ERT::smspec_node > keywordB(
             const DeckKeyword& keyword,
             const EclipseState& es ) {
 
-        std::array< int, 3 > dims = {{
-            int( es.getEclipseGrid()->getNX() ),
-            int( es.getEclipseGrid()->getNY() ),
-            int( es.getEclipseGrid()->getNZ() )
-        }};
+        auto dims = dimensions( *es.getEclipseGrid() );
 
         const auto mkrecord = [&dims,&keyword]( const DeckRecord& record ) {
-
-            std::array< int , 3 > ijk = {{
-                record.getItem( 0 ).get< int >( 0 ) - 1,
-                record.getItem( 1 ).get< int >( 0 ) - 1,
-                record.getItem( 2 ).get< int >( 0 ) - 1
-            }};
-
+            auto ijk = getijk( record );
             return ERT::smspec_node( keyword.name(), dims.data(), ijk.data() );
         };
 
         return fun::map( mkrecord, keyword );
     }
+
+    static inline std::vector< ERT::smspec_node > keywordR(
+            const DeckKeyword& keyword,
+            const EclipseState& es ) {
+
+        auto dims = dimensions( *es.getEclipseGrid() );
+
+        const auto mknode = [&dims,&keyword]( int region ) {
+            return ERT::smspec_node( keyword.name(), dims.data(), region );
+        };
+
+        const auto& item = keyword.getDataRecord().getDataItem();
+        const auto regions = item.size() > 0 && item.hasValue( 0 )
+            ? item.getData< int >()
+            : es.getRegions( "FIPNUM" );
+
+        return fun::map( mknode, regions );
+    }
+
+   static inline std::vector< ERT::smspec_node > keywordC(
+           const DeckKeyword& keyword,
+           const EclipseState& es ) {
+
+       std::vector< ERT::smspec_node > nodes;
+       const auto& keywordstring = keyword.name();
+       const auto& schedule = es.getSchedule();
+       const auto last_timestep = schedule->getTimeMap()->last();
+       auto dims = dimensions( *es.getEclipseGrid() );
+
+       for( const auto& record : keyword ) {
+
+           if( record.getItem( 0 ).defaultApplied( 0 ) ) {
+               for( const auto& well : schedule->getWells() ) {
+
+                   const auto& name = wellName( well );
+
+                   for( const auto& completion : *well->getCompletions( last_timestep ) ) {
+                       auto cijk = getijk( *completion );
+
+                       /* well defaulted, block coordinates defaulted */
+                       if( record.getItem( 1 ).defaultApplied( 0 ) ) {
+                           nodes.emplace_back( keywordstring, name, dims.data(), cijk.data() );
+                       }
+                       /* well defaulted, block coordinates specified */
+                       else {
+                           auto recijk = getijk( record, 1 );
+                           if( std::equal( recijk.begin(), recijk.end(), cijk.begin() ) )
+                               nodes.emplace_back( keywordstring, name, dims.data(), cijk.data() );
+                       }
+                   }
+               }
+
+           } else {
+                const auto& name = record.getItem( 0 ).get< std::string >( 0 );
+               /* all specified */
+               if( !record.getItem( 1 ).defaultApplied( 0 ) ) {
+                   auto ijk = getijk( record, 1 );
+                   nodes.emplace_back( keywordstring, name, dims.data(), ijk.data() );
+               }
+               else {
+                   /* well specified, block coordinates defaulted */
+                   for( const auto& completion : *schedule->getWell( name ).getCompletions( last_timestep ) ) {
+                       auto ijk = getijk( *completion );
+                       nodes.emplace_back( keywordstring, name, dims.data(), ijk.data() );
+                   }
+               }
+           }
+       }
+
+       return nodes;
+   }
 
     std::vector< ERT::smspec_node > handleKW( const DeckKeyword& keyword, const EclipseState& es ) {
         const auto var_type = ecl_smspec_identify_var_type( keyword.name().c_str() );
@@ -111,6 +197,8 @@ namespace Opm {
             case ECL_SMSPEC_GROUP_VAR: return keywordWG( var_type, keyword, es );
             case ECL_SMSPEC_FIELD_VAR: return keywordF( keyword, es );
             case ECL_SMSPEC_BLOCK_VAR: return keywordB( keyword, es );
+            case ECL_SMSPEC_REGION_VAR: return keywordR( keyword, es );
+            case ECL_SMSPEC_COMPLETION_VAR: return keywordC( keyword, es );
 
             default: return {};
         }

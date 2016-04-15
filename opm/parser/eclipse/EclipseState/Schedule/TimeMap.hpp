@@ -42,6 +42,7 @@ namespace Opm {
         void initFirstTimestepsMonths();
         void initFirstTimestepsYears();
         size_t size() const;
+        size_t last() const;
         size_t numTimesteps() const;
         double getTotalTime() const;
         const boost::posix_time::ptime& operator[] (size_t index) const;

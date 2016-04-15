@@ -17,8 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _MINPVMODE_
-#define _MINPVMODE_
+#ifndef OPM_MINPVMODE_HPP
+#define OPM_MINPVMODE_HPP
 
 #include <string>
 

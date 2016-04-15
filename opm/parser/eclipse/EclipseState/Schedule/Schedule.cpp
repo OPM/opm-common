@@ -1495,6 +1495,10 @@ namespace Opm {
         return m_wells.get( wellName );
     }
 
+    const Well& Schedule::getWell(const std::string& wellName) const {
+        return *m_wells.get( wellName );
+    }
+
 
     /*
       Observe that this method only returns wells which have state ==
