@@ -460,6 +460,31 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     ioConfigPtr4->handleRunspecSection(runspecSection4);
 
     BOOST_CHECK_EQUAL(false, ioConfigPtr4->getWriteEGRIDFile());
+
+    IOConfigPtr ioConfigPtr5;
+    BOOST_CHECK_NO_THROW(ioConfigPtr5 = std::make_shared<IOConfig>());
+
+    BOOST_CHECK_EQUAL("", ioConfigPtr5->getDeckFileName());
+
+    std::string testString = "testString";
+    ioConfigPtr5->setDeckFileName(testString);
+    BOOST_CHECK_EQUAL(testString, ioConfigPtr5->getDeckFileName());
+
+    IOConfigPtr ioConfigPtr6;
+    BOOST_CHECK_NO_THROW(ioConfigPtr6 = std::make_shared<IOConfig>());
+
+    BOOST_CHECK_EQUAL(true, ioConfigPtr6->getOutputEnabled());
+    ioConfigPtr6->setOutputEnabled(false);
+    BOOST_CHECK_EQUAL(false, ioConfigPtr6->getOutputEnabled());
+
+    IOConfigPtr ioConfigPtr7;
+    BOOST_CHECK_NO_THROW(ioConfigPtr7 = std::make_shared<IOConfig>());
+
+    BOOST_CHECK_EQUAL(".", ioConfigPtr7->getOutputDir());
+    std::string testDir = "testDir";
+    ioConfigPtr7->setOutputDir(testDir);
+    BOOST_CHECK_EQUAL(testDir, ioConfigPtr7->getOutputDir());
+
 }
 
 

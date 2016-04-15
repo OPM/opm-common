@@ -47,7 +47,11 @@ namespace Opm {
         m_FMTIN(false),
         m_FMTOUT(false),
         m_eclipse_input_path(input_path),
-        m_ignore_RPTSCHED_RESTART(false){
+        m_ignore_RPTSCHED_RESTART(false),
+        m_deck_filename(""),
+        m_output_enabled(true),
+        m_output_dir(".")
+    {
     }
 
     bool IOConfig::getWriteEGRIDFile() const {
@@ -443,6 +447,30 @@ namespace Opm {
 
     int IOConfig::getFirstRFTStep() const {
         return m_first_rft_step;
+    }
+
+    std::string IOConfig::getDeckFileName() {
+        return m_deck_filename;
+    }
+
+    void IOConfig::setDeckFileName(const std::string& deckFileName){
+        m_deck_filename = deckFileName;
+    }
+
+    bool IOConfig::getOutputEnabled(){
+        return m_output_enabled;
+    }
+
+    void IOConfig::setOutputEnabled(bool enabled){
+        m_output_enabled = enabled;
+    }
+
+    std::string IOConfig::getOutputDir() {
+        return m_output_dir;
+    }
+
+    void IOConfig::setOutputDir(const std::string& outputDir) {
+        m_output_dir = outputDir;
     }
 
 } //namespace Opm
