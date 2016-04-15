@@ -50,14 +50,14 @@ namespace Opm {
             };
 
             /// Query if a value is set.
-            inline bool has( opt );
+            inline bool has( opt ) const;
 
             /// Read the value indicated by m. Throws an exception if
             /// if the requested value is unset.
-            inline double get( opt m );
+            inline double get( opt m ) const;
             /// Read the value indicated by m. Returns a default value if
             /// the requested value is unset.
-            inline double get( opt m, double default_value );
+            inline double get( opt m, double default_value ) const;
             /// Set the value specified by m. Throws an exception if multiple
             /// values are requested. Returns a self-reference to support
             /// chaining.
@@ -86,10 +86,7 @@ namespace Opm {
         std::map< Completion::logical_cartesian_index, Completion > completions;
     };
 
-    struct Wells {
-        double step_length;
-        std::map< std::string, Well > wells;
-    };
+    typedef std::map< std::string, Well > Wells;
 
     /* IMPLEMENTATIONS */
 
