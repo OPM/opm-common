@@ -259,7 +259,7 @@ namespace Opm {
     }
 
 
-    void EclipseState::complainAboutAmbiguousKeyword(DeckConstPtr deck, const std::string& keywordName) const {
+    void EclipseState::complainAboutAmbiguousKeyword(DeckConstPtr deck, const std::string& keywordName) {
         m_messageContainer.error("The " + keywordName + " keyword must be unique in the deck. Ignoring all!");
         auto keywords = deck->getKeywordList(keywordName);
         for (size_t i = 0; i < keywords.size(); ++i) {
