@@ -37,7 +37,7 @@ endif (CMAKE_VERSION VERSION_LESS "2.8.3")
 if (CMAKE_VERSION VERSION_LESS "2.8.5")
 	message (STATUS "Enabling compatibility modules for CMake 2.8.5")
 	list (APPEND CMAKE_MODULE_PATH "${OPM_MACROS_ROOT}/cmake/Modules/compat-2.8.5")
-endif (CMAKE_VERSION VERSION_LESS "2.8.5")	
+endif (CMAKE_VERSION VERSION_LESS "2.8.5")
 
 if (CMAKE_VERSION VERSION_LESS "2.8.7")
 	message (STATUS "Enabling compatibility modules for CMake 2.8.7")
@@ -93,6 +93,8 @@ endif (NOT USE_MPI)
 # parallel programming
 include (UseOpenMP)
 find_openmp (${project})
+include (UseThreads)
+find_threads (${project})
 
 # callback hook to setup additional dependencies
 if (COMMAND prereqs_hook)
