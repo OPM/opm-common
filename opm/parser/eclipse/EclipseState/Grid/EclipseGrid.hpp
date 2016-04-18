@@ -138,7 +138,7 @@ namespace Opm {
         void initDVDEPTHZGrid(const std::vector<int>& dims , std::shared_ptr< const Deck > deck);
         void initGrid(const std::vector<int>& dims, std::shared_ptr< const Deck > deck);
 
-        static void assertCornerPointKeywords(const std::vector<int>& dims, std::shared_ptr< const Deck > deck);
+        void assertCornerPointKeywords(const std::vector<int>& dims, std::shared_ptr< const Deck > deck);
         static bool hasDVDEPTHZKeywords(std::shared_ptr< const Deck > deck);
         static bool hasDTOPSKeywords(std::shared_ptr< const Deck > deck);
         static void assertVectorSize(const std::vector<double>& vector , size_t expectedSize , const std::string& msg);
