@@ -75,6 +75,11 @@ namespace Opm {
         initFaults(deck);
         initMULTREGT(deck);
         m_nnc = std::make_shared<NNC>( deck, getEclipseGrid());
+
+        m_messageContainer.appendMessages(m_tables.getMessageContainer());
+        m_messageContainer.appendMessages(m_schedule->getMessageContainer());
+        m_messageContainer.appendMessages(m_eclipseGrid->getMessageContainer());
+        m_messageContainer.appendMessages(m_eclipseProperties.getMessageContainer());
     }
 
     const UnitSystem& EclipseState::getDeckUnitSystem() const {
@@ -99,9 +104,6 @@ namespace Opm {
 
     
     MessageContainer& EclipseState::getMessageContainer() {
-        m_messageContainer.appendMessages(m_tables.getMessageContainer());
-        m_messageContainer.appendMessages(m_schedule->getMessageContainer());
-        m_messageContainer.appendMessages(m_eclipseGrid->getMessageContainer());
         return m_messageContainer;
     }
 
