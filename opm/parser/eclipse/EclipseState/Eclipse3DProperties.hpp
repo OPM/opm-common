@@ -25,7 +25,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
-
+#include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 
 namespace Opm {
 
@@ -69,6 +69,8 @@ namespace Opm {
         bool hasDeckIntGridProperty(const std::string& keyword) const;
         bool hasDeckDoubleGridProperty(const std::string& keyword) const;
         bool supportsGridProperty(const std::string& keyword, int enabledTypes = AllProperties) const;
+        const MessageContainer& getMessageContainer() const;
+        MessageContainer& getMessageContainer();
 
     private:
         void processGridProperties(const Deck& deck,
@@ -97,7 +99,7 @@ namespace Opm {
                                              const DeckKeyword& deckKeyword,
                                              int enabledTypes);
 
-        static void setKeywordBox(const DeckKeyword& deckKeyword, const DeckRecord&, BoxManager& boxManager);
+        void setKeywordBox(const DeckKeyword& deckKeyword, const DeckRecord&, BoxManager& boxManager);
 
         std::string            m_defaultRegion;
         const UnitSystem&      m_deckUnitSystem;
