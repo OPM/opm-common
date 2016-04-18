@@ -864,7 +864,6 @@ namespace Opm {
     }
 
 
-    // static member function
     void Eclipse3DProperties::setKeywordBox( const DeckKeyword& deckKeyword,
                                            const DeckRecord& deckRecord,
                                            BoxManager& boxManager) {
@@ -906,10 +905,6 @@ namespace Opm {
             std::string msg = "BOX modifiers on keywords must be either "
                 "specified completely or not at all. Ignoring.";
             m_intGridProperties.getMessageContainer().error(deckKeyword.getFileName() + std::to_string(deckKeyword.getLineNumber()) + msg);
-            //            OpmLog::addMessage(Log::MessageType::Error,
-            //                               Log::fileMessage(deckKeyword.getFileName(),
-            //                                                deckKeyword.getLineNumber(),
-            //                                                msg));
         }
     }
 }
