@@ -84,6 +84,11 @@ macro (opm_compile_satellites opm satellite excl_all test_regexp)
 		endif ("${_sat_NAME}" MATCHES "${_regexp}")
 	  endforeach (_regexp)
 	  get_target_property (_sat_LOC ${_sat_NAME} LOCATION)
+          # Run tests through mpi-run. Ubuntu 14.04 provided mpi libs will crash
+          # in the MPI_Finalize() call otherwise.
+          if(MPI_FOUND)
+            set(_sat_LOC ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 1 ${_sat_LOC})
+          endif()
 	  if (CMAKE_VERSION VERSION_LESS "2.8.4")
 		add_test (
 		  NAME ${_sat_FANCY}
