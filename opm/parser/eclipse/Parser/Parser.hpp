@@ -25,14 +25,9 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <boost/filesystem.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
-
-namespace boost {
-    namespace filesystem {
-        class path;
-    }
-}
 
 namespace Json {
     class JsonObject;
