@@ -54,12 +54,12 @@ namespace Opm {
         m_deckUnitSystem(    deck->getActiveUnitSystem() ),
         m_parseContext(      parseContext ),
         m_tables(            *deck ),
-        m_eclipseGrid(       std::make_shared<EclipseGrid>(deck)),
-        m_eclipseProperties( *deck, m_tables, *m_eclipseGrid)
+        m_inputGrid(         std::make_shared<EclipseGrid>(deck)),
+        m_eclipseProperties( *deck, m_tables, *m_inputGrid)
     {
         // after Eclipse3DProperties has been constructed, we have complete ACTNUM info
         if (m_eclipseProperties.hasDeckIntGridProperty("ACTNUM"))
-            m_eclipseGrid->resetACTNUM(m_eclipseProperties.getIntGridProperty("ACTNUM").getData().data());
+            m_inputGrid->resetACTNUM(m_eclipseProperties.getIntGridProperty("ACTNUM").getData().data());
 
         initIOConfig(deck);
 
@@ -88,11 +88,11 @@ namespace Opm {
     }
 
     EclipseGridConstPtr EclipseState::getEclipseGrid() const {
-        return m_eclipseGrid;
+        return m_inputGrid;
     }
 
     EclipseGridPtr EclipseState::getEclipseGridCopy() const {
-        return std::make_shared<EclipseGrid>( m_eclipseGrid->c_ptr() );
+        return std::make_shared<EclipseGrid>( m_inputGrid->c_ptr() );
     }
 
     const Eclipse3DProperties& EclipseState::get3DProperties() const {

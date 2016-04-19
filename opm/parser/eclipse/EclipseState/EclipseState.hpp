@@ -125,7 +125,7 @@ namespace Opm {
         const UnitSystem& m_deckUnitSystem;
         const ParseContext& m_parseContext;
         const TableManager m_tables;
-        std::shared_ptr<EclipseGrid> m_eclipseGrid;
+        std::shared_ptr<EclipseGrid> m_inputGrid;
         Eclipse3DProperties m_eclipseProperties;
         MessageContainer m_messageContainer;
     };
