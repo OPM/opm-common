@@ -551,7 +551,7 @@ public:
         auto dataField = eclipseState->get3DProperties().getDoubleGridProperty("PORO").getData();
         restrictAndReorderToActiveCells(dataField, numCells, compressedToCartesianCellIdx);
 
-        auto eclGrid = eclipseState->getEclipseGridCopy();
+        auto eclGrid = eclipseState->getInputGridCopy();
 
         // update the ACTNUM array using the processed cornerpoint grid
         std::vector<int> actnumData(eclGrid->getCartesianSize(), 1);
@@ -1209,7 +1209,7 @@ void EclipseWriter::writeInit(const SimulatorTimerInterface &timer)
     /* Create summary object (could not do it at construction time,
        since it requires knowledge of the start time). */
     {
-      auto eclGrid = eclipseState_->getEclipseGrid();
+      auto eclGrid = eclipseState_->getInputGrid();
       auto deckUnitType = eclipseState_->getDeckUnitSystem().getType();
       bool time_in_days = true;
 
@@ -1368,7 +1368,7 @@ void EclipseWriter::writeTimeStep(const SimulatorTimerInterface& timer,
     std::shared_ptr<EclipseWriterDetails::EclipseWriteRFTHandler> eclipseWriteRFTHandler = std::make_shared<EclipseWriterDetails::EclipseWriteRFTHandler>(
                                                                                                                       compressedToCartesianCellIdx_,
                                                                                                                       numCells_,
-                                                                                                                      eclipseState_->getEclipseGrid()->getCartesianSize());
+                                                                                                                      eclipseState_->getInputGrid()->getCartesianSize());
 
     // Write RFT file.
     {
@@ -1385,7 +1385,7 @@ void EclipseWriter::writeTimeStep(const SimulatorTimerInterface& timer,
                                               ecl_unit,
                                               timer,
                                               wells,
-                                              eclipseState_->getEclipseGrid(),
+                                              eclipseState_->getInputGrid(),
                                               pressure,
                                               saturation_water,
                                               saturation_gas);
@@ -1425,7 +1425,7 @@ EclipseWriter::EclipseWriter(const parameter::ParameterGroup& params,
     , gridToEclipseIdx_(numCells, int(-1) )
     , phaseUsage_(phaseUsage)
 {
-    const auto eclGrid = eclipseState->getEclipseGrid();
+    const auto eclGrid = eclipseState->getInputGrid();
     cartesianSize_[0] = eclGrid->getNX();
     cartesianSize_[1] = eclGrid->getNY();
     cartesianSize_[2] = eclGrid->getNZ();
