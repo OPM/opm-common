@@ -173,140 +173,102 @@ const std::string& inputStrMissingPressure = "RUNSPEC\n"
                                          "/\n"
                                          "\n";
 
-
-
-
-static DeckPtr createDeck(const ParseContext& parseContext , const std::string& input) {
+static DeckPtr createDeck(const ParseContext& parseContext, const std::string& input) {
     Opm::Parser parser;
-    return parser.parseString(input , parseContext);
+    return parser.parseString(input, parseContext);
 }
 
-static Eclipse3DProperties getEclipseProperties(const Deck& deck)
+/// Setup fixture
+struct Setup
 {
-    TableManager* tm = new TableManager(deck);
-    EclipseGrid* eg = new EclipseGrid(3, 3, 3);
+    ParseContext parseContext;
+    DeckPtr deck;
+    TableManager tablemanager;
+    EclipseGrid grid;
+    Eclipse3DProperties props;
+    ThresholdPressure threshPres;
 
-    // We are intentionally leaking memory here.  To save typing three lines
-    // every time we need an Eclipse3DProperties object, we use this helper
-    // function.  We need pointers so that tm and eg do not go out of scope.
-    return Eclipse3DProperties(deck, *tm, *eg);
-}
+    explicit Setup(const std::string& input) :
+            parseContext(),
+            deck(createDeck(parseContext, input)),
+            tablemanager(*deck),
+            grid(10, 3, 4),
+            props(*deck, tablemanager, grid),
+            threshPres(parseContext, *deck, props)
+    {
+    }
+    explicit Setup(const std::string& input, ParseContext& parseContext) :
+            deck(createDeck(parseContext, input)),
+            tablemanager(*deck),
+            grid(10, 3, 4),
+            props(*deck, tablemanager, grid),
+            threshPres(parseContext, *deck, props)
+    {
+    }
 
+};
 
 BOOST_AUTO_TEST_CASE(ThresholdPressureDeckHasEqlnum) {
-    ParseContext parseContext;
-    DeckPtr deck = createDeck(parseContext , inputStrWithEqlNum);
-    auto ep = getEclipseProperties( *deck );
+    Setup s(inputStrWithEqlNum);
 
-    BOOST_CHECK (ep.hasDeckIntGridProperty("EQLNUM"));
+    BOOST_CHECK(s.props.hasDeckIntGridProperty("EQLNUM"));
 }
-
 
 BOOST_AUTO_TEST_CASE(ThresholdPressureTest) {
-    ParseContext parseContext;
-    DeckPtr deck = createDeck(parseContext , inputStrWithEqlNum);
-    auto ep = getEclipseProperties( *deck );
-    ThresholdPressureConstPtr thp = std::make_shared<ThresholdPressure>(parseContext , *deck, ep);
+    Setup s(inputStrWithEqlNum);
+    auto thp = s.threshPres;
 
-    BOOST_CHECK_EQUAL( thp->getThresholdPressure(1,2) , 1200000.0 );
-    BOOST_CHECK_EQUAL( thp->getThresholdPressure(2,1) , 1200000.0 );
-    BOOST_CHECK_EQUAL( thp->getThresholdPressure(1,3) , 500000.0 );
-    BOOST_CHECK_EQUAL( thp->getThresholdPressure(3,1) , 500000.0 );
-    BOOST_CHECK_EQUAL( thp->getThresholdPressure(2,3) , 700000.0 );
-    BOOST_CHECK_EQUAL( thp->getThresholdPressure(3,2) , 700000.0 );
-
+    BOOST_CHECK_EQUAL(thp.getThresholdPressure(1, 2), 1200000.0);
+    BOOST_CHECK_EQUAL(thp.getThresholdPressure(2, 1), 1200000.0);
+    BOOST_CHECK_EQUAL(thp.getThresholdPressure(1, 3), 500000.0);
+    BOOST_CHECK_EQUAL(thp.getThresholdPressure(3, 1), 500000.0);
+    BOOST_CHECK_EQUAL(thp.getThresholdPressure(2, 3), 700000.0);
+    BOOST_CHECK_EQUAL(thp.getThresholdPressure(3, 2), 700000.0);
 }
-
 
 BOOST_AUTO_TEST_CASE(ThresholdPressureEmptyTest) {
-    ParseContext parseContext;
-    DeckPtr deck = createDeck(parseContext , inputStrNoSolutionSection);
-    auto ep = getEclipseProperties(*deck);
-    ThresholdPressureConstPtr thresholdPressurePtr = std::make_shared<ThresholdPressure>(parseContext , *deck, ep);
-    BOOST_CHECK_EQUAL(0, thresholdPressurePtr->size());
+    Setup s(inputStrNoSolutionSection);
+    BOOST_CHECK_EQUAL(0, s.threshPres.size());
 }
-
 
 BOOST_AUTO_TEST_CASE(ThresholdPressureNoTHPREStest) {
-    ParseContext parseContext;
-    DeckPtr deck_no_thpres = createDeck(parseContext , inputStrNoTHPRESinSolutionNorRUNSPEC);
-    DeckPtr deck_no_thpres2 = createDeck(parseContext , inputStrTHPRESinRUNSPECnotSoultion);
-    auto ep = getEclipseProperties(*deck_no_thpres);
-    auto ep2 = getEclipseProperties(*deck_no_thpres2);
+    Setup s(inputStrNoTHPRESinSolutionNorRUNSPEC);
+    Setup s2(inputStrTHPRESinRUNSPECnotSoultion);
 
-    ThresholdPressureConstPtr thresholdPressurePtr;
-    BOOST_CHECK_NO_THROW(thresholdPressurePtr = std::make_shared<ThresholdPressure>(parseContext , *deck_no_thpres, ep));
-    ThresholdPressureConstPtr thresholdPressurePtr2;
-    BOOST_CHECK_NO_THROW(thresholdPressurePtr2 = std::make_shared<ThresholdPressure>(parseContext , *deck_no_thpres2, ep2));
-
-    BOOST_CHECK_EQUAL(0, thresholdPressurePtr->size());
-    BOOST_CHECK_EQUAL(0, thresholdPressurePtr2->size());
+    BOOST_CHECK_EQUAL(0, s.threshPres.size());
+    BOOST_CHECK_EQUAL(0, s.threshPres.size());
 }
-
 
 BOOST_AUTO_TEST_CASE(ThresholdPressureThrowTest) {
-    ParseContext parseContext;
-    DeckPtr deck                 = createDeck(parseContext , inputStr);
-    DeckPtr deck_all0            = createDeck(parseContext , inputStrWithEqlNumall0);
-    DeckPtr deck_irrevers        = createDeck(parseContext , inputStrIrrevers);
-    DeckPtr deck_inconsistency   = createDeck(parseContext , inputStrInconsistency);
-    DeckPtr deck_highRegNum      = createDeck(parseContext , inputStrTooHighRegionNumbers);
-    DeckPtr deck_missingData     = createDeck(parseContext , inputStrMissingData);
-    DeckPtr deck_missingPressure = createDeck(parseContext , inputStrMissingPressure);
+    BOOST_CHECK_THROW(Setup sx(inputStrIrrevers), std::runtime_error);
+    BOOST_CHECK_THROW(Setup sx(inputStrInconsistency), std::runtime_error);
+    BOOST_CHECK_THROW(Setup sx(inputStrTooHighRegionNumbers), std::runtime_error);
+    BOOST_CHECK_THROW(Setup sx(inputStrMissingData), std::runtime_error);
+    BOOST_CHECK_THROW(Setup sx(inputStr), std::runtime_error);
+    BOOST_CHECK_THROW(Setup sx(inputStrWithEqlNumall0), std::runtime_error);
 
-    auto ep                 = getEclipseProperties(*deck                );
-    auto ep_irrevers        = getEclipseProperties(*deck_irrevers       );
-    auto ep_inconsistency   = getEclipseProperties(*deck_inconsistency  );
-    auto ep_highRegNum      = getEclipseProperties(*deck_highRegNum     );
-    auto ep_missingData     = getEclipseProperties(*deck_missingData    );
-    auto ep_missingPressure = getEclipseProperties(*deck_missingPressure);
+    BOOST_CHECK_THROW(Setup sx(inputStr), std::runtime_error);
+    ParseContext pc;
+    pc.update(ParseContext::UNSUPPORTED_INITIAL_THPRES, InputError::IGNORE);
+    BOOST_CHECK_NO_THROW(Setup sx(inputStrMissingPressure, pc));
 
-    BOOST_CHECK_THROW(std::make_shared<ThresholdPressure>(parseContext,*deck_irrevers, ep_irrevers), std::runtime_error);
-    BOOST_CHECK_THROW(std::make_shared<ThresholdPressure>(parseContext,*deck_inconsistency, ep_inconsistency), std::runtime_error);
-    BOOST_CHECK_THROW(std::make_shared<ThresholdPressure>(parseContext,*deck_highRegNum, ep_highRegNum), std::runtime_error);
-    BOOST_CHECK_THROW(std::make_shared<ThresholdPressure>(parseContext,*deck_missingData, ep_missingData), std::runtime_error);
+    Setup s(inputStrMissingPressure, pc);
+    BOOST_CHECK( s.threshPres.hasRegionBarrier(2, 3));
+    BOOST_CHECK(!s.threshPres.hasThresholdPressure(2, 3));
 
-    {
-        auto gridPropertiesEQLNUMkeywordNotAdded = getEclipseProperties( *deck);
-        BOOST_CHECK_THROW(
-                std::make_shared<ThresholdPressure>( parseContext, *deck, gridPropertiesEQLNUMkeywordNotAdded ),
-                std::runtime_error );
-    }
-    {
-        auto gridPropertiesEQLNUMall0 = getEclipseProperties(*deck_all0);
-        BOOST_CHECK_THROW(std::make_shared<ThresholdPressure>(parseContext , *deck, gridPropertiesEQLNUMall0), std::runtime_error);
-    }
+    pc.update(ParseContext::INTERNAL_ERROR_UNINITIALIZED_THPRES, InputError::THROW_EXCEPTION);
+    BOOST_CHECK_THROW(s.threshPres.getThresholdPressure(2, 3), std::invalid_argument);
 
-    parseContext.update( ParseContext::UNSUPPORTED_INITIAL_THPRES , InputError::IGNORE );
-    BOOST_CHECK_NO_THROW(ThresholdPressure(parseContext,*deck_missingPressure, ep_missingPressure));
-
-
-    {
-        ThresholdPressure thp(parseContext , *deck_missingPressure , ep_missingPressure );
-
-        BOOST_CHECK_EQUAL( true  , thp.hasRegionBarrier(2,3));
-        BOOST_CHECK_EQUAL( false , thp.hasThresholdPressure(2,3));
-
-        parseContext.update( ParseContext::INTERNAL_ERROR_UNINITIALIZED_THPRES , InputError::THROW_EXCEPTION );
-        BOOST_CHECK_THROW( thp.getThresholdPressure(2, 3) , std::invalid_argument);
-
-        parseContext.update( ParseContext::INTERNAL_ERROR_UNINITIALIZED_THPRES , InputError::IGNORE );
-        BOOST_CHECK_EQUAL( 0.0 , thp.getThresholdPressure(2, 3));
-    }
+    pc.update(ParseContext::INTERNAL_ERROR_UNINITIALIZED_THPRES, InputError::IGNORE);
+    BOOST_CHECK_EQUAL(0.0, s.threshPres.getThresholdPressure(2, 3));
 }
-
 
 BOOST_AUTO_TEST_CASE(HasPair) {
-    ParseContext      parseContext;
-    DeckPtr deck    = createDeck(parseContext , inputStrWithEqlNum);
-    auto ep         = getEclipseProperties(*deck);
-    ThresholdPressure thp(parseContext , *deck , ep);
+    Setup s(inputStrWithEqlNum);
 
-    BOOST_CHECK_EQUAL( true , thp.hasRegionBarrier( 1 , 2 ));
-    BOOST_CHECK_EQUAL( false , thp.hasRegionBarrier( 1 , 7 ));
-    BOOST_CHECK_EQUAL( true , thp.hasThresholdPressure( 1, 2 ));
-    BOOST_CHECK_EQUAL( false , thp.hasThresholdPressure( 1, 7 ));
-    BOOST_CHECK_EQUAL( 1200000.0 , thp.getThresholdPressure( 1,2 ));
-
+    BOOST_CHECK( s.threshPres.hasRegionBarrier(1, 2));
+    BOOST_CHECK(!s.threshPres.hasRegionBarrier(1, 7));
+    BOOST_CHECK( s.threshPres.hasThresholdPressure(1, 2));
+    BOOST_CHECK(!s.threshPres.hasThresholdPressure(1, 7));
+    BOOST_CHECK_EQUAL(1200000.0, s.threshPres.getThresholdPressure(1, 2));
 }
-
