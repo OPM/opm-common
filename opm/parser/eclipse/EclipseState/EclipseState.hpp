@@ -74,8 +74,8 @@ namespace Opm {
         std::shared_ptr< IOConfig > getIOConfig() const;
         std::shared_ptr< const InitConfig > getInitConfig() const;
         std::shared_ptr< const SimulationConfig > getSimulationConfig() const;
-        std::shared_ptr< const EclipseGrid > getEclipseGrid() const;
-        std::shared_ptr< EclipseGrid > getEclipseGridCopy() const;
+        std::shared_ptr< const EclipseGrid > getInputGrid() const;
+        std::shared_ptr< EclipseGrid > getInputGridCopy() const;
         const MessageContainer& getMessageContainer() const;
         MessageContainer& getMessageContainer();
         std::string getTitle() const;

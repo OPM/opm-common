@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(CreateCPGrid) {
     boost::filesystem::path scheduleFile("testdata/integration_tests/GRID/CORNERPOINT.DATA");
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), ParseContext());
     EclipseState es(deck, ParseContext());
-    auto grid = es.getEclipseGrid();
+    auto grid = es.getInputGrid();
 
     BOOST_CHECK_EQUAL( 10U  , grid->getNX( ));
     BOOST_CHECK_EQUAL( 10U  , grid->getNY( ));
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(CreateCPActnumGrid) {
     boost::filesystem::path scheduleFile("testdata/integration_tests/GRID/CORNERPOINT_ACTNUM.DATA");
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), ParseContext());
     EclipseState es(deck, ParseContext());
-    auto grid = es.getEclipseGrid();
+    auto grid = es.getInputGrid();
 
     BOOST_CHECK_EQUAL(  10U , grid->getNX( ));
     BOOST_CHECK_EQUAL(  10U , grid->getNY( ));
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(ExportFromCPGridAllActive) {
     boost::filesystem::path scheduleFile("testdata/integration_tests/GRID/CORNERPOINT.DATA");
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), ParseContext());
     EclipseState es(deck, ParseContext());
-    auto grid = es.getEclipseGrid();
+    auto grid = es.getInputGrid();
 
     std::vector<int> actnum;
 
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(ExportFromCPGridACTNUM) {
     boost::filesystem::path scheduleFile("testdata/integration_tests/GRID/CORNERPOINT_ACTNUM.DATA");
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), ParseContext());
     EclipseState es(deck, ParseContext());
-    auto grid = es.getEclipseGrid();
+    auto grid = es.getInputGrid();
 
     std::vector<double> coord;
     std::vector<double> zcorn;

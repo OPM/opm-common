@@ -112,7 +112,7 @@ namespace Opm {
         return dims;
     }
 
-    EclipseGrid::EclipseGrid(const std::shared_ptr<const Deck>& deck)
+    EclipseGrid::EclipseGrid(const std::shared_ptr<const Deck>& deck, const int * actnum)
         : m_minpvValue(0),
           m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH"),
@@ -161,6 +161,8 @@ namespace Opm {
                 throw std::invalid_argument(msg);
             }
         }
+        if (actnum != nullptr)
+            resetACTNUM(actnum);
     }
 
 

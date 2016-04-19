@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule) {
 DeckPtr deck = createDeck();
 EclipseState state(deck , ParseContext());
 ScheduleConstPtr schedule = state.getSchedule();
-EclipseGridConstPtr eclipseGrid = state.getEclipseGrid();
+EclipseGridConstPtr eclipseGrid = state.getInputGrid();
 
 BOOST_CHECK_EQUAL( schedule->getStartTime() , boost::posix_time::ptime(boost::gregorian::date(1998 , 3 , 8 )));
 }
