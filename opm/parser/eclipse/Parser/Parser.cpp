@@ -229,6 +229,7 @@ namespace Opm {
         parserState->openRootFile( dataFileName );
         parseState(parserState);
         applyUnitsToDeck(*parserState->deck);
+        parserState->deck->setDataFile(dataFileName);
 
         return parserState->deck;
     }

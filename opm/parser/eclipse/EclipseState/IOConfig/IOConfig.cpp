@@ -22,6 +22,7 @@
 #include <iterator>
 
 #include <boost/lexical_cast.hpp>
+#include <boost/filesystem.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -46,12 +47,15 @@ namespace Opm {
         m_UNIFOUT(false),
         m_FMTIN(false),
         m_FMTOUT(false),
-        m_eclipse_input_path(input_path),
         m_ignore_RPTSCHED_RESTART(false),
-        m_deck_filename(""),
-        m_output_enabled(true),
-        m_output_dir(".")
+        m_deck_filename(input_path),
+        m_output_enabled(true)
     {
+        m_output_dir = boost::filesystem::path(input_path).parent_path().string();
+        if (m_output_dir.length() < 1) {
+            m_output_dir = ".";
+        }
+        m_base_name = boost::filesystem::path(input_path).stem().string();
     }
 
     bool IOConfig::getWriteEGRIDFile() const {
@@ -350,12 +354,6 @@ namespace Opm {
         return m_FMTOUT;
     }
 
-
-    const std::string& IOConfig::getEclipseInputPath() const {
-        return m_eclipse_input_path;
-    }
-
-
     void IOConfig::setWriteInitialRestartFile(bool writeInitialRestartFile) {
         m_write_initial_RST_file = writeInitialRestartFile;
     }
@@ -453,10 +451,6 @@ namespace Opm {
         return m_deck_filename;
     }
 
-    void IOConfig::setDeckFileName(const std::string& deckFileName){
-        m_deck_filename = deckFileName;
-    }
-
     bool IOConfig::getOutputEnabled(){
         return m_output_enabled;
     }
@@ -471,6 +465,10 @@ namespace Opm {
 
     void IOConfig::setOutputDir(const std::string& outputDir) {
         m_output_dir = outputDir;
+    }
+
+    std::string IOConfig::getBaseName() {
+        return m_base_name;
     }
 
 } //namespace Opm

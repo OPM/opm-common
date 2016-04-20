@@ -467,23 +467,15 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     BOOST_CHECK_EQUAL("", ioConfigPtr5->getDeckFileName());
 
     std::string testString = "testString";
-    ioConfigPtr5->setDeckFileName(testString);
-    BOOST_CHECK_EQUAL(testString, ioConfigPtr5->getDeckFileName());
+    IOConfigPtr ioConfigPtr6 = std::make_shared<IOConfig>(testString);
+    BOOST_CHECK_EQUAL(testString, ioConfigPtr6->getDeckFileName());
+    BOOST_CHECK_EQUAL(".", ioConfigPtr6->getOutputDir());
 
-    IOConfigPtr ioConfigPtr6;
-    BOOST_CHECK_NO_THROW(ioConfigPtr6 = std::make_shared<IOConfig>());
-
-    BOOST_CHECK_EQUAL(true, ioConfigPtr6->getOutputEnabled());
-    ioConfigPtr6->setOutputEnabled(false);
-    BOOST_CHECK_EQUAL(false, ioConfigPtr6->getOutputEnabled());
-
-    IOConfigPtr ioConfigPtr7;
-    BOOST_CHECK_NO_THROW(ioConfigPtr7 = std::make_shared<IOConfig>());
-
-    BOOST_CHECK_EQUAL(".", ioConfigPtr7->getOutputDir());
-    std::string testDir = "testDir";
-    ioConfigPtr7->setOutputDir(testDir);
-    BOOST_CHECK_EQUAL(testDir, ioConfigPtr7->getOutputDir());
+    std::string absTestPath = "/path/to/testString.DATA";
+    IOConfigPtr ioConfigPtr7 = std::make_shared<IOConfig>(absTestPath);
+    BOOST_CHECK_EQUAL(absTestPath, ioConfigPtr7->getDeckFileName());
+    BOOST_CHECK_EQUAL("/path/to", ioConfigPtr7->getOutputDir());
+    BOOST_CHECK_EQUAL("testString", ioConfigPtr7->getBaseName());
 
 }
 

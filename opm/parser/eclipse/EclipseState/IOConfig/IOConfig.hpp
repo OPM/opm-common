@@ -159,13 +159,14 @@ namespace Opm {
         std::string getRestartFileName(const std::string& restart_base, int report_step, bool output) const;
 
         std::string getDeckFileName();
-        void setDeckFileName(const std::string& deckFileName);
 
         bool getOutputEnabled();
         void setOutputEnabled(bool enabled);
 
         std::string getOutputDir();
         void setOutputDir(const std::string& outputDir);
+
+        std::string getBaseName();
 
     private:
 
@@ -186,13 +187,13 @@ namespace Opm {
         bool            m_UNIFOUT;
         bool            m_FMTIN;
         bool            m_FMTOUT;
-        std::string     m_eclipse_input_path;
         bool            m_ignore_RPTSCHED_RESTART;
         int             m_first_restart_step;
         int             m_first_rft_step;
         std::string     m_deck_filename;
         bool            m_output_enabled;
         std::string     m_output_dir;
+        std::string     m_base_name;
 
         struct restartConfig {
             /*
