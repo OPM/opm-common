@@ -197,12 +197,13 @@ struct Setup
             threshPres(parseContext, *deck, props)
     {
     }
-    explicit Setup(const std::string& input, ParseContext& parseContext) :
-            deck(createDeck(parseContext, input)),
+    explicit Setup(const std::string& input, ParseContext& parseContextArg) :
+            parseContext(), // not used
+            deck(createDeck(parseContextArg, input)),
             tablemanager(*deck),
             grid(10, 3, 4),
             props(*deck, tablemanager, grid),
-            threshPres(parseContext, *deck, props)
+            threshPres(parseContextArg, *deck, props)
     {
     }
 

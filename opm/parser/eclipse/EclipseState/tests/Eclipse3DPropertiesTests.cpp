@@ -154,8 +154,8 @@ struct Setup
     Opm::EclipseGrid grid;
     Opm::Eclipse3DProperties props;
 
-    explicit Setup(Opm::DeckPtr deck) :
-            deck(deck),
+    explicit Setup(Opm::DeckPtr deckArg) :
+            deck(deckArg),
             tablemanager(*deck),
             grid(deck),
             props(*deck, tablemanager, grid)
