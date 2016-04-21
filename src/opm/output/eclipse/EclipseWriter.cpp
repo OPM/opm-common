@@ -1430,7 +1430,7 @@ EclipseWriter::EclipseWriter(Opm::EclipseStateConstPtr eclipseState,
 
     //TODO
     //This should be calculated in EclipseGrid
-    std::shared_ptr<Opm::GridManager>  ourFineGridManagerPtr = std::make_shared<Opm::GridManager>(eclipseState->getEclipseGrid());
+    std::shared_ptr<Opm::GridManager>  ourFineGridManagerPtr = std::make_shared<Opm::GridManager>(eclipseState->getInputGrid());
     const UnstructuredGrid &ourFinerUnstructuredGrid = *ourFineGridManagerPtr->c_grid();
     auto compressedToCartesianCellIdx__ = Opm::UgGridHelpers::globalCell(ourFinerUnstructuredGrid);
 

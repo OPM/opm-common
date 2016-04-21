@@ -169,9 +169,6 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo)
     Opm::DeckConstPtr     deck = createDeck(eclipse_data_filename);
     Opm::EclipseStatePtr  eclipseState(new Opm::EclipseState(deck , parseContext));
 
-    auto ioConfig = eclipseState->getIOConfig();
-    ioConfig->setDeckFileName(eclipse_data_filename);
-
     Opm::EclipseWriterPtr eclipseWriter = createEclipseWriter(deck, eclipseState);
 
     std::shared_ptr<Opm::SimulatorTimer> simTimer( new Opm::SimulatorTimer() );
@@ -185,9 +182,9 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo)
 
     int countTimeStep = eclipseState->getSchedule()->getTimeMap()->numTimesteps();
 
-    for(int timestep=0; timestep <= countTimeStep; ++timestep){
-      simTimer->setCurrentStepNum(timestep);
-      eclipseWriter->writeTimeStep(*simTimer, *blackoilState, *wellState, false);
+    for(int timestep=0; timestep <= countTimeStep; ++timestep) {
+        simTimer->setCurrentStepNum(timestep);
+        eclipseWriter->writeTimeStep(*simTimer, *blackoilState, *wellState, false);
     }
 
     verifyWellState(eclipse_restart_filename, eclipseState->getInputGrid(), eclipseState->getSchedule());
