@@ -84,6 +84,7 @@ namespace Opm {
     struct Well {
         Rates rates;
         double bhp;
+        double thp;
         std::map< Completion::logical_cartesian_index, Completion > completions;
     };
 
