@@ -1,5 +1,5 @@
-opm-common (2015.10-1~trusty) trusty; urgency=medium
+opm-common (2016.04-rc1-1~trusty) trusty; urgency=medium
 
   * New release
 
- -- Arne Morten Kvarving <arne.morten.kvarving@sintef.no>  Mon, 19 Oct 2015 10:49:00 +0200
+ -- Arne Morten Kvarving <arne.morten.kvarving@sintef.no>  Fri, 22 Apr 2016 10:06:00 +0200
