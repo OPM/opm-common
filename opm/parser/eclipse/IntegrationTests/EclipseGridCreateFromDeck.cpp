@@ -30,6 +30,7 @@
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 using namespace Opm;
@@ -39,7 +40,8 @@ BOOST_AUTO_TEST_CASE(CreateCPGrid) {
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/GRID/CORNERPOINT.DATA");
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), ParseContext());
-    std::shared_ptr<EclipseGrid> grid(new EclipseGrid( deck ));
+    EclipseState es(deck, ParseContext());
+    auto grid = es.getInputGrid();
 
     BOOST_CHECK_EQUAL( 10U  , grid->getNX( ));
     BOOST_CHECK_EQUAL( 10U  , grid->getNY( ));
@@ -52,7 +54,8 @@ BOOST_AUTO_TEST_CASE(CreateCPActnumGrid) {
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/GRID/CORNERPOINT_ACTNUM.DATA");
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), ParseContext());
-    std::shared_ptr<EclipseGrid> grid(new EclipseGrid( deck ));
+    EclipseState es(deck, ParseContext());
+    auto grid = es.getInputGrid();
 
     BOOST_CHECK_EQUAL(  10U , grid->getNX( ));
     BOOST_CHECK_EQUAL(  10U , grid->getNY( ));
@@ -65,8 +68,8 @@ BOOST_AUTO_TEST_CASE(ExportFromCPGridAllActive) {
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/GRID/CORNERPOINT.DATA");
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), ParseContext());
-
-    std::shared_ptr<EclipseGrid> grid(new EclipseGrid( deck ));
+    EclipseState es(deck, ParseContext());
+    auto grid = es.getInputGrid();
 
     std::vector<int> actnum;
 
@@ -82,8 +85,8 @@ BOOST_AUTO_TEST_CASE(ExportFromCPGridACTNUM) {
     ParserPtr parser(new Parser());
     boost::filesystem::path scheduleFile("testdata/integration_tests/GRID/CORNERPOINT_ACTNUM.DATA");
     DeckPtr deck =  parser->parseFile(scheduleFile.string(), ParseContext());
-
-    std::shared_ptr<EclipseGrid> grid(new EclipseGrid( deck ));
+    EclipseState es(deck, ParseContext());
+    auto grid = es.getInputGrid();
 
     std::vector<double> coord;
     std::vector<double> zcorn;

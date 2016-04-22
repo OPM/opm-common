@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE( PARSE_TOPS_OK) {
     ParseContext parseContext;
     DeckPtr deck =  parser->parseFile(deckFile, parseContext);
     EclipseState state(deck , parseContext);
-    EclipseGridConstPtr grid = state.getEclipseGrid();
+    EclipseGridConstPtr grid = state.getInputGrid();
 
     BOOST_CHECK_EQUAL( grid->getNX() , 9 );
     BOOST_CHECK_EQUAL( grid->getNY() , 9 );

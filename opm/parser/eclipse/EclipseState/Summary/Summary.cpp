@@ -108,7 +108,7 @@ namespace Opm {
             const DeckKeyword& keyword,
             const EclipseState& es ) {
 
-        auto dims = dimensions( *es.getEclipseGrid() );
+        auto dims = dimensions( *es.getInputGrid() );
 
         const auto mkrecord = [&dims,&keyword]( const DeckRecord& record ) {
             auto ijk = getijk( record );
@@ -122,7 +122,7 @@ namespace Opm {
             const DeckKeyword& keyword,
             const EclipseState& es ) {
 
-        auto dims = dimensions( *es.getEclipseGrid() );
+        auto dims = dimensions( *es.getInputGrid() );
 
         const auto mknode = [&dims,&keyword]( int region ) {
             return ERT::smspec_node( keyword.name(), dims.data(), region );
@@ -144,7 +144,7 @@ namespace Opm {
        const auto& keywordstring = keyword.name();
        const auto& schedule = es.getSchedule();
        const auto last_timestep = schedule->getTimeMap()->last();
-       auto dims = dimensions( *es.getEclipseGrid() );
+       auto dims = dimensions( *es.getInputGrid() );
 
        for( const auto& record : keyword ) {
 

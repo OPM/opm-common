@@ -52,12 +52,16 @@ namespace Opm {
         m_deckUnitSystem(    deck->getActiveUnitSystem() ),
         m_parseContext(      parseContext ),
         m_tables(            *deck ),
-        m_eclipseGrid(       std::make_shared<EclipseGrid>(deck)),
-        m_eclipseProperties( *deck, m_tables, *m_eclipseGrid)
+        m_inputGrid(         std::make_shared<EclipseGrid>(deck, nullptr)),
+        m_eclipseProperties( *deck, m_tables, *m_inputGrid)
     {
+        // after Eclipse3DProperties has been constructed, we have complete ACTNUM info
+        if (m_eclipseProperties.hasDeckIntGridProperty("ACTNUM"))
+            m_inputGrid->resetACTNUM(m_eclipseProperties.getIntGridProperty("ACTNUM").getData().data());
+
         initIOConfig(deck);
 
-        m_schedule = ScheduleConstPtr( new Schedule(m_parseContext ,  getEclipseGrid() , deck, m_ioConfig) );
+        m_schedule = ScheduleConstPtr( new Schedule(m_parseContext ,  getInputGrid() , deck, m_ioConfig) );
         initIOConfigPostSchedule(deck);
 
         if (deck->hasKeyword( "TITLE" )) {
@@ -74,11 +78,11 @@ namespace Opm {
         initTransMult();
         initFaults(deck);
         initMULTREGT(deck);
-        m_nnc = std::make_shared<NNC>( deck, getEclipseGrid());
+        m_nnc = std::make_shared<NNC>( deck, getInputGrid());
 
         m_messageContainer.appendMessages(m_tables.getMessageContainer());
         m_messageContainer.appendMessages(m_schedule->getMessageContainer());
-        m_messageContainer.appendMessages(m_eclipseGrid->getMessageContainer());
+        m_messageContainer.appendMessages(m_inputGrid->getMessageContainer());
         m_messageContainer.appendMessages(m_eclipseProperties.getMessageContainer());
     }
 
@@ -86,12 +90,12 @@ namespace Opm {
         return m_deckUnitSystem;
     }
 
-    EclipseGridConstPtr EclipseState::getEclipseGrid() const {
-        return m_eclipseGrid;
+    EclipseGridConstPtr EclipseState::getInputGrid() const {
+        return m_inputGrid;
     }
 
-    EclipseGridPtr EclipseState::getEclipseGridCopy() const {
-        return std::make_shared<EclipseGrid>( m_eclipseGrid->c_ptr() );
+    EclipseGridPtr EclipseState::getInputGridCopy() const {
+        return std::make_shared<EclipseGrid>( m_inputGrid->c_ptr() );
     }
 
     const Eclipse3DProperties& EclipseState::get3DProperties() const {
@@ -179,7 +183,7 @@ namespace Opm {
 
 
     void EclipseState::initTransMult() {
-        EclipseGridConstPtr grid = getEclipseGrid();
+        EclipseGridConstPtr grid = getInputGrid();
         m_transMult = std::make_shared<TransMult>( grid->getNX() , grid->getNY() , grid->getNZ());
 
         const auto& p = m_eclipseProperties;
@@ -200,7 +204,7 @@ namespace Opm {
     }
 
     void EclipseState::initFaults(DeckConstPtr deck) {
-        EclipseGridConstPtr grid = getEclipseGrid();
+        EclipseGridConstPtr grid = getInputGrid();
         std::shared_ptr<GRIDSection> gridSection = std::make_shared<GRIDSection>( *deck );
 
         m_faults = std::make_shared<FaultCollection>(gridSection , grid);
@@ -233,7 +237,7 @@ namespace Opm {
 
 
     void EclipseState::initMULTREGT(DeckConstPtr deck) {
-        EclipseGridConstPtr grid = getEclipseGrid();
+        EclipseGridConstPtr grid = getInputGrid();
 
         std::vector< const DeckKeyword* > multregtKeywords;
         if (deck->hasKeyword("MULTREGT"))

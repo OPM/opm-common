@@ -73,7 +73,11 @@ namespace Opm {
         explicit EclipseGrid(const ecl_grid_type * src_ptr);
         explicit EclipseGrid(size_t nx, size_t ny, size_t nz,
                              double dx = 1.0, double dy = 1.0, double dz = 1.0);
-        explicit EclipseGrid(const std::shared_ptr<const Deck>& deck);
+
+        /// EclipseGrid ignores ACTNUM in Deck, and therefore needs ACTNUM
+        /// explicitly.  If a null pointer is passed, every cell is active.
+        explicit EclipseGrid(const std::shared_ptr<const Deck>& deck, const int * actnum = nullptr);
+
         static bool hasCornerPointKeywords(std::shared_ptr<const Deck> deck);
         static bool hasCartesianKeywords(std::shared_ptr<const Deck> deck);
         size_t  getNumActive( ) const;
@@ -103,7 +107,7 @@ namespace Opm {
         std::array<double, 3> getCellDims(size_t i,size_t j, size_t k) const;
         std::array<double, 3> getCellDims(size_t globalIndex) const;
         bool cellActive( size_t globalIndex ) const;
-        bool cellActive( size_t i , size_t , size_t k ) const;
+        bool cellActive( size_t i , size_t j, size_t k ) const;
         double getCellDepth(size_t i,size_t j, size_t k) const;
         double getCellDepth(size_t globalIndex) const;
 

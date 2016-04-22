@@ -100,7 +100,8 @@ namespace Opm {
 
     static std::vector< GridProperties< int >::SupportedKeywordInfo >
     makeSupportedIntKeywords() {
-        return {GridProperties< int >::SupportedKeywordInfo( "SATNUM" , 1, "1" ),
+        return {GridProperties< int >::SupportedKeywordInfo( "ACTNUM" , 1, "1" ),
+                GridProperties< int >::SupportedKeywordInfo( "SATNUM" , 1, "1" ),
                 GridProperties< int >::SupportedKeywordInfo( "IMBNUM" , 1, "1" ),
                 GridProperties< int >::SupportedKeywordInfo( "PVTNUM" , 1, "1" ),
                 GridProperties< int >::SupportedKeywordInfo( "EQLNUM" , 1, "1" ),

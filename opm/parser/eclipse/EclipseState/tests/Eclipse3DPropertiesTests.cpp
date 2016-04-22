@@ -141,50 +141,66 @@ static Opm::DeckPtr createValidPERMXDeck() {
     return parser->parseString(deckData, Opm::ParseContext());
 }
 
-static Opm::Eclipse3DProperties getProps(Opm::DeckPtr deck) {
-    return Opm::Eclipse3DProperties(*deck, *new Opm::TableManager(*deck), *new Opm::EclipseGrid(deck));
-}
+
+/// Setup fixture
+struct Setup
+{
+    Opm::ParseContext parseContext;
+    Opm::DeckPtr deck;
+    Opm::TableManager tablemanager;
+    Opm::EclipseGrid grid;
+    Opm::Eclipse3DProperties props;
+
+    explicit Setup(Opm::DeckPtr deckArg) :
+            deck(deckArg),
+            tablemanager(*deck),
+            grid(deck),
+            props(*deck, tablemanager, grid)
+    {
+    }
+};
+
 
 BOOST_AUTO_TEST_CASE(HasDeckProperty) {
-    auto ep = getProps(createDeck());
-    BOOST_CHECK(ep.hasDeckIntGridProperty("SATNUM"));
+    Setup s(createDeck());
+    BOOST_CHECK(s.props.hasDeckIntGridProperty("SATNUM"));
 }
 
 BOOST_AUTO_TEST_CASE(SupportsProperty) {
-    auto ep = getProps(createDeck());
+    Setup s(createDeck());
     std::vector<std::string> keywordList = {
         // int props
-        "SATNUM", "IMBNUM", "PVTNUM", "EQLNUM", "ENDNUM", "FLUXNUM", "MULTNUM", "FIPNUM", "MISCNUM", "OPERNUM",
+        "ACTNUM", "SATNUM", "IMBNUM", "PVTNUM", "EQLNUM", "ENDNUM", "FLUXNUM", "MULTNUM", "FIPNUM", "MISCNUM", "OPERNUM",
         // double props
         "TEMPI", "MULTPV", "PERMX", "PERMY", "PERMZ", "SWATINIT", "THCONR", "NTG"
     };
 
     for (auto keyword : keywordList)
-        BOOST_CHECK(ep.supportsGridProperty(keyword));
+        BOOST_CHECK(s.props.supportsGridProperty(keyword));
 
 }
 
 BOOST_AUTO_TEST_CASE(DefaultRegionFluxnum) {
-    auto ep = getProps(createDeck());
-    BOOST_CHECK_EQUAL(ep.getDefaultRegionKeyword(), "FLUXNUM");
+    Setup s(createDeck());
+    BOOST_CHECK_EQUAL(s.props.getDefaultRegionKeyword(), "FLUXNUM");
 }
 
 BOOST_AUTO_TEST_CASE(UnsupportedKeywordsThrows) {
-    auto ep = getProps(createDeck());
-    BOOST_CHECK_THROW(ep.hasDeckIntGridProperty("NONO"), std::logic_error);
-    BOOST_CHECK_THROW(ep.hasDeckDoubleGridProperty("NONO"), std::logic_error);
+    Setup s(createDeck());
+    BOOST_CHECK_THROW(s.props.hasDeckIntGridProperty("NONO"), std::logic_error);
+    BOOST_CHECK_THROW(s.props.hasDeckDoubleGridProperty("NONO"), std::logic_error);
 
-    BOOST_CHECK_THROW(ep.getIntGridProperty("NONO"), std::logic_error);
-    BOOST_CHECK_THROW(ep.getDoubleGridProperty("NONO"), std::logic_error);
+    BOOST_CHECK_THROW(s.props.getIntGridProperty("NONO"), std::logic_error);
+    BOOST_CHECK_THROW(s.props.getDoubleGridProperty("NONO"), std::logic_error);
 
-    BOOST_CHECK_NO_THROW(ep.hasDeckIntGridProperty("FLUXNUM"));
-    BOOST_CHECK_NO_THROW(ep.supportsGridProperty("NONO"));
+    BOOST_CHECK_NO_THROW(s.props.hasDeckIntGridProperty("FLUXNUM"));
+    BOOST_CHECK_NO_THROW(s.props.supportsGridProperty("NONO"));
 }
 
 BOOST_AUTO_TEST_CASE(IntGridProperty) {
-    auto ep = getProps(createDeck());
+    Setup s(createDeck());
     int cnt = 0;
-    for (auto x : ep.getIntGridProperty("SATNUM").getData()) {
+    for (auto x : s.props.getIntGridProperty("SATNUM").getData()) {
         BOOST_CHECK_EQUAL(x, 2);
         cnt++;
     }
@@ -193,9 +209,9 @@ BOOST_AUTO_TEST_CASE(IntGridProperty) {
 
 BOOST_AUTO_TEST_CASE(AddregIntSetCorrectly) {
     Opm::DeckPtr deck = createValidIntDeck();
-    const auto& ep = getProps(deck);
+    Setup s(deck);
 
-    const auto& property = ep.getIntGridProperty("SATNUM");
+    const auto& property = s.props.getIntGridProperty("SATNUM");
     for (size_t j = 0; j < 5; j++)
         for (size_t i = 0; i < 5; i++) {
             if (i < 2)
@@ -208,8 +224,8 @@ BOOST_AUTO_TEST_CASE(AddregIntSetCorrectly) {
 
 BOOST_AUTO_TEST_CASE(PermxUnitAppliedCorrectly) {
     Opm::DeckPtr deck = createValidPERMXDeck();
-    const auto& props = getProps(deck);
-    const auto& permx = props.getDoubleGridProperty("PERMX");
+    Setup s(deck);
+    const auto& permx = s.props.getDoubleGridProperty("PERMX");
 
     for (size_t j = 0; j < 5; j++)
         for (size_t i = 0; i < 5; i++) {
