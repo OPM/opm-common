@@ -47,7 +47,7 @@ class Section : public DeckView {
 
         // returns whether the deck has all mandatory sections and if all sections are in
         // the right order
-        static bool checkSectionTopology(const Deck& deck,
+        static bool checkSectionTopology(Deck& deck,
                                          const Parser&,
                                          bool ensureKeywordSectionAffiliation = false);
 
