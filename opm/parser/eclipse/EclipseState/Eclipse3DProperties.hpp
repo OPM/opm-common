@@ -69,8 +69,7 @@ namespace Opm {
         bool hasDeckIntGridProperty(const std::string& keyword) const;
         bool hasDeckDoubleGridProperty(const std::string& keyword) const;
         bool supportsGridProperty(const std::string& keyword, int enabledTypes = AllProperties) const;
-        const MessageContainer& getMessageContainer() const;
-        MessageContainer& getMessageContainer();
+        MessageContainer getMessageContainer();
 
     private:
         void processGridProperties(const Deck& deck,
