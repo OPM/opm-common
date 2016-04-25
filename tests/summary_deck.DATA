@@ -1,0 +1,275 @@
+-- Synthetic test deck based on Norne. This data set is meant to be a simple,
+-- well-documented deck for the behaviour of SUMMARY specified output. Data
+-- is mostly entered to *traceable* and does not necessarily make sense from
+-- a simulation point of view.
+
+START
+10 MAI 2007 / 
+RUNSPEC
+
+TITLE
+SUMMARYTESTS
+ 
+-- A simple 10x10x10 cube. Simple to reason about, large enough for all tests
+DIMENS
+ 10 10 10 /
+
+GRID
+
+SUMMARY
+DATE
+PERFORMA
+--
+-- Field Data
+-- Production Rates
+FVPR
+FWPR
+FWPRH
+FOPR
+FOPRH
+FGPR
+FGPRH
+FLPR
+FLPRH
+FGSR
+FGCR
+--FTPRSEA
+-- Injection Rates
+FVIR
+FWIR
+FWIRH
+FGIR
+FGIRH
+-- Production Cummulatives
+FVPT
+FWPT
+FOPT
+FLPT
+FLPTH
+FGPT
+FOPTH
+FGPTH
+FWPTH
+FGST
+FGCT
+-- Injection Cummulatives
+FVIT
+FWIT
+FWITH
+FGIT
+FGITH
+-- In place
+FWIP
+FOIP
+FGIP
+-- Ratios
+FWCT
+FWCTH
+FGOR
+FGORH
+-- Pressures
+FPR
+--BPR
+--18 63 25 /
+--18 63 26 /
+--/
+--  Region data
+RPR
+/
+ROPT
+/
+RGPT
+/
+RWPT
+/
+RGFT
+/
+RWFT
+/
+ROIP
+/
+ROP
+/
+--  Group data --
+GPR -- group nodal pressure
+/
+GOPT -- group oil production total
+/
+GGPT -- group gas production total
+/
+GWPT -- group water production total
+/
+GOPR -- group oil production rate
+/
+GLPR -- group liquid production rate
+/
+GGPR -- group gas production rate
+/
+GWPR -- group water production rate
+/
+GGIR -- group gas injection rate
+/
+GGIT -- grouop gas injection total
+/
+GWCT -- group water cut
+/
+GGOR -- group gas oil ration
+/
+GWIR -- group water injection rate
+/
+-- Well Data
+-- Production Rates
+WWPR
+/
+WWPRH
+/
+WOPR
+/
+WOPRH
+/
+WGPR
+/
+WGPRH
+/
+WLPR
+/
+WLPRH
+/
+
+WLPT
+/
+
+WLPTH
+/
+
+-- Injection Rates
+WWIR
+ W_3
+/
+WWIRH
+  W_3
+/
+
+WGIR
+  W_3
+/
+
+WGIRH
+  W_3
+/
+
+WGIT
+  W_3
+/
+
+WGIRH
+  W_3
+/
+
+-- Production Cummulatives
+WWPT
+/
+WWPTH
+/
+WOPT
+/
+WOPTH
+/
+WGPT
+/
+WGPTH
+/
+-- Tracers
+--WTPRSEA
+--/
+--WTPTSEA
+--/
+-- Injection Cummulatives
+WWIT
+  W_3
+/
+-- Ratios
+WWCT
+/
+WWCTH
+/
+WGOR
+/
+WGORH
+/
+
+-- Performance
+WBHP
+/
+WBHPH
+/
+WTHP
+/
+WTHPH
+/
+WPI
+/
+WBP
+/
+WBP4
+/
+-- Water injection per connection
+----CWIR
+----'F-1H' /
+----'F-2H' /
+----'F-3H' /
+----'F-4H' /
+----'C-1H' /
+----'C-2H' /
+----'C-3H' /
+----'C-4H' /
+----/
+----CWIT
+----'F-1H' /
+----'F-2H' /
+----'F-3H' /
+----'F-4H' /
+----'C-1H' /
+----'C-2H' /
+----'C-3H' /
+----'C-4H' /
+----/
+---- Connection production rates
+----CGPT
+----'E-4AH' /
+----/
+----CGFR
+----'E-4AH' /
+----/
+----CWFR
+----'E-2H' /
+----/
+
+SCHEDULE
+
+-- Three wells, two producers (so that we can form a group) and one injector
+WELSPECS
+     'W_1'        'G_1'   30   37  3.33       'OIL'  7* /   
+     'W_2'        'G_1'   30   37  3.33       'OIL'  7* /   
+     'W_3'        'G_2'   20   51  3.92       'WATER'  7* /  
+/
+
+WCONHIST
+-- history rates are set so that W_1 produces 1, W_2 produces 2 etc.
+-- index.offset.
+-- organised as oil-water-gas
+    W_1 SHUT ORAT 10.1 10 10.2 /
+    W_2 SHUT ORAT 20.1 20 20.2 /
+/
+
+WCONINJH
+-- Injection historical rates (water only, as we only support pure injectors)
+    W_3 WATER STOP 259200 /
+/
+
+TSTEP
+-- register time steps (in days). This allows us to write *two* report steps (1
+-- and 2. Without this, totals/accumulations would fail (segfault) when looking
+-- up historical rates and volumes. These volumes however don't change, i.e.
+-- every time step has the same set of values
+10 10 /
