@@ -234,7 +234,8 @@ namespace Opm {
     template< typename T >
     void GridProperty< T >::loadFromDeckKeyword( const DeckKeyword& deckKeyword ) {
         const auto& deckItem = getDeckItem(deckKeyword);
-        for (size_t dataPointIdx = 0; dataPointIdx < deckItem.size(); ++dataPointIdx) {
+        const auto size = deckItem.size();
+        for (size_t dataPointIdx = 0; dataPointIdx < size; ++dataPointIdx) {
             if (!deckItem.defaultApplied(dataPointIdx))
                 setDataPoint(dataPointIdx, dataPointIdx, deckItem);
         }
