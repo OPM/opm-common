@@ -99,19 +99,16 @@ namespace Opm {
     template< typename Itr >
     static inline Itr trim_left( Itr begin, Itr end ) {
 
-        const auto ws = []( char ch ) { return std::isspace( ch ); };
-        return std::find_if_not( begin, end, ws );
+        return std::find_if_not( begin, end, RawConsts::is_separator );
     }
 
     template< typename Itr >
     static inline Itr trim_right( Itr begin, Itr end ) {
 
-        const auto ws = []( char ch ) { return std::isspace( ch ); };
-
         std::reverse_iterator< Itr > rbegin( end );
         std::reverse_iterator< Itr > rend( begin );
 
-        return std::find_if_not( rbegin, rend, ws ).base();
+        return std::find_if_not( rbegin, rend, RawConsts::is_separator ).base();
     }
 
     static inline string_view trim( string_view str ) {
