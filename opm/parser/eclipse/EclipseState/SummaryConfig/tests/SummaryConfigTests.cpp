@@ -17,13 +17,13 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define BOOST_TEST_MODULE SummaryTests
+#define BOOST_TEST_MODULE SummaryConfigTests
 
 #include <boost/test/unit_test.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/parser/eclipse/EclipseState/Summary/Summary.hpp>
+#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
@@ -64,7 +64,7 @@ static DeckPtr createDeck( const std::string& summary ) {
     return parser.parseString(input, ParseContext());
 }
 
-static std::vector< std::string > sorted_names( const Summary& summary ) {
+static std::vector< std::string > sorted_names( const SummaryConfig& summary ) {
     std::vector< std::string > ret;
     for( const auto& x : summary )
         ret.push_back( x.wgname() );
@@ -73,7 +73,7 @@ static std::vector< std::string > sorted_names( const Summary& summary ) {
     return ret;
 }
 
-static std::vector< std::string > sorted_keywords( const Summary& summary ) {
+static std::vector< std::string > sorted_keywords( const SummaryConfig& summary ) {
     std::vector< std::string > ret;
     for( const auto& x : summary )
         ret.push_back( x.keyword() );
@@ -82,10 +82,10 @@ static std::vector< std::string > sorted_keywords( const Summary& summary ) {
     return ret;
 }
 
-static Summary createSummary( std::string input ) {
+static SummaryConfig createSummary( std::string input ) {
     auto deck = createDeck( input );
     EclipseState state( deck, ParseContext() );
-    return Summary( *deck, state );
+    return SummaryConfig( *deck, state );
 }
 
 BOOST_AUTO_TEST_CASE(wells_all) {

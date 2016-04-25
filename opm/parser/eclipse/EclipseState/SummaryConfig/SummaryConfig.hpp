@@ -17,8 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef OPM_SUMMARY_HPP
-#define OPM_SUMMARY_HPP
+#ifndef OPM_SUMMARY_CONFIG_HPP
+#define OPM_SUMMARY_CONFIG_HPP
 
 #include <vector>
 
@@ -30,11 +30,11 @@ namespace Opm {
     class EclipseState;
     class ParserKeyword;
 
-    class Summary {
+    class SummaryConfig {
         public:
             typedef std::vector< ERT::smspec_node >::const_iterator const_iterator;
 
-            Summary( const Deck&, const EclipseState& );
+            SummaryConfig( const Deck&, const EclipseState& );
 
             const_iterator begin() const;
             const_iterator end() const;

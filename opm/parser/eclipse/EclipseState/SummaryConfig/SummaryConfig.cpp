@@ -31,7 +31,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
-#include <opm/parser/eclipse/EclipseState/Summary/Summary.hpp>
+#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/Utility/Functional.hpp>
 
 #include <ert/ecl/ecl_smspec.h>
@@ -204,7 +204,7 @@ namespace Opm {
         }
     }
 
-    Summary::Summary( const Deck& deck, const EclipseState& es ) {
+    SummaryConfig::SummaryConfig( const Deck& deck, const EclipseState& es ) {
 
         SUMMARYSection section( deck );
         const auto handler = [&es]( const DeckKeyword& kw ) {
@@ -213,11 +213,11 @@ namespace Opm {
         this->keywords = fun::concat( fun::map( handler, section ) );
     }
 
-    Summary::const_iterator Summary::begin() const {
+    SummaryConfig::const_iterator SummaryConfig::begin() const {
         return this->keywords.cbegin();
     }
 
-    Summary::const_iterator Summary::end() const {
+    SummaryConfig::const_iterator SummaryConfig::end() const {
         return this->keywords.cend();
     }
 

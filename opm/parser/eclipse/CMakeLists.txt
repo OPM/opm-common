@@ -13,7 +13,7 @@ add_subdirectory(EclipseState/Grid/tests)
 add_subdirectory(EclipseState/Util/tests)
 add_subdirectory(EclipseState/IOConfig/tests)
 add_subdirectory(EclipseState/InitConfig/tests)
-add_subdirectory(EclipseState/Summary/tests)
+add_subdirectory(EclipseState/SummaryConfig/tests)
 add_subdirectory(Utility/tests)
 
 add_subdirectory(Applications)
@@ -126,7 +126,7 @@ EclipseState/InitConfig/InitConfig.cpp
 EclipseState/InitConfig/Equil.cpp
 EclipseState/SimulationConfig/SimulationConfig.cpp
 EclipseState/SimulationConfig/ThresholdPressure.cpp
-EclipseState/Summary/Summary.cpp
+EclipseState/SummaryConfig/SummaryConfig.cpp
 EclipseState/IOConfig/IOConfig.cpp)
 #
 
@@ -222,7 +222,7 @@ EclipseState/InitConfig/InitConfig.hpp
 EclipseState/InitConfig/Equil.hpp
 EclipseState/SimulationConfig/SimulationConfig.hpp
 EclipseState/SimulationConfig/ThresholdPressure.hpp
-EclipseState/Summary/Summary.hpp
+EclipseState/SummaryConfig/SummaryConfig.hpp
 EclipseState/IOConfig/IOConfig.hpp
 #
 EclipseState/Tables/Tabdims.hpp
