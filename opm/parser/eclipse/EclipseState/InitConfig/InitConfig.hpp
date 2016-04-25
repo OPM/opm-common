@@ -31,7 +31,8 @@ namespace Opm {
     public:
         InitConfig(std::shared_ptr< const Deck > deck);
 
-        bool getRestartInitiated() const;
+        void setRestart( const std::string& root, int step);
+        bool restartRequested() const;
         int getRestartStep() const;
         const std::string& getRestartRootName() const;
 
@@ -41,7 +42,7 @@ namespace Opm {
     private:
         void initRestartKW(std::shared_ptr< const Deck > deck);
 
-        bool m_restartInitiated;
+        bool m_restartRequested;
         int m_restartStep;
         std::string m_restartRootName;
 
