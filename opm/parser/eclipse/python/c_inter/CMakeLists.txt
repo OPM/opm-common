@@ -5,7 +5,6 @@ cparse_context.cc
 ctable_manager.cc
 ctable.cc
 ctable_index.cc
-copm_log.cc
 )
 
 target_link_libraries(copmparser opmparser)
