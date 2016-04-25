@@ -20,6 +20,7 @@
 #ifndef OPM_UTILITY_SUBSTRING_HPP
 #define OPM_UTILITY_SUBSTRING_HPP
 
+#include <cstring>
 #include <iosfwd>
 #include <stdexcept>
 #include <string>
@@ -106,7 +107,8 @@ namespace Opm {
     }
 
     inline bool operator==( const Opm::string_view& view, const char* rhs ) {
-        return std::equal( view.begin(), view.end(), rhs );
+        return std::strlen( rhs ) == view.size() &&
+               std::equal( view.begin(), view.end(), rhs );
     }
 
     inline bool operator==( const std::string& lhs, const Opm::string_view& view ) {
