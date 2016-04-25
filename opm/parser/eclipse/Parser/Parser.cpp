@@ -598,7 +598,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
         return false;
     }
 
-    bool Section::checkSectionTopology(Deck& deck,
+    bool Section::checkSectionTopology(const Deck& deck,
                                        const Parser& parser,
                                        bool ensureKeywordSectionAffiliation)
     {

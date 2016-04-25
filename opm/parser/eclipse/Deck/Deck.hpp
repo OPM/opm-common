@@ -105,8 +105,7 @@ namespace Opm {
             void addKeyword( const DeckKeyword& keyword );
 
             DeckKeyword& getKeyword( size_t );
-            const MessageContainer& getMessageContainer() const;
-            MessageContainer& getMessageContainer();
+            MessageContainer& getMessageContainer() const;
         
             UnitSystem& getDefaultUnitSystem();
             UnitSystem& getActiveUnitSystem();
@@ -121,7 +120,7 @@ namespace Opm {
             void initUnitSystem() const;
 
             std::vector< DeckKeyword > keywordList;
-            MessageContainer m_messageContainer;
+            mutable MessageContainer m_messageContainer;
 
             mutable std::unique_ptr< UnitSystem > activeUnits;
             mutable std::unique_ptr< UnitSystem > defaultUnits;
