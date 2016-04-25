@@ -311,7 +311,7 @@ void Parser::addParserKeyword( std::unique_ptr< const ParserKeyword >&& parserKe
     if (parserKeyword->hasMatchRegex())
         m_wildCardKeywords[parserKeyword->getName()] = parserKeyword.get();
 
-    m_internalParserKeywords[parserKeyword->getName()] = std::move( parserKeyword );
+    m_internalParserKeywords[parserKeyword->getName()].swap( parserKeyword );
 
 }
 
