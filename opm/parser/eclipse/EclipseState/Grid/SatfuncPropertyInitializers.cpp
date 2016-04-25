@@ -216,7 +216,7 @@ namespace Opm {
     static inline double critical_water( const T& table ) {
 
         const auto& col = table.getKrwColumn();
-        const auto end = col.begin() + table.numRows() + 1;
+        const auto end = col.begin() + table.numRows();
         const auto critical = std::upper_bound( col.begin(), end, 0.0 );
         const auto index = std::distance( col.begin(), critical );
 
@@ -249,7 +249,7 @@ namespace Opm {
     template< typename T >
     static inline double critical_gas( const T& table ) {
         const auto& col = table.getKrgColumn();
-        const auto end = col.begin() + table.numRows() + 1;
+        const auto end = col.begin() + table.numRows();
         const auto critical = std::upper_bound( col.begin(), end, 0.0 );
         const auto index = std::distance( col.begin(), critical );
 
