@@ -40,7 +40,7 @@ namespace Opm {
     }
 
     void InitConfig::initRestartKW(DeckConstPtr deck) {
-        if (deck->hasKeyword("RESTART") && deck->hasKeyword("SKIPREST")) {
+        if (deck->hasKeyword("RESTART")) {
             const auto& restart_kw = deck->getKeyword("RESTART");
             const auto& restart_dataRecord = restart_kw.getRecord(0);
             const auto& restart_rootname_item = restart_dataRecord.getItem(0);
@@ -57,9 +57,8 @@ namespace Opm {
             m_restartInitiated = true;
             m_restartStep = restart_report_step_int;
             m_restartRootName = restart_rootname_string;
-        } else if (deck->hasKeyword("RESTART") || deck->hasKeyword("SKIPREST")){
-            throw std::runtime_error("Error in deck: Only one of the kewywords RESTART and SKIPREST are supplied. None or both of them should be supplied.");
-        }
+        } else if (deck->hasKeyword("SKIPREST"))
+            throw std::runtime_error("Error in deck: Can not supply SKIPREST keyword without a preceeding RESTART.");
     }
 
     bool InitConfig::getRestartInitiated() const {

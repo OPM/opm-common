@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(InitConfigTest) {
     BOOST_CHECK_THROW(std::make_shared<InitConfig>(deck3), std::runtime_error);
 
     DeckPtr deck4 = createDeck(deckStr4);
-    BOOST_CHECK_THROW(std::make_shared<InitConfig>(deck4), std::runtime_error);
+    BOOST_CHECK_NO_THROW(std::make_shared<InitConfig>(deck4));
 }
 
 BOOST_AUTO_TEST_CASE( InitConfigWithoutEquil ) {
