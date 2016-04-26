@@ -40,10 +40,7 @@ namespace Opm {
     namespace GridPropertyPostProcessor {
 
         void distTopLayer( std::vector<double>&    values,
-                           const TableManager*     /* tableManager */,
-                           const EclipseGrid*      eclipseGrid,
-                           GridProperties<int>*    /* intGridProperties */,
-                           GridProperties<double>* /* doubleGridProperties */)
+                           const EclipseGrid*      eclipseGrid )
         {
             size_t layerSize = eclipseGrid->getNX() * eclipseGrid->getNY();
             size_t gridSize  = eclipseGrid->getCartesianSize();
@@ -56,9 +53,7 @@ namespace Opm {
 
         /// initPORV uses doubleGridProperties: PORV, PORO, NTG, MULTPV
         void initPORV( std::vector<double>&    values,
-                       const TableManager*     /* tableManager */,
                        const EclipseGrid*      eclipseGrid,
-                       GridProperties<int>*    /* intGridProperties */,
                        GridProperties<double>* doubleGridProperties)
         {
             /*
@@ -123,46 +118,45 @@ namespace Opm {
     {
         using std::placeholders::_1;
 
-        const auto SGLLookup    = std::bind( SGLEndpoint,    _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto ISGLLookup   = std::bind( ISGLEndpoint,   _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto SWLLookup    = std::bind( SWLEndpoint,    _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto ISWLLookup   = std::bind( ISWLEndpoint,   _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto SGULookup    = std::bind( SGUEndpoint,    _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto ISGULookup   = std::bind( ISGUEndpoint,   _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto SWULookup    = std::bind( SWUEndpoint,    _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto ISWULookup   = std::bind( ISWUEndpoint,   _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto SGCRLookup   = std::bind( SGCREndpoint,   _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto ISGCRLookup  = std::bind( ISGCREndpoint,  _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto SOWCRLookup  = std::bind( SOWCREndpoint,  _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto ISOWCRLookup = std::bind( ISOWCREndpoint, _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto SOGCRLookup  = std::bind( SOGCREndpoint,  _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto ISOGCRLookup = std::bind( ISOGCREndpoint, _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto SWCRLookup   = std::bind( SWCREndpoint,   _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto ISWCRLookup  = std::bind( ISWCREndpoint,  _1, tableManager, eclipseGrid, intGridProperties, nullptr );
+        const auto SGLLookup    = std::bind( SGLEndpoint,    _1, tableManager, eclipseGrid, intGridProperties );
+        const auto ISGLLookup   = std::bind( ISGLEndpoint,   _1, tableManager, eclipseGrid, intGridProperties );
+        const auto SWLLookup    = std::bind( SWLEndpoint,    _1, tableManager, eclipseGrid, intGridProperties );
+        const auto ISWLLookup   = std::bind( ISWLEndpoint,   _1, tableManager, eclipseGrid, intGridProperties );
+        const auto SGULookup    = std::bind( SGUEndpoint,    _1, tableManager, eclipseGrid, intGridProperties );
+        const auto ISGULookup   = std::bind( ISGUEndpoint,   _1, tableManager, eclipseGrid, intGridProperties );
+        const auto SWULookup    = std::bind( SWUEndpoint,    _1, tableManager, eclipseGrid, intGridProperties );
+        const auto ISWULookup   = std::bind( ISWUEndpoint,   _1, tableManager, eclipseGrid, intGridProperties );
+        const auto SGCRLookup   = std::bind( SGCREndpoint,   _1, tableManager, eclipseGrid, intGridProperties );
+        const auto ISGCRLookup  = std::bind( ISGCREndpoint,  _1, tableManager, eclipseGrid, intGridProperties );
+        const auto SOWCRLookup  = std::bind( SOWCREndpoint,  _1, tableManager, eclipseGrid, intGridProperties );
+        const auto ISOWCRLookup = std::bind( ISOWCREndpoint, _1, tableManager, eclipseGrid, intGridProperties );
+        const auto SOGCRLookup  = std::bind( SOGCREndpoint,  _1, tableManager, eclipseGrid, intGridProperties );
+        const auto ISOGCRLookup = std::bind( ISOGCREndpoint, _1, tableManager, eclipseGrid, intGridProperties );
+        const auto SWCRLookup   = std::bind( SWCREndpoint,   _1, tableManager, eclipseGrid, intGridProperties );
+        const auto ISWCRLookup  = std::bind( ISWCREndpoint,  _1, tableManager, eclipseGrid, intGridProperties );
 
-        const auto PCWLookup    = std::bind( PCWEndpoint,    _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto IPCWLookup   = std::bind( IPCWEndpoint,   _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto PCGLookup    = std::bind( PCGEndpoint,    _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto IPCGLookup   = std::bind( IPCGEndpoint,   _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto KRWLookup    = std::bind( KRWEndpoint,    _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto IKRWLookup   = std::bind( IKRWEndpoint,   _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto KRWRLookup   = std::bind( KRWREndpoint,   _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto IKRWRLookup  = std::bind( IKRWREndpoint,  _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto KROLookup    = std::bind( KROEndpoint,    _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto IKROLookup   = std::bind( IKROEndpoint,   _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto KRORWLookup  = std::bind( KRORWEndpoint,  _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto IKRORWLookup = std::bind( IKRORWEndpoint, _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto KRORGLookup  = std::bind( KRORGEndpoint,  _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto IKRORGLookup = std::bind( IKRORGEndpoint, _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto KRGLookup    = std::bind( KRGEndpoint,    _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto IKRGLookup   = std::bind( IKRGEndpoint,   _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto KRGRLookup   = std::bind( KRGREndpoint,   _1, tableManager, eclipseGrid, intGridProperties, nullptr );
-        const auto IKRGRLookup  = std::bind( IKRGREndpoint,  _1, tableManager, eclipseGrid, intGridProperties, nullptr );
+        const auto PCWLookup    = std::bind( PCWEndpoint,    _1, tableManager, eclipseGrid, intGridProperties );
+        const auto IPCWLookup   = std::bind( IPCWEndpoint,   _1, tableManager, eclipseGrid, intGridProperties );
+        const auto PCGLookup    = std::bind( PCGEndpoint,    _1, tableManager, eclipseGrid, intGridProperties );
+        const auto IPCGLookup   = std::bind( IPCGEndpoint,   _1, tableManager, eclipseGrid, intGridProperties );
+        const auto KRWLookup    = std::bind( KRWEndpoint,    _1, tableManager, eclipseGrid, intGridProperties );
+        const auto IKRWLookup   = std::bind( IKRWEndpoint,   _1, tableManager, eclipseGrid, intGridProperties );
+        const auto KRWRLookup   = std::bind( KRWREndpoint,   _1, tableManager, eclipseGrid, intGridProperties );
+        const auto IKRWRLookup  = std::bind( IKRWREndpoint,  _1, tableManager, eclipseGrid, intGridProperties );
+        const auto KROLookup    = std::bind( KROEndpoint,    _1, tableManager, eclipseGrid, intGridProperties );
+        const auto IKROLookup   = std::bind( IKROEndpoint,   _1, tableManager, eclipseGrid, intGridProperties );
+        const auto KRORWLookup  = std::bind( KRORWEndpoint,  _1, tableManager, eclipseGrid, intGridProperties );
+        const auto IKRORWLookup = std::bind( IKRORWEndpoint, _1, tableManager, eclipseGrid, intGridProperties );
+        const auto KRORGLookup  = std::bind( KRORGEndpoint,  _1, tableManager, eclipseGrid, intGridProperties );
+        const auto IKRORGLookup = std::bind( IKRORGEndpoint, _1, tableManager, eclipseGrid, intGridProperties );
+        const auto KRGLookup    = std::bind( KRGEndpoint,    _1, tableManager, eclipseGrid, intGridProperties );
+        const auto IKRGLookup   = std::bind( IKRGEndpoint,   _1, tableManager, eclipseGrid, intGridProperties );
+        const auto KRGRLookup   = std::bind( KRGREndpoint,   _1, tableManager, eclipseGrid, intGridProperties );
+        const auto IKRGRLookup  = std::bind( IKRGREndpoint,  _1, tableManager, eclipseGrid, intGridProperties );
 
-        const auto tempLookup = std::bind( temperature_lookup, _1, tableManager, eclipseGrid, intGridProperties, nullptr );
+        const auto tempLookup = std::bind( temperature_lookup, _1, tableManager, eclipseGrid, intGridProperties );
 
-        const auto distributeTopLayer = std::bind( &GridPropertyPostProcessor::distTopLayer, _1,
-                                                            tableManager, eclipseGrid, intGridProperties, nullptr );
+        const auto distributeTopLayer = std::bind( &GridPropertyPostProcessor::distTopLayer, _1, eclipseGrid );
 
         std::vector< GridProperties< double >::SupportedKeywordInfo > supportedDoubleKeywords;
 
@@ -368,9 +362,7 @@ namespace Opm {
 
         auto initPORV = std::bind(&GridPropertyPostProcessor::initPORV,
                                                     std::placeholders::_1,
-                                                    &tableManager,
                                                     &eclipseGrid,
-                                                    &m_intGridProperties,
                                                     &m_doubleGridProperties);
         // pore volume
         m_doubleGridProperties.postAddKeyword( "PORV",

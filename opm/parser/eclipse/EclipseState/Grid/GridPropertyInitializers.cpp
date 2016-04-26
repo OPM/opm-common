@@ -30,12 +30,10 @@
 
 namespace Opm {
 
-    std::vector< double > temperature_lookup(
-            size_t size,
-            const TableManager* tables,
-            const EclipseGrid* grid,
-            GridProperties<int>* ig_props,
-            GridProperties<double>* /* dg_props */) {
+    std::vector< double > temperature_lookup( size_t size,
+                                              const TableManager* tables,
+                                              const EclipseGrid* grid,
+                                              GridProperties<int>* ig_props ) {
 
         if( !tables->useEqlnum() ) {
             /* if values are defaulted in the TEMPI keyword, but no

@@ -34,12 +34,10 @@ template <typename T> class GridProperties;
 
     // initialize the TEMPI grid property using the temperature vs depth
     // table (stemming from the TEMPVD or the RTEMPVD keyword)
-    // std::vector< double > temperature_lookup( size_t, const EclipseState& );
     std::vector< double > temperature_lookup( size_t,
                                               const TableManager*,
                                               const EclipseGrid*,
-                                              GridProperties<int>*,
-                                              GridProperties<double>*);
+                                              GridProperties<int>* );
 }
 
 #endif // ECLIPSE_GRIDPROPERTY_INITIALIZERS_HPP
