@@ -4,12 +4,12 @@
 -- a simulation point of view.
 
 START
-10 MAI 2007 / 
+10 MAI 2007 /
 RUNSPEC
 
 TITLE
 SUMMARYTESTS
- 
+
 -- A simple 10x10x10 cube. Simple to reason about, large enough for all tests
 DIMENS
  10 10 10 /
@@ -91,31 +91,31 @@ ROIP
 ROP
 /
 --  Group data --
-GPR -- group nodal pressure
+GPR
 /
-GOPT -- group oil production total
+GOPT
 /
-GGPT -- group gas production total
+GGPT
 /
-GWPT -- group water production total
+GWPT
 /
-GOPR -- group oil production rate
+GOPR
 /
-GLPR -- group liquid production rate
+GLPR
 /
-GGPR -- group gas production rate
+GGPR
 /
-GWPR -- group water production rate
+GWPR
 /
-GGIR -- group gas injection rate
+GGIR
 /
-GGIT -- grouop gas injection total
+GGIT
 /
-GWCT -- group water cut
+GWCT
 /
-GGOR -- group gas oil ration
+GGOR
 /
-GWIR -- group water injection rate
+GWIR
 /
 -- Well Data
 -- Production Rates
@@ -249,9 +249,9 @@ SCHEDULE
 
 -- Three wells, two producers (so that we can form a group) and one injector
 WELSPECS
-     'W_1'        'G_1'   30   37  3.33       'OIL'  7* /   
-     'W_2'        'G_1'   30   37  3.33       'OIL'  7* /   
-     'W_3'        'G_2'   20   51  3.92       'WATER'  7* /  
+     'W_1'        'G_1'   30   37  3.33       'OIL'  7* /
+     'W_2'        'G_1'   30   37  3.33       'OIL'  7* /
+     'W_3'        'G_2'   20   51  3.92       'WATER'  7* /
 /
 
 WCONHIST

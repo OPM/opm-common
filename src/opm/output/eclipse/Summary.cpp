@@ -22,7 +22,9 @@
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/Units/ConversionFactors.hpp>
@@ -164,6 +166,18 @@ enum class E {
     WWPRH,
     WWPT,
     WWPTH,
+    GWPT,
+    GOPT,
+    GGPT,
+    GWPR,
+    GOPR,
+    GLPR,
+    GGPR,
+    GWIR,
+    GGIR,
+    GGIT,
+    GWCT,
+    GGOR,
     UNSUPPORTED,
 };
 
@@ -204,6 +218,18 @@ const std::map< std::string, E > keyhash = {
     { "WWPRH", E::WWPRH },
     { "WWPT",  E::WWPT },
     { "WWPTH", E::WWPTH },
+    { "GWPT",  E::GWPT },
+    { "GOPT",  E::GOPT },
+    { "GGPT",  E::GGPT },
+    { "GWPR",  E::GWPR },
+    { "GOPR",  E::GOPR },
+    { "GLPR",  E::GLPR },
+    { "GGPR",  E::GGPR },
+    { "GWIR",  E::GWIR },
+    { "GGIR",  E::GGIR },
+    { "GGIT",  E::GGIT },
+    { "GWCT",  E::GWCT },
+    { "GGOR",  E::GGOR },
 };
 
 inline const E khash( const char* key ) {
@@ -361,10 +387,10 @@ inline double well_keywords( const smspec_node_type* node,
     const auto histpvol = [&]( WT phase )
         { return prodvol( state_well, tstep, phase, conversion_table ); };
 
-    const auto histirate = [&]( WT phase )
+    const auto histirate = [&]( WellInjector::TypeEnum phase )
         { return injerate( state_well, tstep, phase, conversion_table ); };
 
-    const auto histivol = [&]( WT phase )
+    const auto histivol = [&]( WellInjector::TypeEnum phase )
         { return injevol( state_well, tstep, phase, conversion_table ); };
 
     switch( khash( smspec_node_get_keyword( node ) ) ) {
@@ -432,6 +458,92 @@ inline double well_keywords( const smspec_node_type* node,
     }
 }
 
+inline double sum( const std::vector< const data::Well* >& wells, rt phase ) {
+    double res = 0;
+
+    for( const auto* well : wells )
+        res += well->rates.get( phase, 0 );
+
+    return res;
+}
+
+
+inline double sum_rate( const std::vector< const data::Well* >& wells,
+                   rt phase,
+                   const double* conversion_table ) {
+
+    switch( phase ) {
+        case rt::wat:
+        case rt::oil: return convert( sum( wells, phase ),
+                                      dim::liquid_surface_rate,
+                                      conversion_table );
+
+        case rt::gas: return convert( sum( wells, phase ),
+                                      dim::gas_surface_rate,
+                                      conversion_table );
+        default: return sum( wells, phase );
+    }
+}
+
+inline double sum_vol( const std::vector< const data::Well* >& wells,
+                   rt phase,
+                   const double* conversion_table ) {
+
+    switch( phase ) {
+        case rt::wat:
+        case rt::oil: return convert( sum( wells, phase ),
+                                      dim::liquid_surface_volume,
+                                      conversion_table );
+
+        case rt::gas: return convert( sum( wells, phase ),
+                                      dim::gas_surface_volume,
+                                      conversion_table );
+        default: return sum( wells, phase );
+    }
+}
+
+inline double group_keywords( const smspec_node_type* node,
+                              const ecl_sum_tstep_type* prev,
+                              const double* conversion_table,
+                              const std::vector< const data::Well* > sim_wells ) {
+
+    const auto* genkey = smspec_node_get_gen_key1( node );
+    const auto accu = prev ? ecl_sum_tstep_get_from_key( prev, genkey ) : 0;
+
+    const auto rate = [&]( rt phase ) {
+        return sum_rate( sim_wells, phase, conversion_table );
+    };
+
+    const auto vol = [&]( rt phase ) {
+        return sum_vol( sim_wells, phase, conversion_table );
+    };
+
+    switch( khash( smspec_node_get_keyword( node ) ) ) {
+        /* Production rates */
+        case E::GWPR: return rate( rt::wat );
+        case E::GOPR: return rate( rt::oil );
+        case E::GGPR: return rate( rt::gas );
+        case E::GLPR: return rate( rt::wat ) + rate( rt::oil );
+
+        /* Production totals */
+        case E::GWPT: return accu + vol( rt::wat );
+        case E::GOPT: return accu + vol( rt::oil );
+        case E::GGPT: return accu + vol( rt::gas );
+
+        /* Injection rates */
+        case E::GWIR: return - rate( rt::wat );
+        case E::GGIR: return - rate( rt::gas );
+        case E::GGIT: return accu - vol( rt::gas );
+
+        /* Production ratios */
+        case E::GWCT: return wct( rate( rt::wat ), rate( rt::oil ) );
+        case E::GGOR: return gor( rate( rt::gas ), rate( rt::oil ) );
+
+        default:
+            return 0;
+    }
+}
+
 }
 
 namespace out {
@@ -483,6 +595,10 @@ Summary::Summary( const EclipseState& st,
                 this->wvar[ node.wgname() ].push_back( nodeptr );
                 break;
 
+            case ECL_SMSPEC_GROUP_VAR:
+                this->gvar[ node.wgname() ].push_back( nodeptr );
+                break;
+
             default:
                 break;
         }
@@ -507,6 +623,22 @@ void Summary::add_timestep( int report_step,
             auto val = well_keywords( node, this->prev_tstep,
                                       this->conversions, sim_well,
                                       state_well, report_step );
+            ecl_sum_tstep_set_from_node( tstep, node, val );
+        }
+    }
+
+    /* calculate the values for the Group-family of keywords. */
+    for( const auto& pair : this->gvar ) {
+        const auto* gname = pair.first;
+        const auto& state_group = *es.getSchedule()->getGroup( gname );
+
+        std::vector< const data::Well* > sim_wells;
+        for( const auto& well : state_group.getWells( report_step ) )
+            sim_wells.push_back( &wells.at( well.first ) );
+
+        for( const auto* node : pair.second ) {
+            auto val = group_keywords( node, this->prev_tstep,
+                                      this->conversions, sim_wells );
             ecl_sum_tstep_set_from_node( tstep, node, val );
         }
     }
