@@ -143,16 +143,11 @@ namespace Opm {
         return this->keywordList.at( index );
     }
 
-    const MessageContainer&  Deck::getMessageContainer() const {
-        return m_messageContainer;
+    MessageContainer&  Deck::getMessageContainer() const {
+        return this->m_messageContainer;
     }
 
     
-    MessageContainer& Deck::getMessageContainer() {
-        return m_messageContainer;
-    }
-
-
     UnitSystem& Deck::getDefaultUnitSystem() {
         if( !this->defaultUnits ) this->initUnitSystem();
         return *this->defaultUnits;

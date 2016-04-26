@@ -26,9 +26,6 @@
 
 #include <opm/json/JsonObject.hpp>
 
-#include <opm/common/OpmLog/LogUtil.hpp>
-#include <opm/common/OpmLog/OpmLog.hpp>
-
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -394,7 +391,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
                             deckKeyword.setLocation(parserState->rawKeyword->getFilename(),
                                                      parserState->rawKeyword->getLineNR());
                             parserState->deck->addKeyword( std::move( deckKeyword ) );
-                            OpmLog::addMessage(Log::MessageType::Warning , Log::fileMessage(parserState->dataFile.string() , parserState->lineNR , msg));
+                            parserState->deck->getMessageContainer().warning(parserState->dataFile.string(), msg, parserState->lineNR);
                         }
                     }
                     parserState->rawKeyword.reset();
@@ -607,7 +604,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
     {
         if( deck.size() == 0 ) {
             std::string msg = "empty decks are invalid\n";
-            OpmLog::addMessage( Log::MessageType::Warning, msg );
+            deck.getMessageContainer().warning(msg);
             return false;
         }
 
@@ -616,7 +613,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
         if( deck.getKeyword(0).name() != "RUNSPEC" ) {
             std::string msg = "The first keyword of a valid deck must be RUNSPEC\n";
             auto curKeyword = deck.getKeyword(0);
-            OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
+            deck.getMessageContainer().warning(curKeyword.getFileName(), msg, curKeyword.getLineNumber());
             deckValid = false;
         }
 
@@ -636,8 +633,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
                     std::string msg =
                         "The keyword '"+curKeywordName+"' is located in the '"+curSectionName
                         +"' section where it is invalid";
-
-                    OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
+                    deck.getMessageContainer().warning(curKeyword.getFileName(), msg, curKeyword.getLineNumber());
                     deckValid = false;
                 }
 
@@ -648,7 +644,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
                 if (curKeywordName != "GRID") {
                     std::string msg =
                         "The RUNSPEC section must be followed by GRID instead of "+curKeywordName;
-                    OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
+                    deck.getMessageContainer().warning(curKeyword.getFileName(), msg, curKeyword.getLineNumber());
                     deckValid = false;
                 }
 
@@ -658,7 +654,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
                 if (curKeywordName != "EDIT" && curKeywordName != "PROPS") {
                     std::string msg =
                         "The GRID section must be followed by EDIT or PROPS instead of "+curKeywordName;
-                    OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
+                    deck.getMessageContainer().warning(curKeyword.getFileName(), msg, curKeyword.getLineNumber());
                     deckValid = false;
                 }
 
@@ -668,7 +664,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
                 if (curKeywordName != "PROPS") {
                     std::string msg =
                         "The EDIT section must be followed by PROPS instead of "+curKeywordName;
-                    OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
+                    deck.getMessageContainer().warning(curKeyword.getFileName(), msg, curKeyword.getLineNumber());
                     deckValid = false;
                 }
 
@@ -678,7 +674,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
                 if (curKeywordName != "REGIONS" && curKeywordName != "SOLUTION") {
                     std::string msg =
                         "The PROPS section must be followed by REGIONS or SOLUTION instead of "+curKeywordName;
-                    OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
+                    deck.getMessageContainer().warning(curKeyword.getFileName(), msg, curKeyword.getLineNumber());
                     deckValid = false;
                 }
 
@@ -688,7 +684,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
                 if (curKeywordName != "SOLUTION") {
                     std::string msg =
                         "The REGIONS section must be followed by SOLUTION instead of "+curKeywordName;
-                    OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
+                    deck.getMessageContainer().warning(curKeyword.getFileName(), msg, curKeyword.getLineNumber());
                     deckValid = false;
                 }
 
@@ -698,7 +694,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
                 if (curKeywordName != "SUMMARY" && curKeywordName != "SCHEDULE") {
                     std::string msg =
                         "The SOLUTION section must be followed by SUMMARY or SCHEDULE instead of "+curKeywordName;
-                    OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
+                    deck.getMessageContainer().warning(curKeyword.getFileName(), msg, curKeyword.getLineNumber());
                     deckValid = false;
                 }
 
@@ -708,7 +704,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
                 if (curKeywordName != "SCHEDULE") {
                     std::string msg =
                         "The SUMMARY section must be followed by SCHEDULE instead of "+curKeywordName;
-                    OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
+                    deck.getMessageContainer().warning(curKeyword.getFileName(), msg, curKeyword.getLineNumber());
                     deckValid = false;
                 }
 
@@ -719,7 +715,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
                 std::string msg =
                     "The SCHEDULE section must be the last one ("
                     +curKeywordName+" specified after SCHEDULE)";
-                OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
+                deck.getMessageContainer().warning(curKeyword.getFileName(), msg, curKeyword.getLineNumber());
                 deckValid = false;
             }
         }
@@ -729,7 +725,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
             const auto& curKeyword = deck.getKeyword(deck.size() - 1);
             std::string msg =
                 "The last section of a valid deck must be SCHEDULE (is "+curSectionName+")";
-            OpmLog::addMessage(Log::MessageType::Warning, Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg));
+            deck.getMessageContainer().warning(curKeyword.getFileName(), msg, curKeyword.getLineNumber());
             deckValid = false;
         }
 
