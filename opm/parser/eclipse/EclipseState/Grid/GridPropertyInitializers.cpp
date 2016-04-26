@@ -30,55 +30,6 @@
 
 namespace Opm {
 
-    template< typename T >
-    GridPropertyInitFunction< T >::GridPropertyInitFunction( T x ) :
-        constant( x )
-    {}
-
-    template< typename T >
-    GridPropertyInitFunction< T >::GridPropertyInitFunction(
-            signature fn,
-            const TableManager* tables,
-            const EclipseGrid* grid,
-            GridProperties<int>* ig_props,
-            GridProperties<double>* dg_props)
-        :
-            f( fn ),
-            tm ( tables ),
-            eg ( grid ),
-            igp ( ig_props ),
-            dgp ( dg_props )
-    {}
-
-    template< typename T >
-    std::vector< T > GridPropertyInitFunction< T >::operator()( size_t size ) const {
-        if( !this->f ) return std::vector< T >( size, this->constant );
-
-        return (*this->f)( size, this->tm, this->eg, this->igp, this->dgp );
-    }
-
-    template< typename T >
-    GridPropertyPostFunction< T >::GridPropertyPostFunction(
-            signature fn,
-            const TableManager* tables,
-            const EclipseGrid* grid,
-            GridProperties<int>* ig_props,
-            GridProperties<double>* dg_props)
-        :
-            f( fn ),
-            tm ( tables ),
-            eg ( grid ),
-            igp ( ig_props ),
-            dgp ( dg_props )
-    {}
-
-    template< typename T >
-    void GridPropertyPostFunction< T >::operator()( std::vector< T >& values ) const {
-        if (!this->f) return;
-
-        return (*this->f)( values, this->tm, this->eg, this->igp, this->dgp );
-    }
-
     std::vector< double > temperature_lookup(
             size_t size,
             const TableManager* tables,
@@ -108,8 +59,3 @@ namespace Opm {
         return values;
     }
 }
-
-template class Opm::GridPropertyInitFunction< int >;
-template class Opm::GridPropertyInitFunction< double >;
-template class Opm::GridPropertyPostFunction< int >;
-template class Opm::GridPropertyPostFunction< double >;

@@ -32,10 +32,20 @@
 namespace Opm {
 
     template< typename T >
+    static std::function< std::vector< T >( size_t ) > constant( T val ) {
+        return [=]( size_t size ) { return std::vector< T >( size, val ); };
+    };
+
+    template< typename T >
+    static std::function< void( std::vector< T >& ) > noop() {
+        return []( std::vector< T >& ) { return; };
+    };
+
+    template< typename T >
     GridPropertySupportedKeywordInfo< T >::GridPropertySupportedKeywordInfo(
             const std::string& name,
-            GridPropertyInitFunction< T > initializer,
-            GridPropertyPostFunction< T > postProcessor,
+            std::function< std::vector< T >( size_t ) > initializer,
+            std::function< void( std::vector< T >& ) > postProcessor,
             const std::string& dimString ) :
         m_keywordName( name ),
         m_initializer( initializer ),
@@ -46,20 +56,11 @@ namespace Opm {
     template< typename T >
     GridPropertySupportedKeywordInfo< T >::GridPropertySupportedKeywordInfo(
             const std::string& name,
-            GridPropertyInitFunction< T > initializer,
-            const std::string& dimString ) :
-        m_keywordName(name),
-        m_initializer(initializer),
-        m_dimensionString(dimString)
-    {}
-
-    template< typename T >
-    GridPropertySupportedKeywordInfo< T >::GridPropertySupportedKeywordInfo(
-            const std::string& name,
-            const T defaultValue,
+            std::function< std::vector< T >( size_t ) > initializer,
             const std::string& dimString ) :
         m_keywordName( name ),
-        m_initializer( defaultValue ),
+        m_initializer( initializer ),
+        m_postProcessor( noop< T >() ),
         m_dimensionString( dimString )
     {}
 
@@ -67,10 +68,21 @@ namespace Opm {
     GridPropertySupportedKeywordInfo< T >::GridPropertySupportedKeywordInfo(
             const std::string& name,
             const T defaultValue,
-            GridPropertyPostFunction< T > postProcessor,
             const std::string& dimString ) :
         m_keywordName( name ),
-        m_initializer( defaultValue ),
+        m_initializer( constant( defaultValue ) ),
+        m_postProcessor( noop< T >() ),
+        m_dimensionString( dimString )
+    {}
+
+    template< typename T >
+    GridPropertySupportedKeywordInfo< T >::GridPropertySupportedKeywordInfo(
+            const std::string& name,
+            const T defaultValue,
+            std::function< void( std::vector< T >& ) > postProcessor,
+            const std::string& dimString ) :
+        m_keywordName( name ),
+        m_initializer( constant( defaultValue ) ),
         m_postProcessor( postProcessor ),
         m_dimensionString( dimString )
     {}
@@ -86,12 +98,12 @@ namespace Opm {
     }
 
     template< typename T >
-    const GridPropertyInitFunction< T >& GridPropertySupportedKeywordInfo< T >::initializer() const {
+    const std::function< std::vector< T >( size_t ) >& GridPropertySupportedKeywordInfo< T >::initializer() const {
         return this->m_initializer;
     }
 
     template< typename T >
-    const GridPropertyPostFunction< T >& GridPropertySupportedKeywordInfo< T >::postProcessor() const {
+    const std::function< void( std::vector< T >& ) >& GridPropertySupportedKeywordInfo< T >::postProcessor() const {
         return this->m_postProcessor;
     }
 

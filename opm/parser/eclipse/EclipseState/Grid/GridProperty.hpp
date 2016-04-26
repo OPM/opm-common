@@ -19,6 +19,7 @@
 #ifndef ECLIPSE_GRIDPROPERTY_HPP_
 #define ECLIPSE_GRIDPROPERTY_HPP_
 
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -45,15 +46,18 @@ class GridPropertySupportedKeywordInfo {
     public:
         GridPropertySupportedKeywordInfo() = default;
 
+        using init = std::function< std::vector< T >( size_t ) >;
+        using post = std::function< void( std::vector< T >& ) >;
+
         GridPropertySupportedKeywordInfo(
             const std::string& name,
-            GridPropertyInitFunction< T > initializer,
-            GridPropertyPostFunction< T > postProcessor,
+            init initializer,
+            post  postProcessor,
             const std::string& dimString );
 
         GridPropertySupportedKeywordInfo(
                 const std::string& name,
-                GridPropertyInitFunction< T > initializer,
+                init initializer,
                 const std::string& dimString);
 
         /* this is a convenience constructor which can be used if the default
@@ -67,18 +71,19 @@ class GridPropertySupportedKeywordInfo {
         GridPropertySupportedKeywordInfo(
                 const std::string& name,
                 const T defaultValue,
-                GridPropertyPostFunction< T > postProcessor,
+                post postProcessor,
                 const std::string& dimString );
 
         const std::string& getKeywordName() const;
         const std::string& getDimensionString() const;
-        const GridPropertyInitFunction< T >& initializer() const;
-        const GridPropertyPostFunction< T >& postProcessor() const;
+        const init& initializer() const;
+        const post& postProcessor() const;
 
     private:
+
         std::string m_keywordName;
-        GridPropertyInitFunction< T > m_initializer;
-        GridPropertyPostFunction< T > m_postProcessor;
+        init m_initializer;
+        post m_postProcessor;
         std::string m_dimensionString;
 };
 
