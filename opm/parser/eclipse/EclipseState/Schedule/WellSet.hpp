@@ -29,6 +29,8 @@ namespace Opm {
 
     class WellSet {
     public:
+        using const_iterator = std::map< std::string, std::shared_ptr< Well > >::const_iterator;
+
         WellSet();
         size_t size() const;
         bool hasWell(const std::string& wellName) const;
@@ -36,6 +38,10 @@ namespace Opm {
         void addWell(std::shared_ptr< Well > well);
         void delWell(const std::string& wellName);
         WellSet * shallowCopy() const;
+
+        const_iterator begin() const;
+        const_iterator end() const;
+
     private:
         std::map<std::string , std::shared_ptr< Well >> m_wells;
     };

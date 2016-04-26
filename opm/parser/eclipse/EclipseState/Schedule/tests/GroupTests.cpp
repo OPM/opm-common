@@ -34,6 +34,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
@@ -227,7 +228,40 @@ BOOST_AUTO_TEST_CASE(GroupAddAndDelWell) {
     BOOST_CHECK_THROW( group.delWell( 8 , "WELL1" ) , std::invalid_argument);
 }
 
+BOOST_AUTO_TEST_CASE(getWells) {
+    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    Opm::Group group("G1" , timeMap , 0);
+    std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>(10,10,10);
+    Opm::WellPtr well1(new Opm::Well("WELL1" , grid , 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0));
+    Opm::WellPtr well2(new Opm::Well("WELL2" , grid , 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0));
 
+    group.addWell( 2 , well1 );
+    group.addWell( 3 , well1 );
+    group.addWell( 3 , well2 );
+    group.addWell( 4 , well1 );
+
+    std::vector< std::string > names = { "WELL1", "WELL2" };
+    std::vector< std::string > wnames;
+    for( const auto& pair : group.getWells( 3 ) )
+        wnames.push_back( pair.first );
+
+    BOOST_CHECK_EQUAL_COLLECTIONS( names.begin(), names.end(),
+                                   wnames.begin(), wnames.end() );
+
+    const auto& wells = group.getWells( 3 );
+    BOOST_CHECK_EQUAL( wells.size(), 2U );
+    BOOST_CHECK( wells.hasWell( "WELL1" ) );
+    BOOST_CHECK( wells.hasWell( "WELL2" ) );
+
+    BOOST_CHECK_EQUAL( group.getWells( 0 ).size(), 0U );
+    BOOST_CHECK_EQUAL( group.getWells( 2 ).size(), 1U );
+    BOOST_CHECK( group.getWells( 2 ).hasWell( "WELL1" ) );
+    BOOST_CHECK( !group.getWells( 2 ).hasWell( "WELL2" ) );
+    BOOST_CHECK_EQUAL( group.getWells( 4 ).size(), 2U );
+    BOOST_CHECK( group.getWells( 4 ).hasWell( "WELL1" ) );
+    BOOST_CHECK( group.getWells( 4 ).hasWell( "WELL2" ) );
+
+}
 
 BOOST_AUTO_TEST_CASE(createDeckWithGEFAC) {
     Opm::Parser parser;
