@@ -340,44 +340,65 @@ inline double well_keywords( const smspec_node_type* node,
     const auto* genkey = smspec_node_get_gen_key1( node );
     const auto accu = prev ? ecl_sum_tstep_get_from_key( prev, genkey ) : 0;
 
+    /* Keyword families tend to share parameters. Since C++'s support for
+     * partial application or currying is somewhat clunky (std::bind), we grow
+     * our own with a handful of lambdas. The optimizer might be able to
+     * reorder this function so that only the needed lambda is created (or even
+     * better - inline it). This is not really a very performance sensitive
+     * function, so regardless of optimisation conciseness triumphs.
+     *
+     * The binding of lambdas is also done for groups, fields etc.
+     */
+    const auto rate = [&]( rt phase )
+        { return get_rate( sim_well, phase, conversion_table ); };
+
+    const auto vol = [&]( rt phase )
+        { return get_vol( sim_well, phase, conversion_table ); };
+
+    const auto histprate = [&]( WT phase )
+        { return prodrate( state_well, tstep, phase, conversion_table ); };
+
+    const auto histpvol = [&]( WT phase )
+        { return prodvol( state_well, tstep, phase, conversion_table ); };
+
+    const auto histirate = [&]( WT phase )
+        { return injerate( state_well, tstep, phase, conversion_table ); };
+
+    const auto histivol = [&]( WT phase )
+        { return injevol( state_well, tstep, phase, conversion_table ); };
+
     switch( khash( smspec_node_get_keyword( node ) ) ) {
 
         /* Production rates */
-        case E::WWPR: return get_rate( sim_well, rt::wat, conversion_table );
-        case E::WOPR: return get_rate( sim_well, rt::oil, conversion_table );
-        case E::WGPR: return get_rate( sim_well, rt::gas, conversion_table );
-        case E::WLPR: return get_rate( sim_well, rt::wat, conversion_table )
-                           + get_rate( sim_well, rt::oil, conversion_table );
+        case E::WWPR: return rate( rt::wat );
+        case E::WOPR: return rate( rt::oil );
+        case E::WGPR: return rate( rt::gas );
+        case E::WLPR: return rate( rt::wat ) + rate( rt::oil );
 
         /* Production totals */
-        case E::WWPT: return accu + get_vol( sim_well, rt::wat, conversion_table );
-        case E::WOPT: return accu + get_vol( sim_well, rt::oil, conversion_table );
-        case E::WGPT: return accu + get_vol( sim_well, rt::gas, conversion_table );
-        case E::WLPT: return accu + get_vol( sim_well, rt::wat, conversion_table )
-                                  + get_vol( sim_well, rt::oil, conversion_table );
+        case E::WWPT: return accu + vol( rt::wat );
+        case E::WOPT: return accu + vol( rt::oil );
+        case E::WGPT: return accu + vol( rt::gas );
+        case E::WLPT: return accu + vol( rt::wat ) + vol( rt::oil );
 
         /* Production history rates */
-        case E::WWPRH: return prodrate( state_well, tstep, WT::wat, conversion_table );
-        case E::WOPRH: return prodrate( state_well, tstep, WT::oil, conversion_table );
-        case E::WGPRH: return prodrate( state_well, tstep, WT::gas, conversion_table );
-        case E::WLPRH: return prodrate( state_well, tstep, WT::wat, conversion_table ) +
-                              prodrate( state_well, tstep, WT::oil, conversion_table );
+        case E::WWPRH: return histprate( WT::wat );
+        case E::WOPRH: return histprate( WT::oil );
+        case E::WGPRH: return histprate( WT::gas );
+        case E::WLPRH: return histprate( WT::wat ) + histprate( WT::oil );
 
         /* Production history totals */
-        case E::WWPTH: return accu + prodvol( state_well, tstep, WT::wat, conversion_table );
-        case E::WOPTH: return accu + prodvol( state_well, tstep, WT::oil, conversion_table );
-        case E::WGPTH: return accu + prodvol( state_well, tstep, WT::gas, conversion_table );
-        case E::WLPTH: return accu + prodvol( state_well, tstep, WT::wat, conversion_table ) +
-                                     prodvol( state_well, tstep, WT::oil, conversion_table );
+        case E::WWPTH: return accu + histpvol( WT::wat );
+        case E::WOPTH: return accu + histpvol( WT::oil );
+        case E::WGPTH: return accu + histpvol( WT::gas );
+        case E::WLPTH: return accu + histpvol( WT::wat ) + histpvol( WT::oil );
 
         /* Production ratios */
-        case E::WWCT: return wwct( get_rate( sim_well, rt::wat, conversion_table ),
-                                   get_rate( sim_well, rt::oil, conversion_table ) );
+        case E::WWCT: return wwct( rate( rt::wat ), rate( rt::oil ) );
 
         case E::WWCTH: return wwcth( state_well, tstep );
 
-        case E::WGOR: return wgor( get_rate( sim_well, rt::gas, conversion_table ),
-                                   get_rate( sim_well, rt::oil, conversion_table ) );
+        case E::WGOR: return wgor( rate( rt::gas ), rate( rt::oil ) );
         case E::WGORH: return wgorh( state_well, tstep );
 
         /* Pressures */
@@ -390,20 +411,20 @@ inline double well_keywords( const smspec_node_type* node,
         /* Injection rates */
         /* TODO: read from sim or compute (how?) */
         /* TODO: Tests */
-        case E::WWIR: return -1 * (get_rate( sim_well, rt::wat, conversion_table ));
-        case E::WOIR: return -1 * (get_rate( sim_well, rt::oil, conversion_table ));
-        case E::WGIR: return -1 * (get_rate( sim_well, rt::gas, conversion_table ));
-        case E::WWIT: return accu - get_vol( sim_well, rt::wat, conversion_table );
-        case E::WOIT: return accu - get_vol( sim_well, rt::oil, conversion_table );
-        case E::WGIT: return accu - get_vol( sim_well, rt::gas, conversion_table );
+        case E::WWIR: return - rate( rt::wat );
+        case E::WOIR: return - rate( rt::oil );
+        case E::WGIR: return - rate( rt::gas );
+        case E::WWIT: return accu - vol( rt::wat );
+        case E::WOIT: return accu - vol( rt::oil );
+        case E::WGIT: return accu - vol( rt::gas );
 
-        case E::WWIRH: return injerate( state_well, tstep, WellInjector::WATER, conversion_table );
-        case E::WOIRH: return injerate( state_well, tstep, WellInjector::GAS, conversion_table );
-        case E::WGIRH: return injerate( state_well, tstep, WellInjector::OIL, conversion_table );
+        case E::WWIRH: return histirate( WellInjector::WATER );
+        case E::WOIRH: return histirate( WellInjector::GAS );
+        case E::WGIRH: return histirate( WellInjector::OIL );
 
-        case E::WWITH: return accu + injevol( state_well, tstep, WellInjector::WATER, conversion_table );
-        case E::WOITH: return accu + injevol( state_well, tstep, WellInjector::GAS, conversion_table );
-        case E::WGITH: return accu + injevol( state_well, tstep, WellInjector::OIL, conversion_table );
+        case E::WWITH: return accu + histivol( WellInjector::WATER );
+        case E::WOITH: return accu + histivol( WellInjector::GAS );
+        case E::WGITH: return accu + histivol( WellInjector::OIL );
 
         case E::UNSUPPORTED:
         default:
