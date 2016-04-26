@@ -258,12 +258,6 @@ BOOST_AUTO_TEST_CASE(IntProperties) {
     BOOST_CHECK_EQUAL( true,  state.get3DProperties().hasDeckIntGridProperty( "SATNUM" ) );
 }
 
-BOOST_AUTO_TEST_CASE(PropertiesNotSupportsFalse) {
-    DeckPtr deck = createDeck();
-    EclipseState state( deck, ParseContext() );
-    const auto& props = state.get3DProperties();
-    BOOST_CHECK( ! props.supportsGridProperty( "SWAT" ) );
-}
 
 BOOST_AUTO_TEST_CASE(GetProperty) {
     DeckPtr deck = createDeck();
