@@ -254,6 +254,17 @@ namespace Opm {
         return (i + j * getNX() + k * getNX() * getNY());
     }
 
+    std::array<int, 3> EclipseGrid::getIJK(size_t globalIndex) const {
+        std::array<int, 3> r = { 0, 0, 0 };
+        int k = globalIndex / (getNX() * getNY()); globalIndex -= k * (getNX() * getNY());
+        int j = globalIndex / getNX();             globalIndex -= j *  getNX();
+        int i = globalIndex;
+        r[0] = i;
+        r[1] = j;
+        r[2] = k;
+        return r;
+    }
+
     void EclipseGrid::assertGlobalIndex(size_t globalIndex) const {
         if (globalIndex >= getCartesianSize())
             throw std::invalid_argument("input index above valid range");

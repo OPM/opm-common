@@ -101,7 +101,33 @@ BOOST_AUTO_TEST_CASE(CreateGridNoCells) {
     BOOST_CHECK_EQUAL( 1000 , grid.getCartesianSize());
 }
 
+BOOST_AUTO_TEST_CASE(CheckGridIndex) {
+    Opm::EclipseGrid grid(17, 19, 41); // prime time
 
+    auto v_start = grid.getIJK(0);
+    BOOST_CHECK_EQUAL(v_start[0], 0);
+    BOOST_CHECK_EQUAL(v_start[1], 0);
+    BOOST_CHECK_EQUAL(v_start[2], 0);
+
+    auto v_end = grid.getIJK(17*19*41 - 1);
+    BOOST_CHECK_EQUAL(v_end[0], 16);
+    BOOST_CHECK_EQUAL(v_end[1], 18);
+    BOOST_CHECK_EQUAL(v_end[2], 40);
+
+    auto v167 = grid.getIJK(167);
+    BOOST_CHECK_EQUAL(v167[0], 14);
+    BOOST_CHECK_EQUAL(v167[1], 9);
+    BOOST_CHECK_EQUAL(v167[2], 0);
+    BOOST_CHECK_EQUAL(grid.getGlobalIndex(14, 9, 0), 167);
+
+    auto v5723 = grid.getIJK(5723);
+    BOOST_CHECK_EQUAL(v5723[0], 11);
+    BOOST_CHECK_EQUAL(v5723[1], 13);
+    BOOST_CHECK_EQUAL(v5723[2], 17);
+    BOOST_CHECK_EQUAL(grid.getGlobalIndex(11, 13, 17), 5723);
+
+    BOOST_CHECK_EQUAL(17 * 19 * 41, grid.getCartesianSize());
+}
 
 static Opm::DeckPtr createCPDeck() {
     const char *deckData =
