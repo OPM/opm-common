@@ -196,27 +196,36 @@ void InputStack::push( std::string&& input, boost::filesystem::path p ) {
     this->file_stack.push_back( &this->file_storage.back() );
 }
 
-struct ParserState {
+class ParserState {
     public:
         ParserState( const ParseContext& );
+        ParserState( const ParseContext&, boost::filesystem::path );
+
         void loadString( const std::string& );
         void loadFile( const boost::filesystem::path& );
         void openRootFile( const boost::filesystem::path& );
+
         void handleRandomText(const string_view& ) const;
+        boost::filesystem::path getIncludeFilePath( std::string ) const;
+        void addPathAlias( const std::string& alias, const std::string& path );
 
         const boost::filesystem::path& current_path() const;
         size_t line() const;
 
         bool done() const;
         string_view getline();
+        void closeFile();
+
+    private:
+        InputStack input_stack;
 
         std::map< std::string, std::string > pathMap;
         boost::filesystem::path rootPath;
-        Deck * deck;
+
+    public:
         RawKeywordPtr rawKeyword;
         string_view nextKeyword = emptystr;
-        InputStack input_stack;
-
+        Deck* deck;
         const ParseContext& parseContext;
 };
 
@@ -247,10 +256,23 @@ string_view ParserState::getline() {
     return line;
 }
 
+void ParserState::closeFile() {
+    this->input_stack.pop();
+}
+
 ParserState::ParserState(const ParseContext& __parseContext)
     : deck( new Deck() ),
     parseContext( __parseContext )
 {}
+
+ParserState::ParserState( const ParseContext& context,
+                          boost::filesystem::path p ) :
+    rootPath( boost::filesystem::canonical( p ).parent_path() ),
+    deck( new Deck() ),
+    parseContext( context )
+{
+    loadFile( p );
+}
 
 void ParserState::loadString(const std::string& input) {
     this->input_stack.push( clean( input + "\n" ) );
@@ -328,10 +350,9 @@ void ParserState::openRootFile( const boost::filesystem::path& inputFile) {
     rootPath = inputFileCanonical.parent_path();
 }
 
-boost::filesystem::path getIncludeFilePath(ParserState& parserState, std::string path)
-{
-    const std::string pathKeywordPrefix("$");
-    const std::string validPathNameCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_");
+boost::filesystem::path ParserState::getIncludeFilePath( std::string path ) const {
+    static const std::string pathKeywordPrefix("$");
+    static const std::string validPathNameCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_");
 
     size_t positionOfPathName = path.find(pathKeywordPrefix);
 
@@ -339,19 +360,21 @@ boost::filesystem::path getIncludeFilePath(ParserState& parserState, std::string
         std::string stringStartingAtPathName = path.substr(positionOfPathName+1);
         size_t cutOffPosition = stringStartingAtPathName.find_first_not_of(validPathNameCharacters);
         std::string stringToFind = stringStartingAtPathName.substr(0, cutOffPosition);
-        std::string stringToReplace = parserState.pathMap.at(stringToFind);
+        std::string stringToReplace = this->pathMap.at( stringToFind );
         boost::replace_all(path, pathKeywordPrefix + stringToFind, stringToReplace);
     }
 
     boost::filesystem::path includeFilePath(path);
 
     if (includeFilePath.is_relative())
-        includeFilePath = parserState.rootPath / includeFilePath;
+        return this->rootPath / includeFilePath;
 
     return includeFilePath;
 }
 
-
+void ParserState::addPathAlias( const std::string& alias, const std::string& path ) {
+    this->pathMap.emplace( alias, path );
+}
 
 std::shared_ptr< RawKeyword > createRawKeyword( const string_view& kw, ParserState& parserState, const Parser& parser ) {
     auto keywordString = ParserKeyword::getDeckName( kw );
@@ -484,7 +507,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
             return true;
 
         if (parserState.rawKeyword->getKeywordName() == Opm::RawConsts::endinclude) {
-            parserState.input_stack.pop();
+            parserState.closeFile();
             continue;
         }
 
@@ -492,7 +515,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
             for( const auto& record : *parserState.rawKeyword ) {
                 std::string pathName = readValueToken<std::string>(record.getItem(0));
                 std::string pathValue = readValueToken<std::string>(record.getItem(1));
-                parserState.pathMap.emplace( pathName, pathValue );
+                parserState.addPathAlias( pathName, pathValue );
             }
 
             continue;
@@ -501,7 +524,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
         if (parserState.rawKeyword->getKeywordName() == Opm::RawConsts::include) {
             auto& firstRecord = parserState.rawKeyword->getFirstRecord( );
             std::string includeFileAsString = readValueToken<std::string>(firstRecord.getItem(0));
-            boost::filesystem::path includeFile = getIncludeFilePath( parserState, includeFileAsString );
+            boost::filesystem::path includeFile = parserState.getIncludeFilePath( includeFileAsString );
 
             parserState.loadFile( includeFile );
             continue;
@@ -551,8 +574,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
      */
 
     Deck * Parser::newDeckFromFile(const std::string &dataFileName, const ParseContext& parseContext) const {
-        ParserState parserState( parseContext );
-        parserState.openRootFile( dataFileName );
+        ParserState parserState( parseContext, dataFileName );
         parseState( parserState, *this );
         applyUnitsToDeck( *parserState.deck );
 
