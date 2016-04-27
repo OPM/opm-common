@@ -206,11 +206,11 @@ namespace Opm {
             void openRootFile( const boost::filesystem::path& );
             void handleRandomText(const string_view& ) const;
 
-            bool done() const;
             const boost::filesystem::path& current_path() const;
-            size_t& line();
-            const size_t& line() const;
-            string_view& input();
+            size_t line() const;
+
+            bool done() const;
+            string_view getline();
 
             std::map< std::string, std::string > pathMap;
             boost::filesystem::path rootPath;
@@ -223,28 +223,34 @@ namespace Opm {
     };
 
 
-    bool ParserState::done() const {
-        return this->input_stack.empty();
-    }
-
     const boost::filesystem::path& ParserState::current_path() const {
         return this->input_stack.peek().path;
     }
 
-    size_t& ParserState::line() {
+    size_t ParserState::line() const {
         return this->input_stack.peek().lineNR;
     }
 
-    const size_t& ParserState::line() const {
-        return this->input_stack.peek().lineNR;
+    bool ParserState::done() const {
+
+        while( !this->input_stack.empty() &&
+                this->input_stack.peek().input.empty() )
+            const_cast< ParserState* >( this )->input_stack.pop();
+
+        return this->input_stack.empty();
     }
 
-    string_view& ParserState::input() {
-        return this->input_stack.peek().input;
+    string_view ParserState::getline() {
+        string_view line;
+
+        Opm::getline( this->input_stack.peek().input, line );
+        this->input_stack.peek().lineNR++;
+
+        return line;
     }
 
-    ParserState::ParserState(const ParseContext& __parseContext) :
-        deck( new Deck() ),
+    ParserState::ParserState(const ParseContext& __parseContext)
+        : deck( new Deck() ),
         parseContext( __parseContext )
     {}
 
@@ -491,11 +497,6 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
 
         parserState->rawKeyword.reset();
 
-        if( parserState->input().empty() ) {
-            parserState->input_stack.pop();
-            continue;
-        }
-
         const bool streamOK = tryParseKeyword(parserState);
         if( !parserState->rawKeyword && !streamOK )
             continue;
@@ -631,15 +632,14 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
         if (parserState->rawKeyword && parserState->rawKeyword->isFinished())
             return true;
 
-        string_view line;
-        while (getline(parserState->input(), line)) {
-
-            std::string keywordString;
-            parserState->line()++;
+        while( !parserState->done() ) {
+            auto line = parserState->getline();
 
             // skip empty lines
             if (line.size() == 0)
                 continue;
+
+            std::string keywordString;
 
             if (parserState->rawKeyword == NULL) {
                 if (RawKeyword::isKeywordPrefix(line, keywordString)) {
