@@ -427,9 +427,7 @@ bool tryParseKeyword( ParserState& parserState, const Parser& parser ) {
     while( !parserState.done() ) {
         auto line = parserState.getline();
 
-        // skip empty lines
-        if (line.size() == 0)
-            continue;
+        if( line.empty() ) continue;
 
         std::string keywordString;
 
