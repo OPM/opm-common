@@ -114,9 +114,7 @@ namespace Opm {
         bool hasWildCardKeyword(const std::string& keyword) const;
         const ParserKeyword* matchingKeyword(const string_view& keyword) const;
 
-        bool tryParseKeyword(std::shared_ptr<ParserState> parserState) const;
         bool parseState(std::shared_ptr<ParserState> parserState) const;
-        std::shared_ptr< RawKeyword > createRawKeyword(const string_view& keywordString, std::shared_ptr<ParserState> parserState) const;
         void addDefaultKeywords();
     };
 
