@@ -56,7 +56,7 @@ inline Itr find_comment( Itr begin, Itr end ) {
 }
 
 template< typename Itr, typename Term >
-inline Itr strip_after( Itr begin, Itr end, Term terminator ) {
+inline Itr find_terminator( Itr begin, Itr end, Term terminator ) {
 
     auto pos = terminator( begin, end );
 
@@ -72,7 +72,7 @@ inline Itr strip_after( Itr begin, Itr end, Term terminator ) {
     // Quotes are not balanced - probably an error?!
     if( qend == end ) return end;
 
-    return strip_after( qend + 1, end, terminator );
+    return find_terminator( qend + 1, end, terminator );
 }
 
 /**
@@ -86,7 +86,7 @@ inline Itr strip_after( Itr begin, Itr end, Term terminator ) {
     ABC "-- Not balanced quote?  =>  ABC "-- Not balanced quote?
 */
 static inline string_view strip_comments( string_view str ) {
-    return { str.begin(), strip_after( str.begin(), str.end(),
+    return { str.begin(), find_terminator( str.begin(), str.end(),
             find_comment< string_view::const_iterator > ) };
 }
 
@@ -119,7 +119,7 @@ inline string_view strip_slash( string_view view ) {
 
     auto begin = view.begin();
     auto end = view.end();
-    auto slash = strip_after( begin, end, term );
+    auto slash = find_terminator( begin, end, term );
 
     /* we want to preserve terminating slashes */
     if( slash != end ) ++slash;
@@ -555,7 +555,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
      * strip_comment is the actual (internal) implementation
      */
     std::string Parser::stripComments( const std::string& str ) {
-        return { str.begin(), strip_after( str.begin(), str.end(),
+        return { str.begin(), find_terminator( str.begin(), str.end(),
                 find_comment< std::string::const_iterator > ) };
     }
 
