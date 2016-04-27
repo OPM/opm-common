@@ -313,6 +313,10 @@ void ParserState::loadFile(const boost::filesystem::path& inputFile) {
     std::fread( &buffer[ 0 ], 1, buffer.size() - 1, fp );
     buffer.back() = '\n';
 
+    if( std::ferror( fp ) )
+        throw std::runtime_error( "Error when reading input file '"
+                                + inputFileCanonical.string() + "'" );
+
     this->input_stack.push( clean( buffer ), inputFileCanonical );
 }
 
