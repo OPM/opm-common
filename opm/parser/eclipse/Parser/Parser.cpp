@@ -328,6 +328,31 @@ namespace Opm {
         parseContext.handleError( errorKey , msg.str() );
     }
 
+    static boost::filesystem::path getIncludeFilePath(ParserState& parserState, std::string path)
+    {
+        const std::string pathKeywordPrefix("$");
+        const std::string validPathNameCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_");
+
+        size_t positionOfPathName = path.find(pathKeywordPrefix);
+
+        if ( positionOfPathName != std::string::npos) {
+            std::string stringStartingAtPathName = path.substr(positionOfPathName+1);
+            size_t cutOffPosition = stringStartingAtPathName.find_first_not_of(validPathNameCharacters);
+            std::string stringToFind = stringStartingAtPathName.substr(0, cutOffPosition);
+            std::string stringToReplace = parserState.pathMap.at(stringToFind);
+            boost::replace_all(path, pathKeywordPrefix + stringToFind, stringToReplace);
+        }
+
+        boost::filesystem::path includeFilePath(path);
+
+        if (includeFilePath.is_relative())
+            includeFilePath = parserState.rootPath / includeFilePath;
+
+        return includeFilePath;
+    }
+
+
+
     std::shared_ptr< RawKeyword > createRawKeyword( const string_view& kw, ParserState& parserState, const Parser& parser ) {
         auto keywordString = ParserKeyword::getDeckName( kw );
 
@@ -447,28 +472,59 @@ namespace Opm {
         return false;
     }
 
+    bool parseState( ParserState& parserState, const Parser& parser ) {
 
-    static boost::filesystem::path getIncludeFilePath(ParserState& parserState, std::string path)
-    {
-        const std::string pathKeywordPrefix("$");
-        const std::string validPathNameCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_");
+        while( !parserState.done() ) {
 
-        size_t positionOfPathName = path.find(pathKeywordPrefix);
+            parserState.rawKeyword.reset();
 
-        if ( positionOfPathName != std::string::npos) {
-            std::string stringStartingAtPathName = path.substr(positionOfPathName+1);
-            size_t cutOffPosition = stringStartingAtPathName.find_first_not_of(validPathNameCharacters);
-            std::string stringToFind = stringStartingAtPathName.substr(0, cutOffPosition);
-            std::string stringToReplace = parserState.pathMap.at(stringToFind);
-            boost::replace_all(path, pathKeywordPrefix + stringToFind, stringToReplace);
+            const bool streamOK = tryParseKeyword( parserState, parser );
+            if( !parserState.rawKeyword && !streamOK )
+                continue;
+
+            if (parserState.rawKeyword->getKeywordName() == Opm::RawConsts::end)
+                return true;
+
+            if (parserState.rawKeyword->getKeywordName() == Opm::RawConsts::endinclude) {
+                parserState.input_stack.pop();
+                continue;
+            }
+
+            if (parserState.rawKeyword->getKeywordName() == Opm::RawConsts::paths) {
+                for( const auto& record : *parserState.rawKeyword ) {
+                    std::string pathName = readValueToken<std::string>(record.getItem(0));
+                    std::string pathValue = readValueToken<std::string>(record.getItem(1));
+                    parserState.pathMap.emplace( pathName, pathValue );
+                }
+
+                continue;
+            }
+
+            if (parserState.rawKeyword->getKeywordName() == Opm::RawConsts::include) {
+                auto& firstRecord = parserState.rawKeyword->getFirstRecord( );
+                std::string includeFileAsString = readValueToken<std::string>(firstRecord.getItem(0));
+                boost::filesystem::path includeFile = getIncludeFilePath( parserState, includeFileAsString );
+
+                parserState.loadFile( includeFile );
+                continue;
+            }
+
+            if( parser.isRecognizedKeyword( parserState.rawKeyword->getKeywordName() ) ) {
+                const auto& kwname = parserState.rawKeyword->getKeywordName();
+                const auto* parserKeyword = parser.getParserKeywordFromDeckName( kwname );
+                parserState.deck->addKeyword( parserKeyword->parse( parserState.parseContext, parserState.rawKeyword ) );
+            } else {
+                DeckKeyword deckKeyword( parserState.rawKeyword->getKeywordName(), false );
+                const std::string msg = "The keyword " + parserState.rawKeyword->getKeywordName() + " is not recognized";
+                deckKeyword.setLocation( parserState.rawKeyword->getFilename(),
+                        parserState.rawKeyword->getLineNR());
+                parserState.deck->addKeyword( std::move( deckKeyword ) );
+                parserState.deck->getMessageContainer().warning(
+                        parserState.current_path().string(), msg, parserState.line() );
+            }
         }
 
-        boost::filesystem::path includeFilePath(path);
-
-        if (includeFilePath.is_relative())
-            includeFilePath = parserState.rootPath / includeFilePath;
-
-        return includeFilePath;
+        return true;
     }
 
 
@@ -489,7 +545,7 @@ namespace Opm {
     Deck * Parser::newDeckFromFile(const std::string &dataFileName, const ParseContext& parseContext) const {
         std::shared_ptr<ParserState> parserState = std::make_shared<ParserState>(parseContext);
         parserState->openRootFile( dataFileName );
-        parseState(parserState);
+        parseState( *parserState, *this );
         applyUnitsToDeck(*parserState->deck);
 
         return parserState->deck;
@@ -499,7 +555,7 @@ namespace Opm {
         std::shared_ptr<ParserState> parserState = std::make_shared<ParserState>(parseContext);
         parserState->loadString( data );
 
-        parseState(parserState);
+        parseState( *parserState, *this );
         applyUnitsToDeck(*parserState->deck);
 
         return parserState->deck;
@@ -609,59 +665,6 @@ std::vector<std::string> Parser::getAllDeckNames () const {
         keywords.push_back(iterator->first.string());
     }
     return keywords;
-}
-
-bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
-
-    while( !parserState->done() ) {
-
-        parserState->rawKeyword.reset();
-
-        const bool streamOK = tryParseKeyword( *parserState, *this );
-        if( !parserState->rawKeyword && !streamOK )
-            continue;
-
-        if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::end)
-            return true;
-
-        if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::endinclude) {
-            parserState->input_stack.pop();
-            continue;
-        }
-
-        if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::paths) {
-            for( const auto& record : *parserState->rawKeyword ) {
-                std::string pathName = readValueToken<std::string>(record.getItem(0));
-                std::string pathValue = readValueToken<std::string>(record.getItem(1));
-                parserState->pathMap.emplace( pathName, pathValue );
-            }
-
-            continue;
-        }
-
-        if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::include) {
-            auto& firstRecord = parserState->rawKeyword->getFirstRecord( );
-            std::string includeFileAsString = readValueToken<std::string>(firstRecord.getItem(0));
-            boost::filesystem::path includeFile = getIncludeFilePath(*parserState, includeFileAsString);
-
-            parserState->loadFile( includeFile );
-            continue;
-        }
-
-        if (isRecognizedKeyword(parserState->rawKeyword->getKeywordName())) {
-            const auto* parserKeyword = getParserKeywordFromDeckName(parserState->rawKeyword->getKeywordName());
-            parserState->deck->addKeyword( parserKeyword->parse(parserState->parseContext , parserState->rawKeyword ) );
-        } else {
-            DeckKeyword deckKeyword(parserState->rawKeyword->getKeywordName(), false);
-            const std::string msg = "The keyword " + parserState->rawKeyword->getKeywordName() + " is not recognized";
-            deckKeyword.setLocation(parserState->rawKeyword->getFilename(),
-                    parserState->rawKeyword->getLineNR());
-            parserState->deck->addKeyword( std::move( deckKeyword ) );
-            parserState->deck->getMessageContainer().warning( parserState->current_path().string(), msg, parserState->line() );
-        }
-    }
-
-    return true;
 }
 
 

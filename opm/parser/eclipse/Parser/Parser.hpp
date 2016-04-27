@@ -39,7 +39,6 @@ namespace Opm {
     class Deck;
     class ParseContext;
     class RawKeyword;
-    struct ParserState;
 
     /// The hub of the parsing process.
     /// An input file in the eclipse data format is specified, several steps of parsing is performed
@@ -114,7 +113,6 @@ namespace Opm {
         bool hasWildCardKeyword(const std::string& keyword) const;
         const ParserKeyword* matchingKeyword(const string_view& keyword) const;
 
-        bool parseState(std::shared_ptr<ParserState> parserState) const;
         void addDefaultKeywords();
     };
 
