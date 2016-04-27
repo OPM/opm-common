@@ -473,7 +473,7 @@ inline double sum_rate( const std::vector< const data::Well* >& wells,
                    const double* conversion_table ) {
 
     switch( phase ) {
-        case rt::wat:
+        case rt::wat: /* intentional fall-through */
         case rt::oil: return convert( sum( wells, phase ),
                                       dim::liquid_surface_rate,
                                       conversion_table );
@@ -481,8 +481,10 @@ inline double sum_rate( const std::vector< const data::Well* >& wells,
         case rt::gas: return convert( sum( wells, phase ),
                                       dim::gas_surface_rate,
                                       conversion_table );
-        default: return sum( wells, phase );
+        default: break;
     }
+
+    throw std::runtime_error( "Reached impossible state in prodrate" );
 }
 
 inline double sum_vol( const std::vector< const data::Well* >& wells,
@@ -490,7 +492,7 @@ inline double sum_vol( const std::vector< const data::Well* >& wells,
                    const double* conversion_table ) {
 
     switch( phase ) {
-        case rt::wat:
+        case rt::wat: /* intentional fall-through */
         case rt::oil: return convert( sum( wells, phase ),
                                       dim::liquid_surface_volume,
                                       conversion_table );
@@ -498,8 +500,10 @@ inline double sum_vol( const std::vector< const data::Well* >& wells,
         case rt::gas: return convert( sum( wells, phase ),
                                       dim::gas_surface_volume,
                                       conversion_table );
-        default: return sum( wells, phase );
+        default: break;
     }
+
+    throw std::runtime_error( "Reached impossible state in prodrate" );
 }
 
 inline double group_keywords( const smspec_node_type* node,
