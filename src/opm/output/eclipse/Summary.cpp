@@ -216,7 +216,7 @@ inline const E khash( const char* key ) {
     return itr->second;
 }
 
-inline double wwct( double wat, double oil ) {
+inline double wct( double wat, double oil ) {
     /* handle div-by-zero - if this well is shut, all production rates will be
      * zero and there is no cut (i.e. zero). */
     if( oil == 0 ) return 0;
@@ -229,10 +229,10 @@ inline double wwcth( const Well& w, size_t ts ) {
     if( w.isInjector( ts ) ) return 0;
 
     const auto& p = w.getProductionProperties( ts );
-    return wwct( p.WaterRate, p.OilRate );
+    return wct( p.WaterRate, p.OilRate );
 }
 
-inline double wgor( double gas, double oil ) {
+inline double gor( double gas, double oil ) {
     /* handle div-by-zero - if this well is shut, all production rates will be
      * zero and there is no gas/oil ratio, (i.e. zero). 
      *
@@ -253,7 +253,7 @@ inline double wgorh( const Well& w, size_t ts ) {
 
     const auto& p = w.getProductionProperties( ts );
 
-    return wgor( p.GasRate, p.OilRate );
+    return gor( p.GasRate, p.OilRate );
 }
 
 enum class WT { wat, oil, gas };
@@ -394,11 +394,11 @@ inline double well_keywords( const smspec_node_type* node,
         case E::WLPTH: return accu + histpvol( WT::wat ) + histpvol( WT::oil );
 
         /* Production ratios */
-        case E::WWCT: return wwct( rate( rt::wat ), rate( rt::oil ) );
+        case E::WWCT: return wct( rate( rt::wat ), rate( rt::oil ) );
 
         case E::WWCTH: return wwcth( state_well, tstep );
 
-        case E::WGOR: return wgor( rate( rt::gas ), rate( rt::oil ) );
+        case E::WGOR: return gor( rate( rt::gas ), rate( rt::oil ) );
         case E::WGORH: return wgorh( state_well, tstep );
 
         /* Pressures */
