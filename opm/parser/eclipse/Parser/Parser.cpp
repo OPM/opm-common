@@ -43,8 +43,10 @@
 
 namespace Opm {
 
+namespace {
+
     template< typename Itr >
-    static inline Itr find_comment( Itr begin, Itr end ) {
+    inline Itr find_comment( Itr begin, Itr end ) {
 
         auto itr = std::find( begin, end, '-' );
         for( ; itr != end; itr = std::find( itr + 1, end, '-' ) )
@@ -54,7 +56,7 @@ namespace Opm {
     }
 
     template< typename Itr, typename Term >
-    static inline Itr strip_after( Itr begin, Itr end, Term terminator ) {
+    inline Itr strip_after( Itr begin, Itr end, Term terminator ) {
 
         auto pos = terminator( begin, end );
 
@@ -79,31 +81,14 @@ namespace Opm {
        the source string to remain alive. The function handles quoting with
        single quotes and double quotes:
 
-         ABC --Comment                =>  ABC
-         ABC '--Comment1' --Comment2  =>  ABC '--Comment1'
-         ABC "-- Not balanced quote?  =>  ABC "-- Not balanced quote?
-    */
-    static inline string_view strip_comments( string_view str ) {
-        return { str.begin(), strip_after( str.begin(), str.end(),
-                find_comment< string_view::const_iterator > ) };
-    }
-
-    /* stripComments only exists so that the unit tests can verify it.
-     * strip_comment is the actual (internal) implementation
-     */
-    std::string Parser::stripComments( const std::string& str ) {
-        return { str.begin(), strip_after( str.begin(), str.end(),
-                find_comment< std::string::const_iterator > ) };
-    }
-
-    template< typename Itr >
-    static inline Itr trim_left( Itr begin, Itr end ) {
+template< typename Itr >
+inline Itr trim_left( Itr begin, Itr end ) {
 
         return std::find_if_not( begin, end, RawConsts::is_separator );
     }
 
     template< typename Itr >
-    static inline Itr trim_right( Itr begin, Itr end ) {
+    inline Itr trim_right( Itr begin, Itr end ) {
 
         std::reverse_iterator< Itr > rbegin( end );
         std::reverse_iterator< Itr > rend( begin );
@@ -111,13 +96,13 @@ namespace Opm {
         return std::find_if_not( rbegin, rend, RawConsts::is_separator ).base();
     }
 
-    static inline string_view trim( string_view str ) {
+    inline string_view trim( string_view str ) {
         auto fst = trim_left( str.begin(), str.end() );
         auto lst = trim_right( fst, str.end() );
         return { fst, lst };
     }
 
-    static inline string_view strip_slash( string_view view ) {
+    inline string_view strip_slash( string_view view ) {
         using itr = string_view::const_iterator;
         const auto term = []( itr begin, itr end ) {
             return std::find( begin, end, '/' );
@@ -133,7 +118,7 @@ namespace Opm {
         return { begin, slash };
     }
 
-    static inline bool getline( string_view& input, string_view& line ) {
+    inline bool getline( string_view& input, string_view& line ) {
         if( input.empty() ) return false;
 
         auto end = std::find( input.begin(), input.end(), '\n' );
@@ -149,7 +134,7 @@ namespace Opm {
      * including stripping comments, removing leading/trailing whitespaces and
      * everything after (terminating) slashes
      */
-    static inline std::string clean( const std::string& str ) {
+    inline std::string clean( const std::string& str ) {
         std::string dst;
         dst.reserve( str.size() );
 
@@ -328,7 +313,7 @@ namespace Opm {
         parseContext.handleError( errorKey , msg.str() );
     }
 
-    static boost::filesystem::path getIncludeFilePath(ParserState& parserState, std::string path)
+    boost::filesystem::path getIncludeFilePath(ParserState& parserState, std::string path)
     {
         const std::string pathKeywordPrefix("$");
         const std::string validPathNameCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_");
@@ -527,6 +512,16 @@ namespace Opm {
         return true;
     }
 
+}
+
+
+    /* stripComments only exists so that the unit tests can verify it.
+     * strip_comment is the actual (internal) implementation
+     */
+    std::string Parser::stripComments( const std::string& str ) {
+        return { str.begin(), strip_after( str.begin(), str.end(),
+                find_comment< std::string::const_iterator > ) };
+    }
 
     Parser::Parser(bool addDefault) {
         if (addDefault)
