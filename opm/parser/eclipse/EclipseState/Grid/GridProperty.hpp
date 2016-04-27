@@ -25,8 +25,6 @@
 
 #include <ert/ecl/EclKW.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Grid/GridPropertyInitializers.hpp>
-
 /*
   This class implemenents a class representing properties which are
   define over an ECLIPSE grid, i.e. with one value for each logical
@@ -39,6 +37,8 @@ namespace Opm {
     class DeckItem;
     class DeckKeyword;
     class EclipseGrid;
+    class TableManager;
+    template< typename > class GridProperties;
 
 template< typename T >
 class GridPropertySupportedKeywordInfo {
@@ -160,5 +160,12 @@ private:
     bool m_hasRunPostProcessor = false;
 };
 
+// initialize the TEMPI grid property using the temperature vs depth
+// table (stemming from the TEMPVD or the RTEMPVD keyword)
+std::vector< double > temperature_lookup( size_t,
+                                            const TableManager*,
+                                            const EclipseGrid*,
+                                            GridProperties<int>* );
 }
+
 #endif
