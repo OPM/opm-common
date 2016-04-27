@@ -133,9 +133,13 @@ inline bool getline( string_view& input, string_view& line ) {
     auto end = std::find( input.begin(), input.end(), '\n' );
 
     line = string_view( input.begin(), end );
-    const auto mod = end == input.end() ? 0 : 1;
-    input = string_view( end + mod, input.end() );
+    input = string_view( end + 1, input.end() );
     return true;
+
+    /* we know that we always append a newline onto the input string, so we can
+     * safely assume that end+1 will either be end-of-input (i.e. empty range)
+     * or the start of the next line
+     */
 }
 
 /*
@@ -154,7 +158,7 @@ inline std::string clean( const std::string& str ) {
         //if( line.begin() == line.end() ) continue;
 
         dst.append( line.begin(), line.end() );
-        dst.append( 1, '\n' );
+        dst.push_back( '\n' );
     }
 
     return dst;
@@ -249,7 +253,7 @@ ParserState::ParserState(const ParseContext& __parseContext)
 {}
 
 void ParserState::loadString(const std::string& input) {
-    this->input_stack.push( clean( input ) );
+    this->input_stack.push( clean( input + "\n" ) );
 }
 
 void ParserState::loadFile(const boost::filesystem::path& inputFile) {
@@ -282,9 +286,10 @@ void ParserState::loadFile(const boost::filesystem::path& inputFile) {
     auto* fp = ufp.get();
     std::string buffer;
     std::fseek( fp, 0, SEEK_END );
-    buffer.resize( std::ftell( fp ) );
+    buffer.resize( std::ftell( fp ) + 1 );
     std::rewind( fp );
-    std::fread( &buffer[ 0 ], 1, buffer.size(), fp );
+    std::fread( &buffer[ 0 ], 1, buffer.size() - 1, fp );
+    buffer.back() = '\n';
 
     this->input_stack.push( clean( buffer ), inputFileCanonical );
 }
