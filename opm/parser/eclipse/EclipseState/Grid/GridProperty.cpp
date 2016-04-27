@@ -23,8 +23,6 @@
 #include <string>
 #include <vector>
 
-#include <boost/lexical_cast.hpp>
-
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
@@ -384,9 +382,9 @@ namespace Opm {
         const auto& deckItem = deckKeyword.getRecord(0).getItem(0);
 
         if (deckItem.size() > m_data.size())
-            throw std::invalid_argument("Size mismatch when setting data for:" + getKeywordName() +
-                                        " keyword size: " + boost::lexical_cast<std::string>(deckItem.size())
-                                        + " input size: " + boost::lexical_cast<std::string>(m_data.size()));
+            throw std::invalid_argument("Size mismatch when setting data for:" + getKeywordName()
+                                        + " keyword size: " + std::to_string( deckItem.size() )
+                                        + " input size: " + std::to_string( m_data.size()) );
 
         return deckItem;
     }
