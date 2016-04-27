@@ -168,140 +168,159 @@ namespace Opm {
 
     const std::string emptystr = "";
 
-    struct ParserState {
-
-        struct file {
-            file( boost::filesystem::path p, const std::string& in ) :
-                path( p ), input( in )
-            {}
-
-            file( const std::string& in ) : path( "" ), input( in ) {}
-
-            boost::filesystem::path path;
-            string_view input;
-            size_t lineNR = 0;
-        };
-
-        const ParseContext& parseContext;
-        Deck * deck;
-
-        boost::filesystem::path rootPath;
-        std::map< std::string, std::string > pathMap;
-        std::list< std::string > input_strings;
-        std::list< file > input_files;
-        std::vector< file* > input_stack;
-        RawKeywordPtr rawKeyword;
-        string_view nextKeyword = emptystr;
-
-        boost::filesystem::path& current_path() {
-            return this->input_stack.back()->path;
-        }
-
-        const boost::filesystem::path& current_path() const {
-            return this->input_stack.back()->path;
-        }
-
-        size_t& line() {
-            return this->input_stack.back()->lineNR;
-        }
-
-        const size_t& line() const {
-            return this->input_stack.back()->lineNR;
-        }
-
-        string_view& input() {
-            return this->input_stack.back()->input;
-        }
-
-        void pop() {
-            this->input_stack.pop_back();
-        }
-
-        ParserState(const ParseContext& __parseContext)
-            : parseContext( __parseContext ),
-              deck( new Deck() )
+    struct file {
+        file( boost::filesystem::path p, const std::string& in ) :
+            input( in ), path( p )
         {}
 
-        void loadString(const std::string& input) {
-            this->input_strings.push_back( clean( input ) );
-            this->input_files.emplace_back( this->input_strings.back() );
-            this->input_stack.push_back( &this->input_files.back() );
+        string_view input;
+        size_t lineNR = 0;
+        boost::filesystem::path path;
+    };
+
+    class InputStack {
+        public:
+            bool empty() const { return this->file_stack.empty(); }
+            file& peek() { return *this->file_stack.back(); }
+            const file& peek() const { return *this->file_stack.back(); }
+            void pop() { this->file_stack.pop_back(); };
+            void push( std::string&& input, boost::filesystem::path p = "" );
+
+        private:
+            std::list< std::string > string_storage;
+            std::list< file > file_storage;
+            std::vector< file* > file_stack;
+    };
+
+    void InputStack::push( std::string&& input, boost::filesystem::path p ) {
+        this->string_storage.push_back( std::move( input ) );
+        this->file_storage.emplace_back( p, this->string_storage.back() );
+        this->file_stack.push_back( &this->file_storage.back() );
+    }
+
+    struct ParserState {
+        public:
+            ParserState( const ParseContext& );
+            void loadString( const std::string& );
+            void loadFile( const boost::filesystem::path& );
+            void openRootFile( const boost::filesystem::path& );
+            void handleRandomText(const string_view& ) const;
+
+            bool done() const;
+            const boost::filesystem::path& current_path() const;
+            size_t& line();
+            const size_t& line() const;
+            string_view& input();
+
+            std::map< std::string, std::string > pathMap;
+            boost::filesystem::path rootPath;
+            Deck * deck;
+            RawKeywordPtr rawKeyword;
+            string_view nextKeyword = emptystr;
+            InputStack input_stack;
+
+            const ParseContext& parseContext;
+    };
+
+
+    bool ParserState::done() const {
+        return this->input_stack.empty();
+    }
+
+    const boost::filesystem::path& ParserState::current_path() const {
+        return this->input_stack.peek().path;
+    }
+
+    size_t& ParserState::line() {
+        return this->input_stack.peek().lineNR;
+    }
+
+    const size_t& ParserState::line() const {
+        return this->input_stack.peek().lineNR;
+    }
+
+    string_view& ParserState::input() {
+        return this->input_stack.peek().input;
+    }
+
+    ParserState::ParserState(const ParseContext& __parseContext) :
+        deck( new Deck() ),
+        parseContext( __parseContext )
+    {}
+
+    void ParserState::loadString(const std::string& input) {
+        this->input_stack.push( clean( input ) );
+    }
+
+    void ParserState::loadFile(const boost::filesystem::path& inputFile) {
+
+        boost::filesystem::path inputFileCanonical;
+        try {
+            inputFileCanonical = boost::filesystem::canonical(inputFile);
+        } catch (boost::filesystem::filesystem_error fs_error) {
+            throw std::runtime_error(std::string("Parser::loadFile fails: ") + fs_error.what());
         }
 
-        void loadFile(const boost::filesystem::path& inputFile) {
-
-            boost::filesystem::path inputFileCanonical;
-            try {
-                inputFileCanonical = boost::filesystem::canonical(inputFile);
-            } catch (boost::filesystem::filesystem_error fs_error) {
-                throw std::runtime_error(std::string("Parser::loadFile fails: ") + fs_error.what());
-            }
-
-            const auto closer = []( std::FILE* f ) { std::fclose( f ); };
-            std::unique_ptr< std::FILE, decltype( closer ) > ufp(
-                    std::fopen( inputFileCanonical.string().c_str(), "rb" ),
-                    closer
+        const auto closer = []( std::FILE* f ) { std::fclose( f ); };
+        std::unique_ptr< std::FILE, decltype( closer ) > ufp(
+                std::fopen( inputFileCanonical.string().c_str(), "rb" ),
+                closer
                 );
 
-            // make sure the file we'd like to parse is readable
-            if( !ufp ) {
-                throw std::runtime_error(std::string("Input file '") +
-                                         inputFileCanonical.string() +
-                                         std::string("' is not readable"));
-            }
-
-            /*
-             * read the input file C-style. This is done for performance
-             * reasons, as streams are slow
-             */
-            auto* fp = ufp.get();
-            std::string buffer;
-            std::fseek( fp, 0, SEEK_END );
-            buffer.resize( std::ftell( fp ) );
-            std::rewind( fp );
-            std::fread( &buffer[ 0 ], 1, buffer.size(), fp );
-
-            this->input_strings.push_back( clean( buffer ) );
-            this->input_files.emplace_back( inputFileCanonical, this->input_strings.back() );
-            this->input_stack.push_back( &this->input_files.back() );
-
-        }
-
-        void openRootFile( const boost::filesystem::path& inputFile) {
-            this->loadFile( inputFile );
-            this->deck->setDataFile( inputFile.string() );
-            const boost::filesystem::path& inputFileCanonical = boost::filesystem::canonical(inputFile);
-            rootPath = inputFileCanonical.parent_path();
+        // make sure the file we'd like to parse is readable
+        if( !ufp ) {
+            throw std::runtime_error(std::string("Input file '") +
+                    inputFileCanonical.string() +
+                    std::string("' is not readable"));
         }
 
         /*
-          We have encountered 'random' characters in the input file which
-          are not correctly formatted as a keyword heading, and not part
-          of the data section of any keyword.
-        */
+         * read the input file C-style. This is done for performance
+         * reasons, as streams are slow
+         */
+        auto* fp = ufp.get();
+        std::string buffer;
+        std::fseek( fp, 0, SEEK_END );
+        buffer.resize( std::ftell( fp ) );
+        std::rewind( fp );
+        std::fread( &buffer[ 0 ], 1, buffer.size(), fp );
 
-        void handleRandomText(const string_view& keywordString ) const {
-            std::string errorKey;
-            std::stringstream msg;
-            std::string trimmedCopy = keywordString.string();
+        this->input_stack.push( clean( buffer ), inputFileCanonical );
+    }
 
-            if (trimmedCopy == "/") {
-                errorKey = ParseContext::PARSE_RANDOM_SLASH;
-                msg << "Extra '/' detected at: "
-                    << this->current_path()
-                    << ":" << this->line();
-            } else {
-                errorKey = ParseContext::PARSE_RANDOM_TEXT;
-                msg << "String \'" << keywordString
-                    << "\' not formatted/recognized as valid keyword at: "
-                    << this->current_path()
-                    << ":" << this->line();
-            }
+    void ParserState::openRootFile( const boost::filesystem::path& inputFile) {
+        this->loadFile( inputFile );
+        this->deck->setDataFile( inputFile.string() );
+        const boost::filesystem::path& inputFileCanonical = boost::filesystem::canonical(inputFile);
+        rootPath = inputFileCanonical.parent_path();
+    }
 
-            parseContext.handleError( errorKey , msg.str() );
+    /*
+       We have encountered 'random' characters in the input file which
+       are not correctly formatted as a keyword heading, and not part
+       of the data section of any keyword.
+       */
+
+    void ParserState::handleRandomText(const string_view& keywordString ) const {
+        std::string errorKey;
+        std::stringstream msg;
+        std::string trimmedCopy = keywordString.string();
+
+        if (trimmedCopy == "/") {
+            errorKey = ParseContext::PARSE_RANDOM_SLASH;
+            msg << "Extra '/' detected at: "
+                << this->current_path()
+                << ":" << this->line();
+        } else {
+            errorKey = ParseContext::PARSE_RANDOM_TEXT;
+            msg << "String \'" << keywordString
+                << "\' not formatted/recognized as valid keyword at: "
+                << this->current_path()
+                << ":" << this->line();
         }
 
-    };
+        parseContext.handleError( errorKey , msg.str() );
+    }
 
     static boost::filesystem::path getIncludeFilePath(ParserState& parserState, std::string path)
     {
@@ -468,12 +487,12 @@ std::vector<std::string> Parser::getAllDeckNames () const {
 
 bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
 
-    while( !parserState->input_stack.empty() ) {
+    while( !parserState->done() ) {
 
         parserState->rawKeyword.reset();
 
         if( parserState->input().empty() ) {
-            parserState->pop();
+            parserState->input_stack.pop();
             continue;
         }
 
@@ -485,7 +504,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
             return true;
 
         if (parserState->rawKeyword->getKeywordName() == Opm::RawConsts::endinclude) {
-            parserState->pop();
+            parserState->input_stack.pop();
             continue;
         }
 
@@ -517,7 +536,7 @@ bool Parser::parseState(std::shared_ptr<ParserState> parserState) const {
             deckKeyword.setLocation(parserState->rawKeyword->getFilename(),
                     parserState->rawKeyword->getLineNR());
             parserState->deck->addKeyword( std::move( deckKeyword ) );
-            parserState->deck->getMessageContainer().warning( parserState->current_path().string(), msg, parserState->lineNR );
+            parserState->deck->getMessageContainer().warning( parserState->current_path().string(), msg, parserState->line() );
         }
     }
 
