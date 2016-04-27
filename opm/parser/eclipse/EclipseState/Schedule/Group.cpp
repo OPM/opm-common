@@ -318,6 +318,9 @@ namespace Opm {
         return wellSet->getWell(wellName);
     }
 
+    const WellSet& Group::getWells( size_t time_step ) const {
+        return *this->wellMap( time_step );
+    }
 
     size_t Group::numWells(size_t time_step) const {
         WellSetConstPtr wellSet = wellMap(time_step);

@@ -69,4 +69,12 @@ namespace Opm {
 
         return copy;
     }
+
+    WellSet::const_iterator WellSet::begin() const {
+        return this->m_wells.begin();
+    }
+
+    WellSet::const_iterator WellSet::end() const {
+        return this->m_wells.end();
+    }
 }
