@@ -543,22 +543,22 @@ namespace Opm {
      */
 
     Deck * Parser::newDeckFromFile(const std::string &dataFileName, const ParseContext& parseContext) const {
-        std::shared_ptr<ParserState> parserState = std::make_shared<ParserState>(parseContext);
-        parserState->openRootFile( dataFileName );
-        parseState( *parserState, *this );
-        applyUnitsToDeck(*parserState->deck);
+        ParserState parserState( parseContext );
+        parserState.openRootFile( dataFileName );
+        parseState( parserState, *this );
+        applyUnitsToDeck( *parserState.deck );
 
-        return parserState->deck;
+        return parserState.deck;
     }
 
     Deck * Parser::newDeckFromString(const std::string &data, const ParseContext& parseContext) const {
-        std::shared_ptr<ParserState> parserState = std::make_shared<ParserState>(parseContext);
-        parserState->loadString( data );
+        ParserState parserState( parseContext );
+        parserState.loadString( data );
 
-        parseState( *parserState, *this );
-        applyUnitsToDeck(*parserState->deck);
+        parseState( parserState, *this );
+        applyUnitsToDeck( *parserState.deck );
 
-        return parserState->deck;
+        return parserState.deck;
     }
 
 
