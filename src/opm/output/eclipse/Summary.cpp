@@ -454,7 +454,7 @@ inline double well_keywords( const smspec_node_type* node,
 
         case E::UNSUPPORTED:
         default:
-            return 0;
+            return -1;
     }
 }
 
@@ -544,7 +544,7 @@ inline double group_keywords( const smspec_node_type* node,
         case E::GGOR: return gor( rate( rt::gas ), rate( rt::oil ) );
 
         default:
-            return 0;
+            return -1;
     }
 }
 
