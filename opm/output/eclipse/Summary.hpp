@@ -45,10 +45,20 @@ class Summary {
                            const EclipseState&, const data::Wells& );
         void write();
 
+        using kwtype = uint32_t;
+        struct sum_node {
+            sum_node( kwtype k, smspec_node_type* n ) :
+                kw( k ), node( n ) {}
+
+            kwtype kw;
+            smspec_node_type* node;
+        };
+
     private:
+
         ERT::ert_unique_ptr< ecl_sum_type, ecl_sum_free > ecl_sum;
-        std::map< const char*, std::vector< smspec_node_type* > > wvar;
-        std::map< const char*, std::vector< smspec_node_type* > > gvar;
+        std::map< const char*, std::vector< sum_node > > wvar;
+        std::map< const char*, std::vector< sum_node > > gvar;
         const ecl_sum_tstep_type* prev_tstep = nullptr;
         double duration = 0;
         const double* conversions;

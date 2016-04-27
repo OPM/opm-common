@@ -129,7 +129,7 @@ inline std::time_t to_time_t( boost::posix_time::ptime pt ) {
 }
 
 /* The supported Eclipse keywords */
-enum class E {
+enum class E : out::Summary::kwtype {
     WBHP,
     WBHPH,
     WGIR,
@@ -356,7 +356,8 @@ inline double get_vol( const data::Well& w,
     }
 }
 
-inline double well_keywords( const smspec_node_type* node,
+inline double well_keywords( E keyword,
+                             const smspec_node_type* node,
                              const ecl_sum_tstep_type* prev,
                              const double* conversion_table,
                              const data::Well& sim_well,
@@ -393,7 +394,7 @@ inline double well_keywords( const smspec_node_type* node,
     const auto histivol = [&]( WellInjector::TypeEnum phase )
         { return injevol( state_well, tstep, phase, conversion_table ); };
 
-    switch( khash( smspec_node_get_keyword( node ) ) ) {
+    switch( keyword ) {
 
         /* Production rates */
         case E::WWPR: return rate( rt::wat );
@@ -506,7 +507,8 @@ inline double sum_vol( const std::vector< const data::Well* >& wells,
     throw std::runtime_error( "Reached impossible state in prodrate" );
 }
 
-inline double group_keywords( const smspec_node_type* node,
+inline double group_keywords( E keyword,
+                              const smspec_node_type* node,
                               const ecl_sum_tstep_type* prev,
                               const double* conversion_table,
                               const std::vector< const data::Well* > sim_wells ) {
@@ -522,7 +524,7 @@ inline double group_keywords( const smspec_node_type* node,
         return sum_vol( sim_wells, phase, conversion_table );
     };
 
-    switch( khash( smspec_node_get_keyword( node ) ) ) {
+    switch( keyword ) {
         /* Production rates */
         case E::GWPR: return rate( rt::wat );
         case E::GOPR: return rate( rt::oil );
@@ -591,16 +593,21 @@ Summary::Summary( const EclipseState& st,
     conversions( get_conversions( st ) )
 {
     for( const auto& node : sum ) {
+
+        const auto keyword = khash( node.keyword() );
+
         auto* nodeptr = ecl_sum_add_var( this->ecl_sum.get(), node.keyword(),
                                             node.wgname(), node.num(), "", 0 );
 
-        switch( smspec_node_get_var_type( nodeptr ) ) {
+        const auto kw = static_cast< Summary::kwtype >( keyword );
+
+        switch( node.type() ) {
             case ECL_SMSPEC_WELL_VAR:
-                this->wvar[ node.wgname() ].push_back( nodeptr );
+                this->wvar[ node.wgname() ].emplace_back( kw, nodeptr );
                 break;
 
             case ECL_SMSPEC_GROUP_VAR:
-                this->gvar[ node.wgname() ].push_back( nodeptr );
+                this->gvar[ node.wgname() ].emplace_back( kw, nodeptr );
                 break;
 
             default:
@@ -623,11 +630,12 @@ void Summary::add_timestep( int report_step,
         const auto& state_well = es.getSchedule()->getWell( wname );
         const auto& sim_well = wells.at( wname );
 
-        for( const auto* node : pair.second ) {
-            auto val = well_keywords( node, this->prev_tstep,
+        for( const auto& node : pair.second ) {
+            auto val = well_keywords( static_cast< E >( node.kw ),
+                                      node.node, this->prev_tstep,
                                       this->conversions, sim_well,
                                       state_well, report_step );
-            ecl_sum_tstep_set_from_node( tstep, node, val );
+            ecl_sum_tstep_set_from_node( tstep, node.node, val );
         }
     }
 
@@ -640,10 +648,11 @@ void Summary::add_timestep( int report_step,
         for( const auto& well : state_group.getWells( report_step ) )
             sim_wells.push_back( &wells.at( well.first ) );
 
-        for( const auto* node : pair.second ) {
-            auto val = group_keywords( node, this->prev_tstep,
-                                      this->conversions, sim_wells );
-            ecl_sum_tstep_set_from_node( tstep, node, val );
+        for( const auto& node : pair.second ) {
+            auto val = group_keywords( static_cast< E >( node.kw ),
+                                       node.node, this->prev_tstep,
+                                       this->conversions, sim_wells );
+            ecl_sum_tstep_set_from_node( tstep, node.node, val );
         }
     }
 
