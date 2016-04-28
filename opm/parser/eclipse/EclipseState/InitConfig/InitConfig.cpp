@@ -24,46 +24,56 @@
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/InitConfig/Equil.hpp>
 
+#include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/R.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
+
 namespace Opm {
 
     static inline Equil equils( const Deck& deck ) {
-        if( !deck.hasKeyword( "EQUIL" ) ) return {};
-        return Equil( deck.getKeyword( "EQUIL" ) );
+        if( !deck.hasKeyword<ParserKeywords::EQUIL>( ) ) return {};
+        return Equil( deck.getKeyword<ParserKeywords::EQUIL>(  ) );
     }
 
     InitConfig::InitConfig(DeckConstPtr deck) : equil( equils( *deck ) ) {
-        m_restartInitiated = false;
+        m_restartRequested = false;
         m_restartStep = 0;
         m_restartRootName = "";
 
         initRestartKW(deck);
     }
 
-    void InitConfig::initRestartKW(DeckConstPtr deck) {
-        if (deck->hasKeyword("RESTART") && deck->hasKeyword("SKIPREST")) {
-            const auto& restart_kw = deck->getKeyword("RESTART");
-            const auto& restart_dataRecord = restart_kw.getRecord(0);
-            const auto& restart_rootname_item = restart_dataRecord.getItem(0);
-            const std::string restart_rootname_string = restart_rootname_item.get< std::string >(0);
 
-            const auto& restart_report_step_item = restart_dataRecord.getItem(1);
-            int restart_report_step_int = restart_report_step_item.get< int >(0);
-
-            const auto& save_item = restart_dataRecord.getItem(2);
-            if (save_item.hasValue(0)) {
-                throw std::runtime_error("OPM does not support RESTART from a SAVE file, only from RESTART files");
-            }
-
-            m_restartInitiated = true;
-            m_restartStep = restart_report_step_int;
-            m_restartRootName = restart_rootname_string;
-        } else if (deck->hasKeyword("RESTART") || deck->hasKeyword("SKIPREST")){
-            throw std::runtime_error("Error in deck: Only one of the kewywords RESTART and SKIPREST are supplied. None or both of them should be supplied.");
-        }
+    void InitConfig::setRestart( const std::string& root, int step) {
+        m_restartRequested = true;
+        m_restartStep = step;
+        m_restartRootName = root;
     }
 
-    bool InitConfig::getRestartInitiated() const {
-        return m_restartInitiated;
+
+    void InitConfig::initRestartKW(DeckConstPtr deck) {
+        if (deck->hasKeyword<ParserKeywords::RESTART>( )) {
+            const auto& keyword = deck->getKeyword<ParserKeywords::RESTART>( );
+            const auto& record = keyword.getRecord(0);
+            const auto& save_item = record.getItem(2);
+            if (save_item.hasValue(0))
+                throw std::runtime_error("OPM does not support RESTART from a SAVE file, only from RESTART files");
+
+            {
+                const auto& root_item = record.getItem(0);
+                const std::string& root = root_item.get< std::string >(0);
+
+                const auto& step_item = record.getItem(1);
+                int step = step_item.get< int >(0);
+
+                setRestart( root , step );
+            }
+        } else if (deck->hasKeyword<ParserKeywords::SKIPREST>())
+            throw std::runtime_error("Error in deck: Can not supply SKIPREST keyword without a preceeding RESTART.");
+    }
+
+    bool InitConfig::restartRequested() const {
+        return m_restartRequested;
     }
 
     int InitConfig::getRestartStep() const {

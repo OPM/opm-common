@@ -265,6 +265,10 @@ namespace Opm {
         for( const auto& kw : { "IKRGR", "IKRGRX", "IKRGRX-", "IKRGRY", "IKRGRY-", "IKRGRZ", "IKRGRZ-" } )
             supportedDoubleKeywords.emplace_back( kw, IKRGRLookup, "1" );
 
+        // Solution keywords - required fror enumerated restart.
+        supportedDoubleKeywords.emplace_back( "PRESSURE", 0.0 , "Pressure" );
+        supportedDoubleKeywords.emplace_back( "SWAT", 0.0 , "1" );
+        supportedDoubleKeywords.emplace_back( "SGAS", 0.0 , "1" );
 
 
         // cell temperature (E300 only, but makes a lot of sense for E100, too)

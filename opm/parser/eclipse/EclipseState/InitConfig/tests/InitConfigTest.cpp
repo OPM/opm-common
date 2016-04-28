@@ -112,22 +112,27 @@ BOOST_AUTO_TEST_CASE(InitConfigTest) {
     DeckPtr deck = createDeck(deckStr);
     InitConfigPtr initConfigPtr;
     BOOST_CHECK_NO_THROW(initConfigPtr = std::make_shared<InitConfig>(deck));
-    BOOST_CHECK_EQUAL(initConfigPtr->getRestartInitiated(), true);
+    BOOST_CHECK_EQUAL(initConfigPtr->restartRequested(), true);
     BOOST_CHECK_EQUAL(initConfigPtr->getRestartStep(), 5);
     BOOST_CHECK_EQUAL(initConfigPtr->getRestartRootName(), "BASE");
 
     DeckPtr deck2 = createDeck(deckStr2);
     InitConfigPtr initConfigPtr2;
     BOOST_CHECK_NO_THROW(initConfigPtr2 = std::make_shared<InitConfig>(deck2));
-    BOOST_CHECK_EQUAL(initConfigPtr2->getRestartInitiated(), false);
+    BOOST_CHECK_EQUAL(initConfigPtr2->restartRequested(), false);
     BOOST_CHECK_EQUAL(initConfigPtr2->getRestartStep(), 0);
     BOOST_CHECK_EQUAL(initConfigPtr2->getRestartRootName(), "");
+
+    initConfigPtr2->setRestart( "CASE" , 100);
+    BOOST_CHECK_EQUAL(initConfigPtr2->restartRequested(), true);
+    BOOST_CHECK_EQUAL(initConfigPtr2->getRestartStep(), 100);
+    BOOST_CHECK_EQUAL(initConfigPtr2->getRestartRootName(), "CASE");
 
     DeckPtr deck3 = createDeck(deckStr3);
     BOOST_CHECK_THROW(std::make_shared<InitConfig>(deck3), std::runtime_error);
 
     DeckPtr deck4 = createDeck(deckStr4);
-    BOOST_CHECK_THROW(std::make_shared<InitConfig>(deck4), std::runtime_error);
+    BOOST_CHECK_NO_THROW(std::make_shared<InitConfig>(deck4));
 }
 
 BOOST_AUTO_TEST_CASE( InitConfigWithoutEquil ) {
