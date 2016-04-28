@@ -444,10 +444,6 @@ namespace Opm {
         return m_first_rft_step;
     }
 
-    std::string IOConfig::getDeckFileName() {
-        return m_deck_filename;
-    }
-
     bool IOConfig::getOutputEnabled(){
         return m_output_enabled;
     }

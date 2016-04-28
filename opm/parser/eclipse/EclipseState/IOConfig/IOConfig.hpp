@@ -158,8 +158,6 @@ namespace Opm {
 
         std::string getRestartFileName(const std::string& restart_base, int report_step, bool output) const;
 
-        std::string getDeckFileName();
-
         bool getOutputEnabled();
         void setOutputEnabled(bool enabled);
 
