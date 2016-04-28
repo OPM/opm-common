@@ -220,6 +220,29 @@ BOOST_AUTO_TEST_CASE(WGOR_H) {
 
 }
 
+BOOST_AUTO_TEST_CASE(WGLR_H) {
+    setup cfg( "sum_test_WGOR_H" );
+
+    out::Summary writer( cfg.es, cfg.config, cfg.name );
+    writer.add_timestep( 1, 1, cfg.es, cfg.wells );
+    writer.write();
+
+    auto res = readsum( cfg.name );
+    const auto* resp = res.get();
+
+    const double wgor1 = 10.2 / ( 10.0 + 10.1 );
+    const double wgor2 = 20.2 / ( 20.0 + 20.1 );
+    const double wgor3 = 30.2 / ( 30.0 + 30.1 );
+
+    BOOST_CHECK_CLOSE( wgor1, ecl_sum_get_well_var( resp, 0, "W_1", "WGLR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( wgor2, ecl_sum_get_well_var( resp, 0, "W_2", "WGLR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( wgor3, ecl_sum_get_well_var( resp, 0, "W_3", "WGLR" ), 1e-5 );
+
+    BOOST_CHECK_CLOSE( wgor1, ecl_sum_get_well_var( resp, 0, "W_1", "WGLRH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( wgor2, ecl_sum_get_well_var( resp, 0, "W_2", "WGLRH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0, ecl_sum_get_well_var( resp, 0, "W_3", "WGLRH" ), 1e-5 );
+}
+
 BOOST_AUTO_TEST_CASE(WBHP) {
     setup cfg( "sum_test_WBHP" );
 

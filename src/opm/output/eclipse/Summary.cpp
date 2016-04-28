@@ -138,6 +138,8 @@ enum class E : out::Summary::kwtype {
     WGITH,
     WGOR,
     WGORH,
+    WGLR,
+    WGLRH,
     WGPR,
     WGPRH,
     WGPT,
@@ -190,6 +192,8 @@ const std::map< std::string, E > keyhash = {
     { "WGITH", E::WGITH },
     { "WGOR",  E::WGOR },
     { "WGORH", E::WGORH },
+    { "WGLR",  E::WGLR },
+    { "WGLRH", E::WGLRH },
     { "WGPR",  E::WGPR },
     { "WGPRH", E::WGPRH },
     { "WGPT",  E::WGPT },
@@ -281,6 +285,17 @@ inline double wgorh( const Well& w, size_t ts ) {
     const auto& p = w.getProductionProperties( ts );
 
     return glr( p.GasRate, p.OilRate );
+}
+
+inline double wglrh( const Well& w, size_t ts ) {
+    /* We do not support mixed injections, and gas/oil is undefined when oil is
+     * zero (i.e. pure gas injector), so always output 0 if this is an injector
+     */
+    if( w.isInjector( ts ) ) return 0;
+
+    const auto& p = w.getProductionProperties( ts );
+
+    return glr( p.GasRate, p.WaterRate + p.OilRate );
 }
 
 enum class WT { wat, oil, gas };
@@ -428,6 +443,10 @@ inline double well_keywords( E keyword,
 
         case E::WGOR: return glr( rate( rt::gas ), rate( rt::oil ) );
         case E::WGORH: return wgorh( state_well, tstep );
+
+        case E::WGLR: return glr( rate( rt::gas ),
+                                  rate( rt::wat ) + rate( rt::oil ) );
+        case E::WGLRH: return wglrh( state_well, tstep );
 
         /* Pressures */
         case E::WBHP: return convert( sim_well.bhp, dim::pressure, conversion_table );
