@@ -468,12 +468,12 @@ inline double well_keywords( E keyword,
         case E::WGIT: return accu - vol( rt::gas );
 
         case E::WWIRH: return histirate( WellInjector::WATER );
-        case E::WOIRH: return histirate( WellInjector::GAS );
-        case E::WGIRH: return histirate( WellInjector::OIL );
+        case E::WOIRH: return histirate( WellInjector::OIL );
+        case E::WGIRH: return histirate( WellInjector::GAS );
 
         case E::WWITH: return accu + histivol( WellInjector::WATER );
-        case E::WOITH: return accu + histivol( WellInjector::GAS );
-        case E::WGITH: return accu + histivol( WellInjector::OIL );
+        case E::WOITH: return accu + histivol( WellInjector::OIL );
+        case E::WGITH: return accu + histivol( WellInjector::GAS );
 
         case E::UNSUPPORTED:
         default:
