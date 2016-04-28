@@ -32,205 +32,171 @@ namespace Opm {
     std::vector<double> SGLEndpoint(size_t,
                                     const TableManager*,
                                     const EclipseGrid*,
-                                    GridProperties<int>*,
-                                    GridProperties<double>*);
+                                    GridProperties<int>*);
 
     std::vector<double> ISGLEndpoint(size_t,
                                      const TableManager*,
                                      const EclipseGrid*,
-                                     GridProperties<int>*,
-                                     GridProperties<double>*);
+                                     GridProperties<int>*);
 
     std::vector<double> SGUEndpoint(size_t,
                                     const TableManager*,
                                     const EclipseGrid*,
-                                    GridProperties<int>*,
-                                    GridProperties<double>*);
+                                    GridProperties<int>*);
 
     std::vector<double> ISGUEndpoint(size_t, const TableManager*,
                                      const EclipseGrid*,
-                                     GridProperties<int>*,
-                                     GridProperties<double>*);
+                                     GridProperties<int>*);
 
     std::vector<double> SWLEndpoint(size_t,
                                     const TableManager*,
                                     const EclipseGrid*,
-                                    GridProperties<int>*,
-                                    GridProperties<double>*);
+                                    GridProperties<int>*);
 
     std::vector<double> ISWLEndpoint(size_t,
                                      const TableManager*,
                                      const EclipseGrid*,
-                                     GridProperties<int>*,
-                                     GridProperties<double>*);
+                                     GridProperties<int>*);
 
     std::vector<double> SWUEndpoint(size_t,
                                     const TableManager*,
                                     const EclipseGrid*,
-                                    GridProperties<int>*,
-                                    GridProperties<double>*);
+                                    GridProperties<int>*);
 
     std::vector<double> ISWUEndpoint(size_t,
                                      const TableManager*,
                                      const EclipseGrid*,
-                                     GridProperties<int>*,
-                                     GridProperties<double>*);
+                                     GridProperties<int>*);
 
     std::vector<double> SGCREndpoint(size_t,
                                      const TableManager*,
                                      const EclipseGrid*,
-                                     GridProperties<int>*,
-                                     GridProperties<double>*);
+                                     GridProperties<int>*);
 
     std::vector<double> ISGCREndpoint(size_t,
                                       const TableManager*,
                                       const EclipseGrid*,
-                                      GridProperties<int>*,
-                                      GridProperties<double>*);
+                                      GridProperties<int>*);
 
     std::vector<double> SOWCREndpoint(size_t,
                                       const TableManager*,
                                       const EclipseGrid*,
-                                      GridProperties<int>*,
-                                      GridProperties<double>*);
+                                      GridProperties<int>*);
 
     std::vector<double> ISOWCREndpoint(size_t,
                                        const TableManager*,
                                        const EclipseGrid*,
-                                       GridProperties<int>*,
-                                       GridProperties<double>*);
+                                       GridProperties<int>*);
 
     std::vector<double> SOGCREndpoint(size_t,
                                       const TableManager*,
                                       const EclipseGrid*,
-                                      GridProperties<int>*,
-                                      GridProperties<double>*);
+                                      GridProperties<int>*);
 
     std::vector<double> ISOGCREndpoint(size_t,
                                        const TableManager*,
                                        const EclipseGrid*,
-                                       GridProperties<int>*,
-                                       GridProperties<double>*);
+                                       GridProperties<int>*);
 
     std::vector<double> SWCREndpoint(size_t,
                                      const TableManager*,
                                      const EclipseGrid*,
-                                     GridProperties<int>*,
-                                     GridProperties<double>*);
+                                     GridProperties<int>*);
 
     std::vector<double> ISWCREndpoint(size_t,
                                       const TableManager*,
                                       const EclipseGrid*,
-                                      GridProperties<int>*,
-                                      GridProperties<double>*);
+                                      GridProperties<int>*);
 
     std::vector<double> PCWEndpoint(size_t,
                                     const TableManager*,
                                     const EclipseGrid*,
-                                    GridProperties<int>*,
-                                    GridProperties<double>*);
+                                    GridProperties<int>*);
 
     std::vector<double> IPCWEndpoint(size_t,
                                      const TableManager*,
                                      const EclipseGrid*,
-                                     GridProperties<int>*,
-                                     GridProperties<double>*);
+                                     GridProperties<int>*);
 
     std::vector<double> PCGEndpoint(size_t,
                                     const TableManager*,
                                     const EclipseGrid*,
-                                    GridProperties<int>*,
-                                    GridProperties<double>*);
+                                    GridProperties<int>*);
 
     std::vector<double> IPCGEndpoint(size_t,
                                      const TableManager*,
                                      const EclipseGrid*,
-                                     GridProperties<int>*,
-                                     GridProperties<double>*);
+                                     GridProperties<int>*);
 
     std::vector<double> KRWEndpoint(size_t,
                                     const TableManager*,
                                     const EclipseGrid*,
-                                    GridProperties<int>*,
-                                    GridProperties<double>*);
+                                    GridProperties<int>*);
 
     std::vector<double> IKRWEndpoint(size_t,
                                      const TableManager*,
                                      const EclipseGrid*,
-                                     GridProperties<int>*,
-                                     GridProperties<double>*);
+                                     GridProperties<int>*);
 
     std::vector<double> KRWREndpoint(size_t,
                                      const TableManager*,
                                      const EclipseGrid*,
-                                     GridProperties<int>*,
-                                     GridProperties<double>*);
+                                     GridProperties<int>*);
 
     std::vector<double> IKRWREndpoint(size_t,
                                       const TableManager*,
                                       const EclipseGrid*,
-                                      GridProperties<int>*,
-                                      GridProperties<double>*);
+                                      GridProperties<int>*);
 
     std::vector<double> KROEndpoint(size_t,
                                     const TableManager*,
                                     const EclipseGrid*,
-                                    GridProperties<int>*,
-                                    GridProperties<double>*);
+                                    GridProperties<int>*);
 
     std::vector<double> IKROEndpoint(size_t,
                                      const TableManager*,
                                      const EclipseGrid*,
-                                     GridProperties<int>*,
-                                     GridProperties<double>*);
+                                     GridProperties<int>*);
 
     std::vector<double> KRORWEndpoint(size_t,
                                       const TableManager*,
                                       const EclipseGrid*,
-                                      GridProperties<int>*,
-                                      GridProperties<double>*);
+                                      GridProperties<int>*);
 
     std::vector<double> IKRORWEndpoint(size_t,
                                        const TableManager*,
                                        const EclipseGrid*,
-                                       GridProperties<int>*,
-                                       GridProperties<double>*);
+                                       GridProperties<int>*);
 
     std::vector<double> KRORGEndpoint(size_t,
                                       const TableManager*,
                                       const EclipseGrid*,
-                                      GridProperties<int>*,
-                                      GridProperties<double>*);
+                                      GridProperties<int>*);
 
     std::vector<double> IKRORGEndpoint(size_t,
                                        const TableManager*,
                                        const EclipseGrid*,
-                                       GridProperties<int>*,
-                                       GridProperties<double>*);
+                                       GridProperties<int>*);
 
     std::vector<double> KRGEndpoint(size_t,
                                     const TableManager*,
                                     const EclipseGrid*,
-                                    GridProperties<int>*,
-                                    GridProperties<double>*);
+                                    GridProperties<int>*);
 
     std::vector<double> IKRGEndpoint(size_t,
                                      const TableManager*,
                                      const EclipseGrid*,
-                                     GridProperties<int>*,
-                                     GridProperties<double>*);
+                                     GridProperties<int>*);
 
     std::vector<double> KRGREndpoint(size_t,
                                      const TableManager*,
                                      const EclipseGrid*,
-                                     GridProperties<int>*,
-                                     GridProperties<double>*);
+                                     GridProperties<int>*);
 
     std::vector<double> IKRGREndpoint(size_t,
                                       const TableManager*,
                                       const EclipseGrid*,
-                                      GridProperties<int>*,
-                                      GridProperties<double>*);
+                                      GridProperties<int>*);
 }
 
 #endif // ECLIPSE_SATFUNCPROPERTY_INITIALIZERS_HPP

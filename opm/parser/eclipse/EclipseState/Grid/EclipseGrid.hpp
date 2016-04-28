@@ -30,6 +30,7 @@
 #include <ert/ecl/ecl_grid.h>
 #include <ert/util/ert_unique_ptr.hpp>
 
+#include <array>
 #include <memory>
 #include <vector>
 

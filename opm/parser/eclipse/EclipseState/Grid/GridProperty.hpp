@@ -19,12 +19,11 @@
 #ifndef ECLIPSE_GRIDPROPERTY_HPP_
 #define ECLIPSE_GRIDPROPERTY_HPP_
 
+#include <functional>
 #include <string>
 #include <vector>
 
 #include <ert/ecl/EclKW.hpp>
-
-#include <opm/parser/eclipse/EclipseState/Grid/GridPropertyInitializers.hpp>
 
 /*
   This class implemenents a class representing properties which are
@@ -38,6 +37,8 @@ namespace Opm {
     class DeckItem;
     class DeckKeyword;
     class EclipseGrid;
+    class TableManager;
+    template< typename > class GridProperties;
 
 template< typename T >
 class GridPropertySupportedKeywordInfo {
@@ -45,15 +46,18 @@ class GridPropertySupportedKeywordInfo {
     public:
         GridPropertySupportedKeywordInfo() = default;
 
+        using init = std::function< std::vector< T >( size_t ) >;
+        using post = std::function< void( std::vector< T >& ) >;
+
         GridPropertySupportedKeywordInfo(
             const std::string& name,
-            GridPropertyInitFunction< T > initializer,
-            GridPropertyPostFunction< T > postProcessor,
+            init initializer,
+            post  postProcessor,
             const std::string& dimString );
 
         GridPropertySupportedKeywordInfo(
                 const std::string& name,
-                GridPropertyInitFunction< T > initializer,
+                init initializer,
                 const std::string& dimString);
 
         /* this is a convenience constructor which can be used if the default
@@ -67,18 +71,19 @@ class GridPropertySupportedKeywordInfo {
         GridPropertySupportedKeywordInfo(
                 const std::string& name,
                 const T defaultValue,
-                GridPropertyPostFunction< T > postProcessor,
+                post postProcessor,
                 const std::string& dimString );
 
         const std::string& getKeywordName() const;
         const std::string& getDimensionString() const;
-        const GridPropertyInitFunction< T >& initializer() const;
-        const GridPropertyPostFunction< T >& postProcessor() const;
+        const init& initializer() const;
+        const post& postProcessor() const;
 
     private:
+
         std::string m_keywordName;
-        GridPropertyInitFunction< T > m_initializer;
-        GridPropertyPostFunction< T > m_postProcessor;
+        init m_initializer;
+        post m_postProcessor;
         std::string m_dimensionString;
 };
 
@@ -155,5 +160,12 @@ private:
     bool m_hasRunPostProcessor = false;
 };
 
+// initialize the TEMPI grid property using the temperature vs depth
+// table (stemming from the TEMPVD or the RTEMPVD keyword)
+std::vector< double > temperature_lookup( size_t,
+                                            const TableManager*,
+                                            const EclipseGrid*,
+                                            GridProperties<int>* );
 }
+
 #endif

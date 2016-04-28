@@ -684,7 +684,6 @@ namespace Opm {
                                               const TableManager* tableManager,
                                               const EclipseGrid* eclipseGrid,
                                               GridProperties<int>* intGridProperties,
-                                              GridProperties<double>* /* doubleGridProperties */,
                                               bool useOneMinusTableValue ) {
 
 
@@ -731,7 +730,6 @@ namespace Opm {
                                               const TableManager* tableManager,
                                               const EclipseGrid* eclipseGrid,
                                               GridProperties<int>* intGridProperties,
-                                              GridProperties<double>* /* doubleGridProperties */,
                                               bool useOneMinusTableValue ) {
 
         std::vector< double > values( size, 0 );
@@ -769,375 +767,340 @@ namespace Opm {
     std::vector< double > SGLEndpoint( size_t size,
                                        const TableManager * tableManager,
                                        const EclipseGrid* eclipseGrid,
-                                       GridProperties<int>* intGridProperties,
-                                       GridProperties<double>* doubleGridProperties)
+                                       GridProperties<int>* intGridProperties )
     {
         const auto min_gas = findMinGasSaturation( tableManager );
         return satnumApply( size, "SGCO", min_gas, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > ISGLEndpoint( size_t size,
                                         const TableManager * tableManager,
                                         const EclipseGrid* eclipseGrid,
-                                        GridProperties<int>* intGridProperties,
-                                        GridProperties<double>* doubleGridProperties)
+                                        GridProperties<int>* intGridProperties )
     {
         const auto min_gas = findMinGasSaturation( tableManager );
         return imbnumApply( size, "SGCO", min_gas, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > SGUEndpoint( size_t size,
                                        const TableManager * tableManager,
                                        const EclipseGrid* eclipseGrid,
-                                       GridProperties<int>* intGridProperties,
-                                       GridProperties<double>* doubleGridProperties)
+                                       GridProperties<int>* intGridProperties )
     {
         const auto max_gas = findMaxGasSaturation( tableManager );
         return satnumApply( size, "SGMAX", max_gas, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > ISGUEndpoint( size_t size,
                                         const TableManager * tableManager,
                                         const EclipseGrid* eclipseGrid,
-                                        GridProperties<int>* intGridProperties,
-                                        GridProperties<double>* doubleGridProperties)
+                                        GridProperties<int>* intGridProperties )
     {
         const auto max_gas = findMaxGasSaturation( tableManager );
         return imbnumApply( size, "SGMAX", max_gas, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > SWLEndpoint( size_t size,
                                        const TableManager * tableManager,
                                        const EclipseGrid* eclipseGrid,
-                                       GridProperties<int>* intGridProperties,
-                                       GridProperties<double>* doubleGridProperties)
+                                       GridProperties<int>* intGridProperties )
     {
         const auto min_water = findMinWaterSaturation( tableManager );
         return satnumApply( size, "SWCO", min_water, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > ISWLEndpoint( size_t size,
                                         const TableManager * tableManager,
                                         const EclipseGrid  * eclipseGrid,
-                                        GridProperties<int>* intGridProperties,
-                                        GridProperties<double>* doubleGridProperties)
+                                        GridProperties<int>* intGridProperties )
     {
         const auto min_water = findMinWaterSaturation( tableManager );
         return imbnumApply( size, "SWCO", min_water, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > SWUEndpoint( size_t size,
                                        const TableManager * tableManager,
                                        const EclipseGrid  * eclipseGrid,
-                                       GridProperties<int>* intGridProperties,
-                                       GridProperties<double>* doubleGridProperties)
+                                       GridProperties<int>* intGridProperties )
     {
         const auto max_water = findMaxWaterSaturation( tableManager );
         return satnumApply( size, "SWMAX", max_water, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, true );
+                            intGridProperties, true );
     }
 
     std::vector< double > ISWUEndpoint( size_t size,
                                         const TableManager * tableManager,
                                         const EclipseGrid  * eclipseGrid,
-                                        GridProperties<int>* intGridProperties,
-                                        GridProperties<double>* doubleGridProperties)
+                                        GridProperties<int>* intGridProperties )
     {
         const auto max_water = findMaxWaterSaturation( tableManager );
         return imbnumApply( size, "SWMAX", max_water, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, true);
+                            intGridProperties, true);
     }
 
     std::vector< double > SGCREndpoint( size_t size,
                                         const TableManager * tableManager,
                                         const EclipseGrid  * eclipseGrid,
-                                        GridProperties<int>* intGridProperties,
-                                        GridProperties<double>* doubleGridProperties)
+                                        GridProperties<int>* intGridProperties )
     {
         const auto crit_gas = findCriticalGas( tableManager );
         return satnumApply( size, "SGCRIT", crit_gas, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > ISGCREndpoint( size_t size,
                                          const TableManager * tableManager,
                                          const EclipseGrid  * eclipseGrid,
-                                         GridProperties<int>* intGridProperties,
-                                         GridProperties<double>* doubleGridProperties)
+                                         GridProperties<int>* intGridProperties )
     {
         const auto crit_gas = findCriticalGas( tableManager );
         return imbnumApply( size, "SGCRIT", crit_gas, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > SOWCREndpoint( size_t size,
                                          const TableManager * tableManager,
                                          const EclipseGrid  * eclipseGrid,
-                                         GridProperties<int>* intGridProperties,
-                                         GridProperties<double>* doubleGridProperties)
+                                         GridProperties<int>* intGridProperties )
     {
         const auto oil_water = findCriticalOilWater( tableManager );
         return satnumApply( size, "SOWCRIT", oil_water, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > ISOWCREndpoint( size_t size,
                                           const TableManager * tableManager,
                                           const EclipseGrid  * eclipseGrid,
-                                          GridProperties<int>* intGridProperties,
-                                          GridProperties<double>* doubleGridProperties
-)
+                                          GridProperties<int>* intGridProperties )
     {
         const auto oil_water = findCriticalOilWater( tableManager );
         return imbnumApply( size, "SOWCRIT", oil_water, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > SOGCREndpoint( size_t size,
                                          const TableManager * tableManager,
                                          const EclipseGrid  * eclipseGrid,
-                                         GridProperties<int>* intGridProperties,
-                                         GridProperties<double>* doubleGridProperties)
+                                         GridProperties<int>* intGridProperties )
     {
         const auto crit_oil_gas = findCriticalOilGas( tableManager );
         return satnumApply( size, "SOGCRIT", crit_oil_gas, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > ISOGCREndpoint( size_t size,
                                           const TableManager * tableManager,
                                           const EclipseGrid  * eclipseGrid,
-                                          GridProperties<int>* intGridProperties,
-                                          GridProperties<double>* doubleGridProperties)
+                                          GridProperties<int>* intGridProperties )
     {
         const auto crit_oil_gas = findCriticalOilGas( tableManager );
         return imbnumApply( size, "SOGCRIT", crit_oil_gas, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > SWCREndpoint( size_t size,
                                         const TableManager * tableManager,
                                         const EclipseGrid  * eclipseGrid,
-                                        GridProperties<int>* intGridProperties,
-                                        GridProperties<double>* doubleGridProperties)
+                                        GridProperties<int>* intGridProperties )
     {
         const auto crit_water = findCriticalWater( tableManager );
         return satnumApply( size, "SWCRIT", crit_water, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > ISWCREndpoint( size_t size,
                                          const TableManager * tableManager,
                                          const EclipseGrid  * eclipseGrid,
-                                         GridProperties<int>* intGridProperties,
-                                         GridProperties<double>* doubleGridProperties)
+                                         GridProperties<int>* intGridProperties )
     {
         const auto crit_water = findCriticalWater( tableManager );
         return imbnumApply( size, "SWCRIT", crit_water, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > PCWEndpoint( size_t size,
                                        const TableManager * tableManager,
                                        const EclipseGrid  * eclipseGrid,
-                                       GridProperties<int>* intGridProperties,
-                                       GridProperties<double>* doubleGridProperties)
+                                       GridProperties<int>* intGridProperties )
     {
         const auto max_pcow = findMaxPcow( tableManager );
         return satnumApply( size, "PCW", max_pcow, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > IPCWEndpoint( size_t size,
                                         const TableManager * tableManager,
                                         const EclipseGrid  * eclipseGrid,
-                                        GridProperties<int>* intGridProperties,
-                                        GridProperties<double>* doubleGridProperties)
+                                        GridProperties<int>* intGridProperties )
     {
         const auto max_pcow = findMaxPcow( tableManager );
         return imbnumApply( size, "IPCW", max_pcow, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > PCGEndpoint( size_t size,
                                        const TableManager * tableManager,
                                        const EclipseGrid  * eclipseGrid,
-                                       GridProperties<int>* intGridProperties,
-                                       GridProperties<double>* doubleGridProperties)
+                                       GridProperties<int>* intGridProperties )
     {
         const auto max_pcog = findMaxPcog( tableManager );
         return satnumApply( size, "PCG", max_pcog, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > IPCGEndpoint( size_t size,
                                         const TableManager * tableManager,
                                         const EclipseGrid  * eclipseGrid,
-                                        GridProperties<int>* intGridProperties,
-                                        GridProperties<double>* doubleGridProperties)
+                                        GridProperties<int>* intGridProperties )
     {
         const auto max_pcog = findMaxPcog( tableManager );
         return imbnumApply( size, "IPCG", max_pcog, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > KRWEndpoint( size_t size,
                                        const TableManager * tableManager,
                                        const EclipseGrid  * eclipseGrid,
-                                       GridProperties<int>* intGridProperties,
-                                       GridProperties<double>* doubleGridProperties)
+                                       GridProperties<int>* intGridProperties )
     {
         const auto max_krw = findMaxKrw( tableManager );
         return satnumApply( size, "KRW", max_krw, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > IKRWEndpoint( size_t size,
                                         const TableManager * tableManager,
                                         const EclipseGrid  * eclipseGrid,
-                                        GridProperties<int>* intGridProperties,
-                                        GridProperties<double>* doubleGridProperties)
+                                        GridProperties<int>* intGridProperties )
     {
         const auto krwr = findKrwr( tableManager );
         return imbnumApply( size, "IKRW", krwr, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > KRWREndpoint( size_t size,
                                         const TableManager * tableManager,
                                         const EclipseGrid  * eclipseGrid,
-                                        GridProperties<int>* intGridProperties,
-                                        GridProperties<double>* doubleGridProperties)
+                                        GridProperties<int>* intGridProperties )
     {
         const auto krwr = findKrwr( tableManager );
         return satnumApply( size, "KRWR", krwr, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > IKRWREndpoint( size_t size,
                                          const TableManager * tableManager,
                                          const EclipseGrid  * eclipseGrid,
-                                         GridProperties<int>* intGridProperties,
-                                         GridProperties<double>* doubleGridProperties)
+                                         GridProperties<int>* intGridProperties )
     {
         const auto krwr = findKrwr( tableManager );
         return imbnumApply( size, "IKRWR", krwr, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > KROEndpoint( size_t size,
                                        const TableManager * tableManager,
                                        const EclipseGrid  * eclipseGrid,
-                                       GridProperties<int>* intGridProperties,
-                                       GridProperties<double>* doubleGridProperties)
+                                       GridProperties<int>* intGridProperties )
     {
         const auto max_kro = findMaxKro( tableManager );
         return satnumApply( size, "KRO", max_kro, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > IKROEndpoint( size_t size,
                                         const TableManager * tableManager,
                                         const EclipseGrid  * eclipseGrid,
-                                        GridProperties<int>* intGridProperties,
-                                        GridProperties<double>* doubleGridProperties)
+                                        GridProperties<int>* intGridProperties )
     {
         const auto max_kro = findMaxKro( tableManager );
         return imbnumApply( size, "IKRO", max_kro, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > KRORWEndpoint( size_t size,
                                          const TableManager * tableManager,
                                          const EclipseGrid  * eclipseGrid,
-                                         GridProperties<int>* intGridProperties,
-                                         GridProperties<double>* doubleGridProperties)
+                                         GridProperties<int>* intGridProperties )
     {
         const auto krorw = findKrorw( tableManager );
         return satnumApply( size, "KRORW", krorw, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > IKRORWEndpoint( size_t size,
                                           const TableManager * tableManager,
                                           const EclipseGrid  * eclipseGrid,
-                                          GridProperties<int>* intGridProperties,
-                                          GridProperties<double>* doubleGridProperties)
+                                          GridProperties<int>* intGridProperties )
     {
         const auto krorw = findKrorw( tableManager );
         return imbnumApply( size, "IKRORW", krorw, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > KRORGEndpoint( size_t size,
                                          const TableManager * tableManager,
                                          const EclipseGrid  * eclipseGrid,
-                                         GridProperties<int>* intGridProperties,
-                                         GridProperties<double>* doubleGridProperties)
+                                         GridProperties<int>* intGridProperties )
     {
         const auto krorg = findKrorg( tableManager );
         return satnumApply( size, "KRORG", krorg, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > IKRORGEndpoint( size_t size,
                                           const TableManager * tableManager,
                                           const EclipseGrid  * eclipseGrid,
-                                          GridProperties<int>* intGridProperties,
-                                          GridProperties<double>* doubleGridProperties)
+                                          GridProperties<int>* intGridProperties )
     {
         const auto krorg = findKrorg( tableManager );
         return imbnumApply( size, "IKRORG", krorg, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > KRGEndpoint( size_t size,
                                        const TableManager * tableManager,
                                        const EclipseGrid  * eclipseGrid,
-                                       GridProperties<int>* intGridProperties,
-                                       GridProperties<double>* doubleGridProperties)
+                                       GridProperties<int>* intGridProperties )
     {
         const auto max_krg = findMaxKrg( tableManager );
         return satnumApply( size, "KRG", max_krg, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > IKRGEndpoint( size_t size,
                                         const TableManager * tableManager,
                                         const EclipseGrid  * eclipseGrid,
-                                        GridProperties<int>* intGridProperties,
-                                        GridProperties<double>* doubleGridProperties)
+                                        GridProperties<int>* intGridProperties )
     {
         const auto max_krg = findMaxKrg( tableManager );
         return imbnumApply( size, "IKRG", max_krg, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > KRGREndpoint( size_t size,
                                         const TableManager * tableManager,
                                         const EclipseGrid  * eclipseGrid,
-                                        GridProperties<int>* intGridProperties,
-                                        GridProperties<double>* doubleGridProperties)
+                                        GridProperties<int>* intGridProperties )
     {
         const auto krgr = findKrgr( tableManager );
         return satnumApply( size, "KRGR", krgr, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 
     std::vector< double > IKRGREndpoint( size_t size,
                                         const TableManager * tableManager,
                                          const EclipseGrid* eclipseGrid,
-                                         GridProperties<int>* intGridProperties,
-                                         GridProperties<double>* doubleGridProperties)
+                                         GridProperties<int>* intGridProperties )
     {
         const auto krgr = findKrgr( tableManager );
         return imbnumApply( size, "IKRGR", krgr, tableManager, eclipseGrid,
-                            intGridProperties, doubleGridProperties, false );
+                            intGridProperties, false );
     }
 }

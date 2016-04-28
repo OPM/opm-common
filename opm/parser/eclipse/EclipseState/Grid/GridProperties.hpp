@@ -196,7 +196,7 @@ namespace Opm {
         /// this method exists for (friend) Eclipse3DProperties to be allowed initializing PORV keyword
         void postAddKeyword(const std::string& name,
                             const T defaultValue,
-                            GridPropertyPostFunction< T >& postProcessor,
+                            std::function< void( std::vector< T >& ) > postProcessor,
                             const std::string& dimString )
             {
                 m_supportedKeywords.emplace(name,

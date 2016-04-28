@@ -17,25 +17,37 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
-#include <boost/lexical_cast.hpp>
-
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/RtempvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
 namespace Opm {
 
     template< typename T >
+    static std::function< std::vector< T >( size_t ) > constant( T val ) {
+        return [=]( size_t size ) { return std::vector< T >( size, val ); };
+    };
+
+    template< typename T >
+    static std::function< void( std::vector< T >& ) > noop() {
+        return []( std::vector< T >& ) { return; };
+    };
+
+    template< typename T >
     GridPropertySupportedKeywordInfo< T >::GridPropertySupportedKeywordInfo(
             const std::string& name,
-            GridPropertyInitFunction< T > initializer,
-            GridPropertyPostFunction< T > postProcessor,
+            std::function< std::vector< T >( size_t ) > initializer,
+            std::function< void( std::vector< T >& ) > postProcessor,
             const std::string& dimString ) :
         m_keywordName( name ),
         m_initializer( initializer ),
@@ -46,20 +58,11 @@ namespace Opm {
     template< typename T >
     GridPropertySupportedKeywordInfo< T >::GridPropertySupportedKeywordInfo(
             const std::string& name,
-            GridPropertyInitFunction< T > initializer,
-            const std::string& dimString ) :
-        m_keywordName(name),
-        m_initializer(initializer),
-        m_dimensionString(dimString)
-    {}
-
-    template< typename T >
-    GridPropertySupportedKeywordInfo< T >::GridPropertySupportedKeywordInfo(
-            const std::string& name,
-            const T defaultValue,
+            std::function< std::vector< T >( size_t ) > initializer,
             const std::string& dimString ) :
         m_keywordName( name ),
-        m_initializer( defaultValue ),
+        m_initializer( initializer ),
+        m_postProcessor( noop< T >() ),
         m_dimensionString( dimString )
     {}
 
@@ -67,10 +70,21 @@ namespace Opm {
     GridPropertySupportedKeywordInfo< T >::GridPropertySupportedKeywordInfo(
             const std::string& name,
             const T defaultValue,
-            GridPropertyPostFunction< T > postProcessor,
             const std::string& dimString ) :
         m_keywordName( name ),
-        m_initializer( defaultValue ),
+        m_initializer( constant( defaultValue ) ),
+        m_postProcessor( noop< T >() ),
+        m_dimensionString( dimString )
+    {}
+
+    template< typename T >
+    GridPropertySupportedKeywordInfo< T >::GridPropertySupportedKeywordInfo(
+            const std::string& name,
+            const T defaultValue,
+            std::function< void( std::vector< T >& ) > postProcessor,
+            const std::string& dimString ) :
+        m_keywordName( name ),
+        m_initializer( constant( defaultValue ) ),
         m_postProcessor( postProcessor ),
         m_dimensionString( dimString )
     {}
@@ -86,12 +100,12 @@ namespace Opm {
     }
 
     template< typename T >
-    const GridPropertyInitFunction< T >& GridPropertySupportedKeywordInfo< T >::initializer() const {
+    const std::function< std::vector< T >( size_t ) >& GridPropertySupportedKeywordInfo< T >::initializer() const {
         return this->m_initializer;
     }
 
     template< typename T >
-    const GridPropertyPostFunction< T >& GridPropertySupportedKeywordInfo< T >::postProcessor() const {
+    const std::function< void( std::vector< T >& ) >& GridPropertySupportedKeywordInfo< T >::postProcessor() const {
         return this->m_postProcessor;
     }
 
@@ -368,9 +382,9 @@ namespace Opm {
         const auto& deckItem = deckKeyword.getRecord(0).getItem(0);
 
         if (deckItem.size() > m_data.size())
-            throw std::invalid_argument("Size mismatch when setting data for:" + getKeywordName() +
-                                        " keyword size: " + boost::lexical_cast<std::string>(deckItem.size())
-                                        + " input size: " + boost::lexical_cast<std::string>(m_data.size()));
+            throw std::invalid_argument("Size mismatch when setting data for:" + getKeywordName()
+                                        + " keyword size: " + std::to_string( deckItem.size() )
+                                        + " input size: " + std::to_string( m_data.size()) );
 
         return deckItem;
     }
@@ -416,6 +430,33 @@ const std::string& GridProperty<int>::getDimensionString() const {
 template<>
 const std::string& GridProperty<double>::getDimensionString() const {
     return m_kwInfo.getDimensionString();
+}
+
+std::vector< double > temperature_lookup( size_t size,
+                                            const TableManager* tables,
+                                            const EclipseGrid* grid,
+                                            GridProperties<int>* ig_props ) {
+
+    if( !tables->useEqlnum() ) {
+        /* if values are defaulted in the TEMPI keyword, but no
+            * EQLNUM is specified, you will get NaNs
+            */
+        return std::vector< double >( size, std::numeric_limits< double >::quiet_NaN() );
+    }
+
+    std::vector< double > values( size, 0 );
+
+    const auto& rtempvdTables = tables->getRtempvdTables();
+    const std::vector< int >& eqlNum = ig_props->getKeyword("EQLNUM").getData();
+
+    for (size_t cellIdx = 0; cellIdx < eqlNum.size(); ++ cellIdx) {
+        int cellEquilNum = eqlNum[cellIdx];
+        const RtempvdTable& rtempvdTable = rtempvdTables.getTable<RtempvdTable>(cellEquilNum);
+        double cellDepth = std::get<2>(grid->getCellCenter(cellIdx));
+        values[cellIdx] = rtempvdTable.evaluate("Temperature", cellDepth);
+    }
+
+    return values;
 }
 
 }
