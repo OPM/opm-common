@@ -533,7 +533,7 @@ inline double group_keywords( E keyword,
                               const smspec_node_type* node,
                               const ecl_sum_tstep_type* prev,
                               const double* conversion_table,
-                              const std::vector< const data::Well* > sim_wells ) {
+                              const std::vector< const data::Well* >& sim_wells ) {
 
     const auto* genkey = smspec_node_get_gen_key1( node );
     const auto accu = prev ? ecl_sum_tstep_get_from_key( prev, genkey ) : 0;
