@@ -324,12 +324,10 @@ state second_sim() {
     Opm::EclipseStatePtr eclipseState(new Opm::EclipseState(deck, parseContext));
     Opm::PhaseUsage phaseUsage = Opm::phaseUsageFromDeck(deck);
 
-    std::shared_ptr <Opm::WellState> wellStateRestored(new Opm::WellState());
+    std::shared_ptr<Opm::WellState> wellStateRestored(new Opm::WellState());
     Opm::GridManager gridManager(eclipseState->getInputGrid());
     Opm::WellsManager wellsManager(eclipseState, 1, *gridManager.c_grid(), NULL);
-    const Wells *wells = wellsManager.c_wells();
-
-    //std::shared_ptr<Opm::BlackoilState> blackoilState = state1.second;
+    const Wells* wells = wellsManager.c_wells();
 
     //Read and verify OPM XWEL data, and solution data: pressure, temperature, saturation data, rs and rv
     std::shared_ptr <Opm::BlackoilState> blackoilStateRestored = createBlackOilState(eclipseState->getInputGrid(),
