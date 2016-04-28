@@ -196,8 +196,8 @@ BOOST_AUTO_TEST_CASE(WWCT) {
     BOOST_CHECK_CLOSE( wcut3, ecl_sum_get_well_var( resp, 0, "W_3", "WWCT" ), 1e-5 );
 }
 
-BOOST_AUTO_TEST_CASE(WGOR) {
-    setup cfg( "sum_test_WGOR" );
+BOOST_AUTO_TEST_CASE(WGOR_H) {
+    setup cfg( "sum_test_WGOR_H" );
 
     out::Summary writer( cfg.es, cfg.config, cfg.name );
     writer.add_timestep( 1, 1, cfg.es, cfg.wells );
@@ -213,6 +213,11 @@ BOOST_AUTO_TEST_CASE(WGOR) {
     BOOST_CHECK_CLOSE( wgor1, ecl_sum_get_well_var( resp, 0, "W_1", "WGOR" ), 1e-5 );
     BOOST_CHECK_CLOSE( wgor2, ecl_sum_get_well_var( resp, 0, "W_2", "WGOR" ), 1e-5 );
     BOOST_CHECK_CLOSE( wgor3, ecl_sum_get_well_var( resp, 0, "W_3", "WGOR" ), 1e-5 );
+
+    BOOST_CHECK_CLOSE( wgor1, ecl_sum_get_well_var( resp, 0, "W_1", "WGORH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( wgor2, ecl_sum_get_well_var( resp, 0, "W_2", "WGORH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0,     ecl_sum_get_well_var( resp, 0, "W_3", "WGORH" ), 1e-5 );
+
 }
 
 BOOST_AUTO_TEST_CASE(WBHP) {

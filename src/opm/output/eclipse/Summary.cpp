@@ -258,17 +258,18 @@ inline double wwcth( const Well& w, size_t ts ) {
     return wct( p.WaterRate, p.OilRate );
 }
 
-inline double gor( double gas, double oil ) {
+inline double glr( double gas, double liq ) {
     /* handle div-by-zero - if this well is shut, all production rates will be
      * zero and there is no gas/oil ratio, (i.e. zero). 
      *
-     * Also, if this is a gas well that produces no oil, gas/oil ratio would be
-     * undefined and is explicitly set to 0. This is the author's best guess.
-     * If other semantics when just gas is produced, this must be changed.
+     * Also, if this is a gas well that produces no liquid, gas/liquid ratio
+     * would be undefined and is explicitly set to 0. This is the author's best
+     * guess.  If other semantics when just gas is produced, this must be
+     * changed.
      */
-    if( oil == 0 ) return 0;
+    if( liq == 0 ) return 0;
 
-    return gas / oil;
+    return gas / liq;
 }
 
 inline double wgorh( const Well& w, size_t ts ) {
@@ -279,7 +280,7 @@ inline double wgorh( const Well& w, size_t ts ) {
 
     const auto& p = w.getProductionProperties( ts );
 
-    return gor( p.GasRate, p.OilRate );
+    return glr( p.GasRate, p.OilRate );
 }
 
 enum class WT { wat, oil, gas };
@@ -425,7 +426,7 @@ inline double well_keywords( E keyword,
 
         case E::WWCTH: return wwcth( state_well, tstep );
 
-        case E::WGOR: return gor( rate( rt::gas ), rate( rt::oil ) );
+        case E::WGOR: return glr( rate( rt::gas ), rate( rt::oil ) );
         case E::WGORH: return wgorh( state_well, tstep );
 
         /* Pressures */
@@ -543,7 +544,7 @@ inline double group_keywords( E keyword,
 
         /* Production ratios */
         case E::GWCT: return wct( rate( rt::wat ), rate( rt::oil ) );
-        case E::GGOR: return gor( rate( rt::gas ), rate( rt::oil ) );
+        case E::GGOR: return glr( rate( rt::gas ), rate( rt::oil ) );
 
         default:
             return -1;
