@@ -176,6 +176,7 @@ enum class E : out::Summary::kwtype {
     GLPR,
     GGPR,
     GWIR,
+    GWIT,
     GGIR,
     GGIT,
     GWCT,
@@ -230,6 +231,7 @@ const std::map< std::string, E > keyhash = {
     { "GLPR",  E::GLPR },
     { "GGPR",  E::GGPR },
     { "GWIR",  E::GWIR },
+    { "GWIT",  E::GWIT },
     { "GGIR",  E::GGIR },
     { "GGIT",  E::GGIT },
     { "GWCT",  E::GWCT },
@@ -559,6 +561,7 @@ inline double group_keywords( E keyword,
         /* Injection rates */
         case E::GWIR: return - rate( rt::wat );
         case E::GGIR: return - rate( rt::gas );
+        case E::GWIT: return accu - vol( rt::wat );
         case E::GGIT: return accu - vol( rt::gas );
 
         /* Production ratios */
