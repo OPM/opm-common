@@ -1477,13 +1477,7 @@ void EclipseWriter::init(Opm::EclipseStateConstPtr eclipseState)
     // get the base name from the name of the deck
     using boost::filesystem::path;
     auto ioConfig = eclipseState->getIOConfig();
-    path deckPath(ioConfig->getDeckFileName());
-    if (boost::to_upper_copy(path(deckPath.extension()).string()) == ".DATA") {
-        baseName_ = path(deckPath.stem()).string();
-    }
-    else {
-        baseName_ = path(deckPath.filename()).string();
-    }
+    baseName_ = ioConfig->getBaseName();
 
     // make uppercase of everything (or otherwise we'll get uppercase
     // of some of the files (.SMSPEC, .UNSMRY) and not others
