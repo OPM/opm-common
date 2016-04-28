@@ -93,6 +93,8 @@ ROP
 --  Group data --
 GPR
 /
+GLPR
+/
 GOPT
 /
 GGPT
@@ -109,13 +111,39 @@ GWPR
 /
 GGIR
 /
+GGIRH
+/
 GGIT
+/
+GGITH
 /
 GWCT
 /
 GGOR
 /
 GWIR
+/
+GWIT
+/
+GWIRH
+/
+GWITH
+/
+GWPRH
+/
+GOPRH
+/
+GGPRH
+/
+GLPRH
+/
+GWPTH
+/
+GOPTH
+/
+GGPTH
+/
+GLPTH
 /
 -- Well Data
 -- Production Rates

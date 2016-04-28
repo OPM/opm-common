@@ -179,6 +179,19 @@ enum class E : out::Summary::kwtype {
     GWIT,
     GGIR,
     GGIT,
+    GGIRH,
+    GWIRH,
+    GOIRH,
+    GGITH,
+    GWITH,
+    GWPRH,
+    GOPRH,
+    GGPRH,
+    GLPRH,
+    GWPTH,
+    GOPTH,
+    GGPTH,
+    GLPTH,
     GWCT,
     GGOR,
     UNSUPPORTED,
@@ -233,7 +246,20 @@ const std::map< std::string, E > keyhash = {
     { "GWIR",  E::GWIR },
     { "GWIT",  E::GWIT },
     { "GGIR",  E::GGIR },
+    { "GWPRH", E::GWPRH },
+    { "GOPRH", E::GOPRH },
+    { "GGPRH", E::GGPRH },
+    { "GLPRH", E::GLPRH },
+    { "GWPTH", E::GWPTH },
+    { "GOPTH", E::GOPTH },
+    { "GGPTH", E::GGPTH },
+    { "GLPTH", E::GLPTH },
+    { "GGIRH", E::GGIRH },
+    { "GWIRH", E::GWIRH },
+    { "GOIRH", E::GOIRH },
     { "GGIT",  E::GGIT },
+    { "GWITH", E::GWITH },
+    { "GGITH", E::GGITH },
     { "GWCT",  E::GWCT },
     { "GGOR",  E::GGOR },
 };
@@ -528,11 +554,26 @@ inline double sum_vol( const std::vector< const data::Well* >& wells,
     throw std::runtime_error( "Reached impossible state in prodrate" );
 }
 
+template< typename F, typename Phase >
+inline double sum_hist( F f,
+                        const WellSet& wells,
+                        size_t tstep,
+                        Phase phase,
+                        const double* conversion_table ) {
+    double res = 0;
+    for( const auto& well : wells )
+        res += f( *well.second, tstep, phase, conversion_table );
+
+    return res;
+}
+
 inline double group_keywords( E keyword,
                               const smspec_node_type* node,
                               const ecl_sum_tstep_type* prev,
                               const double* conversion_table,
-                              const std::vector< const data::Well* >& sim_wells ) {
+                              size_t tstep,
+                              const std::vector< const data::Well* >& sim_wells,
+                              const WellSet& state_wells ) {
 
     const auto* genkey = smspec_node_get_gen_key1( node );
     const auto accu = prev ? ecl_sum_tstep_get_from_key( prev, genkey ) : 0;
@@ -543,6 +584,22 @@ inline double group_keywords( E keyword,
 
     const auto vol = [&]( rt phase ) {
         return sum_vol( sim_wells, phase, conversion_table );
+    };
+
+    const auto histprate = [&]( WT phase ) {
+        return sum_hist( prodrate, state_wells, tstep, phase, conversion_table );
+    };
+
+    const auto histpvol = [&]( WT phase ) {
+        return sum_hist( prodvol, state_wells, tstep, phase, conversion_table );
+    };
+
+    const auto histirate = [&]( WellInjector::TypeEnum phase ) {
+        return sum_hist( injerate, state_wells, tstep, phase, conversion_table );
+    };
+
+    const auto histivol = [&]( WellInjector::TypeEnum phase ) {
+        return sum_hist( injevol, state_wells, tstep, phase, conversion_table );
     };
 
     switch( keyword ) {
@@ -566,6 +623,23 @@ inline double group_keywords( E keyword,
         /* Production ratios */
         case E::GWCT: return wct( rate( rt::wat ), rate( rt::oil ) );
         case E::GGOR: return glr( rate( rt::gas ), rate( rt::oil ) );
+
+        /* Historical rates */
+        case E::GWPRH: return histprate( WT::wat );
+        case E::GOPRH: return histprate( WT::oil );
+        case E::GGPRH: return histprate( WT::gas );
+        case E::GLPRH: return histprate( WT::wat ) + histprate( WT::oil );
+        case E::GWIRH: return histirate( WellInjector::WATER );
+        case E::GOIRH: return histirate( WellInjector::OIL );
+        case E::GGIRH: return histirate( WellInjector::GAS );
+
+        /* Historical totals */
+        case E::GWPTH: return accu + histpvol( WT::wat );
+        case E::GOPTH: return accu + histpvol( WT::oil );
+        case E::GGPTH: return accu + histpvol( WT::gas );
+        case E::GLPTH: return accu + histpvol( WT::wat ) + histpvol( WT::oil );
+        case E::GGITH: return accu + histivol( WellInjector::GAS );
+        case E::GWITH: return accu + histivol( WellInjector::WATER );
 
         default:
             return -1;
@@ -665,15 +739,17 @@ void Summary::add_timestep( int report_step,
     for( const auto& pair : this->gvar ) {
         const auto* gname = pair.first;
         const auto& state_group = *es.getSchedule()->getGroup( gname );
+        const auto& state_wells = state_group.getWells( report_step );
 
         std::vector< const data::Well* > sim_wells;
-        for( const auto& well : state_group.getWells( report_step ) )
+        for( const auto& well : state_wells )
             sim_wells.push_back( &wells.at( well.first ) );
 
         for( const auto& node : pair.second ) {
             auto val = group_keywords( static_cast< E >( node.kw ),
                                        node.node, this->prev_tstep,
-                                       this->conversions, sim_wells );
+                                       this->conversions, report_step,
+                                       sim_wells, state_wells );
             ecl_sum_tstep_set_from_node( tstep, node.node, val );
         }
     }

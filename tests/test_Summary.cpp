@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(W_WOG_PRH) {
 }
 
 BOOST_AUTO_TEST_CASE(W_WOG_PTH) {
-    setup cfg( "sum_test_W_WOG_PRH" );
+    setup cfg( "sum_test_W_WOG_PTH" );
 
     out::Summary writer( cfg.es, cfg.config, cfg.name );
     writer.add_timestep( 1, 1, cfg.es, cfg.wells );
@@ -415,6 +415,79 @@ BOOST_AUTO_TEST_CASE(G_WOG_PT) {
     BOOST_CHECK_CLOSE( 2 * 30.1 / day, ecl_sum_get_group_var( resp, 1, "G_2", "GOPT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * (10.2 + 20.2) / day, ecl_sum_get_group_var( resp, 1, "G_1", "GGPT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * 30.2 / day, ecl_sum_get_group_var( resp, 1, "G_2", "GGPT" ), 1e-5 );
+}
+
+BOOST_AUTO_TEST_CASE(G_WOG_PRH) {
+    setup cfg( "sum_test_G_WOG_PRH" );
+
+    out::Summary writer( cfg.es, cfg.config, cfg.name );
+    writer.add_timestep( 1, 1, cfg.es, cfg.wells );
+    writer.write();
+
+    auto res = readsum( cfg.name );
+    const auto* resp = res.get();
+
+    BOOST_CHECK_CLOSE( 10.0 + 20.0, ecl_sum_get_group_var( resp, 0, "G_1", "GWPRH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0,           ecl_sum_get_group_var( resp, 0, "G_2", "GWPRH" ), 1e-5 );
+
+    BOOST_CHECK_CLOSE( 10.1 + 20.1, ecl_sum_get_group_var( resp, 0, "G_1", "GOPRH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0,           ecl_sum_get_group_var( resp, 0, "G_2", "GOPRH" ), 1e-5 );
+
+    BOOST_CHECK_CLOSE( 10.2 + 20.2, ecl_sum_get_group_var( resp, 0, "G_1", "GGPRH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0,           ecl_sum_get_group_var( resp, 0, "G_2", "GGPRH" ), 1e-5 );
+
+    BOOST_CHECK_CLOSE( 10.0 + 10.1 + 20.0 + 20.1,
+                                    ecl_sum_get_group_var( resp, 0, "G_1", "GLPRH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0,           ecl_sum_get_group_var( resp, 0, "G_2", "GLPRH" ), 1e-5 );
+}
+
+BOOST_AUTO_TEST_CASE(G_WG_ITH) {
+    setup cfg( "sum_test_G_WG_ITH" );
+
+    out::Summary writer( cfg.es, cfg.config, cfg.name );
+    writer.add_timestep( 1, 1, cfg.es, cfg.wells );
+    writer.add_timestep( 2, 1, cfg.es, cfg.wells );
+    writer.write();
+
+    auto res = readsum( cfg.name );
+    const auto* resp = res.get();
+
+    BOOST_CHECK_CLOSE( 30.0 / day, ecl_sum_get_group_var( resp, 0, "G_2", "GWITH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0,          ecl_sum_get_group_var( resp, 0, "G_2", "GGITH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 60.0 / day, ecl_sum_get_group_var( resp, 1, "G_2", "GWITH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0,          ecl_sum_get_group_var( resp, 1, "G_2", "GGITH" ), 1e-5 );
+}
+
+BOOST_AUTO_TEST_CASE(G_WOG_PRT) {
+    setup cfg( "sum_test_G_WOG_PRT" );
+
+    out::Summary writer( cfg.es, cfg.config, cfg.name );
+    writer.add_timestep( 1, 1, cfg.es, cfg.wells );
+    writer.add_timestep( 2, 1, cfg.es, cfg.wells );
+    writer.write();
+
+    auto res = readsum( cfg.name );
+    const auto* resp = res.get();
+
+    BOOST_CHECK_CLOSE( (10.0 + 20.0) / day, ecl_sum_get_group_var( resp, 0, "G_1", "GWPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0,                   ecl_sum_get_group_var( resp, 0, "G_2", "GWPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( (10.1 + 20.1) / day, ecl_sum_get_group_var( resp, 0, "G_1", "GOPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0,                   ecl_sum_get_group_var( resp, 0, "G_2", "GOPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( (10.2 + 20.2) / day, ecl_sum_get_group_var( resp, 0, "G_1", "GGPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0,                   ecl_sum_get_group_var( resp, 0, "G_2", "GGPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( (10.0 + 20.0 + 10.1 + 20.1) / day,
+                                            ecl_sum_get_group_var( resp, 0, "G_1", "GLPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0,                   ecl_sum_get_group_var( resp, 0, "G_2", "GLPTH" ), 1e-5 );
+
+    BOOST_CHECK_CLOSE( 2 * (10.0 + 20.0) / day, ecl_sum_get_group_var( resp, 1, "G_1", "GWPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0,                       ecl_sum_get_group_var( resp, 1, "G_2", "GWPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * (10.1 + 20.1) / day, ecl_sum_get_group_var( resp, 1, "G_1", "GOPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0,                       ecl_sum_get_group_var( resp, 1, "G_2", "GOPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * (10.2 + 20.2) / day, ecl_sum_get_group_var( resp, 1, "G_1", "GGPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0,                       ecl_sum_get_group_var( resp, 1, "G_2", "GGPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * (10.0 + 20.0  + 10.1 + 20.1) / day,
+                                                ecl_sum_get_group_var( resp, 1, "G_1", "GLPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0,                       ecl_sum_get_group_var( resp, 1, "G_2", "GLPTH" ), 1e-5 );
 }
 
 BOOST_AUTO_TEST_CASE(GWCT) {
