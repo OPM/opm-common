@@ -123,13 +123,13 @@ namespace Opm {
     Deck::Deck() :
         Deck( std::vector< DeckKeyword >() )
     {
-        m_hasDataFile = false;
+        m_dataFile = "";
     }
 
     Deck::Deck( std::vector< DeckKeyword >&& x ) :
         DeckView( x.begin(), x.end() ),
         keywordList( std::move( x ) ),
-        m_hasDataFile(false)
+        m_dataFile("")
     {}
 
     void Deck::addKeyword( DeckKeyword&& keyword ) {
@@ -200,12 +200,7 @@ namespace Opm {
     }
 
     void Deck::setDataFile(const std::string& dataFile) {
-        m_hasDataFile = true;
         m_dataFile = dataFile;
-    }
-
-    bool Deck::hasDataFile() const {
-        return m_hasDataFile;
     }
 
 }

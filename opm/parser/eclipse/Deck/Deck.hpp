@@ -117,7 +117,6 @@ namespace Opm {
 
             const std::string getDataFile() const;
             void setDataFile(const std::string& dataFile);
-            bool hasDataFile() const;
 
         private:
             Deck( std::vector< DeckKeyword >&& );
@@ -132,7 +131,6 @@ namespace Opm {
             mutable std::unique_ptr< UnitSystem > defaultUnits;
 
             std::string m_dataFile;
-            bool m_hasDataFile;
     };
 
     typedef std::shared_ptr<Deck> DeckPtr;
