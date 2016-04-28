@@ -490,7 +490,6 @@ inline double sum( const std::vector< const data::Well* >& wells, rt phase ) {
     return res;
 }
 
-
 inline double sum_rate( const std::vector< const data::Well* >& wells,
                    rt phase,
                    const double* conversion_table ) {

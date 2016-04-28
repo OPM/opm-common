@@ -339,6 +339,37 @@ BOOST_AUTO_TEST_CASE(W_WOG_PTH) {
     BOOST_CHECK_CLOSE( 2 * 20.2 / day, ecl_sum_get_well_var( resp, 1, "W_2", "WGPTH" ), 1e-5 );
 }
 
+BOOST_AUTO_TEST_CASE(W_WG_IRH) {
+    setup cfg( "sum_test_W_WG_IRH" );
+
+    out::Summary writer( cfg.es, cfg.config, cfg.name );
+    writer.add_timestep( 1, 1, cfg.es, cfg.wells );
+    writer.write();
+
+    auto res = readsum( cfg.name );
+    const auto* resp = res.get();
+
+    BOOST_CHECK_CLOSE( 30.0, ecl_sum_get_well_var( resp, 0, "W_3", "WWIRH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0,    ecl_sum_get_well_var( resp, 0, "W_3", "WGIRH" ), 1e-5 );
+}
+
+BOOST_AUTO_TEST_CASE(W_WG_ITH) {
+    setup cfg( "sum_test_W_WG_ITH" );
+
+    out::Summary writer( cfg.es, cfg.config, cfg.name );
+    writer.add_timestep( 1, 1, cfg.es, cfg.wells );
+    writer.add_timestep( 2, 1, cfg.es, cfg.wells );
+    writer.write();
+
+    auto res = readsum( cfg.name );
+    const auto* resp = res.get();
+
+    BOOST_CHECK_CLOSE( 30.0 / day, ecl_sum_get_well_var( resp, 0, "W_3", "WWITH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0,          ecl_sum_get_well_var( resp, 0, "W_3", "WGITH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 60.0 / day, ecl_sum_get_well_var( resp, 1, "W_3", "WWITH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0,          ecl_sum_get_well_var( resp, 1, "W_3", "WGITH" ), 1e-5 );
+}
+
 BOOST_AUTO_TEST_CASE(G_WOG_PR) {
     setup cfg( "sum_test_G_WOG_PR" );
 
