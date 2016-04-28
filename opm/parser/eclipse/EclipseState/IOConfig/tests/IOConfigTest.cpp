@@ -466,15 +466,19 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
 
     BOOST_CHECK_EQUAL("", ioConfigPtr5->getDeckFileName());
 
-    std::string testString = "testString";
+    std::string testString = "testString.DATA";
     IOConfigPtr ioConfigPtr6 = std::make_shared<IOConfig>(testString);
+    std::string output_dir6 =  ".";
+    ioConfigPtr6->setOutputDir(output_dir6);
     BOOST_CHECK_EQUAL(testString, ioConfigPtr6->getDeckFileName());
-    BOOST_CHECK_EQUAL(".", ioConfigPtr6->getOutputDir());
+    BOOST_CHECK_EQUAL(output_dir6, ioConfigPtr6->getOutputDir());
 
-    std::string absTestPath = "/path/to/testString.DATA";
+    std::string absTestPath = "testString.DATA";
     IOConfigPtr ioConfigPtr7 = std::make_shared<IOConfig>(absTestPath);
+    std::string output_dir7 =  "/path/to";
+    ioConfigPtr7->setOutputDir(output_dir7);
     BOOST_CHECK_EQUAL(absTestPath, ioConfigPtr7->getDeckFileName());
-    BOOST_CHECK_EQUAL("/path/to", ioConfigPtr7->getOutputDir());
+    BOOST_CHECK_EQUAL(output_dir7, ioConfigPtr7->getOutputDir());
     BOOST_CHECK_EQUAL("testString", ioConfigPtr7->getBaseName());
 
 }

@@ -49,12 +49,9 @@ namespace Opm {
         m_FMTOUT(false),
         m_ignore_RPTSCHED_RESTART(false),
         m_deck_filename(input_path),
-        m_output_enabled(true)
+        m_output_enabled(true),
+        m_output_dir(".")
     {
-        m_output_dir = boost::filesystem::path(input_path).parent_path().string();
-        if (m_output_dir.length() < 1) {
-            m_output_dir = ".";
-        }
         m_base_name = boost::filesystem::path(input_path).stem().string();
     }
 
