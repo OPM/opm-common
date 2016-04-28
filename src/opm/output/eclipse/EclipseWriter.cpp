@@ -547,7 +547,8 @@ public:
                      const int* compressedToCartesianCellIdx,
                      const SimulatorTimerInterface& timer,
                      Opm::EclipseStateConstPtr eclipseState,
-                     const PhaseUsage uses)
+                     const PhaseUsage uses,
+                     const NNC& nnc = NNC())
     {
         auto dataField = eclipseState->get3DProperties().getDoubleGridProperty("PORO").getData();
         restrictAndReorderToActiveCells(dataField, numCells, compressedToCartesianCellIdx);
@@ -565,6 +566,16 @@ public:
         }
 
         eclGrid->resetACTNUM(&actnumData[0]);
+
+        if (nnc.hasNNC())
+        {
+            int idx = 0;
+            // const_cast is safe, since this is a copy of the input grid
+            auto ecl_grid = const_cast<ecl_grid_type*>(eclGrid->c_ptr());
+            for (NNCdata n : nnc.nncdata()) {
+                ecl_grid_add_self_nnc( ecl_grid, n.cell1, n.cell2, idx++);
+            }
+        }
 
 
         // finally, write the grid to disk
@@ -586,6 +597,11 @@ public:
                                         ertPhaseMask(uses),
                                         timer.currentPosixTime());
         }
+
+
+
+
+
     }
 
     void writeKeyword(const std::string& keywordName, const std::vector<double> &data)
@@ -1165,7 +1181,7 @@ EclipseWriter::convertUnitTypeErtEclUnitEnum(UnitSystem::UnitType unit)
 }
 
 
-void EclipseWriter::writeInit(const SimulatorTimerInterface &timer)
+void EclipseWriter::writeInit(const SimulatorTimerInterface &timer, const NNC& nnc)
 {
     // if we don't want to write anything, this method becomes a
     // no-op...
@@ -1181,10 +1197,12 @@ void EclipseWriter::writeInit(const SimulatorTimerInterface &timer)
                        compressedToCartesianCellIdx_,
                        timer,
                        eclipseState_,
-                       phaseUsage_);
+                       phaseUsage_,
+                       nnc);
 
     IOConfigConstPtr ioConfig = eclipseState_->getIOConfigConst();
     const auto& props = eclipseState_->get3DProperties();
+
 
     if (ioConfig->getWriteINITFile()) {
         if (props.hasDeckDoubleGridProperty("PERMX")) {
@@ -1204,6 +1222,13 @@ void EclipseWriter::writeInit(const SimulatorTimerInterface &timer)
             EclipseWriterDetails::convertFromSiTo(data, Opm::prefix::milli * Opm::unit::darcy);
             EclipseWriterDetails::restrictAndReorderToActiveCells(data, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
             fortio.writeKeyword("PERMZ", data);
+        }
+        if (nnc.hasNNC()) {
+            std::vector<double> tran;
+            for (NNCdata nd : nnc.nncdata()) {
+                tran.push_back(nd.trans);
+            }
+            fortio.writeKeyword("TRANNNC", tran);
         }
     }
 

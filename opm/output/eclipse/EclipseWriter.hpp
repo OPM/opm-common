@@ -28,6 +28,7 @@
 #include <opm/core/simulator/SimulatorTimerInterface.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
@@ -38,7 +39,6 @@
 #include <array>
 #include <memory>
 
-struct UnstructuredGrid;
 
 namespace Opm {
 
@@ -80,8 +80,11 @@ public:
 
     /**
      * Write the static eclipse data (grid, PVT curves, etc) to disk.
+     *
+     * If NNC is given, writes TRANNNC keyword.
      */
-    virtual void writeInit(const SimulatorTimerInterface &timer);
+     virtual void writeInit(const SimulatorTimerInterface &timer,
+                            const NNC& nnc = NNC());
 
     /*!
      * \brief Write a reservoir state and summary information to disk.
