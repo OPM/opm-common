@@ -469,4 +469,8 @@ namespace Opm {
         return m_base_name;
     }
 
+    void IOConfig::setBaseName(std::string baseName) {
+        m_base_name = baseName;
+    }
+
 } //namespace Opm

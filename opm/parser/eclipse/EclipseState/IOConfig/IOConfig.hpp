@@ -165,6 +165,7 @@ namespace Opm {
         void setOutputDir(const std::string& outputDir);
 
         std::string getBaseName();
+        void setBaseName(std::string baseName);
 
     private:
 
