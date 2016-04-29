@@ -255,7 +255,7 @@ namespace Opm {
     }
 
     std::array<int, 3> EclipseGrid::getIJK(size_t globalIndex) const {
-        std::array<int, 3> r = { 0, 0, 0 };
+        std::array<int, 3> r = {{ 0, 0, 0 }};
         int k = globalIndex / (getNX() * getNY()); globalIndex -= k * (getNX() * getNY());
         int j = globalIndex / getNX();             globalIndex -= j *  getNX();
         int i = globalIndex;
