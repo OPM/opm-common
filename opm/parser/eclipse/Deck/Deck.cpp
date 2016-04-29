@@ -120,9 +120,17 @@ namespace Opm {
         DeckView( limits.first, limits.second )
     {}
 
-    Deck::Deck() : Deck( std::vector< DeckKeyword >() ) {}
-    Deck::Deck( std::vector< DeckKeyword >&& x ) : DeckView( x.begin(), x.end() ),
-                                                   keywordList( std::move( x ) ) {}
+    Deck::Deck() :
+        Deck( std::vector< DeckKeyword >() )
+    {
+        m_dataFile = "";
+    }
+
+    Deck::Deck( std::vector< DeckKeyword >&& x ) :
+        DeckView( x.begin(), x.end() ),
+        keywordList( std::move( x ) ),
+        m_dataFile("")
+    {}
 
     void Deck::addKeyword( DeckKeyword&& keyword ) {
         this->keywordList.push_back( std::move( keyword ) );
@@ -185,6 +193,14 @@ namespace Opm {
             this->activeUnits = std::unique_ptr< UnitSystem >( UnitSystem::newFIELD() );
         else
             this->activeUnits = std::unique_ptr< UnitSystem >( UnitSystem::newMETRIC() );
+    }
+
+    const std::string Deck::getDataFile() const {
+        return m_dataFile;
+    }
+
+    void Deck::setDataFile(const std::string& dataFile) {
+        m_dataFile = dataFile;
     }
 
 }

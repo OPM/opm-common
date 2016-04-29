@@ -117,6 +117,8 @@ namespace Opm {
 
         void openRootFile( const boost::filesystem::path& inputFile) {
             openFile( inputFile );
+            deck->setDataFile(dataFile.string());
+
             const boost::filesystem::path& inputFileCanonical = boost::filesystem::canonical(inputFile);
             rootPath = inputFileCanonical.parent_path();
         }

@@ -25,6 +25,8 @@
 #include <vector>
 #include <string>
 
+#include <boost/filesystem.hpp>
+
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
@@ -128,17 +130,22 @@ namespace Opm {
             const UnitSystem& getDefaultUnitSystem() const;
             const UnitSystem& getActiveUnitSystem() const;
 
+            const std::string getDataFile() const;
+            void setDataFile(const std::string& dataFile);
 
         private:
             Deck( std::vector< DeckKeyword >&& );
 
             void initUnitSystem() const;
 
+
             std::vector< DeckKeyword > keywordList;
             mutable MessageContainer m_messageContainer;
 
             mutable std::unique_ptr< UnitSystem > activeUnits;
             mutable std::unique_ptr< UnitSystem > defaultUnits;
+
+            std::string m_dataFile;
     };
 
     typedef std::shared_ptr<Deck> DeckPtr;

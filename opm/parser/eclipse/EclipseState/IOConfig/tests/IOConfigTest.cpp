@@ -460,6 +460,24 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     ioConfigPtr4->handleRunspecSection(runspecSection4);
 
     BOOST_CHECK_EQUAL(false, ioConfigPtr4->getWriteEGRIDFile());
+
+    IOConfigPtr ioConfigPtr5;
+    BOOST_CHECK_NO_THROW(ioConfigPtr5 = std::make_shared<IOConfig>());
+    BOOST_CHECK_EQUAL("", ioConfigPtr5->getBaseName());
+
+    std::string testString = "testString.DATA";
+    IOConfigPtr ioConfigPtr6 = std::make_shared<IOConfig>(testString);
+    std::string output_dir6 =  ".";
+    ioConfigPtr6->setOutputDir(output_dir6);
+    BOOST_CHECK_EQUAL("testString", ioConfigPtr6->getBaseName());
+
+    std::string absTestPath = "/path/to/testString.DATA";
+    IOConfigPtr ioConfigPtr7 = std::make_shared<IOConfig>(absTestPath);
+    std::string output_dir7 =  "/path/to";
+    ioConfigPtr7->setOutputDir(output_dir7);
+    BOOST_CHECK_EQUAL(output_dir7, ioConfigPtr7->getOutputDir());
+    BOOST_CHECK_EQUAL("testString", ioConfigPtr7->getBaseName());
+
 }
 
 

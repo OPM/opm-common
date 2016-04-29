@@ -161,7 +161,9 @@ namespace Opm {
     }
 
     void EclipseState::initIOConfig(DeckConstPtr deck) {
-        m_ioConfig = std::make_shared<IOConfig>();
+        std::string dataFile = deck->getDataFile();
+
+        m_ioConfig = std::make_shared<IOConfig>(dataFile);
         if (Section::hasGRID(*deck)) {
             std::shared_ptr<const GRIDSection> gridSection = std::make_shared<const GRIDSection>(*deck);
             m_ioConfig->handleGridSection(gridSection);
