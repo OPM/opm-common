@@ -125,13 +125,18 @@ std::shared_ptr<Opm::BlackoilState> createBlackoilState(int timeStepIdx, std::sh
 
 std::shared_ptr<Opm::EclipseWriter> createEclipseWriter(std::shared_ptr<const Opm::Deck> deck,
                                                         std::shared_ptr<Opm::EclipseState> eclipseState,
-                                                        std::shared_ptr<Opm::GridManager> ourFineGridManagerPtr)
+                                                        std::shared_ptr<Opm::GridManager> ourFineGridManagerPtr,
+                                                        const int * compressedToCartesianCellIdx)
 {
 
     Opm::PhaseUsage phaseUsage = Opm::phaseUsageFromDeck(deck);
 
+    const UnstructuredGrid &ourFinerUnstructuredGrid = *ourFineGridManagerPtr->c_grid();
+
     std::shared_ptr<Opm::EclipseWriter> eclipseWriter = std::make_shared<Opm::EclipseWriter>(eclipseState,
-                                                                                             phaseUsage);
+                                                                                             phaseUsage,
+                                                                                             ourFinerUnstructuredGrid.number_of_cells,
+                                                                                             compressedToCartesianCellIdx);
 
     return eclipseWriter;
 }
@@ -155,10 +160,13 @@ BOOST_AUTO_TEST_CASE(test_EclipseWriterRFTHandler)
     simulatorTimer->init(eclipseState->getSchedule()->getTimeMap());
 
     std::shared_ptr<Opm::GridManager>  ourFineGridManagerPtr = std::make_shared<Opm::GridManager>(eclipseState->getInputGrid());
+    const UnstructuredGrid &ourFinerUnstructuredGrid = *ourFineGridManagerPtr->c_grid();
+    const int* compressedToCartesianCellIdx = Opm::UgGridHelpers::globalCell(ourFinerUnstructuredGrid);
 
     std::shared_ptr<Opm::EclipseWriter> eclipseWriter = createEclipseWriter(deck,
                                                                             eclipseState,
-                                                                            ourFineGridManagerPtr);
+                                                                            ourFineGridManagerPtr,
+                                                                            compressedToCartesianCellIdx);
     eclipseWriter->writeInit(*simulatorTimer);
 
 

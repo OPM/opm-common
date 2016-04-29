@@ -69,7 +69,9 @@ public:
      *        binary files using ERT.
      */
     EclipseWriter(Opm::EclipseStateConstPtr eclipseState,
-                  const Opm::PhaseUsage &phaseUsage);
+                  const Opm::PhaseUsage &phaseUsage,
+                  int numCells,
+                  const int* compressedToCartesianCellIdx);
 
     /**
      * We need a destructor in the compilation unit to avoid the
@@ -111,7 +113,7 @@ private:
     Opm::EclipseStateConstPtr eclipseState_;
     int numCells_;
     std::array<int, 3> cartesianSize_;
-    std::vector<int> compressedToCartesianCellIdx_;
+    const int* compressedToCartesianCellIdx_;
     std::vector< int > gridToEclipseIdx_;
     double deckToSiPressure_;
     double deckToSiTemperatureFactor_;

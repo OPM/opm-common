@@ -1178,7 +1178,7 @@ void EclipseWriter::writeInit(const SimulatorTimerInterface &timer)
 
     EclipseWriterDetails::Init fortio(outputDir_, baseName_, /*stepIdx=*/0, eclipseState_->getIOConfigConst());
     fortio.writeHeader(numCells_,
-                       compressedToCartesianCellIdx_.data(),
+                       compressedToCartesianCellIdx_,
                        timer,
                        eclipseState_,
                        phaseUsage_);
@@ -1367,7 +1367,7 @@ void EclipseWriter::writeTimeStep(const SimulatorTimerInterface& timer,
 
     //Write RFT data for current timestep to RFT file
     std::shared_ptr<EclipseWriterDetails::EclipseWriteRFTHandler> eclipseWriteRFTHandler = std::make_shared<EclipseWriterDetails::EclipseWriteRFTHandler>(
-                                                                                                                      compressedToCartesianCellIdx_.data(),
+                                                                                                                      compressedToCartesianCellIdx_,
                                                                                                                       numCells_,
                                                                                                                       eclipseState_->getInputGrid()->getCartesianSize());
 
@@ -1416,8 +1416,13 @@ void EclipseWriter::writeTimeStep(const SimulatorTimerInterface& timer,
 
 
 EclipseWriter::EclipseWriter(Opm::EclipseStateConstPtr eclipseState,
-                             const Opm::PhaseUsage &phaseUsage)
+                             const Opm::PhaseUsage &phaseUsage,
+                             int numCells,
+                             const int* compressedToCartesianCellIdx)
     : eclipseState_(eclipseState)
+    , numCells_(numCells)
+    , compressedToCartesianCellIdx_(compressedToCartesianCellIdx)
+    , gridToEclipseIdx_(numCells, int(-1) )
     , phaseUsage_(phaseUsage)
 {
     const auto eclGrid = eclipseState->getInputGrid();
@@ -1425,25 +1430,12 @@ EclipseWriter::EclipseWriter(Opm::EclipseStateConstPtr eclipseState,
     cartesianSize_[1] = eclGrid->getNY();
     cartesianSize_[2] = eclGrid->getNZ();
 
-    numCells_ = eclGrid->getNumActive();
-    gridToEclipseIdx_ = std::vector<int>(numCells_, int(-1) );
-
-    //TODO
-    //This should be calculated in EclipseGrid
-    std::shared_ptr<Opm::GridManager>  ourFineGridManagerPtr = std::make_shared<Opm::GridManager>(eclipseState->getInputGrid());
-    const UnstructuredGrid &ourFinerUnstructuredGrid = *ourFineGridManagerPtr->c_grid();
-    auto compressedToCartesianCellIdx__ = Opm::UgGridHelpers::globalCell(ourFinerUnstructuredGrid);
-
-    for(int i=0;i<numCells_;i++) {
-        compressedToCartesianCellIdx_.push_back(compressedToCartesianCellIdx__[i]);
-    }
-
-    if( compressedToCartesianCellIdx_.size()>0 ) {
+    if( compressedToCartesianCellIdx ) {
         // if compressedToCartesianCellIdx available then
         // compute mapping to eclipse order
         std::map< int , int > indexMap;
-        for (int cellIdx = 0; cellIdx < numCells_; ++cellIdx) {
-            int cartesianCellIdx = compressedToCartesianCellIdx_[cellIdx];
+        for (int cellIdx = 0; cellIdx < numCells; ++cellIdx) {
+            int cartesianCellIdx = compressedToCartesianCellIdx[cellIdx];
             indexMap[ cartesianCellIdx ] = cellIdx;
         }
 
@@ -1453,8 +1445,8 @@ EclipseWriter::EclipseWriter(Opm::EclipseStateConstPtr eclipseState,
         }
     }
     else {
-        // if not compressedToCartesianCellIdx_ was given use identity
-        for (int cellIdx = 0; cellIdx < numCells_; ++cellIdx) {
+        // if not compressedToCartesianCellIdx was given use identity
+        for (int cellIdx = 0; cellIdx < numCells; ++cellIdx) {
             gridToEclipseIdx_[ cellIdx ] = cellIdx;
         }
     }

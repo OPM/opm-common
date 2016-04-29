@@ -52,7 +52,9 @@ create (const ParameterGroup& params,
         const Opm::PhaseUsage &phaseUsage,
         std::shared_ptr <const UnstructuredGrid> grid) {
     return unique_ptr <OutputWriter> (new Format (eclipseState,
-                                                  phaseUsage));
+                                                  phaseUsage,
+                                                  grid->number_of_cells,
+                                                  grid->global_cell));
 }
 
 /// Map between keyword in configuration and the corresponding

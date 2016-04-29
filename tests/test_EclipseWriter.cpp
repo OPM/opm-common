@@ -68,7 +68,6 @@ void createEclipseWriter(const char *deckString)
     eclipseState.reset(new Opm::EclipseState(deck , parseContext));
 
     auto eclGrid = eclipseState->getInputGrid();
-
     BOOST_CHECK(eclGrid->getNX() == 3);
     BOOST_CHECK(eclGrid->getNY() == 3);
     BOOST_CHECK(eclGrid->getNZ() == 3);
@@ -91,7 +90,9 @@ void createEclipseWriter(const char *deckString)
 
     Opm::PhaseUsage phaseUsage = Opm::phaseUsageFromDeck(deck);
     eclWriter.reset(new Opm::EclipseWriter(eclipseState,
-                                           phaseUsage));
+                                           phaseUsage,
+                                           ourFinerUnstructuredGrid.number_of_cells,
+                                           0));
 
     // this check is disabled so far, because UnstructuredGrid uses some weird definition
     // of the term "face". For this grid, "number_of_faces" is 108 which is
@@ -182,7 +183,8 @@ void getErtData(ecl_kw_type *eclKeyword, std::vector<int> &data)
     std::copy(ertData, ertData + kwSize, data.begin());
 }
 
-void compareErtData(const std::vector<double> &src, const std::vector<double> &dst, double tolerance) {
+void compareErtData(const std::vector<double> &src, const std::vector<double> &dst, double tolerance)
+{
     BOOST_CHECK_EQUAL(src.size(), dst.size());
     if (src.size() != dst.size())
         return;
@@ -191,14 +193,14 @@ void compareErtData(const std::vector<double> &src, const std::vector<double> &d
         BOOST_CHECK_CLOSE(src[i], dst[i], tolerance);
 }
 
-void compareErtData(const std::vector<int> &src, const std::vector<int> &dst) {
+void compareErtData(const std::vector<int> &src, const std::vector<int> &dst)
+{
     BOOST_CHECK_EQUAL(src.size(), dst.size());
     if (src.size() != dst.size())
         return;
 
     for (size_t i = 0; i < src.size(); ++i)
         BOOST_CHECK_EQUAL(src[i], dst[i]);
-
 }
 
 void checkEgridFile()
