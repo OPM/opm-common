@@ -49,10 +49,15 @@ namespace Opm {
         m_FMTOUT(false),
         m_ignore_RPTSCHED_RESTART(false),
         m_deck_filename(input_path),
-        m_output_enabled(true),
-        m_output_dir(".")
+        m_output_enabled(true)
     {
-        m_base_name = boost::filesystem::path(input_path).stem().string();
+        m_output_dir = ".";
+        m_base_name = "";
+        if (!input_path.empty()) {
+            boost::filesystem::path path( input_path );
+            m_base_name = path.stem().string();
+            m_output_dir = path.parent_path().string();
+        }
     }
 
     bool IOConfig::getWriteEGRIDFile() const {
