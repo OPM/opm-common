@@ -449,6 +449,17 @@ namespace Opm {
         }
     }
 
+    std::vector< int > Eclipse3DProperties::getRegions( const std::string& kw ) const {
+        if( !this->hasDeckIntGridProperty( kw ) ) return {};
+
+        const auto& property = this->getIntGridProperty( kw );
+
+        std::set< int > regions( property.getData().begin(),
+                                 property.getData().end() );
+
+        return { regions.begin(), regions.end() };
+    }
+
     ///  Due to the post processor which might be applied to the GridProperty
     ///  objects it is essential that this method use the m_intGridProperties /
     ///  m_doubleGridProperties fields directly and *NOT* use the public methods

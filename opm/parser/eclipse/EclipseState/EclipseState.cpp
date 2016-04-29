@@ -261,17 +261,6 @@ namespace Opm {
     }
 
 
-    std::vector< int > EclipseState::getRegions( const std::string& kw ) const {
-        if( !this->get3DProperties().hasDeckIntGridProperty( kw ) ) return {};
-
-        const auto& property = this->get3DProperties().getIntGridProperty( kw );
-
-        std::set< int > regions( property.getData().begin(),
-                                 property.getData().end() );
-
-        return { regions.begin(), regions.end() };
-    }
-
 
     void EclipseState::complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) {
         m_messageContainer.error("The " + keywordName + " keyword must be unique in the deck. Ignoring all!");

@@ -95,8 +95,6 @@ namespace Opm {
 
         const TableManager& getTableManager() const;
 
-        std::vector< int > getRegions( const std::string& kw ) const;
-
         // the unit system used by the deck. note that it is rarely needed to convert
         // units because internally to opm-parser everything is represented by SI
         // units...

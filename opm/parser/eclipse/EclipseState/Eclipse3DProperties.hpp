@@ -61,6 +61,7 @@ namespace Opm {
 
 
         const GridProperty<int>& getRegion(const DeckItem& regionItem) const;
+        std::vector< int > getRegions( const std::string& keyword ) const;
         std::string getDefaultRegionKeyword() const;
 
         const GridProperty<int>&      getIntGridProperty     ( const std::string& keyword ) const;
