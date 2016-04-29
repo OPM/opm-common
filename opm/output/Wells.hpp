@@ -76,8 +76,8 @@ namespace Opm {
     };
 
     struct Completion {
-        using logical_cartesian_index = size_t;
-        logical_cartesian_index index;
+        using active_index = size_t;
+        active_index index;
         Rates rates;
     };
 
@@ -85,7 +85,7 @@ namespace Opm {
         Rates rates;
         double bhp;
         double thp;
-        std::map< Completion::logical_cartesian_index, Completion > completions;
+        std::map< Completion::active_index, Completion > completions;
     };
 
     typedef std::map< std::string, Well > Wells;
