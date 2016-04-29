@@ -264,7 +264,7 @@ const std::map< std::string, E > keyhash = {
     { "GGOR",  E::GGOR },
 };
 
-inline const E khash( const char* key ) {
+inline E khash( const char* key ) {
     /* Since a switch is used to determine the proper computation from the
      * input node, but keywords are stored as strings, we need a string -> enum
      * mapping for keywords.
