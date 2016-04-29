@@ -39,6 +39,7 @@
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/core/utility/Units.hpp>
 #include <opm/core/wells.h> // WellType
+#include <opm/core/props/phaseUsageFromDeck.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
@@ -51,7 +52,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
-
 #include <boost/algorithm/string/case_conv.hpp> // to_upper_copy
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem.hpp> // path
@@ -1416,15 +1416,14 @@ void EclipseWriter::writeTimeStep(const SimulatorTimerInterface& timer,
 
 
 EclipseWriter::EclipseWriter(Opm::EclipseStateConstPtr eclipseState,
-                             const Opm::PhaseUsage &phaseUsage,
                              int numCells,
                              const int* compressedToCartesianCellIdx)
     : eclipseState_(eclipseState)
     , numCells_(numCells)
     , compressedToCartesianCellIdx_(compressedToCartesianCellIdx)
     , gridToEclipseIdx_(numCells, int(-1) )
-    , phaseUsage_(phaseUsage)
 {
+    phaseUsage_ = phaseUsageFromDeck( eclipseState );
     const auto eclGrid = eclipseState->getInputGrid();
     cartesianSize_[0] = eclGrid->getNX();
     cartesianSize_[1] = eclGrid->getNY();

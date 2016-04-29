@@ -69,7 +69,6 @@ public:
      *        binary files using ERT.
      */
     EclipseWriter(Opm::EclipseStateConstPtr eclipseState,
-                  const Opm::PhaseUsage &phaseUsage,
                   int numCells,
                   const int* compressedToCartesianCellIdx);
 

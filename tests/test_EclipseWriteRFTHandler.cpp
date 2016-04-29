@@ -129,12 +129,9 @@ std::shared_ptr<Opm::EclipseWriter> createEclipseWriter(std::shared_ptr<const Op
                                                         const int * compressedToCartesianCellIdx)
 {
 
-    Opm::PhaseUsage phaseUsage = Opm::phaseUsageFromDeck(deck);
-
     const UnstructuredGrid &ourFinerUnstructuredGrid = *ourFineGridManagerPtr->c_grid();
 
     std::shared_ptr<Opm::EclipseWriter> eclipseWriter = std::make_shared<Opm::EclipseWriter>(eclipseState,
-                                                                                             phaseUsage,
                                                                                              ourFinerUnstructuredGrid.number_of_cells,
                                                                                              compressedToCartesianCellIdx);
 

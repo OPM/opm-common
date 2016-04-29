@@ -201,10 +201,7 @@ std::shared_ptr<Opm::BlackoilState> createBlackOilState(Opm::EclipseGridConstPtr
 Opm::EclipseWriterPtr createEclipseWriter(Opm::DeckConstPtr deck,
                                           Opm::EclipseStatePtr eclipseState) {
 
-  const Opm::PhaseUsage phaseUsage = Opm::phaseUsageFromDeck(deck);
-
   Opm::EclipseWriterPtr eclWriter(new Opm::EclipseWriter(eclipseState,
-                                                         phaseUsage,
                                                          eclipseState->getInputGrid()->getCartesianSize(),
                                                          0));
   return eclWriter;
