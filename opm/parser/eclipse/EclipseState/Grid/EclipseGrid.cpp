@@ -226,6 +226,10 @@ namespace Opm {
         return m_nz;
     }
 
+    std::array< int, 3 > EclipseGrid::getNXYZ() const {
+        return {{ int( m_nx ), int( m_ny ), int( m_nz ) }};
+    }
+
     size_t EclipseGrid::getCartesianSize( ) const {
         return m_nx * m_ny * m_nz;
     }

@@ -87,6 +87,7 @@ namespace Opm {
         size_t  getNX( ) const;
         size_t  getNY( ) const;
         size_t  getNZ( ) const;
+        std::array< int, 3 > getNXYZ() const;
         size_t  getCartesianSize( ) const;
         bool isPinchActive( ) const;
         double getPinchThresholdThickness( ) const;
