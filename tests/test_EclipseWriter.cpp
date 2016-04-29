@@ -48,6 +48,7 @@
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_endian_flip.h>
 #include <ert/ecl/fortio.h>
+#include <ert/util/test_work_area.h>
 
 #include <memory>
 
@@ -364,6 +365,9 @@ void checkSummaryFile(int /*timeStepIdx*/)
 
 BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
 {
+
+    test_work_area_type * test_area = test_work_area_alloc("TEST_EclipseWriterIntegration");
+
     const char *deckString =
         "RUNSPEC\n"
         "INIT\n"
@@ -414,4 +418,6 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
         checkRestartFile(simTimer->currentStepNum());
         checkSummaryFile(simTimer->currentStepNum());
     }
+
+    test_work_area_free(test_area);
 }
