@@ -24,13 +24,14 @@
 #include <memory>
 
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/Fault.hpp>
+
 
 namespace Opm {
 
     class Deck;
     class GRIDSection;
     class EclipseGrid;
-    class Fault;
     class GRIDSection;
 
 
@@ -41,15 +42,17 @@ public:
 
     size_t size() const;
     bool hasFault(const std::string& faultName) const;
-    std::shared_ptr<Fault>  getFault(const std::string& faultName);
-    std::shared_ptr<const Fault>  getFault(const std::string& faultName) const;
-    std::shared_ptr<Fault>  getFault(size_t faultIndex);
-    std::shared_ptr<const Fault>  getFault(size_t faultIndex) const;
-    void addFault(std::shared_ptr<Fault> fault);
+    Fault& getFault(const std::string& faultName);
+    const Fault& getFault(const std::string& faultName) const;
+    Fault& getFault(size_t faultIndex);
+    const Fault& getFault(size_t faultIndex) const;
+
+    /// we construct the fault based on faultName.  To get the fault: getFault
+    void addFault(const std::string& faultName);
     void setTransMult(const std::string& faultName , double transMult);
 
 private:
-    OrderedMap<std::shared_ptr<Fault > > m_faults;
+    OrderedMap<Fault> m_faults;
 };
 }
 

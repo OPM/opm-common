@@ -51,8 +51,8 @@ namespace Opm {
         double getMultiplier(size_t i , size_t j , size_t k, FaceDir::DirEnum faceDir) const;
         double getRegionMultiplier( size_t globalCellIndex1, size_t globalCellIndex2, FaceDir::DirEnum faceDir) const;
         void applyMULT(const GridProperty<double>& srcMultProp, FaceDir::DirEnum faceDir);
-        void applyMULTFLT( std::shared_ptr<const FaultCollection> faults);
-        void applyMULTFLT( std::shared_ptr<const Fault> fault);
+        void applyMULTFLT(const FaultCollection& faults);
+        void applyMULTFLT(const Fault& fault);
         void setMultregtScanner(std::shared_ptr<const MULTREGTScanner> multregtScanner);
 
     private:

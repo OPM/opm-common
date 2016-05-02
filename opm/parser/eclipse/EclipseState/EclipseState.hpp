@@ -26,6 +26,10 @@
 #include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FaultFace.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/Fault.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
@@ -43,8 +47,6 @@ namespace Opm {
     class DeckRecord;
     class EclipseGrid;
     class Eclipse3DProperties;
-    class Fault;
-    class FaultCollection;
     class InitConfig;
     class IOConfig;
     class NNC;
@@ -83,9 +85,9 @@ namespace Opm {
         MessageContainer& getMessageContainer();
         std::string getTitle() const;
 
-        std::shared_ptr<const FaultCollection> getFaults() const;
+        const FaultCollection& getFaults() const;
         std::shared_ptr<const TransMult> getTransMult() const;
-        std::shared_ptr<const NNC> getNNC() const;
+        const NNC& getNNC() const;
         bool hasNNC() const;
 
         const Eclipse3DProperties& get3DProperties() const;
@@ -97,18 +99,20 @@ namespace Opm {
         // the unit system used by the deck. note that it is rarely needed to convert
         // units because internally to opm-parser everything is represented by SI
         // units...
-        const UnitSystem& getDeckUnitSystem()  const;
-        void applyModifierDeck( const Deck& deck);
+        const UnitSystem& getDeckUnitSystem() const;
+
+        /// [deprecated]
+        void applyModifierDeck(std::shared_ptr<const Deck>);
+        void applyModifierDeck(const Deck& deck);
 
     private:
         void initIOConfig(const Deck& deck);
         void initIOConfigPostSchedule(const Deck& deck);
         void initTransMult();
-        void initFaults(std::shared_ptr< const Deck > deck);
+        void initFaults(const Deck& deck);
 
-
-        void setMULTFLT(std::shared_ptr<const Opm::Section> section) const;
-        void initMULTREGT(std::shared_ptr< const Deck > deck);
+        void setMULTFLT(std::shared_ptr<const Opm::Section> section);
+        void initMULTREGT(const Deck& deck);
 
         void complainAboutAmbiguousKeyword(const Deck& deck,
                                            const std::string& keywordName);
@@ -120,8 +124,8 @@ namespace Opm {
 
         std::string m_title;
         std::shared_ptr<TransMult> m_transMult;
-        std::shared_ptr<FaultCollection> m_faults;
-        std::shared_ptr<NNC> m_nnc;
+        FaultCollection m_faults;
+        NNC m_nnc;
 
 
         const UnitSystem& m_deckUnitSystem;

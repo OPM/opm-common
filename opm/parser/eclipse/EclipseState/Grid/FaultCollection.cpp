@@ -34,9 +34,7 @@
 namespace Opm {
 
     FaultCollection::FaultCollection()
-    {
-
-    }
+    {}
 
 
     FaultCollection::FaultCollection( std::shared_ptr<const GRIDSection> deck, std::shared_ptr<const EclipseGrid> grid) {
@@ -60,58 +58,48 @@ namespace Opm {
                                                                                           static_cast<size_t>(K1) , static_cast<size_t>(K2) ,
                                                                                           faceDir);
                 if (!hasFault(faultName)) {
-                    std::shared_ptr<Fault> fault = std::make_shared<Fault>( faultName );
-                    addFault( fault );
+                    addFault( faultName );
                 }
 
                 {
-                    std::shared_ptr<Fault> fault = getFault( faultName );
-                    fault->addFace( face );
+                    Fault& fault = getFault( faultName );
+                    fault.addFace( face );
                 }
             }
         }
     }
 
-
     size_t FaultCollection::size() const {
         return m_faults.size();
     }
-
 
     bool FaultCollection::hasFault(const std::string& faultName) const {
         return m_faults.hasKey( faultName );
     }
 
-
-    std::shared_ptr<const Fault> FaultCollection::getFault(const std::string& faultName) const {
+    const Fault& FaultCollection::getFault(const std::string& faultName) const {
         return m_faults.get( faultName );
     }
 
-    std::shared_ptr<Fault> FaultCollection::getFault(const std::string& faultName) {
+    Fault& FaultCollection::getFault(const std::string& faultName) {
         return m_faults.get( faultName );
     }
 
-
-    std::shared_ptr<Fault> FaultCollection::getFault(size_t faultIndex) {
+    Fault& FaultCollection::getFault(size_t faultIndex) {
         return m_faults.get( faultIndex );
     }
 
-    std::shared_ptr<const Fault> FaultCollection::getFault(size_t faultIndex) const {
+    const Fault& FaultCollection::getFault(size_t faultIndex) const {
         return m_faults.get( faultIndex );
     }
 
-
-    void FaultCollection::addFault(std::shared_ptr<Fault> fault) {
-        m_faults.insert(fault->getName() , fault);
+    void FaultCollection::addFault(const std::string& faultName) {
+        Fault fault(faultName);
+        m_faults.insert(fault.getName() , fault);
     }
-
-
 
     void FaultCollection::setTransMult(const std::string& faultName , double transMult) {
-        std::shared_ptr<Fault> fault = getFault( faultName );
-        fault->setTransMult( transMult );
+        Fault& fault = getFault( faultName );
+        fault.setTransMult( transMult );
     }
-
-
-
 }

@@ -117,20 +117,18 @@ BOOST_AUTO_TEST_CASE(CreateFaultCollection) {
 
 BOOST_AUTO_TEST_CASE(AddFaultsToCollection) {
     Opm::FaultCollection faults;
-    std::shared_ptr<Opm::Fault> fault = std::make_shared<Opm::Fault>("FAULT");
 
-    faults.addFault(fault);
+    faults.addFault("FAULT");
     BOOST_CHECK_EQUAL( faults.size() , 1 );
     BOOST_CHECK(faults.hasFault("FAULT"));
 
-    std::shared_ptr<Opm::Fault> fault2 = faults.getFault("FAULT");
-    std::shared_ptr<Opm::Fault> fault0 = faults.getFault(0);
-    BOOST_CHECK_EQUAL( fault , fault2 );
-    BOOST_CHECK_EQUAL( fault , fault0 );
+    const auto& fault1 = faults.getFault("FAULT");
+    const auto& fault2 = faults.getFault(0);
+    BOOST_CHECK_EQUAL(fault1.getName(), fault2.getName());
 
-    std::shared_ptr<Opm::Fault> faultx = std::make_shared<Opm::Fault>("FAULTX");
-    faults.addFault(faultx);
+    faults.addFault("FAULTX");
+    const auto& faultx = faults.getFault("FAULTX");
     BOOST_CHECK_EQUAL( faults.size() , 2 );
     BOOST_CHECK(faults.hasFault("FAULTX"));
-    BOOST_CHECK_EQUAL( faultx , faults.getFault(1));
+    BOOST_CHECK_EQUAL( faultx.getName() , faults.getFault(1).getName());
 }

@@ -109,10 +109,10 @@ namespace Opm {
     }
 
 
-    void TransMult::applyMULTFLT( std::shared_ptr<const Fault> fault) {
-        double transMult = fault->getTransMult();
+    void TransMult::applyMULTFLT(const Fault& fault) {
+        double transMult = fault.getTransMult();
 
-        for (auto face_iter = fault->begin(); face_iter != fault->end(); ++face_iter) {
+        for (auto face_iter = fault.begin(); face_iter != fault.end(); ++face_iter) {
             std::shared_ptr<const FaultFace> face = *face_iter;
             FaceDir::DirEnum faceDir = face->getDir();
             auto& multProperty = getDirectionProperty(faceDir);
@@ -125,10 +125,10 @@ namespace Opm {
     }
 
 
-    void TransMult::applyMULTFLT( std::shared_ptr<const FaultCollection> faults) {
-        for (size_t faultIndex = 0; faultIndex < faults->size(); faultIndex++) {
-            std::shared_ptr<const Fault> fault = faults->getFault( faultIndex );
-            applyMULTFLT( fault );
+    void TransMult::applyMULTFLT(const FaultCollection& faults) {
+        for (size_t faultIndex = 0; faultIndex < faults.size(); faultIndex++) {
+            auto& fault = faults.getFault(faultIndex);
+            applyMULTFLT(fault);
         }
     }
 

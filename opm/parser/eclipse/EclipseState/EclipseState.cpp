@@ -145,7 +145,7 @@ namespace Opm {
         return m_simulationConfig;
     }
 
-    std::shared_ptr<const FaultCollection> EclipseState::getFaults() const {
+    const FaultCollection& EclipseState::getFaults() const {
         return m_faults;
     }
 
@@ -208,11 +208,11 @@ namespace Opm {
             m_transMult->applyMULT(p.getDoubleGridProperty("MULTZ-"), FaceDir::ZMinus);
     }
 
-    void EclipseState::initFaults(DeckConstPtr deck) {
+    void EclipseState::initFaults(const Deck& deck) {
         EclipseGridConstPtr grid = getInputGrid();
         std::shared_ptr<GRIDSection> gridSection = std::make_shared<GRIDSection>( deck );
 
-        m_faults = std::make_shared<FaultCollection>(gridSection , grid);
+        m_faults = FaultCollection(gridSection, grid);
         setMULTFLT(gridSection);
 
         if (Section::hasEDIT(deck)) {
@@ -279,17 +279,20 @@ namespace Opm {
         }
     }
 
+    void EclipseState::applyModifierDeck(std::shared_ptr<const Deck> deckptr) {
+        applyModifierDeck(*deckptr);
+    }
 
-    void EclipseState::applyModifierDeck( std::shared_ptr<const Deck> deck) {
+    void EclipseState::applyModifierDeck(const Deck& deck) {
         using namespace ParserKeywords;
-        for (const auto& keyword : *deck) {
+        for (const auto& keyword : deck) {
 
             if (keyword.isKeyword<MULTFLT>()) {
                 for (const auto& record : keyword) {
                     const std::string& faultName = record.getItem<MULTFLT::fault>().get< std::string >(0);
-                    auto fault = m_faults->getFault( faultName );
+                    auto& fault = m_faults.getFault( faultName );
                     double tmpMultFlt = record.getItem<MULTFLT::factor>().get< double >(0);
-                    double oldMultFlt = fault->getTransMult( );
+                    double oldMultFlt = fault.getTransMult( );
                     double newMultFlt = oldMultFlt * tmpMultFlt;
 
                     /*
@@ -312,9 +315,9 @@ namespace Opm {
                          MULTFLT value in the fault instance.
 
                     */
-                    fault->setTransMult( tmpMultFlt );
+                    fault.setTransMult( tmpMultFlt );
                     m_transMult->applyMULTFLT( fault );
-                    fault->setTransMult( newMultFlt );
+                    fault.setTransMult( newMultFlt );
                 }
             }
         }
