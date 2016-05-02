@@ -35,88 +35,10 @@ namespace Opm {
 namespace {
 
 /*
- * It is VERY important that the dim enum has the same order as the
- * metric and field arrays. C++ does not support designated initializers, so
- * this cannot be done in a declaration-order independent matter.
- */
-
-enum class dim : int {
-    length,
-    time,
-    density,
-    pressure,
-    temperature_absolute,
-    temperature,
-    viscosity,
-    permeability,
-    liquid_surface_volume,
-    gas_surface_volume,
-    volume,
-    liquid_surface_rate,
-    gas_surface_rate,
-    rate,
-    transmissibility,
-    mass,
-};
-
-namespace conversions {
-    /* lookup tables for SI-to-unit system
-     *
-     * We assume that all values in the report structures are plain SI units,
-     * but output can be configured to use other (inconsistent) unit systems.
-     * These lookup tables are passed to the convert function that translates
-     * between SI and the target unit.
-     */
-
-const double metric[] = {
-    1 / Metric::Length,
-    1 / Metric::Time,
-    1 / Metric::Density,
-    1 / Metric::Pressure,
-    1 / Metric::AbsoluteTemperature,
-    1 / Metric::Temperature,
-    1 / Metric::Viscosity,
-    1 / Metric::Permeability,
-    1 / Metric::LiquidSurfaceVolume,
-    1 / Metric::GasSurfaceVolume,
-    1 / Metric::ReservoirVolume,
-    1 / ( Metric::LiquidSurfaceVolume / Metric::Time ),
-    1 / ( Metric::GasSurfaceVolume / Metric::Time ),
-    1 / ( Metric::ReservoirVolume / Metric::Time ),
-    1 / Metric::Transmissibility,
-    1 / Metric::Mass,
-};
-
-const double field[] = {
-    1 / Field::Length,
-    1 / Field::Time,
-    1 / Field::Density,
-    1 / Field::Pressure,
-    1 / Field::AbsoluteTemperature,
-    1 / Field::Temperature,
-    1 / Field::Viscosity,
-    1 / Field::Permeability,
-    1 / Field::LiquidSurfaceVolume,
-    1 / Field::GasSurfaceVolume,
-    1 / Field::ReservoirVolume,
-    1 / ( Field::LiquidSurfaceVolume / Field::Time ),
-    1 / ( Field::GasSurfaceVolume / Field::Time ),
-    1 / ( Field::ReservoirVolume / Field::Time ),
-    1 / Field::Transmissibility,
-    1 / Field::Mass,
-};
-
-}
-
-/*
  * A series of helper functions to read & compute values from the simulator,
  * intended to clean up the keyword -> action mapping in the *_keyword
  * functions.
  */
-
-inline double convert( double si_val, dim d, const double* table ) {
-    return si_val * table[ static_cast< int >( d ) ];
-}
 
 using rt = data::Rates::opt;
 
@@ -331,13 +253,15 @@ inline double prodrate( const Well& w,
                         size_t timestep,
                         WT wt,
                         const double* conversion_table ) {
+    using namespace conversions;
+
     if( !w.isProducer( timestep ) ) return 0;
 
     const auto& p = w.getProductionProperties( timestep );
     switch( wt ) {
-        case WT::wat: return convert( p.WaterRate, dim::liquid_surface_rate, conversion_table );
-        case WT::oil: return convert( p.OilRate, dim::liquid_surface_rate, conversion_table );
-        case WT::gas: return convert( p.GasRate, dim::gas_surface_rate, conversion_table );
+        case WT::wat: return from_si( conversion_table, dim::liquid_surface_rate, p.WaterRate );
+        case WT::oil: return from_si( conversion_table, dim::liquid_surface_rate, p.OilRate );
+        case WT::gas: return from_si( conversion_table, dim::gas_surface_rate, p.GasRate );
     }
 
     throw std::runtime_error( "Reached impossible state in prodrate" );
@@ -348,13 +272,17 @@ inline double prodvol( const Well& w,
                        WT wt,
                        const double* conversion_table ) {
     const auto rate = prodrate( w, timestep, wt, conversion_table );
-    return rate * convert( 1, dim::time, conversion_table );
+    return rate * conversions::from_si( conversion_table,
+                                        conversions::dim::time,
+                                        1 );
 }
 
 inline double injerate( const Well& w,
                         size_t timestep,
                         WellInjector::TypeEnum wt,
                         const double* conversion_table ) {
+
+    using namespace conversions;
 
     if( !w.isInjector( timestep ) ) return 0;
     const auto& i = w.getInjectionProperties( timestep );
@@ -365,9 +293,13 @@ inline double injerate( const Well& w,
     if( wt != i.injectorType ) return 0;
 
     if( wt == WellInjector::GAS )
-        return convert( i.surfaceInjectionRate, dim::gas_surface_rate, conversion_table );
+        return from_si( conversion_table,
+                        dim::gas_surface_rate,
+                        i.surfaceInjectionRate );
 
-    return convert( i.surfaceInjectionRate, dim::liquid_surface_rate, conversion_table );
+    return from_si( conversion_table,
+                    dim::liquid_surface_rate,
+                    i.surfaceInjectionRate );
 }
 
 inline double injevol( const Well& w,
@@ -376,7 +308,9 @@ inline double injevol( const Well& w,
                        const double* conversion_table ) {
 
     const auto rate = injerate( w, timestep, wt, conversion_table );
-    return rate * convert( 1, dim::time, conversion_table );
+    return rate * conversions::from_si( conversion_table,
+                                        conversions::dim::time,
+                                        1 );
 }
 
 inline double get_rate( const data::Well& w,
@@ -384,19 +318,23 @@ inline double get_rate( const data::Well& w,
                         const double* conversion_table ) {
     const auto x = w.rates.get( phase, 0.0 );
 
+    using namespace conversions;
+
     switch( phase ) {
-        case rt::gas: return convert( x, dim::gas_surface_rate, conversion_table );
-        default: return convert( x, dim::liquid_surface_rate, conversion_table );
+        case rt::gas: return from_si( conversion_table, dim::gas_surface_rate, x );
+        default: return from_si( conversion_table, dim::liquid_surface_rate, x );
     }
 }
 
 inline double get_vol( const data::Well& w,
                        rt phase,
                        const double* conversion_table ) {
+    using namespace conversions;
+
     const auto x = w.rates.get( phase, 0.0 );
     switch( phase ) {
-        case rt::gas: return convert( x, dim::gas_surface_volume, conversion_table );
-        default: return convert( x, dim::liquid_surface_volume, conversion_table );
+        case rt::gas: return from_si( conversion_table, dim::gas_surface_volume, x );
+        default: return from_si( conversion_table, dim::liquid_surface_volume, x );
     }
 }
 
@@ -438,6 +376,8 @@ inline double well_keywords( E keyword,
     const auto histivol = [&]( WellInjector::TypeEnum phase )
         { return injevol( state_well, tstep, phase, conversion_table ); };
 
+    using namespace conversions;
+
     switch( keyword ) {
 
         /* Production rates */
@@ -477,10 +417,10 @@ inline double well_keywords( E keyword,
         case E::WGLRH: return wglrh( state_well, tstep );
 
         /* Pressures */
-        case E::WBHP: return convert( sim_well.bhp, dim::pressure, conversion_table );
+        case E::WBHP: return from_si( conversion_table, dim::pressure, sim_well.bhp );
         case E::WBHPH: return 0; /* not supported */
 
-        case E::WTHP: return convert( sim_well.thp, dim::pressure, conversion_table );
+        case E::WTHP: return from_si( conversion_table, dim::pressure, sim_well.thp );
         case E::WTHPH: return 0; /* not supported */
 
         /* Injection rates */
@@ -520,15 +460,17 @@ inline double sum_rate( const std::vector< const data::Well* >& wells,
                    rt phase,
                    const double* conversion_table ) {
 
+    using namespace conversions;
+
     switch( phase ) {
         case rt::wat: /* intentional fall-through */
-        case rt::oil: return convert( sum( wells, phase ),
+        case rt::oil: return from_si( conversion_table,
                                       dim::liquid_surface_rate,
-                                      conversion_table );
+                                      sum( wells, phase ) );
 
-        case rt::gas: return convert( sum( wells, phase ),
+        case rt::gas: return from_si( conversion_table,
                                       dim::gas_surface_rate,
-                                      conversion_table );
+                                      sum( wells, phase ) );
         default: break;
     }
 
@@ -539,15 +481,17 @@ inline double sum_vol( const std::vector< const data::Well* >& wells,
                    rt phase,
                    const double* conversion_table ) {
 
+    using namespace conversions;
+
     switch( phase ) {
         case rt::wat: /* intentional fall-through */
-        case rt::oil: return convert( sum( wells, phase ),
+        case rt::oil: return from_si( conversion_table,
                                       dim::liquid_surface_volume,
-                                      conversion_table );
+                                      sum( wells, phase ) );
 
-        case rt::gas: return convert( sum( wells, phase ),
+        case rt::gas: return from_si( conversion_table,
                                       dim::gas_surface_volume,
-                                      conversion_table );
+                                      sum( wells, phase ) );
         default: break;
     }
 
@@ -664,9 +608,9 @@ static inline const double* get_conversions( const EclipseState& es ) {
     using namespace conversions;
 
     switch( es.getDeckUnitSystem().getType() ) {
-        case UnitSystem::UNIT_TYPE_METRIC: return metric;
-        case UnitSystem::UNIT_TYPE_FIELD: return field;
-        default: return metric;
+        case UnitSystem::UNIT_TYPE_METRIC: return si2metric;
+        case UnitSystem::UNIT_TYPE_FIELD: return si2field;
+        default: return si2metric;
     }
 }
 
