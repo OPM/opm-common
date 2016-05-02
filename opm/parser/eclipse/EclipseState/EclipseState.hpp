@@ -105,7 +105,6 @@ namespace Opm {
         void applyModifierDeck(const Deck& deck);
 
     private:
-        void initIOConfig(const Deck& deck);
         void initIOConfigPostSchedule(const Deck& deck);
         void initTransMult();
         void initFaults(const Deck& deck);
@@ -116,9 +115,13 @@ namespace Opm {
         void complainAboutAmbiguousKeyword(const Deck& deck,
                                            const std::string& keywordName);
 
+        ParseContext m_parseContext;
         std::shared_ptr< IOConfig >               m_ioConfig;
         std::shared_ptr< const InitConfig >       m_initConfig;
-        std::shared_ptr< const Schedule >         m_schedule;
+        const TableManager m_tables;
+        std::shared_ptr<EclipseGrid> m_inputGrid;
+        Eclipse3DProperties m_eclipseProperties;
+        std::shared_ptr< const Schedule > m_schedule;
         std::shared_ptr< const SimulationConfig > m_simulationConfig;
 
         std::string m_title;
@@ -126,13 +129,8 @@ namespace Opm {
         FaultCollection m_faults;
         NNC m_nnc;
 
-
-        const UnitSystem& m_deckUnitSystem;
-        const ParseContext m_parseContext;
-        const TableManager m_tables;
-        std::shared_ptr<EclipseGrid> m_inputGrid;
-        Eclipse3DProperties m_eclipseProperties;
         MessageContainer m_messageContainer;
+        const UnitSystem& m_deckUnitSystem;
     };
 
     typedef std::shared_ptr<EclipseState> EclipseStatePtr;

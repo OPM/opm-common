@@ -49,25 +49,39 @@
 
 namespace Opm {
 
+    static IOConfig mkIOConfig( const Deck& deck ) {
+        IOConfig config( deck.getDataFile() );
+
+        if( Section::hasGRID( deck ) )
+            config.handleGridSection( GRIDSection( deck ) );
+
+        if( Section::hasRUNSPEC( deck ) )
+            config.handleRunspecSection( RUNSPECSection( deck ) );
+
+        return config;
+    }
 
     EclipseState::EclipseState(std::shared_ptr<const Deck> deckptr, ParseContext parseContext) :
         EclipseState(*deckptr, parseContext)
     {}
 
     EclipseState::EclipseState(const Deck& deck, ParseContext parseContext) :
-        m_deckUnitSystem(    deck.getActiveUnitSystem() ),
         m_parseContext(      parseContext ),
+        m_ioConfig(          std::make_shared< IOConfig >( mkIOConfig( deck ) ) ),
         m_tables(            deck ),
-        m_inputGrid(         std::make_shared<EclipseGrid>(deck, nullptr)),
-        m_eclipseProperties( deck, m_tables, *m_inputGrid)
+        m_inputGrid(         std::make_shared<EclipseGrid>(deck, nullptr) ),
+        m_eclipseProperties( deck, m_tables, *m_inputGrid ),
+        m_schedule(          std::make_shared<Schedule>( m_parseContext, m_inputGrid, deck, m_ioConfig ) ),
+        m_simulationConfig(  std::make_shared<SimulationConfig>( m_parseContext, deck, m_eclipseProperties ) ),
+        m_summaryConfig(     deck, *m_schedule, m_eclipseProperties, m_inputGrid->getNXYZ() ),
+        m_nnc(               deck, m_inputGrid ),
+        m_deckUnitSystem(    deck.getActiveUnitSystem() )
+
     {
         // after Eclipse3DProperties has been constructed, we have complete ACTNUM info
         if (m_eclipseProperties.hasDeckIntGridProperty("ACTNUM"))
             m_inputGrid->resetACTNUM(m_eclipseProperties.getIntGridProperty("ACTNUM").getData().data());
 
-        initIOConfig(deck);
-
-        m_schedule = ScheduleConstPtr(new Schedule(m_parseContext, getInputGrid(), deck, m_ioConfig));
         initIOConfigPostSchedule(deck);
 
         if (deck.hasKeyword( "TITLE" )) {
@@ -77,14 +91,9 @@ namespace Opm {
             m_title = boost::algorithm::join( itemValue, " " );
         }
 
-        m_initConfig = std::make_shared<const InitConfig>(deck);
-        m_simulationConfig = std::make_shared<const SimulationConfig>(m_parseContext, deck,
-                                                                      m_eclipseProperties);
-
         initTransMult();
         initFaults(deck);
         initMULTREGT(deck);
-        m_nnc = NNC(deck, getInputGrid());
 
         m_messageContainer.appendMessages(m_tables.getMessageContainer());
         m_messageContainer.appendMessages(m_schedule->getMessageContainer());
@@ -164,20 +173,6 @@ namespace Opm {
 
     std::string EclipseState::getTitle() const {
         return m_title;
-    }
-
-    void EclipseState::initIOConfig(const Deck& deck) {
-        std::string dataFile = deck.getDataFile();
-        m_ioConfig = std::make_shared<IOConfig>(dataFile);
-
-        if (Section::hasGRID(deck)) {
-            auto gridSection = std::make_shared<const GRIDSection>(deck);
-            m_ioConfig->handleGridSection(gridSection);
-        }
-        if (Section::hasRUNSPEC(deck)) {
-            auto runspecSection = std::make_shared<const RUNSPECSection>(deck);
-            m_ioConfig->handleRunspecSection(runspecSection);
-        }
     }
 
     // Hmmm - would have thought this should iterate through the SCHEDULE section as well?
