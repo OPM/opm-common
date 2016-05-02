@@ -67,6 +67,8 @@ void createEclipseWriter(const char *deckString)
     deck = parser->parseString(deckString, parseContext);
 
     eclipseState.reset(new Opm::EclipseState(deck , parseContext));
+    auto ioConfig = eclipseState->getIOConfig();
+    ioConfig->setBaseName("FOO");
 
     auto eclGrid = eclipseState->getInputGrid();
     BOOST_CHECK(eclGrid->getNX() == 3);
