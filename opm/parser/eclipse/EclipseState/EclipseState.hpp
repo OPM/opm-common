@@ -31,6 +31,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/Fault.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -82,6 +83,7 @@ namespace Opm {
         std::shared_ptr< const SimulationConfig > getSimulationConfig() const;
         std::shared_ptr< const EclipseGrid > getInputGrid() const;
         std::shared_ptr< EclipseGrid > getInputGridCopy() const;
+        const SummaryConfig& getSummaryConfig() const;
         const MessageContainer& getMessageContainer() const;
         MessageContainer& getMessageContainer();
         std::string getTitle() const;
@@ -123,6 +125,7 @@ namespace Opm {
         Eclipse3DProperties m_eclipseProperties;
         std::shared_ptr< const Schedule > m_schedule;
         std::shared_ptr< const SimulationConfig > m_simulationConfig;
+        SummaryConfig m_summaryConfig;
 
         std::string m_title;
         std::shared_ptr<TransMult> m_transMult;

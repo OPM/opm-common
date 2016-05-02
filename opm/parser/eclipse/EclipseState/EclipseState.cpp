@@ -113,6 +113,10 @@ namespace Opm {
         return std::make_shared<EclipseGrid>( m_inputGrid->c_ptr() );
     }
 
+    const SummaryConfig& EclipseState::getSummaryConfig() const {
+        return this->m_summaryConfig;
+    }
+
     const Eclipse3DProperties& EclipseState::get3DProperties() const {
         return m_eclipseProperties;
     }
