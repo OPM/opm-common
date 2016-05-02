@@ -59,17 +59,26 @@
 
 namespace Opm {
 
-    Schedule::Schedule(const ParseContext& parseContext , std::shared_ptr<const EclipseGrid> grid , DeckConstPtr deck, IOConfigPtr ioConfig)
-        : m_grid(grid)
+    Schedule::Schedule(const ParseContext& parseContext,
+                       std::shared_ptr<const EclipseGrid> grid,
+                       DeckConstPtr deckptr,
+                       IOConfigPtr ioConfig) :
+            Schedule(parseContext, grid, *deckptr, ioConfig)
     {
-        initFromDeck(parseContext , deck, ioConfig);
+    }
+
+    Schedule::Schedule(const ParseContext& parseContext, std::shared_ptr<const EclipseGrid> grid, const Deck& deck,
+            IOConfigPtr ioConfig) :
+            m_grid(grid)
+    {
+        initFromDeck(parseContext, deck, ioConfig);
     }
 
     boost::posix_time::ptime Schedule::getStartTime() const {
         return m_timeMap->getStartTime(/*timeStepIdx=*/0);
     }
 
-    void Schedule::initFromDeck(const ParseContext& parseContext , DeckConstPtr deck, IOConfigPtr ioConfig) {
+    void Schedule::initFromDeck(const ParseContext& parseContext, const Deck& deck, IOConfigPtr ioConfig) {
         initializeNOSIM(deck);
         createTimeMap(deck);
         m_tuning.reset(new Tuning(m_timeMap));
@@ -79,8 +88,8 @@ namespace Opm {
         initRootGroupTreeNode(getTimeMap());
         initOilVaporization(getTimeMap());
 
-        if (Section::hasSCHEDULE( *deck )) {
-            std::shared_ptr<SCHEDULESection> scheduleSection = std::make_shared<SCHEDULESection>( *deck );
+        if (Section::hasSCHEDULE(deck)) {
+            std::shared_ptr<SCHEDULESection> scheduleSection = std::make_shared<SCHEDULESection>(deck);
             iterateScheduleSection(parseContext , *scheduleSection , ioConfig);
         }
     }
@@ -93,18 +102,18 @@ namespace Opm {
         m_rootGroupTree.reset(new DynamicState<GroupTreePtr>(timeMap, GroupTreePtr(new GroupTree())));
     }
 
-    void Schedule::initializeNOSIM(DeckConstPtr deck) {
-        if (deck->hasKeyword("NOSIM")){
+    void Schedule::initializeNOSIM(const Deck& deck) {
+        if (deck.hasKeyword("NOSIM")){
             nosim = true;
         } else {
             nosim = false;
         }
     }
 
-    void Schedule::createTimeMap(DeckConstPtr deck) {
+    void Schedule::createTimeMap(const Deck& deck) {
         boost::posix_time::ptime startTime(defaultStartDate);
-        if (deck->hasKeyword("START")) {
-             const auto& startKeyword = deck->getKeyword("START");
+        if (deck.hasKeyword("START")) {
+             const auto& startKeyword = deck.getKeyword("START");
             startTime = TimeMap::timeFromEclipse(startKeyword.getRecord(0));
         }
 

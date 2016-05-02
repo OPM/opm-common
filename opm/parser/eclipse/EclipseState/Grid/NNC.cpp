@@ -29,9 +29,12 @@
 
 namespace Opm
 {
-    NNC::NNC(Opm::DeckConstPtr deck, EclipseGridConstPtr eclipseGrid)
-    {
-        const auto& nncs = deck->getKeywordList<ParserKeywords::NNC>();
+    NNC::NNC(std::shared_ptr<const Deck> deck, EclipseGridConstPtr eclipseGrid) :
+            NNC(*deck, eclipseGrid)
+    {}
+
+    NNC::NNC(const Deck& deck, EclipseGridConstPtr eclipseGrid) {
+        const auto& nncs = deck.getKeywordList<ParserKeywords::NNC>();
         for (size_t idx_nnc = 0; idx_nnc<nncs.size(); ++idx_nnc) {
             const auto& nnc = *nncs[idx_nnc];
             size_t numNNC = nnc.size();

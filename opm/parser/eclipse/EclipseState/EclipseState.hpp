@@ -66,6 +66,9 @@ namespace Opm {
             AllProperties = IntProperties | DoubleProperties
         };
 
+        EclipseState(const Deck& deck , const ParseContext& parseContext);
+
+        /// [deprecated]
         EclipseState(std::shared_ptr< const Deck > deck , const ParseContext& parseContext);
 
         const ParseContext& getParseContext() const;
@@ -95,12 +98,11 @@ namespace Opm {
         // units because internally to opm-parser everything is represented by SI
         // units...
         const UnitSystem& getDeckUnitSystem()  const;
-        void applyModifierDeck( std::shared_ptr<const Deck> deck);
+        void applyModifierDeck( const Deck& deck);
 
     private:
-        void initTabdims(std::shared_ptr< const Deck > deck);
-        void initIOConfig(std::shared_ptr< const Deck > deck);
-        void initIOConfigPostSchedule(std::shared_ptr< const Deck > deck);
+        void initIOConfig(const Deck& deck);
+        void initIOConfigPostSchedule(const Deck& deck);
         void initTransMult();
         void initFaults(std::shared_ptr< const Deck > deck);
 
@@ -108,7 +110,7 @@ namespace Opm {
         void setMULTFLT(std::shared_ptr<const Opm::Section> section) const;
         void initMULTREGT(std::shared_ptr< const Deck > deck);
 
-        void complainAboutAmbiguousKeyword(std::shared_ptr< const Deck > deck,
+        void complainAboutAmbiguousKeyword(const Deck& deck,
                                            const std::string& keywordName);
 
         std::shared_ptr< IOConfig >               m_ioConfig;

@@ -40,7 +40,8 @@ class NNC
 public:
     /// Construct from input deck.
     NNC();
-    NNC(std::shared_ptr< const Deck > deck, std::shared_ptr< const EclipseGrid > eclipseGrid);
+    NNC(std::shared_ptr<const Deck> deck_ptr, std::shared_ptr< const EclipseGrid > eclipseGrid);
+    NNC(const Deck& deck, std::shared_ptr< const EclipseGrid > eclipseGrid);
     void addNNC(const size_t cell1, const size_t cell2, const double trans);
     const std::vector<NNCdata>& nncdata() const { return m_nnc; }
     size_t numNNC() const;

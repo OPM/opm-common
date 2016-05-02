@@ -54,7 +54,12 @@ namespace Opm
 
     class Schedule {
     public:
-        Schedule(const ParseContext& parseContext , std::shared_ptr<const EclipseGrid> grid , std::shared_ptr< const Deck > deck, std::shared_ptr< IOConfig > ioConfig);
+        Schedule(const ParseContext& parseContext, std::shared_ptr<const EclipseGrid> grid,
+                 const Deck& deck,                 std::shared_ptr<IOConfig> ioConfig);
+        /// [deprecated]
+        Schedule(const ParseContext& parseContext, std::shared_ptr<const EclipseGrid> grid,
+                 std::shared_ptr<const Deck> deck, std::shared_ptr<IOConfig> ioConfig);
+
         boost::posix_time::ptime getStartTime() const;
         std::shared_ptr< const TimeMap > getTimeMap() const;
 
@@ -101,9 +106,9 @@ namespace Opm
 
         void updateWellStatus(std::shared_ptr<Well> well, size_t reportStep , WellCommon::StatusEnum status);
         void addWellToGroup( std::shared_ptr< Group > newGroup , std::shared_ptr< Well > well , size_t timeStep);
-        void initFromDeck(const ParseContext& parseContext , std::shared_ptr< const Deck > deck, std::shared_ptr< IOConfig > ioConfig);
-        void initializeNOSIM(std::shared_ptr< const Deck > deck);
-        void createTimeMap(std::shared_ptr< const Deck > deck);
+        void initFromDeck(const ParseContext& parseContext, const Deck& deck, std::shared_ptr<IOConfig> ioConfig);
+        void initializeNOSIM(const Deck& deck);
+        void createTimeMap(const Deck& deck);
         void initRootGroupTreeNode(std::shared_ptr< const TimeMap > timeMap);
         void initOilVaporization(std::shared_ptr< const TimeMap > timeMap);
         void iterateScheduleSection(const ParseContext& parseContext ,  const SCHEDULESection&  section, std::shared_ptr< IOConfig > ioConfig);

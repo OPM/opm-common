@@ -30,6 +30,7 @@ namespace Opm {
 
     public:
         InitConfig(std::shared_ptr< const Deck > deck);
+        InitConfig(const Deck& deck);
 
         void setRestart( const std::string& root, int step);
         bool restartRequested() const;
@@ -40,7 +41,7 @@ namespace Opm {
         const Equil& getEquil() const;
 
     private:
-        void initRestartKW(std::shared_ptr< const Deck > deck);
+        void initRestartKW(const Deck& deck);
 
         bool m_restartRequested;
         int m_restartStep;

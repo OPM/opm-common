@@ -35,7 +35,12 @@ namespace Opm {
         return Equil( deck.getKeyword<ParserKeywords::EQUIL>(  ) );
     }
 
-    InitConfig::InitConfig(DeckConstPtr deck) : equil( equils( *deck ) ) {
+
+  InitConfig::InitConfig(DeckConstPtr deck) :
+            InitConfig(*deck)
+    {}
+
+  InitConfig::InitConfig(const Deck& deck) : equil( equils( deck ) ) {
         m_restartRequested = false;
         m_restartStep = 0;
         m_restartRootName = "";
@@ -51,9 +56,9 @@ namespace Opm {
     }
 
 
-    void InitConfig::initRestartKW(DeckConstPtr deck) {
-        if (deck->hasKeyword<ParserKeywords::RESTART>( )) {
-            const auto& keyword = deck->getKeyword<ParserKeywords::RESTART>( );
+    void InitConfig::initRestartKW(const Deck& deck) {
+        if (deck.hasKeyword<ParserKeywords::RESTART>( )) {
+            const auto& keyword = deck.getKeyword<ParserKeywords::RESTART>( );
             const auto& record = keyword.getRecord(0);
             const auto& save_item = record.getItem(2);
             if (save_item.hasValue(0))

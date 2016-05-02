@@ -48,12 +48,17 @@
 
 namespace Opm {
 
-    EclipseState::EclipseState(std::shared_ptr<const Deck> deck, const ParseContext& parseContext) :
-        m_deckUnitSystem(    deck->getActiveUnitSystem() ),
+
+    EclipseState::EclipseState(std::shared_ptr<const Deck> deckptr, const ParseContext& parseContext) :
+        EclipseState(*deckptr, parseContext)
+    {}
+
+    EclipseState::EclipseState(const Deck& deck, const ParseContext& parseContext) :
+        m_deckUnitSystem(    deck.getActiveUnitSystem() ),
         m_parseContext(      parseContext ),
-        m_tables(            *deck ),
+        m_tables(            deck ),
         m_inputGrid(         std::make_shared<EclipseGrid>(deck, nullptr)),
-        m_eclipseProperties( *deck, m_tables, *m_inputGrid)
+        m_eclipseProperties( deck, m_tables, *m_inputGrid)
     {
         // after Eclipse3DProperties has been constructed, we have complete ACTNUM info
         if (m_eclipseProperties.hasDeckIntGridProperty("ACTNUM"))
@@ -61,24 +66,24 @@ namespace Opm {
 
         initIOConfig(deck);
 
-        m_schedule = ScheduleConstPtr( new Schedule(m_parseContext ,  getInputGrid() , deck, m_ioConfig) );
+        m_schedule = ScheduleConstPtr(new Schedule(m_parseContext, getInputGrid(), deck, m_ioConfig));
         initIOConfigPostSchedule(deck);
 
-        if (deck->hasKeyword( "TITLE" )) {
-            const auto& titleKeyword = deck->getKeyword( "TITLE" );
+        if (deck.hasKeyword( "TITLE" )) {
+            const auto& titleKeyword = deck.getKeyword( "TITLE" );
             const auto& item = titleKeyword.getRecord( 0 ).getItem( 0 );
             std::vector<std::string> itemValue = item.getData<std::string>();
             m_title = boost::algorithm::join( itemValue, " " );
         }
 
         m_initConfig = std::make_shared<const InitConfig>(deck);
-        m_simulationConfig = std::make_shared<const SimulationConfig>(m_parseContext, *deck,
+        m_simulationConfig = std::make_shared<const SimulationConfig>(m_parseContext, deck,
                                                                       m_eclipseProperties);
 
         initTransMult();
         initFaults(deck);
         initMULTREGT(deck);
-        m_nnc = std::make_shared<NNC>( deck, getInputGrid());
+        m_nnc = NNC(deck, getInputGrid());
 
         m_messageContainer.appendMessages(m_tables.getMessageContainer());
         m_messageContainer.appendMessages(m_schedule->getMessageContainer());
@@ -148,36 +153,34 @@ namespace Opm {
         return m_transMult;
     }
 
-    std::shared_ptr<const NNC> EclipseState::getNNC() const {
+    const NNC& EclipseState::getNNC() const {
         return m_nnc;
     }
 
     bool EclipseState::hasNNC() const {
-        return m_nnc->hasNNC();
+        return m_nnc.hasNNC();
     }
 
     std::string EclipseState::getTitle() const {
         return m_title;
     }
 
-    void EclipseState::initIOConfig(DeckConstPtr deck) {
-        std::string dataFile = deck->getDataFile();
-
-        m_ioConfig = std::make_shared<IOConfig>(dataFile);
-        if (Section::hasGRID(*deck)) {
-            std::shared_ptr<const GRIDSection> gridSection = std::make_shared<const GRIDSection>(*deck);
+    void EclipseState::initIOConfig(const Deck& deck) {
+        m_ioConfig = std::make_shared<IOConfig>();
+        if (Section::hasGRID(deck)) {
+            std::shared_ptr<const GRIDSection> gridSection = std::make_shared<const GRIDSection>(deck);
             m_ioConfig->handleGridSection(gridSection);
         }
-        if (Section::hasRUNSPEC(*deck)) {
-            std::shared_ptr<const RUNSPECSection> runspecSection = std::make_shared<const RUNSPECSection>(*deck);
+        if (Section::hasRUNSPEC(deck)) {
+            std::shared_ptr<const RUNSPECSection> runspecSection = std::make_shared<const RUNSPECSection>(deck);
             m_ioConfig->handleRunspecSection(runspecSection);
         }
     }
 
     // Hmmm - would have thought this should iterate through the SCHEDULE section as well?
-    void EclipseState::initIOConfigPostSchedule(DeckConstPtr deck) {
-        if (Section::hasSOLUTION(*deck)) {
-            std::shared_ptr<const SOLUTIONSection> solutionSection = std::make_shared<const SOLUTIONSection>(*deck);
+    void EclipseState::initIOConfigPostSchedule(const Deck& deck) {
+        if (Section::hasSOLUTION(deck)) {
+            std::shared_ptr<const SOLUTIONSection> solutionSection = std::make_shared<const SOLUTIONSection>(deck);
             m_ioConfig->handleSolutionSection(m_schedule->getTimeMap(), solutionSection);
         }
         m_ioConfig->initFirstOutput( *m_schedule );
@@ -207,13 +210,13 @@ namespace Opm {
 
     void EclipseState::initFaults(DeckConstPtr deck) {
         EclipseGridConstPtr grid = getInputGrid();
-        std::shared_ptr<GRIDSection> gridSection = std::make_shared<GRIDSection>( *deck );
+        std::shared_ptr<GRIDSection> gridSection = std::make_shared<GRIDSection>( deck );
 
         m_faults = std::make_shared<FaultCollection>(gridSection , grid);
         setMULTFLT(gridSection);
 
-        if (Section::hasEDIT(*deck)) {
-            std::shared_ptr<EDITSection> editSection = std::make_shared<EDITSection>( *deck );
+        if (Section::hasEDIT(deck)) {
+            std::shared_ptr<EDITSection> editSection = std::make_shared<EDITSection>( deck );
             setMULTFLT(editSection);
         }
 
@@ -222,7 +225,7 @@ namespace Opm {
 
 
 
-    void EclipseState::setMULTFLT(std::shared_ptr<const Section> section) const {
+    void EclipseState::setMULTFLT(std::shared_ptr<const Section> section) {
         for (size_t index=0; index < section->count("MULTFLT"); index++) {
             const auto& faultsKeyword = section->getKeyword("MULTFLT" , index);
             for (auto iter = faultsKeyword.begin(); iter != faultsKeyword.end(); ++iter) {
@@ -231,19 +234,19 @@ namespace Opm {
                 const std::string& faultName = faultRecord.getItem(0).get< std::string >(0);
                 double multFlt = faultRecord.getItem(1).get< double >(0);
 
-                m_faults->setTransMult( faultName , multFlt );
+                m_faults.setTransMult( faultName , multFlt );
             }
         }
     }
 
 
 
-    void EclipseState::initMULTREGT(DeckConstPtr deck) {
+    void EclipseState::initMULTREGT(const Deck& deck) {
         EclipseGridConstPtr grid = getInputGrid();
 
         std::vector< const DeckKeyword* > multregtKeywords;
-        if (deck->hasKeyword("MULTREGT"))
-            multregtKeywords = deck->getKeywordList("MULTREGT");
+        if (deck.hasKeyword("MULTREGT"))
+            multregtKeywords = deck.getKeywordList("MULTREGT");
 
         std::shared_ptr<MULTREGTScanner> scanner =
             std::make_shared<MULTREGTScanner>(
@@ -267,9 +270,9 @@ namespace Opm {
     }
 
 
-    void EclipseState::complainAboutAmbiguousKeyword(DeckConstPtr deck, const std::string& keywordName) {
+    void EclipseState::complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) {
         m_messageContainer.error("The " + keywordName + " keyword must be unique in the deck. Ignoring all!");
-        auto keywords = deck->getKeywordList(keywordName);
+        auto keywords = deck.getKeywordList(keywordName);
         for (size_t i = 0; i < keywords.size(); ++i) {
             std::string msg = "Ambiguous keyword "+keywordName+" defined here";
             m_messageContainer.error(keywords[i]->getFileName(), msg, keywords[i]->getLineNumber());

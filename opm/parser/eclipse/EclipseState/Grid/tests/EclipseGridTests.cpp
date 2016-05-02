@@ -87,8 +87,8 @@ BOOST_AUTO_TEST_CASE(MissingDimsThrows) {
 
 BOOST_AUTO_TEST_CASE(HasGridKeywords) {
     Opm::DeckPtr deck = createDeckHeaders();
-    BOOST_CHECK( !Opm::EclipseGrid::hasCornerPointKeywords( deck ));
-    BOOST_CHECK( !Opm::EclipseGrid::hasCartesianKeywords( deck ));
+    BOOST_CHECK( !Opm::EclipseGrid::hasCornerPointKeywords( *deck ));
+    BOOST_CHECK( !Opm::EclipseGrid::hasCartesianKeywords( *deck ));
 }
 
 
@@ -369,29 +369,29 @@ BOOST_AUTO_TEST_CASE(DEPTHZ_EQUAL_TOPS) {
 
 BOOST_AUTO_TEST_CASE(HasCPKeywords) {
     Opm::DeckPtr deck = createCPDeck();
-    BOOST_CHECK(  Opm::EclipseGrid::hasCornerPointKeywords( deck ));
-    BOOST_CHECK( !Opm::EclipseGrid::hasCartesianKeywords( deck ));
+    BOOST_CHECK(  Opm::EclipseGrid::hasCornerPointKeywords( *deck ));
+    BOOST_CHECK( !Opm::EclipseGrid::hasCartesianKeywords( *deck ));
 }
 
 
 BOOST_AUTO_TEST_CASE(HasCartKeywords) {
     Opm::DeckPtr deck = createCARTDeck();
-    BOOST_CHECK( !Opm::EclipseGrid::hasCornerPointKeywords( deck ));
-    BOOST_CHECK(  Opm::EclipseGrid::hasCartesianKeywords( deck ));
+    BOOST_CHECK( !Opm::EclipseGrid::hasCornerPointKeywords( *deck ));
+    BOOST_CHECK(  Opm::EclipseGrid::hasCartesianKeywords( *deck ));
 }
 
 
 BOOST_AUTO_TEST_CASE(HasCartKeywordsDEPTHZ) {
     Opm::DeckPtr deck = createCARTDeckDEPTHZ();
-    BOOST_CHECK( !Opm::EclipseGrid::hasCornerPointKeywords( deck ));
-    BOOST_CHECK(  Opm::EclipseGrid::hasCartesianKeywords( deck ));
+    BOOST_CHECK( !Opm::EclipseGrid::hasCornerPointKeywords( *deck ));
+    BOOST_CHECK(  Opm::EclipseGrid::hasCartesianKeywords( *deck ));
 }
 
 
 BOOST_AUTO_TEST_CASE(HasINVALIDCartKeywords) {
     Opm::DeckPtr deck = createCARTInvalidDeck();
-    BOOST_CHECK( !Opm::EclipseGrid::hasCornerPointKeywords( deck ));
-    BOOST_CHECK( !Opm::EclipseGrid::hasCartesianKeywords( deck ));
+    BOOST_CHECK( !Opm::EclipseGrid::hasCornerPointKeywords( *deck ));
+    BOOST_CHECK( !Opm::EclipseGrid::hasCartesianKeywords( *deck ));
 }
 
 
