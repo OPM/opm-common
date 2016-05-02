@@ -237,7 +237,83 @@ namespace Opm {
         const double Timestep             = day;
     }
 
+namespace conversions {
+    /*
+    * It is VERY important that the dim enum has the same order as the
+    * metric and field arrays. C++ does not support designated initializers, so
+    * this cannot be done in a declaration-order independent matter.
+    */
+
+    enum class dim : int {
+        length,
+        time,
+        density,
+        pressure,
+        temperature_absolute,
+        temperature,
+        viscosity,
+        permeability,
+        liquid_surface_volume,
+        gas_surface_volume,
+        volume,
+        liquid_surface_rate,
+        gas_surface_rate,
+        rate,
+        transmissibility,
+        mass,
+    };
+
+    /* lookup tables for SI-to-unit system
+     *
+     * We assume that all values in the report structures are plain SI units,
+     * but output can be configured to use other (inconsistent) unit systems.
+     * These lookup tables are passed to the convert function that translates
+     * between SI and the target unit.
+     */
+
+    const double si2metric[] = {
+        1 / Metric::Length,
+        1 / Metric::Time,
+        1 / Metric::Density,
+        1 / Metric::Pressure,
+        1 / Metric::AbsoluteTemperature,
+        1 / Metric::Temperature,
+        1 / Metric::Viscosity,
+        1 / Metric::Permeability,
+        1 / Metric::LiquidSurfaceVolume,
+        1 / Metric::GasSurfaceVolume,
+        1 / Metric::ReservoirVolume,
+        1 / ( Metric::LiquidSurfaceVolume / Metric::Time ),
+        1 / ( Metric::GasSurfaceVolume / Metric::Time ),
+        1 / ( Metric::ReservoirVolume / Metric::Time ),
+        1 / Metric::Transmissibility,
+        1 / Metric::Mass,
+    };
+
+    const double si2field[] = {
+        1 / Field::Length,
+        1 / Field::Time,
+        1 / Field::Density,
+        1 / Field::Pressure,
+        1 / Field::AbsoluteTemperature,
+        1 / Field::Temperature,
+        1 / Field::Viscosity,
+        1 / Field::Permeability,
+        1 / Field::LiquidSurfaceVolume,
+        1 / Field::GasSurfaceVolume,
+        1 / Field::ReservoirVolume,
+        1 / ( Field::LiquidSurfaceVolume / Field::Time ),
+        1 / ( Field::GasSurfaceVolume / Field::Time ),
+        1 / ( Field::ReservoirVolume / Field::Time ),
+        1 / Field::Transmissibility,
+        1 / Field::Mass,
+    };
+
+    inline double from_si( const double* table, dim d, double val ) {
+        return val * table[ static_cast< int >( d ) ];
+    }
 }
 
+}
 
 #endif
