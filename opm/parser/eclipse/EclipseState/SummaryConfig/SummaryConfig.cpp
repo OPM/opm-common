@@ -122,6 +122,12 @@ namespace Opm {
             const Eclipse3DProperties& props,
             std::array< int, 3 > dims ) {
 
+        /* RUNSUM is not a region keyword but a directive for how to format and
+         * print output. Unfortunately its *recognised* as a region keyword
+         * because of its structure and position. Hence the special handling of ignoring it.
+         */
+        if( keyword.name() == "RUNSUM" ) return {};
+
         const auto mknode = [dims,&keyword]( int region ) {
             return ERT::smspec_node( keyword.name(), dims.data(), region );
         };
