@@ -44,6 +44,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/core/wells/WellsManager.hpp>
 #include <opm/core/grid/GridManager.hpp>
 #include <opm/core/props/IncompPropertiesFromDeck.hpp>
@@ -59,6 +60,7 @@
 
 #include <string.h>
 
+typedef std::pair<std::shared_ptr<Opm::WellState>, std::shared_ptr<Opm::BlackoilState>> state;
 
 std::string input =
            "RUNSPEC\n"
@@ -85,7 +87,7 @@ std::string input =
 
            "SOLUTION\n"
            "RESTART\n"
-           "TESTWELLSTATE 1/\n"
+           "FIRST_SIM 1/\n"
            "\n"
 
            "START             -- 0 \n"
@@ -197,17 +199,9 @@ std::shared_ptr<Opm::BlackoilState> createBlackOilState(Opm::EclipseGridConstPtr
 }
 
 Opm::EclipseWriterPtr createEclipseWriter(Opm::DeckConstPtr deck,
-                                          Opm::EclipseStatePtr eclipseState,
-                                          std::string& eclipse_data_filename) {
+                                          Opm::EclipseStatePtr eclipseState) {
 
-  Opm::parameter::ParameterGroup params;
-  params.insertParameter("deck_filename", eclipse_data_filename);
-
-  const Opm::PhaseUsage phaseUsage = Opm::phaseUsageFromDeck(deck);
-
-  Opm::EclipseWriterPtr eclWriter(new Opm::EclipseWriter(params,
-                                                         eclipseState,
-                                                         phaseUsage,
+  Opm::EclipseWriterPtr eclWriter(new Opm::EclipseWriter(eclipseState,
                                                          eclipseState->getInputGrid()->getCartesianSize(),
                                                          0));
   return eclWriter;
@@ -248,40 +242,38 @@ void setValuesInWellState(std::shared_ptr<Opm::WellState> wellState){
     wellState->perfRates()[8] = 38.45;
 }
 
-BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData)
-{
-    std::string eclipse_data_filename    = "TestWellState.DATA";
-    test_work_area_type * test_area = test_work_area_alloc("EclipseReadWriteWellStateData");
+state first_sim(test_work_area_type * test_area) {
 
+    std::string eclipse_data_filename    = "FIRST_SIM.DATA";
+    test_work_area_copy_file(test_area, eclipse_data_filename.c_str());
     Opm::Parser parser;
     Opm::ParseContext parseContext;
-    Opm::DeckConstPtr deck = parser.parseString(input, parseContext);
-    Opm::EclipseStatePtr  eclipseState(new Opm::EclipseState(deck , parseContext));
-    Opm::EclipseWriterPtr eclipseWriter = createEclipseWriter(deck, eclipseState, eclipse_data_filename);
+    Opm::DeckConstPtr deck = parser.parseFile(eclipse_data_filename, Opm::ParseContext());
+    Opm::EclipseStatePtr  eclipseState(new Opm::EclipseState(deck, parseContext));
+
+    Opm::EclipseWriterPtr eclipseWriter = createEclipseWriter(deck, eclipseState);
 
     std::shared_ptr<Opm::SimulatorTimer> simTimer( new Opm::SimulatorTimer() );
     simTimer->init(eclipseState->getSchedule()->getTimeMap());
     eclipseWriter->writeInit(*simTimer);
-    std::shared_ptr<Opm::WellState> wellState(new Opm::WellState());
+
+    //
     Opm::PhaseUsage phaseUsage = Opm::phaseUsageFromDeck(deck);
 
     Opm::GridManager gridManager(eclipseState->getInputGrid());
     Opm::WellsManager wellsManager(eclipseState, 1, *gridManager.c_grid(), NULL);
     const Wells* wells = wellsManager.c_wells();
     std::shared_ptr<Opm::BlackoilState> blackoilState = createBlackOilState(eclipseState->getInputGrid(), phaseUsage);
+    std::shared_ptr<Opm::WellState> wellState(new Opm::WellState());
     wellState->init(wells, *blackoilState);
 
     //Set test data for pressure
-    std::vector<double>& pressure = blackoilState->pressure();
-    for (std::vector<double>::iterator iter = pressure.begin(); iter != pressure.end(); ++iter) {
-        *iter = 6.0;
-    }
+    auto &pressure = blackoilState->pressure();
+    pressure.assign(pressure.size(), 6.0 );
 
     //Set test data for temperature
-    std::vector<double>& temperature = blackoilState->temperature();
-    for (std::vector<double>::iterator iter = temperature.begin(); iter != temperature.end(); ++iter) {
-        *iter = 7.0;
-    }
+    auto &temperature = blackoilState->temperature();
+    temperature.assign(temperature.size(), 7.0);
 
     //Set test data for saturation water
     std::vector<double> swatdata(1000, 8);
@@ -294,16 +286,16 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData)
     // Set test data for rs
     double rs = 300.0;
     std::vector<double>& rs_vec = blackoilState->gasoilratio();
-    for (std::vector<double>::iterator rs_iter = rs_vec.begin(); rs_iter != rs_vec.end(); ++ rs_iter) {
-        *rs_iter = rs;
+    for (auto &ratio: rs_vec) {
+        ratio = rs;
         rs = rs + 1.0;
     }
 
     // Set testdata for rv
     double rv = 400.0;
     std::vector<double>& rv_vec = blackoilState->rv();
-    for (std::vector<double>::iterator rv_iter = rv_vec.begin(); rv_iter != rv_vec.end(); ++rv_iter) {
-        *rv_iter = rv;
+    for (auto &v: rv_vec) {
+        v = rv;
         rv = rv + 1.0;
     }
 
@@ -311,13 +303,51 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData)
     simTimer->setCurrentStepNum(1);
     eclipseWriter->writeTimeStep(*simTimer, *blackoilState, *wellState , false);
 
+    return std::make_pair(wellState, blackoilState);
+}
+
+Opm::PhaseUsage getPhaseUsageFromInput() {
+
+    Opm::Parser parser;
+    Opm::ParseContext parseContext;
+    Opm::DeckConstPtr deck = parser.parseString(input, parseContext);
+    Opm::PhaseUsage phaseUsage = Opm::phaseUsageFromDeck(deck);
+
+    return phaseUsage;
+}
+
+state second_sim() {
+    Opm::Parser parser;
+    Opm::ParseContext parseContext;
+    Opm::DeckConstPtr deck = parser.parseString(input, parseContext);
+    Opm::EclipseStatePtr eclipseState(new Opm::EclipseState(deck, parseContext));
+    Opm::PhaseUsage phaseUsage = Opm::phaseUsageFromDeck(deck);
+
     std::shared_ptr<Opm::WellState> wellStateRestored(new Opm::WellState());
-    wellStateRestored->init(wells, *blackoilState);
+    Opm::GridManager gridManager(eclipseState->getInputGrid());
+    Opm::WellsManager wellsManager(eclipseState, 1, *gridManager.c_grid(), NULL);
+    const Wells* wells = wellsManager.c_wells();
 
     //Read and verify OPM XWEL data, and solution data: pressure, temperature, saturation data, rs and rv
-    std::shared_ptr<Opm::BlackoilState> blackoilStateRestored = createBlackOilState(eclipseState->getInputGrid(), phaseUsage);
-    Opm::init_from_restart_file(eclipseState, Opm::UgGridHelpers::numCells(*gridManager.c_grid()), phaseUsage, *blackoilStateRestored, *wellStateRestored);
-    
+    std::shared_ptr <Opm::BlackoilState> blackoilStateRestored = createBlackOilState(eclipseState->getInputGrid(),
+                                                                                     phaseUsage);
+
+    wellStateRestored->init(wells, *blackoilStateRestored);
+
+    Opm::init_from_restart_file(eclipseState, Opm::UgGridHelpers::numCells(*gridManager.c_grid()), phaseUsage,
+                                *blackoilStateRestored, *wellStateRestored);
+
+    return std::make_pair(wellStateRestored, blackoilStateRestored);
+}
+
+void compare(state state1, state state2) {
+
+    std::shared_ptr<Opm::WellState> wellState = state1.first;
+    std::shared_ptr<Opm::WellState> wellStateRestored = state2.first;
+
+    std::shared_ptr<Opm::BlackoilState> blackoilState = state1.second;
+    std::shared_ptr<Opm::BlackoilState> blackoilStateRestored = state2.second;
+
     BOOST_CHECK_EQUAL_COLLECTIONS(wellState->bhp().begin(), wellState->bhp().end(), wellStateRestored->bhp().begin(), wellStateRestored->bhp().end());
     BOOST_CHECK_EQUAL_COLLECTIONS(wellState->temperature().begin(), wellState->temperature().end(), wellStateRestored->temperature().begin(), wellStateRestored->temperature().end());
     BOOST_CHECK_EQUAL_COLLECTIONS(wellState->wellRates().begin(), wellState->wellRates().end(), wellStateRestored->wellRates().begin(), wellStateRestored->wellRates().end());
@@ -328,6 +358,7 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData)
     std::vector<double> swat;
     std::vector<double> sgas_restored;
     std::vector<double> sgas;
+    auto phaseUsage = getPhaseUsageFromInput();
     Opm::EclipseIOUtil::extractFromStripedData(blackoilStateRestored->saturation(), swat_restored, phaseUsage.phase_pos[Opm::BlackoilPhases::Aqua], phaseUsage.num_phases);
     Opm::EclipseIOUtil::extractFromStripedData(blackoilState->saturation(), swat, phaseUsage.phase_pos[Opm::BlackoilPhases::Aqua], phaseUsage.num_phases);
     Opm::EclipseIOUtil::extractFromStripedData(blackoilStateRestored->saturation(), sgas_restored, phaseUsage.phase_pos[Opm::BlackoilPhases::Vapour], phaseUsage.num_phases);
@@ -340,11 +371,18 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData)
         BOOST_CHECK_CLOSE(sgas[cellindex], sgas_restored[cellindex], 0.00001);
     }
 
-
     for (size_t cellindex = 0; cellindex < 10; ++cellindex) {
         BOOST_CHECK_CLOSE(blackoilState->gasoilratio()[cellindex], blackoilStateRestored->gasoilratio()[cellindex], 0.0000001);
         BOOST_CHECK_CLOSE(blackoilState->rv()[cellindex], blackoilStateRestored->rv()[cellindex], 0.0000001);
     }
+}
+
+BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
+    test_work_area_type * test_area = test_work_area_alloc("EclipseReadWriteWellStateData");
+
+    state state1 = first_sim(test_area);
+    state state2 = second_sim();
+    compare(state1, state2);
 
     test_work_area_free(test_area);
 }

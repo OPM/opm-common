@@ -29,20 +29,22 @@
 #include <opm/core/props/BlackoilPhases.hpp>
 #include <opm/core/props/phaseUsageFromDeck.hpp>
 #include <opm/core/grid.h>
+#include <opm/core/grid/GridManager.hpp>
+#include <opm/core/grid/GridHelpers.hpp>
 #include <opm/core/grid/cpgpreprocess/preprocess.h>
 #include <opm/core/simulator/SimulatorTimerInterface.hpp>
 #include <opm/core/simulator/WellState.hpp>
 #include <opm/core/simulator/BlackoilState.hpp>
 #include <opm/output/eclipse/EclipseWriteRFTHandler.hpp>
 #include <opm/common/ErrorMacros.hpp>
-#include <opm/core/utility/parameters/Parameter.hpp>
-#include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/core/utility/Units.hpp>
 #include <opm/core/wells.h> // WellType
+#include <opm/core/props/phaseUsageFromDeck.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
@@ -50,7 +52,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
-
 #include <boost/algorithm/string/case_conv.hpp> // to_upper_copy
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem.hpp> // path
@@ -1414,17 +1415,15 @@ void EclipseWriter::writeTimeStep(const SimulatorTimerInterface& timer,
 }
 
 
-EclipseWriter::EclipseWriter(const parameter::ParameterGroup& params,
-                             Opm::EclipseStateConstPtr eclipseState,
-                             const Opm::PhaseUsage &phaseUsage,
+EclipseWriter::EclipseWriter(Opm::EclipseStateConstPtr eclipseState,
                              int numCells,
                              const int* compressedToCartesianCellIdx)
     : eclipseState_(eclipseState)
     , numCells_(numCells)
     , compressedToCartesianCellIdx_(compressedToCartesianCellIdx)
     , gridToEclipseIdx_(numCells, int(-1) )
-    , phaseUsage_(phaseUsage)
 {
+    phaseUsage_ = phaseUsageFromDeck( eclipseState );
     const auto eclGrid = eclipseState->getInputGrid();
     cartesianSize_[0] = eclGrid->getNX();
     cartesianSize_[1] = eclGrid->getNY();
@@ -1451,7 +1450,6 @@ EclipseWriter::EclipseWriter(const parameter::ParameterGroup& params,
         }
     }
 
-
     // factor from the pressure values given in the deck to Pascals
     deckToSiPressure_ =
         eclipseState->getDeckUnitSystem().parse("Pressure")->getSIScaling();
@@ -1462,30 +1460,25 @@ EclipseWriter::EclipseWriter(const parameter::ParameterGroup& params,
     deckToSiTemperatureOffset_ =
         eclipseState->getDeckUnitSystem().parse("Temperature")->getSIOffset();
 
-    init(params);
+    init(eclipseState);
 }
 
-void EclipseWriter::init(const parameter::ParameterGroup& params)
+void EclipseWriter::init(Opm::EclipseStateConstPtr eclipseState)
 {
     // get the base name from the name of the deck
     using boost::filesystem::path;
-    path deckPath(params.get <std::string>("deck_filename"));
-    if (boost::to_upper_copy(path(deckPath.extension()).string()) == ".DATA") {
-        baseName_ = path(deckPath.stem()).string();
-    }
-    else {
-        baseName_ = path(deckPath.filename()).string();
-    }
+    auto ioConfig = eclipseState->getIOConfig();
+    baseName_ = ioConfig->getBaseName();
 
     // make uppercase of everything (or otherwise we'll get uppercase
     // of some of the files (.SMSPEC, .UNSMRY) and not others
     baseName_ = boost::to_upper_copy(baseName_);
 
     // retrieve the value of the "output" parameter
-    enableOutput_ = params.getDefault<bool>("output", /*defaultValue=*/true);
+    enableOutput_ = ioConfig->getOutputEnabled();
 
     // store in current directory if not explicitly set
-    outputDir_ = params.getDefault<std::string>("output_dir", ".");
+    outputDir_ = ioConfig->getOutputDir();
 
     // set the index of the first time step written to 0...
     writeStepIdx_  = 0;

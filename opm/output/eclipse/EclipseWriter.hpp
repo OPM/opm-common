@@ -68,9 +68,7 @@ public:
      * \brief Sets the common attributes required to write eclipse
      *        binary files using ERT.
      */
-    EclipseWriter(const parameter::ParameterGroup& params,
-                  Opm::EclipseStateConstPtr eclipseState,
-                  const Opm::PhaseUsage &phaseUsage,
+    EclipseWriter(Opm::EclipseStateConstPtr eclipseState,
                   int numCells,
                   const int* compressedToCartesianCellIdx);
 
@@ -127,7 +125,7 @@ private:
     PhaseUsage phaseUsage_; // active phases in the input deck
     std::shared_ptr<EclipseWriterDetails::Summary> summary_;
 
-    void init(const parameter::ParameterGroup& params);
+    void init(Opm::EclipseStateConstPtr eclipseState);
 };
 
 typedef std::shared_ptr<EclipseWriter> EclipseWriterPtr;

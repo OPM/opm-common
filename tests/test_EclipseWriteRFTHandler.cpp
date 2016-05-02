@@ -41,6 +41,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 
 #include <ert/ecl/ecl_rft_file.h>
 #include <ert/util/test_work_area.h>
@@ -90,9 +91,9 @@ void verifyRFTFile(const std::string& rft_filename) {
 
 
 
-Opm::DeckConstPtr createDeck(const std::string& input_str) {
+Opm::DeckConstPtr createDeck(const std::string& eclipse_data_filename) {
     Opm::ParserPtr parser = std::make_shared<Opm::Parser>();
-    Opm::DeckConstPtr deck = parser->parseString(input_str , Opm::ParseContext());
+    Opm::DeckConstPtr deck = parser->parseFile(eclipse_data_filename , Opm::ParseContext());
     return deck;
 }
 
@@ -127,16 +128,10 @@ std::shared_ptr<Opm::EclipseWriter> createEclipseWriter(std::shared_ptr<const Op
                                                         std::shared_ptr<Opm::GridManager> ourFineGridManagerPtr,
                                                         const int * compressedToCartesianCellIdx)
 {
-    Opm::parameter::ParameterGroup params;
-    params.insertParameter("deck_filename", "testcase.data");
-
-    Opm::PhaseUsage phaseUsage = Opm::phaseUsageFromDeck(deck);
 
     const UnstructuredGrid &ourFinerUnstructuredGrid = *ourFineGridManagerPtr->c_grid();
 
-    std::shared_ptr<Opm::EclipseWriter> eclipseWriter = std::make_shared<Opm::EclipseWriter>(params,
-                                                                                             eclipseState,
-                                                                                             phaseUsage,
+    std::shared_ptr<Opm::EclipseWriter> eclipseWriter = std::make_shared<Opm::EclipseWriter>(eclipseState,
                                                                                              ourFinerUnstructuredGrid.number_of_cells,
                                                                                              compressedToCartesianCellIdx);
 
@@ -147,59 +142,15 @@ std::shared_ptr<Opm::EclipseWriter> createEclipseWriter(std::shared_ptr<const Op
 
 BOOST_AUTO_TEST_CASE(test_EclipseWriterRFTHandler)
 {
-    const std::string& deckString =
-                                    "RUNSPEC\n"
-                                    "OIL\n"
-                                    "GAS\n"
-                                    "WATER\n"
-                                    "DIMENS\n"
-                                    " 10 10 10 /\n"
-                                    "GRID\n"
-                                    "DXV\n"
-                                    "10*0.25 /\n"
-                                    "DYV\n"
-                                    "10*0.25 /\n"
-                                    "DZV\n"
-                                    "10*0.25 /\n"
-                                    "TOPS\n"
-                                    "100*0.25 /\n"
-                                    "\n"
-                                     "START             -- 0 \n"
-                                    "1 NOV 1979 / \n"
-                                    "SCHEDULE\n"
-                                    "DATES             -- 1\n"
-                                    " 1 DES 1979/ \n"
-                                    "/\n"
-                                    "WELSPECS\n"
-                                    "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-                                    "    'OP_2'       'OP'   4   4 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-                                    "/\n"
-                                    "COMPDAT\n"
-                                    " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                                    " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-                                    " 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                                    " 'OP_2'  4  4   4  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                                    "/\n"
-                                    "DATES             -- 2\n"
-                                    " 10  OKT 2008 / \n"
-                                    "/\n"
-                                    "WRFT \n"
-                                    "/ \n"
-                                    "WELOPEN\n"
-                                    " 'OP_1' OPEN / \n"
-                                    " 'OP_2' OPEN / \n"
-                                    "/\n"
-                                    "DATES             -- 3\n"
-                                    " 10  NOV 2008 / \n"
-                                    "/\n";
 
-
-
+    std::string eclipse_data_filename    = "testRFT.DATA";
     test_work_area_type * new_ptr = test_work_area_alloc("test_EclipseWriterRFTHandler");
     std::shared_ptr<test_work_area_type> test_area;
     test_area.reset(new_ptr, test_work_area_free);
+    test_work_area_copy_file(test_area.get(), eclipse_data_filename.c_str());
 
-    std::shared_ptr<const Opm::Deck>   deck         = createDeck(deckString);
+
+    std::shared_ptr<const Opm::Deck>   deck         = createDeck(eclipse_data_filename);
     std::shared_ptr<Opm::EclipseState> eclipseState = std::make_shared<Opm::EclipseState>(deck , Opm::ParseContext());
 
     std::shared_ptr<Opm::SimulatorTimer> simulatorTimer = std::make_shared<Opm::SimulatorTimer>();
@@ -223,8 +174,9 @@ BOOST_AUTO_TEST_CASE(test_EclipseWriterRFTHandler)
     }
 
     std::string cwd(test_work_area_get_cwd(test_area.get()));
-    std::string rft_filename = cwd + "/TESTCASE.RFT";
+    std::string rft_filename = cwd + "/TESTRFT.RFT";
     verifyRFTFile(rft_filename);
+
 
 }
 

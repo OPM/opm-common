@@ -42,11 +42,13 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
+#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 
 // ERT stuff
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_endian_flip.h>
 #include <ert/ecl/fortio.h>
+#include <ert/util/test_work_area.h>
 
 #include <memory>
 
@@ -64,10 +66,9 @@ void createEclipseWriter(const char *deckString)
     Opm::ParserConstPtr parser(new Opm::Parser());
     deck = parser->parseString(deckString, parseContext);
 
-    Opm::parameter::ParameterGroup params;
-    params.insertParameter("deck_filename", "foo.data");
-
     eclipseState.reset(new Opm::EclipseState(deck , parseContext));
+    auto ioConfig = eclipseState->getIOConfig();
+    ioConfig->setBaseName("FOO");
 
     auto eclGrid = eclipseState->getInputGrid();
     BOOST_CHECK(eclGrid->getNX() == 3);
@@ -89,10 +90,8 @@ void createEclipseWriter(const char *deckString)
 
     BOOST_CHECK(ourFinerUnstructuredGrid.number_of_cells == 3*3*3);
 
-    Opm::PhaseUsage phaseUsage = Opm::phaseUsageFromDeck(deck);
-    eclWriter.reset(new Opm::EclipseWriter(params,
-                                           eclipseState,
-                                           phaseUsage,
+
+    eclWriter.reset(new Opm::EclipseWriter(eclipseState,
                                            ourFinerUnstructuredGrid.number_of_cells,
                                            0));
 
@@ -368,6 +367,9 @@ void checkSummaryFile(int /*timeStepIdx*/)
 
 BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
 {
+
+    test_work_area_type * test_area = test_work_area_alloc("TEST_EclipseWriterIntegration");
+
     const char *deckString =
         "RUNSPEC\n"
         "INIT\n"
@@ -418,4 +420,6 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
         checkRestartFile(simTimer->currentStepNum());
         checkSummaryFile(simTimer->currentStepNum());
     }
+
+    test_work_area_free(test_area);
 }
