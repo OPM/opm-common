@@ -271,7 +271,7 @@ ParserState::ParserState( const ParseContext& context,
     deck( new Deck() ),
     parseContext( context )
 {
-    loadFile( p );
+    openRootFile( p );
 }
 
 void ParserState::loadString(const std::string& input) {

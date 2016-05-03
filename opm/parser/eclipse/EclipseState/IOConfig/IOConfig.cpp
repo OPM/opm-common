@@ -57,6 +57,8 @@ namespace Opm {
             boost::filesystem::path path( input_path );
             m_base_name = path.stem().string();
             m_output_dir = path.parent_path().string();
+            if (m_output_dir == "")
+                m_output_dir = ".";
         }
     }
 

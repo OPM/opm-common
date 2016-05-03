@@ -414,6 +414,13 @@ BOOST_AUTO_TEST_CASE(TestIOConfigBaseName) {
     DeckConstPtr deck = parser->parseFile("testdata/integration_tests/IOConfig/SPE1CASE2.DATA", parseContext);
     EclipseState state(*deck, parseContext);
     BOOST_CHECK_EQUAL(state.getIOConfig()->getBaseName(), "SPE1CASE2");
+    BOOST_CHECK_EQUAL(state.getIOConfig()->getOutputDir(), "testdata/integration_tests/IOConfig");
+
+    ParserPtr parser2(new Parser());
+    DeckConstPtr deck2 = createDeckWithGridOpts();
+    EclipseState state2(*deck2, parseContext);
+    BOOST_CHECK_EQUAL(state2.getIOConfig()->getBaseName(), "");
+    BOOST_CHECK_EQUAL(state2.getIOConfig()->getOutputDir(), ".");
 }
 
 BOOST_AUTO_TEST_CASE(TestIOConfigCreation) {
