@@ -459,7 +459,8 @@ bool tryParseKeyword( ParserState& parserState, const Parser& parser ) {
     while( !parserState.done() ) {
         auto line = parserState.getline();
 
-        if( line.empty() ) continue;
+        if( line.empty() && !parserState.rawKeyword ) continue;
+        if( line.empty() && !parserState.rawKeyword->is_title() ) continue;
 
         std::string keywordString;
 
