@@ -408,6 +408,13 @@ BOOST_AUTO_TEST_CASE(WithGridOptsDefaultRegion) {
     BOOST_CHECK_NE( &fluxnum  , &multnum );
 }
 
+BOOST_AUTO_TEST_CASE(TestIOConfigBaseName) {
+    ParseContext parseContext;
+    ParserPtr parser(new Parser());
+    DeckConstPtr deck = parser->parseFile("testdata/integration_tests/IOConfig/SPE1CASE2.DATA", parseContext);
+    EclipseState state(*deck, parseContext);
+    BOOST_CHECK_EQUAL(state.getIOConfig()->getBaseName(), "SPE1CASE2");
+}
 
 BOOST_AUTO_TEST_CASE(TestIOConfigCreation) {
     const char * deckData  =
