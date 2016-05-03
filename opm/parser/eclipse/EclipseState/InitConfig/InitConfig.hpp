@@ -43,8 +43,8 @@ namespace Opm {
     private:
         void initRestartKW(const Deck& deck);
 
-        bool m_restartRequested;
-        int m_restartStep;
+        bool m_restartRequested = false;
+        int m_restartStep = 0;
         std::string m_restartRootName;
 
         Equil equil;

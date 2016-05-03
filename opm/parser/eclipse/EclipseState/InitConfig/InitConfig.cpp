@@ -35,19 +35,11 @@ namespace Opm {
         return Equil( deck.getKeyword<ParserKeywords::EQUIL>(  ) );
     }
 
+    InitConfig::InitConfig(DeckConstPtr deck) : InitConfig(*deck) {}
 
-  InitConfig::InitConfig(DeckConstPtr deck) :
-            InitConfig(*deck)
-    {}
-
-  InitConfig::InitConfig(const Deck& deck) : equil( equils( deck ) ) {
-        m_restartRequested = false;
-        m_restartStep = 0;
-        m_restartRootName = "";
-
+    InitConfig::InitConfig(const Deck& deck) : equil(equils(deck)) {
         initRestartKW(deck);
     }
-
 
     void InitConfig::setRestart( const std::string& root, int step) {
         m_restartRequested = true;
@@ -73,7 +65,7 @@ namespace Opm {
 
                 setRestart( root , step );
             }
-        } else if (deck->hasKeyword<ParserKeywords::SKIPREST>())
+        } else if (deck.hasKeyword<ParserKeywords::SKIPREST>())
             throw std::runtime_error("Error in deck: Can not supply SKIPREST keyword without a preceeding RESTART.");
     }
 
