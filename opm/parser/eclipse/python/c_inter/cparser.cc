@@ -18,7 +18,7 @@ extern "C" {
     }
 
     bool parser_has_keyword(const Opm::Parser * parser , const char * keyword) {
-        return parser->hasInternalKeyword( keyword );
+        return parser->hasKeyword( keyword );
     }
 
 
