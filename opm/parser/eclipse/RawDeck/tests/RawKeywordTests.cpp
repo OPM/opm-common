@@ -18,6 +18,7 @@
  */
 
 #define BOOST_TEST_MODULE RawKeywordTests
+#include <cstring>
 #include <stdexcept>
 #include <boost/test/unit_test.hpp>
 
@@ -92,16 +93,30 @@ BOOST_AUTO_TEST_CASE(addRecord_singleRecord_recordAdded) {
 
 
 BOOST_AUTO_TEST_CASE(isFinished_undef_size) {
+    /* addRawRecord assumes newlines etc. are stripped */
+    /* also assumes all records are *immediately* following the previous one */
+    const char* inputstr = "test 1 2 3 4 /test 1 2 3 4 test 1 2 3 4 //";
+
+    const size_t ln1 = std::strlen( "test 1 2 3 4 /" );
+    const size_t ln2 = ln1 + std::strlen( "test 1 2 3 4 test 1 2 3 4 " );
+    const size_t ln3 = ln2 + std::strlen( "/" );
+    const size_t ln4 = ln3 + std::strlen( "/" );
+
+    string_view incomplete1( inputstr, inputstr + ln1 );
+    string_view incomplete2( inputstr + ln1, inputstr + ln2 );
+    string_view finalizer1( inputstr + ln2, inputstr + ln3 );
+    string_view finalizer2( inputstr + ln3 , inputstr + ln4 );
+
     RawKeyword keyword("TEST", Raw::SLASH_TERMINATED , "FILE" , 10U);
 
     BOOST_CHECK(  !keyword.isFinished() );
-    keyword.addRawRecordString("test 1 3 4 /");
-    keyword.addRawRecordString("test 1 3 4");
-    keyword.addRawRecordString("test 1 3 4");
+    keyword.addRawRecordString( incomplete1 );
+    keyword.addRawRecordString( incomplete2 );
     BOOST_CHECK(  !keyword.isFinished() );
-    keyword.addRawRecordString("/");
+    keyword.addRawRecordString( finalizer1 );
     BOOST_CHECK(  !keyword.isFinished() );
-    keyword.addRawRecordString("/");
+    keyword.addRawRecordString( finalizer2 );
+
     BOOST_CHECK(  keyword.isFinished() );
 }
 
@@ -111,7 +126,6 @@ BOOST_AUTO_TEST_CASE(isFinished_Fixedsize0) {
 
     BOOST_CHECK(  keyword.isFinished() );
 }
-
 
 BOOST_AUTO_TEST_CASE(isFinished_Fixedsize1) {
     RawKeyword keyword("TEST" , "FILE" , 10U, 1U);
@@ -123,18 +137,32 @@ BOOST_AUTO_TEST_CASE(isFinished_Fixedsize1) {
 
 BOOST_AUTO_TEST_CASE(isFinished_FixedsizeMulti) {
     RawKeyword keyword("TEST", "FILE" , 10U , 4U);
+    const char* inputstr = "test 1 2 3 4 //1 2 3 3 4 1 2 3 3 4 /1 2 3 3 /";
+
+    const size_t ln1 = std::strlen( "test 1 2 3 4 /" );
+    const size_t ln2 = ln1 + std::strlen( "/" );
+    const size_t ln3 = ln2 + std::strlen( "1 2 3 3 4 " );
+    const size_t ln4 = ln3 + std::strlen( "1 2 3 3 4 /" );
+    const size_t ln5 = ln4 + std::strlen( "1 2 3 3 /" );
+
+    string_view incomplete1( inputstr, inputstr + ln1 );
+    string_view finalizer1( inputstr + ln1, inputstr + ln2 );
+    string_view incomplete2( inputstr + ln2 , inputstr + ln3 );
+    string_view incomplete3( inputstr + ln3 , inputstr + ln4 );
+    string_view finalizer2( inputstr + ln4 , inputstr + ln5 );
+
     BOOST_CHECK(  !keyword.isFinished() );
-    keyword.addRawRecordString("test 1 3 4 /");
+    keyword.addRawRecordString( incomplete1 );
     BOOST_CHECK(  !keyword.isFinished() );
 
-    keyword.addRawRecordString("/");
+    keyword.addRawRecordString( finalizer1 );
     BOOST_CHECK(  !keyword.isFinished() );
 
-    keyword.addRawRecordString("1 2 3 3 4");
+    keyword.addRawRecordString( incomplete2 );
     BOOST_CHECK(  !keyword.isFinished() );
-    keyword.addRawRecordString("1 2 3 3 4 /");
+    keyword.addRawRecordString( incomplete3 );
     BOOST_CHECK(  !keyword.isFinished() );
-    keyword.addRawRecordString("1 2 3 3 /");
+    keyword.addRawRecordString( finalizer2 );
     BOOST_CHECK(  keyword.isFinished() );
 }
 
