@@ -119,12 +119,6 @@ BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_dataIsCorrect) {
 BOOST_AUTO_TEST_CASE(parser_internal_name_vs_deck_name) {
     ParserPtr parser(new Opm::Parser());
 
-    // the WELL_PROBE keyword is present by default
-    BOOST_CHECK(parser->hasInternalKeyword("WELL_PROBE"));
-
-    // the NONEXISTING_PROBE keyword is _not_ present by default
-    BOOST_CHECK(!parser->hasInternalKeyword("NONEXISTING_PROBE"));
-
     // internal names cannot appear in the deck if the deck names and/or deck regular
     // match expressions are given
     BOOST_CHECK(!parser->isRecognizedKeyword("WELL_PROBE"));

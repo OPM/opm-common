@@ -25,6 +25,9 @@
 
 #include <opm/json/JsonObject.hpp>
 
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
@@ -292,3 +295,15 @@ BOOST_AUTO_TEST_CASE( PATHS_has_global_scope ) {
     parser.newDeckFromFile( "testdata/parser/PATHSInInclude.data", ParseContext() );
     BOOST_CHECK_THROW( parser.newDeckFromFile( "testdata/parser/PATHSInIncludeInvalid.data", ParseContext() ), std::runtime_error );
 }
+
+BOOST_AUTO_TEST_CASE( handle_empty_title ) {
+    const auto* input_deck = "RUNSPEC\n\n"
+                             "TITLE\n\n"
+                             "DIMENS\n10 10 10/\n"
+                             "EQLDIMS\n/\n";
+
+    Parser parser;
+    const auto deck = parser.newDeckFromString( input_deck, ParseContext() );
+    BOOST_CHECK_EQUAL( "untitled", deck->getKeyword( "TITLE" ).getStringData().front() );
+ }
+

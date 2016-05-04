@@ -71,19 +71,21 @@ namespace Opm {
         iterator begin();
         iterator end();
 
+        bool is_title() const;
 
     private:
         Raw::KeywordSizeEnum m_sizeType;
-        bool m_isFinished;
+        bool m_isFinished = false;
         size_t m_fixedSize;
         size_t m_numTables;
-        size_t m_currentNumTables;
+        size_t m_currentNumTables = 0;
         std::string m_name;
         std::list< RawRecord > m_records;
         string_view m_partialRecordString;
 
         size_t m_lineNR;
         std::string m_filename;
+        bool m_is_title = false;
 
         void commonInit(const std::string& name,const std::string& filename, size_t lineNR);
         void setKeywordName(const std::string& keyword);

@@ -459,7 +459,8 @@ bool tryParseKeyword( ParserState& parserState, const Parser& parser ) {
     while( !parserState.done() ) {
         auto line = parserState.getline();
 
-        if( line.empty() ) continue;
+        if( line.empty() && !parserState.rawKeyword ) continue;
+        if( line.empty() && !parserState.rawKeyword->is_title() ) continue;
 
         std::string keywordString;
 
@@ -608,14 +609,6 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
         return m_deckParserKeywords.size();
     }
 
-    bool Parser::hasInternalKeyword(const std::string& internalKeywordName) const {
-        return (m_internalParserKeywords.count(internalKeywordName) > 0);
-    }
-
-    const ParserKeyword* Parser::getParserKeywordFromInternalName(const std::string& internalKeywordName) const {
-        return m_internalParserKeywords.at(internalKeywordName).get();
-    }
-
     const ParserKeyword* Parser::matchingKeyword(const string_view& name) const {
         for (auto iter = m_wildCardKeywords.begin(); iter != m_wildCardKeywords.end(); ++iter) {
             if (iter->second->matches(name))
@@ -639,29 +632,36 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
     }
 
 void Parser::addParserKeyword( std::unique_ptr< const ParserKeyword >&& parserKeyword) {
-    /* since string_view's don't own their memory, to update a value in the map
-     * we must *delete* the previous entry and then re-insert the equivalent
-     * new value. This is because the string_view borrows its memory from the
-     * ParserKeyword, and when the ParserKeyword is replaced it will most
-     * likely be free'd.
+    string_view name( parserKeyword->getName() );
+    auto* ptr = parserKeyword.get();
+
+    /* Store the keywords in the keyword storage. They aren't free'd until the
+     * parser gets destroyed, even if there is no reasonable way to reach them
+     * (effectively making them leak). This is not a big problem because:
+     *
+     * * A keyword can be added that overwrites some *but not all* deckname ->
+     *   keyword mappings. Keeping track of this is more hassle than worth for
+     *   what is essentially edge case usage.
+     * * We can store (and search) via string_view's from the keyword added
+     *   first because we know that it will be kept around, i.e. we don't have to
+     *   deal with subtle lifetime issues.
+     * * It means we aren't reliant on some internal name mapping, and can only
+     * be concerned with interesting behaviour.
+     * * Finally, these releases would in practice never happen anyway until
+     *   the parser went out of scope, and now they'll also be cleaned up in the
+     *   same sweep.
      */
 
-    string_view name( parserKeyword->getName() );
-    m_internalParserKeywords.erase( name );
-    m_internalParserKeywords[ name ].swap( parserKeyword );
-    auto* ptr = m_internalParserKeywords[ name ].get();
+    this->keyword_storage.push_back( std::move( parserKeyword ) );
 
     for (auto nameIt = ptr->deckNamesBegin();
             nameIt != ptr->deckNamesEnd();
             ++nameIt)
     {
-        string_view nm( *nameIt );
-        m_deckParserKeywords.erase( nm );
-        m_deckParserKeywords[ nm ] = ptr;
+        m_deckParserKeywords[ *nameIt ] = ptr;
     }
 
     if (ptr->hasMatchRegex()) {
-        m_wildCardKeywords.erase( name );
         m_wildCardKeywords[ name ] = ptr;
     }
 
@@ -672,6 +672,10 @@ void Parser::addParserKeyword(const Json::JsonObject& jsonKeyword) {
     addParserKeyword( std::unique_ptr< ParserKeyword >( new ParserKeyword( jsonKeyword ) ) );
 }
 
+bool Parser::hasKeyword( const std::string& name ) const {
+    return this->m_deckParserKeywords.find( string_view( name ) )
+        != this->m_deckParserKeywords.end();
+}
 
 const ParserKeyword* Parser::getKeyword( const std::string& name ) const {
     return getParserKeywordFromDeckName( string_view( name ) );

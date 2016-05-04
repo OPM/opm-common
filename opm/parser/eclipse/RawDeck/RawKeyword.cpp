@@ -29,7 +29,8 @@ namespace Opm {
     static const std::string emptystr = "";
 
     RawKeyword::RawKeyword(const string_view& name, Raw::KeywordSizeEnum sizeType , const std::string& filename, size_t lineNR) :
-    m_partialRecordString( emptystr ) {
+        m_partialRecordString( emptystr )
+    {
         if (sizeType == Raw::SLASH_TERMINATED || sizeType == Raw::UNKNOWN) {
             commonInit(name.string(),filename,lineNR);
             m_sizeType = sizeType;
@@ -57,8 +58,8 @@ namespace Opm {
         setKeywordName( name );
         m_filename = filename;
         m_lineNR = lineNR;
-        m_isFinished = false;
-        m_currentNumTables = 0;
+
+        this->m_is_title = name == "TITLE";
     }
 
 
@@ -99,12 +100,23 @@ namespace Opm {
 
         if( m_isFinished ) return;
 
-        if( this->getKeywordName() == "TITLE"
-            || RawRecord::isTerminatedRecordString( partialRecordString ) ) {
+        if( this->is_title() ) {
+
+            string_view recstr = m_partialRecordString == ""
+                               ? "untitled"
+                               : m_partialRecordString;
+
+            m_records.emplace_back( recstr, m_filename, m_name );
+            m_partialRecordString = emptystr;
+            m_isFinished = true;
+            return;
+        }
+
+        if( RawRecord::isTerminatedRecordString( partialRecordString ) ) {
 
             auto recstr = partialRecordString.back() == '/'
-                          ? string_view{ m_partialRecordString.begin(), m_partialRecordString.end() - 1 }
-                          : m_partialRecordString;
+                ? string_view{ m_partialRecordString.begin(), m_partialRecordString.end() - 1 }
+                : m_partialRecordString;
 
             m_records.emplace_back( recstr, m_filename, m_name );
             m_partialRecordString = emptystr;
@@ -189,6 +201,9 @@ namespace Opm {
         return this->m_records.end();
     }
 
+    bool RawKeyword::is_title() const {
+        return this->m_is_title;
+    }
 
     Raw::KeywordSizeEnum RawKeyword::getSizeType() const {
         return m_sizeType;
