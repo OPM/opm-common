@@ -345,7 +345,7 @@ void ParserState::handleRandomText(const string_view& keywordString ) const {
             << this->current_path()
             << ":" << this->line();
     }
-
+    deck->getMessageContainer().warning(msg.str());
     parseContext.handleError( errorKey , msg.str() );
 }
 
@@ -388,6 +388,7 @@ std::shared_ptr< RawKeyword > createRawKeyword( const string_view& kw, ParserSta
     if( !parser.isRecognizedKeyword( keywordString ) ) {
         if( ParserKeyword::validDeckName( keywordString ) ) {
             std::string msg = "Keyword " + keywordString + " not recognized.";
+            parserState.deck->getMessageContainer().error(msg);
             parserState.parseContext.handleError( ParseContext::PARSE_UNKNOWN_KEYWORD, msg );
             return {};
         }
@@ -434,7 +435,7 @@ std::shared_ptr< RawKeyword > createRawKeyword( const string_view& kw, ParserSta
 
     std::string msg = "Expected the kewyord: " + sizeKeyword.first
                     + " to infer the number of records in: " + keywordString;
-
+    parserState.deck->getMessageContainer().error(msg);
     parserState.parseContext.handleError(ParseContext::PARSE_MISSING_DIMS_KEYWORD , msg );
 
     const auto* keyword = parser.getKeyword( sizeKeyword.first );
