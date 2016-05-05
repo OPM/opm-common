@@ -28,6 +28,12 @@ if (POLICY CMP0048)
 	cmake_policy(SET CMP0048 OLD)
 endif()
 
+# set the behavior of the policy 0054 to NEW. (i.e. do not implicitly
+# expand variables in if statements)
+if (POLICY CMP0054)
+  cmake_policy(SET CMP0054 NEW)
+endif()
+
 # include special
 if (CMAKE_VERSION VERSION_LESS "2.8.3")
 	message (STATUS "Enabling compatibility modules for CMake 2.8.3")
