@@ -299,11 +299,7 @@ BOOST_AUTO_TEST_CASE( NorneResttartConfig ) {
     rptConfig.push_back( std::make_tuple(241 , true , boost::gregorian::date( 2006,10,10)) );
 
 
-    ParseContext parseContext;
-    ParserPtr parser(new Parser());
-    DeckConstPtr deck = parser->parseFile("testdata/integration_tests/IOConfig/RPTRST_DECK.DATA", parseContext);
-    EclipseState state( deck , parseContext );
-
+    auto state = Parser::parse("testdata/integration_tests/IOConfig/RPTRST_DECK.DATA");
     verifyRestartConfig(state.getIOConfigConst(), rptConfig);
 }
 

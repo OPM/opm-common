@@ -69,10 +69,10 @@ namespace Opm {
             AllProperties = IntProperties | DoubleProperties
         };
 
-        EclipseState(const Deck& deck , const ParseContext parseContext = ParseContext());
+        EclipseState(const Deck& deck , ParseContext parseContext = ParseContext());
 
         /// [deprecated]
-        EclipseState(std::shared_ptr< const Deck > deck , const ParseContext parseContext = ParseContext());
+        EclipseState(std::shared_ptr< const Deck > deck , ParseContext parseContext = ParseContext());
 
         const ParseContext& getParseContext() const;
         std::shared_ptr< const Schedule > getSchedule() const;

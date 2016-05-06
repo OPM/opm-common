@@ -82,6 +82,8 @@ namespace Opm {
         ParseContext(const std::vector<std::pair<std::string , InputError::Action>> initial);
         Message::type handleError( const std::string& errorKey, const std::string& msg ) const;
         bool hasKey(const std::string& key) const;
+        ParseContext  withKey(const std::string& key, InputError::Action action = InputError::WARN) const;
+        ParseContext& withKey(const std::string& key, InputError::Action action = InputError::WARN);
         void updateKey(const std::string& key , InputError::Action action);
         void update(InputError::Action action);
         void update(const std::string& keyString , InputError::Action action);
@@ -190,6 +192,12 @@ namespace Opm {
           not supported.
         */
         const static std::string INTERNAL_ERROR_UNINITIALIZED_THPRES;
+
+        /*
+         If the deck is partial deck, and thus a full EclipseState is
+         meaningless, we can still construct a slim EclipseGrid.
+         */
+        const static std::string PARSE_MISSING_SECTIONS;
 
     private:
         void initDefault();

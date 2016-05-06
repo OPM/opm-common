@@ -31,6 +31,8 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
@@ -596,6 +598,51 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
         return parserState.deck;
     }
 
+    void assertFullDeck(const ParseContext& context) {
+        if (context.hasKey(ParseContext::PARSE_MISSING_SECTIONS))
+            throw new std::logic_error("Cannot construct a state in partial deck context");
+    }
+
+    EclipseState Parser::parse(const std::string &filename, const ParseContext& context) {
+        assertFullDeck(context);
+        Parser p;
+        auto deck = p.parseFile(filename, context);
+        return EclipseState(deck, context);
+    }
+
+    EclipseState Parser::parse(const Deck& deck, const ParseContext& context) {
+        assertFullDeck(context);
+        return EclipseState(deck, context);
+    }
+
+    EclipseState Parser::parseData(const std::string &data, const ParseContext& context) {
+        assertFullDeck(context);
+        Parser p;
+        auto deck = p.parseString(data, context);
+        return parse(*deck, context);
+    }
+
+    std::shared_ptr<const EclipseGrid> Parser::parseGrid(const std::string &filename, const ParseContext& context) {
+        if (context.hasKey(ParseContext::PARSE_MISSING_SECTIONS))
+            return std::make_shared<const EclipseGrid>(filename);
+        return parse(filename, context).getInputGrid();
+    }
+
+    std::shared_ptr<const EclipseGrid> Parser::parseGrid(const Deck& deck, const ParseContext& context)
+    {
+        if (context.hasKey(ParseContext::PARSE_MISSING_SECTIONS))
+            return std::make_shared<const EclipseGrid>(deck);
+        return parse(deck, context).getInputGrid();
+    }
+
+    std::shared_ptr<const EclipseGrid> Parser::parseGridData(const std::string &data, const ParseContext& context) {
+        Parser parser;
+        auto deck = parser.parseString(data, context);
+        if (context.hasKey(ParseContext::PARSE_MISSING_SECTIONS)) {
+            return std::make_shared<const EclipseGrid>(deck);
+        }
+        return parse(*deck, context).getInputGrid();
+    }
 
     DeckPtr Parser::parseFile(const std::string &dataFileName, const ParseContext& parseContext) const {
         return std::shared_ptr<Deck>( newDeckFromFile( dataFileName , parseContext));

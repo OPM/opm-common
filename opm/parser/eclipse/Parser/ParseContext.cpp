@@ -100,6 +100,19 @@ namespace Opm {
         return m_errorContexts.end();
     }
 
+    ParseContext ParseContext::withKey(const std::string& key, InputError::Action action) const {
+        ParseContext pc(*this);
+        pc.addKey(key);
+        pc.updateKey(key, action);
+        return pc;
+    }
+
+    ParseContext& ParseContext::withKey(const std::string& key, InputError::Action action) {
+        this->addKey(key);
+        this->updateKey(key, action);
+        return *this;
+    }
+
     bool ParseContext::hasKey(const std::string& key) const {
         if (m_errorContexts.find( key ) == m_errorContexts.end())
             return false;
@@ -218,6 +231,8 @@ namespace Opm {
     const std::string ParseContext::UNSUPPORTED_INITIAL_THPRES = "UNSUPPORTED_INITIAL_THPRES";
 
     const std::string ParseContext::INTERNAL_ERROR_UNINITIALIZED_THPRES = "INTERNAL_ERROR_UNINITIALIZED_THPRES";
+
+    const std::string ParseContext::PARSE_MISSING_SECTIONS = "PARSE_MISSING_SECTIONS";
 }
 
 
