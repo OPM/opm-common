@@ -42,11 +42,6 @@
 
 namespace Opm {
 
-// forward declarations
-namespace EclipseWriterDetails {
-class Summary;
-}
-
 class SimulationDataContainer;
 class WellState;
 
@@ -71,12 +66,6 @@ public:
     EclipseWriter(Opm::EclipseStateConstPtr eclipseState,
                   int numCells,
                   const int* compressedToCartesianCellIdx);
-
-    /**
-     * We need a destructor in the compilation unit to avoid the
-     * EclipseSummary being a complete type here.
-     */
-    virtual ~EclipseWriter ();
 
     /**
      * Write the static eclipse data (grid, PVT curves, etc) to disk.
@@ -125,7 +114,6 @@ private:
     std::string outputDir_;
     std::string baseName_;
     PhaseUsage phaseUsage_; // active phases in the input deck
-    std::shared_ptr<EclipseWriterDetails::Summary> summary_;
 
     void init(Opm::EclipseStateConstPtr eclipseState);
 };
