@@ -52,7 +52,7 @@ struct PhaseUsage;
  *          OutputWriter::create (params, parser);
  *
  *  // before the first timestep
- *  writer->writeInit (timer);
+ *  writer->writeInit( current_posix_time, time_since_epoch_at_start );
  *
  *  // after each timestep
  *  writer->writeTimeStep (timer, state, wellState);
@@ -74,7 +74,7 @@ public:
      * This routine should be called before the first timestep (i.e. when
      * timer.currentStepNum () == 0)
      */
-    virtual void writeInit(const SimulatorTimerInterface &timer, const NNC& nnc = NNC()) = 0;
+    virtual void writeInit( time_t current_posix_time, double start_time, const NNC& nnc = NNC() ) = 0;
 
     /*!
      * \brief Write a blackoil reservoir state to disk for later inspection with

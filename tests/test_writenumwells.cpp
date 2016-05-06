@@ -172,7 +172,8 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo)
     std::shared_ptr<Opm::SimulatorTimer> simTimer( new Opm::SimulatorTimer() );
     simTimer->init(eclipseState->getSchedule()->getTimeMap());
 
-    eclipseWriter->writeInit(*simTimer);
+    tm t = boost::posix_time::to_tm( simTimer->startDateTime() );
+    eclipseWriter->writeInit( simTimer->currentPosixTime(), std::mktime( &t ) );
 
     std::shared_ptr<Opm::WellState> wellState(new Opm::WellState());
     std::shared_ptr<Opm::BlackoilState> blackoilState = createBlackOilState(eclipseState->getInputGrid());

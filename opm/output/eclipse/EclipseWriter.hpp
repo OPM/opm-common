@@ -83,8 +83,7 @@ public:
      *
      * If NNC is given, writes TRANNNC keyword.
      */
-     virtual void writeInit(const SimulatorTimerInterface &timer,
-                            const NNC& nnc = NNC());
+    virtual void writeInit( time_t current_time, double start_time, const NNC& nnc = NNC() ) override;
 
     /*!
      * \brief Write a reservoir state and summary information to disk.

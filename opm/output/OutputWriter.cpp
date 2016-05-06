@@ -26,9 +26,9 @@ struct MultiWriter : public OutputWriter {
     MultiWriter (ptr_t writers) : writers_ (std::move (writers)) { }
 
     /// Forward the call to all writers
-    virtual void writeInit(const SimulatorTimerInterface &timer, const NNC& nnc) {
+    virtual void writeInit( time_t current, double start, const NNC& nnc) {
         for (it_t it = writers_->begin (); it != writers_->end (); ++it) {
-            (*it)->writeInit (timer, nnc);
+            (*it)->writeInit ( current, start, nnc);
         }
     }
 

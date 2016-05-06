@@ -255,7 +255,9 @@ state first_sim(test_work_area_type * test_area) {
 
     std::shared_ptr<Opm::SimulatorTimer> simTimer( new Opm::SimulatorTimer() );
     simTimer->init(eclipseState->getSchedule()->getTimeMap());
-    eclipseWriter->writeInit(*simTimer);
+
+    tm t = boost::posix_time::to_tm( simTimer->startDateTime() );
+    eclipseWriter->writeInit( simTimer->currentPosixTime(), std::mktime( &t ) );
 
     //
     Opm::PhaseUsage phaseUsage = Opm::phaseUsageFromDeck(deck);

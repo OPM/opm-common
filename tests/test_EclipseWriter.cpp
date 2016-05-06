@@ -408,7 +408,8 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
 
     createEclipseWriter(deckString);
 
-    eclWriter->writeInit(*simTimer);
+    tm t = boost::posix_time::to_tm( simTimer->startDateTime() );
+    eclWriter->writeInit( simTimer->currentPosixTime(), std::mktime( &t ) );
 
     checkEgridFile();
     checkInitFile();

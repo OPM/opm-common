@@ -164,7 +164,8 @@ BOOST_AUTO_TEST_CASE(test_EclipseWriterRFTHandler)
                                                                             eclipseState,
                                                                             ourFineGridManagerPtr,
                                                                             compressedToCartesianCellIdx);
-    eclipseWriter->writeInit(*simulatorTimer);
+    tm t = boost::posix_time::to_tm( simulatorTimer->startDateTime() );
+    eclipseWriter->writeInit( simulatorTimer->currentPosixTime(), std::mktime( &t ) );
 
 
     for (; simulatorTimer->currentStepNum() < simulatorTimer->numSteps(); ++ (*simulatorTimer)) {

@@ -431,7 +431,7 @@ class Summary : private boost::noncopyable
 public:
     Summary(const std::string& outputDir,
             const std::string& baseName,
-            const SimulatorTimerInterface& timer,
+            time_t start_time,
             bool time_in_days , 
             int nx,
             int ny,
@@ -441,16 +441,12 @@ public:
         casePath /= boost::to_upper_copy(baseName);
 
         // convert the start time to seconds since 1970-1-1@00:00:00
-        boost::posix_time::ptime startTime
-            = timer.startDateTime();
-        tm t = boost::posix_time::to_tm(startTime);
-        double secondsSinceEpochStart = std::mktime(&t);
 
         ertHandle_ = ecl_sum_alloc_writer(casePath.string().c_str(),
                                           false, /* formatted   */
                                           true,  /* unified     */
                                           ":",    /* join string */
-                                          secondsSinceEpochStart,
+                                          start_time,
                                           time_in_days,
                                           nx,
                                           ny,
@@ -546,7 +542,7 @@ public:
 
     void writeHeader(int numCells,
                      const int* compressedToCartesianCellIdx,
-                     const SimulatorTimerInterface& timer,
+                     time_t current_posix_time,
                      Opm::EclipseStateConstPtr eclipseState,
                      const PhaseUsage uses,
                      const NNC& nnc = NNC())
@@ -596,7 +592,7 @@ public:
                                         eclGrid->c_ptr(),
                                         poro_kw.ertHandle(),
                                         ertPhaseMask(uses),
-                                        timer.currentPosixTime());
+                                        current_posix_time );
         }
     }
 
@@ -1177,7 +1173,7 @@ EclipseWriter::convertUnitTypeErtEclUnitEnum(UnitSystem::UnitType unit)
 }
 
 
-void EclipseWriter::writeInit(const SimulatorTimerInterface &timer, const NNC& nnc)
+void EclipseWriter::writeInit( time_t current_posix_time, double start_time, const NNC& nnc)
 {
     // if we don't want to write anything, this method becomes a
     // no-op...
@@ -1191,7 +1187,7 @@ void EclipseWriter::writeInit(const SimulatorTimerInterface &timer, const NNC& n
     EclipseWriterDetails::Init fortio(outputDir_, baseName_, /*stepIdx=*/0, eclipseState_->getIOConfigConst());
     fortio.writeHeader(numCells_,
                        compressedToCartesianCellIdx_,
-                       timer,
+                       current_posix_time,
                        eclipseState_,
                        phaseUsage_,
                        nnc);
@@ -1244,7 +1240,7 @@ void EclipseWriter::writeInit(const SimulatorTimerInterface &timer, const NNC& n
 
       summary_.reset(new EclipseWriterDetails::Summary(outputDir_,
                                                        baseName_,
-                                                       timer,
+                                                       start_time,
                                                        time_in_days,
                                                        eclGrid->getNX(),
                                                        eclGrid->getNY(),
