@@ -20,7 +20,6 @@
 #include <vector>
 
 #include <opm/output/eclipse/EclipseWriteRFTHandler.hpp>
-#include <opm/core/simulator/SimulatorTimer.hpp>
 #include <opm/core/props/BlackoilPhases.hpp>
 #include <opm/core/utility/Units.hpp>
 #include <opm/core/utility/miscUtilities.hpp>
@@ -50,7 +49,9 @@ namespace EclipseWriterDetails {
     void EclipseWriteRFTHandler::writeTimeStep(const IOConfig& ioConfig,
                                                const std::string& filename,
                                                const ert_ecl_unit_enum ecl_unit,
-                                               const SimulatorTimerInterface& simulatorTimer,
+                                               int report_step,
+                                               time_t current_time,
+                                               double secs_elapsed,
                                                std::vector<WellConstPtr>& wells,
                                                EclipseGridConstPtr eclipseGrid,
                                                std::vector<double>& pressure,
@@ -58,15 +59,18 @@ namespace EclipseWriterDetails {
                                                std::vector<double>& sgas) {
 
         std::ios_base::openmode mode = std::ios_base::app;
-        if (simulatorTimer.reportStepNum() == ioConfig.getFirstRFTStep())
+        if( report_step == ioConfig.getFirstRFTStep() )
             mode = std::ios_base::out;
+
         {
             ERT::FortIO fortio(filename , mode);
 
             for (const auto& well : wells) {
-                if ((well->getRFTActive(simulatorTimer.reportStepNum())) || (well->getPLTActive(simulatorTimer.reportStepNum()))) {
+                if ((well->getRFTActive( report_step )) || (well->getPLTActive( report_step ))) {
                     ERT::ert_unique_ptr<ecl_rft_node_type, ecl_rft_node_free>  ecl_node( createEclRFTNode(well,
-                                                                                                          simulatorTimer,
+                                                                                                          report_step,
+                                                                                                          current_time,
+                                                                                                          secs_elapsed,
                                                                                                           eclipseGrid,
                                                                                                           pressure,
                                                                                                           swat,
@@ -87,8 +91,10 @@ namespace EclipseWriterDetails {
 
 
 
-    ecl_rft_node_type * EclipseWriteRFTHandler::createEclRFTNode(WellConstPtr well,
-                                                                  const SimulatorTimerInterface& simulatorTimer,
+    ecl_rft_node_type * EclipseWriteRFTHandler::createEclRFTNode( WellConstPtr well,
+                                                                  int report_step,
+                                                                  time_t current_time,
+                                                                  double secs_elapsed,
                                                                   EclipseGridConstPtr eclipseGrid,
                                                                   const std::vector<double>& pressure,
                                                                   const std::vector<double>& swat,
@@ -96,9 +102,9 @@ namespace EclipseWriterDetails {
 
 
         const std::string& well_name      = well->name();
-        size_t             timestep       = (size_t)simulatorTimer.reportStepNum();
-        time_t             recording_date = simulatorTimer.currentPosixTime();
-        double             days           = Opm::unit::convert::to(simulatorTimer.simulationTimeElapsed(), Opm::unit::day);
+        size_t             timestep       = size_t( report_step );
+        time_t             recording_date = current_time;
+        double             days           = Opm::unit::convert::to( secs_elapsed, Opm::unit::day );
 
         std::string type = "RFT";
         ecl_rft_node_type * ecl_rft_node = ecl_rft_node_alloc_new(well_name.c_str(), type.c_str(), recording_date, days);

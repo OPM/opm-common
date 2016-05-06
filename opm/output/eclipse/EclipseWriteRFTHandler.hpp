@@ -20,8 +20,6 @@
 #ifndef OPM_ECLIPSE_WRITE_RFT_HANDLER_HPP
 #define OPM_ECLIPSE_WRITE_RFT_HANDLER_HPP
 
-#include <opm/core/simulator/SimulatorTimer.hpp>
-
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 #include <ert/ecl/ecl_rft_node.h>
@@ -45,7 +43,9 @@ namespace EclipseWriterDetails {
     void writeTimeStep(const IOConfig& ioConfig,
                        const std::string& filename,
                        const ert_ecl_unit_enum ecl_unit,
-                       const SimulatorTimerInterface& simulatorTimer,
+                       int report_step,
+                       time_t current_time,
+                       double secs_elapsed,
                        std::vector<std::shared_ptr< const Well >>& wells,
                        std::shared_ptr< const EclipseGrid > eclipseGrid,
                        std::vector<double>& pressure,
@@ -57,7 +57,9 @@ namespace EclipseWriterDetails {
     private:
 
     ecl_rft_node_type * createEclRFTNode(std::shared_ptr< const Well > well,
-                                         const SimulatorTimerInterface& simulatorTimer,
+                                         int report_step,
+                                         time_t current_time,
+                                         double secs_elapsed,
                                          std::shared_ptr< const EclipseGrid > eclipseGrid,
                                          const std::vector<double>& pressure,
                                          const std::vector<double>& swat,
