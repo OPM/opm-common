@@ -40,6 +40,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
@@ -49,11 +50,11 @@
 namespace Opm {
 
 
-    EclipseState::EclipseState(std::shared_ptr<const Deck> deckptr, const ParseContext& parseContext) :
+    EclipseState::EclipseState(std::shared_ptr<const Deck> deckptr, const ParseContext parseContext) :
         EclipseState(*deckptr, parseContext)
     {}
 
-    EclipseState::EclipseState(const Deck& deck, const ParseContext& parseContext) :
+    EclipseState::EclipseState(const Deck& deck, const ParseContext parseContext) :
         m_deckUnitSystem(    deck.getActiveUnitSystem() ),
         m_parseContext(      parseContext ),
         m_tables(            deck ),

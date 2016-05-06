@@ -33,6 +33,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
 namespace Opm {
 
@@ -68,10 +69,10 @@ namespace Opm {
             AllProperties = IntProperties | DoubleProperties
         };
 
-        EclipseState(const Deck& deck , const ParseContext& parseContext);
+        EclipseState(const Deck& deck , const ParseContext parseContext = ParseContext());
 
         /// [deprecated]
-        EclipseState(std::shared_ptr< const Deck > deck , const ParseContext& parseContext);
+        EclipseState(std::shared_ptr< const Deck > deck , const ParseContext parseContext = ParseContext());
 
         const ParseContext& getParseContext() const;
         std::shared_ptr< const Schedule > getSchedule() const;
@@ -129,7 +130,7 @@ namespace Opm {
 
 
         const UnitSystem& m_deckUnitSystem;
-        const ParseContext& m_parseContext;
+        const ParseContext m_parseContext;
         const TableManager m_tables;
         std::shared_ptr<EclipseGrid> m_inputGrid;
         Eclipse3DProperties m_eclipseProperties;
