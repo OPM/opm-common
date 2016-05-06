@@ -182,8 +182,11 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo)
     int countTimeStep = eclipseState->getSchedule()->getTimeMap()->numTimesteps();
 
     for(int timestep=0; timestep <= countTimeStep; ++timestep){
-      simTimer->setCurrentStepNum(timestep);
-        eclipseWriter->writeTimeStep(*simTimer, *blackoilState, *wellState, false);
+        simTimer->setCurrentStepNum( timestep );
+        eclipseWriter->writeTimeStep( simTimer->reportStepNum(),
+                                      simTimer->currentPosixTime(),
+                                      simTimer->simulationTimeElapsed(),
+                                      *blackoilState, *wellState, false);
     }
 
     verifyWellState(eclipse_restart_filename, eclipseState->getInputGrid(), eclipseState->getSchedule());

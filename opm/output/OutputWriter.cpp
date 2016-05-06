@@ -32,12 +32,15 @@ struct MultiWriter : public OutputWriter {
         }
     }
 
-    virtual void writeTimeStep(const SimulatorTimerInterface& timer,
+    virtual void writeTimeStep(int report_step,
+                               time_t current_time,
+                               double secs_elapsed,
                                const SimulationDataContainer& reservoirState,
                                const WellState& wellState,
                                bool  isSubstep) {
         for (it_t it = writers_->begin (); it != writers_->end(); ++it) {
-            (*it)->writeTimeStep (timer, reservoirState, wellState, isSubstep);
+            (*it)->writeTimeStep( report_step, current_time, secs_elapsed,
+                                  reservoirState, wellState, isSubstep );
         }
     }
 

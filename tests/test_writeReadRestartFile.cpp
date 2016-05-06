@@ -303,7 +303,10 @@ state first_sim(test_work_area_type * test_area) {
 
     setValuesInWellState(wellState);
     simTimer->setCurrentStepNum(1);
-    eclipseWriter->writeTimeStep(*simTimer, *blackoilState, *wellState , false);
+    eclipseWriter->writeTimeStep( simTimer->reportStepNum(),
+                                  simTimer->currentPosixTime(),
+                                  simTimer->simulationTimeElapsed(),
+                                  *blackoilState, *wellState , false);
 
     return std::make_pair(wellState, blackoilState);
 }

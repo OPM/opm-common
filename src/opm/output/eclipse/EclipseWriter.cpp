@@ -32,7 +32,6 @@
 #include <opm/core/grid/GridManager.hpp>
 #include <opm/core/grid/GridHelpers.hpp>
 #include <opm/core/grid/cpgpreprocess/preprocess.h>
-#include <opm/core/simulator/SimulatorTimerInterface.hpp>
 #include <opm/core/simulator/WellState.hpp>
 #include <opm/core/simulator/BlackoilState.hpp>
 #include <opm/output/eclipse/EclipseWriteRFTHandler.hpp>
@@ -374,10 +373,7 @@ public:
         ecl_rst_file_close(restartFileHandle_);
     }
 
-    void writeHeader(const SimulatorTimerInterface& /*timer*/,
-                     int writeStepIdx,
-                     ecl_rsthead_type * rsthead_data)
-    {
+    void writeHeader( int writeStepIdx, ecl_rsthead_type* rsthead_data ){
 
       ecl_util_set_date_values( rsthead_data->sim_time , &rsthead_data->day , &rsthead_data->month , &rsthead_data->year );
 
@@ -648,7 +644,9 @@ void EclipseWriter::writeInit( time_t current_posix_time, double start_time, con
 }
 
 // implementation of the writeTimeStep method
-void EclipseWriter::writeTimeStep(const SimulatorTimerInterface& timer,
+void EclipseWriter::writeTimeStep(int report_step,
+                                  time_t current_posix_time,
+                                  double secs_elapsed,
                                   const SimulationDataContainer& reservoirState,
                                   const WellState& wellState,
                                   bool  isSubstep)
@@ -691,17 +689,17 @@ void EclipseWriter::writeTimeStep(const SimulatorTimerInterface& timer,
 
 
     // Write restart file
-    if(!isSubstep && ioConfig->getWriteRestartFile(timer.reportStepNum()))
+    if(!isSubstep && ioConfig->getWriteRestartFile(report_step))
     {
-        const size_t ncwmax                 = eclipseState_->getSchedule()->getMaxNumCompletionsForWells(timer.reportStepNum());
-        const size_t numWells               = eclipseState_->getSchedule()->numWells(timer.reportStepNum());
-        std::vector<WellConstPtr> wells_ptr = eclipseState_->getSchedule()->getWells(timer.reportStepNum());
+        const size_t ncwmax                 = eclipseState_->getSchedule()->getMaxNumCompletionsForWells(report_step);
+        const size_t numWells               = eclipseState_->getSchedule()->numWells(report_step);
+        std::vector<WellConstPtr> wells_ptr = eclipseState_->getSchedule()->getWells(report_step);
 
         std::vector<const char*> zwell_data( numWells * Opm::EclipseWriterDetails::Restart::NZWELZ , "");
         std::vector<int>         iwell_data( numWells * Opm::EclipseWriterDetails::Restart::NIWELZ , 0 );
         std::vector<int>         icon_data( numWells * ncwmax * Opm::EclipseWriterDetails::Restart::NICONZ , 0 );
 
-        EclipseWriterDetails::Restart restartHandle(outputDir_, baseName_, timer.reportStepNum(), ioConfig);
+        EclipseWriterDetails::Restart restartHandle(outputDir_, baseName_, report_step, ioConfig);
 
         const size_t sz = wellState.bhp().size() + wellState.perfPress().size() + wellState.perfRates().size() + wellState.temperature().size() + wellState.wellRates().size();
         std::vector<double>      xwell_data( sz , 0 );
@@ -712,11 +710,11 @@ void EclipseWriter::writeTimeStep(const SimulatorTimerInterface& timer,
             WellConstPtr well = wells_ptr[iwell];
             {
                 size_t wellIwelOffset = Opm::EclipseWriterDetails::Restart::NIWELZ * iwell;
-                restartHandle.addRestartFileIwelData(iwell_data, timer.reportStepNum(), well , wellIwelOffset);
+                restartHandle.addRestartFileIwelData(iwell_data, report_step, well , wellIwelOffset);
             }
             {
                 size_t wellIconOffset = ncwmax * Opm::EclipseWriterDetails::Restart::NICONZ * iwell;
-                restartHandle.addRestartFileIconData(icon_data,  well->getCompletions( timer.reportStepNum() ), wellIconOffset);
+                restartHandle.addRestartFileIconData(icon_data,  well->getCompletions( report_step ), wellIconOffset);
             }
             zwell_data[ iwell * Opm::EclipseWriterDetails::Restart::NZWELZ ] = well->name().c_str();
         }
@@ -724,7 +722,7 @@ void EclipseWriter::writeTimeStep(const SimulatorTimerInterface& timer,
 
         {
             ecl_rsthead_type rsthead_data = {};
-            rsthead_data.sim_time   = timer.currentPosixTime();
+            rsthead_data.sim_time   = current_posix_time;
             rsthead_data.nactive    = numCells_;
             rsthead_data.nx         = cartesianSize_[0];
             rsthead_data.ny         = cartesianSize_[1];
@@ -735,11 +733,9 @@ void EclipseWriter::writeTimeStep(const SimulatorTimerInterface& timer,
             rsthead_data.niconz     = EclipseWriterDetails::Restart::NICONZ;
             rsthead_data.ncwmax     = ncwmax;
             rsthead_data.phase_sum  = Opm::EclipseWriterDetails::ertPhaseMask(phaseUsage_);
-            rsthead_data.sim_days   = Opm::unit::convert::to(timer.simulationTimeElapsed(), Opm::unit::day); //data for doubhead
+            rsthead_data.sim_days   = Opm::unit::convert::to(secs_elapsed, Opm::unit::day); //data for doubhead
 
-            restartHandle.writeHeader(timer,
-                                      timer.reportStepNum(),
-                                      &rsthead_data);
+            restartHandle.writeHeader( report_step, &rsthead_data);
         }
 
 
@@ -799,13 +795,13 @@ void EclipseWriter::writeTimeStep(const SimulatorTimerInterface& timer,
                                                       0);
         auto unit_type = eclipseState_->getDeckUnitSystem().getType();
         ert_ecl_unit_enum ecl_unit = convertUnitTypeErtEclUnitEnum(unit_type);
-        std::vector<WellConstPtr> wells = eclipseState_->getSchedule()->getWells(timer.reportStepNum());
+        std::vector<WellConstPtr> wells = eclipseState_->getSchedule()->getWells(report_step);
         eclipseWriteRFTHandler->writeTimeStep(*ioConfig,
                                               rft_filename,
                                               ecl_unit,
-                                              timer.reportStepNum(),
-                                              timer.currentPosixTime(),
-                                              timer.simulationTimeElapsed(),
+                                              report_step,
+                                              current_posix_time,
+                                              secs_elapsed,
                                               wells,
                                               eclipseState_->getInputGrid(),
                                               pressure,
@@ -820,7 +816,7 @@ void EclipseWriter::writeTimeStep(const SimulatorTimerInterface& timer,
 
     ++writeStepIdx_;
     // store current report index
-    reportStepIdx_ = timer.reportStepNum();
+    reportStepIdx_ = report_step;
 }
 
 

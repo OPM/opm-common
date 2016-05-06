@@ -25,7 +25,6 @@
 #include <opm/output/OutputWriter.hpp>
 #include <opm/core/props/BlackoilPhases.hpp>
 #include <opm/core/wells.h> // WellType
-#include <opm/core/simulator/SimulatorTimerInterface.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
@@ -89,10 +88,12 @@ public:
      * \param[in] reservoirState The thermodynamic state of the reservoir
      * \param[in] wellState      The production/injection data for all wells
      */
-    virtual void writeTimeStep(const SimulatorTimerInterface& timer,
-                               const SimulationDataContainer& reservoirState,
-                               const WellState& wellState,
-                               bool isSubstep);
+    virtual void writeTimeStep( int report_step,
+                                time_t current_posix_time,
+                                double seconds_elapsed,
+                                const SimulationDataContainer& reservoirState,
+                                const WellState& wellState,
+                                bool isSubstep);
 
 
     static int eclipseWellTypeMask(WellType wellType, WellInjector::TypeEnum injectorType);

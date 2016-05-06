@@ -171,7 +171,10 @@ BOOST_AUTO_TEST_CASE(test_EclipseWriterRFTHandler)
     for (; simulatorTimer->currentStepNum() < simulatorTimer->numSteps(); ++ (*simulatorTimer)) {
         std::shared_ptr<Opm::BlackoilState> blackoilState2 = createBlackoilState(simulatorTimer->currentStepNum(),ourFineGridManagerPtr);
         std::shared_ptr<Opm::WellState> wellState = createWellState(blackoilState2);
-        eclipseWriter->writeTimeStep(*simulatorTimer, *blackoilState2, *wellState, false);
+        eclipseWriter->writeTimeStep( simulatorTimer->reportStepNum(),
+                                      simulatorTimer->currentPosixTime(),
+                                      simulatorTimer->simulationTimeElapsed(),
+                                      *blackoilState2, *wellState, false);
     }
 
     std::string cwd(test_work_area_get_cwd(test_area.get()));

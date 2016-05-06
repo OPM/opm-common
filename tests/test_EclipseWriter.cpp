@@ -415,11 +415,17 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
     checkInitFile();
 
     for (; simTimer->currentStepNum() < simTimer->numSteps(); ++ (*simTimer)) {
-        createBlackoilState(simTimer->currentStepNum());
-        createWellState(simTimer->currentStepNum());
-        eclWriter->writeTimeStep(*simTimer, *blackoilState, *wellState, false);
-        checkRestartFile(simTimer->currentStepNum());
-        checkSummaryFile(simTimer->currentStepNum());
+        const auto current_step = simTimer->currentStepNum();
+        const auto report_step = simTimer->reportStepNum();
+        createBlackoilState( current_step );
+        createWellState( current_step );
+
+        eclWriter->writeTimeStep( report_step,
+                                  simTimer->currentPosixTime(),
+                                  simTimer->simulationTimeElapsed(),
+                                  *blackoilState, *wellState, false);
+        checkRestartFile( current_step );
+        checkSummaryFile( current_step );
     }
 
     test_work_area_free(test_area);

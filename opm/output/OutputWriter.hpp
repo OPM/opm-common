@@ -21,7 +21,6 @@
 #define OPM_OUTPUT_WRITER_HPP
 
 #include <memory>  // unique_ptr, shared_ptr
-#include <opm/core/simulator/SimulatorTimerInterface.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 
 struct UnstructuredGrid;
@@ -80,17 +79,21 @@ public:
      * \brief Write a blackoil reservoir state to disk for later inspection with
      *        visualization tools like ResInsight
      *
-     * \param[in] timer          The timer providing time, time step, etc. information
-     * \param[in] reservoirState The thermodynamic state of the reservoir
+     * \param[in] report_step           The current report step
+     * \param[in] current_posix_time    Seconds elapsed since epoch
+     * \param[in] seconds_elapsed       Seconds elapsed since simulation start
+     * \param[in] reservoirState        The thermodynamic state of the reservoir
      * \param[in] wellState      The production/injection data for all wells
      *
      * This routine should be called after the timestep has been advanced,
      * i.e. timer.currentStepNum () > 0.
      */
-    virtual void writeTimeStep(const SimulatorTimerInterface& timer,
-                               const SimulationDataContainer& reservoirState,
-                               const WellState& wellState,
-                               bool  isSubstep) = 0;
+    virtual void writeTimeStep( int report_step,
+                                time_t current_posix_time,
+                                double seconds_elapsed,
+                                const SimulationDataContainer& reservoirState,
+                                const WellState& wellState,
+                                bool  isSubstep) = 0;
 
     /*!
      * Create a suitable set of output formats based on configuration.
