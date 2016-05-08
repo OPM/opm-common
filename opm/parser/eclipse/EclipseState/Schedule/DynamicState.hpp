@@ -25,6 +25,9 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 
+#include <ert/util/ssize_t.h>
+
+
 namespace Opm {
 
     /**

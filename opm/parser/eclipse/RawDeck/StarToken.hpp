@@ -23,6 +23,7 @@
 #include <string>
 
 #include <opm/parser/eclipse/Utility/Stringview.hpp>
+#include <ert/util/ssize_t.h>
 
 namespace Opm {
     bool isStarToken(const string_view& token,

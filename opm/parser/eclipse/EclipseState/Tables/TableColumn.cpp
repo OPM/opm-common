@@ -22,6 +22,8 @@
 #include <opm/parser/eclipse/EclipseState/Tables/ColumnSchema.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableColumn.hpp>
 
+#include <ert/util/ssize_t.h>
+
 namespace Opm {
 
     TableColumn::TableColumn(const ColumnSchema& schema) :
