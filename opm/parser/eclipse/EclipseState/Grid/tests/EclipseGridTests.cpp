@@ -648,6 +648,51 @@ BOOST_AUTO_TEST_CASE(ResetACTNUM) {
 }
 
 
+BOOST_AUTO_TEST_CASE(ACTNUM_BEST_EFFORT) {
+    const char *deckData1 =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        " 10 10 10 /\n"
+        "GRID\n"
+        "COORD\n"
+        "  726*1 / \n"
+        "ZCORN \n"
+        "  8000*1 / \n"
+        "ACTNUM \n"
+        "  100*1 /\n"
+        "EDIT\n"
+        "\n";
+
+    const char *deckData2 =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        " 10 10 10 /\n"
+        "GRID\n"
+        "COORD\n"
+        "  726*1 / \n"
+        "ZCORN \n"
+        "  8000*1 / \n"
+        "ACTNUM \n"
+        "  100*1 800*0 100*1 /\n"
+        "EDIT\n"
+        "\n";
+
+    Opm::ParserPtr parser(new Opm::Parser());
+    Opm::DeckConstPtr deck1 = parser->parseString(deckData1, Opm::ParseContext()) ;
+    Opm::DeckConstPtr deck2 = parser->parseString(deckData2, Opm::ParseContext()) ;
+
+    Opm::EclipseGrid grid1(deck1);
+    // Actnum vector is too short - ignored
+    BOOST_CHECK_EQUAL( 1000U , grid1.getNumActive());
+
+    Opm::EclipseGrid grid2(deck2);
+    BOOST_CHECK_EQUAL( 200U , grid2.getNumActive());
+}
+
+
+
 BOOST_AUTO_TEST_CASE(LoadFromBinary) {
     BOOST_CHECK_THROW(Opm::EclipseGrid( "No/does/not/exist" ) , std::invalid_argument);
 }

@@ -115,6 +115,36 @@ namespace Opm {
                EclipseGrid(*deckptr, actnum)
     {}
 
+
+    /*
+      This is the main EclipseGrid constructor, it will inspect the
+      input Deck for grid keywords, either the corner point keywords
+      COORD and ZCORN, or the various rectangular keywords like DX,DY
+      and DZ.
+
+      Actnum is treated specially:
+
+        1. If an actnum pointer is passed in that should be a pointer
+           to 0 and 1 values which will be used as actnum mask.
+
+        2. If the actnum pointer is not present the constructor will
+           look in the deck for an actnum keyword, and use that if it
+           is found. This is a best effort which will work in many
+           cases, but if the ACTNUM keyword is manipulated in the deck
+           those manipulations will be silently lost; if the ACTNUM
+           keyword has size different from nx*ny*nz it will also be
+           silently ignored.
+
+      With a mutable EclipseGrid instance you can later call the
+      EclipseGrid::resetACTNUM() method when you have complete actnum
+      information. The EclipseState based construction of EclipseGrid
+      is a two-pass operation, which guarantees that actnum is handled
+      correctly.
+    */
+
+
+
+
     EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         : m_minpvValue(0),
           m_minpvMode(MinpvMode::ModeEnum::Inactive),
@@ -166,6 +196,17 @@ namespace Opm {
         }
         if (actnum != nullptr)
             resetACTNUM(actnum);
+        else {
+            if (deck.hasKeyword<ParserKeywords::ACTNUM>()) {
+                const auto& actnumData = deck.getKeyword<ParserKeywords::ACTNUM>().getIntData();
+                if (actnumData.size() == getCartesianSize())
+                    resetACTNUM( actnumData.data());
+                else {
+                    const std::string msg = "The ACTNUM keyword has " + std::to_string( actnumData.size() ) + " elements - expected : " + std::to_string( getCartesianSize()) + " - ignored.";
+                    m_messages.warning(msg);
+                }
+            }
+        }
     }
 
 
@@ -187,7 +228,7 @@ namespace Opm {
 
             auto pinchoutString = record.getItem<ParserKeywords::PINCH::PINCHOUT_OPTION>().get< std::string >(0);
             m_pinchoutMode = PinchMode::PinchModeFromString(pinchoutString);
-            
+
             auto multzString = record.getItem<ParserKeywords::PINCH::MULTZ_OPTION>().get< std::string >(0);
             m_multzMode = PinchMode::PinchModeFromString(multzString);
         }
