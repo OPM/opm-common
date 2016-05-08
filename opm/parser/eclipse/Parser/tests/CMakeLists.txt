@@ -3,8 +3,7 @@ foreach(tapp ParserTests ParserKeywordTests ParserRecordTests
   opm_add_test(run${tapp} SOURCES ${tapp}.cpp
                           LIBRARIES opmparser ${Boost_LIBRARIES})
 endforeach()
-set_property(SOURCE ParserRecordTests.cpp PROPERTY COMPILE_FLAGS "-Wno-error")
-
-
-
+if (NOT MSVC)
+    set_property(SOURCE ParserRecordTests.cpp PROPERTY COMPILE_FLAGS "-Wno-error")
+endif()
 
