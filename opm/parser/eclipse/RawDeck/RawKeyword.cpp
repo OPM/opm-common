@@ -24,6 +24,8 @@
 #include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
 #include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
 
+#include <cctype>
+
 namespace Opm {
 
     static const std::string emptystr = "";
