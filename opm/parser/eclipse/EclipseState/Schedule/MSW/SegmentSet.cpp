@@ -21,6 +21,11 @@
 #include <cmath>
 #include <map>
 
+#ifdef _WIN32
+#define _USE_MATH_DEFINES 
+#include <math.h>
+#endif
+
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
