@@ -218,10 +218,12 @@ endif (COMMAND install_hook)
 opm_install (${project})
 message (STATUS "This build defaults to installing in ${CMAKE_INSTALL_PREFIX}")
 
-# installation of CMake modules to help user programs locate the library
-include (OpmProject)
-opm_cmake_config (${project})
-
+if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    #installation of CMake modules to help user programs locate the library
+    include (OpmProject)
+    opm_cmake_config (${project})
+endif()
+    
 # routines to build satellites such as tests, tutorials and samples
 include (OpmSatellites)
 
