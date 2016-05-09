@@ -232,3 +232,45 @@ BOOST_AUTO_TEST_CASE(TestOpmLog) {
 
     BOOST_CHECK_EQUAL( log_stream.str() , "Warning\n");
 }
+
+
+
+BOOST_AUTO_TEST_CASE(TestOpmLogWithColors)
+{
+    OpmLog::clearBackends();
+
+    std::ostringstream log_stream;
+
+    {
+        std::shared_ptr<CounterLog> counter = std::make_shared<CounterLog>();
+        std::shared_ptr<StreamLog> streamLog = std::make_shared<StreamLog>(log_stream, Log::DefaultMessageTypes);
+        BOOST_CHECK_EQUAL( false , OpmLog::hasBackend("NO"));
+        OpmLog::addBackend("COUNTER" , counter);
+        OpmLog::addBackend("STREAM" , streamLog);
+        BOOST_CHECK_EQUAL( true , OpmLog::hasBackend("COUNTER"));
+        BOOST_CHECK_EQUAL( true , OpmLog::hasBackend("STREAM"));
+
+        streamLog->configureDecoration(false, true);
+    }
+
+    OpmLog::warning("Warning");
+    OpmLog::error("Error");
+    OpmLog::info("Info");
+    OpmLog::bug("Bug");
+
+    const std::string expected = Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Error, "Error") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Info, "Info") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Bug, "Bug") + "\n";
+
+    BOOST_CHECK_EQUAL(log_stream.str(), expected);
+
+    {
+        auto counter = OpmLog::getBackend<CounterLog>("COUNTER");
+
+        BOOST_CHECK_EQUAL( 1 , counter->numMessages(Log::MessageType::Error) );
+        BOOST_CHECK_EQUAL( 1 , counter->numMessages(Log::MessageType::Warning) );
+        BOOST_CHECK_EQUAL( 1 , counter->numMessages(Log::MessageType::Info) );
+        BOOST_CHECK_EQUAL( 1 , counter->numMessages(Log::MessageType::Bug) );
+    }
+}
