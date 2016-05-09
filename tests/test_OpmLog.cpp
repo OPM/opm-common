@@ -235,6 +235,32 @@ BOOST_AUTO_TEST_CASE(TestOpmLog) {
 
 
 
+BOOST_AUTO_TEST_CASE(TestHelperFunctions)
+{
+    using namespace Log;
+
+    // isPower2
+    BOOST_CHECK(!isPower2(0));
+    BOOST_CHECK(isPower2(1));
+    BOOST_CHECK(isPower2(1 << 3));
+    BOOST_CHECK(isPower2(1ul << 62));
+
+    // fileMessage
+    BOOST_CHECK_EQUAL(fileMessage("foo/bar", 1, "message"), "foo/bar:1: message");
+    BOOST_CHECK_EQUAL(fileMessage(MessageType::Error, "foo/bar", 1, "message"), "foo/bar:1: error: message");
+
+    // prefixMessage
+    BOOST_CHECK_EQUAL(prefixMessage(MessageType::Error, "message"), "error: message");
+    BOOST_CHECK_EQUAL(prefixMessage(MessageType::Info, "message"), "info: message");
+
+    // colorCode Message
+    BOOST_CHECK_EQUAL(colorCodeMessage(MessageType::Info, "message"), "\033[39mmessage\033[0m");
+    BOOST_CHECK_EQUAL(colorCodeMessage(MessageType::Warning, "message"), "\033[33;1mmessage\033[0m");
+    BOOST_CHECK_EQUAL(colorCodeMessage(MessageType::Error, "message"), "\033[31;1mmessage\033[0m");
+}
+
+
+
 BOOST_AUTO_TEST_CASE(TestOpmLogWithColors)
 {
     OpmLog::clearBackends();
