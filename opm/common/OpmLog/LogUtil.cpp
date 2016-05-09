@@ -72,5 +72,29 @@ namespace Log {
 
         return prefix + ": " + message;
     }
+
+
+    std::string colorCodeMessage(int64_t messageType, const std::string& message) {
+        std::string colorcode;
+        switch (messageType) {
+        case MessageType::Debug:
+        case MessageType::Info:
+            colorcode = "\033[39m";
+            break;
+        case MessageType::Warning:
+            colorcode = "\033[33;1m";
+            break;
+        case MessageType::Error:
+        case MessageType::Problem:
+        case MessageType::Bug:
+            colorcode = "\033[31;1m";
+            break;
+        default:
+            throw std::invalid_argument("Unhandled messagetype");
+        }
+
+        return colorcode + message + "\033[0m";
+    }
+
 }
 }

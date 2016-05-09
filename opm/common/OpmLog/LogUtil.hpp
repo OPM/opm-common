@@ -40,6 +40,7 @@ namespace Log {
     std::string fileMessage(const std::string& path, int line , const std::string& msg);
     std::string fileMessage(int64_t messageType , const std::string& path, int line , const std::string& msg);
     std::string prefixMessage(int64_t messageType , const std::string& msg);
+    std::string colorCodeMessage(int64_t messageType , const std::string& msg);
 
 }
 }
