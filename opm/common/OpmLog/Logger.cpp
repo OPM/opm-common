@@ -63,6 +63,11 @@ namespace Opm {
             return true;
     }
 
+    void Logger::clearBackends() {
+        m_backends.clear();
+        m_globalMask = 0;
+    }
+
     bool Logger::removeBackend(const std::string& name) {
         size_t eraseCount = m_backends.erase( name );
         if (eraseCount == 1)

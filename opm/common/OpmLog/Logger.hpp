@@ -44,6 +44,7 @@ public:
     void addBackend(const std::string& name , std::shared_ptr<LogBackend> backend);
     bool hasBackend(const std::string& name);
     bool removeBackend(const std::string& name);
+    void clearBackends();
 
     template <class BackendType>
     std::shared_ptr<BackendType> getBackend(const std::string& name) const {
