@@ -39,43 +39,37 @@ namespace Opm {
 
     void OpmLog::info(const std::string& message)
     {
-        const std::string msg = Log::prefixMessage(Log::MessageType::Info, message);
-        addMessage(Log::MessageType::Info, msg);
+        addMessage(Log::MessageType::Info, message);
     }
 
 
     void OpmLog::warning(const std::string& message)
     {
-        const std::string msg = Log::prefixMessage(Log::MessageType::Warning, message);
-        addMessage(Log::MessageType::Warning, msg);
+        addMessage(Log::MessageType::Warning, message);
     }
 
 
     void OpmLog::problem(const std::string& message)
     {
-        const std::string msg = Log::prefixMessage(Log::MessageType::Problem, message);
-        addMessage(Log::MessageType::Problem, msg);
+        addMessage(Log::MessageType::Problem, message);
     }
 
 
     void OpmLog::error(const std::string& message)
     {
-        const std::string msg = Log::prefixMessage(Log::MessageType::Error, message);
-        addMessage(Log::MessageType::Error, msg);
+        addMessage(Log::MessageType::Error, message);
     }
 
 
     void OpmLog::bug(const std::string& message)
     {
-        const std::string msg = Log::prefixMessage(Log::MessageType::Bug, message);
-        addMessage(Log::MessageType::Bug, msg);
+        addMessage(Log::MessageType::Bug, message);
     }
 
     
     void OpmLog::debug(const std::string& message)
     {
-        const std::string msg = Log::prefixMessage(Log::MessageType::Debug, message);
-        addMessage(Log::MessageType::Debug, msg);
+        addMessage(Log::MessageType::Debug, message);
     }
 
 
