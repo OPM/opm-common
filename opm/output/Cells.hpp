@@ -25,6 +25,8 @@
 
 namespace Opm {
 
+class SimulationDataContainer;
+
 namespace data {
 
     struct Solution {
@@ -54,6 +56,9 @@ namespace data {
          * * cells are active indexed
          */
         std::map< key, std::vector< double > > data;
+
+        /* hack to keep matlab/vtk output support */
+        const SimulationDataContainer* sdc = nullptr;
     };
 
     struct Static {};
