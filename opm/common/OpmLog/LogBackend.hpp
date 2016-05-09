@@ -37,6 +37,9 @@ namespace Opm
         /// Virtual destructor to enable inheritance.
         virtual ~LogBackend();
 
+        /// Configure how decorateMessage() will modify message strings.
+        void configureDecoration(bool use_prefix, bool use_color_coding);
+
         /// Add a message to the backend.
         ///
         /// Typically a subclass may filter, change, and output
@@ -49,10 +52,15 @@ namespace Opm
 
     protected:
         /// Return true if all bits of messageFlag are also set in our mask.
-        bool    includeMessage(int64_t messageFlag);
+        bool includeMessage(int64_t messageFlag);
+
+        /// Return decorated version of message depending on configureDecoration() arguments.
+        std::string decorateMessage(int64_t messageFlag, const std::string& message);
 
     private:
         int64_t m_mask;
+        bool use_prefix_ = false;
+        bool use_color_coding_ = false;
     };
 
 } // namespace LogBackend
