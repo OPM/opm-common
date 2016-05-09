@@ -33,6 +33,7 @@
 #include <opm/core/simulator/WellState.hpp>
 #include <opm/core/simulator/SimulatorTimer.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
+#include <opm/core/utility/Compat.hpp>
 #include <opm/core/wells.h>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -186,7 +187,8 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo)
         eclipseWriter->writeTimeStep( simTimer->reportStepNum(),
                                       simTimer->currentPosixTime(),
                                       simTimer->simulationTimeElapsed(),
-                                      *blackoilState, *wellState, false);
+                                      sim2solution( *blackoilState, phaseUsageFromDeck( eclipseState ) ),
+                                      *wellState, false);
     }
 
     verifyWellState(eclipse_restart_filename, eclipseState->getInputGrid(), eclipseState->getSchedule());

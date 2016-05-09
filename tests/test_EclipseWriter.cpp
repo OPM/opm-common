@@ -34,6 +34,7 @@
 #include <opm/core/simulator/WellState.hpp>
 #include <opm/core/simulator/SimulatorTimer.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
+#include <opm/core/utility/Compat.hpp>
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -51,6 +52,8 @@
 #include <ert/util/test_work_area.h>
 
 #include <memory>
+
+using namespace Opm;
 
 std::shared_ptr<Opm::EclipseWriter> eclWriter;
 std::shared_ptr<Opm::SimulatorTimer> simTimer;
@@ -406,6 +409,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
         "'PROD' 'G' 3 3 1000 'OIL' /\n"
         "/\n";
 
+    auto deck = Parser().parseString( deckString, ParseContext() );
     createEclipseWriter(deckString);
 
     tm t = boost::posix_time::to_tm( simTimer->startDateTime() );
@@ -423,7 +427,8 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
         eclWriter->writeTimeStep( report_step,
                                   simTimer->currentPosixTime(),
                                   simTimer->simulationTimeElapsed(),
-                                  *blackoilState, *wellState, false);
+                                  sim2solution( *blackoilState, phaseUsageFromDeck( deck ) ),
+                                  *wellState, false);
         checkRestartFile( current_step );
         checkSummaryFile( current_step );
     }

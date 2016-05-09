@@ -23,9 +23,6 @@
 
 #include "EclipseWriter.hpp"
 
-#include <opm/common/data/SimulationDataContainer.hpp>
-
-
 #include <opm/core/props/BlackoilPhases.hpp>
 #include <opm/core/props/phaseUsageFromDeck.hpp>
 #include <opm/core/grid.h>
@@ -78,9 +75,6 @@
 // namespace start here since we don't want the ERT headers in it
 namespace Opm {
 namespace EclipseWriterDetails {
-/// Names of the saturation property for each phase. The order of these
-/// names are critical; they must be the same as the BlackoilPhases enum
-static const char* saturationKeywordNames[] = { "SWAT", "SOIL", "SGAS" };
 
 // throw away the data for all non-active cells and reorder to the Cartesian logic of
 // eclipse
@@ -109,22 +103,6 @@ void convertFromSiTo(std::vector<double> &siValues, double toSiConversionFactor,
     for (size_t curIdx = 0; curIdx < siValues.size(); ++curIdx) {
         siValues[curIdx] = unit::convert::to(siValues[curIdx] - toSiOffset, toSiConversionFactor);
     }
-}
-
-// extract a sub-array of a larger one which represents multiple
-// striped ones
-void extractFromStripedData(std::vector<double> &data,
-                            int offset,
-                            int stride)
-{
-    size_t tmpIdx = 0;
-    for (size_t curIdx = offset; curIdx < data.size(); curIdx += stride) {
-        assert(tmpIdx <= curIdx);
-        data[tmpIdx] = data[curIdx];
-        ++tmpIdx;
-    }
-    // shirk the result
-    data.resize(tmpIdx);
 }
 
 /// Convert OPM phase usage to ERT bitmask
@@ -647,43 +625,32 @@ void EclipseWriter::writeInit( time_t current_posix_time, double start_time, con
 void EclipseWriter::writeTimeStep(int report_step,
                                   time_t current_posix_time,
                                   double secs_elapsed,
-                                  const SimulationDataContainer& reservoirState,
+                                  data::Solution cells,
                                   const WellState& wellState,
                                   bool  isSubstep)
 {
 
+    using dc = data::Solution::key;
     // if we don't want to write anything, this method becomes a
     // no-op...
     if (!enableOutput_) {
         return;
     }
 
-
-    std::vector<double> pressure = reservoirState.pressure();
+    auto& pressure = cells[ dc::PRESSURE ];
     EclipseWriterDetails::convertFromSiTo(pressure, deckToSiPressure_);
     EclipseWriterDetails::restrictAndReorderToActiveCells(pressure, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
 
-    std::vector<double> saturation_water;
-    std::vector<double> saturation_gas;
-
-    if (phaseUsage_.phase_used[BlackoilPhases::Aqua]) {
-        saturation_water = reservoirState.saturation();
-        EclipseWriterDetails::extractFromStripedData(saturation_water,
-                                                     /*offset=*/phaseUsage_.phase_pos[BlackoilPhases::Aqua],
-                                                     /*stride=*/phaseUsage_.num_phases);
+    if( cells.has( dc::SWAT ) ) {
+        auto& saturation_water = cells[ dc::SWAT ];
         EclipseWriterDetails::restrictAndReorderToActiveCells(saturation_water, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
     }
 
 
-    if (phaseUsage_.phase_used[BlackoilPhases::Vapour]) {
-        saturation_gas = reservoirState.saturation();
-        EclipseWriterDetails::extractFromStripedData(saturation_gas,
-                                                     /*offset=*/phaseUsage_.phase_pos[BlackoilPhases::Vapour],
-                                                     /*stride=*/phaseUsage_.num_phases);
+    if( cells.has( dc::SGAS ) ) {
+        auto& saturation_gas = cells[ dc::SGAS ];
         EclipseWriterDetails::restrictAndReorderToActiveCells(saturation_gas, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
     }
-
-
 
     IOConfigConstPtr ioConfig = eclipseState_->getIOConfigConst();
 
@@ -750,33 +717,28 @@ void EclipseWriter::writeTimeStep(int report_step,
 
 
         // write the cell temperature
-        std::vector<double> temperature = reservoirState.temperature();
+        auto& temperature = cells[ dc::TEMP ];
         EclipseWriterDetails::convertFromSiTo(temperature, deckToSiTemperatureFactor_, deckToSiTemperatureOffset_);
-        EclipseWriterDetails::restrictAndReorderToActiveCells(temperature, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
         sol.add(EclipseWriterDetails::Keyword<float>("TEMP", temperature));
 
 
-        if (phaseUsage_.phase_used[BlackoilPhases::Aqua]) {
-            sol.add(EclipseWriterDetails::Keyword<float>(EclipseWriterDetails::saturationKeywordNames[BlackoilPhases::PhaseIndex::Aqua], saturation_water));
+        if( cells.has( dc::SWAT ) ) {
+            sol.add( EclipseWriterDetails::Keyword<float>( "SWAT", cells[ dc::SWAT ] ) );
         }
 
 
-        if (phaseUsage_.phase_used[BlackoilPhases::Vapour]) {
-            sol.add(EclipseWriterDetails::Keyword<float>(EclipseWriterDetails::saturationKeywordNames[BlackoilPhases::PhaseIndex::Vapour], saturation_gas));
+        if( cells.has( dc::SGAS ) ) {
+            sol.add( EclipseWriterDetails::Keyword<float>( "SGAS", cells[ dc::SGAS ] ) );
         }
 
 
         // Write RS - Dissolved GOR
-        if (reservoirState.hasCellData( BlackoilState::GASOILRATIO )) {
-            const std::vector<double>& rs = reservoirState.getCellData( BlackoilState::GASOILRATIO );
-            sol.add(EclipseWriterDetails::Keyword<float>("RS", rs));
-        }
+        if( cells.has( dc::RS ) )
+            sol.add(EclipseWriterDetails::Keyword<float>("RS", cells[ dc::RS ] ) );
 
         // Write RV - Volatilized oil/gas ratio
-        if (reservoirState.hasCellData( BlackoilState::RV )) {
-            const std::vector<double>& rv = reservoirState.getCellData( BlackoilState::RV );
-            sol.add(EclipseWriterDetails::Keyword<float>("RV", rv));
-        }
+        if( cells.has( dc::RV ) )
+            sol.add(EclipseWriterDetails::Keyword<float>("RV", cells[ dc::RV ] ) );
     }
 
 
@@ -805,8 +767,8 @@ void EclipseWriter::writeTimeStep(int report_step,
                                               wells,
                                               eclipseState_->getInputGrid(),
                                               pressure,
-                                              saturation_water,
-                                              saturation_gas);
+                                              cells[ dc::SWAT ],
+                                              cells[ dc::SGAS ] );
         free( rft_filename );
     }
 

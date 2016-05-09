@@ -34,6 +34,7 @@
 #include <opm/core/simulator/SimulatorTimer.hpp>
 #include <opm/core/props/phaseUsageFromDeck.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
+#include <opm/core/utility/Compat.hpp>
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -174,7 +175,8 @@ BOOST_AUTO_TEST_CASE(test_EclipseWriterRFTHandler)
         eclipseWriter->writeTimeStep( simulatorTimer->reportStepNum(),
                                       simulatorTimer->currentPosixTime(),
                                       simulatorTimer->simulationTimeElapsed(),
-                                      *blackoilState2, *wellState, false);
+                                      sim2solution( *blackoilState2, phaseUsageFromDeck( eclipseState ) ),
+                                      *wellState, false);
     }
 
     std::string cwd(test_work_area_get_cwd(test_area.get()));

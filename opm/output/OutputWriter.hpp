@@ -23,6 +23,8 @@
 #include <memory>  // unique_ptr, shared_ptr
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 
+#include <opm/output/Cells.hpp>
+
 struct UnstructuredGrid;
 
 namespace Opm {
@@ -30,7 +32,6 @@ namespace Opm {
 // forward declaration
 class EclipseState;
 namespace parameter { class ParameterGroup; }
-class SimulationDataContainer;
 class WellState;
 struct PhaseUsage;
 
@@ -91,7 +92,7 @@ public:
     virtual void writeTimeStep( int report_step,
                                 time_t current_posix_time,
                                 double seconds_elapsed,
-                                const SimulationDataContainer& reservoirState,
+                                data::Solution reservoirState,
                                 const WellState& wellState,
                                 bool  isSubstep) = 0;
 

@@ -91,7 +91,7 @@ public:
     virtual void writeTimeStep( int report_step,
                                 time_t current_posix_time,
                                 double seconds_elapsed,
-                                const SimulationDataContainer& reservoirState,
+                                data::Solution,
                                 const WellState& wellState,
                                 bool isSubstep);
 

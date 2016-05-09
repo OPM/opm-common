@@ -36,6 +36,7 @@
 #include <opm/core/simulator/WellState.hpp>
 #include <opm/core/simulator/SimulatorTimer.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
+#include <opm/core/utility/Compat.hpp>
 #include <opm/core/wells.h>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -306,7 +307,8 @@ state first_sim(test_work_area_type * test_area) {
     eclipseWriter->writeTimeStep( simTimer->reportStepNum(),
                                   simTimer->currentPosixTime(),
                                   simTimer->simulationTimeElapsed(),
-                                  *blackoilState, *wellState , false);
+                                  sim2solution( *blackoilState, phaseUsage ),
+                                  *wellState , false);
 
     return std::make_pair(wellState, blackoilState);
 }
