@@ -23,7 +23,6 @@
 #define OPM_ECLIPSE_WRITER_HPP
 
 #include <opm/output/OutputWriter.hpp>
-#include <opm/core/props/BlackoilPhases.hpp>
 #include <opm/core/wells.h> // WellType
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -44,16 +43,9 @@ namespace Opm {
 class SimulationDataContainer;
 class WellState;
 
-namespace parameter { class ParameterGroup; }
-
 /*!
  * \brief A class to write the reservoir state and the well state of a
  *        blackoil simulation to disk using the Eclipse binary format.
- *
- * This class only writes files if the 'write_output' parameter is set
- * to 1. It needs the ERT libraries to write to disk, so if the
- * 'write_output' parameter is set but ERT is not available, all
- * methods throw a std::runtime_error.
  */
 class EclipseWriter : public OutputWriter
 {

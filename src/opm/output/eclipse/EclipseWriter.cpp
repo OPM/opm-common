@@ -23,46 +23,30 @@
 
 #include "EclipseWriter.hpp"
 
-#include <opm/core/grid.h>
-#include <opm/core/grid/GridManager.hpp>
-#include <opm/core/grid/GridHelpers.hpp>
-#include <opm/core/grid/cpgpreprocess/preprocess.h>
 #include <opm/core/simulator/WellState.hpp>
-#include <opm/core/simulator/BlackoilState.hpp>
 #include <opm/output/eclipse/EclipseWriteRFTHandler.hpp>
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/core/utility/Units.hpp>
-#include <opm/core/wells.h> // WellType
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Units/ConversionFactors.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
-#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <boost/algorithm/string/case_conv.hpp> // to_upper_copy
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem.hpp> // path
 
-#include <ctime>      // mktime
-#include <forward_list>
 #include <memory>     // unique_ptr
 #include <utility>    // move
 
 #include <ert/ecl/fortio.h>
-#include <ert/ecl/ecl_endian_flip.h>
-#include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_kw_magic.h>
-#include <ert/ecl/ecl_kw.h>
-#include <ert/ecl/ecl_sum.h>
-#include <ert/ecl/ecl_util.h>
 #include <ert/ecl/ecl_init_file.h>
 #include <ert/ecl/ecl_file.h>
 #include <ert/ecl/ecl_rst_file.h>
