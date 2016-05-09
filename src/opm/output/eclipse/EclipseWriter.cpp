@@ -23,8 +23,6 @@
 
 #include "EclipseWriter.hpp"
 
-#include <opm/core/props/BlackoilPhases.hpp>
-#include <opm/core/props/phaseUsageFromDeck.hpp>
 #include <opm/core/grid.h>
 #include <opm/core/grid/GridManager.hpp>
 #include <opm/core/grid/GridHelpers.hpp>
@@ -35,7 +33,6 @@
 #include <opm/common/ErrorMacros.hpp>
 #include <opm/core/utility/Units.hpp>
 #include <opm/core/wells.h> // WellType
-#include <opm/core/props/phaseUsageFromDeck.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Units/ConversionFactors.hpp>
@@ -48,6 +45,7 @@
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <boost/algorithm/string/case_conv.hpp> // to_upper_copy
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -103,14 +101,6 @@ void convertFromSiTo(std::vector<double> &siValues, double toSiConversionFactor,
     for (size_t curIdx = 0; curIdx < siValues.size(); ++curIdx) {
         siValues[curIdx] = unit::convert::to(siValues[curIdx] - toSiOffset, toSiConversionFactor);
     }
-}
-
-/// Convert OPM phase usage to ERT bitmask
-int ertPhaseMask(const PhaseUsage uses)
-{
-    return (uses.phase_used[BlackoilPhases::Liquid] ? ECL_OIL_PHASE : 0)
-        | (uses.phase_used[BlackoilPhases::Aqua] ? ECL_WATER_PHASE : 0)
-        | (uses.phase_used[BlackoilPhases::Vapour] ? ECL_GAS_PHASE : 0);
 }
 
 
@@ -430,7 +420,7 @@ public:
                      const int* compressedToCartesianCellIdx,
                      time_t current_posix_time,
                      Opm::EclipseStateConstPtr eclipseState,
-                     const PhaseUsage uses,
+                     int ert_phase_mask,
                      const NNC& nnc = NNC())
     {
         auto dataField = eclipseState->get3DProperties().getDoubleGridProperty("PORO").getData();
@@ -477,7 +467,7 @@ public:
             ecl_init_file_fwrite_header(ertHandle(),
                                         eclGrid->c_ptr(),
                                         poro_kw.ertHandle(),
-                                        ertPhaseMask(uses),
+                                        ert_phase_mask,
                                         current_posix_time );
         }
     }
@@ -581,7 +571,7 @@ void EclipseWriter::writeInit( time_t current_posix_time, double start_time, con
                        compressedToCartesianCellIdx_,
                        current_posix_time,
                        eclipseState_,
-                       phaseUsage_,
+                       ert_phase_mask_,
                        nnc);
 
     IOConfigConstPtr ioConfig = eclipseState_->getIOConfigConst();
@@ -699,7 +689,7 @@ void EclipseWriter::writeTimeStep(int report_step,
             rsthead_data.nzwelz     = EclipseWriterDetails::Restart::NZWELZ;
             rsthead_data.niconz     = EclipseWriterDetails::Restart::NICONZ;
             rsthead_data.ncwmax     = ncwmax;
-            rsthead_data.phase_sum  = Opm::EclipseWriterDetails::ertPhaseMask(phaseUsage_);
+            rsthead_data.phase_sum  = ert_phase_mask_;
             rsthead_data.sim_days   = Opm::unit::convert::to(secs_elapsed, Opm::unit::day); //data for doubhead
 
             restartHandle.writeHeader( report_step, &rsthead_data);
@@ -782,6 +772,13 @@ void EclipseWriter::writeTimeStep(int report_step,
 }
 
 
+/// Convert OPM phase usage to ERT bitmask
+static inline int ertPhaseMask( const TableManager& tm ) {
+    return ( tm.hasPhase( Phase::PhaseEnum::WATER ) ? ECL_WATER_PHASE : 0 )
+         | ( tm.hasPhase( Phase::PhaseEnum::OIL ) ? ECL_OIL_PHASE : 0 )
+         | ( tm.hasPhase( Phase::PhaseEnum::GAS ) ? ECL_GAS_PHASE : 0 );
+}
+
 EclipseWriter::EclipseWriter(Opm::EclipseStateConstPtr eclipseState,
                              int numCells,
                              const int* compressedToCartesianCellIdx)
@@ -789,8 +786,8 @@ EclipseWriter::EclipseWriter(Opm::EclipseStateConstPtr eclipseState,
     , numCells_(numCells)
     , compressedToCartesianCellIdx_(compressedToCartesianCellIdx)
     , gridToEclipseIdx_(numCells, int(-1) )
+    , ert_phase_mask_( ertPhaseMask( eclipseState->getTableManager() ) )
 {
-    phaseUsage_ = phaseUsageFromDeck( eclipseState );
     const auto eclGrid = eclipseState->getInputGrid();
     cartesianSize_[0] = eclGrid->getNX();
     cartesianSize_[1] = eclGrid->getNY();

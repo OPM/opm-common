@@ -114,7 +114,7 @@ private:
     int reportStepIdx_;
     std::string outputDir_;
     std::string baseName_;
-    PhaseUsage phaseUsage_; // active phases in the input deck
+    int ert_phase_mask_;
 
     void init(Opm::EclipseStateConstPtr eclipseState);
 };
