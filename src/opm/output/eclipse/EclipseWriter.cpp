@@ -547,9 +547,6 @@ void EclipseWriter::writeInit( time_t current_posix_time, double start_time, con
         return;
     }
 
-    writeStepIdx_ = 0;
-    reportStepIdx_ = -1;
-
     EclipseWriterDetails::Init fortio(outputDir_, baseName_, /*stepIdx=*/0, eclipseState_->getIOConfigConst());
     fortio.writeHeader(numCells_,
                        compressedToCartesianCellIdx_,
@@ -749,10 +746,6 @@ void EclipseWriter::writeTimeStep(int report_step,
     if (!isSubstep) {
         /* Summary variables (well reporting) */
     }
-
-    ++writeStepIdx_;
-    // store current report index
-    reportStepIdx_ = report_step;
 }
 
 
@@ -827,10 +820,6 @@ void EclipseWriter::init(Opm::EclipseStateConstPtr eclipseState)
 
     // store in current directory if not explicitly set
     outputDir_ = ioConfig->getOutputDir();
-
-    // set the index of the first time step written to 0...
-    writeStepIdx_  = 0;
-    reportStepIdx_ = -1;
 
     if (enableOutput_) {
         // make sure that the output directory exists, if not try to create it

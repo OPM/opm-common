@@ -102,8 +102,6 @@ private:
     double deckToSiTemperatureFactor_;
     double deckToSiTemperatureOffset_;
     bool enableOutput_;
-    int writeStepIdx_;
-    int reportStepIdx_;
     std::string outputDir_;
     std::string baseName_;
     int ert_phase_mask_;
