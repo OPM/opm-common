@@ -98,9 +98,7 @@ private:
     std::array<int, 3> cartesianSize_;
     const int* compressedToCartesianCellIdx_;
     std::vector< int > gridToEclipseIdx_;
-    double deckToSiPressure_;
-    double deckToSiTemperatureFactor_;
-    double deckToSiTemperatureOffset_;
+    const double* conversion_table_;
     bool enableOutput_;
     std::string outputDir_;
     std::string baseName_;

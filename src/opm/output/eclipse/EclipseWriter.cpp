@@ -26,7 +26,6 @@
 #include <opm/core/simulator/WellState.hpp>
 #include <opm/output/eclipse/EclipseWriteRFTHandler.hpp>
 #include <opm/common/ErrorMacros.hpp>
-#include <opm/core/utility/Units.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Units/ConversionFactors.hpp>
@@ -79,11 +78,11 @@ void restrictAndReorderToActiveCells(std::vector<double> &data,
     data.swap( eclData );
 }
 
-// convert the units of an array
-void convertFromSiTo(std::vector<double> &siValues, double toSiConversionFactor, double toSiOffset = 0)
-{
+static inline void convertFromSiTo( std::vector< double >& siValues,
+                                    const double* table,
+                                    conversions::dim d ) {
     for (size_t curIdx = 0; curIdx < siValues.size(); ++curIdx) {
-        siValues[curIdx] = unit::convert::to(siValues[curIdx] - toSiOffset, toSiConversionFactor);
+        siValues[curIdx] = conversions::from_si( table, d, siValues[ curIdx ] );
     }
 }
 
@@ -562,19 +561,25 @@ void EclipseWriter::writeInit( time_t current_posix_time, double start_time, con
     if (ioConfig->getWriteINITFile()) {
         if (props.hasDeckDoubleGridProperty("PERMX")) {
             auto data = props.getDoubleGridProperty("PERMX").getData();
-            EclipseWriterDetails::convertFromSiTo(data, Opm::prefix::milli * Opm::unit::darcy);
+            EclipseWriterDetails::convertFromSiTo( data,
+                                                   conversion_table_,
+                                                   conversions::dim::permeability );
             EclipseWriterDetails::restrictAndReorderToActiveCells(data, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
             fortio.writeKeyword("PERMX", data);
         }
         if (props.hasDeckDoubleGridProperty("PERMY")) {
             auto data = props.getDoubleGridProperty("PERMY").getData();
-            EclipseWriterDetails::convertFromSiTo(data, Opm::prefix::milli * Opm::unit::darcy);
+            EclipseWriterDetails::convertFromSiTo( data,
+                                                   conversion_table_,
+                                                   conversions::dim::permeability );
             EclipseWriterDetails::restrictAndReorderToActiveCells(data, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
             fortio.writeKeyword("PERMY", data);
         }
         if (props.hasDeckDoubleGridProperty("PERMZ")) {
             auto data = props.getDoubleGridProperty("PERMZ").getData();
-            EclipseWriterDetails::convertFromSiTo(data, Opm::prefix::milli * Opm::unit::darcy);
+            EclipseWriterDetails::convertFromSiTo( data,
+                                                   conversion_table_,
+                                                   conversions::dim::permeability );
             EclipseWriterDetails::restrictAndReorderToActiveCells(data, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
             fortio.writeKeyword("PERMZ", data);
         }
@@ -583,10 +588,8 @@ void EclipseWriter::writeInit( time_t current_posix_time, double start_time, con
             for (NNCdata nd : nnc.nncdata()) {
                 tran.push_back(nd.trans);
             }
-            if (eclipseState_->getDeckUnitSystem().getType() == UnitSystem::UNIT_TYPE_METRIC)
-                EclipseWriterDetails::convertFromSiTo(tran, 1.0 / Opm::Metric::Transmissibility);
-            else
-                EclipseWriterDetails::convertFromSiTo(tran, 1.0 / Opm::Field::Transmissibility);
+
+            EclipseWriterDetails::convertFromSiTo( tran, conversion_table_, conversions::dim::transmissibility );
             fortio.writeKeyword("TRANNNC", tran);
         }
     }
@@ -609,7 +612,9 @@ void EclipseWriter::writeTimeStep(int report_step,
     }
 
     auto& pressure = cells[ dc::PRESSURE ];
-    EclipseWriterDetails::convertFromSiTo(pressure, deckToSiPressure_);
+    EclipseWriterDetails::convertFromSiTo( pressure,
+                                           conversion_table_,
+                                           conversions::dim::pressure );
     EclipseWriterDetails::restrictAndReorderToActiveCells(pressure, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
 
     if( cells.has( dc::SWAT ) ) {
@@ -671,7 +676,9 @@ void EclipseWriter::writeTimeStep(int report_step,
             rsthead_data.niconz     = EclipseWriterDetails::Restart::NICONZ;
             rsthead_data.ncwmax     = ncwmax;
             rsthead_data.phase_sum  = ert_phase_mask_;
-            rsthead_data.sim_days   = Opm::unit::convert::to(secs_elapsed, Opm::unit::day); //data for doubhead
+            rsthead_data.sim_days   = conversions::from_si( conversion_table_,
+                                                            conversions::dim::time,
+                                                            secs_elapsed );
 
             restartHandle.writeHeader( report_step, &rsthead_data);
         }
@@ -689,7 +696,9 @@ void EclipseWriter::writeTimeStep(int report_step,
 
         // write the cell temperature
         auto& temperature = cells[ dc::TEMP ];
-        EclipseWriterDetails::convertFromSiTo(temperature, deckToSiTemperatureFactor_, deckToSiTemperatureOffset_);
+        EclipseWriterDetails::convertFromSiTo( temperature,
+                                               conversion_table_,
+                                               conversions::dim::temperature );
         sol.add(EclipseWriterDetails::Keyword<float>("TEMP", temperature));
 
 
@@ -756,6 +765,14 @@ static inline int ertPhaseMask( const TableManager& tm ) {
          | ( tm.hasPhase( Phase::PhaseEnum::GAS ) ? ECL_GAS_PHASE : 0 );
 }
 
+static inline const double* get_conv_table( UnitSystem::UnitType t ) {
+    switch( t ) {
+        case UnitSystem::UNIT_TYPE_METRIC: return conversions::si2metric;
+        case UnitSystem::UNIT_TYPE_FIELD:  return conversions::si2field;
+        default: return conversions::si2metric;
+    }
+}
+
 EclipseWriter::EclipseWriter(Opm::EclipseStateConstPtr eclipseState,
                              int numCells,
                              const int* compressedToCartesianCellIdx)
@@ -763,6 +780,7 @@ EclipseWriter::EclipseWriter(Opm::EclipseStateConstPtr eclipseState,
     , numCells_(numCells)
     , compressedToCartesianCellIdx_(compressedToCartesianCellIdx)
     , gridToEclipseIdx_(numCells, int(-1) )
+    , conversion_table_( get_conv_table( eclipseState->getDeckUnitSystem().getType() ) )
     , enableOutput_( eclipseState->getIOConfig()->getOutputEnabled() )
     , outputDir_( eclipseState->getIOConfig()->getOutputDir() )
     , baseName_( boost::to_upper_copy( eclipseState->getIOConfig()->getBaseName() ) )
@@ -793,16 +811,6 @@ EclipseWriter::EclipseWriter(Opm::EclipseStateConstPtr eclipseState,
             gridToEclipseIdx_[ cellIdx ] = cellIdx;
         }
     }
-
-    // factor from the pressure values given in the deck to Pascals
-    deckToSiPressure_ =
-        eclipseState->getDeckUnitSystem().parse("Pressure")->getSIScaling();
-
-    // factor and offset from the temperature values given in the deck to Kelvin
-    deckToSiTemperatureFactor_ =
-        eclipseState->getDeckUnitSystem().parse("Temperature")->getSIScaling();
-    deckToSiTemperatureOffset_ =
-        eclipseState->getDeckUnitSystem().parse("Temperature")->getSIOffset();
 
     if( enableOutput_ ) {
         // make sure that the output directory exists, if not try to create it
