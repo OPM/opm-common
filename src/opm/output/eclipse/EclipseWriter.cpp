@@ -763,6 +763,9 @@ EclipseWriter::EclipseWriter(Opm::EclipseStateConstPtr eclipseState,
     , numCells_(numCells)
     , compressedToCartesianCellIdx_(compressedToCartesianCellIdx)
     , gridToEclipseIdx_(numCells, int(-1) )
+    , enableOutput_( eclipseState->getIOConfig()->getOutputEnabled() )
+    , outputDir_( eclipseState->getIOConfig()->getOutputDir() )
+    , baseName_( boost::to_upper_copy( eclipseState->getIOConfig()->getBaseName() ) )
     , ert_phase_mask_( ertPhaseMask( eclipseState->getTableManager() ) )
 {
     const auto eclGrid = eclipseState->getInputGrid();
@@ -801,27 +804,7 @@ EclipseWriter::EclipseWriter(Opm::EclipseStateConstPtr eclipseState,
     deckToSiTemperatureOffset_ =
         eclipseState->getDeckUnitSystem().parse("Temperature")->getSIOffset();
 
-    init(eclipseState);
-}
-
-void EclipseWriter::init(Opm::EclipseStateConstPtr eclipseState)
-{
-    // get the base name from the name of the deck
-    using boost::filesystem::path;
-    auto ioConfig = eclipseState->getIOConfig();
-    baseName_ = ioConfig->getBaseName();
-
-    // make uppercase of everything (or otherwise we'll get uppercase
-    // of some of the files (.SMSPEC, .UNSMRY) and not others
-    baseName_ = boost::to_upper_copy(baseName_);
-
-    // retrieve the value of the "output" parameter
-    enableOutput_ = ioConfig->getOutputEnabled();
-
-    // store in current directory if not explicitly set
-    outputDir_ = ioConfig->getOutputDir();
-
-    if (enableOutput_) {
+    if( enableOutput_ ) {
         // make sure that the output directory exists, if not try to create it
         if (!boost::filesystem::exists(outputDir_)) {
             std::cout << "Trying to create directory \"" << outputDir_ << "\" for the simulation output\n";
