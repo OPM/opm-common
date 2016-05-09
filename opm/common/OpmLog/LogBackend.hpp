@@ -24,22 +24,38 @@
 #include <cstdint>
 #include <string>
 
-namespace Opm {
+namespace Opm
+{
 
-class LogBackend {
+    /// Abstract interface class for log backends.
+    class LogBackend
+    {
+    public:
+        /// Construct with given message mask.
+        explicit LogBackend(int64_t mask);
 
-public:
-    LogBackend( int64_t mask );
-    virtual ~LogBackend() { };
-    virtual void addMessage(int64_t , const std::string& ) { };
+        /// Virtual destructor to enable inheritance.
+        virtual ~LogBackend();
 
-    int64_t getMask() const;
-    bool    includeMessage(int64_t messageFlag);
+        /// Add a message to the backend.
+        ///
+        /// Typically a subclass may filter, change, and output
+        /// messages based on configuration and the messageFlag.
+        virtual void addMessage(int64_t messageFlag, const std::string& message) = 0;
 
-private:
-    int64_t m_mask;
-};
-}
+        /// The message mask types are specified in the
+        /// Opm::Log::MessageType namespace, in file LogUtils.hpp.
+        int64_t getMask() const;
+
+    protected:
+        /// Return true if all bits of messageFlag are also set in our mask.
+        bool    includeMessage(int64_t messageFlag);
+
+    private:
+        int64_t m_mask;
+    };
+
+} // namespace LogBackend
 
 
 #endif

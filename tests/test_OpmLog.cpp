@@ -55,23 +55,6 @@ BOOST_AUTO_TEST_CASE(Test_Format) {
 
 
 
-BOOST_AUTO_TEST_CASE(Test_AbstractBackend) {
-    int64_t mask = 1+4+16;
-    LogBackend backend(mask);
-
-    BOOST_CHECK_EQUAL(false , backend.includeMessage(0 ));
-    BOOST_CHECK_EQUAL(true  , backend.includeMessage(1 ));
-    BOOST_CHECK_EQUAL(false , backend.includeMessage(2 ));
-    BOOST_CHECK_EQUAL(true  , backend.includeMessage(4 ));
-    BOOST_CHECK_EQUAL(false , backend.includeMessage(8 ));
-    BOOST_CHECK_EQUAL(true  , backend.includeMessage(16 ));
-
-    BOOST_CHECK_EQUAL(false, backend.includeMessage(6 ));
-    BOOST_CHECK_EQUAL(true , backend.includeMessage(5 ));
-}
-
-
-
 BOOST_AUTO_TEST_CASE(Test_Logger) {
     Logger logger;
     std::ostringstream log_stream;

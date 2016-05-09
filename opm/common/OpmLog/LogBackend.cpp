@@ -27,6 +27,9 @@ namespace Opm {
     {
     }
 
+    LogBackend::~LogBackend()
+    {
+    }
 
     bool LogBackend::includeMessage(int64_t messageFlag) {
         if (((messageFlag & m_mask) == messageFlag) &&
