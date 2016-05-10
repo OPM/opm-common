@@ -142,8 +142,8 @@ namespace Opm {
                                bool reset_global = false);
         void handleRPTSCHEDRestart(std::shared_ptr< const TimeMap > timemap, size_t timestep, size_t restart);
         void handleSolutionSection(std::shared_ptr< const TimeMap > timemap, std::shared_ptr<const SOLUTIONSection> solutionSection);
-        void handleGridSection(std::shared_ptr<const GRIDSection> gridSection);
-        void handleRunspecSection(std::shared_ptr<const RUNSPECSection> runspecSection);
+        void handleGridSection( const GRIDSection& );
+        void handleRunspecSection( const RUNSPECSection& );
         void setWriteInitialRestartFile(bool writeInitialRestartFile);
 
         /// This method will internalize variables with information of

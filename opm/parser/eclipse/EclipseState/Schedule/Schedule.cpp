@@ -1312,7 +1312,7 @@ namespace Opm {
         const std::string& well_name = record1.getItem("WELL").getTrimmedString(0);
         WellPtr well = getWell(well_name);
 
-        std::vector<CompsegsPtr> compsegs_vector = Compsegs::compsegsFromCOMPSEGSKeyword(keyword, m_grid);
+        std::vector<CompsegsPtr> compsegs_vector = Compsegs::compsegsFromCOMPSEGSKeyword( keyword );
 
         SegmentSetConstPtr current_segmentSet = well->getSegmentSet(currentStep);
         Compsegs::processCOMPSEGS(compsegs_vector, current_segmentSet);

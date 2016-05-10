@@ -295,11 +295,11 @@ namespace Opm {
 
 
 
-    void IOConfig::handleGridSection(std::shared_ptr<const GRIDSection> gridSection) {
-        m_write_INIT_file = gridSection->hasKeyword("INIT");
+    void IOConfig::handleGridSection( const GRIDSection& gridSection) {
+        m_write_INIT_file = gridSection.hasKeyword("INIT");
 
-        if (gridSection->hasKeyword("GRIDFILE")) {
-            const auto& gridfilekeyword = gridSection->getKeyword("GRIDFILE");
+        if (gridSection.hasKeyword("GRIDFILE")) {
+            const auto& gridfilekeyword = gridSection.getKeyword("GRIDFILE");
             if (gridfilekeyword.size() > 0) {
                 const auto& rec = gridfilekeyword.getRecord(0);
                 const auto& item1 = rec.getItem(0);
@@ -314,17 +314,17 @@ namespace Opm {
                 }
             }
         }
-        if (gridSection->hasKeyword("NOGGF")) {
+        if (gridSection.hasKeyword("NOGGF")) {
             m_write_EGRID_file = false;
         }
     }
 
 
-    void IOConfig::handleRunspecSection(std::shared_ptr<const RUNSPECSection> runspecSection) {
-        m_FMTIN   = runspecSection->hasKeyword("FMTIN");   //Input files are formatted
-        m_FMTOUT  = runspecSection->hasKeyword("FMTOUT");  //Output files are to be formatted
-        m_UNIFIN  = runspecSection->hasKeyword("UNIFIN");  //Input files are unified
-        m_UNIFOUT = runspecSection->hasKeyword("UNIFOUT"); //Output files are to be unified
+    void IOConfig::handleRunspecSection( const RUNSPECSection& runspecSection) {
+        m_FMTIN   = runspecSection.hasKeyword("FMTIN");   //Input files are formatted
+        m_FMTOUT  = runspecSection.hasKeyword("FMTOUT");  //Output files are to be formatted
+        m_UNIFIN  = runspecSection.hasKeyword("UNIFIN");  //Input files are unified
+        m_UNIFOUT = runspecSection.hasKeyword("UNIFOUT"); //Output files are to be unified
     }
 
 

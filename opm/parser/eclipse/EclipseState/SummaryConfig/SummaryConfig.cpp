@@ -23,6 +23,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
+#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
@@ -38,6 +39,7 @@
 
 #include <algorithm>
 #include <array>
+#include <functional>
 
 namespace Opm {
 
@@ -52,30 +54,29 @@ namespace Opm {
     static inline std::vector< ERT::smspec_node > keywordWG(
             ecl_smspec_var_type var_type,
             const DeckKeyword& keyword,
-            const EclipseState& es ) {
+            const Schedule& schedule ) {
 
         const auto mknode = [&keyword,var_type]( const std::string& name ) {
             return ERT::smspec_node( var_type, name, keyword.name() );
         };
 
-        const auto find = []( ecl_smspec_var_type v, const EclipseState& est ) {
+        const auto find = []( ecl_smspec_var_type v, const Schedule& sc ) {
             if( v == ECL_SMSPEC_WELL_VAR )
-                return fun::map( wellName, est.getSchedule()->getWells() );
+                return fun::map( wellName, sc.getWells() );
             else
-                return fun::map( groupName, est.getSchedule()->getGroups() );
+                return fun::map( groupName, sc.getGroups() );
         };
 
         const auto& item = keyword.getDataRecord().getDataItem();
         const auto wgnames = item.size() > 0 && item.hasValue( 0 )
             ? item.getData< std::string >()
-            : find( var_type, es );
+            : find( var_type, schedule );
 
         return fun::map( mknode, wgnames );
     }
 
     static inline std::vector< ERT::smspec_node > keywordF(
-            const DeckKeyword& keyword,
-            const EclipseState& /* es */ ) {
+            const DeckKeyword& keyword ) {
 
         std::vector< ERT::smspec_node > res;
         res.push_back( ERT::smspec_node( keyword.name() ) );
@@ -106,11 +107,9 @@ namespace Opm {
 
     static inline std::vector< ERT::smspec_node > keywordB(
             const DeckKeyword& keyword,
-            const EclipseState& es ) {
+            std::array< int, 3 > dims ) {
 
-        auto dims = dimensions( *es.getInputGrid() );
-
-        const auto mkrecord = [&dims,&keyword]( const DeckRecord& record ) {
+        const auto mkrecord = [dims,&keyword]( const DeckRecord& record ) {
             auto ijk = getijk( record );
             return ERT::smspec_node( keyword.name(), dims.data(), ijk.data() );
         };
@@ -120,36 +119,40 @@ namespace Opm {
 
     static inline std::vector< ERT::smspec_node > keywordR(
             const DeckKeyword& keyword,
-            const EclipseState& es ) {
+            const Eclipse3DProperties& props,
+            std::array< int, 3 > dims ) {
 
-        auto dims = dimensions( *es.getInputGrid() );
+        /* RUNSUM is not a region keyword but a directive for how to format and
+         * print output. Unfortunately its *recognised* as a region keyword
+         * because of its structure and position. Hence the special handling of ignoring it.
+         */
+        if( keyword.name() == "RUNSUM" ) return {};
 
-        const auto mknode = [&dims,&keyword]( int region ) {
+        const auto mknode = [dims,&keyword]( int region ) {
             return ERT::smspec_node( keyword.name(), dims.data(), region );
         };
 
         const auto& item = keyword.getDataRecord().getDataItem();
         const auto regions = item.size() > 0 && item.hasValue( 0 )
             ? item.getData< int >()
-            : es.getRegions( "FIPNUM" );
+            : props.getRegions( "FIPNUM" );
 
         return fun::map( mknode, regions );
     }
 
    static inline std::vector< ERT::smspec_node > keywordC(
            const DeckKeyword& keyword,
-           const EclipseState& es ) {
+           const Schedule& schedule,
+           std::array< int, 3 > dims ) {
 
        std::vector< ERT::smspec_node > nodes;
        const auto& keywordstring = keyword.name();
-       const auto& schedule = es.getSchedule();
-       const auto last_timestep = schedule->getTimeMap()->last();
-       auto dims = dimensions( *es.getInputGrid() );
+       const auto last_timestep = schedule.getTimeMap()->last();
 
        for( const auto& record : keyword ) {
 
            if( record.getItem( 0 ).defaultApplied( 0 ) ) {
-               for( const auto& well : schedule->getWells() ) {
+               for( const auto& well : schedule.getWells() ) {
 
                    const auto& name = wellName( well );
 
@@ -178,7 +181,7 @@ namespace Opm {
                }
                else {
                    /* well specified, block coordinates defaulted */
-                   for( const auto& completion : *schedule->getWell( name ).getCompletions( last_timestep ) ) {
+                   for( const auto& completion : *schedule.getWell( name ).getCompletions( last_timestep ) ) {
                        auto ijk = getijk( *completion );
                        nodes.emplace_back( keywordstring, name, dims.data(), ijk.data() );
                    }
@@ -189,27 +192,40 @@ namespace Opm {
        return nodes;
    }
 
-    std::vector< ERT::smspec_node > handleKW( const DeckKeyword& keyword, const EclipseState& es ) {
+    std::vector< ERT::smspec_node > handleKW( const DeckKeyword& keyword,
+                                              const Schedule& schedule,
+                                              const Eclipse3DProperties& props,
+                                              std::array< int, 3 > n_xyz ) {
         const auto var_type = ecl_smspec_identify_var_type( keyword.name().c_str() );
 
         switch( var_type ) {
             case ECL_SMSPEC_WELL_VAR: /* intentional fall-through */
-            case ECL_SMSPEC_GROUP_VAR: return keywordWG( var_type, keyword, es );
-            case ECL_SMSPEC_FIELD_VAR: return keywordF( keyword, es );
-            case ECL_SMSPEC_BLOCK_VAR: return keywordB( keyword, es );
-            case ECL_SMSPEC_REGION_VAR: return keywordR( keyword, es );
-            case ECL_SMSPEC_COMPLETION_VAR: return keywordC( keyword, es );
+            case ECL_SMSPEC_GROUP_VAR: return keywordWG( var_type, keyword, schedule );
+            case ECL_SMSPEC_FIELD_VAR: return keywordF( keyword );
+            case ECL_SMSPEC_BLOCK_VAR: return keywordB( keyword, n_xyz );
+            case ECL_SMSPEC_REGION_VAR: return keywordR( keyword, props, n_xyz );
+            case ECL_SMSPEC_COMPLETION_VAR: return keywordC( keyword, schedule, n_xyz );
 
             default: return {};
         }
     }
 
-    SummaryConfig::SummaryConfig( const Deck& deck, const EclipseState& es ) {
+    SummaryConfig::SummaryConfig( const Deck& deck, const EclipseState& es )
+        : SummaryConfig( deck,
+                         *es.getSchedule(),
+                         es.get3DProperties(),
+                         dimensions( *es.getInputGrid() ) )
+    {}
+
+    SummaryConfig::SummaryConfig( const Deck& deck,
+                                  const Schedule& schedule,
+                                  const Eclipse3DProperties& props,
+                                  std::array< int, 3 > n_xyz ) {
 
         SUMMARYSection section( deck );
-        const auto handler = [&es]( const DeckKeyword& kw ) {
-            return handleKW( kw, es );
-        };
+
+        using namespace std::placeholders;
+        const auto handler = std::bind( handleKW, _1, schedule, props, n_xyz );
         this->keywords = fun::concat( fun::map( handler, section ) );
     }
 

@@ -209,8 +209,8 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     IOConfigPtr ioConfigPtr;
     BOOST_CHECK_NO_THROW(ioConfigPtr = std::make_shared<IOConfig>());
 
-    std::shared_ptr<const GRIDSection> gridSection = std::make_shared<const GRIDSection>(*deck);
-    std::shared_ptr<const RUNSPECSection> runspecSection = std::make_shared<const RUNSPECSection>(*deck);
+    GRIDSection gridSection( *deck );
+    RUNSPECSection runspecSection( *deck );
     ioConfigPtr->handleGridSection(gridSection);
     ioConfigPtr->handleRunspecSection(runspecSection);
 
@@ -433,8 +433,8 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     IOConfigPtr ioConfigPtr3;
     BOOST_CHECK_NO_THROW(ioConfigPtr3 = std::make_shared<IOConfig>());
 
-    std::shared_ptr<const GRIDSection> gridSection3 = std::make_shared<const GRIDSection>(*deck3);
-    std::shared_ptr<const RUNSPECSection> runspecSection3 = std::make_shared<const RUNSPECSection>(*deck3);
+    GRIDSection gridSection3( *deck3 );
+    RUNSPECSection runspecSection3( *deck3 );
     ioConfigPtr3->handleGridSection(gridSection3);
     ioConfigPtr3->handleRunspecSection(runspecSection3);
 
@@ -454,8 +454,8 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     IOConfigPtr ioConfigPtr4;
     BOOST_CHECK_NO_THROW(ioConfigPtr4 = std::make_shared<IOConfig>());
 
-    std::shared_ptr<const GRIDSection> gridSection4 = std::make_shared<const GRIDSection>(*deck4);
-    std::shared_ptr<const RUNSPECSection> runspecSection4 = std::make_shared<const RUNSPECSection>(*deck4);
+    GRIDSection gridSection4( *deck4 );
+    RUNSPECSection runspecSection4( *deck4 );
     ioConfigPtr4->handleGridSection(gridSection4);
     ioConfigPtr4->handleRunspecSection(runspecSection4);
 
