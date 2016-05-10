@@ -97,26 +97,6 @@ public:
                                 data::Wells,
                                 bool  isSubstep) = 0;
 
-    /*!
-     * Create a suitable set of output formats based on configuration.
-     *
-     * @param params Configuration properties. This function will setup a
-     *               multiplexer of applicable output formats based on the
-     *               desired configuration values.
-     *
-     * @param deck Input deck used to set up the simulation.
-     *
-     * @param eclipseState The internalized input deck.
-     *
-     * @return       Pointer to a multiplexer to all applicable output formats.
-     *
-     * @see Opm::share_obj
-     */
-    static std::unique_ptr <OutputWriter>
-    create (const parameter::ParameterGroup& params,
-            std::shared_ptr <const EclipseState> eclipseState,
-            const Opm::PhaseUsage &phaseUsage,
-            std::shared_ptr <const UnstructuredGrid> grid);
 };
 
 } // namespace Opm
