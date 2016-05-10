@@ -127,6 +127,7 @@ namespace Opm {
          * because of its structure and position. Hence the special handling of ignoring it.
          */
         if( keyword.name() == "RUNSUM" ) return {};
+        if( keyword.name() == "RPTONLY" ) return {};
 
         const auto mknode = [dims,&keyword]( int region ) {
             return ERT::smspec_node( keyword.name(), dims.data(), region );
