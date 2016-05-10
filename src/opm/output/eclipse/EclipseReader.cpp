@@ -17,230 +17,169 @@
   along with OPM. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "EclipseReader.hpp"
-#include <opm/core/simulator/WellState.hpp>
-#include <opm/core/simulator/BlackoilState.hpp>
-#include <opm/core/utility/Units.hpp>
-#include <opm/core/grid/GridHelpers.hpp>
-#include <opm/output/eclipse/EclipseIOUtil.hpp>
+#include <ert/ecl/ecl_file.h>
+#include <ert/util/ert_unique_ptr.hpp>
 
-#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
+#include <opm/output/eclipse/EclipseReader.hpp>
+#include <opm/output/Cells.hpp>
+#include <opm/output/Wells.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
-#include <opm/parser/eclipse/Units/Dimension.hpp>
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
+#include <opm/parser/eclipse/Units/ConversionFactors.hpp>
 
 #include <algorithm>
 
-#include <ert/ecl/ecl_file.h>
+namespace Opm {
+namespace {
 
-namespace Opm
-{
+    inline data::Solution restoreSOLUTION( ecl_file_type* file,
+                                           int numcells,
+                                           const double* conversion_table ) {
 
-    static void restoreTemperatureData(const ecl_file_type* file,
-                                       EclipseStateConstPtr eclipse_state,
-                                       int numcells,
-                                       SimulationDataContainer& simulator_state) {
-        const char* temperature = "TEMP";
-
-        if (ecl_file_has_kw(file , temperature)) {
-            ecl_kw_type* temperature_kw = ecl_file_iget_named_kw(file, temperature, 0);
-
-            if (ecl_kw_get_size(temperature_kw) != numcells) {
-                throw std::runtime_error("Read of restart file: Could not restore temperature data, length of data from file not equal number of cells");
-            }
-
-            float* temperature_data = ecl_kw_get_float_ptr(temperature_kw);
-
-            // factor and offset from the temperature values given in the deck to Kelvin
-            double scaling = eclipse_state->getDeckUnitSystem().parse("Temperature")->getSIScaling();
-            double offset  = eclipse_state->getDeckUnitSystem().parse("Temperature")->getSIOffset();
-
-            for (size_t index = 0; index < simulator_state.temperature().size(); ++index) {
-                simulator_state.temperature()[index] = unit::convert::from((double)temperature_data[index] - offset, scaling);
-            }
-          } else {
-              throw std::runtime_error("Read of restart file: File does not contain TEMP data\n");
-          }
-    }
-
-
-    void restorePressureData(const ecl_file_type* file,
-                             EclipseStateConstPtr eclipse_state,
-                             int numcells,
-                             SimulationDataContainer& simulator_state) {
-        const char* pressure = "PRESSURE";
-
-        if (ecl_file_has_kw(file , pressure)) {
-
-            ecl_kw_type* pressure_kw = ecl_file_iget_named_kw(file, pressure, 0);
-
-            if (ecl_kw_get_size(pressure_kw) != numcells) {
-                throw std::runtime_error("Read of restart file: Could not restore pressure data, length of data from file not equal number of cells");
-            }
-
-            float* pressure_data = ecl_kw_get_float_ptr(pressure_kw);
-            const double deck_pressure_unit = (eclipse_state->getDeckUnitSystem().getType() == UnitSystem::UNIT_TYPE_METRIC) ? Opm::unit::barsa : Opm::unit::psia;
-            for (size_t index = 0; index < simulator_state.pressure().size(); ++index) {
-                simulator_state.pressure()[index] = unit::convert::from((double)pressure_data[index], deck_pressure_unit);
-            }
-        } else {
-            throw std::runtime_error("Read of restart file: File does not contain PRESSURE data\n");
-        }
-    }
-
-
-    static void restoreSaturation(const ecl_file_type* file_type,
-                                  const PhaseUsage& phaseUsage,
-                                  int numcells,
-                                  SimulationDataContainer& simulator_state) {
-
-        float* sgas_data = NULL;
-        float* swat_data = NULL;
-
-        if (phaseUsage.phase_used[BlackoilPhases::Aqua]) {
-            const char* swat = "SWAT";
-            if (ecl_file_has_kw(file_type, swat)) {
-                ecl_kw_type* swat_kw = ecl_file_iget_named_kw(file_type , swat, 0);
-                swat_data = ecl_kw_get_float_ptr(swat_kw);
-                std::vector<double> swat_datavec(&swat_data[0], &swat_data[numcells]);
-                EclipseIOUtil::addToStripedData(swat_datavec, simulator_state.saturation(), phaseUsage.phase_pos[BlackoilPhases::Aqua], phaseUsage.num_phases);
-            } else {
-                std::string error_str = "Restart file is missing SWAT data!\n";
-                throw std::runtime_error(error_str);
-            }
+        for( const auto* key : { "PRESSURE", "TEMP", "SWAT", "SGAS" } ) {
+            if( !ecl_file_has_kw( file, key ) )
+                throw std::runtime_error("Read of restart file: "
+                                         "File does not contain "
+                                         + std::string( key )
+                                         + " data" );
         }
 
-        if (phaseUsage.phase_used[BlackoilPhases::Vapour]) {
-            const char* sgas = "SGAS";
-            if (ecl_file_has_kw(file_type, sgas)) {
-                ecl_kw_type* sgas_kw = ecl_file_iget_named_kw(file_type , sgas, 0);
-                sgas_data = ecl_kw_get_float_ptr(sgas_kw);
-                std::vector<double> sgas_datavec(&sgas_data[0], &sgas_data[numcells]);
-                EclipseIOUtil::addToStripedData(sgas_datavec, simulator_state.saturation(), phaseUsage.phase_pos[BlackoilPhases::Vapour], phaseUsage.num_phases);
-            } else {
-                std::string error_str = "Restart file is missing SGAS data!\n";
-                throw std::runtime_error(error_str);
-            }
-        }
-    }
+        struct keyword {
+            ecl_kw_type* kw;
+            int size;
+            const float* data;
+            const char* name;
 
+            keyword( ecl_file_type* file, const char* nm ) :
+                kw( ecl_file_iget_named_kw( file, nm, 0 ) ),
+                size( ecl_kw_get_size( kw ) ),
+                data( ecl_kw_get_float_ptr( kw ) ),
+                name( nm )
+            {}
+        };
 
-    static void restoreRSandRV(const ecl_file_type* file_type,
-                               SimulationConfigConstPtr sim_config,
-                               SimulationDataContainer& simulator_state) {
+        keyword pres( file, "PRESSURE" );
+        keyword temp( file, "TEMP" );
+        keyword swat( file, "SWAT" );
+        keyword sgas( file, "SGAS" );
 
-        if (sim_config->hasDISGAS()) {
-            const char* RS = "RS";
-            if (ecl_file_has_kw(file_type, RS)) {
-                ecl_kw_type* rs_kw = ecl_file_iget_named_kw(file_type, RS, 0);
-                float* rs_data = ecl_kw_get_float_ptr(rs_kw);
-                auto& rs = simulator_state.getCellData( BlackoilState::GASOILRATIO );
-                for (int i = 0; i < ecl_kw_get_size( rs_kw ); i++) {
-                    rs[i] = rs_data[i];
-                }
-            } else {
-                throw std::runtime_error("Restart file is missing RS data!\n");
-            }
+        for( const auto& kw : { pres, temp, swat, sgas } ) {
+            if( kw.size != numcells )
+                throw std::runtime_error("Restart file: Could not restore "
+                                        + std::string( kw.name )
+                                        + ", mismatched number of cells" );
         }
 
-        if (sim_config->hasVAPOIL()) {
-            const char* RV = "RV";
-            if (ecl_file_has_kw(file_type, RV)) {
-                ecl_kw_type* rv_kw = ecl_file_iget_named_kw(file_type, RV, 0);
-                float* rv_data = ecl_kw_get_float_ptr(rv_kw);
-                auto& rv = simulator_state.getCellData( BlackoilState::RV );
-                for (int i = 0; i < ecl_kw_get_size( rv_kw ); i++) {
-                    rv[i] = rv_data[i];
-                }
-            } else {
-                throw std::runtime_error("Restart file is missing RV data!\n");
-            }
+        using ds = data::Solution::key;
+        data::Solution sol;
+        sol.insert( ds::PRESSURE, { pres.data, pres.data + pres.size } );
+        sol.insert( ds::TEMP,     { temp.data, temp.data + temp.size } );
+        sol.insert( ds::SWAT,     { swat.data, swat.data + swat.size } );
+        sol.insert( ds::SGAS,     { sgas.data, sgas.data + sgas.size } );
+
+        using namespace conversions;
+        const auto apply_pressure = [=]( double x ) {
+            return to_si( conversion_table, dim::pressure, x );
+        };
+
+        const auto apply_temperature = [=]( double x ) {
+            return to_si( conversion_table, dim::temperature, x );
+        };
+
+        std::transform( sol[ ds::PRESSURE ].begin(), sol[ ds::PRESSURE ].end(),
+                        sol[ ds::PRESSURE ].begin(), apply_pressure );
+        std::transform( sol[ ds::TEMP ].begin(), sol[ ds::TEMP ].end(),
+                        sol[ ds::TEMP ].begin(), apply_temperature );
+
+        /* optional keywords */
+        if( ecl_file_has_kw( file, "RS" ) ) {
+            keyword kw( file, "RS" );
+            sol.insert( ds::RS, { kw.data, kw.data + kw.size } );
         }
-    }
 
-
-    static void restoreSOLUTION(const std::string& restart_filename,
-                                int reportstep,
-                                bool unified,
-                                EclipseStateConstPtr eclipseState,
-                                int numcells,
-                                const PhaseUsage& phaseUsage,
-                                SimulationDataContainer& simulator_state)
-    {
-        const char* filename = restart_filename.c_str();
-        ecl_file_type* file_type = ecl_file_open(filename, 0);
-
-        if (file_type) {
-            bool block_selected = unified ? ecl_file_select_rstblock_report_step(file_type , reportstep) : true;
-
-            if (block_selected) {
-                restorePressureData(file_type, eclipseState, numcells, simulator_state);
-                restoreTemperatureData(file_type, eclipseState, numcells, simulator_state);
-                restoreSaturation(file_type, phaseUsage, numcells, simulator_state);
-                if (simulator_state.hasCellData( BlackoilState::RV )) {
-                    SimulationConfigConstPtr sim_config = eclipseState->getSimulationConfig();
-                    restoreRSandRV(file_type, sim_config, simulator_state );
-                } 
-            } else {
-                std::string error_str = "Restart file " +  restart_filename + " does not contain data for report step " + std::to_string(reportstep) + "!\n";
-                throw std::runtime_error(error_str);
-            }
-            ecl_file_close(file_type);
-        } else {
-            std::string error_str = "Restart file " + restart_filename + " not found!\n";
-            throw std::runtime_error(error_str);
+        if( ecl_file_has_kw( file, "RV" ) ) {
+            keyword kw( file, "RV" );
+            sol.insert( ds::RV, { kw.data, kw.data + kw.size } );
         }
+
+        return sol;
     }
 
+    inline data::Wells restoreOPM_XWEL( ecl_file_type* file,
+                                        int num_wells,
+                                        int num_phases ) {
+        const char* keyword = "OPM_XWEL";
 
-    static void restoreOPM_XWELKeyword(const std::string& restart_filename, int reportstep, bool unified, WellState& wellstate)
-    {
-        const char * keyword = "OPM_XWEL";
-        const char* filename = restart_filename.c_str();
-        ecl_file_type* file_type = ecl_file_open(filename, 0);
+        ecl_kw_type* xwel = ecl_file_iget_named_kw( file, keyword, 0 );
+        const double* xwel_data = ecl_kw_get_double_ptr(xwel);
+        const double* xwel_end  = xwel_data + ecl_kw_get_size( xwel );
 
-        if (file_type != NULL) {
+        const double* bhp_begin = xwel_data;
+        const double* bhp_end = bhp_begin + num_wells;
+        const double* temp_begin = bhp_end;
+        const double* temp_end = temp_begin + num_wells;
+        const double* wellrate_begin = temp_end;
+        const double* wellrate_end = wellrate_begin + (num_wells * num_phases);
 
-            bool block_selected = unified ? ecl_file_select_rstblock_report_step(file_type , reportstep) : true;
+        const auto remaining = std::distance( wellrate_end, xwel_end );
+        const auto perf_elems = remaining / 2;
 
-            if (block_selected) {
-                ecl_kw_type* xwel = ecl_file_iget_named_kw(file_type , keyword, 0);
-                const double* xwel_data = ecl_kw_get_double_ptr(xwel);
-                std::copy_n(xwel_data + wellstate.getRestartTemperatureOffset(), wellstate.temperature().size(), wellstate.temperature().begin());
-                std::copy_n(xwel_data + wellstate.getRestartBhpOffset(), wellstate.bhp().size(), wellstate.bhp().begin());
-                std::copy_n(xwel_data + wellstate.getRestartPerfPressOffset(), wellstate.perfPress().size(), wellstate.perfPress().begin());
-                std::copy_n(xwel_data + wellstate.getRestartPerfRatesOffset(), wellstate.perfRates().size(), wellstate.perfRates().begin());
-                std::copy_n(xwel_data + wellstate.getRestartWellRatesOffset(), wellstate.wellRates().size(), wellstate.wellRates().begin());
-            } else {
-                std::string error_str = "Restart file " +  restart_filename + " does not contain data for report step " + std::to_string(reportstep) + "!\n";
-                throw std::runtime_error(error_str);
-            }
-            ecl_file_close(file_type);
-        } else {
-            std::string error_str = "Restart file " + restart_filename + " not found!\n";
-            throw std::runtime_error(error_str);
-        }
+        const double* perfpres_begin = wellrate_end;
+        const double* perfpres_end = perfpres_begin + perf_elems;
+        const double* perfrate_begin = perfpres_end;
+        const double* perfrate_end = perfrate_begin + perf_elems;
+
+        return { {},
+            { bhp_begin, bhp_end },
+            { perfpres_begin, perfpres_end },
+            { perfrate_begin, perfrate_end },
+            { temp_begin, temp_end },
+            { wellrate_begin, wellrate_end }
+        };
+    }
+}
+
+std::pair< data::Solution, data::Wells >
+init_from_restart_file( const EclipseState& es, int numcells ) {
+
+    InitConfigConstPtr initConfig        = es.getInitConfig();
+    IOConfigConstPtr ioConfig            = es.getIOConfig();
+    int restart_step                     = initConfig->getRestartStep();
+    const std::string& restart_file_root = initConfig->getRestartRootName();
+    bool output                          = false;
+    const std::string filename           = ioConfig->getRestartFileName(
+                                                        restart_file_root,
+                                                        restart_step,
+                                                        output);
+    const bool unified                   = ioConfig->getUNIFIN();
+    const int num_wells = es.getSchedule()->numWells( restart_step );
+    const int num_phases = es.getTableManager().getNumPhases();
+
+    using ft = ERT::ert_unique_ptr< ecl_file_type, ecl_file_close >;
+    ft file( ecl_file_open( filename.c_str(), 0 ) );
+
+    if( !file )
+        throw std::runtime_error( "Restart file " + filename + " not found!" );
+
+    if( unified &&
+        !ecl_file_select_rstblock_report_step( file.get(), restart_step ) ) {
+        throw std::runtime_error( "Restart file " + filename
+                + " does not contain data for report step "
+                + std::to_string( restart_step ) + "!" );
     }
 
+    const auto* conv_table = es.getDeckUnitSystem()
+        .getType() == UnitSystem::UNIT_TYPE_METRIC
+        ? conversions::metric2si
+        : conversions::field2si;
 
-
-    void init_from_restart_file(EclipseStateConstPtr eclipse_state,
-                                int numcells,
-                                const PhaseUsage& phase_usage,
-                                SimulationDataContainer& simulator_state,
-                                WellState& wellstate) {
-
-        InitConfigConstPtr initConfig        = eclipse_state->getInitConfig();
-        IOConfigConstPtr ioConfig            = eclipse_state->getIOConfig();
-        int restart_step                     = initConfig->getRestartStep();
-        const std::string& restart_file_root = initConfig->getRestartRootName();
-        bool output                          = false;
-        const std::string& restart_file_name = ioConfig->getRestartFileName(restart_file_root, restart_step, output);
-
-        Opm::restoreSOLUTION(restart_file_name, restart_step, ioConfig->getUNIFIN(), eclipse_state, numcells, phase_usage, simulator_state);
-        Opm::restoreOPM_XWELKeyword(restart_file_name, restart_step, ioConfig->getUNIFIN(), wellstate);
-    }
-
+    return {
+        restoreSOLUTION( file.get(), numcells, conv_table ),
+        restoreOPM_XWEL( file.get(), num_wells, num_phases )
+    };
+}
 
 } // namespace Opm

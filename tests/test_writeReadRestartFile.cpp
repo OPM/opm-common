@@ -25,6 +25,8 @@
 #define BOOST_TEST_MODULE EclipseWriter
 #include <boost/test/unit_test.hpp>
 
+#include <opm/output/Cells.hpp>
+#include <opm/output/Wells.hpp>
 #include <opm/output/eclipse/EclipseWriter.hpp>
 #include <opm/output/eclipse/EclipseReader.hpp>
 #include <opm/output/eclipse/EclipseIOUtil.hpp>
@@ -346,10 +348,40 @@ state second_sim() {
 
     wellStateRestored->init(wells, *blackoilStateRestored);
 
-    Opm::init_from_restart_file(eclipseState, Opm::UgGridHelpers::numCells(*gridManager.c_grid()), phaseUsage,
-                                *blackoilStateRestored, *wellStateRestored);
+    auto restored = Opm::init_from_restart_file(
+            *eclipseState, Opm::UgGridHelpers::numCells( *gridManager.c_grid() ) );
 
-    return std::make_pair(wellStateRestored, blackoilStateRestored);
+    /* manually populate from output data strucutres */
+    using ds = Opm::data::Solution::key;
+    blackoilStateRestored->registerCellData( "GASOILRATIO", 0 );
+    blackoilStateRestored->registerCellData( "RV", 0 );
+    blackoilStateRestored->registerCellData( "PRESSURE", 0 );
+    blackoilStateRestored->registerCellData( "TEMP", 0 );
+    blackoilStateRestored->registerCellData( "SATURATION", 0 );
+
+    /* SimulationDataContainer expects striped data */
+    const auto phases = phaseUsage.num_phases;
+    std::vector< double > sat( restored.first[ ds::SWAT ].size() * phases, 0 );
+    for( size_t i = 0; i < restored.first[ ds::SWAT ].size(); ++i ) {
+        const auto wat_offset = phaseUsage.phase_pos[ Opm::BlackoilPhases::Aqua ];
+        const auto gas_offset = phaseUsage.phase_pos[ Opm::BlackoilPhases::Vapour ];
+        sat[ wat_offset + (i * phases) ] = restored.first[ ds::SWAT ][ i ];
+        sat[ gas_offset + (i * phases) ] = restored.first[ ds::SGAS ][ i ];
+    }
+
+    blackoilStateRestored->gasoilratio() = restored.first[ ds::RS ];
+    blackoilStateRestored->rv() = restored.first[ ds::RV ];
+    blackoilStateRestored->pressure() = restored.first[ ds::PRESSURE ];
+    blackoilStateRestored->temperature() = restored.first[ ds::TEMP ];
+    blackoilStateRestored->saturation() = sat;
+
+    wellStateRestored->bhp() = restored.second.bhp;
+    wellStateRestored->temperature() = restored.second.temperature;
+    wellStateRestored->perfPress() = restored.second.perf_pressure;
+    wellStateRestored->perfRates() = restored.second.perf_rate;
+    wellStateRestored->wellRates() = restored.second.well_rate;
+
+    return std::make_pair( wellStateRestored, blackoilStateRestored );
 }
 
 void compare(state state1, state state2) {

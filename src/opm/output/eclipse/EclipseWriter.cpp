@@ -675,8 +675,8 @@ void EclipseWriter::writeTimeStep(int report_step,
         std::vector< double > xwel;
         xwel.reserve( sz );
 
-        for( const auto& vec : { wells.bhp, wells.perf_pressure, wells.perf_rate,
-                           wells.temperature, wells.well_rate } )
+        for( const auto& vec : { wells.bhp, wells.temperature, wells.well_rate,
+                                 wells.perf_pressure, wells.perf_rate } )
             xwel.insert( xwel.end(), vec.begin(), vec.end() );
 
         restartHandle.add_kw(EclipseWriterDetails::Keyword<int>(IWEL_KW, iwell_data));

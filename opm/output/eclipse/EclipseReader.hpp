@@ -1,16 +1,15 @@
 #ifndef ECLIPSEREADER_HPP
 #define ECLIPSEREADER_HPP
 
-#include <string>
+#include <utility>
 
-#include <opm/core/simulator/WellState.hpp>
-#include <opm/core/props/BlackoilPhases.hpp>
-#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/output/Cells.hpp>
+#include <opm/output/Wells.hpp>
 
+namespace Opm {
 
+    class EclipseState;
 
-namespace Opm
-{
 ///
 /// \brief init_from_restart_file
 ///     Reading from the restart file, information stored under the OPM_XWEL keyword and SOLUTION data is in this method filled into
@@ -25,13 +24,8 @@ namespace Opm
 ///     An instance of a WellState object, with correct size for each of the 5 contained std::vector<double> objects
 ///
 
-    class SimulationDataContainer;
-
-    void init_from_restart_file(EclipseStateConstPtr eclipse_state,
-                                int numcells,
-                                const PhaseUsage& pu,
-                                SimulationDataContainer& simulator_state,
-                                WellState& wellstate);
+    std::pair< data::Solution, data::Wells >
+    init_from_restart_file( const EclipseState&, int numcells );
 
 
 }
