@@ -304,11 +304,16 @@ state first_sim(test_work_area_type * test_area) {
 
     setValuesInWellState(wellState);
     simTimer->setCurrentStepNum(1);
+
+    Opm::data::Wells dwells { {}, wellState->bhp(), wellState->perfPress(),
+                              wellState->perfRates(), wellState->temperature(),
+                              wellState->wellRates() };
+
     eclipseWriter->writeTimeStep( simTimer->reportStepNum(),
                                   simTimer->currentPosixTime(),
                                   simTimer->simulationTimeElapsed(),
                                   sim2solution( *blackoilState, phaseUsage ),
-                                  *wellState , false);
+                                  dwells, false);
 
     return std::make_pair(wellState, blackoilState);
 }

@@ -2,6 +2,8 @@
 
 #include <opm/core/grid.h>
 #include <opm/output/eclipse/EclipseWriter.hpp>
+#include <opm/output/Cells.hpp>
+#include <opm/output/Wells.hpp>
 #include <opm/core/utility/parameters/Parameter.hpp>
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
@@ -36,11 +38,11 @@ struct MultiWriter : public OutputWriter {
                                time_t current_time,
                                double secs_elapsed,
                                data::Solution reservoirState,
-                               const WellState& wellState,
+                               data::Wells wells,
                                bool  isSubstep) {
         for (it_t it = writers_->begin (); it != writers_->end(); ++it) {
             (*it)->writeTimeStep( report_step, current_time, secs_elapsed,
-                                  reservoirState, wellState, isSubstep );
+                                  reservoirState, wells, isSubstep );
         }
     }
 

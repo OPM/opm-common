@@ -24,6 +24,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 
 #include <opm/output/Cells.hpp>
+#include <opm/output/Wells.hpp>
 
 struct UnstructuredGrid;
 
@@ -55,7 +56,7 @@ struct PhaseUsage;
  *  writer->writeInit( current_posix_time, time_since_epoch_at_start );
  *
  *  // after each timestep
- *  writer->writeTimeStep (timer, state, wellState);
+ *  writer->writeTimeStep
  *
  * \endcode
  */
@@ -84,7 +85,7 @@ public:
      * \param[in] current_posix_time    Seconds elapsed since epoch
      * \param[in] seconds_elapsed       Seconds elapsed since simulation start
      * \param[in] reservoirState        The thermodynamic state of the reservoir
-     * \param[in] wellState      The production/injection data for all wells
+     * \param[in] wells                 Well data
      *
      * This routine should be called after the timestep has been advanced,
      * i.e. timer.currentStepNum () > 0.
@@ -93,7 +94,7 @@ public:
                                 time_t current_posix_time,
                                 double seconds_elapsed,
                                 data::Solution reservoirState,
-                                const WellState& wellState,
+                                data::Wells,
                                 bool  isSubstep) = 0;
 
     /*!

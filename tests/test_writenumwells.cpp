@@ -181,6 +181,10 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo)
     wellState->init(0, *blackoilState);
 
     int countTimeStep = eclipseState->getSchedule()->getTimeMap()->numTimesteps();
+    Opm::data::Wells wells { {}, wellState->bhp(), wellState->perfPress(),
+                             wellState->perfRates(), wellState->temperature(),
+                             wellState->wellRates() };
+
 
     for(int timestep=0; timestep <= countTimeStep; ++timestep){
         simTimer->setCurrentStepNum( timestep );
@@ -188,7 +192,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo)
                                       simTimer->currentPosixTime(),
                                       simTimer->simulationTimeElapsed(),
                                       sim2solution( *blackoilState, phaseUsageFromDeck( eclipseState ) ),
-                                      *wellState, false);
+                                      wells, false);
     }
 
     verifyWellState(eclipse_restart_filename, eclipseState->getInputGrid(), eclipseState->getSchedule());

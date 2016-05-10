@@ -84,7 +84,7 @@ public:
                                 time_t current_posix_time,
                                 double seconds_elapsed,
                                 data::Solution,
-                                const WellState& wellState,
+                                data::Wells,
                                 bool isSubstep);
 
 

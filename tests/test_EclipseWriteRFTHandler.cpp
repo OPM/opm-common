@@ -27,6 +27,7 @@
 
 #include <opm/output/eclipse/EclipseWriteRFTHandler.hpp>
 #include <opm/output/eclipse/EclipseWriter.hpp>
+#include <opm/output/Wells.hpp>
 #include <opm/core/grid/GridManager.hpp>
 #include <opm/core/grid/GridHelpers.hpp>
 #include <opm/core/simulator/BlackoilState.hpp>
@@ -172,11 +173,14 @@ BOOST_AUTO_TEST_CASE(test_EclipseWriterRFTHandler)
     for (; simulatorTimer->currentStepNum() < simulatorTimer->numSteps(); ++ (*simulatorTimer)) {
         std::shared_ptr<Opm::BlackoilState> blackoilState2 = createBlackoilState(simulatorTimer->currentStepNum(),ourFineGridManagerPtr);
         std::shared_ptr<Opm::WellState> wellState = createWellState(blackoilState2);
+        Opm::data::Wells wells { {}, wellState->bhp(), wellState->perfPress(),
+                                 wellState->perfRates(), wellState->temperature(),
+                                 wellState->wellRates() };
         eclipseWriter->writeTimeStep( simulatorTimer->reportStepNum(),
                                       simulatorTimer->currentPosixTime(),
                                       simulatorTimer->simulationTimeElapsed(),
                                       sim2solution( *blackoilState2, phaseUsageFromDeck( eclipseState ) ),
-                                      *wellState, false);
+                                      wells, false);
     }
 
     std::string cwd(test_work_area_get_cwd(test_area.get()));

@@ -424,11 +424,15 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
         createBlackoilState( current_step );
         createWellState( current_step );
 
+        data::Wells wells { {}, wellState->bhp(), wellState->perfPress(),
+                            wellState->perfRates(), wellState->temperature(),
+                            wellState->wellRates() };
+
         eclWriter->writeTimeStep( report_step,
                                   simTimer->currentPosixTime(),
                                   simTimer->simulationTimeElapsed(),
                                   sim2solution( *blackoilState, phaseUsageFromDeck( deck ) ),
-                                  *wellState, false);
+                                  wells, false);
         checkRestartFile( current_step );
         checkSummaryFile( current_step );
     }
