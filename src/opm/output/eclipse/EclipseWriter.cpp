@@ -42,6 +42,7 @@
 #include <opm/core/props/phaseUsageFromDeck.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Units/ConversionFactors.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
@@ -597,11 +598,6 @@ public:
                                         ertPhaseMask(uses),
                                         timer.currentPosixTime());
         }
-
-
-
-
-
     }
 
     void writeKeyword(const std::string& keywordName, const std::vector<double> &data)
@@ -1228,6 +1224,10 @@ void EclipseWriter::writeInit(const SimulatorTimerInterface &timer, const NNC& n
             for (NNCdata nd : nnc.nncdata()) {
                 tran.push_back(nd.trans);
             }
+            if (eclipseState_->getDeckUnitSystem().getType() == UnitSystem::UNIT_TYPE_METRIC)
+                EclipseWriterDetails::convertFromSiTo(tran, 1.0 / Opm::Metric::Transmissibility);
+            else
+                EclipseWriterDetails::convertFromSiTo(tran, 1.0 / Opm::Field::Transmissibility);
             fortio.writeKeyword("TRANNNC", tran);
         }
     }
