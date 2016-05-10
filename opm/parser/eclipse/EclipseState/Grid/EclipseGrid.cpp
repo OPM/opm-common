@@ -112,11 +112,9 @@ namespace Opm {
           m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH"),
           m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
-          m_multzMode(PinchMode::ModeEnum::TOP)
+          m_multzMode(PinchMode::ModeEnum::TOP),
+          GridDims(nx,ny,nz,dx,dy,dz)
     {
-        m_nx = nx;
-        m_ny = ny;
-        m_nz = nz;
         m_grid.reset(ecl_grid_alloc_rectangular(nx, ny, nz, dx, dy, dz, NULL));
     }
 
@@ -335,33 +333,6 @@ namespace Opm {
     double EclipseGrid::getMinpvValue( ) const {
         return m_minpvValue;
     }
-
-
-    size_t EclipseGrid::getGlobalIndex(size_t i, size_t j, size_t k) const {
-        return (i + j * getNX() + k * getNX() * getNY());
-    }
-
-    std::array<int, 3> EclipseGrid::getIJK(size_t globalIndex) const {
-        std::array<int, 3> r = {{ 0, 0, 0 }};
-        int k = globalIndex / (getNX() * getNY()); globalIndex -= k * (getNX() * getNY());
-        int j = globalIndex / getNX();             globalIndex -= j *  getNX();
-        int i = globalIndex;
-        r[0] = i;
-        r[1] = j;
-        r[2] = k;
-        return r;
-    }
-
-    void EclipseGrid::assertGlobalIndex(size_t globalIndex) const {
-        if (globalIndex >= getCartesianSize())
-            throw std::invalid_argument("input index above valid range");
-    }
-
-    void EclipseGrid::assertIJK(size_t i , size_t j , size_t k) const {
-        if (i >= getNX() || j >= getNY() || k >= getNZ())
-            throw std::invalid_argument("input index above valid range");
-    }
-
 
 
     void EclipseGrid::initCartesianGrid(const std::vector<int>& dims , const Deck& deck) {

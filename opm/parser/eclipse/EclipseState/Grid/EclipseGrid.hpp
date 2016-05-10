@@ -26,6 +26,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/MinpvMode.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/PinchMode.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
 
 #include <ert/ecl/ecl_grid.h>
 #include <ert/util/ert_unique_ptr.hpp>
@@ -68,7 +69,7 @@ namespace Opm {
 
     */
 
-    class EclipseGrid {
+    class EclipseGrid : public GridDims {
     public:
         explicit EclipseGrid(const std::string& filename);
         explicit EclipseGrid(const EclipseGrid& srcGrid);
@@ -91,10 +92,6 @@ namespace Opm {
         static bool hasCornerPointKeywords(const Deck&);
         static bool hasCartesianKeywords(const Deck&);
         size_t  getNumActive( ) const;
-        size_t  getNX( ) const;
-        size_t  getNY( ) const;
-        size_t  getNZ( ) const;
-        std::array< int, 3 > getNXYZ() const;
         size_t  getCartesianSize( ) const;
         bool isPinchActive( ) const;
         double getPinchThresholdThickness( ) const;
@@ -105,21 +102,6 @@ namespace Opm {
         double getMinpvValue( ) const;
 
         bool hasCellInfo() const;
-
-        /// The activeIndex methods will return from (i,j,k) or g,
-        /// where g \in [0,nx*n*nz) to the corresponding active index
-        /// in the range [0,numActive). Observe that if the input
-        /// argument corresponds to a cell which is not active an
-        /// exception will be raised - check with cellActive() first
-        /// if that is a possibillity.
-        size_t activeIndex(size_t i, size_t j, size_t k) const;
-        size_t activeIndex(size_t globalIndex) const;
-
-
-        size_t getGlobalIndex(size_t i, size_t j, size_t k) const;
-        std::array<int, 3> getIJK(size_t globalIndex) const;
-        void assertGlobalIndex(size_t globalIndex) const;
-        void assertIJK(size_t i , size_t j , size_t k) const;
         std::array<double, 3> getCellCenter(size_t i,size_t j, size_t k) const;
         std::array<double, 3> getCellCenter(size_t globalIndex) const;
         double getCellVolume(size_t globalIndex) const;
@@ -151,9 +133,7 @@ namespace Opm {
         Value<double> m_pinch;
         PinchMode::ModeEnum m_pinchoutMode;
         PinchMode::ModeEnum m_multzMode;
-        size_t m_nx;
-        size_t m_ny;
-        size_t m_nz;
+
         MessageContainer m_messages;
 
         void assertCellInfo() const;
