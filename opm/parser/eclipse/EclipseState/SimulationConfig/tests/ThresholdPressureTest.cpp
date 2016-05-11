@@ -259,9 +259,6 @@ BOOST_AUTO_TEST_CASE(ThresholdPressureThrowTest) {
 
     pc.update(ParseContext::INTERNAL_ERROR_UNINITIALIZED_THPRES, InputError::THROW_EXCEPTION);
     BOOST_CHECK_THROW(s.threshPres.getThresholdPressure(2, 3), std::invalid_argument);
-
-    pc.update(ParseContext::INTERNAL_ERROR_UNINITIALIZED_THPRES, InputError::IGNORE);
-    BOOST_CHECK_EQUAL(0.0, s.threshPres.getThresholdPressure(2, 3));
 }
 
 BOOST_AUTO_TEST_CASE(HasPair) {
