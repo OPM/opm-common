@@ -194,7 +194,7 @@ struct Setup
             tablemanager(*deck),
             grid(10, 3, 4),
             props(*deck, tablemanager, grid),
-            threshPres(parseContext, *deck, props)
+            threshPres(*deck, props)
     {
     }
     explicit Setup(const std::string& input, ParseContext& parseContextArg) :
@@ -203,7 +203,7 @@ struct Setup
             tablemanager(*deck),
             grid(10, 3, 4),
             props(*deck, tablemanager, grid),
-            threshPres(parseContextArg, *deck, props)
+            threshPres(*deck, props)
     {
     }
 
