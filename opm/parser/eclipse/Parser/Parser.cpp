@@ -345,8 +345,7 @@ void ParserState::handleRandomText(const string_view& keywordString ) const {
             << this->current_path()
             << ":" << this->line();
     }
-    deck->getMessageContainer().warning(msg.str());
-    parseContext.handleError( errorKey , msg.str() );
+    parseContext.handleError( errorKey , deck->getMessageContainer() , msg.str() );
 }
 
 void ParserState::openRootFile( const boost::filesystem::path& inputFile) {
@@ -388,8 +387,8 @@ std::shared_ptr< RawKeyword > createRawKeyword( const string_view& kw, ParserSta
     if( !parser.isRecognizedKeyword( keywordString ) ) {
         if( ParserKeyword::validDeckName( keywordString ) ) {
             std::string msg = "Keyword " + keywordString + " not recognized.";
-            parserState.deck->getMessageContainer().error(msg);
-            parserState.parseContext.handleError( ParseContext::PARSE_UNKNOWN_KEYWORD, msg );
+            auto& msgContainer = parserState.deck->getMessageContainer();
+            parserState.parseContext.handleError( ParseContext::PARSE_UNKNOWN_KEYWORD, msgContainer, msg );
             return {};
         }
 
@@ -435,8 +434,8 @@ std::shared_ptr< RawKeyword > createRawKeyword( const string_view& kw, ParserSta
 
     std::string msg = "Expected the kewyord: " + sizeKeyword.first
                     + " to infer the number of records in: " + keywordString;
-    parserState.deck->getMessageContainer().error(msg);
-    parserState.parseContext.handleError(ParseContext::PARSE_MISSING_DIMS_KEYWORD , msg );
+    auto& msgContainer = parserState.deck->getMessageContainer();
+    parserState.parseContext.handleError(ParseContext::PARSE_MISSING_DIMS_KEYWORD , msgContainer, msg );
 
     const auto* keyword = parser.getKeyword( sizeKeyword.first );
     const auto record = keyword->getRecord(0);
@@ -541,7 +540,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
         if( parser.isRecognizedKeyword( parserState.rawKeyword->getKeywordName() ) ) {
             const auto& kwname = parserState.rawKeyword->getKeywordName();
             const auto* parserKeyword = parser.getParserKeywordFromDeckName( kwname );
-            parserState.deck->addKeyword( parserKeyword->parse( parserState.parseContext, parserState.rawKeyword ) );
+            parserState.deck->addKeyword( parserKeyword->parse( parserState.parseContext, parserState.deck->getMessageContainer(), parserState.rawKeyword ) );
         } else {
             DeckKeyword deckKeyword( parserState.rawKeyword->getKeywordName(), false );
             const std::string msg = "The keyword " + parserState.rawKeyword->getKeywordName() + " is not recognized";
