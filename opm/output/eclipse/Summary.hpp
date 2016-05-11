@@ -41,7 +41,7 @@ class Summary {
         Summary( const EclipseState&, const SummaryConfig&, const std::string& );
         Summary( const EclipseState&, const SummaryConfig&, const char* basename );
 
-        void add_timestep( int report_step, double step_duration,
+        void add_timestep( int report_step, double secs_elapsed,
                            const EclipseState&, const data::Wells& );
         void write();
 
@@ -59,7 +59,7 @@ class Summary {
         std::map< const char*, std::vector< sum_node > > wvar;
         std::map< const char*, std::vector< sum_node > > gvar;
         const ecl_sum_tstep_type* prev_tstep = nullptr;
-        double duration = 0;
+        const double* conversions;
 };
 
 }

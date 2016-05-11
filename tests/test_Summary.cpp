@@ -317,7 +317,7 @@ BOOST_AUTO_TEST_CASE(report_steps_time) {
     setup cfg( "test_Summary_report_steps_time" );
 
     out::Summary writer( cfg.es, cfg.config, cfg.name );
-    writer.add_timestep( 1, 5 *  day, cfg.es, cfg.wells );
+    writer.add_timestep( 1, 2 *  day, cfg.es, cfg.wells );
     writer.add_timestep( 1, 5 *  day, cfg.es, cfg.wells );
     writer.add_timestep( 2, 10 * day, cfg.es, cfg.wells );
     writer.write();
@@ -329,8 +329,8 @@ BOOST_AUTO_TEST_CASE(report_steps_time) {
     BOOST_CHECK( ecl_sum_has_report_step( resp, 2 ) );
     BOOST_CHECK( !ecl_sum_has_report_step( resp, 3 ) );
 
-    BOOST_CHECK_EQUAL( ecl_sum_iget_sim_days( resp, 0 ), 5 );
-    BOOST_CHECK_EQUAL( ecl_sum_iget_sim_days( resp, 1 ), 10 );
-    BOOST_CHECK_EQUAL( ecl_sum_iget_sim_days( resp, 2 ), 20 );
-    BOOST_CHECK_EQUAL( ecl_sum_get_sim_length( resp ), 20 );
+    BOOST_CHECK_EQUAL( ecl_sum_iget_sim_days( resp, 0 ), 2 );
+    BOOST_CHECK_EQUAL( ecl_sum_iget_sim_days( resp, 1 ), 5 );
+    BOOST_CHECK_EQUAL( ecl_sum_iget_sim_days( resp, 2 ), 10 );
+    BOOST_CHECK_EQUAL( ecl_sum_get_sim_length( resp ), 10 );
 }

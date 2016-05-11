@@ -613,11 +613,11 @@ Summary::Summary( const EclipseState& st,
 }
 
 void Summary::add_timestep( int report_step,
-                            double step_duration,
+                            double secs_elapsed,
                             const EclipseState& es,
                             const data::Wells& wells ) {
-    this->duration += step_duration;
-    auto* tstep = ecl_sum_add_tstep( this->ecl_sum.get(), report_step, this->duration );
+
+    auto* tstep = ecl_sum_add_tstep( this->ecl_sum.get(), report_step, secs_elapsed );
 
     /* calculate the values for the Well-family of keywords. */
     for( const auto& pair : this->wvar ) {
