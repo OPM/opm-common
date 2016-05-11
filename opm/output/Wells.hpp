@@ -91,10 +91,13 @@ namespace Opm {
 
     struct Wells {
         using value_type = std::map< std::string, Well >::value_type;
+        using iterator = std::map< std::string, Well >::iterator;
 
         inline Well& operator[]( const std::string& );
         inline Well& at( const std::string& );
         inline const Well& at( const std::string& ) const;
+        template< typename... Args >
+        inline std::pair< iterator, bool > emplace( Args&&... );
 
         inline Wells() = default;
         inline Wells( std::initializer_list< value_type > );
@@ -186,6 +189,11 @@ namespace Opm {
 
     inline const Well& Wells::at( const std::string& k ) const {
         return this->wells.at( k );
+    }
+
+    template< typename... Args >
+    inline std::pair< Wells::iterator, bool > Wells::emplace( Args&&... args ) {
+        return this->wells.emplace( std::forward< Args >( args )... );
     }
 
     inline Wells::Wells( std::initializer_list< Wells::value_type > l ) :
