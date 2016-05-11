@@ -464,9 +464,6 @@ private:
 
 
 
-/**
- * Convert opm-core WellType and InjectorType to eclipse welltype
- */
 int EclipseWriter::eclipseWellTypeMask(WellType wellType, WellInjector::TypeEnum injectorType)
 {
   int ert_well_type = IWEL_UNDOCUMENTED_ZERO;
@@ -493,9 +490,6 @@ int EclipseWriter::eclipseWellTypeMask(WellType wellType, WellInjector::TypeEnum
 }
 
 
-/**
- * Convert opm-core WellStatus to eclipse format: > 0 open, <= 0 shut
- */
 int EclipseWriter::eclipseWellStatusMask(WellCommon::StatusEnum wellStatus)
 {
   int well_status = 0;
@@ -506,11 +500,6 @@ int EclipseWriter::eclipseWellStatusMask(WellCommon::StatusEnum wellStatus)
   return well_status;
 }
 
-
-
-/**
- * Convert opm-core UnitType to eclipse format: ert_ecl_unit_enum
- */
 ert_ecl_unit_enum
 EclipseWriter::convertUnitTypeErtEclUnitEnum(UnitSystem::UnitType unit)
 {
