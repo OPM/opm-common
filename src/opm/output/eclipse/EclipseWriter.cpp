@@ -736,9 +736,10 @@ void EclipseWriter::writeTimeStep(int report_step,
         free( rft_filename );
     }
 
-    if (!isSubstep) {
-        /* Summary variables (well reporting) */
-    }
+    if( isSubstep ) return;
+
+    summary_.add_timestep( report_step, secs_elapsed, *eclipseState_, wells );
+    summary_.write();
 }
 
 
@@ -761,6 +762,7 @@ EclipseWriter::EclipseWriter(Opm::EclipseStateConstPtr eclipseState,
                              int numCells,
                              const int* compressedToCartesianCellIdx)
     : eclipseState_(eclipseState)
+    , summary_( *eclipseState, eclipseState->getSummaryConfig() )
     , numCells_(numCells)
     , compressedToCartesianCellIdx_(compressedToCartesianCellIdx)
     , gridToEclipseIdx_(numCells, int(-1) )

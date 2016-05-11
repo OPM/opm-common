@@ -23,11 +23,13 @@
 #define OPM_ECLIPSE_WRITER_HPP
 
 #include <opm/output/OutputWriter.hpp>
+#include <opm/output/eclipse/Summary.hpp>
 #include <opm/core/wells.h> // WellType
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
+#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <ert/ecl/ecl_util.h>
@@ -94,6 +96,7 @@ public:
 
 private:
     Opm::EclipseStateConstPtr eclipseState_;
+    out::Summary summary_;
     int numCells_;
     std::array<int, 3> cartesianSize_;
     const int* compressedToCartesianCellIdx_;
