@@ -611,12 +611,17 @@ void EclipseWriter::writeTimeStep(int report_step,
     IOConfigConstPtr ioConfig = eclipseState_->getIOConfigConst();
 
 
+    const auto days = conversions::from_si( this->conversion_table_,
+                                            conversions::dim::time,
+                                            secs_elapsed );
+    const auto& schedule = *this->eclipseState_->getSchedule();
+
     // Write restart file
     if(!isSubstep && ioConfig->getWriteRestartFile(report_step))
     {
-        const size_t ncwmax                 = eclipseState_->getSchedule()->getMaxNumCompletionsForWells(report_step);
-        const size_t numWells               = eclipseState_->getSchedule()->numWells(report_step);
-        std::vector<WellConstPtr> wells_ptr = eclipseState_->getSchedule()->getWells(report_step);
+        const size_t ncwmax                 = schedule.getMaxNumCompletionsForWells(report_step);
+        const size_t numWells               = schedule.numWells(report_step);
+        std::vector<WellConstPtr> wells_ptr = schedule.getWells(report_step);
 
         std::vector<const char*> zwell_data( numWells * Opm::EclipseWriterDetails::Restart::NZWELZ , "");
         std::vector<int>         iwell_data( numWells * Opm::EclipseWriterDetails::Restart::NIWELZ , 0 );
@@ -651,9 +656,7 @@ void EclipseWriter::writeTimeStep(int report_step,
             rsthead_data.niconz     = EclipseWriterDetails::Restart::NICONZ;
             rsthead_data.ncwmax     = ncwmax;
             rsthead_data.phase_sum  = ert_phase_mask_;
-            rsthead_data.sim_days   = conversions::from_si( conversion_table_,
-                                                            conversions::dim::time,
-                                                            secs_elapsed );
+            rsthead_data.sim_days   = days;
 
             restartHandle.writeHeader( report_step, &rsthead_data);
         }
