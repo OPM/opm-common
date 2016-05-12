@@ -134,10 +134,10 @@ namespace {
 
         return { {},
             { bhp_begin, bhp_end },
-            { perfpres_begin, perfpres_end },
-            { perfrate_begin, perfrate_end },
             { temp_begin, temp_end },
-            { wellrate_begin, wellrate_end }
+            { wellrate_begin, wellrate_end },
+            { perfpres_begin, perfpres_end },
+            { perfrate_begin, perfrate_end }
         };
     }
 }

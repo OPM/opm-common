@@ -103,17 +103,17 @@ namespace Opm {
         inline Wells( std::initializer_list< value_type > );
         inline Wells( std::initializer_list< value_type >,
                       std::vector< double > bhp,
-                      std::vector< double > perf_pressure,
-                      std::vector< double > perf_rates,
                       std::vector< double > temperature,
-                      std::vector< double > wellrates );
+                      std::vector< double > wellrates,
+                      std::vector< double > perf_pressure,
+                      std::vector< double > perf_rates );
 
         std::map< std::string, Well > wells;
         std::vector< double > bhp;
-        std::vector< double > perf_pressure;
-        std::vector< double > perf_rate;
         std::vector< double > temperature;
         std::vector< double > well_rate;
+        std::vector< double > perf_pressure;
+        std::vector< double > perf_rate;
     };
 
     /* IMPLEMENTATIONS */
@@ -202,15 +202,16 @@ namespace Opm {
 
     inline Wells::Wells( std::initializer_list< value_type > l,
                          std::vector< double > b,
-                         std::vector< double > pp,
-                         std::vector< double > pr,
                          std::vector< double > t,
-                         std::vector< double > w ) :
+                         std::vector< double > w,
+                         std::vector< double > pp,
+                         std::vector< double > pr ) :
+        wells( l ),
         bhp( b ),
-        perf_pressure( pp ),
-        perf_rate( pr ),
         temperature( t ),
-        well_rate( w ) {
+        well_rate( w ),
+        perf_pressure( pp ),
+        perf_rate( pr ) {
         // TODO: size asserts and sanity checks in debug mode
     }
 

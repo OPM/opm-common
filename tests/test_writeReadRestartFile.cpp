@@ -307,9 +307,11 @@ state first_sim(test_work_area_type * test_area) {
     setValuesInWellState(wellState);
     simTimer->setCurrentStepNum(1);
 
-    Opm::data::Wells dwells { {}, wellState->bhp(), wellState->perfPress(),
-                              wellState->perfRates(), wellState->temperature(),
-                              wellState->wellRates() };
+    Opm::data::Wells dwells { {}, wellState->bhp(),
+                                  wellState->temperature(),
+                                  wellState->wellRates(),
+                                  wellState->perfPress(),
+                                  wellState->perfRates() };
 
     eclipseWriter->writeTimeStep( simTimer->reportStepNum(),
                                   simTimer->currentPosixTime(),
