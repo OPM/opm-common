@@ -309,7 +309,49 @@ namespace conversions {
         1 / Field::Mass,
     };
 
+    const double metric2si[] = {
+        Metric::Length,
+        Metric::Time,
+        Metric::Density,
+        Metric::Pressure,
+        Metric::AbsoluteTemperature,
+        Metric::Temperature,
+        Metric::Viscosity,
+        Metric::Permeability,
+        Metric::LiquidSurfaceVolume,
+        Metric::GasSurfaceVolume,
+        Metric::ReservoirVolume,
+        Metric::LiquidSurfaceVolume / Metric::Time,
+        Metric::GasSurfaceVolume / Metric::Time,
+        Metric::ReservoirVolume / Metric::Time,
+        Metric::Transmissibility,
+        Metric::Mass,
+    };
+
+    const double field2si[] = {
+         Field::Length,
+         Field::Time,
+         Field::Density,
+         Field::Pressure,
+         Field::AbsoluteTemperature,
+         Field::Temperature,
+         Field::Viscosity,
+         Field::Permeability,
+         Field::LiquidSurfaceVolume,
+         Field::GasSurfaceVolume,
+         Field::ReservoirVolume,
+         Field::LiquidSurfaceVolume / Field::Time,
+         Field::GasSurfaceVolume / Field::Time,
+         Field::ReservoirVolume / Field::Time,
+         Field::Transmissibility,
+         Field::Mass,
+    };
+
     inline double from_si( const double* table, dim d, double val ) {
+        return val * table[ static_cast< int >( d ) ];
+    }
+
+    inline double to_si( const double* table, dim d, double val ) {
         return val * table[ static_cast< int >( d ) ];
     }
 }
