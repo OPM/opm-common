@@ -79,21 +79,21 @@ namespace Log {
         switch (messageType) {
         case MessageType::Debug:
         case MessageType::Info:
-            colorcode = "\033[39m";
+            colorcode = AnsiTerminalColors::default_color;
             break;
         case MessageType::Warning:
-            colorcode = "\033[33;1m";
+            colorcode = AnsiTerminalColors::yellow_strong;
             break;
         case MessageType::Error:
         case MessageType::Problem:
         case MessageType::Bug:
-            colorcode = "\033[31;1m";
+            colorcode = AnsiTerminalColors::red_strong;
             break;
         default:
             throw std::invalid_argument("Unhandled messagetype");
         }
 
-        return colorcode + message + "\033[0m";
+        return colorcode + message + AnsiTerminalColors::none;
     }
 
 }

@@ -254,9 +254,9 @@ BOOST_AUTO_TEST_CASE(TestHelperFunctions)
     BOOST_CHECK_EQUAL(prefixMessage(MessageType::Info, "message"), "info: message");
 
     // colorCode Message
-    BOOST_CHECK_EQUAL(colorCodeMessage(MessageType::Info, "message"), "\033[39mmessage\033[0m");
-    BOOST_CHECK_EQUAL(colorCodeMessage(MessageType::Warning, "message"), "\033[33;1mmessage\033[0m");
-    BOOST_CHECK_EQUAL(colorCodeMessage(MessageType::Error, "message"), "\033[31;1mmessage\033[0m");
+    BOOST_CHECK_EQUAL(colorCodeMessage(MessageType::Info, "message"), AnsiTerminalColors::default_color + "message" + AnsiTerminalColors::none);
+    BOOST_CHECK_EQUAL(colorCodeMessage(MessageType::Warning, "message"), AnsiTerminalColors::yellow_strong + "message" + AnsiTerminalColors::none);
+    BOOST_CHECK_EQUAL(colorCodeMessage(MessageType::Error, "message"), AnsiTerminalColors::red_strong + "message" + AnsiTerminalColors::none);
 }
 
 
