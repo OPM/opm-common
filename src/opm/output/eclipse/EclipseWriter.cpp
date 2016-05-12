@@ -765,14 +765,14 @@ EclipseWriter::EclipseWriter(Opm::EclipseStateConstPtr eclipseState,
                              int numCells,
                              const int* compressedToCartesianCellIdx)
     : eclipseState_(eclipseState)
+    , outputDir_( eclipseState->getIOConfig()->getOutputDir() )
+    , baseName_( boost::to_upper_copy( eclipseState->getIOConfig()->getBaseName() ) )
     , summary_( *eclipseState, eclipseState->getSummaryConfig() )
     , numCells_(numCells)
     , compressedToCartesianCellIdx_(compressedToCartesianCellIdx)
     , gridToEclipseIdx_(numCells, int(-1) )
     , conversion_table_( get_conv_table( eclipseState->getDeckUnitSystem().getType() ) )
     , enableOutput_( eclipseState->getIOConfig()->getOutputEnabled() )
-    , outputDir_( eclipseState->getIOConfig()->getOutputDir() )
-    , baseName_( boost::to_upper_copy( eclipseState->getIOConfig()->getBaseName() ) )
     , ert_phase_mask_( ertPhaseMask( eclipseState->getTableManager() ) )
 {
     const auto eclGrid = eclipseState->getInputGrid();

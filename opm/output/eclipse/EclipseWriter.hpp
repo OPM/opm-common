@@ -96,6 +96,8 @@ public:
 
 private:
     Opm::EclipseStateConstPtr eclipseState_;
+    std::string outputDir_;
+    std::string baseName_;
     out::Summary summary_;
     int numCells_;
     std::array<int, 3> cartesianSize_;
@@ -103,8 +105,6 @@ private:
     std::vector< int > gridToEclipseIdx_;
     const double* conversion_table_;
     bool enableOutput_;
-    std::string outputDir_;
-    std::string baseName_;
     int ert_phase_mask_;
 
     void init(Opm::EclipseStateConstPtr eclipseState);
