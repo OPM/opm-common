@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE(TestHelperFunctions)
 
 BOOST_AUTO_TEST_CASE(TestOpmLogWithColors)
 {
-    OpmLog::clearBackends();
+    OpmLog::removeAllBackends();
 
     std::ostringstream log_stream;
 

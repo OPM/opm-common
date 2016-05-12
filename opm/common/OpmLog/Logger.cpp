@@ -63,7 +63,7 @@ namespace Opm {
             return true;
     }
 
-    void Logger::clearBackends() {
+    void Logger::removeAllBackends() {
         m_backends.clear();
         m_globalMask = 0;
     }

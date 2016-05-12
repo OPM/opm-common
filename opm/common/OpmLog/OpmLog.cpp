@@ -96,9 +96,9 @@ namespace Opm {
     }
 
 
-    void OpmLog::clearBackends() {
+    void OpmLog::removeAllBackends() {
         if (m_logger) {
-            m_logger->clearBackends();
+            m_logger->removeAllBackends();
         }
     }
 
