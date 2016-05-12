@@ -25,7 +25,6 @@
 #define BOOST_TEST_MODULE EclipseRFTWriter
 #include <boost/test/unit_test.hpp>
 
-#include <opm/output/eclipse/EclipseWriteRFTHandler.hpp>
 #include <opm/output/eclipse/EclipseWriter.hpp>
 #include <opm/output/Wells.hpp>
 #include <opm/core/grid/GridManager.hpp>
@@ -162,25 +161,33 @@ BOOST_AUTO_TEST_CASE(test_EclipseWriterRFTHandler)
     const UnstructuredGrid &ourFinerUnstructuredGrid = *ourFineGridManagerPtr->c_grid();
     const int* compressedToCartesianCellIdx = Opm::UgGridHelpers::globalCell(ourFinerUnstructuredGrid);
 
-    std::shared_ptr<Opm::EclipseWriter> eclipseWriter = createEclipseWriter(deck,
-                                                                            eclipseState,
-                                                                            ourFineGridManagerPtr,
-                                                                            compressedToCartesianCellIdx);
-    tm t = boost::posix_time::to_tm( simulatorTimer->startDateTime() );
-    eclipseWriter->writeInit( simulatorTimer->currentPosixTime(), std::mktime( &t ) );
+    {
+        /* eclipseWriter is scoped here to ensure it is destroyed after the
+         * file itself has been written, because we're going to reload it
+         * immediately. first upon destruction can we guarantee it being
+         * written to disk and flushed.
+         */
+
+        std::shared_ptr<Opm::EclipseWriter> eclipseWriter = createEclipseWriter(deck,
+                eclipseState,
+                ourFineGridManagerPtr,
+                compressedToCartesianCellIdx);
+        tm t = boost::posix_time::to_tm( simulatorTimer->startDateTime() );
+        eclipseWriter->writeInit( simulatorTimer->currentPosixTime(), std::mktime( &t ) );
 
 
-    for (; simulatorTimer->currentStepNum() < simulatorTimer->numSteps(); ++ (*simulatorTimer)) {
-        std::shared_ptr<Opm::BlackoilState> blackoilState2 = createBlackoilState(simulatorTimer->currentStepNum(),ourFineGridManagerPtr);
-        std::shared_ptr<Opm::WellState> wellState = createWellState(blackoilState2);
-        Opm::data::Wells wells { {}, wellState->bhp(), wellState->perfPress(),
-                                 wellState->perfRates(), wellState->temperature(),
-                                 wellState->wellRates() };
-        eclipseWriter->writeTimeStep( simulatorTimer->reportStepNum(),
-                                      simulatorTimer->currentPosixTime(),
-                                      simulatorTimer->simulationTimeElapsed(),
-                                      sim2solution( *blackoilState2, phaseUsageFromDeck( eclipseState ) ),
-                                      wells, false);
+        for (; simulatorTimer->currentStepNum() < simulatorTimer->numSteps(); ++ (*simulatorTimer)) {
+            std::shared_ptr<Opm::BlackoilState> blackoilState2 = createBlackoilState(simulatorTimer->currentStepNum(),ourFineGridManagerPtr);
+            std::shared_ptr<Opm::WellState> wellState = createWellState(blackoilState2);
+            Opm::data::Wells wells { {}, wellState->bhp(), wellState->perfPress(),
+                wellState->perfRates(), wellState->temperature(),
+                wellState->wellRates() };
+            eclipseWriter->writeTimeStep( simulatorTimer->reportStepNum(),
+                    simulatorTimer->currentPosixTime(),
+                    simulatorTimer->simulationTimeElapsed(),
+                    sim2solution( *blackoilState2, phaseUsageFromDeck( eclipseState ) ),
+                    wells, false);
+        }
     }
 
     std::string cwd(test_work_area_get_cwd(test_area.get()));

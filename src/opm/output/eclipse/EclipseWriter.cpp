@@ -23,7 +23,6 @@
 
 #include "EclipseWriter.hpp"
 
-#include <opm/output/eclipse/EclipseWriteRFTHandler.hpp>
 #include <opm/common/ErrorMacros.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -37,9 +36,11 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
+#include <opm/parser/eclipse/Utility/Functional.hpp>
 #include <boost/algorithm/string/case_conv.hpp> // to_upper_copy
 #include <boost/filesystem.hpp> // path
 
+#include <cstdlib>
 #include <memory>     // unique_ptr
 #include <utility>    // move
 
@@ -47,6 +48,7 @@
 #include <ert/ecl/ecl_kw_magic.h>
 #include <ert/ecl/ecl_init_file.h>
 #include <ert/ecl/ecl_file.h>
+#include <ert/ecl/ecl_rft_file.h>
 #include <ert/ecl/ecl_rst_file.h>
 #include <ert/ecl_well/well_const.h>
 #include <ert/ecl/ecl_rsthead.h>
@@ -500,21 +502,94 @@ int EclipseWriter::eclipseWellStatusMask(WellCommon::StatusEnum wellStatus)
   return well_status;
 }
 
-ert_ecl_unit_enum
-EclipseWriter::convertUnitTypeErtEclUnitEnum(UnitSystem::UnitType unit)
+inline std::unique_ptr< char, decltype( std::free )* >
+rft_filename( const char* dir, const char* basename, bool format ) {
+    return {
+        ecl_util_alloc_filename( dir, basename, ECL_RFT_FILE, format, 0 ),
+        std::free
+    };
+}
+
+const int inactive_index = -1;
+
+out::RFT::RFT( const char* output_dir,
+          const char* basename,
+          bool format,
+          const int* compressed_to_cartesian,
+          size_t num_cells,
+          size_t cart_size ) :
+    global_to_active( cart_size, inactive_index ),
+    fortio(
+        rft_filename( output_dir, basename, format ).get(),
+        std::ios_base::out
+        )
 {
-    switch (unit) {
-      case UnitSystem::UNIT_TYPE_METRIC:
-          return ERT_ECL_METRIC_UNITS;
+    if( !compressed_to_cartesian ) {
+        /* without a global to active mapping we assume identity mapping, i.e.
+         * 0 -> 0, 1 -> 1 etc.
+         */
+        fun::iota range( num_cells );
+        std::copy( range.begin(), range.end(), this->global_to_active.begin() );
+        return;
+    }
 
-      case UnitSystem::UNIT_TYPE_FIELD:
-          return ERT_ECL_FIELD_UNITS;
+    for( size_t active_index = 0; active_index < num_cells; ++active_index )
+        global_to_active[ compressed_to_cartesian[ active_index ] ] = active_index;
+}
 
-      case UnitSystem::UNIT_TYPE_LAB:
-          return ERT_ECL_LAB_UNITS;
+inline ert_ecl_unit_enum to_ert_unit( UnitSystem::UnitType t ) {
+    switch ( t ) {
+        case UnitSystem::UNIT_TYPE_METRIC: return ERT_ECL_METRIC_UNITS;
+        case UnitSystem::UNIT_TYPE_FIELD: return ERT_ECL_FIELD_UNITS;
+        case UnitSystem::UNIT_TYPE_LAB: return ERT_ECL_LAB_UNITS;
     }
 
     throw std::invalid_argument("unhandled enum value");
+}
+
+void out::RFT::writeTimeStep( std::vector< std::shared_ptr< const Well > > wells,
+                              const EclipseGrid& grid,
+                              int report_step,
+                              time_t current_time,
+                              double days,
+                              ert_ecl_unit_enum unitsystem,
+                              const std::vector< double >& pressure,
+                              const std::vector< double >& swat,
+                              const std::vector< double >& sgas ) {
+
+    using rft = ERT::ert_unique_ptr< ecl_rft_node_type, ecl_rft_node_free >;
+
+    for( const auto& well : wells ) {
+        if( !( well->getRFTActive( report_step )
+            || well->getPLTActive( report_step ) ) )
+            continue;
+
+        auto* rft_node = ecl_rft_node_alloc_new( well->name().c_str(), "RFT",
+                current_time, days );
+
+        for( const auto& completion : *well->getCompletions( report_step ) ) {
+            const size_t i = size_t( completion->getI() );
+            const size_t j = size_t( completion->getJ() );
+            const size_t k = size_t( completion->getK() );
+
+            const auto global_index = grid.getGlobalIndex( i, j, k );
+            const int index = this->global_to_active[ global_index ];
+            if( index == inactive_index ) continue;
+
+            const double depth = grid.getCellDepth( i, j, k );
+            const double press = !pressure.empty() ? pressure[ index ] : 0.0;
+            const double satwat = !swat.empty() ? swat[ index ] : 0.0;
+            const double satgas = !sgas.empty() ? sgas[ index ] : 0.0;
+
+            auto* cell = ecl_rft_cell_alloc_RFT(
+                            i, j, k, depth, press, satwat, satgas );
+
+            ecl_rft_node_append_cell( rft_node, cell );
+        }
+
+        rft ecl_node( rft_node );
+        ecl_rft_node_fwrite( ecl_node.get(), this->fortio.get(), unitsystem );
+    }
 }
 
 
@@ -708,36 +783,16 @@ void EclipseWriter::writeTimeStep(int report_step,
             sol.add(EclipseWriterDetails::Keyword<float>("RV", cells[ dc::RV ] ) );
     }
 
-
-    //Write RFT data for current timestep to RFT file
-    std::shared_ptr<EclipseWriterDetails::EclipseWriteRFTHandler> eclipseWriteRFTHandler = std::make_shared<EclipseWriterDetails::EclipseWriteRFTHandler>(
-                                                                                                                      compressedToCartesianCellIdx_,
-                                                                                                                      numCells_,
-                                                                                                                      eclipseState_->getInputGrid()->getCartesianSize());
-
-    // Write RFT file.
-    {
-        char * rft_filename = ecl_util_alloc_filename(outputDir_.c_str(),
-                                                      baseName_.c_str(),
-                                                      ECL_RFT_FILE,
-                                                      ioConfig->getFMTOUT(),
-                                                      0);
-        auto unit_type = eclipseState_->getDeckUnitSystem().getType();
-        ert_ecl_unit_enum ecl_unit = convertUnitTypeErtEclUnitEnum(unit_type);
-        std::vector<WellConstPtr> wells = eclipseState_->getSchedule()->getWells(report_step);
-        eclipseWriteRFTHandler->writeTimeStep(*ioConfig,
-                                              rft_filename,
-                                              ecl_unit,
-                                              report_step,
-                                              current_posix_time,
-                                              secs_elapsed,
-                                              wells,
-                                              eclipseState_->getInputGrid(),
-                                              pressure,
-                                              cells[ dc::SWAT ],
-                                              cells[ dc::SGAS ] );
-        free( rft_filename );
-    }
+    const auto unit_type = eclipseState_->getDeckUnitSystem().getType();
+    this->rft_.writeTimeStep( schedule.getWells( report_step ),
+                             *this->eclipseState_->getInputGrid(),
+                             report_step,
+                             current_posix_time,
+                             days,
+                             to_ert_unit( unit_type ),
+                             pressure,
+                             cells[ dc::SWAT ],
+                             cells[ dc::SGAS ] );
 
     if( isSubstep ) return;
 
@@ -768,6 +823,10 @@ EclipseWriter::EclipseWriter(Opm::EclipseStateConstPtr eclipseState,
     , outputDir_( eclipseState->getIOConfig()->getOutputDir() )
     , baseName_( boost::to_upper_copy( eclipseState->getIOConfig()->getBaseName() ) )
     , summary_( *eclipseState, eclipseState->getSummaryConfig() )
+    , rft_( outputDir_.c_str(), baseName_.c_str(),
+            eclipseState->getIOConfig()->getFMTOUT(),
+            compressedToCartesianCellIdx,
+            numCells, eclipseState->getInputGrid()->getCartesianSize() )
     , numCells_(numCells)
     , compressedToCartesianCellIdx_(compressedToCartesianCellIdx)
     , gridToEclipseIdx_(numCells, int(-1) )

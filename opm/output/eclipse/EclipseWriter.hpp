@@ -45,6 +45,40 @@ namespace Opm {
 class SimulationDataContainer;
 class WellState;
 
+namespace out {
+/*!
+ * \brief A class to write the RFT file to disk. Keeps the file handle alive,
+ * i.e. you cannot read from the RFT file as long as the instance that wrote it
+ * is alive in the same process.
+ *
+ * You should generally not interact with this component directly, but rather
+ * use the higher level interface of EclipseWriter.
+ */
+class RFT {
+    public:
+        RFT( const char* output_dir,
+             const char* basename,
+             bool format,
+             const int* compressed_to_cartesian,
+             size_t num_cells,
+             size_t cartesian_size );
+
+        void writeTimeStep( std::vector< std::shared_ptr< const Well > >,
+                            const EclipseGrid& grid,
+                            int report_step,
+                            time_t current_time,
+                            double days,
+                            ert_ecl_unit_enum,
+                            const std::vector< double >& pressure,
+                            const std::vector< double >& swat,
+                            const std::vector< double >& sgas );
+    private:
+        std::vector< int > global_to_active;
+        ERT::FortIO fortio;
+};
+
+}
+
 /*!
  * \brief A class to write the reservoir state and the well state of a
  *        blackoil simulation to disk using the Eclipse binary format.
@@ -92,13 +126,13 @@ public:
 
     static int eclipseWellTypeMask(WellType wellType, WellInjector::TypeEnum injectorType);
     static int eclipseWellStatusMask(WellCommon::StatusEnum wellStatus);
-    static ert_ecl_unit_enum convertUnitTypeErtEclUnitEnum(UnitSystem::UnitType unit);
 
 private:
     Opm::EclipseStateConstPtr eclipseState_;
     std::string outputDir_;
     std::string baseName_;
     out::Summary summary_;
+    out::RFT rft_;
     int numCells_;
     std::array<int, 3> cartesianSize_;
     const int* compressedToCartesianCellIdx_;
