@@ -21,8 +21,10 @@
 #ifndef OPM_LOGBACKEND_HPP
 #define OPM_LOGBACKEND_HPP
 
+#include <opm/common/OpmLog/MessageFormatter.hpp>
 #include <cstdint>
 #include <string>
+#include <memory>
 
 namespace Opm
 {
@@ -38,7 +40,7 @@ namespace Opm
         virtual ~LogBackend();
 
         /// Configure how decorateMessage() will modify message strings.
-        void configureDecoration(bool use_prefix, bool use_color_coding);
+        void configureDecoration(std::shared_ptr<MessageFormatterInterface> formatter);
 
         /// Add a message to the backend.
         ///
@@ -59,8 +61,7 @@ namespace Opm
 
     private:
         int64_t m_mask;
-        bool use_prefix_ = false;
-        bool use_color_coding_ = false;
+        std::shared_ptr<MessageFormatterInterface> formatter_;
     };
 
 } // namespace LogBackend

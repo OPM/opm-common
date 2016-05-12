@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(TestOpmLogWithColors)
         BOOST_CHECK_EQUAL( true , OpmLog::hasBackend("COUNTER"));
         BOOST_CHECK_EQUAL( true , OpmLog::hasBackend("STREAM"));
 
-        streamLog->configureDecoration(false, true);
+        streamLog->configureDecoration(std::make_shared<SimpleMessageFormatter>(false, true));
     }
 
     OpmLog::warning("Warning");
@@ -299,4 +299,7 @@ BOOST_AUTO_TEST_CASE(TestOpmLogWithColors)
         BOOST_CHECK_EQUAL( 1 , counter->numMessages(Log::MessageType::Info) );
         BOOST_CHECK_EQUAL( 1 , counter->numMessages(Log::MessageType::Bug) );
     }
+
+
+    std::cout << log_stream.str() << std::endl;
 }

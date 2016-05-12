@@ -59,6 +59,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/OpmLog/LogBackend.hpp
       opm/common/OpmLog/Logger.hpp
       opm/common/OpmLog/LogUtil.hpp
+      opm/common/OpmLog/MessageFormatter.hpp
       opm/common/OpmLog/OpmLog.hpp
       opm/common/OpmLog/StreamLog.hpp
       opm/common/OpmLog/TimerLog.hpp

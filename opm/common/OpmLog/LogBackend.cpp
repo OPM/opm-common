@@ -31,10 +31,9 @@ namespace Opm {
     {
     }
 
-    void LogBackend::configureDecoration(bool use_prefix, bool use_color_coding)
+    void LogBackend::configureDecoration(std::shared_ptr<MessageFormatterInterface> formatter)
     {
-        use_prefix_ = use_prefix;
-        use_color_coding_ = use_color_coding;
+        formatter_ = formatter;
     }
 
     int64_t LogBackend::getMask() const
@@ -49,14 +48,11 @@ namespace Opm {
 
     std::string LogBackend::decorateMessage(int64_t messageFlag, const std::string& message)
     {
-        std::string msg = message;
-        if (use_prefix_) {
-            msg = Log::prefixMessage(messageFlag, msg);
+        if (formatter_) {
+            return formatter_->format(messageFlag, message);
+        } else {
+            return message;
         }
-        if (use_color_coding_) {
-            msg = Log::colorCodeMessage(messageFlag, msg);
-        }
-        return msg;
     }
 
 
