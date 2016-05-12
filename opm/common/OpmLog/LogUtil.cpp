@@ -72,5 +72,29 @@ namespace Log {
 
         return prefix + ": " + message;
     }
+
+
+    std::string colorCodeMessage(int64_t messageType, const std::string& message) {
+        std::string colorcode;
+        switch (messageType) {
+        case MessageType::Debug:
+        case MessageType::Info:
+            colorcode = AnsiTerminalColors::default_color;
+            break;
+        case MessageType::Warning:
+            colorcode = AnsiTerminalColors::yellow_strong;
+            break;
+        case MessageType::Error:
+        case MessageType::Problem:
+        case MessageType::Bug:
+            colorcode = AnsiTerminalColors::red_strong;
+            break;
+        default:
+            throw std::invalid_argument("Unhandled messagetype");
+        }
+
+        return colorcode + message + AnsiTerminalColors::none;
+    }
+
 }
 }

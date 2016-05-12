@@ -36,10 +36,23 @@ namespace Log {
 
     const int64_t DefaultMessageTypes = MessageType::Debug + MessageType::Info + MessageType::Warning + MessageType::Error + MessageType::Problem + MessageType::Bug;
 
+    /// Terminal codes for ANSI/vt100 compatible terminals.
+    /// See for example http://ascii-table.com/ansi-escape-sequences.php
+    namespace AnsiTerminalColors {
+        const std::string none = "\033[0m";
+        const std::string red = "\033[31m";
+        const std::string red_strong = "\033[31;1m";
+        const std::string yellow = "\033[33m";
+        const std::string yellow_strong = "\033[33;1m";
+        const std::string default_color = "\033[39m";
+    }
+
+
     bool isPower2(int64_t x);
     std::string fileMessage(const std::string& path, int line , const std::string& msg);
     std::string fileMessage(int64_t messageType , const std::string& path, int line , const std::string& msg);
     std::string prefixMessage(int64_t messageType , const std::string& msg);
+    std::string colorCodeMessage(int64_t messageType , const std::string& msg);
 
 }
 }

@@ -50,6 +50,7 @@ public:
     static bool hasBackend( const std::string& backendName );
     static void addBackend(const std::string& name , std::shared_ptr<LogBackend> backend);
     static bool removeBackend(const std::string& name);
+    static void removeAllBackends();
     static bool enabledMessageType( int64_t messageType );
     static void addMessageType( int64_t messageType , const std::string& prefix);
 
