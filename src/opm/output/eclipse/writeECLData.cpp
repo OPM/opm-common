@@ -22,7 +22,6 @@
 #include "config.h"
 #endif
 
-#include <opm/core/grid.h>
 #include <opm/output/eclipse/writeECLData.hpp>
 #include <opm/core/utility/Units.hpp>
 #include <opm/common/ErrorMacros.hpp>
@@ -39,7 +38,7 @@
 namespace Opm
 {
 
-  static ecl_kw_type * ecl_kw_wrapper( const UnstructuredGrid& grid,
+  static ecl_kw_type * ecl_kw_wrapper( int number_of_cells,
                                        const std::string& kw_name ,
                                        const std::vector<double> * data ,
                                        int offset ,
@@ -47,11 +46,11 @@ namespace Opm
 
     if (stride <= 0)
       OPM_THROW(std::runtime_error, "Vector strides must be positive. Got stride = " << stride);
-    if ((stride * std::vector<double>::size_type(grid.number_of_cells)) != data->size())
-      OPM_THROW(std::runtime_error, "Internal mismatch grid.number_of_cells: " << grid.number_of_cells << " data size: " << data->size() / stride);
+    if ((stride * std::vector<double>::size_type(number_of_cells)) != data->size())
+      OPM_THROW(std::runtime_error, "Internal mismatch grid.number_of_cells: " << number_of_cells << " data size: " << data->size() / stride);
     {
-      ecl_kw_type * ecl_kw = ecl_kw_alloc( kw_name.c_str() , grid.number_of_cells , ECL_FLOAT_TYPE );
-      for (int i=0; i < grid.number_of_cells; i++)
+      ecl_kw_type * ecl_kw = ecl_kw_alloc( kw_name.c_str() , number_of_cells , ECL_FLOAT_TYPE );
+      for (int i=0; i < number_of_cells; i++)
         ecl_kw_iset_float( ecl_kw , i , (*data)[i*stride + offset]);
       return ecl_kw;
     }
@@ -85,7 +84,7 @@ namespace Opm
     an ECLIPSE filename according to this conventions.
   */
 
-  void writeECLData(const UnstructuredGrid& grid,
+  void writeECLData(int nx, int ny, int nz, int nactive,
                     const DataMap& data,
                     const int current_step,
                     const double current_time,
@@ -99,10 +98,6 @@ namespace Opm
     char * filename         = ecl_util_alloc_filename(output_dir.c_str() , base_name.c_str() , file_type , fmt_file , current_step );
     int phases              = ECL_OIL_PHASE + ECL_WATER_PHASE;
     time_t date             = 0;
-    int nx                  = grid.cartdims[0];
-    int ny                  = grid.cartdims[1];
-    int nz                  = grid.cartdims[2];
-    int nactive             = grid.number_of_cells;
     ecl_rst_file_type * rst_file;
 
     {
@@ -149,7 +144,7 @@ namespace Opm
     {
       DataMap::const_iterator i = data.find("pressure");
       if (i != data.end()) {
-        ecl_kw_type * pressure_kw = ecl_kw_wrapper( grid , "PRESSURE" , i->second , 0 , 1);
+        ecl_kw_type * pressure_kw = ecl_kw_wrapper( nactive, "PRESSURE" , i->second , 0 , 1);
         ecl_rst_file_add_kw( rst_file , pressure_kw );
         ecl_kw_free( pressure_kw );
       }
@@ -158,10 +153,10 @@ namespace Opm
     {
       DataMap::const_iterator i = data.find("saturation");
       if (i != data.end()) {
-        if (int(i->second->size()) != 2 * grid.number_of_cells) {
+        if (int(i->second->size()) != 2 * nactive ) {
           OPM_THROW(std::runtime_error, "writeECLData() requires saturation field to have two phases.");
         }
-        ecl_kw_type * swat_kw = ecl_kw_wrapper( grid , "SWAT" , i->second , 0 , 2);
+        ecl_kw_type * swat_kw = ecl_kw_wrapper( nactive, "SWAT" , i->second , 0 , 2);
         ecl_rst_file_add_kw( rst_file , swat_kw );
         ecl_kw_free( swat_kw );
       }
@@ -178,7 +173,7 @@ namespace Opm
 namespace Opm
 {
 
-    void writeECLData(const UnstructuredGrid&,
+    void writeECLData(int, int, int, int,
                       const DataMap&,
                       const int,
                       const double,

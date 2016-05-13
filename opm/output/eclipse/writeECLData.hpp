@@ -27,13 +27,12 @@
 
 #include <string>
 
-struct UnstructuredGrid;
-
 namespace Opm
 {
 
   // ECLIPSE output for general grids.
-  void writeECLData(const UnstructuredGrid& grid,
+  void writeECLData(int nx, int ny, int nz,
+                    int number_of_cells,
                     const DataMap& data,
                     const int current_step,
                     const double current_time,
