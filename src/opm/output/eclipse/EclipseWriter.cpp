@@ -23,6 +23,7 @@
 
 #include "EclipseWriter.hpp"
 
+#include <opm/core/wells.h> // WellType
 #include <opm/common/ErrorMacros.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -30,6 +31,7 @@
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
@@ -85,6 +87,42 @@ static inline void convertFromSiTo( std::vector< double >& siValues,
     for (size_t curIdx = 0; curIdx < siValues.size(); ++curIdx) {
         siValues[curIdx] = conversions::from_si( table, d, siValues[ curIdx ] );
     }
+}
+
+int eclipseWellTypeMask(WellType wellType, WellInjector::TypeEnum injectorType)
+{
+  int ert_well_type = IWEL_UNDOCUMENTED_ZERO;
+
+  if (PRODUCER == wellType) {
+      ert_well_type = IWEL_PRODUCER;
+  } else if (INJECTOR == wellType) {
+      switch (injectorType) {
+        case WellInjector::WATER:
+          ert_well_type = IWEL_WATER_INJECTOR;
+          break;
+        case WellInjector::GAS:
+          ert_well_type = IWEL_GAS_INJECTOR;
+          break;
+        case WellInjector::OIL :
+          ert_well_type = IWEL_OIL_INJECTOR;
+          break;
+        default:
+          ert_well_type = IWEL_UNDOCUMENTED_ZERO;
+      }
+  }
+
+  return ert_well_type;
+}
+
+
+int eclipseWellStatusMask(WellCommon::StatusEnum wellStatus)
+{
+  int well_status = 0;
+
+  if (wellStatus == WellCommon::OPEN) {
+    well_status = 1;
+  }
+  return well_status;
 }
 
 
@@ -281,11 +319,11 @@ public:
 
         {
             WellType welltype = well->isProducer(currentStep) ? PRODUCER : INJECTOR;
-            int ert_welltype = EclipseWriter::eclipseWellTypeMask(welltype, well->getInjectionProperties(currentStep).injectorType);
+            int ert_welltype = eclipseWellTypeMask(welltype, well->getInjectionProperties(currentStep).injectorType);
             iwel_data[ offset + IWEL_TYPE_ITEM ] = ert_welltype;
         }
 
-        iwel_data[ offset + IWEL_STATUS_ITEM ] = EclipseWriter::eclipseWellStatusMask(well->getStatus(currentStep));
+        iwel_data[ offset + IWEL_STATUS_ITEM ] = eclipseWellStatusMask(well->getStatus(currentStep));
     }
 
     void addRestartFileIconData(std::vector<int>& icon_data, CompletionSetConstPtr completions , size_t wellICONOffset) const {
@@ -466,41 +504,6 @@ private:
 
 
 
-int EclipseWriter::eclipseWellTypeMask(WellType wellType, WellInjector::TypeEnum injectorType)
-{
-  int ert_well_type = IWEL_UNDOCUMENTED_ZERO;
-
-  if (PRODUCER == wellType) {
-      ert_well_type = IWEL_PRODUCER;
-  } else if (INJECTOR == wellType) {
-      switch (injectorType) {
-        case WellInjector::WATER:
-          ert_well_type = IWEL_WATER_INJECTOR;
-          break;
-        case WellInjector::GAS:
-          ert_well_type = IWEL_GAS_INJECTOR;
-          break;
-        case WellInjector::OIL :
-          ert_well_type = IWEL_OIL_INJECTOR;
-          break;
-        default:
-          ert_well_type = IWEL_UNDOCUMENTED_ZERO;
-      }
-  }
-
-  return ert_well_type;
-}
-
-
-int EclipseWriter::eclipseWellStatusMask(WellCommon::StatusEnum wellStatus)
-{
-  int well_status = 0;
-
-  if (wellStatus == WellCommon::OPEN) {
-    well_status = 1;
-  }
-  return well_status;
-}
 
 inline std::unique_ptr< char, decltype( std::free )* >
 rft_filename( const char* dir, const char* basename, bool format ) {

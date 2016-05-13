@@ -22,28 +22,20 @@
 #ifndef OPM_ECLIPSE_WRITER_HPP
 #define OPM_ECLIPSE_WRITER_HPP
 
+#include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/output/OutputWriter.hpp>
 #include <opm/output/eclipse/Summary.hpp>
-#include <opm/core/wells.h> // WellType
 
-#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
-#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
-
-#include <ert/ecl/ecl_util.h>
 
 #include <string>
 #include <vector>
 #include <array>
 #include <memory>
 
-
 namespace Opm {
 
-class SimulationDataContainer;
-class WellState;
+class EclipseGrid;
+class Well;
 
 namespace out {
 /*!
@@ -90,7 +82,7 @@ public:
      * \brief Sets the common attributes required to write eclipse
      *        binary files using ERT.
      */
-    EclipseWriter(Opm::EclipseStateConstPtr eclipseState,
+    EclipseWriter(std::shared_ptr< const EclipseState >,
                   int numCells,
                   const int* compressedToCartesianCellIdx);
 
@@ -111,10 +103,6 @@ public:
      * The summary information can then be visualized using tools from
      * ERT or ECLIPSE. Note that calling this method is only
      * meaningful after the first time step has been completed.
-     *
-     * \param[in] timer          The timer providing time step and time information
-     * \param[in] reservoirState The thermodynamic state of the reservoir
-     * \param[in] wellState      The production/injection data for all wells
      */
     virtual void writeTimeStep( int report_step,
                                 time_t current_posix_time,
@@ -123,12 +111,8 @@ public:
                                 data::Wells,
                                 bool isSubstep);
 
-
-    static int eclipseWellTypeMask(WellType wellType, WellInjector::TypeEnum injectorType);
-    static int eclipseWellStatusMask(WellCommon::StatusEnum wellStatus);
-
 private:
-    Opm::EclipseStateConstPtr eclipseState_;
+    std::shared_ptr< const EclipseState > eclipseState_;
     std::string outputDir_;
     std::string baseName_;
     out::Summary summary_;
@@ -141,7 +125,7 @@ private:
     bool enableOutput_;
     int ert_phase_mask_;
 
-    void init(Opm::EclipseStateConstPtr eclipseState);
+    void init( std::shared_ptr< const EclipseState > );
 };
 
 typedef std::shared_ptr<EclipseWriter> EclipseWriterPtr;

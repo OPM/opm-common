@@ -55,6 +55,43 @@
 
 #include <string.h>
 
+using namespace Opm;
+
+int eclipseWellTypeMask(WellType wellType, WellInjector::TypeEnum injectorType)
+{
+  int ert_well_type = IWEL_UNDOCUMENTED_ZERO;
+
+  if (PRODUCER == wellType) {
+      ert_well_type = IWEL_PRODUCER;
+  } else if (INJECTOR == wellType) {
+      switch (injectorType) {
+        case WellInjector::WATER:
+          ert_well_type = IWEL_WATER_INJECTOR;
+          break;
+        case WellInjector::GAS:
+          ert_well_type = IWEL_GAS_INJECTOR;
+          break;
+        case WellInjector::OIL :
+          ert_well_type = IWEL_OIL_INJECTOR;
+          break;
+        default:
+          ert_well_type = IWEL_UNDOCUMENTED_ZERO;
+      }
+  }
+
+  return ert_well_type;
+}
+
+int eclipseWellStatusMask(WellCommon::StatusEnum wellStatus)
+{
+  int well_status = 0;
+
+  if (wellStatus == WellCommon::OPEN) {
+    well_status = 1;
+  }
+  return well_status;
+}
+
 
 void verifyWellState(const std::string& rst_filename,
                      Opm::EclipseGridConstPtr ecl_grid,
@@ -90,7 +127,7 @@ void verifyWellState(const std::string& rst_filename,
       int ert_well_type = well_state_get_type(well_state);
       WellType welltype = well->isProducer(j) ? PRODUCER : INJECTOR;
       Opm::WellInjector::TypeEnum injectortype = well->getInjectionProperties(j).injectorType;
-      int ecl_converted_welltype = Opm::EclipseWriter::eclipseWellTypeMask(welltype, injectortype);
+      int ecl_converted_welltype = eclipseWellTypeMask(welltype, injectortype);
       int ert_converted_welltype = well_state_translate_ecl_type_int(ecl_converted_welltype);
       BOOST_CHECK(ert_well_type == ert_converted_welltype);
 
@@ -98,7 +135,7 @@ void verifyWellState(const std::string& rst_filename,
       int ert_well_status = well_state_is_open(well_state) ? 1 : 0;
 
       Opm::WellCommon::StatusEnum status = well->getStatus(j);
-      int wellstatus = Opm::EclipseWriter::eclipseWellStatusMask(status);
+      int wellstatus = eclipseWellStatusMask(status);
 
       BOOST_CHECK(ert_well_status == wellstatus);
 
