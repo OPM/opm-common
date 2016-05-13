@@ -19,7 +19,7 @@
 
 #include "config.h"
 #include <opm/output/vtk/writeVtkData.hpp>
-#include <opm/core/grid.h>
+#include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/ErrorMacros.hpp>
 #include <boost/lexical_cast.hpp>
 #include <set>
@@ -138,180 +138,182 @@ namespace Opm
     int Tag::indent_ = 0;
 
 
-    void writeVtkData(const UnstructuredGrid& grid,
-                      const std::map< std::string, const std::vector< double >* >& data,
-                      std::ostream& os)
+    void writeVtkData(const UnstructuredGrid& ,
+                      const std::map< std::string, const std::vector< double >* >& ,
+                      std::ostream& )
     {
-        if (grid.dimensions != 3) {
-            OPM_THROW(std::runtime_error, "Vtk output for 3d grids only");
-        }
-        os.precision(12);
-        os << "<?xml version=\"1.0\"?>\n";
-        PMap pm;
-        pm["type"] = "UnstructuredGrid";
-        Tag vtkfiletag("VTKFile", pm, os);
-        Tag ugtag("UnstructuredGrid", os);
-        int num_pts = grid.number_of_nodes;
-        int num_cells = grid.number_of_cells;
-        pm.clear();
-        pm["NumberOfPoints"] = boost::lexical_cast<std::string>(num_pts);
-        pm["NumberOfCells"] = boost::lexical_cast<std::string>(num_cells);
-        Tag piecetag("Piece", pm, os);
-        {
-            Tag pointstag("Points", os);
-            pm.clear();
-            pm["type"] = "Float64";
-            pm["Name"] = "Coordinates";
-            pm["NumberOfComponents"] = "3";
-            pm["format"] = "ascii";
-            Tag datag("DataArray", pm, os);
-            for (int i = 0; i < num_pts; ++i) {
-                Tag::indent(os);
-                os << grid.node_coordinates[3*i + 0] << ' '
-                   << grid.node_coordinates[3*i + 1] << ' '
-                   << grid.node_coordinates[3*i + 2] << '\n';
-            }
-        }
-        {
-            Tag cellstag("Cells", os);
-            pm.clear();
-            pm["type"] = "Int32";
-            pm["NumberOfComponents"] = "1";
-            pm["format"] = "ascii";
-            std::vector<int> cell_numpts;
-            cell_numpts.reserve(num_cells);
-            {
-                pm["Name"] = "connectivity";
-                Tag t("DataArray", pm, os);
-                int hf = 0;
-                for (int c = 0; c < num_cells; ++c) {
-                    std::set<int> cell_pts;
-                    for (; hf < grid.cell_facepos[c+1]; ++hf) {
-                        int f = grid.cell_faces[hf];
-                        const int* fnbeg = grid.face_nodes + grid.face_nodepos[f];
-                        const int* fnend = grid.face_nodes + grid.face_nodepos[f+1];
-                        cell_pts.insert(fnbeg, fnend);
-                    }
-                    cell_numpts.push_back(cell_pts.size());
-                    Tag::indent(os);
-                    std::copy(cell_pts.begin(), cell_pts.end(),
-                              std::ostream_iterator<int>(os, " "));
-                    os << '\n';
-                }
-            }
-            {
-                pm["Name"] = "offsets";
-                Tag t("DataArray", pm, os);
-                int offset = 0;
-                const int num_per_line = 10;
-                for (int c = 0; c < num_cells; ++c) {
-                    if (c % num_per_line == 0) {
-                        Tag::indent(os);
-                    }
-                    offset += cell_numpts[c];
-                    os << offset << ' ';
-                    if (c % num_per_line == num_per_line - 1
-                        || c == num_cells - 1) {
-                        os << '\n';
-                    }
-                }
-            }
-            std::vector<int> cell_foffsets;
-            cell_foffsets.reserve(num_cells);
-            {
-                pm["Name"] = "faces";
-                Tag t("DataArray", pm, os);
-                const int* fp = grid.cell_facepos;
-                int offset = 0;
-                for (int c = 0; c < num_cells; ++c) {
-                    Tag::indent(os);
-                    os << fp[c+1] - fp[c] << '\n';
-                    ++offset;
-                    for (int hf = fp[c]; hf < fp[c+1]; ++hf) {
-                        int f = grid.cell_faces[hf];
-                        const int* np = grid.face_nodepos;
-                        int f_num_pts = np[f+1] - np[f];
-                        Tag::indent(os);
-                        os << f_num_pts << ' ';
-                        ++offset;
-                        std::copy(grid.face_nodes + np[f],
-                                  grid.face_nodes + np[f+1],
-                                  std::ostream_iterator<int>(os, " "));
-                        os << '\n';
-                        offset += f_num_pts;
-                    }
-                    cell_foffsets.push_back(offset);
-                }
-            }
-            {
-                pm["Name"] = "faceoffsets";
-                Tag t("DataArray", pm, os);
-                const int num_per_line = 10;
-                for (int c = 0; c < num_cells; ++c) {
-                    if (c % num_per_line == 0) {
-                        Tag::indent(os);
-                    }
-                    os << cell_foffsets[c] << ' ';
-                    if (c % num_per_line == num_per_line - 1
-                        || c == num_cells - 1) {
-                        os << '\n';
-                    }
-                }
-            }
-            {
-                pm["type"] = "UInt8";
-                pm["Name"] = "types";
-                Tag t("DataArray", pm, os);
-                const int num_per_line = 10;
-                for (int c = 0; c < num_cells; ++c) {
-                    if (c % num_per_line == 0) {
-                        Tag::indent(os);
-                    }
-                    os << "42 ";
-                    if (c % num_per_line == num_per_line - 1
-                        || c == num_cells - 1) {
-                        os << '\n';
-                    }
-                }
-            }
-        }
-        {
-            pm.clear();
-            if (data.find("saturation") != data.end()) {
-                pm["Scalars"] = "saturation";
-            } else if (data.find("pressure") != data.end()) {
-                pm["Scalars"] = "pressure";
-            }
-            Tag celldatatag("CellData", pm, os);
-            pm.clear();
-            pm["NumberOfComponents"] = "1";
-            pm["format"] = "ascii";
-            pm["type"] = "Float64";
-            for (auto dit = data.begin(); dit != data.end(); ++dit) {
-                pm["Name"] = dit->first;
-                const std::vector<double>& field = *(dit->second);
-                const int num_comps = field.size()/grid.number_of_cells;
-                pm["NumberOfComponents"] = boost::lexical_cast<std::string>(num_comps);
-                Tag ptag("DataArray", pm, os);
-                const int num_per_line = num_comps == 1 ? 5 : num_comps;
-                for (int item = 0; item < num_cells*num_comps; ++item) {
-                    if (item % num_per_line == 0) {
-                        Tag::indent(os);
-                    }
-                    double value = field[item];
-                    if (std::fabs(value) < std::numeric_limits<double>::min()) {
-                        // Avoiding denormal numbers to work around
-                        // bug in Paraview.
-                        value = 0.0;
-                    }
-                    os << value << ' ';
-                    if (item % num_per_line == num_per_line - 1
-                        || item == num_cells - 1) {
-                        os << '\n';
-                    }
-                }
-            }
-        }
+        OpmLog::warning( "Writing VTK grid data is disabled." );
+
+       // if (grid.dimensions != 3) {
+       //     OPM_THROW(std::runtime_error, "Vtk output for 3d grids only");
+       // }
+       // os.precision(12);
+       // os << "<?xml version=\"1.0\"?>\n";
+       // PMap pm
+       // pm["type"] = "UnstructuredGrid";
+       // Tag vtkfiletag("VTKFile", pm, os);
+       // Tag ugtag("UnstructuredGrid", os);
+       // int num_pts = grid.number_of_nodes;
+       // int num_cells = grid.number_of_cells;
+       // pm.clear();
+       // pm["NumberOfPoints"] = boost::lexical_cast<std::string>(num_pts);
+       // pm["NumberOfCells"] = boost::lexical_cast<std::string>(num_cells);
+       // Tag piecetag("Piece", pm, os);
+       // {
+       //     Tag pointstag("Points", os);
+       //     pm.clear();
+       //     pm["type"] = "Float64";
+       //     pm["Name"] = "Coordinates";
+       //     pm["NumberOfComponents"] = "3";
+       //     pm["format"] = "ascii";
+       //     Tag datag("DataArray", pm, os);
+       //     for (int i = 0; i < num_pts; ++i) {
+       //         Tag::indent(os);
+       //         os << grid.node_coordinates[3*i + 0] << ' '
+       //            << grid.node_coordinates[3*i + 1] << ' '
+       //            << grid.node_coordinates[3*i + 2] << '\n';
+       //     }
+       // }
+       // {
+       //     Tag cellstag("Cells", os);
+       //     pm.clear();
+       //     pm["type"] = "Int32";
+       //     pm["NumberOfComponents"] = "1";
+       //     pm["format"] = "ascii";
+       //     std::vector<int> cell_numpts;
+       //     cell_numpts.reserve(num_cells);
+       //     {
+       //         pm["Name"] = "connectivity";
+       //         Tag t("DataArray", pm, os);
+       //         int hf = 0;
+       //         for (int c = 0; c < num_cells; ++c) {
+       //             std::set<int> cell_pts;
+       //             for (; hf < grid.cell_facepos[c+1]; ++hf) {
+       //                 int f = grid.cell_faces[hf];
+       //                 const int* fnbeg = grid.face_nodes + grid.face_nodepos[f];
+       //                 const int* fnend = grid.face_nodes + grid.face_nodepos[f+1];
+       //                 cell_pts.insert(fnbeg, fnend);
+       //             }
+       //             cell_numpts.push_back(cell_pts.size());
+       //             Tag::indent(os);
+       //             std::copy(cell_pts.begin(), cell_pts.end(),
+       //                       std::ostream_iterator<int>(os, " "));
+       //             os << '\n';
+       //         }
+       //     }
+       //     {
+       //         pm["Name"] = "offsets";
+       //         Tag t("DataArray", pm, os);
+       //         int offset = 0;
+       //         const int num_per_line = 10;
+       //         for (int c = 0; c < num_cells; ++c) {
+       //             if (c % num_per_line == 0) {
+       //                 Tag::indent(os);
+       //             }
+       //             offset += cell_numpts[c];
+       //             os << offset << ' ';
+       //             if (c % num_per_line == num_per_line - 1
+       //                 || c == num_cells - 1) {
+       //                 os << '\n';
+       //             }
+       //         }
+       //     }
+       //     std::vector<int> cell_foffsets;
+       //     cell_foffsets.reserve(num_cells);
+       //     {
+       //         pm["Name"] = "faces";
+       //         Tag t("DataArray", pm, os);
+       //         const int* fp = grid.cell_facepos;
+       //         int offset = 0;
+       //         for (int c = 0; c < num_cells; ++c) {
+       //             Tag::indent(os);
+       //             os << fp[c+1] - fp[c] << '\n';
+       //             ++offset;
+       //             for (int hf = fp[c]; hf < fp[c+1]; ++hf) {
+       //                 int f = grid.cell_faces[hf];
+       //                 const int* np = grid.face_nodepos;
+       //                 int f_num_pts = np[f+1] - np[f];
+       //                 Tag::indent(os);
+       //                 os << f_num_pts << ' ';
+       //                 ++offset;
+       //                 std::copy(grid.face_nodes + np[f],
+       //                           grid.face_nodes + np[f+1],
+       //                           std::ostream_iterator<int>(os, " "));
+       //                 os << '\n';
+       //                 offset += f_num_pts;
+       //             }
+       //             cell_foffsets.push_back(offset);
+       //         }
+       //     }
+       //     {
+       //         pm["Name"] = "faceoffsets";
+       //         Tag t("DataArray", pm, os);
+       //         const int num_per_line = 10;
+       //         for (int c = 0; c < num_cells; ++c) {
+       //             if (c % num_per_line == 0) {
+       //                 Tag::indent(os);
+       //             }
+       //             os << cell_foffsets[c] << ' ';
+       //             if (c % num_per_line == num_per_line - 1
+       //                 || c == num_cells - 1) {
+       //                 os << '\n';
+       //             }
+       //         }
+       //     }
+       //     {
+       //         pm["type"] = "UInt8";
+       //         pm["Name"] = "types";
+       //         Tag t("DataArray", pm, os);
+       //         const int num_per_line = 10;
+       //         for (int c = 0; c < num_cells; ++c) {
+       //             if (c % num_per_line == 0) {
+       //                 Tag::indent(os);
+       //             }
+       //             os << "42 ";
+       //             if (c % num_per_line == num_per_line - 1
+       //                 || c == num_cells - 1) {
+       //                 os << '\n';
+       //             }
+       //         }
+       //     }
+       // }
+       // {
+       //     pm.clear();
+       //     if (data.find("saturation") != data.end()) {
+       //         pm["Scalars"] = "saturation";
+       //     } else if (data.find("pressure") != data.end()) {
+       //         pm["Scalars"] = "pressure";
+       //     }
+       //     Tag celldatatag("CellData", pm, os);
+       //     pm.clear();
+       //     pm["NumberOfComponents"] = "1";
+       //     pm["format"] = "ascii";
+       //     pm["type"] = "Float64";
+       //     for (auto dit = data.begin(); dit != data.end(); ++dit) {
+       //         pm["Name"] = dit->first;
+       //         const std::vector<double>& field = *(dit->second);
+       //         const int num_comps = field.size()/grid.number_of_cells;
+       //         pm["NumberOfComponents"] = boost::lexical_cast<std::string>(num_comps);
+       //         Tag ptag("DataArray", pm, os);
+       //         const int num_per_line = num_comps == 1 ? 5 : num_comps;
+       //         for (int item = 0; item < num_cells*num_comps; ++item) {
+       //             if (item % num_per_line == 0) {
+       //                 Tag::indent(os);
+       //             }
+       //             double value = field[item];
+       //             if (std::fabs(value) < std::numeric_limits<double>::min()) {
+       //                 // Avoiding denormal numbers to work around
+       //                 // bug in Paraview.
+       //                 value = 0.0;
+       //             }
+       //             os << value << ' ';
+       //             if (item % num_per_line == num_per_line - 1
+       //                 || item == num_cells - 1) {
+       //                 os << '\n';
+       //             }
+       //         }
+       //     }
+       // }
     }
 
 } // namespace Opm
