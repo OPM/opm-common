@@ -161,7 +161,7 @@ namespace Opm
                       const std::string&,
                       const std::string&)
     {
-        OPM_THROW(std::runtime_error, "Cannot call writeECLData() without ERT library support. Reconfigure opm-core with ERT support and recompile.");
+        OPM_THROW(std::runtime_error, "Cannot call writeECLData() without ERT library support. Reconfigure opm-output with ERT support and recompile.");
     }
 }
 
