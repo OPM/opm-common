@@ -23,15 +23,12 @@
 #endif
 
 #include <opm/output/eclipse/writeECLData.hpp>
-#include <opm/core/utility/Units.hpp>
-#include <opm/common/ErrorMacros.hpp>
+#include <opm/parser/eclipse/Units/ConversionFactors.hpp>
 
 #include <vector>
 
 #ifdef HAVE_ERT // This one goes almost to the bottom of the file
 
-#include <ert/ecl/ecl_grid.h>
-#include <ert/ecl/ecl_util.h>
 #include <ert/ecl/ecl_rst_file.h>
 #include <ert/util/ert_unique_ptr.hpp>
 
@@ -115,7 +112,7 @@ namespace Opm {
       rsthead_data.phase_sum = phases;
       rsthead_data.sim_time  = date;
 
-      rsthead_data.sim_days = Opm::unit::convert::to(current_time, Opm::unit::day); //Data for doubhead
+      rsthead_data.sim_days = current_time * Opm::Metric::Time; //Data for doubhead
 
       ecl_rst_file_fwrite_header( rst_file , current_step , &rsthead_data);
     }
