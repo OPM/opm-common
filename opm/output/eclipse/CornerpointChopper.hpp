@@ -20,7 +20,6 @@
 #ifndef OPM_CORNERPOINTCHOPPER_HEADER_INCLUDED
 #define OPM_CORNERPOINTCHOPPER_HEADER_INCLUDED
 
-#include <opm/core/utility/parameters/ParameterGroup.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
