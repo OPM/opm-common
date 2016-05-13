@@ -23,7 +23,6 @@
 
 #include "EclipseWriter.hpp"
 
-#include <opm/core/wells.h> // WellType
 #include <opm/common/ErrorMacros.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -89,31 +88,17 @@ static inline void convertFromSiTo( std::vector< double >& siValues,
     }
 }
 
-int eclipseWellTypeMask(WellType wellType, WellInjector::TypeEnum injectorType)
-{
-  int ert_well_type = IWEL_UNDOCUMENTED_ZERO;
+inline int eclipseWellTypeMask( const Well& well, size_t timestep ) {
 
-  if (PRODUCER == wellType) {
-      ert_well_type = IWEL_PRODUCER;
-  } else if (INJECTOR == wellType) {
-      switch (injectorType) {
-        case WellInjector::WATER:
-          ert_well_type = IWEL_WATER_INJECTOR;
-          break;
-        case WellInjector::GAS:
-          ert_well_type = IWEL_GAS_INJECTOR;
-          break;
-        case WellInjector::OIL :
-          ert_well_type = IWEL_OIL_INJECTOR;
-          break;
-        default:
-          ert_well_type = IWEL_UNDOCUMENTED_ZERO;
-      }
-  }
+    if( well.isProducer( timestep ) ) return IWEL_PRODUCER;
 
-  return ert_well_type;
+    switch( well.getInjectionProperties( timestep ).injectorType ) {
+        case WellInjector::WATER: return IWEL_WATER_INJECTOR;
+        case WellInjector::GAS: return IWEL_GAS_INJECTOR;
+        case WellInjector::OIL: return IWEL_OIL_INJECTOR;
+        default: return IWEL_UNDOCUMENTED_ZERO;
+    }
 }
-
 
 int eclipseWellStatusMask(WellCommon::StatusEnum wellStatus)
 {
@@ -317,11 +302,8 @@ public:
         iwel_data[ offset + IWEL_CONNECTIONS_ITEM ] = completions->size();
         iwel_data[ offset + IWEL_GROUP_ITEM ] = 1;
 
-        {
-            WellType welltype = well->isProducer(currentStep) ? PRODUCER : INJECTOR;
-            int ert_welltype = eclipseWellTypeMask(welltype, well->getInjectionProperties(currentStep).injectorType);
-            iwel_data[ offset + IWEL_TYPE_ITEM ] = ert_welltype;
-        }
+        int ert_welltype = eclipseWellTypeMask( *well, currentStep );
+        iwel_data[ offset + IWEL_TYPE_ITEM ] = ert_welltype;
 
         iwel_data[ offset + IWEL_STATUS_ITEM ] = eclipseWellStatusMask(well->getStatus(currentStep));
     }
