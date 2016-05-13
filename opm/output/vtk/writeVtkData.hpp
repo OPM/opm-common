@@ -26,7 +26,6 @@
 #include <vector>
 #include <array>
 #include <iosfwd>
-#include <opm/core/utility/DataMap.hpp>
 
 struct UnstructuredGrid;
 
@@ -36,12 +35,12 @@ namespace Opm
     /// Vtk output for cartesian grids.
     void writeVtkData(const std::array<int, 3>& dims,
                       const std::array<double, 3>& cell_size,
-                      const DataMap& data,
+                      const std::map< std::string, const std::vector< double >* >& data,
                       std::ostream& os);
 
     /// Vtk output for general grids.
     void writeVtkData(const UnstructuredGrid& grid,
-                      const DataMap& data,
+                      const std::map< std::string, const std::vector< double >* >& data,
                       std::ostream& os);
 } // namespace Opm
 

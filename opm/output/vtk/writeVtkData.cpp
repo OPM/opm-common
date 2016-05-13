@@ -19,7 +19,6 @@
 
 #include "config.h"
 #include <opm/output/vtk/writeVtkData.hpp>
-#include <opm/core/utility/DataMap.hpp>
 #include <opm/core/grid.h>
 #include <opm/common/ErrorMacros.hpp>
 #include <boost/lexical_cast.hpp>
@@ -37,7 +36,7 @@ namespace Opm
 
     void writeVtkData(const std::array<int, 3>& dims,
                       const std::array<double, 3>& cell_size,
-                      const DataMap& data,
+                      const std::map< std::string, const std::vector< double >* >& data,
                       std::ostream& os)
     {
         // Dimension is hardcoded in the prototype and the next two lines,
@@ -74,7 +73,7 @@ namespace Opm
         os << "\n";
 
         os << "\nCELL_DATA " << num_cells << '\n';
-        for (DataMap::const_iterator dit = data.begin(); dit != data.end(); ++dit) {
+        for (auto dit = data.begin(); dit != data.end(); ++dit) {
             std::string name = dit->first;
             os << "SCALARS " << name << " float" << '\n';
             os << "LOOKUP_TABLE " << name << "_table " << '\n';
@@ -140,7 +139,7 @@ namespace Opm
 
 
     void writeVtkData(const UnstructuredGrid& grid,
-                      const DataMap& data,
+                      const std::map< std::string, const std::vector< double >* >& data,
                       std::ostream& os)
     {
         if (grid.dimensions != 3) {
@@ -288,7 +287,7 @@ namespace Opm
             pm["NumberOfComponents"] = "1";
             pm["format"] = "ascii";
             pm["type"] = "Float64";
-            for (DataMap::const_iterator dit = data.begin(); dit != data.end(); ++dit) {
+            for (auto dit = data.begin(); dit != data.end(); ++dit) {
                 pm["Name"] = dit->first;
                 const std::vector<double>& field = *(dit->second);
                 const int num_comps = field.size()/grid.number_of_cells;
