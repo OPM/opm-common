@@ -26,15 +26,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/output/eclipse/EclipseWriter.hpp>
-#include <opm/output/eclipse/EclipseWriter.hpp>
-#include <opm/core/grid/GridManager.hpp>
-#include <opm/core/grid/GridHelpers.hpp>
-#include <opm/core/props/phaseUsageFromDeck.hpp>
-#include <opm/core/simulator/BlackoilState.hpp>
-#include <opm/core/simulator/WellState.hpp>
-#include <opm/core/simulator/SimulatorTimer.hpp>
-#include <opm/core/utility/parameters/ParameterGroup.hpp>
-#include <opm/core/utility/Compat.hpp>
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -44,6 +35,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
+#include <opm/parser/eclipse/Units/ConversionFactors.hpp>
 
 // ERT stuff
 #include <ert/ecl/ecl_kw.h>
@@ -55,140 +47,49 @@
 
 using namespace Opm;
 
-std::shared_ptr<Opm::EclipseWriter> eclWriter;
-std::shared_ptr<Opm::SimulatorTimer> simTimer;
-std::shared_ptr<const Opm::Deck> deck;
-std::shared_ptr<Opm::EclipseState> eclipseState;
-std::shared_ptr<Opm::GridManager> ourFineGridManagerPtr;
-std::shared_ptr<Opm::BlackoilState> blackoilState;
-std::shared_ptr<Opm::WellState> wellState;
+data::Solution createBlackoilState( int timeStepIdx, int numCells ) {
 
-void createEclipseWriter(const char *deckString)
-{
-    Opm::ParseContext parseContext;
-    Opm::ParserConstPtr parser(new Opm::Parser());
-    deck = parser->parseString(deckString, parseContext);
+    std::vector< double > pressure( numCells );
+    std::vector< double > swat( numCells );
+    std::vector< double > sgas( numCells );
+    std::vector< double > rs( numCells );
+    std::vector< double > rv( numCells );
 
-    eclipseState.reset(new Opm::EclipseState(deck , parseContext));
-    auto ioConfig = eclipseState->getIOConfig();
-    ioConfig->setBaseName("FOO");
+    for( int cellIdx = 0; cellIdx < numCells; ++cellIdx) {
 
-    auto eclGrid = eclipseState->getInputGrid();
-    BOOST_CHECK(eclGrid->getNX() == 3);
-    BOOST_CHECK(eclGrid->getNY() == 3);
-    BOOST_CHECK(eclGrid->getNZ() == 3);
-    BOOST_CHECK(eclGrid->getCartesianSize() == 3*3*3);
-
-    simTimer.reset(new Opm::SimulatorTimer());
-    simTimer->init(eclipseState->getSchedule()->getTimeMap());
-
-    // also create an UnstructuredGrid (required to create a BlackoilState)
-    Opm::EclipseGridConstPtr constEclGrid(eclGrid);
-    ourFineGridManagerPtr.reset(new Opm::GridManager(constEclGrid));
-
-    const UnstructuredGrid &ourFinerUnstructuredGrid = *ourFineGridManagerPtr->c_grid();
-    BOOST_CHECK(ourFinerUnstructuredGrid.cartdims[0] == 3);
-    BOOST_CHECK(ourFinerUnstructuredGrid.cartdims[1] == 3);
-    BOOST_CHECK(ourFinerUnstructuredGrid.cartdims[2] == 3);
-
-    BOOST_CHECK(ourFinerUnstructuredGrid.number_of_cells == 3*3*3);
-
-
-    eclWriter.reset(new Opm::EclipseWriter(eclipseState,
-                                           ourFinerUnstructuredGrid.number_of_cells,
-                                           0));
-
-    // this check is disabled so far, because UnstructuredGrid uses some weird definition
-    // of the term "face". For this grid, "number_of_faces" is 108 which is
-    // 2*6*numCells...
-    //BOOST_CHECK(ourFinerUnstructuredGrid.number_of_faces == 4*4*4);
-
-    int numCells = ourFinerUnstructuredGrid.number_of_cells;
-    for (int cellIdx = 0; cellIdx < numCells; ++cellIdx)
-        BOOST_CHECK(ourFinerUnstructuredGrid.global_cell[cellIdx] == cellIdx);
-}
-
-void createBlackoilState(int timeStepIdx)
-{
-    // allocate a new BlackoilState object
-    const UnstructuredGrid &ourFinerUnstructuredGrid = *ourFineGridManagerPtr->c_grid();
-    blackoilState.reset(new Opm::BlackoilState( Opm::UgGridHelpers::numCells( ourFinerUnstructuredGrid ) , Opm::UgGridHelpers::numFaces( ourFinerUnstructuredGrid ), 3));
-
-    size_t numCells = ourFinerUnstructuredGrid.number_of_cells;
-    size_t numFaces = ourFinerUnstructuredGrid.number_of_faces;
-
-    BOOST_CHECK(blackoilState->pressure().size() == numCells);
-    BOOST_CHECK(blackoilState->facepressure().size() == numFaces);
-    BOOST_CHECK(blackoilState->faceflux().size() == numFaces);
-    BOOST_CHECK(blackoilState->saturation().size() == numCells*3);
-    BOOST_CHECK(blackoilState->gasoilratio().size() == numCells);
-    BOOST_CHECK(blackoilState->rv().size() == numCells);
-
-    // this check is disabled because BlackoilState does not seem to allocate memory for
-    // this field. This means that it is probably unused and unneeded.
-    //BOOST_CHECK(blackoilState->surfacevol().size() == numCells*3);
-
-    // fill the state object with some data. The fun with this class is that it does not
-    // exhibit a proper c++ way to do this (i.e., getter + setter methods). Instead
-    // references to the arrays must be retrieved from the object and manipulated
-    // directly. Don't try to call resize() or anything else which is not politically
-    // correct on them!
-    auto &pressure = blackoilState->pressure();
-    auto &facepressure = blackoilState->facepressure();
-    auto &faceflux = blackoilState->faceflux();
-    auto &saturation = blackoilState->saturation();
-    auto &gasoilratio = blackoilState->gasoilratio();
-    auto &rv = blackoilState->rv();
-    for (size_t cellIdx = 0; cellIdx < numCells; ++cellIdx) {
         pressure[cellIdx] = timeStepIdx*1e5 + 1e4 + cellIdx;
-
-        // set the phase saturations. Some fun with direct index manipulation is to be
-        // had...
-        saturation[3*cellIdx + 0] = timeStepIdx*1e5 +2.1e4 + cellIdx; // oil
-        saturation[3*cellIdx + 1] = timeStepIdx*1e5 +2.2e4 + cellIdx; // gas
-        saturation[3*cellIdx + 2] = timeStepIdx*1e5 +2.3e4 + cellIdx; // water
+        sgas[cellIdx] = timeStepIdx*1e5 +2.2e4 + cellIdx;
+        swat[cellIdx] = timeStepIdx*1e5 +2.3e4 + cellIdx;
 
         // oil vaporization factor
         rv[cellIdx] = timeStepIdx*1e5 +3e4 + cellIdx;
-
         // gas dissolution factor
-        gasoilratio[cellIdx] = timeStepIdx*1e5 + 4e4 + cellIdx;
+        rs[cellIdx] = timeStepIdx*1e5 + 4e4 + cellIdx;
     }
 
-    // face specific data
-    for (size_t faceIdx = 0; faceIdx < numFaces; ++faceIdx) {
-        facepressure[faceIdx] = timeStepIdx*1e5 + 5e4 + faceIdx;
-        faceflux[faceIdx] = timeStepIdx*1e5 + 6e4 + faceIdx;
-    }
+    data::Solution solution;
+    using ds = data::Solution::key;
+
+    solution.insert( ds::PRESSURE, pressure );
+    solution.insert( ds::SWAT, swat );
+    solution.insert( ds::SGAS, sgas );
+    solution.insert( ds::RS, rs );
+    solution.insert( ds::RV, rv );
+    return solution;
 }
 
-void createWellState(int /*timeStepIdx*/)
-{
-    // allocate a new BlackoilState object
-    wellState.reset(new Opm::WellState);
-    wellState->init(0, *blackoilState);
-}
-
-void getErtData(ecl_kw_type *eclKeyword, std::vector<double> &data)
-{
+template< typename T >
+std::vector< T > getErtData( ecl_kw_type *eclKeyword ) {
     size_t kwSize = ecl_kw_get_size(eclKeyword);
-    float* ertData = static_cast<float*>(ecl_kw_iget_ptr(eclKeyword, 0));
+    T* ertData = static_cast< T* >(ecl_kw_iget_ptr(eclKeyword, 0));
 
-    data.resize(kwSize);
-    std::copy(ertData, ertData + kwSize, data.begin());
+    return { ertData, ertData + kwSize };
 }
 
-void getErtData(ecl_kw_type *eclKeyword, std::vector<int> &data)
-{
-    size_t kwSize = ecl_kw_get_size(eclKeyword);
-    int* ertData = static_cast<int*>(ecl_kw_iget_ptr(eclKeyword, 0));
-
-    data.resize(kwSize);
-    std::copy(ertData, ertData + kwSize, data.begin());
-}
-
-void compareErtData(const std::vector<double> &src, const std::vector<double> &dst, double tolerance)
-{
+template< typename T, typename U >
+void compareErtData(const std::vector< T > &src,
+                    const std::vector< U > &dst,
+                    double tolerance ) {
     BOOST_CHECK_EQUAL(src.size(), dst.size());
     if (src.size() != dst.size())
         return;
@@ -199,50 +100,39 @@ void compareErtData(const std::vector<double> &src, const std::vector<double> &d
 
 void compareErtData(const std::vector<int> &src, const std::vector<int> &dst)
 {
-    BOOST_CHECK_EQUAL(src.size(), dst.size());
-    if (src.size() != dst.size())
-        return;
-
-    for (size_t i = 0; i < src.size(); ++i)
-        BOOST_CHECK_EQUAL(src[i], dst[i]);
+    BOOST_CHECK_EQUAL_COLLECTIONS( src.begin(), src.end(),
+                                   dst.begin(), dst.end() );
 }
 
-void checkEgridFile()
-{
-    size_t numCells = ourFineGridManagerPtr->c_grid()->number_of_cells;
-
+void checkEgridFile( const EclipseGrid& eclGrid ) {
     // use ERT directly to inspect the EGRID file produced by EclipseWriter
     auto egridFile = fortio_open_reader("FOO.EGRID", /*isFormated=*/0, ECL_ENDIAN_FLIP);
 
-    auto eclGrid = eclipseState->getInputGrid();
+    const auto numCells = eclGrid.getNX() * eclGrid.getNY() * eclGrid.getNZ();
 
-    ecl_kw_type *eclKeyword;
-    // yes, that's an assignment!
-    while ((eclKeyword = ecl_kw_fread_alloc(egridFile))) {
+    while( auto* eclKeyword = ecl_kw_fread_alloc( egridFile ) ) {
         std::string keywordName(ecl_kw_get_header(eclKeyword));
         if (keywordName == "COORD") {
-            std::vector<double> sourceData, resultData;
-            eclGrid->exportCOORD(sourceData);
-            getErtData(eclKeyword, resultData);
-            compareErtData(sourceData, resultData, /*percentTolerance=*/1e-6);
+            std::vector< double > sourceData;
+            eclGrid.exportCOORD( sourceData );
+            auto resultData = getErtData< float >( eclKeyword );
+            compareErtData(sourceData, resultData, 1e-6);
         }
         else if (keywordName == "ZCORN") {
-            std::vector<double> sourceData, resultData;
-            eclGrid->exportZCORN(sourceData);
-            getErtData(eclKeyword, resultData);
+            std::vector< double > sourceData;
+            eclGrid.exportZCORN(sourceData);
+            auto resultData = getErtData< float >( eclKeyword );
             compareErtData(sourceData, resultData, /*percentTolerance=*/1e-6);
         }
         else if (keywordName == "ACTNUM") {
-            std::vector<int> sourceData, resultData;
-            eclGrid->exportACTNUM(sourceData);
-            getErtData(eclKeyword, resultData);
+            std::vector< int > sourceData( numCells );
+            eclGrid.exportACTNUM(sourceData);
+            auto resultData = getErtData< int >( eclKeyword );
 
-            if (resultData.size() == numCells && sourceData.size() == 0) {
-                sourceData.resize(numCells);
-                std::fill(sourceData.begin(), sourceData.end(), 1);
-            }
+            if( sourceData.empty() )
+                sourceData.assign( numCells, 1 );
 
-            compareErtData(sourceData, resultData);
+            compareErtData( sourceData, resultData );
         }
 
         ecl_kw_free(eclKeyword);
@@ -251,35 +141,29 @@ void checkEgridFile()
     fortio_fclose(egridFile);
 }
 
-void checkInitFile()
-{
+void checkInitFile( const Deck& deck ) {
     // use ERT directly to inspect the INIT file produced by EclipseWriter
     auto initFile = fortio_open_reader("FOO.INIT", /*isFormated=*/0, ECL_ENDIAN_FLIP);
 
-    ecl_kw_type *eclKeyword;
-    // yes, that's an assignment!
-    while ((eclKeyword = ecl_kw_fread_alloc(initFile))) {
+    while( auto* eclKeyword = ecl_kw_fread_alloc(initFile) ) {
         std::string keywordName(ecl_kw_get_header(eclKeyword));
 
         if (keywordName == "PORO") {
-            const std::vector<double> &sourceData = deck->getKeyword("PORO").getSIDoubleData();
-            std::vector<double> resultData;
-            getErtData(eclKeyword, resultData);
-
-            compareErtData(sourceData, resultData, /*percentTolerance=*/1e-4);
+            const auto &sourceData = deck.getKeyword("PORO").getSIDoubleData();
+            auto resultData = getErtData< float >( eclKeyword );
+            compareErtData(sourceData, resultData, 1e-4);
         }
 
         if (keywordName == "PERMX") {
-            std::vector<double> sourceData = deck->getKeyword("PERMX").getSIDoubleData();
-            std::vector<double> resultData;
-            getErtData(eclKeyword, resultData);
+            const auto& sourceData = deck.getKeyword("PERMX").getSIDoubleData();
+            auto resultData = getErtData< float >( eclKeyword );
 
             // convert the data from ERT from Field to SI units (mD to m^2)
             for (size_t i = 0; i < resultData.size(); ++i) {
                 resultData[i] *= 9.869233e-16;
             }
 
-            compareErtData(sourceData, resultData, /*percentTolerance=*/1e-4);
+            compareErtData(sourceData, resultData, 1e-4);
         }
 
         ecl_kw_free(eclKeyword);
@@ -288,25 +172,17 @@ void checkInitFile()
     fortio_fclose(initFile);
 }
 
-void checkRestartFile(int timeStepIdx)
-{
-    size_t numCells = ourFineGridManagerPtr->c_grid()->number_of_cells;
-
-    Opm::PhaseUsage phaseUsage = Opm::phaseUsageFromDeck(deck);
-    int numActivePhases = phaseUsage.num_phases;
-    int waterPhaseIdx = phaseUsage.phase_pos[Opm::BlackoilPhases::Aqua];
-    int gasPhaseIdx = phaseUsage.phase_pos[Opm::BlackoilPhases::Vapour];
+void checkRestartFile( int timeStepIdx ) {
+    using ds = data::Solution::key;
 
     for (int i = 0; i <= timeStepIdx; ++i) {
-        createBlackoilState(i);
+        auto sol = createBlackoilState( i, 3 * 3 * 3 );
 
         // use ERT directly to inspect the restart file produced by EclipseWriter
         auto rstFile = fortio_open_reader("FOO.UNRST", /*isFormated=*/0, ECL_ENDIAN_FLIP);
 
         int curSeqnum = -1;
-        ecl_kw_type *eclKeyword;
-        // yes, that's an assignment!
-        while ((eclKeyword = ecl_kw_fread_alloc(rstFile))) {
+        while( auto* eclKeyword = ecl_kw_fread_alloc(rstFile) ) {
             std::string keywordName(ecl_kw_get_header(eclKeyword));
 
             if (keywordName == "SEQNUM") {
@@ -316,56 +192,26 @@ void checkRestartFile(int timeStepIdx)
                 continue;
 
             if (keywordName == "PRESSURE") {
-                std::vector<double> sourceData = blackoilState->pressure();
-                std::vector<double> resultData;
-                getErtData(eclKeyword, resultData);
+                const auto resultData = getErtData< float >( eclKeyword );
+                for( auto& x : sol[ ds::PRESSURE ] )
+                    x /= Metric::Pressure;
 
-                // convert the data from ERT from Metric to SI units (bar to Pa)
-                for (size_t ii = 0; ii < resultData.size(); ++ii) {
-                    resultData[ii] *= 1e5;
-                }
-
-                compareErtData(sourceData, resultData, /*percentTolerance=*/1e-4);
+                compareErtData( sol[ ds::PRESSURE ], resultData, 1e-4 );
             }
 
             if (keywordName == "SWAT") {
-                std::vector<double> sourceData;
-                std::vector<double> resultData;
-                getErtData(eclKeyword, resultData);
-
-                // extract the water saturation from the black-oil state
-                sourceData.resize(numCells);
-                for (size_t ii = 0; ii < sourceData.size(); ++ii) {
-                    // again, fun with direct index manipulation...
-                    sourceData[ii] = blackoilState->saturation()[ii*numActivePhases + waterPhaseIdx];
-                }
-
-                compareErtData(sourceData, resultData, /*percentTolerance=*/1e-4);
+                const auto resultData = getErtData< float >( eclKeyword );
+                compareErtData(sol[ ds::SWAT ], resultData, 1e-4);
             }
 
             if (keywordName == "SGAS") {
-                std::vector<double> sourceData;
-                std::vector<double> resultData;
-                getErtData(eclKeyword, resultData);
-
-                // extract the water saturation from the black-oil state
-                sourceData.resize(numCells);
-                for (size_t ii = 0; ii < sourceData.size(); ++ii) {
-                    // again, fun with direct index manipulation...
-                    sourceData[ii] = blackoilState->saturation()[ii*numActivePhases + gasPhaseIdx];
-                }
-
-                compareErtData(sourceData, resultData, /*percentTolerance=*/1e-4);
+                const auto resultData = getErtData< float >( eclKeyword );
+                compareErtData( sol[ ds::SGAS ], resultData, 1e-4 );
             }
         }
 
         fortio_fclose(rstFile);
     }
-}
-
-void checkSummaryFile(int /*timeStepIdx*/)
-{
-    // TODO
 }
 
 BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
@@ -410,32 +256,34 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
         "/\n";
 
     auto deck = Parser().parseString( deckString, ParseContext() );
-    createEclipseWriter(deckString);
+    auto es = std::make_shared< EclipseState >( Parser::parse( *deck ) );
+    es->getIOConfig()->setBaseName( "FOO" );
 
-    tm t = boost::posix_time::to_tm( simTimer->startDateTime() );
-    eclWriter->writeInit( simTimer->currentPosixTime(), std::mktime( &t ) );
+    auto& eclGrid = *es->getInputGrid();
 
-    checkEgridFile();
-    checkInitFile();
+    {
+        EclipseWriter eclWriter( es, 3 * 3 * 3, nullptr );
 
-    for (; simTimer->currentStepNum() < simTimer->numSteps(); ++ (*simTimer)) {
-        const auto current_step = simTimer->currentStepNum();
-        const auto report_step = simTimer->reportStepNum();
-        createBlackoilState( current_step );
-        createWellState( current_step );
+        auto start_time = util_make_datetime( 0, 0, 0, 10, 10, 2008 );
+        auto first_step = util_make_datetime( 0, 0, 0, 10, 11, 2008 );
+        eclWriter.writeInit( start_time, start_time );
 
-        data::Wells wells { {}, wellState->bhp(), wellState->perfPress(),
-                            wellState->perfRates(), wellState->temperature(),
-                            wellState->wellRates() };
+        data::Wells wells;
 
-        eclWriter->writeTimeStep( report_step,
-                                  simTimer->currentPosixTime(),
-                                  simTimer->simulationTimeElapsed(),
-                                  sim2solution( *blackoilState, phaseUsageFromDeck( deck ) ),
-                                  wells, false);
-        checkRestartFile( current_step );
-        checkSummaryFile( current_step );
+        for( int i = 0; i < 5; ++i ) {
+            eclWriter.writeTimeStep( i,
+                    first_step,
+                    first_step - start_time,
+                    createBlackoilState( i, 3 * 3 * 3 ),
+                    wells, false);
+
+            checkRestartFile( i );
+
+        }
     }
+
+    checkEgridFile( eclGrid );
+    checkInitFile( *deck );
 
     test_work_area_free(test_area);
 }
