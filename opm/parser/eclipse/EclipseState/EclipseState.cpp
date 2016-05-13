@@ -75,7 +75,7 @@ namespace Opm {
         m_schedule(          std::make_shared<Schedule>( m_parseContext, m_inputGrid, deck, m_ioConfig ) ),
         m_simulationConfig(  std::make_shared<SimulationConfig>( m_parseContext, deck, m_eclipseProperties ) ),
         m_summaryConfig(     deck, *m_schedule, m_eclipseProperties, m_inputGrid->getNXYZ() ),
-        m_nnc(               deck, m_inputGrid ),
+        m_inputNnc(          deck, m_inputGrid ),
         m_deckUnitSystem(    deck.getActiveUnitSystem() )
 
     {
@@ -168,12 +168,12 @@ namespace Opm {
         return m_transMult;
     }
 
-    const NNC& EclipseState::getNNC() const {
-        return m_nnc;
+    const NNC& EclipseState::getInputNNC() const {
+        return m_inputNnc;
     }
 
-    bool EclipseState::hasNNC() const {
-        return m_nnc.hasNNC();
+    bool EclipseState::hasInputNNC() const {
+        return m_inputNnc.hasNNC();
     }
 
     std::string EclipseState::getTitle() const {
