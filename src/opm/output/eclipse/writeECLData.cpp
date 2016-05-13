@@ -33,29 +33,10 @@
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_util.h>
 #include <ert/ecl/ecl_rst_file.h>
+#include <ert/util/ert_unique_ptr.hpp>
 
 
-namespace Opm
-{
-
-  static ecl_kw_type * ecl_kw_wrapper( int number_of_cells,
-                                       const std::string& kw_name ,
-                                       const std::vector<double> * data ,
-                                       int offset ,
-                                       int stride ) {
-
-    if (stride <= 0)
-      OPM_THROW(std::runtime_error, "Vector strides must be positive. Got stride = " << stride);
-    if ((stride * std::vector<double>::size_type(number_of_cells)) != data->size())
-      OPM_THROW(std::runtime_error, "Internal mismatch grid.number_of_cells: " << number_of_cells << " data size: " << data->size() / stride);
-    {
-      ecl_kw_type * ecl_kw = ecl_kw_alloc( kw_name.c_str() , number_of_cells , ECL_FLOAT_TYPE );
-      for (int i=0; i < number_of_cells; i++)
-        ecl_kw_iset_float( ecl_kw , i , (*data)[i*stride + offset]);
-      return ecl_kw;
-    }
-  }
-
+namespace Opm {
 
   /*
     This function will write the data solution data in the DataMap
@@ -85,7 +66,7 @@ namespace Opm
   */
 
   void writeECLData(int nx, int ny, int nz, int nactive,
-                    const DataMap& data,
+                    data::Solution data,
                     const int current_step,
                     const double current_time,
                     const boost::posix_time::ptime& current_date_time,
@@ -141,25 +122,27 @@ namespace Opm
 
     ecl_rst_file_start_solution( rst_file );
 
-    {
-      DataMap::const_iterator i = data.find("pressure");
-      if (i != data.end()) {
-        ecl_kw_type * pressure_kw = ecl_kw_wrapper( nactive, "PRESSURE" , i->second , 0 , 1);
-        ecl_rst_file_add_kw( rst_file , pressure_kw );
-        ecl_kw_free( pressure_kw );
-      }
+    using eclkw = ERT::ert_unique_ptr< ecl_kw_type, ecl_kw_free >;
+    using ds = data::Solution::key;
+
+    if( data.has( ds::PRESSURE ) ) {
+        const auto& pressure = data[ ds::PRESSURE ];
+
+        eclkw kw( ecl_kw_alloc( "PRESSURE", nactive, ECL_FLOAT_TYPE ) );
+        for( int i = 0; i < nactive; i++ )
+            ecl_kw_iset_float( kw.get(), i, pressure[ i ] );
+
+        ecl_rst_file_add_kw( rst_file, kw.get() );
     }
 
-    {
-      DataMap::const_iterator i = data.find("saturation");
-      if (i != data.end()) {
-        if (int(i->second->size()) != 2 * nactive ) {
-          OPM_THROW(std::runtime_error, "writeECLData() requires saturation field to have two phases.");
-        }
-        ecl_kw_type * swat_kw = ecl_kw_wrapper( nactive, "SWAT" , i->second , 0 , 2);
-        ecl_rst_file_add_kw( rst_file , swat_kw );
-        ecl_kw_free( swat_kw );
-      }
+    if( data.has( ds::SWAT ) ) {
+        const auto& swat = data[ ds::SWAT ];
+
+        eclkw kw( ecl_kw_alloc( "SWAT", nactive, ECL_FLOAT_TYPE ) );
+        for( int i = 0; i < nactive; i++ )
+            ecl_kw_iset_float( kw.get(), i, swat[ i ] );
+
+        ecl_rst_file_add_kw( rst_file, kw.get() );
     }
 
     ecl_rst_file_end_solution( rst_file );
@@ -174,7 +157,7 @@ namespace Opm
 {
 
     void writeECLData(int, int, int, int,
-                      const DataMap&,
+                      data::Solution,
                       const int,
                       const double,
                       const boost::posix_time::ptime&,

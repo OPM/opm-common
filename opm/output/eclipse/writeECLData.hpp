@@ -22,7 +22,7 @@
 #define OPM_WRITEECLDATA_HEADER_INCLUDED
 
 
-#include <opm/core/utility/DataMap.hpp>
+#include <opm/output/Cells.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
 #include <string>
@@ -33,7 +33,7 @@ namespace Opm
   // ECLIPSE output for general grids.
   void writeECLData(int nx, int ny, int nz,
                     int number_of_cells,
-                    const DataMap& data,
+                    data::Solution,
                     const int current_step,
                     const double current_time,
                     const boost::posix_time::ptime& current_date_time,
