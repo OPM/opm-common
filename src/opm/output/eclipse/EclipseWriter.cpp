@@ -158,30 +158,27 @@ private:
 /**
  * Pointer to memory that holds the name to an Eclipse output file.
  */
-class FileName : private boost::noncopyable
-{
+class FileName {
 public:
     FileName(const std::string& outputDir,
              const std::string& baseName,
              ecl_file_enum type,
              int writeStepIdx,
-             bool formatted)
-    {
-        ertHandle_ = ecl_util_alloc_filename(outputDir.c_str(),
-                                             baseName.c_str(),
-                                             type,
-                                             formatted,
-                                             writeStepIdx);
-    }
+             bool formatted ) :
+        handle( ecl_util_alloc_filename(
+                                outputDir.c_str(),
+                                baseName.c_str(),
+                                type,
+                                formatted,
+                                writeStepIdx ),
+                std::free )
+    {}
 
-    ~FileName()
-    { std::free(ertHandle_); }
-
-    const char *ertHandle() const
-    { return ertHandle_; }
+    const char *ertHandle() const { return this->handle.get(); }
 
 private:
-    char *ertHandle_;
+    using fd = std::unique_ptr< char, decltype( std::free )* >;
+    fd handle;
 };
 
 class Restart : private boost::noncopyable
