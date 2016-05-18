@@ -56,18 +56,15 @@ namespace Opm {
                        const EclipseGrid*      eclipseGrid,
                        GridProperties<double>* doubleGridProperties)
         {
-            /*
-               Observe that this apply method does not alter the values input
-               vector, instead it fetches the PORV property one more time, and
-               then manipulates that.
-               */
-
             const auto& porv = doubleGridProperties->getOrCreateProperty("PORV");
 
             if (porv.containsNaN()) {
-                const auto& poro = doubleGridProperties->getOrCreateProperty("PORO");
+                auto& poro = doubleGridProperties->getOrCreateProperty("PORO");
+                auto& ntg =  doubleGridProperties->getOrCreateProperty("NTG");
 
-                const auto& ntg =  doubleGridProperties->getOrCreateProperty("NTG");
+                poro.runPostProcessor();
+                ntg.runPostProcessor();
+
                 if (poro.containsNaN())
                     throw std::logic_error("Do not have information for the PORV keyword - some defaulted values in PORO");
                 else {
@@ -90,15 +87,55 @@ namespace Opm {
                 }
             }
         }
-    }
 
+
+        /*
+          In this codeblock we explicitly set the ACTNUM value to zero
+          for cells with pore volume equal to zero. Observe the
+          following:
+
+             1. The current processing only considers cells with PORV
+                == 0. Processing of the MINPV keyword for cells with
+                small nonzero poervolumes is currently performed along
+                with the Grid processing code.
+
+             2. The PORO or PORV keyword must be explicitly entered
+                in the deck, using getDoubleGridProperty( ) and
+                relying on autocreation will fail - we therefor
+                explicitly check if the PORO or PORV keywords are
+                present in the deck.
+
+             3. The code below will fail hard if it is called with a
+                grid which does not have full cell information.
+        */
+
+        void ACTNUMPostProcessor( std::vector<int>&       values,
+                                  const EclipseGrid*      eclipseGrid,
+                                  GridProperties<double>* doubleGridProperties)
+        {
+            const bool hasPORV = doubleGridProperties->hasKeyword( "PORV" ) || doubleGridProperties->hasKeyword( "PORO");
+            if (!hasPORV)
+                return;
+
+            {
+                auto& porv = doubleGridProperties->getOrCreateProperty("PORV");
+                porv.runPostProcessor();
+
+                {
+                    const auto& porvData = porv.getData();
+                    for (size_t i = 0; i < porvData.size(); i++)
+                        if (porvData[i] == 0)
+                            values[i] = 0;
+                }
+            }
+        }
+    }
 
 
 
     static std::vector< GridProperties< int >::SupportedKeywordInfo >
     makeSupportedIntKeywords() {
-        return {GridProperties< int >::SupportedKeywordInfo( "ACTNUM" , 1, "1" ),
-                GridProperties< int >::SupportedKeywordInfo( "SATNUM" , 1, "1" ),
+        return { GridProperties< int >::SupportedKeywordInfo( "SATNUM" , 1, "1" ),
                 GridProperties< int >::SupportedKeywordInfo( "IMBNUM" , 1, "1" ),
                 GridProperties< int >::SupportedKeywordInfo( "PVTNUM" , 1, "1" ),
                 GridProperties< int >::SupportedKeywordInfo( "EQLNUM" , 1, "1" ),
@@ -107,10 +144,10 @@ namespace Opm {
                 GridProperties< int >::SupportedKeywordInfo( "MULTNUM", 1, "1" ),
                 GridProperties< int >::SupportedKeywordInfo( "FIPNUM" , 1, "1" ),
                 GridProperties< int >::SupportedKeywordInfo( "MISCNUM", 1, "1" ),
-                GridProperties< int >::SupportedKeywordInfo( "OPERNUM", 1, "1" ),
-                };
+                GridProperties< int >::SupportedKeywordInfo( "OPERNUM", 1, "1" ) };
     }
 
+    
     static std::vector< GridProperties< double >::SupportedKeywordInfo >
     makeSupportedDoubleKeywords(const TableManager*        tableManager,
                                 const EclipseGrid*         eclipseGrid,
@@ -364,15 +401,29 @@ namespace Opm {
         }
 
 
-        auto initPORV = std::bind(&GridPropertyPostProcessor::initPORV,
-                                                    std::placeholders::_1,
-                                                    &eclipseGrid,
-                                                    &m_doubleGridProperties);
-        // pore volume
-        m_doubleGridProperties.postAddKeyword( "PORV",
-                                                std::numeric_limits<double>::quiet_NaN(),
-                                                initPORV,
-                                                "Volume" );
+        {
+            auto initPORV = std::bind(&GridPropertyPostProcessor::initPORV,
+                                      std::placeholders::_1,
+                                      &eclipseGrid,
+                                      &m_doubleGridProperties);
+
+            m_doubleGridProperties.postAddKeyword( "PORV",
+                                                   std::numeric_limits<double>::quiet_NaN(),
+                                                   initPORV,
+                                                   "Volume" );
+        }
+
+        {
+            auto actnumPP = std::bind(&GridPropertyPostProcessor::ACTNUMPostProcessor,
+                                      std::placeholders::_1,
+                                      &eclipseGrid,
+                                      &m_doubleGridProperties);
+
+            m_intGridProperties.postAddKeyword( "ACTNUM",
+                                                1,
+                                                actnumPP ,
+                                                "1");
+        }
 
         // actually create the grid property objects. we need to first process
         // all integer grid properties before the double ones as these may be
@@ -412,22 +463,14 @@ namespace Opm {
         return m_doubleGridProperties.hasKeyword( keyword );
     }
 
-    /*
-      1. The public methods getIntGridProperty & getDoubleGridProperty will
-         invoke and run the property post processor (if any is registered); the
-         post processor will only run one time.
 
-         It is important that post processor is not run prematurely, internal
-         functions in EclipseState should therefore ask for properties by
-         invoking the getKeyword() method of the m_intGridProperties /
-         m_doubleGridProperties() directly and not through these methods.
-
-      2. Observe that this will autocreate a property if it has not been
-         explicitly added.
-    */
     const GridProperty<int>& Eclipse3DProperties::getIntGridProperty( const std::string& keyword ) const {
-        return m_intGridProperties.getKeyword( keyword );
+        auto& gridProperty = const_cast< Eclipse3DProperties* >( this )->m_intGridProperties.getKeyword( keyword );
+        gridProperty.runPostProcessor();
+        return gridProperty;
     }
+
+
 
     /// gets property from doubleGridProperty --- and calls the runPostProcessor
     const GridProperty<double>& Eclipse3DProperties::getDoubleGridProperty( const std::string& keyword ) const {

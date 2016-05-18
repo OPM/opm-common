@@ -193,7 +193,7 @@ namespace Opm {
         }
 
     private:
-        /// this method exists for (friend) Eclipse3DProperties to be allowed initializing PORV keyword
+        /// this method exists for (friend) Eclipse3DProperties to be allowed initializing PORV and ACTNUM keyword
         void postAddKeyword(const std::string& name,
                             const T defaultValue,
                             std::function< void( std::vector< T >& ) > postProcessor,
