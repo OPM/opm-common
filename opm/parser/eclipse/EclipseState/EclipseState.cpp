@@ -79,8 +79,7 @@ namespace Opm {
         m_deckUnitSystem(    deck.getActiveUnitSystem() )
 
     {
-        // after Eclipse3DProperties has been constructed, we have complete ACTNUM info
-        if (m_eclipseProperties.hasDeckIntGridProperty("ACTNUM"))
+        if (m_inputGrid->hasCellInfo())
             m_inputGrid->resetACTNUM(m_eclipseProperties.getIntGridProperty("ACTNUM").getData().data());
 
         initIOConfigPostSchedule(deck);
