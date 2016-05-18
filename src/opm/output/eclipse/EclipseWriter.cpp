@@ -110,106 +110,49 @@ int eclipseWellStatusMask(WellCommon::StatusEnum wellStatus)
   return well_status;
 }
 
+template< typename T >
+struct ert_data_type {};
+
+template<> struct ert_data_type< float > {
+    static const ecl_type_enum type{ ECL_FLOAT_TYPE };
+};
+
+template<> struct ert_data_type< double > {
+    static const ecl_type_enum type{ ECL_DOUBLE_TYPE };
+};
+
+template<> struct ert_data_type< int > {
+    static const ecl_type_enum type{ ECL_INT_TYPE };
+};
 
 /**
  * Eclipse "keyword" (i.e. named data) for a vector.
  */
-template <typename T>
-class Keyword : private boost::noncopyable
-{
+template< typename T >
+class Keyword {
 public:
-    // Default constructor
-    Keyword()
-        : ertHandle_(0)
-    {}
-
-    /// Initialization from double-precision array.
-    Keyword(const std::string& name,
-            const std::vector<double>& data)
-        : ertHandle_(0)
-    { set(name, data); }
-
-    /// Initialization from double-precision array.
-    Keyword(const std::string& name,
-            const std::vector<int>& data)
-        : ertHandle_(0)
-    { set(name, data); }
-
-    Keyword(const std::string& name,
-            const std::vector<const char*>& data)
-        : ertHandle_(0)
-    {set(name, data); }
-
-    ~Keyword()
+    template< typename U >
+    Keyword( const std::string& name, const std::vector< U >& data ) :
+        handle( ecl_kw_alloc( name.c_str(), data.size(), ert_data_type< T >::type ) )
     {
-        if (ertHandle_)
-            ecl_kw_free(ertHandle_);
+        T* target = static_cast< T* >( ecl_kw_get_ptr( this->handle.get() ) );
+
+        for( size_t i = 0; i < data.size(); ++i )
+            target[ i ] = T( data[ i ] );
     }
 
-    template <class DataElementType>
-    void set(const std::string name, const std::vector<DataElementType>& data)
+    Keyword( const std::string& name, const std::vector< const char* >& data ) :
+        handle( ecl_kw_alloc( name.c_str(), data.size(), ECL_CHAR_TYPE ) )
     {
-
-        if(ertHandle_) {
-            ecl_kw_free(ertHandle_);
-        }
-
-
-        ertHandle_ = ecl_kw_alloc(name.c_str(),
-                                  data.size(),
-                                  ertType_());
-
-        // number of elements to take
-        const int numEntries = data.size();
-
-        // fill it with values
-
-        T* target = static_cast<T*>(ecl_kw_get_ptr(ertHandle()));
-        for (int i = 0; i < numEntries; ++i) {
-            target[i] = static_cast<T>(data[i]);
-        }
+        for( size_t i = 0; i < data.size(); ++i )
+          ecl_kw_iset_char_ptr( this->handle.get(), i, data[ i ] );
     }
 
-    void set(const std::string name, const std::vector<const char *>& data)
-    {
-      if(ertHandle_) {
-          ecl_kw_free(ertHandle_);
-      }
-
-
-      ertHandle_ = ecl_kw_alloc(name.c_str(),
-                                data.size(),
-                                ertType_());
-
-      // number of elements to take
-      const int numEntries = data.size();
-      for (int i = 0; i < numEntries; ++i) {
-          ecl_kw_iset_char_ptr( ertHandle_, i, data[i]);
-     }
-
-    }
-
-    ecl_kw_type *ertHandle() const
-    { return ertHandle_; }
+    ecl_kw_type *ertHandle() { return this->handle.get(); }
+    const ecl_kw_type *ertHandle() const { return this->handle.get(); }
 
 private:
-    static ecl_type_enum ertType_()
-    {
-        if (std::is_same<T, float>::value)
-        { return ECL_FLOAT_TYPE; }
-        if (std::is_same<T, double>::value)
-        { return ECL_DOUBLE_TYPE; }
-        if (std::is_same<T, int>::value)
-        { return ECL_INT_TYPE; }
-        if (std::is_same<T, const char *>::value)
-        { return ECL_CHAR_TYPE; }
-
-
-        OPM_THROW(std::logic_error,
-                  "Unhandled type for data elements in Keyword");
-    }
-
-    ecl_kw_type *ertHandle_;
+    ERT::ert_unique_ptr< ecl_kw_type, ecl_kw_free > handle;
 };
 
 /**
