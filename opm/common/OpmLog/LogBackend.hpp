@@ -22,6 +22,7 @@
 #define OPM_LOGBACKEND_HPP
 
 #include <opm/common/OpmLog/MessageFormatter.hpp>
+#include <opm/common/OpmLog/MessageLimiter.hpp>
 #include <cstdint>
 #include <string>
 #include <memory>
