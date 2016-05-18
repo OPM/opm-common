@@ -26,24 +26,13 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/output/eclipse/EclipseWriter.hpp>
-#include <opm/core/grid/GridManager.hpp>
-#include <opm/core/grid/GridHelpers.hpp>
-#include <opm/core/props/phaseUsageFromDeck.hpp>
-#include <opm/core/simulator/BlackoilState.hpp>
-#include <opm/core/simulator/WellState.hpp>
-#include <opm/core/simulator/SimulatorTimer.hpp>
-#include <opm/core/utility/parameters/ParameterGroup.hpp>
-#include <opm/core/utility/Compat.hpp>
-#include <opm/core/wells.h>
-
-#include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/Parser/Parser.hpp>
 
 // ERT stuff
 #include <ert/ecl/ecl_kw.h>
@@ -53,56 +42,18 @@
 #include <ert/ecl_well/well_state.h>
 #include <ert/util/test_work_area.h>
 
-#include <string.h>
-
 using namespace Opm;
 
-int eclipseWellTypeMask(WellType wellType, WellInjector::TypeEnum injectorType)
-{
-  int ert_well_type = IWEL_UNDOCUMENTED_ZERO;
-
-  if (PRODUCER == wellType) {
-      ert_well_type = IWEL_PRODUCER;
-  } else if (INJECTOR == wellType) {
-      switch (injectorType) {
-        case WellInjector::WATER:
-          ert_well_type = IWEL_WATER_INJECTOR;
-          break;
-        case WellInjector::GAS:
-          ert_well_type = IWEL_GAS_INJECTOR;
-          break;
-        case WellInjector::OIL :
-          ert_well_type = IWEL_OIL_INJECTOR;
-          break;
-        default:
-          ert_well_type = IWEL_UNDOCUMENTED_ZERO;
-      }
-  }
-
-  return ert_well_type;
-}
-
-int eclipseWellStatusMask(WellCommon::StatusEnum wellStatus)
-{
-  int well_status = 0;
-
-  if (wellStatus == WellCommon::OPEN) {
-    well_status = 1;
-  }
-  return well_status;
-}
-
-
 void verifyWellState(const std::string& rst_filename,
-                     Opm::EclipseGridConstPtr ecl_grid,
-                     Opm::ScheduleConstPtr schedule) {
+                     EclipseGridConstPtr ecl_grid,
+                     ScheduleConstPtr schedule) {
 
-  well_info_type * well_info = well_info_alloc(ecl_grid->c_ptr());
+  well_info_type* well_info = well_info_alloc(ecl_grid->c_ptr());
   well_info_load_rstfile(well_info, rst_filename.c_str(), false);
 
   //Verify numwells
   int numwells = well_info_get_num_wells(well_info);
-  BOOST_CHECK(numwells == (int)schedule->numWells());
+  BOOST_CHECK_EQUAL( numwells, schedule->numWells() );
 
   std::vector<Opm::WellConstPtr> wells = schedule->getWells();
 
@@ -110,43 +61,57 @@ void verifyWellState(const std::string& rst_filename,
 
     //Verify wellnames
     const char * wellname = well_info_iget_well_name(well_info, i);
-    Opm::WellConstPtr well = wells.at(i);
-    BOOST_CHECK(wellname == well->name());
+    auto well = wells.at(i);
+    BOOST_CHECK_EQUAL( wellname, well->name() );
 
     // Verify well-head position data
-    well_ts_type * well_ts = well_info_get_ts(well_info , wellname);
-    well_state_type * well_state = well_ts_iget_state(well_ts, 0);
-    const well_conn_type * well_head = well_state_get_wellhead(well_state, ECL_GRID_GLOBAL_GRID);
-    BOOST_CHECK(well_conn_get_i(well_head) == well->getHeadI());
-    BOOST_CHECK(well_conn_get_j(well_head) == well->getHeadJ());
+    well_ts_type* well_ts = well_info_get_ts(well_info , wellname);
+    well_state_type* well_state = well_ts_iget_state(well_ts, 0);
+    const well_conn_type* well_head = well_state_get_wellhead(well_state, ECL_GRID_GLOBAL_GRID);
+    BOOST_CHECK_EQUAL(well_conn_get_i(well_head), well->getHeadI());
+    BOOST_CHECK_EQUAL(well_conn_get_j(well_head), well->getHeadJ());
 
     for (int j = 0; j < well_ts_get_size(well_ts); ++j) {
       well_state = well_ts_iget_state(well_ts, j);
 
       //Verify welltype
-      int ert_well_type = well_state_get_type(well_state);
-      WellType welltype = well->isProducer(j) ? PRODUCER : INJECTOR;
-      Opm::WellInjector::TypeEnum injectortype = well->getInjectionProperties(j).injectorType;
-      int ecl_converted_welltype = eclipseWellTypeMask(welltype, injectortype);
-      int ert_converted_welltype = well_state_translate_ecl_type_int(ecl_converted_welltype);
-      BOOST_CHECK(ert_well_type == ert_converted_welltype);
+      int well_type = ERT_UNDOCUMENTED_ZERO;
+      if( well->isProducer( j ) ) {
+          well_type = ERT_PRODUCER;
+      }
+      else {
+          switch( well->getInjectionProperties( j ).injectorType ) {
+              case WellInjector::WATER:
+                  well_type = ERT_WATER_INJECTOR;
+                  break;
+              case WellInjector::GAS:
+                  well_type = ERT_GAS_INJECTOR;
+                  break;
+              case WellInjector::OIL:
+                  well_type = ERT_OIL_INJECTOR;
+                  break;
+              default:
+                  break;
+          }
+      }
+
+      int ert_well_type = well_state_get_type( well_state );
+      BOOST_CHECK_EQUAL( ert_well_type, well_type );
 
       //Verify wellstatus
       int ert_well_status = well_state_is_open(well_state) ? 1 : 0;
+      int wellstatus = well->getStatus( j ) == WellCommon::OPEN ? 1 : 0;
 
-      Opm::WellCommon::StatusEnum status = well->getStatus(j);
-      int wellstatus = eclipseWellStatusMask(status);
-
-      BOOST_CHECK(ert_well_status == wellstatus);
+      BOOST_CHECK_EQUAL(ert_well_status, wellstatus);
 
       //Verify number of completion connections
       const well_conn_collection_type * well_connections = well_state_get_global_connections( well_state );
       size_t num_wellconnections = well_conn_collection_get_size(well_connections);
 
       int report_nr = well_state_get_report_nr(well_state);
-      Opm::CompletionSetConstPtr completions_set = well->getCompletions((size_t)report_nr);
+      auto completions_set = well->getCompletions((size_t)report_nr);
 
-      BOOST_CHECK(num_wellconnections == completions_set->size());
+      BOOST_CHECK_EQUAL(num_wellconnections, completions_set->size());
 
       //Verify coordinates for each completion connection
       for (size_t k = 0; k < num_wellconnections; ++k) {
@@ -154,9 +119,9 @@ void verifyWellState(const std::string& rst_filename,
 
           Opm::CompletionConstPtr completion = completions_set->get(k);
 
-          BOOST_CHECK(well_conn_get_i(well_connection) == completion->getI());
-          BOOST_CHECK(well_conn_get_j(well_connection) == completion->getJ());
-          BOOST_CHECK(well_conn_get_k(well_connection) == completion->getK());
+          BOOST_CHECK_EQUAL(well_conn_get_i(well_connection), completion->getI());
+          BOOST_CHECK_EQUAL(well_conn_get_j(well_connection), completion->getJ());
+          BOOST_CHECK_EQUAL(well_conn_get_k(well_connection), completion->getK());
       }
     }
   }
@@ -164,72 +129,41 @@ void verifyWellState(const std::string& rst_filename,
   well_info_free(well_info);
 }
 
-
-std::shared_ptr<Opm::BlackoilState> createBlackOilState(Opm::EclipseGridConstPtr eclGrid) {
-
-  std::shared_ptr<Opm::GridManager> grid(new Opm::GridManager(eclGrid));
-  const UnstructuredGrid& ug_grid = *(grid->c_grid());
-  std::shared_ptr<Opm::BlackoilState> blackoilState(new Opm::BlackoilState( Opm::UgGridHelpers::numCells(ug_grid) , Opm::UgGridHelpers::numFaces(ug_grid) , 3 ));
-
-  return blackoilState;
-}
-
-
-Opm::DeckConstPtr createDeck(const std::string& eclipse_data_filename) {
-  Opm::ParserPtr parser(new Opm::Parser());
-  Opm::DeckConstPtr deck = parser->parseFile(eclipse_data_filename , Opm::ParseContext());
-
-  return deck;
-}
-
-
-Opm::EclipseWriterPtr createEclipseWriter(Opm::DeckConstPtr deck,
-                                          Opm::EclipseStatePtr eclipseState) {
-
-  Opm::EclipseWriterPtr eclWriter(new Opm::EclipseWriter(eclipseState,
-                                                         eclipseState->getInputGrid()->getCartesianSize(),
-                                                         0));
-  return eclWriter;
-}
-
-
-BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo)
-{
+BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
     std::string eclipse_data_filename    = "testBlackoilState3.DATA";
     std::string eclipse_restart_filename = "TESTBLACKOILSTATE3.X0004";
-
 
     test_work_area_type * test_area = test_work_area_alloc("TEST_EclipseWriteNumWells");
     test_work_area_copy_file(test_area, eclipse_data_filename.c_str());
 
-    Opm::ParseContext parseContext;
-    Opm::DeckConstPtr     deck = createDeck(eclipse_data_filename);
-    Opm::EclipseStatePtr  eclipseState(new Opm::EclipseState(deck , parseContext));
-    Opm::EclipseWriterPtr eclipseWriter = createEclipseWriter(deck, eclipseState);
+    auto es = Parser::parse( eclipse_data_filename, ParseContext() );
+    auto eclipseState = std::make_shared< EclipseState >( es );
+    const auto num_cells = eclipseState->getInputGrid()->getCartesianSize();
+    EclipseWriter eclipseWriter( eclipseState, num_cells, nullptr );
 
-    std::shared_ptr<Opm::SimulatorTimer> simTimer( new Opm::SimulatorTimer() );
-    simTimer->init(eclipseState->getSchedule()->getTimeMap());
-
-    tm t = boost::posix_time::to_tm( simTimer->startDateTime() );
-    eclipseWriter->writeInit( simTimer->currentPosixTime(), std::mktime( &t ) );
-
-    std::shared_ptr<Opm::WellState> wellState(new Opm::WellState());
-    std::shared_ptr<Opm::BlackoilState> blackoilState = createBlackOilState(eclipseState->getInputGrid());
-    wellState->init(0, *blackoilState);
+    time_t start_time = util_make_datetime( 0, 0, 0, 1, 11, 1979 );
+    eclipseWriter.writeInit( start_time, start_time );
 
     int countTimeStep = eclipseState->getSchedule()->getTimeMap()->numTimesteps();
-    Opm::data::Wells wells { {}, wellState->bhp(), wellState->perfPress(),
-                             wellState->perfRates(), wellState->temperature(),
-                             wellState->wellRates() };
 
+    using ds = data::Solution::key;
+    data::Solution solution;
+    solution.insert( ds::PRESSURE, std::vector< double >( num_cells, 1 ) );
+    solution.insert( ds::TEMP, std::vector< double >( num_cells, 1 ) );
+    data::Wells wells { {},
+        { 1.1, 1.2, 1.3 },
+        { 2.1, 2.2, 2.3 },
+        { 3.11, 3.12, 3.13, 3.21, 3.22, 3.23, 3.31, 3.32, 3.33 },
+        { 4.1, 4.2, 4.3, 4.4 },
+        { 4.1, 4.2, 4.3, 4.4 }
+    };
 
-    for(int timestep=0; timestep <= countTimeStep; ++timestep){
-        simTimer->setCurrentStepNum( timestep );
-        eclipseWriter->writeTimeStep( simTimer->reportStepNum(),
-                                      simTimer->currentPosixTime(),
-                                      simTimer->simulationTimeElapsed(),
-                                      sim2solution( *blackoilState, phaseUsageFromDeck( eclipseState ) ),
-                                      wells, false);
+    for(int timestep = 0; timestep <= countTimeStep; ++timestep){
+        eclipseWriter.writeTimeStep( timestep,
+                                     start_time + timestep,
+                                     timestep,
+                                     solution,
+                                     wells, false);
     }
 
     verifyWellState(eclipse_restart_filename, eclipseState->getInputGrid(), eclipseState->getSchedule());
