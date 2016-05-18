@@ -40,11 +40,11 @@ namespace Opm
         /// Virtual destructor to enable inheritance.
         virtual ~LogBackend();
 
-        /// Configure how decorateMessage() will modify message strings.
-        void configureDecoration(std::shared_ptr<MessageFormatterInterface> formatter);
+        /// Configure how formatMessage() will modify message strings.
+        void setMessageFormatter(std::shared_ptr<MessageFormatterInterface> formatter);
 
         /// Configure how message tags will be used to limit messages.
-        void configureMessageLimiter(std::shared_ptr<MessageLimiter> limiter);
+        void setMessageLimiter(std::shared_ptr<MessageLimiter> limiter);
 
         /// Add a message to the backend.
         ///
@@ -69,7 +69,7 @@ namespace Opm
         bool includeMessage(int64_t messageFlag, const std::string& messageTag);
 
         /// Return decorated version of message depending on configureDecoration() arguments.
-        std::string decorateMessage(int64_t messageFlag, const std::string& message);
+        std::string formatMessage(int64_t messageFlag, const std::string& message);
 
     private:
         int64_t m_mask;

@@ -46,7 +46,7 @@ void StreamLog::close() {
 
 void StreamLog::addTaggedMessage(int64_t messageType, const std::string& messageTag, const std::string& message) {
     if (includeMessage( messageType, messageTag )) {
-        (*m_ostream) << decorateMessage(messageType, message) << std::endl;
+        (*m_ostream) << formatMessage(messageType, message) << std::endl;
         if (m_ofstream.is_open()) {
             m_ofstream.flush();
         }

@@ -47,33 +47,33 @@ BOOST_AUTO_TEST_CASE(Response)
     {
         // No limits.
         MessageLimiter m;
-        BOOST_CHECK(m.encounteredMessage("tag1") == MessageLimiter::Response::PrintMessage);
-        BOOST_CHECK(m.encounteredMessage("tag2") == MessageLimiter::Response::PrintMessage);
-        BOOST_CHECK(m.encounteredMessage("tag1") == MessageLimiter::Response::PrintMessage);
-        BOOST_CHECK(m.encounteredMessage("tag2") == MessageLimiter::Response::PrintMessage);
-        BOOST_CHECK(m.encounteredMessage("tag1") == MessageLimiter::Response::PrintMessage);
-        BOOST_CHECK(m.encounteredMessage("tag2") == MessageLimiter::Response::PrintMessage);
+        BOOST_CHECK(m.handleMessageTag("tag1") == MessageLimiter::Response::PrintMessage);
+        BOOST_CHECK(m.handleMessageTag("tag2") == MessageLimiter::Response::PrintMessage);
+        BOOST_CHECK(m.handleMessageTag("tag1") == MessageLimiter::Response::PrintMessage);
+        BOOST_CHECK(m.handleMessageTag("tag2") == MessageLimiter::Response::PrintMessage);
+        BOOST_CHECK(m.handleMessageTag("tag1") == MessageLimiter::Response::PrintMessage);
+        BOOST_CHECK(m.handleMessageTag("tag2") == MessageLimiter::Response::PrintMessage);
     }
 
     {
         // Limit == 0.
         MessageLimiter m(0);
-        BOOST_CHECK(m.encounteredMessage("tag1") == MessageLimiter::Response::JustOverLimit);
-        BOOST_CHECK(m.encounteredMessage("tag2") == MessageLimiter::Response::JustOverLimit);
-        BOOST_CHECK(m.encounteredMessage("tag1") == MessageLimiter::Response::OverLimit);
-        BOOST_CHECK(m.encounteredMessage("tag2") == MessageLimiter::Response::OverLimit);
-        BOOST_CHECK(m.encounteredMessage("tag1") == MessageLimiter::Response::OverLimit);
-        BOOST_CHECK(m.encounteredMessage("tag2") == MessageLimiter::Response::OverLimit);
+        BOOST_CHECK(m.handleMessageTag("tag1") == MessageLimiter::Response::JustOverLimit);
+        BOOST_CHECK(m.handleMessageTag("tag2") == MessageLimiter::Response::JustOverLimit);
+        BOOST_CHECK(m.handleMessageTag("tag1") == MessageLimiter::Response::OverLimit);
+        BOOST_CHECK(m.handleMessageTag("tag2") == MessageLimiter::Response::OverLimit);
+        BOOST_CHECK(m.handleMessageTag("tag1") == MessageLimiter::Response::OverLimit);
+        BOOST_CHECK(m.handleMessageTag("tag2") == MessageLimiter::Response::OverLimit);
     }
 
     {
         // Limit == 1.
         MessageLimiter m(1);
-        BOOST_CHECK(m.encounteredMessage("tag1") == MessageLimiter::Response::PrintMessage);
-        BOOST_CHECK(m.encounteredMessage("tag2") == MessageLimiter::Response::PrintMessage);
-        BOOST_CHECK(m.encounteredMessage("tag1") == MessageLimiter::Response::JustOverLimit);
-        BOOST_CHECK(m.encounteredMessage("tag2") == MessageLimiter::Response::JustOverLimit);
-        BOOST_CHECK(m.encounteredMessage("tag1") == MessageLimiter::Response::OverLimit);
-        BOOST_CHECK(m.encounteredMessage("tag2") == MessageLimiter::Response::OverLimit);
+        BOOST_CHECK(m.handleMessageTag("tag1") == MessageLimiter::Response::PrintMessage);
+        BOOST_CHECK(m.handleMessageTag("tag2") == MessageLimiter::Response::PrintMessage);
+        BOOST_CHECK(m.handleMessageTag("tag1") == MessageLimiter::Response::JustOverLimit);
+        BOOST_CHECK(m.handleMessageTag("tag2") == MessageLimiter::Response::JustOverLimit);
+        BOOST_CHECK(m.handleMessageTag("tag1") == MessageLimiter::Response::OverLimit);
+        BOOST_CHECK(m.handleMessageTag("tag2") == MessageLimiter::Response::OverLimit);
     }
 }

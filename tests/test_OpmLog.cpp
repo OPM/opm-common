@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(TestOpmLogWithColors)
         BOOST_CHECK_EQUAL( true , OpmLog::hasBackend("COUNTER"));
         BOOST_CHECK_EQUAL( true , OpmLog::hasBackend("STREAM"));
 
-        streamLog->configureDecoration(std::make_shared<SimpleMessageFormatter>(false, true));
+        streamLog->setMessageFormatter(std::make_shared<SimpleMessageFormatter>(false, true));
     }
 
     OpmLog::warning("Warning");
@@ -322,10 +322,10 @@ BOOST_AUTO_TEST_CASE(TestOpmLogWithLimits)
         BOOST_CHECK_EQUAL( true , OpmLog::hasBackend("STREAM1"));
         BOOST_CHECK_EQUAL( true , OpmLog::hasBackend("STREAM2"));
 
-        streamLog1->configureDecoration(std::make_shared<SimpleMessageFormatter>(false, true));
-        streamLog1->configureMessageLimiter(std::make_shared<MessageLimiter>(2));
-        streamLog2->configureDecoration(std::make_shared<SimpleMessageFormatter>(false, true));
-        streamLog2->configureMessageLimiter(std::make_shared<MessageLimiter>()); // no limit
+        streamLog1->setMessageFormatter(std::make_shared<SimpleMessageFormatter>(false, true));
+        streamLog1->setMessageLimiter(std::make_shared<MessageLimiter>(2));
+        streamLog2->setMessageFormatter(std::make_shared<SimpleMessageFormatter>(false, true));
+        streamLog2->setMessageLimiter(std::make_shared<MessageLimiter>()); // no limit
     }
 
     const std::string tag = "ExampleTag";

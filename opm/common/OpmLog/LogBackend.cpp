@@ -31,12 +31,12 @@ namespace Opm {
     {
     }
 
-    void LogBackend::configureDecoration(std::shared_ptr<MessageFormatterInterface> formatter)
+    void LogBackend::setMessageFormatter(std::shared_ptr<MessageFormatterInterface> formatter)
     {
         m_formatter = formatter;
     }
 
-    void LogBackend::configureMessageLimiter(std::shared_ptr<MessageLimiter> limiter)
+    void LogBackend::setMessageLimiter(std::shared_ptr<MessageLimiter> limiter)
     {
         m_limiter = limiter;
     }
@@ -62,7 +62,7 @@ namespace Opm {
 
         // Use the message limiter (if any).
         MessageLimiter::Response res = m_limiter
-            ? m_limiter->encounteredMessage(messageTag)
+            ? m_limiter->handleMessageTag(messageTag)
             : MessageLimiter::Response::PrintMessage;
         if (res == MessageLimiter::Response::JustOverLimit) {
             // Special case: add a message to this backend about limit being reached.
@@ -72,7 +72,7 @@ namespace Opm {
         return res == MessageLimiter::Response::PrintMessage;
     }
 
-    std::string LogBackend::decorateMessage(int64_t messageFlag, const std::string& message)
+    std::string LogBackend::formatMessage(int64_t messageFlag, const std::string& message)
     {
         if (m_formatter) {
             return m_formatter->format(messageFlag, message);

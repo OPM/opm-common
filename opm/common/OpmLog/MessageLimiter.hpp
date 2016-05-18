@@ -57,7 +57,7 @@ namespace Opm
             return message_limit_;
         }
 
-        /// Used for encounteredMessage() return type (see that
+        /// Used for handleMessageTag() return type (see that
         /// function).
         enum class Response
         {
@@ -68,7 +68,7 @@ namespace Opm
         /// tag (count <= limit), respond PrintMessage.
         /// If (count == limit + 1), respond JustOverLimit.
         /// If (count > limit + 1), respond OverLimit.
-        Response encounteredMessage(const std::string& tag)
+        Response handleMessageTag(const std::string& tag)
         {
             if (tag.empty() || message_limit_ == NoLimit) {
                 return Response::PrintMessage;
