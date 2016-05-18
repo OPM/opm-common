@@ -61,7 +61,7 @@ namespace Opm
 
     private:
         int64_t m_mask;
-        std::shared_ptr<MessageFormatterInterface> formatter_;
+        std::shared_ptr<MessageFormatterInterface> m_formatter;
     };
 
 } // namespace LogBackend

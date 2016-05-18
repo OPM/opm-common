@@ -33,7 +33,7 @@ namespace Opm {
 
     void LogBackend::configureDecoration(std::shared_ptr<MessageFormatterInterface> formatter)
     {
-        formatter_ = formatter;
+        m_formatter = formatter;
     }
 
     int64_t LogBackend::getMask() const
@@ -48,8 +48,8 @@ namespace Opm {
 
     std::string LogBackend::decorateMessage(int64_t messageFlag, const std::string& message)
     {
-        if (formatter_) {
-            return formatter_->format(messageFlag, message);
+        if (m_formatter) {
+            return m_formatter->format(messageFlag, message);
         } else {
             return message;
         }
