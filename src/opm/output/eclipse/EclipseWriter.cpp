@@ -88,7 +88,7 @@ inline void convertFromSiTo( std::vector< double >& siValues,
     }
 }
 
-inline int eclipseWellTypeMask( const Well& well, size_t timestep ) {
+inline int to_ert_welltype( const Well& well, size_t timestep ) {
 
     if( well.isProducer( timestep ) ) return IWEL_PRODUCER;
 
@@ -98,16 +98,6 @@ inline int eclipseWellTypeMask( const Well& well, size_t timestep ) {
         case WellInjector::OIL: return IWEL_OIL_INJECTOR;
         default: return IWEL_UNDOCUMENTED_ZERO;
     }
-}
-
-int eclipseWellStatusMask(WellCommon::StatusEnum wellStatus)
-{
-  int well_status = 0;
-
-  if (wellStatus == WellCommon::OPEN) {
-    well_status = 1;
-  }
-  return well_status;
 }
 
 template< typename T >
@@ -174,15 +164,14 @@ public:
                 std::free )
     {}
 
-    const char *ertHandle() const { return this->handle.get(); }
+    const char* ertHandle() const { return this->handle.get(); }
 
 private:
     using fd = std::unique_ptr< char, decltype( std::free )* >;
     fd handle;
 };
 
-class Restart : private boost::noncopyable
-{
+class Restart {
 public:
     static const int NIWELZ = 11; //Number of data elements per well in IWEL array in restart file
     static const int NZWELZ = 3;  //Number of 8-character words per well in ZWEL array restart file
@@ -210,89 +199,77 @@ public:
     Restart(const std::string& outputDir,
             const std::string& baseName,
             int writeStepIdx,
-            IOConfigConstPtr ioConfig)
-    {
+            const IOConfig& ioConfig ) :
+        filename( outputDir,
+                baseName,
+                ioConfig.getUNIFOUT() ? ECL_UNIFIED_RESTART_FILE : ECL_RESTART_FILE,
+                writeStepIdx,
+                ioConfig.getFMTOUT() ),
+        handle(
+                ( writeStepIdx > 0 && ioConfig.getUNIFOUT() )
+                ? ecl_rst_file_open_append( filename.ertHandle() )
+                : ecl_rst_file_open_write( filename.ertHandle() ) )
+    {}
 
-        ecl_file_enum type_of_restart_file = ioConfig->getUNIFOUT() ? ECL_UNIFIED_RESTART_FILE : ECL_RESTART_FILE;
-
-        restartFileName_ = ecl_util_alloc_filename(outputDir.c_str(),
-                                                   baseName.c_str(),
-                                                   type_of_restart_file,
-                                                   ioConfig->getFMTOUT(), // use formatted instead of binary output?
-                                                   writeStepIdx);
-
-        if ((writeStepIdx > 0) && (ECL_UNIFIED_RESTART_FILE == type_of_restart_file)) {
-            restartFileHandle_ = ecl_rst_file_open_append(restartFileName_);
-        }
-        else {
-            restartFileHandle_ = ecl_rst_file_open_write(restartFileName_);
-        }
+    template< typename T >
+    void add_kw( Keyword< T >&& kw ) {
+        ecl_rst_file_add_kw( this->handle.get(), kw.ertHandle() );
     }
 
-    template <typename T>
-    void add_kw(const Keyword<T>& kw)
-    { ecl_rst_file_add_kw(restartFileHandle_, kw.ertHandle()); }
+    void addRestartFileIwelData( std::vector<int>& data,
+                                 size_t step,
+                                 const Well& well,
+                                 size_t offset ) const {
 
+        CompletionSetConstPtr completions = well.getCompletions( step );
 
-    void addRestartFileIwelData(std::vector<int>& iwel_data, size_t currentStep , WellConstPtr well, size_t offset) const {
-        CompletionSetConstPtr completions = well->getCompletions( currentStep );
+        data[ offset + IWEL_HEADI_ITEM ] = well.getHeadI() + 1;
+        data[ offset + IWEL_HEADJ_ITEM ] = well.getHeadJ() + 1;
+        data[ offset + IWEL_CONNECTIONS_ITEM ] = completions->size();
+        data[ offset + IWEL_GROUP_ITEM ] = 1;
 
-        iwel_data[ offset + IWEL_HEADI_ITEM ] = well->getHeadI() + 1;
-        iwel_data[ offset + IWEL_HEADJ_ITEM ] = well->getHeadJ() + 1;
-        iwel_data[ offset + IWEL_CONNECTIONS_ITEM ] = completions->size();
-        iwel_data[ offset + IWEL_GROUP_ITEM ] = 1;
-
-        int ert_welltype = eclipseWellTypeMask( *well, currentStep );
-        iwel_data[ offset + IWEL_TYPE_ITEM ] = ert_welltype;
-
-        iwel_data[ offset + IWEL_STATUS_ITEM ] = eclipseWellStatusMask(well->getStatus(currentStep));
+        data[ offset + IWEL_TYPE_ITEM ] = to_ert_welltype( well, step );
+        data[ offset + IWEL_STATUS_ITEM ] =
+            well.getStatus( step ) == WellCommon::OPEN ? 1 : 0;
     }
 
-    void addRestartFileIconData(std::vector<int>& icon_data, CompletionSetConstPtr completions , size_t wellICONOffset) const {
-        for (size_t i = 0; i < completions->size(); ++i) {
-            CompletionConstPtr completion = completions->get(i);
-            size_t iconOffset = wellICONOffset + i * Restart::NICONZ;
-            icon_data[ iconOffset + ICON_IC_ITEM] = 1;
+    void addRestartFileIconData( std::vector< int >& data,
+                                 CompletionSetConstPtr completions,
+                                 size_t wellICONOffset ) const {
 
-            icon_data[ iconOffset + ICON_I_ITEM] = completion->getI() + 1;
-            icon_data[ iconOffset + ICON_J_ITEM] = completion->getJ() + 1;
-            icon_data[ iconOffset + ICON_K_ITEM] = completion->getK() + 1;
+        for( size_t i = 0; i < completions->size(); ++i ) {
+            const auto& completion = *completions->get( i );
+            size_t offset = wellICONOffset + i * Restart::NICONZ;
+            data[ offset + ICON_IC_ITEM ] = 1;
 
-            {
-                WellCompletion::StateEnum completion_state = completion->getState();
-                if (completion_state == WellCompletion::StateEnum::OPEN) {
-                    icon_data[ iconOffset + ICON_STATUS_ITEM ] = 1;
-                } else {
-                    icon_data[ iconOffset + ICON_STATUS_ITEM ] = 0;
-                }
-            }
-            icon_data[ iconOffset + ICON_DIRECTION_ITEM] = (int)completion->getDirection();
+            data[ offset + ICON_I_ITEM ] = completion.getI() + 1;
+            data[ offset + ICON_J_ITEM ] = completion.getJ() + 1;
+            data[ offset + ICON_K_ITEM ] = completion.getK() + 1;
+
+            const auto open = WellCompletion::StateEnum::OPEN;
+            data[ offset + ICON_STATUS_ITEM ] = completion.getState() == open
+                                              ? 1
+                                              : 0;
+
+            data[ offset + ICON_DIRECTION_ITEM ] = completion.getDirection();
         }
     }
 
-
-    ~Restart()
-    {
-        free(restartFileName_);
-        ecl_rst_file_close(restartFileHandle_);
-    }
-
-    void writeHeader( int writeStepIdx, ecl_rsthead_type* rsthead_data ){
-
-      ecl_util_set_date_values( rsthead_data->sim_time , &rsthead_data->day , &rsthead_data->month , &rsthead_data->year );
-
-      ecl_rst_file_fwrite_header(restartFileHandle_,
-                                 writeStepIdx,
-                                 rsthead_data);
+    void writeHeader( int stepIdx, ecl_rsthead_type* rsthead_data ) {
+      ecl_util_set_date_values( rsthead_data->sim_time,
+                                &rsthead_data->day,
+                                &rsthead_data->month,
+                                &rsthead_data->year );
+      ecl_rst_file_fwrite_header( this->handle.get(), stepIdx, rsthead_data );
 
     }
 
-    ecl_rst_file_type *ertHandle() const
-    { return restartFileHandle_; }
+    ecl_rst_file_type* ertHandle() { return this->handle.get(); }
+    const ecl_rst_file_type* ertHandle() const { return this->handle.get(); }
 
 private:
-    char *restartFileName_;
-    ecl_rst_file_type *restartFileHandle_;
+    FileName filename;
+    ERT::ert_unique_ptr< ecl_rst_file_type, ecl_rst_file_close > handle;
 };
 
 /**
@@ -422,15 +399,6 @@ private:
     FileName egridFileName_;
 };
 
-
-inline std::unique_ptr< char, decltype( std::free )* >
-rft_filename( const char* dir, const char* basename, bool format ) {
-    return {
-        ecl_util_alloc_filename( dir, basename, ECL_RFT_FILE, format, 0 ),
-        std::free
-    };
-}
-
 const int inactive_index = -1;
 
 /// Convert OPM phase usage to ERT bitmask
@@ -458,7 +426,7 @@ out::RFT::RFT( const char* output_dir,
           size_t cart_size ) :
     global_to_active( cart_size, inactive_index ),
     fortio(
-        rft_filename( output_dir, basename, format ).get(),
+        FileName( output_dir, basename, ECL_RFT_FILE, format, 0 ).ertHandle(),
         std::ios_base::out
         )
 {
@@ -640,19 +608,19 @@ void EclipseWriter::writeTimeStep(int report_step,
         std::vector<int>         iwell_data( numWells * Restart::NIWELZ , 0 );
         std::vector<int>         icon_data( numWells * ncwmax * Restart::NICONZ , 0 );
 
-        Restart restartHandle(outputDir_, baseName_, report_step, ioConfig);
+        Restart restartHandle(outputDir_, baseName_, report_step, *ioConfig);
 
         for (size_t iwell = 0; iwell < wells_ptr.size(); ++iwell) {
-            WellConstPtr well = wells_ptr[iwell];
+            const auto& well = *wells_ptr[iwell];
             {
                 size_t wellIwelOffset = Restart::NIWELZ * iwell;
                 restartHandle.addRestartFileIwelData(iwell_data, report_step, well , wellIwelOffset);
             }
             {
                 size_t wellIconOffset = ncwmax * Restart::NICONZ * iwell;
-                restartHandle.addRestartFileIconData(icon_data,  well->getCompletions( report_step ), wellIconOffset);
+                restartHandle.addRestartFileIconData(icon_data,  well.getCompletions( report_step ), wellIconOffset);
             }
-            zwell_data[ iwell * Restart::NZWELZ ] = well->name().c_str();
+            zwell_data[ iwell * Restart::NZWELZ ] = well.name().c_str();
         }
 
 
@@ -684,10 +652,10 @@ void EclipseWriter::writeTimeStep(int report_step,
                                  wells.perf_pressure, wells.perf_rate } )
             xwel.insert( xwel.end(), vec.begin(), vec.end() );
 
-        restartHandle.add_kw(Keyword<int>(IWEL_KW, iwell_data));
-        restartHandle.add_kw(Keyword<const char *>(ZWEL_KW, zwell_data));
-        restartHandle.add_kw(Keyword<double>(OPM_XWEL, xwel));
-        restartHandle.add_kw(Keyword<int>(ICON_KW, icon_data));
+        restartHandle.add_kw( Keyword< int >(IWEL_KW, iwell_data) );
+        restartHandle.add_kw( Keyword< const char* >(ZWEL_KW, zwell_data ) );
+        restartHandle.add_kw( Keyword< double >(OPM_XWEL, xwel ) );
+        restartHandle.add_kw( Keyword< int >( ICON_KW, icon_data ) );
 
 
         Solution sol(restartHandle);
