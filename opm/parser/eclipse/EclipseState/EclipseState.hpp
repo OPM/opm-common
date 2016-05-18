@@ -133,7 +133,7 @@ namespace Opm {
         NNC m_nnc;
 
         MessageContainer m_messageContainer;
-        const UnitSystem& m_deckUnitSystem;
+        UnitSystem m_deckUnitSystem;
     };
 
     typedef std::shared_ptr<EclipseState> EclipseStatePtr;
