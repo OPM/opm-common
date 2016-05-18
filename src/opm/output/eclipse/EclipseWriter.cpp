@@ -57,7 +57,7 @@
 
 // namespace start here since we don't want the ERT headers in it
 namespace Opm {
-namespace EclipseWriterDetails {
+namespace {
 
 // throw away the data for all non-active cells and reorder to the Cartesian logic of
 // eclipse
@@ -80,7 +80,7 @@ void restrictAndReorderToActiveCells(std::vector<double> &data,
     data.swap( eclData );
 }
 
-static inline void convertFromSiTo( std::vector< double >& siValues,
+inline void convertFromSiTo( std::vector< double >& siValues,
                                     const double* table,
                                     conversions::dim d ) {
     for (size_t curIdx = 0; curIdx < siValues.size(); ++curIdx) {
@@ -206,7 +206,7 @@ private:
 
 
         OPM_THROW(std::logic_error,
-                  "Unhandled type for data elements in EclipseWriterDetails::Keyword");
+                  "Unhandled type for data elements in Keyword");
     }
 
     ecl_kw_type *ertHandle_;
@@ -311,7 +311,7 @@ public:
     void addRestartFileIconData(std::vector<int>& icon_data, CompletionSetConstPtr completions , size_t wellICONOffset) const {
         for (size_t i = 0; i < completions->size(); ++i) {
             CompletionConstPtr completion = completions->get(i);
-            size_t iconOffset = wellICONOffset + i * Opm::EclipseWriterDetails::Restart::NICONZ;
+            size_t iconOffset = wellICONOffset + i * Restart::NICONZ;
             icon_data[ iconOffset + ICON_IC_ITEM] = 1;
 
             icon_data[ iconOffset + ICON_I_ITEM] = completion->getI() + 1;
@@ -482,10 +482,6 @@ private:
     FileName egridFileName_;
 };
 
-} // end namespace EclipseWriterDetails
-
-
-
 
 inline std::unique_ptr< char, decltype( std::free )* >
 rft_filename( const char* dir, const char* basename, bool format ) {
@@ -496,6 +492,23 @@ rft_filename( const char* dir, const char* basename, bool format ) {
 }
 
 const int inactive_index = -1;
+
+/// Convert OPM phase usage to ERT bitmask
+inline int ertPhaseMask( const TableManager& tm ) {
+    return ( tm.hasPhase( Phase::PhaseEnum::WATER ) ? ECL_WATER_PHASE : 0 )
+         | ( tm.hasPhase( Phase::PhaseEnum::OIL ) ? ECL_OIL_PHASE : 0 )
+         | ( tm.hasPhase( Phase::PhaseEnum::GAS ) ? ECL_GAS_PHASE : 0 );
+}
+
+inline const double* get_conv_table( UnitSystem::UnitType t ) {
+    switch( t ) {
+        case UnitSystem::UNIT_TYPE_METRIC: return conversions::si2metric;
+        case UnitSystem::UNIT_TYPE_FIELD:  return conversions::si2field;
+        default: return conversions::si2metric;
+    }
+}
+
+}
 
 out::RFT::RFT( const char* output_dir,
           const char* basename,
@@ -586,7 +599,7 @@ void EclipseWriter::writeInit( time_t current_posix_time, double start_time, con
         return;
     }
 
-    EclipseWriterDetails::Init fortio(outputDir_, baseName_, /*stepIdx=*/0, eclipseState_->getIOConfigConst());
+    Init fortio(outputDir_, baseName_, /*stepIdx=*/0, eclipseState_->getIOConfigConst());
     fortio.writeHeader(numCells_,
                        compressedToCartesianCellIdx_,
                        current_posix_time,
@@ -601,26 +614,26 @@ void EclipseWriter::writeInit( time_t current_posix_time, double start_time, con
     if (ioConfig->getWriteINITFile()) {
         if (props.hasDeckDoubleGridProperty("PERMX")) {
             auto data = props.getDoubleGridProperty("PERMX").getData();
-            EclipseWriterDetails::convertFromSiTo( data,
+            convertFromSiTo( data,
                                                    conversion_table_,
                                                    conversions::dim::permeability );
-            EclipseWriterDetails::restrictAndReorderToActiveCells(data, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
+            restrictAndReorderToActiveCells(data, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
             fortio.writeKeyword("PERMX", data);
         }
         if (props.hasDeckDoubleGridProperty("PERMY")) {
             auto data = props.getDoubleGridProperty("PERMY").getData();
-            EclipseWriterDetails::convertFromSiTo( data,
+            convertFromSiTo( data,
                                                    conversion_table_,
                                                    conversions::dim::permeability );
-            EclipseWriterDetails::restrictAndReorderToActiveCells(data, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
+            restrictAndReorderToActiveCells(data, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
             fortio.writeKeyword("PERMY", data);
         }
         if (props.hasDeckDoubleGridProperty("PERMZ")) {
             auto data = props.getDoubleGridProperty("PERMZ").getData();
-            EclipseWriterDetails::convertFromSiTo( data,
+            convertFromSiTo( data,
                                                    conversion_table_,
                                                    conversions::dim::permeability );
-            EclipseWriterDetails::restrictAndReorderToActiveCells(data, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
+            restrictAndReorderToActiveCells(data, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
             fortio.writeKeyword("PERMZ", data);
         }
         if (nnc.hasNNC()) {
@@ -629,7 +642,7 @@ void EclipseWriter::writeInit( time_t current_posix_time, double start_time, con
                 tran.push_back(nd.trans);
             }
 
-            EclipseWriterDetails::convertFromSiTo( tran, conversion_table_, conversions::dim::transmissibility );
+            convertFromSiTo( tran, conversion_table_, conversions::dim::transmissibility );
             fortio.writeKeyword("TRANNNC", tran);
         }
     }
@@ -652,20 +665,20 @@ void EclipseWriter::writeTimeStep(int report_step,
     }
 
     auto& pressure = cells[ dc::PRESSURE ];
-    EclipseWriterDetails::convertFromSiTo( pressure,
+    convertFromSiTo( pressure,
                                            conversion_table_,
                                            conversions::dim::pressure );
-    EclipseWriterDetails::restrictAndReorderToActiveCells(pressure, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
+    restrictAndReorderToActiveCells(pressure, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
 
     if( cells.has( dc::SWAT ) ) {
         auto& saturation_water = cells[ dc::SWAT ];
-        EclipseWriterDetails::restrictAndReorderToActiveCells(saturation_water, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
+        restrictAndReorderToActiveCells(saturation_water, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
     }
 
 
     if( cells.has( dc::SGAS ) ) {
         auto& saturation_gas = cells[ dc::SGAS ];
-        EclipseWriterDetails::restrictAndReorderToActiveCells(saturation_gas, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
+        restrictAndReorderToActiveCells(saturation_gas, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
     }
 
     IOConfigConstPtr ioConfig = eclipseState_->getIOConfigConst();
@@ -683,23 +696,23 @@ void EclipseWriter::writeTimeStep(int report_step,
         const size_t numWells               = schedule.numWells(report_step);
         std::vector<WellConstPtr> wells_ptr = schedule.getWells(report_step);
 
-        std::vector<const char*> zwell_data( numWells * Opm::EclipseWriterDetails::Restart::NZWELZ , "");
-        std::vector<int>         iwell_data( numWells * Opm::EclipseWriterDetails::Restart::NIWELZ , 0 );
-        std::vector<int>         icon_data( numWells * ncwmax * Opm::EclipseWriterDetails::Restart::NICONZ , 0 );
+        std::vector<const char*> zwell_data( numWells * Restart::NZWELZ , "");
+        std::vector<int>         iwell_data( numWells * Restart::NIWELZ , 0 );
+        std::vector<int>         icon_data( numWells * ncwmax * Restart::NICONZ , 0 );
 
-        EclipseWriterDetails::Restart restartHandle(outputDir_, baseName_, report_step, ioConfig);
+        Restart restartHandle(outputDir_, baseName_, report_step, ioConfig);
 
         for (size_t iwell = 0; iwell < wells_ptr.size(); ++iwell) {
             WellConstPtr well = wells_ptr[iwell];
             {
-                size_t wellIwelOffset = Opm::EclipseWriterDetails::Restart::NIWELZ * iwell;
+                size_t wellIwelOffset = Restart::NIWELZ * iwell;
                 restartHandle.addRestartFileIwelData(iwell_data, report_step, well , wellIwelOffset);
             }
             {
-                size_t wellIconOffset = ncwmax * Opm::EclipseWriterDetails::Restart::NICONZ * iwell;
+                size_t wellIconOffset = ncwmax * Restart::NICONZ * iwell;
                 restartHandle.addRestartFileIconData(icon_data,  well->getCompletions( report_step ), wellIconOffset);
             }
-            zwell_data[ iwell * Opm::EclipseWriterDetails::Restart::NZWELZ ] = well->name().c_str();
+            zwell_data[ iwell * Restart::NZWELZ ] = well->name().c_str();
         }
 
 
@@ -711,9 +724,9 @@ void EclipseWriter::writeTimeStep(int report_step,
             rsthead_data.ny         = cartesianSize_[1];
             rsthead_data.nz         = cartesianSize_[2];
             rsthead_data.nwells     = numWells;
-            rsthead_data.niwelz     = EclipseWriterDetails::Restart::NIWELZ;
-            rsthead_data.nzwelz     = EclipseWriterDetails::Restart::NZWELZ;
-            rsthead_data.niconz     = EclipseWriterDetails::Restart::NICONZ;
+            rsthead_data.niwelz     = Restart::NIWELZ;
+            rsthead_data.nzwelz     = Restart::NZWELZ;
+            rsthead_data.niconz     = Restart::NICONZ;
             rsthead_data.ncwmax     = ncwmax;
             rsthead_data.phase_sum  = ert_phase_mask_;
             rsthead_data.sim_days   = days;
@@ -731,41 +744,41 @@ void EclipseWriter::writeTimeStep(int report_step,
                                  wells.perf_pressure, wells.perf_rate } )
             xwel.insert( xwel.end(), vec.begin(), vec.end() );
 
-        restartHandle.add_kw(EclipseWriterDetails::Keyword<int>(IWEL_KW, iwell_data));
-        restartHandle.add_kw(EclipseWriterDetails::Keyword<const char *>(ZWEL_KW, zwell_data));
-        restartHandle.add_kw(EclipseWriterDetails::Keyword<double>(OPM_XWEL, xwel));
-        restartHandle.add_kw(EclipseWriterDetails::Keyword<int>(ICON_KW, icon_data));
+        restartHandle.add_kw(Keyword<int>(IWEL_KW, iwell_data));
+        restartHandle.add_kw(Keyword<const char *>(ZWEL_KW, zwell_data));
+        restartHandle.add_kw(Keyword<double>(OPM_XWEL, xwel));
+        restartHandle.add_kw(Keyword<int>(ICON_KW, icon_data));
 
 
-        EclipseWriterDetails::Solution sol(restartHandle);
-        sol.add(EclipseWriterDetails::Keyword<float>("PRESSURE", pressure));
+        Solution sol(restartHandle);
+        sol.add(Keyword<float>("PRESSURE", pressure));
 
 
         // write the cell temperature
         auto& temperature = cells[ dc::TEMP ];
-        EclipseWriterDetails::convertFromSiTo( temperature,
+        convertFromSiTo( temperature,
                                                conversion_table_,
                                                conversions::dim::temperature );
-        sol.add(EclipseWriterDetails::Keyword<float>("TEMP", temperature));
+        sol.add(Keyword<float>("TEMP", temperature));
 
 
         if( cells.has( dc::SWAT ) ) {
-            sol.add( EclipseWriterDetails::Keyword<float>( "SWAT", cells[ dc::SWAT ] ) );
+            sol.add( Keyword<float>( "SWAT", cells[ dc::SWAT ] ) );
         }
 
 
         if( cells.has( dc::SGAS ) ) {
-            sol.add( EclipseWriterDetails::Keyword<float>( "SGAS", cells[ dc::SGAS ] ) );
+            sol.add( Keyword<float>( "SGAS", cells[ dc::SGAS ] ) );
         }
 
 
         // Write RS - Dissolved GOR
         if( cells.has( dc::RS ) )
-            sol.add(EclipseWriterDetails::Keyword<float>("RS", cells[ dc::RS ] ) );
+            sol.add(Keyword<float>("RS", cells[ dc::RS ] ) );
 
         // Write RV - Volatilized oil/gas ratio
         if( cells.has( dc::RV ) )
-            sol.add(EclipseWriterDetails::Keyword<float>("RV", cells[ dc::RV ] ) );
+            sol.add(Keyword<float>("RV", cells[ dc::RV ] ) );
     }
 
     const auto unit_type = eclipseState_->getDeckUnitSystem().getType();
@@ -783,22 +796,6 @@ void EclipseWriter::writeTimeStep(int report_step,
 
     summary_.add_timestep( report_step, secs_elapsed, *eclipseState_, wells );
     summary_.write();
-}
-
-
-/// Convert OPM phase usage to ERT bitmask
-static inline int ertPhaseMask( const TableManager& tm ) {
-    return ( tm.hasPhase( Phase::PhaseEnum::WATER ) ? ECL_WATER_PHASE : 0 )
-         | ( tm.hasPhase( Phase::PhaseEnum::OIL ) ? ECL_OIL_PHASE : 0 )
-         | ( tm.hasPhase( Phase::PhaseEnum::GAS ) ? ECL_GAS_PHASE : 0 );
-}
-
-static inline const double* get_conv_table( UnitSystem::UnitType t ) {
-    switch( t ) {
-        case UnitSystem::UNIT_TYPE_METRIC: return conversions::si2metric;
-        case UnitSystem::UNIT_TYPE_FIELD:  return conversions::si2field;
-        default: return conversions::si2metric;
-    }
 }
 
 EclipseWriter::EclipseWriter(Opm::EclipseStateConstPtr eclipseState,
