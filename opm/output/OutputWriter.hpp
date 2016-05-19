@@ -22,6 +22,7 @@
 
 #include <memory>  // unique_ptr, shared_ptr
 #include <opm/core/simulator/SimulatorTimerInterface.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 
 struct UnstructuredGrid;
 
@@ -73,7 +74,7 @@ public:
      * This routine should be called before the first timestep (i.e. when
      * timer.currentStepNum () == 0)
      */
-    virtual void writeInit(const SimulatorTimerInterface &timer) = 0;
+    virtual void writeInit(const SimulatorTimerInterface &timer, const NNC& nnc = NNC()) = 0;
 
     /*!
      * \brief Write a blackoil reservoir state to disk for later inspection with
