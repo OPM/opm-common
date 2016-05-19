@@ -99,17 +99,6 @@ data::Solution createBlackoilState( int timeStepIdx, int numCells ) {
     return sol;
 }
 
-
-
-EclipseWriter createEclipseWriter( std::shared_ptr< const EclipseState > eclipseState,
-                                   const int* compressedToCartesianCellIdx ) {
-
-    const auto& grid = *eclipseState->getInputGrid();
-    return EclipseWriter( eclipseState,
-                          grid.getNX() * grid.getNY() * grid.getNZ(),
-                          compressedToCartesianCellIdx );
-}
-
 }
 
 BOOST_AUTO_TEST_CASE(test_RFT) {
@@ -128,14 +117,15 @@ BOOST_AUTO_TEST_CASE(test_RFT) {
          * written to disk and flushed.
          */
 
-        auto eclipseWriter = createEclipseWriter( eclipseState, nullptr );
+        const auto numCells = eclipseState->getInputGrid()->getNX()
+            * eclipseState->getInputGrid()->getNY()
+            * eclipseState->getInputGrid()->getNZ();
+
+        EclipseWriter eclipseWriter( eclipseState, numCells, nullptr );
         time_t btime = util_make_datetime( 0, 0, 0, 1, 12, 1979 );
         time_t start_time = util_make_datetime( 0, 0, 0, 10, 10, 2008 );
         eclipseWriter.writeInit( start_time, btime);
 
-        const auto numCells = eclipseState->getInputGrid()->getNX()
-            * eclipseState->getInputGrid()->getNY()
-            * eclipseState->getInputGrid()->getNZ();
 
 
         time_t times[] = { btime,

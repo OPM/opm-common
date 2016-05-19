@@ -38,6 +38,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/Utility/Functional.hpp>
+#include <opm/output/eclipse/Summary.hpp>
 #include <boost/algorithm/string/case_conv.hpp> // to_upper_copy
 #include <boost/filesystem.hpp> // path
 
@@ -405,9 +406,30 @@ inline const double* get_conv_table( UnitSystem::UnitType t ) {
     }
 }
 
-}
+class RFT {
+    public:
+        RFT( const char* output_dir,
+             const char* basename,
+             bool format,
+             const int* compressed_to_cartesian,
+             size_t num_cells,
+             size_t cartesian_size );
 
-out::RFT::RFT( const char* output_dir,
+        void writeTimeStep( std::vector< std::shared_ptr< const Well > >,
+                            const EclipseGrid& grid,
+                            int report_step,
+                            time_t current_time,
+                            double days,
+                            ert_ecl_unit_enum,
+                            const std::vector< double >& pressure,
+                            const std::vector< double >& swat,
+                            const std::vector< double >& sgas );
+    private:
+        std::vector< int > global_to_active;
+        ERT::FortIO fortio;
+};
+
+RFT::RFT( const char* output_dir,
           const char* basename,
           bool format,
           const int* compressed_to_cartesian,
@@ -442,15 +464,15 @@ inline ert_ecl_unit_enum to_ert_unit( UnitSystem::UnitType t ) {
     throw std::invalid_argument("unhandled enum value");
 }
 
-void out::RFT::writeTimeStep( std::vector< std::shared_ptr< const Well > > wells,
-                              const EclipseGrid& grid,
-                              int report_step,
-                              time_t current_time,
-                              double days,
-                              ert_ecl_unit_enum unitsystem,
-                              const std::vector< double >& pressure,
-                              const std::vector< double >& swat,
-                              const std::vector< double >& sgas ) {
+void RFT::writeTimeStep( std::vector< std::shared_ptr< const Well > > wells,
+                         const EclipseGrid& grid,
+                         int report_step,
+                         time_t current_time,
+                         double days,
+                         ert_ecl_unit_enum unitsystem,
+                         const std::vector< double >& pressure,
+                         const std::vector< double >& swat,
+                         const std::vector< double >& sgas ) {
 
     using rft = ERT::ert_unique_ptr< ecl_rft_node_type, ecl_rft_node_free >;
 
@@ -487,62 +509,107 @@ void out::RFT::writeTimeStep( std::vector< std::shared_ptr< const Well > > wells
     }
 }
 
+}
+
+class EclipseWriter::Impl {
+    public:
+        Impl( std::shared_ptr< const EclipseState > es,
+              int numCells,
+              const int* comp_to_cart );
+
+        std::shared_ptr< const EclipseState > es;
+        std::string outputDir;
+        std::string baseName;
+        out::Summary summary;
+        RFT rft;
+        int numCells;
+        std::array< int, 3 > cartesianSize;
+        const int* compressed_to_cartesian;
+        std::vector< int > gridToEclipseIdx;
+        const double* conversion_table;
+        bool output_enabled;
+        int ert_phase_mask;
+};
+
+EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
+                           int numCells,
+                           const int* compressed_to_cart )
+    : es( eclipseState )
+    , outputDir( eclipseState->getIOConfig()->getOutputDir() )
+    , baseName( boost::to_upper_copy( eclipseState->getIOConfig()->getBaseName() ) )
+    , summary( *eclipseState, eclipseState->getSummaryConfig() )
+    , rft( outputDir.c_str(), baseName.c_str(),
+           es->getIOConfig()->getFMTOUT(),
+           compressed_to_cart,
+           numCells, es->getInputGrid()->getCartesianSize() )
+    , numCells( numCells )
+    , compressed_to_cartesian( compressed_to_cart )
+    , gridToEclipseIdx( numCells, int(-1) )
+    , conversion_table( get_conv_table( eclipseState->getDeckUnitSystem().getType() ) )
+    , output_enabled( eclipseState->getIOConfig()->getOutputEnabled() )
+    , ert_phase_mask( ertPhaseMask( eclipseState->getTableManager() ) )
+{}
 
 void EclipseWriter::writeInit( time_t current_posix_time, double start_time, const NNC& nnc)
 {
-    // if we don't want to write anything, this method becomes a
-    // no-op...
-    if (!enableOutput_) {
+    if( !this->impl->output_enabled )
         return;
+
+    const auto& es = *this->impl->es;
+    Init fortio( this->impl->outputDir,
+                 this->impl->baseName,
+                 /*stepIdx=*/0,
+                 *es.getIOConfigConst());
+
+    fortio.writeHeader( this->impl->numCells,
+                        this->impl->compressed_to_cartesian,
+                        current_posix_time,
+                        es,
+                        this->impl->ert_phase_mask );
+
+    IOConfigConstPtr ioConfig = es.getIOConfigConst();
+    const auto& props = es.get3DProperties();
+
+    if( !ioConfig->getWriteINITFile() ) return;
+
+    const auto* conversion_table = this->impl->conversion_table;
+    const auto& gridToEclipseIdx = this->impl->gridToEclipseIdx;
+
+    if (props.hasDeckDoubleGridProperty("PERMX")) {
+        auto data = props.getDoubleGridProperty("PERMX").getData();
+        convertFromSiTo( data,
+                conversion_table,
+                conversions::dim::permeability );
+        restrictAndReorderToActiveCells(data, gridToEclipseIdx.size(), gridToEclipseIdx.data());
+        fortio.writeKeyword("PERMX", data);
+    }
+    if (props.hasDeckDoubleGridProperty("PERMY")) {
+        auto data = props.getDoubleGridProperty("PERMY").getData();
+        convertFromSiTo( data,
+                conversion_table,
+                conversions::dim::permeability );
+        restrictAndReorderToActiveCells(data, gridToEclipseIdx.size(), gridToEclipseIdx.data());
+        fortio.writeKeyword("PERMY", data);
+    }
+    if (props.hasDeckDoubleGridProperty("PERMZ")) {
+        auto data = props.getDoubleGridProperty("PERMZ").getData();
+        convertFromSiTo( data,
+                conversion_table,
+                conversions::dim::permeability );
+        restrictAndReorderToActiveCells(data, gridToEclipseIdx.size(), gridToEclipseIdx.data());
+        fortio.writeKeyword("PERMZ", data);
     }
 
-    Init fortio(outputDir_, baseName_, /*stepIdx=*/0, *eclipseState_->getIOConfigConst());
-    fortio.writeHeader(numCells_,
-                       compressedToCartesianCellIdx_,
-                       current_posix_time,
-                       *eclipseState_,
-                       ert_phase_mask_,
-                       nnc );
+    if( !nnc.hasNNC() ) return;
 
-    IOConfigConstPtr ioConfig = eclipseState_->getIOConfigConst();
-    const auto& props = eclipseState_->get3DProperties();
-
-
-    if (ioConfig->getWriteINITFile()) {
-        if (props.hasDeckDoubleGridProperty("PERMX")) {
-            auto data = props.getDoubleGridProperty("PERMX").getData();
-            convertFromSiTo( data,
-                                                   conversion_table_,
-                                                   conversions::dim::permeability );
-            restrictAndReorderToActiveCells(data, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
-            fortio.writeKeyword("PERMX", data);
-        }
-        if (props.hasDeckDoubleGridProperty("PERMY")) {
-            auto data = props.getDoubleGridProperty("PERMY").getData();
-            convertFromSiTo( data,
-                                                   conversion_table_,
-                                                   conversions::dim::permeability );
-            restrictAndReorderToActiveCells(data, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
-            fortio.writeKeyword("PERMY", data);
-        }
-        if (props.hasDeckDoubleGridProperty("PERMZ")) {
-            auto data = props.getDoubleGridProperty("PERMZ").getData();
-            convertFromSiTo( data,
-                                                   conversion_table_,
-                                                   conversions::dim::permeability );
-            restrictAndReorderToActiveCells(data, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
-            fortio.writeKeyword("PERMZ", data);
-        }
-        if (nnc.hasNNC()) {
-            std::vector<double> tran;
-            for (NNCdata nd : nnc.nncdata()) {
-                tran.push_back(nd.trans);
-            }
-
-            convertFromSiTo( tran, conversion_table_, conversions::dim::transmissibility );
-            fortio.writeKeyword("TRANNNC", tran);
-        }
+    std::vector<double> tran;
+    for( NNCdata nd : nnc.nncdata() ) {
+        tran.push_back( nd.trans );
     }
+
+    convertFromSiTo( tran, conversion_table, conversions::dim::transmissibility );
+    fortio.writeKeyword("TRANNNC", tran);
+
 }
 
 // implementation of the writeTimeStep method
@@ -554,37 +621,39 @@ void EclipseWriter::writeTimeStep(int report_step,
                                   bool  isSubstep)
 {
 
-    using dc = data::Solution::key;
-    // if we don't want to write anything, this method becomes a
-    // no-op...
-    if (!enableOutput_) {
+    if( !this->impl->output_enabled )
         return;
-    }
+
+    using dc = data::Solution::key;
+
+    const auto* conversion_table = this->impl->conversion_table;
+    const auto& gridToEclipseIdx = this->impl->gridToEclipseIdx;
+    const auto& es = *this->impl->es;
 
     auto& pressure = cells[ dc::PRESSURE ];
     convertFromSiTo( pressure,
-                                           conversion_table_,
-                                           conversions::dim::pressure );
-    restrictAndReorderToActiveCells(pressure, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
+                     conversion_table,
+                     conversions::dim::pressure );
+    restrictAndReorderToActiveCells(pressure, gridToEclipseIdx.size(), gridToEclipseIdx.data());
 
     if( cells.has( dc::SWAT ) ) {
         auto& saturation_water = cells[ dc::SWAT ];
-        restrictAndReorderToActiveCells(saturation_water, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
+        restrictAndReorderToActiveCells(saturation_water, gridToEclipseIdx.size(), gridToEclipseIdx.data());
     }
 
 
     if( cells.has( dc::SGAS ) ) {
         auto& saturation_gas = cells[ dc::SGAS ];
-        restrictAndReorderToActiveCells(saturation_gas, gridToEclipseIdx_.size(), gridToEclipseIdx_.data());
+        restrictAndReorderToActiveCells(saturation_gas, gridToEclipseIdx.size(), gridToEclipseIdx.data());
     }
 
-    IOConfigConstPtr ioConfig = eclipseState_->getIOConfigConst();
+    IOConfigConstPtr ioConfig = this->impl->es->getIOConfigConst();
 
 
-    const auto days = conversions::from_si( this->conversion_table_,
+    const auto days = conversions::from_si( conversion_table,
                                             conversions::dim::time,
                                             secs_elapsed );
-    const auto& schedule = *this->eclipseState_->getSchedule();
+    const auto& schedule = *es.getSchedule();
 
     // Write restart file
     if(!isSubstep && ioConfig->getWriteRestartFile(report_step))
@@ -597,7 +666,10 @@ void EclipseWriter::writeTimeStep(int report_step,
         std::vector<int>         iwell_data( numWells * Restart::NIWELZ , 0 );
         std::vector<int>         icon_data( numWells * ncwmax * Restart::NICONZ , 0 );
 
-        Restart restartHandle(outputDir_, baseName_, report_step, *ioConfig);
+        Restart restartHandle( this->impl->outputDir,
+                               this->impl->baseName,
+                               report_step,
+                               *ioConfig);
 
         for (size_t iwell = 0; iwell < wells_ptr.size(); ++iwell) {
             const auto& well = *wells_ptr[iwell];
@@ -616,16 +688,16 @@ void EclipseWriter::writeTimeStep(int report_step,
         {
             ecl_rsthead_type rsthead_data = {};
             rsthead_data.sim_time   = current_posix_time;
-            rsthead_data.nactive    = numCells_;
-            rsthead_data.nx         = cartesianSize_[0];
-            rsthead_data.ny         = cartesianSize_[1];
-            rsthead_data.nz         = cartesianSize_[2];
+            rsthead_data.nactive    = this->impl->numCells;
+            rsthead_data.nx         = es.getInputGrid()->getNX();
+            rsthead_data.ny         = es.getInputGrid()->getNY();
+            rsthead_data.nz         = es.getInputGrid()->getNZ();
             rsthead_data.nwells     = numWells;
             rsthead_data.niwelz     = Restart::NIWELZ;
             rsthead_data.nzwelz     = Restart::NZWELZ;
             rsthead_data.niconz     = Restart::NICONZ;
             rsthead_data.ncwmax     = ncwmax;
-            rsthead_data.phase_sum  = ert_phase_mask_;
+            rsthead_data.phase_sum  = this->impl->ert_phase_mask;
             rsthead_data.sim_days   = days;
 
             restartHandle.writeHeader( report_step, &rsthead_data);
@@ -654,8 +726,8 @@ void EclipseWriter::writeTimeStep(int report_step,
         // write the cell temperature
         auto& temperature = cells[ dc::TEMP ];
         convertFromSiTo( temperature,
-                                               conversion_table_,
-                                               conversions::dim::temperature );
+                         conversion_table,
+                         conversions::dim::temperature );
         sol.add(Keyword<float>("TEMP", temperature));
 
 
@@ -668,7 +740,6 @@ void EclipseWriter::writeTimeStep(int report_step,
             sol.add( Keyword<float>( "SGAS", cells[ dc::SGAS ] ) );
         }
 
-
         // Write RS - Dissolved GOR
         if( cells.has( dc::RS ) )
             sol.add(Keyword<float>("RS", cells[ dc::RS ] ) );
@@ -678,46 +749,31 @@ void EclipseWriter::writeTimeStep(int report_step,
             sol.add(Keyword<float>("RV", cells[ dc::RV ] ) );
     }
 
-    const auto unit_type = eclipseState_->getDeckUnitSystem().getType();
-    this->rft_.writeTimeStep( schedule.getWells( report_step ),
-                             *this->eclipseState_->getInputGrid(),
-                             report_step,
-                             current_posix_time,
-                             days,
-                             to_ert_unit( unit_type ),
-                             pressure,
-                             cells[ dc::SWAT ],
-                             cells[ dc::SGAS ] );
+    const auto unit_type = es.getDeckUnitSystem().getType();
+    this->impl->rft.writeTimeStep( schedule.getWells( report_step ),
+                                   *es.getInputGrid(),
+                                   report_step,
+                                   current_posix_time,
+                                   days,
+                                   to_ert_unit( unit_type ),
+                                   pressure,
+                                   cells[ dc::SWAT ],
+                                   cells[ dc::SGAS ] );
 
     if( isSubstep ) return;
 
-    summary_.add_timestep( report_step, secs_elapsed, *eclipseState_, wells );
-    summary_.write();
+    this->impl->summary.add_timestep( report_step,
+                                      secs_elapsed,
+                                      es,
+                                      wells );
+    this->impl->summary.write();
 }
 
-EclipseWriter::EclipseWriter(Opm::EclipseStateConstPtr eclipseState,
-                             int numCells,
-                             const int* compressedToCartesianCellIdx)
-    : eclipseState_(eclipseState)
-    , outputDir_( eclipseState->getIOConfig()->getOutputDir() )
-    , baseName_( boost::to_upper_copy( eclipseState->getIOConfig()->getBaseName() ) )
-    , summary_( *eclipseState, eclipseState->getSummaryConfig() )
-    , rft_( outputDir_.c_str(), baseName_.c_str(),
-            eclipseState->getIOConfig()->getFMTOUT(),
-            compressedToCartesianCellIdx,
-            numCells, eclipseState->getInputGrid()->getCartesianSize() )
-    , numCells_(numCells)
-    , compressedToCartesianCellIdx_(compressedToCartesianCellIdx)
-    , gridToEclipseIdx_(numCells, int(-1) )
-    , conversion_table_( get_conv_table( eclipseState->getDeckUnitSystem().getType() ) )
-    , enableOutput_( eclipseState->getIOConfig()->getOutputEnabled() )
-    , ert_phase_mask_( ertPhaseMask( eclipseState->getTableManager() ) )
+EclipseWriter::EclipseWriter( std::shared_ptr< const EclipseState > es,
+                              int numCells,
+                              const int* compressedToCartesianCellIdx ) :
+    impl( new Impl( es, numCells, compressedToCartesianCellIdx ) )
 {
-    const auto eclGrid = eclipseState->getInputGrid();
-    cartesianSize_[0] = eclGrid->getNX();
-    cartesianSize_[1] = eclGrid->getNY();
-    cartesianSize_[2] = eclGrid->getNZ();
-
     if( compressedToCartesianCellIdx ) {
         // if compressedToCartesianCellIdx available then
         // compute mapping to eclipse order
@@ -729,29 +785,36 @@ EclipseWriter::EclipseWriter(Opm::EclipseStateConstPtr eclipseState,
 
         int idx = 0;
         for( auto it = indexMap.begin(), end = indexMap.end(); it != end; ++it ) {
-            gridToEclipseIdx_[ idx++ ] = (*it).second;
+            this->impl->gridToEclipseIdx[ idx++ ] = (*it).second;
         }
     }
     else {
         // if not compressedToCartesianCellIdx was given use identity
         for (int cellIdx = 0; cellIdx < numCells; ++cellIdx) {
-            gridToEclipseIdx_[ cellIdx ] = cellIdx;
+            this->impl->gridToEclipseIdx[ cellIdx ] = cellIdx;
         }
     }
 
-    if( enableOutput_ ) {
-        // make sure that the output directory exists, if not try to create it
-        if (!boost::filesystem::exists(outputDir_)) {
-            std::cout << "Trying to create directory \"" << outputDir_ << "\" for the simulation output\n";
-            boost::filesystem::create_directories(outputDir_);
-        }
+    if( !this->impl->output_enabled ) return;
 
-        if (!boost::filesystem::is_directory(outputDir_)) {
-            OPM_THROW(std::runtime_error,
-                      "The path specified as output directory '" << outputDir_
-                      << "' is not a directory");
-        }
+    const auto& outputDir = this->impl->outputDir;
+
+    // make sure that the output directory exists, if not try to create it
+    if ( !boost::filesystem::exists( outputDir ) ) {
+        std::cout << "Trying to create directory \""
+                    << outputDir
+                    << "\" for the simulation output\n";
+        boost::filesystem::create_directories( outputDir );
+    }
+
+    if (!boost::filesystem::is_directory( outputDir ) ) {
+        OPM_THROW(std::runtime_error,
+                    "The path specified as output directory '"
+                    << outputDir
+                    << "' is not a directory");
     }
 }
+
+EclipseWriter::~EclipseWriter() {}
 
 } // namespace Opm
