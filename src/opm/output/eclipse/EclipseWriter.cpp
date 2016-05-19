@@ -299,57 +299,51 @@ private:
  * Initialization file which contains static properties (such as
  * porosity and permeability) for the simulation field.
  */
-class Init : private boost::noncopyable
-{
+class Init {
 public:
-    Init(const std::string& outputDir,
-         const std::string& baseName,
-         int writeStepIdx,
-         IOConfigConstPtr ioConfig) : egridFileName_(outputDir,
-                                                     baseName,
-                                                     ECL_EGRID_FILE,
-                                                     writeStepIdx,
-                                                     ioConfig->getFMTOUT())
+    Init( const std::string& outputDir,
+          const std::string& baseName,
+          int writeStepIdx,
+          const IOConfig& ioConfig ) :
+        egrid( outputDir,
+               baseName,
+               ECL_EGRID_FILE,
+               writeStepIdx,
+               ioConfig.getFMTOUT() ),
+        init( fortio_open_writer(
+                    FileName( outputDir,
+                        baseName,
+                        ECL_INIT_FILE,
+                        writeStepIdx,
+                        ioConfig.getFMTOUT() ).ertHandle(),
+                    ioConfig.getFMTOUT(),
+                    ECL_ENDIAN_FLIP ) )
+
+    {}
+
+    void writeHeader( int numCells,
+                      const int* compressedToCartesianCellIdx,
+                      time_t current_posix_time,
+                      const EclipseState& es,
+                      int ert_phase_mask,
+                      const NNC& nnc = NNC() )
     {
-        bool formatted = ioConfig->getFMTOUT();
+        auto dataField = es.get3DProperties().getDoubleGridProperty("PORO").getData();
+        restrictAndReorderToActiveCells( dataField, numCells, compressedToCartesianCellIdx );
 
-        FileName initFileName(outputDir,
-                              baseName,
-                              ECL_INIT_FILE,
-                              writeStepIdx,
-                              formatted);
-
-        ertHandle_ = fortio_open_writer(initFileName.ertHandle(),
-                                        formatted,
-                                        ECL_ENDIAN_FLIP);
-    }
-
-    ~Init()
-    { fortio_fclose(ertHandle_); }
-
-    void writeHeader(int numCells,
-                     const int* compressedToCartesianCellIdx,
-                     time_t current_posix_time,
-                     Opm::EclipseStateConstPtr eclipseState,
-                     int ert_phase_mask,
-                     const NNC& nnc = NNC())
-    {
-        auto dataField = eclipseState->get3DProperties().getDoubleGridProperty("PORO").getData();
-        restrictAndReorderToActiveCells(dataField, numCells, compressedToCartesianCellIdx);
-
-        auto eclGrid = eclipseState->getInputGridCopy();
+        auto eclGrid = es.getInputGridCopy();
 
         // update the ACTNUM array using the processed cornerpoint grid
-        std::vector<int> actnumData(eclGrid->getCartesianSize(), 1);
-        if (compressedToCartesianCellIdx) {
-            std::fill(actnumData.begin(), actnumData.end(), 0);
-            for (int cellIdx = 0; cellIdx < numCells; ++cellIdx) {
-                int cartesianCellIdx = compressedToCartesianCellIdx[cellIdx];
-                actnumData[cartesianCellIdx] = 1;
+        std::vector<int> actnumData( eclGrid->getCartesianSize(), 1 );
+        if ( compressedToCartesianCellIdx ) {
+            actnumData.assign( actnumData.size(), 0 );
+
+            for( int cellIdx = 0; cellIdx < numCells; ++cellIdx ) {
+                actnumData[ compressedToCartesianCellIdx[ cellIdx ] ] = 1;
             }
         }
 
-        eclGrid->resetACTNUM(&actnumData[0]);
+        eclGrid->resetACTNUM( &actnumData[0] );
 
         if (nnc.hasNNC())
         {
@@ -363,38 +357,35 @@ public:
 
 
         // finally, write the grid to disk
-        IOConfigConstPtr ioConfig = eclipseState->getIOConfigConst();
-        if (ioConfig->getWriteEGRIDFile()) {
-            if (eclipseState->getDeckUnitSystem().getType() == UnitSystem::UNIT_TYPE_METRIC){
-                eclGrid->fwriteEGRID(egridFileName_.ertHandle(), true);
-            }else{
-                eclGrid->fwriteEGRID(egridFileName_.ertHandle(), false);
-            }
+        const auto& ioConfig = *es.getIOConfig();
+        if( ioConfig.getWriteEGRIDFile() ) {
+            const bool is_metric =
+                es.getDeckUnitSystem().getType() == UnitSystem::UNIT_TYPE_METRIC;
+            eclGrid->fwriteEGRID( egrid.ertHandle(), is_metric );
         }
 
 
-        if (ioConfig->getWriteINITFile()) {
-            Keyword<float> poro_kw("PORO", dataField);
-            ecl_init_file_fwrite_header(ertHandle(),
-                                        eclGrid->c_ptr(),
-                                        poro_kw.ertHandle(),
-                                        ert_phase_mask,
-                                        current_posix_time );
+        if( ioConfig.getWriteINITFile() ) {
+            Keyword< float > poro_kw( "PORO", dataField );
+            ecl_init_file_fwrite_header( this->ertHandle(),
+                                         eclGrid->c_ptr(),
+                                         poro_kw.ertHandle(),
+                                         ert_phase_mask,
+                                         current_posix_time );
         }
     }
 
-    void writeKeyword(const std::string& keywordName, const std::vector<double> &data)
-    {
-        Keyword <float> kw(keywordName, data);
-        ecl_kw_fwrite(kw.ertHandle(), ertHandle());
+    void writeKeyword( const std::string& keywordName,
+                       const std::vector<double> &data ) {
+        Keyword< float > kw( keywordName, data );
+        ecl_kw_fwrite( kw.ertHandle(), this->ertHandle() );
     }
 
-    fortio_type *ertHandle() const
-    { return ertHandle_; }
+    fortio_type* ertHandle() { return this->init.get(); }
 
 private:
-    fortio_type *ertHandle_;
-    FileName egridFileName_;
+    FileName egrid;
+    ERT::ert_unique_ptr< fortio_type, fortio_fclose > init;
 };
 
 const int inactive_index = -1;
@@ -505,13 +496,13 @@ void EclipseWriter::writeInit( time_t current_posix_time, double start_time, con
         return;
     }
 
-    Init fortio(outputDir_, baseName_, /*stepIdx=*/0, eclipseState_->getIOConfigConst());
+    Init fortio(outputDir_, baseName_, /*stepIdx=*/0, *eclipseState_->getIOConfigConst());
     fortio.writeHeader(numCells_,
                        compressedToCartesianCellIdx_,
                        current_posix_time,
-                       eclipseState_,
+                       *eclipseState_,
                        ert_phase_mask_,
-                       nnc);
+                       nnc );
 
     IOConfigConstPtr ioConfig = eclipseState_->getIOConfigConst();
     const auto& props = eclipseState_->get3DProperties();
