@@ -35,6 +35,7 @@ class Logger {
 public:
     Logger();
     void addMessage(int64_t messageType , const std::string& message) const;
+    void addTaggedMessage(int64_t messageType, const std::string& tag, const std::string& message) const;
 
     static bool enabledDefaultMessageType( int64_t messageType);
     bool enabledMessageType( int64_t messageType) const;

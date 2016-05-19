@@ -40,6 +40,7 @@ class OpmLog {
 
 public:
     static void addMessage(int64_t messageFlag , const std::string& message);
+    static void addTaggedMessage(int64_t messageFlag, const std::string& tag, const std::string& message);
 
     static void info(const std::string& message);
     static void warning(const std::string& message);
@@ -47,6 +48,14 @@ public:
     static void problem(const std::string& message);
     static void bug(const std::string& message);
     static void debug(const std::string& message);
+
+    static void info(const std::string& tag, const std::string& message);
+    static void warning(const std::string& tag, const std::string& message);
+    static void error(const std::string& tag, const std::string& message);
+    static void problem(const std::string& tag, const std::string& message);
+    static void bug(const std::string& tag, const std::string& message);
+    static void debug(const std::string& tag, const std::string& message);
+
     static bool hasBackend( const std::string& backendName );
     static void addBackend(const std::string& name , std::shared_ptr<LogBackend> backend);
     static bool removeBackend(const std::string& name);

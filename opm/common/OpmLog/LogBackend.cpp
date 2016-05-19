@@ -31,9 +31,20 @@ namespace Opm {
     {
     }
 
-    void LogBackend::configureDecoration(std::shared_ptr<MessageFormatterInterface> formatter)
+    void LogBackend::setMessageFormatter(std::shared_ptr<MessageFormatterInterface> formatter)
     {
-        formatter_ = formatter;
+        m_formatter = formatter;
+    }
+
+    void LogBackend::setMessageLimiter(std::shared_ptr<MessageLimiter> limiter)
+    {
+        m_limiter = limiter;
+    }
+
+    void LogBackend::addMessage(int64_t messageFlag, const std::string& message)
+    {
+        // Forward the call to the tagged version.
+        addTaggedMessage(messageFlag, "", message);
     }
 
     int64_t LogBackend::getMask() const
@@ -41,15 +52,30 @@ namespace Opm {
         return m_mask;
     }
 
-    bool LogBackend::includeMessage(int64_t messageFlag)
+    bool LogBackend::includeMessage(int64_t messageFlag, const std::string& messageTag)
     {
-        return ((messageFlag & m_mask) == messageFlag) && (messageFlag > 0);
+        // Check mask.
+        const bool included = ((messageFlag & m_mask) == messageFlag) && (messageFlag > 0);
+        if (!included) {
+            return false;
+        }
+
+        // Use the message limiter (if any).
+        MessageLimiter::Response res = m_limiter
+            ? m_limiter->handleMessageTag(messageTag)
+            : MessageLimiter::Response::PrintMessage;
+        if (res == MessageLimiter::Response::JustOverLimit) {
+            // Special case: add a message to this backend about limit being reached.
+            std::string msg = "Message limit reached for message tag: " + messageTag;
+            addTaggedMessage(messageFlag, "", msg);
+        }
+        return res == MessageLimiter::Response::PrintMessage;
     }
 
-    std::string LogBackend::decorateMessage(int64_t messageFlag, const std::string& message)
+    std::string LogBackend::formatMessage(int64_t messageFlag, const std::string& message)
     {
-        if (formatter_) {
-            return formatter_->format(messageFlag, message);
+        if (m_formatter) {
+            return m_formatter->format(messageFlag, message);
         } else {
             return message;
         }

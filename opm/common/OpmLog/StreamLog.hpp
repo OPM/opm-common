@@ -33,7 +33,7 @@ class StreamLog : public LogBackend {
 public:
     StreamLog(const std::string& logFile , int64_t messageMask);
     StreamLog(std::ostream& os , int64_t messageMask);
-    void addMessage(int64_t messageType , const std::string& message);
+    virtual void addTaggedMessage(int64_t messageType, const std::string& messageTag, const std::string& message) override;
     ~StreamLog();
 
 private:

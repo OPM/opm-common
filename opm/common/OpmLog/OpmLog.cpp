@@ -37,6 +37,12 @@ namespace Opm {
     }
 
 
+    void OpmLog::addTaggedMessage(int64_t messageFlag, const std::string& tag, const std::string& message) {
+        if (m_logger)
+            m_logger->addTaggedMessage( messageFlag, tag, message );
+    }
+
+
     void OpmLog::info(const std::string& message)
     {
         addMessage(Log::MessageType::Info, message);
@@ -71,6 +77,45 @@ namespace Opm {
     {
         addMessage(Log::MessageType::Debug, message);
     }
+
+
+
+    void OpmLog::info(const std::string& tag, const std::string& message)
+    {
+        addTaggedMessage(Log::MessageType::Info, tag, message);
+    }
+
+
+    void OpmLog::warning(const std::string& tag, const std::string& message)
+    {
+        addTaggedMessage(Log::MessageType::Warning, tag, message);
+    }
+
+
+    void OpmLog::problem(const std::string& tag, const std::string& message)
+    {
+        addTaggedMessage(Log::MessageType::Problem, tag, message);
+    }
+
+
+    void OpmLog::error(const std::string& tag, const std::string& message)
+    {
+        addTaggedMessage(Log::MessageType::Error, tag, message);
+    }
+
+
+    void OpmLog::bug(const std::string& tag, const std::string& message)
+    {
+        addTaggedMessage(Log::MessageType::Bug, tag, message);
+    }
+
+
+    void OpmLog::debug(const std::string& tag, const std::string& message)
+    {
+        addTaggedMessage(Log::MessageType::Debug, tag, message);
+    }
+
+
 
 
     bool OpmLog::enabledMessageType( int64_t messageType ) {

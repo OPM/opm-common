@@ -118,7 +118,7 @@ public:
         m_specialMessages = 0;
     }
 
-    void addMessage(int64_t messageType , const std::string& /* message */) {
+    void addTaggedMessage(int64_t messageType , const std::string& /* messageTag */, const std::string& /* message */) {
         if (messageType & Log::DefaultMessageTypes)
             m_defaultMessages +=1;
         else
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(TestOpmLogWithColors)
         BOOST_CHECK_EQUAL( true , OpmLog::hasBackend("COUNTER"));
         BOOST_CHECK_EQUAL( true , OpmLog::hasBackend("STREAM"));
 
-        streamLog->configureDecoration(std::make_shared<SimpleMessageFormatter>(false, true));
+        streamLog->setMessageFormatter(std::make_shared<SimpleMessageFormatter>(false, true));
     }
 
     OpmLog::warning("Warning");
@@ -302,4 +302,60 @@ BOOST_AUTO_TEST_CASE(TestOpmLogWithColors)
 
 
     std::cout << log_stream.str() << std::endl;
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(TestOpmLogWithLimits)
+{
+    OpmLog::removeAllBackends();
+
+    std::ostringstream log_stream1;
+    std::ostringstream log_stream2;
+
+    {
+        std::shared_ptr<StreamLog> streamLog1 = std::make_shared<StreamLog>(log_stream1, Log::DefaultMessageTypes);
+        std::shared_ptr<StreamLog> streamLog2 = std::make_shared<StreamLog>(log_stream2, Log::DefaultMessageTypes);
+        OpmLog::addBackend("STREAM1" , streamLog1);
+        OpmLog::addBackend("STREAM2" , streamLog2);
+        BOOST_CHECK_EQUAL( true , OpmLog::hasBackend("STREAM1"));
+        BOOST_CHECK_EQUAL( true , OpmLog::hasBackend("STREAM2"));
+
+        streamLog1->setMessageFormatter(std::make_shared<SimpleMessageFormatter>(false, true));
+        streamLog1->setMessageLimiter(std::make_shared<MessageLimiter>(2));
+        streamLog2->setMessageFormatter(std::make_shared<SimpleMessageFormatter>(false, true));
+        streamLog2->setMessageLimiter(std::make_shared<MessageLimiter>()); // no limit
+    }
+
+    const std::string tag = "ExampleTag";
+    OpmLog::warning(tag, "Warning");
+    OpmLog::error("Error");
+    OpmLog::info("Info");
+    OpmLog::bug("Bug");
+    OpmLog::warning(tag, "Warning");
+    OpmLog::warning(tag, "Warning");
+    OpmLog::warning(tag, "Warning");
+
+    const std::string expected1 = Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Error, "Error") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Info, "Info") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Bug, "Bug") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Warning, "Message limit reached for message tag: " + tag) + "\n";
+
+    BOOST_CHECK_EQUAL(log_stream1.str(), expected1);
+
+    const std::string expected2 = Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Error, "Error") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Info, "Info") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Bug, "Bug") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n";
+
+    BOOST_CHECK_EQUAL(log_stream2.str(), expected2);
+
+    std::cout << log_stream1.str() << std::endl;
+    std::cout << log_stream2.str() << std::endl;
 }
