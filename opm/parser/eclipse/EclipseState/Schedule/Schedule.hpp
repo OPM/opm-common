@@ -61,6 +61,8 @@ namespace Opm
                  std::shared_ptr<const Deck> deck, std::shared_ptr<IOConfig> ioConfig);
 
         boost::posix_time::ptime getStartTime() const;
+        time_t posixStartTime() const;
+
         std::shared_ptr< const TimeMap > getTimeMap() const;
 
         size_t numWells() const;

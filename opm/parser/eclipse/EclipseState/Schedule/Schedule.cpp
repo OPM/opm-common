@@ -78,6 +78,11 @@ namespace Opm {
         return m_timeMap->getStartTime(/*timeStepIdx=*/0);
     }
 
+    time_t Schedule::posixStartTime() const {
+        boost::posix_time::ptime epoch( boost::gregorian::date( 1970, 1, 1 ) );
+        return time_t( ( this->getStartTime() - epoch ).total_seconds() );
+    }
+
     void Schedule::initFromDeck(const ParseContext& parseContext, const Deck& deck, IOConfigPtr ioConfig) {
         initializeNOSIM(deck);
         createTimeMap(deck);
