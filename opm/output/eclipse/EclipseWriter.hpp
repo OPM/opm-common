@@ -23,27 +23,24 @@
 #define OPM_ECLIPSE_WRITER_HPP
 
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
-#include <opm/output/OutputWriter.hpp>
-
 
 #include <string>
 #include <vector>
 #include <array>
 #include <memory>
 
-#include <opm/output/OutputWriter.hpp>
+#include <opm/output/Cells.hpp>
+#include <opm/output/Wells.hpp>
 
 namespace Opm {
 
-class EclipseGrid;
-class Well;
-
+class EclipseState;
 
 /*!
  * \brief A class to write the reservoir state and the well state of a
  *        blackoil simulation to disk using the Eclipse binary format.
  */
-class EclipseWriter : public OutputWriter {
+class EclipseWriter {
 public:
     /*!
      * \brief Sets the common attributes required to write eclipse
@@ -58,7 +55,7 @@ public:
      *
      * If NNC is given, writes TRANNNC keyword.
      */
-    virtual void writeInit( time_t current_time, double start_time, const NNC& nnc = NNC() ) override;
+    void writeInit( time_t current_time, double start_time, const NNC& nnc = NNC() );
 
     /*!
      * \brief Write a reservoir state and summary information to disk.
@@ -71,12 +68,12 @@ public:
      * ERT or ECLIPSE. Note that calling this method is only
      * meaningful after the first time step has been completed.
      */
-    virtual void writeTimeStep( int report_step,
-                                time_t current_posix_time,
-                                double seconds_elapsed,
-                                data::Solution,
-                                data::Wells,
-                                bool isSubstep);
+    void writeTimeStep( int report_step,
+                        time_t current_posix_time,
+                        double seconds_elapsed,
+                        data::Solution,
+                        data::Wells,
+                        bool isSubstep);
 
     EclipseWriter( const EclipseWriter& ) = delete;
     ~EclipseWriter();
@@ -86,9 +83,6 @@ private:
     std::unique_ptr< Impl > impl;
 
 };
-
-typedef std::shared_ptr<EclipseWriter> EclipseWriterPtr;
-typedef std::shared_ptr<const EclipseWriter> EclipseWriterConstPtr;
 
 } // namespace Opm
 
