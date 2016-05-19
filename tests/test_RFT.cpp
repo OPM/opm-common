@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(test_RFT) {
         EclipseWriter eclipseWriter( eclipseState, numCells, nullptr );
         time_t btime = util_make_datetime( 0, 0, 0, 1, 12, 1979 );
         time_t start_time = util_make_datetime( 0, 0, 0, 10, 10, 2008 );
-        eclipseWriter.writeInit( start_time, btime);
+        eclipseWriter.writeInit( start_time );
 
 
 

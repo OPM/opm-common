@@ -554,8 +554,7 @@ EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
     , ert_phase_mask( ertPhaseMask( eclipseState->getTableManager() ) )
 {}
 
-void EclipseWriter::writeInit( time_t current_posix_time, double start_time, const NNC& nnc)
-{
+void EclipseWriter::writeInit( time_t current_posix_time, const NNC& nnc ) {
     if( !this->impl->output_enabled )
         return;
 

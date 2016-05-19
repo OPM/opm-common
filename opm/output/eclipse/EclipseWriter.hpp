@@ -55,7 +55,7 @@ public:
      *
      * If NNC is given, writes TRANNNC keyword.
      */
-    void writeInit( time_t current_time, double start_time, const NNC& nnc = NNC() );
+    void writeInit( time_t current_posix_time, const NNC& nnc = NNC() );
 
     /*!
      * \brief Write a reservoir state and summary information to disk.

@@ -75,7 +75,7 @@ public:
      * This routine should be called before the first timestep (i.e. when
      * timer.currentStepNum () == 0)
      */
-    virtual void writeInit( time_t current_posix_time, double start_time, const NNC& nnc = NNC() ) = 0;
+    virtual void writeInit( const NNC& nnc = NNC() ) = 0;
 
     /*!
      * \brief Write a blackoil reservoir state to disk for later inspection with

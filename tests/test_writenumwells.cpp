@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
     EclipseWriter eclipseWriter( eclipseState, num_cells, nullptr );
 
     time_t start_time = util_make_datetime( 0, 0, 0, 1, 11, 1979 );
-    eclipseWriter.writeInit( start_time, start_time );
+    eclipseWriter.writeInit( start_time );
 
     int countTimeStep = eclipseState->getSchedule()->getTimeMap()->numTimesteps();
 

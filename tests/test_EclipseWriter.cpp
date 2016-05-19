@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
 
         auto start_time = util_make_datetime( 0, 0, 0, 10, 10, 2008 );
         auto first_step = util_make_datetime( 0, 0, 0, 10, 11, 2008 );
-        eclWriter.writeInit( start_time, start_time );
+        eclWriter.writeInit( start_time );
 
         data::Wells wells;
 
