@@ -21,11 +21,9 @@
 #ifndef OPM_WRITEECLDATA_HEADER_INCLUDED
 #define OPM_WRITEECLDATA_HEADER_INCLUDED
 
+#include <string>
 
 #include <opm/output/Cells.hpp>
-#include <boost/date_time/posix_time/posix_time_types.hpp>
-
-#include <string>
 
 namespace Opm
 {
@@ -36,7 +34,7 @@ namespace Opm
                     data::Solution,
                     const int current_step,
                     const double current_time,
-                    const boost::posix_time::ptime& current_date_time,
+                    time_t current_posix_time,
                     const std::string& output_dir,
                     const std::string& base_name);
 

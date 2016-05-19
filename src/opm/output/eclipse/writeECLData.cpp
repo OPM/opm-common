@@ -66,7 +66,7 @@ namespace Opm {
                     data::Solution data,
                     const int current_step,
                     const double current_time,
-                    const boost::posix_time::ptime& current_date_time,
+                    time_t current_posix_time,
                     const std::string& output_dir,
                     const std::string& base_name) {
 
@@ -75,16 +75,7 @@ namespace Opm {
 
     char * filename         = ecl_util_alloc_filename(output_dir.c_str() , base_name.c_str() , file_type , fmt_file , current_step );
     int phases              = ECL_OIL_PHASE + ECL_WATER_PHASE;
-    time_t date             = 0;
     ecl_rst_file_type * rst_file;
-
-    {
-      using namespace boost::posix_time;
-      ptime t0( boost::gregorian::date(1970 , 1 ,1) );
-      time_duration::sec_type seconds = (current_date_time - t0).total_seconds();
-
-      date = time_t( seconds );
-    }
 
     if (current_step > 0 && file_type == ECL_UNIFIED_RESTART_FILE)
       rst_file = ecl_rst_file_open_append( filename );
@@ -110,7 +101,7 @@ namespace Opm {
       rsthead_data.ncwmax    = ncwmax;
       rsthead_data.nactive   = nactive;
       rsthead_data.phase_sum = phases;
-      rsthead_data.sim_time  = date;
+      rsthead_data.sim_time  = current_posix_time;
 
       rsthead_data.sim_days = current_time * Opm::Metric::Time; //Data for doubhead
 
@@ -157,7 +148,7 @@ namespace Opm
                       data::Solution,
                       const int,
                       const double,
-                      const boost::posix_time::ptime&,
+                      time_t,
                       const std::string&,
                       const std::string&)
     {
