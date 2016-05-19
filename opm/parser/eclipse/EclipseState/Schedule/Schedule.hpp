@@ -50,8 +50,6 @@ namespace Opm
     class UnitSystem;
     class Well;
 
-    const boost::gregorian::date defaultStartDate( 1983 , boost::gregorian::Jan , 1);
-
     class Schedule {
     public:
         Schedule(const ParseContext& parseContext, std::shared_ptr<const EclipseGrid> grid,
@@ -60,7 +58,13 @@ namespace Opm
         Schedule(const ParseContext& parseContext, std::shared_ptr<const EclipseGrid> grid,
                  std::shared_ptr<const Deck> deck, std::shared_ptr<IOConfig> ioConfig);
 
+        /*
+         * If the input deck does not specify a start time, Eclipse's 1. Jan
+         * 1983 is defaulted
+         */
         boost::posix_time::ptime getStartTime() const;
+        time_t posixStartTime() const;
+
         std::shared_ptr< const TimeMap > getTimeMap() const;
 
         size_t numWells() const;
