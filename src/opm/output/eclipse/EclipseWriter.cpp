@@ -37,7 +37,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/Utility/Functional.hpp>
 #include <opm/output/eclipse/Summary.hpp>
-#include <boost/algorithm/string/case_conv.hpp> // to_upper_copy
 #include <boost/filesystem.hpp> // path
 
 #include <cstdlib>
@@ -507,6 +506,13 @@ void RFT::writeTimeStep( std::vector< std::shared_ptr< const Well > > wells,
     }
 }
 
+inline std::string uppercase( std::string x ) {
+    std::transform( x.begin(), x.end(), x.begin(),
+        []( char c ) { return std::toupper( c ); } );
+
+    return x;
+}
+
 }
 
 class EclipseWriter::Impl {
@@ -534,7 +540,7 @@ EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
                            const int* compressed_to_cart )
     : es( eclipseState )
     , outputDir( eclipseState->getIOConfig()->getOutputDir() )
-    , baseName( boost::to_upper_copy( eclipseState->getIOConfig()->getBaseName() ) )
+    , baseName( uppercase( eclipseState->getIOConfig()->getBaseName() ) )
     , summary( *eclipseState, eclipseState->getSummaryConfig() )
     , rft( outputDir.c_str(), baseName.c_str(),
            es->getIOConfig()->getFMTOUT(),
