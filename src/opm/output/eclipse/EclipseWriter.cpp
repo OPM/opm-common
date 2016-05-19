@@ -23,8 +23,6 @@
 
 #include "EclipseWriter.hpp"
 
-#include <opm/common/ErrorMacros.hpp>
-
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Units/ConversionFactors.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
@@ -808,10 +806,8 @@ EclipseWriter::EclipseWriter( std::shared_ptr< const EclipseState > es,
     }
 
     if (!boost::filesystem::is_directory( outputDir ) ) {
-        OPM_THROW(std::runtime_error,
-                    "The path specified as output directory '"
-                    << outputDir
-                    << "' is not a directory");
+        throw std::runtime_error( "The path specified as output directory '"
+                                  + outputDir + "' is not a directory");
     }
 }
 
