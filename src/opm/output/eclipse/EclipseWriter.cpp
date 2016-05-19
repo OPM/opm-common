@@ -276,25 +276,23 @@ private:
  * The Solution class wraps the actions that must be done to the restart file while
  * writing solution variables; it is not a handle on its own.
  */
-class Solution : private boost::noncopyable
-{
+class Solution {
 public:
-    Solution(Restart& restartHandle)
-        : restartHandle_(&restartHandle)
-    {  ecl_rst_file_start_solution(restartHandle_->ertHandle()); }
+    Solution( Restart& res ) : restart( res ) {
+        ecl_rst_file_start_solution( res.ertHandle() );
+    }
 
-    ~Solution()
-    { ecl_rst_file_end_solution(restartHandle_->ertHandle()); }
+    template< typename T >
+    void add( Keyword< T >&& kw ) {
+        ecl_rst_file_add_kw( this->restart.ertHandle(), kw.ertHandle() );
+    }
 
-    template <typename T>
-    void add(const Keyword<T>& kw)
-    { ecl_rst_file_add_kw(restartHandle_->ertHandle(), kw.ertHandle()); }
+    ecl_rst_file_type* ertHandle() { return this->restart.ertHandle(); }
 
-    ecl_rst_file_type *ertHandle() const
-    { return restartHandle_->ertHandle(); }
+    ~Solution() { ecl_rst_file_end_solution( this->restart.ertHandle() ); }
 
 private:
-    Restart* restartHandle_;
+    Restart& restart;
 };
 
 /**
