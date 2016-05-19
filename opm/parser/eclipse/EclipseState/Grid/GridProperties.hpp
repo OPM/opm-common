@@ -92,21 +92,6 @@ namespace Opm {
             return *m_properties.at( keyword );
         }
 
-        const GridProperty<T>& getKeyword(size_t index) const {
-            if (index < size())
-                return *m_property_list[index];
-            else
-                throw std::invalid_argument("Invalid index");
-        }
-
-        GridProperty<T>& getKeyword(size_t index)  {
-            if (index < size())
-                return *m_property_list[index];
-            else
-                throw std::invalid_argument( "Invalid index" );
-        }
-
-
 
 
         const GridProperty<T>& getInitializedKeyword(const std::string& keyword) const {
