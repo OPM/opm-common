@@ -116,7 +116,9 @@ namespace Opm {
     }
 
     void Schedule::createTimeMap(const Deck& deck) {
-        boost::posix_time::ptime startTime(defaultStartDate);
+        boost::gregorian::date defaultStartTime( 1983, 1, 1 );
+        boost::posix_time::ptime startTime( defaultStartTime );
+
         if (deck.hasKeyword("START")) {
              const auto& startKeyword = deck.getKeyword("START");
             startTime = TimeMap::timeFromEclipse(startKeyword.getRecord(0));
