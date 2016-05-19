@@ -90,8 +90,11 @@ namespace Opm {
 
         const FaultCollection& getFaults() const;
         std::shared_ptr<const TransMult> getTransMult() const;
-        const NNC& getNNC() const;
-        bool hasNNC() const;
+
+        /// non-neighboring connections
+        /// the non-standard adjacencies as specified in input deck
+        const NNC& getInputNNC() const;
+        bool hasInputNNC() const;
 
         const Eclipse3DProperties& get3DProperties() const;
 
@@ -130,7 +133,7 @@ namespace Opm {
         std::string m_title;
         std::shared_ptr<TransMult> m_transMult;
         FaultCollection m_faults;
-        NNC m_nnc;
+        NNC m_inputNnc;
 
         MessageContainer m_messageContainer;
         UnitSystem m_deckUnitSystem;
