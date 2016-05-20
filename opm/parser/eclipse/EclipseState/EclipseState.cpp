@@ -55,14 +55,11 @@ namespace Opm {
 
     EclipseState::EclipseState(const Deck& deck, ParseContext parseContext) :
         m_parseContext(      parseContext ),
+        m_tables(            deck ),
         m_inputGrid(         std::make_shared<EclipseGrid>(deck, nullptr) ),
         m_schedule(          std::make_shared<Schedule>( m_parseContext, m_inputGrid, deck ) ),
-        m_ioConfig(          std::make_shared< IOConfig >( deck ) ),
-        m_initConfig(        std::make_shared< InitConfig >( deck ) ),
-        m_tables(            deck ),
         m_eclipseProperties( deck, m_tables, *m_inputGrid ),
-        m_simulationConfig(  std::make_shared<SimulationConfig>( deck, m_eclipseProperties ) ),
-        m_summaryConfig(     deck, *m_schedule, m_eclipseProperties, m_inputGrid->getNXYZ() ),
+        m_eclipseConfig(     deck, m_parseContext, m_eclipseProperties, m_inputGrid, *m_schedule),
         m_inputNnc(          deck, m_inputGrid ),
         m_deckUnitSystem(    deck.getActiveUnitSystem() )
 
@@ -70,7 +67,8 @@ namespace Opm {
         if (m_inputGrid->hasCellInfo())
             m_inputGrid->resetACTNUM(m_eclipseProperties.getIntGridProperty("ACTNUM").getData().data());
 
-        initIOConfigPostSchedule(deck);
+        m_eclipseConfig.initIOConfigPostSchedule(deck, *m_schedule);
+
 
         if (deck.hasKeyword( "TITLE" )) {
             const auto& titleKeyword = deck.getKeyword( "TITLE" );
@@ -106,7 +104,7 @@ namespace Opm {
     }
 
     const SummaryConfig& EclipseState::getSummaryConfig() const {
-        return this->m_summaryConfig;
+        return m_eclipseConfig.getSummaryConfig();
     }
 
     const Eclipse3DProperties& EclipseState::get3DProperties() const {
@@ -136,19 +134,19 @@ namespace Opm {
     }
 
     IOConfigConstPtr EclipseState::getIOConfigConst() const {
-        return m_ioConfig;
+        return m_eclipseConfig.getIOConfigConst();
     }
 
     IOConfigPtr EclipseState::getIOConfig() const {
-        return m_ioConfig;
+        return m_eclipseConfig.getIOConfig();
     }
 
     InitConfigConstPtr EclipseState::getInitConfig() const {
-        return m_initConfig;
+        return m_eclipseConfig.getInitConfig();
     }
 
     SimulationConfigConstPtr EclipseState::getSimulationConfig() const {
-        return m_simulationConfig;
+        return m_eclipseConfig.getSimulationConfig();
     }
 
     const FaultCollection& EclipseState::getFaults() const {
@@ -170,16 +168,6 @@ namespace Opm {
     std::string EclipseState::getTitle() const {
         return m_title;
     }
-
-    // Hmmm - would have thought this should iterate through the SCHEDULE section as well?
-    void EclipseState::initIOConfigPostSchedule(const Deck& deck) {
-        if (Section::hasSOLUTION(deck)) {
-            std::shared_ptr<const SOLUTIONSection> solutionSection = std::make_shared<const SOLUTIONSection>(deck);
-            m_ioConfig->handleSolutionSection(m_schedule->getTimeMap(), solutionSection);
-        }
-        m_ioConfig->initFirstOutput( *m_schedule );
-    }
-
 
     void EclipseState::initTransMult() {
         EclipseGridConstPtr grid = getInputGrid();
