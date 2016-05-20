@@ -55,7 +55,7 @@ public:
      *
      * If NNC is given, writes TRANNNC keyword.
      */
-    void writeInit( time_t current_posix_time, const NNC& nnc = NNC() );
+    void writeInit( const NNC& nnc = NNC() );
 
     /*!
      * \brief Write a reservoir state and summary information to disk.
@@ -69,7 +69,6 @@ public:
      * meaningful after the first time step has been completed.
      */
     void writeTimeStep( int report_step,
-                        time_t current_posix_time,
                         double seconds_elapsed,
                         data::Solution,
                         data::Wells,

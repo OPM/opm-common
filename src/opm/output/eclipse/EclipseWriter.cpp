@@ -526,6 +526,7 @@ class EclipseWriter::Impl {
         std::string baseName;
         out::Summary summary;
         RFT rft;
+        time_t sim_start_time;
         int numCells;
         std::array< int, 3 > cartesianSize;
         const int* compressed_to_cartesian;
@@ -546,6 +547,7 @@ EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
            es->getIOConfig()->getFMTOUT(),
            compressed_to_cart,
            numCells, es->getInputGrid()->getCartesianSize() )
+    , sim_start_time( es->getSchedule()->posixStartTime() )
     , numCells( numCells )
     , compressed_to_cartesian( compressed_to_cart )
     , gridToEclipseIdx( numCells, int(-1) )
@@ -554,7 +556,7 @@ EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
     , ert_phase_mask( ertPhaseMask( eclipseState->getTableManager() ) )
 {}
 
-void EclipseWriter::writeInit( time_t current_posix_time, const NNC& nnc ) {
+void EclipseWriter::writeInit( const NNC& nnc ) {
     if( !this->impl->output_enabled )
         return;
 
@@ -566,7 +568,7 @@ void EclipseWriter::writeInit( time_t current_posix_time, const NNC& nnc ) {
 
     fortio.writeHeader( this->impl->numCells,
                         this->impl->compressed_to_cartesian,
-                        current_posix_time,
+                        this->impl->sim_start_time,
                         es,
                         this->impl->ert_phase_mask );
 
@@ -617,7 +619,6 @@ void EclipseWriter::writeInit( time_t current_posix_time, const NNC& nnc ) {
 
 // implementation of the writeTimeStep method
 void EclipseWriter::writeTimeStep(int report_step,
-                                  time_t current_posix_time,
                                   double secs_elapsed,
                                   data::Solution cells,
                                   data::Wells wells,
@@ -629,6 +630,7 @@ void EclipseWriter::writeTimeStep(int report_step,
 
     using dc = data::Solution::key;
 
+    time_t current_posix_time = this->impl->sim_start_time + secs_elapsed;
     const auto* conversion_table = this->impl->conversion_table;
     const auto& gridToEclipseIdx = this->impl->gridToEclipseIdx;
     const auto& es = *this->impl->es;

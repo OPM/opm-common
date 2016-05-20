@@ -141,8 +141,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
     const auto num_cells = eclipseState->getInputGrid()->getCartesianSize();
     EclipseWriter eclipseWriter( eclipseState, num_cells, nullptr );
 
-    time_t start_time = util_make_datetime( 0, 0, 0, 1, 11, 1979 );
-    eclipseWriter.writeInit( start_time );
+    eclipseWriter.writeInit();
 
     int countTimeStep = eclipseState->getSchedule()->getTimeMap()->numTimesteps();
 
@@ -160,7 +159,6 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
 
     for(int timestep = 0; timestep <= countTimeStep; ++timestep){
         eclipseWriter.writeTimeStep( timestep,
-                                     start_time + timestep,
                                      timestep,
                                      solution,
                                      wells, false);

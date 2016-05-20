@@ -122,15 +122,10 @@ BOOST_AUTO_TEST_CASE(test_RFT) {
             * eclipseState->getInputGrid()->getNZ();
 
         EclipseWriter eclipseWriter( eclipseState, numCells, nullptr );
-        time_t btime = util_make_datetime( 0, 0, 0, 1, 12, 1979 );
-        time_t start_time = util_make_datetime( 0, 0, 0, 10, 10, 2008 );
-        eclipseWriter.writeInit( start_time );
-
-
-
-        time_t times[] = { btime,
-            util_make_datetime( 0, 0, 0, 10, 10, 2008 ),
-            util_make_datetime( 0, 0, 0, 10, 11, 2008 ) };
+        time_t start_time = eclipseState->getSchedule()->posixStartTime();
+        /* step time read from deck and hard-coded here */
+        time_t step_time = util_make_datetime( 0, 0, 0, 10, 10, 2008 );
+        eclipseWriter.writeInit();
 
         Opm::data::Wells wells {
             { { "OP_1", { {}, 1.0, 1.1, {} } },
@@ -143,8 +138,7 @@ BOOST_AUTO_TEST_CASE(test_RFT) {
         };
 
         eclipseWriter.writeTimeStep( 2,
-                times[ 1 ],
-                times[ 1 ] - btime,
+                step_time - start_time,
                 createBlackoilState( 2, numCells ),
                 wells, false);
     }

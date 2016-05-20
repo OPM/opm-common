@@ -266,13 +266,12 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
 
         auto start_time = util_make_datetime( 0, 0, 0, 10, 10, 2008 );
         auto first_step = util_make_datetime( 0, 0, 0, 10, 11, 2008 );
-        eclWriter.writeInit( start_time );
+        eclWriter.writeInit();
 
         data::Wells wells;
 
         for( int i = 0; i < 5; ++i ) {
             eclWriter.writeTimeStep( i,
-                    first_step,
                     first_step - start_time,
                     createBlackoilState( i, 3 * 3 * 3 ),
                     wells, false);

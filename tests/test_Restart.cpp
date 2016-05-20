@@ -232,13 +232,12 @@ first_sim(test_work_area_type * test_area) {
     EclipseWriter eclWriter( eclipseState, num_cells, nullptr );
     auto start_time = util_make_datetime( 0, 0, 0, 1, 11, 1979 );
     auto first_step = util_make_datetime( 0, 0, 0, 10, 10, 2008 );
-    eclWriter.writeInit( start_time );
+    eclWriter.writeInit();
 
     auto sol = mkSolution( num_cells );
     auto wells = mkWells();
 
     eclWriter.writeTimeStep( 1,
-                             first_step,
                              first_step - start_time,
                              sol, wells, false);
 
