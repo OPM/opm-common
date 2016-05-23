@@ -19,6 +19,8 @@
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/OpmLog/Logger.hpp>
+#include <opm/common/OpmLog/StreamLog.hpp>
+#include <iostream>
 
 namespace Opm {
 
@@ -160,6 +162,14 @@ namespace Opm {
     }
 
 
+
+    void OpmLog::setupSimpleDefaultLogging(const bool& use_prefix)
+    {
+         std::shared_ptr<StreamLog> streamLog = std::make_shared<StreamLog>(std::cout, Log::DefaultMessageTypes);
+         OpmLog::addBackend( "STREAMLOG", streamLog);
+         streamLog->setMessageLimiter(std::make_shared<MessageLimiter>(10));
+         streamLog->setMessageFormatter(std::make_shared<SimpleMessageFormatter>(use_prefix, true));
+    }
 /******************************************************************/
 
     std::shared_ptr<Logger> OpmLog::m_logger;
