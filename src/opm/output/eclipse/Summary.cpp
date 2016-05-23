@@ -424,8 +424,6 @@ inline double well_keywords( E keyword,
         case E::WTHPH: return 0; /* not supported */
 
         /* Injection rates */
-        /* TODO: read from sim or compute (how?) */
-        /* TODO: Tests */
         case E::WWIR: return rate( rt::wat );
         case E::WOIR: return rate( rt::oil );
         case E::WGIR: return rate( rt::gas );
