@@ -28,7 +28,7 @@
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/parser/eclipse/Units/ConversionFactors.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <algorithm>
 
@@ -37,7 +37,7 @@ namespace {
 
     inline data::Solution restoreSOLUTION( ecl_file_type* file,
                                            int numcells,
-                                           const double* conversion_table ) {
+                                           const UnitSystem& units ) {
 
         for( const auto* key : { "PRESSURE", "TEMP", "SWAT", "SGAS" } ) {
             if( !ecl_file_has_kw( file, key ) )
@@ -80,13 +80,12 @@ namespace {
         sol.insert( ds::SWAT,     { swat.data, swat.data + swat.size } );
         sol.insert( ds::SGAS,     { sgas.data, sgas.data + sgas.size } );
 
-        using namespace conversions;
-        const auto apply_pressure = [=]( double x ) {
-            return to_si( conversion_table, dim::pressure, x );
+        const auto apply_pressure = [&]( double x ) {
+            return units.to_si( UnitSystem::measure::pressure, x );
         };
 
         const auto apply_temperature = [=]( double x ) {
-            return to_si( conversion_table, dim::temperature, x );
+            return units.to_si( UnitSystem::measure::temperature, x );
         };
 
         std::transform( sol[ ds::PRESSURE ].begin(), sol[ ds::PRESSURE ].end(),
@@ -171,13 +170,8 @@ init_from_restart_file( const EclipseState& es, int numcells ) {
                 + std::to_string( restart_step ) + "!" );
     }
 
-    const auto* conv_table = es.getDeckUnitSystem()
-        .getType() == UnitSystem::UNIT_TYPE_METRIC
-        ? conversions::metric2si
-        : conversions::field2si;
-
     return {
-        restoreSOLUTION( file.get(), numcells, conv_table ),
+        restoreSOLUTION( file.get(), numcells, es.getUnits() ),
         restoreOPM_XWEL( file.get(), num_wells, num_phases )
     };
 }

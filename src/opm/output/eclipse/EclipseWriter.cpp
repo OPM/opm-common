@@ -24,7 +24,6 @@
 #include "EclipseWriter.hpp"
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/parser/eclipse/Units/ConversionFactors.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
@@ -79,10 +78,10 @@ void restrictAndReorderToActiveCells(std::vector<double> &data,
 }
 
 inline void convertFromSiTo( std::vector< double >& siValues,
-                                    const double* table,
-                                    conversions::dim d ) {
+                                    const UnitSystem& units,
+                                    UnitSystem::measure m ) {
     for (size_t curIdx = 0; curIdx < siValues.size(); ++curIdx) {
-        siValues[curIdx] = conversions::from_si( table, d, siValues[ curIdx ] );
+        siValues[curIdx] = units.from_si( m, siValues[ curIdx ] );
     }
 }
 
@@ -395,14 +394,6 @@ inline int ertPhaseMask( const TableManager& tm ) {
          | ( tm.hasPhase( Phase::PhaseEnum::GAS ) ? ECL_GAS_PHASE : 0 );
 }
 
-inline const double* get_conv_table( UnitSystem::UnitType t ) {
-    switch( t ) {
-        case UnitSystem::UNIT_TYPE_METRIC: return conversions::si2metric;
-        case UnitSystem::UNIT_TYPE_FIELD:  return conversions::si2field;
-        default: return conversions::si2metric;
-    }
-}
-
 class RFT {
     public:
         RFT( const char* output_dir,
@@ -531,7 +522,6 @@ class EclipseWriter::Impl {
         std::array< int, 3 > cartesianSize;
         const int* compressed_to_cartesian;
         std::vector< int > gridToEclipseIdx;
-        const double* conversion_table;
         bool output_enabled;
         int ert_phase_mask;
 };
@@ -551,7 +541,6 @@ EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
     , numCells( numCells )
     , compressed_to_cartesian( compressed_to_cart )
     , gridToEclipseIdx( numCells, int(-1) )
-    , conversion_table( get_conv_table( eclipseState->getDeckUnitSystem().getType() ) )
     , output_enabled( eclipseState->getIOConfig()->getOutputEnabled() )
     , ert_phase_mask( ertPhaseMask( eclipseState->getTableManager() ) )
 {}
@@ -577,30 +566,30 @@ void EclipseWriter::writeInit( const NNC& nnc ) {
 
     if( !ioConfig->getWriteINITFile() ) return;
 
-    const auto* conversion_table = this->impl->conversion_table;
     const auto& gridToEclipseIdx = this->impl->gridToEclipseIdx;
+    const auto& units = es.getUnits();
 
     if (props.hasDeckDoubleGridProperty("PERMX")) {
         auto data = props.getDoubleGridProperty("PERMX").getData();
         convertFromSiTo( data,
-                conversion_table,
-                conversions::dim::permeability );
+                         units,
+                         units.measure::permeability );
         restrictAndReorderToActiveCells(data, gridToEclipseIdx.size(), gridToEclipseIdx.data());
         fortio.writeKeyword("PERMX", data);
     }
     if (props.hasDeckDoubleGridProperty("PERMY")) {
         auto data = props.getDoubleGridProperty("PERMY").getData();
         convertFromSiTo( data,
-                conversion_table,
-                conversions::dim::permeability );
+                         units,
+                         units.measure::permeability );
         restrictAndReorderToActiveCells(data, gridToEclipseIdx.size(), gridToEclipseIdx.data());
         fortio.writeKeyword("PERMY", data);
     }
     if (props.hasDeckDoubleGridProperty("PERMZ")) {
         auto data = props.getDoubleGridProperty("PERMZ").getData();
         convertFromSiTo( data,
-                conversion_table,
-                conversions::dim::permeability );
+                         units,
+                         units.measure::permeability );
         restrictAndReorderToActiveCells(data, gridToEclipseIdx.size(), gridToEclipseIdx.data());
         fortio.writeKeyword("PERMZ", data);
     }
@@ -612,7 +601,7 @@ void EclipseWriter::writeInit( const NNC& nnc ) {
         tran.push_back( nd.trans );
     }
 
-    convertFromSiTo( tran, conversion_table, conversions::dim::transmissibility );
+    convertFromSiTo( tran, units, units.measure::transmissibility );
     fortio.writeKeyword("TRANNNC", tran);
 
 }
@@ -631,14 +620,14 @@ void EclipseWriter::writeTimeStep(int report_step,
     using dc = data::Solution::key;
 
     time_t current_posix_time = this->impl->sim_start_time + secs_elapsed;
-    const auto* conversion_table = this->impl->conversion_table;
     const auto& gridToEclipseIdx = this->impl->gridToEclipseIdx;
     const auto& es = *this->impl->es;
+    const auto& units = es.getUnits();
 
     auto& pressure = cells[ dc::PRESSURE ];
     convertFromSiTo( pressure,
-                     conversion_table,
-                     conversions::dim::pressure );
+                     units,
+                     units.measure::pressure );
     restrictAndReorderToActiveCells(pressure, gridToEclipseIdx.size(), gridToEclipseIdx.data());
 
     if( cells.has( dc::SWAT ) ) {
@@ -655,9 +644,7 @@ void EclipseWriter::writeTimeStep(int report_step,
     IOConfigConstPtr ioConfig = this->impl->es->getIOConfigConst();
 
 
-    const auto days = conversions::from_si( conversion_table,
-                                            conversions::dim::time,
-                                            secs_elapsed );
+    const auto days = units.from_si( units.measure::time, secs_elapsed );
     const auto& schedule = *es.getSchedule();
 
     // Write restart file
@@ -731,8 +718,8 @@ void EclipseWriter::writeTimeStep(int report_step,
         // write the cell temperature
         auto& temperature = cells[ dc::TEMP ];
         convertFromSiTo( temperature,
-                         conversion_table,
-                         conversions::dim::temperature );
+                         units,
+                         units.measure::temperature );
         sol.add(Keyword<float>("TEMP", temperature));
 
 
