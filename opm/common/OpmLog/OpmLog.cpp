@@ -163,10 +163,10 @@ namespace Opm {
 
 
 
-    void OpmLog::setupSimpleDefaultLogging(const bool& use_prefix)
+    void OpmLog::setupSimpleDefaultLogging(const bool use_prefix)
     {
          std::shared_ptr<StreamLog> streamLog = std::make_shared<StreamLog>(std::cout, Log::DefaultMessageTypes);
-         OpmLog::addBackend( "STREAMLOG", streamLog);
+         OpmLog::addBackend( "SimpleDefaultLog", streamLog);
          streamLog->setMessageLimiter(std::make_shared<MessageLimiter>(10));
          streamLog->setMessageFormatter(std::make_shared<SimpleMessageFormatter>(use_prefix, true));
     }
