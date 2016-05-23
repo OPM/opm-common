@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(hasKeyword) {
         SupportedKeywordInfo("SATNUM" , 0, "1")
     };
     const Opm::EclipseGrid grid(10, 7, 9);
-    Opm::GridProperties<int> gridProperties( grid, std::move( supportedKeywords ) );
+    const Opm::GridProperties<int> gridProperties( grid, std::move( supportedKeywords ) );
 
     // calling getKeyword() should not change the semantics of hasKeyword()!
     BOOST_CHECK(!gridProperties.hasKeyword("SATNUM"));

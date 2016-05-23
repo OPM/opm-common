@@ -109,6 +109,7 @@ EclipseState/Tables/Tables.cpp
 #
 EclipseState/Grid/SatfuncPropertyInitializers.cpp
 EclipseState/Grid/GridProperty.cpp
+EclipseState/Grid/GridProperties.cpp
 EclipseState/Grid/Box.cpp
 EclipseState/Grid/BoxManager.cpp
 EclipseState/Grid/FaceDir.cpp
