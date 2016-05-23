@@ -106,6 +106,10 @@ namespace Opm {
         return m_deckUnitSystem;
     }
 
+    const UnitSystem& EclipseState::getUnits() const {
+        return m_deckUnitSystem;
+    }
+
     EclipseGridConstPtr EclipseState::getInputGrid() const {
         return m_inputGrid;
     }
