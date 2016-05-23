@@ -359,3 +359,13 @@ BOOST_AUTO_TEST_CASE(TestOpmLogWithLimits)
     std::cout << log_stream1.str() << std::endl;
     std::cout << log_stream2.str() << std::endl;
 }
+
+
+
+
+BOOST_AUTO_TEST_CASE(TestsetupSimpleLog)
+{
+    bool use_prefix = false;
+    OpmLog::setupSimpleDefaultLogging(use_prefix);
+    BOOST_CHECK_EQUAL(true, OpmLog::hasBackend("SimpleDefaultLog"));
+}

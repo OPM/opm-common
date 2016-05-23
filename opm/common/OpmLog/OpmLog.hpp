@@ -62,7 +62,7 @@ public:
     static void removeAllBackends();
     static bool enabledMessageType( int64_t messageType );
     static void addMessageType( int64_t messageType , const std::string& prefix);
-
+    static void setupSimpleDefaultLogging(const bool use_prefix);
 
     template <class BackendType>
     static std::shared_ptr<BackendType> getBackend(const std::string& name) {
