@@ -51,28 +51,53 @@ namespace Opm {
         return group->name();
     }
 
-    static inline std::vector< ERT::smspec_node > keywordWG(
-            ecl_smspec_var_type var_type,
+    static inline std::vector< ERT::smspec_node > keywordW(
             const DeckKeyword& keyword,
             const Schedule& schedule ) {
 
-        const auto mknode = [&keyword,var_type]( const std::string& name ) {
-            return ERT::smspec_node( var_type, name, keyword.name() );
+        const auto mknode = [&keyword]( const std::string& name ) {
+            return ERT::smspec_node( ECL_SMSPEC_WELL_VAR, name, keyword.name() );
         };
 
-        const auto find = []( ecl_smspec_var_type v, const Schedule& sc ) {
-            if( v == ECL_SMSPEC_WELL_VAR )
-                return fun::map( wellName, sc.getWells() );
-            else
-                return fun::map( groupName, sc.getGroups() );
+        const auto missing = [&schedule]( const std::string& name ) {
+            return !schedule.hasWell( name );
         };
 
         const auto& item = keyword.getDataRecord().getDataItem();
-        const auto wgnames = item.size() > 0 && item.hasValue( 0 )
+        auto wnames = item.hasValue( 0 )
             ? item.getData< std::string >()
-            : find( var_type, schedule );
+            : fun::map( wellName, schedule.getWells() );
 
-        return fun::map( mknode, wgnames );
+        /* filter all requested names that were not in the Deck */
+        wnames.erase(
+                std::remove_if( wnames.begin(), wnames.end(), missing ),
+                wnames.end() );
+
+        return fun::map( mknode, wnames );
+    }
+
+    static inline std::vector< ERT::smspec_node > keywordG(
+            const DeckKeyword& keyword,
+            const Schedule& schedule ) {
+
+        const auto mknode = [&keyword]( const std::string& name ) {
+            return ERT::smspec_node( ECL_SMSPEC_GROUP_VAR, name, keyword.name() );
+        };
+
+        const auto missing = [&schedule]( const std::string& name ) {
+            return !schedule.hasGroup( name );
+        };
+
+        const auto& item = keyword.getDataRecord().getDataItem();
+        auto gnames = item.hasValue( 0 )
+            ? item.getData< std::string >()
+            : fun::map( groupName, schedule.getGroups() );
+
+        gnames.erase(
+                std::remove_if( gnames.begin(), gnames.end(), missing ),
+                gnames.end() );
+
+        return fun::map( mknode, gnames );
     }
 
     static inline std::vector< ERT::smspec_node > keywordF(
@@ -200,8 +225,8 @@ namespace Opm {
         const auto var_type = ecl_smspec_identify_var_type( keyword.name().c_str() );
 
         switch( var_type ) {
-            case ECL_SMSPEC_WELL_VAR: /* intentional fall-through */
-            case ECL_SMSPEC_GROUP_VAR: return keywordWG( var_type, keyword, schedule );
+            case ECL_SMSPEC_WELL_VAR: return keywordW( keyword, schedule );
+            case ECL_SMSPEC_GROUP_VAR: return keywordG( keyword, schedule );
             case ECL_SMSPEC_FIELD_VAR: return keywordF( keyword );
             case ECL_SMSPEC_BLOCK_VAR: return keywordB( keyword, n_xyz );
             case ECL_SMSPEC_REGION_VAR: return keywordR( keyword, props, n_xyz );
