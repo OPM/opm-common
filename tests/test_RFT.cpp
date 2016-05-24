@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(test_RFT) {
         time_t start_time = eclipseState->getSchedule()->posixStartTime();
         /* step time read from deck and hard-coded here */
         time_t step_time = util_make_datetime( 0, 0, 0, 10, 10, 2008 );
-        eclipseWriter.writeInit();
+        eclipseWriter.writeInit( NNC() );
 
         Opm::data::Wells wells {
             { { "OP_1", { {}, 1.0, 1.1, {} } },

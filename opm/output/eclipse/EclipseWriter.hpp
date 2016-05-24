@@ -55,7 +55,7 @@ public:
      *
      * If NNC is given, writes TRANNNC keyword.
      */
-    void writeInit( const NNC& nnc = NNC() );
+    void writeInit( const NNC& nnc );
 
     /*!
      * \brief Write a reservoir state and summary information to disk.

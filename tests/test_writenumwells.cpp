@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
     const auto num_cells = eclipseState->getInputGrid()->getCartesianSize();
     EclipseWriter eclipseWriter( eclipseState, num_cells, nullptr );
 
-    eclipseWriter.writeInit();
+    eclipseWriter.writeInit( NNC() );
 
     int countTimeStep = eclipseState->getSchedule()->getTimeMap()->numTimesteps();
 
