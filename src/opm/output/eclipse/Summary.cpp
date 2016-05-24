@@ -42,14 +42,6 @@ namespace {
 
 using rt = data::Rates::opt;
 
-/* posix_time -> time_t isn't in older versions of boost (at least not in
- * 1.53), so it's implemented here
- */
-inline std::time_t to_time_t( boost::posix_time::ptime pt ) {
-    auto dur = pt - boost::posix_time::ptime( boost::gregorian::date( 1970, 1, 1 ) );
-    return std::time_t( dur.total_seconds() );
-}
-
 /* The supported Eclipse keywords */
 enum class E : out::Summary::kwtype {
     WBHP,
@@ -623,7 +615,7 @@ Summary::Summary( const EclipseState& st,
                 st.getIOConfig()->getFMTOUT(),
                 st.getIOConfig()->getUNIFOUT(),
                 ":",
-                to_time_t( st.getSchedule()->getStartTime() ),
+                st.getSchedule()->posixStartTime(),
                 true,
                 st.getInputGrid()->getNX(),
                 st.getInputGrid()->getNY(),
