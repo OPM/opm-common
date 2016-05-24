@@ -373,16 +373,16 @@ inline double well_keywords( E keyword,
     switch( keyword ) {
 
         /* Production rates */
-        case E::WWPR: return rate( rt::wat );
-        case E::WOPR: return rate( rt::oil );
-        case E::WGPR: return rate( rt::gas );
-        case E::WLPR: return rate( rt::wat ) + rate( rt::oil );
+        case E::WWPR: return - rate( rt::wat );
+        case E::WOPR: return - rate( rt::oil );
+        case E::WGPR: return - rate( rt::gas );
+        case E::WLPR: return - ( rate( rt::wat ) + rate( rt::oil ) );
 
         /* Production totals */
-        case E::WWPT: return accu + vol( rt::wat );
-        case E::WOPT: return accu + vol( rt::oil );
-        case E::WGPT: return accu + vol( rt::gas );
-        case E::WLPT: return accu + vol( rt::wat ) + vol( rt::oil );
+        case E::WWPT: return accu - vol( rt::wat );
+        case E::WOPT: return accu - vol( rt::oil );
+        case E::WGPT: return accu - vol( rt::gas );
+        case E::WLPT: return accu - ( vol( rt::wat ) + vol( rt::oil ) );
 
         /* Production history rates */
         case E::WWPRH: return histprate( WT::wat );
@@ -416,14 +416,12 @@ inline double well_keywords( E keyword,
         case E::WTHPH: return 0; /* not supported */
 
         /* Injection rates */
-        /* TODO: read from sim or compute (how?) */
-        /* TODO: Tests */
-        case E::WWIR: return - rate( rt::wat );
-        case E::WOIR: return - rate( rt::oil );
-        case E::WGIR: return - rate( rt::gas );
-        case E::WWIT: return accu - vol( rt::wat );
-        case E::WOIT: return accu - vol( rt::oil );
-        case E::WGIT: return accu - vol( rt::gas );
+        case E::WWIR: return rate( rt::wat );
+        case E::WOIR: return rate( rt::oil );
+        case E::WGIR: return rate( rt::gas );
+        case E::WWIT: return accu + vol( rt::wat );
+        case E::WOIT: return accu + vol( rt::oil );
+        case E::WGIT: return accu + vol( rt::gas );
 
         case E::WWIRH: return histirate( WellInjector::WATER );
         case E::WOIRH: return histirate( WellInjector::OIL );
@@ -540,21 +538,21 @@ inline double group_keywords( E keyword,
 
     switch( keyword ) {
         /* Production rates */
-        case E::GWPR: return rate( rt::wat );
-        case E::GOPR: return rate( rt::oil );
-        case E::GGPR: return rate( rt::gas );
-        case E::GLPR: return rate( rt::wat ) + rate( rt::oil );
+        case E::GWPR: return - rate( rt::wat );
+        case E::GOPR: return - rate( rt::oil );
+        case E::GGPR: return - rate( rt::gas );
+        case E::GLPR: return (- rate( rt::wat )) + (- rate( rt::oil ));
 
         /* Production totals */
-        case E::GWPT: return accu + vol( rt::wat );
-        case E::GOPT: return accu + vol( rt::oil );
-        case E::GGPT: return accu + vol( rt::gas );
+        case E::GWPT: return accu - vol( rt::wat );
+        case E::GOPT: return accu - vol( rt::oil );
+        case E::GGPT: return accu - vol( rt::gas );
 
         /* Injection rates */
-        case E::GWIR: return - rate( rt::wat );
-        case E::GGIR: return - rate( rt::gas );
-        case E::GWIT: return accu - vol( rt::wat );
-        case E::GGIT: return accu - vol( rt::gas );
+        case E::GWIR: return rate( rt::wat );
+        case E::GGIR: return rate( rt::gas );
+        case E::GWIT: return accu + vol( rt::wat );
+        case E::GGIT: return accu + vol( rt::gas );
 
         /* Production ratios */
         case E::GWCT: return wct( rate( rt::wat ), rate( rt::oil ) );
