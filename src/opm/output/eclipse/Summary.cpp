@@ -27,7 +27,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/WellSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
-#include <opm/parser/eclipse/Units/ConversionFactors.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm {
@@ -244,16 +243,15 @@ enum class WT { wat, oil, gas };
 inline double prodrate( const Well& w,
                         size_t timestep,
                         WT wt,
-                        const double* conversion_table ) {
-    using namespace conversions;
+                        const UnitSystem& units ) {
 
     if( !w.isProducer( timestep ) ) return 0;
 
     const auto& p = w.getProductionProperties( timestep );
     switch( wt ) {
-        case WT::wat: return from_si( conversion_table, dim::liquid_surface_rate, p.WaterRate );
-        case WT::oil: return from_si( conversion_table, dim::liquid_surface_rate, p.OilRate );
-        case WT::gas: return from_si( conversion_table, dim::gas_surface_rate, p.GasRate );
+        case WT::wat: return units.from_si( units.measure::liquid_surface_rate, p.WaterRate );
+        case WT::oil: return units.from_si( units.measure::liquid_surface_rate, p.OilRate );
+        case WT::gas: return units.from_si( units.measure::gas_surface_rate, p.GasRate );
     }
 
     throw std::runtime_error( "Reached impossible state in prodrate" );
@@ -262,19 +260,15 @@ inline double prodrate( const Well& w,
 inline double prodvol( const Well& w,
                        size_t timestep,
                        WT wt,
-                       const double* conversion_table ) {
-    const auto rate = prodrate( w, timestep, wt, conversion_table );
-    return rate * conversions::from_si( conversion_table,
-                                        conversions::dim::time,
-                                        1 );
+                       const UnitSystem& units ) {
+    const auto rate = prodrate( w, timestep, wt, units );
+    return rate * units.from_si( units.measure::time, 1 );
 }
 
 inline double injerate( const Well& w,
                         size_t timestep,
                         WellInjector::TypeEnum wt,
-                        const double* conversion_table ) {
-
-    using namespace conversions;
+                       const UnitSystem& units ) {
 
     if( !w.isInjector( timestep ) ) return 0;
     const auto& i = w.getInjectionProperties( timestep );
@@ -285,55 +279,48 @@ inline double injerate( const Well& w,
     if( wt != i.injectorType ) return 0;
 
     if( wt == WellInjector::GAS )
-        return from_si( conversion_table,
-                        dim::gas_surface_rate,
-                        i.surfaceInjectionRate );
+        return units.from_si( units.measure::gas_surface_rate,
+                              i.surfaceInjectionRate );
 
-    return from_si( conversion_table,
-                    dim::liquid_surface_rate,
-                    i.surfaceInjectionRate );
+    return units.from_si( units.measure::liquid_surface_rate,
+                          i.surfaceInjectionRate );
 }
 
 inline double injevol( const Well& w,
                        size_t timestep,
                        WellInjector::TypeEnum wt,
-                       const double* conversion_table ) {
+                       const UnitSystem& units ) {
 
-    const auto rate = injerate( w, timestep, wt, conversion_table );
-    return rate * conversions::from_si( conversion_table,
-                                        conversions::dim::time,
-                                        1 );
+    const auto rate = injerate( w, timestep, wt, units );
+    return rate * units.from_si( units.measure::time, 1 );
 }
 
 inline double get_rate( const data::Well& w,
                         rt phase,
-                        const double* conversion_table ) {
+                        const UnitSystem& units ) {
     const auto x = w.rates.get( phase, 0.0 );
 
-    using namespace conversions;
-
     switch( phase ) {
-        case rt::gas: return from_si( conversion_table, dim::gas_surface_rate, x );
-        default: return from_si( conversion_table, dim::liquid_surface_rate, x );
+        case rt::gas: return units.from_si( units.measure::gas_surface_rate, x );
+        default: return units.from_si( units.measure::liquid_surface_rate, x );
     }
 }
 
 inline double get_vol( const data::Well& w,
                        rt phase,
-                       const double* conversion_table ) {
-    using namespace conversions;
+                       const UnitSystem& units ) {
 
     const auto x = w.rates.get( phase, 0.0 );
     switch( phase ) {
-        case rt::gas: return from_si( conversion_table, dim::gas_surface_volume, x );
-        default: return from_si( conversion_table, dim::liquid_surface_volume, x );
+        case rt::gas: return units.from_si( units.measure::gas_surface_volume, x );
+        default: return units.from_si( units.measure::liquid_surface_volume, x );
     }
 }
 
 inline double well_keywords( E keyword,
                              const smspec_node_type* node,
                              const ecl_sum_tstep_type* prev,
-                             const double* conversion_table,
+                             const UnitSystem& units,
                              const data::Well& sim_well,
                              const Well& state_well,
                              size_t tstep ) {
@@ -351,24 +338,22 @@ inline double well_keywords( E keyword,
      * The binding of lambdas is also done for groups, fields etc.
      */
     const auto rate = [&]( rt phase )
-        { return get_rate( sim_well, phase, conversion_table ); };
+        { return get_rate( sim_well, phase, units ); };
 
     const auto vol = [&]( rt phase )
-        { return get_vol( sim_well, phase, conversion_table ); };
+        { return get_vol( sim_well, phase, units ); };
 
     const auto histprate = [&]( WT phase )
-        { return prodrate( state_well, tstep, phase, conversion_table ); };
+        { return prodrate( state_well, tstep, phase, units ); };
 
     const auto histpvol = [&]( WT phase )
-        { return prodvol( state_well, tstep, phase, conversion_table ); };
+        { return prodvol( state_well, tstep, phase, units ); };
 
     const auto histirate = [&]( WellInjector::TypeEnum phase )
-        { return injerate( state_well, tstep, phase, conversion_table ); };
+        { return injerate( state_well, tstep, phase, units ); };
 
     const auto histivol = [&]( WellInjector::TypeEnum phase )
-        { return injevol( state_well, tstep, phase, conversion_table ); };
-
-    using namespace conversions;
+        { return injevol( state_well, tstep, phase, units ); };
 
     switch( keyword ) {
 
@@ -409,10 +394,10 @@ inline double well_keywords( E keyword,
         case E::WGLRH: return wglrh( state_well, tstep );
 
         /* Pressures */
-        case E::WBHP: return from_si( conversion_table, dim::pressure, sim_well.bhp );
+        case E::WBHP: return units.from_si( units.measure::pressure, sim_well.bhp );
         case E::WBHPH: return 0; /* not supported */
 
-        case E::WTHP: return from_si( conversion_table, dim::pressure, sim_well.thp );
+        case E::WTHP: return units.from_si( units.measure::pressure, sim_well.thp );
         case E::WTHPH: return 0; /* not supported */
 
         /* Injection rates */
@@ -447,45 +432,37 @@ inline double sum( const std::vector< const data::Well* >& wells, rt phase ) {
 }
 
 inline double sum_rate( const std::vector< const data::Well* >& wells,
-                   rt phase,
-                   const double* conversion_table ) {
-
-    using namespace conversions;
+                        rt phase,
+                        const UnitSystem& units ) {
 
     switch( phase ) {
         case rt::wat: /* intentional fall-through */
-        case rt::oil: return from_si( conversion_table,
-                                      dim::liquid_surface_rate,
-                                      sum( wells, phase ) );
+        case rt::oil: return units.from_si( units.measure::liquid_surface_rate,
+                                            sum( wells, phase ) );
 
-        case rt::gas: return from_si( conversion_table,
-                                      dim::gas_surface_rate,
-                                      sum( wells, phase ) );
+        case rt::gas: return units.from_si( units.measure::gas_surface_rate,
+                                            sum( wells, phase ) );
         default: break;
     }
 
-    throw std::runtime_error( "Reached impossible state in prodrate" );
+    throw std::runtime_error( "Reached impossible state in sum_rate" );
 }
 
 inline double sum_vol( const std::vector< const data::Well* >& wells,
-                   rt phase,
-                   const double* conversion_table ) {
-
-    using namespace conversions;
+                       rt phase,
+                       const UnitSystem& units ) {
 
     switch( phase ) {
         case rt::wat: /* intentional fall-through */
-        case rt::oil: return from_si( conversion_table,
-                                      dim::liquid_surface_volume,
-                                      sum( wells, phase ) );
+        case rt::oil: return units.from_si( units.measure::liquid_surface_volume,
+                                            sum( wells, phase ) );
 
-        case rt::gas: return from_si( conversion_table,
-                                      dim::gas_surface_volume,
-                                      sum( wells, phase ) );
+        case rt::gas: return units.from_si( units.measure::gas_surface_volume,
+                                            sum( wells, phase ) );
         default: break;
     }
 
-    throw std::runtime_error( "Reached impossible state in prodrate" );
+    throw std::runtime_error( "Reached impossible state in sum_vol" );
 }
 
 template< typename F, typename Phase >
@@ -493,10 +470,10 @@ inline double sum_hist( F f,
                         const WellSet& wells,
                         size_t tstep,
                         Phase phase,
-                        const double* conversion_table ) {
+                        const UnitSystem& units ) {
     double res = 0;
     for( const auto& well : wells )
-        res += f( *well.second, tstep, phase, conversion_table );
+        res += f( *well.second, tstep, phase, units );
 
     return res;
 }
@@ -504,7 +481,7 @@ inline double sum_hist( F f,
 inline double group_keywords( E keyword,
                               const smspec_node_type* node,
                               const ecl_sum_tstep_type* prev,
-                              const double* conversion_table,
+                              const UnitSystem& units,
                               size_t tstep,
                               const std::vector< const data::Well* >& sim_wells,
                               const WellSet& state_wells ) {
@@ -513,27 +490,27 @@ inline double group_keywords( E keyword,
     const auto accu = prev ? ecl_sum_tstep_get_from_key( prev, genkey ) : 0;
 
     const auto rate = [&]( rt phase ) {
-        return sum_rate( sim_wells, phase, conversion_table );
+        return sum_rate( sim_wells, phase, units );
     };
 
     const auto vol = [&]( rt phase ) {
-        return sum_vol( sim_wells, phase, conversion_table );
+        return sum_vol( sim_wells, phase, units );
     };
 
     const auto histprate = [&]( WT phase ) {
-        return sum_hist( prodrate, state_wells, tstep, phase, conversion_table );
+        return sum_hist( prodrate, state_wells, tstep, phase, units );
     };
 
     const auto histpvol = [&]( WT phase ) {
-        return sum_hist( prodvol, state_wells, tstep, phase, conversion_table );
+        return sum_hist( prodvol, state_wells, tstep, phase, units );
     };
 
     const auto histirate = [&]( WellInjector::TypeEnum phase ) {
-        return sum_hist( injerate, state_wells, tstep, phase, conversion_table );
+        return sum_hist( injerate, state_wells, tstep, phase, units );
     };
 
     const auto histivol = [&]( WellInjector::TypeEnum phase ) {
-        return sum_hist( injevol, state_wells, tstep, phase, conversion_table );
+        return sum_hist( injevol, state_wells, tstep, phase, units );
     };
 
     switch( keyword ) {
@@ -594,16 +571,6 @@ Summary::Summary( const EclipseState& st,
     Summary( st, sum, basename.c_str() )
 {}
 
-static inline const double* get_conversions( const EclipseState& es ) {
-    using namespace conversions;
-
-    switch( es.getDeckUnitSystem().getType() ) {
-        case UnitSystem::UNIT_TYPE_METRIC: return si2metric;
-        case UnitSystem::UNIT_TYPE_FIELD: return si2field;
-        default: return si2metric;
-    }
-}
-
 Summary::Summary( const EclipseState& st,
                   const SummaryConfig& sum,
                   const char* basename ) :
@@ -619,8 +586,7 @@ Summary::Summary( const EclipseState& st,
                 st.getInputGrid()->getNY(),
                 st.getInputGrid()->getNZ()
                 )
-            ),
-    conversions( get_conversions( st ) )
+            )
 {
     for( const auto& node : sum ) {
 
@@ -663,7 +629,7 @@ void Summary::add_timestep( int report_step,
         for( const auto& node : pair.second ) {
             auto val = well_keywords( static_cast< E >( node.kw ),
                                       node.node, this->prev_tstep,
-                                      this->conversions, sim_well,
+                                      es.getUnits(), sim_well,
                                       state_well, report_step );
             ecl_sum_tstep_set_from_node( tstep, node.node, val );
         }
@@ -682,7 +648,7 @@ void Summary::add_timestep( int report_step,
         for( const auto& node : pair.second ) {
             auto val = group_keywords( static_cast< E >( node.kw ),
                                        node.node, this->prev_tstep,
-                                       this->conversions, report_step,
+                                       es.getUnits(), report_step,
                                        sim_wells, state_wells );
             ecl_sum_tstep_set_from_node( tstep, node.node, val );
         }

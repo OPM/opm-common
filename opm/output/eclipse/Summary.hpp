@@ -55,13 +55,11 @@ class Summary {
         };
 
     private:
-
         ERT::ert_unique_ptr< ecl_sum_type, ecl_sum_free > ecl_sum;
         std::map< const char*, std::vector< sum_node > > wvar;
         std::map< const char*, std::vector< sum_node > > gvar;
         const ecl_sum_tstep_type* prev_tstep = nullptr;
         double duration = 0;
-        const double* conversions;
 };
 
 }
