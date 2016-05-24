@@ -71,19 +71,6 @@ namespace Opm {
             IOConfigPtr ioConfig) :
             m_grid(grid)
     {
-        initFromDeck(parseContext, deck, ioConfig);
-    }
-
-    boost::posix_time::ptime Schedule::getStartTime() const {
-        return m_timeMap->getStartTime(/*timeStepIdx=*/0);
-    }
-
-    time_t Schedule::posixStartTime() const {
-        boost::posix_time::ptime epoch( boost::gregorian::date( 1970, 1, 1 ) );
-        return time_t( ( this->getStartTime() - epoch ).total_seconds() );
-    }
-
-    void Schedule::initFromDeck(const ParseContext& parseContext, const Deck& deck, IOConfigPtr ioConfig) {
         initializeNOSIM(deck);
         createTimeMap(deck);
         m_tuning.reset(new Tuning(m_timeMap));
@@ -97,6 +84,15 @@ namespace Opm {
             std::shared_ptr<SCHEDULESection> scheduleSection = std::make_shared<SCHEDULESection>(deck);
             iterateScheduleSection(parseContext , *scheduleSection , ioConfig);
         }
+    }
+
+    boost::posix_time::ptime Schedule::getStartTime() const {
+        return m_timeMap->getStartTime(/*timeStepIdx=*/0);
+    }
+
+    time_t Schedule::posixStartTime() const {
+        boost::posix_time::ptime epoch( boost::gregorian::date( 1970, 1, 1 ) );
+        return time_t( ( this->getStartTime() - epoch ).total_seconds() );
     }
 
     void Schedule::initOilVaporization(TimeMapConstPtr timeMap) {

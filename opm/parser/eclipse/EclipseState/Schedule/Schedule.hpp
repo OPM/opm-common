@@ -110,7 +110,6 @@ namespace Opm
 
         void updateWellStatus(std::shared_ptr<Well> well, size_t reportStep , WellCommon::StatusEnum status);
         void addWellToGroup( std::shared_ptr< Group > newGroup , std::shared_ptr< Well > well , size_t timeStep);
-        void initFromDeck(const ParseContext& parseContext, const Deck& deck, std::shared_ptr<IOConfig> ioConfig);
         void initializeNOSIM(const Deck& deck);
         void createTimeMap(const Deck& deck);
         void initRootGroupTreeNode(std::shared_ptr< const TimeMap > timeMap);
