@@ -34,19 +34,21 @@ include(CheckIncludeFileCXX)
 # macro to only add option once
 include(AddOptions)
 
-# try to use compiler flag -std=c++11
-CHECK_CXX_ACCEPTS_FLAG("-std=c++11" CXX_FLAG_CXX11)
-if(CXX_FLAG_CXX11)
-  add_options (CXX ALL_BUILDS "-std=c++11")
-  set(CXX_STD0X_FLAGS "-std=c++11")
-else()
-  # try to use compiler flag -std=c++0x for older compilers
-  CHECK_CXX_ACCEPTS_FLAG("-std=c++0x" CXX_FLAG_CXX0X)
-  if(CXX_FLAG_CXX0X)
-  add_options (CXX ALL_BUILDS "-std=c++0x")
-  set(CXX_STD0X_FLAGS "-std=c++0x")
-  endif(CXX_FLAG_CXX0X)
-endif(CXX_FLAG_CXX11)
+if(NOT MSVC)
+  # try to use compiler flag -std=c++11
+  CHECK_CXX_ACCEPTS_FLAG("-std=c++11" CXX_FLAG_CXX11)
+  if(CXX_FLAG_CXX11)
+    add_options (CXX ALL_BUILDS "-std=c++11")
+    set(CXX_STD0X_FLAGS "-std=c++11")
+  else()
+    # try to use compiler flag -std=c++0x for older compilers
+    CHECK_CXX_ACCEPTS_FLAG("-std=c++0x" CXX_FLAG_CXX0X)
+    if(CXX_FLAG_CXX0X)
+      add_options (CXX ALL_BUILDS "-std=c++0x")
+      set(CXX_STD0X_FLAGS "-std=c++0x")
+    endif(CXX_FLAG_CXX0X)
+  endif(CXX_FLAG_CXX11)
+endif(NOT MSVC)
 
 # if we are building with an Apple toolchain in MacOS X,
 # we cannot use the old GCC 4.2 fork, but must use the
