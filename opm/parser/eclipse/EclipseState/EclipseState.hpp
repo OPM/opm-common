@@ -104,6 +104,7 @@ namespace Opm {
         // units because internally to opm-parser everything is represented by SI
         // units...
         const UnitSystem& getDeckUnitSystem() const;
+        const UnitSystem& getUnits() const;
 
         /// [deprecated]
         void applyModifierDeck(std::shared_ptr<const Deck>);
