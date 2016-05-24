@@ -121,6 +121,7 @@ namespace Opm {
 
         IOConfig() = default;
         explicit IOConfig( const Deck& );
+        explicit IOConfig( const std::string& input_path );
 
         int  getFirstRestartStep() const;
         int  getFirstRFTStep() const;
@@ -182,18 +183,18 @@ namespace Opm {
 
 
         std::shared_ptr< const TimeMap > m_timemap;
-        bool            m_write_INIT_file;
-        bool            m_write_EGRID_file;
-        bool            m_write_initial_RST_file;
-        bool            m_UNIFIN;
-        bool            m_UNIFOUT;
-        bool            m_FMTIN;
-        bool            m_FMTOUT;
-        bool            m_ignore_RPTSCHED_RESTART;
+        bool            m_write_INIT_file = false;
+        bool            m_write_EGRID_file = true;
+        bool            m_write_initial_RST_file = false;
+        bool            m_UNIFIN = false;
+        bool            m_UNIFOUT = false;
+        bool            m_FMTIN = false;
+        bool            m_FMTOUT = false;
+        bool            m_ignore_RPTSCHED_RESTART = false;
         int             m_first_restart_step;
         int             m_first_rft_step;
         std::string     m_deck_filename;
-        bool            m_output_enabled;
+        bool            m_output_enabled = true;
         std::string     m_output_dir;
         std::string     m_base_name;
 

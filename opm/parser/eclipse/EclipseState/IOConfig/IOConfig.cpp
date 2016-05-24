@@ -39,8 +39,31 @@
 
 namespace Opm {
 
+    namespace {
+        const char* default_dir = ".";
+
+        inline std::string basename( const std::string& path ) {
+            return boost::filesystem::path( path ).stem().string();
+        }
+
+        inline std::string outputdir( const std::string& path ) {
+            auto dir = boost::filesystem::path( path ).parent_path().string();
+
+            if( dir.empty() ) return default_dir;
+
+            return dir;
+        }
+    }
+
     IOConfig::IOConfig( const Deck& deck ) :
         IOConfig( GRIDSection( deck ), RUNSPECSection( deck ), deck.getDataFile() )
+    {}
+
+
+    IOConfig::IOConfig( const std::string& input_path ) :
+        m_deck_filename( input_path ),
+        m_output_dir( outputdir( input_path ) ),
+        m_base_name( basename( input_path ) )
     {}
 
     static inline bool write_egrid_file( const GRIDSection& grid ) {
@@ -73,25 +96,14 @@ namespace Opm {
                         const std::string& input_path ) :
         m_write_INIT_file( grid.hasKeyword( "INIT" ) ),
         m_write_EGRID_file( write_egrid_file( grid ) ),
-        m_write_initial_RST_file(false),
         m_UNIFIN( runspec.hasKeyword( "UNIFIN" ) ),
         m_UNIFOUT( runspec.hasKeyword( "UNIFOUT" ) ),
         m_FMTIN( runspec.hasKeyword( "FMTIN" ) ),
         m_FMTOUT( runspec.hasKeyword( "FMTOUT" ) ),
-        m_ignore_RPTSCHED_RESTART(false),
         m_deck_filename( input_path ),
-        m_output_enabled(true)
-    {
-        m_output_dir = ".";
-        m_base_name = "";
-        if (!input_path.empty()) {
-            boost::filesystem::path path( this->m_deck_filename );
-            m_base_name = path.stem().string();
-            m_output_dir = path.parent_path().string();
-            if (m_output_dir == "")
-                m_output_dir = ".";
-        }
-    }
+        m_output_dir( outputdir( input_path ) ),
+        m_base_name( basename( input_path ) )
+    {}
 
     bool IOConfig::getWriteEGRIDFile() const {
         return m_write_EGRID_file;
