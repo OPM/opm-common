@@ -178,24 +178,18 @@ struct file {
     boost::filesystem::path path;
 };
 
-class InputStack {
+class InputStack : public std::stack< file, std::vector< file > > {
     public:
-        bool empty() const { return this->file_stack.empty(); }
-        file& peek() { return *this->file_stack.back(); }
-        const file& peek() const { return *this->file_stack.back(); }
-        void pop() { this->file_stack.pop_back(); };
         void push( std::string&& input, boost::filesystem::path p = "" );
 
     private:
         std::list< std::string > string_storage;
-        std::list< file > file_storage;
-        std::vector< file* > file_stack;
+        using base = std::stack< file, std::vector< file > >;
 };
 
 void InputStack::push( std::string&& input, boost::filesystem::path p ) {
     this->string_storage.push_back( std::move( input ) );
-    this->file_storage.emplace_back( p, this->string_storage.back() );
-    this->file_stack.push_back( &this->file_storage.back() );
+    this->emplace( p, this->string_storage.back() );
 }
 
 class ParserState {
@@ -233,17 +227,17 @@ class ParserState {
 
 
 const boost::filesystem::path& ParserState::current_path() const {
-    return this->input_stack.peek().path;
+    return this->input_stack.top().path;
 }
 
 size_t ParserState::line() const {
-    return this->input_stack.peek().lineNR;
+    return this->input_stack.top().lineNR;
 }
 
 bool ParserState::done() const {
 
     while( !this->input_stack.empty() &&
-            this->input_stack.peek().input.empty() )
+            this->input_stack.top().input.empty() )
         const_cast< ParserState* >( this )->input_stack.pop();
 
     return this->input_stack.empty();
@@ -252,8 +246,8 @@ bool ParserState::done() const {
 string_view ParserState::getline() {
     string_view line;
 
-    Opm::getline( this->input_stack.peek().input, line );
-    this->input_stack.peek().lineNR++;
+    Opm::getline( this->input_stack.top().input, line );
+    this->input_stack.top().lineNR++;
 
     return line;
 }
