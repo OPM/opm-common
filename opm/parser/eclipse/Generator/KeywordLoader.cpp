@@ -109,7 +109,7 @@ namespace Opm {
         std::shared_ptr<ParserKeyword> parserKeyword = std::make_shared<ParserKeyword>(*jsonConfig);
         {
             boost::filesystem::path abs_path = boost::filesystem::absolute( path );
-            addKeyword( parserKeyword , abs_path.string() );
+            addKeyword( parserKeyword , abs_path.generic_string() );
         }
     }
 
