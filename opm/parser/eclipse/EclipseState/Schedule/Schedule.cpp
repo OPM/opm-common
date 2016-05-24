@@ -292,12 +292,15 @@ namespace Opm {
             }
         }
 
-        for (auto restartPair = IOConfigSettings.begin(); restartPair != IOConfigSettings.end(); ++restartPair) {
-            const DeckKeyword& keyword = *restartPair->first;
-            size_t timeStep = restartPair->second;
-            if ((keyword.name() == "RPTRST") && (m_timeMap->size() > timeStep+1 )) {
+        for( const auto& pair : IOConfigSettings ) {
+            const DeckKeyword& keyword = *pair.first;
+            size_t timeStep = pair.second;
+
+            if( m_timeMap->size() <= timeStep + 1 ) continue;
+
+            if( keyword.name() == "RPTRST" ) {
                 handleRPTRST(keyword, timeStep + 1, ioConfig);
-              } else if ((keyword.name() == "RPTSCHED") && (m_timeMap->size() > timeStep+1 )){
+              } else if( keyword.name() == "RPTSCHED" ) {
                 handleRPTSCHED(keyword, timeStep + 1, ioConfig);
             }
         }
