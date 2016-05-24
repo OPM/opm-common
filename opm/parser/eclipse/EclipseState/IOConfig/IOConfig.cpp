@@ -39,22 +39,53 @@
 
 namespace Opm {
 
-    IOConfig::IOConfig(const std::string& input_path):
-        m_write_INIT_file(false),
-        m_write_EGRID_file(true),
+    IOConfig::IOConfig( const Deck& deck ) :
+        IOConfig( GRIDSection( deck ), RUNSPECSection( deck ), deck.getDataFile() )
+    {}
+
+    static inline bool write_egrid_file( const GRIDSection& grid ) {
+        if( grid.hasKeyword( "NOGGF" ) ) return false;
+        if( !grid.hasKeyword( "GRIDFILE" ) ) return true;
+
+        const auto& keyword = grid.getKeyword( "GRIDFILE" );
+
+        if( keyword.size() == 0 ) return false;
+
+        const auto& rec = keyword.getRecord( 0 );
+        const auto& item1 = rec.getItem( 0 );
+
+        if( item1.hasValue( 0 ) && item1.get< int >( 0 ) != 0 ) {
+            std::cerr << "IOConfig: Reading GRIDFILE keyword from GRID section: "
+                      << "Output of GRID file is not supported. "
+                      << "Supported format: EGRID"
+                      << std::endl;
+            return true;
+        }
+
+        if( rec.size() < 1 ) return true;
+
+        const auto& item2 = rec.getItem( 1 );
+        return !item2.hasValue( 0 ) || item2.get< int >( 0 ) != 0;
+    }
+
+    IOConfig::IOConfig( const GRIDSection& grid,
+                        const RUNSPECSection& runspec,
+                        const std::string& input_path ) :
+        m_write_INIT_file( grid.hasKeyword( "INIT" ) ),
+        m_write_EGRID_file( write_egrid_file( grid ) ),
         m_write_initial_RST_file(false),
-        m_UNIFIN(false),
-        m_UNIFOUT(false),
-        m_FMTIN(false),
-        m_FMTOUT(false),
+        m_UNIFIN( runspec.hasKeyword( "UNIFIN" ) ),
+        m_UNIFOUT( runspec.hasKeyword( "UNIFOUT" ) ),
+        m_FMTIN( runspec.hasKeyword( "FMTIN" ) ),
+        m_FMTOUT( runspec.hasKeyword( "FMTOUT" ) ),
         m_ignore_RPTSCHED_RESTART(false),
-        m_deck_filename(input_path),
+        m_deck_filename( input_path ),
         m_output_enabled(true)
     {
         m_output_dir = ".";
         m_base_name = "";
         if (!input_path.empty()) {
-            boost::filesystem::path path( input_path );
+            boost::filesystem::path path( this->m_deck_filename );
             m_base_name = path.stem().string();
             m_output_dir = path.parent_path().string();
             if (m_output_dir == "")
@@ -292,41 +323,6 @@ namespace Opm {
             handleRPTSOL(solutionSection->getKeyword("RPTSOL"));
         } //RPTSOL
     }
-
-
-
-    void IOConfig::handleGridSection( const GRIDSection& gridSection) {
-        m_write_INIT_file = gridSection.hasKeyword("INIT");
-
-        if (gridSection.hasKeyword("GRIDFILE")) {
-            const auto& gridfilekeyword = gridSection.getKeyword("GRIDFILE");
-            if (gridfilekeyword.size() > 0) {
-                const auto& rec = gridfilekeyword.getRecord(0);
-                const auto& item1 = rec.getItem(0);
-                if ((item1.hasValue(0)) && (item1.get< int >(0) !=  0)) {
-                    std::cerr << "IOConfig: Reading GRIDFILE keyword from GRID section: Output of GRID file is not supported" << std::endl;
-                }
-                if (rec.size() > 1) {
-                    const auto& item2 = rec.getItem(1);
-                    if ((item2.hasValue(0)) && (item2.get< int >(0) ==  0)) {
-                        m_write_EGRID_file = false;
-                    }
-                }
-            }
-        }
-        if (gridSection.hasKeyword("NOGGF")) {
-            m_write_EGRID_file = false;
-        }
-    }
-
-
-    void IOConfig::handleRunspecSection( const RUNSPECSection& runspecSection) {
-        m_FMTIN   = runspecSection.hasKeyword("FMTIN");   //Input files are formatted
-        m_FMTOUT  = runspecSection.hasKeyword("FMTOUT");  //Output files are to be formatted
-        m_UNIFIN  = runspecSection.hasKeyword("UNIFIN");  //Input files are unified
-        m_UNIFOUT = runspecSection.hasKeyword("UNIFOUT"); //Output files are to be unified
-    }
-
 
     void IOConfig::overrideRestartWriteInterval(size_t interval) {
         if (interval > 0) {

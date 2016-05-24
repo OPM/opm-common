@@ -49,25 +49,13 @@
 
 namespace Opm {
 
-    static IOConfig mkIOConfig( const Deck& deck ) {
-        IOConfig config( deck.getDataFile() );
-
-        if( Section::hasGRID( deck ) )
-            config.handleGridSection( GRIDSection( deck ) );
-
-        if( Section::hasRUNSPEC( deck ) )
-            config.handleRunspecSection( RUNSPECSection( deck ) );
-
-        return config;
-    }
-
     EclipseState::EclipseState(std::shared_ptr<const Deck> deckptr, ParseContext parseContext) :
         EclipseState(*deckptr, parseContext)
     {}
 
     EclipseState::EclipseState(const Deck& deck, ParseContext parseContext) :
         m_parseContext(      parseContext ),
-        m_ioConfig(          std::make_shared< IOConfig >( mkIOConfig( deck ) ) ),
+        m_ioConfig(          std::make_shared< IOConfig >( deck ) ),
         m_initConfig(        std::make_shared< InitConfig >( deck ) ),
         m_tables(            deck ),
         m_inputGrid(         std::make_shared<EclipseGrid>(deck, nullptr) ),

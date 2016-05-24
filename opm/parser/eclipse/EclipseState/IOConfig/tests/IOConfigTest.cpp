@@ -207,12 +207,7 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     DeckPtr deck = createDeck(deckStr);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
     IOConfigPtr ioConfigPtr;
-    BOOST_CHECK_NO_THROW(ioConfigPtr = std::make_shared<IOConfig>());
-
-    GRIDSection gridSection( *deck );
-    RUNSPECSection runspecSection( *deck );
-    ioConfigPtr->handleGridSection(gridSection);
-    ioConfigPtr->handleRunspecSection(runspecSection);
+    BOOST_CHECK_NO_THROW(ioConfigPtr = std::make_shared<IOConfig>( *deck ));
 
     Schedule schedule(ParseContext() , grid , deck, ioConfigPtr);
 
@@ -431,12 +426,7 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     /*If NOGGF keyword is present, no EGRID file is written*/
     DeckPtr deck3 = createDeck(deckStr_NOGGF);
     IOConfigPtr ioConfigPtr3;
-    BOOST_CHECK_NO_THROW(ioConfigPtr3 = std::make_shared<IOConfig>());
-
-    GRIDSection gridSection3( *deck3 );
-    RUNSPECSection runspecSection3( *deck3 );
-    ioConfigPtr3->handleGridSection(gridSection3);
-    ioConfigPtr3->handleRunspecSection(runspecSection3);
+    BOOST_CHECK_NO_THROW(ioConfigPtr3 = std::make_shared<IOConfig>( *deck3 ));
 
     BOOST_CHECK_EQUAL(false, ioConfigPtr3->getWriteEGRIDFile());
 
@@ -452,12 +442,7 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     /*If GRIDFILE 0 0 is specified, no EGRID file is written */
     DeckPtr deck4 = createDeck(deckStr_NO_GRIDFILE);
     IOConfigPtr ioConfigPtr4;
-    BOOST_CHECK_NO_THROW(ioConfigPtr4 = std::make_shared<IOConfig>());
-
-    GRIDSection gridSection4( *deck4 );
-    RUNSPECSection runspecSection4( *deck4 );
-    ioConfigPtr4->handleGridSection(gridSection4);
-    ioConfigPtr4->handleRunspecSection(runspecSection4);
+    BOOST_CHECK_NO_THROW(ioConfigPtr4 = std::make_shared<IOConfig>( *deck4 ));
 
     BOOST_CHECK_EQUAL(false, ioConfigPtr4->getWriteEGRIDFile());
 
@@ -465,14 +450,16 @@ BOOST_AUTO_TEST_CASE(IOConfigTest) {
     BOOST_CHECK_NO_THROW(ioConfigPtr5 = std::make_shared<IOConfig>());
     BOOST_CHECK_EQUAL("", ioConfigPtr5->getBaseName());
 
-    std::string testString = "testString.DATA";
-    IOConfigPtr ioConfigPtr6 = std::make_shared<IOConfig>(testString);
+    Deck deck1;
+    deck1.setDataFile( "testString.DATA" );
+    IOConfigPtr ioConfigPtr6 = std::make_shared<IOConfig>( deck1 );
     std::string output_dir6 =  ".";
     ioConfigPtr6->setOutputDir(output_dir6);
     BOOST_CHECK_EQUAL("testString", ioConfigPtr6->getBaseName());
 
-    std::string absTestPath = "/path/to/testString.DATA";
-    IOConfigPtr ioConfigPtr7 = std::make_shared<IOConfig>(absTestPath);
+    Deck deck2;
+    deck2.setDataFile( "/path/to/testString.DATA" );
+    IOConfigPtr ioConfigPtr7 = std::make_shared<IOConfig>( deck2 );
     std::string output_dir7 =  "/path/to";
     ioConfigPtr7->setOutputDir(output_dir7);
     BOOST_CHECK_EQUAL(output_dir7, ioConfigPtr7->getOutputDir());

@@ -26,6 +26,7 @@ namespace Opm {
 
     template< typename > class DynamicState;
 
+    class Deck;
     class DeckKeyword;
     class GRIDSection;
     class RUNSPECSection;
@@ -118,8 +119,8 @@ namespace Opm {
 
     public:
 
-        explicit IOConfig(const std::string& input_path = "");
-
+        IOConfig() = default;
+        explicit IOConfig( const Deck& );
 
         int  getFirstRestartStep() const;
         int  getFirstRFTStep() const;
@@ -142,8 +143,6 @@ namespace Opm {
                                bool reset_global = false);
         void handleRPTSCHEDRestart(std::shared_ptr< const TimeMap > timemap, size_t timestep, size_t restart);
         void handleSolutionSection(std::shared_ptr< const TimeMap > timemap, std::shared_ptr<const SOLUTIONSection> solutionSection);
-        void handleGridSection( const GRIDSection& );
-        void handleRunspecSection( const RUNSPECSection& );
         void setWriteInitialRestartFile(bool writeInitialRestartFile);
 
         /// This method will internalize variables with information of
@@ -168,6 +167,10 @@ namespace Opm {
         void setBaseName(std::string baseName);
 
     private:
+
+        IOConfig( const GRIDSection&,
+                  const RUNSPECSection&,
+                  const std::string& input_path );
 
         void assertTimeMap(std::shared_ptr< const TimeMap > timemap);
         bool getWriteRestartFileFrequency(size_t timestep,
