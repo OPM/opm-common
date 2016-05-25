@@ -249,9 +249,9 @@ inline double prodrate( const Well& w,
 
     const auto& p = w.getProductionProperties( timestep );
     switch( wt ) {
-        case WT::wat: return units.from_si( units.measure::liquid_surface_rate, p.WaterRate );
-        case WT::oil: return units.from_si( units.measure::liquid_surface_rate, p.OilRate );
-        case WT::gas: return units.from_si( units.measure::gas_surface_rate, p.GasRate );
+        case WT::wat: return units.from_si( UnitSystem::measure::liquid_surface_rate, p.WaterRate );
+        case WT::oil: return units.from_si( UnitSystem::measure::liquid_surface_rate, p.OilRate );
+        case WT::gas: return units.from_si( UnitSystem::measure::gas_surface_rate, p.GasRate );
     }
 
     throw std::runtime_error( "Reached impossible state in prodrate" );
@@ -262,7 +262,7 @@ inline double prodvol( const Well& w,
                        WT wt,
                        const UnitSystem& units ) {
     const auto rate = prodrate( w, timestep, wt, units );
-    return rate * units.from_si( units.measure::time, 1 );
+    return rate * units.from_si( UnitSystem::measure::time, 1 );
 }
 
 inline double injerate( const Well& w,
@@ -279,10 +279,10 @@ inline double injerate( const Well& w,
     if( wt != i.injectorType ) return 0;
 
     if( wt == WellInjector::GAS )
-        return units.from_si( units.measure::gas_surface_rate,
+        return units.from_si( UnitSystem::measure::gas_surface_rate,
                               i.surfaceInjectionRate );
 
-    return units.from_si( units.measure::liquid_surface_rate,
+    return units.from_si( UnitSystem::measure::liquid_surface_rate,
                           i.surfaceInjectionRate );
 }
 
@@ -292,7 +292,7 @@ inline double injevol( const Well& w,
                        const UnitSystem& units ) {
 
     const auto rate = injerate( w, timestep, wt, units );
-    return rate * units.from_si( units.measure::time, 1 );
+    return rate * units.from_si( UnitSystem::measure::time, 1 );
 }
 
 inline double get_rate( const data::Well& w,
@@ -301,8 +301,8 @@ inline double get_rate( const data::Well& w,
     const auto x = w.rates.get( phase, 0.0 );
 
     switch( phase ) {
-        case rt::gas: return units.from_si( units.measure::gas_surface_rate, x );
-        default: return units.from_si( units.measure::liquid_surface_rate, x );
+        case rt::gas: return units.from_si( UnitSystem::measure::gas_surface_rate, x );
+        default: return units.from_si( UnitSystem::measure::liquid_surface_rate, x );
     }
 }
 
@@ -312,8 +312,8 @@ inline double get_vol( const data::Well& w,
 
     const auto x = w.rates.get( phase, 0.0 );
     switch( phase ) {
-        case rt::gas: return units.from_si( units.measure::gas_surface_volume, x );
-        default: return units.from_si( units.measure::liquid_surface_volume, x );
+        case rt::gas: return units.from_si( UnitSystem::measure::gas_surface_volume, x );
+        default: return units.from_si( UnitSystem::measure::liquid_surface_volume, x );
     }
 }
 
@@ -394,10 +394,10 @@ inline double well_keywords( E keyword,
         case E::WGLRH: return wglrh( state_well, tstep );
 
         /* Pressures */
-        case E::WBHP: return units.from_si( units.measure::pressure, sim_well.bhp );
+        case E::WBHP: return units.from_si( UnitSystem::measure::pressure, sim_well.bhp );
         case E::WBHPH: return 0; /* not supported */
 
-        case E::WTHP: return units.from_si( units.measure::pressure, sim_well.thp );
+        case E::WTHP: return units.from_si( UnitSystem::measure::pressure, sim_well.thp );
         case E::WTHPH: return 0; /* not supported */
 
         /* Injection rates */
@@ -437,10 +437,10 @@ inline double sum_rate( const std::vector< const data::Well* >& wells,
 
     switch( phase ) {
         case rt::wat: /* intentional fall-through */
-        case rt::oil: return units.from_si( units.measure::liquid_surface_rate,
+        case rt::oil: return units.from_si( UnitSystem::measure::liquid_surface_rate,
                                             sum( wells, phase ) );
 
-        case rt::gas: return units.from_si( units.measure::gas_surface_rate,
+        case rt::gas: return units.from_si( UnitSystem::measure::gas_surface_rate,
                                             sum( wells, phase ) );
         default: break;
     }
@@ -454,10 +454,10 @@ inline double sum_vol( const std::vector< const data::Well* >& wells,
 
     switch( phase ) {
         case rt::wat: /* intentional fall-through */
-        case rt::oil: return units.from_si( units.measure::liquid_surface_volume,
+        case rt::oil: return units.from_si( UnitSystem::measure::liquid_surface_volume,
                                             sum( wells, phase ) );
 
-        case rt::gas: return units.from_si( units.measure::gas_surface_volume,
+        case rt::gas: return units.from_si( UnitSystem::measure::gas_surface_volume,
                                             sum( wells, phase ) );
         default: break;
     }
