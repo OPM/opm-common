@@ -252,7 +252,18 @@ namespace Opm {
 
         using namespace std::placeholders;
         const auto handler = std::bind( handleKW, _1, schedule, props, n_xyz );
-        this->keywords = fun::concat( fun::map( handler, section ) );
+
+        /* This line of code does not compile on VS2015
+         *   this->keywords = fun::concat( fun::map( handler, section ) );
+         * The following code is a workaround for this compiler bug */
+        for (auto& x : section)
+        {
+            auto keywords = handler(x);
+            for (auto& keyword : keywords)
+            {
+                this->keywords.push_back(keyword);
+            }
+        }
     }
 
     SummaryConfig::const_iterator SummaryConfig::begin() const {
