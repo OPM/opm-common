@@ -42,6 +42,7 @@
 #include <memory>     // unique_ptr
 #include <utility>    // move
 
+#include <ert/ecl/EclKW.hpp>
 #include <ert/ecl/fortio.h>
 #include <ert/ecl/ecl_kw_magic.h>
 #include <ert/ecl/ecl_init_file.h>
@@ -96,51 +97,6 @@ inline int to_ert_welltype( const Well& well, size_t timestep ) {
         default: return IWEL_UNDOCUMENTED_ZERO;
     }
 }
-
-template< typename T >
-struct ert_data_type {};
-
-template<> struct ert_data_type< float > {
-    static const ecl_type_enum type{ ECL_FLOAT_TYPE };
-};
-
-template<> struct ert_data_type< double > {
-    static const ecl_type_enum type{ ECL_DOUBLE_TYPE };
-};
-
-template<> struct ert_data_type< int > {
-    static const ecl_type_enum type{ ECL_INT_TYPE };
-};
-
-/**
- * Eclipse "keyword" (i.e. named data) for a vector.
- */
-template< typename T >
-class Keyword {
-public:
-    template< typename U >
-    Keyword( const std::string& name, const std::vector< U >& data ) :
-        handle( ecl_kw_alloc( name.c_str(), data.size(), ert_data_type< T >::type ) )
-    {
-        T* target = static_cast< T* >( ecl_kw_get_ptr( this->handle.get() ) );
-
-        for( size_t i = 0; i < data.size(); ++i )
-            target[ i ] = T( data[ i ] );
-    }
-
-    Keyword( const std::string& name, const std::vector< const char* >& data ) :
-        handle( ecl_kw_alloc( name.c_str(), data.size(), ECL_CHAR_TYPE ) )
-    {
-        for( size_t i = 0; i < data.size(); ++i )
-          ecl_kw_iset_char_ptr( this->handle.get(), i, data[ i ] );
-    }
-
-    ecl_kw_type *ertHandle() { return this->handle.get(); }
-    const ecl_kw_type *ertHandle() const { return this->handle.get(); }
-
-private:
-    ERT::ert_unique_ptr< ecl_kw_type, ecl_kw_free > handle;
-};
 
 /**
  * Pointer to memory that holds the name to an Eclipse output file.
@@ -209,8 +165,8 @@ public:
     {}
 
     template< typename T >
-    void add_kw( Keyword< T >&& kw ) {
-        ecl_rst_file_add_kw( this->handle.get(), kw.ertHandle() );
+    void add_kw( ERT::EclKW< T >&& kw ) {
+        ecl_rst_file_add_kw( this->handle.get(), kw.get() );
     }
 
     void addRestartFileIwelData( std::vector<int>& data,
@@ -280,8 +236,8 @@ public:
     }
 
     template< typename T >
-    void add( Keyword< T >&& kw ) {
-        ecl_rst_file_add_kw( this->restart.ertHandle(), kw.ertHandle() );
+    void add( ERT::EclKW< T >&& kw ) {
+        ecl_rst_file_add_kw( this->restart.ertHandle(), kw.get() );
     }
 
     ecl_rst_file_type* ertHandle() { return this->restart.ertHandle(); }
@@ -363,10 +319,10 @@ public:
 
 
         if( ioConfig.getWriteINITFile() ) {
-            Keyword< float > poro_kw( "PORO", dataField );
+            ERT::EclKW< float > poro_kw( "PORO", dataField );
             ecl_init_file_fwrite_header( this->ertHandle(),
                                          eclGrid->c_ptr(),
-                                         poro_kw.ertHandle(),
+                                         poro_kw.get(),
                                          ert_phase_mask,
                                          current_posix_time );
         }
@@ -374,8 +330,8 @@ public:
 
     void writeKeyword( const std::string& keywordName,
                        const std::vector<double> &data ) {
-        Keyword< float > kw( keywordName, data );
-        ecl_kw_fwrite( kw.ertHandle(), this->ertHandle() );
+        ERT::EclKW< float > kw( keywordName, data );
+        ecl_kw_fwrite( kw.get(), this->ertHandle() );
     }
 
     fortio_type* ertHandle() { return this->init.get(); }
@@ -705,14 +661,14 @@ void EclipseWriter::writeTimeStep(int report_step,
                                  wells.perf_pressure, wells.perf_rate } )
             xwel.insert( xwel.end(), vec.begin(), vec.end() );
 
-        restartHandle.add_kw( Keyword< int >(IWEL_KW, iwell_data) );
-        restartHandle.add_kw( Keyword< const char* >(ZWEL_KW, zwell_data ) );
-        restartHandle.add_kw( Keyword< double >(OPM_XWEL, xwel ) );
-        restartHandle.add_kw( Keyword< int >( ICON_KW, icon_data ) );
+        restartHandle.add_kw( ERT::EclKW< int >(IWEL_KW, iwell_data) );
+        restartHandle.add_kw( ERT::EclKW< const char* >(ZWEL_KW, zwell_data ) );
+        restartHandle.add_kw( ERT::EclKW< double >(OPM_XWEL, xwel ) );
+        restartHandle.add_kw( ERT::EclKW< int >( ICON_KW, icon_data ) );
 
 
         Solution sol(restartHandle);
-        sol.add(Keyword<float>("PRESSURE", pressure));
+        sol.add( ERT::EclKW<float>("PRESSURE", pressure) );
 
 
         // write the cell temperature
@@ -720,25 +676,25 @@ void EclipseWriter::writeTimeStep(int report_step,
         convertFromSiTo( temperature,
                          units,
                          units.measure::temperature );
-        sol.add(Keyword<float>("TEMP", temperature));
+        sol.add( ERT::EclKW<float>("TEMP", temperature) );
 
 
         if( cells.has( dc::SWAT ) ) {
-            sol.add( Keyword<float>( "SWAT", cells[ dc::SWAT ] ) );
+            sol.add( ERT::EclKW<float>( "SWAT", cells[ dc::SWAT ] ) );
         }
 
 
         if( cells.has( dc::SGAS ) ) {
-            sol.add( Keyword<float>( "SGAS", cells[ dc::SGAS ] ) );
+            sol.add( ERT::EclKW<float>( "SGAS", cells[ dc::SGAS ] ) );
         }
 
         // Write RS - Dissolved GOR
         if( cells.has( dc::RS ) )
-            sol.add(Keyword<float>("RS", cells[ dc::RS ] ) );
+            sol.add( ERT::EclKW<float>("RS", cells[ dc::RS ] ) );
 
         // Write RV - Volatilized oil/gas ratio
         if( cells.has( dc::RV ) )
-            sol.add(Keyword<float>("RV", cells[ dc::RV ] ) );
+            sol.add( ERT::EclKW<float>("RV", cells[ dc::RV ] ) );
     }
 
     const auto unit_type = es.getDeckUnitSystem().getType();
