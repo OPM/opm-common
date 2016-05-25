@@ -257,6 +257,23 @@ namespace Opm {
     }
 
 
+    size_t EclipseGrid::activeIndex(size_t i, size_t j, size_t k) const {
+        return activeIndex( getGlobalIndex( i,j,k ));
+    }
+
+
+
+    size_t EclipseGrid::activeIndex(size_t globalIndex) const {
+        assertCellInfo();
+        {
+            int active_index = ecl_grid_get_active_index1( m_grid.get() , globalIndex );
+            if (active_index < 0)
+                throw std::invalid_argument("Input argument does not correspond to an active cell");
+            return static_cast<size_t>( active_index );
+        }
+    }
+
+
 
     size_t EclipseGrid::getNX( ) const {
         return m_nx;

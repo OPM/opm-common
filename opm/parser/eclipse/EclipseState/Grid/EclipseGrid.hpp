@@ -99,6 +99,16 @@ namespace Opm {
 
         bool hasCellInfo() const;
 
+        /// The activeIndex methods will return from (i,j,k) or g,
+        /// where g \in [0,nx*n*nz) to the corresponding active index
+        /// in the range [0,numActive). Observe that if the input
+        /// argument corresponds to a cell which is not active an
+        /// exception will be raised - check with cellActive() first
+        /// if that is a possibillity.
+        size_t activeIndex(size_t i, size_t j, size_t k) const;
+        size_t activeIndex(size_t globalIndex) const;
+
+
         size_t getGlobalIndex(size_t i, size_t j, size_t k) const;
         std::array<int, 3> getIJK(size_t globalIndex) const;
         void assertGlobalIndex(size_t globalIndex) const;

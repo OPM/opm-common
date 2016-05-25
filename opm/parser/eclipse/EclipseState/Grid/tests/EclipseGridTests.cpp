@@ -901,19 +901,34 @@ BOOST_AUTO_TEST_CASE(GridBoxActnum) {
 
     BOOST_CHECK_EQUAL(es.getInputGrid()->getNumActive(), active);
 
-    for (size_t x = 0; x < 10; x++) {
-        for (size_t y = 0; y < 10; y++) {
-            for (size_t z = 0; z < 10; z++) {
-                if (z == 0)
-                    BOOST_CHECK(!grid->cellActive(x, y, z));
-                else if (x >= 4 && x <= 6 && y >= 4 && y <= 6 && z >= 4 && z <= 6)
-                    BOOST_CHECK(!grid->cellActive(x, y, z));
-                else if (x >= 5 && x <= 7 && y >= 5 && y <= 7 && z >= 5 && z <= 7)
-                    BOOST_CHECK(!grid->cellActive(x, y, z));
-                else
-                    BOOST_CHECK(grid->cellActive(x, y, z));
+    {
+        size_t active_index = 0;
+        // NB: The implementation of this test actually assumes that
+        //     the loops are running with z as the outer and x as the
+        //     inner direction.
+        for (size_t z = 0; z < grid->getNZ(); z++) {
+            for (size_t y = 0; y < grid->getNY(); y++) {
+                for (size_t x = 0; x < grid->getNX(); x++) {
+                    if (z == 0)
+                        BOOST_CHECK(!grid->cellActive(x, y, z));
+                    else if (x >= 4 && x <= 6 && y >= 4 && y <= 6 && z >= 4 && z <= 6)
+                        BOOST_CHECK(!grid->cellActive(x, y, z));
+                    else if (x >= 5 && x <= 7 && y >= 5 && y <= 7 && z >= 5 && z <= 7)
+                        BOOST_CHECK(!grid->cellActive(x, y, z));
+                    else {
+                        size_t g = grid->getGlobalIndex( x,y,z );
+
+                        BOOST_CHECK(grid->cellActive(x, y, z));
+                        BOOST_CHECK_EQUAL( grid->activeIndex(x,y,z) , active_index );
+                        BOOST_CHECK_EQUAL( grid->activeIndex(g) , active_index );
+
+                        active_index++;
+                    }
+                }
             }
         }
+
+        BOOST_CHECK_THROW( grid->activeIndex(0,0,0) , std::invalid_argument );
     }
 }
 
