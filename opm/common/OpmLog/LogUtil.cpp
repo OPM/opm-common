@@ -75,25 +75,19 @@ namespace Log {
 
 
     std::string colorCodeMessage(int64_t messageType, const std::string& message) {
-        std::string colorcode;
         switch (messageType) {
         case MessageType::Debug:
         case MessageType::Info:
-            colorcode = AnsiTerminalColors::default_color;
-            break;
+            return message; // No color coding, not even the code for default color.
         case MessageType::Warning:
-            colorcode = AnsiTerminalColors::yellow_strong;
-            break;
+            return AnsiTerminalColors::yellow_strong + message + AnsiTerminalColors::none;
         case MessageType::Error:
         case MessageType::Problem:
         case MessageType::Bug:
-            colorcode = AnsiTerminalColors::red_strong;
-            break;
+            return AnsiTerminalColors::red_strong + message + AnsiTerminalColors::none;
         default:
             throw std::invalid_argument("Unhandled messagetype");
         }
-
-        return colorcode + message + AnsiTerminalColors::none;
     }
 
 }
