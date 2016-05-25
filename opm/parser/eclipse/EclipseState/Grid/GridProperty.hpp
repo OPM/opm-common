@@ -23,8 +23,6 @@
 #include <string>
 #include <vector>
 
-#include <ert/ecl/EclKW.hpp>
-
 /*
   This class implemenents a class representing properties which are
   define over an ECLIPSE grid, i.e. with one value for each logical
@@ -135,9 +133,6 @@ public:
 
     const std::string& getKeywordName() const;
     const SupportedKeywordInfo& getKeywordInfo() const;
-
-    ERT::EclKW<T> getEclKW() const;
-    ERT::EclKW<T> getEclKW( const EclipseGrid & ) const;
 
     /**
        Will check that all elements in the property are in the closed
