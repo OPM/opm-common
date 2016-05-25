@@ -923,12 +923,16 @@ BOOST_AUTO_TEST_CASE(GridActnumVia3D) {
     Opm::EclipseState es(deck, Opm::ParseContext());
     auto ep = es.get3DProperties();
     auto grid = es.getInputGrid();
+    Opm::EclipseGrid grid2( *grid );
 
     BOOST_CHECK_NO_THROW(ep.getIntGridProperty("ACTNUM"));
-
     BOOST_CHECK_NO_THROW(grid->getNumActive());
     BOOST_CHECK(grid->hasCellInfo());
     BOOST_CHECK_EQUAL(grid->getNumActive(), 2 * 2 * 2 - 1);
+
+    BOOST_CHECK_NO_THROW(grid2.getNumActive());
+    BOOST_CHECK(grid2.hasCellInfo());
+    BOOST_CHECK_EQUAL(grid2.getNumActive(), 2 * 2 * 2 - 1);
 }
 
 BOOST_AUTO_TEST_CASE(GridActnumViaState) {

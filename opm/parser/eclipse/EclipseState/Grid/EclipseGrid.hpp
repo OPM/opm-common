@@ -71,7 +71,7 @@ namespace Opm {
     class EclipseGrid {
     public:
         explicit EclipseGrid(const std::string& filename);
-        explicit EclipseGrid(const ecl_grid_type * src_ptr);
+        explicit EclipseGrid(const EclipseGrid& srcGrid);
         explicit EclipseGrid(size_t nx, size_t ny, size_t nz,
                              double dx = 1.0, double dy = 1.0, double dz = 1.0);
 
