@@ -108,7 +108,7 @@ public:
              ecl_file_enum type,
              int writeStepIdx,
              bool formatted ) :
-        handle( ecl_util_alloc_filename(
+        filename( ecl_util_alloc_filename(
                                 outputDir.c_str(),
                                 baseName.c_str(),
                                 type,
@@ -117,11 +117,11 @@ public:
                 std::free )
     {}
 
-    const char* ertHandle() const { return this->handle.get(); }
+    const char* ertHandle() const { return this->filename.get(); }
 
 private:
     using fd = std::unique_ptr< char, decltype( std::free )* >;
-    fd handle;
+    fd filename;
 };
 
 class Restart {
@@ -158,7 +158,7 @@ public:
                 ioConfig.getUNIFOUT() ? ECL_UNIFIED_RESTART_FILE : ECL_RESTART_FILE,
                 writeStepIdx,
                 ioConfig.getFMTOUT() ),
-        handle(
+        rst_file(
                 ( writeStepIdx > 0 && ioConfig.getUNIFOUT() )
                 ? ecl_rst_file_open_append( filename.ertHandle() )
                 : ecl_rst_file_open_write( filename.ertHandle() ) )
@@ -166,7 +166,7 @@ public:
 
     template< typename T >
     void add_kw( ERT::EclKW< T >&& kw ) {
-        ecl_rst_file_add_kw( this->handle.get(), kw.get() );
+        ecl_rst_file_add_kw( this->rst_file.get(), kw.get() );
     }
 
     void addRestartFileIwelData( std::vector<int>& data,
@@ -213,16 +213,16 @@ public:
                                 &rsthead_data->day,
                                 &rsthead_data->month,
                                 &rsthead_data->year );
-      ecl_rst_file_fwrite_header( this->handle.get(), stepIdx, rsthead_data );
+      ecl_rst_file_fwrite_header( this->rst_file.get(), stepIdx, rsthead_data );
 
     }
 
-    ecl_rst_file_type* ertHandle() { return this->handle.get(); }
-    const ecl_rst_file_type* ertHandle() const { return this->handle.get(); }
+    ecl_rst_file_type* ertHandle() { return this->rst_file.get(); }
+    const ecl_rst_file_type* ertHandle() const { return this->rst_file.get(); }
 
 private:
     FileName filename;
-    ERT::ert_unique_ptr< ecl_rst_file_type, ecl_rst_file_close > handle;
+    ERT::ert_unique_ptr< ecl_rst_file_type, ecl_rst_file_close > rst_file;
 };
 
 /**
