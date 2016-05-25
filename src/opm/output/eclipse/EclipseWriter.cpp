@@ -43,7 +43,7 @@
 #include <utility>    // move
 
 #include <ert/ecl/EclKW.hpp>
-#include <ert/ecl/fortio.h>
+#include <ert/ecl/FortIO.hpp>
 #include <ert/ecl/ecl_kw_magic.h>
 #include <ert/ecl/ecl_init_file.h>
 #include <ert/ecl/ecl_file.h>
@@ -263,15 +263,14 @@ public:
                ECL_EGRID_FILE,
                writeStepIdx,
                ioConfig.getFMTOUT() ),
-        init( fortio_open_writer(
-                    FileName( outputDir,
+        init( FileName( outputDir,
                         baseName,
                         ECL_INIT_FILE,
                         writeStepIdx,
                         ioConfig.getFMTOUT() ).ertHandle(),
-                    ioConfig.getFMTOUT(),
-                    ECL_ENDIAN_FLIP ) )
-
+              std::ios_base::out,
+              ioConfig.getFMTOUT(),
+              ECL_ENDIAN_FLIP )
     {}
 
     void writeHeader( int numCells,
@@ -338,7 +337,7 @@ public:
 
 private:
     FileName egrid;
-    ERT::ert_unique_ptr< fortio_type, fortio_fclose > init;
+    ERT::FortIO init;
 };
 
 const int inactive_index = -1;
