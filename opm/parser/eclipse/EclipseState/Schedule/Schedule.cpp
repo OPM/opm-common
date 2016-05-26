@@ -59,20 +59,31 @@
 
 namespace Opm {
 
-    Schedule::Schedule(const ParseContext& parseContext,
-                       std::shared_ptr<const EclipseGrid> grid,
-                       DeckConstPtr deckptr,
-                       IOConfigPtr ioConfig) :
-            Schedule(parseContext, grid, *deckptr, ioConfig)
-    {
+    static inline std::shared_ptr< TimeMap > createTimeMap( const Deck& deck ) {
+        boost::gregorian::date defaultStartTime( 1983, 1, 1 );
+        boost::posix_time::ptime startTime( defaultStartTime );
+
+        if (deck.hasKeyword("START")) {
+            const auto& startKeyword = deck.getKeyword("START");
+            startTime = TimeMap::timeFromEclipse(startKeyword.getRecord(0));
+        }
+
+        return std::make_shared< TimeMap >( startTime );
     }
 
-    Schedule::Schedule(const ParseContext& parseContext, std::shared_ptr<const EclipseGrid> grid, const Deck& deck,
-            IOConfigPtr ioConfig) :
-            m_grid(grid)
+    Schedule::Schedule(const ParseContext& parseContext,
+                       std::shared_ptr<const EclipseGrid> grid,
+                       DeckConstPtr deckptr ) :
+            Schedule(parseContext, grid, *deckptr )
+    {}
+
+    Schedule::Schedule( const ParseContext& parseContext,
+                        std::shared_ptr<const EclipseGrid> grid,
+                        const Deck& deck ) :
+            m_grid(grid),
+            m_timeMap( createTimeMap( deck ) ),
     {
         initializeNOSIM(deck);
-        createTimeMap(deck);
         m_tuning.reset(new Tuning(m_timeMap));
         m_events.reset(new Events(m_timeMap));
         m_modifierDeck.reset( new DynamicVector<std::shared_ptr<Deck> >( m_timeMap , std::shared_ptr<Deck>( 0 ) ));
@@ -109,18 +120,6 @@ namespace Opm {
         } else {
             nosim = false;
         }
-    }
-
-    void Schedule::createTimeMap(const Deck& deck) {
-        boost::gregorian::date defaultStartTime( 1983, 1, 1 );
-        boost::posix_time::ptime startTime( defaultStartTime );
-
-        if (deck.hasKeyword("START")) {
-             const auto& startKeyword = deck.getKeyword("START");
-            startTime = TimeMap::timeFromEclipse(startKeyword.getRecord(0));
-        }
-
-        m_timeMap.reset(new TimeMap(startTime));
     }
 
     void Schedule::iterateScheduleSection(const ParseContext& parseContext , const SCHEDULESection& section, IOConfigPtr ioConfig) {
