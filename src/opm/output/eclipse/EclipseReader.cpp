@@ -18,6 +18,7 @@
 */
 
 #include <ert/ecl/ecl_file.h>
+#include <ert/ecl/EclKW.hpp>
 #include <ert/util/ert_unique_ptr.hpp>
 
 #include <opm/output/eclipse/EclipseReader.hpp>
@@ -47,38 +48,26 @@ namespace {
                                          + " data" );
         }
 
-        struct keyword {
-            ecl_kw_type* kw;
-            int size;
-            const float* data;
-            const char* name;
+        using ERT::EclKW_ref;
 
-            keyword( ecl_file_type* file, const char* nm ) :
-                kw( ecl_file_iget_named_kw( file, nm, 0 ) ),
-                size( ecl_kw_get_size( kw ) ),
-                data( ecl_kw_get_float_ptr( kw ) ),
-                name( nm )
-            {}
-        };
-
-        keyword pres( file, "PRESSURE" );
-        keyword temp( file, "TEMP" );
-        keyword swat( file, "SWAT" );
-        keyword sgas( file, "SGAS" );
+        EclKW_ref< float > pres( ecl_file_iget_named_kw( file, "PRESSURE", 0 ) );
+        EclKW_ref< float > temp( ecl_file_iget_named_kw( file, "TEMP", 0 ) );
+        EclKW_ref< float > swat( ecl_file_iget_named_kw( file, "SWAT", 0 ) );
+        EclKW_ref< float > sgas( ecl_file_iget_named_kw( file, "SGAS", 0 ) );
 
         for( const auto& kw : { pres, temp, swat, sgas } ) {
-            if( kw.size != numcells )
+            if( kw.size() != size_t( numcells ) )
                 throw std::runtime_error("Restart file: Could not restore "
-                                        + std::string( kw.name )
+                                        + std::string( kw.name() )
                                         + ", mismatched number of cells" );
         }
 
         using ds = data::Solution::key;
         data::Solution sol;
-        sol.insert( ds::PRESSURE, { pres.data, pres.data + pres.size } );
-        sol.insert( ds::TEMP,     { temp.data, temp.data + temp.size } );
-        sol.insert( ds::SWAT,     { swat.data, swat.data + swat.size } );
-        sol.insert( ds::SGAS,     { sgas.data, sgas.data + sgas.size } );
+        sol.insert( ds::PRESSURE, { pres.data(), pres.data() + pres.size() } );
+        sol.insert( ds::TEMP,     { temp.data(), temp.data() + temp.size() } );
+        sol.insert( ds::SWAT,     { swat.data(), swat.data() + swat.size() } );
+        sol.insert( ds::SGAS,     { sgas.data(), sgas.data() + sgas.size() } );
 
         const auto apply_pressure = [&]( double x ) {
             return units.to_si( UnitSystem::measure::pressure, x );
@@ -95,13 +84,13 @@ namespace {
 
         /* optional keywords */
         if( ecl_file_has_kw( file, "RS" ) ) {
-            keyword kw( file, "RS" );
-            sol.insert( ds::RS, { kw.data, kw.data + kw.size } );
+            EclKW_ref< float > kw( ecl_file_iget_named_kw( file, "RS", 0 ) );
+            sol.insert( ds::RS, { kw.data(), kw.data() + kw.size() } );
         }
 
         if( ecl_file_has_kw( file, "RV" ) ) {
-            keyword kw( file, "RV" );
-            sol.insert( ds::RV, { kw.data, kw.data + kw.size } );
+            EclKW_ref< float > kw( ecl_file_iget_named_kw( file, "RV", 0 ) );
+            sol.insert( ds::RV, { kw.data(), kw.data() + kw.size() } );
         }
 
         return sol;
