@@ -432,10 +432,9 @@ void RFT::writeTimeStep( std::vector< std::shared_ptr< const Well > > wells,
             const size_t j = size_t( completion->getJ() );
             const size_t k = size_t( completion->getK() );
 
-            const auto global_index = grid.getGlobalIndex( i, j, k );
-            const int index = this->global_to_active[ global_index ];
-            if( index == inactive_index ) continue;
+            if( !grid.cellActive( i, j, k ) ) continue;
 
+            const auto index = grid.activeIndex( i, j, k );
             const double depth = grid.getCellDepth( i, j, k );
             const double press = !pressure.empty() ? pressure[ index ] : 0.0;
             const double satwat = !swat.empty() ? swat[ index ] : 0.0;
