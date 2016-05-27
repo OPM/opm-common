@@ -243,7 +243,7 @@ if (NOT (ERT_INCLUDE_DIR MATCHES "-NOTFOUND" OR ERT_LIBRARIES MATCHES "-NOTFOUND
   check_cxx_source_compiles (
 "#include <ert/ecl/EclKW.hpp>
 int main ( ) {
-    ERT::EclKW< int >( ecl_kw_alloc( "SATNUM", 0, ECL_INT_TYPE ) );
+    ERT::EclKW< int > kw( ecl_kw_alloc( \"SATNUM\", 0, ECL_INT_TYPE ) );
     return 0;
 }" HAVE_ERT)
   cmake_pop_check_state ()
