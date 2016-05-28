@@ -65,18 +65,21 @@ namespace Opm {
         m_nz = static_cast<size_t>( ecl_grid_get_nz( c_ptr() ));
     }
 
-    EclipseGrid::EclipseGrid(const ecl_grid_type * src_ptr)
-        : m_minpvValue(0),
-          m_minpvMode(MinpvMode::ModeEnum::Inactive),
-          m_pinch("PINCH"),
-          m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
-          m_multzMode(PinchMode::ModeEnum::TOP)
+    /* Copy constructor */
+    EclipseGrid::EclipseGrid(const EclipseGrid& src)
+        : m_minpvValue( src.m_minpvValue ),
+          m_minpvMode( src.m_minpvMode ),
+          m_pinch( src.m_pinch ),
+          m_pinchoutMode( src.m_pinchoutMode ),
+          m_multzMode( src.m_multzMode ),
+          m_nx( src.m_nx ),
+          m_ny( src.m_ny ),
+          m_nz( src.m_nz ),
+          m_messages( src.m_messages )
     {
-        m_grid.reset( ecl_grid_alloc_copy( src_ptr ) );
+        if (src.hasCellInfo())
+            m_grid.reset( ecl_grid_alloc_copy( src.c_ptr() ) );
 
-        m_nx = static_cast<size_t>( ecl_grid_get_nx( c_ptr() ));
-        m_ny = static_cast<size_t>( ecl_grid_get_ny( c_ptr() ));
-        m_nz = static_cast<size_t>( ecl_grid_get_nz( c_ptr() ));
     }
 
     /*
@@ -250,6 +253,23 @@ namespace Opm {
             const auto& item = record.getItem<ParserKeywords::MINPVFIL::VALUE>( );
             m_minpvValue = item.getSIDouble(0);
             m_minpvMode = MinpvMode::ModeEnum::OpmFIL;
+        }
+    }
+
+
+    size_t EclipseGrid::activeIndex(size_t i, size_t j, size_t k) const {
+        return activeIndex( getGlobalIndex( i,j,k ));
+    }
+
+
+
+    size_t EclipseGrid::activeIndex(size_t globalIndex) const {
+        assertCellInfo();
+        {
+            int active_index = ecl_grid_get_active_index1( m_grid.get() , globalIndex );
+            if (active_index < 0)
+                throw std::invalid_argument("Input argument does not correspond to an active cell");
+            return static_cast<size_t>( active_index );
         }
     }
 

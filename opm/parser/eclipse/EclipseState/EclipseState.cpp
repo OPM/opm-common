@@ -114,7 +114,7 @@ namespace Opm {
     }
 
     EclipseGridPtr EclipseState::getInputGridCopy() const {
-        return std::make_shared<EclipseGrid>( m_inputGrid->c_ptr() );
+        return std::make_shared<EclipseGrid>( *m_inputGrid );
     }
 
     const SummaryConfig& EclipseState::getSummaryConfig() const {
@@ -129,7 +129,7 @@ namespace Opm {
         return m_messageContainer;
     }
 
-    
+
     MessageContainer& EclipseState::getMessageContainer() {
         return m_messageContainer;
     }
