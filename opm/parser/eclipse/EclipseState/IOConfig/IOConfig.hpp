@@ -121,7 +121,7 @@ namespace Opm {
     public:
 
         IOConfig() = default;
-        explicit IOConfig( const Deck&, const Schedule& );
+        explicit IOConfig( const Deck& );
         explicit IOConfig( const std::string& input_path );
 
         int  getFirstRestartStep() const;

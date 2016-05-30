@@ -57,7 +57,7 @@ namespace Opm {
         m_parseContext(      parseContext ),
         m_inputGrid(         std::make_shared<EclipseGrid>(deck, nullptr) ),
         m_schedule(          std::make_shared<Schedule>( m_parseContext, m_inputGrid, deck ) ),
-        m_ioConfig(          std::make_shared< IOConfig >( deck, *m_schedule ) ),
+        m_ioConfig(          std::make_shared< IOConfig >( deck ) ),
         m_initConfig(        std::make_shared< InitConfig >( deck ) ),
         m_tables(            deck ),
         m_eclipseProperties( deck, m_tables, *m_inputGrid ),

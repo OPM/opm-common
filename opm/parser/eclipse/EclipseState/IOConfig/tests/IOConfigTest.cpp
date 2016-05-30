@@ -24,15 +24,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
-#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
-
 
 using namespace Opm;
 
@@ -199,12 +193,8 @@ BOOST_AUTO_TEST_CASE(RPTRST_mixed_mnemonics_int_list) {
                        "BASIC=1\n"
                        "/\n";
 
-    auto grid = std::make_shared<const EclipseGrid>( 10, 10, 10 );
-    ParseContext ctx;
-
-    auto deck = Parser().parseString( data, ctx );
-    Schedule schedule( ctx, grid, *deck );
-    BOOST_CHECK_THROW( IOConfig( *deck, schedule ), std::runtime_error );
+    auto deck = Parser().parseString( data, ParseContext() );
+    BOOST_CHECK_THROW( IOConfig c( *deck ), std::runtime_error );
 }
 
 BOOST_AUTO_TEST_CASE(RPTRST) {
@@ -269,13 +259,11 @@ BOOST_AUTO_TEST_CASE(RPTRST) {
                           " 20  JAN 2011 / \n"
                           "/\n";
 
-    auto grid = std::make_shared< const EclipseGrid >( 10, 10, 10 );
     Opm::Parser parser;
     ParseContext ctx;
 
     auto deck1 = parser.parseString( deckData1, ctx );
-    Schedule schedule1( ctx, grid, deck1 );
-    IOConfig ioConfig1( *deck1, schedule1 );
+    IOConfig ioConfig1( *deck1 );
 
     BOOST_CHECK( !ioConfig1.getWriteRestartFile( 0 ) );
     BOOST_CHECK( !ioConfig1.getWriteRestartFile( 1 ) );
@@ -283,8 +271,7 @@ BOOST_AUTO_TEST_CASE(RPTRST) {
 
 
     auto deck2 = parser.parseString( deckData2, ctx );
-    Schedule schedule2( ctx, grid, deck2 );
-    IOConfig ioConfig2( *deck2, schedule2 );
+    IOConfig ioConfig2( *deck2 );
 
     BOOST_CHECK( !ioConfig2.getWriteRestartFile( 0 ) );
     BOOST_CHECK( !ioConfig2.getWriteRestartFile( 1 ) );
@@ -292,8 +279,7 @@ BOOST_AUTO_TEST_CASE(RPTRST) {
     BOOST_CHECK( !ioConfig2.getWriteRestartFile( 3 ) );
 
     auto deck3 = parser.parseString( deckData3, ctx );
-    Schedule schedule3( ctx, grid, deck3 );
-    IOConfig ioConfig3( *deck3, schedule3 );
+    IOConfig ioConfig3( *deck3 );
 
     BOOST_CHECK( !ioConfig3.getWriteRestartFile( 0 ) );
     BOOST_CHECK( !ioConfig3.getWriteRestartFile( 1 ) );
@@ -376,13 +362,11 @@ BOOST_AUTO_TEST_CASE(RPTSCHED) {
                           "0 0 0 0 0 0 0 0\n"
                           "/\n";
 
-    auto grid = std::make_shared<const EclipseGrid>( 10, 10, 10 );
     Parser parser;
     ParseContext ctx;
 
     auto deck1 = parser.parseString( deckData1, ctx );
-    Schedule schedule1( ctx, grid , *deck1 );
-    IOConfig ioConfig1( *deck1, schedule1 );
+    IOConfig ioConfig1( *deck1 );
 
     BOOST_CHECK( !ioConfig1.getWriteRestartFile( 0 ) );
     BOOST_CHECK( !ioConfig1.getWriteRestartFile( 1 ) );
@@ -391,8 +375,7 @@ BOOST_AUTO_TEST_CASE(RPTSCHED) {
 
 
     auto deck2 = parser.parseString( deckData2, ctx );
-    Schedule schedule2( ctx, grid , *deck2 );
-    IOConfig ioConfig2( *deck2, schedule2 );
+    IOConfig ioConfig2( *deck2 );
 
     BOOST_CHECK( !ioConfig2.getWriteRestartFile( 0 ) );
     BOOST_CHECK( !ioConfig2.getWriteRestartFile( 1 ) );
@@ -401,8 +384,7 @@ BOOST_AUTO_TEST_CASE(RPTSCHED) {
 
 
     auto deck3 = parser.parseString( deckData3, ctx );
-    Schedule schedule3( ctx, grid , *deck3 );
-    IOConfig ioConfig3( *deck3, schedule3 );
+    IOConfig ioConfig3( *deck3 );
     //Older ECLIPSE 100 data set may use integer controls instead of mnemonics
     BOOST_CHECK( !ioConfig3.getWriteRestartFile( 0 ) );
     BOOST_CHECK( !ioConfig3.getWriteRestartFile( 1 ) );
@@ -436,13 +418,11 @@ BOOST_AUTO_TEST_CASE(RPTSCHED_and_RPTRST) {
                         "/\n";
 
 
-    auto grid = std::make_shared<const EclipseGrid>( 10, 10, 10 );
     Opm::Parser parser;
     ParseContext ctx;
 
     auto deck = parser.parseString( deckData, ctx );
-    Schedule schedule( ctx, grid, *deck );
-    IOConfig ioConfig( *deck, schedule );
+    IOConfig ioConfig( *deck );
 
     BOOST_CHECK( !ioConfig.getWriteRestartFile( 0 ) );
     BOOST_CHECK( !ioConfig.getWriteRestartFile( 1 ) );
@@ -470,14 +450,10 @@ BOOST_AUTO_TEST_CASE(NO_BASIC) {
                        "RPTSCHED\n"
                        "/\n";
 
-    auto grid = std::make_shared<const EclipseGrid>( 10, 10, 10 );
-    ParseContext ctx;
+    auto deck = Parser().parseString( data, ParseContext() );
+    IOConfig ioConfig( *deck );
 
-    auto deck = Parser().parseString( data, ctx );
-    Schedule schedule( ctx, grid, *deck );
-    IOConfig ioConfig( *deck, schedule );
-
-    for( size_t ts = 0; ts < schedule.getTimeMap()->numTimesteps(); ++ts )
+    for( size_t ts = 0; ts < 4; ++ts )
         BOOST_CHECK( !ioConfig.getWriteRestartFile( ts ) );
 }
 
@@ -505,18 +481,13 @@ BOOST_AUTO_TEST_CASE(BASIC_EQ_1) {
                        "BASIC=1\n"
                        "/\n";
 
-    auto grid = std::make_shared<const EclipseGrid>( 10, 10, 10 );
-    ParseContext ctx;
-
-    auto deck = Parser().parseString( data, ctx );
-    Schedule schedule( ctx, grid, *deck );
-    IOConfig ioConfig( *deck, schedule );
+    auto deck = Parser().parseString( data, ParseContext() );
+    IOConfig ioConfig( *deck );
 
     for( size_t ts = 0; ts < 3; ++ts )
         BOOST_CHECK( !ioConfig.getWriteRestartFile( ts ) );
 
-    for( size_t ts = 3; ts < schedule.getTimeMap()->numTimesteps(); ++ts )
-        BOOST_CHECK( ioConfig.getWriteRestartFile( ts ) );
+    BOOST_CHECK( ioConfig.getWriteRestartFile( 3 ) );
 }
 
 BOOST_AUTO_TEST_CASE(BASIC_EQ_3) {
@@ -545,17 +516,13 @@ BOOST_AUTO_TEST_CASE(BASIC_EQ_3) {
                         " 6 JAN 1982 14:56:45.123 /\n"  // timestep 11
                         "/\n";
 
-    auto grid = std::make_shared<const EclipseGrid>( 10, 10, 10 );
-    ParseContext ctx;
-
-    auto deck = Parser().parseString( data, ctx );
-    Schedule schedule( ctx, grid, *deck );
-    IOConfig ioConfig( *deck, schedule );
+    auto deck = Parser().parseString( data, ParseContext() );
+    IOConfig ioConfig( *deck );
 
     const size_t freq = 3;
 
     /* BASIC=3, restart files are created every nth report time, n=3 */
-    for( size_t ts = 1; ts < schedule.getTimeMap()->numTimesteps(); ++ts )
+    for( size_t ts = 1; ts < 12; ++ts )
         BOOST_CHECK_EQUAL( ts % freq == 0, ioConfig.getWriteRestartFile( ts ) );
 }
 
@@ -586,12 +553,8 @@ BOOST_AUTO_TEST_CASE(BASIC_EQ_4) {
                         " 6 JAN 1983 14:56:45.123 /\n"  // timestep 12
                         "/\n";
 
-    auto grid = std::make_shared<const EclipseGrid>( 10, 10, 10 );
-    ParseContext ctx;
-
-    auto deck = Parser().parseString( data, ctx );
-    Schedule schedule( ctx, grid, *deck );
-    IOConfig ioConfig( *deck, schedule );
+    auto deck = Parser().parseString( data, ParseContext() );
+    IOConfig ioConfig( *deck );
 
     /* BASIC=4, restart file is written at the first report step of each year.
      */
@@ -628,12 +591,8 @@ BOOST_AUTO_TEST_CASE(BASIC_EQ_4_FREQ_2) {
                         " 1 JAN 1986 /\n" 
                         "/\n";
 
-    auto grid = std::make_shared<const EclipseGrid>( 10, 10, 10 );
-    ParseContext ctx;
-
-    auto deck = Parser().parseString( data, ctx );
-    Schedule schedule( ctx, grid, *deck );
-    IOConfig ioConfig( *deck, schedule );
+    auto deck = Parser().parseString( data, ParseContext() );
+    IOConfig ioConfig( *deck );
 
     /* BASIC=4, restart file is written at the first report step of each year.
      * Optionally, if the mnemonic FREQ is set >1 the restart is written only
@@ -674,12 +633,8 @@ BOOST_AUTO_TEST_CASE(BASIC_EQ_5) {
                         "  2 JUN 1983 /\n"
                         "/\n";
 
-    auto grid = std::make_shared<const EclipseGrid>( 10, 10, 10 );
-    ParseContext ctx;
-
-    auto deck = Parser().parseString( data, ctx );
-    Schedule schedule( ctx, grid, *deck );
-    IOConfig ioConfig( *deck, schedule );
+    auto deck = Parser().parseString( data, ParseContext() );
+    IOConfig ioConfig( *deck );
 
     /* BASIC=5, restart file is written at the first report step of each month.
      */
@@ -716,16 +671,12 @@ BOOST_AUTO_TEST_CASE(BASIC_EQ_0) {
                         "  2 JUN 1983 /\n"
                         "/\n";
 
-    auto grid = std::make_shared<const EclipseGrid>( 10, 10, 10 );
-    ParseContext ctx;
-
-    auto deck = Parser().parseString( data, ctx );
-    Schedule schedule( ctx, grid, *deck );
-    IOConfig ioConfig( *deck, schedule );
+    auto deck = Parser().parseString( data, ParseContext() );
+    IOConfig ioConfig( *deck );
 
     /* RESTART=0, no restart file is written
      */
-    for( size_t ts = 0; ts < schedule.getTimeMap()->numTimesteps(); ++ts )
+    for( size_t ts = 0; ts < 11; ++ts )
         BOOST_CHECK( !ioConfig.getWriteRestartFile( ts ) );
 }
 
@@ -756,16 +707,12 @@ BOOST_AUTO_TEST_CASE(RESTART_EQ_0) {
                         "  2 JUN 1983 /\n"
                         "/\n";
 
-    auto grid = std::make_shared<const EclipseGrid>( 10, 10, 10 );
-    ParseContext ctx;
-
-    auto deck = Parser().parseString( data, ctx );
-    Schedule schedule( ctx, grid, *deck );
-    IOConfig ioConfig( *deck, schedule );
+    auto deck = Parser().parseString( data, ParseContext() );
+    IOConfig ioConfig( *deck );
 
     /* RESTART=0, no restart file is written
      */
-    for( size_t ts = 0; ts < schedule.getTimeMap()->numTimesteps(); ++ts )
+    for( size_t ts = 0; ts < 11; ++ts )
         BOOST_CHECK( !ioConfig.getWriteRestartFile( ts ) );
 }
 
@@ -800,12 +747,8 @@ BOOST_AUTO_TEST_CASE(RESTART_BASIC_GT_2) {
                         " 1 JAN 1986 /\n" 
                        "/\n";
 
-    auto grid = std::make_shared<const EclipseGrid>( 10, 10, 10 );
-    ParseContext ctx;
-
-    auto deck = Parser().parseString( data, ctx );
-    Schedule schedule( ctx, grid, *deck );
-    IOConfig ioConfig( *deck, schedule );
+    auto deck = Parser().parseString( data, ParseContext() );
+    IOConfig ioConfig( *deck );
 
     for( size_t ts : { 1, 2, 3, 4, 5, 7, 8, 10, 11  } )
         BOOST_CHECK( !ioConfig.getWriteRestartFile( ts ) );
@@ -845,15 +788,11 @@ BOOST_AUTO_TEST_CASE(RESTART_BASIC_LEQ_2) {
                         " 1 JAN 1986 /\n" 
                        "/\n";
 
-    auto grid = std::make_shared<const EclipseGrid>( 10, 10, 10 );
-    ParseContext ctx;
-
-    auto deck = Parser().parseString( data, ctx );
-    Schedule schedule( ctx, grid, *deck );
-    IOConfig ioConfig( *deck, schedule );
+    auto deck = Parser().parseString( data, ParseContext() );
+    IOConfig ioConfig( *deck );
 
     BOOST_CHECK( ioConfig.getWriteRestartFile( 1 ) );
-    for( size_t ts = 2; ts < schedule.getTimeMap()->numTimesteps(); ++ts )
+    for( size_t ts = 2; ts < 11; ++ts )
         BOOST_CHECK( !ioConfig.getWriteRestartFile( ts ) );
 }
 
@@ -888,12 +827,8 @@ BOOST_AUTO_TEST_CASE(DefaultProperties) {
                         " 1 JAN 1986 /\n" 
                        "/\n";
 
-    auto grid = std::make_shared<const EclipseGrid>( 10, 10, 10 );
-    ParseContext ctx;
-
-    auto deck = Parser().parseString( data, ctx );
-    Schedule schedule( ctx, grid, *deck );
-    IOConfig ioConfig( *deck, schedule );
+    auto deck = Parser().parseString( data, ParseContext() );
+    IOConfig ioConfig( *deck );
 
     /*If no GRIDFILE nor NOGGF keywords are specified, default output an EGRID file*/
     BOOST_CHECK( ioConfig.getWriteEGRIDFile() );
@@ -926,12 +861,8 @@ BOOST_AUTO_TEST_CASE(OutputProperties) {
                         "SCHEDULE\n";
 
 
-    auto grid = std::make_shared<const EclipseGrid>( 10, 10, 10 );
-    ParseContext ctx;
-
-    auto deck = Parser().parseString( data, ctx );
-    Schedule schedule( ctx, grid, *deck );
-    IOConfig ioConfig( *deck, schedule );
+    auto deck = Parser().parseString( data, ParseContext() );
+    IOConfig ioConfig( *deck );
 
     BOOST_CHECK( !ioConfig.getWriteEGRIDFile() );
     /*If INIT keyword is specified, verify write of INIT file*/
@@ -952,12 +883,8 @@ BOOST_AUTO_TEST_CASE(NoGRIDFILE) {
                         " 0 0 /\n"
                         "\n";
 
-    auto grid = std::make_shared<const EclipseGrid>( 10, 10, 10 );
-    ParseContext ctx;
-
-    auto deck = Parser().parseString( data, ctx );
-    Schedule schedule( ctx, grid, *deck );
-    IOConfig ioConfig( *deck, schedule );
+    auto deck = Parser().parseString( data, ParseContext() );
+    IOConfig ioConfig( *deck );
 
     /*If GRIDFILE 0 0 is specified, no EGRID file is written */
     BOOST_CHECK( !ioConfig.getWriteEGRIDFile() );
@@ -965,23 +892,19 @@ BOOST_AUTO_TEST_CASE(NoGRIDFILE) {
 
 BOOST_AUTO_TEST_CASE(OutputPaths) {
 
-    auto grid = std::make_shared<const EclipseGrid>( 10, 10, 10 );
-
     IOConfig config1( "" );
     BOOST_CHECK_EQUAL("", config1.getBaseName() );
 
     Deck deck2;
-    Schedule schedule2( ParseContext(), grid, deck2 );
     deck2.setDataFile( "testString.DATA" );
-    IOConfig config2( deck2, schedule2 );
+    IOConfig config2( deck2 );
     std::string output_dir2 =  ".";
     BOOST_CHECK_EQUAL( output_dir2,  config2.getOutputDir() );
     BOOST_CHECK_EQUAL( "testString", config2.getBaseName() );
 
     Deck deck3;
     deck3.setDataFile( "/path/to/testString.DATA" );
-    Schedule schedule3( ParseContext(), grid, deck3 );
-    IOConfig config3( deck3, schedule3 );
+    IOConfig config3( deck3 );
     std::string output_dir3 =  "/path/to";
     config3.setOutputDir( output_dir3 );
     BOOST_CHECK_EQUAL( output_dir3,  config3.getOutputDir() );

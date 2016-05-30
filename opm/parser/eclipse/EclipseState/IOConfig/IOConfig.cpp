@@ -217,11 +217,11 @@ namespace Opm {
         return restart_config;
     }
 
-    IOConfig::IOConfig( const Deck& deck, const Schedule& schedule ) :
+    IOConfig::IOConfig( const Deck& deck ) :
         IOConfig( GRIDSection( deck ),
                   RUNSPECSection( deck ),
                   SCHEDULESection( deck ),
-                  schedule.getTimeMap(),
+                  std::make_shared< const TimeMap >( deck ),
                   deck.getDataFile() )
     {}
 
@@ -370,7 +370,7 @@ namespace Opm {
     void IOConfig::initFirstOutput(const Schedule& schedule) {
         m_first_restart_step = -1;
         m_first_rft_step = -1;
-        assertTimeMap( schedule.getTimeMap() );
+        assertTimeMap( this->m_timemap );
         {
             size_t report_step = 0;
             while (true) {
