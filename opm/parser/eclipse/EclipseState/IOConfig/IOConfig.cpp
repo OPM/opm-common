@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
+#include <opm/parser/eclipse/Deck/SCHEDULESection.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -53,12 +54,176 @@ namespace Opm {
 
             return dir;
         }
+
+        inline bool is_int( const std::string& x ) {
+            auto is_digit = []( char c ) { return std::isdigit( c ); };
+
+            return !x.empty()
+                && ( x.front() == '-' || is_digit( x.front() ) )
+                && std::all_of( x.begin() + 1, x.end(), is_digit );
+        }
     }
 
-    IOConfig::IOConfig( const Deck& deck ) :
-        IOConfig( GRIDSection( deck ), RUNSPECSection( deck ), deck.getDataFile() )
-    {}
+    IOConfig::restartConfig IOConfig::rptrst( const DeckKeyword& kw, size_t step ) {
 
+        const auto& items = kw.getStringData();
+
+        /* if any of the values are pure integers we assume this is meant to be
+         * the slash-terminated list of integers way of configuring. If
+         * integers and non-integers are mixed, this is an error.
+         */
+        const auto ints = std::any_of( items.begin(), items.end(), is_int );
+        const auto strs = !std::all_of( items.begin(), items.end(), is_int );
+
+        if( ints && strs ) throw std::runtime_error(
+                "RPTRST does not support mixed mnemonics and integer list."
+            );
+
+        size_t basic = 1;
+        size_t freq = 0;
+        bool found_basic = false;
+
+        for( const auto& mnemonic : items ) {
+
+            const auto freq_pos = mnemonic.find( "FREQ=" );
+            if( freq_pos != std::string::npos ) {
+                freq = std::stoul( mnemonic.substr( freq_pos + 5 ) );
+            }
+
+            const auto basic_pos = mnemonic.find( "BASIC=" );
+            if( basic_pos != std::string::npos ) {
+                basic = std::stoul( mnemonic.substr( basic_pos + 6 ) );
+                found_basic = true;
+            }
+        }
+
+        if( found_basic ) return restartConfig( step, basic, freq );
+
+        /* If no BASIC mnemonic is found, either it is not present or we might
+         * have an old data set containing integer controls instead of mnemonics.
+         * BASIC integer switch is integer control nr 1, FREQUENCY is integer
+         * control nr 6.
+         */
+
+        /* mnemonics, but without basic and freq. Effectively ignored */
+        if( !ints ) return {};
+
+        if( items.size() >= 1 )
+            basic = std::stoul( items[ 0 ] );
+
+        // Peculiar special case in eclipse, - not documented
+        // This ignore of basic = 0 for the integer mnemonics case
+        // is done to make flow write restart file at the same intervals
+        // as eclipse for the Norne data set. There might be some rules
+        // we are missing here.
+        if( 0 == basic ) return {};
+
+        if( items.size() >= 6 ) // if frequency is set
+            freq = std::stoul( items[ 5 ] );
+
+        return restartConfig( step, basic, freq );
+    }
+
+    IOConfig::restartConfig IOConfig::rptsched( const DeckKeyword& keyword ) {
+        size_t restart = 0;
+        bool restart_found = false;
+
+        const auto& items = keyword.getStringData();
+        const auto ints = std::any_of( items.begin(), items.end(), is_int );
+        const auto strs = !std::all_of( items.begin(), items.end(), is_int );
+
+        if( ints && strs ) throw std::runtime_error(
+                "RPTSCHED does not support mixed mnemonics and integer list."
+            );
+
+        for( const auto& mnemonic : items  ) {
+            const auto restart_pos = mnemonic.find( "RESTART=" );
+            if( restart_pos != std::string::npos ) {
+                restart = std::stoul( mnemonic.substr( restart_pos + 8 ) );
+                restart_found = true;
+            }
+
+            const auto nothing_pos = mnemonic.find( "NOTHING" );
+            if( nothing_pos != std::string::npos ) {
+                restart = 0;
+                restart_found = true;
+            }
+        }
+
+        if( restart_found ) return restartConfig( restart );
+
+
+        /* No RESTART or NOTHING found, but it is not an integer list */
+        if( strs ) return {};
+
+        /* We might have an old data set containing integer controls instead of
+         * mnemonics. Restart integer switch is integer control nr 7
+         */
+
+        if( items.size() < 7 ) return {};
+
+        return restartConfig( std::stoul( items[ 6 ] ) );
+    }
+
+    DynamicState< IOConfig::restartConfig > IOConfig::rstconf(
+            const SCHEDULESection& schedule,
+            std::shared_ptr< const TimeMap > timemap ) {
+
+        size_t current_step = 1;
+        bool ignore_RPTSCHED_restart = false;
+        restartConfig unset;
+
+        DynamicState< IOConfig::restartConfig >
+            restart_config( timemap, restartConfig( 0, 0, 1 ) );
+
+        for( const auto& keyword : schedule ) {
+            const auto& name = keyword.name();
+
+            if( name == "DATES" ) {
+                current_step += keyword.size();
+                continue;
+            }
+
+            if( name == "TSTEP" ) {
+                current_step += keyword.getRecord( 0 ).getItem( 0 ).size();
+                continue;
+            }
+
+            if( !( name == "RPTRST" || name == "RPTSCHED" ) ) continue;
+
+            if( timemap->size() <= current_step ) continue;
+
+            const bool is_RPTRST = name == "RPTRST";
+
+            if( !is_RPTRST && ignore_RPTSCHED_restart ) continue;
+
+            const auto rs = is_RPTRST
+                          ? rptrst( keyword, current_step - 1 )
+                          : rptsched( keyword );
+
+            if( is_RPTRST ) ignore_RPTSCHED_restart = rs.basic > 2;
+
+            if( rs == unset ) continue;
+
+            if( 6 == rs.rptsched_restart || 6 == rs.basic )
+                throw std::runtime_error(
+                    "OPM does not support the RESTART=6 setting"
+                    "(write restart file every timestep)"
+                );
+
+            restart_config.update( current_step, rs );
+        }
+
+        return restart_config;
+    }
+
+    IOConfig::IOConfig( const Deck& deck, const Schedule& schedule ) :
+        IOConfig( GRIDSection( deck ),
+                  RUNSPECSection( deck ),
+                  SCHEDULESection( deck ),
+                  schedule.getTimeMap(),
+                  deck.getDataFile() )
+    {}
 
     IOConfig::IOConfig( const std::string& input_path ) :
         m_deck_filename( input_path ),
@@ -93,7 +258,10 @@ namespace Opm {
 
     IOConfig::IOConfig( const GRIDSection& grid,
                         const RUNSPECSection& runspec,
+                        const SCHEDULESection& schedule,
+                        std::shared_ptr< const TimeMap > timemap,
                         const std::string& input_path ) :
+        m_timemap( timemap ),
         m_write_INIT_file( grid.hasKeyword( "INIT" ) ),
         m_write_EGRID_file( write_egrid_file( grid ) ),
         m_UNIFIN( runspec.hasKeyword( "UNIFIN" ) ),
@@ -102,7 +270,9 @@ namespace Opm {
         m_FMTOUT( runspec.hasKeyword( "FMTOUT" ) ),
         m_deck_filename( input_path ),
         m_output_dir( outputdir( input_path ) ),
-        m_base_name( basename( input_path ) )
+        m_base_name( basename( input_path ) ),
+        m_restart_output_config( std::make_shared< DynamicState< restartConfig > >(
+                rstconf( schedule, timemap ) ) )
     {}
 
     bool IOConfig::getWriteEGRIDFile() const {
@@ -172,67 +342,6 @@ namespace Opm {
         return write_restart_file;
     }
 
-
-    void IOConfig::handleRPTRSTBasic(TimeMapConstPtr timemap, size_t timestep, size_t basic, size_t frequency, bool update_default, bool reset_global) {
-
-        if (6 == basic )
-        {
-            throw std::runtime_error("OPM does not support the RPTRST BASIC=6 setting (write restart file every timestep)");
-        }
-
-        if (basic > 2) {
-            m_ignore_RPTSCHED_RESTART = true;
-        } else {
-            m_ignore_RPTSCHED_RESTART = false;
-        }
-
-
-        assertTimeMap( timemap );
-        {
-            restartConfig rs;
-            rs.timestep  = timestep;
-            rs.basic     = basic;
-            rs.frequency = frequency;
-            rs.rptsched_restart_set = false;
-            rs.rptsched_restart     = 0;
-
-            if (update_default) {
-                m_restart_output_config->updateInitial(rs);
-            }
-            else if (reset_global) {
-                m_restart_output_config->globalReset(rs);
-            }
-            else {
-                m_restart_output_config->update(timestep, rs);
-            }
-        }
-    }
-
-
-    void IOConfig::handleRPTSCHEDRestart(TimeMapConstPtr timemap, size_t timestep, size_t restart) {
-        if (6 == restart )
-        {
-            throw std::runtime_error("OPM does not support the RPTSCHED RESTART=6 setting (write restart file every timestep)");
-        }
-
-        if (m_ignore_RPTSCHED_RESTART) { //If previously RPTRST BASIC has been set >2, ignore RPTSCHED RESTART
-            return;
-        }
-
-        assertTimeMap( timemap );
-        {
-            restartConfig rs;
-            rs.timestep             = 0;
-            rs.basic                = 0;
-            rs.frequency            = 0;
-            rs.rptsched_restart     = restart;
-            rs.rptsched_restart_set = true;
-
-            m_restart_output_config->update(timestep, rs);
-        }
-    }
-
-
     void IOConfig::assertTimeMap(TimeMapConstPtr timemap) {
         if (!m_timemap) {
             restartConfig rs;
@@ -289,36 +398,10 @@ namespace Opm {
     void IOConfig::handleSolutionSection(TimeMapConstPtr timemap, std::shared_ptr<const SOLUTIONSection> solutionSection) {
         if (solutionSection->hasKeyword("RPTRST")) {
             const auto& rptrstkeyword        = solutionSection->getKeyword("RPTRST");
-            const auto& record = rptrstkeyword.getRecord(0);
-            const auto& item     = record.getItem(0);
 
-            bool handleRptrstBasic = false;
-            size_t basic = 0;
-            size_t freq  = 0;
-
-            for (size_t index = 0; index < item.size(); ++index) {
-                if (item.hasValue(index)) {
-                    std::string mnemonics = item.get< std::string >(index);
-                    std::size_t found_basic = mnemonics.find("BASIC=");
-                    if (found_basic != std::string::npos) {
-                        std::string basic_no = mnemonics.substr(found_basic+6, found_basic+7);
-                        basic = atoi(basic_no.c_str());
-                        handleRptrstBasic = true;
-                    }
-
-                    std::size_t found_freq = mnemonics.find("FREQ=");
-                    if (found_freq != std::string::npos) {
-                        std::string freq_no = mnemonics.substr(found_freq+5, found_freq+6);
-                        freq = atoi(freq_no.c_str());
-                    }
-                }
-            }
-
-            if (handleRptrstBasic) {
-                size_t currentStep = 0;
-                handleRPTRSTBasic(timemap, currentStep, basic, freq, true);
-            }
-
+            auto rs = rptrst( rptrstkeyword, 0 );
+            if( rs != restartConfig() )
+                m_restart_output_config->updateInitial( rs );
 
             setWriteInitialRestartFile(true); // Guessing on eclipse rules for write of initial RESTART file (at time 0):
                                               // Write of initial restart file is (due to the eclipse reference manual)
@@ -327,7 +410,6 @@ namespace Opm {
                                               // but - due to initial restart file written from Eclipse
                                               // for data where RPTSOL RESTART not set - guessing that
                                               // when RPTRST is set in SOLUTION (no basic though...) -> write inital restart.
-
         } //RPTRST
 
 
@@ -337,17 +419,13 @@ namespace Opm {
     }
 
     void IOConfig::overrideRestartWriteInterval(size_t interval) {
-        if (interval > 0) {
-            size_t basic = 3;
-            size_t timestep = 0;
-            handleRPTRSTBasic(m_timemap, timestep, basic, interval, false, true);
-            setWriteInitialRestartFile(true);
-        } else {
-            size_t basic = 0;
-            size_t timestep = 0;
-            handleRPTRSTBasic(m_timemap, timestep, basic, interval, false, true);
-            setWriteInitialRestartFile(false);
-        }
+        size_t step = 0;
+        size_t basic = interval > 0 ? 3 : 0;
+
+        restartConfig rs( step, basic, interval );
+        m_restart_output_config->globalReset( rs );
+
+        setWriteInitialRestartFile( interval > 0 );
     }
 
     bool IOConfig::getUNIFIN() const {

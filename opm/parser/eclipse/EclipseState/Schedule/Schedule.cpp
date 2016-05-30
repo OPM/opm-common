@@ -73,15 +73,17 @@ namespace Opm {
 
     Schedule::Schedule(const ParseContext& parseContext,
                        std::shared_ptr<const EclipseGrid> grid,
-                       DeckConstPtr deckptr ) :
+                       std::shared_ptr< const Deck > deckptr,
+                       std::shared_ptr< IOConfig > ) :
             Schedule(parseContext, grid, *deckptr )
     {}
 
     Schedule::Schedule( const ParseContext& parseContext,
                         std::shared_ptr<const EclipseGrid> grid,
-                        const Deck& deck ) :
-            m_grid(grid),
+                        const Deck& deck,
+                        std::shared_ptr< IOConfig > ioConfig ) :
             m_timeMap( createTimeMap( deck ) ),
+            m_grid( grid )
     {
         initializeNOSIM(deck);
         m_tuning.reset(new Tuning(m_timeMap));
@@ -122,7 +124,7 @@ namespace Opm {
         }
     }
 
-    void Schedule::iterateScheduleSection(const ParseContext& parseContext , const SCHEDULESection& section, IOConfigPtr ioConfig) {
+    void Schedule::iterateScheduleSection(const ParseContext& parseContext , const SCHEDULESection& section, IOConfigPtr ) {
         /*
           geoModifiers is a list of geo modifiers which can be found in the schedule
           section. This is only partly supported, support is indicated by the bool
@@ -149,7 +151,6 @@ namespace Opm {
 
         size_t currentStep = 0;
         std::vector<std::pair< const DeckKeyword* , size_t> > rftProperties;
-        std::vector<std::pair< const DeckKeyword* , size_t> > IOConfigSettings;
 
         for (size_t keywordIdx = 0; keywordIdx < section.size(); ++keywordIdx) {
             const auto& keyword = section.getKeyword(keywordIdx);
@@ -222,12 +223,6 @@ namespace Opm {
             if (keyword.name() == "NOSIM")
                 handleNOSIM();
 
-            if (keyword.name() == "RPTRST")
-                IOConfigSettings.push_back( std::make_pair( &keyword , currentStep ));
-
-            if (keyword.name() == "RPTSCHED")
-                IOConfigSettings.push_back( std::make_pair( &keyword , currentStep ));
-
             if (keyword.name() == "WRFT")
                 rftProperties.push_back( std::make_pair( &keyword , currentStep ));
 
@@ -284,19 +279,6 @@ namespace Opm {
 
             if (keyword.name() == "WRFTPLT"){
                 handleWRFTPLT(keyword, timeStep);
-            }
-        }
-
-        for( const auto& pair : IOConfigSettings ) {
-            const DeckKeyword& keyword = *pair.first;
-            size_t timeStep = pair.second;
-
-            if( m_timeMap->size() <= timeStep + 1 ) continue;
-
-            if( keyword.name() == "RPTRST" ) {
-                handleRPTRST(keyword, timeStep + 1, ioConfig);
-              } else if( keyword.name() == "RPTSCHED" ) {
-                handleRPTSCHED(keyword, timeStep + 1, ioConfig);
             }
         }
 
@@ -1171,123 +1153,6 @@ namespace Opm {
 
     void Schedule::handleNOSIM() {
         nosim = true;
-    }
-
-    void Schedule::handleRPTRST( const DeckKeyword& keyword, size_t currentStep, IOConfigPtr ioConfig) {
-        const auto& record = keyword.getRecord(0);
-
-        size_t basic = 1;
-        size_t freq  = 0;
-        size_t found_basic = 0;
-        bool handle_RPTRST_BASIC = false;
-
-        const auto& item = record.getItem(0);
-
-        for (size_t index = 0; index < item.size(); ++index) {
-            const std::string& mnemonic = item.get< std::string >(index);
-
-            found_basic = mnemonic.find("BASIC=");
-            if (found_basic != std::string::npos) {
-                std::string basic_no = mnemonic.substr(found_basic+6, mnemonic.size());
-                basic = boost::lexical_cast<size_t>(basic_no);
-                handle_RPTRST_BASIC = true;
-            }
-
-            size_t found_freq = mnemonic.find("FREQ=");
-            if (found_freq != std::string::npos) {
-                std::string freq_no = mnemonic.substr(found_freq+5, mnemonic.size());
-                freq = boost::lexical_cast<size_t>(freq_no);
-            }
-        }
-
-
-        /* If no BASIC mnemonic is found, either it is not present or we might
-           have an old data set containing integer controls instead of mnemonics.
-           BASIC integer switch is integer control nr 1, FREQUENCY is integer
-           control nr 6 */
-
-
-        if (found_basic == std::string::npos) {
-            if (item.size() >= 1)  {
-                const std::string& integer_control_basic = item.get< std::string >(0);
-                try {
-                    basic = boost::lexical_cast<size_t>(integer_control_basic);
-                    if (0 != basic ) // Peculiar special case in eclipse, - not documented
-                                     // This ignore of basic = 0 for the integer mnemonics case
-                                     // is done to make flow write restart file at the same intervals
-                                     // as eclipse for the Norne data set. There might be some rules
-                                     // we are missing here.
-                    {
-                        handle_RPTRST_BASIC = true;
-                    }
-                } catch (boost::bad_lexical_cast &) {
-                    //do nothing
-                }
-            }
-
-            if (item.size() >= 6) { //if frequency is set
-                const std::string& integer_control_frequency = item.get< std::string >(5);
-                try {
-                    freq = boost::lexical_cast<size_t>(integer_control_frequency);
-                } catch (boost::bad_lexical_cast &) {
-                    //do nothing
-                }
-            }
-        }
-
-        if (handle_RPTRST_BASIC) {
-            ioConfig->handleRPTRSTBasic(m_timeMap, currentStep, basic, freq);
-        }
-    }
-
-
-    void Schedule::handleRPTSCHED( const DeckKeyword& keyword, size_t step, IOConfigPtr ioConfig) {
-        const auto& record = keyword.getRecord(0);
-
-        size_t restart = 0;
-        size_t found_mnemonic_RESTART = 0;
-        size_t found_mnemonic_NOTHING = 0;
-        const auto& item = record.getItem(0);
-        bool handle_RPTSCHED_RESTART = false;
-
-        for (size_t index = 0; index < item.size(); ++index) {
-            const std::string& mnemonic = item.get< std::string >(index);
-
-            found_mnemonic_RESTART = mnemonic.find("RESTART=");
-            if (found_mnemonic_RESTART != std::string::npos) {
-                std::string restart_no = mnemonic.substr(found_mnemonic_RESTART+8, mnemonic.size());
-                restart = boost::lexical_cast<size_t>(restart_no);
-                handle_RPTSCHED_RESTART = true;
-            }
-            found_mnemonic_NOTHING = mnemonic.find("NOTHING");
-            if (found_mnemonic_NOTHING != std::string::npos) {
-                restart = 0;
-                handle_RPTSCHED_RESTART = true;
-            }
-        }
-
-
-        /* If no RESTART mnemonic is found, either it is not present or we might
-           have an old data set containing integer controls instead of mnemonics.
-           Restart integer switch is integer control nr 7 */
-
-        if (found_mnemonic_RESTART == std::string::npos) {
-            if (item.size() >= 7)  {
-                const std::string& integer_control = item.get< std::string >(6);
-                try {
-                    restart = boost::lexical_cast<size_t>(integer_control);
-                    handle_RPTSCHED_RESTART = true;
-                } catch (boost::bad_lexical_cast &) {
-                    //do nothing
-                }
-            }
-        }
-
-
-        if (handle_RPTSCHED_RESTART) {
-            ioConfig->handleRPTSCHEDRestart(m_timeMap, step, restart);
-        }
-
     }
 
     void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep) {

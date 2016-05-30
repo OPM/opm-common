@@ -53,10 +53,10 @@ namespace Opm
     class Schedule {
     public:
         Schedule(const ParseContext& parseContext, std::shared_ptr<const EclipseGrid> grid,
-                 const Deck& deck,                 std::shared_ptr<IOConfig> ioConfig);
+                 const Deck& deck,                 std::shared_ptr<IOConfig> ioConfig = nullptr );
         /// [deprecated]
         Schedule(const ParseContext& parseContext, std::shared_ptr<const EclipseGrid> grid,
-                 std::shared_ptr<const Deck> deck, std::shared_ptr<IOConfig> ioConfig);
+                 std::shared_ptr<const Deck> deck, std::shared_ptr<IOConfig> ioConfig = nullptr );
 
         /*
          * If the input deck does not specify a start time, Eclipse's 1. Jan
@@ -138,8 +138,6 @@ namespace Opm
         void handleGEFAC( const DeckKeyword& keyword, size_t currentStep);
         void handleTUNING( const DeckKeyword& keyword, size_t currentStep);
         void handleNOSIM();
-        void handleRPTRST( const DeckKeyword& keyword, size_t currentStep, std::shared_ptr< IOConfig > ioConfig);
-        void handleRPTSCHED( const DeckKeyword& keyword, size_t currentStep, std::shared_ptr< IOConfig > ioConfig);
         void handleDATES( const DeckKeyword& keyword );
         void handleTSTEP( const DeckKeyword& keyword );
         void handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep);

@@ -30,6 +30,7 @@ namespace Opm {
     class DeckKeyword;
     class GRIDSection;
     class RUNSPECSection;
+    class SCHEDULESection;
     class SOLUTIONSection;
     class TimeMap;
     class Schedule;
@@ -120,7 +121,7 @@ namespace Opm {
     public:
 
         IOConfig() = default;
-        explicit IOConfig( const Deck& );
+        explicit IOConfig( const Deck&, const Schedule& );
         explicit IOConfig( const std::string& input_path );
 
         int  getFirstRestartStep() const;
@@ -136,13 +137,6 @@ namespace Opm {
 
         void overrideRestartWriteInterval(size_t interval);
 
-        void handleRPTRSTBasic(std::shared_ptr< const TimeMap > timemap,
-                               size_t timestep,
-                               size_t basic,
-                               size_t frequency = 1,
-                               bool update_default = false,
-                               bool reset_global = false);
-        void handleRPTSCHEDRestart(std::shared_ptr< const TimeMap > timemap, size_t timestep, size_t restart);
         void handleSolutionSection(std::shared_ptr< const TimeMap > timemap, std::shared_ptr<const SOLUTIONSection> solutionSection);
         void setWriteInitialRestartFile(bool writeInitialRestartFile);
 
@@ -171,6 +165,8 @@ namespace Opm {
 
         IOConfig( const GRIDSection&,
                   const RUNSPECSection&,
+                  const SCHEDULESection&,
+                  std::shared_ptr< const TimeMap >,
                   const std::string& input_path );
 
         void assertTimeMap(std::shared_ptr< const TimeMap > timemap);
@@ -181,7 +177,6 @@ namespace Opm {
                                           bool months = false) const;
         void handleRPTSOL( const DeckKeyword& keyword);
 
-
         std::shared_ptr< const TimeMap > m_timemap;
         bool            m_write_INIT_file = false;
         bool            m_write_EGRID_file = true;
@@ -190,7 +185,6 @@ namespace Opm {
         bool            m_UNIFOUT = false;
         bool            m_FMTIN = false;
         bool            m_FMTOUT = false;
-        bool            m_ignore_RPTSCHED_RESTART = false;
         int             m_first_restart_step;
         int             m_first_rft_step;
         std::string     m_deck_filename;
@@ -207,23 +201,44 @@ namespace Opm {
               The former triplet is mainly governed by the RPTRST keyword and the
               latter pair by the RPTSCHED keyword.
             */
-            size_t timestep;
-            size_t basic;
-            size_t frequency;
-            bool   rptsched_restart_set;
-            size_t rptsched_restart;
+            size_t timestep = 0;
+            size_t basic = 0;
+            size_t frequency = 0;
+            bool   rptsched_restart_set = false;
+            size_t rptsched_restart = 0;
 
-            bool operator!=(const restartConfig& rhs) {
-                bool ret = true;
-                if ((this->timestep  == rhs.timestep) &&
-                    (this->basic     == rhs.basic) &&
-                    (this->frequency == rhs.frequency)) {
-                        ret = false;
+            restartConfig() = default;
+            restartConfig( size_t sched_restart ) :
+                rptsched_restart_set( true ),
+                rptsched_restart( sched_restart )
+            {}
+
+            restartConfig( size_t step, size_t b, size_t freq ) :
+                timestep( step ),
+                basic( b ),
+                frequency( freq )
+            {}
+
+            bool operator!=(const restartConfig& rhs) const {
+                return !( *this == rhs );
+            }
+
+            bool operator==( const restartConfig& rhs ) const {
+                if( this->rptsched_restart_set ) {
+                    return rhs.rptsched_restart_set
+                        && this->rptsched_restart == rhs.rptsched_restart;
                 }
-                return ret;
+
+                return this->timestep == rhs.timestep &&
+                       this->basic == rhs.basic &&
+                       this->frequency == rhs.frequency;
             }
         };
 
+        static DynamicState< restartConfig > rstconf( const SCHEDULESection&,
+                                                      std::shared_ptr< const TimeMap > );
+        static restartConfig rptrst( const DeckKeyword&, size_t );
+        static restartConfig rptsched( const DeckKeyword& );
 
         std::shared_ptr<DynamicState<restartConfig>> m_restart_output_config;
 

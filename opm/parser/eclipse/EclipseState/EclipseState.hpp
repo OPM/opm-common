@@ -122,12 +122,12 @@ namespace Opm {
                                            const std::string& keywordName);
 
         ParseContext m_parseContext;
+        std::shared_ptr<EclipseGrid> m_inputGrid;
+        std::shared_ptr< const Schedule > m_schedule;
         std::shared_ptr< IOConfig >               m_ioConfig;
         std::shared_ptr< const InitConfig >       m_initConfig;
         const TableManager m_tables;
-        std::shared_ptr<EclipseGrid> m_inputGrid;
         Eclipse3DProperties m_eclipseProperties;
-        std::shared_ptr< const Schedule > m_schedule;
         std::shared_ptr< const SimulationConfig > m_simulationConfig;
         SummaryConfig m_summaryConfig;
 
