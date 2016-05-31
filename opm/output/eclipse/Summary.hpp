@@ -59,6 +59,7 @@ class Summary {
         std::map< const char*, std::vector< sum_node > > wvar;
         std::map< const char*, std::vector< sum_node > > gvar;
         const ecl_sum_tstep_type* prev_tstep = nullptr;
+        double prev_time_elapsed = 0;
 };
 
 }
