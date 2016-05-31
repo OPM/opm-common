@@ -239,6 +239,7 @@ inline double wglrh( const Well& w, size_t ts ) {
     return glr( p.GasRate, p.WaterRate + p.OilRate );
 }
 
+using measure = UnitSystem::measure;
 enum class WT { wat, oil, gas };
 inline double prodrate( const Well& w,
                         size_t timestep,
@@ -249,9 +250,9 @@ inline double prodrate( const Well& w,
 
     const auto& p = w.getProductionProperties( timestep );
     switch( wt ) {
-        case WT::wat: return units.from_si( UnitSystem::measure::liquid_surface_rate, p.WaterRate );
-        case WT::oil: return units.from_si( UnitSystem::measure::liquid_surface_rate, p.OilRate );
-        case WT::gas: return units.from_si( UnitSystem::measure::gas_surface_rate, p.GasRate );
+        case WT::wat: return units.from_si( measure::liquid_surface_rate, p.WaterRate );
+        case WT::oil: return units.from_si( measure::liquid_surface_rate, p.OilRate );
+        case WT::gas: return units.from_si( measure::gas_surface_rate, p.GasRate );
     }
 
     throw std::runtime_error( "Reached impossible state in prodrate" );
@@ -301,8 +302,8 @@ inline double get_rate( const data::Well& w,
     const auto x = w.rates.get( phase, 0.0 );
 
     switch( phase ) {
-        case rt::gas: return units.from_si( UnitSystem::measure::gas_surface_rate, x );
-        default: return units.from_si( UnitSystem::measure::liquid_surface_rate, x );
+        case rt::gas: return units.from_si( measure::gas_surface_rate, rate );
+        default: return units.from_si( measure::liquid_surface_rate, rate );
     }
 }
 
@@ -312,8 +313,8 @@ inline double get_vol( const data::Well& w,
 
     const auto x = w.rates.get( phase, 0.0 );
     switch( phase ) {
-        case rt::gas: return units.from_si( UnitSystem::measure::gas_surface_volume, x );
-        default: return units.from_si( UnitSystem::measure::liquid_surface_volume, x );
+        case rt::gas: return units.from_si( measure::gas_surface_volume, x );
+        default: return units.from_si( measure::liquid_surface_volume, x );
     }
 }
 
