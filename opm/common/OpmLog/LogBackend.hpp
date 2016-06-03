@@ -47,8 +47,8 @@ namespace Opm
         void setMessageLimiter(std::shared_ptr<MessageLimiter> limiter);
 
 	/// Configure what message should be logged into OpmLog
-	void setLevel(const int64_t level);
-
+	void setMessageLevel(const int64_t level);
+	int64_t getMessageLevel();
 	
         /// Add a message to the backend.
         ///

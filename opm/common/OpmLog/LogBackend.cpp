@@ -41,10 +41,17 @@ namespace Opm {
         m_limiter = limiter;
     }
 
-    void LogBackend::setLevel(const int64_t level)
+    void LogBackend::setMessageLevel(const int64_t level)
     {
         m_level = level;
     }
+
+    int64_t LogBackend::getMessageLevel()
+    {   
+        return m_level;
+    }
+
+
 
     void LogBackend::addMessage(int64_t messageFlag, const std::string& message)
     {
