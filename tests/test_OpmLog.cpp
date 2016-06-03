@@ -64,6 +64,7 @@ BOOST_AUTO_TEST_CASE(Test_Logger) {
 
     logger.addBackend("COUNTER" , counter);
     logger.addBackend("STREAM" , streamLog);
+    counter->setMessageLevel(Log::MessageType::Debug);
     BOOST_CHECK_EQUAL( true , logger.hasBackend("COUNTER"));
     BOOST_CHECK_EQUAL( true , logger.hasBackend("STREAM"));
 
@@ -73,7 +74,7 @@ BOOST_AUTO_TEST_CASE(Test_Logger) {
     BOOST_CHECK_EQUAL( 1U , counter->numMessages(Log::MessageType::Warning) );
     BOOST_CHECK_EQUAL( 0U , counter->numMessages(Log::MessageType::Info) );
 
-    BOOST_CHECK_EQUAL( log_stream.str() , "Warning\n");
+    BOOST_CHECK_EQUAL( log_stream.str() , "Error\nWarning\n");
 
 
     BOOST_CHECK_THROW( logger.getBackend<LogBackend>("No") , std::invalid_argument );
@@ -165,7 +166,7 @@ BOOST_AUTO_TEST_CASE(LoggerDefaultTypesEnabled) {
 }
 
 BOOST_AUTO_TEST_CASE( CounterLogTesting) {
-    CounterLog counter(Log::DefaultMessageTypes);
+    CounterLog counter(Log::MessageType::Debug);
 
     counter.addMessage( Log::MessageType::Error , "This is an error ...");
     counter.addMessage( Log::MessageType::Warning , "This is a warning");
@@ -202,8 +203,9 @@ void initLogger(std::ostringstream& log_stream);
 
 void initLogger(std::ostringstream& log_stream) {
     std::shared_ptr<CounterLog> counter = std::make_shared<CounterLog>();
-    std::shared_ptr<StreamLog> streamLog = std::make_shared<StreamLog>( log_stream , Log::MessageType::Warning );
+    std::shared_ptr<StreamLog> streamLog = std::make_shared<StreamLog>( log_stream , Log::MessageType::Debug );
 
+    counter->setMessageLevel(Log::MessageType::Debug);
     BOOST_CHECK_EQUAL( false , OpmLog::hasBackend("NO"));
 
     OpmLog::addBackend("COUNTER" , counter);
@@ -216,7 +218,6 @@ void initLogger(std::ostringstream& log_stream) {
 
 BOOST_AUTO_TEST_CASE(TestOpmLog) {
     std::ostringstream log_stream;
-
     initLogger(log_stream);
 
     OpmLog::addMessage( Log::MessageType::Warning , "Warning");
@@ -230,7 +231,7 @@ BOOST_AUTO_TEST_CASE(TestOpmLog) {
         BOOST_CHECK_EQUAL( 0 , counter->numMessages(Log::MessageType::Info) );
     }
 
-    BOOST_CHECK_EQUAL( log_stream.str() , "Warning\n");
+    BOOST_CHECK_EQUAL( log_stream.str() , "Warning\nError\n");
 }
 
 
@@ -269,7 +270,7 @@ BOOST_AUTO_TEST_CASE(TestOpmLogWithColors)
 
     {
         std::shared_ptr<CounterLog> counter = std::make_shared<CounterLog>();
-        std::shared_ptr<StreamLog> streamLog = std::make_shared<StreamLog>(log_stream, Log::DefaultMessageTypes);
+        std::shared_ptr<StreamLog> streamLog = std::make_shared<StreamLog>(log_stream, Log::MessageType::Debug);
         BOOST_CHECK_EQUAL( false , OpmLog::hasBackend("NO"));
         OpmLog::addBackend("COUNTER" , counter);
         OpmLog::addBackend("STREAM" , streamLog);
@@ -277,6 +278,8 @@ BOOST_AUTO_TEST_CASE(TestOpmLogWithColors)
         BOOST_CHECK_EQUAL( true , OpmLog::hasBackend("STREAM"));
 
         streamLog->setMessageFormatter(std::make_shared<SimpleMessageFormatter>(false, true));
+        counter->setMessageLevel(Log::MessageType::Debug);
+	
     }
 
     OpmLog::warning("Warning");
@@ -315,8 +318,8 @@ BOOST_AUTO_TEST_CASE(TestOpmLogWithLimits)
     std::ostringstream log_stream2;
 
     {
-        std::shared_ptr<StreamLog> streamLog1 = std::make_shared<StreamLog>(log_stream1, Log::DefaultMessageTypes);
-        std::shared_ptr<StreamLog> streamLog2 = std::make_shared<StreamLog>(log_stream2, Log::DefaultMessageTypes);
+        std::shared_ptr<StreamLog> streamLog1 = std::make_shared<StreamLog>(log_stream1, Log::MessageType::Debug);
+        std::shared_ptr<StreamLog> streamLog2 = std::make_shared<StreamLog>(log_stream2, Log::MessageType::Debug);
         OpmLog::addBackend("STREAM1" , streamLog1);
         OpmLog::addBackend("STREAM2" , streamLog2);
         BOOST_CHECK_EQUAL( true , OpmLog::hasBackend("STREAM1"));
@@ -324,8 +327,10 @@ BOOST_AUTO_TEST_CASE(TestOpmLogWithLimits)
 
         streamLog1->setMessageFormatter(std::make_shared<SimpleMessageFormatter>(false, true));
         streamLog1->setMessageLimiter(std::make_shared<MessageLimiter>(2));
+        streamLog1->setMessageLevel(Log::MessageType::Debug);
         streamLog2->setMessageFormatter(std::make_shared<SimpleMessageFormatter>(false, true));
         streamLog2->setMessageLimiter(std::make_shared<MessageLimiter>()); // no limit
+        streamLog2->setMessageLevel(Log::MessageType::Debug);
     }
 
     const std::string tag = "ExampleTag";
