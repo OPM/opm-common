@@ -46,12 +46,6 @@ namespace Opm {
         m_mask = level;
     }
 
-    int64_t LogBackend::getMessageLevel()
-    {   
-        return m_mask;
-    }
-
-
 
     void LogBackend::addMessage(int64_t messageFlag, const std::string& message)
     {
@@ -69,7 +63,7 @@ namespace Opm {
     bool LogBackend::includeMessage(int64_t messageFlag, const std::string& messageTag)
     {
         // Check mask.
-        const bool included = ((messageFlag & m_mask) == messageFlag) && (messageFlag > 0);
+        const bool included = (messageFlag > 0);
         if (!included) {
             return false;
         }

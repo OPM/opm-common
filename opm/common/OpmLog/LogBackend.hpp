@@ -48,7 +48,6 @@ namespace Opm
 
 	/// Configure what message should be logged into OpmLog
 	void setMessageLevel(const int64_t level);
-	int64_t getMessageLevel();
 	
         /// Add a message to the backend.
         ///
