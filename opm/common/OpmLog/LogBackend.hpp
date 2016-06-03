@@ -79,7 +79,6 @@ namespace Opm
         int64_t m_mask;
         std::shared_ptr<MessageFormatterInterface> m_formatter;
         std::shared_ptr<MessageLimiter> m_limiter;
-        int64_t m_level;
     };
 
 } // namespace LogBackend
