@@ -42,7 +42,7 @@ namespace Opm {
         if ((m_enabledTypes & messageType) == 0)
             throw std::invalid_argument("Tried to issue message with unrecognized message ID");
 
-        if (m_globalMask & messageType) {
+        if (messageType) {
             for (auto iter : m_backends) {
                 LogBackend& backend = *(iter.second);
                 backend.addTaggedMessage( messageType, tag, message );
