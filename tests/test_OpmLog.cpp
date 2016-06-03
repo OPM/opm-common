@@ -369,3 +369,31 @@ BOOST_AUTO_TEST_CASE(TestsetupSimpleLog)
     OpmLog::setupSimpleDefaultLogging(use_prefix);
     BOOST_CHECK_EQUAL(true, OpmLog::hasBackend("SimpleDefaultLog"));
 }
+
+
+
+
+
+BOOST_AUTO_TEST_CASE(TestSetLevel)
+{
+    OpmLog::removeAllBackends();
+    std::ostringstream log_stream1;
+    std::ostringstream log_stream2;
+
+    std::shared_ptr<StreamLog> streamLog1 = std::make_shared<StreamLog>(log_stream1, Log::DefaultMessageTypes);
+    std::shared_ptr<StreamLog> streamLog2 = std::make_shared<StreamLog>(log_stream2, Log::DefaultMessageTypes);
+    OpmLog::addBackend("STREAM1" , streamLog1);
+    OpmLog::addBackend("STREAM2" , streamLog2);
+    streamLog1->setMessageFormatter(std::make_shared<SimpleMessageFormatter>(false, false));
+    streamLog2->setMessageFormatter(std::make_shared<SimpleMessageFormatter>(false, false));
+    streamLog1->setMessageLevel(Log::MessageType::Debug);
+    streamLog2->setMessageLevel(Log::MessageType::Info);
+    OpmLog::debug("Debug");
+    OpmLog::info("Info");
+    OpmLog::warning("Warning");
+    
+    const std::string expected1 = "Debug\nInfo\nWarning\n";
+    const std::string expected2 = "Info\nWarning\n";
+    BOOST_CHECK_EQUAL(log_stream1.str(), expected1);
+    BOOST_CHECK_EQUAL(log_stream2.str(), expected2);
+}

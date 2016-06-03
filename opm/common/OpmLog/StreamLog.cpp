@@ -45,10 +45,13 @@ void StreamLog::close() {
 }
 
 void StreamLog::addTaggedMessage(int64_t messageType, const std::string& messageTag, const std::string& message) {
+    const auto level = getMessageLevel();
     if (includeMessage( messageType, messageTag )) {
-        (*m_ostream) << formatMessage(messageType, message) << std::endl;
-        if (m_ofstream.is_open()) {
-            m_ofstream.flush();
+        if (level <= messageType) {
+            (*m_ostream) << formatMessage(messageType, message) << std::endl;
+            if (m_ofstream.is_open()) {
+                m_ofstream.flush();
+            }
         }
     }
 }
