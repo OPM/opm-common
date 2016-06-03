@@ -46,6 +46,10 @@ namespace Opm
         /// Configure how message tags will be used to limit messages.
         void setMessageLimiter(std::shared_ptr<MessageLimiter> limiter);
 
+	/// Configure what message should be logged into OpmLog
+	void setLevel(const int64_t level);
+
+	
         /// Add a message to the backend.
         ///
         /// Typically a subclass may filter, change, and output
@@ -75,6 +79,7 @@ namespace Opm
         int64_t m_mask;
         std::shared_ptr<MessageFormatterInterface> m_formatter;
         std::shared_ptr<MessageLimiter> m_limiter;
+        int64_t m_level;
     };
 
 } // namespace LogBackend

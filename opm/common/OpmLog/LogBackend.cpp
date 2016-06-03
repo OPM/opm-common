@@ -41,10 +41,17 @@ namespace Opm {
         m_limiter = limiter;
     }
 
+    void LogBackend::setLevel(const int64_t level)
+    {
+        m_level = level;
+    }
+
     void LogBackend::addMessage(int64_t messageFlag, const std::string& message)
     {
         // Forward the call to the tagged version.
-        addTaggedMessage(messageFlag, "", message);
+        if (m_level <= messageFlag) {
+            addTaggedMessage(messageFlag, "", message);
+        }
     }
 
     int64_t LogBackend::getMask() const
