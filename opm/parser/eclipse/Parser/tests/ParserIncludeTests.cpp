@@ -27,6 +27,10 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
+#include "opm_parser_build_config.hpp"
+
+
+#ifdef OPM_PARSER_BUILD_HAVE_SYMLINK
 
 BOOST_AUTO_TEST_CASE(Verify_find_includes_Data_file_is_a_symlink) {
     boost::filesystem::path inputFilePath("testdata/parser/includeSymlinkTestdata/symlink1/case_symlink.data");
@@ -57,6 +61,7 @@ BOOST_AUTO_TEST_CASE(Verify_find_includes_Data_file_has_include_file_that_again_
     BOOST_CHECK_EQUAL(false , deck->hasKeyword("WATER"));
 }
 
+#endif
 
 
 BOOST_AUTO_TEST_CASE(ParserKeyword_includeValid) {
