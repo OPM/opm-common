@@ -22,17 +22,18 @@
 
 #include <memory>
 
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/EclipseConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
 namespace Opm {
+
+    class Deck;
+    class Eclipse3DProperties;
+    class IOConfig;
+    class InitConfig;
+    class ParseContext;
+    class SimulationConfig;
+
+
     class EclipseConfig
     {
     public:
@@ -48,8 +49,6 @@ namespace Opm {
         std::shared_ptr< const SimulationConfig > getSimulationConfig() const;
         const SummaryConfig& getSummaryConfig() const;
 
-
-        void initIOConfigPostSchedule(const Deck& deck, const Schedule& schedule);
     private:
         std::shared_ptr<IOConfig> m_ioConfig;
         std::shared_ptr<const InitConfig> m_initConfig;

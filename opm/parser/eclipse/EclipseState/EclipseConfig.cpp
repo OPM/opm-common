@@ -18,6 +18,7 @@
  */
 
 #include <memory>
+
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
@@ -42,9 +43,6 @@ namespace Opm {
             m_simulationConfig(std::make_shared<const SimulationConfig>(deck, eclipse3DProperties)),
             m_summaryConfig(   deck, schedule, eclipse3DProperties, inputGrid->getNXYZ())
     {
-    }
-
-    void EclipseConfig::initIOConfigPostSchedule(const Deck& deck, const Schedule& schedule) {
         // Hmmm - would have thought this should iterate through the SCHEDULE section as well?
         if (Section::hasSOLUTION(deck)) {
             std::shared_ptr<const SOLUTIONSection> solutionSection = std::make_shared<const SOLUTIONSection>(deck);
@@ -72,6 +70,4 @@ namespace Opm {
     SimulationConfigConstPtr EclipseConfig::getSimulationConfig() const {
         return m_simulationConfig;
     }
-
-
 }

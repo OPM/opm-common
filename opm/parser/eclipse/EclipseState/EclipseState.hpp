@@ -25,7 +25,6 @@
 #include <utility>
 #include <vector>
 
-#include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
@@ -37,7 +36,6 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm {
 
@@ -46,6 +44,7 @@ namespace Opm {
 
     class Box;
     class BoxManager;
+    class Deck;
     class DeckItem;
     class DeckKeyword;
     class DeckRecord;
@@ -58,6 +57,7 @@ namespace Opm {
     class SimulationConfig;
     class TableManager;
     class TransMult;
+    class UnitSystem;
 
     class EclipseState {
     public:

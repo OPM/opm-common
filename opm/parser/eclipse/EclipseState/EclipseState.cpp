@@ -67,9 +67,6 @@ namespace Opm {
         if (m_inputGrid->hasCellInfo())
             m_inputGrid->resetACTNUM(m_eclipseProperties.getIntGridProperty("ACTNUM").getData().data());
 
-        m_eclipseConfig.initIOConfigPostSchedule(deck, *m_schedule);
-
-
         if (deck.hasKeyword( "TITLE" )) {
             const auto& titleKeyword = deck.getKeyword( "TITLE" );
             const auto& item = titleKeyword.getRecord( 0 ).getItem( 0 );
