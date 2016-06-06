@@ -386,10 +386,10 @@ void VFPProdTable::check() {
 
     if (num_decreasing > 0) {
         //TODO: Replace with proper log message
-        std::cerr << "VFPPROD bhp versus thp not monotonic increasing: "
-                << num_decreasing << "/" << m_data.num_elements()
-                << "(" << static_cast<int>(100 * num_decreasing / (double) m_data.num_elements()) << "%)"
-                << " elements failed test" << std::endl;
+        m_messages.debug("VFPPROD bhp versus thp not monotonic increasing: "
+                + std::to_string(num_decreasing) + "/" + std::to_string( m_data.num_elements())
+                + "(" + std::to_string(static_cast<int>(100 * num_decreasing / (double) m_data.num_elements()))
+                + "%) elements failed test");
     }
 }
 
@@ -527,6 +527,17 @@ void VFPProdTable::convertALQToSI(const ALQ_TYPE& type,
 
 
 
+const MessageContainer& VFPProdTable::getMessageContainer() const
+{
+    return m_messages;
+}
+
+
+
+MessageContainer& VFPProdTable::getMessageContainer()
+{
+    return m_messages;
+}
 
 
 
