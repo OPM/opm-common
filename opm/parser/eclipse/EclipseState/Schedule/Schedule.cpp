@@ -35,7 +35,6 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicVector.hpp>
@@ -73,15 +72,13 @@ namespace Opm {
 
     Schedule::Schedule(const ParseContext& parseContext,
                        std::shared_ptr<const EclipseGrid> grid,
-                       std::shared_ptr< const Deck > deckptr,
-                       std::shared_ptr< IOConfig > ) :
+                       std::shared_ptr< const Deck > deckptr ) :
             Schedule(parseContext, grid, *deckptr )
     {}
 
     Schedule::Schedule( const ParseContext& parseContext,
                         std::shared_ptr<const EclipseGrid> grid,
-                        const Deck& deck,
-                        std::shared_ptr< IOConfig > ioConfig ) :
+                        const Deck& deck ) :
             m_timeMap( createTimeMap( deck ) ),
             m_grid( grid )
     {
@@ -95,7 +92,7 @@ namespace Opm {
 
         if (Section::hasSCHEDULE(deck)) {
             std::shared_ptr<SCHEDULESection> scheduleSection = std::make_shared<SCHEDULESection>(deck);
-            iterateScheduleSection(parseContext , *scheduleSection , ioConfig);
+            iterateScheduleSection(parseContext , *scheduleSection );
         }
     }
 
@@ -124,7 +121,7 @@ namespace Opm {
         }
     }
 
-    void Schedule::iterateScheduleSection(const ParseContext& parseContext , const SCHEDULESection& section, IOConfigPtr ) {
+    void Schedule::iterateScheduleSection(const ParseContext& parseContext , const SCHEDULESection& section ) {
         /*
           geoModifiers is a list of geo modifiers which can be found in the schedule
           section. This is only partly supported, support is indicated by the bool

@@ -41,7 +41,6 @@ namespace Opm
     class Events;
     class Group;
     class GroupTree;
-    class IOConfig;
     class OilVaporizationProperties;
     class ParseContext;
     class SCHEDULESection;
@@ -53,10 +52,10 @@ namespace Opm
     class Schedule {
     public:
         Schedule(const ParseContext& parseContext, std::shared_ptr<const EclipseGrid> grid,
-                 const Deck& deck,                 std::shared_ptr<IOConfig> ioConfig = nullptr );
+                 const Deck& deck );
         /// [deprecated]
         Schedule(const ParseContext& parseContext, std::shared_ptr<const EclipseGrid> grid,
-                 std::shared_ptr<const Deck> deck, std::shared_ptr<IOConfig> ioConfig = nullptr );
+                 std::shared_ptr<const Deck> deck );
 
         /*
          * If the input deck does not specify a start time, Eclipse's 1. Jan
@@ -113,7 +112,7 @@ namespace Opm
         void initializeNOSIM(const Deck& deck);
         void initRootGroupTreeNode(std::shared_ptr< const TimeMap > timeMap);
         void initOilVaporization(std::shared_ptr< const TimeMap > timeMap);
-        void iterateScheduleSection(const ParseContext& parseContext ,  const SCHEDULESection&  section, std::shared_ptr< IOConfig > ioConfig);
+        void iterateScheduleSection(const ParseContext& parseContext ,  const SCHEDULESection& );
         bool handleGroupFromWELSPECS(const std::string& groupName, std::shared_ptr< GroupTree > newTree) const;
         void addGroup(const std::string& groupName , size_t timeStep);
         void addWell(const std::string& wellName, const DeckRecord& record, size_t timeStep, WellCompletion::CompletionOrderEnum wellCompletionOrder);
