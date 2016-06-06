@@ -490,8 +490,7 @@ namespace Opm {
 
             VFPProdTable table;
             table.init(keyword, unit_system);
-            auto message = table.getMessageContainer();
-            m_messages.appendMessages(message);
+            m_messages.appendMessages(table.getMessageContainer());
 
             //Check that the table in question has a unique ID
             int table_id = table.getTableNum();

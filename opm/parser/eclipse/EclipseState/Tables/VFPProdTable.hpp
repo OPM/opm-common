@@ -233,7 +233,6 @@ public:
     }
 
     const MessageContainer& getMessageContainer() const;
-    MessageContainer& getMessageContainer();
 
 private:
 

@@ -533,12 +533,4 @@ const MessageContainer& VFPProdTable::getMessageContainer() const
 }
 
 
-
-MessageContainer& VFPProdTable::getMessageContainer()
-{
-    return m_messages;
-}
-
-
-
 } //Namespace opm
