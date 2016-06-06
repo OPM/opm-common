@@ -35,6 +35,7 @@ namespace Log {
     }
 
     const int64_t DefaultMessageTypes = MessageType::Debug + MessageType::Info + MessageType::Warning + MessageType::Error + MessageType::Problem + MessageType::Bug;
+    const int64_t NoDebugMessageTypes = MessageType::Info + MessageType::Warning + MessageType::Error + MessageType::Problem + MessageType::Bug;
 
     /// Terminal codes for ANSI/vt100 compatible terminals.
     /// See for example http://ascii-table.com/ansi-escape-sequences.php
