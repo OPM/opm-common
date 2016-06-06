@@ -108,8 +108,11 @@ namespace Opm {
         /* mnemonics, but without basic and freq. Effectively ignored */
         if( !ints ) return {};
 
-        if( items.size() >= 1 )
-            basic = std::stoul( items[ 0 ] );
+        const int BASIC_index = 0;
+        const int FREQ_index = 5;
+
+        if( items.size() > BASIC_index )
+            basic = std::stoul( items[ BASIC_index ] );
 
         // Peculiar special case in eclipse, - not documented
         // This ignore of basic = 0 for the integer mnemonics case
@@ -118,8 +121,8 @@ namespace Opm {
         // we are missing here.
         if( 0 == basic ) return {};
 
-        if( items.size() >= 6 ) // if frequency is set
-            freq = std::stoul( items[ 5 ] );
+        if( items.size() > FREQ_index ) // if frequency is set
+            freq = std::stoul( items[ FREQ_index ] );
 
         return restartConfig( step, basic, freq );
     }
@@ -160,9 +163,11 @@ namespace Opm {
          * mnemonics. Restart integer switch is integer control nr 7
          */
 
-        if( items.size() < 7 ) return {};
+        const int RESTART_index = 6;
 
-        return restartConfig( std::stoul( items[ 6 ] ) );
+        if( items.size() <= RESTART_index ) return {};
+
+        return restartConfig( std::stoul( items[ RESTART_index ] ) );
     }
 
     DynamicState< IOConfig::restartConfig > IOConfig::rstconf(
