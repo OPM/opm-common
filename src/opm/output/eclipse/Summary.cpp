@@ -246,7 +246,7 @@ inline double prodrate( const Well& w,
                         WT wt,
                         const UnitSystem& units ) {
 
-    if( !w.isProducer( timestep ) ) return 0;
+    if( !w.isProducer( timestep ) ) return  0;
 
     const auto& p = w.getProductionProperties( timestep );
     switch( wt ) {
@@ -642,12 +642,16 @@ void Summary::add_timestep( int report_step,
     auto* tstep = ecl_sum_add_tstep( this->ecl_sum.get(), report_step, secs_elapsed );
     const double duration = secs_elapsed - this->prev_time_elapsed;
 
+    static const data::Well dummy_well = {};
+
     /* calculate the values for the Well-family of keywords. */
     for( const auto& pair : this->wvar ) {
         const auto* wname = pair.first;
 
         const auto& state_well = es.getSchedule()->getWell( wname );
-        const auto& sim_well = wells.at( wname );
+        const auto& sim_well = wells.wells.find( wname ) != wells.wells.end()
+                             ? wells.at( wname )
+                             : dummy_well;
 
         for( const auto& node : pair.second ) {
             auto val = well_keywords( static_cast< E >( node.kw ),
@@ -666,8 +670,13 @@ void Summary::add_timestep( int report_step,
         const auto& state_wells = state_group.getWells( report_step );
 
         std::vector< const data::Well* > sim_wells;
-        for( const auto& well : state_wells )
+        for( const auto& well : state_wells ) {
+            if( wells.wells.find( well.first ) == wells.wells.end() ) continue;
             sim_wells.push_back( &wells.at( well.first ) );
+        }
+
+        if( sim_wells.empty() )
+            sim_wells.push_back( &dummy_well );
 
         for( const auto& node : pair.second ) {
             auto val = group_keywords( static_cast< E >( node.kw ),
