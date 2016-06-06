@@ -208,6 +208,9 @@ namespace Opm {
 
             if( is_RPTRST ) ignore_RPTSCHED_restart = rs.basic > 2;
 
+            /* we're using the default state of restartConfig to signal "no
+             * update". The default state is non-sensical
+             */
             if( rs == unset ) continue;
 
             if( 6 == rs.rptsched_restart || 6 == rs.basic )
@@ -425,6 +428,9 @@ namespace Opm {
 
     void IOConfig::overrideRestartWriteInterval(size_t interval) {
         size_t step = 0;
+        /* write restart files if the interval is non-zero. The restart
+         * mnemonic (setting) that governs restart-on-interval is BASIC=3
+         */
         size_t basic = interval > 0 ? 3 : 0;
 
         restartConfig rs( step, basic, interval );
