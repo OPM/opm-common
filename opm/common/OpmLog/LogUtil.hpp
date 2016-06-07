@@ -32,10 +32,12 @@ namespace Log {
         const int64_t Error     =  8;   /* Error in the input data - should probably exit. */
         const int64_t Problem   = 16;   /* Calculation problems - e.g. convergence failure. */
         const int64_t Bug       = 32;   /* An inconsistent state has been encountered in the simulator - should probably exit. */
+        const int64_t Prtinfo   = 64;  /* Information that should only go into print file.*/
     }
 
-    const int64_t DefaultMessageTypes = MessageType::Debug + MessageType::Info + MessageType::Warning + MessageType::Error + MessageType::Problem + MessageType::Bug;
-    const int64_t NoDebugMessageTypes = MessageType::Info + MessageType::Warning + MessageType::Error + MessageType::Problem + MessageType::Bug;
+    const int64_t DefaultMessageTypes = MessageType::Debug + MessageType::Info + MessageType::Warning + MessageType::Error + MessageType::Problem + MessageType::Bug + MessageType::Prtinfo;
+    const int64_t NoDebugMessageTypes = MessageType::Info + MessageType::Warning + MessageType::Error + MessageType::Problem + MessageType::Bug + MessageType::Prtinfo;
+    const int64_t StdoutMessageTypes = MessageType::Info + MessageType::Warning + MessageType::Error + MessageType::Problem + MessageType::Bug;
 
     /// Terminal codes for ANSI/vt100 compatible terminals.
     /// See for example http://ascii-table.com/ansi-escape-sequences.php

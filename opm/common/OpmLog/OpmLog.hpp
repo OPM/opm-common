@@ -48,6 +48,7 @@ public:
     static void problem(const std::string& message);
     static void bug(const std::string& message);
     static void debug(const std::string& message);
+    static void prtinfo(const std::string& message);
 
     static void info(const std::string& tag, const std::string& message);
     static void warning(const std::string& tag, const std::string& message);
@@ -55,6 +56,7 @@ public:
     static void problem(const std::string& tag, const std::string& message);
     static void bug(const std::string& tag, const std::string& message);
     static void debug(const std::string& tag, const std::string& message);
+    static void prtinfo(const std::string& tag, const std::string& message);
 
     static bool hasBackend( const std::string& backendName );
     static void addBackend(const std::string& name , std::shared_ptr<LogBackend> backend);

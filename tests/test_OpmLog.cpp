@@ -169,10 +169,12 @@ BOOST_AUTO_TEST_CASE( CounterLogTesting) {
 
     counter.addMessage( Log::MessageType::Error , "This is an error ...");
     counter.addMessage( Log::MessageType::Warning , "This is a warning");
+    counter.addMessage( Log::MessageType::Prtinfo , "This is a info(prtinfo)");
 
     BOOST_CHECK_EQUAL(1U , counter.numMessages( Log::MessageType::Error ));
     BOOST_CHECK_EQUAL(1U , counter.numMessages( Log::MessageType::Warning ));
     BOOST_CHECK_EQUAL(0  , counter.numMessages( Log::MessageType::Info ));
+    BOOST_CHECK_EQUAL(1U  , counter.numMessages( Log::MessageType::Prtinfo ));
 
     {
         int64_t not_enabled = 4096;
@@ -252,6 +254,7 @@ BOOST_AUTO_TEST_CASE(TestHelperFunctions)
     // prefixMessage
     BOOST_CHECK_EQUAL(prefixMessage(MessageType::Error, "message"), "error: message");
     BOOST_CHECK_EQUAL(prefixMessage(MessageType::Info, "message"), "info: message");
+    BOOST_CHECK_EQUAL(prefixMessage(MessageType::Prtinfo, "message"), "info: message");
 
     // colorCode Message
     BOOST_CHECK_EQUAL(colorCodeMessage(MessageType::Info, "message"), "message");
