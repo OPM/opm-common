@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE(TestHelperFunctions)
 
     // fileMessage
     BOOST_CHECK_EQUAL(fileMessage("foo/bar", 1, "message"), "foo/bar:1: message");
-    BOOST_CHECK_EQUAL(fileMessage(MessageType::Error, "foo/bar", 1, "message"), "foo/bar:1: error: message");
+    BOOST_CHECK_EQUAL(fileMessage(MessageType::Error, "foo/bar", 1, "message"), "foo/bar:1: Error: message");
 
     // prefixMessage
     BOOST_CHECK_EQUAL(prefixMessage(MessageType::Error, "message"), "Error: message");
@@ -287,10 +287,10 @@ BOOST_AUTO_TEST_CASE(TestOpmLogWithColors)
     OpmLog::info("Info");
     OpmLog::bug("Bug");
 
-    const std::string expected = Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n"
-        + Log::colorCodeMessage(Log::MessageType::Error, "Error") + "\n"
+    const std::string expected = Log::colorCodeMessage(Log::MessageType::Warning, "Warning: Warning") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Error, "Error: Error") + "\n"
         + Log::colorCodeMessage(Log::MessageType::Info, "Info") + "\n"
-        + Log::colorCodeMessage(Log::MessageType::Bug, "Bug") + "\n";
+        + Log::colorCodeMessage(Log::MessageType::Bug, "Bug: Bug") + "\n";
 
     BOOST_CHECK_EQUAL(log_stream.str(), expected);
 
@@ -340,22 +340,22 @@ BOOST_AUTO_TEST_CASE(TestOpmLogWithLimits)
     OpmLog::warning(tag, "Warning");
     OpmLog::warning(tag, "Warning");
 
-    const std::string expected1 = Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n"
-        + Log::colorCodeMessage(Log::MessageType::Error, "Error") + "\n"
+    const std::string expected1 = Log::colorCodeMessage(Log::MessageType::Warning, "Warning: Warning") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Error, "Error: Error") + "\n"
         + Log::colorCodeMessage(Log::MessageType::Info, "Info") + "\n"
-        + Log::colorCodeMessage(Log::MessageType::Bug, "Bug") + "\n"
-        + Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n"
-        + Log::colorCodeMessage(Log::MessageType::Warning, "Message limit reached for message tag: " + tag) + "\n";
+        + Log::colorCodeMessage(Log::MessageType::Bug, "Bug: Bug") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Warning, "Warning: Warning") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Warning, "Warning: Message limit reached for message tag: " + tag) + "\n";
 
     BOOST_CHECK_EQUAL(log_stream1.str(), expected1);
 
-    const std::string expected2 = Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n"
-        + Log::colorCodeMessage(Log::MessageType::Error, "Error") + "\n"
+    const std::string expected2 = Log::colorCodeMessage(Log::MessageType::Warning, "Warning: Warning") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Error, "Error: Error") + "\n"
         + Log::colorCodeMessage(Log::MessageType::Info, "Info") + "\n"
-        + Log::colorCodeMessage(Log::MessageType::Bug, "Bug") + "\n"
-        + Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n"
-        + Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n"
-        + Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n";
+        + Log::colorCodeMessage(Log::MessageType::Bug, "Bug: Bug") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Warning, "Warning: Warning") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Warning, "Warning: Warning") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Warning, "Warning: Warning") + "\n";
 
     BOOST_CHECK_EQUAL(log_stream2.str(), expected2);
 
