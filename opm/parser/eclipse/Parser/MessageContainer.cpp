@@ -120,17 +120,17 @@ namespace Opm {
     }
 
 
-    void MessageContainer::prtinfo( const std::string& msg,
+    void MessageContainer::note( const std::string& msg,
                                     const std::string& filename,
                                     const size_t lineno ) {
         m_messages.emplace_back(
-            Message { Message::Prtinfo, msg, { filename, lineno } }
+            Message { Message::Note, msg, { filename, lineno } }
         );
     }
 
 
-    void MessageContainer::prtinfo( const std::string& msg ) {
-        m_messages.emplace_back( Message { Message::Prtinfo, msg, {} } );
+    void MessageContainer::note( const std::string& msg ) {
+        m_messages.emplace_back( Message { Message::Note, msg, {} } );
     }
 
 

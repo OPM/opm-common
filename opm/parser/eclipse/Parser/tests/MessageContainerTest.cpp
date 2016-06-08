@@ -47,8 +47,8 @@ BOOST_AUTO_TEST_CASE(TestIterator) {
     msgList.error("Error");
     msgList.problem("Problem");
     msgList.bug("Bug");
-    msgList.info("Prtinfo");
-    std::vector<std::string> msgString = {"Debug", "Info", "Warning", "Error", "Problem", "Bug", "Prtinfo"};
+    msgList.note("Note");
+    std::vector<std::string> msgString = {"Debug", "Info", "Warning", "Error", "Problem", "Bug", "Note"};
     int i = 0;
     for (const auto& msg : msgList) {
         BOOST_CHECK_EQUAL(msg.message, msgString[i]);
