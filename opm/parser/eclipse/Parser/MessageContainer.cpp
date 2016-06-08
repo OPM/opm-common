@@ -121,8 +121,8 @@ namespace Opm {
 
 
     void MessageContainer::note( const std::string& msg,
-                                    const std::string& filename,
-                                    const size_t lineno ) {
+                                 const std::string& filename,
+                                 const size_t lineno ) {
         m_messages.emplace_back(
             Message { Message::Note, msg, { filename, lineno } }
         );
