@@ -287,10 +287,10 @@ BOOST_AUTO_TEST_CASE(TestOpmLogWithColors)
     OpmLog::info("Info");
     OpmLog::bug("Bug");
 
-    const std::string expected = Log::colorCodeMessage(Log::MessageType::Warning, "Warning: Warning") + "\n"
-        + Log::colorCodeMessage(Log::MessageType::Error, "Error: Error") + "\n"
+    const std::string expected = Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Error, "Error") + "\n"
         + Log::colorCodeMessage(Log::MessageType::Info, "Info") + "\n"
-        + Log::colorCodeMessage(Log::MessageType::Bug, "Bug: Bug") + "\n";
+        + Log::colorCodeMessage(Log::MessageType::Bug, "Bug") + "\n";
 
     BOOST_CHECK_EQUAL(log_stream.str(), expected);
 
@@ -340,22 +340,22 @@ BOOST_AUTO_TEST_CASE(TestOpmLogWithLimits)
     OpmLog::warning(tag, "Warning");
     OpmLog::warning(tag, "Warning");
 
-    const std::string expected1 = Log::colorCodeMessage(Log::MessageType::Warning, "Warning: Warning") + "\n"
-        + Log::colorCodeMessage(Log::MessageType::Error, "Error: Error") + "\n"
+    const std::string expected1 = Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Error, "Error") + "\n"
         + Log::colorCodeMessage(Log::MessageType::Info, "Info") + "\n"
-        + Log::colorCodeMessage(Log::MessageType::Bug, "Bug: Bug") + "\n"
-        + Log::colorCodeMessage(Log::MessageType::Warning, "Warning: Warning") + "\n"
-        + Log::colorCodeMessage(Log::MessageType::Warning, "Warning: Message limit reached for message tag: " + tag) + "\n";
+        + Log::colorCodeMessage(Log::MessageType::Bug, "Bug") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Warning, "Message limit reached for message tag: " + tag) + "\n";
 
     BOOST_CHECK_EQUAL(log_stream1.str(), expected1);
 
-    const std::string expected2 = Log::colorCodeMessage(Log::MessageType::Warning, "Warning: Warning") + "\n"
-        + Log::colorCodeMessage(Log::MessageType::Error, "Error: Error") + "\n"
+    const std::string expected2 = Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Error, "Error") + "\n"
         + Log::colorCodeMessage(Log::MessageType::Info, "Info") + "\n"
-        + Log::colorCodeMessage(Log::MessageType::Bug, "Bug: Bug") + "\n"
-        + Log::colorCodeMessage(Log::MessageType::Warning, "Warning: Warning") + "\n"
-        + Log::colorCodeMessage(Log::MessageType::Warning, "Warning: Warning") + "\n"
-        + Log::colorCodeMessage(Log::MessageType::Warning, "Warning: Warning") + "\n";
+        + Log::colorCodeMessage(Log::MessageType::Bug, "Bug") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n";
 
     BOOST_CHECK_EQUAL(log_stream2.str(), expected2);
 
@@ -371,4 +371,52 @@ BOOST_AUTO_TEST_CASE(TestsetupSimpleLog)
     bool use_prefix = false;
     OpmLog::setupSimpleDefaultLogging(use_prefix);
     BOOST_CHECK_EQUAL(true, OpmLog::hasBackend("SimpleDefaultLog"));
+}
+
+
+
+BOOST_AUTO_TEST_CASE(TestFormat)
+{
+    OpmLog::removeAllBackends();
+    std::ostringstream log_stream1;
+    std::ostringstream log_stream2;
+    std::ostringstream log_stream3;
+    {
+        std::shared_ptr<StreamLog> streamLog1 = std::make_shared<StreamLog>(log_stream1, Log::DefaultMessageTypes);
+        std::shared_ptr<StreamLog> streamLog2 = std::make_shared<StreamLog>(log_stream2, Log::DefaultMessageTypes);
+        std::shared_ptr<StreamLog> streamLog3 = std::make_shared<StreamLog>(log_stream3, Log::DefaultMessageTypes);
+        OpmLog::addBackend("STREAM1" , streamLog1);
+        OpmLog::addBackend("STREAM2" , streamLog2);
+        OpmLog::addBackend("STREAM3" , streamLog3);
+        BOOST_CHECK_EQUAL( true , OpmLog::hasBackend("STREAM1"));
+        BOOST_CHECK_EQUAL( true , OpmLog::hasBackend("STREAM2"));
+        BOOST_CHECK_EQUAL( true , OpmLog::hasBackend("STREAM3"));
+        streamLog1->setMessageFormatter(std::make_shared<SimpleMessageFormatter>(false, true));
+        streamLog2->setMessageFormatter(std::make_shared<SimpleMessageFormatter>(Log::MessageType::Info, true));
+        streamLog3->setMessageFormatter(std::make_shared<SimpleMessageFormatter>(false));
+    }
+
+    OpmLog::warning("Warning");
+    OpmLog::error("Error");
+    OpmLog::info("Info");
+    OpmLog::bug("Bug");
+
+    const std::string expected1 = Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Error, "Error") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Info, "Info") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Bug, "Bug") + "\n";
+
+    const std::string expected2 = Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Error, "Error") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Info, "Info: Info") + "\n"
+        + Log::colorCodeMessage(Log::MessageType::Bug, "Bug") + "\n";
+
+    const std::string expected3 = Log::prefixMessage(Log::MessageType::Warning, "Warning") + "\n"
+        + Log::prefixMessage(Log::MessageType::Error, "Error") + "\n"
+        + "Info" + "\n"
+        + Log::prefixMessage(Log::MessageType::Bug, "Bug") + "\n";
+
+    BOOST_CHECK_EQUAL(log_stream1.str(), expected1);
+    BOOST_CHECK_EQUAL(log_stream2.str(), expected2);
+    BOOST_CHECK_EQUAL(log_stream3.str(), expected3);
 }
