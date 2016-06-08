@@ -378,8 +378,8 @@ void VFPProdTable::check(const DeckKeyword& keyword, const double table_scaling_
                         if (m_data[t][w][g][a][f] < bhp_last) {
                             ++num_decreasing;
                             points += "At point (FLOW, THP, WFR, GFR, ALQ) = "
-                                    + std::to_string(f) + std::to_string(t)
-                                    + std::to_string(w) + std::to_string(g)
+                                    + std::to_string(f) + " " + std::to_string(t) + " "
+                                    + std::to_string(w) + " " + std::to_string(g) + " "
                                     + std::to_string(a) + " at BHP = "
                                     + std::to_string(m_data[t][w][g][a][f] / table_scaling_factor) + "\n";
                         }
@@ -399,11 +399,6 @@ void VFPProdTable::check(const DeckKeyword& keyword, const double table_scaling_
                            + ", line " + std::to_string(keyword.getLineNumber()) 
                            + ", in file " + keyword.getFileName());
         m_messages.note(points);
-        //TODO: Replace with proper log message
-        m_messages.debug("VFPPROD bhp versus thp not monotonic increasing: "
-                + std::to_string(num_decreasing) + "/" + std::to_string( m_data.num_elements())
-                + "(" + std::to_string(static_cast<int>(100 * num_decreasing / (double) m_data.num_elements()))
-                + "%) elements failed test");
     }
 }
 
