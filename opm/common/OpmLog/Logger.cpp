@@ -36,7 +36,7 @@ namespace Opm {
         addMessageType( Log::MessageType::Error , "error");
         addMessageType( Log::MessageType::Problem , "problem");
         addMessageType( Log::MessageType::Bug , "bug");
-        addMessageType( Log::MessageType::Prtinfo , "prtinfo");
+        addMessageType( Log::MessageType::Note , "note");
     }
 
     void Logger::addTaggedMessage(int64_t messageType, const std::string& tag, const std::string& message) const {

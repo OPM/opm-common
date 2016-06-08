@@ -26,17 +26,17 @@
 namespace Opm {
 namespace Log {
     namespace MessageType {
-        const int64_t Debug     =  1;   /* Excessive information */
-        const int64_t Info      =  2;   /* Normal status information */
-        const int64_t Warning   =  4;   /* Input anomaly - possible error */
-        const int64_t Error     =  8;   /* Error in the input data - should probably exit. */
-        const int64_t Problem   = 16;   /* Calculation problems - e.g. convergence failure. */
-        const int64_t Bug       = 32;   /* An inconsistent state has been encountered in the simulator - should probably exit. */
-        const int64_t Prtinfo   = 64;  /* Information that should only go into print file.*/
+        const int64_t Debug    =  1;   /* Excessive information */
+        const int64_t Info     =  2;   /* Normal status information */
+        const int64_t Warning  =  4;   /* Input anomaly - possible error */
+        const int64_t Error    =  8;   /* Error in the input data - should probably exit. */
+        const int64_t Problem  = 16;   /* Calculation problems - e.g. convergence failure. */
+        const int64_t Bug      = 32;   /* An inconsistent state has been encountered in the simulator - should probably exit. */
+        const int64_t Note     = 64;  /* Information that should only go into print file.*/
     }
 
-    const int64_t DefaultMessageTypes = MessageType::Debug + MessageType::Info + MessageType::Warning + MessageType::Error + MessageType::Problem + MessageType::Bug + MessageType::Prtinfo;
-    const int64_t NoDebugMessageTypes = MessageType::Info + MessageType::Warning + MessageType::Error + MessageType::Problem + MessageType::Bug + MessageType::Prtinfo;
+    const int64_t DefaultMessageTypes = MessageType::Debug + MessageType::Info + MessageType::Warning + MessageType::Error + MessageType::Problem + MessageType::Bug + MessageType::Note;
+    const int64_t NoDebugMessageTypes = MessageType::Info + MessageType::Warning + MessageType::Error + MessageType::Problem + MessageType::Bug + MessageType::Note;
     const int64_t StdoutMessageTypes = MessageType::Info + MessageType::Warning + MessageType::Error + MessageType::Problem + MessageType::Bug;
 
     /// Terminal codes for ANSI/vt100 compatible terminals.

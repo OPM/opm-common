@@ -81,9 +81,9 @@ namespace Opm {
     }
 
 
-    void OpmLog::prtinfo(const std::string& message)
+    void OpmLog::note(const std::string& message)
     {
-        addMessage(Log::MessageType::Prtinfo, message);
+        addMessage(Log::MessageType::Note, message);
     }
 
 
@@ -125,9 +125,9 @@ namespace Opm {
 
 
 
-    void OpmLog::prtinfo(const std::string& tag, const std::string& message)
+    void OpmLog::note(const std::string& tag, const std::string& message)
     {
-        addTaggedMessage(Log::MessageType::Prtinfo, tag, message);
+        addTaggedMessage(Log::MessageType::Note, tag, message);
     }
 
 
