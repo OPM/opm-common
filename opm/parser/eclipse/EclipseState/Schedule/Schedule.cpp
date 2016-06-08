@@ -356,6 +356,9 @@ namespace Opm {
             addWellToGroup( getGroup(groupName) , getWell(wellName) , currentStep);
             if (handleGroupFromWELSPECS(groupName, newTree))
                 needNewTree = true;
+
+            //Collect messages from wells.
+            m_messages.appendMessages(currentWell->getMessageContainer());
         }
 
         if (needNewTree) {
@@ -462,7 +465,7 @@ namespace Opm {
                     std::string msg =
                             "Well " + well->name() + " is a history matched well with zero rate where crossflow is banned. " +
                             "This well will be closed at " + std::to_string ( m_timeMap->getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
-                    m_messages.info(msg);
+                    m_messages.debug(msg);
                     updateWellStatus(well, currentStep, WellCommon::StatusEnum::SHUT );
                 }
             }
