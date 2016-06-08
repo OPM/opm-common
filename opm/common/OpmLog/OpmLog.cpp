@@ -81,6 +81,12 @@ namespace Opm {
     }
 
 
+    void OpmLog::note(const std::string& message)
+    {
+        addMessage(Log::MessageType::Note, message);
+    }
+
+
 
     void OpmLog::info(const std::string& tag, const std::string& message)
     {
@@ -115,6 +121,13 @@ namespace Opm {
     void OpmLog::debug(const std::string& tag, const std::string& message)
     {
         addTaggedMessage(Log::MessageType::Debug, tag, message);
+    }
+
+
+
+    void OpmLog::note(const std::string& tag, const std::string& message)
+    {
+        addTaggedMessage(Log::MessageType::Note, tag, message);
     }
 
 

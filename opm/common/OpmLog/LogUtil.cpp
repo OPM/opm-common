@@ -51,6 +51,9 @@ namespace Log {
         case MessageType::Debug:
             prefix = "debug";
             break;
+        case MessageType::Note:
+            prefix = "note";
+            break;
         case MessageType::Info:
             prefix = "info";
             break;
@@ -78,6 +81,7 @@ namespace Log {
         switch (messageType) {
         case MessageType::Debug:
         case MessageType::Info:
+        case MessageType::Note:
             return message; // No color coding, not even the code for default color.
         case MessageType::Warning:
             return AnsiTerminalColors::blue_strong + message + AnsiTerminalColors::none;
