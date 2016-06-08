@@ -48,9 +48,9 @@ BOOST_AUTO_TEST_CASE(DoLogging) {
 BOOST_AUTO_TEST_CASE(Test_Format) {
     BOOST_CHECK_EQUAL( "/path/to/file:100: There is a mild fuckup here?" , Log::fileMessage("/path/to/file" , 100 , "There is a mild fuckup here?"));
 
-    BOOST_CHECK_EQUAL( "error: This is the error" ,     Log::prefixMessage(Log::MessageType::Error , "This is the error"));
-    BOOST_CHECK_EQUAL( "warning: This is the warning" , Log::prefixMessage(Log::MessageType::Warning , "This is the warning"));
-    BOOST_CHECK_EQUAL( "info: This is the info" ,       Log::prefixMessage(Log::MessageType::Info , "This is the info"));
+    BOOST_CHECK_EQUAL( "Error: This is the error" ,     Log::prefixMessage(Log::MessageType::Error , "This is the error"));
+    BOOST_CHECK_EQUAL( "Warning: This is the warning" , Log::prefixMessage(Log::MessageType::Warning , "This is the warning"));
+    BOOST_CHECK_EQUAL( "Info: This is the info" ,       Log::prefixMessage(Log::MessageType::Info , "This is the info"));
 }
 
 
@@ -252,9 +252,9 @@ BOOST_AUTO_TEST_CASE(TestHelperFunctions)
     BOOST_CHECK_EQUAL(fileMessage(MessageType::Error, "foo/bar", 1, "message"), "foo/bar:1: error: message");
 
     // prefixMessage
-    BOOST_CHECK_EQUAL(prefixMessage(MessageType::Error, "message"), "error: message");
-    BOOST_CHECK_EQUAL(prefixMessage(MessageType::Info, "message"), "info: message");
-    BOOST_CHECK_EQUAL(prefixMessage(MessageType::Note, "message"), "note: message");
+    BOOST_CHECK_EQUAL(prefixMessage(MessageType::Error, "message"), "Error: message");
+    BOOST_CHECK_EQUAL(prefixMessage(MessageType::Info, "message"), "Info: message");
+    BOOST_CHECK_EQUAL(prefixMessage(MessageType::Note, "message"), "Note: message");
 
     // colorCode Message
     BOOST_CHECK_EQUAL(colorCodeMessage(MessageType::Info, "message"), "message");
