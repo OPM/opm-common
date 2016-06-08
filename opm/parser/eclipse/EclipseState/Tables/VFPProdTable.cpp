@@ -149,7 +149,7 @@ void VFPProdTable::init(int table_num,
     m_data.resize(shape);
     m_data = data;
 
-    check();
+    //check();
 }
 
 void VFPProdTable::init( const DeckKeyword& table, const UnitSystem& deck_unit_system) {
@@ -299,7 +299,7 @@ void VFPProdTable::init( const DeckKeyword& table, const UnitSystem& deck_unit_s
         }
     }
 
-    check();
+    check(table, table_scaling_factor);
 }
 
 
@@ -310,7 +310,7 @@ void VFPProdTable::init( const DeckKeyword& table, const UnitSystem& deck_unit_s
 
 
 
-void VFPProdTable::check() {
+void VFPProdTable::check(const DeckKeyword& keyword, const double table_scaling_factor) {
     //Table number
     assert(m_table_num > 0);
 
@@ -368,6 +368,7 @@ void VFPProdTable::check() {
     //If this is not the case, we might not be able to determine
     //the thp from the bhp easily
     int num_decreasing = 0;
+    std::string points = "";
     for (size_type w=0; w<m_data.shape()[1]; ++w) {
         for (size_type g=0; g<m_data.shape()[2]; ++g) {
             for (size_type a=0; a<m_data.shape()[3]; ++a) {
@@ -376,6 +377,11 @@ void VFPProdTable::check() {
                     for (size_type t=0; t<m_data.shape()[0]; ++t) {
                         if (m_data[t][w][g][a][f] < bhp_last) {
                             ++num_decreasing;
+                            points += "At point (FLOW, THP, WFR, GFR, ALQ) = "
+                                    + std::to_string(f) + std::to_string(t)
+                                    + std::to_string(w) + std::to_string(g)
+                                    + std::to_string(a) + " at BHP = "
+                                    + std::to_string(m_data[t][w][g][a][f] / table_scaling_factor) + "\n";
                         }
                         bhp_last = m_data[t][w][g][a][f];
                     }
@@ -385,6 +391,14 @@ void VFPProdTable::check() {
     }
 
     if (num_decreasing > 0) {
+        m_messages.warning("VFP table for production wells has BHP versus THP not " 
+                           + std::string("monotonically increasing.\nThis may cause convergence ")
+                           + "issues due to switching between BHP and THP control mode."
+                           + std::string("\nIn keyword VFPPROD table number ") 
+                           + std::to_string(m_table_num) 
+                           + ", line " + std::to_string(keyword.getLineNumber()) 
+                           + ", in file " + keyword.getFileName());
+        m_messages.note(points);
         //TODO: Replace with proper log message
         m_messages.debug("VFPPROD bhp versus thp not monotonic increasing: "
                 + std::to_string(num_decreasing) + "/" + std::to_string( m_data.num_elements())

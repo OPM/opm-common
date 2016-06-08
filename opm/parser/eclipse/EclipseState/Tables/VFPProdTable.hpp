@@ -259,7 +259,7 @@ private:
      * Debug function that runs a series of asserts to check for sanity of inputs.
      * Called after init to check that everything looks ok.
      */
-    void check();
+    void check(const DeckKeyword& table, const double factor);
 
     static void scaleValues(std::vector<double>& values,
                             const double& scaling_factor);
