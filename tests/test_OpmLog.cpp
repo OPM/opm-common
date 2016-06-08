@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE( CounterLogTesting) {
 
     counter.addMessage( Log::MessageType::Error , "This is an error ...");
     counter.addMessage( Log::MessageType::Warning , "This is a warning");
-    counter.addMessage( Log::MessageType::Note , "This is a info(note)");
+    counter.addMessage( Log::MessageType::Note , "This is a note");
 
     BOOST_CHECK_EQUAL(1U , counter.numMessages( Log::MessageType::Error ));
     BOOST_CHECK_EQUAL(1U , counter.numMessages( Log::MessageType::Warning ));
@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE(TestHelperFunctions)
     // prefixMessage
     BOOST_CHECK_EQUAL(prefixMessage(MessageType::Error, "message"), "error: message");
     BOOST_CHECK_EQUAL(prefixMessage(MessageType::Info, "message"), "info: message");
-    BOOST_CHECK_EQUAL(prefixMessage(MessageType::Note, "message"), "info: message");
+    BOOST_CHECK_EQUAL(prefixMessage(MessageType::Note, "message"), "note: message");
 
     // colorCode Message
     BOOST_CHECK_EQUAL(colorCodeMessage(MessageType::Info, "message"), "message");

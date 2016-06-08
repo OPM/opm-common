@@ -51,8 +51,10 @@ namespace Log {
         case MessageType::Debug:
             prefix = "debug";
             break;
-        case MessageType::Info:
         case MessageType::Note:
+            prefix = "note";
+            break;
+        case MessageType::Info:
             prefix = "info";
             break;
         case MessageType::Warning:
