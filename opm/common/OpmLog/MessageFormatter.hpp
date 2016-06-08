@@ -60,7 +60,12 @@ namespace Opm
         virtual std::string format(const int64_t message_flag, const std::string& message) override
         {
             std::string msg = message;
-            if (use_prefix_) {
+            const int64_t prefix_flag = Log::MessageType::Warning + Log::MessageType::Error 
+                                      + Log::MessageType::Problem + Log::MessageType::Bug;
+            if (message_flag & prefix_flag) {
+                msg = Log::prefixMessage(message_flag, msg);
+            }
+            if (use_prefix_ && !(message_flag & prefix_flag)) {
                 msg = Log::prefixMessage(message_flag, msg);
             }
             if (use_color_coding_) {
