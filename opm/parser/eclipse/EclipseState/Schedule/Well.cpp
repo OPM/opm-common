@@ -156,7 +156,7 @@ namespace Opm {
 
     bool Well::setStatus(size_t timeStep, WellCommon::StatusEnum status) {
         if ((WellCommon::StatusEnum::OPEN == status) && getCompletions(timeStep)->allCompletionsShut()) {
-            m_messages.note("when handling keyword for well " + name() + ": Cannot open a well where all completions are shut");
+            m_messages.note("When handling keyword for well " + name() + ": Cannot open a well where all completions are shut");
             return false;
         } else
             return m_status->update( timeStep , status );
