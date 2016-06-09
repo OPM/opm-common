@@ -367,7 +367,6 @@ void VFPProdTable::check(const DeckKeyword& keyword, const double table_scaling_
     //Check that bhp(thp) is a monotonic increasing function.
     //If this is not the case, we might not be able to determine
     //the thp from the bhp easily
-    int num_decreasing = 0;
     std::string points = "";
     for (size_type w=0; w<m_data.shape()[1]; ++w) {
         for (size_type g=0; g<m_data.shape()[2]; ++g) {
@@ -376,7 +375,6 @@ void VFPProdTable::check(const DeckKeyword& keyword, const double table_scaling_
                     double bhp_last = m_data[0][w][g][a][f];
                     for (size_type t=0; t<m_data.shape()[0]; ++t) {
                         if (m_data[t][w][g][a][f] < bhp_last) {
-                            ++num_decreasing;
                             points += "At point (FLOW, THP, WFR, GFR, ALQ) = "
                                     + std::to_string(f) + " " + std::to_string(t) + " "
                                     + std::to_string(w) + " " + std::to_string(g) + " "
@@ -390,7 +388,7 @@ void VFPProdTable::check(const DeckKeyword& keyword, const double table_scaling_
         }
     }
 
-    if (num_decreasing > 0) {
+    if (!points.empty()) {
         m_messages.warning("VFP table for production wells has BHP versus THP not " 
                            + std::string("monotonically increasing.\nThis may cause convergence ")
                            + "issues due to switching between BHP and THP control mode."
