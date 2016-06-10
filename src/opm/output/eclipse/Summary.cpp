@@ -246,9 +246,25 @@ inline double prodrate( const Well& w,
                         WT wt,
                         const UnitSystem& units ) {
 
-    if( !w.isProducer( timestep ) ) return  0;
+    /*
+     * For well data, looking up historical rates (both for production and
+     * injection) before simulation actually starts is impossible and
+     * nonsensical. We therefore default to writing zero (which is what eclipse
+     * seems to do as well). Additionally, when an input deck is parsed,
+     * timesteps and rates are structured as such:
+     *
+     * The rates observed in timestep N is denoted at timestep N-1, i.e. at the
+     * **end** of the previous timestep. Which means that what observed at
+     * timestep 1 is denoted at timestep 0, and what happens "on" timestep 0
+     * doesn't exist and would in code give an arithmetic error. We therefore
+     * special-case timestep N == 0, and for all other timesteps look up the
+     * value *reported* at N-1 which applies to timestep N.
+     */
+    if( timestep == 0 ) return 0.0;
 
-    const auto& p = w.getProductionProperties( timestep );
+    if( !w.isProducer( timestep - 1 ) ) return  0;
+
+    const auto& p = w.getProductionProperties( timestep - 1 );
     switch( wt ) {
         case WT::wat: return units.from_si( measure::liquid_surface_rate, p.WaterRate );
         case WT::oil: return units.from_si( measure::liquid_surface_rate, p.OilRate );
@@ -264,6 +280,8 @@ inline double prodvol( const Well& w,
                        WT wt,
                        const UnitSystem& units ) {
 
+    if( timestep == 0 ) return 0.0;
+
     const auto rate = prodrate( w, timestep, wt, units );
     return rate * duration * units.from_si( measure::time, 1 );
 }
@@ -273,8 +291,10 @@ inline double injerate( const Well& w,
                         WellInjector::TypeEnum wt,
                        const UnitSystem& units ) {
 
-    if( !w.isInjector( timestep ) ) return 0;
-    const auto& i = w.getInjectionProperties( timestep );
+    if( timestep == 0 ) return 0.0;
+
+    if( !w.isInjector( timestep - 1 ) ) return 0;
+    const auto& i = w.getInjectionProperties( timestep - 1 );
 
     /* we don't support mixed injectors, so querying a water injector for
      * gas rate gives 0.0
@@ -295,7 +315,9 @@ inline double injevol( const Well& w,
                        WellInjector::TypeEnum wt,
                        const UnitSystem& units ) {
 
-    const auto rate = injerate( w, timestep, wt, units );
+    if( timestep == 0 ) return 0.0;
+
+    const auto rate = injerate( w, timestep - 1, wt, units );
     return rate * duration * units.from_si( units.measure::time, 1 );
 }
 
