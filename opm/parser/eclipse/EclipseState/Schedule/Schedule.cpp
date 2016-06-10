@@ -465,7 +465,7 @@ namespace Opm {
                     std::string msg =
                             "Well " + well->name() + " is a history matched well with zero rate where crossflow is banned. " +
                             "This well will be closed at " + std::to_string ( m_timeMap->getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
-                    m_messages.debug(msg);
+                    m_messages.note(msg);
                     updateWellStatus(well, currentStep, WellCommon::StatusEnum::SHUT );
                 }
             }
@@ -637,7 +637,7 @@ namespace Opm {
                     std::string msg =
                             "Well " + well->name() + " is an injector with zero rate where crossflow is banned. " +
                             "This well will be closed at " + std::to_string ( m_timeMap->getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
-                    m_messages.info(msg);
+                    m_messages.note(msg);
                     updateWellStatus(well, currentStep, WellCommon::StatusEnum::SHUT );
                 }
             }
@@ -725,7 +725,7 @@ namespace Opm {
                 std::string msg =
                         "Well " + well->name() + " is an injector with zero rate where crossflow is banned. " +
                         "This well will be closed at " + std::to_string ( m_timeMap->getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
-                m_messages.info(msg);
+                m_messages.note(msg);
                 updateWellStatus(well, currentStep, WellCommon::StatusEnum::SHUT );
             }
         }
@@ -821,7 +821,7 @@ namespace Opm {
                         std::string msg =
                                 "Well " + well->name() + " where crossflow is banned has zero total rate. " +
                                 "This well is prevented from opening at " + std::to_string ( m_timeMap->getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
-                        m_messages.info(msg);
+                        m_messages.note(msg);
                         continue;
                     }
                     updateWellStatus( well , currentStep , status );
