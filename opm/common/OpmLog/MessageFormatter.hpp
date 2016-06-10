@@ -49,18 +49,34 @@ namespace Opm
     public:
         /// Constructor controlling formatting to be applied.
         SimpleMessageFormatter(const bool use_prefix, const bool use_color_coding)
-            : use_prefix_(use_prefix),
-              use_color_coding_(use_color_coding)
+            : use_color_coding_(use_color_coding)
+        {
+            if (use_prefix) {
+                prefix_flag_ = Log::DefaultMessageTypes;
+            }
+        }
+
+
+        SimpleMessageFormatter(const int64_t prefix_flag, const bool use_color_coding)
+            : use_color_coding_(use_color_coding),
+              prefix_flag_(prefix_flag)
         {
         }
 
+
+        SimpleMessageFormatter(const bool use_color_coding)
+            : use_color_coding_(use_color_coding)
+        {
+            prefix_flag_ = Log::MessageType::Warning + Log::MessageType::Error 
+                         + Log::MessageType::Problem + Log::MessageType::Bug;
+        }
         /// Returns a copy of the input string with a flag-dependant
         /// prefix (if use_prefix) and the entire message in a
         /// flag-dependent color (if use_color_coding).
         virtual std::string format(const int64_t message_flag, const std::string& message) override
         {
             std::string msg = message;
-            if (use_prefix_) {
+            if (message_flag & prefix_flag_) {
                 msg = Log::prefixMessage(message_flag, msg);
             }
             if (use_color_coding_) {
@@ -69,8 +85,8 @@ namespace Opm
             return msg;
         }
     private:
-        bool use_prefix_ = false;
         bool use_color_coding_ = false;
+        int64_t prefix_flag_ = 0;
     };
 
 
