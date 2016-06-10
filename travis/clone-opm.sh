@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 set -e
 
-project_list=(opm-data opm-common opm-parser opm-material opm-core opm-output opm-grid opm-simulators opm-upscaling ewoms)
+project_list=(opm-data opm-parser opm-material opm-core opm-output opm-grid opm-simulators opm-upscaling ewoms)
 
-# Will clone all the projects *except* the one project given as commandline argument; that
-# has typically been checked out by travis already.
+# Will clone all the projects *except* the one project given as
+# commandline argument; that has typically been checked out by travis
+# already. Will not clone opm-commone because that should already be
+# present, either because it is the current repository - or because
+# that must be cloned specifically from the other modules first.
+
 
 function clone_project {
     url=https://github.com/OPM/${1}.git
