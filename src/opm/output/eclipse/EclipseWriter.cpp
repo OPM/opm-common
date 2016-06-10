@@ -747,9 +747,6 @@ EclipseWriter::EclipseWriter( std::shared_ptr< const EclipseState > es,
 
     // make sure that the output directory exists, if not try to create it
     if ( !boost::filesystem::exists( outputDir ) ) {
-        std::cout << "Trying to create directory \""
-                    << outputDir
-                    << "\" for the simulation output\n";
         boost::filesystem::create_directories( outputDir );
     }
 
