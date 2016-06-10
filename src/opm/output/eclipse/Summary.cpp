@@ -681,7 +681,8 @@ void Summary::add_timestep( int report_step,
                                       duration,
                                       es.getUnits(), sim_well,
                                       state_well, report_step );
-            ecl_sum_tstep_set_from_node( tstep, node.node, val );
+            ecl_sum_tstep_set_from_node(
+                    tstep, node.node, val > 0 ? val : 0.0 );
         }
     }
 
@@ -706,7 +707,8 @@ void Summary::add_timestep( int report_step,
                                        duration,
                                        es.getUnits(), report_step,
                                        sim_wells, state_wells );
-            ecl_sum_tstep_set_from_node( tstep, node.node, val );
+            ecl_sum_tstep_set_from_node(
+                    tstep, node.node, val > 0 ? val : 0.0 );
         }
     }
 
