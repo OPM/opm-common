@@ -14,13 +14,11 @@ set (opm-output_DEPS
 	"CXX11Features REQUIRED"
 	# various runtime library enhancements
 	"Boost 1.44.0
-		COMPONENTS date_time filesystem system unit_test_framework REQUIRED"
+		COMPONENTS filesystem system unit_test_framework REQUIRED"
 	# Ensembles-based Reservoir Tools (ERT)
 	"ERT REQUIRED"
 	# Look for MPI support
 	"opm-common REQUIRED"
 	# Parser library for ECL-type simulation models
 	"opm-parser REQUIRED"
-	# TODO remove this dependancy
-	"opm-core REQUIRED"
 	)
