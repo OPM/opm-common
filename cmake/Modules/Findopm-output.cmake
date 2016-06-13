@@ -30,9 +30,10 @@ find_opm_package (
   ""
 
   # test program
-"#include <opm/output/OutputWriter.hpp>
+"#include <opm/output/Wells.hpp>
 int main (void) {
-  return 0;  
+    Opm::data::Rates r;
+    return 0;
 }
 "
   # config variables
