@@ -21,7 +21,6 @@
 #include <opm/output/vtk/writeVtkData.hpp>
 #include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/common/ErrorMacros.hpp>
-#include <boost/lexical_cast.hpp>
 #include <set>
 #include <cmath>
 #include <algorithm>

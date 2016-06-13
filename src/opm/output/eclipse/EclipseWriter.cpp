@@ -36,7 +36,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/Utility/Functional.hpp>
 #include <opm/output/eclipse/Summary.hpp>
-#include <boost/filesystem.hpp> // path
 
 #include <cstdlib>
 #include <memory>     // unique_ptr
@@ -51,6 +50,7 @@
 #include <ert/ecl/ecl_rst_file.h>
 #include <ert/ecl_well/well_const.h>
 #include <ert/ecl/ecl_rsthead.h>
+#include <ert/util/util.h>
 #define OPM_XWEL      "OPM_XWEL"
 
 // namespace start here since we don't want the ERT headers in it
@@ -746,11 +746,11 @@ EclipseWriter::EclipseWriter( std::shared_ptr< const EclipseState > es,
     const auto& outputDir = this->impl->outputDir;
 
     // make sure that the output directory exists, if not try to create it
-    if ( !boost::filesystem::exists( outputDir ) ) {
-        boost::filesystem::create_directories( outputDir );
+    if ( !util_entry_exists( outputDir.c_str() ) ) {
+        util_make_path( outputDir.c_str() );
     }
 
-    if (!boost::filesystem::is_directory( outputDir ) ) {
+    if( !util_is_directory( outputDir.c_str() ) ) {
         throw std::runtime_error( "The path specified as output directory '"
                                   + outputDir + "' is not a directory");
     }
