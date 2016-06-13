@@ -2,7 +2,7 @@
 # vim: set filetype=cmake autoindent tabstop=2 shiftwidth=2 noexpandtab softtabstop=2 nowrap:
 
 # defines that must be present in config.h for our headers
-set (opm-core_CONFIG_VAR
+set (opm-output_CONFIG_VAR
 	HAVE_ERT
 	)
 
