@@ -14,7 +14,7 @@ set (opm-output_DEPS
 	"CXX11Features REQUIRED"
 	# various runtime library enhancements
 	"Boost 1.44.0
-		COMPONENTS filesystem system unit_test_framework REQUIRED"
+		COMPONENTS unit_test_framework REQUIRED"
 	# Ensembles-based Reservoir Tools (ERT)
 	"ERT REQUIRED"
 	# Look for MPI support
