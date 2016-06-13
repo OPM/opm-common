@@ -30,8 +30,9 @@ find_opm_package (
   ""
 
   # test program
-"#include <opm/output/OutputWriter.hpp>
+  "#include <opm/output/Wells.hpp>
 int main (void) {
+  data::Rates r;
   return 0;  
 }
 "
