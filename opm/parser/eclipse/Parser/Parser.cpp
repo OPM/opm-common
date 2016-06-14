@@ -176,6 +176,13 @@ inline std::string clean( const std::string& str ) {
      * nothing over whitespace. run over the deck and replace all non-quoted
      * commas with whitespace. commas withing quotes are read verbatim and not
      * to be touched.
+     *
+     * There's a known defect: considering the record
+     * foo bar, , , baz, , /
+     * baz will silently interpreted as item #3 instead of item #5. As of
+     * writing we're not sure if this is even legal, nor have we seen it
+     * happen, but the effort needed to support it is tremendous and will
+     * require significant changes throughout.
      */
     std::replace_if( dst.begin(), dst.end(), f(), ' ' );
 
