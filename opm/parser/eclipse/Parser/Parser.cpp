@@ -163,6 +163,22 @@ inline std::string clean( const std::string& str ) {
         dst.push_back( '\n' );
     }
 
+    struct f {
+        bool inside_quotes = false;
+        bool operator()( char c ) {
+            if( c == ',' ) return true;
+            if( RawConsts::is_quote( c ) ) inside_quotes = !inside_quotes;
+            return false;
+        }
+    };
+
+    /* some decks use commas for item separation in records, but commas add
+     * nothing over whitespace. run over the deck and replace all non-quoted
+     * commas with whitespace. commas withing quotes are read verbatim and not
+     * to be touched.
+     */
+    std::replace_if( dst.begin(), dst.end(), f(), ' ' );
+
     return dst;
 }
 
