@@ -307,3 +307,30 @@ BOOST_AUTO_TEST_CASE( handle_empty_title ) {
     BOOST_CHECK_EQUAL( "untitled", deck->getKeyword( "TITLE" ).getStringData().front() );
  }
 
+BOOST_AUTO_TEST_CASE( deck_comma_separated_fields ) {
+    const char* deck = R"(
+TABDIMS
+    2*    24 2*    20    20 1*     1 7* /
+
+SWOF
+    0.1000,  0.0000e+00,  8.0000e-01  0
+    0.2000,  0,           8.0000e-01  0
+    0.2500,  2.7310e-04,  5.8082e-01  0
+    0.3000,  2.1848e-03,  4.1010e-01  0
+    0.3500,  7.3737e-03,  2.8010e-01  0
+    0.4000,  1.7478e-02,  1.8378e-01  0
+    0.4500,  3.4138e-02,  1.1473e-01  0
+    0.5000,  5.8990e-02,  6.7253e-02  0
+    0.5500,  9.3673e-02,  3.6301e-02  0
+    0.6000,  1.3983e-01,  1.7506e-02  0
+    0.6500,  1.9909e-01,  7.1706e-03  0
+    0.7000,  2.7310e-01,  2.2688e-03  0
+    0.7500,  3.6350e-01,  4.4820e-04  0
+    0.8000,  4.7192e-01,  2.8000e-05  0
+    0.8500,  6.0000e-01,  0.0000e+00  0
+    0.9000,  7.4939e-01,  0.0000e+00  0        
+/
+)";
+
+    BOOST_CHECK_NO_THROW( Parser().newDeckFromString( deck, ParseContext() ) );
+ }
