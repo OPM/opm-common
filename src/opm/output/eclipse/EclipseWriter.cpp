@@ -481,7 +481,7 @@ class EclipseWriter::Impl {
 };
 
 EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
-                           int numCells,
+                           int numCellsArg,
                            const int* compressed_to_cart )
     : es( eclipseState )
     , outputDir( eclipseState->getIOConfig()->getOutputDir() )
@@ -490,9 +490,9 @@ EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
     , rft( outputDir.c_str(), baseName.c_str(),
            es->getIOConfig()->getFMTOUT(),
            compressed_to_cart,
-           numCells, es->getInputGrid()->getCartesianSize() )
+           numCellsArg, es->getInputGrid()->getCartesianSize() )
     , sim_start_time( es->getSchedule()->posixStartTime() )
-    , numCells( numCells )
+    , numCells( numCellsArg )
     , compressed_to_cartesian( compressed_to_cart )
     , gridToEclipseIdx( numCells, int(-1) )
     , output_enabled( eclipseState->getIOConfig()->getOutputEnabled() )
