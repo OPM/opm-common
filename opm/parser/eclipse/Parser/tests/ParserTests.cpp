@@ -331,9 +331,28 @@ SWOF
     0.7500,  3.6350e-01,  4.4820e-04  0
     0.8000,  4.7192e-01,  2.8000e-05  0
     0.8500,  6.0000e-01,  0.0000e+00  0
-    0.9000,  7.4939e-01,  0.0000e+00  0        
+    0.9000,  7.4939e-01,  0.0000e+00  0
 /
 )";
 
     BOOST_CHECK_NO_THROW( Parser().newDeckFromString( deck, ParseContext() ) );
  }
+
+
+BOOST_AUTO_TEST_CASE(ParseTNUM) {
+    const char * deck1 =
+        "REGIONS\n"
+        "TNUMFSGS\n"
+        " 100*1/\n"
+        "\n"
+        "TNUMFXXX\n"
+        " 100*1/\n"
+        "\n";
+
+    Opm::ParseContext parseContext;
+    Opm::Parser parser;
+    auto deck = parser.parseString( deck1 , parseContext );
+    BOOST_CHECK( deck->hasKeyword("TNUMFSGS"));
+    BOOST_CHECK( deck->hasKeyword("TNUMFXXX"));
+}
+
