@@ -351,7 +351,7 @@ namespace Opm {
             }
 
             WellConstPtr currentWell = getWell(wellName);
-            checkWELSPECSConsistency(currentWell, keyword, recordNr);
+            checkWELSPECSConsistency( *currentWell, keyword, recordNr);
 
             addWellToGroup( getGroup(groupName) , getWell(wellName) , currentStep);
             if (handleGroupFromWELSPECS(groupName, newTree))
@@ -398,17 +398,17 @@ namespace Opm {
 
 
 
-    void Schedule::checkWELSPECSConsistency(WellConstPtr well, const DeckKeyword& keyword, size_t recordIdx) {
+    void Schedule::checkWELSPECSConsistency( const Well& well, const DeckKeyword& keyword, size_t recordIdx) {
         const auto& record = keyword.getRecord(recordIdx);
-        if (well->getHeadI() != record.getItem("HEAD_I").get< int >(0) - 1) {
+        if (well.getHeadI() != record.getItem("HEAD_I").get< int >(0) - 1) {
             std::string msg =
-                "Unable process WELSPECS for well " + well->name() + ", HEAD_I deviates from existing value";
+                "Unable process WELSPECS for well " + well.name() + ", HEAD_I deviates from existing value";
             m_messages.error(keyword.getFileName(), msg, keyword.getLineNumber());
             throw std::invalid_argument(msg);
         }
-        if (well->getHeadJ() != record.getItem("HEAD_J").get< int >(0) - 1) {
+        if (well.getHeadJ() != record.getItem("HEAD_J").get< int >(0) - 1) {
             std::string msg =
-                "Unable process WELSPECS for well " + well->name() + ", HEAD_J deviates from existing value";
+                "Unable process WELSPECS for well " + well.name() + ", HEAD_J deviates from existing value";
             m_messages.error(keyword.getFileName(), msg, keyword.getLineNumber());
             throw std::invalid_argument(msg);
         }
