@@ -107,7 +107,6 @@ namespace Opm {
         */
 
         void ACTNUMPostProcessor( std::vector<int>&       values,
-                                  const EclipseGrid*      eclipseGrid,
                                   const GridProperties<double>* doubleGridProperties)
         {
             const bool hasPORV = doubleGridProperties->hasKeyword( "PORV" ) || doubleGridProperties->hasKeyword( "PORO");
@@ -411,7 +410,6 @@ namespace Opm {
         {
             auto actnumPP = std::bind(&GridPropertyPostProcessor::ACTNUMPostProcessor,
                                       std::placeholders::_1,
-                                      &eclipseGrid,
                                       &m_doubleGridProperties);
 
             m_intGridProperties.postAddKeyword( "ACTNUM",
