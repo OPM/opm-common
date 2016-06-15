@@ -485,7 +485,7 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
     BOOST_CHECK( sched->hasGroup( "OP" ));
 
     {
-        GroupPtr group = sched->getGroup("INJ");
+        auto* group = sched->getGroup("INJ");
         BOOST_CHECK_EQUAL( Phase::WATER , group->getInjectionPhase( 3 ));
         BOOST_CHECK_EQUAL( GroupInjection::VREP , group->getInjectionControlMode( 3 ));
         BOOST_CHECK_CLOSE( 10/Metric::Time , group->getSurfaceMaxRate( 3 ) , 0.001);
@@ -501,7 +501,7 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
     }
 
     {
-        GroupPtr group = sched->getGroup("OP");
+        auto* group = sched->getGroup("OP");
         BOOST_CHECK_EQUAL( GroupProduction::ORAT , group->getProductionControlMode(3));
         BOOST_CHECK_CLOSE( 10/Metric::Time , group->getOilTargetRate(3) , 0.001);
         BOOST_CHECK_CLOSE( 20/Metric::Time , group->getWaterTargetRate(3) , 0.001);
@@ -522,8 +522,8 @@ BOOST_AUTO_TEST_CASE( WellTestGroupAndWellRelation ) {
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,3);
     SchedulePtr sched( new Schedule(parseContext , grid , deck));
 
-    GroupPtr group1 = sched->getGroup("GROUP1");
-    GroupPtr group2 = sched->getGroup("GROUP2");
+    auto* group1 = sched->getGroup("GROUP1");
+    auto* group2 = sched->getGroup("GROUP2");
 
     BOOST_CHECK( group1->hasBeenDefined(0) );
     BOOST_CHECK_EQUAL(false , group2->hasBeenDefined(0));

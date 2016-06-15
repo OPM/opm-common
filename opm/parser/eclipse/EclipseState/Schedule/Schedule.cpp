@@ -353,7 +353,7 @@ namespace Opm {
             WellConstPtr currentWell = getWell(wellName);
             checkWELSPECSConsistency( *currentWell, keyword, recordNr);
 
-            addWellToGroup( getGroup(groupName) , getWell(wellName) , currentStep);
+            addWellToGroup( *this->m_groups.at( groupName ), getWell(wellName), currentStep);
             if (handleGroupFromWELSPECS(groupName, newTree))
                 needNewTree = true;
 
@@ -959,15 +959,15 @@ namespace Opm {
     void Schedule::handleGCONINJE( const SCHEDULESection& section,  const DeckKeyword& keyword, size_t currentStep) {
         for( const auto& record : keyword ) {
             const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
-            GroupPtr group = getGroup(groupName);
+            auto& group = *this->m_groups.at( groupName );
 
             {
                 Phase::PhaseEnum phase = Phase::PhaseEnumFromString( record.getItem("PHASE").getTrimmedString(0) );
-                group->setInjectionPhase( currentStep , phase );
+                group.setInjectionPhase( currentStep , phase );
             }
             {
                 GroupInjection::ControlEnum controlMode = GroupInjection::ControlEnumFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
-                group->setInjectionControlMode( currentStep , controlMode );
+                group.setInjectionControlMode( currentStep , controlMode );
             }
 
             Phase::PhaseEnum wellPhase = Phase::PhaseEnumFromString( record.getItem("PHASE").getTrimmedString(0));
@@ -977,34 +977,34 @@ namespace Opm {
             surfaceInjectionRate = convertInjectionRateToSI(surfaceInjectionRate, wellPhase, section.getActiveUnitSystem());
             double reservoirInjectionRate = record.getItem("RESV_TARGET").getSIDouble(0);
 
-            group->setSurfaceMaxRate( currentStep , surfaceInjectionRate);
-            group->setReservoirMaxRate( currentStep , reservoirInjectionRate);
-            group->setTargetReinjectFraction( currentStep , record.getItem("REINJ_TARGET").getSIDouble(0));
-            group->setTargetVoidReplacementFraction( currentStep , record.getItem("VOIDAGE_TARGET").getSIDouble(0));
+            group.setSurfaceMaxRate( currentStep , surfaceInjectionRate);
+            group.setReservoirMaxRate( currentStep , reservoirInjectionRate);
+            group.setTargetReinjectFraction( currentStep , record.getItem("REINJ_TARGET").getSIDouble(0));
+            group.setTargetVoidReplacementFraction( currentStep , record.getItem("VOIDAGE_TARGET").getSIDouble(0));
 
-            group->setProductionGroup(currentStep, false);
+            group.setProductionGroup(currentStep, false);
         }
     }
 
     void Schedule::handleGCONPROD( const DeckKeyword& keyword, size_t currentStep) {
         for( const auto& record : keyword ) {
             const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
-            GroupPtr group = getGroup(groupName);
+            auto& group = *this->m_groups.at( groupName );
             {
                 GroupProduction::ControlEnum controlMode = GroupProduction::ControlEnumFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
-                group->setProductionControlMode( currentStep , controlMode );
+                group.setProductionControlMode( currentStep , controlMode );
             }
-            group->setOilTargetRate( currentStep , record.getItem("OIL_TARGET").getSIDouble(0));
-            group->setGasTargetRate( currentStep , record.getItem("GAS_TARGET").getSIDouble(0));
-            group->setWaterTargetRate( currentStep , record.getItem("WATER_TARGET").getSIDouble(0));
-            group->setLiquidTargetRate( currentStep , record.getItem("LIQUID_TARGET").getSIDouble(0));
-            group->setReservoirVolumeTargetRate( currentStep , record.getItem("RESERVOIR_FLUID_TARGET").getSIDouble(0));
+            group.setOilTargetRate( currentStep , record.getItem("OIL_TARGET").getSIDouble(0));
+            group.setGasTargetRate( currentStep , record.getItem("GAS_TARGET").getSIDouble(0));
+            group.setWaterTargetRate( currentStep , record.getItem("WATER_TARGET").getSIDouble(0));
+            group.setLiquidTargetRate( currentStep , record.getItem("LIQUID_TARGET").getSIDouble(0));
+            group.setReservoirVolumeTargetRate( currentStep , record.getItem("RESERVOIR_FLUID_TARGET").getSIDouble(0));
             {
                 GroupProductionExceedLimit::ActionEnum exceedAction = GroupProductionExceedLimit::ActionEnumFromString(record.getItem("EXCEED_PROC").getTrimmedString(0) );
-                group->setProductionExceedLimitAction( currentStep , exceedAction );
+                group.setProductionExceedLimitAction( currentStep , exceedAction );
             }
 
-            group->setProductionGroup(currentStep, true);
+            group.setProductionGroup(currentStep, true);
         }
     }
 
@@ -1012,13 +1012,13 @@ namespace Opm {
     void Schedule::handleGEFAC( const DeckKeyword& keyword, size_t currentStep) {
         for( const auto& record : keyword ) {
             const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
-            GroupPtr group = getGroup(groupName);
+            auto& group = *this->m_groups.at( groupName );
 
-            group->setGroupEfficiencyFactor(currentStep, record.getItem("EFFICIENCY_FACTOR").get< double >(0));
+            group.setGroupEfficiencyFactor(currentStep, record.getItem("EFFICIENCY_FACTOR").get< double >(0));
 
             const std::string& transfer_str = record.getItem("TRANSFER_EXT_NET").getTrimmedString(0);
             bool transfer = (transfer_str == "YES") ? true : false;
-            group->setTransferGroupEfficiencyFactor(currentStep, transfer);
+            group.setTransferGroupEfficiencyFactor(currentStep, transfer);
         }
     }
 
@@ -1435,9 +1435,9 @@ namespace Opm {
         return nosim;
     }
 
-    GroupPtr Schedule::getGroup(const std::string& groupName) const {
+    const Group* Schedule::getGroup(const std::string& groupName) const {
         if (hasGroup(groupName)) {
-            return m_groups.at(groupName);
+            return m_groups.at(groupName).get();
         } else
             throw std::invalid_argument("Group: " + groupName + " does not exist");
     }
@@ -1451,14 +1451,14 @@ namespace Opm {
         return groups;
     }
 
-    void Schedule::addWellToGroup( GroupPtr newGroup , WellPtr well , size_t timeStep) {
+    void Schedule::addWellToGroup( Group& newGroup , WellPtr well , size_t timeStep) {
         const std::string currentGroupName = well->getGroupName(timeStep);
         if (currentGroupName != "") {
-            GroupPtr currentGroup = getGroup( currentGroupName );
-            currentGroup->delWell( timeStep , well->name());
+            auto& currentGroup = *this->m_groups.at( currentGroupName );
+            currentGroup.delWell( timeStep , well->name());
         }
-        well->setGroupName(timeStep , newGroup->name());
-        newGroup->addWell(timeStep , well);
+        well->setGroupName(timeStep , newGroup.name());
+        newGroup.addWell(timeStep , well);
     }
 
 

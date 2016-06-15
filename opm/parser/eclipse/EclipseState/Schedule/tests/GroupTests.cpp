@@ -288,7 +288,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithGEFAC) {
     std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>(10, 10, 10);
     Opm::Schedule schedule(parseContext , grid, deck );
 
-    Opm::GroupConstPtr group1 = schedule.getGroup("PRODUC");
+    const auto* group1 = schedule.getGroup("PRODUC");
     BOOST_CHECK_EQUAL(group1->getGroupEfficiencyFactor(0), 0.85);
     BOOST_CHECK_EQUAL(group1->getTransferGroupEfficiencyFactor(0), true);
 }
