@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(DoLogging) {
 
 
 BOOST_AUTO_TEST_CASE(Test_Format) {
-    BOOST_CHECK_EQUAL( "There is a mild fuckup here?, file /path/to/file, line 100" , Log::fileMessage("/path/to/file" , 100 , "There is a mild fuckup here?"));
+    BOOST_CHECK_EQUAL( "There is a mild fuckup here?\nIn file /path/to/file, line 100\n" , Log::fileMessage("/path/to/file" , 100 , "There is a mild fuckup here?"));
 
     BOOST_CHECK_EQUAL( "Error: This is the error" ,     Log::prefixMessage(Log::MessageType::Error , "This is the error"));
     BOOST_CHECK_EQUAL( "Warning: This is the warning" , Log::prefixMessage(Log::MessageType::Warning , "This is the warning"));
@@ -248,8 +248,8 @@ BOOST_AUTO_TEST_CASE(TestHelperFunctions)
     BOOST_CHECK(isPower2(1ul << 62));
 
     // fileMessage
-    BOOST_CHECK_EQUAL(fileMessage("foo/bar", 1, "message"), "message, file foo/bar, line 1");
-    BOOST_CHECK_EQUAL(fileMessage(MessageType::Error, "foo/bar", 1, "message"), "Error: message, file foo/bar, line 1");
+    BOOST_CHECK_EQUAL(fileMessage("foo/bar", 1, "message"), "message\nIn file foo/bar, line 1\n");
+    BOOST_CHECK_EQUAL(fileMessage(MessageType::Error, "foo/bar", 1, "message"), "Error: message\nIn file foo/bar, line 1\n");
 
     // prefixMessage
     BOOST_CHECK_EQUAL(prefixMessage(MessageType::Error, "message"), "Error: message");
