@@ -456,7 +456,7 @@ namespace Opm {
                         throw std::invalid_argument(msg);
                     }
                 }
-                updateWellStatus( well , currentStep , status );
+                updateWellStatus( *well , currentStep , status );
                 if (well->setProductionProperties(currentStep, properties))
                     m_events->addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);
                 
@@ -466,15 +466,15 @@ namespace Opm {
                             "Well " + well->name() + " is a history matched well with zero rate where crossflow is banned. " +
                             "This well will be closed at " + std::to_string ( m_timeMap->getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
                     m_messages.note(msg);
-                    updateWellStatus(well, currentStep, WellCommon::StatusEnum::SHUT );
+                    updateWellStatus( *well, currentStep, WellCommon::StatusEnum::SHUT );
                 }
             }
         }
     }
 
-    void Schedule::updateWellStatus(std::shared_ptr<Well> well, size_t reportStep , WellCommon::StatusEnum status) {
-        if (well->setStatus( reportStep , status ))
-            m_events->addEvent( ScheduleEvents::WELL_STATUS_CHANGE , reportStep );
+    void Schedule::updateWellStatus( Well& well, size_t reportStep , WellCommon::StatusEnum status) {
+        if( well.setStatus( reportStep, status ) )
+            m_events->addEvent( ScheduleEvents::WELL_STATUS_CHANGE, reportStep );
     }
 
 
@@ -576,7 +576,7 @@ namespace Opm {
                 WellInjector::TypeEnum injectorType = WellInjector::TypeFromString( record.getItem("TYPE").getTrimmedString(0) );
                 WellCommon::StatusEnum status = WellCommon::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
 
-                updateWellStatus( well , currentStep , status );
+                updateWellStatus( *well , currentStep , status );
                 WellInjectionProperties properties(well->getInjectionPropertiesCopy(currentStep));
 
                 properties.injectorType = injectorType;
@@ -638,7 +638,7 @@ namespace Opm {
                             "Well " + well->name() + " is an injector with zero rate where crossflow is banned. " +
                             "This well will be closed at " + std::to_string ( m_timeMap->getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
                     m_messages.note(msg);
-                    updateWellStatus(well, currentStep, WellCommon::StatusEnum::SHUT );
+                    updateWellStatus( *well, currentStep, WellCommon::StatusEnum::SHUT );
                 }
             }
         }
@@ -704,7 +704,7 @@ namespace Opm {
 
             WellCommon::StatusEnum status = WellCommon::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
 
-            updateWellStatus(well ,  currentStep , status );
+            updateWellStatus( *well, currentStep, status );
             WellInjectionProperties properties(well->getInjectionPropertiesCopy(currentStep));
 
             properties.injectorType = injectorType;
@@ -726,7 +726,7 @@ namespace Opm {
                         "Well " + well->name() + " is an injector with zero rate where crossflow is banned. " +
                         "This well will be closed at " + std::to_string ( m_timeMap->getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
                 m_messages.note(msg);
-                updateWellStatus(well, currentStep, WellCommon::StatusEnum::SHUT );
+                updateWellStatus( *well, currentStep, WellCommon::StatusEnum::SHUT );
             }
         }
     }
@@ -812,7 +812,7 @@ namespace Opm {
                     well->addCompletionSet(currentStep, newCompletionSet);
                     m_events->addEvent(ScheduleEvents::COMPLETION_CHANGE, currentStep);
                     if (newCompletionSet->allCompletionsShut())
-                        updateWellStatus( well , currentStep , WellCommon::StatusEnum::SHUT);
+                        updateWellStatus( *well, currentStep, WellCommon::StatusEnum::SHUT);
 
                 }
                 else if(!haveCompletionData) {
@@ -824,7 +824,7 @@ namespace Opm {
                         m_messages.note(msg);
                         continue;
                     }
-                    updateWellStatus( well , currentStep , status );
+                    updateWellStatus( *well, currentStep, status );
                 }
             }
         }
