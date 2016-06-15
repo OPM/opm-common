@@ -23,7 +23,9 @@
 #endif
 
 #define BOOST_TEST_MODULE EclipseWriter
+#include <opm/common/utility/platform_dependent/disable_warnings.h>
 #include <boost/test/unit_test.hpp>
+#include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 #include <opm/output/eclipse/EclipseWriter.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
