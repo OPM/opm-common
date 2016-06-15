@@ -303,7 +303,9 @@ void ParserState::loadFile(const boost::filesystem::path& inputFile) {
     try {
         inputFileCanonical = boost::filesystem::canonical(inputFile);
     } catch (boost::filesystem::filesystem_error fs_error) {
-        throw std::runtime_error(std::string("Parser::loadFile fails: ") + fs_error.what());
+        std::string msg = "Could not open file: " + inputFile.string();
+        parseContext.handleError( ParseContext::PARSE_MISSING_INCLUDE , deck->getMessageContainer() , msg);
+        return;
     }
 
     const auto closer = []( std::FILE* f ) { std::fclose( f ); };
@@ -314,9 +316,9 @@ void ParserState::loadFile(const boost::filesystem::path& inputFile) {
 
     // make sure the file we'd like to parse is readable
     if( !ufp ) {
-        throw std::runtime_error(std::string("Input file '") +
-                inputFileCanonical.string() +
-                std::string("' is not readable"));
+        std::string msg = "Could not read from file: " + inputFile.string();
+        parseContext.handleError( ParseContext::PARSE_MISSING_INCLUDE , deck->getMessageContainer() , msg);
+        return;
     }
 
     /*
