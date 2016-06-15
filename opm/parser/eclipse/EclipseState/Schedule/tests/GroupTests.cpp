@@ -160,16 +160,16 @@ BOOST_AUTO_TEST_CASE(GroupAddWell) {
     Opm::WellPtr well2(new Opm::Well("WELL2" , grid , 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0));
 
     BOOST_CHECK_EQUAL(0U , group.numWells(2));
-    group.addWell( 3 , well1 );
+    group.addWell( 3 , well1.get() );
     BOOST_CHECK_EQUAL( 1U , group.numWells(3));
     BOOST_CHECK_EQUAL( 0U , group.numWells(1));
 
-    group.addWell( 4 , well1 );
+    group.addWell( 4 , well1.get() );
     BOOST_CHECK_EQUAL( 1U , group.numWells(4));
     BOOST_CHECK_EQUAL( 0U , group.numWells(1));
     BOOST_CHECK_EQUAL( 1U , group.numWells(5));
 
-    group.addWell( 6 , well2 );
+    group.addWell( 6 , well2.get() );
     BOOST_CHECK_EQUAL( 1U , group.numWells(4));
     BOOST_CHECK_EQUAL( 0U , group.numWells(1));
     BOOST_CHECK_EQUAL( 1U , group.numWells(5));
@@ -198,11 +198,11 @@ BOOST_AUTO_TEST_CASE(GroupAddAndDelWell) {
     Opm::WellPtr well2(new Opm::Well("WELL2" , grid , 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0));
 
     BOOST_CHECK_EQUAL(0U , group.numWells(2));
-    group.addWell( 3 , well1 );
+    group.addWell( 3 , well1.get() );
     BOOST_CHECK_EQUAL( 1U , group.numWells(3));
     BOOST_CHECK_EQUAL( 0U , group.numWells(1));
 
-    group.addWell( 6 , well2 );
+    group.addWell( 6 , well2.get() );
     BOOST_CHECK_EQUAL( 1U , group.numWells(4));
     BOOST_CHECK_EQUAL( 0U , group.numWells(1));
     BOOST_CHECK_EQUAL( 1U , group.numWells(5));
@@ -234,10 +234,10 @@ BOOST_AUTO_TEST_CASE(getWells) {
     Opm::WellPtr well1(new Opm::Well("WELL1" , grid , 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0));
     Opm::WellPtr well2(new Opm::Well("WELL2" , grid , 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0));
 
-    group.addWell( 2 , well1 );
-    group.addWell( 3 , well1 );
-    group.addWell( 3 , well2 );
-    group.addWell( 4 , well1 );
+    group.addWell( 2 , well1.get() );
+    group.addWell( 3 , well1.get() );
+    group.addWell( 3 , well2.get() );
+    group.addWell( 4 , well1.get() );
 
     std::vector< std::string > names = { "WELL1", "WELL2" };
     std::vector< std::string > wnames;

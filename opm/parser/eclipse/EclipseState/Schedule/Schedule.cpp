@@ -1458,7 +1458,7 @@ namespace Opm {
             currentGroup.delWell( timeStep , well->name());
         }
         well->setGroupName(timeStep , newGroup.name());
-        newGroup.addWell(timeStep , well);
+        newGroup.addWell(timeStep , well.get());
     }
 
 

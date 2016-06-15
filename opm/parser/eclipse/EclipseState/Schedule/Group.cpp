@@ -96,7 +96,7 @@ namespace Opm {
     Group::Group(const std::string& name_, TimeMapConstPtr timeMap , size_t creationTimeStep) :
         m_injection( new GroupInjection::InjectionData(timeMap) ),
         m_production( new GroupProduction::ProductionData( timeMap )),
-        m_wells( new DynamicState<WellSetConstPtr>(timeMap , WellSetConstPtr(new WellSet() ))),
+        m_wells( new DynamicState< std::shared_ptr< const WellSet > >( timeMap , std::make_shared< const WellSet >() ) ),
         m_isProductionGroup( new DynamicState<bool>(timeMap, true))
     {
         m_name = name_;
@@ -302,20 +302,18 @@ namespace Opm {
 
     /*****************************************************************/
 
-    WellSetConstPtr Group::wellMap(size_t time_step) const {
+    std::shared_ptr< const WellSet > Group::wellMap(size_t time_step) const {
         return m_wells->get(time_step);
     }
 
 
     bool Group::hasWell(const std::string& wellName , size_t time_step) const {
-        WellSetConstPtr wellSet = wellMap(time_step);
-        return wellSet->hasWell(wellName);
+        return this->wellMap(time_step)->hasWell( wellName );
     }
 
 
-    WellConstPtr Group::getWell(const std::string& wellName , size_t time_step) const {
-        WellSetConstPtr wellSet = wellMap(time_step);
-        return wellSet->getWell(wellName);
+    const Well* Group::getWell(const std::string& wellName , size_t time_step) const {
+        return this->wellMap( time_step )->getWell( wellName );
     }
 
     const WellSet& Group::getWells( size_t time_step ) const {
@@ -323,13 +321,12 @@ namespace Opm {
     }
 
     size_t Group::numWells(size_t time_step) const {
-        WellSetConstPtr wellSet = wellMap(time_step);
-        return wellSet->size();
+        return wellMap(time_step)->size();
     }
 
-    void Group::addWell(size_t time_step , WellPtr well) {
-        WellSetConstPtr wellSet = wellMap(time_step);
-        WellSetPtr newWellSet = WellSetPtr( wellSet->shallowCopy() );
+    void Group::addWell(size_t time_step, Well* well ) {
+        auto wellSet = wellMap(time_step);
+        std::shared_ptr< WellSet > newWellSet( wellSet->shallowCopy() );
 
         newWellSet->addWell(well);
         m_wells->update(time_step , newWellSet);
@@ -337,8 +334,8 @@ namespace Opm {
 
 
     void Group::delWell(size_t time_step, const std::string& wellName) {
-        WellSetConstPtr wellSet = wellMap(time_step);
-        WellSetPtr newWellSet = WellSetPtr( wellSet->shallowCopy() );
+        auto wellSet = wellMap(time_step);
+        std::shared_ptr< WellSet > newWellSet( wellSet->shallowCopy() );
 
         newWellSet->delWell(wellName);
         m_wells->update(time_step , newWellSet);
