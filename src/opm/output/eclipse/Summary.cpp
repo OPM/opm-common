@@ -318,7 +318,7 @@ inline double injevol( const Well& w,
     if( timestep == 0 ) return 0.0;
 
     const auto rate = injerate( w, timestep - 1, wt, units );
-    return rate * duration * units.from_si( units.measure::time, 1 );
+    return rate * duration * units.from_si( measure::time, 1 );
 }
 
 inline double get_rate( const data::Well& w,
@@ -483,10 +483,10 @@ inline double sum_vol( const std::vector< const data::Well* >& wells,
 
     switch( phase ) {
         case rt::wat: /* intentional fall-through */
-        case rt::oil: return units.from_si( units.measure::liquid_surface_volume,
+        case rt::oil: return units.from_si( measure::liquid_surface_volume,
                                             duration * sum( wells, phase ) );
 
-        case rt::gas: return units.from_si( units.measure::gas_surface_volume,
+        case rt::gas: return units.from_si( measure::gas_surface_volume,
                                             duration * sum( wells, phase ) );
         default: break;
     }
