@@ -60,6 +60,7 @@ namespace Opm {
     }
 
 
+
     template<>
     double GridProperties<double>::convertInputValue( double doubleValue) const {
         return doubleValue;
@@ -75,9 +76,10 @@ namespace Opm {
     }
 
     template<>
-    int GridProperties<int>::convertInputValue(const GridProperty<int>& property, double doubleValue) const {
+    int GridProperties<int>::convertInputValue(const GridProperty<int>& /* property */, double doubleValue) const {
         return convertInputValue(doubleValue);
     }
+
 
 
     void setKeywordBox( const DeckRecord& deckRecord,
