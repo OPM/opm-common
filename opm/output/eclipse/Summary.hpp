@@ -21,16 +21,16 @@
 #define OPM_OUTPUT_SUMMARY_HPP
 
 #include <string>
-#include <vector>
 
 #include <ert/ecl/ecl_sum.h>
-#include <ert/util/ert_unique_ptr.hpp>
+#include <ert/ecl/Smspec.hpp>
 
 #include <opm/output/Wells.hpp>
 
 namespace Opm {
 
     class EclipseState;
+    class Schedule;
     class SummaryConfig;
 
 namespace out {
@@ -45,19 +45,13 @@ class Summary {
                            const EclipseState&, const data::Wells& );
         void write();
 
-        using kwtype = uint32_t;
-        struct sum_node {
-            sum_node( kwtype k, smspec_node_type* n ) :
-                kw( k ), node( n ) {}
-
-            kwtype kw;
-            smspec_node_type* node;
-        };
+        ~Summary();
 
     private:
+        class keyword_handlers;
+
         ERT::ert_unique_ptr< ecl_sum_type, ecl_sum_free > ecl_sum;
-        std::map< const char*, std::vector< sum_node > > wvar;
-        std::map< const char*, std::vector< sum_node > > gvar;
+        std::unique_ptr< keyword_handlers > handlers;
         const ecl_sum_tstep_type* prev_tstep = nullptr;
         double prev_time_elapsed = 0;
 };

@@ -197,9 +197,9 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     BOOST_CHECK_CLOSE( 0,    ecl_sum_get_well_var( resp, 1, "W_3", "WGIRH" ), 1e-5 );
 
     /* Injection totals (history) */
-    BOOST_CHECK_CLOSE( 0,    ecl_sum_get_well_var( resp, 1, "W_3", "WWITH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 30.0, ecl_sum_get_well_var( resp, 1, "W_3", "WWITH" ), 1e-5 );
     BOOST_CHECK_CLOSE( 0,    ecl_sum_get_well_var( resp, 1, "W_3", "WGITH" ), 1e-5 );
-    BOOST_CHECK_CLOSE( 30.0, ecl_sum_get_well_var( resp, 2, "W_3", "WWITH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 60.0, ecl_sum_get_well_var( resp, 2, "W_3", "WWITH" ), 1e-5 );
     BOOST_CHECK_CLOSE( 0,    ecl_sum_get_well_var( resp, 2, "W_3", "WGITH" ), 1e-5 );
 
     /* WWCT - water cut */
@@ -302,9 +302,9 @@ BOOST_AUTO_TEST_CASE(group_keywords) {
     BOOST_CHECK_CLOSE( 2 * 30.2, ecl_sum_get_group_var( resp, 2, "G_2", "GGIT" ), 1e-5 );
 
     /* Injection totals (history) */
-    BOOST_CHECK_CLOSE( 0,    ecl_sum_get_group_var( resp, 1, "G_2", "GWITH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 30.0, ecl_sum_get_group_var( resp, 1, "G_2", "GWITH" ), 1e-5 );
     BOOST_CHECK_CLOSE( 0,    ecl_sum_get_group_var( resp, 1, "G_2", "GGITH" ), 1e-5 );
-    BOOST_CHECK_CLOSE( 30.0, ecl_sum_get_group_var( resp, 2, "G_2", "GWITH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 60.0, ecl_sum_get_group_var( resp, 2, "G_2", "GWITH" ), 1e-5 );
     BOOST_CHECK_CLOSE( 0,    ecl_sum_get_group_var( resp, 2, "G_2", "GGITH" ), 1e-5 );
 
     /* gwct - water cut */
@@ -340,4 +340,21 @@ BOOST_AUTO_TEST_CASE(report_steps_time) {
     BOOST_CHECK_EQUAL( ecl_sum_iget_sim_days( resp, 1 ), 5 );
     BOOST_CHECK_EQUAL( ecl_sum_iget_sim_days( resp, 2 ), 10 );
     BOOST_CHECK_EQUAL( ecl_sum_get_sim_length( resp ), 10 );
+}
+
+BOOST_AUTO_TEST_CASE(skip_unknown_var) {
+    setup cfg( "test_Summary_skip_unknown_var" );
+
+    out::Summary writer( cfg.es, cfg.config, cfg.name );
+    writer.add_timestep( 1, 2 *  day, cfg.es, cfg.wells );
+    writer.add_timestep( 1, 5 *  day, cfg.es, cfg.wells );
+    writer.add_timestep( 2, 10 * day, cfg.es, cfg.wells );
+    writer.write();
+
+    auto res = readsum( cfg.name );
+    const auto* resp = res.get();
+
+    /* verify that some non-supported keywords aren't written to the file */
+    BOOST_CHECK( !ecl_sum_has_well_var( resp, "W_1", "WPI" ) );
+    BOOST_CHECK( !ecl_sum_has_field_var( resp, "FVIR" ) );
 }
