@@ -72,14 +72,21 @@ namespace Opm {
     public:
         explicit EclipseGrid(const std::string& filename);
         explicit EclipseGrid(const EclipseGrid& srcGrid);
-        explicit EclipseGrid(size_t nx, size_t ny, size_t nz,
-                             double dx = 1.0, double dy = 1.0, double dz = 1.0);
+	EclipseGrid(size_t nx, size_t ny, size_t nz,
+		    double dx = 1.0, double dy = 1.0, double dz = 1.0);
+	
+	EclipseGrid(const std::vector<int>& dims , 
+		    const std::vector<double>& coord , 
+		    const std::vector<double>& zcorn , 
+		    const int * actnum = nullptr,
+		    const double * mapaxes = nullptr);
+
 
         /// EclipseGrid ignores ACTNUM in Deck, and therefore needs ACTNUM
         /// explicitly.  If a null pointer is passed, every cell is active.
-        explicit EclipseGrid(const Deck& deck, const int * actnum = nullptr);
+	EclipseGrid(const Deck& deck, const int * actnum = nullptr);
         /// [deprecated]
-        explicit EclipseGrid(const std::shared_ptr<const Deck>& deck, const int * actnum = nullptr);
+	EclipseGrid(const std::shared_ptr<const Deck>& deck, const int * actnum = nullptr);
 
         static bool hasCornerPointKeywords(const Deck&);
         static bool hasCartesianKeywords(const Deck&);
@@ -150,7 +157,12 @@ namespace Opm {
         MessageContainer m_messages;
 
         void assertCellInfo() const;
-
+	
+	void initCornerPointGrid(const std::vector<int>& dims , 
+				 const std::vector<double>& coord , 
+				 const std::vector<double>& zcorn , 
+				 const int * actnum,
+				 const double * mapaxes);
         void initCartesianGrid(const std::vector<int>& dims, const Deck&);
         void initCornerPointGrid(const std::vector<int>& dims, const Deck&);
         void initDTOPSGrid(const std::vector<int>& dims, const Deck&);
