@@ -670,7 +670,7 @@ void Summary::add_timestep( int report_step,
     for( const auto& pair : this->wvar ) {
         const auto* wname = pair.first;
 
-        const auto& state_well = es.getSchedule()->getWell( wname );
+        const auto& state_well = *es.getSchedule()->getWell( wname );
         const auto& sim_well = wells.wells.find( wname ) != wells.wells.end()
                              ? wells.at( wname )
                              : dummy_well;

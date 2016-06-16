@@ -358,7 +358,7 @@ class RFT {
              size_t num_cells,
              size_t cartesian_size );
 
-        void writeTimeStep( std::vector< std::shared_ptr< const Well > >,
+        void writeTimeStep( std::vector< const Well* >,
                             const EclipseGrid& grid,
                             int report_step,
                             time_t current_time,
@@ -407,7 +407,7 @@ inline ert_ecl_unit_enum to_ert_unit( UnitSystem::UnitType t ) {
     throw std::invalid_argument("unhandled enum value");
 }
 
-void RFT::writeTimeStep( std::vector< std::shared_ptr< const Well > > wells,
+void RFT::writeTimeStep( std::vector< const Well* > wells,
                          const EclipseGrid& grid,
                          int report_step,
                          time_t current_time,
@@ -604,9 +604,9 @@ void EclipseWriter::writeTimeStep(int report_step,
     // Write restart file
     if(!isSubstep && ioConfig->getWriteRestartFile(report_step))
     {
-        const size_t ncwmax                 = schedule.getMaxNumCompletionsForWells(report_step);
-        const size_t numWells               = schedule.numWells(report_step);
-        std::vector<WellConstPtr> wells_ptr = schedule.getWells(report_step);
+        const size_t ncwmax     = schedule.getMaxNumCompletionsForWells(report_step);
+        const size_t numWells   = schedule.numWells(report_step);
+        auto wells_ptr          = schedule.getWells(report_step);
 
         std::vector<const char*> zwell_data( numWells * Restart::NZWELZ , "");
         std::vector<int>         iwell_data( numWells * Restart::NIWELZ , 0 );
