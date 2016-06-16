@@ -277,50 +277,25 @@ public:
                       const int* compressedToCartesianCellIdx,
                       time_t current_posix_time,
                       const EclipseState& es,
-                      int ert_phase_mask,
-                      const NNC& nnc = NNC() )
+                      const EclipseGrid& eclGrid,
+                      int ert_phase_mask )
     {
         auto dataField = es.get3DProperties().getDoubleGridProperty("PORO").getData();
         restrictAndReorderToActiveCells( dataField, numCells, compressedToCartesianCellIdx );
-
-        auto eclGrid = es.getInputGridCopy();
-
-        // update the ACTNUM array using the processed cornerpoint grid
-        std::vector<int> actnumData( eclGrid->getCartesianSize(), 1 );
-        if ( compressedToCartesianCellIdx ) {
-            actnumData.assign( actnumData.size(), 0 );
-
-            for( int cellIdx = 0; cellIdx < numCells; ++cellIdx ) {
-                actnumData[ compressedToCartesianCellIdx[ cellIdx ] ] = 1;
-            }
-        }
-
-        eclGrid->resetACTNUM( &actnumData[0] );
-
-        if (nnc.hasNNC())
-        {
-            int idx = 0;
-            // const_cast is safe, since this is a copy of the input grid
-            auto ecl_grid = const_cast<ecl_grid_type*>(eclGrid->c_ptr());
-            for (NNCdata n : nnc.nncdata()) {
-                ecl_grid_add_self_nnc( ecl_grid, n.cell1, n.cell2, idx++);
-            }
-        }
-
 
         // finally, write the grid to disk
         const auto& ioConfig = *es.getIOConfig();
         if( ioConfig.getWriteEGRIDFile() ) {
             const bool is_metric =
                 es.getDeckUnitSystem().getType() == UnitSystem::UNIT_TYPE_METRIC;
-            eclGrid->fwriteEGRID( egrid.ertHandle(), is_metric );
+            eclGrid.fwriteEGRID( egrid.ertHandle(), is_metric );
         }
 
 
         if( ioConfig.getWriteINITFile() ) {
             ERT::EclKW< float > poro_kw( "PORO", dataField );
             ecl_init_file_fwrite_header( this->ertHandle(),
-                                         eclGrid->c_ptr(),
+                                         eclGrid.c_ptr(),
                                          poro_kw.get(),
                                          ert_phase_mask,
                                          current_posix_time );
@@ -464,9 +439,12 @@ class EclipseWriter::Impl {
     public:
         Impl( std::shared_ptr< const EclipseState > es,
               int numCells,
-              const int* comp_to_cart );
+              const int* comp_to_cart,
+              const NNC& );
 
         std::shared_ptr< const EclipseState > es;
+        EclipseGrid grid;
+        const NNC& nnc;
         std::string outputDir;
         std::string baseName;
         out::Summary summary;
@@ -482,8 +460,11 @@ class EclipseWriter::Impl {
 
 EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
                            int numCellsArg,
-                           const int* compressed_to_cart )
+                           const int* compressed_to_cart,
+                           const NNC& rnnc )
     : es( eclipseState )
+    , grid( *eclipseState->getInputGrid() )
+    , nnc( rnnc )
     , outputDir( eclipseState->getIOConfig()->getOutputDir() )
     , baseName( uppercase( eclipseState->getIOConfig()->getBaseName() ) )
     , summary( *eclipseState, eclipseState->getSummaryConfig() )
@@ -499,7 +480,7 @@ EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
     , ert_phase_mask( ertPhaseMask( eclipseState->getTableManager() ) )
 {}
 
-void EclipseWriter::writeInit( const NNC& nnc ) {
+void EclipseWriter::writeInit() {
     if( !this->impl->output_enabled )
         return;
 
@@ -513,6 +494,7 @@ void EclipseWriter::writeInit( const NNC& nnc ) {
                         this->impl->compressed_to_cartesian,
                         this->impl->sim_start_time,
                         es,
+                        this->impl->grid,
                         this->impl->ert_phase_mask );
 
     IOConfigConstPtr ioConfig = es.getIOConfigConst();
@@ -548,10 +530,10 @@ void EclipseWriter::writeInit( const NNC& nnc ) {
         fortio.writeKeyword("PERMZ", data);
     }
 
-    if( !nnc.hasNNC() ) return;
+    if( !this->impl->nnc.hasNNC() ) return;
 
     std::vector<double> tran;
-    for( NNCdata nd : nnc.nncdata() ) {
+    for( NNCdata nd : this->impl->nnc.nncdata() ) {
         tran.push_back( nd.trans );
     }
 
@@ -576,6 +558,7 @@ void EclipseWriter::writeTimeStep(int report_step,
     time_t current_posix_time = this->impl->sim_start_time + secs_elapsed;
     const auto& gridToEclipseIdx = this->impl->gridToEclipseIdx;
     const auto& es = *this->impl->es;
+    const auto& grid = this->impl->grid;
     const auto& units = es.getUnits();
 
     auto& pressure = cells[ dc::PRESSURE ];
@@ -635,9 +618,9 @@ void EclipseWriter::writeTimeStep(int report_step,
             ecl_rsthead_type rsthead_data = {};
             rsthead_data.sim_time   = current_posix_time;
             rsthead_data.nactive    = this->impl->numCells;
-            rsthead_data.nx         = es.getInputGrid()->getNX();
-            rsthead_data.ny         = es.getInputGrid()->getNY();
-            rsthead_data.nz         = es.getInputGrid()->getNZ();
+            rsthead_data.nx         = grid.getNX();
+            rsthead_data.ny         = grid.getNY();
+            rsthead_data.nz         = grid.getNZ();
             rsthead_data.nwells     = numWells;
             rsthead_data.niwelz     = Restart::NIWELZ;
             rsthead_data.nzwelz     = Restart::NZWELZ;
@@ -697,7 +680,7 @@ void EclipseWriter::writeTimeStep(int report_step,
 
     const auto unit_type = es.getDeckUnitSystem().getType();
     this->impl->rft.writeTimeStep( schedule.getWells( report_step ),
-                                   *es.getInputGrid(),
+                                   grid,
                                    report_step,
                                    current_posix_time,
                                    days,
@@ -717,8 +700,9 @@ void EclipseWriter::writeTimeStep(int report_step,
 
 EclipseWriter::EclipseWriter( std::shared_ptr< const EclipseState > es,
                               int numCells,
-                              const int* compressedToCartesianCellIdx ) :
-    impl( new Impl( es, numCells, compressedToCartesianCellIdx ) )
+                              const int* compressedToCartesianCellIdx,
+                              const NNC& nnc ) :
+    impl( new Impl( es, numCells, compressedToCartesianCellIdx, nnc ) )
 {
     if( compressedToCartesianCellIdx ) {
         // if compressedToCartesianCellIdx available then
@@ -738,6 +722,28 @@ EclipseWriter::EclipseWriter( std::shared_ptr< const EclipseState > es,
         // if not compressedToCartesianCellIdx was given use identity
         for (int cellIdx = 0; cellIdx < numCells; ++cellIdx) {
             this->impl->gridToEclipseIdx[ cellIdx ] = cellIdx;
+        }
+    }
+
+    auto& grid = this->impl->grid;
+
+    // update the ACTNUM array using the processed cornerpoint grid
+    std::vector< int > actnumData( grid.getCartesianSize(), 1 );
+    if ( compressedToCartesianCellIdx ) {
+        actnumData.assign( actnumData.size(), 0 );
+
+        for( int cellIdx = 0; cellIdx < numCells; ++cellIdx )
+            actnumData[ compressedToCartesianCellIdx[ cellIdx ] ] = 1;
+    }
+
+    grid.resetACTNUM( &actnumData[0] );
+
+    if( nnc.hasNNC() ) {
+        int idx = 0;
+        // const_cast is safe, since this is a copy of the input grid
+        auto* ecl_grid = const_cast< ecl_grid_type* >( grid.c_ptr() );
+        for( NNCdata n : nnc.nncdata() ) {
+            ecl_grid_add_self_nnc( ecl_grid, n.cell1, n.cell2, idx++);
         }
     }
 

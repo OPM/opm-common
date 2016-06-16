@@ -48,14 +48,15 @@ public:
      */
     EclipseWriter(std::shared_ptr< const EclipseState >,
                   int numCells,
-                  const int* compressedToCartesianCellIdx);
+                  const int* compressedToCartesianCellIdx,
+                  const NNC& );
 
     /**
      * Write the static eclipse data (grid, PVT curves, etc) to disk.
      *
-     * If NNC is given, writes TRANNNC keyword.
+     * If NNC is given to the constructor, writes TRANNNC keyword.
      */
-    void writeInit( const NNC& nnc );
+    void writeInit();
 
     /*!
      * \brief Write a reservoir state and summary information to disk.

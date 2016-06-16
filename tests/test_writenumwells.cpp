@@ -141,9 +141,9 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
     auto es = Parser::parse( eclipse_data_filename, ParseContext() );
     auto eclipseState = std::make_shared< EclipseState >( es );
     const auto num_cells = eclipseState->getInputGrid()->getCartesianSize();
-    EclipseWriter eclipseWriter( eclipseState, num_cells, nullptr );
+    EclipseWriter eclipseWriter( eclipseState, num_cells, nullptr, NNC() );
 
-    eclipseWriter.writeInit( NNC() );
+    eclipseWriter.writeInit();
 
     int countTimeStep = eclipseState->getSchedule()->getTimeMap()->numTimesteps();
 
