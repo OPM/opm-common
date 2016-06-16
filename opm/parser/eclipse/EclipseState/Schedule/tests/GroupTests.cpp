@@ -25,8 +25,6 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-
-
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -37,6 +35,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/WellSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
+
+using namespace Opm;
 
 static Opm::TimeMapPtr createXDaysTimeMap(size_t numDays) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
@@ -156,8 +156,8 @@ BOOST_AUTO_TEST_CASE(GroupAddWell) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
     Opm::Group group("G1" , timeMap , 0);
     std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>(10,10,10);
-    Opm::WellPtr well1(new Opm::Well("WELL1" , grid , 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0));
-    Opm::WellPtr well2(new Opm::Well("WELL2" , grid , 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0));
+    auto well1 = std::make_shared< Well >("WELL1", grid, 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0);
+    auto well2 = std::make_shared< Well >("WELL2", grid, 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0);
 
     BOOST_CHECK_EQUAL(0U , group.numWells(2));
     group.addWell( 3 , well1.get() );
@@ -194,8 +194,8 @@ BOOST_AUTO_TEST_CASE(GroupAddAndDelWell) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
     Opm::Group group("G1" , timeMap , 0);
     std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>(10,10,10);
-    Opm::WellPtr well1(new Opm::Well("WELL1" , grid , 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0));
-    Opm::WellPtr well2(new Opm::Well("WELL2" , grid , 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0));
+    auto well1 = std::make_shared< Well >("WELL1", grid, 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0);
+    auto well2 = std::make_shared< Well >("WELL2", grid, 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0);
 
     BOOST_CHECK_EQUAL(0U , group.numWells(2));
     group.addWell( 3 , well1.get() );
@@ -231,8 +231,8 @@ BOOST_AUTO_TEST_CASE(getWells) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
     Opm::Group group("G1" , timeMap , 0);
     std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>(10,10,10);
-    Opm::WellPtr well1(new Opm::Well("WELL1" , grid , 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0));
-    Opm::WellPtr well2(new Opm::Well("WELL2" , grid , 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0));
+    auto well1 = std::make_shared< Well >("WELL1", grid, 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0);
+    auto well2 = std::make_shared< Well >("WELL2", grid, 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0);
 
     group.addWell( 2 , well1.get() );
     group.addWell( 3 , well1.get() );
@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
     Opm::DeckPtr deck = parser.parseString(input, parseContext);
     std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>(10, 10, 10);
     Opm::Schedule schedule(parseContext , grid, deck );
-    Opm::WellConstPtr currentWell = schedule.getWell("B-37T2"); 
+    const auto* currentWell = schedule.getWell("B-37T2");
     const Opm::WellProductionProperties& wellProductionProperties = currentWell->getProductionProperties(0);
     BOOST_CHECK_EQUAL(wellProductionProperties.controlMode, Opm::WellProducer::ControlModeEnum::GRUP);
 

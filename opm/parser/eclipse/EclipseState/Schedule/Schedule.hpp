@@ -70,12 +70,11 @@ namespace Opm
         size_t numWells(size_t timestep) const;
         size_t getMaxNumCompletionsForWells(size_t timestep) const;
         bool hasWell(const std::string& wellName) const;
-        std::shared_ptr< Well > getWell(const std::string& wellName);
-        const Well& getWell(const std::string& wellName) const;
-        std::vector<std::shared_ptr< Well >> getOpenWells(size_t timeStep);
-        std::vector<std::shared_ptr< const Well >> getWells() const;
-        std::vector<std::shared_ptr< const Well >> getWells(size_t timeStep) const;
-        std::vector<std::shared_ptr< Well >> getWells(const std::string& wellNamePattern);
+        const Well* getWell(const std::string& wellName) const;
+        std::vector< const Well* > getOpenWells(size_t timeStep) const;
+        std::vector< const Well* > getWells() const;
+        std::vector< const Well* > getWells(size_t timeStep) const;
+        std::vector< const Well* > getWellsMatching( const std::string& ) const;
         std::shared_ptr< const OilVaporizationProperties > getOilVaporizationProperties(size_t timestep);
 
         std::shared_ptr< GroupTree > getGroupTree(size_t t) const;
@@ -107,8 +106,9 @@ namespace Opm
         MessageContainer m_messages;
 
 
+        std::vector< Well* > getWells(const std::string& wellNamePattern);
         void updateWellStatus( Well& well, size_t reportStep , WellCommon::StatusEnum status);
-        void addWellToGroup( Group& newGroup , std::shared_ptr< Well > well , size_t timeStep);
+        void addWellToGroup( Group& newGroup , Well& well , size_t timeStep);
         void initializeNOSIM(const Deck& deck);
         void initRootGroupTreeNode(std::shared_ptr< const TimeMap > timeMap);
         void initOilVaporization(std::shared_ptr< const TimeMap > timeMap);
