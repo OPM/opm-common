@@ -29,7 +29,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
 namespace Opm {
 
