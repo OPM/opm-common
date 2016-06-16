@@ -30,7 +30,6 @@ namespace Opm {
     class Eclipse3DProperties;
     class IOConfig;
     class InitConfig;
-    class ParseContext;
     class SimulationConfig;
 
 
