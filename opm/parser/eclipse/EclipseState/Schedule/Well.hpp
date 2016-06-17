@@ -79,6 +79,17 @@ namespace Opm {
         void addCompletionSet(size_t time_step, const std::shared_ptr< const CompletionSet > newCompletionSet);
         std::shared_ptr< const CompletionSet > getCompletions(size_t timeStep) const;
 
+        /* The rate of a given phase under the following assumptions:
+         * * Returns zero if production is requested for an injector (and vice
+         *   versa)
+         * * If this is an injector and something else than the
+         *   requested phase is injected, returns 0, i.e.
+         *   water_injector.injection_rate( gas ) == 0
+         * * Mixed injection is not supported and always returns 0.
+         */
+        double production_rate( Phase::PhaseEnum phase, size_t timestep ) const;
+        double injection_rate( Phase::PhaseEnum phase, size_t timestep ) const;
+
         bool                            setProductionProperties(size_t timeStep , const WellProductionProperties properties);
         WellProductionProperties        getProductionPropertiesCopy(size_t timeStep) const;
         const WellProductionProperties& getProductionProperties(size_t timeStep)  const;
