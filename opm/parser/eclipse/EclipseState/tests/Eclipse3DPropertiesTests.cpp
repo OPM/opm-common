@@ -153,8 +153,8 @@ static Opm::DeckPtr createValidPERMXDeck() {
             "PERMX\n"
             "25*1 /\n"
             "ADDREG\n"
-            "  PERMX 1 1     / \n"
-            "  PERMX 3 2     / \n"
+            "'PermX   '   1 1     / \n"
+            "PErmX   3 2     / \n"
             "/\n"
             "EDIT\n"
             "\n";

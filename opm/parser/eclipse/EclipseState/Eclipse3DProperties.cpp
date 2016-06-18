@@ -33,7 +33,12 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/Utility/String.hpp>
 
+
 namespace Opm {
+
+
+
+
     namespace GridPropertyPostProcessor {
 
         void distTopLayer( std::vector<double>&    values,
@@ -418,32 +423,28 @@ namespace Opm {
     }
 
     bool Eclipse3DProperties::supportsGridProperty(const std::string& keyword) const {
-        auto kw = uppercase(keyword);
-        return m_doubleGridProperties.supportsKeyword( kw ) || m_intGridProperties.supportsKeyword( kw );
+        return m_doubleGridProperties.supportsKeyword( keyword ) || m_intGridProperties.supportsKeyword( keyword );
     }
 
 
 
     bool Eclipse3DProperties::hasDeckIntGridProperty(const std::string& keyword) const {
-        auto kw = uppercase(keyword);
-        if (!m_intGridProperties.supportsKeyword( kw ))
-            throw std::logic_error("Integer grid property " + kw + " is unsupported!");
+        if (!m_intGridProperties.supportsKeyword( keyword ))
+            throw std::logic_error("Integer grid property " + keyword + " is unsupported!");
 
-        return m_intGridProperties.hasKeyword( kw );
+        return m_intGridProperties.hasKeyword( keyword );
     }
 
     bool Eclipse3DProperties::hasDeckDoubleGridProperty(const std::string& keyword) const {
-        auto kw = uppercase(keyword);
-        if (!m_doubleGridProperties.supportsKeyword( kw ))
-            throw std::logic_error("Double grid property " + kw + " is unsupported!");
+        if (!m_doubleGridProperties.supportsKeyword( keyword ))
+            throw std::logic_error("Double grid property " + keyword + " is unsupported!");
 
-        return m_doubleGridProperties.hasKeyword( kw );
+        return m_doubleGridProperties.hasKeyword( keyword );
     }
 
 
     const GridProperty<int>& Eclipse3DProperties::getIntGridProperty( const std::string& keyword ) const {
-        auto kw = uppercase(keyword);
-        auto& gridProperty = const_cast< Eclipse3DProperties* >( this )->m_intGridProperties.getKeyword( kw );
+        auto& gridProperty = const_cast< Eclipse3DProperties* >( this )->m_intGridProperties.getKeyword( keyword );
         gridProperty.runPostProcessor();
         return gridProperty;
     }
@@ -452,8 +453,7 @@ namespace Opm {
 
     /// gets property from doubleGridProperty --- and calls the runPostProcessor
     const GridProperty<double>& Eclipse3DProperties::getDoubleGridProperty( const std::string& keyword ) const {
-        auto kw = uppercase(keyword);
-        auto& gridProperty = const_cast< Eclipse3DProperties* >( this )->m_doubleGridProperties.getKeyword( kw );
+        auto& gridProperty = const_cast< Eclipse3DProperties* >( this )->m_doubleGridProperties.getKeyword( keyword );
         gridProperty.runPostProcessor();
         return gridProperty;
     }
@@ -472,10 +472,9 @@ namespace Opm {
     }
 
     std::vector< int > Eclipse3DProperties::getRegions( const std::string& keyword ) const {
-        auto kw = uppercase(keyword);
-        if( !this->hasDeckIntGridProperty( kw ) ) return {};
+        if( !this->hasDeckIntGridProperty( keyword ) ) return {};
 
-        const auto& property = this->getIntGridProperty( kw );
+        const auto& property = this->getIntGridProperty( keyword );
 
         std::set< int > regions( property.getData().begin(),
                                  property.getData().end() );
@@ -704,7 +703,7 @@ namespace Opm {
 
     void Eclipse3DProperties::handleADDREGKeyword( const DeckKeyword& deckKeyword) {
        for( const auto& record : deckKeyword ) {
-           const std::string targetArray = uppercase(record.getItem("ARRAY").get< std::string >(0));
+           const std::string& targetArray = record.getItem("ARRAY").get< std::string >(0);
            const auto& regionProperty = getRegion( record.getItem("REGION_NAME") );
 
            if (m_intGridProperties.hasKeyword( targetArray ))
@@ -720,7 +719,7 @@ namespace Opm {
 
     void Eclipse3DProperties::handleMULTIREGKeyword( const DeckKeyword& deckKeyword) {
         for( const auto& record : deckKeyword ) {
-            const std::string targetArray = uppercase(record.getItem("ARRAY").get< std::string >(0));
+            const std::string& targetArray = record.getItem("ARRAY").get< std::string >(0);
             const auto& regionProperty = getRegion( record.getItem("REGION_NAME") );
 
            if (m_intGridProperties.supportsKeyword( targetArray ))
@@ -735,7 +734,7 @@ namespace Opm {
 
     void Eclipse3DProperties::handleCOPYREGKeyword( const DeckKeyword& deckKeyword) {
         for( const auto& record : deckKeyword ) {
-            const std::string srcArray = uppercase(record.getItem("ARRAY").get< std::string >(0));
+            const std::string& srcArray = record.getItem("ARRAY").get< std::string >(0);
             const auto& regionProperty = getRegion( record.getItem("REGION_NAME") );
 
             if (m_intGridProperties.hasKeyword( srcArray ))
@@ -752,7 +751,7 @@ namespace Opm {
 
     void Eclipse3DProperties::handleMULTIPLYKeyword( const DeckKeyword& deckKeyword, BoxManager& boxManager) {
         for( const auto& record : deckKeyword ) {
-            const std::string field = uppercase(record.getItem("field").get< std::string >(0));
+            const std::string& field = record.getItem("field").get< std::string >(0);
 
             if (m_doubleGridProperties.hasKeyword( field ))
                 m_doubleGridProperties.handleMULTIPLYRecord( record , boxManager );
@@ -772,7 +771,7 @@ namespace Opm {
     */
     void Eclipse3DProperties::handleADDKeyword( const DeckKeyword& deckKeyword, BoxManager& boxManager) {
         for( const auto& record : deckKeyword ) {
-            const std::string field = uppercase(record.getItem("field").get< std::string >(0));
+            const std::string& field = record.getItem("field").get< std::string >(0);
 
             if (m_doubleGridProperties.hasKeyword( field ))
                 m_doubleGridProperties.handleADDRecord( record , boxManager );
@@ -787,7 +786,7 @@ namespace Opm {
 
     void Eclipse3DProperties::handleCOPYKeyword( const DeckKeyword& deckKeyword, BoxManager& boxManager) {
         for( const auto& record : deckKeyword ) {
-            const std::string field = uppercase(record.getItem("src").get< std::string >(0));
+            const std::string& field = record.getItem("src").get< std::string >(0);
 
             if (m_doubleGridProperties.hasKeyword( field ))
                 m_doubleGridProperties.handleCOPYRecord( record , boxManager );
@@ -802,7 +801,7 @@ namespace Opm {
 
     void Eclipse3DProperties::handleEQUALSKeyword( const DeckKeyword& deckKeyword, BoxManager& boxManager) {
         for( const auto& record : deckKeyword ) {
-            const std::string field = uppercase(record.getItem("field").get< std::string >(0));
+            const std::string& field = record.getItem("field").get< std::string >(0);
 
             if (m_doubleGridProperties.supportsKeyword( field ))
                 m_doubleGridProperties.handleEQUALSRecord( record , boxManager );

@@ -75,7 +75,6 @@ namespace Opm {
         T convertInputValue(  const GridProperty<T>& property , double doubleValue) const;
         T convertInputValue( double doubleValue ) const;
 
-
         bool supportsKeyword(const std::string& keyword) const;
         bool hasKeyword(const std::string& keyword) const;
         size_t size() const;
