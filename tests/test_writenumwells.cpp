@@ -57,13 +57,13 @@ void verifyWellState(const std::string& rst_filename,
   int numwells = well_info_get_num_wells(well_info);
   BOOST_CHECK_EQUAL( numwells, schedule->numWells() );
 
-  std::vector<Opm::WellConstPtr> wells = schedule->getWells();
+  auto wells = schedule->getWells();
 
   for (int i = 0; i < numwells; ++i) {
 
     //Verify wellnames
     const char * wellname = well_info_iget_well_name(well_info, i);
-    auto well = wells.at(i);
+    auto* well = wells.at(i);
     BOOST_CHECK_EQUAL( wellname, well->name() );
 
     // Verify well-head position data
