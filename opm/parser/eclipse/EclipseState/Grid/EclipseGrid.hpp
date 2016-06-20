@@ -74,8 +74,8 @@ namespace Opm {
     public:
         explicit EclipseGrid(const std::string& filename);
         explicit EclipseGrid(const EclipseGrid& srcGrid);
-	EclipseGrid(size_t nx, size_t ny, size_t nz,
-		    double dx = 1.0, double dy = 1.0, double dz = 1.0);
+	explicit EclipseGrid(size_t nx, size_t ny, size_t nz,
+		             double dx = 1.0, double dy = 1.0, double dz = 1.0);
 	
 	EclipseGrid(const std::vector<int>& dims , 
 		    const std::vector<double>& coord , 
@@ -86,9 +86,9 @@ namespace Opm {
 
         /// EclipseGrid ignores ACTNUM in Deck, and therefore needs ACTNUM
         /// explicitly.  If a null pointer is passed, every cell is active.
-	EclipseGrid(const Deck& deck, const int * actnum = nullptr);
+        explicit EclipseGrid(const Deck& deck, const int * actnum = nullptr);
         /// [deprecated]
-	EclipseGrid(const std::shared_ptr<const Deck>& deck, const int * actnum = nullptr);
+        explicit EclipseGrid(const std::shared_ptr<const Deck>& deck, const int * actnum = nullptr);
 
         static bool hasCornerPointKeywords(const Deck&);
         static bool hasCartesianKeywords(const Deck&);
@@ -147,21 +147,23 @@ namespace Opm {
 				 const std::vector<double>& zcorn , 
 				 const int * actnum,
 				 const double * mapaxes);
-        void initCartesianGrid(const std::vector<int>& dims, const Deck&);
-        void initCornerPointGrid(const std::vector<int>& dims, const Deck&);
-        void initDTOPSGrid(const std::vector<int>& dims, const Deck&);
-        void initDVDEPTHZGrid(const std::vector<int>& dims, const Deck& deck);
-        void initGrid(const std::vector<int>& dims, const Deck&);
+
+        void initCartesianGrid(         const std::array<int, 3>&, const Deck&);
+        void initCornerPointGrid(       const std::array<int, 3>&, const Deck&);
+        void initDTOPSGrid(             const std::array<int, 3>&, const Deck&);
+        void initDVDEPTHZGrid(          const std::array<int, 3>&, const Deck&);
+        void initGrid(                  const std::array<int, 3>&, const Deck&);
+        void assertCornerPointKeywords( const std::array<int, 3>&, const Deck&);
 
         void assertCornerPointKeywords(const std::vector<int>& dims, const Deck&);
         static bool hasDVDEPTHZKeywords(const Deck&);
-        static bool hasDTOPSKeywords(const Deck&);
-        static void assertVectorSize(const std::vector<double>& vector, size_t expectedSize, const std::string& msg);
-        static std::vector<double> createTOPSVector(const std::vector<int>& dims, const std::vector<double>& DZ,
+        static bool hasDTOPSKeywords(   const Deck&);
+        static void assertVectorSize(   const std::vector<double>& vector, size_t expectedSize, const std::string& msg);
+        static std::vector<double> createTOPSVector(const std::array<int, 3>& dims, const std::vector<double>& DZ,
                 const Deck&);
-        static std::vector<double> createDVector(const std::vector<int>& dims, size_t dim, const std::string& DKey,
+        static std::vector<double> createDVector(const std::array<int, 3>& dims, size_t dim, const std::string& DKey,
                 const std::string& DVKey, const Deck&);
-        static void scatterDim(const std::vector<int>& dims , size_t dim , const std::vector<double>& DV , std::vector<double>& D);
+        static void scatterDim(const std::array<int, 3>& dims , size_t dim , const std::vector<double>& DV , std::vector<double>& D);
    };
 
     typedef std::shared_ptr<EclipseGrid> EclipseGridPtr;

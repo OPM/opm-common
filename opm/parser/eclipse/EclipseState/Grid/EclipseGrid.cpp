@@ -161,7 +161,7 @@ namespace Opm {
           m_multzMode(PinchMode::ModeEnum::TOP)
     {
 
-        const std::vector<int> dims = getDims();
+        const std::array<int, 3> dims = getDims();
         initGrid(dims, deck);
 
         if (actnum != nullptr)
@@ -180,7 +180,7 @@ namespace Opm {
     }
 
 
-    void EclipseGrid::initGrid( const std::vector<int>& dims, const Deck& deck) {
+    void EclipseGrid::initGrid( const std::array<int, 3>& dims, const Deck& deck) {
         if (hasCornerPointKeywords(deck)) {
             initCornerPointGrid(dims , deck);
         } else if (hasCartesianKeywords(deck)) {
@@ -260,7 +260,7 @@ namespace Opm {
     }
 
 
-    void EclipseGrid::initCartesianGrid(const std::vector<int>& dims , const Deck& deck) {
+    void EclipseGrid::initCartesianGrid(const std::array<int, 3>& dims , const Deck& deck) {
         if (hasDVDEPTHZKeywords( deck ))
             initDVDEPTHZGrid( dims , deck );
         else if (hasDTOPSKeywords(deck))
@@ -270,7 +270,7 @@ namespace Opm {
     }
 
 
-    void EclipseGrid::initDVDEPTHZGrid(const std::vector<int>& dims, const Deck& deck) {
+    void EclipseGrid::initDVDEPTHZGrid(const std::array<int, 3>& dims, const Deck& deck) {
         const std::vector<double>& DXV = deck.getKeyword<ParserKeywords::DXV>().getSIDoubleData();
         const std::vector<double>& DYV = deck.getKeyword<ParserKeywords::DYV>().getSIDoubleData();
         const std::vector<double>& DZV = deck.getKeyword<ParserKeywords::DZV>().getSIDoubleData();
@@ -285,7 +285,7 @@ namespace Opm {
     }
 
 
-    void EclipseGrid::initDTOPSGrid(const std::vector<int>& dims , const Deck& deck) {
+    void EclipseGrid::initDTOPSGrid(const std::array<int, 3>& dims , const Deck& deck) {
         std::vector<double> DX = createDVector( dims , 0 , "DX" , "DXV" , deck);
         std::vector<double> DY = createDVector( dims , 1 , "DY" , "DYV" , deck);
         std::vector<double> DZ = createDVector( dims , 2 , "DZ" , "DZV" , deck);
@@ -459,7 +459,7 @@ namespace Opm {
             retained.
     */
 
-    std::vector<double> EclipseGrid::createTOPSVector(const std::vector<int>& dims,
+    std::vector<double> EclipseGrid::createTOPSVector(const std::array<int, 3>& dims,
             const std::vector<double>& DZ, const Deck& deck)
     {
         double z_tolerance = 1e-6;
@@ -492,7 +492,7 @@ namespace Opm {
         return TOPS;
     }
 
-    std::vector<double> EclipseGrid::createDVector(const std::vector<int>& dims, size_t dim, const std::string& DKey,
+    std::vector<double> EclipseGrid::createDVector(const std::array<int, 3>& dims, size_t dim, const std::string& DKey,
             const std::string& DVKey, const Deck& deck)
     {
         size_t volume = dims[0] * dims[1] * dims[2];
@@ -529,7 +529,7 @@ namespace Opm {
     }
 
 
-    void EclipseGrid::scatterDim(const std::vector<int>& dims , size_t dim , const std::vector<double>& DV , std::vector<double>& D) {
+    void EclipseGrid::scatterDim(const std::array<int, 3>& dims , size_t dim , const std::vector<double>& DV , std::vector<double>& D) {
         int index[3];
         for (index[2] = 0;  index[2] < dims[2]; index[2]++) {
             for (index[1] = 0; index[1] < dims[1]; index[1]++) {

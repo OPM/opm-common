@@ -20,8 +20,9 @@
 #ifndef OPM_PARSER_GRIDDIMS_HPP
 #define OPM_PARSER_GRIDDIMS_HPP
 
-#include <stdexcept>
 #include <array>
+#include <stdexcept>
+#include <vector>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -150,20 +151,18 @@ namespace Opm {
     protected:
         GridDims() : m_nx(0), m_ny(0), m_nz(0) {}
 
-        const std::vector<int> getDims() {
-            std::vector<int> vec = {static_cast<int>(m_nx),
-                                    static_cast<int>(m_ny),
-                                    static_cast<int>(m_nz)};
-            return vec;
+        const std::array<int, 3> getDims() {
+            return std::array<int, 3> {static_cast<int>(m_nx),
+                                       static_cast<int>(m_ny),
+                                       static_cast<int>(m_nz)};
         }
 
         // keyword must be DIMENS or SPECGRID
         std::vector<int> getDims( const DeckKeyword& keyword ) {
             const auto& record = keyword.getRecord(0);
-            std::vector<int> dims = {record.getItem("NX").get< int >(0) ,
-                record.getItem("NY").get< int >(0) ,
-                record.getItem("NZ").get< int >(0) };
-            return dims;
+            return std::vector<int> {record.getItem("NX").get< int >(0) ,
+                                     record.getItem("NY").get< int >(0) ,
+                                     record.getItem("NZ").get< int >(0) };
         }
 
         size_t m_nx;
