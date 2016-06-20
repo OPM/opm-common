@@ -43,6 +43,23 @@
 
 namespace Opm {
 
+
+    EclipseGrid::EclipseGrid(const std::vector<int>& dims , 
+			     const std::vector<double>& coord , 
+			     const std::vector<double>& zcorn , 
+			     const int * actnum, 
+			     const double * mapaxes) 
+	: m_minpvValue(0),
+	  m_minpvMode(MinpvMode::ModeEnum::Inactive),
+	  m_pinch("PINCH"),
+	  m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
+	  m_multzMode(PinchMode::ModeEnum::TOP)
+    {
+	initCornerPointGrid( dims, coord , zcorn , actnum , mapaxes );
+    }
+
+
+
     /**
        Will create an EclipseGrid instance based on an existing
        GRID/EGRID file.
@@ -380,6 +397,36 @@ namespace Opm {
         m_grid.reset( ecl_grid_alloc_dx_dy_dz_tops( dims[0] , dims[1] , dims[2] , DX.data() , DY.data() , DZ.data() , TOPS.data() , nullptr ) );
     }
 
+
+    void EclipseGrid::initCornerPointGrid(const std::vector<int>& dims , 
+					  const std::vector<double>& coord , 
+					  const std::vector<double>& zcorn , 
+					  const int * actnum, 
+					  const double * mapaxes) 
+    {
+	const std::vector<float> zcorn_float( zcorn.begin() , zcorn.end() );
+	const std::vector<float> coord_float( coord.begin() , coord.end() );
+	float * mapaxes_float = NULL;
+	if (mapaxes) {
+	    mapaxes_float = new float[6];
+	    for (size_t i=0; i < 6; i++)
+		mapaxes_float[i] = mapaxes[i];
+	}
+
+	m_grid.reset( ecl_grid_alloc_GRDECL_data(dims[0] , 
+						 dims[1] , 
+						 dims[2] , 
+						 zcorn_float.data() , 
+						 coord_float.data() , 
+						 actnum , 
+						 mapaxes_float) );
+	
+	if (mapaxes) 
+	    delete[] mapaxes_float;
+    }
+
+
+
     void EclipseGrid::initCornerPointGrid(const std::vector<int>& dims, const Deck& deck) {
         assertCornerPointKeywords( dims , deck);
         {
@@ -397,24 +444,10 @@ namespace Opm {
                     mapaxes[i] = record.getItem( i ).getSIDouble( 0 );
                 }
             }
+	    initCornerPointGrid( dims, coord , zcorn , nullptr , mapaxes );
 
-
-            {
-                const std::vector<float> zcorn_float( zcorn.begin() , zcorn.end() );
-                const std::vector<float> coord_float( coord.begin() , coord.end() );
-                float * mapaxes_float = NULL;
-                if (mapaxes) {
-                    mapaxes_float = new float[6];
-                    for (size_t i=0; i < 6; i++)
-                        mapaxes_float[i] = mapaxes[i];
-                }
-                m_grid.reset( ecl_grid_alloc_GRDECL_data(dims[0] , dims[1] , dims[2] , zcorn_float.data() , coord_float.data() , nullptr , mapaxes_float) );
-
-                if (mapaxes) {
-                    delete[] mapaxes_float;
-                    delete[] mapaxes;
-                }
-            }
+	    if (mapaxes) 
+		delete[] mapaxes;
         }
     }
 
