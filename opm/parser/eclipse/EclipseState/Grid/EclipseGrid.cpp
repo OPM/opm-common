@@ -65,7 +65,8 @@ namespace Opm {
        GRID/EGRID file.
     */
     EclipseGrid::EclipseGrid(const std::string& filename )
-        : m_minpvValue(0),
+        : GridDims(),
+          m_minpvValue(0),
           m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH"),
           m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
@@ -77,22 +78,20 @@ namespace Opm {
         else
             throw std::invalid_argument("Could not load grid from binary file: " + filename);
 
-        m_nx = static_cast<size_t>( ecl_grid_get_nx( c_ptr() ));
-        m_ny = static_cast<size_t>( ecl_grid_get_ny( c_ptr() ));
-        m_nz = static_cast<size_t>( ecl_grid_get_nz( c_ptr() ));
+        m_nx = ecl_grid_get_nx( c_ptr() );
+        m_ny = ecl_grid_get_ny( c_ptr() );
+        m_nz = ecl_grid_get_nz( c_ptr() );
     }
 
     /* Copy constructor */
     EclipseGrid::EclipseGrid(const EclipseGrid& src)
-        : m_minpvValue( src.m_minpvValue ),
+        : GridDims(src.getNX(), src.getNY(), src.getNZ()),
+          m_messages( src.m_messages ),
+          m_minpvValue( src.m_minpvValue ),
           m_minpvMode( src.m_minpvMode ),
           m_pinch( src.m_pinch ),
           m_pinchoutMode( src.m_pinchoutMode ),
-          m_multzMode( src.m_multzMode ),
-          m_nx( src.m_nx ),
-          m_ny( src.m_ny ),
-          m_nz( src.m_nz ),
-          m_messages( src.m_messages )
+          m_multzMode( src.m_multzMode )
     {
         if (src.hasCellInfo())
             m_grid.reset( ecl_grid_alloc_copy( src.c_ptr() ) );
@@ -108,24 +107,14 @@ namespace Opm {
 
     EclipseGrid::EclipseGrid(size_t nx, size_t ny , size_t nz,
                              double dx, double dy, double dz)
-        : m_minpvValue(0),
+        : GridDims(nx, ny, nz),
+          m_minpvValue(0),
           m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH"),
           m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
-          m_multzMode(PinchMode::ModeEnum::TOP),
-          GridDims(nx,ny,nz,dx,dy,dz)
+          m_multzMode(PinchMode::ModeEnum::TOP)
     {
         m_grid.reset(ecl_grid_alloc_rectangular(nx, ny, nz, dx, dy, dz, NULL));
-    }
-
-
-    // keyword must be DIMENS or SPECGRID
-    static std::vector<int> getDims( const DeckKeyword& keyword ) {
-        const auto& record = keyword.getRecord(0);
-        std::vector<int> dims = {record.getItem("NX").get< int >(0) ,
-            record.getItem("NY").get< int >(0) ,
-            record.getItem("NZ").get< int >(0) };
-        return dims;
     }
 
     EclipseGrid::EclipseGrid(const std::shared_ptr<const Deck>& deckptr, const int * actnum)
@@ -164,54 +153,17 @@ namespace Opm {
 
 
     EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
-        : m_minpvValue(0),
+        : GridDims(deck),
+          m_minpvValue(0),
           m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH"),
           m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
           m_multzMode(PinchMode::ModeEnum::TOP)
     {
-        const bool hasRUNSPEC = Section::hasRUNSPEC(deck);
-        const bool hasGRID = Section::hasGRID(deck);
-        if (hasRUNSPEC && hasGRID) {
-            // Equivalent to first constructor.
-            RUNSPECSection runspecSection( deck );
-            if( runspecSection.hasKeyword<ParserKeywords::DIMENS>() ) {
-                const auto& dimens = runspecSection.getKeyword<ParserKeywords::DIMENS>();
-                std::vector<int> dims = getDims(dimens);
-                initGrid(dims, deck);
-            } else {
-                const std::string msg = "The RUNSPEC section must have the DIMENS keyword with logically Cartesian grid dimensions.";
-                m_messages.error(msg);
-                throw std::invalid_argument(msg);
-            }
-        } else if (hasGRID) {
-            // Look for SPECGRID instead of DIMENS.
-            if (deck.hasKeyword<ParserKeywords::SPECGRID>()) {
-                const auto& specgrid = deck.getKeyword<ParserKeywords::SPECGRID>();
-                std::vector<int> dims = getDims(specgrid);
-                initGrid(dims, deck);
-            } else {
-                const std::string msg = "With no RUNSPEC section, the GRID section must specify the grid dimensions using the SPECGRID keyword.";
-                m_messages.error(msg);
-                throw std::invalid_argument(msg);
-            }
-        } else {
-            // The deck contains no relevant section, so it is probably a sectionless GRDECL file.
-            // Either SPECGRID or DIMENS is OK.
-            if (deck.hasKeyword("SPECGRID")) {
-                const auto& specgrid = deck.getKeyword<ParserKeywords::SPECGRID>();
-                std::vector<int> dims = getDims(specgrid);
-                initGrid(dims, deck);
-            } else if (deck.hasKeyword<ParserKeywords::DIMENS>()) {
-                const auto& dimens = deck.getKeyword<ParserKeywords::DIMENS>();
-                std::vector<int> dims = getDims(dimens);
-                initGrid(dims, deck);
-            } else {
-                const std::string msg = "The deck must specify grid dimensions using either DIMENS or SPECGRID.";
-                m_messages.error(msg);
-                throw std::invalid_argument(msg);
-            }
-        }
+
+        const std::vector<int>& dims = getDims();
+        initGrid(dims, deck);
+
         if (actnum != nullptr)
             resetACTNUM(actnum);
         else {
@@ -229,10 +181,6 @@ namespace Opm {
 
 
     void EclipseGrid::initGrid( const std::vector<int>& dims, const Deck& deck) {
-        m_nx = static_cast<size_t>(dims[0]);
-        m_ny = static_cast<size_t>(dims[1]);
-        m_nz = static_cast<size_t>(dims[2]);
-
         if (hasCornerPointKeywords(deck)) {
             initCornerPointGrid(dims , deck);
         } else if (hasCartesianKeywords(deck)) {
@@ -276,8 +224,6 @@ namespace Opm {
         return activeIndex( getGlobalIndex( i,j,k ));
     }
 
-
-
     size_t EclipseGrid::activeIndex(size_t globalIndex) const {
         assertCellInfo();
         {
@@ -288,27 +234,6 @@ namespace Opm {
         }
     }
 
-
-
-    size_t EclipseGrid::getNX( ) const {
-        return m_nx;
-    }
-
-    size_t EclipseGrid::getNY( ) const {
-        return m_ny;
-    }
-
-    size_t EclipseGrid::getNZ( ) const {
-        return m_nz;
-    }
-
-    std::array< int, 3 > EclipseGrid::getNXYZ() const {
-        return {{ int( m_nx ), int( m_ny ), int( m_nz ) }};
-    }
-
-    size_t EclipseGrid::getCartesianSize( ) const {
-        return m_nx * m_ny * m_nz;
-    }
 
     bool EclipseGrid::isPinchActive( ) const {
         return m_pinch.hasValue();

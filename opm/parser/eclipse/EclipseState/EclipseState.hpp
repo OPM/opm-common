@@ -117,6 +117,7 @@ namespace Opm {
 
         ParseContext m_parseContext;
         const TableManager m_tables;
+        const GridDims m_gridDims;
         std::shared_ptr<EclipseGrid> m_inputGrid;
         std::shared_ptr< const Schedule > m_schedule;
         Eclipse3DProperties m_eclipseProperties;

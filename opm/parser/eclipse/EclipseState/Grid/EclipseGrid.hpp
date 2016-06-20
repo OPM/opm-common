@@ -18,15 +18,16 @@
 */
 
 
-#ifndef ECLIPSE_GRID_HPP_
-#define ECLIPSE_GRID_HPP_
+#ifndef OPM_PARSER_ECLIPSE_GRID_HPP
+#define OPM_PARSER_ECLIPSE_GRID_HPP
 
 
 #include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/MinpvMode.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/PinchMode.hpp>
-#include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
+
+#include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 
 #include <ert/ecl/ecl_grid.h>
 #include <ert/util/ert_unique_ptr.hpp>
@@ -92,7 +93,10 @@ namespace Opm {
         static bool hasCornerPointKeywords(const Deck&);
         static bool hasCartesianKeywords(const Deck&);
         size_t  getNumActive( ) const;
-        size_t  getCartesianSize( ) const;
+
+        size_t activeIndex(size_t i, size_t j, size_t k) const;
+        size_t activeIndex(size_t globalIndex) const;
+
         bool isPinchActive( ) const;
         double getPinchThresholdThickness( ) const;
         PinchMode::ModeEnum getPinchOption( ) const;
@@ -127,14 +131,14 @@ namespace Opm {
         const MessageContainer& getMessageContainer() const;
         MessageContainer& getMessageContainer();
     private:
+        MessageContainer m_messages;
+
         ERT::ert_unique_ptr<ecl_grid_type , ecl_grid_free> m_grid;
         double m_minpvValue;
         MinpvMode::ModeEnum m_minpvMode;
         Value<double> m_pinch;
         PinchMode::ModeEnum m_pinchoutMode;
         PinchMode::ModeEnum m_multzMode;
-
-        MessageContainer m_messages;
 
         void assertCellInfo() const;
 	
@@ -167,4 +171,4 @@ namespace Opm {
 
 
 
-#endif
+#endif // OPM_PARSER_ECLIPSE_GRID_HPP

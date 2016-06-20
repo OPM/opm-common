@@ -30,6 +30,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Fault.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
@@ -54,13 +55,15 @@ namespace Opm {
     {}
 
     EclipseState::EclipseState(const Deck& deck, ParseContext parseContext) :
+        m_messageContainer(  ),
         m_parseContext(      parseContext ),
         m_tables(            deck ),
+        m_gridDims(          deck, m_messageContainer ),
         m_inputGrid(         std::make_shared<EclipseGrid>(deck, nullptr) ),
         m_schedule(          std::make_shared<Schedule>( m_parseContext, m_inputGrid, deck ) ),
         m_eclipseProperties( deck, m_tables, *m_inputGrid ),
-        m_eclipseConfig(     deck, m_eclipseProperties, m_inputGrid, *m_schedule),
-        m_inputNnc(          deck, m_inputGrid ),
+        m_eclipseConfig(     deck, m_eclipseProperties, m_gridDims, *m_schedule),
+        m_inputNnc(          deck, m_gridDims ),
         m_deckUnitSystem(    deck.getActiveUnitSystem() )
 
     {
