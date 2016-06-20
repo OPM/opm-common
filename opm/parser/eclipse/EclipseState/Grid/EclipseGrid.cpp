@@ -161,7 +161,7 @@ namespace Opm {
           m_multzMode(PinchMode::ModeEnum::TOP)
     {
 
-        const std::vector<int>& dims = getDims();
+        const std::vector<int> dims = getDims();
         initGrid(dims, deck);
 
         if (actnum != nullptr)
