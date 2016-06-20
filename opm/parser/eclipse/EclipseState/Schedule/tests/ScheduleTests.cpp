@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrdered) {
     DeckPtr deck = createDeckWithWellsOrdered();
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(100,100,100);
     Schedule schedule(ParseContext() , grid , deck );
-    std::vector<WellConstPtr> wells = schedule.getWells();
+    auto wells = schedule.getWells();
 
     BOOST_CHECK_EQUAL( "CW_1" , wells[0]->name());
     BOOST_CHECK_EQUAL( "BW_2" , wells[1]->name());
@@ -307,9 +307,9 @@ BOOST_AUTO_TEST_CASE(WellsIterator_Empty_EmptyVectorReturned) {
     DeckPtr deck = createDeck();
     Schedule schedule(ParseContext() , grid , deck );
     size_t timeStep = 0;
-    std::vector<WellConstPtr> wells_alltimesteps = schedule.getWells();
+    const auto wells_alltimesteps = schedule.getWells();
     BOOST_CHECK_EQUAL(0U, wells_alltimesteps.size());
-    std::vector<WellConstPtr> wells_t0 = schedule.getWells(timeStep);
+    const auto wells_t0 = schedule.getWells(timeStep);
     BOOST_CHECK_EQUAL(0U, wells_t0.size());
 
     BOOST_CHECK_THROW(schedule.getWells(1), std::invalid_argument);
@@ -321,11 +321,11 @@ BOOST_AUTO_TEST_CASE(WellsIterator_HasWells_WellsReturned) {
     Schedule schedule(ParseContext() , grid , deck );
     size_t timeStep = 0;
 
-    std::vector<WellConstPtr> wells_alltimesteps = schedule.getWells();
+    const auto wells_alltimesteps = schedule.getWells();
     BOOST_CHECK_EQUAL(3U, wells_alltimesteps.size());
-    std::vector<WellConstPtr> wells_t0 = schedule.getWells(timeStep);
+    const auto wells_t0 = schedule.getWells(timeStep);
     BOOST_CHECK_EQUAL(1U, wells_t0.size());
-    std::vector<WellConstPtr> wells_t3 = schedule.getWells(3);
+    const auto wells_t3 = schedule.getWells(3);
     BOOST_CHECK_EQUAL(3U, wells_t3.size());
 }
 
@@ -334,18 +334,17 @@ BOOST_AUTO_TEST_CASE(WellsIteratorWithRegex_HasWells_WellsReturned) {
     DeckPtr deck = createDeckWithWells();
     Schedule schedule(ParseContext() , grid , deck );
     std::string wellNamePattern;
-    std::vector<WellPtr> wells;
 
     wellNamePattern = "*";
-    wells = schedule.getWells(wellNamePattern);
+    auto wells = schedule.getWellsMatching(wellNamePattern);
     BOOST_CHECK_EQUAL(3U, wells.size());
 
     wellNamePattern = "W_*";
-    wells = schedule.getWells(wellNamePattern);
+    wells = schedule.getWellsMatching(wellNamePattern);
     BOOST_CHECK_EQUAL(2U, wells.size());
 
     wellNamePattern = "W_3";
-    wells = schedule.getWells(wellNamePattern);
+    wells = schedule.getWellsMatching(wellNamePattern);
     BOOST_CHECK_EQUAL(1U, wells.size());
 }
 
@@ -374,7 +373,7 @@ BOOST_AUTO_TEST_CASE(TestCrossFlowHandling) {
     DeckPtr deck = createDeckForTestingCrossFlow();
     Schedule schedule(ParseContext() , grid , deck );
 
-    WellPtr well_ban = schedule.getWell("BAN");
+    auto well_ban = schedule.getWell("BAN");
     BOOST_CHECK_EQUAL(well_ban->getAllowCrossFlow(), false);
 
 
@@ -387,8 +386,8 @@ BOOST_AUTO_TEST_CASE(TestCrossFlowHandling) {
 
 
     {
-        WellPtr well_allow = schedule.getWell("ALLOW");
-        WellPtr well_default = schedule.getWell("DEFAULT");
+        auto well_allow = schedule.getWell("ALLOW");
+        auto well_default = schedule.getWell("DEFAULT");
 
         BOOST_CHECK_EQUAL(well_default->getAllowCrossFlow(), true);
         BOOST_CHECK_EQUAL(well_allow->getAllowCrossFlow(), true);
@@ -453,8 +452,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndCompletionDataWithWELOPEN) {
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,10);
     DeckPtr deck = createDeckWithWellsAndCompletionDataWithWELOPEN();
     Schedule schedule(ParseContext() , grid , deck );
-    WellPtr well;
-    well = schedule.getWell("OP_1");
+    auto* well = schedule.getWell("OP_1");
     size_t currentStep = 0;
     BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus(currentStep));
     currentStep = 3;
@@ -558,8 +556,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_TryToOpenWellWithShutCompleti
   ParseContext parseContext;
   DeckPtr deck = parser.parseString(input, parseContext);
   Schedule schedule(parseContext , grid , deck );
-  WellPtr well;
-  well = schedule.getWell("OP_1");
+  auto* well = schedule.getWell("OP_1");
   size_t currentStep = 3;
   BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus(currentStep));
   currentStep = 4;
@@ -707,8 +704,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithCOMPLUMPwithDefaultValuesInWELOPEN) {
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
     DeckPtr deck = parser.parseString(input, ParseContext());
     Schedule schedule(ParseContext() , grid , deck );
-    WellPtr well;
-    well = schedule.getWell("OP_1");
+    auto* well = schedule.getWell("OP_1");
     size_t currentStep = 3;
     BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well->getStatus(currentStep));
 }
@@ -757,15 +753,13 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFT) {
     Schedule schedule(parseContext , grid , deck );
 
     {
-        WellPtr well;
-        well = schedule.getWell("OP_1");
+        auto* well = schedule.getWell("OP_1");
         BOOST_CHECK_EQUAL(well->getRFTActive(2),true);
         BOOST_CHECK_EQUAL(2 , well->firstRFTOutput( ));
     }
 
     {
-        WellPtr well;
-        well = schedule.getWell("OP_2");
+        auto* well = schedule.getWell("OP_2");
         BOOST_CHECK_EQUAL(well->getRFTActive(3),true);
         BOOST_CHECK_EQUAL(3 , well->firstRFTOutput( ));
     }
@@ -822,8 +816,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFTPLT) {
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
     DeckPtr deck = parser.parseString(input, parseContext);
     Schedule schedule(parseContext , grid , deck );
-    WellPtr well;
-    well = schedule.getWell("OP_1");
+    auto* well = schedule.getWell("OP_1");
 
     size_t currentStep = 3;
     BOOST_CHECK_EQUAL(well->getRFTActive(currentStep),false);
@@ -870,7 +863,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArg) {
     DeckPtr deck = parser.parseString(input, parseContext);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
     Schedule schedule(parseContext , grid , deck );
-    WellPtr well = schedule.getWell("OP_1");
+    auto* well = schedule.getWell("OP_1");
 
     size_t currentStep = 1;
     WellProductionProperties wpp = well->getProductionProperties(currentStep);
@@ -980,7 +973,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithWPIMULT) {
     DeckPtr deck = parser.parseString(input, parseContext);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10, 10, 10);
     Schedule schedule(parseContext , grid, deck );
-    WellPtr well = schedule.getWell("OP_1");
+    auto* well = schedule.getWell("OP_1");
 
     size_t currentStep = 2;
     CompletionSetConstPtr currentCompletionSet = well->getCompletions(currentStep);
@@ -1171,14 +1164,14 @@ BOOST_AUTO_TEST_CASE(changeBhpLimitInHistoryModeWithWeltarg) {
     DeckPtr deck = parser.parseString(input, parseContext);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10, 10, 10);
     Schedule schedule(parseContext , grid, deck );
-    WellPtr well_p = schedule.getWell("P");
+    auto* well_p = schedule.getWell("P");
 
     BOOST_CHECK_EQUAL(well_p->getProductionProperties(0).BHPLimit, 0); //start
     BOOST_CHECK_EQUAL(well_p->getProductionProperties(1).BHPLimit, 50 * 1e5); // 1
     // The BHP limit should not be effected by WCONHIST
     BOOST_CHECK_EQUAL(well_p->getProductionProperties(2).BHPLimit, 50 * 1e5); // 2
 
-    WellPtr well_i = schedule.getWell("I");
+    auto* well_i = schedule.getWell("I");
 
     BOOST_CHECK_EQUAL(well_i->getInjectionProperties(0).BHPLimit, 0); //start
     BOOST_CHECK_EQUAL(well_i->getInjectionProperties(1).BHPLimit, 600 * 1e5); // 1

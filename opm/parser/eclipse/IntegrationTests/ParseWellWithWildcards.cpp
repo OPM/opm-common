@@ -53,19 +53,19 @@ BOOST_AUTO_TEST_CASE( parse_WCONPROD_OK ) {
     BOOST_CHECK(sched->hasWell("PROX5"));
 
     {
-        WellPtr well = sched->getWell("PROD2");
+        auto* well = sched->getWell("PROD2");
         BOOST_CHECK_CLOSE(1000/Metric::Time, well->getProductionProperties(0).OilRate, 0.001);
         BOOST_CHECK_CLOSE(1500/Metric::Time, well->getProductionProperties(1).OilRate, 0.001);
     }
 
     {
-        WellPtr well = sched->getWell("PROD3");
+        auto* well = sched->getWell("PROD3");
         BOOST_CHECK_CLOSE(0/Metric::Time, well->getProductionProperties(0).OilRate, 0.001);
         BOOST_CHECK_CLOSE(1500/Metric::Time, well->getProductionProperties(1).OilRate, 0.001);
     }
 
     {
-        WellPtr well = sched->getWell("PROX5");
+        auto* well = sched->getWell("PROX5");
         BOOST_CHECK_CLOSE(2000/Metric::Time, well->getProductionProperties(0).OilRate, 0.001);
         BOOST_CHECK_CLOSE(2000/Metric::Time, well->getProductionProperties(1).OilRate, 0.001);
     }
@@ -88,19 +88,19 @@ BOOST_AUTO_TEST_CASE( parse_WCONINJE_OK ) {
     BOOST_CHECK(sched->hasWell("INJX5"));
 
     {
-        WellPtr well = sched->getWell("INJE2");
+        auto* well = sched->getWell("INJE2");
         BOOST_CHECK_CLOSE(1000/Metric::Time, well->getInjectionProperties(0).surfaceInjectionRate, 0.001);
         BOOST_CHECK_CLOSE(1500/Metric::Time, well->getInjectionProperties(1).surfaceInjectionRate, 0.001);
     }
 
     {
-        WellPtr well = sched->getWell("INJE3");
+        auto* well = sched->getWell("INJE3");
         BOOST_CHECK_CLOSE(0/Metric::Time, well->getInjectionProperties(0).surfaceInjectionRate, 0.001);
         BOOST_CHECK_CLOSE(1500/Metric::Time, well->getInjectionProperties(1).surfaceInjectionRate, 0.001);
     }
 
     {
-        WellPtr well = sched->getWell("INJX5");
+        auto* well = sched->getWell("INJX5");
         BOOST_CHECK_CLOSE(2000/Metric::Time, well->getInjectionProperties(0).surfaceInjectionRate, 0.001);
         BOOST_CHECK_CLOSE(2000/Metric::Time, well->getInjectionProperties(1).surfaceInjectionRate, 0.001);
     }

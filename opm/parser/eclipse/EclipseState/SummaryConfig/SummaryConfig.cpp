@@ -43,12 +43,9 @@
 
 namespace Opm {
 
-    static std::string wellName( const std::shared_ptr< const Well >& well ) {
-        return well->name();
-    }
-
-    static std::string groupName( const Group* group ) {
-        return group->name();
+    template< typename T >
+    static std::string name( const T* x ) {
+        return x->name();
     }
 
     static inline std::vector< ERT::smspec_node > keywordW(
@@ -66,7 +63,7 @@ namespace Opm {
         const auto& item = keyword.getDataRecord().getDataItem();
         auto wnames = item.hasValue( 0 )
             ? item.getData< std::string >()
-            : fun::map( wellName, schedule.getWells() );
+            : fun::map( name< Well >, schedule.getWells() );
 
         /* filter all requested names that were not in the Deck */
         wnames.erase(
@@ -91,7 +88,7 @@ namespace Opm {
         const auto& item = keyword.getDataRecord().getDataItem();
         auto gnames = item.hasValue( 0 )
             ? item.getData< std::string >()
-            : fun::map( groupName, schedule.getGroups() );
+            : fun::map( name< Group >, schedule.getGroups() );
 
         gnames.erase(
                 std::remove_if( gnames.begin(), gnames.end(), missing ),
@@ -180,7 +177,7 @@ namespace Opm {
            if( record.getItem( 0 ).defaultApplied( 0 ) ) {
                for( const auto& well : schedule.getWells() ) {
 
-                   const auto& name = wellName( well );
+                   const auto& name = well->name();
 
                    for( const auto& completion : *well->getCompletions( last_timestep ) ) {
                        auto cijk = getijk( *completion );
@@ -207,7 +204,7 @@ namespace Opm {
                }
                else {
                    /* well specified, block coordinates defaulted */
-                   for( const auto& completion : *schedule.getWell( name ).getCompletions( last_timestep ) ) {
+                   for( const auto& completion : *schedule.getWell( name )->getCompletions( last_timestep ) ) {
                        auto ijk = getijk( *completion );
                        nodes.emplace_back( keywordstring, name, dims.data(), ijk.data() );
                    }

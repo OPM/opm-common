@@ -100,10 +100,10 @@ namespace Opm {
         /*****************************************************************/
 
         bool hasWell(const std::string& wellName , size_t time_step) const;
-        std::shared_ptr< const Well > getWell(const std::string& wellName , size_t time_step) const;
+        const Well* getWell(const std::string& wellName , size_t time_step) const;
         const WellSet& getWells( size_t time_step ) const;
         size_t numWells(size_t time_step) const;
-        void addWell(size_t time_step , std::shared_ptr< Well > well);
+        void addWell(size_t time_step , Well* well);
         void delWell(size_t time_step, const std::string& wellName );
     private:
         std::shared_ptr< const WellSet > wellMap(size_t time_step) const;

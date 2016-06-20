@@ -70,18 +70,17 @@ namespace Opm
         size_t numWells(size_t timestep) const;
         size_t getMaxNumCompletionsForWells(size_t timestep) const;
         bool hasWell(const std::string& wellName) const;
-        std::shared_ptr< Well > getWell(const std::string& wellName);
-        const Well& getWell(const std::string& wellName) const;
-        std::vector<std::shared_ptr< Well >> getOpenWells(size_t timeStep);
-        std::vector<std::shared_ptr< const Well >> getWells() const;
-        std::vector<std::shared_ptr< const Well >> getWells(size_t timeStep) const;
-        std::vector<std::shared_ptr< Well >> getWells(const std::string& wellNamePattern);
+        const Well* getWell(const std::string& wellName) const;
+        std::vector< const Well* > getOpenWells(size_t timeStep) const;
+        std::vector< const Well* > getWells() const;
+        std::vector< const Well* > getWells(size_t timeStep) const;
+        std::vector< const Well* > getWellsMatching( const std::string& ) const;
         std::shared_ptr< const OilVaporizationProperties > getOilVaporizationProperties(size_t timestep);
 
         std::shared_ptr< GroupTree > getGroupTree(size_t t) const;
         size_t numGroups() const;
         bool hasGroup(const std::string& groupName) const;
-        std::shared_ptr< Group > getGroup(const std::string& groupName) const;
+        const Group* getGroup(const std::string& groupName) const;
         std::vector< const Group* > getGroups() const;
         std::shared_ptr< Tuning > getTuning() const;
 
@@ -107,8 +106,9 @@ namespace Opm
         MessageContainer m_messages;
 
 
-        void updateWellStatus(std::shared_ptr<Well> well, size_t reportStep , WellCommon::StatusEnum status);
-        void addWellToGroup( std::shared_ptr< Group > newGroup , std::shared_ptr< Well > well , size_t timeStep);
+        std::vector< Well* > getWells(const std::string& wellNamePattern);
+        void updateWellStatus( Well& well, size_t reportStep , WellCommon::StatusEnum status);
+        void addWellToGroup( Group& newGroup , Well& well , size_t timeStep);
         void initializeNOSIM(const Deck& deck);
         void initRootGroupTreeNode(std::shared_ptr< const TimeMap > timeMap);
         void initOilVaporization(std::shared_ptr< const TimeMap > timeMap);
@@ -117,7 +117,7 @@ namespace Opm
         void addGroup(const std::string& groupName , size_t timeStep);
         void addWell(const std::string& wellName, const DeckRecord& record, size_t timeStep, WellCompletion::CompletionOrderEnum wellCompletionOrder);
         void handleCOMPORD(const ParseContext& parseContext, const DeckKeyword& compordKeyword, size_t currentStep);
-        void checkWELSPECSConsistency(std::shared_ptr< const Well > well, const DeckKeyword& keyword, size_t recordIdx);
+        void checkWELSPECSConsistency( const Well&, const DeckKeyword& keyword, size_t recordIdx);
         void handleWELSPECS( const SCHEDULESection&, const DeckKeyword& keyword, size_t currentStep);
         void handleWCONProducer( const DeckKeyword& keyword, size_t currentStep, bool isPredictionMode);
         void handleWCONHIST( const DeckKeyword& keyword, size_t currentStep);

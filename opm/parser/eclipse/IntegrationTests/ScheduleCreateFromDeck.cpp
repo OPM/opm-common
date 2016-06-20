@@ -98,9 +98,9 @@ BOOST_AUTO_TEST_CASE(WellTestRefDepth) {
     SchedulePtr sched(new Schedule(parseContext , grid , deck ));
     BOOST_CHECK_EQUAL(4, 4);
 
-    WellPtr well1 = sched->getWell("W_1");
-    WellPtr well2 = sched->getWell("W_2");
-    WellPtr well4 = sched->getWell("W_4");
+    auto* well1 = sched->getWell("W_1");
+    auto* well2 = sched->getWell("W_2");
+    auto* well4 = sched->getWell("W_4");
     BOOST_CHECK_EQUAL( well1->getRefDepth() , grid->getCellDepth( 29 , 36 , 0 ));
     BOOST_CHECK_EQUAL( well2->getRefDepth() , 100 );
     BOOST_CHECK_THROW( well4->getRefDepth() , std::invalid_argument );
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
     BOOST_CHECK(sched->hasWell("W_3"));
 
     {
-        WellPtr well2 = sched->getWell("W_2");
+        auto* well2 = sched->getWell("W_2");
         BOOST_CHECK_EQUAL( 0 , well2->getProductionPropertiesCopy(2).ResVRate);
         BOOST_CHECK_CLOSE( 777/Metric::Time , well2->getProductionPropertiesCopy(7).ResVRate , 0.0001);
         BOOST_CHECK_EQUAL( 0 , well2->getProductionPropertiesCopy(8).ResVRate);
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
 
 
     {
-        WellPtr well3 = sched->getWell("W_3");
+        auto* well3 = sched->getWell("W_3");
 
         BOOST_CHECK_EQUAL( WellCommon::AUTO , well3->getStatus(3));
         BOOST_CHECK_EQUAL( 0 , well3->getProductionPropertiesCopy(2).LiquidRate);
@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
     }
 
     {
-        WellPtr well1 = sched->getWell("W_1");
+        auto* well1 = sched->getWell("W_1");
 
         BOOST_CHECK(well1->getProductionPropertiesCopy(0).predictionMode);
         BOOST_CHECK_EQUAL(0, well1->getProductionPropertiesCopy(0).OilRate);
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(WellTestCOMPDAT) {
     BOOST_CHECK(sched->hasWell("W_2"));
     BOOST_CHECK(sched->hasWell("W_3"));
     {
-        WellPtr well1 = sched->getWell("W_1");
+        auto* well1 = sched->getWell("W_1");
         BOOST_CHECK_CLOSE(13000/Metric::Time , well1->getProductionPropertiesCopy(8).OilRate , 0.0001);
         CompletionSetConstPtr completions = well1->getCompletions(0);
         BOOST_CHECK_EQUAL(0U, completions->size());
@@ -485,7 +485,7 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
     BOOST_CHECK( sched->hasGroup( "OP" ));
 
     {
-        GroupPtr group = sched->getGroup("INJ");
+        auto* group = sched->getGroup("INJ");
         BOOST_CHECK_EQUAL( Phase::WATER , group->getInjectionPhase( 3 ));
         BOOST_CHECK_EQUAL( GroupInjection::VREP , group->getInjectionControlMode( 3 ));
         BOOST_CHECK_CLOSE( 10/Metric::Time , group->getSurfaceMaxRate( 3 ) , 0.001);
@@ -501,7 +501,7 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
     }
 
     {
-        GroupPtr group = sched->getGroup("OP");
+        auto* group = sched->getGroup("OP");
         BOOST_CHECK_EQUAL( GroupProduction::ORAT , group->getProductionControlMode(3));
         BOOST_CHECK_CLOSE( 10/Metric::Time , group->getOilTargetRate(3) , 0.001);
         BOOST_CHECK_CLOSE( 20/Metric::Time , group->getWaterTargetRate(3) , 0.001);
@@ -522,8 +522,8 @@ BOOST_AUTO_TEST_CASE( WellTestGroupAndWellRelation ) {
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,3);
     SchedulePtr sched( new Schedule(parseContext , grid , deck));
 
-    GroupPtr group1 = sched->getGroup("GROUP1");
-    GroupPtr group2 = sched->getGroup("GROUP2");
+    auto* group1 = sched->getGroup("GROUP1");
+    auto* group2 = sched->getGroup("GROUP2");
 
     BOOST_CHECK( group1->hasBeenDefined(0) );
     BOOST_CHECK_EQUAL(false , group2->hasBeenDefined(0));
@@ -556,19 +556,19 @@ BOOST_AUTO_TEST_CASE(WellTestWELSPECSDataLoaded) {
     BOOST_CHECK(sched->hasWell("W_2"));
     BOOST_CHECK(sched->hasWell("W_3"));
     {
-        WellConstPtr well1 = sched->getWell("W_1");
+        const auto* well1 = sched->getWell("W_1");
         BOOST_CHECK(!well1->hasBeenDefined(2));
         BOOST_CHECK(well1->hasBeenDefined(3));
         BOOST_CHECK_EQUAL(29, well1->getHeadI());
         BOOST_CHECK_EQUAL(36, well1->getHeadJ());
 
-        WellConstPtr well2 = sched->getWell("W_2");
+        const auto* well2 = sched->getWell("W_2");
         BOOST_CHECK(!well2->hasBeenDefined(2));
         BOOST_CHECK(well2->hasBeenDefined(3));
         BOOST_CHECK_EQUAL(19, well2->getHeadI());
         BOOST_CHECK_EQUAL(50, well2->getHeadJ());
 
-        WellConstPtr well3 = sched->getWell("W_3");
+        const auto* well3 = sched->getWell("W_3");
         BOOST_CHECK(!well3->hasBeenDefined(2));
         BOOST_CHECK(well3->hasBeenDefined(3));
         BOOST_CHECK_EQUAL(30, well3->getHeadI());
@@ -603,7 +603,7 @@ BOOST_AUTO_TEST_CASE(WellTestWELOPENControlsSet) {
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10,10,10 );
     SchedulePtr sched(new Schedule(grid , deck));
 
-    WellConstPtr well1 = sched->getWell("W_1");
+    const auto* well1 = sched->getWell("W_1");
     BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, sched->getWell("W_1")->getStatus(0));
     BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, sched->getWell("W_1")->getStatus(1));
     BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, sched->getWell("W_1")->getStatus(2));
@@ -623,19 +623,19 @@ BOOST_AUTO_TEST_CASE(WellTestWGRUPCONWellPropertiesSet) {
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10,10,10 );
     SchedulePtr sched(new Schedule(parseContext , grid , deck));
 
-    WellConstPtr well1 = sched->getWell("W_1");
+    const auto* well1 = sched->getWell("W_1");
     BOOST_CHECK(well1->isAvailableForGroupControl(0));
     BOOST_CHECK_EQUAL(-1, well1->getGuideRate(0));
     BOOST_CHECK_EQUAL(GuideRate::OIL, well1->getGuideRatePhase(0));
     BOOST_CHECK_EQUAL(1.0, well1->getGuideRateScalingFactor(0));
 
-    WellConstPtr well2 = sched->getWell("W_2");
+    const auto* well2 = sched->getWell("W_2");
     BOOST_CHECK(!well2->isAvailableForGroupControl(0));
     BOOST_CHECK_EQUAL(-1, well2->getGuideRate(0));
     BOOST_CHECK_EQUAL(GuideRate::UNDEFINED, well2->getGuideRatePhase(0));
     BOOST_CHECK_EQUAL(1.0, well2->getGuideRateScalingFactor(0));
 
-    WellConstPtr well3 = sched->getWell("W_3");
+    const auto* well3 = sched->getWell("W_3");
     BOOST_CHECK(well3->isAvailableForGroupControl(0));
     BOOST_CHECK_EQUAL(100, well3->getGuideRate(0));
     BOOST_CHECK_EQUAL(GuideRate::RAT, well3->getGuideRatePhase(0));
@@ -661,7 +661,7 @@ COMPDAT \n\
     DeckPtr deck =  parser->parseString(deckString, parseContext);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 30,30,10 );
     SchedulePtr sched(new Schedule(parseContext , grid , deck));
-    WellConstPtr well = sched->getWell("W1");
+    const auto* well = sched->getWell("W1");
     CompletionSetConstPtr completions = well->getCompletions(0);
     BOOST_CHECK_EQUAL( 10 , completions->get(0)->getI() );
     BOOST_CHECK_EQUAL( 20 , completions->get(0)->getJ() );
@@ -692,9 +692,9 @@ BOOST_AUTO_TEST_CASE(WELLS_SHUT) {
     SchedulePtr sched(new Schedule(parseContext , grid , deck));
 
 
-    WellConstPtr well1 = sched->getWell("W1");
-    WellConstPtr well2 = sched->getWell("W2");
-    WellConstPtr well3 = sched->getWell("W3");
+    const auto* well1 = sched->getWell("W1");
+    const auto* well2 = sched->getWell("W2");
+    const auto* well3 = sched->getWell("W3");
 
     BOOST_CHECK_EQUAL( WellCommon::StatusEnum::OPEN , well1->getStatus(1));
     BOOST_CHECK_EQUAL( WellCommon::StatusEnum::OPEN , well2->getStatus(1));
@@ -720,7 +720,7 @@ BOOST_AUTO_TEST_CASE(WellTestWPOLYMER) {
     BOOST_CHECK(sched->hasWell("INJE01"));
     BOOST_CHECK(sched->hasWell("PROD01"));
 
-    WellConstPtr well1 = sched->getWell("INJE01");
+    const auto* well1 = sched->getWell("INJE01");
     BOOST_CHECK( well1->isInjector(0));
     {
         const WellPolymerProperties& props_well10 = well1->getPolymerProperties(0);
@@ -731,7 +731,7 @@ BOOST_AUTO_TEST_CASE(WellTestWPOLYMER) {
         BOOST_CHECK_CLOSE(0.1*Metric::PolymerDensity, props_well12.m_polymerConcentration, 0.0001);
     }
 
-    WellConstPtr well2 = sched->getWell("INJE02");
+    const auto* well2 = sched->getWell("INJE02");
     BOOST_CHECK( well2->isInjector(0));
     {
         const WellPolymerProperties& props_well20 = well2->getPolymerProperties(0);
@@ -742,7 +742,7 @@ BOOST_AUTO_TEST_CASE(WellTestWPOLYMER) {
         BOOST_CHECK_CLOSE(0.2*Metric::PolymerDensity, props_well22.m_polymerConcentration, 0.0001);
     }
 
-    WellConstPtr well3 = sched->getWell("INJE03");
+    const auto* well3 = sched->getWell("INJE03");
     BOOST_CHECK( well3->isInjector(0));
     {
         const WellPolymerProperties& props_well30 = well3->getPolymerProperties(0);

@@ -30,6 +30,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 
+using namespace Opm;
 
 static Opm::TimeMapPtr createXDaysTimeMap(size_t numDays) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
@@ -55,24 +56,24 @@ BOOST_AUTO_TEST_CASE(AddAndDeleteWell) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
 
     std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>(10,10,10);
-    Opm::WellPtr well(new Opm::Well("WELL1"  , grid , 0, 0, Opm::Value<double>("REF_DEPTH") , Opm::Phase::OIL, timeMap , 0));
-    Opm::WellPtr well2(new Opm::Well("WELL2" , grid , 0, 0, Opm::Value<double>("REF_DEPTH") , Opm::Phase::OIL, timeMap , 0));
+    auto well  = std::make_shared< Well >("WELL1", grid, 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap , 0);
+    auto well2 = std::make_shared< Well >("WELL2", grid, 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap , 0);
 
-    wellSet.addWell( well );
+    wellSet.addWell( well.get() );
     BOOST_CHECK_EQUAL(true , wellSet.hasWell("WELL1"));
     BOOST_CHECK_EQUAL(1U , wellSet.size());
-    BOOST_CHECK_EQUAL( well , wellSet.getWell("WELL1"));
+    BOOST_CHECK_EQUAL( well.get(), wellSet.getWell("WELL1"));
 
 
-    wellSet.addWell( well2 );
+    wellSet.addWell( well2.get() );
     BOOST_CHECK_EQUAL(true , wellSet.hasWell("WELL2"));
     BOOST_CHECK_EQUAL(2U , wellSet.size());
-    BOOST_CHECK_EQUAL( well2 , wellSet.getWell("WELL2"));
+    BOOST_CHECK_EQUAL( well2.get(), wellSet.getWell("WELL2"));
 
     wellSet.delWell("WELL1");
     BOOST_CHECK_EQUAL(false , wellSet.hasWell("WELL1"));
     BOOST_CHECK_EQUAL(1U , wellSet.size());
-    BOOST_CHECK_EQUAL( well2 , wellSet.getWell("WELL2"));
+    BOOST_CHECK_EQUAL( well2.get(), wellSet.getWell("WELL2"));
 }
 
 
@@ -81,14 +82,14 @@ BOOST_AUTO_TEST_CASE(AddWellSameName) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
 
     std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>(10,10,10);
-    Opm::WellPtr well1(new Opm::Well("WELL" , grid , 0, 0,Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap , 0));
-    Opm::WellPtr well2(new Opm::Well("WELL" , grid , 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap , 0));
+    auto well1 = std::make_shared< Well >("WELL", grid, 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0);
+    auto well2 = std::make_shared< Well >("WELL", grid, 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0);
 
-    wellSet.addWell( well1 );
+    wellSet.addWell( well1.get() );
     BOOST_CHECK_EQUAL(true , wellSet.hasWell("WELL"));
 
-    BOOST_CHECK_NO_THROW( wellSet.addWell( well1 ));
-    BOOST_CHECK_THROW( wellSet.addWell( well2 ) , std::invalid_argument );
+    BOOST_CHECK_NO_THROW( wellSet.addWell( well1.get() ));
+    BOOST_CHECK_THROW( wellSet.addWell( well2.get() ) , std::invalid_argument );
 }
 
 BOOST_AUTO_TEST_CASE(Iterator) {
@@ -96,8 +97,8 @@ BOOST_AUTO_TEST_CASE(Iterator) {
     Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
 
     std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>(10,10,10);
-    Opm::WellPtr well1(new Opm::Well("WELL" , grid , 0, 0,Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap , 0));
-    Opm::WellPtr well2(new Opm::Well("WELL" , grid , 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap , 0));
+    auto well1 = std::make_shared< Well >("WELL", grid, 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap , 0);
+    auto well2 = std::make_shared< Well >("WELL", grid, 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap , 0);
 
     for( const auto& well : wellSet )
         BOOST_CHECK( well.second->isProducer( 0 ) );

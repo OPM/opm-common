@@ -155,8 +155,6 @@ namespace Opm {
         // flag indicating if the well is a multi-segment well
         std::shared_ptr<DynamicState<std::shared_ptr< const SegmentSet >>> m_segmentset;
     };
-    typedef std::shared_ptr<Well> WellPtr;
-    typedef std::shared_ptr<const Well> WellConstPtr;
 }
 
 
