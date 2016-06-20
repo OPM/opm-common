@@ -19,9 +19,8 @@
 #ifndef OPM_ECLIPSE_PROPERTIES_HPP
 #define OPM_ECLIPSE_PROPERTIES_HPP
 
-#include <utility>
-#include <memory>
-#include <set>
+#include <vector>
+#include <string>
 
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
@@ -36,13 +35,8 @@ namespace Opm {
     class DeckKeyword;
     class DeckRecord;
     class EclipseGrid;
-    class EclipseState;
-    class InitConfig;
-    class IOConfig;
-    class Schedule;
     class Section;
     class TableManager;
-    class TransMult;
     class UnitSystem;
 
     /// Class representing properties on 3D grid for use in EclipseState.

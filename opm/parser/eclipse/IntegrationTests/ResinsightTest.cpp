@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE( test_state ) {
     parser.addKeyword<ParserKeywords::GRID>();
     auto deck = parser.parseFile("testdata/integration_tests/Resinsight/DECK1.DATA" , parseContext);
 
-    auto grid = std::make_shared<EclipseGrid>( deck );
-    auto gsec = std::make_shared< GRIDSection >( *deck );
-    auto faults = std::make_shared<FaultCollection>( gsec, grid );
+    auto grid = std::make_shared<EclipseGrid>(deck);
+    GRIDSection gsec(*deck);
+    FaultCollection faults(gsec, *grid);
 }
