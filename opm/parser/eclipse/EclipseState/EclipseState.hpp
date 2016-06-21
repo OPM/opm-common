@@ -130,6 +130,8 @@ namespace Opm {
         std::shared_ptr<TransMult> m_transMult;
         FaultCollection m_faults;
         std::string m_title;
+
+        MessageContainer m_messageContainer;
     };
 
     typedef std::shared_ptr<EclipseState> EclipseStatePtr;

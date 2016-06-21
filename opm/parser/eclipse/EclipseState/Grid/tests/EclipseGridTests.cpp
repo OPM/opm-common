@@ -23,22 +23,21 @@
 #include <cstdio>
 
 #define BOOST_TEST_MODULE EclipseGridTests
-
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
-
-#include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
-
-#include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Deck/Section.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
+
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/Parser/Parser.hpp>
 
 
 BOOST_AUTO_TEST_CASE(CreateMissingDIMENS_throws) {
@@ -49,8 +48,6 @@ BOOST_AUTO_TEST_CASE(CreateMissingDIMENS_throws) {
 
     BOOST_CHECK_THROW(new Opm::EclipseGrid( deck ) , std::invalid_argument);
 }
-
-
 
 static Opm::DeckPtr createDeckHeaders() {
     const char *deckData =
@@ -66,6 +63,35 @@ static Opm::DeckPtr createDeckHeaders() {
     return parser->parseString(deckData, Opm::ParseContext());
 }
 
+static Opm::DeckPtr createDeckDIMENS() {
+    const char *deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        " 13 17 19/\n"
+        "GRID\n"
+        "EDIT\n"
+        "\n";
+    Opm::ParserPtr parser(new Opm::Parser());
+    return parser->parseString(deckData, Opm::ParseContext());
+}
+
+static Opm::DeckPtr createDeckSPECGRID() {
+    const char *deckData =
+        "GRID\n"
+        "SPECGRID \n"
+        "  13 17 19 / \n"
+        "COORD\n"
+        "  726*1 / \n"
+        "ZCORN \n"
+        "  8000*1 / \n"
+        "ACTNUM \n"
+        "  1000*1 / \n"
+        "EDIT\n"
+        "\n";
+    Opm::ParserPtr parser(new Opm::Parser());
+    return parser->parseString(deckData, Opm::ParseContext());
+}
 
 static Opm::DeckPtr createDeckMissingDIMS() {
     const char *deckData =
@@ -957,4 +983,21 @@ BOOST_AUTO_TEST_CASE(GridActnumViaState) {
     Opm::EclipseState es(deck, Opm::ParseContext());
     BOOST_CHECK(es.getInputGrid()->hasCellInfo());
     BOOST_CHECK_EQUAL(es.getInputGrid()->getNumActive(), 2 * 2 * 2 - 1);
+}
+
+
+BOOST_AUTO_TEST_CASE(GridDimsSPECGRID) {
+    auto deckptr =  createDeckSPECGRID();
+    auto gd = Opm::GridDims(*deckptr);
+    BOOST_CHECK_EQUAL(gd.getNX(), 13);
+    BOOST_CHECK_EQUAL(gd.getNY(), 17);
+    BOOST_CHECK_EQUAL(gd.getNZ(), 19);
+}
+
+BOOST_AUTO_TEST_CASE(GridDimsDIMENS) {
+    auto deckptr =  createDeckDIMENS();
+    auto gd = Opm::GridDims(*deckptr);
+    BOOST_CHECK_EQUAL(gd.getNX(), 13);
+    BOOST_CHECK_EQUAL(gd.getNY(), 17);
+    BOOST_CHECK_EQUAL(gd.getNZ(), 19);
 }

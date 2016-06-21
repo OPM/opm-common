@@ -55,10 +55,9 @@ namespace Opm {
     {}
 
     EclipseState::EclipseState(const Deck& deck, ParseContext parseContext) :
-        m_messageContainer(  ),
         m_parseContext(      parseContext ),
         m_tables(            deck ),
-        m_gridDims(          deck, m_messageContainer ),
+        m_gridDims(          deck ),
         m_inputGrid(         std::make_shared<EclipseGrid>(deck, nullptr) ),
         m_schedule(          std::make_shared<Schedule>( m_parseContext, m_inputGrid, deck ) ),
         m_eclipseProperties( deck, m_tables, *m_inputGrid ),

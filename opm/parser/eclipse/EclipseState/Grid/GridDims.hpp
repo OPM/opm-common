@@ -26,148 +26,46 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/Deck/Section.hpp>
-
-#include <opm/parser/eclipse/Parser/MessageContainer.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeywords/D.hpp> // DIMENS
-#include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp> // SPECGRID
 
 namespace Opm {
     class GridDims
     {
     public:
 
-        GridDims(std::array<int, 3> xyz) :
-            GridDims(xyz[0], xyz[1], xyz[2])
-        {
-        }
+        GridDims(std::array<int, 3> xyz);
 
-        GridDims(size_t nx, size_t ny, size_t nz) :
-            m_nx(nx), m_ny(ny), m_nz(nz)
-        {
-        }
+        GridDims(size_t nx, size_t ny, size_t nz);
 
-        GridDims(const Deck& deck, MessageContainer messages = MessageContainer())
-        {
-            std::vector<int> xyz;
+        GridDims(const Deck& deck);
 
-            const bool hasRUNSPEC = Section::hasRUNSPEC(deck);
-            const bool hasGRID = Section::hasGRID(deck);
-            if (hasRUNSPEC && hasGRID) {
-                // Equivalent to first constructor.
-                RUNSPECSection runspecSection( deck );
-                if( runspecSection.hasKeyword<ParserKeywords::DIMENS>() ) {
-                    const auto& dimens = runspecSection.getKeyword<ParserKeywords::DIMENS>();
-                    xyz = getDims(dimens);
-                } else {
-                    const std::string msg = "The RUNSPEC section must have the DIMENS keyword with logically Cartesian grid dimensions.";
-                    messages.error(msg);
-                    throw std::invalid_argument(msg);
-                }
-            } else if (hasGRID) {
-                // Look for SPECGRID instead of DIMENS.
-                if (deck.hasKeyword<ParserKeywords::SPECGRID>()) {
-                    const auto& specgrid = deck.getKeyword<ParserKeywords::SPECGRID>();
-                    xyz = getDims(specgrid);
-                } else {
-                    const std::string msg = "With no RUNSPEC section, the GRID section must specify the grid dimensions using the SPECGRID keyword.";
-                    messages.error(msg);
-                    throw std::invalid_argument(msg);
-                }
-            } else {
-                // The deck contains no relevant section, so it is probably a sectionless GRDECL file.
-                // Either SPECGRID or DIMENS is OK.
-                if (deck.hasKeyword("SPECGRID")) {
-                    const auto& specgrid = deck.getKeyword<ParserKeywords::SPECGRID>();
-                    xyz = getDims(specgrid);
-                } else if (deck.hasKeyword<ParserKeywords::DIMENS>()) {
-                    const auto& dimens = deck.getKeyword<ParserKeywords::DIMENS>();
-                    xyz = getDims(dimens);
-                } else {
-                    const std::string msg = "The deck must specify grid dimensions using either DIMENS or SPECGRID.";
-                    messages.error(msg);
-                    throw std::invalid_argument(msg);
-                }
-            }
+        size_t getNX() const;
 
-            if (xyz.size() != 3) {
-                throw std::invalid_argument("The deck must specify grid dimensions using either DIMENS or SPECGRID.");
-            }
+        size_t getNY() const;
+        size_t getNZ() const;
 
-            m_nx = xyz[0];
-            m_ny = xyz[1];
-            m_nz = xyz[2];
-        }
+        const std::array<int, 3> getNXYZ() const;
 
-        size_t getNX() const {
-            return m_nx;
-        }
+        size_t getGlobalIndex(size_t i, size_t j, size_t k) const;
 
-        size_t getNY() const {
-            return m_ny;
-        }
+        const std::array<int, 3> getIJK(size_t globalIndex) const;
 
-        size_t getNZ() const {
-            return m_nz;
-        }
+        size_t getCartesianSize() const;
 
-        std::array<int, 3> getNXYZ() const {
-            return { {int( m_nx ), int( m_ny ), int( m_nz )}};
-        }
+        void assertGlobalIndex(size_t globalIndex) const;
 
-        size_t getGlobalIndex(size_t i, size_t j, size_t k) const {
-            return (i + j * getNX() + k * getNX() * getNY());
-        }
-
-        std::array<int, 3> getIJK(size_t globalIndex) const {
-            std::array<int, 3> r = { { 0, 0, 0 } };
-            int k = globalIndex / (getNX() * getNY());
-            globalIndex -= k * (getNX() * getNY());
-            int j = globalIndex / getNX();
-            globalIndex -= j * getNX();
-            int i = globalIndex;
-            r[0] = i;
-            r[1] = j;
-            r[2] = k;
-            return r;
-        }
-
-        size_t getCartesianSize() const {
-            return m_nx * m_ny * m_nz;
-        }
-
-        void assertGlobalIndex(size_t globalIndex) const {
-            if (globalIndex >= getCartesianSize())
-                throw std::invalid_argument("input index above valid range");
-        }
-
-        void assertIJK(size_t i, size_t j, size_t k) const {
-            if (i >= getNX() || j >= getNY() || k >= getNZ())
-                throw std::invalid_argument("input index above valid range");
-        }
-
+        void assertIJK(size_t i, size_t j, size_t k) const;
 
     protected:
-        GridDims() : m_nx(0), m_ny(0), m_nz(0) {}
+        GridDims();
 
-        const std::array<int, 3> getDims() {
-            return std::array<int, 3> {static_cast<int>(m_nx),
-                                       static_cast<int>(m_ny),
-                                       static_cast<int>(m_nz)};
-        }
-
-        // keyword must be DIMENS or SPECGRID
-        std::vector<int> getDims( const DeckKeyword& keyword ) {
-            const auto& record = keyword.getRecord(0);
-            return std::vector<int> {record.getItem("NX").get< int >(0) ,
-                                     record.getItem("NY").get< int >(0) ,
-                                     record.getItem("NZ").get< int >(0) };
-        }
+        const std::array<int, 3> getDims() const;
 
         size_t m_nx;
         size_t m_ny;
         size_t m_nz;
+
+    private:
+        void init(const DeckKeyword& keyword);
     };
 }
 
