@@ -21,18 +21,12 @@
 #define OPM_ECLIPSE_STATE_HPP
 
 #include <memory>
-#include <set>
-#include <utility>
 #include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/FaultFace.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/Fault.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
-#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -116,8 +110,7 @@ namespace Opm {
         void initTransMult();
         void initFaults(const Deck& deck);
 
-        void setMULTFLT(std::shared_ptr<const Opm::Section> section);
-        void initMULTREGT(const Deck& deck);
+        void setMULTFLT(const Opm::Section& section);
 
         void complainAboutAmbiguousKeyword(const Deck& deck,
                                            const std::string& keywordName);

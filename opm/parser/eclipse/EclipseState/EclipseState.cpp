@@ -76,7 +76,12 @@ namespace Opm {
 
         initTransMult();
         initFaults(deck);
-        initMULTREGT(deck);
+
+        std::vector< const DeckKeyword* > multregtKeywords;
+        if (deck.hasKeyword("MULTREGT"))
+            multregtKeywords = deck.getKeywordList("MULTREGT");
+        m_transMult->createMultregtScanner(m_eclipseProperties, multregtKeywords);
+
 
         m_messageContainer.appendMessages(m_tables.getMessageContainer());
         m_messageContainer.appendMessages(m_schedule->getMessageContainer());
@@ -188,15 +193,13 @@ namespace Opm {
     }
 
     void EclipseState::initFaults(const Deck& deck) {
-        EclipseGridConstPtr grid = getInputGrid();
-        std::shared_ptr<GRIDSection> gridSection = std::make_shared<GRIDSection>( deck );
+        const GRIDSection gridSection ( deck );
 
-        m_faults = FaultCollection(gridSection, grid);
+        m_faults = FaultCollection(gridSection, *m_inputGrid);
         setMULTFLT(gridSection);
 
         if (Section::hasEDIT(deck)) {
-            std::shared_ptr<EDITSection> editSection = std::make_shared<EDITSection>( deck );
-            setMULTFLT(editSection);
+            setMULTFLT(EDITSection ( deck ));
         }
 
         m_transMult->applyMULTFLT( m_faults );
@@ -204,9 +207,9 @@ namespace Opm {
 
 
 
-    void EclipseState::setMULTFLT(std::shared_ptr<const Section> section) {
-        for (size_t index=0; index < section->count("MULTFLT"); index++) {
-            const auto& faultsKeyword = section->getKeyword("MULTFLT" , index);
+    void EclipseState::setMULTFLT(const Section& section) {
+        for (size_t index=0; index < section.count("MULTFLT"); index++) {
+            const auto& faultsKeyword = section.getKeyword("MULTFLT" , index);
             for (auto iter = faultsKeyword.begin(); iter != faultsKeyword.end(); ++iter) {
 
                 const auto& faultRecord = *iter;
@@ -218,26 +221,6 @@ namespace Opm {
         }
     }
 
-
-
-    void EclipseState::initMULTREGT(const Deck& deck) {
-        EclipseGridConstPtr grid = getInputGrid();
-
-        std::vector< const DeckKeyword* > multregtKeywords;
-        if (deck.hasKeyword("MULTREGT"))
-            multregtKeywords = deck.getKeywordList("MULTREGT");
-
-        std::shared_ptr<MULTREGTScanner> scanner =
-            std::make_shared<MULTREGTScanner>(
-                m_eclipseProperties,
-                multregtKeywords ,
-                m_eclipseProperties.getDefaultRegionKeyword());
-
-        m_transMult->setMultregtScanner( scanner );
-    }
-
-
-
     void EclipseState::complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) {
         m_messageContainer.error("The " + keywordName + " keyword must be unique in the deck. Ignoring all!");
         auto keywords = deck.getKeywordList(keywordName);
@@ -247,6 +230,7 @@ namespace Opm {
         }
     }
 
+    /// [deprecated]
     void EclipseState::applyModifierDeck(std::shared_ptr<const Deck> deckptr) {
         applyModifierDeck(*deckptr);
     }
