@@ -119,8 +119,14 @@ BOOST_AUTO_TEST_CASE(HasGridKeywords) {
 
 
 BOOST_AUTO_TEST_CASE(CreateGridNoCells) {
-    Opm::DeckPtr deck = createDeckHeaders();
-    Opm::EclipseGrid grid( deck );
+    Opm::DeckPtr deckptr = createDeckHeaders();
+    const Opm::Deck& deck = *deckptr;
+    {
+        Opm::EclipseGrid* gridptr = nullptr;
+        BOOST_CHECK_THROW( gridptr = new Opm::EclipseGrid( deck ) , std::invalid_argument);
+        delete gridptr;
+    }
+    const Opm::GridDims grid(deck);
     BOOST_CHECK_EQUAL( 10 , grid.getNX());
     BOOST_CHECK_EQUAL( 10 , grid.getNY());
     BOOST_CHECK_EQUAL( 10 , grid.getNZ());
@@ -344,8 +350,6 @@ BOOST_AUTO_TEST_CASE(CREATE_SIMPLE) {
     BOOST_CHECK_EQUAL( grid.getNY() , 20 );
     BOOST_CHECK_EQUAL( grid.getNZ() , 30 );
     BOOST_CHECK_EQUAL( grid.getCartesianSize() , 6000 );
-    BOOST_CHECK_EQUAL( true , grid.hasCellInfo() );
-
 }
 
 BOOST_AUTO_TEST_CASE(DEPTHZ_EQUAL_TOPS) {
@@ -425,9 +429,13 @@ BOOST_AUTO_TEST_CASE(HasINVALIDCartKeywords) {
 
 
 BOOST_AUTO_TEST_CASE(CreateMissingGRID_throws) {
-    Opm::DeckPtr deck = createDeckHeaders();
-    Opm::EclipseGrid grid( deck );
-    BOOST_CHECK_EQUAL( false , grid.hasCellInfo() );
+    auto deckptr = createDeckHeaders();
+    const Opm::Deck& deck = *deckptr;
+    {
+        Opm::EclipseGrid* gridptr = nullptr;
+        BOOST_CHECK_THROW( gridptr = new Opm::EclipseGrid( deck ) , std::invalid_argument);
+        delete gridptr;
+    }
 }
 
 
@@ -456,7 +464,8 @@ static Opm::DeckPtr createInvalidDXYZCARTDeck() {
 
 
 BOOST_AUTO_TEST_CASE(CreateCartesianGRID) {
-    Opm::DeckPtr deck = createInvalidDXYZCARTDeck();
+    auto deckptr = createInvalidDXYZCARTDeck();
+    const Opm::Deck& deck = *deckptr;
     BOOST_CHECK_THROW(new Opm::EclipseGrid( deck ) , std::invalid_argument);
 }
 
@@ -486,9 +495,13 @@ static Opm::DeckPtr createInvalidDXYZCARTDeckDEPTHZ() {
 
 
 BOOST_AUTO_TEST_CASE(CreateCartesianGRIDDEPTHZ) {
-    Opm::DeckPtr deck = createInvalidDXYZCARTDeckDEPTHZ();
-    Opm::EclipseGrid grid( deck );
-    BOOST_CHECK_EQUAL( false , grid.hasCellInfo() );
+    auto deckptr = createInvalidDXYZCARTDeckDEPTHZ();
+    const Opm::Deck& deck = *deckptr;
+    {
+        Opm::EclipseGrid* gridptr = nullptr;
+        BOOST_CHECK_THROW( gridptr = new Opm::EclipseGrid( deck ) , std::invalid_argument);
+        delete gridptr;
+    }
 }
 
 
@@ -539,8 +552,14 @@ static Opm::DeckPtr createInvalidDEPTHZDeck1 () {
 
 
 BOOST_AUTO_TEST_CASE(CreateCartesianGRIDInvalidDEPTHZ1) {
-    Opm::DeckPtr deck = createInvalidDEPTHZDeck1();
-    BOOST_CHECK_THROW(new Opm::EclipseGrid( deck ) , std::invalid_argument);
+    auto deckptr = createInvalidDEPTHZDeck1();
+    const Opm::Deck& deck = *deckptr;
+    {
+        Opm::EclipseGrid* gridptr = nullptr;
+        BOOST_CHECK_THROW( gridptr = new Opm::EclipseGrid( deck ) , std::invalid_argument);
+        delete gridptr;
+    }
+
 }
 
 
@@ -567,20 +586,26 @@ static Opm::DeckPtr createInvalidDEPTHZDeck2 () {
 }
 
 BOOST_AUTO_TEST_CASE(CreateCartesianGRIDInvalidDEPTHZ2) {
-    Opm::DeckPtr deck = createInvalidDEPTHZDeck2();
-    BOOST_CHECK_THROW(new Opm::EclipseGrid( deck ) , std::invalid_argument);
+    auto deckptr = createInvalidDEPTHZDeck2();
+    const Opm::Deck& deck = *deckptr;
+    {
+        Opm::EclipseGrid* gridptr = nullptr;
+        BOOST_CHECK_THROW( gridptr = new Opm::EclipseGrid( deck ) , std::invalid_argument);
+        delete gridptr;
+    }
+
 }
 
 
 
 BOOST_AUTO_TEST_CASE(CreateCartesianGRIDOnlyTopLayerDZ) {
     Opm::DeckPtr deck = createOnlyTopDZCartGrid();
-    std::shared_ptr<Opm::EclipseGrid> grid(new Opm::EclipseGrid( deck ));
+    Opm::EclipseGrid grid( *deck );
 
-    BOOST_CHECK_EQUAL( 10 , grid->getNX( ));
-    BOOST_CHECK_EQUAL(  5 , grid->getNY( ));
-    BOOST_CHECK_EQUAL( 20 , grid->getNZ( ));
-    BOOST_CHECK_EQUAL( 1000 , grid->getNumActive());
+    BOOST_CHECK_EQUAL( 10 , grid.getNX( ));
+    BOOST_CHECK_EQUAL(  5 , grid.getNY( ));
+    BOOST_CHECK_EQUAL( 20 , grid.getNZ( ));
+    BOOST_CHECK_EQUAL( 1000 , grid.getNumActive());
 }
 
 
@@ -968,11 +993,9 @@ BOOST_AUTO_TEST_CASE(GridActnumVia3D) {
 
     BOOST_CHECK_NO_THROW(ep.getIntGridProperty("ACTNUM"));
     BOOST_CHECK_NO_THROW(grid->getNumActive());
-    BOOST_CHECK(grid->hasCellInfo());
     BOOST_CHECK_EQUAL(grid->getNumActive(), 2 * 2 * 2 - 1);
 
     BOOST_CHECK_NO_THROW(grid2.getNumActive());
-    BOOST_CHECK(grid2.hasCellInfo());
     BOOST_CHECK_EQUAL(grid2.getNumActive(), 2 * 2 * 2 - 1);
 }
 
@@ -981,7 +1004,6 @@ BOOST_AUTO_TEST_CASE(GridActnumViaState) {
 
     BOOST_CHECK_NO_THROW(Opm::EclipseState(deck, Opm::ParseContext()));
     Opm::EclipseState es(deck, Opm::ParseContext());
-    BOOST_CHECK(es.getInputGrid()->hasCellInfo());
     BOOST_CHECK_EQUAL(es.getInputGrid()->getNumActive(), 2 * 2 * 2 - 1);
 }
 

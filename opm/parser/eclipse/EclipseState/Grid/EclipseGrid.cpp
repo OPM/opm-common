@@ -55,7 +55,7 @@ namespace Opm {
 	  m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
 	  m_multzMode(PinchMode::ModeEnum::TOP)
     {
-	initCornerPointGrid( dims, coord , zcorn , actnum , mapaxes );
+        initCornerPointGrid( dims, coord , zcorn , actnum , mapaxes );
     }
 
 
@@ -93,17 +93,8 @@ namespace Opm {
           m_pinchoutMode( src.m_pinchoutMode ),
           m_multzMode( src.m_multzMode )
     {
-        if (src.hasCellInfo())
-            m_grid.reset( ecl_grid_alloc_copy( src.c_ptr() ) );
-
+        m_grid.reset( ecl_grid_alloc_copy( src.c_ptr() ) );
     }
-
-    /*
-      This creates a grid which only has dimension, and no pointer to
-      a true grid structure. This grid will answer false to
-      hasCellInfo() - but can be used in all situations where the grid
-      dependency is really only on the dimensions.
-    */
 
     EclipseGrid::EclipseGrid(size_t nx, size_t ny , size_t nz,
                              double dx, double dy, double dz)
@@ -161,7 +152,7 @@ namespace Opm {
           m_multzMode(PinchMode::ModeEnum::TOP)
     {
 
-        const std::array<int, 3> dims = getDims();
+        const std::array<int, 3> dims = getNXYZ();
         initGrid(dims, deck);
 
         if (actnum != nullptr)
@@ -185,6 +176,8 @@ namespace Opm {
             initCornerPointGrid(dims , deck);
         } else if (hasCartesianKeywords(deck)) {
             initCartesianGrid(dims , deck);
+        } else {
+            throw std::invalid_argument("EclipseGrid needs cornerpoint or cartesian keywords.");
         }
 
         if (deck.hasKeyword<ParserKeywords::PINCH>()) {
@@ -225,13 +218,10 @@ namespace Opm {
     }
 
     size_t EclipseGrid::activeIndex(size_t globalIndex) const {
-        assertCellInfo();
-        {
-            int active_index = ecl_grid_get_active_index1( m_grid.get() , globalIndex );
-            if (active_index < 0)
-                throw std::invalid_argument("Input argument does not correspond to an active cell");
-            return static_cast<size_t>( active_index );
-        }
+        int active_index = ecl_grid_get_active_index1( m_grid.get() , globalIndex );
+        if (active_index < 0)
+            throw std::invalid_argument("Input argument does not correspond to an active cell");
+        return static_cast<size_t>( active_index );
     }
 
 
@@ -539,26 +529,7 @@ namespace Opm {
         }
     }
 
-
-    /*
-      This function checks if the grid has a pointer to an underlying
-      ecl_grid_type; which must be used to read cell info as
-      size/depth/active of individual cells.
-    */
-
-    bool EclipseGrid::hasCellInfo() const {
-        return static_cast<bool>( m_grid );
-    }
-
-
-    void EclipseGrid::assertCellInfo() const {
-        if (!hasCellInfo())
-            throw std::invalid_argument("Tried to access cell information in a grid with only dimensions");
-    }
-
-
     const ecl_grid_type * EclipseGrid::c_ptr() const {
-        assertCellInfo();
         return m_grid.get();
     }
 
@@ -578,7 +549,7 @@ namespace Opm {
         if(m_minpvMode!=MinpvMode::ModeEnum::Inactive){
             status = status && (m_minpvValue == other.getMinpvValue());
         }
-        return  status;
+        return status;
     }
 
 
@@ -706,13 +677,11 @@ namespace Opm {
 
 
     void EclipseGrid::resetACTNUM( const int * actnum) {
-        assertCellInfo();
         ecl_grid_reset_actnum( m_grid.get() , actnum );
     }
 
 
     void EclipseGrid::fwriteEGRID( const std::string& filename, bool output_metric ) const {
-        assertCellInfo();
         ecl_grid_fwrite_EGRID( m_grid.get() , filename.c_str(), output_metric );
     }
 

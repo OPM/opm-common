@@ -66,8 +66,7 @@ namespace Opm {
         m_deckUnitSystem(    deck.getActiveUnitSystem() )
 
     {
-        if (m_inputGrid->hasCellInfo())
-            m_inputGrid->resetACTNUM(m_eclipseProperties.getIntGridProperty("ACTNUM").getData().data());
+        m_inputGrid->resetACTNUM(m_eclipseProperties.getIntGridProperty("ACTNUM").getData().data());
 
         if (deck.hasKeyword( "TITLE" )) {
             const auto& titleKeyword = deck.getKeyword( "TITLE" );

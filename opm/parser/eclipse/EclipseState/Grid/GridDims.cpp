@@ -102,10 +102,6 @@ namespace Opm {
     {
     }
 
-    const std::array<int, 3> GridDims::getDims() const {
-        return std::array<int, 3> { int(m_nx), int(m_ny), int(m_nz) };
-    }
-
     // keyword must be DIMENS or SPECGRID
     std::vector<int> readDims(const DeckKeyword& keyword) {
         const auto& record = keyword.getRecord(0);

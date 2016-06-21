@@ -49,25 +49,6 @@ namespace Opm {
          - Size of cells
          - Real world position of cells
          - Active/inactive status of cells
-
-       However in may cases the only required information is the
-       dimension of the grid. To facilitate simpler use, in particular
-       in testing, the grid dimensions are internalized separate from
-       the ecl_grid_type pointer. This means that in many cases a grid
-       without the underlying ecl_grid_type pointer is sufficient. To
-       create such a 'naked' grid you can parse a deck with only
-       DIMENS / SPECGRID and no further grid related keywords, or
-       alternatively use the:
-
-           EclipseGrid::EclipseGrid(nx,ny,nz)
-
-       constructor.
-
-       To query a grid instance if it has proper underlying grid
-       support use the method:
-
-           bool EclipseGrid::hasCellInfo();
-
     */
 
     class EclipseGrid : public GridDims {
@@ -105,7 +86,6 @@ namespace Opm {
         MinpvMode::ModeEnum getMinpvMode() const;
         double getMinpvValue( ) const;
 
-        bool hasCellInfo() const;
         std::array<double, 3> getCellCenter(size_t i,size_t j, size_t k) const;
         std::array<double, 3> getCellCenter(size_t globalIndex) const;
         double getCellVolume(size_t globalIndex) const;
@@ -139,8 +119,6 @@ namespace Opm {
         Value<double> m_pinch;
         PinchMode::ModeEnum m_pinchoutMode;
         PinchMode::ModeEnum m_multzMode;
-
-        void assertCellInfo() const;
 
         void initCornerPointGrid(const std::array<int,3>& dims ,
                                  const std::vector<double>& coord ,

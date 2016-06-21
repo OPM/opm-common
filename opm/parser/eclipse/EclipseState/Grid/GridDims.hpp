@@ -58,8 +58,6 @@ namespace Opm {
     protected:
         GridDims();
 
-        const std::array<int, 3> getDims() const;
-
         size_t m_nx;
         size_t m_ny;
         size_t m_nz;
