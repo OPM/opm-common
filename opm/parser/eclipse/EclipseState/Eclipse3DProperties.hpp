@@ -1,5 +1,5 @@
 /*
-  Copyright 2013 Statoil ASA.
+  Copyright 2016  Statoil ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -22,9 +22,13 @@
 #include <vector>
 #include <string>
 
-#include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckItem.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
-#include <opm/parser/eclipse/Parser/MessageContainer.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
 namespace Opm {
 

@@ -207,7 +207,7 @@ namespace Opm {
 
 
 
-    void EclipseState::setMULTFLT(const Section section) {
+    void EclipseState::setMULTFLT(const Section& section) {
         for (size_t index=0; index < section.count("MULTFLT"); index++) {
             const auto& faultsKeyword = section.getKeyword("MULTFLT" , index);
             for (auto iter = faultsKeyword.begin(); iter != faultsKeyword.end(); ++iter) {

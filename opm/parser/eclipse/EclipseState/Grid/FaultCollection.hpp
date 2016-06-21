@@ -51,9 +51,9 @@ public:
     void setTransMult(const std::string& faultName , double transMult);
 
 private:
-    void initFault(const EclipseGrid& grid,
-                   const DeckRecord&  faultRecord,
-                   const std::string& faultName);
+    void addFaultFaces(const EclipseGrid& grid,
+                       const DeckRecord&  faultRecord,
+                       const std::string& faultName);
     OrderedMap<Fault> m_faults;
 
 };

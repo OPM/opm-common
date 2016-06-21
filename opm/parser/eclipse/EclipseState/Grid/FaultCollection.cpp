@@ -51,15 +51,15 @@ namespace Opm {
                 const auto& faultRecord = *iter;
                 const std::string& faultName = faultRecord.getItem(0).get< std::string >(0);
 
-                initFault(grid, faultRecord, faultName);
+                addFaultFaces(grid, faultRecord, faultName);
             }
         }
     }
 
 
-    void FaultCollection::initFault(const EclipseGrid& grid,
-                                    const DeckRecord& faultRecord,
-                                    const std::string& faultName)
+    void FaultCollection::addFaultFaces(const EclipseGrid& grid,
+                                        const DeckRecord& faultRecord,
+                                        const std::string& faultName)
     {
         int I1 = faultRecord.getItem(1).get<int>(0) - 1;
         int I2 = faultRecord.getItem(2).get<int>(0) - 1;
