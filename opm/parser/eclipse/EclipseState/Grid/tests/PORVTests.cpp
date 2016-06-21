@@ -346,8 +346,7 @@ static Opm::DeckPtr createDeckNakedGRID() {
 BOOST_AUTO_TEST_CASE(NAKED_GRID_THROWS) {
     /* Check that MULTIPLE Boxed PORV and MULTPV statements work and NTG */
     Opm::DeckPtr deck = createDeckNakedGRID();
-    const auto props = getProps(deck);
-    BOOST_CHECK_THROW( props.getDoubleGridProperty("PORV") , std::invalid_argument );
+    BOOST_CHECK_THROW( getProps(deck) , std::invalid_argument );
 }
 
 static Opm::DeckPtr createDeckWithPOROZero() {

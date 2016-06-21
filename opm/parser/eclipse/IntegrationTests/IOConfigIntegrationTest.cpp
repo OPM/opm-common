@@ -53,7 +53,7 @@ void verifyRestartConfig(IOConfigConstPtr ioconfig, std::vector<std::tuple<int ,
 
 
 
-BOOST_AUTO_TEST_CASE( NorneResttartConfig ) {
+BOOST_AUTO_TEST_CASE( NorneRestartConfig ) {
     std::vector<std::tuple<int , bool, boost::gregorian::date> > rptConfig;
     rptConfig.push_back( std::make_tuple(0 , true , boost::gregorian::date( 1997,11,6)) );
     rptConfig.push_back( std::make_tuple(1 , true , boost::gregorian::date( 1997,11,14)) );
