@@ -125,8 +125,6 @@ namespace Opm {
         NNC m_inputNnc;
         UnitSystem m_deckUnitSystem;
 
-        MessageContainer m_messageContainer;
-
         std::shared_ptr<TransMult> m_transMult;
         FaultCollection m_faults;
         std::string m_title;

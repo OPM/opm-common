@@ -44,7 +44,7 @@
 namespace Opm {
 
 
-    EclipseGrid::EclipseGrid(const std::vector<int>& dims , 
+    EclipseGrid::EclipseGrid(std::array<int, 3>& dims ,
 			     const std::vector<double>& coord , 
 			     const std::vector<double>& zcorn , 
 			     const int * actnum, 
@@ -294,43 +294,42 @@ namespace Opm {
     }
 
 
-    void EclipseGrid::initCornerPointGrid(const std::vector<int>& dims , 
-					  const std::vector<double>& coord , 
-					  const std::vector<double>& zcorn , 
-					  const int * actnum, 
-					  const double * mapaxes) 
-    {
-	const std::vector<float> zcorn_float( zcorn.begin() , zcorn.end() );
-	const std::vector<float> coord_float( coord.begin() , coord.end() );
-	float * mapaxes_float = NULL;
-	if (mapaxes) {
-	    mapaxes_float = new float[6];
-	    for (size_t i=0; i < 6; i++)
-		mapaxes_float[i] = mapaxes[i];
-	}
 
-	m_grid.reset( ecl_grid_alloc_GRDECL_data(dims[0] , 
-						 dims[1] , 
-						 dims[2] , 
-						 zcorn_float.data() , 
-						 coord_float.data() , 
-						 actnum , 
-						 mapaxes_float) );
-	
-	if (mapaxes) 
-	    delete[] mapaxes_float;
+    void EclipseGrid::initCornerPointGrid(const std::array<int,3>& dims ,
+                                          const std::vector<double>& coord ,
+                                          const std::vector<double>& zcorn ,
+                                          const int * actnum,
+                                          const double * mapaxes)
+    {
+        const std::vector<float> zcorn_float( zcorn.begin() , zcorn.end() );
+        const std::vector<float> coord_float( coord.begin() , coord.end() );
+        float * mapaxes_float = nullptr;
+        if (mapaxes) {
+            mapaxes_float = new float[6];
+            for (size_t i=0; i < 6; i++)
+                mapaxes_float[i] = mapaxes[i];
+        }
+
+        m_grid.reset( ecl_grid_alloc_GRDECL_data(dims[0] ,
+                                                 dims[1] ,
+                                                 dims[2] ,
+                                                 zcorn_float.data() ,
+                                                 coord_float.data() ,
+                                                 actnum ,
+                                                 mapaxes_float) );
+
+        if (mapaxes)
+            delete[] mapaxes_float;
     }
 
-
-
-    void EclipseGrid::initCornerPointGrid(const std::vector<int>& dims, const Deck& deck) {
+    void EclipseGrid::initCornerPointGrid(const std::array<int,3>& dims, const Deck& deck) {
         assertCornerPointKeywords( dims , deck);
         {
             const auto& ZCORNKeyWord = deck.getKeyword<ParserKeywords::ZCORN>();
             const auto& COORDKeyWord = deck.getKeyword<ParserKeywords::COORD>();
             const std::vector<double>& zcorn = ZCORNKeyWord.getSIDoubleData();
             const std::vector<double>& coord = COORDKeyWord.getSIDoubleData();
-            double    * mapaxes = NULL;
+            double * mapaxes = nullptr;
 
             if (deck.hasKeyword<ParserKeywords::MAPAXES>()) {
                 const auto& mapaxesKeyword = deck.getKeyword<ParserKeywords::MAPAXES>();
@@ -340,10 +339,9 @@ namespace Opm {
                     mapaxes[i] = record.getItem( i ).getSIDouble( 0 );
                 }
             }
-	    initCornerPointGrid( dims, coord , zcorn , nullptr , mapaxes );
-
-	    if (mapaxes) 
-		delete[] mapaxes;
+            initCornerPointGrid( dims, coord , zcorn , nullptr , mapaxes );
+            if (mapaxes)
+                delete[] mapaxes;
         }
     }
 
@@ -357,7 +355,7 @@ namespace Opm {
     }
 
 
-    void EclipseGrid::assertCornerPointKeywords( const std::vector<int>& dims , const Deck& deck)
+    void EclipseGrid::assertCornerPointKeywords(const std::array<int, 3>& dims , const Deck& deck)
     {
         const int nx = dims[0];
         const int ny = dims[1];

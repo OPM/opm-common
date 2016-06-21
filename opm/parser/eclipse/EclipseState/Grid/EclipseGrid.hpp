@@ -74,14 +74,14 @@ namespace Opm {
     public:
         explicit EclipseGrid(const std::string& filename);
         explicit EclipseGrid(const EclipseGrid& srcGrid);
-	explicit EclipseGrid(size_t nx, size_t ny, size_t nz,
-		             double dx = 1.0, double dy = 1.0, double dz = 1.0);
-	
-	EclipseGrid(const std::vector<int>& dims , 
-		    const std::vector<double>& coord , 
-		    const std::vector<double>& zcorn , 
-		    const int * actnum = nullptr,
-		    const double * mapaxes = nullptr);
+        explicit EclipseGrid(size_t nx, size_t ny, size_t nz,
+                             double dx = 1.0, double dy = 1.0, double dz = 1.0);
+
+        EclipseGrid(std::array<int, 3>& dims ,
+                    const std::vector<double>& coord ,
+                    const std::vector<double>& zcorn ,
+                    const int * actnum = nullptr,
+                    const double * mapaxes = nullptr);
 
 
         /// EclipseGrid ignores ACTNUM in Deck, and therefore needs ACTNUM
@@ -141,12 +141,12 @@ namespace Opm {
         PinchMode::ModeEnum m_multzMode;
 
         void assertCellInfo() const;
-	
-	void initCornerPointGrid(const std::vector<int>& dims , 
-				 const std::vector<double>& coord , 
-				 const std::vector<double>& zcorn , 
-				 const int * actnum,
-				 const double * mapaxes);
+
+        void initCornerPointGrid(const std::array<int,3>& dims ,
+                                 const std::vector<double>& coord ,
+                                 const std::vector<double>& zcorn ,
+                                 const int * actnum,
+                                 const double * mapaxes);
 
         void initCartesianGrid(         const std::array<int, 3>&, const Deck&);
         void initCornerPointGrid(       const std::array<int, 3>&, const Deck&);
@@ -155,7 +155,6 @@ namespace Opm {
         void initGrid(                  const std::array<int, 3>&, const Deck&);
         void assertCornerPointKeywords( const std::array<int, 3>&, const Deck&);
 
-        void assertCornerPointKeywords(const std::vector<int>& dims, const Deck&);
         static bool hasDVDEPTHZKeywords(const Deck&);
         static bool hasDTOPSKeywords(   const Deck&);
         static void assertVectorSize(   const std::vector<double>& vector, size_t expectedSize, const std::string& msg);
