@@ -5,7 +5,7 @@
        {"name" : "MAX_WATER_CUT", "value_type" : "DOUBLE",   "default" : 0.0},
        {"name" : "MAX_GAS_OIL_RATIO", "value_type" :  "DOUBLE",   "default" : 0.0},
        {"name" : "MAX_WATER_GAS_RATIO", "value_type" :  "DOUBLE",  "default" : 0.0},
-       {"name" : "WORKOVER_RATIO_LIMIT", "value_type" : "STRING", "default" : "NONE},
+       {"name" : "WORKOVER_RATIO_LIMIT", "value_type" : "STRING", "default" : "NONE"},
        {"name" : "END_RUN_FLAG", "value_type" : "STRING", "default" : "NO"},
        {"name" : "FOLLOW_ON_WELL", "value_type" : "STRING", "default" : "'"},
        {"name" : "LIMITED_QUANTITY", "value_type" : "STRING", "default" : "RATE"},
