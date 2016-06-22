@@ -272,6 +272,30 @@ namespace Opm {
     }
 
 
+    namespace WellEcon {
+        enum WorkoverEnum {
+            NONE = 0,
+            CON  = 1, // CON
+            CONP = 2, // +CON
+            WELL = 3,
+            PLUG = 4,
+            // the following two only related to workover action
+            // on exceeding secondary water cut limit
+            LAST = 5,
+            RED  = 6
+        };
+        const std::string WorkoverEnumToString(WorkoverEnum enumValue);
+        WorkoverEnum WorkoverEnumFromString(const std::string& stringValue);
+
+        enum QuantityLimitEnum {
+            RATE = 0,
+            POTN = 1
+        };
+        const std::string QuantityLimitEnumToString(QuantityLimitEnum enumValue);
+        QuantityLimitEnum QuantityLimitEnumFromString(const std::string& stringValue);
+    }
+
+
 }
 
 #endif

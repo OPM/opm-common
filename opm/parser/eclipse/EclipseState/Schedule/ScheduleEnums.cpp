@@ -684,4 +684,78 @@ namespace Opm {
     }
 
 
+
+    namespace WellEcon {
+        const std::string WorkoverEnumToString(WorkoverEnum enumValue) {
+            switch(enumValue) {
+                case NONE:
+                    return "NONE";
+                case CON:
+                    return "CON";
+                case CONP:
+                    return "+CON";
+                case WELL:
+                    return "WELL";
+                case PLUG:
+                    return "PLUG";
+                case LAST:
+                    return "LAST";
+                case RED:
+                    return "RED";
+                default:
+                    throw std::invalid_argument("unhandled WorkoverEnum value");
+            }
+        }
+
+        WorkoverEnum WorkoverEnumFromString(const std::string& stringValue) {
+            std::string trimmedString(stringValue);
+            boost::algorithm::trim(trimmedString);
+
+            if (trimmedString == "NONE") {
+                return NONE;
+            } else if (trimmedString == "CON") {
+                return CON;
+            } else if (trimmedString == "+CON") {
+                return CONP;
+            } else if (trimmedString == "WELL") {
+                return WELL;
+            } else if (trimmedString == "PLUG") {
+                return PLUG;
+            } else if (trimmedString == "LAST") {
+                return LAST;
+            } else if (trimmedString == "RED") {
+                return RED;
+            } else {
+                throw std::invalid_argument("Unknown enum string: " + trimmedString + " for WorkoverEnum");
+            }
+        }
+
+        const std::string QuantityLimitEnumToString(QuantityLimitEnum enumValue) {
+            switch(enumValue) {
+                case RATE:
+                    return "RATE";
+                case POTN:
+                    return "POTN";
+                default:
+                    throw std::invalid_argument("unhandled QuantityLimitvalue");
+            }
+        }
+
+        QuantityLimitEnum QuantityLimitEnumFromString(const std::string& stringValue) {
+            std::string trimmedString(stringValue);
+            boost::algorithm::trim(trimmedString);
+
+            if (trimmedString == "RATE") {
+                return RATE;
+            } else if (trimmedString == "POTN") {
+                return POTN;
+            } else {
+                throw std::invalid_argument("Unknown enum string: " + trimmedString + " for QuantityLimitEnum");
+            }
+        }
+
+
+    }
+
+
 }
