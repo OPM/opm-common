@@ -21,23 +21,21 @@
 
 #include <cstddef>
 #include <string>
-#include <memory>
 
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Fault.hpp>
 
-
 namespace Opm {
 
     class DeckRecord;
-    class EclipseGrid;
+    class GridDims;
     class GRIDSection;
 
 
 class FaultCollection {
 public:
     FaultCollection();
-    FaultCollection(const GRIDSection& gridSection, const EclipseGrid& grid);
+    FaultCollection(const GRIDSection& gridSection, const GridDims& grid);
 
     size_t size() const;
     bool hasFault(const std::string& faultName) const;
@@ -51,7 +49,7 @@ public:
     void setTransMult(const std::string& faultName , double transMult);
 
 private:
-    void addFaultFaces(const EclipseGrid& grid,
+    void addFaultFaces(const GridDims& grid,
                        const DeckRecord&  faultRecord,
                        const std::string& faultName);
     OrderedMap<Fault> m_faults;

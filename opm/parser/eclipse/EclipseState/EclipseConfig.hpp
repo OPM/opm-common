@@ -27,6 +27,7 @@
 namespace Opm {
 
     class Deck;
+    class GridDims;
     class Eclipse3DProperties;
     class IOConfig;
     class InitConfig;
@@ -38,7 +39,7 @@ namespace Opm {
     public:
         EclipseConfig(const Deck& deck,
                       const Eclipse3DProperties& eclipse3DProperties,
-                      std::shared_ptr< EclipseGrid > inputGrid,
+                      const GridDims& gridDims,
                       const Schedule& schedule);
 
         std::shared_ptr< const IOConfig > getIOConfigConst() const;

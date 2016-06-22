@@ -28,7 +28,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultFace.hpp>
@@ -42,7 +42,7 @@ namespace Opm {
     {}
 
     FaultCollection::FaultCollection(const GRIDSection& gridSection,
-                                     const EclipseGrid& grid) {
+                                     const GridDims& grid) {
         const auto& faultKeywords = gridSection.getKeywordList<ParserKeywords::FAULTS>();
 
         for (auto keyword_iter = faultKeywords.begin(); keyword_iter != faultKeywords.end(); ++keyword_iter) {
@@ -57,7 +57,7 @@ namespace Opm {
     }
 
 
-    void FaultCollection::addFaultFaces(const EclipseGrid& grid,
+    void FaultCollection::addFaultFaces(const GridDims& grid,
                                         const DeckRecord& faultRecord,
                                         const std::string& faultName)
     {

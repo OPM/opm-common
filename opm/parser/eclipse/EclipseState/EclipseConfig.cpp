@@ -23,7 +23,7 @@
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -34,12 +34,12 @@ namespace Opm {
 
     EclipseConfig::EclipseConfig(const Deck& deck,
                                  const Eclipse3DProperties& eclipse3DProperties,
-                                 std::shared_ptr< EclipseGrid > inputGrid,
+                                 const GridDims& inputGrid,
                                  const Schedule& schedule) :
             m_ioConfig(        std::make_shared<IOConfig>(deck)),
             m_initConfig(      std::make_shared<const InitConfig>(deck)),
             m_simulationConfig(std::make_shared<const SimulationConfig>(deck, eclipse3DProperties)),
-            m_summaryConfig(   deck, schedule, eclipse3DProperties, inputGrid->getNXYZ())
+            m_summaryConfig(   deck, schedule, eclipse3DProperties, inputGrid.getNXYZ())
     {
         // Hmmm - would have thought this should iterate through the SCHEDULE section as well?
         if (Section::hasSOLUTION(deck)) {

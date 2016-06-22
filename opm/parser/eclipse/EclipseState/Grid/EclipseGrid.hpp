@@ -18,13 +18,15 @@
 */
 
 
-#ifndef ECLIPSE_GRID_HPP_
-#define ECLIPSE_GRID_HPP_
+#ifndef OPM_PARSER_ECLIPSE_GRID_HPP
+#define OPM_PARSER_ECLIPSE_GRID_HPP
 
 
 #include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/MinpvMode.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/PinchMode.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
+
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 
 #include <ert/ecl/ecl_grid.h>
@@ -47,55 +49,35 @@ namespace Opm {
          - Size of cells
          - Real world position of cells
          - Active/inactive status of cells
-
-       However in may cases the only required information is the
-       dimension of the grid. To facilitate simpler use, in particular
-       in testing, the grid dimensions are internalized separate from
-       the ecl_grid_type pointer. This means that in many cases a grid
-       without the underlying ecl_grid_type pointer is sufficient. To
-       create such a 'naked' grid you can parse a deck with only
-       DIMENS / SPECGRID and no further grid related keywords, or
-       alternatively use the:
-
-           EclipseGrid::EclipseGrid(nx,ny,nz)
-
-       constructor.
-
-       To query a grid instance if it has proper underlying grid
-       support use the method:
-
-           bool EclipseGrid::hasCellInfo();
-
     */
 
-    class EclipseGrid {
+    class EclipseGrid : public GridDims {
     public:
         explicit EclipseGrid(const std::string& filename);
         explicit EclipseGrid(const EclipseGrid& srcGrid);
-	EclipseGrid(size_t nx, size_t ny, size_t nz,
-		    double dx = 1.0, double dy = 1.0, double dz = 1.0);
-	
-	EclipseGrid(const std::vector<int>& dims , 
-		    const std::vector<double>& coord , 
-		    const std::vector<double>& zcorn , 
-		    const int * actnum = nullptr,
-		    const double * mapaxes = nullptr);
+        explicit EclipseGrid(size_t nx, size_t ny, size_t nz,
+                             double dx = 1.0, double dy = 1.0, double dz = 1.0);
+
+        EclipseGrid(std::array<int, 3>& dims ,
+                    const std::vector<double>& coord ,
+                    const std::vector<double>& zcorn ,
+                    const int * actnum = nullptr,
+                    const double * mapaxes = nullptr);
 
 
         /// EclipseGrid ignores ACTNUM in Deck, and therefore needs ACTNUM
         /// explicitly.  If a null pointer is passed, every cell is active.
-	EclipseGrid(const Deck& deck, const int * actnum = nullptr);
+        explicit EclipseGrid(const Deck& deck, const int * actnum = nullptr);
         /// [deprecated]
-	EclipseGrid(const std::shared_ptr<const Deck>& deck, const int * actnum = nullptr);
+        explicit EclipseGrid(const std::shared_ptr<const Deck>& deck, const int * actnum = nullptr);
 
         static bool hasCornerPointKeywords(const Deck&);
         static bool hasCartesianKeywords(const Deck&);
         size_t  getNumActive( ) const;
-        size_t  getNX( ) const;
-        size_t  getNY( ) const;
-        size_t  getNZ( ) const;
-        std::array< int, 3 > getNXYZ() const;
-        size_t  getCartesianSize( ) const;
+
+        size_t activeIndex(size_t i, size_t j, size_t k) const;
+        size_t activeIndex(size_t globalIndex) const;
+
         bool isPinchActive( ) const;
         double getPinchThresholdThickness( ) const;
         PinchMode::ModeEnum getPinchOption( ) const;
@@ -104,22 +86,6 @@ namespace Opm {
         MinpvMode::ModeEnum getMinpvMode() const;
         double getMinpvValue( ) const;
 
-        bool hasCellInfo() const;
-
-        /// The activeIndex methods will return from (i,j,k) or g,
-        /// where g \in [0,nx*n*nz) to the corresponding active index
-        /// in the range [0,numActive). Observe that if the input
-        /// argument corresponds to a cell which is not active an
-        /// exception will be raised - check with cellActive() first
-        /// if that is a possibillity.
-        size_t activeIndex(size_t i, size_t j, size_t k) const;
-        size_t activeIndex(size_t globalIndex) const;
-
-
-        size_t getGlobalIndex(size_t i, size_t j, size_t k) const;
-        std::array<int, 3> getIJK(size_t globalIndex) const;
-        void assertGlobalIndex(size_t globalIndex) const;
-        void assertIJK(size_t i , size_t j , size_t k) const;
         std::array<double, 3> getCellCenter(size_t i,size_t j, size_t k) const;
         std::array<double, 3> getCellCenter(size_t globalIndex) const;
         double getCellVolume(size_t globalIndex) const;
@@ -145,39 +111,36 @@ namespace Opm {
         const MessageContainer& getMessageContainer() const;
         MessageContainer& getMessageContainer();
     private:
+        MessageContainer m_messages;
+
         ERT::ert_unique_ptr<ecl_grid_type , ecl_grid_free> m_grid;
         double m_minpvValue;
         MinpvMode::ModeEnum m_minpvMode;
         Value<double> m_pinch;
         PinchMode::ModeEnum m_pinchoutMode;
         PinchMode::ModeEnum m_multzMode;
-        size_t m_nx;
-        size_t m_ny;
-        size_t m_nz;
-        MessageContainer m_messages;
 
-        void assertCellInfo() const;
-	
-	void initCornerPointGrid(const std::vector<int>& dims , 
-				 const std::vector<double>& coord , 
-				 const std::vector<double>& zcorn , 
-				 const int * actnum,
-				 const double * mapaxes);
-        void initCartesianGrid(const std::vector<int>& dims, const Deck&);
-        void initCornerPointGrid(const std::vector<int>& dims, const Deck&);
-        void initDTOPSGrid(const std::vector<int>& dims, const Deck&);
-        void initDVDEPTHZGrid(const std::vector<int>& dims, const Deck& deck);
-        void initGrid(const std::vector<int>& dims, const Deck&);
+        void initCornerPointGrid(const std::array<int,3>& dims ,
+                                 const std::vector<double>& coord ,
+                                 const std::vector<double>& zcorn ,
+                                 const int * actnum,
+                                 const double * mapaxes);
 
-        void assertCornerPointKeywords(const std::vector<int>& dims, const Deck&);
+        void initCartesianGrid(         const std::array<int, 3>&, const Deck&);
+        void initCornerPointGrid(       const std::array<int, 3>&, const Deck&);
+        void initDTOPSGrid(             const std::array<int, 3>&, const Deck&);
+        void initDVDEPTHZGrid(          const std::array<int, 3>&, const Deck&);
+        void initGrid(                  const std::array<int, 3>&, const Deck&);
+        void assertCornerPointKeywords( const std::array<int, 3>&, const Deck&);
+
         static bool hasDVDEPTHZKeywords(const Deck&);
-        static bool hasDTOPSKeywords(const Deck&);
-        static void assertVectorSize(const std::vector<double>& vector, size_t expectedSize, const std::string& msg);
-        static std::vector<double> createTOPSVector(const std::vector<int>& dims, const std::vector<double>& DZ,
+        static bool hasDTOPSKeywords(   const Deck&);
+        static void assertVectorSize(   const std::vector<double>& vector, size_t expectedSize, const std::string& msg);
+        static std::vector<double> createTOPSVector(const std::array<int, 3>& dims, const std::vector<double>& DZ,
                 const Deck&);
-        static std::vector<double> createDVector(const std::vector<int>& dims, size_t dim, const std::string& DKey,
+        static std::vector<double> createDVector(const std::array<int, 3>& dims, size_t dim, const std::string& DKey,
                 const std::string& DVKey, const Deck&);
-        static void scatterDim(const std::vector<int>& dims , size_t dim , const std::vector<double>& DV , std::vector<double>& D);
+        static void scatterDim(const std::array<int, 3>& dims , size_t dim , const std::vector<double>& DV , std::vector<double>& D);
    };
 
     typedef std::shared_ptr<EclipseGrid> EclipseGridPtr;
@@ -187,4 +150,4 @@ namespace Opm {
 
 
 
-#endif
+#endif // OPM_PARSER_ECLIPSE_GRID_HPP

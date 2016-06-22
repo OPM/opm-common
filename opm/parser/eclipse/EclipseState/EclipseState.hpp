@@ -117,6 +117,7 @@ namespace Opm {
 
         ParseContext m_parseContext;
         const TableManager m_tables;
+        const GridDims m_gridDims;
         std::shared_ptr<EclipseGrid> m_inputGrid;
         std::shared_ptr< const Schedule > m_schedule;
         Eclipse3DProperties m_eclipseProperties;
@@ -124,11 +125,11 @@ namespace Opm {
         NNC m_inputNnc;
         UnitSystem m_deckUnitSystem;
 
-        MessageContainer m_messageContainer;
-
         std::shared_ptr<TransMult> m_transMult;
         FaultCollection m_faults;
         std::string m_title;
+
+        MessageContainer m_messageContainer;
     };
 
     typedef std::shared_ptr<EclipseState> EclipseStatePtr;
