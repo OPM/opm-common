@@ -145,6 +145,18 @@ find_library (ERT_LIBRARY_UTIL
   DOC "Path to ERT Utilities library archive/shared object files"
   ${_no_default_path}
   )
+find_library (ERT_LIBRARY_UTILXX
+  NAMES "ert_utilxx"
+  HINTS "${ERT_ROOT}"
+  PATHS "${PROJECT_BINARY_DIR}/../ert"
+        "${PROJECT_SOURCE_DIR}/../ert/build"
+        "${PROJECT_SOURCE_DIR}/../ert/devel/build"
+        "${PROJECT_BINARY_DIR}/../ert-build"
+        "${PROJECT_BINARY_DIR}/../ert/devel"
+  PATH_SUFFIXES "lib" "lib/Release" "lib/Debug" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}"
+  DOC "Path to ERT Utilities library archive/shared object files"
+  ${_no_default_path}
+  )
 # the "library" found here is actually a list of several files
 list (APPEND ERT_INCLUDE_DIR
   ${ERT_ECL_INCLUDE_DIR}
@@ -160,6 +172,7 @@ list (APPEND ERT_LIBRARY
   ${ERT_LIBRARY_ECL_WELL}
   ${ERT_LIBRARY_GEOMETRY}
   ${ERT_LIBRARY_UTIL}
+  ${ERT_LIBRARY_UTILXX} 
   )
 list (APPEND ERT_LIBRARIES ${ERT_LIBRARY})
 list (APPEND ERT_INCLUDE_DIRS ${ERT_INCLUDE_DIR})
