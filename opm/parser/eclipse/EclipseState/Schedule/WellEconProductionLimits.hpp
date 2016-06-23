@@ -103,6 +103,10 @@ namespace Opm {
 
         double minReservoirFluidRate() const { return m_min_reservoir_fluid_rate; };
 
+        bool operator==(const WellEconProductionLimits& other) const;
+
+        bool operator!=(const WellEconProductionLimits& other) const;
+
     private:
         double m_min_oil_rate;
         double m_min_gas_rate;

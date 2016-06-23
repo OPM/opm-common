@@ -69,4 +69,33 @@ namespace Opm {
         }
     }
 
+
+    bool WellEconProductionLimits::operator==(const WellEconProductionLimits& other) const {
+        if ((minOilRate() == other.minOilRate()) &&
+            (minGasRate() == other.minGasRate()) &&
+            (maxWaterCut() == other.maxWaterCut()) &&
+            (maxGasOilRatio() == other.maxGasOilRatio()) &&
+            (maxWaterGasRatio() == other.maxWaterGasRatio()) &&
+            (workover() == other.workover()) &&
+            (followonWell() == other.followonWell()) &&
+            (quantityLimit() == other.quantityLimit()) &&
+            (maxSecondaryMaxWaterCut() == other.maxSecondaryMaxWaterCut()) &&
+            (workoverSecondary() == other.workoverSecondary()) &&
+            (maxGasLiquidRatio() == other.maxGasLiquidRatio()) &&
+            (minLiquidRate() == other.minLiquidRate()) &&
+            (maxTemperature() == other.maxTemperature()) &&
+            minReservoirFluidRate() == other.minReservoirFluidRate())
+        {
+
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+
+    bool WellEconProductionLimits::operator!=(const WellEconProductionLimits& other) const {
+        return !((*this == other));
+    }
+
 } // namespace Opm
