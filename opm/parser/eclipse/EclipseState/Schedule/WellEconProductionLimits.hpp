@@ -31,6 +31,7 @@ namespace Opm {
     class WellEconProductionLimits{
     public:
         WellEconProductionLimits(const DeckRecord& record);
+        WellEconProductionLimits();
 
         // limit switch on?
         bool onMinOilRate() const {
@@ -74,6 +75,18 @@ namespace Opm {
         bool validFollowonWell() const {
             return (m_followon_well != "'");
         };
+
+        bool requireWorkover() const {
+            return (m_workover != WellEcon::NONE);
+        };
+
+        bool requireSecondaryWorkover() const {
+            return (m_workover_secondary != WellEcon::NONE);
+        }
+
+        bool endRun() const {
+            return m_end_run;
+        }
 
         double minOilRate() const { return m_min_oil_rate; };
 
