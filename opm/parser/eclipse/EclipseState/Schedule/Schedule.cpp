@@ -230,6 +230,10 @@ namespace Opm {
             if (keyword.name() == "VAPPARS")
                 handleVAPPARS(keyword, currentStep);
 
+            if (keyword.name() == "WECON") {
+                handleWECON(keyword, currentStep);
+            }
+
 
             if (geoModifiers.find( keyword.name() ) != geoModifiers.end()) {
                 bool supported = geoModifiers.at( keyword.name() );
@@ -653,6 +657,20 @@ namespace Opm {
             }
         }
     }
+
+
+
+    void Schedule::handleWECON( const DeckKeyword& keyword, size_t currentStep) {
+        for( const auto& record : keyword ) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            WellEconProductionLimits econ_production_limits(record);
+
+            for( auto* well : getWells( wellNamePattern ) ) {
+                well->setEconProductionLimits(currentStep, econ_production_limits);
+            }
+        }
+    }
+
 
     void Schedule::handleWSOLVENT( const DeckKeyword& keyword, size_t currentStep) {
 

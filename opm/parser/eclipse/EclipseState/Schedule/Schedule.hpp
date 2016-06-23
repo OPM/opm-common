@@ -142,6 +142,7 @@ namespace Opm
         void handleDRSDT( const DeckKeyword& keyword, size_t currentStep);
         void handleDRVDT( const DeckKeyword& keyword, size_t currentStep);
         void handleVAPPARS( const DeckKeyword& keyword, size_t currentStep);
+        void handleWECON( const DeckKeyword& keyword, size_t currentStep);
 
         void checkUnhandledKeywords( const SCHEDULESection& ) const;
 
