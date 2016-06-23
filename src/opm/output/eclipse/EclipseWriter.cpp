@@ -152,6 +152,8 @@ private:
     fd filename;
 };
 
+
+
 class Restart {
 public:
     static const int NIWELZ = 11; //Number of data elements per well in IWEL array in restart file
@@ -174,7 +176,7 @@ public:
      * Observe that all of these values are our "current-best-guess" for how
      * many numbers are needed; there might very well be third party
      * applications out there which have a hard expectation for these values.
-    */
+     */
 
 
     Restart(const std::string& outputDir,
@@ -443,7 +445,7 @@ EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
 {}
 
 
-void EclipseWriter::writeINITFile(const std::vector<data::CellData>& simProps) const {
+void EclipseWriter::writeINITFile(const std::vector<data::CellData>& simProps, const NNC& nnc) const {
     const auto& gridToEclipseIdx = this->impl->gridToEclipseIdx;
     const auto& es = *this->impl->es;
     const auto& units = es.getUnits();
@@ -519,7 +521,7 @@ void EclipseWriter::writeINITFile(const std::vector<data::CellData>& simProps) c
 }
 
 
-void EclipseWriter::writeEGRIDFile( ) const {
+void EclipseWriter::writeEGRIDFile( const NNC& nnc ) const {
     const auto& es = *this->impl->es;
     const auto& ioConfig = es.getIOConfig();
 
@@ -530,11 +532,19 @@ void EclipseWriter::writeEGRIDFile( ) const {
 
     const EclipseGrid& grid = this->impl->grid;
     const bool is_metric = es.getDeckUnitSystem().getType() == UnitSystem::UNIT_TYPE_METRIC;
+
+    {
+        int idx = 0;
+        auto* ecl_grid = const_cast< ecl_grid_type* >( grid.c_ptr() );
+        for (const NNCdata& n : nnc.nncdata())
+            ecl_grid_add_self_nnc( ecl_grid, n.cell1, n.cell2, idx++);
+    }
+
     grid.fwriteEGRID( egridFile.get()  , is_metric );
 }
 
 
-void EclipseWriter::writeInit(const std::vector<data::CellData>& simProps) {
+void EclipseWriter::writeInit(const std::vector<data::CellData>& simProps, const NNC& nnc) {
     if( !this->impl->output_enabled )
         return;
 
@@ -543,10 +553,10 @@ void EclipseWriter::writeInit(const std::vector<data::CellData>& simProps) {
         IOConfigConstPtr ioConfig = es.getIOConfigConst();
 
         if( ioConfig->getWriteINITFile() )
-            writeINITFile( simProps );
+            writeINITFile( simProps , nnc );
 
-        if( ioConfig->getWriteEGRIDFile() )
-            writeEGRIDFile( );
+        if( ioConfig->getWriteEGRIDFile( ) )
+            writeEGRIDFile( nnc );
     }
 }
 
@@ -746,16 +756,6 @@ EclipseWriter::EclipseWriter( std::shared_ptr< const EclipseState > es,
     }
 
     grid.resetACTNUM( &actnumData[0] );
-
-    if( nnc.hasNNC() ) {
-        int idx = 0;
-        // const_cast is safe, since this is a copy of the input grid
-        auto* ecl_grid = const_cast< ecl_grid_type* >( grid.c_ptr() );
-        for( NNCdata n : nnc.nncdata() ) {
-            ecl_grid_add_self_nnc( ecl_grid, n.cell1, n.cell2, idx++);
-        }
-    }
-
     if( !this->impl->output_enabled ) return;
 
     const auto& outputDir = this->impl->outputDir;

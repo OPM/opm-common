@@ -57,7 +57,7 @@ public:
      *
      * If NNC is given to the constructor, writes TRANNNC keyword.
      */
-    void writeInit(const std::vector<data::CellData>& simProps = {});
+    void writeInit(const std::vector<data::CellData>& simProps = {}, const NNC& nnc = NNC());
 
     /*!
      * \brief Write a reservoir state and summary information to disk.
@@ -80,8 +80,8 @@ public:
     ~EclipseWriter();
 
 private:
-    void writeINITFile(const std::vector<data::CellData>& simProps) const;
-    void writeEGRIDFile( ) const;
+    void writeINITFile(const std::vector<data::CellData>& simProps, const NNC& nnc) const;
+    void writeEGRIDFile( const NNC& nnc) const;
 
     class Impl;
     std::unique_ptr< Impl > impl;
