@@ -14,4 +14,4 @@
        {"name" : "MAX_GAS_LIQUID_RATIO", "value_type" : "DOUBLE", "default" : 0.0},
        {"name" : "MIN_LIQUID_PRODCUTION_RATE", "value_type" : "DOUBLE", "default" : 0.0},
        {"name" : "MAX_TEMP", "value_type" : "DOUBLE", "dimension" : "Temperature"},
-       {"name" : "MIN_RES_FLUID_RATE", "value_type" : "DOUBLE", "dimension" : "ReservoirVolume/Time"}]}
+       {"name" : "MIN_RES_FLUID_RATE", "value_type" : "DOUBLE", "dimension" : "ReservoirVolume/Time", "default" : 0.0}]}
