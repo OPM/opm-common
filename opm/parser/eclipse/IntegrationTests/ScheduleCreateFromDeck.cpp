@@ -755,6 +755,103 @@ BOOST_AUTO_TEST_CASE(WellTestWPOLYMER) {
 }
 
 
+BOOST_AUTO_TEST_CASE(WellTestWECON) {
+    ParseContext parseContext;
+    ParserPtr parser(new Parser());
+    std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WECON");
+    DeckPtr deck =  parser->parseFile(scheduleFile, parseContext);
+    std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 30,30,30);
+    SchedulePtr sched(new Schedule(parseContext , grid , deck));
+
+    BOOST_CHECK_EQUAL(3U, sched->numWells());
+    BOOST_CHECK(sched->hasWell("INJE01"));
+    BOOST_CHECK(sched->hasWell("PROD01"));
+    BOOST_CHECK(sched->hasWell("PROD02"));
+
+    const auto* prod1 = sched->getWell("PROD01");
+    {
+        const WellEconProductionLimits& econ_limit1 = prod1->getEconProductionLimits(0);
+        BOOST_CHECK(econ_limit1.onMinOilRate());
+        BOOST_CHECK(econ_limit1.onMaxWaterCut());
+        BOOST_CHECK(!(econ_limit1.onMinGasRate()));
+        BOOST_CHECK(!(econ_limit1.onMaxGasOilRatio()));
+        BOOST_CHECK_EQUAL(econ_limit1.maxWaterCut(), 0.95);
+        BOOST_CHECK_EQUAL(econ_limit1.minOilRate(), 50.0/86400.);
+        BOOST_CHECK_EQUAL(econ_limit1.minGasRate(), 0.0);
+        BOOST_CHECK_EQUAL(econ_limit1.maxGasOilRatio(), 0.0);
+        BOOST_CHECK_EQUAL(econ_limit1.endRun(), false);
+        BOOST_CHECK_EQUAL(econ_limit1.followonWell(), "'");
+        BOOST_CHECK_EQUAL(econ_limit1.quantityLimit(), WellEcon::RATE);
+        BOOST_CHECK_EQUAL(econ_limit1.workover(), WellEcon::CON);
+        BOOST_CHECK_EQUAL(econ_limit1.workoverSecondary(), WellEcon::CON);
+        BOOST_CHECK(econ_limit1.requireWorkover());
+        BOOST_CHECK(econ_limit1.requireSecondaryWorkover());
+        BOOST_CHECK(!(econ_limit1.validFollowonWell()));
+        BOOST_CHECK(!(econ_limit1.endRun()));
+
+        const WellEconProductionLimits& econ_limit2 = prod1->getEconProductionLimits(1);
+        BOOST_CHECK(!(econ_limit2.onMinOilRate()));
+        BOOST_CHECK(econ_limit2.onMaxWaterCut());
+        BOOST_CHECK(econ_limit2.onMinGasRate());
+        BOOST_CHECK(!(econ_limit2.onMaxGasOilRatio()));
+        BOOST_CHECK_EQUAL(econ_limit2.maxWaterCut(), 0.95);
+        BOOST_CHECK_EQUAL(econ_limit2.minOilRate(), 0.0);
+        BOOST_CHECK_EQUAL(econ_limit2.minGasRate(), 1000./86400.);
+        BOOST_CHECK_EQUAL(econ_limit2.maxGasOilRatio(), 0.0);
+        BOOST_CHECK_EQUAL(econ_limit2.endRun(), false);
+        BOOST_CHECK_EQUAL(econ_limit2.followonWell(), "'");
+        BOOST_CHECK_EQUAL(econ_limit2.quantityLimit(), WellEcon::RATE);
+        BOOST_CHECK_EQUAL(econ_limit2.workover(), WellEcon::CON);
+        BOOST_CHECK_EQUAL(econ_limit2.workoverSecondary(), WellEcon::CON);
+        BOOST_CHECK(econ_limit2.requireWorkover());
+        BOOST_CHECK(econ_limit2.requireSecondaryWorkover());
+        BOOST_CHECK(!(econ_limit2.validFollowonWell()));
+        BOOST_CHECK(!(econ_limit2.endRun()));
+    }
+
+    const auto* prod2 = sched->getWell("PROD02");
+    {
+        const WellEconProductionLimits& econ_limit1 = prod2->getEconProductionLimits(0);
+        BOOST_CHECK(!(econ_limit1.onMinOilRate()));
+        BOOST_CHECK(!(econ_limit1.onMaxWaterCut()));
+        BOOST_CHECK(!(econ_limit1.onMinGasRate()));
+        BOOST_CHECK(!(econ_limit1.onMaxGasOilRatio()));
+        BOOST_CHECK_EQUAL(econ_limit1.maxWaterCut(), 0.0);
+        BOOST_CHECK_EQUAL(econ_limit1.minOilRate(), 0.0);
+        BOOST_CHECK_EQUAL(econ_limit1.minGasRate(), 0.0);
+        BOOST_CHECK_EQUAL(econ_limit1.maxGasOilRatio(), 0.0);
+        BOOST_CHECK_EQUAL(econ_limit1.endRun(), false);
+        BOOST_CHECK_EQUAL(econ_limit1.followonWell(), "'");
+        BOOST_CHECK_EQUAL(econ_limit1.quantityLimit(), WellEcon::RATE);
+        BOOST_CHECK_EQUAL(econ_limit1.workover(), WellEcon::NONE);
+        BOOST_CHECK_EQUAL(econ_limit1.workoverSecondary(), WellEcon::NONE);
+        BOOST_CHECK(!(econ_limit1.requireWorkover()));
+        BOOST_CHECK(!(econ_limit1.requireSecondaryWorkover()));
+        BOOST_CHECK(!(econ_limit1.validFollowonWell()));
+        BOOST_CHECK(!(econ_limit1.endRun()));
+
+        const WellEconProductionLimits& econ_limit2 = prod2->getEconProductionLimits(1);
+        BOOST_CHECK(!(econ_limit2.onMinOilRate()));
+        BOOST_CHECK(econ_limit2.onMaxWaterCut());
+        BOOST_CHECK(econ_limit2.onMinGasRate());
+        BOOST_CHECK(!(econ_limit2.onMaxGasOilRatio()));
+        BOOST_CHECK_EQUAL(econ_limit2.maxWaterCut(), 0.95);
+        BOOST_CHECK_EQUAL(econ_limit2.minOilRate(), 0.0);
+        BOOST_CHECK_EQUAL(econ_limit2.minGasRate(), 1000.0/86400.);
+        BOOST_CHECK_EQUAL(econ_limit2.maxGasOilRatio(), 0.0);
+        BOOST_CHECK_EQUAL(econ_limit2.endRun(), false);
+        BOOST_CHECK_EQUAL(econ_limit2.followonWell(), "'");
+        BOOST_CHECK_EQUAL(econ_limit2.quantityLimit(), WellEcon::RATE);
+        BOOST_CHECK_EQUAL(econ_limit2.workover(), WellEcon::CON);
+        BOOST_CHECK_EQUAL(econ_limit2.workoverSecondary(), WellEcon::CON);
+        BOOST_CHECK(econ_limit2.requireWorkover());
+        BOOST_CHECK(econ_limit2.requireSecondaryWorkover());
+        BOOST_CHECK(!(econ_limit2.validFollowonWell()));
+        BOOST_CHECK(!(econ_limit2.endRun()));
+    }
+}
+
+
 BOOST_AUTO_TEST_CASE(TestEvents) {
     ParseContext parseContext;
     ParserPtr parser(new Parser());

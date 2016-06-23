@@ -12,6 +12,6 @@
        {"name" : "SECOND_MAX_WATER_CUT", "value_type" : "DOUBLE", "default" : 0.0},
        {"name" : "WORKOVER_SECOND_WATER_CUT_LIMIT", "value_type" : "STRING"},
        {"name" : "MAX_GAS_LIQUID_RATIO", "value_type" : "DOUBLE", "default" : 0.0},
-       {"name" : "MIN_LIQUID_PRODCUTION_RATE", "value_type" : "DOUBLE", "default" : 0.0},
+       {"name" : "MIN_LIQUID_PRODCUTION_RATE", "value_type" : "DOUBLE", "default" : 0.0, "dimension" : "LiquidSurfaceVolume/Time"},
        {"name" : "MAX_TEMP", "value_type" : "DOUBLE", "dimension" : "Temperature"},
        {"name" : "MIN_RES_FLUID_RATE", "value_type" : "DOUBLE", "dimension" : "ReservoirVolume/Time", "default" : 0.0}]}

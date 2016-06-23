@@ -45,6 +45,7 @@ namespace Opm {
           m_productionProperties( new DynamicState<WellProductionProperties>(timeMap, WellProductionProperties() )),
           m_injectionProperties( new DynamicState<WellInjectionProperties>(timeMap, WellInjectionProperties() )),
           m_polymerProperties( new DynamicState<WellPolymerProperties>(timeMap, WellPolymerProperties() )),
+          m_econproductionlimits( new DynamicState<WellEconProductionLimits>(timeMap, WellEconProductionLimits()) ),
           m_solventFraction( new DynamicState<double>(timeMap, 0.0 )),
           m_groupName( new DynamicState<std::string>( timeMap , "" )),
           m_rft( new DynamicState<bool>(timeMap,false)),
