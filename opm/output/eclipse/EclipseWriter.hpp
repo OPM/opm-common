@@ -51,6 +51,7 @@ public:
                   const int* compressedToCartesianCellIdx,
                   const NNC& );
 
+
     /**
      * Write the static eclipse data (grid, PVT curves, etc) to disk.
      *
@@ -79,6 +80,9 @@ public:
     ~EclipseWriter();
 
 private:
+    void writeINITFile(const std::vector<data::CellData>& simProps) const;
+    void writeEGRIDFile( ) const;
+
     class Impl;
     std::unique_ptr< Impl > impl;
 

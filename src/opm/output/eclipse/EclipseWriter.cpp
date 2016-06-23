@@ -98,6 +98,20 @@ inline int to_ert_welltype( const Well& well, size_t timestep ) {
     }
 }
 
+/*
+  This function hardcodes the common assumption that properties which
+  are stored internally as double values in OPM should be stored as
+  float values in the ECLIPSE formatted binary files.
+*/
+
+void writeKeyword( ERT::FortIO& fortio ,
+                   const std::string& keywordName,
+                   const std::vector<double> &data ) {
+    ERT::EclKW< float > kw( keywordName, data );
+    kw.fwrite( fortio );
+}
+
+
 /**
  * Pointer to memory that holds the name to an Eclipse output file.
  */
@@ -248,72 +262,6 @@ private:
     Restart& restart;
 };
 
-/**
- * Initialization file which contains static properties (such as
- * porosity and permeability) for the simulation field.
- */
-class Init {
-public:
-    Init( const std::string& outputDir,
-          const std::string& baseName,
-          int writeStepIdx,
-          const IOConfig& ioConfig ) :
-        egrid( outputDir,
-               baseName,
-               ECL_EGRID_FILE,
-               writeStepIdx,
-               ioConfig.getFMTOUT() ),
-        init( FileName( outputDir,
-                        baseName,
-                        ECL_INIT_FILE,
-                        writeStepIdx,
-                        ioConfig.getFMTOUT() ).ertHandle(),
-              std::ios_base::out,
-              ioConfig.getFMTOUT(),
-              ECL_ENDIAN_FLIP )
-    {}
-
-    void writeHeader( int numCells,
-                      const int* compressedToCartesianCellIdx,
-                      time_t current_posix_time,
-                      const EclipseState& es,
-                      const EclipseGrid& eclGrid,
-                      int ert_phase_mask )
-    {
-        auto dataField = es.get3DProperties().getDoubleGridProperty("PORO").getData();
-        restrictAndReorderToActiveCells( dataField, numCells, compressedToCartesianCellIdx );
-
-        // finally, write the grid to disk
-        const auto& ioConfig = *es.getIOConfig();
-        if( ioConfig.getWriteEGRIDFile() ) {
-            const bool is_metric =
-                es.getDeckUnitSystem().getType() == UnitSystem::UNIT_TYPE_METRIC;
-            eclGrid.fwriteEGRID( egrid.ertHandle(), is_metric );
-        }
-
-
-        if( ioConfig.getWriteINITFile() ) {
-            ERT::EclKW< float > poro_kw( "PORO", dataField );
-            ecl_init_file_fwrite_header( this->ertHandle(),
-                                         eclGrid.c_ptr(),
-                                         poro_kw.get(),
-                                         ert_phase_mask,
-                                         current_posix_time );
-        }
-    }
-
-    void writeKeyword( const std::string& keywordName,
-                       const std::vector<double> &data ) {
-        ERT::EclKW< float > kw( keywordName, data );
-        ecl_kw_fwrite( kw.get(), this->ertHandle() );
-    }
-
-    fortio_type* ertHandle() { return this->init.get(); }
-
-private:
-    FileName egrid;
-    ERT::FortIO init;
-};
 
 const int inactive_index = -1;
 
@@ -481,82 +429,115 @@ EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
 {}
 
 
-void EclipseWriter::writeInit(const std::vector<data::CellData>& simProps) {
-
-    if( !this->impl->output_enabled )
-        return;
-
+void EclipseWriter::writeINITFile(const std::vector<data::CellData>& simProps) const {
+    const auto& gridToEclipseIdx = this->impl->gridToEclipseIdx;
     const auto& es = *this->impl->es;
-    IOConfigConstPtr ioConfig = es.getIOConfigConst();
-    if( !ioConfig->getWriteINITFile() )
-        return;
+    const auto& units = es.getUnits();
+    std::shared_ptr<const IOConfig> ioConfig = es.getIOConfigConst();
 
-    // OK: We are actually going to write this file.
+    FileName  initFile( this->impl->outputDir,
+                        this->impl->baseName,
+                        ECL_INIT_FILE,
+                        0 ,
+                        ioConfig->getFMTOUT() );
+
+    ERT::FortIO fortio( initFile.get() ,
+                        std::ios_base::out,
+                        ioConfig->getFMTOUT(),
+                        ECL_ENDIAN_FLIP );
+
+
+    // Write INIT header
     {
-        Init fortio( this->impl->outputDir,
-                     this->impl->baseName,
-                     /*stepIdx=*/0,
-                     *es.getIOConfigConst());
+        auto poro = es.get3DProperties().getDoubleGridProperty("PORO").getData();
+        restrictAndReorderToActiveCells( poro, gridToEclipseIdx.size(), gridToEclipseIdx.data());
 
+        ERT::EclKW< float > poro_kw( "PORO", poro );
+        ecl_init_file_fwrite_header( fortio.get(),
+                                     this->impl->grid.c_ptr(),
+                                     poro_kw.get(),
+                                     this->impl->ert_phase_mask,
+                                     this->impl->sim_start_time);
+    }
 
-        fortio.writeHeader( this->impl->numCells,
-                            this->impl->compressed_to_cartesian,
-                            this->impl->sim_start_time,
-                            es,
-                            this->impl->grid,
-                            this->impl->ert_phase_mask );
+    // Write properties from the input deck.
+    {
+        const auto& properties = es.get3DProperties();
 
+        // Observe that PORO and PORV are special cased in the ecl_init_file_fwrite_header function.
+        using double_kw = std::pair<std::string, UnitSystem::measure>;
+        std::vector<double_kw> doubleKeywords = {{"PERMX" , UnitSystem::measure::permeability },
+                                                 {"PERMY" , UnitSystem::measure::permeability },
+                                                 {"PERMZ" , UnitSystem::measure::permeability }};
 
-        const auto& props = es.get3DProperties();
-
-        const auto& gridToEclipseIdx = this->impl->gridToEclipseIdx;
-        const auto& units = es.getUnits();
-
-        if (props.hasDeckDoubleGridProperty("PERMX")) {
-            auto data = props.getDoubleGridProperty("PERMX").getData();
+        for (const auto& kw_pair : doubleKeywords) {
+            auto data = properties.getDoubleGridProperty(kw_pair.first).getData();
             convertFromSiTo( data,
                              units,
-                             UnitSystem::measure::permeability );
-            restrictAndReorderToActiveCells(data, gridToEclipseIdx.size(), gridToEclipseIdx.data());
-            fortio.writeKeyword("PERMX", data);
+                             kw_pair.second );
+            restrictAndReorderToActiveCells( data , gridToEclipseIdx.size(), gridToEclipseIdx.data());
+            writeKeyword( fortio, kw_pair.first, data );
         }
-        if (props.hasDeckDoubleGridProperty("PERMY")) {
-            auto data = props.getDoubleGridProperty("PERMY").getData();
-            convertFromSiTo( data,
-                             units,
-                             UnitSystem::measure::permeability );
-            restrictAndReorderToActiveCells(data, gridToEclipseIdx.size(), gridToEclipseIdx.data());
-            fortio.writeKeyword("PERMY", data);
-        }
-        if (props.hasDeckDoubleGridProperty("PERMZ")) {
-            auto data = props.getDoubleGridProperty("PERMZ").getData();
-            convertFromSiTo( data,
-                             units,
-                             UnitSystem::measure::permeability );
-            restrictAndReorderToActiveCells(data, gridToEclipseIdx.size(), gridToEclipseIdx.data());
-            fortio.writeKeyword("PERMZ", data);
-        }
+    }
 
 
+    // Write properties which have been initialized by the simulator.
+    {
         for (const auto& prop : simProps) {
             auto data = prop.data;
             convertFromSiTo( data,
                              units,
                              prop.dim );
             restrictAndReorderToActiveCells(data, gridToEclipseIdx.size(), gridToEclipseIdx.data());
-            fortio.writeKeyword( prop.name , data );
-        }
-
-        if( this->impl->nnc.hasNNC() ) {
-            std::vector<double> tran;
-            for( NNCdata nd : this->impl->nnc.nncdata() )
-                tran.push_back( nd.trans );
-
-            convertFromSiTo( tran, units, UnitSystem::measure::transmissibility );
-            fortio.writeKeyword("TRANNNC", tran);
+            writeKeyword( fortio, prop.name, data );
         }
     }
+
+
+    // Write NNC transmissibilities
+    if( this->impl->nnc.hasNNC() ) {
+        std::vector<double> tran;
+        for( NNCdata nd : this->impl->nnc.nncdata() )
+            tran.push_back( nd.trans );
+
+        convertFromSiTo( tran, units, UnitSystem::measure::transmissibility );
+        writeKeyword( fortio, "TRANNNC" , tran );
+    }
 }
+
+
+void EclipseWriter::writeEGRIDFile( ) const {
+    const auto& es = *this->impl->es;
+    const auto& ioConfig = es.getIOConfig();
+
+    FileName  egridFile( this->impl->outputDir,
+                         this->impl->baseName,
+                         ECL_EGRID_FILE,
+                         0 ,
+                         ioConfig->getFMTOUT() );
+
+    const EclipseGrid& grid = this->impl->grid;
+    const bool is_metric = es.getDeckUnitSystem().getType() == UnitSystem::UNIT_TYPE_METRIC;
+    grid.fwriteEGRID( egridFile.get()  , is_metric );
+}
+
+
+void EclipseWriter::writeInit(const std::vector<data::CellData>& simProps) {
+    if( !this->impl->output_enabled )
+        return;
+
+    {
+        const auto& es = *this->impl->es;
+        IOConfigConstPtr ioConfig = es.getIOConfigConst();
+
+        if( ioConfig->getWriteINITFile() )
+            writeINITFile( simProps );
+
+        if( ioConfig->getWriteEGRIDFile() )
+            writeEGRIDFile( );
+    }
+}
+
 
 // implementation of the writeTimeStep method
 void EclipseWriter::writeTimeStep(int report_step,
