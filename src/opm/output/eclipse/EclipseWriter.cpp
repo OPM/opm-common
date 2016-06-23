@@ -131,6 +131,20 @@ public:
                 std::free )
     {}
 
+    FileName(const std::string& outputDir,
+             const std::string& baseName,
+             ecl_file_enum type,
+             bool formatted ) :
+
+        filename( ecl_util_alloc_filename(
+                                outputDir.c_str(),
+                                baseName.c_str(),
+                                type,
+                                formatted,
+                                0 ),
+                  std::free )
+    {}
+
     const char* get() const { return this->filename.get(); }
 
 private:
@@ -303,7 +317,7 @@ RFT::RFT( const char* output_dir,
           size_t cart_size ) :
     global_to_active( cart_size, inactive_index ),
     fortio(
-        FileName( output_dir, basename, ECL_RFT_FILE, format, 0 ).get(),
+        FileName( output_dir, basename, ECL_RFT_FILE, format ).get(),
         std::ios_base::out
         )
 {
@@ -438,7 +452,6 @@ void EclipseWriter::writeINITFile(const std::vector<data::CellData>& simProps) c
     FileName  initFile( this->impl->outputDir,
                         this->impl->baseName,
                         ECL_INIT_FILE,
-                        0 ,
                         ioConfig->getFMTOUT() );
 
     ERT::FortIO fortio( initFile.get() ,
@@ -513,7 +526,6 @@ void EclipseWriter::writeEGRIDFile( ) const {
     FileName  egridFile( this->impl->outputDir,
                          this->impl->baseName,
                          ECL_EGRID_FILE,
-                         0 ,
                          ioConfig->getFMTOUT() );
 
     const EclipseGrid& grid = this->impl->grid;
