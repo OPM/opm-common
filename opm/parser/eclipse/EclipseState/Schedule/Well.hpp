@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellEconProductionLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 
@@ -105,6 +106,9 @@ namespace Opm {
         bool                           setSolventFraction(size_t timeStep , const double fraction);
         const double&                  getSolventFraction(size_t timeStep) const;
 
+        bool                            setEconProductionLimits(const size_t timeStep, const WellEconProductionLimits& properteis);
+        const WellEconProductionLimits& getEconProductionLimits(const size_t timeStep) const;
+
         int  firstRFTOutput( ) const;
         bool getRFTActive(size_t time_step) const;
         void setRFTActive(size_t time_step, bool value);
@@ -145,6 +149,7 @@ namespace Opm {
         std::shared_ptr<DynamicState<WellProductionProperties> > m_productionProperties;
         std::shared_ptr<DynamicState<WellInjectionProperties> > m_injectionProperties;
         std::shared_ptr<DynamicState<WellPolymerProperties> > m_polymerProperties;
+        std::shared_ptr<DynamicState<WellEconProductionLimits> > m_econproductionlimits;
         std::shared_ptr<DynamicState<double> > m_solventFraction;
         std::shared_ptr<DynamicState<std::string> > m_groupName;
         std::shared_ptr<DynamicState<bool> > m_rft;

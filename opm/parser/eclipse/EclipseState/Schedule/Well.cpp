@@ -166,6 +166,16 @@ namespace Opm {
         return m_solventFraction->update(timeStep, fraction);
     }
 
+    bool Well::setEconProductionLimits(const size_t timeStep, const WellEconProductionLimits& productionlimits) {
+        // not sure if this keyword turning a well to be producer.
+        // not sure what will happen if we use this keyword to a injector.
+        return m_econproductionlimits->update(timeStep, productionlimits);
+    }
+
+    const WellEconProductionLimits& Well::getEconProductionLimits(const size_t timeStep) const {
+        return m_econproductionlimits->at(timeStep);
+    }
+
     const double& Well::getSolventFraction(size_t timeStep) const {
         return m_solventFraction->at(timeStep);
     }
