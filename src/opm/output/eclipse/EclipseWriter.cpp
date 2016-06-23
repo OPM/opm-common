@@ -117,7 +117,7 @@ public:
                 std::free )
     {}
 
-    const char* ertHandle() const { return this->filename.get(); }
+    const char* get() const { return this->filename.get(); }
 
 private:
     using fd = std::unique_ptr< char, decltype( std::free )* >;
@@ -160,8 +160,8 @@ public:
                 ioConfig.getFMTOUT() ),
         rst_file(
                 ( writeStepIdx > 0 && ioConfig.getUNIFOUT() )
-                ? ecl_rst_file_open_append( filename.ertHandle() )
-                : ecl_rst_file_open_write( filename.ertHandle() ) )
+                ? ecl_rst_file_open_append( filename.get() )
+                : ecl_rst_file_open_write( filename.get() ) )
     {}
 
     template< typename T >
@@ -355,7 +355,7 @@ RFT::RFT( const char* output_dir,
           size_t cart_size ) :
     global_to_active( cart_size, inactive_index ),
     fortio(
-        FileName( output_dir, basename, ECL_RFT_FILE, format, 0 ).ertHandle(),
+        FileName( output_dir, basename, ECL_RFT_FILE, format, 0 ).get(),
         std::ios_base::out
         )
 {
