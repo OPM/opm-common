@@ -221,7 +221,6 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
 
     const char *deckString =
         "RUNSPEC\n"
-        "INIT\n"
         "UNIFOUT\n"
         "OIL\n"
         "GAS\n"
@@ -230,6 +229,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
         "DIMENS\n"
         "3 3 3/\n"
         "GRID\n"
+        "INIT\n"
         "DXV\n"
         "1.0 2.0 3.0 /\n"
         "DYV\n"
