@@ -485,61 +485,66 @@ void EclipseWriter::writeInit() {
         return;
 
     const auto& es = *this->impl->es;
-    Init fortio( this->impl->outputDir,
-                 this->impl->baseName,
-                 /*stepIdx=*/0,
-                 *es.getIOConfigConst());
-
-    fortio.writeHeader( this->impl->numCells,
-                        this->impl->compressed_to_cartesian,
-                        this->impl->sim_start_time,
-                        es,
-                        this->impl->grid,
-                        this->impl->ert_phase_mask );
-
     IOConfigConstPtr ioConfig = es.getIOConfigConst();
-    const auto& props = es.get3DProperties();
+    if( !ioConfig->getWriteINITFile() )
+        return;
 
-    if( !ioConfig->getWriteINITFile() ) return;
+    // OK: We are actually going to write this file.
+    {
+        Init fortio( this->impl->outputDir,
+                     this->impl->baseName,
+                     /*stepIdx=*/0,
+                     *es.getIOConfigConst());
 
-    const auto& gridToEclipseIdx = this->impl->gridToEclipseIdx;
-    const auto& units = es.getUnits();
 
-    if (props.hasDeckDoubleGridProperty("PERMX")) {
-        auto data = props.getDoubleGridProperty("PERMX").getData();
-        convertFromSiTo( data,
-                         units,
-                         UnitSystem::measure::permeability );
-        restrictAndReorderToActiveCells(data, gridToEclipseIdx.size(), gridToEclipseIdx.data());
-        fortio.writeKeyword("PERMX", data);
+        fortio.writeHeader( this->impl->numCells,
+                            this->impl->compressed_to_cartesian,
+                            this->impl->sim_start_time,
+                            es,
+                            this->impl->grid,
+                            this->impl->ert_phase_mask );
+
+
+        const auto& props = es.get3DProperties();
+
+        const auto& gridToEclipseIdx = this->impl->gridToEclipseIdx;
+        const auto& units = es.getUnits();
+
+        if (props.hasDeckDoubleGridProperty("PERMX")) {
+            auto data = props.getDoubleGridProperty("PERMX").getData();
+            convertFromSiTo( data,
+                             units,
+                             UnitSystem::measure::permeability );
+            restrictAndReorderToActiveCells(data, gridToEclipseIdx.size(), gridToEclipseIdx.data());
+            fortio.writeKeyword("PERMX", data);
+        }
+        if (props.hasDeckDoubleGridProperty("PERMY")) {
+            auto data = props.getDoubleGridProperty("PERMY").getData();
+            convertFromSiTo( data,
+                             units,
+                             UnitSystem::measure::permeability );
+            restrictAndReorderToActiveCells(data, gridToEclipseIdx.size(), gridToEclipseIdx.data());
+            fortio.writeKeyword("PERMY", data);
+        }
+        if (props.hasDeckDoubleGridProperty("PERMZ")) {
+            auto data = props.getDoubleGridProperty("PERMZ").getData();
+            convertFromSiTo( data,
+                             units,
+                             UnitSystem::measure::permeability );
+            restrictAndReorderToActiveCells(data, gridToEclipseIdx.size(), gridToEclipseIdx.data());
+            fortio.writeKeyword("PERMZ", data);
+        }
+
+
+        if( this->impl->nnc.hasNNC() ) {
+            std::vector<double> tran;
+            for( NNCdata nd : this->impl->nnc.nncdata() )
+                tran.push_back( nd.trans );
+
+            convertFromSiTo( tran, units, UnitSystem::measure::transmissibility );
+            fortio.writeKeyword("TRANNNC", tran);
+        }
     }
-    if (props.hasDeckDoubleGridProperty("PERMY")) {
-        auto data = props.getDoubleGridProperty("PERMY").getData();
-        convertFromSiTo( data,
-                         units,
-                         UnitSystem::measure::permeability );
-        restrictAndReorderToActiveCells(data, gridToEclipseIdx.size(), gridToEclipseIdx.data());
-        fortio.writeKeyword("PERMY", data);
-    }
-    if (props.hasDeckDoubleGridProperty("PERMZ")) {
-        auto data = props.getDoubleGridProperty("PERMZ").getData();
-        convertFromSiTo( data,
-                         units,
-                         UnitSystem::measure::permeability );
-        restrictAndReorderToActiveCells(data, gridToEclipseIdx.size(), gridToEclipseIdx.data());
-        fortio.writeKeyword("PERMZ", data);
-    }
-
-    if( !this->impl->nnc.hasNNC() ) return;
-
-    std::vector<double> tran;
-    for( NNCdata nd : this->impl->nnc.nncdata() ) {
-        tran.push_back( nd.trans );
-    }
-
-    convertFromSiTo( tran, units, UnitSystem::measure::transmissibility );
-    fortio.writeKeyword("TRANNNC", tran);
-
 }
 
 // implementation of the writeTimeStep method
