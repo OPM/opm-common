@@ -480,7 +480,9 @@ EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
     , ert_phase_mask( ertPhaseMask( eclipseState->getTableManager() ) )
 {}
 
-void EclipseWriter::writeInit() {
+
+void EclipseWriter::writeInit(const std::vector<data::CellData>& simProps) {
+
     if( !this->impl->output_enabled )
         return;
 
@@ -535,6 +537,15 @@ void EclipseWriter::writeInit() {
             fortio.writeKeyword("PERMZ", data);
         }
 
+
+        for (const auto& prop : simProps) {
+            auto data = prop.data;
+            convertFromSiTo( data,
+                             units,
+                             prop.dim );
+            restrictAndReorderToActiveCells(data, gridToEclipseIdx.size(), gridToEclipseIdx.data());
+            fortio.writeKeyword( prop.name , data );
+        }
 
         if( this->impl->nnc.hasNNC() ) {
             std::vector<double> tran;

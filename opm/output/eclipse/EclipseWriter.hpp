@@ -56,7 +56,7 @@ public:
      *
      * If NNC is given to the constructor, writes TRANNNC keyword.
      */
-    void writeInit();
+    void writeInit(const std::vector<data::CellData>& simProps = {});
 
     /*!
      * \brief Write a reservoir state and summary information to disk.
