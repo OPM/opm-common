@@ -30,6 +30,8 @@
 #include <stdexcept>
 
 #include <ert/ecl/ecl_sum.h>
+#include <ert/util/util.h>
+#include <ert/util/TestArea.hpp>
 
 #include <opm/output/Wells.hpp>
 #include <opm/output/eclipse/Summary.hpp>
@@ -101,19 +103,17 @@ struct setup {
     SummaryConfig config;
     data::Wells wells;
     std::string name;
+    ERT::TestArea ta;
 
     setup( const std::string& fname ) :
         deck( Parser().parseFile( path, ParseContext() ) ),
         es( deck, ParseContext() ),
         config( *deck, es ),
         wells( result_wells() ),
-        name( fname )
-    {}
+        name( fname ),
+        ta( ERT::TestArea("test_summary") )
+    { }
 
-    ~setup() {
-        std::remove( ( name + ".UNSMRY" ).c_str() );
-        std::remove( ( name + ".SMSPEC" ).c_str() );
-    }
 };
 
 /*
