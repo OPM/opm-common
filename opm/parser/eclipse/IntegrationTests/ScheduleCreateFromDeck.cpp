@@ -788,6 +788,7 @@ BOOST_AUTO_TEST_CASE(WellTestWECON) {
         BOOST_CHECK(econ_limit1.requireSecondaryWorkover());
         BOOST_CHECK(!(econ_limit1.validFollowonWell()));
         BOOST_CHECK(!(econ_limit1.endRun()));
+        BOOST_CHECK(econ_limit1.onAnyEffectiveLimit());
 
         const WellEconProductionLimits& econ_limit2 = prod1->getEconProductionLimits(1);
         BOOST_CHECK(!(econ_limit2.onMinOilRate()));
@@ -807,6 +808,7 @@ BOOST_AUTO_TEST_CASE(WellTestWECON) {
         BOOST_CHECK(econ_limit2.requireSecondaryWorkover());
         BOOST_CHECK(!(econ_limit2.validFollowonWell()));
         BOOST_CHECK(!(econ_limit2.endRun()));
+        BOOST_CHECK(econ_limit2.onAnyEffectiveLimit());
     }
 
     const auto* prod2 = sched->getWell("PROD02");
@@ -829,6 +831,7 @@ BOOST_AUTO_TEST_CASE(WellTestWECON) {
         BOOST_CHECK(!(econ_limit1.requireSecondaryWorkover()));
         BOOST_CHECK(!(econ_limit1.validFollowonWell()));
         BOOST_CHECK(!(econ_limit1.endRun()));
+        BOOST_CHECK(!(econ_limit1.onAnyEffectiveLimit()));
 
         const WellEconProductionLimits& econ_limit2 = prod2->getEconProductionLimits(1);
         BOOST_CHECK(!(econ_limit2.onMinOilRate()));
@@ -848,6 +851,7 @@ BOOST_AUTO_TEST_CASE(WellTestWECON) {
         BOOST_CHECK(econ_limit2.requireSecondaryWorkover());
         BOOST_CHECK(!(econ_limit2.validFollowonWell()));
         BOOST_CHECK(!(econ_limit2.endRun()));
+        BOOST_CHECK(econ_limit2.onAnyEffectiveLimit());
     }
 }
 

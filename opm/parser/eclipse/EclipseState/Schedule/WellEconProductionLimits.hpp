@@ -34,6 +34,17 @@ namespace Opm {
         WellEconProductionLimits();
 
         // limit switch on?
+        bool onAnyEffectiveLimit() const {
+            return (onMinOilRate()            ||
+                    onMinGasRate()            ||
+                    onMaxWaterCut()           ||
+                    onMaxGasOilRatio()        ||
+                    onMaxWaterGasRatio()      ||
+                    onMaxGasLiquidRatio()     ||
+                    onMaxTemperature()        ||
+                    onMinReservoirFluidRate());
+        };
+
         bool onMinOilRate() const {
             return (m_min_oil_rate > 0.0);
         };
@@ -50,7 +61,7 @@ namespace Opm {
             return (m_max_gas_oil_ratio > 0.0);
         };
 
-        bool onMaxWaterGasRation() const {
+        bool onMaxWaterGasRatio() const {
             return (m_max_water_gas_ratio > 0.0);
         };
 
