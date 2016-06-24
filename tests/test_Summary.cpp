@@ -123,6 +123,11 @@ struct setup {
 BOOST_AUTO_TEST_CASE(well_keywords) {
     setup cfg( "test_Summary_well" );
 
+    // Force to run in a directory, to make sure the basename with
+    // leading path works.
+    util_make_path( "PATH" );
+    cfg.name = "PATH/CASE";
+
     out::Summary writer( cfg.es, cfg.config, cfg.name );
     writer.add_timestep( 0, 0 * day, cfg.es, cfg.wells );
     writer.add_timestep( 1, 1 * day, cfg.es, cfg.wells );
