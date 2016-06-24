@@ -278,8 +278,8 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
 
         ta.setStore( true );
         std::cout << "Working in: " << ta.getCwd() << std::endl;
-        eclWriter.writeInit( );
-        eclWriter.writeInit( simProps );
+        eclWriter.writeInitAndEgrid( );
+        eclWriter.writeInitAndEgrid( simProps );
 
         data::Wells wells;
 

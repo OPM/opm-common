@@ -52,12 +52,16 @@ public:
                   const NNC& );
 
 
-    /**
-     * Write the static eclipse data (grid, PVT curves, etc) to disk.
-     *
-     * If NNC is given to the constructor, writes TRANNNC keyword.
-     */
-    void writeInit(const std::vector<data::CellData>& simProps = {}, const NNC& nnc = NNC());
+
+    /// Write the static eclipse data (grid, PVT curves, etc) to disk.
+    ///
+    /// - simProps contains a list of properties which must be
+    ///   calculated by the simulator, e.g. the transmissibility
+    ///   vectors TRANX, TRANY and TRANZ.
+    ///
+    /// - The NNC argument is distributed between the EGRID and INIT
+    ///   files.
+    void writeInitAndEgrid(const std::vector<data::CellData>& simProps = {}, const NNC& nnc = NNC());
 
     /*!
      * \brief Write a reservoir state and summary information to disk.

@@ -544,7 +544,7 @@ void EclipseWriter::writeEGRIDFile( const NNC& nnc ) const {
 }
 
 
-void EclipseWriter::writeInit(const std::vector<data::CellData>& simProps, const NNC& nnc) {
+void EclipseWriter::writeInitAndEgrid(const std::vector<data::CellData>& simProps, const NNC& nnc) {
     if( !this->impl->output_enabled )
         return;
 
