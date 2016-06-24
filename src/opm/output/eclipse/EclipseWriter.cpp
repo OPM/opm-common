@@ -403,12 +403,10 @@ class EclipseWriter::Impl {
     public:
         Impl( std::shared_ptr< const EclipseState > es,
               int numCells,
-              const int* comp_to_cart,
-              const NNC& );
+              const int* comp_to_cart);
 
         std::shared_ptr< const EclipseState > es;
         EclipseGrid grid;
-        const NNC& nnc;
         std::string outputDir;
         std::string baseName;
         out::Summary summary;
@@ -424,11 +422,9 @@ class EclipseWriter::Impl {
 
 EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
                            int numCellsArg,
-                           const int* compressed_to_cart,
-                           const NNC& rnnc )
+                           const int* compressed_to_cart)
     : es( eclipseState )
     , grid( *eclipseState->getInputGrid() )
-    , nnc( rnnc )
     , outputDir( eclipseState->getIOConfig()->getOutputDir() )
     , baseName( uppercase( eclipseState->getIOConfig()->getBaseName() ) )
     , summary( *eclipseState, eclipseState->getSummaryConfig() )
@@ -510,9 +506,9 @@ void EclipseWriter::writeINITFile(const std::vector<data::CellData>& simProps, c
 
 
     // Write NNC transmissibilities
-    if( this->impl->nnc.hasNNC() ) {
+    {
         std::vector<double> tran;
-        for( NNCdata nd : this->impl->nnc.nncdata() )
+        for( const NNCdata& nd : nnc.nncdata() )
             tran.push_back( nd.trans );
 
         convertFromSiTo( tran, units, UnitSystem::measure::transmissibility );
@@ -719,9 +715,9 @@ void EclipseWriter::writeTimeStep(int report_step,
 
 EclipseWriter::EclipseWriter( std::shared_ptr< const EclipseState > es,
                               int numCells,
-                              const int* compressedToCartesianCellIdx,
-                              const NNC& nnc ) :
-    impl( new Impl( es, numCells, compressedToCartesianCellIdx, nnc ) )
+                              const int* compressedToCartesianCellIdx) :
+
+    impl( new Impl( es, numCells, compressedToCartesianCellIdx) )
 {
     if( compressedToCartesianCellIdx ) {
         // if compressedToCartesianCellIdx available then

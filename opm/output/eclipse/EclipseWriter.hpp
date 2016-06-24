@@ -48,8 +48,7 @@ public:
      */
     EclipseWriter(std::shared_ptr< const EclipseState >,
                   int numCells,
-                  const int* compressedToCartesianCellIdx,
-                  const NNC& );
+                  const int* compressedToCartesianCellIdx);
 
 
 
