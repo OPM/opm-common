@@ -606,7 +606,7 @@ inline double group_keywords( E keyword,
 namespace out {
 
 Summary::Summary( const EclipseState& st, const SummaryConfig& sum ) :
-    Summary( st, sum, st.getIOConfig()->getBaseName().c_str() )
+    Summary( st, sum, st.getIOConfig()->fullBasePath().c_str() )
 {}
 
 Summary::Summary( const EclipseState& st,
