@@ -39,7 +39,6 @@
 #include <opm/parser/eclipse/Units/ConversionFactors.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
-#include <iostream>
 // ERT stuff
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_endian_flip.h>
@@ -277,7 +276,6 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
                                              {"TRANZ" , UnitSystem::measure::transmissibility, tranz}};
 
         ta.setStore( true );
-        std::cout << "Working in: " << ta.getCwd() << std::endl;
         eclWriter.writeInitAndEgrid( );
         eclWriter.writeInitAndEgrid( simProps );
 
