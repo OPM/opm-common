@@ -161,6 +161,10 @@ namespace Opm {
         const std::string& getBaseName() const;
         void setBaseName(std::string baseName);
 
+        /// Return a string consisting of outputpath and basename;
+        /// i.e. /path/to/sim/CASE
+        std::string fullBasePath( ) const;
+
     private:
 
         IOConfig( const GRIDSection&,

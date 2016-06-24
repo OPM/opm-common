@@ -909,4 +909,5 @@ BOOST_AUTO_TEST_CASE(OutputPaths) {
     config3.setOutputDir( output_dir3 );
     BOOST_CHECK_EQUAL( output_dir3,  config3.getOutputDir() );
     BOOST_CHECK_EQUAL( "testString", config3.getBaseName() );
+    BOOST_CHECK_EQUAL( "/path/to/testString" , config3.fullBasePath( ));
 }
