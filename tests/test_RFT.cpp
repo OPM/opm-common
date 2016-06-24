@@ -117,9 +117,7 @@ BOOST_AUTO_TEST_CASE(test_RFT) {
          * written to disk and flushed.
          */
 
-        const auto numCells = eclipseState->getInputGrid()->getNX()
-            * eclipseState->getInputGrid()->getNY()
-            * eclipseState->getInputGrid()->getNZ();
+        const auto numCells = eclipseState->getInputGrid()->getCartesianSize( );
 
         EclipseWriter eclipseWriter( eclipseState, numCells, nullptr );
         time_t start_time = eclipseState->getSchedule()->posixStartTime();
