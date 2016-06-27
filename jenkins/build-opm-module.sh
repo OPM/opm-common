@@ -56,9 +56,9 @@ function build_upstreams {
   for upstream in ${upstreams[*]}
   do
     echo "Building upstream $upstream=${upstreamRev[$upstream]}"
-
     # Build upstream and execute installation
-    clone_and_build_module $upstream "-DCMAKE_PREFIX_PATH=$WORKSPACE/serial/install -DCMAKE_INSTALL_PREFIX=$WORKSPACE/serial/install" ${upstreamRev[$upstream]} $WORKSPACE/serial
+    # ENABLE_PYTHON - will build the Python wrappers for OpmParser, ignored by the other modules.
+    clone_and_build_module $upstream "-DCMAKE_PREFIX_PATH=$WORKSPACE/serial/install -DCMAKE_INSTALL_PREFIX=$WORKSPACE/serial/install -DENABLE_PYTHON=ON" ${upstreamRev[$upstream]} $WORKSPACE/serial
     test $? -eq 0 || exit 1
   done
   test $? -eq 0 || exit 1
@@ -85,7 +85,8 @@ function build_downstreams {
     # Additional cmake parameters:
     # OPM_DATA_ROOT - passed for modules having opm-data based integration tests
     # USE_QUADMATH - used by ewoms to disable quadmath support (makes tests usable)
-    clone_and_build_module $downstream "-DCMAKE_PREFIX_PATH=$WORKSPACE/serial/install -DCMAKE_INSTALL_PREFIX=$WORKSPACE/serial/install -DOPM_DATA_ROOT=$OPM_DATA_ROOT -DUSE_QUADMATH=0" ${downstreamRev[$downstream]} $WORKSPACE/serial 1
+    # ENABLE_PYTHON - will build the Python wrappers for OpmParser, ignored by the other modules.
+    clone_and_build_module $downstream "-DCMAKE_PREFIX_PATH=$WORKSPACE/serial/install -DCMAKE_INSTALL_PREFIX=$WORKSPACE/serial/install -DOPM_DATA_ROOT=$OPM_DATA_ROOT -DENABLE_PYTHON=ON -DUSE_QUADMATH=0" ${downstreamRev[$downstream]} $WORKSPACE/serial 1
     code=$?
     # ewoms skips tests in nasty ways. ignore return code
     if [ "$downstream" != "ewoms" ]
