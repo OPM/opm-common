@@ -17,6 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <cmath>
+
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
 #include <opm/parser/eclipse/Utility/String.hpp>
@@ -69,7 +71,7 @@ namespace Opm {
 
     template<>
     int GridProperties<int>::convertInputValue(double doubleValue) const {
-        if (fabs( nearbyint( doubleValue ) - doubleValue ) < 1e-6)
+        if (std::fabs( std::nearbyint( doubleValue ) - doubleValue ) < 1e-6)
             return static_cast<int>( doubleValue );
         else
             throw std::invalid_argument("Expected integer argument - got: " + std::to_string( doubleValue ));
