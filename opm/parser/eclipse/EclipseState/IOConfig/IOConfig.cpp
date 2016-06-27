@@ -572,4 +572,15 @@ namespace Opm {
         m_base_name = baseName;
     }
 
+    std::string IOConfig::fullBasePath( ) const {
+        namespace fs = boost::filesystem;
+
+        fs::path dir( m_output_dir );
+        fs::path base( m_base_name );
+        fs::path full_path = dir / base;
+
+        return full_path.string();
+    }
+
+
 } //namespace Opm
