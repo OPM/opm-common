@@ -1,52 +1,75 @@
+/*
+   Copyright 2016 Statoil ASA.
+
+   This file is part of the Open Porous Media project (OPM).
+
+   OPM is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   OPM is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+   */
+
 #include "test_CompareEclipseRestart.hpp"
 
-int main(int argc, char** argv) {
-    char* gridFile1 = argv[1];
-    char* gridFile2 = argv[2];
-    char* unrstFile1 = argv[3];
-    char* unrstFile2 = argv[4];
+//------------------------------------------------//
 
+int main(int argc, char** argv) {
     if (argc != 5) {
         printHelp();
     }
     else {
-        // Comparing grid sizes from .EGRID-files
-        {
-            ecl_grid_type* ecl_grid1 = ecl_grid_alloc(gridFile1);
-            ecl_grid_type* ecl_grid2 = ecl_grid_alloc(gridFile2);
+        try {
+            const char* gridFile1 = argv[1];
+            const char* gridFile2 = argv[2];
+            const char* unrstFile1 = argv[3];
+            const char* unrstFile2 = argv[4];
+            // Comparing grid sizes from .EGRID-files
+            {
+                ecl_grid_type* ecl_grid1 = ecl_grid_alloc(gridFile1);
+                ecl_grid_type* ecl_grid2 = ecl_grid_alloc(gridFile2); 
+                std::cout << "\nName of grid1: " << ecl_grid_get_name(ecl_grid1) << std::endl;
+                const int gridCount1 = ecl_grid_get_global_size(ecl_grid1);
+                std::cout << "Grid1 count = " << gridCount1 << std::endl;
+                std::cout << "Name of grid2: " << ecl_grid_get_name(ecl_grid2) << std::endl;
+                const int gridCount2 = ecl_grid_get_global_size(ecl_grid2);
+                std::cout << "Grid2 count = " << gridCount2 << std::endl;
 
-            std::cout << "\nName of grid1: " << ecl_grid_get_name(ecl_grid1) << std::endl;
-            int gridCount1 = ecl_grid_get_global_size(ecl_grid1);
-            std::cout << "Grid1 count = " << gridCount1 << std::endl;
-            std::cout << "Name of grid2: " << ecl_grid_get_name(ecl_grid2) << std::endl;
-            int gridCount2 = ecl_grid_get_global_size(ecl_grid2);
-            std::cout << "Grid2 count = " << gridCount2 << std::endl;
-
-            ecl_grid_free(ecl_grid1);
-            ecl_grid_free(ecl_grid2);
-        }
-
-        //Comparing keyword values from .UNRST-files:
-
-        ReadUNRST read;
-        if (read.open(unrstFile1, unrstFile2)) {
-            for (const char* keyword : {"SGAS", "SWAT", "PRESSURE"}) {
-                std::cout << "\nKeyword " << keyword << ":\n\n";
-
-                std::vector<double> absDeviation, relDeviation;
-                read.results(keyword, &absDeviation, &relDeviation);
-
-                std::cout << "absDeviation size = " << absDeviation.size() << std::endl;
-                std::cout << "relDeviation size = " << relDeviation.size() << std::endl;
-                std::cout << "Average absolute deviation = " << ReadUNRST::average(absDeviation) << std::endl;
-                std::cout << "Median absolute deviation = " << ReadUNRST::median(absDeviation) << std::endl;
-                std::cout << "Average relative deviation = " << ReadUNRST::average(relDeviation) << std::endl;
-                std::cout << "Median relative deviation = " << ReadUNRST::median(relDeviation) << std::endl;
+                ecl_grid_free(ecl_grid1);
+                ecl_grid_free(ecl_grid2);
             }
-            std::cout << std::endl;
-            read.close();
+
+            //Comparing keyword values from .UNRST-files:
+
+            ReadUNRST read;
+            if (read.open(unrstFile1, unrstFile2)) {
+                for (const char* keyword : {"SGAS", "SWAT", "PRESSURE"}) {
+                    std::cout << "\nKeyword " << keyword << ":\n\n";
+
+                    std::vector<double> absDeviation, relDeviation;
+                    read.results(keyword, absDeviation, relDeviation);
+
+                    //std::cout << "absDeviation size = " << absDeviation.size() << std::endl;
+                    //std::cout << "relDeviation size = " << relDeviation.size() << std::endl;
+                    std::cout << "Average absolute deviation = " << ReadUNRST::average(absDeviation) << std::endl;
+                    std::cout << "Median absolute deviation = " << ReadUNRST::median(absDeviation) << std::endl;
+                    std::cout << "Average relative deviation = " << ReadUNRST::average(relDeviation) << std::endl;
+                    std::cout << "Median relative deviation = " << ReadUNRST::median(relDeviation) << std::endl;
+                }
+                std::cout << std::endl;
+                read.close();
+            }
         }
-    }
+        catch (const std::exception& e) {
+            std::cerr << "Program threw an exception: " << e.what() << std::endl;
+            return EXIT_FAILURE;
+        } }
     return 0;
 }
 
@@ -60,67 +83,79 @@ void printHelp() {
         << "3. .UNRST-file number 2\n";
 }
 
+//------------------------------------------------//
+
 bool ReadUNRST::open(const char* unrstFile1, const char* unrstFile2) {
-    if (ecl_file1 == NULL) {
+    if (ecl_file1 == nullptr) {
         ecl_file1 = ecl_file_open(unrstFile1, ECL_FILE_CLOSE_STREAM);
     }
-    if (ecl_file2 == NULL) {
+    if (ecl_file2 == nullptr) {
         ecl_file2 = ecl_file_open(unrstFile2, ECL_FILE_CLOSE_STREAM);
     }
 
-    if (ecl_file1 == NULL || ecl_file2 == NULL) {
+    if (ecl_file1 == nullptr) {
+        OPM_THROW(std::runtime_error, "Error opening first .UNRST-file.");
+        return false;
+    } 
+    else if (ecl_file2 == nullptr) {
+        OPM_THROW(std::runtime_error, "Error opening second .UNRST-file.");
         return false;
     }
-    else {
-        return true;
-    }
+    return true;
 }
+
+
 
 void ReadUNRST::close() {
     ecl_file_close(ecl_file1);
     ecl_file_close(ecl_file2);
 }
 
-bool ReadUNRST::results(const char* keyword, std::vector<double>* absDeviation, std::vector<double>* relDeviation) {
-    if (!ecl_file_has_kw(ecl_file1, keyword) || !ecl_file_has_kw(ecl_file2, keyword)) {
-        std::cout << "The file does not have this keyword." << std::endl;
-        return false;
-    }
-    unsigned int occurrences1 = ecl_file_get_num_named_kw(ecl_file1, keyword);
-    unsigned int occurrences2 = ecl_file_get_num_named_kw(ecl_file2, keyword);
-    if (occurrences1 != occurrences2) {
-        std::cout << "Keyword occurrences are not equal." << std::endl;
-        return false;
-    }
 
+
+bool ReadUNRST::results(const char* keyword, std::vector<double>& absDeviation, std::vector<double>& relDeviation) const {
+    if (!ecl_file_has_kw(ecl_file1, keyword) || !ecl_file_has_kw(ecl_file2, keyword)) {
+        OPM_THROW(std::runtime_error, "The file does not have this keyword.");
+        return false;
+    }
+    const unsigned int occurrences1 = ecl_file_get_num_named_kw(ecl_file1, keyword);
+    const unsigned int occurrences2 = ecl_file_get_num_named_kw(ecl_file2, keyword);
+    if (occurrences1 != occurrences2) {
+        OPM_THROW(std::runtime_error, "Number of keyword occurrences are not equal.");
+        return false;
+    }
     for (unsigned int index = 0; index < occurrences1; ++index) {
         ecl_kw_type* ecl_kw1 = ecl_file_iget_named_kw(ecl_file1, keyword, index);
-        unsigned int numActiveCells1 = ecl_kw_get_size(ecl_kw1);
+        const unsigned int numActiveCells1 = ecl_kw_get_size(ecl_kw1);
         ecl_kw_type* ecl_kw2 = ecl_file_iget_named_kw(ecl_file2, keyword, index);
-        unsigned int numActiveCells2 = ecl_kw_get_size(ecl_kw2);
+        const unsigned int numActiveCells2 = ecl_kw_get_size(ecl_kw2);
         if (numActiveCells1 != numActiveCells2) {
-            std::cout << "Number of active cells are different." << std::endl;
+            OPM_THROW(std::runtime_error, "Number of active cells are different.");
             return false;
         }
-
-        std::vector<double> values1; // Elements in the vector corresponds to active cells
-        std::vector<double> values2; // Elements in the vector corresponds to active cells
+        std::vector<double> values1, values2; // Elements in the vector corresponds to active cells
         values1.resize(numActiveCells1);
         values2.resize(numActiveCells2);
         ecl_kw_get_data_as_double(ecl_kw1, values1.data());
         ecl_kw_get_data_as_double(ecl_kw2, values2.data());
 
         for (unsigned int i = 0; i < values1.size(); i++) {
-            calculateDeviations(absDeviation, relDeviation, values1[i], values2[i]);
+            Deviation dev = calculateDeviations(values1[i], values2[i]);
+            if (dev.abs != -1) {
+                absDeviation.push_back(dev.abs);
+            }
+            if (dev.rel != -1) {
+                relDeviation.push_back(dev.rel);
+            }
         }
     }
     return true;
 }
 
 
-void ReadUNRST::calculateDeviations(std::vector<double> *absDeviationVector,std::vector<double> *relDeviationVector, double val1, double val2){
-    double absDeviation = 0;
-    double relDeviation = 0;
+
+Deviation ReadUNRST::calculateDeviations(double val1, double val2) const {
+    Deviation deviation;
     if (val1 < 0) {
         val1 = 0;
         //std::cout << "Value 1 has a negative quantity." << std::endl; 
@@ -131,43 +166,35 @@ void ReadUNRST::calculateDeviations(std::vector<double> *absDeviationVector,std:
     }
 
     if (!(val1 == 0 && val2 == 0)) {
-        absDeviation = std::max(val1, val2) - std::min(val1, val2);
-        absDeviationVector->push_back(absDeviation);
+        deviation.abs = std::max(val1, val2) - std::min(val1, val2);
         if (val1 != 0 && val2 != 0) {
-            relDeviation = absDeviation/static_cast<double>(std::max(val1, val2));
-            relDeviationVector->push_back(relDeviation);
+            deviation.rel = deviation.abs/static_cast<double>(std::max(val1, val2));
         }
     }
+    return deviation;
 }
 
-double ReadUNRST::max(std::vector<double>& vec){
-    double maxValue = 0;
-    for(unsigned int i = 0; i < vec.size(); ++i){
-        if (vec[i] > maxValue) {
-            maxValue = vec[i];
-        }
-    }
-    return maxValue;
-}
 
-double ReadUNRST::median(std::vector<double>& vec) {
-    if(vec.empty()) return 0;
+
+double ReadUNRST::median(std::vector<double> vec) {
+    if(vec.empty()) {
+        return 0;
+    } 
     else {
-        std::sort(vec.begin(), vec.end());
-        if(vec.size() % 2 == 0)
-            return (vec[vec.size()/2 - 1] + vec[vec.size()/2]) / 2;
-        else
-            return vec[vec.size()/2];
+        size_t n = vec.size()/2;
+        nth_element(vec.begin(), vec.begin() + n, vec.end());
+        if(vec.size() % 2 == 0) {
+            return 0.5*(vec[n-1]+vec[n]);
+        }
+        else {
+            return vec[n];
+        }
     }
 }
 
-double ReadUNRST::average(std::vector<double>& vec) {
-    if(vec.empty()) return 0;
-    else {
-        double sum = 0;
-        for (unsigned int i = 0; i < vec.size(); ++i) {
-            sum += vec[i];
-        }
-        return sum/vec.size();
-    }
+
+
+double ReadUNRST::average(const std::vector<double>& vec) {
+    double sum = std::accumulate(vec.begin(), vec.end(), 0.0);
+    return sum/vec.size();
 }
