@@ -88,6 +88,33 @@ namespace Opm {
     }
 
 
+    double Well::production_rate( Phase::PhaseEnum phase, size_t timestep ) const {
+        if( !this->isProducer( timestep ) ) return 0.0;
+
+        const auto& p = this->getProductionProperties( timestep );
+
+        switch( phase ) {
+            case Phase::WATER: return p.WaterRate;
+            case Phase::OIL:   return p.OilRate;
+            case Phase::GAS:   return p.GasRate;
+        }
+
+        throw std::logic_error( "Unreachable state. Invalid PhaseEnum value. "
+                                "This is likely a programming error." );
+    }
+
+    double Well::injection_rate( Phase::PhaseEnum phase, size_t timestep ) const {
+        if( !this->isInjector( timestep ) ) return 0.0;
+
+        const auto& i = this->getInjectionProperties( timestep );
+        const auto type = i.injectorType;
+
+        if( phase == Phase::WATER && type != WellInjector::WATER ) return 0.0;
+        if( phase == Phase::OIL   && type != WellInjector::OIL   ) return 0.0;
+        if( phase == Phase::GAS   && type != WellInjector::GAS   ) return 0.0;
+
+        return i.surfaceInjectionRate;
+    }
 
     bool Well::setProductionProperties(size_t timeStep , const WellProductionProperties newProperties) {
         if (isInjector(timeStep))

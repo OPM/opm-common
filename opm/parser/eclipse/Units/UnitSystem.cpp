@@ -40,6 +40,7 @@ namespace {
      */
 
     static const double to_metric[] = {
+        1,
         1 / Metric::Length,
         1 / Metric::Time,
         1 / Metric::Density,
@@ -59,6 +60,7 @@ namespace {
     };
 
     static const double from_metric[] = {
+        1,
         Metric::Length,
         Metric::Time,
         Metric::Density,
@@ -78,6 +80,7 @@ namespace {
     };
 
     static const double to_field[] = {
+        1,
         1 / Field::Length,
         1 / Field::Time,
         1 / Field::Density,
@@ -97,6 +100,7 @@ namespace {
     };
 
     static const double from_field[] = {
+         1,
          Field::Length,
          Field::Time,
          Field::Density,
