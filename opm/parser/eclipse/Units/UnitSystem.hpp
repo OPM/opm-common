@@ -37,6 +37,7 @@ namespace Opm {
         };
 
         enum class measure : int {
+            identity,
             length,
             time,
             density,
