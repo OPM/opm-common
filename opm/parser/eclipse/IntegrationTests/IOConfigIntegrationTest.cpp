@@ -347,3 +347,12 @@ BOOST_AUTO_TEST_CASE( RestartConfig2 ) {
 
     BOOST_CHECK_EQUAL( ioConfig->getFirstRestartStep() , 0 );
 }
+
+
+
+BOOST_AUTO_TEST_CASE( SPE9END ) {
+    ParseContext parseContext;
+    ParserPtr parser(new Parser());
+    DeckConstPtr deck = parser->parseFile("testdata/integration_tests/IOConfig/SPE9_END.DATA", parseContext);
+    BOOST_CHECK_NO_THROW( EclipseState state( deck , parseContext ) );
+}

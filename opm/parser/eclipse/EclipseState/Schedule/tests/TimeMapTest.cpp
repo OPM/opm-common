@@ -308,10 +308,6 @@ BOOST_AUTO_TEST_CASE(initTimestepsYearsAndMonths) {
     Opm::DeckPtr deck = parser->parseString(deckData, Opm::ParseContext());
     const Opm::TimeMap tmap(deck);
 
-    Opm::TimeMap* writableTimemap = const_cast<Opm::TimeMap*>(&tmap);
-    writableTimemap->initFirstTimestepsMonths();
-    writableTimemap->initFirstTimestepsYears();
-
     /*deckData timesteps:
     0   21 may  1981 START
     1   22 may  1981

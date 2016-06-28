@@ -41,8 +41,6 @@ namespace Opm {
         void addTStep(boost::posix_time::time_duration step);
         void addFromDATESKeyword( const DeckKeyword& DATESKeyword );
         void addFromTSTEPKeyword( const DeckKeyword& TSTEPKeyword );
-        void initFirstTimestepsMonths();
-        void initFirstTimestepsYears();
         size_t size() const;
         size_t last() const;
         size_t numTimesteps() const;
