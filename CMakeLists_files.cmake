@@ -35,6 +35,7 @@ list (APPEND MAIN_SOURCE_FILES
 list (APPEND TEST_SOURCE_FILES
       tests/test_SimulationDataContainer.cpp
       tests/test_cmp.cpp
+      tests/test_compareSummary.cpp
       tests/test_OpmLog.cpp
       tests/test_messagelimiter.cpp
       )
