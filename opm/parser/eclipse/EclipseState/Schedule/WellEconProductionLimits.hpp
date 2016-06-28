@@ -33,15 +33,27 @@ namespace Opm {
         WellEconProductionLimits(const DeckRecord& record);
         WellEconProductionLimits();
 
+        // TODO: not handling things related to m_secondary_max_water_cut
+        // for the moment.
+
         // limit switch on?
         bool onAnyEffectiveLimit() const {
+            return (onAnyRatioLimit() ||
+                    onAnyRateLimit());
+        };
+
+        bool onAnyRatioLimit() const {
+            return (onMaxWaterCut()       ||
+                    onMaxGasOilRatio()    ||
+                    onMaxWaterGasRatio()  ||
+                    onMaxGasLiquidRatio());
+        };
+
+
+        bool onAnyRateLimit() const {
             return (onMinOilRate()            ||
                     onMinGasRate()            ||
-                    onMaxWaterCut()           ||
-                    onMaxGasOilRatio()        ||
-                    onMaxWaterGasRatio()      ||
-                    onMaxGasLiquidRatio()     ||
-                    onMaxTemperature()        ||
+                    onMinLiquidRate()         ||
                     onMinReservoirFluidRate());
         };
 
@@ -76,6 +88,10 @@ namespace Opm {
         // assuming Celsius temperature is used internally
         bool onMaxTemperature() const {
             return (m_max_temperature > -273.15);
+        };
+
+        bool onMinLiquidRate() const {
+            return (m_min_liquid_rate > 0.0);
         };
 
         bool onMinReservoirFluidRate() const {
