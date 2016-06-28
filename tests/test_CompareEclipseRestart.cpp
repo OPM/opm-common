@@ -1,4 +1,4 @@
-#include "test_compare_eclipse.hpp"
+#include "test_compare_eclipse.cpp"
 
 int main(int argc, char** argv) {
     char* gridFile1 = argv[1];
