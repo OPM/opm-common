@@ -16,7 +16,7 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#include <opm-common/tests/test_CompareEclipseRestart.hpp>
+#include "test_CompareEclipseRestart.hpp"
 
 //------------------------------------------------//
 
@@ -46,31 +46,25 @@ int main(int argc, char** argv) {
             }
 
             //Comparing keyword values from .UNRST-files:
+            UNRSTReader read(unrstFile1, unrstFile2);
+            for (const char* keyword : {"SGAS", "SWAT", "PRESSURE"}) {
+                std::cout << "\nKeyword " << keyword << ":\n\n";
 
-            ReadUNRST read;
-            if (read.open(unrstFile1, unrstFile2)) {
-                for (const char* keyword : {"SGAS", "SWAT", "PRESSURE"}) {
-                    std::cout << "\nKeyword " << keyword << ":\n\n";
-
-                    std::vector<double> absDeviation, relDeviation;
-                    read.results(keyword, absDeviation, relDeviation);
-
-                    //std::cout << "absDeviation size = " << absDeviation.size() << std::endl;
-                    //std::cout << "relDeviation size = " << relDeviation.size() << std::endl;
-                    std::cout << "Average absolute deviation = " << ReadUNRST::average(absDeviation) << std::endl;
-                    std::cout << "Median absolute deviation = " << ReadUNRST::median(absDeviation) << std::endl;
-                    std::cout << "Average relative deviation = " << ReadUNRST::average(relDeviation) << std::endl;
-                    std::cout << "Median relative deviation = " << ReadUNRST::median(relDeviation) << std::endl;
-                }
-                std::cout << std::endl;
-                read.close();
+                std::vector<double> absDeviation, relDeviation;
+                read.results(keyword, absDeviation, relDeviation);
+                std::cout << "Average absolute deviation = " << UNRSTReader::average(absDeviation) << std::endl;
+                std::cout << "Median absolute deviation = " << UNRSTReader::median(absDeviation) << std::endl;
+                std::cout << "Average relative deviation = " << UNRSTReader::average(relDeviation) << std::endl;
+                std::cout << "Median relative deviation = " << UNRSTReader::median(relDeviation) << std::endl;
             }
+            std::cout << std::endl;
         }
         catch (const std::exception& e) {
             std::cerr << "Program threw an exception: " << e.what() << std::endl;
             return EXIT_FAILURE;
-        } }
-    return 0;
+        }
+        return 0;
+    }
 }
 
 //------------------------------------------------//
@@ -85,35 +79,29 @@ void printHelp() {
 
 //------------------------------------------------//
 
-bool ReadUNRST::open(const char* unrstFile1, const char* unrstFile2) {
-    if (ecl_file1 == nullptr) {
-        ecl_file1 = ecl_file_open(unrstFile1, ECL_FILE_CLOSE_STREAM);
-    }
-    if (ecl_file2 == nullptr) {
-        ecl_file2 = ecl_file_open(unrstFile2, ECL_FILE_CLOSE_STREAM);
-    }
+
+UNRSTReader::UNRSTReader(const char* unrstFile1, const char* unrstFile2) {
+    ecl_file1 = ecl_file_open(unrstFile1, ECL_FILE_CLOSE_STREAM);
+    ecl_file2 = ecl_file_open(unrstFile2, ECL_FILE_CLOSE_STREAM);
 
     if (ecl_file1 == nullptr) {
         OPM_THROW(std::runtime_error, "Error opening first .UNRST-file.");
-        return false;
     } 
-    else if (ecl_file2 == nullptr) {
+    if (ecl_file2 == nullptr) {
         OPM_THROW(std::runtime_error, "Error opening second .UNRST-file.");
-        return false;
     }
-    return true;
 }
 
 
 
-void ReadUNRST::close() {
+UNRSTReader::~UNRSTReader() {
     ecl_file_close(ecl_file1);
     ecl_file_close(ecl_file2);
 }
 
 
 
-bool ReadUNRST::results(const char* keyword, std::vector<double>& absDeviation, std::vector<double>& relDeviation) const {
+bool UNRSTReader::results(const char* keyword, std::vector<double>& absDeviation, std::vector<double>& relDeviation) const {
     if (!ecl_file_has_kw(ecl_file1, keyword) || !ecl_file_has_kw(ecl_file2, keyword)) {
         OPM_THROW(std::runtime_error, "The file does not have this keyword.");
         return false;
@@ -154,7 +142,7 @@ bool ReadUNRST::results(const char* keyword, std::vector<double>& absDeviation, 
 
 
 
-Deviation ReadUNRST::calculateDeviations(double val1, double val2) const {
+Deviation UNRSTReader::calculateDeviations(double val1, double val2) const {
     Deviation deviation;
     if (val1 < 0) {
         val1 = 0;
@@ -168,7 +156,7 @@ Deviation ReadUNRST::calculateDeviations(double val1, double val2) const {
     if (!(val1 == 0 && val2 == 0)) {
         deviation.abs = std::max(val1, val2) - std::min(val1, val2);
         if (val1 != 0 && val2 != 0) {
-            deviation.rel = deviation.abs/static_cast<double>(std::max(val1, val2));
+            deviation.rel = deviation.abs/(std::max(val1, val2));
         }
     }
     return deviation;
@@ -176,7 +164,7 @@ Deviation ReadUNRST::calculateDeviations(double val1, double val2) const {
 
 
 
-double ReadUNRST::median(std::vector<double> vec) {
+double UNRSTReader::median(std::vector<double> vec) {
     if (vec.empty()) {
         return 0;
     } 
@@ -194,7 +182,7 @@ double ReadUNRST::median(std::vector<double> vec) {
 
 
 
-double ReadUNRST::average(const std::vector<double>& vec) {
+double UNRSTReader::average(const std::vector<double>& vec) {
     double sum = std::accumulate(vec.begin(), vec.end(), 0.0);
     return sum/vec.size();
 }

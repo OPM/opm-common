@@ -41,15 +41,15 @@ struct Deviation {
 
 
 
-class ReadUNRST {
+class UNRSTReader {
     private:
         ecl_file_type* ecl_file1;
         ecl_file_type* ecl_file2;
 
     public:
-        ReadUNRST(): ecl_file1(nullptr), ecl_file2(nullptr) {}
-        bool open(const char* unrstFile1, const char* unrstFile2);
-        void close();
+        UNRSTReader(): ecl_file1(nullptr), ecl_file2(nullptr) {}
+        UNRSTReader(const char* unrstFile1, const char* unrstFile2);
+        ~UNRSTReader();
 
         bool results(const char* keyword, std::vector<double>& absDeviaiton, std::vector<double>& relDeviation) const;
         Deviation calculateDeviations(double val1, double val2) const;
