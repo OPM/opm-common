@@ -16,7 +16,7 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#include "test_CompareEclipseRestart.hpp"
+#include <opm-common/tests/test_CompareEclipseRestart.hpp>
 
 //------------------------------------------------//
 
@@ -177,13 +177,13 @@ Deviation ReadUNRST::calculateDeviations(double val1, double val2) const {
 
 
 double ReadUNRST::median(std::vector<double> vec) {
-    if(vec.empty()) {
+    if (vec.empty()) {
         return 0;
     } 
     else {
         size_t n = vec.size()/2;
         nth_element(vec.begin(), vec.begin() + n, vec.end());
-        if(vec.size() % 2 == 0) {
+        if (vec.size() % 2 == 0) {
             return 0.5*(vec[n-1]+vec[n]);
         }
         else {

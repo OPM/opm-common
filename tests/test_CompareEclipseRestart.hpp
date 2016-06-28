@@ -32,10 +32,12 @@ void printHelp();
 
 
 
+
 struct Deviation {
     double abs = -1;
     double rel = -1;
 };
+
 
 
 
