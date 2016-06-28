@@ -66,8 +66,11 @@ static DeckPtr createDeck( const std::string& summary ) {
 
 static std::vector< std::string > sorted_names( const SummaryConfig& summary ) {
     std::vector< std::string > ret;
-    for( const auto& x : summary )
-        ret.push_back( x.wgname() );
+    for( const auto& x : summary ) {
+        auto wgname = x.wgname();
+        if(wgname)
+            ret.push_back( x.wgname() );
+    }
 
     std::sort( ret.begin(), ret.end() );
     return ret;
@@ -77,6 +80,21 @@ static std::vector< std::string > sorted_keywords( const SummaryConfig& summary 
     std::vector< std::string > ret;
     for( const auto& x : summary )
         ret.push_back( x.keyword() );
+
+    std::sort( ret.begin(), ret.end() );
+    return ret;
+}
+
+static std::vector< std::string > sorted_key_names( const SummaryConfig& summary ) {
+    std::vector< std::string > ret;
+    for( const auto& x : summary ) {
+        std::string key = x.keyword();
+        auto wgname = x.wgname();
+        if(wgname) {
+            key += ": "+ std::string(wgname);
+        }
+        ret.push_back( key );
+    }
 
     std::sort( ret.begin(), ret.end() );
     return ret;
@@ -184,4 +202,40 @@ BOOST_AUTO_TEST_CASE(completions) {
     BOOST_CHECK_EQUAL_COLLECTIONS(
             keywords.begin(), keywords.end(),
             names.begin(), names.end() );
+}
+
+BOOST_AUTO_TEST_CASE(summary_ALL) {
+
+    const auto input = "ALL\n";
+
+    const auto summary = createSummary( input );
+    const auto key_names = sorted_key_names( summary );
+
+    std::vector<std::string> all;
+
+    for(const std::string& keyword: SummaryConfig::getAllExpandedKeywords()) {
+        if(keyword[0]=='F') {
+            all.push_back(keyword);
+        }
+        else if (keyword[0]=='G') {
+            auto kn = keyword + ": ";
+            all.push_back(kn + "G");
+            all.push_back(kn + "OP");
+            all.push_back(kn + "FIELD");
+        }
+        else if (keyword[0]=='W') {
+            auto kn = keyword + ": ";
+            all.push_back(kn + "W_1");
+            all.push_back(kn + "WX2");
+            all.push_back(kn + "W_3");
+            all.push_back(kn + "PRODUCER");
+        }
+    }
+
+    std::sort(all.begin(), all.end());
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        all.begin(), all.end(),
+        key_names.begin(), key_names.end());
+
 }
