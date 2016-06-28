@@ -33,9 +33,10 @@ namespace Opm {
 
     class TimeMap {
     public:
-        TimeMap(boost::posix_time::ptime startDate);
-        TimeMap(std::shared_ptr< const Deck > deck);
-        TimeMap( const Deck& deck);
+        explicit TimeMap(boost::posix_time::ptime startDate);
+        explicit TimeMap(std::shared_ptr< const Deck > deck);
+        explicit TimeMap( const Deck& deck);
+
         void addTime(boost::posix_time::ptime newTime);
         void addTStep(boost::posix_time::time_duration step);
         void addFromDATESKeyword( const DeckKeyword& DATESKeyword );

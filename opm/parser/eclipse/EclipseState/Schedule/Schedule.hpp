@@ -133,8 +133,6 @@ namespace Opm
         void handleGCONPROD( const DeckKeyword& keyword, size_t currentStep);
         void handleGEFAC( const DeckKeyword& keyword, size_t currentStep);
         void handleTUNING( const DeckKeyword& keyword, size_t currentStep);
-        void handleDATES( const DeckKeyword& keyword );
-        void handleTSTEP( const DeckKeyword& keyword );
         void handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep);
         void handleWRFT( const DeckKeyword& keyword, size_t currentStep);
         void handleWRFTPLT( const DeckKeyword& keyword, size_t currentStep);

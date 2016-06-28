@@ -58,17 +58,6 @@
 
 namespace Opm {
 
-    static inline std::shared_ptr< TimeMap > createTimeMap( const Deck& deck ) {
-        boost::gregorian::date defaultStartTime( 1983, 1, 1 );
-        boost::posix_time::ptime startTime( defaultStartTime );
-
-        if (deck.hasKeyword("START")) {
-            const auto& startKeyword = deck.getKeyword("START");
-            startTime = TimeMap::timeFromEclipse(startKeyword.getRecord(0));
-        }
-
-        return std::make_shared< TimeMap >( startTime );
-    }
 
     Schedule::Schedule(const ParseContext& parseContext,
                        std::shared_ptr<const EclipseGrid> grid,
@@ -79,8 +68,8 @@ namespace Opm {
     Schedule::Schedule( const ParseContext& parseContext,
                         std::shared_ptr<const EclipseGrid> grid,
                         const Deck& deck ) :
-            m_timeMap( createTimeMap( deck ) ),
-            m_grid( grid )
+        m_timeMap( std::make_shared< TimeMap>( deck )),
+        m_grid( grid )
     {
         m_tuning.reset(new Tuning(m_timeMap));
         m_events.reset(new Events(m_timeMap));
@@ -144,19 +133,14 @@ namespace Opm {
         for (size_t keywordIdx = 0; keywordIdx < section.size(); ++keywordIdx) {
             const auto& keyword = section.getKeyword(keywordIdx);
 
-            if (keyword.name() == "DATES") {
-                handleDATES(keyword);
+            if (keyword.name() == "DATES")
                 currentStep += keyword.size();
-            }
 
-            if (keyword.name() == "TSTEP") {
-                handleTSTEP(keyword);
+            if (keyword.name() == "TSTEP")
                 currentStep += keyword.getRecord(0).getItem(0).size(); // This is a bit weird API.
-            }
 
-            if (keyword.name() == "WELSPECS") {
+            if (keyword.name() == "WELSPECS")
                 handleWELSPECS(section, keyword, currentStep);
-            }
 
             if (keyword.name() == "WCONHIST")
                 handleWCONHIST(keyword, currentStep);
@@ -257,9 +241,6 @@ namespace Opm {
             }
         }
 
-        m_timeMap->initFirstTimestepsYears();
-        m_timeMap->initFirstTimestepsMonths();
-
         for (auto rftPair = rftProperties.begin(); rftPair != rftProperties.end(); ++rftPair) {
             const DeckKeyword& keyword = *rftPair->first;
             size_t timeStep = rftPair->second;
@@ -279,14 +260,6 @@ namespace Opm {
     {
     }
 
-
-    void Schedule::handleDATES( const DeckKeyword& keyword) {
-        m_timeMap->addFromDATESKeyword(keyword);
-    }
-
-    void Schedule::handleTSTEP( const DeckKeyword& keyword) {
-        m_timeMap->addFromTSTEPKeyword(keyword);
-    }
 
     bool Schedule::handleGroupFromWELSPECS(const std::string& groupName, GroupTreePtr newTree) const {
         bool treeUpdated = false;

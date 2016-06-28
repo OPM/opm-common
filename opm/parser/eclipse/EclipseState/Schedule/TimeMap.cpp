@@ -47,7 +47,7 @@ namespace Opm {
         // keyword was specified)
         if (deck.hasKeyword("START")) {
             const auto& keyword = deck.getKeyword("START");
-            startTime = timeFromEclipse(keyword.getRecord(/*index=*/0));
+            startTime = timeFromEclipse(keyword.getRecord(0));
         }
 
         m_timeList.push_back( startTime );
