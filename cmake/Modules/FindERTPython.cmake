@@ -27,7 +27,7 @@ if(PYTHONINTERP_FOUND)
   if (ERT_ROOT)
       list(APPEND PATH_LIST ${ERT_ROOT})
   endif()
-  list(APPEND PATH_LIST ${CMAKE_INSTALL_PREFIX})
+  list(APPEND PATH_LIST ${CMAKE_PREFIX_PATH})
 
   # Add various popular sibling alternatives.
   list(APPEND PATH_LIST "${PROJECT_SOURCE_DIR}/../ert/build/${PYTHON_INSTALL_PREFIX}"
