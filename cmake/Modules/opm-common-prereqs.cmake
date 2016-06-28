@@ -14,4 +14,5 @@ set (opm-common_DEPS
 	# various runtime library enhancements
 	"Boost 1.44.0
 		COMPONENTS system unit_test_framework REQUIRED"
+	"ERT"
 	)
