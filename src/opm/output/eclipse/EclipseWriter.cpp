@@ -59,23 +59,22 @@ namespace {
 
 // throw away the data for all non-active cells and reorder to the Cartesian logic of
 // eclipse
-void restrictAndReorderToActiveCells(std::vector<double> &data,
-                                     int numCells,
-                                     const int* compressedToCartesianCellIdx)
+std::vector<double> restrictAndReorderToActiveCells(const std::vector<double> &flow_data,
+                                                    int numCells,
+                                                    const int* compressedToCartesianCellIdx)
 {
-    if (!compressedToCartesianCellIdx)
-        // if there is no active -> global mapping, all cells
-        // are considered active
-        return;
-
     std::vector<double> eclData;
-    eclData.reserve( numCells );
+    eclData.resize( numCells );
 
-    // activate those cells that are actually there
-    for (int i = 0; i < numCells; ++i) {
-        eclData.push_back( data[ compressedToCartesianCellIdx[i] ] );
+    if (!compressedToCartesianCellIdx || (flow_data.size() == static_cast<size_t>(numCells)))
+        std::copy( flow_data.begin() , flow_data.end() , eclData.begin() );
+    else {
+        // activate those cells that are actually there
+        for (int i = 0; i < numCells; ++i)
+            eclData[i] = flow_data[ compressedToCartesianCellIdx[i] ];
     }
-    data.swap( eclData );
+
+    return eclData;
 }
 
 inline void convertFromSiTo( std::vector< double >& siValues,
@@ -415,7 +414,7 @@ class EclipseWriter::Impl {
         int numCells;
         std::array< int, 3 > cartesianSize;
         const int* compressed_to_cartesian;
-        std::vector< int > gridToEclipseIdx;
+        std::vector< int > compressedToCartesian;
         bool output_enabled;
         int ert_phase_mask;
 };
@@ -435,14 +434,14 @@ EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
     , sim_start_time( es->getSchedule()->posixStartTime() )
     , numCells( numCellsArg )
     , compressed_to_cartesian( compressed_to_cart )
-    , gridToEclipseIdx( numCells, int(-1) )
+    , compressedToCartesian( numCells , int(-1) )
     , output_enabled( eclipseState->getIOConfig()->getOutputEnabled() )
     , ert_phase_mask( ertPhaseMask( eclipseState->getTableManager() ) )
 {}
 
 
 void EclipseWriter::writeINITFile(const std::vector<data::CellData>& simProps, const NNC& nnc) const {
-    const auto& gridToEclipseIdx = this->impl->gridToEclipseIdx;
+    const auto& compressedToCartesian = this->impl->compressedToCartesian;
     const auto& es = *this->impl->es;
     const auto& units = es.getUnits();
     std::shared_ptr<const IOConfig> ioConfig = es.getIOConfigConst();
@@ -458,36 +457,53 @@ void EclipseWriter::writeINITFile(const std::vector<data::CellData>& simProps, c
                         ECL_ENDIAN_FLIP );
 
 
-    // Write INIT header
+    // Write INIT header. Observe that the PORV vector is treated
+    // specially; that is because for this particulat vector we write
+    // a total of nx*ny*nz values, where the PORV vector has been
+    // explicitly set to zero for inactive cells. The convention is
+    // that the active/inactive cell mapping can be inferred by
+    // reading the PORV vector.
     {
-        auto poro = es.get3DProperties().getDoubleGridProperty("PORO").getData();
-        restrictAndReorderToActiveCells( poro, gridToEclipseIdx.size(), gridToEclipseIdx.data());
 
-        ERT::EclKW< float > poro_kw( "PORO", poro );
+        const auto& opm_data = es.get3DProperties().getDoubleGridProperty("PORV").getData();
+        auto ecl_data = opm_data;
+
+        for (size_t global_index = 0; global_index < opm_data.size(); global_index++)
+            if (!this->impl->grid.cellActive( global_index ))
+                ecl_data[global_index] = 0;
+
+
         ecl_init_file_fwrite_header( fortio.get(),
                                      this->impl->grid.c_ptr(),
-                                     poro_kw.get(),
+                                     NULL,
                                      this->impl->ert_phase_mask,
                                      this->impl->sim_start_time);
+
+        convertFromSiTo( ecl_data,
+                         units,
+                         UnitSystem::measure::volume);
+
+        writeKeyword( fortio, "PORV" , ecl_data );
     }
 
     // Write properties from the input deck.
     {
         const auto& properties = es.get3DProperties();
-
-        // Observe that PORO and PORV are special cased in the ecl_init_file_fwrite_header function.
         using double_kw = std::pair<std::string, UnitSystem::measure>;
-        std::vector<double_kw> doubleKeywords = {{"PERMX" , UnitSystem::measure::permeability },
+        std::vector<double_kw> doubleKeywords = {{"PORO"  , UnitSystem::measure::identity },
+                                                 {"PERMX" , UnitSystem::measure::permeability },
                                                  {"PERMY" , UnitSystem::measure::permeability },
                                                  {"PERMZ" , UnitSystem::measure::permeability }};
 
         for (const auto& kw_pair : doubleKeywords) {
-            auto data = properties.getDoubleGridProperty(kw_pair.first).getData();
-            convertFromSiTo( data,
+            const auto& opm_data = properties.getDoubleGridProperty(kw_pair.first).getData();
+            auto ecl_data = restrictAndReorderToActiveCells( opm_data , compressedToCartesian.size(), compressedToCartesian.data());
+
+            convertFromSiTo( ecl_data,
                              units,
                              kw_pair.second );
-            restrictAndReorderToActiveCells( data , gridToEclipseIdx.size(), gridToEclipseIdx.data());
-            writeKeyword( fortio, kw_pair.first, data );
+
+            writeKeyword( fortio, kw_pair.first, ecl_data );
         }
     }
 
@@ -495,12 +511,14 @@ void EclipseWriter::writeINITFile(const std::vector<data::CellData>& simProps, c
     // Write properties which have been initialized by the simulator.
     {
         for (const auto& prop : simProps) {
-            auto data = prop.data;
-            convertFromSiTo( data,
+            const auto& opm_data = prop.data;
+            auto ecl_data = restrictAndReorderToActiveCells( opm_data, compressedToCartesian.size(), compressedToCartesian.data());
+
+            convertFromSiTo( ecl_data,
                              units,
                              prop.dim );
-            restrictAndReorderToActiveCells(data, gridToEclipseIdx.size(), gridToEclipseIdx.data());
-            writeKeyword( fortio, prop.name, data );
+
+            writeKeyword( fortio, prop.name, ecl_data );
         }
     }
 
@@ -571,33 +589,28 @@ void EclipseWriter::writeTimeStep(int report_step,
     using dc = data::Solution::key;
 
     time_t current_posix_time = this->impl->sim_start_time + secs_elapsed;
-    const auto& gridToEclipseIdx = this->impl->gridToEclipseIdx;
     const auto& es = *this->impl->es;
     const auto& grid = this->impl->grid;
     const auto& units = es.getUnits();
-
-    auto& pressure = cells[ dc::PRESSURE ];
-    convertFromSiTo( pressure,
-                     units,
-                     UnitSystem::measure::pressure );
-    restrictAndReorderToActiveCells(pressure, gridToEclipseIdx.size(), gridToEclipseIdx.data());
-
-    if( cells.has( dc::SWAT ) ) {
-        auto& saturation_water = cells[ dc::SWAT ];
-        restrictAndReorderToActiveCells(saturation_water, gridToEclipseIdx.size(), gridToEclipseIdx.data());
-    }
-
-
-    if( cells.has( dc::SGAS ) ) {
-        auto& saturation_gas = cells[ dc::SGAS ];
-        restrictAndReorderToActiveCells(saturation_gas, gridToEclipseIdx.size(), gridToEclipseIdx.data());
-    }
 
     IOConfigConstPtr ioConfig = this->impl->es->getIOConfigConst();
 
 
     const auto days = units.from_si( UnitSystem::measure::time, secs_elapsed );
     const auto& schedule = *es.getSchedule();
+
+    /*
+       This routine can optionally write RFT and/or restart file; to
+       be certain that the data correctly converted to output units
+       the conversion is done once here - and not closer to the actual
+       use-site.
+    */
+    convertFromSiTo( cells[ dc::PRESSURE ], units, UnitSystem::measure::pressure );
+    if ( cells.has( dc::TEMP ))
+        convertFromSiTo( cells[ dc::TEMP ],
+                         units,
+                         UnitSystem::measure::temperature );
+
 
     // Write restart file
     if(!isSubstep && ioConfig->getWriteRestartFile(report_step))
@@ -663,34 +676,44 @@ void EclipseWriter::writeTimeStep(int report_step,
         restartHandle.add_kw( ERT::EclKW< int >( ICON_KW, icon_data ) );
 
 
-        Solution sol(restartHandle);
-        sol.add( ERT::EclKW<float>("PRESSURE", pressure) );
+        /*
+          The code in the block below is in a state of flux, and not
+          very well tested. In particular there have been issues with
+          the mapping between active an inactive cells in the past -
+          there might be more those.
 
+          Currently the code hard-codes the following assumptions:
 
-        // write the cell temperature
-        auto& temperature = cells[ dc::TEMP ];
-        convertFromSiTo( temperature,
-                         units,
-                         UnitSystem::measure::temperature );
-        sol.add( ERT::EclKW<float>("TEMP", temperature) );
+            1. All the cells[ ] vectors have size equal to the number
+               of active cells, and they are already in eclipse
+               ordering.
 
+            2. No unit transformatio applied to the saturation and
+               RS/RV vectors.
 
-        if( cells.has( dc::SWAT ) ) {
-            sol.add( ERT::EclKW<float>( "SWAT", cells[ dc::SWAT ] ) );
+        */
+        {
+            Solution sol(restartHandle);
+
+            sol.add( ERT::EclKW<float>("PRESSURE", cells[ dc::PRESSURE ]));
+
+            if ( cells.has( dc::TEMP ))
+                sol.add( ERT::EclKW<float>("TEMP", cells[ dc::TEMP ]) );
+
+            if( cells.has( dc::SWAT ) )
+                sol.add( ERT::EclKW<float>( "SWAT", cells[ dc::SWAT ] ) );
+
+            if( cells.has( dc::SGAS ) )
+                sol.add( ERT::EclKW<float>( "SGAS", cells[ dc::SGAS ] ) );
+
+            // Write RS - Dissolved GOR
+            if( cells.has( dc::RS ) )
+                sol.add( ERT::EclKW<float>("RS", cells[ dc::RS ] ) );
+
+            // Write RV - Volatilized oil/gas ratio
+            if( cells.has( dc::RV ) )
+                sol.add( ERT::EclKW<float>("RV", cells[ dc::RV ] ) );
         }
-
-
-        if( cells.has( dc::SGAS ) ) {
-            sol.add( ERT::EclKW<float>( "SGAS", cells[ dc::SGAS ] ) );
-        }
-
-        // Write RS - Dissolved GOR
-        if( cells.has( dc::RS ) )
-            sol.add( ERT::EclKW<float>("RS", cells[ dc::RS ] ) );
-
-        // Write RV - Volatilized oil/gas ratio
-        if( cells.has( dc::RV ) )
-            sol.add( ERT::EclKW<float>("RV", cells[ dc::RV ] ) );
     }
 
     const auto unit_type = es.getDeckUnitSystem().getType();
@@ -700,7 +723,7 @@ void EclipseWriter::writeTimeStep(int report_step,
                                    current_posix_time,
                                    days,
                                    to_ert_unit( unit_type ),
-                                   pressure,
+                                   cells[ dc::PRESSURE ],
                                    cells[ dc::SWAT ],
                                    cells[ dc::SGAS ] );
 
@@ -719,39 +742,27 @@ EclipseWriter::EclipseWriter( std::shared_ptr< const EclipseState > es,
 
     impl( new Impl( es, numCells, compressedToCartesianCellIdx) )
 {
-    if( compressedToCartesianCellIdx ) {
-        // if compressedToCartesianCellIdx available then
-        // compute mapping to eclipse order
-        std::map< int , int > indexMap;
-        for (int cellIdx = 0; cellIdx < numCells; ++cellIdx) {
-            int cartesianCellIdx = compressedToCartesianCellIdx[cellIdx];
-            indexMap[ cartesianCellIdx ] = cellIdx;
-        }
-
-        int idx = 0;
-        for( auto it = indexMap.begin(), end = indexMap.end(); it != end; ++it ) {
-            this->impl->gridToEclipseIdx[ idx++ ] = (*it).second;
-        }
-    }
-    else {
-        // if not compressedToCartesianCellIdx was given use identity
-        for (int cellIdx = 0; cellIdx < numCells; ++cellIdx) {
-            this->impl->gridToEclipseIdx[ cellIdx ] = cellIdx;
-        }
-    }
-
-    auto& grid = this->impl->grid;
-
     // update the ACTNUM array using the processed cornerpoint grid
-    std::vector< int > actnumData( grid.getCartesianSize(), 1 );
-    if ( compressedToCartesianCellIdx ) {
-        actnumData.assign( actnumData.size(), 0 );
-
-        for( int cellIdx = 0; cellIdx < numCells; ++cellIdx )
-            actnumData[ compressedToCartesianCellIdx[ cellIdx ] ] = 1;
+    auto& grid = this->impl->grid;
+    {
+        std::vector< int > actnumData( grid.getCartesianSize(), 1 );
+        if ( compressedToCartesianCellIdx ) {
+            actnumData.assign( actnumData.size(), 0 );
+            for( int active_index = 0; active_index < numCells; active_index++ ) {
+                int global_index = compressedToCartesianCellIdx[ active_index ];
+                actnumData[global_index] = 1;
+                this->impl->compressedToCartesian[ active_index ] = global_index;
+            }
+        } else {
+            for( int active_index = 0; active_index < numCells; active_index++ ) {
+                int global_index = active_index;
+                actnumData[global_index] = 1;
+                this->impl->compressedToCartesian[ active_index ] = global_index;
+            }
+        }
+        grid.resetACTNUM( &actnumData[0] );
     }
 
-    grid.resetACTNUM( &actnumData[0] );
     if( !this->impl->output_enabled ) return;
 
     const auto& outputDir = this->impl->outputDir;
