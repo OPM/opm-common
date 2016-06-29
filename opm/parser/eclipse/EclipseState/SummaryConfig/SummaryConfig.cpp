@@ -18,6 +18,8 @@
 */
 
 
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -37,6 +39,7 @@
 
 #include <ert/ecl/ecl_smspec.h>
 
+#include <iostream>
 #include <algorithm>
 #include <array>
 #include <functional>
@@ -64,37 +67,52 @@ namespace Opm {
 		return __ALL_expands_keywords;
 	}
 
+
+    /*
+      When the error handling config says that the error should be
+      logged, the handleMissingWell and handleMissingGroup routines
+      cheat. Ideally we should have a MessageContainer instance around
+      and pass that to the parseContext::handlError() routine. Instead
+      we:
+
+        1. We instantiate new MessageContainer() which is just
+           immediately dropped to floor, leaving the messages behind.
+
+        2. Print a message on stderr.
+
+      The case of incorrectly/missing well/group names in the SUMMARY
+      section did just not seem important enough to warrant the
+      refactoring required to pass a mutable proper MessageContainer
+      all the way down here.
+    */
+
+    static void handleMissingWell( const ParseContext& parseContext , const std::string& keyword, const std::string& well) {
+        std::string msg = std::string("Error in keyword:") + keyword + std::string(" No such well: ") + well;
+        MessageContainer msgContainer;
+        if (parseContext.get( ParseContext::SUMMARY_UNKNOWN_WELL) == InputError::WARN)
+            std::cerr << "ERROR: " << msg << std::endl;
+
+        parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_WELL , msgContainer , msg );
+    }
+
+
+    static void handleMissingGroup( const ParseContext& parseContext , const std::string& keyword, const std::string& group) {
+        std::string msg = std::string("Error in keyword:") + keyword + std::string(" No such group: ") + group;
+        MessageContainer msgContainer;
+        if (parseContext.get( ParseContext::SUMMARY_UNKNOWN_GROUP) == InputError::WARN)
+            std::cerr << "ERROR: " << msg << std::endl;
+
+        parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_GROUP , msgContainer , msg );
+    }
+
+
+
     template< typename T >
     static std::string name( const T* x ) {
         return x->name();
     }
 
-    static inline std::vector< ERT::smspec_node > keywordW(
-            const DeckKeyword& keyword,
-            const Schedule& schedule ) {
-
-        const auto mknode = [&keyword]( const std::string& name ) {
-            return ERT::smspec_node( ECL_SMSPEC_WELL_VAR, name, keyword.name() );
-        };
-
-        const auto missing = [&schedule]( const std::string& name ) {
-            return !schedule.hasWell( name );
-        };
-
-        const auto& item = keyword.getDataRecord().getDataItem();
-        auto wnames = item.hasValue( 0 )
-            ? item.getData< std::string >()
-            : fun::map( name< Well >, schedule.getWells() );
-
-        /* filter all requested names that were not in the Deck */
-        wnames.erase(
-                std::remove_if( wnames.begin(), wnames.end(), missing ),
-                wnames.end() );
-
-        return fun::map( mknode, wnames );
-    }
-
-    static inline std::vector< ERT::smspec_node > keywordW(
+    static inline std::vector< ERT::smspec_node > defaultW(
             const std::string& keyword,
             const Schedule& schedule ) {
 
@@ -102,46 +120,59 @@ namespace Opm {
             return ERT::smspec_node( ECL_SMSPEC_WELL_VAR, wname, keyword );
         };
 
-        auto wnames = fun::map( name< Well >, schedule.getWells() );
-        return fun::map( mknode, wnames );
+        return fun::map( mknode, fun::map( name< Well >, schedule.getWells() ) );
     }
 
-    static inline std::vector< ERT::smspec_node > keywordG(
-            const DeckKeyword& keyword,
-            const Schedule& schedule ) {
 
-        const auto mknode = [&keyword]( const std::string& name ) {
-            return ERT::smspec_node( ECL_SMSPEC_GROUP_VAR, name, keyword.name() );
-        };
-
-        const auto missing = [&schedule]( const std::string& name ) {
-            return !schedule.hasGroup( name );
-        };
-
+    static inline std::vector< ERT::smspec_node > keywordW(const ParseContext& parseContext,
+                                                           const DeckKeyword& keyword,
+                                                           const Schedule& schedule ) {
 
         const auto& item = keyword.getDataRecord().getDataItem();
-        auto gnames = item.hasValue( 0 )
-            ? item.getData< std::string >()
-            : fun::map( name< Group >, schedule.getGroups() );
-
-        gnames.erase(
-                std::remove_if( gnames.begin(), gnames.end(), missing ),
-                gnames.end() );
-
-        return fun::map( mknode, gnames );
+        if (item.hasValue( 0 )) {
+            std::vector<ERT::smspec_node> nodes;
+            for (const std::string& well : item.getData< std::string >()) {
+                if (schedule.hasWell( well ))
+                    nodes.emplace_back( ECL_SMSPEC_WELL_VAR , well , keyword.name());
+                else
+                    handleMissingWell( parseContext , keyword.name() , well );
+            }
+            return nodes;
+        } else
+            return defaultW( keyword.name() , schedule );
     }
 
-    static inline std::vector< ERT::smspec_node > keywordG(
-            const std::string& keyword,
-            const Schedule& schedule ) {
 
-        const auto mknode = [&keyword]( const std::string& name ) {
-            return ERT::smspec_node( ECL_SMSPEC_GROUP_VAR, name, keyword );
+
+    static inline std::vector< ERT::smspec_node > defaultG(const std::string& keyword,
+                                                           const Schedule& schedule ) {
+
+        const auto mknode = [&keyword]( const std::string& gname ) {
+            return ERT::smspec_node( ECL_SMSPEC_GROUP_VAR, gname, keyword );
         };
 
-        auto gnames = fun::map( name< Group >, schedule.getGroups() );
-        return fun::map( mknode, gnames );
+        return fun::map( mknode, fun::map( name< Group  >, schedule.getGroups() ) );
     }
+
+    static inline std::vector< ERT::smspec_node > keywordG(const ParseContext& parseContext,
+                                                           const DeckKeyword& keyword,
+                                                           const Schedule& schedule ) {
+
+        const auto& item = keyword.getDataRecord().getDataItem();
+        if (item.hasValue( 0 )) {
+            std::vector<ERT::smspec_node> nodes;
+            for (const std::string& group : item.getData< std::string >()) {
+                if (schedule.hasGroup( group ))
+                    nodes.emplace_back( ECL_SMSPEC_GROUP_VAR , group , keyword.name());
+                else
+                    handleMissingGroup( parseContext , keyword.name() , group );
+            }
+            return nodes;
+        } else
+            return defaultG( keyword.name() , schedule );
+    }
+
+
 
     static inline std::vector< ERT::smspec_node > keywordF(
             const DeckKeyword& keyword ) {
@@ -217,10 +248,10 @@ namespace Opm {
         return fun::map( mknode, regions );
     }
 
-   static inline std::vector< ERT::smspec_node > keywordC(
-           const DeckKeyword& keyword,
-           const Schedule& schedule,
-           std::array< int, 3 > dims ) {
+   static inline std::vector< ERT::smspec_node > keywordC(const ParseContext& parseContext,
+                                                           const DeckKeyword& keyword,
+                                                           const Schedule& schedule,
+                                                           std::array< int, 3 > dims ) {
 
        std::vector< ERT::smspec_node > nodes;
        const auto& keywordstring = keyword.name();
@@ -251,18 +282,22 @@ namespace Opm {
 
            } else {
                 const auto& name = record.getItem( 0 ).get< std::string >( 0 );
-               /* all specified */
-               if( !record.getItem( 1 ).defaultApplied( 0 ) ) {
-                   auto ijk = getijk( record, 1 );
-                   nodes.emplace_back( keywordstring, name, dims.data(), ijk.data() );
-               }
-               else {
-                   /* well specified, block coordinates defaulted */
-                   for( const auto& completion : *schedule.getWell( name )->getCompletions( last_timestep ) ) {
-                       auto ijk = getijk( *completion );
-                       nodes.emplace_back( keywordstring, name, dims.data(), ijk.data() );
-                   }
-               }
+                if (!schedule.hasWell( name ))
+                    handleMissingWell( parseContext , keyword.name() , name );
+                else {
+                    /* all specified */
+                    if( !record.getItem( 1 ).defaultApplied( 0 ) ) {
+                        auto ijk = getijk( record, 1 );
+                        nodes.emplace_back( keywordstring, name, dims.data(), ijk.data() );
+                    }
+                    else {
+                        /* well specified, block coordinates defaulted */
+                        for( const auto& completion : *schedule.getWell( name )->getCompletions( last_timestep ) ) {
+                            auto ijk = getijk( *completion );
+                            nodes.emplace_back( keywordstring, name, dims.data(), ijk.data() );
+                        }
+                    }
+                }
            }
        }
 
@@ -272,16 +307,17 @@ namespace Opm {
     std::vector< ERT::smspec_node > handleKW( const DeckKeyword& keyword,
                                               const Schedule& schedule,
                                               const Eclipse3DProperties& props,
+                                              const ParseContext& parseContext,
                                               std::array< int, 3 > n_xyz ) {
         const auto var_type = ecl_smspec_identify_var_type( keyword.name().c_str() );
 
         switch( var_type ) {
-            case ECL_SMSPEC_WELL_VAR: return keywordW( keyword, schedule );
-            case ECL_SMSPEC_GROUP_VAR: return keywordG( keyword, schedule );
+            case ECL_SMSPEC_WELL_VAR: return keywordW( parseContext , keyword, schedule );
+            case ECL_SMSPEC_GROUP_VAR: return keywordG( parseContext , keyword, schedule );
             case ECL_SMSPEC_FIELD_VAR: return keywordF( keyword );
             case ECL_SMSPEC_BLOCK_VAR: return keywordB( keyword, n_xyz );
             case ECL_SMSPEC_REGION_VAR: return keywordR( keyword, props, n_xyz );
-            case ECL_SMSPEC_COMPLETION_VAR: return keywordC( keyword, schedule, n_xyz );
+            case ECL_SMSPEC_COMPLETION_VAR: return keywordC( parseContext , keyword, schedule, n_xyz );
 
             default: return {};
         }
@@ -296,10 +332,10 @@ namespace Opm {
             const auto var_type = ecl_smspec_identify_var_type(keyword.c_str());
             switch (var_type) {
                 case ECL_SMSPEC_WELL_VAR:
-                    for(auto&k :keywordW(keyword, schedule)) all.push_back(k);
+                    for(auto&k :defaultW(keyword, schedule)) all.push_back(k);
                     break;
                 case ECL_SMSPEC_GROUP_VAR:
-                    for(auto& k:keywordG(keyword, schedule)) all.push_back(k);
+                    for(auto& k:defaultG(keyword, schedule)) all.push_back(k);
                     break;
                 case ECL_SMSPEC_FIELD_VAR:
                     for(auto& k:keywordF(keyword)) all.push_back(k);
@@ -315,22 +351,24 @@ namespace Opm {
         return all;
     }
 
-    SummaryConfig::SummaryConfig( const Deck& deck, const EclipseState& es )
+    SummaryConfig::SummaryConfig( const Deck& deck, const EclipseState& es , const ParseContext& parseContext)
         : SummaryConfig( deck,
                          *es.getSchedule(),
                          es.get3DProperties(),
+                         parseContext,
                          dimensions( *es.getInputGrid() ) )
     {}
 
     SummaryConfig::SummaryConfig( const Deck& deck,
                                   const Schedule& schedule,
                                   const Eclipse3DProperties& props,
+                                  const ParseContext& parseContext,
                                   std::array< int, 3 > n_xyz ) {
 
         SUMMARYSection section( deck );
 
         using namespace std::placeholders;
-        const auto handler = std::bind( handleKW, _1, schedule, props, n_xyz );
+        const auto handler = std::bind( handleKW, _1, schedule, props, parseContext , n_xyz );
 
         /* This line of code does not compile on VS2015
          *   this->keywords = fun::concat( fun::map( handler, section ) );

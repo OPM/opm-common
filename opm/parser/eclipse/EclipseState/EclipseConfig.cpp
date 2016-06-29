@@ -20,6 +20,7 @@
 #include <memory>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseConfig.hpp>
@@ -35,11 +36,12 @@ namespace Opm {
     EclipseConfig::EclipseConfig(const Deck& deck,
                                  const Eclipse3DProperties& eclipse3DProperties,
                                  const GridDims& inputGrid,
-                                 const Schedule& schedule) :
+                                 const Schedule& schedule,
+                                 const ParseContext& parseContext) :
             m_ioConfig(        std::make_shared<IOConfig>(deck)),
             m_initConfig(      std::make_shared<const InitConfig>(deck)),
             m_simulationConfig(std::make_shared<const SimulationConfig>(deck, eclipse3DProperties)),
-            m_summaryConfig(   deck, schedule, eclipse3DProperties, inputGrid.getNXYZ())
+            m_summaryConfig(   deck, schedule, eclipse3DProperties, parseContext , inputGrid.getNXYZ())
     {
         // Hmmm - would have thought this should iterate through the SCHEDULE section as well?
         if (Section::hasSOLUTION(deck)) {

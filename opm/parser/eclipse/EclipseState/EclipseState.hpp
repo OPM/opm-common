@@ -90,6 +90,7 @@ namespace Opm {
         const Eclipse3DProperties& get3DProperties() const;
 
         const TableManager& getTableManager() const;
+        const EclipseConfig& getEclipseConfig() const;
 
         // the unit system used by the deck. note that it is rarely needed to convert
         // units because internally to opm-parser everything is represented by SI

@@ -61,7 +61,7 @@ namespace Opm {
         m_inputGrid(         std::make_shared<EclipseGrid>(deck, nullptr) ),
         m_schedule(          std::make_shared<Schedule>( m_parseContext, m_inputGrid, deck ) ),
         m_eclipseProperties( deck, m_tables, *m_inputGrid ),
-        m_eclipseConfig(     deck, m_eclipseProperties, m_gridDims, *m_schedule),
+        m_eclipseConfig(     deck, m_eclipseProperties, m_gridDims, *m_schedule , parseContext),
         m_inputNnc(          deck, m_gridDims ),
         m_deckUnitSystem(    deck.getActiveUnitSystem() )
 
@@ -146,6 +146,10 @@ namespace Opm {
 
     InitConfigConstPtr EclipseState::getInitConfig() const {
         return m_eclipseConfig.getInitConfig();
+    }
+
+    const EclipseConfig& EclipseState::getEclipseConfig() const {
+        return m_eclipseConfig;
     }
 
     SimulationConfigConstPtr EclipseState::getSimulationConfig() const {

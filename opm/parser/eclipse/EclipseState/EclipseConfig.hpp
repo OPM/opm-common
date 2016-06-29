@@ -32,7 +32,7 @@ namespace Opm {
     class IOConfig;
     class InitConfig;
     class SimulationConfig;
-
+    class ParseContext;
 
     class EclipseConfig
     {
@@ -40,7 +40,8 @@ namespace Opm {
         EclipseConfig(const Deck& deck,
                       const Eclipse3DProperties& eclipse3DProperties,
                       const GridDims& gridDims,
-                      const Schedule& schedule);
+                      const Schedule& schedule,
+                      const ParseContext& parseContext);
 
         std::shared_ptr< const IOConfig > getIOConfigConst() const;
         std::shared_ptr< IOConfig > getIOConfig() const;

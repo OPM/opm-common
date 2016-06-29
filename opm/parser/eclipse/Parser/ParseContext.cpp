@@ -69,6 +69,9 @@ namespace Opm {
         addKey(UNSUPPORTED_INITIAL_THPRES);
 
         addKey(INTERNAL_ERROR_UNINITIALIZED_THPRES);
+
+        addKey(SUMMARY_UNKNOWN_WELL);
+        addKey(SUMMARY_UNKNOWN_GROUP);
     }
 
     void ParseContext::initEnv() {
@@ -242,6 +245,9 @@ namespace Opm {
     const std::string ParseContext::INTERNAL_ERROR_UNINITIALIZED_THPRES = "INTERNAL_ERROR_UNINITIALIZED_THPRES";
 
     const std::string ParseContext::PARSE_MISSING_SECTIONS = "PARSE_MISSING_SECTIONS";
+
+    const std::string ParseContext::SUMMARY_UNKNOWN_WELL  = "SUMMARY_UNKNOWN_WELL";
+    const std::string ParseContext::SUMMARY_UNKNOWN_GROUP = "SUMMARY_UNKNOWN_GROUP";
 }
 
 

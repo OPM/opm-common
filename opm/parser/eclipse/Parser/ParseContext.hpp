@@ -207,6 +207,14 @@ namespace Opm {
          */
         const static std::string PARSE_MISSING_SECTIONS;
 
+
+        /*
+          If you have configured a specific well in the summary section,
+          which is not recognized - how to handle.
+        */
+        const static std::string SUMMARY_UNKNOWN_WELL;
+        const static std::string SUMMARY_UNKNOWN_GROUP;
+
     private:
         void initDefault();
         void initEnv();

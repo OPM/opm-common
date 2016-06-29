@@ -95,10 +95,10 @@ static std::vector< std::string > sorted_key_names( const SummaryConfig& summary
     return ret;
 }
 
-static SummaryConfig createSummary( std::string input ) {
+static SummaryConfig createSummary( std::string input , const ParseContext& parseContext = ParseContext()) {
     auto deck = createDeck( input );
-    EclipseState state( deck, ParseContext() );
-    return SummaryConfig( *deck, state );
+    EclipseState state( deck, parseContext );
+    return state.getEclipseConfig().getSummaryConfig();
 }
 
 BOOST_AUTO_TEST_CASE(wells_all) {
@@ -124,16 +124,6 @@ BOOST_AUTO_TEST_CASE(wells_select) {
             names.begin(), names.end() );
 }
 
-BOOST_AUTO_TEST_CASE(wells_select_unknown_well) {
-    const auto input = "WWCT\n'W_1' 'WX2' 'unknown'/\n";
-    const auto summary = createSummary( input );
-    const auto wells = { "WX2", "W_1" };
-    const auto names = sorted_names( summary );
-
-    BOOST_CHECK_EQUAL_COLLECTIONS(
-            wells.begin(), wells.end(),
-            names.begin(), names.end() );
-}
 
 BOOST_AUTO_TEST_CASE(fields) {
     const auto input = "FOPT\n";
@@ -233,4 +223,42 @@ BOOST_AUTO_TEST_CASE(summary_ALL) {
         all.begin(), all.end(),
         key_names.begin(), key_names.end());
 
+}
+
+
+
+BOOST_AUTO_TEST_CASE(INVALID_WELL1) {
+    ParseContext parseContext;
+    const auto input = "CWIR\n"
+                       "NEW-WELL /\n"
+        "/\n";
+    parseContext.updateKey( ParseContext::SUMMARY_UNKNOWN_WELL , InputError::THROW_EXCEPTION );
+    BOOST_CHECK_THROW( createSummary( input , parseContext ) , std::invalid_argument);
+
+    parseContext.updateKey( ParseContext::SUMMARY_UNKNOWN_WELL , InputError::IGNORE );
+    BOOST_CHECK_NO_THROW( createSummary( input , parseContext ))
+}
+
+
+BOOST_AUTO_TEST_CASE(INVALID_WELL2) {
+    ParseContext parseContext;
+    const auto input = "WWCT\n"
+        " NEW-WELL /\n";
+    parseContext.updateKey( ParseContext::SUMMARY_UNKNOWN_WELL , InputError::THROW_EXCEPTION );
+    BOOST_CHECK_THROW( createSummary( input , parseContext ) , std::invalid_argument);
+
+    parseContext.updateKey( ParseContext::SUMMARY_UNKNOWN_WELL , InputError::IGNORE );
+    BOOST_CHECK_NO_THROW( createSummary( input , parseContext ))
+}
+
+
+BOOST_AUTO_TEST_CASE(INVALID_GROUP) {
+    ParseContext parseContext;
+    const auto input = "GWCT\n"
+        " NEW-GR /\n";
+    parseContext.updateKey( ParseContext::SUMMARY_UNKNOWN_GROUP , InputError::THROW_EXCEPTION );
+    BOOST_CHECK_THROW( createSummary( input , parseContext ) , std::invalid_argument);
+
+    parseContext.updateKey( ParseContext::SUMMARY_UNKNOWN_GROUP , InputError::IGNORE );
+    BOOST_CHECK_NO_THROW( createSummary( input , parseContext ))
 }
