@@ -88,12 +88,7 @@ static std::vector< std::string > sorted_keywords( const SummaryConfig& summary 
 static std::vector< std::string > sorted_key_names( const SummaryConfig& summary ) {
     std::vector< std::string > ret;
     for( const auto& x : summary ) {
-        std::string key = x.keyword();
-        auto wgname = x.wgname();
-        if(wgname) {
-            key += ":"+ std::string(wgname);
-        }
-        ret.push_back( key );
+        ret.push_back( x.key1() );
     }
 
     std::sort( ret.begin(), ret.end() );
