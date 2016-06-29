@@ -43,6 +43,27 @@
 
 namespace Opm {
 
+    const std::vector <std::string> SummaryConfig::__ALL_expands_keywords ({
+        "FAQR", "FAQRG", "FAQT", "FAQTG", "FGIP", "FGIPG", "FGIPL",
+        "FGIR", "FGIT", "FGOR", "FGPR", "FGPT", "FOIP", "FOIPG",
+        "FOIPL", "FOIR", "FOIT", "FOPR", "FOPT", "FPR", "FVIR",
+        "FVIT", "FVPR", "FVPT", "FWCT", "FWGR", "FWIP", "FWIR",
+        "FWIT", "FWPR", "FWPT",
+        "GGIR", "GGIT", "GGOR", "GGPR", "GGPT", "GOIR", "GOIT",
+        "GOPR", "GOPT", "GVIR", "GVIT", "GVPR", "GVPT", "GWCT",
+        "GWGR", "GWIR", "GWIT", "GWPR", "GWPT",
+        "WBHP", "WGIR", "WGIT", "WGOR", "WGPR", "WGPT", "WOIR",
+        "WOIT", "WOPR", "WOPT", "WPI", "WTHP", "WVIR", "WVIT",
+        "WVPR", "WVPT", "WWCT", "WWGR", "WWIR", "WWIT", "WWPR",
+        "WWPT",
+        // ALL will not expand to these keywords yet
+        "AAQR", "AAQRG", "AAQT", "AAQTG"
+    });
+
+	std::vector <std::string> SummaryConfig::getAllExpandedKeywords() {
+		return __ALL_expands_keywords;
+	}
+
     template< typename T >
     static std::string name( const T* x ) {
         return x->name();
@@ -64,6 +85,28 @@ namespace Opm {
         auto wnames = item.hasValue( 0 )
             ? item.getData< std::string >()
             : fun::map( name< Well >, schedule.getWells() );
+
+        /* filter all requested names that were not in the Deck */
+        wnames.erase(
+                std::remove_if( wnames.begin(), wnames.end(), missing ),
+                wnames.end() );
+
+        return fun::map( mknode, wnames );
+    }
+
+    static inline std::vector< ERT::smspec_node > keywordW(
+            const std::string& keyword,
+            const Schedule& schedule ) {
+
+        const auto mknode = [&keyword]( const std::string& wname ) {
+            return ERT::smspec_node( ECL_SMSPEC_WELL_VAR, wname, keyword );
+        };
+
+        const auto missing = [&schedule]( const std::string& name ) {
+            return !schedule.hasWell( name );
+        };
+
+        auto wnames = fun::map( name< Well >, schedule.getWells() );
 
         /* filter all requested names that were not in the Deck */
         wnames.erase(
@@ -97,11 +140,40 @@ namespace Opm {
         return fun::map( mknode, gnames );
     }
 
+    static inline std::vector< ERT::smspec_node > keywordG(
+            const std::string& keyword,
+            const Schedule& schedule ) {
+
+        const auto mknode = [&keyword]( const std::string& name ) {
+            return ERT::smspec_node( ECL_SMSPEC_GROUP_VAR, name, keyword );
+        };
+
+        const auto missing = [&schedule]( const std::string& name ) {
+            return !schedule.hasGroup( name );
+        };
+
+        auto gnames = fun::map( name< Group >, schedule.getGroups() );
+
+        gnames.erase(
+                std::remove_if( gnames.begin(), gnames.end(), missing ),
+                gnames.end() );
+
+        return fun::map( mknode, gnames );
+    }
+
     static inline std::vector< ERT::smspec_node > keywordF(
             const DeckKeyword& keyword ) {
 
         std::vector< ERT::smspec_node > res;
         res.push_back( ERT::smspec_node( keyword.name() ) );
+        return res;
+    }
+
+    static inline std::vector< ERT::smspec_node > keywordF(
+            const std::string& keyword ) {
+
+        std::vector< ERT::smspec_node > res;
+        res.push_back( ERT::smspec_node( keyword ) );
         return res;
     }
 
@@ -233,6 +305,34 @@ namespace Opm {
         }
     }
 
+    std::vector< ERT::smspec_node > handleALL( const Schedule& schedule) {
+
+
+        std::vector< ERT::smspec_node > all;
+
+        for(const std::string& keyword: SummaryConfig::getAllExpandedKeywords()) {
+            const auto var_type = ecl_smspec_identify_var_type(keyword.c_str());
+            switch (var_type) {
+                case ECL_SMSPEC_WELL_VAR:
+                    for(auto&k :keywordW(keyword, schedule)) all.push_back(k);
+                    break;
+                case ECL_SMSPEC_GROUP_VAR:
+                    for(auto& k:keywordG(keyword, schedule)) all.push_back(k);
+                    break;
+                case ECL_SMSPEC_FIELD_VAR:
+                    for(auto& k:keywordF(keyword)) all.push_back(k);
+                    break;
+                case ECL_SMSPEC_AQUIFER_VAR:
+                    {}
+                    break;
+                default:
+                	throw std::runtime_error("Unrecognized keyword type: " + keyword);
+            }
+        }
+
+        return all;
+    }
+
     SummaryConfig::SummaryConfig( const Deck& deck, const EclipseState& es )
         : SummaryConfig( deck,
                          *es.getSchedule(),
@@ -253,10 +353,17 @@ namespace Opm {
         /* This line of code does not compile on VS2015
          *   this->keywords = fun::concat( fun::map( handler, section ) );
          * The following code is a workaround for this compiler bug */
-        for (auto& x : section)
+        for (auto& x : section) {
+
+            if (x.name().compare("ALL") == 0)
             {
-            for (auto& keyword : handler(x))
-                this->keywords.push_back(keyword);
+                for (auto& keyword : handleALL(schedule))
+                    this->keywords.push_back(keyword);
+            }
+            else {
+                for (auto &keyword : handler(x))
+                    this->keywords.push_back(keyword);
+            }
         }
     }
 
