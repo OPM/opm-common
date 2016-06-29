@@ -91,7 +91,7 @@ static std::vector< std::string > sorted_key_names( const SummaryConfig& summary
         std::string key = x.keyword();
         auto wgname = x.wgname();
         if(wgname) {
-            key += ": "+ std::string(wgname);
+            key += ":"+ std::string(wgname);
         }
         ret.push_back( key );
     }
@@ -218,13 +218,13 @@ BOOST_AUTO_TEST_CASE(summary_ALL) {
             all.push_back(keyword);
         }
         else if (keyword[0]=='G') {
-            auto kn = keyword + ": ";
+            auto kn = keyword + ":";
             all.push_back(kn + "G");
             all.push_back(kn + "OP");
             all.push_back(kn + "FIELD");
         }
         else if (keyword[0]=='W') {
-            auto kn = keyword + ": ";
+            auto kn = keyword + ":";
             all.push_back(kn + "W_1");
             all.push_back(kn + "WX2");
             all.push_back(kn + "W_3");

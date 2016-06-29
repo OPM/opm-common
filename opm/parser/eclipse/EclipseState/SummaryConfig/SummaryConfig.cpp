@@ -43,24 +43,22 @@
 
 namespace Opm {
 
-	const std::vector <std::string> SummaryConfig::__ALL_expands_keywords ({
-                "FOPR", "GOPR", "WOPR", "FOPT", "GOPT", "WOPT",
-                "FOIR", "GOIR", "WOIR", "FOIT", "GOIT", "WOIT",
-                "FWPR", "GWPR", "WWPR", "FWPT", "GWPT", "WWPT",
-                "FWIR", "GWIR", "WWIR", "FWIT", "GWIT", "WWIT",
-                "FGPR", "GGPR", "WGPR", "FGPT", "GGPT", "WGPT",
-                "FGIR", "GGIR", "WGIR", "FGIT", "GGIT", "WGIT",
-                "FVPR", "GVPR", "WVPR", "FVPT", "GVPT", "WVPT",
-                "FVIR", "GVIR", "WVIR", "FVIT", "GVIT", "WVIT",
-                "FWCT", "GWCT", "WWCT", "FGOR", "GGOR", "WGOR",
-                "FWGR", "GWGR", "WWGR",
-                "WBHP", "WTHP", "WPI",
-                "FOIP", "FOIPL", "FOIPG",
-                "FWIP",
-                "FGIP", "FGIPL", "FGIPG", "FPR",
-                "FAQR", "FAQRG", "AAQR", "AAQRG",
-                "FAQT", "FAQTG", "AAQT", "AAQTG"
-        });
+    const std::vector <std::string> SummaryConfig::__ALL_expands_keywords ({
+        "FAQR", "FAQRG", "FAQT", "FAQTG", "FGIP", "FGIPG", "FGIPL",
+        "FGIR", "FGIT", "FGOR", "FGPR", "FGPT", "FOIP", "FOIPG",
+        "FOIPL", "FOIR", "FOIT", "FOPR", "FOPT", "FPR", "FVIR",
+        "FVIT", "FVPR", "FVPT", "FWCT", "FWGR", "FWIP", "FWIR",
+        "FWIT", "FWPR", "FWPT",
+        "GGIR", "GGIT", "GGOR", "GGPR", "GGPT", "GOIR", "GOIT",
+        "GOPR", "GOPT", "GVIR", "GVIT", "GVPR", "GVPT", "GWCT",
+        "GWGR", "GWIR", "GWIT", "GWPR", "GWPT",
+        "WBHP", "WGIR", "WGIT", "WGOR", "WGPR", "WGPT", "WOIR",
+        "WOIT", "WOPR", "WOPT", "WPI", "WTHP", "WVIR", "WVIT",
+        "WVPR", "WVPT", "WWCT", "WWGR", "WWIR", "WWIT", "WWPR",
+        "WWPT",
+        // ALL will not expand to these keywords yet
+        "AAQR", "AAQRG", "AAQT", "AAQTG"
+    });
 
 	std::vector <std::string> SummaryConfig::getAllExpandedKeywords() {
 		return __ALL_expands_keywords;
