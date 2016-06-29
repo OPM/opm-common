@@ -102,17 +102,7 @@ namespace Opm {
             return ERT::smspec_node( ECL_SMSPEC_WELL_VAR, wname, keyword );
         };
 
-        const auto missing = [&schedule]( const std::string& name ) {
-            return !schedule.hasWell( name );
-        };
-
         auto wnames = fun::map( name< Well >, schedule.getWells() );
-
-        /* filter all requested names that were not in the Deck */
-        wnames.erase(
-                std::remove_if( wnames.begin(), wnames.end(), missing ),
-                wnames.end() );
-
         return fun::map( mknode, wnames );
     }
 
@@ -127,6 +117,7 @@ namespace Opm {
         const auto missing = [&schedule]( const std::string& name ) {
             return !schedule.hasGroup( name );
         };
+
 
         const auto& item = keyword.getDataRecord().getDataItem();
         auto gnames = item.hasValue( 0 )
@@ -148,16 +139,7 @@ namespace Opm {
             return ERT::smspec_node( ECL_SMSPEC_GROUP_VAR, name, keyword );
         };
 
-        const auto missing = [&schedule]( const std::string& name ) {
-            return !schedule.hasGroup( name );
-        };
-
         auto gnames = fun::map( name< Group >, schedule.getGroups() );
-
-        gnames.erase(
-                std::remove_if( gnames.begin(), gnames.end(), missing ),
-                gnames.end() );
-
         return fun::map( mknode, gnames );
     }
 
