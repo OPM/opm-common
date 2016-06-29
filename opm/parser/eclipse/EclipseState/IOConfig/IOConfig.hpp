@@ -136,7 +136,7 @@ namespace Opm {
         const std::string& getEclipseInputPath() const;
 
         void overrideRestartWriteInterval(size_t interval);
-
+        void overrideNOSIM(bool nosim);
         void handleSolutionSection(std::shared_ptr< const TimeMap > timemap, std::shared_ptr<const SOLUTIONSection> solutionSection);
         void setWriteInitialRestartFile(bool writeInitialRestartFile);
 
@@ -165,12 +165,14 @@ namespace Opm {
         /// i.e. /path/to/sim/CASE
         std::string fullBasePath( ) const;
 
+        bool initOnly() const;
     private:
 
         IOConfig( const GRIDSection&,
                   const RUNSPECSection&,
                   const SCHEDULESection&,
                   std::shared_ptr< const TimeMap >,
+                  bool nosim,
                   const std::string& input_path );
 
         void assertTimeMap(std::shared_ptr< const TimeMap > timemap);
@@ -195,6 +197,7 @@ namespace Opm {
         bool            m_output_enabled = true;
         std::string     m_output_dir;
         std::string     m_base_name;
+        bool            m_nosim;
 
         struct restartConfig {
             /*
