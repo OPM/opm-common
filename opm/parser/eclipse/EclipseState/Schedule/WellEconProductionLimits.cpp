@@ -105,7 +105,7 @@ namespace Opm {
             (maxGasLiquidRatio() == other.maxGasLiquidRatio()) &&
             (minLiquidRate() == other.minLiquidRate()) &&
             (maxTemperature() == other.maxTemperature()) &&
-            minReservoirFluidRate() == other.minReservoirFluidRate())
+            (minReservoirFluidRate() == other.minReservoirFluidRate()))
         {
 
             return true;
@@ -116,7 +116,7 @@ namespace Opm {
 
 
     bool WellEconProductionLimits::operator!=(const WellEconProductionLimits& other) const {
-        return !((*this == other));
+        return (!(*this == other));
     }
 
 } // namespace Opm
