@@ -105,10 +105,10 @@ struct setup {
     std::string name;
     ERT::TestArea ta;
 
-    setup( const std::string& fname ) :
-        deck( Parser().parseFile( path, ParseContext() ) ),
+    setup( const std::string& fname , const ParseContext& parseContext = ParseContext( )) :
+        deck( Parser().parseFile( path, parseContext ) ),
         es( deck, ParseContext() ),
-        config( *deck, es ),
+        config( *deck, es , parseContext ),
         wells( result_wells() ),
         name( fname ),
         ta( ERT::TestArea("test_summary") )
