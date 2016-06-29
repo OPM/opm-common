@@ -84,7 +84,6 @@ namespace Opm
         std::vector< const Group* > getGroups() const;
         std::shared_ptr< Tuning > getTuning() const;
 
-        bool initOnly() const;
         const Events& getEvents() const;
         bool hasOilVaporizationProperties();
         std::shared_ptr<const Deck> getModifierDeck(size_t timeStep) const;
@@ -102,14 +101,12 @@ namespace Opm
         std::shared_ptr<Events> m_events;
         std::shared_ptr<DynamicVector<std::shared_ptr<Deck> > > m_modifierDeck;
         std::shared_ptr< Tuning > m_tuning;
-        bool nosim;
         MessageContainer m_messages;
 
 
         std::vector< Well* > getWells(const std::string& wellNamePattern);
         void updateWellStatus( Well& well, size_t reportStep , WellCommon::StatusEnum status);
         void addWellToGroup( Group& newGroup , Well& well , size_t timeStep);
-        void initializeNOSIM(const Deck& deck);
         void initRootGroupTreeNode(std::shared_ptr< const TimeMap > timeMap);
         void initOilVaporization(std::shared_ptr< const TimeMap > timeMap);
         void iterateScheduleSection(const ParseContext& parseContext ,  const SCHEDULESection& );
@@ -136,7 +133,6 @@ namespace Opm
         void handleGCONPROD( const DeckKeyword& keyword, size_t currentStep);
         void handleGEFAC( const DeckKeyword& keyword, size_t currentStep);
         void handleTUNING( const DeckKeyword& keyword, size_t currentStep);
-        void handleNOSIM();
         void handleDATES( const DeckKeyword& keyword );
         void handleTSTEP( const DeckKeyword& keyword );
         void handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep);

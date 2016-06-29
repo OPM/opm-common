@@ -82,7 +82,6 @@ namespace Opm {
             m_timeMap( createTimeMap( deck ) ),
             m_grid( grid )
     {
-        initializeNOSIM(deck);
         m_tuning.reset(new Tuning(m_timeMap));
         m_events.reset(new Events(m_timeMap));
         m_modifierDeck.reset( new DynamicVector<std::shared_ptr<Deck> >( m_timeMap , std::shared_ptr<Deck>( 0 ) ));
@@ -113,13 +112,6 @@ namespace Opm {
         m_rootGroupTree.reset(new DynamicState<GroupTreePtr>(timeMap, GroupTreePtr(new GroupTree())));
     }
 
-    void Schedule::initializeNOSIM(const Deck& deck) {
-        if (deck.hasKeyword("NOSIM")){
-            nosim = true;
-        } else {
-            nosim = false;
-        }
-    }
 
     void Schedule::iterateScheduleSection(const ParseContext& parseContext , const SCHEDULESection& section ) {
         /*
@@ -216,9 +208,6 @@ namespace Opm {
 
             if (keyword.name() == "TUNING")
                 handleTUNING(keyword, currentStep);
-
-            if (keyword.name() == "NOSIM")
-                handleNOSIM();
 
             if (keyword.name() == "WRFT")
                 rftProperties.push_back( std::make_pair( &keyword , currentStep ));
@@ -1137,10 +1126,6 @@ namespace Opm {
     }
 
 
-    void Schedule::handleNOSIM() {
-        nosim = true;
-    }
-
     void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep) {
         std::map<std::string , std::vector< CompletionPtr> > completionMapList = Completion::completionsFromCOMPDATKeyword( keyword );
         std::map<std::string , std::vector< CompletionPtr> >::iterator iter;
@@ -1418,9 +1403,6 @@ namespace Opm {
         return m_groups.find(groupName) != m_groups.end();
     }
 
-    bool Schedule::initOnly() const {
-        return nosim;
-    }
 
     const Group* Schedule::getGroup(const std::string& groupName) const {
         if (hasGroup(groupName)) {

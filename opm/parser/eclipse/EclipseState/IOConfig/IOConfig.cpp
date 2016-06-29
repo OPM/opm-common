@@ -230,6 +230,7 @@ namespace Opm {
                   RUNSPECSection( deck ),
                   SCHEDULESection( deck ),
                   std::make_shared< const TimeMap >( deck ),
+                  deck.hasKeyword("NOSIM"),
                   deck.getDataFile() )
     {}
 
@@ -268,6 +269,7 @@ namespace Opm {
                         const RUNSPECSection& runspec,
                         const SCHEDULESection& schedule,
                         std::shared_ptr< const TimeMap > timemap,
+                        bool nosim,
                         const std::string& input_path ) :
         m_timemap( timemap ),
         m_write_INIT_file( grid.hasKeyword( "INIT" ) ),
@@ -279,6 +281,7 @@ namespace Opm {
         m_deck_filename( input_path ),
         m_output_dir( outputdir( input_path ) ),
         m_base_name( basename( input_path ) ),
+        m_nosim( nosim  ),
         m_restart_output_config( std::make_shared< DynamicState< restartConfig > >(
                 rstconf( schedule, timemap ) ) )
     {}
@@ -439,6 +442,11 @@ namespace Opm {
         setWriteInitialRestartFile( interval > 0 );
     }
 
+    void IOConfig::overrideNOSIM(bool nosim) {
+        m_nosim = nosim;
+    }
+
+
     bool IOConfig::getUNIFIN() const {
         return m_UNIFIN;
     }
@@ -582,5 +590,9 @@ namespace Opm {
         return full_path.string();
     }
 
+
+    bool IOConfig::initOnly( ) const {
+        return m_nosim;
+    }
 
 } //namespace Opm
