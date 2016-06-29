@@ -1317,7 +1317,14 @@ namespace Opm {
         if (allowCrossFlowStr == "NO")
             allowCrossFlow = false;
 
-        auto well = std::make_shared<Well>(wellName, m_grid , headI, headJ, refDepth, preferredPhase, m_timeMap , timeStep, wellCompletionOrder, allowCrossFlow);
+        bool automaticShutIn = true;
+        const std::string& automaticShutInStr = record.getItem<ParserKeywords::WELSPECS::AUTO_SHUTIN>().getTrimmedString(0);
+        if (automaticShutInStr == "STOP") {
+            automaticShutIn = false;
+        }
+
+        auto well = std::make_shared<Well>(wellName, m_grid , headI, headJ, refDepth, preferredPhase, m_timeMap , timeStep,
+                                           wellCompletionOrder, allowCrossFlow, automaticShutIn);
         m_wells.insert( wellName  , well);
         m_events->addEvent( ScheduleEvents::NEW_WELL , timeStep );
     }

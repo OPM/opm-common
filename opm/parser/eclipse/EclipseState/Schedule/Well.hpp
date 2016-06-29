@@ -46,7 +46,8 @@ namespace Opm {
     class Well {
     public:
         Well(const std::string& name, std::shared_ptr<const EclipseGrid> grid , int headI, int headJ, Value<double> refDepth , Phase::PhaseEnum preferredPhase,
-             std::shared_ptr< const TimeMap > timeMap, size_t creationTimeStep, WellCompletion::CompletionOrderEnum completionOrdering = WellCompletion::TRACK, bool allowCrossFlow = true);
+             std::shared_ptr< const TimeMap > timeMap, size_t creationTimeStep, WellCompletion::CompletionOrderEnum completionOrdering = WellCompletion::TRACK,
+             bool allowCrossFlow = true, bool automaticShutIn = true);
         const std::string& name() const;
 
         bool hasBeenDefined(size_t timeStep) const;
@@ -122,6 +123,7 @@ namespace Opm {
         WellCompletion::CompletionOrderEnum getWellCompletionOrdering() const;
 
         bool getAllowCrossFlow() const;
+        bool getAutomaticShutIn() const;
         bool canOpen(size_t time_step) const;
 
 
@@ -166,6 +168,7 @@ namespace Opm {
 
         WellCompletion::CompletionOrderEnum m_comporder;
         bool m_allowCrossFlow;
+        bool m_automaticShutIn;
         MessageContainer m_messages;
         // WELSEGS DATA - for mutli-segment wells
         // flag indicating if the well is a multi-segment well

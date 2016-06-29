@@ -34,7 +34,7 @@
 namespace Opm {
 
     Well::Well(const std::string& name_, std::shared_ptr<const EclipseGrid> grid , int headI, int headJ, Value<double> refDepth , Phase::PhaseEnum preferredPhase,
-               TimeMapConstPtr timeMap, size_t creationTimeStep, WellCompletion::CompletionOrderEnum completionOrdering, bool allowCrossFlow)
+               TimeMapConstPtr timeMap, size_t creationTimeStep, WellCompletion::CompletionOrderEnum completionOrdering, bool allowCrossFlow, bool automaticShutIn)
         : m_status(new DynamicState<WellCommon::StatusEnum>(timeMap, WellCommon::SHUT)),
           m_isAvailableForGroupControl(new DynamicState<bool>(timeMap, true)),
           m_guideRate(new DynamicState<double>(timeMap, -1.0)),
@@ -58,6 +58,7 @@ namespace Opm {
           m_grid( grid ),
           m_comporder(completionOrdering),
           m_allowCrossFlow(allowCrossFlow),
+          m_automaticShutIn(automaticShutIn),
           m_segmentset(new DynamicState<SegmentSetConstPtr>(timeMap, SegmentSetPtr(new SegmentSet())))
     {
         m_name = name_;
@@ -397,6 +398,10 @@ namespace Opm {
 
     bool Well::getAllowCrossFlow() const {
         return m_allowCrossFlow;
+    }
+
+    bool Well::getAutomaticShutIn() const {
+        return m_automaticShutIn;
     }
 
     bool Well::canOpen(size_t currentStep) const {
