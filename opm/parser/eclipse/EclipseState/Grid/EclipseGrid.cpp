@@ -674,7 +674,17 @@ namespace Opm {
         ecl_grid_init_zcorn_data_double( c_ptr() , zcorn.data() );
     }
 
-
+    std::vector<int> EclipseGrid::getActiveMap() const {
+        std::vector<int> activeMap( getNumActive() );
+	for (int global_index = 0; global_index < static_cast<int>(getCartesianSize()); global_index++) {
+	    // Using the low level C function to get the active index, because the C++ 
+	    // version will throw for inactive cells.
+	    int active_index = ecl_grid_get_active_index1( m_grid.get() , global_index );
+	    if (active_index >= 0)
+  	        activeMap[active_index] = global_index;
+	}
+	return activeMap;
+    } 
 
     void EclipseGrid::resetACTNUM( const int * actnum) {
         ecl_grid_reset_actnum( m_grid.get() , actnum );

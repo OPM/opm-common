@@ -85,7 +85,10 @@ namespace Opm {
 
         MinpvMode::ModeEnum getMinpvMode() const;
         double getMinpvValue( ) const;
-
+      
+        /// Will return a vector a length num_active;
+        /// where the value of each element is the corresponding global index.
+        std::vector<int> getActiveMap() const;
         std::array<double, 3> getCellCenter(size_t i,size_t j, size_t k) const;
         std::array<double, 3> getCellCenter(size_t globalIndex) const;
         double getCellVolume(size_t globalIndex) const;
