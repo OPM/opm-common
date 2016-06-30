@@ -45,8 +45,10 @@ namespace Opm {
 
     class Well {
     public:
-        Well(const std::string& name, std::shared_ptr<const EclipseGrid> grid , int headI, int headJ, Value<double> refDepth , Phase::PhaseEnum preferredPhase,
-             std::shared_ptr< const TimeMap > timeMap, size_t creationTimeStep, WellCompletion::CompletionOrderEnum completionOrdering = WellCompletion::TRACK,
+        Well(const std::string& name, std::shared_ptr<const EclipseGrid> grid, int headI,
+             int headJ, Value<double> refDepth , Phase::PhaseEnum preferredPhase,
+             std::shared_ptr< const TimeMap > timeMap, size_t creationTimeStep,
+             WellCompletion::CompletionOrderEnum completionOrdering = WellCompletion::TRACK,
              bool allowCrossFlow = true, bool automaticShutIn = true);
         const std::string& name() const;
 
@@ -107,7 +109,7 @@ namespace Opm {
         bool                           setSolventFraction(size_t timeStep , const double fraction);
         const double&                  getSolventFraction(size_t timeStep) const;
 
-        bool                            setEconProductionLimits(const size_t timeStep, const WellEconProductionLimits& properteis);
+        bool                            setEconProductionLimits(const size_t timeStep, const WellEconProductionLimits& productionlimits);
         const WellEconProductionLimits& getEconProductionLimits(const size_t timeStep) const;
 
         int  firstRFTOutput( ) const;
