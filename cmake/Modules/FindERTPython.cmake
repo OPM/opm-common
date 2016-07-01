@@ -36,7 +36,7 @@ if(PYTHONINTERP_FOUND)
     			"${PROJECT_BINARY_DIR}/../ert/devel")
 
   foreach( PATH ${PATH_LIST})
-      set( python_code "import sys; sys.path.insert(0 , '${PATH}/${PYTHON_INSTALL_PREFIX}'); import os.path; import inspect; import ert; print os.path.dirname(os.path.dirname(inspect.getfile(ert)))")
+      set( python_code "import sys; sys.path.insert(0 , '${PATH}/${PYTHON_INSTALL_PREFIX}'); import os.path; import inspect; import ert; print os.path.dirname(os.path.dirname(inspect.getfile(ert))); from ert.ecl import EclSum")
       execute_process( COMMAND ${PYTHON_EXECUTABLE} -c "${python_code}"
                        RESULT_VARIABLE import_result
                        OUTPUT_VARIABLE stdout_output
