@@ -229,10 +229,9 @@ first_sim(test_work_area_type * test_area) {
     const auto& grid = *eclipseState->getInputGrid();
     auto num_cells = grid.getNX() * grid.getNY() * grid.getNZ();
 
-    EclipseWriter eclWriter( eclipseState, num_cells, nullptr, NNC() );
+    EclipseWriter eclWriter( eclipseState, num_cells, nullptr );
     auto start_time = util_make_datetime( 0, 0, 0, 1, 11, 1979 );
     auto first_step = util_make_datetime( 0, 0, 0, 10, 10, 2008 );
-    eclWriter.writeInit();
 
     auto sol = mkSolution( num_cells );
     auto wells = mkWells();

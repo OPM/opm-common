@@ -40,6 +40,7 @@
 #include <ert/ecl/ecl_rft_file.h>
 #include <ert/util/test_work_area.h>
 #include <ert/util/util.h>
+#include <ert/util/TestArea.hpp>
 
 #include <vector>
 
@@ -104,10 +105,8 @@ data::Solution createBlackoilState( int timeStepIdx, int numCells ) {
 BOOST_AUTO_TEST_CASE(test_RFT) {
 
     std::string eclipse_data_filename    = "testRFT.DATA";
-    test_work_area_type * new_ptr = test_work_area_alloc("test_RFT");
-    std::shared_ptr<test_work_area_type> test_area;
-    test_area.reset(new_ptr, test_work_area_free);
-    test_work_area_copy_file(test_area.get(), eclipse_data_filename.c_str());
+    ERT::TestArea test_area("test_RFT");
+    test_area.copyFile( eclipse_data_filename );
 
     auto eclipseState = std::make_shared< EclipseState >( Parser::parse( eclipse_data_filename ) );
     {
@@ -117,15 +116,12 @@ BOOST_AUTO_TEST_CASE(test_RFT) {
          * written to disk and flushed.
          */
 
-        const auto numCells = eclipseState->getInputGrid()->getNX()
-            * eclipseState->getInputGrid()->getNY()
-            * eclipseState->getInputGrid()->getNZ();
+        const auto numCells = eclipseState->getInputGrid()->getCartesianSize( );
 
-        EclipseWriter eclipseWriter( eclipseState, numCells, nullptr, NNC() );
+        EclipseWriter eclipseWriter( eclipseState, numCells, nullptr );
         time_t start_time = eclipseState->getSchedule()->posixStartTime();
         /* step time read from deck and hard-coded here */
         time_t step_time = util_make_datetime( 0, 0, 0, 10, 10, 2008 );
-        eclipseWriter.writeInit();
 
         Opm::data::Wells wells {
             { { "OP_1", { {}, 1.0, 1.1, {} } },
@@ -143,7 +139,5 @@ BOOST_AUTO_TEST_CASE(test_RFT) {
                 wells, false);
     }
 
-    std::string cwd(test_work_area_get_cwd(test_area.get()));
-    std::string rft_filename = cwd + "/TESTRFT.RFT";
-    verifyRFTFile(rft_filename);
+    verifyRFTFile("TESTRFT.RFT");
 }

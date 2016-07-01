@@ -23,11 +23,20 @@
 #include <map>
 #include <vector>
 
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+
 namespace Opm {
 
 class SimulationDataContainer;
 
 namespace data {
+
+    struct CellData {
+        std::string name;
+        UnitSystem::measure dim;
+        std::vector<double> data;
+    };
+
 
     struct Solution {
         /* data::Solution supports writing only some information,

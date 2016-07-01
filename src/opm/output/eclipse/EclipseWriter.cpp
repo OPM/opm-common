@@ -59,23 +59,22 @@ namespace {
 
 // throw away the data for all non-active cells and reorder to the Cartesian logic of
 // eclipse
-void restrictAndReorderToActiveCells(std::vector<double> &data,
-                                     int numCells,
-                                     const int* compressedToCartesianCellIdx)
+std::vector<double> restrictAndReorderToActiveCells(const std::vector<double> &flow_data,
+                                                    int numCells,
+                                                    const int* compressedToCartesianCellIdx)
 {
-    if (!compressedToCartesianCellIdx)
-        // if there is no active -> global mapping, all cells
-        // are considered active
-        return;
-
     std::vector<double> eclData;
-    eclData.reserve( numCells );
+    eclData.resize( numCells );
 
-    // activate those cells that are actually there
-    for (int i = 0; i < numCells; ++i) {
-        eclData.push_back( data[ compressedToCartesianCellIdx[i] ] );
+    if (!compressedToCartesianCellIdx || (flow_data.size() == static_cast<size_t>(numCells)))
+        std::copy( flow_data.begin() , flow_data.end() , eclData.begin() );
+    else {
+        // activate those cells that are actually there
+        for (int i = 0; i < numCells; ++i)
+            eclData[i] = flow_data[ compressedToCartesianCellIdx[i] ];
     }
-    data.swap( eclData );
+
+    return eclData;
 }
 
 inline void convertFromSiTo( std::vector< double >& siValues,
@@ -98,6 +97,20 @@ inline int to_ert_welltype( const Well& well, size_t timestep ) {
     }
 }
 
+/*
+  This function hardcodes the common assumption that properties which
+  are stored internally as double values in OPM should be stored as
+  float values in the ECLIPSE formatted binary files.
+*/
+
+void writeKeyword( ERT::FortIO& fortio ,
+                   const std::string& keywordName,
+                   const std::vector<double> &data ) {
+    ERT::EclKW< float > kw( keywordName, data );
+    kw.fwrite( fortio );
+}
+
+
 /**
  * Pointer to memory that holds the name to an Eclipse output file.
  */
@@ -117,12 +130,28 @@ public:
                 std::free )
     {}
 
-    const char* ertHandle() const { return this->filename.get(); }
+    FileName(const std::string& outputDir,
+             const std::string& baseName,
+             ecl_file_enum type,
+             bool formatted ) :
+
+        filename( ecl_util_alloc_filename(
+                                outputDir.c_str(),
+                                baseName.c_str(),
+                                type,
+                                formatted,
+                                0 ),
+                  std::free )
+    {}
+
+    const char* get() const { return this->filename.get(); }
 
 private:
     using fd = std::unique_ptr< char, decltype( std::free )* >;
     fd filename;
 };
+
+
 
 class Restart {
 public:
@@ -146,7 +175,7 @@ public:
      * Observe that all of these values are our "current-best-guess" for how
      * many numbers are needed; there might very well be third party
      * applications out there which have a hard expectation for these values.
-    */
+     */
 
 
     Restart(const std::string& outputDir,
@@ -160,8 +189,8 @@ public:
                 ioConfig.getFMTOUT() ),
         rst_file(
                 ( writeStepIdx > 0 && ioConfig.getUNIFOUT() )
-                ? ecl_rst_file_open_append( filename.ertHandle() )
-                : ecl_rst_file_open_write( filename.ertHandle() ) )
+                ? ecl_rst_file_open_append( filename.get() )
+                : ecl_rst_file_open_write( filename.get() ) )
     {}
 
     template< typename T >
@@ -248,72 +277,6 @@ private:
     Restart& restart;
 };
 
-/**
- * Initialization file which contains static properties (such as
- * porosity and permeability) for the simulation field.
- */
-class Init {
-public:
-    Init( const std::string& outputDir,
-          const std::string& baseName,
-          int writeStepIdx,
-          const IOConfig& ioConfig ) :
-        egrid( outputDir,
-               baseName,
-               ECL_EGRID_FILE,
-               writeStepIdx,
-               ioConfig.getFMTOUT() ),
-        init( FileName( outputDir,
-                        baseName,
-                        ECL_INIT_FILE,
-                        writeStepIdx,
-                        ioConfig.getFMTOUT() ).ertHandle(),
-              std::ios_base::out,
-              ioConfig.getFMTOUT(),
-              ECL_ENDIAN_FLIP )
-    {}
-
-    void writeHeader( int numCells,
-                      const int* compressedToCartesianCellIdx,
-                      time_t current_posix_time,
-                      const EclipseState& es,
-                      const EclipseGrid& eclGrid,
-                      int ert_phase_mask )
-    {
-        auto dataField = es.get3DProperties().getDoubleGridProperty("PORO").getData();
-        restrictAndReorderToActiveCells( dataField, numCells, compressedToCartesianCellIdx );
-
-        // finally, write the grid to disk
-        const auto& ioConfig = *es.getIOConfig();
-        if( ioConfig.getWriteEGRIDFile() ) {
-            const bool is_metric =
-                es.getDeckUnitSystem().getType() == UnitSystem::UNIT_TYPE_METRIC;
-            eclGrid.fwriteEGRID( egrid.ertHandle(), is_metric );
-        }
-
-
-        if( ioConfig.getWriteINITFile() ) {
-            ERT::EclKW< float > poro_kw( "PORO", dataField );
-            ecl_init_file_fwrite_header( this->ertHandle(),
-                                         eclGrid.c_ptr(),
-                                         poro_kw.get(),
-                                         ert_phase_mask,
-                                         current_posix_time );
-        }
-    }
-
-    void writeKeyword( const std::string& keywordName,
-                       const std::vector<double> &data ) {
-        ERT::EclKW< float > kw( keywordName, data );
-        ecl_kw_fwrite( kw.get(), this->ertHandle() );
-    }
-
-    fortio_type* ertHandle() { return this->init.get(); }
-
-private:
-    FileName egrid;
-    ERT::FortIO init;
-};
 
 const int inactive_index = -1;
 
@@ -355,7 +318,7 @@ RFT::RFT( const char* output_dir,
           size_t cart_size ) :
     global_to_active( cart_size, inactive_index ),
     fortio(
-        FileName( output_dir, basename, ECL_RFT_FILE, format, 0 ).ertHandle(),
+        FileName( output_dir, basename, ECL_RFT_FILE, format ).get(),
         std::ios_base::out
         )
 {
@@ -439,12 +402,10 @@ class EclipseWriter::Impl {
     public:
         Impl( std::shared_ptr< const EclipseState > es,
               int numCells,
-              const int* comp_to_cart,
-              const NNC& );
+              const int* comp_to_cart);
 
         std::shared_ptr< const EclipseState > es;
         EclipseGrid grid;
-        const NNC& nnc;
         std::string outputDir;
         std::string baseName;
         out::Summary summary;
@@ -453,18 +414,16 @@ class EclipseWriter::Impl {
         int numCells;
         std::array< int, 3 > cartesianSize;
         const int* compressed_to_cartesian;
-        std::vector< int > gridToEclipseIdx;
+        std::vector< int > compressedToCartesian;
         bool output_enabled;
         int ert_phase_mask;
 };
 
 EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
                            int numCellsArg,
-                           const int* compressed_to_cart,
-                           const NNC& rnnc )
+                           const int* compressed_to_cart)
     : es( eclipseState )
     , grid( *eclipseState->getInputGrid() )
-    , nnc( rnnc )
     , outputDir( eclipseState->getIOConfig()->getOutputDir() )
     , baseName( uppercase( eclipseState->getIOConfig()->getBaseName() ) )
     , summary( *eclipseState, eclipseState->getSummaryConfig() )
@@ -475,72 +434,146 @@ EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
     , sim_start_time( es->getSchedule()->posixStartTime() )
     , numCells( numCellsArg )
     , compressed_to_cartesian( compressed_to_cart )
-    , gridToEclipseIdx( numCells, int(-1) )
+    , compressedToCartesian( numCells , int(-1) )
     , output_enabled( eclipseState->getIOConfig()->getOutputEnabled() )
     , ert_phase_mask( ertPhaseMask( eclipseState->getTableManager() ) )
 {}
 
-void EclipseWriter::writeInit() {
+
+void EclipseWriter::writeINITFile(const std::vector<data::CellData>& simProps, const NNC& nnc) const {
+    const auto& compressedToCartesian = this->impl->compressedToCartesian;
+    const auto& es = *this->impl->es;
+    const auto& units = es.getUnits();
+    std::shared_ptr<const IOConfig> ioConfig = es.getIOConfigConst();
+
+    FileName  initFile( this->impl->outputDir,
+                        this->impl->baseName,
+                        ECL_INIT_FILE,
+                        ioConfig->getFMTOUT() );
+
+    ERT::FortIO fortio( initFile.get() ,
+                        std::ios_base::out,
+                        ioConfig->getFMTOUT(),
+                        ECL_ENDIAN_FLIP );
+
+
+    // Write INIT header. Observe that the PORV vector is treated
+    // specially; that is because for this particulat vector we write
+    // a total of nx*ny*nz values, where the PORV vector has been
+    // explicitly set to zero for inactive cells. The convention is
+    // that the active/inactive cell mapping can be inferred by
+    // reading the PORV vector.
+    {
+
+        const auto& opm_data = es.get3DProperties().getDoubleGridProperty("PORV").getData();
+        auto ecl_data = opm_data;
+
+        for (size_t global_index = 0; global_index < opm_data.size(); global_index++)
+            if (!this->impl->grid.cellActive( global_index ))
+                ecl_data[global_index] = 0;
+
+
+        ecl_init_file_fwrite_header( fortio.get(),
+                                     this->impl->grid.c_ptr(),
+                                     NULL,
+                                     this->impl->ert_phase_mask,
+                                     this->impl->sim_start_time);
+
+        convertFromSiTo( ecl_data,
+                         units,
+                         UnitSystem::measure::volume);
+
+        writeKeyword( fortio, "PORV" , ecl_data );
+    }
+
+    // Write properties from the input deck.
+    {
+        const auto& properties = es.get3DProperties();
+        using double_kw = std::pair<std::string, UnitSystem::measure>;
+        std::vector<double_kw> doubleKeywords = {{"PORO"  , UnitSystem::measure::identity },
+                                                 {"PERMX" , UnitSystem::measure::permeability },
+                                                 {"PERMY" , UnitSystem::measure::permeability },
+                                                 {"PERMZ" , UnitSystem::measure::permeability }};
+
+        for (const auto& kw_pair : doubleKeywords) {
+            const auto& opm_data = properties.getDoubleGridProperty(kw_pair.first).getData();
+            auto ecl_data = restrictAndReorderToActiveCells( opm_data , compressedToCartesian.size(), compressedToCartesian.data());
+
+            convertFromSiTo( ecl_data,
+                             units,
+                             kw_pair.second );
+
+            writeKeyword( fortio, kw_pair.first, ecl_data );
+        }
+    }
+
+
+    // Write properties which have been initialized by the simulator.
+    {
+        for (const auto& prop : simProps) {
+            const auto& opm_data = prop.data;
+            auto ecl_data = restrictAndReorderToActiveCells( opm_data, compressedToCartesian.size(), compressedToCartesian.data());
+
+            convertFromSiTo( ecl_data,
+                             units,
+                             prop.dim );
+
+            writeKeyword( fortio, prop.name, ecl_data );
+        }
+    }
+
+
+    // Write NNC transmissibilities
+    {
+        std::vector<double> tran;
+        for( const NNCdata& nd : nnc.nncdata() )
+            tran.push_back( nd.trans );
+
+        convertFromSiTo( tran, units, UnitSystem::measure::transmissibility );
+        writeKeyword( fortio, "TRANNNC" , tran );
+    }
+}
+
+
+void EclipseWriter::writeEGRIDFile( const NNC& nnc ) const {
+    const auto& es = *this->impl->es;
+    const auto& ioConfig = es.getIOConfig();
+
+    FileName  egridFile( this->impl->outputDir,
+                         this->impl->baseName,
+                         ECL_EGRID_FILE,
+                         ioConfig->getFMTOUT() );
+
+    const EclipseGrid& grid = this->impl->grid;
+    const bool is_metric = es.getDeckUnitSystem().getType() == UnitSystem::UNIT_TYPE_METRIC;
+
+    {
+        int idx = 0;
+        auto* ecl_grid = const_cast< ecl_grid_type* >( grid.c_ptr() );
+        for (const NNCdata& n : nnc.nncdata())
+            ecl_grid_add_self_nnc( ecl_grid, n.cell1, n.cell2, idx++);
+    }
+
+    grid.fwriteEGRID( egridFile.get()  , is_metric );
+}
+
+
+void EclipseWriter::writeInitAndEgrid(const std::vector<data::CellData>& simProps, const NNC& nnc) {
     if( !this->impl->output_enabled )
         return;
 
-    const auto& es = *this->impl->es;
-    Init fortio( this->impl->outputDir,
-                 this->impl->baseName,
-                 /*stepIdx=*/0,
-                 *es.getIOConfigConst());
+    {
+        const auto& es = *this->impl->es;
+        IOConfigConstPtr ioConfig = es.getIOConfigConst();
 
-    fortio.writeHeader( this->impl->numCells,
-                        this->impl->compressed_to_cartesian,
-                        this->impl->sim_start_time,
-                        es,
-                        this->impl->grid,
-                        this->impl->ert_phase_mask );
+        if( ioConfig->getWriteINITFile() )
+            writeINITFile( simProps , nnc );
 
-    IOConfigConstPtr ioConfig = es.getIOConfigConst();
-    const auto& props = es.get3DProperties();
-
-    if( !ioConfig->getWriteINITFile() ) return;
-
-    const auto& gridToEclipseIdx = this->impl->gridToEclipseIdx;
-    const auto& units = es.getUnits();
-
-    if (props.hasDeckDoubleGridProperty("PERMX")) {
-        auto data = props.getDoubleGridProperty("PERMX").getData();
-        convertFromSiTo( data,
-                         units,
-                         UnitSystem::measure::permeability );
-        restrictAndReorderToActiveCells(data, gridToEclipseIdx.size(), gridToEclipseIdx.data());
-        fortio.writeKeyword("PERMX", data);
+        if( ioConfig->getWriteEGRIDFile( ) )
+            writeEGRIDFile( nnc );
     }
-    if (props.hasDeckDoubleGridProperty("PERMY")) {
-        auto data = props.getDoubleGridProperty("PERMY").getData();
-        convertFromSiTo( data,
-                         units,
-                         UnitSystem::measure::permeability );
-        restrictAndReorderToActiveCells(data, gridToEclipseIdx.size(), gridToEclipseIdx.data());
-        fortio.writeKeyword("PERMY", data);
-    }
-    if (props.hasDeckDoubleGridProperty("PERMZ")) {
-        auto data = props.getDoubleGridProperty("PERMZ").getData();
-        convertFromSiTo( data,
-                         units,
-                         UnitSystem::measure::permeability );
-        restrictAndReorderToActiveCells(data, gridToEclipseIdx.size(), gridToEclipseIdx.data());
-        fortio.writeKeyword("PERMZ", data);
-    }
-
-    if( !this->impl->nnc.hasNNC() ) return;
-
-    std::vector<double> tran;
-    for( NNCdata nd : this->impl->nnc.nncdata() ) {
-        tran.push_back( nd.trans );
-    }
-
-    convertFromSiTo( tran, units, UnitSystem::measure::transmissibility );
-    fortio.writeKeyword("TRANNNC", tran);
-
 }
+
 
 // implementation of the writeTimeStep method
 void EclipseWriter::writeTimeStep(int report_step,
@@ -556,33 +589,28 @@ void EclipseWriter::writeTimeStep(int report_step,
     using dc = data::Solution::key;
 
     time_t current_posix_time = this->impl->sim_start_time + secs_elapsed;
-    const auto& gridToEclipseIdx = this->impl->gridToEclipseIdx;
     const auto& es = *this->impl->es;
     const auto& grid = this->impl->grid;
     const auto& units = es.getUnits();
-
-    auto& pressure = cells[ dc::PRESSURE ];
-    convertFromSiTo( pressure,
-                     units,
-                     UnitSystem::measure::pressure );
-    restrictAndReorderToActiveCells(pressure, gridToEclipseIdx.size(), gridToEclipseIdx.data());
-
-    if( cells.has( dc::SWAT ) ) {
-        auto& saturation_water = cells[ dc::SWAT ];
-        restrictAndReorderToActiveCells(saturation_water, gridToEclipseIdx.size(), gridToEclipseIdx.data());
-    }
-
-
-    if( cells.has( dc::SGAS ) ) {
-        auto& saturation_gas = cells[ dc::SGAS ];
-        restrictAndReorderToActiveCells(saturation_gas, gridToEclipseIdx.size(), gridToEclipseIdx.data());
-    }
 
     IOConfigConstPtr ioConfig = this->impl->es->getIOConfigConst();
 
 
     const auto days = units.from_si( UnitSystem::measure::time, secs_elapsed );
     const auto& schedule = *es.getSchedule();
+
+    /*
+       This routine can optionally write RFT and/or restart file; to
+       be certain that the data correctly converted to output units
+       the conversion is done once here - and not closer to the actual
+       use-site.
+    */
+    convertFromSiTo( cells[ dc::PRESSURE ], units, UnitSystem::measure::pressure );
+    if ( cells.has( dc::TEMP ))
+        convertFromSiTo( cells[ dc::TEMP ],
+                         units,
+                         UnitSystem::measure::temperature );
+
 
     // Write restart file
     if(!isSubstep && ioConfig->getWriteRestartFile(report_step))
@@ -648,34 +676,44 @@ void EclipseWriter::writeTimeStep(int report_step,
         restartHandle.add_kw( ERT::EclKW< int >( ICON_KW, icon_data ) );
 
 
-        Solution sol(restartHandle);
-        sol.add( ERT::EclKW<float>("PRESSURE", pressure) );
+        /*
+          The code in the block below is in a state of flux, and not
+          very well tested. In particular there have been issues with
+          the mapping between active an inactive cells in the past -
+          there might be more those.
 
+          Currently the code hard-codes the following assumptions:
 
-        // write the cell temperature
-        auto& temperature = cells[ dc::TEMP ];
-        convertFromSiTo( temperature,
-                         units,
-                         UnitSystem::measure::temperature );
-        sol.add( ERT::EclKW<float>("TEMP", temperature) );
+            1. All the cells[ ] vectors have size equal to the number
+               of active cells, and they are already in eclipse
+               ordering.
 
+            2. No unit transformatio applied to the saturation and
+               RS/RV vectors.
 
-        if( cells.has( dc::SWAT ) ) {
-            sol.add( ERT::EclKW<float>( "SWAT", cells[ dc::SWAT ] ) );
+        */
+        {
+            Solution sol(restartHandle);
+
+            sol.add( ERT::EclKW<float>("PRESSURE", cells[ dc::PRESSURE ]));
+
+            if ( cells.has( dc::TEMP ))
+                sol.add( ERT::EclKW<float>("TEMP", cells[ dc::TEMP ]) );
+
+            if( cells.has( dc::SWAT ) )
+                sol.add( ERT::EclKW<float>( "SWAT", cells[ dc::SWAT ] ) );
+
+            if( cells.has( dc::SGAS ) )
+                sol.add( ERT::EclKW<float>( "SGAS", cells[ dc::SGAS ] ) );
+
+            // Write RS - Dissolved GOR
+            if( cells.has( dc::RS ) )
+                sol.add( ERT::EclKW<float>("RS", cells[ dc::RS ] ) );
+
+            // Write RV - Volatilized oil/gas ratio
+            if( cells.has( dc::RV ) )
+                sol.add( ERT::EclKW<float>("RV", cells[ dc::RV ] ) );
         }
-
-
-        if( cells.has( dc::SGAS ) ) {
-            sol.add( ERT::EclKW<float>( "SGAS", cells[ dc::SGAS ] ) );
-        }
-
-        // Write RS - Dissolved GOR
-        if( cells.has( dc::RS ) )
-            sol.add( ERT::EclKW<float>("RS", cells[ dc::RS ] ) );
-
-        // Write RV - Volatilized oil/gas ratio
-        if( cells.has( dc::RV ) )
-            sol.add( ERT::EclKW<float>("RV", cells[ dc::RV ] ) );
     }
 
     const auto unit_type = es.getDeckUnitSystem().getType();
@@ -685,7 +723,7 @@ void EclipseWriter::writeTimeStep(int report_step,
                                    current_posix_time,
                                    days,
                                    to_ert_unit( unit_type ),
-                                   pressure,
+                                   cells[ dc::PRESSURE ],
                                    cells[ dc::SWAT ],
                                    cells[ dc::SGAS ] );
 
@@ -700,51 +738,29 @@ void EclipseWriter::writeTimeStep(int report_step,
 
 EclipseWriter::EclipseWriter( std::shared_ptr< const EclipseState > es,
                               int numCells,
-                              const int* compressedToCartesianCellIdx,
-                              const NNC& nnc ) :
-    impl( new Impl( es, numCells, compressedToCartesianCellIdx, nnc ) )
+                              const int* compressedToCartesianCellIdx) :
+
+    impl( new Impl( es, numCells, compressedToCartesianCellIdx) )
 {
-    if( compressedToCartesianCellIdx ) {
-        // if compressedToCartesianCellIdx available then
-        // compute mapping to eclipse order
-        std::map< int , int > indexMap;
-        for (int cellIdx = 0; cellIdx < numCells; ++cellIdx) {
-            int cartesianCellIdx = compressedToCartesianCellIdx[cellIdx];
-            indexMap[ cartesianCellIdx ] = cellIdx;
-        }
-
-        int idx = 0;
-        for( auto it = indexMap.begin(), end = indexMap.end(); it != end; ++it ) {
-            this->impl->gridToEclipseIdx[ idx++ ] = (*it).second;
-        }
-    }
-    else {
-        // if not compressedToCartesianCellIdx was given use identity
-        for (int cellIdx = 0; cellIdx < numCells; ++cellIdx) {
-            this->impl->gridToEclipseIdx[ cellIdx ] = cellIdx;
-        }
-    }
-
-    auto& grid = this->impl->grid;
-
     // update the ACTNUM array using the processed cornerpoint grid
-    std::vector< int > actnumData( grid.getCartesianSize(), 1 );
-    if ( compressedToCartesianCellIdx ) {
-        actnumData.assign( actnumData.size(), 0 );
-
-        for( int cellIdx = 0; cellIdx < numCells; ++cellIdx )
-            actnumData[ compressedToCartesianCellIdx[ cellIdx ] ] = 1;
-    }
-
-    grid.resetACTNUM( &actnumData[0] );
-
-    if( nnc.hasNNC() ) {
-        int idx = 0;
-        // const_cast is safe, since this is a copy of the input grid
-        auto* ecl_grid = const_cast< ecl_grid_type* >( grid.c_ptr() );
-        for( NNCdata n : nnc.nncdata() ) {
-            ecl_grid_add_self_nnc( ecl_grid, n.cell1, n.cell2, idx++);
+    auto& grid = this->impl->grid;
+    {
+        std::vector< int > actnumData( grid.getCartesianSize(), 1 );
+        if ( compressedToCartesianCellIdx ) {
+            actnumData.assign( actnumData.size(), 0 );
+            for( int active_index = 0; active_index < numCells; active_index++ ) {
+                int global_index = compressedToCartesianCellIdx[ active_index ];
+                actnumData[global_index] = 1;
+                this->impl->compressedToCartesian[ active_index ] = global_index;
+            }
+        } else {
+            for( int active_index = 0; active_index < numCells; active_index++ ) {
+                int global_index = active_index;
+                actnumData[global_index] = 1;
+                this->impl->compressedToCartesian[ active_index ] = global_index;
+            }
         }
+        grid.resetACTNUM( &actnumData[0] );
     }
 
     if( !this->impl->output_enabled ) return;

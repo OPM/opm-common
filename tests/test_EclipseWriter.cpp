@@ -26,6 +26,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/output/eclipse/EclipseWriter.hpp>
+#include <opm/output/Cells.hpp>
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -36,12 +37,14 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/Units/ConversionFactors.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 // ERT stuff
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_endian_flip.h>
-#include <ert/ecl/fortio.h>
-#include <ert/util/test_work_area.h>
+#include <ert/ecl/ecl_file.h>
+#include <ert/util/ert_unique_ptr.hpp>
+#include <ert/util/TestArea.hpp>
 
 #include <memory>
 
@@ -141,11 +144,12 @@ void checkEgridFile( const EclipseGrid& eclGrid ) {
     fortio_fclose(egridFile);
 }
 
-void checkInitFile( const Deck& deck ) {
+void checkInitFile( const Deck& deck, const std::vector<data::CellData>& simProps) {
     // use ERT directly to inspect the INIT file produced by EclipseWriter
-    auto initFile = fortio_open_reader("FOO.INIT", /*isFormated=*/0, ECL_ENDIAN_FLIP);
+    ERT::ert_unique_ptr<ecl_file_type , ecl_file_close> initFile(ecl_file_open( "FOO.INIT" , 0 ));
 
-    while( auto* eclKeyword = ecl_kw_fread_alloc(initFile) ) {
+    for (int i=0; i < ecl_file_get_size(  initFile.get() ); i++) {
+        ecl_kw_type * eclKeyword = ecl_file_iget_kw( initFile.get( ) , i );
         std::string keywordName(ecl_kw_get_header(eclKeyword));
 
         if (keywordName == "PORO") {
@@ -165,11 +169,11 @@ void checkInitFile( const Deck& deck ) {
 
             compareErtData(sourceData, resultData, 1e-4);
         }
-
-        ecl_kw_free(eclKeyword);
     }
 
-    fortio_fclose(initFile);
+    for (const auto& prop : simProps) {
+        BOOST_CHECK( ecl_file_has_kw( initFile.get() , prop.name.c_str()) );
+    }
 }
 
 void checkRestartFile( int timeStepIdx ) {
@@ -216,12 +220,8 @@ void checkRestartFile( int timeStepIdx ) {
 
 BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
 {
-
-    test_work_area_type * test_area = test_work_area_alloc("TEST_EclipseWriterIntegration");
-
     const char *deckString =
         "RUNSPEC\n"
-        "INIT\n"
         "UNIFOUT\n"
         "OIL\n"
         "GAS\n"
@@ -230,6 +230,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
         "DIMENS\n"
         "3 3 3/\n"
         "GRID\n"
+        "INIT\n"
         "DXV\n"
         "1.0 2.0 3.0 /\n"
         "DYV\n"
@@ -262,27 +263,34 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
     auto& eclGrid = *es->getInputGrid();
 
     {
-        EclipseWriter eclWriter( es, 3 * 3 * 3, nullptr, NNC());
+        ERT::TestArea ta("test_ecl_writer");
+        EclipseWriter eclWriter( es, 3 * 3 * 3, nullptr);
 
         auto start_time = util_make_datetime( 0, 0, 0, 10, 10, 2008 );
         auto first_step = util_make_datetime( 0, 0, 0, 10, 11, 2008 );
-        eclWriter.writeInit();
+        std::vector<double> tranx(3*3*3);
+        std::vector<double> trany(3*3*3);
+        std::vector<double> tranz(3*3*3);
+        std::vector<data::CellData> simProps{{"TRANX" , UnitSystem::measure::transmissibility, tranx},
+                                             {"TRANY" , UnitSystem::measure::transmissibility, trany},
+                                             {"TRANZ" , UnitSystem::measure::transmissibility, tranz}};
+
+        ta.setStore( true );
+        eclWriter.writeInitAndEgrid( );
+        eclWriter.writeInitAndEgrid( simProps );
 
         data::Wells wells;
 
         for( int i = 0; i < 5; ++i ) {
             eclWriter.writeTimeStep( i,
-                    first_step - start_time,
-                    createBlackoilState( i, 3 * 3 * 3 ),
-                    wells, false);
+                                     first_step - start_time,
+                                     createBlackoilState( i, 3 * 3 * 3 ),
+                                     wells, false);
 
             checkRestartFile( i );
 
         }
+        checkInitFile( *deck , simProps);
+        checkEgridFile( eclGrid );
     }
-
-    checkEgridFile( eclGrid );
-    checkInitFile( *deck );
-
-    test_work_area_free(test_area);
 }
