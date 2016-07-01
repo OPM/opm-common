@@ -25,7 +25,6 @@ build_order=(opm-common opm-parser opm-material opm-output opm-core opm-grid opm
 # This can typically be achived by using the 'clone-opm.sh' script.
 
 
-
 function upstream_build {
     project=${1}
     echo "Building: ${project}"
@@ -50,6 +49,11 @@ function downstream_build_and_test {
     ctest --output-on-failure
     popd > /dev/null
 }
+
+#-----------------------------------------------------------------
+
+export CONDA_HOME="$HOME/miniconda"
+export PATH="$CONDA_HOME/bin:$PATH"
 
 
 for i in "${!build_order[@]}"; do
