@@ -49,6 +49,8 @@ function build_superlu {
 
 
 function build_ert {
+    sudo pip install numpy
+
     git clone https://github.com/Ensembles/ert.git
     mkdir -p ert/build
     pushd ert/build > /dev/null
