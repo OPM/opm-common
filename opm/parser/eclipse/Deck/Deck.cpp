@@ -132,6 +132,14 @@ namespace Opm {
         m_dataFile("")
     {}
 
+    Deck::Deck( std::initializer_list< DeckKeyword > ilist ) :
+        Deck( std::vector< DeckKeyword >( ilist.begin(), ilist.end() ) )
+    {}
+
+    Deck::Deck( std::initializer_list< std::string > ilist ) :
+        Deck( std::vector< DeckKeyword >( ilist.begin(), ilist.end() ) )
+    {}
+
     void Deck::addKeyword( DeckKeyword&& keyword ) {
         this->keywordList.push_back( std::move( keyword ) );
 

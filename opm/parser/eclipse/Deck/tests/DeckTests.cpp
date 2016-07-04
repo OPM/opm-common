@@ -37,6 +37,18 @@ BOOST_AUTO_TEST_CASE(Initialize) {
     BOOST_REQUIRE_NO_THROW(DeckConstPtr deckConstPtr(new Deck()));
 }
 
+BOOST_AUTO_TEST_CASE(Initializer_lists) {
+    DeckKeyword foo( "foo" );
+    DeckKeyword bar( "bar" );
+
+    std::string foostr( "foo" );
+    std::string barstr( "bar" );
+
+    BOOST_REQUIRE_NO_THROW( Deck( { foo, bar } ) );
+    BOOST_REQUIRE_NO_THROW( Deck( { foostr, barstr } ) );
+    BOOST_REQUIRE_NO_THROW( Deck( { "Kappa", "Phi" } ) );
+}
+
 BOOST_AUTO_TEST_CASE(hasKeyword_empty_returnFalse) {
     Deck deck;
     BOOST_CHECK_EQUAL(false, deck.hasKeyword("Bjarne"));
