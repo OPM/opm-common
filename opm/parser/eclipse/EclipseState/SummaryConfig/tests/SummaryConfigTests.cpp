@@ -189,6 +189,24 @@ BOOST_AUTO_TEST_CASE(completions) {
             names.begin(), names.end() );
 }
 
+constexpr auto ALL_keywords =  {
+    "FAQR",  "FAQRG", "FAQT", "FAQTG", "FGIP", "FGIPG", "FGIPL",
+    "FGIR",  "FGIT",  "FGOR", "FGPR",  "FGPT", "FOIP",  "FOIPG",
+    "FOIPL", "FOIR",  "FOIT", "FOPR",  "FOPT", "FPR",   "FVIR",
+    "FVIT",  "FVPR",  "FVPT", "FWCT",  "FWGR", "FWIP",  "FWIR",
+    "FWIT",  "FWPR",  "FWPT",
+    "GGIR",  "GGIT",  "GGOR", "GGPR",  "GGPT", "GOIR",  "GOIT",
+    "GOPR",  "GOPT",  "GVIR", "GVIT",  "GVPR", "GVPT",  "GWCT",
+    "GWGR",  "GWIR",  "GWIT", "GWPR",  "GWPT",
+    "WBHP",  "WGIR",  "WGIT", "WGOR",  "WGPR", "WGPT",  "WOIR",
+    "WOIT",  "WOPR",  "WOPT", "WPI",   "WTHP", "WVIR",  "WVIT",
+    "WVPR",  "WVPT",  "WWCT", "WWGR",  "WWIR", "WWIT",  "WWPR",
+    "WWPT",
+    // ALL will not expand to these keywords yet
+    "AAQR",  "AAQRG", "AAQT", "AAQTG"
+};
+
+
 BOOST_AUTO_TEST_CASE(summary_ALL) {
 
     const auto input = "ALL\n";
@@ -198,7 +216,7 @@ BOOST_AUTO_TEST_CASE(summary_ALL) {
 
     std::vector<std::string> all;
 
-    for(const std::string& keyword: SummaryConfig::getAllExpandedKeywords()) {
+    for( std::string keyword: ALL_keywords ) {
         if(keyword[0]=='F') {
             all.push_back(keyword);
         }

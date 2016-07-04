@@ -46,27 +46,23 @@
 
 namespace Opm {
 
-    const std::vector <std::string> SummaryConfig::__ALL_expands_keywords ({
-        "FAQR", "FAQRG", "FAQT", "FAQTG", "FGIP", "FGIPG", "FGIPL",
-        "FGIR", "FGIT", "FGOR", "FGPR", "FGPT", "FOIP", "FOIPG",
-        "FOIPL", "FOIR", "FOIT", "FOPR", "FOPT", "FPR", "FVIR",
-        "FVIT", "FVPR", "FVPT", "FWCT", "FWGR", "FWIP", "FWIR",
-        "FWIT", "FWPR", "FWPT",
-        "GGIR", "GGIT", "GGOR", "GGPR", "GGPT", "GOIR", "GOIT",
-        "GOPR", "GOPT", "GVIR", "GVIT", "GVPR", "GVPT", "GWCT",
-        "GWGR", "GWIR", "GWIT", "GWPR", "GWPT",
-        "WBHP", "WGIR", "WGIT", "WGOR", "WGPR", "WGPT", "WOIR",
-        "WOIT", "WOPR", "WOPT", "WPI", "WTHP", "WVIR", "WVIT",
-        "WVPR", "WVPT", "WWCT", "WWGR", "WWIR", "WWIT", "WWPR",
+namespace {
+    constexpr auto ALL_keywords =  {
+        "FAQR",  "FAQRG", "FAQT", "FAQTG", "FGIP", "FGIPG", "FGIPL",
+        "FGIR",  "FGIT",  "FGOR", "FGPR",  "FGPT", "FOIP",  "FOIPG",
+        "FOIPL", "FOIR",  "FOIT", "FOPR",  "FOPT", "FPR",   "FVIR",
+        "FVIT",  "FVPR",  "FVPT", "FWCT",  "FWGR", "FWIP",  "FWIR",
+        "FWIT",  "FWPR",  "FWPT",
+        "GGIR",  "GGIT",  "GGOR", "GGPR",  "GGPT", "GOIR",  "GOIT",
+        "GOPR",  "GOPT",  "GVIR", "GVIT",  "GVPR", "GVPT",  "GWCT",
+        "GWGR",  "GWIR",  "GWIT", "GWPR",  "GWPT",
+        "WBHP",  "WGIR",  "WGIT", "WGOR",  "WGPR", "WGPT",  "WOIR",
+        "WOIT",  "WOPR",  "WOPT", "WPI",   "WTHP", "WVIR",  "WVIT",
+        "WVPR",  "WVPT",  "WWCT", "WWGR",  "WWIR", "WWIT",  "WWPR",
         "WWPT",
         // ALL will not expand to these keywords yet
-        "AAQR", "AAQRG", "AAQT", "AAQTG"
-    });
-
-	std::vector <std::string> SummaryConfig::getAllExpandedKeywords() {
-		return __ALL_expands_keywords;
-	}
-
+        "AAQR",  "AAQRG", "AAQT", "AAQTG"
+    };
 
     /*
       When the error handling config says that the error should be
@@ -86,7 +82,7 @@ namespace Opm {
       all the way down here.
     */
 
-    static void handleMissingWell( const ParseContext& parseContext , const std::string& keyword, const std::string& well) {
+    void handleMissingWell( const ParseContext& parseContext , const std::string& keyword, const std::string& well) {
         std::string msg = std::string("Error in keyword:") + keyword + std::string(" No such well: ") + well;
         MessageContainer msgContainer;
         if (parseContext.get( ParseContext::SUMMARY_UNKNOWN_WELL) == InputError::WARN)
@@ -96,7 +92,7 @@ namespace Opm {
     }
 
 
-    static void handleMissingGroup( const ParseContext& parseContext , const std::string& keyword, const std::string& group) {
+    void handleMissingGroup( const ParseContext& parseContext , const std::string& keyword, const std::string& group) {
         std::string msg = std::string("Error in keyword:") + keyword + std::string(" No such group: ") + group;
         MessageContainer msgContainer;
         if (parseContext.get( ParseContext::SUMMARY_UNKNOWN_GROUP) == InputError::WARN)
@@ -108,11 +104,11 @@ namespace Opm {
 
 
     template< typename T >
-    static std::string name( const T* x ) {
+    std::string name( const T* x ) {
         return x->name();
     }
 
-    static inline std::vector< ERT::smspec_node > defaultW(
+    inline std::vector< ERT::smspec_node > defaultW(
             const std::string& keyword,
             const Schedule& schedule ) {
 
@@ -124,7 +120,7 @@ namespace Opm {
     }
 
 
-    static inline std::vector< ERT::smspec_node > keywordW(const ParseContext& parseContext,
+    inline std::vector< ERT::smspec_node > keywordW(const ParseContext& parseContext,
                                                            const DeckKeyword& keyword,
                                                            const Schedule& schedule ) {
 
@@ -144,7 +140,7 @@ namespace Opm {
 
 
 
-    static inline std::vector< ERT::smspec_node > defaultG(const std::string& keyword,
+    inline std::vector< ERT::smspec_node > defaultG(const std::string& keyword,
                                                            const Schedule& schedule ) {
 
         const auto mknode = [&keyword]( const std::string& gname ) {
@@ -154,7 +150,7 @@ namespace Opm {
         return fun::map( mknode, fun::map( name< Group  >, schedule.getGroups() ) );
     }
 
-    static inline std::vector< ERT::smspec_node > keywordG(const ParseContext& parseContext,
+    inline std::vector< ERT::smspec_node > keywordG(const ParseContext& parseContext,
                                                            const DeckKeyword& keyword,
                                                            const Schedule& schedule ) {
 
@@ -174,7 +170,7 @@ namespace Opm {
 
 
 
-    static inline std::vector< ERT::smspec_node > keywordF(
+    inline std::vector< ERT::smspec_node > keywordF(
             const DeckKeyword& keyword ) {
 
         std::vector< ERT::smspec_node > res;
@@ -182,7 +178,7 @@ namespace Opm {
         return res;
     }
 
-    static inline std::vector< ERT::smspec_node > keywordF(
+    inline std::vector< ERT::smspec_node > keywordF(
             const std::string& keyword ) {
 
         std::vector< ERT::smspec_node > res;
@@ -190,7 +186,7 @@ namespace Opm {
         return res;
     }
 
-    static inline std::array< int, 3 > dimensions( const EclipseGrid& grid ) {
+    inline std::array< int, 3 > dimensions( const EclipseGrid& grid ) {
         return {{
             int( grid.getNX() ),
             int( grid.getNY() ),
@@ -198,7 +194,7 @@ namespace Opm {
         }};
     }
 
-    static inline std::array< int, 3 > getijk( const DeckRecord& record,
+    inline std::array< int, 3 > getijk( const DeckRecord& record,
                                                int offset = 0 )
     {
         return {{
@@ -208,11 +204,11 @@ namespace Opm {
         }};
     }
 
-    static inline std::array< int, 3 > getijk( const Completion& completion ) {
+    inline std::array< int, 3 > getijk( const Completion& completion ) {
         return {{ completion.getI(), completion.getJ(), completion.getK() }};
     }
 
-    static inline std::vector< ERT::smspec_node > keywordB(
+    inline std::vector< ERT::smspec_node > keywordB(
             const DeckKeyword& keyword,
             std::array< int, 3 > dims ) {
 
@@ -224,7 +220,7 @@ namespace Opm {
         return fun::map( mkrecord, keyword );
     }
 
-    static inline std::vector< ERT::smspec_node > keywordR(
+    inline std::vector< ERT::smspec_node > keywordR(
             const DeckKeyword& keyword,
             const Eclipse3DProperties& props,
             std::array< int, 3 > dims ) {
@@ -248,7 +244,7 @@ namespace Opm {
         return fun::map( mknode, regions );
     }
 
-   static inline std::vector< ERT::smspec_node > keywordC(const ParseContext& parseContext,
+   inline std::vector< ERT::smspec_node > keywordC(const ParseContext& parseContext,
                                                            const DeckKeyword& keyword,
                                                            const Schedule& schedule,
                                                            std::array< int, 3 > dims ) {
@@ -325,11 +321,10 @@ namespace Opm {
 
     std::vector< ERT::smspec_node > handleALL( const Schedule& schedule) {
 
-
         std::vector< ERT::smspec_node > all;
 
-        for(const std::string& keyword: SummaryConfig::getAllExpandedKeywords()) {
-            const auto var_type = ecl_smspec_identify_var_type(keyword.c_str());
+        for( const auto& keyword: ALL_keywords ) {
+            const auto var_type = ecl_smspec_identify_var_type(keyword);
             switch (var_type) {
                 case ECL_SMSPEC_WELL_VAR:
                     for(auto&k :defaultW(keyword, schedule)) all.push_back(k);
@@ -343,13 +338,15 @@ namespace Opm {
                 case ECL_SMSPEC_AQUIFER_VAR:
                     {}
                     break;
-                default:
-                	throw std::runtime_error("Unrecognized keyword type: " + keyword);
+                default: throw std::runtime_error(
+                                 "Unrecognized keyword type: "
+                                 + std::string(keyword) );
             }
         }
 
         return all;
     }
+}
 
     SummaryConfig::SummaryConfig( const Deck& deck, const EclipseState& es , const ParseContext& parseContext)
         : SummaryConfig( deck,
