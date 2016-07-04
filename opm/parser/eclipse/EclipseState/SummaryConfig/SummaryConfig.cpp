@@ -283,6 +283,21 @@ inline void handleKW( std::vector< ERT::smspec_node >& list,
     }
 }
 
+inline void uniq( std::vector< ERT::smspec_node >& vec ) {
+    const auto lt = []( const ERT::smspec_node& lhs,
+                        const ERT::smspec_node& rhs ) {
+        return std::strcmp( lhs.key1(), rhs.key1() ) < 0;
+    };
+    const auto eq = []( const ERT::smspec_node& lhs,
+                        const ERT::smspec_node& rhs ) {
+        return std::strcmp( lhs.key1(), rhs.key1() ) == 0;
+    };
+
+    std::sort( vec.begin(), vec.end(), lt );
+    auto logical_end = std::unique( vec.begin(), vec.end(), eq );
+    vec.erase( logical_end, vec.end() );
+}
+
 }
 
 SummaryConfig::SummaryConfig( const Deck& deck, const EclipseState& es , const ParseContext& parseContext)
@@ -305,6 +320,8 @@ SummaryConfig::SummaryConfig( const Deck& deck,
 
     if( section.hasKeyword( "ALL" ) )
         this->merge( { ALL_keywords, schedule, props, parseContext, n_xyz } );
+
+    uniq( this->keywords );
 }
 
 SummaryConfig::const_iterator SummaryConfig::begin() const {
@@ -319,6 +336,8 @@ SummaryConfig& SummaryConfig::merge( const SummaryConfig& other ) {
     this->keywords.insert( this->keywords.end(),
                             other.keywords.begin(),
                             other.keywords.end() );
+
+    uniq( this->keywords );
     return *this;
 }
 
@@ -328,6 +347,7 @@ SummaryConfig& SummaryConfig::merge( SummaryConfig&& other ) {
     this->keywords.insert( this->keywords.end(), begin, end );
     other.keywords.clear();
 
+    uniq( this->keywords );
     return *this;
 }
 

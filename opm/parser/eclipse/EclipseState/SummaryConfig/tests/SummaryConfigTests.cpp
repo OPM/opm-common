@@ -325,3 +325,22 @@ BOOST_AUTO_TEST_CASE(INVALID_GROUP) {
     parseContext.updateKey( ParseContext::SUMMARY_UNKNOWN_GROUP , InputError::IGNORE );
     BOOST_CHECK_NO_THROW( createSummary( input , parseContext ));
 }
+
+BOOST_AUTO_TEST_CASE( REMOVE_DUPLICATED_ENTRIES ) {
+    ParseContext parseContext;
+    const auto input = "WGPR \n/\n"
+                       "WGPR \n/\n"
+                       "ALL\n";
+
+    const auto summary = createSummary( input );
+    const auto keys = sorted_key_names( summary );
+    auto uniq_keys = keys;
+    uniq_keys.erase( std::unique( uniq_keys.begin(),
+                                  uniq_keys.end(),
+                                  std::equal_to< std::string >() ),
+                     uniq_keys.end() );
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+            keys.begin(), keys.end(),
+            uniq_keys.begin(), uniq_keys.end() );
+}
