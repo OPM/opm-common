@@ -132,17 +132,18 @@ namespace {
             return defaultW( keyword.name(), schedule );
 
         const auto& item = keyword.getDataRecord().getDataItem();
-        if (item.hasValue( 0 )) {
-            std::vector<ERT::smspec_node> nodes;
-            for (const std::string& well : item.getData< std::string >()) {
-                if (schedule.hasWell( well ))
-                    nodes.emplace_back( ECL_SMSPEC_WELL_VAR , well , keyword.name());
-                else
-                    handleMissingWell( parseContext , keyword.name() , well );
-            }
-            return nodes;
-        } else
-            return defaultW( keyword.name() , schedule );
+
+        if( !item.hasValue( 0 ) )
+            return defaultW( keyword.name(), schedule );
+
+        std::vector<ERT::smspec_node> nodes;
+        for( const std::string& well : item.getData< std::string >() ) {
+            if (schedule.hasWell( well ))
+                nodes.emplace_back( ECL_SMSPEC_WELL_VAR , well , keyword.name());
+            else
+                handleMissingWell( parseContext , keyword.name() , well );
+        }
+        return nodes;
     }
 
 
@@ -164,17 +165,18 @@ namespace {
             return defaultG( keyword.name(), schedule );
 
         const auto& item = keyword.getDataRecord().getDataItem();
-        if (item.hasValue( 0 )) {
-            std::vector<ERT::smspec_node> nodes;
-            for (const std::string& group : item.getData< std::string >()) {
-                if (schedule.hasGroup( group ))
-                    nodes.emplace_back( ECL_SMSPEC_GROUP_VAR , group , keyword.name());
-                else
-                    handleMissingGroup( parseContext , keyword.name() , group );
-            }
-            return nodes;
-        } else
-            return defaultG( keyword.name() , schedule );
+
+        if( !item.hasValue( 0 ) )
+            return defaultG( keyword.name(), schedule );
+
+        std::vector<ERT::smspec_node> nodes;
+        for( const std::string& group : item.getData< std::string >() ) {
+            if (schedule.hasGroup( group ))
+                nodes.emplace_back( ECL_SMSPEC_GROUP_VAR , group , keyword.name());
+            else
+                handleMissingGroup( parseContext , keyword.name() , group );
+        }
+        return nodes;
     }
 
 
