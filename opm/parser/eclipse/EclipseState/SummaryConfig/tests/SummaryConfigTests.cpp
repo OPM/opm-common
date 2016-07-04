@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(INVALID_WELL1) {
     BOOST_CHECK_THROW( createSummary( input , parseContext ) , std::invalid_argument);
 
     parseContext.updateKey( ParseContext::SUMMARY_UNKNOWN_WELL , InputError::IGNORE );
-    BOOST_CHECK_NO_THROW( createSummary( input , parseContext ))
+    BOOST_CHECK_NO_THROW( createSummary( input , parseContext ));
 }
 
 
@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE(INVALID_WELL2) {
     BOOST_CHECK_THROW( createSummary( input , parseContext ) , std::invalid_argument);
 
     parseContext.updateKey( ParseContext::SUMMARY_UNKNOWN_WELL , InputError::IGNORE );
-    BOOST_CHECK_NO_THROW( createSummary( input , parseContext ))
+    BOOST_CHECK_NO_THROW( createSummary( input , parseContext ));
 }
 
 
@@ -260,5 +260,5 @@ BOOST_AUTO_TEST_CASE(INVALID_GROUP) {
     BOOST_CHECK_THROW( createSummary( input , parseContext ) , std::invalid_argument);
 
     parseContext.updateKey( ParseContext::SUMMARY_UNKNOWN_GROUP , InputError::IGNORE );
-    BOOST_CHECK_NO_THROW( createSummary( input , parseContext ))
+    BOOST_CHECK_NO_THROW( createSummary( input , parseContext ));
 }
