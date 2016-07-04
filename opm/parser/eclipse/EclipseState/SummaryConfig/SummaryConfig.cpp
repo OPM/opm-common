@@ -392,4 +392,20 @@ namespace {
         return this->keywords.cend();
     }
 
+    SummaryConfig& SummaryConfig::merge( const SummaryConfig& other ) {
+        this->keywords.insert( this->keywords.end(),
+                               other.keywords.begin(),
+                               other.keywords.end() );
+        return *this;
+    }
+
+    SummaryConfig& SummaryConfig::merge( SummaryConfig&& other ) {
+        auto begin = std::make_move_iterator( other.keywords.begin() );
+        auto end = std::make_move_iterator( other.keywords.end() );
+        this->keywords.insert( this->keywords.end(), begin, end );
+        other.keywords.clear();
+
+        return *this;
+    }
+
 }

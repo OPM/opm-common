@@ -187,6 +187,51 @@ BOOST_AUTO_TEST_CASE(completions) {
     BOOST_CHECK_EQUAL_COLLECTIONS(
             keywords.begin(), keywords.end(),
             names.begin(), names.end() );
+
+}
+
+BOOST_AUTO_TEST_CASE( merge ) {
+    const auto input1 = "WWCT\n/\n";
+    auto summary1 = createSummary( input1 );
+
+    const auto keywords = { "FOPT", "WWCT", "WWCT", "WWCT", "WWCT" };
+    const auto wells = { "PRODUCER", "WX2", "W_1", "W_3" };
+
+    const auto input2 = "FOPT\n";
+    const auto summary2 = createSummary( input2 );
+
+    summary1.merge( summary2 );
+    const auto kw_names = sorted_keywords( summary1 );
+    const auto well_names = sorted_names( summary1 );
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+            keywords.begin(), keywords.end(),
+            kw_names.begin(), kw_names.end() );
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+            wells.begin(), wells.end(),
+            well_names.begin(), well_names.end() );
+}
+
+BOOST_AUTO_TEST_CASE( merge_move ) {
+    const auto input = "WWCT\n/\n";
+    auto summary = createSummary( input );
+
+    const auto keywords = { "FOPT", "WWCT", "WWCT", "WWCT", "WWCT" };
+    const auto wells = { "PRODUCER", "WX2", "W_1", "W_3" };
+
+    summary.merge( createSummary( "FOPT\n" ) );
+
+    const auto kw_names = sorted_keywords( summary );
+    const auto well_names = sorted_names( summary );
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+            keywords.begin(), keywords.end(),
+            kw_names.begin(), kw_names.end() );
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+            wells.begin(), wells.end(),
+            well_names.begin(), well_names.end() );
 }
 
 constexpr auto ALL_keywords =  {

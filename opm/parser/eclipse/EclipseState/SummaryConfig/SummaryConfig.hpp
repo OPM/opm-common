@@ -47,6 +47,9 @@ namespace Opm {
             const_iterator begin() const;
             const_iterator end() const;
 
+            SummaryConfig& merge( const SummaryConfig& );
+            SummaryConfig& merge( SummaryConfig&& );
+
         private:
             std::vector< ERT::smspec_node > keywords;
     };
