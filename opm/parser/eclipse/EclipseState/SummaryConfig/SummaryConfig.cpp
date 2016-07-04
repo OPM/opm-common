@@ -66,42 +66,42 @@ namespace {
         "AAQR",  "AAQRG", "AAQT", "AAQTG"
     };
 
-    /*
-      When the error handling config says that the error should be
-      logged, the handleMissingWell and handleMissingGroup routines
-      cheat. Ideally we should have a MessageContainer instance around
-      and pass that to the parseContext::handlError() routine. Instead
-      we:
+/*
+    When the error handling config says that the error should be
+    logged, the handleMissingWell and handleMissingGroup routines
+    cheat. Ideally we should have a MessageContainer instance around
+    and pass that to the parseContext::handlError() routine. Instead
+    we:
 
-        1. We instantiate new MessageContainer() which is just
-           immediately dropped to floor, leaving the messages behind.
+    1. We instantiate new MessageContainer() which is just
+        immediately dropped to floor, leaving the messages behind.
 
-        2. Print a message on stderr.
+    2. Print a message on stderr.
 
-      The case of incorrectly/missing well/group names in the SUMMARY
-      section did just not seem important enough to warrant the
-      refactoring required to pass a mutable proper MessageContainer
-      all the way down here.
-    */
+    The case of incorrectly/missing well/group names in the SUMMARY
+    section did just not seem important enough to warrant the
+    refactoring required to pass a mutable proper MessageContainer
+    all the way down here.
+*/
 
-    void handleMissingWell( const ParseContext& parseContext , const std::string& keyword, const std::string& well) {
-        std::string msg = std::string("Error in keyword:") + keyword + std::string(" No such well: ") + well;
-        MessageContainer msgContainer;
-        if (parseContext.get( ParseContext::SUMMARY_UNKNOWN_WELL) == InputError::WARN)
-            std::cerr << "ERROR: " << msg << std::endl;
+void handleMissingWell( const ParseContext& parseContext , const std::string& keyword, const std::string& well) {
+    std::string msg = std::string("Error in keyword:") + keyword + std::string(" No such well: ") + well;
+    MessageContainer msgContainer;
+    if (parseContext.get( ParseContext::SUMMARY_UNKNOWN_WELL) == InputError::WARN)
+        std::cerr << "ERROR: " << msg << std::endl;
 
-        parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_WELL , msgContainer , msg );
-    }
+    parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_WELL , msgContainer , msg );
+}
 
 
-    void handleMissingGroup( const ParseContext& parseContext , const std::string& keyword, const std::string& group) {
-        std::string msg = std::string("Error in keyword:") + keyword + std::string(" No such group: ") + group;
-        MessageContainer msgContainer;
-        if (parseContext.get( ParseContext::SUMMARY_UNKNOWN_GROUP) == InputError::WARN)
-            std::cerr << "ERROR: " << msg << std::endl;
+void handleMissingGroup( const ParseContext& parseContext , const std::string& keyword, const std::string& group) {
+    std::string msg = std::string("Error in keyword:") + keyword + std::string(" No such group: ") + group;
+    MessageContainer msgContainer;
+    if (parseContext.get( ParseContext::SUMMARY_UNKNOWN_GROUP) == InputError::WARN)
+        std::cerr << "ERROR: " << msg << std::endl;
 
-        parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_GROUP , msgContainer , msg );
-    }
+    parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_GROUP , msgContainer , msg );
+}
 
 inline void keywordW( std::vector< ERT::smspec_node >& list,
                       const ParseContext& parseContext,
@@ -307,28 +307,28 @@ SummaryConfig::SummaryConfig( const Deck& deck,
         this->merge( { ALL_keywords, schedule, props, parseContext, n_xyz } );
 }
 
-    SummaryConfig::const_iterator SummaryConfig::begin() const {
-        return this->keywords.cbegin();
-    }
+SummaryConfig::const_iterator SummaryConfig::begin() const {
+    return this->keywords.cbegin();
+}
 
-    SummaryConfig::const_iterator SummaryConfig::end() const {
-        return this->keywords.cend();
-    }
+SummaryConfig::const_iterator SummaryConfig::end() const {
+    return this->keywords.cend();
+}
 
-    SummaryConfig& SummaryConfig::merge( const SummaryConfig& other ) {
-        this->keywords.insert( this->keywords.end(),
-                               other.keywords.begin(),
-                               other.keywords.end() );
-        return *this;
-    }
+SummaryConfig& SummaryConfig::merge( const SummaryConfig& other ) {
+    this->keywords.insert( this->keywords.end(),
+                            other.keywords.begin(),
+                            other.keywords.end() );
+    return *this;
+}
 
-    SummaryConfig& SummaryConfig::merge( SummaryConfig&& other ) {
-        auto begin = std::make_move_iterator( other.keywords.begin() );
-        auto end = std::make_move_iterator( other.keywords.end() );
-        this->keywords.insert( this->keywords.end(), begin, end );
-        other.keywords.clear();
+SummaryConfig& SummaryConfig::merge( SummaryConfig&& other ) {
+    auto begin = std::make_move_iterator( other.keywords.begin() );
+    auto end = std::make_move_iterator( other.keywords.end() );
+    this->keywords.insert( this->keywords.end(), begin, end );
+    other.keywords.clear();
 
-        return *this;
-    }
+    return *this;
+}
 
 }
