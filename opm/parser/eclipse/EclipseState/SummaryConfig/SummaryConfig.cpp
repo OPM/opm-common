@@ -47,7 +47,11 @@
 namespace Opm {
 
 namespace {
-    constexpr auto ALL_keywords =  {
+    /* A dummy deck that holds a Summary section with the keyword list that ALL
+     * expands to, plus the SUMMARY header
+     */
+    const Deck ALL_keywords = {
+        "SUMMARY",
         "FAQR",  "FAQRG", "FAQT", "FAQTG", "FGIP", "FGIPG", "FGIPL",
         "FGIR",  "FGIT",  "FGOR", "FGPR",  "FGPT", "FOIP",  "FOIPG",
         "FOIPL", "FOIR",  "FOIT", "FOPR",  "FOPT", "FPR",   "FVIR",
@@ -124,6 +128,9 @@ namespace {
                                                            const DeckKeyword& keyword,
                                                            const Schedule& schedule ) {
 
+        if( keyword.size() == 0 )
+            return defaultW( keyword.name(), schedule );
+
         const auto& item = keyword.getDataRecord().getDataItem();
         if (item.hasValue( 0 )) {
             std::vector<ERT::smspec_node> nodes;
@@ -153,6 +160,8 @@ namespace {
     inline std::vector< ERT::smspec_node > keywordG(const ParseContext& parseContext,
                                                            const DeckKeyword& keyword,
                                                            const Schedule& schedule ) {
+        if( keyword.size() == 0 )
+            return defaultG( keyword.name(), schedule );
 
         const auto& item = keyword.getDataRecord().getDataItem();
         if (item.hasValue( 0 )) {
@@ -319,33 +328,6 @@ namespace {
         }
     }
 
-    std::vector< ERT::smspec_node > handleALL( const Schedule& schedule) {
-
-        std::vector< ERT::smspec_node > all;
-
-        for( const auto& keyword: ALL_keywords ) {
-            const auto var_type = ecl_smspec_identify_var_type(keyword);
-            switch (var_type) {
-                case ECL_SMSPEC_WELL_VAR:
-                    for(auto&k :defaultW(keyword, schedule)) all.push_back(k);
-                    break;
-                case ECL_SMSPEC_GROUP_VAR:
-                    for(auto& k:defaultG(keyword, schedule)) all.push_back(k);
-                    break;
-                case ECL_SMSPEC_FIELD_VAR:
-                    for(auto& k:keywordF(keyword)) all.push_back(k);
-                    break;
-                case ECL_SMSPEC_AQUIFER_VAR:
-                    {}
-                    break;
-                default: throw std::runtime_error(
-                                 "Unrecognized keyword type: "
-                                 + std::string(keyword) );
-            }
-        }
-
-        return all;
-    }
 }
 
     SummaryConfig::SummaryConfig( const Deck& deck, const EclipseState& es , const ParseContext& parseContext)
@@ -371,17 +353,12 @@ namespace {
          *   this->keywords = fun::concat( fun::map( handler, section ) );
          * The following code is a workaround for this compiler bug */
         for (auto& x : section) {
-
-            if (x.name().compare("ALL") == 0)
-            {
-                for (auto& keyword : handleALL(schedule))
-                    this->keywords.push_back(keyword);
-            }
-            else {
-                for (auto &keyword : handler(x))
-                    this->keywords.push_back(keyword);
-            }
+            for (auto &keyword : handler(x))
+                this->keywords.push_back(keyword);
         }
+
+        if( section.hasKeyword( "ALL" ) )
+            this->merge( { ALL_keywords, schedule, props, parseContext, n_xyz } );
     }
 
     SummaryConfig::const_iterator SummaryConfig::begin() const {
