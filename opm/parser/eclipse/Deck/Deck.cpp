@@ -120,11 +120,7 @@ namespace Opm {
         DeckView( limits.first, limits.second )
     {}
 
-    Deck::Deck() :
-        Deck( std::vector< DeckKeyword >() )
-    {
-        m_dataFile = "";
-    }
+    Deck::Deck() : Deck( std::vector< DeckKeyword >() ) {}
 
     Deck::Deck( std::vector< DeckKeyword >&& x ) :
         DeckView( x.begin(), x.end() ),
@@ -133,7 +129,7 @@ namespace Opm {
     {}
 
     Deck::Deck( std::initializer_list< DeckKeyword > ilist ) :
-        Deck( std::vector< DeckKeyword >( ilist.begin(), ilist.end() ) )
+        Deck( std::vector< DeckKeyword >( ilist ) )
     {}
 
     Deck::Deck( std::initializer_list< std::string > ilist ) :
