@@ -64,7 +64,7 @@ find_opm_package (
   "dune/alugrid/grid.hh"
 
   # library to search for
-  "dunealugrid"
+  "alugrid_serial;alugrid_parallel;dunealugrid"
 
   # defines to be added to compilations
   ""
