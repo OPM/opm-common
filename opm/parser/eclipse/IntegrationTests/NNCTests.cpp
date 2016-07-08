@@ -32,9 +32,7 @@
 
 #define BOOST_TEST_MODULE NNCTests
 
-#include <opm/common/utility/platform_dependent/disable_warnings.h>
 #include <boost/test/unit_test.hpp>
-#include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 using namespace Opm;
 
