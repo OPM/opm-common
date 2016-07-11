@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE( merge_move ) {
             well_names.begin(), well_names.end() );
 }
 
-constexpr auto ALL_keywords =  {
+static const auto ALL_keywords = {
     "FAQR",  "FAQRG", "FAQT", "FAQTG", "FGIP", "FGIPG", "FGIPL",
     "FGIR",  "FGIT",  "FGOR", "FGPR",  "FGPT", "FOIP",  "FOIPG",
     "FOIPL", "FOIR",  "FOIT", "FOPR",  "FOPT", "FPR",   "FVIR",
