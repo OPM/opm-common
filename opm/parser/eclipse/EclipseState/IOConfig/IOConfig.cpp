@@ -585,7 +585,7 @@ namespace Opm {
 
         fs::path dir( m_output_dir );
         fs::path base( m_base_name );
-        fs::path full_path = dir / base;
+        fs::path full_path = dir.make_preferred() / base.make_preferred();
 
         return full_path.string();
     }
