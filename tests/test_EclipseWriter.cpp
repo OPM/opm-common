@@ -275,7 +275,6 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
                                              {"TRANY" , UnitSystem::measure::transmissibility, trany},
                                              {"TRANZ" , UnitSystem::measure::transmissibility, tranz}};
 
-        ta.setStore( true );
         eclWriter.writeInitAndEgrid( );
         eclWriter.writeInitAndEgrid( simProps );
 
