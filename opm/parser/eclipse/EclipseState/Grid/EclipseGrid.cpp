@@ -29,6 +29,9 @@
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/D.hpp>
@@ -37,6 +40,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/Z.hpp>
+
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 #include <ert/ecl/ecl_grid.h>
@@ -688,11 +692,6 @@ namespace Opm {
 
     void EclipseGrid::resetACTNUM( const int * actnum) {
         ecl_grid_reset_actnum( m_grid.get() , actnum );
-    }
-
-
-    void EclipseGrid::fwriteEGRID( const std::string& filename, bool output_metric ) const {
-        ecl_grid_fwrite_EGRID( m_grid.get() , filename.c_str(), output_metric );
     }
 
 

@@ -30,6 +30,8 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
@@ -757,32 +759,6 @@ BOOST_AUTO_TEST_CASE(LoadFromBinary) {
 }
 
 
-
-BOOST_AUTO_TEST_CASE(Fwrite) {
-    const char *deckData =
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        " 10 10 10 /\n"
-        "GRID\n"
-        "COORD\n"
-        "  726*1 / \n"
-        "ZCORN \n"
-        "  8000*1 / \n"
-        "EDIT\n"
-        "\n";
-
-    Opm::ParserPtr parser(new Opm::Parser());
-    Opm::DeckConstPtr deck = parser->parseString(deckData, Opm::ParseContext()) ;
-    Opm::EclipseGrid grid1(deck );
-
-    grid1.fwriteEGRID( "TEST.EGRID" , true);
-
-    Opm::EclipseGrid grid2( "TEST.EGRID" );
-
-    BOOST_CHECK( grid1.equal( grid2 ));
-    remove("TEST.EGRID");
-}
 
 
 

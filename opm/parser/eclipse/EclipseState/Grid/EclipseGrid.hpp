@@ -85,7 +85,7 @@ namespace Opm {
 
         MinpvMode::ModeEnum getMinpvMode() const;
         double getMinpvValue( ) const;
-      
+
         /// Will return a vector a length num_active;
         /// where the value of each element is the corresponding global index.
         std::vector<int> getActiveMap() const;
@@ -109,7 +109,6 @@ namespace Opm {
         void exportACTNUM( std::vector<int>& actnum) const;
         void resetACTNUM( const int * actnum);
         bool equal(const EclipseGrid& other) const;
-        void fwriteEGRID( const std::string& filename, bool output_metric ) const;
         const ecl_grid_type * c_ptr() const;
         const MessageContainer& getMessageContainer() const;
         MessageContainer& getMessageContainer();
