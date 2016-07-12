@@ -83,7 +83,7 @@ public:
     ~EclipseWriter();
 
 private:
-    void writeINITFile(const std::vector<data::CellData>& simProps, const NNC& nnc) const;
+    void writeINITFile( const EclipseGrid& grid, const std::vector<data::CellData>& simProps, const NNC& nnc) const;
     void writeEGRIDFile( const NNC& nnc) const;
 
     class Impl;

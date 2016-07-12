@@ -46,6 +46,7 @@
 #include <ert/ecl/ecl_kw_magic.h>
 #include <ert/ecl/ecl_init_file.h>
 #include <ert/ecl/ecl_file.h>
+#include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_rft_file.h>
 #include <ert/ecl/ecl_rst_file.h>
 #include <ert/ecl_well/well_const.h>
@@ -440,7 +441,7 @@ EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
 {}
 
 
-void EclipseWriter::writeINITFile(const std::vector<data::CellData>& simProps, const NNC& nnc) const {
+void EclipseWriter::writeINITFile(const EclipseGrid& grid, const std::vector<data::CellData>& simProps, const NNC& nnc) const {
     const auto& compressedToCartesian = this->impl->compressedToCartesian;
     const auto& es = *this->impl->es;
     const auto& units = es.getUnits();
@@ -485,6 +486,10 @@ void EclipseWriter::writeINITFile(const std::vector<data::CellData>& simProps, c
 
         writeKeyword( fortio, "PORV" , ecl_data );
     }
+
+    // Writing quantities which are calculated by the grid to the INIT file.
+    ecl_grid_fwrite_depth( grid.c_ptr() , fortio.get() , to_ert_unit( units.getType( )) );
+    ecl_grid_fwrite_dims( grid.c_ptr() , fortio.get() , to_ert_unit( units.getType( )) );
 
     // Write properties from the input deck.
     {
@@ -545,16 +550,14 @@ void EclipseWriter::writeEGRIDFile( const NNC& nnc ) const {
                          ioConfig->getFMTOUT() );
 
     const EclipseGrid& grid = this->impl->grid;
-    const bool is_metric = es.getDeckUnitSystem().getType() == UnitSystem::UNIT_TYPE_METRIC;
-
     {
         int idx = 0;
         auto* ecl_grid = const_cast< ecl_grid_type* >( grid.c_ptr() );
         for (const NNCdata& n : nnc.nncdata())
             ecl_grid_add_self_nnc( ecl_grid, n.cell1, n.cell2, idx++);
-    }
 
-    grid.fwriteEGRID( egridFile.get()  , is_metric );
+        ecl_grid_fwrite_EGRID2(ecl_grid, egridFile.get(), to_ert_unit( es.getDeckUnitSystem().getType()));
+    }
 }
 
 
@@ -565,9 +568,10 @@ void EclipseWriter::writeInitAndEgrid(const std::vector<data::CellData>& simProp
     {
         const auto& es = *this->impl->es;
         IOConfigConstPtr ioConfig = es.getIOConfigConst();
+        const EclipseGrid& grid = this->impl->grid;
 
         if( ioConfig->getWriteINITFile() )
-            writeINITFile( simProps , nnc );
+            writeINITFile( grid , simProps , nnc );
 
         if( ioConfig->getWriteEGRIDFile( ) )
             writeEGRIDFile( nnc );

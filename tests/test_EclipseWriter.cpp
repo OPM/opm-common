@@ -144,7 +144,7 @@ void checkEgridFile( const EclipseGrid& eclGrid ) {
     fortio_fclose(egridFile);
 }
 
-void checkInitFile( const Deck& deck, const std::vector<data::CellData>& simProps) {
+void checkInitFile( const EclipseGrid& grid , const Deck& deck, const std::vector<data::CellData>& simProps) {
     // use ERT directly to inspect the INIT file produced by EclipseWriter
     ERT::ert_unique_ptr<ecl_file_type , ecl_file_close> initFile(ecl_file_open( "FOO.INIT" , 0 ));
 
@@ -289,7 +289,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
             checkRestartFile( i );
 
         }
-        checkInitFile( *deck , simProps);
+        checkInitFile( eclGrid , *deck , simProps);
         checkEgridFile( eclGrid );
     }
 }
