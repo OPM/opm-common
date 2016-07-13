@@ -139,10 +139,10 @@ namespace Opm {
     void Deck::addKeyword( DeckKeyword&& keyword ) {
         this->keywordList.push_back( std::move( keyword ) );
 
-        auto first = this->keywordList.begin();
-        auto last = this->keywordList.end();
+        auto fst = this->keywordList.begin();
+        auto lst = this->keywordList.end();
 
-        this->add( &this->keywordList.back(), first, last );
+        this->add( &this->keywordList.back(), fst, lst );
     }
 
     void Deck::addKeyword( const DeckKeyword& keyword ) {
