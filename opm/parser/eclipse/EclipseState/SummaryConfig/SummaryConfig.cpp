@@ -342,9 +342,9 @@ SummaryConfig& SummaryConfig::merge( const SummaryConfig& other ) {
 }
 
 SummaryConfig& SummaryConfig::merge( SummaryConfig&& other ) {
-    auto begin = std::make_move_iterator( other.keywords.begin() );
-    auto end = std::make_move_iterator( other.keywords.end() );
-    this->keywords.insert( this->keywords.end(), begin, end );
+    auto fst = std::make_move_iterator( other.keywords.begin() );
+    auto lst = std::make_move_iterator( other.keywords.end() );
+    this->keywords.insert( this->keywords.end(), fst, lst );
     other.keywords.clear();
 
     uniq( this->keywords );
