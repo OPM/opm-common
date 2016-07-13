@@ -29,8 +29,8 @@
 namespace Opm {
 
 
-    DeckRecord::DeckRecord( size_t size ) {
-        this->m_items.reserve( size );
+    DeckRecord::DeckRecord( size_t sz ) {
+        this->m_items.reserve( sz );
     }
 
     size_t DeckRecord::size() const {
