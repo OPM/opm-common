@@ -36,8 +36,7 @@
 
 using namespace Opm;
 
-
-void verifyRestartConfig(IOConfigConstPtr ioconfig, std::vector<std::tuple<int , bool, boost::gregorian::date>>& rptConfig) {
+inline void verifyRestartConfig(IOConfigConstPtr ioconfig, std::vector<std::tuple<int , bool, boost::gregorian::date>>& rptConfig) {
 
     for (auto rptrst : rptConfig) {
         int report_step                    = std::get<0>(rptrst);
@@ -50,8 +49,6 @@ void verifyRestartConfig(IOConfigConstPtr ioconfig, std::vector<std::tuple<int ,
         }
     }
 }
-
-
 
 BOOST_AUTO_TEST_CASE( NorneRestartConfig ) {
     std::vector<std::tuple<int , bool, boost::gregorian::date> > rptConfig;
