@@ -36,10 +36,7 @@
 
 namespace Opm {
 
-
-
-
-    namespace GridPropertyPostProcessor {
+    namespace {
 
         void distTopLayer( std::vector<double>&    values,
                            const EclipseGrid*      eclipseGrid )
@@ -188,7 +185,7 @@ namespace Opm {
 
         const auto tempLookup = std::bind( temperature_lookup, _1, tableManager, eclipseGrid, intGridProperties );
 
-        const auto distributeTopLayer = std::bind( &GridPropertyPostProcessor::distTopLayer, _1, eclipseGrid );
+        const auto distributeTopLayer = std::bind( &distTopLayer, _1, eclipseGrid );
 
         std::vector< GridProperties< double >::SupportedKeywordInfo > supportedDoubleKeywords;
 
@@ -397,19 +394,19 @@ namespace Opm {
 
 
         {
-            auto initPORV = std::bind(&GridPropertyPostProcessor::initPORV,
+            auto initPORVProcessor =  std::bind(&initPORV,
                                       std::placeholders::_1,
                                       &eclipseGrid,
                                       &m_doubleGridProperties);
 
             m_doubleGridProperties.postAddKeyword( "PORV",
                                                    std::numeric_limits<double>::quiet_NaN(),
-                                                   initPORV,
+                                                   initPORVProcessor,
                                                    "Volume" );
         }
 
         {
-            auto actnumPP = std::bind(&GridPropertyPostProcessor::ACTNUMPostProcessor,
+            auto actnumPP = std::bind(&ACTNUMPostProcessor,
                                       std::placeholders::_1,
                                       &m_doubleGridProperties);
 
