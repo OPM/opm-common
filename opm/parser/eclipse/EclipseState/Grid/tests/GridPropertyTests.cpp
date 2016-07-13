@@ -383,7 +383,7 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
 }
 
 
-void TestPostProcessorMul(std::vector< double >& values,
+inline void TestPostProcessorMul(std::vector< double >& values,
         const Opm::TableManager*,
         const Opm::EclipseGrid*,
         Opm::GridProperties<int>*,
