@@ -20,8 +20,6 @@
 #include <iostream>
 #include <memory>
 
-#include <opm/common/OpmLog/OpmLog.hpp>
-
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -33,7 +31,7 @@ void dumpMessages( const Opm::MessageContainer& messageContainer) {
     auto extractMessage = [](const Opm::Message& msg) {
         const auto& location = msg.location;
         if (location)
-            return Opm::Log::fileMessage(location.filename, location.lineno, msg.message);
+            return location.filename + ":" + std::to_string( location.lineno ) + " " + msg.message;
         else
             return msg.message;
     };
