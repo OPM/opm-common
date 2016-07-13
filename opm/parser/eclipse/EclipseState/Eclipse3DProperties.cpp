@@ -458,6 +458,15 @@ namespace Opm {
         return gridProperty;
     }
 
+    const GridProperties<int>& Eclipse3DProperties::getIntProperties() const {
+        return m_intGridProperties;
+    }
+
+    const GridProperties<double>& Eclipse3DProperties::getDoubleProperties() const {
+        return m_doubleGridProperties;
+    }
+
+
     std::string Eclipse3DProperties::getDefaultRegionKeyword() const {
         return m_defaultRegion;
     }

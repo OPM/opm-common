@@ -60,6 +60,9 @@ namespace Opm {
         const GridProperty<int>&      getIntGridProperty     ( const std::string& keyword ) const;
         const GridProperty<double>&   getDoubleGridProperty  ( const std::string& keyword ) const;
 
+        const GridProperties<int>& getIntProperties() const;
+        const GridProperties<double>& getDoubleProperties() const;
+
         bool hasDeckIntGridProperty(const std::string& keyword) const;
         bool hasDeckDoubleGridProperty(const std::string& keyword) const;
         bool supportsGridProperty(const std::string& keyword) const;
