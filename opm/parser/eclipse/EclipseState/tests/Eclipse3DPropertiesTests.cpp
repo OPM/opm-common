@@ -80,6 +80,8 @@ static Opm::DeckPtr createDeck() {
     return parser->parseString(deckData, Opm::ParseContext());
 }
 
+
+
 static Opm::DeckPtr createValidIntDeck() {
     const char *deckData = "RUNSPEC\n"
             "GRIDOPTS\n"
@@ -232,7 +234,6 @@ BOOST_AUTO_TEST_CASE(IntGridProperty) {
 BOOST_AUTO_TEST_CASE(AddregIntSetCorrectly) {
     Opm::DeckPtr deck = createValidIntDeck();
     Setup s(deck);
-
     const auto& property = s.props.getIntGridProperty("SATNUM");
     for (size_t j = 0; j < 5; j++)
         for (size_t i = 0; i < 5; i++) {
@@ -257,6 +258,33 @@ BOOST_AUTO_TEST_CASE(PermxUnitAppliedCorrectly) {
                 BOOST_CHECK_CLOSE(4 * Opm::Metric::Permeability, permx.iget(i, j, 0), 0.0001);
         }
 }
+
+BOOST_AUTO_TEST_CASE(DoubleIterator) {
+    Opm::DeckPtr deck = createValidPERMXDeck();
+    Setup s(deck);
+    const auto& doubleProperties = s.props.getDoubleProperties();
+    std::vector<std::string> kw_list;
+    for (const auto& prop : doubleProperties )
+        kw_list.push_back( prop.getKeywordName() );
+
+    BOOST_CHECK_EQUAL( 2 , kw_list.size() );
+    BOOST_CHECK( std::find( kw_list.begin() , kw_list.end() , "PERMX") != kw_list.end());
+    BOOST_CHECK( std::find( kw_list.begin() , kw_list.end() , "PERMZ") != kw_list.end());
+}
+
+
+BOOST_AUTO_TEST_CASE(IntIterator) {
+    Opm::DeckPtr deck = createValidPERMXDeck();
+    Setup s(deck);
+    const auto& intProperties = s.props.getIntProperties();
+    std::vector<std::string> kw_list;
+    for (const auto& prop : intProperties )
+        kw_list.push_back( prop.getKeywordName() );
+
+    BOOST_CHECK_EQUAL( 1 , kw_list.size() );
+    BOOST_CHECK_EQUAL( kw_list[0] , "MULTNUM" );
+}
+
 
 BOOST_AUTO_TEST_CASE(getRegions) {
     const char* input =
