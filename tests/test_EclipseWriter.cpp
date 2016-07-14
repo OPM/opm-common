@@ -171,6 +171,9 @@ void checkInitFile( const EclipseGrid& grid , const Deck& deck, const std::vecto
         }
     }
 
+    BOOST_CHECK( ecl_file_has_kw( initFile.get() , "FIPNUM" ));
+    BOOST_CHECK( ecl_file_has_kw( initFile.get() , "SATNUM" ));
+
     for (const auto& prop : simProps) {
         BOOST_CHECK( ecl_file_has_kw( initFile.get() , prop.name.c_str()) );
     }
@@ -244,6 +247,11 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
         "27*0.3 /\n"
         "PERMX\n"
         "27*1 /\n"
+        "REGIONS\n"
+        "SATNUM\n"
+        "27*2 /\n"
+        "FIPNUM\n"
+        "27*3 /\n"
         "SOLUTION\n"
         "RPTRST\n"
         "BASIC=2\n"

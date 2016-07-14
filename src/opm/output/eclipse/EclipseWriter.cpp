@@ -60,11 +60,12 @@ namespace {
 
 // throw away the data for all non-active cells and reorder to the Cartesian logic of
 // eclipse
-std::vector<double> restrictAndReorderToActiveCells(const std::vector<double> &flow_data,
-                                                    int numCells,
-                                                    const int* compressedToCartesianCellIdx)
+template <typename T>
+std::vector<T> restrictAndReorderToActiveCells(const std::vector<T> &flow_data,
+                                               int numCells,
+                                               const int* compressedToCartesianCellIdx)
 {
-    std::vector<double> eclData;
+    std::vector<T> eclData;
     eclData.resize( numCells );
 
     if (!compressedToCartesianCellIdx || (flow_data.size() == static_cast<size_t>(numCells)))
@@ -98,8 +99,16 @@ inline int to_ert_welltype( const Well& well, size_t timestep ) {
     }
 }
 
+
+void writeKeyword( ERT::FortIO& fortio ,
+                   const std::string& keywordName,
+                   const std::vector<int> &data ) {
+    ERT::EclKW< int > kw( keywordName, data );
+    kw.fwrite( fortio );
+}
+
 /*
-  This function hardcodes the common assumption that properties which
+  This overload hardcodes the common assumption that properties which
   are stored internally as double values in OPM should be stored as
   float values in the ECLIPSE formatted binary files.
 */
@@ -524,6 +533,26 @@ void EclipseWriter::writeINITFile(const EclipseGrid& grid, const std::vector<dat
                              prop.dim );
 
             writeKeyword( fortio, prop.name, ecl_data );
+        }
+    }
+
+
+    // Write all integer field properties from the input deck.
+    {
+        const auto& properties = es.get3DProperties().getIntProperties();
+
+        // It seems that the INIT file should always contain these
+        // keywords, we therefor call getKeyword() here to invoke the
+        // autocreation property, and ensure that the keywords exist
+        // in the properties container.
+        properties.getKeyword("PVTNUM");
+        properties.getKeyword("SATNUM");
+        properties.getKeyword("EQLNUM");
+        properties.getKeyword("FIPNUM");
+
+        for (const auto& property : properties) {
+            auto ecl_data = restrictAndReorderToActiveCells( property.getData() , compressedToCartesian.size(), compressedToCartesian.data());
+            writeKeyword( fortio , property.getKeywordName() , ecl_data );
         }
     }
 
