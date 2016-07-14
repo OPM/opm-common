@@ -34,6 +34,7 @@ namespace Opm {
 
     class DeckKeyword;
     class DeckRecord;
+    class Well;
 
     class Completion {
     public:
@@ -67,8 +68,9 @@ namespace Opm {
 
         WellCompletion::DirectionEnum getDirection() const;
 
-        static std::map<std::string , std::vector<std::shared_ptr<Completion> > >  completionsFromCOMPDATKeyword( const DeckKeyword& compdatKeyword );
-        static std::pair<std::string , std::vector<std::shared_ptr<Completion> > > completionsFromCOMPDATRecord( const DeckRecord&  compdatRecord );
+        static std::map< std::string, std::vector< std::shared_ptr< Completion > > >
+        fromCOMPDAT( const DeckKeyword& compdatKeyword,
+                                       const std::vector< const Well* >& );
 
     private:
         int m_i, m_j, m_k;

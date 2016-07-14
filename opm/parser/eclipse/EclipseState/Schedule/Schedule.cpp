@@ -1118,13 +1118,12 @@ namespace Opm {
 
 
     void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep) {
-        std::map<std::string , std::vector< CompletionPtr> > completionMapList = Completion::completionsFromCOMPDATKeyword( keyword );
-        std::map<std::string , std::vector< CompletionPtr> >::iterator iter;
+        const auto wells = this->getWells( currentStep );
+        auto completions = Completion::fromCOMPDAT( keyword, wells );
 
-        for( iter= completionMapList.begin(); iter != completionMapList.end(); iter++) {
-            const std::string wellName = iter->first;
-            m_wells.get( wellName )->addCompletions(currentStep, iter->second);
-        }
+        for( const auto pair : completions )
+            m_wells.get( pair.first )->addCompletions( currentStep, pair.second );
+
         m_events->addEvent(ScheduleEvents::COMPLETION_CHANGE, currentStep);
     }
 

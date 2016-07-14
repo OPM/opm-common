@@ -187,8 +187,8 @@ static DeckPtr createDeckWithWellsAndCompletionData() {
       " 10  JUL 2007 / \n"
       " 10  AUG 2007 / \n"
       "/\n"
-      "COMPDAT\n"
-      " 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+      "COMPDAT\n" // with defaulted I and J
+      " 'OP_1'  0  *   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
       "/\n";
 
     return parser.parseString(input, ParseContext());
