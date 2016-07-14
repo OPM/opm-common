@@ -39,7 +39,7 @@
 
 using namespace Opm;
 
-std::unique_ptr< ParserKeyword > createDynamicSized(const std::string& kw) {
+inline std::unique_ptr< ParserKeyword > createDynamicSized(const std::string& kw) {
     std::unique_ptr< ParserKeyword > pkw( new ParserKeyword( kw ) );
     pkw->setSizeType(SLASH_TERMINATED);
     return pkw;

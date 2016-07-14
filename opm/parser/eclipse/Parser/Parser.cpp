@@ -267,12 +267,12 @@ bool ParserState::done() const {
 }
 
 string_view ParserState::getline() {
-    string_view line;
+    string_view ln;
 
-    Opm::getline( this->input_stack.top().input, line );
+    Opm::getline( this->input_stack.top().input, ln );
     this->input_stack.top().lineNR++;
 
-    return line;
+    return ln;
 }
 
 void ParserState::closeFile() {
@@ -331,10 +331,10 @@ void ParserState::loadFile(const boost::filesystem::path& inputFile) {
     std::fseek( fp, 0, SEEK_END );
     buffer.resize( std::ftell( fp ) + 1 );
     std::rewind( fp );
-    std::fread( &buffer[ 0 ], 1, buffer.size() - 1, fp );
+    const auto readc = std::fread( &buffer[ 0 ], 1, buffer.size() - 1, fp );
     buffer.back() = '\n';
 
-    if( std::ferror( fp ) )
+    if( std::ferror( fp ) || readc != buffer.size() - 1 )
         throw std::runtime_error( "Error when reading input file '"
                                 + inputFileCanonical.string() + "'" );
 
@@ -617,7 +617,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
         return parserState.deck;
     }
 
-    void assertFullDeck(const ParseContext& context) {
+    inline void assertFullDeck(const ParseContext& context) {
         if (context.hasKey(ParseContext::PARSE_MISSING_SECTIONS))
             throw new std::logic_error("Cannot construct a state in partial deck context");
     }

@@ -27,7 +27,7 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 
-void dumpMessages( const Opm::MessageContainer& messageContainer) {
+inline void dumpMessages( const Opm::MessageContainer& messageContainer) {
     auto extractMessage = [](const Opm::Message& msg) {
         const auto& location = msg.location;
         if (location)
@@ -42,7 +42,7 @@ void dumpMessages( const Opm::MessageContainer& messageContainer) {
 }
 
 
-void loadDeck( const char * deck_file) {
+inline void loadDeck( const char * deck_file) {
     Opm::ParseContext parseContext;
     Opm::ParserPtr parser(new Opm::Parser());
     std::shared_ptr<const Opm::Deck> deck;

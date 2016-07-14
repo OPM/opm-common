@@ -36,32 +36,32 @@ namespace Opm {
     template< typename T >
     static std::function< std::vector< T >( size_t ) > constant( T val ) {
         return [=]( size_t size ) { return std::vector< T >( size, val ); };
-    };
+    }
 
     template< typename T >
     static std::function< void( std::vector< T >& ) > noop() {
         return []( std::vector< T >& ) { return; };
-    };
+    }
 
     template< typename T >
     GridPropertySupportedKeywordInfo< T >::GridPropertySupportedKeywordInfo(
             const std::string& name,
-            std::function< std::vector< T >( size_t ) > initializer,
-            std::function< void( std::vector< T >& ) > postProcessor,
+            std::function< std::vector< T >( size_t ) > init,
+            std::function< void( std::vector< T >& ) > post,
             const std::string& dimString ) :
         m_keywordName( name ),
-        m_initializer( initializer ),
-        m_postProcessor( postProcessor ),
+        m_initializer( init ),
+        m_postProcessor( post ),
         m_dimensionString( dimString )
     {}
 
     template< typename T >
     GridPropertySupportedKeywordInfo< T >::GridPropertySupportedKeywordInfo(
             const std::string& name,
-            std::function< std::vector< T >( size_t ) > initializer,
+            std::function< std::vector< T >( size_t ) > init,
             const std::string& dimString ) :
         m_keywordName( name ),
-        m_initializer( initializer ),
+        m_initializer( init ),
         m_postProcessor( noop< T >() ),
         m_dimensionString( dimString )
     {}
@@ -81,11 +81,11 @@ namespace Opm {
     GridPropertySupportedKeywordInfo< T >::GridPropertySupportedKeywordInfo(
             const std::string& name,
             const T defaultValue,
-            std::function< void( std::vector< T >& ) > postProcessor,
+            std::function< void( std::vector< T >& ) > post,
             const std::string& dimString ) :
         m_keywordName( name ),
         m_initializer( constant( defaultValue ) ),
-        m_postProcessor( postProcessor ),
+        m_postProcessor( post ),
         m_dimensionString( dimString )
     {}
 

@@ -32,7 +32,7 @@
 #include <string>
 #include <memory>
 
-std::shared_ptr<const Opm::Deck> createSWOFDeck() {
+inline std::shared_ptr<const Opm::Deck> createSWOFDeck() {
     const char *deckData =
         "TABDIMS\n"
         " 2 /\n"

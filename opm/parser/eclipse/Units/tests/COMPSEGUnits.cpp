@@ -31,7 +31,7 @@
 
 using namespace Opm;
 
-std::shared_ptr<const Deck> createCOMPSEGSDeck() {
+inline std::shared_ptr<const Deck> createCOMPSEGSDeck() {
     const char *deckData =
         "COMPSEGS\n"
         " WELL /\n"

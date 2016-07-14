@@ -105,7 +105,7 @@ namespace Opm {
             "Maximum 'double' length is " + std::to_string( width )
         );
 
-        std::array< char, width > buffer {};
+        std::array< char, width > buffer {{}};
         std::copy( view.begin(), view.end(), buffer.begin() );
 
 

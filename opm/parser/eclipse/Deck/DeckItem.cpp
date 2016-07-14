@@ -111,12 +111,12 @@ namespace Opm {
 
 
     template< typename T >
-    DeckTypeItem< T >::DeckTypeItem( const std::string& name, size_t size ) :
+    DeckTypeItem< T >::DeckTypeItem( const std::string& nm, size_t sz ) :
         DeckItemBase( type_to_tag< T >() ),
-        item_name( name )
+        item_name( nm )
     {
-        this->dataPointDefaulted.reserve( size );
-        this->data.reserve( size );
+        this->dataPointDefaulted.reserve( sz );
+        this->data.reserve( sz );
     }
 
     template< typename T >
@@ -223,10 +223,10 @@ namespace Opm {
          * This is an unobservable state change - SIData is lazily converted to
          * SI units, so externally the object still behaves as const
          */
-        const auto size = this->size();
-        this->SIdata.resize( size );
+        const auto sz = this->size();
+        this->SIdata.resize( sz );
 
-        for( size_t index = 0; index < size; index++ ) {
+        for( size_t index = 0; index < sz; index++ ) {
             const auto dimIndex = index % dim_size;
             this->SIdata[ index ] = this->dimensions[ dimIndex ]
                                           ->convertRawToSi( this->get( index ) );
