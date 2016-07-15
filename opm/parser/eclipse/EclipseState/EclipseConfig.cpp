@@ -43,12 +43,6 @@ namespace Opm {
             m_simulationConfig(std::make_shared<const SimulationConfig>(deck, eclipse3DProperties)),
             m_summaryConfig(   deck, schedule, eclipse3DProperties, parseContext , inputGrid.getNXYZ())
     {
-        // Hmmm - would have thought this should iterate through the SCHEDULE section as well?
-        if (Section::hasSOLUTION(deck)) {
-            std::shared_ptr<const SOLUTIONSection> solutionSection = std::make_shared<const SOLUTIONSection>(deck);
-            m_ioConfig->handleSolutionSection(schedule.getTimeMap(), solutionSection);
-        }
-        m_ioConfig->initFirstOutput(schedule);
     }
 
     const SummaryConfig& EclipseConfig::getSummaryConfig() const {

@@ -44,7 +44,7 @@ void verifyRestartConfig(IOConfigConstPtr ioconfig, std::vector<std::tuple<int ,
         bool save                          = std::get<1>(rptrst);
         boost::gregorian::date report_date = std::get<2>(rptrst);
 
-        BOOST_CHECK_EQUAL( save , ioconfig->getWriteRestartFile( report_step ));
+        BOOST_CHECK_EQUAL( save , ioconfig->restartConfig().getWriteRestartFile( report_step ));
         if (save) {
             BOOST_CHECK_EQUAL( report_date, ioconfig->getTimestepDate( report_step ));
         }
