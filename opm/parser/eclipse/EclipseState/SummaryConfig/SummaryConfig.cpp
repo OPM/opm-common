@@ -218,45 +218,35 @@ inline void keywordC( std::vector< ERT::smspec_node >& list,
 
     for( const auto& record : keyword ) {
 
-        if( record.getItem( 0 ).defaultApplied( 0 ) ) {
-            for( const auto& well : schedule.getWells() ) {
+        const auto& wellitem = record.getItem( 0 );
 
-                const auto& name = well->name();
+        const auto wells = wellitem.defaultApplied( 0 )
+                         ? schedule.getWells()
+                         : schedule.getWellsMatching( wellitem.getTrimmedString( 0 ) );
 
-                for( const auto& completion : *well->getCompletions( last_timestep ) ) {
-                    auto cijk = getijk( *completion );
+        if( wells.empty() )
+            handleMissingWell( parseContext, keyword.name(), wellitem.getTrimmedString( 0 ) );
 
-                    /* well defaulted, block coordinates defaulted */
-                    if( record.getItem( 1 ).defaultApplied( 0 ) ) {
-                        list.emplace_back( keywordstring, name, dims.data(), cijk.data() );
-                    }
-                    /* well defaulted, block coordinates specified */
-                    else {
-                        auto recijk = getijk( record, 1 );
-                        if( std::equal( recijk.begin(), recijk.end(), cijk.begin() ) )
-                            list.emplace_back( keywordstring, name, dims.data(), cijk.data() );
-                    }
+        for( const auto* well : wells ) {
+            const auto& name = well->name();
+
+            /*
+             * we don't want to add completions that don't exist, so we iterate
+             * over a well's completions regardless of the desired block is
+             * defaulted or not
+             */
+            for( const auto& completion : *well->getCompletions( last_timestep ) ) {
+                /* block coordinates defaulted */
+                auto cijk = getijk( *completion );
+
+                if( record.getItem( 1 ).defaultApplied( 0 ) ) {
+                    list.emplace_back( keywordstring, name, dims.data(), cijk.data() );
                 }
-            }
-
-        } else {
-            const auto& name = record.getItem( 0 ).get< std::string >( 0 );
-            if( !schedule.hasWell( name ) ) {
-                handleMissingWell( parseContext, keyword.name(), name );
-                continue;
-            }
-
-            /* all specified */
-            if( !record.getItem( 1 ).defaultApplied( 0 ) ) {
-                auto ijk = getijk( record, 1 );
-                list.emplace_back( keywordstring, name, dims.data(), ijk.data() );
-            }
-            else {
-                const auto& well = *schedule.getWell( name );
-                /* well specified, block coordinates defaulted */
-                for( const auto& completion : *well.getCompletions( last_timestep ) ) {
-                    auto ijk = getijk( *completion );
-                    list.emplace_back( keywordstring, name, dims.data(), ijk.data() );
+                else {
+                    /* block coordinates specified */
+                    auto recijk = getijk( record, 1 );
+                    if( std::equal( recijk.begin(), recijk.end(), cijk.begin() ) )
+                        list.emplace_back( keywordstring, name, dims.data(), cijk.data() );
                 }
             }
         }

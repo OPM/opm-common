@@ -55,8 +55,9 @@ static DeckPtr createDeck( const std::string& summary ) {
             "/\n"
             "COMPDAT\n"
             "'PRODUCER'   5  5  1  1 'OPEN' 1* -1  0.5  / \n"
-            "'W_1'   3    7    1    3      'OPEN'  1*     32.948      0.311   3047.839  2*         'X'     22.100 / \n"
             "'W_1'   3    7    2    2      'OPEN'  1*          *      0.311   4332.346  2*         'X'     22.123 / \n"
+            "'W_1'   2    2    1    1      /\n"
+            "'WX2'   2    2    1    1      /\n"
             "/\n"
             "SUMMARY\n"
             + summary;
@@ -170,18 +171,26 @@ BOOST_AUTO_TEST_CASE(regions) {
 }
 
 BOOST_AUTO_TEST_CASE(completions) {
-    const auto input = "CWIR\n"
+    const auto input = "CWIR\n" // all specified
                        "'PRODUCER'  /\n"
                        "'WX2' 1 1 1 /\n"
-                       "'WX2' 2 2 2 /\n"
+                       "'WX2' 2 2 1 /\n"
                        "/\n"
-                       "CWIT\n"
+                       "CWIT\n" // block defaulted
                        "'W_1' /\n"
+                       "/\n"
+                       "CGIT\n" // well defaulted
+                       "* 2 2 1 /\n"
+                       "/\n"
+                       "CGIR\n" // all defaulted
+                       " '*' /\n"
                        "/\n";
 
     const auto summary = createSummary( input );
-    const auto keywords = { "CWIR", "CWIR", "CWIR",
-                            "CWIT", "CWIT", "CWIT" };
+    const auto keywords = { "CGIR", "CGIR", "CGIR", "CGIR",
+                            "CGIT", "CGIT",
+                            "CWIR", "CWIR",
+                            "CWIT", "CWIT" };
     const auto names = sorted_keywords( summary );
 
     BOOST_CHECK_EQUAL_COLLECTIONS(
