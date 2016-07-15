@@ -77,13 +77,14 @@ struct quantity {
  * All functions must have the same parameters, so they're gathered in a struct
  * and functions use whatever information they care about.
  *
- * ecl_wells are wells from the deck, provided by opm-parser. wells is
- * simulation data
+ * ecl_wells are wells from the deck, provided by opm-parser. active_index is
+ * the index of the block in question. wells is simulation data.
  */
 struct fn_args {
     const std::vector< const Well* >& ecl_wells;
     double duration;
     size_t timestep;
+    int active_index;
     const data::Wells& wells;
 };
 
@@ -109,6 +110,20 @@ inline quantity rate( const fn_args& args ) {
     for( const auto* ecl_well : args.ecl_wells ) {
         if( args.wells.wells.count( ecl_well->name() ) == 0 ) continue;
         sum += args.wells.at( ecl_well->name() ).rates.get( phase, 0.0 );
+    }
+
+    return { sum, rate_unit< phase >() };
+}
+
+template< rt phase >
+inline quantity crate( const fn_args& args ) {
+    double sum = 0.0;
+
+    for( const auto* ecl_well : args.ecl_wells ) {
+        if( args.wells.wells.count( ecl_well->name() ) == 0 ) continue;
+        const auto& well = args.wells.at( ecl_well->name() );
+        if( well.completions.count( args.active_index ) == 0 ) continue;
+        sum += well.completions.at( args.active_index ).rates.get( phase, 0.0 );
     }
 
     return { sum, rate_unit< phase >() };
@@ -326,6 +341,18 @@ static const std::unordered_map< std::string, ofun > funs = {
                              production_history< Phase::OIL > ) ) },
     { "GWITH", liq_vol( injection_history< Phase::WATER > ) },
     { "GGITH", gas_vol( injection_history< Phase::GAS > ) },
+
+    { "CWIR", crate< rt::wat > },
+    { "CGIR", crate< rt::gas > },
+    { "CWIT", liq_vol( crate< rt::wat > ) },
+    { "CGIT", gas_vol( crate< rt::gas > ) },
+
+    { "CWPR", negate( crate< rt::wat > ) },
+    { "COPR", negate( crate< rt::oil > ) },
+    { "CGPR", negate( crate< rt::gas > ) },
+    { "CWPT", negate( liq_vol( crate< rt::wat > ) ) },
+    { "COPT", negate( liq_vol( crate< rt::oil > ) ) },
+    { "CGPT", negate( gas_vol( crate< rt::gas > ) ) },
 };
 
 inline std::vector< const Well* > find_wells( const Schedule& schedule,
@@ -335,7 +362,7 @@ inline std::vector< const Well* > find_wells( const Schedule& schedule,
     const auto* name = smspec_node_get_wgname( node );
     const auto type = smspec_node_get_var_type( node );
 
-    if( type == ECL_SMSPEC_WELL_VAR ) {
+    if( type == ECL_SMSPEC_WELL_VAR || type == ECL_SMSPEC_COMPLETION_VAR ) {
         const auto* well = schedule.getWell( name );
         if( !well ) return {};
         return { well };
@@ -420,10 +447,11 @@ void Summary::add_timestep( int report_step,
     const auto& schedule = *es.getSchedule();
 
     for( auto& f : this->handlers->handlers ) {
+        const int active_index = smspec_node_get_num( f.first );
         const auto* genkey = smspec_node_get_gen_key1( f.first );
 
         const auto ecl_wells = find_wells( schedule, f.first, timestep );
-        const auto val = f.second( { ecl_wells, duration, timestep, wells } );
+        const auto val = f.second( { ecl_wells, duration, timestep, active_index, wells } );
 
         const auto num_val = val.value > 0 ? val.value : 0.0;
         const auto unit_applied_val = es.getUnits().from_si( val.unit, num_val );
