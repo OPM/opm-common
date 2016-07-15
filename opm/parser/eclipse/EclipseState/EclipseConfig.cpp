@@ -43,6 +43,7 @@ namespace Opm {
             m_simulationConfig(std::make_shared<const SimulationConfig>(deck, eclipse3DProperties)),
             m_summaryConfig(   deck, schedule, eclipse3DProperties, parseContext , inputGrid.getNXYZ())
     {
+        m_ioConfig->initFirstRFTOutput(schedule);
     }
 
     const SummaryConfig& EclipseConfig::getSummaryConfig() const {
