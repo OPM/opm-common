@@ -822,7 +822,14 @@ namespace Opm {
             const std::string& cMode = record.getItem("CMODE").getTrimmedString(0);
             double newValue = record.getItem("NEW_VALUE").get< double >(0);
 
-            for( auto* well : getWells( wellNamePattern ) ) {
+            const auto wells = getWells( wellNamePattern );
+
+            if( wells.empty() )
+                throw std::invalid_argument(
+                        wellNamePattern + " does not match any wells. " +
+                        "Specify wells with the WCONxxxx keywords." );
+
+            for( auto* well : wells ) {
                 if(well->isProducer(currentStep)){
                     WellProductionProperties prop = well->getProductionPropertiesCopy(currentStep);
 
@@ -1367,19 +1374,21 @@ namespace Opm {
     }
 
     std::vector< Well* > Schedule::getWells(const std::string& wellNamePattern) {
-        std::vector< Well* > wells;
         size_t wildcard_pos = wellNamePattern.find("*");
-        if (wildcard_pos == wellNamePattern.length()-1) {
-            for (auto wellIter = m_wells.begin(); wellIter != m_wells.end(); ++wellIter) {
-                Well* well = wellIter->get();
-                if (Well::wellNameInWellNamePattern(well->name(), wellNamePattern)) {
-                    wells.push_back (well);
-                }
+
+        if( wildcard_pos != wellNamePattern.length()-1 ) {
+            if( !m_wells.hasKey( wellNamePattern ) ) return {};
+            return { m_wells.get( wellNamePattern ).get() };
+        }
+
+        std::vector< Well* > wells;
+        for (auto wellIter = m_wells.begin(); wellIter != m_wells.end(); ++wellIter) {
+            Well* well = wellIter->get();
+            if (Well::wellNameInWellNamePattern(well->name(), wellNamePattern)) {
+                wells.push_back (well);
             }
         }
-        else {
-            wells.push_back( m_wells.get( wellNamePattern ).get() );
-        }
+
         return wells;
     }
 
