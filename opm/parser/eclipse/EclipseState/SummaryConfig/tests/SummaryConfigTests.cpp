@@ -125,6 +125,16 @@ BOOST_AUTO_TEST_CASE(wells_select) {
             names.begin(), names.end() );
 }
 
+BOOST_AUTO_TEST_CASE(wells_pattern) {
+    const auto input = "WWCT\n'W*' /\n";
+    const auto summary = createSummary( input );
+    const auto wells = { "WX2", "W_1", "W_3" };
+    const auto names = sorted_names( summary );
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+            wells.begin(), wells.end(),
+            names.begin(), names.end() );
+}
 
 BOOST_AUTO_TEST_CASE(fields) {
     const auto input = "FOPT\n";
