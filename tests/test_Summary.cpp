@@ -380,6 +380,82 @@ BOOST_AUTO_TEST_CASE(completion_kewords) {
     BOOST_CHECK_CLOSE( 2 * 200.2, ecl_sum_get_well_completion_var( resp, 2, "W_2", "CGPT", 1 ), 1e-5 );
 }
 
+BOOST_AUTO_TEST_CASE(field_keywords) {
+    setup cfg( "test_Summary_field" );
+
+    out::Summary writer( cfg.es, cfg.config, cfg.name );
+    writer.add_timestep( 0, 0 * day, cfg.es, cfg.wells );
+    writer.add_timestep( 1, 1 * day, cfg.es, cfg.wells );
+    writer.add_timestep( 2, 2 * day, cfg.es, cfg.wells );
+    writer.write();
+
+    auto res = readsum( cfg.name );
+    const auto* resp = res.get();
+
+    /* Production rates */
+    BOOST_CHECK_CLOSE( 10.0 + 20.0, ecl_sum_get_field_var( resp, 1, "FWPR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.1 + 20.1, ecl_sum_get_field_var( resp, 1, "FOPR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.2 + 20.2, ecl_sum_get_field_var( resp, 1, "FGPR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.0 + 20.0 + 10.1 + 20.1,
+                                    ecl_sum_get_field_var( resp, 1, "FLPR" ), 1e-5 );
+
+    /* Production totals */
+    BOOST_CHECK_CLOSE( 10.0 + 20.0, ecl_sum_get_field_var( resp, 1, "FWPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.1 + 20.1, ecl_sum_get_field_var( resp, 1, "FOPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.2 + 20.2, ecl_sum_get_field_var( resp, 1, "FGPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.0 + 20.0 + 10.1 + 20.1,
+                                    ecl_sum_get_field_var( resp, 1, "FLPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * (10.0 + 20.0), ecl_sum_get_field_var( resp, 2, "FWPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * (10.1 + 20.1), ecl_sum_get_field_var( resp, 2, "FOPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * (10.2 + 20.2), ecl_sum_get_field_var( resp, 2, "FGPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * (10.0 + 20.0 + 10.1 + 20.1),
+                                    ecl_sum_get_field_var( resp, 2, "FLPT" ), 1e-5 );
+
+    /* Production rates (history) */
+    BOOST_CHECK_CLOSE( 10.0 + 20.0, ecl_sum_get_field_var( resp, 1, "FWPRH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.1 + 20.1, ecl_sum_get_field_var( resp, 1, "FOPRH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.2 + 20.2, ecl_sum_get_field_var( resp, 1, "FGPRH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.0 + 10.1 + 20.0 + 20.1,
+                                    ecl_sum_get_field_var( resp, 1, "FLPRH" ), 1e-5 );
+
+    /* Production totals (history) */
+    BOOST_CHECK_CLOSE( (10.0 + 20.0), ecl_sum_get_field_var( resp, 1, "FWPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( (10.1 + 20.1), ecl_sum_get_field_var( resp, 1, "FOPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( (10.2 + 20.2), ecl_sum_get_field_var( resp, 1, "FGPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( (10.0 + 20.0 + 10.1 + 20.1),
+                                      ecl_sum_get_field_var( resp, 1, "FLPTH" ), 1e-5 );
+
+    BOOST_CHECK_CLOSE( 2 * (10.0 + 20.0), ecl_sum_get_field_var( resp, 2, "FWPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * (10.1 + 20.1), ecl_sum_get_field_var( resp, 2, "FOPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * (10.2 + 20.2), ecl_sum_get_field_var( resp, 2, "FGPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * (10.0 + 20.0 + 10.1 + 20.1),
+                                          ecl_sum_get_field_var( resp, 2, "FLPTH" ), 1e-5 );
+
+    /* Injection rates */
+    BOOST_CHECK_CLOSE( 30.0, ecl_sum_get_field_var( resp, 1, "FWIR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 30.2, ecl_sum_get_field_var( resp, 1, "FGIR" ), 1e-5 );
+
+    /* Injection totals */
+    BOOST_CHECK_CLOSE( 30.0,     ecl_sum_get_field_var( resp, 1, "FWIT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 30.2,     ecl_sum_get_field_var( resp, 1, "FGIT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 30.0, ecl_sum_get_field_var( resp, 2, "FWIT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 30.2, ecl_sum_get_field_var( resp, 2, "FGIT" ), 1e-5 );
+
+    /* Injection totals (history) */
+    BOOST_CHECK_CLOSE( 30.0, ecl_sum_get_field_var( resp, 1, "FWITH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 60.0, ecl_sum_get_field_var( resp, 2, "FWITH" ), 1e-5 );
+
+    /* gwct - water cut */
+    const double wcut = (10.0 + 20.0) / ( 10.0 + 10.1 + 20.0 + 20.1 );
+    BOOST_CHECK_CLOSE( wcut, ecl_sum_get_field_var( resp, 1, "FWCT" ), 1e-5 );
+
+    /* ggor - gas-oil ratio */
+    const double ggor = (10.2 + 20.2) / (10.1 + 20.1);
+    BOOST_CHECK_CLOSE( ggor, ecl_sum_get_field_var( resp, 1, "FGOR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( ggor, ecl_sum_get_field_var( resp, 1, "FGORH" ), 1e-5 );
+
+}
+
 BOOST_AUTO_TEST_CASE(report_steps_time) {
     setup cfg( "test_Summary_report_steps_time" );
 

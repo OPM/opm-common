@@ -369,6 +369,58 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "CWPT", liq_vol( prodcrate< rt::wat > ) },
     { "COPT", liq_vol( prodcrate< rt::oil > ) },
     { "CGPT", gas_vol( prodcrate< rt::gas > ) },
+
+    { "FWPR", prodrate< rt::wat > },
+    { "FOPR", prodrate< rt::oil > },
+    { "FGPR", prodrate< rt::gas > },
+    { "FLPR", sum( prodrate< rt::wat >, prodrate< rt::oil > ) },
+    { "FWPT", liq_vol( prodrate< rt::wat > ) },
+    { "FOPT", liq_vol( prodrate< rt::oil > ) },
+    { "FGPT", gas_vol( prodrate< rt::gas > ) },
+    { "FLPT", liq_vol( sum( prodrate< rt::wat >,
+                            prodrate< rt::oil > ) ) },
+
+    { "FWIR", injerate< rt::wat > },
+    { "FOIR", injerate< rt::oil > },
+    { "FGIR", injerate< rt::gas > },
+    { "FLIR", sum( injerate< rt::wat >, injerate< rt::oil > ) },
+    { "FWIT", liq_vol( injerate< rt::wat > ) },
+    { "FOIT", liq_vol( injerate< rt::oil > ) },
+    { "FGIT", gas_vol( injerate< rt::gas > ) },
+    { "FLIT", liq_vol( sum( injerate< rt::wat >,
+                            injerate< rt::oil > ) ) },
+
+    { "FWPRH", production_history< Phase::WATER > },
+    { "FOPRH", production_history< Phase::OIL > },
+    { "FGPRH", production_history< Phase::GAS > },
+    { "FLPRH", sum( production_history< Phase::WATER >,
+                    production_history< Phase::OIL > ) },
+    { "FWPTH", liq_vol( production_history< Phase::WATER > ) },
+    { "FOPTH", liq_vol( production_history< Phase::OIL > ) },
+    { "FGPTH", gas_vol( production_history< Phase::GAS > ) },
+    { "FLPTH", liq_vol( sum( production_history< Phase::WATER >,
+                             production_history< Phase::OIL > ) ) },
+
+    { "FWIRH", injection_history< Phase::WATER > },
+    { "FOIRH", injection_history< Phase::OIL > },
+    { "FGIRH", injection_history< Phase::GAS > },
+    { "FWITH", liq_vol( injection_history< Phase::WATER > ) },
+    { "FOITH", liq_vol( injection_history< Phase::OIL > ) },
+    { "FGITH", gas_vol( injection_history< Phase::GAS > ) },
+
+    { "FWCT", div( prodrate< rt::wat >,
+                   sum( prodrate< rt::wat >, prodrate< rt::oil > ) ) },
+    { "FWCT", div( prodrate< rt::wat >,
+                   sum( prodrate< rt::wat >, prodrate< rt::oil > ) ) },
+    { "FGOR", div( prodrate< rt::gas >, prodrate< rt::oil > ) },
+    { "FGOR", div( prodrate< rt::gas >, prodrate< rt::oil > ) },
+    { "FGLR", div( prodrate< rt::gas >,
+                   sum( prodrate< rt::wat >, prodrate< rt::oil > ) ) },
+    { "FGORH", div( production_history< Phase::GAS >,
+                    production_history< Phase::OIL > ) },
+    { "FGLRH", div( production_history< Phase::GAS >,
+                    sum( production_history< Phase::WATER >,
+                         production_history< Phase::OIL > ) ) },
 };
 
 inline std::vector< const Well* > find_wells( const Schedule& schedule,
@@ -394,6 +446,9 @@ inline std::vector< const Well* > find_wells( const Schedule& schedule,
 
         return wells;
     }
+
+    if( type == ECL_SMSPEC_FIELD_VAR )
+        return schedule.getWells();
 
     return {};
 }
