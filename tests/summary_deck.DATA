@@ -278,6 +278,8 @@ CGIT
 /
 
 -- Production per connection
+-- Using all the different ways of specifying connections here
+-- as an informal test that we still get the data we want
 CWPR
  'W_1' 1 1 1 /
 /
@@ -321,6 +323,8 @@ WELSPECS
 
 -- Completion data.
 COMPDAT
+-- 'Well' I J K1 K2
+-- Passing 0 to I/J means they'll get the well head I/J
     W_1 0 0 1 1 /
     W_2 0 0 1 1 /
     W_2 1 1 1 1 /
