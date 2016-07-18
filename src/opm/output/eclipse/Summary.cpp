@@ -103,31 +103,50 @@ measure rate_unit< rt::gas >() { return measure::gas_surface_rate; }
 template<> constexpr
 measure rate_unit< Phase::GAS >() { return measure::gas_surface_rate; }
 
-template< rt phase >
+template< rt phase, bool injection = true >
 inline quantity rate( const fn_args& args ) {
     double sum = 0.0;
 
     for( const auto* ecl_well : args.ecl_wells ) {
-        if( args.wells.wells.count( ecl_well->name() ) == 0 ) continue;
-        sum += args.wells.at( ecl_well->name() ).rates.get( phase, 0.0 );
+        const auto& name = ecl_well->name();
+        if( args.wells.wells.count( name ) == 0 ) continue;
+        const auto v = args.wells.at( name ).rates.get( phase, 0.0 );
+        if( ( v > 0 ) == injection )
+            sum += v;
     }
 
+    if( !injection ) sum *= -1;
     return { sum, rate_unit< phase >() };
 }
 
-template< rt phase >
+template< rt phase, bool injection = true >
 inline quantity crate( const fn_args& args ) {
     double sum = 0.0;
 
     for( const auto* ecl_well : args.ecl_wells ) {
-        if( args.wells.wells.count( ecl_well->name() ) == 0 ) continue;
-        const auto& well = args.wells.at( ecl_well->name() );
+        const auto& name = ecl_well->name();
+        if( args.wells.wells.count( name ) == 0 ) continue;
+        const auto& well = args.wells.at( name );
         if( well.completions.count( args.active_index ) == 0 ) continue;
-        sum += well.completions.at( args.active_index ).rates.get( phase, 0.0 );
+        const auto v = well.completions.at( args.active_index ).rates.get( phase, 0.0 );
+        if( ( v > 0 ) == injection )
+            sum += v;
     }
+
+    if( !injection ) sum *= -1;
 
     return { sum, rate_unit< phase >() };
 }
+
+template< rt phase > inline quantity prodrate( const fn_args& args )
+{ return rate< phase, false >( args ); }
+template< rt phase > inline quantity injerate( const fn_args& args )
+{ return rate< phase, true >( args ); }
+template< rt phase > inline quantity prodcrate( const fn_args& args )
+{ return crate< phase, false >( args ); }
+template< rt phase > inline quantity injecrate( const fn_args& args )
+{ return crate< phase, true >( args ); }
+
 
 inline quantity bhp( const fn_args& args ) {
     assert( args.ecl_wells.size() == 1 );
@@ -234,9 +253,6 @@ template< typename F, typename G >
 auto div( F f, G g ) -> bin_op< F, G, std::divides< quantity > > { return { f, g }; }
 
 template< typename F >
-auto negate( F f ) -> mul< F, constant< -1 > > { return { f }; }
-
-template< typename F >
 auto liq_vol( F f ) -> mul< const_liq, mul< F, duration > >
 { return { const_liq(), f }; }
 
@@ -247,50 +263,50 @@ auto gas_vol( F f ) -> mul< const_gas, mul< F, duration > >
 using ofun = std::function< quantity( const fn_args& ) >;
 
 static const std::unordered_map< std::string, ofun > funs = {
-    { "WWIR", rate< rt::wat > },
-    { "WOIR", rate< rt::oil > },
-    { "WGIR", rate< rt::gas > },
-    { "WWIT", liq_vol( rate< rt::wat > ) },
-    { "WOIT", liq_vol( rate< rt::oil > ) },
-    { "WGIT", gas_vol( rate< rt::gas > ) },
+    { "WWIR", injerate< rt::wat > },
+    { "WOIR", injerate< rt::oil > },
+    { "WGIR", injerate< rt::gas > },
+    { "WWIT", liq_vol( injerate< rt::wat > ) },
+    { "WOIT", liq_vol( injerate< rt::oil > ) },
+    { "WGIT", gas_vol( injerate< rt::gas > ) },
 
-    { "WWPR", negate( rate< rt::wat > ) },
-    { "WOPR", negate( rate< rt::oil > ) },
-    { "WGPR", negate( rate< rt::gas > ) },
-    { "WLPR", negate( sum( rate< rt::wat >, rate< rt::oil > ) ) },
-    { "WWPT", negate( liq_vol( rate< rt::wat > ) ) },
-    { "WOPT", negate( liq_vol( rate< rt::oil > ) ) },
-    { "WGPT", negate( gas_vol( rate< rt::gas > ) ) },
-    { "WLPT", negate( liq_vol( sum( rate< rt::wat >, rate< rt::oil > ) ) ) },
+    { "WWPR", prodrate< rt::wat > },
+    { "WOPR", prodrate< rt::oil > },
+    { "WGPR", prodrate< rt::gas > },
+    { "WLPR", sum( prodrate< rt::wat >, prodrate< rt::oil > ) },
+    { "WWPT", liq_vol( prodrate< rt::wat > ) },
+    { "WOPT", liq_vol( prodrate< rt::oil > ) },
+    { "WGPT", gas_vol( prodrate< rt::gas > ) },
+    { "WLPT", liq_vol( sum( prodrate< rt::wat >, prodrate< rt::oil > ) ) },
 
-    { "WWCT", div( rate< rt::wat >,
-                   sum( rate< rt::wat >, rate< rt::oil > ) ) },
-    { "GWCT", div( rate< rt::wat >,
-                   sum( rate< rt::wat >, rate< rt::oil > ) ) },
-    { "WGOR", div( rate< rt::gas >, rate< rt::oil > ) },
-    { "GGOR", div( rate< rt::gas >, rate< rt::oil > ) },
-    { "WGLR", div( rate< rt::gas >,
-                    sum( rate< rt::wat >, rate< rt::oil > ) ) },
+    { "WWCT", div( prodrate< rt::wat >,
+                   sum( prodrate< rt::wat >, prodrate< rt::oil > ) ) },
+    { "GWCT", div( prodrate< rt::wat >,
+                   sum( prodrate< rt::wat >, prodrate< rt::oil > ) ) },
+    { "WGOR", div( prodrate< rt::gas >, prodrate< rt::oil > ) },
+    { "GGOR", div( prodrate< rt::gas >, prodrate< rt::oil > ) },
+    { "WGLR", div( prodrate< rt::gas >,
+                   sum( prodrate< rt::wat >, prodrate< rt::oil > ) ) },
 
     { "WBHP", bhp },
     { "WTHP", thp },
 
-    { "GWIR", rate< rt::wat > },
-    { "GOIR", rate< rt::oil > },
-    { "GGIR", rate< rt::gas > },
-    { "GWIT", liq_vol( rate< rt::wat > ) },
-    { "GOIT", liq_vol( rate< rt::oil > ) },
-    { "GGIT", gas_vol( rate< rt::gas > ) },
+    { "GWIR", injerate< rt::wat > },
+    { "GOIR", injerate< rt::oil > },
+    { "GGIR", injerate< rt::gas > },
+    { "GWIT", liq_vol( injerate< rt::wat > ) },
+    { "GOIT", liq_vol( injerate< rt::oil > ) },
+    { "GGIT", gas_vol( injerate< rt::gas > ) },
 
-    { "GWPR", negate( rate< rt::wat > ) },
-    { "GOPR", negate( rate< rt::oil > ) },
-    { "GGPR", negate( rate< rt::gas > ) },
-    { "GLPR", negate( sum( rate< rt::wat >, rate< rt::oil > ) ) },
+    { "GWPR", prodrate< rt::wat > },
+    { "GOPR", prodrate< rt::oil > },
+    { "GGPR", prodrate< rt::gas > },
+    { "GLPR", sum( prodrate< rt::wat >, prodrate< rt::oil > ) },
 
-    { "GWPT", negate( liq_vol( rate< rt::wat > ) ) },
-    { "GOPT", negate( liq_vol( rate< rt::oil > ) ) },
-    { "GGPT", negate( gas_vol( rate< rt::gas > ) ) },
-    { "GLPT", negate( liq_vol( sum( rate< rt::wat >, rate< rt::oil > ) ) ) },
+    { "GWPT", liq_vol( prodrate< rt::wat > ) },
+    { "GOPT", liq_vol( prodrate< rt::oil > ) },
+    { "GGPT", gas_vol( prodrate< rt::gas > ) },
+    { "GLPT", liq_vol( sum( prodrate< rt::wat >, prodrate< rt::oil > ) ) },
 
     { "WWPRH", production_history< Phase::WATER > },
     { "WOPRH", production_history< Phase::OIL > },
@@ -302,7 +318,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WOPTH", liq_vol( production_history< Phase::OIL > ) },
     { "WGPTH", gas_vol( production_history< Phase::GAS > ) },
     { "WLPTH", liq_vol( sum( production_history< Phase::WATER >,
-                            production_history< Phase::OIL > ) ) },
+                             production_history< Phase::OIL > ) ) },
 
     { "WWIRH", injection_history< Phase::WATER > },
     { "WOIRH", injection_history< Phase::OIL > },
@@ -342,17 +358,17 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "GWITH", liq_vol( injection_history< Phase::WATER > ) },
     { "GGITH", gas_vol( injection_history< Phase::GAS > ) },
 
-    { "CWIR", crate< rt::wat > },
-    { "CGIR", crate< rt::gas > },
-    { "CWIT", liq_vol( crate< rt::wat > ) },
-    { "CGIT", gas_vol( crate< rt::gas > ) },
+    { "CWIR", injecrate< rt::wat > },
+    { "CGIR", injecrate< rt::gas > },
+    { "CWIT", liq_vol( injecrate< rt::wat > ) },
+    { "CGIT", gas_vol( injecrate< rt::gas > ) },
 
-    { "CWPR", negate( crate< rt::wat > ) },
-    { "COPR", negate( crate< rt::oil > ) },
-    { "CGPR", negate( crate< rt::gas > ) },
-    { "CWPT", negate( liq_vol( crate< rt::wat > ) ) },
-    { "COPT", negate( liq_vol( crate< rt::oil > ) ) },
-    { "CGPT", negate( gas_vol( crate< rt::gas > ) ) },
+    { "CWPR", prodcrate< rt::wat > },
+    { "COPR", prodcrate< rt::oil > },
+    { "CGPR", prodcrate< rt::gas > },
+    { "CWPT", liq_vol( prodcrate< rt::wat > ) },
+    { "COPT", liq_vol( prodcrate< rt::oil > ) },
+    { "CGPT", gas_vol( prodcrate< rt::gas > ) },
 };
 
 inline std::vector< const Well* > find_wells( const Schedule& schedule,

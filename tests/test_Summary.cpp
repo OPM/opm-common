@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     /* WWCT - water cut */
     const double wwcut1 = 10.0 / ( 10.0 + 10.1 );
     const double wwcut2 = 20.0 / ( 20.0 + 20.1 );
-    const double wwcut3 = 30.0 / ( 30.0 + 30.1 );
+    const double wwcut3 = 0;
 
     BOOST_CHECK_CLOSE( wwcut1, ecl_sum_get_well_var( resp, 1, "W_1", "WWCT" ), 1e-5 );
     BOOST_CHECK_CLOSE( wwcut2, ecl_sum_get_well_var( resp, 1, "W_2", "WWCT" ), 1e-5 );
@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     /* gas-oil ratio */
     const double wgor1 = 10.2 / 10.1;
     const double wgor2 = 20.2 / 20.1;
-    const double wgor3 = 30.2 / 30.1;
+    const double wgor3 = 0;
 
     BOOST_CHECK_CLOSE( wgor1, ecl_sum_get_well_var( resp, 1, "W_1", "WGOR" ), 1e-5 );
     BOOST_CHECK_CLOSE( wgor2, ecl_sum_get_well_var( resp, 1, "W_2", "WGOR" ), 1e-5 );
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     /* WGLR - gas-liquid rate */
     const double wglr1 = 10.2 / ( 10.0 + 10.1 );
     const double wglr2 = 20.2 / ( 20.0 + 20.1 );
-    const double wglr3 = 30.2 / ( 30.0 + 30.1 );
+    const double wglr3 = 0;
 
     BOOST_CHECK_CLOSE( wglr1, ecl_sum_get_well_var( resp, 1, "W_1", "WGLR" ), 1e-5 );
     BOOST_CHECK_CLOSE( wglr2, ecl_sum_get_well_var( resp, 1, "W_2", "WGLR" ), 1e-5 );
@@ -329,13 +329,13 @@ BOOST_AUTO_TEST_CASE(group_keywords) {
 
     /* gwct - water cut */
     const double gwcut1 = (10.0 + 20.0) / ( 10.0 + 10.1 + 20.0 + 20.1 );
-    const double gwcut2 = 30.0 / ( 30.0 + 30.1 );
+    const double gwcut2 = 0;
     BOOST_CHECK_CLOSE( gwcut1, ecl_sum_get_group_var( resp, 1, "G_1", "GWCT" ), 1e-5 );
     BOOST_CHECK_CLOSE( gwcut2, ecl_sum_get_group_var( resp, 1, "G_2", "GWCT" ), 1e-5 );
 
     /* ggor - gas-oil ratio */
     const double ggor1 = (10.2 + 20.2) / (10.1 + 20.1);
-    const double ggor2 = 30.2 / 30.1;
+    const double ggor2 = 0;
     BOOST_CHECK_CLOSE( ggor1, ecl_sum_get_group_var( resp, 1, "G_1", "GGOR" ), 1e-5 );
     BOOST_CHECK_CLOSE( ggor2, ecl_sum_get_group_var( resp, 1, "G_2", "GGOR" ), 1e-5 );
 }
