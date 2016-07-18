@@ -130,6 +130,7 @@ EclipseState/InitConfig/Equil.cpp
 EclipseState/SimulationConfig/SimulationConfig.cpp
 EclipseState/SimulationConfig/ThresholdPressure.cpp
 EclipseState/SummaryConfig/SummaryConfig.cpp
+EclipseState/IOConfig/RestartConfig.cpp
 EclipseState/IOConfig/IOConfig.cpp)
 #
 
@@ -228,6 +229,7 @@ EclipseState/InitConfig/Equil.hpp
 EclipseState/SimulationConfig/SimulationConfig.hpp
 EclipseState/SimulationConfig/ThresholdPressure.hpp
 EclipseState/SummaryConfig/SummaryConfig.hpp
+EclipseState/IOConfig/RestartConfig.hpp
 EclipseState/IOConfig/IOConfig.hpp
 #
 EclipseState/Tables/Tabdims.hpp

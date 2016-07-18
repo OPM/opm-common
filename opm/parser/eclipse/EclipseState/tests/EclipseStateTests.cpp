@@ -498,11 +498,12 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreation) {
     EclipseState state(deck , ParseContext());
 
     IOConfigConstPtr ioConfig = state.getIOConfigConst();
+    const RestartConfig& rstConfig = ioConfig->restartConfig();
 
-    BOOST_CHECK_EQUAL(false, ioConfig->getWriteRestartFile(0));
-    BOOST_CHECK_EQUAL(false, ioConfig->getWriteRestartFile(1));
-    BOOST_CHECK_EQUAL(true, ioConfig->getWriteRestartFile(2));
-    BOOST_CHECK_EQUAL(false, ioConfig->getWriteRestartFile(3));
+    BOOST_CHECK_EQUAL(false, rstConfig.getWriteRestartFile(0));
+    BOOST_CHECK_EQUAL(false, rstConfig.getWriteRestartFile(1));
+    BOOST_CHECK_EQUAL(true,  rstConfig.getWriteRestartFile(2));
+    BOOST_CHECK_EQUAL(false, rstConfig.getWriteRestartFile(3));
 }
 
 
@@ -549,11 +550,12 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTRST) {
     EclipseState state(deck, parseContext);
 
     IOConfigConstPtr ioConfig = state.getIOConfigConst();
+    const RestartConfig& rstConfig = ioConfig->restartConfig();
 
-    BOOST_CHECK_EQUAL(true  , ioConfig->getWriteRestartFile(0));
-    BOOST_CHECK_EQUAL(false , ioConfig->getWriteRestartFile(1));
-    BOOST_CHECK_EQUAL(false , ioConfig->getWriteRestartFile(2));
-    BOOST_CHECK_EQUAL(false  , ioConfig->getWriteRestartFile(3));
+    BOOST_CHECK_EQUAL(true  ,  rstConfig.getWriteRestartFile(0));
+    BOOST_CHECK_EQUAL(false ,  rstConfig.getWriteRestartFile(1));
+    BOOST_CHECK_EQUAL(false ,  rstConfig.getWriteRestartFile(2));
+    BOOST_CHECK_EQUAL(false  , rstConfig.getWriteRestartFile(3));
 }
 
 
@@ -640,8 +642,9 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTSOL) {
         EclipseState state(deck, parseContext);
 
         IOConfigConstPtr ioConfig = state.getIOConfigConst();
+        const RestartConfig& rstConfig = ioConfig->restartConfig();
 
-        BOOST_CHECK_EQUAL(true, ioConfig->getWriteRestartFile(0));
+        BOOST_CHECK_EQUAL(true, rstConfig.getWriteRestartFile(0));
     }
 
     {   //old fashion integer mnemonics
@@ -649,7 +652,8 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTSOL) {
         EclipseState state(deck, parseContext);
 
         IOConfigConstPtr ioConfig = state.getIOConfigConst();
+        const RestartConfig& rstConfig = ioConfig->restartConfig();
 
-        BOOST_CHECK_EQUAL(true, ioConfig->getWriteRestartFile(0));
+        BOOST_CHECK_EQUAL(true, rstConfig.getWriteRestartFile(0));
     }
 }
