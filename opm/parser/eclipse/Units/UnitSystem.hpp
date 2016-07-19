@@ -54,6 +54,9 @@ namespace Opm {
             rate,
             transmissibility,
             mass,
+            gas_oil_ratio,
+            oil_gas_ratio,
+            water_cut,
         };
 
         UnitSystem(UnitType unit);

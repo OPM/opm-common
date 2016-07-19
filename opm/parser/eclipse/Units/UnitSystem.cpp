@@ -57,6 +57,9 @@ namespace {
         1 / ( Metric::ReservoirVolume / Metric::Time ),
         1 / Metric::Transmissibility,
         1 / Metric::Mass,
+        1, /* gas-oil ratio */
+        1, /* oil-gas ratio */
+        1, /* water cut */
     };
 
     static const double from_metric[] = {
@@ -99,7 +102,10 @@ namespace {
         "SM3/DAY",
         "RM3/DAY",
         "CPR3/DAY/BARS",
-        "KG"
+        "KG",
+        "SM3/SM3",
+        "SM3/SM3",
+        "SM3/SM3",
     };
 
     static const double to_field[] = {
@@ -120,6 +126,9 @@ namespace {
         1 / ( Field::ReservoirVolume / Field::Time ),
         1 / Field::Transmissibility,
         1 / Field::Mass,
+        1, /* gas-oil ratio */
+        1, /* oil-gas ratio */
+        1, /* water cut */
     };
 
     static const double from_field[] = {
@@ -140,6 +149,9 @@ namespace {
          Field::ReservoirVolume / Field::Time,
          Field::Transmissibility,
          Field::Mass,
+         1, /* gas-oil ratio */
+         1, /* oil-gas ratio */
+         1, /* water cut */
     };
 
     static constexpr const char* field_names[] = {
@@ -159,7 +171,10 @@ namespace {
         "MSCF/DAY",
         "RB/DAY",
         "CPRB/DAY/PSI",
-        "LB"
+        "LB",
+        "MSCF/STB",
+        "STB/MSCF",
+        "STB/STB",
     };
 }
 
