@@ -84,9 +84,29 @@ static data::Wells result_wells() {
     rates3.set( rt::oil, 30.1 / day );
     rates3.set( rt::gas, 30.2 / day );
 
-    data::Well well1 { rates1, 0.1 * ps, 0.2 * ps, {} };
-    data::Well well2 { rates2, 1.1 * ps, 1.2 * ps, {} };
-    data::Well well3 { rates3, 2.1 * ps, 2.2 * ps, {} };
+    /* completion rates */
+    data::Rates crates1;
+    crates1.set( rt::wat, -100.0 / day );
+    crates1.set( rt::oil, -100.1 / day );
+    crates1.set( rt::gas, -100.2 / day );
+
+    data::Rates crates2;
+    crates2.set( rt::wat, -200.0 / day );
+    crates2.set( rt::oil, -200.1 / day );
+    crates2.set( rt::gas, -200.2 / day );
+
+    data::Rates crates3;
+    crates3.set( rt::wat, 300.0 / day );
+    crates3.set( rt::oil, 300.1 / day );
+    crates3.set( rt::gas, 300.2 / day );
+
+    data::Completion comp1 { 1, crates1 };
+    data::Completion comp2 { 1, crates2 };
+    data::Completion comp3 { 3, crates3 };
+
+    data::Well well1 { rates1, 0.1 * ps, 0.2 * ps, { {1, comp1} } };
+    data::Well well2 { rates2, 1.1 * ps, 1.2 * ps, { {1, comp2} } };
+    data::Well well3 { rates3, 2.1 * ps, 2.2 * ps, { {3, comp3} } };
 
     return { { "W_1", well1 }, { "W_2", well2 }, { "W_3", well3 } };
 }
@@ -205,7 +225,7 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     /* WWCT - water cut */
     const double wwcut1 = 10.0 / ( 10.0 + 10.1 );
     const double wwcut2 = 20.0 / ( 20.0 + 20.1 );
-    const double wwcut3 = 30.0 / ( 30.0 + 30.1 );
+    const double wwcut3 = 0;
 
     BOOST_CHECK_CLOSE( wwcut1, ecl_sum_get_well_var( resp, 1, "W_1", "WWCT" ), 1e-5 );
     BOOST_CHECK_CLOSE( wwcut2, ecl_sum_get_well_var( resp, 1, "W_2", "WWCT" ), 1e-5 );
@@ -214,7 +234,7 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     /* gas-oil ratio */
     const double wgor1 = 10.2 / 10.1;
     const double wgor2 = 20.2 / 20.1;
-    const double wgor3 = 30.2 / 30.1;
+    const double wgor3 = 0;
 
     BOOST_CHECK_CLOSE( wgor1, ecl_sum_get_well_var( resp, 1, "W_1", "WGOR" ), 1e-5 );
     BOOST_CHECK_CLOSE( wgor2, ecl_sum_get_well_var( resp, 1, "W_2", "WGOR" ), 1e-5 );
@@ -227,7 +247,7 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     /* WGLR - gas-liquid rate */
     const double wglr1 = 10.2 / ( 10.0 + 10.1 );
     const double wglr2 = 20.2 / ( 20.0 + 20.1 );
-    const double wglr3 = 30.2 / ( 30.0 + 30.1 );
+    const double wglr3 = 0;
 
     BOOST_CHECK_CLOSE( wglr1, ecl_sum_get_well_var( resp, 1, "W_1", "WGLR" ), 1e-5 );
     BOOST_CHECK_CLOSE( wglr2, ecl_sum_get_well_var( resp, 1, "W_2", "WGLR" ), 1e-5 );
@@ -309,15 +329,131 @@ BOOST_AUTO_TEST_CASE(group_keywords) {
 
     /* gwct - water cut */
     const double gwcut1 = (10.0 + 20.0) / ( 10.0 + 10.1 + 20.0 + 20.1 );
-    const double gwcut2 = 30.0 / ( 30.0 + 30.1 );
+    const double gwcut2 = 0;
     BOOST_CHECK_CLOSE( gwcut1, ecl_sum_get_group_var( resp, 1, "G_1", "GWCT" ), 1e-5 );
     BOOST_CHECK_CLOSE( gwcut2, ecl_sum_get_group_var( resp, 1, "G_2", "GWCT" ), 1e-5 );
 
     /* ggor - gas-oil ratio */
     const double ggor1 = (10.2 + 20.2) / (10.1 + 20.1);
-    const double ggor2 = 30.2 / 30.1;
+    const double ggor2 = 0;
     BOOST_CHECK_CLOSE( ggor1, ecl_sum_get_group_var( resp, 1, "G_1", "GGOR" ), 1e-5 );
     BOOST_CHECK_CLOSE( ggor2, ecl_sum_get_group_var( resp, 1, "G_2", "GGOR" ), 1e-5 );
+}
+
+BOOST_AUTO_TEST_CASE(completion_kewords) {
+    setup cfg( "test_Summary_completion" );
+
+    out::Summary writer( cfg.es, cfg.config, cfg.name );
+    writer.add_timestep( 0, 0 * day, cfg.es, cfg.wells );
+    writer.add_timestep( 1, 1 * day, cfg.es, cfg.wells );
+    writer.add_timestep( 2, 2 * day, cfg.es, cfg.wells );
+    writer.write();
+
+    auto res = readsum( cfg.name );
+    const auto* resp = res.get();
+
+    /* Production rates */
+    BOOST_CHECK_CLOSE( 100.0,     ecl_sum_get_well_completion_var( resp, 1, "W_1", "CWPR", 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 100.1,     ecl_sum_get_well_completion_var( resp, 1, "W_1", "COPR", 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 100.2,     ecl_sum_get_well_completion_var( resp, 1, "W_1", "CGPR", 1 ), 1e-5 );
+
+    /* Production totals */
+    BOOST_CHECK_CLOSE( 100.0,     ecl_sum_get_well_completion_var( resp, 1, "W_1", "CWPT", 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 100.1,     ecl_sum_get_well_completion_var( resp, 1, "W_1", "COPT", 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 100.2,     ecl_sum_get_well_completion_var( resp, 1, "W_1", "CGPT", 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 100.0, ecl_sum_get_well_completion_var( resp, 2, "W_1", "CWPT", 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 100.1, ecl_sum_get_well_completion_var( resp, 2, "W_1", "COPT", 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 100.2, ecl_sum_get_well_completion_var( resp, 2, "W_1", "CGPT", 1 ), 1e-5 );
+
+    /* Injection rates */
+    BOOST_CHECK_CLOSE( 300.0,     ecl_sum_get_well_completion_var( resp, 1, "W_3", "CWIR", 3 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 300.2,     ecl_sum_get_well_completion_var( resp, 1, "W_3", "CGIR", 3 ), 1e-5 );
+
+    /* Injection totals */
+    BOOST_CHECK_CLOSE( 300.0,     ecl_sum_get_well_completion_var( resp, 1, "W_3", "CWIT", 3 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 300.2,     ecl_sum_get_well_completion_var( resp, 1, "W_3", "CGIT", 3 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 300.0, ecl_sum_get_well_completion_var( resp, 2, "W_3", "CWIT", 3 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 300.2, ecl_sum_get_well_completion_var( resp, 2, "W_3", "CGIT", 3 ), 1e-5 );
+
+    /* CGPT's wildcarding means W_2's completions should also be available */
+    BOOST_CHECK_CLOSE( 200.2,     ecl_sum_get_well_completion_var( resp, 1, "W_2", "CGPT", 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 200.2, ecl_sum_get_well_completion_var( resp, 2, "W_2", "CGPT", 1 ), 1e-5 );
+}
+
+BOOST_AUTO_TEST_CASE(field_keywords) {
+    setup cfg( "test_Summary_field" );
+
+    out::Summary writer( cfg.es, cfg.config, cfg.name );
+    writer.add_timestep( 0, 0 * day, cfg.es, cfg.wells );
+    writer.add_timestep( 1, 1 * day, cfg.es, cfg.wells );
+    writer.add_timestep( 2, 2 * day, cfg.es, cfg.wells );
+    writer.write();
+
+    auto res = readsum( cfg.name );
+    const auto* resp = res.get();
+
+    /* Production rates */
+    BOOST_CHECK_CLOSE( 10.0 + 20.0, ecl_sum_get_field_var( resp, 1, "FWPR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.1 + 20.1, ecl_sum_get_field_var( resp, 1, "FOPR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.2 + 20.2, ecl_sum_get_field_var( resp, 1, "FGPR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.0 + 20.0 + 10.1 + 20.1,
+                                    ecl_sum_get_field_var( resp, 1, "FLPR" ), 1e-5 );
+
+    /* Production totals */
+    BOOST_CHECK_CLOSE( 10.0 + 20.0, ecl_sum_get_field_var( resp, 1, "FWPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.1 + 20.1, ecl_sum_get_field_var( resp, 1, "FOPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.2 + 20.2, ecl_sum_get_field_var( resp, 1, "FGPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.0 + 20.0 + 10.1 + 20.1,
+                                    ecl_sum_get_field_var( resp, 1, "FLPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * (10.0 + 20.0), ecl_sum_get_field_var( resp, 2, "FWPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * (10.1 + 20.1), ecl_sum_get_field_var( resp, 2, "FOPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * (10.2 + 20.2), ecl_sum_get_field_var( resp, 2, "FGPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * (10.0 + 20.0 + 10.1 + 20.1),
+                                    ecl_sum_get_field_var( resp, 2, "FLPT" ), 1e-5 );
+
+    /* Production rates (history) */
+    BOOST_CHECK_CLOSE( 10.0 + 20.0, ecl_sum_get_field_var( resp, 1, "FWPRH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.1 + 20.1, ecl_sum_get_field_var( resp, 1, "FOPRH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.2 + 20.2, ecl_sum_get_field_var( resp, 1, "FGPRH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.0 + 10.1 + 20.0 + 20.1,
+                                    ecl_sum_get_field_var( resp, 1, "FLPRH" ), 1e-5 );
+
+    /* Production totals (history) */
+    BOOST_CHECK_CLOSE( (10.0 + 20.0), ecl_sum_get_field_var( resp, 1, "FWPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( (10.1 + 20.1), ecl_sum_get_field_var( resp, 1, "FOPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( (10.2 + 20.2), ecl_sum_get_field_var( resp, 1, "FGPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( (10.0 + 20.0 + 10.1 + 20.1),
+                                      ecl_sum_get_field_var( resp, 1, "FLPTH" ), 1e-5 );
+
+    BOOST_CHECK_CLOSE( 2 * (10.0 + 20.0), ecl_sum_get_field_var( resp, 2, "FWPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * (10.1 + 20.1), ecl_sum_get_field_var( resp, 2, "FOPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * (10.2 + 20.2), ecl_sum_get_field_var( resp, 2, "FGPTH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * (10.0 + 20.0 + 10.1 + 20.1),
+                                          ecl_sum_get_field_var( resp, 2, "FLPTH" ), 1e-5 );
+
+    /* Injection rates */
+    BOOST_CHECK_CLOSE( 30.0, ecl_sum_get_field_var( resp, 1, "FWIR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 30.2, ecl_sum_get_field_var( resp, 1, "FGIR" ), 1e-5 );
+
+    /* Injection totals */
+    BOOST_CHECK_CLOSE( 30.0,     ecl_sum_get_field_var( resp, 1, "FWIT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 30.2,     ecl_sum_get_field_var( resp, 1, "FGIT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 30.0, ecl_sum_get_field_var( resp, 2, "FWIT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 30.2, ecl_sum_get_field_var( resp, 2, "FGIT" ), 1e-5 );
+
+    /* Injection totals (history) */
+    BOOST_CHECK_CLOSE( 30.0, ecl_sum_get_field_var( resp, 1, "FWITH" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 60.0, ecl_sum_get_field_var( resp, 2, "FWITH" ), 1e-5 );
+
+    /* gwct - water cut */
+    const double wcut = (10.0 + 20.0) / ( 10.0 + 10.1 + 20.0 + 20.1 );
+    BOOST_CHECK_CLOSE( wcut, ecl_sum_get_field_var( resp, 1, "FWCT" ), 1e-5 );
+
+    /* ggor - gas-oil ratio */
+    const double ggor = (10.2 + 20.2) / (10.1 + 20.1);
+    BOOST_CHECK_CLOSE( ggor, ecl_sum_get_field_var( resp, 1, "FGOR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( ggor, ecl_sum_get_field_var( resp, 1, "FGORH" ), 1e-5 );
+
 }
 
 BOOST_AUTO_TEST_CASE(report_steps_time) {

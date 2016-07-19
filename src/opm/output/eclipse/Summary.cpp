@@ -77,13 +77,14 @@ struct quantity {
  * All functions must have the same parameters, so they're gathered in a struct
  * and functions use whatever information they care about.
  *
- * ecl_wells are wells from the deck, provided by opm-parser. wells is
- * simulation data
+ * schedule_wells are wells from the deck, provided by opm-parser. active_index
+ * is the index of the block in question. wells is simulation data.
  */
 struct fn_args {
-    const std::vector< const Well* >& ecl_wells;
+    const std::vector< const Well* >& schedule_wells;
     double duration;
     size_t timestep;
+    int active_index;
     const data::Wells& wells;
 };
 
@@ -102,22 +103,56 @@ measure rate_unit< rt::gas >() { return measure::gas_surface_rate; }
 template<> constexpr
 measure rate_unit< Phase::GAS >() { return measure::gas_surface_rate; }
 
-template< rt phase >
+template< rt phase, bool injection = true >
 inline quantity rate( const fn_args& args ) {
     double sum = 0.0;
 
-    for( const auto* ecl_well : args.ecl_wells ) {
-        if( args.wells.wells.count( ecl_well->name() ) == 0 ) continue;
-        sum += args.wells.at( ecl_well->name() ).rates.get( phase, 0.0 );
+    for( const auto* sched_well : args.schedule_wells ) {
+        const auto& name = sched_well->name();
+        if( args.wells.wells.count( name ) == 0 ) continue;
+        const auto v = args.wells.at( name ).rates.get( phase, 0.0 );
+        if( ( v > 0 ) == injection )
+            sum += v;
     }
 
+    if( !injection ) sum *= -1;
     return { sum, rate_unit< phase >() };
 }
 
-inline quantity bhp( const fn_args& args ) {
-    assert( args.ecl_wells.size() == 1 );
+template< rt phase, bool injection = true >
+inline quantity crate( const fn_args& args ) {
+    const quantity zero = { 0, rate_unit< phase >() };
+    const auto index = args.active_index;
 
-    const auto p = args.wells.wells.find( args.ecl_wells.front()->name() );
+    if( args.schedule_wells.empty() ) return zero;
+
+    const auto& name = args.schedule_wells.front()->name();
+    if( args.wells.wells.count( name ) == 0 ) return zero;
+
+    const auto& well = args.wells.at( name );
+    if( well.completions.count( index ) == 0 ) return zero;
+
+    const auto v = well.completions.at( index ).rates.get( phase, 0.0 );
+    if( ( v > 0 ) != injection ) return zero;
+
+    if( !injection ) return { -v, rate_unit< phase >() };
+    return { v, rate_unit< phase >() };
+}
+
+template< rt phase > inline quantity prodrate( const fn_args& args )
+{ return rate< phase, false >( args ); }
+template< rt phase > inline quantity injerate( const fn_args& args )
+{ return rate< phase, true >( args ); }
+template< rt phase > inline quantity prodcrate( const fn_args& args )
+{ return crate< phase, false >( args ); }
+template< rt phase > inline quantity injecrate( const fn_args& args )
+{ return crate< phase, true >( args ); }
+
+
+inline quantity bhp( const fn_args& args ) {
+    assert( args.schedule_wells.size() == 1 );
+
+    const auto p = args.wells.wells.find( args.schedule_wells.front()->name() );
     if( p == args.wells.wells.end() )
         return { 0, measure::pressure };
 
@@ -125,9 +160,9 @@ inline quantity bhp( const fn_args& args ) {
 }
 
 inline quantity thp( const fn_args& args ) {
-    assert( args.ecl_wells.size() == 1 );
+    assert( args.schedule_wells.size() == 1 );
 
-    const auto p = args.wells.wells.find( args.ecl_wells.front()->name() );
+    const auto p = args.wells.wells.find( args.schedule_wells.front()->name() );
     if( p == args.wells.wells.end() )
         return { 0, measure::pressure };
 
@@ -155,8 +190,8 @@ inline quantity production_history( const fn_args& args ) {
     const auto timestep = args.timestep - 1;
 
     double sum = 0.0;
-    for( const Well* ecl_well : args.ecl_wells )
-        sum += ecl_well->production_rate( phase, timestep );
+    for( const Well* sched_well : args.schedule_wells )
+        sum += sched_well->production_rate( phase, timestep );
 
     return { sum, rate_unit< phase >() };
 }
@@ -168,8 +203,8 @@ inline quantity injection_history( const fn_args& args ) {
     const auto timestep = args.timestep - 1;
 
     double sum = 0.0;
-    for( const Well* ecl_well : args.ecl_wells )
-        sum += ecl_well->injection_rate( phase, timestep );
+    for( const Well* sched_well : args.schedule_wells )
+        sum += sched_well->injection_rate( phase, timestep );
 
     return { sum, rate_unit< phase >() };
 }
@@ -219,9 +254,6 @@ template< typename F, typename G >
 auto div( F f, G g ) -> bin_op< F, G, std::divides< quantity > > { return { f, g }; }
 
 template< typename F >
-auto negate( F f ) -> mul< F, constant< -1 > > { return { f }; }
-
-template< typename F >
 auto liq_vol( F f ) -> mul< const_liq, mul< F, duration > >
 { return { const_liq(), f }; }
 
@@ -232,50 +264,50 @@ auto gas_vol( F f ) -> mul< const_gas, mul< F, duration > >
 using ofun = std::function< quantity( const fn_args& ) >;
 
 static const std::unordered_map< std::string, ofun > funs = {
-    { "WWIR", rate< rt::wat > },
-    { "WOIR", rate< rt::oil > },
-    { "WGIR", rate< rt::gas > },
-    { "WWIT", liq_vol( rate< rt::wat > ) },
-    { "WOIT", liq_vol( rate< rt::oil > ) },
-    { "WGIT", gas_vol( rate< rt::gas > ) },
+    { "WWIR", injerate< rt::wat > },
+    { "WOIR", injerate< rt::oil > },
+    { "WGIR", injerate< rt::gas > },
+    { "WWIT", liq_vol( injerate< rt::wat > ) },
+    { "WOIT", liq_vol( injerate< rt::oil > ) },
+    { "WGIT", gas_vol( injerate< rt::gas > ) },
 
-    { "WWPR", negate( rate< rt::wat > ) },
-    { "WOPR", negate( rate< rt::oil > ) },
-    { "WGPR", negate( rate< rt::gas > ) },
-    { "WLPR", negate( sum( rate< rt::wat >, rate< rt::oil > ) ) },
-    { "WWPT", negate( liq_vol( rate< rt::wat > ) ) },
-    { "WOPT", negate( liq_vol( rate< rt::oil > ) ) },
-    { "WGPT", negate( gas_vol( rate< rt::gas > ) ) },
-    { "WLPT", negate( liq_vol( sum( rate< rt::wat >, rate< rt::oil > ) ) ) },
+    { "WWPR", prodrate< rt::wat > },
+    { "WOPR", prodrate< rt::oil > },
+    { "WGPR", prodrate< rt::gas > },
+    { "WLPR", sum( prodrate< rt::wat >, prodrate< rt::oil > ) },
+    { "WWPT", liq_vol( prodrate< rt::wat > ) },
+    { "WOPT", liq_vol( prodrate< rt::oil > ) },
+    { "WGPT", gas_vol( prodrate< rt::gas > ) },
+    { "WLPT", liq_vol( sum( prodrate< rt::wat >, prodrate< rt::oil > ) ) },
 
-    { "WWCT", div( rate< rt::wat >,
-                   sum( rate< rt::wat >, rate< rt::oil > ) ) },
-    { "GWCT", div( rate< rt::wat >,
-                   sum( rate< rt::wat >, rate< rt::oil > ) ) },
-    { "WGOR", div( rate< rt::gas >, rate< rt::oil > ) },
-    { "GGOR", div( rate< rt::gas >, rate< rt::oil > ) },
-    { "WGLR", div( rate< rt::gas >,
-                    sum( rate< rt::wat >, rate< rt::oil > ) ) },
+    { "WWCT", div( prodrate< rt::wat >,
+                   sum( prodrate< rt::wat >, prodrate< rt::oil > ) ) },
+    { "GWCT", div( prodrate< rt::wat >,
+                   sum( prodrate< rt::wat >, prodrate< rt::oil > ) ) },
+    { "WGOR", div( prodrate< rt::gas >, prodrate< rt::oil > ) },
+    { "GGOR", div( prodrate< rt::gas >, prodrate< rt::oil > ) },
+    { "WGLR", div( prodrate< rt::gas >,
+                   sum( prodrate< rt::wat >, prodrate< rt::oil > ) ) },
 
     { "WBHP", bhp },
     { "WTHP", thp },
 
-    { "GWIR", rate< rt::wat > },
-    { "GOIR", rate< rt::oil > },
-    { "GGIR", rate< rt::gas > },
-    { "GWIT", liq_vol( rate< rt::wat > ) },
-    { "GOIT", liq_vol( rate< rt::oil > ) },
-    { "GGIT", gas_vol( rate< rt::gas > ) },
+    { "GWIR", injerate< rt::wat > },
+    { "GOIR", injerate< rt::oil > },
+    { "GGIR", injerate< rt::gas > },
+    { "GWIT", liq_vol( injerate< rt::wat > ) },
+    { "GOIT", liq_vol( injerate< rt::oil > ) },
+    { "GGIT", gas_vol( injerate< rt::gas > ) },
 
-    { "GWPR", negate( rate< rt::wat > ) },
-    { "GOPR", negate( rate< rt::oil > ) },
-    { "GGPR", negate( rate< rt::gas > ) },
-    { "GLPR", negate( sum( rate< rt::wat >, rate< rt::oil > ) ) },
+    { "GWPR", prodrate< rt::wat > },
+    { "GOPR", prodrate< rt::oil > },
+    { "GGPR", prodrate< rt::gas > },
+    { "GLPR", sum( prodrate< rt::wat >, prodrate< rt::oil > ) },
 
-    { "GWPT", negate( liq_vol( rate< rt::wat > ) ) },
-    { "GOPT", negate( liq_vol( rate< rt::oil > ) ) },
-    { "GGPT", negate( gas_vol( rate< rt::gas > ) ) },
-    { "GLPT", negate( liq_vol( sum( rate< rt::wat >, rate< rt::oil > ) ) ) },
+    { "GWPT", liq_vol( prodrate< rt::wat > ) },
+    { "GOPT", liq_vol( prodrate< rt::oil > ) },
+    { "GGPT", gas_vol( prodrate< rt::gas > ) },
+    { "GLPT", liq_vol( sum( prodrate< rt::wat >, prodrate< rt::oil > ) ) },
 
     { "WWPRH", production_history< Phase::WATER > },
     { "WOPRH", production_history< Phase::OIL > },
@@ -287,7 +319,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WOPTH", liq_vol( production_history< Phase::OIL > ) },
     { "WGPTH", gas_vol( production_history< Phase::GAS > ) },
     { "WLPTH", liq_vol( sum( production_history< Phase::WATER >,
-                            production_history< Phase::OIL > ) ) },
+                             production_history< Phase::OIL > ) ) },
 
     { "WWIRH", injection_history< Phase::WATER > },
     { "WOIRH", injection_history< Phase::OIL > },
@@ -326,6 +358,70 @@ static const std::unordered_map< std::string, ofun > funs = {
                              production_history< Phase::OIL > ) ) },
     { "GWITH", liq_vol( injection_history< Phase::WATER > ) },
     { "GGITH", gas_vol( injection_history< Phase::GAS > ) },
+
+    { "CWIR", injecrate< rt::wat > },
+    { "CGIR", injecrate< rt::gas > },
+    { "CWIT", liq_vol( injecrate< rt::wat > ) },
+    { "CGIT", gas_vol( injecrate< rt::gas > ) },
+
+    { "CWPR", prodcrate< rt::wat > },
+    { "COPR", prodcrate< rt::oil > },
+    { "CGPR", prodcrate< rt::gas > },
+    { "CWPT", liq_vol( prodcrate< rt::wat > ) },
+    { "COPT", liq_vol( prodcrate< rt::oil > ) },
+    { "CGPT", gas_vol( prodcrate< rt::gas > ) },
+
+    { "FWPR", prodrate< rt::wat > },
+    { "FOPR", prodrate< rt::oil > },
+    { "FGPR", prodrate< rt::gas > },
+    { "FLPR", sum( prodrate< rt::wat >, prodrate< rt::oil > ) },
+    { "FWPT", liq_vol( prodrate< rt::wat > ) },
+    { "FOPT", liq_vol( prodrate< rt::oil > ) },
+    { "FGPT", gas_vol( prodrate< rt::gas > ) },
+    { "FLPT", liq_vol( sum( prodrate< rt::wat >,
+                            prodrate< rt::oil > ) ) },
+
+    { "FWIR", injerate< rt::wat > },
+    { "FOIR", injerate< rt::oil > },
+    { "FGIR", injerate< rt::gas > },
+    { "FLIR", sum( injerate< rt::wat >, injerate< rt::oil > ) },
+    { "FWIT", liq_vol( injerate< rt::wat > ) },
+    { "FOIT", liq_vol( injerate< rt::oil > ) },
+    { "FGIT", gas_vol( injerate< rt::gas > ) },
+    { "FLIT", liq_vol( sum( injerate< rt::wat >,
+                            injerate< rt::oil > ) ) },
+
+    { "FWPRH", production_history< Phase::WATER > },
+    { "FOPRH", production_history< Phase::OIL > },
+    { "FGPRH", production_history< Phase::GAS > },
+    { "FLPRH", sum( production_history< Phase::WATER >,
+                    production_history< Phase::OIL > ) },
+    { "FWPTH", liq_vol( production_history< Phase::WATER > ) },
+    { "FOPTH", liq_vol( production_history< Phase::OIL > ) },
+    { "FGPTH", gas_vol( production_history< Phase::GAS > ) },
+    { "FLPTH", liq_vol( sum( production_history< Phase::WATER >,
+                             production_history< Phase::OIL > ) ) },
+
+    { "FWIRH", injection_history< Phase::WATER > },
+    { "FOIRH", injection_history< Phase::OIL > },
+    { "FGIRH", injection_history< Phase::GAS > },
+    { "FWITH", liq_vol( injection_history< Phase::WATER > ) },
+    { "FOITH", liq_vol( injection_history< Phase::OIL > ) },
+    { "FGITH", gas_vol( injection_history< Phase::GAS > ) },
+
+    { "FWCT", div( prodrate< rt::wat >,
+                   sum( prodrate< rt::wat >, prodrate< rt::oil > ) ) },
+    { "FWCT", div( prodrate< rt::wat >,
+                   sum( prodrate< rt::wat >, prodrate< rt::oil > ) ) },
+    { "FGOR", div( prodrate< rt::gas >, prodrate< rt::oil > ) },
+    { "FGOR", div( prodrate< rt::gas >, prodrate< rt::oil > ) },
+    { "FGLR", div( prodrate< rt::gas >,
+                   sum( prodrate< rt::wat >, prodrate< rt::oil > ) ) },
+    { "FGORH", div( production_history< Phase::GAS >,
+                    production_history< Phase::OIL > ) },
+    { "FGLRH", div( production_history< Phase::GAS >,
+                    sum( production_history< Phase::WATER >,
+                         production_history< Phase::OIL > ) ) },
 };
 
 inline std::vector< const Well* > find_wells( const Schedule& schedule,
@@ -335,7 +431,7 @@ inline std::vector< const Well* > find_wells( const Schedule& schedule,
     const auto* name = smspec_node_get_wgname( node );
     const auto type = smspec_node_get_var_type( node );
 
-    if( type == ECL_SMSPEC_WELL_VAR ) {
+    if( type == ECL_SMSPEC_WELL_VAR || type == ECL_SMSPEC_COMPLETION_VAR ) {
         const auto* well = schedule.getWell( name );
         if( !well ) return {};
         return { well };
@@ -351,6 +447,9 @@ inline std::vector< const Well* > find_wells( const Schedule& schedule,
 
         return wells;
     }
+
+    if( type == ECL_SMSPEC_FIELD_VAR )
+        return schedule.getWells();
 
     return {};
 }
@@ -420,10 +519,11 @@ void Summary::add_timestep( int report_step,
     const auto& schedule = *es.getSchedule();
 
     for( auto& f : this->handlers->handlers ) {
+        const int active_index = smspec_node_get_num( f.first );
         const auto* genkey = smspec_node_get_gen_key1( f.first );
 
-        const auto ecl_wells = find_wells( schedule, f.first, timestep );
-        const auto val = f.second( { ecl_wells, duration, timestep, wells } );
+        const auto schedule_wells = find_wells( schedule, f.first, timestep );
+        const auto val = f.second( { schedule_wells, duration, timestep, active_index, wells } );
 
         const auto num_val = val.value > 0 ? val.value : 0.0;
         const auto unit_applied_val = es.getUnits().from_si( val.unit, num_val );

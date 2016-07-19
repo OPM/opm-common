@@ -258,31 +258,53 @@ WBP
 /
 WBP4
 /
+
 -- Water injection per connection
-----CWIR
-----'F-1H' /
-----'F-2H' /
-----'F-3H' /
-----'F-4H' /
-----'C-1H' /
-----'C-2H' /
-----'C-3H' /
-----'C-4H' /
-----/
-----CWIT
-----'F-1H' /
-----'F-2H' /
-----'F-3H' /
-----'F-4H' /
-----'C-1H' /
-----'C-2H' /
-----'C-3H' /
-----'C-4H' /
-----/
+CWIR
+'W_3' /
+/
+
+-- Gas injection on 3 1 1 (45)
+CGIR
+'W_3' 3 1 1 /
+/
+
+CWIT
+'W_3' /
+/
+
+CGIT
+* /
+/
+
+-- Production per connection
+-- Using all the different ways of specifying connections here
+-- as an informal test that we still get the data we want
+CWPR
+ 'W_1' 1 1 1 /
+/
+
+COPR
+ 'W_1' /
+/
+
+CGPR
+ '*' /
+/
+
+CWPT
+ 'W_1' 1 1 1 /
+/
+
+COPT
+ 'W_1' /
+/
+
+CGPT
+ '*' 1 1 1 /
+/
+
 ---- Connection production rates
-----CGPT
-----'E-4AH' /
-----/
 ----CGFR
 ----'E-4AH' /
 ----/
@@ -294,9 +316,19 @@ SCHEDULE
 
 -- Three wells, two producers (so that we can form a group) and one injector
 WELSPECS
-     'W_1'        'G_1'   30   37  3.33       'OIL'  7* /
-     'W_2'        'G_1'   30   37  3.33       'OIL'  7* /
-     'W_3'        'G_2'   20   51  3.92       'WATER'  7* /
+     'W_1'        'G_1'   1    1  3.33       'OIL'  7* /
+     'W_2'        'G_1'   2    1  3.33       'OIL'  7* /
+     'W_3'        'G_2'   3    1  3.92       'WATER'  7* /
+/
+
+-- Completion data.
+COMPDAT
+-- 'Well' I J K1 K2
+-- Passing 0 to I/J means they'll get the well head I/J
+    W_1 0 0 1 1 /
+    W_2 0 0 1 1 /
+    W_2 1 1 1 1 /
+    W_3 0 0 1 1 /
 /
 
 WCONHIST
