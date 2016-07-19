@@ -45,31 +45,65 @@ using rt = data::Rates::opt;
 using measure = UnitSystem::measure;
 
 /* Some numerical value with its unit tag embedded to enable caller to apply
- * unit conversion. This removes a ton of boilerplate.
- *
- * Some arithmetic operations are supported, which also codifies the following
- * assumptions:
- * * Division by zero, such as in gas/oil ratios without oil, shall default to 0
- * * Division typically happen to calculate ratios, in which case unit
- *   conversion is a no-op
- * * When performing an operation on two operands, the left operand's unit is
- *   applied, meaning arithmetic is **not** associative with respect to units.
+ * unit conversion. This removes a lot of boilerplate. ad-hoc solution to poor
+ * unit support in general.
  */
+measure div_unit( measure denom, measure div ) {
+    if( denom == measure::gas_surface_rate &&
+        div   == measure::liquid_surface_rate )
+        return measure::gas_oil_ratio;
+
+    if( denom == measure::liquid_surface_rate &&
+        div   == measure::gas_surface_rate )
+        return measure::oil_gas_ratio;
+
+    if( denom == measure::liquid_surface_rate &&
+        div   == measure::liquid_surface_rate )
+        return measure::water_cut;
+
+    if( denom == measure::liquid_surface_rate &&
+        div   == measure::time )
+        return measure::liquid_surface_volume;
+
+    if( denom == measure::gas_surface_rate &&
+        div   == measure::time )
+        return measure::gas_surface_volume;
+
+    return measure::identity;
+}
+
+measure mul_unit( measure lhs, measure rhs ) {
+    if( lhs == rhs ) return lhs;
+
+    if( ( lhs == measure::liquid_surface_rate && rhs == measure::time ) ||
+        ( rhs == measure::liquid_surface_rate && lhs == measure::time ) )
+        return measure::liquid_surface_volume;
+
+    if( ( lhs == measure::gas_surface_rate && rhs == measure::time ) ||
+        ( rhs == measure::gas_surface_rate && lhs == measure::time ) )
+        return measure::gas_surface_volume;
+
+    return lhs;
+}
+
 struct quantity {
     double value;
     UnitSystem::measure unit;
 
     quantity operator+( const quantity& rhs ) const {
+        assert( this->unit == rhs.unit );
         return { this->value + rhs.value, this->unit };
     }
 
     quantity operator*( const quantity& rhs ) const {
-        return { this->value * rhs.value, this->unit };
+        return { this->value * rhs.value, mul_unit( this->unit, rhs.unit ) };
     }
 
     quantity operator/( const quantity& rhs ) const {
-        if( rhs.value == 0 ) return { 0.0, measure::identity };
-        return { this->value / rhs.value, measure::identity };
+        const auto res_unit = div_unit( this->unit, rhs.unit );
+
+        if( rhs.value == 0 ) return { 0.0, res_unit };
+        return { this->value / rhs.value, res_unit };
     }
 };
 
@@ -227,39 +261,21 @@ struct bin_op {
         G g;
 };
 
-struct duration {
-    quantity operator()( const fn_args& args ) const {
-        return { args.duration, measure::identity };
-    }
-};
-
-/* constant also uses the arithmetic-gets-left-hand-as-unit assumption, meaning
- * it can also be used for unit conversion.
- */
-template< int N, measure M = measure::identity >
-struct constant {
-    quantity operator()( const fn_args& args ) const { return { N, M }; }
-};
-
-using const_liq = constant< 1, measure::liquid_surface_volume >;
-using const_gas = constant< 1, measure::gas_surface_volume >;
+inline quantity duration( const fn_args& args ) {
+    return { args.duration, measure::time };
+}
 
 template< typename F, typename G >
-using mul = bin_op< F, G, std::multiplies< quantity > >;
+auto mul( F f, G g ) -> bin_op< F, G, std::multiplies< quantity > >
+{ return { f, g }; }
 
 template< typename F, typename G >
-auto sum( F f, G g ) -> bin_op< F, G, std::plus< quantity > > { return { f, g }; }
+auto sum( F f, G g ) -> bin_op< F, G, std::plus< quantity > >
+{ return { f, g }; }
 
 template< typename F, typename G >
-auto div( F f, G g ) -> bin_op< F, G, std::divides< quantity > > { return { f, g }; }
-
-template< typename F >
-auto liq_vol( F f ) -> mul< const_liq, mul< F, duration > >
-{ return { const_liq(), f }; }
-
-template< typename F >
-auto gas_vol( F f ) -> mul< const_gas, mul< F, duration > >
-{ return { const_gas(), f }; }
+auto div( F f, G g ) -> bin_op< F, G, std::divides< quantity > >
+{ return { f, g }; }
 
 using ofun = std::function< quantity( const fn_args& ) >;
 
@@ -267,18 +283,19 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WWIR", injerate< rt::wat > },
     { "WOIR", injerate< rt::oil > },
     { "WGIR", injerate< rt::gas > },
-    { "WWIT", liq_vol( injerate< rt::wat > ) },
-    { "WOIT", liq_vol( injerate< rt::oil > ) },
-    { "WGIT", gas_vol( injerate< rt::gas > ) },
+    { "WWIT", mul( injerate< rt::wat >, duration ) },
+    { "WOIT", mul( injerate< rt::oil >, duration ) },
+    { "WGIT", mul( injerate< rt::gas >, duration ) },
 
     { "WWPR", prodrate< rt::wat > },
     { "WOPR", prodrate< rt::oil > },
     { "WGPR", prodrate< rt::gas > },
     { "WLPR", sum( prodrate< rt::wat >, prodrate< rt::oil > ) },
-    { "WWPT", liq_vol( prodrate< rt::wat > ) },
-    { "WOPT", liq_vol( prodrate< rt::oil > ) },
-    { "WGPT", gas_vol( prodrate< rt::gas > ) },
-    { "WLPT", liq_vol( sum( prodrate< rt::wat >, prodrate< rt::oil > ) ) },
+    { "WWPT", mul( prodrate< rt::wat >, duration ) },
+    { "WOPT", mul( prodrate< rt::oil >, duration ) },
+    { "WGPT", mul( prodrate< rt::gas >, duration ) },
+    { "WLPT", mul( sum( prodrate< rt::wat >, prodrate< rt::oil > ),
+                   duration ) },
 
     { "WWCT", div( prodrate< rt::wat >,
                    sum( prodrate< rt::wat >, prodrate< rt::oil > ) ) },
@@ -295,19 +312,20 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "GWIR", injerate< rt::wat > },
     { "GOIR", injerate< rt::oil > },
     { "GGIR", injerate< rt::gas > },
-    { "GWIT", liq_vol( injerate< rt::wat > ) },
-    { "GOIT", liq_vol( injerate< rt::oil > ) },
-    { "GGIT", gas_vol( injerate< rt::gas > ) },
+    { "GWIT", mul( injerate< rt::wat >, duration ) },
+    { "GOIT", mul( injerate< rt::oil >, duration ) },
+    { "GGIT", mul( injerate< rt::gas >, duration ) },
 
     { "GWPR", prodrate< rt::wat > },
     { "GOPR", prodrate< rt::oil > },
     { "GGPR", prodrate< rt::gas > },
     { "GLPR", sum( prodrate< rt::wat >, prodrate< rt::oil > ) },
 
-    { "GWPT", liq_vol( prodrate< rt::wat > ) },
-    { "GOPT", liq_vol( prodrate< rt::oil > ) },
-    { "GGPT", gas_vol( prodrate< rt::gas > ) },
-    { "GLPT", liq_vol( sum( prodrate< rt::wat >, prodrate< rt::oil > ) ) },
+    { "GWPT", mul( prodrate< rt::wat >, duration ) },
+    { "GOPT", mul( prodrate< rt::oil >, duration ) },
+    { "GGPT", mul( prodrate< rt::gas >, duration ) },
+    { "GLPT", mul( sum( prodrate< rt::wat >, prodrate< rt::oil > ),
+                   duration ) },
 
     { "WWPRH", production_history< Phase::WATER > },
     { "WOPRH", production_history< Phase::OIL > },
@@ -315,18 +333,19 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WLPRH", sum( production_history< Phase::WATER >,
                     production_history< Phase::OIL > ) },
 
-    { "WWPTH", liq_vol( production_history< Phase::WATER > ) },
-    { "WOPTH", liq_vol( production_history< Phase::OIL > ) },
-    { "WGPTH", gas_vol( production_history< Phase::GAS > ) },
-    { "WLPTH", liq_vol( sum( production_history< Phase::WATER >,
-                             production_history< Phase::OIL > ) ) },
+    { "WWPTH", mul( production_history< Phase::WATER >, duration ) },
+    { "WOPTH", mul( production_history< Phase::OIL >, duration ) },
+    { "WGPTH", mul( production_history< Phase::GAS >, duration ) },
+    { "WLPTH", mul( sum( production_history< Phase::WATER >,
+                         production_history< Phase::OIL > ),
+                    duration ) },
 
     { "WWIRH", injection_history< Phase::WATER > },
     { "WOIRH", injection_history< Phase::OIL > },
     { "WGIRH", injection_history< Phase::GAS > },
-    { "WWITH", liq_vol( injection_history< Phase::WATER > ) },
-    { "WOITH", liq_vol( injection_history< Phase::OIL > ) },
-    { "WGITH", gas_vol( injection_history< Phase::GAS > ) },
+    { "WWITH", mul( injection_history< Phase::WATER >, duration ) },
+    { "WOITH", mul( injection_history< Phase::OIL >, duration ) },
+    { "WGITH", mul( injection_history< Phase::GAS >, duration ) },
 
     /* From our point of view, injectors don't have water cuts and div/sum will return 0.0 */
     { "WWCTH", div( production_history< Phase::WATER >,
@@ -351,69 +370,68 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "GOIRH", injection_history< Phase::OIL > },
     { "GGIRH", injection_history< Phase::GAS > },
 
-    { "GWPTH", liq_vol( production_history< Phase::WATER > ) },
-    { "GOPTH", liq_vol( production_history< Phase::OIL > ) },
-    { "GGPTH", gas_vol( production_history< Phase::GAS > ) },
-    { "GLPTH", liq_vol( sum( production_history< Phase::WATER >,
-                             production_history< Phase::OIL > ) ) },
-    { "GWITH", liq_vol( injection_history< Phase::WATER > ) },
-    { "GGITH", gas_vol( injection_history< Phase::GAS > ) },
+    { "GWPTH", mul( production_history< Phase::WATER >, duration ) },
+    { "GOPTH", mul( production_history< Phase::OIL >, duration ) },
+    { "GGPTH", mul( production_history< Phase::GAS >, duration ) },
+    { "GLPTH", mul( sum( production_history< Phase::WATER >,
+                         production_history< Phase::OIL > ),
+                    duration ) },
+    { "GWITH", mul( injection_history< Phase::WATER >, duration ) },
+    { "GGITH", mul( injection_history< Phase::GAS >, duration ) },
 
     { "CWIR", injecrate< rt::wat > },
     { "CGIR", injecrate< rt::gas > },
-    { "CWIT", liq_vol( injecrate< rt::wat > ) },
-    { "CGIT", gas_vol( injecrate< rt::gas > ) },
+    { "CWIT", mul( injecrate< rt::wat >, duration ) },
+    { "CGIT", mul( injecrate< rt::gas >, duration ) },
 
     { "CWPR", prodcrate< rt::wat > },
     { "COPR", prodcrate< rt::oil > },
     { "CGPR", prodcrate< rt::gas > },
-    { "CWPT", liq_vol( prodcrate< rt::wat > ) },
-    { "COPT", liq_vol( prodcrate< rt::oil > ) },
-    { "CGPT", gas_vol( prodcrate< rt::gas > ) },
+    { "CWPT", mul( prodcrate< rt::wat >, duration ) },
+    { "COPT", mul( prodcrate< rt::oil >, duration ) },
+    { "CGPT", mul( prodcrate< rt::gas >, duration ) },
 
     { "FWPR", prodrate< rt::wat > },
     { "FOPR", prodrate< rt::oil > },
     { "FGPR", prodrate< rt::gas > },
     { "FLPR", sum( prodrate< rt::wat >, prodrate< rt::oil > ) },
-    { "FWPT", liq_vol( prodrate< rt::wat > ) },
-    { "FOPT", liq_vol( prodrate< rt::oil > ) },
-    { "FGPT", gas_vol( prodrate< rt::gas > ) },
-    { "FLPT", liq_vol( sum( prodrate< rt::wat >,
-                            prodrate< rt::oil > ) ) },
+    { "FWPT", mul( prodrate< rt::wat >, duration ) },
+    { "FOPT", mul( prodrate< rt::oil >, duration ) },
+    { "FGPT", mul( prodrate< rt::gas >, duration ) },
+    { "FLPT", mul( sum( prodrate< rt::wat >, prodrate< rt::oil > ),
+                   duration ) },
 
     { "FWIR", injerate< rt::wat > },
     { "FOIR", injerate< rt::oil > },
     { "FGIR", injerate< rt::gas > },
     { "FLIR", sum( injerate< rt::wat >, injerate< rt::oil > ) },
-    { "FWIT", liq_vol( injerate< rt::wat > ) },
-    { "FOIT", liq_vol( injerate< rt::oil > ) },
-    { "FGIT", gas_vol( injerate< rt::gas > ) },
-    { "FLIT", liq_vol( sum( injerate< rt::wat >,
-                            injerate< rt::oil > ) ) },
+    { "FWIT", mul( injerate< rt::wat >, duration ) },
+    { "FOIT", mul( injerate< rt::oil >, duration ) },
+    { "FGIT", mul( injerate< rt::gas >, duration ) },
+    { "FLIT", mul( sum( injerate< rt::wat >, injerate< rt::oil > ),
+                   duration ) },
 
     { "FWPRH", production_history< Phase::WATER > },
     { "FOPRH", production_history< Phase::OIL > },
     { "FGPRH", production_history< Phase::GAS > },
     { "FLPRH", sum( production_history< Phase::WATER >,
                     production_history< Phase::OIL > ) },
-    { "FWPTH", liq_vol( production_history< Phase::WATER > ) },
-    { "FOPTH", liq_vol( production_history< Phase::OIL > ) },
-    { "FGPTH", gas_vol( production_history< Phase::GAS > ) },
-    { "FLPTH", liq_vol( sum( production_history< Phase::WATER >,
-                             production_history< Phase::OIL > ) ) },
+    { "FWPTH", mul( production_history< Phase::WATER >, duration ) },
+    { "FOPTH", mul( production_history< Phase::OIL >, duration ) },
+    { "FGPTH", mul( production_history< Phase::GAS >, duration ) },
+    { "FLPTH", mul( sum( production_history< Phase::WATER >,
+                         production_history< Phase::OIL > ),
+                    duration ) },
 
     { "FWIRH", injection_history< Phase::WATER > },
     { "FOIRH", injection_history< Phase::OIL > },
     { "FGIRH", injection_history< Phase::GAS > },
-    { "FWITH", liq_vol( injection_history< Phase::WATER > ) },
-    { "FOITH", liq_vol( injection_history< Phase::OIL > ) },
-    { "FGITH", gas_vol( injection_history< Phase::GAS > ) },
+    { "FWITH", mul( injection_history< Phase::WATER >, duration ) },
+    { "FOITH", mul( injection_history< Phase::OIL >, duration ) },
+    { "FGITH", mul( injection_history< Phase::GAS >, duration ) },
 
     { "FWCT", div( prodrate< rt::wat >,
                    sum( prodrate< rt::wat >, prodrate< rt::oil > ) ) },
-    { "FWCT", div( prodrate< rt::wat >,
-                   sum( prodrate< rt::wat >, prodrate< rt::oil > ) ) },
-    { "FGOR", div( prodrate< rt::gas >, prodrate< rt::oil > ) },
     { "FGOR", div( prodrate< rt::gas >, prodrate< rt::oil > ) },
     { "FGLR", div( prodrate< rt::gas >,
                    sum( prodrate< rt::wat >, prodrate< rt::oil > ) ) },
