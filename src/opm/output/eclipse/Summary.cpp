@@ -121,21 +121,22 @@ inline quantity rate( const fn_args& args ) {
 
 template< rt phase, bool injection = true >
 inline quantity crate( const fn_args& args ) {
-    double sum = 0.0;
+    const quantity zero = { 0, rate_unit< phase >() };
+    const auto index = args.active_index;
 
-    for( const auto* sched_well : args.schedule_wells ) {
-        const auto& name = sched_well->name();
-        if( args.wells.wells.count( name ) == 0 ) continue;
-        const auto& well = args.wells.at( name );
-        if( well.completions.count( args.active_index ) == 0 ) continue;
-        const auto v = well.completions.at( args.active_index ).rates.get( phase, 0.0 );
-        if( ( v > 0 ) == injection )
-            sum += v;
-    }
+    if( args.schedule_wells.empty() ) return zero;
 
-    if( !injection ) sum *= -1;
+    const auto& name = args.schedule_wells.front()->name();
+    if( args.wells.wells.count( name ) == 0 ) return zero;
 
-    return { sum, rate_unit< phase >() };
+    const auto& well = args.wells.at( name );
+    if( well.completions.count( index ) == 0 ) return zero;
+
+    const auto v = well.completions.at( index ).rates.get( phase, 0.0 );
+    if( ( v > 0 ) != injection ) return zero;
+
+    if( !injection ) return { -v, rate_unit< phase >() };
+    return { v, rate_unit< phase >() };
 }
 
 template< rt phase > inline quantity prodrate( const fn_args& args )
