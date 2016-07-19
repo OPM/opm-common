@@ -77,11 +77,11 @@ struct quantity {
  * All functions must have the same parameters, so they're gathered in a struct
  * and functions use whatever information they care about.
  *
- * ecl_wells are wells from the deck, provided by opm-parser. active_index is
- * the index of the block in question. wells is simulation data.
+ * schedule_wells are wells from the deck, provided by opm-parser. active_index
+ * is the index of the block in question. wells is simulation data.
  */
 struct fn_args {
-    const std::vector< const Well* >& ecl_wells;
+    const std::vector< const Well* >& schedule_wells;
     double duration;
     size_t timestep;
     int active_index;
@@ -107,8 +107,8 @@ template< rt phase, bool injection = true >
 inline quantity rate( const fn_args& args ) {
     double sum = 0.0;
 
-    for( const auto* ecl_well : args.ecl_wells ) {
-        const auto& name = ecl_well->name();
+    for( const auto* sched_well : args.schedule_wells ) {
+        const auto& name = sched_well->name();
         if( args.wells.wells.count( name ) == 0 ) continue;
         const auto v = args.wells.at( name ).rates.get( phase, 0.0 );
         if( ( v > 0 ) == injection )
@@ -123,8 +123,8 @@ template< rt phase, bool injection = true >
 inline quantity crate( const fn_args& args ) {
     double sum = 0.0;
 
-    for( const auto* ecl_well : args.ecl_wells ) {
-        const auto& name = ecl_well->name();
+    for( const auto* sched_well : args.schedule_wells ) {
+        const auto& name = sched_well->name();
         if( args.wells.wells.count( name ) == 0 ) continue;
         const auto& well = args.wells.at( name );
         if( well.completions.count( args.active_index ) == 0 ) continue;
@@ -149,9 +149,9 @@ template< rt phase > inline quantity injecrate( const fn_args& args )
 
 
 inline quantity bhp( const fn_args& args ) {
-    assert( args.ecl_wells.size() == 1 );
+    assert( args.schedule_wells.size() == 1 );
 
-    const auto p = args.wells.wells.find( args.ecl_wells.front()->name() );
+    const auto p = args.wells.wells.find( args.schedule_wells.front()->name() );
     if( p == args.wells.wells.end() )
         return { 0, measure::pressure };
 
@@ -159,9 +159,9 @@ inline quantity bhp( const fn_args& args ) {
 }
 
 inline quantity thp( const fn_args& args ) {
-    assert( args.ecl_wells.size() == 1 );
+    assert( args.schedule_wells.size() == 1 );
 
-    const auto p = args.wells.wells.find( args.ecl_wells.front()->name() );
+    const auto p = args.wells.wells.find( args.schedule_wells.front()->name() );
     if( p == args.wells.wells.end() )
         return { 0, measure::pressure };
 
@@ -189,8 +189,8 @@ inline quantity production_history( const fn_args& args ) {
     const auto timestep = args.timestep - 1;
 
     double sum = 0.0;
-    for( const Well* ecl_well : args.ecl_wells )
-        sum += ecl_well->production_rate( phase, timestep );
+    for( const Well* sched_well : args.schedule_wells )
+        sum += sched_well->production_rate( phase, timestep );
 
     return { sum, rate_unit< phase >() };
 }
@@ -202,8 +202,8 @@ inline quantity injection_history( const fn_args& args ) {
     const auto timestep = args.timestep - 1;
 
     double sum = 0.0;
-    for( const Well* ecl_well : args.ecl_wells )
-        sum += ecl_well->injection_rate( phase, timestep );
+    for( const Well* sched_well : args.schedule_wells )
+        sum += sched_well->injection_rate( phase, timestep );
 
     return { sum, rate_unit< phase >() };
 }
@@ -521,8 +521,8 @@ void Summary::add_timestep( int report_step,
         const int active_index = smspec_node_get_num( f.first );
         const auto* genkey = smspec_node_get_gen_key1( f.first );
 
-        const auto ecl_wells = find_wells( schedule, f.first, timestep );
-        const auto val = f.second( { ecl_wells, duration, timestep, active_index, wells } );
+        const auto schedule_wells = find_wells( schedule, f.first, timestep );
+        const auto val = f.second( { schedule_wells, duration, timestep, active_index, wells } );
 
         const auto num_val = val.value > 0 ? val.value : 0.0;
         const auto unit_applied_val = es.getUnits().from_si( val.unit, num_val );
