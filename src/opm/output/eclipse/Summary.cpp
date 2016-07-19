@@ -150,21 +150,21 @@ template< rt phase > inline quantity injecrate( const fn_args& args )
 
 
 inline quantity bhp( const fn_args& args ) {
-    assert( args.schedule_wells.size() == 1 );
+    const quantity zero = { 0, measure::pressure };
+    if( args.schedule_wells.empty() ) return zero;
 
     const auto p = args.wells.wells.find( args.schedule_wells.front()->name() );
-    if( p == args.wells.wells.end() )
-        return { 0, measure::pressure };
+    if( p == args.wells.wells.end() ) return zero;
 
     return { p->second.bhp, measure::pressure };
 }
 
 inline quantity thp( const fn_args& args ) {
-    assert( args.schedule_wells.size() == 1 );
+    const quantity zero = { 0, measure::pressure };
+    if( args.schedule_wells.empty() ) return zero;
 
     const auto p = args.wells.wells.find( args.schedule_wells.front()->name() );
-    if( p == args.wells.wells.end() )
-        return { 0, measure::pressure };
+    if( p == args.wells.wells.end() ) return zero;
 
     return { p->second.thp, measure::pressure };
 }
@@ -499,11 +499,17 @@ Summary::Summary( const EclipseState& st,
         const auto* keyword = node.keyword();
         if( funs.find( keyword ) == funs.end() ) continue;
 
-        auto* nodeptr = ecl_sum_add_var( this->ecl_sum.get(), keyword,
-                                         node.wgname(), node.num(), "", 0 );
+        /* get unit strings by calling each function with dummy input */
+        const auto handle = funs.find( keyword )->second;
+        const std::vector< const Well* > dummy;
+        const fn_args no_args{ dummy, 0, 0, 0, {} };
+        const auto val = handle( no_args );
+        const auto* unit = st.getUnits().name( val.unit );
 
-        this->handlers->handlers.emplace_back( nodeptr,
-                                               funs.find( keyword )->second );
+        auto* nodeptr = ecl_sum_add_var( this->ecl_sum.get(), keyword,
+                                         node.wgname(), node.num(), unit, 0 );
+
+        this->handlers->handlers.emplace_back( nodeptr, handle );
     }
 }
 
