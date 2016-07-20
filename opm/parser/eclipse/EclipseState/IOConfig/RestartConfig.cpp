@@ -24,6 +24,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
 
+#include <opm/parser/eclipse/Utility/Functional.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
@@ -49,10 +50,97 @@ namespace Opm {
                 && std::all_of( x.begin() + 1, x.end(), is_digit );
         }
 
+
+        std::set<std::string> notSupported = {"NORST", "SFREQ" , "STREAM"};
+
+        constexpr const char*  integerKeywords[] = {""     ,      //  1 BASIC=?? - ignored
+                                                    "FLOWS",      //  2
+                                                    "FIP",        //  3
+                                                    "POT",        //  4
+                                                    "PBPD",       //  5
+                                                    "",           //  6 FREQ=?? - ignored
+                                                    "PRES",       //  7
+                                                    "VISC",       //  8
+                                                    "DEN",        //  9
+                                                    "DRAIN",      // 10
+                                                    "KRO",        // 11
+                                                    "KRW",        // 12
+                                                    "KRG",        // 13
+                                                    "PORO",       // 14
+                                                    "NOGRAD",     // 15
+                                                    "NORST",      // 16 NORST - not supported
+                                                    "SAVE",       // 17
+                                                    "SFREQ",      // 18 SFREQ=?? - not supported
+                                                    "ALLPROPS",   // 19
+                                                    "ROCKC",      // 20
+                                                    "SGTRAP",     // 21
+                                                    "",           // 22 - Blank - ignored.
+                                                    "RSSAT",      // 23
+                                                    "RVSAT",      // 24
+                                                    "GIMULT",     // 25
+                                                    "SURFBLK",    // 26
+                                                    "PCOW,PCOG",  // 27 - Multiple, split on "," [Special cased]
+                                                    "STREAM",     // 28 STREAM=?? - not supported
+                                                    "RK",         // 29
+                                                    "VELOCITY",   // 30
+                                                    "COMPRESS" }; // 31
+
+
+        static void insertKeyword(std::set<std::string>& keywords, const std::string& keyword) {
+            const auto pos = keyword.find( "=" );
+            if (pos != std::string::npos) {
+                std::string base_keyword( keyword , 0 , pos );
+                insertKeyword( keywords, base_keyword );
+            } else {
+                /*
+                  We have an explicit list of not supported keywords;
+                  those are keywords requesting special output
+                  behavior which is not supported. However - the list
+                  of keywords is long, and not appearing on this list
+                  does *not* imply that the keyword is actually
+                  supported by the simulator.
+                */
+                if (notSupported.find( keyword ) == notSupported.end())
+                    keywords.insert( keyword );
+            }
+        }
+
     }
 
-    RestartConfig::restart RestartConfig::rptrst( const DeckKeyword& kw, size_t step ) {
 
+    RestartSchedule::RestartSchedule( size_t sched_restart) :
+        rptsched_restart_set( true ),
+        rptsched_restart( sched_restart )
+    {
+    }
+
+    RestartSchedule::RestartSchedule( size_t step, size_t b, size_t freq) :
+        timestep( step ),
+        basic( b ),
+        frequency( freq )
+    {
+    }
+
+    bool RestartSchedule::operator!=(const RestartSchedule & rhs) const {
+        return !( *this == rhs );
+    }
+
+    bool RestartSchedule::operator==( const RestartSchedule& rhs ) const {
+        if( this->rptsched_restart_set ) {
+            return rhs.rptsched_restart_set
+                && this->rptsched_restart == rhs.rptsched_restart;
+        }
+
+        return this->timestep == rhs.timestep &&
+            this->basic == rhs.basic &&
+            this->frequency == rhs.frequency;
+    }
+
+
+
+    void RestartConfig::handleRPTRST( const DeckKeyword& kw, size_t step ) {
+        RestartSchedule rs;
+        RestartSchedule unset;
         const auto& items = kw.getStringData();
 
         /* if any of the values are pure integers we assume this is meant to be
@@ -69,52 +157,65 @@ namespace Opm {
         size_t basic = 1;
         size_t freq = 0;
         bool found_basic = false;
+        if (strs) {
+            std::vector<std::string> keywords;
+            for( const auto& mnemonic : items ) {
 
-        for( const auto& mnemonic : items ) {
+                const auto freq_pos = mnemonic.find( "FREQ=" );
+                if( freq_pos != std::string::npos ) {
+                    freq = std::stoul( mnemonic.substr( freq_pos + 5 ) );
+                    continue;
+                }
 
-            const auto freq_pos = mnemonic.find( "FREQ=" );
-            if( freq_pos != std::string::npos ) {
-                freq = std::stoul( mnemonic.substr( freq_pos + 5 ) );
+                const auto basic_pos = mnemonic.find( "BASIC=" );
+                if( basic_pos != std::string::npos ) {
+                    basic = std::stoul( mnemonic.substr( basic_pos + 6 ) );
+                    found_basic = true;
+                    continue;
+                }
+
+                keywords.push_back( std::string( mnemonic ));
+            }
+            addKeywords( step , keywords );
+
+            if( found_basic )
+                rs = RestartSchedule( step, basic, freq );
+        } else {
+            /* If no BASIC mnemonic is found, either it is not present or we might
+             * have an old data set containing integer controls instead of mnemonics.
+             * BASIC integer switch is integer control nr 1, FREQUENCY is integer
+             * control nr 6.
+             */
+
+            const int BASIC_index = 0;
+            const int FREQ_index = 5;
+
+            if( items.size() > BASIC_index )
+                basic = std::stoul( items[ BASIC_index ] );
+
+            // Peculiar special case in eclipse, - not documented
+            // This ignore of basic = 0 for the integer mnemonics case
+            // is done to make flow write restart file at the same intervals
+            // as eclipse for the Norne data set. There might be some rules
+            // we are missing here.
+            if (basic == 0)
+                rs = unset;
+            else {
+                if( items.size() > FREQ_index ) // if frequency is set
+                    freq = std::stoul( items[ FREQ_index ] );
+
+                rs = RestartSchedule( step, basic, freq );
             }
 
-            const auto basic_pos = mnemonic.find( "BASIC=" );
-            if( basic_pos != std::string::npos ) {
-                basic = std::stoul( mnemonic.substr( basic_pos + 6 ) );
-                found_basic = true;
-            }
+            updateKeywords( step , fun::map( []( const std::string& s) { return std::stoi(s); } , items ));
         }
 
-        if( found_basic ) return restart( step, basic, freq );
-
-        /* If no BASIC mnemonic is found, either it is not present or we might
-         * have an old data set containing integer controls instead of mnemonics.
-         * BASIC integer switch is integer control nr 1, FREQUENCY is integer
-         * control nr 6.
-         */
-
-        /* mnemonics, but without basic and freq. Effectively ignored */
-        if( !ints ) return {};
-
-        const int BASIC_index = 0;
-        const int FREQ_index = 5;
-
-        if( items.size() > BASIC_index )
-            basic = std::stoul( items[ BASIC_index ] );
-
-        // Peculiar special case in eclipse, - not documented
-        // This ignore of basic = 0 for the integer mnemonics case
-        // is done to make flow write restart file at the same intervals
-        // as eclipse for the Norne data set. There might be some rules
-        // we are missing here.
-        if( 0 == basic ) return {};
-
-        if( items.size() > FREQ_index ) // if frequency is set
-            freq = std::stoul( items[ FREQ_index ] );
-
-        return restart( step, basic, freq );
+        if (rs != unset)
+            update( step , rs);
     }
 
-    RestartConfig::restart RestartConfig::rptsched( const DeckKeyword& keyword ) {
+
+    RestartSchedule RestartConfig::rptsched( const DeckKeyword& keyword ) {
         size_t step = 0;
         bool restart_found = false;
 
@@ -140,7 +241,7 @@ namespace Opm {
             }
         }
 
-        if( restart_found ) return restart( step );
+        if( restart_found ) return RestartSchedule( step );
 
 
         /* No RESTART or NOTHING found, but it is not an integer list */
@@ -154,19 +255,86 @@ namespace Opm {
 
         if( items.size() <= RESTART_index ) return {};
 
-        return restart( std::stoul( items[ RESTART_index ] ) );
+        return RestartSchedule( std::stoul( items[ RESTART_index ] ) );
     }
 
-    DynamicState< RestartConfig::restart > RestartConfig::rstconf(
-            const SCHEDULESection& schedule,
-            std::shared_ptr< const TimeMap > timemap ) {
+
+    void RestartConfig::update( size_t step, const RestartSchedule& rs) {
+        if (step == 0)
+            this->restart_schedule->updateInitial( rs );
+        else
+            this->restart_schedule->update( step, rs );
+    }
+
+
+
+
+    /*
+      The time related mnemonics BASIC= and FREQ= have been stripped
+      out before calling this method, the other keywords just come
+      verbatim from the deck; in particular we do not split KEY=int
+      keywords - there are some of them.
+    */
+
+    void RestartConfig::addKeywords( size_t step, const std::vector<std::string>& keywords) {
+        if (keywords.size() > 0) {
+            std::set<std::string> kw_set = this->restart_keywords->back();
+            for (const auto& kw : keywords )
+                insertKeyword( kw_set , kw );
+
+            if (step == 0)
+                this->restart_keywords->updateInitial( kw_set );
+            else
+                this->restart_keywords->update( step , kw_set );
+        }
+    }
+
+
+    /*
+      When handling the RPTRST keyword based on integer controls we
+      can actually remove keywords from the write set by passing in a
+      control value of 0. With our implementation it is not possible
+      to remove keywords with the string based menonics.
+    */
+
+    void RestartConfig::updateKeywords( size_t step, const std::vector<int>& integer_controls) {
+        std::set<std::string> keywords = this->restart_keywords->back();
+
+        for (size_t index = 0; index < integer_controls.size(); index++) {
+            if (index == 26) {
+                if (integer_controls[index] > 0) {
+                    insertKeyword( keywords , "PCOW" );
+                    insertKeyword( keywords , "PCOG" );
+                } else {
+                    keywords.erase( "PCOW" );
+                    keywords.erase( "PCOG" );
+                }
+                continue;
+            }
+
+            {
+                const std::string& keyword = integerKeywords[index];
+                if (keyword != "") {
+                    if (integer_controls[index] > 0)
+                        insertKeyword( keywords , keyword );
+                    else
+                        keywords.erase( keyword );
+                }
+            }
+        }
+
+        if (step == 0)
+            this->restart_keywords->updateInitial( keywords );
+        else
+            this->restart_keywords->update( step , keywords );
+    }
+
+
+    void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule) {
 
         size_t current_step = 1;
         bool ignore_RPTSCHED_restart = false;
-        restart unset;
-
-        DynamicState< RestartConfig::restart >
-            restart_config( timemap, restart( 0, 0, 1 ) );
+        RestartSchedule unset;
 
         for( const auto& keyword : schedule ) {
             const auto& name = keyword.name();
@@ -183,34 +351,64 @@ namespace Opm {
 
             if( !( name == "RPTRST" || name == "RPTSCHED" ) ) continue;
 
-            if( timemap->size() <= current_step ) continue;
+            if( this->m_timemap->size() <= current_step ) continue;
 
             const bool is_RPTRST = name == "RPTRST";
 
             if( !is_RPTRST && ignore_RPTSCHED_restart ) continue;
 
-            const auto rs = is_RPTRST
-                          ? rptrst( keyword, current_step - 1 )
-                          : rptsched( keyword );
+            if (is_RPTRST) {
+                handleRPTRST( keyword, current_step );  // Was -1??
+                const auto& rs = this->restart_schedule->back();
+                if (rs.basic > 2)
+                    ignore_RPTSCHED_restart = true;
+            } else {
+                const auto rs = rptsched( keyword );
 
-            if( is_RPTRST ) ignore_RPTSCHED_restart = rs.basic > 2;
+                /* we're using the default state of restart to signal "no
+                 * update". The default state is non-sensical
+                 */
+                if( rs == unset ) continue;
 
-            /* we're using the default state of restart to signal "no
-             * update". The default state is non-sensical
-             */
-            if( rs == unset ) continue;
+                if( 6 == rs.rptsched_restart || 6 == rs.basic )
+                    throw std::runtime_error(
+                                             "OPM does not support the RESTART=6 setting"
+                                             "(write restart file every timestep)"
+                                             );
 
-            if( 6 == rs.rptsched_restart || 6 == rs.basic )
-                throw std::runtime_error(
-                    "OPM does not support the RESTART=6 setting"
-                    "(write restart file every timestep)"
-                );
-
-            restart_config.update( current_step, rs );
+                update( current_step , rs );
+            }
         }
-
-        return restart_config;
     }
+
+    bool RestartSchedule::writeRestartFile( size_t input_timestep , const TimeMap& timemap) const {
+        if (this->rptsched_restart_set && (this->rptsched_restart > 0))
+            return true;
+
+        switch (basic) {
+         //Do not write restart files
+        case 0:  return false;
+
+        //Write restart file every report time
+        case 1: return true;
+
+        //Write restart file every report time
+        case 2: return true;
+
+        //Every n'th report time
+        case 3: return  ((input_timestep % this->frequency) == 0) ? true : false;
+
+        //First reportstep of every year, or if n > 1, n'th years
+        case 4: return timemap.isTimestepInFirstOfMonthsYearsSequence(input_timestep, true , this->timestep, this->frequency);
+
+         //First reportstep of every month, or if n > 1, n'th months
+        case 5: return timemap.isTimestepInFirstOfMonthsYearsSequence(input_timestep, false , this->timestep, this->frequency);
+
+        default: return false;
+        }
+    }
+
+
 
     RestartConfig::RestartConfig( const Deck& deck ) :
         RestartConfig( SCHEDULESection( deck ),
@@ -223,72 +421,38 @@ namespace Opm {
                                   const SOLUTIONSection& solution,
                                   std::shared_ptr< const TimeMap > timemap) :
         m_timemap( timemap ),
-        m_first_restart_step( -1 ),
-        m_restart_output_config( std::make_shared< DynamicState< restart > >(rstconf( schedule, timemap ) ) )
+        m_first_restart_step( -1 )
     {
+        restart_schedule.reset( new DynamicState<RestartSchedule>(timemap , RestartSchedule(0 ,0 ,1)) );
+        restart_keywords.reset( new DynamicState<std::set<std::string>>( timemap, {}));
+
         handleSolutionSection( solution ) ;
+        handleScheduleSection( schedule ) ;
+
         initFirstOutput( );
     }
 
 
+    RestartSchedule RestartConfig::getNode( size_t timestep ) const{
+        return restart_schedule->get(timestep);
+    }
+
+
     bool RestartConfig::getWriteRestartFile(size_t timestep) const {
-        bool write_restart_ts = false;
+        if (0 == timestep)
+            return m_write_initial_RST_file;
 
-        if (0 == timestep) {
-            write_restart_ts = m_write_initial_RST_file;
-        } else if (m_restart_output_config) {
-            restart ts_restart_config = m_restart_output_config->get(timestep);
-
-            //Look at rptsched restart setting
-            if (ts_restart_config.rptsched_restart_set) {
-                if (ts_restart_config.rptsched_restart > 0) {
-                    write_restart_ts = true;
-                }
-            } else { //Look at rptrst basic setting
-                switch (ts_restart_config.basic) {
-                    case 0: //Do not write restart files
-                        write_restart_ts = false;
-                        break;
-                    case 1: //Write restart file every report time
-                        write_restart_ts = true;
-                        break;
-                    case 2: //Write restart file every report time
-                        write_restart_ts = true;
-                        break;
-                    case 3: //Every n'th report time
-                        write_restart_ts = getWriteRestartFileFrequency(timestep, ts_restart_config.timestep, ts_restart_config.frequency);
-                        break;
-                    case 4: //First reportstep of every year, or if n > 1, n'th years
-                        write_restart_ts = getWriteRestartFileFrequency(timestep, ts_restart_config.timestep, ts_restart_config.frequency, true);
-                        break;
-                    case 5: //First reportstep of every month, or if n > 1, n'th months
-                        write_restart_ts = getWriteRestartFileFrequency(timestep, ts_restart_config.timestep, ts_restart_config.frequency, false, true);
-                        break;
-                    default:
-                        // do nothing
-                        break;
-                }
-            }
+        {
+            RestartSchedule ts_restart_config = getNode( timestep );
+            return ts_restart_config.writeRestartFile( timestep , *m_timemap );
         }
-
-        return write_restart_ts;
     }
 
 
-    bool RestartConfig::getWriteRestartFileFrequency(size_t timestep,
-                                                size_t start_timestep,
-                                                size_t frequency,
-                                                bool   years,
-                                                bool   months) const {
-        bool write_restart_file = false;
-        if ((!years && !months) && (timestep >= start_timestep)) {
-            write_restart_file = ((timestep % frequency) == 0) ? true : false;
-        } else {
-              write_restart_file = m_timemap->isTimestepInFirstOfMonthsYearsSequence(timestep, years, start_timestep, frequency);
-
-        }
-        return write_restart_file;
+    const std::set<std::string>& RestartConfig::getRestartKeywords( size_t timestep ) const {
+        return restart_keywords->at( timestep );
     }
+
 
     /*
       Will initialize the internal variable holding the first report
@@ -318,10 +482,7 @@ namespace Opm {
         if (solutionSection.hasKeyword("RPTRST")) {
             const auto& rptrstkeyword        = solutionSection.getKeyword("RPTRST");
 
-            auto rs = rptrst( rptrstkeyword, 0 );
-            if( rs != restart() )
-                m_restart_output_config->updateInitial( rs );
-
+            handleRPTRST( rptrstkeyword, 0 );
             setWriteInitialRestartFile(true); // Guessing on eclipse rules for write of initial RESTART file (at time 0):
                                               // Write of initial restart file is (due to the eclipse reference manual)
                                               // governed by RPTSOL RESTART in solution section,
@@ -345,8 +506,8 @@ namespace Opm {
          */
         size_t basic = interval > 0 ? 3 : 0;
 
-        restart rs( step, basic, interval );
-        m_restart_output_config->globalReset( rs );
+        RestartSchedule rs( step, basic, interval );
+        restart_schedule->globalReset( rs );
 
         setWriteInitialRestartFile( interval > 0 );
     }
@@ -420,6 +581,5 @@ namespace Opm {
     int RestartConfig::getFirstRestartStep() const {
         return m_first_restart_step;
     }
-
 
 }

@@ -161,7 +161,6 @@ namespace Opm {
         const RestartConfig& restartConfig() const;
         void initFirstRFTOutput(const Schedule& schedule);
 
-
         // Proxy methods forwarding directly to corresponding RestartConfig
         bool getWriteRestartFile(size_t timestep) const;
         int  getFirstRestartStep() const;

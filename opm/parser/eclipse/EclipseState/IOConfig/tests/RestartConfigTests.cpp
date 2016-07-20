@@ -31,6 +31,60 @@
 
 using namespace Opm;
 
+
+BOOST_AUTO_TEST_CASE(RPTSCHED_INTEGER) {
+
+    const char *deckData1 =
+                          "RUNSPEC\n"
+                          "DIMENS\n"
+                          " 10 10 10 /\n"
+                          "GRID\n"
+                          "START             -- 0 \n"
+                          "19 JUN 2007 / \n"
+                          "SOLUTION\n"
+                          "RPTRST  -- PRES,DEN,PCOW,PCOG,RK,VELOCITY,COMPRESS\n"
+                          "  6*0 1 0 1 17*0 1 0 3*1 /\n"
+                          "SCHEDULE\n"
+                          "DATES             -- 1\n"
+                          " 10  OKT 2008 / \n"
+                          "/\n"
+                          "RPTSCHED\n"
+                          "RESTART=1\n"
+                          "/\n"
+                          "DATES             -- 2\n"
+                          " 20  JAN 2010 / \n"
+                          "/\n"
+                          "RPTRST  -- ALLPROPS,RK,VELOCITY,COMPRESS\n"
+                          "  18*0 1 8*0 /\n"
+                          "DATES             -- 3\n"
+                          " 20  FEB 2010 / \n"
+                          "/\n"
+                          "RPTSCHED\n"
+                          "RESTART=0\n"
+                          "/\n";
+
+    Parser parser;
+    ParseContext ctx;
+
+    auto deck1 = parser.parseString( deckData1, ctx );
+    RestartConfig rstConfig1( *deck1 );
+
+    BOOST_CHECK(  rstConfig1.getWriteRestartFile( 0 ) );
+    BOOST_CHECK( !rstConfig1.getWriteRestartFile( 1 ) );
+    BOOST_CHECK(  rstConfig1.getWriteRestartFile( 2 ) );
+    BOOST_CHECK(  rstConfig1.getWriteRestartFile( 3 ) );
+
+    // The underlying data structure is a std::set : lexicographically ordered.
+    std::vector<std::string> expected1 = {"COMPRESS","DEN","PCOG","PCOW","PRES","RK","VELOCITY"};
+    const auto& kw_list1 = rstConfig1.getRestartKeywords(0);
+    BOOST_CHECK_EQUAL_COLLECTIONS( expected1.begin() , expected1.end() , kw_list1.begin() , kw_list1.end() );
+
+    std::vector<std::string> expected2 = {"ALLPROPS" , "COMPRESS", "RK", "VELOCITY" };
+    const auto& kw_list2 = rstConfig1.getRestartKeywords(3);
+    BOOST_CHECK_EQUAL_COLLECTIONS( expected2.begin() , expected2.end() , kw_list2.begin() , kw_list2.end() );
+}
+
+
 const std::string& deckStr =  "RUNSPEC\n"
                               "\n"
                               "DIMENS\n"
@@ -192,6 +246,9 @@ BOOST_AUTO_TEST_CASE(RPTRST) {
                           "GRID\n"
                           "START             -- 0 \n"
                           "19 JUN 2007 / \n"
+                          "SOLUTION\n"
+                          "RPTRST\n"
+                          " KRG KRO KRW NORST SFREQ=10/\n"
                           "SCHEDULE\n"
                           "DATES             -- 1\n"
                           " 10  OKT 2008 / \n"
@@ -249,29 +306,41 @@ BOOST_AUTO_TEST_CASE(RPTRST) {
     ParseContext ctx;
 
     auto deck1 = parser.parseString( deckData1, ctx );
-    RestartConfig ioConfig1( *deck1 );
+    RestartConfig rstConfig1( *deck1 );
 
-    BOOST_CHECK( !ioConfig1.getWriteRestartFile( 0 ) );
-    BOOST_CHECK( !ioConfig1.getWriteRestartFile( 1 ) );
-    BOOST_CHECK(  ioConfig1.getWriteRestartFile( 2 ) );
+    // Observe that this is true due to some undocumented guessing that
+    // the initial restart file should be written if a RPTRST keyword is
+    // found in the SOLUTION section, irrespective of the content of that
+    // keyword.
+    BOOST_CHECK(  rstConfig1.getWriteRestartFile( 0 ) );
+
+    BOOST_CHECK( !rstConfig1.getWriteRestartFile( 1 ) );
+    BOOST_CHECK(  rstConfig1.getWriteRestartFile( 2 ) );
+
+    std::vector<std::string> expected = {"KRG","KRO","KRW"};
+    const auto& kw_list = rstConfig1.getRestartKeywords(2);
+    BOOST_CHECK_EQUAL_COLLECTIONS( expected.begin() , expected.end() , kw_list.begin() , kw_list.end() );
 
 
     auto deck2 = parser.parseString( deckData2, ctx );
-    RestartConfig ioConfig2( *deck2 );
+    RestartConfig rstConfig2( *deck2 );
 
-    BOOST_CHECK( !ioConfig2.getWriteRestartFile( 0 ) );
-    BOOST_CHECK( !ioConfig2.getWriteRestartFile( 1 ) );
-    BOOST_CHECK(  ioConfig2.getWriteRestartFile( 2 ) );
-    BOOST_CHECK( !ioConfig2.getWriteRestartFile( 3 ) );
+    BOOST_CHECK( !rstConfig2.getWriteRestartFile( 0 ) );
+    BOOST_CHECK( !rstConfig2.getWriteRestartFile( 1 ) );
+    BOOST_CHECK(  rstConfig2.getWriteRestartFile( 2 ) );
+    BOOST_CHECK( !rstConfig2.getWriteRestartFile( 3 ) );
 
     auto deck3 = parser.parseString( deckData3, ctx );
-    RestartConfig ioConfig3( *deck3 );
+    RestartConfig rstConfig3( *deck3 );
 
-    BOOST_CHECK( !ioConfig3.getWriteRestartFile( 0 ) );
-    BOOST_CHECK( !ioConfig3.getWriteRestartFile( 1 ) );
-    BOOST_CHECK(  ioConfig3.getWriteRestartFile( 2 ) );
-    BOOST_CHECK( !ioConfig3.getWriteRestartFile( 3 ) );
+    BOOST_CHECK( !rstConfig3.getWriteRestartFile( 0 ) );
+    BOOST_CHECK( !rstConfig3.getWriteRestartFile( 1 ) );
+    BOOST_CHECK(  rstConfig3.getWriteRestartFile( 2 ) );
+    BOOST_CHECK( !rstConfig3.getWriteRestartFile( 3 ) );
 }
+
+
+
 
 BOOST_AUTO_TEST_CASE(RPTSCHED) {
 
@@ -312,10 +381,13 @@ BOOST_AUTO_TEST_CASE(RPTSCHED) {
                           " 10  OKT 2008 / \n"
                           "/\n"
                           "RPTSCHED\n"
-                          "RESTART=1\n"
+                          "RESTART=3\n"
                           "/\n"
                           "DATES             -- 2\n"
                           " 20  JAN 2010 / \n"
+                          "/\n"
+                          "RPTSCHED\n"
+                          "RESTART=4\n"
                           "/\n"
                           "DATES             -- 3\n"
                           " 20  FEB 2010 / \n"
@@ -331,6 +403,9 @@ BOOST_AUTO_TEST_CASE(RPTSCHED) {
                           "GRID\n"
                           "START             -- 0 \n"
                           "19 JUN 2007 / \n"
+                          "SOLUTION\n"
+                          "RPTSOL\n"
+                          "  RESTART=4 /\n"
                           "SCHEDULE\n"
                           "DATES             -- 1\n"
                           " 10  OKT 2008 / \n"
@@ -352,31 +427,44 @@ BOOST_AUTO_TEST_CASE(RPTSCHED) {
     ParseContext ctx;
 
     auto deck1 = parser.parseString( deckData1, ctx );
-    RestartConfig ioConfig1( *deck1 );
+    RestartConfig rstConfig1( *deck1 );
 
-    BOOST_CHECK( !ioConfig1.getWriteRestartFile( 0 ) );
-    BOOST_CHECK( !ioConfig1.getWriteRestartFile( 1 ) );
-    BOOST_CHECK(  ioConfig1.getWriteRestartFile( 2 ) );
-    BOOST_CHECK(  ioConfig1.getWriteRestartFile( 3 ) );
+    BOOST_CHECK( !rstConfig1.getWriteRestartFile( 0 ) );
+    BOOST_CHECK( !rstConfig1.getWriteRestartFile( 1 ) );
+    BOOST_CHECK(  rstConfig1.getWriteRestartFile( 2 ) );
+    BOOST_CHECK(  rstConfig1.getWriteRestartFile( 3 ) );
 
 
     auto deck2 = parser.parseString( deckData2, ctx );
-    RestartConfig ioConfig2( *deck2 );
+    RestartConfig rstConfig2( *deck2 );
 
-    BOOST_CHECK( !ioConfig2.getWriteRestartFile( 0 ) );
-    BOOST_CHECK( !ioConfig2.getWriteRestartFile( 1 ) );
-    BOOST_CHECK(  ioConfig2.getWriteRestartFile( 2 ) );
-    BOOST_CHECK(  ioConfig2.getWriteRestartFile( 3 ) );
+    BOOST_CHECK( !rstConfig2.getWriteRestartFile( 0 ) );
+    BOOST_CHECK( !rstConfig2.getWriteRestartFile( 1 ) );
+    BOOST_CHECK(  rstConfig2.getWriteRestartFile( 2 ) );
+    BOOST_CHECK(  rstConfig2.getWriteRestartFile( 3 ) );
+
+    std::vector<std::string> expected1 = {"FLOWS"};
+    const auto& kw_list1 = rstConfig1.getRestartKeywords(1);
+    BOOST_CHECK_EQUAL_COLLECTIONS( expected1.begin() , expected1.end() , kw_list1.begin() , kw_list1.end() );
+
+    std::vector<std::string> expected2 = {"FIP", "FLOWS"};
+    const auto& kw_list2 = rstConfig1.getRestartKeywords(3);
+    BOOST_CHECK_EQUAL_COLLECTIONS( expected2.begin() , expected2.end() , kw_list2.begin() , kw_list2.end() );
 
 
     auto deck3 = parser.parseString( deckData3, ctx );
-    RestartConfig ioConfig3( *deck3 );
+    RestartConfig rstConfig3( *deck3 );
     //Older ECLIPSE 100 data set may use integer controls instead of mnemonics
-    BOOST_CHECK( !ioConfig3.getWriteRestartFile( 0 ) );
-    BOOST_CHECK( !ioConfig3.getWriteRestartFile( 1 ) );
-    BOOST_CHECK(  ioConfig3.getWriteRestartFile( 2 ) );
-    BOOST_CHECK(  ioConfig3.getWriteRestartFile( 3 ) );
+    BOOST_CHECK(  rstConfig3.getWriteRestartFile( 0 ) );
+    BOOST_CHECK( !rstConfig3.getWriteRestartFile( 1 ) );
+    BOOST_CHECK(  rstConfig3.getWriteRestartFile( 2 ) );
+    BOOST_CHECK(  rstConfig3.getWriteRestartFile( 3 ) );
+
+    std::vector<std::string> expected3 = {"FIP", "FLOWS"};
+    const auto& kw_list3 = rstConfig3.getRestartKeywords(0);
+    BOOST_CHECK_EQUAL_COLLECTIONS( expected3.begin() , expected3.end() , kw_list3.begin() , kw_list3.end() );
 }
+
 
 BOOST_AUTO_TEST_CASE(RPTSCHED_and_RPTRST) {
   const char *deckData =
@@ -391,7 +479,7 @@ BOOST_AUTO_TEST_CASE(RPTSCHED_and_RPTRST) {
                         " 10  OKT 2008 / \n"
                         "/\n"
                         "RPTRST\n"
-                        "BASIC=3 FREQ=3\n"
+                        "BASIC=3 FREQ=3 BG BO\n"
                         "/\n"
                         "DATES             -- 2\n"
                         " 20  JAN 2010 / \n"
@@ -408,13 +496,14 @@ BOOST_AUTO_TEST_CASE(RPTSCHED_and_RPTRST) {
     ParseContext ctx;
 
     auto deck = parser.parseString( deckData, ctx );
-    RestartConfig ioConfig( *deck );
+    RestartConfig rstConfig( *deck );
 
-    BOOST_CHECK( !ioConfig.getWriteRestartFile( 0 ) );
-    BOOST_CHECK( !ioConfig.getWriteRestartFile( 1 ) );
-    BOOST_CHECK( !ioConfig.getWriteRestartFile( 2 ) );
-    BOOST_CHECK(  ioConfig.getWriteRestartFile( 3 ) );
+    BOOST_CHECK( !rstConfig.getWriteRestartFile( 0 ) );
+    BOOST_CHECK( !rstConfig.getWriteRestartFile( 1 ) );
+    BOOST_CHECK( !rstConfig.getWriteRestartFile( 2 ) );
+    BOOST_CHECK(  rstConfig.getWriteRestartFile( 3 ) );
 }
+
 
 BOOST_AUTO_TEST_CASE(NO_BASIC) {
     const char* data = "RUNSPEC\n"
@@ -771,7 +860,7 @@ BOOST_AUTO_TEST_CASE(RESTART_BASIC_LEQ_2) {
                         " 26 MAY 1984 /\n"
                         " 26 MAY 1985 /\n"
                         " 27 MAY 1985 /\n"
-                        " 1 JAN 1986 /\n" 
+                        " 1 JAN 1986 /\n"
                        "/\n";
 
     auto deck = Parser().parseString( data, ParseContext() );
