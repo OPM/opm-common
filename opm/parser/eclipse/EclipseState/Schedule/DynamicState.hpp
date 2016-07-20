@@ -68,6 +68,12 @@ namespace Opm {
         }
 
 
+        const T& back() const {
+            if (m_data.size() > 0)
+                return m_data.back();
+            else
+                return m_initialValue;
+        }
 
         const T& at(size_t index) const {
             if (index >= m_timeMap->size())
