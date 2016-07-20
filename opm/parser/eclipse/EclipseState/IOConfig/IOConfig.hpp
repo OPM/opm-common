@@ -22,8 +22,6 @@
 
 #include <boost/date_time/gregorian/gregorian_types.hpp>
 
-#include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
-
 namespace Opm {
 
     template< typename > class DynamicState;
@@ -32,8 +30,6 @@ namespace Opm {
     class DeckKeyword;
     class GRIDSection;
     class RUNSPECSection;
-    class SCHEDULESection;
-    class SOLUTIONSection;
     class TimeMap;
     class Schedule;
 
@@ -158,7 +154,6 @@ namespace Opm {
         std::string fullBasePath( ) const;
 
         bool initOnly() const;
-        const RestartConfig& restartConfig() const;
         void initFirstRFTOutput(const Schedule& schedule);
 
         // Proxy methods forwarding directly to corresponding RestartConfig
@@ -166,6 +161,7 @@ namespace Opm {
         int  getFirstRestartStep() const;
         void overrideRestartWriteInterval(size_t interval);
         void setWriteInitialRestartFile(bool writeInitialRestartFile);
+
     private:
         std::shared_ptr< const TimeMap > m_timemap;
         bool            m_write_INIT_file = false;
@@ -181,13 +177,9 @@ namespace Opm {
         std::string     m_output_dir;
         std::string     m_base_name;
         bool            m_nosim;
-        RestartConfig   m_restart_config;
-
 
         IOConfig( const GRIDSection&,
                   const RUNSPECSection&,
-                  const SOLUTIONSection&,
-                  const SCHEDULESection&,
                   std::shared_ptr< const TimeMap >,
                   bool nosim,
                   const std::string& input_path );

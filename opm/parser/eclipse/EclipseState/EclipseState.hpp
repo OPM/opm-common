@@ -47,6 +47,7 @@ namespace Opm {
     class InitConfig;
     class IOConfig;
     class ParseContext;
+    class RestartConfig;
     class Schedule;
     class Section;
     class SimulationConfig;
@@ -76,6 +77,8 @@ namespace Opm {
         const InitConfig& getInitConfig() const;
         const SimulationConfig& getSimulationConfig() const;
         const SummaryConfig& getSummaryConfig() const;
+        const RestartConfig& getRestartConfig() const;
+        RestartConfig& getRestartConfig();
 
         std::shared_ptr< const EclipseGrid > getInputGrid() const;
         std::shared_ptr< EclipseGrid > getInputGridCopy() const;

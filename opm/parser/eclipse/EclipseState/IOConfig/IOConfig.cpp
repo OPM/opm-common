@@ -59,8 +59,6 @@ namespace Opm {
     IOConfig::IOConfig( const Deck& deck ) :
         IOConfig( GRIDSection( deck ),
                   RUNSPECSection( deck ),
-                  SOLUTIONSection( deck ),
-                  SCHEDULESection( deck ),
                   std::make_shared< const TimeMap >( deck ),
                   deck.hasKeyword("NOSIM"),
                   deck.getDataFile() )
@@ -99,8 +97,6 @@ namespace Opm {
 
     IOConfig::IOConfig( const GRIDSection& grid,
                         const RUNSPECSection& runspec,
-                        const SOLUTIONSection& solution,
-                        const SCHEDULESection& schedule,
                         std::shared_ptr< const TimeMap > timemap,
                         bool nosim,
                         const std::string& input_path ) :
@@ -114,14 +110,8 @@ namespace Opm {
         m_deck_filename( input_path ),
         m_output_dir( outputdir( input_path ) ),
         m_base_name( basename( input_path ) ),
-        m_nosim( nosim  ),
-        m_restart_config( RestartConfig( schedule , solution , timemap))
+        m_nosim( nosim  )
     {}
-
-
-    const RestartConfig& IOConfig::restartConfig() const {
-        return m_restart_config;
-    }
 
 
     bool IOConfig::getWriteEGRIDFile() const {
@@ -255,24 +245,5 @@ namespace Opm {
        remove the ability modify IOConfig objects we should also
        remove these forwarding methods.
     */
-
-
-
-    void IOConfig::overrideRestartWriteInterval(size_t interval) {
-        m_restart_config.overrideRestartWriteInterval(interval);
-    }
-
-
-    bool IOConfig::getWriteRestartFile(size_t timestep) const {
-        return m_restart_config.getWriteRestartFile( timestep );
-    }
-
-    int IOConfig::getFirstRestartStep() const {
-        return m_restart_config.getFirstRestartStep();
-    }
-
-    void IOConfig::setWriteInitialRestartFile(bool writeInitialRestartFile) {
-        m_restart_config.setWriteInitialRestartFile( writeInitialRestartFile );
-    }
 
 } //namespace Opm

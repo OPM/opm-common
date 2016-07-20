@@ -27,6 +27,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
@@ -41,7 +42,8 @@ namespace Opm {
             m_ioConfig(        std::make_shared<IOConfig>(deck)),
             m_initConfig(      deck),
             m_simulationConfig(deck, eclipse3DProperties),
-            m_summaryConfig(   deck, schedule, eclipse3DProperties, parseContext , inputGrid.getNXYZ())
+            m_summaryConfig(   deck, schedule, eclipse3DProperties, parseContext , inputGrid.getNXYZ()),
+            m_restartConfig(   deck )
     {
         m_ioConfig->initFirstRFTOutput(schedule);
     }
@@ -67,9 +69,18 @@ namespace Opm {
         return m_summaryConfig;
     }
 
+    const RestartConfig& EclipseConfig::restart() const {
+        return this->m_restartConfig;
+    }
+
     // [[deprecated]] --- use summary()
     const SummaryConfig& EclipseConfig::getSummaryConfig() const {
         return summary();
+    }
+
+    // [[deprecated]] --- use restart()
+    const RestartConfig& EclipseConfig::getRestartConfig() const {
+        return this->restart();
     }
 
     IOConfigConstPtr EclipseConfig::getIOConfigConst() const {

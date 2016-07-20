@@ -261,9 +261,9 @@ namespace Opm {
 
     void RestartConfig::update( size_t step, const RestartSchedule& rs) {
         if (step == 0)
-            this->restart_schedule->updateInitial( rs );
+            this->restart_schedule.updateInitial( rs );
         else
-            this->restart_schedule->update( step, rs );
+            this->restart_schedule.update( step, rs );
     }
 
 
@@ -278,14 +278,14 @@ namespace Opm {
 
     void RestartConfig::addKeywords( size_t step, const std::vector<std::string>& keywords) {
         if (keywords.size() > 0) {
-            std::set<std::string> kw_set = this->restart_keywords->back();
+            std::set<std::string> kw_set = this->restart_keywords.back();
             for (const auto& kw : keywords )
                 insertKeyword( kw_set , kw );
 
             if (step == 0)
-                this->restart_keywords->updateInitial( kw_set );
+                this->restart_keywords.updateInitial( kw_set );
             else
-                this->restart_keywords->update( step , kw_set );
+                this->restart_keywords.update( step , kw_set );
         }
     }
 
@@ -298,7 +298,7 @@ namespace Opm {
     */
 
     void RestartConfig::updateKeywords( size_t step, const std::vector<int>& integer_controls) {
-        std::set<std::string> keywords = this->restart_keywords->back();
+        std::set<std::string> keywords = this->restart_keywords.back();
 
         for (size_t index = 0; index < integer_controls.size(); index++) {
             if (index == 26) {
@@ -324,9 +324,9 @@ namespace Opm {
         }
 
         if (step == 0)
-            this->restart_keywords->updateInitial( keywords );
+            this->restart_keywords.updateInitial( keywords );
         else
-            this->restart_keywords->update( step , keywords );
+            this->restart_keywords.update( step , keywords );
     }
 
 
@@ -359,7 +359,7 @@ namespace Opm {
 
             if (is_RPTRST) {
                 handleRPTRST( keyword, current_step );  // Was -1??
-                const auto& rs = this->restart_schedule->back();
+                const auto& rs = this->restart_schedule.back();
                 if (rs.basic > 2)
                     ignore_RPTSCHED_restart = true;
             } else {
@@ -421,20 +421,19 @@ namespace Opm {
                                   const SOLUTIONSection& solution,
                                   std::shared_ptr< const TimeMap > timemap) :
         m_timemap( timemap ),
-        m_first_restart_step( -1 )
+        m_first_restart_step( -1 ),
+        restart_schedule( timemap, { 0, 0, 1 } ),
+        restart_keywords( timemap, {} )
     {
-        restart_schedule.reset( new DynamicState<RestartSchedule>(timemap , RestartSchedule(0 ,0 ,1)) );
-        restart_keywords.reset( new DynamicState<std::set<std::string>>( timemap, {}));
-
-        handleSolutionSection( solution ) ;
-        handleScheduleSection( schedule ) ;
+        handleSolutionSection( solution );
+        handleScheduleSection( schedule );
 
         initFirstOutput( );
     }
 
 
     RestartSchedule RestartConfig::getNode( size_t timestep ) const{
-        return restart_schedule->get(timestep);
+        return restart_schedule.get(timestep);
     }
 
 
@@ -450,7 +449,7 @@ namespace Opm {
 
 
     const std::set<std::string>& RestartConfig::getRestartKeywords( size_t timestep ) const {
-        return restart_keywords->at( timestep );
+        return restart_keywords.at( timestep );
     }
 
 
@@ -507,7 +506,7 @@ namespace Opm {
         size_t basic = interval > 0 ? 3 : 0;
 
         RestartSchedule rs( step, basic, interval );
-        restart_schedule->globalReset( rs );
+        restart_schedule.globalReset( rs );
 
         setWriteInitialRestartFile( interval > 0 );
     }

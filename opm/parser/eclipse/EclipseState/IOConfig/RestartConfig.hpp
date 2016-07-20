@@ -22,6 +22,8 @@
 
 #include <vector>
 #include <set>
+#include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
+#include <boost/date_time.hpp>
 
 /*
   The RestartConfig class internalizes information of when (at which
@@ -283,30 +285,30 @@ namespace Opm {
 
     class RestartSchedule {
         /*
-          The content of this struct is logically divided in two; either the
-          restart behaviour is governed by { timestep , basic , frequency }, or
-          alternatively by { rptshec_restart_set , rptsched_restart }.
+           The content of this struct is logically divided in two; either the
+           restart behaviour is governed by { timestep , basic , frequency }, or
+           alternatively by { rptshec_restart_set , rptsched_restart }.
 
-          The former triplet is mainly governed by the RPTRST keyword and the
-          latter pair by the RPTSCHED keyword.
-        */
-    public:
+           The former triplet is mainly governed by the RPTRST keyword and the
+           latter pair by the RPTSCHED keyword.
+           */
+        public:
 
-        RestartSchedule() = default;
-        RestartSchedule( size_t sched_restart);
-        RestartSchedule( size_t step, size_t b, size_t freq);
-        bool writeRestartFile( size_t timestep , const TimeMap& timemap) const;
-        bool operator!=(const RestartSchedule& rhs) const;
-        bool operator==( const RestartSchedule& rhs ) const;
+            RestartSchedule() = default;
+            RestartSchedule( size_t sched_restart);
+            RestartSchedule( size_t step, size_t b, size_t freq);
+            bool writeRestartFile( size_t timestep , const TimeMap& timemap) const;
+            bool operator!=(const RestartSchedule& rhs) const;
+            bool operator==( const RestartSchedule& rhs ) const;
 
 
 
         //private:
-        size_t timestep = 0;
-        size_t basic = 0;
-        size_t frequency = 0;
-        bool   rptsched_restart_set = false;
-        size_t rptsched_restart = 0;
+            size_t timestep = 0;
+            size_t basic = 0;
+            size_t frequency = 0;
+            bool   rptsched_restart_set = false;
+            size_t rptsched_restart = 0;
     };
     //    }
 
@@ -314,7 +316,7 @@ namespace Opm {
 
     public:
 
-        RestartConfig() = default;
+        RestartConfig();
         explicit RestartConfig( const Deck& );
         RestartConfig( const SCHEDULESection& schedule,
                        const SOLUTIONSection& solution,
@@ -328,6 +330,11 @@ namespace Opm {
         void overrideRestartWriteInterval(size_t interval);
         void handleSolutionSection(const SOLUTIONSection& solutionSection);
         void setWriteInitialRestartFile(bool writeInitialRestartFile);
+
+        boost::gregorian::date getTimestepDate(size_t reportStep) const {
+            auto time = (*m_timemap)[reportStep];
+            return time.date();
+        }
 
         RestartSchedule getNode( size_t timestep ) const;
         static std::string getRestartFileName(const std::string& restart_base, int report_step, bool unified, bool fmt_file);
@@ -360,8 +367,8 @@ namespace Opm {
         void handleRPTRST( const DeckKeyword&, size_t );
         static RestartSchedule rptsched( const DeckKeyword& );
 
-        std::shared_ptr<DynamicState<RestartSchedule>> restart_schedule;
-        std::shared_ptr<DynamicState<std::set<std::string>>> restart_keywords;
+        DynamicState< RestartSchedule > restart_schedule;
+        DynamicState< std::set< std::string > > restart_keywords;
     };
 } //namespace Opm
 

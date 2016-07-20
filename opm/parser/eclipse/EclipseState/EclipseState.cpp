@@ -111,6 +111,14 @@ namespace Opm {
         return m_eclipseConfig.getSummaryConfig();
     }
 
+    const RestartConfig& EclipseState::getRestartConfig() const {
+        return m_eclipseConfig.getRestartConfig();
+    }
+
+    RestartConfig& EclipseState::getRestartConfig() {
+        return const_cast< RestartConfig& >( m_eclipseConfig.getRestartConfig() );
+    }
+
     const Eclipse3DProperties& EclipseState::get3DProperties() const {
         return m_eclipseProperties;
     }
