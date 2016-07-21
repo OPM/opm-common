@@ -41,3 +41,20 @@ int main (void) {
   )
 include (UseDynamicBoost)
 #debug_find_vars ("opm-output")
+
+
+if(OPM_OUTPUT_FOUND)
+  get_filename_component(opm-output_PREFIX_DIR ${opm-output_LIBRARY} PATH)
+  find_program(SUMMARY_REGRESSION_TEST_COMMAND summaryRegressionTest
+               PATHS ${opm-output_PREFIX_DIR}/../bin
+                     ${opm-output_PREFIX_DIR}/../../bin)
+  find_program(RESTART_REGRESSION_TEST_COMMAND restartRegressionTest
+               PATHS ${opm-output_PREFIX_DIR}/../bin
+                     ${opm-output_PREFIX_DIR}/../../bin)
+
+  find_program(INIT_REGRESSION_TEST_COMMAND initRegressionTest
+               PATHS ${opm-output_PREFIX_DIR}/../bin
+                     ${opm-output_PREFIX_DIR}/../../bin)
+
+endif()
+
