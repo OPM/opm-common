@@ -169,36 +169,6 @@ BOOST_AUTO_TEST_CASE( RFT_TIME) {
     BOOST_CHECK_EQUAL( ioConfig.getFirstRFTStep() , 2 );
 }
 
-BOOST_AUTO_TEST_CASE(RPTRST_mixed_mnemonics_int_list) {
-    const char* data = "RUNSPEC\n"
-                       "DIMENS\n"
-                       " 10 10 10 /\n"
-                       "GRID\n"
-                       "START             -- 0 \n"
-                       "19 JUN 2007 / \n"
-                       "SCHEDULE\n"
-                       "DATES             -- 1\n"
-                       " 10  OKT 2008 / \n"
-                       "/\n"
-                       "RPTRST\n"
-                       "BASIC=3 0 1 2\n"
-                       "/\n"
-                       "DATES             -- 2\n"
-                       " 20  JAN 2010 / \n"
-                       "/\n"
-                       "DATES             -- 3\n"
-                       " 20  FEB 2010 / \n"
-                       "/\n"
-                       "RPTSCHED\n"
-                       "BASIC=1\n"
-                       "/\n";
-
-    auto deck = Parser().parseString( data, ParseContext() );
-    BOOST_CHECK_THROW( IOConfig c( *deck ), std::runtime_error );
-}
-
-
-
 BOOST_AUTO_TEST_CASE(DefaultProperties) {
     const char* data =  "RUNSPEC\n"
                         "DIMENS\n"

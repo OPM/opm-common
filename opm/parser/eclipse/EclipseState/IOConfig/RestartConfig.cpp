@@ -17,12 +17,11 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
+#include <algorithm>
 #include <iostream>
 #include <iterator>
 
 #include <boost/lexical_cast.hpp>
-#include <boost/filesystem.hpp>
 
 #include <opm/parser/eclipse/Utility/Functional.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
@@ -40,73 +39,177 @@
 
 namespace Opm {
 
-    namespace {
+namespace {
 
-        inline bool is_int( const std::string& x ) {
-            auto is_digit = []( char c ) { return std::isdigit( c ); };
+inline bool is_int( const std::string& x ) {
+    auto is_digit = []( char c ) { return std::isdigit( c ); };
 
-            return !x.empty()
-                && ( x.front() == '-' || is_digit( x.front() ) )
-                && std::all_of( x.begin() + 1, x.end(), is_digit );
-        }
+    return !x.empty()
+        && ( x.front() == '-' || is_digit( x.front() ) )
+        && std::all_of( x.begin() + 1, x.end(), is_digit );
+}
 
+constexpr const char* RSTIntegerKeywords[] = { "BASIC",      //  1
+                                               "FLOWS",      //  2
+                                               "FIP",        //  3
+                                               "POT",        //  4
+                                               "PBPD",       //  5
+                                               "FREQ",       //  6
+                                               "PRES",       //  7
+                                               "VISC",       //  8
+                                               "DEN",        //  9
+                                               "DRAIN",      // 10
+                                               "KRO",        // 11
+                                               "KRW",        // 12
+                                               "KRG",        // 13
+                                               "PORO",       // 14
+                                               "NOGRAD",     // 15
+                                               "NORST",      // 16 NORST - not supported
+                                               "SAVE",       // 17
+                                               "SFREQ",      // 18 SFREQ=?? - not supported
+                                               "ALLPROPS",   // 19
+                                               "ROCKC",      // 20
+                                               "SGTRAP",     // 21
+                                               "",           // 22 - Blank - ignored.
+                                               "RSSAT",      // 23
+                                               "RVSAT",      // 24
+                                               "GIMULT",     // 25
+                                               "SURFBLK",    // 26
+                                               "",           // 27 - PCOW, PCOG, special cased
+                                               "STREAM",     // 28 STREAM=?? - not supported
+                                               "RK",         // 29
+                                               "VELOCITY",   // 30
+                                               "COMPRESS" }; // 31
 
-        std::set<std::string> notSupported = {"NORST", "SFREQ" , "STREAM"};
+constexpr const char* SCHEDIntegerKeywords[] = { "PRES",    // 1
+                                                 "SOIL",    // 2
+                                                 "SWAT",    // 3
+                                                 "SGAS",    // 4
+                                                 "RS",      // 5
+                                                 "RV",      // 6
+                                                 "RESTART", // 7
+                                                 "FIP",     // 8
+                                                 "WELLS",   // 9
+                                                 "VFPPROD", // 10
+                                                 "SUMMARY", // 11
+                                                 "CPU",     // 12
+                                                 "AQUCT",   // 13
+                                                 "WELSPECS",// 14
+                                                 "NEWTON",  // 15
+                                                 "POILD",   // 16
+                                                 "PWAT",    // 17
+                                                 "PWATD",   // 18
+                                                 "PGAS",    // 19
+                                                 "PGASD",   // 20
+                                                 "FIPVE",   // 21
+                                                 "WOC",     // 22
+                                                 "GOC",     // 23
+                                                 "WOCDIFF", // 24
+                                                 "GOCDIFF", // 25
+                                                 "WOCGOC",  // 26
+                                                 "ODGAS",   // 27
+                                                 "ODWAT",   // 28
+                                                 "GDOWAT",  // 29
+                                                 "WDOGAS",  // 30
+                                                 "OILAPI",  // 31
+                                                 "FIPITR",  // 32
+                                                 "TBLK",    // 33
+                                                 "PBLK",    // 34
+                                                 "SALT",    // 35
+                                                 "PLYADS",  // 36
+                                                 "RK",      // 37
+                                                 "FIPSALT", // 38
+                                                 "TUNING",  // 39
+                                                 "GI",      // 40
+                                                 "ROCKC",   // 41
+                                                 "SPENWAT", // 42
+                                                 "FIPSOL",  // 43
+                                                 "SURFBLK", // 44
+                                                 "SURFADS", // 45
+                                                 "FIPSURF", // 46
+                                                 "TRADS",   // 47
+                                                 "VOIL",    // 48
+                                                 "VWAT",    // 49
+                                                 "VGAS",    // 50
+                                                 "DENO",    // 51
+                                                 "DENW",    // 52
+                                                 "DENG",    // 53
+                                                 "GASCONC", // 54
+                                                 "PB",      // 55
+                                                 "PD",      // 56
+                                                 "KRW",     // 57
+                                                 "KRO",     // 58
+                                                 "KRG",     // 59
+                                                 "MULT",    // 60
+                                                 "UNKNOWN", // 61 61 and 62 are not listed in the manual
+                                                 "UNKNOWN", // 62
+                                                 "FOAM",    // 63
+                                                 "FIPFOAM", // 64
+                                                 "TEMP",    // 65
+                                                 "FIPTEMP", // 66
+                                                 "POTC",    // 67
+                                                 "FOAMADS", // 68
+                                                 "FOAMDCY", // 69
+                                                 "FOAMMOB", // 70
+                                                 "RECOV",   // 71
+                                                 "FLOOIL",  // 72
+                                                 "FLOWAT",  // 73
+                                                 "FLOGAS",  // 74
+                                                 "SGTRAP",  // 75
+                                                 "FIPRESV", // 76
+                                                 "FLOSOL",  // 77
+                                                 "KRN",     // 78
+                                                 "GRAD",    // 79
+                                               };
 
-        constexpr const char*  integerKeywords[] = {""     ,      //  1 BASIC=?? - ignored
-                                                    "FLOWS",      //  2
-                                                    "FIP",        //  3
-                                                    "POT",        //  4
-                                                    "PBPD",       //  5
-                                                    "",           //  6 FREQ=?? - ignored
-                                                    "PRES",       //  7
-                                                    "VISC",       //  8
-                                                    "DEN",        //  9
-                                                    "DRAIN",      // 10
-                                                    "KRO",        // 11
-                                                    "KRW",        // 12
-                                                    "KRG",        // 13
-                                                    "PORO",       // 14
-                                                    "NOGRAD",     // 15
-                                                    "NORST",      // 16 NORST - not supported
-                                                    "SAVE",       // 17
-                                                    "SFREQ",      // 18 SFREQ=?? - not supported
-                                                    "ALLPROPS",   // 19
-                                                    "ROCKC",      // 20
-                                                    "SGTRAP",     // 21
-                                                    "",           // 22 - Blank - ignored.
-                                                    "RSSAT",      // 23
-                                                    "RVSAT",      // 24
-                                                    "GIMULT",     // 25
-                                                    "SURFBLK",    // 26
-                                                    "PCOW,PCOG",  // 27 - Multiple, split on "," [Special cased]
-                                                    "STREAM",     // 28 STREAM=?? - not supported
-                                                    "RK",         // 29
-                                                    "VELOCITY",   // 30
-                                                    "COMPRESS" }; // 31
+bool is_RPTRST_mnemonic( const std::string& kw ) {
+    /* all eclipse 100 keywords we want to not simply ignore. The list is
+     * sorted, so we can use binary_search for log(n) lookup. It is important
+     * that the list is sorted, but these are all the keywords listed in the
+     * manual and unlikely to change at all
+     */
+    static constexpr const char* valid[] = {
+        "ACIP",     "ACIS",     "ALLPROPS", "BASIC",  "BG",       "BO",
+        "BW",       "CELLINDX", "COMPRESS", "CONV",   "DEN",      "DRAIN",
+        "DRAINAGE", "DYNREG",   "FIP",      "FLORES", "FLOWS",    "FREQ",
+        "GIMULT",   "HYDH",     "HYDHFW",   "KRG",    "KRO",      "KRW",
+        "NOGRAD",   "NORST",    "NPMREB",   "PBPD",   "PCOG",     "PCOW",
+        "PERMREDN", "POIS",     "PORO",     "PORV",   "POT",      "PRES",
+        "RFIP",     "RK",       "ROCKC",    "RPORV",  "RSSAT",    "RVSAT",
+        "SAVE",     "SDENO",    "SFIP",     "SFREQ",  "SGTRAP",   "SIGM_MOD",
+        "STREAM",   "SURFBLK",  "TRAS",     "VELGAS", "VELOCITY", "VELOIL",
+        "VELWAT",   "VISC",
+    };
 
+    return std::binary_search( std::begin( valid ), std::end( valid ), kw );
+}
 
-        static void insertKeyword(std::set<std::string>& keywords, const std::string& keyword) {
-            const auto pos = keyword.find( "=" );
-            if (pos != std::string::npos) {
-                std::string base_keyword( keyword , 0 , pos );
-                insertKeyword( keywords, base_keyword );
-            } else {
-                /*
-                  We have an explicit list of not supported keywords;
-                  those are keywords requesting special output
-                  behavior which is not supported. However - the list
-                  of keywords is long, and not appearing on this list
-                  does *not* imply that the keyword is actually
-                  supported by the simulator.
-                */
-                if (notSupported.find( keyword ) == notSupported.end())
-                    keywords.insert( keyword );
-            }
-        }
+bool is_RPTSCHED_mnemonic( const std::string& kw ) {
+    static constexpr const char* valid[] = {
+        "ALKALINE", "ANIONS",  "AQUCT",    "AQUFET",   "AQUFETP",  "BFORG",
+        "CATIONS",  "CPU",     "DENG",     "DENO",     "DENW",     "ESALPLY",
+        "ESALSUR",  "FFORG",   "FIP",      "FIPFOAM",  "FIPHEAT",  "FIPRESV",
+        "FIPSALT",  "FIPSOL",  "FIPSURF",  "FIPTEMP",  "FIPTR",    "FIPVE",
+        "FLOGAS",   "FLOOIL",  "FLOSOL",   "FLOWAT",   "FMISC",    "FOAM",
+        "FOAMADS",  "FOAMCNM", "FOAMDCY",  "FOAMMOB",  "GASCONC",  "GASSATC",
+        "GDOWAT",   "GI",      "GOC",      "GOCDIFF",  "GRAD",     "KRG",
+        "KRN",      "KRO",     "KRW",      "MULT",     "NEWTON",   "NOTHING",
+        "NPMREB",   "ODGAS",   "ODWAT",    "OILAPI",   "PB",       "PBLK",
+        "PBU",      "PD",      "PDEW",     "PGAS",     "PGASD",    "PLYADS",
+        "POIL",     "POILD",   "POLYMER",  "POTC",     "POTG",     "POTO",
+        "POTW",     "PRES",    "PRESSURE", "PWAT",     "PWATD",    "RECOV",
+        "RESTART",  "ROCKC",   "RS",       "RSSAT",    "RV",       "RVSAT",
+        "SALT",     "SGAS",    "SGTRAP",   "SIGM_MOD", "SOIL",     "SSOL",
+        "SUMMARY",  "SURFADS", "SURFBLK",  "SWAT",     "TBLK",     "TEMP",
+        "TRACER",   "TRADS",   "TRDCY",    "TUNING",   "VFPPROD",  "VGAS",
+        "VOIL",     "VWAT",    "WDOGAS",   "WELLS",    "WELSPECL", "WELSPECS",
+        "WOC",      "WOCDIFF", "WOCGOC",
+    };
 
-    }
+    return std::binary_search( std::begin( valid ), std::end( valid ), kw );
+}
 
+}
 
     RestartSchedule::RestartSchedule( size_t sched_restart) :
         rptsched_restart_set( true ),
@@ -117,8 +220,16 @@ namespace Opm {
     RestartSchedule::RestartSchedule( size_t step, size_t b, size_t freq) :
         timestep( step ),
         basic( b ),
-        frequency( freq )
+        frequency( basic > 2 ? std::max( freq, size_t{ 1 } ) : freq )
     {
+        /*
+         * if basic > 2 and freq is default (zero) we're looking at an error
+         * (every Nth step where N = 0). Instead of throwing we default this to
+         * 1 so that basic > 2 and freq unset essentially is
+         * write-every-timestep. It could've just as easily been an exception,
+         * but to be more robust handling poorly written decks we instead set a
+         * reasonable default and carry on.
+         */
     }
 
     bool RestartSchedule::operator!=(const RestartSchedule & rhs) const {
@@ -136,250 +247,175 @@ namespace Opm {
             this->frequency == rhs.frequency;
     }
 
+inline std::map< std::string, int >
+RPTRST_integer( const std::vector< int >& ints ) {
+    const size_t PCO_index = 26;
+    const size_t BASIC_index = 0;
 
+    std::map< std::string, int > mnemonics;
+    const size_t size = std::min( ints.size(), sizeof( RSTIntegerKeywords ) );
 
-    void RestartConfig::handleRPTRST( const DeckKeyword& kw, size_t step ) {
-        RestartSchedule rs;
-        RestartSchedule unset;
-        const auto& items = kw.getStringData();
+    /* fun with special cases. Eclipse seems to ignore the BASIC=0,
+     * interpreting it as sort-of "don't modify". Handle this by *not*
+     * adding/updating the integer list sourced BASIC mnemonic, should it be
+     * zero. I'm not sure if this applies to other mnemonics, but the eclipse
+     * manual indicates that any zero here should disable the output.
+     *
+     * See https://github.com/OPM/opm-parser/issues/886 for reference
+     */
+    if( size > 0 && ints[ BASIC_index ] != 0 )
+        mnemonics[ RSTIntegerKeywords[ BASIC_index ] ] = ints[ BASIC_index ];
 
-        /* if any of the values are pure integers we assume this is meant to be
-         * the slash-terminated list of integers way of configuring. If
-         * integers and non-integers are mixed, this is an error.
-         */
-        const auto ints = std::any_of( items.begin(), items.end(), is_int );
-        const auto strs = !std::all_of( items.begin(), items.end(), is_int );
+    for( size_t i = 1; i < std::min( size, PCO_index ); ++i )
+        mnemonics[ RSTIntegerKeywords[ i ] ] = ints[ i ];
 
-        if( ints && strs ) throw std::runtime_error(
-                "RPTRST does not support mixed mnemonics and integer list."
+    for( size_t i = PCO_index + 1; i < size; ++i )
+        mnemonics[ RSTIntegerKeywords[ i ] ] = ints[ i ];
+
+    /* item 27 (index 26) sets both PCOW and PCOG, so we special case it */
+    if( ints.size() >= PCO_index ) {
+        mnemonics[ "PCOW" ] = ints[ PCO_index ];
+        mnemonics[ "PCOG" ] = ints[ PCO_index ];
+    }
+
+    return std::move( mnemonics );
+}
+
+inline std::map< std::string, int >
+RPTSCHED_integer( const std::vector< int >& ints ) {
+    const size_t size = std::min( ints.size(), sizeof( SCHEDIntegerKeywords ) );
+
+    std::map< std::string, int > mnemonics;
+    for( size_t i = 0; i < size; ++i )
+        mnemonics[ SCHEDIntegerKeywords[ i ] ] = ints[ i ];
+
+    return std::move( mnemonics );
+}
+
+template< typename F, typename G >
+inline std::map< std::string, int > RPT( const DeckKeyword& keyword,
+                                         F is_mnemonic,
+                                         G integer_mnemonic ) {
+
+    const auto& items = keyword.getStringData();
+    const auto ints = std::any_of( items.begin(), items.end(), is_int );
+    const auto strs = !std::all_of( items.begin(), items.end(), is_int );
+
+    /* if any of the values are pure integers we assume this is meant to be
+     * the slash-terminated list of integers way of configuring. If
+     * integers and non-integers are mixed, this is an error.
+     */
+    if( ints && strs ) throw std::runtime_error(
+            "RPTRST does not support mixed mnemonics and integer list."
             );
 
-        size_t basic = 1;
-        size_t freq = 0;
-        bool found_basic = false;
-        if (strs) {
-            std::vector<std::string> keywords;
-            for( const auto& mnemonic : items ) {
+    auto stoi = []( const std::string& str ) { return std::stoi( str ); };
+    if( ints )
+        return integer_mnemonic( fun::map( stoi, items ) );
 
-                const auto freq_pos = mnemonic.find( "FREQ=" );
-                if( freq_pos != std::string::npos ) {
-                    freq = std::stoul( mnemonic.substr( freq_pos + 5 ) );
-                    continue;
-                }
+    std::map< std::string, int > mnemonics;
 
-                const auto basic_pos = mnemonic.find( "BASIC=" );
-                if( basic_pos != std::string::npos ) {
-                    basic = std::stoul( mnemonic.substr( basic_pos + 6 ) );
-                    found_basic = true;
-                    continue;
-                }
+    for( const auto& mnemonic : items ) {
+        const auto pos = mnemonic.find( '=' );
 
-                keywords.push_back( std::string( mnemonic ));
-            }
-            addKeywords( step , keywords );
+        std::string base = mnemonic.substr( 0, pos );
+        if( !is_mnemonic( base ) ) continue;
 
-            if( found_basic )
-                rs = RestartSchedule( step, basic, freq );
-        } else {
-            /* If no BASIC mnemonic is found, either it is not present or we might
-             * have an old data set containing integer controls instead of mnemonics.
-             * BASIC integer switch is integer control nr 1, FREQUENCY is integer
-             * control nr 6.
-             */
+        const int val = pos != std::string::npos
+                      ? std::stoi( mnemonic.substr( pos + 1 ) )
+                      : 1;
 
-            const int BASIC_index = 0;
-            const int FREQ_index = 5;
+        mnemonics.emplace( base, val );
+    }
 
-            if( items.size() > BASIC_index )
-                basic = std::stoul( items[ BASIC_index ] );
+    return std::move( mnemonics );
+}
 
-            // Peculiar special case in eclipse, - not documented
-            // This ignore of basic = 0 for the integer mnemonics case
-            // is done to make flow write restart file at the same intervals
-            // as eclipse for the Norne data set. There might be some rules
-            // we are missing here.
-            if (basic == 0)
-                rs = unset;
-            else {
-                if( items.size() > FREQ_index ) // if frequency is set
-                    freq = std::stoul( items[ FREQ_index ] );
+inline std::pair< std::map< std::string, int >, RestartSchedule >
+RPTRST( const DeckKeyword& keyword, RestartSchedule prev, size_t step ) {
+    auto mnemonics = RPT( keyword, is_RPTRST_mnemonic, RPTRST_integer );
 
-                rs = RestartSchedule( step, basic, freq );
-            }
+    const bool has_freq  = mnemonics.find( "FREQ" )  != mnemonics.end();
+    const bool has_basic = mnemonics.find( "BASIC" ) != mnemonics.end();
 
-            updateKeywords( step , fun::map( []( const std::string& s) { return std::stoi(s); } , items ));
+    if( !has_freq && !has_basic ) return { std::move( mnemonics ), {} };
+
+    const auto basic = has_basic ? mnemonics.at( "BASIC" ) : prev.basic;
+    const auto freq  = has_freq  ? mnemonics.at( "FREQ"  ) : prev.frequency;
+
+    return { std::move( mnemonics ), { step, basic, freq } };
+}
+
+inline std::pair< std::map< std::string, int >, RestartSchedule >
+RPTSCHED( const DeckKeyword& keyword ) {
+    auto mnemonics = RPT( keyword, is_RPTSCHED_mnemonic, RPTSCHED_integer );
+
+    if( mnemonics.count( "NOTHING" ) )
+        return { std::move( mnemonics ), { 0 } };
+
+    if( mnemonics.count( "RESTART" ) )
+        return { std::move( mnemonics ), size_t( mnemonics.at( "RESTART" ) ) };
+
+    return { std::move( mnemonics ), {} };
+}
+
+
+void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule) {
+    size_t current_step = 1;
+    RestartSchedule unset;
+
+    auto ignore_RPTSCHED_RESTART = []( decltype( restart_schedule )& x ) {
+        return x.back().basic > 2;
+    };
+
+    for( const auto& keyword : schedule ) {
+        const auto& name = keyword.name();
+
+        if( name == "DATES" ) {
+            current_step += keyword.size();
+            continue;
         }
 
-        if (rs != unset)
-            update( step , rs);
-    }
-
-
-    RestartSchedule RestartConfig::rptsched( const DeckKeyword& keyword ) {
-        size_t step = 0;
-        bool restart_found = false;
-
-        const auto& items = keyword.getStringData();
-        const auto ints = std::any_of( items.begin(), items.end(), is_int );
-        const auto strs = !std::all_of( items.begin(), items.end(), is_int );
-
-        if( ints && strs ) throw std::runtime_error(
-                "RPTSCHED does not support mixed mnemonics and integer list."
-            );
-
-        for( const auto& mnemonic : items  ) {
-            const auto restart_pos = mnemonic.find( "RESTART=" );
-            if( restart_pos != std::string::npos ) {
-                step = std::stoul( mnemonic.substr( restart_pos + 8 ) );
-                restart_found = true;
-            }
-
-            const auto nothing_pos = mnemonic.find( "NOTHING" );
-            if( nothing_pos != std::string::npos ) {
-                step = 0;
-                restart_found = true;
-            }
+        if( name == "TSTEP" ) {
+            current_step += keyword.getRecord( 0 ).getItem( 0 ).size();
+            continue;
         }
 
-        if( restart_found ) return RestartSchedule( step );
+        if( !( name == "RPTRST" || name == "RPTSCHED" ) ) continue;
+        if( this->m_timemap->size() <= current_step ) continue;
 
+        const bool is_RPTRST = name == "RPTRST";
+        const auto& prev_sched = this->restart_schedule.back();
 
-        /* No RESTART or NOTHING found, but it is not an integer list */
-        if( strs ) return {};
+        auto config = is_RPTRST
+                      ? RPTRST( keyword, prev_sched, current_step )
+                      : RPTSCHED( keyword );
 
-        /* We might have an old data set containing integer controls instead of
-         * mnemonics. Restart integer switch is integer control nr 7
-         */
+        /* add the missing entries from the previous step */
+        auto& mnemonics = config.first;
+        const auto& prev_mnemonics = this->restart_keywords.back();
+        mnemonics.insert( prev_mnemonics.begin(), prev_mnemonics.end() );
 
-        const int RESTART_index = 6;
+        if( mnemonics.find( "NOTHING" ) != mnemonics.end() )
+            mnemonics.clear();
 
-        if( items.size() <= RESTART_index ) return {};
+        this->restart_keywords.update( current_step, mnemonics );
 
-        return RestartSchedule( std::stoul( items[ RESTART_index ] ) );
+        const bool ignore_RESTART =
+            !is_RPTRST && ignore_RPTSCHED_RESTART( this->restart_schedule );
+
+        const auto& rs = config.second;
+        if( rs == unset || ignore_RESTART ) continue;
+
+        if( 6 == rs.rptsched_restart || 6 == rs.basic )
+            throw std::runtime_error(
+                    "OPM does not support the RESTART=6 setting "
+                    "(write restart file every timestep)"
+                );
+
+        this->restart_schedule.update( current_step, rs );
     }
-
-
-    void RestartConfig::update( size_t step, const RestartSchedule& rs) {
-        if (step == 0)
-            this->restart_schedule.updateInitial( rs );
-        else
-            this->restart_schedule.update( step, rs );
-    }
-
-
-
-
-    /*
-      The time related mnemonics BASIC= and FREQ= have been stripped
-      out before calling this method, the other keywords just come
-      verbatim from the deck; in particular we do not split KEY=int
-      keywords - there are some of them.
-    */
-
-    void RestartConfig::addKeywords( size_t step, const std::vector<std::string>& keywords) {
-        if (keywords.size() > 0) {
-            std::set<std::string> kw_set = this->restart_keywords.back();
-            for (const auto& kw : keywords )
-                insertKeyword( kw_set , kw );
-
-            if (step == 0)
-                this->restart_keywords.updateInitial( kw_set );
-            else
-                this->restart_keywords.update( step , kw_set );
-        }
-    }
-
-
-    /*
-      When handling the RPTRST keyword based on integer controls we
-      can actually remove keywords from the write set by passing in a
-      control value of 0. With our implementation it is not possible
-      to remove keywords with the string based menonics.
-    */
-
-    void RestartConfig::updateKeywords( size_t step, const std::vector<int>& integer_controls) {
-        std::set<std::string> keywords = this->restart_keywords.back();
-
-        for (size_t index = 0; index < integer_controls.size(); index++) {
-            if (index == 26) {
-                if (integer_controls[index] > 0) {
-                    insertKeyword( keywords , "PCOW" );
-                    insertKeyword( keywords , "PCOG" );
-                } else {
-                    keywords.erase( "PCOW" );
-                    keywords.erase( "PCOG" );
-                }
-                continue;
-            }
-
-            {
-                const std::string& keyword = integerKeywords[index];
-                if (keyword != "") {
-                    if (integer_controls[index] > 0)
-                        insertKeyword( keywords , keyword );
-                    else
-                        keywords.erase( keyword );
-                }
-            }
-        }
-
-        if (step == 0)
-            this->restart_keywords.updateInitial( keywords );
-        else
-            this->restart_keywords.update( step , keywords );
-    }
-
-
-    void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule) {
-
-        size_t current_step = 1;
-        bool ignore_RPTSCHED_restart = false;
-        RestartSchedule unset;
-
-        for( const auto& keyword : schedule ) {
-            const auto& name = keyword.name();
-
-            if( name == "DATES" ) {
-                current_step += keyword.size();
-                continue;
-            }
-
-            if( name == "TSTEP" ) {
-                current_step += keyword.getRecord( 0 ).getItem( 0 ).size();
-                continue;
-            }
-
-            if( !( name == "RPTRST" || name == "RPTSCHED" ) ) continue;
-
-            if( this->m_timemap->size() <= current_step ) continue;
-
-            const bool is_RPTRST = name == "RPTRST";
-
-            if( !is_RPTRST && ignore_RPTSCHED_restart ) continue;
-
-            if (is_RPTRST) {
-                handleRPTRST( keyword, current_step );  // Was -1??
-                const auto& rs = this->restart_schedule.back();
-                if (rs.basic > 2)
-                    ignore_RPTSCHED_restart = true;
-            } else {
-                const auto rs = rptsched( keyword );
-
-                /* we're using the default state of restart to signal "no
-                 * update". The default state is non-sensical
-                 */
-                if( rs == unset ) continue;
-
-                if( 6 == rs.rptsched_restart || 6 == rs.basic )
-                    throw std::runtime_error(
-                                             "OPM does not support the RESTART=6 setting"
-                                             "(write restart file every timestep)"
-                                             );
-
-                update( current_step , rs );
-            }
-        }
-    }
+}
 
     bool RestartSchedule::writeRestartFile( size_t input_timestep , const TimeMap& timemap) const {
         if (this->rptsched_restart_set && (this->rptsched_restart > 0))
@@ -448,7 +484,7 @@ namespace Opm {
     }
 
 
-    const std::set<std::string>& RestartConfig::getRestartKeywords( size_t timestep ) const {
+    const std::map< std::string, int >& RestartConfig::getRestartKeywords( size_t timestep ) const {
         return restart_keywords.at( timestep );
     }
 
@@ -481,7 +517,9 @@ namespace Opm {
         if (solutionSection.hasKeyword("RPTRST")) {
             const auto& rptrstkeyword        = solutionSection.getKeyword("RPTRST");
 
-            handleRPTRST( rptrstkeyword, 0 );
+            const auto rptrst = RPTRST( rptrstkeyword, {}, 0 );
+            this->restart_keywords.updateInitial( rptrst.first );
+            this->restart_schedule.updateInitial( rptrst.second );
             setWriteInitialRestartFile(true); // Guessing on eclipse rules for write of initial RESTART file (at time 0):
                                               // Write of initial restart file is (due to the eclipse reference manual)
                                               // governed by RPTSOL RESTART in solution section,
@@ -525,7 +563,6 @@ namespace Opm {
         bool handle_RPTSOL_RESTART = false;
 
         const auto& item = record.getItem(0);
-
 
         for (size_t index = 0; index < item.size(); ++index) {
             const std::string& mnemonic = item.get< std::string >(index);

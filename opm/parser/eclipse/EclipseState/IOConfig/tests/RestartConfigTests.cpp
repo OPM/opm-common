@@ -28,6 +28,11 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
+#include <opm/parser/eclipse/Utility/Functional.hpp>
+
+inline std::string fst( const std::pair< std::string, int >& p ) {
+    return p.first;
+}
 
 using namespace Opm;
 
@@ -72,16 +77,24 @@ BOOST_AUTO_TEST_CASE(RPTSCHED_INTEGER) {
     BOOST_CHECK(  rstConfig1.getWriteRestartFile( 0 ) );
     BOOST_CHECK( !rstConfig1.getWriteRestartFile( 1 ) );
     BOOST_CHECK(  rstConfig1.getWriteRestartFile( 2 ) );
-    BOOST_CHECK(  rstConfig1.getWriteRestartFile( 3 ) );
+    BOOST_CHECK(  !rstConfig1.getWriteRestartFile( 3 ) );
 
-    // The underlying data structure is a std::set : lexicographically ordered.
-    std::vector<std::string> expected1 = {"COMPRESS","DEN","PCOG","PCOW","PRES","RK","VELOCITY"};
-    const auto& kw_list1 = rstConfig1.getRestartKeywords(0);
-    BOOST_CHECK_EQUAL_COLLECTIONS( expected1.begin() , expected1.end() , kw_list1.begin() , kw_list1.end() );
+    std::vector< std::string > kw_list1;
+    for( const auto& pair : rstConfig1.getRestartKeywords( 0 ) )
+        if( pair.second != 0 ) kw_list1.push_back( pair.first );
 
-    std::vector<std::string> expected2 = {"ALLPROPS" , "COMPRESS", "RK", "VELOCITY" };
-    const auto& kw_list2 = rstConfig1.getRestartKeywords(3);
-    BOOST_CHECK_EQUAL_COLLECTIONS( expected2.begin() , expected2.end() , kw_list2.begin() , kw_list2.end() );
+    const auto expected1 = {"COMPRESS","DEN","PCOG","PCOW","PRES","RK","VELOCITY"};
+    BOOST_CHECK_EQUAL_COLLECTIONS( expected1.begin(), expected1.end(),
+                                   kw_list1.begin(), kw_list1.end() );
+
+
+    std::vector< std::string > kw_list2;
+    for( const auto& pair : rstConfig1.getRestartKeywords( 3 ) )
+        if( pair.second != 0 ) kw_list2.push_back( pair.first );
+
+    const auto expected2 = { "ALLPROPS", "COMPRESS", "RESTART", "RK", "VELOCITY" };
+    BOOST_CHECK_EQUAL_COLLECTIONS( expected2.begin(), expected2.end(),
+                                   kw_list2.begin(), kw_list2.end() );
 }
 
 
@@ -272,7 +285,7 @@ BOOST_AUTO_TEST_CASE(RPTRST) {
                           " 10  OKT 2008 / \n"
                           "/\n"
                           "RPTRST\n"
-                          "BASIC=3 FREQ=2 RUBBISH=5\n"
+                          "BASIC=3 FREQ=2 FLOWS RUBBISH=5\n"
                           "/\n"
                           "DATES             -- 2\n"
                           " 20  JAN 2010 / \n"
@@ -313,17 +326,23 @@ BOOST_AUTO_TEST_CASE(RPTRST) {
     // found in the SOLUTION section, irrespective of the content of that
     // keyword.
     BOOST_CHECK(  rstConfig1.getWriteRestartFile( 0 ) );
-
     BOOST_CHECK( !rstConfig1.getWriteRestartFile( 1 ) );
     BOOST_CHECK(  rstConfig1.getWriteRestartFile( 2 ) );
 
-    std::vector<std::string> expected = {"KRG","KRO","KRW"};
-    const auto& kw_list = rstConfig1.getRestartKeywords(2);
-    BOOST_CHECK_EQUAL_COLLECTIONS( expected.begin() , expected.end() , kw_list.begin() , kw_list.end() );
+    std::vector<std::string> expected = { "BASIC", "KRG", "KRO", "KRW", "NORST", "SFREQ" };
+    const auto kw_list = fun::map( fst, rstConfig1.getRestartKeywords(2) );
+
+    BOOST_CHECK_EQUAL_COLLECTIONS( expected.begin() ,expected.end(),
+                                   kw_list.begin() , kw_list.end() );
 
 
     auto deck2 = parser.parseString( deckData2, ctx );
     RestartConfig rstConfig2( *deck2 );
+
+    const auto expected2 = { "BASIC", "FLOWS", "FREQ" };
+    const auto kw_list2 = fun::map( fst, rstConfig2.getRestartKeywords( 2 ) );
+    BOOST_CHECK_EQUAL_COLLECTIONS( expected2.begin(), expected2.end(),
+                                   kw_list2.begin(), kw_list2.end() );
 
     BOOST_CHECK( !rstConfig2.getWriteRestartFile( 0 ) );
     BOOST_CHECK( !rstConfig2.getWriteRestartFile( 1 ) );
@@ -381,7 +400,7 @@ BOOST_AUTO_TEST_CASE(RPTSCHED) {
                           " 10  OKT 2008 / \n"
                           "/\n"
                           "RPTSCHED\n"
-                          "RESTART=3\n"
+                          "RESTART=3 FIP\n"
                           "/\n"
                           "DATES             -- 2\n"
                           " 20  JAN 2010 / \n"
@@ -443,13 +462,10 @@ BOOST_AUTO_TEST_CASE(RPTSCHED) {
     BOOST_CHECK(  rstConfig2.getWriteRestartFile( 2 ) );
     BOOST_CHECK(  rstConfig2.getWriteRestartFile( 3 ) );
 
-    std::vector<std::string> expected1 = {"FLOWS"};
-    const auto& kw_list1 = rstConfig1.getRestartKeywords(1);
-    BOOST_CHECK_EQUAL_COLLECTIONS( expected1.begin() , expected1.end() , kw_list1.begin() , kw_list1.end() );
-
-    std::vector<std::string> expected2 = {"FIP", "FLOWS"};
-    const auto& kw_list2 = rstConfig1.getRestartKeywords(3);
-    BOOST_CHECK_EQUAL_COLLECTIONS( expected2.begin() , expected2.end() , kw_list2.begin() , kw_list2.end() );
+    const auto expected2 = { "FIP", "RESTART" };
+    const auto kw_list2 = fun::map( fst, rstConfig2.getRestartKeywords( 2 ) );
+    BOOST_CHECK_EQUAL_COLLECTIONS( expected2.begin(), expected2.end(),
+                                   kw_list2.begin(), kw_list2.end() );
 
 
     auto deck3 = parser.parseString( deckData3, ctx );
@@ -460,8 +476,8 @@ BOOST_AUTO_TEST_CASE(RPTSCHED) {
     BOOST_CHECK(  rstConfig3.getWriteRestartFile( 2 ) );
     BOOST_CHECK(  rstConfig3.getWriteRestartFile( 3 ) );
 
-    std::vector<std::string> expected3 = {"FIP", "FLOWS"};
-    const auto& kw_list3 = rstConfig3.getRestartKeywords(0);
+    std::vector<std::string> expected3 = { "BASIC", "FREQ" };
+    const auto kw_list3 = fun::map( fst, rstConfig3.getRestartKeywords(2) );
     BOOST_CHECK_EQUAL_COLLECTIONS( expected3.begin() , expected3.end() , kw_list3.begin() , kw_list3.end() );
 }
 

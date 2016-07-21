@@ -325,7 +325,7 @@ namespace Opm {
 
         int  getFirstRestartStep() const;
         bool getWriteRestartFile(size_t timestep) const;
-        const std::set<std::string>& getRestartKeywords( size_t timestep ) const;
+        const std::map< std::string, int >& getRestartKeywords( size_t timestep ) const;
 
         void overrideRestartWriteInterval(size_t interval);
         void handleSolutionSection(const SOLUTIONSection& solutionSection);
@@ -364,11 +364,10 @@ namespace Opm {
         void update( size_t step, const RestartSchedule& rs);
         void addKeywords( size_t step, const std::vector<std::string>& keywords);
         void updateKeywords( size_t step, const std::vector<int>& integer_controls);
-        void handleRPTRST( const DeckKeyword&, size_t );
         static RestartSchedule rptsched( const DeckKeyword& );
 
         DynamicState< RestartSchedule > restart_schedule;
-        DynamicState< std::set< std::string > > restart_keywords;
+        DynamicState< std::map< std::string, int > > restart_keywords;
     };
 } //namespace Opm
 
