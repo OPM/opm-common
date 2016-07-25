@@ -55,6 +55,9 @@ if(OPM_OUTPUT_FOUND)
   find_program(INIT_REGRESSION_TEST_COMMAND initRegressionTest
                PATHS ${opm-output_PREFIX_DIR}/../bin
                      ${opm-output_PREFIX_DIR}/../../bin)
+  find_program(RFT_REGRESSION_TEST_COMMAND rftRegressionTest
+               PATHS ${opm-output_PREFIX_DIR}/../bin
+                     ${opm-output_PREFIX_DIR}/../../bin)
 
 endif()
 
