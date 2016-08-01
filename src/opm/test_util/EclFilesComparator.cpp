@@ -23,6 +23,8 @@
 #include <algorithm>
 #include <ert/ecl/ecl_file.h>
 #include <ert/ecl/ecl_grid.h>
+#include <cmath>
+#include <numeric>
 
 bool ECLFilesComparator::keywordValidForComparing(const std::string& keyword) const {
     auto it = std::find(keywords1.begin(), keywords1.end(), keyword);

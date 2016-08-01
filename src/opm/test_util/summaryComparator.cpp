@@ -22,6 +22,8 @@
 #include <ert/util/int_vector.h>
 #include <ert/util/bool_vector.h>
 #include <opm/common/ErrorMacros.hpp>
+#include <cmath>
+#include <numeric>
 
 SummaryComparator::SummaryComparator(const char* basename1, const char* basename2, double absoluteTolerance, double relativeTolerance){
     ecl_sum1 = ecl_sum_fread_alloc_case(basename1, ":");
