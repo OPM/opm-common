@@ -54,14 +54,6 @@ namespace Opm {
 
             return dir;
         }
-
-        inline bool is_int( const std::string& x ) {
-            auto is_digit = []( char c ) { return std::isdigit( c ); };
-
-            return !x.empty()
-                && ( x.front() == '-' || is_digit( x.front() ) )
-                && std::all_of( x.begin() + 1, x.end(), is_digit );
-        }
     }
 
 

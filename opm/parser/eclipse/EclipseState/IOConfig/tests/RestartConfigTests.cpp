@@ -155,13 +155,6 @@ const std::string deckStr_RFT = "RUNSPEC\n"
 
 
 
-static DeckPtr createDeck(const std::string& input) {
-    Opm::Parser parser;
-    return parser.parseString(input, Opm::ParseContext());
-}
-
-
-
 BOOST_AUTO_TEST_CASE(RPTRST_mixed_mnemonics_int_list) {
     const char* data = "RUNSPEC\n"
                        "DIMENS\n"
