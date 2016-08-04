@@ -100,9 +100,8 @@ namespace Opm {
         return m_keywordName;
     }
 
-    void RawRecord::push_front(std::string tok ) {
-        this->expanded_items.push_back( tok );
-        this->m_recordItems.emplace_front( this->expanded_items.back() );
+    void RawRecord::prepend( size_t count, string_view tok ) {
+        this->m_recordItems.insert( this->m_recordItems.begin(), count, tok );
     }
 
     void RawRecord::dump() const {
