@@ -28,7 +28,6 @@ namespace Opm {
     namespace RawConsts {
         const char slash = '/';
         const char quote = '\'';
-        const std::string separators = "\t ";
         const std::string include = "INCLUDE";
         const std::string end = "END";
         const std::string endinclude = "ENDINC";
