@@ -147,21 +147,24 @@ inline bool getline( string_view& input, string_view& line ) {
 /*
  * Read the input file and remove everything that isn't interesting data,
  * including stripping comments, removing leading/trailing whitespaces and
- * everything after (terminating) slashes
+ * everything after (terminating) slashes. Manually copying into the string for
+ * performance.
  */
 inline std::string clean( const std::string& str ) {
     std::string dst;
-    dst.reserve( str.size() );
+    dst.resize( str.size() );
 
     string_view input( str ), line;
+    auto dsti = dst.begin();
     while( getline( input, line ) ) {
         line = trim( strip_slash( strip_comments( line ) ) );
 
-        //if( line.begin() == line.end() ) continue;
-
-        dst.append( line.begin(), line.end() );
-        dst.push_back( '\n' );
+        std::copy( line.begin(), line.end(), dsti );
+        dsti += std::distance( line.begin(), line.end() );
+        *dsti++ = '\n';
     }
+
+    dst.resize( std::distance( dst.begin(), dsti ) );
 
     struct f {
         bool inside_quotes = false;
