@@ -141,11 +141,7 @@ namespace Opm {
 
     template< typename T >
     T GridProperty< T >::iget( size_t index ) const {
-        if (index < m_data.size()) {
-            return m_data[index];
-        } else {
-            throw std::invalid_argument("Index out of range \n");
-        }
+        return this->m_data.at( index );
     }
 
     template< typename T >
@@ -156,10 +152,7 @@ namespace Opm {
 
     template< typename T >
     void GridProperty< T >::iset(size_t index, T value) {
-        if (index < m_data.size())
-            m_data[index] = value;
-        else
-            throw std::invalid_argument("Index out of range \n");
+        this->m_data.at( index ) = value;
     }
 
     template< typename T >

@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE(GetProperty) {
     for (size_t i=0; i < satNUM.getCartesianSize(); i++)
         BOOST_CHECK_EQUAL( 2 , satNUM.iget(i) );
 
-    BOOST_CHECK_THROW( satNUM.iget(100000) , std::invalid_argument);
+    BOOST_CHECK_THROW( satNUM.iget(100000) , std::out_of_range );
 }
 
 BOOST_AUTO_TEST_CASE(GetTransMult) {
