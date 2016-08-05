@@ -68,7 +68,7 @@ namespace Opm {
 
         const auto& cmodeItem = record.getItem("CMODE");
         if (!cmodeItem.defaultApplied(0)) {
-            const auto cmode = WellProducer::ControlModeFromString( cmodeItem.get< std::string >(0) );
+            const auto cmode = WellProducer::ControlModeFromString( cmodeItem.getTrimmedString( 0 ) );
 
             if (p.hasProductionControl( cmode ))
                 p.controlMode = cmode;
@@ -114,7 +114,7 @@ namespace Opm {
         {
             const auto& cmodeItem = record.getItem("CMODE");
             if (cmodeItem.hasValue(0)) {
-                const WellProducer::ControlModeEnum cmode = WellProducer::ControlModeFromString( cmodeItem.get< std::string >(0) );
+                const WellProducer::ControlModeEnum cmode = WellProducer::ControlModeFromString( cmodeItem.getTrimmedString(0) );
 
                 if (p.hasProductionControl( cmode ))
                     p.controlMode = cmode;

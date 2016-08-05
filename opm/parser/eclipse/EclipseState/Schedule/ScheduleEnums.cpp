@@ -20,8 +20,6 @@
 #include <string>
 #include <stdexcept>
 
-#include <boost/algorithm/string.hpp>
-
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 
 namespace Opm {
@@ -51,11 +49,8 @@ namespace Opm {
         }
 
         DirectionEnum
-        DirectionEnumFromString(const std::string& stringValue)
+        DirectionEnumFromString(const std::string& s )
         {
-            std::string s(stringValue);
-            boost::algorithm::trim(s);
-
             DirectionEnum direction;
 
             if      (s == "X") { direction = DirectionEnum::X; }
@@ -84,9 +79,7 @@ namespace Opm {
         }
 
 
-        StateEnum StateEnumFromString( const std::string& origStringValue ) {
-            std::string stringValue(origStringValue);
-            boost::algorithm::trim(stringValue);
+        StateEnum StateEnumFromString( const std::string& stringValue ) {
             if (stringValue == "OPEN")
                 return OPEN;
             else if (stringValue == "SHUT")
@@ -114,9 +107,7 @@ namespace Opm {
 
         }
 
-        CompletionOrderEnum CompletionOrderEnumFromString(const std::string& comporderStringValue) {
-            std::string stringValue(comporderStringValue);
-            boost::algorithm::trim(stringValue);
+        CompletionOrderEnum CompletionOrderEnumFromString(const std::string& stringValue ) {
             if (stringValue == "DEPTH")
                 return DEPTH;
             else if (stringValue == "INPUT")
@@ -153,10 +144,7 @@ namespace Opm {
         }
 
 
-        ControlEnum ControlEnumFromString( const std::string& origStringValue ) {
-            std::string stringValue(origStringValue);
-            boost::algorithm::trim(stringValue);
-
+        ControlEnum ControlEnumFromString( const std::string& stringValue ) {
             if (stringValue == "NONE")
                 return NONE;
             else if (stringValue == "RATE")
@@ -248,9 +236,7 @@ namespace Opm {
         }
 
 
-        ActionEnum ActionEnumFromString( const std::string& origStringValue ) {
-            std::string stringValue(origStringValue);
-            boost::algorithm::trim(stringValue);
+        ActionEnum ActionEnumFromString( const std::string& stringValue ) {
 
             if (stringValue == "NONE")
                 return NONE;
@@ -286,9 +272,7 @@ namespace Opm {
             }
         }
 
-        PhaseEnum PhaseEnumFromString( const std::string& origStringValue ) {
-            std::string stringValue(origStringValue);
-            boost::algorithm::trim(stringValue);
+        PhaseEnum PhaseEnumFromString( const std::string& stringValue ) {
 
             if (stringValue == "OIL")
                 return OIL;
@@ -332,10 +316,7 @@ namespace Opm {
             }
         }
 
-        ControlModeEnum ControlModeFromString( const std::string& origStringValue ) {
-            std::string stringValue(origStringValue);
-            boost::algorithm::trim(stringValue);
-
+        ControlModeEnum ControlModeFromString( const std::string& stringValue ) {
             if (stringValue == "ORAT")
                 return ORAT;
             else if (stringValue == "WRAT")
@@ -377,10 +358,7 @@ namespace Opm {
             }
         }
 
-        TypeEnum TypeFromString( const std::string& origStringValue ) {
-            std::string stringValue(origStringValue);
-            boost::algorithm::trim(stringValue);
-
+        TypeEnum TypeFromString( const std::string& stringValue ) {
             if (stringValue == "OIL")
                 return OIL;
             else if (stringValue == "WATER")
@@ -414,10 +392,7 @@ namespace Opm {
             }
         }
 
-        ControlModeEnum ControlModeFromString( const std::string& origStringValue ) {
-            std::string stringValue(origStringValue);
-            boost::algorithm::trim(stringValue);
-
+        ControlModeEnum ControlModeFromString( const std::string& stringValue ) {
             if (stringValue == "RATE")
                 return RATE;
             else if (stringValue == "RESV")
@@ -453,10 +428,7 @@ namespace Opm {
         }
 
 
-        StatusEnum StatusFromString(const std::string& origStringValue) {
-            std::string stringValue(origStringValue);
-            boost::algorithm::trim(stringValue);
-
+        StatusEnum StatusFromString(const std::string& stringValue) {
             if (stringValue == "OPEN")
                 return OPEN;
             else if (stringValue == "SHUT")
@@ -500,9 +472,7 @@ namespace Opm {
             }
         }
 
-        GuideRatePhaseEnum GuideRatePhaseEnumFromString( const std::string& origStringValue ) {
-            std::string stringValue(origStringValue);
-            boost::algorithm::trim(stringValue);
+        GuideRatePhaseEnum GuideRatePhaseEnumFromString( const std::string& stringValue ) {
 
             if (stringValue == "OIL")
                 return OIL;
@@ -547,9 +517,7 @@ namespace Opm {
             }
         }
 
-        RFTEnum RFTEnumFromString(const std::string &origStringValue) {
-            std::string stringValue(origStringValue);
-            boost::algorithm::trim(stringValue);
+        RFTEnum RFTEnumFromString(const std::string& stringValue) {
 
             if (stringValue == "YES")
                 return YES;
@@ -582,10 +550,7 @@ namespace Opm {
             }
         }
 
-        PLTEnum PLTEnumFromString( const std::string& origStringValue){
-            std::string stringValue(origStringValue);
-            boost::algorithm::trim(stringValue);
-
+        PLTEnum PLTEnumFromString( const std::string& stringValue ){
             if (stringValue == "YES")
                 return YES;
             else if (stringValue == "REPT")
@@ -612,17 +577,13 @@ namespace Opm {
             }
         }
 
-        LengthDepthEnum LengthDepthEnumFromString(const std::string& stringValue) {
-
-            std::string trimmedString(stringValue);
-            boost::algorithm::trim(trimmedString);
-
-            if (trimmedString == "INC") {
+        LengthDepthEnum LengthDepthEnumFromString(const std::string& string ) {
+            if (string == "INC") {
                 return INC;
-            } else if (trimmedString == "ABS") {
+            } else if (string == "ABS") {
                 return ABS;
             } else {
-                throw std::invalid_argument("Unknown enum string: " + trimmedString + " for LengthDepthEnum");
+                throw std::invalid_argument("Unknown enum string: " + string + " for LengthDepthEnum");
             }
         }
 
@@ -639,19 +600,16 @@ namespace Opm {
             }
         }
 
-        CompPressureDropEnum CompPressureDropEnumFromString(const std::string& stringValue) {
+        CompPressureDropEnum CompPressureDropEnumFromString( const std::string& string ) {
 
-            std::string trimmedString(stringValue);
-            boost::algorithm::trim(trimmedString);
-
-            if (trimmedString == "HFA") {
+            if (string == "HFA") {
                 return HFA;
-            } else if (trimmedString == "HF-") {
+            } else if (string == "HF-") {
                 return HF_;
-            } else if (trimmedString == "H--") {
+            } else if (string == "H--") {
                 return H__;
             } else {
-                throw std::invalid_argument("Unknown enum string: " + trimmedString + " for CompPressureDropEnum");
+                throw std::invalid_argument("Unknown enum string: " + string + " for CompPressureDropEnum");
             }
         }
 
@@ -666,17 +624,14 @@ namespace Opm {
             }
         }
 
-        MultiPhaseModelEnum MultiPhaseModelEnumFromString(const std::string& stringValue) {
+        MultiPhaseModelEnum MultiPhaseModelEnumFromString(const std::string& string ) {
 
-            std::string trimmedString(stringValue);
-            boost::algorithm::trim(trimmedString);
-
-            if ((trimmedString == "HO") || (trimmedString == "H0")) {
+            if ((string == "HO") || (string == "H0")) {
                 return HO;
-            } else if (trimmedString == "DF") {
+            } else if (string == "DF") {
                 return DF;
             } else {
-                throw std::invalid_argument("Unknown enum string: " + trimmedString + " for MultiPhaseModelEnum");
+                throw std::invalid_argument("Unknown enum string: " + string + " for MultiPhaseModelEnum");
             }
 
         }
@@ -707,26 +662,24 @@ namespace Opm {
             }
         }
 
-        WorkoverEnum WorkoverEnumFromString(const std::string& stringValue) {
-            std::string trimmedString(stringValue);
-            boost::algorithm::trim(trimmedString);
+        WorkoverEnum WorkoverEnumFromString( const std::string& string ) {
 
-            if (trimmedString == "NONE") {
+            if (string == "NONE") {
                 return NONE;
-            } else if (trimmedString == "CON") {
+            } else if (string == "CON") {
                 return CON;
-            } else if (trimmedString == "+CON") {
+            } else if (string == "+CON") {
                 return CONP;
-            } else if (trimmedString == "WELL") {
+            } else if (string == "WELL") {
                 return WELL;
-            } else if (trimmedString == "PLUG") {
+            } else if (string == "PLUG") {
                 return PLUG;
-            } else if (trimmedString == "LAST") {
+            } else if (string == "LAST") {
                 return LAST;
-            } else if (trimmedString == "RED") {
+            } else if (string == "RED") {
                 return RED;
             } else {
-                throw std::invalid_argument("Unknown enum string: " + trimmedString + " for WorkoverEnum");
+                throw std::invalid_argument("Unknown enum string: " + string + " for WorkoverEnum");
             }
         }
 
@@ -741,16 +694,13 @@ namespace Opm {
             }
         }
 
-        QuantityLimitEnum QuantityLimitEnumFromString(const std::string& stringValue) {
-            std::string trimmedString(stringValue);
-            boost::algorithm::trim(trimmedString);
-
-            if (trimmedString == "RATE") {
+        QuantityLimitEnum QuantityLimitEnumFromString(const std::string& string ) {
+            if (string == "RATE") {
                 return RATE;
-            } else if (trimmedString == "POTN") {
+            } else if (string == "POTN") {
                 return POTN;
             } else {
-                throw std::invalid_argument("Unknown enum string: " + trimmedString + " for QuantityLimitEnum");
+                throw std::invalid_argument("Unknown enum string: " + string + " for QuantityLimitEnum");
             }
         }
 
