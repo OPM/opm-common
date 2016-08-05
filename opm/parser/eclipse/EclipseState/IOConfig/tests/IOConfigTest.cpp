@@ -162,7 +162,7 @@ static DeckPtr createDeck(const std::string& input) {
 
 BOOST_AUTO_TEST_CASE( RFT_TIME) {
     DeckPtr deck = createDeck(deckStr_RFT);
-    EclipseState state( deck , Opm::ParseContext() );
+    EclipseState state( *deck , Opm::ParseContext() );
     std::shared_ptr<const IOConfig> ioConfig = state.getIOConfigConst();
 
 

@@ -234,31 +234,31 @@ static Opm::DeckPtr createValidPERMXDeck() {
 
 BOOST_AUTO_TEST_CASE(InvalidArrayThrows) {
     Opm::DeckPtr deck = createDeckInvalidArray();
-    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseContext()) , std::invalid_argument );
+    BOOST_CHECK_THROW( new Opm::EclipseState( *deck, Opm::ParseContext()) , std::invalid_argument );
 }
 
 
 BOOST_AUTO_TEST_CASE(InvalidRegionThrows) {
     Opm::DeckPtr deck = createDeckInvalidRegion();
-    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseContext()) , std::invalid_argument );
+    BOOST_CHECK_THROW( new Opm::EclipseState( *deck, Opm::ParseContext()) , std::invalid_argument );
 }
 
 
 BOOST_AUTO_TEST_CASE(ExpectedIntThrows) {
     Opm::DeckPtr deck = createDeckInvalidValue();
-    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseContext()) , std::invalid_argument );
+    BOOST_CHECK_THROW( new Opm::EclipseState( *deck, Opm::ParseContext()) , std::invalid_argument );
 }
 
 
 BOOST_AUTO_TEST_CASE(UnInitializedRegionThrows) {
     Opm::DeckPtr deck = createDeckUnInitializedRegion();
-    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseContext()) , std::invalid_argument );
+    BOOST_CHECK_THROW( new Opm::EclipseState( *deck, Opm::ParseContext()) , std::invalid_argument );
 }
 
 
 BOOST_AUTO_TEST_CASE(UnInitializedVectorThrows) {
     Opm::DeckPtr deck = createDeckUnInitializedVector();
-    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseContext()) , std::invalid_argument );
+    BOOST_CHECK_THROW( new Opm::EclipseState( *deck, Opm::ParseContext()) , std::invalid_argument );
 }
 
 
