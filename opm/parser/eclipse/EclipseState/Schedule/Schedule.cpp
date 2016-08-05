@@ -134,90 +134,88 @@ namespace Opm {
             if (keyword.name() == "DATES")
                 currentStep += keyword.size();
 
-            if (keyword.name() == "TSTEP")
+            else if (keyword.name() == "TSTEP")
                 currentStep += keyword.getRecord(0).getItem(0).size(); // This is a bit weird API.
 
-            if (keyword.name() == "WELSPECS")
+            else if (keyword.name() == "WELSPECS")
                 handleWELSPECS( section, keywordIdx, currentStep );
 
-            if (keyword.name() == "WCONHIST")
+            else if (keyword.name() == "WCONHIST")
                 handleWCONHIST(keyword, currentStep);
 
-            if (keyword.name() == "WCONPROD")
+            else if (keyword.name() == "WCONPROD")
                 handleWCONPROD(keyword, currentStep);
 
-            if (keyword.name() == "WCONINJE")
+            else if (keyword.name() == "WCONINJE")
                 handleWCONINJE(section, keyword, currentStep);
 
-            if (keyword.name() == "WPOLYMER")
+            else if (keyword.name() == "WPOLYMER")
                 handleWPOLYMER(keyword, currentStep);
 
-            if (keyword.name() == "WSOLVENT")
+            else if (keyword.name() == "WSOLVENT")
                 handleWSOLVENT(keyword, currentStep);
 
-            if (keyword.name() == "WCONINJH")
+            else if (keyword.name() == "WCONINJH")
                 handleWCONINJH(section, keyword, currentStep);
 
-            if (keyword.name() == "WGRUPCON")
+            else if (keyword.name() == "WGRUPCON")
                 handleWGRUPCON(keyword, currentStep);
 
-            if (keyword.name() == "COMPDAT")
+            else if (keyword.name() == "COMPDAT")
                 handleCOMPDAT(keyword, currentStep);
 
-            if (keyword.name() == "WELSEGS")
+            else if (keyword.name() == "WELSEGS")
                 handleWELSEGS(keyword, currentStep);
 
-            if (keyword.name() == "COMPSEGS")
+            else if (keyword.name() == "COMPSEGS")
                 handleCOMPSEGS(keyword, currentStep);
 
-            if (keyword.name() == "WELOPEN")
+            else if (keyword.name() == "WELOPEN")
                 handleWELOPEN(keyword, currentStep , section.hasKeyword("COMPLUMP"));
 
-            if (keyword.name() == "WELTARG")
+            else if (keyword.name() == "WELTARG")
                 handleWELTARG(section, keyword, currentStep);
 
-            if (keyword.name() == "GRUPTREE")
+            else if (keyword.name() == "GRUPTREE")
                 handleGRUPTREE(keyword, currentStep);
 
-            if (keyword.name() == "GCONINJE")
+            else if (keyword.name() == "GCONINJE")
                 handleGCONINJE(section, keyword, currentStep);
 
-            if (keyword.name() == "GCONPROD")
+            else if (keyword.name() == "GCONPROD")
                 handleGCONPROD(keyword, currentStep);
 
-            if (keyword.name() == "GEFAC")
+            else if (keyword.name() == "GEFAC")
                 handleGEFAC(keyword, currentStep);
 
-            if (keyword.name() == "TUNING")
+            else if (keyword.name() == "TUNING")
                 handleTUNING(keyword, currentStep);
 
-            if (keyword.name() == "WRFT")
+            else if (keyword.name() == "WRFT")
                 rftProperties.push_back( std::make_pair( &keyword , currentStep ));
 
-            if (keyword.name() == "WRFTPLT")
+            else if (keyword.name() == "WRFTPLT")
                 rftProperties.push_back( std::make_pair( &keyword , currentStep ));
 
-            if (keyword.name() == "WPIMULT")
+            else if (keyword.name() == "WPIMULT")
                 handleWPIMULT(keyword, currentStep);
 
-            if (keyword.name() == "COMPORD")
+            else if (keyword.name() == "COMPORD")
                 handleCOMPORD(parseContext , keyword, currentStep);
 
-            if (keyword.name() == "DRSDT")
+            else if (keyword.name() == "DRSDT")
                 handleDRSDT(keyword, currentStep);
 
-            if (keyword.name() == "DRVDT")
+            else if (keyword.name() == "DRVDT")
                 handleDRVDT(keyword, currentStep);
 
-            if (keyword.name() == "VAPPARS")
+            else if (keyword.name() == "VAPPARS")
                 handleVAPPARS(keyword, currentStep);
 
-            if (keyword.name() == "WECON") {
+            else if (keyword.name() == "WECON")
                 handleWECON(keyword, currentStep);
-            }
 
-
-            if (geoModifiers.find( keyword.name() ) != geoModifiers.end()) {
+            else if (geoModifiers.find( keyword.name() ) != geoModifiers.end()) {
                 bool supported = geoModifiers.at( keyword.name() );
                 if (supported) {
                     /*
