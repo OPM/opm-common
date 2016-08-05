@@ -1447,10 +1447,10 @@ namespace Opm {
 
         case WellInjector::OIL:
         case WellInjector::WATER:
-            return rawRate * unitSystem.parse("LiquidSurfaceVolume/Time")->getSIScaling();
+            return unitSystem.to_si( UnitSystem::measure::liquid_surface_rate, rawRate );
 
         case WellInjector::GAS:
-            return rawRate * unitSystem.parse("GasSurfaceVolume/Time")->getSIScaling();
+            return unitSystem.to_si( UnitSystem::measure::gas_surface_rate, rawRate );
 
         default:
             throw std::logic_error("Unknown injector type");
@@ -1461,10 +1461,10 @@ namespace Opm {
         switch (wellPhase) {
         case Phase::OIL:
         case Phase::WATER:
-            return rawRate * unitSystem.parse("LiquidSurfaceVolume/Time")->getSIScaling();
+            return unitSystem.to_si( UnitSystem::measure::liquid_surface_rate, rawRate );
 
         case Phase::GAS:
-            return rawRate * unitSystem.parse("GasSurfaceVolume/Time")->getSIScaling();
+            return unitSystem.to_si( UnitSystem::measure::gas_surface_rate, rawRate );
 
         default:
             throw std::logic_error("Unknown injection phase");
