@@ -27,9 +27,7 @@
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/Deck/DeckTimeStep.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
-#include <opm/parser/eclipse/Deck/SCHEDULESection.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
@@ -140,7 +138,7 @@ namespace Opm {
                 currentStep += keyword.getRecord(0).getItem(0).size(); // This is a bit weird API.
 
             if (keyword.name() == "WELSPECS")
-                handleWELSPECS(section, keyword, currentStep);
+                handleWELSPECS( section, keywordIdx, currentStep );
 
             if (keyword.name() == "WCONHIST")
                 handleWCONHIST(keyword, currentStep);
@@ -284,9 +282,24 @@ namespace Opm {
 
 
 
-    void Schedule::handleWELSPECS( const SCHEDULESection& section, const DeckKeyword& keyword, size_t currentStep) {
+    void Schedule::handleWELSPECS( const SCHEDULESection& section,
+                                   size_t index,
+                                   size_t currentStep ) {
         bool needNewTree = false;
         GroupTreePtr newTree = m_rootGroupTree->get(currentStep)->deepCopy();
+
+        const auto COMPORD_in_timestep = [&]() -> const DeckKeyword* {
+            auto itr = section.begin() + index;
+            for( ; itr != section.end(); ++itr ) {
+                if( itr->name() == "DATES" ) return nullptr;
+                if( itr->name() == "TSTEP" ) return nullptr;
+                if( itr->name() == "COMPORD" ) return std::addressof( *itr );
+            }
+
+            return nullptr;
+        };
+
+        const auto& keyword = section.getKeyword( index );
 
         for (size_t recordNr = 0; recordNr < keyword.size(); recordNr++) {
             const auto& record = keyword.getRecord(recordNr);
@@ -299,9 +312,8 @@ namespace Opm {
             if (!hasWell(wellName)) {
                 WellCompletion::CompletionOrderEnum wellCompletionOrder = WellCompletion::TRACK;
 
-                DeckTimeStepConstPtr deckTimeStep = section.getDeckTimeStep(currentStep);
-                if (deckTimeStep->hasKeyword("COMPORD")) {
-                     const auto& compord = deckTimeStep->getKeyword("COMPORD");
+                if( const auto* compordp = COMPORD_in_timestep() ) {
+                     const auto& compord = *compordp;
 
                     for (size_t compordRecordNr = 0; compordRecordNr < compord.size(); compordRecordNr++) {
                         const auto& compordRecord = compord.getRecord(compordRecordNr);
@@ -544,7 +556,7 @@ namespace Opm {
                 properties.predictionMode = true;
 
                 if (!record.getItem("RATE").defaultApplied(0)) {
-                    properties.surfaceInjectionRate = convertInjectionRateToSI(record.getItem("RATE").get< double >(0) , injectorType, section.getActiveUnitSystem());
+                    properties.surfaceInjectionRate = convertInjectionRateToSI(record.getItem("RATE").get< double >(0) , injectorType, section.unitSystem());
                     properties.addInjectionControl(WellInjector::RATE);
                 } else
                     properties.dropInjectionControl(WellInjector::RATE);
@@ -669,7 +681,7 @@ namespace Opm {
             // convert injection rates to SI
             WellInjector::TypeEnum injectorType = WellInjector::TypeFromString( record.getItem("TYPE").getTrimmedString(0));
             double injectionRate = record.getItem("RATE").get< double >(0);
-            injectionRate = convertInjectionRateToSI(injectionRate, injectorType, section.getActiveUnitSystem());
+            injectionRate = convertInjectionRateToSI(injectionRate, injectorType, section.unitSystem());
 
             WellCommon::StatusEnum status = WellCommon::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
 
@@ -811,7 +823,7 @@ namespace Opm {
     */
 
     void Schedule::handleWELTARG( const SCHEDULESection& section ,  const DeckKeyword& keyword, size_t currentStep) {
-        Opm::UnitSystem unitSystem = section.getActiveUnitSystem();
+        Opm::UnitSystem unitSystem = section.unitSystem();
         double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time")->getSIScaling();
         double siFactorG = unitSystem.parse("GasSurfaceVolume/Time")->getSIScaling();
         double siFactorP = unitSystem.parse("Pressure")->getSIScaling();
@@ -947,7 +959,7 @@ namespace Opm {
 
             // calculate SI injection rates for the group
             double surfaceInjectionRate = record.getItem("SURFACE_TARGET").get< double >(0);
-            surfaceInjectionRate = convertInjectionRateToSI(surfaceInjectionRate, wellPhase, section.getActiveUnitSystem());
+            surfaceInjectionRate = convertInjectionRateToSI(surfaceInjectionRate, wellPhase, section.unitSystem());
             double reservoirInjectionRate = record.getItem("RESV_TARGET").getSIDouble(0);
 
             group.setSurfaceMaxRate( currentStep , surfaceInjectionRate);

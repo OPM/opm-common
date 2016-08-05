@@ -34,8 +34,6 @@ Deck/DeckKeyword.cpp
 Deck/DeckRecord.cpp
 Deck/DeckItem.cpp
 Deck/Section.cpp
-Deck/SCHEDULESection.cpp
-Deck/DeckTimeStep.cpp
 )
 
 set( parser_source
@@ -151,8 +149,6 @@ Deck/DeckKeyword.hpp
 Deck/DeckRecord.hpp
 Deck/DeckItem.hpp
 Deck/Section.hpp
-Deck/SCHEDULESection.hpp
-Deck/DeckTimeStep.hpp
 #
 Parser/ParserEnums.hpp
 Parser/ParserKeyword.hpp 

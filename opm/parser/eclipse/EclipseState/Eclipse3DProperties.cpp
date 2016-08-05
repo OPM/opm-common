@@ -19,8 +19,8 @@
 
 #include <algorithm>
 #include <functional>
+#include <set>
 
-#include <boost/algorithm/string/join.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>

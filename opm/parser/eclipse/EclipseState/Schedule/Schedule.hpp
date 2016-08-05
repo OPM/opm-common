@@ -115,7 +115,7 @@ namespace Opm
         void addWell(const std::string& wellName, const DeckRecord& record, size_t timeStep, WellCompletion::CompletionOrderEnum wellCompletionOrder);
         void handleCOMPORD(const ParseContext& parseContext, const DeckKeyword& compordKeyword, size_t currentStep);
         void checkWELSPECSConsistency( const Well&, const DeckKeyword& keyword, size_t recordIdx);
-        void handleWELSPECS( const SCHEDULESection&, const DeckKeyword& keyword, size_t currentStep);
+        void handleWELSPECS( const SCHEDULESection&, size_t, size_t  );
         void handleWCONProducer( const DeckKeyword& keyword, size_t currentStep, bool isPredictionMode);
         void handleWCONHIST( const DeckKeyword& keyword, size_t currentStep);
         void handleWCONPROD( const DeckKeyword& keyword, size_t currentStep);
