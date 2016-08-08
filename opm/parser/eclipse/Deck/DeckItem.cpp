@@ -212,17 +212,17 @@ namespace Opm {
     }
 
     const std::vector< double >& DeckItemT< double >::assertSIData() const {
-        const auto dim_size = dimensions.size();
-        if( dim_size <= 0 )
-            throw std::invalid_argument("No dimension has been set for item:" + this->name() + " can not ask for SI data");
-
         // we already converted this item to SI?
-        if( this->SIdata.size() > 0 ) return this->SIdata;
+        if( !this->SIdata.empty() ) return this->SIdata;
+
+        if( this->dimensions.empty() )
+            throw std::invalid_argument("No dimension has been set for item:" + this->name() + " can not ask for SI data");
 
         /*
          * This is an unobservable state change - SIData is lazily converted to
          * SI units, so externally the object still behaves as const
          */
+        const auto dim_size = dimensions.size();
         const auto sz = this->size();
         this->SIdata.resize( sz );
 
