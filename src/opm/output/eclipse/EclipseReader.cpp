@@ -133,10 +133,10 @@ namespace {
 std::pair< data::Solution, data::Wells >
 init_from_restart_file( const EclipseState& es, int numcells ) {
 
-    InitConfigConstPtr initConfig        = es.getInitConfig();
+    const InitConfig& initConfig         = es.getInitConfig();
     IOConfigConstPtr ioConfig            = es.getIOConfig();
-    int restart_step                     = initConfig->getRestartStep();
-    const std::string& restart_file_root = initConfig->getRestartRootName();
+    int restart_step                     = initConfig.getRestartStep();
+    const std::string& restart_file_root = initConfig.getRestartRootName();
     bool output                          = false;
     const std::string filename           = ioConfig->getRestartFileName(
                                                         restart_file_root,

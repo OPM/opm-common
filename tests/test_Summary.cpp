@@ -127,7 +127,7 @@ struct setup {
 
     setup( const std::string& fname , const ParseContext& parseContext = ParseContext( )) :
         deck( Parser().parseFile( path, parseContext ) ),
-        es( deck, ParseContext() ),
+        es( *deck, ParseContext() ),
         config( *deck, es , parseContext ),
         wells( result_wells() ),
         name( fname ),
