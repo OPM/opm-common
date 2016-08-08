@@ -145,7 +145,7 @@ namespace Opm {
         return m_eclipseConfig.getIOConfig();
     }
 
-    InitConfigConstPtr EclipseState::getInitConfig() const {
+    const InitConfig& EclipseState::getInitConfig() const {
         return m_eclipseConfig.getInitConfig();
     }
 
@@ -153,7 +153,7 @@ namespace Opm {
         return m_eclipseConfig;
     }
 
-    SimulationConfigConstPtr EclipseState::getSimulationConfig() const {
+    const SimulationConfig& EclipseState::getSimulationConfig() const {
         return m_eclipseConfig.getSimulationConfig();
     }
 

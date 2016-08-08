@@ -72,8 +72,9 @@ namespace Opm {
         std::shared_ptr< const Schedule > getSchedule() const;
         std::shared_ptr< const IOConfig > getIOConfigConst() const;
         std::shared_ptr< IOConfig > getIOConfig() const;
-        std::shared_ptr< const InitConfig > getInitConfig() const;
-        std::shared_ptr< const SimulationConfig > getSimulationConfig() const;
+
+        const InitConfig& getInitConfig() const;
+        const SimulationConfig& getSimulationConfig() const;
         const SummaryConfig& getSummaryConfig() const;
 
         std::shared_ptr< const EclipseGrid > getInputGrid() const;

@@ -39,8 +39,8 @@ namespace Opm {
                                  const Schedule& schedule,
                                  const ParseContext& parseContext) :
             m_ioConfig(        std::make_shared<IOConfig>(deck)),
-            m_initConfig(      std::make_shared<const InitConfig>(deck)),
-            m_simulationConfig(std::make_shared<const SimulationConfig>(deck, eclipse3DProperties)),
+            m_initConfig(      deck),
+            m_simulationConfig(deck, eclipse3DProperties),
             m_summaryConfig(   deck, schedule, eclipse3DProperties, parseContext , inputGrid.getNXYZ())
     {
         m_ioConfig->initFirstRFTOutput(schedule);
@@ -58,11 +58,11 @@ namespace Opm {
         return m_ioConfig;
     }
 
-    InitConfigConstPtr EclipseConfig::getInitConfig() const {
+    const InitConfig& EclipseConfig::getInitConfig() const {
         return m_initConfig;
     }
 
-    SimulationConfigConstPtr EclipseConfig::getSimulationConfig() const {
+    const SimulationConfig& EclipseConfig::getSimulationConfig() const {
         return m_simulationConfig;
     }
 }

@@ -242,11 +242,11 @@ BOOST_AUTO_TEST_CASE(CreateSimulationConfig) {
 
     DeckPtr deck = createDeckSimConfig();
     EclipseState state(*deck, ParseContext());
-    SimulationConfigConstPtr simConf = state.getSimulationConfig();
+    const auto& simConf = state.getSimulationConfig();
 
-    BOOST_CHECK(simConf->hasThresholdPressure());
+    BOOST_CHECK(simConf.hasThresholdPressure());
 
-    std::shared_ptr<const ThresholdPressure> thresholdPressure = simConf->getThresholdPressure();
+    std::shared_ptr<const ThresholdPressure> thresholdPressure = simConf.getThresholdPressure();
     BOOST_CHECK_EQUAL(thresholdPressure->size(), 3);
 }
 
