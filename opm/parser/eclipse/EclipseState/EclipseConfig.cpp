@@ -46,8 +46,30 @@ namespace Opm {
         m_ioConfig->initFirstRFTOutput(schedule);
     }
 
-    const SummaryConfig& EclipseConfig::getSummaryConfig() const {
+
+    const InitConfig& EclipseConfig::init() const {
+        return m_initConfig;
+    }
+
+    const IOConfig& EclipseConfig::io() const {
+        return *m_ioConfig;
+    }
+
+    IOConfig& EclipseConfig::io() {
+        return *m_ioConfig;
+    }
+
+    const SimulationConfig& EclipseConfig::simulation() const {
+        return m_simulationConfig;
+    }
+
+    const SummaryConfig& EclipseConfig::summary() const {
         return m_summaryConfig;
+    }
+
+    // [[deprecated]] --- use summary()
+    const SummaryConfig& EclipseConfig::getSummaryConfig() const {
+        return summary();
     }
 
     IOConfigConstPtr EclipseConfig::getIOConfigConst() const {
@@ -58,11 +80,13 @@ namespace Opm {
         return m_ioConfig;
     }
 
+    // [[deprecated]] --- use init()
     const InitConfig& EclipseConfig::getInitConfig() const {
-        return m_initConfig;
+        return init();
     }
 
+    // [[deprecated]] --- use simulation()
     const SimulationConfig& EclipseConfig::getSimulationConfig() const {
-        return m_simulationConfig;
+        return simulation();
     }
 }

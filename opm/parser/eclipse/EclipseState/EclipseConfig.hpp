@@ -43,8 +43,14 @@ namespace Opm {
                       const Schedule& schedule,
                       const ParseContext& parseContext);
 
-        std::shared_ptr< const IOConfig > getIOConfigConst() const;
-        std::shared_ptr< IOConfig > getIOConfig() const;
+        const InitConfig& init() const;
+        const IOConfig& io() const;
+        IOConfig& io();
+        const SimulationConfig & simulation() const;
+        const SummaryConfig& summary() const;
+
+        std::shared_ptr<const IOConfig> getIOConfigConst() const;
+        std::shared_ptr<IOConfig> getIOConfig() const;
         const InitConfig& getInitConfig() const;
         const SimulationConfig & getSimulationConfig() const;
         const SummaryConfig& getSummaryConfig() const;

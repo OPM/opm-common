@@ -212,7 +212,7 @@ namespace Opm {
         m_output_enabled = enabled;
     }
 
-    std::string IOConfig::getOutputDir() {
+    std::string IOConfig::getOutputDir() const {
         return m_output_dir;
     }
 

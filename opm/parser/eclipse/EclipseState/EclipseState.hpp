@@ -92,6 +92,7 @@ namespace Opm {
 
         const TableManager& getTableManager() const;
         const EclipseConfig& getEclipseConfig() const;
+        const EclipseConfig& cfg() const;
 
         // the unit system used by the deck. note that it is rarely needed to convert
         // units because internally to opm-parser everything is represented by SI

@@ -448,14 +448,16 @@ BOOST_AUTO_TEST_CASE(TestIOConfigBaseName) {
     ParserPtr parser(new Parser());
     DeckConstPtr deck = parser->parseFile("testdata/integration_tests/IOConfig/SPE1CASE2.DATA", parseContext);
     EclipseState state(*deck, parseContext);
-    BOOST_CHECK_EQUAL(state.getIOConfig()->getBaseName(), "SPE1CASE2");
-    BOOST_CHECK_EQUAL(state.getIOConfig()->getOutputDir(), "testdata/integration_tests/IOConfig");
+    const auto& io = state.cfg().io();
+    BOOST_CHECK_EQUAL(io.getBaseName(), "SPE1CASE2");
+    BOOST_CHECK_EQUAL(io.getOutputDir(), "testdata/integration_tests/IOConfig");
 
     ParserPtr parser2(new Parser());
     DeckConstPtr deck2 = createDeckWithGridOpts();
     EclipseState state2(*deck2, parseContext);
-    BOOST_CHECK_EQUAL(state2.getIOConfig()->getBaseName(), "");
-    BOOST_CHECK_EQUAL(state2.getIOConfig()->getOutputDir(), ".");
+    const auto& io2 = state2.cfg().io();
+    BOOST_CHECK_EQUAL(io2.getBaseName(), "");
+    BOOST_CHECK_EQUAL(io2.getOutputDir(), ".");
 }
 
 BOOST_AUTO_TEST_CASE(TestIOConfigCreation) {
@@ -495,8 +497,8 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreation) {
     DeckPtr deck = parser->parseString(deckData, ParseContext()) ;
     EclipseState state(*deck , ParseContext());
 
-    IOConfigConstPtr ioConfig = state.getIOConfigConst();
-    const RestartConfig& rstConfig = ioConfig->restartConfig();
+    const IOConfig& ioConfig = state.cfg().io();
+    const RestartConfig& rstConfig = ioConfig.restartConfig();
 
     BOOST_CHECK_EQUAL(false, rstConfig.getWriteRestartFile(0));
     BOOST_CHECK_EQUAL(false, rstConfig.getWriteRestartFile(1));
@@ -547,8 +549,8 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTRST) {
     DeckPtr deck = parser->parseString(deckData, parseContext) ;
     EclipseState state(*deck, parseContext);
 
-    IOConfigConstPtr ioConfig = state.getIOConfigConst();
-    const RestartConfig& rstConfig = ioConfig->restartConfig();
+    const IOConfig& ioConfig = state.cfg().io();
+    const RestartConfig& rstConfig = ioConfig.restartConfig();
 
     BOOST_CHECK_EQUAL(true  ,  rstConfig.getWriteRestartFile(0));
     BOOST_CHECK_EQUAL(false ,  rstConfig.getWriteRestartFile(1));
@@ -639,8 +641,8 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTSOL) {
         DeckPtr deck = parser->parseString(deckData, parseContext) ;
         EclipseState state(*deck, parseContext);
 
-        IOConfigConstPtr ioConfig = state.getIOConfigConst();
-        const RestartConfig& rstConfig = ioConfig->restartConfig();
+        const IOConfig& ioConfig = state.cfg().io();
+        const RestartConfig& rstConfig = ioConfig.restartConfig();
 
         BOOST_CHECK_EQUAL(true, rstConfig.getWriteRestartFile(0));
     }
@@ -649,8 +651,8 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTSOL) {
         DeckPtr deck = parser->parseString(deckData2, parseContext) ;
         EclipseState state(*deck, parseContext);
 
-        IOConfigConstPtr ioConfig = state.getIOConfigConst();
-        const RestartConfig& rstConfig = ioConfig->restartConfig();
+        const IOConfig& ioConfig = state.cfg().io();
+        const RestartConfig& rstConfig = ioConfig.restartConfig();
 
         BOOST_CHECK_EQUAL(true, rstConfig.getWriteRestartFile(0));
     }

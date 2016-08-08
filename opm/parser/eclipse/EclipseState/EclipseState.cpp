@@ -137,22 +137,31 @@ namespace Opm {
         return m_schedule;
     }
 
+    /// [[deprecated]] --- use cfg().io()
     IOConfigConstPtr EclipseState::getIOConfigConst() const {
         return m_eclipseConfig.getIOConfigConst();
     }
 
+    /// [[deprecated]] --- use cfg().io()
     IOConfigPtr EclipseState::getIOConfig() const {
         return m_eclipseConfig.getIOConfig();
     }
 
+    /// [[deprecated]] --- use cfg().init()
     const InitConfig& EclipseState::getInitConfig() const {
         return m_eclipseConfig.getInitConfig();
     }
 
+    /// [[deprecated]] --- use cfg()
     const EclipseConfig& EclipseState::getEclipseConfig() const {
+        return cfg();
+    }
+
+    const EclipseConfig& EclipseState::cfg() const {
         return m_eclipseConfig;
     }
 
+    /// [[deprecated]] --- use cfg().simulation()
     const SimulationConfig& EclipseState::getSimulationConfig() const {
         return m_eclipseConfig.getSimulationConfig();
     }

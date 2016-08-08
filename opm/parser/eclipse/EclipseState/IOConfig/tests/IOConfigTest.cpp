@@ -163,10 +163,10 @@ static DeckPtr createDeck(const std::string& input) {
 BOOST_AUTO_TEST_CASE( RFT_TIME) {
     DeckPtr deck = createDeck(deckStr_RFT);
     EclipseState state( *deck , Opm::ParseContext() );
-    std::shared_ptr<const IOConfig> ioConfig = state.getIOConfigConst();
+    const IOConfig& ioConfig = state.cfg().io();
 
 
-    BOOST_CHECK_EQUAL( ioConfig->getFirstRFTStep() , 2 );
+    BOOST_CHECK_EQUAL( ioConfig.getFirstRFTStep() , 2 );
 }
 
 BOOST_AUTO_TEST_CASE(RPTRST_mixed_mnemonics_int_list) {
