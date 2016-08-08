@@ -38,7 +38,7 @@ namespace {
 std::deque< string_view > splitSingleRecordString( const string_view& record ) {
     auto first_nonspace = []( string_view::const_iterator begin,
                               string_view::const_iterator end ) {
-        return std::find_if_not( begin, end, RawConsts::is_separator );
+        return std::find_if_not( begin, end, RawConsts::is_separator() );
     };
 
     std::deque< string_view > dst;
@@ -50,7 +50,7 @@ std::deque< string_view > splitSingleRecordString( const string_view& record ) {
             dst.push_back( { current, quote_end } );
             current = quote_end;
         } else {
-            auto token_end = std::find_if( current, record.end(), RawConsts::is_separator );
+            auto token_end = std::find_if( current, record.end(), RawConsts::is_separator() );
             dst.push_back( { current, token_end } );
             current = token_end;
         }

@@ -47,15 +47,21 @@ namespace Opm {
 
 namespace {
 
-template< typename Itr >
-inline Itr find_comment( Itr begin, Itr end ) {
+struct find_comment {
+    /*
+     * A note on performance: using a function to plug functionality into
+     * find_terminator rather than plain functions because it almost ensures
+     * inlining, where the plain function can reduce to a function pointer.
+     */
+    template< typename Itr >
+    Itr operator()( Itr begin, Itr end ) const {
+        auto itr = std::find( begin, end, '-' );
+        for( ; itr != end; itr = std::find( itr + 1, end, '-' ) )
+            if( (itr + 1) != end &&  *( itr + 1 ) == '-' ) return itr;
 
-    auto itr = std::find( begin, end, '-' );
-    for( ; itr != end; itr = std::find( itr + 1, end, '-' ) )
-        if( (itr + 1) != end &&  *( itr + 1 ) == '-' ) return itr;
-
-    return end;
-}
+        return end;
+    }
+};
 
 template< typename Itr, typename Term >
 inline Itr find_terminator( Itr begin, Itr end, Term terminator ) {
@@ -64,7 +70,7 @@ inline Itr find_terminator( Itr begin, Itr end, Term terminator ) {
 
     if( pos == end ) return end;
 
-    auto qbegin = std::find_if( begin, end, RawConsts::is_quote );
+    auto qbegin = std::find_if( begin, end, RawConsts::is_quote() );
 
     if( qbegin == end || qbegin > pos )
         return pos;
@@ -88,14 +94,13 @@ inline Itr find_terminator( Itr begin, Itr end, Term terminator ) {
     ABC "-- Not balanced quote?  =>  ABC "-- Not balanced quote?
 */
 static inline string_view strip_comments( string_view str ) {
-    return { str.begin(), find_terminator( str.begin(), str.end(),
-            find_comment< string_view::const_iterator > ) };
+    return { str.begin(),
+             find_terminator( str.begin(), str.end(), find_comment() ) };
 }
 
 template< typename Itr >
 inline Itr trim_left( Itr begin, Itr end ) {
-
-    return std::find_if_not( begin, end, RawConsts::is_separator );
+    return std::find_if_not( begin, end, RawConsts::is_separator() );
 }
 
 template< typename Itr >
@@ -104,7 +109,7 @@ inline Itr trim_right( Itr begin, Itr end ) {
     std::reverse_iterator< Itr > rbegin( end );
     std::reverse_iterator< Itr > rend( begin );
 
-    return std::find_if_not( rbegin, rend, RawConsts::is_separator ).base();
+    return std::find_if_not( rbegin, rend, RawConsts::is_separator() ).base();
 }
 
 inline string_view trim( string_view str ) {
@@ -560,8 +565,8 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
      * strip_comment is the actual (internal) implementation
      */
     std::string Parser::stripComments( const std::string& str ) {
-        return { str.begin(), find_terminator( str.begin(), str.end(),
-                find_comment< std::string::const_iterator > ) };
+        return { str.begin(),
+                 find_terminator( str.begin(), str.end(), find_comment() ) };
     }
 
     Parser::Parser(bool addDefault) {
