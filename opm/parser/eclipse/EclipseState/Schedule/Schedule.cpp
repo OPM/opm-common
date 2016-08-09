@@ -1138,9 +1138,17 @@ namespace Opm {
         const auto wells = this->getWells( currentStep );
         auto completions = Completion::fromCOMPDAT( keyword, wells );
 
-        for( const auto pair : completions )
-            m_wells.get( pair.first )->addCompletions( currentStep, pair.second );
-
+        for( const auto pair : completions ) {
+            auto& well = *this->m_wells.get( pair.first );
+            well.addCompletions( currentStep, pair.second );
+            if (well.getCompletions( currentStep )->allCompletionsShut()) {
+                std::string msg =
+                        "All completions in well " + well.name() + " is shut at " + std::to_string ( m_timeMap->getTimePassedUntil(currentStep) / (60*60*24) ) + " days. \n" +
+                        "The well is therefore also shut.";
+                m_messages.note(msg);
+                updateWellStatus( well, currentStep, WellCommon::StatusEnum::SHUT);
+            }
+        }
         m_events->addEvent(ScheduleEvents::COMPLETION_CHANGE, currentStep);
     }
 

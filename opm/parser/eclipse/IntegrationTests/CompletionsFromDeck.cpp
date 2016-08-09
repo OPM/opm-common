@@ -27,6 +27,8 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 
 using namespace Opm;
 
@@ -69,4 +71,16 @@ BOOST_AUTO_TEST_CASE( CreateCompletionsFromKeyword ) {
     BOOST_CHECK_EQUAL( WellCompletion::OPEN   , completion4->getState() );
     BOOST_CHECK_EQUAL( 5.4722222222222212e-13 , completion4->getConnectionTransmissibilityFactor() );
     BOOST_CHECK_EQUAL( WellCompletion::DirectionEnum::Y, completion4->getDirection() );
+
+
+    // Check that wells with all completions shut is also itself shut
+    const Well* well1 = schedule.getWell("W_1");
+    BOOST_CHECK (!well1->getCompletions(0)->allCompletionsShut());
+    BOOST_CHECK_EQUAL (well1->getStatus(0) , WellCommon::StatusEnum::OPEN);
+
+    const Well* well2 = schedule.getWell("W_2");
+    BOOST_CHECK (well2->getCompletions(0)->allCompletionsShut());
+    BOOST_CHECK_EQUAL (well2->getStatus(0) , WellCommon::StatusEnum::SHUT);
+
+
 }
