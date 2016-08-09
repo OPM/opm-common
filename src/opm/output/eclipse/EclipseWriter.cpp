@@ -454,16 +454,16 @@ void EclipseWriter::writeINITFile(const EclipseGrid& grid, const std::vector<dat
     const auto& compressedToCartesian = this->impl->compressedToCartesian;
     const auto& es = *this->impl->es;
     const auto& units = es.getUnits();
-    std::shared_ptr<const IOConfig> ioConfig = es.getIOConfigConst();
+    const IOConfig& ioConfig = es.cfg().io();
 
     FileName  initFile( this->impl->outputDir,
                         this->impl->baseName,
                         ECL_INIT_FILE,
-                        ioConfig->getFMTOUT() );
+                        ioConfig.getFMTOUT() );
 
     ERT::FortIO fortio( initFile.get() ,
                         std::ios_base::out,
-                        ioConfig->getFMTOUT(),
+                        ioConfig.getFMTOUT(),
                         ECL_ENDIAN_FLIP );
 
 
@@ -596,13 +596,13 @@ void EclipseWriter::writeInitAndEgrid(const std::vector<data::CellData>& simProp
 
     {
         const auto& es = *this->impl->es;
-        IOConfigConstPtr ioConfig = es.getIOConfigConst();
+        const IOConfig& ioConfig = es.cfg().io();
         const EclipseGrid& grid = this->impl->grid;
 
-        if( ioConfig->getWriteINITFile() )
+        if( ioConfig.getWriteINITFile() )
             writeINITFile( grid , simProps , nnc );
 
-        if( ioConfig->getWriteEGRIDFile( ) )
+        if( ioConfig.getWriteEGRIDFile( ) )
             writeEGRIDFile( nnc );
     }
 }
@@ -626,7 +626,7 @@ void EclipseWriter::writeTimeStep(int report_step,
     const auto& grid = this->impl->grid;
     const auto& units = es.getUnits();
 
-    IOConfigConstPtr ioConfig = this->impl->es->getIOConfigConst();
+    const IOConfig& ioConfig = es.cfg().io();
 
 
     const auto days = units.from_si( UnitSystem::measure::time, secs_elapsed );
@@ -646,7 +646,7 @@ void EclipseWriter::writeTimeStep(int report_step,
 
 
     // Write restart file
-    if(!isSubstep && ioConfig->getWriteRestartFile(report_step))
+    if(!isSubstep && ioConfig.getWriteRestartFile(report_step))
     {
         const size_t ncwmax     = schedule.getMaxNumCompletionsForWells(report_step);
         const size_t numWells   = schedule.numWells(report_step);
@@ -659,7 +659,7 @@ void EclipseWriter::writeTimeStep(int report_step,
         Restart restartHandle( this->impl->outputDir,
                                this->impl->baseName,
                                report_step,
-                               *ioConfig);
+                               ioConfig);
 
         for (size_t iwell = 0; iwell < wells_ptr.size(); ++iwell) {
             const auto& well = *wells_ptr[iwell];
