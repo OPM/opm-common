@@ -39,15 +39,37 @@ namespace Opm {
                                  const Schedule& schedule,
                                  const ParseContext& parseContext) :
             m_ioConfig(        std::make_shared<IOConfig>(deck)),
-            m_initConfig(      std::make_shared<const InitConfig>(deck)),
-            m_simulationConfig(std::make_shared<const SimulationConfig>(deck, eclipse3DProperties)),
+            m_initConfig(      deck),
+            m_simulationConfig(deck, eclipse3DProperties),
             m_summaryConfig(   deck, schedule, eclipse3DProperties, parseContext , inputGrid.getNXYZ())
     {
         m_ioConfig->initFirstRFTOutput(schedule);
     }
 
-    const SummaryConfig& EclipseConfig::getSummaryConfig() const {
+
+    const InitConfig& EclipseConfig::init() const {
+        return m_initConfig;
+    }
+
+    const IOConfig& EclipseConfig::io() const {
+        return *m_ioConfig;
+    }
+
+    IOConfig& EclipseConfig::io() {
+        return *m_ioConfig;
+    }
+
+    const SimulationConfig& EclipseConfig::simulation() const {
+        return m_simulationConfig;
+    }
+
+    const SummaryConfig& EclipseConfig::summary() const {
         return m_summaryConfig;
+    }
+
+    // [[deprecated]] --- use summary()
+    const SummaryConfig& EclipseConfig::getSummaryConfig() const {
+        return summary();
     }
 
     IOConfigConstPtr EclipseConfig::getIOConfigConst() const {
@@ -58,11 +80,13 @@ namespace Opm {
         return m_ioConfig;
     }
 
-    InitConfigConstPtr EclipseConfig::getInitConfig() const {
-        return m_initConfig;
+    // [[deprecated]] --- use init()
+    const InitConfig& EclipseConfig::getInitConfig() const {
+        return init();
     }
 
-    SimulationConfigConstPtr EclipseConfig::getSimulationConfig() const {
-        return m_simulationConfig;
+    // [[deprecated]] --- use simulation()
+    const SimulationConfig& EclipseConfig::getSimulationConfig() const {
+        return simulation();
     }
 }

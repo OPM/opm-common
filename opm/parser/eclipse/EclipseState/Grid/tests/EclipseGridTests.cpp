@@ -919,7 +919,7 @@ static Opm::DeckPtr createActnumBoxDeck() {
 
 BOOST_AUTO_TEST_CASE(GridBoxActnum) {
     Opm::DeckConstPtr deck = createActnumBoxDeck();
-    Opm::EclipseState es(deck, Opm::ParseContext());
+    Opm::EclipseState es(*deck, Opm::ParseContext());
     auto ep = es.get3DProperties();
     auto grid = es.getInputGrid();
 
@@ -970,7 +970,7 @@ BOOST_AUTO_TEST_CASE(GridBoxActnum) {
 BOOST_AUTO_TEST_CASE(GridActnumVia3D) {
     Opm::DeckConstPtr deck = createActnumDeck();
 
-    Opm::EclipseState es(deck, Opm::ParseContext());
+    Opm::EclipseState es(*deck, Opm::ParseContext());
     auto ep = es.get3DProperties();
     auto grid = es.getInputGrid();
     Opm::EclipseGrid grid2( *grid );
@@ -986,8 +986,8 @@ BOOST_AUTO_TEST_CASE(GridActnumVia3D) {
 BOOST_AUTO_TEST_CASE(GridActnumViaState) {
     Opm::DeckConstPtr deck = createActnumDeck();
 
-    BOOST_CHECK_NO_THROW(Opm::EclipseState(deck, Opm::ParseContext()));
-    Opm::EclipseState es(deck, Opm::ParseContext());
+    BOOST_CHECK_NO_THROW(Opm::EclipseState(*deck, Opm::ParseContext()));
+    Opm::EclipseState es(*deck, Opm::ParseContext());
     BOOST_CHECK_EQUAL(es.getInputGrid()->getNumActive(), 2 * 2 * 2 - 1);
 }
 

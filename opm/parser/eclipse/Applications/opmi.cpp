@@ -51,7 +51,7 @@ inline void loadDeck( const char * deck_file) {
     std::cout << "Loading deck: " << deck_file << " ..... "; std::cout.flush();
     deck = parser->parseFile(deck_file, parseContext);
     std::cout << "parse complete - creating EclipseState .... ";  std::cout.flush();
-    state = std::make_shared<Opm::EclipseState>( deck , parseContext );
+    state = std::make_shared<Opm::EclipseState>( *deck , parseContext );
     std::cout << "complete." << std::endl;
 
     dumpMessages( deck->getMessageContainer() );

@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE( PARSE_TOPS_OK) {
     std::string deckFile("testdata/integration_tests/GRID/TOPS.DATA");
     ParseContext parseContext;
     DeckPtr deck =  parser->parseFile(deckFile, parseContext);
-    EclipseState state(deck , parseContext);
+    EclipseState state(*deck , parseContext);
     EclipseGridConstPtr grid = state.getInputGrid();
 
     BOOST_CHECK_EQUAL( grid->getNX() , 9 );

@@ -385,7 +385,7 @@ static Opm::DeckPtr createDeckWithPOROZero() {
 BOOST_AUTO_TEST_CASE(PORO_ZERO_ACTNUM_CORRECT) {
     /* Check that MULTIPLE Boxed PORV and MULTPV statements work and NTG */
     Opm::DeckPtr deck = createDeckWithPOROZero();
-    Opm::EclipseState state( deck , Opm::ParseContext());
+    Opm::EclipseState state( *deck , Opm::ParseContext());
     auto grid = state.getInputGrid( );
 
     /* Top layer is active */

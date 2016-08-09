@@ -95,7 +95,7 @@ return parser->parseString(deckData, ParseContext()) ;
 
 BOOST_AUTO_TEST_CASE(GetPOROTOPBased) {
     DeckPtr deck = createDeckTOP();
-    EclipseState state(deck , ParseContext());
+    EclipseState state(*deck , ParseContext());
     const Eclipse3DProperties& props = state.get3DProperties();
 
     const GridProperty<double>& poro  = props.getDoubleGridProperty( "PORO" );
@@ -194,14 +194,13 @@ ParserPtr parser(new Parser());
 return parser->parseString(deckData, ParseContext()) ;
 }
 
-
 BOOST_AUTO_TEST_CASE(CreateSchedule) {
-DeckPtr deck = createDeck();
-EclipseState state(deck , ParseContext());
-ScheduleConstPtr schedule = state.getSchedule();
-EclipseGridConstPtr eclipseGrid = state.getInputGrid();
+    DeckPtr deck = createDeck();
+    EclipseState state(*deck, ParseContext());
+    ScheduleConstPtr schedule = state.getSchedule();
+    EclipseGridConstPtr eclipseGrid = state.getInputGrid();
 
-BOOST_CHECK_EQUAL( schedule->getStartTime() , boost::posix_time::ptime(boost::gregorian::date(1998 , 3 , 8 )));
+    BOOST_CHECK_EQUAL(schedule->getStartTime(), boost::posix_time::ptime(boost::gregorian::date(1998, 3, 8)));
 }
 
 
@@ -239,24 +238,23 @@ ParserPtr parser(new Parser());
 return parser->parseString(inputStr, ParseContext()) ;
 }
 
-
 BOOST_AUTO_TEST_CASE(CreateSimulationConfig) {
 
-DeckPtr deck = createDeckSimConfig();
-EclipseState state(deck, ParseContext());
-SimulationConfigConstPtr simConf = state.getSimulationConfig();
+    DeckPtr deck = createDeckSimConfig();
+    EclipseState state(*deck, ParseContext());
+    const auto& simConf = state.getSimulationConfig();
 
-BOOST_CHECK( simConf->hasThresholdPressure() );
+    BOOST_CHECK(simConf.hasThresholdPressure());
 
-std::shared_ptr<const ThresholdPressure> thresholdPressure = simConf->getThresholdPressure();
-BOOST_CHECK_EQUAL(thresholdPressure->size(), 3);
+    std::shared_ptr<const ThresholdPressure> thresholdPressure = simConf.getThresholdPressure();
+    BOOST_CHECK_EQUAL(thresholdPressure->size(), 3);
 }
 
 
 
 BOOST_AUTO_TEST_CASE(PhasesCorrect) {
     DeckPtr deck = createDeck();
-    EclipseState state( deck, ParseContext() );
+    EclipseState state( *deck, ParseContext() );
     const auto& tm = state.getTableManager();
     BOOST_CHECK(   tm.hasPhase( Phase::PhaseEnum::OIL ));
     BOOST_CHECK(   tm.hasPhase( Phase::PhaseEnum::GAS ));
@@ -265,14 +263,14 @@ BOOST_AUTO_TEST_CASE(PhasesCorrect) {
 
 BOOST_AUTO_TEST_CASE(TitleCorrect) {
     DeckPtr deck = createDeck();
-    EclipseState state( deck, ParseContext() );
+    EclipseState state( *deck, ParseContext() );
 
     BOOST_CHECK_EQUAL( state.getTitle(), "The title" );
 }
 
 BOOST_AUTO_TEST_CASE(IntProperties) {
     DeckPtr deck = createDeck();
-    EclipseState state( deck, ParseContext() );
+    EclipseState state( *deck, ParseContext() );
 
     BOOST_CHECK_EQUAL( false, state.get3DProperties().supportsGridProperty( "NONO" ) );
     BOOST_CHECK_EQUAL( true,  state.get3DProperties().supportsGridProperty( "SATNUM" ) );
@@ -282,7 +280,7 @@ BOOST_AUTO_TEST_CASE(IntProperties) {
 
 BOOST_AUTO_TEST_CASE(GetProperty) {
     DeckPtr deck = createDeck();
-    EclipseState state(deck, ParseContext());
+    EclipseState state(*deck, ParseContext());
 
     const auto& satNUM = state.get3DProperties().getIntGridProperty( "SATNUM" );
 
@@ -295,16 +293,16 @@ BOOST_AUTO_TEST_CASE(GetProperty) {
 
 BOOST_AUTO_TEST_CASE(GetTransMult) {
     DeckPtr deck = createDeck();
-    EclipseState state( deck, ParseContext() );
-    std::shared_ptr<const TransMult> transMult = state.getTransMult();
+    EclipseState state( *deck, ParseContext() );
+    const auto& transMult = state.getTransMult();
 
-    BOOST_CHECK_EQUAL( 1.0, transMult->getMultiplier( 1, 0, 0, FaceDir::XPlus ) );
-    BOOST_CHECK_THROW( transMult->getMultiplier( 1000, FaceDir::XPlus ), std::invalid_argument );
+    BOOST_CHECK_EQUAL( 1.0, transMult.getMultiplier( 1, 0, 0, FaceDir::XPlus ) );
+    BOOST_CHECK_THROW( transMult.getMultiplier( 1000, FaceDir::XPlus ), std::invalid_argument );
 }
 
 BOOST_AUTO_TEST_CASE(GetFaults) {
     DeckPtr deck = createDeck();
-    EclipseState state( deck, ParseContext() );
+    EclipseState state( *deck, ParseContext() );
     const auto& faults = state.getFaults();
 
     BOOST_CHECK( faults.hasFault( "F1" ) );
@@ -316,50 +314,50 @@ BOOST_AUTO_TEST_CASE(GetFaults) {
     BOOST_CHECK_EQUAL( 0.50, F1.getTransMult() );
     BOOST_CHECK_EQUAL( 0.25, F2.getTransMult() );
 
-    std::shared_ptr<const TransMult> transMult = state.getTransMult();
-    BOOST_CHECK_EQUAL( transMult->getMultiplier( 0, 0, 0, FaceDir::XPlus ), 0.50 );
-    BOOST_CHECK_EQUAL( transMult->getMultiplier( 4, 3, 0, FaceDir::XMinus ), 0.25 );
-    BOOST_CHECK_EQUAL( transMult->getMultiplier( 4, 3, 0, FaceDir::ZPlus ), 1.00 );
+    const auto& transMult = state.getTransMult();
+    BOOST_CHECK_EQUAL( transMult.getMultiplier( 0, 0, 0, FaceDir::XPlus ), 0.50 );
+    BOOST_CHECK_EQUAL( transMult.getMultiplier( 4, 3, 0, FaceDir::XMinus ), 0.25 );
+    BOOST_CHECK_EQUAL( transMult.getMultiplier( 4, 3, 0, FaceDir::ZPlus ), 1.00 );
 }
 
 
 BOOST_AUTO_TEST_CASE(FaceTransMults) {
     DeckPtr deck = createDeckNoFaults();
-    EclipseState state(deck, ParseContext());
-    std::shared_ptr<const TransMult> transMult = state.getTransMult();
+    EclipseState state(*deck, ParseContext());
+    const auto& transMult = state.getTransMult();
 
     for (int i = 0; i < 10; ++ i) {
         for (int j = 0; j < 10; ++ j) {
             for (int k = 0; k < 10; ++ k) {
                 if (k == 1)
-                    BOOST_CHECK_EQUAL(transMult->getMultiplier(i, j, k, FaceDir::XPlus), 10.0);
+                    BOOST_CHECK_EQUAL(transMult.getMultiplier(i, j, k, FaceDir::XPlus), 10.0);
                 else
-                    BOOST_CHECK_EQUAL(transMult->getMultiplier(i, j, k, FaceDir::XPlus), 1.0);
+                    BOOST_CHECK_EQUAL(transMult.getMultiplier(i, j, k, FaceDir::XPlus), 1.0);
 
                 if (k == 2)
-                    BOOST_CHECK_EQUAL(transMult->getMultiplier(i, j, k, FaceDir::XMinus), 11.0);
+                    BOOST_CHECK_EQUAL(transMult.getMultiplier(i, j, k, FaceDir::XMinus), 11.0);
                 else
-                    BOOST_CHECK_EQUAL(transMult->getMultiplier(i, j, k, FaceDir::XMinus), 1.0);
+                    BOOST_CHECK_EQUAL(transMult.getMultiplier(i, j, k, FaceDir::XMinus), 1.0);
 
                 if (k == 3)
-                    BOOST_CHECK_EQUAL(transMult->getMultiplier(i, j, k, FaceDir::YPlus), 12.0);
+                    BOOST_CHECK_EQUAL(transMult.getMultiplier(i, j, k, FaceDir::YPlus), 12.0);
                 else
-                    BOOST_CHECK_EQUAL(transMult->getMultiplier(i, j, k, FaceDir::YPlus), 1.0);
+                    BOOST_CHECK_EQUAL(transMult.getMultiplier(i, j, k, FaceDir::YPlus), 1.0);
 
                 if (k == 4)
-                    BOOST_CHECK_EQUAL(transMult->getMultiplier(i, j, k, FaceDir::YMinus), 13.0);
+                    BOOST_CHECK_EQUAL(transMult.getMultiplier(i, j, k, FaceDir::YMinus), 13.0);
                 else
-                    BOOST_CHECK_EQUAL(transMult->getMultiplier(i, j, k, FaceDir::YMinus), 1.0);
+                    BOOST_CHECK_EQUAL(transMult.getMultiplier(i, j, k, FaceDir::YMinus), 1.0);
 
                 if (k == 5)
-                    BOOST_CHECK_EQUAL(transMult->getMultiplier(i, j, k, FaceDir::ZPlus), 14.0);
+                    BOOST_CHECK_EQUAL(transMult.getMultiplier(i, j, k, FaceDir::ZPlus), 14.0);
                 else
-                    BOOST_CHECK_EQUAL(transMult->getMultiplier(i, j, k, FaceDir::ZPlus), 1.0);
+                    BOOST_CHECK_EQUAL(transMult.getMultiplier(i, j, k, FaceDir::ZPlus), 1.0);
 
                 if (k == 6)
-                    BOOST_CHECK_EQUAL(transMult->getMultiplier(i, j, k, FaceDir::ZMinus), 15.0);
+                    BOOST_CHECK_EQUAL(transMult.getMultiplier(i, j, k, FaceDir::ZMinus), 15.0);
                 else
-                    BOOST_CHECK_EQUAL(transMult->getMultiplier(i, j, k, FaceDir::ZMinus), 1.0);
+                    BOOST_CHECK_EQUAL(transMult.getMultiplier(i, j, k, FaceDir::ZMinus), 1.0);
             }
         }
     }
@@ -420,7 +418,7 @@ static DeckPtr createDeckWithGridOpts() {
 
 BOOST_AUTO_TEST_CASE(NoGridOptsDefaultRegion) {
     DeckPtr deck = createDeckNoGridOpts();
-    EclipseState state(deck, ParseContext());
+    EclipseState state(*deck, ParseContext());
     const auto& props   = state.get3DProperties();
     const auto& multnum = props.getIntGridProperty("MULTNUM");
     const auto& fluxnum = props.getIntGridProperty("FLUXNUM");
@@ -434,7 +432,7 @@ BOOST_AUTO_TEST_CASE(NoGridOptsDefaultRegion) {
 
 BOOST_AUTO_TEST_CASE(WithGridOptsDefaultRegion) {
     DeckPtr deck = createDeckWithGridOpts();
-    EclipseState state(deck, ParseContext());
+    EclipseState state(*deck, ParseContext());
     const auto& props   = state.get3DProperties();
     const auto& multnum = props.getIntGridProperty("MULTNUM");
     const auto& fluxnum = props.getIntGridProperty("FLUXNUM");
@@ -450,14 +448,16 @@ BOOST_AUTO_TEST_CASE(TestIOConfigBaseName) {
     ParserPtr parser(new Parser());
     DeckConstPtr deck = parser->parseFile("testdata/integration_tests/IOConfig/SPE1CASE2.DATA", parseContext);
     EclipseState state(*deck, parseContext);
-    BOOST_CHECK_EQUAL(state.getIOConfig()->getBaseName(), "SPE1CASE2");
-    BOOST_CHECK_EQUAL(state.getIOConfig()->getOutputDir(), "testdata/integration_tests/IOConfig");
+    const auto& io = state.cfg().io();
+    BOOST_CHECK_EQUAL(io.getBaseName(), "SPE1CASE2");
+    BOOST_CHECK_EQUAL(io.getOutputDir(), "testdata/integration_tests/IOConfig");
 
     ParserPtr parser2(new Parser());
     DeckConstPtr deck2 = createDeckWithGridOpts();
     EclipseState state2(*deck2, parseContext);
-    BOOST_CHECK_EQUAL(state2.getIOConfig()->getBaseName(), "");
-    BOOST_CHECK_EQUAL(state2.getIOConfig()->getOutputDir(), ".");
+    const auto& io2 = state2.cfg().io();
+    BOOST_CHECK_EQUAL(io2.getBaseName(), "");
+    BOOST_CHECK_EQUAL(io2.getOutputDir(), ".");
 }
 
 BOOST_AUTO_TEST_CASE(TestIOConfigCreation) {
@@ -495,10 +495,10 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreation) {
 
     ParserPtr parser(new Parser());
     DeckPtr deck = parser->parseString(deckData, ParseContext()) ;
-    EclipseState state(deck , ParseContext());
+    EclipseState state(*deck , ParseContext());
 
-    IOConfigConstPtr ioConfig = state.getIOConfigConst();
-    const RestartConfig& rstConfig = ioConfig->restartConfig();
+    const IOConfig& ioConfig = state.cfg().io();
+    const RestartConfig& rstConfig = ioConfig.restartConfig();
 
     BOOST_CHECK_EQUAL(false, rstConfig.getWriteRestartFile(0));
     BOOST_CHECK_EQUAL(false, rstConfig.getWriteRestartFile(1));
@@ -547,10 +547,10 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTRST) {
     ParseContext parseContext;
     ParserPtr parser(new Parser());
     DeckPtr deck = parser->parseString(deckData, parseContext) ;
-    EclipseState state(deck, parseContext);
+    EclipseState state(*deck, parseContext);
 
-    IOConfigConstPtr ioConfig = state.getIOConfigConst();
-    const RestartConfig& rstConfig = ioConfig->restartConfig();
+    const IOConfig& ioConfig = state.cfg().io();
+    const RestartConfig& rstConfig = ioConfig.restartConfig();
 
     BOOST_CHECK_EQUAL(true  ,  rstConfig.getWriteRestartFile(0));
     BOOST_CHECK_EQUAL(false ,  rstConfig.getWriteRestartFile(1));
@@ -639,20 +639,20 @@ BOOST_AUTO_TEST_CASE(TestIOConfigCreationWithSolutionRPTSOL) {
 
     {   //mnemnonics
         DeckPtr deck = parser->parseString(deckData, parseContext) ;
-        EclipseState state(deck, parseContext);
+        EclipseState state(*deck, parseContext);
 
-        IOConfigConstPtr ioConfig = state.getIOConfigConst();
-        const RestartConfig& rstConfig = ioConfig->restartConfig();
+        const IOConfig& ioConfig = state.cfg().io();
+        const RestartConfig& rstConfig = ioConfig.restartConfig();
 
         BOOST_CHECK_EQUAL(true, rstConfig.getWriteRestartFile(0));
     }
 
     {   //old fashion integer mnemonics
         DeckPtr deck = parser->parseString(deckData2, parseContext) ;
-        EclipseState state(deck, parseContext);
+        EclipseState state(*deck, parseContext);
 
-        IOConfigConstPtr ioConfig = state.getIOConfigConst();
-        const RestartConfig& rstConfig = ioConfig->restartConfig();
+        const IOConfig& ioConfig = state.cfg().io();
+        const RestartConfig& rstConfig = ioConfig.restartConfig();
 
         BOOST_CHECK_EQUAL(true, rstConfig.getWriteRestartFile(0));
     }

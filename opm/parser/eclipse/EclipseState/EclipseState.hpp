@@ -27,6 +27,7 @@
 #include <opm/parser/eclipse/EclipseState/EclipseConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -50,7 +51,6 @@ namespace Opm {
     class Section;
     class SimulationConfig;
     class TableManager;
-    class TransMult;
     class UnitSystem;
 
     class EclipseState {
@@ -72,15 +72,16 @@ namespace Opm {
         std::shared_ptr< const Schedule > getSchedule() const;
         std::shared_ptr< const IOConfig > getIOConfigConst() const;
         std::shared_ptr< IOConfig > getIOConfig() const;
-        std::shared_ptr< const InitConfig > getInitConfig() const;
-        std::shared_ptr< const SimulationConfig > getSimulationConfig() const;
+
+        const InitConfig& getInitConfig() const;
+        const SimulationConfig& getSimulationConfig() const;
         const SummaryConfig& getSummaryConfig() const;
 
         std::shared_ptr< const EclipseGrid > getInputGrid() const;
         std::shared_ptr< EclipseGrid > getInputGridCopy() const;
 
         const FaultCollection& getFaults() const;
-        std::shared_ptr<const TransMult> getTransMult() const;
+        const TransMult& getTransMult() const;
 
         /// non-neighboring connections
         /// the non-standard adjacencies as specified in input deck
@@ -91,6 +92,7 @@ namespace Opm {
 
         const TableManager& getTableManager() const;
         const EclipseConfig& getEclipseConfig() const;
+        const EclipseConfig& cfg() const;
 
         // the unit system used by the deck. note that it is rarely needed to convert
         // units because internally to opm-parser everything is represented by SI
@@ -102,8 +104,6 @@ namespace Opm {
         MessageContainer& getMessageContainer();
         std::string getTitle() const;
 
-        /// [deprecated]
-        void applyModifierDeck(std::shared_ptr<const Deck>);
         void applyModifierDeck(const Deck& deck);
 
     private:
@@ -120,13 +120,13 @@ namespace Opm {
         const TableManager m_tables;
         const GridDims m_gridDims;
         std::shared_ptr<EclipseGrid> m_inputGrid;
+        TransMult m_transMult;
         std::shared_ptr< const Schedule > m_schedule;
         Eclipse3DProperties m_eclipseProperties;
         EclipseConfig m_eclipseConfig;
         NNC m_inputNnc;
         UnitSystem m_deckUnitSystem;
 
-        std::shared_ptr<TransMult> m_transMult;
         FaultCollection m_faults;
         std::string m_title;
 

@@ -609,8 +609,9 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
     EclipseState Parser::parse(const std::string &filename, const ParseContext& context) {
         assertFullDeck(context);
         Parser p;
-        auto deck = p.parseFile(filename, context);
-        return EclipseState(deck, context);
+        DeckPtr deck = p.parseFile(filename, context);
+        EclipseState es(deck, context);
+        return es;
     }
 
     EclipseState Parser::parse(const Deck& deck, const ParseContext& context) {

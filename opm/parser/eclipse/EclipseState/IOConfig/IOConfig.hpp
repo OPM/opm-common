@@ -147,7 +147,7 @@ namespace Opm {
         bool getOutputEnabled();
         void setOutputEnabled(bool enabled);
 
-        std::string getOutputDir();
+        std::string getOutputDir() const;
         void setOutputDir(const std::string& outputDir);
 
         const std::string& getBaseName() const;
