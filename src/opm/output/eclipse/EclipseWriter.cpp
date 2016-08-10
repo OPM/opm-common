@@ -626,7 +626,7 @@ void EclipseWriter::writeTimeStep(int report_step,
     const auto& grid = this->impl->grid;
     const auto& units = es.getUnits();
 
-    const IOConfig& ioConfig = es.cfg().io();
+    const auto& restart = es.cfg().restart();
 
 
     const auto days = units.from_si( UnitSystem::measure::time, secs_elapsed );
@@ -646,7 +646,7 @@ void EclipseWriter::writeTimeStep(int report_step,
 
 
     // Write restart file
-    if(!isSubstep && ioConfig.getWriteRestartFile(report_step))
+    if(!isSubstep && restart.getWriteRestartFile(report_step))
     {
         const size_t ncwmax     = schedule.getMaxNumCompletionsForWells(report_step);
         const size_t numWells   = schedule.numWells(report_step);
@@ -659,7 +659,7 @@ void EclipseWriter::writeTimeStep(int report_step,
         Restart restartHandle( this->impl->outputDir,
                                this->impl->baseName,
                                report_step,
-                               ioConfig);
+                               es.cfg().io() );
 
         for (size_t iwell = 0; iwell < wells_ptr.size(); ++iwell) {
             const auto& well = *wells_ptr[iwell];
