@@ -81,6 +81,4 @@ build_dune dune-common
 build_dune dune-istl
 build_dune dune-geometry
 build_dune dune-grid
-
-
-
+build_dune dune-localfunctions
