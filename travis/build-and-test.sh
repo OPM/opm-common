@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-build_order=(opm-common opm-parser opm-material opm-output opm-core opm-grid opm-simulators opm-upscaling)
+build_order=(opm-common opm-parser opm-material opm-output opm-core opm-grid ewoms opm-simulators opm-upscaling)
 
 # This shell script should be started with the name of a module as
 # only only command line argument. It will start by building all
