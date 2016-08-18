@@ -77,7 +77,8 @@ public:
                         double seconds_elapsed,
                         data::Solution,
                         data::Wells,
-                        bool isSubstep);
+                        bool isSubstep,
+                        bool write_float = true);
 
     EclipseWriter( const EclipseWriter& ) = delete;
     ~EclipseWriter();

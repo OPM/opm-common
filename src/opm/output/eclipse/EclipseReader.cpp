@@ -18,6 +18,7 @@
 */
 
 #include <ert/ecl/ecl_file.h>
+#include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/EclKW.hpp>
 #include <ert/util/ert_unique_ptr.hpp>
 
@@ -36,6 +37,19 @@
 namespace Opm {
 namespace {
 
+    std::vector<double> double_vector( const ecl_kw_type * ecl_kw ) {
+        size_t size = ecl_kw_get_size( ecl_kw );
+
+        if (ecl_kw_get_type( ecl_kw ) == ECL_DOUBLE_TYPE ) {
+            const double * ecl_data = ecl_kw_get_double_ptr( ecl_kw );
+            return { ecl_data , ecl_data + size };
+        } else {
+            const float * ecl_data = ecl_kw_get_float_ptr( ecl_kw );
+            return { ecl_data , ecl_data + size };
+        }
+
+    }
+
     inline data::Solution restoreSOLUTION( ecl_file_type* file,
                                            int numcells,
                                            const UnitSystem& units ) {
@@ -48,26 +62,24 @@ namespace {
                                          + " data" );
         }
 
-        using ERT::EclKW_ref;
-
-        EclKW_ref< float > pres( ecl_file_iget_named_kw( file, "PRESSURE", 0 ) );
-        EclKW_ref< float > temp( ecl_file_iget_named_kw( file, "TEMP", 0 ) );
-        EclKW_ref< float > swat( ecl_file_iget_named_kw( file, "SWAT", 0 ) );
-        EclKW_ref< float > sgas( ecl_file_iget_named_kw( file, "SGAS", 0 ) );
+        const ecl_kw_type * pres = ecl_file_iget_named_kw( file, "PRESSURE", 0 );
+        const ecl_kw_type * temp = ecl_file_iget_named_kw( file, "TEMP", 0 );
+        const ecl_kw_type * swat = ecl_file_iget_named_kw( file, "SWAT", 0 );
+        const ecl_kw_type * sgas = ecl_file_iget_named_kw( file, "SGAS", 0 );
 
         for( const auto& kw : { pres, temp, swat, sgas } ) {
-            if( kw.size() != size_t( numcells ) )
+            if( ecl_kw_get_size(kw) != numcells)
                 throw std::runtime_error("Restart file: Could not restore "
-                                        + std::string( kw.name() )
-                                        + ", mismatched number of cells" );
+                                         + std::string( ecl_kw_get_header( kw ) )
+                                         + ", mismatched number of cells" );
         }
 
         using ds = data::Solution::key;
         data::Solution sol;
-        sol.insert( ds::PRESSURE, { pres.data(), pres.data() + pres.size() } );
-        sol.insert( ds::TEMP,     { temp.data(), temp.data() + temp.size() } );
-        sol.insert( ds::SWAT,     { swat.data(), swat.data() + swat.size() } );
-        sol.insert( ds::SGAS,     { sgas.data(), sgas.data() + sgas.size() } );
+        sol.insert( ds::PRESSURE, double_vector( pres ));
+        sol.insert( ds::TEMP,     double_vector( temp ));
+        sol.insert( ds::SWAT,     double_vector( swat ));
+        sol.insert( ds::SGAS,     double_vector( sgas ));
 
         const auto apply_pressure = [&]( double x ) {
             return units.to_si( UnitSystem::measure::pressure, x );
@@ -84,13 +96,13 @@ namespace {
 
         /* optional keywords */
         if( ecl_file_has_kw( file, "RS" ) ) {
-            EclKW_ref< float > kw( ecl_file_iget_named_kw( file, "RS", 0 ) );
-            sol.insert( ds::RS, { kw.data(), kw.data() + kw.size() } );
+            const ecl_kw_type * rs = ecl_file_iget_named_kw( file , "RS" , 0);
+            sol.insert( ds::RS, double_vector( rs ) );
         }
 
         if( ecl_file_has_kw( file, "RV" ) ) {
-            EclKW_ref< float > kw( ecl_file_iget_named_kw( file, "RV", 0 ) );
-            sol.insert( ds::RV, { kw.data(), kw.data() + kw.size() } );
+            const ecl_kw_type * rv = ecl_file_iget_named_kw( file , "RV" , 0);
+            sol.insert( ds::RV, double_vector( rv ) );
         }
 
         return sol;

@@ -115,9 +115,11 @@ void writeKeyword( ERT::FortIO& fortio ,
 
 void writeKeyword( ERT::FortIO& fortio ,
                    const std::string& keywordName,
-                   const std::vector<double> &data ) {
+                   const std::vector<double> &data) {
+
     ERT::EclKW< float > kw( keywordName, data );
     kw.fwrite( fortio );
+
 }
 
 
@@ -277,6 +279,30 @@ public:
     template< typename T >
     void add( ERT::EclKW< T >&& kw ) {
         ecl_rst_file_add_kw( this->restart.ertHandle(), kw.get() );
+    }
+
+    template<typename T>
+    void addFromCells(const data::Solution& cells) {
+        using dc = data::Solution::key;
+
+        this->add( ERT::EclKW<T>("PRESSURE", cells[ dc::PRESSURE ]));
+
+        if ( cells.has( dc::TEMP ))
+            this->add( ERT::EclKW<T>("TEMP", cells[ dc::TEMP ]) );
+
+        if( cells.has( dc::SWAT ) )
+            this->add( ERT::EclKW<T>( "SWAT", cells[ dc::SWAT ] ) );
+
+        if( cells.has( dc::SGAS ) )
+            this->add( ERT::EclKW<T>( "SGAS", cells[ dc::SGAS ] ) );
+
+        // Write RS - Dissolved GOR
+        if( cells.has( dc::RS ) )
+            this->add( ERT::EclKW<T>("RS", cells[ dc::RS ] ) );
+
+        // Write RV - Volatilized oil/gas ratio
+        if( cells.has( dc::RV ) )
+            this->add( ERT::EclKW<T>("RV", cells[ dc::RV ] ) );
     }
 
     ecl_rst_file_type* ertHandle() { return this->restart.ertHandle(); }
@@ -613,7 +639,8 @@ void EclipseWriter::writeTimeStep(int report_step,
                                   double secs_elapsed,
                                   data::Solution cells,
                                   data::Wells wells,
-                                  bool  isSubstep)
+                                  bool  isSubstep,
+                                  bool  write_float)
 {
 
     if( !this->impl->output_enabled )
@@ -728,24 +755,10 @@ void EclipseWriter::writeTimeStep(int report_step,
         {
             Solution sol(restartHandle);
 
-            sol.add( ERT::EclKW<float>("PRESSURE", cells[ dc::PRESSURE ]));
-
-            if ( cells.has( dc::TEMP ))
-                sol.add( ERT::EclKW<float>("TEMP", cells[ dc::TEMP ]) );
-
-            if( cells.has( dc::SWAT ) )
-                sol.add( ERT::EclKW<float>( "SWAT", cells[ dc::SWAT ] ) );
-
-            if( cells.has( dc::SGAS ) )
-                sol.add( ERT::EclKW<float>( "SGAS", cells[ dc::SGAS ] ) );
-
-            // Write RS - Dissolved GOR
-            if( cells.has( dc::RS ) )
-                sol.add( ERT::EclKW<float>("RS", cells[ dc::RS ] ) );
-
-            // Write RV - Volatilized oil/gas ratio
-            if( cells.has( dc::RV ) )
-                sol.add( ERT::EclKW<float>("RV", cells[ dc::RV ] ) );
+            if (write_float)
+                sol.addFromCells<float>( cells );
+            else
+                sol.addFromCells<double>( cells );
         }
     }
 
@@ -767,7 +780,7 @@ void EclipseWriter::writeTimeStep(int report_step,
                                       es,
                                       wells );
     this->impl->summary.write();
-}
+ }
 
 EclipseWriter::EclipseWriter( std::shared_ptr< const EclipseState > es,
                               int numCells,
