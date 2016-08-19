@@ -95,7 +95,7 @@ namespace Opm {
 
         namespace wp = WellProducer;
         using mode = std::pair< const char*, wp::ControlModeEnum >;
-        static constexpr mode modes[] = {
+        static const mode modes[] = {
             { "ORAT", wp::ORAT }, { "WRAT", wp::WRAT }, { "GRAT", wp::GRAT },
             { "LRAT", wp::LRAT }, { "RESV", wp::RESV }, { "BHP", wp::BHP },
             { "THP", wp::THP }
