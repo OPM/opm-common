@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(RPTRST) {
                           "19 JUN 2007 / \n"
                           "SOLUTION\n"
                           "RPTRST\n"
-                          " KRG KRO KRW NORST SFREQ=10/\n"
+                          " ACIP KRG KRO KRW NORST SFREQ=10/\n"
                           "SCHEDULE\n"
                           "DATES             -- 1\n"
                           " 10  OKT 2008 / \n"
@@ -329,7 +329,7 @@ BOOST_AUTO_TEST_CASE(RPTRST) {
     BOOST_CHECK( !rstConfig1.getWriteRestartFile( 1 ) );
     BOOST_CHECK(  rstConfig1.getWriteRestartFile( 2 ) );
 
-    std::vector<std::string> expected = { "BASIC", "KRG", "KRO", "KRW", "NORST", "SFREQ" };
+    std::vector<std::string> expected = { "ACIP","BASIC", "KRG", "KRO", "KRW", "NORST", "SFREQ" };
     const auto kw_list = fun::map( fst, rstConfig1.getRestartKeywords(2) );
 
     BOOST_CHECK_EQUAL_COLLECTIONS( expected.begin() ,expected.end(),
