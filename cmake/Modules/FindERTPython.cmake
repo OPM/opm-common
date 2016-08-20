@@ -31,9 +31,7 @@ if(PYTHONINTERP_FOUND)
 
   # Add various popular sibling alternatives.
   list(APPEND PATH_LIST "${PROJECT_SOURCE_DIR}/../ert/build"
-    			"${PROJECT_SOURCE_DIR}/../ert/devel/build"
-    			"${PROJECT_BINARY_DIR}/../ert-build"
-    			"${PROJECT_BINARY_DIR}/../ert/devel")
+    			"${PROJECT_BINARY_DIR}/../ert-build")
 
   foreach( PATH ${PATH_LIST})
       set( python_code "import sys; sys.path.insert(0 , '${PATH}/${PYTHON_INSTALL_PREFIX}'); import os.path; import inspect; import ert; print os.path.dirname(os.path.dirname(inspect.getfile(ert))); from ert.ecl import EclSum")
