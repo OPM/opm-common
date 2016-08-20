@@ -237,8 +237,9 @@ first_sim(test_work_area_type * test_area) {
     auto wells = mkWells();
 
     eclWriter.writeTimeStep( 1,
+                             false,
                              first_step - start_time,
-                             sol, wells, false);
+                             sol, wells);
 
     return { sol, wells };
 }

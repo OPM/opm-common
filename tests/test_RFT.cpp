@@ -134,9 +134,10 @@ BOOST_AUTO_TEST_CASE(test_RFT) {
         };
 
         eclipseWriter.writeTimeStep( 2,
-                step_time - start_time,
-                createBlackoilState( 2, numCells ),
-                wells, false);
+                                     false,
+                                     step_time - start_time,
+                                     createBlackoilState( 2, numCells ),
+                                     wells);
     }
 
     verifyRFTFile("TESTRFT.RFT");

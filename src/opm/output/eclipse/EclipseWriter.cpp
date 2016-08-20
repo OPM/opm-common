@@ -636,10 +636,10 @@ void EclipseWriter::writeInitAndEgrid(const std::vector<data::CellData>& simProp
 
 // implementation of the writeTimeStep method
 void EclipseWriter::writeTimeStep(int report_step,
+                                  bool  isSubstep,
                                   double secs_elapsed,
                                   data::Solution cells,
                                   data::Wells wells,
-                                  bool  isSubstep,
                                   bool  write_float)
 {
 

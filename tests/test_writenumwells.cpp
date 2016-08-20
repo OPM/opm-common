@@ -159,9 +159,10 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
 
     for(int timestep = 0; timestep <= countTimeStep; ++timestep){
         eclipseWriter.writeTimeStep( timestep,
+                                     false, 
                                      timestep,
                                      solution,
-                                     wells, false);
+                                     wells );
     }
 
     verifyWellState(eclipse_restart_filename, eclipseState->getInputGrid(), eclipseState->getSchedule());

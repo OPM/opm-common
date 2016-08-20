@@ -290,9 +290,10 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
 
         for( int i = 0; i < 5; ++i ) {
             eclWriter.writeTimeStep( i,
+                                     false,
                                      first_step - start_time,
                                      createBlackoilState( i, 3 * 3 * 3 ),
-                                     wells, false);
+                                     wells);
 
             checkRestartFile( i );
 

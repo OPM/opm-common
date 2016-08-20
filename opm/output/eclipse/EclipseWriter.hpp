@@ -74,10 +74,10 @@ public:
      * meaningful after the first time step has been completed.
      */
     void writeTimeStep( int report_step,
+                        bool isSubstep,
                         double seconds_elapsed,
                         data::Solution,
                         data::Wells,
-                        bool isSubstep,
                         bool write_float = true);
 
     EclipseWriter( const EclipseWriter& ) = delete;
