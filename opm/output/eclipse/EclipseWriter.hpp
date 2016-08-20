@@ -72,12 +72,27 @@ public:
      * The summary information can then be visualized using tools from
      * ERT or ECLIPSE. Note that calling this method is only
      * meaningful after the first time step has been completed.
+     *
+     * The optional simProps vector contains fields which have been
+     * calculated by the simulator and are written to the restart
+     * file. Examples of such fields would be the relative
+     * permeabilities KRO, KRW and KRG and fluxes. The keywords which
+     * can be added here are represented with mnenonics in the RPTRST
+     * keyword.
+     *
+     * By default the various solution fields like PRESSURE and
+     * SWAT/SGAS should be written in single precision (i.e. as
+     * float). That is what eclipse does, and probably what most third
+     * party application expect - however passing false for the
+     * optional variable write_float the solution fields will be
+     * written in double precision.
      */
     void writeTimeStep( int report_step,
                         bool isSubstep,
                         double seconds_elapsed,
                         data::Solution,
                         data::Wells,
+                        const std::vector<data::CellData>& simProps = {},
                         bool write_float = true);
 
     EclipseWriter( const EclipseWriter& ) = delete;

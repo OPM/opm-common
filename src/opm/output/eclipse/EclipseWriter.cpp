@@ -640,6 +640,7 @@ void EclipseWriter::writeTimeStep(int report_step,
                                   double secs_elapsed,
                                   data::Solution cells,
                                   data::Wells wells,
+                                  const std::vector<data::CellData>& simProps,
                                   bool  write_float)
 {
 
@@ -759,6 +760,23 @@ void EclipseWriter::writeTimeStep(int report_step,
                 sol.addFromCells<float>( cells );
             else
                 sol.addFromCells<double>( cells );
+            {
+                const auto& compressedToCartesian = this->impl->compressedToCartesian;
+                for (const auto& prop : simProps) {
+                    const auto& opm_data = prop.data;
+                    auto ecl_data = restrictAndReorderToActiveCells( opm_data,
+                                                                     compressedToCartesian.size(),
+                                                                     compressedToCartesian.data());
+                    convertFromSiTo( ecl_data,
+                                     units,
+                                     prop.dim );
+
+                    if (write_float)
+                        sol.add( ERT::EclKW<float>(prop.name , ecl_data));
+                    else
+                        sol.add( ERT::EclKW<double>(prop.name , ecl_data));
+                }
+            }
         }
     }
 

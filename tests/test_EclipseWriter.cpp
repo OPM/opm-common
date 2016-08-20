@@ -215,6 +215,12 @@ void checkRestartFile( int timeStepIdx ) {
                 const auto resultData = getErtData< float >( eclKeyword );
                 compareErtData( sol[ ds::SGAS ], resultData, 1e-4 );
             }
+
+            if (keywordName == "KRO")
+                BOOST_CHECK_EQUAL( 1.0 * i * ecl_kw_get_size( eclKeyword ) , ecl_kw_element_sum_float( eclKeyword ));
+
+            if (keywordName == "KRG")
+                BOOST_CHECK_EQUAL( 10.0 * i * ecl_kw_get_size( eclKeyword ) , ecl_kw_element_sum_float( eclKeyword ));
         }
 
         fortio_fclose(rstFile);
@@ -289,11 +295,15 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
         data::Wells wells;
 
         for( int i = 0; i < 5; ++i ) {
+            std::vector<data::CellData> simProps{{"KRO" , UnitSystem::measure::identity , std::vector<double>(3*3*3 , i)},
+                                                 {"KRG" , UnitSystem::measure::identity , std::vector<double>(3*3*3 , i*10)}};
+
             eclWriter.writeTimeStep( i,
                                      false,
                                      first_step - start_time,
                                      createBlackoilState( i, 3 * 3 * 3 ),
-                                     wells);
+                                     wells,
+                                     simProps);
 
             checkRestartFile( i );
 
