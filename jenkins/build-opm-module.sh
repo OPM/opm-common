@@ -24,7 +24,12 @@ function clone_module {
   mkdir -p $WORKSPACE/deps/$1
   cd $WORKSPACE/deps/$1
   git init .
-  git remote add origin https://github.com/OPM/$1
+  if [ "$1" == "ert" ]
+  then
+    git remote add origin https://github.com/Ensembles/$1
+  else
+    git remote add origin https://github.com/OPM/$1
+  fi
   git fetch --depth 1 origin $2:branch_to_build
   git checkout branch_to_build
   test $? -eq 0 || exit 1
