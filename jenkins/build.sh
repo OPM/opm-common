@@ -65,7 +65,7 @@ popd
 pushd .
 mkdir -p serial/build-ert
 cd serial/build-ert
-cmake $WORKSPACE/deps/ert/devel -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$WORKSPACE/serial/install
+cmake $WORKSPACE/deps/ert -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$WORKSPACE/serial/install
 cmake --build . --target install
 popd
 

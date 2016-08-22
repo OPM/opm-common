@@ -67,7 +67,7 @@ function build_ert {
     git clone https://github.com/Ensembles/ert.git
     mkdir -p ert/build
     pushd ert/build > /dev/null
-    cmake ../devel && make
+    cmake .. && make
     popd > /dev/null
 }
 
