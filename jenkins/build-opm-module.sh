@@ -86,13 +86,9 @@ function build_downstreams {
     # OPM_DATA_ROOT - passed for modules having opm-data based integration tests
     # USE_QUADMATH - used by ewoms to disable quadmath support (makes tests usable)
     # ENABLE_PYTHON - will build the Python wrappers for OpmParser, ignored by the other modules.
-    clone_and_build_module $downstream "-DCMAKE_PREFIX_PATH=$WORKSPACE/serial/install -DCMAKE_INSTALL_PREFIX=$WORKSPACE/serial/install -DOPM_DATA_ROOT=$OPM_DATA_ROOT -DENABLE_PYTHON=ON -DUSE_QUADMATH=0" ${downstreamRev[$downstream]} $WORKSPACE/serial 1
-    code=$?
-    # ewoms skips tests in nasty ways. ignore return code
-    if [ "$downstream" != "ewoms" ]
-    then
-      test $code -eq 0 || exit 1
-    fi
+    # ADD_DISABLED_CTESTS - will not add ctests to the output which are disabled due to missing dependencies.
+    clone_and_build_module $downstream "-DCMAKE_PREFIX_PATH=$WORKSPACE/serial/install -DCMAKE_INSTALL_PREFIX=$WORKSPACE/serial/install -DOPM_DATA_ROOT=$OPM_DATA_ROOT -DENABLE_PYTHON=ON -DUSE_QUADMATH=0 -DADD_DISABLED_CTESTS=OFF" ${downstreamRev[$downstream]} $WORKSPACE/serial 1
+    test $? -eq 0 || exit 1
 
     # Installation for downstream
     pushd .
