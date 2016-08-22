@@ -25,7 +25,7 @@ build_script:
     - git clone https://github.com/OPM/opm-common.git
     - git clone https://github.com/Ensembles/ert.git
     - cd ert
-    - cmake C:\projects\opm-parser\ert\devel -G"%GEN%" -DCMAKE_BUILD_TYPE=%configuration% -DERT_BUILD_CXX=ON -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF
+    - cmake C:\projects\opm-parser\ert -G"%GEN%" -DCMAKE_BUILD_TYPE=%configuration% -DERT_BUILD_CXX=ON -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF
     - cmake --build . --target install --config %configuration%
     - cd ../opm-common
     - cmake C:\projects\opm-parser\opm-common -G"%GEN%" %BOOST_OPTIONS% -DCMAKE_BUILD_TYPE=%configuration% -DBUILD_TESTING=OFF
