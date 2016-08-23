@@ -34,9 +34,12 @@
 #include <ert/util/TestArea.hpp>
 
 #include <opm/output/Wells.hpp>
+#include <opm/output/Cells.hpp>
 #include <opm/output/eclipse/Summary.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -51,6 +54,36 @@ const char* path = "summary_deck.DATA";
  * expect input in SI units (seconds)
  */
 static const int day = 24 * 60 * 60;
+
+
+static data::Solution make_solution( const EclipseGrid& grid ) {
+    using ds = data::Solution::key;
+    data::Solution sol;
+    int numCells = grid.getCartesianSize();
+
+    for( auto k : { ds::TEMP, ds::SWAT, ds::SGAS } ) {
+        sol.insert( k, std::vector< double >( numCells ) );
+    }
+
+    sol[ ds::TEMP ].assign( numCells, 7.0 );
+    sol[ ds::SWAT ].assign( numCells, 8.0 );
+    sol[ ds::SGAS ].assign( numCells, 9.0 );
+
+
+    {
+        std::vector<double> pres(numCells);
+        for (size_t k=0; k < grid.getNZ(); k++) {
+            for (size_t j=0; j < grid.getNY(); j++) {
+                for (size_t i=0; i < grid.getNX(); i++) {
+                    size_t g = grid.getNX()*grid.getNY()*k + j * grid.getNX() + i;
+                    pres[g] = 1.0*(k + 1);
+                }
+            }
+        }
+        sol.insert( ds::PRESSURE , pres);
+    }
+    return sol;
+}
 
 static data::Wells result_wells() {
     /* populate with the following pattern:
@@ -121,18 +154,36 @@ struct setup {
     std::shared_ptr< Deck > deck;
     EclipseState es;
     SummaryConfig config;
+    const EclipseGrid& grid;
+    const std::vector<int> am;
     data::Wells wells;
     std::string name;
     ERT::TestArea ta;
+
+    /*-----------------------------------------------------------------*/
+
+    data::Solution solution;
+    std::unordered_map<int , std::vector<size_t>> cells;
 
     setup( const std::string& fname , const ParseContext& parseContext = ParseContext( )) :
         deck( Parser().parseFile( path, parseContext ) ),
         es( *deck, ParseContext() ),
         config( *deck, es , parseContext ),
+        grid( *es.getInputGrid() ),
+        am( grid.getActiveMap() ),
         wells( result_wells() ),
         name( fname ),
         ta( ERT::TestArea("test_summary") )
-    { }
+    {
+        const auto& properties = es.get3DProperties();
+        const auto& fipnum = properties.getIntGridProperty("FIPNUM");
+        const auto& region_values = properties.getRegions( "FIPNUM" );
+
+        for (auto region_id : region_values)
+            cells.emplace( region_id , fipnum.cellsEqual( region_id , am ));
+
+        solution = make_solution( *es.getInputGrid());
+    }
 
 };
 
@@ -149,9 +200,9 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     cfg.name = "PATH/CASE";
 
     out::Summary writer( cfg.es, cfg.config, cfg.name );
-    writer.add_timestep( 0, 0 * day, cfg.es, cfg.wells );
-    writer.add_timestep( 1, 1 * day, cfg.es, cfg.wells );
-    writer.add_timestep( 2, 2 * day, cfg.es, cfg.wells );
+    writer.add_timestep( 0, 0 * day, cfg.am, cfg.es, cfg.cells, cfg.wells , cfg.solution);
+    writer.add_timestep( 1, 1 * day, cfg.am, cfg.es, cfg.cells, cfg.wells , cfg.solution);
+    writer.add_timestep( 2, 2 * day, cfg.am, cfg.es, cfg.cells, cfg.wells , cfg.solution);
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -272,9 +323,9 @@ BOOST_AUTO_TEST_CASE(group_keywords) {
     setup cfg( "test_Summary_group" );
 
     out::Summary writer( cfg.es, cfg.config, cfg.name );
-    writer.add_timestep( 0, 0 * day, cfg.es, cfg.wells );
-    writer.add_timestep( 1, 1 * day, cfg.es, cfg.wells );
-    writer.add_timestep( 2, 2 * day, cfg.es, cfg.wells );
+    writer.add_timestep( 0, 0 * day, cfg.am, cfg.es, cfg.cells, cfg.wells , cfg.solution);
+    writer.add_timestep( 1, 1 * day, cfg.am, cfg.es, cfg.cells, cfg.wells , cfg.solution);
+    writer.add_timestep( 2, 2 * day, cfg.am, cfg.es, cfg.cells, cfg.wells , cfg.solution);
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -344,9 +395,9 @@ BOOST_AUTO_TEST_CASE(completion_kewords) {
     setup cfg( "test_Summary_completion" );
 
     out::Summary writer( cfg.es, cfg.config, cfg.name );
-    writer.add_timestep( 0, 0 * day, cfg.es, cfg.wells );
-    writer.add_timestep( 1, 1 * day, cfg.es, cfg.wells );
-    writer.add_timestep( 2, 2 * day, cfg.es, cfg.wells );
+    writer.add_timestep( 0, 0 * day, cfg.am, cfg.es, cfg.cells, cfg.wells , cfg.solution);
+    writer.add_timestep( 1, 1 * day, cfg.am, cfg.es, cfg.cells, cfg.wells , cfg.solution);
+    writer.add_timestep( 2, 2 * day, cfg.am, cfg.es, cfg.cells, cfg.wells , cfg.solution);
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -384,9 +435,9 @@ BOOST_AUTO_TEST_CASE(field_keywords) {
     setup cfg( "test_Summary_field" );
 
     out::Summary writer( cfg.es, cfg.config, cfg.name );
-    writer.add_timestep( 0, 0 * day, cfg.es, cfg.wells );
-    writer.add_timestep( 1, 1 * day, cfg.es, cfg.wells );
-    writer.add_timestep( 2, 2 * day, cfg.es, cfg.wells );
+    writer.add_timestep( 0, 0 * day, cfg.am, cfg.es, cfg.cells, cfg.wells , cfg.solution);
+    writer.add_timestep( 1, 1 * day, cfg.am, cfg.es, cfg.cells, cfg.wells , cfg.solution);
+    writer.add_timestep( 2, 2 * day, cfg.am, cfg.es, cfg.cells, cfg.wells , cfg.solution);
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -461,9 +512,9 @@ BOOST_AUTO_TEST_CASE(report_steps_time) {
     setup cfg( "test_Summary_report_steps_time" );
 
     out::Summary writer( cfg.es, cfg.config, cfg.name );
-    writer.add_timestep( 1, 2 *  day, cfg.es, cfg.wells );
-    writer.add_timestep( 1, 5 *  day, cfg.es, cfg.wells );
-    writer.add_timestep( 2, 10 * day, cfg.es, cfg.wells );
+    writer.add_timestep( 1, 2 *  day, cfg.am, cfg.es, cfg.cells, cfg.wells , cfg.solution);
+    writer.add_timestep( 1, 5 *  day, cfg.am, cfg.es, cfg.cells, cfg.wells , cfg.solution);
+    writer.add_timestep( 2, 10 * day, cfg.am, cfg.es, cfg.cells, cfg.wells , cfg.solution);
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -483,9 +534,9 @@ BOOST_AUTO_TEST_CASE(skip_unknown_var) {
     setup cfg( "test_Summary_skip_unknown_var" );
 
     out::Summary writer( cfg.es, cfg.config, cfg.name );
-    writer.add_timestep( 1, 2 *  day, cfg.es, cfg.wells );
-    writer.add_timestep( 1, 5 *  day, cfg.es, cfg.wells );
-    writer.add_timestep( 2, 10 * day, cfg.es, cfg.wells );
+    writer.add_timestep( 1, 2 *  day, cfg.am, cfg.es, cfg.cells, cfg.wells , cfg.solution);
+    writer.add_timestep( 1, 5 *  day, cfg.am, cfg.es, cfg.cells, cfg.wells , cfg.solution);
+    writer.add_timestep( 2, 10 * day, cfg.am, cfg.es, cfg.cells, cfg.wells , cfg.solution);
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -494,4 +545,31 @@ BOOST_AUTO_TEST_CASE(skip_unknown_var) {
     /* verify that some non-supported keywords aren't written to the file */
     BOOST_CHECK( !ecl_sum_has_well_var( resp, "W_1", "WPI" ) );
     BOOST_CHECK( !ecl_sum_has_field_var( resp, "FVIR" ) );
+}
+
+
+
+BOOST_AUTO_TEST_CASE(region_vars) {
+    setup cfg( "region_vars" );
+
+    {
+        out::Summary writer( cfg.es, cfg.config, cfg.name );
+        writer.add_timestep( 1, 2 *  day, cfg.am , cfg.es, cfg.cells, cfg.wells, cfg.solution);
+        writer.add_timestep( 1, 5 *  day, cfg.am , cfg.es, cfg.cells, cfg.wells, cfg.solution);
+        writer.add_timestep( 2, 10 * day, cfg.am , cfg.es, cfg.cells, cfg.wells, cfg.solution);
+        writer.write();
+    }
+
+    auto res = readsum( cfg.name );
+    const auto* resp = res.get();
+
+    BOOST_CHECK( ecl_sum_has_general_var( resp , "RPR:1"));
+    BOOST_CHECK( ecl_sum_has_general_var( resp , "RPR:10"));
+    BOOST_CHECK( !ecl_sum_has_general_var( resp , "RPR:11"));
+    UnitSystem units( UnitSystem::UNIT_TYPE_METRIC );
+
+    for (size_t r=1; r <= 10; r++) {
+        std::string key = "RPR:" + std::to_string( r );
+        BOOST_CHECK_CLOSE( r * 1.0 , units.to_si( UnitSystem::measure::pressure , ecl_sum_get_general_var( resp, 1, key.c_str())) , 1e-5);
+    }
 }

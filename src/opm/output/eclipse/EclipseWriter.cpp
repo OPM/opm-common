@@ -19,6 +19,8 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <unordered_map>
+
 #include "config.h"
 
 #include "EclipseWriter.hpp"
@@ -442,6 +444,7 @@ class EclipseWriter::Impl {
 
         std::shared_ptr< const EclipseState > es;
         EclipseGrid grid;
+        std::unordered_map<int , std::vector<size_t>> regionCells;
         std::string outputDir;
         std::string baseName;
         out::Summary summary;
@@ -473,7 +476,8 @@ EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
     , compressedToCartesian( numCells , int(-1) )
     , output_enabled( eclipseState->getIOConfig()->getOutputEnabled() )
     , ert_phase_mask( ertPhaseMask( eclipseState->getTableManager() ) )
-{}
+{
+}
 
 
 void EclipseWriter::writeINITFile(const EclipseGrid& grid, const std::vector<data::CellData>& simProps, const NNC& nnc) const {
@@ -795,8 +799,11 @@ void EclipseWriter::writeTimeStep(int report_step,
 
     this->impl->summary.add_timestep( report_step,
                                       secs_elapsed,
-                                      es,
-                                      wells );
+                                      this->impl->compressedToCartesian,
+                                      *this->impl->es,
+                                      this->impl->regionCells,
+                                      wells ,
+                                      cells );
     this->impl->summary.write();
  }
 
@@ -839,6 +846,19 @@ EclipseWriter::EclipseWriter( std::shared_ptr< const EclipseState > es,
     if( !util_is_directory( outputDir.c_str() ) ) {
         throw std::runtime_error( "The path specified as output directory '"
                                   + outputDir + "' is not a directory");
+    }
+
+    /*
+       Precalculate the cell - region distribution for faster
+       evaluation of region properties.
+    */
+    {
+        const auto& properties = es->get3DProperties();
+        const auto& fipnum = properties.getIntGridProperty("FIPNUM");
+        const auto& region_values = properties.getRegions( "FIPNUM" );
+
+        for (auto region_id : region_values)
+            this->impl->regionCells.emplace( region_id , fipnum.cellsEqual( region_id , this->impl->compressedToCartesian ));
     }
 }
 

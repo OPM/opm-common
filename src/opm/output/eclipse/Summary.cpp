@@ -27,6 +27,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/WellSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 /*
@@ -118,8 +119,11 @@ struct fn_args {
     const std::vector< const Well* >& schedule_wells;
     double duration;
     size_t timestep;
-    int active_index;
+    int  num;
     const data::Wells& wells;
+    const data::Solution& state;
+    const std::unordered_map<int , std::vector<size_t>>& regionCells;
+    const std::vector<int>& compressedToCartesian;
 };
 
 /* Since there are several enums in opm scattered about more-or-less
@@ -156,7 +160,7 @@ inline quantity rate( const fn_args& args ) {
 template< rt phase, bool injection = true >
 inline quantity crate( const fn_args& args ) {
     const quantity zero = { 0, rate_unit< phase >() };
-    const auto index = args.active_index;
+    const auto index = args.num;
 
     if( args.schedule_wells.empty() ) return zero;
 
@@ -263,6 +267,23 @@ struct bin_op {
 
 inline quantity duration( const fn_args& args ) {
     return { args.duration, measure::time };
+}
+
+quantity rpr(const fn_args& args) {
+    const auto& pair = args.regionCells.find( args.num );
+    if (pair == args.regionCells.end())
+        return { 0.0 , measure::pressure };
+
+    double RPR = 0;
+    const std::vector<double>& pressure = args.state[data::Solution::key::PRESSURE];
+    const auto& cells = pair->second;
+
+    for (auto cell_index : cells)
+        RPR += pressure[cell_index];
+
+    RPR /= cells.size();
+
+    return { RPR , measure::pressure };
 }
 
 template< typename F, typename G >
@@ -443,6 +464,9 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FGLRH", div( production_history< Phase::GAS >,
                     sum( production_history< Phase::WATER >,
                          production_history< Phase::OIL > ) ) },
+
+    /* Region properties */
+    { "RPR" , rpr},
 };
 
 inline std::vector< const Well* > find_wells( const Schedule& schedule,
@@ -522,8 +546,9 @@ Summary::Summary( const EclipseState& st,
 
         /* get unit strings by calling each function with dummy input */
         const auto handle = funs.find( keyword )->second;
-        const std::vector< const Well* > dummy;
-        const fn_args no_args{ dummy, 0, 0, 0, {} };
+        const std::vector< const Well* > dummy_wells;
+        const std::unordered_map<int,std::vector<size_t>> dummy_cells;
+        const fn_args no_args{ dummy_wells, 0, 0, 0, {} , {}, dummy_cells , {} };
         const auto val = handle( no_args );
         const auto* unit = st.getUnits().name( val.unit );
 
@@ -536,8 +561,11 @@ Summary::Summary( const EclipseState& st,
 
 void Summary::add_timestep( int report_step,
                             double secs_elapsed,
+                            const std::vector<int>& indexMap,
                             const EclipseState& es,
-                            const data::Wells& wells ) {
+                            const std::unordered_map<int, std::vector<size_t>>& regionCells,
+                            const data::Wells& wells ,
+                            const data::Solution& state) {
 
     auto* tstep = ecl_sum_add_tstep( this->ecl_sum.get(), report_step, secs_elapsed );
     const double duration = secs_elapsed - this->prev_time_elapsed;
@@ -546,11 +574,11 @@ void Summary::add_timestep( int report_step,
     const auto& schedule = *es.getSchedule();
 
     for( auto& f : this->handlers->handlers ) {
-        const int active_index = smspec_node_get_num( f.first );
+        const int num = smspec_node_get_num( f.first );
         const auto* genkey = smspec_node_get_gen_key1( f.first );
 
         const auto schedule_wells = find_wells( schedule, f.first, timestep );
-        const auto val = f.second( { schedule_wells, duration, timestep, active_index, wells } );
+        const auto val = f.second( { schedule_wells, duration, timestep, num, wells , state , regionCells , indexMap} );
 
         const auto num_val = val.value > 0 ? val.value : 0.0;
         const auto unit_applied_val = es.getUnits().from_si( val.unit, num_val );
