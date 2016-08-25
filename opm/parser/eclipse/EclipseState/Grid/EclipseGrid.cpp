@@ -679,26 +679,27 @@ namespace Opm {
     }
 
     const std::vector<int>& EclipseGrid::getActiveMap() const {
-        if (!activeMap) {
-            std::vector<int> * data_ptr = new std::vector<int>( getNumActive() );
-            std::vector<int>& data = *data_ptr;
-            activeMap.reset( data_ptr );
+        if( !this->activeMap.empty() ) return this->activeMap;
 
-            for (int global_index = 0; global_index < static_cast<int>(getCartesianSize()); global_index++) {
-                // Using the low level C function to get the active index, because the C++
-                // version will throw for inactive cells.
-                int active_index = ecl_grid_get_active_index1( m_grid.get() , global_index );
-                if (active_index >= 0)
-                    data[active_index] = global_index;
-            }
+        this->activeMap.resize( this->getNumActive() );
+        const auto size = int(this->getCartesianSize());
+
+        for( int global_index = 0; global_index < size; global_index++) {
+            // Using the low level C function to get the active index, because the C++
+            // version will throw for inactive cells.
+            int active_index = ecl_grid_get_active_index1( m_grid.get() , global_index );
+            if (active_index >= 0)
+                this->activeMap[ active_index ] = global_index;
         }
 
-        return *activeMap;
+        return this->activeMap;
     }
 
     void EclipseGrid::resetACTNUM( const int * actnum) {
-        activeMap.reset( 0 );
         ecl_grid_reset_actnum( m_grid.get() , actnum );
+        /* re-build the active map cache */
+        this->activeMap.clear();
+        this->getActiveMap();
     }
 
 
