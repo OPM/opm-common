@@ -697,15 +697,26 @@ BOOST_AUTO_TEST_CASE(ResetACTNUM) {
     grid.resetACTNUM( actnum.data() );
     BOOST_CHECK_EQUAL( 4U , grid.getNumActive() );
 
-    std::vector<int> activeMap = grid.getActiveMap( );
-    BOOST_CHECK_EQUAL( 4U , activeMap.size() );
-    BOOST_CHECK_EQUAL( 0 , activeMap[0] );
-    BOOST_CHECK_EQUAL( 2 , activeMap[1] );
-    BOOST_CHECK_EQUAL( 4 , activeMap[2] );
-    BOOST_CHECK_EQUAL( 6 , activeMap[3] );
+    {
+        const auto& activeMap = grid.getActiveMap( );
+        BOOST_CHECK_EQUAL( 4U , activeMap.size() );
+        BOOST_CHECK_EQUAL( 0 , activeMap[0] );
+        BOOST_CHECK_EQUAL( 2 , activeMap[1] );
+        BOOST_CHECK_EQUAL( 4 , activeMap[2] );
+        BOOST_CHECK_EQUAL( 6 , activeMap[3] );
+    }
 
     grid.resetACTNUM( NULL );
     BOOST_CHECK_EQUAL( 1000U , grid.getNumActive() );
+
+    {
+        const auto&  activeMap = grid.getActiveMap( );
+        BOOST_CHECK_EQUAL( 1000U , activeMap.size() );
+        BOOST_CHECK_EQUAL( 0 , activeMap[0] );
+        BOOST_CHECK_EQUAL( 1 , activeMap[1] );
+        BOOST_CHECK_EQUAL( 2 , activeMap[2] );
+        BOOST_CHECK_EQUAL( 999 , activeMap[999] );
+    }
 }
 
 
