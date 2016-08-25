@@ -406,6 +406,37 @@ const std::string& GridProperty<double>::getDimensionString() const {
 }
 
 
+template<typename T>
+std::vector<size_t> GridProperty<T>::cellsEqual(T value, const std::vector<int>& activeMap) const {
+    std::vector<size_t> cells;
+    for (size_t active_index = 0; active_index < activeMap.size(); active_index++) {
+        size_t global_index = activeMap[ active_index ];
+        if (m_data[global_index] == value)
+            cells.push_back( active_index );
+    }
+    return cells;
+}
+
+
+template<typename T>
+std::vector<size_t> GridProperty<T>::indexEqual(T value) const {
+    std::vector<size_t> index_list;
+    for (size_t index = 0; index < m_data.size(); index++) {
+        if (m_data[index] == value)
+            index_list.push_back( index );
+    }
+    return index_list;
+}
+
+
+template<typename T>
+std::vector<size_t> GridProperty<T>::cellsEqual(T value, const EclipseGrid& grid, bool active) const {
+    if (active)
+        return cellsEqual( value , grid.getActiveMap());
+    else
+        return indexEqual( value );
+}
+
 std::vector< double > temperature_lookup( size_t size,
                                             const TableManager* tables,
                                             const EclipseGrid* grid,
