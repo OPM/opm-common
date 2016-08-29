@@ -95,9 +95,9 @@ namespace Opm {
           m_minpvMode( src.m_minpvMode ),
           m_pinch( src.m_pinch ),
           m_pinchoutMode( src.m_pinchoutMode ),
-          m_multzMode( src.m_multzMode )
+          m_multzMode( src.m_multzMode ),
+          m_grid( ecl_grid_alloc_copy( src.c_ptr() ))
     {
-        m_grid.reset( ecl_grid_alloc_copy( src.c_ptr() ) );
     }
 
     EclipseGrid::EclipseGrid(size_t nx, size_t ny , size_t nz,
@@ -107,15 +107,39 @@ namespace Opm {
           m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH"),
           m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
-          m_multzMode(PinchMode::ModeEnum::TOP)
+          m_multzMode(PinchMode::ModeEnum::TOP),
+          m_grid( ecl_grid_alloc_rectangular(nx, ny, nz, dx, dy, dz, NULL) )
     {
-        m_grid.reset(ecl_grid_alloc_rectangular(nx, ny, nz, dx, dy, dz, NULL));
     }
 
     EclipseGrid::EclipseGrid(const std::shared_ptr<const Deck>& deckptr, const int * actnum)
-       :
-               EclipseGrid(*deckptr, actnum)
+       : EclipseGrid(*deckptr, actnum)
     {}
+
+
+    EclipseGrid::EclipseGrid(const EclipseGrid& src, const double* zcorn , const std::vector<int>& actnum)
+        : GridDims(src.getNX(), src.getNY(), src.getNZ()),
+          m_messages( src.m_messages ),
+          m_minpvValue( src.m_minpvValue ),
+          m_minpvMode( src.m_minpvMode ),
+          m_pinch( src.m_pinch ),
+          m_pinchoutMode( src.m_pinchoutMode ),
+          m_multzMode( src.m_multzMode )
+    {
+        const int * actnum_data = (actnum.size() > 0) ? actnum.data() : nullptr;
+        m_grid.reset( ecl_grid_alloc_processed_copy( src.c_ptr(), zcorn , actnum_data ));
+    }
+
+
+    EclipseGrid::EclipseGrid(const EclipseGrid& src, const std::vector<double>& zcorn , const std::vector<int>& actnum)
+        : EclipseGrid( src , (zcorn.size() > 0) ? zcorn.data() : nullptr , actnum )
+    { }
+
+
+    EclipseGrid::EclipseGrid(const EclipseGrid& src, const std::vector<int>& actnum)
+        : EclipseGrid( src , nullptr , actnum )
+    {  }
+
 
 
     /*

@@ -1018,3 +1018,37 @@ BOOST_AUTO_TEST_CASE(GridDimsDIMENS) {
     BOOST_CHECK_EQUAL(gd.getNY(), 17);
     BOOST_CHECK_EQUAL(gd.getNZ(), 19);
 }
+
+
+BOOST_AUTO_TEST_CASE(ProcessedCopy) {
+    Opm::EclipseGrid gd(10,10,10);
+    std::vector<double> zcorn;
+    std::vector<int> actnum;
+
+    gd.exportZCORN( zcorn );
+    gd.exportACTNUM( actnum  );
+
+    {
+        Opm::EclipseGrid gd2(gd , zcorn , actnum );
+        BOOST_CHECK( gd.equal( gd2 ));
+    }
+
+    zcorn[0] -= 1;
+    {
+        Opm::EclipseGrid gd2(gd , zcorn , actnum );
+        BOOST_CHECK( !gd.equal( gd2 ));
+    }
+
+    {
+        Opm::EclipseGrid gd2(gd , actnum );
+        BOOST_CHECK( gd.equal( gd2 ));
+    }
+
+    actnum.assign( gd.getCartesianSize() , 1);
+    actnum[0] = 0;
+    {
+        Opm::EclipseGrid gd2(gd , actnum );
+        BOOST_CHECK( !gd.equal( gd2 ));
+        BOOST_CHECK( !gd2.cellActive( 0 ));
+    }
+}

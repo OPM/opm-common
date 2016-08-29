@@ -54,9 +54,18 @@ namespace Opm {
     class EclipseGrid : public GridDims {
     public:
         explicit EclipseGrid(const std::string& filename);
-        explicit EclipseGrid(const EclipseGrid& srcGrid);
-        explicit EclipseGrid(size_t nx, size_t ny, size_t nz,
-                             double dx = 1.0, double dy = 1.0, double dz = 1.0);
+        EclipseGrid(const EclipseGrid& srcGrid);
+
+        /*
+          These constructors will make a copy of the src grid, with
+          zcorn and or actnum have been adjustments.
+        */
+        EclipseGrid(const EclipseGrid& src, const double* zcorn , const std::vector<int>& actnum);
+        EclipseGrid(const EclipseGrid& src, const std::vector<double>& zcorn , const std::vector<int>& actnum);
+        EclipseGrid(const EclipseGrid& src, const std::vector<int>& actnum);
+
+        EclipseGrid(size_t nx, size_t ny, size_t nz,
+                    double dx = 1.0, double dy = 1.0, double dz = 1.0);
 
         EclipseGrid(std::array<int, 3>& dims ,
                     const std::vector<double>& coord ,
@@ -115,13 +124,13 @@ namespace Opm {
     private:
         MessageContainer m_messages;
 
-        ERT::ert_unique_ptr<ecl_grid_type , ecl_grid_free> m_grid;
         double m_minpvValue;
         MinpvMode::ModeEnum m_minpvMode;
         Value<double> m_pinch;
         PinchMode::ModeEnum m_pinchoutMode;
         PinchMode::ModeEnum m_multzMode;
         mutable std::vector< int > activeMap;
+        ERT::ert_unique_ptr<ecl_grid_type , ecl_grid_free> m_grid;
 
         void initCornerPointGrid(const std::array<int,3>& dims ,
                                  const std::vector<double>& coord ,
