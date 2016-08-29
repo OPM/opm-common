@@ -219,13 +219,13 @@ public:
 
         CompletionSetConstPtr completions = well.getCompletions( step );
 
-        data[ offset + IWEL_HEADI_ITEM ] = well.getHeadI() + 1;
-        data[ offset + IWEL_HEADJ_ITEM ] = well.getHeadJ() + 1;
-        data[ offset + IWEL_CONNECTIONS_ITEM ] = completions->size();
-        data[ offset + IWEL_GROUP_ITEM ] = 1;
+        data[ offset + IWEL_HEADI_INDEX ] = well.getHeadI() + 1;
+        data[ offset + IWEL_HEADJ_INDEX ] = well.getHeadJ() + 1;
+        data[ offset + IWEL_CONNECTIONS_INDEX ] = completions->size();
+        data[ offset + IWEL_GROUP_INDEX ] = 1;
 
-        data[ offset + IWEL_TYPE_ITEM ] = to_ert_welltype( well, step );
-        data[ offset + IWEL_STATUS_ITEM ] =
+        data[ offset + IWEL_TYPE_INDEX ] = to_ert_welltype( well, step );
+        data[ offset + IWEL_STATUS_INDEX ] =
             well.getStatus( step ) == WellCommon::OPEN ? 1 : 0;
     }
 
@@ -236,18 +236,18 @@ public:
         for( size_t i = 0; i < completions->size(); ++i ) {
             const auto& completion = *completions->get( i );
             size_t offset = wellICONOffset + i * Restart::NICONZ;
-            data[ offset + ICON_IC_ITEM ] = 1;
+            data[ offset + ICON_IC_INDEX ] = 1;
 
-            data[ offset + ICON_I_ITEM ] = completion.getI() + 1;
-            data[ offset + ICON_J_ITEM ] = completion.getJ() + 1;
-            data[ offset + ICON_K_ITEM ] = completion.getK() + 1;
+            data[ offset + ICON_I_INDEX ] = completion.getI() + 1;
+            data[ offset + ICON_J_INDEX ] = completion.getJ() + 1;
+            data[ offset + ICON_K_INDEX ] = completion.getK() + 1;
 
             const auto open = WellCompletion::StateEnum::OPEN;
-            data[ offset + ICON_STATUS_ITEM ] = completion.getState() == open
+            data[ offset + ICON_STATUS_INDEX ] = completion.getState() == open
                                               ? 1
                                               : 0;
 
-            data[ offset + ICON_DIRECTION_ITEM ] = completion.getDirection();
+            data[ offset + ICON_DIRECTION_INDEX ] = completion.getDirection();
         }
     }
 
