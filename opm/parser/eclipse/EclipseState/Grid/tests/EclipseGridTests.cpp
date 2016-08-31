@@ -1052,3 +1052,28 @@ BOOST_AUTO_TEST_CASE(ProcessedCopy) {
         BOOST_CHECK( !gd2.cellActive( 0 ));
     }
 }
+
+
+BOOST_AUTO_TEST_CASE(ZcornMapper) {
+    int nx = 3;
+    int ny = 4;
+    int nz = 5;
+    Opm::EclipseGrid grid(nx,ny,nz);
+    Opm::ZcornMapper zmp = grid.zcornMapper( );
+    const ecl_grid_type * ert_grid = grid.c_ptr();
+
+
+    BOOST_CHECK_THROW(zmp.index(nx,1,1,0) , std::invalid_argument);
+    BOOST_CHECK_THROW(zmp.index(0,ny,1,0) , std::invalid_argument);
+    BOOST_CHECK_THROW(zmp.index(0,1,nz,0) , std::invalid_argument);
+    BOOST_CHECK_THROW(zmp.index(0,1,2,8) , std::invalid_argument);
+
+    for (int k=0; k < nz; k++)
+        for (int j=0; j < ny; j++)
+            for (int i=0; i < nx; i++)
+                for (int c=0; c < 8; c++) {
+                    size_t g = i + j*nx + k*nx*ny;
+                    BOOST_CHECK_EQUAL( zmp.index(g , c) , zmp.index( i,j,k,c));
+                    BOOST_CHECK_EQUAL( zmp.index(i,j,k,c) , ecl_grid_zcorn_index( ert_grid, i , j , k, c));
+                }
+}

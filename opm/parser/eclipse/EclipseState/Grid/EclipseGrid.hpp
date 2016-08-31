@@ -39,6 +39,7 @@
 namespace Opm {
 
     class Deck;
+    class ZcornMapper;
 
     /**
        About cell information and dimension: The actual grid
@@ -110,6 +111,7 @@ namespace Opm {
         bool cellActive( size_t i , size_t j, size_t k ) const;
         double getCellDepth(size_t i,size_t j, size_t k) const;
         double getCellDepth(size_t globalIndex) const;
+        ZcornMapper zcornMapper() const;
 
 
         void exportMAPAXES( std::vector<double>& mapaxes) const;
@@ -157,6 +159,18 @@ namespace Opm {
 
     typedef std::shared_ptr<EclipseGrid> EclipseGridPtr;
     typedef std::shared_ptr<const EclipseGrid> EclipseGridConstPtr;
+
+    class ZcornMapper {
+    public:
+        ZcornMapper(size_t nx, size_t ny, size_t nz);
+        size_t index(size_t i, size_t j, size_t k, int c) const;
+        size_t index(size_t g, int c) const;
+
+    private:
+        std::array<size_t,3> dims;
+        std::array<size_t,3> stride;
+        std::array<size_t,8> cell_shift;
+    };
 }
 
 
