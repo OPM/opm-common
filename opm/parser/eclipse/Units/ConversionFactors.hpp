@@ -112,6 +112,7 @@ namespace Opm {
             /// \name Mass
             /// @{
             constexpr const double kilogram = 1;
+            constexpr const double gram     = 1.0e-3 * kilogram;
             // http://en.wikipedia.org/wiki/Pound_(mass)#Avoirdupois_pound
             constexpr const double pound    = 0.45359237 * kilogram;
             /// @}
@@ -235,6 +236,31 @@ namespace Opm {
         constexpr const double Salinity             = pound/stb;
         constexpr const double Viscosity            = centi*Poise;
         constexpr const double Timestep             = day;
+    }
+
+
+    namespace Lab {
+        using namespace details::prefix;
+        using namespace details::unit;
+        constexpr const double Pressure             = atm;
+        constexpr const double Temperature          = degCelsius;
+        constexpr const double TemperatureOffset    = degCelsiusOffset;
+        constexpr const double AbsoluteTemperature  = degCelsius; // actually [K], but the these two are identical
+        constexpr const double Length               = centi*meter;
+        constexpr const double Time                 = hour;
+        constexpr const double Mass                 = gram;
+        constexpr const double Permeability         = milli*darcy;
+        constexpr const double Transmissibility     = centi*Poise*cubic(centi*meter)/(hour*atm);
+        constexpr const double LiquidSurfaceVolume  = cubic(centi*meter);
+        constexpr const double GasSurfaceVolume     = cubic(centi*meter);
+        constexpr const double ReservoirVolume      = cubic(centi*meter);
+        constexpr const double GasDissolutionFactor = GasSurfaceVolume/LiquidSurfaceVolume;
+        constexpr const double OilDissolutionFactor = LiquidSurfaceVolume/GasSurfaceVolume;
+        constexpr const double Density              = gram/cubic(centi*meter);
+        constexpr const double PolymerDensity       = gram/cubic(centi*meter);
+        constexpr const double Salinity             = gram/cubic(centi*meter);
+        constexpr const double Viscosity            = centi*Poise;
+        constexpr const double Timestep             = hour;
     }
 
 }

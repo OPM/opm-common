@@ -79,6 +79,7 @@ namespace Opm {
 
         static UnitSystem * newMETRIC();
         static UnitSystem * newFIELD();
+        static UnitSystem * newLAB();
     private:
         std::shared_ptr<const Dimension> parseFactor(const std::string& dimension) const;
 

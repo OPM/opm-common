@@ -176,6 +176,75 @@ namespace {
         "STB/MSCF",
         "STB/STB",
     };
+
+    static const double to_lab[] = {
+        1,
+        1 / Lab::Length,
+        1 / Lab::Time,
+        1 / Lab::Density,
+        1 / Lab::Pressure,
+        1 / Lab::AbsoluteTemperature,
+        1 / Lab::Temperature,
+        1 / Lab::Viscosity,
+        1 / Lab::Permeability,
+        1 / Lab::LiquidSurfaceVolume,
+        1 / Lab::GasSurfaceVolume,
+        1 / Lab::ReservoirVolume,
+        1 / ( Lab::LiquidSurfaceVolume / Lab::Time ),
+        1 / ( Lab::GasSurfaceVolume / Lab::Time ),
+        1 / ( Lab::ReservoirVolume / Lab::Time ),
+        1 / Lab::Transmissibility,
+        1 / Lab::Mass,
+        1 / Lab::GasDissolutionFactor, /* gas-oil ratio */
+        1 / Lab::OilDissolutionFactor, /* oil-gas ratio */
+        1, /* water cut */
+    };
+
+    static const double from_lab[] = {
+        1,
+        Lab::Length,
+        Lab::Time,
+        Lab::Density,
+        Lab::Pressure,
+        Lab::AbsoluteTemperature,
+        Lab::Temperature,
+        Lab::Viscosity,
+        Lab::Permeability,
+        Lab::LiquidSurfaceVolume,
+        Lab::GasSurfaceVolume,
+        Lab::ReservoirVolume,
+        Lab::LiquidSurfaceVolume / Lab::Time,
+        Lab::GasSurfaceVolume / Lab::Time,
+        Lab::ReservoirVolume / Lab::Time,
+        Lab::Transmissibility,
+        Lab::Mass,
+        Lab::GasDissolutionFactor,  /* gas-oil ratio */
+        Lab::OilDissolutionFactor,  /* oil-gas ratio */
+        1, /* water cut */
+    };
+
+    static constexpr const char* lab_names[] = {
+        "",
+        "CM",
+        "H",
+        "G/CC",
+        "ATM",
+        "K",
+        "C",
+        "CP",
+        "MD",
+        "SCC",
+        "SCC",
+        "RCC",
+        "SCC/H",
+        "SCC/H",
+        "RCC/H",
+        "CPRCC/H/ATM",
+        "G",
+        "SCC/SCC",
+        "SCC/SCC",
+        "SCC/SCC",
+    };
 }
 
     UnitSystem::UnitSystem(const UnitType unit) :
@@ -196,7 +265,9 @@ namespace {
                 break;
             case(UNIT_TYPE_LAB):
                 m_name = "Lab";
-                throw std::runtime_error( "Lab unit system is not supported" );
+                this->measure_table_from_si = to_lab;
+                this->measure_table_to_si = from_lab;
+                this->unit_name_table = lab_names;
                 break;
             default:
                 //do nothing
@@ -376,6 +447,34 @@ namespace {
         system->addDimension("Salinity", Field::Salinity);
         system->addDimension("Viscosity", Field::Viscosity);
         system->addDimension("Timestep", Field::Timestep);
+        system->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
+        return system;
+    }
+
+
+
+    UnitSystem * UnitSystem::newLAB() {
+        UnitSystem * system = new UnitSystem(UNIT_TYPE_LAB);
+
+        system->addDimension("1"    , 1.0);
+        system->addDimension("Pressure", Lab::Pressure );
+        system->addDimension("Temperature", Lab::Temperature, Lab::TemperatureOffset);
+        system->addDimension("AbsoluteTemperature", Lab::AbsoluteTemperature);
+        system->addDimension("Length", Lab::Length);
+        system->addDimension("Time" , Lab::Time);
+        system->addDimension("Mass", Lab::Mass);
+        system->addDimension("Permeability", Lab::Permeability );
+        system->addDimension("Transmissibility", Lab::Transmissibility );
+        system->addDimension("GasDissolutionFactor" , Lab::GasDissolutionFactor);
+        system->addDimension("OilDissolutionFactor", Lab::OilDissolutionFactor);
+        system->addDimension("LiquidSurfaceVolume", Lab::LiquidSurfaceVolume );
+        system->addDimension("GasSurfaceVolume", Lab::GasSurfaceVolume );
+        system->addDimension("ReservoirVolume", Lab::ReservoirVolume );
+        system->addDimension("Density", Lab::Density );
+        system->addDimension("PolymerDensity", Lab::PolymerDensity);
+        system->addDimension("Salinity", Lab::Salinity);
+        system->addDimension("Viscosity", Lab::Viscosity);
+        system->addDimension("Timestep", Lab::Timestep);
         system->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         return system;
     }
