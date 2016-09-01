@@ -40,7 +40,7 @@ int main()
 {
     using FDT = Opm::FlowDiagnostics::Toolbox;
 
-    const auto pv = FDT::PoreVolume{ std::vector<double>(10, 0.3) };
+    const auto pv = std::vector<double>(10, 0.3);
 }
 "
   # config variables
