@@ -57,6 +57,9 @@ namespace Opm {
             gas_oil_ratio,
             oil_gas_ratio,
             water_cut,
+            gas_formation_volume_factor,
+            oil_formation_volume_factor,
+            water_formation_volume_factor,
         };
 
         UnitSystem(UnitType unit);
