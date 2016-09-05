@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(RPTSCHED_INTEGER) {
                           "DATES             -- 2\n"
                           " 20  JAN 2010 / \n"
                           "/\n"
-                          "RPTRST  -- ALLPROPS,RK,VELOCITY,COMPRESS\n"
+                          "RPTRST  -- RK,VELOCITY,COMPRESS\n"
                           "  18*0 0 8*0 /\n"
                           "DATES             -- 3\n"
                           " 20  FEB 2010 / \n"
@@ -100,6 +100,9 @@ BOOST_AUTO_TEST_CASE(RPTSCHED_INTEGER) {
     const auto expected2 = { "COMPRESS", "RESTART", "RK", "VELOCITY" };
     BOOST_CHECK_EQUAL_COLLECTIONS( expected2.begin(), expected2.end(),
                                    kw_list2.begin(), kw_list2.end() );
+
+    BOOST_CHECK_EQUAL( rstConfig1.getKeyword( "ALLPROPS" , 0 ) , 0);
+    BOOST_CHECK_EQUAL( rstConfig1.getKeyword( "ALLPROPS" , 3 ) , 0);
 }
 
 
@@ -341,6 +344,7 @@ BOOST_AUTO_TEST_CASE(RPTRST) {
     BOOST_CHECK_EQUAL_COLLECTIONS( expected.begin() ,expected.end(),
                                    kw_list.begin() , kw_list.end() );
 
+    BOOST_CHECK_EQUAL( rstConfig1.getKeyword( "ALLPROPS" , 2 ) , 0);
 
     auto deck2 = parser.parseString( deckData2, ctx );
     RestartConfig rstConfig2( *deck2 );
