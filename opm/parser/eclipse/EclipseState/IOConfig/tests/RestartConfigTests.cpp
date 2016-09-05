@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(RPTSCHED_INTEGER) {
                           "19 JUN 2007 / \n"
                           "SOLUTION\n"
                           "RPTRST  -- PRES,DEN,PCOW,PCOG,RK,VELOCITY,COMPRESS\n"
-                          "  6*0 1 0 1 17*0 1 0 3*1 /\n"
+                          "  6*0 1 0 1 9*0 1 7*0 1 0 3*1 /\n"
                           "SCHEDULE\n"
                           "DATES             -- 1\n"
                           " 10  OKT 2008 / \n"
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(RPTSCHED_INTEGER) {
     for( const auto& pair : rstConfig1.getRestartKeywords( 0 ) )
         if( pair.second != 0 ) kw_list1.push_back( pair.first );
 
-    const auto expected1 = {"COMPRESS","DEN","PCOG","PCOW","PRES","RK","VELOCITY"};
+    const auto expected1 = {"BG","BO","BW","COMPRESS","DEN","KRG","KRO","KRW","PCOG","PCOW","PRES","RK","VELOCITY","VGAS","VOIL","VWAT"};
     BOOST_CHECK_EQUAL_COLLECTIONS( expected1.begin(), expected1.end(),
                                    kw_list1.begin(), kw_list1.end() );
 
