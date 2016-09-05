@@ -76,7 +76,7 @@ namespace Opm {
           m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
           m_multzMode(PinchMode::ModeEnum::TOP)
     {
-        ecl_grid_type * new_ptr = ecl_grid_load_case( filename.c_str() );
+        ecl_grid_type * new_ptr = ecl_grid_load_case__( filename.c_str() , false );
         if (new_ptr)
             m_grid.reset( new_ptr );
         else
@@ -310,6 +310,7 @@ namespace Opm {
                                                  zcorn_float.data() ,
                                                  coord_float.data() ,
                                                  actnum ,
+                                                 false,  // We do not apply the MAPAXES transformations
                                                  mapaxes_float) );
 
         if (mapaxes)
