@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(RPTSCHED_INTEGER) {
                           "19 JUN 2007 / \n"
                           "SOLUTION\n"
                           "RPTRST  -- PRES,DEN,PCOW,PCOG,RK,VELOCITY,COMPRESS\n"
-                          "  6*0 1 0 1 17*0 1 0 3*1 /\n"
+                          "  6*0 1 0 1 9*0 1 7*0 1 0 3*1 /\n"
                           "SCHEDULE\n"
                           "DATES             -- 1\n"
                           " 10  OKT 2008 / \n"
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(RPTSCHED_INTEGER) {
                           "DATES             -- 2\n"
                           " 20  JAN 2010 / \n"
                           "/\n"
-                          "RPTRST  -- ALLPROPS,RK,VELOCITY,COMPRESS\n"
+                          "RPTRST  -- RK,VELOCITY,COMPRESS\n"
                           "  18*0 0 8*0 /\n"
                           "DATES             -- 3\n"
                           " 20  FEB 2010 / \n"
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(RPTSCHED_INTEGER) {
     for( const auto& pair : rstConfig1.getRestartKeywords( 0 ) )
         if( pair.second != 0 ) kw_list1.push_back( pair.first );
 
-    const auto expected1 = {"COMPRESS","DEN","PCOG","PCOW","PRES","RK","VELOCITY"};
+    const auto expected1 = {"BG","BO","BW","COMPRESS","DEN","KRG","KRO","KRW","PCOG","PCOW","PRES","RK","VELOCITY","VGAS","VOIL","VWAT"};
     BOOST_CHECK_EQUAL_COLLECTIONS( expected1.begin(), expected1.end(),
                                    kw_list1.begin(), kw_list1.end() );
 
@@ -100,6 +100,9 @@ BOOST_AUTO_TEST_CASE(RPTSCHED_INTEGER) {
     const auto expected2 = { "COMPRESS", "RESTART", "RK", "VELOCITY" };
     BOOST_CHECK_EQUAL_COLLECTIONS( expected2.begin(), expected2.end(),
                                    kw_list2.begin(), kw_list2.end() );
+
+    BOOST_CHECK_EQUAL( rstConfig1.getKeyword( "ALLPROPS" , 0 ) , 0);
+    BOOST_CHECK_EQUAL( rstConfig1.getKeyword( "ALLPROPS" , 3 ) , 0);
 }
 
 
@@ -341,6 +344,7 @@ BOOST_AUTO_TEST_CASE(RPTRST) {
     BOOST_CHECK_EQUAL_COLLECTIONS( expected.begin() ,expected.end(),
                                    kw_list.begin() , kw_list.end() );
 
+    BOOST_CHECK_EQUAL( rstConfig1.getKeyword( "ALLPROPS" , 2 ) , 0);
 
     auto deck2 = parser.parseString( deckData2, ctx );
     RestartConfig rstConfig2( *deck2 );

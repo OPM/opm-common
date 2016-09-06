@@ -331,12 +331,27 @@ inline std::map< std::string, int > RPT( const DeckKeyword& keyword,
     return std::move( mnemonics );
 }
 
+void expand_RPTRST_mnemonics(std::map< std::string, int >& mnemonics) {
+    const auto allprops = mnemonics.find( "ALLPROPS");
+    if (allprops != mnemonics.end()) {
+        const auto value = allprops->second;
+        mnemonics.erase( "ALLPROPS" );
+
+        for (const auto& kw : {"BG","BO","BW","KRG","KRO","KRW","VOIL","VGAS","VWAT","DEN"})
+            mnemonics[kw] = value;
+
+    }
+}
+
+
 inline std::pair< std::map< std::string, int >, RestartSchedule >
 RPTRST( const DeckKeyword& keyword, RestartSchedule prev, size_t step ) {
     auto mnemonics = RPT( keyword, is_RPTRST_mnemonic, RPTRST_integer );
 
     const bool has_freq  = mnemonics.find( "FREQ" )  != mnemonics.end();
     const bool has_basic = mnemonics.find( "BASIC" ) != mnemonics.end();
+
+    expand_RPTRST_mnemonics( mnemonics );
 
     if( !has_freq && !has_basic ) return { std::move( mnemonics ), {} };
 
@@ -359,21 +374,6 @@ RPTSCHED( const DeckKeyword& keyword ) {
     return { std::move( mnemonics ), {} };
 }
 
-
-    void RestartConfig::addRestartKeywords( size_t timeStep , std::map<std::string, int> mnemonics) {
-        const auto allprops = mnemonics.find( "ALLPROPS");
-        if (allprops == mnemonics.end())
-            this->restart_keywords.update( timeStep , mnemonics );
-        else {
-            const auto value = allprops->second;
-            mnemonics.erase( "ALLPROPS" );
-
-            for (const auto& kw : {"BG","BO","BW","KRG","KRO","KRW","VOIL","VGAS","VWAT","DEN"})
-                mnemonics[kw] = value;
-
-            this->restart_keywords.update( timeStep , mnemonics );
-        }
-    }
 
 
 void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule) {
@@ -416,7 +416,7 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule) {
             if( mnemonics.find( "NOTHING" ) != mnemonics.end() )
                 mnemonics.clear();
 
-            this->addRestartKeywords( current_step , mnemonics );
+            this->restart_keywords.update( current_step , mnemonics );
         }
         const bool ignore_RESTART =
             !is_RPTRST && ignore_RPTSCHED_RESTART( this->restart_schedule );

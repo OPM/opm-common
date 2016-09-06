@@ -363,7 +363,6 @@ namespace Opm {
 
         void handleScheduleSection( const SCHEDULESection& schedule);
         void update( size_t step, const RestartSchedule& rs);
-        void addRestartKeywords( size_t timeStep , std::map<std::string, int> mnemonics);
         static RestartSchedule rptsched( const DeckKeyword& );
 
         DynamicState< RestartSchedule > restart_schedule;

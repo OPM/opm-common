@@ -33,7 +33,6 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/Utility/String.hpp>
 
-
 namespace Opm {
 
     namespace {
@@ -50,9 +49,26 @@ namespace Opm {
             }
         }
 
-        /// initPORV uses doubleGridProperties: PORV, PORO, NTG, MULTPV
+        // this funcion applies a single pore volume multiplier (i.e., it deals with a single
+        // record of the MULTREGP keyword)
+        void applyPorosityRegionMultiplier_(std::vector<double>& porev,
+                                            const std::vector<int>& regionId,
+                                            int multRegionId,
+                                            double multValue)
+        {
+            for (unsigned i = 0; i < porev.size(); ++i) {
+                if (regionId[i] == multRegionId)
+                    porev[i] *= multValue;
+            }
+        }
+
+        /// this function initializes the pore volume of all cells. it uses the raw keyword
+        /// 'MULTREGP', the integer grid properties 'FLUXNUM', 'MULTNUM' and 'OPERNUM' as
+        /// well as the double grid properties 'PORV', 'PORO', 'NTG' and 'MULTPV'
         void initPORV( std::vector<double>&    values,
+                       const Deck* deck,
                        const EclipseGrid*      eclipseGrid,
+                       const GridProperties<int>* intGridProperties,
                        const GridProperties<double>* doubleGridProperties)
         {
             const auto iter = std::find_if( values.begin(), values.end(), []( double value ) { return std::isnan(value); });
@@ -80,6 +96,54 @@ namespace Opm {
                 const auto& multpvData = multpvKeyword.getData();
                 for (size_t globalIndex = 0; globalIndex < multpvData.size(); globalIndex++)
                     values[globalIndex] *= multpvData[globalIndex];
+            }
+
+            // deal with the region multiplier for porosity
+            if (deck->hasKeyword("MULTREGP")) {
+                const DeckKeyword& multregpKeyword = deck->getKeyword("MULTREGP");
+                for (unsigned recordIdx = 0; recordIdx < multregpKeyword.size(); ++recordIdx) {
+                    const DeckRecord& multregpRecord = multregpKeyword.getRecord(recordIdx);
+
+                    int regionId = multregpRecord.getItem("REGION").template get<int>(0);
+                    std::string regionType = multregpRecord.getItem("REGION_TYPE").template get<std::string>(0);
+                    double multValue = multregpRecord.getItem("MULTIPLIER").template get<double>(0);
+                    uppercase(regionType, regionType);
+
+                    // deal with the "convenience" feature of ECL: if the region index is
+                    // zero or negative, the record is ignored.
+                    if (regionId <= 0)
+                        continue;
+
+                    // implement a (documented) ECL bug: the region index must be unique
+                    // (i.e., it is impossible to specify multipliers for different
+                    // region types with the same index). Also, only the last occurence
+                    // of each region counts.
+                    unsigned record2Idx = recordIdx + 1;
+                    for (; record2Idx < multregpKeyword.size(); ++record2Idx) {
+                        const DeckRecord& multregpRecord2 = multregpKeyword.getRecord(record2Idx);
+                        int region2Idx = multregpRecord2.getItem("REGION").template get<int>(0);
+                        if (region2Idx == regionId)
+                            break;
+                    }
+                    if (record2Idx < multregpKeyword.size())
+                        // the region was specified twice
+                        continue;
+
+                    if (regionType == "M") {
+                        const GridProperty<int>& multnumProp = intGridProperties->getKeyword("MULTNUM");
+                        applyPorosityRegionMultiplier_(values, multnumProp.getData(), regionId, multValue);
+                    }
+                    else if (regionType == "F") {
+                        const GridProperty<int>& fluxnumProp = intGridProperties->getKeyword("FLUXNUM");
+                        applyPorosityRegionMultiplier_(values, fluxnumProp.getData(), regionId, multValue);
+                    }
+                    else if (regionType == "O") {
+                        const GridProperty<int>& opernumProp = intGridProperties->getKeyword("OPERNUM");
+                        applyPorosityRegionMultiplier_(values, opernumProp.getData(), regionId, multValue);
+                    }
+                    else
+                        throw std::logic_error("Unknown or illegal region type for MULTREGP keyword: '"+regionType+"'");
+                }
             }
         }
 
@@ -396,7 +460,9 @@ namespace Opm {
         {
             auto initPORVProcessor =  std::bind(&initPORV,
                                       std::placeholders::_1,
+                                      &deck,
                                       &eclipseGrid,
+                                      &m_intGridProperties,
                                       &m_doubleGridProperties);
 
             m_doubleGridProperties.postAddKeyword( "PORV",
