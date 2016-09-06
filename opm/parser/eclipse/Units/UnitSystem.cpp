@@ -63,6 +63,9 @@ namespace {
         1, /* gas formation volume factor */
         1, /* oil formation volume factor */
         1, /* water formation volume factor */
+        1, /* gas inverse formation volume factor */
+        1, /* oil inverse formation volume factor */
+        1, /* water inverse formation volume factor */
     };
 
     static const double from_metric[] = {
@@ -89,6 +92,9 @@ namespace {
         1, /* gas formation volume factor */
         1, /* oil formation volume factor */
         1, /* water formation volume factor */
+        1, /* gas inverse formation volume factor */
+        1, /* oil inverse formation volume factor */
+        1, /* water inverse formation volume factor */
     };
 
     static constexpr const char* metric_names[] = {
@@ -115,6 +121,9 @@ namespace {
         "RM3/SM3", /* gas formation volume factor */
         "RM3/SM3", /* oil formation volume factor */
         "RM3/SM3", /* water formation volume factor */
+        "SM3/RM3", /* gas inverse formation volume factor */
+        "SM3/RM3", /* oil inverse formation volume factor */
+        "SM3/RM3", /* water inverse formation volume factor */
     };
 
     static const double to_field[] = {
@@ -141,6 +150,9 @@ namespace {
         1 / (Field::ReservoirVolume / Field::GasSurfaceVolume), /* gas formation volume factor */
         1, /* oil formation volume factor */
         1, /* water formation volume factor */
+        1 / (Field::GasSurfaceVolume / Field::ReservoirVolume), /* gas inverse formation volume factor */
+        1, /* oil inverse formation volume factor */
+        1, /* water inverse formation volume factor */
     };
 
     static const double from_field[] = {
@@ -167,6 +179,9 @@ namespace {
          Field::ReservoirVolume / Field::GasSurfaceVolume, /* gas formation volume factor */
          1, /* oil formation volume factor */
          1, /* water formation volume factor */
+         Field::GasSurfaceVolume / Field::ReservoirVolume, /* gas inverse formation volume factor */
+         1, /* oil inverse formation volume factor */
+         1, /* water inverse formation volume factor */
     };
 
     static constexpr const char* field_names[] = {
@@ -193,6 +208,9 @@ namespace {
         "RB/MSCF", /* gas formation volume factor */
         "RB/STB", /* oil formation volume factor */
         "RB/STB", /* water formation volume factor */
+        "MSCF/RB", /* gas inverse formation volume factor */
+        "STB/RB", /* oil inverse formation volume factor */
+        "STB/RB", /* water inverse formation volume factor */
     };
 
     static const double to_lab[] = {
@@ -219,6 +237,9 @@ namespace {
         1, /* gas formation volume factor */
         1, /* oil formation volume factor */
         1, /* water formation volume factor */
+        1, /* gas inverse formation volume factor */
+        1, /* oil inverse formation volume factor */
+        1, /* water inverse formation volume factor */
     };
 
     static const double from_lab[] = {
@@ -245,6 +266,9 @@ namespace {
         1, /* gas formation volume factor */
         1, /* oil formation volume factor */
         1, /* water formation volume factor */
+        1, /* gas inverse formation volume factor */
+        1, /* oil inverse formation volume factor */
+        1, /* water inverse formation volume factor */
     };
 
     static constexpr const char* lab_names[] = {
@@ -271,6 +295,9 @@ namespace {
         "RCC/SCC", /* gas formation volume factor */
         "RCC/SCC", /* oil formation volume factor */
         "RCC/SCC", /* water formation volume factor */
+        "SCC/RCC", /* gas formation volume factor */
+        "SCC/RCC", /* oil inverse formation volume factor */
+        "SCC/RCC", /* water inverse formation volume factor */
     };
 }
 

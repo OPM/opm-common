@@ -60,6 +60,9 @@ namespace Opm {
             gas_formation_volume_factor,
             oil_formation_volume_factor,
             water_formation_volume_factor,
+            gas_inverse_formation_volume_factor,
+            oil_inverse_formation_volume_factor,
+            water_inverse_formation_volume_factor,
         };
 
         UnitSystem(UnitType unit);
