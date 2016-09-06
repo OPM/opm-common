@@ -37,9 +37,9 @@ bool ECLFilesComparator::keywordValidForComparing(const std::string& keyword) co
         std::cout << "Could not find keyword: " << keyword << std::endl;
         OPM_THROW(std::runtime_error, "Keyword does not exist in second file.");
     }
-    ecl_kw_type* ecl_kw = ecl_file_iget_named_kw(ecl_file1, keyword.c_str(), 0);
-    ecl_type_enum ecl_kw_type = ecl_kw_get_type(ecl_kw);
-    switch (ecl_kw_type) {
+    ecl_kw_type* kw = ecl_file_iget_named_kw(ecl_file1, keyword.c_str(), 0);
+    ecl_type_enum kw_type = ecl_kw_get_type(kw);
+    switch (kw_type) {
         case ECL_DOUBLE_TYPE:
             return true;
         case ECL_FLOAT_TYPE:
@@ -150,8 +150,8 @@ void ECLFilesComparator::deviationsForCell(double val1, double val2, const std::
 
 
 
-ECLFilesComparator::ECLFilesComparator(eclFileEnum fileType, const std::string& basename1, const std::string& basename2, double absTolerance, double relTolerance):
-    fileType(fileType), absTolerance(absTolerance), relTolerance(relTolerance) {
+ECLFilesComparator::ECLFilesComparator(eclFileEnum eclFileType, const std::string& basename1, const std::string& basename2, double absTol, double relTol):
+    fileType(eclFileType), absTolerance(absTol), relTolerance(relTol) {
 
     std::string file1, file2;
     if (fileType == RESTARTFILE) {

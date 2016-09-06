@@ -148,8 +148,8 @@ void checkInitFile( const EclipseGrid& grid , const Deck& deck, const std::vecto
     // use ERT directly to inspect the INIT file produced by EclipseWriter
     ERT::ert_unique_ptr<ecl_file_type , ecl_file_close> initFile(ecl_file_open( "FOO.INIT" , 0 ));
 
-    for (int i=0; i < ecl_file_get_size(  initFile.get() ); i++) {
-        ecl_kw_type * eclKeyword = ecl_file_iget_kw( initFile.get( ) , i );
+    for (int k=0; k < ecl_file_get_size(  initFile.get() ); k++) {
+        ecl_kw_type * eclKeyword = ecl_file_iget_kw( initFile.get( ) , k );
         std::string keywordName(ecl_kw_get_header(eclKeyword));
 
         if (keywordName == "PORO") {
@@ -285,17 +285,17 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
         std::vector<double> tranx(3*3*3);
         std::vector<double> trany(3*3*3);
         std::vector<double> tranz(3*3*3);
-        std::vector<data::CellData> simProps{{"TRANX" , UnitSystem::measure::transmissibility, tranx},
-                                             {"TRANY" , UnitSystem::measure::transmissibility, trany},
-                                             {"TRANZ" , UnitSystem::measure::transmissibility, tranz}};
+        std::vector<data::CellData> eGridProps{{"TRANX" , UnitSystem::measure::transmissibility, tranx},
+                                              {"TRANY" , UnitSystem::measure::transmissibility, trany},
+                                              {"TRANZ" , UnitSystem::measure::transmissibility, tranz}};
 
         eclWriter.writeInitAndEgrid( );
-        eclWriter.writeInitAndEgrid( simProps );
+        eclWriter.writeInitAndEgrid( eGridProps );
 
         data::Wells wells;
 
         for( int i = 0; i < 5; ++i ) {
-            std::vector<data::CellData> simProps{{"KRO" , UnitSystem::measure::identity , std::vector<double>(3*3*3 , i)},
+            std::vector<data::CellData> timesStepProps{{"KRO" , UnitSystem::measure::identity , std::vector<double>(3*3*3 , i)},
                                                  {"KRG" , UnitSystem::measure::identity , std::vector<double>(3*3*3 , i*10)}};
 
             eclWriter.writeTimeStep( i,
@@ -303,12 +303,12 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
                                      first_step - start_time,
                                      createBlackoilState( i, 3 * 3 * 3 ),
                                      wells,
-                                     simProps);
+                                     timesStepProps);
 
             checkRestartFile( i );
 
         }
-        checkInitFile( eclGrid , *deck , simProps);
+        checkInitFile( eclGrid , *deck , eGridProps);
         checkEgridFile( eclGrid );
     }
 }

@@ -50,14 +50,14 @@ BOOST_AUTO_TEST_CASE(deviation) {
 BOOST_AUTO_TEST_CASE(median) {
     std::vector<double> vec = {1,3,4,5};
 
-    double median = ECLFilesComparator::median(vec);
+    double med = ECLFilesComparator::median(vec);
 
-    BOOST_CHECK_EQUAL(median, 3.5);
+    BOOST_CHECK_EQUAL(med, 3.5);
 
     vec = {1,4,5};
-    median = ECLFilesComparator::median(vec);
+    med = ECLFilesComparator::median(vec);
 
-    BOOST_CHECK_EQUAL(median, 4);
+    BOOST_CHECK_EQUAL(med, 4);
 }
 
 
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(average) {
     std::vector<double> vec = {1,3,4,5};
     const double tol = 1.0e-14;
 
-    double average = ECLFilesComparator::average(vec);
+    double avg = ECLFilesComparator::average(vec);
 
-    BOOST_CHECK_CLOSE(average, 13.0/4, tol);
+    BOOST_CHECK_CLOSE(avg, 13.0/4, tol);
 }

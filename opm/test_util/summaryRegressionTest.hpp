@@ -45,11 +45,11 @@ class RegressionTest: public SummaryComparator {
         //! \brief Constructor, creates an object of RefressionTest class.
         //! \param[in] basename1 Path to file1 without extension.
         //! \param[in] basename1 Path to file2 without extension.
-        //! \param[in] absoluteTolerance The absolute tolerance which is to be used in the test.
-        //! \param[in] relativeTolerance The relative tolerance which is to be used in the test.
+        //! \param[in] relativeTol The relative tolerance which is to be used in the test.
+        //! \param[in] absoluteTol The absolute tolerance which is to be used in the test.
         //! \details The constructor calls the constructor of the super class.
-        RegressionTest(const char* basename1, const char* basename2, double relativeTolerance, double absoluteTolerance):
-            SummaryComparator(basename1, basename2,relativeTolerance,  absoluteTolerance) {}
+        RegressionTest(const char* basename1, const char* basename2, double relativeTol, double absoluteTol):
+            SummaryComparator(basename1, basename2, relativeTol, absoluteTol) {}
 
         //! \details The function executes a regression test for all the keywords. If the two files do not match in amount of keywords, an exception is thrown.
         void getRegressionTest();

@@ -81,9 +81,9 @@ class ECLFilesComparator {
         ~ECLFilesComparator();
 
         //! \brief Setting the member variable showValues.
-        //! \param[in] showValues Variable which is copied to #showValues
+        //! \param[in] values Variable which is copied to #showValues
         //! \details When showValues is set to true, resultsForKeyword() will print all values side by side from the two files.
-        void setShowValues(bool showValues) {this->showValues = showValues;}
+        void setShowValues(bool values) {this->showValues = values;}
         //! \brief Print all keywords stored in #keywords1 and #keywords2
         void printKeywords() const;
         //! \brief Comparing grids from the to gridfiles.

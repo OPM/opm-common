@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(average) {
     std::vector<double> vec = {1,2,3,4,5,6};
     const double tol = 1.0e-14;
 
-    double average = SummaryComparator::average(vec);
+    double avg = SummaryComparator::average(vec);
 
-    BOOST_CHECK_CLOSE(average, 21.0/6, tol);
+    BOOST_CHECK_CLOSE(avg, 21.0/6, tol);
 }

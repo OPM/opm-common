@@ -25,14 +25,14 @@
 #include <cmath>
 #include <numeric>
 
-SummaryComparator::SummaryComparator(const char* basename1, const char* basename2, double absoluteTolerance, double relativeTolerance){
+SummaryComparator::SummaryComparator(const char* basename1, const char* basename2, double absoluteTol, double relativeTol){
     ecl_sum1 = ecl_sum_fread_alloc_case(basename1, ":");
     ecl_sum2 = ecl_sum_fread_alloc_case(basename2, ":");
     if (ecl_sum1 == nullptr || ecl_sum2 == nullptr) {
         OPM_THROW(std::runtime_error, "Not able to open files");
     }
-    this->absoluteTolerance = absoluteTolerance;
-    this->relativeTolerance = relativeTolerance;
+    absoluteTolerance = absoluteTol;
+    relativeTolerance = relativeTol;
     keys1 = stringlist_alloc_new();
     keys2 = stringlist_alloc_new();
     ecl_sum_select_matching_general_var_list( ecl_sum1 , "*" , this->keys1);

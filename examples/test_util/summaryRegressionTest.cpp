@@ -19,6 +19,8 @@
 #include <opm/test_util/summaryRegressionTest.hpp>
 #include <string>
 #include <getopt.h>
+
+void printHelp(); //< Declare global function which prints help text
 void printHelp(){
     std::cout << "The program takes four arguments"          << std::endl;
     std::cout << "1) <path to file1>/<base_name>"            << std::endl;
