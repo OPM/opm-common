@@ -407,6 +407,17 @@ const std::string& GridProperty<double>::getDimensionString() const {
 
 
 template<typename T>
+std::vector<T> GridProperty<T>::compressedCopy(const EclipseGrid& grid) const {
+    if (grid.allActive())
+        return m_data;
+    else {
+        return grid.compressedVector( m_data );
+    }
+}
+
+
+
+template<typename T>
 std::vector<size_t> GridProperty<T>::cellsEqual(T value, const std::vector<int>& activeMap) const {
     std::vector<size_t> cells;
     for (size_t active_index = 0; active_index < activeMap.size(); active_index++) {

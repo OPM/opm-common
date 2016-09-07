@@ -105,6 +105,24 @@ namespace Opm {
         MinpvMode::ModeEnum getMinpvMode() const;
         double getMinpvValue( ) const;
 
+
+        template<typename T>
+        std::vector<T> compressedVector(const std::vector<T>& full_vector) const {
+            if (full_vector.size() != getCartesianSize())
+                throw std::invalid_argument("Input vector must have full size");
+
+            {
+                std::vector<T> compressed_vector( this->getNumActive() );
+                const auto& active_map = this->getActiveMap( );
+
+                for (size_t i = 0; i < this->getNumActive(); ++i)
+                    compressed_vector[i] = full_vector[ active_map[i] ];
+
+                return compressed_vector;
+            }
+        }
+
+
         /// Will return a vector a length num_active; where the value
         /// of each element is the corresponding global index.
         const std::vector<int>& getActiveMap() const;

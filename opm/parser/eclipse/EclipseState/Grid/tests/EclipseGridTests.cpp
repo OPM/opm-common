@@ -696,7 +696,18 @@ BOOST_AUTO_TEST_CASE(ResetACTNUM) {
     actnum[6] = 1;
     grid.resetACTNUM( actnum.data() );
     BOOST_CHECK_EQUAL( 4U , grid.getNumActive() );
+    {
+        std::vector<int> full(grid.getCartesianSize());
+        for (int i=0; i < grid.getCartesianSize(); i++)
+            full[i] = i;
 
+        auto compressed = grid.compressedVector( full );
+        BOOST_CHECK_EQUAL( compressed.size() , 4U );
+        BOOST_CHECK_EQUAL( compressed[0] , 0 );
+        BOOST_CHECK_EQUAL( compressed[1] , 2 );
+        BOOST_CHECK_EQUAL( compressed[2] , 4 );
+        BOOST_CHECK_EQUAL( compressed[3] , 6 );
+    }
     {
         const auto& activeMap = grid.getActiveMap( );
         BOOST_CHECK_EQUAL( 4U , activeMap.size() );

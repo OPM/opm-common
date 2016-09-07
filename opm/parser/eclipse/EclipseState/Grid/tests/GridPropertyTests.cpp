@@ -427,6 +427,13 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
         }
         BOOST_CHECK_EQUAL( cells3_g[8] , 26);
     }
+
+    const auto compressedSatnum = satnum.compressedCopy( eg );
+    BOOST_CHECK_EQUAL( compressedSatnum.size() , eg.getNumActive());
+    for (size_t i=0; i < eg.getNumActive(); i++) {
+        size_t g = eg.getGlobalIndex( i );
+        BOOST_CHECK_EQUAL( compressedSatnum[i] , satnum.getData()[g]);
+    }
 }
 
 

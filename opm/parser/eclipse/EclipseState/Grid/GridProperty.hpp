@@ -169,6 +169,10 @@ public:
      */
      std::vector<size_t>  cellsEqual(T value, const EclipseGrid& grid, bool active = true)  const;
 
+    /*
+      Will return a std::vector<T> of the data in the active cells.
+    */
+     std::vector<T> compressedCopy( const EclipseGrid& grid) const;
 
 private:
     const DeckItem& getDeckItem( const DeckKeyword& );
