@@ -55,7 +55,6 @@ namespace Opm {
     class EclipseGrid : public GridDims {
     public:
         explicit EclipseGrid(const std::string& filename);
-        EclipseGrid(const EclipseGrid& srcGrid);
 
         /*
           These constructors will make a copy of the src grid, with
@@ -132,7 +131,23 @@ namespace Opm {
         PinchMode::ModeEnum m_pinchoutMode;
         PinchMode::ModeEnum m_multzMode;
         mutable std::vector< int > activeMap;
-        ERT::ert_unique_ptr<ecl_grid_type , ecl_grid_free> m_grid;
+
+        /*
+          The internal class grid_ptr is a a std::unique_ptr with
+          special copy semantics. The purpose of implementing this is
+          that the EclipseGrid class can now use the default
+          implementation for the copy and move constructors.
+        */
+        using ert_ptr = ERT::ert_unique_ptr<ecl_grid_type , ecl_grid_free>;
+        class grid_ptr : public ert_ptr {
+        public:
+            using ert_ptr::unique_ptr;
+            grid_ptr() = default;
+            grid_ptr(grid_ptr&&) = default;
+            grid_ptr(const grid_ptr& src) :
+                ert_ptr( ecl_grid_alloc_copy( src.get() ) ) {}
+        };
+        grid_ptr m_grid;
 
         void initCornerPointGrid(const std::array<int,3>& dims ,
                                  const std::vector<double>& coord ,

@@ -87,18 +87,6 @@ namespace Opm {
         m_nz = ecl_grid_get_nz( c_ptr() );
     }
 
-    /* Copy constructor */
-    EclipseGrid::EclipseGrid(const EclipseGrid& src)
-        : GridDims(src.getNX(), src.getNY(), src.getNZ()),
-          m_messages( src.m_messages ),
-          m_minpvValue( src.m_minpvValue ),
-          m_minpvMode( src.m_minpvMode ),
-          m_pinch( src.m_pinch ),
-          m_pinchoutMode( src.m_pinchoutMode ),
-          m_multzMode( src.m_multzMode ),
-          m_grid( ecl_grid_alloc_copy( src.c_ptr() ))
-    {
-    }
 
     EclipseGrid::EclipseGrid(size_t nx, size_t ny , size_t nz,
                              double dx, double dy, double dz)
@@ -126,13 +114,13 @@ namespace Opm {
           m_pinchoutMode( src.m_pinchoutMode ),
           m_multzMode( src.m_multzMode )
     {
-        const int * actnum_data = (actnum.size() > 0) ? actnum.data() : nullptr;
+        const int * actnum_data = (actnum.empty()) ? nullptr : actnum.data();
         m_grid.reset( ecl_grid_alloc_processed_copy( src.c_ptr(), zcorn , actnum_data ));
     }
 
 
     EclipseGrid::EclipseGrid(const EclipseGrid& src, const std::vector<double>& zcorn , const std::vector<int>& actnum)
-        : EclipseGrid( src , (zcorn.size() > 0) ? zcorn.data() : nullptr , actnum )
+        : EclipseGrid( src , (zcorn.empty()) ? nullptr : zcorn.data(), actnum )
     { }
 
 

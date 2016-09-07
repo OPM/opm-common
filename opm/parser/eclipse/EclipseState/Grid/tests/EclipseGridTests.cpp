@@ -1077,3 +1077,15 @@ BOOST_AUTO_TEST_CASE(ZcornMapper) {
                     BOOST_CHECK_EQUAL( zmp.index(i,j,k,c) , ecl_grid_zcorn_index( ert_grid, i , j , k, c));
                 }
 }
+
+
+
+BOOST_AUTO_TEST_CASE(MoveTest) {
+    int nx = 3;
+    int ny = 4;
+    int nz = 5;
+    Opm::EclipseGrid grid1(nx,ny,nz);
+    Opm::EclipseGrid grid2( std::move( grid1 )); // grid2 should be move constructed from grid1
+
+    BOOST_CHECK( !grid1.c_ptr() );               // We peek at some internal details ...
+}
