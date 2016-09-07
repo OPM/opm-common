@@ -240,6 +240,19 @@ namespace Opm {
         return static_cast<size_t>( active_index );
     }
 
+    /**
+       Observe: the input argument is assumed to be in the space
+       [0,num_active).
+    */
+    size_t EclipseGrid::getGlobalIndex(size_t active_index) const {
+        int global_index = ecl_grid_get_global_index1A( m_grid.get() , active_index );
+        return static_cast<size_t>(global_index);
+    }
+
+    size_t EclipseGrid::getGlobalIndex(size_t i, size_t j, size_t k) const {
+        return GridDims::getGlobalIndex(i,j,k);
+    }
+
 
     bool EclipseGrid::isPinchActive( ) const {
         return m_pinch.hasValue();

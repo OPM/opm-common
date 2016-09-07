@@ -88,6 +88,15 @@ namespace Opm {
         size_t activeIndex(size_t i, size_t j, size_t k) const;
         size_t activeIndex(size_t globalIndex) const;
 
+        /*
+          Observe that the there is a getGlobalIndex(i,j,k)
+          implementation in the base class. This method - translating
+          from an active index to a global index must be implemented
+          in the current class.
+        */
+        size_t getGlobalIndex(size_t active_index) const;
+        size_t getGlobalIndex(size_t i, size_t j, size_t k) const;
+
         bool isPinchActive( ) const;
         double getPinchThresholdThickness( ) const;
         PinchMode::ModeEnum getPinchOption( ) const;
