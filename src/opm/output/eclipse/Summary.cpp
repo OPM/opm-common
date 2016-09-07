@@ -123,7 +123,7 @@ struct fn_args {
     const data::Wells& wells;
     const data::Solution& state;
     const std::unordered_map<int , std::vector<size_t>>& regionCells;
-    const std::vector<int>& compressedToCartesian;
+    const GridDims& grid;
 };
 
 /* Since there are several enums in opm scattered about more-or-less
@@ -548,7 +548,8 @@ Summary::Summary( const EclipseState& st,
         const auto handle = funs.find( keyword )->second;
         const std::vector< const Well* > dummy_wells;
         const std::unordered_map<int,std::vector<size_t>> dummy_cells;
-        const fn_args no_args{ dummy_wells, 0, 0, 0, {} , {}, dummy_cells , {} };
+        GridDims dummy_grid(1,1,1);
+        const fn_args no_args{ dummy_wells, 0, 0, 0, {} , {}, dummy_cells , dummy_grid };
         const auto val = handle( no_args );
         const auto* unit = st.getUnits().name( val.unit );
 
@@ -561,7 +562,7 @@ Summary::Summary( const EclipseState& st,
 
 void Summary::add_timestep( int report_step,
                             double secs_elapsed,
-                            const std::vector<int>& indexMap,
+                            const EclipseGrid& grid,
                             const EclipseState& es,
                             const std::unordered_map<int, std::vector<size_t>>& regionCells,
                             const data::Wells& wells ,
@@ -578,7 +579,7 @@ void Summary::add_timestep( int report_step,
         const auto* genkey = smspec_node_get_gen_key1( f.first );
 
         const auto schedule_wells = find_wells( schedule, f.first, timestep );
-        const auto val = f.second( { schedule_wells, duration, timestep, num, wells , state , regionCells , indexMap} );
+        const auto val = f.second( { schedule_wells, duration, timestep, num, wells , state , regionCells , grid} );
 
         const auto num_val = val.value > 0 ? val.value : 0.0;
         const auto unit_applied_val = es.getUnits().from_si( val.unit, num_val );

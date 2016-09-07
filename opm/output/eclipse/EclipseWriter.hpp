@@ -46,9 +46,8 @@ public:
      * \brief Sets the common attributes required to write eclipse
      *        binary files using ERT.
      */
-    EclipseWriter(std::shared_ptr< const EclipseState >,
-                  int numCells,
-                  const int* compressedToCartesianCellIdx);
+    EclipseWriter(std::shared_ptr< const EclipseState >, EclipseGrid grid);
+
 
 
 
@@ -99,8 +98,9 @@ public:
     ~EclipseWriter();
 
 private:
-    void writeINITFile( const EclipseGrid& grid, const std::vector<data::CellData>& simProps, const NNC& nnc) const;
+    void writeINITFile( const std::vector<data::CellData>& simProps, const NNC& nnc) const;
     void writeEGRIDFile( const NNC& nnc) const;
+    void init();
 
     class Impl;
     std::unique_ptr< Impl > impl;

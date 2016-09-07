@@ -117,8 +117,9 @@ BOOST_AUTO_TEST_CASE(test_RFT) {
          */
 
         const auto numCells = eclipseState->getInputGrid()->getCartesianSize( );
+        const auto& grid = *eclipseState->getInputGrid();
 
-        EclipseWriter eclipseWriter( eclipseState, numCells, nullptr );
+        EclipseWriter eclipseWriter( eclipseState, grid);
         time_t start_time = eclipseState->getSchedule()->posixStartTime();
         /* step time read from deck and hard-coded here */
         time_t step_time = util_make_datetime( 0, 0, 0, 10, 10, 2008 );

@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
 
     {
         ERT::TestArea ta("test_ecl_writer");
-        EclipseWriter eclWriter( es, 3 * 3 * 3, nullptr);
+        EclipseWriter eclWriter( es, eclGrid);
 
         auto start_time = util_make_datetime( 0, 0, 0, 10, 10, 2008 );
         auto first_step = util_make_datetime( 0, 0, 0, 10, 11, 2008 );

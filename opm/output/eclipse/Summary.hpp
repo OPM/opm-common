@@ -27,6 +27,8 @@
 #include <ert/ecl/ecl_sum.h>
 #include <ert/ecl/Smspec.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+
 #include <opm/output/Wells.hpp>
 #include <opm/output/Cells.hpp>
 
@@ -46,7 +48,7 @@ class Summary {
 
         void add_timestep( int report_step,
                            double secs_elapsed,
-                           const std::vector<int>& indexMap,
+                           const EclipseGrid& grid, 
                            const EclipseState& es,
                            const std::unordered_map<int, std::vector<size_t>>& regionCells,
                            const data::Wells&,

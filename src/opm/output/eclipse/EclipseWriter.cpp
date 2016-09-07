@@ -60,26 +60,6 @@
 namespace Opm {
 namespace {
 
-// throw away the data for all non-active cells and reorder to the Cartesian logic of
-// eclipse
-template <typename T>
-std::vector<T> restrictAndReorderToActiveCells(const std::vector<T> &flow_data,
-                                               int numCells,
-                                               const int* compressedToCartesianCellIdx)
-{
-    std::vector<T> eclData;
-    eclData.resize( numCells );
-
-    if (!compressedToCartesianCellIdx || (flow_data.size() == static_cast<size_t>(numCells)))
-        std::copy( flow_data.begin() , flow_data.end() , eclData.begin() );
-    else {
-        // activate those cells that are actually there
-        for (int i = 0; i < numCells; ++i)
-            eclData[i] = flow_data[ compressedToCartesianCellIdx[i] ];
-    }
-
-    return eclData;
-}
 
 inline void convertFromSiTo( std::vector< double >& siValues,
                                     const UnitSystem& units,
@@ -330,9 +310,7 @@ class RFT {
         RFT( const char* output_dir,
              const char* basename,
              bool format,
-             const int* compressed_to_cartesian,
-             size_t num_cells,
-             size_t cartesian_size );
+             const EclipseGrid& grid_);
 
         void writeTimeStep( std::vector< const Well* >,
                             const EclipseGrid& grid,
@@ -344,33 +322,18 @@ class RFT {
                             const std::vector< double >& swat,
                             const std::vector< double >& sgas );
     private:
-        std::vector< int > global_to_active;
         ERT::FortIO fortio;
+        const EclipseGrid& grid;
 };
+
 
 RFT::RFT( const char* output_dir,
           const char* basename,
           bool format,
-          const int* compressed_to_cartesian,
-          size_t num_cells,
-          size_t cart_size ) :
-    global_to_active( cart_size, inactive_index ),
-    fortio(
-        FileName( output_dir, basename, ECL_RFT_FILE, format ).get(),
-        std::ios_base::out
-        )
+          const EclipseGrid& grid_ ) :
+    fortio(FileName( output_dir, basename, ECL_RFT_FILE, format ).get(),std::ios_base::out),
+    grid( grid_ )
 {
-    if( !compressed_to_cartesian ) {
-        /* without a global to active mapping we assume identity mapping, i.e.
-         * 0 -> 0, 1 -> 1 etc.
-         */
-        fun::iota range( num_cells );
-        std::copy( range.begin(), range.end(), this->global_to_active.begin() );
-        return;
-    }
-
-    for( size_t active_index = 0; active_index < num_cells; ++active_index )
-        global_to_active[ compressed_to_cartesian[ active_index ] ] = active_index;
 }
 
 inline ert_ecl_unit_enum to_ert_unit( UnitSystem::UnitType t ) {
@@ -438,9 +401,8 @@ inline std::string uppercase( std::string x ) {
 
 class EclipseWriter::Impl {
     public:
-        Impl( std::shared_ptr< const EclipseState > es,
-              int numCells,
-              const int* comp_to_cart);
+        Impl( std::shared_ptr< const EclipseState > es, EclipseGrid&& grid);
+        Impl( std::shared_ptr< const EclipseState > es, const EclipseGrid& grid);
 
         std::shared_ptr< const EclipseState > es;
         EclipseGrid grid;
@@ -450,40 +412,49 @@ class EclipseWriter::Impl {
         out::Summary summary;
         RFT rft;
         time_t sim_start_time;
-        int numCells;
         std::array< int, 3 > cartesianSize;
-        const int* compressed_to_cartesian;
-        std::vector< int > compressedToCartesian;
         bool output_enabled;
         int ert_phase_mask;
 };
 
 EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
-                           int numCellsArg,
-                           const int* compressed_to_cart)
+                           EclipseGrid&& grid_)
     : es( eclipseState )
-    , grid( *eclipseState->getInputGrid() )
+    , grid( std::move(grid_) )
     , outputDir( eclipseState->getIOConfig()->getOutputDir() )
     , baseName( uppercase( eclipseState->getIOConfig()->getBaseName() ) )
     , summary( *eclipseState, eclipseState->getSummaryConfig() )
     , rft( outputDir.c_str(), baseName.c_str(),
            es->getIOConfig()->getFMTOUT(),
-           compressed_to_cart,
-           numCellsArg, es->getInputGrid()->getCartesianSize() )
+           grid)
     , sim_start_time( es->getSchedule()->posixStartTime() )
-    , numCells( numCellsArg )
-    , compressed_to_cartesian( compressed_to_cart )
-    , compressedToCartesian( numCells , int(-1) )
+    , output_enabled( eclipseState->getIOConfig()->getOutputEnabled() )
+    , ert_phase_mask( ertPhaseMask( eclipseState->getTableManager() ) )
+{
+}
+
+EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
+                           const EclipseGrid& grid_)
+    : es( eclipseState )
+    , grid( grid_ )
+    , outputDir( eclipseState->getIOConfig()->getOutputDir() )
+    , baseName( uppercase( eclipseState->getIOConfig()->getBaseName() ) )
+    , summary( *eclipseState, eclipseState->getSummaryConfig() )
+    , rft( outputDir.c_str(), baseName.c_str(),
+           es->getIOConfig()->getFMTOUT(),
+           grid)
+    , sim_start_time( es->getSchedule()->posixStartTime() )
     , output_enabled( eclipseState->getIOConfig()->getOutputEnabled() )
     , ert_phase_mask( ertPhaseMask( eclipseState->getTableManager() ) )
 {
 }
 
 
-void EclipseWriter::writeINITFile(const EclipseGrid& grid, const std::vector<data::CellData>& simProps, const NNC& nnc) const {
-    const auto& compressedToCartesian = this->impl->compressedToCartesian;
+
+void EclipseWriter::writeINITFile(const std::vector<data::CellData>& simProps, const NNC& nnc) const {
     const auto& es = *this->impl->es;
     const auto& units = es.getUnits();
+    const EclipseGrid& grid = this->impl->grid;
     const IOConfig& ioConfig = es.cfg().io();
 
     FileName  initFile( this->impl->outputDir,
@@ -509,12 +480,12 @@ void EclipseWriter::writeINITFile(const EclipseGrid& grid, const std::vector<dat
         auto ecl_data = opm_data;
 
         for (size_t global_index = 0; global_index < opm_data.size(); global_index++)
-            if (!this->impl->grid.cellActive( global_index ))
+            if (!grid.cellActive( global_index ))
                 ecl_data[global_index] = 0;
 
 
         ecl_init_file_fwrite_header( fortio.get(),
-                                     this->impl->grid.c_ptr(),
+                                     grid.c_ptr(),
                                      NULL,
                                      this->impl->ert_phase_mask,
                                      this->impl->sim_start_time);
@@ -540,8 +511,8 @@ void EclipseWriter::writeINITFile(const EclipseGrid& grid, const std::vector<dat
                                                  {"PERMZ" , UnitSystem::measure::permeability }};
 
         for (const auto& kw_pair : doubleKeywords) {
-            const auto& opm_data = properties.getDoubleGridProperty(kw_pair.first).getData();
-            auto ecl_data = restrictAndReorderToActiveCells( opm_data , compressedToCartesian.size(), compressedToCartesian.data());
+            const auto& opm_property = properties.getDoubleGridProperty(kw_pair.first);
+            auto ecl_data = opm_property.compressedCopy( grid );
 
             convertFromSiTo( ecl_data,
                              units,
@@ -555,8 +526,7 @@ void EclipseWriter::writeINITFile(const EclipseGrid& grid, const std::vector<dat
     // Write properties which have been initialized by the simulator.
     {
         for (const auto& prop : simProps) {
-            const auto& opm_data = prop.data;
-            auto ecl_data = restrictAndReorderToActiveCells( opm_data, compressedToCartesian.size(), compressedToCartesian.data());
+            auto ecl_data = grid.compressedVector( prop.data );
 
             convertFromSiTo( ecl_data,
                              units,
@@ -581,7 +551,7 @@ void EclipseWriter::writeINITFile(const EclipseGrid& grid, const std::vector<dat
         properties.getKeyword("FIPNUM");
 
         for (const auto& property : properties) {
-            auto ecl_data = restrictAndReorderToActiveCells( property.getData() , compressedToCartesian.size(), compressedToCartesian.data());
+            auto ecl_data = property.compressedCopy( grid );
             writeKeyword( fortio , property.getKeywordName() , ecl_data );
         }
     }
@@ -608,8 +578,8 @@ void EclipseWriter::writeEGRIDFile( const NNC& nnc ) const {
                          ECL_EGRID_FILE,
                          ioConfig->getFMTOUT() );
 
-    const EclipseGrid& grid = this->impl->grid;
     {
+        const EclipseGrid& grid = this->impl->grid;
         int idx = 0;
         auto* ecl_grid = const_cast< ecl_grid_type* >( grid.c_ptr() );
         for (const NNCdata& n : nnc.nncdata())
@@ -627,10 +597,9 @@ void EclipseWriter::writeInitAndEgrid(const std::vector<data::CellData>& simProp
     {
         const auto& es = *this->impl->es;
         const IOConfig& ioConfig = es.cfg().io();
-        const EclipseGrid& grid = this->impl->grid;
 
         if( ioConfig.getWriteINITFile() )
-            writeINITFile( grid , simProps , nnc );
+            writeINITFile( simProps , nnc );
 
         if( ioConfig.getWriteEGRIDFile( ) )
             writeEGRIDFile( nnc );
@@ -710,7 +679,7 @@ void EclipseWriter::writeTimeStep(int report_step,
         {
             ecl_rsthead_type rsthead_data = {};
             rsthead_data.sim_time   = current_posix_time;
-            rsthead_data.nactive    = this->impl->numCells;
+            rsthead_data.nactive    = grid.getNumActive(),
             rsthead_data.nx         = grid.getNX();
             rsthead_data.ny         = grid.getNY();
             rsthead_data.nz         = grid.getNZ();
@@ -765,12 +734,8 @@ void EclipseWriter::writeTimeStep(int report_step,
             else
                 sol.addFromCells<double>( cells );
             {
-                const auto& compressedToCartesian = this->impl->compressedToCartesian;
                 for (const auto& prop : simProps) {
-                    const auto& opm_data = prop.data;
-                    auto ecl_data = restrictAndReorderToActiveCells( opm_data,
-                                                                     compressedToCartesian.size(),
-                                                                     compressedToCartesian.data());
+                    auto ecl_data = grid.compressedVector( prop.data );
                     convertFromSiTo( ecl_data,
                                      units,
                                      prop.dim );
@@ -799,7 +764,7 @@ void EclipseWriter::writeTimeStep(int report_step,
 
     this->impl->summary.add_timestep( report_step,
                                       secs_elapsed,
-                                      this->impl->compressedToCartesian,
+                                      this->impl->grid,
                                       *this->impl->es,
                                       this->impl->regionCells,
                                       wells ,
@@ -807,45 +772,25 @@ void EclipseWriter::writeTimeStep(int report_step,
     this->impl->summary.write();
  }
 
-EclipseWriter::EclipseWriter( std::shared_ptr< const EclipseState > es,
-                              int numCells,
-                              const int* compressedToCartesianCellIdx) :
 
-    impl( new Impl( es, numCells, compressedToCartesianCellIdx) )
+
+EclipseWriter::EclipseWriter( std::shared_ptr< const EclipseState > es, EclipseGrid grid)
+    : impl( new Impl( es, std::move(grid) ) )
 {
-    // update the ACTNUM array using the processed cornerpoint grid
-    auto& grid = this->impl->grid;
+    if( !this->impl->output_enabled )
+        return;
     {
-        std::vector< int > actnumData( grid.getCartesianSize(), 1 );
-        if ( compressedToCartesianCellIdx ) {
-            actnumData.assign( actnumData.size(), 0 );
-            for( int active_index = 0; active_index < numCells; active_index++ ) {
-                int global_index = compressedToCartesianCellIdx[ active_index ];
-                actnumData[global_index] = 1;
-                this->impl->compressedToCartesian[ active_index ] = global_index;
-            }
-        } else {
-            for( int active_index = 0; active_index < numCells; active_index++ ) {
-                int global_index = active_index;
-                actnumData[global_index] = 1;
-                this->impl->compressedToCartesian[ active_index ] = global_index;
-            }
+        const auto& outputDir = this->impl->outputDir;
+
+        // make sure that the output directory exists, if not try to create it
+        if ( !util_entry_exists( outputDir.c_str() ) ) {
+            util_make_path( outputDir.c_str() );
         }
-        grid.resetACTNUM( &actnumData[0] );
-    }
 
-    if( !this->impl->output_enabled ) return;
-
-    const auto& outputDir = this->impl->outputDir;
-
-    // make sure that the output directory exists, if not try to create it
-    if ( !util_entry_exists( outputDir.c_str() ) ) {
-        util_make_path( outputDir.c_str() );
-    }
-
-    if( !util_is_directory( outputDir.c_str() ) ) {
-        throw std::runtime_error( "The path specified as output directory '"
-                                  + outputDir + "' is not a directory");
+        if( !util_is_directory( outputDir.c_str() ) ) {
+            throw std::runtime_error( "The path specified as output directory '"
+                                      + outputDir + "' is not a directory");
+        }
     }
 
     /*
@@ -853,13 +798,14 @@ EclipseWriter::EclipseWriter( std::shared_ptr< const EclipseState > es,
        evaluation of region properties.
     */
     {
-        const auto& properties = es->get3DProperties();
+        const auto& properties = this->impl->es->get3DProperties();
         const auto& fipnum = properties.getIntGridProperty("FIPNUM");
         const auto& region_values = properties.getRegions( "FIPNUM" );
 
         for (auto region_id : region_values)
-            this->impl->regionCells.emplace( region_id , fipnum.cellsEqual( region_id , this->impl->compressedToCartesian ));
+            this->impl->regionCells.emplace( region_id , fipnum.cellsEqual( region_id , this->impl->grid ));
     }
+
 }
 
 EclipseWriter::~EclipseWriter() {}
