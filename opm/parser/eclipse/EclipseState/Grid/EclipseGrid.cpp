@@ -574,6 +574,10 @@ namespace Opm {
         return static_cast<size_t>(ecl_grid_get_nactive( c_ptr() ));
     }
 
+    bool EclipseGrid::allActive( ) const {
+        return (getNumActive() == getCartesianSize());
+    }
+
     bool EclipseGrid::cellActive( size_t globalIndex ) const {
         assertGlobalIndex( globalIndex );
         return ecl_grid_cell_active1( c_ptr() , static_cast<int>(globalIndex));
