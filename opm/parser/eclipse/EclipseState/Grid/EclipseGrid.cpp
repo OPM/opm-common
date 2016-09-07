@@ -95,9 +95,9 @@ namespace Opm {
           m_minpvMode( src.m_minpvMode ),
           m_pinch( src.m_pinch ),
           m_pinchoutMode( src.m_pinchoutMode ),
-          m_multzMode( src.m_multzMode )
+          m_multzMode( src.m_multzMode ),
+          m_grid( ecl_grid_alloc_copy( src.c_ptr() ))
     {
-        m_grid.reset( ecl_grid_alloc_copy( src.c_ptr() ) );
     }
 
     EclipseGrid::EclipseGrid(size_t nx, size_t ny , size_t nz,
@@ -107,15 +107,39 @@ namespace Opm {
           m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH"),
           m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
-          m_multzMode(PinchMode::ModeEnum::TOP)
+          m_multzMode(PinchMode::ModeEnum::TOP),
+          m_grid( ecl_grid_alloc_rectangular(nx, ny, nz, dx, dy, dz, NULL) )
     {
-        m_grid.reset(ecl_grid_alloc_rectangular(nx, ny, nz, dx, dy, dz, NULL));
     }
 
     EclipseGrid::EclipseGrid(const std::shared_ptr<const Deck>& deckptr, const int * actnum)
-       :
-               EclipseGrid(*deckptr, actnum)
+       : EclipseGrid(*deckptr, actnum)
     {}
+
+
+    EclipseGrid::EclipseGrid(const EclipseGrid& src, const double* zcorn , const std::vector<int>& actnum)
+        : GridDims(src.getNX(), src.getNY(), src.getNZ()),
+          m_messages( src.m_messages ),
+          m_minpvValue( src.m_minpvValue ),
+          m_minpvMode( src.m_minpvMode ),
+          m_pinch( src.m_pinch ),
+          m_pinchoutMode( src.m_pinchoutMode ),
+          m_multzMode( src.m_multzMode )
+    {
+        const int * actnum_data = (actnum.size() > 0) ? actnum.data() : nullptr;
+        m_grid.reset( ecl_grid_alloc_processed_copy( src.c_ptr(), zcorn , actnum_data ));
+    }
+
+
+    EclipseGrid::EclipseGrid(const EclipseGrid& src, const std::vector<double>& zcorn , const std::vector<int>& actnum)
+        : EclipseGrid( src , (zcorn.size() > 0) ? zcorn.data() : nullptr , actnum )
+    { }
+
+
+    EclipseGrid::EclipseGrid(const EclipseGrid& src, const std::vector<int>& actnum)
+        : EclipseGrid( src , nullptr , actnum )
+    {  }
+
 
 
     /*
@@ -703,7 +727,45 @@ namespace Opm {
         this->getActiveMap();
     }
 
+    ZcornMapper EclipseGrid::zcornMapper() const {
+        return ZcornMapper( getNX() , getNY(), getNZ() );
+    }
 
+    ZcornMapper::ZcornMapper(size_t nx , size_t ny, size_t nz)
+        : dims( {nx,ny,nz} ),
+          stride( {2 , 4*nx, 8*nx*ny} ),
+          cell_shift( {0 , 1 , 2*nx , 2*nx + 1 , 4*nx*ny , 4*nx*ny + 1, 4*nx*ny + 2*nx , 4*nx*ny + 2*nx + 1 })
+    {
+    }
+
+
+    /* lower layer:   upper layer  (higher value of z - i.e. lower down in resrvoir).
+
+         2---3           6---7
+         |   |           |   |
+         0---1           4---5
+    */
+
+    size_t ZcornMapper::index(size_t i, size_t j, size_t k, int c) const {
+        if ((i >= dims[0]) || (j >= dims[1]) || (k >= dims[2]) || (c < 0) || (c >= 8))
+            throw std::invalid_argument("Invalid cell argument");
+
+        return i*stride[0] + j*stride[1] + k*stride[2] + cell_shift[c];
+    }
+
+
+
+    size_t ZcornMapper::index(size_t g, int c) const {
+        int k = g / (dims[0] * dims[1]);
+        g -= k * dims[0] * dims[1];
+
+        int j = g / dims[0];
+        g -= j * dims[0];
+
+        int i = g;
+
+        return index(i,j,k,c);
+    }
 }
 
 
