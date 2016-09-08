@@ -58,16 +58,15 @@ namespace Opm {
 
 
     Schedule::Schedule(const ParseContext& parseContext,
-                       std::shared_ptr<const EclipseGrid> grid,
+                       const EclipseGrid& grid,
                        std::shared_ptr< const Deck > deckptr ) :
             Schedule(parseContext, grid, *deckptr )
     {}
 
     Schedule::Schedule( const ParseContext& parseContext,
-                        std::shared_ptr<const EclipseGrid> grid,
+                        const EclipseGrid& grid,
                         const Deck& deck ) :
-        m_timeMap( std::make_shared< TimeMap>( deck )),
-        m_grid( grid )
+        m_timeMap( std::make_shared< TimeMap>( deck ))
     {
         m_tuning.reset(new Tuning(m_timeMap));
         m_events.reset(new Events(m_timeMap));
@@ -78,7 +77,7 @@ namespace Opm {
 
         if (Section::hasSCHEDULE(deck)) {
             std::shared_ptr<SCHEDULESection> scheduleSection = std::make_shared<SCHEDULESection>(deck);
-            iterateScheduleSection(parseContext , *scheduleSection );
+            iterateScheduleSection(parseContext , *scheduleSection , grid );
         }
     }
 
@@ -100,7 +99,7 @@ namespace Opm {
     }
 
 
-    void Schedule::iterateScheduleSection(const ParseContext& parseContext , const SCHEDULESection& section ) {
+    void Schedule::iterateScheduleSection(const ParseContext& parseContext , const SCHEDULESection& section , const EclipseGrid& grid) {
         /*
           geoModifiers is a list of geo modifiers which can be found in the schedule
           section. This is only partly supported, support is indicated by the bool
@@ -162,7 +161,7 @@ namespace Opm {
                 handleWGRUPCON(keyword, currentStep);
 
             else if (keyword.name() == "COMPDAT")
-                handleCOMPDAT(keyword, currentStep);
+                handleCOMPDAT(keyword, currentStep, grid);
 
             else if (keyword.name() == "WELSEGS")
                 handleWELSEGS(keyword, currentStep);
@@ -1134,9 +1133,9 @@ namespace Opm {
     }
 
 
-    void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep) {
+    void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid) {
         const auto wells = this->getWells( currentStep );
-        auto completions = Completion::fromCOMPDAT( *m_grid, keyword, wells );
+        auto completions = Completion::fromCOMPDAT( grid, keyword, wells );
 
         for( const auto pair : completions ) {
             auto& well = *this->m_wells.get( pair.first );

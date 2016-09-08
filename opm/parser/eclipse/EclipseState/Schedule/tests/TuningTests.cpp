@@ -70,7 +70,7 @@ static DeckPtr createDeck(const std::string& input) {
 BOOST_AUTO_TEST_CASE(TuningTest) {
 
   DeckPtr deck = createDeck(deckStr);
-  std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
+  EclipseGrid grid(10,10,10);
   Schedule schedule( ParseContext() , grid , deck );
   TuningPtr tuning = schedule.getTuning();
 
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
 BOOST_AUTO_TEST_CASE(TuningInitTest) {
 
   DeckPtr deck = createDeck(deckStr);
-  std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
+  EclipseGrid grid(10,10,10);
   Schedule schedule(ParseContext() , grid , deck);
   TuningPtr tuning = schedule.getTuning();
 
@@ -342,14 +342,14 @@ BOOST_AUTO_TEST_CASE(TuningInitTest) {
   BOOST_CHECK_EQUAL(true, TMAXWC_has_value);
   BOOST_CHECK_CLOSE(TMAXWC_default, 10.0 * Metric::Time, diff);
 
-  
+
   }
 
 
 BOOST_AUTO_TEST_CASE(TuningResetTest) {
 
   DeckPtr deck = createDeck(deckStr);
-  std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10 , 10 , 10 );
+  EclipseGrid grid(10,10,10);
   Schedule schedule(ParseContext() , grid , deck);
   TuningPtr tuning = schedule.getTuning();
 

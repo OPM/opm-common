@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithGEFAC) {
 
     Opm::ParseContext parseContext;
     Opm::DeckPtr deck = parser.parseString(input, parseContext);
-    std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>(10, 10, 10);
+    EclipseGrid grid(10,10,10);
     Opm::Schedule schedule(parseContext , grid, deck );
 
     const auto* group1 = schedule.getGroup("PRODUC");
@@ -329,7 +329,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
 
     Opm::ParseContext parseContext;
     Opm::DeckPtr deck = parser.parseString(input, parseContext);
-    std::shared_ptr<const Opm::EclipseGrid> grid = std::make_shared<const Opm::EclipseGrid>(10, 10, 10);
+    EclipseGrid grid(10,10,10);
     Opm::Schedule schedule(parseContext , grid, deck );
     const auto* currentWell = schedule.getWell("B-37T2");
     const Opm::WellProductionProperties& wellProductionProperties = currentWell->getProductionProperties(0);
