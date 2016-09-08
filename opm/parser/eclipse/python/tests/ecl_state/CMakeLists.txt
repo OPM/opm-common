@@ -4,3 +4,4 @@ add_python_package("python.tests.ecl_state" "${PYTHON_INSTALL_PREFIX}/tests/ecl_
 
 add_subdirectory( table )
 add_subdirectory( grid )
+add_subdirectory( schedule )
