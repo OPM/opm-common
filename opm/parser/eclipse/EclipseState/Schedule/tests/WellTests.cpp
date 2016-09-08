@@ -375,6 +375,7 @@ Opm::CompletionPtr completion(const size_t i, const size_t j, const size_t k);
 Opm::CompletionPtr completion(const size_t i, const size_t j, const size_t k)
 {
     return std::make_shared<Opm::Completion>(i, j, k,
+                                             k*1.0,
                                              Opm::WellCompletion::AUTO,
                                              Opm::Value<double>("ConnectionTransmissibilityFactor",99.88),
                                              Opm::Value<double>("D",22.33),
