@@ -23,7 +23,7 @@ class TableManager(BaseCClass):
 
         
     def free(self):
-        self._free( self )
+        self._free( )
         
 
     def hasTable(self, name ):

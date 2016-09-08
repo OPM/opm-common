@@ -116,7 +116,7 @@ class Deck(BaseCClass):
 
         
     def free(self):
-        self._free( self )
+        self._free(  )
 
 
         
