@@ -38,14 +38,13 @@ namespace Opm {
 
     class Completion;
     class CompletionSet;
-    class EclipseGrid;
     class Segment;
     class SegmentSet;
     class TimeMap;
 
     class Well {
     public:
-        Well(const std::string& name, std::shared_ptr<const EclipseGrid> grid, int headI,
+        Well(const std::string& name, int headI,
              int headJ, Value<double> refDepth , Phase::PhaseEnum preferredPhase,
              std::shared_ptr< const TimeMap > timeMap, size_t creationTimeStep,
              WellCompletion::CompletionOrderEnum completionOrdering = WellCompletion::TRACK,
@@ -166,7 +165,6 @@ namespace Opm {
         int m_headJ;
         mutable Value<double> m_refDepth;
         Phase::PhaseEnum m_preferredPhase;
-        std::shared_ptr<const EclipseGrid> m_grid;
 
         WellCompletion::CompletionOrderEnum m_comporder;
         bool m_allowCrossFlow;
