@@ -1136,7 +1136,7 @@ namespace Opm {
 
     void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep) {
         const auto wells = this->getWells( currentStep );
-        auto completions = Completion::fromCOMPDAT( keyword, wells );
+        auto completions = Completion::fromCOMPDAT( *m_grid, keyword, wells );
 
         for( const auto pair : completions ) {
             auto& well = *this->m_wells.get( pair.first );

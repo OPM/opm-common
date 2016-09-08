@@ -340,11 +340,11 @@ BOOST_AUTO_TEST_CASE(UpdateCompletions) {
 
     std::vector<Opm::CompletionPtr> newCompletions;
     std::vector<Opm::CompletionPtr> newCompletions2;
-    Opm::CompletionPtr comp1(new Opm::Completion( 10 , 10 , 10 , Opm::WellCompletion::AUTO , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
-    Opm::CompletionPtr comp2(new Opm::Completion( 10 , 10 , 11 , Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
-    Opm::CompletionPtr comp3(new Opm::Completion( 10 , 10 , 12 , Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
-    Opm::CompletionPtr comp4(new Opm::Completion( 10 , 10 , 12 , Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
-    Opm::CompletionPtr comp5(new Opm::Completion( 10 , 10 , 13 , Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
+    Opm::CompletionPtr comp1(new Opm::Completion( 10 , 10 , 10 , 10,Opm::WellCompletion::AUTO , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
+    Opm::CompletionPtr comp2(new Opm::Completion( 10 , 10 , 11 , 11,Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
+    Opm::CompletionPtr comp3(new Opm::Completion( 10 , 10 , 12 , 12,Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
+    Opm::CompletionPtr comp4(new Opm::Completion( 10 , 10 , 12 , 12,Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
+    Opm::CompletionPtr comp5(new Opm::Completion( 10 , 10 , 13 , 13,Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
 
     //std::vector<Opm::CompletionConstPtr> newCompletions2{ comp4 , comp5}; Newer c++
 
@@ -634,7 +634,7 @@ BOOST_AUTO_TEST_CASE(WellStatus) {
     Opm::Well well("WELL1" , grid , 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap , 0);
 
     std::vector<Opm::CompletionPtr> newCompletions;
-    Opm::CompletionPtr comp1(new Opm::Completion( 10 , 10 , 10 , Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
+    Opm::CompletionPtr comp1(new Opm::Completion( 10 , 10 , 10 , 0.25 , Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
 
     newCompletions.push_back( comp1 );
 
