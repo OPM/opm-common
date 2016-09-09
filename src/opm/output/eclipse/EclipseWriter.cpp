@@ -145,7 +145,21 @@ private:
     fd filename;
 };
 
+using restart_file = ERT::ert_unique_ptr< ecl_rst_file_type, ecl_rst_file_close >;
 
+restart_file open_rst( const char* filename,
+          bool first_restart,
+          bool unifout,
+          int report_step ) {
+
+    if( !unifout )
+        return restart_file{ ecl_rst_file_open_write( filename ) };
+
+    if( first_restart )
+        return restart_file{ ecl_rst_file_open_write_seek( filename, report_step ) };
+
+    return restart_file{ ecl_rst_file_open_append( filename ) };
+}
 
 class Restart {
 public:
@@ -175,16 +189,17 @@ public:
     Restart(const std::string& outputDir,
             const std::string& baseName,
             int writeStepIdx,
-            const IOConfig& ioConfig ) :
+            const IOConfig& ioConfig,
+            bool first_restart ) :
         filename( outputDir,
                 baseName,
                 ioConfig.getUNIFOUT() ? ECL_UNIFIED_RESTART_FILE : ECL_RESTART_FILE,
                 writeStepIdx,
                 ioConfig.getFMTOUT() ),
-        rst_file(
-                ( writeStepIdx > 0 && ioConfig.getUNIFOUT() )
-                ? ecl_rst_file_open_append( filename.get() )
-                : ecl_rst_file_open_write( filename.get() ) )
+        rst_file( open_rst( filename.get(),
+                            first_restart,
+                            ioConfig.getUNIFOUT(),
+                            writeStepIdx ) )
     {}
 
     template< typename T >
@@ -245,7 +260,7 @@ public:
 
 private:
     FileName filename;
-    ERT::ert_unique_ptr< ecl_rst_file_type, ecl_rst_file_close > rst_file;
+    restart_file rst_file;
 };
 
 /**
@@ -413,6 +428,7 @@ class EclipseWriter::Impl {
         std::array< int, 3 > cartesianSize;
         bool output_enabled;
         int ert_phase_mask;
+        bool first_restart = true;
 };
 
 EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
@@ -658,7 +674,10 @@ void EclipseWriter::writeTimeStep(int report_step,
         Restart restartHandle( this->impl->outputDir,
                                this->impl->baseName,
                                report_step,
-                               es.cfg().io() );
+                               es.cfg().io(),
+                               this->impl->first_restart );
+
+        this->impl->first_restart = false;
 
         for (size_t iwell = 0; iwell < wells_ptr.size(); ++iwell) {
             const auto& well = *wells_ptr[iwell];

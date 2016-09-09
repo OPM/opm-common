@@ -183,7 +183,7 @@ void checkInitFile( const Deck& deck, const std::vector<data::CellData>& simProp
 void checkRestartFile( int timeStepIdx ) {
     using ds = data::Solution::key;
 
-    for (int i = 0; i <= timeStepIdx; ++i) {
+    for (int i = 1; i <= timeStepIdx; ++i) {
         auto sol = createBlackoilState( i, 3 * 3 * 3 );
 
         // use ERT directly to inspect the restart file produced by EclipseWriter
@@ -228,8 +228,7 @@ void checkRestartFile( int timeStepIdx ) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
-{
+BOOST_AUTO_TEST_CASE(EclipseWriterIntegration) {
     const char *deckString =
         "RUNSPEC\n"
         "UNIFOUT\n"
@@ -265,51 +264,93 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
         "/\n"
         "SCHEDULE\n"
         "TSTEP\n"
-        "1.0 2.0 3.0 4.0 /\n"
+        "1.0 2.0 3.0 4.0 5.0 6.0 7.0 /\n"
         "WELSPECS\n"
         "'INJ' 'G' 1 1 2000 'GAS' /\n"
         "'PROD' 'G' 3 3 1000 'OIL' /\n"
         "/\n";
 
-    auto deck = Parser().parseString( deckString, ParseContext() );
-    auto es = std::make_shared< EclipseState >( Parser::parse( *deck ) );
-    es->getIOConfig()->setBaseName( "FOO" );
+    ERT::TestArea ta("test_ecl_writer");
 
-    auto& eclGrid = *es->getInputGrid();
+    auto write_and_check = [&]( int first = 1, int last = 5 ) {
+        auto deck = Parser().parseString( deckString, ParseContext() );
+        auto es = std::make_shared< EclipseState >( Parser::parse( *deck ) );
+        es->getIOConfig()->setBaseName( "FOO" );
 
-    {
-        ERT::TestArea ta("test_ecl_writer");
-        EclipseWriter eclWriter( es, eclGrid);
+        auto& eclGrid = *es->getInputGrid();
+
+        EclipseWriter eclWriter( es, eclGrid );
 
         auto start_time = ecl_util_make_date( 10, 10, 2008 );
-        auto first_step = ecl_util_make_date( 10, 11, 2008 );
         std::vector<double> tranx(3*3*3);
         std::vector<double> trany(3*3*3);
         std::vector<double> tranz(3*3*3);
-        std::vector<data::CellData> eGridProps{{"TRANX" , UnitSystem::measure::transmissibility, tranx},
-                                              {"TRANY" , UnitSystem::measure::transmissibility, trany},
-                                              {"TRANZ" , UnitSystem::measure::transmissibility, tranz}};
+        std::vector<data::CellData> eGridProps{
+            {"TRANX" , UnitSystem::measure::transmissibility, tranx},
+            {"TRANY" , UnitSystem::measure::transmissibility, trany},
+            {"TRANZ" , UnitSystem::measure::transmissibility, tranz}
+        };
 
         eclWriter.writeInitAndEgrid( );
         eclWriter.writeInitAndEgrid( eGridProps );
 
         data::Wells wells;
 
-        for( int i = 0; i < 5; ++i ) {
-            std::vector<data::CellData> timesStepProps{{"KRO" , UnitSystem::measure::identity , std::vector<double>(3*3*3 , i)},
-                                                 {"KRG" , UnitSystem::measure::identity , std::vector<double>(3*3*3 , i*10)}};
+        for( int i = first; i < last; ++i ) {
+            std::vector<data::CellData> timesStepProps {
+                {"KRO" , UnitSystem::measure::identity , std::vector<double>(3*3*3 , i)},
+                {"KRG" , UnitSystem::measure::identity , std::vector<double>(3*3*3 , i*10)}};
 
+            auto first_step = ecl_util_make_date( 10 + i, 11, 2008 );
             eclWriter.writeTimeStep( i,
-                                     false,
-                                     first_step - start_time,
-                                     createBlackoilState( i, 3 * 3 * 3 ),
-                                     wells,
-                                     timesStepProps);
+                    false,
+                    first_step - start_time,
+                    createBlackoilState( i, 3 * 3 * 3 ),
+                    wells,
+                    timesStepProps);
 
             checkRestartFile( i );
-
         }
+
         checkInitFile( *deck , eGridProps);
         checkEgridFile( eclGrid );
-    }
+
+        std::ifstream file( "FOO.UNRST", std::ios::binary );
+        std::streampos file_size = 0;
+
+        file_size = file.tellg();
+        file.seekg( 0, std::ios::end );
+        file_size = file.tellg() - file_size;
+
+        return file_size;
+    };
+
+    /*
+     * write the file and calculate the file size. FOO.UNRST should be
+     * overwitten for every time step, i.e. the file size should not change
+     * between runs.  This is to verify that UNRST files are properly
+     * overwritten, which they used not to.
+     *
+     * * https://github.com/OPM/opm-simulators/issues/753
+     * * https://github.com/OPM/opm-output/pull/61
+     */
+    const auto file_size = write_and_check();
+
+    for( int i = 0; i < 3; ++i )
+        BOOST_CHECK_EQUAL( file_size, write_and_check() );
+
+    /*
+     * check that "restarting" and writing over previous timesteps does not
+     * change the file size, if the total amount of steps are the same
+     */
+    BOOST_CHECK_EQUAL( file_size, write_and_check( 3, 5 ) );
+
+    /* verify that adding steps from restart also increases file size */
+    BOOST_CHECK( file_size < write_and_check( 3, 7 ) );
+
+    /*
+     * verify that restarting a simulation, then writing fewer steps truncates
+     * the file
+     */
+    BOOST_CHECK_EQUAL( file_size, write_and_check( 3, 5 ) );
 }
