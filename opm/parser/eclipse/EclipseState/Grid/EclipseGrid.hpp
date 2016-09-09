@@ -106,9 +106,25 @@ namespace Opm {
         double getMinpvValue( ) const;
 
 
+        /*
+          Will return a vector of nactive elements. The method will
+          behave differently depending on the lenght of the
+          input_vector:
+
+             nx*ny*nz: only the values corresponding to active cells
+               are copied out.
+
+             nactive: The input vector is copied straight out again.
+
+             ??? : Exception.
+        */
         template<typename T>
-        std::vector<T> compressedVector(const std::vector<T>& full_vector) const {
-            if (full_vector.size() != getCartesianSize())
+        std::vector<T> compressedVector(const std::vector<T>& input_vector) const {
+            if( input_vector.size() == this->getNumActive() ) {
+                return input_vector;
+            }
+
+            if (input_vector.size() != getCartesianSize())
                 throw std::invalid_argument("Input vector must have full size");
 
             {
@@ -116,7 +132,7 @@ namespace Opm {
                 const auto& active_map = this->getActiveMap( );
 
                 for (size_t i = 0; i < this->getNumActive(); ++i)
-                    compressed_vector[i] = full_vector[ active_map[i] ];
+                    compressed_vector[i] = input_vector[ active_map[i] ];
 
                 return compressed_vector;
             }
