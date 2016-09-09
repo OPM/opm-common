@@ -310,7 +310,6 @@ private:
     Restart& restart;
 };
 
-
 /// Convert OPM phase usage to ERT bitmask
 inline int ertPhaseMask( const TableManager& tm ) {
     return ( tm.hasPhase( Phase::PhaseEnum::WATER ) ? ECL_WATER_PHASE : 0 )
@@ -322,8 +321,7 @@ class RFT {
     public:
         RFT( const char* output_dir,
              const char* basename,
-             bool format,
-             const EclipseGrid& grid_);
+             bool format );
 
         void writeTimeStep( std::vector< const Well* >,
                             const EclipseGrid& grid,
@@ -336,18 +334,14 @@ class RFT {
                             const std::vector< double >& sgas );
     private:
         ERT::FortIO fortio;
-        const EclipseGrid& grid;
 };
 
 
 RFT::RFT( const char* output_dir,
           const char* basename,
-          bool format,
-          const EclipseGrid& grid_ ) :
-    fortio(FileName( output_dir, basename, ECL_RFT_FILE, format ).get(),std::ios_base::out),
-    grid( grid_ )
-{
-}
+          bool format ) :
+    fortio(FileName( output_dir, basename, ECL_RFT_FILE, format ).get(),std::ios_base::out)
+{}
 
 inline ert_ecl_unit_enum to_ert_unit( UnitSystem::UnitType t ) {
     switch ( t ) {
@@ -438,9 +432,7 @@ EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
     , outputDir( eclipseState->getIOConfig()->getOutputDir() )
     , baseName( uppercase( eclipseState->getIOConfig()->getBaseName() ) )
     , summary( *eclipseState, eclipseState->getSummaryConfig() )
-    , rft( outputDir.c_str(), baseName.c_str(),
-           es->getIOConfig()->getFMTOUT(),
-           grid)
+    , rft( outputDir.c_str(), baseName.c_str(), es->getIOConfig()->getFMTOUT() )
     , sim_start_time( es->getSchedule()->posixStartTime() )
     , output_enabled( eclipseState->getIOConfig()->getOutputEnabled() )
     , ert_phase_mask( ertPhaseMask( eclipseState->getTableManager() ) )
@@ -454,9 +446,7 @@ EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
     , outputDir( eclipseState->getIOConfig()->getOutputDir() )
     , baseName( uppercase( eclipseState->getIOConfig()->getBaseName() ) )
     , summary( *eclipseState, eclipseState->getSummaryConfig() )
-    , rft( outputDir.c_str(), baseName.c_str(),
-           es->getIOConfig()->getFMTOUT(),
-           grid)
+    , rft( outputDir.c_str(), baseName.c_str(), es->getIOConfig()->getFMTOUT() )
     , sim_start_time( es->getSchedule()->posixStartTime() )
     , output_enabled( eclipseState->getIOConfig()->getOutputEnabled() )
     , ert_phase_mask( ertPhaseMask( eclipseState->getTableManager() ) )
