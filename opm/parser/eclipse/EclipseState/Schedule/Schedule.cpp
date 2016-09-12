@@ -41,6 +41,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/Compsegs.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp>
+
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -55,6 +56,15 @@
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm {
+
+    namespace {
+
+        time_t posixTime( const boost::posix_time::ptime& t) {
+            boost::posix_time::ptime epoch( boost::gregorian::date( 1970, 1, 1 ) );
+            return time_t( ( t - epoch ).total_seconds() );
+        }
+
+    }
 
 
     Schedule::Schedule(const ParseContext& parseContext,
@@ -86,9 +96,13 @@ namespace Opm {
     }
 
     time_t Schedule::posixStartTime() const {
-        boost::posix_time::ptime epoch( boost::gregorian::date( 1970, 1, 1 ) );
-        return time_t( ( this->getStartTime() - epoch ).total_seconds() );
+        return posixTime(this->getStartTime());
     }
+
+    time_t Schedule::posixEndTime() const {
+        return posixTime( this->m_timeMap->getEndTime() );
+    }
+
 
     void Schedule::initOilVaporization(TimeMapConstPtr timeMap) {
         m_oilvaporizationproperties.reset(new DynamicState<OilVaporizationPropertiesPtr>(timeMap, OilVaporizationPropertiesPtr()));

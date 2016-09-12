@@ -64,6 +64,8 @@ namespace Opm
          */
         boost::posix_time::ptime getStartTime() const;
         time_t posixStartTime() const;
+        time_t posixEndTime() const;
+
 
         std::shared_ptr< const TimeMap > getTimeMap() const;
 
