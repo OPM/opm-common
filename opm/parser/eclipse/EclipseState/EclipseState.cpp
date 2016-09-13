@@ -64,7 +64,8 @@ namespace Opm {
         m_eclipseProperties( deck, m_tables, *m_inputGrid ),
         m_eclipseConfig(     deck, m_eclipseProperties, m_gridDims, *m_schedule , parseContext),
         m_inputNnc(          deck, m_gridDims ),
-        m_deckUnitSystem(    deck.getActiveUnitSystem() )
+        m_deckUnitSystem(    deck.getActiveUnitSystem() ),
+        m_messages(          deck)
 
     {
         m_inputGrid->resetACTNUM(m_eclipseProperties.getIntGridProperty("ACTNUM").getData().data());
@@ -130,6 +131,12 @@ namespace Opm {
 
     MessageContainer& EclipseState::getMessageContainer() {
         return m_messageContainer;
+    }
+
+
+    const Messages& EclipseState::getMessages() const
+    {
+        return m_messages;
     }
 
 

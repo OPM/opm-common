@@ -21,6 +21,7 @@
 #define OPM_MESSAGES_HPP
 
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 
 namespace Opm {
 
@@ -35,6 +36,12 @@ namespace Opm {
         Messages(const Messages& message , const DeckRecord& record);
         
         Messages(const DeckRecord& record);
+
+        Messages(const Deck& deck);
+
+        ///Get all the value from MESSAGES keyword.
+        std::vector<int> getPrintLimit() const;
+        std::vector<int> getStopLimit() const;
 
     private:
         int m_message_print_limit;

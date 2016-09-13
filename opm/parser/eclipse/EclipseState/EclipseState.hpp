@@ -29,6 +29,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
+#include <opm/parser/eclipse/EclipseState/Messages.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
@@ -53,6 +54,7 @@ namespace Opm {
     class SimulationConfig;
     class TableManager;
     class UnitSystem;
+    class Messages;
 
     class EclipseState {
     public:
@@ -105,6 +107,8 @@ namespace Opm {
 
         const MessageContainer& getMessageContainer() const;
         MessageContainer& getMessageContainer();
+
+        const Messages& getMessages() const;
         std::string getTitle() const;
 
         void applyModifierDeck(const Deck& deck);
@@ -134,6 +138,8 @@ namespace Opm {
         std::string m_title;
 
         MessageContainer m_messageContainer;
+
+        Messages m_messages;
     };
 
     typedef std::shared_ptr<EclipseState> EclipseStatePtr;

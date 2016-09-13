@@ -93,6 +93,43 @@ namespace Opm {
         m_bug_stop_limit( record.getItem<ParserKeywords::MESSAGES::BUG_STOP_LIMIT>().get< int >(0))
     { }
 
+
+
+
+    Messages::Messages(const Deck& deck)
+    {
+        if (deck.hasKeyword("MESSAGES")) {
+            const auto& record = deck.getKeyword("MESSAGES").getRecord(0);
+            m_message_print_limit = record.getItem<ParserKeywords::MESSAGES::MESSAGE_PRINT_LIMIT>().get< int >(0);
+            m_comment_print_limit = record.getItem<ParserKeywords::MESSAGES::COMMENT_PRINT_LIMIT>().get< int >(0);
+            m_warning_print_limit = record.getItem<ParserKeywords::MESSAGES::WARNING_PRINT_LIMIT>().get< int >(0);
+            m_problem_print_limit = record.getItem<ParserKeywords::MESSAGES::PROBLEM_PRINT_LIMIT>().get< int >(0);
+            m_error_print_limit = record.getItem<ParserKeywords::MESSAGES::ERROR_PRINT_LIMIT>().get< int >(0);
+            m_bug_print_limit = record.getItem<ParserKeywords::MESSAGES::BUG_PRINT_LIMIT>().get< int >(0);
+            m_message_stop_limit = record.getItem<ParserKeywords::MESSAGES::MESSAGE_STOP_LIMIT>().get< int >(0);
+            m_comment_stop_limit = record.getItem<ParserKeywords::MESSAGES::COMMENT_STOP_LIMIT>().get< int >(0);
+            m_warning_stop_limit = record.getItem<ParserKeywords::MESSAGES::WARNING_STOP_LIMIT>().get< int >(0);
+            m_problem_stop_limit = record.getItem<ParserKeywords::MESSAGES::PROBLEM_STOP_LIMIT>().get< int >(0);
+            m_error_stop_limit = record.getItem<ParserKeywords::MESSAGES::ERROR_STOP_LIMIT>().get< int >(0);
+            m_bug_stop_limit = record.getItem<ParserKeywords::MESSAGES::BUG_STOP_LIMIT>().get< int >(0);
+        }
+    }
+
+
+
+
+    std::vector<int> Messages::getPrintLimit() const
+    {
+        return std::vector<int> {m_message_print_limit, m_comment_print_limit, m_warning_print_limit,
+                m_problem_print_limit, m_error_print_limit, m_bug_print_limit};
+    }
+
+
+    std::vector<int> Messages::getStopLimit() const
+    {
+        return std::vector<int> {m_message_stop_limit, m_comment_stop_limit, m_warning_stop_limit,
+                m_problem_stop_limit, m_error_stop_limit, m_bug_stop_limit};
+    }
 }
 
 
