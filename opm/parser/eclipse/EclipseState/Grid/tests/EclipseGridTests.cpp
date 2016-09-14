@@ -698,8 +698,7 @@ BOOST_AUTO_TEST_CASE(ResetACTNUM) {
     BOOST_CHECK_EQUAL( 4U , grid.getNumActive() );
     {
         std::vector<int> full(grid.getCartesianSize());
-        for (int i=0; i < grid.getCartesianSize(); i++)
-            full[i] = i;
+        std::iota(full.begin(), full.end(), 0);
 
         auto compressed = grid.compressedVector( full );
         BOOST_CHECK_EQUAL( compressed.size() , 4U );
