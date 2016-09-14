@@ -22,6 +22,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace Opm
 {
@@ -36,7 +37,8 @@ namespace Opm
 
         /// Default constructor, no limit to the number of messages.
         MessageLimiter()
-            : message_limit_(NoLimit)
+            : message_limit_(NoLimit),
+              limits_({100, 1000000, 1000000, 1000000, 100, 100, 100})
         {
         }
 
@@ -46,8 +48,18 @@ namespace Opm
         /// Negative limits (including NoLimit) are interpreted as
         /// NoLimit, but the default constructor is the preferred way
         /// to obtain that behaviour.
-        explicit MessageLimiter(const int message_limit)
-            : message_limit_(message_limit < 0 ? NoLimit : message_limit)
+        explicit MessageLimiter(const int tag_limit)
+            : message_limit_(tag_limit < 0 ? NoLimit : tag_limit),
+              limits_({100, 1000000, 1000000, 1000000, 100, 100, 100})
+        {
+        }
+
+        /// tag_limits is for tagged messages.
+        /// limits is gotten from MESSAGES keywords, at least include 6 print limit
+        /// values.
+        explicit MessageLimiter(const int tag_limit, const std::vector<int> limits)
+             : message_limit_(tag_limit < 0 ? NoLimit : tag_limit),
+               limits_(limits)
         {
         }
 
@@ -55,6 +67,13 @@ namespace Opm
         int messageLimit() const
         {
             return message_limit_;
+        }
+
+
+        /// Limits from MESSGAES keyword.
+        std::vector<int> categoryLimit() const
+        {
+            return limits_;
         }
 
         /// Used for handleMessageTag() return type (see that
@@ -87,6 +106,13 @@ namespace Opm
             }
         }
 
+
+        /// Handle category print limtis.
+        Response handleCategoryLimits(const int count, const int limit)
+        {
+            return countBasedResponse(count, limit);
+        }
+
     private:
         Response countBasedResponse(const int count)
         {
@@ -99,13 +125,22 @@ namespace Opm
             }
         }
 
+        Response countBasedResponse(const int count, const int limit)
+        {
+            if (count <= limit) {
+                return Response::PrintMessage;
+            } else if (count == limit + 1) {
+                return Response::JustOverLimit;
+            } else {
+                return Response::OverLimit;
+            }
+        }
 
         int message_limit_;
+        // info, note, warning, problem, error, bug.
+        std::vector<int> limits_;
         std::unordered_map<std::string, int> tag_counts_;
     };
-
-
-
 } // namespace Opm
 
 #endif // OPM_MESSAGELIMITER_HEADER_INCLUDED
