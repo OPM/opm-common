@@ -57,6 +57,10 @@ void StreamLog::addTaggedMessage(int64_t messageType, const std::string& message
     }
 }
 
+    std::ostream* StreamLog::getOstream() const
+    {
+        return m_ostream;
+    }
 
 StreamLog::~StreamLog() {
     close();
