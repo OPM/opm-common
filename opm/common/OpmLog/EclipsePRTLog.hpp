@@ -29,6 +29,7 @@ namespace Opm {
 class EclipsePRTLog : public StreamLog {
 
 public:
+    using StreamLog::StreamLog;
 
     void addTaggedMessage(int64_t messageType, const std::string& messageTag, const std::string& message);
 
@@ -37,10 +38,10 @@ public:
     ~EclipsePRTLog();
 
     EclipsePRTLog(const std::string& logFile , int64_t messageMask,
-                  bool append, bool print_summary=true);
+                  bool append, bool print_summary);
 
     EclipsePRTLog(std::ostream& os , int64_t messageMask,
-                  bool print_summary=true);
+                  bool print_summary);
 private:
     std::map<int64_t, size_t> m_count;
     bool print_summary_;
