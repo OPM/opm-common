@@ -57,7 +57,7 @@ public:
 private:
     std::map<int64_t, size_t> m_count;
     /// \brief Whether to print a summary to the log file.
-    bool print_summary_;
+    bool print_summary_ = true;
 };
 }
 #endif // ECLIPSEPRTLOG_H
