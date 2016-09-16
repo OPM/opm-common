@@ -61,13 +61,16 @@ namespace Opm {
         StreamLog::addTaggedMessage(Log::MessageType::Info, "", summary_msg);
     }
 
-    EclipsePRTLog::EclipsePRTLog(const std::string& logFile , int64_t messageMask,
-                  bool append, bool print_summary)
+    EclipsePRTLog::EclipsePRTLog(const std::string& logFile,
+                                 int64_t messageMask,
+                                 bool append,
+                                 bool print_summary)
         : StreamLog(logFile, messageMask, append),
           print_summary_(print_summary)
     {}
 
-    EclipsePRTLog::EclipsePRTLog(std::ostream& os , int64_t messageMask,
+    EclipsePRTLog::EclipsePRTLog(std::ostream& os,
+                                 int64_t messageMask,
                                  bool print_summary)
         : StreamLog(os, messageMask), print_summary_(print_summary)
     {}
