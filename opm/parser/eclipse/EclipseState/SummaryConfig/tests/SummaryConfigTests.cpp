@@ -305,6 +305,11 @@ BOOST_AUTO_TEST_CASE(summary_ALL) {
         all.begin(), all.end(),
         key_names.begin(), key_names.end());
 
+    BOOST_CHECK_EQUAL( true , summary.hasKeyword( "FOPT"));
+    BOOST_CHECK_EQUAL( true , summary.hasKeyword( "GGIT"));
+    BOOST_CHECK_EQUAL( true , summary.hasKeyword( "WWCT"));
+
+    BOOST_CHECK_EQUAL( false , summary.hasKeyword("NO-NOT-THIS"));
 }
 
 

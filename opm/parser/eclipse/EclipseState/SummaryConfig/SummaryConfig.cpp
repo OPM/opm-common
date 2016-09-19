@@ -300,10 +300,10 @@ SummaryConfig::SummaryConfig( const Deck& deck, const EclipseState& es , const P
 {}
 
 SummaryConfig::SummaryConfig( const Deck& deck,
-                                const Schedule& schedule,
-                                const Eclipse3DProperties& props,
-                                const ParseContext& parseContext,
-                                std::array< int, 3 > n_xyz ) {
+                              const Schedule& schedule,
+                              const Eclipse3DProperties& props,
+                              const ParseContext& parseContext,
+                              std::array< int, 3 > n_xyz ) {
 
     SUMMARYSection section( deck );
     for( auto& x : section )
@@ -313,6 +313,8 @@ SummaryConfig::SummaryConfig( const Deck& deck,
         this->merge( { ALL_keywords, schedule, props, parseContext, n_xyz } );
 
     uniq( this->keywords );
+    for (const auto& kw: this->keywords)
+        this->short_keywords.insert( kw.keyword() );
 }
 
 SummaryConfig::const_iterator SummaryConfig::begin() const {
@@ -340,6 +342,10 @@ SummaryConfig& SummaryConfig::merge( SummaryConfig&& other ) {
 
     uniq( this->keywords );
     return *this;
+}
+
+bool SummaryConfig::hasKeyword( const std::string& keyword ) const {
+    return (this->short_keywords.count( keyword ) == 1);
 }
 
 }
