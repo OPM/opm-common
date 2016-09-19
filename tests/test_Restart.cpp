@@ -41,6 +41,7 @@
 // ERT stuff
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_file.h>
+#include <ert/ecl/ecl_util.h>
 #include <ert/ecl/ecl_kw_magic.h>
 #include <ert/ecl_well/well_info.h>
 #include <ert/ecl_well/well_state.h>
@@ -230,8 +231,8 @@ first_sim(test_work_area_type * test_area) {
     auto num_cells = grid.getNX() * grid.getNY() * grid.getNZ();
 
     EclipseWriter eclWriter( eclipseState, grid);
-    auto start_time = util_make_datetime( 0, 0, 0, 1, 11, 1979 );
-    auto first_step = util_make_datetime( 0, 0, 0, 10, 10, 2008 );
+    auto start_time = ecl_util_make_date( 1, 11, 1979 );
+    auto first_step = ecl_util_make_date( 10, 10, 2008 );
 
     auto sol = mkSolution( num_cells );
     auto wells = mkWells();

@@ -38,6 +38,7 @@
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 
 #include <ert/ecl/ecl_rft_file.h>
+#include <ert/ecl/ecl_util.h>
 #include <ert/util/test_work_area.h>
 #include <ert/util/util.h>
 #include <ert/util/TestArea.hpp>
@@ -55,7 +56,7 @@ void verifyRFTFile(const std::string& rft_filename) {
     rft_file.reset(new_rft_file, ecl_rft_file_free);
 
     //Get RFT node for well/time OP_1/10 OKT 2008
-    time_t recording_time = util_make_datetime(0, 0, 0, 10, 10, 2008);
+    time_t recording_time = ecl_util_make_date(10, 10, 2008);
     ecl_rft_node_type * ecl_rft_node = ecl_rft_file_get_well_time_rft(rft_file.get() , "OP_1" , recording_time);
     BOOST_CHECK(ecl_rft_node_is_RFT(ecl_rft_node));
 
@@ -122,7 +123,7 @@ BOOST_AUTO_TEST_CASE(test_RFT) {
         EclipseWriter eclipseWriter( eclipseState, grid);
         time_t start_time = eclipseState->getSchedule()->posixStartTime();
         /* step time read from deck and hard-coded here */
-        time_t step_time = util_make_datetime( 0, 0, 0, 10, 10, 2008 );
+        time_t step_time = ecl_util_make_date(10, 10, 2008 );
 
         Opm::data::Wells wells {
             { { "OP_1", { {}, 1.0, 1.1, {} } },

@@ -43,6 +43,7 @@
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_endian_flip.h>
 #include <ert/ecl/ecl_file.h>
+#include <ert/ecl/ecl_util.h>
 #include <ert/util/ert_unique_ptr.hpp>
 #include <ert/util/TestArea.hpp>
 
@@ -280,8 +281,8 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration)
         ERT::TestArea ta("test_ecl_writer");
         EclipseWriter eclWriter( es, eclGrid);
 
-        auto start_time = util_make_datetime( 0, 0, 0, 10, 10, 2008 );
-        auto first_step = util_make_datetime( 0, 0, 0, 10, 11, 2008 );
+        auto start_time = ecl_util_make_date( 10, 10, 2008 );
+        auto first_step = ecl_util_make_date( 10, 11, 2008 );
         std::vector<double> tranx(3*3*3);
         std::vector<double> trany(3*3*3);
         std::vector<double> tranz(3*3*3);
