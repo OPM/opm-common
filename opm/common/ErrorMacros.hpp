@@ -53,11 +53,30 @@
     do {                                                                \
         std::ostringstream oss__;                                       \
         oss__ << "[" << __FILE__ << ":" << __LINE__ << "] " << message; \
-        Opm::OpmLog::error(oss__.str());                                \
+        throw Exception(oss__.str());                                   \
+    } while (false)
+
+// Macro to throw an exception and log the message. NOTE: For this macro
+// to work, the
+// exception class must exhibit a constructor with the signature
+// (const std::string &message). Since this condition is not fulfilled
+// for the std::exception, you should use this macro with some
+// exception class derived from either std::logic_error or
+// std::runtime_error.
+//
+// Usage: OPM_THROW_LOG(ExceptionClass, "Error message " << value);
+#define OPM_THROW_LOG(Exception, message)                                   \
+    do {                                                                \
+        std::ostringstream oss__;                                       \
+        oss__ << "[" << __FILE__ << ":" << __LINE__ << "] " << message; \
+        Opm::OpmLog::error(oss__.str())                                 \
         throw Exception(oss__.str());                                   \
     } while (false)
 
 // throw an exception if a condition is true
 #define OPM_ERROR_IF(condition, message) do {if(condition){ OPM_THROW(std::logic_error, message);}} while(false)
+
+// throw an exception and log the message if a condition is true
+#define OPM_ERROR_LOG_IF(condition, message) do {if(condition){ OPM_THROW_LOG(std::logic_error, message);}} while(false)
 
 #endif // OPM_ERRORMACROS_HPP
