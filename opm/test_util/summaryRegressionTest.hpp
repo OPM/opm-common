@@ -17,6 +17,9 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
+#ifndef SUMMARYREGRESSIONTEST_HPP
+#define SUMMARYREGRESSIONTEST_HPP
+
 #include <opm/test_util/summaryComparator.hpp>
 
 //! \details  The class inherits from the SummaryComparator class, which takes care of all file reading. \n The RegressionTest class compares the values from the two different files and throws exceptions when the deviation is unsatisfying.
@@ -37,10 +40,12 @@ class RegressionTest: public SummaryComparator {
         //! \brief Caluculates a deviation, throws exceptions and writes and error message.
         //! \param[in] deviation Deviation struct
         //! \param[in] keyword The keyword that the data that are being compared belongs to.
-        //! \param[in] reportStep The report step of which the deviation originates from.
+        //! \param[in] refIndex The report step of which the deviation originates from in #referenceDataVec.
+        //! \param[in] checkIndex The report step of which the deviation originates from in #checkDataVec.
         //! \details The function checks the values of the Deviation struct against the absolute and relative tolerance, which are private member values of the super class. \n When comparing against the relative tolerance an additional term is added, the absolute deviation has to be greater than 1e-6 for the function to throw an exception. \n When the deviations are too great, the function writes out which keyword, and at what report step the deviation is too great before throwing an exception.
-        void checkDeviation(Deviation deviation, const char* keyword, int reportStep);
+        void checkDeviation(Deviation deviation, const char* keyword, int refIndex, int checkIndex);
 
+        bool isRestartFile = false; //!< Private member variable, when true the files that are being compared is a restart file vs a normal file
     public:
         //! \brief Constructor, creates an object of RefressionTest class.
         //! \param[in] basename1 Path to file1 without extension.
@@ -56,4 +61,10 @@ class RegressionTest: public SummaryComparator {
 
         //! \details The function executes a regression test for one specific keyword. If one or both of the files do not have the keyword, an exception is thrown.
         void getRegressionTest(const char* keyword);///< Regression test for a certain keyword of the files.
+
+        //! \brief This function sets the private member variable isRestartFiles
+        //! \param[in] boolean Boolean value
+        void setIsRestartFile(bool boolean){this->isRestartFile = boolean;}
 };
+
+#endif
