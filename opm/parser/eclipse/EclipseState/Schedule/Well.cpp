@@ -20,7 +20,6 @@
 #include <iostream>
 
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
@@ -33,7 +32,7 @@
 
 namespace Opm {
 
-    Well::Well(const std::string& name_, std::shared_ptr<const EclipseGrid> grid, int headI,
+    Well::Well(const std::string& name_, int headI,
                int headJ, Value<double> refDepth , Phase::PhaseEnum preferredPhase,
                TimeMapConstPtr timeMap, size_t creationTimeStep,
                WellCompletion::CompletionOrderEnum completionOrdering,
@@ -58,7 +57,6 @@ namespace Opm {
           m_headJ(headJ),
           m_refDepth(refDepth),
           m_preferredPhase(preferredPhase),
-          m_grid( grid ),
           m_comporder(completionOrdering),
           m_allowCrossFlow(allowCrossFlow),
           m_automaticShutIn(automaticShutIn),
@@ -274,8 +272,7 @@ namespace Opm {
             auto completions = getCompletions( timeStep );
             if (completions->size() > 0) {
                 auto firstCompletion = completions->get(0);
-                double depth = m_grid->getCellDepth( firstCompletion->getI() , firstCompletion->getJ() , firstCompletion->getK());
-                m_refDepth.setValue( depth );
+                m_refDepth.setValue( firstCompletion->getCenterDepth() );
                 break;
             } else {
                 timeStep++;
@@ -309,7 +306,7 @@ namespace Opm {
     void Well::addCompletionSet(size_t time_step, const CompletionSetConstPtr newCompletionSet){
         CompletionSetPtr mutable_copy(newCompletionSet->shallowCopy());
         if (getWellCompletionOrdering() == WellCompletion::TRACK) {
-            mutable_copy->orderCompletions(m_headI, m_headJ, m_grid);
+            mutable_copy->orderCompletions(m_headI, m_headJ);
         }
         m_completions->update(time_step, mutable_copy);
     }

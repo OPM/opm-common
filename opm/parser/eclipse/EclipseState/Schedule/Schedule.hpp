@@ -51,10 +51,11 @@ namespace Opm
 
     class Schedule {
     public:
-        Schedule(const ParseContext& parseContext, std::shared_ptr<const EclipseGrid> grid,
+        Schedule(const ParseContext& parseContext, const EclipseGrid& grid,
                  const Deck& deck );
+
         /// [deprecated]
-        Schedule(const ParseContext& parseContext, std::shared_ptr<const EclipseGrid> grid,
+        Schedule(const ParseContext& parseContext, const EclipseGrid& grid,
                  std::shared_ptr<const Deck> deck );
 
         /*
@@ -63,6 +64,8 @@ namespace Opm
          */
         boost::posix_time::ptime getStartTime() const;
         time_t posixStartTime() const;
+        time_t posixEndTime() const;
+
 
         std::shared_ptr< const TimeMap > getTimeMap() const;
 
@@ -94,7 +97,6 @@ namespace Opm
     private:
         std::shared_ptr< TimeMap > m_timeMap;
         OrderedMap<std::shared_ptr< Well >> m_wells;
-        std::shared_ptr<const EclipseGrid> m_grid;
         std::map<std::string , std::shared_ptr< Group >> m_groups;
         std::shared_ptr<DynamicState<std::shared_ptr< GroupTree >> > m_rootGroupTree;
         std::shared_ptr<DynamicState<std::shared_ptr< OilVaporizationProperties > > > m_oilvaporizationproperties;
@@ -109,7 +111,7 @@ namespace Opm
         void addWellToGroup( Group& newGroup , Well& well , size_t timeStep);
         void initRootGroupTreeNode(std::shared_ptr< const TimeMap > timeMap);
         void initOilVaporization(std::shared_ptr< const TimeMap > timeMap);
-        void iterateScheduleSection(const ParseContext& parseContext ,  const SCHEDULESection& );
+        void iterateScheduleSection(const ParseContext& parseContext ,  const SCHEDULESection& , const EclipseGrid& grid);
         bool handleGroupFromWELSPECS(const std::string& groupName, std::shared_ptr< GroupTree > newTree) const;
         void addGroup(const std::string& groupName , size_t timeStep);
         void addWell(const std::string& wellName, const DeckRecord& record, size_t timeStep, WellCompletion::CompletionOrderEnum wellCompletionOrder);
@@ -120,7 +122,7 @@ namespace Opm
         void handleWCONHIST( const DeckKeyword& keyword, size_t currentStep);
         void handleWCONPROD( const DeckKeyword& keyword, size_t currentStep);
         void handleWGRUPCON( const DeckKeyword& keyword, size_t currentStep);
-        void handleCOMPDAT( const DeckKeyword& keyword,  size_t currentStep);
+        void handleCOMPDAT( const DeckKeyword& keyword,  size_t currentStep, const EclipseGrid& grid);
         void handleWELSEGS( const DeckKeyword& keyword, size_t currentStep);
         void handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep);
         void handleWCONINJE( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep);

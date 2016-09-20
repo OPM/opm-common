@@ -37,12 +37,12 @@ BOOST_AUTO_TEST_CASE( CreateCompletionsFromKeyword ) {
     ParserPtr parser(new Parser());
     const auto scheduleFile = "testdata/integration_tests/SCHEDULE/SCHEDULE_COMPDAT1";
     DeckPtr deck =  parser->parseFile(scheduleFile, ParseContext());
-    const auto grid = std::make_shared< const EclipseGrid >( *deck );
+    EclipseGrid grid(10,10,10);
     const Schedule schedule( ParseContext(), grid, *deck );
     const auto& COMPDAT1 = deck->getKeyword("COMPDAT" , 1);
 
     const auto wells = schedule.getWells( 0 );
-    auto completions = Completion::fromCOMPDAT( COMPDAT1, wells );
+    auto completions = Completion::fromCOMPDAT( grid, COMPDAT1, wells );
     BOOST_CHECK_EQUAL( 3U , completions.size() );
 
     BOOST_CHECK( completions.find("W_1") != completions.end() );

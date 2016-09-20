@@ -48,6 +48,7 @@ namespace Opm {
         const boost::posix_time::ptime& operator[] (size_t index) const;
         /// Return the date and time where a given time step starts.
         boost::posix_time::ptime getStartTime(size_t tStepIdx) const;
+        boost::posix_time::ptime getEndTime() const;
         /// Return the period of time in seconds which passed between the start of the simulation and a given point in time.
         double getTimePassedUntil(size_t tLevelIdx) const;
         /// Return the length of a given time step in seconds.

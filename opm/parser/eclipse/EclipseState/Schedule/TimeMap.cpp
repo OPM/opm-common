@@ -79,6 +79,9 @@ namespace Opm {
         return m_timeList[tStepIdx];
     }
 
+    boost::posix_time::ptime TimeMap::getEndTime() const {
+        return m_timeList.back();
+    }
 
     double TimeMap::getTotalTime() const
     {
