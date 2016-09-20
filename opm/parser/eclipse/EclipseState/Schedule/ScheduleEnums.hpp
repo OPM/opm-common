@@ -190,7 +190,8 @@ namespace Opm {
             LRAT = 4,
             CRAT = 5,
             RESV = 6,
-            PRBL = 7
+            PRBL = 7,
+            FLD  = 8
         };
 
         const std::string ControlEnum2String( GroupProduction::ControlEnum enumValue );
