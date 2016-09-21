@@ -67,14 +67,16 @@ int main (void) {
   ")
 #debug_find_vars ("dune-common")
 
-# check for MPI version 2
-include(CMakePushCheckState)
-include(CheckFunctionExists)
-cmake_push_check_state()
-set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES};${MPI_CXX_LIBRARIES})
-set(CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES};${MPI_CXX_INCLUDES})
-check_function_exists(MPI_Finalized MPI_2)
-cmake_pop_check_state()
+if(MPI_C_FOUND)
+  # check for MPI version 2
+  include(CMakePushCheckState)
+  include(CheckFunctionExists)
+  cmake_push_check_state()
+  set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES};${MPI_CXX_LIBRARIES})
+  set(CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES};${MPI_CXX_INCLUDES})
+  check_function_exists(MPI_Finalized MPI_2)
+  cmake_pop_check_state()
+endif(MPI_C_FOUND)
 
 # make version number available in config.h
 include (UseDuneVer)
