@@ -1184,4 +1184,134 @@ BOOST_AUTO_TEST_CASE(changeBhpLimitInHistoryModeWithWeltarg) {
     BOOST_CHECK_EQUAL( false , well_i->getInjectionProperties(4).hasInjectionControl(Opm::WellInjector::BHP) );
 }
 
+BOOST_AUTO_TEST_CASE(changeModeWithWHISTCTL) {
+    Opm::Parser parser;
+    std::string input =
+            "START             -- 0 \n"
+            "19 JUN 2007 / \n"
+            "SCHEDULE\n"
+            "DATES             -- 1\n"
+            " 10  OKT 2008 / \n"
+            "/\n"
+            "WELSPECS\n"
+            "    'P1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+            "    'P2'       'OP'   5   5 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+            "    'I'       'OP'   1   1 1*     'WATER' 1*      1*  1*   1*  1*   1*  1*  / \n"
+            "/\n"
+            "COMPDAT\n"
+            " 'P1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+            " 'P1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
+            " 'P2'  5  5   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+            " 'P2'  5  5   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
+            " 'I'  1  1   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+            "/\n"
+            "WCONHIST\n"
+            " 'P1' 'OPEN' 'ORAT' 5*/ \n"
+            " 'P2' 'OPEN' 'ORAT' 5*/ \n"
+            "/\n"
+            "DATES             -- 2\n"
+            " 15  OKT 2008 / \n"
+            "/\n"
+            "WHISTCTL\n"
+            " RESV / \n"
+            "WCONHIST\n"
+            " 'P1' 'OPEN' 'ORAT' 5*/ \n"
+            " 'P2' 'OPEN' 'ORAT' 5*/ \n"
+            "/\n"
+            "DATES             -- 3\n"
+            " 18  OKT 2008 / \n"
+            "/\n"
+            "WCONHIST\n"
+            " 'P1' 'OPEN' 'ORAT' 5*/ \n"
+            " 'P2' 'OPEN' 'ORAT' 5*/ \n"
+            "/\n"
+            "DATES             -- 4\n"
+            " 20  OKT 2008 / \n"
+            "/\n"
+            "WHISTCTL\n"
+            " LRAT / \n"
+            "WCONHIST\n"
+            " 'P1' 'OPEN' 'ORAT' 5*/ \n"
+            " 'P2' 'OPEN' 'ORAT' 5*/ \n"
+            "/\n"
+            "DATES             -- 5\n"
+            " 25  OKT 2008 / \n"
+            "/\n"
+            "WHISTCTL\n"
+            " NONE / \n"
+            "WCONHIST\n"
+            " 'P1' 'OPEN' 'ORAT' 5*/ \n"
+            " 'P2' 'OPEN' 'ORAT' 5*/ \n"
+            "/\n"
+            ;
+
+    ParseContext parseContext;
+    DeckPtr deck = parser.parseString(input, parseContext);
+    EclipseGrid grid(10,10,10);
+    Schedule schedule(parseContext , grid, deck );
+    auto* well_p1 = schedule.getWell("P1");
+    auto* well_p2 = schedule.getWell("P2");
+
+    //Start
+    BOOST_CHECK_EQUAL(well_p1->getProductionProperties(0).controlMode, Opm::WellProducer::CMODE_UNDEFINED);
+    BOOST_CHECK_EQUAL(well_p2->getProductionProperties(0).controlMode, Opm::WellProducer::CMODE_UNDEFINED);
+
+    //10  OKT 2008
+    BOOST_CHECK_EQUAL(well_p1->getProductionProperties(1).controlMode, Opm::WellProducer::ORAT);
+    BOOST_CHECK_EQUAL(well_p2->getProductionProperties(1).controlMode, Opm::WellProducer::ORAT);
+
+    //15  OKT 2008
+    BOOST_CHECK_EQUAL(well_p1->getProductionProperties(2).controlMode, Opm::WellProducer::RESV);
+    BOOST_CHECK_EQUAL(well_p2->getProductionProperties(2).controlMode, Opm::WellProducer::RESV);
+
+    //18  OKT 2008
+    BOOST_CHECK_EQUAL(well_p1->getProductionProperties(3).controlMode, Opm::WellProducer::RESV);
+    BOOST_CHECK_EQUAL(well_p2->getProductionProperties(3).controlMode, Opm::WellProducer::RESV);
+
+    // 20 OKT 2008
+    BOOST_CHECK_EQUAL(well_p1->getProductionProperties(4).controlMode, Opm::WellProducer::LRAT);
+    BOOST_CHECK_EQUAL(well_p2->getProductionProperties(4).controlMode, Opm::WellProducer::LRAT);
+
+    // 25 OKT 2008
+    BOOST_CHECK_EQUAL(well_p1->getProductionProperties(5).controlMode, Opm::WellProducer::ORAT);
+    BOOST_CHECK_EQUAL(well_p2->getProductionProperties(5).controlMode, Opm::WellProducer::ORAT);
+}
+
+BOOST_AUTO_TEST_CASE(unsupportedOptionWHISTCTL) {
+    Opm::Parser parser;
+    std::string input =
+            "START             -- 0 \n"
+            "19 JUN 2007 / \n"
+            "SCHEDULE\n"
+            "DATES             -- 1\n"
+            " 10  OKT 2008 / \n"
+            "/\n"
+            "WELSPECS\n"
+            "    'P1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+            "    'P2'       'OP'   5   5 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+            "    'I'       'OP'   1   1 1*     'WATER' 1*      1*  1*   1*  1*   1*  1*  / \n"
+            "/\n"
+            "COMPDAT\n"
+            " 'P1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+            " 'P1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
+            " 'P2'  5  5   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+            " 'P2'  5  5   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
+            " 'I'  1  1   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+            "/\n"
+            "WCONHIST\n"
+            " 'P1' 'OPEN' 'ORAT' 5*/ \n"
+            " 'P2' 'OPEN' 'ORAT' 5*/ \n"
+            "/\n"
+            "DATES             -- 2\n"
+            " 15  OKT 2008 / \n"
+            "/\n"
+            "WHISTCTL\n"
+            " * YES / \n"
+            ;
+
+    ParseContext parseContext;
+    DeckPtr deck = parser.parseString(input, parseContext);
+    EclipseGrid grid(10,10,10);
+    BOOST_CHECK_THROW(Schedule schedule(parseContext , grid, deck ), std::invalid_argument);
+}
 

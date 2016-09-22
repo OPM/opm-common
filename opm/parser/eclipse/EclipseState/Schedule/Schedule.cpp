@@ -81,6 +81,7 @@ namespace Opm {
         m_tuning.reset(new Tuning(m_timeMap));
         m_events.reset(new Events(m_timeMap));
         m_modifierDeck.reset( new DynamicVector<std::shared_ptr<Deck> >( m_timeMap , std::shared_ptr<Deck>( 0 ) ));
+        m_controlModeWHISTCTL = WellProducer::CMODE_UNDEFINED;
         addGroup( "FIELD", 0 );
         initRootGroupTreeNode(getTimeMap());
         initOilVaporization(getTimeMap());
@@ -152,6 +153,9 @@ namespace Opm {
 
             else if (keyword.name() == "WELSPECS")
                 handleWELSPECS( section, keywordIdx, currentStep );
+
+            else if (keyword.name() == "WHISTCTL")
+                handleWHISTCTL(parseContext, keyword);
 
             else if (keyword.name() == "WCONHIST")
                 handleWCONHIST(keyword, currentStep);
@@ -277,6 +281,21 @@ namespace Opm {
             newTree->updateTree(groupName);
         }
         return treeUpdated;
+    }
+
+    void Schedule::handleWHISTCTL(const ParseContext& parseContext, const DeckKeyword& keyword) {
+        for( const auto& record : keyword ) {
+            const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
+            WellProducer::ControlModeEnum controlMode = WellProducer::ControlModeFromString( cmodeString );
+            m_controlModeWHISTCTL = controlMode;
+            const std::string bhp_terminate = record.getItem("BPH_TERMINATE").getTrimmedString(0);
+            if (bhp_terminate == "YES") {
+                std::string msg = "The WHISTCTL keyword does not handle 'YES'. i.e. to terminate the run";
+                m_messages.error(msg);
+                parseContext.handleError( ParseContext::UNSUPPORTED_TERMINATE_IF_BHP , m_messages, msg );
+            }
+
+        }
     }
 
 
@@ -432,6 +451,11 @@ namespace Opm {
 
                     WellProducer::ControlModeEnum control =
                         WellProducer::ControlModeFromString(cmodeString);
+
+                    if ( m_controlModeWHISTCTL != WellProducer::CMODE_UNDEFINED &&
+                         m_controlModeWHISTCTL != WellProducer::NONE) {
+                        control = m_controlModeWHISTCTL; // overwrite given control
+                    }
 
                     if (properties.hasProductionControl(control)) {
                         properties.controlMode = control;

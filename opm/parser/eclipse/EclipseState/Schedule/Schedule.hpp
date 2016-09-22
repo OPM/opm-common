@@ -104,7 +104,7 @@ namespace Opm
         std::shared_ptr<DynamicVector<std::shared_ptr<Deck> > > m_modifierDeck;
         std::shared_ptr< Tuning > m_tuning;
         MessageContainer m_messages;
-
+        WellProducer::ControlModeEnum m_controlModeWHISTCTL;
 
         std::vector< Well* > getWells(const std::string& wellNamePattern);
         void updateWellStatus( Well& well, size_t reportStep , WellCommon::StatusEnum status);
@@ -143,6 +143,7 @@ namespace Opm
         void handleDRVDT( const DeckKeyword& keyword, size_t currentStep);
         void handleVAPPARS( const DeckKeyword& keyword, size_t currentStep);
         void handleWECON( const DeckKeyword& keyword, size_t currentStep);
+        void handleWHISTCTL(const ParseContext& parseContext, const DeckKeyword& keyword);
 
         void checkUnhandledKeywords( const SCHEDULESection& ) const;
 

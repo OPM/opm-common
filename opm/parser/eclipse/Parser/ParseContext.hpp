@@ -191,6 +191,13 @@ namespace Opm {
         */
         const static std::string UNSUPPORTED_INITIAL_THPRES;
 
+        /*
+          If the second item in the WHISTCTL keyword is set to YES
+          The simulator is supposed to terminate if the well is
+          changed to BHP control. This feature is not yet supported.
+        */
+        const static std::string UNSUPPORTED_TERMINATE_IF_BHP;
+
 
         /*
           If the third item in the THPRES keyword is defaulted the

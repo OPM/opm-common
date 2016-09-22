@@ -339,6 +339,8 @@ namespace Opm {
                 return THP;
             else if (stringValue == "GRUP")
                 return GRUP;
+            else if (stringValue == "NONE")
+                return NONE;
             else
                 throw std::invalid_argument("Unknown enum state string: " + stringValue );
         }
