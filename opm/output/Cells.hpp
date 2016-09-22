@@ -50,6 +50,7 @@ namespace data {
             SGAS,
             RS,
             RV,
+            SSOL,
         };
 
         inline bool has( key ) const;
