@@ -182,7 +182,7 @@ int main(int argc, char** argv) {
 
     if (specificFileType) {
         std::string fileTypeString(fileTypeCstr);
-        for (auto& c: fileTypeString) c = toupper(c);
+        for (auto& ch: fileTypeString) ch = toupper(ch);
         if (fileTypeString== "UNRST") {} //Do nothing
         else if (fileTypeString == "RST") {
             concatenateRestart(basename1);

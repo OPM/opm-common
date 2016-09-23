@@ -129,17 +129,17 @@ class IntegrationTest: public SummaryComparator {
         //! \brief This function sets the private member variable allowSpikes.
         //! \param[in] allowSpikes Boolean value
         //! \details When allowSpikes is true, the integration test checkWithSpikes is excecuted.
-        void setAllowSpikes(bool allowSpikes){this->allowSpikes = allowSpikes;}
+        void setAllowSpikes(bool allowSpikesArg){this->allowSpikes = allowSpikesArg;}
 
         //! \brief This function sets the private member variable findVolumeError.
         //! \param[in] findVolumeError Boolean value
         //! \details When findVolumeError is true, the integration test volumeErrorCheck and the function evaluateWellProductionVolume are excecuted.
-        void setFindVolumeError(bool findVolumeError){this->findVolumeError = findVolumeError;}
+        void setFindVolumeError(bool findVolumeErrorArg){this->findVolumeError = findVolumeErrorArg;}
 
         //! \brief This function sets the private member variable oneOfTheMainVariables
         //! \param[in] oneOfTheMainVariables Boolean value
         //! \details When oneOfTheMainVariables is true, the integration test runs the substest volumeErrorCheckForOneSpecificVariable.
-        void setOneOfTheMainVariables(bool oneOfTheMainVariables){this->oneOfTheMainVariables = oneOfTheMainVariables;}
+        void setOneOfTheMainVariables(bool oneOfTheMainVariablesArg){this->oneOfTheMainVariables = oneOfTheMainVariablesArg;}
 
         //! \brief This function sets the member variable string #mainVariable
         //! \param[in] mainVar This is the string should contain one of the main variables. e.g. WOPR

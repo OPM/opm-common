@@ -59,7 +59,7 @@ unsigned int ECLFilesComparator::getEclKeywordData(ecl_kw_type*& ecl_kw1, ecl_kw
 
 
 template <typename T>
-void ECLFilesComparator::printValuesForCell(const std::string& keyword, int occurrence1, int occurrence2, size_t cell, const T& value1, const T& value2) const {
+void ECLFilesComparator::printValuesForCell(const std::string& /*keyword*/, int occurrence1, int occurrence2, size_t cell, const T& value1, const T& value2) const {
     int i, j, k;
     ecl_grid_get_ijk1(ecl_grid1, cell, &i, &j, &k);
     // Coordinates from this function are zero-based, hence incrementing
@@ -77,10 +77,10 @@ template void ECLFilesComparator::printValuesForCell<std::string>(const std::str
 
 
 
-ECLFilesComparator::ECLFilesComparator(int file_type, const std::string& basename1,
+ECLFilesComparator::ECLFilesComparator(int file_type_arg, const std::string& basename1,
                                        const std::string& basename2,
-                                       double absTolerance, double relTolerance) :
- file_type(file_type), absTolerance(absTolerance), relTolerance(relTolerance) {
+                                       double absToleranceArg, double relToleranceArg) :
+ file_type(file_type_arg), absTolerance(absToleranceArg), relTolerance(relToleranceArg) {
 
     std::string file1, file2;
     if (file_type == ECL_UNIFIED_RESTART_FILE) {

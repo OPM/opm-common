@@ -296,8 +296,6 @@ private:
 };
 
 
-const int inactive_index = -1;
-
 /// Convert OPM phase usage to ERT bitmask
 inline int ertPhaseMask( const TableManager& tm ) {
     return ( tm.hasPhase( Phase::PhaseEnum::WATER ) ? ECL_WATER_PHASE : 0 )

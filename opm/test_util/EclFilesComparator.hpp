@@ -164,7 +164,7 @@ class RegressionTest: public ECLFilesComparator {
             ECLFilesComparator(file_type, basename1, basename2, absTolerance, relTolerance) {}
 
         //! \brief Option to only compare last occurrence
-        void setOnlyLastOccurrence(bool onlyLastOccurrence) {this->onlyLastOccurrence = onlyLastOccurrence;}
+        void setOnlyLastOccurrence(bool onlyLastOccurrenceArg) {this->onlyLastOccurrence = onlyLastOccurrenceArg;}
 
         //! \brief Compares grid properties of the two cases.
         // gridCompare() checks if both the number of active and global cells in the two cases are the same. If they are, all cells are looped over to calculate the cell volume deviation for the two cases. If the both the relative and absolute deviation exceeds the tolerances, an exception is thrown.
