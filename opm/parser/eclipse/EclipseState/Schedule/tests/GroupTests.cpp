@@ -75,14 +75,18 @@ BOOST_AUTO_TEST_CASE(CreateGroup_SetInjectorProducer_CorrectStatusSet) {
     BOOST_CHECK(!group1.isInjectionGroup(1));
     group1.setProductionGroup(3, false);
     BOOST_CHECK(!group1.isProductionGroup(3));
-    BOOST_CHECK(group1.isInjectionGroup(3));
+    BOOST_CHECK(!group1.isInjectionGroup(3));
 
     group2.setProductionGroup(0, false);
     BOOST_CHECK(!group2.isProductionGroup(1));
-    BOOST_CHECK(group2.isInjectionGroup(1));
+    BOOST_CHECK(!group2.isInjectionGroup(1));
     group2.setProductionGroup(3, true);
     BOOST_CHECK(group2.isProductionGroup(4));
     BOOST_CHECK(!group2.isInjectionGroup(4));
+    group2.setInjectionGroup(4, true);
+    BOOST_CHECK(group2.isProductionGroup(5));
+    BOOST_CHECK(group2.isInjectionGroup(5));
+
 }
 
 
