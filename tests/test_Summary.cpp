@@ -106,32 +106,39 @@ static data::Wells result_wells() {
     rates1.set( rt::wat, -10.0 / day );
     rates1.set( rt::oil, -10.1 / day );
     rates1.set( rt::gas, -10.2 / day );
+    rates1.set( rt::solvent, -10.3 / day );
 
     data::Rates rates2;
     rates2.set( rt::wat, -20.0 / day );
     rates2.set( rt::oil, -20.1 / day );
     rates2.set( rt::gas, -20.2 / day );
+    rates2.set( rt::solvent, -20.3 / day );
 
     data::Rates rates3;
     rates3.set( rt::wat, 30.0 / day );
     rates3.set( rt::oil, 30.1 / day );
     rates3.set( rt::gas, 30.2 / day );
+    rates3.set( rt::solvent, 30.3 / day );
+
 
     /* completion rates */
     data::Rates crates1;
     crates1.set( rt::wat, -100.0 / day );
     crates1.set( rt::oil, -100.1 / day );
     crates1.set( rt::gas, -100.2 / day );
+    crates1.set( rt::solvent, -100.3 / day );
 
     data::Rates crates2;
     crates2.set( rt::wat, -200.0 / day );
     crates2.set( rt::oil, -200.1 / day );
     crates2.set( rt::gas, -200.2 / day );
+    crates2.set( rt::solvent, -200.3 / day );
 
     data::Rates crates3;
     crates3.set( rt::wat, 300.0 / day );
     crates3.set( rt::oil, 300.1 / day );
     crates3.set( rt::gas, 300.2 / day );
+    crates3.set( rt::solvent, 300.3 / day );
 
     data::Completion comp1 { 1, crates1 };
     data::Completion comp2 { 1, crates2 };
@@ -208,13 +215,19 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
 
     /* Production rates */
     BOOST_CHECK_CLOSE( 10.0, ecl_sum_get_well_var( resp, 1, "W_1", "WWPR" ), 1e-5 );
+
     BOOST_CHECK_CLOSE( 20.0, ecl_sum_get_well_var( resp, 1, "W_2", "WWPR" ), 1e-5 );
+
     BOOST_CHECK_CLOSE( 10.1, ecl_sum_get_well_var( resp, 1, "W_1", "WOPR" ), 1e-5 );
+
     BOOST_CHECK_CLOSE( 20.1, ecl_sum_get_well_var( resp, 1, "W_2", "WOPR" ), 1e-5 );
+
     BOOST_CHECK_CLOSE( 10.2, ecl_sum_get_well_var( resp, 1, "W_1", "WGPR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 20.2, ecl_sum_get_well_var( resp, 1, "W_2", "WGPR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.0 + 10.1, ecl_sum_get_well_var( resp, 1, "W_1", "WLPR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 20.0 + 20.1, ecl_sum_get_well_var( resp, 1, "W_2", "WLPR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.3, ecl_sum_get_well_var( resp, 1, "W_1", "WNPR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 20.3, ecl_sum_get_well_var( resp, 1, "W_2", "WNPR" ), 1e-5 );
 
     /* Production totals */
     BOOST_CHECK_CLOSE( 10.0, ecl_sum_get_well_var( resp, 1, "W_1", "WWPT" ), 1e-5 );
@@ -223,6 +236,8 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     BOOST_CHECK_CLOSE( 20.1, ecl_sum_get_well_var( resp, 1, "W_2", "WOPT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.2, ecl_sum_get_well_var( resp, 1, "W_1", "WGPT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 20.2, ecl_sum_get_well_var( resp, 1, "W_2", "WGPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.3, ecl_sum_get_well_var( resp, 1, "W_1", "WNPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 20.3, ecl_sum_get_well_var( resp, 1, "W_2", "WNPT" ), 1e-5 );
     BOOST_CHECK_CLOSE( (10.0 + 10.1), ecl_sum_get_well_var( resp, 1, "W_1", "WLPT" ), 1e-5 );
     BOOST_CHECK_CLOSE( (20.0 + 20.1), ecl_sum_get_well_var( resp, 1, "W_2", "WLPT" ), 1e-5 );
 
@@ -234,6 +249,8 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     BOOST_CHECK_CLOSE( 2 * 20.2, ecl_sum_get_well_var( resp, 2, "W_2", "WGPT" ), 1e-5 );
     BOOST_CHECK_CLOSE( ( 20.0 + 20.1 ), ecl_sum_get_well_var( resp, 2, "W_2", "WLPR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * (20.0 + 20.1), ecl_sum_get_well_var( resp, 2, "W_2", "WLPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 10.3, ecl_sum_get_well_var( resp, 2, "W_1", "WNPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 20.3, ecl_sum_get_well_var( resp, 2, "W_2", "WNPT" ), 1e-5 );
 
     /* Production rates (history) */
     BOOST_CHECK_CLOSE( 10, ecl_sum_get_well_var( resp, 1, "W_1", "WWPRH" ), 1e-5 );
@@ -254,12 +271,15 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     /* Injection rates */
     BOOST_CHECK_CLOSE( 30.0, ecl_sum_get_well_var( resp, 1, "W_3", "WWIR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 30.2, ecl_sum_get_well_var( resp, 1, "W_3", "WGIR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 30.3, ecl_sum_get_well_var( resp, 1, "W_3", "WNIR" ), 1e-5 );
 
     /* Injection totals */
     BOOST_CHECK_CLOSE( 30.0, ecl_sum_get_well_var( resp, 1, "W_3", "WWIT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 30.2, ecl_sum_get_well_var( resp, 1, "W_3", "WGIT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 30.3, ecl_sum_get_well_var( resp, 1, "W_3", "WNIT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * 30.0, ecl_sum_get_well_var( resp, 2, "W_3", "WWIT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * 30.2, ecl_sum_get_well_var( resp, 2, "W_3", "WGIT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 30.3, ecl_sum_get_well_var( resp, 2, "W_3", "WNIT" ), 1e-5 );
 
     /* Injection rates (history) */
     BOOST_CHECK_CLOSE( 30.0, ecl_sum_get_well_var( resp, 1, "W_3", "WWIRH" ), 1e-5 );
@@ -333,14 +353,17 @@ BOOST_AUTO_TEST_CASE(group_keywords) {
     BOOST_CHECK_CLOSE( 10.0 + 20.0, ecl_sum_get_group_var( resp, 1, "G_1", "GWPR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.1 + 20.1, ecl_sum_get_group_var( resp, 1, "G_1", "GOPR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.2 + 20.2, ecl_sum_get_group_var( resp, 1, "G_1", "GGPR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.3 + 20.3, ecl_sum_get_group_var( resp, 1, "G_1", "GNPR" ), 1e-5 );
 
     /* Production totals */
     BOOST_CHECK_CLOSE( 10.0 + 20.0, ecl_sum_get_group_var( resp, 1, "G_1", "GWPT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.1 + 20.1, ecl_sum_get_group_var( resp, 1, "G_1", "GOPT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.2 + 20.2, ecl_sum_get_group_var( resp, 1, "G_1", "GGPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.3 + 20.3, ecl_sum_get_group_var( resp, 1, "G_1", "GNPT" ), 1e-5 );
     BOOST_CHECK_CLOSE(  2 * (10.0 + 20.0), ecl_sum_get_group_var( resp, 2, "G_1", "GWPT" ), 1e-5 );
     BOOST_CHECK_CLOSE(  2 * (10.1 + 20.1), ecl_sum_get_group_var( resp, 2, "G_1", "GOPT" ), 1e-5 );
     BOOST_CHECK_CLOSE(  2 * (10.2 + 20.2), ecl_sum_get_group_var( resp, 2, "G_1", "GGPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE(  2 * (10.3 + 20.3), ecl_sum_get_group_var( resp, 2, "G_1", "GNPT" ), 1e-5 );
 
     /* Production rates (history) */
     BOOST_CHECK_CLOSE( 10.0 + 20.0, ecl_sum_get_group_var( resp, 1, "G_1", "GWPRH" ), 1e-5 );
@@ -363,12 +386,15 @@ BOOST_AUTO_TEST_CASE(group_keywords) {
     /* Injection rates */
     BOOST_CHECK_CLOSE( 30.0, ecl_sum_get_group_var( resp, 1, "G_2", "GWIR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 30.2, ecl_sum_get_group_var( resp, 1, "G_2", "GGIR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 30.3, ecl_sum_get_group_var( resp, 1, "G_2", "GNIR" ), 1e-5 );
 
     /* Injection totals */
     BOOST_CHECK_CLOSE( 30.0, ecl_sum_get_group_var( resp, 1, "G_2", "GWIT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 30.2, ecl_sum_get_group_var( resp, 1, "G_2", "GGIT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 30.3, ecl_sum_get_group_var( resp, 1, "G_2", "GNIT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * 30.0, ecl_sum_get_group_var( resp, 2, "G_2", "GWIT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * 30.2, ecl_sum_get_group_var( resp, 2, "G_2", "GGIT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 30.3, ecl_sum_get_group_var( resp, 2, "G_2", "GNIT" ), 1e-5 );
 
     /* Injection totals (history) */
     BOOST_CHECK_CLOSE( 30.0, ecl_sum_get_group_var( resp, 1, "G_2", "GWITH" ), 1e-5 );
@@ -410,9 +436,11 @@ BOOST_AUTO_TEST_CASE(completion_kewords) {
     BOOST_CHECK_CLOSE( 100.0,     ecl_sum_get_well_completion_var( resp, 1, "W_1", "CWPT", 1 ), 1e-5 );
     BOOST_CHECK_CLOSE( 100.1,     ecl_sum_get_well_completion_var( resp, 1, "W_1", "COPT", 1 ), 1e-5 );
     BOOST_CHECK_CLOSE( 100.2,     ecl_sum_get_well_completion_var( resp, 1, "W_1", "CGPT", 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 100.3,     ecl_sum_get_well_completion_var( resp, 1, "W_1", "CNPT", 1 ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * 100.0, ecl_sum_get_well_completion_var( resp, 2, "W_1", "CWPT", 1 ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * 100.1, ecl_sum_get_well_completion_var( resp, 2, "W_1", "COPT", 1 ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * 100.2, ecl_sum_get_well_completion_var( resp, 2, "W_1", "CGPT", 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 100.3, ecl_sum_get_well_completion_var( resp, 2, "W_1", "CNPT", 1 ), 1e-5 );
 
     /* Injection rates */
     BOOST_CHECK_CLOSE( 300.0,     ecl_sum_get_well_completion_var( resp, 1, "W_3", "CWIR", 3 ), 1e-5 );
@@ -421,8 +449,15 @@ BOOST_AUTO_TEST_CASE(completion_kewords) {
     /* Injection totals */
     BOOST_CHECK_CLOSE( 300.0,     ecl_sum_get_well_completion_var( resp, 1, "W_3", "CWIT", 3 ), 1e-5 );
     BOOST_CHECK_CLOSE( 300.2,     ecl_sum_get_well_completion_var( resp, 1, "W_3", "CGIT", 3 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 300.3,     ecl_sum_get_well_completion_var( resp, 1, "W_3", "CNIT", 3 ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * 300.0, ecl_sum_get_well_completion_var( resp, 2, "W_3", "CWIT", 3 ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * 300.2, ecl_sum_get_well_completion_var( resp, 2, "W_3", "CGIT", 3 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 300.3, ecl_sum_get_well_completion_var( resp, 2, "W_3", "CNIT", 3 ), 1e-5 );
+
+    /* Solvent flow rate + or - Note OPM uses negative values for producers, while CNFR outputs positive
+    values for producers*/
+    BOOST_CHECK_CLOSE( -300.3,     ecl_sum_get_well_completion_var( resp, 1, "W_3", "CNFR", 3 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 200.3,    ecl_sum_get_well_completion_var( resp, 1, "W_2", "CNFR", 1 ), 1e-5 );
 
     /* CGPT's wildcarding means W_2's completions should also be available */
     BOOST_CHECK_CLOSE( 200.2,     ecl_sum_get_well_completion_var( resp, 1, "W_2", "CGPT", 1 ), 1e-5 );

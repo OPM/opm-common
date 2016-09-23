@@ -57,12 +57,14 @@ FLPR
 FLPRH
 FGSR
 FGCR
+FNPR -- solvent
 --FTPRSEA
 -- Injection Rates
 FVIR
 FWIR
 FWIRH
 FGIR
+FNIR -- solvent
 FGIRH
 -- Production Cummulatives
 FVPT
@@ -71,6 +73,7 @@ FOPT
 FLPT
 FLPTH
 FGPT
+FNPT
 FOPTH
 FGPTH
 FWPTH
@@ -81,6 +84,7 @@ FVIT
 FWIT
 FWITH
 FGIT
+FNIT
 FGITH
 -- In place
 FWIP
@@ -162,6 +166,8 @@ GGPT
 /
 GWPT
 /
+GNPT
+/
 GOPR
 /
 GGPR
@@ -172,9 +178,16 @@ GWPRH
 /
 GGIR
 /
+GNPR
+/
+
+GNIR
+/
 GGIRH
 /
 GGIT
+/
+GNIT
 /
 GGITH
 /
@@ -268,6 +281,8 @@ WOPRH
 /
 WGPR
 /
+WNPR
+/
 WGPRH
 /
 WLPR
@@ -307,6 +322,12 @@ WGIRH
 WGITH
   W_3
 /
+WNIR
+ W_3
+/
+WNIT
+ W_3
+/
 
 -- Production Cummulatives
 WWPT
@@ -321,6 +342,9 @@ WGPT
 /
 WGPTH
 /
+WNPT
+/
+
 -- Tracers
 --WTPRSEA
 --/
@@ -425,6 +449,18 @@ COPR
 /
 
 CGPR
+ '*' /
+/
+
+CNFR
+ '*' /
+/
+
+CNPT
+ '*' /
+/
+
+CNIT
  '*' /
 /
 

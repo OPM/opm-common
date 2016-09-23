@@ -48,6 +48,7 @@ namespace Opm {
                 oil     = (1 << 1),
                 gas     = (1 << 2),
                 polymer = (1 << 3),
+                solvent = (1 << 4),
             };
 
             /// Query if a value is set.
@@ -74,6 +75,7 @@ namespace Opm {
             double oil;
             double gas;
             double polymer;
+            double solvent;
     };
 
     struct Completion {
@@ -164,6 +166,7 @@ namespace Opm {
             case opt::oil: return this->oil;
             case opt::gas: return this->gas;
             case opt::polymer: return this->polymer;
+            case opt::solvent: return this->solvent;
         }
 
         throw std::invalid_argument(

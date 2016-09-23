@@ -106,6 +106,9 @@ struct quantity {
         if( rhs.value == 0 ) return { 0.0, res_unit };
         return { this->value / rhs.value, res_unit };
     }
+    quantity operator-( const quantity& rhs) const {
+        return { this->value - rhs.value, this->unit };
+    }
 };
 
 /*
@@ -140,6 +143,9 @@ template<> constexpr
 measure rate_unit< rt::gas >() { return measure::gas_surface_rate; }
 template<> constexpr
 measure rate_unit< Phase::GAS >() { return measure::gas_surface_rate; }
+
+template<> constexpr
+measure rate_unit< rt::solvent >() { return measure::gas_surface_rate; }
 
 template< rt phase, bool injection = true >
 inline quantity rate( const fn_args& args ) {
@@ -176,6 +182,7 @@ inline quantity crate( const fn_args& args ) {
     if( !injection ) return { -v, rate_unit< phase >() };
     return { v, rate_unit< phase >() };
 }
+
 
 template< rt phase > inline quantity prodrate( const fn_args& args )
 { return rate< phase, false >( args ); }
@@ -298,23 +305,33 @@ template< typename F, typename G >
 auto div( F f, G g ) -> bin_op< F, G, std::divides< quantity > >
 { return { f, g }; }
 
+template< typename F, typename G >
+auto sub( F f, G g ) -> bin_op< F, G, std::minus< quantity > >
+{ return { f, g }; }
+
 using ofun = std::function< quantity( const fn_args& ) >;
 
 static const std::unordered_map< std::string, ofun > funs = {
     { "WWIR", injerate< rt::wat > },
     { "WOIR", injerate< rt::oil > },
     { "WGIR", injerate< rt::gas > },
+    { "WNIR", injerate< rt::solvent > },
+
     { "WWIT", mul( injerate< rt::wat >, duration ) },
     { "WOIT", mul( injerate< rt::oil >, duration ) },
     { "WGIT", mul( injerate< rt::gas >, duration ) },
+    { "WNIT", mul( injerate< rt::solvent >, duration ) },
 
     { "WWPR", prodrate< rt::wat > },
     { "WOPR", prodrate< rt::oil > },
     { "WGPR", prodrate< rt::gas > },
+    { "WNPR", prodrate< rt::solvent > },
+
     { "WLPR", sum( prodrate< rt::wat >, prodrate< rt::oil > ) },
     { "WWPT", mul( prodrate< rt::wat >, duration ) },
     { "WOPT", mul( prodrate< rt::oil >, duration ) },
     { "WGPT", mul( prodrate< rt::gas >, duration ) },
+    { "WNPT", mul( prodrate< rt::solvent >, duration ) },
     { "WLPT", mul( sum( prodrate< rt::wat >, prodrate< rt::oil > ),
                    duration ) },
 
@@ -333,18 +350,22 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "GWIR", injerate< rt::wat > },
     { "GOIR", injerate< rt::oil > },
     { "GGIR", injerate< rt::gas > },
+    { "GNIR", injerate< rt::solvent > },
     { "GWIT", mul( injerate< rt::wat >, duration ) },
     { "GOIT", mul( injerate< rt::oil >, duration ) },
     { "GGIT", mul( injerate< rt::gas >, duration ) },
+    { "GNIT", mul( injerate< rt::solvent >, duration ) },
 
     { "GWPR", prodrate< rt::wat > },
     { "GOPR", prodrate< rt::oil > },
     { "GGPR", prodrate< rt::gas > },
+    { "GNPR", prodrate< rt::solvent > },
     { "GLPR", sum( prodrate< rt::wat >, prodrate< rt::oil > ) },
 
     { "GWPT", mul( prodrate< rt::wat >, duration ) },
     { "GOPT", mul( prodrate< rt::oil >, duration ) },
     { "GGPT", mul( prodrate< rt::gas >, duration ) },
+    { "GNPT", mul( prodrate< rt::solvent >, duration ) },
     { "GLPT", mul( sum( prodrate< rt::wat >, prodrate< rt::oil > ),
                    duration ) },
 
@@ -404,31 +425,41 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "CGIR", injecrate< rt::gas > },
     { "CWIT", mul( injecrate< rt::wat >, duration ) },
     { "CGIT", mul( injecrate< rt::gas >, duration ) },
+    { "CNIT", mul( injecrate< rt::solvent >, duration ) },
 
     { "CWPR", prodcrate< rt::wat > },
     { "COPR", prodcrate< rt::oil > },
     { "CGPR", prodcrate< rt::gas > },
+    // Minus for injection rates and pluss for production rate
+    { "CNFR", sub( prodcrate< rt::solvent>, injecrate<rt::solvent>) },
     { "CWPT", mul( prodcrate< rt::wat >, duration ) },
     { "COPT", mul( prodcrate< rt::oil >, duration ) },
     { "CGPT", mul( prodcrate< rt::gas >, duration ) },
+    { "CNPT", mul( prodcrate< rt::solvent >, duration ) },
 
     { "FWPR", prodrate< rt::wat > },
     { "FOPR", prodrate< rt::oil > },
     { "FGPR", prodrate< rt::gas > },
+    { "FNPR", prodrate< rt::solvent > },
+
     { "FLPR", sum( prodrate< rt::wat >, prodrate< rt::oil > ) },
     { "FWPT", mul( prodrate< rt::wat >, duration ) },
     { "FOPT", mul( prodrate< rt::oil >, duration ) },
     { "FGPT", mul( prodrate< rt::gas >, duration ) },
+    { "FNPT", mul( prodrate< rt::solvent >, duration ) },
     { "FLPT", mul( sum( prodrate< rt::wat >, prodrate< rt::oil > ),
                    duration ) },
 
     { "FWIR", injerate< rt::wat > },
     { "FOIR", injerate< rt::oil > },
     { "FGIR", injerate< rt::gas > },
+    { "FNIR", injerate< rt::solvent > },
+
     { "FLIR", sum( injerate< rt::wat >, injerate< rt::oil > ) },
     { "FWIT", mul( injerate< rt::wat >, duration ) },
     { "FOIT", mul( injerate< rt::oil >, duration ) },
     { "FGIT", mul( injerate< rt::gas >, duration ) },
+    { "FNIT", mul( injerate< rt::solvent >, duration ) },
     { "FLIT", mul( sum( injerate< rt::wat >, injerate< rt::oil > ),
                    duration ) },
 
@@ -581,8 +612,7 @@ void Summary::add_timestep( int report_step,
         const auto schedule_wells = find_wells( schedule, f.first, timestep );
         const auto val = f.second( { schedule_wells, duration, timestep, num, wells , state , regionCells , grid} );
 
-        const auto num_val = val.value > 0 ? val.value : 0.0;
-        const auto unit_applied_val = es.getUnits().from_si( val.unit, num_val );
+        const auto unit_applied_val = es.getUnits().from_si( val.unit, val.value );
         const auto res = smspec_node_is_total( f.first ) && prev_tstep
             ? ecl_sum_tstep_get_from_key( prev_tstep, genkey ) + unit_applied_val
             : unit_applied_val;
