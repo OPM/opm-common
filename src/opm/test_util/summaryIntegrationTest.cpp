@@ -21,6 +21,7 @@
 #include <opm/common/ErrorMacros.hpp>
 #include <ert/ecl/ecl_sum.h>
 #include <ert/util/stringlist.h>
+#include <cmath>
 
 
 void IntegrationTest::getIntegrationTest(){
@@ -368,7 +369,7 @@ double IntegrationTest::integrateError(const std::vector<double>& timeVec1,
         if(timeVec1[i] == timeVec2[j]){
             rightEdge = timeVec1[i];
             width = rightEdge - leftEdge;
-            double dev = std::abs(dataVec1[i] - dataVec2[j]);
+            double dev = std::fabs(dataVec1[i] - dataVec2[j]);
             errorSum += getRectangleArea(dev, width);
             leftEdge = rightEdge;
             i++;
@@ -379,7 +380,7 @@ double IntegrationTest::integrateError(const std::vector<double>& timeVec1,
             rightEdge = timeVec1[i];
             width = rightEdge - leftEdge;
             double value = unitStep(dataVec2[j]);
-            double dev = std::abs(dataVec1[i]-value);
+            double dev = std::fabs(dataVec1[i]-value);
             errorSum += getRectangleArea(dev, width);
             leftEdge = rightEdge;
             i++;
@@ -389,7 +390,7 @@ double IntegrationTest::integrateError(const std::vector<double>& timeVec1,
             rightEdge = timeVec2[j];
             width = rightEdge - leftEdge;
             double value = unitStep(dataVec1[i]);
-            double dev = std::abs(dataVec2[j]-value);
+            double dev = std::fabs(dataVec2[j]-value);
             errorSum += getRectangleArea(dev, width);
             leftEdge = rightEdge;
             j++;
