@@ -24,6 +24,7 @@
 #include <map>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 namespace Opm {
@@ -41,15 +42,15 @@ namespace Opm {
          */
 
         public:
-            using enum_size = uint16_t;
-
-            enum class opt : enum_size {
+            enum class opt : uint32_t {
                 wat     = (1 << 0),
                 oil     = (1 << 1),
                 gas     = (1 << 2),
                 polymer = (1 << 3),
                 solvent = (1 << 4),
             };
+
+            using enum_size = std::underlying_type< opt >::type;
 
             /// Query if a value is set.
             inline bool has( opt ) const;
